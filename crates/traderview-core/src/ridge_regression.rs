@@ -29,13 +29,25 @@ pub struct Report {
 
 pub fn compute(x: &[Vec<f64>], y: &[f64], alpha: f64) -> Option<Report> {
     let n = x.len();
-    if n < 2 { return None; }
+    if n < 2 {
+        return None;
+    }
     let p = x[0].len();
-    if p < 1 || y.len() != n { return None; }
-    if x.iter().any(|row| row.len() != p) { return None; }
-    if !alpha.is_finite() || alpha < 0.0 { return None; }
-    if x.iter().any(|row| row.iter().any(|v| !v.is_finite())) { return None; }
-    if y.iter().any(|v| !v.is_finite()) { return None; }
+    if p < 1 || y.len() != n {
+        return None;
+    }
+    if x.iter().any(|row| row.len() != p) {
+        return None;
+    }
+    if !alpha.is_finite() || alpha < 0.0 {
+        return None;
+    }
+    if x.iter().any(|row| row.iter().any(|v| !v.is_finite())) {
+        return None;
+    }
+    if y.iter().any(|v| !v.is_finite()) {
+        return None;
+    }
     // Standardize features.
     let mut means = vec![0.0_f64; p];
     let mut stds = vec![1.0_f64; p];
@@ -62,23 +74,40 @@ pub fn compute(x: &[Vec<f64>], y: &[f64], alpha: f64) -> Option<Report> {
             xtx[k][j] = s;
         }
     }
-    for j in 0..p { xtx[j][j] += n as f64 * alpha; }
-    let xty: Vec<f64> = (0..p).map(|j|
-        (0..n).map(|i| xs[i][j] * y_centered[i]).sum()
-    ).collect();
+    for j in 0..p {
+        xtx[j][j] += n as f64 * alpha;
+    }
+    let xty: Vec<f64> = (0..p)
+        .map(|j| (0..n).map(|i| xs[i][j] * y_centered[i]).sum())
+        .collect();
     let beta_std = solve_linear_system(xtx, xty)?;
-    let coefficients: Vec<f64> = beta_std.iter().zip(stds.iter())
-        .map(|(b, s)| b / s).collect();
-    let intercept = y_mean - coefficients.iter().zip(means.iter())
-        .map(|(b, m)| b * m).sum::<f64>();
+    let coefficients: Vec<f64> = beta_std
+        .iter()
+        .zip(stds.iter())
+        .map(|(b, s)| b / s)
+        .collect();
+    let intercept = y_mean
+        - coefficients
+            .iter()
+            .zip(means.iter())
+            .map(|(b, m)| b * m)
+            .sum::<f64>();
     // R² = 1 - SSE/SST.
-    let y_hat: Vec<f64> = (0..n).map(|i| {
-        intercept + (0..p).map(|j| coefficients[j] * x[i][j]).sum::<f64>()
-    }).collect();
-    let sse: f64 = y.iter().zip(y_hat.iter()).map(|(a, b)| (a - b).powi(2)).sum();
+    let y_hat: Vec<f64> = (0..n)
+        .map(|i| intercept + (0..p).map(|j| coefficients[j] * x[i][j]).sum::<f64>())
+        .collect();
+    let sse: f64 = y
+        .iter()
+        .zip(y_hat.iter())
+        .map(|(a, b)| (a - b).powi(2))
+        .sum();
     let sst: f64 = y.iter().map(|a| (a - y_mean).powi(2)).sum();
     let r_squared = if sst > 1e-18 { 1.0 - sse / sst } else { 0.0 };
-    Some(Report { intercept, coefficients, r_squared })
+    Some(Report {
+        intercept,
+        coefficients,
+        r_squared,
+    })
 }
 
 /// Gauss-Jordan elimination — returns None on singular system.
@@ -88,18 +117,27 @@ fn solve_linear_system(mut a: Vec<Vec<f64>>, mut b: Vec<f64>) -> Option<Vec<f64>
         let mut pivot = i;
         let mut pmax = a[i][i].abs();
         for k in i + 1..n {
-            if a[k][i].abs() > pmax { pmax = a[k][i].abs(); pivot = k; }
+            if a[k][i].abs() > pmax {
+                pmax = a[k][i].abs();
+                pivot = k;
+            }
         }
-        if pmax < 1e-15 { return None; }
+        if pmax < 1e-15 {
+            return None;
+        }
         a.swap(i, pivot);
         b.swap(i, pivot);
         let pv = a[i][i];
-        for j in 0..n { a[i][j] /= pv; }
+        for j in 0..n {
+            a[i][j] /= pv;
+        }
         b[i] /= pv;
         for k in 0..n {
             if k != i && a[k][i].abs() > 0.0 {
                 let factor = a[k][i];
-                for j in 0..n { a[k][j] -= factor * a[i][j]; }
+                for j in 0..n {
+                    a[k][j] -= factor * a[i][j];
+                }
                 b[k] -= factor * b[i];
             }
         }

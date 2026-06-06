@@ -123,8 +123,7 @@ fn ca_check(input: &ImmigrationProtectionInput) -> ImmigrationProtectionResult {
     // CA carve-out: disclosure permitted only when responding to a
     // judicial warrant or judge-signed subpoena in a criminal
     // investigation. Other prohibited acts are NEVER excused by warrant.
-    if input.act_type == ProhibitedActType::DisclosureToAgency
-        && input.judicial_warrant_or_subpoena
+    if input.act_type == ProhibitedActType::DisclosureToAgency && input.judicial_warrant_or_subpoena
     {
         return ImmigrationProtectionResult {
             regime: Regime::CaliforniaAb291,

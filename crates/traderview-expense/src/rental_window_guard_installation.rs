@@ -157,91 +157,96 @@ pub struct RentalWindowGuardInstallationResult {
 pub fn check(input: &RentalWindowGuardInstallationInput) -> RentalWindowGuardInstallationResult {
     let mut failure_reasons: Vec<String> = Vec::new();
 
-    let (installation_obligation_triggered, installation_compliant, notice_compliant, nyc_daily_penalty_cents) =
-        match input.jurisdiction {
-            Jurisdiction::NewYorkCity => {
-                let obligation = input.dwelling_unit_count >= 3
-                    && input.child_age_10_or_younger_resides;
-                let installed =
-                    !obligation || input.window_guards_installed || input.window_connects_to_fire_escape;
-                let notices = !obligation
-                    || (input.thirty_day_lease_notice_provided
-                        && input.annual_notice_provided_jan_1_to_16);
-                let penalty_cents = if obligation && !installed {
-                    (input.days_violation_continues as u64).saturating_mul(100_000)
-                } else {
-                    0
-                };
+    let (
+        installation_obligation_triggered,
+        installation_compliant,
+        notice_compliant,
+        nyc_daily_penalty_cents,
+    ) = match input.jurisdiction {
+        Jurisdiction::NewYorkCity => {
+            let obligation =
+                input.dwelling_unit_count >= 3 && input.child_age_10_or_younger_resides;
+            let installed = !obligation
+                || input.window_guards_installed
+                || input.window_connects_to_fire_escape;
+            let notices = !obligation
+                || (input.thirty_day_lease_notice_provided
+                    && input.annual_notice_provided_jan_1_to_16);
+            let penalty_cents = if obligation && !installed {
+                (input.days_violation_continues as u64).saturating_mul(100_000)
+            } else {
+                0
+            };
 
-                if obligation && !installed {
-                    failure_reasons.push(
+            if obligation && !installed {
+                failure_reasons.push(
                         "NYC Health Code Article 131 § 131.15 + NYC Admin Code § 27-2043.1 — landlord of multiple dwelling with 3+ apartments MUST install approved window guards on every window in apartment where child age 10 or younger resides (carveout: windows leading to fire escapes); NYC Health Code § 3.11 civil penalties up to $1,000 per violation per day".to_string(),
                     );
-                }
-                if obligation && !input.thirty_day_lease_notice_provided {
-                    failure_reasons.push(
+            }
+            if obligation && !input.thirty_day_lease_notice_provided {
+                failure_reasons.push(
                         "NYC Health Code Article 131 § 131.15 — landlord must provide WINDOW GUARD NOTICE FORM within first 30 DAYS of occupancy".to_string(),
                     );
-                }
-                if obligation && !input.annual_notice_provided_jan_1_to_16 {
-                    failure_reasons.push(
+            }
+            if obligation && !input.annual_notice_provided_jan_1_to_16 {
+                failure_reasons.push(
                         "NYC Health Code Article 131 § 131.15 — building owner must send ANNUAL NOTICE regarding window guards between JANUARY 1 AND JANUARY 16 each year".to_string(),
                     );
-                }
-
-                (obligation, installed, notices, penalty_cents)
             }
-            Jurisdiction::Chicago => {
-                let obligation = true;
-                let installed = input.chicago_window_opening_4_inch_or_less;
-                let notices = true;
-                if !installed {
-                    failure_reasons.push(
+
+            (obligation, installed, notices, penalty_cents)
+        }
+        Jurisdiction::Chicago => {
+            let obligation = true;
+            let installed = input.chicago_window_opening_4_inch_or_less;
+            let notices = true;
+            if !installed {
+                failure_reasons.push(
                         "Chicago Building Code § 13-196-550 — operable window guards required limiting window opening to 4 INCHES OR LESS in dwelling units; screens required April 15 through November 15 each year".to_string(),
                     );
-                }
-                (obligation, installed, notices, 0)
             }
-            Jurisdiction::Massachusetts => {
-                let applicable_window = input.window_above_6_feet_grade
-                    && input.window_opens_for_5_inch_ball
-                    && !input.window_connects_to_fire_escape;
-                let obligation = applicable_window
-                    && input.child_age_10_or_younger_resides
-                    && input.tenant_requested_installation;
-                let installed = !obligation || input.window_guards_installed;
-                let notices = !applicable_window || input.ma_annual_notice_provided;
-                if obligation && !installed {
-                    failure_reasons.push(
+            (obligation, installed, notices, 0)
+        }
+        Jurisdiction::Massachusetts => {
+            let applicable_window = input.window_above_6_feet_grade
+                && input.window_opens_for_5_inch_ball
+                && !input.window_connects_to_fire_escape;
+            let obligation = applicable_window
+                && input.child_age_10_or_younger_resides
+                && input.tenant_requested_installation;
+            let installed = !obligation || input.window_guards_installed;
+            let notices = !applicable_window || input.ma_annual_notice_provided;
+            if obligation && !installed {
+                failure_reasons.push(
                         "Mass. G.L. + 105 CMR 410 (State Sanitary Code) — landlord MUST install window guards at TENANT'S REQUEST when child under age 10 resides; applies to 'applicable windows' (> 6 feet above grade + opens for 5-inch diameter ball + not fire escape)".to_string(),
                     );
-                }
-                if applicable_window && !input.ma_annual_notice_provided {
-                    failure_reasons.push(
+            }
+            if applicable_window && !input.ma_annual_notice_provided {
+                failure_reasons.push(
                         "Mass. G.L. + 105 CMR 410 — landlord must provide annual notice stating 'Parents with children under the age of 10 have the right, at no additional charge, to have window guards installed within the rented apartment and the common areas of the building'".to_string(),
                     );
-                }
-                (obligation, installed, notices, 0)
             }
-            Jurisdiction::MontgomeryCountyMd => {
-                let obligation = input.child_age_6_or_younger_resides
-                    && input.tenant_requested_installation;
-                let installed = !obligation || input.window_guards_installed;
-                let notices = true;
-                if obligation && !installed {
-                    failure_reasons.push(
+            (obligation, installed, notices, 0)
+        }
+        Jurisdiction::MontgomeryCountyMd => {
+            let obligation =
+                input.child_age_6_or_younger_resides && input.tenant_requested_installation;
+            let installed = !obligation || input.window_guards_installed;
+            let notices = true;
+            if obligation && !installed {
+                failure_reasons.push(
                         "Montgomery County MD DHCA Code § 29-23 — landlord must install window guards at TENANT'S REQUEST when child under age 6 resides; lease addendum disclosure required at lease execution".to_string(),
                     );
-                }
-                (obligation, installed, notices, 0)
             }
-            Jurisdiction::Default => {
-                let obligation = false;
-                let installed = true;
-                let notices = true;
-                (obligation, installed, notices, 0)
-            }
-        };
+            (obligation, installed, notices, 0)
+        }
+        Jurisdiction::Default => {
+            let obligation = false;
+            let installed = true;
+            let notices = true;
+            (obligation, installed, notices, 0)
+        }
+    };
 
     let notes: Vec<String> = vec![
         "NYC Health Code Article 131 § 131.15 + NYC Admin Code § 27-2043.1 — landlord of multiple dwelling with 3 OR MORE APARTMENTS must install approved window guards on every window in apartment where child age 10 OR YOUNGER resides (carveout: windows leading to fire escapes); applies to public hallway windows in such buildings".to_string(),
@@ -330,9 +335,12 @@ mod tests {
         i.window_guards_installed = false;
         let r = check(&i);
         assert!(!r.installation_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("Article 131 § 131.15")
-            && f.contains("§ 27-2043.1")
-            && f.contains("$1,000 per violation per day")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("Article 131 § 131.15")
+                && f.contains("§ 27-2043.1")
+                && f.contains("$1,000 per violation per day")));
     }
 
     #[test]
@@ -350,8 +358,10 @@ mod tests {
         i.thirty_day_lease_notice_provided = false;
         let r = check(&i);
         assert!(!r.notice_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 131.15")
-            && f.contains("30 DAYS")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 131.15") && f.contains("30 DAYS")));
     }
 
     #[test]
@@ -390,8 +400,10 @@ mod tests {
         i.chicago_window_opening_4_inch_or_less = false;
         let r = check(&i);
         assert!(!r.installation_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 13-196-550")
-            && f.contains("4 INCHES OR LESS")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 13-196-550") && f.contains("4 INCHES OR LESS")));
     }
 
     #[test]
@@ -487,8 +499,10 @@ mod tests {
         i.window_guards_installed = false;
         let r = check(&i);
         assert!(!r.installation_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("DHCA Code § 29-23")
-            && f.contains("child under age 6")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("DHCA Code § 29-23") && f.contains("child under age 6")));
     }
 
     #[test]
@@ -546,7 +560,9 @@ mod tests {
         assert!(r.citation.contains("NYC Admin Code § 27-2115"));
         assert!(r.citation.contains("Chicago Building Code § 13-196-550"));
         assert!(r.citation.contains("Mass. G.L. + 105 CMR 410"));
-        assert!(r.citation.contains("Montgomery County MD DHCA Code § 29-23"));
+        assert!(r
+            .citation
+            .contains("Montgomery County MD DHCA Code § 29-23"));
         assert!(r.citation.contains("ASTM F2090-23"));
     }
 
@@ -570,9 +586,12 @@ mod tests {
     #[test]
     fn note_pins_nyc_daily_penalty_dhmh() {
         let r = check(&nyc_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("Department of Health and Mental Hygiene")
-            && n.contains("$1,000 PER VIOLATION PER DAY")
-            && n.contains("§ 3.11")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Department of Health and Mental Hygiene")
+                && n.contains("$1,000 PER VIOLATION PER DAY")
+                && n.contains("§ 3.11")));
     }
 
     #[test]
@@ -605,8 +624,10 @@ mod tests {
     #[test]
     fn note_pins_montgomery_md_dhca_29_23() {
         let r = check(&nyc_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("DHCA Code § 29-23")
-            && n.contains("children under age 6")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("DHCA Code § 29-23") && n.contains("children under age 6")));
     }
 
     #[test]
@@ -620,25 +641,32 @@ mod tests {
     #[test]
     fn note_pins_trader_landlord_5m_award() {
         let r = check(&nyc_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("Trader-landlord critical")
-            && n.contains("$5M")
-            && n.contains("STRICT LIABILITY")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-landlord critical")
+                && n.contains("$5M")
+                && n.contains("STRICT LIABILITY")));
     }
 
     #[test]
     fn note_pins_astm_voluntary_standard() {
         let r = check(&nyc_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("ASTM F2090-23")
-            && n.contains("emergency escape (egress) release")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("ASTM F2090-23") && n.contains("emergency escape (egress) release")
+        ));
     }
 
     #[test]
     fn note_pins_cross_jurisdictional_architecture() {
         let r = check(&nyc_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("Cross-jurisdictional architecture")
-            && n.contains("BUILDING-SIZE + CHILD-AGE TRIGGER")
-            && n.contains("4-INCH OPENING MANDATE")
-            && n.contains("APPLICABLE-WINDOW THREE-PRONG TEST")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Cross-jurisdictional architecture")
+                && n.contains("BUILDING-SIZE + CHILD-AGE TRIGGER")
+                && n.contains("4-INCH OPENING MANDATE")
+                && n.contains("APPLICABLE-WINDOW THREE-PRONG TEST")));
     }
 
     #[test]

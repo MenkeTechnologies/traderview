@@ -22,15 +22,21 @@
 pub fn compute(closes: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = closes.len();
     let mut out = vec![None; n];
-    if period < 2 || n < period { return out; }
-    if closes.iter().any(|x| !x.is_finite()) { return out; }
+    if period < 2 || n < period {
+        return out;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     let n_f = period as f64;
     // x = 1..N, sum = N(N+1)/2, sum_sq = N(N+1)(2N+1)/6.
     let sx: f64 = (1..=period).map(|i| i as f64).sum();
     let sx2: f64 = (1..=period).map(|i| (i * i) as f64).sum();
     let xbar = sx / n_f;
     let sxx = sx2 - n_f * xbar * xbar;
-    if sxx <= 0.0 { return out; }
+    if sxx <= 0.0 {
+        return out;
+    }
     for (i, slot) in out.iter_mut().enumerate().skip(period - 1) {
         let win = &closes[i + 1 - period..=i];
         let ybar: f64 = win.iter().sum::<f64>() / n_f;
@@ -98,7 +104,9 @@ mod tests {
 
     #[test]
     fn output_length_matches_input() {
-        let c: Vec<f64> = (0..50).map(|i| 100.0 + (i as f64 * 0.1).sin() * 5.0).collect();
+        let c: Vec<f64> = (0..50)
+            .map(|i| 100.0 + (i as f64 * 0.1).sin() * 5.0)
+            .collect();
         let r = compute(&c, 14);
         assert_eq!(r.len(), 50);
         assert!(r[12].is_none());

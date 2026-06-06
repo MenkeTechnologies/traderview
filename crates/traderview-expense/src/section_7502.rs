@@ -375,28 +375,38 @@ mod tests {
         assert!(r
             .notes
             .iter()
-            .any(|n| n.contains("Anderson v. United States") && n.contains("displaces common-law mailbox rule")));
+            .any(|n| n.contains("Anderson v. United States")
+                && n.contains("displaces common-law mailbox rule")));
     }
 
     #[test]
     fn fedex_designated_qualifies() {
         let r = compute(&base(DeliveryMethod::FedExDesignated));
         assert!(r.treated_as_timely_filed);
-        assert!(r.notes.iter().any(|n| n.contains("FedEx First Overnight") && n.contains("Notice 2016-30")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("FedEx First Overnight") && n.contains("Notice 2016-30")));
     }
 
     #[test]
     fn ups_designated_qualifies() {
         let r = compute(&base(DeliveryMethod::UpsDesignated));
         assert!(r.treated_as_timely_filed);
-        assert!(r.notes.iter().any(|n| n.contains("UPS Next Day Air variants")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("UPS Next Day Air variants")));
     }
 
     #[test]
     fn dhl_express_designated_qualifies() {
         let r = compute(&base(DeliveryMethod::DhlExpressDesignated));
         assert!(r.treated_as_timely_filed);
-        assert!(r.notes.iter().any(|n| n.contains("DHL Express 9:00/10:30/12:00")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("DHL Express 9:00/10:30/12:00")));
     }
 
     #[test]
@@ -417,7 +427,10 @@ mod tests {
         let r = compute(&i);
         assert!(!r.treated_as_timely_filed);
         assert_eq!(r.evidentiary_status, EvidentiaryStatus::NotProtected);
-        assert!(r.notes.iter().any(|n| n.contains("postmark NOT within prescribed period")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("postmark NOT within prescribed period")));
     }
 
     #[test]
@@ -436,7 +449,10 @@ mod tests {
         i.delivered_after_deadline = false;
         let r = compute(&i);
         assert!(r.treated_as_timely_filed);
-        assert!(r.notes.iter().any(|n| n.contains("ON OR BEFORE the deadline")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("ON OR BEFORE the deadline")));
     }
 
     #[test]
@@ -445,7 +461,10 @@ mod tests {
         i.electronic_acknowledgment_within_period = true;
         let r = compute(&i);
         assert!(r.treated_as_timely_filed);
-        assert!(r.notes.iter().any(|n| n.contains("§ 301.7502-1(d)") && n.contains("electronic acknowledgment")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 301.7502-1(d)") && n.contains("electronic acknowledgment")));
     }
 
     #[test]
@@ -500,7 +519,11 @@ mod tests {
             DeliveryMethod::DhlExpressDesignated,
         ] {
             let r = compute(&base(method));
-            assert!(r.treated_as_timely_filed, "designated PDS {:?} should qualify", method);
+            assert!(
+                r.treated_as_timely_filed,
+                "designated PDS {:?} should qualify",
+                method
+            );
         }
     }
 
@@ -516,7 +539,11 @@ mod tests {
         ];
         for method in methods_that_protect {
             let r = compute(&base(method));
-            assert!(r.treated_as_timely_filed, "method {:?} should be protected", method);
+            assert!(
+                r.treated_as_timely_filed,
+                "method {:?} should be protected",
+                method
+            );
         }
         let r_none = compute(&base(DeliveryMethod::NonDesignatedPrivateDeliveryService));
         assert!(!r_none.treated_as_timely_filed);
@@ -524,7 +551,10 @@ mod tests {
 
     #[test]
     fn certified_and_registered_uniquely_get_prima_facie_status_invariant() {
-        let prima_facie_methods = [DeliveryMethod::UspsCertified, DeliveryMethod::UspsRegistered];
+        let prima_facie_methods = [
+            DeliveryMethod::UspsCertified,
+            DeliveryMethod::UspsRegistered,
+        ];
         let ordinary_methods = [
             DeliveryMethod::UspsRegular,
             DeliveryMethod::FedExDesignated,
@@ -550,7 +580,11 @@ mod tests {
             let mut i = base(method);
             i.postmark_within_prescribed_period = false;
             let r = compute(&i);
-            assert!(!r.treated_as_timely_filed, "method {:?} cannot save outside-period postmark", method);
+            assert!(
+                !r.treated_as_timely_filed,
+                "method {:?} cannot save outside-period postmark",
+                method
+            );
         }
     }
 
@@ -591,16 +625,17 @@ mod tests {
             let mut i = base(method);
             i.delivered_after_deadline = false;
             let r = compute(&i);
-            assert!(r.treated_as_timely_filed, "before-deadline filing always timely regardless of method");
+            assert!(
+                r.treated_as_timely_filed,
+                "before-deadline filing always timely regardless of method"
+            );
         }
     }
 
     #[test]
     fn fedex_note_lists_designated_services() {
         let r = compute(&base(DeliveryMethod::FedExDesignated));
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("Priority Overnight") && n.contains("International Priority/First/Economy")));
+        assert!(r.notes.iter().any(|n| n.contains("Priority Overnight")
+            && n.contains("International Priority/First/Economy")));
     }
 }

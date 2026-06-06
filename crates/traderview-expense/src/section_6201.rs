@@ -131,7 +131,8 @@ pub struct Section6201Result {
 pub fn check(input: &Section6201Input) -> Section6201Result {
     let mut failure_reasons: Vec<String> = Vec::new();
 
-    let assessment_authority_engaged = !matches!(input.assessment_basis, AssessmentBasis::NoAuthority);
+    let assessment_authority_engaged =
+        !matches!(input.assessment_basis, AssessmentBasis::NoAuthority);
 
     if !assessment_authority_engaged {
         failure_reasons.push(
@@ -155,8 +156,8 @@ pub fn check(input: &Section6201Input) -> Section6201Result {
         && input.dispute_is_reasonable
         && input.taxpayer_fully_cooperated;
 
-    let secretary_satisfied_burden = !burden_shifted
-        || input.secretary_produced_additional_probative_evidence;
+    let secretary_satisfied_burden =
+        !burden_shifted || input.secretary_produced_additional_probative_evidence;
 
     if burden_shifted && !secretary_satisfied_burden {
         failure_reasons.push(
@@ -164,12 +165,13 @@ pub fn check(input: &Section6201Input) -> Section6201Result {
         );
     }
 
-    let math_error_abatement_unavailable_for_a3 =
-        matches!(input.assessment_basis, AssessmentBasis::ErroneousPrepaymentCredits);
+    let math_error_abatement_unavailable_for_a3 = matches!(
+        input.assessment_basis,
+        AssessmentBasis::ErroneousPrepaymentCredits
+    );
 
-    let may_proceed = assessment_authority_engaged
-        && deficiency_satisfied
-        && secretary_satisfied_burden;
+    let may_proceed =
+        assessment_authority_engaged && deficiency_satisfied && secretary_satisfied_burden;
 
     let notes: Vec<String> = vec![
         "26 USC § 6201(a) — Secretary authorized and required to make inquiries, determinations, and assessments of all taxes imposed by Title 26 including interest, additional amounts, additions to tax, and assessable penalties".to_string(),
@@ -365,8 +367,7 @@ mod tests {
         assert!(r
             .failure_reasons
             .iter()
-            .any(|f| f.contains("§ 6201(d)")
-                && f.contains("reasonable and probative")));
+            .any(|f| f.contains("§ 6201(d)") && f.contains("reasonable and probative")));
     }
 
     #[test]
@@ -416,8 +417,10 @@ mod tests {
     #[test]
     fn note_pins_a3_math_error_unavailable() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6201(a)(3)")
-            && n.contains("§ 6213(b)(2) abatement")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6201(a)(3)") && n.contains("§ 6213(b)(2) abatement")));
     }
 
     #[test]
@@ -432,8 +435,10 @@ mod tests {
     #[test]
     fn note_pins_c_child_compensation() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6201(c)")
-            && n.contains("child")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6201(c)") && n.contains("child")));
     }
 
     #[test]
@@ -571,7 +576,9 @@ mod tests {
         i.assessment_basis = AssessmentBasis::ErroneousPrepaymentCredits;
         let r = check(&i);
         assert!(r.math_error_abatement_unavailable_for_a3);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6213(b)(2) abatement")
-            && n.contains("WITHOUT")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6213(b)(2) abatement") && n.contains("WITHOUT")));
     }
 }

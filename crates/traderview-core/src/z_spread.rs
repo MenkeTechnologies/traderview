@@ -45,25 +45,40 @@ pub fn solve(
     tolerance: f64,
     max_iter: usize,
 ) -> Option<ZSpreadReport> {
-    if cash_flows.is_empty() || spot_curve.len() < 2 || !market_price.is_finite()
-        || market_price <= 0.0 || tolerance <= 0.0 || max_iter == 0
+    if cash_flows.is_empty()
+        || spot_curve.len() < 2
+        || !market_price.is_finite()
+        || market_price <= 0.0
+        || tolerance <= 0.0
+        || max_iter == 0
     {
         return None;
     }
-    if cash_flows.iter().any(|c| !c.time_years.is_finite() || c.time_years < 0.0
-        || !c.amount.is_finite()) { return None; }
-    if spot_curve.iter().any(|s| !s.time_years.is_finite() || !s.spot_rate.is_finite()) {
+    if cash_flows
+        .iter()
+        .any(|c| !c.time_years.is_finite() || c.time_years < 0.0 || !c.amount.is_finite())
+    {
+        return None;
+    }
+    if spot_curve
+        .iter()
+        .any(|s| !s.time_years.is_finite() || !s.spot_rate.is_finite())
+    {
         return None;
     }
     for w in spot_curve.windows(2) {
-        if w[1].time_years <= w[0].time_years { return None; }
+        if w[1].time_years <= w[0].time_years {
+            return None;
+        }
     }
     // PV is monotonically decreasing in z, so straight bisection.
     let mut lo = -0.5_f64;
     let mut hi = 0.5_f64;
     let pv_lo = pv_at_spread(cash_flows, spot_curve, lo)?;
     let pv_hi = pv_at_spread(cash_flows, spot_curve, hi)?;
-    if !pv_lo.is_finite() || !pv_hi.is_finite() { return None; }
+    if !pv_lo.is_finite() || !pv_hi.is_finite() {
+        return None;
+    }
     // Expand bracket if needed.
     let mut pv_lo = pv_lo;
     let mut pv_hi = pv_hi;
@@ -78,15 +93,23 @@ pub fn solve(
         pv_hi = pv_at_spread(cash_flows, spot_curve, hi)?;
         expansions += 1;
     }
-    if pv_lo < market_price || pv_hi > market_price { return None; }
+    if pv_lo < market_price || pv_hi > market_price {
+        return None;
+    }
     let mut iter = 0_usize;
     let mut z = 0.0_f64;
     let mut pv = 0.0_f64;
     while iter < max_iter {
         z = 0.5 * (lo + hi);
         pv = pv_at_spread(cash_flows, spot_curve, z)?;
-        if (pv - market_price).abs() < tolerance { break; }
-        if pv > market_price { lo = z; } else { hi = z; }
+        if (pv - market_price).abs() < tolerance {
+            break;
+        }
+        if pv > market_price {
+            lo = z;
+        } else {
+            hi = z;
+        }
         iter += 1;
     }
     Some(ZSpreadReport {
@@ -108,15 +131,21 @@ fn pv_at_spread(cf: &[CashFlow], curve: &[SpotPoint], z: f64) -> Option<f64> {
 }
 
 fn interp_rate(t: f64, curve: &[SpotPoint]) -> Option<f64> {
-    if curve.is_empty() { return None; }
-    if t <= curve[0].time_years { return Some(curve[0].spot_rate); }
+    if curve.is_empty() {
+        return None;
+    }
+    if t <= curve[0].time_years {
+        return Some(curve[0].spot_rate);
+    }
     if t >= curve[curve.len() - 1].time_years {
         return Some(curve[curve.len() - 1].spot_rate);
     }
     for w in curve.windows(2) {
         if t >= w[0].time_years && t <= w[1].time_years {
             let span = w[1].time_years - w[0].time_years;
-            if span <= 0.0 { return Some(w[0].spot_rate); }
+            if span <= 0.0 {
+                return Some(w[0].spot_rate);
+            }
             let frac = (t - w[0].time_years) / span;
             return Some(w[0].spot_rate + frac * (w[1].spot_rate - w[0].spot_rate));
         }
@@ -131,7 +160,10 @@ mod tests {
     fn ten_year_5pct_bond() -> Vec<CashFlow> {
         let mut cf = Vec::new();
         for t in 1..=10 {
-            cf.push(CashFlow { time_years: t as f64, amount: 5.0 });
+            cf.push(CashFlow {
+                time_years: t as f64,
+                amount: 5.0,
+            });
         }
         cf.last_mut().unwrap().amount = 105.0;
         cf
@@ -139,10 +171,22 @@ mod tests {
 
     fn flat_curve(rate: f64) -> Vec<SpotPoint> {
         vec![
-            SpotPoint { time_years: 0.5, spot_rate: rate },
-            SpotPoint { time_years: 2.0, spot_rate: rate },
-            SpotPoint { time_years: 5.0, spot_rate: rate },
-            SpotPoint { time_years: 10.0, spot_rate: rate },
+            SpotPoint {
+                time_years: 0.5,
+                spot_rate: rate,
+            },
+            SpotPoint {
+                time_years: 2.0,
+                spot_rate: rate,
+            },
+            SpotPoint {
+                time_years: 5.0,
+                spot_rate: rate,
+            },
+            SpotPoint {
+                time_years: 10.0,
+                spot_rate: rate,
+            },
         ]
     }
 
@@ -161,8 +205,14 @@ mod tests {
     #[test]
     fn non_monotonic_curve_rejected() {
         let bad = vec![
-            SpotPoint { time_years: 5.0, spot_rate: 0.05 },
-            SpotPoint { time_years: 2.0, spot_rate: 0.05 },
+            SpotPoint {
+                time_years: 5.0,
+                spot_rate: 0.05,
+            },
+            SpotPoint {
+                time_years: 2.0,
+                spot_rate: 0.05,
+            },
         ];
         let cf = ten_year_5pct_bond();
         assert!(solve(&cf, &bad, 100.0, 1e-8, 100).is_none());
@@ -187,7 +237,11 @@ mod tests {
         let curve = flat_curve(0.05);
         let pv0 = pv_at_spread(&cf, &curve, 0.0).unwrap();
         let r = solve(&cf, &curve, pv0 - 5.0, 1e-8, 200).unwrap();
-        assert!(r.z_spread > 0.0, "expected positive z-spread, got {}", r.z_spread);
+        assert!(
+            r.z_spread > 0.0,
+            "expected positive z-spread, got {}",
+            r.z_spread
+        );
     }
 
     #[test]
@@ -196,7 +250,11 @@ mod tests {
         let curve = flat_curve(0.05);
         let pv0 = pv_at_spread(&cf, &curve, 0.0).unwrap();
         let r = solve(&cf, &curve, pv0 + 5.0, 1e-8, 200).unwrap();
-        assert!(r.z_spread < 0.0, "expected negative z-spread, got {}", r.z_spread);
+        assert!(
+            r.z_spread < 0.0,
+            "expected negative z-spread, got {}",
+            r.z_spread
+        );
     }
 
     #[test]

@@ -25,12 +25,18 @@
 pub fn compute(series: &[f64], length: usize, phase: f64, power: f64) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if n == 0 || length < 2 || !phase.is_finite()
+    if n == 0
+        || length < 2
+        || !phase.is_finite()
         || !(-100.0..=100.0).contains(&phase)
-        || !power.is_finite() || power <= 0.0 {
+        || !power.is_finite()
+        || power <= 0.0
+    {
         return out;
     }
-    if series.iter().any(|x| !x.is_finite()) { return out; }
+    if series.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     let l_f = length as f64;
     let beta = 0.45 * (l_f - 1.0) / (0.45 * (l_f - 1.0) + 2.0);
     let alpha = beta.powf(power);
@@ -95,27 +101,35 @@ mod tests {
         let r = compute(&s, 14, 0.0, 1.0);
         let last_jma = r[199].unwrap();
         // JMA should be near the current input (small lag).
-        assert!((last_jma - 199.0).abs() < 10.0,
-            "JMA {last_jma} should track input near 199");
+        assert!(
+            (last_jma - 199.0).abs() < 10.0,
+            "JMA {last_jma} should track input near 199"
+        );
     }
 
     #[test]
     fn jma_smoother_than_input_on_noise() {
         let mut state: u64 = 42;
-        let s: Vec<f64> = (0..400).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
-            100.0 + (r - 0.5) * 10.0
-        }).collect();
+        let s: Vec<f64> = (0..400)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
+                100.0 + (r - 0.5) * 10.0
+            })
+            .collect();
         let r = compute(&s, 20, 0.0, 1.0);
         let vals: Vec<f64> = r.iter().flatten().copied().collect();
         let mean_in: f64 = s.iter().sum::<f64>() / s.len() as f64;
         let var_in: f64 = s.iter().map(|x| (x - mean_in).powi(2)).sum::<f64>() / s.len() as f64;
         let mean_jma: f64 = vals.iter().sum::<f64>() / vals.len() as f64;
-        let var_jma: f64 = vals.iter().map(|x| (x - mean_jma).powi(2)).sum::<f64>() / vals.len() as f64;
-        assert!(var_jma < var_in,
-            "JMA variance {var_jma} should be lower than input {var_in}");
+        let var_jma: f64 =
+            vals.iter().map(|x| (x - mean_jma).powi(2)).sum::<f64>() / vals.len() as f64;
+        assert!(
+            var_jma < var_in,
+            "JMA variance {var_jma} should be lower than input {var_in}"
+        );
     }
 
     #[test]

@@ -239,12 +239,7 @@ pub fn compute(input: &Section1234AInput) -> Section1234AResult {
 mod tests {
     use super::*;
 
-    fn input(
-        g: i64,
-        days: u32,
-        u: UnderlyingCharacter,
-        c: ContractType,
-    ) -> Section1234AInput {
+    fn input(g: i64, days: u32, u: UnderlyingCharacter, c: ContractType) -> Section1234AInput {
         Section1234AInput {
             gain_or_loss_cents: g,
             holding_period_days: days,
@@ -456,11 +451,10 @@ mod tests {
             ContractType::Section1256,
         ));
         assert!(r.notes.iter().any(|n| n.contains("60/40")));
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.to_lowercase().contains("holding period"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.to_lowercase().contains("holding period")));
     }
 
     // ── Securities futures contract — § 1234B governs ──────────

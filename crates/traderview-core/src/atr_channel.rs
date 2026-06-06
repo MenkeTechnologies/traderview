@@ -20,7 +20,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AtrChannelReport {
@@ -32,12 +36,7 @@ pub struct AtrChannelReport {
     pub use_ema: bool,
 }
 
-pub fn compute(
-    bars: &[Bar],
-    period: usize,
-    multiplier: f64,
-    use_ema: bool,
-) -> AtrChannelReport {
+pub fn compute(bars: &[Bar], period: usize, multiplier: f64, use_ema: bool) -> AtrChannelReport {
     let n = bars.len();
     let mut report = AtrChannelReport {
         middle: vec![None; n],
@@ -47,13 +46,21 @@ pub fn compute(
         multiplier,
         use_ema,
     };
-    if period < 2 || !multiplier.is_finite() || multiplier <= 0.0
-        || n < period + 1 { return report; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if period < 2 || !multiplier.is_finite() || multiplier <= 0.0 || n < period + 1 {
+        return report;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return report;
     }
     let closes: Vec<f64> = bars.iter().map(|b| b.close).collect();
-    report.middle = if use_ema { ema(&closes, period) } else { sma(&closes, period) };
+    report.middle = if use_ema {
+        ema(&closes, period)
+    } else {
+        sma(&closes, period)
+    };
     // Wilder ATR.
     let mut tr = vec![0.0_f64; n];
     tr[0] = bars[0].high - bars[0].low;
@@ -84,7 +91,9 @@ pub fn compute(
 fn sma(series: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     let mut sum: f64 = series[..period].iter().sum();
     out[period - 1] = Some(sum / p_f);
@@ -98,7 +107,9 @@ fn sma(series: &[f64], period: usize) -> Vec<Option<f64>> {
 fn ema(series: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     let k = 2.0 / (p_f + 1.0);
     let seed: f64 = series[..period].iter().sum::<f64>() / p_f;
@@ -115,7 +126,13 @@ fn ema(series: &[f64], period: usize) -> Vec<Option<f64>> {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {
@@ -149,10 +166,12 @@ mod tests {
 
     #[test]
     fn upper_above_lower_always() {
-        let bars: Vec<_> = (0..50).map(|i| {
-            let m = 100.0 + (i as f64 * 0.3).sin() * 5.0;
-            b(m + 1.5, m - 1.5, m)
-        }).collect();
+        let bars: Vec<_> = (0..50)
+            .map(|i| {
+                let m = 100.0 + (i as f64 * 0.3).sin() * 5.0;
+                b(m + 1.5, m - 1.5, m)
+            })
+            .collect();
         let r = compute(&bars, 20, 2.0, true);
         for i in 0..50 {
             if let (Some(u), Some(l)) = (r.upper[i], r.lower[i]) {
@@ -165,9 +184,7 @@ mod tests {
     fn ema_vs_sma_differ_on_step_change() {
         let mut closes = vec![100.0_f64; 30];
         closes.extend(vec![200.0; 5]);
-        let bars: Vec<_> = closes.iter()
-            .map(|c| b(c + 1.0, c - 1.0, *c))
-            .collect();
+        let bars: Vec<_> = closes.iter().map(|c| b(c + 1.0, c - 1.0, *c)).collect();
         let r_ema = compute(&bars, 20, 2.0, true);
         let r_sma = compute(&bars, 20, 2.0, false);
         let last = 34;

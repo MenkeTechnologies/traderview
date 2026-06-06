@@ -39,15 +39,16 @@ pub fn compute(smoothed_price: &[f64]) -> HilbertReport {
     let mut period = vec![None; n];
     if n < 8 || smoothed_price.iter().any(|x| !x.is_finite()) {
         return HilbertReport {
-            in_phase, quadrature: quad, instantaneous_phase_radians: phase,
+            in_phase,
+            quadrature: quad,
+            instantaneous_phase_radians: phase,
             dominant_cycle_period: period,
         };
     }
-    let mut prev_period = 20.0_f64;    // seed
+    let mut prev_period = 20.0_f64; // seed
     for i in 6..n {
         // Ehlers FIR Hilbert filter (4 non-zero coefficients spaced 2 bars apart).
-        let det = 0.0962 * smoothed_price[i]
-            + 0.5769 * smoothed_price[i - 2]
+        let det = 0.0962 * smoothed_price[i] + 0.5769 * smoothed_price[i - 2]
             - 0.5769 * smoothed_price[i - 4]
             - 0.0962 * smoothed_price[i - 6];
         let period_factor = 0.075 * prev_period + 0.54;
@@ -111,32 +112,46 @@ mod tests {
     fn sinusoidal_input_detects_period_within_range() {
         // 20-bar sine wave. Hilbert should converge to a period in [6, 50].
         let period_true = 20.0_f64;
-        let s: Vec<f64> = (0..200).map(|i| {
-            100.0 + (2.0 * std::f64::consts::PI * i as f64 / period_true).sin() * 5.0
-        }).collect();
+        let s: Vec<f64> = (0..200)
+            .map(|i| 100.0 + (2.0 * std::f64::consts::PI * i as f64 / period_true).sin() * 5.0)
+            .collect();
         let r = compute(&s);
         // Take average period over last 50 bars.
-        let est: Vec<f64> = r.dominant_cycle_period.iter().skip(150).filter_map(|x| *x).collect();
+        let est: Vec<f64> = r
+            .dominant_cycle_period
+            .iter()
+            .skip(150)
+            .filter_map(|x| *x)
+            .collect();
         let avg = est.iter().sum::<f64>() / est.len() as f64;
-        assert!((6.0..=50.0).contains(&avg), "period {avg} outside clamp range");
+        assert!(
+            (6.0..=50.0).contains(&avg),
+            "period {avg} outside clamp range"
+        );
     }
 
     #[test]
     fn period_clamped_to_six_fifty() {
         // High-frequency input: period should be clamped at 6.
-        let s: Vec<f64> = (0..200).map(|i| {
-            100.0 + (i as f64).sin() * 5.0     // ~6.28 bar period
-        }).collect();
+        let s: Vec<f64> = (0..200)
+            .map(|i| {
+                100.0 + (i as f64).sin() * 5.0 // ~6.28 bar period
+            })
+            .collect();
         let r = compute(&s);
         for v in r.dominant_cycle_period.iter().skip(10).flatten() {
-            assert!((6.0..=50.0).contains(v),
-                "period {v} should be clamped to [6, 50]");
+            assert!(
+                (6.0..=50.0).contains(v),
+                "period {v} should be clamped to [6, 50]"
+            );
         }
     }
 
     #[test]
     fn output_lengths_match_input() {
-        let s: Vec<f64> = (0..50).map(|i| 100.0 + (i as f64 * 0.1).sin() * 5.0).collect();
+        let s: Vec<f64> = (0..50)
+            .map(|i| 100.0 + (i as f64 * 0.1).sin() * 5.0)
+            .collect();
         let r = compute(&s);
         assert_eq!(r.in_phase.len(), 50);
         assert_eq!(r.quadrature.len(), 50);

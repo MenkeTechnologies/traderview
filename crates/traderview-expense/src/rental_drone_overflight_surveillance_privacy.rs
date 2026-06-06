@@ -244,7 +244,9 @@ pub fn compute(input: &Input) -> Output {
 
     match input.jurisdiction {
         DroneJurisdiction::California1708_8 => {
-            if input.intent_to_conduct_surveillance && input.consent_status == ConsentStatus::NoConsentObtained {
+            if input.intent_to_conduct_surveillance
+                && input.consent_status == ConsentStatus::NoConsentObtained
+            {
                 return Output {
                     mode: DroneOverflightMode::ViolationCaliforniaCiv1708_8PhysicalInvasionOfPrivacyDrone,
                     statutory_basis: "Cal. Civ. Code § 1708.8 — airspace entry without permission to capture image".to_string(),
@@ -254,7 +256,9 @@ pub fn compute(input: &Input) -> Output {
             }
         }
         DroneJurisdiction::TexasChapter423PrivacyAct => {
-            if input.intent_to_conduct_surveillance && input.consent_status == ConsentStatus::NoConsentObtained {
+            if input.intent_to_conduct_surveillance
+                && input.consent_status == ConsentStatus::NoConsentObtained
+            {
                 return Output {
                     mode: DroneOverflightMode::ViolationTexasChapter423CapturedImageWithoutConsent,
                     statutory_basis: "Tex. Gov. Code Chapter 423 — captured image with intent to surveil without consent".to_string(),
@@ -341,7 +345,10 @@ mod tests {
             ..baseline_california_violation()
         };
         let result = check(&input);
-        assert_eq!(result.mode, DroneOverflightMode::NotApplicableNoDroneFlightOrImageCaptured);
+        assert_eq!(
+            result.mode,
+            DroneOverflightMode::NotApplicableNoDroneFlightOrImageCaptured
+        );
     }
 
     #[test]
@@ -351,7 +358,10 @@ mod tests {
             ..baseline_california_violation()
         };
         let result = check(&input);
-        assert_eq!(result.mode, DroneOverflightMode::NotApplicableNoDroneFlightOrImageCaptured);
+        assert_eq!(
+            result.mode,
+            DroneOverflightMode::NotApplicableNoDroneFlightOrImageCaptured
+        );
     }
 
     #[test]
@@ -362,7 +372,10 @@ mod tests {
             ..baseline_california_violation()
         };
         let result = check(&input);
-        assert_eq!(result.mode, DroneOverflightMode::NotApplicableHobbyistRecreationalFlightExempt);
+        assert_eq!(
+            result.mode,
+            DroneOverflightMode::NotApplicableHobbyistRecreationalFlightExempt
+        );
     }
 
     #[test]
@@ -372,7 +385,10 @@ mod tests {
             ..baseline_california_violation()
         };
         let result = check(&input);
-        assert_eq!(result.mode, DroneOverflightMode::NotApplicableConsentObtainedFromAllPropertyOwnersAndOccupants);
+        assert_eq!(
+            result.mode,
+            DroneOverflightMode::NotApplicableConsentObtainedFromAllPropertyOwnersAndOccupants
+        );
     }
 
     #[test]
@@ -394,7 +410,10 @@ mod tests {
             ..baseline_california_violation()
         };
         let result = check(&input);
-        assert_eq!(result.mode, DroneOverflightMode::ViolationFAAPart107NoRemotePilotCertificate);
+        assert_eq!(
+            result.mode,
+            DroneOverflightMode::ViolationFAAPart107NoRemotePilotCertificate
+        );
     }
 
     #[test]
@@ -406,7 +425,10 @@ mod tests {
             ..baseline_california_violation()
         };
         let result = check(&input);
-        assert_eq!(result.mode, DroneOverflightMode::ViolationCommercialFlightOutsideDaylightOrVisualLineOfSight);
+        assert_eq!(
+            result.mode,
+            DroneOverflightMode::ViolationCommercialFlightOutsideDaylightOrVisualLineOfSight
+        );
     }
 
     #[test]
@@ -418,7 +440,10 @@ mod tests {
             ..baseline_california_violation()
         };
         let result = check(&input);
-        assert_eq!(result.mode, DroneOverflightMode::ViolationDroneFlightAboveLegalAltitude400FtAgl);
+        assert_eq!(
+            result.mode,
+            DroneOverflightMode::ViolationDroneFlightAboveLegalAltitude400FtAgl
+        );
     }
 
     #[test]
@@ -431,7 +456,10 @@ mod tests {
             ..baseline_california_violation()
         };
         let result = check(&input);
-        assert_eq!(result.mode, DroneOverflightMode::CompliantWrittenConsentObtainedPerStateLaw);
+        assert_eq!(
+            result.mode,
+            DroneOverflightMode::CompliantWrittenConsentObtainedPerStateLaw
+        );
     }
 
     #[test]
@@ -442,7 +470,10 @@ mod tests {
             ..baseline_california_violation()
         };
         let result = check(&input);
-        assert_eq!(result.mode, DroneOverflightMode::ViolationTenantSurveillanceWithoutLeaseAuthorityOrConsent);
+        assert_eq!(
+            result.mode,
+            DroneOverflightMode::ViolationTenantSurveillanceWithoutLeaseAuthorityOrConsent
+        );
     }
 
     #[test]
@@ -455,7 +486,10 @@ mod tests {
             ..baseline_california_violation()
         };
         let result = check(&input);
-        assert_eq!(result.mode, DroneOverflightMode::ViolationTexasChapter423CapturedImageWithoutConsent);
+        assert_eq!(
+            result.mode,
+            DroneOverflightMode::ViolationTexasChapter423CapturedImageWithoutConsent
+        );
     }
 
     #[test]
@@ -468,7 +502,10 @@ mod tests {
             ..baseline_california_violation()
         };
         let result = check(&input);
-        assert_eq!(result.mode, DroneOverflightMode::CompliantWrittenConsentObtainedPerStateLaw);
+        assert_eq!(
+            result.mode,
+            DroneOverflightMode::CompliantWrittenConsentObtainedPerStateLaw
+        );
     }
 
     #[test]
@@ -482,7 +519,10 @@ mod tests {
             ..baseline_california_violation()
         };
         let result = check(&input);
-        assert_eq!(result.mode, DroneOverflightMode::ViolationFlorida934_50ImagingDeviceWithoutWrittenConsent);
+        assert_eq!(
+            result.mode,
+            DroneOverflightMode::ViolationFlorida934_50ImagingDeviceWithoutWrittenConsent
+        );
     }
 
     #[test]
@@ -496,7 +536,10 @@ mod tests {
             ..baseline_california_violation()
         };
         let result = check(&input);
-        assert_eq!(result.mode, DroneOverflightMode::ViolationFlorida934_50ImagingDeviceWithoutWrittenConsent);
+        assert_eq!(
+            result.mode,
+            DroneOverflightMode::ViolationFlorida934_50ImagingDeviceWithoutWrittenConsent
+        );
     }
 
     #[test]
@@ -510,7 +553,10 @@ mod tests {
             ..baseline_california_violation()
         };
         let result = check(&input);
-        assert_eq!(result.mode, DroneOverflightMode::CompliantCommercialFlightFAAPart107CertifiedAndConsented);
+        assert_eq!(
+            result.mode,
+            DroneOverflightMode::CompliantCommercialFlightFAAPart107CertifiedAndConsented
+        );
     }
 
     #[test]
@@ -524,7 +570,10 @@ mod tests {
             ..baseline_california_violation()
         };
         let result = check(&input);
-        assert_eq!(result.mode, DroneOverflightMode::CompliantWrittenConsentObtainedPerStateLaw);
+        assert_eq!(
+            result.mode,
+            DroneOverflightMode::CompliantWrittenConsentObtainedPerStateLaw
+        );
     }
 
     #[test]
@@ -537,7 +586,10 @@ mod tests {
             ..baseline_california_violation()
         };
         let result = check(&input);
-        assert_eq!(result.mode, DroneOverflightMode::CompliantWrittenConsentObtainedPerStateLaw);
+        assert_eq!(
+            result.mode,
+            DroneOverflightMode::CompliantWrittenConsentObtainedPerStateLaw
+        );
     }
 
     #[test]

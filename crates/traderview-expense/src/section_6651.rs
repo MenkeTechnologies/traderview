@@ -148,8 +148,7 @@ pub fn compute(input: &Section6651Input) -> Section6651Result {
     let section_6651c1_reduction = if input.failure_to_file_is_fraudulent {
         0
     } else {
-        let overlap_ftp_bp =
-            (overlap_months * ftp_rate_bp).min(FTP_MAX_BP);
+        let overlap_ftp_bp = (overlap_months * ftp_rate_bp).min(FTP_MAX_BP);
         ((tax as i128) * (overlap_ftp_bp as i128) / 10_000) as i64
     };
 
@@ -168,8 +167,8 @@ pub fn compute(input: &Section6651Input) -> Section6651Result {
     };
 
     // Reasonable-cause defense — not applicable to fraud.
-    let reasonable_cause_defense_applies = input.reasonable_cause_established
-        && !input.failure_to_file_is_fraudulent;
+    let reasonable_cause_defense_applies =
+        input.reasonable_cause_established && !input.failure_to_file_is_fraudulent;
 
     let mut total_penalty = if reasonable_cause_defense_applies {
         0
@@ -179,13 +178,17 @@ pub fn compute(input: &Section6651Input) -> Section6651Result {
 
     // Apply minimum-penalty floor — total cannot fall below the
     // §6651(g) amount when triggered.
-    if minimum_floor_triggered && !reasonable_cause_defense_applies && total_penalty < minimum_penalty
+    if minimum_floor_triggered
+        && !reasonable_cause_defense_applies
+        && total_penalty < minimum_penalty
     {
         total_penalty = minimum_penalty;
     }
 
-    let mut note_parts =
-        vec![format!("Tax required ${}; months late filing {}; months late paying {}", tax, input.months_late_filing, input.months_late_paying)];
+    let mut note_parts = vec![format!(
+        "Tax required ${}; months late filing {}; months late paying {}",
+        tax, input.months_late_filing, input.months_late_paying
+    )];
     if installment_rate_applies {
         note_parts.push("§6651(h) installment-rate 0.25%/month applies".to_string());
     }
@@ -199,9 +202,7 @@ pub fn compute(input: &Section6651Input) -> Section6651Result {
     if minimum_floor_triggered {
         note_parts.push(format!(
             "§6651(g) minimum-penalty floor ${} (lesser of inflation amount ${} or 100% tax ${})",
-            minimum_penalty,
-            input.minimum_penalty_inflation_adjusted_dollars,
-            tax,
+            minimum_penalty, input.minimum_penalty_inflation_adjusted_dollars, tax,
         ));
     }
     if reasonable_cause_defense_applies {

@@ -138,8 +138,7 @@ pub fn check(input: &MoldCheckInput) -> MoldCheckResult {
         ));
     }
 
-    if rule.move_in_report_mold_notation_required && !input.move_in_report_included_mold_notation
-    {
+    if rule.move_in_report_mold_notation_required && !input.move_in_report_included_mold_notation {
         violations.push(format!(
             "{} requires move-in report to include visible-mold notation; not included",
             rule.state_name
@@ -167,7 +166,10 @@ pub fn check(input: &MoldCheckInput) -> MoldCheckResult {
 
     let complies = violations.is_empty();
     let note = if complies {
-        format!("{}: mold-disclosure / remediation requirements satisfied", rule.state_name)
+        format!(
+            "{}: mold-disclosure / remediation requirements satisfied",
+            rule.state_name
+        )
     } else {
         format!(
             "{}: {} mold-compliance violation(s)",
@@ -213,10 +215,46 @@ const fn rule(
 static TABLE: Lazy<HashMap<&'static str, &'static StateMoldRule>> = Lazy::new(|| {
     use MoldRegime::*;
     static RULES: &[StateMoldRule] = &[
-        rule("AK", "Alaska", NoStateStatute, false, false, false, None, "no statewide statute"),
-        rule("AL", "Alabama", HabitabilityCovenantOnly, false, false, false, None, "Ala. Code § 35-9A-204"),
-        rule("AR", "Arkansas", NoStateStatute, false, false, false, None, "no statewide statute"),
-        rule("AZ", "Arizona", HabitabilityCovenantOnly, false, false, false, None, "A.R.S. § 33-1324"),
+        rule(
+            "AK",
+            "Alaska",
+            NoStateStatute,
+            false,
+            false,
+            false,
+            None,
+            "no statewide statute",
+        ),
+        rule(
+            "AL",
+            "Alabama",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "Ala. Code § 35-9A-204",
+        ),
+        rule(
+            "AR",
+            "Arkansas",
+            NoStateStatute,
+            false,
+            false,
+            false,
+            None,
+            "no statewide statute",
+        ),
+        rule(
+            "AZ",
+            "Arizona",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "A.R.S. § 33-1324",
+        ),
         rule(
             "CA",
             "California",
@@ -227,16 +265,106 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateMoldRule>> = Lazy::new(||
             None,
             "Cal. Civ. Code § 1941.7 + Toxic Mold Protection Act (Health & Safety Code § 26100)",
         ),
-        rule("CO", "Colorado", HabitabilityCovenantOnly, false, false, false, None, "C.R.S. § 38-12-505"),
-        rule("CT", "Connecticut", HabitabilityCovenantOnly, false, false, false, None, "Conn. Gen. Stat. § 47a-7"),
-        rule("DC", "District of Columbia", HabitabilityCovenantOnly, false, false, false, None, "14 DCMR § 700"),
-        rule("DE", "Delaware", HabitabilityCovenantOnly, false, false, false, None, "25 Del. C. § 5305 (general habitability)"),
-        rule("FL", "Florida", HabitabilityCovenantOnly, false, false, false, None, "Fla. Stat. § 83.51"),
-        rule("GA", "Georgia", NoStateStatute, false, false, false, None, "no statewide statute"),
-        rule("HI", "Hawaii", HabitabilityCovenantOnly, false, false, false, None, "HRS § 521-42"),
-        rule("IA", "Iowa", HabitabilityCovenantOnly, false, false, false, None, "Iowa Code § 562A.15"),
-        rule("ID", "Idaho", NoStateStatute, false, false, false, None, "no statewide statute"),
-        rule("IL", "Illinois", HabitabilityCovenantOnly, false, false, false, None, "Chicago RLTO § 5-12-130"),
+        rule(
+            "CO",
+            "Colorado",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "C.R.S. § 38-12-505",
+        ),
+        rule(
+            "CT",
+            "Connecticut",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "Conn. Gen. Stat. § 47a-7",
+        ),
+        rule(
+            "DC",
+            "District of Columbia",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "14 DCMR § 700",
+        ),
+        rule(
+            "DE",
+            "Delaware",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "25 Del. C. § 5305 (general habitability)",
+        ),
+        rule(
+            "FL",
+            "Florida",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "Fla. Stat. § 83.51",
+        ),
+        rule(
+            "GA",
+            "Georgia",
+            NoStateStatute,
+            false,
+            false,
+            false,
+            None,
+            "no statewide statute",
+        ),
+        rule(
+            "HI",
+            "Hawaii",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "HRS § 521-42",
+        ),
+        rule(
+            "IA",
+            "Iowa",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "Iowa Code § 562A.15",
+        ),
+        rule(
+            "ID",
+            "Idaho",
+            NoStateStatute,
+            false,
+            false,
+            false,
+            None,
+            "no statewide statute",
+        ),
+        rule(
+            "IL",
+            "Illinois",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "Chicago RLTO § 5-12-130",
+        ),
         rule(
             "IN",
             "Indiana",
@@ -247,10 +375,46 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateMoldRule>> = Lazy::new(||
             None,
             "Ind. Code § 32-31-8-5 (habitability + investigate reports)",
         ),
-        rule("KS", "Kansas", HabitabilityCovenantOnly, false, false, false, None, "K.S.A. § 58-2553"),
-        rule("KY", "Kentucky", HabitabilityCovenantOnly, false, false, false, None, "KRS § 383.595"),
-        rule("LA", "Louisiana", NoStateStatute, false, false, false, None, "no statewide statute"),
-        rule("MA", "Massachusetts", HabitabilityCovenantOnly, false, false, false, None, "M.G.L. c. 111 § 127A"),
+        rule(
+            "KS",
+            "Kansas",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "K.S.A. § 58-2553",
+        ),
+        rule(
+            "KY",
+            "Kentucky",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "KRS § 383.595",
+        ),
+        rule(
+            "LA",
+            "Louisiana",
+            NoStateStatute,
+            false,
+            false,
+            false,
+            None,
+            "no statewide statute",
+        ),
+        rule(
+            "MA",
+            "Massachusetts",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "M.G.L. c. 111 § 127A",
+        ),
         rule(
             "MD",
             "Maryland",
@@ -261,16 +425,106 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateMoldRule>> = Lazy::new(||
             Some(30),
             "Md. Code Real Prop. § 8-208.2 (Healthy Homes Act 2008, expanded 2025)",
         ),
-        rule("ME", "Maine", HabitabilityCovenantOnly, false, false, false, None, "14 M.R.S. § 6021"),
-        rule("MI", "Michigan", HabitabilityCovenantOnly, false, false, false, None, "MCL § 554.139"),
-        rule("MN", "Minnesota", HabitabilityCovenantOnly, false, false, false, None, "Minn. Stat. § 504B.181"),
-        rule("MO", "Missouri", NoStateStatute, false, false, false, None, "no statewide statute"),
-        rule("MS", "Mississippi", NoStateStatute, false, false, false, None, "no statewide statute"),
-        rule("MT", "Montana", HabitabilityCovenantOnly, false, false, false, None, "Mont. Code § 70-24-303"),
-        rule("NC", "North Carolina", HabitabilityCovenantOnly, false, false, false, None, "N.C.G.S. § 42-42"),
-        rule("ND", "North Dakota", HabitabilityCovenantOnly, false, false, false, None, "N.D.C.C. § 47-16-13.1"),
-        rule("NE", "Nebraska", HabitabilityCovenantOnly, false, false, false, None, "Neb. Rev. Stat. § 76-1419"),
-        rule("NH", "New Hampshire", HabitabilityCovenantOnly, false, false, false, None, "RSA § 540-A"),
+        rule(
+            "ME",
+            "Maine",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "14 M.R.S. § 6021",
+        ),
+        rule(
+            "MI",
+            "Michigan",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "MCL § 554.139",
+        ),
+        rule(
+            "MN",
+            "Minnesota",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "Minn. Stat. § 504B.181",
+        ),
+        rule(
+            "MO",
+            "Missouri",
+            NoStateStatute,
+            false,
+            false,
+            false,
+            None,
+            "no statewide statute",
+        ),
+        rule(
+            "MS",
+            "Mississippi",
+            NoStateStatute,
+            false,
+            false,
+            false,
+            None,
+            "no statewide statute",
+        ),
+        rule(
+            "MT",
+            "Montana",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "Mont. Code § 70-24-303",
+        ),
+        rule(
+            "NC",
+            "North Carolina",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "N.C.G.S. § 42-42",
+        ),
+        rule(
+            "ND",
+            "North Dakota",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "N.D.C.C. § 47-16-13.1",
+        ),
+        rule(
+            "NE",
+            "Nebraska",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "Neb. Rev. Stat. § 76-1419",
+        ),
+        rule(
+            "NH",
+            "New Hampshire",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "RSA § 540-A",
+        ),
         rule(
             "NJ",
             "New Jersey",
@@ -281,8 +535,26 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateMoldRule>> = Lazy::new(||
             None,
             "Mold Safe Housing Act pending since 2013; habitability covenant applies",
         ),
-        rule("NM", "New Mexico", HabitabilityCovenantOnly, false, false, false, None, "NMSA § 47-8-20"),
-        rule("NV", "Nevada", HabitabilityCovenantOnly, false, false, false, None, "NRS § 118A.290"),
+        rule(
+            "NM",
+            "New Mexico",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "NMSA § 47-8-20",
+        ),
+        rule(
+            "NV",
+            "Nevada",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "NRS § 118A.290",
+        ),
         rule(
             "NY",
             "New York",
@@ -293,16 +565,106 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateMoldRule>> = Lazy::new(||
             None,
             "NYC Local Law 55 of 2018 (Asthma-Free Housing Act) — NYC only; state has no statute",
         ),
-        rule("OH", "Ohio", HabitabilityCovenantOnly, false, false, false, None, "ORC § 5321.04"),
-        rule("OK", "Oklahoma", HabitabilityCovenantOnly, false, false, false, None, "41 O.S. § 118"),
-        rule("OR", "Oregon", HabitabilityCovenantOnly, false, false, false, None, "ORS § 90.320"),
-        rule("PA", "Pennsylvania", HabitabilityCovenantOnly, false, false, false, None, "Pugh v. Holmes (1979)"),
-        rule("RI", "Rhode Island", HabitabilityCovenantOnly, false, false, false, None, "R.I.G.L. § 34-18-22"),
-        rule("SC", "South Carolina", HabitabilityCovenantOnly, false, false, false, None, "S.C. Code § 27-40-440"),
-        rule("SD", "South Dakota", NoStateStatute, false, false, false, None, "no statewide statute"),
-        rule("TN", "Tennessee", HabitabilityCovenantOnly, false, false, false, None, "Tenn. Code § 66-28-304"),
-        rule("TX", "Texas", HabitabilityCovenantOnly, false, false, false, None, "Tex. Prop. Code § 92.052"),
-        rule("UT", "Utah", HabitabilityCovenantOnly, false, false, false, None, "Utah Code § 57-22-4"),
+        rule(
+            "OH",
+            "Ohio",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "ORC § 5321.04",
+        ),
+        rule(
+            "OK",
+            "Oklahoma",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "41 O.S. § 118",
+        ),
+        rule(
+            "OR",
+            "Oregon",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "ORS § 90.320",
+        ),
+        rule(
+            "PA",
+            "Pennsylvania",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "Pugh v. Holmes (1979)",
+        ),
+        rule(
+            "RI",
+            "Rhode Island",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "R.I.G.L. § 34-18-22",
+        ),
+        rule(
+            "SC",
+            "South Carolina",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "S.C. Code § 27-40-440",
+        ),
+        rule(
+            "SD",
+            "South Dakota",
+            NoStateStatute,
+            false,
+            false,
+            false,
+            None,
+            "no statewide statute",
+        ),
+        rule(
+            "TN",
+            "Tennessee",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "Tenn. Code § 66-28-304",
+        ),
+        rule(
+            "TX",
+            "Texas",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "Tex. Prop. Code § 92.052",
+        ),
+        rule(
+            "UT",
+            "Utah",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "Utah Code § 57-22-4",
+        ),
         rule(
             "VA",
             "Virginia",
@@ -313,11 +675,56 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateMoldRule>> = Lazy::new(||
             None,
             "Va. Code § 55.1-1215 (move-in report visible mold)",
         ),
-        rule("VT", "Vermont", HabitabilityCovenantOnly, false, false, false, None, "9 V.S.A. § 4457"),
-        rule("WA", "Washington", HabitabilityCovenantOnly, false, false, false, None, "RCW § 59.18.060"),
-        rule("WI", "Wisconsin", HabitabilityCovenantOnly, false, false, false, None, "Wis. Stat. § 704.07"),
-        rule("WV", "West Virginia", HabitabilityCovenantOnly, false, false, false, None, "W. Va. Code § 37-6-30"),
-        rule("WY", "Wyoming", NoStateStatute, false, false, false, None, "no statewide statute"),
+        rule(
+            "VT",
+            "Vermont",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "9 V.S.A. § 4457",
+        ),
+        rule(
+            "WA",
+            "Washington",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "RCW § 59.18.060",
+        ),
+        rule(
+            "WI",
+            "Wisconsin",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "Wis. Stat. § 704.07",
+        ),
+        rule(
+            "WV",
+            "West Virginia",
+            HabitabilityCovenantOnly,
+            false,
+            false,
+            false,
+            None,
+            "W. Va. Code § 37-6-30",
+        ),
+        rule(
+            "WY",
+            "Wyoming",
+            NoStateStatute,
+            false,
+            false,
+            false,
+            None,
+            "no statewide statute",
+        ),
     ];
     RULES.iter().map(|r| (r.state_code, r)).collect()
 });
@@ -350,7 +757,10 @@ mod tests {
         i.pre_lease_disclosure_made = false;
         let r = check(&i);
         assert!(!r.complies);
-        assert!(r.violations.iter().any(|v| v.contains("pre-lease disclosure")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("pre-lease disclosure")));
     }
 
     #[test]
@@ -370,7 +780,10 @@ mod tests {
         i.annual_inspection_completed = false;
         let r = check(&i);
         assert!(!r.complies);
-        assert!(r.violations.iter().any(|v| v.contains("annual mold inspection")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("annual mold inspection")));
     }
 
     #[test]
@@ -382,7 +795,10 @@ mod tests {
         i.remediation_completed = false;
         let r = check(&i);
         assert!(!r.complies);
-        assert!(r.violations.iter().any(|v| v.contains("remediation within 30d")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("remediation within 30d")));
     }
 
     #[test]
@@ -488,7 +904,10 @@ mod tests {
         // NY (NYC LL55) is the only state with ComprehensiveAnnualInspection
         // regime.
         let ny = lookup("NY").unwrap();
-        assert!(matches!(ny.regime, MoldRegime::ComprehensiveAnnualInspection));
+        assert!(matches!(
+            ny.regime,
+            MoldRegime::ComprehensiveAnnualInspection
+        ));
     }
 
     #[test]

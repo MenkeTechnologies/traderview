@@ -34,28 +34,43 @@ pub struct GpdFitReport {
 }
 
 pub fn fit(losses: &[f64], threshold: f64) -> Option<GpdFitReport> {
-    if !threshold.is_finite() { return None; }
-    let exceedances: Vec<f64> = losses.iter().copied()
+    if !threshold.is_finite() {
+        return None;
+    }
+    let exceedances: Vec<f64> = losses
+        .iter()
+        .copied()
         .filter(|x| x.is_finite() && *x > threshold)
         .map(|x| x - threshold)
         .collect();
     let n = exceedances.len();
-    if n < 10 { return None; }
+    if n < 10 {
+        return None;
+    }
     let n_f = n as f64;
     let mut sorted = exceedances.clone();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     let a0: f64 = sorted.iter().sum::<f64>() / n_f;
     // a_1 = (1/n) · Σ y_i · (n − rank_i) / (n − 1)
     //     where rank_i is 1-based ASCENDING rank.
-    let a1: f64 = sorted.iter().enumerate().map(|(i, y)| {
-        let rank = (i + 1) as f64;
-        y * (n_f - rank) / (n_f - 1.0)
-    }).sum::<f64>() / n_f;
+    let a1: f64 = sorted
+        .iter()
+        .enumerate()
+        .map(|(i, y)| {
+            let rank = (i + 1) as f64;
+            y * (n_f - rank) / (n_f - 1.0)
+        })
+        .sum::<f64>()
+        / n_f;
     let denom = a0 - 2.0 * a1;
-    if denom.abs() < 1e-18 { return None; }
+    if denom.abs() < 1e-18 {
+        return None;
+    }
     let xi = 2.0 - a0 / denom;
     let beta = 2.0 * a0 * a1 / denom;
-    if !xi.is_finite() || !beta.is_finite() || beta <= 0.0 { return None; }
+    if !xi.is_finite() || !beta.is_finite() || beta <= 0.0 {
+        return None;
+    }
     Some(GpdFitReport {
         shape_xi: xi,
         scale_beta: beta,
@@ -71,16 +86,19 @@ mod tests {
 
     fn simulate_gpd(n: usize, xi: f64, beta: f64, seed: u64) -> Vec<f64> {
         let mut state = seed;
-        (0..n).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
-            if xi.abs() < 1e-9 {
-                -beta * (1.0 - u).ln()
-            } else {
-                beta / xi * ((1.0 - u).powf(-xi) - 1.0)
-            }
-        }).collect()
+        (0..n)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
+                if xi.abs() < 1e-9 {
+                    -beta * (1.0 - u).ln()
+                } else {
+                    beta / xi * ((1.0 - u).powf(-xi) - 1.0)
+                }
+            })
+            .collect()
     }
 
     #[test]
@@ -108,8 +126,7 @@ mod tests {
         // Simulate GPD with ξ = 0.3 → fit should recover positive shape.
         let losses = simulate_gpd(2000, 0.3, 1.0, 42);
         let r = fit(&losses, 0.0).unwrap();
-        assert!(r.shape_xi > 0.1,
-            "expected ξ ≈ 0.3, got {}", r.shape_xi);
+        assert!(r.shape_xi > 0.1, "expected ξ ≈ 0.3, got {}", r.shape_xi);
         assert!(r.scale_beta > 0.0);
     }
 
@@ -118,8 +135,11 @@ mod tests {
         // ξ = 0 → exponential tail; fit should recover ξ ≈ 0.
         let losses = simulate_gpd(2000, 0.0, 1.5, 7);
         let r = fit(&losses, 0.0).unwrap();
-        assert!(r.shape_xi.abs() < 0.15,
-            "expected ξ ≈ 0, got {}", r.shape_xi);
+        assert!(
+            r.shape_xi.abs() < 0.15,
+            "expected ξ ≈ 0, got {}",
+            r.shape_xi
+        );
     }
 
     #[test]
@@ -132,8 +152,9 @@ mod tests {
 
     #[test]
     fn mean_exceedance_reported() {
-        let losses = vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9,
-            1.0, 1.1, 1.2, 1.3, 1.4, 1.5];
+        let losses = vec![
+            0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5,
+        ];
         let r = fit(&losses, 0.05);
         if let Some(rep) = r {
             assert!(rep.mean_exceedance > 0.0);

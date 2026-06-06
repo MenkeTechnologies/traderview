@@ -37,17 +37,23 @@ pub struct MicropriceReport {
 }
 
 pub fn compute(q: &Quote) -> Option<MicropriceReport> {
-    if !q.bid_price.is_finite() || q.bid_price <= 0.0
-        || !q.ask_price.is_finite() || q.ask_price <= 0.0
-        || !q.bid_size.is_finite() || q.bid_size <= 0.0
-        || !q.ask_size.is_finite() || q.ask_size <= 0.0
+    if !q.bid_price.is_finite()
+        || q.bid_price <= 0.0
+        || !q.ask_price.is_finite()
+        || q.ask_price <= 0.0
+        || !q.bid_size.is_finite()
+        || q.bid_size <= 0.0
+        || !q.ask_size.is_finite()
+        || q.ask_size <= 0.0
         || q.bid_price > q.ask_price
     {
         return None;
     }
     let mid = (q.bid_price + q.ask_price) / 2.0;
     let total_size = q.bid_size + q.ask_size;
-    if total_size <= 0.0 { return None; }
+    if total_size <= 0.0 {
+        return None;
+    }
     // Stoikov microprice: bid_p weighted by ASK size, ask_p by BID size.
     let micro = (q.bid_price * q.ask_size + q.ask_price * q.bid_size) / total_size;
     let imbalance = (q.bid_size - q.ask_size) / total_size;
@@ -74,7 +80,12 @@ mod tests {
     use super::*;
 
     fn q(bp: f64, bs: f64, ap: f64, as_: f64) -> Quote {
-        Quote { bid_price: bp, bid_size: bs, ask_price: ap, ask_size: as_ }
+        Quote {
+            bid_price: bp,
+            bid_size: bs,
+            ask_price: ap,
+            ask_size: as_,
+        }
     }
 
     #[test]

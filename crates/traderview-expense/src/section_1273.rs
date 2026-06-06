@@ -153,7 +153,8 @@ pub fn compute(input: &Section1273Input) -> Section1273Result {
                  includes services)",
             ),
             IssueClass::Residual => (
-                srpm.saturating_sub(input.residual_oid_amount_cents.max(0)).max(0),
+                srpm.saturating_sub(input.residual_oid_amount_cents.max(0))
+                    .max(0),
                 "§ 1273(b)(4) — residual case; issue price = stated redemption price minus OID. \
                  Caller-supplied OID amount typically reflects § 1274 AFR-imputed OID.",
                 "26 U.S.C. § 1273(b)(4) (residual case — SRPM − OID); § 1274 (AFR-imputed OID \
@@ -382,11 +383,10 @@ mod tests {
             0,
         ));
         assert_eq!(r.issue_price_cents, 85_000);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1273(b)(1)") && n.contains("initial offering"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1273(b)(1)") && n.contains("initial offering")));
     }
 
     // ── § 1273(b)(2) non-public cash ───────────────────────────
@@ -405,11 +405,10 @@ mod tests {
         assert_eq!(r.issue_price_cents, 85_000);
         assert_eq!(r.raw_oid_cents, 15_000);
         assert!(r.citation.contains("§ 1273(b)(2)"));
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1273(b)(2)") && n.contains("first buyer"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1273(b)(2)") && n.contains("first buyer")));
     }
 
     // ── § 1273(b)(3) traded debt FMV ───────────────────────────
@@ -429,11 +428,11 @@ mod tests {
         assert_eq!(r.raw_oid_cents, 20_000);
         assert!(r.citation.contains("§ 1273(b)(3)"));
         assert!(r.citation.contains("§ 1273(b)(5)"));
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1273(b)(3)") && n.contains("FMV") || n.contains("fair market value"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1273(b)(3)") && n.contains("FMV")
+                || n.contains("fair market value")));
     }
 
     // ── § 1273(b)(4) residual ─────────────────────────────────
@@ -458,15 +457,7 @@ mod tests {
 
     #[test]
     fn residual_caller_oid_exceeds_srpm_clamps_at_zero_issue_price() {
-        let r = compute(&input(
-            IssueClass::Residual,
-            100_000,
-            5,
-            0,
-            0,
-            0,
-            150_000,
-        ));
+        let r = compute(&input(IssueClass::Residual, 100_000, 5, 0, 0, 0, 150_000));
         assert_eq!(r.issue_price_cents, 0);
         assert_eq!(r.raw_oid_cents, 100_000);
     }
@@ -622,24 +613,8 @@ mod tests {
             0,
             0,
         ));
-        let traded = compute(&input(
-            IssueClass::TradedDebt,
-            100_000,
-            5,
-            0,
-            0,
-            80_000,
-            0,
-        ));
-        let residual = compute(&input(
-            IssueClass::Residual,
-            100_000,
-            5,
-            0,
-            0,
-            0,
-            15_000,
-        ));
+        let traded = compute(&input(IssueClass::TradedDebt, 100_000, 5, 0, 0, 80_000, 0));
+        let residual = compute(&input(IssueClass::Residual, 100_000, 5, 0, 0, 0, 15_000));
         assert!(pub_off.citation.contains("§ 1273(b)(1)"));
         assert!(non_pub.citation.contains("§ 1273(b)(2)"));
         assert!(traded.citation.contains("§ 1273(b)(3)"));
@@ -696,47 +671,23 @@ mod tests {
             0,
             0,
         ));
-        let traded = compute(&input(
-            IssueClass::TradedDebt,
-            100_000,
-            5,
-            0,
-            0,
-            80_000,
-            0,
-        ));
-        let residual = compute(&input(
-            IssueClass::Residual,
-            100_000,
-            5,
-            0,
-            0,
-            0,
-            15_000,
-        ));
-        assert!(
-            pub_off
-                .notes
-                .iter()
-                .any(|n| n.contains("§ 1273(b)(1)") && n.contains("initial offering"))
-        );
-        assert!(
-            non_pub
-                .notes
-                .iter()
-                .any(|n| n.contains("§ 1273(b)(2)") && n.contains("first buyer"))
-        );
-        assert!(
-            traded
-                .notes
-                .iter()
-                .any(|n| n.contains("§ 1273(b)(3)") && n.contains("fair market value"))
-        );
-        assert!(
-            residual
-                .notes
-                .iter()
-                .any(|n| n.contains("§ 1273(b)(4)") && n.contains("§ 1274"))
-        );
+        let traded = compute(&input(IssueClass::TradedDebt, 100_000, 5, 0, 0, 80_000, 0));
+        let residual = compute(&input(IssueClass::Residual, 100_000, 5, 0, 0, 0, 15_000));
+        assert!(pub_off
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1273(b)(1)") && n.contains("initial offering")));
+        assert!(non_pub
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1273(b)(2)") && n.contains("first buyer")));
+        assert!(traded
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1273(b)(3)") && n.contains("fair market value")));
+        assert!(residual
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1273(b)(4)") && n.contains("§ 1274")));
     }
 }

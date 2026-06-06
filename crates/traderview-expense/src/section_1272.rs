@@ -179,7 +179,10 @@ pub fn compute(input: &Section1272Input) -> Section1272Result {
 
     // § 1272(a)(6) — REMIC + prepayable mortgage-backed PV
     // methodology. Caller-supplied annual accrual is used directly.
-    if matches!(input.debt_type, DebtInstrumentType::PrepayableMortgageBacked) {
+    if matches!(
+        input.debt_type,
+        DebtInstrumentType::PrepayableMortgageBacked
+    ) {
         let pv_accrual = input.prepayable_pv_annual_accrual_cents.max(0);
         notes.push(
             "§ 1272(a)(6) — prepayable debt instrument (REMIC interest or accelerated-payment \
@@ -220,17 +223,13 @@ pub fn compute(input: &Section1272Input) -> Section1272Result {
     let premium_reduction = if acquisition_premium > 0 && denominator > 0 {
         // Reduction = daily_portion × (premium / denominator).
         // Cap reduction at the daily portion (can't reduce below 0).
-        let computed = daily_portion_total
-            .saturating_mul(acquisition_premium)
-            / denominator;
+        let computed = daily_portion_total.saturating_mul(acquisition_premium) / denominator;
         computed.min(daily_portion_total)
     } else {
         0
     };
 
-    let current_year_inclusion = daily_portion_total
-        .saturating_sub(premium_reduction)
-        .max(0);
+    let current_year_inclusion = daily_portion_total.saturating_sub(premium_reduction).max(0);
 
     if premium_reduction > 0 {
         notes.push(
@@ -330,11 +329,10 @@ mod tests {
         assert_eq!(r.raw_oid_increase_for_year_cents, 3_000);
         assert_eq!(r.daily_portion_total_cents, 821);
         assert_eq!(r.current_year_oid_inclusion_cents, 821);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1272(a)(3)") && n.contains("proration"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1272(a)(3)") && n.contains("proration")));
     }
 
     #[test]
@@ -481,11 +479,10 @@ mod tests {
         assert!(r.annual_inclusion_required);
         assert_eq!(r.current_year_oid_inclusion_cents, 4_500);
         assert!(r.citation.contains("§ 1272(a)(6)"));
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1272(a)(6)") && n.contains("PV"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1272(a)(6)") && n.contains("PV")));
     }
 
     #[test]
@@ -524,11 +521,10 @@ mod tests {
         assert_eq!(r.daily_portion_total_cents, 3_000);
         assert_eq!(r.acquisition_premium_reduction_cents, 1_200);
         assert_eq!(r.current_year_oid_inclusion_cents, 1_800);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1272(a)(7)") && n.contains("acquisition-premium"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1272(a)(7)") && n.contains("acquisition-premium")));
     }
 
     #[test]
@@ -824,16 +820,13 @@ mod tests {
             0,
             0,
         ));
-        assert!(
-            !full.notes
-                .iter()
-                .any(|n| n.contains("§ 1272(a)(3)") && n.contains("proration"))
-        );
-        assert!(
-            partial
-                .notes
-                .iter()
-                .any(|n| n.contains("§ 1272(a)(3)") && n.contains("proration"))
-        );
+        assert!(!full
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1272(a)(3)") && n.contains("proration")));
+        assert!(partial
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1272(a)(3)") && n.contains("proration")));
     }
 }

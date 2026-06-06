@@ -34,37 +34,54 @@ pub struct Report {
 
 pub fn compute(series: &[f64], max_imfs: usize, max_sift_iter: u32) -> Option<Report> {
     let n = series.len();
-    if n < 8 || max_imfs == 0 || max_sift_iter == 0 { return None; }
-    if series.iter().any(|x| !x.is_finite()) { return None; }
+    if n < 8 || max_imfs == 0 || max_sift_iter == 0 {
+        return None;
+    }
+    if series.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let mut residual = series.to_vec();
     let mut imfs: Vec<Vec<f64>> = Vec::new();
     let mut iterations = Vec::new();
     for _ in 0..max_imfs {
         // If residual has too few extrema, stop — it's a monotone trend.
         let (max_idx, min_idx) = find_extrema(&residual);
-        if max_idx.len() < 2 || min_idx.len() < 2 { break; }
+        if max_idx.len() < 2 || min_idx.len() < 2 {
+            break;
+        }
         let mut h = residual.clone();
         let mut iters = 0_u32;
         for _ in 0..max_sift_iter {
             iters += 1;
             let (max_idx, min_idx) = find_extrema(&h);
-            if max_idx.len() < 2 || min_idx.len() < 2 { break; }
+            if max_idx.len() < 2 || min_idx.len() < 2 {
+                break;
+            }
             let upper = linear_envelope(&h, &max_idx);
             let lower = linear_envelope(&h, &min_idx);
-            let mean: Vec<f64> = upper.iter().zip(lower.iter())
-                .map(|(u, l)| 0.5 * (u + l)).collect();
+            let mean: Vec<f64> = upper
+                .iter()
+                .zip(lower.iter())
+                .map(|(u, l)| 0.5 * (u + l))
+                .collect();
             let new_h: Vec<f64> = h.iter().zip(mean.iter()).map(|(a, b)| a - b).collect();
             // Convergence: low-mean of envelope mean over series.
             let abs_mean: f64 = mean.iter().map(|x| x.abs()).sum::<f64>() / n as f64;
             let signal_scale: f64 = h.iter().map(|x| x.abs()).sum::<f64>() / n as f64;
             h = new_h;
-            if abs_mean < signal_scale * 1e-3 || abs_mean < 1e-10 { break; }
+            if abs_mean < signal_scale * 1e-3 || abs_mean < 1e-10 {
+                break;
+            }
         }
         iterations.push(iters);
         residual = residual.iter().zip(h.iter()).map(|(r, i)| r - i).collect();
         imfs.push(h);
     }
-    Some(Report { imfs, residual, iterations })
+    Some(Report {
+        imfs,
+        residual,
+        iterations,
+    })
 }
 
 fn find_extrema(series: &[f64]) -> (Vec<usize>, Vec<usize>) {
@@ -72,13 +89,16 @@ fn find_extrema(series: &[f64]) -> (Vec<usize>, Vec<usize>) {
     let mut maxima = Vec::new();
     let mut minima = Vec::new();
     for i in 1..n - 1 {
-        if series[i] > series[i - 1] && series[i] > series[i + 1] { maxima.push(i); }
-        else if series[i] < series[i - 1] && series[i] < series[i + 1] { minima.push(i); }
+        if series[i] > series[i - 1] && series[i] > series[i + 1] {
+            maxima.push(i);
+        } else if series[i] < series[i - 1] && series[i] < series[i + 1] {
+            minima.push(i);
+        }
     }
     (maxima, minima)
 }
 
-/// Linear interpolation through the (idx, series[idx]) points, with the
+/// Linear interpolation through the `(idx, series\[idx\])` points, with the
 /// series endpoints treated as additional anchors so the envelope spans
 /// the full signal.
 fn linear_envelope(series: &[f64], indices: &[usize]) -> Vec<f64> {
@@ -103,9 +123,15 @@ fn linear_envelope(series: &[f64], indices: &[usize]) -> Vec<f64> {
     let mut out = vec![0.0_f64; n];
     let mut seg = 0;
     for i in 0..n {
-        while seg + 1 < anchors.len() && i > anchors[seg + 1].0 { seg += 1; }
+        while seg + 1 < anchors.len() && i > anchors[seg + 1].0 {
+            seg += 1;
+        }
         let (x0, y0) = anchors[seg];
-        let (x1, y1) = if seg + 1 < anchors.len() { anchors[seg + 1] } else { (x0, y0) };
+        let (x1, y1) = if seg + 1 < anchors.len() {
+            anchors[seg + 1]
+        } else {
+            (x0, y0)
+        };
         if x0 == x1 {
             out[i] = y0;
         } else {
@@ -123,7 +149,7 @@ mod tests {
     #[test]
     fn invalid_inputs_return_none() {
         let s = vec![1.0_f64; 5];
-        assert!(compute(&s, 5, 100).is_none());            // n < 8
+        assert!(compute(&s, 5, 100).is_none()); // n < 8
         let s2 = vec![1.0_f64; 50];
         assert!(compute(&s2, 0, 100).is_none());
         assert!(compute(&s2, 5, 0).is_none());
@@ -138,14 +164,16 @@ mod tests {
         let r = compute(&s, 5, 50).unwrap();
         assert_eq!(r.imfs.len(), 0);
         // Residual equals input.
-        for v in &r.residual { assert!((v - 5.0).abs() < 1e-9); }
+        for v in &r.residual {
+            assert!((v - 5.0).abs() < 1e-9);
+        }
     }
 
     #[test]
     fn sum_of_components_equals_input() {
-        let s: Vec<f64> = (0..100).map(|i|
-            (i as f64 * 0.5).sin() + (i as f64 * 0.05).cos() + 0.01 * i as f64
-        ).collect();
+        let s: Vec<f64> = (0..100)
+            .map(|i| (i as f64 * 0.5).sin() + (i as f64 * 0.05).cos() + 0.01 * i as f64)
+            .collect();
         let r = compute(&s, 4, 50).unwrap();
         for i in 0..100 {
             let sum: f64 = r.imfs.iter().map(|imf| imf[i]).sum::<f64>() + r.residual[i];
@@ -166,7 +194,9 @@ mod tests {
         let s: Vec<f64> = (0..100).map(|i| (i as f64 * 0.2).sin()).collect();
         let r = compute(&s, 3, 50).unwrap();
         assert_eq!(r.residual.len(), 100);
-        for imf in &r.imfs { assert_eq!(imf.len(), 100); }
+        for imf in &r.imfs {
+            assert_eq!(imf.len(), 100);
+        }
     }
 
     #[test]

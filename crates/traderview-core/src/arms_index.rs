@@ -47,30 +47,39 @@ pub fn compute(bars: &[BreadthBar]) -> TrinReport {
     if bars.is_empty() {
         return TrinReport::default();
     }
-    let series: Vec<Option<f64>> = bars.iter().map(|b| {
-        // Guard against division-by-zero AND NaN/Inf inputs. The naive
-        // `<= 0.0` guards used to slip NaN through (every NaN comparison
-        // is false), producing Some(NaN) in the report.
-        if b.declining_issues == 0
-            || !b.declining_volume.is_finite() || b.declining_volume <= 0.0
-            || !b.advancing_volume.is_finite() || b.advancing_volume <= 0.0
-        {
-            return None;
-        }
-        let issues_ratio = b.advancing_issues as f64 / b.declining_issues as f64;
-        let volume_ratio = b.advancing_volume / b.declining_volume;
-        Some(issues_ratio / volume_ratio)
-    }).collect();
+    let series: Vec<Option<f64>> = bars
+        .iter()
+        .map(|b| {
+            // Guard against division-by-zero AND NaN/Inf inputs. The naive
+            // `<= 0.0` guards used to slip NaN through (every NaN comparison
+            // is false), producing Some(NaN) in the report.
+            if b.declining_issues == 0
+                || !b.declining_volume.is_finite()
+                || b.declining_volume <= 0.0
+                || !b.advancing_volume.is_finite()
+                || b.advancing_volume <= 0.0
+            {
+                return None;
+            }
+            let issues_ratio = b.advancing_issues as f64 / b.declining_issues as f64;
+            let volume_ratio = b.advancing_volume / b.declining_volume;
+            Some(issues_ratio / volume_ratio)
+        })
+        .collect();
     let latest = series.last().copied().flatten();
     let signal = match latest {
-        Some(v) if v < 0.5  => TrinSignal::StrongBuy,
-        Some(v) if v < 0.8  => TrinSignal::Buy,
-        Some(v) if v > 2.0  => TrinSignal::StrongSell,
-        Some(v) if v > 1.2  => TrinSignal::Sell,
-        Some(_)             => TrinSignal::Neutral,
-        None                => TrinSignal::Neutral,
+        Some(v) if v < 0.5 => TrinSignal::StrongBuy,
+        Some(v) if v < 0.8 => TrinSignal::Buy,
+        Some(v) if v > 2.0 => TrinSignal::StrongSell,
+        Some(v) if v > 1.2 => TrinSignal::Sell,
+        Some(_) => TrinSignal::Neutral,
+        None => TrinSignal::Neutral,
     };
-    TrinReport { series, latest, signal }
+    TrinReport {
+        series,
+        latest,
+        signal,
+    }
 }
 
 #[cfg(test)]
@@ -78,7 +87,12 @@ mod tests {
     use super::*;
 
     fn bar(ai: u64, di: u64, av: f64, dv: f64) -> BreadthBar {
-        BreadthBar { advancing_issues: ai, declining_issues: di, advancing_volume: av, declining_volume: dv }
+        BreadthBar {
+            advancing_issues: ai,
+            declining_issues: di,
+            advancing_volume: av,
+            declining_volume: dv,
+        }
     }
 
     #[test]
@@ -136,10 +150,14 @@ mod tests {
         // Prior implementation let NaN slip through both guards because
         // `NaN <= 0.0` is false, producing Some(NaN) in the report.
         for bad in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
-            assert!(compute(&[bar(1500, 1500, bad, 100.0)]).latest.is_none(),
-                "advancing_volume={bad:?} should yield None");
-            assert!(compute(&[bar(1500, 1500, 100.0, bad)]).latest.is_none(),
-                "declining_volume={bad:?} should yield None");
+            assert!(
+                compute(&[bar(1500, 1500, bad, 100.0)]).latest.is_none(),
+                "advancing_volume={bad:?} should yield None"
+            );
+            assert!(
+                compute(&[bar(1500, 1500, 100.0, bad)]).latest.is_none(),
+                "declining_volume={bad:?} should yield None"
+            );
         }
     }
 
@@ -157,9 +175,14 @@ mod tests {
     /// and adds no dev-dependencies.
     struct Lcg(u64);
     impl Lcg {
-        fn new(seed: u64) -> Self { Self(seed) }
+        fn new(seed: u64) -> Self {
+            Self(seed)
+        }
         fn next_u64(&mut self) -> u64 {
-            self.0 = self.0.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            self.0 = self
+                .0
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             self.0
         }
         fn f64_range(&mut self, lo: f64, hi: f64) -> f64 {
@@ -183,20 +206,25 @@ mod tests {
         let mut rng = Lcg::new(0xDEAD_BEEF_CAFE_F00D);
         for _ in 0..20_000 {
             let n = (rng.next_u64() % 64) as usize;
-            let bars: Vec<BreadthBar> = (0..n).map(|_| BreadthBar {
-                advancing_issues: rng.next_u64() % 1_000_000,
-                declining_issues: rng.next_u64() % 1_000_000,
-                advancing_volume: rng.pick_bad_f64(),
-                declining_volume: rng.pick_bad_f64(),
-            }).collect();
+            let bars: Vec<BreadthBar> = (0..n)
+                .map(|_| BreadthBar {
+                    advancing_issues: rng.next_u64() % 1_000_000,
+                    declining_issues: rng.next_u64() % 1_000_000,
+                    advancing_volume: rng.pick_bad_f64(),
+                    declining_volume: rng.pick_bad_f64(),
+                })
+                .collect();
             let r = compute(&bars);
             // Series length must match input.
             assert_eq!(r.series.len(), bars.len());
             // Every populated value must be a finite real (no NaN, no Inf).
             for (i, v) in r.series.iter().enumerate() {
                 if let Some(x) = v {
-                    assert!(x.is_finite(),
-                        "bar {i} produced non-finite TRIN {x} from bar {:?}", bars[i]);
+                    assert!(
+                        x.is_finite(),
+                        "bar {i} produced non-finite TRIN {x} from bar {:?}",
+                        bars[i]
+                    );
                 }
             }
             if let Some(v) = r.latest {

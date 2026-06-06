@@ -37,10 +37,15 @@ pub fn compute(
         is_smirk: vec![None; n],
         smirk_threshold,
     };
-    if n == 0 || iv_25d_call.len() != n || iv_atm.len() != n
-        || !smirk_threshold.is_finite() { return report; }
-    if iv_25d_put.iter().chain(iv_25d_call.iter()).chain(iv_atm.iter())
-        .any(|x| !x.is_finite() || *x <= 0.0) {
+    if n == 0 || iv_25d_call.len() != n || iv_atm.len() != n || !smirk_threshold.is_finite() {
+        return report;
+    }
+    if iv_25d_put
+        .iter()
+        .chain(iv_25d_call.iter())
+        .chain(iv_atm.iter())
+        .any(|x| !x.is_finite() || *x <= 0.0)
+    {
         return report;
     }
     for i in 0..n {

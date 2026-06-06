@@ -276,14 +276,15 @@ pub fn check(input: &Section408Input) -> Section408Result {
     let deductible_contribution_cents = if !input.active_participant_in_employer_plan
         || input.modified_agi_cents <= phase_out_low_cents
     {
-        input.contribution_cents.min(annual_contribution_limit_cents)
+        input
+            .contribution_cents
+            .min(annual_contribution_limit_cents)
     } else if input.modified_agi_cents >= phase_out_high_cents {
         0
     } else {
         let phase_range = phase_out_high_cents.saturating_sub(phase_out_low_cents);
         let in_phase = input.modified_agi_cents.saturating_sub(phase_out_low_cents);
-        let reduction =
-            annual_contribution_limit_cents.saturating_mul(in_phase) / phase_range;
+        let reduction = annual_contribution_limit_cents.saturating_mul(in_phase) / phase_range;
         annual_contribution_limit_cents
             .saturating_sub(reduction)
             .min(input.contribution_cents)
@@ -314,15 +315,14 @@ pub fn check(input: &Section408Input) -> Section408Result {
         10_500_000
     };
 
-    let qcd_excluded_from_gross_income_cents = if input.qualified_charitable_distribution
-        && input.age >= 71
-    {
-        let remaining_allowance = qcd_annual_limit_cents
-            .saturating_sub(input.cumulative_qcd_this_year_cents);
-        input.distribution_cents.min(remaining_allowance)
-    } else {
-        0
-    };
+    let qcd_excluded_from_gross_income_cents =
+        if input.qualified_charitable_distribution && input.age >= 71 {
+            let remaining_allowance =
+                qcd_annual_limit_cents.saturating_sub(input.cumulative_qcd_this_year_cents);
+            input.distribution_cents.min(remaining_allowance)
+        } else {
+            0
+        };
 
     if input.qualified_charitable_distribution && input.age < 71 {
         failure_reasons.push(
@@ -330,11 +330,7 @@ pub fn check(input: &Section408Input) -> Section408Result {
         );
     }
 
-    let rmd_age_threshold = if input.tax_year >= 2033 {
-        75
-    } else {
-        73
-    };
+    let rmd_age_threshold = if input.tax_year >= 2033 { 75 } else { 73 };
 
     let one_rollover_per_year_violated =
         input.indirect_60_day_rollover && input.indirect_rollover_prior_12_months;
@@ -502,8 +498,10 @@ mod tests {
         i.investment = Investment::LifeInsuranceContract;
         let r = check(&i);
         assert!(!r.investment_permitted);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 408(a)(3)")
-            && f.contains("LIFE INSURANCE CONTRACTS")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 408(a)(3)") && f.contains("LIFE INSURANCE CONTRACTS")));
     }
 
     #[test]
@@ -544,8 +542,10 @@ mod tests {
         i.distribution_cents = 5_000_000;
         let r = check(&i);
         assert_eq!(r.qcd_excluded_from_gross_income_cents, 0);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 408(d)(8)")
-            && f.contains("age 70½")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 408(d)(8)") && f.contains("age 70½")));
     }
 
     #[test]
@@ -619,8 +619,10 @@ mod tests {
         i.account_type = AccountType::SimpleIra;
         i.simple_ira_employer_employee_count = 101;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 408(p)(2)")
-            && f.contains("100 OR FEWER")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 408(p)(2)") && f.contains("100 OR FEWER")));
     }
 
     #[test]
@@ -683,9 +685,13 @@ mod tests {
         assert!(r.citation.contains("SECURE Act of 2019"));
         assert!(r.citation.contains("SECURE Act 2.0 of 2022"));
         assert!(r.citation.contains("IRS Notice 2025-77"));
-        assert!(r.citation.contains("Bobrow v. Commissioner, T.C. Memo 2014-21"));
+        assert!(r
+            .citation
+            .contains("Bobrow v. Commissioner, T.C. Memo 2014-21"));
         assert!(r.citation.contains("IRS Announcement 2014-15"));
-        assert!(r.citation.contains("Treas. Reg. § 1.408-1 through § 1.408-11"));
+        assert!(r
+            .citation
+            .contains("Treas. Reg. § 1.408-1 through § 1.408-11"));
         assert!(r.citation.contains("Form 8606"));
     }
 
@@ -702,11 +708,14 @@ mod tests {
     #[test]
     fn note_pins_2026_contribution_limits() {
         let r = check(&under_50_traditional_ira());
-        assert!(r.notes.iter().any(|n| n.contains("2026 IRA contribution limits")
-            && n.contains("$7,500 base")
-            && n.contains("$1,100")
-            && n.contains("$8,600")
-            && n.contains("§ 408A Roth IRA")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("2026 IRA contribution limits")
+                && n.contains("$7,500 base")
+                && n.contains("$1,100")
+                && n.contains("$8,600")
+                && n.contains("§ 408A Roth IRA")));
     }
 
     #[test]
@@ -788,19 +797,24 @@ mod tests {
     #[test]
     fn note_pins_q_deemed_ira() {
         let r = check(&under_50_traditional_ira());
-        assert!(r.notes.iter().any(|n| n.contains("§ 408(q)")
-            && n.contains("Deemed IRA")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 408(q)") && n.contains("Deemed IRA")));
     }
 
     #[test]
     fn note_pins_trader_critical_fact_patterns_five() {
         let r = check(&under_50_traditional_ira());
-        assert!(r.notes.iter().any(|n| n.contains("Trader-critical fact patterns")
-            && n.contains("Self-directed IRA trader")
-            && n.contains("§ 4975 prohibited-transaction")
-            && n.contains("Bobrow")
-            && n.contains("§ 408(d)(8) QCD strategy")
-            && n.contains("§ 408(p) SIMPLE IRA")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-critical fact patterns")
+                && n.contains("Self-directed IRA trader")
+                && n.contains("§ 4975 prohibited-transaction")
+                && n.contains("Bobrow")
+                && n.contains("§ 408(d)(8) QCD strategy")
+                && n.contains("§ 408(p) SIMPLE IRA")));
     }
 
     #[test]

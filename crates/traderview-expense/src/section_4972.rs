@@ -189,7 +189,10 @@ pub fn check(input: &Input) -> Output {
 
     if matches!(input.plan_type, QualifiedEmployerPlanType::NotApplicable) {
         let mut n = notes;
-        n.push("Plan type not subject to § 4972 — not a qualified employer plan under § 4972(d).".to_string());
+        n.push(
+            "Plan type not subject to § 4972 — not a qualified employer plan under § 4972(d)."
+                .to_string(),
+        );
         return Output {
             severity: Severity::NotApplicable,
             aggregate_contributions_cents: 0,
@@ -231,8 +234,9 @@ pub fn check(input: &Input) -> Output {
         .current_year_contributions_cents
         .saturating_add(input.prior_year_nondeductible_carryforward_cents);
 
-    let allowable_deduction =
-        input.section_404_deduction_limit_cents.min(aggregate_contributions);
+    let allowable_deduction = input
+        .section_404_deduction_limit_cents
+        .min(aggregate_contributions);
 
     let nondeductible_amount = aggregate_contributions.saturating_sub(allowable_deduction);
 

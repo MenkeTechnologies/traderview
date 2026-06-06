@@ -231,7 +231,10 @@ mod tests {
         i.broker_fee_imposed_on_tenant = true;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 20-699.20") && v.contains("MAY NOT impose")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 20-699.20") && v.contains("MAY NOT impose")));
     }
 
     #[test]
@@ -241,7 +244,10 @@ mod tests {
         i.tenant_hired_own_broker = true;
         let r = check(&i);
         assert_eq!(r.party_responsible, PartyResponsibleForFee::Tenant);
-        assert!(r.notes.iter().any(|n| n.contains("tenant separately retained")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("tenant separately retained")));
     }
 
     #[test]
@@ -249,7 +255,10 @@ mod tests {
         let mut i = nyc_base();
         i.tenant_hired_own_broker = true;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("each pays their own broker")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("each pays their own broker")));
     }
 
     #[test]
@@ -274,7 +283,10 @@ mod tests {
     #[test]
     fn nyc_dcwp_enforcement_note_always_present() {
         let r = check(&nyc_base());
-        assert!(r.notes.iter().any(|n| n.contains("DCWP") && n.contains("§ 20-699.22")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("DCWP") && n.contains("§ 20-699.22")));
     }
 
     #[test]
@@ -282,7 +294,10 @@ mod tests {
         let r = check(&default_base());
         assert!(r.compliant);
         assert_eq!(r.party_responsible, PartyResponsibleForFee::Landlord);
-        assert!(r.notes.iter().any(|n| n.contains("lease + market practice")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("lease + market practice")));
     }
 
     #[test]
@@ -351,7 +366,10 @@ mod tests {
     #[test]
     fn nyc_party_who_hired_pays_rule_landlord_hired() {
         let r = check(&nyc_base());
-        assert!(r.notes.iter().any(|n| n.contains("party-who-hired-pays rule")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("party-who-hired-pays rule")));
     }
 
     #[test]
@@ -419,7 +437,10 @@ mod tests {
     #[test]
     fn nyc_civil_penalty_or_action_described_in_enforcement_note() {
         let r = check(&nyc_base());
-        assert!(r.notes.iter().any(|n| n.contains("civil penalty") && n.contains("civil action")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("civil penalty") && n.contains("civil action")));
     }
 
     #[test]
@@ -429,8 +450,15 @@ mod tests {
         i.tenant_hired_own_broker = true;
         i.broker_fee_imposed_on_tenant = true;
         let r = check(&i);
-        let imposition_violations: Vec<_> = r.violations.iter().filter(|v| v.contains("MAY NOT impose")).collect();
-        assert!(imposition_violations.is_empty(), "tenant who hired own broker may be charged for that broker");
+        let imposition_violations: Vec<_> = r
+            .violations
+            .iter()
+            .filter(|v| v.contains("MAY NOT impose"))
+            .collect();
+        assert!(
+            imposition_violations.is_empty(),
+            "tenant who hired own broker may be charged for that broker"
+        );
     }
 
     #[test]

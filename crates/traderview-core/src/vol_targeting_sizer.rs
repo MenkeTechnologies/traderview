@@ -48,9 +48,12 @@ pub fn size(
         || target_annualized_vol <= 0.0
         || !forecast_annualized_vol.is_finite()
         || forecast_annualized_vol <= 0.0
-        || !asset_price.is_finite() || asset_price <= 0.0
-        || !base_capital.is_finite() || base_capital <= 0.0
-        || !max_leverage.is_finite() || max_leverage <= 0.0
+        || !asset_price.is_finite()
+        || asset_price <= 0.0
+        || !base_capital.is_finite()
+        || base_capital <= 0.0
+        || !max_leverage.is_finite()
+        || max_leverage <= 0.0
         || !smoothing_alpha.is_finite()
         || !(0.0..=1.0).contains(&smoothing_alpha)
     {

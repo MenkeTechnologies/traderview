@@ -116,8 +116,7 @@ pub fn compute(input: &Section3406Input) -> Section3406Result {
     let required = trigger != BackupTrigger::NoTrigger;
 
     let withholding = if required {
-        (input.payment_amount_dollars as i128 * BACKUP_WITHHOLDING_RATE_BP as i128
-            / 10_000) as i64
+        (input.payment_amount_dollars as i128 * BACKUP_WITHHOLDING_RATE_BP as i128 / 10_000) as i64
     } else {
         0
     };
@@ -135,8 +134,7 @@ pub fn compute(input: &Section3406Input) -> Section3406Result {
     } else {
         format!(
             "§3406(a) no trigger fired: full ${} {:?} payment to payee; no backup withholding.",
-            input.payment_amount_dollars,
-            input.payment_type,
+            input.payment_amount_dollars, input.payment_type,
         )
     };
 

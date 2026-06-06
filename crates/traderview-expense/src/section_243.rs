@@ -125,8 +125,8 @@ pub fn compute(input: &Section243Input) -> Section243Result {
     let holding_satisfied = input.holding_days_in_statutory_window > required_days;
 
     // §246A debt-financed reduction.
-    let debt_reduction = input.stock_is_debt_financed_portfolio
-        && tier != OwnershipTier::EightyPlusPct;
+    let debt_reduction =
+        input.stock_is_debt_financed_portfolio && tier != OwnershipTier::EightyPlusPct;
     let effective_pct_bp = if !holding_satisfied {
         0 // §246(c) full disallowance
     } else if debt_reduction {

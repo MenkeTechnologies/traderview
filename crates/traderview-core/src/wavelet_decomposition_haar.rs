@@ -28,13 +28,21 @@ pub struct Report {
 
 pub fn compute(series: &[f64], levels: u32) -> Option<Report> {
     let n = series.len();
-    if n < 2 || levels == 0 || levels > 20 { return None; }
-    if series.iter().any(|x| !x.is_finite()) { return None; }
+    if n < 2 || levels == 0 || levels > 20 {
+        return None;
+    }
+    if series.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let max_levels = (n as f64).log2().floor() as u32;
-    if max_levels == 0 { return None; }
+    if max_levels == 0 {
+        return None;
+    }
     let used_levels = levels.min(max_levels);
     let used_len = 1_usize << used_levels;
-    if used_len > n { return None; }
+    if used_len > n {
+        return None;
+    }
     let mut current: Vec<f64> = series[..used_len].to_vec();
     let mut details: Vec<Vec<f64>> = Vec::with_capacity(used_levels as usize);
     let inv_sqrt2 = 1.0_f64 / std::f64::consts::SQRT_2;
@@ -91,8 +99,7 @@ mod tests {
         let r = compute(&s, 4).unwrap();
         let in_energy: f64 = s.iter().map(|x| x * x).sum();
         let approx_e: f64 = r.approximation.iter().map(|x| x * x).sum();
-        let detail_e: f64 = r.details.iter()
-            .flatten().map(|x| x * x).sum();
+        let detail_e: f64 = r.details.iter().flatten().map(|x| x * x).sum();
         assert!((in_energy - approx_e - detail_e).abs() < 1e-9);
     }
 
@@ -111,7 +118,7 @@ mod tests {
     fn used_length_is_power_of_2() {
         let s = vec![1.0_f64; 50];
         let r = compute(&s, 5).unwrap();
-        assert_eq!(r.used_length, 32);    // largest 2^k ≤ 50
+        assert_eq!(r.used_length, 32); // largest 2^k ≤ 50
         assert_eq!(r.levels, 5);
     }
 
@@ -119,7 +126,7 @@ mod tests {
     fn levels_capped_to_log2_floor() {
         let s = vec![1.0_f64; 16];
         let r = compute(&s, 10).unwrap();
-        assert_eq!(r.levels, 4);          // log2(16) = 4
+        assert_eq!(r.levels, 4); // log2(16) = 4
     }
 
     #[test]
@@ -129,8 +136,12 @@ mod tests {
         let mut s = vec![0.0_f64; 16];
         s[9] = 1.0;
         let r = compute(&s, 4).unwrap();
-        let nonzero: Vec<usize> = r.details[0].iter().enumerate()
-            .filter(|(_, &v)| v.abs() > 1e-9).map(|(i, _)| i).collect();
+        let nonzero: Vec<usize> = r.details[0]
+            .iter()
+            .enumerate()
+            .filter(|(_, &v)| v.abs() > 1e-9)
+            .map(|(i, _)| i)
+            .collect();
         assert_eq!(nonzero, vec![4]);
     }
 }

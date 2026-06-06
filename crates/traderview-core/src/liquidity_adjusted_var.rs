@@ -37,29 +37,39 @@ pub fn compute(
     spreads_as_fraction_of_mid: &[f64],
     alpha: f64,
 ) -> Option<LvarReport> {
-    if !price_var_fraction.is_finite() || price_var_fraction < 0.0
-        || !notional.is_finite() || notional <= 0.0
-        || !alpha.is_finite() || !(0.0..1.0).contains(&alpha) || alpha == 0.0
+    if !price_var_fraction.is_finite()
+        || price_var_fraction < 0.0
+        || !notional.is_finite()
+        || notional <= 0.0
+        || !alpha.is_finite()
+        || !(0.0..1.0).contains(&alpha)
+        || alpha == 0.0
         || spreads_as_fraction_of_mid.is_empty()
     {
         return None;
     }
-    let clean: Vec<f64> = spreads_as_fraction_of_mid.iter().copied()
+    let clean: Vec<f64> = spreads_as_fraction_of_mid
+        .iter()
+        .copied()
         .filter(|x| x.is_finite() && *x >= 0.0)
         .collect();
     let n = clean.len();
-    if n < 2 { return None; }
+    if n < 2 {
+        return None;
+    }
     let n_f = n as f64;
     let mean = clean.iter().sum::<f64>() / n_f;
     let var = clean.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (n_f - 1.0);
     let stdev = var.max(0.0).sqrt();
     let scaler = if mean > 0.0 { stdev / mean } else { 0.0 };
-    let z = inv_norm_cdf(1.0 - alpha);    // one-sided quantile of stress
+    let z = inv_norm_cdf(1.0 - alpha); // one-sided quantile of stress
     let liquidity_factor = 0.5 * mean * (1.0 + scaler * z);
     let liquidity_cost = liquidity_factor * notional;
     let price_var_dollar = price_var_fraction * notional;
     let lvar = price_var_dollar + liquidity_cost;
-    if !lvar.is_finite() { return None; }
+    if !lvar.is_finite() {
+        return None;
+    }
     Some(LvarReport {
         price_var: price_var_dollar,
         liquidity_cost,
@@ -75,21 +85,43 @@ fn inv_norm_cdf(p: f64) -> f64 {
     if !(0.0..=1.0).contains(&p) || !p.is_finite() {
         return f64::NAN;
     }
-    if p == 0.0 { return f64::NEG_INFINITY; }
-    if p == 1.0 { return f64::INFINITY; }
+    if p == 0.0 {
+        return f64::NEG_INFINITY;
+    }
+    if p == 1.0 {
+        return f64::INFINITY;
+    }
     let plow = 0.02425;
     let phigh = 1.0 - plow;
-    let a = [-3.969_683_028_665_376e1, 2.209_460_984_245_205e2,
-        -2.759_285_104_469_687e2, 1.383_577_518_672_69e2,
-        -3.066_479_806_614_716e1, 2.506_628_277_153_46];
-    let b = [-5.447_609_879_822_406e1, 1.615_858_368_580_409e2,
-        -1.556_989_798_598_866e2, 6.680_131_188_771_972e1,
-        -1.328_068_155_288_572e1];
-    let c = [-7.784_894_002_430_293e-3, -3.223_964_580_411_365e-1,
-        -2.400_758_277_161_838, -2.549_732_539_343_734,
-        4.374_664_141_464_968, 2.938_163_982_698_783];
-    let d = [7.784_695_709_041_462e-3, 3.224_671_290_700_398e-1,
-        2.445_134_137_142_996, 3.754_408_661_907_416];
+    let a = [
+        -3.969_683_028_665_376e1,
+        2.209_460_984_245_205e2,
+        -2.759_285_104_469_687e2,
+        1.383_577_518_672_69e2,
+        -3.066_479_806_614_716e1,
+        2.506_628_277_153_46,
+    ];
+    let b = [
+        -5.447_609_879_822_406e1,
+        1.615_858_368_580_409e2,
+        -1.556_989_798_598_866e2,
+        6.680_131_188_771_972e1,
+        -1.328_068_155_288_572e1,
+    ];
+    let c = [
+        -7.784_894_002_430_293e-3,
+        -3.223_964_580_411_365e-1,
+        -2.400_758_277_161_838,
+        -2.549_732_539_343_734,
+        4.374_664_141_464_968,
+        2.938_163_982_698_783,
+    ];
+    let d = [
+        7.784_695_709_041_462e-3,
+        3.224_671_290_700_398e-1,
+        2.445_134_137_142_996,
+        3.754_408_661_907_416,
+    ];
     if p < plow {
         let q = (-2.0 * p.ln()).sqrt();
         (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5])
@@ -121,8 +153,7 @@ mod tests {
 
     #[test]
     fn nan_spreads_filtered() {
-        let r = compute(0.05, 1_000_000.0,
-            &[0.001, f64::NAN, 0.001, 0.002], 0.05).unwrap();
+        let r = compute(0.05, 1_000_000.0, &[0.001, f64::NAN, 0.001, 0.002], 0.05).unwrap();
         assert_eq!(r.n_observations, 3);
     }
 
@@ -160,7 +191,7 @@ mod tests {
 
     #[test]
     fn larger_notional_scales_lvar_proportionally() {
-        let r_1m  = compute(0.05, 1_000_000.0, &[0.001; 10], 0.05).unwrap();
+        let r_1m = compute(0.05, 1_000_000.0, &[0.001; 10], 0.05).unwrap();
         let r_10m = compute(0.05, 10_000_000.0, &[0.001; 10], 0.05).unwrap();
         // 10× notional → 10× LVaR.
         assert!((r_10m.liquidity_adjusted_var - 10.0 * r_1m.liquidity_adjusted_var).abs() < 1e-6);

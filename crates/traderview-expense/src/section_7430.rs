@@ -211,13 +211,14 @@ pub fn compute(input: &Section7430Input) -> Section7430Result {
         hourly_rate_cap_cents as f64 / 100.0
     ));
 
-    let max_fees_awardable_cents = if matches!(prevailing_party_status, PrevailingPartyStatus::NotPrevailing)
-        || !administrative_exhaustion_satisfied
+    let max_fees_awardable_cents = if matches!(
+        prevailing_party_status,
+        PrevailingPartyStatus::NotPrevailing
+    ) || !administrative_exhaustion_satisfied
     {
         0
     } else {
-        hourly_rate_cap_cents
-            .saturating_mul(input.attorney_hours_billed as i64)
+        hourly_rate_cap_cents.saturating_mul(input.attorney_hours_billed as i64)
     };
 
     Section7430Result {
@@ -270,7 +271,10 @@ mod tests {
     #[test]
     fn substantively_prevailed_individual_within_net_worth_awards_fees() {
         let r = compute(&base());
-        assert_eq!(r.prevailing_party_status, PrevailingPartyStatus::SubstantivelyPrevailed);
+        assert_eq!(
+            r.prevailing_party_status,
+            PrevailingPartyStatus::SubstantivelyPrevailed
+        );
         assert!(r.net_worth_test_satisfied);
         assert!(r.employee_count_test_satisfied);
         assert!(r.administrative_exhaustion_satisfied);
@@ -283,9 +287,15 @@ mod tests {
         let mut i = base();
         i.irs_position_substantially_justified = true;
         let r = compute(&i);
-        assert_eq!(r.prevailing_party_status, PrevailingPartyStatus::NotPrevailing);
+        assert_eq!(
+            r.prevailing_party_status,
+            PrevailingPartyStatus::NotPrevailing
+        );
         assert_eq!(r.max_attorney_fees_awardable_cents, 0);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7430(c)(4)(B)") && n.contains("substantially justified")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7430(c)(4)(B)") && n.contains("substantially justified")));
     }
 
     #[test]
@@ -294,7 +304,10 @@ mod tests {
         i.net_worth_cents = 2_000_000_01;
         let r = compute(&i);
         assert!(!r.net_worth_test_satisfied);
-        assert_eq!(r.prevailing_party_status, PrevailingPartyStatus::NotPrevailing);
+        assert_eq!(
+            r.prevailing_party_status,
+            PrevailingPartyStatus::NotPrevailing
+        );
     }
 
     #[test]
@@ -303,7 +316,10 @@ mod tests {
         i.net_worth_cents = 200_000_000;
         let r = compute(&i);
         assert!(r.net_worth_test_satisfied);
-        assert_eq!(r.prevailing_party_status, PrevailingPartyStatus::SubstantivelyPrevailed);
+        assert_eq!(
+            r.prevailing_party_status,
+            PrevailingPartyStatus::SubstantivelyPrevailed
+        );
     }
 
     #[test]
@@ -332,7 +348,10 @@ mod tests {
         i.employee_count_at_filing = 501;
         let r = compute(&i);
         assert!(!r.employee_count_test_satisfied);
-        assert_eq!(r.prevailing_party_status, PrevailingPartyStatus::NotPrevailing);
+        assert_eq!(
+            r.prevailing_party_status,
+            PrevailingPartyStatus::NotPrevailing
+        );
     }
 
     #[test]
@@ -350,7 +369,10 @@ mod tests {
         let r = compute(&i);
         assert!(!r.administrative_exhaustion_satisfied);
         assert_eq!(r.max_attorney_fees_awardable_cents, 0);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7430(b)(1)") && n.contains("EXHAUSTED")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7430(b)(1)") && n.contains("EXHAUSTED")));
     }
 
     #[test]
@@ -360,8 +382,14 @@ mod tests {
         i.qualified_offer_liability_cents = 10_000_000;
         i.judgment_liability_cents = 10_000_000;
         let r = compute(&i);
-        assert_eq!(r.prevailing_party_status, PrevailingPartyStatus::QualifiedOfferRule);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7430(c)(7)") && n.contains("≥")));
+        assert_eq!(
+            r.prevailing_party_status,
+            PrevailingPartyStatus::QualifiedOfferRule
+        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7430(c)(7)") && n.contains("≥")));
     }
 
     #[test]
@@ -372,8 +400,14 @@ mod tests {
         i.qualified_offer_liability_cents = 5_000_000;
         i.judgment_liability_cents = 10_000_000;
         let r = compute(&i);
-        assert_eq!(r.prevailing_party_status, PrevailingPartyStatus::NotPrevailing);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7430(c)(7)") && n.contains("does NOT engage")));
+        assert_eq!(
+            r.prevailing_party_status,
+            PrevailingPartyStatus::NotPrevailing
+        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7430(c)(7)") && n.contains("does NOT engage")));
     }
 
     #[test]
@@ -384,7 +418,10 @@ mod tests {
         i.qualified_offer_liability_cents = 10_000_000;
         i.judgment_liability_cents = 10_000_000;
         let r = compute(&i);
-        assert_eq!(r.prevailing_party_status, PrevailingPartyStatus::QualifiedOfferRule);
+        assert_eq!(
+            r.prevailing_party_status,
+            PrevailingPartyStatus::QualifiedOfferRule
+        );
     }
 
     #[test]
@@ -445,14 +482,20 @@ mod tests {
         let r_ind = compute(&i_ind);
         let r_biz = compute(&i_biz);
 
-        assert!(!r_ind.net_worth_test_satisfied, "individual $3M exceeds $2M");
+        assert!(
+            !r_ind.net_worth_test_satisfied,
+            "individual $3M exceeds $2M"
+        );
         assert!(r_biz.net_worth_test_satisfied, "business $3M within $7M");
     }
 
     #[test]
     fn note_describes_2026_hourly_cap() {
         let r = compute(&base());
-        assert!(r.notes.iter().any(|n| n.contains("2026") && n.contains("$260.00/hour")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("2026") && n.contains("$260.00/hour")));
     }
 
     #[test]
@@ -460,7 +503,10 @@ mod tests {
         let mut i = base();
         i.administrative_remedies_exhausted = false;
         let r = compute(&i);
-        assert_eq!(r.prevailing_party_status, PrevailingPartyStatus::SubstantivelyPrevailed);
+        assert_eq!(
+            r.prevailing_party_status,
+            PrevailingPartyStatus::SubstantivelyPrevailed
+        );
         assert_eq!(r.max_attorney_fees_awardable_cents, 0);
     }
 
@@ -471,7 +517,10 @@ mod tests {
         i.qualified_offer_liability_cents = 10_000_000;
         i.judgment_liability_cents = 10_000_000;
         let r = compute(&i);
-        assert_eq!(r.prevailing_party_status, PrevailingPartyStatus::SubstantivelyPrevailed);
+        assert_eq!(
+            r.prevailing_party_status,
+            PrevailingPartyStatus::SubstantivelyPrevailed
+        );
     }
 
     #[test]
@@ -498,7 +547,10 @@ mod tests {
         i.qualified_offer_liability_cents = 7_500_000;
         i.judgment_liability_cents = 7_500_000;
         let r = compute(&i);
-        assert_eq!(r.prevailing_party_status, PrevailingPartyStatus::QualifiedOfferRule);
+        assert_eq!(
+            r.prevailing_party_status,
+            PrevailingPartyStatus::QualifiedOfferRule
+        );
     }
 
     #[test]
@@ -509,7 +561,10 @@ mod tests {
         i.qualified_offer_liability_cents = 7_500_000 - 1;
         i.judgment_liability_cents = 7_500_000;
         let r = compute(&i);
-        assert_eq!(r.prevailing_party_status, PrevailingPartyStatus::NotPrevailing);
+        assert_eq!(
+            r.prevailing_party_status,
+            PrevailingPartyStatus::NotPrevailing
+        );
     }
 
     #[test]
@@ -517,7 +572,10 @@ mod tests {
         let mut i = base();
         i.substantially_prevailed_on_amount_or_issue = false;
         let r = compute(&i);
-        assert_eq!(r.prevailing_party_status, PrevailingPartyStatus::NotPrevailing);
+        assert_eq!(
+            r.prevailing_party_status,
+            PrevailingPartyStatus::NotPrevailing
+        );
         assert_eq!(r.max_attorney_fees_awardable_cents, 0);
     }
 

@@ -34,7 +34,13 @@ pub struct RotationConfig {
 }
 
 impl Default for RotationConfig {
-    fn default() -> Self { Self { leader_count: 3, laggard_count: 3, min_rank_change: 3 } }
+    fn default() -> Self {
+        Self {
+            leader_count: 3,
+            laggard_count: 3,
+            min_rank_change: 3,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -49,7 +55,7 @@ pub struct RotationFlag {
     pub symbol: String,
     pub prior_rank: usize,
     pub current_rank: usize,
-    pub delta: i64,    // negative = moved UP in rank (better); positive = moved DOWN
+    pub delta: i64, // negative = moved UP in rank (better); positive = moved DOWN
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -84,11 +90,15 @@ pub fn analyze(
         });
     }
     let n = report.leaderboard.len();
-    report.leaders = report.leaderboard.iter()
+    report.leaders = report
+        .leaderboard
+        .iter()
         .take(cfg.leader_count.min(n))
         .map(|r| r.symbol.clone())
         .collect();
-    report.laggards = report.leaderboard.iter()
+    report.laggards = report
+        .leaderboard
+        .iter()
         .rev()
         .take(cfg.laggard_count.min(n))
         .map(|r| r.symbol.clone())
@@ -114,7 +124,11 @@ pub fn analyze(
 /// Helper: extract a `symbol → rank` map from a `RotationReport.leaderboard`
 /// to pass into the next analyze() call.
 pub fn ranks_map(report: &RotationReport) -> HashMap<String, usize> {
-    report.leaderboard.iter().map(|r| (r.symbol.clone(), r.rank)).collect()
+    report
+        .leaderboard
+        .iter()
+        .map(|r| (r.symbol.clone(), r.rank))
+        .collect()
 }
 
 #[cfg(test)]
@@ -122,7 +136,10 @@ mod tests {
     use super::*;
 
     fn s(sym: &str, r: f64) -> SectorReturn {
-        SectorReturn { symbol: sym.into(), return_pct: r }
+        SectorReturn {
+            symbol: sym.into(),
+            return_pct: r,
+        }
     }
 
     #[test]
@@ -142,7 +159,11 @@ mod tests {
     #[test]
     fn leaders_take_top_n_laggards_take_bottom_n() {
         let v: Vec<SectorReturn> = (0..10).map(|i| s(&format!("X{i}"), i as f64)).collect();
-        let cfg = RotationConfig { leader_count: 2, laggard_count: 2, min_rank_change: 99 };
+        let cfg = RotationConfig {
+            leader_count: 2,
+            laggard_count: 2,
+            min_rank_change: 99,
+        };
         let r = analyze(&v, None, &cfg);
         // Highest two returns are X9 (9.0) and X8 (8.0).
         assert_eq!(r.leaders, vec!["X9".to_string(), "X8".to_string()]);
@@ -155,7 +176,11 @@ mod tests {
         prior.insert("XLE".to_string(), 1);
         prior.insert("XLK".to_string(), 5);
         let cur = vec![s("XLE", -2.0), s("XLK", 3.0)];
-        let cfg = RotationConfig { leader_count: 1, laggard_count: 1, min_rank_change: 3 };
+        let cfg = RotationConfig {
+            leader_count: 1,
+            laggard_count: 1,
+            min_rank_change: 3,
+        };
         let r = analyze(&cur, Some(&prior), &cfg);
         // XLE went from rank 1 → 2 (delta 1) — won't flag.
         // XLK went from rank 5 → 1 (delta -4) — should flag.

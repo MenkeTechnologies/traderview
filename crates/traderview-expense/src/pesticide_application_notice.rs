@@ -389,7 +389,10 @@ mod tests {
         i.hours_advance_notice_to_treated_tenant = 23;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("23") && v.contains("24")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("23") && v.contains("24")));
     }
 
     #[test]
@@ -407,11 +410,10 @@ mod tests {
         i.hours_advance_notice_to_adjacent_tenants = 0;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("Adjacent-unit") && v.contains("Broadcast"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("Adjacent-unit") && v.contains("Broadcast")));
     }
 
     #[test]
@@ -420,11 +422,10 @@ mod tests {
         i.notice_contains_pesticide_product_info = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("14 CCR § 6740") && v.contains("pesticide product"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("14 CCR § 6740") && v.contains("pesticide product")));
     }
 
     #[test]
@@ -453,11 +454,10 @@ mod tests {
         i.notice_contains_npic_phone = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("§ 7:30-9.12") && v.contains("National Pesticide"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 7:30-9.12") && v.contains("National Pesticide")));
     }
 
     #[test]
@@ -485,11 +485,10 @@ mod tests {
         let mut i = base(Regime::NewYork);
         i.building_type = BuildingType::MultiFamily;
         let r = check(&i);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("multi-dwelling") && n.contains("ON REQUEST"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("multi-dwelling") && n.contains("ON REQUEST")));
     }
 
     #[test]
@@ -497,11 +496,7 @@ mod tests {
         let mut i = base(Regime::NewYork);
         i.building_type = BuildingType::SingleFamily;
         let r = check(&i);
-        assert!(
-            !r.notes
-                .iter()
-                .any(|n| n.contains("multi-dwelling"))
-        );
+        assert!(!r.notes.iter().any(|n| n.contains("multi-dwelling")));
     }
 
     // ── Massachusetts c. 132B § 9 + 333 CMR 13.04 ────────────────
@@ -541,11 +536,10 @@ mod tests {
         i.hours_advance_posting_at_building = 0;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("posting") && v.contains("48"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("posting") && v.contains("48")));
     }
 
     // ── Oregon § 634.740 ────────────────────────────────────────
@@ -708,26 +702,16 @@ mod tests {
 
     #[test]
     fn citation_pins_authority_per_regime() {
-        assert!(
-            check(&base(Regime::California))
-                .citation
-                .contains("§ 1940.8.5")
-        );
-        assert!(
-            check(&base(Regime::NewJersey))
-                .citation
-                .contains("§ 7:30-9.12")
-        );
-        assert!(
-            check(&base(Regime::NewYork))
-                .citation
-                .contains("§ 33-1004")
-        );
-        assert!(
-            check(&base(Regime::Massachusetts))
-                .citation
-                .contains("c. 132B § 9")
-        );
+        assert!(check(&base(Regime::California))
+            .citation
+            .contains("§ 1940.8.5"));
+        assert!(check(&base(Regime::NewJersey))
+            .citation
+            .contains("§ 7:30-9.12"));
+        assert!(check(&base(Regime::NewYork)).citation.contains("§ 33-1004"));
+        assert!(check(&base(Regime::Massachusetts))
+            .citation
+            .contains("c. 132B § 9"));
         assert!(check(&base(Regime::Oregon)).citation.contains("§ 634.740"));
         assert!(check(&base(Regime::Default)).citation.contains("FIFRA"));
     }

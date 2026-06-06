@@ -487,9 +487,12 @@ mod tests {
     #[test]
     fn ircr310_note_pins_state_adoption() {
         let r = check(&ircr310_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("California Residential Code")
-            && n.contains("New York State Residential Code")
-            && n.contains("ALL FOUR")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("California Residential Code")
+                && n.contains("New York State Residential Code")
+                && n.contains("ALL FOUR")));
     }
 
     #[test]

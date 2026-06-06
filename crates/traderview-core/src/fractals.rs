@@ -21,7 +21,10 @@ pub struct Bar {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum FractalKind { Up, Down }
+pub enum FractalKind {
+    Up,
+    Down,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Fractal {
@@ -45,18 +48,20 @@ pub fn detect(bars: &[Bar]) -> Vec<Fractal> {
         let p1 = bars[i + 1];
         let p2 = bars[i + 2];
         // Up fractal: middle strictly highest.
-        if h.is_finite()
-            && h > n2.high && h > n1.high
-            && h > p1.high && h > p2.high
-        {
-            out.push(Fractal { bar_index: i, kind: FractalKind::Up, price: h });
+        if h.is_finite() && h > n2.high && h > n1.high && h > p1.high && h > p2.high {
+            out.push(Fractal {
+                bar_index: i,
+                kind: FractalKind::Up,
+                price: h,
+            });
         }
         // Down fractal: middle strictly lowest.
-        if l.is_finite()
-            && l < n2.low && l < n1.low
-            && l < p1.low && l < p2.low
-        {
-            out.push(Fractal { bar_index: i, kind: FractalKind::Down, price: l });
+        if l.is_finite() && l < n2.low && l < n1.low && l < p1.low && l < p2.low {
+            out.push(Fractal {
+                bar_index: i,
+                kind: FractalKind::Down,
+                price: l,
+            });
         }
     }
     out
@@ -82,7 +87,7 @@ mod tests {
         let bars = vec![
             b(100.0, 99.0),
             b(101.0, 100.0),
-            b(105.0, 100.0),    // middle — highest
+            b(105.0, 100.0), // middle — highest
             b(102.0, 100.0),
             b(99.0, 98.0),
         ];
@@ -98,7 +103,7 @@ mod tests {
         let bars = vec![
             b(105.0, 102.0),
             b(104.0, 101.0),
-            b(103.0, 95.0),     // middle — lowest
+            b(103.0, 95.0), // middle — lowest
             b(104.0, 101.0),
             b(105.0, 102.0),
         ];
@@ -115,7 +120,7 @@ mod tests {
             b(100.0, 99.0),
             b(101.0, 99.0),
             b(105.0, 99.0),
-            b(105.0, 99.0),    // tied with middle — disqualifies
+            b(105.0, 99.0), // tied with middle — disqualifies
             b(104.0, 99.0),
         ];
         let f = detect(&bars);
@@ -126,16 +131,19 @@ mod tests {
     #[test]
     fn first_and_last_two_bars_never_fractal() {
         let bars = vec![
-            b(200.0, 0.0),     // highest high in series but bar 0 — can't be fractal
+            b(200.0, 0.0), // highest high in series but bar 0 — can't be fractal
             b(101.0, 99.0),
             b(102.0, 98.0),
             b(101.0, 99.0),
-            b(200.0, 0.0),     // bar n-1 — also can't be fractal
+            b(200.0, 0.0), // bar n-1 — also can't be fractal
         ];
         let f = detect(&bars);
         for fr in &f {
-            assert_eq!(fr.bar_index, 2,
-                "fractal index {} outside valid middle range", fr.bar_index);
+            assert_eq!(
+                fr.bar_index, 2,
+                "fractal index {} outside valid middle range",
+                fr.bar_index
+            );
         }
     }
 
@@ -147,17 +155,24 @@ mod tests {
         // separated by deep troughs so each peak is strictly highest in
         // its own 5-bar window.
         let bars = vec![
-            b(100.0, 99.0), b(102.0, 100.0),       // approaching peak 1
-            b(105.0, 102.0),                        // peak 1 (idx 2)
-            b(102.0, 100.0), b(99.0, 98.0),
-            b(98.0,  97.0),  b(99.0, 98.0),         // trough + recovery
+            b(100.0, 99.0),
+            b(102.0, 100.0), // approaching peak 1
+            b(105.0, 102.0), // peak 1 (idx 2)
             b(102.0, 100.0),
-            b(108.0, 105.0),                        // peak 2 (idx 8)
-            b(102.0, 100.0), b(99.0, 98.0),
+            b(99.0, 98.0),
+            b(98.0, 97.0),
+            b(99.0, 98.0), // trough + recovery
+            b(102.0, 100.0),
+            b(108.0, 105.0), // peak 2 (idx 8)
+            b(102.0, 100.0),
+            b(99.0, 98.0),
         ];
         let f = detect(&bars);
         let ups: Vec<_> = f.iter().filter(|x| x.kind == FractalKind::Up).collect();
-        assert!(!ups.is_empty(), "expected at least one up-fractal, got {f:?}");
+        assert!(
+            !ups.is_empty(),
+            "expected at least one up-fractal, got {f:?}"
+        );
     }
 
     #[test]
@@ -165,7 +180,7 @@ mod tests {
         let bars = vec![
             b(100.0, 99.0),
             b(101.0, 100.0),
-            b(f64::NAN, f64::NAN),    // middle is NaN — no fractal
+            b(f64::NAN, f64::NAN), // middle is NaN — no fractal
             b(102.0, 100.0),
             b(99.0, 98.0),
         ];

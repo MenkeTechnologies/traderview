@@ -18,7 +18,11 @@
 //! `greeks`, `option_strategy_screener`.
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum LegKind { Call, Put, Underlying }
+pub enum LegKind {
+    Call,
+    Put,
+    Underlying,
+}
 
 #[derive(Clone, Debug)]
 pub struct Leg {
@@ -37,13 +41,23 @@ pub struct Report {
 }
 
 pub fn compute(
-    legs: &[Leg], spot: f64, t_to_expiry: f64,
-    rate: f64, div_yield: f64, sigma: f64,
+    legs: &[Leg],
+    spot: f64,
+    t_to_expiry: f64,
+    rate: f64,
+    div_yield: f64,
+    sigma: f64,
 ) -> Option<Report> {
-    if legs.is_empty() { return None; }
+    if legs.is_empty() {
+        return None;
+    }
     let scalars = [spot, t_to_expiry, rate, div_yield, sigma];
-    if scalars.iter().any(|x| !x.is_finite()) { return None; }
-    if spot <= 0.0 || t_to_expiry < 0.0 || sigma < 0.0 { return None; }
+    if scalars.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
+    if spot <= 0.0 || t_to_expiry < 0.0 || sigma < 0.0 {
+        return None;
+    }
     for l in legs {
         if !l.strike.is_finite() || !l.premium.is_finite() || !l.qty.is_finite() {
             return None;
@@ -115,7 +129,12 @@ mod tests {
 
     #[test]
     fn invalid_inputs_return_none() {
-        let legs = vec![Leg { kind: LegKind::Call, strike: 100.0, premium: 5.0, qty: 1.0 }];
+        let legs = vec![Leg {
+            kind: LegKind::Call,
+            strike: 100.0,
+            premium: 5.0,
+            qty: 1.0,
+        }];
         assert!(compute(&[], 100.0, 0.5, 0.05, 0.0, 0.2).is_none());
         assert!(compute(&legs, -1.0, 0.5, 0.05, 0.0, 0.2).is_none());
         assert!(compute(&legs, 100.0, -0.5, 0.05, 0.0, 0.2).is_none());
@@ -126,7 +145,12 @@ mod tests {
     #[test]
     fn at_expiry_collapses_to_intrinsic() {
         // T=0: BS reduces to max(S-K, 0).
-        let legs = vec![Leg { kind: LegKind::Call, strike: 100.0, premium: 5.0, qty: 1.0 }];
+        let legs = vec![Leg {
+            kind: LegKind::Call,
+            strike: 100.0,
+            premium: 5.0,
+            qty: 1.0,
+        }];
         let r = compute(&legs, 110.0, 0.0, 0.05, 0.0, 0.2).unwrap();
         assert!((r.strategy_value - 10.0).abs() < 1e-9);
         // P/L = intrinsic - premium = 10 - 5 = 5.
@@ -136,10 +160,24 @@ mod tests {
     #[test]
     fn put_call_parity_holds() {
         // C - P = S·e^(-qT) - K·e^(-rT) for European options.
-        let s = 100.0; let k = 100.0; let t = 0.5; let r = 0.05;
-        let q = 0.0; let sigma = 0.25;
-        let call = vec![Leg { kind: LegKind::Call, strike: k, premium: 0.0, qty: 1.0 }];
-        let put = vec![Leg { kind: LegKind::Put, strike: k, premium: 0.0, qty: 1.0 }];
+        let s = 100.0;
+        let k = 100.0;
+        let t = 0.5;
+        let r = 0.05;
+        let q = 0.0;
+        let sigma = 0.25;
+        let call = vec![Leg {
+            kind: LegKind::Call,
+            strike: k,
+            premium: 0.0,
+            qty: 1.0,
+        }];
+        let put = vec![Leg {
+            kind: LegKind::Put,
+            strike: k,
+            premium: 0.0,
+            qty: 1.0,
+        }];
         let c_val = compute(&call, s, t, r, q, sigma).unwrap().strategy_value;
         let p_val = compute(&put, s, t, r, q, sigma).unwrap().strategy_value;
         let parity = s * (-q * t).exp() - k * (-r * t).exp();
@@ -150,8 +188,18 @@ mod tests {
     fn straddle_value_exceeds_individual_legs() {
         // ATM straddle should be ~2x ATM call value at-the-money.
         let legs = vec![
-            Leg { kind: LegKind::Call, strike: 100.0, premium: 0.0, qty: 1.0 },
-            Leg { kind: LegKind::Put, strike: 100.0, premium: 0.0, qty: 1.0 },
+            Leg {
+                kind: LegKind::Call,
+                strike: 100.0,
+                premium: 0.0,
+                qty: 1.0,
+            },
+            Leg {
+                kind: LegKind::Put,
+                strike: 100.0,
+                premium: 0.0,
+                qty: 1.0,
+            },
         ];
         let r = compute(&legs, 100.0, 0.5, 0.05, 0.0, 0.25).unwrap();
         assert!(r.strategy_value > 0.0);
@@ -162,8 +210,18 @@ mod tests {
     fn short_position_inverts_sign() {
         // Long 100C @ $5, then short 100C @ $5 → zero strategy P/L.
         let legs = vec![
-            Leg { kind: LegKind::Call, strike: 100.0, premium: 5.0, qty: 1.0 },
-            Leg { kind: LegKind::Call, strike: 100.0, premium: 5.0, qty: -1.0 },
+            Leg {
+                kind: LegKind::Call,
+                strike: 100.0,
+                premium: 5.0,
+                qty: 1.0,
+            },
+            Leg {
+                kind: LegKind::Call,
+                strike: 100.0,
+                premium: 5.0,
+                qty: -1.0,
+            },
         ];
         let r = compute(&legs, 105.0, 0.5, 0.05, 0.0, 0.25).unwrap();
         assert!(r.strategy_pnl.abs() < 1e-9);
@@ -172,7 +230,12 @@ mod tests {
 
     #[test]
     fn underlying_leg_is_linear() {
-        let legs = vec![Leg { kind: LegKind::Underlying, strike: 100.0, premium: 0.0, qty: 1.0 }];
+        let legs = vec![Leg {
+            kind: LegKind::Underlying,
+            strike: 100.0,
+            premium: 0.0,
+            qty: 1.0,
+        }];
         let r = compute(&legs, 110.0, 0.5, 0.05, 0.0, 0.25).unwrap();
         assert!((r.strategy_value - 10.0).abs() < 1e-9);
     }

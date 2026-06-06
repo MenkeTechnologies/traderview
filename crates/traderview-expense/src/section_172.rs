@@ -169,9 +169,13 @@ fn build_note(
     limit_binds: bool,
 ) -> String {
     let regime_phrase = match regime {
-        Section172Regime::Pre2018Legacy => "pre-TCJA (2-yr carryback / 20-yr carryforward / no 80% limit)",
+        Section172Regime::Pre2018Legacy => {
+            "pre-TCJA (2-yr carryback / 20-yr carryforward / no 80% limit)"
+        }
         Section172Regime::CaresAct => "CARES Act (5-yr carryback / 100% offset / 2018-2020 only)",
-        Section172Regime::PermanentTcja => "permanent TCJA post-2020 (no carryback, indefinite carryforward, 80% limit)",
+        Section172Regime::PermanentTcja => {
+            "permanent TCJA post-2020 (no carryback, indefinite carryforward, 80% limit)"
+        }
     };
     let farming_phrase = if input.farming_or_insurance_loss {
         " + §172(b)(1)(B) farming/insurance 2-year carryback available"

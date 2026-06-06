@@ -187,7 +187,9 @@ pub fn check(input: &CleaningFeeInput) -> CleaningFeeResult {
             );
         }
         Regime::NewYork => {
-            let advance_payment_cap = input.monthly_rent_cents.saturating_add(input.monthly_rent_cents);
+            let advance_payment_cap = input
+                .monthly_rent_cents
+                .saturating_add(input.monthly_rent_cents);
             let total_advance = input
                 .ny_existing_security_deposit_cents
                 .saturating_add(input.fee_amount_cents)
@@ -233,9 +235,7 @@ pub fn check(input: &CleaningFeeInput) -> CleaningFeeResult {
 
 fn citation_for(regime: Regime) -> &'static str {
     match regime {
-        Regime::California => {
-            "Cal. Civ. Code § 1950.5(n)/(b)/(m)"
-        }
+        Regime::California => "Cal. Civ. Code § 1950.5(n)/(b)/(m)",
         Regime::Texas => "Tex. Prop. Code Ch. 92 + § 92.103",
         Regime::Washington => "RCW 59.18.285; RCW 59.18.260/.270/.280",
         Regime::NewYork => "N.Y. Gen. Oblig. Law § 7-108(1-a) (HSTPA 2019)",
@@ -307,10 +307,7 @@ mod tests {
         let r = check(&ca_base());
         assert!(!r.fee_enforceable_as_nonrefundable);
         assert!(r.treated_as_refundable_deposit);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("§ 1950.5(n)")));
+        assert!(r.violations.iter().any(|v| v.contains("§ 1950.5(n)")));
     }
 
     #[test]
@@ -319,20 +316,32 @@ mod tests {
         i.written_lease = true;
         i.lease_specifies_nonrefundable = true;
         let r = check(&i);
-        assert!(!r.fee_enforceable_as_nonrefundable, "CA strict prohibition regardless of disclosure");
+        assert!(
+            !r.fee_enforceable_as_nonrefundable,
+            "CA strict prohibition regardless of disclosure"
+        );
     }
 
     #[test]
     fn ca_notes_security_breadth_and_cleaning_deduction_rule() {
         let r = check(&ca_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 1950.5(b) broad security")));
-        assert!(r.notes.iter().any(|n| n.contains("§ 1950.5(m)") && n.contains("inception cleanliness")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1950.5(b) broad security")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1950.5(m)") && n.contains("inception cleanliness")));
     }
 
     #[test]
     fn ca_notes_exception_list() {
         let r = check(&ca_base());
-        assert!(r.notes.iter().any(|n| n.contains("application screening fees") && n.contains("holding deposits")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("application screening fees") && n.contains("holding deposits")));
     }
 
     #[test]
@@ -359,10 +368,7 @@ mod tests {
         let r = check(&i);
         assert!(!r.fee_enforceable_as_nonrefundable);
         assert!(r.landlord_liable_for_full_fee);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("LIABLE TO TENANT")));
+        assert!(r.violations.iter().any(|v| v.contains("LIABLE TO TENANT")));
     }
 
     #[test]
@@ -400,16 +406,16 @@ mod tests {
     fn ny_advance_payment_cap_violation_when_total_exceeds() {
         let r = check(&ny_base());
         assert!(!r.fee_enforceable_as_nonrefundable);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("HSTPA 2019")));
+        assert!(r.violations.iter().any(|v| v.contains("HSTPA 2019")));
     }
 
     #[test]
     fn ny_implicit_prohibition_persists_even_with_disclosure() {
         let r = check(&ny_base());
-        assert!(!r.fee_enforceable_as_nonrefundable, "NY HSTPA implicit prohibition regardless of disclosure");
+        assert!(
+            !r.fee_enforceable_as_nonrefundable,
+            "NY HSTPA implicit prohibition regardless of disclosure"
+        );
     }
 
     #[test]
@@ -479,12 +485,21 @@ mod tests {
 
     #[test]
     fn washington_uniquely_imposes_landlord_liability_for_no_written_lease() {
-        for regime in [Regime::California, Regime::Texas, Regime::NewYork, Regime::Default] {
+        for regime in [
+            Regime::California,
+            Regime::Texas,
+            Regime::NewYork,
+            Regime::Default,
+        ] {
             let mut i = wa_base();
             i.regime = regime;
             i.written_lease = false;
             let r = check(&i);
-            assert!(!r.landlord_liable_for_full_fee, "regime {:?} should not impose WA-style landlord liability", regime);
+            assert!(
+                !r.landlord_liable_for_full_fee,
+                "regime {:?} should not impose WA-style landlord liability",
+                regime
+            );
         }
         let mut i = wa_base();
         i.written_lease = false;
@@ -498,6 +513,9 @@ mod tests {
         i.fee_amount_cents = 100;
         i.ny_existing_security_deposit_cents = 100_000;
         let r = check(&i);
-        assert!(!r.fee_enforceable_as_nonrefundable, "NY implicit prohibition persists regardless of advance-cap math");
+        assert!(
+            !r.fee_enforceable_as_nonrefundable,
+            "NY implicit prohibition persists regardless of advance-cap math"
+        );
     }
 }

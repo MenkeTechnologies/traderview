@@ -205,7 +205,9 @@ pub fn check(input: &Section7426Input) -> Section7426Result {
 
     let aia_exception = matches!(
         input.action_type,
-        ActionType::WrongfulLevy | ActionType::SurplusProceeds | ActionType::SubstitutedSalesProceeds
+        ActionType::WrongfulLevy
+            | ActionType::SurplusProceeds
+            | ActionType::SubstitutedSalesProceeds
     );
 
     let notes: Vec<String> = vec![
@@ -302,10 +304,9 @@ mod tests {
         let r = check(&i);
         assert!(!r.action_maintainable);
         assert!(!r.sol_satisfied);
-        assert!(r
-            .failure_reasons
-            .iter()
-            .any(|f| f.contains("§ 7426(c)") && f.contains("731 days") && f.contains("2-year TCJA")));
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 7426(c)")
+            && f.contains("731 days")
+            && f.contains("2-year TCJA")));
     }
 
     #[test]

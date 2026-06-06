@@ -70,7 +70,11 @@ mod tests {
     use super::*;
 
     fn b(h: f64, l: f64, c: f64) -> Bar {
-        Bar { high: h, low: l, close: c }
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -107,7 +111,10 @@ mod tests {
             .collect();
         let r = compute(&bars, 13);
         let bull = r.bull_power[49].expect("populated");
-        assert!(bull > 0.0, "uptrend bull power should be positive, got {bull}");
+        assert!(
+            bull > 0.0,
+            "uptrend bull power should be positive, got {bull}"
+        );
     }
 
     #[test]

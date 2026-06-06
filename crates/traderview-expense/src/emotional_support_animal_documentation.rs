@@ -248,9 +248,7 @@ pub fn check(input: &Input) -> CheckResult {
                     );
                 }
                 if input.internet_only_documentation {
-                    missing.push(
-                        "internet-only registration EXPLICITLY UNRELIABLE under § 760.27",
-                    );
+                    missing.push("internet-only registration EXPLICITLY UNRELIABLE under § 760.27");
                 }
                 violations.push(format!(
                     "Fla. Stat. § 760.27 — ESA documentation UNRELIABLE. Missing/failed \
@@ -486,7 +484,10 @@ mod tests {
         let r = check(&b);
         assert!(!r.fl_personal_knowledge_satisfied);
         assert!(!r.documentation_reliable);
-        assert!(r.violations.iter().any(|v| v.contains("PERSONAL KNOWLEDGE")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("PERSONAL KNOWLEDGE")));
     }
 
     #[test]
@@ -692,11 +693,7 @@ mod tests {
 
     #[test]
     fn boundary_29_30_31_day_truth_table() {
-        let cells = [
-            (29, false),
-            (30, true),
-            (31, true),
-        ];
+        let cells = [(29, false), (30, true), (31, true)];
         for (days, expected) in cells.iter() {
             let mut b = input(Regime::California);
             b.therapeutic_relationship_days = *days;

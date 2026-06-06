@@ -30,8 +30,12 @@ pub fn compute(
 ) -> Option<HoltWintersReport> {
     let n = series.len();
     if n < 2
-        || !alpha.is_finite() || !(0.0..=1.0).contains(&alpha) || alpha == 0.0
-        || !beta.is_finite() || !(0.0..=1.0).contains(&beta) || beta == 0.0
+        || !alpha.is_finite()
+        || !(0.0..=1.0).contains(&alpha)
+        || alpha == 0.0
+        || !beta.is_finite()
+        || !(0.0..=1.0).contains(&beta)
+        || beta == 0.0
     {
         return None;
     }
@@ -40,7 +44,9 @@ pub fn compute(
     while idx < n - 1 && !(series[idx].is_finite() && series[idx + 1].is_finite()) {
         idx += 1;
     }
-    if idx >= n - 1 { return None; }
+    if idx >= n - 1 {
+        return None;
+    }
     let mut level = series[idx];
     let mut trend = series[idx + 1] - series[idx];
     let mut report = HoltWintersReport {
@@ -50,7 +56,7 @@ pub fn compute(
     };
     report.level[idx] = Some(level);
     report.trend[idx] = Some(trend);
-    report.level[idx + 1] = Some(level + trend);    // initial smoother step
+    report.level[idx + 1] = Some(level + trend); // initial smoother step
     report.trend[idx + 1] = Some(trend);
     let mut prev_level = level + trend;
     let mut prev_trend = trend;

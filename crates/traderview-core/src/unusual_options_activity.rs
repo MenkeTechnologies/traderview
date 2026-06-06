@@ -38,7 +38,11 @@ pub struct OptionContract {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum FillSide { AboveAsk, BelowBid, Midpoint }
+pub enum FillSide {
+    AboveAsk,
+    BelowBid,
+    Midpoint,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UoaHit {
@@ -62,26 +66,46 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
-        Self { min_vol_oi_ratio: 2.0, min_volume: 500.0, min_premium_paid: 100_000.0 }
+        Self {
+            min_vol_oi_ratio: 2.0,
+            min_volume: 500.0,
+            min_premium_paid: 100_000.0,
+        }
     }
 }
 
 pub fn scan(contracts: &[OptionContract], cfg: &Config) -> Vec<UoaHit> {
-    let mut hits: Vec<UoaHit> = contracts.iter()
-        .filter(|c| c.volume.is_finite() && c.open_interest.is_finite()
-            && c.last_price.is_finite() && c.bid.is_finite() && c.ask.is_finite()
-            && c.volume >= 0.0 && c.open_interest >= 0.0 && c.last_price >= 0.0
-            && c.bid >= 0.0 && c.ask >= c.bid)
+    let mut hits: Vec<UoaHit> = contracts
+        .iter()
+        .filter(|c| {
+            c.volume.is_finite()
+                && c.open_interest.is_finite()
+                && c.last_price.is_finite()
+                && c.bid.is_finite()
+                && c.ask.is_finite()
+                && c.volume >= 0.0
+                && c.open_interest >= 0.0
+                && c.last_price >= 0.0
+                && c.bid >= 0.0
+                && c.ask >= c.bid
+        })
         .filter_map(|c| {
-            let oi = c.open_interest.max(1.0);    // floor to 1 to avoid div by zero
+            let oi = c.open_interest.max(1.0); // floor to 1 to avoid div by zero
             let vol_oi = c.volume / oi;
             let premium = c.volume * c.last_price * 100.0;
             if vol_oi < cfg.min_vol_oi_ratio
                 || c.volume < cfg.min_volume
-                || premium < cfg.min_premium_paid { return None; }
-            let side = if c.last_price >= c.ask { FillSide::AboveAsk }
-                else if c.last_price <= c.bid { FillSide::BelowBid }
-                else { FillSide::Midpoint };
+                || premium < cfg.min_premium_paid
+            {
+                return None;
+            }
+            let side = if c.last_price >= c.ask {
+                FillSide::AboveAsk
+            } else if c.last_price <= c.bid {
+                FillSide::BelowBid
+            } else {
+                FillSide::Midpoint
+            };
             Some(UoaHit {
                 symbol: c.symbol.clone(),
                 strike: c.strike,
@@ -95,8 +119,11 @@ pub fn scan(contracts: &[OptionContract], cfg: &Config) -> Vec<UoaHit> {
             })
         })
         .collect();
-    hits.sort_by(|a, b| b.premium_paid.partial_cmp(&a.premium_paid)
-        .unwrap_or(std::cmp::Ordering::Equal));
+    hits.sort_by(|a, b| {
+        b.premium_paid
+            .partial_cmp(&a.premium_paid)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     hits
 }
 
@@ -165,9 +192,9 @@ mod tests {
     #[test]
     fn sorted_by_premium_descending() {
         let contracts = vec![
-            c("AAA", 1000.0, 100.0, 1.00, 0.95, 1.05),    // premium $100K
-            c("BBB", 2000.0, 100.0, 5.00, 4.95, 5.05),    // premium $1M
-            c("CCC", 1500.0, 100.0, 2.00, 1.95, 2.05),    // premium $300K
+            c("AAA", 1000.0, 100.0, 1.00, 0.95, 1.05), // premium $100K
+            c("BBB", 2000.0, 100.0, 5.00, 4.95, 5.05), // premium $1M
+            c("CCC", 1500.0, 100.0, 2.00, 1.95, 2.05), // premium $300K
         ];
         let hits = scan(&contracts, &Config::default());
         assert_eq!(hits.len(), 3);
@@ -180,7 +207,7 @@ mod tests {
     fn nan_or_negative_fields_filtered() {
         let bad_vol = c("X", f64::NAN, 100.0, 5.0, 4.9, 5.1);
         let neg_oi = c("Y", 1000.0, -1.0, 5.0, 4.9, 5.1);
-        let crossed = c("Z", 1000.0, 100.0, 5.0, 5.1, 4.9);    // bid > ask
+        let crossed = c("Z", 1000.0, 100.0, 5.0, 5.1, 4.9); // bid > ask
         let hits = scan(&[bad_vol, neg_oi, crossed], &Config::default());
         assert!(hits.is_empty());
     }

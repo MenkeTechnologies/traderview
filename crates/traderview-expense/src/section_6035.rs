@@ -164,7 +164,9 @@ pub fn compute(input: &Input) -> Output {
         "ABA RPTE May / June 2025 — Treasury Finalizes Long-Awaited Basis Consistency and Reporting Regulations — final-regs practitioner guide".to_string(),
     ];
 
-    if input.estate_filing_status == EstateFilingStatus::EstateTaxReturnFiledOnOrBeforeJuly31_2015PreEnactment {
+    if input.estate_filing_status
+        == EstateFilingStatus::EstateTaxReturnFiledOnOrBeforeJuly31_2015PreEnactment
+    {
         return Output {
             mode: Section6035Mode::NotApplicableEstateTaxReturnFiledOnOrBeforeJuly31_2015PreEnactment,
             statutory_basis: "Public Law 114-41 § 2004(d) effective date — § 6035 applies only to estates filing under § 6018 after July 31, 2015".to_string(),
@@ -204,7 +206,9 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.property_inclusion_status == PropertyInclusionStatus::PropertyExceptedFromReportingByFinalRegulations {
+    if input.property_inclusion_status
+        == PropertyInclusionStatus::PropertyExceptedFromReportingByFinalRegulations
+    {
         return Output {
             mode: Section6035Mode::NotApplicablePropertyExceptedByFinalRegulations,
             statutory_basis: "Treas. Reg. § 1.6035-1 (September 17, 2024 final regulations) — exceptions for cash; income in respect of decedent (IRD); tangible personal property under § 6018(b) threshold".to_string(),
@@ -344,19 +348,23 @@ mod tests {
     fn baseline_input() -> Input {
         Input {
             estate_filing_status: EstateFilingStatus::EstateRequiredToFileForm706UnderSection6018,
-            property_inclusion_status: PropertyInclusionStatus::PropertyIncludedInGrossEstateSubjectToReporting,
-            reporting_compliance_aspect: ReportingComplianceAspect::Form8971AndScheduleAInitialFiling,
+            property_inclusion_status:
+                PropertyInclusionStatus::PropertyIncludedInGrossEstateSubjectToReporting,
+            reporting_compliance_aspect:
+                ReportingComplianceAspect::Form8971AndScheduleAInitialFiling,
             initial_filing_timeliness: FilingTimelinessStatus::FiledWithinThirtyDayWindow,
             supplemental_filing_timeliness: FilingTimelinessStatus::FiledWithinThirtyDayWindow,
             schedule_a_furnished_to_beneficiary: true,
-            beneficiary_basis_status: BeneficiaryBasisStatus::BeneficiaryReportedBasisEqualToFinalEstateTaxValue,
+            beneficiary_basis_status:
+                BeneficiaryBasisStatus::BeneficiaryReportedBasisEqualToFinalEstateTaxValue,
         }
     }
 
     #[test]
     fn pre_enactment_estate_return_not_applicable() {
         let mut input = baseline_input();
-        input.estate_filing_status = EstateFilingStatus::EstateTaxReturnFiledOnOrBeforeJuly31_2015PreEnactment;
+        input.estate_filing_status =
+            EstateFilingStatus::EstateTaxReturnFiledOnOrBeforeJuly31_2015PreEnactment;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -369,7 +377,10 @@ mod tests {
         let mut input = baseline_input();
         input.estate_filing_status = EstateFilingStatus::EstateNotRequiredToFileAndDoesNotFile;
         let output = check(&input);
-        assert_eq!(output.mode, Section6035Mode::NotApplicableEstateNotRequiredToFileForm706);
+        assert_eq!(
+            output.mode,
+            Section6035Mode::NotApplicableEstateNotRequiredToFileForm706
+        );
     }
 
     #[test]
@@ -378,7 +389,10 @@ mod tests {
         input.estate_filing_status =
             EstateFilingStatus::EstateNotRequiredToFileButFilesVoluntarilyForPortabilityUnderSection2010C5;
         let output = check(&input);
-        assert_eq!(output.mode, Section6035Mode::NotApplicableEstateNotRequiredToFileForm706);
+        assert_eq!(
+            output.mode,
+            Section6035Mode::NotApplicableEstateNotRequiredToFileForm706
+        );
     }
 
     #[test]
@@ -386,7 +400,10 @@ mod tests {
         let mut input = baseline_input();
         input.property_inclusion_status = PropertyInclusionStatus::PropertyExcludedFromGrossEstate;
         let output = check(&input);
-        assert_eq!(output.mode, Section6035Mode::NotApplicablePropertyExcludedFromGrossEstate);
+        assert_eq!(
+            output.mode,
+            Section6035Mode::NotApplicablePropertyExcludedFromGrossEstate
+        );
     }
 
     #[test]
@@ -415,7 +432,10 @@ mod tests {
         let mut input = baseline_input();
         input.initial_filing_timeliness = FilingTimelinessStatus::NotFiledAtAll;
         let output = check(&input);
-        assert_eq!(output.mode, Section6035Mode::ViolationFailureToFileForm8971WithIrs);
+        assert_eq!(
+            output.mode,
+            Section6035Mode::ViolationFailureToFileForm8971WithIrs
+        );
         assert_eq!(
             output.information_return_penalty_per_failure_dollars,
             IRC_6721_INFORMATION_RETURN_BASE_PENALTY_DOLLARS
@@ -513,7 +533,8 @@ mod tests {
     }
 
     #[test]
-    fn beneficiary_basis_exceeding_final_estate_tax_value_violation_triggers_section_6662k_penalty() {
+    fn beneficiary_basis_exceeding_final_estate_tax_value_violation_triggers_section_6662k_penalty()
+    {
         let mut input = baseline_input();
         input.reporting_compliance_aspect =
             ReportingComplianceAspect::BeneficiaryBasisConsistencyWithFinalEstateTaxValueUnderSection1014F;
@@ -548,9 +569,18 @@ mod tests {
             30
         );
         assert_eq!(IRC_6035_SUPPLEMENTAL_REPORTING_DEADLINE_DAYS, 30);
-        assert_eq!(IRC_6035_FINAL_REGULATIONS_FEDERAL_REGISTER_PUBLICATION_DATE_YEAR, 2024);
-        assert_eq!(IRC_6035_FINAL_REGULATIONS_FEDERAL_REGISTER_PUBLICATION_DATE_MONTH, 9);
-        assert_eq!(IRC_6035_FINAL_REGULATIONS_FEDERAL_REGISTER_PUBLICATION_DATE_DAY, 17);
+        assert_eq!(
+            IRC_6035_FINAL_REGULATIONS_FEDERAL_REGISTER_PUBLICATION_DATE_YEAR,
+            2024
+        );
+        assert_eq!(
+            IRC_6035_FINAL_REGULATIONS_FEDERAL_REGISTER_PUBLICATION_DATE_MONTH,
+            9
+        );
+        assert_eq!(
+            IRC_6035_FINAL_REGULATIONS_FEDERAL_REGISTER_PUBLICATION_DATE_DAY,
+            17
+        );
         assert_eq!(IRC_6035_ENABLING_ACT_SECTION_NUMBER, 2004);
         assert_eq!(
             IRC_6662_K_INCONSISTENT_ESTATE_BASIS_ACCURACY_PENALTY_RATE_BPS,
@@ -565,7 +595,9 @@ mod tests {
     fn citations_contain_landmarks() {
         let output = check(&baseline_input());
         let joined = output.citations.join("\n");
-        assert!(joined.contains("Surface Transportation and Veterans Health Care Choice Improvement Act of 2015"));
+        assert!(joined.contains(
+            "Surface Transportation and Veterans Health Care Choice Improvement Act of 2015"
+        ));
         assert!(joined.contains("Public Law 114-41"));
         assert!(joined.contains("129 Stat. 443"));
         assert!(joined.contains("July 31, 2015"));

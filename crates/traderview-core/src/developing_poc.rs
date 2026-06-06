@@ -12,7 +12,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub volume: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub volume: f64,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Default)]
 pub struct DevelopingPocPoint {
@@ -33,15 +37,24 @@ pub fn compute(bars: &[Bar], num_bins: usize) -> DevelopingPocReport {
         per_bar: vec![DevelopingPocPoint::default(); n],
         num_bins,
     };
-    if n == 0 || num_bins < 2 { return report; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite()
-        || !b.volume.is_finite() || b.volume < 0.0 || b.high < b.low) {
+    if n == 0 || num_bins < 2 {
+        return report;
+    }
+    if bars.iter().any(|b| {
+        !b.high.is_finite()
+            || !b.low.is_finite()
+            || !b.volume.is_finite()
+            || b.volume < 0.0
+            || b.high < b.low
+    }) {
         return report;
     }
     let min_price = bars.iter().fold(f64::INFINITY, |a, b| a.min(b.low));
     let max_price = bars.iter().fold(f64::NEG_INFINITY, |a, b| a.max(b.high));
     let bin_size = (max_price - min_price) / num_bins as f64;
-    if bin_size <= 0.0 { return report; }
+    if bin_size <= 0.0 {
+        return report;
+    }
     let mut bin_volumes = vec![0.0_f64; num_bins];
     let mut cumulative = 0.0_f64;
     for (i, bar) in bars.iter().enumerate() {
@@ -57,7 +70,9 @@ pub fn compute(bars: &[Bar], num_bins: usize) -> DevelopingPocReport {
             }
         }
         cumulative += bar.volume;
-        if let Some((poc_idx, &poc_vol)) = bin_volumes.iter().enumerate()
+        if let Some((poc_idx, &poc_vol)) = bin_volumes
+            .iter()
+            .enumerate()
             .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
         {
             report.per_bar[i] = DevelopingPocPoint {
@@ -74,7 +89,13 @@ pub fn compute(bars: &[Bar], num_bins: usize) -> DevelopingPocReport {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, v: f64) -> Bar { Bar { high: h, low: l, volume: v } }
+    fn b(h: f64, l: f64, v: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            volume: v,
+        }
+    }
 
     #[test]
     fn empty_or_invalid_returns_empty() {

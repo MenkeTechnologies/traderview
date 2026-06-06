@@ -203,7 +203,9 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.claim_is_personal_injury_under_florida_section_83_51 && input.jurisdiction == Jurisdiction::Florida {
+    if input.claim_is_personal_injury_under_florida_section_83_51
+        && input.jurisdiction == Jurisdiction::Florida
+    {
         return Output {
             mode: AttorneyFeeReciprocityMode::ViolationPersonalInjuryClaimAttemptedToInvokeFeeShifting,
             recoverable_fees_cents: 0,
@@ -216,7 +218,9 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.lease_purports_to_waive_florida_section_83_48_reciprocity && input.jurisdiction == Jurisdiction::Florida {
+    if input.lease_purports_to_waive_florida_section_83_48_reciprocity
+        && input.jurisdiction == Jurisdiction::Florida
+    {
         let recoverable = if input.prevailing_party == PrevailingParty::NoJudgmentYet {
             0
         } else {
@@ -243,7 +247,9 @@ pub fn compute(input: &Input) -> Output {
             (_, LeaseAttorneyFeeClauseType::BilateralWithCap) => {
                 let cap = input.lease_caps_fees_at_amount_cents.unwrap_or(0);
                 let recoverable = input.reasonable_fees_incurred_cents.min(cap);
-                if input.jurisdiction == Jurisdiction::California && cap < input.reasonable_fees_incurred_cents {
+                if input.jurisdiction == Jurisdiction::California
+                    && cap < input.reasonable_fees_incurred_cents
+                {
                     return Output {
                         mode: AttorneyFeeReciprocityMode::ViolationLeaseFeesCapBelowReasonablenessStandard,
                         recoverable_fees_cents: input.reasonable_fees_incurred_cents,
@@ -283,7 +289,8 @@ pub fn compute(input: &Input) -> Output {
             PrevailingParty::NoJudgmentYet => 0,
             PrevailingParty::Landlord => {
                 if input.lease_clause_type == LeaseAttorneyFeeClauseType::UnilateralLandlordFavor
-                    || input.lease_clause_type == LeaseAttorneyFeeClauseType::LandlordFavorWithExplicitNonWaiverOverride
+                    || input.lease_clause_type
+                        == LeaseAttorneyFeeClauseType::LandlordFavorWithExplicitNonWaiverOverride
                 {
                     input.reasonable_fees_incurred_cents
                 } else {
@@ -359,7 +366,10 @@ mod tests {
     #[test]
     fn california_mutualizes_unilateral_landlord_favor_clause_for_tenant() {
         let result = compute(&baseline_ca_unilateral_ll_favor_tenant_prevails());
-        assert_eq!(result.mode, AttorneyFeeReciprocityMode::CompliantUnilateralClauseStatutoryMutualization);
+        assert_eq!(
+            result.mode,
+            AttorneyFeeReciprocityMode::CompliantUnilateralClauseStatutoryMutualization
+        );
         assert_eq!(result.recoverable_fees_cents, 1_500_000);
         assert!(result.notes.contains("California"));
     }
@@ -376,7 +386,10 @@ mod tests {
             lease_purports_to_waive_florida_section_83_48_reciprocity: false,
         };
         let result = compute(&input);
-        assert_eq!(result.mode, AttorneyFeeReciprocityMode::CompliantFloridaPrevailingPartyByOperationOfStatuteNoClause);
+        assert_eq!(
+            result.mode,
+            AttorneyFeeReciprocityMode::CompliantFloridaPrevailingPartyByOperationOfStatuteNoClause
+        );
         assert_eq!(result.recoverable_fees_cents, 800_000);
     }
 
@@ -392,7 +405,10 @@ mod tests {
             lease_purports_to_waive_florida_section_83_48_reciprocity: false,
         };
         let result = compute(&input);
-        assert_eq!(result.mode, AttorneyFeeReciprocityMode::CompliantPersonalInjuryClaimExcludedPerFloridaStatute);
+        assert_eq!(
+            result.mode,
+            AttorneyFeeReciprocityMode::CompliantPersonalInjuryClaimExcludedPerFloridaStatute
+        );
         assert_eq!(result.recoverable_fees_cents, 0);
     }
 
@@ -408,7 +424,10 @@ mod tests {
             lease_purports_to_waive_florida_section_83_48_reciprocity: false,
         };
         let result = compute(&input);
-        assert_eq!(result.mode, AttorneyFeeReciprocityMode::ViolationPersonalInjuryClaimAttemptedToInvokeFeeShifting);
+        assert_eq!(
+            result.mode,
+            AttorneyFeeReciprocityMode::ViolationPersonalInjuryClaimAttemptedToInvokeFeeShifting
+        );
         assert_eq!(result.recoverable_fees_cents, 0);
         assert!(result.notes.contains("§ 83.51"));
     }
@@ -425,7 +444,10 @@ mod tests {
             lease_purports_to_waive_florida_section_83_48_reciprocity: true,
         };
         let result = compute(&input);
-        assert_eq!(result.mode, AttorneyFeeReciprocityMode::ViolationLeaseAttemptedToWaiveStatutoryReciprocity);
+        assert_eq!(
+            result.mode,
+            AttorneyFeeReciprocityMode::ViolationLeaseAttemptedToWaiveStatutoryReciprocity
+        );
         assert_eq!(result.recoverable_fees_cents, 900_000);
         assert!(result.notes.contains("VOID"));
     }
@@ -442,7 +464,10 @@ mod tests {
             lease_purports_to_waive_florida_section_83_48_reciprocity: false,
         };
         let result = compute(&input);
-        assert_eq!(result.mode, AttorneyFeeReciprocityMode::ViolationLeaseFeesCapBelowReasonablenessStandard);
+        assert_eq!(
+            result.mode,
+            AttorneyFeeReciprocityMode::ViolationLeaseFeesCapBelowReasonablenessStandard
+        );
         assert_eq!(result.recoverable_fees_cents, 1_500_000);
         assert!(result.notes.contains("§ 1717"));
     }
@@ -491,7 +516,10 @@ mod tests {
             lease_purports_to_waive_florida_section_83_48_reciprocity: false,
         };
         let result = compute(&input);
-        assert_eq!(result.mode, AttorneyFeeReciprocityMode::CompliantUnilateralClauseStatutoryMutualization);
+        assert_eq!(
+            result.mode,
+            AttorneyFeeReciprocityMode::CompliantUnilateralClauseStatutoryMutualization
+        );
         assert_eq!(result.recoverable_fees_cents, 750_000);
     }
 
@@ -507,7 +535,10 @@ mod tests {
             lease_purports_to_waive_florida_section_83_48_reciprocity: false,
         };
         let result = compute(&input);
-        assert_eq!(result.mode, AttorneyFeeReciprocityMode::CompliantUnilateralClauseStatutoryMutualization);
+        assert_eq!(
+            result.mode,
+            AttorneyFeeReciprocityMode::CompliantUnilateralClauseStatutoryMutualization
+        );
         assert_eq!(result.recoverable_fees_cents, 600_000);
     }
 
@@ -523,7 +554,10 @@ mod tests {
             lease_purports_to_waive_florida_section_83_48_reciprocity: false,
         };
         let result = compute(&input);
-        assert_eq!(result.mode, AttorneyFeeReciprocityMode::CompliantUnilateralClauseStatutoryMutualization);
+        assert_eq!(
+            result.mode,
+            AttorneyFeeReciprocityMode::CompliantUnilateralClauseStatutoryMutualization
+        );
         assert_eq!(result.recoverable_fees_cents, 400_000);
     }
 
@@ -539,7 +573,10 @@ mod tests {
             lease_purports_to_waive_florida_section_83_48_reciprocity: false,
         };
         let result = compute(&input);
-        assert_eq!(result.mode, AttorneyFeeReciprocityMode::CompliantBilateralClauseOriginalDrafting);
+        assert_eq!(
+            result.mode,
+            AttorneyFeeReciprocityMode::CompliantBilateralClauseOriginalDrafting
+        );
         assert_eq!(result.recoverable_fees_cents, 1_200_000);
     }
 
@@ -565,7 +602,9 @@ mod tests {
         let result = compute(&input);
         assert_eq!(result.mode, AttorneyFeeReciprocityMode::NotApplicable);
         assert_eq!(result.recoverable_fees_cents, 0);
-        assert!(result.statutory_basis_for_recovery.contains("American Rule"));
+        assert!(result
+            .statutory_basis_for_recovery
+            .contains("American Rule"));
     }
 
     #[test]
@@ -593,7 +632,8 @@ mod tests {
     fn florida_landlord_favor_with_non_waiver_override_no_special_treatment() {
         let input = Input {
             jurisdiction: Jurisdiction::Florida,
-            lease_clause_type: LeaseAttorneyFeeClauseType::LandlordFavorWithExplicitNonWaiverOverride,
+            lease_clause_type:
+                LeaseAttorneyFeeClauseType::LandlordFavorWithExplicitNonWaiverOverride,
             claim_is_personal_injury_under_florida_section_83_51: false,
             lease_caps_fees_at_amount_cents: None,
             reasonable_fees_incurred_cents: 700_000,
@@ -601,7 +641,10 @@ mod tests {
             lease_purports_to_waive_florida_section_83_48_reciprocity: false,
         };
         let result = compute(&input);
-        assert_eq!(result.mode, AttorneyFeeReciprocityMode::CompliantUnilateralClauseStatutoryMutualization);
+        assert_eq!(
+            result.mode,
+            AttorneyFeeReciprocityMode::CompliantUnilateralClauseStatutoryMutualization
+        );
         assert_eq!(result.recoverable_fees_cents, 700_000);
     }
 }

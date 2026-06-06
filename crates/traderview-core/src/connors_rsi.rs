@@ -31,8 +31,12 @@ pub fn compute(
     let streak = streak_lengths(closes);
     let rsi_streak = rsi(&streak, streak_period);
     let roc_1: Vec<f64> = (0..n)
-        .map(|i| if i == 0 || closes[i - 1] == 0.0 { 0.0 } else {
-            (closes[i] - closes[i - 1]) / closes[i - 1] * 100.0
+        .map(|i| {
+            if i == 0 || closes[i - 1] == 0.0 {
+                0.0
+            } else {
+                (closes[i] - closes[i - 1]) / closes[i - 1] * 100.0
+            }
         })
         .collect();
     for i in 0..n {
@@ -47,7 +51,10 @@ pub fn compute(
             if !today.is_finite() {
                 continue;
             }
-            let below = window.iter().filter(|x| x.is_finite() && **x < today).count() as f64;
+            let below = window
+                .iter()
+                .filter(|x| x.is_finite() && **x < today)
+                .count() as f64;
             let pr = below / rank_period as f64 * 100.0;
             let crsi = (a + b + pr) / 3.0;
             if crsi.is_finite() {
@@ -63,9 +70,17 @@ fn streak_lengths(closes: &[f64]) -> Vec<f64> {
     let mut out = vec![0.0; n];
     for i in 1..n {
         if closes[i] > closes[i - 1] {
-            out[i] = if out[i - 1] > 0.0 { out[i - 1] + 1.0 } else { 1.0 };
+            out[i] = if out[i - 1] > 0.0 {
+                out[i - 1] + 1.0
+            } else {
+                1.0
+            };
         } else if closes[i] < closes[i - 1] {
-            out[i] = if out[i - 1] < 0.0 { out[i - 1] - 1.0 } else { -1.0 };
+            out[i] = if out[i - 1] < 0.0 {
+                out[i - 1] - 1.0
+            } else {
+                -1.0
+            };
         } else {
             out[i] = 0.0;
         }
@@ -83,7 +98,11 @@ fn rsi(values: &[f64], period: usize) -> Vec<Option<f64>> {
     let mut loss = 0.0;
     for i in 1..=period {
         let d = values[i] - values[i - 1];
-        if d >= 0.0 { gain += d; } else { loss -= d; }
+        if d >= 0.0 {
+            gain += d;
+        } else {
+            loss -= d;
+        }
     }
     gain /= period as f64;
     loss /= period as f64;
@@ -99,7 +118,9 @@ fn rsi(values: &[f64], period: usize) -> Vec<Option<f64>> {
 }
 
 fn rsi_from(gain: f64, loss: f64) -> f64 {
-    if loss == 0.0 { return 100.0; }
+    if loss == 0.0 {
+        return 100.0;
+    }
     let rs = gain / loss;
     100.0 - 100.0 / (1.0 + rs)
 }

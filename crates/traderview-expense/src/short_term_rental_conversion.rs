@@ -201,7 +201,8 @@ fn check_la(input: &ShortTermRentalConversionInput) -> ShortTermRentalConversion
 
     if !input.host_registered {
         violations.push(
-            "LAMC § 12.22 A.32 — host has not registered with LADBS Home-Sharing Program".to_string(),
+            "LAMC § 12.22 A.32 — host has not registered with LADBS Home-Sharing Program"
+                .to_string(),
         );
     }
 
@@ -243,7 +244,8 @@ fn check_default(_input: &ShortTermRentalConversionInput) -> ShortTermRentalConv
         max_unhosted_nights: 0,
         max_penalty_per_violation_cents: 0,
         violations: Vec::new(),
-        citation: "no statewide statute; locality-controlled; FL/AZ preempt local; NY/CA/CO permit local",
+        citation:
+            "no statewide statute; locality-controlled; FL/AZ preempt local; NY/CA/CO permit local",
         notes,
     }
 }
@@ -322,10 +324,7 @@ mod tests {
         i.host_present_during_stay = false;
         let r = check(&i);
         assert!(!r.conversion_lawful);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("PRESENT")));
+        assert!(r.violations.iter().any(|v| v.contains("PRESENT")));
     }
 
     #[test]
@@ -473,10 +472,7 @@ mod tests {
         i.primary_residence = false;
         let r = check(&i);
         assert!(!r.conversion_lawful);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("primary residence")));
+        assert!(r.violations.iter().any(|v| v.contains("primary residence")));
     }
 
     #[test]

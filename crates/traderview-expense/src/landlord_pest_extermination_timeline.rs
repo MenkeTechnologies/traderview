@@ -271,8 +271,8 @@ pub fn check(
         (_, PestSeverity::PreventiveOnly) => 30,
     };
 
-    let response_timely = input.eradication_commenced
-        && input.days_since_tenant_report <= required_response_days;
+    let response_timely =
+        input.eradication_commenced && input.days_since_tenant_report <= required_response_days;
 
     let nyc_local_law_55_compliant = match input.jurisdiction {
         Jurisdiction::NewYorkCity => {
@@ -295,8 +295,12 @@ pub fn check(
 
     if !response_timely {
         let severity_label = match input.pest_severity {
-            PestSeverity::EmergencyHealthHazard => "EMERGENCY (rodent infestation with health hazard or severe cockroach infestation)",
-            PestSeverity::StandardInfestation => "STANDARD (visible cockroach activity / mouse sightings / active infestation)",
+            PestSeverity::EmergencyHealthHazard => {
+                "EMERGENCY (rodent infestation with health hazard or severe cockroach infestation)"
+            }
+            PestSeverity::StandardInfestation => {
+                "STANDARD (visible cockroach activity / mouse sightings / active infestation)"
+            }
             PestSeverity::PreventiveOnly => "PREVENTIVE (conditions conducive to infestation)",
         };
         let jurisdiction_statute = match input.jurisdiction {
@@ -331,8 +335,10 @@ pub fn check(
         ));
     }
 
-    if !matches!(input.nyc_hpd_violation_class, NycViolationClass::NoViolation)
-        && matches!(input.jurisdiction, Jurisdiction::NewYorkCity)
+    if !matches!(
+        input.nyc_hpd_violation_class,
+        NycViolationClass::NoViolation
+    ) && matches!(input.jurisdiction, Jurisdiction::NewYorkCity)
     {
         let class_label = match input.nyc_hpd_violation_class {
             NycViolationClass::ClassA => "CLASS A (non-hazardous) — 90-day correction; no daily civil penalty",
@@ -340,10 +346,7 @@ pub fn check(
             NycViolationClass::ClassC => "CLASS C (immediately hazardous) — 24-hour correction; $250-$1,000 daily civil penalty",
             NycViolationClass::NoViolation => "(none)",
         };
-        failure_reasons.push(format!(
-            "NYC HPD Violation issued — {}",
-            class_label
-        ));
+        failure_reasons.push(format!("NYC HPD Violation issued — {}", class_label));
     }
 
     if habitability_warranty_breached {
@@ -438,10 +441,12 @@ mod tests {
         let r = check(&i);
         assert!(!r.response_timely);
         assert!(r.habitability_warranty_breached);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("NYC HMC § 27-2018")
-            && f.contains("14 days")
-            && f.contains("20 days elapsed")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("NYC HMC § 27-2018")
+                && f.contains("14 days")
+                && f.contains("20 days elapsed")));
     }
 
     #[test]
@@ -502,9 +507,10 @@ mod tests {
         i.annual_inspection_conducted = false;
         let r = check(&i);
         assert!(!r.nyc_local_law_55_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("NYC Local Law 55 of 2018")
-            && f.contains("annual inspection")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("NYC Local Law 55 of 2018") && f.contains("annual inspection")));
     }
 
     #[test]
@@ -513,8 +519,10 @@ mod tests {
         i.least_toxic_methods_first = false;
         let r = check(&i);
         assert!(!r.nyc_local_law_55_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("least-toxic methods first")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("least-toxic methods first")));
     }
 
     #[test]
@@ -523,8 +531,10 @@ mod tests {
         i.tenant_72_hour_notification = false;
         let r = check(&i);
         assert!(!r.nyc_local_law_55_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("72-hour pre-pesticide tenant notification")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("72-hour pre-pesticide tenant notification")));
     }
 
     #[test]
@@ -543,9 +553,10 @@ mod tests {
         i.nyc_hpd_violation_class = NycViolationClass::ClassC;
         let r = check(&i);
         assert_eq!(r.daily_civil_penalty_max_cents, 100_000);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("CLASS C")
-            && f.contains("$250-$1,000 daily")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("CLASS C") && f.contains("$250-$1,000 daily")));
     }
 
     #[test]
@@ -554,9 +565,10 @@ mod tests {
         i.nyc_hpd_violation_class = NycViolationClass::ClassB;
         let r = check(&i);
         assert_eq!(r.daily_civil_penalty_max_cents, 25_000);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("CLASS B")
-            && f.contains("$25-$250 daily")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("CLASS B") && f.contains("$25-$250 daily")));
     }
 
     #[test]
@@ -565,9 +577,10 @@ mod tests {
         i.nyc_hpd_violation_class = NycViolationClass::ClassA;
         let r = check(&i);
         assert_eq!(r.daily_civil_penalty_max_cents, 0);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("CLASS A")
-            && f.contains("90-day")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("CLASS A") && f.contains("90-day")));
     }
 
     #[test]
@@ -576,23 +589,31 @@ mod tests {
         i.days_since_tenant_report = 30;
         let r = check(&i);
         assert!(r.habitability_warranty_breached);
-        assert!(r.tenant_remedies_available.iter().any(|t|
-            t.contains("RENT WITHHOLDING")
-            && t.contains("Park West")));
-        assert!(r.tenant_remedies_available.iter().any(|t|
-            t.contains("REPAIR AND DEDUCT")));
-        assert!(r.tenant_remedies_available.iter().any(|t|
-            t.contains("RENT ABATEMENT")));
-        assert!(r.tenant_remedies_available.iter().any(|t|
-            t.contains("CONSTRUCTIVE EVICTION")));
+        assert!(r
+            .tenant_remedies_available
+            .iter()
+            .any(|t| t.contains("RENT WITHHOLDING") && t.contains("Park West")));
+        assert!(r
+            .tenant_remedies_available
+            .iter()
+            .any(|t| t.contains("REPAIR AND DEDUCT")));
+        assert!(r
+            .tenant_remedies_available
+            .iter()
+            .any(|t| t.contains("RENT ABATEMENT")));
+        assert!(r
+            .tenant_remedies_available
+            .iter()
+            .any(|t| t.contains("CONSTRUCTIVE EVICTION")));
     }
 
     #[test]
     fn nyc_unlocks_hpd_complaint_remedy() {
         let r = check(&nyc_standard_timely());
-        assert!(r.tenant_remedies_available.iter().any(|t|
-            t.contains("NYC HPD COMPLAINT")
-            && t.contains("7-10 days")));
+        assert!(r
+            .tenant_remedies_available
+            .iter()
+            .any(|t| t.contains("NYC HPD COMPLAINT") && t.contains("7-10 days")));
     }
 
     #[test]
@@ -601,9 +622,12 @@ mod tests {
         i.jurisdiction = Jurisdiction::California;
         i.building_three_plus_units = false;
         let r = check(&i);
-        assert!(r.tenant_remedies_available.iter().any(|t|
-            t.contains("CA LOCAL CODE ENFORCEMENT")
-            && t.contains("environmental health")));
+        assert!(
+            r.tenant_remedies_available
+                .iter()
+                .any(|t| t.contains("CA LOCAL CODE ENFORCEMENT")
+                    && t.contains("environmental health"))
+        );
     }
 
     #[test]
@@ -612,25 +636,59 @@ mod tests {
         i.jurisdiction = Jurisdiction::Massachusetts;
         i.building_three_plus_units = false;
         let r = check(&i);
-        assert!(r.tenant_remedies_available.iter().any(|t|
-            t.contains("MA BOARD OF HEALTH COMPLAINT")
-            && t.contains("§ 127A")
-            && t.contains("criminal contempt")));
+        assert!(r
+            .tenant_remedies_available
+            .iter()
+            .any(|t| t.contains("MA BOARD OF HEALTH COMPLAINT")
+                && t.contains("§ 127A")
+                && t.contains("criminal contempt")));
     }
 
     #[test]
     fn jurisdiction_severity_truth_table() {
         let cases = [
-            (Jurisdiction::NewYorkCity, PestSeverity::EmergencyHealthHazard, 1),
-            (Jurisdiction::NewYorkCity, PestSeverity::StandardInfestation, 14),
+            (
+                Jurisdiction::NewYorkCity,
+                PestSeverity::EmergencyHealthHazard,
+                1,
+            ),
+            (
+                Jurisdiction::NewYorkCity,
+                PestSeverity::StandardInfestation,
+                14,
+            ),
             (Jurisdiction::NewYorkCity, PestSeverity::PreventiveOnly, 30),
-            (Jurisdiction::California, PestSeverity::EmergencyHealthHazard, 1),
-            (Jurisdiction::California, PestSeverity::StandardInfestation, 30),
+            (
+                Jurisdiction::California,
+                PestSeverity::EmergencyHealthHazard,
+                1,
+            ),
+            (
+                Jurisdiction::California,
+                PestSeverity::StandardInfestation,
+                30,
+            ),
             (Jurisdiction::California, PestSeverity::PreventiveOnly, 30),
-            (Jurisdiction::Massachusetts, PestSeverity::EmergencyHealthHazard, 1),
-            (Jurisdiction::Massachusetts, PestSeverity::StandardInfestation, 14),
-            (Jurisdiction::Massachusetts, PestSeverity::PreventiveOnly, 30),
-            (Jurisdiction::Default, PestSeverity::EmergencyHealthHazard, 1),
+            (
+                Jurisdiction::Massachusetts,
+                PestSeverity::EmergencyHealthHazard,
+                1,
+            ),
+            (
+                Jurisdiction::Massachusetts,
+                PestSeverity::StandardInfestation,
+                14,
+            ),
+            (
+                Jurisdiction::Massachusetts,
+                PestSeverity::PreventiveOnly,
+                30,
+            ),
+            (
+                Jurisdiction::Default,
+                PestSeverity::EmergencyHealthHazard,
+                1,
+            ),
             (Jurisdiction::Default, PestSeverity::StandardInfestation, 30),
             (Jurisdiction::Default, PestSeverity::PreventiveOnly, 30),
         ];
@@ -681,52 +739,59 @@ mod tests {
     #[test]
     fn note_pins_four_jurisdiction_framework() {
         let r = check(&nyc_standard_timely());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Four-jurisdiction framework")
-            && n.contains("NEW YORK CITY")
-            && n.contains("CALIFORNIA")
-            && n.contains("MASSACHUSETTS")
-            && n.contains("DEFAULT")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Four-jurisdiction framework")
+                && n.contains("NEW YORK CITY")
+                && n.contains("CALIFORNIA")
+                && n.contains("MASSACHUSETTS")
+                && n.contains("DEFAULT")));
     }
 
     #[test]
     fn note_pins_nyc_27_2018_pest_definitions() {
         let r = check(&nyc_standard_timely());
-        assert!(r.notes.iter().any(|n|
-            n.contains("NYC HMC § 27-2018 pest definitions")
-            && n.contains("Class Insecta")
-            && n.contains("Phylum Arthropoda")
-            && n.contains("Order Rodentia")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("NYC HMC § 27-2018 pest definitions")
+                && n.contains("Class Insecta")
+                && n.contains("Phylum Arthropoda")
+                && n.contains("Order Rodentia")));
     }
 
     #[test]
     fn note_pins_nyc_hpd_violation_classes() {
         let r = check(&nyc_standard_timely());
-        assert!(r.notes.iter().any(|n|
-            n.contains("NYC HPD violation classes")
-            && n.contains("CLASS A")
-            && n.contains("CLASS B")
-            && n.contains("CLASS C")
-            && n.contains("$250-$1,000")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("NYC HPD violation classes")
+                && n.contains("CLASS A")
+                && n.contains("CLASS B")
+                && n.contains("CLASS C")
+                && n.contains("$250-$1,000")));
     }
 
     #[test]
     fn note_pins_local_law_55_five_requirements() {
         let r = check(&nyc_standard_timely());
-        assert!(r.notes.iter().any(|n|
-            n.contains("NYC Local Law 55 of 2018")
-            && n.contains("3+ unit buildings")
-            && n.contains("ANNUAL inspection")
-            && n.contains("LEAST-TOXIC")
-            && n.contains("72-hour")
-            && n.contains("3-year recordkeeping")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("NYC Local Law 55 of 2018")
+                && n.contains("3+ unit buildings")
+                && n.contains("ANNUAL inspection")
+                && n.contains("LEAST-TOXIC")
+                && n.contains("72-hour")
+                && n.contains("3-year recordkeeping")));
     }
 
     #[test]
     fn note_pins_response_timeline() {
         let r = check(&nyc_standard_timely());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Pest response timeline")
+        assert!(r.notes.iter().any(|n| n.contains("Pest response timeline")
             && n.contains("EMERGENCY")
             && n.contains("24 HOURS")
             && n.contains("STANDARD")
@@ -736,29 +801,34 @@ mod tests {
     #[test]
     fn note_pins_habitability_remedies_with_case_law() {
         let r = check(&nyc_standard_timely());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Tenant remedies under habitability warranty")
-            && n.contains("Park West v. Mitchell")
-            && n.contains("Green v. Superior Court")
-            && n.contains("Boston Housing Auth. v. Hemingway")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("Tenant remedies under habitability warranty")
+                && n.contains("Park West v. Mitchell")
+                && n.contains("Green v. Superior Court")
+                && n.contains("Boston Housing Auth. v. Hemingway")
+        ));
     }
 
     #[test]
     fn note_pins_trader_fact_patterns_five() {
         let r = check(&nyc_standard_timely());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-landlord critical fact patterns")
-            && n.contains("CLASS C violation $1,000/day")
-            && n.contains("§ 1942 repair-and-deduct")
-            && n.contains("URLTA-jurisdiction")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-landlord critical fact patterns")
+                && n.contains("CLASS C violation $1,000/day")
+                && n.contains("§ 1942 repair-and-deduct")
+                && n.contains("URLTA-jurisdiction")));
     }
 
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&nyc_standard_timely());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Companion to bedbug_extermination_cost")
-            && n.contains("habitability_remedies")
-            && n.contains("landlord_repair_response_timeframe")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Companion to bedbug_extermination_cost")
+                && n.contains("habitability_remedies")
+                && n.contains("landlord_repair_response_timeframe")));
     }
 }

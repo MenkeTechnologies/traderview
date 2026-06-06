@@ -486,7 +486,8 @@ mod tests {
     #[test]
     fn wind_produced_after_december31_2027_not_applicable() {
         let mut input = baseline_input();
-        input.eligible_component_category = EligibleComponentCategory::WindBladeNacelleTowerFoundation;
+        input.eligible_component_category =
+            EligibleComponentCategory::WindBladeNacelleTowerFoundation;
         input.wind_production_status =
             WindProductionStatus::WindProducedAndSoldAfterDecember31_2027PostObbbaPhaseOut;
         let out = check(&input);
@@ -526,14 +527,18 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::SolarComponentProductionCreditUnderSection45XB1;
         input.eligible_component_category = EligibleComponentCategory::SolarModule;
         let out = check(&input);
-        assert_eq!(out.mode, Section45XMode::CompliantSolarComponentProductionCredit);
+        assert_eq!(
+            out.mode,
+            Section45XMode::CompliantSolarComponentProductionCredit
+        );
     }
 
     #[test]
     fn wind_component_credit_before_phase_out_compliant() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::WindComponentProductionCreditUnderSection45XB1;
-        input.eligible_component_category = EligibleComponentCategory::WindBladeNacelleTowerFoundation;
+        input.eligible_component_category =
+            EligibleComponentCategory::WindBladeNacelleTowerFoundation;
         input.wind_production_status =
             WindProductionStatus::WindProducedAndSoldOnOrBeforeDecember31_2027PreObbbaPhaseOut;
         let out = check(&input);
@@ -599,7 +604,8 @@ mod tests {
     #[test]
     fn critical_mineral_credit_at_ten_percent_of_production_cost_computed() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::CriticalMineralProductionCreditUnderSection45XB1;
+        input.compliance_aspect =
+            ComplianceAspect::CriticalMineralProductionCreditUnderSection45XB1;
         input.eligible_component_category = EligibleComponentCategory::ApplicableCriticalMineral;
         input.production_cost_dollars = 100_000;
         let out = check(&input);
@@ -617,7 +623,10 @@ mod tests {
         input.production_and_sale_status =
             ProductionAndSaleStatus::ProducedByTaxpayerInUnitedStatesAndSoldToUnrelatedParty;
         let out = check(&input);
-        assert_eq!(out.mode, Section45XMode::CompliantDomesticProductionRequirementMet);
+        assert_eq!(
+            out.mode,
+            Section45XMode::CompliantDomesticProductionRequirementMet
+        );
     }
 
     #[test]
@@ -627,7 +636,10 @@ mod tests {
         input.production_and_sale_status =
             ProductionAndSaleStatus::ProducedByTaxpayerInUnitedStatesAndRelatedPartySaleElectionMade;
         let out = check(&input);
-        assert_eq!(out.mode, Section45XMode::CompliantRelatedPartySaleElectionMade);
+        assert_eq!(
+            out.mode,
+            Section45XMode::CompliantRelatedPartySaleElectionMade
+        );
     }
 
     #[test]
@@ -636,14 +648,18 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::ObbbaWindPhaseOutUnderSection70514;
         input.eligible_component_category = EligibleComponentCategory::SolarModule;
         let out = check(&input);
-        assert_eq!(out.mode, Section45XMode::CompliantDomesticProductionRequirementMet);
+        assert_eq!(
+            out.mode,
+            Section45XMode::CompliantDomesticProductionRequirementMet
+        );
     }
 
     #[test]
     fn obbba_wind_phase_out_wind_component_within_window_compliant() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::ObbbaWindPhaseOutUnderSection70514;
-        input.eligible_component_category = EligibleComponentCategory::WindBladeNacelleTowerFoundation;
+        input.eligible_component_category =
+            EligibleComponentCategory::WindBladeNacelleTowerFoundation;
         input.wind_production_status =
             WindProductionStatus::WindProducedAndSoldOnOrBeforeDecember31_2027PreObbbaPhaseOut;
         let out = check(&input);
@@ -661,7 +677,10 @@ mod tests {
         input.prohibited_foreign_entity_status =
             ProhibitedForeignEntityStatus::NotSubjectToProhibitedForeignEntityRestrictions;
         let out = check(&input);
-        assert_eq!(out.mode, Section45XMode::CompliantNotSubjectToFeocRestriction);
+        assert_eq!(
+            out.mode,
+            Section45XMode::CompliantNotSubjectToFeocRestriction
+        );
     }
 
     #[test]
@@ -679,7 +698,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::FormFilingUnderForm7207;
         input.form_7207_filed_correctly = false;
         let out = check(&input);
-        assert_eq!(out.mode, Section45XMode::ViolationForm7207NotFiledOrIncorrect);
+        assert_eq!(
+            out.mode,
+            Section45XMode::ViolationForm7207NotFiledOrIncorrect
+        );
     }
 
     #[test]
@@ -699,8 +721,14 @@ mod tests {
         assert_eq!(IRC_45X_BATTERY_CELL_RATE_DOLLARS_PER_KWH, 35);
         assert_eq!(IRC_45X_BATTERY_MODULE_INTEGRATED_RATE_DOLLARS_PER_KWH, 10);
         assert_eq!(IRC_45X_BATTERY_MODULE_STANDALONE_RATE_DOLLARS_PER_KWH, 45);
-        assert_eq!(IRC_45X_CRITICAL_MINERAL_PERCENT_OF_PRODUCTION_COST_BPS, 1_000);
-        assert_eq!(IRC_45X_OFFSHORE_WIND_VESSEL_PERCENT_OF_SALES_PRICE_BPS, 1_000);
+        assert_eq!(
+            IRC_45X_CRITICAL_MINERAL_PERCENT_OF_PRODUCTION_COST_BPS,
+            1_000
+        );
+        assert_eq!(
+            IRC_45X_OFFSHORE_WIND_VESSEL_PERCENT_OF_SALES_PRICE_BPS,
+            1_000
+        );
         assert_eq!(IRC_45X_SOLAR_POLYSILICON_RATE_DOLLARS_PER_KG, 3);
         assert_eq!(IRC_45X_SOLAR_WAFER_RATE_DOLLARS_PER_SQ_METER, 12);
         assert_eq!(IRC_45X_BASIS_POINT_DENOMINATOR, 10_000);

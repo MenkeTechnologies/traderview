@@ -23,7 +23,10 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub close: f64, pub volume: f64 }
+pub struct Bar {
+    pub close: f64,
+    pub volume: f64,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
@@ -50,8 +53,13 @@ pub fn compute(bars: &[Bar], lookback: usize) -> AvpReport {
         regime: vec![None; n],
         lookback,
     };
-    if lookback < 2 || n < lookback + 1 { return report; }
-    if bars.iter().any(|b| !b.close.is_finite() || !b.volume.is_finite() || b.volume < 0.0) {
+    if lookback < 2 || n < lookback + 1 {
+        return report;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.close.is_finite() || !b.volume.is_finite() || b.volume < 0.0)
+    {
         return report;
     }
     for i in lookback..n {
@@ -61,15 +69,26 @@ pub fn compute(bars: &[Bar], lookback: usize) -> AvpReport {
         let mut dn_sum = 0.0_f64;
         let mut dn_cnt = 0_usize;
         for k in win_start..=i {
-            if k == 0 { continue; }
+            if k == 0 {
+                continue;
+            }
             let d = bars[k].close - bars[k - 1].close;
-            if d > 0.0 { up_sum += bars[k].volume; up_cnt += 1; }
-            else if d < 0.0 { dn_sum += bars[k].volume; dn_cnt += 1; }
+            if d > 0.0 {
+                up_sum += bars[k].volume;
+                up_cnt += 1;
+            } else if d < 0.0 {
+                dn_sum += bars[k].volume;
+                dn_cnt += 1;
+            }
         }
-        if up_cnt == 0 || dn_cnt == 0 { continue; }
+        if up_cnt == 0 || dn_cnt == 0 {
+            continue;
+        }
         let up_avg = up_sum / up_cnt as f64;
         let dn_avg = dn_sum / dn_cnt as f64;
-        if dn_avg <= 0.0 { continue; }
+        if dn_avg <= 0.0 {
+            continue;
+        }
         let ratio = up_avg / dn_avg;
         report.ratio[i] = Some(ratio);
         report.regime[i] = Some(classify(ratio));
@@ -78,17 +97,27 @@ pub fn compute(bars: &[Bar], lookback: usize) -> AvpReport {
 }
 
 fn classify(ratio: f64) -> AvpRegime {
-    if ratio > 1.5 { AvpRegime::StrongAccumulation }
-    else if ratio > 1.0 { AvpRegime::MildAccumulation }
-    else if ratio > 0.67 { AvpRegime::MildDistribution }
-    else { AvpRegime::StrongDistribution }
+    if ratio > 1.5 {
+        AvpRegime::StrongAccumulation
+    } else if ratio > 1.0 {
+        AvpRegime::MildAccumulation
+    } else if ratio > 0.67 {
+        AvpRegime::MildDistribution
+    } else {
+        AvpRegime::StrongDistribution
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn b(c: f64, v: f64) -> Bar { Bar { close: c, volume: v } }
+    fn b(c: f64, v: f64) -> Bar {
+        Bar {
+            close: c,
+            volume: v,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {
@@ -110,10 +139,15 @@ mod tests {
     #[test]
     fn high_up_volume_classifies_strong_accumulation() {
         // 30 alternating bars with up-volume 5000 vs down-volume 1000.
-        let bars: Vec<_> = (0_usize..60).map(|i| {
-            if i.is_multiple_of(2) { b(101.0, 5000.0) }
-            else { b(100.0, 1000.0) }
-        }).collect();
+        let bars: Vec<_> = (0_usize..60)
+            .map(|i| {
+                if i.is_multiple_of(2) {
+                    b(101.0, 5000.0)
+                } else {
+                    b(100.0, 1000.0)
+                }
+            })
+            .collect();
         let r = compute(&bars, 50);
         let last = 59;
         assert!(r.ratio[last].is_some());
@@ -123,10 +157,15 @@ mod tests {
 
     #[test]
     fn high_down_volume_classifies_strong_distribution() {
-        let bars: Vec<_> = (0_usize..60).map(|i| {
-            if i.is_multiple_of(2) { b(101.0, 1000.0) }
-            else { b(100.0, 5000.0) }
-        }).collect();
+        let bars: Vec<_> = (0_usize..60)
+            .map(|i| {
+                if i.is_multiple_of(2) {
+                    b(101.0, 1000.0)
+                } else {
+                    b(100.0, 5000.0)
+                }
+            })
+            .collect();
         let r = compute(&bars, 50);
         let last = 59;
         assert!(r.ratio[last].unwrap() < 0.67);

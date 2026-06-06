@@ -113,12 +113,20 @@ fn ema_optional(values: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
     for (i, v) in values.iter().enumerate() {
         if v.is_some() {
             run += 1;
-            if run >= period { start = Some(i); break; }
-        } else { run = 0; }
+            if run >= period {
+                start = Some(i);
+                break;
+            }
+        } else {
+            run = 0;
+        }
     }
     let Some(s) = start else { return out };
     let alpha = 2.0 / (period as f64 + 1.0);
-    let seed: f64 = values[s + 1 - period..=s].iter().map(|x| x.unwrap()).sum::<f64>()
+    let seed: f64 = values[s + 1 - period..=s]
+        .iter()
+        .map(|x| x.unwrap())
+        .sum::<f64>()
         / period as f64;
     out[s] = Some(seed);
     let mut prev = seed;
@@ -138,7 +146,12 @@ mod tests {
     use super::*;
 
     fn b(h: f64, l: f64, c: f64, v: f64) -> Bar {
-        Bar { high: h, low: l, close: c, volume: v }
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+            volume: v,
+        }
     }
 
     #[test]
@@ -159,10 +172,12 @@ mod tests {
     #[test]
     fn rising_typical_with_steady_volume_yields_positive_kvo_eventually() {
         // Build a clean uptrend with constant volume.
-        let bars: Vec<Bar> = (1..=120).map(|i| {
-            let c = 100.0 + i as f64;
-            b(c + 1.0, c - 1.0, c, 1_000_000.0)
-        }).collect();
+        let bars: Vec<Bar> = (1..=120)
+            .map(|i| {
+                let c = 100.0 + i as f64;
+                b(c + 1.0, c - 1.0, c, 1_000_000.0)
+            })
+            .collect();
         let r = compute(&bars, 34, 55, 13);
         let last = r.line.last().copied().flatten().expect("populated");
         // On a clean uptrend, fast EMA of VF > slow EMA → positive line.
@@ -172,10 +187,12 @@ mod tests {
 
     #[test]
     fn histogram_equals_line_minus_signal() {
-        let bars: Vec<Bar> = (0..120).map(|i| {
-            let c = 100.0 + (i as f64 * 0.4).sin() * 5.0;
-            b(c + 1.0, c - 1.0, c, 1_000_000.0 + (i as f64) * 1000.0)
-        }).collect();
+        let bars: Vec<Bar> = (0..120)
+            .map(|i| {
+                let c = 100.0 + (i as f64 * 0.4).sin() * 5.0;
+                b(c + 1.0, c - 1.0, c, 1_000_000.0 + (i as f64) * 1000.0)
+            })
+            .collect();
         let r = compute(&bars, 34, 55, 13);
         for i in 0..r.line.len() {
             if let (Some(l), Some(s), Some(h)) = (r.line[i], r.signal[i], r.histogram[i]) {

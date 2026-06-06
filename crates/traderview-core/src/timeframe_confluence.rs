@@ -18,7 +18,11 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum Stance { Bullish, Bearish, Neutral }
+pub enum Stance {
+    Bullish,
+    Bearish,
+    Neutral,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TimeframeVerdict {
@@ -54,7 +58,10 @@ pub struct ConfluenceReport {
 
 pub fn analyze(verdicts: &[TimeframeVerdict]) -> ConfluenceReport {
     if verdicts.is_empty() {
-        return ConfluenceReport { note: "no verdicts supplied".into(), ..Default::default() };
+        return ConfluenceReport {
+            note: "no verdicts supplied".into(),
+            ..Default::default()
+        };
     }
     let mut bull = 0usize;
     let mut bear = 0usize;
@@ -65,26 +72,49 @@ pub fn analyze(verdicts: &[TimeframeVerdict]) -> ConfluenceReport {
         let w = v.weight.max(0.0);
         total_w += w;
         match v.stance {
-            Stance::Bullish => { bull += 1; score += w; }
-            Stance::Bearish => { bear += 1; score -= w; }
-            Stance::Neutral => { neutral += 1; }
+            Stance::Bullish => {
+                bull += 1;
+                score += w;
+            }
+            Stance::Bearish => {
+                bear += 1;
+                score -= w;
+            }
+            Stance::Neutral => {
+                neutral += 1;
+            }
         }
     }
     let net_score = if total_w > 0.0 { score / total_w } else { 0.0 };
-    let bias = if net_score >=  0.66 { CompositeBias::StrongBull }
-               else if net_score >=  0.33 { CompositeBias::Bull }
-               else if net_score <= -0.66 { CompositeBias::StrongBear }
-               else if net_score <= -0.33 { CompositeBias::Bear }
-               else                       { CompositeBias::Neutral };
+    let bias = if net_score >= 0.66 {
+        CompositeBias::StrongBull
+    } else if net_score >= 0.33 {
+        CompositeBias::Bull
+    } else if net_score <= -0.66 {
+        CompositeBias::StrongBear
+    } else if net_score <= -0.33 {
+        CompositeBias::Bear
+    } else {
+        CompositeBias::Neutral
+    };
     let dominant = bull.max(bear);
-    let agreement_pct = if verdicts.is_empty() { 0.0 } else { dominant as f64 / verdicts.len() as f64 };
+    let agreement_pct = if verdicts.is_empty() {
+        0.0
+    } else {
+        dominant as f64 / verdicts.len() as f64
+    };
     let note = format!(
         "{} bull / {} bear / {} neutral — net score {:.2}",
         bull, bear, neutral, net_score
     );
     ConfluenceReport {
-        net_score, bias, agreement_pct,
-        bull_count: bull, bear_count: bear, neutral_count: neutral, note,
+        net_score,
+        bias,
+        agreement_pct,
+        bull_count: bull,
+        bear_count: bear,
+        neutral_count: neutral,
+        note,
     }
 }
 
@@ -93,7 +123,11 @@ mod tests {
     use super::*;
 
     fn tf(tag: &str, s: Stance, w: f64) -> TimeframeVerdict {
-        TimeframeVerdict { timeframe: tag.into(), stance: s, weight: w }
+        TimeframeVerdict {
+            timeframe: tag.into(),
+            stance: s,
+            weight: w,
+        }
     }
 
     #[test]
@@ -134,8 +168,12 @@ mod tests {
             tf("5m", Stance::Bullish, 1.0),
             tf("1d", Stance::Bearish, 4.0),
         ]);
-        assert!(matches!(r.bias, CompositeBias::Bear),
-            "1d should dominate, got {:?} (score={})", r.bias, r.net_score);
+        assert!(
+            matches!(r.bias, CompositeBias::Bear),
+            "1d should dominate, got {:?} (score={})",
+            r.bias,
+            r.net_score
+        );
         assert!(r.net_score < 0.0);
     }
 
@@ -174,8 +212,11 @@ mod tests {
             tf("b", Stance::Bullish, 1.0),
             tf("c", Stance::Bearish, 0.0),
         ]);
-        assert!((r.net_score - 1.0).abs() < 1e-9,
-            "zero-weight should be silent, got {}", r.net_score);
+        assert!(
+            (r.net_score - 1.0).abs() < 1e-9,
+            "zero-weight should be silent, got {}",
+            r.net_score
+        );
     }
 
     #[test]

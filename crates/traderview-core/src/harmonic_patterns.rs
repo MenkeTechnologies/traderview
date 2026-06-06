@@ -60,7 +60,9 @@ pub struct DetectorConfig {
 }
 
 impl Default for DetectorConfig {
-    fn default() -> Self { Self { tolerance: 0.05 } }
+    fn default() -> Self {
+        Self { tolerance: 0.05 }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -88,8 +90,19 @@ pub fn detect(swings: &[SwingPoint], cfg: &DetectorConfig) -> HarmonicReport {
         // Alternating-kind check.
         let alternating = matches!(
             (x.kind, a.kind, b.kind, c.kind, d.kind),
-            (SwingKind::High, SwingKind::Low, SwingKind::High, SwingKind::Low, SwingKind::High)
-                | (SwingKind::Low, SwingKind::High, SwingKind::Low, SwingKind::High, SwingKind::Low)
+            (
+                SwingKind::High,
+                SwingKind::Low,
+                SwingKind::High,
+                SwingKind::Low,
+                SwingKind::High
+            ) | (
+                SwingKind::Low,
+                SwingKind::High,
+                SwingKind::Low,
+                SwingKind::High,
+                SwingKind::Low
+            )
         );
         if !alternating {
             continue;
@@ -116,10 +129,17 @@ pub fn detect(swings: &[SwingPoint], cfg: &DetectorConfig) -> HarmonicReport {
         ] {
             if check_pattern(kind, ab_to_xa, bc_to_ab, cd_to_bc, ad_to_xa, cfg.tolerance) {
                 report.events.push(HarmonicEvent {
-                    kind, bias,
-                    x_idx: x.index, a_idx: a.index, b_idx: b.index,
-                    c_idx: c.index, d_idx: d.index,
-                    ab_to_xa, bc_to_ab, cd_to_bc, ad_to_xa,
+                    kind,
+                    bias,
+                    x_idx: x.index,
+                    a_idx: a.index,
+                    b_idx: b.index,
+                    c_idx: c.index,
+                    d_idx: d.index,
+                    ab_to_xa,
+                    bc_to_ab,
+                    cd_to_bc,
+                    ad_to_xa,
                 });
                 break; // one named pattern per window
             }
@@ -137,7 +157,8 @@ fn check_pattern(
     tol: f64,
 ) -> bool {
     let near = |actual: f64, target: f64| (actual - target).abs() <= tol * target;
-    let in_band = |actual: f64, lo: f64, hi: f64| actual >= lo - tol * lo && actual <= hi + tol * hi;
+    let in_band =
+        |actual: f64, lo: f64, hi: f64| actual >= lo - tol * lo && actual <= hi + tol * hi;
     match kind {
         PatternKind::Gartley => {
             near(ab_to_xa, 0.618)
@@ -171,7 +192,11 @@ mod tests {
     use super::*;
 
     fn sp(idx: usize, price: f64, kind: SwingKind) -> SwingPoint {
-        SwingPoint { index: idx, price, kind }
+        SwingPoint {
+            index: idx,
+            price,
+            kind,
+        }
     }
 
     #[test]
@@ -195,7 +220,9 @@ mod tests {
     #[test]
     fn non_alternating_pivots_dont_match() {
         // 5 consecutive HIGHS — can't form an XABCD harmonic.
-        let swings: Vec<_> = (0..5).map(|i| sp(i, 100.0 + i as f64, SwingKind::High)).collect();
+        let swings: Vec<_> = (0..5)
+            .map(|i| sp(i, 100.0 + i as f64, SwingKind::High))
+            .collect();
         let r = detect(&swings, &DetectorConfig::default());
         assert!(r.events.is_empty());
     }
@@ -227,10 +254,10 @@ mod tests {
         //   0.999 is OUTSIDE the Gartley BC band. Use a relaxed test: tolerance high enough
         //   to allow this slight overshoot.
         let swings = vec![
-            sp(0,  100.0, SwingKind::Low),
+            sp(0, 100.0, SwingKind::Low),
             sp(10, 150.0, SwingKind::High),
             sp(20, 119.1, SwingKind::Low),
-            sp(30, 150.0, SwingKind::High),    // BC mathematically inconsistent w/ strict Gartley
+            sp(30, 150.0, SwingKind::High), // BC mathematically inconsistent w/ strict Gartley
             sp(40, 110.7, SwingKind::Low),
         ];
         // With a loose 12% tolerance the BC band extends ~0.886·1.12 ≈ 0.992 — borderline.
@@ -249,7 +276,7 @@ mod tests {
     fn bullish_xabcd_bias_is_bullish_bearish_xabcd_bias_is_bearish() {
         // Bullish layout: X is a LOW pivot.
         let bullish_x = vec![
-            sp(0,  100.0, SwingKind::Low),
+            sp(0, 100.0, SwingKind::Low),
             sp(10, 150.0, SwingKind::High),
             sp(20, 130.0, SwingKind::Low),
             sp(30, 145.0, SwingKind::High),
@@ -261,7 +288,7 @@ mod tests {
         }
         // Bearish layout: X is a HIGH pivot — mirror prices.
         let bearish_x = vec![
-            sp(0,  200.0, SwingKind::High),
+            sp(0, 200.0, SwingKind::High),
             sp(10, 150.0, SwingKind::Low),
             sp(20, 170.0, SwingKind::High),
             sp(30, 155.0, SwingKind::Low),
@@ -278,7 +305,7 @@ mod tests {
         // X == A → XA = 0; detector must skip without dividing by zero.
         let swings = vec![
             sp(0, 100.0, SwingKind::Low),
-            sp(10, 100.0, SwingKind::High),    // A same price as X — XA = 0
+            sp(10, 100.0, SwingKind::High), // A same price as X — XA = 0
             sp(20, 90.0, SwingKind::Low),
             sp(30, 95.0, SwingKind::High),
             sp(40, 92.0, SwingKind::Low),

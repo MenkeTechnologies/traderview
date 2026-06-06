@@ -20,8 +20,8 @@
 //!   * Form 8959 (additional Medicare) thresholds: $200k single /
 //!     $250k MFJ / $125k MFS — set by IRC § 3101(b)(2).
 
-use rust_decimal::Decimal;
 use crate::engine::FilingStatus;
+use rust_decimal::Decimal;
 
 /// 2025 Social Security wage base. SSA announced 2024-10-10.
 pub const SS_WAGE_BASE_2025: i64 = 176_100;
@@ -80,8 +80,8 @@ pub fn compute(
     // (Box 5) — the threshold applies to the combined total.
     let threshold = match status {
         FilingStatus::Single | FilingStatus::Hoh => Decimal::from(200_000),
-        FilingStatus::Mfj                        => Decimal::from(250_000),
-        FilingStatus::Mfs                        => Decimal::from(125_000),
+        FilingStatus::Mfj => Decimal::from(250_000),
+        FilingStatus::Mfs => Decimal::from(125_000),
     };
     let combined = base + w2_medicare_wages;
     let over = (combined - threshold).max(Decimal::ZERO);
@@ -107,7 +107,12 @@ mod tests {
 
     #[test]
     fn zero_se_yields_zero_tax() {
-        let r = compute(Decimal::ZERO, Decimal::ZERO, Decimal::ZERO, FilingStatus::Single);
+        let r = compute(
+            Decimal::ZERO,
+            Decimal::ZERO,
+            Decimal::ZERO,
+            FilingStatus::Single,
+        );
         assert_eq!(r.total, Decimal::ZERO);
         assert_eq!(r.above_line_deduction, Decimal::ZERO);
     }
@@ -127,11 +132,14 @@ mod tests {
             FilingStatus::Single,
         );
         assert_eq!(r.se_base, "46175.00".parse::<Decimal>().unwrap());
-        assert_eq!(r.ss_tax,  "5725.70".parse::<Decimal>().unwrap());
+        assert_eq!(r.ss_tax, "5725.70".parse::<Decimal>().unwrap());
         assert_eq!(r.medicare_tax, "1339.08".parse::<Decimal>().unwrap());
         assert_eq!(r.additional_medicare_tax, Decimal::ZERO);
         assert_eq!(r.total, "7064.78".parse::<Decimal>().unwrap());
-        assert_eq!(r.above_line_deduction, "3532.39".parse::<Decimal>().unwrap());
+        assert_eq!(
+            r.above_line_deduction,
+            "3532.39".parse::<Decimal>().unwrap()
+        );
     }
 
     #[test]
@@ -157,7 +165,10 @@ mod tests {
             Decimal::ZERO,
             FilingStatus::Single,
         );
-        assert_eq!(r.additional_medicare_tax, "277.88".parse::<Decimal>().unwrap());
+        assert_eq!(
+            r.additional_medicare_tax,
+            "277.88".parse::<Decimal>().unwrap()
+        );
     }
 
     #[test]
@@ -173,9 +184,11 @@ mod tests {
             "199999.08".parse::<Decimal>().unwrap(),
             FilingStatus::Single,
         );
-        assert!(r.additional_medicare_tax <= "0.01".parse::<Decimal>().unwrap(),
+        assert!(
+            r.additional_medicare_tax <= "0.01".parse::<Decimal>().unwrap(),
             "at threshold (combined ≈ $200k), surtax ≈ 0, got {}",
-            r.additional_medicare_tax);
+            r.additional_medicare_tax
+        );
     }
 
     #[test]
@@ -189,7 +202,10 @@ mod tests {
             Decimal::from(200_500),
             FilingStatus::Single,
         );
-        assert_eq!(r.additional_medicare_tax, "4.51".parse::<Decimal>().unwrap());
+        assert_eq!(
+            r.additional_medicare_tax,
+            "4.51".parse::<Decimal>().unwrap()
+        );
     }
 
     #[test]
@@ -202,8 +218,11 @@ mod tests {
             Decimal::from(200_500),
             FilingStatus::Mfj,
         );
-        assert_eq!(r.additional_medicare_tax, Decimal::ZERO,
-            "MFJ $200,500 combined < $250k threshold → 0 surtax");
+        assert_eq!(
+            r.additional_medicare_tax,
+            Decimal::ZERO,
+            "MFJ $200,500 combined < $250k threshold → 0 surtax"
+        );
     }
 
     #[test]
@@ -217,7 +236,10 @@ mod tests {
             Decimal::from(125_500),
             FilingStatus::Mfs,
         );
-        assert_eq!(r.additional_medicare_tax, "4.51".parse::<Decimal>().unwrap());
+        assert_eq!(
+            r.additional_medicare_tax,
+            "4.51".parse::<Decimal>().unwrap()
+        );
     }
 
     #[test]
@@ -231,8 +253,11 @@ mod tests {
             Decimal::from(150_000),
             FilingStatus::Single,
         );
-        assert_eq!(r.additional_medicare_tax, "214.92".parse::<Decimal>().unwrap(),
-            "W-2 Medicare wages must combine with SE base for threshold test");
+        assert_eq!(
+            r.additional_medicare_tax,
+            "214.92".parse::<Decimal>().unwrap(),
+            "W-2 Medicare wages must combine with SE base for threshold test"
+        );
     }
 
     #[test]

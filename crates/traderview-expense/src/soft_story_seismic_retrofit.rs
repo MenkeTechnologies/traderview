@@ -131,9 +131,7 @@ fn check_sf(input: &SoftStorySeismicRetrofitInput) -> SoftStorySeismicRetrofitRe
         && input.residential_unit_count >= 5
         && input.two_plus_stories_over_soft_story;
 
-    if in_scope
-        && !matches!(input.compliance_stage, ComplianceStage::RetrofitComplete)
-    {
+    if in_scope && !matches!(input.compliance_stage, ComplianceStage::RetrofitComplete) {
         violations.push(
             "San Francisco Building Code Chapter 34B — retrofit not complete; all tier deadlines passed September 15, 2021; building deemed UNSAFE".to_string(),
         );
@@ -164,8 +162,7 @@ fn check_la(input: &SoftStorySeismicRetrofitInput) -> SoftStorySeismicRetrofitRe
             .to_string(),
     ];
 
-    let in_scope =
-        input.wood_frame_construction && input.two_plus_stories_over_soft_story;
+    let in_scope = input.wood_frame_construction && input.two_plus_stories_over_soft_story;
 
     let required_stage: Option<ComplianceStage> = if !in_scope {
         None
@@ -179,18 +176,16 @@ fn check_la(input: &SoftStorySeismicRetrofitInput) -> SoftStorySeismicRetrofitRe
 
     if let Some(required) = required_stage {
         let current_meets = match required {
-            ComplianceStage::StructuralReport => !matches!(
-                input.compliance_stage,
-                ComplianceStage::NotStarted
-            ),
+            ComplianceStage::StructuralReport => {
+                !matches!(input.compliance_stage, ComplianceStage::NotStarted)
+            }
             ComplianceStage::PermitsSecured => matches!(
                 input.compliance_stage,
                 ComplianceStage::PermitsSecured | ComplianceStage::RetrofitComplete
             ),
-            ComplianceStage::RetrofitComplete => matches!(
-                input.compliance_stage,
-                ComplianceStage::RetrofitComplete
-            ),
+            ComplianceStage::RetrofitComplete => {
+                matches!(input.compliance_stage, ComplianceStage::RetrofitComplete)
+            }
             ComplianceStage::NotStarted => true,
         };
         if !current_meets {
@@ -224,9 +219,7 @@ fn check_berkeley(input: &SoftStorySeismicRetrofitInput) -> SoftStorySeismicRetr
         && input.residential_unit_count >= 3
         && input.two_plus_stories_over_soft_story;
 
-    if in_scope
-        && !matches!(input.compliance_stage, ComplianceStage::RetrofitComplete)
-    {
+    if in_scope && !matches!(input.compliance_stage, ComplianceStage::RetrofitComplete) {
         violations.push(
             "Berkeley Municipal Code Chapter 19.39 — retrofit not complete; ongoing certification requirement violated".to_string(),
         );
@@ -474,9 +467,10 @@ mod tests {
     #[test]
     fn la_note_pins_3_phase_timeline() {
         let r = check(&la_base());
-        assert!(r.notes.iter().any(|n| n.contains("2 years")
-            && n.contains("3.5 years")
-            && n.contains("7 years")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("2 years") && n.contains("3.5 years") && n.contains("7 years")));
     }
 
     #[test]
@@ -501,10 +495,7 @@ mod tests {
         i.compliance_stage = ComplianceStage::PermitsSecured;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("Chapter 19.39")));
+        assert!(r.violations.iter().any(|v| v.contains("Chapter 19.39")));
     }
 
     #[test]

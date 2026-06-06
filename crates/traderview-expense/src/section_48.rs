@@ -520,7 +520,10 @@ mod tests {
         input.eligible_energy_property_category =
             EligibleEnergyPropertyCategory::NotEligibleEnergyProperty;
         let out = check(&input);
-        assert_eq!(out.mode, Section48Mode::NotApplicableNotEligibleEnergyProperty);
+        assert_eq!(
+            out.mode,
+            Section48Mode::NotApplicableNotEligibleEnergyProperty
+        );
     }
 
     #[test]
@@ -528,7 +531,10 @@ mod tests {
         let mut input = baseline_input();
         input.boc_and_pis_status = BocAndPisStatus::BocOnOrAfterJanuary1_2025NonGeothermal;
         let out = check(&input);
-        assert_eq!(out.mode, Section48Mode::NotApplicableBocOnOrAfterJanuary1_2025NonGeothermal);
+        assert_eq!(
+            out.mode,
+            Section48Mode::NotApplicableBocOnOrAfterJanuary1_2025NonGeothermal
+        );
     }
 
     #[test]
@@ -543,9 +549,13 @@ mod tests {
     fn solar_energy_equipment_eligible_compliant() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::EligibleEnergyPropertyCategoryUnderSection48A3;
-        input.eligible_energy_property_category = EligibleEnergyPropertyCategory::SolarEnergyEquipment;
+        input.eligible_energy_property_category =
+            EligibleEnergyPropertyCategory::SolarEnergyEquipment;
         let out = check(&input);
-        assert_eq!(out.mode, Section48Mode::CompliantEligibleEnergyPropertyCategory);
+        assert_eq!(
+            out.mode,
+            Section48Mode::CompliantEligibleEnergyPropertyCategory
+        );
     }
 
     #[test]
@@ -555,34 +565,49 @@ mod tests {
         input.eligible_energy_property_category =
             EligibleEnergyPropertyCategory::GeothermalEnergyEquipment;
         let out = check(&input);
-        assert_eq!(out.mode, Section48Mode::CompliantEligibleEnergyPropertyCategory);
+        assert_eq!(
+            out.mode,
+            Section48Mode::CompliantEligibleEnergyPropertyCategory
+        );
     }
 
     #[test]
     fn energy_storage_eligible_compliant() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::EligibleEnergyPropertyCategoryUnderSection48A3;
-        input.eligible_energy_property_category = EligibleEnergyPropertyCategory::EnergyStorageTechnology;
+        input.eligible_energy_property_category =
+            EligibleEnergyPropertyCategory::EnergyStorageTechnology;
         let out = check(&input);
-        assert_eq!(out.mode, Section48Mode::CompliantEligibleEnergyPropertyCategory);
+        assert_eq!(
+            out.mode,
+            Section48Mode::CompliantEligibleEnergyPropertyCategory
+        );
     }
 
     #[test]
     fn qualified_biogas_eligible_compliant() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::EligibleEnergyPropertyCategoryUnderSection48A3;
-        input.eligible_energy_property_category = EligibleEnergyPropertyCategory::QualifiedBiogasProperty;
+        input.eligible_energy_property_category =
+            EligibleEnergyPropertyCategory::QualifiedBiogasProperty;
         let out = check(&input);
-        assert_eq!(out.mode, Section48Mode::CompliantEligibleEnergyPropertyCategory);
+        assert_eq!(
+            out.mode,
+            Section48Mode::CompliantEligibleEnergyPropertyCategory
+        );
     }
 
     #[test]
     fn microgrid_controllers_eligible_compliant() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::EligibleEnergyPropertyCategoryUnderSection48A3;
-        input.eligible_energy_property_category = EligibleEnergyPropertyCategory::MicrogridControllers;
+        input.eligible_energy_property_category =
+            EligibleEnergyPropertyCategory::MicrogridControllers;
         let out = check(&input);
-        assert_eq!(out.mode, Section48Mode::CompliantEligibleEnergyPropertyCategory);
+        assert_eq!(
+            out.mode,
+            Section48Mode::CompliantEligibleEnergyPropertyCategory
+        );
     }
 
     #[test]
@@ -592,7 +617,10 @@ mod tests {
         input.eligible_energy_property_category =
             EligibleEnergyPropertyCategory::DynamicGlassElectrochromicAddedByIra2022;
         let out = check(&input);
-        assert_eq!(out.mode, Section48Mode::CompliantEligibleEnergyPropertyCategory);
+        assert_eq!(
+            out.mode,
+            Section48Mode::CompliantEligibleEnergyPropertyCategory
+        );
     }
 
     #[test]
@@ -602,7 +630,10 @@ mod tests {
         input.eligible_energy_property_category =
             EligibleEnergyPropertyCategory::LinearGeneratorsAddedByIra2022;
         let out = check(&input);
-        assert_eq!(out.mode, Section48Mode::CompliantEligibleEnergyPropertyCategory);
+        assert_eq!(
+            out.mode,
+            Section48Mode::CompliantEligibleEnergyPropertyCategory
+        );
     }
 
     #[test]
@@ -642,7 +673,10 @@ mod tests {
         let out_base = check(&input_base);
         let out_pwa = check(&input_pwa);
 
-        assert_eq!(out_pwa.credit_amount_dollars / out_base.credit_amount_dollars, 5);
+        assert_eq!(
+            out_pwa.credit_amount_dollars / out_base.credit_amount_dollars,
+            5
+        );
     }
 
     #[test]
@@ -653,7 +687,10 @@ mod tests {
         input.pwa_status = PwaStatus::SatisfiesPwaRequirements;
         input.qualified_investment_dollars = 100_000_000;
         let out = check(&input);
-        assert_eq!(out.mode, Section48Mode::CompliantWithEnergyCommunityAdder10Percent);
+        assert_eq!(
+            out.mode,
+            Section48Mode::CompliantWithEnergyCommunityAdder10Percent
+        );
         assert_eq!(out.credit_amount_dollars, 40_000_000);
     }
 
@@ -673,12 +710,14 @@ mod tests {
     fn domestic_content_adder_with_pwa_compliant() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::DomesticContent10PercentAdderUnderSection48A12;
-        input.domestic_content_status =
-            DomesticContentStatus::SatisfiesDomesticContentRequirements;
+        input.domestic_content_status = DomesticContentStatus::SatisfiesDomesticContentRequirements;
         input.pwa_status = PwaStatus::SatisfiesPwaRequirements;
         input.qualified_investment_dollars = 100_000_000;
         let out = check(&input);
-        assert_eq!(out.mode, Section48Mode::CompliantWithDomesticContentAdder10Percent);
+        assert_eq!(
+            out.mode,
+            Section48Mode::CompliantWithDomesticContentAdder10Percent
+        );
         assert_eq!(out.credit_amount_dollars, 40_000_000);
     }
 
@@ -688,11 +727,13 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::MaximumStackedCredit50Percent;
         input.pwa_status = PwaStatus::SatisfiesPwaRequirements;
         input.energy_community_status = EnergyCommunityStatus::LocatedInEnergyCommunity;
-        input.domestic_content_status =
-            DomesticContentStatus::SatisfiesDomesticContentRequirements;
+        input.domestic_content_status = DomesticContentStatus::SatisfiesDomesticContentRequirements;
         input.qualified_investment_dollars = 100_000_000;
         let out = check(&input);
-        assert_eq!(out.mode, Section48Mode::CompliantMaximumStackedCreditAt50Percent);
+        assert_eq!(
+            out.mode,
+            Section48Mode::CompliantMaximumStackedCreditAt50Percent
+        );
         assert_eq!(out.credit_amount_dollars, 50_000_000);
     }
 
@@ -703,7 +744,10 @@ mod tests {
         input.low_income_community_status =
             LowIncomeCommunityStatus::AllocatedLowIncomeCommunitiesBonusUnderSection48E;
         let out = check(&input);
-        assert_eq!(out.mode, Section48Mode::CompliantLowIncomeCommunitiesBonusAllocated);
+        assert_eq!(
+            out.mode,
+            Section48Mode::CompliantLowIncomeCommunitiesBonusAllocated
+        );
     }
 
     #[test]
@@ -712,7 +756,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::BocAndPisDeadlinesGeneralAndGeothermal;
         input.boc_and_pis_status = BocAndPisStatus::BocBeforeJanuary1_2025AndPisAfter2021;
         let out = check(&input);
-        assert_eq!(out.mode, Section48Mode::CompliantBocBeforeJanuary1_2025AndPisAfter2021);
+        assert_eq!(
+            out.mode,
+            Section48Mode::CompliantBocBeforeJanuary1_2025AndPisAfter2021
+        );
     }
 
     #[test]
@@ -733,7 +780,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::FiveYearRecapturePeriod;
         input.recapture_status = RecaptureStatus::No5YearRecaptureTriggered;
         let out = check(&input);
-        assert_eq!(out.mode, Section48Mode::CompliantFiveYearRecapturePeriodSatisfied);
+        assert_eq!(
+            out.mode,
+            Section48Mode::CompliantFiveYearRecapturePeriodSatisfied
+        );
     }
 
     #[test]
@@ -743,7 +793,10 @@ mod tests {
         input.recapture_status =
             RecaptureStatus::RecaptureTriggeredByDispositionOrPwaFailureDuring5YearPeriod;
         let out = check(&input);
-        assert_eq!(out.mode, Section48Mode::ViolationRecaptureTriggeredDuring5YearPeriod);
+        assert_eq!(
+            out.mode,
+            Section48Mode::ViolationRecaptureTriggeredDuring5YearPeriod
+        );
     }
 
     #[test]
@@ -751,7 +804,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::EligibilityForSection6417DirectPay;
         let out = check(&input);
-        assert_eq!(out.mode, Section48Mode::CompliantEligibleForSection6417DirectPay);
+        assert_eq!(
+            out.mode,
+            Section48Mode::CompliantEligibleForSection6417DirectPay
+        );
     }
 
     #[test]
@@ -759,7 +815,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::EligibilityForSection6418Transferability;
         let out = check(&input);
-        assert_eq!(out.mode, Section48Mode::CompliantEligibleForSection6418Transferability);
+        assert_eq!(
+            out.mode,
+            Section48Mode::CompliantEligibleForSection6418Transferability
+        );
     }
 
     #[test]

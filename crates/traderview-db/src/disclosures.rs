@@ -398,9 +398,9 @@ pub async fn poll_all(pool: &PgPool) -> PollResult {
 /// endpoint is unreachable while still surfacing real failures (HTTP
 /// 4xx/5xx, parse errors).
 fn log_poll_error(source: &str, err: &anyhow::Error) {
-    let is_transient = err.downcast_ref::<reqwest::Error>().is_some_and(|re| {
-        re.is_connect() || re.is_timeout() || re.is_request()
-    });
+    let is_transient = err
+        .downcast_ref::<reqwest::Error>()
+        .is_some_and(|re| re.is_connect() || re.is_timeout() || re.is_request());
     if is_transient {
         tracing::debug!(error = ?err, source, "disclosures poll skipped (transient network error)");
     } else {

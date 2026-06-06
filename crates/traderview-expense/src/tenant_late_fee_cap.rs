@@ -144,12 +144,9 @@ pub fn check(input: &TenantLateFeeCapInput) -> TenantLateFeeCapResult {
 
     match input.jurisdiction {
         Jurisdiction::California => {
-            statutory_cap_cents =
-                input.monthly_rent_cents.saturating_mul(600) / 10_000;
+            statutory_cap_cents = input.monthly_rent_cents.saturating_mul(600) / 10_000;
             grace_period_days_required = 0;
-            if !input.impracticable_to_fix_actual_damage
-                || !input.reasonable_endeavor_to_estimate
-            {
+            if !input.impracticable_to_fix_actual_damage || !input.reasonable_endeavor_to_estimate {
                 failure_reasons.push(
                     "Cal. Civ. Code § 1671(d) + Orozco v. Casimiro, 121 Cal.App.4th Supp. 7 (2004) — late fee VOID as unenforceable liquidated damages unless landlord proves BOTH (1) it was impracticable or extremely difficult to fix actual damage at lease execution AND (2) the fee was a reasonable endeavor to estimate fair average compensation for loss sustained".to_string(),
                 );
@@ -173,9 +170,15 @@ pub fn check(input: &TenantLateFeeCapInput) -> TenantLateFeeCapResult {
             grace_period_days_required = 0;
         }
         Jurisdiction::Texas => {
-            let safe_harbor_bps: u32 = if input.dwelling_unit_count > 4 { 1000 } else { 1200 };
-            statutory_cap_cents =
-                input.monthly_rent_cents.saturating_mul(safe_harbor_bps as u64) / 10_000;
+            let safe_harbor_bps: u32 = if input.dwelling_unit_count > 4 {
+                1000
+            } else {
+                1200
+            };
+            statutory_cap_cents = input
+                .monthly_rent_cents
+                .saturating_mul(safe_harbor_bps as u64)
+                / 10_000;
             grace_period_days_required = 2;
         }
         Jurisdiction::Default => {
@@ -184,17 +187,16 @@ pub fn check(input: &TenantLateFeeCapInput) -> TenantLateFeeCapResult {
         }
     }
 
-    let late_fee_excess_cents = input.late_fee_charged_cents.saturating_sub(statutory_cap_cents);
-    let late_fee_compliant_amount =
-        input.late_fee_charged_cents <= statutory_cap_cents;
-    let grace_period_satisfied =
-        input.days_after_due_when_charged >= grace_period_days_required;
+    let late_fee_excess_cents = input
+        .late_fee_charged_cents
+        .saturating_sub(statutory_cap_cents);
+    let late_fee_compliant_amount = input.late_fee_charged_cents <= statutory_cap_cents;
+    let grace_period_satisfied = input.days_after_due_when_charged >= grace_period_days_required;
 
     let mut late_fee_compliant = late_fee_compliant_amount && grace_period_satisfied;
 
     if input.jurisdiction == Jurisdiction::California
-        && (!input.impracticable_to_fix_actual_damage
-            || !input.reasonable_endeavor_to_estimate)
+        && (!input.impracticable_to_fix_actual_damage || !input.reasonable_endeavor_to_estimate)
     {
         late_fee_compliant = false;
     }
@@ -208,8 +210,8 @@ pub fn check(input: &TenantLateFeeCapInput) -> TenantLateFeeCapResult {
                 ));
             }
             Jurisdiction::Texas => {
-                tenant_damages_cents = 10_000_u64
-                    .saturating_add(input.late_fee_charged_cents.saturating_mul(3));
+                tenant_damages_cents =
+                    10_000_u64.saturating_add(input.late_fee_charged_cents.saturating_mul(3));
                 treble_damages_engaged = true;
                 failure_reasons.push(format!(
                     "Tex. Prop. Code § 92.019(d) — late fee EXCEEDS safe-harbor cap ({} bps of monthly rent for {}-unit structure); tenant remedy: $100 + TREBLE the late fee collected + reasonable attorney's fees ({} cents total)",
@@ -379,8 +381,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.late_fee_compliant);
         assert_eq!(r.late_fee_excess_cents, 1);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 238-a")
-            && f.contains("LESSER of $50 OR 5%")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 238-a") && f.contains("LESSER of $50 OR 5%")));
     }
 
     #[test]
@@ -391,8 +395,10 @@ mod tests {
         i.late_fee_charged_cents = 3_000;
         let r = check(&i);
         assert!(!r.grace_period_satisfied);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 238-a")
-            && f.contains("5-DAY GRACE PERIOD")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 238-a") && f.contains("5-DAY GRACE PERIOD")));
     }
 
     #[test]
@@ -410,8 +416,9 @@ mod tests {
         let mut i = ca_compliant();
         i.jurisdiction = Jurisdiction::NewYork;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 238-a")
-            && f.contains("CANNOT EVICT solely for unpaid late fees")));
+        assert!(r.failure_reasons.iter().any(
+            |f| f.contains("§ 238-a") && f.contains("CANNOT EVICT solely for unpaid late fees")
+        ));
     }
 
     #[test]
@@ -466,8 +473,10 @@ mod tests {
         assert!(!r.late_fee_compliant);
         assert!(r.treble_damages_engaged);
         assert_eq!(r.tenant_damages_cents, 10_000 + 30_000 * 3);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 92.019(d)")
-            && f.contains("$100 + TREBLE")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 92.019(d)") && f.contains("$100 + TREBLE")));
     }
 
     #[test]
@@ -480,8 +489,10 @@ mod tests {
         i.days_after_due_when_charged = 1;
         let r = check(&i);
         assert!(!r.grace_period_satisfied);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 92.019(a)(2)")
-            && f.contains("2-DAY GRACE PERIOD")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 92.019(a)(2)") && f.contains("2-DAY GRACE PERIOD")));
     }
 
     #[test]
@@ -512,8 +523,11 @@ mod tests {
         i.late_fee_charged_cents = 50_000;
         let r = check(&i);
         assert!(!r.late_fee_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("Common-law liquidated damages")
-            && f.contains("Restatement (Second) of Contracts § 356")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("Common-law liquidated damages")
+                && f.contains("Restatement (Second) of Contracts § 356")));
     }
 
     #[test]
@@ -526,7 +540,9 @@ mod tests {
         assert!(r.citation.contains("HSTPA of 2019"));
         assert!(r.citation.contains("Fla. Stat. § 83.808"));
         assert!(r.citation.contains("Tex. Prop. Code § 92.019"));
-        assert!(r.citation.contains("Restatement (Second) of Contracts § 356"));
+        assert!(r
+            .citation
+            .contains("Restatement (Second) of Contracts § 356"));
     }
 
     #[test]
@@ -591,8 +607,10 @@ mod tests {
     #[test]
     fn note_pins_texas_2_day_grace() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("§ 92.019(a)(2)")
-            && n.contains("2-DAY GRACE PERIOD")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 92.019(a)(2)") && n.contains("2-DAY GRACE PERIOD")));
     }
 
     #[test]
@@ -606,17 +624,23 @@ mod tests {
     #[test]
     fn note_pins_default_restatement_356() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("Restatement (Second) of Contracts § 356")
-            && n.contains("NOT operate as a penalty")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Restatement (Second) of Contracts § 356")
+                && n.contains("NOT operate as a penalty")));
     }
 
     #[test]
     fn note_pins_cross_jurisdictional_invariant() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("Cross-jurisdictional invariant")
-            && n.contains("LIQUIDATED-DAMAGES REASONABLENESS")
-            && n.contains("STATUTORY HARD CAP")
-            && n.contains("PERCENTAGE SAFE HARBOR")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Cross-jurisdictional invariant")
+                && n.contains("LIQUIDATED-DAMAGES REASONABLENESS")
+                && n.contains("STATUTORY HARD CAP")
+                && n.contains("PERCENTAGE SAFE HARBOR")));
     }
 
     #[test]

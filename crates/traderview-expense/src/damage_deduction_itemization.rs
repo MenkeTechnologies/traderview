@@ -269,7 +269,9 @@ pub fn check(input: &Input) -> CheckResult {
             Regime::Florida => 0,
             // Texas § 92.109 — $100 + 3× retained + reasonable
             // attorney fees.
-            Regime::Texas => 10_000_i64.saturating_add(input.amount_withheld_cents.saturating_mul(3)),
+            Regime::Texas => {
+                10_000_i64.saturating_add(input.amount_withheld_cents.saturating_mul(3))
+            }
         }
     } else {
         0
@@ -343,11 +345,10 @@ mod tests {
         i.days_to_itemized_statement = 22;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("22") && v.contains("21"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("22") && v.contains("21")));
     }
 
     #[test]
@@ -365,11 +366,10 @@ mod tests {
         i.receipts_attached_for_items_above_threshold = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("receipt-attachment threshold"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("receipt-attachment threshold")));
     }
 
     #[test]
@@ -388,11 +388,10 @@ mod tests {
         i.photographs_taken_before_and_after_repairs = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("AB 2801") && v.contains("photographs"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("AB 2801") && v.contains("photographs")));
     }
 
     #[test]
@@ -472,11 +471,10 @@ mod tests {
         i.depreciation_applied_to_finite_life_items = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("depreciation") && v.contains("new-for-old"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("depreciation") && v.contains("new-for-old")));
     }
 
     // ── Florida Fla. Stat. § 83.49(3) ───────────────────────────
@@ -498,11 +496,10 @@ mod tests {
         i.receipts_attached_for_items_above_threshold = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("200") && v.contains("threshold"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("200") && v.contains("threshold")));
     }
 
     #[test]
@@ -612,11 +609,7 @@ mod tests {
     fn only_california_has_21_day_shortest_deadline_5_regime_invariant() {
         let ca = check(&base(Regime::California));
         assert_eq!(ca.deadline_days, 21);
-        for &regime in &[
-            Regime::Washington,
-            Regime::Florida,
-            Regime::Texas,
-        ] {
+        for &regime in &[Regime::Washington, Regime::Florida, Regime::Texas] {
             assert_eq!(check(&base(regime)).deadline_days, 30);
         }
         assert_eq!(check(&base(Regime::Oregon)).deadline_days, 31);
@@ -659,11 +652,7 @@ mod tests {
             i.amount_withheld_cents = 100000;
             samples.push((regime, check(&i).statutory_bad_faith_penalty_cents));
         }
-        let texas_value = samples
-            .iter()
-            .find(|(r, _)| *r == Regime::Texas)
-            .unwrap()
-            .1;
+        let texas_value = samples.iter().find(|(r, _)| *r == Regime::Texas).unwrap().1;
         for &(regime, value) in samples.iter() {
             if regime == Regime::Texas {
                 continue;
@@ -698,31 +687,19 @@ mod tests {
 
     #[test]
     fn citation_pins_authority_per_regime() {
-        assert!(
-            check(&base(Regime::California))
-                .citation
-                .contains("§ 1950.5(g)(2)")
-        );
-        assert!(
-            check(&base(Regime::Washington))
-                .citation
-                .contains("RCW 59.18.280")
-        );
-        assert!(
-            check(&base(Regime::Oregon))
-                .citation
-                .contains("ORS 90.300(13)")
-        );
-        assert!(
-            check(&base(Regime::Florida))
-                .citation
-                .contains("§ 83.49(3)")
-        );
-        assert!(
-            check(&base(Regime::Texas))
-                .citation
-                .contains("§ 92.109")
-        );
+        assert!(check(&base(Regime::California))
+            .citation
+            .contains("§ 1950.5(g)(2)"));
+        assert!(check(&base(Regime::Washington))
+            .citation
+            .contains("RCW 59.18.280"));
+        assert!(check(&base(Regime::Oregon))
+            .citation
+            .contains("ORS 90.300(13)"));
+        assert!(check(&base(Regime::Florida))
+            .citation
+            .contains("§ 83.49(3)"));
+        assert!(check(&base(Regime::Texas)).citation.contains("§ 92.109"));
     }
 
     #[test]
@@ -743,8 +720,7 @@ mod tests {
         assert!(
             r.notes
                 .iter()
-                .any(|n| n.contains("pre-tenancy photographs")
-                    && n.contains("2025-07-01")),
+                .any(|n| n.contains("pre-tenancy photographs") && n.contains("2025-07-01")),
             "CA AB 2801 pre-tenancy photo note must be present"
         );
     }

@@ -116,8 +116,7 @@ const ONE_YEAR_DAYS: i64 = 365;
 
 pub fn compute(input: &Section1015Input) -> Section1015Result {
     // Step 1: §1015(d) gift-tax basis increase.
-    let net_appreciation = (input.fmv_at_gift_date - input.donor_adjusted_basis)
-        .max(Decimal::ZERO);
+    let net_appreciation = (input.fmv_at_gift_date - input.donor_adjusted_basis).max(Decimal::ZERO);
     let gift_tax_basis_increase = if input.gift_tax_paid > Decimal::ZERO
         && net_appreciation > Decimal::ZERO
         && input.gift_amount_for_tax_purposes > Decimal::ZERO

@@ -45,32 +45,55 @@ pub fn analyze(
         let p = portfolio_returns[i];
         let m = market_returns[i];
         let rf = risk_free_returns[i];
-        if !p.is_finite() || !m.is_finite() || !rf.is_finite() { continue; }
+        if !p.is_finite() || !m.is_finite() || !rf.is_finite() {
+            continue;
+        }
         let mer = m - rf;
         y.push(p - rf);
         xm.push(mer);
-        down.push((-mer).max(0.0));    // max(0, rf − m)
+        down.push((-mer).max(0.0)); // max(0, rf − m)
     }
     let n_obs = y.len();
-    if n_obs < 10 { return None; }
+    if n_obs < 10 {
+        return None;
+    }
     let ones: Vec<f64> = vec![1.0; n_obs];
     let cols = vec![ones, xm, down];
     let (beta, se) = ols_with_se(&cols, &y)?;
-    if beta.len() != 3 || se.len() != 3 { return None; }
-    let alpha = beta[0]; let beta_coef = beta[1]; let gamma = beta[2];
-    let alpha_se = se[0]; let beta_se = se[1]; let gamma_se = se[2];
-    let tstat = if gamma_se > 0.0 { gamma / gamma_se } else { 0.0 };
+    if beta.len() != 3 || se.len() != 3 {
+        return None;
+    }
+    let alpha = beta[0];
+    let beta_coef = beta[1];
+    let gamma = beta[2];
+    let alpha_se = se[0];
+    let beta_se = se[1];
+    let gamma_se = se[2];
+    let tstat = if gamma_se > 0.0 {
+        gamma / gamma_se
+    } else {
+        0.0
+    };
     let y_mean: f64 = y.iter().sum::<f64>() / n_obs as f64;
-    let mut ss_tot = 0.0; let mut ss_res = 0.0;
+    let mut ss_tot = 0.0;
+    let mut ss_res = 0.0;
     for k in 0..n_obs {
         let pred = alpha + beta_coef * cols[1][k] + gamma * cols[2][k];
         ss_tot += (y[k] - y_mean).powi(2);
         ss_res += (y[k] - pred).powi(2);
     }
-    let r2 = if ss_tot > 0.0 { 1.0 - ss_res / ss_tot } else { 0.0 };
+    let r2 = if ss_tot > 0.0 {
+        1.0 - ss_res / ss_tot
+    } else {
+        0.0
+    };
     Some(HmReport {
-        alpha, beta: beta_coef, gamma,
-        alpha_se, beta_se, gamma_se,
+        alpha,
+        beta: beta_coef,
+        gamma,
+        alpha_se,
+        beta_se,
+        gamma_se,
         gamma_tstat: tstat,
         r_squared: r2,
         n_observations: n_obs,
@@ -80,7 +103,9 @@ pub fn analyze(
 fn ols_with_se(x: &[Vec<f64>], y: &[f64]) -> Option<(Vec<f64>, Vec<f64>)> {
     let p = x.len();
     let n = y.len();
-    if p == 0 || n == 0 || x.iter().any(|c| c.len() != n) { return None; }
+    if p == 0 || n == 0 || x.iter().any(|c| c.len() != n) {
+        return None;
+    }
     let mut xtx = vec![vec![0.0_f64; p]; p];
     let mut xty = vec![0.0_f64; p];
     for i in 0..p {
@@ -100,18 +125,30 @@ fn ols_with_se(x: &[Vec<f64>], y: &[f64]) -> Option<(Vec<f64>, Vec<f64>)> {
     for i in 0..p {
         let mut pivot = i;
         for r in (i + 1)..p {
-            if aug[r][i].abs() > aug[pivot][i].abs() { pivot = r; }
+            if aug[r][i].abs() > aug[pivot][i].abs() {
+                pivot = r;
+            }
         }
-        if aug[pivot][i].abs() < 1e-18 { return None; }
+        if aug[pivot][i].abs() < 1e-18 {
+            return None;
+        }
         aug.swap(i, pivot);
         let div = aug[i][i];
-        for v in aug[i].iter_mut() { *v /= div; }
+        for v in aug[i].iter_mut() {
+            *v /= div;
+        }
         for r in 0..p {
-            if r == i { continue; }
+            if r == i {
+                continue;
+            }
             let f = aug[r][i];
-            if f == 0.0 { continue; }
+            if f == 0.0 {
+                continue;
+            }
             let pivot_row = aug[i].clone();
-            for (j, v) in aug[r].iter_mut().enumerate() { *v -= f * pivot_row[j]; }
+            for (j, v) in aug[r].iter_mut().enumerate() {
+                *v -= f * pivot_row[j];
+            }
         }
     }
     let beta: Vec<f64> = (0..p).map(|i| aug[i][2 * p]).collect();
@@ -136,7 +173,7 @@ mod tests {
 
     #[test]
     fn dim_mismatch_returns_none() {
-        assert!(analyze(&[0.01; 50], &[0.01; 25], &[0.001; 25], ).is_none());
+        assert!(analyze(&[0.01; 50], &[0.01; 25], &[0.001; 25],).is_none());
     }
 
     #[test]
@@ -159,19 +196,26 @@ mod tests {
         // Portfolio shrinks beta in down markets — equivalent to γ > 0.
         let m: Vec<f64> = (0..200).map(|i| (i as f64 * 0.07).sin() * 0.03).collect();
         let rf = vec![0.0001; 200];
-        let p: Vec<f64> = m.iter().zip(rf.iter()).map(|(mi, rfi)| {
-            let mer = mi - rfi;
-            if mer >= 0.0 {
-                rfi + 1.0 * mer
-            } else {
-                rfi + 0.3 * mer    // only 30% participation in down moves
-            }
-        }).collect();
+        let p: Vec<f64> = m
+            .iter()
+            .zip(rf.iter())
+            .map(|(mi, rfi)| {
+                let mer = mi - rfi;
+                if mer >= 0.0 {
+                    rfi + 1.0 * mer
+                } else {
+                    rfi + 0.3 * mer // only 30% participation in down moves
+                }
+            })
+            .collect();
         let report = analyze(&p, &m, &rf).unwrap();
         // Per the model: in down regimes the manager loses (β + γ)·mer instead of β·mer.
         // Defensive (0.3 effective beta down) vs 1.0 up means γ ≈ +0.7.
-        assert!(report.gamma > 0.3,
-            "defensive timer should produce γ > 0, got {}", report.gamma);
+        assert!(
+            report.gamma > 0.3,
+            "defensive timer should produce γ > 0, got {}",
+            report.gamma
+        );
     }
 
     #[test]
@@ -179,17 +223,24 @@ mod tests {
         // Manager DOUBLES exposure in down markets — anti-timing.
         let m: Vec<f64> = (0..200).map(|i| (i as f64 * 0.07).sin() * 0.03).collect();
         let rf = vec![0.0001; 200];
-        let p: Vec<f64> = m.iter().zip(rf.iter()).map(|(mi, rfi)| {
-            let mer = mi - rfi;
-            if mer >= 0.0 {
-                rfi + 1.0 * mer
-            } else {
-                rfi + 2.0 * mer
-            }
-        }).collect();
+        let p: Vec<f64> = m
+            .iter()
+            .zip(rf.iter())
+            .map(|(mi, rfi)| {
+                let mer = mi - rfi;
+                if mer >= 0.0 {
+                    rfi + 1.0 * mer
+                } else {
+                    rfi + 2.0 * mer
+                }
+            })
+            .collect();
         let report = analyze(&p, &m, &rf).unwrap();
-        assert!(report.gamma < 0.0,
-            "anti-timer should produce γ < 0, got {}", report.gamma);
+        assert!(
+            report.gamma < 0.0,
+            "anti-timer should produce γ < 0, got {}",
+            report.gamma
+        );
     }
 
     #[test]

@@ -193,8 +193,7 @@ pub fn check(input: &Input) -> Output {
         };
     }
 
-    let is_post_2020 =
-        input.renovation_year >= TSCA_POST_2020_CLEARANCE_EFFECTIVE_YEAR;
+    let is_post_2020 = input.renovation_year >= TSCA_POST_2020_CLEARANCE_EFFECTIVE_YEAR;
     let floor_clearance_limit = if is_post_2020 {
         TSCA_POST_2020_FLOOR_CLEARANCE_UG_PER_SQ_FT
     } else {
@@ -211,7 +210,10 @@ pub fn check(input: &Input) -> Output {
         input.federal_assistance,
         FederalAssistanceStatus::HudAssistedLeadSafeHousingRuleApplies
     ) || input.dust_wipe_clearance_required_by_state_or_contract
-        || matches!(input.jurisdiction, Jurisdiction::Massachusetts | Jurisdiction::NewYork);
+        || matches!(
+            input.jurisdiction,
+            Jurisdiction::Massachusetts | Jurisdiction::NewYork
+        );
 
     if input.child_under_6_or_pregnant_woman_in_unit
         && input.tenant_reoccupied_before_clearance_results
@@ -323,9 +325,12 @@ pub fn check(input: &Input) -> Output {
              verification documented, dust wipe samples passed all three locations (floor \
              {} ≤ {} μg/ft², sill {} ≤ {} μg/ft², trough {} ≤ {} μg/ft²). Retain all \
              documentation for {}-year RRP recordkeeping period per 40 C.F.R. § 745.86(a).",
-            input.floor_dust_lead_micrograms_per_sq_ft, floor_clearance_limit,
-            input.window_sill_dust_lead_micrograms_per_sq_ft, sill_clearance_limit,
-            input.window_trough_dust_lead_micrograms_per_sq_ft, trough_clearance_limit,
+            input.floor_dust_lead_micrograms_per_sq_ft,
+            floor_clearance_limit,
+            input.window_sill_dust_lead_micrograms_per_sq_ft,
+            sill_clearance_limit,
+            input.window_trough_dust_lead_micrograms_per_sq_ft,
+            trough_clearance_limit,
             3
         ));
     }
@@ -407,7 +412,8 @@ pub fn check(input: &Input) -> Output {
         severity,
         recommended_actions: actions,
         annual_rent_at_risk_cents: annual_rent_at_risk,
-        epa_civil_penalty_per_violation_per_day_cents: EPA_CIVIL_PENALTY_PER_VIOLATION_PER_DAY_CENTS,
+        epa_civil_penalty_per_violation_per_day_cents:
+            EPA_CIVIL_PENALTY_PER_VIOLATION_PER_DAY_CENTS,
         citation: match input.jurisdiction {
             Jurisdiction::Massachusetts => {
                 "105 CMR 460 + M.G.L. ch. 111 §§ 190-199A + CLPPP + 40 C.F.R. Part 745 Subpart E"
@@ -472,7 +478,10 @@ mod tests {
         i.exterior_disturbed_square_feet = 10;
         let r = check(&i);
         assert!(matches!(r.severity, Severity::NotApplicable));
-        assert!(r.notes.iter().any(|n| n.contains("40 C.F.R. § 745.82(a)(2)")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("40 C.F.R. § 745.82(a)(2)")));
     }
 
     #[test]
@@ -519,9 +528,15 @@ mod tests {
     fn compliant_clearance_passed_all_locations() {
         let i = baseline();
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantClearancePassedAllLocations));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantClearancePassedAllLocations
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, 0);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("§ 745.86(a)")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("§ 745.86(a)")));
     }
 
     #[test]
@@ -531,7 +546,10 @@ mod tests {
         let r = check(&i);
         assert!(matches!(r.severity, Severity::UncertifiedFirmRrpViolation));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("40 C.F.R. § 745.81(a)")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("40 C.F.R. § 745.81(a)")));
     }
 
     #[test]
@@ -551,7 +569,10 @@ mod tests {
         let mut i = baseline();
         i.renovate_right_pamphlet_provided = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::NoTenantNotificationPreWorkViolation));
+        assert!(matches!(
+            r.severity,
+            Severity::NoTenantNotificationPreWorkViolation
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents / 2);
         assert!(r
             .recommended_actions
@@ -564,7 +585,10 @@ mod tests {
         let mut i = baseline();
         i.cleaning_verification_card_documented = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::NoCleaningVerificationViolation));
+        assert!(matches!(
+            r.severity,
+            Severity::NoCleaningVerificationViolation
+        ));
         assert!(r
             .recommended_actions
             .iter()
@@ -577,7 +601,10 @@ mod tests {
         i.federal_assistance = FederalAssistanceStatus::HudAssistedLeadSafeHousingRuleApplies;
         i.dust_wipe_clearance_performed = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::DustWipeClearanceRequiredButNotPerformed));
+        assert!(matches!(
+            r.severity,
+            Severity::DustWipeClearanceRequiredButNotPerformed
+        ));
     }
 
     #[test]
@@ -586,9 +613,15 @@ mod tests {
         i.renovation_year = 2024;
         i.floor_dust_lead_micrograms_per_sq_ft = 15;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::FloorDustExceedsClearanceStandard));
+        assert!(matches!(
+            r.severity,
+            Severity::FloorDustExceedsClearanceStandard
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("§ 745.227")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("§ 745.227")));
     }
 
     #[test]
@@ -596,7 +629,10 @@ mod tests {
         let mut i = baseline();
         i.floor_dust_lead_micrograms_per_sq_ft = 10;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantClearancePassedAllLocations));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantClearancePassedAllLocations
+        ));
     }
 
     #[test]
@@ -605,7 +641,10 @@ mod tests {
         i.renovation_year = 2019;
         i.floor_dust_lead_micrograms_per_sq_ft = 40;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantClearancePassedAllLocations));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantClearancePassedAllLocations
+        ));
     }
 
     #[test]
@@ -614,7 +653,10 @@ mod tests {
         i.renovation_year = 2019;
         i.floor_dust_lead_micrograms_per_sq_ft = 41;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::FloorDustExceedsClearanceStandard));
+        assert!(matches!(
+            r.severity,
+            Severity::FloorDustExceedsClearanceStandard
+        ));
     }
 
     #[test]
@@ -622,7 +664,10 @@ mod tests {
         let mut i = baseline();
         i.window_sill_dust_lead_micrograms_per_sq_ft = 150;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::WindowSillDustExceedsClearanceStandard));
+        assert!(matches!(
+            r.severity,
+            Severity::WindowSillDustExceedsClearanceStandard
+        ));
     }
 
     #[test]
@@ -630,7 +675,10 @@ mod tests {
         let mut i = baseline();
         i.window_trough_dust_lead_micrograms_per_sq_ft = 450;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::WindowTroughDustExceedsClearanceStandard));
+        assert!(matches!(
+            r.severity,
+            Severity::WindowTroughDustExceedsClearanceStandard
+        ));
     }
 
     #[test]
@@ -638,7 +686,10 @@ mod tests {
         let mut i = baseline();
         i.tenant_reoccupied_before_clearance_results = true;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::TenantReoccupancyBeforeClearancePass));
+        assert!(matches!(
+            r.severity,
+            Severity::TenantReoccupancyBeforeClearancePass
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
     }
 
@@ -648,7 +699,10 @@ mod tests {
         i.child_under_6_or_pregnant_woman_in_unit = true;
         i.tenant_reoccupied_before_clearance_results = true;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::ChildPregnancyExposureMaximumLiability));
+        assert!(matches!(
+            r.severity,
+            Severity::ChildPregnancyExposureMaximumLiability
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
         assert!(r
             .recommended_actions
@@ -665,7 +719,10 @@ mod tests {
         let i = baseline();
         let r = check(&i);
         assert!(r.notes.iter().any(|n| n.contains("105 CMR 460")));
-        assert!(r.notes.iter().any(|n| n.contains("M.G.L. ch. 111 §§ 190-199A")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("M.G.L. ch. 111 §§ 190-199A")));
         assert!(r.notes.iter().any(|n| n.contains("CLPPP")));
         assert!(r.notes.iter().any(|n| n.contains("triple damages")));
     }
@@ -676,7 +733,10 @@ mod tests {
         i.jurisdiction = Jurisdiction::California;
         let r = check(&i);
         assert!(r.notes.iter().any(|n| n.contains("§ 17920.10")));
-        assert!(r.notes.iter().any(|n| n.contains("Title 17 Div. 1 Ch. 8 CLPPB")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Title 17 Div. 1 Ch. 8 CLPPB")));
     }
 
     #[test]
@@ -703,7 +763,10 @@ mod tests {
     fn coordination_note_references_lead_pipe_relocation_iied() {
         let i = baseline();
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("rental_lead_pipe_disclosure")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("rental_lead_pipe_disclosure")));
         assert!(r
             .notes
             .iter()
@@ -741,7 +804,10 @@ mod tests {
         i.tenant_reoccupied_before_clearance_results = true;
         i.floor_dust_lead_micrograms_per_sq_ft = 5_000;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::ChildPregnancyExposureMaximumLiability));
+        assert!(matches!(
+            r.severity,
+            Severity::ChildPregnancyExposureMaximumLiability
+        ));
     }
 
     #[test]
@@ -755,10 +821,26 @@ mod tests {
 
     #[test]
     fn citation_branch_for_each_jurisdiction() {
-        let ma = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Massachusetts; i });
-        let ca = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::California; i });
-        let ny = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::NewYork; i });
-        let de = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Default; i });
+        let ma = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Massachusetts;
+            i
+        });
+        let ca = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::California;
+            i
+        });
+        let ny = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::NewYork;
+            i
+        });
+        let de = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Default;
+            i
+        });
         assert!(ma.citation.contains("105 CMR 460"));
         assert!(ca.citation.contains("§ 17920.10"));
         assert!(ny.citation.contains("Local Law 1 of 2004"));

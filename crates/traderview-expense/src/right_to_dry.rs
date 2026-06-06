@@ -100,13 +100,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
     // Many states have "right to dry" laws but they apply to HOAs /
     // condos only and do NOT extend to landlord-tenant rentals.
     let no_state = [
-        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE",
-        "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS",
-        "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS",
-        "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY",
-        "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
-        "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV",
-        "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA",
+        "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+        "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT",
+        "VA", "WA", "WV", "WI", "WY",
     ];
     for code in no_state {
         m.insert(
@@ -236,10 +233,7 @@ mod tests {
     #[test]
     fn ca_tenant_clothesline_right_regime() {
         let r = check(&baseline("CA"));
-        assert_eq!(
-            r.regime,
-            RightToDryRegime::CaliforniaTenantClotheslineRight
-        );
+        assert_eq!(r.regime, RightToDryRegime::CaliforniaTenantClotheslineRight);
     }
 
     #[test]
@@ -334,7 +328,9 @@ mod tests {
         let r = check(&baseline("FL"));
         assert!(r.citation.contains("FL § 163.04"));
         assert!(r.citation.contains("HOA / condo covenants only"));
-        assert!(r.citation.contains("do NOT extend to landlord-tenant rentals"));
+        assert!(r
+            .citation
+            .contains("do NOT extend to landlord-tenant rentals"));
     }
 
     // ── Coverage / single-state-uniqueness ─────────────────────────
@@ -353,7 +349,10 @@ mod tests {
 
     #[test]
     fn ca_only_extends_to_tenants_state() {
-        let count = RULES.iter().filter(|(_, r)| r.extends_to_rental_tenants).count();
+        let count = RULES
+            .iter()
+            .filter(|(_, r)| r.extends_to_rental_tenants)
+            .count();
         assert_eq!(count, 1, "only CA extends statutory right to tenants");
     }
 
@@ -361,12 +360,7 @@ mod tests {
     fn ca_only_clothesline_regime_state() {
         let count = RULES
             .iter()
-            .filter(|(_, r)| {
-                matches!(
-                    r.regime,
-                    RightToDryRegime::CaliforniaTenantClotheslineRight
-                )
-            })
+            .filter(|(_, r)| matches!(r.regime, RightToDryRegime::CaliforniaTenantClotheslineRight))
             .count();
         assert_eq!(count, 1);
     }
@@ -394,9 +388,6 @@ mod tests {
     #[test]
     fn lowercase_state_code_normalizes() {
         let r = check(&baseline("ca"));
-        assert_eq!(
-            r.regime,
-            RightToDryRegime::CaliforniaTenantClotheslineRight
-        );
+        assert_eq!(r.regime, RightToDryRegime::CaliforniaTenantClotheslineRight);
     }
 }

@@ -33,7 +33,7 @@ pub struct TradeFilter {
     pub offset: Option<i64>,
 }
 
-/// Accept Option<i64> from either a JSON integer (POST body) or a query-
+/// Accept `Option<i64>` from either a JSON integer (POST body) or a query-
 /// string scalar (which arrives as a string after `#[serde(flatten)]`).
 fn de_opt_i64_from_str_or_int<'de, D>(de: D) -> Result<Option<i64>, D::Error>
 where
@@ -46,14 +46,22 @@ where
         fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
             f.write_str("integer or string-encoded integer (or null)")
         }
-        fn visit_none<E: de::Error>(self) -> Result<Self::Value, E> { Ok(None) }
-        fn visit_unit<E: de::Error>(self) -> Result<Self::Value, E> { Ok(None) }
-        fn visit_i64<E: de::Error>(self, v: i64) -> Result<Self::Value, E> { Ok(Some(v)) }
+        fn visit_none<E: de::Error>(self) -> Result<Self::Value, E> {
+            Ok(None)
+        }
+        fn visit_unit<E: de::Error>(self) -> Result<Self::Value, E> {
+            Ok(None)
+        }
+        fn visit_i64<E: de::Error>(self, v: i64) -> Result<Self::Value, E> {
+            Ok(Some(v))
+        }
         fn visit_u64<E: de::Error>(self, v: u64) -> Result<Self::Value, E> {
             Ok(Some(v as i64))
         }
         fn visit_str<E: de::Error>(self, v: &str) -> Result<Self::Value, E> {
-            if v.is_empty() { return Ok(None); }
+            if v.is_empty() {
+                return Ok(None);
+            }
             v.parse::<i64>().map(Some).map_err(de::Error::custom)
         }
         fn visit_some<D2: serde::Deserializer<'de>>(self, d: D2) -> Result<Self::Value, D2::Error> {

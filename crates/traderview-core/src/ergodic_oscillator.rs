@@ -46,9 +46,16 @@ pub fn compute(
         s_period,
         signal_period,
     };
-    if r_period < 2 || s_period < 2 || signal_period < 2
-        || n < r_period + s_period + signal_period + 1 { return report; }
-    if closes.iter().any(|x| !x.is_finite()) { return report; }
+    if r_period < 2
+        || s_period < 2
+        || signal_period < 2
+        || n < r_period + s_period + signal_period + 1
+    {
+        return report;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return report;
+    }
     let mut pc = vec![0.0_f64; n];
     let mut apc = vec![0.0_f64; n];
     for i in 1..n {
@@ -93,7 +100,9 @@ fn double_ema(series: &[f64], r: usize, s: usize, offset: usize) -> Vec<Option<f
 fn ema(series: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     let k = 2.0 / (p_f + 1.0);
     let seed: f64 = series[..period].iter().sum::<f64>() / p_f;
@@ -109,18 +118,31 @@ fn ema(series: &[f64], period: usize) -> Vec<Option<f64>> {
 fn ema_opt(series: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 { return out; }
+    if period == 0 {
+        return out;
+    }
     let mut seed_end = None;
     let mut count = 0_usize;
     let mut seed_sum = 0.0_f64;
     for (i, v) in series.iter().enumerate() {
         match v {
-            Some(x) => { seed_sum += x; count += 1; }
-            None => { seed_sum = 0.0; count = 0; }
+            Some(x) => {
+                seed_sum += x;
+                count += 1;
+            }
+            None => {
+                seed_sum = 0.0;
+                count = 0;
+            }
         }
-        if count == period { seed_end = Some(i); break; }
+        if count == period {
+            seed_end = Some(i);
+            break;
+        }
     }
-    let Some(end) = seed_end else { return out; };
+    let Some(end) = seed_end else {
+        return out;
+    };
     let p_f = period as f64;
     let k = 2.0 / (p_f + 1.0);
     let mut cur = seed_sum / p_f;
@@ -168,8 +190,7 @@ mod tests {
         let c: Vec<f64> = (0..200).map(|i| 100.0 + i as f64).collect();
         let r = compute(&c, 25, 13, 7);
         let last = r.tsi.iter().rev().find_map(|x| *x).unwrap();
-        assert!(last > 50.0,
-            "uptrend should yield TSI > 50, got {last}");
+        assert!(last > 50.0, "uptrend should yield TSI > 50, got {last}");
     }
 
     #[test]

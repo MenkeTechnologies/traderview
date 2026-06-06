@@ -103,7 +103,9 @@ pub struct Section1231Result {
 
 pub fn compute(input: &Section1231Input) -> Section1231Result {
     let net = input.current_year_gains_dollars - input.current_year_losses_dollars;
-    let carryover_in = input.nonrecaptured_section_1231_loss_carryover_dollars.max(0);
+    let carryover_in = input
+        .nonrecaptured_section_1231_loss_carryover_dollars
+        .max(0);
 
     let (characterization, ltcg, ordinary_recap, ordinary_loss, carryover_out) = if net == 0 {
         (
@@ -323,7 +325,10 @@ mod tests {
             nonrecaptured_section_1231_loss_carryover_dollars: 0,
         });
         assert_eq!(year1.ordinary_loss_dollars, 100_000);
-        assert_eq!(year1.nonrecaptured_loss_carryover_to_next_year_dollars, 100_000);
+        assert_eq!(
+            year1.nonrecaptured_loss_carryover_to_next_year_dollars,
+            100_000
+        );
 
         let year2 = compute(&Section1231Input {
             tax_year: 2025,
@@ -333,7 +338,10 @@ mod tests {
         });
         assert_eq!(year2.ordinary_recapture_dollars, 40_000);
         assert_eq!(year2.long_term_capital_gain_dollars, 0);
-        assert_eq!(year2.nonrecaptured_loss_carryover_to_next_year_dollars, 60_000);
+        assert_eq!(
+            year2.nonrecaptured_loss_carryover_to_next_year_dollars,
+            60_000
+        );
 
         let year3 = compute(&Section1231Input {
             tax_year: 2026,

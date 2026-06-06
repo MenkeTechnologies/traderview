@@ -209,22 +209,18 @@ pub fn check(input: &Input) -> CheckResult {
             if ca_section_1940_2_engaged {
                 let mut prohibited_acts: Vec<&str> = Vec::new();
                 if input.committed_theft_or_extortion {
-                    prohibited_acts.push(
-                        "§ 1940.2(a)(1)-(2) Penal Code § 484 (theft) or § 518 (extortion)",
-                    );
+                    prohibited_acts
+                        .push("§ 1940.2(a)(1)-(2) Penal Code § 484 (theft) or § 518 (extortion)");
                 }
                 if input.used_force_or_threats {
-                    prohibited_acts
-                        .push("§ 1940.2(a)(3) force/threats/menacing course of conduct");
+                    prohibited_acts.push("§ 1940.2(a)(3) force/threats/menacing course of conduct");
                 }
                 if input.significant_entry_violation {
-                    prohibited_acts.push(
-                        "§ 1940.2(a)(4) significant + intentional § 1954 entry violation",
-                    );
+                    prohibited_acts
+                        .push("§ 1940.2(a)(4) significant + intentional § 1954 entry violation");
                 }
                 if input.immigration_status_disclosure_threat {
-                    prohibited_acts
-                        .push("§ 1940.2(a)(5) immigration/citizenship status threat");
+                    prohibited_acts.push("§ 1940.2(a)(5) immigration/citizenship status threat");
                 }
                 violations.push(format!(
                     "Cal. Civ. Code § 1940.2 — prohibited act(s): {}. § 1940.2(b) civil \
@@ -472,7 +468,10 @@ mod tests {
         let r = check(&b);
         assert!(!r.nyc_hpa_engaged);
         // Note about intent element generated.
-        assert!(r.notes.iter().any(|n| n.contains("INTENT or CAUSATION TO VACATE")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("INTENT or CAUSATION TO VACATE")));
     }
 
     #[test]
@@ -483,7 +482,10 @@ mod tests {
         b.violation_count = 1;
         let r = check(&b);
         assert!(r.nyc_hpa_engaged);
-        assert!(r.violations.iter().any(|v| v.contains("service interruptions")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("service interruptions")));
     }
 
     #[test]
@@ -589,8 +591,7 @@ mod tests {
             let r = check(&b);
             let expected = matches!(regime, Regime::California);
             assert_eq!(
-                r.good_faith_warning_exception_engaged,
-                expected,
+                r.good_faith_warning_exception_engaged, expected,
                 "{:?}",
                 regime
             );
@@ -612,7 +613,11 @@ mod tests {
             b.intent_or_causation_to_vacate = *intent;
             b.violation_count = 1;
             let r = check(&b);
-            assert_eq!(r.nyc_hpa_engaged, *expected_engaged, "act={} intent={}", act, intent);
+            assert_eq!(
+                r.nyc_hpa_engaged, *expected_engaged,
+                "act={} intent={}",
+                act, intent
+            );
         }
     }
 
@@ -621,7 +626,7 @@ mod tests {
         assert_eq!(CA_PENALTY_PER_VIOLATION_CENTS, 200_000); // $2,000
         assert_eq!(NYC_MIN_PENALTY_CENTS, 100_000); // $1,000
         assert_eq!(NYC_MAX_PENALTY_CENTS, 1_000_000); // $10,000
-        // NYC max is 5× CA penalty.
+                                                      // NYC max is 5× CA penalty.
         assert_eq!(NYC_MAX_PENALTY_CENTS, 5 * CA_PENALTY_PER_VIOLATION_CENTS);
     }
 

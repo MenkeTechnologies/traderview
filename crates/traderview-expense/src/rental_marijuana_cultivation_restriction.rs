@@ -210,7 +210,10 @@ pub fn check(input: &Input) -> Output {
         input.cultivation_status,
         CultivationStatus::MedicalCannabisQualifyingPatient
     ) && input.tenant_qualifying_medical_patient
-        && matches!(input.housing_program, HousingProgram::HudAssistedFederalCsaEnforcement)
+        && matches!(
+            input.housing_program,
+            HousingProgram::HudAssistedFederalCsaEnforcement
+        )
     {
         severity = Severity::FhaMedicalCannabisAccommodationDenied;
         actions.push(
@@ -352,9 +355,7 @@ pub fn check(input: &Input) -> Output {
         | Severity::HudFederalCsaTerminationGround => input.annual_rent_cents,
         Severity::ExceedsStatePlantCountViolation
         | Severity::FhaMedicalCannabisAccommodationDenied
-        | Severity::LandlordProhibitionEnforceable => {
-            input.annual_rent_cents.saturating_div(2)
-        }
+        | Severity::LandlordProhibitionEnforceable => input.annual_rent_cents.saturating_div(2),
         _ => 0,
     };
 
@@ -363,7 +364,9 @@ pub fn check(input: &Input) -> Output {
         recommended_actions: actions,
         annual_rent_at_risk_cents: annual_rent_at_risk,
         citation: match input.jurisdiction {
-            Jurisdiction::California => "Cal. Health & Safety Code § 11362.1(a)(3) + § 11362.45(h) + Prop 64",
+            Jurisdiction::California => {
+                "Cal. Health & Safety Code § 11362.1(a)(3) + § 11362.45(h) + Prop 64"
+            }
             Jurisdiction::Colorado => "Colo. Const. Art. XVIII § 16(3)(b)(I)-(II)",
             Jurisdiction::NewYork => "NY Cannabis Law § 222 + MRTA + NY OCM",
             Jurisdiction::Massachusetts => "M.G.L. ch. 94G § 7 + MA CCC",
@@ -422,9 +425,15 @@ mod tests {
         let mut i = baseline();
         i.lease_explicitly_prohibits_cultivation = true;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::LandlordProhibitionEnforceable));
+        assert!(matches!(
+            r.severity,
+            Severity::LandlordProhibitionEnforceable
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents / 2);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("3-day Notice to Cure")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("3-day Notice to Cure")));
     }
 
     #[test]
@@ -432,10 +441,19 @@ mod tests {
         let mut i = baseline();
         i.housing_program = HousingProgram::HudAssistedFederalCsaEnforcement;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::HudFederalCsaTerminationGround));
+        assert!(matches!(
+            r.severity,
+            Severity::HudFederalCsaTerminationGround
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("HUD Notice PIH 2011-25")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("24 C.F.R. § 5.852")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("HUD Notice PIH 2011-25")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("24 C.F.R. § 5.852")));
     }
 
     #[test]
@@ -444,7 +462,10 @@ mod tests {
         i.cultivation_status = CultivationStatus::ExceedingStatePlantCountLimit;
         i.plant_count_actual = 12;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::ExceedsStatePlantCountViolation));
+        assert!(matches!(
+            r.severity,
+            Severity::ExceedsStatePlantCountViolation
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents / 2);
     }
 
@@ -454,7 +475,10 @@ mod tests {
         i.plant_count_actual = 10;
         i.state_plant_count_limit = 6;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::ExceedsStatePlantCountViolation));
+        assert!(matches!(
+            r.severity,
+            Severity::ExceedsStatePlantCountViolation
+        ));
     }
 
     #[test]
@@ -462,7 +486,10 @@ mod tests {
         let mut i = baseline();
         i.cultivation_status = CultivationStatus::BlackMarketCommercialCultivation;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::BlackMarketCommercialEvictionGround));
+        assert!(matches!(
+            r.severity,
+            Severity::BlackMarketCommercialEvictionGround
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
         assert!(r.recommended_actions.iter().any(|a| a.contains("RICO")));
     }
@@ -477,7 +504,10 @@ mod tests {
             Severity::MoldOrElectricalFireDamageHabitabilityBreach
         ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("60-80% relative humidity")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("60-80% relative humidity")));
     }
 
     #[test]
@@ -487,7 +517,10 @@ mod tests {
         i.cultivation_status = CultivationStatus::MedicalCannabisQualifyingPatient;
         i.tenant_qualifying_medical_patient = true;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::HudFederalCsaTerminationGround));
+        assert!(matches!(
+            r.severity,
+            Severity::HudFederalCsaTerminationGround
+        ));
     }
 
     #[test]
@@ -504,8 +537,14 @@ mod tests {
         let mut i = baseline();
         i.jurisdiction = Jurisdiction::Colorado;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("Colo. Const. Art. XVIII § 16(3)(b)")));
-        assert!(r.notes.iter().any(|n| n.contains("Marijuana Enforcement Division")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Colo. Const. Art. XVIII § 16(3)(b)")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Marijuana Enforcement Division")));
     }
 
     #[test]
@@ -525,7 +564,10 @@ mod tests {
         i.jurisdiction = Jurisdiction::Massachusetts;
         let r = check(&i);
         assert!(r.notes.iter().any(|n| n.contains("M.G.L. ch. 94G § 7")));
-        assert!(r.notes.iter().any(|n| n.contains("Cannabis Control Commission")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Cannabis Control Commission")));
     }
 
     #[test]
@@ -535,7 +577,10 @@ mod tests {
         let r = check(&i);
         assert!(r.notes.iter().any(|n| n.contains("410 ILCS 705")));
         assert!(r.notes.iter().any(|n| n.contains("410 ILCS 130")));
-        assert!(r.notes.iter().any(|n| n.contains("PROHIBITS home cultivation")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("PROHIBITS home cultivation")));
     }
 
     #[test]
@@ -553,8 +598,14 @@ mod tests {
     fn coordination_note_references_siblings() {
         let i = baseline();
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("tenant_cannabis_use_protection")));
-        assert!(r.notes.iter().any(|n| n.contains("rental_smoke_free_housing_disclosure")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("tenant_cannabis_use_protection")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("rental_smoke_free_housing_disclosure")));
         assert!(r
             .notes
             .iter()
@@ -598,12 +649,36 @@ mod tests {
 
     #[test]
     fn citation_branch_for_each_jurisdiction() {
-        let ca = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::California; i });
-        let co = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Colorado; i });
-        let ny = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::NewYork; i });
-        let ma = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Massachusetts; i });
-        let il = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Illinois; i });
-        let de = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Default; i });
+        let ca = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::California;
+            i
+        });
+        let co = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Colorado;
+            i
+        });
+        let ny = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::NewYork;
+            i
+        });
+        let ma = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Massachusetts;
+            i
+        });
+        let il = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Illinois;
+            i
+        });
+        let de = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Default;
+            i
+        });
         assert!(ca.citation.contains("Prop 64"));
         assert!(co.citation.contains("Colo. Const. Art. XVIII"));
         assert!(ny.citation.contains("MRTA"));
@@ -629,7 +704,10 @@ mod tests {
         let mut i = baseline();
         i.housing_program = HousingProgram::HudAssistedFederalCsaEnforcement;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::HudFederalCsaTerminationGround));
+        assert!(matches!(
+            r.severity,
+            Severity::HudFederalCsaTerminationGround
+        ));
     }
 
     #[test]

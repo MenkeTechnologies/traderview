@@ -50,21 +50,26 @@ pub struct BrinsonReport {
 }
 
 pub fn analyze(inputs: &[BrinsonInput]) -> Option<BrinsonReport> {
-    if inputs.is_empty() { return None; }
-    if inputs.iter().any(|s| !s.portfolio_weight.is_finite()
-        || !s.benchmark_weight.is_finite()
-        || !s.portfolio_return.is_finite()
-        || !s.benchmark_return.is_finite()
-        || s.portfolio_weight < 0.0
-        || s.benchmark_weight < 0.0)
-    {
+    if inputs.is_empty() {
+        return None;
+    }
+    if inputs.iter().any(|s| {
+        !s.portfolio_weight.is_finite()
+            || !s.benchmark_weight.is_finite()
+            || !s.portfolio_return.is_finite()
+            || !s.benchmark_return.is_finite()
+            || s.portfolio_weight < 0.0
+            || s.benchmark_weight < 0.0
+    }) {
         return None;
     }
     // Total benchmark return = Σ w_b · r_b (uses provided weights as-is).
-    let benchmark_total: f64 = inputs.iter()
+    let benchmark_total: f64 = inputs
+        .iter()
         .map(|s| s.benchmark_weight * s.benchmark_return)
         .sum();
-    let portfolio_total: f64 = inputs.iter()
+    let portfolio_total: f64 = inputs
+        .iter()
         .map(|s| s.portfolio_weight * s.portfolio_return)
         .sum();
     let mut per_sector = Vec::with_capacity(inputs.len());
@@ -147,7 +152,7 @@ mod tests {
         // Benchmark total = 0.4·0.05 + 0.6·0.01 = 0.026
         // (Tech ret 0.05 vs benchmark 0.026 → above-mean sector.)
         let inputs = vec![
-            s("Tech",  0.6, 0.4, 0.05, 0.05),    // overweight a winner
+            s("Tech", 0.6, 0.4, 0.05, 0.05), // overweight a winner
             s("Other", 0.4, 0.6, 0.01, 0.01),
         ];
         let r = analyze(&inputs).unwrap();
@@ -158,18 +163,18 @@ mod tests {
     fn selection_effect_positive_when_picking_better_stocks() {
         // Within Tech: 0.10 portfolio vs 0.05 benchmark → +5% selection.
         let inputs = vec![
-            s("Tech",  0.4, 0.4, 0.10, 0.05),
+            s("Tech", 0.4, 0.4, 0.10, 0.05),
             s("Other", 0.6, 0.6, 0.02, 0.02),
         ];
         let r = analyze(&inputs).unwrap();
         assert!(r.total_selection > 0.0);
-        assert!(r.total_allocation.abs() < 1e-12);    // same weights → no allocation effect
+        assert!(r.total_allocation.abs() < 1e-12); // same weights → no allocation effect
     }
 
     #[test]
     fn interaction_effect_nonzero_when_both_active() {
         let inputs = vec![
-            s("Tech",  0.6, 0.4, 0.10, 0.05),    // overweight AND outperformer
+            s("Tech", 0.6, 0.4, 0.10, 0.05), // overweight AND outperformer
             s("Other", 0.4, 0.6, 0.02, 0.02),
         ];
         let r = analyze(&inputs).unwrap();
@@ -179,24 +184,23 @@ mod tests {
     #[test]
     fn sum_of_effects_equals_total_active_return() {
         let inputs = vec![
-            s("Tech",   0.30, 0.20, 0.12, 0.08),
+            s("Tech", 0.30, 0.20, 0.12, 0.08),
             s("Energy", 0.15, 0.25, -0.03, 0.01),
             s("Health", 0.25, 0.20, 0.05, 0.04),
-            s("Fin",    0.30, 0.35, 0.02, 0.03),
+            s("Fin", 0.30, 0.35, 0.02, 0.03),
         ];
         let r = analyze(&inputs).unwrap();
         let sum_effects = r.total_allocation + r.total_selection + r.total_interaction;
-        assert!((sum_effects - r.total_active_return).abs() < 1e-9,
+        assert!(
+            (sum_effects - r.total_active_return).abs() < 1e-9,
             "A+S+I should equal total active: A+S+I={sum_effects} active={}",
-            r.total_active_return);
+            r.total_active_return
+        );
     }
 
     #[test]
     fn per_sector_count_matches_input() {
-        let inputs = vec![
-            s("A", 0.5, 0.5, 0.01, 0.01),
-            s("B", 0.5, 0.5, 0.01, 0.01),
-        ];
+        let inputs = vec![s("A", 0.5, 0.5, 0.01, 0.01), s("B", 0.5, 0.5, 0.01, 0.01)];
         let r = analyze(&inputs).unwrap();
         assert_eq!(r.per_sector.len(), 2);
     }

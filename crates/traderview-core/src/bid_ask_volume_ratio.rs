@@ -20,14 +20,23 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub bid_volume: f64, pub ask_volume: f64 }
+pub struct Bar {
+    pub bid_volume: f64,
+    pub ask_volume: f64,
+}
 
 pub fn compute(bars: &[Bar], period: usize) -> Vec<Option<f64>> {
     let n = bars.len();
     let mut out = vec![None; n];
-    if period < 2 || n < period { return out; }
-    if bars.iter().any(|b| !b.bid_volume.is_finite() || !b.ask_volume.is_finite()
-        || b.bid_volume < 0.0 || b.ask_volume < 0.0) {
+    if period < 2 || n < period {
+        return out;
+    }
+    if bars.iter().any(|b| {
+        !b.bid_volume.is_finite()
+            || !b.ask_volume.is_finite()
+            || b.bid_volume < 0.0
+            || b.ask_volume < 0.0
+    }) {
         return out;
     }
     let mut bid_sum: f64 = bars[..period].iter().map(|b| b.bid_volume).sum();
@@ -49,7 +58,12 @@ pub fn compute(bars: &[Bar], period: usize) -> Vec<Option<f64>> {
 mod tests {
     use super::*;
 
-    fn b(bid: f64, ask: f64) -> Bar { Bar { bid_volume: bid, ask_volume: ask } }
+    fn b(bid: f64, ask: f64) -> Bar {
+        Bar {
+            bid_volume: bid,
+            ask_volume: ask,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {

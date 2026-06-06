@@ -29,15 +29,21 @@ pub struct ArimaReport {
 
 pub fn fit(series: &[f64]) -> Option<ArimaReport> {
     let n = series.len();
-    if n < 10 { return None; }
-    if series.iter().any(|x| !x.is_finite()) { return None; }
+    if n < 10 {
+        return None;
+    }
+    if series.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     // First-difference.
     let mut diffs = Vec::with_capacity(n - 1);
     for i in 1..n {
         diffs.push(series[i] - series[i - 1]);
     }
     let nd = diffs.len();
-    if nd < 5 { return None; }
+    if nd < 5 {
+        return None;
+    }
     // Iteration 0: AR(1)-only fit. Residuals start as all-zero, so adding
     // the MA column on the first pass makes it collinear with the
     // intercept and XᵀX singular. Run pure AR(1), build residuals, THEN
@@ -47,7 +53,7 @@ pub fn fit(series: &[f64]) -> Option<ArimaReport> {
     let mean_diff: f64 = diffs.iter().sum::<f64>() / nd as f64;
     let diff_var: f64 = diffs.iter().map(|d| (d - mean_diff).powi(2)).sum::<f64>() / nd as f64;
     let (mut c, mut phi) = if diff_var < 1e-18 {
-        (mean_diff, 0.0)    // degenerate: constant diffs → pure-drift model
+        (mean_diff, 0.0) // degenerate: constant diffs → pure-drift model
     } else {
         let mut x_intercept0 = Vec::with_capacity(nd - 1);
         let mut x_phi0 = Vec::with_capacity(nd - 1);
@@ -71,7 +77,9 @@ pub fn fit(series: &[f64]) -> Option<ArimaReport> {
         // If residuals are still effectively zero (flat-input edge case),
         // keep the AR(1) fit and stop iterating — model collapses to MA=0.
         let res_norm: f64 = residuals.iter().map(|r| r * r).sum::<f64>().sqrt();
-        if res_norm < 1e-12 { break; }
+        if res_norm < 1e-12 {
+            break;
+        }
         let mut x_intercept = Vec::with_capacity(nd - 1);
         let mut x_phi = Vec::with_capacity(nd - 1);
         let mut x_theta = Vec::with_capacity(nd - 1);
@@ -84,7 +92,7 @@ pub fn fit(series: &[f64]) -> Option<ArimaReport> {
         }
         let new_beta = match ols(&[x_intercept, x_phi, x_theta], &y) {
             Some(b) => b,
-            None => break,    // singular at this iteration — keep prior fit
+            None => break, // singular at this iteration — keep prior fit
         };
         let new_c = new_beta[0];
         let new_phi = new_beta[1];
@@ -95,9 +103,13 @@ pub fn fit(series: &[f64]) -> Option<ArimaReport> {
             new_res[t] = diffs[t] - predicted;
         }
         let converged = (new_phi - phi).abs() < 1e-9 && (new_theta - theta).abs() < 1e-9;
-        c = new_c; phi = new_phi; theta = new_theta;
+        c = new_c;
+        phi = new_phi;
+        theta = new_theta;
         residuals = new_res;
-        if converged { break; }
+        if converged {
+            break;
+        }
     }
     // Residual variance.
     let n_eff = (nd - 1).max(1);
@@ -121,7 +133,9 @@ pub fn fit(series: &[f64]) -> Option<ArimaReport> {
 fn ols(x: &[Vec<f64>], y: &[f64]) -> Option<Vec<f64>> {
     let p = x.len();
     let n = y.len();
-    if p == 0 || n == 0 || x.iter().any(|c| c.len() != n) { return None; }
+    if p == 0 || n == 0 || x.iter().any(|c| c.len() != n) {
+        return None;
+    }
     let mut xtx = vec![vec![0.0_f64; p]; p];
     let mut xty = vec![0.0_f64; p];
     for i in 0..p {
@@ -132,24 +146,38 @@ fn ols(x: &[Vec<f64>], y: &[f64]) -> Option<Vec<f64>> {
     }
     let mut aug = vec![vec![0.0_f64; p + 1]; p];
     for i in 0..p {
-        for j in 0..p { aug[i][j] = xtx[i][j]; }
+        for j in 0..p {
+            aug[i][j] = xtx[i][j];
+        }
         aug[i][p] = xty[i];
     }
     for i in 0..p {
         let mut pivot = i;
         for r in (i + 1)..p {
-            if aug[r][i].abs() > aug[pivot][i].abs() { pivot = r; }
+            if aug[r][i].abs() > aug[pivot][i].abs() {
+                pivot = r;
+            }
         }
-        if aug[pivot][i].abs() < 1e-18 { return None; }
+        if aug[pivot][i].abs() < 1e-18 {
+            return None;
+        }
         aug.swap(i, pivot);
         let div = aug[i][i];
-        for v in aug[i].iter_mut() { *v /= div; }
+        for v in aug[i].iter_mut() {
+            *v /= div;
+        }
         for r in 0..p {
-            if r == i { continue; }
+            if r == i {
+                continue;
+            }
             let f = aug[r][i];
-            if f == 0.0 { continue; }
+            if f == 0.0 {
+                continue;
+            }
             let pivot_row = aug[i].clone();
-            for (j, v) in aug[r].iter_mut().enumerate() { *v -= f * pivot_row[j]; }
+            for (j, v) in aug[r].iter_mut().enumerate() {
+                *v -= f * pivot_row[j];
+            }
         }
     }
     Some((0..p).map(|i| aug[i][p]).collect())
@@ -191,7 +219,9 @@ mod tests {
 
     #[test]
     fn forecast_dimensions_correct() {
-        let s: Vec<f64> = (0..30).map(|i| (i as f64 * 0.1).sin() * 10.0 + 100.0).collect();
+        let s: Vec<f64> = (0..30)
+            .map(|i| (i as f64 * 0.1).sin() * 10.0 + 100.0)
+            .collect();
         let r = fit(&s).unwrap();
         assert_eq!(r.n_observations, 30);
         assert!(r.one_step_forecast_level.is_finite());
@@ -206,19 +236,25 @@ mod tests {
         let mut state: u64 = 42;
         let mut diffs = vec![0.0_f64; n];
         for i in 1..n {
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let u = (state >> 32) as f64 / u32::MAX as f64 - 0.5;
             diffs[i] = 0.5 * diffs[i - 1] + 0.1 * u;
         }
         let mut s = vec![100.0_f64];
-        for d in &diffs { s.push(s.last().unwrap() + d); }
+        for d in &diffs {
+            s.push(s.last().unwrap() + d);
+        }
         let r = fit(&s).unwrap();
         // Iterative-CLS for ARMA(1,1) has a known small-sample bias toward
         // larger φ when the true process is pure AR(1) (θ has nothing
         // to fit, so the algorithm pushes its weight to φ). Tolerance
         // 0.2 is reasonable for a 1000-sample CLS estimate.
-        assert!((r.phi - 0.5).abs() < 0.2,
-            "φ should be ≈ 0.5, got {}", r.phi);
+        assert!(
+            (r.phi - 0.5).abs() < 0.2,
+            "φ should be ≈ 0.5, got {}",
+            r.phi
+        );
     }
 }

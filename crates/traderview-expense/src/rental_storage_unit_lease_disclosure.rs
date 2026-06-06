@@ -387,7 +387,10 @@ mod tests {
         let mut i = baseline();
         i.storage_type = StorageType::ResidentialStorageIncludedWithApartmentLease;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::SsfActInapplicabilityResidentialStorage));
+        assert!(matches!(
+            r.severity,
+            Severity::SsfActInapplicabilityResidentialStorage
+        ));
         assert!(r
             .recommended_actions
             .iter()
@@ -403,7 +406,10 @@ mod tests {
         let mut i = baseline();
         i.storage_type = StorageType::SeparateResidentialStorageRental;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::SsfActInapplicabilityResidentialStorage));
+        assert!(matches!(
+            r.severity,
+            Severity::SsfActInapplicabilityResidentialStorage
+        ));
     }
 
     #[test]
@@ -419,7 +425,10 @@ mod tests {
         let mut i = baseline();
         i.sb_709_six_disclosures_on_first_page = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::SbSix709FirstPageDisclosureMissing));
+        assert!(matches!(
+            r.severity,
+            Severity::SbSix709FirstPageDisclosureMissing
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents / 2);
         assert!(r.recommended_actions.iter().any(|a| a.contains("§ 21712")));
     }
@@ -459,7 +468,10 @@ mod tests {
         i.lien_action = LienAction::LienSaleNoticeIssued;
         i.days_since_lien_sale_notice = 30;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::LienSaleNoticeRequirementsNotMet));
+        assert!(matches!(
+            r.severity,
+            Severity::LienSaleNoticeRequirementsNotMet
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
         assert!(r.recommended_actions.iter().any(|a| a.contains("§ 21707")));
     }
@@ -490,7 +502,10 @@ mod tests {
             .recommended_actions
             .iter()
             .any(|a| a.contains("California Penal Code § 530.5")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("18 U.S.C. § 1028")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("18 U.S.C. § 1028")));
     }
 
     #[test]
@@ -500,9 +515,15 @@ mod tests {
         i.days_since_lien_sale_notice = 60;
         i.excess_proceeds_returned_to_tenant_within_90_days = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::ExcessProceedsReturnFailureToTenant));
+        assert!(matches!(
+            r.severity,
+            Severity::ExcessProceedsReturnFailureToTenant
+        ));
         assert!(r.recommended_actions.iter().any(|a| a.contains("§ 21710")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Cal. Civ. Code § 1500")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Cal. Civ. Code § 1500")));
     }
 
     #[test]
@@ -520,7 +541,10 @@ mod tests {
         let mut i = baseline();
         i.jurisdiction = Jurisdiction::NewYork;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("N.Y. General Business Law § 182")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("N.Y. General Business Law § 182")));
         assert!(r.notes.iter().any(|n| n.contains("S3690")));
         assert!(r.notes.iter().any(|n| n.contains("N.Y. Lien Law § 184")));
     }
@@ -530,7 +554,10 @@ mod tests {
         let mut i = baseline();
         i.jurisdiction = Jurisdiction::Florida;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("Fla. Stat. § 83.801-83.809")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Fla. Stat. § 83.801-83.809")));
         assert!(r.notes.iter().any(|n| n.contains("7 days")));
     }
 
@@ -539,7 +566,10 @@ mod tests {
         let mut i = baseline();
         i.jurisdiction = Jurisdiction::Texas;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("Tex. Prop. Code § 59.001-59.046")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Tex. Prop. Code § 59.001-59.046")));
         assert!(r.notes.iter().any(|n| n.contains("§ 59.044")));
     }
 
@@ -550,7 +580,10 @@ mod tests {
         let r = check(&i);
         assert!(r.notes.iter().any(|n| n.contains("UCC § 7-209")));
         assert!(r.notes.iter().any(|n| n.contains("UCC § 7-210")));
-        assert!(r.notes.iter().any(|n| n.contains("Uniform Self-Service Storage Facility Act")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Uniform Self-Service Storage Facility Act")));
     }
 
     #[test]
@@ -565,8 +598,14 @@ mod tests {
             .notes
             .iter()
             .any(|n| n.contains("tenant_voting_address_protection")));
-        assert!(r.notes.iter().any(|n| n.contains("rental_in_unit_laundry_appliance_provision")));
-        assert!(r.notes.iter().any(|n| n.contains("tenant_emotional_distress_damages")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("rental_in_unit_laundry_appliance_provision")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("tenant_emotional_distress_damages")));
     }
 
     #[test]
@@ -617,11 +656,31 @@ mod tests {
 
     #[test]
     fn citation_branch_for_each_jurisdiction() {
-        let ca = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::California; i });
-        let ny = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::NewYork; i });
-        let fl = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Florida; i });
-        let tx = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Texas; i });
-        let de = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Default; i });
+        let ca = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::California;
+            i
+        });
+        let ny = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::NewYork;
+            i
+        });
+        let fl = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Florida;
+            i
+        });
+        let tx = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Texas;
+            i
+        });
+        let de = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Default;
+            i
+        });
         assert!(ca.citation.contains("SB 709"));
         assert!(ny.citation.contains("§ 182"));
         assert!(fl.citation.contains("§ 83.801-83.809"));
@@ -635,7 +694,10 @@ mod tests {
         i.storage_type = StorageType::ResidentialStorageIncludedWithApartmentLease;
         i.sb_709_six_disclosures_on_first_page = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::SsfActInapplicabilityResidentialStorage));
+        assert!(matches!(
+            r.severity,
+            Severity::SsfActInapplicabilityResidentialStorage
+        ));
     }
 
     #[test]

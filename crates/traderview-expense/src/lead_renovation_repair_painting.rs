@@ -169,8 +169,7 @@ pub fn check(input: &RrpInput) -> RrpResult {
 
     if !input.firm_epa_or_state_certified {
         violations.push(
-            "§§ 745.89, 745.90 — firm not currently EPA or state-authorized certified"
-                .to_string(),
+            "§§ 745.89, 745.90 — firm not currently EPA or state-authorized certified".to_string(),
         );
     }
 
@@ -217,10 +216,7 @@ pub fn check(input: &RrpInput) -> RrpResult {
     }
 
     if !input.records_retained_3_years {
-        violations.push(
-            "§ 745.86 — records not retained for 3 years post-renovation"
-                .to_string(),
-        );
+        violations.push("§ 745.86 — records not retained for 3 years post-renovation".to_string());
     }
 
     notes.push(
@@ -305,10 +301,7 @@ mod tests {
         let r = check(&i);
         assert!(!r.rule_applies);
         assert!(r.compliant);
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("NOT target housing")));
+        assert!(r.notes.iter().any(|n| n.contains("NOT target housing")));
     }
 
     #[test]
@@ -380,7 +373,10 @@ mod tests {
             .iter()
             .filter(|v| v.contains("signed acknowledgment"))
             .collect();
-        assert!(acknowledgment_violations.is_empty(), "acknowledgment check skipped when pamphlet not provided");
+        assert!(
+            acknowledgment_violations.is_empty(),
+            "acknowledgment check skipped when pamphlet not provided"
+        );
     }
 
     #[test]
@@ -455,7 +451,8 @@ mod tests {
         assert!(r
             .notes
             .iter()
-            .any(|n| n.contains("State-Authorized jurisdiction") && n.contains("WI, IA, NC, MS, KS, RI, UT, OR, MA, AL, WA, GA, OK, DE, VT")));
+            .any(|n| n.contains("State-Authorized jurisdiction")
+                && n.contains("WI, IA, NC, MS, KS, RI, UT, OR, MA, AL, WA, GA, OK, DE, VT")));
     }
 
     #[test]
@@ -524,4 +521,3 @@ mod tests {
         assert!(r.compliant);
     }
 }
-

@@ -162,13 +162,13 @@ pub fn compute(input: &Section704cInput) -> Section704cResult {
     // property to OTHER partner within 7 years → full remaining BIG
     // recognized to contributor.
     let (sec_704c1b, sec_704c1b_gain) = match input.distributed_to_other_partner_date {
-        Some(d) if d <= seven_years_after_contribution
-            && direction == PrecontributionDirection::BuiltInGain =>
+        Some(d)
+            if d <= seven_years_after_contribution
+                && direction == PrecontributionDirection::BuiltInGain =>
         {
             // Remaining BIG after any prior disposition allocations.
-            let remaining = (input.pre_contribution_built_in_gain
-                - contributor_704c1a)
-                .max(Decimal::ZERO);
+            let remaining =
+                (input.pre_contribution_built_in_gain - contributor_704c1a).max(Decimal::ZERO);
             (true, remaining)
         }
         _ => (false, Decimal::ZERO),
@@ -178,16 +178,16 @@ pub fn compute(input: &Section704cInput) -> Section704cResult {
     // within 7 years → gain recognition = lesser of (FMV other property
     // received − outside basis) or (remaining pre-contribution BIG).
     let (sec_737, sec_737_gain) = match input.contributor_received_other_property_date {
-        Some(d) if d <= seven_years_after_contribution
-            && direction == PrecontributionDirection::BuiltInGain =>
+        Some(d)
+            if d <= seven_years_after_contribution
+                && direction == PrecontributionDirection::BuiltInGain =>
         {
-            let excess_distribution =
-                (input.other_property_received_fmv - input.contributor_outside_basis)
-                    .max(Decimal::ZERO);
-            let remaining_big = (input.pre_contribution_built_in_gain
-                - contributor_704c1a
-                - sec_704c1b_gain)
+            let excess_distribution = (input.other_property_received_fmv
+                - input.contributor_outside_basis)
                 .max(Decimal::ZERO);
+            let remaining_big =
+                (input.pre_contribution_built_in_gain - contributor_704c1a - sec_704c1b_gain)
+                    .max(Decimal::ZERO);
             (true, excess_distribution.min(remaining_big))
         }
         _ => (false, Decimal::ZERO),
@@ -242,7 +242,11 @@ pub fn compute(input: &Section704cInput) -> Section704cResult {
     note_parts.push(format!(
         "Method: {:?} ({}{})",
         input.allocation_method,
-        if ceiling { "subject to ceiling rule" } else { "no ceiling rule" },
+        if ceiling {
+            "subject to ceiling rule"
+        } else {
+            "no ceiling rule"
+        },
         if notional {
             "; creates notional remedial items"
         } else {

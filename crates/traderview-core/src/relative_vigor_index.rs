@@ -93,8 +93,12 @@ fn sma(values: &[f64], period: usize) -> Vec<Option<f64>> {
     let mut sum = 0.0;
     for i in 0..n {
         sum += values[i];
-        if i >= period { sum -= values[i - period]; }
-        if i + 1 >= period { out[i] = Some(sum / period as f64); }
+        if i >= period {
+            sum -= values[i - period];
+        }
+        if i + 1 >= period {
+            out[i] = Some(sum / period as f64);
+        }
     }
     out
 }
@@ -104,7 +108,12 @@ mod tests {
     use super::*;
 
     fn b(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -140,14 +149,20 @@ mod tests {
     #[test]
     fn signal_lags_rvi_by_construction() {
         // Verify signal[i] uses RVI[i] and RVI[i-1..=i-3].
-        let bars: Vec<Bar> = (0..50).map(|i| {
-            let o = 100.0 + i as f64;
-            b(o, o + 1.0, o - 1.0, o + 0.5)
-        }).collect();
+        let bars: Vec<Bar> = (0..50)
+            .map(|i| {
+                let o = 100.0 + i as f64;
+                b(o, o + 1.0, o - 1.0, o + 0.5)
+            })
+            .collect();
         let r = compute(&bars, 10);
         for i in 13..r.line.len() {
             if let (Some(s), Some(a), Some(b_), Some(c), Some(d)) = (
-                r.signal[i], r.line[i], r.line[i - 1], r.line[i - 2], r.line[i - 3],
+                r.signal[i],
+                r.line[i],
+                r.line[i - 1],
+                r.line[i - 2],
+                r.line[i - 3],
             ) {
                 let expected = (a + 2.0 * b_ + 2.0 * c + d) / 6.0;
                 assert!((s - expected).abs() < 1e-9);

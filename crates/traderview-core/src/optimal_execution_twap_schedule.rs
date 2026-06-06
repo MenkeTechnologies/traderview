@@ -31,11 +31,19 @@ pub fn compute(
     num_slices: usize,
     optional_volume_curve: Option<&[f64]>,
 ) -> Option<Report> {
-    if !total_order_size.is_finite() || total_order_size <= 0.0 { return None; }
-    if num_slices == 0 { return None; }
+    if !total_order_size.is_finite() || total_order_size <= 0.0 {
+        return None;
+    }
+    if num_slices == 0 {
+        return None;
+    }
     if let Some(v) = optional_volume_curve {
-        if v.len() != num_slices { return None; }
-        if v.iter().any(|x| !x.is_finite() || *x < 0.0) { return None; }
+        if v.len() != num_slices {
+            return None;
+        }
+        if v.iter().any(|x| !x.is_finite() || *x < 0.0) {
+            return None;
+        }
     }
     let per_slice = total_order_size / num_slices as f64;
     let slices = vec![per_slice; num_slices];
@@ -45,12 +53,20 @@ pub fn compute(
         acc += s;
         cumulative_fill[i] = acc;
     }
-    let max_participation_rate = optional_volume_curve.map(|v| {
-        slices.iter().zip(v.iter())
-            .map(|(s, vol)| if *vol > 0.0 { s / vol } else { 0.0 })
-            .fold(0.0_f64, f64::max)
-    }).unwrap_or(0.0);
-    Some(Report { slices, cumulative_fill, max_participation_rate })
+    let max_participation_rate = optional_volume_curve
+        .map(|v| {
+            slices
+                .iter()
+                .zip(v.iter())
+                .map(|(s, vol)| if *vol > 0.0 { s / vol } else { 0.0 })
+                .fold(0.0_f64, f64::max)
+        })
+        .unwrap_or(0.0);
+    Some(Report {
+        slices,
+        cumulative_fill,
+        max_participation_rate,
+    })
 }
 
 #[cfg(test)]
@@ -73,7 +89,9 @@ mod tests {
     #[test]
     fn equal_slices_produced() {
         let r = compute(1000.0, 10, None).unwrap();
-        for s in &r.slices { assert!((s - 100.0).abs() < 1e-9); }
+        for s in &r.slices {
+            assert!((s - 100.0).abs() < 1e-9);
+        }
     }
 
     #[test]
@@ -85,7 +103,9 @@ mod tests {
     #[test]
     fn max_participation_calculated_with_volume() {
         // 1000 order / 10 slices = 100 per slice. Volume vec: max 200 → rate 0.5.
-        let v = vec![500.0, 500.0, 200.0, 1000.0, 1000.0, 500.0, 500.0, 500.0, 500.0, 500.0];
+        let v = vec![
+            500.0, 500.0, 200.0, 1000.0, 1000.0, 500.0, 500.0, 500.0, 500.0, 500.0,
+        ];
         let r = compute(1000.0, 10, Some(&v)).unwrap();
         assert!((r.max_participation_rate - 0.5).abs() < 1e-9);
     }

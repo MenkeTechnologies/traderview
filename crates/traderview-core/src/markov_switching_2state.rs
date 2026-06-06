@@ -35,11 +35,17 @@ pub struct Report {
 
 pub fn compute(returns: &[f64]) -> Option<Report> {
     let n = returns.len();
-    if n < 30 { return None; }
-    if returns.iter().any(|x| !x.is_finite()) { return None; }
+    if n < 30 {
+        return None;
+    }
+    if returns.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let mean = returns.iter().sum::<f64>() / n as f64;
     let var = returns.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / n as f64;
-    if var < 1e-18 { return None; }
+    if var < 1e-18 {
+        return None;
+    }
     let stdev = var.sqrt();
     // Init.
     let mut mu = [mean, mean];
@@ -138,15 +144,25 @@ pub fn compute(returns: &[f64]) -> Option<Report> {
         for k in 0..2 {
             let w: f64 = gamma.iter().map(|g| g[k]).sum();
             if w > 1e-15 {
-                let m_k: f64 = returns.iter().zip(gamma.iter())
-                    .map(|(r, g)| r * g[k]).sum::<f64>() / w;
-                let v_k: f64 = returns.iter().zip(gamma.iter())
-                    .map(|(r, g)| (r - m_k).powi(2) * g[k]).sum::<f64>() / w;
+                let m_k: f64 = returns
+                    .iter()
+                    .zip(gamma.iter())
+                    .map(|(r, g)| r * g[k])
+                    .sum::<f64>()
+                    / w;
+                let v_k: f64 = returns
+                    .iter()
+                    .zip(gamma.iter())
+                    .map(|(r, g)| (r - m_k).powi(2) * g[k])
+                    .sum::<f64>()
+                    / w;
                 mu[k] = m_k;
                 sigma[k] = v_k.max(1e-18).sqrt();
             }
         }
-        if (log_lik - prev_ll).abs() < 1e-7 { break; }
+        if (log_lik - prev_ll).abs() < 1e-7 {
+            break;
+        }
         prev_ll = log_lik;
     }
     // Convention: state 1 = higher variance.
@@ -154,16 +170,21 @@ pub fn compute(returns: &[f64]) -> Option<Report> {
     let prob_state1: Vec<f64> = gamma.iter().map(|g| g[idx1]).collect();
     Some(Report {
         prob_state1,
-        mu0: mu[idx0], mu1: mu[idx1],
-        sigma0: sigma[idx0], sigma1: sigma[idx1],
-        p00: p[idx0][idx0], p11: p[idx1][idx1],
+        mu0: mu[idx0],
+        mu1: mu[idx1],
+        sigma0: sigma[idx0],
+        sigma1: sigma[idx1],
+        p00: p[idx0][idx0],
+        p11: p[idx1][idx1],
         log_likelihood: log_lik,
         iterations: iter,
     })
 }
 
 fn gauss_pdf(x: f64, mu: f64, sigma: f64) -> f64 {
-    if sigma <= 0.0 { return 0.0; }
+    if sigma <= 0.0 {
+        return 0.0;
+    }
     let z = (x - mu) / sigma;
     (1.0 / (sigma * (std::f64::consts::TAU).sqrt())) * (-0.5 * z * z).exp()
 }

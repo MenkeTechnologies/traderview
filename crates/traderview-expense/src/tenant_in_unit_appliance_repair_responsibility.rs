@@ -282,8 +282,8 @@ pub fn check(input: &Input) -> Output {
         };
     }
 
-    let extended_non_repair = input.days_since_tenant_notice > REASONABLE_REPAIR_WINDOW_DAYS
-        && !input.repair_completed;
+    let extended_non_repair =
+        input.days_since_tenant_notice > REASONABLE_REPAIR_WINDOW_DAYS && !input.repair_completed;
     if extended_non_repair && !input.landlord_made_diligent_repair_effort {
         let citation = match input.jurisdiction {
             Jurisdiction::NewYork => "N.Y. Real Property Law § 235-b implied warranty + HPD complaint + rent reduction in housing court + 28 RCNY § 32-04 enforcement",

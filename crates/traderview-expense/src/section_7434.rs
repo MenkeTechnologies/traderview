@@ -194,13 +194,12 @@ pub fn check(input: &Section7434Input) -> Section7434Result {
         0
     };
 
-    let attorney_fees = if civil_action_authorized
-        && input.attorney_fees_awarded_by_court_discretion
-    {
-        input.attorney_fees_amount_cents.max(0)
-    } else {
-        0
-    };
+    let attorney_fees =
+        if civil_action_authorized && input.attorney_fees_awarded_by_court_discretion {
+            input.attorney_fees_amount_cents.max(0)
+        } else {
+            0
+        };
 
     let total_recovery = statutory_damages
         .saturating_add(court_costs)
@@ -338,7 +337,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.civil_action_authorized);
         assert!(r.derolf_misclassification_carveout_engaged);
-        assert!(r.notes.iter().any(|n| n.contains("Derolf v. Risinger Bros.")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Derolf v. Risinger Bros.")));
     }
 
     #[test]
@@ -414,7 +416,9 @@ mod tests {
     #[test]
     fn citation_pins_subsections_and_derolf() {
         let r = check(&full_claim());
-        assert!(r.citation.contains("§§ 7434(a), 7434(b), 7434(c), 7434(d), 7434(e), 7434(f)"));
+        assert!(r
+            .citation
+            .contains("§§ 7434(a), 7434(b), 7434(c), 7434(d), 7434(e), 7434(f)"));
         assert!(r.citation.contains("Derolf v. Risinger Bros."));
     }
 
@@ -433,19 +437,28 @@ mod tests {
     #[test]
     fn cause_of_action_note_describes_section_7434_a() {
         let r = check(&full_claim());
-        assert!(r.notes.iter().any(|n| n.contains("§ 7434(a)") && n.contains("willfully")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7434(a)") && n.contains("willfully")));
     }
 
     #[test]
     fn notice_to_secretary_note_present() {
         let r = check(&full_claim());
-        assert!(r.notes.iter().any(|n| n.contains("§ 7434(e)") && n.contains("IRS notice")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7434(e)") && n.contains("IRS notice")));
     }
 
     #[test]
     fn collateral_estoppel_note_present() {
         let r = check(&full_claim());
-        assert!(r.notes.iter().any(|n| n.contains("collateral-estoppel") && n.contains("Tax Court")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("collateral-estoppel") && n.contains("Tax Court")));
     }
 
     #[test]
@@ -493,13 +506,19 @@ mod tests {
     #[test]
     fn damages_note_describes_greater_of_rule() {
         let r = check(&full_claim());
-        assert!(r.notes.iter().any(|n| n.contains("§ 7434(b)") && n.contains("greater of $5,000")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7434(b)") && n.contains("greater of $5,000")));
     }
 
     #[test]
     fn sol_note_describes_later_of_rule() {
         let r = check(&full_claim());
-        assert!(r.notes.iter().any(|n| n.contains("§ 7434(d)") && n.contains("later of 6 years")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7434(d)") && n.contains("later of 6 years")));
     }
 
     #[test]
@@ -531,6 +550,9 @@ mod tests {
     #[test]
     fn full_recovery_note_describes_total() {
         let r = check(&full_claim());
-        assert!(r.notes.iter().any(|n| n.contains("§ 7434 — civil action AUTHORIZED") && n.contains("total")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7434 — civil action AUTHORIZED") && n.contains("total")));
     }
 }

@@ -46,14 +46,17 @@ pub struct PsaScheduleReport {
 
 pub fn schedule(
     original_balance: f64,
-    gross_coupon: f64,         // annual, decimal
+    gross_coupon: f64, // annual, decimal
     original_term_months: usize,
-    psa_speed_pct: f64,         // 100.0 = 100% PSA
+    psa_speed_pct: f64, // 100.0 = 100% PSA
 ) -> Option<PsaScheduleReport> {
-    if !original_balance.is_finite() || original_balance <= 0.0
-        || !gross_coupon.is_finite() || gross_coupon <= 0.0
+    if !original_balance.is_finite()
+        || original_balance <= 0.0
+        || !gross_coupon.is_finite()
+        || gross_coupon <= 0.0
         || original_term_months == 0
-        || !psa_speed_pct.is_finite() || psa_speed_pct < 0.0
+        || !psa_speed_pct.is_finite()
+        || psa_speed_pct < 0.0
     {
         return None;
     }
@@ -61,7 +64,9 @@ pub fn schedule(
     // Level payment per pool dollar.
     let n = original_term_months as f64;
     let denom = 1.0 - (1.0 + monthly_rate).powf(-n);
-    if denom <= 0.0 { return None; }
+    if denom <= 0.0 {
+        return None;
+    }
     let level_payment = original_balance * monthly_rate / denom;
     let mut bal = original_balance;
     let mut total_int = 0.0_f64;
@@ -70,7 +75,9 @@ pub fn schedule(
     let mut wal_denom = 0.0_f64;
     let mut cfs = Vec::with_capacity(original_term_months);
     for month_idx in 1..=original_term_months {
-        if bal <= 1e-9 { break; }
+        if bal <= 1e-9 {
+            break;
+        }
         let age = month_idx as f64;
         let cpr_100 = 0.06_f64 * (age.min(30.0) / 30.0);
         let cpr = (psa_speed_pct / 100.0) * cpr_100;
@@ -100,7 +107,11 @@ pub fn schedule(
         wal_denom += total_prin_month;
         bal = end_bal;
     }
-    let wal_years = if wal_denom > 0.0 { wal_weight / wal_denom / 12.0 } else { 0.0 };
+    let wal_years = if wal_denom > 0.0 {
+        wal_weight / wal_denom / 12.0
+    } else {
+        0.0
+    };
     Some(PsaScheduleReport {
         cash_flows: cfs,
         total_interest: total_int,
@@ -126,7 +137,10 @@ mod tests {
     fn zero_psa_yields_no_prepayment() {
         let r = schedule(100_000.0, 0.06, 360, 0.0).unwrap();
         let total_prepay: f64 = r.cash_flows.iter().map(|c| c.prepayment).sum();
-        assert!(total_prepay.abs() < 1e-9, "0 PSA: prepayments should be 0, got {total_prepay}");
+        assert!(
+            total_prepay.abs() < 1e-9,
+            "0 PSA: prepayments should be 0, got {total_prepay}"
+        );
     }
 
     #[test]
@@ -151,9 +165,12 @@ mod tests {
     fn higher_psa_shortens_wal() {
         let slow = schedule(100_000.0, 0.06, 360, 50.0).unwrap();
         let fast = schedule(100_000.0, 0.06, 360, 400.0).unwrap();
-        assert!(fast.weighted_average_life < slow.weighted_average_life,
+        assert!(
+            fast.weighted_average_life < slow.weighted_average_life,
             "fast PSA WAL {} should be less than slow PSA WAL {}",
-            fast.weighted_average_life, slow.weighted_average_life);
+            fast.weighted_average_life,
+            slow.weighted_average_life
+        );
     }
 
     #[test]

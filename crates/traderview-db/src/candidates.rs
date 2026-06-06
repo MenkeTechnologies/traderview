@@ -106,7 +106,11 @@ impl CandidateStore {
             })
             .filter(|c| c.score >= MIN_KEEP_SCORE)
             .collect();
-        rows.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+        rows.sort_by(|a, b| {
+            b.score
+                .partial_cmp(&a.score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
         rows
     }
 
@@ -221,8 +225,7 @@ pub fn spawn_aggregator(store: CandidateStore) {
             store.evict_stale();
             let snap = store.snapshot();
             let n = store.get_top_n().await;
-            let symbols: Vec<String> =
-                snap.iter().take(n).map(|c| c.symbol.clone()).collect();
+            let symbols: Vec<String> = snap.iter().take(n).map(|c| c.symbol.clone()).collect();
             if !symbols.is_empty() {
                 let live = live_ticks::global();
                 if live.has_key().await {
@@ -258,7 +261,11 @@ fn ingest_halt(store: &CandidateStore, h: Halt) {
         && (h.reason_label.eq_ignore_ascii_case("Quotation Resumption")
             || h.reason_code == "C9"
             || h.reason_code == "R4");
-    let source = if resumed { Source::HaltResume } else { Source::Halt };
+    let source = if resumed {
+        Source::HaltResume
+    } else {
+        Source::Halt
+    };
     let title = Some(format!("HALT {} ({})", h.symbol, h.reason_label));
     store.observe(&h.symbol, source, title);
 }

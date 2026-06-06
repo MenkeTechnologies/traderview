@@ -484,7 +484,8 @@ mod tests {
     #[test]
     fn personal_use_property_loan_exception_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::PersonalUsePropertyLoanExceptionUnderSection1275B;
+        input.compliance_aspect =
+            ComplianceAspect::PersonalUsePropertyLoanExceptionUnderSection1275B;
         input.is_personal_use_property_loan_between_natural_persons = true;
         let output = check(&input);
         assert_eq!(
@@ -496,7 +497,8 @@ mod tests {
     #[test]
     fn personal_use_property_loan_exception_not_satisfied() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::PersonalUsePropertyLoanExceptionUnderSection1275B;
+        input.compliance_aspect =
+            ComplianceAspect::PersonalUsePropertyLoanExceptionUnderSection1275B;
         input.is_personal_use_property_loan_between_natural_persons = false;
         let output = check(&input);
         assert_eq!(
@@ -508,7 +510,8 @@ mod tests {
     #[test]
     fn information_return_filed_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::InformationReturnFilingUnderSection6049Section1275C;
+        input.compliance_aspect =
+            ComplianceAspect::InformationReturnFilingUnderSection6049Section1275C;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -519,7 +522,8 @@ mod tests {
     #[test]
     fn information_return_not_filed_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::InformationReturnFilingUnderSection6049Section1275C;
+        input.compliance_aspect =
+            ComplianceAspect::InformationReturnFilingUnderSection6049Section1275C;
         input.information_return_filed_under_section_6049 = false;
         let output = check(&input);
         assert_eq!(

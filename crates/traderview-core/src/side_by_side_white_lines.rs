@@ -16,7 +16,12 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub open: f64, pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SideBySideReport {
@@ -32,37 +37,30 @@ pub fn compute(bars: &[Bar], tolerance_pct: f64) -> SideBySideReport {
         bearish_black: vec![false; n],
         tolerance_pct,
     };
-    if n < 3 || !tolerance_pct.is_finite() || tolerance_pct <= 0.0 { return report; }
-    if bars.iter().any(|b| !b.open.is_finite() || !b.high.is_finite()
-        || !b.low.is_finite() || !b.close.is_finite()) {
+    if n < 3 || !tolerance_pct.is_finite() || tolerance_pct <= 0.0 {
+        return report;
+    }
+    if bars.iter().any(|b| {
+        !b.open.is_finite() || !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()
+    }) {
         return report;
     }
     let tol_factor = tolerance_pct / 100.0;
     for i in 2..n {
         let (b1, b2, b3) = (bars[i - 2], bars[i - 1], bars[i]);
         // Bullish white lines.
-        if b1.close > b1.open
-            && b2.close > b2.open
-            && b3.close > b3.open
-            && b2.low > b1.high
-        {
+        if b1.close > b1.open && b2.close > b2.open && b3.close > b3.open && b2.low > b1.high {
             let tol_open = b2.open.abs() * tol_factor;
             let tol_close = b2.close.abs() * tol_factor;
-            if (b3.open - b2.open).abs() <= tol_open
-                && (b3.close - b2.close).abs() <= tol_close {
+            if (b3.open - b2.open).abs() <= tol_open && (b3.close - b2.close).abs() <= tol_close {
                 report.bullish_white[i] = true;
             }
         }
         // Bearish black lines.
-        if b1.close < b1.open
-            && b2.close < b2.open
-            && b3.close < b3.open
-            && b2.high < b1.low
-        {
+        if b1.close < b1.open && b2.close < b2.open && b3.close < b3.open && b2.high < b1.low {
             let tol_open = b2.open.abs() * tol_factor;
             let tol_close = b2.close.abs() * tol_factor;
-            if (b3.open - b2.open).abs() <= tol_open
-                && (b3.close - b2.close).abs() <= tol_close {
+            if (b3.open - b2.open).abs() <= tol_open && (b3.close - b2.close).abs() <= tol_close {
                 report.bearish_black[i] = true;
             }
         }
@@ -75,7 +73,12 @@ mod tests {
     use super::*;
 
     fn bar(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -86,9 +89,11 @@ mod tests {
 
     #[test]
     fn nan_returns_empty() {
-        let bars = vec![bar(100.0, 101.0, 99.0, 100.0),
-                        bar(f64::NAN, 101.0, 99.0, 100.0),
-                        bar(100.0, 101.0, 99.0, 100.0)];
+        let bars = vec![
+            bar(100.0, 101.0, 99.0, 100.0),
+            bar(f64::NAN, 101.0, 99.0, 100.0),
+            bar(100.0, 101.0, 99.0, 100.0),
+        ];
         let r = compute(&bars, 0.3);
         assert!(!r.bullish_white.iter().any(|x| *x));
     }
@@ -122,7 +127,7 @@ mod tests {
     fn no_gap_rejects() {
         let bars = vec![
             bar(100.0, 105.0, 99.5, 105.0),
-            bar(104.0, 110.0, 103.0, 109.0),    // low 103 < bar 1 high 105
+            bar(104.0, 110.0, 103.0, 109.0), // low 103 < bar 1 high 105
             bar(104.1, 110.0, 103.5, 109.0),
         ];
         let r = compute(&bars, 0.3);
@@ -134,7 +139,7 @@ mod tests {
         let bars = vec![
             bar(100.0, 105.0, 99.5, 105.0),
             bar(108.0, 113.5, 107.0, 113.0),
-            bar(120.0, 125.0, 119.5, 124.0),    // open 120 ≠ 108
+            bar(120.0, 125.0, 119.5, 124.0), // open 120 ≠ 108
         ];
         let r = compute(&bars, 0.3);
         assert!(!r.bullish_white[2]);

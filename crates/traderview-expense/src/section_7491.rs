@@ -146,8 +146,8 @@ pub fn check(input: &Section7491Input) -> Section7491Result {
         input.entity_type,
         EntityType::Corporation | EntityType::Partnership | EntityType::Trust
     );
-    let net_worth_limitation_engaged = net_worth_limited_entity
-        && input.net_worth_cents > net_worth_threshold_cents;
+    let net_worth_limitation_engaged =
+        net_worth_limited_entity && input.net_worth_cents > net_worth_threshold_cents;
 
     let a_2_threshold_met = input.taxpayer_substantiation_complied
         && input.taxpayer_maintained_records
@@ -286,7 +286,10 @@ mod tests {
         i.taxpayer_substantiation_complied = false;
         let r = check(&i);
         assert!(!r.subsection_a_1_burden_shift_engaged);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7491(a)(2)") && n.contains("missing any one")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7491(a)(2)") && n.contains("missing any one")));
     }
 
     #[test]
@@ -332,7 +335,10 @@ mod tests {
         let r = check(&i);
         assert!(r.net_worth_limitation_engaged);
         assert!(!r.subsection_a_1_burden_shift_engaged);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7491(a)(2)(C)") && n.contains("$7,000,000")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7491(a)(2)(C)") && n.contains("$7,000,000")));
     }
 
     #[test]
@@ -389,7 +395,10 @@ mod tests {
         i.tax_type = TaxType::EmploymentSubtitleC;
         let r = check(&i);
         assert!(!r.subsection_a_1_burden_shift_engaged);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7491(a)") && n.contains("employment + excise taxes outside")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7491(a)") && n.contains("employment + excise taxes outside")));
     }
 
     #[test]
@@ -415,7 +424,10 @@ mod tests {
         i.irs_used_statistical_reconstruction = true;
         let r = check(&i);
         assert!(r.subsection_b_statistical_burden_engaged);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7491(b)") && n.contains("BLS surveys")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7491(b)") && n.contains("BLS surveys")));
     }
 
     #[test]
@@ -426,7 +438,10 @@ mod tests {
         i.irs_used_statistical_reconstruction = true;
         let r = check(&i);
         assert!(!r.subsection_b_statistical_burden_engaged);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7491(b)") && n.contains("INDIVIDUAL taxpayers")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7491(b)") && n.contains("INDIVIDUAL taxpayers")));
     }
 
     #[test]
@@ -445,7 +460,10 @@ mod tests {
         i.irs_seeks_penalty_or_addition = true;
         let r = check(&i);
         assert!(r.subsection_c_penalty_production_burden_engaged);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7491(c)") && n.contains("BURDEN OF PRODUCTION")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7491(c)") && n.contains("BURDEN OF PRODUCTION")));
     }
 
     #[test]
@@ -489,19 +507,29 @@ mod tests {
     #[test]
     fn credible_evidence_note_describes_post_critical_analysis() {
         let r = check(&individual_base());
-        assert!(r.notes.iter().any(|n| n.contains("credible evidence") && n.contains("court would find sufficient")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("credible evidence") && n.contains("court would find sufficient")));
     }
 
     #[test]
     fn three_threshold_satisfied_note_lists_a_b_c() {
         let r = check(&individual_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 7491(a)(2)") && n.contains("(A) substantiation") && n.contains("(B) records") && n.contains("(C) cooperation")));
+        assert!(r.notes.iter().any(|n| n.contains("§ 7491(a)(2)")
+            && n.contains("(A) substantiation")
+            && n.contains("(B) records")
+            && n.contains("(C) cooperation")));
     }
 
     #[test]
     fn rra_1998_enactment_note_present() {
         let r = check(&individual_base());
-        assert!(r.notes.iter().any(|n| n.contains("IRS Restructuring and Reform Act of 1998") && n.contains("Pub. L. No. 105-206")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("IRS Restructuring and Reform Act of 1998")
+                && n.contains("Pub. L. No. 105-206")));
     }
 
     #[test]
@@ -545,7 +573,11 @@ mod tests {
             assert!(!check(&i).net_worth_limitation_engaged);
         }
 
-        for entity in [EntityType::Corporation, EntityType::Partnership, EntityType::Trust] {
+        for entity in [
+            EntityType::Corporation,
+            EntityType::Partnership,
+            EntityType::Trust,
+        ] {
             let mut i = individual_base();
             i.entity_type = entity;
             i.net_worth_cents = 700_000_001;

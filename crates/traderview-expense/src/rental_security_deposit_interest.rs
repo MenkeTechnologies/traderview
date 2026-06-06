@@ -216,7 +216,9 @@ pub fn check(input: &SecurityDepositInterestInput) -> SecurityDepositInterestRes
         && input.days_since_tenant_demand > 30
         && !input.interest_paid_within_window
     {
-        penalty_damages_cents = tenant_interest_owed_cents.saturating_mul(2).saturating_add(10_000);
+        penalty_damages_cents = tenant_interest_owed_cents
+            .saturating_mul(2)
+            .saturating_add(10_000);
         failure_reasons.push(
             "Conn. Gen. Stat. § 47a-21(d)(2) — landlord retention of interest beyond 30 days after tenant demand triggers DOUBLE damages + $100 statutory penalty + costs + reasonable attorney fees".to_string(),
         );
@@ -433,10 +435,7 @@ mod tests {
             && f.contains("TENANT'S NAME")));
         i.held_in_proper_interest_bearing_account = true;
         let r2 = check(&i);
-        assert!(!r2
-            .failure_reasons
-            .iter()
-            .any(|f| f.contains("§ 15B(3)(a)")));
+        assert!(!r2.failure_reasons.iter().any(|f| f.contains("§ 15B(3)(a)")));
     }
 
     #[test]
@@ -478,9 +477,12 @@ mod tests {
         let exp_interest = 300_u64;
         let exp_penalty = exp_interest.saturating_mul(2).saturating_add(10_000);
         assert_eq!(r.penalty_damages_cents, exp_penalty);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 47a-21(d)(2)")
-            && f.contains("DOUBLE damages")
-            && f.contains("$100")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 47a-21(d)(2)")
+                && f.contains("DOUBLE damages")
+                && f.contains("$100")));
     }
 
     #[test]
@@ -522,8 +524,10 @@ mod tests {
         };
         let r = check(&i);
         assert!(r.deposit_cap_violated);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("N.J.S.A. 46:8-21.2")
-            && f.contains("1.5 months")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("N.J.S.A. 46:8-21.2") && f.contains("1.5 months")));
     }
 
     #[test]
@@ -583,10 +587,7 @@ mod tests {
             days_since_tenant_demand: 0,
         };
         let r = check(&i);
-        assert!(!r
-            .failure_reasons
-            .iter()
-            .any(|f| f.contains("§ 7-103(2)")));
+        assert!(!r.failure_reasons.iter().any(|f| f.contains("§ 7-103(2)")));
     }
 
     #[test]
@@ -688,7 +689,9 @@ mod tests {
     #[test]
     fn citation_pins_all_five_jurisdictions() {
         let r = check(&chicago_compliant());
-        assert!(r.citation.contains("Chicago Municipal Code § 5-12-080(c)/(f)"));
+        assert!(r
+            .citation
+            .contains("Chicago Municipal Code § 5-12-080(c)/(f)"));
         assert!(r.citation.contains("§ 5-12-081"));
         assert!(r.citation.contains("Mass. G.L. c. 186 § 15B"));
         assert!(r.citation.contains("§ 15B(3)(a)/(b)"));
@@ -745,8 +748,10 @@ mod tests {
     #[test]
     fn note_pins_connecticut_quarterly_banking_commissioner() {
         let r = check(&chicago_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("§ 47a-21(i)")
-            && n.contains("QUARTERLY by Banking Commissioner")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 47a-21(i)") && n.contains("QUARTERLY by Banking Commissioner")));
     }
 
     #[test]
@@ -760,15 +765,18 @@ mod tests {
     #[test]
     fn note_pins_new_jersey_1_5_month_cap() {
         let r = check(&chicago_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("N.J.S.A. 46:8-21.2")
-            && n.contains("1.5 months' rent")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("N.J.S.A. 46:8-21.2") && n.contains("1.5 months' rent")));
     }
 
     #[test]
     fn note_pins_new_jersey_1_percent_admin_fee() {
         let r = check(&chicago_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("N.J.S.A. 46:8-19")
-            && n.contains("1% per annum administrative fee")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("N.J.S.A. 46:8-19") && n.contains("1% per annum administrative fee")
+        ));
     }
 
     #[test]
@@ -782,9 +790,10 @@ mod tests {
     #[test]
     fn note_pins_new_york_trust_no_commingling() {
         let r = check(&chicago_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("§ 7-103(1)")
-            && n.contains("TRUST")
-            && n.contains("commingling")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7-103(1)") && n.contains("TRUST") && n.contains("commingling")));
     }
 
     #[test]

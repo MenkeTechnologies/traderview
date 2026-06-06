@@ -30,14 +30,18 @@ pub struct CrpsReport {
     pub n_events: usize,
 }
 
-pub fn ensemble(
-    ensembles: &[Vec<f64>],
-    observations: &[f64],
-) -> Option<CrpsReport> {
+pub fn ensemble(ensembles: &[Vec<f64>], observations: &[f64]) -> Option<CrpsReport> {
     let n = observations.len();
-    if n == 0 || ensembles.len() != n { return None; }
-    if observations.iter().any(|y| !y.is_finite()) { return None; }
-    if ensembles.iter().any(|e| e.is_empty() || e.iter().any(|x| !x.is_finite())) {
+    if n == 0 || ensembles.len() != n {
+        return None;
+    }
+    if observations.iter().any(|y| !y.is_finite()) {
+        return None;
+    }
+    if ensembles
+        .iter()
+        .any(|e| e.is_empty() || e.iter().any(|x| !x.is_finite()))
+    {
         return None;
     }
     let mut per_event = Vec::with_capacity(n);
@@ -125,7 +129,9 @@ mod tests {
     fn wider_ensemble_higher_crps_when_off_target() {
         let tight = [vec![10.0_f64; 20]];
         let mut wide = Vec::new();
-        for i in -10..=10 { wide.push(10.0 + i as f64); }
+        for i in -10..=10 {
+            wide.push(10.0 + i as f64);
+        }
         let e_tight = vec![tight[0].clone()];
         let e_wide = vec![wide];
         let o = vec![10.0];

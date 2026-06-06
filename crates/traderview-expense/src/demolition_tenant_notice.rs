@@ -112,8 +112,8 @@ pub fn check(input: &DemolitionNoticeInput) -> DemolitionNoticeResult {
 fn ca_check(input: &DemolitionNoticeInput) -> DemolitionNoticeResult {
     // § 7060.4(b): 365-day extension if tenant is ≥ 62 OR disabled AND
     // has been in the unit ≥ 1 year.
-    let qualifies_for_extension =
-        (input.tenant_age >= 62 || input.tenant_disabled) && input.months_since_tenancy_started >= 12;
+    let qualifies_for_extension = (input.tenant_age >= 62 || input.tenant_disabled)
+        && input.months_since_tenancy_started >= 12;
     let required = if qualifies_for_extension { 365 } else { 120 };
     let citation = if qualifies_for_extension {
         "Cal. Govt Code § 7060.4(b) — 365-day notice extension for tenants ≥ 62 or disabled with ≥ 1 year residency"

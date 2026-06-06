@@ -115,7 +115,11 @@ pub fn compute(input: &Section1341Input) -> Section1341Result {
     // Method B — credit. Credit may exceed current-year tax → refund.
     let raw_credit_tax = cy_without - py_decrease;
     let method_b = raw_credit_tax.max(0);
-    let credit_refund = if raw_credit_tax < 0 { -raw_credit_tax } else { 0 };
+    let credit_refund = if raw_credit_tax < 0 {
+        -raw_credit_tax
+    } else {
+        0
+    };
 
     let (better, final_tax) = if method_a <= method_b {
         (Method::DeductionMethodA, method_a)

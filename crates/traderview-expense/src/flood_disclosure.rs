@@ -226,12 +226,9 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // NoStateFloodDisclosure default — 41 states + DC.
     let no_state = [
-        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE",
-        "HI", "ID", "IL", "IA", "KS", "KY", "LA", "ME",
-        "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE",
-        "NV", "NH", "NM", "NC", "ND", "OH", "PA", "RI",
-        "SC", "SD", "TN", "UT", "VT", "VA", "WA", "WV",
-        "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "HI", "ID", "IL", "IA", "KS", "KY", "LA",
+        "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NM", "NC", "ND", "OH",
+        "PA", "RI", "SC", "SD", "TN", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
     ];
     for code in no_state {
         m.insert(
@@ -307,9 +304,10 @@ pub fn check(input: &FloodDisclosureInput) -> FloodDisclosureResult {
     };
 
     // FL-specific: only applies to leases ≥ 12 months.
-    let fl_term_ok =
-        matches!(rule.regime, FloodDisclosureRegime::FloridaFloodHistoryClaimsFemaAid)
-            && input.lease_term_months >= 12;
+    let fl_term_ok = matches!(
+        rule.regime,
+        FloodDisclosureRegime::FloridaFloodHistoryClaimsFemaAid
+    ) && input.lease_term_months >= 12;
     let non_fl_term_ok = !matches!(
         rule.regime,
         FloodDisclosureRegime::FloridaFloodHistoryClaimsFemaAid
@@ -367,12 +365,8 @@ pub fn check(input: &FloodDisclosureInput) -> FloodDisclosureResult {
         FloodDisclosureRegime::CaliforniaNaturalHazardCombined => {
             "California natural-hazard cluster disclosure"
         }
-        FloodDisclosureRegime::PriorFloodKnowledgeDisclosure => {
-            "prior-flood-knowledge disclosure"
-        }
-        FloodDisclosureRegime::NoStateFloodDisclosure => {
-            "no statutory pre-lease flood disclosure"
-        }
+        FloodDisclosureRegime::PriorFloodKnowledgeDisclosure => "prior-flood-knowledge disclosure",
+        FloodDisclosureRegime::NoStateFloodDisclosure => "no statutory pre-lease flood disclosure",
     };
 
     let note = if !in_effect
@@ -564,7 +558,10 @@ mod tests {
         i.landlord_provided_disclosure = false;
         let r = check(&i);
         assert!(r.statute_in_effect_on_signing);
-        assert!(!r.disclosure_required, "FL only applies to leases ≥ 12 months");
+        assert!(
+            !r.disclosure_required,
+            "FL only applies to leases ≥ 12 months"
+        );
         assert!(r.landlord_compliant);
     }
 
@@ -586,7 +583,10 @@ mod tests {
         i.tenant_substantial_loss_suffered = false;
         let r = check(&i);
         assert!(!r.landlord_compliant);
-        assert!(!r.tenant_may_terminate, "FL requires substantial loss for termination right");
+        assert!(
+            !r.tenant_may_terminate,
+            "FL requires substantial loss for termination right"
+        );
     }
 
     #[test]
@@ -624,7 +624,10 @@ mod tests {
         i.prior_flood_known_to_landlord = false;
         let r = check(&i);
         assert!(!r.landlord_compliant);
-        assert!(!r.tenant_may_terminate, "NJ termination requires flood zone OR prior flood");
+        assert!(
+            !r.tenant_may_terminate,
+            "NJ termination requires flood zone OR prior flood"
+        );
     }
 
     #[test]
@@ -723,7 +726,10 @@ mod tests {
         let count = RULES
             .iter()
             .filter(|(_, r)| {
-                matches!(r.regime, FloodDisclosureRegime::FloridaFloodHistoryClaimsFemaAid)
+                matches!(
+                    r.regime,
+                    FloodDisclosureRegime::FloridaFloodHistoryClaimsFemaAid
+                )
             })
             .count();
         assert_eq!(count, 1, "FloridaFloodHistoryClaimsFemaAid must be FL only");
@@ -734,7 +740,10 @@ mod tests {
         let count = RULES
             .iter()
             .filter(|(_, r)| {
-                matches!(r.regime, FloodDisclosureRegime::NewJerseyFemaFloodZoneAndHistory)
+                matches!(
+                    r.regime,
+                    FloodDisclosureRegime::NewJerseyFemaFloodZoneAndHistory
+                )
             })
             .count();
         assert_eq!(count, 1, "NewJerseyFemaFloodZoneAndHistory must be NJ only");
@@ -745,7 +754,10 @@ mod tests {
         let count = RULES
             .iter()
             .filter(|(_, r)| {
-                matches!(r.regime, FloodDisclosureRegime::CaliforniaNaturalHazardCombined)
+                matches!(
+                    r.regime,
+                    FloodDisclosureRegime::CaliforniaNaturalHazardCombined
+                )
             })
             .count();
         assert_eq!(count, 1, "CaliforniaNaturalHazardCombined must be CA only");
@@ -756,7 +768,10 @@ mod tests {
         let count = RULES
             .iter()
             .filter(|(_, r)| {
-                matches!(r.regime, FloodDisclosureRegime::PriorFloodKnowledgeDisclosure)
+                matches!(
+                    r.regime,
+                    FloodDisclosureRegime::PriorFloodKnowledgeDisclosure
+                )
             })
             .count();
         assert_eq!(

@@ -147,8 +147,7 @@ pub fn compute(input: &Section174Input) -> Section174Result {
     r.amortization_for_current_year = current_year_amt;
     r.cumulative_amortization_through_current_year = cumulative;
     r.year_of_life = (input.current_tax_year - input.expenditure_year + 1).max(0) as u32;
-    r.remaining_capitalized_basis =
-        (input.r_and_d_amount - cumulative).max(Decimal::ZERO);
+    r.remaining_capitalized_basis = (input.r_and_d_amount - cumulative).max(Decimal::ZERO);
     r.fully_amortized = r.remaining_capitalized_basis == Decimal::ZERO
         || input.current_tax_year > input.expenditure_year + years as i32;
 
@@ -248,7 +247,7 @@ mod tests {
         assert_eq!(r.annual_schedule[3].amount, dec!(20000)); // year 4 full
         assert_eq!(r.annual_schedule[4].amount, dec!(20000)); // year 5 full
         assert_eq!(r.annual_schedule[5].amount, dec!(10000)); // year 6 stub half
-        // Sum = $100k total.
+                                                              // Sum = $100k total.
         let sum: Decimal = r.annual_schedule.iter().map(|x| x.amount).sum();
         assert_eq!(sum, dec!(100000));
     }
@@ -304,7 +303,10 @@ mod tests {
         i.current_tax_year = 2023; // before 2024 expenditure
         let r = compute(&i);
         assert_eq!(r.amortization_for_current_year, Decimal::ZERO);
-        assert_eq!(r.cumulative_amortization_through_current_year, Decimal::ZERO);
+        assert_eq!(
+            r.cumulative_amortization_through_current_year,
+            Decimal::ZERO
+        );
     }
 
     #[test]

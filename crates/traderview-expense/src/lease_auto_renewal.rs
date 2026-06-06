@@ -117,11 +117,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // NoStateDisclosureRequirement for all remaining states + DC.
     let no_rule = [
-        "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "GA",
-        "HI", "ID", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA",
-        "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM",
-        "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN",
-        "TX", "UT", "VT", "VA", "WA", "WV", "WY",
+        "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "GA", "HI", "ID", "IN", "IA", "KS",
+        "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM",
+        "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA",
+        "WV", "WY",
     ];
     for code in no_rule {
         m.insert(
@@ -186,8 +185,8 @@ pub fn check(input: &AutoRenewalInput) -> AutoRenewalResult {
     } else {
         true
     };
-    let clause_compliant = !rule.clear_conspicuous_clause_required
-        || input.clause_is_clear_and_conspicuous;
+    let clause_compliant =
+        !rule.clear_conspicuous_clause_required || input.clause_is_clear_and_conspicuous;
     let fees_compliant = !rule.must_list_fees_and_charges || input.notice_listed_fees_and_charges;
 
     let enforceable = !required || (timing_compliant && clause_compliant && fees_compliant);
@@ -413,7 +412,11 @@ mod tests {
     fn no_rule_state_auto_renewal_always_enforceable() {
         for st in &["TX", "CA", "MA", "OR", "DC", "OH"] {
             let r = check(&input(st, true));
-            assert_eq!(r.regime, AutoRenewalRegime::NoStateDisclosureRequirement, "{st}");
+            assert_eq!(
+                r.regime,
+                AutoRenewalRegime::NoStateDisclosureRequirement,
+                "{st}"
+            );
             assert!(r.auto_renewal_enforceable, "{st}");
         }
     }
@@ -432,7 +435,12 @@ mod tests {
     #[test]
     fn coverage_is_all_50_states_plus_dc() {
         let codes: Vec<&'static str> = RULES.keys().copied().collect();
-        assert_eq!(codes.len(), 51, "expected 50 states + DC, got {}", codes.len());
+        assert_eq!(
+            codes.len(),
+            51,
+            "expected 50 states + DC, got {}",
+            codes.len()
+        );
     }
 
     #[test]
@@ -483,7 +491,10 @@ mod tests {
                 count += 1;
             }
         }
-        assert_eq!(count, 1, "expected IL only with clear-conspicuous requirement");
+        assert_eq!(
+            count, 1,
+            "expected IL only with clear-conspicuous requirement"
+        );
     }
 
     #[test]

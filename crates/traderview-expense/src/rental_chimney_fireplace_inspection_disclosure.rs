@@ -216,9 +216,14 @@ pub fn check(input: &Input) -> Output {
         actions.push("Damaged chimney crown or brick spalling observed: water intrusion path into walls and roof; cross-reference rental_basement_water_intrusion_disclosure; tuckpointing + crown repair required.".to_string());
     }
 
-    let needs_level_ii = input.occupancy_change_since_last_inspection
-        || input.damage_event_since_last_inspection;
-    if needs_level_ii && !matches!(input.last_inspection_level, InspectionLevel::LevelII | InspectionLevel::LevelIII) {
+    let needs_level_ii =
+        input.occupancy_change_since_last_inspection || input.damage_event_since_last_inspection;
+    if needs_level_ii
+        && !matches!(
+            input.last_inspection_level,
+            InspectionLevel::LevelII | InspectionLevel::LevelIII
+        )
+    {
         actions.push("NFPA 211 Level II inspection required: occupancy change or damage event since last inspection; engage CSIA-certified chimney sweep inspector.".to_string());
     }
 
@@ -252,7 +257,13 @@ pub fn check(input: &Input) -> Output {
         Severity::FireOrCoEvent
     } else if defect_observed {
         Severity::DefectObserved
-    } else if inspection_overdue || (needs_level_ii && !matches!(input.last_inspection_level, InspectionLevel::LevelII | InspectionLevel::LevelIII)) {
+    } else if inspection_overdue
+        || (needs_level_ii
+            && !matches!(
+                input.last_inspection_level,
+                InspectionLevel::LevelII | InspectionLevel::LevelIII
+            ))
+    {
         Severity::InspectionOverdue
     } else if maine_disclosure_missing {
         Severity::DisclosureRequired

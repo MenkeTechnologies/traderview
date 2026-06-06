@@ -163,8 +163,7 @@ pub fn compute(input: &Section132Input) -> Section132Result {
             } else {
                 // Discount exceeds cap → excess is taxable.
                 // Approximation: excludable = value × (cap / discount_pct).
-                ((value as i128) * (cap_bp as i128)
-                    / (input.discount_pct_bp.max(1) as i128)) as i64
+                ((value as i128) * (cap_bp as i128) / (input.discount_pct_bp.max(1) as i128)) as i64
             }
         }
         FringeCategory::QualifiedTransportationFringe => {
@@ -463,8 +462,12 @@ mod tests {
         assert!(r.citation.contains("(3) working condition fringe"));
         assert!(r.citation.contains("(4) de minimis fringe"));
         assert!(r.citation.contains("(5) qualified transportation fringe"));
-        assert!(r.citation.contains("(6) qualified moving expense reimbursement"));
-        assert!(r.citation.contains("(7) qualified retirement planning services"));
+        assert!(r
+            .citation
+            .contains("(6) qualified moving expense reimbursement"));
+        assert!(r
+            .citation
+            .contains("(7) qualified retirement planning services"));
         assert!(r.citation.contains("(8) military base"));
     }
 

@@ -36,7 +36,7 @@ impl RealPropertyClass {
     pub fn recovery_period_years(self) -> Decimal {
         match self {
             RealPropertyClass::Residential27_5 => Decimal::from_str("27.5").unwrap(),
-            RealPropertyClass::Commercial39   => Decimal::from(39),
+            RealPropertyClass::Commercial39 => Decimal::from(39),
         }
     }
 }
@@ -45,15 +45,15 @@ impl RealPropertyClass {
 /// mid-month convention. Year-1 percentages indexed by placed-in-service
 /// month (1=Jan .. 12=Dec). Values from the IRS table (e.g. 3.485% = 0.03485).
 const TABLE_A6_RESIDENTIAL_YEAR_1: [&str; 12] = [
-    "0.03485", "0.03182", "0.02879", "0.02576", "0.02273", "0.01970",
-    "0.01667", "0.01364", "0.01061", "0.00758", "0.00455", "0.00152",
+    "0.03485", "0.03182", "0.02879", "0.02576", "0.02273", "0.01970", "0.01667", "0.01364",
+    "0.01061", "0.00758", "0.00455", "0.00152",
 ];
 
 /// IRS Pub 946 Table A-7a — Non-residential real property, 39-year SL,
 /// mid-month convention. Year-1 percentages indexed by month.
 const TABLE_A7A_COMMERCIAL_YEAR_1: [&str; 12] = [
-    "0.02461", "0.02247", "0.02033", "0.01819", "0.01605", "0.01391",
-    "0.01177", "0.00963", "0.00749", "0.00535", "0.00321", "0.00107",
+    "0.02461", "0.02247", "0.02033", "0.01819", "0.01605", "0.01391", "0.01177", "0.00963",
+    "0.00749", "0.00535", "0.00321", "0.00107",
 ];
 
 /// Year-2-through-last full-recovery-year percentage for 27.5y residential.
@@ -100,14 +100,14 @@ fn year_1_pct(class: RealPropertyClass, month: u32) -> Decimal {
     let m = month.clamp(1, 12) as usize - 1;
     pct(match class {
         RealPropertyClass::Residential27_5 => TABLE_A6_RESIDENTIAL_YEAR_1[m],
-        RealPropertyClass::Commercial39   => TABLE_A7A_COMMERCIAL_YEAR_1[m],
+        RealPropertyClass::Commercial39 => TABLE_A7A_COMMERCIAL_YEAR_1[m],
     })
 }
 
 fn mid_life_pct(class: RealPropertyClass) -> Decimal {
     pct(match class {
         RealPropertyClass::Residential27_5 => MID_LIFE_RESIDENTIAL,
-        RealPropertyClass::Commercial39   => MID_LIFE_COMMERCIAL,
+        RealPropertyClass::Commercial39 => MID_LIFE_COMMERCIAL,
     })
 }
 
@@ -117,7 +117,7 @@ fn life_in_calendar_years(class: RealPropertyClass) -> u32 {
     // the leftover sliver in the final year).
     match class {
         RealPropertyClass::Residential27_5 => 28 + 1, // 29 calendar years touched
-        RealPropertyClass::Commercial39    => 40 + 1, // 41 calendar years touched
+        RealPropertyClass::Commercial39 => 40 + 1,    // 41 calendar years touched
     }
 }
 
@@ -192,7 +192,11 @@ pub fn macrs_rental_year(p: &RentalPropertyDepreciation) -> DepreciationForYear 
                 c += mid;
             }
         }
-        if c > Decimal::ONE { Decimal::ONE } else { c }
+        if c > Decimal::ONE {
+            Decimal::ONE
+        } else {
+            c
+        }
     };
     let prior_dollars = (p.depreciable_basis * prior_cum_pct).round_dp(2);
 
@@ -325,7 +329,8 @@ mod tests {
             assert!(
                 r.cumulative_through_year <= dec!(275000),
                 "cumulative {} exceeds basis at year of life {}",
-                r.cumulative_through_year, yol
+                r.cumulative_through_year,
+                yol
             );
             assert!(r.basis_remaining >= Decimal::ZERO);
         }
@@ -334,18 +339,16 @@ mod tests {
     #[test]
     fn convenience_deduction_helper_matches_full_compute() {
         let basis = dec!(275000);
-        let helper = macrs_rental_year_1_deduction(
-            basis,
-            RealPropertyClass::Residential27_5,
-            2024, 6, 2024,
-        );
+        let helper =
+            macrs_rental_year_1_deduction(basis, RealPropertyClass::Residential27_5, 2024, 6, 2024);
         let full = macrs_rental_year(&RentalPropertyDepreciation {
             depreciable_basis: basis,
             class: RealPropertyClass::Residential27_5,
             placed_in_service_year: 2024,
             placed_in_service_month: 6,
             current_tax_year: 2024,
-        }).deduction;
+        })
+        .deduction;
         assert_eq!(helper, full);
     }
 

@@ -87,9 +87,7 @@ pub fn check(input: &WaterHeaterEarthquakeStrapInput) -> WaterHeaterEarthquakeSt
     }
 }
 
-fn check_california(
-    input: &WaterHeaterEarthquakeStrapInput,
-) -> WaterHeaterEarthquakeStrapResult {
+fn check_california(input: &WaterHeaterEarthquakeStrapInput) -> WaterHeaterEarthquakeStrapResult {
     let mut violations: Vec<String> = Vec::new();
     let notes: Vec<String> = vec![
         "Cal. Health & Safety Code § 19211(a) — all new + replacement + existing residential water heaters must be braced, anchored, or strapped to resist falling or horizontal displacement due to earthquake motion; minimum standard = California Plumbing Code (Title 24 Part 5) or local modifications"
@@ -270,10 +268,7 @@ mod tests {
         assert!(!r.within_120_gallon_scope);
         assert!(!r.strapping_required);
         assert!(!r.habitability_nuisance);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("§ 19211(d)")));
+        assert!(r.violations.iter().any(|v| v.contains("§ 19211(d)")));
     }
 
     #[test]

@@ -42,21 +42,31 @@ pub struct ConvertibleBondReport {
 }
 
 pub fn price(inputs: &ConvertibleBondInputs) -> Option<ConvertibleBondReport> {
-    if !inputs.spot.is_finite() || inputs.spot <= 0.0
-        || !inputs.conversion_ratio.is_finite() || inputs.conversion_ratio <= 0.0
-        || !inputs.redemption_face_value.is_finite() || inputs.redemption_face_value <= 0.0
-        || !inputs.time_to_expiry.is_finite() || inputs.time_to_expiry <= 0.0
-        || !inputs.risk_free.is_finite() || !inputs.dividend_yield.is_finite()
-        || !inputs.sigma.is_finite() || inputs.sigma <= 0.0
+    if !inputs.spot.is_finite()
+        || inputs.spot <= 0.0
+        || !inputs.conversion_ratio.is_finite()
+        || inputs.conversion_ratio <= 0.0
+        || !inputs.redemption_face_value.is_finite()
+        || inputs.redemption_face_value <= 0.0
+        || !inputs.time_to_expiry.is_finite()
+        || inputs.time_to_expiry <= 0.0
+        || !inputs.risk_free.is_finite()
+        || !inputs.dividend_yield.is_finite()
+        || !inputs.sigma.is_finite()
+        || inputs.sigma <= 0.0
         || !(1..=5_000).contains(&inputs.n_steps)
     {
         return None;
     }
     if let Some(c) = inputs.call_price {
-        if !c.is_finite() || c <= 0.0 { return None; }
+        if !c.is_finite() || c <= 0.0 {
+            return None;
+        }
     }
     if let Some(p) = inputs.put_price {
-        if !p.is_finite() || p <= 0.0 { return None; }
+        if !p.is_finite() || p <= 0.0 {
+            return None;
+        }
     }
     let dt = inputs.time_to_expiry / inputs.n_steps as f64;
     let u = (inputs.sigma * dt.sqrt()).exp();
@@ -64,7 +74,9 @@ pub fn price(inputs: &ConvertibleBondInputs) -> Option<ConvertibleBondReport> {
     let disc = (-inputs.risk_free * dt).exp();
     let drift = ((inputs.risk_free - inputs.dividend_yield) * dt).exp();
     let p_up = (drift - d) / (u - d);
-    if !(0.0..=1.0).contains(&p_up) { return None; }
+    if !(0.0..=1.0).contains(&p_up) {
+        return None;
+    }
     let q = 1.0 - p_up;
     // Terminal payoffs.
     let mut values = vec![0.0_f64; inputs.n_steps + 1];
@@ -83,7 +95,7 @@ pub fn price(inputs: &ConvertibleBondInputs) -> Option<ConvertibleBondReport> {
                 v = v.max(p_put);
             }
             if let Some(p_call) = inputs.call_price {
-                v = v.min(p_call.max(convert));    // issuer call capped at max(call, convert)
+                v = v.min(p_call.max(convert)); // issuer call capped at max(call, convert)
             }
             values[j] = v;
         }
@@ -117,16 +129,21 @@ mod tests {
     #[test]
     fn invalid_inputs_return_none() {
         for bad in [0.0, -1.0, f64::NAN] {
-            let mut i = default_inputs(); i.spot = bad;
+            let mut i = default_inputs();
+            i.spot = bad;
             assert!(price(&i).is_none());
-            let mut i = default_inputs(); i.conversion_ratio = bad;
+            let mut i = default_inputs();
+            i.conversion_ratio = bad;
             assert!(price(&i).is_none());
-            let mut i = default_inputs(); i.sigma = bad;
+            let mut i = default_inputs();
+            i.sigma = bad;
             assert!(price(&i).is_none());
-            let mut i = default_inputs(); i.redemption_face_value = bad;
+            let mut i = default_inputs();
+            i.redemption_face_value = bad;
             assert!(price(&i).is_none());
         }
-        let mut i = default_inputs(); i.n_steps = 0;
+        let mut i = default_inputs();
+        i.n_steps = 0;
         assert!(price(&i).is_none());
     }
 
@@ -134,7 +151,8 @@ mod tests {
     fn deep_itm_bond_dominated_by_conversion_value() {
         // Spot = 100, conv ratio = 2 → conversion value = 200 > face 100.
         // Bond should price near max(conversion, continuation) ≈ 200+.
-        let mut i = default_inputs(); i.spot = 100.0;
+        let mut i = default_inputs();
+        i.spot = 100.0;
         let r = price(&i).unwrap();
         assert!(r.price >= 195.0);
         assert!(r.conversion_value_today == 200.0);
@@ -143,10 +161,14 @@ mod tests {
     #[test]
     fn deep_otm_bond_priced_near_face_value() {
         // Spot = 10 → conversion = 20 << face 100. Bond floor at face.
-        let mut i = default_inputs(); i.spot = 10.0;
+        let mut i = default_inputs();
+        i.spot = 10.0;
         let r = price(&i).unwrap();
-        assert!(r.price >= 90.0,    // some PV-discounting expected
-            "OTM bond should price near face, got {}", r.price);
+        assert!(
+            r.price >= 90.0, // some PV-discounting expected
+            "OTM bond should price near face, got {}",
+            r.price
+        );
     }
 
     #[test]
@@ -162,7 +184,7 @@ mod tests {
     fn issuer_call_caps_upside() {
         // Set call price slightly above conversion value for ITM scenarios.
         let mut callable = default_inputs();
-        callable.spot = 80.0;     // conversion = 160
+        callable.spot = 80.0; // conversion = 160
         callable.call_price = Some(150.0);
         let r_callable = price(&callable).unwrap();
         let mut uncallable = callable;
@@ -173,15 +195,21 @@ mod tests {
 
     #[test]
     fn higher_vol_inflates_atm_convertible() {
-        let mut low = default_inputs(); low.spot = 50.0; low.sigma = 0.15;
-        let mut high = default_inputs(); high.spot = 50.0; high.sigma = 0.50;
+        let mut low = default_inputs();
+        low.spot = 50.0;
+        low.sigma = 0.15;
+        let mut high = default_inputs();
+        high.spot = 50.0;
+        high.sigma = 0.50;
         assert!(price(&high).unwrap().price > price(&low).unwrap().price);
     }
 
     #[test]
     fn longer_expiry_inflates_atm_convertible() {
-        let mut short = default_inputs(); short.time_to_expiry = 0.25;
-        let mut long  = default_inputs(); long.time_to_expiry = 5.0;
+        let mut short = default_inputs();
+        short.time_to_expiry = 0.25;
+        let mut long = default_inputs();
+        long.time_to_expiry = 5.0;
         assert!(price(&long).unwrap().price > price(&short).unwrap().price);
     }
 

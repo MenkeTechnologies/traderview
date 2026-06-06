@@ -76,11 +76,7 @@ pub fn information_ratio(
     // Floor annualization at 0 — a negative JSON value would produce NaN
     // via sqrt(-x) and silently poison the ratio.
     let ann_sqrt = annualization.max(0.0).sqrt();
-    let ir = if te == 0.0 {
-        0.0
-    } else {
-        mean / te * ann_sqrt
-    };
+    let ir = if te == 0.0 { 0.0 } else { mean / te * ann_sqrt };
     Some(InfoRatioReport {
         n,
         mean_active_return: mean,

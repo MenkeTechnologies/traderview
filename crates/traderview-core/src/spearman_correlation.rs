@@ -33,7 +33,9 @@ pub struct SpearmanReport {
 
 pub fn compute(x: &[f64], y: &[f64]) -> Option<SpearmanReport> {
     let n = x.len();
-    if n < 3 || y.len() != n { return None; }
+    if n < 3 || y.len() != n {
+        return None;
+    }
     if x.iter().any(|v| !v.is_finite()) || y.iter().any(|v| !v.is_finite()) {
         return None;
     }
@@ -52,7 +54,9 @@ pub fn compute(x: &[f64], y: &[f64]) -> Option<SpearmanReport> {
         sxx += dx * dx;
         syy += dy * dy;
     }
-    if sxx <= 0.0 || syy <= 0.0 { return None; }
+    if sxx <= 0.0 || syy <= 0.0 {
+        return None;
+    }
     let rho = sxy / (sxx * syy).sqrt();
     let rho = rho.clamp(-1.0, 1.0);
     // t-test for ρ_S != 0.
@@ -74,14 +78,22 @@ pub fn compute(x: &[f64], y: &[f64]) -> Option<SpearmanReport> {
 fn rank_with_ties(x: &[f64]) -> Vec<f64> {
     let n = x.len();
     let mut idx: Vec<usize> = (0..n).collect();
-    idx.sort_by(|a, b| x[*a].partial_cmp(&x[*b]).unwrap_or(std::cmp::Ordering::Equal));
+    idx.sort_by(|a, b| {
+        x[*a]
+            .partial_cmp(&x[*b])
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     let mut ranks = vec![0.0_f64; n];
     let mut i = 0;
     while i < n {
         let mut j = i;
-        while j + 1 < n && x[idx[j + 1]] == x[idx[i]] { j += 1; }
+        while j + 1 < n && x[idx[j + 1]] == x[idx[i]] {
+            j += 1;
+        }
         let mid_rank = (i + j) as f64 / 2.0 + 1.0;
-        for k in i..=j { ranks[idx[k]] = mid_rank; }
+        for k in i..=j {
+            ranks[idx[k]] = mid_rank;
+        }
         i = j + 1;
     }
     ranks
@@ -91,17 +103,22 @@ fn rank_with_ties(x: &[f64]) -> Vec<f64> {
 /// of the incomplete-beta function for moderate dof; accurate to ~1e-6
 /// for dof > 5.
 fn student_t_two_sided_pvalue(t: f64, dof: f64) -> f64 {
-    if !t.is_finite() || dof <= 0.0 { return 1.0; }
+    if !t.is_finite() || dof <= 0.0 {
+        return 1.0;
+    }
     let x = dof / (dof + t * t);
     let p = incomplete_beta(dof / 2.0, 0.5, x);
     p.clamp(0.0, 1.0)
 }
 
 fn incomplete_beta(a: f64, b: f64, x: f64) -> f64 {
-    if x <= 0.0 { return 0.0; }
-    if x >= 1.0 { return 1.0; }
-    let bt = (lgamma(a + b) - lgamma(a) - lgamma(b)
-        + a * x.ln() + b * (1.0 - x).ln()).exp();
+    if x <= 0.0 {
+        return 0.0;
+    }
+    if x >= 1.0 {
+        return 1.0;
+    }
+    let bt = (lgamma(a + b) - lgamma(a) - lgamma(b) + a * x.ln() + b * (1.0 - x).ln()).exp();
     if x < (a + 1.0) / (a + b + 2.0) {
         bt * cont_frac(a, b, x) / a
     } else {
@@ -117,7 +134,9 @@ fn cont_frac(a: f64, b: f64, x: f64) -> f64 {
     let qam = a - 1.0;
     let mut c = 1.0;
     let mut d = 1.0 - qab * x / qap;
-    if d.abs() < 1e-30 { d = 1e-30; }
+    if d.abs() < 1e-30 {
+        d = 1e-30;
+    }
     d = 1.0 / d;
     let mut h = d;
     for m in 1..=max_iter {
@@ -125,20 +144,30 @@ fn cont_frac(a: f64, b: f64, x: f64) -> f64 {
         let m2 = 2.0 * m_f;
         let aa = m_f * (b - m_f) * x / ((qam + m2) * (a + m2));
         d = 1.0 + aa * d;
-        if d.abs() < 1e-30 { d = 1e-30; }
+        if d.abs() < 1e-30 {
+            d = 1e-30;
+        }
         c = 1.0 + aa / c;
-        if c.abs() < 1e-30 { c = 1e-30; }
+        if c.abs() < 1e-30 {
+            c = 1e-30;
+        }
         d = 1.0 / d;
         h *= d * c;
         let aa = -(a + m_f) * (qab + m_f) * x / ((a + m2) * (qap + m2));
         d = 1.0 + aa * d;
-        if d.abs() < 1e-30 { d = 1e-30; }
+        if d.abs() < 1e-30 {
+            d = 1e-30;
+        }
         c = 1.0 + aa / c;
-        if c.abs() < 1e-30 { c = 1e-30; }
+        if c.abs() < 1e-30 {
+            c = 1e-30;
+        }
         d = 1.0 / d;
         let del = d * c;
         h *= del;
-        if (del - 1.0).abs() < eps { return h; }
+        if (del - 1.0).abs() < eps {
+            return h;
+        }
     }
     h
 }
@@ -159,9 +188,7 @@ fn lgamma(z: f64) -> f64 {
         1.505_632_735_149_312e-7,
     ];
     if z < 0.5 {
-        std::f64::consts::PI.ln()
-            - (std::f64::consts::PI * z).sin().abs().ln()
-            - lgamma(1.0 - z)
+        std::f64::consts::PI.ln() - (std::f64::consts::PI * z).sin().abs().ln() - lgamma(1.0 - z)
     } else {
         let zm = z - 1.0;
         let mut x = p[0];
@@ -169,8 +196,7 @@ fn lgamma(z: f64) -> f64 {
             x += pi / (zm + i as f64);
         }
         let t = zm + g + 0.5;
-        0.5 * (2.0 * std::f64::consts::PI).ln()
-            + (zm + 0.5) * t.ln() - t + x.ln()
+        0.5 * (2.0 * std::f64::consts::PI).ln() + (zm + 0.5) * t.ln() - t + x.ln()
     }
 }
 
@@ -207,7 +233,11 @@ mod tests {
         let x: Vec<f64> = (1..=20).map(|i| i as f64).collect();
         let y: Vec<f64> = (1..=20).map(|i| (i as f64).exp()).collect();
         let r = compute(&x, &y).unwrap();
-        assert!((r.rho - 1.0).abs() < 1e-12, "monotone: ρ should be 1, got {}", r.rho);
+        assert!(
+            (r.rho - 1.0).abs() < 1e-12,
+            "monotone: ρ should be 1, got {}",
+            r.rho
+        );
     }
 
     #[test]
@@ -225,7 +255,11 @@ mod tests {
         let y = vec![1.0, 2.0, 2.0, 3.0, 4.0, 4.0, 5.0, 6.0, 7.0, 8.0];
         let r = compute(&x, &y).unwrap();
         assert!(r.rho.is_finite());
-        assert!(r.rho > 0.9, "near-monotone with ties: ρ should be > 0.9, got {}", r.rho);
+        assert!(
+            r.rho > 0.9,
+            "near-monotone with ties: ρ should be > 0.9, got {}",
+            r.rho
+        );
     }
 
     #[test]

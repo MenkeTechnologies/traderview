@@ -13,16 +13,15 @@
 //! Pure compute. Defaults: momentum_period = 10, smooth_period = 8.
 //! Companion to `ehlers_super_smoother`, `roc`, `tsi`, `coppock_curve`.
 
-pub fn compute(
-    closes: &[f64],
-    momentum_period: usize,
-    smooth_period: usize,
-) -> Vec<Option<f64>> {
+pub fn compute(closes: &[f64], momentum_period: usize, smooth_period: usize) -> Vec<Option<f64>> {
     let n = closes.len();
     let mut out = vec![None; n];
-    if momentum_period < 1 || smooth_period < 4
-        || n < momentum_period + 3 { return out; }
-    if closes.iter().any(|x| !x.is_finite()) { return out; }
+    if momentum_period < 1 || smooth_period < 4 || n < momentum_period + 3 {
+        return out;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     let mut mom = vec![0.0_f64; n];
     for i in momentum_period..n {
         mom[i] = closes[i] - closes[i - momentum_period];
@@ -35,9 +34,7 @@ pub fn compute(
     let c1 = 1.0 - c2 - c3;
     let mut ss = vec![0.0_f64; n];
     for i in (momentum_period + 2)..n {
-        ss[i] = c1 * (mom[i] + mom[i - 1]) / 2.0
-            + c2 * ss[i - 1]
-            + c3 * ss[i - 2];
+        ss[i] = c1 * (mom[i] + mom[i - 1]) / 2.0 + c2 * ss[i - 1] + c3 * ss[i - 2];
         out[i] = Some(ss[i]);
     }
     out
@@ -77,8 +74,10 @@ mod tests {
         let r = compute(&c, 10, 8);
         // Steady-state mom = period (constant 10) → CSM converges to 10.
         let last = r[99].unwrap();
-        assert!(last > 8.0 && last < 12.0,
-            "uptrend CSM should be near +10, got {last}");
+        assert!(
+            last > 8.0 && last < 12.0,
+            "uptrend CSM should be near +10, got {last}"
+        );
     }
 
     #[test]

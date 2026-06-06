@@ -34,7 +34,9 @@ pub fn compute(returns: &[f64], threshold: f64) -> Option<OmegaReport> {
     let mut n_loss = 0usize;
     let mut any_valid = false;
     for r in returns {
-        if !r.is_finite() { continue; }
+        if !r.is_finite() {
+            continue;
+        }
         any_valid = true;
         let diff = r - threshold;
         if diff > 0.0 {
@@ -48,7 +50,11 @@ pub fn compute(returns: &[f64], threshold: f64) -> Option<OmegaReport> {
     if !any_valid {
         return None;
     }
-    let ratio = if losses == 0.0 { f64::INFINITY } else { gains / losses };
+    let ratio = if losses == 0.0 {
+        f64::INFINITY
+    } else {
+        gains / losses
+    };
     Some(OmegaReport {
         ratio,
         gains_above_threshold: gains,

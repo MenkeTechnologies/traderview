@@ -141,16 +141,14 @@ pub fn check(input: &Section6045BInput) -> Section6045BResult {
     // action OR (2) January 15 of the year following the calendar
     // year of the action.
     let primary_deadline_passed = input.days_since_action > SECTION_6045B_DEADLINE_DAYS;
-    let filing_deadline_passed =
-        primary_deadline_passed || input.january_15_following_year_passed;
+    let filing_deadline_passed = primary_deadline_passed || input.january_15_following_year_passed;
 
     // § 6045B(e) public-website waiver — Treas. Reg. § 1.6045B-1(a)(3)
     // requires posting for at least 10 years in readily accessible
     // format.
-    let website_exception_satisfied = matches!(
-        input.filing_method,
-        FilingMethod::PublicWebsitePosting
-    ) && input.website_posting_duration_years >= WEBSITE_POSTING_MIN_YEARS;
+    let website_exception_satisfied =
+        matches!(input.filing_method, FilingMethod::PublicWebsitePosting)
+            && input.website_posting_duration_years >= WEBSITE_POSTING_MIN_YEARS;
 
     // § 6045B(a) return content — must describe the action AND
     // include quantitative basis effect.
@@ -325,11 +323,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.compliant);
         assert!(r.filing_deadline_passed);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("§ 6045B(b)") && v.contains("46 days"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 6045B(b)") && v.contains("46 days")));
     }
 
     #[test]
@@ -356,11 +353,10 @@ mod tests {
         i.return_includes_basis_adjustment_description = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("§ 6045B(a)(1)") && v.contains("description"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 6045B(a)(1)") && v.contains("description")));
     }
 
     #[test]
@@ -372,11 +368,10 @@ mod tests {
         i.return_includes_quantitative_effect = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("§ 6045B(a)(2)") && v.contains("quantitative"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 6045B(a)(2)") && v.contains("quantitative")));
     }
 
     // ── § 6045B(c) holder statement ────────────────────────────
@@ -390,11 +385,10 @@ mod tests {
         i.furnished_statement_to_holders = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("§ 6045B(c)") && v.contains("nominees and security holders"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 6045B(c)") && v.contains("nominees and security holders")));
     }
 
     // ── § 6045B(e) public-website waiver ────────────────────────
@@ -433,11 +427,10 @@ mod tests {
         i.website_posting_duration_years = 9;
         let r = check(&i);
         assert!(!r.website_exception_satisfied);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("§ 1.6045B-1(a)(3)") && v.contains("9 years"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1.6045B-1(a)(3)") && v.contains("9 years")));
     }
 
     #[test]
@@ -458,11 +451,10 @@ mod tests {
         assert!(r.filing_deadline_passed);
         // No "filing deadline missed" violation because website
         // waiver satisfied.
-        assert!(
-            !r.violations
-                .iter()
-                .any(|v| v.contains("filing deadline missed"))
-        );
+        assert!(!r
+            .violations
+            .iter()
+            .any(|v| v.contains("filing deadline missed")));
         // Test compliant only if other requirements are met.
         assert!(r.compliant);
     }
@@ -475,11 +467,10 @@ mod tests {
             FilingMethod::IrsForm8937,
             OrganizationalActionType::StockSplit,
         ));
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("Stock split") && n.contains("share ratio"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Stock split") && n.contains("share ratio")));
     }
 
     #[test]
@@ -488,11 +479,10 @@ mod tests {
             FilingMethod::IrsForm8937,
             OrganizationalActionType::StockDividend,
         ));
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("Stock dividend") && n.contains("§ 305(a)"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Stock dividend") && n.contains("§ 305(a)")));
     }
 
     #[test]
@@ -501,11 +491,10 @@ mod tests {
             FilingMethod::IrsForm8937,
             OrganizationalActionType::SpinOff,
         ));
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("Spin-off") && n.contains("§ 358"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Spin-off") && n.contains("§ 358")));
     }
 
     #[test]
@@ -514,11 +503,10 @@ mod tests {
             FilingMethod::IrsForm8937,
             OrganizationalActionType::Merger,
         ));
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("Merger") && n.contains("§ 368"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Merger") && n.contains("§ 368")));
     }
 
     #[test]
@@ -527,11 +515,10 @@ mod tests {
             FilingMethod::IrsForm8937,
             OrganizationalActionType::ReturnOfCapital,
         ));
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("Return of capital") && n.contains("reduces basis"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Return of capital") && n.contains("reduces basis")));
     }
 
     // ── Regression-critical invariants ──────────────────────────
@@ -614,7 +601,11 @@ mod tests {
             OrganizationalActionType::Other,
         ] {
             let r = check(&base(FilingMethod::IrsForm8937, action));
-            assert!(r.notes.len() >= 2, "{:?}: must have action + companion notes", action);
+            assert!(
+                r.notes.len() >= 2,
+                "{:?}: must have action + companion notes",
+                action
+            );
         }
     }
 

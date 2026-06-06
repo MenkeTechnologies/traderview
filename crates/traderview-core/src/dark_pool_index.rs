@@ -44,7 +44,11 @@ pub struct DpiConfig {
 
 impl Default for DpiConfig {
     fn default() -> Self {
-        Self { smooth_period: 5, accumulation_threshold: 0.45, min_streak_days: 5 }
+        Self {
+            smooth_period: 5,
+            accumulation_threshold: 0.45,
+            min_streak_days: 5,
+        }
     }
 }
 
@@ -94,9 +98,14 @@ pub fn compute(bars: &[DarkPoolBar], cfg: &DpiConfig) -> DpiReport {
                     let len = end - start + 1;
                     if len >= cfg.min_streak_days {
                         let mean = report.smoothed[start..=end]
-                            .iter().filter_map(|x| *x).sum::<f64>() / len as f64;
+                            .iter()
+                            .filter_map(|x| *x)
+                            .sum::<f64>()
+                            / len as f64;
                         report.accumulation_streaks.push(StreakEvent {
-                            start_index: start, end_index: end, mean_dpi: mean,
+                            start_index: start,
+                            end_index: end,
+                            mean_dpi: mean,
                         });
                     }
                     run_start = None;
@@ -110,9 +119,14 @@ pub fn compute(bars: &[DarkPoolBar], cfg: &DpiConfig) -> DpiReport {
         let len = end - start + 1;
         if len >= cfg.min_streak_days {
             let mean = report.smoothed[start..=end]
-                .iter().filter_map(|x| *x).sum::<f64>() / len as f64;
+                .iter()
+                .filter_map(|x| *x)
+                .sum::<f64>()
+                / len as f64;
             report.accumulation_streaks.push(StreakEvent {
-                start_index: start, end_index: end, mean_dpi: mean,
+                start_index: start,
+                end_index: end,
+                mean_dpi: mean,
             });
         }
     }
@@ -124,7 +138,10 @@ mod tests {
     use super::*;
 
     fn b(d: f64, t: f64) -> DarkPoolBar {
-        DarkPoolBar { dark_volume: d, total_volume: t }
+        DarkPoolBar {
+            dark_volume: d,
+            total_volume: t,
+        }
     }
 
     #[test]
@@ -137,10 +154,22 @@ mod tests {
     fn invalid_config_returns_default() {
         let bars = vec![b(500.0, 1000.0); 20];
         for cfg in [
-            DpiConfig { smooth_period: 0, ..Default::default() },
-            DpiConfig { accumulation_threshold: 1.5, ..Default::default() },
-            DpiConfig { accumulation_threshold: -1.0, ..Default::default() },
-            DpiConfig { min_streak_days: 0, ..Default::default() },
+            DpiConfig {
+                smooth_period: 0,
+                ..Default::default()
+            },
+            DpiConfig {
+                accumulation_threshold: 1.5,
+                ..Default::default()
+            },
+            DpiConfig {
+                accumulation_threshold: -1.0,
+                ..Default::default()
+            },
+            DpiConfig {
+                min_streak_days: 0,
+                ..Default::default()
+            },
         ] {
             let r = compute(&bars, &cfg);
             assert!(r.raw.iter().all(|x| x.is_none()) && r.accumulation_streaks.is_empty());

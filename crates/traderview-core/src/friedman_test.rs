@@ -32,26 +32,44 @@ pub struct FriedmanReport {
 /// `data[i][j]` is subject i's value under treatment j.
 pub fn test(data: &[Vec<f64>]) -> Option<FriedmanReport> {
     let n = data.len();
-    if n < 3 { return None; }
+    if n < 3 {
+        return None;
+    }
     let k = data[0].len();
-    if k < 2 { return None; }
-    if data.iter().any(|row| row.len() != k
-        || row.iter().any(|x| !x.is_finite())) { return None; }
+    if k < 2 {
+        return None;
+    }
+    if data
+        .iter()
+        .any(|row| row.len() != k || row.iter().any(|x| !x.is_finite()))
+    {
+        return None;
+    }
     // Per-subject rank with mid-rank tie correction.
     let mut rank_sums = vec![0.0_f64; k];
     for row in data {
         let mut idx: Vec<usize> = (0..k).collect();
-        idx.sort_by(|a, b| row[*a].partial_cmp(&row[*b]).unwrap_or(std::cmp::Ordering::Equal));
+        idx.sort_by(|a, b| {
+            row[*a]
+                .partial_cmp(&row[*b])
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
         let mut ranks = vec![0.0_f64; k];
         let mut i = 0;
         while i < k {
             let mut j = i;
-            while j + 1 < k && row[idx[j + 1]] == row[idx[i]] { j += 1; }
+            while j + 1 < k && row[idx[j + 1]] == row[idx[i]] {
+                j += 1;
+            }
             let mid = (i + j) as f64 / 2.0 + 1.0;
-            for r in i..=j { ranks[idx[r]] = mid; }
+            for r in i..=j {
+                ranks[idx[r]] = mid;
+            }
             i = j + 1;
         }
-        for (j, slot) in rank_sums.iter_mut().enumerate() { *slot += ranks[j]; }
+        for (j, slot) in rank_sums.iter_mut().enumerate() {
+            *slot += ranks[j];
+        }
     }
     let n_f = n as f64;
     let k_f = k as f64;
@@ -72,14 +90,20 @@ pub fn test(data: &[Vec<f64>]) -> Option<FriedmanReport> {
 }
 
 fn chi_squared_upper_tail(x: f64, k: f64) -> f64 {
-    if x <= 0.0 || k <= 0.0 { return 1.0; }
+    if x <= 0.0 || k <= 0.0 {
+        return 1.0;
+    }
     let z = ((x / k).powf(1.0 / 3.0) - (1.0 - 2.0 / (9.0 * k))) / (2.0 / (9.0 * k)).sqrt();
     1.0 - standard_normal_cdf(z)
 }
 
 fn chi_squared_5pct_critical(k: usize) -> f64 {
     match k {
-        1 => 3.841, 2 => 5.991, 3 => 7.815, 4 => 9.488, 5 => 11.070,
+        1 => 3.841,
+        2 => 5.991,
+        3 => 7.815,
+        4 => 9.488,
+        5 => 11.070,
         _ => k as f64 + 2.0 * (2.0 * k as f64).sqrt(),
     }
 }
@@ -92,8 +116,11 @@ fn erf(x: f64) -> f64 {
     let sign = if x < 0.0 { -1.0 } else { 1.0 };
     let x = x.abs();
     let t = 1.0 / (1.0 + 0.327_591_1 * x);
-    let y = 1.0 - (((((1.061_405_429 * t - 1.453_152_027) * t)
-        + 1.421_413_741) * t - 0.284_496_736) * t + 0.254_829_592) * t * (-x * x).exp();
+    let y = 1.0
+        - (((((1.061_405_429 * t - 1.453_152_027) * t) + 1.421_413_741) * t - 0.284_496_736) * t
+            + 0.254_829_592)
+            * t
+            * (-x * x).exp();
     sign * y
 }
 
@@ -126,21 +153,31 @@ mod tests {
     #[test]
     fn one_treatment_consistently_best_rejects() {
         // Treatment 2 (index 2) always best for every subject.
-        let data: Vec<Vec<f64>> = (1..=20).map(|i| {
-            vec![i as f64, i as f64 + 0.5, i as f64 + 100.0]
-        }).collect();
+        let data: Vec<Vec<f64>> = (1..=20)
+            .map(|i| vec![i as f64, i as f64 + 0.5, i as f64 + 100.0])
+            .collect();
         let r = test(&data).unwrap();
-        assert!(r.reject_at_5pct,
-            "consistent winner should reject, χ² = {}", r.chi_squared_statistic);
+        assert!(
+            r.reject_at_5pct,
+            "consistent winner should reject, χ² = {}",
+            r.chi_squared_statistic
+        );
         // Treatment 2 has highest rank-sum.
-        let max_idx = r.rank_sums.iter().enumerate()
-            .max_by(|a, b| a.1.partial_cmp(b.1).unwrap()).unwrap().0;
+        let max_idx = r
+            .rank_sums
+            .iter()
+            .enumerate()
+            .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+            .unwrap()
+            .0;
         assert_eq!(max_idx, 2);
     }
 
     #[test]
     fn rank_sums_sum_to_n_times_k_plus_1_over_2() {
-        let data: Vec<Vec<f64>> = (1..=10).map(|i| vec![i as f64, i as f64 * 2.0, i as f64 * 3.0]).collect();
+        let data: Vec<Vec<f64>> = (1..=10)
+            .map(|i| vec![i as f64, i as f64 * 2.0, i as f64 * 3.0])
+            .collect();
         let r = test(&data).unwrap();
         let total: f64 = r.rank_sums.iter().sum();
         // Each row contributes ranks 1+2+3 = 6. n rows → 6n.
@@ -149,9 +186,9 @@ mod tests {
 
     #[test]
     fn p_value_in_unit_range() {
-        let data: Vec<Vec<f64>> = (0..15).map(|i| {
-            vec![(i as f64).sin(), (i as f64).cos(), (i as f64).tan()]
-        }).collect();
+        let data: Vec<Vec<f64>> = (0..15)
+            .map(|i| vec![(i as f64).sin(), (i as f64).cos(), (i as f64).tan()])
+            .collect();
         let r = test(&data).unwrap();
         assert!((0.0..=1.0).contains(&r.p_value));
     }

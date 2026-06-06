@@ -64,7 +64,9 @@ pub fn sweep_sma_cross(
             }
             let preset = Preset::SmaCross { fast, slow };
             let res = backtest::run(bars, preset, initial_capital, fee_per_trade);
-            report.rows.push(row_from(&format!("sma {fast}/{slow}"), &res));
+            report
+                .rows
+                .push(row_from(&format!("sma {fast}/{slow}"), &res));
         }
     }
     finalize(&mut report);
@@ -88,7 +90,9 @@ pub fn sweep_bb_breakout(
             }
             let preset = Preset::BollingerBreakout { period, k };
             let res = backtest::run(bars, preset, initial_capital, fee_per_trade);
-            report.rows.push(row_from(&format!("bb {period}/{k:.1}"), &res));
+            report
+                .rows
+                .push(row_from(&format!("bb {period}/{k:.1}"), &res));
         }
     }
     finalize(&mut report);
@@ -154,15 +158,20 @@ mod tests {
     }
 
     fn build_trending_bars(n: usize) -> Vec<PriceBar> {
-        (1..=n).map(|i| {
-            let c = 100.0 + i as f64 * 0.1;
-            bar(c - 0.2, c + 0.2, c - 0.4, c, i as i64)
-        }).collect()
+        (1..=n)
+            .map(|i| {
+                let c = 100.0 + i as f64 * 0.1;
+                bar(c - 0.2, c + 0.2, c - 0.4, c, i as i64)
+            })
+            .collect()
     }
 
     #[test]
     fn empty_input_returns_empty_report() {
-        let g = SmaCrossGrid { fasts: vec![5, 10], slows: vec![20, 30] };
+        let g = SmaCrossGrid {
+            fasts: vec![5, 10],
+            slows: vec![20, 30],
+        };
         let r = sweep_sma_cross(&[], &g, 10_000.0, 1.0);
         assert!(r.rows.is_empty());
         assert!(r.best_by_return.is_none());
@@ -172,7 +181,7 @@ mod tests {
     fn invalid_combos_filtered() {
         let bars = build_trending_bars(60);
         let g = SmaCrossGrid {
-            fasts: vec![0, 50, 5],     // 0 invalid, 50 >= 50 invalid
+            fasts: vec![0, 50, 5], // 0 invalid, 50 >= 50 invalid
             slows: vec![50],
         };
         let r = sweep_sma_cross(&bars, &g, 10_000.0, 1.0);
@@ -196,10 +205,16 @@ mod tests {
     #[test]
     fn best_by_return_index_points_to_highest_return_row() {
         let bars = build_trending_bars(120);
-        let g = SmaCrossGrid { fasts: vec![5, 10], slows: vec![20, 30] };
+        let g = SmaCrossGrid {
+            fasts: vec![5, 10],
+            slows: vec![20, 30],
+        };
         let r = sweep_sma_cross(&bars, &g, 10_000.0, 1.0);
         let best = r.best_by_return.unwrap();
-        let max_ret = r.rows.iter().map(|x| x.total_return_pct)
+        let max_ret = r
+            .rows
+            .iter()
+            .map(|x| x.total_return_pct)
             .fold(f64::NEG_INFINITY, f64::max);
         assert!((r.rows[best].total_return_pct - max_ret).abs() < 1e-9);
     }

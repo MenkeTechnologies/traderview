@@ -377,7 +377,10 @@ mod tests {
         let mut i = baseline();
         i.basket_category = BasketCategory::Section901jSanctioned;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::Section901jSanctionedNonCreditable));
+        assert!(matches!(
+            r.severity,
+            Severity::Section901jSanctionedNonCreditable
+        ));
         assert_eq!(r.ftc_actually_used_cents, 0);
         assert!(r.notes.iter().any(|n| n.contains("Iran")));
         assert!(r.notes.iter().any(|n| n.contains("§ 901(j)")));
@@ -389,9 +392,15 @@ mod tests {
         i.ofl_recapture_triggered = true;
         i.ofl_recapture_amount_cents = 5_000_000_00;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::OverallForeignLossRecaptureTriggered));
+        assert!(matches!(
+            r.severity,
+            Severity::OverallForeignLossRecaptureTriggered
+        ));
         assert!(r.recommended_actions.iter().any(|a| a.contains("§ 904(f)")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Form 1118 Schedule J")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Form 1118 Schedule J")));
     }
 
     #[test]
@@ -399,7 +408,10 @@ mod tests {
         let mut i = baseline();
         i.odl_recapture_triggered = true;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::OverallDomesticLossRecaptureTriggered));
+        assert!(matches!(
+            r.severity,
+            Severity::OverallDomesticLossRecaptureTriggered
+        ));
         assert!(r.recommended_actions.iter().any(|a| a.contains("§ 904(g)")));
     }
 
@@ -487,15 +499,24 @@ mod tests {
     fn action_references_form_1116_and_1118() {
         let i = baseline();
         let r = check(&i);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Form 1116")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Form 1118")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Form 1116")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Form 1118")));
     }
 
     #[test]
     fn note_pins_seven_baskets_and_obbba_864e() {
         let i = baseline();
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("7 separate § 904(d) baskets")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("7 separate § 904(d) baskets")));
         assert!(r.notes.iter().any(|n| n.contains("OBBBA")));
         assert!(r.notes.iter().any(|n| n.contains("§ 864(e)")));
         assert!(r.notes.iter().any(|n| n.contains("80")));

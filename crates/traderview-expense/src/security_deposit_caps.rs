@@ -58,9 +58,8 @@ fn d(s: &str) -> Decimal {
 }
 
 fn rules() -> &'static [DepositCapRule] {
-    static R: once_cell::sync::Lazy<Vec<DepositCapRule>> =
-        once_cell::sync::Lazy::new(|| {
-            vec![
+    static R: once_cell::sync::Lazy<Vec<DepositCapRule>> = once_cell::sync::Lazy::new(|| {
+        vec![
                 DepositCapRule {
                     state: "CA",
                     max_months_rent: d("1"),
@@ -244,13 +243,15 @@ fn rules() -> &'static [DepositCapRule] {
                     },
                 },
             ]
-        });
+    });
     &R
 }
 
 pub fn rule_for(state: &str) -> Option<&'static DepositCapRule> {
     let upper = state.to_uppercase();
-    rules().iter().find(|r| r.state.eq_ignore_ascii_case(&upper))
+    rules()
+        .iter()
+        .find(|r| r.state.eq_ignore_ascii_case(&upper))
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

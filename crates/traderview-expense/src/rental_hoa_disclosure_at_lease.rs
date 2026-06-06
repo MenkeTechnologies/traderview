@@ -152,8 +152,8 @@ fn check_ca(input: &RentalHoaDisclosureAtLeaseInput) -> RentalHoaDisclosureAtLea
         );
     }
 
-    let rental_restriction_enforceable = input.rental_prohibition_at_purchase
-        && !input.rental_prohibition_post_acquisition;
+    let rental_restriction_enforceable =
+        input.rental_prohibition_at_purchase && !input.rental_prohibition_post_acquisition;
 
     if input.rental_prohibition_at_purchase
         && input.owner_leased_despite_pre_acquisition_prohibition
@@ -219,8 +219,8 @@ fn check_nv(input: &RentalHoaDisclosureAtLeaseInput) -> RentalHoaDisclosureAtLea
         "Nev. Rev. Stat. § 118A — Landlord and Tenant Dwellings — general landlord-tenant disclosure framework applies in addition to HOA Chapter 116".to_string(),
     ];
 
-    let rental_restriction_enforceable = input.rental_prohibition_at_purchase
-        && !input.rental_prohibition_post_acquisition;
+    let rental_restriction_enforceable =
+        input.rental_prohibition_at_purchase && !input.rental_prohibition_post_acquisition;
 
     if input.rental_prohibition_post_acquisition && !input.rental_prohibition_at_purchase {
         violations.push(
@@ -454,8 +454,7 @@ mod tests {
         assert!(r
             .notes
             .iter()
-            .any(|n| n.contains("REDACT")
-                && n.contains("financial privacy")));
+            .any(|n| n.contains("REDACT") && n.contains("financial privacy")));
     }
 
     #[test]
@@ -479,8 +478,10 @@ mod tests {
     #[test]
     fn note_pins_nv_116_335_pre_acquisition_grandfathering() {
         let r = check(&nv_clean());
-        assert!(r.notes.iter().any(|n| n.contains("§ 116.335")
-            && n.contains("TIME OF PURCHASE")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 116.335") && n.contains("TIME OF PURCHASE")));
     }
 
     #[test]

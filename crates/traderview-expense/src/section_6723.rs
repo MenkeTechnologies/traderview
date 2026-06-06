@@ -260,7 +260,10 @@ mod tests {
             ..baseline_violation_10_failures()
         };
         let result = check(&input);
-        assert_eq!(result.mode, Section6723Mode::NotApplicableNoFailureCompliedTimely);
+        assert_eq!(
+            result.mode,
+            Section6723Mode::NotApplicableNoFailureCompliedTimely
+        );
     }
 
     #[test]

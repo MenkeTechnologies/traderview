@@ -258,7 +258,8 @@ pub fn compute(input: &Input) -> Output {
 
     let is_wind_or_solar = matches!(
         input.facility_technology_type,
-        FacilityTechnologyType::AppliableWindFacility | FacilityTechnologyType::AppliableSolarFacility
+        FacilityTechnologyType::AppliableWindFacility
+            | FacilityTechnologyType::AppliableSolarFacility
     );
 
     if is_wind_or_solar
@@ -536,8 +537,7 @@ mod tests {
                 BeginningOfConstructionStatus::NotApplicableNonWindNonSolarOrStorageFacility,
             wind_solar_placed_in_service_status:
                 WindSolarPlacedInServiceStatus::NotApplicableNonWindNonSolarOrStorageFacility,
-            pwa_status:
-                PrevailingWageApprenticeshipStatus::PwaRequirementsMetEligibleForBonusRate,
+            pwa_status: PrevailingWageApprenticeshipStatus::PwaRequirementsMetEligibleForBonusRate,
             domestic_content_status: DomesticContentAdderStatus::DomesticContentRequirementMet,
             energy_community_status: EnergyCommunityAdderStatus::LocatedInEnergyCommunity,
             compliance_aspect: ComplianceAspect::BaseCreditAmountUnderSection48EA,
@@ -660,8 +660,7 @@ mod tests {
     fn pwa_bonus_claimed_without_meeting_requirements_violation() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::BonusCreditAmountForPwaUnderSection48EA3A;
-        input.pwa_status =
-            PrevailingWageApprenticeshipStatus::PwaRequirementsNotMetBaseRateOnly;
+        input.pwa_status = PrevailingWageApprenticeshipStatus::PwaRequirementsNotMetBaseRateOnly;
         input.claimed_pwa_bonus_rate = true;
         let out = check(&input);
         assert_eq!(
@@ -704,10 +703,7 @@ mod tests {
         input.claimed_energy_community_adder = true;
         input.qualified_investment_dollars = 1_000_000;
         let out = check(&input);
-        assert_eq!(
-            out.mode,
-            Section48EMode::CompliantWithEnergyCommunityAdder
-        );
+        assert_eq!(out.mode, Section48EMode::CompliantWithEnergyCommunityAdder);
         assert_eq!(out.computed_credit_dollars, 400_000);
     }
 
@@ -715,16 +711,12 @@ mod tests {
     fn energy_community_adder_applied_compliant_without_pwa() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::EnergyCommunityAdderUnderSection48EA3C;
-        input.pwa_status =
-            PrevailingWageApprenticeshipStatus::PwaRequirementsNotMetBaseRateOnly;
+        input.pwa_status = PrevailingWageApprenticeshipStatus::PwaRequirementsNotMetBaseRateOnly;
         input.energy_community_status = EnergyCommunityAdderStatus::LocatedInEnergyCommunity;
         input.claimed_energy_community_adder = true;
         input.qualified_investment_dollars = 1_000_000;
         let out = check(&input);
-        assert_eq!(
-            out.mode,
-            Section48EMode::CompliantWithEnergyCommunityAdder
-        );
+        assert_eq!(out.mode, Section48EMode::CompliantWithEnergyCommunityAdder);
         assert_eq!(out.computed_credit_dollars, 160_000);
     }
 
@@ -751,10 +743,7 @@ mod tests {
         input.claimed_domestic_content_adder = true;
         input.qualified_investment_dollars = 1_000_000;
         let out = check(&input);
-        assert_eq!(
-            out.mode,
-            Section48EMode::CompliantWithDomesticContentAdder
-        );
+        assert_eq!(out.mode, Section48EMode::CompliantWithDomesticContentAdder);
         assert_eq!(out.computed_credit_dollars, 400_000);
     }
 
@@ -783,7 +772,10 @@ mod tests {
         input.claimed_domestic_content_adder = true;
         input.claimed_energy_community_adder = true;
         let out = check(&input);
-        assert_eq!(out.mode, Section48EMode::CompliantWithBothBonusAddersStacked);
+        assert_eq!(
+            out.mode,
+            Section48EMode::CompliantWithBothBonusAddersStacked
+        );
     }
 
     #[test]
@@ -826,7 +818,8 @@ mod tests {
     fn obbba_wind_solar_termination_non_wind_non_solar_facility_unaffected() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::ObbbaWindSolarTerminationUnderSection70513;
-        input.facility_technology_type = FacilityTechnologyType::NonWindNonSolarZeroEmissionFacility;
+        input.facility_technology_type =
+            FacilityTechnologyType::NonWindNonSolarZeroEmissionFacility;
         let out = check(&input);
         assert_eq!(
             out.mode,
@@ -861,7 +854,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::FormFilingUnderForm3468;
         input.form_3468_filed_correctly = false;
         let out = check(&input);
-        assert_eq!(out.mode, Section48EMode::ViolationForm3468NotFiledOrIncorrect);
+        assert_eq!(
+            out.mode,
+            Section48EMode::ViolationForm3468NotFiledOrIncorrect
+        );
     }
 
     #[test]

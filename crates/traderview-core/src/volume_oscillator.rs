@@ -23,9 +23,12 @@
 pub fn compute(volumes: &[f64], fast_period: usize, slow_period: usize) -> Vec<Option<f64>> {
     let n = volumes.len();
     let mut out = vec![None; n];
-    if fast_period < 2 || slow_period < 2 || fast_period >= slow_period
-        || n < slow_period { return out; }
-    if volumes.iter().any(|x| !x.is_finite() || *x < 0.0) { return out; }
+    if fast_period < 2 || slow_period < 2 || fast_period >= slow_period || n < slow_period {
+        return out;
+    }
+    if volumes.iter().any(|x| !x.is_finite() || *x < 0.0) {
+        return out;
+    }
     let fast = ema(volumes, fast_period);
     let slow = ema(volumes, slow_period);
     for (i, slot) in out.iter_mut().enumerate() {
@@ -41,7 +44,9 @@ pub fn compute(volumes: &[f64], fast_period: usize, slow_period: usize) -> Vec<O
 fn ema(series: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     let k = 2.0 / (p_f + 1.0);
     let seed: f64 = series[..period].iter().sum::<f64>() / p_f;

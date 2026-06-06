@@ -79,11 +79,11 @@ pub fn compute_what_if(baseline: &TaxReturn, scenario: Scenario) -> Option<WhatI
     }
     let scenario_result = compute(&mutated);
 
-    let delta_refund_due  = scenario_result.refund_due  - baseline_result.refund_due;
-    let delta_tax_owed    = scenario_result.tax_owed    - baseline_result.tax_owed;
-    let delta_agi         = scenario_result.agi         - baseline_result.agi;
-    let delta_taxable     = scenario_result.taxable_income - baseline_result.taxable_income;
-    let delta_total_tax   = scenario_result.tax_after_credits - baseline_result.tax_after_credits;
+    let delta_refund_due = scenario_result.refund_due - baseline_result.refund_due;
+    let delta_tax_owed = scenario_result.tax_owed - baseline_result.tax_owed;
+    let delta_agi = scenario_result.agi - baseline_result.agi;
+    let delta_taxable = scenario_result.taxable_income - baseline_result.taxable_income;
+    let delta_total_tax = scenario_result.tax_after_credits - baseline_result.tax_after_credits;
 
     // In-pocket = (refund_up - owed_up). Refund increase is good
     // (positive); owed increase is bad (negative). Subtract the
@@ -118,10 +118,22 @@ fn apply(r: &mut TaxReturn, s: &Scenario) -> bool {
             });
             true
         }
-        "interest_income"               => { r.interest_income = s.value; true }
-        "ordinary_dividends"            => { r.ordinary_dividends = s.value; true }
-        "qualified_dividends"           => { r.qualified_dividends = s.value; true }
-        "net_long_term_capital_gain"    => { r.net_long_term_capital_gain = s.value; true }
+        "interest_income" => {
+            r.interest_income = s.value;
+            true
+        }
+        "ordinary_dividends" => {
+            r.ordinary_dividends = s.value;
+            true
+        }
+        "qualified_dividends" => {
+            r.qualified_dividends = s.value;
+            true
+        }
+        "net_long_term_capital_gain" => {
+            r.net_long_term_capital_gain = s.value;
+            true
+        }
         "schedule_c_net_profit" => {
             // Caller is modeling net SE income directly. Zero out
             // gross/expenses so engine doesn't double-compute.
@@ -136,13 +148,31 @@ fn apply(r: &mut TaxReturn, s: &Scenario) -> bool {
             r.schedule_e.net_income = s.value;
             true
         }
-        "other_income"                  => { r.other_income = s.value; true }
-        "hsa_deduction"                 => { r.hsa_deduction = s.value; true }
-        "ira_deduction"                 => { r.ira_deduction = s.value; true }
-        "student_loan_interest"         => { r.student_loan_interest = s.value; true }
-        "other_adjustments"             => { r.other_adjustments = s.value; true }
-        "estimated_tax_payments"        => { r.estimated_tax_payments = s.value; true }
-        "qualifying_children_under_17"  => {
+        "other_income" => {
+            r.other_income = s.value;
+            true
+        }
+        "hsa_deduction" => {
+            r.hsa_deduction = s.value;
+            true
+        }
+        "ira_deduction" => {
+            r.ira_deduction = s.value;
+            true
+        }
+        "student_loan_interest" => {
+            r.student_loan_interest = s.value;
+            true
+        }
+        "other_adjustments" => {
+            r.other_adjustments = s.value;
+            true
+        }
+        "estimated_tax_payments" => {
+            r.estimated_tax_payments = s.value;
+            true
+        }
+        "qualifying_children_under_17" => {
             r.qualifying_children_under_17 = u32::try_from(s.value.trunc().mantissa()).unwrap_or(0);
             true
         }
@@ -160,7 +190,9 @@ mod tests {
     use crate::engine::{ScheduleC, W2};
     use crate::FilingStatus;
 
-    fn d(n: i64) -> Decimal { Decimal::from(n) }
+    fn d(n: i64) -> Decimal {
+        Decimal::from(n)
+    }
 
     fn single_w2_baseline(wages: i64, withholding: i64) -> TaxReturn {
         TaxReturn {
@@ -180,7 +212,10 @@ mod tests {
         // $80k wages single. Bumping IRA contribution by $5k should
         // reduce taxable income by exactly $5k.
         let base = single_w2_baseline(80_000, 8_000);
-        let scen = Scenario { path: "ira_deduction".into(), value: d(5_000) };
+        let scen = Scenario {
+            path: "ira_deduction".into(),
+            value: d(5_000),
+        };
         let r = compute_what_if(&base, scen).expect("recognized");
         assert_eq!(r.delta_taxable_income, d(-5_000));
         // AGI also reduces by $5k since IRA is above-the-line.
@@ -195,14 +230,26 @@ mod tests {
         // Owed: $1,214 → $114 (delta -$1,100). Refund stays 0.
         // Net in pocket = +$1,100 (you keep more money).
         let base = single_w2_baseline(80_000, 8_000);
-        let scen = Scenario { path: "ira_deduction".into(), value: d(5_000) };
+        let scen = Scenario {
+            path: "ira_deduction".into(),
+            value: d(5_000),
+        };
         let r = compute_what_if(&base, scen).expect("recognized");
-        assert_eq!(r.delta_tax_owed, d(-1_100),
-            "owed drops by 22% × $5k = $1,100");
-        assert_eq!(r.delta_refund_due, Decimal::ZERO,
-            "still in owed position post-IRA; refund stays at 0");
-        assert_eq!(r.net_dollar_change_in_pocket, d(1_100),
-            "net = +$1,100 (owed dropped by $1,100)");
+        assert_eq!(
+            r.delta_tax_owed,
+            d(-1_100),
+            "owed drops by 22% × $5k = $1,100"
+        );
+        assert_eq!(
+            r.delta_refund_due,
+            Decimal::ZERO,
+            "still in owed position post-IRA; refund stays at 0"
+        );
+        assert_eq!(
+            r.net_dollar_change_in_pocket,
+            d(1_100),
+            "net = +$1,100 (owed dropped by $1,100)"
+        );
     }
 
     #[test]
@@ -223,8 +270,11 @@ mod tests {
         let r = compute_what_if(&base, scen).expect("recognized");
         assert_eq!(r.delta_refund_due, d(786));
         assert_eq!(r.delta_tax_owed, d(-1_214));
-        assert_eq!(r.net_dollar_change_in_pocket, d(2_000),
-            "1 kid CTC = $2,000 net benefit");
+        assert_eq!(
+            r.net_dollar_change_in_pocket,
+            d(2_000),
+            "1 kid CTC = $2,000 net benefit"
+        );
     }
 
     #[test]
@@ -243,8 +293,10 @@ mod tests {
         assert_eq!(r.baseline.tax_owed, "3961.5".parse::<Decimal>().unwrap());
         assert_eq!(r.baseline.refund_due, Decimal::ZERO);
         // Scenario at $200k crosses into 32% bracket. Tax much higher.
-        assert!(r.scenario.tax_owed > d(35_000),
-            "$200k wages should owe ≥$35k with no withholding");
+        assert!(
+            r.scenario.tax_owed > d(35_000),
+            "$200k wages should owe ≥$35k with no withholding"
+        );
         // Net change in pocket is decidedly negative.
         assert!(r.net_dollar_change_in_pocket < d(-30_000));
     }
@@ -260,8 +312,10 @@ mod tests {
         let r = compute_what_if(&base, scen).expect("recognized");
         // SE tax in baseline = 0; scenario = positive.
         assert_eq!(r.baseline.se_tax.total, Decimal::ZERO);
-        assert!(r.scenario.se_tax.total > d(4_000),
-            "$30k SE net → SE tax > $4k");
+        assert!(
+            r.scenario.se_tax.total > d(4_000),
+            "$30k SE net → SE tax > $4k"
+        );
         // Delta tax positive (more owed) — net in pocket negative.
         assert!(r.delta_total_tax > Decimal::ZERO);
         assert!(r.net_dollar_change_in_pocket < Decimal::ZERO);
@@ -298,7 +352,10 @@ mod tests {
     #[test]
     fn unrecognized_path_returns_none() {
         let base = single_w2_baseline(50_000, 5_000);
-        let scen = Scenario { path: "garbage_field".into(), value: d(1_000) };
+        let scen = Scenario {
+            path: "garbage_field".into(),
+            value: d(1_000),
+        };
         assert!(compute_what_if(&base, scen).is_none());
     }
 
@@ -306,7 +363,10 @@ mod tests {
     fn hsa_deduction_reduces_agi() {
         // HSA is above-the-line — drops AGI dollar-for-dollar.
         let base = single_w2_baseline(80_000, 8_000);
-        let scen = Scenario { path: "hsa_deduction".into(), value: d(4_150) };
+        let scen = Scenario {
+            path: "hsa_deduction".into(),
+            value: d(4_150),
+        };
         let r = compute_what_if(&base, scen).expect("recognized");
         assert_eq!(r.delta_agi, d(-4_150));
     }
@@ -316,7 +376,10 @@ mod tests {
         // Bumping IRA on a refund-position return increases refund
         // (positive delta), never inflates owed.
         let base = single_w2_baseline(60_000, 8_000);
-        let scen = Scenario { path: "ira_deduction".into(), value: d(2_000) };
+        let scen = Scenario {
+            path: "ira_deduction".into(),
+            value: d(2_000),
+        };
         let r = compute_what_if(&base, scen).expect("recognized");
         assert!(r.delta_refund_due >= Decimal::ZERO);
         assert!(r.delta_tax_owed <= Decimal::ZERO);

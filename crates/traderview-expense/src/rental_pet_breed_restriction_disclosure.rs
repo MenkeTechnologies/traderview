@@ -167,7 +167,10 @@ pub fn check(input: &Input) -> Output {
             HUD_SUBSEQUENT_OFFENSE_PENALTY_CENTS / 100
         ));
     } else if input.insurance_breed_ban_cited_as_justification
-        && matches!(input.animal_type, AnimalType::AdaServiceAnimal | AnimalType::FhaEmotionalSupportAnimal)
+        && matches!(
+            input.animal_type,
+            AnimalType::AdaServiceAnimal | AnimalType::FhaEmotionalSupportAnimal
+        )
     {
         severity = Severity::InsuranceBreedBanIneffectiveVsFha;
         actions.push(
@@ -353,12 +356,18 @@ pub fn check(input: &Input) -> Output {
         annual_rent_at_risk_cents: annual_rent_at_risk,
         hud_civil_penalty_first_offense_cents: HUD_FIRST_OFFENSE_CIVIL_PENALTY_CENTS,
         citation: match input.jurisdiction {
-            Jurisdiction::Maryland => "Md. Pet Policy Transparency Act 2025 + FHA 42 U.S.C. § 3604(f)(3)(B)",
+            Jurisdiction::Maryland => {
+                "Md. Pet Policy Transparency Act 2025 + FHA 42 U.S.C. § 3604(f)(3)(B)"
+            }
             Jurisdiction::Michigan => "Mich. Civ. Rights Commission + FHA + state-law disability",
             Jurisdiction::Nevada => "Nev. SB 245 (2025) + FHA + Nev. Div. of Insurance",
             Jurisdiction::California => "Cal. Civ. Code § 1942.7 + § 54.2 + DFEH + AB 468",
-            Jurisdiction::NewYork => "NY Civ. Rights Law § 47-a + NY RPL § 235-b + NYC Admin § 8-107(15)",
-            Jurisdiction::Default => "42 U.S.C. § 3604(f)(3)(B) FHA + 24 C.F.R. § 100.204 + HUD FHEO-2020-01",
+            Jurisdiction::NewYork => {
+                "NY Civ. Rights Law § 47-a + NY RPL § 235-b + NYC Admin § 8-107(15)"
+            }
+            Jurisdiction::Default => {
+                "42 U.S.C. § 3604(f)(3)(B) FHA + 24 C.F.R. § 100.204 + HUD FHEO-2020-01"
+            }
         },
         notes,
     }
@@ -401,7 +410,10 @@ mod tests {
             r.severity,
             Severity::BreedRestrictionEnforceableNonAssistance
         ));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("4.5M dog bites")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("4.5M dog bites")));
     }
 
     #[test]
@@ -419,7 +431,10 @@ mod tests {
             .recommended_actions
             .iter()
             .any(|a| a.contains("§ 3604(f)(3)(B)")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("FHEO-2020-01")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("FHEO-2020-01")));
     }
 
     #[test]
@@ -434,7 +449,10 @@ mod tests {
             Severity::DiscriminatoryDenialFhaViolationFineExposure
         ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("24 C.F.R. § 180.671")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("24 C.F.R. § 180.671")));
         assert!(r.recommended_actions.iter().any(|a| a.contains("§ 3610")));
     }
 
@@ -448,8 +466,14 @@ mod tests {
             r.severity,
             Severity::DocumentationRequestedFromTenantPermissible
         ));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("two questions")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("ADA Title III")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("two questions")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("ADA Title III")));
     }
 
     #[test]
@@ -458,9 +482,18 @@ mod tests {
         i.animal_type = AnimalType::FhaEmotionalSupportAnimal;
         i.insurance_breed_ban_cited_as_justification = true;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::InsuranceBreedBanIneffectiveVsFha));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Liberty Mutual")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("State Farm")));
+        assert!(matches!(
+            r.severity,
+            Severity::InsuranceBreedBanIneffectiveVsFha
+        ));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Liberty Mutual")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("State Farm")));
     }
 
     #[test]
@@ -473,7 +506,10 @@ mod tests {
             r.severity,
             Severity::MdPetPolicyTransparencyActDisclosureRequired
         ));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("vaccination requirements")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("vaccination requirements")));
     }
 
     #[test]
@@ -498,8 +534,14 @@ mod tests {
         let mut i = baseline();
         i.jurisdiction = Jurisdiction::Maryland;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("Pet Policy Transparency Act")));
-        assert!(r.notes.iter().any(|n| n.contains("21 states permit local BSL")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Pet Policy Transparency Act")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("21 states permit local BSL")));
     }
 
     #[test]
@@ -520,7 +562,10 @@ mod tests {
         i.jurisdiction = Jurisdiction::Nevada;
         let r = check(&i);
         assert!(r.notes.iter().any(|n| n.contains("Nevada SB 245")));
-        assert!(r.notes.iter().any(|n| n.contains("Nevada Division of Insurance")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Nevada Division of Insurance")));
     }
 
     #[test]
@@ -548,7 +593,10 @@ mod tests {
         i.jurisdiction = Jurisdiction::Default;
         let r = check(&i);
         assert!(r.notes.iter().any(|n| n.contains("§ 3604(f)(3)(B)")));
-        assert!(r.notes.iter().any(|n| n.contains("HUD Notice FHEO-2020-01")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("HUD Notice FHEO-2020-01")));
         assert!(r.notes.iter().any(|n| n.contains("4500000")));
     }
 
@@ -556,7 +604,10 @@ mod tests {
     fn coordination_note_references_siblings() {
         let i = baseline();
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("rental_pet_deposit_separate_security")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("rental_pet_deposit_separate_security")));
         assert!(r
             .notes
             .iter()
@@ -600,12 +651,32 @@ mod tests {
 
     #[test]
     fn citation_branch_for_each_jurisdiction() {
-        let md = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Maryland; i });
-        let mi = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Michigan; i });
-        let nv = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Nevada; i });
+        let md = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Maryland;
+            i
+        });
+        let mi = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Michigan;
+            i
+        });
+        let nv = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Nevada;
+            i
+        });
         let ca = check(&baseline());
-        let ny = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::NewYork; i });
-        let de = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Default; i });
+        let ny = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::NewYork;
+            i
+        });
+        let de = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Default;
+            i
+        });
         assert!(md.citation.contains("Pet Policy Transparency Act"));
         assert!(mi.citation.contains("Mich. Civ. Rights Commission"));
         assert!(nv.citation.contains("Nev. SB 245"));

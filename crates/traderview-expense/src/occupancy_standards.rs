@@ -151,11 +151,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // HudKeatingDefault for all remaining states.
     let keating_default = [
-        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "FL", "GA",
-        "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
-        "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM",
-        "NC", "ND", "OH", "OK", "PA", "RI", "SC", "SD", "TN", "TX",
-        "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA",
+        "KS", "KY", "LA", "ME", "MD", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM",
+        "NC", "ND", "OH", "OK", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV",
+        "WI", "WY",
     ];
     for code in keating_default {
         // WA gets a stricter citation (unrelated-occupant preemption).
@@ -164,17 +163,7 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
         } else {
             "HUD Keating Memorandum (63 FR 70982) — 2 per bedroom presumption + state sanitary code overlay"
         };
-        m.insert(
-            code,
-            rule(
-                HudKeatingDefault,
-                0,
-                0,
-                false,
-                false,
-                citation,
-            ),
-        );
+        m.insert(code, rule(HudKeatingDefault, 0, 0, false, false, citation));
     }
     m
 });
@@ -234,8 +223,7 @@ pub fn check(input: &OccupancyInput) -> OccupancyResult {
                 if input.total_livable_sqft < rule.sqft_first_occupant_floor {
                     0
                 } else {
-                    1 + (input.total_livable_sqft
-                        - rule.sqft_first_occupant_floor)
+                    1 + (input.total_livable_sqft - rule.sqft_first_occupant_floor)
                         / rule.sqft_per_occupant
                 }
             } else {
@@ -259,14 +247,14 @@ pub fn check(input: &OccupancyInput) -> OccupancyResult {
 
     // Effective max: lesser of state-formula and Keating presumption,
     // further capped by building code if applicable.
-    let mut effective_max = state_max.min(keating_max).max(if rule.regime
-        == OccupancyRegime::NoMoreRestrictiveThanTwoPerBedroom
-    {
-        // OR: never less than 2 per bedroom — the landlord rule floor.
-        keating_max
-    } else {
-        0
-    });
+    let mut effective_max = state_max.min(keating_max).max(
+        if rule.regime == OccupancyRegime::NoMoreRestrictiveThanTwoPerBedroom {
+            // OR: never less than 2 per bedroom — the landlord rule floor.
+            keating_max
+        } else {
+            0
+        },
+    );
     // For TwoPlusOneStatutory, the state formula EXCEEDS Keating (2 per
     // bedroom + 1), so it overrides the Keating cap.
     if rule.regime == OccupancyRegime::TwoPlusOneStatutory {
@@ -408,7 +396,10 @@ mod tests {
     #[test]
     fn or_landlord_capped_at_2_per_bedroom() {
         let r = check(&input("OR", 2, 800, 4));
-        assert_eq!(r.regime, OccupancyRegime::NoMoreRestrictiveThanTwoPerBedroom);
+        assert_eq!(
+            r.regime,
+            OccupancyRegime::NoMoreRestrictiveThanTwoPerBedroom
+        );
         assert_eq!(r.effective_max_occupants, 4);
         assert!(r.proposed_within_limit);
         let r2 = check(&input("OR", 2, 800, 5));
@@ -417,7 +408,12 @@ mod tests {
 
     #[test]
     fn or_landlord_rule_capped_flag_set() {
-        assert!(RULES.get("OR").unwrap().landlord_rule_capped_at_2_per_bedroom);
+        assert!(
+            RULES
+                .get("OR")
+                .unwrap()
+                .landlord_rule_capped_at_2_per_bedroom
+        );
     }
 
     #[test]
@@ -471,10 +467,12 @@ mod tests {
 
     #[test]
     fn ca_state_familial_status_pretext_flag_set() {
-        assert!(RULES
-            .get("CA")
-            .unwrap()
-            .state_familial_status_pretext_explicit);
+        assert!(
+            RULES
+                .get("CA")
+                .unwrap()
+                .state_familial_status_pretext_explicit
+        );
     }
 
     #[test]
@@ -501,7 +499,12 @@ mod tests {
     #[test]
     fn coverage_is_all_50_states_plus_dc() {
         let codes: Vec<&'static str> = RULES.keys().copied().collect();
-        assert_eq!(codes.len(), 51, "expected 50 states + DC, got {}", codes.len());
+        assert_eq!(
+            codes.len(),
+            51,
+            "expected 50 states + DC, got {}",
+            codes.len()
+        );
     }
 
     #[test]
@@ -550,7 +553,10 @@ mod tests {
                 count += 1;
             }
         }
-        assert_eq!(count, 1, "expected OR only on NoMoreRestrictiveThanTwoPerBedroom");
+        assert_eq!(
+            count, 1,
+            "expected OR only on NoMoreRestrictiveThanTwoPerBedroom"
+        );
     }
 
     #[test]

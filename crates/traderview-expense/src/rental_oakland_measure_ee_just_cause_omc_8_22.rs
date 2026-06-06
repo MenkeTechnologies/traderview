@@ -286,7 +286,8 @@ pub fn compute(input: &Input) -> Output {
 
     let costa_hawkins_applies = matches!(
         input.unit_type,
-        UnitType::SingleFamilyHomeCostaHawkinsApplies | UnitType::CondominiumUnitCostaHawkinsApplies
+        UnitType::SingleFamilyHomeCostaHawkinsApplies
+            | UnitType::CondominiumUnitCostaHawkinsApplies
     );
 
     if costa_hawkins_applies
@@ -408,7 +409,8 @@ mod tests {
             certificate_of_occupancy_date_status:
                 CertificateOfOccupancyDateStatus::IssuedBeforeJanuary1_1983CoveredByOmc822360,
             compliance_aspect: ComplianceAspect::JustCauseEvictionScopeCheck,
-            just_cause_ground_asserted: JustCauseGroundAsserted::NonPaymentOfRentAfter3DayNoticeOmc822360A,
+            just_cause_ground_asserted:
+                JustCauseGroundAsserted::NonPaymentOfRentAfter3DayNoticeOmc822360A,
             protected_tenant_status: ProtectedTenantStatus::NotApplicableNonOwnerMoveInCase,
             ellis_act_notice_days_provided: 0,
         }
@@ -419,7 +421,10 @@ mod tests {
         let mut input = baseline_input();
         input.property_jurisdiction = PropertyJurisdiction::OutsideOaklandCityLimits;
         let output = check(&input);
-        assert_eq!(output.mode, OaklandMeasureEeMode::NotApplicablePropertyOutsideOakland);
+        assert_eq!(
+            output.mode,
+            OaklandMeasureEeMode::NotApplicablePropertyOutsideOakland
+        );
     }
 
     #[test]
@@ -427,7 +432,10 @@ mod tests {
         let mut input = baseline_input();
         input.unit_type = UnitType::NonResidentialUnitExempt;
         let output = check(&input);
-        assert_eq!(output.mode, OaklandMeasureEeMode::NotApplicableNonResidentialUnit);
+        assert_eq!(
+            output.mode,
+            OaklandMeasureEeMode::NotApplicableNonResidentialUnit
+        );
     }
 
     #[test]
@@ -491,7 +499,10 @@ mod tests {
         let mut input = baseline_input();
         input.exemption_status = ExemptionStatus::HospitalOrNonprofitOperatedHousingExempt;
         let output = check(&input);
-        assert_eq!(output.mode, OaklandMeasureEeMode::NotApplicableHospitalOrNonprofitExempt);
+        assert_eq!(
+            output.mode,
+            OaklandMeasureEeMode::NotApplicableHospitalOrNonprofitExempt
+        );
     }
 
     #[test]
@@ -543,7 +554,8 @@ mod tests {
     fn owner_move_in_against_disabled_tenant_violation() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::OwnerMoveInProtectedTenantCheck;
-        input.protected_tenant_status = ProtectedTenantStatus::DisabledTenantProtectedFromOwnerMoveIn;
+        input.protected_tenant_status =
+            ProtectedTenantStatus::DisabledTenantProtectedFromOwnerMoveIn;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -594,7 +606,8 @@ mod tests {
     fn ellis_act_senior_disabled_365_day_notice_compliant() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::EllisActWithdrawalNoticeRequirement;
-        input.protected_tenant_status = ProtectedTenantStatus::DisabledTenantProtectedFromOwnerMoveIn;
+        input.protected_tenant_status =
+            ProtectedTenantStatus::DisabledTenantProtectedFromOwnerMoveIn;
         input.ellis_act_notice_days_provided = 365;
         let output = check(&input);
         assert_eq!(
@@ -608,7 +621,8 @@ mod tests {
     fn ellis_act_senior_disabled_under_365_day_violation() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::EllisActWithdrawalNoticeRequirement;
-        input.protected_tenant_status = ProtectedTenantStatus::DisabledTenantProtectedFromOwnerMoveIn;
+        input.protected_tenant_status =
+            ProtectedTenantStatus::DisabledTenantProtectedFromOwnerMoveIn;
         input.ellis_act_notice_days_provided = 200;
         let output = check(&input);
         assert_eq!(

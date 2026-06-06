@@ -151,9 +151,8 @@ pub fn compute(input: &RepsInput) -> RepsResult {
     r.passes_more_than_half_test = r.rptb_share_of_personal_services > half();
     r.material_participation_met = input.material_participation_test_satisfied.is_some();
 
-    r.qualifies_as_reps = r.passes_750_hour_test
-        && r.passes_more_than_half_test
-        && r.material_participation_met;
+    r.qualifies_as_reps =
+        r.passes_750_hour_test && r.passes_more_than_half_test && r.material_participation_met;
 
     if !r.passes_750_hour_test {
         r.failure_reasons.push(format!(
@@ -164,9 +163,7 @@ pub fn compute(input: &RepsInput) -> RepsResult {
     if !r.passes_more_than_half_test {
         r.failure_reasons.push(format!(
             ">50% test failed: {} / {} = {} of personal services in RPTB (>0.5 required)",
-            r.total_rptb_hours,
-            r.total_personal_services_hours,
-            r.rptb_share_of_personal_services,
+            r.total_rptb_hours, r.total_personal_services_hours, r.rptb_share_of_personal_services,
         ));
     }
     if !r.material_participation_met {
@@ -189,7 +186,10 @@ pub fn compute(input: &RepsInput) -> RepsResult {
             input.material_participation_test_satisfied.unwrap(),
             grouping,
         )
-    } else if input.filing_status.eq_ignore_ascii_case("married_filing_jointly") {
+    } else if input
+        .filing_status
+        .eq_ignore_ascii_case("married_filing_jointly")
+    {
         format!(
             "REPS NOT qualified for this spouse — §469(c)(7)(B) is per-spouse, spouses cannot aggregate hours: {}",
             r.failure_reasons.join("; ")
@@ -206,7 +206,10 @@ mod tests {
     use rust_decimal_macros::dec;
 
     fn hr(a: RptbActivity, h: Decimal) -> RptbHourEntry {
-        RptbHourEntry { activity: a, hours: h }
+        RptbHourEntry {
+            activity: a,
+            hours: h,
+        }
     }
 
     fn passing() -> RepsInput {
@@ -292,7 +295,10 @@ mod tests {
         let r = compute(&i);
         assert!(!r.qualifies_as_reps);
         assert!(!r.material_participation_met);
-        assert!(r.failure_reasons.iter().any(|s| s.contains("material participation")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|s| s.contains("material participation")));
     }
 
     #[test]
@@ -395,7 +401,7 @@ mod tests {
         i.hours_by_activity = vec![hr(RptbActivity::Rental, dec!(750))];
         let r = compute(&i);
         assert!(r.passes_more_than_half_test); // 750/750 = 100% > 50%
-        assert!(!r.passes_750_hour_test);      // 750 NOT > 750
+        assert!(!r.passes_750_hour_test); // 750 NOT > 750
         assert!(!r.qualifies_as_reps);
     }
 }

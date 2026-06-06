@@ -128,7 +128,10 @@ pub fn check(input: &Input) -> Output {
     let severity: Severity;
 
     if matches!(input.heating_system_type, HeatingSystemType::NoRadiator)
-        || matches!(input.heating_system_type, HeatingSystemType::ForcedAirCentral)
+        || matches!(
+            input.heating_system_type,
+            HeatingSystemType::ForcedAirCentral
+        )
     {
         notes.push(
             "No radiator-based heating system on premises — framework inapplicable. \
@@ -164,7 +167,8 @@ pub fn check(input: &Input) -> Output {
     } else if matches!(input.jurisdiction, Jurisdiction::NewYorkCity)
         && matches!(
             input.tenant_composition,
-            TenantComposition::HouseholdWithChildUnder12 | TenantComposition::HouseholdWithChildUnder6
+            TenantComposition::HouseholdWithChildUnder12
+                | TenantComposition::HouseholdWithChildUnder6
         )
         && input.tenant_written_request_for_cover_submitted
         && !input.radiator_cover_installed
@@ -186,7 +190,10 @@ pub fn check(input: &Input) -> Output {
             NYC_HPD_PENALTY_MAX_CENTS / 100
         ));
     } else if matches!(input.jurisdiction, Jurisdiction::NewYorkCity)
-        && matches!(input.tenant_composition, TenantComposition::HouseholdWithChildUnder6)
+        && matches!(
+            input.tenant_composition,
+            TenantComposition::HouseholdWithChildUnder6
+        )
         && input.months_since_last_biennial_inspection > NYC_BIENNIAL_INSPECTION_INTERVAL_MONTHS
     {
         severity = Severity::BenZLawBiennialInspectionOverdue;
@@ -201,10 +208,12 @@ pub fn check(input: &Input) -> Output {
             NYC_BIENNIAL_INSPECTION_INTERVAL_MONTHS,
             BEN_Z_DEATH_DATE
         ));
-    } else if input.radiator_cover_installed && !input.cover_meets_grill_opening_child_safety_spec
+    } else if input.radiator_cover_installed
+        && !input.cover_meets_grill_opening_child_safety_spec
         && matches!(
             input.tenant_composition,
-            TenantComposition::HouseholdWithChildUnder12 | TenantComposition::HouseholdWithChildUnder6
+            TenantComposition::HouseholdWithChildUnder12
+                | TenantComposition::HouseholdWithChildUnder6
         )
     {
         severity = Severity::CoverMissingGrillOpeningChildSafetySpec;
@@ -216,10 +225,8 @@ pub fn check(input: &Input) -> Output {
              toy safety standard (analogous child-finger-trap specification)."
                 .to_string(),
         );
-    } else if matches!(
-        input.heating_system_type,
-        HeatingSystemType::SteamRadiator
-    ) && !input.radiator_thermostat_or_control_present
+    } else if matches!(input.heating_system_type, HeatingSystemType::SteamRadiator)
+        && !input.radiator_thermostat_or_control_present
     {
         severity = Severity::UnregulatedRadiatorWithoutThermostatHazard;
         actions.push(
@@ -382,7 +389,10 @@ mod tests {
     fn compliant_cover_installed_baseline() {
         let i = baseline();
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantCoverInstalledOrNoRequest));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantCoverInstalledOrNoRequest
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, 0);
     }
 
@@ -397,8 +407,14 @@ mod tests {
             Severity::LandlordCoverInstallationOverdue90Day
         ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Int 1489-2017")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("§ 27-2076")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Int 1489-2017")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("§ 27-2076")));
     }
 
     #[test]
@@ -419,9 +435,15 @@ mod tests {
         i.tenant_composition = TenantComposition::HouseholdWithChildUnder6;
         i.months_since_last_biennial_inspection = 30;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::BenZLawBiennialInspectionOverdue));
+        assert!(matches!(
+            r.severity,
+            Severity::BenZLawBiennialInspectionOverdue
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Int 0925-2024")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Int 0925-2024")));
         assert!(r.recommended_actions.iter().any(|a| a.contains("Ben Z")));
     }
 
@@ -446,7 +468,10 @@ mod tests {
             r.severity,
             Severity::CoverMissingGrillOpeningChildSafetySpec
         ));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("ASTM F963-23")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("ASTM F963-23")));
     }
 
     #[test]
@@ -454,11 +479,20 @@ mod tests {
         let mut i = baseline();
         i.steam_burn_injury_occurred = true;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::SteamBurnInjuryHabitabilityBreach));
+        assert!(matches!(
+            r.severity,
+            Severity::SteamBurnInjuryHabitabilityBreach
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
         assert!(r.recommended_actions.iter().any(|a| a.contains("250°F")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Mayo Clinic")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("$500K-$2M")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Mayo Clinic")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("$500K-$2M")));
     }
 
     #[test]
@@ -471,7 +505,10 @@ mod tests {
             Severity::UnregulatedRadiatorWithoutThermostatHazard
         ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents / 2);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Honeywell HR92")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Honeywell HR92")));
         assert!(r
             .recommended_actions
             .iter()
@@ -505,7 +542,10 @@ mod tests {
         let mut i = baseline();
         i.jurisdiction = Jurisdiction::Chicago;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("Chicago Municipal Code § 5-12-110")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Chicago Municipal Code § 5-12-110")));
         assert!(r.notes.iter().any(|n| n.contains("§ 13-196-300")));
     }
 
@@ -515,7 +555,10 @@ mod tests {
         i.jurisdiction = Jurisdiction::Default;
         let r = check(&i);
         assert!(r.notes.iter().any(|n| n.contains("ASTM F2779-19")));
-        assert!(r.notes.iter().any(|n| n.contains("Common-law habitability")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Common-law habitability")));
     }
 
     #[test]
@@ -527,7 +570,10 @@ mod tests {
             .notes
             .iter()
             .any(|n| n.contains("rental_chimney_fireplace_inspection_disclosure")));
-        assert!(r.notes.iter().any(|n| n.contains("rental_pellet_stove_disclosure")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("rental_pellet_stove_disclosure")));
         assert!(r
             .notes
             .iter()
@@ -584,10 +630,26 @@ mod tests {
 
     #[test]
     fn citation_branch_for_each_jurisdiction() {
-        let nyc = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::NewYorkCity; i });
-        let bos = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Boston; i });
-        let chi = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Chicago; i });
-        let de = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Default; i });
+        let nyc = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::NewYorkCity;
+            i
+        });
+        let bos = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Boston;
+            i
+        });
+        let chi = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Chicago;
+            i
+        });
+        let de = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Default;
+            i
+        });
         assert!(nyc.citation.contains("Int 1489-2017"));
         assert!(bos.citation.contains("M.G.L. ch. 186"));
         assert!(chi.citation.contains("§ 5-12-110"));
@@ -601,7 +663,10 @@ mod tests {
         i.radiator_cover_installed = false;
         i.days_since_tenant_cover_request = 200;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::SteamBurnInjuryHabitabilityBreach));
+        assert!(matches!(
+            r.severity,
+            Severity::SteamBurnInjuryHabitabilityBreach
+        ));
     }
 
     #[test]
@@ -619,6 +684,9 @@ mod tests {
         let mut i = baseline();
         i.heating_system_type = HeatingSystemType::HotWaterRadiator;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantCoverInstalledOrNoRequest));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantCoverInstalledOrNoRequest
+        ));
     }
 }

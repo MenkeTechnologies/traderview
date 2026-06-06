@@ -433,14 +433,8 @@ pub fn compute(input: &Input) -> Output {
     }
 }
 
-fn compute_credit_dollars(
-    gallons: u64,
-    cents_per_gallon: u64,
-    emissions_factor_bps: u64,
-) -> u64 {
-    (u128::from(gallons)
-        * u128::from(cents_per_gallon)
-        * u128::from(emissions_factor_bps)
+fn compute_credit_dollars(gallons: u64, cents_per_gallon: u64, emissions_factor_bps: u64) -> u64 {
+    (u128::from(gallons) * u128::from(cents_per_gallon) * u128::from(emissions_factor_bps)
         / u128::from(IRC_45Z_CENTS_PER_DOLLAR)
         / u128::from(IRC_45Z_EMISSIONS_FACTOR_DENOMINATOR_BPS)) as u64
 }
@@ -631,8 +625,7 @@ mod tests {
     fn pwa_bonus_multiplier_claimed_without_meeting_requirements_violation() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::BonusCreditAmountForPwaUnderSection45ZA2;
-        input.pwa_status =
-            PrevailingWageApprenticeshipStatus::PwaRequirementsNotMetBaseRateOnly;
+        input.pwa_status = PrevailingWageApprenticeshipStatus::PwaRequirementsNotMetBaseRateOnly;
         input.claimed_pwa_bonus_multiplier = true;
         let out = check(&input);
         assert_eq!(
@@ -686,7 +679,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::TransferabilityElectionUnderSection6418;
         input.transferability_election_made = true;
         let out = check(&input);
-        assert_eq!(out.mode, Section45ZMode::CompliantTransferabilityElectionMade);
+        assert_eq!(
+            out.mode,
+            Section45ZMode::CompliantTransferabilityElectionMade
+        );
     }
 
     #[test]
@@ -704,7 +700,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::FormFilingUnderForm7218;
         input.form_7218_filed_correctly = false;
         let out = check(&input);
-        assert_eq!(out.mode, Section45ZMode::ViolationForm7218NotFiledOrIncorrect);
+        assert_eq!(
+            out.mode,
+            Section45ZMode::ViolationForm7218NotFiledOrIncorrect
+        );
     }
 
     #[test]

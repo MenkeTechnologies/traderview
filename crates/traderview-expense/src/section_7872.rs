@@ -229,9 +229,7 @@ pub fn compute(input: &Section7872Input) -> Section7872Result {
     let type_phrase = match input.loan_type {
         LoanType::Gift => "gift loan > $100k",
         LoanType::Compensation => "compensation-related loan (no de minimis)",
-        LoanType::CorporationShareholder => {
-            "corporation/shareholder loan (no de minimis)"
-        }
+        LoanType::CorporationShareholder => "corporation/shareholder loan (no de minimis)",
     };
     Section7872Result {
         rule_path: Section7872Rule::FullAfrImputation,
@@ -257,7 +255,7 @@ mod tests {
         Section7872Input {
             loan_principal: dec!(50_000),
             loan_term_years: dec!(5),
-            actual_interest_rate: dec!(0.01), // 1%
+            actual_interest_rate: dec!(0.01),    // 1%
             applicable_federal_rate: dec!(0.04), // 4%
             loan_type: LoanType::Gift,
             aggregate_outstanding_between_parties: dec!(50_000),

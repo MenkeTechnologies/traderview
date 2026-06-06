@@ -146,9 +146,7 @@ pub fn check(input: &RentalLeadPipeDisclosureInput) -> RentalLeadPipeDisclosureR
     }
 }
 
-fn check_federal(
-    input: &RentalLeadPipeDisclosureInput,
-) -> RentalLeadPipeDisclosureResult {
+fn check_federal(input: &RentalLeadPipeDisclosureInput) -> RentalLeadPipeDisclosureResult {
     let mut violations: Vec<String> = Vec::new();
     let notes: Vec<String> = vec![
         "40 CFR Part 141 Subpart I — EPA Lead and Copper Rule Revisions (LCRR) compliance date October 16, 2024; public water systems must complete initial service line inventory + notification to persons served of known or potential lead service lines".to_string(),
@@ -212,10 +210,7 @@ fn check_il(input: &RentalLeadPipeDisclosureInput) -> RentalLeadPipeDisclosureRe
         || !input.water_system_notified
         || input.days_from_water_system_to_tenant_notice <= 30;
 
-    if lead_present
-        && input.water_system_notified
-        && !input.landlord_notified_tenants
-    {
+    if lead_present && input.water_system_notified && !input.landlord_notified_tenants {
         violations.push(
             "415 ILCS 5/17.12 — landlord must provide written notice to tenants of known or potential lead service line".to_string(),
         );
@@ -231,12 +226,11 @@ fn check_il(input: &RentalLeadPipeDisclosureInput) -> RentalLeadPipeDisclosureRe
     }
 
     const IL_PENALTY_CAP_CENTS: u64 = 5_000_000;
-    let penalty_in_range = input.civil_penalty_cents == 0
-        || input.civil_penalty_cents <= IL_PENALTY_CAP_CENTS;
+    let penalty_in_range =
+        input.civil_penalty_cents == 0 || input.civil_penalty_cents <= IL_PENALTY_CAP_CENTS;
     if !penalty_in_range {
-        violations.push(
-            "IL EPA Act § 42 — civil penalty capped at $50,000 per violation".to_string(),
-        );
+        violations
+            .push("IL EPA Act § 42 — civil penalty capped at $50,000 per violation".to_string());
     }
 
     RentalLeadPipeDisclosureResult {
@@ -276,8 +270,8 @@ fn check_nj(input: &RentalLeadPipeDisclosureInput) -> RentalLeadPipeDisclosureRe
     }
 
     const NJ_PENALTY_PER_DAY_CAP_CENTS: u64 = 5_000_000;
-    let penalty_in_range = input.civil_penalty_cents == 0
-        || input.civil_penalty_cents <= NJ_PENALTY_PER_DAY_CAP_CENTS;
+    let penalty_in_range =
+        input.civil_penalty_cents == 0 || input.civil_penalty_cents <= NJ_PENALTY_PER_DAY_CAP_CENTS;
     if !penalty_in_range {
         violations.push(
             "N.J.S.A. 58:10A-10 — civil penalty capped at $50,000 per violation PER DAY for failure to replace".to_string(),
@@ -445,8 +439,7 @@ mod tests {
         assert!(r
             .violations
             .iter()
-            .any(|v| v.contains("N.J.S.A. 58:12A-40")
-                && v.contains("BEFORE LEASE SIGNING")));
+            .any(|v| v.contains("N.J.S.A. 58:12A-40") && v.contains("BEFORE LEASE SIGNING")));
     }
 
     #[test]
@@ -568,19 +561,13 @@ mod tests {
     #[test]
     fn note_pins_nj_pre_lease_disclosure() {
         let r = check(&nj_clean());
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("BEFORE LEASE SIGNING")));
+        assert!(r.notes.iter().any(|n| n.contains("BEFORE LEASE SIGNING")));
     }
 
     #[test]
     fn note_pins_nj_2031_replacement_deadline() {
         let r = check(&nj_clean());
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("July 2031")));
+        assert!(r.notes.iter().any(|n| n.contains("July 2031")));
     }
 
     #[test]

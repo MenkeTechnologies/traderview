@@ -164,9 +164,7 @@ pub fn compute(input: &Section6700Input) -> Section6700Result {
 
     // § 6700(a) penalty — 50% of gross income.
     let section_6700a_penalty_cents = if false_statement_violation {
-        gross_income
-            .saturating_mul(FALSE_STATEMENT_PENALTY_BPS)
-            / BPS_DENOMINATOR
+        gross_income.saturating_mul(FALSE_STATEMENT_PENALTY_BPS) / BPS_DENOMINATOR
     } else {
         0
     };
@@ -180,7 +178,8 @@ pub fn compute(input: &Section6700Input) -> Section6700Result {
         0
     };
 
-    let total_penalty_cents = section_6700a_penalty_cents.saturating_add(section_6700b_penalty_cents);
+    let total_penalty_cents =
+        section_6700a_penalty_cents.saturating_add(section_6700b_penalty_cents);
 
     if false_statement_violation {
         violations.push(format!(
@@ -226,8 +225,7 @@ pub fn compute(input: &Section6700Input) -> Section6700Result {
         );
     }
 
-    if input.made_false_or_fraudulent_statement
-        && !input.knew_or_should_have_known_statement_false
+    if input.made_false_or_fraudulent_statement && !input.knew_or_should_have_known_statement_false
     {
         notes.push(
             "§ 6700(a)(2)(A) false statement made BUT scienter (knowledge or reason to \
@@ -261,7 +259,8 @@ pub fn compute(input: &Section6700Input) -> Section6700Result {
         );
     }
 
-    if gross_valuation_overstatement_violation && gross_income < VALUATION_OVERSTATEMENT_FLOOR_CENTS {
+    if gross_valuation_overstatement_violation && gross_income < VALUATION_OVERSTATEMENT_FLOOR_CENTS
+    {
         notes.push(format!(
             "§ 6700(b)(1) — gross income {} cents is LESS than $1,000 floor. Penalty \
              reduced to 100% × gross income = {} cents (statute permits LESSER amount \
@@ -443,7 +442,10 @@ mod tests {
         b.gross_income_from_activity_cents = 10_000_000;
         let r = compute(&b);
         // Penalty = min($1,000 = 100,000 cents, 100% × $100K = 10,000,000) = 100,000.
-        assert_eq!(r.section_6700b_penalty_cents, VALUATION_OVERSTATEMENT_FLOOR_CENTS);
+        assert_eq!(
+            r.section_6700b_penalty_cents,
+            VALUATION_OVERSTATEMENT_FLOOR_CENTS
+        );
     }
 
     #[test]
@@ -489,7 +491,10 @@ mod tests {
         let r = compute(&b);
         // (a) 50% × $1M = $500K; (b) min($1K, 100% × $1M) = $1K.
         assert_eq!(r.section_6700a_penalty_cents, 50_000_000);
-        assert_eq!(r.section_6700b_penalty_cents, VALUATION_OVERSTATEMENT_FLOOR_CENTS);
+        assert_eq!(
+            r.section_6700b_penalty_cents,
+            VALUATION_OVERSTATEMENT_FLOOR_CENTS
+        );
         assert_eq!(r.total_penalty_cents, 50_000_000 + 100_000);
     }
 
@@ -558,11 +563,11 @@ mod tests {
     fn valuation_threshold_boundary_truth_table() {
         // 200% threshold: stated > 2 × correct.
         let cells = [
-            (1_000_000, 1_000_000, false),  // 100% — not engaged
-            (1_999_999, 1_000_000, false),  // 199.99% — not engaged
-            (2_000_000, 1_000_000, false),  // exactly 200% — not engaged (strict exceeds)
-            (2_000_001, 1_000_000, true),   // 200.0001% — engaged
-            (5_000_000, 1_000_000, true),   // 500% — engaged
+            (1_000_000, 1_000_000, false), // 100% — not engaged
+            (1_999_999, 1_000_000, false), // 199.99% — not engaged
+            (2_000_000, 1_000_000, false), // exactly 200% — not engaged (strict exceeds)
+            (2_000_001, 1_000_000, true),  // 200.0001% — engaged
+            (5_000_000, 1_000_000, true),  // 500% — engaged
         ];
         for (stated, correct, expected) in cells.iter() {
             let mut b = input();
@@ -573,11 +578,9 @@ mod tests {
             b.value_directly_related_to_deduction_or_credit = true;
             let r = compute(&b);
             assert_eq!(
-                r.gross_valuation_overstatement_violation,
-                *expected,
+                r.gross_valuation_overstatement_violation, *expected,
                 "stated={} correct={}",
-                stated,
-                correct
+                stated, correct
             );
         }
     }

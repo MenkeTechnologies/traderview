@@ -209,9 +209,7 @@ fn check_california(
     }
 }
 
-fn check_default(
-    _input: &TenantClotheslineDryingRightInput,
-) -> TenantClotheslineDryingRightResult {
+fn check_default(_input: &TenantClotheslineDryingRightInput) -> TenantClotheslineDryingRightResult {
     let notes: Vec<String> = vec![
         "default rule — no specific tenant clothesline / drying-rack right under state statute; lease provisions controlling; common-law quiet-enjoyment review may apply"
             .to_string(),
@@ -302,10 +300,7 @@ mod tests {
         let r = check(&i);
         assert!(!r.is_private_area);
         assert!(!r.right_protected);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("§ 1940.20(a)(3)")));
+        assert!(r.violations.iter().any(|v| v.contains("§ 1940.20(a)(3)")));
     }
 
     #[test]
@@ -326,10 +321,7 @@ mod tests {
         assert!(r.consent_required);
         assert!(!r.consent_satisfied);
         assert!(!r.right_protected);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("§ 1940.20(b)(4)")));
+        assert!(r.violations.iter().any(|v| v.contains("§ 1940.20(b)(4)")));
     }
 
     #[test]
@@ -349,10 +341,7 @@ mod tests {
         i.interferes_with_property_maintenance = true;
         let r = check(&i);
         assert!(!r.right_protected);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("§ 1940.20(b)(1)")));
+        assert!(r.violations.iter().any(|v| v.contains("§ 1940.20(b)(1)")));
     }
 
     #[test]
@@ -361,10 +350,7 @@ mod tests {
         i.creates_health_or_safety_hazard = true;
         let r = check(&i);
         assert!(!r.right_protected);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("§ 1940.20(b)(2)")));
+        assert!(r.violations.iter().any(|v| v.contains("§ 1940.20(b)(2)")));
     }
 
     #[test]
@@ -373,10 +359,7 @@ mod tests {
         i.blocks_doorways_or_walkways_or_utilities = true;
         let r = check(&i);
         assert!(!r.right_protected);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("§ 1940.20(b)(3)")));
+        assert!(r.violations.iter().any(|v| v.contains("§ 1940.20(b)(3)")));
     }
 
     #[test]
@@ -385,10 +368,7 @@ mod tests {
         i.violates_reasonable_time_location_restrictions = true;
         let r = check(&i);
         assert!(!r.right_protected);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("§ 1940.20(b)(5)")));
+        assert!(r.violations.iter().any(|v| v.contains("§ 1940.20(b)(5)")));
     }
 
     #[test]

@@ -116,11 +116,10 @@ pub fn compute(input: &Section864B2Input) -> Section864B2Result {
         r.classification = GainClassification::EffectivelyConnected;
         r.safe_harbor_applies = false;
         r.reasons.push(
-            "trading not for own account — §864(b)(2)(A) requires proprietary trading"
-                .into(),
+            "trading not for own account — §864(b)(2)(A) requires proprietary trading".into(),
         );
-        r.note = "non-own-account activity — gains effectively connected to US trade or business"
-            .into();
+        r.note =
+            "non-own-account activity — gains effectively connected to US trade or business".into();
         return r;
     }
 
@@ -131,7 +130,8 @@ pub fn compute(input: &Section864B2Input) -> Section864B2Result {
             "US office maintained for trading — §864(c)(5) US-office rule attributes income to US TB"
                 .into(),
         );
-        r.note = "US office presence triggers ECI under §864(c)(5) regardless of safe harbor".into();
+        r.note =
+            "US office presence triggers ECI under §864(c)(5) regardless of safe harbor".into();
         return r;
     }
 
@@ -146,10 +146,8 @@ pub fn compute(input: &Section864B2Input) -> Section864B2Result {
     ) && input.acts_as_commodities_dealer;
 
     if securities_disqualified {
-        r.reasons.push(
-            "securities dealer — §864(b)(2)(B) excludes dealers from the safe harbor"
-                .into(),
-        );
+        r.reasons
+            .push("securities dealer — §864(b)(2)(B) excludes dealers from the safe harbor".into());
     }
     if commodities_disqualified {
         r.reasons.push(
@@ -202,7 +200,10 @@ mod tests {
     fn non_us_individual_trading_securities_qualifies_for_safe_harbor() {
         let r = compute(&base());
         assert!(r.safe_harbor_applies);
-        assert_eq!(r.classification, GainClassification::NotEffectivelyConnected);
+        assert_eq!(
+            r.classification,
+            GainClassification::NotEffectivelyConnected
+        );
         assert_eq!(r.controlling_subsection, "§864(b)(2)(A)(ii)");
     }
 

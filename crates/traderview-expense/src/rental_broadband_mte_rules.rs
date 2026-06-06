@@ -115,9 +115,7 @@ pub fn check(input: &RentalBroadbandMteRulesInput) -> RentalBroadbandMteRulesRes
     }
 }
 
-fn check_federal_fcc(
-    input: &RentalBroadbandMteRulesInput,
-) -> RentalBroadbandMteRulesResult {
+fn check_federal_fcc(input: &RentalBroadbandMteRulesInput) -> RentalBroadbandMteRulesResult {
     let mut violations: Vec<String> = Vec::new();
     let notes: Vec<String> = vec![
         "47 CFR § 64.2500-64.2503 — exclusive access contracts between landlords and telecom + cable + broadband providers categorically PROHIBITED in multiple tenant environments"
@@ -143,14 +141,15 @@ fn check_federal_fcc(
 
     let categorical_prohibition = matches!(
         input.arrangement,
-        ContractArrangement::ExclusiveAccess
-            | ContractArrangement::ExclusiveRevenueSharing
+        ContractArrangement::ExclusiveAccess | ContractArrangement::ExclusiveRevenueSharing
     );
 
-    let broadband_only_graduated_prohibited = matches!(
-        input.provider_type,
-        ProviderType::BroadbandOnly
-    ) && matches!(input.arrangement, ContractArrangement::GraduatedRevenueSharing);
+    let broadband_only_graduated_prohibited =
+        matches!(input.provider_type, ProviderType::BroadbandOnly)
+            && matches!(
+                input.arrangement,
+                ContractArrangement::GraduatedRevenueSharing
+            );
 
     if categorical_prohibition {
         violations.push(format!(
@@ -266,12 +265,9 @@ mod tests {
         i.arrangement = ContractArrangement::GraduatedRevenueSharing;
         let r = check(&i);
         assert!(!r.arrangement_lawful);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("FCC 24-52")
-                && v.contains("graduated revenue-sharing")
-                && v.contains("broadband-only")));
+        assert!(r.violations.iter().any(|v| v.contains("FCC 24-52")
+            && v.contains("graduated revenue-sharing")
+            && v.contains("broadband-only")));
     }
 
     #[test]

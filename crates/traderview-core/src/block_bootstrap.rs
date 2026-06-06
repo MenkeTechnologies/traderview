@@ -47,10 +47,16 @@ pub fn bootstrap(
     seed: u64,
 ) -> Option<BootstrapReport> {
     let n = data.len();
-    if n < block_size + 2 || block_size == 0 || n_resamples < 50 || !(50..=10_000).contains(&n_resamples) {
+    if n < block_size + 2
+        || block_size == 0
+        || n_resamples < 50
+        || !(50..=10_000).contains(&n_resamples)
+    {
         return None;
     }
-    if data.iter().any(|x| !x.is_finite()) { return None; }
+    if data.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let original = compute_statistic(data, statistic)?;
     let mut state = seed.wrapping_add(1);
     let n_blocks_per_resample = n.div_ceil(block_size);
@@ -59,7 +65,8 @@ pub fn bootstrap(
     for _ in 0..n_resamples {
         buffer.clear();
         for _ in 0..n_blocks_per_resample {
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let max_start = n - block_size + 1;
             let start = ((state >> 32) as usize) % max_start;
@@ -70,7 +77,9 @@ pub fn bootstrap(
             stats.push(s);
         }
     }
-    if stats.is_empty() { return None; }
+    if stats.is_empty() {
+        return None;
+    }
     stats.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     let m = stats.len();
     let mean: f64 = stats.iter().sum::<f64>() / m as f64;
@@ -90,21 +99,31 @@ pub fn bootstrap(
 }
 
 fn compute_statistic(data: &[f64], stat: Statistic) -> Option<f64> {
-    if data.is_empty() { return None; }
+    if data.is_empty() {
+        return None;
+    }
     let n = data.len() as f64;
     let mean: f64 = data.iter().sum::<f64>() / n;
     match stat {
         Statistic::Mean => Some(mean),
         Statistic::Stdev => {
-            if data.len() < 2 { return None; }
+            if data.len() < 2 {
+                return None;
+            }
             let var: f64 = data.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (n - 1.0);
             Some(var.max(0.0).sqrt())
         }
         Statistic::SharpeRatio => {
-            if data.len() < 2 { return None; }
+            if data.len() < 2 {
+                return None;
+            }
             let var: f64 = data.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (n - 1.0);
             let sd = var.max(0.0).sqrt();
-            if sd > 0.0 { Some(mean / sd) } else { None }
+            if sd > 0.0 {
+                Some(mean / sd)
+            } else {
+                None
+            }
         }
         Statistic::MaxDrawdown => {
             // Treat data as PnL increments; build equity curve.
@@ -113,9 +132,13 @@ fn compute_statistic(data: &[f64], stat: Statistic) -> Option<f64> {
             let mut max_dd = 0.0_f64;
             for r in data {
                 equity += r;
-                if equity > peak { peak = equity; }
+                if equity > peak {
+                    peak = equity;
+                }
                 let dd = peak - equity;
-                if dd > max_dd { max_dd = dd; }
+                if dd > max_dd {
+                    max_dd = dd;
+                }
             }
             Some(max_dd)
         }
@@ -167,11 +190,14 @@ mod tests {
     #[test]
     fn ci_brackets_original_for_well_behaved_series() {
         let mut state: u64 = 7;
-        let data: Vec<f64> = (0..500).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.05
-        }).collect();
+        let data: Vec<f64> = (0..500)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.05
+            })
+            .collect();
         let r = bootstrap(&data, 20, 1_000, Statistic::Mean, 42).unwrap();
         // 95% CI should usually bracket the sample mean.
         assert!(r.ci_lower_2_5_pct <= r.original_statistic);
@@ -195,11 +221,14 @@ mod tests {
     #[test]
     fn max_drawdown_statistic_nonnegative() {
         let mut state: u64 = 42;
-        let data: Vec<f64> = (0..500).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.05
-        }).collect();
+        let data: Vec<f64> = (0..500)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.05
+            })
+            .collect();
         let r = bootstrap(&data, 20, 200, Statistic::MaxDrawdown, 42).unwrap();
         assert!(r.original_statistic >= 0.0);
         assert!(r.bootstrap_mean >= 0.0);

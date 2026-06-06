@@ -25,11 +25,17 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum PatternKind { DiamondTop, DiamondBottom }
+pub enum PatternKind {
+    DiamondTop,
+    DiamondBottom,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DiamondCandidate {
@@ -48,21 +54,30 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
-        Self { pivot_lookback: 3, max_pattern_bars: 250 }
+        Self {
+            pivot_lookback: 3,
+            max_pattern_bars: 250,
+        }
     }
 }
 
 pub fn detect(bars: &[Bar], cfg: &Config) -> Vec<DiamondCandidate> {
     let n = bars.len();
     let mut out = Vec::new();
-    if cfg.pivot_lookback == 0 || cfg.max_pattern_bars == 0
-        || n < 5 + 2 * cfg.pivot_lookback {
+    if cfg.pivot_lookback == 0 || cfg.max_pattern_bars == 0 || n < 5 + 2 * cfg.pivot_lookback {
         return out;
     }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite()) { return out; }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite())
+    {
+        return out;
+    }
     let highs = find_pivots(bars, cfg.pivot_lookback, true);
     let lows = find_pivots(bars, cfg.pivot_lookback, false);
-    if highs.len() < 5 || lows.len() < 5 { return out; }
+    if highs.len() < 5 || lows.len() < 5 {
+        return out;
+    }
     // Scan all contiguous 5-pivot windows for both highs and lows.
     for h_window in highs.windows(5) {
         for l_window in lows.windows(5) {
@@ -70,7 +85,9 @@ pub fn detect(bars: &[Bar], cfg: &Config) -> Vec<DiamondCandidate> {
             let all_idx = [h_window, l_window].concat();
             let max_idx = *all_idx.iter().max().unwrap();
             let min_idx = *all_idx.iter().min().unwrap();
-            if max_idx - min_idx > cfg.max_pattern_bars { continue; }
+            if max_idx - min_idx > cfg.max_pattern_bars {
+                continue;
+            }
             // Diamond-top: expanding highs+contracting lows in leg 1,
             // then contracting highs+expanding lows in leg 2.
             if let Some(c) = check_diamond_top(bars, h_window, l_window) {
@@ -86,11 +103,19 @@ pub fn detect(bars: &[Bar], cfg: &Config) -> Vec<DiamondCandidate> {
 
 fn check_diamond_top(bars: &[Bar], hi: &[usize], lo: &[usize]) -> Option<DiamondCandidate> {
     // Leg 1: h1 < h2 < h3, l1 > l2 > l3 (broadening)
-    if !(bars[hi[0]].high < bars[hi[1]].high && bars[hi[1]].high < bars[hi[2]].high) { return None; }
-    if !(bars[lo[0]].low > bars[lo[1]].low && bars[lo[1]].low > bars[lo[2]].low) { return None; }
+    if !(bars[hi[0]].high < bars[hi[1]].high && bars[hi[1]].high < bars[hi[2]].high) {
+        return None;
+    }
+    if !(bars[lo[0]].low > bars[lo[1]].low && bars[lo[1]].low > bars[lo[2]].low) {
+        return None;
+    }
     // Leg 2: h3 > h4 > h5, l3 < l4 < l5 (contracting)
-    if !(bars[hi[2]].high > bars[hi[3]].high && bars[hi[3]].high > bars[hi[4]].high) { return None; }
-    if !(bars[lo[2]].low < bars[lo[3]].low && bars[lo[3]].low < bars[lo[4]].low) { return None; }
+    if !(bars[hi[2]].high > bars[hi[3]].high && bars[hi[3]].high > bars[hi[4]].high) {
+        return None;
+    }
+    if !(bars[lo[2]].low < bars[lo[3]].low && bars[lo[3]].low < bars[lo[4]].low) {
+        return None;
+    }
     Some(DiamondCandidate {
         kind: PatternKind::DiamondTop,
         pivot_high_indices: [hi[0], hi[1], hi[2], hi[3], hi[4]],
@@ -102,10 +127,18 @@ fn check_diamond_top(bars: &[Bar], hi: &[usize], lo: &[usize]) -> Option<Diamond
 
 fn check_diamond_bottom(bars: &[Bar], hi: &[usize], lo: &[usize]) -> Option<DiamondCandidate> {
     // Mirror: leg 1 contracts, leg 2 broadens (typical bottom geometry).
-    if !(bars[hi[0]].high > bars[hi[1]].high && bars[hi[1]].high > bars[hi[2]].high) { return None; }
-    if !(bars[lo[0]].low < bars[lo[1]].low && bars[lo[1]].low < bars[lo[2]].low) { return None; }
-    if !(bars[hi[2]].high < bars[hi[3]].high && bars[hi[3]].high < bars[hi[4]].high) { return None; }
-    if !(bars[lo[2]].low > bars[lo[3]].low && bars[lo[3]].low > bars[lo[4]].low) { return None; }
+    if !(bars[hi[0]].high > bars[hi[1]].high && bars[hi[1]].high > bars[hi[2]].high) {
+        return None;
+    }
+    if !(bars[lo[0]].low < bars[lo[1]].low && bars[lo[1]].low < bars[lo[2]].low) {
+        return None;
+    }
+    if !(bars[hi[2]].high < bars[hi[3]].high && bars[hi[3]].high < bars[hi[4]].high) {
+        return None;
+    }
+    if !(bars[lo[2]].low > bars[lo[3]].low && bars[lo[3]].low > bars[lo[4]].low) {
+        return None;
+    }
     Some(DiamondCandidate {
         kind: PatternKind::DiamondBottom,
         pivot_high_indices: [hi[0], hi[1], hi[2], hi[3], hi[4]],
@@ -118,18 +151,36 @@ fn check_diamond_bottom(bars: &[Bar], hi: &[usize], lo: &[usize]) -> Option<Diam
 fn find_pivots(bars: &[Bar], lookback: usize, find_high: bool) -> Vec<usize> {
     let n = bars.len();
     let mut out = Vec::new();
-    if n < 2 * lookback + 1 { return out; }
+    if n < 2 * lookback + 1 {
+        return out;
+    }
     for i in lookback..(n - lookback) {
         let v = if find_high { bars[i].high } else { bars[i].low };
         let mut is_pivot = true;
         for k in 1..=lookback {
-            let l = if find_high { bars[i - k].high } else { bars[i - k].low };
-            let r = if find_high { bars[i + k].high } else { bars[i + k].low };
+            let l = if find_high {
+                bars[i - k].high
+            } else {
+                bars[i - k].low
+            };
+            let r = if find_high {
+                bars[i + k].high
+            } else {
+                bars[i + k].low
+            };
             if find_high {
-                if l >= v || r >= v { is_pivot = false; break; }
-            } else if l <= v || r <= v { is_pivot = false; break; }
+                if l >= v || r >= v {
+                    is_pivot = false;
+                    break;
+                }
+            } else if l <= v || r <= v {
+                is_pivot = false;
+                break;
+            }
         }
-        if is_pivot { out.push(i); }
+        if is_pivot {
+            out.push(i);
+        }
     }
     out
 }
@@ -138,7 +189,9 @@ fn find_pivots(bars: &[Bar], lookback: usize, find_high: bool) -> Vec<usize> {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64) -> Bar { Bar { high: h, low: l } }
+    fn b(h: f64, l: f64) -> Bar {
+        Bar { high: h, low: l }
+    }
 
     #[test]
     fn empty_returns_empty() {
@@ -148,7 +201,10 @@ mod tests {
     #[test]
     fn invalid_config_returns_empty() {
         let bars = vec![b(101.0, 99.0); 50];
-        let cfg = Config { pivot_lookback: 0, ..Default::default() };
+        let cfg = Config {
+            pivot_lookback: 0,
+            ..Default::default()
+        };
         assert!(detect(&bars, &cfg).is_empty());
     }
 
@@ -179,9 +235,17 @@ mod tests {
         // Contracting lows: 98, 99 at idx 32, 40.
         bars[32] = b(100.5, 98.0);
         bars[40] = b(100.5, 99.0);
-        let cands = detect(&bars, &Config { pivot_lookback: 2, max_pattern_bars: 100 });
-        assert!(cands.iter().any(|c| c.kind == PatternKind::DiamondTop),
-            "expected diamond top, got {cands:?}");
+        let cands = detect(
+            &bars,
+            &Config {
+                pivot_lookback: 2,
+                max_pattern_bars: 100,
+            },
+        );
+        assert!(
+            cands.iter().any(|c| c.kind == PatternKind::DiamondTop),
+            "expected diamond top, got {cands:?}"
+        );
     }
 
     #[test]
@@ -198,10 +262,20 @@ mod tests {
         bars[24] = b(100.5, 97.0);
         bars[32] = b(100.5, 98.0);
         bars[40] = b(100.5, 99.0);
-        let cands: Vec<_> = detect(&bars, &Config { pivot_lookback: 2, max_pattern_bars: 100 })
-            .into_iter()
-            .filter(|c| c.kind == PatternKind::DiamondTop).collect();
-        assert!(cands.is_empty(), "no broadening leg → no diamond, got {cands:?}");
+        let cands: Vec<_> = detect(
+            &bars,
+            &Config {
+                pivot_lookback: 2,
+                max_pattern_bars: 100,
+            },
+        )
+        .into_iter()
+        .filter(|c| c.kind == PatternKind::DiamondTop)
+        .collect();
+        assert!(
+            cands.is_empty(),
+            "no broadening leg → no diamond, got {cands:?}"
+        );
     }
 
     #[test]

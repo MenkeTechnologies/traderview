@@ -166,9 +166,7 @@ pub fn check(input: &Input) -> CheckResult {
             );
         }
         // As-soon-as-practicable notice for grandfathered tenancies.
-        if input.tenancy_existing_on_1990_01_01
-            && !input.notice_provided_as_soon_as_practicable
-        {
+        if input.tenancy_existing_on_1990_01_01 && !input.notice_provided_as_soon_as_practicable {
             violations.push(
                 "Cal. Civ. Code § 1940.7(c) — for tenancies in existence on January 1, 1990, \
                  written notice must be given to tenants as soon as practicable thereafter; \
@@ -257,11 +255,10 @@ mod tests {
         i.written_notice_provided_before_lease = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("§ 1940.7(b)") && v.contains("PRIOR TO"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1940.7(b)") && v.contains("PRIOR TO")));
     }
 
     #[test]
@@ -273,11 +270,10 @@ mod tests {
         assert!(!r.disclosure_trigger_fired);
         // No actual knowledge → no statutory duty → compliant.
         assert!(r.compliant);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("ACTUAL KNOWLEDGE") && n.contains("Constructive"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("ACTUAL KNOWLEDGE") && n.contains("Constructive")));
     }
 
     #[test]
@@ -309,11 +305,10 @@ mod tests {
         i.notice_provided_as_soon_as_practicable = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("§ 1940.7(c)") && v.contains("January 1, 1990"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1940.7(c)") && v.contains("January 1, 1990")));
     }
 
     // ── Federal MMRP / Default ─────────────────────────────────
@@ -351,16 +346,14 @@ mod tests {
     #[test]
     fn california_definitional_notes_present() {
         let r = check(&base(Regime::California));
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1940.7(d)(1)") && n.contains("former federal or state"))
-        );
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1940.7(d)(2)") && n.contains("ONE MILE"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1940.7(d)(1)") && n.contains("former federal or state")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1940.7(d)(2)") && n.contains("ONE MILE")));
     }
 
     #[test]
@@ -368,11 +361,7 @@ mod tests {
         let mut i = base(Regime::California);
         i.landlord_has_actual_knowledge = false;
         let r = check(&i);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("Constructive knowledge"))
-        );
+        assert!(r.notes.iter().any(|n| n.contains("Constructive knowledge")));
     }
 
     // ── Regression-critical invariants ──────────────────────────
@@ -430,13 +419,15 @@ mod tests {
 
     #[test]
     fn citation_pins_authority_per_regime() {
-        assert!(check(&base(Regime::California)).citation.contains("§ 1940.7"));
-        assert!(check(&base(Regime::FederalMMRP)).citation.contains("§ 2710"));
-        assert!(
-            check(&base(Regime::Default))
-                .citation
-                .contains("common-law")
-        );
+        assert!(check(&base(Regime::California))
+            .citation
+            .contains("§ 1940.7"));
+        assert!(check(&base(Regime::FederalMMRP))
+            .citation
+            .contains("§ 2710"));
+        assert!(check(&base(Regime::Default))
+            .citation
+            .contains("common-law"));
     }
 
     #[test]

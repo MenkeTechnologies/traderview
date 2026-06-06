@@ -125,8 +125,7 @@ pub fn compute(input: &Section41Input) -> Section41Result {
                 input.fixed_base_percentage_bp.min(1600)
             };
             let avg_gross_receipts = input.prior_4_year_avg_gross_receipts_cents.max(0);
-            let fbp_base =
-                ((avg_gross_receipts as i128) * (fbp_bp as i128) / 10_000) as i64;
+            let fbp_base = ((avg_gross_receipts as i128) * (fbp_bp as i128) / 10_000) as i64;
             let fifty_pct_qre = ((qre as i128) / 2) as i64;
             let base = fbp_base.max(fifty_pct_qre);
             let excess = (qre - base).max(0);

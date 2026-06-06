@@ -108,24 +108,22 @@ pub fn compute(input: &Section6050IInput) -> Section6050IResult {
             violation: ViolationType::None,
             maximum_per_violation_penalty_cents: 0,
             criminal_exposure: false,
-            citation: "26 U.S.C. § 6050I(a) — applies only to persons engaged in a trade or business",
-            note: "Recipient is not engaged in a trade or business. § 6050I does not apply.".to_string(),
+            citation:
+                "26 U.S.C. § 6050I(a) — applies only to persons engaged in a trade or business",
+            note: "Recipient is not engaged in a trade or business. § 6050I does not apply."
+                .to_string(),
         };
     }
 
     // Cash classification under § 6050I(d).
     let qualifies_as_cash = match input.payment_type {
         PaymentType::Currency => true,
-        PaymentType::CashiersCheck
-        | PaymentType::MoneyOrder
-        | PaymentType::BankDraft => {
+        PaymentType::CashiersCheck | PaymentType::MoneyOrder | PaymentType::BankDraft => {
             // Face amount must be ≤ $10,000 for the instrument to be
             // treated as cash (§ 6050I(d)(2)).
             input.single_instrument_face_amount_cents <= 1000000
         }
-        PaymentType::PersonalCheck | PaymentType::WireTransfer | PaymentType::OtherNonCash => {
-            false
-        }
+        PaymentType::PersonalCheck | PaymentType::WireTransfer | PaymentType::OtherNonCash => false,
         PaymentType::DigitalAsset => {
             // IIJA added digital assets but IRS Announcement 2024-04
             // suspended implementation. Currently EXCLUDED.
@@ -653,15 +651,7 @@ mod tests {
 
     #[test]
     fn negative_inputs_handled() {
-        let r = compute(&input(
-            true,
-            PaymentType::Currency,
-            -1,
-            -1,
-            0,
-            true,
-            false,
-        ));
+        let r = compute(&input(true, PaymentType::Currency, -1, -1, 0, true, false));
         assert!(!r.form_8300_required);
     }
 

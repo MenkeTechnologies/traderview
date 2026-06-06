@@ -387,7 +387,10 @@ mod tests {
         let mut input = baseline_input();
         input.application_form_status = ApplicationFormStatus::OtherFormOrNoApplicationFiled;
         let output = check(&input);
-        assert_eq!(output.mode, Section6411Mode::NotApplicableForm1139Or1045NotFiled);
+        assert_eq!(
+            output.mode,
+            Section6411Mode::NotApplicableForm1139Or1045NotFiled
+        );
     }
 
     #[test]
@@ -507,7 +510,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::IrsExamination90DayWindowCheck;
         let output = check(&input);
-        assert_eq!(output.mode, Section6411Mode::CompliantIrsProcessedWithin90Days);
+        assert_eq!(
+            output.mode,
+            Section6411Mode::CompliantIrsProcessedWithin90Days
+        );
     }
 
     #[test]
@@ -516,7 +522,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::IrsExamination90DayWindowCheck;
         input.irs_processing_days = 90;
         let output = check(&input);
-        assert_eq!(output.mode, Section6411Mode::CompliantIrsProcessedWithin90Days);
+        assert_eq!(
+            output.mode,
+            Section6411Mode::CompliantIrsProcessedWithin90Days
+        );
     }
 
     #[test]
@@ -525,7 +534,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::IrsExamination90DayWindowCheck;
         input.irs_processing_days = 120;
         let output = check(&input);
-        assert_eq!(output.mode, Section6411Mode::ViolationIrsProcessingExceeded90Days);
+        assert_eq!(
+            output.mode,
+            Section6411Mode::ViolationIrsProcessingExceeded90Days
+        );
     }
 
     #[test]

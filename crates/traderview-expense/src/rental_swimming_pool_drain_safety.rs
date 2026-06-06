@@ -488,10 +488,7 @@ mod tests {
         i.drain_cover_compliant = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("§ 454.2.17")));
+        assert!(r.violations.iter().any(|v| v.contains("§ 454.2.17")));
     }
 
     #[test]
@@ -532,10 +529,7 @@ mod tests {
     #[test]
     fn note_pins_apartment_complexes_in_scope() {
         let r = check(&federal_clean());
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("apartment complexes")));
+        assert!(r.notes.iter().any(|n| n.contains("apartment complexes")));
     }
 
     #[test]

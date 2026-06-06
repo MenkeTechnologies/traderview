@@ -406,8 +406,7 @@ mod tests {
         Input {
             tenancy_coverage: TenancyCoverage::CoveredResidentialTenancy,
             tenancy_type: TenancyType::MonthToMonthOrFixedTerm,
-            nonpayment_notice_variant:
-                NonpaymentNoticeVariant::TenDayAfterDay8ForOtherTenancies,
+            nonpayment_notice_variant: NonpaymentNoticeVariant::TenDayAfterDay8ForOtherTenancies,
             entry_notice_status: EntryNoticeStatus::LandlordGave24HourActualNotice,
             compliance_aspect: ComplianceAspect::SecurityDepositReturnUnderOrs90300,
             days_to_return_deposit: 25,
@@ -475,8 +474,7 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::NonpaymentNoticeUnderOrs90394;
         input.tenancy_type = TenancyType::WeekToWeek;
-        input.nonpayment_notice_variant =
-            NonpaymentNoticeVariant::SeventyTwoHourForWeekToWeek;
+        input.nonpayment_notice_variant = NonpaymentNoticeVariant::SeventyTwoHourForWeekToWeek;
         input.nonpayment_notice_hours_given = 72;
         input.nonpayment_notice_earliest_day_served = 5;
         let out = check(&input);
@@ -491,8 +489,7 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::NonpaymentNoticeUnderOrs90394;
         input.tenancy_type = TenancyType::WeekToWeek;
-        input.nonpayment_notice_variant =
-            NonpaymentNoticeVariant::SeventyTwoHourForWeekToWeek;
+        input.nonpayment_notice_variant = NonpaymentNoticeVariant::SeventyTwoHourForWeekToWeek;
         input.nonpayment_notice_hours_given = 71;
         input.nonpayment_notice_earliest_day_served = 5;
         let out = check(&input);
@@ -507,8 +504,7 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::NonpaymentNoticeUnderOrs90394;
         input.tenancy_type = TenancyType::WeekToWeek;
-        input.nonpayment_notice_variant =
-            NonpaymentNoticeVariant::SeventyTwoHourForWeekToWeek;
+        input.nonpayment_notice_variant = NonpaymentNoticeVariant::SeventyTwoHourForWeekToWeek;
         input.nonpayment_notice_hours_given = 72;
         input.nonpayment_notice_earliest_day_served = 4;
         let out = check(&input);
@@ -523,8 +519,7 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::NonpaymentNoticeUnderOrs90394;
         input.tenancy_type = TenancyType::MonthToMonthOrFixedTerm;
-        input.nonpayment_notice_variant =
-            NonpaymentNoticeVariant::TenDayAfterDay8ForOtherTenancies;
+        input.nonpayment_notice_variant = NonpaymentNoticeVariant::TenDayAfterDay8ForOtherTenancies;
         input.nonpayment_notice_hours_given = 240;
         input.nonpayment_notice_earliest_day_served = 8;
         let out = check(&input);
@@ -555,8 +550,7 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::NonpaymentNoticeUnderOrs90394;
         input.tenancy_type = TenancyType::MonthToMonthOrFixedTerm;
-        input.nonpayment_notice_variant =
-            NonpaymentNoticeVariant::TenDayAfterDay8ForOtherTenancies;
+        input.nonpayment_notice_variant = NonpaymentNoticeVariant::TenDayAfterDay8ForOtherTenancies;
         input.nonpayment_notice_hours_given = 240;
         input.nonpayment_notice_earliest_day_served = 7;
         let out = check(&input);
@@ -571,8 +565,7 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::NonpaymentNoticeUnderOrs90394;
         input.tenancy_type = TenancyType::WeekToWeek;
-        input.nonpayment_notice_variant =
-            NonpaymentNoticeVariant::TenDayAfterDay8ForOtherTenancies;
+        input.nonpayment_notice_variant = NonpaymentNoticeVariant::TenDayAfterDay8ForOtherTenancies;
         let out = check(&input);
         assert_eq!(
             out.mode,
@@ -585,8 +578,7 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::NonpaymentNoticeUnderOrs90394;
         input.tenancy_type = TenancyType::MonthToMonthOrFixedTerm;
-        input.nonpayment_notice_variant =
-            NonpaymentNoticeVariant::SeventyTwoHourForWeekToWeek;
+        input.nonpayment_notice_variant = NonpaymentNoticeVariant::SeventyTwoHourForWeekToWeek;
         let out = check(&input);
         assert_eq!(
             out.mode,
@@ -671,8 +663,7 @@ mod tests {
     fn landlord_entered_without_notice_violation() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::LandlordEntryNoticeUnderOrs90322;
-        input.entry_notice_status =
-            EntryNoticeStatus::LandlordEnteredWithoutNoticeAndNotEmergency;
+        input.entry_notice_status = EntryNoticeStatus::LandlordEnteredWithoutNoticeAndNotEmergency;
         let out = check(&input);
         assert_eq!(
             out.mode,

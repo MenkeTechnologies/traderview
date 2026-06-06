@@ -60,7 +60,9 @@ pub struct VsaReport {
 
 pub fn classify(bars: &[VsaBar], avg_volume: &[f64]) -> VsaReport {
     let n = bars.len();
-    if n == 0 || avg_volume.len() != n { return VsaReport::default(); }
+    if n == 0 || avg_volume.len() != n {
+        return VsaReport::default();
+    }
     let mut events = Vec::new();
     // Compute rolling average spread for the wide/narrow comparison.
     let spreads: Vec<f64> = bars.iter().map(|b| (b.high - b.low).max(0.0)).collect();
@@ -68,16 +70,24 @@ pub fn classify(bars: &[VsaBar], avg_volume: &[f64]) -> VsaReport {
     for i in 0..n {
         let bar = bars[i];
         let avg_vol = avg_volume[i];
-        if avg_vol <= 0.0 { continue; }
+        if avg_vol <= 0.0 {
+            continue;
+        }
         let spread = spreads[i];
-        if spread <= 0.0 { continue; }
+        if spread <= 0.0 {
+            continue;
+        }
         let vol_ratio = bar.volume / avg_vol;
         let close_pos = (bar.close - bar.low) / spread;
         let is_up = bar.close > bar.open;
         let is_down = bar.close < bar.open;
-        let spread_ratio = if avg_spread[i] > 0.0 { spread / avg_spread[i] } else { 1.0 };
+        let spread_ratio = if avg_spread[i] > 0.0 {
+            spread / avg_spread[i]
+        } else {
+            1.0
+        };
         let narrow = spread_ratio < 0.7;
-        let wide   = spread_ratio > 1.5;
+        let wide = spread_ratio > 1.5;
 
         let signal = if narrow && is_up && vol_ratio < 0.7 {
             Some(VsaSignal::NoDemand)
@@ -99,8 +109,11 @@ pub fn classify(bars: &[VsaBar], avg_volume: &[f64]) -> VsaReport {
         };
         if let Some(sig) = signal {
             events.push(VsaEvent {
-                bar_index: i, signal: sig,
-                spread, volume_ratio: vol_ratio, close_position: close_pos,
+                bar_index: i,
+                signal: sig,
+                spread,
+                volume_ratio: vol_ratio,
+                close_position: close_pos,
             });
         }
     }
@@ -111,7 +124,9 @@ pub fn classify(bars: &[VsaBar], avg_volume: &[f64]) -> VsaReport {
 fn rolling_mean(values: &[f64], window: usize) -> Vec<f64> {
     let n = values.len();
     let mut out = vec![0.0_f64; n];
-    if window == 0 || n == 0 { return out; }
+    if window == 0 || n == 0 {
+        return out;
+    }
     for i in 0..n {
         let lo = i.saturating_sub(window.saturating_sub(1));
         let slice = &values[lo..=i];
@@ -125,7 +140,13 @@ mod tests {
     use super::*;
 
     fn bar(o: f64, h: f64, l: f64, c: f64, v: f64) -> VsaBar {
-        VsaBar { open: o, high: h, low: l, close: c, volume: v }
+        VsaBar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+            volume: v,
+        }
     }
 
     #[test]
@@ -139,7 +160,9 @@ mod tests {
     #[test]
     fn climactic_bar_detected_on_wide_spread_huge_volume() {
         // 14 normal bars, then 1 monster: spread 5x normal, volume 3x avg.
-        let mut bars: Vec<VsaBar> = (0..14).map(|_| bar(100.0, 100.5, 99.5, 100.0, 1000.0)).collect();
+        let mut bars: Vec<VsaBar> = (0..14)
+            .map(|_| bar(100.0, 100.5, 99.5, 100.0, 1000.0))
+            .collect();
         bars.push(bar(100.0, 105.0, 99.0, 104.5, 3000.0));
         let avg_volume: Vec<f64> = bars.iter().map(|_| 1000.0).collect();
         let r = classify(&bars, &avg_volume);
@@ -153,20 +176,27 @@ mod tests {
         // 14 normal bars (spread 2.0), then narrow up-bar (spread 0.5, vol 200).
         // avg_spread will be dragged toward 0.5 by the inclusion. Use larger
         // bars to keep avg_spread elevated.
-        let mut bars: Vec<VsaBar> = (0..14).map(|_| bar(100.0, 101.0, 99.0, 100.5, 1000.0)).collect();
-        bars.push(bar(100.0, 100.4, 99.9, 100.3, 200.0));    // narrow up, low vol
+        let mut bars: Vec<VsaBar> = (0..14)
+            .map(|_| bar(100.0, 101.0, 99.0, 100.5, 1000.0))
+            .collect();
+        bars.push(bar(100.0, 100.4, 99.9, 100.3, 200.0)); // narrow up, low vol
         let avg_volume: Vec<f64> = bars.iter().map(|_| 1000.0).collect();
         let r = classify(&bars, &avg_volume);
         let last = r.events.iter().find(|e| e.bar_index == 14);
         assert!(last.is_some(), "expected NoDemand at bar 14");
-        assert!(matches!(last.unwrap().signal, VsaSignal::NoDemand),
-            "expected NoDemand, got {:?}", last.unwrap().signal);
+        assert!(
+            matches!(last.unwrap().signal, VsaSignal::NoDemand),
+            "expected NoDemand, got {:?}",
+            last.unwrap().signal
+        );
     }
 
     #[test]
     fn no_supply_on_narrow_down_bar_with_low_volume() {
-        let mut bars: Vec<VsaBar> = (0..14).map(|_| bar(100.0, 101.0, 99.0, 100.5, 1000.0)).collect();
-        bars.push(bar(100.0, 100.0, 99.6, 99.7, 200.0));    // narrow down, low vol
+        let mut bars: Vec<VsaBar> = (0..14)
+            .map(|_| bar(100.0, 101.0, 99.0, 100.5, 1000.0))
+            .collect();
+        bars.push(bar(100.0, 100.0, 99.6, 99.7, 200.0)); // narrow down, low vol
         let avg_volume: Vec<f64> = bars.iter().map(|_| 1000.0).collect();
         let r = classify(&bars, &avg_volume);
         let last = r.events.iter().find(|e| e.bar_index == 14);
@@ -178,7 +208,9 @@ mod tests {
     fn stopping_volume_on_wide_down_bar_with_close_at_top() {
         // Wide down-bar (open 100, close 98 — down on direction), but the
         // CLOSE landed near the high (close_position > 0.7). HIGH volume.
-        let mut bars: Vec<VsaBar> = (0..14).map(|_| bar(100.0, 100.5, 99.5, 100.0, 1000.0)).collect();
+        let mut bars: Vec<VsaBar> = (0..14)
+            .map(|_| bar(100.0, 100.5, 99.5, 100.0, 1000.0))
+            .collect();
         // Open 100, low 95 (wide drop), high 99, close 98.7 → close_pos = (98.7-95)/(99-95) = 0.925.
         bars.push(bar(100.0, 99.0, 95.0, 98.7, 2000.0));
         let avg_volume: Vec<f64> = bars.iter().map(|_| 1000.0).collect();
@@ -187,8 +219,11 @@ mod tests {
         assert!(last.is_some());
         // Either StoppingVolume OR Climactic depending on thresholds.
         let sig = last.unwrap().signal;
-        assert!(matches!(sig, VsaSignal::StoppingVolume | VsaSignal::Climactic),
-            "expected StoppingVolume or Climactic, got {:?}", sig);
+        assert!(
+            matches!(sig, VsaSignal::StoppingVolume | VsaSignal::Climactic),
+            "expected StoppingVolume or Climactic, got {:?}",
+            sig
+        );
     }
 
     #[test]
@@ -196,7 +231,10 @@ mod tests {
         let bars = vec![bar(100.0, 101.0, 99.0, 100.5, 1000.0)];
         let avg = vec![0.0];
         let r = classify(&bars, &avg);
-        assert!(r.events.is_empty(), "zero avg volume → skip (no div-by-zero)");
+        assert!(
+            r.events.is_empty(),
+            "zero avg volume → skip (no div-by-zero)"
+        );
     }
 
     #[test]

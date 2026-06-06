@@ -22,7 +22,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum TrendDirection { Up, Down }
+pub enum TrendDirection {
+    Up,
+    Down,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -48,11 +51,7 @@ pub struct ChochReport {
     pub last_event: Option<ChochEvent>,
 }
 
-pub fn detect(
-    closes: &[f64],
-    swings: &[SwingPoint],
-    initial_trend: TrendDirection,
-) -> ChochReport {
+pub fn detect(closes: &[f64], swings: &[SwingPoint], initial_trend: TrendDirection) -> ChochReport {
     if closes.is_empty() || swings.is_empty() {
         return ChochReport::default();
     }
@@ -61,12 +60,14 @@ pub fn detect(
     for (i, &close) in closes.iter().enumerate() {
         // Find the most recent swing of the relevant kind for the current trend.
         let mut latest_high: Option<&SwingPoint> = None;
-        let mut latest_low:  Option<&SwingPoint> = None;
+        let mut latest_low: Option<&SwingPoint> = None;
         for s in swings {
-            if s.index >= i { break; }
+            if s.index >= i {
+                break;
+            }
             match s.kind {
                 SwingKind::High => latest_high = Some(s),
-                SwingKind::Low  => latest_low  = Some(s),
+                SwingKind::Low => latest_low = Some(s),
             }
         }
         match trend {
@@ -74,8 +75,10 @@ pub fn detect(
                 if let Some(sl) = latest_low {
                     if close < sl.price {
                         events.push(ChochEvent {
-                            bar_index: i, kind: ChochKind::Bearish,
-                            broken_level: sl.price, close_at_break: close,
+                            bar_index: i,
+                            kind: ChochKind::Bearish,
+                            broken_level: sl.price,
+                            close_at_break: close,
                         });
                         trend = TrendDirection::Down;
                     }
@@ -85,8 +88,10 @@ pub fn detect(
                 if let Some(sh) = latest_high {
                     if close > sh.price {
                         events.push(ChochEvent {
-                            bar_index: i, kind: ChochKind::Bullish,
-                            broken_level: sh.price, close_at_break: close,
+                            bar_index: i,
+                            kind: ChochKind::Bullish,
+                            broken_level: sh.price,
+                            close_at_break: close,
                         });
                         trend = TrendDirection::Up;
                     }
@@ -103,7 +108,11 @@ mod tests {
     use super::*;
 
     fn sp(idx: usize, price: f64, kind: SwingKind) -> SwingPoint {
-        SwingPoint { index: idx, price, kind }
+        SwingPoint {
+            index: idx,
+            price,
+            kind,
+        }
     }
 
     #[test]
@@ -147,11 +156,10 @@ mod tests {
         // Start uptrend. CHoCH bearish at idx 5 (close 93 < 95 low).
         // Now downtrend — a later close above a lower-high (110) should
         // fire bullish CHoCH at idx 9.
-        let closes = vec![100.0, 102.0, 95.0, 105.0, 100.0, 93.0, 108.0, 100.0, 105.0, 115.0];
-        let swings = vec![
-            sp(2, 95.0, SwingKind::Low),
-            sp(6, 110.0, SwingKind::High),
+        let closes = vec![
+            100.0, 102.0, 95.0, 105.0, 100.0, 93.0, 108.0, 100.0, 105.0, 115.0,
         ];
+        let swings = vec![sp(2, 95.0, SwingKind::Low), sp(6, 110.0, SwingKind::High)];
         let r = detect(&closes, &swings, TrendDirection::Up);
         assert_eq!(r.events.len(), 2);
         assert!(matches!(r.events[0].kind, ChochKind::Bearish));

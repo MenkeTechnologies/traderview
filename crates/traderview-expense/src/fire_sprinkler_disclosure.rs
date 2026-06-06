@@ -98,13 +98,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // NoStateFireSprinklerDisclosureLaw default — 49 other states + DC.
     let no_state = [
-        "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC",
-        "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA",
-        "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN",
-        "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM",
-        "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
-        "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV",
-        "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "ID", "IL", "IN",
+        "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH",
+        "NJ", "NM", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT",
+        "VA", "WA", "WV", "WI", "WY",
     ];
     for code in no_state {
         m.insert(
@@ -165,9 +162,8 @@ pub fn check(input: &FireSprinklerDisclosureInput) -> FireSprinklerDisclosureRes
     );
 
     // Bold-face compliance: only relevant when statute requires it.
-    let bold_face_ok = !rule.bold_face_required
-        || !input.lease_contains_notice
-        || input.notice_is_bold_face;
+    let bold_face_ok =
+        !rule.bold_face_required || !input.lease_contains_notice || input.notice_is_bold_face;
 
     // Maintenance-date compliance: only when sprinkler present AND
     // statute requires it.
@@ -175,8 +171,8 @@ pub fn check(input: &FireSprinklerDisclosureInput) -> FireSprinklerDisclosureRes
         && input.sprinkler_system_present)
         || input.last_maintenance_date_disclosed;
 
-    let landlord_compliant = !required
-        || (input.lease_contains_notice && bold_face_ok && maintenance_date_ok);
+    let landlord_compliant =
+        !required || (input.lease_contains_notice && bold_face_ok && maintenance_date_ok);
 
     let regime_label = match rule.regime {
         FireSprinklerDisclosureRegime::NewYorkSprinklerSystemNotice => {
@@ -300,7 +296,9 @@ mod tests {
         let r = check(&i);
         assert!(!r.landlord_compliant);
         assert!(!r.maintenance_date_compliance_satisfied);
-        assert!(r.note.contains("last maintenance / inspection date not disclosed"));
+        assert!(r
+            .note
+            .contains("last maintenance / inspection date not disclosed"));
     }
 
     #[test]
@@ -312,7 +310,10 @@ mod tests {
         i.sprinkler_system_present = false;
         i.last_maintenance_date_disclosed = false;
         let r = check(&i);
-        assert!(r.landlord_compliant, "no system → no maintenance-date requirement");
+        assert!(
+            r.landlord_compliant,
+            "no system → no maintenance-date requirement"
+        );
     }
 
     // ── Default state ──────────────────────────────────────────────
@@ -331,7 +332,10 @@ mod tests {
         i.notice_is_bold_face = false;
         i.last_maintenance_date_disclosed = false;
         let r = check(&i);
-        assert!(r.landlord_compliant, "no state law → no compliance question");
+        assert!(
+            r.landlord_compliant,
+            "no state law → no compliance question"
+        );
     }
 
     // ── Citation contents ──────────────────────────────────────────

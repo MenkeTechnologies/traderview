@@ -22,12 +22,30 @@ use uuid::Uuid;
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/institutional/managers", get(list_managers_route))
-        .route("/institutional/managers/by-cik/:cik", get(manager_by_cik_route))
-        .route("/institutional/managers/:id/filings", get(manager_filings_route))
-        .route("/institutional/managers/:id/holdings", get(holdings_latest_route))
-        .route("/institutional/managers/:id/changes", get(position_changes_route))
-        .route("/institutional/filings/:id/holdings", get(holdings_for_filing_route))
-        .route("/institutional/symbols/:symbol/owners", get(top_owners_route))
+        .route(
+            "/institutional/managers/by-cik/:cik",
+            get(manager_by_cik_route),
+        )
+        .route(
+            "/institutional/managers/:id/filings",
+            get(manager_filings_route),
+        )
+        .route(
+            "/institutional/managers/:id/holdings",
+            get(holdings_latest_route),
+        )
+        .route(
+            "/institutional/managers/:id/changes",
+            get(position_changes_route),
+        )
+        .route(
+            "/institutional/filings/:id/holdings",
+            get(holdings_for_filing_route),
+        )
+        .route(
+            "/institutional/symbols/:symbol/owners",
+            get(top_owners_route),
+        )
         .route("/institutional/top-managers", get(top_managers_route))
 }
 
@@ -45,9 +63,14 @@ async fn list_managers_route(
 ) -> Result<Json<Vec<Manager>>, ApiError> {
     let limit = q.limit.unwrap_or(100).clamp(1, 1000);
     Ok(Json(
-        list_managers(&s.pool, q.search.as_deref(), q.notable.unwrap_or(false), limit)
-            .await
-            .map_err(ApiError::Internal)?,
+        list_managers(
+            &s.pool,
+            q.search.as_deref(),
+            q.notable.unwrap_or(false),
+            limit,
+        )
+        .await
+        .map_err(ApiError::Internal)?,
     ))
 }
 

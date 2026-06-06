@@ -179,21 +179,11 @@ pub fn check(input: &Section6404Input) -> Section6404Result {
     }
 
     let authorized = match input.claim_pathway {
-        AbatementPathway::UnreasonableErrorOrDelay => {
-            check_e_1(input, &mut notes)
-        }
-        AbatementPathway::ErroneousRefundCheck => {
-            check_e_2(input, &mut notes)
-        }
-        AbatementPathway::ErroneousWrittenAdvice => {
-            check_f(input, &mut notes)
-        }
-        AbatementPathway::ThirtySixMonthInterestSuspension => {
-            check_g(input, &mut notes)
-        }
-        AbatementPathway::SmallTaxBalance => {
-            check_c(input, &mut notes)
-        }
+        AbatementPathway::UnreasonableErrorOrDelay => check_e_1(input, &mut notes),
+        AbatementPathway::ErroneousRefundCheck => check_e_2(input, &mut notes),
+        AbatementPathway::ErroneousWrittenAdvice => check_f(input, &mut notes),
+        AbatementPathway::ThirtySixMonthInterestSuspension => check_g(input, &mut notes),
+        AbatementPathway::SmallTaxBalance => check_c(input, &mut notes),
         AbatementPathway::GeneralAbatement => {
             notes.push(
                 "§ 6404(a) — IRS DISCRETIONARY authority to abate (1) excessive assessment, (2) post-SOL assessment, OR (3) erroneously / illegally assessed; not a taxpayer right"
@@ -262,8 +252,7 @@ fn check_e_2(input: &Section6404Input, notes: &mut Vec<String>) -> bool {
 
     if input.taxpayer_caused_erroneous_refund {
         notes.push(
-            "§ 6404(e)(2) — abatement BARRED when taxpayer caused the erroneous refund"
-                .to_string(),
+            "§ 6404(e)(2) — abatement BARRED when taxpayer caused the erroneous refund".to_string(),
         );
         return false;
     }
@@ -327,9 +316,7 @@ fn check_g(input: &Section6404Input, notes: &mut Vec<String>) -> bool {
 
 fn check_c(input: &Section6404Input, notes: &mut Vec<String>) -> bool {
     let five_dollars_cents = 500i64;
-    if input.small_tax_balance_cents <= five_dollars_cents
-        && input.small_tax_balance_cents > 0
-    {
+    if input.small_tax_balance_cents <= five_dollars_cents && input.small_tax_balance_cents > 0 {
         notes.push(
             "§ 6404(c) — small tax balance abatement available for balances of $5 or less"
                 .to_string(),
@@ -415,7 +402,10 @@ mod tests {
         i.error_after_written_irs_contact = false;
         let r = check(&i);
         assert!(!r.abatement_authorized);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6404(e)(1)") && n.contains("in writing")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6404(e)(1)") && n.contains("in writing")));
     }
 
     #[test]
@@ -424,7 +414,10 @@ mod tests {
         i.taxpayer_contributed_to_error_or_delay = true;
         let r = check(&i);
         assert!(!r.abatement_authorized);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6404(e)(1)") && n.contains("significantly contributed")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6404(e)(1)") && n.contains("significantly contributed")));
     }
 
     #[test]
@@ -433,13 +426,20 @@ mod tests {
         i.act_was_ministerial_or_managerial = false;
         let r = check(&i);
         assert!(!r.abatement_authorized);
-        assert!(r.notes.iter().any(|n| n.contains("§ 301.6404-2") && n.contains("legal-judgment-based")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 301.6404-2") && n.contains("legal-judgment-based")));
     }
 
     #[test]
     fn e_1_authorized_note_describes_ministerial_managerial() {
         let r = check(&e_1_base());
-        assert!(r.notes.iter().any(|n| n.contains("ministerial act = procedural/mechanical") && n.contains("managerial act = administrative")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("ministerial act = procedural/mechanical")
+                && n.contains("managerial act = administrative")));
     }
 
     #[test]
@@ -478,7 +478,10 @@ mod tests {
         i.taxpayer_caused_erroneous_refund = true;
         let r = check(&i);
         assert!(!r.abatement_authorized);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6404(e)(2)") && n.contains("taxpayer caused")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6404(e)(2)") && n.contains("taxpayer caused")));
     }
 
     #[test]
@@ -495,7 +498,10 @@ mod tests {
     fn f_three_element_test_satisfied_authorized() {
         let r = check(&f_base());
         assert!(r.abatement_authorized);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6404(f)") && n.contains("three-element test satisfied")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6404(f)") && n.contains("three-element test satisfied")));
     }
 
     #[test]
@@ -544,7 +550,10 @@ mod tests {
         i.days_from_filing_to_irs_notification = 1200;
         let r = check(&i);
         assert!(r.abatement_authorized);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6404(g)") && n.contains("interest SUSPENDS")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6404(g)") && n.contains("interest SUSPENDS")));
     }
 
     #[test]
@@ -553,7 +562,10 @@ mod tests {
         i.days_from_filing_to_irs_notification = 900;
         let r = check(&i);
         assert!(!r.abatement_authorized);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6404(g)") && n.contains("NOT engaged")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6404(g)") && n.contains("NOT engaged")));
     }
 
     #[test]
@@ -562,7 +574,10 @@ mod tests {
         i.return_timely_filed = false;
         let r = check(&i);
         assert!(!r.abatement_authorized);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6404(g)") && n.contains("timely-filed returns")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6404(g)") && n.contains("timely-filed returns")));
     }
 
     #[test]
@@ -614,25 +629,37 @@ mod tests {
         i.claim_pathway = AbatementPathway::GeneralAbatement;
         let r = check(&i);
         assert!(r.abatement_authorized);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6404(a)") && n.contains("DISCRETIONARY")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6404(a)") && n.contains("DISCRETIONARY")));
     }
 
     #[test]
     fn form_843_lookback_note_always_present() {
         let r = check(&e_1_base());
-        assert!(r.notes.iter().any(|n| n.contains("Form 843") && n.contains("§ 6511")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Form 843") && n.contains("§ 6511")));
     }
 
     #[test]
     fn section_6404_b_no_claim_right_note_present() {
         let r = check(&e_1_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6404(b)") && n.contains("NO statutory RIGHT")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6404(b)") && n.contains("NO statutory RIGHT")));
     }
 
     #[test]
     fn section_6404_h_tax_court_review_note() {
         let r = check(&e_1_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6404(h)") && n.contains("Tax Court") && n.contains("180 days")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6404(h)") && n.contains("Tax Court") && n.contains("180 days")));
     }
 
     #[test]

@@ -26,7 +26,12 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
-        Self { rsi_period: 14, short_roc: 11, long_roc: 14, wma_period: 10 }
+        Self {
+            rsi_period: 14,
+            short_roc: 11,
+            long_roc: 14,
+            wma_period: 10,
+        }
     }
 }
 
@@ -39,11 +44,7 @@ pub fn compute(closes: &[f64], cfg: Config) -> Vec<Option<f64>> {
     // Any param > input length cannot produce any output. Early-return
     // prevents an O(N²) blow-up in the WMA weight-sum loop below when a
     // caller passes a pathological period like usize::MAX.
-    if cfg.rsi_period > n
-        || cfg.short_roc > n
-        || cfg.long_roc > n
-        || cfg.wma_period > n
-    {
+    if cfg.rsi_period > n || cfg.short_roc > n || cfg.long_roc > n || cfg.wma_period > n {
         return out;
     }
     let rsi = indicators::rsi(closes, cfg.rsi_period);
@@ -57,7 +58,7 @@ pub fn compute(closes: &[f64], cfg: Config) -> Vec<Option<f64>> {
         if let (Some(n_), Some(s_), Some(l_)) = (now, s_then, l_then) {
             if s_.abs() > f64::EPSILON && l_.abs() > f64::EPSILON {
                 let short_roc = (n_ - s_) / s_;
-                let long_roc  = (n_ - l_) / l_;
+                let long_roc = (n_ - l_) / l_;
                 let v = short_roc + long_roc;
                 if v.is_finite() {
                     summed[i] = Some(v);
@@ -80,7 +81,10 @@ pub fn compute(closes: &[f64], cfg: Config) -> Vec<Option<f64>> {
         for (k, j) in ((i + 1 - wp)..=i).enumerate() {
             match summed[j] {
                 Some(v) => numer += v * (k + 1) as f64,
-                None => { ok = false; break; }
+                None => {
+                    ok = false;
+                    break;
+                }
             }
         }
         if ok && numer.is_finite() {
@@ -103,10 +107,22 @@ mod tests {
     fn invalid_config_returns_all_none() {
         let v = vec![100.0; 100];
         for cfg in [
-            Config { rsi_period: 0, ..Default::default() },
-            Config { short_roc: 0, ..Default::default() },
-            Config { long_roc: 0, ..Default::default() },
-            Config { wma_period: 0, ..Default::default() },
+            Config {
+                rsi_period: 0,
+                ..Default::default()
+            },
+            Config {
+                short_roc: 0,
+                ..Default::default()
+            },
+            Config {
+                long_roc: 0,
+                ..Default::default()
+            },
+            Config {
+                wma_period: 0,
+                ..Default::default()
+            },
         ] {
             assert!(compute(&v, cfg).iter().all(|x| x.is_none()));
         }
@@ -121,7 +137,10 @@ mod tests {
         let v = vec![100.0; 100];
         let out = compute(&v, Config::default());
         for x in out.iter().flatten() {
-            assert!(x.abs() < 1e-9, "flat series should yield 0 coppock, got {x}");
+            assert!(
+                x.abs() < 1e-9,
+                "flat series should yield 0 coppock, got {x}"
+            );
         }
     }
 

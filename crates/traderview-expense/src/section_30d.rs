@@ -189,8 +189,16 @@ pub fn compute(input: &Section30DInput) -> Section30DResult {
         };
     }
 
-    let critical_minerals = if input.meets_critical_minerals_test { 375000 } else { 0 };
-    let battery_components = if input.meets_battery_components_test { 375000 } else { 0 };
+    let critical_minerals = if input.meets_critical_minerals_test {
+        375000
+    } else {
+        0
+    };
+    let battery_components = if input.meets_battery_components_test {
+        375000
+    } else {
+        0
+    };
     let credit = critical_minerals + battery_components;
 
     Section30DResult {
@@ -267,8 +275,16 @@ mod tests {
     #[test]
     fn full_7500_credit_for_eligible_vehicle() {
         let r = compute(&input(
-            2024, 6, 1, false, VehicleType::Car, 40_000_00, 100_000_00,
-            FilingStatus::Single, true, true,
+            2024,
+            6,
+            1,
+            false,
+            VehicleType::Car,
+            40_000_00,
+            100_000_00,
+            FilingStatus::Single,
+            true,
+            true,
         ));
         assert_eq!(r.credit_amount_cents, 7_500_00);
         assert!(r.credit_eligible);
@@ -277,8 +293,16 @@ mod tests {
     #[test]
     fn half_credit_critical_minerals_only() {
         let r = compute(&input(
-            2024, 6, 1, false, VehicleType::Car, 40_000_00, 100_000_00,
-            FilingStatus::Single, true, false,
+            2024,
+            6,
+            1,
+            false,
+            VehicleType::Car,
+            40_000_00,
+            100_000_00,
+            FilingStatus::Single,
+            true,
+            false,
         ));
         assert_eq!(r.credit_amount_cents, 3_750_00);
     }
@@ -286,8 +310,16 @@ mod tests {
     #[test]
     fn half_credit_battery_components_only() {
         let r = compute(&input(
-            2024, 6, 1, false, VehicleType::Car, 40_000_00, 100_000_00,
-            FilingStatus::Single, false, true,
+            2024,
+            6,
+            1,
+            false,
+            VehicleType::Car,
+            40_000_00,
+            100_000_00,
+            FilingStatus::Single,
+            false,
+            true,
         ));
         assert_eq!(r.credit_amount_cents, 3_750_00);
     }
@@ -295,8 +327,16 @@ mod tests {
     #[test]
     fn no_credit_neither_test_met() {
         let r = compute(&input(
-            2024, 6, 1, false, VehicleType::Car, 40_000_00, 100_000_00,
-            FilingStatus::Single, false, false,
+            2024,
+            6,
+            1,
+            false,
+            VehicleType::Car,
+            40_000_00,
+            100_000_00,
+            FilingStatus::Single,
+            false,
+            false,
         ));
         assert_eq!(r.credit_amount_cents, 0);
         assert!(!r.credit_eligible);
@@ -305,8 +345,16 @@ mod tests {
     #[test]
     fn obbba_termination_acquired_after_2025_09_30() {
         let r = compute(&input(
-            2025, 10, 1, false, VehicleType::Car, 40_000_00, 100_000_00,
-            FilingStatus::Single, true, true,
+            2025,
+            10,
+            1,
+            false,
+            VehicleType::Car,
+            40_000_00,
+            100_000_00,
+            FilingStatus::Single,
+            true,
+            true,
         ));
         assert!(r.acquisition_after_obbba_termination);
         assert_eq!(r.credit_amount_cents, 0);
@@ -318,8 +366,16 @@ mod tests {
     fn at_2025_09_30_boundary_still_eligible() {
         // Exactly on the cutoff date — not "after" → still eligible.
         let r = compute(&input(
-            2025, 9, 30, false, VehicleType::Car, 40_000_00, 100_000_00,
-            FilingStatus::Single, true, true,
+            2025,
+            9,
+            30,
+            false,
+            VehicleType::Car,
+            40_000_00,
+            100_000_00,
+            FilingStatus::Single,
+            true,
+            true,
         ));
         assert!(!r.acquisition_after_obbba_termination);
         assert_eq!(r.credit_amount_cents, 7_500_00);
@@ -328,8 +384,16 @@ mod tests {
     #[test]
     fn one_day_after_cutoff_terminated() {
         let r = compute(&input(
-            2025, 10, 1, false, VehicleType::Car, 40_000_00, 100_000_00,
-            FilingStatus::Single, true, true,
+            2025,
+            10,
+            1,
+            false,
+            VehicleType::Car,
+            40_000_00,
+            100_000_00,
+            FilingStatus::Single,
+            true,
+            true,
         ));
         assert!(r.acquisition_after_obbba_termination);
         assert_eq!(r.credit_amount_cents, 0);
@@ -338,8 +402,16 @@ mod tests {
     #[test]
     fn binding_contract_carve_out_preserves_credit_after_cutoff() {
         let r = compute(&input(
-            2025, 11, 15, true, VehicleType::Car, 40_000_00, 100_000_00,
-            FilingStatus::Single, true, true,
+            2025,
+            11,
+            15,
+            true,
+            VehicleType::Car,
+            40_000_00,
+            100_000_00,
+            FilingStatus::Single,
+            true,
+            true,
         ));
         assert!(r.acquisition_after_obbba_termination);
         assert!(r.binding_contract_carve_out_applied);
@@ -351,8 +423,16 @@ mod tests {
     fn no_carve_out_no_payment_blocks_post_cutoff() {
         // After cutoff + no binding contract → blocked.
         let r = compute(&input(
-            2025, 11, 15, false, VehicleType::Car, 40_000_00, 100_000_00,
-            FilingStatus::Single, true, true,
+            2025,
+            11,
+            15,
+            false,
+            VehicleType::Car,
+            40_000_00,
+            100_000_00,
+            FilingStatus::Single,
+            true,
+            true,
         ));
         assert_eq!(r.credit_amount_cents, 0);
         assert!(!r.binding_contract_carve_out_applied);
@@ -361,8 +441,16 @@ mod tests {
     #[test]
     fn magi_over_150k_single_no_credit() {
         let r = compute(&input(
-            2024, 6, 1, false, VehicleType::Car, 40_000_00, 200_000_00,
-            FilingStatus::Single, true, true,
+            2024,
+            6,
+            1,
+            false,
+            VehicleType::Car,
+            40_000_00,
+            200_000_00,
+            FilingStatus::Single,
+            true,
+            true,
         ));
         assert_eq!(r.credit_amount_cents, 0);
         assert!(r.citation.contains("§ 30D(f)(10)"));
@@ -372,8 +460,16 @@ mod tests {
     #[test]
     fn magi_at_150k_single_boundary_eligible() {
         let r = compute(&input(
-            2024, 6, 1, false, VehicleType::Car, 40_000_00, 150_000_00,
-            FilingStatus::Single, true, true,
+            2024,
+            6,
+            1,
+            false,
+            VehicleType::Car,
+            40_000_00,
+            150_000_00,
+            FilingStatus::Single,
+            true,
+            true,
         ));
         assert!(r.magi_under_threshold);
         assert_eq!(r.credit_amount_cents, 7_500_00);
@@ -382,7 +478,16 @@ mod tests {
     #[test]
     fn magi_at_150k_plus_one_cent_blocks() {
         let r = compute(&input(
-            2024, 6, 1, false, VehicleType::Car, 40_000_00, 150_000_00 + 1, FilingStatus::Single, true, true,
+            2024,
+            6,
+            1,
+            false,
+            VehicleType::Car,
+            40_000_00,
+            150_000_00 + 1,
+            FilingStatus::Single,
+            true,
+            true,
         ));
         assert_eq!(r.credit_amount_cents, 0);
     }
@@ -390,8 +495,16 @@ mod tests {
     #[test]
     fn mfj_uses_300k_threshold() {
         let r = compute(&input(
-            2024, 6, 1, false, VehicleType::Car, 40_000_00, 280_000_00,
-            FilingStatus::MarriedFilingJointly, true, true,
+            2024,
+            6,
+            1,
+            false,
+            VehicleType::Car,
+            40_000_00,
+            280_000_00,
+            FilingStatus::MarriedFilingJointly,
+            true,
+            true,
         ));
         assert_eq!(r.magi_threshold_cents, 300_000_00);
         assert_eq!(r.credit_amount_cents, 7_500_00);
@@ -400,8 +513,16 @@ mod tests {
     #[test]
     fn hoh_uses_225k_threshold() {
         let r = compute(&input(
-            2024, 6, 1, false, VehicleType::Car, 40_000_00, 200_000_00,
-            FilingStatus::HeadOfHousehold, true, true,
+            2024,
+            6,
+            1,
+            false,
+            VehicleType::Car,
+            40_000_00,
+            200_000_00,
+            FilingStatus::HeadOfHousehold,
+            true,
+            true,
         ));
         assert_eq!(r.magi_threshold_cents, 225_000_00);
         assert_eq!(r.credit_amount_cents, 7_500_00);
@@ -411,8 +532,16 @@ mod tests {
     fn mfs_uses_150k_threshold_not_300k() {
         // MFS gets the SAME treatment as Single, not half of MFJ.
         let r = compute(&input(
-            2024, 6, 1, false, VehicleType::Car, 40_000_00, 200_000_00,
-            FilingStatus::MarriedFilingSeparately, true, true,
+            2024,
+            6,
+            1,
+            false,
+            VehicleType::Car,
+            40_000_00,
+            200_000_00,
+            FilingStatus::MarriedFilingSeparately,
+            true,
+            true,
         ));
         assert_eq!(r.magi_threshold_cents, 150_000_00);
         assert_eq!(r.credit_amount_cents, 0);
@@ -421,8 +550,16 @@ mod tests {
     #[test]
     fn car_msrp_over_55k_blocks_credit() {
         let r = compute(&input(
-            2024, 6, 1, false, VehicleType::Car, 56_000_00, 100_000_00,
-            FilingStatus::Single, true, true,
+            2024,
+            6,
+            1,
+            false,
+            VehicleType::Car,
+            56_000_00,
+            100_000_00,
+            FilingStatus::Single,
+            true,
+            true,
         ));
         assert_eq!(r.credit_amount_cents, 0);
         assert!(!r.msrp_under_cap);
@@ -432,8 +569,16 @@ mod tests {
     #[test]
     fn car_msrp_at_55k_boundary_eligible() {
         let r = compute(&input(
-            2024, 6, 1, false, VehicleType::Car, 55_000_00, 100_000_00,
-            FilingStatus::Single, true, true,
+            2024,
+            6,
+            1,
+            false,
+            VehicleType::Car,
+            55_000_00,
+            100_000_00,
+            FilingStatus::Single,
+            true,
+            true,
         ));
         assert!(r.msrp_under_cap);
         assert_eq!(r.credit_amount_cents, 7_500_00);
@@ -442,8 +587,16 @@ mod tests {
     #[test]
     fn suv_msrp_up_to_80k_eligible() {
         let r = compute(&input(
-            2024, 6, 1, false, VehicleType::SuvTruckVan, 80_000_00, 100_000_00,
-            FilingStatus::Single, true, true,
+            2024,
+            6,
+            1,
+            false,
+            VehicleType::SuvTruckVan,
+            80_000_00,
+            100_000_00,
+            FilingStatus::Single,
+            true,
+            true,
         ));
         assert_eq!(r.msrp_cap_cents, 80_000_00);
         assert_eq!(r.credit_amount_cents, 7_500_00);
@@ -452,8 +605,16 @@ mod tests {
     #[test]
     fn suv_msrp_over_80k_blocks_credit() {
         let r = compute(&input(
-            2024, 6, 1, false, VehicleType::SuvTruckVan, 81_000_00, 100_000_00,
-            FilingStatus::Single, true, true,
+            2024,
+            6,
+            1,
+            false,
+            VehicleType::SuvTruckVan,
+            81_000_00,
+            100_000_00,
+            FilingStatus::Single,
+            true,
+            true,
         ));
         assert_eq!(r.credit_amount_cents, 0);
     }
@@ -461,8 +622,16 @@ mod tests {
     #[test]
     fn pre_termination_2024_eligible_with_all_conditions() {
         let r = compute(&input(
-            2024, 1, 15, false, VehicleType::Car, 40_000_00, 100_000_00,
-            FilingStatus::Single, true, true,
+            2024,
+            1,
+            15,
+            false,
+            VehicleType::Car,
+            40_000_00,
+            100_000_00,
+            FilingStatus::Single,
+            true,
+            true,
         ));
         assert_eq!(r.credit_amount_cents, 7_500_00);
         assert!(!r.acquisition_after_obbba_termination);
@@ -472,8 +641,16 @@ mod tests {
     fn termination_check_order_independent_of_other_blocks() {
         // High MSRP + post-termination — termination should fire first.
         let r = compute(&input(
-            2026, 1, 1, false, VehicleType::Car, 100_000_00, 100_000_00,
-            FilingStatus::Single, true, true,
+            2026,
+            1,
+            1,
+            false,
+            VehicleType::Car,
+            100_000_00,
+            100_000_00,
+            FilingStatus::Single,
+            true,
+            true,
         ));
         assert!(r.citation.contains("TERMINATED"));
     }
@@ -481,8 +658,16 @@ mod tests {
     #[test]
     fn full_credit_breakdown_matches_components() {
         let r = compute(&input(
-            2024, 6, 1, false, VehicleType::Car, 40_000_00, 100_000_00,
-            FilingStatus::Single, true, true,
+            2024,
+            6,
+            1,
+            false,
+            VehicleType::Car,
+            40_000_00,
+            100_000_00,
+            FilingStatus::Single,
+            true,
+            true,
         ));
         assert_eq!(r.critical_minerals_amount_cents, 3_750_00);
         assert_eq!(r.battery_components_amount_cents, 3_750_00);
@@ -495,26 +680,58 @@ mod tests {
     #[test]
     fn citations_pin_correct_authorities() {
         let pre = compute(&input(
-            2024, 6, 1, false, VehicleType::Car, 40_000_00, 100_000_00,
-            FilingStatus::Single, true, true,
+            2024,
+            6,
+            1,
+            false,
+            VehicleType::Car,
+            40_000_00,
+            100_000_00,
+            FilingStatus::Single,
+            true,
+            true,
         ));
         assert!(pre.citation.contains("§ 30D(e)"));
 
         let post = compute(&input(
-            2026, 1, 1, false, VehicleType::Car, 40_000_00, 100_000_00,
-            FilingStatus::Single, true, true,
+            2026,
+            1,
+            1,
+            false,
+            VehicleType::Car,
+            40_000_00,
+            100_000_00,
+            FilingStatus::Single,
+            true,
+            true,
         ));
         assert!(post.citation.contains("OBBBA § 70424"));
 
         let high_magi = compute(&input(
-            2024, 6, 1, false, VehicleType::Car, 40_000_00, 200_000_00,
-            FilingStatus::Single, true, true,
+            2024,
+            6,
+            1,
+            false,
+            VehicleType::Car,
+            40_000_00,
+            200_000_00,
+            FilingStatus::Single,
+            true,
+            true,
         ));
         assert!(high_magi.citation.contains("§ 30D(f)(10)"));
 
         let high_msrp = compute(&input(
-            2024, 6, 1, false, VehicleType::Car, 60_000_00, 100_000_00,
-            FilingStatus::Single, true, true,
+            2024,
+            6,
+            1,
+            false,
+            VehicleType::Car,
+            60_000_00,
+            100_000_00,
+            FilingStatus::Single,
+            true,
+            true,
         ));
         assert!(high_msrp.citation.contains("§ 30D(f)(11)"));
     }
@@ -522,12 +739,28 @@ mod tests {
     #[test]
     fn year_boundary_2024_pre_termination_2026_post() {
         let r_2024 = compute(&input(
-            2024, 12, 31, false, VehicleType::Car, 40_000_00, 100_000_00,
-            FilingStatus::Single, true, true,
+            2024,
+            12,
+            31,
+            false,
+            VehicleType::Car,
+            40_000_00,
+            100_000_00,
+            FilingStatus::Single,
+            true,
+            true,
         ));
         let r_2026 = compute(&input(
-            2026, 1, 1, false, VehicleType::Car, 40_000_00, 100_000_00,
-            FilingStatus::Single, true, true,
+            2026,
+            1,
+            1,
+            false,
+            VehicleType::Car,
+            40_000_00,
+            100_000_00,
+            FilingStatus::Single,
+            true,
+            true,
         ));
         assert_eq!(r_2024.credit_amount_cents, 7_500_00);
         assert_eq!(r_2026.credit_amount_cents, 0);
@@ -536,16 +769,40 @@ mod tests {
     #[test]
     fn date_boundary_2025_09_29_vs_30_vs_oct_1() {
         let day29 = compute(&input(
-            2025, 9, 29, false, VehicleType::Car, 40_000_00, 100_000_00,
-            FilingStatus::Single, true, true,
+            2025,
+            9,
+            29,
+            false,
+            VehicleType::Car,
+            40_000_00,
+            100_000_00,
+            FilingStatus::Single,
+            true,
+            true,
         ));
         let day30 = compute(&input(
-            2025, 9, 30, false, VehicleType::Car, 40_000_00, 100_000_00,
-            FilingStatus::Single, true, true,
+            2025,
+            9,
+            30,
+            false,
+            VehicleType::Car,
+            40_000_00,
+            100_000_00,
+            FilingStatus::Single,
+            true,
+            true,
         ));
         let oct1 = compute(&input(
-            2025, 10, 1, false, VehicleType::Car, 40_000_00, 100_000_00,
-            FilingStatus::Single, true, true,
+            2025,
+            10,
+            1,
+            false,
+            VehicleType::Car,
+            40_000_00,
+            100_000_00,
+            FilingStatus::Single,
+            true,
+            true,
         ));
         assert_eq!(day29.credit_amount_cents, 7_500_00);
         assert_eq!(day30.credit_amount_cents, 7_500_00);

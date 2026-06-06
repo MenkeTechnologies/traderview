@@ -192,13 +192,7 @@ mod tests {
 
     #[test]
     fn co_carpet_past_10_years_zero_deduction() {
-        let r = check(&input(
-            Regime::ColoradoHb251249,
-            11,
-            2_000_00,
-            true,
-            true,
-        ));
+        let r = check(&input(Regime::ColoradoHb251249, 11, 2_000_00, true, true));
         assert_eq!(r.allowed_deduction_cents, 0);
         assert!(r.carpet_past_useful_life);
         assert_eq!(r.useful_life_years, 10);
@@ -207,13 +201,7 @@ mod tests {
     #[test]
     fn co_carpet_at_10_year_boundary_past() {
         // At 10 years, carpet is considered past useful life.
-        let r = check(&input(
-            Regime::ColoradoHb251249,
-            10,
-            2_000_00,
-            true,
-            true,
-        ));
+        let r = check(&input(Regime::ColoradoHb251249, 10, 2_000_00, true, true));
         assert!(r.carpet_past_useful_life);
         assert_eq!(r.allowed_deduction_cents, 0);
     }
@@ -221,13 +209,7 @@ mod tests {
     #[test]
     fn co_carpet_9_years_with_damage_5_years_remaining_proration() {
         // 9 years old, 1 year remaining. Cost $2000 × 1/10 = $200.
-        let r = check(&input(
-            Regime::ColoradoHb251249,
-            9,
-            2_000_00,
-            true,
-            true,
-        ));
+        let r = check(&input(Regime::ColoradoHb251249, 9, 2_000_00, true, true));
         assert_eq!(r.allowed_deduction_cents, 200_00);
         assert_eq!(r.remaining_life_years, 1);
     }
@@ -236,13 +218,7 @@ mod tests {
     fn co_no_substantial_damage_no_deduction() {
         // Regression-critical: without substantial+irreparable damage,
         // CO HB 25-1249 bars deduction.
-        let r = check(&input(
-            Regime::ColoradoHb251249,
-            5,
-            2_000_00,
-            false,
-            true,
-        ));
+        let r = check(&input(Regime::ColoradoHb251249, 5, 2_000_00, false, true));
         assert_eq!(r.allowed_deduction_cents, 0);
         assert!(r.citation.contains("substantial + irreparable"));
     }
@@ -251,13 +227,7 @@ mod tests {
     fn co_not_replaced_new_within_10_years_no_deduction() {
         // Regression-critical: CO HB 25-1249 — cannot deem damage unless
         // carpet was replaced new within useful-life window.
-        let r = check(&input(
-            Regime::ColoradoHb251249,
-            5,
-            2_000_00,
-            true,
-            false,
-        ));
+        let r = check(&input(Regime::ColoradoHb251249, 5, 2_000_00, true, false));
         assert_eq!(r.allowed_deduction_cents, 0);
     }
 
@@ -362,13 +332,7 @@ mod tests {
     #[test]
     fn co_useful_life_longest_at_10_years() {
         // CO 10 > CA 8 > HUD 7 = Default 7. Regression-critical ordering.
-        let co = check(&input(
-            Regime::ColoradoHb251249,
-            0,
-            2_000_00,
-            true,
-            true,
-        ));
+        let co = check(&input(Regime::ColoradoHb251249, 0, 2_000_00, true, true));
         let ca = check(&input(Regime::California, 0, 2_000_00, true, true));
         let hud = check(&input(Regime::HudSection8, 0, 2_000_00, true, true));
         let d = check(&input(Regime::Default, 0, 2_000_00, true, true));
@@ -381,13 +345,7 @@ mod tests {
     fn only_co_has_substantial_damage_gate() {
         // Same no-substantial-damage scenario across regimes. CO →
         // zero deduction; others → prorated.
-        let co = check(&input(
-            Regime::ColoradoHb251249,
-            5,
-            2_000_00,
-            false,
-            true,
-        ));
+        let co = check(&input(Regime::ColoradoHb251249, 5, 2_000_00, false, true));
         let ca = check(&input(Regime::California, 5, 2_000_00, false, true));
         let hud = check(&input(Regime::HudSection8, 5, 2_000_00, false, true));
         let d = check(&input(Regime::Default, 5, 2_000_00, false, true));
@@ -400,13 +358,7 @@ mod tests {
     #[test]
     fn only_co_requires_replaced_new_within_useful_life() {
         // Same not-recently-replaced scenario. CO → zero; others → prorated.
-        let co = check(&input(
-            Regime::ColoradoHb251249,
-            5,
-            2_000_00,
-            true,
-            false,
-        ));
+        let co = check(&input(Regime::ColoradoHb251249, 5, 2_000_00, true, false));
         let ca = check(&input(Regime::California, 5, 2_000_00, true, false));
         assert_eq!(co.allowed_deduction_cents, 0);
         assert!(ca.allowed_deduction_cents > 0);
@@ -414,13 +366,7 @@ mod tests {
 
     #[test]
     fn citations_pin_correct_authorities() {
-        let co = check(&input(
-            Regime::ColoradoHb251249,
-            5,
-            2_000_00,
-            true,
-            true,
-        ));
+        let co = check(&input(Regime::ColoradoHb251249, 5, 2_000_00, true, true));
         assert!(co.citation.contains("HB 25-1249"));
         assert!(co.citation.contains("2026-01-01"));
 
@@ -448,13 +394,7 @@ mod tests {
     fn co_with_damage_and_recent_replacement_proration_applies() {
         // CO gates: substantial damage YES + replaced within useful life YES
         // → standard proration applies.
-        let r = check(&input(
-            Regime::ColoradoHb251249,
-            5,
-            2_000_00,
-            true,
-            true,
-        ));
+        let r = check(&input(Regime::ColoradoHb251249, 5, 2_000_00, true, true));
         // 5 of 10 used → 5 remaining → $2000 × 5/10 = $1000.
         assert_eq!(r.allowed_deduction_cents, 1_000_00);
     }

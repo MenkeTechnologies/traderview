@@ -198,7 +198,11 @@ pub fn check(input: &TowingInput) -> TowingResult {
                         .to_string(),
                 );
             }
-            let storage_limit = if input.fl_county_population_500k_plus { 10 } else { 15 };
+            let storage_limit = if input.fl_county_population_500k_plus {
+                10
+            } else {
+                15
+            };
             if input.fl_storage_distance_miles > storage_limit {
                 violations.push(format!(
                     "Fla. Stat. § 715.07(2)(a)(3) — storage location {} miles exceeds {}-mile radius for {} county",
@@ -358,7 +362,10 @@ mod tests {
         i.tow_reason = TowReason::AbandonedVehicle;
         i.ca_ninety_six_hours_elapsed_since_parking_notice = false;
         let r = check(&i);
-        assert!(r.lawful_tow, "96-hour rule applies only to UnauthorizedParking");
+        assert!(
+            r.lawful_tow,
+            "96-hour rule applies only to UnauthorizedParking"
+        );
     }
 
     #[test]
@@ -427,10 +434,7 @@ mod tests {
         i.fl_storage_distance_miles = 11;
         let r = check(&i);
         assert!(!r.lawful_tow);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("§ 715.07(2)(a)(3)")));
+        assert!(r.violations.iter().any(|v| v.contains("§ 715.07(2)(a)(3)")));
         assert!(r.violations.iter().any(|v| v.contains("11 miles")));
     }
 
@@ -470,10 +474,7 @@ mod tests {
         i.fl_minutes_to_law_enforcement_notification = 31;
         let r = check(&i);
         assert!(!r.lawful_tow);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("§ 715.07(2)(a)(4)")));
+        assert!(r.violations.iter().any(|v| v.contains("§ 715.07(2)(a)(4)")));
     }
 
     #[test]
@@ -483,7 +484,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.lawful_tow);
         assert!(r.violations.iter().any(|v| v.contains("§ 715.07(4)")));
-        assert!(r.violations.iter().any(|v| v.contains("half the posted rate")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("half the posted rate")));
     }
 
     #[test]
@@ -493,10 +497,7 @@ mod tests {
         i.single_family_residence = true;
         let r = check(&i);
         assert!(r.lawful_tow);
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("§ 715.07(2)(c)")));
+        assert!(r.notes.iter().any(|n| n.contains("§ 715.07(2)(c)")));
     }
 
     #[test]

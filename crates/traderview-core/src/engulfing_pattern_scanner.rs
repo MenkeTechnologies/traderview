@@ -27,7 +27,12 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub open: f64, pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct EngulfingReport {
@@ -43,9 +48,12 @@ pub fn compute(bars: &[Bar], trend_period: usize) -> EngulfingReport {
         bearish_strength: vec![None; n],
         trend_period,
     };
-    if trend_period < 2 || n < trend_period + 1 { return report; }
-    if bars.iter().any(|b| !b.open.is_finite() || !b.high.is_finite()
-        || !b.low.is_finite() || !b.close.is_finite()) {
+    if trend_period < 2 || n < trend_period + 1 {
+        return report;
+    }
+    if bars.iter().any(|b| {
+        !b.open.is_finite() || !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()
+    }) {
         return report;
     }
     let p_f = trend_period as f64;
@@ -62,19 +70,27 @@ pub fn compute(bars: &[Bar], trend_period: usize) -> EngulfingReport {
         let cur = bars[i];
         let prev_body = (prev.close - prev.open).abs();
         let cur_body = (cur.close - cur.open).abs();
-        if prev_body <= 0.0 { continue; }
+        if prev_body <= 0.0 {
+            continue;
+        }
         let ratio = (cur_body / prev_body).min(5.0);
         let normalized = ratio / 5.0;
         // Bullish: prior bar bearish, current bullish, engulfing geometry,
         // prior close below trend (pullback into down-leg of trend).
-        if prev.close < prev.open && cur.close > cur.open
-            && cur.open <= prev.close && cur.close >= prev.open
-            && prev.close < m {
+        if prev.close < prev.open
+            && cur.close > cur.open
+            && cur.open <= prev.close
+            && cur.close >= prev.open
+            && prev.close < m
+        {
             report.bullish_strength[i] = Some(normalized);
         }
-        if prev.close > prev.open && cur.close < cur.open
-            && cur.open >= prev.close && cur.close <= prev.open
-            && prev.close > m {
+        if prev.close > prev.open
+            && cur.close < cur.open
+            && cur.open >= prev.close
+            && cur.close <= prev.open
+            && prev.close > m
+        {
             report.bearish_strength[i] = Some(normalized);
         }
     }
@@ -86,7 +102,12 @@ mod tests {
     use super::*;
 
     fn bar(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -109,10 +130,12 @@ mod tests {
     #[test]
     fn classic_bullish_engulfing_detected() {
         // 20 down bars, then bearish bar, then strong bullish engulfing bar.
-        let mut bars: Vec<_> = (0..20).map(|i| {
-            let p = 100.0 - i as f64 * 0.5;
-            bar(p, p + 0.5, p - 0.5, p - 0.3)
-        }).collect();
+        let mut bars: Vec<_> = (0..20)
+            .map(|i| {
+                let p = 100.0 - i as f64 * 0.5;
+                bar(p, p + 0.5, p - 0.5, p - 0.3)
+            })
+            .collect();
         // Prior bar bearish at base.
         bars.push(bar(90.5, 91.0, 89.0, 89.5));
         // Engulfing bar.
@@ -125,10 +148,12 @@ mod tests {
 
     #[test]
     fn classic_bearish_engulfing_detected() {
-        let mut bars: Vec<_> = (0..20).map(|i| {
-            let p = 100.0 + i as f64 * 0.5;
-            bar(p, p + 0.5, p - 0.5, p + 0.3)
-        }).collect();
+        let mut bars: Vec<_> = (0..20)
+            .map(|i| {
+                let p = 100.0 + i as f64 * 0.5;
+                bar(p, p + 0.5, p - 0.5, p + 0.3)
+            })
+            .collect();
         bars.push(bar(109.5, 110.5, 109.0, 110.0));
         bars.push(bar(110.5, 111.0, 105.0, 108.0));
         let r = compute(&bars, 20);
@@ -142,10 +167,12 @@ mod tests {
         // bar + bullish engulfing — but trend filter requires prior
         // close BELOW SMA to fire bullish (counter-trend pullback). In
         // an uptrend the prior close sits ABOVE the SMA → no signal.
-        let mut bars: Vec<_> = (0..20).map(|i| {
-            let p = 100.0 + i as f64;
-            bar(p, p + 0.5, p - 0.5, p + 0.3)
-        }).collect();
+        let mut bars: Vec<_> = (0..20)
+            .map(|i| {
+                let p = 100.0 + i as f64;
+                bar(p, p + 0.5, p - 0.5, p + 0.3)
+            })
+            .collect();
         bars.push(bar(120.5, 121.0, 119.5, 120.0));
         bars.push(bar(119.8, 122.0, 119.5, 121.0));
         let r = compute(&bars, 20);

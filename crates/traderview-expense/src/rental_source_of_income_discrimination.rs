@@ -360,8 +360,7 @@ mod tests {
     #[test]
     fn compliant_voucher_acceptance_with_tenant_portion_screening() {
         let mut input = base();
-        input.landlord_action =
-            LandlordAction::CompliantAcceptedVoucherTenantPortionScreening;
+        input.landlord_action = LandlordAction::CompliantAcceptedVoucherTenantPortionScreening;
         let output = check(&input);
         assert_eq!(
             output.severity,
@@ -402,8 +401,7 @@ mod tests {
     fn new_jersey_minimum_income_rule_violation() {
         let mut input = base();
         input.jurisdiction = Jurisdiction::NewJersey;
-        input.landlord_action =
-            LandlordAction::MinimumIncomeTestAppliedToFullRentNotTenantPortion;
+        input.landlord_action = LandlordAction::MinimumIncomeTestAppliedToFullRentNotTenantPortion;
         let output = check(&input);
         assert_eq!(
             output.severity,
@@ -417,8 +415,7 @@ mod tests {
     fn washington_voucher_deduction_failure_violation() {
         let mut input = base();
         input.jurisdiction = Jurisdiction::Washington;
-        input.landlord_action =
-            LandlordAction::MinimumIncomeTestAppliedToFullRentNotTenantPortion;
+        input.landlord_action = LandlordAction::MinimumIncomeTestAppliedToFullRentNotTenantPortion;
         let output = check(&input);
         assert_eq!(
             output.severity,
@@ -467,7 +464,10 @@ mod tests {
         let mut input = base();
         input.jurisdiction = Jurisdiction::FederalFhaFloorOnly;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::FederalFhaDisparateImpactAvailable);
+        assert_eq!(
+            output.severity,
+            Severity::FederalFhaDisparateImpactAvailable
+        );
         assert!(output.note.contains("42 U.S.C. § 3601"));
         assert!(output.note.contains("Inclusive Communities"));
         assert!(output.note.contains("$19787"));
@@ -476,8 +476,7 @@ mod tests {
     #[test]
     fn vash_voucher_triggers_soi_analysis() {
         let mut input = base();
-        input.income_source =
-            IncomeSource::VashVeteransAffairsSupportiveHousingVoucher;
+        input.income_source = IncomeSource::VashVeteransAffairsSupportiveHousingVoucher;
         let output = check(&input);
         assert_eq!(
             output.severity,
@@ -521,8 +520,7 @@ mod tests {
     #[test]
     fn state_or_local_rental_assistance_triggers_soi_analysis() {
         let mut input = base();
-        input.income_source =
-            IncomeSource::StateOrLocalRentalAssistanceProgram;
+        input.income_source = IncomeSource::StateOrLocalRentalAssistanceProgram;
         let output = check(&input);
         assert_eq!(
             output.severity,

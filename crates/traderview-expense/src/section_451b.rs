@@ -126,14 +126,12 @@ pub fn compute(input: &Section451bInput) -> Section451bResult {
     } else {
         0
     };
-    let advance_deferred = if applies
-        && input.has_advance_payment
-        && input.elects_section_451c_one_year_deferral
-    {
-        (input.advance_payment_received_current_year_dollars - advance_current).max(0)
-    } else {
-        0
-    };
+    let advance_deferred =
+        if applies && input.has_advance_payment && input.elects_section_451c_one_year_deferral {
+            (input.advance_payment_received_current_year_dollars - advance_current).max(0)
+        } else {
+            0
+        };
 
     let note = if !post_tcja {
         format!(
@@ -318,7 +316,10 @@ mod tests {
         i.elects_section_451c_one_year_deferral = false;
         let r = compute(&i);
         assert_eq!(r.section_451c_advance_payment_current_year_dollars, 500_000);
-        assert_eq!(r.section_451c_advance_payment_deferred_to_next_year_dollars, 0);
+        assert_eq!(
+            r.section_451c_advance_payment_deferred_to_next_year_dollars,
+            0
+        );
     }
 
     #[test]
@@ -331,7 +332,10 @@ mod tests {
         i.elects_section_451c_one_year_deferral = true;
         let r = compute(&i);
         assert_eq!(r.section_451c_advance_payment_current_year_dollars, 100_000);
-        assert_eq!(r.section_451c_advance_payment_deferred_to_next_year_dollars, 400_000);
+        assert_eq!(
+            r.section_451c_advance_payment_deferred_to_next_year_dollars,
+            400_000
+        );
     }
 
     #[test]
@@ -344,7 +348,10 @@ mod tests {
         i.elects_section_451c_one_year_deferral = true;
         let r = compute(&i);
         assert_eq!(r.section_451c_advance_payment_current_year_dollars, 500_000);
-        assert_eq!(r.section_451c_advance_payment_deferred_to_next_year_dollars, 0);
+        assert_eq!(
+            r.section_451c_advance_payment_deferred_to_next_year_dollars,
+            0
+        );
     }
 
     // Notes / citations.

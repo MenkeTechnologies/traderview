@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct TradingDay {
-    pub trading_day_index: u32,    // increment by 1 per trading day
+    pub trading_day_index: u32, // increment by 1 per trading day
     pub close: f64,
 }
 
@@ -45,14 +45,20 @@ pub fn compute(
     window_before: u32,
     window_after: u32,
 ) -> Option<HolidaySeasonalityReport> {
-    if days.len() < 2 || holiday_indices.is_empty() { return None; }
-    if days.iter().any(|d| !d.close.is_finite() || d.close <= 0.0) { return None; }
+    if days.len() < 2 || holiday_indices.is_empty() {
+        return None;
+    }
+    if days.iter().any(|d| !d.close.is_finite() || d.close <= 0.0) {
+        return None;
+    }
     // Sort days by trading_day_index.
     let mut sorted: Vec<TradingDay> = days.to_vec();
     sorted.sort_by_key(|d| d.trading_day_index);
     // Build map from index → close for fast lookup.
-    let index_to_close: std::collections::BTreeMap<u32, f64> =
-        sorted.iter().map(|d| (d.trading_day_index, d.close)).collect();
+    let index_to_close: std::collections::BTreeMap<u32, f64> = sorted
+        .iter()
+        .map(|d| (d.trading_day_index, d.close))
+        .collect();
     let mut returns_by_offset: std::collections::BTreeMap<i32, Vec<f64>> =
         std::collections::BTreeMap::new();
     for &h in holiday_indices {
@@ -60,10 +66,17 @@ pub fn compute(
         let hi = h.saturating_add(window_after);
         for idx in lo..=hi {
             // We need close at idx and idx-1 to form a return; skip idx=0.
-            if idx == 0 { continue; }
-            let (Some(&prev), Some(&cur)) = (index_to_close.get(&(idx - 1)), index_to_close.get(&idx))
-                else { continue };
-            if prev <= 0.0 || cur <= 0.0 { continue; }
+            if idx == 0 {
+                continue;
+            }
+            let (Some(&prev), Some(&cur)) =
+                (index_to_close.get(&(idx - 1)), index_to_close.get(&idx))
+            else {
+                continue;
+            };
+            if prev <= 0.0 || cur <= 0.0 {
+                continue;
+            }
             let r = (cur / prev).ln();
             let offset = idx as i32 - h as i32;
             returns_by_offset.entry(offset).or_default().push(r);
@@ -96,7 +109,10 @@ mod tests {
     use super::*;
 
     fn d(idx: u32, close: f64) -> TradingDay {
-        TradingDay { trading_day_index: idx, close }
+        TradingDay {
+            trading_day_index: idx,
+            close,
+        }
     }
 
     #[test]
@@ -112,11 +128,14 @@ mod tests {
         // (offset -1) AND day 11 (offset +1).
         // 21 trading days, holiday at index 10.
         let mut closes = [100.0_f64; 21];
-        closes[10] = 101.0;    // ret on day 10 (offset 0) = ln(1.01)
-        closes[12] = 102.01;   // ret on day 12 (offset +2) = ln(102.01/101)
-        // day 11 stays at 100 → ret on day 11 = ln(100/101) (negative)
-        let days: Vec<_> = closes.iter().enumerate()
-            .map(|(i, &c)| d(i as u32, c)).collect();
+        closes[10] = 101.0; // ret on day 10 (offset 0) = ln(1.01)
+        closes[12] = 102.01; // ret on day 12 (offset +2) = ln(102.01/101)
+                             // day 11 stays at 100 → ret on day 11 = ln(100/101) (negative)
+        let days: Vec<_> = closes
+            .iter()
+            .enumerate()
+            .map(|(i, &c)| d(i as u32, c))
+            .collect();
         let r = compute(&days, &[10], 3, 3).unwrap();
         assert!(!r.by_offset.is_empty());
         // Offset 0 (= holiday itself) should have positive return.
@@ -130,8 +149,11 @@ mod tests {
         let mut closes = vec![100.0_f64; 30];
         closes[5] = 101.0;
         closes[25] = 101.0;
-        let days: Vec<_> = closes.iter().enumerate()
-            .map(|(i, &c)| d(i as u32, c)).collect();
+        let days: Vec<_> = closes
+            .iter()
+            .enumerate()
+            .map(|(i, &c)| d(i as u32, c))
+            .collect();
         let r = compute(&days, &[5, 25], 2, 2).unwrap();
         // Offset 0 should have 2 samples.
         let off0 = r.by_offset.iter().find(|s| s.offset == 0).unwrap();

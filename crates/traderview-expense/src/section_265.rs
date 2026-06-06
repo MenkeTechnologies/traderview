@@ -258,7 +258,9 @@ fn apply_section_265b_bank_pro_rata(input: &Input) -> Output {
         .saturating_div(10_000)
         .saturating_div(10_000);
     let raw_disallowed_u64 = u64::try_from(raw_disallowed).unwrap_or(u64::MAX);
-    let allowed = input.interest_expense_cents.saturating_sub(raw_disallowed_u64);
+    let allowed = input
+        .interest_expense_cents
+        .saturating_sub(raw_disallowed_u64);
 
     let effective_bps = u32::try_from(
         u128::from(disallowance_bps)
@@ -439,8 +441,7 @@ mod tests {
     #[test]
     fn bank_qualified_291e_twenty_pct_disallowance() {
         let mut input = base_bank();
-        input.bond_classification =
-            BondClassification::BankQualifiedQualifiedTaxExemptObligation;
+        input.bond_classification = BondClassification::BankQualifiedQualifiedTaxExemptObligation;
         let output = check(&input);
         assert_eq!(
             output.severity,
@@ -535,8 +536,7 @@ mod tests {
     #[test]
     fn note_pins_bank_qualified_10m_issuer_cap() {
         let mut input = base_bank();
-        input.bond_classification =
-            BondClassification::BankQualifiedQualifiedTaxExemptObligation;
+        input.bond_classification = BondClassification::BankQualifiedQualifiedTaxExemptObligation;
         let output = check(&input);
         assert!(output.note.contains("$10,000,000"));
         assert!(output.note.contains("calendar year"));

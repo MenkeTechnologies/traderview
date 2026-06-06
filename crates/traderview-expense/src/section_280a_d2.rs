@@ -128,8 +128,7 @@ fn classify(period: &OccupancyPeriod) -> (Classification, String) {
             } else {
                 (
                     Classification::PersonalUse,
-                    "unrelated occupant with no rent = personal use (gratuitous use)"
-                        .into(),
+                    "unrelated occupant with no rent = personal use (gratuitous use)".into(),
                 )
             }
         }
@@ -139,8 +138,7 @@ fn classify(period: &OccupancyPeriod) -> (Classification, String) {
             if period.shared_equity_arrangement {
                 return (
                     Classification::RentalUse,
-                    "§280A(d)(3) shared-equity-financing arrangement: rental use"
-                        .into(),
+                    "§280A(d)(3) shared-equity-financing arrangement: rental use".into(),
                 );
             }
             if period.used_as_principal_residence
@@ -246,7 +244,9 @@ mod tests {
         p.fair_market_rent_for_period = dec!(24000);
         let r = compute(&[p]);
         assert_eq!(r.rental_use_days, 365);
-        assert!(r.period_classifications[0].reason.contains("§280A(d)(2)(C)"));
+        assert!(r.period_classifications[0]
+            .reason
+            .contains("§280A(d)(2)(C)"));
     }
 
     #[test]
@@ -273,7 +273,9 @@ mod tests {
         p.fair_market_rent_for_period = dec!(5000);
         let r = compute(&[p]);
         assert_eq!(r.personal_use_days, 30);
-        assert!(r.period_classifications[0].reason.contains("not principal residence"));
+        assert!(r.period_classifications[0]
+            .reason
+            .contains("not principal residence"));
     }
 
     #[test]

@@ -367,7 +367,10 @@ mod tests {
         i.tank_location = TankLocation::UndergroundBuried;
         i.known_prior_release_or_remediation = true;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CerclaStrictLiabilityExposure));
+        assert!(matches!(
+            r.severity,
+            Severity::CerclaStrictLiabilityExposure
+        ));
         assert!(r
             .recommended_actions
             .iter()
@@ -412,15 +415,15 @@ mod tests {
         let mut i = baseline();
         i.visible_corrosion_or_oil_odor = true;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::ReplacementRequiredLeakDetected));
+        assert!(matches!(
+            r.severity,
+            Severity::ReplacementRequiredLeakDetected
+        ));
         assert!(r
             .recommended_actions
             .iter()
             .any(|a| a.contains("precision-test")));
-        assert!(r
-            .recommended_actions
-            .iter()
-            .any(|a| a.contains("24 hours")));
+        assert!(r.recommended_actions.iter().any(|a| a.contains("24 hours")));
     }
 
     #[test]
@@ -451,11 +454,11 @@ mod tests {
         i.tank_material = TankMaterial::BareSteelUnprotected;
         i.tank_age_years = 30;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::ReplacementRequiredAgeFailure));
-        assert!(r
-            .recommended_actions
-            .iter()
-            .any(|a| a.contains("90 days")));
+        assert!(matches!(
+            r.severity,
+            Severity::ReplacementRequiredAgeFailure
+        ));
+        assert!(r.recommended_actions.iter().any(|a| a.contains("90 days")));
     }
 
     #[test]
@@ -481,7 +484,10 @@ mod tests {
         let mut i = baseline();
         i.disclosure_provided_at_lease_signing = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::DisclosureRequiredNotProvided));
+        assert!(matches!(
+            r.severity,
+            Severity::DisclosureRequiredNotProvided
+        ));
         assert!(r
             .recommended_actions
             .iter()
@@ -493,7 +499,10 @@ mod tests {
         let mut i = baseline();
         i.disclosure_includes_age_and_location = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::DisclosureRequiredNotProvided));
+        assert!(matches!(
+            r.severity,
+            Severity::DisclosureRequiredNotProvided
+        ));
     }
 
     #[test]
@@ -503,7 +512,10 @@ mod tests {
         i.known_prior_release_or_remediation = true;
         i.disclosure_includes_known_releases = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::RescissionRiskFraudInInducement));
+        assert!(matches!(
+            r.severity,
+            Severity::RescissionRiskFraudInInducement
+        ));
         assert!(r
             .recommended_actions
             .iter()
@@ -516,7 +528,10 @@ mod tests {
         let i = baseline();
         let r = check(&i);
         assert!(r.notes.iter().any(|n| n.contains("NJDEP UHOT")));
-        assert!(r.notes.iter().any(|n| n.contains("N.J.A.C. 7:14B-1.6(a)(3)")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("N.J.A.C. 7:14B-1.6(a)(3)")));
         assert!(r
             .notes
             .iter()
@@ -581,10 +596,7 @@ mod tests {
         let mut i = baseline();
         i.jurisdiction = Jurisdiction::RhodeIsland;
         let r = check(&i);
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("250-RICR-140-25-1")));
+        assert!(r.notes.iter().any(|n| n.contains("250-RICR-140-25-1")));
         assert!(r.notes.iter().any(|n| n.contains("R.I.G.L. 46-12.5.1")));
     }
 
@@ -667,7 +679,10 @@ mod tests {
         i.tank_material = TankMaterial::BareSteelUnprotected;
         i.tank_age_years = 35;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::ReplacementRequiredAgeFailure));
+        assert!(matches!(
+            r.severity,
+            Severity::ReplacementRequiredAgeFailure
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents / 2);
     }
 

@@ -39,17 +39,23 @@ pub fn compute(prices: &[f64], window: usize) -> Vec<Option<f64>> {
         let mut sum_prod = 0.0;
         let mut count = 0;
         for t in (lo + 1)..=i {
-            if !have[t] || !have[t - 1] { continue; }
+            if !have[t] || !have[t - 1] {
+                continue;
+            }
             sum_now += delta[t];
             sum_prev += delta[t - 1];
             sum_prod += delta[t] * delta[t - 1];
             count += 1;
         }
-        if count < 2 { continue; }
+        if count < 2 {
+            continue;
+        }
         let mean_now = sum_now / count as f64;
         let mean_prev = sum_prev / count as f64;
         let cov = sum_prod / count as f64 - mean_now * mean_prev;
-        if !cov.is_finite() { continue; }
+        if !cov.is_finite() {
+            continue;
+        }
         let spread = if cov < 0.0 { 2.0 * (-cov).sqrt() } else { 0.0 };
         if spread.is_finite() {
             *slot = Some(spread);
@@ -93,7 +99,8 @@ mod tests {
         let mut state: u64 = 7919;
         let mut p = Vec::with_capacity(5_000);
         for _ in 0..5_000 {
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let u = (state >> 32) as f64 / u32::MAX as f64;
             p.push(if u < 0.5 { bid } else { ask });
@@ -101,8 +108,10 @@ mod tests {
         let out = compute(&p, 500);
         let est = out[4_999].expect("populated");
         // Tolerance ~50% (Roll converges slowly + finite-sample noise).
-        assert!((est - spread).abs() / spread < 0.5,
-            "expected spread ≈ {spread}, got {est}");
+        assert!(
+            (est - spread).abs() / spread < 0.5,
+            "expected spread ≈ {spread}, got {est}"
+        );
     }
 
     #[test]

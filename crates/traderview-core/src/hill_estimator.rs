@@ -46,35 +46,50 @@ pub struct HillReport {
 /// returns). Returns None if fewer than `min_n` finite positive
 /// observations.
 pub fn compute(losses: &[f64], k_values: &[usize]) -> Option<HillReport> {
-    let mut sorted: Vec<f64> = losses.iter().copied()
+    let mut sorted: Vec<f64> = losses
+        .iter()
+        .copied()
         .filter(|x| x.is_finite() && *x > 0.0)
         .collect();
     let n = sorted.len();
-    if n < 10 || k_values.is_empty() { return None; }
+    if n < 10 || k_values.is_empty() {
+        return None;
+    }
     // Descending sort.
     sorted.sort_by(|a, b| b.partial_cmp(a).unwrap_or(std::cmp::Ordering::Equal));
     let mut ks = Vec::new();
     let mut alphas = Vec::new();
     let mut xis = Vec::new();
     for &k in k_values {
-        if k < 2 || k >= n { continue; }
+        if k < 2 || k >= n {
+            continue;
+        }
         let log_threshold = sorted[k].ln();
-        let mean_excess: f64 = (0..k)
-            .map(|i| sorted[i].ln() - log_threshold).sum::<f64>() / k as f64;
-        if mean_excess <= 0.0 || !mean_excess.is_finite() { continue; }
+        let mean_excess: f64 =
+            (0..k).map(|i| sorted[i].ln() - log_threshold).sum::<f64>() / k as f64;
+        if mean_excess <= 0.0 || !mean_excess.is_finite() {
+            continue;
+        }
         ks.push(k);
         alphas.push(1.0 / mean_excess);
         xis.push(mean_excess);
     }
-    if ks.is_empty() { return None; }
+    if ks.is_empty() {
+        return None;
+    }
     // Heuristic optimum k. round (not floor) because n^(2/3) for exact
     // cubes like 1000 lands just below the integer in f64.
-    let heuristic_k = ((n as f64).powf(2.0 / 3.0).round() as usize)
-        .clamp(2, n.saturating_sub(1));
+    let heuristic_k = ((n as f64).powf(2.0 / 3.0).round() as usize).clamp(2, n.saturating_sub(1));
     let log_threshold = sorted[heuristic_k].ln();
     let mean_excess: f64 = (0..heuristic_k)
-        .map(|i| sorted[i].ln() - log_threshold).sum::<f64>() / heuristic_k as f64;
-    let heuristic_alpha = if mean_excess > 0.0 { 1.0 / mean_excess } else { f64::NAN };
+        .map(|i| sorted[i].ln() - log_threshold)
+        .sum::<f64>()
+        / heuristic_k as f64;
+    let heuristic_alpha = if mean_excess > 0.0 {
+        1.0 / mean_excess
+    } else {
+        f64::NAN
+    };
     Some(HillReport {
         n_observations: n,
         k_values: ks,
@@ -124,17 +139,27 @@ mod tests {
         let mut state: u64 = 42;
         let true_alpha = 3.0_f64;
         let n = 5000;
-        let losses: Vec<f64> = (0..n).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
-            u.powf(-1.0 / true_alpha)
-        }).collect();
+        let losses: Vec<f64> = (0..n)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
+                u.powf(-1.0 / true_alpha)
+            })
+            .collect();
         let k_values = vec![50, 100, 200, 500];
         let r = compute(&losses, &k_values).unwrap();
         // At least one estimate should be within 25% of true alpha.
-        let close = r.alpha_estimates.iter().any(|a| (a - true_alpha).abs() / true_alpha < 0.25);
-        assert!(close, "no Hill estimate close to true α = {true_alpha}: {:?}", r.alpha_estimates);
+        let close = r
+            .alpha_estimates
+            .iter()
+            .any(|a| (a - true_alpha).abs() / true_alpha < 0.25);
+        assert!(
+            close,
+            "no Hill estimate close to true α = {true_alpha}: {:?}",
+            r.alpha_estimates
+        );
     }
 
     #[test]

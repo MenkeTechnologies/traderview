@@ -171,10 +171,7 @@ fn check_california(
     notes: &mut Vec<String>,
 ) {
     if input.perpetrator_is_co_tenant {
-        notes.push(
-            "§ 1941.6 — perpetrator is co-tenant; landlord-pays still applies"
-                .to_string(),
-        );
+        notes.push("§ 1941.6 — perpetrator is co-tenant; landlord-pays still applies".to_string());
     } else {
         notes.push(
             "§ 1941.5 — perpetrator NOT co-tenant; landlord must change locks within 24 hours of documentation at landlord's expense"
@@ -213,19 +210,17 @@ fn check_california(
         }
     }
 
-    if matches!(input.documentation_type, DocumentationType::SignedStatementByTenant) {
+    if matches!(
+        input.documentation_type,
+        DocumentationType::SignedStatementByTenant
+    ) {
         notes.push(
-            "SB 1051 (2023) — signed statement by tenant accepted under CA framework"
-                .to_string(),
+            "SB 1051 (2023) — signed statement by tenant accepted under CA framework".to_string(),
         );
     }
 }
 
-fn check_texas(
-    input: &DvLockChangeInput,
-    _violations: &mut Vec<String>,
-    notes: &mut Vec<String>,
-) {
+fn check_texas(input: &DvLockChangeInput, _violations: &mut Vec<String>, notes: &mut Vec<String>) {
     if input.tenant_requested_rekey {
         notes.push(
             "§ 92.156(e) — tenant-requested rekey at tenant expense; unlimited number of requests permitted"
@@ -244,7 +239,10 @@ fn check_washington(
     violations: &mut Vec<String>,
     notes: &mut Vec<String>,
 ) {
-    if matches!(input.documentation_type, DocumentationType::SignedStatementByTenant) {
+    if matches!(
+        input.documentation_type,
+        DocumentationType::SignedStatementByTenant
+    ) {
         violations.push(
             "RCW 59.18.575 — tenant signed statement alone NOT accepted; requires valid protection order OR written record signed by qualified third party"
                 .to_string(),
@@ -367,10 +365,7 @@ mod tests {
         i.hours_to_landlord_action = Some(25);
         let r = check(&i);
         assert!(!r.lock_change_valid);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("24-hour deadline")));
+        assert!(r.violations.iter().any(|v| v.contains("24-hour deadline")));
     }
 
     #[test]
@@ -576,7 +571,10 @@ mod tests {
         i.documentation_type = DocumentationType::SignedStatementByTenant;
         i.days_to_landlord_notice = Some(3);
         let r = check(&i);
-        assert!(!r.lock_change_valid, "WA does not accept signed-statement alone regardless of notice timing");
+        assert!(
+            !r.lock_change_valid,
+            "WA does not accept signed-statement alone regardless of notice timing"
+        );
     }
 
     #[test]

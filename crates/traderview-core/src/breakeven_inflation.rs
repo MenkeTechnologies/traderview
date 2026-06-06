@@ -41,7 +41,8 @@ pub fn compute(
     if !nominal_yield.is_finite()
         || !real_yield.is_finite()
         || !inflation_risk_premium.is_finite()
-        || !liquidity_premium.is_finite() {
+        || !liquidity_premium.is_finite()
+    {
         return None;
     }
     let bei = nominal_yield - real_yield;

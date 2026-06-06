@@ -290,7 +290,8 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.backup_withholding_trigger == BackupWithholdingTrigger::TinMismatchAfterFirstBNoticeNotCured
+    if input.backup_withholding_trigger
+        == BackupWithholdingTrigger::TinMismatchAfterFirstBNoticeNotCured
     {
         return Output {
             mode: Section6109Mode::CompliantBNoticeFirstCureWithin30BusinessDays,
@@ -315,7 +316,8 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.backup_withholding_trigger != BackupWithholdingTrigger::NoTriggerNoBackupWithholdingRequired
+    if input.backup_withholding_trigger
+        != BackupWithholdingTrigger::NoTriggerNoBackupWithholdingRequired
         && !input.backup_withholding_applied_at_24_percent
     {
         return Output {
@@ -331,7 +333,8 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.backup_withholding_trigger != BackupWithholdingTrigger::NoTriggerNoBackupWithholdingRequired
+    if input.backup_withholding_trigger
+        != BackupWithholdingTrigger::NoTriggerNoBackupWithholdingRequired
         && input.backup_withholding_applied_at_24_percent
     {
         return Output {
@@ -391,7 +394,8 @@ mod tests {
             tin_type_furnished: TinType::Ssn,
             payee_tax_status: PayeeTaxStatus::UsCitizenOrResidentAlienWithSsn,
             form_used: FormUsed::FormW9UsPersonRequestForTin,
-            backup_withholding_trigger: BackupWithholdingTrigger::NoTriggerNoBackupWithholdingRequired,
+            backup_withholding_trigger:
+                BackupWithholdingTrigger::NoTriggerNoBackupWithholdingRequired,
             backup_withholding_applied_at_24_percent: false,
             correct_tin_on_information_return: true,
             number_of_information_returns: 1,
@@ -408,7 +412,10 @@ mod tests {
             ..baseline_compliant_form_w9()
         };
         let result = check(&input);
-        assert_eq!(result.mode, Section6109Mode::NotApplicableNoInformationReturnRequired);
+        assert_eq!(
+            result.mode,
+            Section6109Mode::NotApplicableNoInformationReturnRequired
+        );
     }
 
     #[test]
@@ -548,8 +555,7 @@ mod tests {
     #[test]
     fn backup_withholding_no_tin_compliant_at_24_pct() {
         let input = Input {
-            backup_withholding_trigger:
-                BackupWithholdingTrigger::PayeeFailedToProvideTinOnFormW9,
+            backup_withholding_trigger: BackupWithholdingTrigger::PayeeFailedToProvideTinOnFormW9,
             backup_withholding_applied_at_24_percent: true,
             reportable_payment_dollars: 10_000,
             ..baseline_compliant_form_w9()
@@ -643,7 +649,10 @@ mod tests {
         assert_eq!(IRC_3406_BACKUP_WITHHOLDING_RATE_BASIS_POINTS, 2_400);
         assert_eq!(IRC_3406_BASIS_POINT_DENOMINATOR, 10_000);
         assert_eq!(IRC_6721_PENALTY_PER_RETURN_DOLLARS, 50);
-        assert_eq!(IRC_6721_PENALTY_PER_RETURN_INTENTIONAL_DISREGARD_DOLLARS, 100);
+        assert_eq!(
+            IRC_6721_PENALTY_PER_RETURN_INTENTIONAL_DISREGARD_DOLLARS,
+            100
+        );
         assert_eq!(IRC_6721_PENALTY_MAX_LARGE_FILER_DOLLARS, 250_000);
         assert_eq!(IRC_6721_PENALTY_MAX_SMALL_BUSINESS_DOLLARS, 100_000);
         assert_eq!(IRC_6721_INTENTIONAL_DISREGARD_NO_MAX, u64::MAX);

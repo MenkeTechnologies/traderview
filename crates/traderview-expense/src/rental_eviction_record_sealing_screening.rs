@@ -121,10 +121,7 @@ pub fn check(input: &Input) -> Output {
         "FCRA 15 U.S.C. § 1681c (federal adverse-action notice floor)".to_string(),
     ];
 
-    if matches!(
-        input.jurisdiction,
-        Jurisdiction::DefaultNoSealingRegime
-    ) {
+    if matches!(input.jurisdiction, Jurisdiction::DefaultNoSealingRegime) {
         notes.push("Jurisdiction has no statewide eviction-record sealing regime; FCRA 7-year reporting cap applies as federal floor.".to_string());
         return Output {
             severity: Severity::DefaultJurisdictionNoSealingRegime,
@@ -141,7 +138,10 @@ pub fn check(input: &Input) -> Output {
 
     if !input.landlord_relied_on_record_for_adverse_action {
         if sealed_or_expunged {
-            notes.push("Sealed/expunged record properly excluded from screening; no adverse action taken.".to_string());
+            notes.push(
+                "Sealed/expunged record properly excluded from screening; no adverse action taken."
+                    .to_string(),
+            );
             return Output {
                 severity: Severity::CompliantTenantScreeningExcludesSealedEvictionRecord,
                 record_is_sealed_or_expunged: true,
@@ -151,9 +151,13 @@ pub fn check(input: &Input) -> Output {
                 citations,
             };
         }
-        if matches!(input.jurisdiction, Jurisdiction::CaliforniaAb2819CcpSection1161_2)
-            && matches!(input.eviction_outcome, EvictionOutcome::LandlordPrevailedWithin60Days)
-        {
+        if matches!(
+            input.jurisdiction,
+            Jurisdiction::CaliforniaAb2819CcpSection1161_2
+        ) && matches!(
+            input.eviction_outcome,
+            EvictionOutcome::LandlordPrevailedWithin60Days
+        ) {
             notes.push(format!(
                 "CA AB 2819: landlord prevailed within {}-day window; record unmasked and reportable.",
                 CA_AB_2819_MASKING_DAYS
@@ -179,9 +183,14 @@ pub fn check(input: &Input) -> Output {
     }
 
     if sealed_or_expunged {
-        notes.push("Landlord relied on a sealed or expunged eviction record — per se statutory violation.".to_string());
+        notes.push(
+            "Landlord relied on a sealed or expunged eviction record — per se statutory violation."
+                .to_string(),
+        );
         let severity = match input.jurisdiction {
-            Jurisdiction::MinnesotaSection484_014 => Severity::ViolationReliedOnAutomaticallyExpungedRecord,
+            Jurisdiction::MinnesotaSection484_014 => {
+                Severity::ViolationReliedOnAutomaticallyExpungedRecord
+            }
             _ => Severity::ViolationReliedOnSealedEvictionRecordForDenial,
         };
         return Output {
@@ -448,7 +457,10 @@ mod tests {
         assert!(out.citations.iter().any(|c| c.contains("AB 2819")));
         assert!(out.citations.iter().any(|c| c.contains("RCW 59.18.367")));
         assert!(out.citations.iter().any(|c| c.contains("RPAPL § 745")));
-        assert!(out.citations.iter().any(|c| c.contains("735 ILCS 5/9-121.5")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("735 ILCS 5/9-121.5")));
         assert!(out.citations.iter().any(|c| c.contains("§ 484.014")));
     }
 

@@ -116,9 +116,8 @@ pub fn compute(input: &Section453Input) -> Section453Result {
     // §453(d) elect-out — full recognition in year of sale.
     if input.elect_out_of_installment_treatment {
         r.disqualified = true;
-        r.disqualification_reasons.push(
-            "§453(d) elect-out: seller chose full recognition in year of sale".into(),
-        );
+        r.disqualification_reasons
+            .push("§453(d) elect-out: seller chose full recognition in year of sale".into());
     }
 
     if r.disqualified {
@@ -151,8 +150,9 @@ pub fn compute(input: &Section453Input) -> Section453Result {
     }
 
     // Gross profit ratio = gross_profit / contract_price.
-    r.gross_profit_ratio =
-        (r.realized_gain / r.contract_price).round_dp(6).min(Decimal::ONE);
+    r.gross_profit_ratio = (r.realized_gain / r.contract_price)
+        .round_dp(6)
+        .min(Decimal::ONE);
 
     // §453(g) related-party 2-year resale clawback OVERRIDES the
     // gross-profit ratio for the current year — all remaining gain
@@ -176,10 +176,9 @@ pub fn compute(input: &Section453Input) -> Section453Result {
     // Normal GPR application.
     r.principal_payment_gain_this_year =
         (input.principal_received_this_year * r.gross_profit_ratio).round_dp(2);
-    r.gain_deferred_to_future_years =
-        (input.unrecognized_gain_remaining + r.realized_gain
-            - r.principal_payment_gain_this_year)
-            .max(Decimal::ZERO);
+    r.gain_deferred_to_future_years = (input.unrecognized_gain_remaining + r.realized_gain
+        - r.principal_payment_gain_this_year)
+        .max(Decimal::ZERO);
 
     r.note = format!(
         "§453 installment: GPR {} applied to ${} principal → ${} gain recognized this year; ${} interest income separately; ${} gain deferred to future years",
@@ -240,7 +239,10 @@ mod tests {
         assert!(r.disqualified);
         // Full $500k gain recognized year 1 (trader exclusion).
         assert_eq!(r.principal_payment_gain_this_year, dec!(500000));
-        assert!(r.disqualification_reasons.iter().any(|s| s.contains("§453(k)")));
+        assert!(r
+            .disqualification_reasons
+            .iter()
+            .any(|s| s.contains("§453(k)")));
     }
 
     #[test]
@@ -250,7 +252,10 @@ mod tests {
         let r = compute(&i);
         assert!(r.disqualified);
         assert_eq!(r.principal_payment_gain_this_year, dec!(500000));
-        assert!(r.disqualification_reasons.iter().any(|s| s.contains("§453(d)")));
+        assert!(r
+            .disqualification_reasons
+            .iter()
+            .any(|s| s.contains("§453(d)")));
     }
 
     #[test]

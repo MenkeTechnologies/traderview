@@ -213,10 +213,9 @@ mod tests {
         let r = check(&i);
         assert!(!r.recovery_action_maintainable);
         assert!(!r.sol_satisfied);
-        assert!(r
-            .failure_reasons
-            .iter()
-            .any(|f| f.contains("§ 7405(d)") && f.contains("731") && f.contains("standard 2-year")));
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 7405(d)")
+            && f.contains("731")
+            && f.contains("standard 2-year")));
     }
 
     #[test]

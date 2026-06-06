@@ -213,7 +213,9 @@ fn rules() -> &'static [StateRule] {
 
 pub fn rule_for(state: &str) -> Option<&'static StateRule> {
     let upper = state.to_uppercase();
-    rules().iter().find(|r| r.state.eq_ignore_ascii_case(&upper))
+    rules()
+        .iter()
+        .find(|r| r.state.eq_ignore_ascii_case(&upper))
 }
 
 /// Catch-all for the 36 US states with no interest requirement.

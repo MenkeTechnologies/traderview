@@ -202,7 +202,9 @@ pub fn compute(input: &Input) -> Output {
         return Output {
             mode: Section674Mode::NotApplicableNoTrustOrNoPowerOfDisposition,
             statutory_basis: "IRC § 674 inapplicable — no power of disposition exists".to_string(),
-            notes: "No power of disposition over beneficial enjoyment exists; § 674 does not trigger.".to_string(),
+            notes:
+                "No power of disposition over beneficial enjoyment exists; § 674 does not trigger."
+                    .to_string(),
             citations,
         };
     }
@@ -385,7 +387,8 @@ mod tests {
     fn baseline_standard_discretionary_power_compliant() -> Input {
         Input {
             trust_exists: true,
-            power_of_disposition_category: PowerOfDispositionCategory::StandardDiscretionaryPowerNotExcepted,
+            power_of_disposition_category:
+                PowerOfDispositionCategory::StandardDiscretionaryPowerNotExcepted,
             power_holder_category: PowerHolderCategory::GrantorAloneOrWithNonadverseParty,
             add_beneficiary_power_status: AddBeneficiaryPowerStatus::NoPowerToAddBeneficiaries,
             trustees_independent_basis_points: 0,
@@ -400,7 +403,10 @@ mod tests {
             ..baseline_standard_discretionary_power_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, Section674Mode::NotApplicableNoTrustOrNoPowerOfDisposition);
+        assert_eq!(
+            result.mode,
+            Section674Mode::NotApplicableNoTrustOrNoPowerOfDisposition
+        );
     }
 
     #[test]
@@ -411,7 +417,10 @@ mod tests {
             ..baseline_standard_discretionary_power_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, Section674Mode::NotApplicableNoTrustOrNoPowerOfDisposition);
+        assert_eq!(
+            result.mode,
+            Section674Mode::NotApplicableNoTrustOrNoPowerOfDisposition
+        );
     }
 
     #[test]
@@ -421,7 +430,10 @@ mod tests {
             ..baseline_standard_discretionary_power_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, Section674Mode::NotApplicableOnlyAdversePartyHoldsPower);
+        assert_eq!(
+            result.mode,
+            Section674Mode::NotApplicableOnlyAdversePartyHoldsPower
+        );
     }
 
     #[test]
@@ -477,7 +489,8 @@ mod tests {
     #[test]
     fn section_674_b3_testamentary_power_excepted() {
         let input = Input {
-            power_of_disposition_category: PowerOfDispositionCategory::Section674B3TestamentaryPower,
+            power_of_disposition_category:
+                PowerOfDispositionCategory::Section674B3TestamentaryPower,
             ..baseline_standard_discretionary_power_compliant()
         };
         let result = check(&input);
@@ -504,7 +517,8 @@ mod tests {
     #[test]
     fn section_674_b5_distribute_corpus_excepted() {
         let input = Input {
-            power_of_disposition_category: PowerOfDispositionCategory::Section674B5PowerToDistributeCorpus,
+            power_of_disposition_category:
+                PowerOfDispositionCategory::Section674B5PowerToDistributeCorpus,
             ..baseline_standard_discretionary_power_compliant()
         };
         let result = check(&input);

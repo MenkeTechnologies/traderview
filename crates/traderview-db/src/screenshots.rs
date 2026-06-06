@@ -65,13 +65,12 @@ pub async fn get_bytes(
     user_id: Uuid,
     id: Uuid,
 ) -> anyhow::Result<Option<(String, Vec<u8>)>> {
-    let row: Option<(String, Vec<u8>)> = sqlx::query_as(
-        "SELECT mime_type, bytes FROM screenshots WHERE id = $1 AND user_id = $2",
-    )
-    .bind(id)
-    .bind(user_id)
-    .fetch_optional(pool)
-    .await?;
+    let row: Option<(String, Vec<u8>)> =
+        sqlx::query_as("SELECT mime_type, bytes FROM screenshots WHERE id = $1 AND user_id = $2")
+            .bind(id)
+            .bind(user_id)
+            .fetch_optional(pool)
+            .await?;
     Ok(row)
 }
 

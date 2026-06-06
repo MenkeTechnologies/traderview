@@ -25,16 +25,17 @@ pub struct BurkeReport {
     pub sum_squared_drawdowns: f64,
 }
 
-pub fn compute(
-    equity: &[f64],
-    risk_free_total: f64,
-    periods_per_year: f64,
-) -> Option<BurkeReport> {
-    if equity.len() < 2 || !risk_free_total.is_finite()
-        || !periods_per_year.is_finite() || periods_per_year <= 0.0 {
+pub fn compute(equity: &[f64], risk_free_total: f64, periods_per_year: f64) -> Option<BurkeReport> {
+    if equity.len() < 2
+        || !risk_free_total.is_finite()
+        || !periods_per_year.is_finite()
+        || periods_per_year <= 0.0
+    {
         return None;
     }
-    if equity.iter().any(|x| !x.is_finite() || *x <= 0.0) { return None; }
+    if equity.iter().any(|x| !x.is_finite() || *x <= 0.0) {
+        return None;
+    }
     let start = equity[0];
     let end = *equity.last().unwrap();
     let total_return = end / start - 1.0;
@@ -46,17 +47,27 @@ pub fn compute(
     let mut drawdowns = Vec::new();
     for &v in &equity[1..] {
         if v > hwm {
-            if current_trough_dd > 0.0 { drawdowns.push(current_trough_dd); }
+            if current_trough_dd > 0.0 {
+                drawdowns.push(current_trough_dd);
+            }
             hwm = v;
             current_trough_dd = 0.0;
         } else {
             let dd = (hwm - v) / hwm;
-            if dd > current_trough_dd { current_trough_dd = dd; }
+            if dd > current_trough_dd {
+                current_trough_dd = dd;
+            }
         }
     }
-    if current_trough_dd > 0.0 { drawdowns.push(current_trough_dd); }
+    if current_trough_dd > 0.0 {
+        drawdowns.push(current_trough_dd);
+    }
     let sum_sq_dd: f64 = drawdowns.iter().map(|d| d * d).sum();
-    let burke = if sum_sq_dd > 0.0 { excess / sum_sq_dd.sqrt() } else { 0.0 };
+    let burke = if sum_sq_dd > 0.0 {
+        excess / sum_sq_dd.sqrt()
+    } else {
+        0.0
+    };
     let mod_burke = burke * periods_per_year.sqrt();
     Some(BurkeReport {
         burke_ratio: burke,

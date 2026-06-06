@@ -26,34 +26,64 @@ pub struct MvReport {
     pub tangency_sharpe: f64,
 }
 
-pub fn solve(
-    covariance: &[Vec<f64>],
-    expected_excess_returns: &[f64],
-) -> Option<MvReport> {
+pub fn solve(covariance: &[Vec<f64>], expected_excess_returns: &[f64]) -> Option<MvReport> {
     let n = covariance.len();
-    if n < 2 || covariance.iter().any(|r| r.len() != n) { return None; }
-    if expected_excess_returns.len() != n { return None; }
-    if covariance.iter().any(|r| r.iter().any(|c| !c.is_finite())) { return None; }
-    if expected_excess_returns.iter().any(|x| !x.is_finite()) { return None; }
+    if n < 2 || covariance.iter().any(|r| r.len() != n) {
+        return None;
+    }
+    if expected_excess_returns.len() != n {
+        return None;
+    }
+    if covariance.iter().any(|r| r.iter().any(|c| !c.is_finite())) {
+        return None;
+    }
+    if expected_excess_returns.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let sigma_inv = invert(covariance)?;
     let ones = vec![1.0_f64; n];
     let sigma_inv_ones = matvec(&sigma_inv, &ones);
-    let denom_mv: f64 = ones.iter().zip(sigma_inv_ones.iter()).map(|(a, b)| a * b).sum();
-    if denom_mv.abs() < 1e-18 { return None; }
+    let denom_mv: f64 = ones
+        .iter()
+        .zip(sigma_inv_ones.iter())
+        .map(|(a, b)| a * b)
+        .sum();
+    if denom_mv.abs() < 1e-18 {
+        return None;
+    }
     let mv_weights: Vec<f64> = sigma_inv_ones.iter().map(|x| x / denom_mv).collect();
-    let mv_var: f64 = mv_weights.iter().zip(matvec(covariance, &mv_weights).iter())
-        .map(|(w, sw)| w * sw).sum();
+    let mv_var: f64 = mv_weights
+        .iter()
+        .zip(matvec(covariance, &mv_weights).iter())
+        .map(|(w, sw)| w * sw)
+        .sum();
     let mv_vol = mv_var.max(0.0).sqrt();
     let sigma_inv_mu = matvec(&sigma_inv, expected_excess_returns);
-    let denom_tan: f64 = ones.iter().zip(sigma_inv_mu.iter()).map(|(a, b)| a * b).sum();
-    if denom_tan.abs() < 1e-18 { return None; }
+    let denom_tan: f64 = ones
+        .iter()
+        .zip(sigma_inv_mu.iter())
+        .map(|(a, b)| a * b)
+        .sum();
+    if denom_tan.abs() < 1e-18 {
+        return None;
+    }
     let tan_weights: Vec<f64> = sigma_inv_mu.iter().map(|x| x / denom_tan).collect();
-    let tan_var: f64 = tan_weights.iter().zip(matvec(covariance, &tan_weights).iter())
-        .map(|(w, sw)| w * sw).sum();
+    let tan_var: f64 = tan_weights
+        .iter()
+        .zip(matvec(covariance, &tan_weights).iter())
+        .map(|(w, sw)| w * sw)
+        .sum();
     let tan_vol = tan_var.max(0.0).sqrt();
-    let tan_ret: f64 = tan_weights.iter().zip(expected_excess_returns.iter())
-        .map(|(w, r)| w * r).sum();
-    let tan_sharpe = if tan_vol > 0.0 { tan_ret / tan_vol } else { 0.0 };
+    let tan_ret: f64 = tan_weights
+        .iter()
+        .zip(expected_excess_returns.iter())
+        .map(|(w, r)| w * r)
+        .sum();
+    let tan_sharpe = if tan_vol > 0.0 {
+        tan_ret / tan_vol
+    } else {
+        0.0
+    };
     Some(MvReport {
         min_variance_weights: mv_weights,
         min_variance_portfolio_volatility: mv_vol,
@@ -65,12 +95,16 @@ pub fn solve(
 }
 
 fn matvec(m: &[Vec<f64>], v: &[f64]) -> Vec<f64> {
-    m.iter().map(|r| r.iter().zip(v.iter()).map(|(a, b)| a * b).sum()).collect()
+    m.iter()
+        .map(|r| r.iter().zip(v.iter()).map(|(a, b)| a * b).sum())
+        .collect()
 }
 
 fn invert(m: &[Vec<f64>]) -> Option<Vec<Vec<f64>>> {
     let n = m.len();
-    if n == 0 || m.iter().any(|r| r.len() != n) { return None; }
+    if n == 0 || m.iter().any(|r| r.len() != n) {
+        return None;
+    }
     let mut aug = vec![vec![0.0_f64; 2 * n]; n];
     for i in 0..n {
         for j in 0..n {
@@ -81,18 +115,30 @@ fn invert(m: &[Vec<f64>]) -> Option<Vec<Vec<f64>>> {
     for i in 0..n {
         let mut pivot = i;
         for r in (i + 1)..n {
-            if aug[r][i].abs() > aug[pivot][i].abs() { pivot = r; }
+            if aug[r][i].abs() > aug[pivot][i].abs() {
+                pivot = r;
+            }
         }
-        if aug[pivot][i].abs() < 1e-18 { return None; }
+        if aug[pivot][i].abs() < 1e-18 {
+            return None;
+        }
         aug.swap(i, pivot);
         let div = aug[i][i];
-        for v in aug[i].iter_mut() { *v /= div; }
+        for v in aug[i].iter_mut() {
+            *v /= div;
+        }
         for r in 0..n {
-            if r == i { continue; }
+            if r == i {
+                continue;
+            }
             let f = aug[r][i];
-            if f == 0.0 { continue; }
+            if f == 0.0 {
+                continue;
+            }
             let pivot_row = aug[i].clone();
-            for (j, v) in aug[r].iter_mut().enumerate() { *v -= f * pivot_row[j]; }
+            for (j, v) in aug[r].iter_mut().enumerate() {
+                *v -= f * pivot_row[j];
+            }
         }
     }
     Some(aug.into_iter().map(|r| r[n..].to_vec()).collect())
@@ -154,10 +200,7 @@ mod tests {
 
     #[test]
     fn min_variance_volatility_le_any_single_asset() {
-        let cov = vec![
-            vec![0.04, 0.0],
-            vec![0.0, 0.09],
-        ];
+        let cov = vec![vec![0.04, 0.0], vec![0.0, 0.09]];
         let mu = vec![0.05, 0.07];
         let r = solve(&cov, &mu).unwrap();
         // MV portfolio variance should be ≤ min individual variance (0.04).
@@ -167,15 +210,16 @@ mod tests {
     #[test]
     fn tangency_sharpe_at_least_min_var_sharpe() {
         // By construction tangency maximizes Sharpe.
-        let cov = vec![
-            vec![0.04, 0.01],
-            vec![0.01, 0.09],
-        ];
+        let cov = vec![vec![0.04, 0.01], vec![0.01, 0.09]];
         let mu = vec![0.10, 0.05];
         let r = solve(&cov, &mu).unwrap();
         // Compute MV portfolio Sharpe for comparison.
-        let mv_ret: f64 = r.min_variance_weights.iter().zip(mu.iter())
-            .map(|(w, m)| w * m).sum();
+        let mv_ret: f64 = r
+            .min_variance_weights
+            .iter()
+            .zip(mu.iter())
+            .map(|(w, m)| w * m)
+            .sum();
         let mv_sharpe = mv_ret / r.min_variance_portfolio_volatility;
         assert!(r.tangency_sharpe >= mv_sharpe - 1e-9);
     }
@@ -183,10 +227,7 @@ mod tests {
     #[test]
     fn higher_expected_return_increases_tangency_weight() {
         // Asset 0 gets higher μ → tangency weight should rise.
-        let cov = vec![
-            vec![0.04, 0.0],
-            vec![0.0, 0.04],
-        ];
+        let cov = vec![vec![0.04, 0.0], vec![0.0, 0.04]];
         let mu_eq = vec![0.05, 0.05];
         let mu_skew = vec![0.10, 0.05];
         let r_eq = solve(&cov, &mu_eq).unwrap();

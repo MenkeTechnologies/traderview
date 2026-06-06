@@ -33,19 +33,30 @@ pub struct Report {
     pub non_zero_count: usize,
 }
 
-pub fn compute(
-    x: &[Vec<f64>], y: &[f64],
-    alpha: f64, max_iter: u32, tol: f64,
-) -> Option<Report> {
+pub fn compute(x: &[Vec<f64>], y: &[f64], alpha: f64, max_iter: u32, tol: f64) -> Option<Report> {
     let n = x.len();
-    if n < 2 { return None; }
+    if n < 2 {
+        return None;
+    }
     let p = x[0].len();
-    if p < 1 || y.len() != n { return None; }
-    if x.iter().any(|row| row.len() != p) { return None; }
-    if !alpha.is_finite() || alpha < 0.0 { return None; }
-    if !tol.is_finite() || tol <= 0.0 || max_iter == 0 { return None; }
-    if x.iter().any(|row| row.iter().any(|v| !v.is_finite())) { return None; }
-    if y.iter().any(|v| !v.is_finite()) { return None; }
+    if p < 1 || y.len() != n {
+        return None;
+    }
+    if x.iter().any(|row| row.len() != p) {
+        return None;
+    }
+    if !alpha.is_finite() || alpha < 0.0 {
+        return None;
+    }
+    if !tol.is_finite() || tol <= 0.0 || max_iter == 0 {
+        return None;
+    }
+    if x.iter().any(|row| row.iter().any(|v| !v.is_finite())) {
+        return None;
+    }
+    if y.iter().any(|v| !v.is_finite()) {
+        return None;
+    }
     // Standardize features.
     let mut means = vec![0.0_f64; p];
     let mut stds = vec![1.0_f64; p];
@@ -76,30 +87,52 @@ pub fn compute(
         for j in 0..p {
             let old_beta = beta[j];
             // Restore feature j's contribution to residual.
-            for i in 0..n { residual[i] += xs[i][j] * old_beta; }
+            for i in 0..n {
+                residual[i] += xs[i][j] * old_beta;
+            }
             // Compute z_j = (1/N) Σ x_{i,j} · residual_i
             let z: f64 = (0..n).map(|i| xs[i][j] * residual[i]).sum::<f64>() / nf;
             let new_beta = soft_threshold(z, alpha);
             beta[j] = new_beta;
             let change = (new_beta - old_beta).abs();
-            if change > max_change { max_change = change; }
+            if change > max_change {
+                max_change = change;
+            }
             // Re-subtract new contribution.
-            for i in 0..n { residual[i] -= xs[i][j] * new_beta; }
+            for i in 0..n {
+                residual[i] -= xs[i][j] * new_beta;
+            }
         }
-        if max_change < tol { converged = true; break; }
+        if max_change < tol {
+            converged = true;
+            break;
+        }
     }
     // De-standardize coefficients.
-    let coefficients: Vec<f64> = beta.iter().zip(stds.iter())
-        .map(|(b, s)| b / s).collect();
-    let intercept = y_mean - coefficients.iter().zip(means.iter())
-        .map(|(b, m)| b * m).sum::<f64>();
+    let coefficients: Vec<f64> = beta.iter().zip(stds.iter()).map(|(b, s)| b / s).collect();
+    let intercept = y_mean
+        - coefficients
+            .iter()
+            .zip(means.iter())
+            .map(|(b, m)| b * m)
+            .sum::<f64>();
     let non_zero_count = coefficients.iter().filter(|c| c.abs() > 1e-12).count();
-    Some(Report { intercept, coefficients, iterations: iters, converged, non_zero_count })
+    Some(Report {
+        intercept,
+        coefficients,
+        iterations: iters,
+        converged,
+        non_zero_count,
+    })
 }
 
 fn soft_threshold(z: f64, alpha: f64) -> f64 {
     let abs_z = z.abs();
-    if abs_z <= alpha { 0.0 } else { z.signum() * (abs_z - alpha) }
+    if abs_z <= alpha {
+        0.0
+    } else {
+        z.signum() * (abs_z - alpha)
+    }
 }
 
 #[cfg(test)]
@@ -149,7 +182,9 @@ mod tests {
         }
         let r = compute(&x, &y, 100.0, 1000, 1e-9).unwrap();
         assert_eq!(r.non_zero_count, 0);
-        for c in &r.coefficients { assert!(c.abs() < 1e-9); }
+        for c in &r.coefficients {
+            assert!(c.abs() < 1e-9);
+        }
     }
 
     #[test]

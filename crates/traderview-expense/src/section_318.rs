@@ -142,8 +142,7 @@ pub fn check(input: &Input) -> Output {
                  redemption qualification, § 304 brother-sister recharacterization (limited \
                  by sibling-exclusion under § 318), § 542 PHC ownership test, § 856(h) REIT \
                  5/50 closely-held test.",
-                input.direct_ownership_shares,
-                input.direct_ownership_percentage_bps
+                input.direct_ownership_shares, input.direct_ownership_percentage_bps
             ),
         },
         AttributionPath::SiblingAttemptDoesNotApplyToSection318 => Output {
@@ -182,9 +181,9 @@ pub fn check(input: &Input) -> Output {
                 };
             }
             let attributed_shares = u64::try_from(
-                u128::from(input.direct_ownership_shares).saturating_mul(
-                    u128::from(input.proportional_attribution_percentage_bps),
-                ).saturating_div(10_000),
+                u128::from(input.direct_ownership_shares)
+                    .saturating_mul(u128::from(input.proportional_attribution_percentage_bps))
+                    .saturating_div(10_000),
             )
             .unwrap_or(u64::MAX);
             let path_label = match input.attribution_path {
@@ -199,8 +198,7 @@ pub fn check(input: &Input) -> Output {
             Output {
                 severity: Severity::Section318A2EntityToOwnerProportionalAttribution,
                 attributed_shares,
-                attributed_percentage_bps: input
-                    .proportional_attribution_percentage_bps,
+                attributed_percentage_bps: input.proportional_attribution_percentage_bps,
                 note: format!(
                     "{} PROPORTIONAL attribution applies. Stock owned by entity ({} \
                      shares) attributed to owner proportionally to owner's interest ({} bps) \
@@ -271,8 +269,7 @@ pub fn check(input: &Input) -> Output {
                  {} ({} bps). Critical for § 302 redemption analysis where outstanding call \
                  options held by family member can defeat substantially-disproportionate \
                  redemption qualification.",
-                input.direct_ownership_shares,
-                input.direct_ownership_percentage_bps
+                input.direct_ownership_shares, input.direct_ownership_percentage_bps
             ),
         },
         AttributionPath::ReAttributionFamilyToFamilyDisallowed => Output {
@@ -310,8 +307,7 @@ mod tests {
 
     fn base() -> Input {
         Input {
-            attribution_path:
-                AttributionPath::FamilyAttributionSpouseChildGrandchildParent,
+            attribution_path: AttributionPath::FamilyAttributionSpouseChildGrandchildParent,
             corporation_ownership_tier:
                 CorporationOwnershipTier::FiftyPctOrMoreEntityAttributionApplies,
             direct_ownership_shares: 1_000,
@@ -338,8 +334,7 @@ mod tests {
     #[test]
     fn sibling_does_not_apply_to_section_318() {
         let mut input = base();
-        input.attribution_path =
-            AttributionPath::SiblingAttemptDoesNotApplyToSection318;
+        input.attribution_path = AttributionPath::SiblingAttemptDoesNotApplyToSection318;
         let output = check(&input);
         assert_eq!(
             output.severity,
@@ -352,8 +347,7 @@ mod tests {
     #[test]
     fn partnership_to_partner_proportional_attribution() {
         let mut input = base();
-        input.attribution_path =
-            AttributionPath::FromPartnershipOrEstateProportional;
+        input.attribution_path = AttributionPath::FromPartnershipOrEstateProportional;
         let output = check(&input);
         assert_eq!(
             output.severity,
@@ -367,8 +361,7 @@ mod tests {
     #[test]
     fn corporation_to_50_pct_plus_shareholder_proportional() {
         let mut input = base();
-        input.attribution_path =
-            AttributionPath::FromCorporationToFiftyPctShareholderProportional;
+        input.attribution_path = AttributionPath::FromCorporationToFiftyPctShareholderProportional;
         let output = check(&input);
         assert_eq!(
             output.severity,
@@ -380,8 +373,7 @@ mod tests {
     #[test]
     fn corporation_below_50_pct_no_attribution() {
         let mut input = base();
-        input.attribution_path =
-            AttributionPath::FromCorporationToFiftyPctShareholderProportional;
+        input.attribution_path = AttributionPath::FromCorporationToFiftyPctShareholderProportional;
         input.corporation_ownership_tier =
             CorporationOwnershipTier::LessThanFiftyPctNoEntityAttribution;
         let output = check(&input);
@@ -404,8 +396,7 @@ mod tests {
     #[test]
     fn shareholder_to_corp_50_pct_plus_full_attribution() {
         let mut input = base();
-        input.attribution_path =
-            AttributionPath::ToCorporationFromFiftyPctShareholderInFull;
+        input.attribution_path = AttributionPath::ToCorporationFromFiftyPctShareholderInFull;
         let output = check(&input);
         assert_eq!(
             output.severity,
@@ -417,8 +408,7 @@ mod tests {
     #[test]
     fn shareholder_to_corp_below_50_pct_no_attribution() {
         let mut input = base();
-        input.attribution_path =
-            AttributionPath::ToCorporationFromFiftyPctShareholderInFull;
+        input.attribution_path = AttributionPath::ToCorporationFromFiftyPctShareholderInFull;
         input.corporation_ownership_tier =
             CorporationOwnershipTier::LessThanFiftyPctNoEntityAttribution;
         let output = check(&input);
@@ -428,8 +418,7 @@ mod tests {
     #[test]
     fn option_attribution_treats_holder_as_owner() {
         let mut input = base();
-        input.attribution_path =
-            AttributionPath::OptionAttributionCallOrWarrantOrConvertible;
+        input.attribution_path = AttributionPath::OptionAttributionCallOrWarrantOrConvertible;
         let output = check(&input);
         assert_eq!(
             output.severity,
@@ -443,8 +432,7 @@ mod tests {
     #[test]
     fn re_attribution_family_to_family_disallowed() {
         let mut input = base();
-        input.attribution_path =
-            AttributionPath::ReAttributionFamilyToFamilyDisallowed;
+        input.attribution_path = AttributionPath::ReAttributionFamilyToFamilyDisallowed;
         let output = check(&input);
         assert_eq!(
             output.severity,
@@ -457,8 +445,7 @@ mod tests {
     #[test]
     fn re_attribution_entity_bounce_disallowed() {
         let mut input = base();
-        input.attribution_path =
-            AttributionPath::ReAttributionEntityBounceDisallowed;
+        input.attribution_path = AttributionPath::ReAttributionEntityBounceDisallowed;
         let output = check(&input);
         assert_eq!(
             output.severity,
@@ -476,8 +463,7 @@ mod tests {
     #[test]
     fn very_large_shares_no_overflow() {
         let mut input = base();
-        input.attribution_path =
-            AttributionPath::FromPartnershipOrEstateProportional;
+        input.attribution_path = AttributionPath::FromPartnershipOrEstateProportional;
         input.direct_ownership_shares = u64::MAX;
         let output = check(&input);
         assert!(output.attributed_shares > 0);
@@ -486,8 +472,7 @@ mod tests {
     #[test]
     fn zero_proportional_yields_zero_attribution() {
         let mut input = base();
-        input.attribution_path =
-            AttributionPath::FromPartnershipOrEstateProportional;
+        input.attribution_path = AttributionPath::FromPartnershipOrEstateProportional;
         input.proportional_attribution_percentage_bps = 0;
         let output = check(&input);
         assert_eq!(output.attributed_shares, 0);
@@ -496,8 +481,7 @@ mod tests {
     #[test]
     fn note_pins_section_267_sibling_inclusion_contrast() {
         let mut input = base();
-        input.attribution_path =
-            AttributionPath::SiblingAttemptDoesNotApplyToSection318;
+        input.attribution_path = AttributionPath::SiblingAttemptDoesNotApplyToSection318;
         let output = check(&input);
         assert!(output.note.contains("§ 267"));
     }
@@ -526,8 +510,7 @@ mod tests {
     #[test]
     fn note_pins_section_7520_actuarial_for_trusts() {
         let mut input = base();
-        input.attribution_path =
-            AttributionPath::FromPartnershipOrEstateProportional;
+        input.attribution_path = AttributionPath::FromPartnershipOrEstateProportional;
         let output = check(&input);
         assert!(output.note.contains("§ 7520"));
     }

@@ -252,13 +252,12 @@ pub fn check(input: &Section280gInput) -> Section280gResult {
     let small_business_exception_applies = input.private_corporation
         && (input.s_corporation_election || input.shareholder_approval_above_75_with_disclosure);
 
-    let excess_parachute_payment_cents = if three_times_threshold_met
-        && !small_business_exception_applies
-    {
-        parachute_after_reasonable_carveout_cents.saturating_sub(input.base_amount_cents)
-    } else {
-        0
-    };
+    let excess_parachute_payment_cents =
+        if three_times_threshold_met && !small_business_exception_applies {
+            parachute_after_reasonable_carveout_cents.saturating_sub(input.base_amount_cents)
+        } else {
+            0
+        };
 
     let section_4999_excise_tax_cents = excess_parachute_payment_cents.saturating_mul(20) / 100;
 
@@ -424,9 +423,10 @@ mod tests {
         assert!(!r.is_disqualified_individual);
         assert!(!r.three_times_threshold_met);
         assert_eq!(r.section_4999_excise_tax_cents, 0);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 280G(c)")
-            && f.contains("NOT a DISQUALIFIED INDIVIDUAL")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 280G(c)") && f.contains("NOT a DISQUALIFIED INDIVIDUAL")));
     }
 
     #[test]
@@ -436,9 +436,11 @@ mod tests {
         let r = check(&i);
         assert!(!r.change_in_control_engaged);
         assert!(!r.three_times_threshold_met);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 280G(b)(2)(A)")
-            && f.contains("NO CHANGE IN OWNERSHIP OR CONTROL")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 280G(b)(2)(A)")
+                && f.contains("NO CHANGE IN OWNERSHIP OR CONTROL")));
     }
 
     #[test]
@@ -449,9 +451,10 @@ mod tests {
         let r = check(&i);
         assert!(r.small_business_exception_applies);
         assert_eq!(r.excess_parachute_payment_cents, 0);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 280G(b)(5)(A)(i)")
-            && f.contains("S corporation")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 280G(b)(5)(A)(i)") && f.contains("S corporation")));
     }
 
     #[test]
@@ -462,10 +465,12 @@ mod tests {
         let r = check(&i);
         assert!(r.small_business_exception_applies);
         assert_eq!(r.excess_parachute_payment_cents, 0);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 280G(b)(5)(A)(ii)")
-            && f.contains("CLEANSING VOTE")
-            && f.contains("Q&A 7")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 280G(b)(5)(A)(ii)")
+                && f.contains("CLEANSING VOTE")
+                && f.contains("Q&A 7")));
     }
 
     #[test]
@@ -501,8 +506,10 @@ mod tests {
         i.disqualified_individual_type = DisqualifiedIndividualType::OnePercentShareholder;
         let r = check(&i);
         assert!(r.is_disqualified_individual);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 280G(c)(2) 1%+ SHAREHOLDER")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 280G(c)(2) 1%+ SHAREHOLDER")));
     }
 
     #[test]
@@ -511,9 +518,11 @@ mod tests {
         i.disqualified_individual_type = DisqualifiedIndividualType::HighlyCompensatedEmployee;
         let r = check(&i);
         assert!(r.is_disqualified_individual);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 280G(c)(3) HIGHLY COMPENSATED EMPLOYEE")
-            && f.contains("$155,000+")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 280G(c)(3) HIGHLY COMPENSATED EMPLOYEE")
+                && f.contains("$155,000+")));
     }
 
     #[test]
@@ -537,9 +546,10 @@ mod tests {
         let mut i = officer_acquisition_excess();
         i.has_gross_up_clause = true;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 280G GROSS-UP CLAUSE")
-            && f.contains("Dodd-Frank")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 280G GROSS-UP CLAUSE") && f.contains("Dodd-Frank")));
     }
 
     #[test]
@@ -547,10 +557,12 @@ mod tests {
         let mut i = officer_acquisition_excess();
         i.modified_cutback_clause_applies = true;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 280G MODIFIED CUTBACK")
-            && f.contains("BEST-AFTER-TAX")
-            && f.contains("GREATER AFTER-TAX AMOUNT")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 280G MODIFIED CUTBACK")
+                && f.contains("BEST-AFTER-TAX")
+                && f.contains("GREATER AFTER-TAX AMOUNT")));
     }
 
     #[test]
@@ -612,8 +624,7 @@ mod tests {
     #[test]
     fn note_pins_subsection_a_employer_deduction_denial() {
         let r = check(&officer_acquisition_excess());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 280G(a)")
+        assert!(r.notes.iter().any(|n| n.contains("§ 280G(a)")
             && n.contains("DENIES employer DEDUCTION")
             && n.contains("§ 4999 20% recipient excise tax")));
     }
@@ -621,37 +632,41 @@ mod tests {
     #[test]
     fn note_pins_subsection_b1_cliff_definition() {
         let r = check(&officer_acquisition_excess());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 280G(b)(1) PARACHUTE PAYMENT")
-            && n.contains("3× base amount")
-            && n.contains("CLIFF")
-            && n.contains("not just over-3× portion")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 280G(b)(1) PARACHUTE PAYMENT")
+                && n.contains("3× base amount")
+                && n.contains("CLIFF")
+                && n.contains("not just over-3× portion")));
     }
 
     #[test]
     fn note_pins_subsection_b3_base_amount() {
         let r = check(&officer_acquisition_excess());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 280G(b)(3) BASE AMOUNT")
-            && n.contains("5 MOST RECENT TAX YEARS")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("§ 280G(b)(3) BASE AMOUNT") && n.contains("5 MOST RECENT TAX YEARS")
+        ));
     }
 
     #[test]
     fn note_pins_subsection_c_three_categories() {
         let r = check(&officer_acquisition_excess());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 280G(c) DISQUALIFIED INDIVIDUAL")
-            && n.contains("OFFICER")
-            && n.contains("1%+ SHAREHOLDER")
-            && n.contains("HIGHLY COMPENSATED EMPLOYEE")
-            && n.contains("$155K")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 280G(c) DISQUALIFIED INDIVIDUAL")
+                && n.contains("OFFICER")
+                && n.contains("1%+ SHAREHOLDER")
+                && n.contains("HIGHLY COMPENSATED EMPLOYEE")
+                && n.contains("$155K")));
     }
 
     #[test]
     fn note_pins_subsection_b2_change_categories() {
         let r = check(&officer_acquisition_excess());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 280G(b)(2)(A) CHANGE IN OWNERSHIP OR CONTROL")
+        assert!(r.notes.iter().any(|n| n
+            .contains("§ 280G(b)(2)(A) CHANGE IN OWNERSHIP OR CONTROL")
             && n.contains("> 50%")
             && n.contains("35% voting")
             && n.contains("40%+ of total gross FMV")));
@@ -660,18 +675,20 @@ mod tests {
     #[test]
     fn note_pins_subsection_b5_small_business_exception() {
         let r = check(&officer_acquisition_excess());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 280G(b)(5) SMALL BUSINESS EXCEPTION")
-            && n.contains("§ 1361 S corporation election")
-            && n.contains("> 75% voting power")
-            && n.contains("cleansing-vote safe harbor")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 280G(b)(5) SMALL BUSINESS EXCEPTION")
+                && n.contains("§ 1361 S corporation election")
+                && n.contains("> 75% voting power")
+                && n.contains("cleansing-vote safe harbor")));
     }
 
     #[test]
     fn note_pins_subsection_b4_reasonable_compensation() {
         let r = check(&officer_acquisition_excess());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 280G(b)(4) REASONABLE COMPENSATION EXCEPTION")
+        assert!(r.notes.iter().any(|n| n
+            .contains("§ 280G(b)(4) REASONABLE COMPENSATION EXCEPTION")
             && n.contains("CLEAR AND CONVINCING EVIDENCE")
             && n.contains("Q&A 40")));
     }
@@ -679,8 +696,7 @@ mod tests {
     #[test]
     fn note_pins_section_4999_and_gross_up_modified_cutback() {
         let r = check(&officer_acquisition_excess());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 4999")
+        assert!(r.notes.iter().any(|n| n.contains("§ 4999")
             && n.contains("20% EXCISE TAX")
             && n.contains("GROSS-UP CLAUSE")
             && n.contains("MODIFIED CUTBACK")
@@ -690,26 +706,28 @@ mod tests {
     #[test]
     fn note_pins_trader_fact_patterns_five() {
         let r = check(&officer_acquisition_excess());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-critical fact patterns")
-            && n.contains("$500M")
-            && n.contains("$700K § 4999")
-            && n.contains("0.5% stock")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-critical fact patterns")
+                && n.contains("$500M")
+                && n.contains("$700K § 4999")
+                && n.contains("0.5% stock")));
     }
 
     #[test]
     fn note_pins_form_1120_schedule_m3() {
         let r = check(&officer_acquisition_excess());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Form 1120 Schedule M-3")
-            && n.contains("Form W-2 Box 12 Code K")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Form 1120 Schedule M-3") && n.contains("Form W-2 Box 12 Code K")));
     }
 
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&officer_acquisition_excess());
-        assert!(r.notes.iter().any(|n|
-            n.contains("section_422")
+        assert!(r.notes.iter().any(|n| n.contains("section_422")
             && n.contains("section_423")
             && n.contains("section_409a")
             && n.contains("section_4973")

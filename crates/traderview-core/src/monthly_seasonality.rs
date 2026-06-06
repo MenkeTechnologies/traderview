@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct DailyClose {
     pub year: u16,
-    pub month: u8,    // 1..=12
+    pub month: u8, // 1..=12
     pub close: f64,
 }
 
@@ -36,9 +36,13 @@ pub struct MonthlySeasonalityReport {
 }
 
 pub fn compute(closes: &[DailyClose]) -> Option<MonthlySeasonalityReport> {
-    if closes.len() < 2 { return None; }
-    if closes.iter().any(|c| !c.close.is_finite() || c.close <= 0.0
-        || !(1..=12).contains(&c.month)) {
+    if closes.len() < 2 {
+        return None;
+    }
+    if closes
+        .iter()
+        .any(|c| !c.close.is_finite() || c.close <= 0.0 || !(1..=12).contains(&c.month))
+    {
         return None;
     }
     // Aggregate month-end closes per (year, month).
@@ -47,7 +51,9 @@ pub fn compute(closes: &[DailyClose]) -> Option<MonthlySeasonalityReport> {
     for c in closes {
         month_end.insert((c.year, c.month), c.close);
     }
-    if month_end.len() < 2 { return None; }
+    if month_end.len() < 2 {
+        return None;
+    }
     // Compute month-over-month log returns keyed by month-of-year.
     let mut returns_per_month: Vec<Vec<f64>> = vec![Vec::new(); 13];
     let mut prev: Option<((u16, u8), f64)> = None;
@@ -68,7 +74,8 @@ pub fn compute(closes: &[DailyClose]) -> Option<MonthlySeasonalityReport> {
         let returns = &returns_per_month[m as usize];
         if returns.is_empty() {
             report.by_month.push(MonthStats {
-                month: m, ..Default::default()
+                month: m,
+                ..Default::default()
             });
             continue;
         }
@@ -112,8 +119,12 @@ mod tests {
     #[test]
     fn flat_market_yields_zero_returns() {
         let closes = vec![
-            d(2020, 1, 100.0), d(2020, 2, 100.0), d(2020, 3, 100.0),
-            d(2021, 1, 100.0), d(2021, 2, 100.0), d(2021, 3, 100.0),
+            d(2020, 1, 100.0),
+            d(2020, 2, 100.0),
+            d(2020, 3, 100.0),
+            d(2021, 1, 100.0),
+            d(2021, 2, 100.0),
+            d(2021, 3, 100.0),
         ];
         let r = compute(&closes).unwrap();
         for m in &r.by_month {
@@ -127,8 +138,12 @@ mod tests {
     fn january_outperformance_detected() {
         // January up 10%, other months flat for 3 years.
         let closes = vec![
-            d(2020, 1, 110.0), d(2020, 2, 110.0), d(2020, 12, 100.0),
-            d(2021, 1, 110.0), d(2021, 2, 110.0), d(2021, 12, 100.0),
+            d(2020, 1, 110.0),
+            d(2020, 2, 110.0),
+            d(2020, 12, 100.0),
+            d(2021, 1, 110.0),
+            d(2021, 2, 110.0),
+            d(2021, 12, 100.0),
             d(2022, 1, 110.0),
         ];
         let r = compute(&closes).unwrap();

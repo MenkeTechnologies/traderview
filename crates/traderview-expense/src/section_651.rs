@@ -175,8 +175,10 @@ pub fn compute(input: &Input) -> Output {
             mode: Section651Mode::NotApplicableGrantorTrustPassThrough,
             distribution_deduction_dollars: 0,
             beneficiary_inclusion_dollars: 0,
-            statutory_basis: "Subpart E grantor trust passthrough; no § 651 deduction at trust level".to_string(),
-            notes: "Grantor trust passthrough; all income flows to grantor; § 651 inapplicable.".to_string(),
+            statutory_basis:
+                "Subpart E grantor trust passthrough; no § 651 deduction at trust level".to_string(),
+            notes: "Grantor trust passthrough; all income flows to grantor; § 651 inapplicable."
+                .to_string(),
             citations,
         };
     }
@@ -186,8 +188,10 @@ pub fn compute(input: &Input) -> Output {
             mode: Section651Mode::NotApplicableNoIncomeRequiredToBeDistributed,
             distribution_deduction_dollars: 0,
             beneficiary_inclusion_dollars: 0,
-            statutory_basis: "§ 651 inapplicable absent income required to be distributed currently".to_string(),
-            notes: "No income required to be distributed currently; § 651 deduction = 0.".to_string(),
+            statutory_basis:
+                "§ 651 inapplicable absent income required to be distributed currently".to_string(),
+            notes: "No income required to be distributed currently; § 651 deduction = 0."
+                .to_string(),
             citations,
         };
     }
@@ -333,7 +337,8 @@ mod tests {
     fn baseline_simple_trust_compliant() -> Input {
         Input {
             trust_type: TrustType::SimpleTrustQualifyingUnderSection651,
-            simple_trust_requirements_failure: SimpleTrustRequirementsFailureCategory::AllRequirementsSatisfied,
+            simple_trust_requirements_failure:
+                SimpleTrustRequirementsFailureCategory::AllRequirementsSatisfied,
             income_required_to_be_distributed_currently_dollars: 60_000,
             dni_dollars: 100_000,
             distribution_deduction_claimed_dollars: 60_000,
@@ -351,7 +356,10 @@ mod tests {
             ..baseline_simple_trust_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section651Mode::NotApplicableTrustIsComplexNotSimpleUseSection661);
+        assert_eq!(
+            result.mode,
+            Section651Mode::NotApplicableTrustIsComplexNotSimpleUseSection661
+        );
     }
 
     #[test]
@@ -361,7 +369,10 @@ mod tests {
             ..baseline_simple_trust_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section651Mode::NotApplicableTrustIsComplexNotSimpleUseSection661);
+        assert_eq!(
+            result.mode,
+            Section651Mode::NotApplicableTrustIsComplexNotSimpleUseSection661
+        );
     }
 
     #[test]
@@ -371,7 +382,10 @@ mod tests {
             ..baseline_simple_trust_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section651Mode::NotApplicableGrantorTrustPassThrough);
+        assert_eq!(
+            result.mode,
+            Section651Mode::NotApplicableGrantorTrustPassThrough
+        );
     }
 
     #[test]
@@ -381,13 +395,19 @@ mod tests {
             ..baseline_simple_trust_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section651Mode::NotApplicableNoIncomeRequiredToBeDistributed);
+        assert_eq!(
+            result.mode,
+            Section651Mode::NotApplicableNoIncomeRequiredToBeDistributed
+        );
     }
 
     #[test]
     fn simple_trust_baseline_compliant() {
         let result = compute(&baseline_simple_trust_compliant());
-        assert_eq!(result.mode, Section651Mode::CompliantIncomeFullyDistributedAndIncludedByBeneficiary);
+        assert_eq!(
+            result.mode,
+            Section651Mode::CompliantIncomeFullyDistributedAndIncludedByBeneficiary
+        );
         assert_eq!(result.distribution_deduction_dollars, 60_000);
         assert_eq!(result.beneficiary_inclusion_dollars, 60_000);
     }
@@ -395,31 +415,43 @@ mod tests {
     #[test]
     fn corpus_distribution_makes_trust_complex_violation() {
         let input = Input {
-            simple_trust_requirements_failure: SimpleTrustRequirementsFailureCategory::CorpusDistributionMadeInYear,
+            simple_trust_requirements_failure:
+                SimpleTrustRequirementsFailureCategory::CorpusDistributionMadeInYear,
             ..baseline_simple_trust_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section651Mode::ViolationCorpusDistributionMadeTrustNotSimple);
+        assert_eq!(
+            result.mode,
+            Section651Mode::ViolationCorpusDistributionMadeTrustNotSimple
+        );
     }
 
     #[test]
     fn charitable_section_642c_provision_makes_trust_complex() {
         let input = Input {
-            simple_trust_requirements_failure: SimpleTrustRequirementsFailureCategory::Section642cCharitableProvisionInInstrument,
+            simple_trust_requirements_failure:
+                SimpleTrustRequirementsFailureCategory::Section642cCharitableProvisionInInstrument,
             ..baseline_simple_trust_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section651Mode::ViolationCharitableSection642cProvisionMakesTrustComplex);
+        assert_eq!(
+            result.mode,
+            Section651Mode::ViolationCharitableSection642cProvisionMakesTrustComplex
+        );
     }
 
     #[test]
     fn income_not_required_to_be_distributed_currently_violation() {
         let input = Input {
-            simple_trust_requirements_failure: SimpleTrustRequirementsFailureCategory::IncomeNotRequiredToBeDistributedCurrently,
+            simple_trust_requirements_failure:
+                SimpleTrustRequirementsFailureCategory::IncomeNotRequiredToBeDistributedCurrently,
             ..baseline_simple_trust_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section651Mode::ViolationCorpusDistributionMadeTrustNotSimple);
+        assert_eq!(
+            result.mode,
+            Section651Mode::ViolationCorpusDistributionMadeTrustNotSimple
+        );
     }
 
     #[test]
@@ -429,7 +461,10 @@ mod tests {
             ..baseline_simple_trust_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section651Mode::ViolationDeductionExceededDniCeiling);
+        assert_eq!(
+            result.mode,
+            Section651Mode::ViolationDeductionExceededDniCeiling
+        );
         assert_eq!(result.distribution_deduction_dollars, 60_000);
     }
 
@@ -441,7 +476,10 @@ mod tests {
             ..baseline_simple_trust_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section651Mode::CompliantDeductionCappedAtDniRatableInclusionToBeneficiaries);
+        assert_eq!(
+            result.mode,
+            Section651Mode::CompliantDeductionCappedAtDniRatableInclusionToBeneficiaries
+        );
         assert_eq!(result.distribution_deduction_dollars, 100_000);
         assert_eq!(result.beneficiary_inclusion_dollars, 100_000);
     }
@@ -453,7 +491,10 @@ mod tests {
             ..baseline_simple_trust_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section651Mode::ViolationBeneficiaryDidNotIncludeIncomeRequiredToBeDistributed);
+        assert_eq!(
+            result.mode,
+            Section651Mode::ViolationBeneficiaryDidNotIncludeIncomeRequiredToBeDistributed
+        );
     }
 
     #[test]
@@ -470,7 +511,10 @@ mod tests {
             ..baseline_simple_trust_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section651Mode::ViolationBeneficiaryUsedIncorrectTaxableYearSection652c);
+        assert_eq!(
+            result.mode,
+            Section651Mode::ViolationBeneficiaryUsedIncorrectTaxableYearSection652c
+        );
     }
 
     #[test]
@@ -481,7 +525,10 @@ mod tests {
             ..baseline_simple_trust_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section651Mode::CompliantBeneficiaryDifferentTaxableYearSection652c);
+        assert_eq!(
+            result.mode,
+            Section651Mode::CompliantBeneficiaryDifferentTaxableYearSection652c
+        );
     }
 
     #[test]
@@ -491,7 +538,10 @@ mod tests {
             ..baseline_simple_trust_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section651Mode::ViolationCharacterNotProportionatelyAllocated);
+        assert_eq!(
+            result.mode,
+            Section651Mode::ViolationCharacterNotProportionatelyAllocated
+        );
     }
 
     #[test]
@@ -500,11 +550,15 @@ mod tests {
             income_required_to_be_distributed_currently_dollars: 200_000,
             dni_dollars: 80_000,
             distribution_deduction_claimed_dollars: 80_000,
-            beneficiary_inclusion_status: BeneficiaryInclusionStatus::BeneficiaryIncludedRatablePortionAfterDniLimitation,
+            beneficiary_inclusion_status:
+                BeneficiaryInclusionStatus::BeneficiaryIncludedRatablePortionAfterDniLimitation,
             ..baseline_simple_trust_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section651Mode::CompliantDeductionCappedAtDniRatableInclusionToBeneficiaries);
+        assert_eq!(
+            result.mode,
+            Section651Mode::CompliantDeductionCappedAtDniRatableInclusionToBeneficiaries
+        );
         assert_eq!(result.distribution_deduction_dollars, 80_000);
         assert_eq!(result.beneficiary_inclusion_dollars, 80_000);
     }
@@ -517,7 +571,10 @@ mod tests {
             ..baseline_simple_trust_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section651Mode::CompliantIncomeFullyDistributedAndIncludedByBeneficiary);
+        assert_eq!(
+            result.mode,
+            Section651Mode::CompliantIncomeFullyDistributedAndIncludedByBeneficiary
+        );
         assert_eq!(result.distribution_deduction_dollars, 100_000);
     }
 

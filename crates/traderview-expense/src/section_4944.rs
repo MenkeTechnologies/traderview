@@ -442,7 +442,7 @@ mod tests {
         let mut i = baseline();
         i.manager_knowing_willful_without_reasonable_cause = true;
         i.investment_amount_cents = 10_000_000_00; // $10M
-        // 10% × $10M = $1M, capped at $10K
+                                                   // 10% × $10M = $1M, capped at $10K
         let out = check(&i);
         assert_eq!(out.tier1_manager_tax_cents, 10_000_00);
     }
@@ -452,7 +452,7 @@ mod tests {
         let mut i = baseline();
         i.manager_knowing_willful_without_reasonable_cause = true;
         i.investment_amount_cents = 50_000_00; // $50K
-        // 10% × $50K = $5K (under $10K cap)
+                                               // 10% × $50K = $5K (under $10K cap)
         let out = check(&i);
         assert_eq!(out.tier1_manager_tax_cents, 5_000_00);
     }
@@ -479,7 +479,7 @@ mod tests {
         let mut i = baseline();
         i.manager_refuses_correction = true;
         i.investment_amount_cents = 200_000_00; // $200K
-        // 5% × $200K = $10K (under $20K cap)
+                                                // 5% × $200K = $10K (under $20K cap)
         let out = check(&i);
         assert_eq!(out.tier2_manager_tax_cents, 10_000_00);
     }

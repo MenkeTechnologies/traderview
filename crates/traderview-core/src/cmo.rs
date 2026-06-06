@@ -22,8 +22,11 @@ pub fn compute(closes: &[f64], period: usize) -> Vec<Option<f64>> {
     let mut down = vec![0.0_f64; n];
     for i in 1..n {
         let d = closes[i] - closes[i - 1];
-        if d > 0.0 { up[i] = d; }
-        else if d < 0.0 { down[i] = -d; }
+        if d > 0.0 {
+            up[i] = d;
+        } else if d < 0.0 {
+            down[i] = -d;
+        }
     }
     for i in period..n {
         let sum_up: f64 = up[i + 1 - period..=i].iter().sum();
@@ -59,7 +62,9 @@ mod tests {
         // No up or down days → denom = 0 → None.
         let v = vec![100.0; 30];
         let out = compute(&v, 14);
-        for v in &out { assert!(v.is_none()); }
+        for v in &out {
+            assert!(v.is_none());
+        }
     }
 
     #[test]
@@ -81,7 +86,9 @@ mod tests {
     #[test]
     fn balanced_changes_cmo_near_zero() {
         // Alternating +1/-1 → sum_up ≈ sum_down.
-        let v: Vec<f64> = (0..30).map(|i| if i % 2 == 0 { 100.0 } else { 101.0 }).collect();
+        let v: Vec<f64> = (0..30)
+            .map(|i| if i % 2 == 0 { 100.0 } else { 101.0 })
+            .collect();
         let out = compute(&v, 14);
         let last = out[29].expect("populated");
         assert!(last.abs() < 10.0, "got {last}");
@@ -89,7 +96,9 @@ mod tests {
 
     #[test]
     fn output_in_range_minus_100_to_100() {
-        let v: Vec<f64> = (0..200).map(|i| 100.0 + (i as f64 * 0.3).sin() * 10.0).collect();
+        let v: Vec<f64> = (0..200)
+            .map(|i| 100.0 + (i as f64 * 0.3).sin() * 10.0)
+            .collect();
         let out = compute(&v, 14);
         for x in out.iter().flatten() {
             assert!((-100.0..=100.0).contains(x), "CMO out of range: {x}");

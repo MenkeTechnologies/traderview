@@ -37,19 +37,25 @@ pub struct RealizedQuarticityReport {
 
 pub fn compute(returns: &[f64]) -> Option<RealizedQuarticityReport> {
     let n = returns.len();
-    if n < 5 { return None; }
-    if returns.iter().any(|x| !x.is_finite()) { return None; }
+    if n < 5 {
+        return None;
+    }
+    if returns.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let n_f = n as f64;
     let rv: f64 = returns.iter().map(|r| r * r).sum();
     let rq = (n_f / 3.0) * returns.iter().map(|r| r.powi(4)).sum::<f64>();
     // Tripower with 3-bar product window.
     let mu_43 = 2.0_f64.powf(2.0 / 3.0) * gamma_7_6() / std::f64::consts::PI.sqrt();
     let mu_43_cubed_inv = 1.0 / mu_43.powi(3);
-    let tq_sum: f64 = (2..n).map(|i| {
-        returns[i].abs().powf(4.0 / 3.0)
-            * returns[i - 1].abs().powf(4.0 / 3.0)
-            * returns[i - 2].abs().powf(4.0 / 3.0)
-    }).sum();
+    let tq_sum: f64 = (2..n)
+        .map(|i| {
+            returns[i].abs().powf(4.0 / 3.0)
+                * returns[i - 1].abs().powf(4.0 / 3.0)
+                * returns[i - 2].abs().powf(4.0 / 3.0)
+        })
+        .sum();
     let tq = n_f * mu_43_cubed_inv * tq_sum;
     let rv_se = (2.0 * rq / n_f).max(0.0).sqrt();
     Some(RealizedQuarticityReport {
@@ -61,7 +67,9 @@ pub fn compute(returns: &[f64]) -> Option<RealizedQuarticityReport> {
     })
 }
 
-fn gamma_7_6() -> f64 { 0.927_553_793_283_388_2 }
+fn gamma_7_6() -> f64 {
+    0.927_553_793_283_388_2
+}
 
 #[cfg(test)]
 mod tests {
@@ -103,9 +111,12 @@ mod tests {
         r[100] = 0.5;
         let result = compute(&r).unwrap();
         // TQ should be smaller than RQ when there's a jump.
-        assert!(result.tripower_quarticity < result.realized_quarticity,
+        assert!(
+            result.tripower_quarticity < result.realized_quarticity,
             "jump should depress TQ vs RQ: TQ = {}, RQ = {}",
-            result.tripower_quarticity, result.realized_quarticity);
+            result.tripower_quarticity,
+            result.realized_quarticity
+        );
     }
 
     #[test]

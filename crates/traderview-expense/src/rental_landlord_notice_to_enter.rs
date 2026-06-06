@@ -301,7 +301,10 @@ pub fn check(input: &Input) -> Output {
 fn jurisdiction_required_hours(jurisdiction: Jurisdiction, entry_purpose: EntryPurpose) -> u32 {
     match jurisdiction {
         Jurisdiction::California => {
-            if matches!(entry_purpose, EntryPurpose::InitialMoveOutInspectionCaSection1950_5F) {
+            if matches!(
+                entry_purpose,
+                EntryPurpose::InitialMoveOutInspectionCaSection1950_5F
+            ) {
                 CA_INITIAL_MOVEOUT_NOTICE_HOURS
             } else {
                 CA_REQUIRED_NOTICE_HOURS
@@ -359,7 +362,10 @@ mod tests {
         input.entry_purpose = EntryPurpose::TenantAbandonedUnit;
         input.notice_method = NoticeMethod::NoNoticeGiven;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::TenantAbandonedUnitNoNoticeRequired);
+        assert_eq!(
+            output.severity,
+            Severity::TenantAbandonedUnitNoNoticeRequired
+        );
         assert!(output.note.contains("CA Civ. Code § 1951.3"));
         assert!(output.note.contains("FL Stat. § 83.595"));
     }
@@ -379,7 +385,10 @@ mod tests {
         let mut input = base();
         input.entry_purpose = EntryPurpose::UnpermittedOrPretextual;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::UnpermittedPurposeQuietEnjoymentBreach);
+        assert_eq!(
+            output.severity,
+            Severity::UnpermittedPurposeQuietEnjoymentBreach
+        );
         // $3,000 rent + $1,000 actual = $4,000
         assert_eq!(output.estimated_landlord_exposure_cents, 4_000_00);
         assert!(output.note.contains("QUIET ENJOYMENT"));
@@ -390,7 +399,10 @@ mod tests {
     fn california_24_hour_written_notice_compliant() {
         let input = base();
         let output = check(&input);
-        assert_eq!(output.severity, Severity::CompliantWrittenNoticeWithinWindow);
+        assert_eq!(
+            output.severity,
+            Severity::CompliantWrittenNoticeWithinWindow
+        );
         assert_eq!(output.required_notice_hours, 24);
         assert_eq!(output.estimated_landlord_exposure_cents, 0);
         assert!(output.note.contains("§ 1954"));
@@ -416,7 +428,10 @@ mod tests {
         input.entry_purpose = EntryPurpose::InitialMoveOutInspectionCaSection1950_5F;
         input.notice_hours_in_advance = 48;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::CompliantWrittenNoticeWithinWindow);
+        assert_eq!(
+            output.severity,
+            Severity::CompliantWrittenNoticeWithinWindow
+        );
         assert_eq!(output.required_notice_hours, 48);
     }
 
@@ -455,7 +470,10 @@ mod tests {
         input.entry_purpose = EntryPurpose::ShowingToProspectiveBuyersTenantsOrAppraisers;
         input.notice_hours_in_advance = 24;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::CompliantWrittenNoticeWithinWindow);
+        assert_eq!(
+            output.severity,
+            Severity::CompliantWrittenNoticeWithinWindow
+        );
         assert_eq!(output.required_notice_hours, 24);
     }
 
@@ -466,7 +484,10 @@ mod tests {
         input.notice_hours_in_advance = 12;
         // FL doesn't require written, but written is supplied which is acceptable
         let output = check(&input);
-        assert_eq!(output.severity, Severity::CompliantWrittenNoticeWithinWindow);
+        assert_eq!(
+            output.severity,
+            Severity::CompliantWrittenNoticeWithinWindow
+        );
         assert_eq!(output.required_notice_hours, 12);
     }
 
@@ -487,7 +508,10 @@ mod tests {
         input.jurisdiction = Jurisdiction::IllinoisChicagoRlto;
         input.notice_hours_in_advance = 48;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::CompliantWrittenNoticeWithinWindow);
+        assert_eq!(
+            output.severity,
+            Severity::CompliantWrittenNoticeWithinWindow
+        );
         assert_eq!(output.required_notice_hours, 48);
     }
 
@@ -498,7 +522,10 @@ mod tests {
         input.notice_hours_in_advance = 24;
         let output = check(&input);
         assert_eq!(output.required_notice_hours, 24);
-        assert_eq!(output.severity, Severity::CompliantWrittenNoticeWithinWindow);
+        assert_eq!(
+            output.severity,
+            Severity::CompliantWrittenNoticeWithinWindow
+        );
     }
 
     #[test]
@@ -507,7 +534,10 @@ mod tests {
         input.jurisdiction = Jurisdiction::Colorado;
         input.notice_hours_in_advance = 48;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::CompliantWrittenNoticeWithinWindow);
+        assert_eq!(
+            output.severity,
+            Severity::CompliantWrittenNoticeWithinWindow
+        );
         assert_eq!(output.required_notice_hours, 48);
     }
 
@@ -564,7 +594,10 @@ mod tests {
         let mut input = base();
         input.notice_hours_in_advance = 24;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::CompliantWrittenNoticeWithinWindow);
+        assert_eq!(
+            output.severity,
+            Severity::CompliantWrittenNoticeWithinWindow
+        );
     }
 
     #[test]

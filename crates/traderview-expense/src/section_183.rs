@@ -132,8 +132,8 @@ pub fn compute(input: &Section183Input) -> Section183Result {
         ActivityType::HorseRelated => 2,
     };
 
-    let presumption_met = !input.section_183e_deferral_election_made
-        && input.profit_years_in_window >= threshold;
+    let presumption_met =
+        !input.section_183e_deferral_election_made && input.profit_years_in_window >= threshold;
 
     // Determination of profit motive:
     // 1. §183(d) presumption met → profit motive
@@ -441,7 +441,9 @@ mod tests {
         i.profit_years_in_window = 0;
         i.nine_factors_favoring_profit = 7;
         let r = compute(&i);
-        assert!(r.note.contains("9-factor analysis establishes profit motive"));
+        assert!(r
+            .note
+            .contains("9-factor analysis establishes profit motive"));
     }
 
     // ── Precision ──────────────────────────────────────────────────

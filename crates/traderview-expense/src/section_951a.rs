@@ -211,9 +211,8 @@ pub fn check(input: &Section951aInput) -> Section951aResult {
     let section_250_deduction_amount: u64 =
         (u128::from(inclusion) * u128::from(section_250_pct) / 10_000) as u64;
     let taxable_after_250 = inclusion.saturating_sub(section_250_deduction_amount);
-    let gross_us_tax: u64 = (u128::from(taxable_after_250)
-        * u128::from(input.corporate_tax_rate_bps)
-        / 10_000) as u64;
+    let gross_us_tax: u64 =
+        (u128::from(taxable_after_250) * u128::from(input.corporate_tax_rate_bps) / 10_000) as u64;
 
     let ftc_rate_bps = if is_post_obbba_year {
         10_000 - POST_OBBBA_FTC_HAIRCUT_BPS
@@ -419,7 +418,10 @@ mod tests {
         let mut i = baseline();
         i.taxable_year = 2024;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::Pre2026GiltiInclusionWithQbai));
+        assert!(matches!(
+            r.severity,
+            Severity::Pre2026GiltiInclusionWithQbai
+        ));
         assert!(!r.is_post_obbba_year);
         let expected_ndtir = 50_000_000_00u64 * 1_000 / 10_000;
         assert_eq!(r.ndtir_deduction_cents, expected_ndtir);
@@ -531,8 +533,7 @@ mod tests {
     #[test]
     fn individual_with_962_election_gets_section_250() {
         let mut i = baseline();
-        i.us_shareholder_type =
-            UsShareholderType::IndividualOrPassThroughWithSection962Election;
+        i.us_shareholder_type = UsShareholderType::IndividualOrPassThroughWithSection962Election;
         let r = check(&i);
         assert_eq!(r.section_250_deduction_pct_bps, 5_000);
     }
@@ -593,8 +594,14 @@ mod tests {
     fn action_references_form_5471_and_form_8992() {
         let i = baseline();
         let r = check(&i);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Form 5471")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Form 8992")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Form 5471")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Form 8992")));
     }
 
     #[test]
@@ -629,7 +636,10 @@ mod tests {
         let mut i = baseline();
         i.taxable_year = 2025;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::Pre2026GiltiInclusionWithQbai));
+        assert!(matches!(
+            r.severity,
+            Severity::Pre2026GiltiInclusionWithQbai
+        ));
         assert!(!r.is_post_obbba_year);
     }
 

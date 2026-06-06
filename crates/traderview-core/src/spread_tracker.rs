@@ -49,15 +49,23 @@ pub struct SpreadReport {
 }
 
 fn classify(bps: f64) -> SpreadRegime {
-    if bps <= 5.0        { SpreadRegime::Tight }
-    else if bps <= 25.0  { SpreadRegime::Normal }
-    else if bps <= 100.0 { SpreadRegime::Wide }
-    else                 { SpreadRegime::Pathological }
+    if bps <= 5.0 {
+        SpreadRegime::Tight
+    } else if bps <= 25.0 {
+        SpreadRegime::Normal
+    } else if bps <= 100.0 {
+        SpreadRegime::Wide
+    } else {
+        SpreadRegime::Pathological
+    }
 }
 
 pub fn analyze(samples: &[QuoteSnapshot]) -> SpreadReport {
     if samples.is_empty() {
-        return SpreadReport { note: "no samples".into(), ..Default::default() };
+        return SpreadReport {
+            note: "no samples".into(),
+            ..Default::default()
+        };
     }
     let (mut sum_bps, mut sum_mid) = (0.0_f64, 0.0_f64);
     let mut min_bps = f64::INFINITY;
@@ -69,13 +77,21 @@ pub fn analyze(samples: &[QuoteSnapshot]) -> SpreadReport {
             continue;
         }
         let mid = (s.bid + s.ask) / 2.0;
-        if mid <= 0.0 { continue; }
+        if mid <= 0.0 {
+            continue;
+        }
         let bps = (s.ask - s.bid) / mid * 10_000.0;
         sum_bps += bps;
         sum_mid += mid;
-        if bps < min_bps { min_bps = bps; }
-        if bps > max_bps { max_bps = bps; }
-        if bps > 100.0   { pathological += 1; }
+        if bps < min_bps {
+            min_bps = bps;
+        }
+        if bps > max_bps {
+            max_bps = bps;
+        }
+        if bps > 100.0 {
+            pathological += 1;
+        }
         valid += 1;
     }
     if valid == 0 {
@@ -90,10 +106,12 @@ pub fn analyze(samples: &[QuoteSnapshot]) -> SpreadReport {
     let regime = classify(avg_bps);
     let pathological_pct = pathological as f64 / valid as f64;
     let note = match regime {
-        SpreadRegime::Tight        => format!("tight {avg_bps:.1} bps — execute aggressively"),
-        SpreadRegime::Normal       => format!("normal {avg_bps:.1} bps"),
-        SpreadRegime::Wide         => format!("wide {avg_bps:.1} bps — use limit orders"),
-        SpreadRegime::Pathological => format!("pathological {avg_bps:.1} bps — feed broken or illiquid name"),
+        SpreadRegime::Tight => format!("tight {avg_bps:.1} bps — execute aggressively"),
+        SpreadRegime::Normal => format!("normal {avg_bps:.1} bps"),
+        SpreadRegime::Wide => format!("wide {avg_bps:.1} bps — use limit orders"),
+        SpreadRegime::Pathological => {
+            format!("pathological {avg_bps:.1} bps — feed broken or illiquid name")
+        }
     };
     SpreadReport {
         samples: valid,
@@ -111,7 +129,9 @@ pub fn analyze(samples: &[QuoteSnapshot]) -> SpreadReport {
 mod tests {
     use super::*;
 
-    fn q(bid: f64, ask: f64) -> QuoteSnapshot { QuoteSnapshot { bid, ask } }
+    fn q(bid: f64, ask: f64) -> QuoteSnapshot {
+        QuoteSnapshot { bid, ask }
+    }
 
     #[test]
     fn empty_input_returns_zero_report() {
@@ -133,8 +153,12 @@ mod tests {
         // 50 bps → Wide regime (5-100 bps boundary lands here).
         // 100 / 100.50 → 50 bps.
         let r = analyze(&[q(100.0, 100.5), q(100.0, 100.5), q(100.0, 100.5)]);
-        assert!(matches!(r.regime, SpreadRegime::Wide),
-            "expected Wide for ~50 bps spread, got {:?} (avg={})", r.regime, r.avg_spread_bps);
+        assert!(
+            matches!(r.regime, SpreadRegime::Wide),
+            "expected Wide for ~50 bps spread, got {:?} (avg={})",
+            r.regime,
+            r.avg_spread_bps
+        );
     }
 
     #[test]
@@ -150,10 +174,10 @@ mod tests {
     fn invalid_samples_skipped_but_counted() {
         // Inputs: 1 valid + 3 invalid. Only valid one is averaged.
         let r = analyze(&[
-            q(100.0, 100.10),       // valid: 10 bps
-            q(0.0,   100.0),        // invalid (bid=0)
-            q(100.0, 99.0),         // invalid (ask < bid)
-            q(f64::NAN, 100.0),     // invalid (NaN)
+            q(100.0, 100.10),   // valid: 10 bps
+            q(0.0, 100.0),      // invalid (bid=0)
+            q(100.0, 99.0),     // invalid (ask < bid)
+            q(f64::NAN, 100.0), // invalid (NaN)
         ]);
         assert_eq!(r.samples, 1);
         assert!((r.avg_spread_bps - 10.0).abs() < 0.01);
@@ -165,16 +189,26 @@ mod tests {
         // the same formula the function uses so the tolerance doesn't have
         // to absorb the bid-vs-mid drift that widens the apparent bps.
         let samples = [q(100.0, 100.02), q(100.0, 100.30), q(100.0, 100.60)];
-        let expected_bps: Vec<f64> = samples.iter()
+        let expected_bps: Vec<f64> = samples
+            .iter()
             .map(|s| (s.ask - s.bid) / ((s.bid + s.ask) / 2.0) * 10_000.0)
             .collect();
         let want_min = expected_bps.iter().copied().fold(f64::INFINITY, f64::min);
-        let want_max = expected_bps.iter().copied().fold(f64::NEG_INFINITY, f64::max);
+        let want_max = expected_bps
+            .iter()
+            .copied()
+            .fold(f64::NEG_INFINITY, f64::max);
         let r = analyze(&samples);
-        assert!((r.min_spread_bps - want_min).abs() < 1e-9,
-            "min: expected {want_min}, got {}", r.min_spread_bps);
-        assert!((r.max_spread_bps - want_max).abs() < 1e-9,
-            "max: expected {want_max}, got {}", r.max_spread_bps);
+        assert!(
+            (r.min_spread_bps - want_min).abs() < 1e-9,
+            "min: expected {want_min}, got {}",
+            r.min_spread_bps
+        );
+        assert!(
+            (r.max_spread_bps - want_max).abs() < 1e-9,
+            "max: expected {want_max}, got {}",
+            r.max_spread_bps
+        );
     }
 
     #[test]

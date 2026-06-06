@@ -46,7 +46,11 @@ pub struct AbcConfig {
 
 impl Default for AbcConfig {
     fn default() -> Self {
-        Self { min_b_retrace: 0.382, max_b_retrace: 0.618, min_c_extension: 1.0 }
+        Self {
+            min_b_retrace: 0.382,
+            max_b_retrace: 0.618,
+            min_c_extension: 1.0,
+        }
     }
 }
 
@@ -82,7 +86,7 @@ pub fn detect(swings: &[SwingPoint], cfg: &AbcConfig) -> AbcReport {
         }
         // B retraces some fraction of AB (it's the same leg measured against
         // itself — equivalent to checking B's location relative to A).
-        let b_retrace = ab / ab.max(bc);    // 0..1 sketch
+        let b_retrace = ab / ab.max(bc); // 0..1 sketch
         let c_ext = bc / ab;
         if c_ext < cfg.min_c_extension {
             continue;
@@ -96,9 +100,14 @@ pub fn detect(swings: &[SwingPoint], cfg: &AbcConfig) -> AbcReport {
             continue;
         }
         report.events.push(AbcEvent {
-            a_idx: a.index, b_idx: b.index, c_idx: c.index, bias,
-            ab_length: ab, bc_length: bc,
-            b_retrace_pct: b_retrace, c_extension_ratio: c_ext,
+            a_idx: a.index,
+            b_idx: b.index,
+            c_idx: c.index,
+            bias,
+            ab_length: ab,
+            bc_length: bc,
+            b_retrace_pct: b_retrace,
+            c_extension_ratio: c_ext,
         });
     }
     report
@@ -109,7 +118,11 @@ mod tests {
     use super::*;
 
     fn sp(idx: usize, price: f64, kind: SwingKind) -> SwingPoint {
-        SwingPoint { index: idx, price, kind }
+        SwingPoint {
+            index: idx,
+            price,
+            kind,
+        }
     }
 
     #[test]
@@ -126,9 +139,16 @@ mod tests {
             sp(20, 95.0, SwingKind::High),
         ];
         // Backwards retrace range.
-        let bad = AbcConfig { min_b_retrace: 0.8, max_b_retrace: 0.2, min_c_extension: 1.0 };
+        let bad = AbcConfig {
+            min_b_retrace: 0.8,
+            max_b_retrace: 0.2,
+            min_c_extension: 1.0,
+        };
         assert!(detect(&swings, &bad).events.is_empty());
-        let zero_ext = AbcConfig { min_c_extension: 0.0, ..AbcConfig::default() };
+        let zero_ext = AbcConfig {
+            min_c_extension: 0.0,
+            ..AbcConfig::default()
+        };
         assert!(detect(&swings, &zero_ext).events.is_empty());
     }
 
@@ -137,9 +157,9 @@ mod tests {
         // A=top 150, B=low 130 (-20), C=high 140 (+10 — C extension 0.5, fails default 1.0).
         // Adjust to make BC ≥ AB.
         let swings = vec![
-            sp(0,  150.0, SwingKind::High),
+            sp(0, 150.0, SwingKind::High),
             sp(10, 130.0, SwingKind::Low),
-            sp(20, 155.0, SwingKind::High),    // BC=25, AB=20, c_ext=1.25 ✓
+            sp(20, 155.0, SwingKind::High), // BC=25, AB=20, c_ext=1.25 ✓
         ];
         let r = detect(&swings, &AbcConfig::default());
         // b_proxy = AB/(AB+BC) = 20/45 = 0.444 ∈ [0.382, 0.618] ✓.
@@ -150,9 +170,9 @@ mod tests {
     #[test]
     fn bullish_abc_after_bottom_detected() {
         let swings = vec![
-            sp(0,  100.0, SwingKind::Low),
+            sp(0, 100.0, SwingKind::Low),
             sp(10, 120.0, SwingKind::High),
-            sp(20, 95.0,  SwingKind::Low),     // BC=25, AB=20, c_ext=1.25 ✓
+            sp(20, 95.0, SwingKind::Low), // BC=25, AB=20, c_ext=1.25 ✓
         ];
         let r = detect(&swings, &AbcConfig::default());
         assert_eq!(r.events.len(), 1);
@@ -163,9 +183,9 @@ mod tests {
     fn non_alternating_kinds_dont_match() {
         // 3 highs in a row.
         let swings = vec![
-            sp(0,  100.0, SwingKind::High),
+            sp(0, 100.0, SwingKind::High),
             sp(10, 120.0, SwingKind::High),
-            sp(20, 95.0,  SwingKind::High),
+            sp(20, 95.0, SwingKind::High),
         ];
         let r = detect(&swings, &AbcConfig::default());
         assert!(r.events.is_empty());
@@ -175,9 +195,9 @@ mod tests {
     fn weak_c_extension_doesnt_qualify() {
         // BC much smaller than AB → c_ext < 1.0 → skip.
         let swings = vec![
-            sp(0,  150.0, SwingKind::High),
+            sp(0, 150.0, SwingKind::High),
             sp(10, 130.0, SwingKind::Low),
-            sp(20, 135.0, SwingKind::High),    // BC=5, AB=20, c_ext=0.25
+            sp(20, 135.0, SwingKind::High), // BC=5, AB=20, c_ext=0.25
         ];
         let r = detect(&swings, &AbcConfig::default());
         assert!(r.events.is_empty());
@@ -186,8 +206,8 @@ mod tests {
     #[test]
     fn zero_leg_skipped() {
         let swings = vec![
-            sp(0,  100.0, SwingKind::High),
-            sp(10, 100.0, SwingKind::Low),     // AB = 0
+            sp(0, 100.0, SwingKind::High),
+            sp(10, 100.0, SwingKind::Low), // AB = 0
             sp(20, 110.0, SwingKind::High),
         ];
         let r = detect(&swings, &AbcConfig::default());

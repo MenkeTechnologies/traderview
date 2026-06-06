@@ -29,19 +29,21 @@ pub struct RsVsMarketReport {
     pub period: usize,
 }
 
-pub fn compute(
-    stock_closes: &[f64],
-    benchmark_closes: &[f64],
-    period: usize,
-) -> RsVsMarketReport {
+pub fn compute(stock_closes: &[f64], benchmark_closes: &[f64], period: usize) -> RsVsMarketReport {
     let n = stock_closes.len();
     let mut report = RsVsMarketReport {
         rs_line: vec![None; n],
         rs_change_pct: vec![None; n],
         period,
     };
-    if n == 0 || benchmark_closes.len() != n || period < 2 { return report; }
-    if stock_closes.iter().chain(benchmark_closes.iter()).any(|x| !x.is_finite()) {
+    if n == 0 || benchmark_closes.len() != n || period < 2 {
+        return report;
+    }
+    if stock_closes
+        .iter()
+        .chain(benchmark_closes.iter())
+        .any(|x| !x.is_finite())
+    {
         return report;
     }
     let mut first_ratio: Option<f64> = None;

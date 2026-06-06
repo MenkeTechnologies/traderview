@@ -29,7 +29,11 @@ pub struct PriceBar {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum Cadence { Weekly, Biweekly, Monthly }
+pub enum Cadence {
+    Weekly,
+    Biweekly,
+    Monthly,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScheduleSpec {
@@ -79,7 +83,9 @@ pub fn simulate(bars: &[PriceBar], spec: &ScheduleSpec) -> SipReport {
     for bar in bars {
         // Apply every scheduled contribution at or before this bar.
         while let Some(&due) = sched_iter.peek() {
-            if due > bar.ts { break; }
+            if due > bar.ts {
+                break;
+            }
             sched_iter.next();
             if bar.price > 0.0 {
                 let bought = spec.contribution_dollars / bar.price;
@@ -120,7 +126,11 @@ pub fn simulate(bars: &[PriceBar], spec: &ScheduleSpec) -> SipReport {
     }
     let final_price = bars.last().map(|b| b.price).unwrap_or(0.0);
     let mv = shares * final_price;
-    let total_return = if cost > 0.0 { (mv + cash_dividends) / cost - 1.0 } else { 0.0 };
+    let total_return = if cost > 0.0 {
+        (mv + cash_dividends) / cost - 1.0
+    } else {
+        0.0
+    };
     SipReport {
         events,
         final_shares: shares,
@@ -133,12 +143,14 @@ pub fn simulate(bars: &[PriceBar], spec: &ScheduleSpec) -> SipReport {
 
 fn scheduled_dates(spec: &ScheduleSpec) -> Vec<DateTime<Utc>> {
     let mut out = Vec::new();
-    if spec.end < spec.start { return out; }
+    if spec.end < spec.start {
+        return out;
+    }
     let step_days = match spec.cadence {
-        Cadence::Weekly   => 7,
+        Cadence::Weekly => 7,
         Cadence::Biweekly => 14,
-        Cadence::Monthly  => 30,    // approximate — caller wanting exact
-                                    // calendar months can iterate manually
+        Cadence::Monthly => 30, // approximate — caller wanting exact
+                                // calendar months can iterate manually
     };
     let mut t = spec.start;
     let mut guard = 0usize;
@@ -156,7 +168,11 @@ mod tests {
     use chrono::NaiveDate;
 
     fn bar(s: &str, price: f64) -> PriceBar {
-        PriceBar { ts: d(s), price, dividend_per_share: 0.0 }
+        PriceBar {
+            ts: d(s),
+            price,
+            dividend_per_share: 0.0,
+        }
     }
 
     fn d(s: &str) -> DateTime<Utc> {
@@ -169,11 +185,16 @@ mod tests {
 
     #[test]
     fn empty_input_returns_default_report() {
-        let r = simulate(&[], &ScheduleSpec {
-            start: d("2026-01-01"), end: d("2026-06-01"),
-            cadence: Cadence::Monthly, contribution_dollars: 500.0,
-            reinvest_dividends: false,
-        });
+        let r = simulate(
+            &[],
+            &ScheduleSpec {
+                start: d("2026-01-01"),
+                end: d("2026-06-01"),
+                cadence: Cadence::Monthly,
+                contribution_dollars: 500.0,
+                reinvest_dividends: false,
+            },
+        );
         assert_eq!(r.final_shares, 0.0);
         assert_eq!(r.final_cost_basis, 0.0);
         assert!(r.events.is_empty());
@@ -182,33 +203,53 @@ mod tests {
     #[test]
     fn zero_contribution_skips_all_buys() {
         let bars = vec![bar("2026-01-15", 100.0), bar("2026-02-15", 100.0)];
-        let r = simulate(&bars, &ScheduleSpec {
-            start: d("2026-01-01"), end: d("2026-12-31"),
-            cadence: Cadence::Monthly, contribution_dollars: 0.0,
-            reinvest_dividends: false,
-        });
+        let r = simulate(
+            &bars,
+            &ScheduleSpec {
+                start: d("2026-01-01"),
+                end: d("2026-12-31"),
+                cadence: Cadence::Monthly,
+                contribution_dollars: 0.0,
+                reinvest_dividends: false,
+            },
+        );
         assert!(r.events.is_empty());
     }
 
     #[test]
     fn monthly_500_into_flat_price_buys_constant_shares() {
         // Monthly $500 at $100 → 5 shares per contribution.
-        let bars: Vec<PriceBar> = (1..=6).map(|m| bar(&format!("2026-{m:02}-15"), 100.0)).collect();
-        let r = simulate(&bars, &ScheduleSpec {
-            start: d("2026-01-01"), end: d("2026-06-30"),
-            cadence: Cadence::Monthly, contribution_dollars: 500.0,
-            reinvest_dividends: false,
-        });
+        let bars: Vec<PriceBar> = (1..=6)
+            .map(|m| bar(&format!("2026-{m:02}-15"), 100.0))
+            .collect();
+        let r = simulate(
+            &bars,
+            &ScheduleSpec {
+                start: d("2026-01-01"),
+                end: d("2026-06-30"),
+                cadence: Cadence::Monthly,
+                contribution_dollars: 500.0,
+                reinvest_dividends: false,
+            },
+        );
         // Expect 6 monthly contributions × 5 shares = 30 shares total.
-        assert!(r.events.iter().filter(|e| e.kind == "contribution").count() >= 5,
-            "expected at least 5 contributions, got {}", r.events.len());
+        assert!(
+            r.events.iter().filter(|e| e.kind == "contribution").count() >= 5,
+            "expected at least 5 contributions, got {}",
+            r.events.len()
+        );
         // Each contribution buys exactly 5 shares at $100.
         for ev in &r.events {
             if ev.kind == "contribution" {
                 assert!((ev.shares_bought - 5.0).abs() < 1e-9);
             }
         }
-        assert!((r.final_cost_basis - 500.0 * r.events.iter().filter(|e| e.kind == "contribution").count() as f64).abs() < 1e-9);
+        assert!(
+            (r.final_cost_basis
+                - 500.0 * r.events.iter().filter(|e| e.kind == "contribution").count() as f64)
+                .abs()
+                < 1e-9
+        );
     }
 
     #[test]
@@ -218,30 +259,53 @@ mod tests {
         // Window kept tight (start..=start+14) so the 30-day Monthly cadence
         // only fires once.
         let bars = vec![PriceBar {
-            ts: d("2026-01-15"), price: 100.0, dividend_per_share: 1.0,
+            ts: d("2026-01-15"),
+            price: 100.0,
+            dividend_per_share: 1.0,
         }];
-        let r = simulate(&bars, &ScheduleSpec {
-            start: d("2026-01-01"), end: d("2026-01-15"),
-            cadence: Cadence::Monthly, contribution_dollars: 1000.0,
-            reinvest_dividends: true,
-        });
-        assert!((r.final_shares - 10.1).abs() < 1e-9,
-            "DRIP should add 0.1 shares; got total {}", r.final_shares);
-        assert_eq!(r.final_dividend_cash, 0.0, "DRIP path keeps no cash dividend");
+        let r = simulate(
+            &bars,
+            &ScheduleSpec {
+                start: d("2026-01-01"),
+                end: d("2026-01-15"),
+                cadence: Cadence::Monthly,
+                contribution_dollars: 1000.0,
+                reinvest_dividends: true,
+            },
+        );
+        assert!(
+            (r.final_shares - 10.1).abs() < 1e-9,
+            "DRIP should add 0.1 shares; got total {}",
+            r.final_shares
+        );
+        assert_eq!(
+            r.final_dividend_cash, 0.0,
+            "DRIP path keeps no cash dividend"
+        );
     }
 
     #[test]
     fn non_drip_keeps_dividends_as_cash() {
         let bars = vec![PriceBar {
-            ts: d("2026-01-15"), price: 100.0, dividend_per_share: 2.0,
+            ts: d("2026-01-15"),
+            price: 100.0,
+            dividend_per_share: 2.0,
         }];
-        let r = simulate(&bars, &ScheduleSpec {
-            start: d("2026-01-01"), end: d("2026-01-15"),
-            cadence: Cadence::Monthly, contribution_dollars: 1000.0,
-            reinvest_dividends: false,
-        });
-        assert!((r.final_dividend_cash - 20.0).abs() < 1e-9,
-            "non-DRIP should accrue $20 cash, got {}", r.final_dividend_cash);
+        let r = simulate(
+            &bars,
+            &ScheduleSpec {
+                start: d("2026-01-01"),
+                end: d("2026-01-15"),
+                cadence: Cadence::Monthly,
+                contribution_dollars: 1000.0,
+                reinvest_dividends: false,
+            },
+        );
+        assert!(
+            (r.final_dividend_cash - 20.0).abs() < 1e-9,
+            "non-DRIP should accrue $20 cash, got {}",
+            r.final_dividend_cash
+        );
         assert!((r.final_shares - 10.0).abs() < 1e-9);
     }
 
@@ -249,12 +313,20 @@ mod tests {
     fn appreciation_into_rising_price_shows_positive_return() {
         // Buy at $100, end at $150 — positive return.
         let bars = vec![bar("2026-01-15", 100.0), bar("2026-06-15", 150.0)];
-        let r = simulate(&bars, &ScheduleSpec {
-            start: d("2026-01-01"), end: d("2026-01-31"),
-            cadence: Cadence::Monthly, contribution_dollars: 1000.0,
-            reinvest_dividends: false,
-        });
-        assert!(r.total_return_pct > 0.0,
-            "rising price must produce positive return, got {}", r.total_return_pct);
+        let r = simulate(
+            &bars,
+            &ScheduleSpec {
+                start: d("2026-01-01"),
+                end: d("2026-01-31"),
+                cadence: Cadence::Monthly,
+                contribution_dollars: 1000.0,
+                reinvest_dividends: false,
+            },
+        );
+        assert!(
+            r.total_return_pct > 0.0,
+            "rising price must produce positive return, got {}",
+            r.total_return_pct
+        );
     }
 }

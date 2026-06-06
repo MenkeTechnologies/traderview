@@ -248,8 +248,7 @@ mod tests {
     #[test]
     fn unrelated_arms_length_sale_section_304_inapplicable() {
         let mut input = base_brother_sister();
-        input.transaction_type =
-            TransactionType::UnrelatedArmsLengthSaleSection304Inapplicable;
+        input.transaction_type = TransactionType::UnrelatedArmsLengthSaleSection304Inapplicable;
         let output = check(&input);
         assert_eq!(
             output.severity,
@@ -399,8 +398,7 @@ mod tests {
     #[test]
     fn unrelated_arms_length_zero_gain_when_basis_exceeds_proceeds() {
         let mut input = base_brother_sister();
-        input.transaction_type =
-            TransactionType::UnrelatedArmsLengthSaleSection304Inapplicable;
+        input.transaction_type = TransactionType::UnrelatedArmsLengthSaleSection304Inapplicable;
         input.property_received_from_acquiring_corp_cents = 100_000_00;
         input.shareholder_basis_in_sold_stock_cents = 150_000_00;
         let output = check(&input);
@@ -416,7 +414,10 @@ mod tests {
         let output = check(&input);
         // $800K dividend (within E&P), no basis recovery
         // Remaining basis = $200K
-        assert_eq!(output.remaining_basis_in_shareholder_stock_cents, 200_000_00);
+        assert_eq!(
+            output.remaining_basis_in_shareholder_stock_cents,
+            200_000_00
+        );
     }
 
     #[test]

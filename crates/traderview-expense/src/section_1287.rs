@@ -295,7 +295,8 @@ pub fn compute(input: &Input) -> Output {
         return Output {
             mode: Section1287Mode::CompliantNoDispositionGainOrLoss,
             statutory_basis: "IRC § 1287(a) — no gain on disposition to recharacterize".to_string(),
-            notes: "COMPLIANT: no gain on disposition; § 1287(a) recharacterization rule moot.".to_string(),
+            notes: "COMPLIANT: no gain on disposition; § 1287(a) recharacterization rule moot."
+                .to_string(),
             citations,
             gain_recharacterized_as_ordinary_income_dollars: 0,
             gain_preserved_as_capital_dollars: 0,
@@ -323,10 +324,12 @@ mod tests {
         Input {
             obligation_classification:
                 ObligationClassification::RegistrationRequiredObligationUnderSection163F2,
-            registration_status: RegistrationStatus::NotInRegisteredFormBearerOrUnregisteredBookEntry,
+            registration_status:
+                RegistrationStatus::NotInRegisteredFormBearerOrUnregisteredBookEntry,
             issuance_date_status: IssuanceDateStatus::IssuedAfterDecember31_1982TefraApplies,
             section_4701_tax_status: Section4701TaxStatus::Section4701TaxNotPaidByIssuer,
-            holder_exception_status: HolderExceptionStatus::HolderExceptionNotClaimedOrNotApplicable,
+            holder_exception_status:
+                HolderExceptionStatus::HolderExceptionNotClaimedOrNotApplicable,
             gain_on_disposition_dollars: 10_000,
         }
     }
@@ -455,7 +458,10 @@ mod tests {
             result.mode,
             Section1287Mode::ViolationSection1287AClaimedAsAvoidedButHolderHadActualKnowledge
         );
-        assert_eq!(result.gain_recharacterized_as_ordinary_income_dollars, 10_000);
+        assert_eq!(
+            result.gain_recharacterized_as_ordinary_income_dollars,
+            10_000
+        );
     }
 
     #[test]
@@ -465,7 +471,10 @@ mod tests {
             result.mode,
             Section1287Mode::ViolationSection1287AConvertsGainToOrdinaryIncome
         );
-        assert_eq!(result.gain_recharacterized_as_ordinary_income_dollars, 10_000);
+        assert_eq!(
+            result.gain_recharacterized_as_ordinary_income_dollars,
+            10_000
+        );
         assert_eq!(result.gain_preserved_as_capital_dollars, 0);
     }
 
@@ -476,7 +485,10 @@ mod tests {
             ..baseline_violation_unregistered_obligation()
         };
         let result = check(&input);
-        assert_eq!(result.mode, Section1287Mode::CompliantNoDispositionGainOrLoss);
+        assert_eq!(
+            result.mode,
+            Section1287Mode::CompliantNoDispositionGainOrLoss
+        );
     }
 
     #[test]

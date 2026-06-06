@@ -64,44 +64,71 @@ pub fn solve(
     if securities.is_empty()
         || !market_excess_return.is_finite()
         || !market_variance.is_finite()
-        || market_variance <= 0.0 {
+        || market_variance <= 0.0
+    {
         return None;
     }
-    if securities.iter().any(|s| !s.alpha.is_finite() || !s.beta.is_finite()
-        || !s.residual_variance.is_finite() || s.residual_variance <= 0.0) {
+    if securities.iter().any(|s| {
+        !s.alpha.is_finite()
+            || !s.beta.is_finite()
+            || !s.residual_variance.is_finite()
+            || s.residual_variance <= 0.0
+    }) {
         return None;
     }
-    let score_sum: f64 = securities.iter().map(|s| s.alpha / s.residual_variance).sum();
-    if !score_sum.is_finite() || score_sum.abs() < 1e-18 { return None; }
+    let score_sum: f64 = securities
+        .iter()
+        .map(|s| s.alpha / s.residual_variance)
+        .sum();
+    if !score_sum.is_finite() || score_sum.abs() < 1e-18 {
+        return None;
+    }
     let mut active_weights = Vec::with_capacity(securities.len());
     for s in securities {
         active_weights.push((s.alpha / s.residual_variance) / score_sum);
     }
-    let alpha_a: f64 = securities.iter().zip(active_weights.iter())
-        .map(|(s, w)| s.alpha * w).sum();
-    let beta_a: f64 = securities.iter().zip(active_weights.iter())
-        .map(|(s, w)| s.beta * w).sum();
-    let resid_var_a: f64 = securities.iter().zip(active_weights.iter())
-        .map(|(s, w)| w * w * s.residual_variance).sum();
-    if resid_var_a <= 0.0 { return None; }
+    let alpha_a: f64 = securities
+        .iter()
+        .zip(active_weights.iter())
+        .map(|(s, w)| s.alpha * w)
+        .sum();
+    let beta_a: f64 = securities
+        .iter()
+        .zip(active_weights.iter())
+        .map(|(s, w)| s.beta * w)
+        .sum();
+    let resid_var_a: f64 = securities
+        .iter()
+        .zip(active_weights.iter())
+        .map(|(s, w)| w * w * s.residual_variance)
+        .sum();
+    if resid_var_a <= 0.0 {
+        return None;
+    }
     // Naive active weight: (α_A / σ²_ε,A) / (E[R_M − Rf] / σ²_M)
     let market_score = market_excess_return / market_variance;
-    if market_score.abs() < 1e-18 { return None; }
+    if market_score.abs() < 1e-18 {
+        return None;
+    }
     let w_a_naive = (alpha_a / resid_var_a) / market_score;
     // Beta adjustment: w_A^* = w_A^0 / (1 + (1 − β_A) · w_A^0)
     let adjust = 1.0 + (1.0 - beta_a) * w_a_naive;
-    if adjust.abs() < 1e-18 { return None; }
+    if adjust.abs() < 1e-18 {
+        return None;
+    }
     let w_a_adj = w_a_naive / adjust;
     let w_market = 1.0 - w_a_adj;
     // Information ratio = α_A / σ_ε,A (Sharpe ratio for active alpha).
     let info_ratio = alpha_a / resid_var_a.sqrt();
-    let allocations = securities.iter().zip(active_weights.iter()).map(|(s, w)| {
-        SecurityAllocation {
+    let allocations = securities
+        .iter()
+        .zip(active_weights.iter())
+        .map(|(s, w)| SecurityAllocation {
             symbol: s.symbol.clone(),
             weight_active_subportfolio: *w,
             weight_overall: w_a_adj * w,
-        }
-    }).collect();
+        })
+        .collect();
     Some(TreynorBlackReport {
         active_portfolio_alpha: alpha_a,
         active_portfolio_beta: beta_a,
@@ -119,7 +146,12 @@ mod tests {
     use super::*;
 
     fn s(sym: &str, alpha: f64, beta: f64, sv: f64) -> ActiveSecurity {
-        ActiveSecurity { symbol: sym.into(), alpha, beta, residual_variance: sv }
+        ActiveSecurity {
+            symbol: sym.into(),
+            alpha,
+            beta,
+            residual_variance: sv,
+        }
     }
 
     #[test]
@@ -145,8 +177,18 @@ mod tests {
         // A should dominate the active sub-portfolio.
         let sec = vec![s("A", 0.03, 1.0, 0.01), s("B", 0.01, 1.0, 0.02)];
         let r = solve(&sec, 0.06, 0.04).unwrap();
-        let a_w = r.allocations.iter().find(|x| x.symbol == "A").unwrap().weight_active_subportfolio;
-        let b_w = r.allocations.iter().find(|x| x.symbol == "B").unwrap().weight_active_subportfolio;
+        let a_w = r
+            .allocations
+            .iter()
+            .find(|x| x.symbol == "A")
+            .unwrap()
+            .weight_active_subportfolio;
+        let b_w = r
+            .allocations
+            .iter()
+            .find(|x| x.symbol == "B")
+            .unwrap()
+            .weight_active_subportfolio;
         assert!(a_w > b_w);
         assert!((a_w + b_w - 1.0).abs() < 1e-12);
     }
@@ -156,8 +198,16 @@ mod tests {
         // Short the security with negative alpha.
         let sec = vec![s("LONG", 0.02, 1.0, 0.01), s("SHORT", -0.01, 1.0, 0.01)];
         let r = solve(&sec, 0.06, 0.04).unwrap();
-        let short_w = r.allocations.iter().find(|x| x.symbol == "SHORT").unwrap().weight_active_subportfolio;
-        assert!(short_w < 0.0, "negative alpha should produce short weight, got {short_w}");
+        let short_w = r
+            .allocations
+            .iter()
+            .find(|x| x.symbol == "SHORT")
+            .unwrap()
+            .weight_active_subportfolio;
+        assert!(
+            short_w < 0.0,
+            "negative alpha should produce short weight, got {short_w}"
+        );
     }
 
     #[test]

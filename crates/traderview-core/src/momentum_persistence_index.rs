@@ -32,23 +32,33 @@ pub fn compute(closes: &[f64], period: usize) -> MomentumPersistenceReport {
         signed_persistence: vec![None; n],
         period,
     };
-    if period < 2 || n < period + 1 { return report; }
-    if closes.iter().any(|x| !x.is_finite()) { return report; }
+    if period < 2 || n < period + 1 {
+        return report;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return report;
+    }
     let p_f = period as f64;
     for i in period..n {
         let win = &closes[i + 1 - period..=i];
         let mut up = 0_usize;
         let mut dn = 0_usize;
         for w in win.windows(2) {
-            if w[1] > w[0] { up += 1; }
-            else if w[1] < w[0] { dn += 1; }
+            if w[1] > w[0] {
+                up += 1;
+            } else if w[1] < w[0] {
+                dn += 1;
+            }
         }
         // Include the first bar of the window vs the bar BEFORE the window
         // (closes[i + 1 - period - 1] = closes[i - period]).
         let first_in_win = win[0];
         let bar_before = closes[i - period];
-        if first_in_win > bar_before { up += 1; }
-        else if first_in_win < bar_before { dn += 1; }
+        if first_in_win > bar_before {
+            up += 1;
+        } else if first_in_win < bar_before {
+            dn += 1;
+        }
         let max_count = up.max(dn) as f64;
         report.persistence[i] = Some(max_count / p_f);
         report.signed_persistence[i] = Some((up as f64 - dn as f64) / p_f);
@@ -111,7 +121,9 @@ mod tests {
     #[test]
     fn alternating_yields_half_persistence() {
         // Alternating up/down → up and dn each = 10 of 20 → persistence = 0.5.
-        let c: Vec<f64> = (0_usize..30).map(|i| if i.is_multiple_of(2) { 100.0 } else { 101.0 }).collect();
+        let c: Vec<f64> = (0_usize..30)
+            .map(|i| if i.is_multiple_of(2) { 100.0 } else { 101.0 })
+            .collect();
         let r = compute(&c, 20);
         let last = 29;
         assert!((r.persistence[last].unwrap() - 0.5).abs() < 1e-9);

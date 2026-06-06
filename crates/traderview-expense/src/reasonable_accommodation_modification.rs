@@ -297,7 +297,8 @@ pub fn check(input: &Input) -> CheckResult {
     };
 
     if matches!(input.regime, Regime::Washington) {
-        citation_parts.push("RCW 49.60.222(2)(b) (Washington reasonable modification / accommodation)");
+        citation_parts
+            .push("RCW 49.60.222(2)(b) (Washington reasonable modification / accommodation)");
     }
 
     let citation = citation_parts.join("; ");
@@ -354,7 +355,10 @@ mod tests {
         assert_eq!(r.cost_borne_by, "tenant");
         assert!(r.citation.contains("§ 3604(f)(3)(A)"));
         assert!(!r.cooperative_dialogue_required);
-        assert_eq!(r.cooperative_dialogue_completed_within_reasonable_time, None);
+        assert_eq!(
+            r.cooperative_dialogue_completed_within_reasonable_time,
+            None
+        );
     }
 
     #[test]
@@ -375,11 +379,10 @@ mod tests {
         i.modification_would_materially_impact_next_occupant = false;
         let r = check(&i);
         assert!(!r.restoration_permissible);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("Restoration agreement is NOT a permissible condition"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("Restoration agreement is NOT a permissible condition")));
     }
 
     // ── Federal accommodation path ───────────────────────────────
@@ -398,11 +401,10 @@ mod tests {
         i.creates_undue_financial_burden = true;
         let r = check(&i);
         assert!(!r.request_grantable);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("undue financial or administrative burden"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("undue financial or administrative burden")));
     }
 
     #[test]
@@ -411,11 +413,10 @@ mod tests {
         i.creates_fundamental_alteration = true;
         let r = check(&i);
         assert!(!r.request_grantable);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("fundamental alteration"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("fundamental alteration")));
     }
 
     // ── Nexus / disability threshold ─────────────────────────────
@@ -426,11 +427,10 @@ mod tests {
         i.tenant_has_qualifying_disability = false;
         let r = check(&i);
         assert!(!r.request_grantable);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("does not have a qualifying disability"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("does not have a qualifying disability")));
     }
 
     #[test]
@@ -480,21 +480,20 @@ mod tests {
         i.restoration_estimate_cents = 7_500_00;
         let r = check(&i);
         assert!(!r.escrow_within_cap);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("escrow amount") && v.contains("exceeds"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("escrow amount") && v.contains("exceeds")));
     }
 
     #[test]
     fn california_sensory_disability_note() {
         let i = base(Regime::California, RequestType::Modification);
         let r = check(&i);
-        assert!(
-            r.notes.iter().any(|n| n.contains("§ 54(b)")
-                && n.to_lowercase().contains("sensory"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 54(b)") && n.to_lowercase().contains("sensory")));
     }
 
     // ── NYC cooperative-dialogue mandate ─────────────────────────
@@ -520,11 +519,10 @@ mod tests {
             r.cooperative_dialogue_completed_within_reasonable_time,
             Some(false)
         );
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("failed to engage in cooperative dialogue"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("failed to engage in cooperative dialogue")));
     }
 
     #[test]
@@ -538,11 +536,10 @@ mod tests {
             r.cooperative_dialogue_completed_within_reasonable_time,
             Some(false)
         );
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("not completed within reasonable time"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("not completed within reasonable time")));
     }
 
     #[test]
@@ -567,11 +564,10 @@ mod tests {
         i.creates_fundamental_alteration = false;
         let r = check(&i);
         assert!(!r.request_grantable);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("Failure to engage is itself a discriminatory practice"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("Failure to engage is itself a discriminatory practice")));
     }
 
     // ── Washington ───────────────────────────────────────────────
@@ -597,11 +593,7 @@ mod tests {
 
     #[test]
     fn only_nyc_imposes_cooperative_dialogue_mandate_4_regime_invariant() {
-        for &regime in &[
-            Regime::Federal,
-            Regime::California,
-            Regime::Washington,
-        ] {
+        for &regime in &[Regime::Federal, Regime::California, Regime::Washington] {
             let r = check(&base(regime, RequestType::Accommodation));
             assert!(
                 !r.cooperative_dialogue_required,
@@ -630,11 +622,10 @@ mod tests {
             i
         };
         let ca = check(&setup(Regime::California));
-        assert!(
-            ca.violations
-                .iter()
-                .any(|v| v.contains("escrow amount") && v.contains("exceeds"))
-        );
+        assert!(ca
+            .violations
+            .iter()
+            .any(|v| v.contains("escrow amount") && v.contains("exceeds")));
         for &regime in &[Regime::Federal, Regime::NYC, Regime::Washington] {
             let r = check(&setup(regime));
             assert!(

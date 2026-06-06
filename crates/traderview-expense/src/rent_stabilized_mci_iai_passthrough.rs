@@ -98,12 +98,8 @@ pub fn check(input: &RentStabilizedPassthroughInput) -> RentStabilizedPassthroug
 
     match input.improvement_type {
         ImprovementType::MajorCapitalImprovement => check_mci(input, cost, rent),
-        ImprovementType::IndividualApartmentStandard => {
-            check_iai_standard(input, cost)
-        }
-        ImprovementType::IndividualApartmentSpecialTier => {
-            check_iai_special(input, cost)
-        }
+        ImprovementType::IndividualApartmentStandard => check_iai_standard(input, cost),
+        ImprovementType::IndividualApartmentSpecialTier => check_iai_special(input, cost),
     }
 }
 
@@ -173,7 +169,11 @@ fn check_iai_standard(
         ));
     }
 
-    let divisor: i64 = if input.building_unit_count <= 35 { 168 } else { 180 };
+    let divisor: i64 = if input.building_unit_count <= 35 {
+        168
+    } else {
+        180
+    };
     let allowable = recoverable_cost / divisor;
 
     RentStabilizedPassthroughResult {
@@ -211,7 +211,11 @@ fn check_iai_special(
         ));
     }
 
-    let divisor: i64 = if input.building_unit_count <= 35 { 144 } else { 156 };
+    let divisor: i64 = if input.building_unit_count <= 35 {
+        144
+    } else {
+        156
+    };
     let allowable = recoverable_cost / divisor;
 
     RentStabilizedPassthroughResult {
@@ -324,9 +328,10 @@ mod tests {
     #[test]
     fn mci_note_pins_2_percent_cap_and_12_year_amortization() {
         let r = check(&mci_base());
-        assert!(r.notes.iter().any(|n| n.contains("2%")
-            && n.contains("12 years")
-            && n.contains("12.5 years")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("2%") && n.contains("12 years") && n.contains("12.5 years")));
     }
 
     #[test]
@@ -388,9 +393,10 @@ mod tests {
     #[test]
     fn iai_standard_note_pins_30000_cap_and_permanent() {
         let r = check(&iai_standard_base());
-        assert!(r.notes.iter().any(|n| n.contains("$30,000")
-            && n.contains("PERMANENT")
-            && n.contains("HSTPA 2019")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("$30,000") && n.contains("PERMANENT") && n.contains("HSTPA 2019")));
     }
 
     #[test]

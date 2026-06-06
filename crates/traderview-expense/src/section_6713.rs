@@ -137,10 +137,7 @@ pub struct Section6713Result {
 pub fn check(input: &Section6713Input) -> Section6713Result {
     let mut failure_reasons: Vec<String> = Vec::new();
 
-    let exception_applies = !matches!(
-        input.exception_category,
-        DisclosureExceptionCategory::None
-    );
+    let exception_applies = !matches!(input.exception_category, DisclosureExceptionCategory::None);
 
     const PER_DISCLOSURE_CENTS: u64 = 25_000;
     const ANNUAL_CAP_CENTS: u64 = 1_000_000;
@@ -393,7 +390,10 @@ mod tests {
     #[test]
     fn note_pins_concurrent_penalty_stacking() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("Both penalties may apply concurrently")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Both penalties may apply concurrently")));
     }
 
     #[test]
@@ -432,7 +432,10 @@ mod tests {
             (DisclosureExceptionCategory::AssistingFirm, true),
             (DisclosureExceptionCategory::BookkeepingServices, true),
             (DisclosureExceptionCategory::QualityOrPeerReview, true),
-            (DisclosureExceptionCategory::ProfessionalLiabilityInsurance, true),
+            (
+                DisclosureExceptionCategory::ProfessionalLiabilityInsurance,
+                true,
+            ),
             (DisclosureExceptionCategory::TaxAuthorityInvestigation, true),
             (DisclosureExceptionCategory::OtherFederalLaw, true),
             (DisclosureExceptionCategory::TaxpayerWrittenConsent, true),
@@ -465,8 +468,10 @@ mod tests {
     fn strict_liability_distinct_from_7216_knowing_invariant() {
         let r = check(&valid_base());
         assert!(r.strict_liability_applies);
-        assert!(r.notes.iter().any(|n| n.contains("STRICT LIABILITY")
-            && n.contains("KNOWING OR RECKLESS")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("STRICT LIABILITY") && n.contains("KNOWING OR RECKLESS")));
     }
 
     #[test]

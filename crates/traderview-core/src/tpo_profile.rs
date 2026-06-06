@@ -29,7 +29,12 @@ pub struct Config {
 }
 
 impl Default for Config {
-    fn default() -> Self { Self { n_buckets: 30, value_area_pct: 0.70 } }
+    fn default() -> Self {
+        Self {
+            n_buckets: 30,
+            value_area_pct: 0.70,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -62,9 +67,15 @@ pub fn build(bars: &[Bar], cfg: &Config) -> Option<TpoReport> {
     let mut hi = f64::NEG_INFINITY;
     let mut lo = f64::INFINITY;
     for b in bars {
-        if !b.high.is_finite() || !b.low.is_finite() || b.high < b.low { continue; }
-        if b.high > hi { hi = b.high; }
-        if b.low < lo { lo = b.low; }
+        if !b.high.is_finite() || !b.low.is_finite() || b.high < b.low {
+            continue;
+        }
+        if b.high > hi {
+            hi = b.high;
+        }
+        if b.low < lo {
+            lo = b.low;
+        }
     }
     if !hi.is_finite() || !lo.is_finite() || hi <= lo {
         return None;
@@ -80,7 +91,9 @@ pub fn build(bars: &[Bar], cfg: &Config) -> Option<TpoReport> {
         bucket_prices.push(lo + bucket_size * (i as f64 + 0.5));
     }
     for b in bars {
-        if !b.high.is_finite() || !b.low.is_finite() || b.high < b.low { continue; }
+        if !b.high.is_finite() || !b.low.is_finite() || b.high < b.low {
+            continue;
+        }
         let low_idx = ((b.low - lo) / bucket_size).floor() as isize;
         let high_idx = ((b.high - lo) / bucket_size).floor() as isize;
         let low_idx = low_idx.clamp(0, cfg.n_buckets as isize - 1) as usize;
@@ -94,7 +107,9 @@ pub fn build(bars: &[Bar], cfg: &Config) -> Option<TpoReport> {
         return None;
     }
     // POC = bucket with max count (lowest index if tied — convention).
-    let (poc_index, _) = counts.iter().enumerate()
+    let (poc_index, _) = counts
+        .iter()
+        .enumerate()
         .max_by(|a, b| a.1.cmp(b.1).then_with(|| b.0.cmp(&a.0)))
         .expect("non-empty");
     // Expand value area outward from POC until target % of TPOs covered.
@@ -105,16 +120,24 @@ pub fn build(bars: &[Bar], cfg: &Config) -> Option<TpoReport> {
     while covered < target && (va_lo > 0 || va_hi < cfg.n_buckets - 1) {
         // Take the larger of the next two adjacent slots (above + below pair).
         let above_pair = if va_hi + 2 < cfg.n_buckets {
-            counts.get(va_hi + 1).copied().unwrap_or(0) + counts.get(va_hi + 2).copied().unwrap_or(0)
+            counts.get(va_hi + 1).copied().unwrap_or(0)
+                + counts.get(va_hi + 2).copied().unwrap_or(0)
         } else if va_hi + 1 < cfg.n_buckets {
             counts.get(va_hi + 1).copied().unwrap_or(0)
-        } else { 0 };
+        } else {
+            0
+        };
         let below_pair = if va_lo >= 2 {
-            counts.get(va_lo - 1).copied().unwrap_or(0) + counts.get(va_lo - 2).copied().unwrap_or(0)
+            counts.get(va_lo - 1).copied().unwrap_or(0)
+                + counts.get(va_lo - 2).copied().unwrap_or(0)
         } else if va_lo >= 1 {
             counts.get(va_lo - 1).copied().unwrap_or(0)
-        } else { 0 };
-        if above_pair == 0 && below_pair == 0 { break; }
+        } else {
+            0
+        };
+        if above_pair == 0 && below_pair == 0 {
+            break;
+        }
         if above_pair >= below_pair && va_hi < cfg.n_buckets - 1 {
             let step = if va_hi + 2 < cfg.n_buckets { 2 } else { 1 };
             let end = (va_hi + step).min(cfg.n_buckets - 1);
@@ -129,7 +152,9 @@ pub fn build(bars: &[Bar], cfg: &Config) -> Option<TpoReport> {
                 covered = covered.saturating_add(*c);
             }
             va_lo = lo_new;
-        } else { break; }
+        } else {
+            break;
+        }
     }
     Some(TpoReport {
         session_high: hi,
@@ -150,7 +175,9 @@ pub fn build(bars: &[Bar], cfg: &Config) -> Option<TpoReport> {
 mod tests {
     use super::*;
 
-    fn bar(h: f64, l: f64) -> Bar { Bar { high: h, low: l } }
+    fn bar(h: f64, l: f64) -> Bar {
+        Bar { high: h, low: l }
+    }
 
     #[test]
     fn empty_returns_none() {
@@ -161,10 +188,22 @@ mod tests {
     fn invalid_config_returns_none() {
         let bars = vec![bar(101.0, 99.0); 30];
         for cfg in [
-            Config { n_buckets: 0, ..Default::default() },
-            Config { n_buckets: 2, ..Default::default() },
-            Config { value_area_pct: 0.0, ..Default::default() },
-            Config { value_area_pct: 1.5, ..Default::default() },
+            Config {
+                n_buckets: 0,
+                ..Default::default()
+            },
+            Config {
+                n_buckets: 2,
+                ..Default::default()
+            },
+            Config {
+                value_area_pct: 0.0,
+                ..Default::default()
+            },
+            Config {
+                value_area_pct: 1.5,
+                ..Default::default()
+            },
         ] {
             assert!(build(&bars, &cfg).is_none());
         }
@@ -179,11 +218,7 @@ mod tests {
 
     #[test]
     fn nan_bars_skipped_safely() {
-        let bars = vec![
-            bar(100.0, 99.0),
-            bar(f64::NAN, f64::NAN),
-            bar(102.0, 101.0),
-        ];
+        let bars = vec![bar(100.0, 99.0), bar(f64::NAN, f64::NAN), bar(102.0, 101.0)];
         let r = build(&bars, &Config::default()).expect("has signal");
         assert!(r.session_high > r.session_low);
     }
@@ -195,18 +230,27 @@ mod tests {
         bars.push(bar(112.0, 110.0));
         let r = build(&bars, &Config::default()).expect("populated");
         // POC should be in the 100-102 zone, not near 110.
-        assert!(r.poc_price < 105.0, "POC should be in dense zone, got {}", r.poc_price);
+        assert!(
+            r.poc_price < 105.0,
+            "POC should be in dense zone, got {}",
+            r.poc_price
+        );
     }
 
     #[test]
     fn value_area_covers_target_pct() {
         // Uniform: every bucket hit roughly equally → VA should span
         // roughly 70% of buckets.
-        let bars: Vec<Bar> = (0..100).map(|i| {
-            let mid = 100.0 + i as f64 * 0.1;
-            bar(mid + 1.0, mid - 1.0)
-        }).collect();
-        let cfg = Config { n_buckets: 30, value_area_pct: 0.70 };
+        let bars: Vec<Bar> = (0..100)
+            .map(|i| {
+                let mid = 100.0 + i as f64 * 0.1;
+                bar(mid + 1.0, mid - 1.0)
+            })
+            .collect();
+        let cfg = Config {
+            n_buckets: 30,
+            value_area_pct: 0.70,
+        };
         let r = build(&bars, &cfg).expect("populated");
         let va_width = r.value_area_high_index as isize - r.value_area_low_index as isize + 1;
         assert!(va_width > 0 && va_width <= 30);
@@ -216,10 +260,12 @@ mod tests {
 
     #[test]
     fn val_below_vah_and_poc_inside_value_area() {
-        let bars: Vec<Bar> = (0..50).map(|i| {
-            let mid = 100.0 + (i as f64 * 0.2).sin() * 5.0;
-            bar(mid + 0.5, mid - 0.5)
-        }).collect();
+        let bars: Vec<Bar> = (0..50)
+            .map(|i| {
+                let mid = 100.0 + (i as f64 * 0.2).sin() * 5.0;
+                bar(mid + 0.5, mid - 0.5)
+            })
+            .collect();
         let r = build(&bars, &Config::default()).expect("populated");
         assert!(r.val <= r.poc_price && r.poc_price <= r.vah);
     }
@@ -228,9 +274,15 @@ mod tests {
     fn counts_sum_corresponds_to_total_bar_coverage() {
         // Each bar spans 3 buckets in this synth → total counts ≈ 3 × n_bars.
         let bars = vec![bar(105.0, 95.0); 30];
-        let cfg = Config { n_buckets: 10, value_area_pct: 0.70 };
+        let cfg = Config {
+            n_buckets: 10,
+            value_area_pct: 0.70,
+        };
         let r = build(&bars, &cfg).expect("populated");
         let total: u64 = r.tpo_counts.iter().sum();
-        assert!(total >= 30, "every bar must contribute ≥ 1 TPO; total={total}");
+        assert!(
+            total >= 30,
+            "every bar must contribute ≥ 1 TPO; total={total}"
+        );
     }
 }

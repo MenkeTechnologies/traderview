@@ -222,17 +222,15 @@ pub fn check(input: &Input) -> Output {
         actions.push("NYC Int 0994 of 2024 'Cool Homes for All Act' VIOLATION: bedroom temperature exceeds 78°F during heat-advisory period (June 15-Sept 15 when outdoor temp > 82°F) AND landlord has not provided AC; Housing Maintenance Code violation + ECB civil penalty + tenant rent reduction + HPD complaint exposure.".to_string());
     }
 
-    let bracket_required_not_installed =
-        (input.building_taller_than_6_stories || !input.window_frame_supports_unit_weight)
-            && !input.bracket_installed;
-    if bracket_required_not_installed
-        && !matches!(input.install_path, InstallPath::NotApplicable)
-    {
+    let bracket_required_not_installed = (input.building_taller_than_6_stories
+        || !input.window_frame_supports_unit_weight)
+        && !input.bracket_installed;
+    if bracket_required_not_installed && !matches!(input.install_path, InstallPath::NotApplicable) {
         actions.push("Bracket required but NOT installed: building taller than 6 stories OR window frame cannot support unit weight; falling-AC injury liability + insurance denial. Install bracket to manufacturer specifications with fasteners into structural framing.".to_string());
     }
 
-    let bracket_maintenance_deficient = input.bracket_installed
-        && !input.bracket_maintained_to_manufacturer_spec;
+    let bracket_maintenance_deficient =
+        input.bracket_installed && !input.bracket_maintained_to_manufacturer_spec;
     if bracket_maintenance_deficient {
         actions.push("Bracket maintenance deficient — not maintained to manufacturer specification: premises liability exposure; annual inspection + re-tightening required pre-cooling season.".to_string());
     }
@@ -243,8 +241,8 @@ pub fn check(input: &Input) -> Output {
         actions.push("Lease prohibits window AC without legitimate safety basis: habitability dispute + tenant rescission claim under common-law habitability + state-specific cooling rights. Landlord prohibition must rest on safety + window-frame + structural rationale.".to_string());
     }
 
-    let failure_to_accommodate = input.disability_accommodation_request
-        && !input.reasonable_accommodation_granted;
+    let failure_to_accommodate =
+        input.disability_accommodation_request && !input.reasonable_accommodation_granted;
     if failure_to_accommodate {
         actions.push("Reasonable accommodation request DENIED: Fair Housing Act 42 U.S.C. § 3604(f) requires landlord to permit AC installation for disability/health-condition basis absent undue hardship; HUD enforcement + private action + state fair-housing remedies.".to_string());
     }

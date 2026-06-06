@@ -41,16 +41,26 @@ pub fn compute(
     }
     let mut active = Vec::with_capacity(portfolio_returns.len());
     for (p, b) in portfolio_returns.iter().zip(benchmark_returns.iter()) {
-        if !p.is_finite() || !b.is_finite() { continue; }
+        if !p.is_finite() || !b.is_finite() {
+            continue;
+        }
         active.push(p - b);
     }
     let n = active.len();
-    if n < 2 { return None; }
+    if n < 2 {
+        return None;
+    }
     let n_f = n as f64;
     let mean = active.iter().sum::<f64>() / n_f;
     let var = active.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (n_f - 1.0);
     let te = var.max(0.0).sqrt();
-    let ir = if te > 0.0 { mean / te } else if mean == 0.0 { 0.0 } else { f64::INFINITY };
+    let ir = if te > 0.0 {
+        mean / te
+    } else if mean == 0.0 {
+        0.0
+    } else {
+        f64::INFINITY
+    };
     let sqrt_py = periods_per_year.sqrt();
     Some(InformationReport {
         mean_active_return: mean,
@@ -112,8 +122,10 @@ mod tests {
         let r = compute(&p, &b, 252.0).unwrap();
         assert!(r.mean_active_return > 0.0);
         assert!(r.information_ratio > 0.0);
-        assert!(r.annualized_information_ratio > r.information_ratio,
-            "annualized IR should scale up by √252");
+        assert!(
+            r.annualized_information_ratio > r.information_ratio,
+            "annualized IR should scale up by √252"
+        );
     }
 
     #[test]

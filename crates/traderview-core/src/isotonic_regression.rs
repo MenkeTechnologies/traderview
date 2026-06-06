@@ -30,13 +30,19 @@ pub struct IsotonicReport {
 
 pub fn fit(x: &[f64], y: &[f64], decreasing: bool) -> Option<IsotonicReport> {
     let n = x.len();
-    if n < 2 || y.len() != n { return None; }
+    if n < 2 || y.len() != n {
+        return None;
+    }
     if x.iter().any(|v| !v.is_finite()) || y.iter().any(|v| !v.is_finite()) {
         return None;
     }
     // Sort by x.
     let mut idx: Vec<usize> = (0..n).collect();
-    idx.sort_by(|a, b| x[*a].partial_cmp(&x[*b]).unwrap_or(std::cmp::Ordering::Equal));
+    idx.sort_by(|a, b| {
+        x[*a]
+            .partial_cmp(&x[*b])
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     let sign = if decreasing { -1.0 } else { 1.0 };
     let sorted_y: Vec<f64> = idx.iter().map(|i| sign * y[*i]).collect();
     // PAVA. Maintain stack of (cumulative sum, cumulative weight, end-index).
@@ -61,7 +67,9 @@ pub fn fit(x: &[f64], y: &[f64], decreasing: bool) -> Option<IsotonicReport> {
     let mut prev_end = 0_usize;
     for (sum, weight, end) in &stack {
         let mean = sum / weight;
-        for slot in sorted_fitted.iter_mut().take(end + 1).skip(prev_end) { *slot = mean; }
+        for slot in sorted_fitted.iter_mut().take(end + 1).skip(prev_end) {
+            *slot = mean;
+        }
         prev_end = end + 1;
     }
     // Unsort back to original order; un-flip sign if decreasing.
@@ -69,7 +77,11 @@ pub fn fit(x: &[f64], y: &[f64], decreasing: bool) -> Option<IsotonicReport> {
     for (sort_pos, orig_idx) in idx.iter().enumerate() {
         fitted[*orig_idx] = sign * sorted_fitted[sort_pos];
     }
-    Some(IsotonicReport { fitted_values: fitted, n_observations: n, decreasing })
+    Some(IsotonicReport {
+        fitted_values: fitted,
+        n_observations: n,
+        decreasing,
+    })
 }
 
 #[cfg(test)]
@@ -118,7 +130,9 @@ mod tests {
     #[test]
     fn fitted_is_monotone_after_violations() {
         let x: Vec<f64> = (1..=20).map(|i| i as f64).collect();
-        let y: Vec<f64> = (0..20).map(|i| (i as f64).sin() * 5.0 + i as f64 * 0.5).collect();
+        let y: Vec<f64> = (0..20)
+            .map(|i| (i as f64).sin() * 5.0 + i as f64 * 0.5)
+            .collect();
         let r = fit(&x, &y, false).unwrap();
         for w in r.fitted_values.windows(2) {
             assert!(w[1] >= w[0] - 1e-9);
@@ -128,7 +142,9 @@ mod tests {
     #[test]
     fn decreasing_fit_monotone_non_increasing() {
         let x: Vec<f64> = (0..20).map(|i| i as f64).collect();
-        let y: Vec<f64> = (0..20).map(|i| (i as f64).sin() * 3.0 - i as f64 * 0.2).collect();
+        let y: Vec<f64> = (0..20)
+            .map(|i| (i as f64).sin() * 3.0 - i as f64 * 0.2)
+            .collect();
         let r = fit(&x, &y, true).unwrap();
         for w in r.fitted_values.windows(2) {
             assert!(w[1] <= w[0] + 1e-9);

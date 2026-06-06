@@ -20,13 +20,23 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub close: f64, pub volume: f64 }
+pub struct Bar {
+    pub close: f64,
+    pub volume: f64,
+}
 
 pub fn compute(bars: &[Bar]) -> Vec<Option<f64>> {
     let n = bars.len();
     let mut out = vec![None; n];
-    if n == 0 { return out; }
-    if bars.iter().any(|b| !b.close.is_finite() || !b.volume.is_finite()) { return out; }
+    if n == 0 {
+        return out;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.close.is_finite() || !b.volume.is_finite())
+    {
+        return out;
+    }
     let mut nvi = 1000.0_f64;
     out[0] = Some(nvi);
     for i in 1..n {
@@ -45,10 +55,17 @@ pub fn compute(bars: &[Bar]) -> Vec<Option<f64>> {
 mod tests {
     use super::*;
 
-    fn b(c: f64, v: f64) -> Bar { Bar { close: c, volume: v } }
+    fn b(c: f64, v: f64) -> Bar {
+        Bar {
+            close: c,
+            volume: v,
+        }
+    }
 
     #[test]
-    fn empty_returns_empty() { assert!(compute(&[]).is_empty()); }
+    fn empty_returns_empty() {
+        assert!(compute(&[]).is_empty());
+    }
 
     #[test]
     fn nan_returns_all_none() {
@@ -95,10 +112,12 @@ mod tests {
     fn nvi_remains_positive_across_long_drawdowns() {
         // Down trend on declining volume → NVI multiplied by (1+r) < 1
         // each day but cannot go negative.
-        let bars: Vec<_> = (0..50).map(|i| {
-            b(100.0 * 0.99_f64.powi(i), 1000.0 - i as f64 * 5.0)
-        }).collect();
+        let bars: Vec<_> = (0..50)
+            .map(|i| b(100.0 * 0.99_f64.powi(i), 1000.0 - i as f64 * 5.0))
+            .collect();
         let r = compute(&bars);
-        for v in r.iter().flatten() { assert!(*v > 0.0); }
+        for v in r.iter().flatten() {
+            assert!(*v > 0.0);
+        }
     }
 }

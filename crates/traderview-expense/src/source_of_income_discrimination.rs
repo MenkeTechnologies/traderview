@@ -138,10 +138,7 @@ fn soi_protected(source: IncomeSourceType) -> bool {
     !matches!(source, IncomeSourceType::EmploymentWages)
 }
 
-fn check_california(
-    input: &SourceOfIncomeInput,
-    _prior_count: u32,
-) -> SourceOfIncomeResult {
+fn check_california(input: &SourceOfIncomeInput, _prior_count: u32) -> SourceOfIncomeResult {
     let mut failure_reasons: Vec<String> = Vec::new();
     let notes: Vec<String> = vec![
         "California SB 329 (Housing Opportunities Act of 2019, eff. 2020) — Section 8 Housing Choice Vouchers explicitly added to FEHA source-of-income definition (Cal. Gov. Code § 12955)"
@@ -189,10 +186,7 @@ fn check_california(
     }
 }
 
-fn check_new_jersey(
-    input: &SourceOfIncomeInput,
-    prior_count: u32,
-) -> SourceOfIncomeResult {
+fn check_new_jersey(input: &SourceOfIncomeInput, prior_count: u32) -> SourceOfIncomeResult {
     let mut failure_reasons: Vec<String> = Vec::new();
     let notes: Vec<String> = vec![
         "N.J.S.A. 10:5-12.5 (NJ Law Against Discrimination) — source of income covers Section 8 vouchers + public assistance; Division on Civil Rights administrative enforcement"
@@ -207,8 +201,7 @@ fn check_new_jersey(
     if protected
         && matches!(
             input.refusal_reason,
-            RefusalReason::VoucherSoleReason
-                | RefusalReason::IncomeMultipleAppliedDisparately
+            RefusalReason::VoucherSoleReason | RefusalReason::IncomeMultipleAppliedDisparately
         )
     {
         violation = true;
@@ -236,10 +229,7 @@ fn check_new_jersey(
     }
 }
 
-fn check_new_york(
-    input: &SourceOfIncomeInput,
-    _prior_count: u32,
-) -> SourceOfIncomeResult {
+fn check_new_york(input: &SourceOfIncomeInput, _prior_count: u32) -> SourceOfIncomeResult {
     let mut failure_reasons: Vec<String> = Vec::new();
     let notes: Vec<String> = vec![
         "N.Y. Exec. Law § 296(5)(a)(1) (NY State Human Rights Law, SOI eff. April 2019) — landlord may not refuse applicant based on lawful source of income including federal, state, or local public assistance + housing assistance + child support + alimony"
@@ -254,8 +244,7 @@ fn check_new_york(
     if protected
         && matches!(
             input.refusal_reason,
-            RefusalReason::VoucherSoleReason
-                | RefusalReason::IncomeMultipleAppliedDisparately
+            RefusalReason::VoucherSoleReason | RefusalReason::IncomeMultipleAppliedDisparately
         )
     {
         violation = true;
@@ -353,7 +342,10 @@ mod tests {
         i.refusal_reason = RefusalReason::IncomeMultipleAppliedDisparately;
         let r = check(&i);
         assert!(r.violation);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("disparate treatment")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("disparate treatment")));
     }
 
     #[test]
@@ -382,7 +374,10 @@ mod tests {
     fn nj_voucher_refusal_violates() {
         let r = check(&nj_base());
         assert!(r.violation);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("N.J.S.A. 10:5-12.5")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("N.J.S.A. 10:5-12.5")));
     }
 
     #[test]
@@ -410,7 +405,10 @@ mod tests {
     fn ny_voucher_refusal_violates() {
         let r = check(&ny_base());
         assert!(r.violation);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 296(5)(a)(1)")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 296(5)(a)(1)")));
     }
 
     #[test]
@@ -605,10 +603,7 @@ mod tests {
     #[test]
     fn ny_note_pins_eff_april_2019() {
         let r = check(&ny_base());
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("April 2019")));
+        assert!(r.notes.iter().any(|n| n.contains("April 2019")));
     }
 
     #[test]

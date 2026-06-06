@@ -183,11 +183,10 @@ pub fn check(
         change_of_terms_procedure_required,
     ) = match input.jurisdiction {
         Jurisdiction::California => {
-            let post_2012 = input.lease_year > 2012
-                || (input.lease_year == 2012 && input.lease_month >= 1);
-            let obligation_triggered = input.smoke_free_policy_adopted
-                && post_2012
-                && !input.lessee_previously_occupied;
+            let post_2012 =
+                input.lease_year > 2012 || (input.lease_year == 2012 && input.lease_month >= 1);
+            let obligation_triggered =
+                input.smoke_free_policy_adopted && post_2012 && !input.lessee_previously_occupied;
             let mut compliant = true;
             if obligation_triggered && !input.lease_specifies_prohibited_areas {
                 compliant = false;
@@ -213,8 +212,8 @@ pub fn check(
                     "HUD 24 CFR § 965.653(a) — PHAs MUST design and implement policy prohibiting prohibited tobacco products in ALL public housing living units AND interior areas (hallways, rental/admin offices, community centers, daycare, laundry)".to_string(),
                 );
             }
-            let perimeter_engaged = obligation_triggered
-                && input.twenty_five_foot_perimeter_restriction_implemented;
+            let perimeter_engaged =
+                obligation_triggered && input.twenty_five_foot_perimeter_restriction_implemented;
             if obligation_triggered && !input.twenty_five_foot_perimeter_restriction_implemented {
                 compliant = false;
                 failure_reasons.push(
@@ -312,8 +311,10 @@ mod tests {
         i.lease_specifies_prohibited_areas = false;
         let r = check(&i);
         assert!(!r.disclosure_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 1947.5(b)")
-            && f.contains("January 1, 2012")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1947.5(b)") && f.contains("January 1, 2012")));
     }
 
     #[test]
@@ -381,8 +382,10 @@ mod tests {
         i.twenty_five_foot_perimeter_restriction_implemented = false;
         let r = check(&i);
         assert!(!r.disclosure_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 965.653(a)(3)")
-            && f.contains("25 FEET")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 965.653(a)(3)") && f.contains("25 FEET")));
     }
 
     #[test]
@@ -394,8 +397,10 @@ mod tests {
         i.twenty_five_foot_perimeter_restriction_implemented = true;
         let r = check(&i);
         assert!(!r.disclosure_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 965.653(a)")
-            && f.contains("interior areas")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 965.653(a)") && f.contains("interior areas")));
     }
 
     #[test]
@@ -435,9 +440,12 @@ mod tests {
         i.ny_mdl_written_policy_disclosed = false;
         let r = check(&i);
         assert!(!r.disclosure_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("NY Multiple Dwelling Law § 17")
-            && f.contains("3+ DWELLING UNITS")
-            && f.contains("§ 1399-n")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("NY Multiple Dwelling Law § 17")
+                && f.contains("3+ DWELLING UNITS")
+                && f.contains("§ 1399-n")));
     }
 
     #[test]
@@ -516,11 +524,7 @@ mod tests {
             let mut i = ca_compliant();
             i.jurisdiction = jur;
             let r = check(&i);
-            assert!(
-                !r.hud_twenty_five_foot_perimeter_engaged,
-                "jur={:?}",
-                jur
-            );
+            assert!(!r.hud_twenty_five_foot_perimeter_engaged, "jur={:?}", jur);
         }
     }
 
@@ -591,8 +595,11 @@ mod tests {
     #[test]
     fn note_pins_ca_e_cigarette_2017_sb5() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("§ 1947.5")
-            && n.contains("e-cigarettes added effective 2017 per SB 5")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1947.5")
+                && n.contains("e-cigarettes added effective 2017 per SB 5")));
     }
 
     #[test]
@@ -640,10 +647,13 @@ mod tests {
     #[test]
     fn note_pins_ny_mdl_3_unit_threshold() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("NY Multiple Dwelling Law § 17")
-            && n.contains("3+ DWELLING UNITS")
-            && n.contains("written smoking policy")
-            && n.contains("§ 1399-n")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("NY Multiple Dwelling Law § 17")
+                && n.contains("3+ DWELLING UNITS")
+                && n.contains("written smoking policy")
+                && n.contains("§ 1399-n")));
     }
 
     #[test]

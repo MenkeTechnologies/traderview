@@ -255,9 +255,15 @@ pub fn compute(input: &Input) -> Output {
         }
         ComplianceAspect::TerminationNoticeBasedOnTenancyDurationUnderRplSection226C => {
             let required_days = match input.tenancy_duration {
-                TenancyDurationCategory::LessThanOneYear => HSTPA_TERMINATION_NOTICE_UNDER_1_YEAR_DAYS,
-                TenancyDurationCategory::AtLeastOneYearButLessThanTwoYears => HSTPA_TERMINATION_NOTICE_1_TO_2_YEARS_DAYS,
-                TenancyDurationCategory::AtLeastTwoYears => HSTPA_TERMINATION_NOTICE_2_PLUS_YEARS_DAYS,
+                TenancyDurationCategory::LessThanOneYear => {
+                    HSTPA_TERMINATION_NOTICE_UNDER_1_YEAR_DAYS
+                }
+                TenancyDurationCategory::AtLeastOneYearButLessThanTwoYears => {
+                    HSTPA_TERMINATION_NOTICE_1_TO_2_YEARS_DAYS
+                }
+                TenancyDurationCategory::AtLeastTwoYears => {
+                    HSTPA_TERMINATION_NOTICE_2_PLUS_YEARS_DAYS
+                }
             };
             if input.termination_notice_days_given >= required_days {
                 Output {
@@ -295,7 +301,9 @@ pub fn compute(input: &Input) -> Output {
             }
         }
         ComplianceAspect::PostWarrantHardshipStayUnderRpaplSection753 => {
-            if input.post_warrant_hardship_stay_days_granted <= HSTPA_POST_WARRANT_HARDSHIP_STAY_MAX_DAYS {
+            if input.post_warrant_hardship_stay_days_granted
+                <= HSTPA_POST_WARRANT_HARDSHIP_STAY_MAX_DAYS
+            {
                 Output {
                     mode: HstpaMode::CompliantPostWarrantHardshipStayWithinOneYearMaximum,
                     statutory_basis: "RPAPL § 753 — post-warrant hardship stay within 1-year statutory maximum".to_string(),
@@ -384,7 +392,10 @@ mod tests {
     #[test]
     fn security_deposit_at_one_month_cap_compliant() {
         let output = check(&baseline_input());
-        assert_eq!(output.mode, HstpaMode::CompliantSecurityDepositAtOrBelowOneMonthCap);
+        assert_eq!(
+            output.mode,
+            HstpaMode::CompliantSecurityDepositAtOrBelowOneMonthCap
+        );
     }
 
     #[test]
@@ -392,7 +403,10 @@ mod tests {
         let mut input = baseline_input();
         input.security_deposit_dollars = 2_001;
         let output = check(&input);
-        assert_eq!(output.mode, HstpaMode::ViolationSecurityDepositExceedsOneMonthCap);
+        assert_eq!(
+            output.mode,
+            HstpaMode::ViolationSecurityDepositExceedsOneMonthCap
+        );
     }
 
     #[test]
@@ -401,7 +415,10 @@ mod tests {
         input.compliance_aspect =
             ComplianceAspect::SecurityDepositReturnFourteenDayDeadlineUnderGolSection7_108;
         let output = check(&input);
-        assert_eq!(output.mode, HstpaMode::CompliantSecurityDepositReturnedWithinFourteenDays);
+        assert_eq!(
+            output.mode,
+            HstpaMode::CompliantSecurityDepositReturnedWithinFourteenDays
+        );
     }
 
     #[test]
@@ -411,7 +428,10 @@ mod tests {
             ComplianceAspect::SecurityDepositReturnFourteenDayDeadlineUnderGolSection7_108;
         input.days_since_tenant_vacated_for_deposit_return = 14;
         let output = check(&input);
-        assert_eq!(output.mode, HstpaMode::CompliantSecurityDepositReturnedWithinFourteenDays);
+        assert_eq!(
+            output.mode,
+            HstpaMode::CompliantSecurityDepositReturnedWithinFourteenDays
+        );
     }
 
     #[test]
@@ -422,7 +442,10 @@ mod tests {
         input.days_since_tenant_vacated_for_deposit_return = 15;
         input.deposit_returned_and_itemized_statement_within_window = false;
         let output = check(&input);
-        assert_eq!(output.mode, HstpaMode::ViolationSecurityDepositReturnedPastFourteenDayDeadline);
+        assert_eq!(
+            output.mode,
+            HstpaMode::ViolationSecurityDepositReturnedPastFourteenDayDeadline
+        );
     }
 
     #[test]
@@ -431,7 +454,10 @@ mod tests {
         input.compliance_aspect =
             ComplianceAspect::LateFeeFiveDayGracePeriodAndDollarOrPercentCapUnderRplSection238A;
         let output = check(&input);
-        assert_eq!(output.mode, HstpaMode::CompliantLateFeeWithinGracePeriodAndCap);
+        assert_eq!(
+            output.mode,
+            HstpaMode::CompliantLateFeeWithinGracePeriodAndCap
+        );
     }
 
     #[test]
@@ -441,7 +467,10 @@ mod tests {
             ComplianceAspect::LateFeeFiveDayGracePeriodAndDollarOrPercentCapUnderRplSection238A;
         input.days_rent_late_when_late_fee_charged = 4;
         let output = check(&input);
-        assert_eq!(output.mode, HstpaMode::ViolationLateFeeChargedWithinFiveDayGracePeriod);
+        assert_eq!(
+            output.mode,
+            HstpaMode::ViolationLateFeeChargedWithinFiveDayGracePeriod
+        );
     }
 
     #[test]
@@ -451,7 +480,10 @@ mod tests {
             ComplianceAspect::LateFeeFiveDayGracePeriodAndDollarOrPercentCapUnderRplSection238A;
         input.days_rent_late_when_late_fee_charged = 5;
         let output = check(&input);
-        assert_eq!(output.mode, HstpaMode::CompliantLateFeeWithinGracePeriodAndCap);
+        assert_eq!(
+            output.mode,
+            HstpaMode::CompliantLateFeeWithinGracePeriodAndCap
+        );
     }
 
     #[test]
@@ -461,7 +493,10 @@ mod tests {
             ComplianceAspect::LateFeeFiveDayGracePeriodAndDollarOrPercentCapUnderRplSection238A;
         input.late_fee_charged_dollars = 51;
         let output = check(&input);
-        assert_eq!(output.mode, HstpaMode::ViolationLateFeeExceedsLesserOfFiftyDollarsOrFivePercent);
+        assert_eq!(
+            output.mode,
+            HstpaMode::ViolationLateFeeExceedsLesserOfFiftyDollarsOrFivePercent
+        );
     }
 
     #[test]
@@ -472,30 +507,42 @@ mod tests {
         input.monthly_rent_dollars = 500;
         input.late_fee_charged_dollars = 26;
         let output = check(&input);
-        assert_eq!(output.mode, HstpaMode::ViolationLateFeeExceedsLesserOfFiftyDollarsOrFivePercent);
+        assert_eq!(
+            output.mode,
+            HstpaMode::ViolationLateFeeExceedsLesserOfFiftyDollarsOrFivePercent
+        );
     }
 
     #[test]
     fn application_fee_at_twenty_dollar_cap_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::ApplicationFeeTwentyDollarCapUnderRplSection238A;
+        input.compliance_aspect =
+            ComplianceAspect::ApplicationFeeTwentyDollarCapUnderRplSection238A;
         let output = check(&input);
-        assert_eq!(output.mode, HstpaMode::CompliantApplicationFeeAtOrBelowTwentyDollarCap);
+        assert_eq!(
+            output.mode,
+            HstpaMode::CompliantApplicationFeeAtOrBelowTwentyDollarCap
+        );
     }
 
     #[test]
     fn application_fee_at_twenty_one_dollars_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::ApplicationFeeTwentyDollarCapUnderRplSection238A;
+        input.compliance_aspect =
+            ComplianceAspect::ApplicationFeeTwentyDollarCapUnderRplSection238A;
         input.application_fee_charged_dollars = 21;
         let output = check(&input);
-        assert_eq!(output.mode, HstpaMode::ViolationApplicationFeeExceedsTwentyDollarCap);
+        assert_eq!(
+            output.mode,
+            HstpaMode::ViolationApplicationFeeExceedsTwentyDollarCap
+        );
     }
 
     #[test]
     fn termination_notice_under_one_year_at_thirty_days_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::TerminationNoticeBasedOnTenancyDurationUnderRplSection226C;
+        input.compliance_aspect =
+            ComplianceAspect::TerminationNoticeBasedOnTenancyDurationUnderRplSection226C;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -506,7 +553,8 @@ mod tests {
     #[test]
     fn termination_notice_at_one_to_two_years_at_sixty_days_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::TerminationNoticeBasedOnTenancyDurationUnderRplSection226C;
+        input.compliance_aspect =
+            ComplianceAspect::TerminationNoticeBasedOnTenancyDurationUnderRplSection226C;
         input.tenancy_duration = TenancyDurationCategory::AtLeastOneYearButLessThanTwoYears;
         input.termination_notice_days_given = 60;
         let output = check(&input);
@@ -519,7 +567,8 @@ mod tests {
     #[test]
     fn termination_notice_at_two_plus_years_at_ninety_days_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::TerminationNoticeBasedOnTenancyDurationUnderRplSection226C;
+        input.compliance_aspect =
+            ComplianceAspect::TerminationNoticeBasedOnTenancyDurationUnderRplSection226C;
         input.tenancy_duration = TenancyDurationCategory::AtLeastTwoYears;
         input.termination_notice_days_given = 90;
         let output = check(&input);
@@ -532,7 +581,8 @@ mod tests {
     #[test]
     fn termination_notice_at_two_plus_years_at_eighty_nine_days_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::TerminationNoticeBasedOnTenancyDurationUnderRplSection226C;
+        input.compliance_aspect =
+            ComplianceAspect::TerminationNoticeBasedOnTenancyDurationUnderRplSection226C;
         input.tenancy_duration = TenancyDurationCategory::AtLeastTwoYears;
         input.termination_notice_days_given = 89;
         let output = check(&input);
@@ -594,24 +644,35 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::EliminationOfVacancyBonusInRentRegulatedUnits;
         input.vacancy_bonus_claimed_in_rent_regulated_unit = true;
         let output = check(&input);
-        assert_eq!(output.mode, HstpaMode::ViolationVacancyBonusClaimedInRentRegulatedUnit);
+        assert_eq!(
+            output.mode,
+            HstpaMode::ViolationVacancyBonusClaimedInRentRegulatedUnit
+        );
     }
 
     #[test]
     fn implied_warranty_of_habitability_maintained_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::ImpliedWarrantyOfHabitabilityUnderRplSection235B;
+        input.compliance_aspect =
+            ComplianceAspect::ImpliedWarrantyOfHabitabilityUnderRplSection235B;
         let output = check(&input);
-        assert_eq!(output.mode, HstpaMode::CompliantImpliedWarrantyOfHabitabilityMaintained);
+        assert_eq!(
+            output.mode,
+            HstpaMode::CompliantImpliedWarrantyOfHabitabilityMaintained
+        );
     }
 
     #[test]
     fn implied_warranty_of_habitability_breached_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::ImpliedWarrantyOfHabitabilityUnderRplSection235B;
+        input.compliance_aspect =
+            ComplianceAspect::ImpliedWarrantyOfHabitabilityUnderRplSection235B;
         input.implied_warranty_of_habitability_maintained = false;
         let output = check(&input);
-        assert_eq!(output.mode, HstpaMode::ViolationImpliedWarrantyOfHabitabilityBreached);
+        assert_eq!(
+            output.mode,
+            HstpaMode::ViolationImpliedWarrantyOfHabitabilityBreached
+        );
     }
 
     #[test]

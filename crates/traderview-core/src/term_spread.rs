@@ -35,18 +35,21 @@ pub struct TermSpreadReport {
     pub inversion_run_bars: Vec<u32>,
 }
 
-pub fn compute(
-    short_yield_pct: &[f64],
-    long_yield_pct: &[f64],
-) -> TermSpreadReport {
+pub fn compute(short_yield_pct: &[f64], long_yield_pct: &[f64]) -> TermSpreadReport {
     let n = short_yield_pct.len();
     let mut report = TermSpreadReport {
         spread_bps: vec![0.0; n],
         regime: vec![TermSpreadRegime::Normal; n],
         inversion_run_bars: vec![0; n],
     };
-    if n == 0 || long_yield_pct.len() != n { return report; }
-    if short_yield_pct.iter().chain(long_yield_pct.iter()).any(|x| !x.is_finite()) {
+    if n == 0 || long_yield_pct.len() != n {
+        return report;
+    }
+    if short_yield_pct
+        .iter()
+        .chain(long_yield_pct.iter())
+        .any(|x| !x.is_finite())
+    {
         return report;
     }
     let mut run = 0_u32;
@@ -61,11 +64,17 @@ pub fn compute(
 }
 
 fn classify(spread_bps: f64) -> TermSpreadRegime {
-    if spread_bps >= 200.0 { TermSpreadRegime::SteepNormal }
-    else if spread_bps >= 25.0 { TermSpreadRegime::Normal }
-    else if spread_bps > -25.0 { TermSpreadRegime::Flat }
-    else if spread_bps > -100.0 { TermSpreadRegime::Inverted }
-    else { TermSpreadRegime::SteepInverted }
+    if spread_bps >= 200.0 {
+        TermSpreadRegime::SteepNormal
+    } else if spread_bps >= 25.0 {
+        TermSpreadRegime::Normal
+    } else if spread_bps > -25.0 {
+        TermSpreadRegime::Flat
+    } else if spread_bps > -100.0 {
+        TermSpreadRegime::Inverted
+    } else {
+        TermSpreadRegime::SteepInverted
+    }
 }
 
 #[cfg(test)]
@@ -110,7 +119,7 @@ mod tests {
         assert_eq!(r.inversion_run_bars[1], 2);
         assert_eq!(r.inversion_run_bars[2], 3);
         assert_eq!(r.inversion_run_bars[3], 4);
-        assert_eq!(r.inversion_run_bars[4], 0);    // spread positive
+        assert_eq!(r.inversion_run_bars[4], 0); // spread positive
     }
 
     #[test]

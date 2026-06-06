@@ -163,12 +163,14 @@ fn check_ca(
         "California regime mandatory submetering for new construction post-January 1, 2018; existing buildings voluntary".to_string(),
     ];
 
-    let ca_mandatory =
-        input.ca_new_construction_post_2018 && input.multiunit_or_mixed_use;
+    let ca_mandatory = input.ca_new_construction_post_2018 && input.multiunit_or_mixed_use;
 
     if ca_mandatory
         && !matches!(input.billing_method, BillingMethod::Submetering)
-        && !matches!(input.billing_method, BillingMethod::MasterMeteredNoTenantBilling)
+        && !matches!(
+            input.billing_method,
+            BillingMethod::MasterMeteredNoTenantBilling
+        )
     {
         violations.push(
             "Cal. Civ. Code § 1954.201 (SB 7 of 2016) — submetering MANDATORY for newly constructed multiunit/mixed-use structures with water connection applications after January 1, 2018".to_string(),
@@ -194,12 +196,14 @@ fn check_ca(
         }
         if !input.billing_frequency_disclosed {
             violations.push(
-                "Cal. Civ. Code § 1954.203 — disclosure must describe billing frequency".to_string(),
+                "Cal. Civ. Code § 1954.203 — disclosure must describe billing frequency"
+                    .to_string(),
             );
         }
         if !input.dispute_process_disclosed {
             violations.push(
-                "Cal. Civ. Code § 1954.203 — disclosure must describe dispute resolution process".to_string(),
+                "Cal. Civ. Code § 1954.203 — disclosure must describe dispute resolution process"
+                    .to_string(),
             );
         }
     }
@@ -211,7 +215,8 @@ fn check_ca(
         administrative_fee_within_cap: true,
         ca_submetering_mandatory: ca_mandatory,
         violations,
-        citation: "Cal. Civ. Code § 1954.201 et seq. (SB 7 of 2016); Cal. Public Utilities Code § 739.5",
+        citation:
+            "Cal. Civ. Code § 1954.201 et seq. (SB 7 of 2016); Cal. Public Utilities Code § 739.5",
         notes,
     }
 }
@@ -253,9 +258,7 @@ fn check_tx(
     }
 
     if tenant_billing && !input.quarterly_past_usage_disclosed {
-        violations.push(
-            "16 TAC § 24.275 — quarterly past-usage disclosure required".to_string(),
-        );
+        violations.push("16 TAC § 24.275 — quarterly past-usage disclosure required".to_string());
     }
 
     RentalWaterSubmeteringDisclosureResult {
@@ -423,8 +426,7 @@ mod tests {
         assert!(r
             .violations
             .iter()
-            .any(|v| v.contains("§ 1954.202")
-                && v.contains("pre-lease written disclosure")));
+            .any(|v| v.contains("§ 1954.202") && v.contains("pre-lease written disclosure")));
     }
 
     #[test]
@@ -435,8 +437,7 @@ mod tests {
         assert!(r
             .violations
             .iter()
-            .any(|v| v.contains("§ 1954.203")
-                && v.contains("billing method")));
+            .any(|v| v.contains("§ 1954.203") && v.contains("billing method")));
     }
 
     #[test]
@@ -447,8 +448,7 @@ mod tests {
         assert!(r
             .violations
             .iter()
-            .any(|v| v.contains("§ 1954.203")
-                && v.contains("billing frequency")));
+            .any(|v| v.contains("§ 1954.203") && v.contains("billing frequency")));
     }
 
     #[test]
@@ -459,8 +459,7 @@ mod tests {
         assert!(r
             .violations
             .iter()
-            .any(|v| v.contains("§ 1954.203")
-                && v.contains("dispute resolution")));
+            .any(|v| v.contains("§ 1954.203") && v.contains("dispute resolution")));
     }
 
     #[test]
@@ -634,8 +633,10 @@ mod tests {
     #[test]
     fn note_pins_default_rubs_framework() {
         let r = check(&default_clean());
-        assert!(r.notes.iter().any(|n| n.contains("RUBS")
-            && n.contains("38+")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("RUBS") && n.contains("38+")));
     }
 
     #[test]

@@ -156,12 +156,14 @@ pub fn check(input: &Section4501Input) -> Section4501Result {
 
     let is_covered = matches!(
         input.corporation_type,
-        CorporationType::DomesticPubliclyTraded | CorporationType::SpacSpecialPurposeAcquisitionCompany
+        CorporationType::DomesticPubliclyTraded
+            | CorporationType::SpacSpecialPurposeAcquisitionCompany
     );
 
     if !is_covered {
         let severity = match input.corporation_type {
-            CorporationType::RegulatedInvestmentCompany | CorporationType::RealEstateInvestmentTrust => {
+            CorporationType::RegulatedInvestmentCompany
+            | CorporationType::RealEstateInvestmentTrust => {
                 notes.push(
                     "RIC / REIT exception under § 4501(e)(6) — distributions treated as § 301 \
                      dividends not subject to 1% excise tax."
@@ -331,8 +333,8 @@ pub fn check(input: &Section4501Input) -> Section4501Result {
         .fmv_repurchased_cents
         .saturating_sub(input.fmv_excepted_repurchases_cents);
     let after_netting = after_excepted.saturating_sub(input.fmv_issuances_during_year_cents);
-    let excise_tax_cents: u64 = (u128::from(after_netting) * u128::from(EXCISE_TAX_RATE_BPS)
-        / 10_000) as u64;
+    let excise_tax_cents: u64 =
+        (u128::from(after_netting) * u128::from(EXCISE_TAX_RATE_BPS) / 10_000) as u64;
 
     let severity = if after_netting == 0 {
         ExciseTaxSeverity::NettingFullOffsetByIssuances
@@ -349,7 +351,10 @@ pub fn check(input: &Section4501Input) -> Section4501Result {
          Notice 2023-2. Tax computed on taxable base of {} cents at 1% rate = {} cents.",
         input.taxable_year, after_netting, excise_tax_cents
     ));
-    if matches!(input.corporation_type, CorporationType::SpacSpecialPurposeAcquisitionCompany) {
+    if matches!(
+        input.corporation_type,
+        CorporationType::SpacSpecialPurposeAcquisitionCompany
+    ) {
         actions.push(
             "SPAC sponsor / shareholder redemptions on de-SPAC, qualifying business \
              combination, or trust-liquidation events are SUBJECT to § 4501 1% excise tax per \
@@ -413,7 +418,10 @@ mod tests {
         let r = check(&i);
         assert!(matches!(r.severity, ExciseTaxSeverity::NotApplicable));
         assert_eq!(r.excise_tax_cents, 0);
-        assert!(r.notes.iter().any(|n| n.contains("after December 31, 2022")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("after December 31, 2022")));
     }
 
     #[test]
@@ -426,7 +434,10 @@ mod tests {
         let mut i = baseline();
         i.corporation_type = CorporationType::DomesticPrivatelyHeld;
         let r = check(&i);
-        assert!(matches!(r.severity, ExciseTaxSeverity::NotACoveredCorporation));
+        assert!(matches!(
+            r.severity,
+            ExciseTaxSeverity::NotACoveredCorporation
+        ));
         assert!(!r.is_covered_corporation);
         assert_eq!(r.excise_tax_cents, 0);
         assert!(r.notes.iter().any(|n| n.contains("§ 7704(b)(1)")));
@@ -437,8 +448,14 @@ mod tests {
         let mut i = baseline();
         i.corporation_type = CorporationType::ForeignCorporation;
         let r = check(&i);
-        assert!(matches!(r.severity, ExciseTaxSeverity::NotACoveredCorporation));
-        assert!(r.notes.iter().any(|n| n.contains("§ 4501(d) specified-affiliate")));
+        assert!(matches!(
+            r.severity,
+            ExciseTaxSeverity::NotACoveredCorporation
+        ));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 4501(d) specified-affiliate")));
     }
 
     #[test]
@@ -446,7 +463,10 @@ mod tests {
         let mut i = baseline();
         i.corporation_type = CorporationType::RegulatedInvestmentCompany;
         let r = check(&i);
-        assert!(matches!(r.severity, ExciseTaxSeverity::FullyExemptedRicReit));
+        assert!(matches!(
+            r.severity,
+            ExciseTaxSeverity::FullyExemptedRicReit
+        ));
         assert_eq!(r.excise_tax_cents, 0);
     }
 
@@ -455,7 +475,10 @@ mod tests {
         let mut i = baseline();
         i.corporation_type = CorporationType::RealEstateInvestmentTrust;
         let r = check(&i);
-        assert!(matches!(r.severity, ExciseTaxSeverity::FullyExemptedRicReit));
+        assert!(matches!(
+            r.severity,
+            ExciseTaxSeverity::FullyExemptedRicReit
+        ));
     }
 
     #[test]
@@ -472,7 +495,10 @@ mod tests {
         let mut i = baseline();
         i.fmv_repurchased_cents = DE_MINIMIS_THRESHOLD_CENTS + 1;
         let r = check(&i);
-        assert!(matches!(r.severity, ExciseTaxSeverity::OnePercentExciseTaxApplies));
+        assert!(matches!(
+            r.severity,
+            ExciseTaxSeverity::OnePercentExciseTaxApplies
+        ));
         let expected = (DE_MINIMIS_THRESHOLD_CENTS + 1) / 100;
         assert_eq!(r.excise_tax_cents, expected);
     }
@@ -492,7 +518,10 @@ mod tests {
         let mut i = baseline();
         i.repurchase_exception = RepurchaseExceptionCategory::Section368Reorganization;
         let r = check(&i);
-        assert!(matches!(r.severity, ExciseTaxSeverity::FullyExemptedReorganization));
+        assert!(matches!(
+            r.severity,
+            ExciseTaxSeverity::FullyExemptedReorganization
+        ));
         assert_eq!(r.excise_tax_cents, 0);
         assert!(r.notes.iter().any(|n| n.contains("Treas. Reg. § 1.368-1")));
     }
@@ -500,10 +529,12 @@ mod tests {
     #[test]
     fn retirement_plan_contribution_fully_exempted() {
         let mut i = baseline();
-        i.repurchase_exception =
-            RepurchaseExceptionCategory::EmployerRetirementPlanContribution;
+        i.repurchase_exception = RepurchaseExceptionCategory::EmployerRetirementPlanContribution;
         let r = check(&i);
-        assert!(matches!(r.severity, ExciseTaxSeverity::FullyExemptedRetirementPlan));
+        assert!(matches!(
+            r.severity,
+            ExciseTaxSeverity::FullyExemptedRetirementPlan
+        ));
         assert!(r.notes.iter().any(|n| n.contains("section_1042")));
         assert!(r.notes.iter().any(|n| n.contains("section_4978")));
     }
@@ -522,7 +553,10 @@ mod tests {
         let mut i = baseline();
         i.repurchase_exception = RepurchaseExceptionCategory::Section301DividendTreatment;
         let r = check(&i);
-        assert!(matches!(r.severity, ExciseTaxSeverity::FullyExemptedSection301Dividend));
+        assert!(matches!(
+            r.severity,
+            ExciseTaxSeverity::FullyExemptedSection301Dividend
+        ));
         assert!(r.notes.iter().any(|n| n.contains("§ 302(d)")));
     }
 
@@ -531,7 +565,10 @@ mod tests {
         let mut i = baseline();
         i.fmv_repurchased_cents = 1_000_000_000_00;
         let r = check(&i);
-        assert!(matches!(r.severity, ExciseTaxSeverity::OnePercentExciseTaxApplies));
+        assert!(matches!(
+            r.severity,
+            ExciseTaxSeverity::OnePercentExciseTaxApplies
+        ));
         let expected = 1_000_000_000_00u64 / 100;
         assert_eq!(r.excise_tax_cents, expected);
         assert_eq!(r.excise_tax_cents, 10_000_000_00);
@@ -543,7 +580,10 @@ mod tests {
         i.fmv_repurchased_cents = 50_000_000_00;
         i.fmv_issuances_during_year_cents = 50_000_000_00;
         let r = check(&i);
-        assert!(matches!(r.severity, ExciseTaxSeverity::NettingFullOffsetByIssuances));
+        assert!(matches!(
+            r.severity,
+            ExciseTaxSeverity::NettingFullOffsetByIssuances
+        ));
         assert_eq!(r.excise_tax_cents, 0);
         assert_eq!(r.taxable_repurchase_base_cents, 0);
     }
@@ -554,7 +594,10 @@ mod tests {
         i.fmv_repurchased_cents = 100_000_000_00;
         i.fmv_issuances_during_year_cents = 30_000_000_00;
         let r = check(&i);
-        assert!(matches!(r.severity, ExciseTaxSeverity::NettingPartialOffsetByIssuances));
+        assert!(matches!(
+            r.severity,
+            ExciseTaxSeverity::NettingPartialOffsetByIssuances
+        ));
         assert_eq!(r.taxable_repurchase_base_cents, 70_000_000_00);
         assert_eq!(r.excise_tax_cents, 70_000_000_00 / 100);
     }
@@ -577,7 +620,10 @@ mod tests {
         let r = check(&i);
         assert_eq!(r.taxable_repurchase_base_cents, 0);
         assert_eq!(r.excise_tax_cents, 0);
-        assert!(matches!(r.severity, ExciseTaxSeverity::NettingFullOffsetByIssuances));
+        assert!(matches!(
+            r.severity,
+            ExciseTaxSeverity::NettingFullOffsetByIssuances
+        ));
     }
 
     #[test]
@@ -587,7 +633,10 @@ mod tests {
         i.fmv_repurchased_cents = 200_000_000_00;
         let r = check(&i);
         assert!(r.is_covered_corporation);
-        assert!(matches!(r.severity, ExciseTaxSeverity::OnePercentExciseTaxApplies));
+        assert!(matches!(
+            r.severity,
+            ExciseTaxSeverity::OnePercentExciseTaxApplies
+        ));
         assert!(r
             .recommended_actions
             .iter()
@@ -611,7 +660,10 @@ mod tests {
     fn action_recommends_form_7208_and_form_720() {
         let i = baseline();
         let r = check(&i);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Form 7208")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Form 7208")));
         assert!(r.recommended_actions.iter().any(|a| a.contains("Form 720")));
     }
 
@@ -626,7 +678,10 @@ mod tests {
     fn note_pins_treas_reg_compensatory_issuance_offset() {
         let i = baseline();
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("Treas. Reg. § 1.4501-2(c)")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Treas. Reg. § 1.4501-2(c)")));
         assert!(r.notes.iter().any(|n| n.contains("RSU vest")));
     }
 
@@ -674,7 +729,10 @@ mod tests {
         i.repurchase_exception = RepurchaseExceptionCategory::Section368Reorganization;
         i.fmv_repurchased_cents = 500_000_00;
         let r = check(&i);
-        assert!(matches!(r.severity, ExciseTaxSeverity::FullyExemptedReorganization));
+        assert!(matches!(
+            r.severity,
+            ExciseTaxSeverity::FullyExemptedReorganization
+        ));
     }
 
     #[test]

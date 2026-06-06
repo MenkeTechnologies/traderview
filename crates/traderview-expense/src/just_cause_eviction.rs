@@ -437,13 +437,7 @@ mod tests {
     fn california_under_12_months_no_just_cause_required() {
         // CA AB 1482 only kicks in at 12 months. 11 months → no-cause
         // termination still available.
-        let r = check(&input(
-            "CA",
-            11,
-            100,
-            EvictionGrounds::NoCause,
-            300_000,
-        ));
+        let r = check(&input("CA", 11, 100, EvictionGrounds::NoCause, 300_000));
         assert!(!r.just_cause_required);
         assert!(r.no_cause_termination_available);
         assert!(r.grounds_satisfy_just_cause);
@@ -454,13 +448,7 @@ mod tests {
     fn california_at_12_months_just_cause_required() {
         // Exactly 12-month boundary: AB 1482 applies. NoCause grounds
         // do NOT satisfy.
-        let r = check(&input(
-            "CA",
-            12,
-            100,
-            EvictionGrounds::NoCause,
-            300_000,
-        ));
+        let r = check(&input("CA", 12, 100, EvictionGrounds::NoCause, 300_000));
         assert!(r.just_cause_required);
         assert!(!r.no_cause_termination_available);
         assert!(!r.grounds_satisfy_just_cause);
@@ -470,13 +458,7 @@ mod tests {
     fn california_at_fault_grounds_no_relocation() {
         // At-fault grounds satisfy just-cause but do NOT require
         // relocation assistance.
-        let r = check(&input(
-            "CA",
-            12,
-            100,
-            EvictionGrounds::AtFault,
-            300_000,
-        ));
+        let r = check(&input("CA", 12, 100, EvictionGrounds::AtFault, 300_000));
         assert!(r.just_cause_required);
         assert!(r.grounds_satisfy_just_cause);
         assert!(!r.relocation_assistance_required);
@@ -537,21 +519,9 @@ mod tests {
     #[test]
     fn oregon_at_12_months_boundary() {
         // OR SB 608 12-month threshold mirrors CA AB 1482.
-        let under = check(&input(
-            "OR",
-            11,
-            100,
-            EvictionGrounds::NoCause,
-            300_000,
-        ));
+        let under = check(&input("OR", 11, 100, EvictionGrounds::NoCause, 300_000));
         assert!(!under.just_cause_required);
-        let at = check(&input(
-            "OR",
-            12,
-            100,
-            EvictionGrounds::NoCause,
-            300_000,
-        ));
+        let at = check(&input("OR", 12, 100, EvictionGrounds::NoCause, 300_000));
         assert!(at.just_cause_required);
     }
 
@@ -559,13 +529,7 @@ mod tests {
     fn washington_just_cause_day_one() {
         // WA HB 1236 (2021): just-cause from day 1, no threshold.
         // Tenancy of 1 month still gets just-cause protection.
-        let r = check(&input(
-            "WA",
-            1,
-            100,
-            EvictionGrounds::NoCause,
-            200_000,
-        ));
+        let r = check(&input("WA", 1, 100, EvictionGrounds::NoCause, 200_000));
         assert!(r.just_cause_required);
         assert!(!r.no_cause_termination_available);
         assert!(!r.grounds_satisfy_just_cause);
@@ -605,13 +569,7 @@ mod tests {
         // DC Rental Housing Act § 42-3505.01: just-cause day 1, no
         // statewide relocation requirement (separate rent-control rules
         // may impose obligations).
-        let r = check(&input(
-            "DC",
-            1,
-            100,
-            EvictionGrounds::NoCause,
-            300_000,
-        ));
+        let r = check(&input("DC", 1, 100, EvictionGrounds::NoCause, 300_000));
         assert!(r.just_cause_required);
         assert!(!r.grounds_satisfy_just_cause);
         assert_eq!(r.relocation_assistance_cents, 0);
@@ -622,13 +580,7 @@ mod tests {
         // NY HSTPA 2019: just-cause applies to rent-stabilized buildings
         // only. The PartialByBuilding regime flags this so the caller
         // checks rent-regulation status separately.
-        let r = check(&input(
-            "NY",
-            24,
-            100,
-            EvictionGrounds::NoCause,
-            300_000,
-        ));
+        let r = check(&input("NY", 24, 100, EvictionGrounds::NoCause, 300_000));
         assert!(r.partial_by_building_check_rent_regulation);
         assert!(!r.just_cause_required);
         assert!(r.no_cause_termination_available);
@@ -638,13 +590,7 @@ mod tests {
     fn maine_partial_by_building_for_four_plus_unit() {
         // ME 14 M.R.S. § 6002: just-cause for 4+ unit buildings only.
         // Same flag as NY.
-        let r = check(&input(
-            "ME",
-            24,
-            100,
-            EvictionGrounds::NoCause,
-            300_000,
-        ));
+        let r = check(&input("ME", 24, 100, EvictionGrounds::NoCause, 300_000));
         assert!(r.partial_by_building_check_rent_regulation);
     }
 
@@ -652,13 +598,7 @@ mod tests {
     fn illinois_partial_by_building_flag_set_for_local_ordinances() {
         // IL: no statewide regime but Chicago RLTO + Evanston + Mt.
         // Prospect have local just-cause. Caller checks municipality.
-        let r = check(&input(
-            "IL",
-            24,
-            100,
-            EvictionGrounds::NoCause,
-            300_000,
-        ));
+        let r = check(&input("IL", 24, 100, EvictionGrounds::NoCause, 300_000));
         assert!(r.partial_by_building_check_rent_regulation);
     }
 
@@ -667,14 +607,11 @@ mod tests {
         // Texas, Florida, Colorado, etc. — no statewide just-cause.
         // No-cause termination at lease end remains available.
         for code in ["TX", "FL", "CO", "AZ", "AL", "WY", "ID"] {
-            let r = check(&input(
-                code,
-                100,
-                100,
-                EvictionGrounds::NoCause,
-                300_000,
-            ));
-            assert!(!r.just_cause_required, "{code} should not require just cause");
+            let r = check(&input(code, 100, 100, EvictionGrounds::NoCause, 300_000));
+            assert!(
+                !r.just_cause_required,
+                "{code} should not require just cause"
+            );
             assert!(r.no_cause_termination_available);
             assert!(r.no_statewide_regime);
         }
@@ -682,13 +619,7 @@ mod tests {
 
     #[test]
     fn unknown_state_marked_no_statewide() {
-        let r = check(&input(
-            "ZZ",
-            12,
-            100,
-            EvictionGrounds::NoCause,
-            300_000,
-        ));
+        let r = check(&input("ZZ", 12, 100, EvictionGrounds::NoCause, 300_000));
         assert!(r.no_statewide_regime);
         assert!(r.note.contains("unknown state code"));
     }
@@ -748,13 +679,7 @@ mod tests {
         // At-fault grounds never trigger relocation, even when the
         // landlord owns 100 units. Small-landlord-exempt flag stays
         // false because the exemption only matters for no-fault grounds.
-        let r = check(&input(
-            "OR",
-            24,
-            100,
-            EvictionGrounds::AtFault,
-            250_000,
-        ));
+        let r = check(&input("OR", 24, 100, EvictionGrounds::AtFault, 250_000));
         assert!(!r.relocation_assistance_required);
         assert!(!r.small_landlord_exempt_from_relocation);
     }

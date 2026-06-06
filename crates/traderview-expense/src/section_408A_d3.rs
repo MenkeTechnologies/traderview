@@ -33,7 +33,7 @@
 //! conversions, current age, withdrawal amount, and withdrawal date;
 //! we compute the tax + penalty exposure per ordering rule.
 
-use chrono::{NaiveDate, Months};
+use chrono::{Months, NaiveDate};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
@@ -79,8 +79,7 @@ fn ten_percent() -> Decimal {
 }
 
 fn five_years_after(date: NaiveDate) -> NaiveDate {
-    date.checked_add_months(Months::new(60))
-        .unwrap_or(date)
+    date.checked_add_months(Months::new(60)).unwrap_or(date)
 }
 
 pub fn compute(input: &Section408AD3Input) -> Section408AD3Result {
@@ -88,8 +87,8 @@ pub fn compute(input: &Section408AD3Input) -> Section408AD3Result {
 
     let mut remaining = input.withdrawal_amount.max(Decimal::ZERO);
     let age_59_5 = input.taxpayer_age_at_withdrawal >= 60; // 59½ rounded up
-    let general_5yr_passed = input.withdrawal_date
-        >= five_years_after(input.first_roth_account_funding_date);
+    let general_5yr_passed =
+        input.withdrawal_date >= five_years_after(input.first_roth_account_funding_date);
     r.qualified_distribution = age_59_5 && general_5yr_passed;
 
     // Bucket 1: Contributions (always tax-free + penalty-free).
@@ -111,8 +110,7 @@ pub fn compute(input: &Section408AD3Input) -> Section408AD3Result {
             break;
         }
         let take = remaining.min(conv.amount_converted.max(Decimal::ZERO));
-        let conv_5yr_passed =
-            input.withdrawal_date >= five_years_after(conv.conversion_date);
+        let conv_5yr_passed = input.withdrawal_date >= five_years_after(conv.conversion_date);
         let aged = conv_5yr_passed || age_59_5;
         if aged {
             r.from_conversions_aged += take;
@@ -138,9 +136,9 @@ pub fn compute(input: &Section408AD3Input) -> Section408AD3Result {
     // §72(t) penalty: 10% on unaged conversion withdrawals + earnings
     // when not qualified.
     if !age_59_5 {
-        r.penalty_72t_amount =
-            ((r.from_conversions_unaged_penalty_exposed + r.from_earnings) * ten_percent())
-                .round_dp(2);
+        r.penalty_72t_amount = ((r.from_conversions_unaged_penalty_exposed + r.from_earnings)
+            * ten_percent())
+        .round_dp(2);
     }
     // If 59½+, no §72(t) penalty regardless of 5-year aging.
 
@@ -269,8 +267,14 @@ mod tests {
         let mut i = base();
         i.total_contributions_basis = Decimal::ZERO;
         i.conversions = vec![
-            RothConversion { conversion_date: date(2022, 1, 1), amount_converted: dec!(5000) },
-            RothConversion { conversion_date: date(2019, 1, 1), amount_converted: dec!(5000) },
+            RothConversion {
+                conversion_date: date(2022, 1, 1),
+                amount_converted: dec!(5000),
+            },
+            RothConversion {
+                conversion_date: date(2019, 1, 1),
+                amount_converted: dec!(5000),
+            },
         ];
         let r = compute(&i);
         // Aged first (2019), then unaged (2022). Withdraw $10k → $5k aged + $5k unaged.
@@ -348,8 +352,14 @@ mod tests {
         i.total_contributions_basis = Decimal::ZERO;
         i.withdrawal_amount = dec!(20000);
         i.conversions = vec![
-            RothConversion { conversion_date: date(2018, 1, 1), amount_converted: dec!(10000) },
-            RothConversion { conversion_date: date(2023, 1, 1), amount_converted: dec!(10000) },
+            RothConversion {
+                conversion_date: date(2018, 1, 1),
+                amount_converted: dec!(10000),
+            },
+            RothConversion {
+                conversion_date: date(2023, 1, 1),
+                amount_converted: dec!(10000),
+            },
         ];
         let r = compute(&i);
         assert_eq!(r.from_conversions_aged, dec!(10000));

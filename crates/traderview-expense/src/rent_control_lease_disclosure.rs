@@ -280,8 +280,12 @@ fn citation_for(regime: Regime) -> &'static str {
             "Cal. Civ. Code §§ 1947.12, 1947.12(d)(5), 1946.2, 1946.2(e)(8); AB 1482 (2019)"
         }
         Regime::Oregon => "Or. Rev. Stat. § 90.323; SB 608 (2019)",
-        Regime::NewYork => "N.Y. Real Prop. Law § 234; N.Y. Comp. Codes R. & Regs. tit. 9 § 2522.5(c)",
-        Regime::Default => "no statewide rent-control disclosure statute; municipal control may apply",
+        Regime::NewYork => {
+            "N.Y. Real Prop. Law § 234; N.Y. Comp. Codes R. & Regs. tit. 9 § 2522.5(c)"
+        }
+        Regime::Default => {
+            "no statewide rent-control disclosure statute; municipal control may apply"
+        }
     }
 }
 
@@ -345,7 +349,10 @@ mod tests {
     fn ca_post_july_2020_covered_property_full_compliance() {
         let r = check(&ca_base());
         assert!(r.compliant);
-        assert!(r.notes.iter().any(|n| n.contains("§ 1947.12") && n.contains("§ 1946.2")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1947.12") && n.contains("§ 1946.2")));
     }
 
     #[test]
@@ -364,7 +371,10 @@ mod tests {
         i.addendum_or_signed_notice_provided = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 1947.12(d)") && v.contains("addendum")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1947.12(d)") && v.contains("addendum")));
     }
 
     #[test]
@@ -373,7 +383,10 @@ mod tests {
         i.font_size_at_least_12_point = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 1947.12(d)(5)") && v.contains("12-point")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1947.12(d)(5)") && v.contains("12-point")));
     }
 
     #[test]
@@ -383,7 +396,10 @@ mod tests {
         i.exempt_property_disclosure_includes_required_language = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("REIT") && v.contains("corporation")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("REIT") && v.contains("corporation")));
     }
 
     #[test]
@@ -393,13 +409,19 @@ mod tests {
         i.exempt_property_disclosure_includes_required_language = true;
         let r = check(&i);
         assert!(r.compliant);
-        assert!(r.notes.iter().any(|n| n.contains("exempt property") && n.contains("§ 1947.12(d)(5)")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("exempt property") && n.contains("§ 1947.12(d)(5)")));
     }
 
     #[test]
     fn ca_covered_property_note_references_just_cause() {
         let r = check(&ca_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 1946.2 just-cause") && n.contains("12/24-month")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1946.2 just-cause") && n.contains("12/24-month")));
     }
 
     #[test]
@@ -412,20 +434,29 @@ mod tests {
     #[test]
     fn or_notes_describe_rent_increase_notice_framework() {
         let r = check(&or_base());
-        assert!(r.notes.iter().any(|n| n.contains("90 days") && n.contains("180 days")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("90 days") && n.contains("180 days")));
     }
 
     #[test]
     fn or_notes_describe_cap_exemptions() {
         let r = check(&or_base());
-        assert!(r.notes.iter().any(|n| n.contains("< 15 years old") && n.contains("government-subsidized")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("< 15 years old") && n.contains("government-subsidized")));
     }
 
     #[test]
     fn ny_rent_stabilized_with_rider_compliant() {
         let r = check(&ny_base());
         assert!(r.compliant);
-        assert!(r.notes.iter().any(|n| n.contains("§ 2522.5(c)") && n.contains("registered legal rent")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 2522.5(c)") && n.contains("registered legal rent")));
     }
 
     #[test]
@@ -434,7 +465,10 @@ mod tests {
         i.ny_rent_stabilization_rider_attached = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 2522.5(c)") && v.contains("unenforceable")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 2522.5(c)") && v.contains("unenforceable")));
     }
 
     #[test]
@@ -451,13 +485,18 @@ mod tests {
     fn default_no_obligation_compliant() {
         let r = check(&default_base());
         assert!(r.compliant);
-        assert!(r.notes.iter().any(|n| n.contains("no statewide") && n.contains("municipal")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("no statewide") && n.contains("municipal")));
     }
 
     #[test]
     fn citation_california_pins_subsections_and_ab_1482() {
         let r = check(&ca_base());
-        assert!(r.citation.contains("§§ 1947.12, 1947.12(d)(5), 1946.2, 1946.2(e)(8)"));
+        assert!(r
+            .citation
+            .contains("§§ 1947.12, 1947.12(d)(5), 1946.2, 1946.2(e)(8)"));
         assert!(r.citation.contains("AB 1482"));
     }
 
@@ -502,7 +541,11 @@ mod tests {
             i.regime = regime;
             i.addendum_or_signed_notice_provided = false;
             let r = check(&i);
-            assert!(r.compliant, "regime {:?} does not require addendum at lease execution", regime);
+            assert!(
+                r.compliant,
+                "regime {:?} does not require addendum at lease execution",
+                regime
+            );
         }
     }
 
@@ -527,7 +570,10 @@ mod tests {
             .iter()
             .filter(|v| v.contains("12-point"))
             .collect();
-        assert!(font_violations.is_empty(), "font check skipped when addendum not provided");
+        assert!(
+            font_violations.is_empty(),
+            "font check skipped when addendum not provided"
+        );
     }
 
     #[test]
@@ -551,7 +597,10 @@ mod tests {
             i.font_size_at_least_12_point = font;
             i.exempt_property_disclosure_includes_required_language = exempt_lang;
             let r = check(&i);
-            assert!(r.compliant, "Oregon does not require addendum regardless of inputs");
+            assert!(
+                r.compliant,
+                "Oregon does not require addendum regardless of inputs"
+            );
         }
     }
 
@@ -561,7 +610,10 @@ mod tests {
         i.property_exempt_from_rent_cap = true;
         i.exempt_property_disclosure_includes_required_language = true;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("§ 1947.12(d)(5) ownership requirements")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1947.12(d)(5) ownership requirements")));
     }
 
     #[test]
@@ -575,7 +627,11 @@ mod tests {
             i.ny_rent_stabilization_rider_attached = false;
             i.tenancy_post_july_1_2020 = false;
             let r = check(&i);
-            assert!(r.compliant || matches!(regime, Regime::California), "regime {:?} does not impose RSC § 2522.5(c) requirement", regime);
+            assert!(
+                r.compliant || matches!(regime, Regime::California),
+                "regime {:?} does not impose RSC § 2522.5(c) requirement",
+                regime
+            );
         }
     }
 }

@@ -214,7 +214,11 @@ pub fn check(input: &Input) -> Output {
     // Check employment requirement
     let employment_ok = input.was_employee_throughout_grant_to_exercise_minus_3_months
         || input.employee_died_or_became_disabled;
-    if !employment_ok && matches!(input.event_type, EventType::Exercise | EventType::Disposition)
+    if !employment_ok
+        && matches!(
+            input.event_type,
+            EventType::Exercise | EventType::Disposition
+        )
     {
         let mut n = notes;
         n.push("§ 422(a)(2) employment requirement FAILED: individual was not employee of granting corporation (or related corp under § 424(e)/(f)) at all times during period beginning on grant date and ending 3 months before exercise date. Death or disability extension does not apply. Treats option as NQSO under § 83 with immediate ordinary income at exercise.".to_string());
@@ -261,8 +265,7 @@ pub fn check(input: &Input) -> Output {
             }
         }
         EventType::Disposition => {
-            let two_year_grant_satisfied =
-                input.months_since_grant >= ISO_GRANT_HOLDING_MONTHS;
+            let two_year_grant_satisfied = input.months_since_grant >= ISO_GRANT_HOLDING_MONTHS;
             let one_year_exercise_satisfied =
                 input.months_since_exercise >= ISO_EXERCISE_HOLDING_MONTHS;
             let qualifying = two_year_grant_satisfied && one_year_exercise_satisfied;
@@ -373,7 +376,10 @@ mod tests {
     fn qualifying_disposition_full_capital_gain() {
         let i = baseline(); // 30mo > 24, 15mo > 12 → qualifying
         let out = check(&i);
-        assert_eq!(out.severity, Severity::Section421aQualifyingDispositionCapitalGain);
+        assert_eq!(
+            out.severity,
+            Severity::Section421aQualifyingDispositionCapitalGain
+        );
         // capital gain = $100 - $10 = $90
         assert_eq!(out.capital_gain_cents, 90_00);
         assert_eq!(out.ordinary_compensation_income_cents, 0);
@@ -660,9 +666,9 @@ mod tests {
         // Trader-employee exercises 10,000 ISO shares at $5 strike, FMV $50
         // at exercise = $450K AMT preference; holds 2+ years and sells at $100
         let mut i = baseline();
-        i.option_exercise_price_cents = 5_00 * 10_000;       // $50K exercise cost
-        i.fmv_at_exercise_cents = 50_00 * 10_000;            // $500K FMV at exercise
-        i.fmv_at_disposition_cents = 100_00 * 10_000;        // $1M FMV at disposition
+        i.option_exercise_price_cents = 5_00 * 10_000; // $50K exercise cost
+        i.fmv_at_exercise_cents = 50_00 * 10_000; // $500K FMV at exercise
+        i.fmv_at_disposition_cents = 100_00 * 10_000; // $1M FMV at disposition
         let out = check(&i);
         assert_eq!(
             out.severity,

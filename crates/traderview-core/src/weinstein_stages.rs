@@ -22,7 +22,13 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
-pub enum Stage { #[default] Basing, Advancing, Topping, Declining }
+pub enum Stage {
+    #[default]
+    Basing,
+    Advancing,
+    Topping,
+    Declining,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct WeinsteinStagesReport {
@@ -41,14 +47,21 @@ pub fn classify(
 ) -> Option<WeinsteinStagesReport> {
     let n = closes.len();
     if n < ma_period + ma_slope_window
-        || ma_period < 5 || ma_slope_window < 2
-        || !band_pct.is_finite() || band_pct < 0.0 {
+        || ma_period < 5
+        || ma_slope_window < 2
+        || !band_pct.is_finite()
+        || band_pct < 0.0
+    {
         return None;
     }
-    if closes.iter().any(|x| !x.is_finite() || *x <= 0.0) { return None; }
+    if closes.iter().any(|x| !x.is_finite() || *x <= 0.0) {
+        return None;
+    }
     let current_ma: f64 = closes[n - ma_period..n].iter().sum::<f64>() / ma_period as f64;
-    let past_ma: f64 = closes[n - ma_period - ma_slope_window..n - ma_slope_window].iter()
-        .sum::<f64>() / ma_period as f64;
+    let past_ma: f64 = closes[n - ma_period - ma_slope_window..n - ma_slope_window]
+        .iter()
+        .sum::<f64>()
+        / ma_period as f64;
     let slope_pct = (current_ma - past_ma) / past_ma;
     let last_price = *closes.last().unwrap();
     let price_to_ma = (last_price - current_ma) / current_ma;
@@ -58,8 +71,8 @@ pub fn classify(
         (s, p) if s.abs() <= band_pct && p > band_pct => Stage::Topping,
         (s, p) if s.abs() <= band_pct && p < -band_pct => Stage::Basing,
         // Mixed / transitioning: treat by the stronger signal.
-        (s, p) if s > band_pct && p < -band_pct => Stage::Basing,    // rising MA, price still below
-        (s, p) if s < -band_pct && p > band_pct => Stage::Topping,    // falling MA, price still above
+        (s, p) if s > band_pct && p < -band_pct => Stage::Basing, // rising MA, price still below
+        (s, p) if s < -band_pct && p > band_pct => Stage::Topping, // falling MA, price still above
         _ => Stage::Basing,
     };
     Some(WeinsteinStagesReport {

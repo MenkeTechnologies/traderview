@@ -18,7 +18,11 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum TrendBias { Up, Down, Neutral }
+pub enum TrendBias {
+    Up,
+    Down,
+    Neutral,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
@@ -51,22 +55,31 @@ pub struct ZoneReport {
 
 pub fn classify(range_high: f64, range_low: f64, price: f64, trend: TrendBias) -> ZoneReport {
     if !range_high.is_finite() || !range_low.is_finite() || range_high <= range_low {
-        return ZoneReport { note: "invalid range".into(), ..Default::default() };
+        return ZoneReport {
+            note: "invalid range".into(),
+            ..Default::default()
+        };
     }
     let midpoint = (range_high + range_low) / 2.0;
     let position = (price - range_low) / (range_high - range_low);
     // Strict bands: top 30% = premium, bottom 30% = discount, middle = equilibrium.
-    let zone = if position >= 0.70      { Zone::Premium }
-                else if position <= 0.30 { Zone::Discount }
-                else                     { Zone::Equilibrium };
+    let zone = if position >= 0.70 {
+        Zone::Premium
+    } else if position <= 0.30 {
+        Zone::Discount
+    } else {
+        Zone::Equilibrium
+    };
     let verdict = match (trend, zone) {
-        (TrendBias::Up,   Zone::Discount)    => Verdict::Buy,
-        (TrendBias::Down, Zone::Premium)     => Verdict::Sell,
+        (TrendBias::Up, Zone::Discount) => Verdict::Buy,
+        (TrendBias::Down, Zone::Premium) => Verdict::Sell,
         _ => Verdict::Wait,
     };
     let note = match (zone, verdict) {
-        (Zone::Discount,   Verdict::Buy)  => format!("discount {position:.0}% in uptrend — long bias"),
-        (Zone::Premium,    Verdict::Sell) => format!("premium {position:.0}% in downtrend — short bias"),
+        (Zone::Discount, Verdict::Buy) => format!("discount {position:.0}% in uptrend — long bias"),
+        (Zone::Premium, Verdict::Sell) => {
+            format!("premium {position:.0}% in downtrend — short bias")
+        }
         (Zone::Equilibrium, _) => format!("equilibrium {position:.0}% — wait for premium/discount"),
         _ => format!("{:?} zone in {:?} trend — no edge", zone, trend),
     };

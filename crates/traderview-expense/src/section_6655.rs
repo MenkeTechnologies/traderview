@@ -204,7 +204,8 @@ pub fn compute(input: &Input) -> Output {
         "IRM 20.1.3 — Estimated Tax Penalties (IRS examiner manual)".to_string(),
     ];
 
-    if input.total_tax_shown_on_return_dollars < IRC_6655_SMALL_UNDERPAYMENT_EXCEPTION_THRESHOLD_DOLLARS
+    if input.total_tax_shown_on_return_dollars
+        < IRC_6655_SMALL_UNDERPAYMENT_EXCEPTION_THRESHOLD_DOLLARS
     {
         return Output {
             mode: Section6655Mode::NotApplicableTotalTaxBelow500SmallUnderpaymentException,
@@ -230,11 +231,13 @@ pub fn compute(input: &Input) -> Output {
 
     let is_first_installment = input.installment_quarter == InstallmentQuarter::Quarter1AprilOf15;
 
-    let prior_year_safe_harbor_available = prior_year_safe_harbor_usable_baseline
-        && (!is_large_corporation || is_first_installment);
+    let prior_year_safe_harbor_available =
+        prior_year_safe_harbor_usable_baseline && (!is_large_corporation || is_first_installment);
 
     let required_annual_payment = if prior_year_safe_harbor_available {
-        input.current_year_tax_dollars.min(input.preceding_year_tax_dollars)
+        input
+            .current_year_tax_dollars
+            .min(input.preceding_year_tax_dollars)
     } else {
         if !prior_year_safe_harbor_usable_baseline && is_large_corporation && is_first_installment {
             // Large corp first installment but no usable prior-year baseline -> use current year tax
@@ -342,8 +345,8 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    let underpayment = required_installment_amount
-        .saturating_sub(input.installment_amount_paid_dollars);
+    let underpayment =
+        required_installment_amount.saturating_sub(input.installment_amount_paid_dollars);
 
     let underpayment_rate_basis_points = input
         .federal_short_term_rate_basis_points
@@ -351,11 +354,15 @@ pub fn compute(input: &Input) -> Output {
     let addition_to_tax = u128::from(underpayment)
         .saturating_mul(u128::from(underpayment_rate_basis_points))
         .saturating_mul(u128::from(input.days_underpayment_period))
-        .checked_div(u128::from(IRC_6655_BASIS_POINT_DENOMINATOR).saturating_mul(u128::from(IRC_6655_DAYS_PER_YEAR)))
+        .checked_div(
+            u128::from(IRC_6655_BASIS_POINT_DENOMINATOR)
+                .saturating_mul(u128::from(IRC_6655_DAYS_PER_YEAR)),
+        )
         .unwrap_or(0)
         .min(u128::from(u64::MAX)) as u64;
 
-    if is_large_corporation && !is_first_installment
+    if is_large_corporation
+        && !is_first_installment
         && input.safe_harbor_method == SafeHarborMethod::LesserOfCurrentOrPrecedingYearTax
         && input.current_year_tax_dollars > input.preceding_year_tax_dollars
     {
@@ -547,7 +554,8 @@ mod tests {
     #[test]
     fn annualized_income_method_compliant() {
         let mut input = baseline_standard_corp_input();
-        input.safe_harbor_method = SafeHarborMethod::AnnualizedIncomeInstallmentMethodUnderSection6655E;
+        input.safe_harbor_method =
+            SafeHarborMethod::AnnualizedIncomeInstallmentMethodUnderSection6655E;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -558,7 +566,8 @@ mod tests {
     #[test]
     fn adjusted_seasonal_method_compliant() {
         let mut input = baseline_standard_corp_input();
-        input.safe_harbor_method = SafeHarborMethod::AdjustedSeasonalInstallmentMethodUnderSection6655E;
+        input.safe_harbor_method =
+            SafeHarborMethod::AdjustedSeasonalInstallmentMethodUnderSection6655E;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -614,7 +623,10 @@ mod tests {
         assert_eq!(IRC_6655_BASIS_POINT_DENOMINATOR, 10_000);
         assert_eq!(IRC_6655_NUMBER_OF_INSTALLMENTS_PER_YEAR, 4);
         assert_eq!(IRC_6655_SMALL_UNDERPAYMENT_EXCEPTION_THRESHOLD_DOLLARS, 500);
-        assert_eq!(IRC_6655_LARGE_CORPORATION_TAXABLE_INCOME_THRESHOLD_DOLLARS, 1_000_000);
+        assert_eq!(
+            IRC_6655_LARGE_CORPORATION_TAXABLE_INCOME_THRESHOLD_DOLLARS,
+            1_000_000
+        );
         assert_eq!(IRC_6655_LARGE_CORPORATION_LOOKBACK_YEARS, 3);
         assert_eq!(IRC_6655_INSTALLMENT_1_MONTH, 4);
         assert_eq!(IRC_6655_INSTALLMENT_1_DAY, 15);

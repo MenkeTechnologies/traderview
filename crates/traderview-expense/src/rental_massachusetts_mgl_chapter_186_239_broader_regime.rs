@@ -403,8 +403,7 @@ mod tests {
     fn habitability_maintained_compliant() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::WarrantyOfHabitabilityUnderChapter186Section14;
-        input.habitability_status =
-            HabitabilityStatus::LandlordMaintainsHabitabilityUnderSection14;
+        input.habitability_status = HabitabilityStatus::LandlordMaintainsHabitabilityUnderSection14;
         let out = check(&input);
         assert_eq!(
             out.mode,
@@ -453,7 +452,8 @@ mod tests {
     #[test]
     fn nonpayment_14_day_notice_boundary_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SummaryProcessNonpaymentNoticeUnderChapter239Section1;
+        input.compliance_aspect =
+            ComplianceAspect::SummaryProcessNonpaymentNoticeUnderChapter239Section1;
         input.nonpayment_notice_days_given = 14;
         let out = check(&input);
         assert_eq!(
@@ -465,7 +465,8 @@ mod tests {
     #[test]
     fn nonpayment_13_day_notice_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SummaryProcessNonpaymentNoticeUnderChapter239Section1;
+        input.compliance_aspect =
+            ComplianceAspect::SummaryProcessNonpaymentNoticeUnderChapter239Section1;
         input.nonpayment_notice_days_given = 13;
         let out = check(&input);
         assert_eq!(

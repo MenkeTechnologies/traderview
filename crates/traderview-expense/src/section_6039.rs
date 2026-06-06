@@ -132,8 +132,8 @@ pub fn check(input: &Input) -> Output {
         };
     }
 
-    let electronic_required = input.total_aggregate_info_returns_filed
-        >= ELECTRONIC_FILING_AGGREGATE_THRESHOLD_RETURNS;
+    let electronic_required =
+        input.total_aggregate_info_returns_filed >= ELECTRONIC_FILING_AGGREGATE_THRESHOLD_RETURNS;
 
     if input.intentional_disregard {
         let per_form = INTENTIONAL_DISREGARD_MIN_PER_FORM_FLOOR_CENTS;
@@ -193,7 +193,9 @@ pub fn check(input: &Input) -> Output {
     }
 
     if !input.irs_copy_a_filed {
-        notes.push("Complete failure to file IRS Copy A: § 6721 maximum-rate penalty applies.".to_string());
+        notes.push(
+            "Complete failure to file IRS Copy A: § 6721 maximum-rate penalty applies.".to_string(),
+        );
         let per_form = PENALTY_LATE_AFTER_AUGUST_1_OR_COMPLETE_FAILURE_CENTS_PER_FORM;
         let total = per_form.saturating_mul(total_forms as u64);
         return Output {
@@ -404,7 +406,10 @@ mod tests {
             out.severity,
             Severity::ViolationIntentionalDisregardNoMaximumPenalty
         );
-        assert_eq!(out.per_form_penalty_cents, INTENTIONAL_DISREGARD_MIN_PER_FORM_FLOOR_CENTS);
+        assert_eq!(
+            out.per_form_penalty_cents,
+            INTENTIONAL_DISREGARD_MIN_PER_FORM_FLOOR_CENTS
+        );
         assert!(out.notes.iter().any(|n| n.contains("no maximum")));
     }
 

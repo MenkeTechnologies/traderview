@@ -88,8 +88,7 @@ pub fn compute(input: &Section250Input) -> Section250Result {
     let net_gilti = (input.gilti_ncti_income_dollars - dtir).max(0);
 
     // § 250 deductions.
-    let gilti_deduction =
-        ((net_gilti as i128) * (gilti_pct_bp as i128) / 10_000) as i64;
+    let gilti_deduction = ((net_gilti as i128) * (gilti_pct_bp as i128) / 10_000) as i64;
     let fdii_deduction =
         ((input.fdii_fddei_income_dollars as i128) * (fdii_pct_bp as i128) / 10_000) as i64;
 
@@ -100,9 +99,8 @@ pub fn compute(input: &Section250Input) -> Section250Result {
         (input.corporate_tax_rate_bp as u64 * (10_000 - fdii_pct_bp) as u64 / 10_000) as u32;
 
     // Foreign tax credit.
-    let ftc_amount = ((input.deemed_paid_foreign_taxes_dollars as i128)
-        * (ftc_pct_bp as i128)
-        / 10_000) as i64;
+    let ftc_amount =
+        ((input.deemed_paid_foreign_taxes_dollars as i128) * (ftc_pct_bp as i128) / 10_000) as i64;
 
     let income_label_gilti = if post_obbba { "NCTI" } else { "GILTI" };
     let income_label_fdii = if post_obbba { "FDDEI" } else { "FDII" };

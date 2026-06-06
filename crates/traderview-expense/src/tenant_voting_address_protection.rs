@@ -139,10 +139,8 @@ pub fn check(input: &Input) -> Output {
     let mut criminal_misdemeanor = false;
     let mut criminal_felony = false;
 
-    if matches!(
-        input.acp_status,
-        AcpStatus::NoAcpAndNoVictimDisclosure
-    ) && matches!(input.disclosure_request, DisclosureRequestType::NoRequest)
+    if matches!(input.acp_status, AcpStatus::NoAcpAndNoVictimDisclosure)
+        && matches!(input.disclosure_request, DisclosureRequestType::NoRequest)
     {
         notes.push(
             "No ACP enrollment, no victim status disclosure, no pending disclosure request; \
@@ -161,10 +159,7 @@ pub fn check(input: &Input) -> Output {
         };
     }
 
-    let is_acp_participant = matches!(
-        input.acp_status,
-        AcpStatus::EnrolledWithSubstituteAddress
-    );
+    let is_acp_participant = matches!(input.acp_status, AcpStatus::EnrolledWithSubstituteAddress);
     let is_victim_disclosed = matches!(
         input.acp_status,
         AcpStatus::VictimStatusDisclosedNotEnrolled
@@ -385,11 +380,19 @@ pub fn check(input: &Input) -> Output {
         criminal_exposure_misdemeanor: criminal_misdemeanor,
         criminal_exposure_felony: criminal_felony,
         citation: match input.jurisdiction {
-            Jurisdiction::California => "Cal. Gov. Code § 6206-6210 + Cal. Civ. Code § 1946.7 + § 1161.3 + Penal § 273.6",
-            Jurisdiction::Massachusetts => "M.G.L. ch. 9A + ch. 209A + ch. 186 § 24-29 + ch. 151B § 4",
-            Jurisdiction::NewYork => "N.Y. Executive Law § 108 + RPL § 227-c + Social Services Law § 459-a",
+            Jurisdiction::California => {
+                "Cal. Gov. Code § 6206-6210 + Cal. Civ. Code § 1946.7 + § 1161.3 + Penal § 273.6"
+            }
+            Jurisdiction::Massachusetts => {
+                "M.G.L. ch. 9A + ch. 209A + ch. 186 § 24-29 + ch. 151B § 4"
+            }
+            Jurisdiction::NewYork => {
+                "N.Y. Executive Law § 108 + RPL § 227-c + Social Services Law § 459-a"
+            }
             Jurisdiction::Washington => "RCW 40.24 + RCW 59.18.575 + 59.18.585",
-            Jurisdiction::Default => "42 U.S.C. § 14043e VAWA + 24 C.F.R. § 5.2003 + common-law privacy torts",
+            Jurisdiction::Default => {
+                "42 U.S.C. § 14043e VAWA + 24 C.F.R. § 5.2003 + common-law privacy torts"
+            }
         },
         notes,
     }
@@ -430,7 +433,10 @@ mod tests {
     fn acp_participant_no_disclosure_compliant() {
         let i = baseline();
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantConfidentialityMaintained));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantConfidentialityMaintained
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, 0);
     }
 
@@ -485,7 +491,10 @@ mod tests {
         let mut i = baseline();
         i.disclosure_request = DisclosureRequestType::VoterRegistrationChallenger;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::DisclosureToVoterChallengerProhibited));
+        assert!(matches!(
+            r.severity,
+            Severity::DisclosureToVoterChallengerProhibited
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents / 2);
         assert!(r
             .recommended_actions
@@ -499,7 +508,10 @@ mod tests {
         i.acp_status = AcpStatus::VictimStatusDisclosedNotEnrolled;
         i.disclosure_request = DisclosureRequestType::VoterRegistrationChallenger;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::DisclosureToVoterChallengerProhibited));
+        assert!(matches!(
+            r.severity,
+            Severity::DisclosureToVoterChallengerProhibited
+        ));
     }
 
     #[test]
@@ -526,7 +538,10 @@ mod tests {
             r.severity,
             Severity::DisclosureToDebtCollectorRequiresAcpSubstitute
         ));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("FDCPA 15 U.S.C. § 1692c")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("FDCPA 15 U.S.C. § 1692c")));
     }
 
     #[test]
@@ -560,7 +575,10 @@ mod tests {
         let mut i = baseline();
         i.disclosure_request = DisclosureRequestType::LawEnforcementWithWarrantOrSubpoena;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::LawEnforcementWithValidWarrantCompliant));
+        assert!(matches!(
+            r.severity,
+            Severity::LawEnforcementWithValidWarrantCompliant
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, 0);
         assert!(r.recommended_actions.iter().any(|a| a.contains("warrant")));
     }
@@ -570,8 +588,14 @@ mod tests {
         let i = baseline();
         let r = check(&i);
         assert!(r.notes.iter().any(|n| n.contains("Safe at Home Program")));
-        assert!(r.notes.iter().any(|n| n.contains("Cal. Gov. Code § 6206-6210")));
-        assert!(r.notes.iter().any(|n| n.contains("Cal. Civ. Code § 1946.7")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Cal. Gov. Code § 6206-6210")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Cal. Civ. Code § 1946.7")));
     }
 
     #[test]
@@ -589,8 +613,14 @@ mod tests {
         let mut i = baseline();
         i.jurisdiction = Jurisdiction::NewYork;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("N.Y. Executive Law § 108")));
-        assert!(r.notes.iter().any(|n| n.contains("Real Property Law § 227-c")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("N.Y. Executive Law § 108")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Real Property Law § 227-c")));
         assert!(r.notes.iter().any(|n| n.contains("post-")));
         assert!(r.notes.iter().any(|n| n.contains("Dobbs")));
     }
@@ -623,7 +653,10 @@ mod tests {
             .notes
             .iter()
             .any(|n| n.contains("tenant_smart_lock_biometric_consent")));
-        assert!(r.notes.iter().any(|n| n.contains("security_camera_disclosure")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("security_camera_disclosure")));
         assert!(r
             .notes
             .iter()
@@ -688,11 +721,31 @@ mod tests {
 
     #[test]
     fn citation_branch_for_each_jurisdiction() {
-        let ca = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::California; i });
-        let ma = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Massachusetts; i });
-        let ny = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::NewYork; i });
-        let wa = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Washington; i });
-        let de = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Default; i });
+        let ca = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::California;
+            i
+        });
+        let ma = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Massachusetts;
+            i
+        });
+        let ny = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::NewYork;
+            i
+        });
+        let wa = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Washington;
+            i
+        });
+        let de = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Default;
+            i
+        });
         assert!(ca.citation.contains("Cal. Gov. Code"));
         assert!(ma.citation.contains("M.G.L. ch. 9A"));
         assert!(ny.citation.contains("N.Y. Executive Law"));
@@ -706,7 +759,10 @@ mod tests {
         i.acp_status = AcpStatus::NoAcpAndNoVictimDisclosure;
         i.disclosure_request = DisclosureRequestType::VoterRegistrationChallenger;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantConfidentialityMaintained));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantConfidentialityMaintained
+        ));
     }
 
     #[test]
@@ -714,6 +770,9 @@ mod tests {
         let mut i = baseline();
         i.disclosure_request = DisclosureRequestType::RoutineLandlordBusiness;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantConfidentialityMaintained));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantConfidentialityMaintained
+        ));
     }
 }

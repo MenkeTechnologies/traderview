@@ -150,8 +150,8 @@ pub fn check(input: &Section6532Input) -> Section6532Result {
 
     match input.suit_type {
         SuitType::TaxpayerRefundSuit => {
-            let floor_lifted = input.irs_rendered_decision_within_6_months
-                || input.days_since_claim_filing >= 180;
+            let floor_lifted =
+                input.irs_rendered_decision_within_6_months || input.days_since_claim_filing >= 180;
             six_month_floor_satisfied = floor_lifted;
             if !floor_lifted {
                 failure_reasons.push(format!(
@@ -207,19 +207,18 @@ pub fn check(input: &Section6532Input) -> Section6532Result {
             let mut effective_levy_sol = base_sol_days;
             if input.days_since_section_6343b_request > 0 {
                 let twelve_month_extension = input.days_since_section_6343b_request;
-                let six_month_disallowance_clock = if input.days_since_section_6343b_disallowance
-                    > 0
-                {
-                    Some(input.days_since_section_6343b_disallowance)
-                } else {
-                    None
-                };
+                let six_month_disallowance_clock =
+                    if input.days_since_section_6343b_disallowance > 0 {
+                        Some(input.days_since_section_6343b_disallowance)
+                    } else {
+                        None
+                    };
 
                 let twelve_month_cap: u32 = 365;
                 let six_month_cap: u32 = 180;
 
-                let extension_option_1 =
-                    base_sol_days.saturating_add(twelve_month_cap.saturating_sub(twelve_month_extension));
+                let extension_option_1 = base_sol_days
+                    .saturating_add(twelve_month_cap.saturating_sub(twelve_month_extension));
                 let extension_option_2 = six_month_disallowance_clock.map(|d_disallowance| {
                     base_sol_days.saturating_add(six_month_cap.saturating_sub(d_disallowance))
                 });
@@ -307,8 +306,10 @@ mod tests {
         i.irs_rendered_decision_within_6_months = false;
         let r = check(&i);
         assert!(!r.six_month_floor_satisfied);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 6532(a)(1)")
-            && f.contains("6 MONTHS")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 6532(a)(1)") && f.contains("6 MONTHS")));
     }
 
     #[test]
@@ -342,8 +343,10 @@ mod tests {
         i.days_since_disallowance_notice = 731;
         let r = check(&i);
         assert!(!r.two_year_ceiling_satisfied);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 6532(a)(1)")
-            && f.contains("2 YEARS")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 6532(a)(1)") && f.contains("2 YEARS")));
     }
 
     #[test]
@@ -502,8 +505,10 @@ mod tests {
     #[test]
     fn note_pins_subsection_a2_written_extension() {
         let r = check(&taxpayer_refund_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6532(a)(2)")
-            && n.contains("EXTENDED by written agreement")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6532(a)(2)") && n.contains("EXTENDED by written agreement")));
     }
 
     #[test]
@@ -552,16 +557,21 @@ mod tests {
     #[test]
     fn note_pins_tcja_2017_section_11071() {
         let r = check(&taxpayer_refund_base());
-        assert!(r.notes.iter().any(|n| n.contains("Tax Cuts and Jobs Act of 2017 § 11071")
-            && n.contains("Pub. L. 115-97")
-            && n.contains("9 months to 2 years")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Tax Cuts and Jobs Act of 2017 § 11071")
+                && n.contains("Pub. L. 115-97")
+                && n.contains("9 months to 2 years")));
     }
 
     #[test]
     fn note_pins_irm_and_pub_4528() {
         let r = check(&taxpayer_refund_base());
-        assert!(r.notes.iter().any(|n| n.contains("IRM 34.5.3")
-            && n.contains("IRS Pub. 4528")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("IRM 34.5.3") && n.contains("IRS Pub. 4528")));
     }
 
     #[test]

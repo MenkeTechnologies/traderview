@@ -46,7 +46,11 @@ pub struct ScannerConfig {
 
 impl Default for ScannerConfig {
     fn default() -> Self {
-        Self { min_inversion: 0.02, min_steepness: 0.02, flat_threshold: 0.01 }
+        Self {
+            min_inversion: 0.02,
+            min_steepness: 0.02,
+            flat_threshold: 0.01,
+        }
     }
 }
 
@@ -56,7 +60,7 @@ pub struct TermStructureEntry {
     pub shape: TermStructureShape,
     pub near_iv: f64,
     pub far_iv: f64,
-    pub iv_spread: f64,    // near − far (positive = inverted)
+    pub iv_spread: f64, // near − far (positive = inverted)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -83,9 +87,15 @@ pub fn analyze(universe: &[SymbolTermStructure], cfg: &ScannerConfig) -> TermStr
         let mut min_iv = f64::INFINITY;
         let mut max_iv = f64::NEG_INFINITY;
         for p in &sym.curve {
-            if !p.atm_iv.is_finite() { continue; }
-            if p.atm_iv < min_iv { min_iv = p.atm_iv; }
-            if p.atm_iv > max_iv { max_iv = p.atm_iv; }
+            if !p.atm_iv.is_finite() {
+                continue;
+            }
+            if p.atm_iv < min_iv {
+                min_iv = p.atm_iv;
+            }
+            if p.atm_iv > max_iv {
+                max_iv = p.atm_iv;
+            }
         }
         let range = max_iv - min_iv;
         let shape = if range < cfg.flat_threshold {
@@ -126,11 +136,17 @@ mod tests {
     use super::*;
 
     fn exp(dte: i64, iv: f64) -> ExpiryIv {
-        ExpiryIv { days_to_expiry: dte, atm_iv: iv }
+        ExpiryIv {
+            days_to_expiry: dte,
+            atm_iv: iv,
+        }
     }
 
     fn s(name: &str, curve: Vec<ExpiryIv>) -> SymbolTermStructure {
-        SymbolTermStructure { symbol: name.into(), curve }
+        SymbolTermStructure {
+            symbol: name.into(),
+            curve,
+        }
     }
 
     #[test]
@@ -183,15 +199,15 @@ mod tests {
     #[test]
     fn entries_sorted_by_absolute_spread_descending() {
         let u = vec![
-            s("MILD", vec![exp(7, 0.32), exp(60, 0.30)]),        // spread 0.02
-            s("BIG",  vec![exp(7, 0.50), exp(60, 0.20)]),        // spread 0.30
-            s("SMALL",vec![exp(7, 0.31), exp(60, 0.30)]),        // spread 0.01
+            s("MILD", vec![exp(7, 0.32), exp(60, 0.30)]), // spread 0.02
+            s("BIG", vec![exp(7, 0.50), exp(60, 0.20)]),  // spread 0.30
+            s("SMALL", vec![exp(7, 0.31), exp(60, 0.30)]), // spread 0.01
         ];
         let r = analyze(&u, &ScannerConfig::default());
         assert_eq!(r.entries[0].symbol, "BIG");
         // Order of MILD vs SMALL: both small, but absolute spread sort means MILD before SMALL.
         let positions: Vec<&str> = r.entries.iter().map(|e| e.symbol.as_str()).collect();
-        let big_pos  = positions.iter().position(|s| *s == "BIG").unwrap();
+        let big_pos = positions.iter().position(|s| *s == "BIG").unwrap();
         let mild_pos = positions.iter().position(|s| *s == "MILD").unwrap();
         let small_pos = positions.iter().position(|s| *s == "SMALL").unwrap();
         assert!(big_pos < mild_pos && mild_pos < small_pos);

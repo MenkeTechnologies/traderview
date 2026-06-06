@@ -287,7 +287,10 @@ mod tests {
 
     #[test]
     fn third_party_device_violates_federal_regardless_of_state() {
-        for regime in [ConsentRegime::OnePartyConsent, ConsentRegime::AllPartyConsent] {
+        for regime in [
+            ConsentRegime::OnePartyConsent,
+            ConsentRegime::AllPartyConsent,
+        ] {
             let mut i = base(regime);
             i.recording_party_is_a_party_to_conversation = false;
             i.at_least_one_party_consented = true;
@@ -310,7 +313,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.recording_lawful_federal);
         assert!(!r.recording_lawful_state);
-        assert!(r.notes.iter().any(|n| n.contains("reasonable expectation of privacy")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("reasonable expectation of privacy")));
     }
 
     #[test]
@@ -326,7 +332,10 @@ mod tests {
 
     #[test]
     fn public_space_no_privacy_expectation_always_lawful() {
-        for regime in [ConsentRegime::OnePartyConsent, ConsentRegime::AllPartyConsent] {
+        for regime in [
+            ConsentRegime::OnePartyConsent,
+            ConsentRegime::AllPartyConsent,
+        ] {
             let mut i = base(regime);
             i.public_space_no_privacy_expectation = true;
             i.all_parties_consented = false;
@@ -417,7 +426,10 @@ mod tests {
         i.public_space_no_privacy_expectation = true;
         i.recording_party_is_a_party_to_conversation = false;
         let r = check(&i);
-        assert!(r.recording_lawful_federal, "public space carve-out runs first");
+        assert!(
+            r.recording_lawful_federal,
+            "public space carve-out runs first"
+        );
     }
 
     #[test]
@@ -428,7 +440,10 @@ mod tests {
         let r = check(&i);
         assert!(r.recording_lawful_federal);
         assert!(!r.recording_lawful_state);
-        assert!(!r.federal_criminal_exposure, "federal not violated when one-party consent met");
+        assert!(
+            !r.federal_criminal_exposure,
+            "federal not violated when one-party consent met"
+        );
     }
 
     #[test]
@@ -455,7 +470,10 @@ mod tests {
         i.all_parties_consented = true;
         i.at_least_one_party_consented = true;
         let r = check(&i);
-        assert!(!r.recording_lawful_federal, "third-party device unlawful even with all-party consent");
+        assert!(
+            !r.recording_lawful_federal,
+            "third-party device unlawful even with all-party consent"
+        );
     }
 
     #[test]
@@ -466,7 +484,10 @@ mod tests {
             .iter()
             .filter(|n| n.contains("§ 2520(c)"))
             .collect();
-        assert!(civil_notes.is_empty(), "civil damages note only on federal violation");
+        assert!(
+            civil_notes.is_empty(),
+            "civil damages note only on federal violation"
+        );
     }
 
     #[test]
@@ -476,7 +497,10 @@ mod tests {
         i.at_least_one_party_consented = true;
         i.all_parties_consented = false;
         let r = check(&i);
-        assert!(!r.recording_lawful_federal, "in-unit recording requires all-party consent regardless of regime");
+        assert!(
+            !r.recording_lawful_federal,
+            "in-unit recording requires all-party consent regardless of regime"
+        );
     }
 
     #[test]

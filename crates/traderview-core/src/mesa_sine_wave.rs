@@ -33,8 +33,12 @@ pub fn compute(series: &[f64]) -> SineWaveReport {
         lead_sine: vec![None; n],
         period: vec![None; n],
     };
-    if n < 7 { return report; }
-    if series.iter().any(|x| !x.is_finite()) { return report; }
+    if n < 7 {
+        return report;
+    }
+    if series.iter().any(|x| !x.is_finite()) {
+        return report;
+    }
     let mut smooth = vec![0.0_f64; n];
     let mut detrender = vec![0.0_f64; n];
     let mut q1 = vec![0.0_f64; n];
@@ -51,18 +55,22 @@ pub fn compute(series: &[f64]) -> SineWaveReport {
     let mut delta_phase = vec![0.0_f64; n];
     let mut instant_period = vec![0.0_f64; n];
     for i in 6..n {
-        smooth[i] = (4.0 * series[i] + 3.0 * series[i - 1]
-            + 2.0 * series[i - 2] + series[i - 3]) / 10.0;
+        smooth[i] =
+            (4.0 * series[i] + 3.0 * series[i - 1] + 2.0 * series[i - 2] + series[i - 3]) / 10.0;
         let p_factor = 0.075 * period[i - 1] + 0.54;
         detrender[i] = (0.0962 * smooth[i] + 0.5769 * smooth[i - 2]
-            - 0.5769 * smooth[i - 4] - 0.0962 * smooth[i - 6]) * p_factor;
+            - 0.5769 * smooth[i - 4]
+            - 0.0962 * smooth[i - 6])
+            * p_factor;
         q1[i] = (0.0962 * detrender[i] + 0.5769 * detrender[i - 2]
-            - 0.5769 * detrender[i - 4] - 0.0962 * detrender[i - 6]) * p_factor;
+            - 0.5769 * detrender[i - 4]
+            - 0.0962 * detrender[i - 6])
+            * p_factor;
         i1[i] = detrender[i - 3];
-        ji[i] = (0.0962 * i1[i] + 0.5769 * i1[i - 2]
-            - 0.5769 * i1[i - 4] - 0.0962 * i1[i - 6]) * p_factor;
-        jq[i] = (0.0962 * q1[i] + 0.5769 * q1[i - 2]
-            - 0.5769 * q1[i - 4] - 0.0962 * q1[i - 6]) * p_factor;
+        ji[i] = (0.0962 * i1[i] + 0.5769 * i1[i - 2] - 0.5769 * i1[i - 4] - 0.0962 * i1[i - 6])
+            * p_factor;
+        jq[i] = (0.0962 * q1[i] + 0.5769 * q1[i - 2] - 0.5769 * q1[i - 4] - 0.0962 * q1[i - 6])
+            * p_factor;
         i2[i] = i1[i] - jq[i];
         q2[i] = q1[i] + ji[i];
         i2[i] = 0.2 * i2[i] + 0.8 * i2[i - 1];
@@ -76,16 +84,30 @@ pub fn compute(series: &[f64]) -> SineWaveReport {
         } else {
             period[i - 1]
         };
-        if p > 1.5 * period[i - 1] { p = 1.5 * period[i - 1]; }
-        if p < 0.67 * period[i - 1] { p = 0.67 * period[i - 1]; }
+        if p > 1.5 * period[i - 1] {
+            p = 1.5 * period[i - 1];
+        }
+        if p < 0.67 * period[i - 1] {
+            p = 0.67 * period[i - 1];
+        }
         p = p.clamp(6.0, 50.0);
         period[i] = 0.2 * p + 0.8 * period[i - 1];
         smooth_period[i] = 0.33 * period[i] + 0.67 * smooth_period[i - 1];
         // Cycle phase from in-phase / quadrature.
-        phase[i] = if i1[i] != 0.0 { q1[i].atan2(i1[i]).to_degrees() } else { 0.0 };
+        phase[i] = if i1[i] != 0.0 {
+            q1[i].atan2(i1[i]).to_degrees()
+        } else {
+            0.0
+        };
         delta_phase[i] = (phase[i - 1] - phase[i]).max(1.0);
-        if delta_phase[i] > 60.0 { delta_phase[i] = 60.0; }
-        instant_period[i] = if delta_phase[i] > 0.0 { 360.0 / delta_phase[i] } else { 0.0 };
+        if delta_phase[i] > 60.0 {
+            delta_phase[i] = 60.0;
+        }
+        instant_period[i] = if delta_phase[i] > 0.0 {
+            360.0 / delta_phase[i]
+        } else {
+            0.0
+        };
         let p_rad = phase[i].to_radians();
         report.sine[i] = Some(p_rad.sin());
         report.lead_sine[i] = Some((phase[i] + 45.0).to_radians().sin());
@@ -113,7 +135,9 @@ mod tests {
 
     #[test]
     fn output_in_unit_signed_range() {
-        let s: Vec<f64> = (0..200).map(|i| 100.0 + (i as f64 * 0.3).sin() * 5.0).collect();
+        let s: Vec<f64> = (0..200)
+            .map(|i| 100.0 + (i as f64 * 0.3).sin() * 5.0)
+            .collect();
         let r = compute(&s);
         for v in r.sine.iter().flatten() {
             assert!((-1.0..=1.0).contains(v));
@@ -125,11 +149,12 @@ mod tests {
 
     #[test]
     fn period_in_six_to_fifty_range() {
-        let s: Vec<f64> = (0..200).map(|i| 100.0 + (i as f64 * 0.3).sin() * 5.0).collect();
+        let s: Vec<f64> = (0..200)
+            .map(|i| 100.0 + (i as f64 * 0.3).sin() * 5.0)
+            .collect();
         let r = compute(&s);
         for v in r.period.iter().skip(20).flatten() {
-            assert!((0.0..=50.0).contains(v),
-                "period {v} should be in [0, 50]");
+            assert!((0.0..=50.0).contains(v), "period {v} should be in [0, 50]");
         }
     }
 

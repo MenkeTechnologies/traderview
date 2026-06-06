@@ -441,7 +441,10 @@ mod tests {
         let mut input = baseline_input();
         input.home_type = HomeType::NotEligibleHomeType;
         let output = check(&input);
-        assert_eq!(output.mode, Section45LMode::NotApplicableNotEligibleHomeType);
+        assert_eq!(
+            output.mode,
+            Section45LMode::NotApplicableNotEligibleHomeType
+        );
     }
 
     #[test]
@@ -455,16 +458,23 @@ mod tests {
     #[test]
     fn single_family_energy_star_2500_compliant() {
         let output = check(&baseline_input());
-        assert_eq!(output.mode, Section45LMode::CompliantSingleFamilyEnergyStar2500Credit);
+        assert_eq!(
+            output.mode,
+            Section45LMode::CompliantSingleFamilyEnergyStar2500Credit
+        );
         assert_eq!(output.credit_amount_dollars, 2_500);
     }
 
     #[test]
     fn single_family_zerh_5000_compliant() {
         let mut input = baseline_input();
-        input.certification_level = CertificationLevel::DoeZeroEnergyReadyHomeOrEfficientNewHomesCertified;
+        input.certification_level =
+            CertificationLevel::DoeZeroEnergyReadyHomeOrEfficientNewHomesCertified;
         let output = check(&input);
-        assert_eq!(output.mode, Section45LMode::CompliantSingleFamilyZerh5000Credit);
+        assert_eq!(
+            output.mode,
+            Section45LMode::CompliantSingleFamilyZerh5000Credit
+        );
         assert_eq!(output.credit_amount_dollars, 5_000);
     }
 
@@ -486,9 +496,13 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::MultifamilyCreditUnderSection45LB2;
         input.home_type = HomeType::MultifamilyDwellingUnit;
-        input.certification_level = CertificationLevel::DoeZeroEnergyReadyHomeOrEfficientNewHomesCertified;
+        input.certification_level =
+            CertificationLevel::DoeZeroEnergyReadyHomeOrEfficientNewHomesCertified;
         let output = check(&input);
-        assert_eq!(output.mode, Section45LMode::CompliantMultifamilyZerhBase1000Credit);
+        assert_eq!(
+            output.mode,
+            Section45LMode::CompliantMultifamilyZerhBase1000Credit
+        );
         assert_eq!(output.credit_amount_dollars, 1_000);
     }
 
@@ -511,7 +525,8 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::MultifamilyCreditUnderSection45LB2;
         input.home_type = HomeType::MultifamilyDwellingUnit;
-        input.certification_level = CertificationLevel::DoeZeroEnergyReadyHomeOrEfficientNewHomesCertified;
+        input.certification_level =
+            CertificationLevel::DoeZeroEnergyReadyHomeOrEfficientNewHomesCertified;
         input.prevailing_wage_requirement_met = true;
         let output = check(&input);
         assert_eq!(
@@ -524,7 +539,8 @@ mod tests {
     #[test]
     fn prevailing_wage_met_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::PrevailingWageRequirementForMultifamilyUnderSection45LG;
+        input.compliance_aspect =
+            ComplianceAspect::PrevailingWageRequirementForMultifamilyUnderSection45LG;
         input.prevailing_wage_requirement_met = true;
         let output = check(&input);
         assert_eq!(
@@ -536,7 +552,8 @@ mod tests {
     #[test]
     fn prevailing_wage_not_met_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::PrevailingWageRequirementForMultifamilyUnderSection45LG;
+        input.compliance_aspect =
+            ComplianceAspect::PrevailingWageRequirementForMultifamilyUnderSection45LG;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -549,7 +566,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::EligibleContractorStatusUnderSection45LC;
         let output = check(&input);
-        assert_eq!(output.mode, Section45LMode::CompliantEligibleContractorStatus);
+        assert_eq!(
+            output.mode,
+            Section45LMode::CompliantEligibleContractorStatus
+        );
     }
 
     #[test]
@@ -566,7 +586,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::HomeLocatedInUnitedStatesRequirement;
         let output = check(&input);
-        assert_eq!(output.mode, Section45LMode::CompliantHomeLocatedInUnitedStates);
+        assert_eq!(
+            output.mode,
+            Section45LMode::CompliantHomeLocatedInUnitedStates
+        );
     }
 
     #[test]
@@ -575,15 +598,22 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::HomeLocatedInUnitedStatesRequirement;
         input.home_located_in_united_states = false;
         let output = check(&input);
-        assert_eq!(output.mode, Section45LMode::ViolationHomeNotLocatedInUnitedStates);
+        assert_eq!(
+            output.mode,
+            Section45LMode::ViolationHomeNotLocatedInUnitedStates
+        );
     }
 
     #[test]
     fn acquisition_from_eligible_contractor_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::AcquisitionFromEligibleContractorUnderSection45LD;
+        input.compliance_aspect =
+            ComplianceAspect::AcquisitionFromEligibleContractorUnderSection45LD;
         let output = check(&input);
-        assert_eq!(output.mode, Section45LMode::CompliantAcquisitionFromEligibleContractor);
+        assert_eq!(
+            output.mode,
+            Section45LMode::CompliantAcquisitionFromEligibleContractor
+        );
     }
 
     #[test]
@@ -600,7 +630,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::FormFilingUnderForm8908;
         input.form_8908_filed_correctly = false;
         let output = check(&input);
-        assert_eq!(output.mode, Section45LMode::ViolationForm8908NotFiledOrIncorrect);
+        assert_eq!(
+            output.mode,
+            Section45LMode::ViolationForm8908NotFiledOrIncorrect
+        );
     }
 
     #[test]
@@ -628,7 +661,10 @@ mod tests {
             IRC_45L_MULTIFAMILY_ENERGY_STAR_WITH_PREVAILING_WAGE_CREDIT_DOLLARS,
             2_500
         );
-        assert_eq!(IRC_45L_MULTIFAMILY_ZERH_WITH_PREVAILING_WAGE_CREDIT_DOLLARS, 5_000);
+        assert_eq!(
+            IRC_45L_MULTIFAMILY_ZERH_WITH_PREVAILING_WAGE_CREDIT_DOLLARS,
+            5_000
+        );
         assert_eq!(IRC_45L_FORM_NUMBER, 8908);
         assert_eq!(IRC_45L_BASIS_POINT_DENOMINATOR, 10_000);
     }

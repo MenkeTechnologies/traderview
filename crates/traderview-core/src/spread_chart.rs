@@ -39,9 +39,16 @@ pub fn compute(
         hedge_ratio,
         zscore_period,
     };
-    if n == 0 || closes_b.len() != n
-        || !hedge_ratio.is_finite() || zscore_period < 2 { return report; }
-    if closes_a.iter().chain(closes_b.iter()).any(|x| !x.is_finite()) { return report; }
+    if n == 0 || closes_b.len() != n || !hedge_ratio.is_finite() || zscore_period < 2 {
+        return report;
+    }
+    if closes_a
+        .iter()
+        .chain(closes_b.iter())
+        .any(|x| !x.is_finite())
+    {
+        return report;
+    }
     for i in 0..n {
         report.spread[i] = Some(closes_a[i] - hedge_ratio * closes_b[i]);
     }
@@ -49,7 +56,9 @@ pub fn compute(
     for i in (zscore_period - 1)..n {
         let win = &report.spread[i + 1 - zscore_period..=i];
         let vals: Vec<f64> = win.iter().filter_map(|x| *x).collect();
-        if vals.len() != zscore_period { continue; }
+        if vals.len() != zscore_period {
+            continue;
+        }
         let mean: f64 = vals.iter().sum::<f64>() / p_f;
         let var: f64 = vals.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / p_f;
         let std = var.max(0.0).sqrt();
@@ -87,7 +96,9 @@ mod tests {
         let a = vec![100.0_f64; 20];
         let b = vec![100.0_f64; 20];
         let r = compute(&a, &b, 1.0, 5);
-        for v in r.spread.iter().flatten() { assert!(v.abs() < 1e-9); }
+        for v in r.spread.iter().flatten() {
+            assert!(v.abs() < 1e-9);
+        }
     }
 
     #[test]
@@ -103,7 +114,9 @@ mod tests {
         let a = vec![100.0_f64; 20];
         let b = vec![100.0_f64; 20];
         let r = compute(&a, &b, 1.0, 5);
-        for v in r.zscore.iter().flatten() { assert!(v.abs() < 1e-9); }
+        for v in r.zscore.iter().flatten() {
+            assert!(v.abs() < 1e-9);
+        }
     }
 
     #[test]

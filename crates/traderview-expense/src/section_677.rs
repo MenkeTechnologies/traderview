@@ -215,7 +215,10 @@ pub fn compute(input: &Input) -> Output {
         );
     let triggered_by_subsection_b = input.income_applied_to_legal_obligation_of_grantor_or_spouse;
 
-    if !triggered_by_subsection_a1_or_a2 && !triggered_by_subsection_a3 && !triggered_by_subsection_b {
+    if !triggered_by_subsection_a1_or_a2
+        && !triggered_by_subsection_a3
+        && !triggered_by_subsection_b
+    {
         return Output {
             mode: Section677Mode::NotApplicableTrustIncomeNotPayableToGrantorOrSpouseOrLifeInsurance,
             triggered_subsection: Section677Subsection::NoTriggerNoSubsection,
@@ -235,9 +238,7 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.adverse_party_status
-        == AdversePartyStatus::AdversePartyApprovalRequiredAndObtained
-    {
+    if input.adverse_party_status == AdversePartyStatus::AdversePartyApprovalRequiredAndObtained {
         return Output {
             mode: Section677Mode::CompliantAdversePartyApprovalDeactivatesSection677,
             triggered_subsection: Section677Subsection::Section677A1IncomeDistributableToGrantorOrSpouse,

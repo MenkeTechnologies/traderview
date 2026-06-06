@@ -26,21 +26,33 @@ pub struct Report {
 
 pub fn compute(x: &[f64], y: &[f64]) -> Option<Report> {
     let n = x.len();
-    if n < 3 || y.len() != n { return None; }
-    if x.iter().chain(y.iter()).any(|v| !v.is_finite()) { return None; }
+    if n < 3 || y.len() != n {
+        return None;
+    }
+    if x.iter().chain(y.iter()).any(|v| !v.is_finite()) {
+        return None;
+    }
     let mut slopes = Vec::with_capacity(n * (n - 1) / 2);
     for i in 0..n {
         for j in i + 1..n {
             let dx = x[j] - x[i];
-            if dx == 0.0 { continue; }
+            if dx == 0.0 {
+                continue;
+            }
             slopes.push((y[j] - y[i]) / dx);
         }
     }
-    if slopes.is_empty() { return None; }
+    if slopes.is_empty() {
+        return None;
+    }
     let slope = median(&mut slopes);
     let mut intercepts: Vec<f64> = (0..n).map(|i| y[i] - slope * x[i]).collect();
     let intercept = median(&mut intercepts);
-    Some(Report { slope, intercept, n_pairs: slopes.len() })
+    Some(Report {
+        slope,
+        intercept,
+        n_pairs: slopes.len(),
+    })
 }
 
 fn median(v: &mut [f64]) -> f64 {
@@ -98,7 +110,8 @@ mod tests {
         // Slope should still be close to 2.
         assert!((r.slope - 2.0).abs() < 0.5);
         // Keep `x` mutable-binding warning quiet without changing semantics.
-        x.push(0.0); let _ = x;
+        x.push(0.0);
+        let _ = x;
     }
 
     #[test]

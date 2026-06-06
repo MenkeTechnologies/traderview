@@ -117,8 +117,8 @@ fn check_florida(input: &HoaFeeTenantEnforcementInput) -> HoaFeeTenantEnforcemen
     let mut violations: Vec<String> = Vec::new();
     let mut notes: Vec<String> = Vec::new();
 
-    let demand_triggered = input.landlord_delinquent_on_hoa_dues
-        && input.hoa_demanded_tenant_pay_directly;
+    let demand_triggered =
+        input.landlord_delinquent_on_hoa_dues && input.hoa_demanded_tenant_pay_directly;
 
     let mut hoa_enforce = false;
     let mut immunity = false;
@@ -331,7 +331,11 @@ mod tests {
         let r = check(&i);
         assert!(!r.hoa_can_enforce_against_tenant);
         assert!(!r.tenant_immunity_from_landlord_claim);
-        assert!(r.violations.iter().any(|v| v.contains("§ 720.3085(8)") && v.contains("hand delivery OR United States mail")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 720.3085(8)")
+                && v.contains("hand delivery OR United States mail")));
     }
 
     #[test]
@@ -365,7 +369,10 @@ mod tests {
     #[test]
     fn fl_condominium_parallel_rule_note_present() {
         let r = check(&fl_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 718.116(11)") && n.contains("CONDOMINIUM")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 718.116(11)") && n.contains("CONDOMINIUM")));
     }
 
     #[test]
@@ -377,7 +384,10 @@ mod tests {
     #[test]
     fn fl_tenant_credit_note_describes_liability_cap() {
         let r = check(&fl_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 720.3085(8)(c)") && n.contains("liability capped")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 720.3085(8)(c)") && n.contains("liability capped")));
     }
 
     #[test]
@@ -393,7 +403,10 @@ mod tests {
         let mut i = tx_base();
         i.tx_owner_45_day_notice_provided = false;
         let r = check(&i);
-        assert!(r.violations.iter().any(|v| v.contains("§ 209.0064") && v.contains("45-day cure period")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 209.0064") && v.contains("45-day cure period")));
     }
 
     #[test]
@@ -401,7 +414,11 @@ mod tests {
         let mut i = tx_base();
         i.lease_passes_hoa_dues_to_tenant = true;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("lease passes HOA dues to tenant") && n.contains("landlord may evict")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("lease passes HOA dues to tenant")
+                && n.contains("landlord may evict")));
     }
 
     #[test]
@@ -420,7 +437,9 @@ mod tests {
     #[test]
     fn ca_davis_stirling_foreclose_owner_not_tenant_note() {
         let r = check(&ca_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 5710") && n.contains("foreclose on owner's interest") && n.contains("NOT tenant")));
+        assert!(r.notes.iter().any(|n| n.contains("§ 5710")
+            && n.contains("foreclose on owner's interest")
+            && n.contains("NOT tenant")));
     }
 
     #[test]
@@ -442,7 +461,10 @@ mod tests {
     #[test]
     fn default_fdcpa_note_for_third_party_collector() {
         let r = check(&default_base());
-        assert!(r.notes.iter().any(|n| n.contains("FDCPA") && n.contains("15 U.S.C. § 1692")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("FDCPA") && n.contains("15 U.S.C. § 1692")));
     }
 
     #[test]
@@ -519,7 +541,12 @@ mod tests {
 
     #[test]
     fn four_regimes_routed_correctly() {
-        for regime in [Regime::Florida, Regime::Texas, Regime::California, Regime::Default] {
+        for regime in [
+            Regime::Florida,
+            Regime::Texas,
+            Regime::California,
+            Regime::Default,
+        ] {
             let mut i = fl_base();
             i.regime = regime;
             i.tx_owner_45_day_notice_provided = true;
@@ -537,7 +564,11 @@ mod tests {
             i.lease_passes_hoa_dues_to_tenant = true;
             i.tx_owner_45_day_notice_provided = true;
             let r = check(&i);
-            assert!(r.notes.iter().any(|n| n.contains("lease passes HOA dues")), "regime {:?} should describe lease passthrough", regime);
+            assert!(
+                r.notes.iter().any(|n| n.contains("lease passes HOA dues")),
+                "regime {:?} should describe lease passthrough",
+                regime
+            );
         }
     }
 

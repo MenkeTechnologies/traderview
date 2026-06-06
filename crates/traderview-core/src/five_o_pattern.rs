@@ -23,12 +23,20 @@ pub use crate::gartley_pattern::Pivot;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
-pub enum FiveODirection { #[default] Bullish, Bearish }
+pub enum FiveODirection {
+    #[default]
+    Bullish,
+    Bearish,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct FiveOMatch {
     pub direction: FiveODirection,
-    pub x: Pivot, pub a: Pivot, pub b: Pivot, pub c: Pivot, pub d: Pivot,
+    pub x: Pivot,
+    pub a: Pivot,
+    pub b: Pivot,
+    pub c: Pivot,
+    pub d: Pivot,
     pub ab_ratio: f64,
     pub bc_ratio: f64,
     pub cd_to_bc_ratio: f64,
@@ -41,24 +49,44 @@ pub fn detect(pivots: &[Pivot], tolerance: f64) -> Vec<FiveOMatch> {
     }
     for w in pivots.windows(5) {
         let alternating = (1..5).all(|i| w[i].is_high != w[i - 1].is_high);
-        if !alternating { continue; }
+        if !alternating {
+            continue;
+        }
         let (x, a, b, c, d) = (w[0], w[1], w[2], w[3], w[4]);
         let xa = (a.price - x.price).abs();
         let ab = (b.price - a.price).abs();
         let bc = (c.price - b.price).abs();
         let cd = (d.price - c.price).abs();
-        if xa <= 0.0 || ab <= 0.0 || bc <= 0.0 { continue; }
+        if xa <= 0.0 || ab <= 0.0 || bc <= 0.0 {
+            continue;
+        }
         let ab_ratio = ab / xa;
         let bc_ratio = bc / ab;
         let cd_to_bc_ratio = cd / bc;
-        if !(1.130 - tolerance..=1.618 + tolerance).contains(&ab_ratio) { continue; }
-        if !(1.618 - tolerance..=2.240 + tolerance).contains(&bc_ratio) { continue; }
-        if (cd_to_bc_ratio - 0.500).abs() > tolerance { continue; }
-        let direction = if x.is_high { FiveODirection::Bearish }
-            else { FiveODirection::Bullish };
+        if !(1.130 - tolerance..=1.618 + tolerance).contains(&ab_ratio) {
+            continue;
+        }
+        if !(1.618 - tolerance..=2.240 + tolerance).contains(&bc_ratio) {
+            continue;
+        }
+        if (cd_to_bc_ratio - 0.500).abs() > tolerance {
+            continue;
+        }
+        let direction = if x.is_high {
+            FiveODirection::Bearish
+        } else {
+            FiveODirection::Bullish
+        };
         out.push(FiveOMatch {
-            direction, x, a, b, c, d,
-            ab_ratio, bc_ratio, cd_to_bc_ratio,
+            direction,
+            x,
+            a,
+            b,
+            c,
+            d,
+            ab_ratio,
+            bc_ratio,
+            cd_to_bc_ratio,
         });
     }
     out
@@ -69,7 +97,11 @@ mod tests {
     use super::*;
 
     fn p(idx: usize, price: f64, is_high: bool) -> Pivot {
-        Pivot { index: idx, price, is_high }
+        Pivot {
+            index: idx,
+            price,
+            is_high,
+        }
     }
 
     #[test]
@@ -107,7 +139,7 @@ mod tests {
             p(10, 140.0, true),
             p(20, 88.0, false),
             p(30, 192.0, true),
-            p(40, 161.0, false),    // CD = 31, ratio = 0.298
+            p(40, 161.0, false), // CD = 31, ratio = 0.298
         ];
         assert!(detect(&pivots, 0.05).is_empty());
     }
@@ -117,7 +149,7 @@ mod tests {
         let pivots = vec![
             p(0, 100.0, false),
             p(10, 140.0, true),
-            p(20, 88.0, true),    // not alternating
+            p(20, 88.0, true), // not alternating
             p(30, 192.0, true),
             p(40, 140.0, false),
         ];

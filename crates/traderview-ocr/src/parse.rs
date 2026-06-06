@@ -7,9 +7,10 @@
 //!       + "total" alone                                            → +1
 //!       - "total savings", "total number of items", "subtotal",
 //!         "rebate", "discount", "you saved"                        → reject
-//!       Among the highest-scoring lines, take the LAST occurrence
-//!       (chain-store receipts put the final total at the bottom).
-//!       Falls back to the largest dollar amount on the page.
+//!
+//!     Among the highest-scoring lines, take the LAST occurrence
+//!     (chain-store receipts put the final total at the bottom).
+//!     Falls back to the largest dollar amount on the page.
 //!   * Date    — scored across every `MM/DD/YY` and month-name date:
 //!       + line contains "sale", "trans", "date", "receipt", "order",
 //!         "purchase"                                               → +2
@@ -18,7 +19,8 @@
 //!         "exp", "redeem", "good until", "offer", "warranty",
 //!         "policy"                                                 → -3
 //!       - date is more than 30 days in the future                  → -2
-//!       Pick highest-score; tiebreak = LAST occurrence.
+//!
+//!     Pick highest-score; tiebreak = LAST occurrence.
 
 use crate::{OcrLineItem, OcrResult};
 use chrono::{Datelike, Duration, NaiveDate, NaiveTime, Utc};
@@ -41,21 +43,25 @@ pub fn structure(raw: &str, confidence: f32) -> OcrResult {
     let mut cleaned = raw.replace("[UNK]", " ");
     {
         static COMMA_DECIMAL: OnceLock<Regex> = OnceLock::new();
-        let re = COMMA_DECIMAL.get_or_init(|| {
-            Regex::new(r"(\d),(\d{2})(?:\b|$|[^0-9])").unwrap()
-        });
-        let mut next = re.replace_all(&cleaned, |c: &regex::Captures| {
-            let tail = c.get(0).unwrap().as_str();
-            let trailing = &tail[c[1].len() + 1 + c[2].len()..];
-            format!("{}.{}{}", &c[1], &c[2], trailing)
-        }).into_owned();
-        loop {
-            let again = re.replace_all(&next, |c: &regex::Captures| {
+        let re = COMMA_DECIMAL.get_or_init(|| Regex::new(r"(\d),(\d{2})(?:\b|$|[^0-9])").unwrap());
+        let mut next = re
+            .replace_all(&cleaned, |c: &regex::Captures| {
                 let tail = c.get(0).unwrap().as_str();
                 let trailing = &tail[c[1].len() + 1 + c[2].len()..];
                 format!("{}.{}{}", &c[1], &c[2], trailing)
-            }).into_owned();
-            if again == next { break; }
+            })
+            .into_owned();
+        loop {
+            let again = re
+                .replace_all(&next, |c: &regex::Captures| {
+                    let tail = c.get(0).unwrap().as_str();
+                    let trailing = &tail[c[1].len() + 1 + c[2].len()..];
+                    format!("{}.{}{}", &c[1], &c[2], trailing)
+                })
+                .into_owned();
+            if again == next {
+                break;
+            }
             next = again;
         }
         cleaned = next;
@@ -73,17 +79,22 @@ pub fn structure(raw: &str, confidence: f32) -> OcrResult {
     //     pre-replacement snapshot above.
     {
         static COLON_DECIMAL: OnceLock<Regex> = OnceLock::new();
-        let re = COLON_DECIMAL.get_or_init(|| {
-            Regex::new(r"(\d{1,2}):(\d{2})(\s*[AaPp][Mm])?").unwrap()
-        });
-        cleaned = re.replace_all(&cleaned, |c: &regex::Captures| {
-            if c.get(3).map_or(false, |m| !m.as_str().trim().is_empty()) {
-                format!("{}:{}{}", &c[1], &c[2],
-                    c.get(3).map(|m| m.as_str()).unwrap_or(""))
-            } else {
-                format!("{}.{}", &c[1], &c[2])
-            }
-        }).into_owned();
+        let re =
+            COLON_DECIMAL.get_or_init(|| Regex::new(r"(\d{1,2}):(\d{2})(\s*[AaPp][Mm])?").unwrap());
+        cleaned = re
+            .replace_all(&cleaned, |c: &regex::Captures| {
+                if c.get(3).is_some_and(|m| !m.as_str().trim().is_empty()) {
+                    format!(
+                        "{}:{}{}",
+                        &c[1],
+                        &c[2],
+                        c.get(3).map(|m| m.as_str()).unwrap_or("")
+                    )
+                } else {
+                    format!("{}.{}", &c[1], &c[2])
+                }
+            })
+            .into_owned();
     }
     OcrResult {
         merchant: extract_merchant(&cleaned),
@@ -315,13 +326,24 @@ fn extract_date(text: &str) -> Option<NaiveDate> {
             Some(c) => c,
             None => continue,
         };
-        let month: u32 = match cap[1].parse() { Ok(v) => v, Err(_) => continue };
-        let day: u32 = match cap[2].parse() { Ok(v) => v, Err(_) => continue };
-        let mut year: i32 = match cap[3].parse() { Ok(v) => v, Err(_) => continue };
+        let month: u32 = match cap[1].parse() {
+            Ok(v) => v,
+            Err(_) => continue,
+        };
+        let day: u32 = match cap[2].parse() {
+            Ok(v) => v,
+            Err(_) => continue,
+        };
+        let mut year: i32 = match cap[3].parse() {
+            Ok(v) => v,
+            Err(_) => continue,
+        };
         if year < 100 {
             year += if year < 70 { 2000 } else { 1900 };
         }
-        let Some(date) = NaiveDate::from_ymd_opt(year, month, day) else { continue };
+        let Some(date) = NaiveDate::from_ymd_opt(year, month, day) else {
+            continue;
+        };
         let line = line_containing(text, m.start());
         consider(date, line);
     }
@@ -333,17 +355,34 @@ fn extract_date(text: &str) -> Option<NaiveDate> {
             None => continue,
         };
         let month = match cap[1].to_ascii_lowercase().as_str() {
-            "jan" => 1,  "feb" => 2,  "mar" => 3,  "apr" => 4,
-            "may" => 5,  "jun" => 6,  "jul" => 7,  "aug" => 8,
-            "sep" | "sept" => 9, "oct" => 10, "nov" => 11, "dec" => 12,
+            "jan" => 1,
+            "feb" => 2,
+            "mar" => 3,
+            "apr" => 4,
+            "may" => 5,
+            "jun" => 6,
+            "jul" => 7,
+            "aug" => 8,
+            "sep" | "sept" => 9,
+            "oct" => 10,
+            "nov" => 11,
+            "dec" => 12,
             _ => continue,
         };
-        let day: u32 = match cap[2].parse() { Ok(v) => v, Err(_) => continue };
-        let mut year: i32 = match cap[3].parse() { Ok(v) => v, Err(_) => continue };
+        let day: u32 = match cap[2].parse() {
+            Ok(v) => v,
+            Err(_) => continue,
+        };
+        let mut year: i32 = match cap[3].parse() {
+            Ok(v) => v,
+            Err(_) => continue,
+        };
         if year < 100 {
             year += if year < 70 { 2000 } else { 1900 };
         }
-        let Some(date) = NaiveDate::from_ymd_opt(year, month, day) else { continue };
+        let Some(date) = NaiveDate::from_ymd_opt(year, month, day) else {
+            continue;
+        };
         let line = line_containing(text, m.start());
         consider(date, line);
     }
@@ -378,29 +417,45 @@ fn extract_time(text: &str) -> Option<NaiveTime> {
     // Matches `06:07PM`, `6:07 PM`, `18:07`, `18:07:42`. 12-hour form
     // requires AM/PM; 24-hour form requires hours 0-23.
     static TIME_RE: OnceLock<Regex> = OnceLock::new();
-    let re = TIME_RE.get_or_init(|| {
-        Regex::new(r"(?i)\b(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(am|pm)?\b").unwrap()
-    });
+    let re = TIME_RE
+        .get_or_init(|| Regex::new(r"(?i)\b(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(am|pm)?\b").unwrap());
     for cap in re.captures_iter(text) {
         let h: u32 = cap[1].parse().ok()?;
         let m: u32 = cap[2].parse().ok()?;
-        let s: u32 = cap.get(3).and_then(|x| x.as_str().parse().ok()).unwrap_or(0);
+        let s: u32 = cap
+            .get(3)
+            .and_then(|x| x.as_str().parse().ok())
+            .unwrap_or(0);
         let suffix = cap.get(4).map(|x| x.as_str().to_ascii_lowercase());
         let h24 = match suffix.as_deref() {
             Some("am") => {
-                if !(1..=12).contains(&h) { continue; }
-                if h == 12 { 0 } else { h }
+                if !(1..=12).contains(&h) {
+                    continue;
+                }
+                if h == 12 {
+                    0
+                } else {
+                    h
+                }
             }
             Some("pm") => {
-                if !(1..=12).contains(&h) { continue; }
-                if h == 12 { 12 } else { h + 12 }
+                if !(1..=12).contains(&h) {
+                    continue;
+                }
+                if h == 12 {
+                    12
+                } else {
+                    h + 12
+                }
             }
             _ => {
                 // 24-hour: reject obvious price-noise like "$1.23"
                 // (won't reach here — re requires HH:MM) and the
                 // "06:07PM" w/o space when suffix is None. Accept only
                 // when 0-23.
-                if h > 23 { continue; }
+                if h > 23 {
+                    continue;
+                }
                 h
             }
         };
@@ -421,10 +476,7 @@ fn extract_tax(text: &str) -> Option<Decimal> {
     // Match "Tax", "Sales Tax", "TAX STATE OF MI 6%", "GST", "HST", "VAT".
     // Skip "TAX EXEMPT" / "TAX FREE" lines that have no dollar value
     // (the amount regex below requires `.dd` so they naturally drop out).
-    extract_amount_for_tag(
-        text,
-        r"(?i)\b(tax|sales\s*tax|tax\s*state|gst|hst|vat)\b",
-    )
+    extract_amount_for_tag(text, r"(?i)\b(tax|sales\s*tax|tax\s*state|gst|hst|vat)\b")
 }
 
 // Shared helper: return the last `.dd` amount on the LAST line that
@@ -435,11 +487,15 @@ fn extract_amount_for_tag(text: &str, tag_pattern: &str) -> Option<Decimal> {
     let tag = Regex::new(tag_pattern).unwrap();
     let mut last: Option<Decimal> = None;
     for line in text.lines() {
-        if !tag.is_match(line) { continue; }
+        if !tag.is_match(line) {
+            continue;
+        }
         // Avoid the "TOTAL SALE" line matching "tax" sub-strings if any.
         // Also skip explicit reject phrases.
         let lc = line.to_lowercase();
-        if lc.contains("tax exempt") || lc.contains("tax free") { continue; }
+        if lc.contains("tax exempt") || lc.contains("tax free") {
+            continue;
+        }
         let mut line_value: Option<Decimal> = None;
         for cap in amt.captures_iter(line) {
             if let Some(d) = parse_money(&cap[1]) {
@@ -466,17 +522,24 @@ fn extract_address(text: &str) -> Option<String> {
     });
     let lines: Vec<&str> = text.lines().map(|l| l.trim()).collect();
     for (i, line) in lines.iter().enumerate() {
-        if !looks_like_address(line) { continue; }
+        if !looks_like_address(line) {
+            continue;
+        }
         // Check the next two non-empty lines for a city/state/zip.
-        for j in (i + 1)..(i + 4).min(lines.len()) {
-            let next = lines[j];
-            if next.is_empty() { continue; }
+        let end = (i + 4).min(lines.len());
+        for next in &lines[(i + 1)..end] {
+            let next = *next;
+            if next.is_empty() {
+                continue;
+            }
             if csz.is_match(next) {
                 return Some(format!("{}, {}", line, next));
             }
             // Stop early if we hit a clearly-non-address line (e.g.,
             // "KEEP YOUR RECEIPT").
-            if next.chars().any(|c| c == '$') { break; }
+            if next.chars().any(|c| c == '$') {
+                break;
+            }
         }
         return Some((*line).to_string());
     }
@@ -507,9 +570,8 @@ fn extract_items(text: &str) -> Vec<OcrLineItem> {
     static PRICE_LINE_RE: OnceLock<Regex> = OnceLock::new();
     static TRAILING_PRICE_RE: OnceLock<Regex> = OnceLock::new();
     static SKU_ONLY_RE: OnceLock<Regex> = OnceLock::new();
-    let qty_at = QTY_AT_RE.get_or_init(|| {
-        Regex::new(r"(?i)(\d+(?:\.\d+)?)\s*@\s*\$?\s*(\d+(?:\.\d{2}))").unwrap()
-    });
+    let qty_at = QTY_AT_RE
+        .get_or_init(|| Regex::new(r"(?i)(\d+(?:\.\d+)?)\s*@\s*\$?\s*(\d+(?:\.\d{2}))").unwrap());
     // PRICE_LINE: the entire line is JUST a price + optional 1-2 letter
     // flag ("NT", "T", "F"). Used as a line-total detector.
     let price_line = PRICE_LINE_RE.get_or_init(|| {
@@ -519,12 +581,9 @@ fn extract_items(text: &str) -> Vec<OcrLineItem> {
     // TRAILING_PRICE: price right before end-of-line, with anything in
     // front. Used for single-line "NAME      5.50" fallback.
     let trailing_price = TRAILING_PRICE_RE.get_or_init(|| {
-        Regex::new(r"(\d{1,3}(?:,\d{3})*\.\d{2}|\d+\.\d{2})\s*(?:[A-Z]{1,2})?\s*$")
-            .unwrap()
+        Regex::new(r"(\d{1,3}(?:,\d{3})*\.\d{2}|\d+\.\d{2})\s*(?:[A-Z]{1,2})?\s*$").unwrap()
     });
-    let sku_only = SKU_ONLY_RE.get_or_init(|| {
-        Regex::new(r"^\s*\d[\d\s]*$").unwrap()
-    });
+    let sku_only = SKU_ONLY_RE.get_or_init(|| Regex::new(r"^\s*\d[\d\s]*$").unwrap());
 
     // Tesseract decorates every line on photo'd receipts with leading
     // junk (`—`, `=`, `:`, `|`, single-char fragments like `oS`, `AZ`,
@@ -540,7 +599,10 @@ fn extract_items(text: &str) -> Vec<OcrLineItem> {
     // above the actual total on multi-line POS formats.
     static TOTALS_BOUNDARY_RE: OnceLock<Regex> = OnceLock::new();
     let totals_re = TOTALS_BOUNDARY_RE.get_or_init(|| {
-        Regex::new(r"(?i)\b(sub\s*total|sub-?total|grand\s*total|amount\s*due|total\s*sale)\b|^\s*total\b").unwrap()
+        Regex::new(
+            r"(?i)\b(sub\s*total|sub-?total|grand\s*total|amount\s*due|total\s*sale)\b|^\s*total\b",
+        )
+        .unwrap()
     });
     let mut item_end = lines.len();
     for (i, line) in lines.iter().enumerate() {
@@ -559,15 +621,21 @@ fn extract_items(text: &str) -> Vec<OcrLineItem> {
         // Tesseract (`oS                 GUNK CHLORNTD BRI` ≈ 60 chars
         // raw, 22 non-whitespace) don't get rejected as paragraphs.
         let content_chars = line.chars().filter(|c| !c.is_whitespace()).count();
-        if line.is_empty() || sku_only.is_match(line) || is_header_noise(line)
-            || looks_like_address(line) || looks_like_city_state_zip(line)
-            || content_chars > 50  // policy / disclaimer paragraph
+        if line.is_empty()
+            || sku_only.is_match(line)
+            || is_header_noise(line)
+            || looks_like_address(line)
+            || looks_like_city_state_zip(line)
+            || content_chars > 50
+        // policy / disclaimer paragraph
         {
-            i += 1; continue;
+            i += 1;
+            continue;
         }
         // Need real alphabetic content to start an item.
         if !line_has_alpha(line) {
-            i += 1; continue;
+            i += 1;
+            continue;
         }
 
         // ── Single-line "NAME    PRICE" fast path ─────────────────
@@ -575,19 +643,19 @@ fn extract_items(text: &str) -> Vec<OcrLineItem> {
         // prefix, trailing price, AND the next line doesn't look like
         // a SKU/qty continuation (which would suggest a multi-line
         // block where this is just the name).
-        let next_is_continuation = lines.get(i + 1).map_or(false, |n| {
-            sku_only.is_match(n) || qty_at.is_match(n) || price_line.is_match(n)
-        });
+        let next_is_continuation = lines
+            .get(i + 1)
+            .is_some_and(|n| sku_only.is_match(n) || qty_at.is_match(n) || price_line.is_match(n));
         if !next_is_continuation {
             if let Some(cap) = trailing_price.captures(line) {
                 let m = cap.get(1).unwrap();
-                let name_part = line[..m.start()].trim_end_matches(|c: char| {
-                    c == '$' || c.is_whitespace()
-                });
+                let name_part =
+                    line[..m.start()].trim_end_matches(|c: char| c == '$' || c.is_whitespace());
                 if line_has_alpha(name_part) {
                     if let Some(t) = parse_money(&cap[1]) {
                         push_item(&mut out, clean_item_name(name_part), None, None, t);
-                        i += 1; continue;
+                        i += 1;
+                        continue;
                     }
                 }
             }
@@ -604,9 +672,14 @@ fn extract_items(text: &str) -> Vec<OcrLineItem> {
         let max_block = 5;
         for k in 1..max_block {
             let idx = i + k;
-            if idx >= item_end { break; }
+            if idx >= item_end {
+                break;
+            }
             let l = lines[idx];
-            if l.is_empty() { consumed = k + 1; continue; }
+            if l.is_empty() {
+                consumed = k + 1;
+                continue;
+            }
             // Line-total terminates the block.
             if let Some(cap) = price_line.captures(l) {
                 if let Some(t) = parse_money(&cap[1]) {
@@ -680,8 +753,8 @@ fn extract_items(text: &str) -> Vec<OcrLineItem> {
         }
         // No line-total found within window: 3-line block with qty+unit
         // → synthesize total from qty × unit so the item shows up.
-        if qty.is_some() && unit.is_some() {
-            let synthetic = qty.unwrap() * unit.unwrap();
+        if let (Some(q), Some(u)) = (qty, unit) {
+            let synthetic = q * u;
             let name = name_parts.join(" ");
             push_item(&mut out, clean_item_name(&name), qty, unit, synthetic);
             i += consumed.max(1);
@@ -738,14 +811,22 @@ fn is_header_noise(line: &str) -> bool {
     let lc = line.to_ascii_lowercase();
     matches!(
         lc.trim(),
-        "sale transaction" | "guest copy" | "keep your receipt" |
-        "thank you" | "" | "*" | "im" | "1m"
+        "sale transaction"
+            | "guest copy"
+            | "keep your receipt"
+            | "thank you"
+            | ""
+            | "*"
+            | "im"
+            | "1m"
     ) || lc.starts_with("the following rebate")
-      || lc.starts_with("return policy")
-      || lc.starts_with("unless noted")
-      || lc.starts_with("if you have questions")
-      || lc.starts_with("email us")
-      || lc.contains("@menards") || lc.contains("@gmail") || lc.contains(".com")
+        || lc.starts_with("return policy")
+        || lc.starts_with("unless noted")
+        || lc.starts_with("if you have questions")
+        || lc.starts_with("email us")
+        || lc.contains("@menards")
+        || lc.contains("@gmail")
+        || lc.contains(".com")
 }
 
 /// Pre-walker line cleaner. Tesseract OCR on photo'd receipts
@@ -773,12 +854,8 @@ fn strip_line_decorations(s: &str) -> String {
     //   * pure non-alphanumeric (with whitespace) — punctuation runs
     //   * a 1-2 char alphanumeric token followed by whitespace
     // We loop both together until the line stabilizes.
-    let lead = LEAD.get_or_init(|| {
-        Regex::new(r"^(?:[^A-Za-z0-9]+|[A-Za-z]{1,2}\s+)+").unwrap()
-    });
-    let trail = TRAIL.get_or_init(|| {
-        Regex::new(r"(?:[^A-Za-z0-9]+|\s+[A-Za-z]{1,2})+$").unwrap()
-    });
+    let lead = LEAD.get_or_init(|| Regex::new(r"^(?:[^A-Za-z0-9]+|[A-Za-z]{1,2}\s+)+").unwrap());
+    let trail = TRAIL.get_or_init(|| Regex::new(r"(?:[^A-Za-z0-9]+|\s+[A-Za-z]{1,2})+$").unwrap());
     let trimmed = s.trim();
     if trimmed.is_empty() {
         return String::new();
@@ -834,127 +911,401 @@ pub fn guess_category(name: &str) -> String {
     // substring, so multi-word brands ("jiffy lube") work too.
     let cats: &[(&str, &[&str])] = &[
         // Advertising (Schedule C line 8).
-        ("advertising", &[
-            "ad", "ads", "advert", "facebook ads", "google ads", "billboard",
-            "flyer", "banner", "logo", "branding", "seo", "mailer",
-        ]),
+        (
+            "advertising",
+            &[
+                "ad",
+                "ads",
+                "advert",
+                "facebook ads",
+                "google ads",
+                "billboard",
+                "flyer",
+                "banner",
+                "logo",
+                "branding",
+                "seo",
+                "mailer",
+            ],
+        ),
         // Vehicle — fuel (line 9).
-        ("vehicle_fuel", &[
-            "gasoline", "diesel", "unleaded", "shell", "chevron", "exxon",
-            "mobil", "valero", "sunoco", "ev charge", "supercharger",
-            "fuel", "bp ", " gas ",
-        ]),
+        (
+            "vehicle_fuel",
+            &[
+                "gasoline",
+                "diesel",
+                "unleaded",
+                "shell",
+                "chevron",
+                "exxon",
+                "mobil",
+                "valero",
+                "sunoco",
+                "ev charge",
+                "supercharger",
+                "fuel",
+                "bp ",
+                " gas ",
+            ],
+        ),
         // Vehicle — maintenance + parts + registration (line 9).
-        ("vehicle_maintenance", &[
-            "tire", "oil change", "brake", "wiper", "rotor", "spray ford",
-            "truck bed", "auto", "autozone", "o'reilly", "oreilly", "napa",
-            "jiffy lube", "dmv", "registration", "smog", "lube",
-            "windshield", "engine", "transmission", "coolant", "antifreeze",
-            "lubric", "gunk", "wd-40", "wd40", "spray paint",
-        ]),
+        (
+            "vehicle_maintenance",
+            &[
+                "tire",
+                "oil change",
+                "brake",
+                "wiper",
+                "rotor",
+                "spray ford",
+                "truck bed",
+                "auto",
+                "autozone",
+                "o'reilly",
+                "oreilly",
+                "napa",
+                "jiffy lube",
+                "dmv",
+                "registration",
+                "smog",
+                "lube",
+                "windshield",
+                "engine",
+                "transmission",
+                "coolant",
+                "antifreeze",
+                "lubric",
+                "gunk",
+                "wd-40",
+                "wd40",
+                "spray paint",
+            ],
+        ),
         // Travel — transport (line 24a).
-        ("travel_transport", &[
-            "airline", "airfare", "flight", "delta", "united", "southwest",
-            "amtrak", "uber", "lyft", "taxi", "parking", "toll", "baggage",
-            "rental car",
-        ]),
+        (
+            "travel_transport",
+            &[
+                "airline",
+                "airfare",
+                "flight",
+                "delta",
+                "united",
+                "southwest",
+                "amtrak",
+                "uber",
+                "lyft",
+                "taxi",
+                "parking",
+                "toll",
+                "baggage",
+                "rental car",
+            ],
+        ),
         // Travel — lodging (line 24a).
-        ("travel_lodging", &[
-            "hotel", "motel", "inn", "marriott", "hilton", "hyatt", "airbnb",
-            "vrbo", "lodging", "resort", "suite",
-        ]),
+        (
+            "travel_lodging",
+            &[
+                "hotel", "motel", "inn", "marriott", "hilton", "hyatt", "airbnb", "vrbo",
+                "lodging", "resort", "suite",
+            ],
+        ),
         // Deductible meals (line 24b, 50% rule).
-        ("meals", &[
-            "restaurant", "cafe", "diner", "coffee", "starbucks", "dunkin",
-            "lunch", "dinner", "breakfast", "doordash", "ubereats", "grubhub",
-            "bar tab", "brewery", "espresso", "latte", "burger", "pizza",
-            "sandwich", "salad", "entree", "dessert", "tip", "gratuity",
-            "beer", "wine", "cocktail",
-        ]),
+        (
+            "meals",
+            &[
+                "restaurant",
+                "cafe",
+                "diner",
+                "coffee",
+                "starbucks",
+                "dunkin",
+                "lunch",
+                "dinner",
+                "breakfast",
+                "doordash",
+                "ubereats",
+                "grubhub",
+                "bar tab",
+                "brewery",
+                "espresso",
+                "latte",
+                "burger",
+                "pizza",
+                "sandwich",
+                "salad",
+                "entree",
+                "dessert",
+                "tip",
+                "gratuity",
+                "beer",
+                "wine",
+                "cocktail",
+            ],
+        ),
         // Office supplies (line 18, consumables).
-        ("office_supplies", &[
-            "paper", "pen ", "pencil", "stapler", "ink", "toner", "envelope",
-            "folder", "notebook", "staples", "officedepot", "postage",
-            "stamps", "binder", "tape ",
-        ]),
+        (
+            "office_supplies",
+            &[
+                "paper",
+                "pen ",
+                "pencil",
+                "stapler",
+                "ink",
+                "toner",
+                "envelope",
+                "folder",
+                "notebook",
+                "staples",
+                "officedepot",
+                "postage",
+                "stamps",
+                "binder",
+                "tape ",
+            ],
+        ),
         // Office equipment + software (line 18 / line 13 depreciation).
-        ("office_equipment_software", &[
-            "laptop", "monitor", "keyboard", "mouse", "printer", "scanner",
-            "dell", "apple ", "macbook", "ipad", "iphone", "hp ", "lenovo",
-            "adobe", "microsoft", "office 365", "github", "slack", "zoom",
-            "saas", "subscription", "license", "domain", "hosting",
-        ]),
+        (
+            "office_equipment_software",
+            &[
+                "laptop",
+                "monitor",
+                "keyboard",
+                "mouse",
+                "printer",
+                "scanner",
+                "dell",
+                "apple ",
+                "macbook",
+                "ipad",
+                "iphone",
+                "hp ",
+                "lenovo",
+                "adobe",
+                "microsoft",
+                "office 365",
+                "github",
+                "slack",
+                "zoom",
+                "saas",
+                "subscription",
+                "license",
+                "domain",
+                "hosting",
+            ],
+        ),
         // Supplies — COGS / raw materials (line 22).
-        ("supplies_cogs", &[
-            "lumber", "fabric", "thread", "screws", "bolts", "nails",
-            "resin", "filament", "ingredient", "packaging", "shipping box",
-            "hardware",
-        ]),
+        (
+            "supplies_cogs",
+            &[
+                "lumber",
+                "fabric",
+                "thread",
+                "screws",
+                "bolts",
+                "nails",
+                "resin",
+                "filament",
+                "ingredient",
+                "packaging",
+                "shipping box",
+                "hardware",
+            ],
+        ),
         // Repairs & maintenance — business property (line 21).
-        ("repairs_maintenance", &[
-            "repair", "fix ", "maintenance", "service", "replace", "hvac",
-            "plumber", "electrician", "handyman",
-        ]),
+        (
+            "repairs_maintenance",
+            &[
+                "repair",
+                "fix ",
+                "maintenance",
+                "service",
+                "replace",
+                "hvac",
+                "plumber",
+                "electrician",
+                "handyman",
+            ],
+        ),
         // Utilities (line 25).
-        ("utilities", &[
-            "electric", "electricity", "power bill", "water bill", "sewer",
-            "gas bill", "internet", "comcast", "xfinity", "at&t", "verizon",
-            "t-mobile", "wifi", "broadband", "phone bill",
-        ]),
+        (
+            "utilities",
+            &[
+                "electric",
+                "electricity",
+                "power bill",
+                "water bill",
+                "sewer",
+                "gas bill",
+                "internet",
+                "comcast",
+                "xfinity",
+                "at&t",
+                "verizon",
+                "t-mobile",
+                "wifi",
+                "broadband",
+                "phone bill",
+            ],
+        ),
         // Rent / lease (line 20a/b).
-        ("rent_lease", &[
-            "rent ", "lease", "wework", "regus", "storage unit", "warehouse",
-            "copier lease",
-        ]),
+        (
+            "rent_lease",
+            &[
+                "rent ",
+                "lease",
+                "wework",
+                "regus",
+                "storage unit",
+                "warehouse",
+                "copier lease",
+            ],
+        ),
         // Insurance (line 15).
-        ("insurance", &[
-            "insurance", "premium", "geico", "progressive", "state farm",
-            "allstate", "hiscox", "hartford", "liability", "workers comp",
-            "e&o", "umbrella",
-        ]),
+        (
+            "insurance",
+            &[
+                "insurance",
+                "premium",
+                "geico",
+                "progressive",
+                "state farm",
+                "allstate",
+                "hiscox",
+                "hartford",
+                "liability",
+                "workers comp",
+                "e&o",
+                "umbrella",
+            ],
+        ),
         // Professional services (line 17).
-        ("professional_services", &[
-            "attorney", "lawyer", "legal", "cpa", "accountant", "bookkeeper",
-            "consultant", "tax prep", "hr block", "turbotax",
-        ]),
+        (
+            "professional_services",
+            &[
+                "attorney",
+                "lawyer",
+                "legal",
+                "cpa",
+                "accountant",
+                "bookkeeper",
+                "consultant",
+                "tax prep",
+                "hr block",
+                "turbotax",
+            ],
+        ),
         // Contract labor (line 11).
-        ("contract_labor", &[
-            "contractor", "freelance", "1099", "upwork", "fiverr",
-            "subcontractor",
-        ]),
+        (
+            "contract_labor",
+            &[
+                "contractor",
+                "freelance",
+                "1099",
+                "upwork",
+                "fiverr",
+                "subcontractor",
+            ],
+        ),
         // Wages & benefits (line 26 / 14 / 19).
-        ("wages_benefits", &[
-            "payroll", "gusto", "adp ", "paychex", "wages", "salary",
-            "401k", "sep ira", "health premium", "benefit",
-        ]),
+        (
+            "wages_benefits",
+            &[
+                "payroll",
+                "gusto",
+                "adp ",
+                "paychex",
+                "wages",
+                "salary",
+                "401k",
+                "sep ira",
+                "health premium",
+                "benefit",
+            ],
+        ),
         // Bank / card / payment fees (line 27a — "Other").
-        ("bank_fees", &[
-            "stripe", "square ", "paypal", "bank fee", "atm fee", "overdraft",
-            "wire fee", "merchant fee", "processing fee", "finance charge",
-        ]),
+        (
+            "bank_fees",
+            &[
+                "stripe",
+                "square ",
+                "paypal",
+                "bank fee",
+                "atm fee",
+                "overdraft",
+                "wire fee",
+                "merchant fee",
+                "processing fee",
+                "finance charge",
+            ],
+        ),
         // Taxes, licenses, dues (line 23).
-        ("taxes_licenses_dues", &[
-            "license", "permit", "llc fee", "secretary of state", "sales tax",
-            "dues", "membership", "chamber", "association",
-        ]),
+        (
+            "taxes_licenses_dues",
+            &[
+                "license",
+                "permit",
+                "llc fee",
+                "secretary of state",
+                "sales tax",
+                "dues",
+                "membership",
+                "chamber",
+                "association",
+            ],
+        ),
         // Education & training (line 27a — "Other").
-        ("education_training", &[
-            "course", "udemy", "coursera", "conference", "seminar", "book ",
-            "training", "certification", "tuition",
-        ]),
+        (
+            "education_training",
+            &[
+                "course",
+                "udemy",
+                "coursera",
+                "conference",
+                "seminar",
+                "book ",
+                "training",
+                "certification",
+                "tuition",
+            ],
+        ),
         // Groceries — not strictly Schedule C but extremely common on
         // mixed receipts (Menards hardware store with milk + berries).
         // Maps to "other" / personal for now; user re-classifies in UI.
-        ("groceries", &[
-            "milk", "bread", "egg", "cheese", "butter", "yogurt", "fruit",
-            "berry", "berries", "snack", "cereal", "cookie", "ice",
-            "funables", "candy", "chocolate", "juice", "soda", "water bottle",
-            "produce", "veg", "meat", "chicken",
-        ]),
+        (
+            "groceries",
+            &[
+                "milk",
+                "bread",
+                "egg",
+                "cheese",
+                "butter",
+                "yogurt",
+                "fruit",
+                "berry",
+                "berries",
+                "snack",
+                "cereal",
+                "cookie",
+                "ice",
+                "funables",
+                "candy",
+                "chocolate",
+                "juice",
+                "soda",
+                "water bottle",
+                "produce",
+                "veg",
+                "meat",
+                "chicken",
+            ],
+        ),
     ];
     let mut best: (i32, &str) = (0, "other");
     for (cat, kws) in cats {
-        let score: i32 = kws.iter().map(|kw| if n.contains(kw) { 1 } else { 0 }).sum();
+        let score: i32 = kws
+            .iter()
+            .map(|kw| if n.contains(kw) { 1 } else { 0 })
+            .sum();
         if score > best.0 {
             best = (score, cat);
         }
@@ -1095,10 +1446,7 @@ MASTERCARD 3797      99.36
 TOTAL SAVINGS         0.80
 TOTAL NUMBER OF ITEMS = 15
 ";
-        assert_eq!(
-            extract_total(receipt),
-            Some(Decimal::new(9936, 2))
-        );
+        assert_eq!(extract_total(receipt), Some(Decimal::new(9936, 2)));
     }
 
     /// "Total Savings", "Subtotal", "You Saved" must never win — the
@@ -1142,16 +1490,21 @@ TOTAL NUMBER OF ITEMS = 15
 
     #[test]
     fn subtotal_picks_pre_tax_line() {
-        let r = "TOTAL                94.19\nTAX STATE OF MI 6%    5.17\nTOTAL SALE           99.36";
-        assert_eq!(extract_subtotal(r), None,
-            "bare TOTAL on this receipt is the subtotal, but it's not tagged 'Subtotal'");
+        let r =
+            "TOTAL                94.19\nTAX STATE OF MI 6%    5.17\nTOTAL SALE           99.36";
+        assert_eq!(
+            extract_subtotal(r),
+            None,
+            "bare TOTAL on this receipt is the subtotal, but it's not tagged 'Subtotal'"
+        );
         let r2 = "Subtotal $40.00\nTax $3.50\nTotal $43.50";
         assert_eq!(extract_subtotal(r2), Some(Decimal::new(4000, 2)));
     }
 
     #[test]
     fn tax_picks_tax_line() {
-        let r = "TOTAL                94.19\nTAX STATE OF MI 6%    5.17\nTOTAL SALE           99.36";
+        let r =
+            "TOTAL                94.19\nTAX STATE OF MI 6%    5.17\nTOTAL SALE           99.36";
         assert_eq!(extract_tax(r), Some(Decimal::new(517, 2)));
     }
 
@@ -1195,23 +1548,33 @@ TOTAL SALE                     99.36
         let items = extract_items(receipt);
         // We expect at least the four item rows; OCR noise around "1M" /
         // sku-only lines should be filtered.
-        assert!(items.len() >= 4, "got {} items: {:?}",
-                items.len(), items.iter().map(|i| &i.name).collect::<Vec<_>>());
+        assert!(
+            items.len() >= 4,
+            "got {} items: {:?}",
+            items.len(),
+            items.iter().map(|i| &i.name).collect::<Vec<_>>()
+        );
 
         // Specific pins:
-        let spray = items.iter().find(|i| i.name.contains("SPRAY FORD"))
+        let spray = items
+            .iter()
+            .find(|i| i.name.contains("SPRAY FORD"))
             .expect("SPRAY FORD line");
         assert_eq!(spray.line_total, Decimal::new(2752, 2));
         assert_eq!(spray.qty, Some(Decimal::new(4, 0)));
         assert_eq!(spray.unit_price, Some(Decimal::new(688, 2)));
         assert_eq!(spray.category, "vehicle_maintenance");
 
-        let milk = items.iter().find(|i| i.name.contains("STRAWBERRY MILK"))
+        let milk = items
+            .iter()
+            .find(|i| i.name.contains("STRAWBERRY MILK"))
             .expect("STRAWBERRY MILK line");
         assert_eq!(milk.line_total, Decimal::new(249, 2));
         assert_eq!(milk.category, "groceries");
 
-        let truck = items.iter().find(|i| i.name.contains("TRUCK BED"))
+        let truck = items
+            .iter()
+            .find(|i| i.name.contains("TRUCK BED"))
             .expect("PRO TRUCK BED line");
         assert_eq!(truck.line_total, Decimal::new(2994, 2));
         assert_eq!(truck.category, "vehicle_maintenance");
@@ -1282,14 +1645,22 @@ TOTAL
         let total_29 = items.iter().any(|i| i.line_total == Decimal::new(2994, 2));
         let total_249 = items.iter().any(|i| i.line_total == Decimal::new(249, 2));
         let total_547 = items.iter().any(|i| i.line_total == Decimal::new(547, 2));
-        assert!(total_27, "27.52 line missing — items={:?}",
-                items.iter().map(|i| (&i.name, i.line_total)).collect::<Vec<_>>());
+        assert!(
+            total_27,
+            "27.52 line missing — items={:?}",
+            items
+                .iter()
+                .map(|i| (&i.name, i.line_total))
+                .collect::<Vec<_>>()
+        );
         assert!(total_29, "29.94 line missing");
         assert!(total_249, "2.49 (Strawberry Milk) line missing");
         assert!(total_547, "5.47 (Funables) line missing");
 
         // SPRAY FORD RED block should carry qty + unit_price.
-        let spray = items.iter().find(|i| i.line_total == Decimal::new(2752, 2))
+        let spray = items
+            .iter()
+            .find(|i| i.line_total == Decimal::new(2752, 2))
             .expect("spray item");
         assert_eq!(spray.qty, Some(Decimal::new(4, 0)));
         assert_eq!(spray.unit_price, Some(Decimal::new(688, 2)));
@@ -1313,7 +1684,10 @@ TOTAL
     /// (`1,234.56`) or phone numbers (`555,1234`).
     #[test]
     fn structure_restores_comma_decimals_to_periods() {
-        let r = structure("TOTAL SALE 29,94\nPHONE 555,1234\nGRAND TOTAL 1,234.56", 0.85);
+        let r = structure(
+            "TOTAL SALE 29,94\nPHONE 555,1234\nGRAND TOTAL 1,234.56",
+            0.85,
+        );
         // 29,94 → 29.94 → picked up as TOTAL SALE.
         // 1,234.56 → preserved as 1234.56 → larger, but TOTAL SALE
         // outranks GRAND TOTAL in our tag scoring (both strong, last
@@ -1333,11 +1707,19 @@ PRO TRUCK BED SPRAY BLAC
 9974679 2 014,97     29,94
 ";
         let r = structure(raw, 0.85);
-        assert!(r.items.iter().any(|i| i.line_total == Decimal::new(2752, 2)),
-                "27.52 item missing — got {:?}",
-                r.items.iter().map(|i| &i.line_total).collect::<Vec<_>>());
-        assert!(r.items.iter().any(|i| i.line_total == Decimal::new(2994, 2)),
-                "29.94 item missing");
+        assert!(
+            r.items
+                .iter()
+                .any(|i| i.line_total == Decimal::new(2752, 2)),
+            "27.52 item missing — got {:?}",
+            r.items.iter().map(|i| &i.line_total).collect::<Vec<_>>()
+        );
+        assert!(
+            r.items
+                .iter()
+                .any(|i| i.line_total == Decimal::new(2994, 2)),
+            "29.94 item missing"
+        );
     }
 
     /// Photo'd-receipt regression — Tesseract decorates every line on
@@ -1360,12 +1742,21 @@ AZ    :               FUNABLES MIXED BERRY                                Be
         let r = structure(raw, 0.85);
         let totals: Vec<Decimal> = r.items.iter().map(|i| i.line_total).collect();
         // PRO TRUCK BED (29.94 via comma fix), GUNK (23.88), FUNABLES (9.47).
-        assert!(totals.contains(&Decimal::new(2994, 2)),
-                "PRO TRUCK BED 29.94 missing — got {:?}", totals);
-        assert!(totals.contains(&Decimal::new(2388, 2)),
-                "GUNK 23.88 missing — got {:?}", totals);
-        assert!(totals.contains(&Decimal::new(947, 2)),
-                "FUNABLES 9.47 missing — got {:?}", totals);
+        assert!(
+            totals.contains(&Decimal::new(2994, 2)),
+            "PRO TRUCK BED 29.94 missing — got {:?}",
+            totals
+        );
+        assert!(
+            totals.contains(&Decimal::new(2388, 2)),
+            "GUNK 23.88 missing — got {:?}",
+            totals
+        );
+        assert!(
+            totals.contains(&Decimal::new(947, 2)),
+            "FUNABLES 9.47 missing — got {:?}",
+            totals
+        );
     }
 
     /// strip_line_decorations unit pins — confirms the cleaner removes
@@ -1381,10 +1772,7 @@ AZ    :               FUNABLES MIXED BERRY                                Be
             "FUNABLES MIXED BERRY",
         );
         // Plain item-name lines are unchanged.
-        assert_eq!(
-            strip_line_decorations("STRAWBERRY MILK"),
-            "STRAWBERRY MILK",
-        );
+        assert_eq!(strip_line_decorations("STRAWBERRY MILK"), "STRAWBERRY MILK",);
         // Pure decoration → empty.
         assert_eq!(strip_line_decorations("= = = ---"), "");
     }

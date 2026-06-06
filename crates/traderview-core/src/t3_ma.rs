@@ -68,12 +68,20 @@ fn ema_optional(values: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
     for (i, v) in values.iter().enumerate() {
         if v.is_some() {
             run += 1;
-            if run >= period { start = Some(i); break; }
-        } else { run = 0; }
+            if run >= period {
+                start = Some(i);
+                break;
+            }
+        } else {
+            run = 0;
+        }
     }
     let Some(s) = start else { return out };
     let alpha = 2.0 / (period as f64 + 1.0);
-    let seed: f64 = values[s + 1 - period..=s].iter().map(|x| x.unwrap()).sum::<f64>()
+    let seed: f64 = values[s + 1 - period..=s]
+        .iter()
+        .map(|x| x.unwrap())
+        .sum::<f64>()
         / period as f64;
     out[s] = Some(seed);
     let mut prev = seed;
@@ -81,7 +89,9 @@ fn ema_optional(values: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
         if let Some(v) = values[i] {
             prev = alpha * v + (1.0 - alpha) * prev;
             out[i] = Some(prev);
-        } else { break; }
+        } else {
+            break;
+        }
     }
     out
 }

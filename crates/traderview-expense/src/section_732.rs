@@ -122,7 +122,8 @@ pub fn check(input: &Input) -> Output {
         "IRC § 732(c) (basis allocation among multiple properties)".to_string(),
         "IRC § 732(c)(1)(A) (first allocation to § 751(c)/(d) hot assets)".to_string(),
         "IRC § 732(c)(1)(B) (remaining allocation to other property)".to_string(),
-        "IRC § 732(d) (special rule for distributions within 2 years of transfer without § 754)".to_string(),
+        "IRC § 732(d) (special rule for distributions within 2 years of transfer without § 754)"
+            .to_string(),
         "IRC § 732(f) (corporate-partner distribution rule, post-2015)".to_string(),
         "IRC § 751(c) (unrealized receivables definition cross-reference)".to_string(),
         "IRC § 751(d) (inventory items definition cross-reference)".to_string(),
@@ -211,8 +212,8 @@ pub fn check(input: &Input) -> Output {
         };
     }
 
-    let has_multiple_property_classes = input.hot_assets_751c_751d_basis_cents > 0
-        && input.other_property_basis_cents > 0;
+    let has_multiple_property_classes =
+        input.hot_assets_751c_751d_basis_cents > 0 && input.other_property_basis_cents > 0;
 
     if has_multiple_property_classes {
         let available_basis = match input.distribution_type {
@@ -244,7 +245,10 @@ pub fn check(input: &Input) -> Output {
         };
     }
 
-    if matches!(input.distribution_type, DistributionType::LiquidatingDistribution) {
+    if matches!(
+        input.distribution_type,
+        DistributionType::LiquidatingDistribution
+    ) {
         let substituted_basis = input
             .partner_outside_basis_cents
             .saturating_sub(input.money_distributed_same_transaction_cents);

@@ -250,7 +250,8 @@ pub fn compute(input: &Input) -> Output {
             }
         }
         ComplianceAspect::MaterialNoncomplianceNoticeUnderSection27_40_710 => {
-            if input.material_noncompliance_notice_days_given < SC_MATERIAL_NONCOMPLIANCE_NOTICE_DAYS
+            if input.material_noncompliance_notice_days_given
+                < SC_MATERIAL_NONCOMPLIANCE_NOTICE_DAYS
             {
                 return Output {
                     mode: ScLandlordTenantMode::ViolationMaterialNoncomplianceNoticeShorterThan14Days,
@@ -412,16 +413,21 @@ mod tests {
     #[test]
     fn no_wrongful_withholding_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::WrongfulWithholding3xPenaltyUnderSection27_40_410;
+        input.compliance_aspect =
+            ComplianceAspect::WrongfulWithholding3xPenaltyUnderSection27_40_410;
         input.deposit_wrongfully_withheld = false;
         let out = check(&input);
-        assert_eq!(out.mode, ScLandlordTenantMode::CompliantNoWrongfulWithholding);
+        assert_eq!(
+            out.mode,
+            ScLandlordTenantMode::CompliantNoWrongfulWithholding
+        );
     }
 
     #[test]
     fn wrongful_withholding_3x_penalty_triggered_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::WrongfulWithholding3xPenaltyUnderSection27_40_410;
+        input.compliance_aspect =
+            ComplianceAspect::WrongfulWithholding3xPenaltyUnderSection27_40_410;
         input.deposit_wrongfully_withheld = true;
         let out = check(&input);
         assert_eq!(
@@ -433,7 +439,8 @@ mod tests {
     #[test]
     fn landlord_maintains_habitability_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordHabitabilityObligationUnderSection27_40_440;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordHabitabilityObligationUnderSection27_40_440;
         input.landlord_maintains_habitability = true;
         let out = check(&input);
         assert_eq!(
@@ -445,7 +452,8 @@ mod tests {
     #[test]
     fn landlord_failed_habitability_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordHabitabilityObligationUnderSection27_40_440;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordHabitabilityObligationUnderSection27_40_440;
         input.landlord_maintains_habitability = false;
         let out = check(&input);
         assert_eq!(
@@ -498,7 +506,8 @@ mod tests {
     #[test]
     fn material_noncompliance_14_day_cure_with_correction_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::MaterialNoncomplianceNoticeUnderSection27_40_710;
+        input.compliance_aspect =
+            ComplianceAspect::MaterialNoncomplianceNoticeUnderSection27_40_710;
         input.material_noncompliance_notice_days_given = 14;
         input.material_noncompliance_status =
             MaterialNoncomplianceStatus::TenantCorrectedNoncomplianceWithin14Days;
@@ -512,7 +521,8 @@ mod tests {
     #[test]
     fn material_noncompliance_14_day_notice_without_cure_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::MaterialNoncomplianceNoticeUnderSection27_40_710;
+        input.compliance_aspect =
+            ComplianceAspect::MaterialNoncomplianceNoticeUnderSection27_40_710;
         input.material_noncompliance_notice_days_given = 14;
         input.material_noncompliance_status =
             MaterialNoncomplianceStatus::TenantDidNotCorrectNoncomplianceWithin14Days;
@@ -526,7 +536,8 @@ mod tests {
     #[test]
     fn material_noncompliance_13_day_notice_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::MaterialNoncomplianceNoticeUnderSection27_40_710;
+        input.compliance_aspect =
+            ComplianceAspect::MaterialNoncomplianceNoticeUnderSection27_40_710;
         input.material_noncompliance_notice_days_given = 13;
         let out = check(&input);
         assert_eq!(
@@ -634,7 +645,9 @@ mod tests {
         assert!(joined.contains("HEAT"));
         assert!(joined.contains("SC Code § 27-40-710"));
         assert!(joined.contains("5 DAYS OF THE DUE DATE"));
-        assert!(joined.contains("NOT REQUIRED TO FURNISH ANY SEPARATE OR ADDITIONAL WRITTEN NOTICE"));
+        assert!(
+            joined.contains("NOT REQUIRED TO FURNISH ANY SEPARATE OR ADDITIONAL WRITTEN NOTICE")
+        );
         assert!(joined.contains("14-DAY WRITTEN NOTICE"));
         assert!(joined.contains("CORRECTS THE PROBLEM WITHIN 14 DAYS"));
         assert!(joined.contains("SC Code § 27-40-540"));

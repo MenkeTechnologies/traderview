@@ -17,8 +17,12 @@
 pub fn compute(closes: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = closes.len();
     let mut out = vec![None; n];
-    if period < 3 || n < period { return out; }
-    if closes.iter().any(|x| !x.is_finite()) { return out; }
+    if period < 3 || n < period {
+        return out;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     let inner_len = period.div_ceil(2);
     let outer_len = period / 2 + 1;
     let inner = sma(closes, inner_len);
@@ -26,7 +30,8 @@ pub fn compute(closes: &[f64], period: usize) -> Vec<Option<f64>> {
     let outer_f = outer_len as f64;
     let mut count = 0_usize;
     let mut sum = 0.0_f64;
-    let mut buf: std::collections::VecDeque<f64> = std::collections::VecDeque::with_capacity(outer_len);
+    let mut buf: std::collections::VecDeque<f64> =
+        std::collections::VecDeque::with_capacity(outer_len);
     for (i, v) in inner.iter().enumerate() {
         match v {
             Some(x) => {
@@ -34,10 +39,14 @@ pub fn compute(closes: &[f64], period: usize) -> Vec<Option<f64>> {
                 sum += x;
                 count += 1;
                 if count > outer_len {
-                    if let Some(old) = buf.pop_front() { sum -= old; }
+                    if let Some(old) = buf.pop_front() {
+                        sum -= old;
+                    }
                     count -= 1;
                 }
-                if count == outer_len { out[i] = Some(sum / outer_f); }
+                if count == outer_len {
+                    out[i] = Some(sum / outer_f);
+                }
             }
             None => {
                 buf.clear();
@@ -52,7 +61,9 @@ pub fn compute(closes: &[f64], period: usize) -> Vec<Option<f64>> {
 fn sma(series: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     let mut sum: f64 = series[..period].iter().sum();
     out[period - 1] = Some(sum / p_f);
@@ -85,7 +96,9 @@ mod tests {
     fn flat_series_yields_constant_tma() {
         let c = vec![100.0_f64; 50];
         let r = compute(&c, 20);
-        for v in r.iter().flatten() { assert!((v - 100.0).abs() < 1e-9); }
+        for v in r.iter().flatten() {
+            assert!((v - 100.0).abs() < 1e-9);
+        }
     }
 
     #[test]
@@ -102,7 +115,9 @@ mod tests {
     #[test]
     fn tma_within_input_range() {
         // Sanity: smoothed value can't exit the input min/max bracket.
-        let c: Vec<f64> = (0..100).map(|i| 100.0 + (i as f64 * 0.2).sin() * 5.0).collect();
+        let c: Vec<f64> = (0..100)
+            .map(|i| 100.0 + (i as f64 * 0.2).sin() * 5.0)
+            .collect();
         let r = compute(&c, 20);
         let in_min = c.iter().cloned().fold(f64::INFINITY, f64::min);
         let in_max = c.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
@@ -114,11 +129,14 @@ mod tests {
     #[test]
     fn smoothing_reduces_high_frequency_noise() {
         let mut state: u64 = 42;
-        let c: Vec<f64> = (0..200).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            100.0 + ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 10.0
-        }).collect();
+        let c: Vec<f64> = (0..200)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                100.0 + ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 10.0
+            })
+            .collect();
         let tma = compute(&c, 20);
         // Sample stdev of TMA values < input.
         let vals: Vec<f64> = tma.iter().flatten().copied().collect();

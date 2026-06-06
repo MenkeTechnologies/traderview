@@ -233,10 +233,8 @@ pub fn check(input: &Input) -> Output {
         .qualifying_distributions_cents
         .saturating_add(input.prior_year_excess_carryover_cents);
 
-    let undistributed_income =
-        distributable_amount.saturating_sub(total_qualifying_with_carryover);
-    let current_year_excess =
-        total_qualifying_with_carryover.saturating_sub(distributable_amount);
+    let undistributed_income = distributable_amount.saturating_sub(total_qualifying_with_carryover);
+    let current_year_excess = total_qualifying_with_carryover.saturating_sub(distributable_amount);
 
     let mut n = notes;
 
@@ -406,9 +404,9 @@ mod tests {
     fn acquisition_indebtedness_reduces_mir() {
         let mut i = baseline();
         i.acquisition_indebtedness_cents = 2_000_000_00; // $2M debt
-        // Net = $8M × 5% = $400K MIR
-        // Distributable = $400K - $50K - $0 = $350K
-        // Distributions $480K >> $350K → satisfied, $130K excess
+                                                         // Net = $8M × 5% = $400K MIR
+                                                         // Distributable = $400K - $50K - $0 = $350K
+                                                         // Distributions $480K >> $350K → satisfied, $130K excess
         let out = check(&i);
         assert_eq!(out.minimum_investment_return_cents, 400_000_00);
         assert_eq!(out.distributable_amount_cents, 350_000_00);

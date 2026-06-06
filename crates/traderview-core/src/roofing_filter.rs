@@ -26,8 +26,12 @@
 pub fn compute(series: &[f64], hp_period: usize, ss_period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if n < 3 || hp_period < 4 || ss_period < 4 { return out; }
-    if series.iter().any(|x| !x.is_finite()) { return out; }
+    if n < 3 || hp_period < 4 || ss_period < 4 {
+        return out;
+    }
+    if series.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     let pi = std::f64::consts::PI;
     let two_pi = 2.0 * pi;
     // High-pass coefficients.
@@ -47,12 +51,9 @@ pub fn compute(series: &[f64], hp_period: usize, ss_period: usize) -> Vec<Option
     let mut hp = vec![0.0_f64; n];
     let mut ss = vec![0.0_f64; n];
     for i in 2..n {
-        hp[i] = coef1 * (series[i] - 2.0 * series[i - 1] + series[i - 2])
-            + coef2 * hp[i - 1]
+        hp[i] = coef1 * (series[i] - 2.0 * series[i - 1] + series[i - 2]) + coef2 * hp[i - 1]
             - coef3 * hp[i - 2];
-        ss[i] = c1 * (hp[i] + hp[i - 1]) / 2.0
-            + c2 * ss[i - 1]
-            + c3 * ss[i - 2];
+        ss[i] = c1 * (hp[i] + hp[i - 1]) / 2.0 + c2 * ss[i - 1] + c3 * ss[i - 2];
         out[i] = Some(ss[i]);
     }
     out
@@ -95,8 +96,10 @@ mod tests {
         let vals: Vec<f64> = r.iter().skip(50).flatten().copied().collect();
         let mean: f64 = vals.iter().sum::<f64>() / vals.len() as f64;
         // Constant-slope ramp: HP should remove the trend → mean ≈ 0.
-        assert!(mean.abs() < 1.0,
-            "ramp filtered out; mean output should be near 0, got {mean}");
+        assert!(
+            mean.abs() < 1.0,
+            "ramp filtered out; mean output should be near 0, got {mean}"
+        );
     }
 
     #[test]

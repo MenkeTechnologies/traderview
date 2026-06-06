@@ -549,7 +549,12 @@ mod tests {
                 months,
                 true,
             ));
-            assert_eq!(r.violation, ViolationType::None, "month {} should be within carve-out", months);
+            assert_eq!(
+                r.violation,
+                ViolationType::None,
+                "month {} should be within carve-out",
+                months
+            );
         }
         // Month 4 and beyond: violation.
         for months in 4..=10 {

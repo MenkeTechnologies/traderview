@@ -46,7 +46,11 @@ pub struct PeadConfig {
 
 impl Default for PeadConfig {
     fn default() -> Self {
-        Self { drift_window: 60, min_surprise_pct: 0.05, min_announcement_reaction: 0.03 }
+        Self {
+            drift_window: 60,
+            min_surprise_pct: 0.05,
+            min_announcement_reaction: 0.03,
+        }
     }
 }
 
@@ -164,10 +168,22 @@ mod tests {
     fn invalid_config_returns_default() {
         let events = vec![ev("X", 10, 0.10, 0.05, 0.08)];
         for cfg in [
-            PeadConfig { drift_window: 0, ..Default::default() },
-            PeadConfig { drift_window: -1, ..Default::default() },
-            PeadConfig { min_surprise_pct: 0.0, ..Default::default() },
-            PeadConfig { min_announcement_reaction: -1.0, ..Default::default() },
+            PeadConfig {
+                drift_window: 0,
+                ..Default::default()
+            },
+            PeadConfig {
+                drift_window: -1,
+                ..Default::default()
+            },
+            PeadConfig {
+                min_surprise_pct: 0.0,
+                ..Default::default()
+            },
+            PeadConfig {
+                min_announcement_reaction: -1.0,
+                ..Default::default()
+            },
         ] {
             assert!(analyze(&events, &cfg).candidates.is_empty());
         }
@@ -175,10 +191,7 @@ mod tests {
 
     #[test]
     fn beat_with_positive_post_drift_classified_as_continuation() {
-        let r = analyze(
-            &[ev("BEAT", 5, 0.10, 0.06, 0.04)],
-            &PeadConfig::default(),
-        );
+        let r = analyze(&[ev("BEAT", 5, 0.10, 0.06, 0.04)], &PeadConfig::default());
         assert_eq!(r.candidates.len(), 1);
         assert_eq!(r.candidates[0].bias, DriftBias::BeatContinuation);
         assert_eq!(r.n_beats, 1);
@@ -205,19 +218,16 @@ mod tests {
 
     #[test]
     fn small_surprise_filtered_out() {
-        let r = analyze(
-            &[ev("NOISE", 5, 0.02, 0.06, 0.04)],
-            &PeadConfig::default(),
+        let r = analyze(&[ev("NOISE", 5, 0.02, 0.06, 0.04)], &PeadConfig::default());
+        assert!(
+            r.candidates.is_empty(),
+            "surprise below 5% threshold should be filtered"
         );
-        assert!(r.candidates.is_empty(), "surprise below 5% threshold should be filtered");
     }
 
     #[test]
     fn small_announcement_reaction_filtered_out() {
-        let r = analyze(
-            &[ev("WEAK", 5, 0.10, 0.005, 0.04)],
-            &PeadConfig::default(),
-        );
+        let r = analyze(&[ev("WEAK", 5, 0.10, 0.005, 0.04)], &PeadConfig::default());
         assert!(r.candidates.is_empty());
     }
 
@@ -225,7 +235,7 @@ mod tests {
     fn outside_drift_window_filtered() {
         let r = analyze(
             &[ev("OLD", 90, 0.10, 0.06, 0.04)],
-            &PeadConfig::default(),    // 60-day window
+            &PeadConfig::default(), // 60-day window
         );
         assert!(r.candidates.is_empty());
     }
@@ -234,8 +244,8 @@ mod tests {
     fn candidates_sorted_by_absolute_surprise() {
         let events = vec![
             ev("SMALL", 5, 0.06, 0.04, 0.02),
-            ev("BIG",   5, 0.25, 0.10, 0.05),
-            ev("MID",   5, 0.10, 0.05, 0.03),
+            ev("BIG", 5, 0.25, 0.10, 0.05),
+            ev("MID", 5, 0.10, 0.05, 0.03),
         ];
         let r = analyze(&events, &PeadConfig::default());
         let order: Vec<&str> = r.candidates.iter().map(|c| c.symbol.as_str()).collect();

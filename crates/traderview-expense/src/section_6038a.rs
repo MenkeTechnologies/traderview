@@ -183,10 +183,7 @@ pub fn check(input: &Section6038aInput) -> Section6038aResult {
     let has_reportable_transactions = input.reportable_transaction_count > 0;
     let form_5472_filing_required = subject_to_section_6038a
         && (has_reportable_transactions
-            || matches!(
-                input.entity_type,
-                EntityType::ForeignOwnedSingleMemberLlc
-            ));
+            || matches!(input.entity_type, EntityType::ForeignOwnedSingleMemberLlc));
 
     let mut base_penalty_cents: u64 = 0;
     let mut continuation_penalty_cents: u64 = 0;
@@ -304,8 +301,10 @@ mod tests {
         i.form_5472_filed = false;
         let r = check(&i);
         assert_eq!(r.base_penalty_cents, 2_500_000);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 6038A(d)(1)")
-            && f.contains("$25,000 base penalty")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 6038A(d)(1)") && f.contains("$25,000 base penalty")));
     }
 
     #[test]
@@ -325,8 +324,10 @@ mod tests {
         assert_eq!(r.base_penalty_cents, 2_500_000);
         assert_eq!(r.continuation_penalty_cents, 2_500_000);
         assert_eq!(r.total_penalty_cents, 5_000_000);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 6038A(d)(2)")
-            && f.contains("UNCAPPED")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 6038A(d)(2)") && f.contains("UNCAPPED")));
     }
 
     #[test]
@@ -367,8 +368,10 @@ mod tests {
         let r = check(&i);
         assert_eq!(r.base_penalty_cents, 0);
         assert_eq!(r.continuation_penalty_cents, 0);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 6038A(d)(3)")
-            && f.contains("reasonable cause")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 6038A(d)(3)") && f.contains("reasonable cause")));
     }
 
     #[test]
@@ -432,8 +435,10 @@ mod tests {
         i.form_5472_filed = false;
         let r = check(&i);
         assert!(r.section_6501_c8_sol_tolled);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 6501(c)(8)")
-            && f.contains("OPEN INDEFINITELY")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 6501(c)(8)") && f.contains("OPEN INDEFINITELY")));
     }
 
     #[test]
@@ -447,7 +452,9 @@ mod tests {
         let r = check(&us_corp_base());
         assert!(r.citation.contains("§ 6038A(a)-(e)"));
         assert!(r.citation.contains("§ 6501(c)(8)"));
-        assert!(r.citation.contains("Treas. Reg. § 1.6038A-1 to § 1.6038A-7"));
+        assert!(r
+            .citation
+            .contains("Treas. Reg. § 1.6038A-1 to § 1.6038A-7"));
         assert!(r.citation.contains("T.D. 9796"));
         assert!(r.citation.contains("December 13, 2016"));
         assert!(r.citation.contains("Form 5472"));
@@ -474,10 +481,13 @@ mod tests {
     #[test]
     fn note_pins_dre_carveout_2017_tds_9796() {
         let r = check(&us_corp_base());
-        assert!(r.notes.iter().any(|n| n.contains("Treas. Reg. § 1.6038A-1(c)")
-            && n.contains("DISREGARDED ENTITY")
-            && n.contains("January 1, 2017")
-            && n.contains("T.D. 9796")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Treas. Reg. § 1.6038A-1(c)")
+                && n.contains("DISREGARDED ENTITY")
+                && n.contains("January 1, 2017")
+                && n.contains("T.D. 9796")));
     }
 
     #[test]
@@ -491,8 +501,10 @@ mod tests {
     #[test]
     fn note_pins_subsection_d1_25k_base_penalty() {
         let r = check(&us_corp_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6038A(d)(1)")
-            && n.contains("BASE PENALTY $25,000")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6038A(d)(1)") && n.contains("BASE PENALTY $25,000")));
     }
 
     #[test]
@@ -523,14 +535,19 @@ mod tests {
     #[test]
     fn note_pins_6501_c8_sol_tolling() {
         let r = check(&us_corp_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6501(c)(8)")
-            && n.contains("OPEN INDEFINITELY")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6501(c)(8)") && n.contains("OPEN INDEFINITELY")));
     }
 
     #[test]
     fn note_pins_form_1120_pro_forma_attachment() {
         let r = check(&us_corp_base());
-        assert!(r.notes.iter().any(|n| n.contains("Form 5472 filed as attachment to pro-forma Form 1120")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Form 5472 filed as attachment to pro-forma Form 1120")));
     }
 
     #[test]
@@ -546,7 +563,11 @@ mod tests {
             i.max_foreign_ownership_bps = 5000;
             i.tax_year = 2026;
             let r = check(&i);
-            assert_eq!(r.subject_to_section_6038a, expected_subject, "entity={:?}", et);
+            assert_eq!(
+                r.subject_to_section_6038a, expected_subject,
+                "entity={:?}",
+                et
+            );
         }
     }
 
@@ -563,7 +584,11 @@ mod tests {
             let mut i = us_corp_base();
             i.max_foreign_ownership_bps = bps;
             let r = check(&i);
-            assert_eq!(r.twenty_five_percent_threshold_met, expected_meets, "bps={}", bps);
+            assert_eq!(
+                r.twenty_five_percent_threshold_met, expected_meets,
+                "bps={}",
+                bps
+            );
         }
     }
 

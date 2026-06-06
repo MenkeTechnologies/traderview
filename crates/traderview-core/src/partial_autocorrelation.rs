@@ -31,17 +31,27 @@ pub struct PacfReport {
 
 pub fn compute(series: &[f64], max_lag: usize) -> Option<PacfReport> {
     let n = series.len();
-    if n < 5 || max_lag == 0 || max_lag >= n { return None; }
-    if series.iter().any(|x| !x.is_finite()) { return None; }
+    if n < 5 || max_lag == 0 || max_lag >= n {
+        return None;
+    }
+    if series.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let n_f = n as f64;
     let mean: f64 = series.iter().sum::<f64>() / n_f;
     let denom: f64 = series.iter().map(|x| (x - mean).powi(2)).sum();
-    if denom <= 0.0 { return None; }
+    if denom <= 0.0 {
+        return None;
+    }
     // Sample autocorrelations needed by Levinson-Durbin.
-    let acf: Vec<f64> = (0..=max_lag).map(|k| {
-        let num: f64 = (k..n).map(|t| (series[t] - mean) * (series[t - k] - mean)).sum();
-        num / denom
-    }).collect();
+    let acf: Vec<f64> = (0..=max_lag)
+        .map(|k| {
+            let num: f64 = (k..n)
+                .map(|t| (series[t] - mean) * (series[t - k] - mean))
+                .sum();
+            num / denom
+        })
+        .collect();
     // Levinson-Durbin recursion. φ_kk = PACF at lag k.
     let mut pacf = vec![0.0_f64; max_lag + 1];
     pacf[0] = 1.0;
@@ -51,9 +61,13 @@ pub fn compute(series: &[f64], max_lag: usize) -> Option<PacfReport> {
     let mut phi_prev: Vec<f64> = vec![acf[1]];
     let mut error_prev = 1.0 - acf[1].powi(2);
     for k in 2..=max_lag {
-        if error_prev.abs() < 1e-18 { break; }
+        if error_prev.abs() < 1e-18 {
+            break;
+        }
         let mut num = acf[k];
-        for j in 0..(k - 1) { num -= phi_prev[j] * acf[k - 1 - j]; }
+        for j in 0..(k - 1) {
+            num -= phi_prev[j] * acf[k - 1 - j];
+        }
         let phi_kk = num / error_prev;
         pacf[k] = phi_kk;
         // Update φ_k,j for j < k.
@@ -66,9 +80,12 @@ pub fn compute(series: &[f64], max_lag: usize) -> Option<PacfReport> {
         phi_prev = phi_curr;
     }
     let band = 1.96 / n_f.sqrt();
-    let significant: Vec<usize> = pacf.iter().enumerate()
+    let significant: Vec<usize> = pacf
+        .iter()
+        .enumerate()
         .filter(|(k, v)| *k > 0 && v.abs() > band)
-        .map(|(k, _)| k).collect();
+        .map(|(k, _)| k)
+        .collect();
     Some(PacfReport {
         lags: (0..=max_lag).collect(),
         partial_autocorrelations: pacf,
@@ -121,35 +138,50 @@ mod tests {
         let phi = 0.7_f64;
         let mut s = vec![0.0_f64; 1000];
         for i in 1..1000 {
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let eps = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.5;
             s[i] = phi * s[i - 1] + eps;
         }
         let r = compute(&s, 10).unwrap();
-        assert!((r.partial_autocorrelations[1] - phi).abs() < 0.05,
-            "AR(1) PACF[1] expected ~0.7, got {}", r.partial_autocorrelations[1]);
+        assert!(
+            (r.partial_autocorrelations[1] - phi).abs() < 0.05,
+            "AR(1) PACF[1] expected ~0.7, got {}",
+            r.partial_autocorrelations[1]
+        );
         // Higher lags should be near zero.
         let max_higher = r.partial_autocorrelations[2..]
-            .iter().cloned().map(f64::abs).fold(0.0_f64, f64::max);
-        assert!(max_higher < 0.15,
-            "AR(1) PACF should cut off after lag 1, max |higher| = {max_higher}");
+            .iter()
+            .cloned()
+            .map(f64::abs)
+            .fold(0.0_f64, f64::max);
+        assert!(
+            max_higher < 0.15,
+            "AR(1) PACF should cut off after lag 1, max |higher| = {max_higher}"
+        );
     }
 
     #[test]
     fn white_noise_pacf_mostly_inside_band() {
         let mut state: u64 = 99;
-        let s: Vec<f64> = (0..500).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 2.0
-        }).collect();
+        let s: Vec<f64> = (0..500)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 2.0
+            })
+            .collect();
         let r = compute(&s, 10).unwrap();
         let outside: usize = (1..=10)
-            .filter(|k| r.partial_autocorrelations[*k].abs() > r.confidence_band).count();
-        assert!(outside <= 3,
+            .filter(|k| r.partial_autocorrelations[*k].abs() > r.confidence_band)
+            .count();
+        assert!(
+            outside <= 3,
             "{outside} PACF lags outside 95% band on white noise: {:?}",
-            &r.partial_autocorrelations[1..=10]);
+            &r.partial_autocorrelations[1..=10]
+        );
     }
 
     #[test]

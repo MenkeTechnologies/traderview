@@ -139,28 +139,23 @@ pub struct Section7503Result {
 pub fn check(input: &Section7503Input) -> Section7503Result {
     let mut failure_reasons: Vec<String> = Vec::new();
 
-    let is_weekend = matches!(
-        input.last_day_type,
-        DayType::Saturday | DayType::Sunday
-    );
+    let is_weekend = matches!(input.last_day_type, DayType::Saturday | DayType::Sunday);
 
     let is_federal_holiday = matches!(
         input.last_day_type,
         DayType::FederalLegalHoliday | DayType::DcOnlyHoliday
     );
 
-    let state_holiday_treatment_available = matches!(
-        input.act_scope,
-        ActScope::OutsideDcInternalRevenueDistrict
-    );
+    let state_holiday_treatment_available =
+        matches!(input.act_scope, ActScope::OutsideDcInternalRevenueDistrict);
 
     let is_state_holiday = matches!(
         input.last_day_type,
         DayType::StatewideLegalHolidayInOfficeState
     );
 
-    let is_legal_holiday = is_federal_holiday
-        || (is_state_holiday && state_holiday_treatment_available);
+    let is_legal_holiday =
+        is_federal_holiday || (is_state_holiday && state_holiday_treatment_available);
 
     let extension_engaged = is_weekend || is_legal_holiday;
 
@@ -334,15 +329,20 @@ mod tests {
     #[test]
     fn note_pins_authorized_extension_inclusion() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("authorized extension of time")
-            && n.contains("included")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("authorized extension of time") && n.contains("included")));
     }
 
     #[test]
     fn note_pins_legal_holiday_definition_two_clauses() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("(1) legal holiday in District of Columbia")
-            && n.contains("(2) statewide legal holiday")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("(1) legal holiday in District of Columbia")
+                && n.contains("(2) statewide legal holiday")));
     }
 
     #[test]
@@ -387,8 +387,10 @@ mod tests {
     #[test]
     fn note_pins_7502_7503_stacking() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 7503 stacks with § 7502")
-            && n.contains("timely-mailing")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7503 stacks with § 7502") && n.contains("timely-mailing")));
     }
 
     #[test]

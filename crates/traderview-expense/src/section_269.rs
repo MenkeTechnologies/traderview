@@ -125,12 +125,13 @@ const SECTION_269B_LIQUIDATION_WINDOW_YEARS: u32 = 2;
 
 #[must_use]
 pub fn check(input: &Input) -> Output {
-    if matches!(input.acquisition_type, AcquisitionType::NoAcquisitionOfControl)
-        || matches!(
-            input.control_threshold_status,
-            ControlThresholdStatus::ControlNotAcquiredBelowFiftyPercent
-        )
-    {
+    if matches!(
+        input.acquisition_type,
+        AcquisitionType::NoAcquisitionOfControl
+    ) || matches!(
+        input.control_threshold_status,
+        ControlThresholdStatus::ControlNotAcquiredBelowFiftyPercent
+    ) {
         return Output {
             severity: Severity::NoControlAcquisitionSection269Inapplicable,
             disallowed_benefit_cents: 0,
@@ -294,10 +295,8 @@ mod tests {
     fn base() -> Input {
         Input {
             acquisition_type: AcquisitionType::StockAcquisitionSection269A1,
-            control_threshold_status:
-                ControlThresholdStatus::ControlAcquiredFiftyPercentOrMore,
-            principal_purpose_status:
-                PrincipalPurposeStatus::PrincipalPurposeIsTaxAvoidance,
+            control_threshold_status: ControlThresholdStatus::ControlAcquiredFiftyPercentOrMore,
+            principal_purpose_status: PrincipalPurposeStatus::PrincipalPurposeIsTaxAvoidance,
             tax_benefit_sought_cents: 50_000_000_00,
             active_business_purpose_evidence_strength_bps: 0,
         }
@@ -333,10 +332,12 @@ mod tests {
     #[test]
     fn bona_fide_business_purpose_preserves_tax_benefit() {
         let mut input = base();
-        input.principal_purpose_status =
-            PrincipalPurposeStatus::PrincipalPurposeIsBonaFideBusiness;
+        input.principal_purpose_status = PrincipalPurposeStatus::PrincipalPurposeIsBonaFideBusiness;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::BonaFideBusinessPurposeNoDisallowance);
+        assert_eq!(
+            output.severity,
+            Severity::BonaFideBusinessPurposeNoDisallowance
+        );
         assert_eq!(output.allowed_benefit_cents, 50_000_000_00);
         assert!(output.note.contains("synergy"));
         assert!(output.note.contains("EXCEEDS IN IMPORTANCE"));
@@ -372,8 +373,7 @@ mod tests {
     #[test]
     fn section_269b_section_332_liquidation_within_2_years_disallowance() {
         let mut input = base();
-        input.acquisition_type =
-            AcquisitionType::Section332LiquidationWithinTwoYearsSection269B;
+        input.acquisition_type = AcquisitionType::Section332LiquidationWithinTwoYearsSection269B;
         let output = check(&input);
         assert_eq!(
             output.severity,
@@ -405,7 +405,10 @@ mod tests {
             PrincipalPurposeStatus::PriceDisproportionateSection269CPresumption;
         input.active_business_purpose_evidence_strength_bps = 8_000;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::BonaFideBusinessPurposeNoDisallowance);
+        assert_eq!(
+            output.severity,
+            Severity::BonaFideBusinessPurposeNoDisallowance
+        );
         assert_eq!(output.allowed_benefit_cents, 50_000_000_00);
         assert!(output.note.contains("REBUTTED"));
     }
@@ -417,7 +420,10 @@ mod tests {
             PrincipalPurposeStatus::PriceDisproportionateSection269CPresumption;
         input.active_business_purpose_evidence_strength_bps = 7_500;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::BonaFideBusinessPurposeNoDisallowance);
+        assert_eq!(
+            output.severity,
+            Severity::BonaFideBusinessPurposeNoDisallowance
+        );
     }
 
     #[test]
@@ -518,18 +524,19 @@ mod tests {
     fn bona_fide_business_purpose_overrides_section_269a_branch() {
         let mut input = base();
         input.acquisition_type = AcquisitionType::StockAcquisitionSection269A1;
-        input.principal_purpose_status =
-            PrincipalPurposeStatus::PrincipalPurposeIsBonaFideBusiness;
+        input.principal_purpose_status = PrincipalPurposeStatus::PrincipalPurposeIsBonaFideBusiness;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::BonaFideBusinessPurposeNoDisallowance);
+        assert_eq!(
+            output.severity,
+            Severity::BonaFideBusinessPurposeNoDisallowance
+        );
     }
 
     #[test]
     fn no_control_takes_priority_over_principal_purpose_status() {
         let mut input = base();
         input.acquisition_type = AcquisitionType::NoAcquisitionOfControl;
-        input.principal_purpose_status =
-            PrincipalPurposeStatus::PrincipalPurposeIsTaxAvoidance;
+        input.principal_purpose_status = PrincipalPurposeStatus::PrincipalPurposeIsTaxAvoidance;
         let output = check(&input);
         assert_eq!(
             output.severity,

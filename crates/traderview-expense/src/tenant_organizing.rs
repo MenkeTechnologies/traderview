@@ -160,12 +160,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // NoStatewideTenantOrganizingProtection default — 46 other states.
     let no_state = [
-        "AL", "AK", "AZ", "AR", "CO", "CT", "DE", "FL",
-        "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY",
-        "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO",
-        "MT", "NE", "NV", "NH", "NM", "NC", "ND", "OH",
-        "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX",
-        "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS",
+        "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NM", "NC",
+        "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV",
+        "WI", "WY",
     ];
     for code in no_state {
         m.insert(
@@ -242,9 +240,8 @@ pub fn check(input: &TenantOrganizingInput) -> TenantOrganizingResult {
         true
     };
 
-    let retaliation_presumed = protected
-        && input.landlord_took_adverse_action
-        && within_protected_window;
+    let retaliation_presumed =
+        protected && input.landlord_took_adverse_action && within_protected_window;
 
     // NY common-room obligation is a separate compliance trigger.
     let ny_room_violation = matches!(
@@ -300,8 +297,10 @@ pub fn check(input: &TenantOrganizingInput) -> TenantOrganizingResult {
             regime_label,
         )
     } else {
-        let mut parts =
-            vec![format!("State applies {} regime; landlord NON-COMPLIANT", regime_label)];
+        let mut parts = vec![format!(
+            "State applies {} regime; landlord NON-COMPLIANT",
+            regime_label
+        )];
         if retaliation_presumed {
             parts.push(if rule.protected_window_days > 0 {
                 format!(
@@ -313,10 +312,15 @@ pub fn check(input: &TenantOrganizingInput) -> TenantOrganizingResult {
             });
         }
         if ny_room_violation {
-            parts.push("common-room access refused or fee charged in violation of RPL § 230".to_string());
+            parts.push(
+                "common-room access refused or fee charged in violation of RPL § 230".to_string(),
+            );
         }
         if penalty > 0 {
-            parts.push(format!("civil penalty up to ${} per violation available", penalty));
+            parts.push(format!(
+                "civil penalty up to ${} per violation available",
+                penalty
+            ));
         }
         if rule.business_license_suspension_remedy {
             parts.push("business license suspension/revocation remedy available".to_string());
@@ -356,7 +360,10 @@ mod tests {
     #[test]
     fn ny_affirmative_room_access_regime() {
         let r = check(&baseline("NY"));
-        assert_eq!(r.regime, TenantOrganizingRegime::NewYorkAffirmativeRoomAccess);
+        assert_eq!(
+            r.regime,
+            TenantOrganizingRegime::NewYorkAffirmativeRoomAccess
+        );
     }
 
     #[test]
@@ -569,7 +576,10 @@ mod tests {
         let count = RULES
             .iter()
             .filter(|(_, r)| {
-                matches!(r.regime, TenantOrganizingRegime::NewYorkAffirmativeRoomAccess)
+                matches!(
+                    r.regime,
+                    TenantOrganizingRegime::NewYorkAffirmativeRoomAccess
+                )
             })
             .count();
         assert_eq!(count, 1);
@@ -594,7 +604,10 @@ mod tests {
         let count = RULES
             .iter()
             .filter(|(_, r)| {
-                matches!(r.regime, TenantOrganizingRegime::NewJerseyOrganizerProtection)
+                matches!(
+                    r.regime,
+                    TenantOrganizingRegime::NewJerseyOrganizerProtection
+                )
             })
             .count();
         assert_eq!(count, 1);
@@ -644,6 +657,9 @@ mod tests {
     #[test]
     fn lowercase_state_code_normalizes() {
         let r = check(&baseline("ny"));
-        assert_eq!(r.regime, TenantOrganizingRegime::NewYorkAffirmativeRoomAccess);
+        assert_eq!(
+            r.regime,
+            TenantOrganizingRegime::NewYorkAffirmativeRoomAccess
+        );
     }
 }

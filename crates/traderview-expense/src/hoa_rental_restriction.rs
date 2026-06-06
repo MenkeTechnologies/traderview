@@ -158,8 +158,7 @@ pub fn check(input: &Input) -> CheckResult {
                     match input.restriction_type {
                         RestrictionType::ShortTermRentalRestriction =>
                             "short-term-rental (≤6 month)",
-                        RestrictionType::FrequencyRestrictionThreeOrFewer =>
-                            "≤3-rentals-per-year",
+                        RestrictionType::FrequencyRestrictionThreeOrFewer => "≤3-rentals-per-year",
                         _ => "exception",
                     },
                 ));
@@ -224,8 +223,16 @@ pub fn check(input: &Input) -> CheckResult {
                  prohibit rentals or impose time-period restrictions if such restrictions \
                  appear in the declaration. Statute does NOT set a percentage cap on \
                  rentals. Declaration {} rentals; restriction is {} enforceable.",
-                if input.declaration_permits_rental { "PERMITS" } else { "RESTRICTS" },
-                if restriction_enforceable_against_owner { "" } else { "NOT" },
+                if input.declaration_permits_rental {
+                    "PERMITS"
+                } else {
+                    "RESTRICTS"
+                },
+                if restriction_enforceable_against_owner {
+                    ""
+                } else {
+                    "NOT"
+                },
             ));
         }
         Regime::Default => {
@@ -309,7 +316,10 @@ mod tests {
 
     #[test]
     fn florida_pre_amendment_owner_no_consent_grandfather_engaged() {
-        let r = check(&input(Regime::Florida, RestrictionType::GeneralLongTermRestriction));
+        let r = check(&input(
+            Regime::Florida,
+            RestrictionType::GeneralLongTermRestriction,
+        ));
         assert!(r.grandfather_protection_engaged);
         assert!(!r.restriction_enforceable_against_owner);
         assert!(r.compliant);
@@ -392,7 +402,10 @@ mod tests {
 
     #[test]
     fn arizona_declaration_permits_no_enforceable_restriction() {
-        let r = check(&input(Regime::Arizona, RestrictionType::GeneralLongTermRestriction));
+        let r = check(&input(
+            Regime::Arizona,
+            RestrictionType::GeneralLongTermRestriction,
+        ));
         assert!(!r.restriction_enforceable_against_owner);
     }
 
@@ -414,7 +427,10 @@ mod tests {
 
     #[test]
     fn arizona_no_agent_designation_no_engagement() {
-        let r = check(&input(Regime::Arizona, RestrictionType::GeneralLongTermRestriction));
+        let r = check(&input(
+            Regime::Arizona,
+            RestrictionType::GeneralLongTermRestriction,
+        ));
         assert!(!r.agent_designation_engaged);
     }
 
@@ -422,7 +438,10 @@ mod tests {
 
     #[test]
     fn default_declaration_permits_no_enforceable_restriction() {
-        let r = check(&input(Regime::Default, RestrictionType::GeneralLongTermRestriction));
+        let r = check(&input(
+            Regime::Default,
+            RestrictionType::GeneralLongTermRestriction,
+        ));
         assert!(!r.restriction_enforceable_against_owner);
     }
 
@@ -446,11 +465,7 @@ mod tests {
             b.declaration_permits_rental = false;
             let r = check(&b);
             let expected = matches!(regime, Regime::Florida);
-            assert_eq!(
-                r.grandfather_protection_engaged, expected,
-                "{:?}",
-                regime
-            );
+            assert_eq!(r.grandfather_protection_engaged, expected, "{:?}", regime);
         }
     }
 
@@ -509,7 +524,10 @@ mod tests {
 
     #[test]
     fn citation_pins_all_regime_authorities() {
-        let r = check(&input(Regime::Florida, RestrictionType::GeneralLongTermRestriction));
+        let r = check(&input(
+            Regime::Florida,
+            RestrictionType::GeneralLongTermRestriction,
+        ));
         assert!(r.citation.contains("§ 720.306(1)(h)"));
         assert!(r.citation.contains("§ 720.306(1)(h)1"));
         assert!(r.citation.contains("§ 720.306(1)(h)2"));
@@ -521,7 +539,10 @@ mod tests {
 
     #[test]
     fn sibling_distinction_note_present() {
-        let r = check(&input(Regime::Florida, RestrictionType::GeneralLongTermRestriction));
+        let r = check(&input(
+            Regime::Florida,
+            RestrictionType::GeneralLongTermRestriction,
+        ));
         assert!(
             r.notes.iter().any(|n| n.contains("tenant_topa")
                 && n.contains("str_regulation")
@@ -539,10 +560,10 @@ mod tests {
         // § 720.306(1)(h)3 regardless of how the current owner originally
         // qualified.
         let cells = [
-            (true, false, true),   // heir + not-transferred → grandfather preserved
-            (true, true, false),   // heir + transferred → grandfather lost
-            (false, false, true),  // pre-amendment-direct + not-transferred → grandfather
-            (false, true, false),  // pre-amendment-direct + transferred → grandfather lost
+            (true, false, true),  // heir + not-transferred → grandfather preserved
+            (true, true, false),  // heir + transferred → grandfather lost
+            (false, false, true), // pre-amendment-direct + not-transferred → grandfather
+            (false, true, false), // pre-amendment-direct + transferred → grandfather lost
         ];
         for (via_heir, transferred, expected_grandfather) in cells.iter() {
             let mut b = input(Regime::Florida, RestrictionType::GeneralLongTermRestriction);

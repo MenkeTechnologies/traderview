@@ -174,8 +174,12 @@ pub fn compute(input: &Input) -> Output {
     if !input.property_in_california {
         return Output {
             mode: CaAb12Mode::NotApplicablePropertyOutsideCalifornia,
-            statutory_basis: "Property outside California; AB 12 / Cal. Civ. Code § 1950.5 inapplicable".to_string(),
-            notes: "Property outside California; California AB 12 security deposit cap inapplicable.".to_string(),
+            statutory_basis:
+                "Property outside California; AB 12 / Cal. Civ. Code § 1950.5 inapplicable"
+                    .to_string(),
+            notes:
+                "Property outside California; California AB 12 security deposit cap inapplicable."
+                    .to_string(),
             citations,
             applicable_cap_cents: 0,
         };
@@ -341,7 +345,8 @@ mod tests {
         Input {
             property_in_california: true,
             lease_trigger_event: LeaseTriggerEvent::NewTenancyAfterOriginalTenantVacated,
-            landlord_entity_type: LandlordEntityType::CorporationOrAnyEntityWithNonNaturalPersonMember,
+            landlord_entity_type:
+                LandlordEntityType::CorporationOrAnyEntityWithNonNaturalPersonMember,
             landlord_residential_property_count: 50,
             landlord_total_dwelling_units_for_rent: 200,
             tenant_classification: TenantClassification::StandardResidentialTenant,
@@ -359,7 +364,10 @@ mod tests {
             ..baseline_post_ab12_general_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, CaAb12Mode::NotApplicablePropertyOutsideCalifornia);
+        assert_eq!(
+            result.mode,
+            CaAb12Mode::NotApplicablePropertyOutsideCalifornia
+        );
     }
 
     #[test]
@@ -370,13 +378,19 @@ mod tests {
             ..baseline_post_ab12_general_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, CaAb12Mode::NotApplicablePreAb12LeaseLawfullyGrandfathered);
+        assert_eq!(
+            result.mode,
+            CaAb12Mode::NotApplicablePreAb12LeaseLawfullyGrandfathered
+        );
     }
 
     #[test]
     fn post_ab12_general_cap_compliant_at_exactly_one_month() {
         let result = check(&baseline_post_ab12_general_compliant());
-        assert_eq!(result.mode, CaAb12Mode::CompliantPostAb12GeneralCapOneMonthRent);
+        assert_eq!(
+            result.mode,
+            CaAb12Mode::CompliantPostAb12GeneralCapOneMonthRent
+        );
         assert_eq!(result.applicable_cap_cents, 250_000);
     }
 
@@ -387,7 +401,10 @@ mod tests {
             ..baseline_post_ab12_general_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, CaAb12Mode::ViolationPostAb12DepositExceedsOneMonthCap);
+        assert_eq!(
+            result.mode,
+            CaAb12Mode::ViolationPostAb12DepositExceedsOneMonthCap
+        );
     }
 
     #[test]
@@ -397,7 +414,10 @@ mod tests {
             ..baseline_post_ab12_general_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, CaAb12Mode::ViolationPostAb12DepositExceedsOneMonthCap);
+        assert_eq!(
+            result.mode,
+            CaAb12Mode::ViolationPostAb12DepositExceedsOneMonthCap
+        );
     }
 
     #[test]
@@ -408,7 +428,10 @@ mod tests {
             ..baseline_post_ab12_general_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, CaAb12Mode::ViolationPostAb12DepositExceedsOneMonthCap);
+        assert_eq!(
+            result.mode,
+            CaAb12Mode::ViolationPostAb12DepositExceedsOneMonthCap
+        );
     }
 
     #[test]
@@ -422,14 +445,18 @@ mod tests {
             ..baseline_post_ab12_general_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, CaAb12Mode::CompliantSmallLandlordExceptionTwoMonthRentCap);
+        assert_eq!(
+            result.mode,
+            CaAb12Mode::CompliantSmallLandlordExceptionTwoMonthRentCap
+        );
         assert_eq!(result.applicable_cap_cents, 500_000);
     }
 
     #[test]
     fn small_landlord_llc_natural_person_members_compliant() {
         let input = Input {
-            landlord_entity_type: LandlordEntityType::LimitedLiabilityCompanyAllMembersNaturalPersons,
+            landlord_entity_type:
+                LandlordEntityType::LimitedLiabilityCompanyAllMembersNaturalPersons,
             landlord_residential_property_count: 1,
             landlord_total_dwelling_units_for_rent: 2,
             small_landlord_exception_claimed: true,
@@ -437,13 +464,17 @@ mod tests {
             ..baseline_post_ab12_general_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, CaAb12Mode::CompliantSmallLandlordExceptionTwoMonthRentCap);
+        assert_eq!(
+            result.mode,
+            CaAb12Mode::CompliantSmallLandlordExceptionTwoMonthRentCap
+        );
     }
 
     #[test]
     fn small_landlord_corporation_entity_type_ineligible() {
         let input = Input {
-            landlord_entity_type: LandlordEntityType::CorporationOrAnyEntityWithNonNaturalPersonMember,
+            landlord_entity_type:
+                LandlordEntityType::CorporationOrAnyEntityWithNonNaturalPersonMember,
             landlord_residential_property_count: 1,
             landlord_total_dwelling_units_for_rent: 2,
             small_landlord_exception_claimed: true,
@@ -502,7 +533,10 @@ mod tests {
             ..baseline_post_ab12_general_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, CaAb12Mode::CompliantSmallLandlordExceptionTwoMonthRentCap);
+        assert_eq!(
+            result.mode,
+            CaAb12Mode::CompliantSmallLandlordExceptionTwoMonthRentCap
+        );
     }
 
     #[test]
@@ -567,7 +601,10 @@ mod tests {
             ..baseline_post_ab12_general_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, CaAb12Mode::ViolationPostAb12DepositExceedsOneMonthCap);
+        assert_eq!(
+            result.mode,
+            CaAb12Mode::ViolationPostAb12DepositExceedsOneMonthCap
+        );
     }
 
     #[test]
@@ -578,7 +615,10 @@ mod tests {
             ..baseline_post_ab12_general_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, CaAb12Mode::ViolationPostAb12DepositExceedsOneMonthCap);
+        assert_eq!(
+            result.mode,
+            CaAb12Mode::ViolationPostAb12DepositExceedsOneMonthCap
+        );
     }
 
     #[test]
@@ -589,7 +629,10 @@ mod tests {
             ..baseline_post_ab12_general_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, CaAb12Mode::ViolationPostAb12DepositExceedsOneMonthCap);
+        assert_eq!(
+            result.mode,
+            CaAb12Mode::ViolationPostAb12DepositExceedsOneMonthCap
+        );
     }
 
     #[test]
@@ -644,6 +687,9 @@ mod tests {
             ..baseline_post_ab12_general_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, CaAb12Mode::CompliantPostAb12GeneralCapOneMonthRent);
+        assert_eq!(
+            result.mode,
+            CaAb12Mode::CompliantPostAb12GeneralCapOneMonthRent
+        );
     }
 }

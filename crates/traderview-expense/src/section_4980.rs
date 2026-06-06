@@ -282,13 +282,12 @@ pub fn check(input: &Section4980Input) -> Section4980Result {
     let pro_rata_benefit_requirements_satisfied = matches!(
         input.termination_structure,
         TerminationStructure::ProRataBenefitIncrease
-    ) && input.pro_rata_benefit_increase_percent >= 20
+    ) && input.pro_rata_benefit_increase_percent
+        >= 20
         && input.benefit_increase_immediate;
 
     let qrp_transfer_cents = if qrp_requirements_satisfied {
-        plan_surplus_cents
-            .saturating_mul(input.qrp_transfer_percent as u64)
-            / 100
+        plan_surplus_cents.saturating_mul(input.qrp_transfer_percent as u64) / 100
     } else {
         0
     };
@@ -302,19 +301,17 @@ pub fn check(input: &Section4980Input) -> Section4980Result {
             50
         };
 
-    let section_4980_excise_tax_cents = employer_reversion_cents
-        .saturating_mul(effective_excise_rate_percent as u64)
-        / 100;
+    let section_4980_excise_tax_cents =
+        employer_reversion_cents.saturating_mul(effective_excise_rate_percent as u64) / 100;
 
     let combined_tax_rate_bp = input
         .federal_corporate_tax_rate_bp
         .saturating_add(input.state_corporate_tax_rate_bp);
-    let corporate_income_tax_cents = employer_reversion_cents
-        .saturating_mul(combined_tax_rate_bp as u64)
-        / 10_000;
+    let corporate_income_tax_cents =
+        employer_reversion_cents.saturating_mul(combined_tax_rate_bp as u64) / 10_000;
 
-    let total_tax_burden_cents = section_4980_excise_tax_cents
-        .saturating_add(corporate_income_tax_cents);
+    let total_tax_burden_cents =
+        section_4980_excise_tax_cents.saturating_add(corporate_income_tax_cents);
 
     let effective_combined_rate_percent: u32 = total_tax_burden_cents
         .saturating_mul(100)
@@ -343,7 +340,10 @@ pub fn check(input: &Section4980Input) -> Section4980Result {
             qrp_transfer_cents,
             employer_reversion_cents
         ));
-    } else if matches!(input.termination_structure, TerminationStructure::QualifiedReplacementPlan) {
+    } else if matches!(
+        input.termination_structure,
+        TerminationStructure::QualifiedReplacementPlan
+    ) {
         if input.qrp_active_participant_percent < 95 {
             failure_reasons.push(format!(
                 "26 USC § 4980(d)(2)(B)(i) QRP ACTIVE PARTICIPANT REQUIREMENT NOT SATISFIED — only {}% of active participants become QRP participants; at least 95% REQUIRED; reverts to default 50% excise rate",
@@ -368,7 +368,10 @@ pub fn check(input: &Section4980Input) -> Section4980Result {
             "26 USC § 4980(d)(3) PRO RATA BENEFIT INCREASE — present value of pro rata increase ({}% of maximum reversion) at least 20% required; benefit increases take effect IMMEDIATELY on plan termination date; REDUCED 20% excise rate applies",
             input.pro_rata_benefit_increase_percent
         ));
-    } else if matches!(input.termination_structure, TerminationStructure::ProRataBenefitIncrease) {
+    } else if matches!(
+        input.termination_structure,
+        TerminationStructure::ProRataBenefitIncrease
+    ) {
         if input.pro_rata_benefit_increase_percent < 20 {
             failure_reasons.push(format!(
                 "26 USC § 4980(d)(3)(B) PRO RATA BENEFIT INCREASE PERCENT NOT SATISFIED — only {}% of maximum reversion; at least 20% REQUIRED; reverts to default 50% excise rate",
@@ -482,10 +485,12 @@ mod tests {
         let r = check(&i);
         assert!(!r.qrp_requirements_satisfied);
         assert_eq!(r.effective_excise_rate_percent, 50);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 4980(d)(2)(B)(i)")
-            && f.contains("94%")
-            && f.contains("at least 95%")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 4980(d)(2)(B)(i)")
+                && f.contains("94%")
+                && f.contains("at least 95%")));
     }
 
     #[test]
@@ -498,10 +503,12 @@ mod tests {
         let r = check(&i);
         assert!(!r.qrp_requirements_satisfied);
         assert_eq!(r.effective_excise_rate_percent, 50);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 4980(d)(2)(B)(ii)")
-            && f.contains("24%")
-            && f.contains("at least 25%")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 4980(d)(2)(B)(ii)")
+                && f.contains("24%")
+                && f.contains("at least 25%")));
     }
 
     #[test]
@@ -514,9 +521,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.qrp_requirements_satisfied);
         assert_eq!(r.effective_excise_rate_percent, 50);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 4980(d)(2)(B)(iii)")
-            && f.contains("7-year")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 4980(d)(2)(B)(iii)") && f.contains("7-year")));
     }
 
     #[test]
@@ -540,10 +548,12 @@ mod tests {
         let r = check(&i);
         assert!(!r.pro_rata_benefit_requirements_satisfied);
         assert_eq!(r.effective_excise_rate_percent, 50);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 4980(d)(3)(B)")
-            && f.contains("19%")
-            && f.contains("at least 20%")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 4980(d)(3)(B)")
+                && f.contains("19%")
+                && f.contains("at least 20%")));
     }
 
     #[test]
@@ -555,9 +565,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.pro_rata_benefit_requirements_satisfied);
         assert_eq!(r.effective_excise_rate_percent, 50);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 4980(d)(3)(C)")
-            && f.contains("IMMEDIATELY")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 4980(d)(3)(C)") && f.contains("IMMEDIATELY")));
     }
 
     #[test]
@@ -568,9 +579,10 @@ mod tests {
         let r = check(&i);
         assert_eq!(r.plan_surplus_cents, 0);
         assert_eq!(r.section_4980_excise_tax_cents, 0);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("NO SURPLUS")
-            && f.contains("DOES NOT APPLY")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("NO SURPLUS") && f.contains("DOES NOT APPLY")));
     }
 
     #[test]
@@ -662,45 +674,51 @@ mod tests {
     #[test]
     fn note_pins_general_rule_overview() {
         let r = check(&direct_reversion_2m_surplus());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 4980 — EXCISE TAX on employer reversion")
-            && n.contains("50% rate reduced to 20%")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 4980 — EXCISE TAX on employer reversion")
+                && n.contains("50% rate reduced to 20%")));
     }
 
     #[test]
     fn note_pins_qualified_db_plan_scope() {
         let r = check(&direct_reversion_2m_surplus());
-        assert!(r.notes.iter().any(|n|
-            n.contains("QUALIFIED DEFINED BENEFIT plans")
-            && n.contains("§ 401(a)")
-            && n.contains("§ 411")
-            && n.contains("§ 412")
-            && n.contains("§ 415")
-            && n.contains("NOT applicable")
-            && n.contains("§ 401(k)")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("QUALIFIED DEFINED BENEFIT plans")
+                && n.contains("§ 401(a)")
+                && n.contains("§ 411")
+                && n.contains("§ 412")
+                && n.contains("§ 415")
+                && n.contains("NOT applicable")
+                && n.contains("§ 401(k)")));
     }
 
     #[test]
     fn note_pins_subsection_a_general_rule() {
         let r = check(&direct_reversion_2m_surplus());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 4980(a) GENERAL RULE")
-            && n.contains("20% base tax")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 4980(a) GENERAL RULE") && n.contains("20% base tax")));
     }
 
     #[test]
     fn note_pins_subsection_d_50_percent_default() {
         let r = check(&direct_reversion_2m_surplus());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 4980(d) INCREASED 50% RATE")
-            && n.contains("70-75%")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 4980(d) INCREASED 50% RATE") && n.contains("70-75%")));
     }
 
     #[test]
     fn note_pins_subsection_d2_qrp_three_requirements() {
         let r = check(&direct_reversion_2m_surplus());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 4980(d)(2) QUALIFIED REPLACEMENT PLAN (QRP) REQUIREMENTS")
+        assert!(r.notes.iter().any(|n| n
+            .contains("§ 4980(d)(2) QUALIFIED REPLACEMENT PLAN (QRP) REQUIREMENTS")
             && n.contains("95%")
             && n.contains("25%")
             && n.contains("7-year")));
@@ -709,37 +727,43 @@ mod tests {
     #[test]
     fn note_pins_subsection_d3_pro_rata_benefit_three_requirements() {
         let r = check(&direct_reversion_2m_surplus());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 4980(d)(3) PRO RATA BENEFIT INCREASE")
-            && n.contains("20% of maximum")
-            && n.contains("take effect immediately")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 4980(d)(3) PRO RATA BENEFIT INCREASE")
+                && n.contains("20% of maximum")
+                && n.contains("take effect immediately")));
     }
 
     #[test]
     fn note_pins_subsection_d4_qualified_participant() {
         let r = check(&direct_reversion_2m_surplus());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 4980(d)(4) QUALIFIED PARTICIPANT")
-            && n.contains("active participant")
-            && n.contains("receiving benefits")
-            && n.contains("being deferred")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 4980(d)(4) QUALIFIED PARTICIPANT")
+                && n.contains("active participant")
+                && n.contains("receiving benefits")
+                && n.contains("being deferred")));
     }
 
     #[test]
     fn note_pins_subsection_c_employer_reversion_definition() {
         let r = check(&direct_reversion_2m_surplus());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 4980(c) EMPLOYER REVERSION DEFINITION")
-            && n.contains("cash or fair market value")
-            && n.contains("EXCLUDES")
-            && n.contains("§ 404")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 4980(c) EMPLOYER REVERSION DEFINITION")
+                && n.contains("cash or fair market value")
+                && n.contains("EXCLUDES")
+                && n.contains("§ 404")));
     }
 
     #[test]
     fn note_pins_income_tax_interaction() {
         let r = check(&direct_reversion_2m_surplus());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 4980 interaction with § 162 + § 404 + income tax")
+        assert!(r.notes.iter().any(|n| n
+            .contains("§ 4980 interaction with § 162 + § 404 + income tax")
             && n.contains("stacked liability")
             && n.contains("75%")));
     }
@@ -747,31 +771,37 @@ mod tests {
     #[test]
     fn note_pins_four_termination_routes() {
         let r = check(&direct_reversion_2m_surplus());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 4980 PRACTICAL TERMINATION ROUTES")
-            && n.contains("PLR 9701036")
-            && n.contains("Rev. Rul. 2003-85")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 4980 PRACTICAL TERMINATION ROUTES")
+                && n.contains("PLR 9701036")
+                && n.contains("Rev. Rul. 2003-85")));
     }
 
     #[test]
     fn note_pins_trader_fact_patterns_five() {
         let r = check(&direct_reversion_2m_surplus());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-critical fact patterns")
-            && n.contains("$1.52M total (76% effective)")
-            && n.contains("§ 414(b)/(c)/(m)/(o)")
-            && n.contains("M&A-driven plan termination")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-critical fact patterns")
+                && n.contains("$1.52M total (76% effective)")
+                && n.contains("§ 414(b)/(c)/(m)/(o)")
+                && n.contains("M&A-driven plan termination")));
     }
 
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&direct_reversion_2m_surplus());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Companion to section_401k")
-            && n.contains("section_415")
-            && n.contains("section_457b")
-            && n.contains("section_4975")
-            && n.contains("section_162m")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Companion to section_401k")
+                && n.contains("section_415")
+                && n.contains("section_457b")
+                && n.contains("section_4975")
+                && n.contains("section_162m")));
     }
 
     #[test]

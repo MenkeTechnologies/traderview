@@ -231,7 +231,8 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.grantor_trigger_section == GrantorTriggerSection::Section674PowerControlBeneficialEnjoyment
+    if input.grantor_trigger_section
+        == GrantorTriggerSection::Section674PowerControlBeneficialEnjoyment
         && !input.section_674_exemption_applies
     {
         if !input.grantor_reported_items_on_personal_return {
@@ -286,7 +287,9 @@ pub fn compute(input: &Input) -> Output {
         GrantorTriggerSection::Section675_4cSubstitutionPower => {
             Section671Mode::CompliantSection675_4cSubstitutionPowerIdgtClassic
         }
-        GrantorTriggerSection::Section676PowerToRevoke => Section671Mode::CompliantSection676PowerToRevoke,
+        GrantorTriggerSection::Section676PowerToRevoke => {
+            Section671Mode::CompliantSection676PowerToRevoke
+        }
         GrantorTriggerSection::Section677IncomeAccumulatedForGrantor => {
             Section671Mode::CompliantSection677IncomeForGrantorBenefit
         }
@@ -296,7 +299,9 @@ pub fn compute(input: &Input) -> Output {
         GrantorTriggerSection::Section679ForeignTrustUsBeneficiary => {
             Section671Mode::CompliantSection679ForeignTrustUsBeneficiary
         }
-        GrantorTriggerSection::NoTriggerStandardNonGrantorTrust => Section671Mode::NotApplicableNoGrantorTrustStatus,
+        GrantorTriggerSection::NoTriggerStandardNonGrantorTrust => {
+            Section671Mode::NotApplicableNoGrantorTrustStatus
+        }
     };
 
     Output {
@@ -336,13 +341,19 @@ mod tests {
             ..baseline_675_4c_substitution_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section671Mode::NotApplicableNoGrantorTrustStatus);
+        assert_eq!(
+            result.mode,
+            Section671Mode::NotApplicableNoGrantorTrustStatus
+        );
     }
 
     #[test]
     fn section_675_4c_substitution_idgt_classic_compliant() {
         let result = compute(&baseline_675_4c_substitution_compliant());
-        assert_eq!(result.mode, Section671Mode::CompliantSection675_4cSubstitutionPowerIdgtClassic);
+        assert_eq!(
+            result.mode,
+            Section671Mode::CompliantSection675_4cSubstitutionPowerIdgtClassic
+        );
     }
 
     #[test]
@@ -353,7 +364,10 @@ mod tests {
             ..baseline_675_4c_substitution_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section671Mode::NotApplicableNoGrantorTrustStatus);
+        assert_eq!(
+            result.mode,
+            Section671Mode::NotApplicableNoGrantorTrustStatus
+        );
     }
 
     #[test]
@@ -364,7 +378,10 @@ mod tests {
             ..baseline_675_4c_substitution_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section671Mode::CompliantSection673ReversionaryOver5PctTriggered);
+        assert_eq!(
+            result.mode,
+            Section671Mode::CompliantSection673ReversionaryOver5PctTriggered
+        );
     }
 
     #[test]
@@ -376,41 +393,56 @@ mod tests {
             ..baseline_675_4c_substitution_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section671Mode::ViolationItemsFailedToFlowThroughToGrantor);
+        assert_eq!(
+            result.mode,
+            Section671Mode::ViolationItemsFailedToFlowThroughToGrantor
+        );
     }
 
     #[test]
     fn section_674_power_no_exemption_triggers_compliant() {
         let input = Input {
-            grantor_trigger_section: GrantorTriggerSection::Section674PowerControlBeneficialEnjoyment,
+            grantor_trigger_section:
+                GrantorTriggerSection::Section674PowerControlBeneficialEnjoyment,
             section_674_exemption_applies: false,
             ..baseline_675_4c_substitution_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section671Mode::CompliantSection674PowerControlBeneficial);
+        assert_eq!(
+            result.mode,
+            Section671Mode::CompliantSection674PowerControlBeneficial
+        );
     }
 
     #[test]
     fn section_674_with_exemption_no_violation() {
         let input = Input {
-            grantor_trigger_section: GrantorTriggerSection::Section674PowerControlBeneficialEnjoyment,
+            grantor_trigger_section:
+                GrantorTriggerSection::Section674PowerControlBeneficialEnjoyment,
             section_674_exemption_applies: true,
             ..baseline_675_4c_substitution_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section671Mode::CompliantSection674PowerControlBeneficial);
+        assert_eq!(
+            result.mode,
+            Section671Mode::CompliantSection674PowerControlBeneficial
+        );
     }
 
     #[test]
     fn section_674_no_exemption_items_not_reported_violation() {
         let input = Input {
-            grantor_trigger_section: GrantorTriggerSection::Section674PowerControlBeneficialEnjoyment,
+            grantor_trigger_section:
+                GrantorTriggerSection::Section674PowerControlBeneficialEnjoyment,
             section_674_exemption_applies: false,
             grantor_reported_items_on_personal_return: false,
             ..baseline_675_4c_substitution_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section671Mode::ViolationSection674PowerNotExemptedFromTrigger);
+        assert_eq!(
+            result.mode,
+            Section671Mode::ViolationSection674PowerNotExemptedFromTrigger
+        );
     }
 
     #[test]
@@ -420,7 +452,10 @@ mod tests {
             ..baseline_675_4c_substitution_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section671Mode::CompliantSection675AdministrativePower);
+        assert_eq!(
+            result.mode,
+            Section671Mode::CompliantSection675AdministrativePower
+        );
     }
 
     #[test]
@@ -430,7 +465,10 @@ mod tests {
             ..baseline_675_4c_substitution_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section671Mode::CompliantSection676PowerToRevoke);
+        assert_eq!(
+            result.mode,
+            Section671Mode::CompliantSection676PowerToRevoke
+        );
     }
 
     #[test]
@@ -440,7 +478,10 @@ mod tests {
             ..baseline_675_4c_substitution_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section671Mode::CompliantSection677IncomeForGrantorBenefit);
+        assert_eq!(
+            result.mode,
+            Section671Mode::CompliantSection677IncomeForGrantorBenefit
+        );
     }
 
     #[test]
@@ -451,7 +492,10 @@ mod tests {
             ..baseline_675_4c_substitution_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section671Mode::CompliantSection678ThirdPartyTreatedAsOwnerBdit);
+        assert_eq!(
+            result.mode,
+            Section671Mode::CompliantSection678ThirdPartyTreatedAsOwnerBdit
+        );
     }
 
     #[test]
@@ -462,7 +506,10 @@ mod tests {
             ..baseline_675_4c_substitution_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section671Mode::ViolationSection678LapseFailsFiveAndFiveSafeHarbor);
+        assert_eq!(
+            result.mode,
+            Section671Mode::ViolationSection678LapseFailsFiveAndFiveSafeHarbor
+        );
     }
 
     #[test]
@@ -472,7 +519,10 @@ mod tests {
             ..baseline_675_4c_substitution_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section671Mode::CompliantSection679ForeignTrustUsBeneficiary);
+        assert_eq!(
+            result.mode,
+            Section671Mode::CompliantSection679ForeignTrustUsBeneficiary
+        );
     }
 
     #[test]
@@ -482,7 +532,10 @@ mod tests {
             ..baseline_675_4c_substitution_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section671Mode::ViolationItemsFailedToFlowThroughToGrantor);
+        assert_eq!(
+            result.mode,
+            Section671Mode::ViolationItemsFailedToFlowThroughToGrantor
+        );
     }
 
     #[test]
@@ -509,9 +562,15 @@ mod tests {
 
     #[test]
     fn constant_pin_5_pct_threshold_and_5x5_rule() {
-        assert_eq!(SECTION_673_REVERSIONARY_INTEREST_THRESHOLD_BASIS_POINTS, 500);
+        assert_eq!(
+            SECTION_673_REVERSIONARY_INTEREST_THRESHOLD_BASIS_POINTS,
+            500
+        );
         assert_eq!(SECTION_678_B_2_LAPSE_5X5_RULE_GREATER_OF_DOLLARS, 5_000);
-        assert_eq!(SECTION_678_B_2_LAPSE_5X5_RULE_TRUST_CORPUS_PCT_BASIS_POINTS, 500);
+        assert_eq!(
+            SECTION_678_B_2_LAPSE_5X5_RULE_TRUST_CORPUS_PCT_BASIS_POINTS,
+            500
+        );
         assert_eq!(SECTION_671_BASIS_POINT_DENOMINATOR, 10_000);
         assert!(SECTION_675_4C_SUBSTITUTION_POWER_AVAILABLE);
         assert_eq!(TAX_REFORM_ACT_1986_SECTION_673_EFFECTIVE_YEAR, 1986);

@@ -37,11 +37,15 @@ pub struct StrangleReport {
 }
 
 pub fn analyze(s: &Strangle) -> Option<StrangleReport> {
-    if !s.put_strike.is_finite() || s.put_strike <= 0.0
-        || !s.call_strike.is_finite() || s.call_strike <= 0.0
+    if !s.put_strike.is_finite()
+        || s.put_strike <= 0.0
+        || !s.call_strike.is_finite()
+        || s.call_strike <= 0.0
         || s.call_strike <= s.put_strike
-        || !s.net_premium_per_contract.is_finite() || s.net_premium_per_contract < 0.0
-        || !s.multiplier.is_finite() || s.multiplier <= 0.0
+        || !s.net_premium_per_contract.is_finite()
+        || s.net_premium_per_contract < 0.0
+        || !s.multiplier.is_finite()
+        || s.multiplier <= 0.0
         || s.contracts == 0
     {
         return None;

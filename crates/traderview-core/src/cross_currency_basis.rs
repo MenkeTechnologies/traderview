@@ -39,10 +39,15 @@ pub fn compute(
     foreign_rate: f64,
     time_years: f64,
 ) -> Option<BasisReport> {
-    if !spot.is_finite() || spot <= 0.0
-        || !forward.is_finite() || forward <= 0.0
-        || !domestic_rate.is_finite() || !foreign_rate.is_finite()
-        || !time_years.is_finite() || time_years <= 0.0 {
+    if !spot.is_finite()
+        || spot <= 0.0
+        || !forward.is_finite()
+        || forward <= 0.0
+        || !domestic_rate.is_finite()
+        || !foreign_rate.is_finite()
+        || !time_years.is_finite()
+        || time_years <= 0.0
+    {
         return None;
     }
     let log_premium = (forward / spot).ln();
@@ -77,8 +82,11 @@ mod tests {
         let t = 0.25_f64;
         let forward = spot * ((rd - rf) * t).exp();
         let r = compute(spot, forward, rd, rf, t).unwrap();
-        assert!(r.implied_basis.abs() < 1e-12,
-            "CIP-consistent → basis 0, got {}", r.implied_basis);
+        assert!(
+            r.implied_basis.abs() < 1e-12,
+            "CIP-consistent → basis 0, got {}",
+            r.implied_basis
+        );
     }
 
     #[test]
@@ -136,9 +144,10 @@ mod tests {
         let r_short = compute(spot, fwd, rd, rf, 0.25).unwrap();
         let r_long = compute(spot, fwd, rd, rf, 1.0).unwrap();
         // The 1Y basis should be 1/4 of the 3M basis (in magnitude difference).
-        let ratio = (r_short.implied_basis - (rf - rd))
-            / (r_long.implied_basis - (rf - rd));
-        assert!((ratio - 4.0).abs() < 1e-6,
-            "ratio of 3M:1Y basis (above CIP) should be 4:1, got {ratio}");
+        let ratio = (r_short.implied_basis - (rf - rd)) / (r_long.implied_basis - (rf - rd));
+        assert!(
+            (ratio - 4.0).abs() < 1e-6,
+            "ratio of 3M:1Y basis (above CIP) should be 4:1, got {ratio}"
+        );
     }
 }

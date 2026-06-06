@@ -36,9 +36,12 @@ pub struct Ks2SampleReport {
 pub fn test(sample_a: &[f64], sample_b: &[f64]) -> Option<Ks2SampleReport> {
     let m = sample_a.len();
     let n = sample_b.len();
-    if m < 3 || n < 3 { return None; }
-    if sample_a.iter().any(|x| !x.is_finite())
-        || sample_b.iter().any(|x| !x.is_finite()) { return None; }
+    if m < 3 || n < 3 {
+        return None;
+    }
+    if sample_a.iter().any(|x| !x.is_finite()) || sample_b.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     // Build the sorted union and walk both ECDFs in parallel.
     let mut a = sample_a.to_vec();
     let mut b = sample_b.to_vec();
@@ -52,12 +55,18 @@ pub fn test(sample_a: &[f64], sample_b: &[f64]) -> Option<Ks2SampleReport> {
     while i < m && j < n {
         let ai = a[i];
         let bj = b[j];
-        if ai <= bj { i += 1; }
-        if bj <= ai { j += 1; }
+        if ai <= bj {
+            i += 1;
+        }
+        if bj <= ai {
+            j += 1;
+        }
         let f_a = i as f64 / m_f;
         let f_b = j as f64 / n_f;
         let d = (f_a - f_b).abs();
-        if d > d_max { d_max = d; }
+        if d > d_max {
+            d_max = d;
+        }
     }
     let z = d_max * (m_f * n_f / (m_f + n_f)).sqrt();
     let p_value = ks_p_value(z);
@@ -72,7 +81,9 @@ pub fn test(sample_a: &[f64], sample_b: &[f64]) -> Option<Ks2SampleReport> {
 }
 
 fn ks_p_value(z: f64) -> f64 {
-    if z <= 0.0 { return 1.0; }
+    if z <= 0.0 {
+        return 1.0;
+    }
     // 2·Σ_{k=1..N} (-1)^{k-1} · exp(-2·k²·z²). 50 terms is overkill but cheap.
     let mut sum = 0.0_f64;
     let mut sign = 1.0_f64;
@@ -80,7 +91,9 @@ fn ks_p_value(z: f64) -> f64 {
         let term = sign * (-2.0 * (k as f64).powi(2) * z * z).exp();
         sum += term;
         sign = -sign;
-        if term.abs() < 1e-18 { break; }
+        if term.abs() < 1e-18 {
+            break;
+        }
     }
     (2.0 * sum).clamp(0.0, 1.0)
 }
@@ -91,15 +104,19 @@ mod tests {
 
     fn box_muller(n: usize, seed: u64, scale: f64, mean: f64) -> Vec<f64> {
         let mut state = seed;
-        (0..n).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u2 = (state >> 32) as f64 / u32::MAX as f64;
-            mean + scale * (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
-        }).collect()
+        (0..n)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u2 = (state >> 32) as f64 / u32::MAX as f64;
+                mean + scale * (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
+            })
+            .collect()
     }
 
     #[test]
@@ -117,32 +134,41 @@ mod tests {
         let a = box_muller(500, 42, 1.0, 0.0);
         let b = box_muller(500, 13, 1.0, 0.0);
         let r = test(&a, &b).unwrap();
-        assert!(!r.reject_at_5pct,
-            "same distribution shouldn't reject, D = {}, p = {}", r.d_statistic, r.p_value);
+        assert!(
+            !r.reject_at_5pct,
+            "same distribution shouldn't reject, D = {}, p = {}",
+            r.d_statistic, r.p_value
+        );
     }
 
     #[test]
     fn shifted_distributions_reject() {
         let a = box_muller(500, 42, 1.0, 0.0);
-        let b = box_muller(500, 13, 1.0, 1.5);    // shifted by 1.5σ
+        let b = box_muller(500, 13, 1.0, 1.5); // shifted by 1.5σ
         let r = test(&a, &b).unwrap();
-        assert!(r.reject_at_5pct,
-            "shifted distribution should reject, D = {}, p = {}", r.d_statistic, r.p_value);
+        assert!(
+            r.reject_at_5pct,
+            "shifted distribution should reject, D = {}, p = {}",
+            r.d_statistic, r.p_value
+        );
     }
 
     #[test]
     fn different_scales_reject() {
         let a = box_muller(500, 42, 1.0, 0.0);
-        let b = box_muller(500, 13, 3.0, 0.0);    // 3× wider
+        let b = box_muller(500, 13, 3.0, 0.0); // 3× wider
         let r = test(&a, &b).unwrap();
-        assert!(r.reject_at_5pct,
-            "different scales should reject, D = {}", r.d_statistic);
+        assert!(
+            r.reject_at_5pct,
+            "different scales should reject, D = {}",
+            r.d_statistic
+        );
     }
 
     #[test]
     fn d_statistic_in_unit_range() {
         let a = box_muller(100, 1, 1.0, 0.0);
-        let b = box_muller(100, 2, 1.0, 5.0);    // very different
+        let b = box_muller(100, 2, 1.0, 5.0); // very different
         let r = test(&a, &b).unwrap();
         assert!(r.d_statistic >= 0.0 && r.d_statistic <= 1.0);
     }

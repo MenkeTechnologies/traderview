@@ -401,7 +401,10 @@ mod tests {
         input.good_faith_reliance_status =
             GoodFaithRelianceStatus::GoodFaithRelianceOnWrittenStatementOfHopaExemptionFromPropertyOwner;
         let output = check(&input);
-        assert_eq!(output.mode, HopaMode::CompliantGoodFaithRelianceOnWrittenStatementFromOwner);
+        assert_eq!(
+            output.mode,
+            HopaMode::CompliantGoodFaithRelianceOnWrittenStatementFromOwner
+        );
         assert!(output.hopa_exemption_valid);
     }
 

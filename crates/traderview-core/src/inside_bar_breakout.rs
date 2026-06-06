@@ -34,12 +34,21 @@ pub struct IbConfig {
 }
 
 impl Default for IbConfig {
-    fn default() -> Self { Self { confirm_within: 5, max_range_ratio: 0.8 } }
+    fn default() -> Self {
+        Self {
+            confirm_within: 5,
+            max_range_ratio: 0.8,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum BreakoutDirection { Up, Down, None }
+pub enum BreakoutDirection {
+    Up,
+    Down,
+    None,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct IbEvent {
@@ -61,17 +70,25 @@ pub struct IbReport {
 
 pub fn detect(bars: &[OhlcBar], cfg: &IbConfig) -> IbReport {
     let n = bars.len();
-    if n < 2 { return IbReport::default(); }
+    if n < 2 {
+        return IbReport::default();
+    }
     let mut events = Vec::new();
     for i in 1..n {
         let mother = bars[i - 1];
         let cur = bars[i];
-        if cur.high > mother.high || cur.low < mother.low { continue; }
+        if cur.high > mother.high || cur.low < mother.low {
+            continue;
+        }
         let mother_range = mother.high - mother.low;
         let cur_range = cur.high - cur.low;
-        if mother_range <= 0.0 { continue; }
+        if mother_range <= 0.0 {
+            continue;
+        }
         let ratio = cur_range / mother_range;
-        if ratio > cfg.max_range_ratio { continue; }
+        if ratio > cfg.max_range_ratio {
+            continue;
+        }
         // Scan forward for the breakout. `confirm_within` is deserialized
         // from JSON so saturating_add guards against attacker-supplied
         // usize::MAX wrapping i+confirm_within to 0.
@@ -90,36 +107,64 @@ pub fn detect(bars: &[OhlcBar], cfg: &IbConfig) -> IbReport {
             }
         }
         events.push(IbEvent {
-            mother_bar: i - 1, inside_bar: i,
-            breakout_bar: breakout_at, direction, range_ratio: ratio,
+            mother_bar: i - 1,
+            inside_bar: i,
+            breakout_bar: breakout_at,
+            direction,
+            range_ratio: ratio,
         });
     }
     let n_events = events.len();
-    let n_resolved_up = events.iter().filter(|e| matches!(e.direction, BreakoutDirection::Up)).count();
-    let n_resolved_down = events.iter().filter(|e| matches!(e.direction, BreakoutDirection::Down)).count();
-    let n_unresolved = events.iter().filter(|e| matches!(e.direction, BreakoutDirection::None)).count();
-    IbReport { events, n_events, n_resolved_up, n_resolved_down, n_unresolved }
+    let n_resolved_up = events
+        .iter()
+        .filter(|e| matches!(e.direction, BreakoutDirection::Up))
+        .count();
+    let n_resolved_down = events
+        .iter()
+        .filter(|e| matches!(e.direction, BreakoutDirection::Down))
+        .count();
+    let n_unresolved = events
+        .iter()
+        .filter(|e| matches!(e.direction, BreakoutDirection::None))
+        .count();
+    IbReport {
+        events,
+        n_events,
+        n_resolved_up,
+        n_resolved_down,
+        n_unresolved,
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn b(o: f64, h: f64, l: f64, c: f64) -> OhlcBar { OhlcBar { open: o, high: h, low: l, close: c } }
+    fn b(o: f64, h: f64, l: f64, c: f64) -> OhlcBar {
+        OhlcBar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn empty_or_short_returns_no_events() {
         assert_eq!(detect(&[], &IbConfig::default()).n_events, 0);
-        assert_eq!(detect(&[b(100.0, 101.0, 99.0, 100.0)], &IbConfig::default()).n_events, 0);
+        assert_eq!(
+            detect(&[b(100.0, 101.0, 99.0, 100.0)], &IbConfig::default()).n_events,
+            0
+        );
     }
 
     #[test]
     fn inside_bar_with_up_breakout_fires() {
         let bars = vec![
-            b(100.0, 105.0,  95.0, 102.0),    // 0 mother
-            b(102.0, 103.0,  98.0, 100.0),    // 1 inside (range 5 vs mother 10 = 0.5)
-            b(100.0, 104.0,  99.0, 103.0),    // 2 close 103 < 105
-            b(103.0, 107.0, 102.0, 106.0),    // 3 close 106 > 105 → up breakout
+            b(100.0, 105.0, 95.0, 102.0),  // 0 mother
+            b(102.0, 103.0, 98.0, 100.0),  // 1 inside (range 5 vs mother 10 = 0.5)
+            b(100.0, 104.0, 99.0, 103.0),  // 2 close 103 < 105
+            b(103.0, 107.0, 102.0, 106.0), // 3 close 106 > 105 → up breakout
         ];
         let r = detect(&bars, &IbConfig::default());
         assert_eq!(r.events.len(), 1);
@@ -134,9 +179,9 @@ mod tests {
     #[test]
     fn inside_bar_with_down_breakout_fires() {
         let bars = vec![
-            b(100.0, 105.0,  95.0,  98.0),    // mother
-            b(100.0, 103.0,  97.0, 100.0),    // inside
-            b(100.0, 104.0,  94.0,  94.5),    // close 94.5 < 95 → down breakout
+            b(100.0, 105.0, 95.0, 98.0),  // mother
+            b(100.0, 103.0, 97.0, 100.0), // inside
+            b(100.0, 104.0, 94.0, 94.5),  // close 94.5 < 95 → down breakout
         ];
         let r = detect(&bars, &IbConfig::default());
         assert_eq!(r.events.len(), 1);
@@ -147,8 +192,8 @@ mod tests {
     #[test]
     fn non_inside_bar_doesnt_fire() {
         let bars = vec![
-            b(100.0, 105.0,  95.0, 102.0),    // mother
-            b(102.0, 106.0,  98.0, 103.0),    // high 106 > mother 105 — NOT inside
+            b(100.0, 105.0, 95.0, 102.0), // mother
+            b(102.0, 106.0, 98.0, 103.0), // high 106 > mother 105 — NOT inside
         ];
         assert_eq!(detect(&bars, &IbConfig::default()).n_events, 0);
     }
@@ -157,10 +202,13 @@ mod tests {
     fn oversized_inside_bar_rejected() {
         // Inside bar range = 8 vs mother range = 10 → ratio 0.8 — at the limit;
         // make the inside bar slightly larger to fail.
-        let cfg = IbConfig { confirm_within: 5, max_range_ratio: 0.7 };
+        let cfg = IbConfig {
+            confirm_within: 5,
+            max_range_ratio: 0.7,
+        };
         let bars = vec![
-            b(100.0, 105.0,  95.0, 102.0),
-            b(100.0, 104.0,  96.0, 101.0),    // range 8/10 = 0.8 > 0.7
+            b(100.0, 105.0, 95.0, 102.0),
+            b(100.0, 104.0, 96.0, 101.0), // range 8/10 = 0.8 > 0.7
         ];
         assert_eq!(detect(&bars, &cfg).n_events, 0);
     }
@@ -168,11 +216,11 @@ mod tests {
     #[test]
     fn no_breakout_within_window_marks_unresolved() {
         let bars = vec![
-            b(100.0, 105.0,  95.0, 102.0),    // mother
-            b(100.0, 103.0,  97.0, 101.0),    // inside
-            b(101.0, 104.0,  98.0, 102.0),    // ranges within
-            b(102.0, 104.5,  98.5, 103.0),
-            b(103.0, 104.8,  99.0, 102.5),
+            b(100.0, 105.0, 95.0, 102.0), // mother
+            b(100.0, 103.0, 97.0, 101.0), // inside
+            b(101.0, 104.0, 98.0, 102.0), // ranges within
+            b(102.0, 104.5, 98.5, 103.0),
+            b(103.0, 104.8, 99.0, 102.5),
         ];
         let r = detect(&bars, &IbConfig::default());
         assert_eq!(r.events.len(), 1);
@@ -184,12 +232,12 @@ mod tests {
     #[test]
     fn multiple_setups_tracked() {
         let bars = vec![
-            b(100.0, 105.0,  95.0, 102.0),    // 0 mother A
-            b(102.0, 103.0,  98.0, 100.0),    // 1 inside A
-            b(100.0, 107.0,  94.0, 106.0),    // 2 breakout up (close 106 > 105)
-            b(106.0, 110.0, 100.0, 108.0),    // 3 mother B
-            b(108.0, 109.0, 103.0, 105.0),    // 4 inside B
-            b(105.0, 111.0, 101.0, 110.5),    // 5 close 110.5 > 110 → up
+            b(100.0, 105.0, 95.0, 102.0),  // 0 mother A
+            b(102.0, 103.0, 98.0, 100.0),  // 1 inside A
+            b(100.0, 107.0, 94.0, 106.0),  // 2 breakout up (close 106 > 105)
+            b(106.0, 110.0, 100.0, 108.0), // 3 mother B
+            b(108.0, 109.0, 103.0, 105.0), // 4 inside B
+            b(105.0, 111.0, 101.0, 110.5), // 5 close 110.5 > 110 → up
         ];
         let r = detect(&bars, &IbConfig::default());
         assert_eq!(r.events.len(), 2);
@@ -199,8 +247,8 @@ mod tests {
     #[test]
     fn zero_range_mother_skipped() {
         let bars = vec![
-            b(100.0, 100.0, 100.0, 100.0),    // mother — zero range
-            b(100.0, 100.0, 100.0, 100.0),    // would-be inside
+            b(100.0, 100.0, 100.0, 100.0), // mother — zero range
+            b(100.0, 100.0, 100.0, 100.0), // would-be inside
         ];
         assert_eq!(detect(&bars, &IbConfig::default()).n_events, 0);
     }
@@ -210,12 +258,15 @@ mod tests {
         // Prior code did `(i + cfg.confirm_within).min(n - 1)`. With
         // confirm_within = usize::MAX the addition wraps to a tiny value
         // and the breakout scan is silently empty. Saturating_add fixes it.
-        let cfg = IbConfig { confirm_within: usize::MAX, max_range_ratio: 0.8 };
+        let cfg = IbConfig {
+            confirm_within: usize::MAX,
+            max_range_ratio: 0.8,
+        };
         let bars = vec![
-            b(100.0, 105.0,  95.0, 102.0),    // mother
-            b(102.0, 103.0,  98.0, 100.0),    // inside
-            b(100.0, 104.0,  99.0, 103.0),
-            b(103.0, 107.0, 102.0, 106.0),    // close 106 > 105 → up breakout
+            b(100.0, 105.0, 95.0, 102.0), // mother
+            b(102.0, 103.0, 98.0, 100.0), // inside
+            b(100.0, 104.0, 99.0, 103.0),
+            b(103.0, 107.0, 102.0, 106.0), // close 106 > 105 → up breakout
         ];
         let r = detect(&bars, &cfg);
         assert_eq!(r.events.len(), 1);

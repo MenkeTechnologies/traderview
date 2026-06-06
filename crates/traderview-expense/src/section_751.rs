@@ -143,8 +143,7 @@ pub fn check(input: &Input) -> Output {
                 };
             }
 
-            let ordinary_portion = hot_assets_total
-                .saturating_sub(inventory_basis);
+            let ordinary_portion = hot_assets_total.saturating_sub(inventory_basis);
             let capital_portion: i128 = (input.amount_realized_cents as i128)
                 - (input.partner_outside_basis_cents as i128)
                 - (ordinary_portion as i128);
@@ -361,7 +360,8 @@ mod tests {
     }
 
     #[test]
-    fn disproportionate_distribution_inventory_not_substantially_appreciated_only_receivables_hot() {
+    fn disproportionate_distribution_inventory_not_substantially_appreciated_only_receivables_hot()
+    {
         let mut i = base_sale();
         i.transaction_type = TransactionType::CurrentDistribution;
         i.distribution_alters_share_of_hot_assets = true;
@@ -442,7 +442,10 @@ mod tests {
 
     #[test]
     fn constant_pin_substantially_appreciated_120_percent_threshold() {
-        assert_eq!(SUBSTANTIALLY_APPRECIATED_INVENTORY_FMV_OVER_BASIS_PERCENT, 120);
+        assert_eq!(
+            SUBSTANTIALLY_APPRECIATED_INVENTORY_FMV_OVER_BASIS_PERCENT,
+            120
+        );
     }
 
     #[test]

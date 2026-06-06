@@ -18,13 +18,22 @@ pub use crate::gartley_pattern::Pivot;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
-pub enum SharkDirection { #[default] Bullish, Bearish }
+pub enum SharkDirection {
+    #[default]
+    Bullish,
+    Bearish,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct SharkMatch {
     pub direction: SharkDirection,
-    pub p0: Pivot, pub x: Pivot, pub a: Pivot, pub b: Pivot, pub c: Pivot,
-    pub ab_ratio: f64, pub bc_ratio: f64,
+    pub p0: Pivot,
+    pub x: Pivot,
+    pub a: Pivot,
+    pub b: Pivot,
+    pub c: Pivot,
+    pub ab_ratio: f64,
+    pub bc_ratio: f64,
 }
 
 pub fn detect(pivots: &[Pivot], tolerance: f64) -> Vec<SharkMatch> {
@@ -34,21 +43,39 @@ pub fn detect(pivots: &[Pivot], tolerance: f64) -> Vec<SharkMatch> {
     }
     for w in pivots.windows(5) {
         let alternating = (1..5).all(|i| w[i].is_high != w[i - 1].is_high);
-        if !alternating { continue; }
+        if !alternating {
+            continue;
+        }
         let (p0, x, a, b, c) = (w[0], w[1], w[2], w[3], w[4]);
         let xa = (a.price - x.price).abs();
         let ab = (b.price - a.price).abs();
         let bc = (c.price - b.price).abs();
-        if xa <= 0.0 || ab <= 0.0 { continue; }
+        if xa <= 0.0 || ab <= 0.0 {
+            continue;
+        }
         let ab_ratio = ab / xa;
         let bc_ratio = bc / ab;
-        if !(1.13 - tolerance..=1.618 + tolerance).contains(&ab_ratio) { continue; }
-        if !(1.618 - tolerance..=2.24 + tolerance).contains(&bc_ratio) { continue; }
+        if !(1.13 - tolerance..=1.618 + tolerance).contains(&ab_ratio) {
+            continue;
+        }
+        if !(1.618 - tolerance..=2.24 + tolerance).contains(&bc_ratio) {
+            continue;
+        }
         // Direction: classify by the first pivot's polarity.
-        let direction = if p0.is_high { SharkDirection::Bearish }
-            else { SharkDirection::Bullish };
+        let direction = if p0.is_high {
+            SharkDirection::Bearish
+        } else {
+            SharkDirection::Bullish
+        };
         out.push(SharkMatch {
-            direction, p0, x, a, b, c, ab_ratio, bc_ratio,
+            direction,
+            p0,
+            x,
+            a,
+            b,
+            c,
+            ab_ratio,
+            bc_ratio,
         });
     }
     out
@@ -59,7 +86,11 @@ mod tests {
     use super::*;
 
     fn p(idx: usize, price: f64, is_high: bool) -> Pivot {
-        Pivot { index: idx, price, is_high }
+        Pivot {
+            index: idx,
+            price,
+            is_high,
+        }
     }
 
     #[test]
@@ -93,7 +124,7 @@ mod tests {
             p(0, 140.0, true),
             p(10, 100.0, false),
             p(20, 130.0, true),
-            p(30, 110.0, false),    // AB = 20, ratio = 0.667 (not 1.13+)
+            p(30, 110.0, false), // AB = 20, ratio = 0.667 (not 1.13+)
             p(40, 169.0, true),
         ];
         assert!(detect(&pivots, 0.05).is_empty());

@@ -269,7 +269,8 @@ fn check_texas(
             );
         }
         if input.notice_days_provided == 0 {
-            violations.push("lease modification clause requires prescribed advance notice".to_string());
+            violations
+                .push("lease modification clause requires prescribed advance notice".to_string());
         }
         notes.push(
             "lease grants modification right — TX § 92.006 anti-waiver of certain warranties still applies to mandatory tenant protections"
@@ -500,10 +501,7 @@ mod tests {
         let r = check(&base(Regime::Texas, TenancyType::MonthToMonth));
         assert!(!r.enforceable);
         assert!(r.bilateral_consent_required);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("no TX statute")));
+        assert!(r.violations.iter().any(|v| v.contains("no TX statute")));
     }
 
     #[test]

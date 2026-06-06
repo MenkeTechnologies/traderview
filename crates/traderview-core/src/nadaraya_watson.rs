@@ -26,8 +26,12 @@
 pub fn evaluate_at_indices(y: &[f64], bandwidth: f64) -> Vec<Option<f64>> {
     let n = y.len();
     let mut out = vec![None; n];
-    if n == 0 || !bandwidth.is_finite() || bandwidth <= 0.0 { return out; }
-    if y.iter().any(|x| !x.is_finite()) { return out; }
+    if n == 0 || !bandwidth.is_finite() || bandwidth <= 0.0 {
+        return out;
+    }
+    if y.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     let two_h2 = 2.0 * bandwidth * bandwidth;
     for (t, slot) in out.iter_mut().enumerate() {
         let mut num = 0.0_f64;
@@ -38,21 +42,25 @@ pub fn evaluate_at_indices(y: &[f64], bandwidth: f64) -> Vec<Option<f64>> {
             num += w * yi;
             den += w;
         }
-        if den > 0.0 { *slot = Some(num / den); }
+        if den > 0.0 {
+            *slot = Some(num / den);
+        }
     }
     out
 }
 
-pub fn evaluate_at_grid(
-    y: &[f64],
-    grid: &[f64],
-    bandwidth: f64,
-) -> Vec<Option<f64>> {
+pub fn evaluate_at_grid(y: &[f64], grid: &[f64], bandwidth: f64) -> Vec<Option<f64>> {
     let n = y.len();
     let mut out = vec![None; grid.len()];
-    if n == 0 || grid.is_empty() || !bandwidth.is_finite() || bandwidth <= 0.0 { return out; }
-    if y.iter().any(|x| !x.is_finite()) { return out; }
-    if grid.iter().any(|t| !t.is_finite()) { return out; }
+    if n == 0 || grid.is_empty() || !bandwidth.is_finite() || bandwidth <= 0.0 {
+        return out;
+    }
+    if y.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
+    if grid.iter().any(|t| !t.is_finite()) {
+        return out;
+    }
     let two_h2 = 2.0 * bandwidth * bandwidth;
     for (g_idx, t) in grid.iter().enumerate() {
         let mut num = 0.0_f64;
@@ -63,7 +71,9 @@ pub fn evaluate_at_grid(
             num += w * yi;
             den += w;
         }
-        if den > 0.0 { out[g_idx] = Some(num / den); }
+        if den > 0.0 {
+            out[g_idx] = Some(num / den);
+        }
     }
     out
 }
@@ -82,7 +92,9 @@ mod tests {
         let y = vec![100.0_f64; 10];
         assert!(evaluate_at_indices(&y, 0.0).iter().all(|x| x.is_none()));
         assert!(evaluate_at_indices(&y, -1.0).iter().all(|x| x.is_none()));
-        assert!(evaluate_at_indices(&y, f64::NAN).iter().all(|x| x.is_none()));
+        assert!(evaluate_at_indices(&y, f64::NAN)
+            .iter()
+            .all(|x| x.is_none()));
     }
 
     #[test]
@@ -105,8 +117,12 @@ mod tests {
         let y: Vec<f64> = (0..20).map(|i| i as f64).collect();
         let out = evaluate_at_indices(&y, 0.01);
         for (i, v) in out.iter().enumerate() {
-            assert!((v.unwrap() - y[i]).abs() < 1e-9,
-                "tiny bandwidth at idx {i}: got {} vs input {}", v.unwrap(), y[i]);
+            assert!(
+                (v.unwrap() - y[i]).abs() < 1e-9,
+                "tiny bandwidth at idx {i}: got {} vs input {}",
+                v.unwrap(),
+                y[i]
+            );
         }
     }
 
@@ -116,7 +132,10 @@ mod tests {
         let mean: f64 = y.iter().sum::<f64>() / y.len() as f64;
         let out = evaluate_at_indices(&y, 1_000.0);
         for v in out.iter().flatten() {
-            assert!((v - mean).abs() < 0.5, "huge bandwidth should approach mean {mean}, got {v}");
+            assert!(
+                (v - mean).abs() < 0.5,
+                "huge bandwidth should approach mean {mean}, got {v}"
+            );
         }
     }
 
@@ -137,19 +156,25 @@ mod tests {
         let v0 = out[0].unwrap();
         let v1 = out[1].unwrap();
         let v2 = out[2].unwrap();
-        assert!(v0 < v1 && v1 < v2, "expected monotonic, got {v0}, {v1}, {v2}");
+        assert!(
+            v0 < v1 && v1 < v2,
+            "expected monotonic, got {v0}, {v1}, {v2}"
+        );
         assert!((0.0..=10.0).contains(&v0));
     }
 
     #[test]
     fn noisy_input_smoothed_within_signal_range() {
         let mut state: u64 = 7;
-        let y: Vec<f64> = (0..100).map(|i| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let noise = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 2.0;
-            (i as f64 * 0.1).sin() * 5.0 + noise
-        }).collect();
+        let y: Vec<f64> = (0..100)
+            .map(|i| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let noise = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 2.0;
+                (i as f64 * 0.1).sin() * 5.0 + noise
+            })
+            .collect();
         let out = evaluate_at_indices(&y, 4.0);
         // Smoothed values should lie within input min/max range.
         let in_min = y.iter().cloned().fold(f64::INFINITY, f64::min);

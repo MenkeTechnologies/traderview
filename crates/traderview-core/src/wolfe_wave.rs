@@ -47,7 +47,11 @@ pub struct WolfeConfig {
 }
 
 impl Default for WolfeConfig {
-    fn default() -> Self { Self { line_tolerance: 0.10 } }
+    fn default() -> Self {
+        Self {
+            line_tolerance: 0.10,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -68,8 +72,12 @@ pub fn detect(swings: &[SwingPoint], cfg: &WolfeConfig) -> WolfeReport {
         let p5 = &swings[i + 4];
         // Bias from p1's kind. Bullish (p1=high) requires p2=low, p3=high, p4=low, p5=low (the trigger goes BELOW p2 line).
         let bias = match (p1.kind, p2.kind, p3.kind, p4.kind, p5.kind) {
-            (SwingKind::High, SwingKind::Low, SwingKind::High, SwingKind::Low, SwingKind::Low) => WolfeBias::Bullish,
-            (SwingKind::Low, SwingKind::High, SwingKind::Low, SwingKind::High, SwingKind::High) => WolfeBias::Bearish,
+            (SwingKind::High, SwingKind::Low, SwingKind::High, SwingKind::Low, SwingKind::Low) => {
+                WolfeBias::Bullish
+            }
+            (SwingKind::Low, SwingKind::High, SwingKind::Low, SwingKind::High, SwingKind::High) => {
+                WolfeBias::Bearish
+            }
             _ => continue,
         };
         // Check ordering rules.
@@ -91,17 +99,25 @@ pub fn detect(swings: &[SwingPoint], cfg: &WolfeConfig) -> WolfeReport {
         // 1-3-5 collinearity: project the line through p1 → p3, predict
         // price at p5's bar index, and check it's within tolerance of p5's price.
         let predicted_135 = line_predict(
-            p1.index as f64, p1.price,
-            p3.index as f64, p3.price,
+            p1.index as f64,
+            p1.price,
+            p3.index as f64,
+            p3.price,
             p5.index as f64,
         );
         let predicted_24 = line_predict(
-            p2.index as f64, p2.price,
-            p4.index as f64, p4.price,
+            p2.index as f64,
+            p2.price,
+            p4.index as f64,
+            p4.price,
             p5.index as f64,
         );
-        let Some(pred_135) = predicted_135 else { continue };
-        let Some(_pred_24) = predicted_24 else { continue };
+        let Some(pred_135) = predicted_135 else {
+            continue;
+        };
+        let Some(_pred_24) = predicted_24 else {
+            continue;
+        };
         // Tolerance check on 1-3-5 line (the "exhaust" trigger).
         if (p5.price - pred_135).abs() / pred_135.abs().max(1e-9) > cfg.line_tolerance {
             continue;
@@ -110,14 +126,21 @@ pub fn detect(swings: &[SwingPoint], cfg: &WolfeConfig) -> WolfeReport {
         // wave 1→5 distance (we use a 1.272 Fib extension as the
         // conservative "first target").
         let Some(epa_target) = line_predict(
-            p1.index as f64, p1.price,
-            p4.index as f64, p4.price,
+            p1.index as f64,
+            p1.price,
+            p4.index as f64,
+            p4.price,
             p5.index as f64 + (p5.index as f64 - p1.index as f64) * 0.272,
-        ) else { continue };
+        ) else {
+            continue;
+        };
         report.events.push(WolfeEvent {
             bias,
-            p1_idx: p1.index, p2_idx: p2.index, p3_idx: p3.index,
-            p4_idx: p4.index, p5_idx: p5.index,
+            p1_idx: p1.index,
+            p2_idx: p2.index,
+            p3_idx: p3.index,
+            p4_idx: p4.index,
+            p5_idx: p5.index,
             epa_target,
         });
     }
@@ -132,7 +155,11 @@ fn line_predict(x1: f64, y1: f64, x2: f64, y2: f64, x3: f64) -> Option<f64> {
     }
     let slope = (y2 - y1) / dx;
     let val = y1 + slope * (x3 - x1);
-    if val.is_finite() { Some(val) } else { None }
+    if val.is_finite() {
+        Some(val)
+    } else {
+        None
+    }
 }
 
 #[cfg(test)]
@@ -140,7 +167,11 @@ mod tests {
     use super::*;
 
     fn sp(idx: usize, price: f64, kind: SwingKind) -> SwingPoint {
-        SwingPoint { index: idx, price, kind }
+        SwingPoint {
+            index: idx,
+            price,
+            kind,
+        }
     }
 
     #[test]
@@ -153,14 +184,30 @@ mod tests {
     #[test]
     fn invalid_tolerance_returns_empty() {
         let pivots = vec![sp(0, 100.0, SwingKind::High); 5];
-        assert!(detect(&pivots, &WolfeConfig { line_tolerance: -0.1 }).events.is_empty());
-        assert!(detect(&pivots, &WolfeConfig { line_tolerance: 1.5 }).events.is_empty());
+        assert!(detect(
+            &pivots,
+            &WolfeConfig {
+                line_tolerance: -0.1
+            }
+        )
+        .events
+        .is_empty());
+        assert!(detect(
+            &pivots,
+            &WolfeConfig {
+                line_tolerance: 1.5
+            }
+        )
+        .events
+        .is_empty());
     }
 
     #[test]
     fn wrong_kind_sequence_doesnt_match() {
         // 5 highs in a row.
-        let pivots: Vec<_> = (0..5).map(|i| sp(i, 100.0 + i as f64, SwingKind::High)).collect();
+        let pivots: Vec<_> = (0..5)
+            .map(|i| sp(i, 100.0 + i as f64, SwingKind::High))
+            .collect();
         assert!(detect(&pivots, &WolfeConfig::default()).events.is_empty());
     }
 
@@ -184,13 +231,15 @@ mod tests {
         // Use very loose tolerance for this test — verify the detector runs without panic
         // and the bias-detection / ordering paths work.
         let pivots = vec![
-            sp(0,  100.0, SwingKind::High),
-            sp(5,  95.0,  SwingKind::Low),
+            sp(0, 100.0, SwingKind::High),
+            sp(5, 95.0, SwingKind::Low),
             sp(10, 110.0, SwingKind::High),
             sp(15, 105.0, SwingKind::Low),
-            sp(20, 90.0,  SwingKind::Low),
+            sp(20, 90.0, SwingKind::Low),
         ];
-        let cfg = WolfeConfig { line_tolerance: 0.50 };
+        let cfg = WolfeConfig {
+            line_tolerance: 0.50,
+        };
         let r = detect(&pivots, &cfg);
         for e in &r.events {
             assert_eq!(e.bias, WolfeBias::Bullish);
@@ -200,13 +249,18 @@ mod tests {
     #[test]
     fn bearish_wolfe_kind_sequence_recognised() {
         let pivots = vec![
-            sp(0,  90.0,  SwingKind::Low),
-            sp(5,  100.0, SwingKind::High),
-            sp(10, 80.0,  SwingKind::Low),
-            sp(15, 95.0,  SwingKind::High),
+            sp(0, 90.0, SwingKind::Low),
+            sp(5, 100.0, SwingKind::High),
+            sp(10, 80.0, SwingKind::Low),
+            sp(15, 95.0, SwingKind::High),
             sp(20, 110.0, SwingKind::High),
         ];
-        let r = detect(&pivots, &WolfeConfig { line_tolerance: 0.5 });
+        let r = detect(
+            &pivots,
+            &WolfeConfig {
+                line_tolerance: 0.5,
+            },
+        );
         for e in &r.events {
             assert_eq!(e.bias, WolfeBias::Bearish);
         }
@@ -216,11 +270,11 @@ mod tests {
     fn invalid_ordering_doesnt_match() {
         // p3 NOT higher than p1 — fails the bullish ordering check.
         let pivots = vec![
-            sp(0,  120.0, SwingKind::High),
-            sp(5,  95.0,  SwingKind::Low),
-            sp(10, 110.0, SwingKind::High),    // p3 (110) < p1 (120)
+            sp(0, 120.0, SwingKind::High),
+            sp(5, 95.0, SwingKind::Low),
+            sp(10, 110.0, SwingKind::High), // p3 (110) < p1 (120)
             sp(15, 105.0, SwingKind::Low),
-            sp(20, 90.0,  SwingKind::Low),
+            sp(20, 90.0, SwingKind::Low),
         ];
         let r = detect(&pivots, &WolfeConfig::default());
         assert!(r.events.is_empty());
@@ -232,12 +286,17 @@ mod tests {
         // returns None → no event.
         let pivots = vec![
             sp(0, 100.0, SwingKind::High),
-            sp(5, 95.0,  SwingKind::Low),
-            sp(0, 110.0, SwingKind::High),    // same index as p1 → vertical 1-3 line
+            sp(5, 95.0, SwingKind::Low),
+            sp(0, 110.0, SwingKind::High), // same index as p1 → vertical 1-3 line
             sp(15, 105.0, SwingKind::Low),
             sp(20, 90.0, SwingKind::Low),
         ];
-        let r = detect(&pivots, &WolfeConfig { line_tolerance: 0.5 });
+        let r = detect(
+            &pivots,
+            &WolfeConfig {
+                line_tolerance: 0.5,
+            },
+        );
         assert!(r.events.is_empty());
     }
 }

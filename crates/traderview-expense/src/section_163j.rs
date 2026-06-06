@@ -133,15 +133,14 @@ pub fn compute(input: &Section163jInput) -> Section163jResult {
     }
 
     // Standard path: 30% × ATI + business interest income + floor plan.
-    r.thirty_pct_of_ati = (input.adjusted_taxable_income.max(Decimal::ZERO) * thirty_pct())
-        .round_dp(2);
-    r.deduction_limit = r.thirty_pct_of_ati
-        + input.business_interest_income
-        + input.floor_plan_financing_interest;
+    r.thirty_pct_of_ati =
+        (input.adjusted_taxable_income.max(Decimal::ZERO) * thirty_pct()).round_dp(2);
+    r.deduction_limit =
+        r.thirty_pct_of_ati + input.business_interest_income + input.floor_plan_financing_interest;
 
     r.deductible_this_year = r.total_expense_available.min(r.deduction_limit);
-    r.carryforward_to_next_year = (r.total_expense_available - r.deductible_this_year)
-        .max(Decimal::ZERO);
+    r.carryforward_to_next_year =
+        (r.total_expense_available - r.deductible_this_year).max(Decimal::ZERO);
 
     r.note = if r.carryforward_to_next_year > Decimal::ZERO {
         format!(

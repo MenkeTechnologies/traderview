@@ -20,17 +20,23 @@
 
 #![allow(clippy::needless_range_loop)]
 
-pub fn compute(
-    x: &[f64], y: &[f64], frac: f64, robustness_iter: u32,
-) -> Option<Vec<f64>> {
+pub fn compute(x: &[f64], y: &[f64], frac: f64, robustness_iter: u32) -> Option<Vec<f64>> {
     let n = x.len();
-    if n < 5 || y.len() != n { return None; }
+    if n < 5 || y.len() != n {
+        return None;
+    }
     if !frac.is_finite() || !(0.0..=1.0).contains(&frac) || frac == 0.0 {
         return None;
     }
-    if x.iter().chain(y.iter()).any(|v| !v.is_finite()) { return None; }
+    if x.iter().chain(y.iter()).any(|v| !v.is_finite()) {
+        return None;
+    }
     // x must be non-decreasing.
-    for w in x.windows(2) { if w[1] < w[0] { return None; } }
+    for w in x.windows(2) {
+        if w[1] < w[0] {
+            return None;
+        }
+    }
     let r = ((frac * n as f64).round() as usize).clamp(2, n);
     let mut robust_weights = vec![1.0_f64; n];
     let mut y_hat = vec![0.0_f64; n];
@@ -52,7 +58,9 @@ pub fn compute(
             }
             y_hat[i] = wls_fit_predict(x, y, &weights, x[i]);
         }
-        if pass == robustness_iter { break; }
+        if pass == robustness_iter {
+            break;
+        }
         // Update robustness weights from residuals.
         let residuals: Vec<f64> = (0..n).map(|i| y[i] - y_hat[i]).collect();
         let mut abs_res: Vec<f64> = residuals.iter().map(|r| r.abs()).collect();
@@ -84,14 +92,18 @@ fn wls_fit_predict(x: &[f64], y: &[f64], w: &[f64], x_eval: f64) -> f64 {
     let mut swxy = 0.0;
     for i in 0..x.len() {
         let wi = w[i];
-        if wi <= 0.0 { continue; }
+        if wi <= 0.0 {
+            continue;
+        }
         sw += wi;
         swx += wi * x[i];
         swy += wi * y[i];
         swxx += wi * x[i] * x[i];
         swxy += wi * x[i] * y[i];
     }
-    if sw <= 0.0 { return 0.0; }
+    if sw <= 0.0 {
+        return 0.0;
+    }
     let mean_x = swx / sw;
     let mean_y = swy / sw;
     let denom = swxx - sw * mean_x * mean_x;
@@ -137,14 +149,19 @@ mod tests {
     #[test]
     fn smooths_noisy_signal_below_input_variance() {
         let x: Vec<f64> = (0..100).map(|i| i as f64).collect();
-        let y: Vec<f64> = x.iter().enumerate()
+        let y: Vec<f64> = x
+            .iter()
+            .enumerate()
             .map(|(i, xi)| 0.1 * xi + 5.0 * ((i as f64 * 0.7).sin()))
             .collect();
         let y_hat = compute(&x, &y, 0.3, 0).unwrap();
         let var_y = variance(&y);
         let resid: Vec<f64> = y.iter().zip(y_hat.iter()).map(|(a, b)| a - b).collect();
         let var_resid = variance(&resid);
-        assert!(var_resid < var_y, "smoothed residuals should have lower variance than input");
+        assert!(
+            var_resid < var_y,
+            "smoothed residuals should have lower variance than input"
+        );
     }
 
     #[test]
@@ -161,7 +178,10 @@ mod tests {
         let expected = 2.0 * x[25] + 1.0;
         let plain_err = (plain[25] - expected).abs();
         let robust_err = (robust[25] - expected).abs();
-        assert!(robust_err <= plain_err, "robust iterations must not be worse at clean points");
+        assert!(
+            robust_err <= plain_err,
+            "robust iterations must not be worse at clean points"
+        );
     }
 
     #[test]

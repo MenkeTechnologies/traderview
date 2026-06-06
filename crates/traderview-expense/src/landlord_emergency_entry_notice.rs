@@ -96,9 +96,7 @@ pub fn check(input: &LandlordEmergencyEntryInput) -> LandlordEmergencyEntryResul
     }
 }
 
-fn check_california(
-    input: &LandlordEmergencyEntryInput,
-) -> LandlordEmergencyEntryResult {
+fn check_california(input: &LandlordEmergencyEntryInput) -> LandlordEmergencyEntryResult {
     let mut violations: Vec<String> = Vec::new();
     let notes: Vec<String> = vec![
         "Cal. Civ. Code § 1954(e) — landlord may enter without prior notice in case of emergency; post-entry landlord MUST (1) leave WRITTEN NOTICE describing date + time + purpose of entry on premises AND (2) provide such notice within REASONABLE TIME"
@@ -222,9 +220,7 @@ fn check_default(input: &LandlordEmergencyEntryInput) -> LandlordEmergencyEntryR
             .to_string(),
     ];
 
-    if input.emergency_entry_made_without_prior_notice
-        && !input.emergency_was_actual
-    {
+    if input.emergency_entry_made_without_prior_notice && !input.emergency_was_actual {
         violations.push(
             "common-law — pretextual 'emergency' entry constitutes trespass + breach of quiet enjoyment + common-law harassment"
                 .to_string(),
@@ -300,7 +296,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.compliant);
         assert!(r.harassment_or_pretext_engaged);
-        assert!(r.violations.iter().any(|v| v.contains("§ 1940.2") && v.contains("$2,000")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1940.2") && v.contains("$2,000")));
     }
 
     #[test]
@@ -309,7 +308,10 @@ mod tests {
         i.written_notice_describing_date_time_purpose_left = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 1954(e)") && v.contains("date + time + purpose")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1954(e)") && v.contains("date + time + purpose")));
     }
 
     #[test]
@@ -318,7 +320,10 @@ mod tests {
         i.post_entry_notice_provided_within_reasonable_time = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 1954(e)") && v.contains("REASONABLE TIME")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1954(e)") && v.contains("REASONABLE TIME")));
     }
 
     #[test]
@@ -348,13 +353,19 @@ mod tests {
         i.emergency_was_actual = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 92.0081") && v.contains("$1,000")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 92.0081") && v.contains("$1,000")));
     }
 
     #[test]
     fn tx_no_specific_post_entry_notice_obligation_note() {
         let r = check(&tx_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("does NOT impose specific post-entry written-notice obligation")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("does NOT impose specific post-entry written-notice obligation")));
     }
 
     #[test]
@@ -375,7 +386,10 @@ mod tests {
         i.premises_secured_after_entry = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 78") && v.contains("SECURED")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 78") && v.contains("SECURED")));
     }
 
     #[test]
@@ -392,7 +406,10 @@ mod tests {
         i.emergency_was_actual = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("quiet enjoyment") && v.contains("trespass")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("quiet enjoyment") && v.contains("trespass")));
     }
 
     #[test]
@@ -413,7 +430,10 @@ mod tests {
         i.emergency_was_actual = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("trespass") && v.contains("quiet enjoyment")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("trespass") && v.contains("quiet enjoyment")));
     }
 
     #[test]
@@ -422,7 +442,10 @@ mod tests {
         i.post_entry_notice_provided_within_reasonable_time = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("common-law quiet enjoyment")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("common-law quiet enjoyment")));
     }
 
     #[test]
@@ -453,7 +476,12 @@ mod tests {
 
     #[test]
     fn pretext_engages_across_all_regimes() {
-        for regime in [Regime::California, Regime::Texas, Regime::NewYork, Regime::Default] {
+        for regime in [
+            Regime::California,
+            Regime::Texas,
+            Regime::NewYork,
+            Regime::Default,
+        ] {
             let mut i = ca_compliant();
             i.regime = regime;
             i.emergency_was_actual = false;
@@ -471,7 +499,12 @@ mod tests {
 
     #[test]
     fn four_regimes_routed_correctly() {
-        for regime in [Regime::California, Regime::Texas, Regime::NewYork, Regime::Default] {
+        for regime in [
+            Regime::California,
+            Regime::Texas,
+            Regime::NewYork,
+            Regime::Default,
+        ] {
             let mut i = ca_compliant();
             i.regime = regime;
             let r = check(&i);

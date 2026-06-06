@@ -34,20 +34,33 @@ pub fn compute(
     periods_per_year: f64,
 ) -> Option<TrackingErrorReport> {
     let n = portfolio_returns.len();
-    if n < 2 || benchmark_returns.len() != n
-        || !periods_per_year.is_finite() || periods_per_year <= 0.0 {
+    if n < 2
+        || benchmark_returns.len() != n
+        || !periods_per_year.is_finite()
+        || periods_per_year <= 0.0
+    {
         return None;
     }
     if portfolio_returns.iter().any(|x| !x.is_finite())
-        || benchmark_returns.iter().any(|x| !x.is_finite()) { return None; }
-    let active: Vec<f64> = portfolio_returns.iter().zip(benchmark_returns.iter())
-        .map(|(p, b)| p - b).collect();
+        || benchmark_returns.iter().any(|x| !x.is_finite())
+    {
+        return None;
+    }
+    let active: Vec<f64> = portfolio_returns
+        .iter()
+        .zip(benchmark_returns.iter())
+        .map(|(p, b)| p - b)
+        .collect();
     let n_f = n as f64;
     let mean: f64 = active.iter().sum::<f64>() / n_f;
     let var: f64 = active.iter().map(|a| (a - mean).powi(2)).sum::<f64>() / (n_f - 1.0);
     let sd = var.max(0.0).sqrt();
     let te_ann = sd * periods_per_year.sqrt();
-    let ir = if sd > 0.0 { mean / sd * periods_per_year.sqrt() } else { 0.0 };
+    let ir = if sd > 0.0 {
+        mean / sd * periods_per_year.sqrt()
+    } else {
+        0.0
+    };
     let max_under = active.iter().cloned().fold(f64::INFINITY, f64::min);
     let max_over = active.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
     Some(TrackingErrorReport {
@@ -104,11 +117,14 @@ mod tests {
     fn information_ratio_zero_when_active_return_zero() {
         // Random-noise portfolio vs benchmark with zero mean → IR ≈ 0.
         let mut state: u64 = 42;
-        let b: Vec<f64> = (0..200).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.02
-        }).collect();
+        let b: Vec<f64> = (0..200)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.02
+            })
+            .collect();
         let p: Vec<f64> = b.iter().map(|x| x + 0.0).collect();
         let r = compute(&p, &b, 252.0).unwrap();
         // Perfect tracker → TE=0 → IR computed as 0.

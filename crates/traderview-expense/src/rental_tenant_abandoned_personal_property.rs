@@ -121,7 +121,10 @@ const DEFAULT_NOTICE_DAYS: u32 = 30;
 
 #[must_use]
 pub fn check(input: &Input) -> Output {
-    if matches!(input.disposal_action, DisposalAction::StoredPendingTenantClaim) {
+    if matches!(
+        input.disposal_action,
+        DisposalAction::StoredPendingTenantClaim
+    ) {
         return Output {
             severity: Severity::CompliantStoredPendingTenantClaim,
             statutory_notice_window_days: jurisdiction_notice_window(
@@ -308,10 +311,7 @@ pub fn check(input: &Input) -> Output {
     }
 }
 
-fn jurisdiction_notice_window(
-    jurisdiction: Jurisdiction,
-    delivery_method: DeliveryMethod,
-) -> u32 {
+fn jurisdiction_notice_window(jurisdiction: Jurisdiction, delivery_method: DeliveryMethod) -> u32 {
     match jurisdiction {
         Jurisdiction::California => match delivery_method {
             DeliveryMethod::PersonalDelivery => CA_PERSONAL_DELIVERY_NOTICE_DAYS,
@@ -414,8 +414,7 @@ mod tests {
     #[test]
     fn california_high_value_landlord_retention_not_permitted() {
         let mut input = base_ca();
-        input.disposal_action =
-            DisposalAction::LandlordRetainsForPersonalUseUnderValueThreshold;
+        input.disposal_action = DisposalAction::LandlordRetainsForPersonalUseUnderValueThreshold;
         input.estimated_property_value_cents = 150_000;
         let output = check(&input);
         // $1,500 > $700 threshold → retention not permitted
@@ -430,8 +429,7 @@ mod tests {
     #[test]
     fn california_low_value_landlord_retention_permitted() {
         let mut input = base_ca();
-        input.disposal_action =
-            DisposalAction::LandlordRetainsForPersonalUseUnderValueThreshold;
+        input.disposal_action = DisposalAction::LandlordRetainsForPersonalUseUnderValueThreshold;
         input.estimated_property_value_cents = 50_000;
         let output = check(&input);
         // $500 ≤ $700 threshold → retention permitted
@@ -471,8 +469,7 @@ mod tests {
     fn texas_dual_mail_requirement_satisfied() {
         let mut input = base_ca();
         input.jurisdiction = Jurisdiction::Texas;
-        input.delivery_method =
-            DeliveryMethod::BothFirstClassAndCertifiedRequiredTexas;
+        input.delivery_method = DeliveryMethod::BothFirstClassAndCertifiedRequiredTexas;
         input.days_after_notice_disposed = 30;
         let output = check(&input);
         assert_eq!(
@@ -527,8 +524,7 @@ mod tests {
         let mut input = base_ca();
         input.jurisdiction = Jurisdiction::Florida;
         input.days_after_notice_disposed = 15;
-        input.disposal_action =
-            DisposalAction::LandlordRetainsForPersonalUseUnderValueThreshold;
+        input.disposal_action = DisposalAction::LandlordRetainsForPersonalUseUnderValueThreshold;
         input.estimated_property_value_cents = 80_000;
         let output = check(&input);
         // $800 > $500 FL threshold → retention not permitted
@@ -544,8 +540,7 @@ mod tests {
         let mut input = base_ca();
         input.jurisdiction = Jurisdiction::Florida;
         input.days_after_notice_disposed = 15;
-        input.disposal_action =
-            DisposalAction::LandlordRetainsForPersonalUseUnderValueThreshold;
+        input.disposal_action = DisposalAction::LandlordRetainsForPersonalUseUnderValueThreshold;
         input.estimated_property_value_cents = 30_000;
         let output = check(&input);
         // $300 ≤ $500 → retention permitted

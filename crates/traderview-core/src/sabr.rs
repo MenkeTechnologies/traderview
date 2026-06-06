@@ -16,22 +16,32 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct SabrParams {
-    pub alpha: f64,    // current vol level
-    pub beta: f64,     // skew exponent (0=normal, 1=lognormal)
-    pub rho: f64,      // correlation
-    pub nu: f64,       // vol-of-vol
+    pub alpha: f64, // current vol level
+    pub beta: f64,  // skew exponent (0=normal, 1=lognormal)
+    pub rho: f64,   // correlation
+    pub nu: f64,    // vol-of-vol
 }
 
 pub fn implied_lognormal_vol(
-    forward: f64, strike: f64, time_to_expiry: f64, params: &SabrParams,
+    forward: f64,
+    strike: f64,
+    time_to_expiry: f64,
+    params: &SabrParams,
 ) -> Option<f64> {
-    if !forward.is_finite() || forward <= 0.0
-        || !strike.is_finite() || strike <= 0.0
-        || !time_to_expiry.is_finite() || time_to_expiry <= 0.0
-        || !params.alpha.is_finite() || params.alpha <= 0.0
-        || !params.beta.is_finite() || !(0.0..=1.0).contains(&params.beta)
-        || !params.rho.is_finite() || !(-1.0..=1.0).contains(&params.rho)
-        || !params.nu.is_finite() || params.nu < 0.0
+    if !forward.is_finite()
+        || forward <= 0.0
+        || !strike.is_finite()
+        || strike <= 0.0
+        || !time_to_expiry.is_finite()
+        || time_to_expiry <= 0.0
+        || !params.alpha.is_finite()
+        || params.alpha <= 0.0
+        || !params.beta.is_finite()
+        || !(0.0..=1.0).contains(&params.beta)
+        || !params.rho.is_finite()
+        || !(-1.0..=1.0).contains(&params.rho)
+        || !params.nu.is_finite()
+        || params.nu < 0.0
     {
         return None;
     }
@@ -43,12 +53,13 @@ pub fn implied_lognormal_vol(
     let fk_avg = (forward * strike).powf(one_minus_beta / 2.0);
     let log_fk = (forward / strike).ln();
     // Hagan term 1: prefactor.
-    let denominator = fk_avg * (
-        1.0
-        + (one_minus_beta * log_fk).powi(2) / 24.0
-        + (one_minus_beta * log_fk).powi(4) / 1920.0
-    );
-    if denominator <= 0.0 || !denominator.is_finite() { return None; }
+    let denominator = fk_avg
+        * (1.0
+            + (one_minus_beta * log_fk).powi(2) / 24.0
+            + (one_minus_beta * log_fk).powi(4) / 1920.0);
+    if denominator <= 0.0 || !denominator.is_finite() {
+        return None;
+    }
     let prefactor = alpha / denominator;
     // Hagan term 2: skew correction in z.
     let atm_threshold = 1e-9;
@@ -58,17 +69,21 @@ pub fn implied_lognormal_vol(
     } else {
         let z = (nu / alpha) * fk_avg * log_fk;
         let x = ((1.0 - 2.0 * rho * z + z * z).sqrt() + z - rho) / (1.0 - rho);
-        if x <= 0.0 || !x.is_finite() { return None; }
+        if x <= 0.0 || !x.is_finite() {
+            return None;
+        }
         z / x.ln()
     };
     // Hagan term 3: time-decay correction.
-    let time_correction = 1.0 + (
-        (one_minus_beta * alpha).powi(2) / (24.0 * fk_avg.powi(2))
-        + rho * beta * nu * alpha / (4.0 * fk_avg)
-        + (2.0 - 3.0 * rho * rho) * nu * nu / 24.0
-    ) * time_to_expiry;
+    let time_correction = 1.0
+        + ((one_minus_beta * alpha).powi(2) / (24.0 * fk_avg.powi(2))
+            + rho * beta * nu * alpha / (4.0 * fk_avg)
+            + (2.0 - 3.0 * rho * rho) * nu * nu / 24.0)
+            * time_to_expiry;
     let vol = prefactor * z_correction * time_correction;
-    if !vol.is_finite() || vol <= 0.0 { return None; }
+    if !vol.is_finite() || vol <= 0.0 {
+        return None;
+    }
     Some(vol)
 }
 
@@ -77,7 +92,12 @@ mod tests {
     use super::*;
 
     fn p(alpha: f64, beta: f64, rho: f64, nu: f64) -> SabrParams {
-        SabrParams { alpha, beta, rho, nu }
+        SabrParams {
+            alpha,
+            beta,
+            rho,
+            nu,
+        }
     }
 
     #[test]
@@ -115,7 +135,8 @@ mod tests {
     #[test]
     fn smile_curvature_increases_with_vol_of_vol() {
         // Higher ν inflates the wings of the smile (relative to ATM).
-        let f = 100.0; let t = 1.0;
+        let f = 100.0;
+        let t = 1.0;
         let low_nu = p(0.20, 0.5, -0.3, 0.10);
         let high_nu = p(0.20, 0.5, -0.3, 0.80);
         let atm_low = implied_lognormal_vol(f, f, t, &low_nu).unwrap();
@@ -125,27 +146,37 @@ mod tests {
         // Smile width = |OTM − ATM| should grow with ν.
         let width_low = (otm_low - atm_low).abs();
         let width_high = (otm_high - atm_high).abs();
-        assert!(width_high > width_low,
-            "high-ν smile width ({width_high}) should exceed low-ν ({width_low})");
+        assert!(
+            width_high > width_low,
+            "high-ν smile width ({width_high}) should exceed low-ν ({width_low})"
+        );
     }
 
     #[test]
     fn negative_rho_tilts_smile_left() {
         // ρ < 0 → put skew (left wing higher vol than right).
-        let f = 100.0; let t = 1.0;
+        let f = 100.0;
+        let t = 1.0;
         let pp = p(0.20, 0.5, -0.5, 0.50);
         let v_lo_strike = implied_lognormal_vol(f, 80.0, t, &pp).unwrap();
         let v_hi_strike = implied_lognormal_vol(f, 120.0, t, &pp).unwrap();
-        assert!(v_lo_strike > v_hi_strike, "negative ρ should produce put-skew");
+        assert!(
+            v_lo_strike > v_hi_strike,
+            "negative ρ should produce put-skew"
+        );
     }
 
     #[test]
     fn positive_rho_tilts_smile_right() {
-        let f = 100.0; let t = 1.0;
+        let f = 100.0;
+        let t = 1.0;
         let pp = p(0.20, 0.5, 0.5, 0.50);
         let v_lo_strike = implied_lognormal_vol(f, 80.0, t, &pp).unwrap();
         let v_hi_strike = implied_lognormal_vol(f, 120.0, t, &pp).unwrap();
-        assert!(v_hi_strike > v_lo_strike, "positive ρ should produce call-skew");
+        assert!(
+            v_hi_strike > v_lo_strike,
+            "positive ρ should produce call-skew"
+        );
     }
 
     #[test]

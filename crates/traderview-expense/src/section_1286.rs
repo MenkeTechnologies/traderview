@@ -568,7 +568,8 @@ mod tests {
     #[test]
     fn stripper_failed_to_include_accrued_interest_violation() {
         let mut input = baseline_stripper_input();
-        input.stripper_action = StripperAction::StripperDidNotIncludeAccruedInterestAndMarketDiscount;
+        input.stripper_action =
+            StripperAction::StripperDidNotIncludeAccruedInterestAndMarketDiscount;
         let output = check(&input);
         assert_eq!(
             output.mode,

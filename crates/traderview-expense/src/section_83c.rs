@@ -133,8 +133,10 @@ pub struct Section83cResult {
 pub fn compute(input: &Section83cInput) -> Section83cResult {
     // §83(c)(3) §16(b) restriction — applies regardless of other
     // facts when an insider is within the 6-month window.
-    let section_16b_active = matches!(input.condition_type, ForfeitureConditionType::Section16bShortSwingPeriod)
-        && input.days_remaining_in_section_16b_period > 0;
+    let section_16b_active = matches!(
+        input.condition_type,
+        ForfeitureConditionType::Section16bShortSwingPeriod
+    ) && input.days_remaining_in_section_16b_period > 0;
 
     // §83(c)(1) substantial risk of forfeiture analysis.
     let srf_exists = match input.condition_type {
@@ -368,7 +370,9 @@ mod tests {
     #[test]
     fn note_describes_service_condition_path() {
         let r = compute(&base_service());
-        assert!(r.note.contains("§83(c)(1) future-performance-of-substantial-services"));
+        assert!(r
+            .note
+            .contains("§83(c)(1) future-performance-of-substantial-services"));
     }
 
     #[test]
@@ -386,6 +390,8 @@ mod tests {
         let mut i = base_service();
         i.condition_type = ForfeitureConditionType::TransferPurposeCondition;
         let r = compute(&i);
-        assert!(r.note.contains("§83(c)(1) condition related to transfer purpose"));
+        assert!(r
+            .note
+            .contains("§83(c)(1) condition related to transfer purpose"));
     }
 }

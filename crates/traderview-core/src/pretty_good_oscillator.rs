@@ -18,13 +18,22 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 pub fn compute(bars: &[Bar], period: usize) -> Vec<Option<f64>> {
     let n = bars.len();
     let mut out = vec![None; n];
-    if period < 2 || n < period + 1 { return out; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if period < 2 || n < period + 1 {
+        return out;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return out;
     }
     let p_f = period as f64;
@@ -67,7 +76,13 @@ pub fn compute(bars: &[Bar], period: usize) -> Vec<Option<f64>> {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_all_none() {
@@ -87,7 +102,9 @@ mod tests {
     fn flat_market_yields_zero_pgo() {
         let bars = vec![b(101.0, 99.0, 100.0); 30];
         let r = compute(&bars, 14);
-        for v in r.iter().flatten() { assert!(v.abs() < 1e-9); }
+        for v in r.iter().flatten() {
+            assert!(v.abs() < 1e-9);
+        }
     }
 
     #[test]
@@ -108,10 +125,12 @@ mod tests {
 
     #[test]
     fn strong_uptrend_pgo_above_one() {
-        let bars: Vec<_> = (0..50).map(|i| {
-            let m = 100.0 + i as f64;
-            b(m + 0.5, m - 0.5, m)
-        }).collect();
+        let bars: Vec<_> = (0..50)
+            .map(|i| {
+                let m = 100.0 + i as f64;
+                b(m + 0.5, m - 0.5, m)
+            })
+            .collect();
         let r = compute(&bars, 14);
         // Steady uptrend: close = mean + (n-1)/2 above the 14-bar SMA.
         // ATR ≈ 1 so PGO ≈ (n-1)/2.

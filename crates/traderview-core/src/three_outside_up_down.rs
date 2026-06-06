@@ -16,7 +16,12 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub open: f64, pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ThreeOutsideReport {
@@ -30,35 +35,58 @@ pub fn compute(bars: &[Bar]) -> ThreeOutsideReport {
         three_outside_up: vec![false; n],
         three_outside_down: vec![false; n],
     };
-    if n < 3 { return report; }
-    if bars.iter().any(|b| !b.open.is_finite() || !b.high.is_finite()
-        || !b.low.is_finite() || !b.close.is_finite()) {
+    if n < 3 {
+        return report;
+    }
+    if bars.iter().any(|b| {
+        !b.open.is_finite() || !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()
+    }) {
         return report;
     }
     for i in 2..n {
         let (b1, b2, b3) = (bars[i - 2], bars[i - 1], bars[i]);
-        if is_three_outside_up(b1, b2, b3) { report.three_outside_up[i] = true; }
-        if is_three_outside_down(b1, b2, b3) { report.three_outside_down[i] = true; }
+        if is_three_outside_up(b1, b2, b3) {
+            report.three_outside_up[i] = true;
+        }
+        if is_three_outside_down(b1, b2, b3) {
+            report.three_outside_down[i] = true;
+        }
     }
     report
 }
 
 fn is_three_outside_up(b1: Bar, b2: Bar, b3: Bar) -> bool {
     // Bar 1 bearish.
-    if b1.close >= b1.open { return false; }
+    if b1.close >= b1.open {
+        return false;
+    }
     // Bar 2 bullish engulfs bar 1's body.
-    if b2.close <= b2.open { return false; }
-    if b2.open > b1.close || b2.close < b1.open { return false; }
+    if b2.close <= b2.open {
+        return false;
+    }
+    if b2.open > b1.close || b2.close < b1.open {
+        return false;
+    }
     // Bar 3 bullish, closes above bar 2's close.
-    if b3.close <= b3.open { return false; }
+    if b3.close <= b3.open {
+        return false;
+    }
     b3.close > b2.close
 }
 
 fn is_three_outside_down(b1: Bar, b2: Bar, b3: Bar) -> bool {
-    if b1.close <= b1.open { return false; }
-    if b2.close >= b2.open { return false; }
-    if b2.open < b1.close || b2.close > b1.open { return false; }
-    if b3.close >= b3.open { return false; }
+    if b1.close <= b1.open {
+        return false;
+    }
+    if b2.close >= b2.open {
+        return false;
+    }
+    if b2.open < b1.close || b2.close > b1.open {
+        return false;
+    }
+    if b3.close >= b3.open {
+        return false;
+    }
     b3.close < b2.close
 }
 
@@ -67,7 +95,12 @@ mod tests {
     use super::*;
 
     fn bar(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -78,9 +111,11 @@ mod tests {
 
     #[test]
     fn nan_returns_empty() {
-        let bars = vec![bar(100.0, 101.0, 99.0, 100.0),
-                        bar(f64::NAN, 101.0, 99.0, 100.0),
-                        bar(100.0, 101.0, 99.0, 100.0)];
+        let bars = vec![
+            bar(100.0, 101.0, 99.0, 100.0),
+            bar(f64::NAN, 101.0, 99.0, 100.0),
+            bar(100.0, 101.0, 99.0, 100.0),
+        ];
         let r = compute(&bars);
         assert!(!r.three_outside_up.iter().any(|x| *x));
     }
@@ -114,7 +149,7 @@ mod tests {
     fn no_engulfing_rejects_pattern() {
         let bars = vec![
             bar(105.0, 106.0, 102.0, 103.0),
-            bar(104.0, 108.0, 103.5, 107.0),    // open 104 > b1.close 103
+            bar(104.0, 108.0, 103.5, 107.0), // open 104 > b1.close 103
             bar(107.0, 110.0, 106.0, 109.0),
         ];
         let r = compute(&bars);
@@ -126,7 +161,7 @@ mod tests {
         let bars = vec![
             bar(105.0, 106.0, 102.0, 103.0),
             bar(102.0, 108.0, 101.0, 107.0),
-            bar(107.0, 107.5, 105.0, 106.0),    // bullish but closes below b2.close 107
+            bar(107.0, 107.5, 105.0, 106.0), // bullish but closes below b2.close 107
         ];
         let r = compute(&bars);
         assert!(!r.three_outside_up[2]);

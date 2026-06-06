@@ -192,7 +192,8 @@ pub fn compute(input: &Section6601Input) -> Section6601Result {
         }
     };
 
-    let interest = compute_daily_compound_interest(principal, annual_rate_bps, input.days_outstanding);
+    let interest =
+        compute_daily_compound_interest(principal, annual_rate_bps, input.days_outstanding);
 
     if input.days_outstanding > 0 {
         notes.push(format!(
@@ -303,10 +304,7 @@ mod tests {
         i.rate_override_bps = Some(500);
         let r = compute(&i);
         assert_eq!(r.annual_rate_bps, 500);
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("rate override applied")));
+        assert!(r.notes.iter().any(|n| n.contains("rate override applied")));
     }
 
     #[test]
@@ -363,8 +361,14 @@ mod tests {
     fn note_for_large_corporate_path_pins_section_6621c() {
         let r = compute(&input(1_000_000, 2026, 1, 30, true));
         assert!(r.notes.iter().any(|n| n.contains("§ 6621(c)")));
-        assert!(r.notes.iter().any(|n| n.contains("federal short-term + 5%")));
-        assert!(r.notes.iter().any(|n| n.contains("30 days after IRS notice")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("federal short-term + 5%")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("30 days after IRS notice")));
     }
 
     #[test]

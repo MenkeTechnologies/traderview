@@ -151,9 +151,7 @@ pub fn compute(input: &Section280eInput) -> Section280eResult {
     let effective_disadvantage = trafficking_disallowed;
 
     let activity_label = match input.business_activity_type {
-        BusinessActivityType::TraditionalTrafficking => {
-            "Traditional Schedule I/II trafficking"
-        }
+        BusinessActivityType::TraditionalTrafficking => "Traditional Schedule I/II trafficking",
         BusinessActivityType::FdaApprovedScheduleIII => "FDA-approved Schedule III drug product",
         BusinessActivityType::StateLicensedMedicalRescheduled => {
             "State-licensed medical marijuana (DOJ Final Order partial rescheduling)"

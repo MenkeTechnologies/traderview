@@ -212,9 +212,7 @@ pub fn compute(input: &Input) -> Output {
                 IRC_6721_INTENTIONAL_DISREGARD_PER_RETURN_2026_DOLLARS
             }
         };
-        let per_return_penalty_total = input
-            .number_of_failed_returns
-            .saturating_mul(per_return);
+        let per_return_penalty_total = input.number_of_failed_returns.saturating_mul(per_return);
         let ten_percent_aggregate = input
             .aggregate_amount_required_to_be_reported_dollars
             .saturating_mul(IRC_6721_INTENTIONAL_DISREGARD_PCT_BASIS_POINTS)
@@ -239,52 +237,72 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    let (per_return, max_general, max_small_biz, mode_violation, mode_compliant) =
-        match (input.correction_timing, input.penalty_amount_version) {
-            (CorrectionTiming::CorrectedWithin30DaysAfterRequiredFilingDate, PenaltyAmountVersion::BaseStatutoryAmounts) => (
-                IRC_6721_TIER1_PER_RETURN_BASE_DOLLARS,
-                IRC_6721_TIER1_MAX_BASE_DOLLARS,
-                IRC_6721_TIER1_SMALL_BUSINESS_MAX_BASE_DOLLARS,
-                Section6721Mode::ViolationPayerFailedToFileButCorrectedWithin30Days,
-                Section6721Mode::CompliantTier1Within30DaysCorrection,
-            ),
-            (CorrectionTiming::CorrectedWithin30DaysAfterRequiredFilingDate, PenaltyAmountVersion::InflationAdjusted2026UnderRevProc202532) => (
-                IRC_6721_TIER1_PER_RETURN_2026_DOLLARS,
-                IRC_6721_TIER1_MAX_BASE_DOLLARS,
-                IRC_6721_TIER1_SMALL_BUSINESS_MAX_BASE_DOLLARS,
-                Section6721Mode::ViolationPayerFailedToFileButCorrectedWithin30Days,
-                Section6721Mode::CompliantTier1Within30DaysCorrection,
-            ),
-            (CorrectionTiming::CorrectedAfter30DaysButByAugust1, PenaltyAmountVersion::BaseStatutoryAmounts) => (
-                IRC_6721_TIER2_PER_RETURN_BASE_DOLLARS,
-                IRC_6721_TIER2_MAX_BASE_DOLLARS,
-                IRC_6721_TIER2_SMALL_BUSINESS_MAX_BASE_DOLLARS,
-                Section6721Mode::ViolationPayerFailedToFileAndCorrectedAfter30DaysButByAugust1,
-                Section6721Mode::CompliantTier2AfterDay30ButByAugust1Correction,
-            ),
-            (CorrectionTiming::CorrectedAfter30DaysButByAugust1, PenaltyAmountVersion::InflationAdjusted2026UnderRevProc202532) => (
-                IRC_6721_TIER2_PER_RETURN_2026_DOLLARS,
-                IRC_6721_TIER2_MAX_BASE_DOLLARS,
-                IRC_6721_TIER2_SMALL_BUSINESS_MAX_BASE_DOLLARS,
-                Section6721Mode::ViolationPayerFailedToFileAndCorrectedAfter30DaysButByAugust1,
-                Section6721Mode::CompliantTier2AfterDay30ButByAugust1Correction,
-            ),
-            (CorrectionTiming::NotCorrectedByAugust1OrNotCorrected, PenaltyAmountVersion::BaseStatutoryAmounts) => (
-                IRC_6721_TIER3_PER_RETURN_BASE_DOLLARS,
-                IRC_6721_TIER3_MAX_BASE_DOLLARS,
-                IRC_6721_TIER3_SMALL_BUSINESS_MAX_BASE_DOLLARS,
-                Section6721Mode::ViolationPayerFailedToFileAndDidNotCorrectByAugust1,
-                Section6721Mode::CompliantTier3NotCorrectedByAugust1FullPenalty,
-            ),
-            (CorrectionTiming::NotCorrectedByAugust1OrNotCorrected, PenaltyAmountVersion::InflationAdjusted2026UnderRevProc202532) => (
-                IRC_6721_TIER3_PER_RETURN_2026_DOLLARS,
-                IRC_6721_TIER3_MAX_2026_DOLLARS,
-                IRC_6721_TIER3_SMALL_BUSINESS_MAX_2026_DOLLARS,
-                Section6721Mode::ViolationPayerFailedToFileAndDidNotCorrectByAugust1,
-                Section6721Mode::CompliantTier3NotCorrectedByAugust1FullPenalty,
-            ),
-            (CorrectionTiming::NoFailureFiledOnTime, _) => {
-                return Output {
+    let (per_return, max_general, max_small_biz, mode_violation, mode_compliant) = match (
+        input.correction_timing,
+        input.penalty_amount_version,
+    ) {
+        (
+            CorrectionTiming::CorrectedWithin30DaysAfterRequiredFilingDate,
+            PenaltyAmountVersion::BaseStatutoryAmounts,
+        ) => (
+            IRC_6721_TIER1_PER_RETURN_BASE_DOLLARS,
+            IRC_6721_TIER1_MAX_BASE_DOLLARS,
+            IRC_6721_TIER1_SMALL_BUSINESS_MAX_BASE_DOLLARS,
+            Section6721Mode::ViolationPayerFailedToFileButCorrectedWithin30Days,
+            Section6721Mode::CompliantTier1Within30DaysCorrection,
+        ),
+        (
+            CorrectionTiming::CorrectedWithin30DaysAfterRequiredFilingDate,
+            PenaltyAmountVersion::InflationAdjusted2026UnderRevProc202532,
+        ) => (
+            IRC_6721_TIER1_PER_RETURN_2026_DOLLARS,
+            IRC_6721_TIER1_MAX_BASE_DOLLARS,
+            IRC_6721_TIER1_SMALL_BUSINESS_MAX_BASE_DOLLARS,
+            Section6721Mode::ViolationPayerFailedToFileButCorrectedWithin30Days,
+            Section6721Mode::CompliantTier1Within30DaysCorrection,
+        ),
+        (
+            CorrectionTiming::CorrectedAfter30DaysButByAugust1,
+            PenaltyAmountVersion::BaseStatutoryAmounts,
+        ) => (
+            IRC_6721_TIER2_PER_RETURN_BASE_DOLLARS,
+            IRC_6721_TIER2_MAX_BASE_DOLLARS,
+            IRC_6721_TIER2_SMALL_BUSINESS_MAX_BASE_DOLLARS,
+            Section6721Mode::ViolationPayerFailedToFileAndCorrectedAfter30DaysButByAugust1,
+            Section6721Mode::CompliantTier2AfterDay30ButByAugust1Correction,
+        ),
+        (
+            CorrectionTiming::CorrectedAfter30DaysButByAugust1,
+            PenaltyAmountVersion::InflationAdjusted2026UnderRevProc202532,
+        ) => (
+            IRC_6721_TIER2_PER_RETURN_2026_DOLLARS,
+            IRC_6721_TIER2_MAX_BASE_DOLLARS,
+            IRC_6721_TIER2_SMALL_BUSINESS_MAX_BASE_DOLLARS,
+            Section6721Mode::ViolationPayerFailedToFileAndCorrectedAfter30DaysButByAugust1,
+            Section6721Mode::CompliantTier2AfterDay30ButByAugust1Correction,
+        ),
+        (
+            CorrectionTiming::NotCorrectedByAugust1OrNotCorrected,
+            PenaltyAmountVersion::BaseStatutoryAmounts,
+        ) => (
+            IRC_6721_TIER3_PER_RETURN_BASE_DOLLARS,
+            IRC_6721_TIER3_MAX_BASE_DOLLARS,
+            IRC_6721_TIER3_SMALL_BUSINESS_MAX_BASE_DOLLARS,
+            Section6721Mode::ViolationPayerFailedToFileAndDidNotCorrectByAugust1,
+            Section6721Mode::CompliantTier3NotCorrectedByAugust1FullPenalty,
+        ),
+        (
+            CorrectionTiming::NotCorrectedByAugust1OrNotCorrected,
+            PenaltyAmountVersion::InflationAdjusted2026UnderRevProc202532,
+        ) => (
+            IRC_6721_TIER3_PER_RETURN_2026_DOLLARS,
+            IRC_6721_TIER3_MAX_2026_DOLLARS,
+            IRC_6721_TIER3_SMALL_BUSINESS_MAX_2026_DOLLARS,
+            Section6721Mode::ViolationPayerFailedToFileAndDidNotCorrectByAugust1,
+            Section6721Mode::CompliantTier3NotCorrectedByAugust1FullPenalty,
+        ),
+        (CorrectionTiming::NoFailureFiledOnTime, _) => {
+            return Output {
                     mode: Section6721Mode::NotApplicableNoFailureFiledOnTime,
                     statutory_basis: "IRC § 6721 — no failure occurred".to_string(),
                     notes: "NOT APPLICABLE: no failure to file information return; § 6721 penalty does not apply.".to_string(),
@@ -293,12 +311,14 @@ pub fn compute(input: &Input) -> Output {
                     raw_penalty_dollars: 0,
                     capped_penalty_dollars: 0,
                 };
-            }
-        };
+        }
+    };
 
     let raw_penalty_dollars = input.number_of_failed_returns.saturating_mul(per_return);
     let cap = match input.filer_size {
-        FilerSize::SmallBusinessAverageGrossReceiptsAtOrBelow5MillionFor3YearLookback => max_small_biz,
+        FilerSize::SmallBusinessAverageGrossReceiptsAtOrBelow5MillionFor3YearLookback => {
+            max_small_biz
+        }
         FilerSize::LargeCorporationOrLargeFilerAboveSmallBusinessThreshold => max_general,
     };
     let capped_penalty_dollars = raw_penalty_dollars.min(cap);
@@ -353,7 +373,8 @@ mod tests {
     fn baseline_tier1_small_biz() -> Input {
         Input {
             correction_timing: CorrectionTiming::CorrectedWithin30DaysAfterRequiredFilingDate,
-            filer_size: FilerSize::SmallBusinessAverageGrossReceiptsAtOrBelow5MillionFor3YearLookback,
+            filer_size:
+                FilerSize::SmallBusinessAverageGrossReceiptsAtOrBelow5MillionFor3YearLookback,
             penalty_amount_version: PenaltyAmountVersion::BaseStatutoryAmounts,
             number_of_failed_returns: 100,
             intentional_disregard: false,
@@ -370,7 +391,10 @@ mod tests {
             ..baseline_tier1_small_biz()
         };
         let result = check(&input);
-        assert_eq!(result.mode, Section6721Mode::NotApplicableNoFailureFiledOnTime);
+        assert_eq!(
+            result.mode,
+            Section6721Mode::NotApplicableNoFailureFiledOnTime
+        );
     }
 
     #[test]
@@ -587,7 +611,10 @@ mod tests {
         assert_eq!(IRC_6721_TIER3_PER_RETURN_BASE_DOLLARS, 250);
         assert_eq!(IRC_6721_INTENTIONAL_DISREGARD_PER_RETURN_BASE_DOLLARS, 500);
         assert_eq!(IRC_6721_INTENTIONAL_DISREGARD_PCT_BASIS_POINTS, 1_000);
-        assert_eq!(IRC_6721_INTENTIONAL_DISREGARD_BASIS_POINT_DENOMINATOR, 10_000);
+        assert_eq!(
+            IRC_6721_INTENTIONAL_DISREGARD_BASIS_POINT_DENOMINATOR,
+            10_000
+        );
         assert_eq!(IRC_6721_TIER1_PER_RETURN_2026_DOLLARS, 60);
         assert_eq!(IRC_6721_TIER2_PER_RETURN_2026_DOLLARS, 130);
         assert_eq!(IRC_6721_TIER3_PER_RETURN_2026_DOLLARS, 340);
@@ -600,7 +627,10 @@ mod tests {
         assert_eq!(IRC_6721_TIER2_SMALL_BUSINESS_MAX_BASE_DOLLARS, 500_000);
         assert_eq!(IRC_6721_TIER3_SMALL_BUSINESS_MAX_BASE_DOLLARS, 1_000_000);
         assert_eq!(IRC_6721_TIER3_SMALL_BUSINESS_MAX_2026_DOLLARS, 1_397_000);
-        assert_eq!(IRC_6721_SMALL_BUSINESS_GROSS_RECEIPTS_THRESHOLD_DOLLARS, 5_000_000);
+        assert_eq!(
+            IRC_6721_SMALL_BUSINESS_GROSS_RECEIPTS_THRESHOLD_DOLLARS,
+            5_000_000
+        );
         assert_eq!(IRC_6721_INTENTIONAL_DISREGARD_NO_MAX, u64::MAX);
     }
 

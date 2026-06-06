@@ -32,11 +32,19 @@ pub struct GaussianCopulaReport {
 /// observation vector at time i.
 pub fn fit(observations: &[Vec<f64>]) -> Option<GaussianCopulaReport> {
     let n = observations.len();
-    if n < 5 { return None; }
+    if n < 5 {
+        return None;
+    }
     let p = observations[0].len();
-    if p < 2 { return None; }
-    if observations.iter().any(|row| row.len() != p
-        || row.iter().any(|x| !x.is_finite())) { return None; }
+    if p < 2 {
+        return None;
+    }
+    if observations
+        .iter()
+        .any(|row| row.len() != p || row.iter().any(|x| !x.is_finite()))
+    {
+        return None;
+    }
     // Per-variable rank → uniform grade U_i = rank / (n + 1).
     let n_f = n as f64;
     let mut u = vec![vec![0.0_f64; p]; n];
@@ -54,20 +62,27 @@ pub fn fit(observations: &[Vec<f64>]) -> Option<GaussianCopulaReport> {
     // across both observation and variable axes — needed for the inner
     // sum, so an iterator rewrite would force a transpose.
     let mut corr = vec![vec![0.0_f64; p]; p];
-    let z_means: Vec<f64> = (0..p).map(|j| {
-        z.iter().map(|row| row[j]).sum::<f64>() / n_f
-    }).collect();
-    let z_stds: Vec<f64> = (0..p).map(|j| {
-        let var: f64 = z.iter().map(|row| (row[j] - z_means[j]).powi(2)).sum::<f64>()
-            / (n_f - 1.0);
-        var.max(1e-18).sqrt()
-    }).collect();
+    let z_means: Vec<f64> = (0..p)
+        .map(|j| z.iter().map(|row| row[j]).sum::<f64>() / n_f)
+        .collect();
+    let z_stds: Vec<f64> = (0..p)
+        .map(|j| {
+            let var: f64 = z
+                .iter()
+                .map(|row| (row[j] - z_means[j]).powi(2))
+                .sum::<f64>()
+                / (n_f - 1.0);
+            var.max(1e-18).sqrt()
+        })
+        .collect();
     for j in 0..p {
         corr[j][j] = 1.0;
         for k in (j + 1)..p {
-            let cov: f64 = z.iter()
+            let cov: f64 = z
+                .iter()
                 .map(|row| (row[j] - z_means[j]) * (row[k] - z_means[k]))
-                .sum::<f64>() / (n_f - 1.0);
+                .sum::<f64>()
+                / (n_f - 1.0);
             let r = (cov / (z_stds[j] * z_stds[k])).clamp(-1.0, 1.0);
             corr[j][k] = r;
             corr[k][j] = r;
@@ -85,14 +100,22 @@ pub fn fit(observations: &[Vec<f64>]) -> Option<GaussianCopulaReport> {
 fn rank_with_ties(x: &[f64]) -> Vec<f64> {
     let n = x.len();
     let mut idx: Vec<usize> = (0..n).collect();
-    idx.sort_by(|a, b| x[*a].partial_cmp(&x[*b]).unwrap_or(std::cmp::Ordering::Equal));
+    idx.sort_by(|a, b| {
+        x[*a]
+            .partial_cmp(&x[*b])
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     let mut ranks = vec![0.0_f64; n];
     let mut i = 0;
     while i < n {
         let mut j = i;
-        while j + 1 < n && x[idx[j + 1]] == x[idx[i]] { j += 1; }
+        while j + 1 < n && x[idx[j + 1]] == x[idx[i]] {
+            j += 1;
+        }
         let mid_rank = (i + j) as f64 / 2.0 + 1.0;
-        for k in i..=j { ranks[idx[k]] = mid_rank; }
+        for k in i..=j {
+            ranks[idx[k]] = mid_rank;
+        }
         i = j + 1;
     }
     ranks
@@ -101,39 +124,49 @@ fn rank_with_ties(x: &[f64]) -> Vec<f64> {
 /// Acklam inverse normal CDF (same as `component_var`, ~1.15e-9 abs error).
 fn standard_normal_inverse_cdf(p: f64) -> f64 {
     const A: [f64; 6] = [
-        -3.969_683_028_665_376e1, 2.209_460_984_245_205e2,
-        -2.759_285_104_469_687e2, 1.383_577_518_672_69e2,
-        -3.066_479_806_614_716e1, 2.506_628_277_459_239,
+        -3.969_683_028_665_376e1,
+        2.209_460_984_245_205e2,
+        -2.759_285_104_469_687e2,
+        1.383_577_518_672_69e2,
+        -3.066_479_806_614_716e1,
+        2.506_628_277_459_239,
     ];
     const B: [f64; 5] = [
-        -5.447_609_879_822_406e1, 1.615_858_368_580_409e2,
-        -1.556_989_798_598_866e2, 6.680_131_188_771_972e1,
+        -5.447_609_879_822_406e1,
+        1.615_858_368_580_409e2,
+        -1.556_989_798_598_866e2,
+        6.680_131_188_771_972e1,
         -1.328_068_155_288_572e1,
     ];
     const C: [f64; 6] = [
-        -7.784_894_002_430_293e-3, -3.223_964_580_411_365e-1,
-        -2.400_758_277_161_838, -2.549_732_539_343_734,
-         4.374_664_141_464_968, 2.938_163_982_698_783,
+        -7.784_894_002_430_293e-3,
+        -3.223_964_580_411_365e-1,
+        -2.400_758_277_161_838,
+        -2.549_732_539_343_734,
+        4.374_664_141_464_968,
+        2.938_163_982_698_783,
     ];
     const D: [f64; 4] = [
-         7.784_695_709_041_462e-3, 3.224_671_290_700_398e-1,
-         2.445_134_137_142_996, 3.754_408_661_907_416,
+        7.784_695_709_041_462e-3,
+        3.224_671_290_700_398e-1,
+        2.445_134_137_142_996,
+        3.754_408_661_907_416,
     ];
     let p_low = 0.02425;
     let p_high = 1.0 - p_low;
     if p < p_low {
         let q = (-2.0 * p.ln()).sqrt();
-        (((((C[0]*q+C[1])*q+C[2])*q+C[3])*q+C[4])*q+C[5])
-            / ((((D[0]*q+D[1])*q+D[2])*q+D[3])*q+1.0)
+        (((((C[0] * q + C[1]) * q + C[2]) * q + C[3]) * q + C[4]) * q + C[5])
+            / ((((D[0] * q + D[1]) * q + D[2]) * q + D[3]) * q + 1.0)
     } else if p <= p_high {
         let q = p - 0.5;
         let r = q * q;
-        (((((A[0]*r+A[1])*r+A[2])*r+A[3])*r+A[4])*r+A[5]) * q
-            / (((((B[0]*r+B[1])*r+B[2])*r+B[3])*r+B[4])*r+1.0)
+        (((((A[0] * r + A[1]) * r + A[2]) * r + A[3]) * r + A[4]) * r + A[5]) * q
+            / (((((B[0] * r + B[1]) * r + B[2]) * r + B[3]) * r + B[4]) * r + 1.0)
     } else {
         let q = (-2.0 * (1.0 - p).ln()).sqrt();
-        -(((((C[0]*q+C[1])*q+C[2])*q+C[3])*q+C[4])*q+C[5])
-            / ((((D[0]*q+D[1])*q+D[2])*q+D[3])*q+1.0)
+        -(((((C[0] * q + C[1]) * q + C[2]) * q + C[3]) * q + C[4]) * q + C[5])
+            / ((((D[0] * q + D[1]) * q + D[2]) * q + D[3]) * q + 1.0)
     }
 }
 
@@ -168,10 +201,12 @@ mod tests {
 
     #[test]
     fn correlation_matrix_dimensions_match_variables() {
-        let obs: Vec<Vec<f64>> = (0..20).map(|i| {
-            let f = i as f64;
-            vec![f, 2.0 * f, -f]
-        }).collect();
+        let obs: Vec<Vec<f64>> = (0..20)
+            .map(|i| {
+                let f = i as f64;
+                vec![f, 2.0 * f, -f]
+            })
+            .collect();
         let r = fit(&obs).unwrap();
         assert_eq!(r.correlation_matrix.len(), 3);
         assert_eq!(r.correlation_matrix[0].len(), 3);
@@ -179,9 +214,7 @@ mod tests {
 
     #[test]
     fn perfectly_monotone_inputs_yield_correlation_one() {
-        let obs: Vec<Vec<f64>> = (1..=30).map(|i| {
-            vec![i as f64, (i as f64).exp()]
-        }).collect();
+        let obs: Vec<Vec<f64>> = (1..=30).map(|i| vec![i as f64, (i as f64).exp()]).collect();
         let r = fit(&obs).unwrap();
         // Rank-correlation between strictly monotone inputs is exactly +1.
         assert!((r.correlation_matrix[0][1] - 1.0).abs() < 1e-9);
@@ -189,16 +222,18 @@ mod tests {
 
     #[test]
     fn anti_monotone_inputs_yield_correlation_minus_one() {
-        let obs: Vec<Vec<f64>> = (1..=30).map(|i| {
-            vec![i as f64, -(i as f64).exp()]
-        }).collect();
+        let obs: Vec<Vec<f64>> = (1..=30)
+            .map(|i| vec![i as f64, -(i as f64).exp()])
+            .collect();
         let r = fit(&obs).unwrap();
         assert!((r.correlation_matrix[0][1] + 1.0).abs() < 1e-9);
     }
 
     #[test]
     fn uniform_grades_in_open_interval() {
-        let obs: Vec<Vec<f64>> = (1..=30).map(|i| vec![i as f64, (i as f64 * 0.5).sin()]).collect();
+        let obs: Vec<Vec<f64>> = (1..=30)
+            .map(|i| vec![i as f64, (i as f64 * 0.5).sin()])
+            .collect();
         let r = fit(&obs).unwrap();
         for row in &r.uniform_grades {
             for u in row {
@@ -209,8 +244,9 @@ mod tests {
 
     #[test]
     fn correlation_matrix_symmetric() {
-        let obs: Vec<Vec<f64>> = (1..=30).map(|i| vec![i as f64, (i as f64).sin(),
-            -(i as f64) * 0.3]).collect();
+        let obs: Vec<Vec<f64>> = (1..=30)
+            .map(|i| vec![i as f64, (i as f64).sin(), -(i as f64) * 0.3])
+            .collect();
         let r = fit(&obs).unwrap();
         for j in 0..3 {
             for k in 0..3 {

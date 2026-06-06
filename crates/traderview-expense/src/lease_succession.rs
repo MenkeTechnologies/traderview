@@ -147,13 +147,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // DefaultLeaseGovernsNoSuccession — 48 other states + DC.
     let default_states = [
-        "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC",
-        "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA",
-        "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN",
-        "MS", "MO", "MT", "NE", "NV", "NH", "NM", "NC",
-        "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD",
-        "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI",
-        "WY",
+        "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "ID", "IL", "IN",
+        "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH",
+        "NM", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA",
+        "WA", "WV", "WI", "WY",
     ];
     for code in default_states {
         m.insert(
@@ -240,7 +237,11 @@ pub fn check(input: &LeaseSuccessionInput) -> LeaseSuccessionResult {
                 && input.successor_was_primary_resident
         }
         LeaseSuccessionRegime::NewJerseyAntiEvictionImmediateFamily => {
-            family_eligible && matches!(input.family_member_category, FamilyMemberCategory::TraditionalFamily)
+            family_eligible
+                && matches!(
+                    input.family_member_category,
+                    FamilyMemberCategory::TraditionalFamily
+                )
         }
         LeaseSuccessionRegime::DefaultLeaseGovernsNoSuccession => false,
     };
@@ -264,7 +265,10 @@ pub fn check(input: &LeaseSuccessionInput) -> LeaseSuccessionResult {
         )
     } else {
         let mut reasons = vec![];
-        if matches!(rule.regime, LeaseSuccessionRegime::DefaultLeaseGovernsNoSuccession) {
+        if matches!(
+            rule.regime,
+            LeaseSuccessionRegime::DefaultLeaseGovernsNoSuccession
+        ) {
             reasons.push("no statutory succession right in this state".to_string());
         } else {
             if !regulated_gate_ok {
@@ -279,8 +283,10 @@ pub fn check(input: &LeaseSuccessionInput) -> LeaseSuccessionResult {
                     required_years, input.co_residency_years_with_named_tenant
                 ));
             }
-            if matches!(rule.regime, LeaseSuccessionRegime::NewYorkRentRegulatedSuccession)
-                && !input.successor_was_primary_resident
+            if matches!(
+                rule.regime,
+                LeaseSuccessionRegime::NewYorkRentRegulatedSuccession
+            ) && !input.successor_was_primary_resident
             {
                 reasons.push("successor was not primary resident".to_string());
             }
@@ -532,7 +538,10 @@ mod tests {
 
     #[test]
     fn ny_only_non_traditional_family_eligible_state() {
-        let count = RULES.iter().filter(|(_, r)| r.non_traditional_family_eligible).count();
+        let count = RULES
+            .iter()
+            .filter(|(_, r)| r.non_traditional_family_eligible)
+            .count();
         assert_eq!(count, 1, "only NY extends to non-traditional family");
     }
 

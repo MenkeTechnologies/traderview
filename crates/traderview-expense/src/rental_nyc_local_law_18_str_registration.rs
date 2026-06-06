@@ -189,7 +189,8 @@ pub fn compute(input: &Input) -> Output {
         return Output {
             mode: NycLocalLaw18Mode::NotApplicableNotInNyc,
             statutory_basis: "Property outside NYC; LL 18 inapplicable".to_string(),
-            notes: "NOT APPLICABLE: property outside NYC; NYC Local Law 18 of 2022 inapplicable.".to_string(),
+            notes: "NOT APPLICABLE: property outside NYC; NYC Local Law 18 of 2022 inapplicable."
+                .to_string(),
             citations,
             host_civil_penalty_dollars: 0,
             booking_service_civil_penalty_dollars: 0,
@@ -314,7 +315,8 @@ pub fn compute(input: &Input) -> Output {
     if input.number_of_paying_guests > NYC_LL_18_MAX_PAYING_GUESTS {
         return Output {
             mode: NycLocalLaw18Mode::ViolationMoreThan2PayingGuests,
-            statutory_basis: "NYC Admin Code § 26-3001 — maximum 2 paying guests at a time".to_string(),
+            statutory_basis: "NYC Admin Code § 26-3001 — maximum 2 paying guests at a time"
+                .to_string(),
             notes: format!(
                 "VIOLATION: {} paying guests exceeds 2-guest maximum under § 26-3001.",
                 input.number_of_paying_guests
@@ -464,7 +466,10 @@ mod tests {
             ..baseline_compliant_registered()
         };
         let result = check(&input);
-        assert_eq!(result.mode, NycLocalLaw18Mode::ViolationProhibitedBuildingsListPbl);
+        assert_eq!(
+            result.mode,
+            NycLocalLaw18Mode::ViolationProhibitedBuildingsListPbl
+        );
     }
 
     #[test]

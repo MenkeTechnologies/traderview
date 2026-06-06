@@ -27,10 +27,17 @@ pub fn compute(
 ) -> Vec<Option<f64>> {
     let n = closes.len();
     let mut out = vec![None; n];
-    if bb_period < 2 || lookback < bb_period
-        || !n_stdev.is_finite() || n_stdev <= 0.0
-        || n < lookback { return out; }
-    if closes.iter().any(|x| !x.is_finite()) { return out; }
+    if bb_period < 2
+        || lookback < bb_period
+        || !n_stdev.is_finite()
+        || n_stdev <= 0.0
+        || n < lookback
+    {
+        return out;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     let p_f = bb_period as f64;
     let mut width = vec![None; n];
     for i in (bb_period - 1)..n {
@@ -44,7 +51,9 @@ pub fn compute(
     }
     for (i, slot) in out.iter_mut().enumerate().skip(lookback - 1) {
         let win = &width[i + 1 - lookback..=i];
-        if win.iter().any(|x| x.is_none()) { continue; }
+        if win.iter().any(|x| x.is_none()) {
+            continue;
+        }
         let vals: Vec<f64> = win.iter().filter_map(|x| *x).collect();
         let cur = vals[vals.len() - 1];
         let less_or_eq = vals.iter().filter(|v| **v <= cur).count();
@@ -88,7 +97,8 @@ mod tests {
         let mut state: u64 = 42;
         let mut c = vec![100.0_f64; 252];
         for _ in 0..50 {
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
             c.push(100.0 + (r - 0.5) * 50.0);
@@ -97,19 +107,24 @@ mod tests {
         // Final bars in surge region should sit high in the percentile.
         let last_few: Vec<f64> = r.iter().rev().take(20).filter_map(|x| *x).collect();
         let max_p = last_few.iter().cloned().fold(0.0_f64, f64::max);
-        assert!(max_p > 70.0,
-            "volatility surge should rank high, got max {max_p}");
+        assert!(
+            max_p > 70.0,
+            "volatility surge should rank high, got max {max_p}"
+        );
     }
 
     #[test]
     fn output_in_zero_hundred_range() {
         let mut state: u64 = 42;
-        let c: Vec<f64> = (0..400).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
-            100.0 + (r - 0.5) * 5.0
-        }).collect();
+        let c: Vec<f64> = (0..400)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
+                100.0 + (r - 0.5) * 5.0
+            })
+            .collect();
         let r = compute(&c, 20, 2.0, 252);
         for v in r.iter().flatten() {
             assert!((0.0..=100.0).contains(v));

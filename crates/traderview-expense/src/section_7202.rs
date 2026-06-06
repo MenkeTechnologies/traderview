@@ -204,8 +204,7 @@ pub fn check(input: &Section7202Input) -> Section7202Result {
 
     if felony_authorized {
         notes.push(
-            "§ 7202 — all four elements satisfied; FELONY PROSECUTION AUTHORIZED"
-                .to_string(),
+            "§ 7202 — all four elements satisfied; FELONY PROSECUTION AUTHORIZED".to_string(),
         );
     } else if !all_four {
         notes.push(
@@ -362,7 +361,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.felony_prosecution_authorized);
         assert!(r.cheek_defense_engaged_and_successful);
-        assert!(r.notes.iter().any(|n| n.contains("Cheek defense SUCCESSFUL")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Cheek defense SUCCESSFUL")));
     }
 
     #[test]
@@ -395,45 +397,67 @@ mod tests {
         let mut i = full_prosecution();
         i.cheek_defense_asserted = true;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("Cheek v. United States") && n.contains("OBJECTIVELY UNREASONABLE")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("Cheek v. United States") && n.contains("OBJECTIVELY UNREASONABLE")
+        ));
     }
 
     #[test]
     fn willfulness_no_evil_intent_required_note() {
         let r = check(&full_prosecution());
-        assert!(r.notes.iter().any(|n| n.contains("willfulness standard") && n.contains("NO requirement to prove evil")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("willfulness standard")
+                && n.contains("NO requirement to prove evil")));
     }
 
     #[test]
     fn trust_fund_taxes_note_lists_three_categories() {
         let r = check(&full_prosecution());
-        assert!(r.notes.iter().any(|n| n.contains("§ 3402") && n.contains("§ 3101") && n.contains("§ 3301")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 3402") && n.contains("§ 3101") && n.contains("§ 3301")));
     }
 
     #[test]
     fn employer_fica_match_excluded_note() {
         let r = check(&full_prosecution());
-        assert!(r.notes.iter().any(|n| n.contains("§ 3111 employer FICA match") && n.contains("NOT REACHED")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 3111 employer FICA match") && n.contains("NOT REACHED")));
     }
 
     #[test]
     fn responsible_person_standard_same_as_6672_note() {
         let r = check(&full_prosecution());
-        assert!(r.notes.iter().any(|n| n.contains("§ 7202 responsible person standard") && n.contains("same as § 6672")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7202 responsible person standard")
+                && n.contains("same as § 6672")));
     }
 
     #[test]
     fn criminal_sol_6_years() {
         let r = check(&full_prosecution());
         assert_eq!(r.criminal_sol_years, 6);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6531") && n.contains("6 years for § 7202")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6531") && n.contains("6 years for § 7202")));
     }
 
     #[test]
     fn parallel_6672_tfrp_always_available() {
         let r = check(&full_prosecution());
         assert!(r.parallel_section_6672_tfrp_available);
-        assert!(r.notes.iter().any(|n| n.contains("Spies-Daly doctrine") && n.contains("§ 6672")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Spies-Daly doctrine") && n.contains("§ 6672")));
     }
 
     #[test]
@@ -441,13 +465,20 @@ mod tests {
         let mut i = full_prosecution();
         i.parallel_section_6672_tfrp_imposed = true;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6672 TFRP already imposed") && n.contains("§ 523(a)(7) NONDISCHARGEABLE")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6672 TFRP already imposed")
+                && n.contains("§ 523(a)(7) NONDISCHARGEABLE")));
     }
 
     #[test]
     fn no_parallel_tfrp_no_nondischargeable_note() {
         let r = check(&full_prosecution());
-        assert!(!r.notes.iter().any(|n| n.contains("§ 6672 TFRP already imposed")));
+        assert!(!r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6672 TFRP already imposed")));
     }
 
     #[test]
@@ -459,13 +490,19 @@ mod tests {
     #[test]
     fn section_7491_burden_shifts_excluded_note() {
         let r = check(&full_prosecution());
-        assert!(r.notes.iter().any(|n| n.contains("§ 7491") && n.contains("BEYOND REASONABLE DOUBT")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7491") && n.contains("BEYOND REASONABLE DOUBT")));
     }
 
     #[test]
     fn cfia_18_usc_3571_supersedes_note() {
         let r = check(&full_prosecution());
-        assert!(r.notes.iter().any(|n| n.contains("18 U.S.C. § 3571") && n.contains("$250,000")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("18 U.S.C. § 3571") && n.contains("$250,000")));
     }
 
     #[test]
@@ -499,7 +536,12 @@ mod tests {
     #[test]
     fn distinction_from_6672_note_describes_parallel() {
         let r = check(&full_prosecution());
-        assert!(r.notes.iter().any(|n| n.contains("§ 7202 — criminal FELONY") && n.contains("§ 6672") && n.contains("BOTH § 7202 felony and § 6672")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7202 — criminal FELONY")
+                && n.contains("§ 6672")
+                && n.contains("BOTH § 7202 felony and § 6672")));
     }
 
     #[test]

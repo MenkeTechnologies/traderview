@@ -300,7 +300,10 @@ mod tests {
     fn fine_paid_to_government_nondeductible() {
         let r = compute(&base(PaymentType::Fine));
         assert!(!r.deductible);
-        assert!(r.notes.iter().any(|n| n.contains("§ 162(f)(1)") && n.contains("NO DEDUCTION")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 162(f)(1)") && n.contains("NO DEDUCTION")));
     }
 
     #[test]
@@ -309,7 +312,10 @@ mod tests {
         i.payment_to_government_in_relation_to_violation = false;
         let r = compute(&i);
         assert!(r.deductible);
-        assert!(r.notes.iter().any(|n| n.contains("does not apply") || n.contains("§ 162(a)")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("does not apply") || n.contains("§ 162(a)")));
     }
 
     #[test]
@@ -319,7 +325,10 @@ mod tests {
         i.taxpayer_established_payment_for_identified_purpose = true;
         let r = compute(&i);
         assert!(r.deductible);
-        assert!(r.notes.iter().any(|n| n.contains("§ 162(f)(2)(A)") && n.contains("restitution")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 162(f)(2)(A)") && n.contains("restitution")));
     }
 
     #[test]
@@ -329,7 +338,10 @@ mod tests {
         i.taxpayer_established_payment_for_identified_purpose = true;
         let r = compute(&i);
         assert!(!r.deductible);
-        assert!(r.notes.iter().any(|n| n.contains("§ 162(f)(2)(B) IDENTIFICATION")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 162(f)(2)(B) IDENTIFICATION")));
     }
 
     #[test]
@@ -339,7 +351,10 @@ mod tests {
         i.taxpayer_established_payment_for_identified_purpose = false;
         let r = compute(&i);
         assert!(!r.deductible);
-        assert!(r.notes.iter().any(|n| n.contains("§ 162(f)(2)(A) ESTABLISHMENT")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 162(f)(2)(A) ESTABLISHMENT")));
     }
 
     #[test]
@@ -358,7 +373,10 @@ mod tests {
         i.pre_december_22_2017_binding_order = true;
         let r = compute(&i);
         assert!(r.deductible);
-        assert!(r.notes.iter().any(|n| n.contains("TCJA § 13306") && n.contains("grandfathered")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("TCJA § 13306") && n.contains("grandfathered")));
     }
 
     #[test]
@@ -379,7 +397,10 @@ mod tests {
     fn qui_tam_payment_falls_outside_162f1() {
         let r = compute(&base(PaymentType::QuiTamPayment));
         assert!(r.deductible);
-        assert!(r.notes.iter().any(|n| n.contains("§ 162(f)(5)") && n.contains("relator is NOT government")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 162(f)(5)") && n.contains("relator is NOT government")));
     }
 
     #[test]
@@ -388,7 +409,10 @@ mod tests {
         i.payment_amount_cents = 50_000_00;
         let r = compute(&i);
         assert!(r.form_1098_f_reporting_required);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6050X") && n.contains("$50,000")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6050X") && n.contains("$50,000")));
     }
 
     #[test]
@@ -450,7 +474,11 @@ mod tests {
             i.court_order_identifies_amount_and_purpose = ident;
             i.taxpayer_established_payment_for_identified_purpose = estab;
             let r = compute(&i);
-            assert_eq!(r.deductible, expected, "ident={} estab={} expected={}", ident, estab, expected);
+            assert_eq!(
+                r.deductible, expected,
+                "ident={} estab={} expected={}",
+                ident, estab, expected
+            );
         }
     }
 
@@ -524,7 +552,11 @@ mod tests {
         let nondeductible_paths = [PaymentType::Fine];
         for pt in nondeductible_paths {
             let r = compute(&base(pt));
-            assert!(!r.deductible, "payment type {:?} should be nondeductible without exception", pt);
+            assert!(
+                !r.deductible,
+                "payment type {:?} should be nondeductible without exception",
+                pt
+            );
         }
 
         let deductible_without_exception_paths = [
@@ -534,7 +566,11 @@ mod tests {
         ];
         for pt in deductible_without_exception_paths {
             let r = compute(&base(pt));
-            assert!(r.deductible, "payment type {:?} should be deductible regardless", pt);
+            assert!(
+                r.deductible,
+                "payment type {:?} should be deductible regardless",
+                pt
+            );
         }
 
         let requires_exception_paths = [
@@ -543,7 +579,11 @@ mod tests {
         ];
         for pt in requires_exception_paths {
             let r = compute(&base(pt));
-            assert!(!r.deductible, "payment type {:?} requires both prongs for deduction", pt);
+            assert!(
+                !r.deductible,
+                "payment type {:?} requires both prongs for deduction",
+                pt
+            );
         }
     }
 

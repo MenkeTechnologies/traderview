@@ -173,8 +173,8 @@ fn nyc_check(input: &RightToCounselInput) -> RightToCounselResult {
 
 fn wa_check(input: &RightToCounselInput) -> RightToCounselResult {
     let threshold = (input.federal_poverty_line_cents as i128 * 200 / 100) as i64;
-    let income_eligible = input.tenant_household_income_cents <= threshold
-        || input.tenant_receives_public_assistance;
+    let income_eligible =
+        input.tenant_household_income_cents <= threshold || input.tenant_receives_public_assistance;
     if !input.rtc_notice_provided {
         return RightToCounselResult {
             regime: Regime::Washington,
@@ -484,16 +484,16 @@ mod tests {
             Regime::for_jurisdiction("NY", "New York"),
             Regime::NewYorkCity
         );
+        assert_eq!(Regime::for_jurisdiction("NY", "NYC"), Regime::NewYorkCity);
+        assert_eq!(Regime::for_jurisdiction("NY", "Buffalo"), Regime::Default);
         assert_eq!(
-            Regime::for_jurisdiction("NY", "NYC"),
-            Regime::NewYorkCity
+            Regime::for_jurisdiction("WA", "Seattle"),
+            Regime::Washington
         );
         assert_eq!(
-            Regime::for_jurisdiction("NY", "Buffalo"),
-            Regime::Default
+            Regime::for_jurisdiction("WA", "Spokane"),
+            Regime::Washington
         );
-        assert_eq!(Regime::for_jurisdiction("WA", "Seattle"), Regime::Washington);
-        assert_eq!(Regime::for_jurisdiction("WA", "Spokane"), Regime::Washington);
         assert_eq!(Regime::for_jurisdiction("CA", "LA"), Regime::Default);
     }
 

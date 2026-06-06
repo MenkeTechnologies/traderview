@@ -159,12 +159,21 @@ pub fn check(input: &Section6707Input) -> Section6707Result {
         _ => !input.form_8918_filed_timely || input.false_or_incomplete_information,
     };
 
-    let (penalty_cents, intentional_75_percent_rate_engaged, reasonable_cause_defense_available, rescission_available) = if !violation_triggered {
+    let (
+        penalty_cents,
+        intentional_75_percent_rate_engaged,
+        reasonable_cause_defense_available,
+        rescission_available,
+    ) = if !violation_triggered {
         (0_u64, false, false, false)
     } else {
         match input.transaction_category {
             TransactionCategory::ListedTransaction => {
-                let pct_bps: u32 = if input.intentional_failure { 7500 } else { 5000 };
+                let pct_bps: u32 = if input.intentional_failure {
+                    7500
+                } else {
+                    5000
+                };
                 let pct_amount = input
                     .gross_income_from_advice_cents
                     .saturating_mul(pct_bps as u64)
@@ -175,13 +184,12 @@ pub fn check(input: &Section6707Input) -> Section6707Result {
             }
             TransactionCategory::OtherReportableTransaction => {
                 let base = 5_000_000_u64;
-                let final_penalty = if input.commissioner_rescission_granted
-                    || input.reasonable_cause_engaged
-                {
-                    0
-                } else {
-                    base
-                };
+                let final_penalty =
+                    if input.commissioner_rescission_granted || input.reasonable_cause_engaged {
+                        0
+                    } else {
+                        base
+                    };
                 (final_penalty, false, true, true)
             }
             TransactionCategory::NotReportable => (0, false, false, false),
@@ -276,8 +284,10 @@ mod tests {
         let r = check(&other_reportable_violation());
         assert!(r.penalty_engaged);
         assert_eq!(r.penalty_cents, 5_000_000);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 6707(b)(1)")
-            && f.contains("FLAT $50,000")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 6707(b)(1)") && f.contains("FLAT $50,000")));
     }
 
     #[test]
@@ -287,8 +297,10 @@ mod tests {
         let r = check(&i);
         assert_eq!(r.penalty_cents, 0);
         assert!(r.reasonable_cause_defense_available);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 6664(d)")
-            && f.contains("reasonable cause")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 6664(d)") && f.contains("reasonable cause")));
     }
 
     #[test]
@@ -298,8 +310,10 @@ mod tests {
         let r = check(&i);
         assert_eq!(r.penalty_cents, 0);
         assert!(r.rescission_available);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 6707(c)(1)")
-            && f.contains("Commissioner rescission granted")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 6707(c)(1)") && f.contains("Commissioner rescission granted")));
     }
 
     #[test]
@@ -356,8 +370,11 @@ mod tests {
         let r = check(&i);
         assert_eq!(r.penalty_cents, 750_000_000);
         assert!(r.intentional_75_percent_rate_engaged);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 6707(b)(2) flush language")
-            && f.contains("75% when failure or act is INTENTIONAL")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 6707(b)(2) flush language")
+                && f.contains("75% when failure or act is INTENTIONAL")));
     }
 
     #[test]
@@ -373,8 +390,10 @@ mod tests {
         };
         let r = check(&i);
         assert!(!r.rescission_available);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 6707(c)(2)")
-            && f.contains("NOT ELIGIBLE FOR RESCISSION")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 6707(c)(2)") && f.contains("NOT ELIGIBLE FOR RESCISSION")));
     }
 
     #[test]
@@ -449,7 +468,9 @@ mod tests {
     fn citation_pins_all_authorities() {
         let r = check(&other_reportable_violation());
         assert!(r.citation.contains("§ 6707(a)-(d)"));
-        assert!(r.citation.contains("American Jobs Creation Act of 2004 § 815"));
+        assert!(r
+            .citation
+            .contains("American Jobs Creation Act of 2004 § 815"));
         assert!(r.citation.contains("Pub. L. 108-357"));
         assert!(r.citation.contains("October 22, 2004"));
         assert!(r.citation.contains("26 CFR § 301.6707-1"));
@@ -475,8 +496,10 @@ mod tests {
     #[test]
     fn note_pins_subsection_b1_flat_50k() {
         let r = check(&other_reportable_violation());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6707(b)(1)")
-            && n.contains("FLAT $50,000")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6707(b)(1)") && n.contains("FLAT $50,000")));
     }
 
     #[test]
@@ -524,16 +547,20 @@ mod tests {
     #[test]
     fn note_pins_2004_ajca_origin() {
         let r = check(&other_reportable_violation());
-        assert!(r.notes.iter().any(|n| n.contains("American Jobs Creation Act of 2004 § 815")
-            && n.contains("Pub. L. 108-357")
-            && n.contains("October 22, 2004")
-            && n.contains("KPMG")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("American Jobs Creation Act of 2004 § 815")
+                && n.contains("Pub. L. 108-357")
+                && n.contains("October 22, 2004")
+                && n.contains("KPMG")));
     }
 
     #[test]
     fn note_pins_material_advisor_threshold_50k_250k() {
         let r = check(&other_reportable_violation());
-        assert!(r.notes.iter().any(|n| n.contains("Material advisor threshold under § 6111(b)(1)")
+        assert!(r.notes.iter().any(|n| n
+            .contains("Material advisor threshold under § 6111(b)(1)")
             && n.contains("$50,000")
             && n.contains("$250,000")));
     }
@@ -549,25 +576,31 @@ mod tests {
     #[test]
     fn note_pins_listed_transaction_examples() {
         let r = check(&other_reportable_violation());
-        assert!(r.notes.iter().any(|n| n.contains("Listed transaction examples")
-            && n.contains("Notice 2015-73")
-            && n.contains("Notice 2017-10")
-            && n.contains("Notice 2016-66")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Listed transaction examples")
+                && n.contains("Notice 2015-73")
+                && n.contains("Notice 2017-10")
+                && n.contains("Notice 2016-66")));
     }
 
     #[test]
     fn note_pins_301_6707_1_implementing_regulations() {
         let r = check(&other_reportable_violation());
-        assert!(r.notes.iter().any(|n| n.contains("26 CFR § 301.6707-1")
-            && n.contains("T.D. 9683")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("26 CFR § 301.6707-1") && n.contains("T.D. 9683")));
     }
 
     #[test]
     fn note_pins_irm_20_1_13() {
         let r = check(&other_reportable_violation());
-        assert!(r.notes.iter().any(|n| n.contains("IRM 20.1.13")
-            && n.contains("§ 6707A")
-            && n.contains("§ 6708")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("IRM 20.1.13") && n.contains("§ 6707A") && n.contains("§ 6708")));
     }
 
     #[test]

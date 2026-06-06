@@ -214,41 +214,119 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateEntryRule>> = Lazy::new(|
         rule("AR", "Arkansas", None, None, "no statute"),
         rule("CA", "California", Some(24), None, "Cal. Civ. Code § 1954"),
         rule("CO", "Colorado", Some(24), None, "C.R.S. § 38-12-510"),
-        rule("CT", "Connecticut", None, None, "Conn. Gen. Stat. § 47a-16 (\"reasonable\")"),
+        rule(
+            "CT",
+            "Connecticut",
+            None,
+            None,
+            "Conn. Gen. Stat. § 47a-16 (\"reasonable\")",
+        ),
         rule("DE", "Delaware", Some(48), None, "25 Del. C. § 5509"),
-        rule("DC", "District of Columbia", Some(48), None, "14 DCMR § 304"),
+        rule(
+            "DC",
+            "District of Columbia",
+            Some(48),
+            None,
+            "14 DCMR § 304",
+        ),
         rule("FL", "Florida", Some(12), None, "Fla. Stat. § 83.53"),
         rule("GA", "Georgia", None, None, "no statute"),
         rule("HI", "Hawaii", Some(48), None, "HRS § 521-53"),
         rule("ID", "Idaho", None, None, "no statute"),
-        rule("IL", "Illinois", None, None, "no state statute (Chicago RLTO § 5-12-050: 48h)"),
+        rule(
+            "IL",
+            "Illinois",
+            None,
+            None,
+            "no state statute (Chicago RLTO § 5-12-050: 48h)",
+        ),
         rule("IN", "Indiana", None, None, "no statute"),
         rule("IA", "Iowa", Some(24), None, "Iowa Code § 562A.19"),
-        rule("KS", "Kansas", None, None, "K.S.A. § 58-2557 (\"reasonable\")"),
+        rule(
+            "KS",
+            "Kansas",
+            None,
+            None,
+            "K.S.A. § 58-2557 (\"reasonable\")",
+        ),
         rule("KY", "Kentucky", Some(48), None, "KRS § 383.615"),
         rule("LA", "Louisiana", None, None, "no statute"),
         rule("ME", "Maine", Some(24), None, "14 M.R.S. § 6025"),
-        rule("MD", "Maryland", None, None, "no statute (common-law reasonable)"),
-        rule("MA", "Massachusetts", None, None, "no statute (lease governs)"),
+        rule(
+            "MD",
+            "Maryland",
+            None,
+            None,
+            "no statute (common-law reasonable)",
+        ),
+        rule(
+            "MA",
+            "Massachusetts",
+            None,
+            None,
+            "no statute (lease governs)",
+        ),
         rule("MI", "Michigan", None, None, "no statute"),
-        rule("MN", "Minnesota", None, None, "Minn. Stat. § 504B.211 (\"reasonable\")"),
+        rule(
+            "MN",
+            "Minnesota",
+            None,
+            None,
+            "Minn. Stat. § 504B.211 (\"reasonable\")",
+        ),
         rule("MS", "Mississippi", None, None, "no statute"),
         rule("MO", "Missouri", None, None, "no statute"),
         rule("MT", "Montana", Some(24), None, "Mont. Code § 70-24-312"),
-        rule("NE", "Nebraska", Some(24), None, "Neb. Rev. Stat. § 76-1423"),
+        rule(
+            "NE",
+            "Nebraska",
+            Some(24),
+            None,
+            "Neb. Rev. Stat. § 76-1423",
+        ),
         rule("NV", "Nevada", Some(24), None, "NRS § 118A.330"),
-        rule("NH", "New Hampshire", None, None, "no statute (\"adequate notice\")"),
-        rule("NJ", "New Jersey", None, None, "no statute (case law: reasonable)"),
+        rule(
+            "NH",
+            "New Hampshire",
+            None,
+            None,
+            "no statute (\"adequate notice\")",
+        ),
+        rule(
+            "NJ",
+            "New Jersey",
+            None,
+            None,
+            "no statute (case law: reasonable)",
+        ),
         rule("NM", "New Mexico", Some(24), None, "NMSA § 47-8-24"),
-        rule("NY", "New York", None, None, "no statewide statute (NYC: 24h custom)"),
+        rule(
+            "NY",
+            "New York",
+            None,
+            None,
+            "no statewide statute (NYC: 24h custom)",
+        ),
         rule("NC", "North Carolina", None, None, "no statute"),
-        rule("ND", "North Dakota", None, None, "no statute (\"reasonable\")"),
+        rule(
+            "ND",
+            "North Dakota",
+            None,
+            None,
+            "no statute (\"reasonable\")",
+        ),
         rule("OH", "Ohio", Some(24), None, "ORC § 5321.04"),
         rule("OK", "Oklahoma", Some(24), None, "41 O.S. § 128"),
         rule("OR", "Oregon", Some(24), None, "ORS § 90.322"),
         rule("PA", "Pennsylvania", None, None, "no statute"),
         rule("RI", "Rhode Island", Some(48), None, "R.I.G.L. § 34-18-26"),
-        rule("SC", "South Carolina", Some(24), None, "SC Code § 27-40-530"),
+        rule(
+            "SC",
+            "South Carolina",
+            Some(24),
+            None,
+            "SC Code § 27-40-530",
+        ),
         rule("SD", "South Dakota", Some(24), None, "SDCL § 43-32-32"),
         rule("TN", "Tennessee", Some(24), None, "Tenn. Code § 66-28-403"),
         rule("TX", "Texas", None, None, "no statute"),
@@ -257,7 +335,13 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateEntryRule>> = Lazy::new(|
         rule("VA", "Virginia", Some(24), None, "Va. Code § 55.1-1229"),
         rule("WA", "Washington", Some(48), Some(24), "RCW § 59.18.150"),
         rule("WV", "West Virginia", None, None, "no statute"),
-        rule("WI", "Wisconsin", Some(12), None, "Wis. Admin. Code ATCP § 134.09"),
+        rule(
+            "WI",
+            "Wisconsin",
+            Some(12),
+            None,
+            "Wis. Admin. Code ATCP § 134.09",
+        ),
         rule("WY", "Wyoming", None, None, "no statute"),
     ];
     RULES.iter().map(|r| (r.state_code, r)).collect()
@@ -302,7 +386,10 @@ mod tests {
         // with zero notice.
         for code in ["WA", "CA", "AR", "FL", "AL"] {
             let r = compute(&input(code, EntryPurpose::Emergency, 0));
-            assert!(r.complies, "{code} emergency entry must comply with 0h notice");
+            assert!(
+                r.complies,
+                "{code} emergency entry must comply with 0h notice"
+            );
             assert_eq!(r.shortfall_hours, 0);
             assert!(r.exception.is_some());
         }
@@ -313,7 +400,10 @@ mod tests {
         // Consent is presumed when the tenant initiated the visit.
         let r = compute(&input("WA", EntryPurpose::TenantRequested, 0));
         assert!(r.complies);
-        assert_eq!(r.exception, Some("tenant-requested entry: consent presumed"));
+        assert_eq!(
+            r.exception,
+            Some("tenant-requested entry: consent presumed")
+        );
     }
 
     #[test]
@@ -373,7 +463,10 @@ mod tests {
         assert_eq!(showing.required_hours, Some(24));
 
         let inspection_short = compute(&input("WA", EntryPurpose::Inspection, 24));
-        assert!(!inspection_short.complies, "inspections fall under 48h column");
+        assert!(
+            !inspection_short.complies,
+            "inspections fall under 48h column"
+        );
     }
 
     #[test]
@@ -393,7 +486,10 @@ mod tests {
         // For states without an hour count, the compute fn treats every
         // notice level (including 0) as compliant — there's no measurable
         // standard to fail against. The note flags the absence.
-        for code in ["AR", "GA", "ID", "IL", "IN", "LA", "MA", "MI", "MO", "MS", "NC", "PA", "TX", "WV", "WY"] {
+        for code in [
+            "AR", "GA", "ID", "IL", "IN", "LA", "MA", "MI", "MO", "MS", "NC", "PA", "TX", "WV",
+            "WY",
+        ] {
             let r = compute(&input(code, EntryPurpose::Repairs, 0));
             assert!(r.complies, "{code} has no statute, must report compliant");
             assert!(r.required_hours.is_none());
@@ -435,7 +531,11 @@ mod tests {
         // populated (either the statute cite or the literal "no statute").
         // This guards against blank-citation regressions when adding rows.
         for r in TABLE.values() {
-            assert!(!r.citation.is_empty(), "{} has empty citation", r.state_code);
+            assert!(
+                !r.citation.is_empty(),
+                "{} has empty citation",
+                r.state_code
+            );
         }
     }
 

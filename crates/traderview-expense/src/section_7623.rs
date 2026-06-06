@@ -246,7 +246,9 @@ pub fn check(input: &Section7623Input) -> Section7623Result {
         input.award_percentage_bps.clamp(min_bps, max_bps)
     };
 
-    let award_cents = (input.collected_proceeds_cents.saturating_mul(clamped_pct_bps as u64))
+    let award_cents = (input
+        .collected_proceeds_cents
+        .saturating_mul(clamped_pct_bps as u64))
         / 10_000;
 
     if matches!(tier, AwardTier::MandatoryFullRange)
@@ -495,7 +497,9 @@ mod tests {
     fn citation_pins_all_authorities() {
         let r = check(&mandatory_base());
         assert!(r.citation.contains("§ 7623(a)-(d)"));
-        assert!(r.citation.contains("Tax Relief and Health Care Act of 2006 § 406"));
+        assert!(r
+            .citation
+            .contains("Tax Relief and Health Care Act of 2006 § 406"));
         assert!(r.citation.contains("Pub. L. 109-432"));
         assert!(r.citation.contains("Bipartisan Budget Act of 2018 § 41108"));
         assert!(r.citation.contains("Pub. L. 115-123"));
@@ -534,8 +538,10 @@ mod tests {
     #[test]
     fn note_pins_subsection_b2b_planned_initiated() {
         let r = check(&mandatory_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 7623(b)(2)(B)")
-            && n.contains("planned and initiated")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7623(b)(2)(B)") && n.contains("planned and initiated")));
     }
 
     #[test]
@@ -590,16 +596,27 @@ mod tests {
     #[test]
     fn note_pins_treas_reg_15_22_30_baseline() {
         let r = check(&mandatory_base());
-        assert!(r.notes.iter().any(|n| n.contains("Treas. Reg. § 301.7623-4")
-            && n.contains("15% baseline")
-            && n.contains("22% or 30%")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Treas. Reg. § 301.7623-4")
+                && n.contains("15% baseline")
+                && n.contains("22% or 30%")));
     }
 
     #[test]
     fn award_tier_truth_table_five_cells() {
         for (config, exp_tier) in [
             (
-                (false, false, false, false, true, 30_000_000_u64, 300_000_000_u64),
+                (
+                    false,
+                    false,
+                    false,
+                    false,
+                    true,
+                    30_000_000_u64,
+                    300_000_000_u64,
+                ),
                 AwardTier::MandatoryFullRange,
             ),
             (

@@ -440,7 +440,7 @@ mod tests {
         let out = check(&i);
         assert_eq!(out.excess_benefit_cents, 100_000_00);
         assert_eq!(out.tier1_tax_cents, 25_000_00); // 25%
-        // No correction → tier-2 also applies
+                                                    // No correction → tier-2 also applies
         assert_eq!(out.severity, Severity::Tier2TaxOwed);
     }
 

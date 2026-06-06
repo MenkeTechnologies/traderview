@@ -12,7 +12,10 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Print { pub price: f64, pub size: f64 }
+pub struct Print {
+    pub price: f64,
+    pub size: f64,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct DollarBar {
@@ -30,8 +33,10 @@ pub fn compute(prints: &[Print], dollars_per_bar: f64) -> Vec<DollarBar> {
     if prints.is_empty() || !dollars_per_bar.is_finite() || dollars_per_bar <= 0.0 {
         return out;
     }
-    if prints.iter().any(|p| !p.price.is_finite() || !p.size.is_finite()
-        || p.price <= 0.0 || p.size < 0.0) {
+    if prints
+        .iter()
+        .any(|p| !p.price.is_finite() || !p.size.is_finite() || p.price <= 0.0 || p.size < 0.0)
+    {
         return out;
     }
     let mut open = prints[0].price;
@@ -48,16 +53,24 @@ pub fn compute(prints: &[Print], dollars_per_bar: f64) -> Vec<DollarBar> {
             volume = 0.0;
             notional = 0.0;
         }
-        if p.price > high { high = p.price; }
-        if p.price < low { low = p.price; }
+        if p.price > high {
+            high = p.price;
+        }
+        if p.price < low {
+            low = p.price;
+        }
         volume += p.size;
         notional += p.price * p.size;
         tick_count += 1;
         if notional >= dollars_per_bar {
             out.push(DollarBar {
-                open, high, low,
+                open,
+                high,
+                low,
                 close: p.price,
-                volume, notional, tick_count,
+                volume,
+                notional,
+                tick_count,
             });
             tick_count = 0;
         }
@@ -69,7 +82,9 @@ pub fn compute(prints: &[Print], dollars_per_bar: f64) -> Vec<DollarBar> {
 mod tests {
     use super::*;
 
-    fn p(price: f64, size: f64) -> Print { Print { price, size } }
+    fn p(price: f64, size: f64) -> Print {
+        Print { price, size }
+    }
 
     #[test]
     fn empty_or_invalid_returns_empty() {
@@ -96,8 +111,14 @@ mod tests {
 
     #[test]
     fn high_low_tracked() {
-        let prints = vec![p(100.0, 100.0), p(110.0, 100.0), p(95.0, 100.0),
-                          p(102.0, 100.0), p(98.0, 100.0), p(101.0, 100.0)];
+        let prints = vec![
+            p(100.0, 100.0),
+            p(110.0, 100.0),
+            p(95.0, 100.0),
+            p(102.0, 100.0),
+            p(98.0, 100.0),
+            p(101.0, 100.0),
+        ];
         let bars = compute(&prints, 60000.0);
         assert_eq!(bars.len(), 1);
         assert!((bars[0].high - 110.0).abs() < 1e-9);

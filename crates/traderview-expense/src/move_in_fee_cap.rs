@@ -446,7 +446,12 @@ mod tests {
 
     #[test]
     fn four_regimes_routed_correctly() {
-        for regime in [Regime::Seattle, Regime::Washington, Regime::Chicago, Regime::Default] {
+        for regime in [
+            Regime::Seattle,
+            Regime::Washington,
+            Regime::Chicago,
+            Regime::Default,
+        ] {
             let mut i = seattle_base();
             i.regime = regime;
             let r = check(&i);

@@ -30,10 +30,10 @@ pub struct PremarketSnapshot {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScannerConfig {
-    pub min_gap_pct: f64,           // 0.04 = +4%
-    pub min_premarket_volume: f64,  // 50_000 shares
-    pub min_rvol: f64,              // 5.0 — premarket vol vs avg
-    pub max_float: Option<f64>,     // optional float cap (low-float runners)
+    pub min_gap_pct: f64,          // 0.04 = +4%
+    pub min_premarket_volume: f64, // 50_000 shares
+    pub min_rvol: f64,             // 5.0 — premarket vol vs avg
+    pub max_float: Option<f64>,    // optional float cap (low-float runners)
 }
 
 impl Default for ScannerConfig {
@@ -101,7 +101,7 @@ pub fn scan(snapshots: &[PremarketSnapshot], cfg: &ScannerConfig) -> ScannerRepo
         let rvol = if s.avg_premarket_volume > 0.0 {
             s.premarket_volume / s.avg_premarket_volume
         } else {
-            f64::INFINITY    // no prior baseline = treat as extreme
+            f64::INFINITY // no prior baseline = treat as extreme
         };
         if rvol < cfg.min_rvol {
             continue;
@@ -130,11 +130,17 @@ pub fn scan(snapshots: &[PremarketSnapshot], cfg: &ScannerConfig) -> ScannerRepo
     }
     // Rank descending by |gap_pct|.
     report.candidates.sort_by(|a, b| {
-        b.gap_pct.abs().partial_cmp(&a.gap_pct.abs()).unwrap_or(std::cmp::Ordering::Equal)
+        b.gap_pct
+            .abs()
+            .partial_cmp(&a.gap_pct.abs())
+            .unwrap_or(std::cmp::Ordering::Equal)
     });
     for c in &report.candidates {
-        if c.gap_pct > 0.0 { report.gappers_up.push(c.symbol.clone()); }
-        else { report.gappers_down.push(c.symbol.clone()); }
+        if c.gap_pct > 0.0 {
+            report.gappers_up.push(c.symbol.clone());
+        } else {
+            report.gappers_down.push(c.symbol.clone());
+        }
     }
     report
 }
@@ -165,9 +171,18 @@ mod tests {
     fn invalid_config_returns_default() {
         let snaps = vec![snap("X", 100.0, 110.0, 100_000.0, 10_000.0)];
         for cfg in [
-            ScannerConfig { min_gap_pct: 0.0, ..Default::default() },
-            ScannerConfig { min_gap_pct: f64::NAN, ..Default::default() },
-            ScannerConfig { min_rvol: 0.0, ..Default::default() },
+            ScannerConfig {
+                min_gap_pct: 0.0,
+                ..Default::default()
+            },
+            ScannerConfig {
+                min_gap_pct: f64::NAN,
+                ..Default::default()
+            },
+            ScannerConfig {
+                min_rvol: 0.0,
+                ..Default::default()
+            },
         ] {
             assert!(scan(&snaps, &cfg).candidates.is_empty());
         }
@@ -203,7 +218,10 @@ mod tests {
         let mut s = snap("LOWFLOAT", 100.0, 110.0, 500_000.0, 50_000.0);
         s.float_shares = Some(5_000_000.0);
         let r = scan(&[s], &ScannerConfig::default());
-        assert_eq!(r.candidates[0].classification, Classification::LowFloatRunner);
+        assert_eq!(
+            r.candidates[0].classification,
+            Classification::LowFloatRunner
+        );
     }
 
     #[test]
@@ -233,7 +251,10 @@ mod tests {
     fn float_cap_filter_works() {
         let mut s = snap("BIG", 100.0, 110.0, 500_000.0, 50_000.0);
         s.float_shares = Some(500_000_000.0);
-        let cfg = ScannerConfig { max_float: Some(50_000_000.0), ..Default::default() };
+        let cfg = ScannerConfig {
+            max_float: Some(50_000_000.0),
+            ..Default::default()
+        };
         let r = scan(&[s], &cfg);
         assert!(r.candidates.is_empty());
     }
@@ -241,9 +262,9 @@ mod tests {
     #[test]
     fn candidates_ranked_by_absolute_gap_desc() {
         let snaps = vec![
-            snap("SMALL", 100.0, 105.0, 500_000.0, 50_000.0),    // +5%
-            snap("HUGE",  100.0, 130.0, 500_000.0, 50_000.0),    // +30%
-            snap("MID",   100.0, 110.0, 500_000.0, 50_000.0),    // +10%
+            snap("SMALL", 100.0, 105.0, 500_000.0, 50_000.0), // +5%
+            snap("HUGE", 100.0, 130.0, 500_000.0, 50_000.0),  // +30%
+            snap("MID", 100.0, 110.0, 500_000.0, 50_000.0),   // +10%
         ];
         let r = scan(&snaps, &ScannerConfig::default());
         let order: Vec<&str> = r.candidates.iter().map(|c| c.symbol.as_str()).collect();

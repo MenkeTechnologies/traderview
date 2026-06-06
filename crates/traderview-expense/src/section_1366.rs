@@ -316,7 +316,7 @@ mod tests {
             shareholder_pro_rata_share_basis_points: 5000, // 50%
             adjusted_basis_in_stock_cents: 500_000_00,     // $500K
             adjusted_basis_in_indebtedness_cents: 100_000_00, // $100K
-            at_risk_amount_cents: 600_000_00,               // $600K
+            at_risk_amount_cents: 600_000_00,              // $600K
             passive_activity: false,
             passive_income_available_to_offset_cents: 0,
             corporation_ordinary_business_loss_cents: 200_000_00, // $200K corp loss
@@ -362,9 +362,9 @@ mod tests {
     #[test]
     fn losses_exceed_basis_partially_suspended() {
         let mut i = baseline();
-        i.adjusted_basis_in_stock_cents = 50_000_00;        // $50K
+        i.adjusted_basis_in_stock_cents = 50_000_00; // $50K
         i.adjusted_basis_in_indebtedness_cents = 20_000_00; // $20K
-        // basis cap = $70K; shareholder loss = $100K → $30K suspended
+                                                            // basis cap = $70K; shareholder loss = $100K → $30K suspended
         let out = check(&i);
         assert_eq!(out.severity, Severity::LossPartiallySuspendedBasis);
         assert_eq!(out.loss_allowed_after_basis_limit_cents, 70_000_00);
@@ -428,7 +428,7 @@ mod tests {
     fn pro_rata_share_25_percent() {
         let mut i = baseline();
         i.shareholder_pro_rata_share_basis_points = 2500; // 25%
-        // shareholder loss = 25% × $200K = $50K
+                                                          // shareholder loss = 25% × $200K = $50K
         let out = check(&i);
         assert_eq!(out.shareholder_pro_rata_total_loss_cents, 50_000_00);
         assert_eq!(out.severity, Severity::Compliant);
@@ -438,7 +438,7 @@ mod tests {
     fn pro_rata_share_100_percent() {
         let mut i = baseline();
         i.shareholder_pro_rata_share_basis_points = 10000; // 100%
-        // shareholder loss = $200K (full corp loss)
+                                                           // shareholder loss = $200K (full corp loss)
         let out = check(&i);
         assert_eq!(out.shareholder_pro_rata_total_loss_cents, 200_000_00);
     }
@@ -473,7 +473,7 @@ mod tests {
         i.at_risk_amount_cents = 40_000_00; // at-risk $40K
         i.passive_activity = true;
         i.passive_income_available_to_offset_cents = 20_000_00; // passive $20K
-        // shareholder loss $100K → basis $60K allowed → at-risk $40K allowed → passive $20K allowed
+                                                                // shareholder loss $100K → basis $60K allowed → at-risk $40K allowed → passive $20K allowed
         let out = check(&i);
         assert_eq!(out.loss_allowed_after_basis_limit_cents, 60_000_00);
         assert_eq!(out.loss_allowed_after_at_risk_limit_cents, 40_000_00);

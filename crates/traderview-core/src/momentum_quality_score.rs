@@ -20,18 +20,23 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub close: f64, pub volume: f64 }
+pub struct Bar {
+    pub close: f64,
+    pub volume: f64,
+}
 
-pub fn compute(
-    bars: &[Bar],
-    period: usize,
-    z_period: usize,
-) -> Vec<Option<f64>> {
+pub fn compute(bars: &[Bar], period: usize, z_period: usize) -> Vec<Option<f64>> {
     let n = bars.len();
     let mut out = vec![None; n];
-    if period < 2 || z_period < 3 || n < period + z_period { return out; }
-    if bars.iter().any(|b| !b.close.is_finite() || !b.volume.is_finite()
-        || b.close <= 0.0 || b.volume < 0.0) { return out; }
+    if period < 2 || z_period < 3 || n < period + z_period {
+        return out;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.close.is_finite() || !b.volume.is_finite() || b.close <= 0.0 || b.volume < 0.0)
+    {
+        return out;
+    }
     let mut ret = vec![None; n];
     for i in period..n {
         let prev = bars[i - period].close;
@@ -42,14 +47,20 @@ pub fn compute(
     let zp = z_period as f64;
     for (i, slot) in out.iter_mut().enumerate().skip(period + z_period - 1) {
         let ret_win = &ret[i + 1 - z_period..=i];
-        if ret_win.iter().any(|x| x.is_none()) { continue; }
+        if ret_win.iter().any(|x| x.is_none()) {
+            continue;
+        }
         let ret_vals: Vec<f64> = ret_win.iter().filter_map(|x| *x).collect();
         let ret_mean: f64 = ret_vals.iter().sum::<f64>() / zp;
         let ret_var: f64 = ret_vals.iter().map(|x| (x - ret_mean).powi(2)).sum::<f64>() / zp;
         let ret_std = ret_var.max(0.0).sqrt();
         let vol_win = &bars[i + 1 - z_period..=i];
         let vol_mean: f64 = vol_win.iter().map(|b| b.volume).sum::<f64>() / zp;
-        let vol_var: f64 = vol_win.iter().map(|b| (b.volume - vol_mean).powi(2)).sum::<f64>() / zp;
+        let vol_var: f64 = vol_win
+            .iter()
+            .map(|b| (b.volume - vol_mean).powi(2))
+            .sum::<f64>()
+            / zp;
         let vol_std = vol_var.max(0.0).sqrt();
         if ret_std > 0.0 && vol_std > 0.0 {
             let mom_z = (ret[i].unwrap() - ret_mean) / ret_std;
@@ -66,7 +77,12 @@ pub fn compute(
 mod tests {
     use super::*;
 
-    fn b(c: f64, v: f64) -> Bar { Bar { close: c, volume: v } }
+    fn b(c: f64, v: f64) -> Bar {
+        Bar {
+            close: c,
+            volume: v,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {

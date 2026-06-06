@@ -253,8 +253,7 @@ mod tests {
     #[test]
     fn non_psc_corporation_section_269a_inapplicable() {
         let mut input = base();
-        input.corporation_activity_type =
-            CorporationActivityType::NonPersonalServiceBusiness;
+        input.corporation_activity_type = CorporationActivityType::NonPersonalServiceBusiness;
         let output = check(&input);
         assert_eq!(
             output.severity,
@@ -283,10 +282,12 @@ mod tests {
     #[test]
     fn bona_fide_business_purpose_no_allocation() {
         let mut input = base();
-        input.principal_purpose_status =
-            PrincipalPurposeStatus::PrincipalPurposeIsBonaFideBusiness;
+        input.principal_purpose_status = PrincipalPurposeStatus::PrincipalPurposeIsBonaFideBusiness;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::BonaFideBusinessPurposeNoAllocation);
+        assert_eq!(
+            output.severity,
+            Severity::BonaFideBusinessPurposeNoAllocation
+        );
         assert_eq!(output.allocated_to_psc_cents, 500_000_00);
         assert!(output.note.contains("EXCEEDS IN IMPORTANCE"));
         assert!(output.note.contains("professional-liability"));
@@ -341,8 +342,7 @@ mod tests {
     #[test]
     fn note_pins_section_482_related_party_transfer_pricing() {
         let mut input = base();
-        input.corporation_activity_type =
-            CorporationActivityType::NonPersonalServiceBusiness;
+        input.corporation_activity_type = CorporationActivityType::NonPersonalServiceBusiness;
         let output = check(&input);
         assert!(output.note.contains("§ 482"));
     }
@@ -381,8 +381,7 @@ mod tests {
     #[test]
     fn non_psc_takes_priority_over_all_other_conditions() {
         let mut input = base();
-        input.corporation_activity_type =
-            CorporationActivityType::NonPersonalServiceBusiness;
+        input.corporation_activity_type = CorporationActivityType::NonPersonalServiceBusiness;
         // All other conditions satisfied, but non-PSC takes priority
         let output = check(&input);
         assert_eq!(
@@ -407,10 +406,12 @@ mod tests {
     #[test]
     fn bona_fide_business_purpose_takes_priority_over_employee_owner_threshold() {
         let mut input = base();
-        input.principal_purpose_status =
-            PrincipalPurposeStatus::PrincipalPurposeIsBonaFideBusiness;
+        input.principal_purpose_status = PrincipalPurposeStatus::PrincipalPurposeIsBonaFideBusiness;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::BonaFideBusinessPurposeNoAllocation);
+        assert_eq!(
+            output.severity,
+            Severity::BonaFideBusinessPurposeNoAllocation
+        );
     }
 
     #[test]

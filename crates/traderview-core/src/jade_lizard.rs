@@ -115,7 +115,7 @@ mod tests {
     #[test]
     fn invalid_strike_order_rejected() {
         let mut bad = jl();
-        bad.call_short_strike = 90.0;    // < put_strike
+        bad.call_short_strike = 90.0; // < put_strike
         assert!(analyze(&bad).is_none());
     }
 
@@ -146,17 +146,17 @@ mod tests {
         let r = analyze(&jl()).unwrap();
         assert!(r.no_upside_risk);
         assert!((r.max_profit - 550.0).abs() < 1e-9);
-        assert_eq!(r.max_loss_upside, 0.0);    // no upside risk → max_loss_upside = 0
+        assert_eq!(r.max_loss_upside, 0.0); // no upside risk → max_loss_upside = 0
         assert!((r.put_breakeven - 89.5).abs() < 1e-9);
     }
 
     #[test]
     fn jade_lizard_with_upside_risk_when_credit_below_wing() {
         let mut narrow_credit = jl();
-        narrow_credit.net_credit_per_contract = 3.0;    // 3 < wing width 5
+        narrow_credit.net_credit_per_contract = 3.0; // 3 < wing width 5
         let r = analyze(&narrow_credit).unwrap();
         assert!(!r.no_upside_risk);
-        assert!((r.max_loss_upside + 200.0).abs() < 1e-9);    // − (5 − 3) · 100 = −200
+        assert!((r.max_loss_upside + 200.0).abs() < 1e-9); // − (5 − 3) · 100 = −200
     }
 
     #[test]

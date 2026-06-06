@@ -347,7 +347,8 @@ mod tests {
     fn baseline_input() -> Input {
         Input {
             tenancy_type: TenancyType::ResidentialRentalDwellingCoveredByVrlta,
-            compliance_aspect: ComplianceAspect::SecurityDepositCapTwoMonthsRentUnderSection55_1_1226,
+            compliance_aspect:
+                ComplianceAspect::SecurityDepositCapTwoMonthsRentUnderSection55_1_1226,
             monthly_rent_dollars: 2_000,
             security_deposit_dollars: 4_000,
             days_since_tenant_vacated_for_deposit_return: 30,
@@ -377,7 +378,10 @@ mod tests {
     #[test]
     fn security_deposit_at_two_months_cap_compliant() {
         let output = check(&baseline_input());
-        assert_eq!(output.mode, VrltaMode::CompliantSecurityDepositAtOrBelowTwoMonthsRentCap);
+        assert_eq!(
+            output.mode,
+            VrltaMode::CompliantSecurityDepositAtOrBelowTwoMonthsRentCap
+        );
     }
 
     #[test]
@@ -386,7 +390,10 @@ mod tests {
         input.monthly_rent_dollars = 1_500;
         input.security_deposit_dollars = 3_000;
         let output = check(&input);
-        assert_eq!(output.mode, VrltaMode::CompliantSecurityDepositAtOrBelowTwoMonthsRentCap);
+        assert_eq!(
+            output.mode,
+            VrltaMode::CompliantSecurityDepositAtOrBelowTwoMonthsRentCap
+        );
     }
 
     #[test]
@@ -395,7 +402,10 @@ mod tests {
         input.monthly_rent_dollars = 1_500;
         input.security_deposit_dollars = 3_001;
         let output = check(&input);
-        assert_eq!(output.mode, VrltaMode::ViolationSecurityDepositExceedsTwoMonthsRentCap);
+        assert_eq!(
+            output.mode,
+            VrltaMode::ViolationSecurityDepositExceedsTwoMonthsRentCap
+        );
     }
 
     #[test]
@@ -404,7 +414,10 @@ mod tests {
         input.compliance_aspect =
             ComplianceAspect::SecurityDepositReturnFortyFiveDayDeadlineUnderSection55_1_1226;
         let output = check(&input);
-        assert_eq!(output.mode, VrltaMode::CompliantSecurityDepositReturnedWithinFortyFiveDays);
+        assert_eq!(
+            output.mode,
+            VrltaMode::CompliantSecurityDepositReturnedWithinFortyFiveDays
+        );
     }
 
     #[test]
@@ -414,7 +427,10 @@ mod tests {
             ComplianceAspect::SecurityDepositReturnFortyFiveDayDeadlineUnderSection55_1_1226;
         input.days_since_tenant_vacated_for_deposit_return = 45;
         let output = check(&input);
-        assert_eq!(output.mode, VrltaMode::CompliantSecurityDepositReturnedWithinFortyFiveDays);
+        assert_eq!(
+            output.mode,
+            VrltaMode::CompliantSecurityDepositReturnedWithinFortyFiveDays
+        );
     }
 
     #[test]
@@ -425,7 +441,10 @@ mod tests {
         input.days_since_tenant_vacated_for_deposit_return = 46;
         input.deposit_returned_or_itemized_within_window = false;
         let output = check(&input);
-        assert_eq!(output.mode, VrltaMode::ViolationSecurityDepositReturnedPastFortyFiveDayDeadline);
+        assert_eq!(
+            output.mode,
+            VrltaMode::ViolationSecurityDepositReturnedPastFortyFiveDayDeadline
+        );
     }
 
     #[test]
@@ -473,7 +492,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::FiveDayPayOrQuitNoticeUnderSection55_1_1245A;
         let output = check(&input);
-        assert_eq!(output.mode, VrltaMode::CompliantFiveDayPayOrQuitNoticeProvided);
+        assert_eq!(
+            output.mode,
+            VrltaMode::CompliantFiveDayPayOrQuitNoticeProvided
+        );
     }
 
     #[test]
@@ -482,7 +504,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::FiveDayPayOrQuitNoticeUnderSection55_1_1245A;
         input.pay_or_quit_notice_period_days_given = 3;
         let output = check(&input);
-        assert_eq!(output.mode, VrltaMode::ViolationPayOrQuitNoticePeriodShorterThanFiveDays);
+        assert_eq!(
+            output.mode,
+            VrltaMode::ViolationPayOrQuitNoticePeriodShorterThanFiveDays
+        );
     }
 
     #[test]
@@ -513,25 +538,34 @@ mod tests {
     #[test]
     fn landlord_entry_twenty_four_hour_notice_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordEntryTwentyFourHourNoticeUnderSection55_1_1229;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordEntryTwentyFourHourNoticeUnderSection55_1_1229;
         let output = check(&input);
-        assert_eq!(output.mode, VrltaMode::CompliantLandlordEntryTwentyFourHourNoticeOrEmergency);
+        assert_eq!(
+            output.mode,
+            VrltaMode::CompliantLandlordEntryTwentyFourHourNoticeOrEmergency
+        );
     }
 
     #[test]
     fn landlord_entry_emergency_exception_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordEntryTwentyFourHourNoticeUnderSection55_1_1229;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordEntryTwentyFourHourNoticeUnderSection55_1_1229;
         input.landlord_entry_notice_hours_given = 0;
         input.entry_was_emergency = true;
         let output = check(&input);
-        assert_eq!(output.mode, VrltaMode::CompliantLandlordEntryTwentyFourHourNoticeOrEmergency);
+        assert_eq!(
+            output.mode,
+            VrltaMode::CompliantLandlordEntryTwentyFourHourNoticeOrEmergency
+        );
     }
 
     #[test]
     fn landlord_entry_under_twenty_four_hours_and_not_emergency_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordEntryTwentyFourHourNoticeUnderSection55_1_1229;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordEntryTwentyFourHourNoticeUnderSection55_1_1229;
         input.landlord_entry_notice_hours_given = 12;
         let output = check(&input);
         assert_eq!(
@@ -543,7 +577,8 @@ mod tests {
     #[test]
     fn retaliation_within_six_months_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::RetaliatoryConductProhibitedUnderSection55_1_1244;
+        input.compliance_aspect =
+            ComplianceAspect::RetaliatoryConductProhibitedUnderSection55_1_1244;
         input.protected_activity_occurred = true;
         input.adverse_action_within_six_months_of_protected_activity = true;
         let output = check(&input);
@@ -556,7 +591,8 @@ mod tests {
     #[test]
     fn no_retaliation_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::RetaliatoryConductProhibitedUnderSection55_1_1244;
+        input.compliance_aspect =
+            ComplianceAspect::RetaliatoryConductProhibitedUnderSection55_1_1244;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -567,7 +603,8 @@ mod tests {
     #[test]
     fn essential_services_maintained_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::EssentialServicesMaintenanceUnderSection55_1_1227;
+        input.compliance_aspect =
+            ComplianceAspect::EssentialServicesMaintenanceUnderSection55_1_1227;
         let output = check(&input);
         assert_eq!(output.mode, VrltaMode::CompliantEssentialServicesMaintained);
     }
@@ -575,10 +612,14 @@ mod tests {
     #[test]
     fn essential_services_not_maintained_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::EssentialServicesMaintenanceUnderSection55_1_1227;
+        input.compliance_aspect =
+            ComplianceAspect::EssentialServicesMaintenanceUnderSection55_1_1227;
         input.essential_services_maintained = false;
         let output = check(&input);
-        assert_eq!(output.mode, VrltaMode::ViolationEssentialServicesNotMaintained);
+        assert_eq!(
+            output.mode,
+            VrltaMode::ViolationEssentialServicesNotMaintained
+        );
     }
 
     #[test]

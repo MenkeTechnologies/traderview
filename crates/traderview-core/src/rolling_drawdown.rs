@@ -29,8 +29,12 @@ pub struct RollingDrawdownReport {
 
 pub fn compute(equity: &[f64], window: usize) -> Option<RollingDrawdownReport> {
     let n = equity.len();
-    if n < 2 || window < 2 { return None; }
-    if equity.iter().any(|x| !x.is_finite() || *x <= 0.0) { return None; }
+    if n < 2 || window < 2 {
+        return None;
+    }
+    if equity.iter().any(|x| !x.is_finite() || *x <= 0.0) {
+        return None;
+    }
     let mut rolling_max_dd = vec![None; n];
     let mut rolling_hwm = vec![None; n];
     let mut per_bar_dd = vec![None; n];
@@ -40,9 +44,13 @@ pub fn compute(equity: &[f64], window: usize) -> Option<RollingDrawdownReport> {
         let mut hwm = win[0];
         let mut max_dd = 0.0_f64;
         for &v in win {
-            if v > hwm { hwm = v; }
+            if v > hwm {
+                hwm = v;
+            }
             let dd = (hwm - v) / hwm;
-            if dd > max_dd { max_dd = dd; }
+            if dd > max_dd {
+                max_dd = dd;
+            }
         }
         rolling_hwm[i] = Some(hwm);
         rolling_max_dd[i] = Some(max_dd);
@@ -87,8 +95,11 @@ mod tests {
         let eq = vec![100.0, 105.0, 110.0, 95.0, 88.0, 92.0, 95.0];
         let r = compute(&eq, 7).unwrap();
         let last_dd = r.rolling_max_drawdown[6].unwrap();
-        assert!((last_dd - 0.20).abs() < 1e-9,
-            "expected DD = 20%, got {}", last_dd);
+        assert!(
+            (last_dd - 0.20).abs() < 1e-9,
+            "expected DD = 20%, got {}",
+            last_dd
+        );
     }
 
     #[test]

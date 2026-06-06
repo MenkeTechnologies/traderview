@@ -146,11 +146,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // NoStateTopa — all remaining states.
     let no_topa = [
-        "AL", "AK", "AZ", "AR", "CO", "CT", "DE", "FL", "GA", "HI",
-        "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MA", "MI",
-        "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY",
-        "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN",
-        "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS",
+        "KY", "LA", "ME", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY",
+        "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA",
+        "WV", "WI", "WY",
     ];
     for code in no_topa {
         m.insert(
@@ -221,9 +220,7 @@ pub fn check(input: &TopaInput) -> TopaResult {
         None => input.unit_count > 0,
     };
 
-    let has_rofr = rule.regime != TopaRegime::NoStateTopa
-        && sale_covered
-        && unit_in_scope;
+    let has_rofr = rule.regime != TopaRegime::NoStateTopa && sale_covered && unit_in_scope;
 
     let within_window = match rule.exercise_window_days {
         Some(w) => input.days_since_notice_received <= w,
@@ -431,7 +428,12 @@ mod tests {
     #[test]
     fn coverage_is_all_50_states_plus_dc() {
         let codes: Vec<&'static str> = RULES.keys().copied().collect();
-        assert_eq!(codes.len(), 51, "expected 50 states + DC, got {}", codes.len());
+        assert_eq!(
+            codes.len(),
+            51,
+            "expected 50 states + DC, got {}",
+            codes.len()
+        );
     }
 
     #[test]

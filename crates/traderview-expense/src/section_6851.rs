@@ -174,8 +174,7 @@ pub fn check(input: &Section6851Input) -> Section6851Result {
         );
     }
 
-    let ten_day_compliant = input.days_to_payment_or_bond <= 10
-        || input.section_6863_bond_filed;
+    let ten_day_compliant = input.days_to_payment_or_bond <= 10 || input.section_6863_bond_filed;
     if !ten_day_compliant {
         failure_reasons.push(
             "26 USC § 6863 + IRM 5.17.15 — amount of termination assessment must be paid within 10 days unless § 6863 bond is filed to stay collection".to_string(),
@@ -412,16 +411,19 @@ mod tests {
     #[test]
     fn note_pins_section_b_60_day_snod() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6851(b)")
-            && n.contains("60 days")
-            && n.contains("LATER")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6851(b)") && n.contains("60 days") && n.contains("LATER")));
     }
 
     #[test]
     fn note_pins_section_c_treatment_of_amounts_collected() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6851(c)")
-            && n.contains("treated as if collected")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6851(c)") && n.contains("treated as if collected")));
     }
 
     #[test]
@@ -435,8 +437,10 @@ mod tests {
     #[test]
     fn note_pins_6851_6863_10_day_interaction() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6851 + § 6863")
-            && n.contains("10 days")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6851 + § 6863") && n.contains("10 days")));
     }
 
     #[test]

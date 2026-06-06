@@ -20,7 +20,12 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub open: f64, pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct EightyTwentyReport {
@@ -36,16 +41,21 @@ pub fn compute(bars: &[Bar], lookback: usize) -> EightyTwentyReport {
         short_signal: vec![false; n],
         lookback,
     };
-    if lookback < 2 || n < lookback + 2 { return report; }
-    if bars.iter().any(|b| !b.open.is_finite() || !b.high.is_finite()
-        || !b.low.is_finite() || !b.close.is_finite()) {
+    if lookback < 2 || n < lookback + 2 {
+        return report;
+    }
+    if bars.iter().any(|b| {
+        !b.open.is_finite() || !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()
+    }) {
         return report;
     }
     for i in lookback..(n - 1) {
         let bar = bars[i];
         let next = bars[i + 1];
         let range = bar.high - bar.low;
-        if range <= 0.0 { continue; }
+        if range <= 0.0 {
+            continue;
+        }
         let open_pct = (bar.open - bar.low) / range;
         let close_pct = (bar.close - bar.low) / range;
         let win = &bars[i - lookback..i];
@@ -53,14 +63,12 @@ pub fn compute(bars: &[Bar], lookback: usize) -> EightyTwentyReport {
         let prior_low = win.iter().fold(f64::INFINITY, |a, b| a.min(b.low));
         // Bullish: open near high (≥ 0.80), close near low (≤ 0.20),
         // new low broken, next bar reclaims.
-        if open_pct >= 0.80 && close_pct <= 0.20
-            && bar.low < prior_low && next.close > bar.low {
+        if open_pct >= 0.80 && close_pct <= 0.20 && bar.low < prior_low && next.close > bar.low {
             report.long_signal[i + 1] = true;
         }
         // Bearish: open near low (≤ 0.20), close near high (≥ 0.80),
         // new high taken out, next bar rejects.
-        if open_pct <= 0.20 && close_pct >= 0.80
-            && bar.high > prior_high && next.close < bar.high {
+        if open_pct <= 0.20 && close_pct >= 0.80 && bar.high > prior_high && next.close < bar.high {
             report.short_signal[i + 1] = true;
         }
     }
@@ -72,7 +80,12 @@ mod tests {
     use super::*;
 
     fn bar(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]

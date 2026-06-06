@@ -145,9 +145,7 @@ pub fn check(
     }
 }
 
-fn check_ca(
-    input: &RentalUnpermittedUnitDisclosureInput,
-) -> RentalUnpermittedUnitDisclosureResult {
+fn check_ca(input: &RentalUnpermittedUnitDisclosureInput) -> RentalUnpermittedUnitDisclosureResult {
     let mut violations: Vec<String> = Vec::new();
     let notes: Vec<String> = vec![
         "California asymmetric enforceability doctrine (Espinoza v. Calva, 169 Cal.App.4th 1393 (Cal. Ct. App. 2008)) — tenant may enforce lease and sue for damages despite illegality; landlord may NOT collect or enforce rent for unpermitted unit".to_string(),
@@ -216,8 +214,9 @@ fn check_oakland(
     let base_relocation: u64 = 793_100;
     let per_qualifying: u64 = 528_700;
     let oakland_relocation: u64 = if unpermitted && input.landlord_seeks_no_cause_eviction {
-        base_relocation
-            .saturating_add(per_qualifying.saturating_mul(input.senior_disabled_or_minor_count as u64))
+        base_relocation.saturating_add(
+            per_qualifying.saturating_mul(input.senior_disabled_or_minor_count as u64),
+        )
     } else {
         0
     };
@@ -477,8 +476,7 @@ mod tests {
         let mut i = oakland_unpermitted_evicting();
         i.senior_disabled_or_minor_count = u32::MAX;
         let r = check(&i);
-        let expected = 793_100_u64
-            .saturating_add(528_700_u64.saturating_mul(u32::MAX as u64));
+        let expected = 793_100_u64.saturating_add(528_700_u64.saturating_mul(u32::MAX as u64));
         assert_eq!(r.oakland_relocation_amount_cents, expected);
         assert!(r.oakland_relocation_amount_cents > 793_100);
     }
@@ -603,10 +601,7 @@ mod tests {
     #[test]
     fn note_pins_default_hud_section_8() {
         let r = check(&default_clean());
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("HUD Section 8")));
+        assert!(r.notes.iter().any(|n| n.contains("HUD Section 8")));
     }
 
     #[test]

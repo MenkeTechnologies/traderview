@@ -19,19 +19,23 @@ pub fn compute(closes: &[f64], lambda: f64) -> Vec<Option<f64>> {
     }
     let mut variance: Option<f64> = None;
     for i in 1..n {
-        if !closes[i].is_finite() || !closes[i - 1].is_finite()
-            || closes[i] <= 0.0 || closes[i - 1] <= 0.0
+        if !closes[i].is_finite()
+            || !closes[i - 1].is_finite()
+            || closes[i] <= 0.0
+            || closes[i - 1] <= 0.0
         {
             // Carry the prior variance if we have one; just don't update.
             if let Some(v) = variance {
-                if v >= 0.0 { out[i] = Some(v.sqrt()); }
+                if v >= 0.0 {
+                    out[i] = Some(v.sqrt());
+                }
             }
             continue;
         }
         let r = (closes[i] / closes[i - 1]).ln();
         let r2 = r * r;
         let new_var = match variance {
-            None => r2,    // seed with first squared return
+            None => r2, // seed with first squared return
             Some(v) => lambda * v + (1.0 - lambda) * r2,
         };
         if new_var.is_finite() && new_var >= 0.0 {
@@ -70,7 +74,10 @@ mod tests {
         let v = vec![100.0; 50];
         let out = compute(&v, 0.94);
         for x in out.iter().flatten() {
-            assert!(x.abs() < 1e-12, "flat series should yield zero vol, got {x}");
+            assert!(
+                x.abs() < 1e-12,
+                "flat series should yield zero vol, got {x}"
+            );
         }
     }
 
@@ -78,12 +85,16 @@ mod tests {
     fn rising_constant_pct_returns_yield_stable_vol() {
         // 1% daily up move repeatedly — variance should converge to (ln 1.01)².
         let mut v = vec![100.0];
-        for _ in 0..200 { v.push(v.last().unwrap() * 1.01); }
+        for _ in 0..200 {
+            v.push(v.last().unwrap() * 1.01);
+        }
         let out = compute(&v, 0.94);
         let last = out.last().copied().flatten().expect("populated");
         let expected = (1.01_f64).ln();
-        assert!((last - expected.abs()).abs() < 1e-3,
-            "should converge to ln(1.01) ≈ {expected}, got {last}");
+        assert!(
+            (last - expected.abs()).abs() < 1e-3,
+            "should converge to ln(1.01) ≈ {expected}, got {last}"
+        );
     }
 
     #[test]
@@ -96,7 +107,10 @@ mod tests {
         let out = compute(&v, 0.94);
         let spike_vol = out[100].expect("populated");
         let later_vol = out[120].expect("populated");
-        assert!(later_vol < spike_vol, "vol should decay after spike: spike={spike_vol} later={later_vol}");
+        assert!(
+            later_vol < spike_vol,
+            "vol should decay after spike: spike={spike_vol} later={later_vol}"
+        );
     }
 
     #[test]

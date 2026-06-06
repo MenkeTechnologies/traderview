@@ -32,12 +32,18 @@ pub struct PcaReport {
     pub converged: bool,
 }
 
-#[allow(clippy::needless_range_loop, clippy::map_clone)]    // matrix-element indexing
+#[allow(clippy::needless_range_loop, clippy::map_clone)] // matrix-element indexing
 pub fn decompose(matrix: &[Vec<f64>], max_iter: usize, tolerance: f64) -> Option<PcaReport> {
     let n = matrix.len();
-    if n == 0 || matrix.iter().any(|row| row.len() != n) { return None; }
-    if matrix.iter().any(|row| row.iter().any(|c| !c.is_finite())) { return None; }
-    if !tolerance.is_finite() || tolerance <= 0.0 || max_iter == 0 { return None; }
+    if n == 0 || matrix.iter().any(|row| row.len() != n) {
+        return None;
+    }
+    if matrix.iter().any(|row| row.iter().any(|c| !c.is_finite())) {
+        return None;
+    }
+    if !tolerance.is_finite() || tolerance <= 0.0 || max_iter == 0 {
+        return None;
+    }
     // Verify symmetry.
     for i in 0..n {
         for j in (i + 1)..n {
@@ -51,7 +57,9 @@ pub fn decompose(matrix: &[Vec<f64>], max_iter: usize, tolerance: f64) -> Option
     // Working copy of A (will be diagonalized in place); V starts as I.
     let mut a: Vec<Vec<f64>> = matrix.iter().map(|r| r.clone()).collect();
     let mut v = vec![vec![0.0_f64; n]; n];
-    for i in 0..n { v[i][i] = 1.0; }
+    for i in 0..n {
+        v[i][i] = 1.0;
+    }
     let mut iters = 0;
     let mut converged = false;
     for _ in 0..max_iter {
@@ -63,13 +71,18 @@ pub fn decompose(matrix: &[Vec<f64>], max_iter: usize, tolerance: f64) -> Option
                 off_norm += a[i][j] * a[i][j];
             }
         }
-        if off_norm.sqrt() < tolerance { converged = true; break; }
+        if off_norm.sqrt() < tolerance {
+            converged = true;
+            break;
+        }
         // Sweep through all off-diagonal (p, q) pairs.
-        #[allow(clippy::needless_range_loop)]    // matrix iteration needs both indices
+        #[allow(clippy::needless_range_loop)] // matrix iteration needs both indices
         for p in 0..n - 1 {
             for q in (p + 1)..n {
                 let apq = a[p][q];
-                if apq.abs() < 1e-18 { continue; }
+                if apq.abs() < 1e-18 {
+                    continue;
+                }
                 let theta = (a[q][q] - a[p][p]) / (2.0 * apq);
                 let t = if theta >= 0.0 {
                     1.0 / (theta + (1.0 + theta * theta).sqrt())
@@ -185,10 +198,7 @@ mod tests {
 
     #[test]
     fn diagonal_matrix_yields_diagonal_eigenvalues() {
-        let m = vec![
-            vec![5.0, 0.0],
-            vec![0.0, 2.0],
-        ];
+        let m = vec![vec![5.0, 0.0], vec![0.0, 2.0]];
         let r = decompose(&m, 100, 1e-12).unwrap();
         // Sorted descending.
         assert!((r.eigenvalues[0] - 5.0).abs() < 1e-9);
@@ -212,27 +222,26 @@ mod tests {
 
     #[test]
     fn eigenvectors_unit_length() {
-        let m = vec![
-            vec![4.0, 2.0],
-            vec![2.0, 3.0],
-        ];
+        let m = vec![vec![4.0, 2.0], vec![2.0, 3.0]];
         let r = decompose(&m, 100, 1e-12).unwrap();
         for col in 0..2 {
-            let len: f64 = (0..2).map(|row| r.eigenvectors[row][col].powi(2)).sum::<f64>().sqrt();
+            let len: f64 = (0..2)
+                .map(|row| r.eigenvectors[row][col].powi(2))
+                .sum::<f64>()
+                .sqrt();
             assert!((len - 1.0).abs() < 1e-9);
         }
     }
 
     #[test]
     fn eigenvalue_eigenvector_satisfies_a_x_eq_lambda_x() {
-        let m = vec![
-            vec![6.0, 2.0],
-            vec![2.0, 3.0],
-        ];
+        let m = vec![vec![6.0, 2.0], vec![2.0, 3.0]];
         let r = decompose(&m, 100, 1e-12).unwrap();
         for k in 0..2 {
             let v: Vec<f64> = (0..2).map(|i| r.eigenvectors[i][k]).collect();
-            let av: Vec<f64> = (0..2).map(|i| (0..2).map(|j| m[i][j] * v[j]).sum::<f64>()).collect();
+            let av: Vec<f64> = (0..2)
+                .map(|i| (0..2).map(|j| m[i][j] * v[j]).sum::<f64>())
+                .collect();
             let lambda_v: Vec<f64> = v.iter().map(|x| r.eigenvalues[k] * x).collect();
             for i in 0..2 {
                 assert!((av[i] - lambda_v[i]).abs() < 1e-9);

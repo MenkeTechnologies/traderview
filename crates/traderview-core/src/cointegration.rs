@@ -24,7 +24,12 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum SignificanceLevel { Pct1, Pct5, Pct10, Insignificant }
+pub enum SignificanceLevel {
+    Pct1,
+    Pct5,
+    Pct10,
+    Insignificant,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CointegrationReport {
@@ -56,18 +61,29 @@ pub fn test(y: &[f64], x: &[f64], adf_lags: usize) -> Option<CointegrationReport
         sxy += dx * dy;
         sxx += dx * dx;
     }
-    if sxx <= 0.0 { return None; }
+    if sxx <= 0.0 {
+        return None;
+    }
     let beta = sxy / sxx;
     let alpha = mean_y - beta * mean_x;
-    let residuals: Vec<f64> = y.iter().zip(x.iter()).map(|(yi, xi)| yi - alpha - beta * xi).collect();
+    let residuals: Vec<f64> = y
+        .iter()
+        .zip(x.iter())
+        .map(|(yi, xi)| yi - alpha - beta * xi)
+        .collect();
     // Step 2: ADF on residuals.
     let adf_stat = adf_t_stat(&residuals, adf_lags)?;
     // MacKinnon residual-based ADF critical values (intercept, no trend).
     // For ~250 obs: 1% ≈ −3.90, 5% ≈ −3.34, 10% ≈ −3.04.
-    let sig = if adf_stat < -3.90 { SignificanceLevel::Pct1 }
-        else if adf_stat < -3.34 { SignificanceLevel::Pct5 }
-        else if adf_stat < -3.04 { SignificanceLevel::Pct10 }
-        else { SignificanceLevel::Insignificant };
+    let sig = if adf_stat < -3.90 {
+        SignificanceLevel::Pct1
+    } else if adf_stat < -3.34 {
+        SignificanceLevel::Pct5
+    } else if adf_stat < -3.04 {
+        SignificanceLevel::Pct10
+    } else {
+        SignificanceLevel::Insignificant
+    };
     // Mean-reversion half-life from OU fit: ε_t = ρ · ε_{t−1} + ν.
     let half_life = ou_half_life(&residuals);
     Some(CointegrationReport {
@@ -82,16 +98,24 @@ pub fn test(y: &[f64], x: &[f64], adf_lags: usize) -> Option<CointegrationReport
 
 fn adf_t_stat(series: &[f64], lags: usize) -> Option<f64> {
     let n = series.len();
-    if n < lags + 4 { return None; }
+    if n < lags + 4 {
+        return None;
+    }
     // Δy_t = γ · y_{t−1} + Σ φ_i · Δy_{t−i} + intercept + u_t
     // Build design matrix manually for the simple case.
     // For lags=0 it reduces to a 2-column OLS: intercept + y_{t−1}.
     let mut diffs = vec![0.0_f64; n];
-    for i in 1..n { diffs[i] = series[i] - series[i - 1]; }
+    for i in 1..n {
+        diffs[i] = series[i] - series[i - 1];
+    }
     let start = 1 + lags;
-    if n <= start { return None; }
+    if n <= start {
+        return None;
+    }
     let m = n - start;
-    if m < 2 { return None; }
+    if m < 2 {
+        return None;
+    }
     // X columns: [1, y_{t−1}, Δy_{t−1}, …, Δy_{t−lags}], y: Δy_t.
     let p = 2 + lags;
     let mut x: Vec<Vec<f64>> = (0..p).map(|_| Vec::with_capacity(m)).collect();
@@ -107,15 +131,21 @@ fn adf_t_stat(series: &[f64], lags: usize) -> Option<f64> {
     let (beta, se) = ols_with_se(&x, &y_vec)?;
     let gamma = beta[1];
     let se_gamma = se[1];
-    if se_gamma <= 0.0 { return None; }
+    if se_gamma <= 0.0 {
+        return None;
+    }
     Some(gamma / se_gamma)
 }
 
 fn ols_with_se(x: &[Vec<f64>], y: &[f64]) -> Option<(Vec<f64>, Vec<f64>)> {
     let p = x.len();
     let n = y.len();
-    if p == 0 || n == 0 { return None; }
-    if x.iter().any(|c| c.len() != n) { return None; }
+    if p == 0 || n == 0 {
+        return None;
+    }
+    if x.iter().any(|c| c.len() != n) {
+        return None;
+    }
     // Normal equations: (XᵀX) β = Xᵀy. Solve with Gauss-Jordan
     // (in-place; only sensible for small p — ADF has p ≤ ~10 typically).
     let mut xtx = vec![vec![0.0_f64; p]; p];
@@ -139,16 +169,26 @@ fn ols_with_se(x: &[Vec<f64>], y: &[f64]) -> Option<(Vec<f64>, Vec<f64>)> {
         // Partial pivot.
         let mut pivot_row = i;
         for r in (i + 1)..p {
-            if aug[r][i].abs() > aug[pivot_row][i].abs() { pivot_row = r; }
+            if aug[r][i].abs() > aug[pivot_row][i].abs() {
+                pivot_row = r;
+            }
         }
-        if aug[pivot_row][i].abs() < 1e-18 { return None; }
+        if aug[pivot_row][i].abs() < 1e-18 {
+            return None;
+        }
         aug.swap(i, pivot_row);
         let div = aug[i][i];
-        for v in aug[i].iter_mut() { *v /= div; }
+        for v in aug[i].iter_mut() {
+            *v /= div;
+        }
         for r in 0..p {
-            if r == i { continue; }
+            if r == i {
+                continue;
+            }
             let factor = aug[r][i];
-            if factor == 0.0 { continue; }
+            if factor == 0.0 {
+                continue;
+            }
             let pivot_row = aug[i].clone();
             for (j, v) in aug[r].iter_mut().enumerate() {
                 *v -= factor * pivot_row[j];
@@ -175,7 +215,9 @@ fn ols_with_se(x: &[Vec<f64>], y: &[f64]) -> Option<(Vec<f64>, Vec<f64>)> {
 
 fn ou_half_life(series: &[f64]) -> Option<f64> {
     let n = series.len();
-    if n < 4 { return None; }
+    if n < 4 {
+        return None;
+    }
     let mut x = Vec::with_capacity(n - 1);
     let mut y = Vec::with_capacity(n - 1);
     for i in 1..n {
@@ -186,14 +228,19 @@ fn ou_half_life(series: &[f64]) -> Option<f64> {
     let m = x.len() as f64;
     let mx = x.iter().sum::<f64>() / m;
     let my = y.iter().sum::<f64>() / m;
-    let mut sxy = 0.0; let mut sxx = 0.0;
+    let mut sxy = 0.0;
+    let mut sxx = 0.0;
     for (xi, yi) in x.iter().zip(y.iter()) {
         sxy += (xi - mx) * (yi - my);
         sxx += (xi - mx).powi(2);
     }
-    if sxx <= 0.0 { return None; }
-    let theta = sxy / sxx;        // = ρ − 1 (negative when mean-reverting)
-    if theta >= 0.0 { return None; }
+    if sxx <= 0.0 {
+        return None;
+    }
+    let theta = sxy / sxx; // = ρ − 1 (negative when mean-reverting)
+    if theta >= 0.0 {
+        return None;
+    }
     Some(-(2.0_f64.ln()) / theta)
 }
 
@@ -230,24 +277,38 @@ mod tests {
         let mut x = vec![0.0_f64; n];
         let mut state: u64 = 12345;
         for i in 1..n {
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             let inc = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.05;
-            x[i] = x[i - 1] + inc;    // random walk
+            x[i] = x[i - 1] + inc; // random walk
         }
         let mut noise = vec![0.0_f64; n];
         // Generate AR(1) residual: ε_t = 0.5 · ε_{t-1} + u_t — mean-reverting.
         for i in 1..n {
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             let u = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.02;
             noise[i] = 0.5 * noise[i - 1] + u;
         }
-        let y: Vec<f64> = x.iter().zip(noise.iter()).map(|(xi, ei)| 2.0 * xi + ei).collect();
+        let y: Vec<f64> = x
+            .iter()
+            .zip(noise.iter())
+            .map(|(xi, ei)| 2.0 * xi + ei)
+            .collect();
         let report = test(&y, &x, 2).expect("populated");
-        assert!((report.hedge_ratio_beta - 2.0).abs() < 0.1,
-            "hedge ratio should ≈ 2, got {}", report.hedge_ratio_beta);
+        assert!(
+            (report.hedge_ratio_beta - 2.0).abs() < 0.1,
+            "hedge ratio should ≈ 2, got {}",
+            report.hedge_ratio_beta
+        );
         // ADF stat should be quite negative (mean-reverting noise).
-        assert!(report.adf_statistic < -2.0,
-            "ADF should be significantly negative, got {}", report.adf_statistic);
+        assert!(
+            report.adf_statistic < -2.0,
+            "ADF should be significantly negative, got {}",
+            report.adf_statistic
+        );
     }
 
     #[test]
@@ -257,18 +318,28 @@ mod tests {
         let mut y = vec![0.0_f64; n];
         let mut state: u64 = 999;
         for i in 1..n {
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             let u = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.05;
             x[i] = x[i - 1] + u;
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             let v = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.05;
             y[i] = y[i - 1] + v;
         }
         let report = test(&y, &x, 2).expect("populated");
         // Spurious regression: ADF should NOT be highly negative.
-        assert!(matches!(report.significance, SignificanceLevel::Insignificant | SignificanceLevel::Pct10),
+        assert!(
+            matches!(
+                report.significance,
+                SignificanceLevel::Insignificant | SignificanceLevel::Pct10
+            ),
             "unrelated walks should not show strong cointegration, got {:?} (adf={})",
-            report.significance, report.adf_statistic);
+            report.significance,
+            report.adf_statistic
+        );
     }
 
     #[test]

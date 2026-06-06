@@ -9,21 +9,21 @@
 //! `is_local = true` user instead of demanding credentials.
 
 pub mod auth;
+pub mod budget_routes;
 pub mod error;
 pub mod expense_routes;
 pub mod log_mw;
+pub mod merchant;
 pub mod rate_limit;
 pub mod realtime;
-pub mod merchant;
 pub mod receipt_routes;
 pub mod rental_routes;
-pub mod tax_routes;
-pub mod tax_filing_routes;
-pub mod tax_pdf;
-pub mod budget_routes;
 pub mod risk_gate_routes;
 pub mod routes;
 pub mod state;
+pub mod tax_filing_routes;
+pub mod tax_pdf;
+pub mod tax_routes;
 
 pub use error::ApiError;
 pub use state::{AppMode, AppState};

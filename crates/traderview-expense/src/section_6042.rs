@@ -175,10 +175,7 @@ pub fn check(input: &Section6042Input) -> Section6042Result {
     const TEN_DOLLAR_CENTS: u64 = 1_000;
     let threshold_met = input.aggregate_dividend_cents >= TEN_DOLLAR_CENTS;
 
-    let exempt_interest = matches!(
-        input.dividend_type,
-        DividendType::ExemptInterestDividend
-    );
+    let exempt_interest = matches!(input.dividend_type, DividendType::ExemptInterestDividend);
 
     let required = (threshold_met || input.backup_withholding_applied) && !exempt_interest;
 
@@ -412,8 +409,10 @@ mod tests {
     #[test]
     fn note_pins_subsection_c_january_31_statement() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6042(c)")
-            && n.contains("January 31")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6042(c)") && n.contains("January 31")));
     }
 
     #[test]
@@ -427,8 +426,10 @@ mod tests {
     #[test]
     fn note_pins_subsection_d2_uncertain_payments_entire_amount() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6042(d)(2)")
-            && n.contains("ENTIRE AMOUNT")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6042(d)(2)") && n.contains("ENTIRE AMOUNT")));
     }
 
     #[test]

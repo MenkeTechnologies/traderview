@@ -595,7 +595,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::FifteenYearCompliancePeriodUnderSection42I1;
         input.compliance_period_status = CompliancePeriodStatus::WithinFifteenYearCompliancePeriod;
         let out = check(&input);
-        assert_eq!(out.mode, Section42Mode::CompliantFifteenYearCompliancePeriodMet);
+        assert_eq!(
+            out.mode,
+            Section42Mode::CompliantFifteenYearCompliancePeriodMet
+        );
     }
 
     #[test]
@@ -604,7 +607,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::ThirtyYearExtendedUseAgreementUnderSection42H6;
         input.extended_use_agreement_breached = false;
         let out = check(&input);
-        assert_eq!(out.mode, Section42Mode::CompliantExtendedUseAgreementInForce);
+        assert_eq!(
+            out.mode,
+            Section42Mode::CompliantExtendedUseAgreementInForce
+        );
     }
 
     #[test]
@@ -613,7 +619,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::ThirtyYearExtendedUseAgreementUnderSection42H6;
         input.extended_use_agreement_breached = true;
         let out = check(&input);
-        assert_eq!(out.mode, Section42Mode::ViolationExtendedUseAgreementBreached);
+        assert_eq!(
+            out.mode,
+            Section42Mode::ViolationExtendedUseAgreementBreached
+        );
     }
 
     #[test]
@@ -778,7 +787,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::FormFilingUnderForm8609;
         input.form_8609_filed_correctly = false;
         let out = check(&input);
-        assert_eq!(out.mode, Section42Mode::ViolationForm8609NotFiledOrIncorrect);
+        assert_eq!(
+            out.mode,
+            Section42Mode::ViolationForm8609NotFiledOrIncorrect
+        );
     }
 
     #[test]
@@ -799,7 +811,10 @@ mod tests {
         assert_eq!(IRC_42_SET_ASIDE_40_60_AMI_PCT_BPS, 6_000);
         assert_eq!(IRC_42_SET_ASIDE_AVERAGE_INCOME_UNIT_PCT_BPS, 4_000);
         assert_eq!(IRC_42_SET_ASIDE_AVERAGE_INCOME_AVERAGE_AMI_PCT_BPS, 6_000);
-        assert_eq!(IRC_42_RENT_RESTRICTION_GROSS_RENT_OF_QUALIFYING_INCOME_BPS, 3_000);
+        assert_eq!(
+            IRC_42_RENT_RESTRICTION_GROSS_RENT_OF_QUALIFYING_INCOME_BPS,
+            3_000
+        );
         assert_eq!(IRC_42_AVERAGE_INCOME_DESIGNATION_MIN_AMI_PCT_BPS, 2_000);
         assert_eq!(IRC_42_AVERAGE_INCOME_DESIGNATION_MAX_AMI_PCT_BPS, 8_000);
         assert_eq!(IRC_42_BOND_FINANCED_MIN_PCT_BPS, 5_000);

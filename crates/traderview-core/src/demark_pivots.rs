@@ -36,9 +36,12 @@ pub struct DemarkPivotLevels {
 }
 
 pub fn compute(session: PriorSession) -> Option<DemarkPivotLevels> {
-    if !session.open.is_finite() || !session.high.is_finite()
-        || !session.low.is_finite() || !session.close.is_finite()
-        || session.high < session.low {
+    if !session.open.is_finite()
+        || !session.high.is_finite()
+        || !session.low.is_finite()
+        || !session.close.is_finite()
+        || session.high < session.low
+    {
         return None;
     }
     let x = if session.close < session.open {
@@ -60,7 +63,12 @@ mod tests {
     use super::*;
 
     fn s(o: f64, h: f64, l: f64, c: f64) -> PriorSession {
-        PriorSession { open: o, high: h, low: l, close: c }
+        PriorSession {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]

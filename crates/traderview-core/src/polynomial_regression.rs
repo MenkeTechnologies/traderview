@@ -19,15 +19,19 @@
 
 #[derive(Debug)]
 pub struct Report {
-    pub coefficients: Vec<f64>,        // length = degree + 1
+    pub coefficients: Vec<f64>, // length = degree + 1
     pub fitted: Vec<f64>,
     pub r_squared: f64,
 }
 
 pub fn compute(x: &[f64], y: &[f64], degree: usize) -> Option<Report> {
     let n = x.len();
-    if degree == 0 || n < degree + 2 || y.len() != n { return None; }
-    if x.iter().chain(y.iter()).any(|v| !v.is_finite()) { return None; }
+    if degree == 0 || n < degree + 2 || y.len() != n {
+        return None;
+    }
+    if x.iter().chain(y.iter()).any(|v| !v.is_finite()) {
+        return None;
+    }
     // Standardize x for conditioning.
     let mean_x: f64 = x.iter().sum::<f64>() / n as f64;
     let var_x: f64 = x.iter().map(|v| (v - mean_x).powi(2)).sum::<f64>() / n as f64;
@@ -39,7 +43,9 @@ pub fn compute(x: &[f64], y: &[f64], degree: usize) -> Option<Report> {
     let mut xty = vec![0.0_f64; cols];
     for i in 0..n {
         let mut row = vec![1.0_f64; cols];
-        for k in 1..cols { row[k] = row[k - 1] * xs[i]; }
+        for k in 1..cols {
+            row[k] = row[k - 1] * xs[i];
+        }
         for j in 0..cols {
             for k in j..cols {
                 xtx[j][k] += row[j] * row[k];
@@ -63,30 +69,46 @@ pub fn compute(x: &[f64], y: &[f64], degree: usize) -> Option<Report> {
         for k in j..cols {
             let c_kj = choose(k, j);
             let sign = if (k - j).is_multiple_of(2) { 1.0 } else { -1.0 };
-            s += beta_std[k] * std_x.powi(-(k as i32)) * c_kj as f64
-                 * sign * mean_x.powi((k - j) as i32);
+            s += beta_std[k]
+                * std_x.powi(-(k as i32))
+                * c_kj as f64
+                * sign
+                * mean_x.powi((k - j) as i32);
         }
         coefficients[j] = s;
     }
     // Evaluate ŷ in original-x space.
-    let fitted: Vec<f64> = x.iter().map(|xi| {
-        let mut p = 1.0_f64;
-        let mut sum = 0.0;
-        for &c in &coefficients {
-            sum += c * p;
-            p *= xi;
-        }
-        sum
-    }).collect();
+    let fitted: Vec<f64> = x
+        .iter()
+        .map(|xi| {
+            let mut p = 1.0_f64;
+            let mut sum = 0.0;
+            for &c in &coefficients {
+                sum += c * p;
+                p *= xi;
+            }
+            sum
+        })
+        .collect();
     let y_mean: f64 = y.iter().sum::<f64>() / n as f64;
     let sst: f64 = y.iter().map(|a| (a - y_mean).powi(2)).sum();
-    let sse: f64 = y.iter().zip(fitted.iter()).map(|(a, b)| (a - b).powi(2)).sum();
+    let sse: f64 = y
+        .iter()
+        .zip(fitted.iter())
+        .map(|(a, b)| (a - b).powi(2))
+        .sum();
     let r_squared = if sst > 1e-18 { 1.0 - sse / sst } else { 0.0 };
-    Some(Report { coefficients, fitted, r_squared })
+    Some(Report {
+        coefficients,
+        fitted,
+        r_squared,
+    })
 }
 
 fn choose(n: usize, k: usize) -> u64 {
-    if k > n { return 0; }
+    if k > n {
+        return 0;
+    }
     let k = k.min(n - k);
     let mut r = 1_u64;
     for i in 0..k {
@@ -101,18 +123,27 @@ fn solve_linear_system(mut a: Vec<Vec<f64>>, mut b: Vec<f64>) -> Option<Vec<f64>
         let mut pivot = i;
         let mut pmax = a[i][i].abs();
         for k in i + 1..n {
-            if a[k][i].abs() > pmax { pmax = a[k][i].abs(); pivot = k; }
+            if a[k][i].abs() > pmax {
+                pmax = a[k][i].abs();
+                pivot = k;
+            }
         }
-        if pmax < 1e-15 { return None; }
+        if pmax < 1e-15 {
+            return None;
+        }
         a.swap(i, pivot);
         b.swap(i, pivot);
         let pv = a[i][i];
-        for j in 0..n { a[i][j] /= pv; }
+        for j in 0..n {
+            a[i][j] /= pv;
+        }
         b[i] /= pv;
         for k in 0..n {
             if k != i && a[k][i].abs() > 0.0 {
                 let factor = a[k][i];
-                for j in 0..n { a[k][j] -= factor * a[i][j]; }
+                for j in 0..n {
+                    a[k][j] -= factor * a[i][j];
+                }
                 b[k] -= factor * b[i];
             }
         }
@@ -161,7 +192,10 @@ mod tests {
     #[test]
     fn cubic_function_recovered_with_degree_3() {
         let x: Vec<f64> = (-15_i32..=15).map(|i| i as f64 / 2.0).collect();
-        let y: Vec<f64> = x.iter().map(|xi| 0.5 * xi * xi * xi - 2.0 * xi + 1.0).collect();
+        let y: Vec<f64> = x
+            .iter()
+            .map(|xi| 0.5 * xi * xi * xi - 2.0 * xi + 1.0)
+            .collect();
         let r = compute(&x, &y, 3).unwrap();
         assert!((r.coefficients[0] - 1.0).abs() < 1e-4);
         assert!((r.coefficients[1] + 2.0).abs() < 1e-4);

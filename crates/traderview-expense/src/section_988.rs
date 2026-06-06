@@ -159,7 +159,9 @@ pub fn compute(input: &Section988Input) -> Section988Result {
             // §988 ordinary.
             if input.section_988_kickout_election {
                 r.character = Character::Ordinary;
-                r.note = "§988(c)(1)(D)(i) kick-out election: §1256(g) futures treated as §988 ordinary".into();
+                r.note =
+                    "§988(c)(1)(D)(i) kick-out election: §1256(g) futures treated as §988 ordinary"
+                        .into();
             } else {
                 r.character = Character::Section1256Sixty40;
                 r.note = "§1256(g) foreign currency contract: 60% LTCG / 40% STCG".into();

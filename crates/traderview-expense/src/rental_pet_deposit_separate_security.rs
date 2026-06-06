@@ -167,7 +167,11 @@ fn check_ca(
     ];
 
     let monthly_rent = input.monthly_rent_cents;
-    let multiplier: u64 = if input.ca_small_landlord_exception { 2 } else { 1 };
+    let multiplier: u64 = if input.ca_small_landlord_exception {
+        2
+    } else {
+        1
+    };
     let effective_cap: u64 = monthly_rent.saturating_mul(multiplier);
 
     let pet_counts_against_cap = matches!(
@@ -176,7 +180,9 @@ fn check_ca(
     );
 
     let total_deposit = if pet_counts_against_cap {
-        input.general_security_deposit_cents.saturating_add(input.pet_charge_cents)
+        input
+            .general_security_deposit_cents
+            .saturating_add(input.pet_charge_cents)
     } else {
         input.general_security_deposit_cents
     };
@@ -193,8 +199,8 @@ fn check_ca(
         );
     }
 
-    let monthly_rent_permitted = matches!(input.pet_charge_type, PetCharge::MonthlyPetRent)
-        && input.disclosed_in_lease;
+    let monthly_rent_permitted =
+        matches!(input.pet_charge_type, PetCharge::MonthlyPetRent) && input.disclosed_in_lease;
     if matches!(input.pet_charge_type, PetCharge::MonthlyPetRent) && !input.disclosed_in_lease {
         violations.push(
             "Cal. Civ. Code § 1950.5 + SB 611 — monthly pet rent permitted only if clearly disclosed upfront in rental agreement".to_string(),
@@ -234,12 +240,8 @@ fn check_wa(
         _ => true,
     };
 
-    if matches!(input.pet_charge_type, PetCharge::RefundablePetDeposit)
-        && !pet_deposit_within_cap
-    {
-        violations.push(
-            "RCW 59.18.260 — refundable pet damage deposit capped at $150".to_string(),
-        );
+    if matches!(input.pet_charge_type, PetCharge::RefundablePetDeposit) && !pet_deposit_within_cap {
+        violations.push("RCW 59.18.260 — refundable pet damage deposit capped at $150".to_string());
     }
 
     let non_refundable_compliant = match input.pet_charge_type {
@@ -294,8 +296,7 @@ fn check_ny(
         );
     }
 
-    if matches!(input.pet_charge_type, PetCharge::NonRefundablePetFee)
-        && input.pet_charge_cents > 0
+    if matches!(input.pet_charge_type, PetCharge::NonRefundablePetFee) && input.pet_charge_cents > 0
     {
         violations.push(
             "NY GOL § 7-103 — non-refundable pet fee NOT permitted (NY security deposits must be fully refundable)".to_string(),
@@ -554,10 +555,7 @@ mod tests {
         i.general_security_deposit_cents = 250_000;
         let r = check(&i);
         assert!(!r.deposit_within_cap);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("HSTPA")));
+        assert!(r.violations.iter().any(|v| v.contains("HSTPA")));
     }
 
     #[test]
@@ -634,15 +632,19 @@ mod tests {
     #[test]
     fn note_pins_ca_july_2024_effective_date() {
         let r = check(&ca_base());
-        assert!(r.notes.iter().any(|n| n.contains("July 1, 2024")
-            && n.contains("AB 12")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("July 1, 2024") && n.contains("AB 12")));
     }
 
     #[test]
     fn note_pins_ca_sb_611_july_2025_effective_date() {
         let r = check(&ca_base());
-        assert!(r.notes.iter().any(|n| n.contains("July 1, 2025")
-            && n.contains("SB 611")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("July 1, 2025") && n.contains("SB 611")));
     }
 
     #[test]
@@ -654,8 +656,10 @@ mod tests {
     #[test]
     fn note_pins_ny_hstpa_one_month_cap() {
         let r = check(&ny_base());
-        assert!(r.notes.iter().any(|n| n.contains("HSTPA")
-            && n.contains("one month")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("HSTPA") && n.contains("one month")));
     }
 
     #[test]
@@ -698,7 +702,10 @@ mod tests {
         i_small.ca_small_landlord_exception = true;
         let r_small = check(&i_small);
 
-        assert_eq!(r_small.effective_cap_cents, r_normal.effective_cap_cents * 2);
+        assert_eq!(
+            r_small.effective_cap_cents,
+            r_normal.effective_cap_cents * 2
+        );
     }
 
     #[test]

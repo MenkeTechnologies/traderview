@@ -40,8 +40,13 @@ pub fn compute(bars: &[Bar]) -> SessionVwapReport {
         upper_2: vec![None; n],
         lower_2: vec![None; n],
     };
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite()
-        || !b.close.is_finite() || !b.volume.is_finite() || b.volume < 0.0) {
+    if bars.iter().any(|b| {
+        !b.high.is_finite()
+            || !b.low.is_finite()
+            || !b.close.is_finite()
+            || !b.volume.is_finite()
+            || b.volume < 0.0
+    }) {
         return report;
     }
     let mut sum_pv = 0.0_f64;
@@ -76,7 +81,13 @@ mod tests {
     use super::*;
 
     fn b(h: f64, l: f64, c: f64, v: f64, ss: bool) -> Bar {
-        Bar { high: h, low: l, close: c, volume: v, is_session_start: ss }
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+            volume: v,
+            is_session_start: ss,
+        }
     }
 
     #[test]
@@ -87,8 +98,10 @@ mod tests {
 
     #[test]
     fn nan_returns_empty() {
-        let bars = vec![b(101.0, 99.0, 100.0, 1000.0, true),
-                        b(f64::NAN, 99.0, 100.0, 1000.0, false)];
+        let bars = vec![
+            b(101.0, 99.0, 100.0, 1000.0, true),
+            b(f64::NAN, 99.0, 100.0, 1000.0, false),
+        ];
         let r = compute(&bars);
         assert!(r.vwap.iter().all(|x| x.is_none()));
     }

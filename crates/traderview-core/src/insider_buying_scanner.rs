@@ -63,66 +63,75 @@ impl Default for Config {
     }
 }
 
-pub fn scan(
-    transactions: &[InsiderTransaction],
-    cfg: &Config,
-) -> Vec<InsiderClusterHit> {
+pub fn scan(transactions: &[InsiderTransaction], cfg: &Config) -> Vec<InsiderClusterHit> {
     use std::collections::HashMap;
-    if transactions.is_empty() { return Vec::new(); }
+    if transactions.is_empty() {
+        return Vec::new();
+    }
     // Group by symbol, filtering to buy/sell only.
     let mut by_symbol: HashMap<String, Vec<&InsiderTransaction>> = HashMap::new();
     for tx in transactions {
-        if !tx.shares.is_finite() || !tx.price.is_finite()
-            || tx.shares <= 0.0 || tx.price <= 0.0 { continue; }
-        if tx.direction != "buy" && tx.direction != "sell" { continue; }
+        if !tx.shares.is_finite() || !tx.price.is_finite() || tx.shares <= 0.0 || tx.price <= 0.0 {
+            continue;
+        }
+        if tx.direction != "buy" && tx.direction != "sell" {
+            continue;
+        }
         by_symbol.entry(tx.symbol.clone()).or_default().push(tx);
     }
-    let mut hits: Vec<InsiderClusterHit> = by_symbol.into_iter().filter_map(|(sym, txs)| {
-        use std::collections::HashSet;
-        let mut buy_dollar = 0.0_f64;
-        let mut sell_dollar = 0.0_f64;
-        let mut buy_shares = 0.0_f64;
-        let mut sell_shares = 0.0_f64;
-        let mut insiders: HashSet<String> = HashSet::new();
-        let mut titles: HashSet<String> = HashSet::new();
-        for tx in &txs {
-            let dollars = tx.shares * tx.price;
-            if tx.direction == "buy" {
-                buy_dollar += dollars;
-                buy_shares += tx.shares;
-            } else {
-                sell_dollar += dollars;
-                sell_shares += tx.shares;
+    let mut hits: Vec<InsiderClusterHit> = by_symbol
+        .into_iter()
+        .filter_map(|(sym, txs)| {
+            use std::collections::HashSet;
+            let mut buy_dollar = 0.0_f64;
+            let mut sell_dollar = 0.0_f64;
+            let mut buy_shares = 0.0_f64;
+            let mut sell_shares = 0.0_f64;
+            let mut insiders: HashSet<String> = HashSet::new();
+            let mut titles: HashSet<String> = HashSet::new();
+            for tx in &txs {
+                let dollars = tx.shares * tx.price;
+                if tx.direction == "buy" {
+                    buy_dollar += dollars;
+                    buy_shares += tx.shares;
+                } else {
+                    sell_dollar += dollars;
+                    sell_shares += tx.shares;
+                }
+                insiders.insert(tx.insider_name.clone());
+                titles.insert(tx.insider_title.clone());
             }
-            insiders.insert(tx.insider_name.clone());
-            titles.insert(tx.insider_title.clone());
-        }
-        let n_distinct = insiders.len();
-        let total_dollar = buy_dollar + sell_dollar;
-        let avg_tx = total_dollar / txs.len() as f64;
-        let net_dollar = buy_dollar - sell_dollar;
-        let net_shares = buy_shares - sell_shares;
-        if n_distinct < cfg.min_distinct_insiders
-            || total_dollar < cfg.min_dollar_volume
-            || avg_tx < cfg.min_average_transaction
-            || (cfg.require_net_buy && net_dollar <= 0.0) {
-            return None;
-        }
-        let mut title_list: Vec<String> = titles.into_iter().collect();
-        title_list.sort();
-        Some(InsiderClusterHit {
-            symbol: sym,
-            distinct_insiders: n_distinct,
-            total_buy_dollar_volume: buy_dollar,
-            total_sell_dollar_volume: sell_dollar,
-            net_dollar_volume: net_dollar,
-            net_shares,
-            average_transaction_dollar_size: avg_tx,
-            insider_titles: title_list,
+            let n_distinct = insiders.len();
+            let total_dollar = buy_dollar + sell_dollar;
+            let avg_tx = total_dollar / txs.len() as f64;
+            let net_dollar = buy_dollar - sell_dollar;
+            let net_shares = buy_shares - sell_shares;
+            if n_distinct < cfg.min_distinct_insiders
+                || total_dollar < cfg.min_dollar_volume
+                || avg_tx < cfg.min_average_transaction
+                || (cfg.require_net_buy && net_dollar <= 0.0)
+            {
+                return None;
+            }
+            let mut title_list: Vec<String> = titles.into_iter().collect();
+            title_list.sort();
+            Some(InsiderClusterHit {
+                symbol: sym,
+                distinct_insiders: n_distinct,
+                total_buy_dollar_volume: buy_dollar,
+                total_sell_dollar_volume: sell_dollar,
+                net_dollar_volume: net_dollar,
+                net_shares,
+                average_transaction_dollar_size: avg_tx,
+                insider_titles: title_list,
+            })
         })
-    }).collect();
-    hits.sort_by(|a, b| b.net_dollar_volume.partial_cmp(&a.net_dollar_volume)
-        .unwrap_or(std::cmp::Ordering::Equal));
+        .collect();
+    hits.sort_by(|a, b| {
+        b.net_dollar_volume
+            .partial_cmp(&a.net_dollar_volume)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     hits
 }
 
@@ -130,8 +139,14 @@ pub fn scan(
 mod tests {
     use super::*;
 
-    fn tx(sym: &str, name: &str, title: &str, dir: &str, shares: f64, price: f64)
-        -> InsiderTransaction {
+    fn tx(
+        sym: &str,
+        name: &str,
+        title: &str,
+        dir: &str,
+        shares: f64,
+        price: f64,
+    ) -> InsiderTransaction {
         InsiderTransaction {
             symbol: sym.into(),
             insider_name: name.into(),
@@ -159,8 +174,8 @@ mod tests {
     #[test]
     fn cluster_buy_emitted() {
         let txs = vec![
-            tx("AAA", "Smith", "CEO", "buy", 2000.0, 50.0),    // $100K
-            tx("AAA", "Jones", "CFO", "buy", 2000.0, 50.0),    // $100K
+            tx("AAA", "Smith", "CEO", "buy", 2000.0, 50.0), // $100K
+            tx("AAA", "Jones", "CFO", "buy", 2000.0, 50.0), // $100K
         ];
         let hits = scan(&txs, &Config::default());
         assert_eq!(hits.len(), 1);
@@ -194,10 +209,13 @@ mod tests {
 
     #[test]
     fn small_transactions_filtered_by_avg_size() {
-        let cfg = Config { min_average_transaction: 100_000.0, ..Default::default() };
+        let cfg = Config {
+            min_average_transaction: 100_000.0,
+            ..Default::default()
+        };
         let txs = vec![
-            tx("AAA", "Smith", "CEO", "buy", 100.0, 50.0),    // $5K
-            tx("AAA", "Jones", "CFO", "buy", 100.0, 50.0),    // $5K
+            tx("AAA", "Smith", "CEO", "buy", 100.0, 50.0), // $5K
+            tx("AAA", "Jones", "CFO", "buy", 100.0, 50.0), // $5K
         ];
         assert!(scan(&txs, &cfg).is_empty());
     }
@@ -206,9 +224,9 @@ mod tests {
     fn sorted_by_net_dollar_volume_descending() {
         let txs = vec![
             tx("AAA", "Smith", "CEO", "buy", 1000.0, 50.0),
-            tx("AAA", "Jones", "CFO", "buy", 1000.0, 50.0),    // AAA net $100K
+            tx("AAA", "Jones", "CFO", "buy", 1000.0, 50.0), // AAA net $100K
             tx("BBB", "Brown", "CEO", "buy", 5000.0, 50.0),
-            tx("BBB", "White", "CFO", "buy", 5000.0, 50.0),    // BBB net $500K
+            tx("BBB", "White", "CFO", "buy", 5000.0, 50.0), // BBB net $500K
         ];
         let hits = scan(&txs, &Config::default());
         assert_eq!(hits.len(), 2);
@@ -231,9 +249,12 @@ mod tests {
         let txs = vec![
             tx("AAA", "Smith", "CEO", "buy", 2000.0, 50.0),
             tx("AAA", "Jones", "CFO", "buy", 2000.0, 50.0),
-            tx("AAA", "Brown", "CEO", "buy", 2000.0, 50.0),    // duplicate title
+            tx("AAA", "Brown", "CEO", "buy", 2000.0, 50.0), // duplicate title
         ];
         let hits = scan(&txs, &Config::default());
-        assert_eq!(hits[0].insider_titles, vec!["CEO".to_string(), "CFO".to_string()]);
+        assert_eq!(
+            hits[0].insider_titles,
+            vec!["CEO".to_string(), "CFO".to_string()]
+        );
     }
 }

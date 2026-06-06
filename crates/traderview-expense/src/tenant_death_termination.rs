@@ -151,12 +151,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // NoSpecificStatuteCommonLawContract default — 46 other states + DC.
     let no_state = [
-        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE",
-        "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS",
-        "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS",
-        "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY",
-        "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
-        "SD", "TN", "UT", "VT", "WV", "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA",
+        "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+        "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "UT", "VT", "WV",
+        "WI", "WY",
     ];
     for code in no_state {
         m.insert(
@@ -303,7 +301,9 @@ pub fn check(input: &TenantDeathInput) -> TenantDeathResult {
         TenantDeathRegime::MonthToMonthAutoTerminationOnLastRent => {
             "month-to-month auto-termination on last rent"
         }
-        TenantDeathRegime::LeaseAutoTerminatesOnDateOfDeath => "lease auto-terminates on date of death",
+        TenantDeathRegime::LeaseAutoTerminatesOnDateOfDeath => {
+            "lease auto-terminates on date of death"
+        }
         TenantDeathRegime::MultiNoticeStorageRegime => "multi-notice storage regime",
         TenantDeathRegime::NoSpecificStatuteCommonLawContract => {
             "no specific statute — common-law contract continuation"
@@ -316,7 +316,9 @@ pub fn check(input: &TenantDeathInput) -> TenantDeathResult {
             regime_label,
             if may_dispose {
                 "; landlord may dispose of property"
-            } else { "" },
+            } else {
+                ""
+            },
         )
     } else {
         format!(
@@ -473,10 +475,7 @@ mod tests {
         i.days_since_estate_notice = 60;
         i.property_removed_from_premises = true;
         let r = check(&i);
-        assert!(
-            !r.lease_terminated,
-            "§ 92.0162 is sole-occupant only"
-        );
+        assert!(!r.lease_terminated, "§ 92.0162 is sole-occupant only");
     }
 
     // ── CA § 1934 month-to-month ───────────────────────────────────
@@ -552,10 +551,7 @@ mod tests {
         let mut i = baseline("VA");
         i.sole_occupant = false;
         let r = check(&i);
-        assert!(
-            !r.lease_terminated,
-            "VA § 55.1-1256 is sole-occupant only"
-        );
+        assert!(!r.lease_terminated, "VA § 55.1-1256 is sole-occupant only");
     }
 
     // ── WA RCW 59.18.595 multi-notice ──────────────────────────────
@@ -696,7 +692,10 @@ mod tests {
         let count = RULES
             .iter()
             .filter(|(_, r)| {
-                matches!(r.regime, TenantDeathRegime::LeaseAutoTerminatesOnDateOfDeath)
+                matches!(
+                    r.regime,
+                    TenantDeathRegime::LeaseAutoTerminatesOnDateOfDeath
+                )
             })
             .count();
         assert_eq!(count, 1, "expected VA only");

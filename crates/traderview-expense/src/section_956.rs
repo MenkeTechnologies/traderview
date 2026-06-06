@@ -177,10 +177,7 @@ pub fn check(input: &Section956Input) -> Section956Result {
         );
     }
 
-    if matches!(
-        input.us_property_type,
-        UsPropertyType::NoUsProperty
-    ) {
+    if matches!(input.us_property_type, UsPropertyType::NoUsProperty) {
         notes.push(
             "CFC holds no US property at close of quarters; no § 956 inclusion. Verify \
              quarterly snapshot per § 956(a)(2) at close of each quarter — not annual \
@@ -224,8 +221,8 @@ pub fn check(input: &Section956Input) -> Section956Result {
     let hypothetical_distribution = gross_inclusion;
     let ptep_attributable = hypothetical_distribution.min(input.section_959_c2_ptep_cents);
     let non_ptep_attributable = hypothetical_distribution.saturating_sub(ptep_attributable);
-    let non_ptep_foreign_source = non_ptep_attributable
-        .min(input.foreign_source_portion_of_non_ptep_cents);
+    let non_ptep_foreign_source =
+        non_ptep_attributable.min(input.foreign_source_portion_of_non_ptep_cents);
 
     let is_corporate_us_shareholder = matches!(
         input.us_shareholder_type,
@@ -456,7 +453,10 @@ mod tests {
         let mut i = baseline();
         i.us_shareholder_type = UsShareholderType::IndividualOrPassThroughNoSection962;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::IndividualSection956FullInclusion));
+        assert!(matches!(
+            r.severity,
+            Severity::IndividualSection956FullInclusion
+        ));
         assert_eq!(r.section_245a_drd_offset_cents, 0);
         assert_eq!(
             r.net_section_956_inclusion_cents,
@@ -485,7 +485,10 @@ mod tests {
         let mut i = baseline();
         i.us_shareholder_type = UsShareholderType::RegulatedInvestmentCompany;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::RicOrReitSection956FullInclusion));
+        assert!(matches!(
+            r.severity,
+            Severity::RicOrReitSection956FullInclusion
+        ));
         assert_eq!(r.section_245a_drd_offset_cents, 0);
     }
 
@@ -494,7 +497,10 @@ mod tests {
         let mut i = baseline();
         i.us_shareholder_type = UsShareholderType::RealEstateInvestmentTrust;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::RicOrReitSection956FullInclusion));
+        assert!(matches!(
+            r.severity,
+            Severity::RicOrReitSection956FullInclusion
+        ));
         assert_eq!(r.section_245a_drd_offset_cents, 0);
     }
 
@@ -529,7 +535,10 @@ mod tests {
         i.us_property_type = UsPropertyType::TangibleUsProperty;
         i.us_shareholder_type = UsShareholderType::IndividualOrPassThroughNoSection962;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::IndividualSection956FullInclusion));
+        assert!(matches!(
+            r.severity,
+            Severity::IndividualSection956FullInclusion
+        ));
         assert!(r.gross_section_956_inclusion_cents > 0);
     }
 
@@ -565,8 +574,14 @@ mod tests {
     fn action_references_form_5471_schedule_i_1() {
         let i = baseline();
         let r = check(&i);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Form 5471")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Schedule I-1")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Form 5471")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Schedule I-1")));
     }
 
     #[test]
@@ -609,7 +624,10 @@ mod tests {
         i.avg_quarterly_us_property_cents = 10_000_000_00;
         i.cfc_earnings_and_profits_cents = 50_000_000_00;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::IndividualSection956FullInclusion));
+        assert!(matches!(
+            r.severity,
+            Severity::IndividualSection956FullInclusion
+        ));
         assert_eq!(r.gross_section_956_inclusion_cents, 10_000_000_00);
         assert_eq!(r.net_section_956_inclusion_cents, 10_000_000_00);
     }

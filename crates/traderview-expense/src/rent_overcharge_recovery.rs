@@ -133,8 +133,8 @@ fn check_new_york(input: &RentOverchargeRecoveryInput) -> RentOverchargeRecovery
         single
     };
 
-    let complaint_in_lookback = input.complaint_filed_within_six_year_lookback
-        || input.fraud_to_conceal_overcharge;
+    let complaint_in_lookback =
+        input.complaint_filed_within_six_year_lookback || input.fraud_to_conceal_overcharge;
 
     let attorney_fees_mandatory = single > 0 && complaint_in_lookback;
 
@@ -194,9 +194,7 @@ fn check_new_york(input: &RentOverchargeRecoveryInput) -> RentOverchargeRecovery
     }
 }
 
-fn check_district_of_columbia(
-    input: &RentOverchargeRecoveryInput,
-) -> RentOverchargeRecoveryResult {
+fn check_district_of_columbia(input: &RentOverchargeRecoveryInput) -> RentOverchargeRecoveryResult {
     let mut notes: Vec<String> = Vec::new();
 
     let single = input.alleged_overcharge_amount_cents.max(0);
@@ -319,13 +317,19 @@ mod tests {
         let r = check(&i);
         assert!(r.treble_damages_engaged);
         assert_eq!(r.treble_damages_amount_cents, 3_000_000);
-        assert!(r.notes.iter().any(|n| n.contains("TREBLE DAMAGES MANDATORY") && n.contains("non-discretionary")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("TREBLE DAMAGES MANDATORY") && n.contains("non-discretionary")));
     }
 
     #[test]
     fn ny_six_year_lookback_note_present() {
         let r = check(&ny_base());
-        assert!(r.notes.iter().any(|n| n.contains("HSTPA of 2019") && n.contains("6 YEARS")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("HSTPA of 2019") && n.contains("6 YEARS")));
     }
 
     #[test]
@@ -336,7 +340,10 @@ mod tests {
         let r = check(&i);
         assert!(r.fraud_exception_extends_lookback);
         assert!(r.complaint_within_lookback);
-        assert!(r.notes.iter().any(|n| n.contains("HSTPA fraud exception") && n.contains("falsifying records")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("HSTPA fraud exception") && n.contains("falsifying records")));
     }
 
     #[test]
@@ -352,7 +359,8 @@ mod tests {
         let mut i = ny_base();
         i.landlord_registered_unit_with_dhcr = false;
         let r = check(&i);
-        assert!(r.violations.iter().any(|v| v.contains("9 NYCRR Part 2522") && v.contains("register rent-stabilized unit with DHCR")));
+        assert!(r.violations.iter().any(|v| v.contains("9 NYCRR Part 2522")
+            && v.contains("register rent-stabilized unit with DHCR")));
     }
 
     #[test]
@@ -365,7 +373,9 @@ mod tests {
     fn ny_attorney_fees_mandatory_when_overcharge_in_lookback() {
         let r = check(&ny_base());
         assert!(r.attorney_fees_costs_interest_mandatory);
-        assert!(r.notes.iter().any(|n| n.contains("HSTPA") && n.contains("attorney fees") && n.contains("NON-DISCRETIONARY")));
+        assert!(r.notes.iter().any(|n| n.contains("HSTPA")
+            && n.contains("attorney fees")
+            && n.contains("NON-DISCRETIONARY")));
     }
 
     #[test]
@@ -379,7 +389,10 @@ mod tests {
     #[test]
     fn ny_dhcr_complaint_option_note() {
         let r = check(&ny_base());
-        assert!(r.notes.iter().any(|n| n.contains("DHCR") && n.contains("court") && n.contains("§ 26-516")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("DHCR") && n.contains("court") && n.contains("§ 26-516")));
     }
 
     #[test]
@@ -411,7 +424,10 @@ mod tests {
     #[test]
     fn dc_topa_cross_reference_note() {
         let r = check(&dc_base());
-        assert!(r.notes.iter().any(|n| n.contains("TOPA") && n.contains("tenant_topa module")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("TOPA") && n.contains("tenant_topa module")));
     }
 
     #[test]
@@ -432,19 +448,27 @@ mod tests {
     #[test]
     fn default_municipal_examples_note() {
         let r = check(&default_base());
-        assert!(r.notes.iter().any(|n| n.contains("Berkeley") && n.contains("San Francisco") && n.contains("Newark")));
+        assert!(r.notes.iter().any(|n| n.contains("Berkeley")
+            && n.contains("San Francisco")
+            && n.contains("Newark")));
     }
 
     #[test]
     fn default_ca_1947_7_note_present() {
         let r = check(&default_base());
-        assert!(r.notes.iter().any(|n| n.contains("Cal. Civ. Code § 1947.7") && n.contains("AB 1482")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Cal. Civ. Code § 1947.7") && n.contains("AB 1482")));
     }
 
     #[test]
     fn default_restatement_restitution_note_present() {
         let r = check(&default_base());
-        assert!(r.notes.iter().any(|n| n.contains("Restatement") && n.contains("Restitution")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Restatement") && n.contains("Restitution")));
     }
 
     #[test]
@@ -465,7 +489,10 @@ mod tests {
         let mut i_default = default_base();
         i_default.willful_overcharge = true;
         let r_default = check(&i_default);
-        assert!(!r_default.treble_damages_engaged, "default regime should not engage mandatory treble");
+        assert!(
+            !r_default.treble_damages_engaged,
+            "default regime should not engage mandatory treble"
+        );
     }
 
     #[test]
@@ -478,12 +505,19 @@ mod tests {
         let mut i_default = default_base();
         i_default.complaint_filed_within_six_year_lookback = false;
         let r_default = check(&i_default);
-        assert!(r_default.complaint_within_lookback, "default regime has no 6-year lookback bar");
+        assert!(
+            r_default.complaint_within_lookback,
+            "default regime has no 6-year lookback bar"
+        );
     }
 
     #[test]
     fn three_regimes_routed_correctly() {
-        for regime in [Regime::NewYorkHstpa, Regime::DistrictOfColumbiaRaca, Regime::Default] {
+        for regime in [
+            Regime::NewYorkHstpa,
+            Regime::DistrictOfColumbiaRaca,
+            Regime::Default,
+        ] {
             let mut i = ny_base();
             i.regime = regime;
             let r = check(&i);

@@ -37,7 +37,11 @@ pub struct TickConfig {
 }
 
 impl Default for TickConfig {
-    fn default() -> Self { Self { extreme_threshold: 1200.0 } }
+    fn default() -> Self {
+        Self {
+            extreme_threshold: 1200.0,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -49,7 +53,8 @@ pub struct TickReport {
 
 pub fn analyze(tick_series: &[f64], cfg: &TickConfig) -> TickReport {
     let mut report = TickReport::default();
-    if tick_series.is_empty() || !cfg.extreme_threshold.is_finite() || cfg.extreme_threshold <= 0.0 {
+    if tick_series.is_empty() || !cfg.extreme_threshold.is_finite() || cfg.extreme_threshold <= 0.0
+    {
         return report;
     }
     report.max_tick = f64::NEG_INFINITY;
@@ -61,8 +66,12 @@ pub fn analyze(tick_series: &[f64], cfg: &TickConfig) -> TickReport {
             prior_kind = None;
             continue;
         }
-        if v > report.max_tick { report.max_tick = v; }
-        if v < report.min_tick { report.min_tick = v; }
+        if v > report.max_tick {
+            report.max_tick = v;
+        }
+        if v < report.min_tick {
+            report.min_tick = v;
+        }
         let cur_kind = if v >= thr {
             Some(TickEventKind::ExtremeHigh)
         } else if v <= -thr {
@@ -77,17 +86,27 @@ pub fn analyze(tick_series: &[f64], cfg: &TickConfig) -> TickReport {
                     || (prev == TickEventKind::ExtremeLow && k == TickEventKind::ExtremeHigh)
                 {
                     report.events.push(TickEvent {
-                        bar_index: i, kind: TickEventKind::Flip, tick: v,
+                        bar_index: i,
+                        kind: TickEventKind::Flip,
+                        tick: v,
                     });
                 }
             }
-            report.events.push(TickEvent { bar_index: i, kind: k, tick: v });
+            report.events.push(TickEvent {
+                bar_index: i,
+                kind: k,
+                tick: v,
+            });
         }
         prior_kind = cur_kind;
     }
     // Normalize defaults if no finite values seen.
-    if !report.max_tick.is_finite() { report.max_tick = 0.0; }
-    if !report.min_tick.is_finite() { report.min_tick = 0.0; }
+    if !report.max_tick.is_finite() {
+        report.max_tick = 0.0;
+    }
+    if !report.min_tick.is_finite() {
+        report.min_tick = 0.0;
+    }
     report
 }
 
@@ -106,9 +125,15 @@ mod tests {
     fn invalid_threshold_returns_default() {
         let v = vec![1500.0, -1500.0];
         for cfg in [
-            TickConfig { extreme_threshold: 0.0 },
-            TickConfig { extreme_threshold: -1.0 },
-            TickConfig { extreme_threshold: f64::NAN },
+            TickConfig {
+                extreme_threshold: 0.0,
+            },
+            TickConfig {
+                extreme_threshold: -1.0,
+            },
+            TickConfig {
+                extreme_threshold: f64::NAN,
+            },
         ] {
             assert!(analyze(&v, &cfg).events.is_empty());
         }
@@ -118,7 +143,10 @@ mod tests {
     fn extreme_high_flagged_when_tick_exceeds_threshold() {
         let v = vec![800.0, 1300.0, 500.0];
         let r = analyze(&v, &TickConfig::default());
-        assert!(r.events.iter().any(|e| e.kind == TickEventKind::ExtremeHigh && e.bar_index == 1));
+        assert!(r
+            .events
+            .iter()
+            .any(|e| e.kind == TickEventKind::ExtremeHigh && e.bar_index == 1));
     }
 
     #[test]
@@ -133,7 +161,11 @@ mod tests {
         // Bar 0 extreme high, bar 1 extreme low → flip at bar 1.
         let v = vec![1300.0, -1300.0];
         let r = analyze(&v, &TickConfig::default());
-        let flips: Vec<_> = r.events.iter().filter(|e| e.kind == TickEventKind::Flip).collect();
+        let flips: Vec<_> = r
+            .events
+            .iter()
+            .filter(|e| e.kind == TickEventKind::Flip)
+            .collect();
         assert_eq!(flips.len(), 1);
         assert_eq!(flips[0].bar_index, 1);
     }
@@ -143,7 +175,11 @@ mod tests {
         // Bar 0 high, bar 1 NaN (skipped), bar 2 low → no flip (NaN reset).
         let v = vec![1300.0, f64::NAN, -1300.0];
         let r = analyze(&v, &TickConfig::default());
-        let flips: Vec<_> = r.events.iter().filter(|e| e.kind == TickEventKind::Flip).collect();
+        let flips: Vec<_> = r
+            .events
+            .iter()
+            .filter(|e| e.kind == TickEventKind::Flip)
+            .collect();
         assert!(flips.is_empty());
     }
 

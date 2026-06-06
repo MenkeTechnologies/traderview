@@ -321,7 +321,11 @@ fn k_ratio(cum_pnl: &[f64]) -> Option<f64> {
         return None;
     }
     let v = slope / se_slope;
-    if v.is_finite() { Some(v) } else { None }
+    if v.is_finite() {
+        Some(v)
+    } else {
+        None
+    }
 }
 
 /// Standard normal CDF via Abramowitz & Stegun 7.1.26 (max error ~1.5e-7).
@@ -666,14 +670,23 @@ pub fn by_r_bucket(trades: &[Trade]) -> Vec<Bucket> {
 }
 
 fn r_bucket_label(r: f64) -> String {
-    if r <= -3.0 { "≤ -3R" }
-    else if r <= -2.0 { "-3R to -2R" }
-    else if r <= -1.0 { "-2R to -1R" }
-    else if r <= 0.0 { "-1R to 0R" }
-    else if r <= 1.0 { "0R to 1R" }
-    else if r <= 2.0 { "1R to 2R" }
-    else if r <= 3.0 { "2R to 3R" }
-    else { "≥ 3R" }
+    if r <= -3.0 {
+        "≤ -3R"
+    } else if r <= -2.0 {
+        "-3R to -2R"
+    } else if r <= -1.0 {
+        "-2R to -1R"
+    } else if r <= 0.0 {
+        "-1R to 0R"
+    } else if r <= 1.0 {
+        "0R to 1R"
+    } else if r <= 2.0 {
+        "1R to 2R"
+    } else if r <= 3.0 {
+        "2R to 3R"
+    } else {
+        "≥ 3R"
+    }
     .to_string()
 }
 
@@ -720,12 +733,19 @@ pub fn by_opening_gap(
 }
 
 fn opening_gap_label(g: f64) -> String {
-    if g < -7.0 { "< -7%" }
-    else if g < -2.0 { "-7% to -2%" }
-    else if g < 0.0 { "-2% to 0%" }
-    else if g < 2.0 { "0% to +2%" }
-    else if g < 7.0 { "+2% to +7%" }
-    else { "> +7%" }
+    if g < -7.0 {
+        "< -7%"
+    } else if g < -2.0 {
+        "-7% to -2%"
+    } else if g < 0.0 {
+        "-2% to 0%"
+    } else if g < 2.0 {
+        "0% to +2%"
+    } else if g < 7.0 {
+        "+2% to +7%"
+    } else {
+        "> +7%"
+    }
     .to_string()
 }
 
@@ -740,13 +760,7 @@ pub fn by_instrument_volume(
         let adv = adv_by_symbol.get(&t.symbol)?;
         Some(instrument_volume_label(decimal_to_f64(*adv)))
     });
-    let order = [
-        "< 1M",
-        "1M - 10M",
-        "10M - 100M",
-        "100M - 500M",
-        "≥ 500M",
-    ];
+    let order = ["< 1M", "1M - 10M", "10M - 100M", "100M - 500M", "≥ 500M"];
     let mut sorted: Vec<Bucket> = order
         .iter()
         .filter_map(|k| buckets.iter().find(|b| b.key == *k).cloned())
@@ -760,11 +774,17 @@ pub fn by_instrument_volume(
 }
 
 fn instrument_volume_label(v: f64) -> String {
-    if v < 1_000_000.0 { "< 1M" }
-    else if v < 10_000_000.0 { "1M - 10M" }
-    else if v < 100_000_000.0 { "10M - 100M" }
-    else if v < 500_000_000.0 { "100M - 500M" }
-    else { "≥ 500M" }
+    if v < 1_000_000.0 {
+        "< 1M"
+    } else if v < 10_000_000.0 {
+        "1M - 10M"
+    } else if v < 100_000_000.0 {
+        "10M - 100M"
+    } else if v < 500_000_000.0 {
+        "100M - 500M"
+    } else {
+        "≥ 500M"
+    }
     .to_string()
 }
 
@@ -778,13 +798,7 @@ pub fn by_movement(
         let r = range_pct_by_symbol.get(&t.symbol)?;
         Some(movement_label(*r))
     });
-    let order = [
-        "< 1%",
-        "1% - 3%",
-        "3% - 5%",
-        "5% - 10%",
-        "≥ 10%",
-    ];
+    let order = ["< 1%", "1% - 3%", "3% - 5%", "5% - 10%", "≥ 10%"];
     let mut sorted: Vec<Bucket> = order
         .iter()
         .filter_map(|k| buckets.iter().find(|b| b.key == *k).cloned())
@@ -798,11 +812,17 @@ pub fn by_movement(
 }
 
 fn movement_label(r: f64) -> String {
-    if r < 1.0 { "< 1%" }
-    else if r < 3.0 { "1% - 3%" }
-    else if r < 5.0 { "3% - 5%" }
-    else if r < 10.0 { "5% - 10%" }
-    else { "≥ 10%" }
+    if r < 1.0 {
+        "< 1%"
+    } else if r < 3.0 {
+        "1% - 3%"
+    } else if r < 5.0 {
+        "3% - 5%"
+    } else if r < 10.0 {
+        "5% - 10%"
+    } else {
+        "≥ 10%"
+    }
     .to_string()
 }
 
@@ -951,8 +971,7 @@ pub fn win_loss_days(trades: &[Trade]) -> WinLossDays {
     let mut day_pnl: HashMap<NaiveDate, Decimal> = HashMap::new();
     for t in trades {
         if let Some(closed) = t.closed_at {
-            *day_pnl.entry(closed.date_naive()).or_default() +=
-                t.net_pnl.unwrap_or(Decimal::ZERO);
+            *day_pnl.entry(closed.date_naive()).or_default() += t.net_pnl.unwrap_or(Decimal::ZERO);
         }
     }
     let (winning_set, losing_set): (Vec<_>, Vec<_>) = trades
@@ -964,16 +983,28 @@ pub fn win_loss_days(trades: &[Trade]) -> WinLossDays {
         });
     WinLossDays {
         by_dow: WinLossSplit {
-            winning_days: by_day_of_week(&winning_set.iter().map(|t| (*t).clone()).collect::<Vec<_>>()),
-            losing_days: by_day_of_week(&losing_set.iter().map(|t| (*t).clone()).collect::<Vec<_>>()),
+            winning_days: by_day_of_week(
+                &winning_set.iter().map(|t| (*t).clone()).collect::<Vec<_>>(),
+            ),
+            losing_days: by_day_of_week(
+                &losing_set.iter().map(|t| (*t).clone()).collect::<Vec<_>>(),
+            ),
         },
         by_hour: WinLossSplit {
-            winning_days: by_hour_of_day(&winning_set.iter().map(|t| (*t).clone()).collect::<Vec<_>>()),
-            losing_days: by_hour_of_day(&losing_set.iter().map(|t| (*t).clone()).collect::<Vec<_>>()),
+            winning_days: by_hour_of_day(
+                &winning_set.iter().map(|t| (*t).clone()).collect::<Vec<_>>(),
+            ),
+            losing_days: by_hour_of_day(
+                &losing_set.iter().map(|t| (*t).clone()).collect::<Vec<_>>(),
+            ),
         },
         by_hold: WinLossSplit {
-            winning_days: by_hold_bucket(&winning_set.iter().map(|t| (*t).clone()).collect::<Vec<_>>()),
-            losing_days: by_hold_bucket(&losing_set.iter().map(|t| (*t).clone()).collect::<Vec<_>>()),
+            winning_days: by_hold_bucket(
+                &winning_set.iter().map(|t| (*t).clone()).collect::<Vec<_>>(),
+            ),
+            losing_days: by_hold_bucket(
+                &losing_set.iter().map(|t| (*t).clone()).collect::<Vec<_>>(),
+            ),
         },
     }
 }
@@ -1436,9 +1467,7 @@ pub fn advanced(trades: &[Trade], starting_cash: Decimal) -> Advanced {
                 .unwrap_or_else(|| t.opened_at.date_naive())
                 .format("%Y-%m-%d")
                 .to_string();
-            let hold = t
-                .closed_at
-                .map(|c| (c - t.opened_at).num_seconds());
+            let hold = t.closed_at.map(|c| (c - t.opened_at).num_seconds());
             let r = t.risk_amount.and_then(|risk| {
                 if risk.is_zero() {
                     None

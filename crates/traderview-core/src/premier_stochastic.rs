@@ -21,7 +21,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 pub fn compute(
     bars: &[Bar],
@@ -31,11 +35,17 @@ pub fn compute(
 ) -> Vec<Option<f64>> {
     let n = bars.len();
     let mut out = vec![None; n];
-    if stoch_period < 2 || smoothing_1 < 2 || smoothing_2 < 2
-        || n < stoch_period + smoothing_1 + smoothing_2 {
+    if stoch_period < 2
+        || smoothing_1 < 2
+        || smoothing_2 < 2
+        || n < stoch_period + smoothing_1 + smoothing_2
+    {
         return out;
     }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return out;
     }
     // Raw stochastic %K.
@@ -45,7 +55,11 @@ pub fn compute(
         let hh = win.iter().fold(f64::NEG_INFINITY, |a, b| a.max(b.high));
         let ll = win.iter().fold(f64::INFINITY, |a, b| a.min(b.low));
         let range = hh - ll;
-        *slot = Some(if range > 0.0 { (bars[i].close - ll) / range * 100.0 } else { 50.0 });
+        *slot = Some(if range > 0.0 {
+            (bars[i].close - ll) / range * 100.0
+        } else {
+            50.0
+        });
     }
     // Normalize.
     let normalized: Vec<Option<f64>> = raw_k.iter().map(|v| v.map(|k| 0.1 * (k - 50.0))).collect();
@@ -64,18 +78,31 @@ pub fn compute(
 fn ema_opt(series: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n == 0 { return out; }
+    if period == 0 || n == 0 {
+        return out;
+    }
     let mut seed_end = None;
     let mut seed_sum = 0.0;
     let mut count = 0_usize;
     for (i, v) in series.iter().enumerate() {
         match v {
-            Some(x) => { seed_sum += x; count += 1; }
-            None => { seed_sum = 0.0; count = 0; }
+            Some(x) => {
+                seed_sum += x;
+                count += 1;
+            }
+            None => {
+                seed_sum = 0.0;
+                count = 0;
+            }
         }
-        if count == period { seed_end = Some(i); break; }
+        if count == period {
+            seed_end = Some(i);
+            break;
+        }
     }
-    let Some(end) = seed_end else { return out; };
+    let Some(end) = seed_end else {
+        return out;
+    };
     let k = 2.0 / (period as f64 + 1.0);
     let mut cur = seed_sum / period as f64;
     out[end] = Some(cur);
@@ -94,7 +121,13 @@ fn ema_opt(series: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn invalid_params_return_all_none() {
@@ -112,10 +145,12 @@ mod tests {
 
     #[test]
     fn output_in_unit_signed_range() {
-        let bars: Vec<_> = (0..100).map(|i| {
-            let m = 100.0 + (i as f64 * 0.3).sin() * 5.0;
-            b(m + 1.0, m - 1.0, m)
-        }).collect();
+        let bars: Vec<_> = (0..100)
+            .map(|i| {
+                let m = 100.0 + (i as f64 * 0.3).sin() * 5.0;
+                b(m + 1.0, m - 1.0, m)
+            })
+            .collect();
         let r = compute(&bars, 8, 5, 3);
         for v in r.iter().flatten() {
             assert!((-1.0..=1.0).contains(v));
@@ -125,22 +160,28 @@ mod tests {
     #[test]
     fn uptrend_yields_positive_pso() {
         // Strong uptrend with closes at highs.
-        let bars: Vec<_> = (0..50).map(|i| {
-            let mid = 100.0 + i as f64;
-            b(mid + 0.5, mid - 0.5, mid + 0.5)
-        }).collect();
+        let bars: Vec<_> = (0..50)
+            .map(|i| {
+                let mid = 100.0 + i as f64;
+                b(mid + 0.5, mid - 0.5, mid + 0.5)
+            })
+            .collect();
         let r = compute(&bars, 8, 5, 3);
         let last = r[49].unwrap();
-        assert!(last > 0.5,
-            "strong uptrend should yield PSO > 0.5, got {last}");
+        assert!(
+            last > 0.5,
+            "strong uptrend should yield PSO > 0.5, got {last}"
+        );
     }
 
     #[test]
     fn downtrend_yields_negative_pso() {
-        let bars: Vec<_> = (0..50).map(|i| {
-            let mid = 200.0 - i as f64;
-            b(mid + 0.5, mid - 0.5, mid - 0.5)
-        }).collect();
+        let bars: Vec<_> = (0..50)
+            .map(|i| {
+                let mid = 200.0 - i as f64;
+                b(mid + 0.5, mid - 0.5, mid - 0.5)
+            })
+            .collect();
         let r = compute(&bars, 8, 5, 3);
         let last = r[49].unwrap();
         assert!(last < -0.5);

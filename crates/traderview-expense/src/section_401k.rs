@@ -249,32 +249,31 @@ pub fn check(input: &Section401kInput) -> Section401kResult {
     let compensation_limit_cents: u64 = 36_000_000;
     let roth_catch_up_threshold_cents: u64 = 15_000_000;
 
-    let considered_compensation_cents = input
-        .plan_compensation_cents
-        .min(compensation_limit_cents);
+    let considered_compensation_cents = input.plan_compensation_cents.min(compensation_limit_cents);
 
     let total_annual_addition_cents = input
         .elective_deferral_cents
         .saturating_add(input.employer_match_cents)
         .saturating_add(input.after_tax_contribution_cents);
 
-    let elective_deferral_compliant = input.elective_deferral_cents <= elective_deferral_limit_cents;
+    let elective_deferral_compliant =
+        input.elective_deferral_cents <= elective_deferral_limit_cents;
 
     let catch_up_compliant = input.catch_up_contribution_cents <= catch_up_limit_cents;
 
     let annual_addition_compliant = total_annual_addition_cents <= annual_addition_limit_cents;
 
-    let mandatory_roth_catch_up_engaged = input.prior_year_ss_wages_cents > roth_catch_up_threshold_cents
+    let mandatory_roth_catch_up_engaged = input.prior_year_ss_wages_cents
+        > roth_catch_up_threshold_cents
         && input.catch_up_contribution_cents > 0;
 
-    let roth_catch_up_violation = mandatory_roth_catch_up_engaged && !input.catch_up_designated_roth;
+    let roth_catch_up_violation =
+        mandatory_roth_catch_up_engaged && !input.catch_up_designated_roth;
 
-    let adp_safe_harbor_threshold_a = input
-        .non_hce_adp_percent
-        .saturating_mul(125)
-        / 100;
+    let adp_safe_harbor_threshold_a = input.non_hce_adp_percent.saturating_mul(125) / 100;
     let adp_safe_harbor_threshold_b = input.non_hce_adp_percent.saturating_add(2);
-    let adp_test_passed = input.hce_adp_percent <= adp_safe_harbor_threshold_a.max(adp_safe_harbor_threshold_b);
+    let adp_test_passed =
+        input.hce_adp_percent <= adp_safe_harbor_threshold_a.max(adp_safe_harbor_threshold_b);
     let safe_harbor_exempts_adp_test = input.safe_harbor_designated;
 
     if !elective_deferral_compliant {
@@ -445,10 +444,10 @@ mod tests {
         i.elective_deferral_cents = 2_500_000;
         let r = check(&i);
         assert!(!r.elective_deferral_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 402(g)(1)")
-            && f.contains("$24,500")
-            && f.contains("§ 4979")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 402(g)(1)") && f.contains("$24,500") && f.contains("§ 4979")));
     }
 
     #[test]
@@ -458,9 +457,10 @@ mod tests {
         i.catch_up_contribution_cents = 1_000_000;
         let r = check(&i);
         assert!(!r.catch_up_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 414(v)")
-            && f.contains("EXCEEDED")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 414(v)") && f.contains("EXCEEDED")));
     }
 
     #[test]
@@ -471,10 +471,12 @@ mod tests {
         i.after_tax_contribution_cents = 5_000_000;
         let r = check(&i);
         assert!(!r.annual_addition_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 415(c)(1)(A)")
-            && f.contains("$72,000")
-            && f.contains("§ 415(c)(6)")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 415(c)(1)(A)")
+                && f.contains("$72,000")
+                && f.contains("§ 415(c)(6)")));
     }
 
     #[test]
@@ -483,9 +485,10 @@ mod tests {
         i.plan_compensation_cents = 50_000_000;
         let r = check(&i);
         assert_eq!(r.considered_compensation_cents, 36_000_000);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 401(a)(17)")
-            && f.contains("$360,000")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 401(a)(17)") && f.contains("$360,000")));
     }
 
     #[test]
@@ -498,8 +501,7 @@ mod tests {
         let r = check(&i);
         assert!(r.mandatory_roth_catch_up_engaged);
         assert!(r.roth_catch_up_violation);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 414(v)(7)")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 414(v)(7)")
             && f.contains("SECURE Act 2.0 § 603")
             && f.contains("$150,000 threshold")));
     }
@@ -546,10 +548,12 @@ mod tests {
         i.non_hce_adp_percent = 4;
         let r = check(&i);
         assert!(!r.adp_test_passed);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 401(k)(3) ADP TEST FAILED")
-            && f.contains("corrective distributions")
-            && f.contains("§ 401(k)(12) safe harbor")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 401(k)(3) ADP TEST FAILED")
+                && f.contains("corrective distributions")
+                && f.contains("§ 401(k)(12) safe harbor")));
     }
 
     #[test]
@@ -560,10 +564,12 @@ mod tests {
         i.non_hce_adp_percent = 2;
         let r = check(&i);
         assert!(r.safe_harbor_exempts_adp_test);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 401(k)(12) SAFE HARBOR")
-            && f.contains("NON-ELECTIVE 3%")
-            && f.contains("100% on first 3%")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 401(k)(12) SAFE HARBOR")
+                && f.contains("NON-ELECTIVE 3%")
+                && f.contains("100% on first 3%")));
     }
 
     #[test]
@@ -577,7 +583,11 @@ mod tests {
             let mut i = under_50_max();
             i.age_bracket = bracket;
             let r = check(&i);
-            assert_eq!(r.catch_up_limit_cents, expected_catch_up_cents, "bracket={:?}", bracket);
+            assert_eq!(
+                r.catch_up_limit_cents, expected_catch_up_cents,
+                "bracket={:?}",
+                bracket
+            );
         }
     }
 
@@ -633,8 +643,7 @@ mod tests {
     #[test]
     fn note_pins_subsection_k1_cash_or_deferred_arrangement() {
         let r = check(&under_50_max());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 401(k)(1)")
+        assert!(r.notes.iter().any(|n| n.contains("§ 401(k)(1)")
             && n.contains("CASH OR DEFERRED ARRANGEMENT")
             && n.contains("growth tax-deferred")));
     }
@@ -642,22 +651,23 @@ mod tests {
     #[test]
     fn note_pins_2026_seven_limits() {
         let r = check(&under_50_max());
-        assert!(r.notes.iter().any(|n|
-            n.contains("2026 contribution limits")
-            && n.contains("$24,500")
-            && n.contains("$8,000")
-            && n.contains("$11,250")
-            && n.contains("$72,000")
-            && n.contains("$360,000")
-            && n.contains("$160,000")
-            && n.contains("$150,000")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("2026 contribution limits")
+                && n.contains("$24,500")
+                && n.contains("$8,000")
+                && n.contains("$11,250")
+                && n.contains("$72,000")
+                && n.contains("$360,000")
+                && n.contains("$160,000")
+                && n.contains("$150,000")));
     }
 
     #[test]
     fn note_pins_secure_2_section_109_enhanced_catch_up() {
         let r = check(&under_50_max());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 414(v)(2)(E)")
+        assert!(r.notes.iter().any(|n| n.contains("§ 414(v)(2)(E)")
             && n.contains("SECURE 2.0 ENHANCED CATCH-UP")
             && n.contains("ages 60-63")
             && n.contains("$11,250 (vs $8,000")
@@ -667,8 +677,7 @@ mod tests {
     #[test]
     fn note_pins_secure_2_section_603_mandatory_roth() {
         let r = check(&under_50_max());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 414(v)(7)")
+        assert!(r.notes.iter().any(|n| n.contains("§ 414(v)(7)")
             && n.contains("MANDATORY ROTH CATCH-UP")
             && n.contains("SECURE Act 2.0 § 603")
             && n.contains("$150,000")));
@@ -677,8 +686,7 @@ mod tests {
     #[test]
     fn note_pins_section_k3_adp_test() {
         let r = check(&under_50_max());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 401(k)(3) ADP TEST")
+        assert!(r.notes.iter().any(|n| n.contains("§ 401(k)(3) ADP TEST")
             && n.contains("× 1.25")
             && n.contains("+ 2%")
             && n.contains("non-HCE × 2")));
@@ -687,19 +695,21 @@ mod tests {
     #[test]
     fn note_pins_section_k12_safe_harbor_three_alternatives() {
         let r = check(&under_50_max());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 401(k)(12) SAFE HARBOR")
-            && n.contains("NON-ELECTIVE 3%")
-            && n.contains("100% match on first 3%")
-            && n.contains("50% match on next 2%")
-            && n.contains("ENHANCED matching")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 401(k)(12) SAFE HARBOR")
+                && n.contains("NON-ELECTIVE 3%")
+                && n.contains("100% match on first 3%")
+                && n.contains("50% match on next 2%")
+                && n.contains("ENHANCED matching")));
     }
 
     #[test]
     fn note_pins_section_k2_six_requirements() {
         let r = check(&under_50_max());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 401(k)(2) QUALIFIED CASH OR DEFERRED ARRANGEMENT REQUIREMENTS")
+        assert!(r.notes.iter().any(|n| n
+            .contains("§ 401(k)(2) QUALIFIED CASH OR DEFERRED ARRANGEMENT REQUIREMENTS")
             && n.contains("vest IMMEDIATELY")
             && n.contains("anti-conditioning rule")));
     }
@@ -707,8 +717,8 @@ mod tests {
     #[test]
     fn note_pins_section_402a_roth_401k() {
         let r = check(&under_50_max());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 402A DESIGNATED ROTH § 401(k) CONTRIBUTIONS")
+        assert!(r.notes.iter().any(|n| n
+            .contains("§ 402A DESIGNATED ROTH § 401(k) CONTRIBUTIONS")
             && n.contains("SECURE 2.0 § 325")
             && n.contains("NOT SUBJECT to § 401(a)(9) lifetime RMDs")
             && n.contains("SECURE 2.0 § 604")
@@ -718,8 +728,7 @@ mod tests {
     #[test]
     fn note_pins_mega_backdoor_roth() {
         let r = check(&under_50_max());
-        assert!(r.notes.iter().any(|n|
-            n.contains("MEGA BACKDOOR ROTH")
+        assert!(r.notes.iter().any(|n| n.contains("MEGA BACKDOOR ROTH")
             && n.contains("§ 415(c)(1)(A) $72,000")
             && n.contains("§ 408A(d)(3)")
             && n.contains("pro-rata rule")));
@@ -728,30 +737,36 @@ mod tests {
     #[test]
     fn note_pins_multi_employer_457b_double_deferral() {
         let r = check(&under_50_max());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Multi-employer / multi-plan considerations")
-            && n.contains("§ 457(b) governmental plans have SEPARATE $24,500 limit")
-            && n.contains("DOUBLE DEFERRAL strategy")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Multi-employer / multi-plan considerations")
+                && n.contains("§ 457(b) governmental plans have SEPARATE $24,500 limit")
+                && n.contains("DOUBLE DEFERRAL strategy")));
     }
 
     #[test]
     fn note_pins_trader_fact_patterns_five() {
         let r = check(&under_50_max());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-critical fact patterns")
-            && n.contains("$72,000 § 415(c)")
-            && n.contains("enhanced catch-up (SECURE 2.0 § 109)")
-            && n.contains("DOUBLE DEFERRAL")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-critical fact patterns")
+                && n.contains("$72,000 § 415(c)")
+                && n.contains("enhanced catch-up (SECURE 2.0 § 109)")
+                && n.contains("DOUBLE DEFERRAL")));
     }
 
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&under_50_max());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Companion to section_408")
-            && n.contains("section_408a")
-            && n.contains("section_4973")
-            && n.contains("section_162m")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Companion to section_408")
+                && n.contains("section_408a")
+                && n.contains("section_4973")
+                && n.contains("section_162m")));
     }
 
     #[test]

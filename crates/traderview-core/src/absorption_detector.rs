@@ -21,7 +21,12 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64, pub volume: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+    pub volume: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AbsorptionReport {
@@ -46,11 +51,22 @@ pub fn compute(
         threshold,
         vol_multiplier,
     };
-    if period < 2 || !threshold.is_finite() || threshold <= 0.0
-        || !vol_multiplier.is_finite() || vol_multiplier <= 0.0
-        || n < period + 1 { return report; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite()
-        || !b.close.is_finite() || !b.volume.is_finite() || b.volume <= 0.0) {
+    if period < 2
+        || !threshold.is_finite()
+        || threshold <= 0.0
+        || !vol_multiplier.is_finite()
+        || vol_multiplier <= 0.0
+        || n < period + 1
+    {
+        return report;
+    }
+    if bars.iter().any(|b| {
+        !b.high.is_finite()
+            || !b.low.is_finite()
+            || !b.close.is_finite()
+            || !b.volume.is_finite()
+            || b.volume <= 0.0
+    }) {
         return report;
     }
     let rpv: Vec<f64> = bars.iter().map(|b| (b.high - b.low) / b.volume).collect();
@@ -60,7 +76,9 @@ pub fn compute(
         let vol_avg: f64 = bars[i - period..i].iter().map(|b| b.volume).sum::<f64>() / p_f;
         let cur = bars[i];
         let range = cur.high - cur.low;
-        if range <= 0.0 { continue; }
+        if range <= 0.0 {
+            continue;
+        }
         let mid = cur.low + range / 2.0;
         let prev_close = bars[i - 1].close;
         let absorb = rpv[i] < rpv_avg * threshold && cur.volume > vol_avg * vol_multiplier;
@@ -79,7 +97,12 @@ mod tests {
     use super::*;
 
     fn b(h: f64, l: f64, c: f64, v: f64) -> Bar {
-        Bar { high: h, low: l, close: c, volume: v }
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+            volume: v,
+        }
     }
 
     #[test]

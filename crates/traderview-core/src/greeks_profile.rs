@@ -13,7 +13,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum OptionKind { Call, Put }
+pub enum OptionKind {
+    Call,
+    Put,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct GreeksPoint {
@@ -44,12 +47,18 @@ pub fn compute(
     n_points: usize,
     kind: OptionKind,
 ) -> Option<GreeksProfileReport> {
-    if !strike.is_finite() || strike <= 0.0
-        || !time_to_expiry.is_finite() || time_to_expiry <= 0.0
-        || !risk_free.is_finite() || !dividend_yield.is_finite()
-        || !sigma.is_finite() || sigma <= 0.0
-        || !spot_grid_low.is_finite() || spot_grid_low <= 0.0
-        || !spot_grid_high.is_finite() || spot_grid_high <= spot_grid_low
+    if !strike.is_finite()
+        || strike <= 0.0
+        || !time_to_expiry.is_finite()
+        || time_to_expiry <= 0.0
+        || !risk_free.is_finite()
+        || !dividend_yield.is_finite()
+        || !sigma.is_finite()
+        || sigma <= 0.0
+        || !spot_grid_low.is_finite()
+        || spot_grid_low <= 0.0
+        || !spot_grid_high.is_finite()
+        || spot_grid_high <= spot_grid_low
         || n_points < 2
     {
         return None;
@@ -60,7 +69,15 @@ pub fn compute(
     let mut atm_dist = f64::INFINITY;
     for k in 0..n_points {
         let s = spot_grid_low + step * k as f64;
-        let pt = compute_point(s, strike, time_to_expiry, risk_free, dividend_yield, sigma, kind);
+        let pt = compute_point(
+            s,
+            strike,
+            time_to_expiry,
+            risk_free,
+            dividend_yield,
+            sigma,
+            kind,
+        );
         let dist = (s - strike).abs();
         if dist < atm_dist {
             atm_dist = dist;
@@ -72,7 +89,13 @@ pub fn compute(
 }
 
 fn compute_point(
-    s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64, kind: OptionKind,
+    s: f64,
+    k: f64,
+    t: f64,
+    r: f64,
+    q: f64,
+    sigma: f64,
+    kind: OptionKind,
 ) -> GreeksPoint {
     let sqrt_t = t.sqrt();
     let d1 = ((s / k).ln() + (r - q + 0.5 * sigma * sigma) * t) / (sigma * sqrt_t);
@@ -83,11 +106,7 @@ fn compute_point(
     let dq = (-q * t).exp();
     let dr = (-r * t).exp();
     let (price, delta, rho) = match kind {
-        OptionKind::Call => (
-            s * dq * nd1 - k * dr * nd2,
-            dq * nd1,
-            k * t * dr * nd2,
-        ),
+        OptionKind::Call => (s * dq * nd1 - k * dr * nd2, dq * nd1, k * t * dr * nd2),
         OptionKind::Put => (
             k * dr * (1.0 - nd2) - s * dq * (1.0 - nd1),
             -dq * (1.0 - nd1),
@@ -101,16 +120,24 @@ fn compute_point(
         OptionKind::Call => theta_term1 - r * k * dr * nd2 + q * s * dq * nd1,
         OptionKind::Put => theta_term1 + r * k * dr * (1.0 - nd2) - q * s * dq * (1.0 - nd1),
     };
-    GreeksPoint { spot: s, price, delta, gamma, vega, theta, rho }
+    GreeksPoint {
+        spot: s,
+        price,
+        delta,
+        gamma,
+        vega,
+        theta,
+        rho,
+    }
 }
 
 fn norm_cdf(x: f64) -> f64 {
-    let a1 =  0.254829592_f64;
+    let a1 = 0.254829592_f64;
     let a2 = -0.284496736_f64;
-    let a3 =  1.421413741_f64;
+    let a3 = 1.421413741_f64;
     let a4 = -1.453152027_f64;
-    let a5 =  1.061405429_f64;
-    let p  =  0.3275911_f64;
+    let a5 = 1.061405429_f64;
+    let p = 0.3275911_f64;
     let sign = if x < 0.0 { -1.0 } else { 1.0 };
     let xa = x.abs() / std::f64::consts::SQRT_2;
     let t = 1.0 / (1.0 + p * xa);
@@ -126,16 +153,60 @@ mod tests {
     fn invalid_inputs_return_none() {
         for bad in [0.0, -1.0, f64::NAN] {
             assert!(compute(bad, 0.5, 0.05, 0.0, 0.2, 80.0, 120.0, 41, OptionKind::Call).is_none());
-            assert!(compute(100.0, bad, 0.05, 0.0, 0.2, 80.0, 120.0, 41, OptionKind::Call).is_none());
-            assert!(compute(100.0, 0.5, 0.05, 0.0, bad, 80.0, 120.0, 41, OptionKind::Call).is_none());
+            assert!(compute(
+                100.0,
+                bad,
+                0.05,
+                0.0,
+                0.2,
+                80.0,
+                120.0,
+                41,
+                OptionKind::Call
+            )
+            .is_none());
+            assert!(compute(
+                100.0,
+                0.5,
+                0.05,
+                0.0,
+                bad,
+                80.0,
+                120.0,
+                41,
+                OptionKind::Call
+            )
+            .is_none());
         }
-        assert!(compute(100.0, 0.5, 0.05, 0.0, 0.2, 120.0, 80.0, 41, OptionKind::Call).is_none());
+        assert!(compute(
+            100.0,
+            0.5,
+            0.05,
+            0.0,
+            0.2,
+            120.0,
+            80.0,
+            41,
+            OptionKind::Call
+        )
+        .is_none());
         assert!(compute(100.0, 0.5, 0.05, 0.0, 0.2, 80.0, 120.0, 1, OptionKind::Call).is_none());
     }
 
     #[test]
     fn delta_monotonic_increasing_for_call() {
-        let r = compute(100.0, 0.5, 0.05, 0.0, 0.20, 60.0, 140.0, 41, OptionKind::Call).unwrap();
+        let r = compute(
+            100.0,
+            0.5,
+            0.05,
+            0.0,
+            0.20,
+            60.0,
+            140.0,
+            41,
+            OptionKind::Call,
+        )
+        .unwrap();
         let mut prev = -f64::INFINITY;
         for pt in &r.points {
             assert!(pt.delta >= prev - 1e-9);
@@ -145,7 +216,18 @@ mod tests {
 
     #[test]
     fn put_delta_negative_and_increasing() {
-        let r = compute(100.0, 0.5, 0.05, 0.0, 0.20, 60.0, 140.0, 41, OptionKind::Put).unwrap();
+        let r = compute(
+            100.0,
+            0.5,
+            0.05,
+            0.0,
+            0.20,
+            60.0,
+            140.0,
+            41,
+            OptionKind::Put,
+        )
+        .unwrap();
         for pt in &r.points {
             assert!(pt.delta <= 0.0 && pt.delta >= -1.0);
         }
@@ -158,17 +240,44 @@ mod tests {
 
     #[test]
     fn gamma_peaks_near_atm() {
-        let r = compute(100.0, 0.5, 0.05, 0.0, 0.20, 60.0, 140.0, 41, OptionKind::Call).unwrap();
+        let r = compute(
+            100.0,
+            0.5,
+            0.05,
+            0.0,
+            0.20,
+            60.0,
+            140.0,
+            41,
+            OptionKind::Call,
+        )
+        .unwrap();
         // The bar with maximum gamma should be near (but not exactly at)
         // the ATM strike — peak gamma sits slightly OTM for OTM calls.
-        let max_gamma_idx = r.points.iter().enumerate()
-            .max_by(|a, b| a.1.gamma.partial_cmp(&b.1.gamma).unwrap()).unwrap().0;
+        let max_gamma_idx = r
+            .points
+            .iter()
+            .enumerate()
+            .max_by(|a, b| a.1.gamma.partial_cmp(&b.1.gamma).unwrap())
+            .unwrap()
+            .0;
         assert!((max_gamma_idx as isize - r.atm_index as isize).abs() <= 5);
     }
 
     #[test]
     fn vega_always_positive_for_long_options() {
-        let r = compute(100.0, 0.5, 0.05, 0.0, 0.20, 50.0, 150.0, 41, OptionKind::Call).unwrap();
+        let r = compute(
+            100.0,
+            0.5,
+            0.05,
+            0.0,
+            0.20,
+            50.0,
+            150.0,
+            41,
+            OptionKind::Call,
+        )
+        .unwrap();
         for pt in &r.points {
             assert!(pt.vega >= 0.0);
         }
@@ -176,7 +285,18 @@ mod tests {
 
     #[test]
     fn atm_index_closest_to_strike() {
-        let r = compute(100.0, 0.5, 0.05, 0.0, 0.20, 80.0, 120.0, 41, OptionKind::Call).unwrap();
+        let r = compute(
+            100.0,
+            0.5,
+            0.05,
+            0.0,
+            0.20,
+            80.0,
+            120.0,
+            41,
+            OptionKind::Call,
+        )
+        .unwrap();
         let atm = r.points[r.atm_index];
         for pt in &r.points {
             let dist_other = (pt.spot - 100.0).abs();
@@ -187,7 +307,18 @@ mod tests {
 
     #[test]
     fn grid_step_uniform() {
-        let r = compute(100.0, 0.5, 0.05, 0.0, 0.20, 80.0, 120.0, 41, OptionKind::Call).unwrap();
+        let r = compute(
+            100.0,
+            0.5,
+            0.05,
+            0.0,
+            0.20,
+            80.0,
+            120.0,
+            41,
+            OptionKind::Call,
+        )
+        .unwrap();
         let diffs: Vec<f64> = r.points.windows(2).map(|w| w[1].spot - w[0].spot).collect();
         for d in &diffs[1..] {
             assert!((d - diffs[0]).abs() < 1e-9);
@@ -196,7 +327,18 @@ mod tests {
 
     #[test]
     fn n_points_matches_grid_length() {
-        let r = compute(100.0, 0.5, 0.05, 0.0, 0.20, 80.0, 120.0, 41, OptionKind::Call).unwrap();
+        let r = compute(
+            100.0,
+            0.5,
+            0.05,
+            0.0,
+            0.20,
+            80.0,
+            120.0,
+            41,
+            OptionKind::Call,
+        )
+        .unwrap();
         assert_eq!(r.points.len(), 41);
     }
 }

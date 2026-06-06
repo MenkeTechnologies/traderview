@@ -182,8 +182,7 @@ pub fn compute(input: &Section408D3Input) -> Section408D3Result {
     } else if !r.rollover_qualifies {
         // Compute penalty on the taxable portion.
         if input.taxpayer_age_at_distribution < 60 {
-            r.early_withdrawal_penalty_10pct =
-                (r.taxable_amount * ten_percent()).round_dp(2);
+            r.early_withdrawal_penalty_10pct = (r.taxable_amount * ten_percent()).round_dp(2);
         }
         r.note = format!(
             "§408(d)(3) rollover failed: {} — ${} taxable + ${} early withdrawal penalty (under 59½)",

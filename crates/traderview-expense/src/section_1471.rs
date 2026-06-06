@@ -211,13 +211,16 @@ pub fn compute(input: &Input) -> Output {
             mode: Section1471Mode::NotApplicableNonUsSourcePayment,
             required_withholding_dollars: 0,
             applicable_rate_basis_points: 0,
-            statutory_basis: "§ 1473 — payment is not a withholdable payment (non-US-source)".to_string(),
+            statutory_basis: "§ 1473 — payment is not a withholdable payment (non-US-source)"
+                .to_string(),
             notes: "Payment is non-US-source; not a withholdable payment under § 1473.".to_string(),
             citations,
         };
     }
 
-    if input.payment_type == WithholdablePaymentType::GrossProceedsFromSaleOfPropertyRescindedByTreasReg {
+    if input.payment_type
+        == WithholdablePaymentType::GrossProceedsFromSaleOfPropertyRescindedByTreasReg
+    {
         return Output {
             mode: Section1471Mode::NotApplicableGrossProceedsRescinded,
             required_withholding_dollars: 0,
@@ -228,7 +231,8 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.payment_type == WithholdablePaymentType::PreExistingObligationOutstandingJanuary1_2014 {
+    if input.payment_type == WithholdablePaymentType::PreExistingObligationOutstandingJanuary1_2014
+    {
         return Output {
             mode: Section1471Mode::NotApplicablePreExistingObligation,
             required_withholding_dollars: 0,
@@ -256,7 +260,9 @@ pub fn compute(input: &Input) -> Output {
         PayeeChapter4Status::ExemptBeneficialOwner => {
             Some(Section1471Mode::CompliantExemptBeneficialOwnerNoWithholdingRequired)
         }
-        PayeeChapter4Status::ActiveNffe => Some(Section1471Mode::CompliantActiveNffeNoWithholdingRequired),
+        PayeeChapter4Status::ActiveNffe => {
+            Some(Section1471Mode::CompliantActiveNffeNoWithholdingRequired)
+        }
         PayeeChapter4Status::PassiveNffeNoSubstantialUsOwners => {
             Some(Section1471Mode::CompliantPassiveNffeNoSubstantialUsOwnersCertified)
         }
@@ -303,7 +309,10 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    let required = apply_rate(input.payment_amount_dollars, SECTION_1471_WITHHOLDING_RATE_BASIS_POINTS);
+    let required = apply_rate(
+        input.payment_amount_dollars,
+        SECTION_1471_WITHHOLDING_RATE_BASIS_POINTS,
+    );
 
     if input.payee_chapter4_status == PayeeChapter4Status::UndocumentedPayee
         && input.actual_withheld_dollars < required
@@ -359,7 +368,8 @@ pub fn compute(input: &Input) -> Output {
             required_withholding_dollars: required,
             applicable_rate_basis_points: SECTION_1471_WITHHOLDING_RATE_BASIS_POINTS,
             statutory_basis: "Form 1042-S per-payee statement required".to_string(),
-            notes: "VIOLATION: Form 1042-S not issued to foreign payee. Subject to § 6722 penalty.".to_string(),
+            notes: "VIOLATION: Form 1042-S not issued to foreign payee. Subject to § 6722 penalty."
+                .to_string(),
             citations,
         };
     }
@@ -420,17 +430,24 @@ mod tests {
             ..baseline_nonparticipating_ffi_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1471Mode::NotApplicableNonUsSourcePayment);
+        assert_eq!(
+            result.mode,
+            Section1471Mode::NotApplicableNonUsSourcePayment
+        );
     }
 
     #[test]
     fn gross_proceeds_rescinded_not_applicable() {
         let input = Input {
-            payment_type: WithholdablePaymentType::GrossProceedsFromSaleOfPropertyRescindedByTreasReg,
+            payment_type:
+                WithholdablePaymentType::GrossProceedsFromSaleOfPropertyRescindedByTreasReg,
             ..baseline_nonparticipating_ffi_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1471Mode::NotApplicableGrossProceedsRescinded);
+        assert_eq!(
+            result.mode,
+            Section1471Mode::NotApplicableGrossProceedsRescinded
+        );
     }
 
     #[test]
@@ -440,13 +457,19 @@ mod tests {
             ..baseline_nonparticipating_ffi_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1471Mode::NotApplicablePreExistingObligation);
+        assert_eq!(
+            result.mode,
+            Section1471Mode::NotApplicablePreExistingObligation
+        );
     }
 
     #[test]
     fn participating_ffi_with_giin_compliant_no_withholding() {
         let result = compute(&baseline_participating_ffi());
-        assert_eq!(result.mode, Section1471Mode::CompliantParticipatingFfiNoWithholdingRequired);
+        assert_eq!(
+            result.mode,
+            Section1471Mode::CompliantParticipatingFfiNoWithholdingRequired
+        );
         assert_eq!(result.required_withholding_dollars, 0);
     }
 
@@ -457,7 +480,10 @@ mod tests {
             ..baseline_participating_ffi()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1471Mode::CompliantDeemedCompliantFfiNoWithholdingRequired);
+        assert_eq!(
+            result.mode,
+            Section1471Mode::CompliantDeemedCompliantFfiNoWithholdingRequired
+        );
     }
 
     #[test]
@@ -467,7 +493,10 @@ mod tests {
             ..baseline_participating_ffi()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1471Mode::CompliantReportingModel1Or2FfiNoWithholdingRequired);
+        assert_eq!(
+            result.mode,
+            Section1471Mode::CompliantReportingModel1Or2FfiNoWithholdingRequired
+        );
     }
 
     #[test]
@@ -477,7 +506,10 @@ mod tests {
             ..baseline_participating_ffi()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1471Mode::CompliantExemptBeneficialOwnerNoWithholdingRequired);
+        assert_eq!(
+            result.mode,
+            Section1471Mode::CompliantExemptBeneficialOwnerNoWithholdingRequired
+        );
     }
 
     #[test]
@@ -487,7 +519,10 @@ mod tests {
             ..baseline_participating_ffi()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1471Mode::CompliantActiveNffeNoWithholdingRequired);
+        assert_eq!(
+            result.mode,
+            Section1471Mode::CompliantActiveNffeNoWithholdingRequired
+        );
     }
 
     #[test]
@@ -497,7 +532,10 @@ mod tests {
             ..baseline_participating_ffi()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1471Mode::CompliantPassiveNffeNoSubstantialUsOwnersCertified);
+        assert_eq!(
+            result.mode,
+            Section1471Mode::CompliantPassiveNffeNoSubstantialUsOwnersCertified
+        );
     }
 
     #[test]
@@ -507,13 +545,19 @@ mod tests {
             ..baseline_participating_ffi()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1471Mode::CompliantPassiveNffeWithSubstantialUsOwnersReported);
+        assert_eq!(
+            result.mode,
+            Section1471Mode::CompliantPassiveNffeWithSubstantialUsOwnersReported
+        );
     }
 
     #[test]
     fn nonparticipating_ffi_30_pct_withholding_compliant() {
         let result = compute(&baseline_nonparticipating_ffi_compliant());
-        assert_eq!(result.mode, Section1471Mode::CompliantFullWithholdingAppliedToNonparticipatingFfi);
+        assert_eq!(
+            result.mode,
+            Section1471Mode::CompliantFullWithholdingAppliedToNonparticipatingFfi
+        );
         assert_eq!(result.required_withholding_dollars, 300_000);
         assert_eq!(result.applicable_rate_basis_points, 3_000);
     }
@@ -525,7 +569,10 @@ mod tests {
             ..baseline_nonparticipating_ffi_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1471Mode::ViolationWithholdingAgentFailedToWithholdFromNonparticipatingFfi);
+        assert_eq!(
+            result.mode,
+            Section1471Mode::ViolationWithholdingAgentFailedToWithholdFromNonparticipatingFfi
+        );
     }
 
     #[test]
@@ -535,7 +582,10 @@ mod tests {
             ..baseline_nonparticipating_ffi_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1471Mode::ViolationWithholdingAgentFailedToWithholdFromNonparticipatingFfi);
+        assert_eq!(
+            result.mode,
+            Section1471Mode::ViolationWithholdingAgentFailedToWithholdFromNonparticipatingFfi
+        );
         assert!(result.notes.contains("shortfall $200000"));
     }
 
@@ -547,7 +597,10 @@ mod tests {
             ..baseline_nonparticipating_ffi_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1471Mode::ViolationUndocumentedPayeeNoWithholdingApplied);
+        assert_eq!(
+            result.mode,
+            Section1471Mode::ViolationUndocumentedPayeeNoWithholdingApplied
+        );
         assert_eq!(result.required_withholding_dollars, 300_000);
     }
 
@@ -559,7 +612,10 @@ mod tests {
             ..baseline_nonparticipating_ffi_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1471Mode::CompliantFullWithholdingAppliedToNonparticipatingFfi);
+        assert_eq!(
+            result.mode,
+            Section1471Mode::CompliantFullWithholdingAppliedToNonparticipatingFfi
+        );
         assert_eq!(result.required_withholding_dollars, 300_000);
     }
 
@@ -571,7 +627,10 @@ mod tests {
             ..baseline_nonparticipating_ffi_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1471Mode::CompliantFullWithholdingAppliedToNonparticipatingFfi);
+        assert_eq!(
+            result.mode,
+            Section1471Mode::CompliantFullWithholdingAppliedToNonparticipatingFfi
+        );
     }
 
     #[test]
@@ -581,7 +640,10 @@ mod tests {
             ..baseline_nonparticipating_ffi_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1471Mode::ViolationForm1042NotFiledByMarch15Deadline);
+        assert_eq!(
+            result.mode,
+            Section1471Mode::ViolationForm1042NotFiledByMarch15Deadline
+        );
     }
 
     #[test]
@@ -591,7 +653,10 @@ mod tests {
             ..baseline_nonparticipating_ffi_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1471Mode::ViolationForm1042SNotIssuedToForeignPayee);
+        assert_eq!(
+            result.mode,
+            Section1471Mode::ViolationForm1042SNotIssuedToForeignPayee
+        );
     }
 
     #[test]

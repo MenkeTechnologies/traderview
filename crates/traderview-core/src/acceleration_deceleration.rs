@@ -15,7 +15,10 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct HlBar { pub high: f64, pub low: f64 }
+pub struct HlBar {
+    pub high: f64,
+    pub low: f64,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
@@ -80,14 +83,22 @@ pub fn compute(bars: &[HlBar]) -> AcReport {
         (Some(Some(v1)), Some(Some(v0))) if *v1 < 0.0 && *v0 < 0.0 && v1 < v0 => AcBias::Bearish,
         _ => AcBias::Neutral,
     };
-    AcReport { ao, ac, latest_ao, latest_ac, bias }
+    AcReport {
+        ao,
+        ac,
+        latest_ao,
+        latest_ac,
+        bias,
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64) -> HlBar { HlBar { high: h, low: l } }
+    fn b(h: f64, l: f64) -> HlBar {
+        HlBar { high: h, low: l }
+    }
 
     #[test]
     fn short_input_returns_default() {
@@ -110,10 +121,12 @@ mod tests {
     #[test]
     fn rising_trend_yields_positive_ao() {
         // Steady rising series → short SMA > long SMA → AO > 0.
-        let bars: Vec<HlBar> = (0..50).map(|i| {
-            let p = 100.0 + i as f64;
-            b(p + 0.5, p - 0.5)
-        }).collect();
+        let bars: Vec<HlBar> = (0..50)
+            .map(|i| {
+                let p = 100.0 + i as f64;
+                b(p + 0.5, p - 0.5)
+            })
+            .collect();
         let r = compute(&bars);
         let ao = r.latest_ao.expect("populated");
         assert!(ao > 0.0, "rising → AO positive, got {ao}");
@@ -121,10 +134,12 @@ mod tests {
 
     #[test]
     fn falling_trend_yields_negative_ao() {
-        let bars: Vec<HlBar> = (0..50).map(|i| {
-            let p = 200.0 - i as f64;
-            b(p + 0.5, p - 0.5)
-        }).collect();
+        let bars: Vec<HlBar> = (0..50)
+            .map(|i| {
+                let p = 200.0 - i as f64;
+                b(p + 0.5, p - 0.5)
+            })
+            .collect();
         let r = compute(&bars);
         let ao = r.latest_ao.expect("populated");
         assert!(ao < 0.0, "falling → AO negative, got {ao}");
@@ -133,25 +148,32 @@ mod tests {
     #[test]
     fn accelerating_uptrend_gives_bullish_bias() {
         // Quadratic ramp — momentum is increasing, so AC > 0 and rising.
-        let bars: Vec<HlBar> = (0..60).map(|i| {
-            let p = 100.0 + (i as f64).powi(2) / 30.0;
-            b(p + 0.5, p - 0.5)
-        }).collect();
+        let bars: Vec<HlBar> = (0..60)
+            .map(|i| {
+                let p = 100.0 + (i as f64).powi(2) / 30.0;
+                b(p + 0.5, p - 0.5)
+            })
+            .collect();
         let r = compute(&bars);
         let v = r.latest_ac.expect("populated");
         // AC may still be small but the bias check requires AC > 0 AND rising
         // across the last two bars. For quadratic ramp both should hold.
         assert!(v > 0.0, "accelerating → AC > 0, got {v}");
-        assert!(matches!(r.bias, AcBias::Bullish | AcBias::Neutral),
-            "got {:?}, AC = {v}", r.bias);
+        assert!(
+            matches!(r.bias, AcBias::Bullish | AcBias::Neutral),
+            "got {:?}, AC = {v}",
+            r.bias
+        );
     }
 
     #[test]
     fn warmup_indices_below_38_are_none() {
-        let bars: Vec<HlBar> = (0..50).map(|i| {
-            let p = 100.0 + i as f64;
-            b(p + 0.5, p - 0.5)
-        }).collect();
+        let bars: Vec<HlBar> = (0..50)
+            .map(|i| {
+                let p = 100.0 + i as f64;
+                b(p + 0.5, p - 0.5)
+            })
+            .collect();
         let r = compute(&bars);
         for i in 0..37 {
             assert!(r.ac[i].is_none(), "ac[{i}] should be None");

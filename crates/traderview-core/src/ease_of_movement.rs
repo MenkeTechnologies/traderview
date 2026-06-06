@@ -63,7 +63,11 @@ mod tests {
     use super::*;
 
     fn b(h: f64, l: f64, v: f64) -> Bar {
-        Bar { high: h, low: l, volume: v }
+        Bar {
+            high: h,
+            low: l,
+            volume: v,
+        }
     }
 
     #[test]
@@ -80,21 +84,28 @@ mod tests {
     #[test]
     fn rising_midpoint_yields_positive_eom() {
         // Midpoint rises by 1 per bar; range constant at 2; volume constant.
-        let bars: Vec<Bar> = (0..30).map(|i| {
-            let mid = 100.0 + i as f64;
-            b(mid + 1.0, mid - 1.0, 50_000_000.0)
-        }).collect();
+        let bars: Vec<Bar> = (0..30)
+            .map(|i| {
+                let mid = 100.0 + i as f64;
+                b(mid + 1.0, mid - 1.0, 50_000_000.0)
+            })
+            .collect();
         let out = compute(&bars, 14);
         let last = out[29].expect("populated");
-        assert!(last > 0.0, "rising midpoint should yield EOM > 0, got {last}");
+        assert!(
+            last > 0.0,
+            "rising midpoint should yield EOM > 0, got {last}"
+        );
     }
 
     #[test]
     fn falling_midpoint_yields_negative_eom() {
-        let bars: Vec<Bar> = (0..30).map(|i| {
-            let mid = 200.0 - i as f64;
-            b(mid + 1.0, mid - 1.0, 50_000_000.0)
-        }).collect();
+        let bars: Vec<Bar> = (0..30)
+            .map(|i| {
+                let mid = 200.0 - i as f64;
+                b(mid + 1.0, mid - 1.0, 50_000_000.0)
+            })
+            .collect();
         let out = compute(&bars, 14);
         let last = out[29].expect("populated");
         assert!(last < 0.0);
@@ -105,7 +116,9 @@ mod tests {
         let bars = vec![b(100.0, 100.0, 1_000_000.0); 30];
         let out = compute(&bars, 14);
         // All raw values are None → SMA is None.
-        for v in &out { assert!(v.is_none()); }
+        for v in &out {
+            assert!(v.is_none());
+        }
     }
 
     #[test]

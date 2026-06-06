@@ -324,7 +324,8 @@ pub fn compute(input: &Input) -> Output {
             }
         }
         ComplianceAspect::MaterialNoncomplianceNoticeUnderSection562A271 => {
-            if input.material_noncompliance_notice_days_given < IA_MATERIAL_NONCOMPLIANCE_NOTICE_DAYS
+            if input.material_noncompliance_notice_days_given
+                < IA_MATERIAL_NONCOMPLIANCE_NOTICE_DAYS
             {
                 return Output {
                     mode: IaLandlordTenantMode::ViolationMaterialNoncomplianceNoticeShorterThan7Days,
@@ -430,7 +431,10 @@ mod tests {
         let mut input = baseline_input();
         input.tenancy_coverage = TenancyCoverage::ExemptFromChapter562A;
         let out = check(&input);
-        assert_eq!(out.mode, IaLandlordTenantMode::NotApplicableTenancyExemptFromChapter562A);
+        assert_eq!(
+            out.mode,
+            IaLandlordTenantMode::NotApplicableTenancyExemptFromChapter562A
+        );
     }
 
     #[test]
@@ -439,7 +443,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::DepositCapTwoMonthsRentUnderSection562A121;
         input.deposit_amount_in_months_rent = 2;
         let out = check(&input);
-        assert_eq!(out.mode, IaLandlordTenantMode::CompliantDepositCapWithinTwoMonthsRent);
+        assert_eq!(
+            out.mode,
+            IaLandlordTenantMode::CompliantDepositCapWithinTwoMonthsRent
+        );
     }
 
     #[test]
@@ -448,7 +455,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::DepositCapTwoMonthsRentUnderSection562A121;
         input.deposit_amount_in_months_rent = 3;
         let out = check(&input);
-        assert_eq!(out.mode, IaLandlordTenantMode::ViolationDepositExceedsTwoMonthsRent);
+        assert_eq!(
+            out.mode,
+            IaLandlordTenantMode::ViolationDepositExceedsTwoMonthsRent
+        );
     }
 
     #[test]
@@ -468,8 +478,7 @@ mod tests {
     fn commingled_deposit_violation() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::FederallyInsuredHoldingUnderSection562A122;
-        input.deposit_holding_status =
-            DepositHoldingStatus::DepositCommingledOrNotFederallyInsured;
+        input.deposit_holding_status = DepositHoldingStatus::DepositCommingledOrNotFederallyInsured;
         let out = check(&input);
         assert_eq!(
             out.mode,
@@ -495,27 +504,38 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::SecurityDepositReturnUnderSection562A123;
         input.days_to_return_deposit = 31;
         let out = check(&input);
-        assert_eq!(out.mode, IaLandlordTenantMode::ViolationDepositReturnedPast30DayDeadline);
+        assert_eq!(
+            out.mode,
+            IaLandlordTenantMode::ViolationDepositReturnedPast30DayDeadline
+        );
     }
 
     #[test]
     fn permissible_withholding_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::PermissibleWithholdingReasonsUnderSection562A123;
+        input.compliance_aspect =
+            ComplianceAspect::PermissibleWithholdingReasonsUnderSection562A123;
         input.withholding_reason_status =
             WithholdingReasonStatus::PermissibleWithholdingRentDefaultOrRestorationLessOrdinaryWearAndTear;
         let out = check(&input);
-        assert_eq!(out.mode, IaLandlordTenantMode::CompliantPermissibleWithholdingReasons);
+        assert_eq!(
+            out.mode,
+            IaLandlordTenantMode::CompliantPermissibleWithholdingReasons
+        );
     }
 
     #[test]
     fn impermissible_withholding_normal_wear_and_tear_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::PermissibleWithholdingReasonsUnderSection562A123;
+        input.compliance_aspect =
+            ComplianceAspect::PermissibleWithholdingReasonsUnderSection562A123;
         input.withholding_reason_status =
             WithholdingReasonStatus::ImpermissibleWithholdingNormalWearAndTearOrOtherImpermissibleReason;
         let out = check(&input);
-        assert_eq!(out.mode, IaLandlordTenantMode::ViolationImpermissibleWithholdingReasons);
+        assert_eq!(
+            out.mode,
+            IaLandlordTenantMode::ViolationImpermissibleWithholdingReasons
+        );
     }
 
     #[test]
@@ -525,7 +545,10 @@ mod tests {
             ComplianceAspect::BadFaithRetention2xMonthlyRentPenaltyUnderSection562A127;
         input.bad_faith_status = BadFaithStatus::NoBadFaithProperReturn;
         let out = check(&input);
-        assert_eq!(out.mode, IaLandlordTenantMode::CompliantNoBadFaithProperReturn);
+        assert_eq!(
+            out.mode,
+            IaLandlordTenantMode::CompliantNoBadFaithProperReturn
+        );
     }
 
     #[test]
@@ -535,7 +558,10 @@ mod tests {
             ComplianceAspect::BadFaithRetention2xMonthlyRentPenaltyUnderSection562A127;
         input.bad_faith_status = BadFaithStatus::NoBadFaithGoodFaithDispute;
         let out = check(&input);
-        assert_eq!(out.mode, IaLandlordTenantMode::CompliantNoBadFaithGoodFaithDispute);
+        assert_eq!(
+            out.mode,
+            IaLandlordTenantMode::CompliantNoBadFaithGoodFaithDispute
+        );
     }
 
     #[test]
@@ -554,7 +580,8 @@ mod tests {
     #[test]
     fn landlord_maintains_habitability_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordHabitabilityObligationUnderSection562A15;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordHabitabilityObligationUnderSection562A15;
         input.landlord_maintains_habitability = true;
         let out = check(&input);
         assert_eq!(
@@ -566,7 +593,8 @@ mod tests {
     #[test]
     fn landlord_failed_habitability_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordHabitabilityObligationUnderSection562A15;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordHabitabilityObligationUnderSection562A15;
         input.landlord_maintains_habitability = false;
         let out = check(&input);
         assert_eq!(
@@ -737,7 +765,8 @@ mod tests {
         assert!(joined.contains("BUILDING AND HOUSING CODES"));
         assert!(joined.contains("FIT AND HABITABLE CONDITION"));
         assert!(joined.contains("COMMON AREAS"));
-        assert!(joined.contains("ELECTRICAL, PLUMBING, SANITARY, HEATING, VENTILATING, AIR-CONDITIONING"));
+        assert!(joined
+            .contains("ELECTRICAL, PLUMBING, SANITARY, HEATING, VENTILATING, AIR-CONDITIONING"));
         assert!(joined.contains("ELEVATORS"));
     }
 }

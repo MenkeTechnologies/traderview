@@ -11,7 +11,10 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Print { pub price: f64, pub size: f64 }
+pub struct Print {
+    pub price: f64,
+    pub size: f64,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct TickBar {
@@ -25,9 +28,13 @@ pub struct TickBar {
 
 pub fn compute(prints: &[Print], ticks_per_bar: u32) -> Vec<TickBar> {
     let mut out = Vec::new();
-    if prints.is_empty() || ticks_per_bar == 0 { return out; }
-    if prints.iter().any(|p| !p.price.is_finite() || !p.size.is_finite()
-        || p.price <= 0.0 || p.size < 0.0) {
+    if prints.is_empty() || ticks_per_bar == 0 {
+        return out;
+    }
+    if prints
+        .iter()
+        .any(|p| !p.price.is_finite() || !p.size.is_finite() || p.price <= 0.0 || p.size < 0.0)
+    {
         return out;
     }
     let mut open = prints[0].price;
@@ -42,13 +49,19 @@ pub fn compute(prints: &[Print], ticks_per_bar: u32) -> Vec<TickBar> {
             low = p.price;
             volume = 0.0;
         }
-        if p.price > high { high = p.price; }
-        if p.price < low { low = p.price; }
+        if p.price > high {
+            high = p.price;
+        }
+        if p.price < low {
+            low = p.price;
+        }
         volume += p.size;
         tick_count += 1;
         if tick_count >= ticks_per_bar {
             out.push(TickBar {
-                open, high, low,
+                open,
+                high,
+                low,
                 close: p.price,
                 volume,
                 tick_count,
@@ -63,7 +76,9 @@ pub fn compute(prints: &[Print], ticks_per_bar: u32) -> Vec<TickBar> {
 mod tests {
     use super::*;
 
-    fn p(price: f64, size: f64) -> Print { Print { price, size } }
+    fn p(price: f64, size: f64) -> Print {
+        Print { price, size }
+    }
 
     #[test]
     fn empty_or_invalid_returns_empty() {

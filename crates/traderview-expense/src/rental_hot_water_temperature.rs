@@ -110,8 +110,8 @@ fn check_ca(input: &RentalHotWaterTemperatureInput) -> RentalHotWaterTemperature
         ));
     }
 
-    let habitability_breach = !input.hot_water_supplied
-        || input.temperature_fahrenheit < min_required;
+    let habitability_breach =
+        !input.hot_water_supplied || input.temperature_fahrenheit < min_required;
 
     RentalHotWaterTemperatureResult {
         compliant: violations.is_empty(),
@@ -119,7 +119,8 @@ fn check_ca(input: &RentalHotWaterTemperatureInput) -> RentalHotWaterTemperature
         year_round_required: false,
         habitability_breach,
         violations,
-        citation: "Cal. Health & Safety Code §§ 114192, 17920.3; Cal. Civ. Code § 1941.1; 22 CCR § 81088",
+        citation:
+            "Cal. Health & Safety Code §§ 114192, 17920.3; Cal. Civ. Code § 1941.1; 22 CCR § 81088",
         notes,
     }
 }
@@ -189,8 +190,8 @@ fn check_default(input: &RentalHotWaterTemperatureInput) -> RentalHotWaterTemper
         ));
     }
 
-    let habitability_breach = !input.hot_water_supplied
-        || input.temperature_fahrenheit < min_required;
+    let habitability_breach =
+        !input.hot_water_supplied || input.temperature_fahrenheit < min_required;
 
     RentalHotWaterTemperatureResult {
         compliant: violations.is_empty(),

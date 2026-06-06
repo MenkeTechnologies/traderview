@@ -30,22 +30,21 @@ use axum::body::Body;
 use axum::extract::{Path, State};
 use axum::http::{header, StatusCode};
 use axum::response::Response;
-use printpdf::{Mm, PdfDocument, BuiltinFont};
+use printpdf::{BuiltinFont, Mm, PdfDocument};
 use rust_decimal::Decimal;
-use traderview_tax::{compute as compute_tax, TaxReturn, TaxResult};
+use traderview_tax::{compute as compute_tax, TaxResult, TaxReturn};
 
 pub async fn generate_pdf(
     State(s): State<AppState>,
     user: AuthUser,
     Path(year): Path<i32>,
 ) -> Result<Response, ApiError> {
-    let row: Option<serde_json::Value> = sqlx::query_scalar(
-        "SELECT data FROM tax_returns WHERE user_id = $1 AND tax_year = $2",
-    )
-    .bind(user.id)
-    .bind(year)
-    .fetch_optional(&s.pool)
-    .await?;
+    let row: Option<serde_json::Value> =
+        sqlx::query_scalar("SELECT data FROM tax_returns WHERE user_id = $1 AND tax_year = $2")
+            .bind(user.id)
+            .bind(year)
+            .fetch_optional(&s.pool)
+            .await?;
     let draft: TaxReturn = row
         .and_then(|v| serde_json::from_value(v).ok())
         .unwrap_or_default();
@@ -54,9 +53,7 @@ pub async fn generate_pdf(
     let pdf_bytes = render_pdf(year, &draft, &result)
         .map_err(|e| ApiError::Internal(anyhow::anyhow!("pdf: {e}")))?;
 
-    let disposition = format!(
-        "attachment; filename=\"traderview-tax-return-{year}.pdf\""
-    );
+    let disposition = format!("attachment; filename=\"traderview-tax-return-{year}.pdf\"");
     Response::builder()
         .status(StatusCode::OK)
         .header(header::CONTENT_TYPE, "application/pdf")
@@ -68,47 +65,75 @@ pub async fn generate_pdf(
 fn render_pdf(year: i32, draft: &TaxReturn, result: &TaxResult) -> Result<Vec<u8>, String> {
     let (doc, page1, layer1) = PdfDocument::new(
         format!("Traderview Tax Return — {year}"),
-        Mm(216.0), Mm(279.0), // US Letter portrait
+        Mm(216.0),
+        Mm(279.0), // US Letter portrait
         "Cover",
     );
-    let font = doc.add_builtin_font(BuiltinFont::Helvetica).map_err(|e| e.to_string())?;
-    let font_bold = doc.add_builtin_font(BuiltinFont::HelveticaBold).map_err(|e| e.to_string())?;
+    let font = doc
+        .add_builtin_font(BuiltinFont::Helvetica)
+        .map_err(|e| e.to_string())?;
+    let font_bold = doc
+        .add_builtin_font(BuiltinFont::HelveticaBold)
+        .map_err(|e| e.to_string())?;
 
     // ── Cover page ────────────────────────────────────────────────────
     let layer = doc.get_page(page1).get_layer(layer1);
     let mut y = 260.0;
     layer.use_text(
         format!("Tax Return — {year}"),
-        18.0, Mm(20.0), Mm(y), &font_bold,
+        18.0,
+        Mm(20.0),
+        Mm(y),
+        &font_bold,
     );
     y -= 10.0;
     layer.use_text(
         "Computed by traderview · for review before paper filing or IRS Free File transcription",
-        9.0, Mm(20.0), Mm(y), &font,
+        9.0,
+        Mm(20.0),
+        Mm(y),
+        &font,
     );
     y -= 14.0;
     layer.use_text("Summary", 14.0, Mm(20.0), Mm(y), &font_bold);
     y -= 8.0;
 
     let lines = vec![
-        ("Filing status",                 format!("{:?}", draft.status)),
-        ("Total income",                  fmt_money(result.total_income)),
-        ("Adjustments to income",         fmt_money(result.adjustments_total)),
-        ("Adjusted gross income (AGI)",   fmt_money(result.agi)),
-        ("Deduction used",                format!("{} — {}", result.deduction_label, fmt_money(result.deduction_used))),
-        ("QBI § 199A deduction",          fmt_money(result.qbi_deduction)),
-        ("Taxable income",                fmt_money(result.taxable_income)),
-        ("Income tax (brackets)",         fmt_money(result.ordinary_tax)),
-        ("Self-employment tax",           fmt_money(result.se_tax.total)),
-        ("Child Tax Credit + ODC",        fmt_money(result.ctc.total)),
-        ("Total tax (after credits)",     fmt_money(result.tax_after_credits)),
-        ("Total payments + withholding",  fmt_money(result.total_payments)),
-        ("",                              String::new()),
-        ("REFUND DUE",                    fmt_money(result.refund_due)),
-        ("TAX OWED",                      fmt_money(result.tax_owed)),
+        ("Filing status", format!("{:?}", draft.status)),
+        ("Total income", fmt_money(result.total_income)),
+        ("Adjustments to income", fmt_money(result.adjustments_total)),
+        ("Adjusted gross income (AGI)", fmt_money(result.agi)),
+        (
+            "Deduction used",
+            format!(
+                "{} — {}",
+                result.deduction_label,
+                fmt_money(result.deduction_used)
+            ),
+        ),
+        ("QBI § 199A deduction", fmt_money(result.qbi_deduction)),
+        ("Taxable income", fmt_money(result.taxable_income)),
+        ("Income tax (brackets)", fmt_money(result.ordinary_tax)),
+        ("Self-employment tax", fmt_money(result.se_tax.total)),
+        ("Child Tax Credit + ODC", fmt_money(result.ctc.total)),
+        (
+            "Total tax (after credits)",
+            fmt_money(result.tax_after_credits),
+        ),
+        (
+            "Total payments + withholding",
+            fmt_money(result.total_payments),
+        ),
+        ("", String::new()),
+        ("REFUND DUE", fmt_money(result.refund_due)),
+        ("TAX OWED", fmt_money(result.tax_owed)),
     ];
     for (label, value) in lines {
-        let f = if label == "REFUND DUE" || label == "TAX OWED" { &font_bold } else { &font };
+        let f = if label == "REFUND DUE" || label == "TAX OWED" {
+            &font_bold
+        } else {
+            &font
+        };
         layer.use_text(label.to_string(), 10.0, Mm(20.0), Mm(y), f);
         layer.use_text(value, 10.0, Mm(120.0), Mm(y), f);
         y -= 6.0;
@@ -125,35 +150,89 @@ fn render_pdf(year: i32, draft: &TaxReturn, result: &TaxResult) -> Result<Vec<u8
     let (p2, l2) = doc.add_page(Mm(216.0), Mm(279.0), "Form 1040");
     let layer = doc.get_page(p2).get_layer(l2);
     let mut y = 260.0;
-    layer.use_text(format!("Form 1040 — {year}"), 16.0, Mm(20.0), Mm(y), &font_bold);
+    layer.use_text(
+        format!("Form 1040 — {year}"),
+        16.0,
+        Mm(20.0),
+        Mm(y),
+        &font_bold,
+    );
     y -= 10.0;
 
     let w2_total: Decimal = draft.w2s.iter().map(|w| w.box_1_wages).sum();
     let lines_1040 = vec![
-        ("Line 1a — W-2 wages",                            fmt_money(w2_total)),
-        ("Line 2b — Taxable interest",                     fmt_money(draft.interest_income)),
-        ("Line 3a — Qualified dividends",                  fmt_money(draft.qualified_dividends)),
-        ("Line 3b — Ordinary dividends",                   fmt_money(draft.ordinary_dividends)),
-        ("Line 7 — Capital gain (LTCG)",                   fmt_money(draft.net_long_term_capital_gain)),
-        ("Line 8 — Schedule 1 (Schedule C net profit)",    fmt_money(draft.schedule_c.net_profit)),
-        ("Schedule E net income",                          fmt_money(draft.schedule_e.net_income)),
-        ("Line 9 — Total income",                          fmt_money(result.total_income)),
-        ("Line 10 — Adjustments (Sch 1)",                  fmt_money(result.adjustments_total)),
-        ("Line 11 — AGI",                                  fmt_money(result.agi)),
-        ("Line 12 — Deduction (std or itemized)",          fmt_money(result.deduction_used)),
-        ("Line 13 — QBI § 199A",                           fmt_money(result.qbi_deduction)),
-        ("Line 15 — Taxable income",                       fmt_money(result.taxable_income)),
-        ("Line 16 — Tax (bracket table)",                  fmt_money(result.ordinary_tax)),
-        ("Line 19 — Child Tax Credit",                     fmt_money(result.ctc.ctc)),
-        ("Line 23 — Other taxes (Schedule 2 → SE tax)",    fmt_money(result.se_tax.total)),
-        ("Line 24 — Total tax",                            fmt_money(result.tax_after_credits)),
-        ("Line 25 — Withholding (W-2 box 2)",              fmt_money(draft.w2s.iter().map(|w| w.box_2_federal_income_tax_withheld).sum::<Decimal>())),
-        ("Line 26 — Estimated tax payments",               fmt_money(draft.estimated_tax_payments)),
-        ("Line 27 — EITC",                                 fmt_money(draft.eitc_claim)),
-        ("Line 28 — Additional CTC (refundable)",          fmt_money(result.ctc.refundable_portion)),
-        ("Line 33 — Total payments",                       fmt_money(result.total_payments)),
-        ("Line 34 — Refund (if payments > tax)",           fmt_money(result.refund_due)),
-        ("Line 37 — Amount you owe",                       fmt_money(result.tax_owed)),
+        ("Line 1a — W-2 wages", fmt_money(w2_total)),
+        (
+            "Line 2b — Taxable interest",
+            fmt_money(draft.interest_income),
+        ),
+        (
+            "Line 3a — Qualified dividends",
+            fmt_money(draft.qualified_dividends),
+        ),
+        (
+            "Line 3b — Ordinary dividends",
+            fmt_money(draft.ordinary_dividends),
+        ),
+        (
+            "Line 7 — Capital gain (LTCG)",
+            fmt_money(draft.net_long_term_capital_gain),
+        ),
+        (
+            "Line 8 — Schedule 1 (Schedule C net profit)",
+            fmt_money(draft.schedule_c.net_profit),
+        ),
+        (
+            "Schedule E net income",
+            fmt_money(draft.schedule_e.net_income),
+        ),
+        ("Line 9 — Total income", fmt_money(result.total_income)),
+        (
+            "Line 10 — Adjustments (Sch 1)",
+            fmt_money(result.adjustments_total),
+        ),
+        ("Line 11 — AGI", fmt_money(result.agi)),
+        (
+            "Line 12 — Deduction (std or itemized)",
+            fmt_money(result.deduction_used),
+        ),
+        ("Line 13 — QBI § 199A", fmt_money(result.qbi_deduction)),
+        ("Line 15 — Taxable income", fmt_money(result.taxable_income)),
+        (
+            "Line 16 — Tax (bracket table)",
+            fmt_money(result.ordinary_tax),
+        ),
+        ("Line 19 — Child Tax Credit", fmt_money(result.ctc.ctc)),
+        (
+            "Line 23 — Other taxes (Schedule 2 → SE tax)",
+            fmt_money(result.se_tax.total),
+        ),
+        ("Line 24 — Total tax", fmt_money(result.tax_after_credits)),
+        (
+            "Line 25 — Withholding (W-2 box 2)",
+            fmt_money(
+                draft
+                    .w2s
+                    .iter()
+                    .map(|w| w.box_2_federal_income_tax_withheld)
+                    .sum::<Decimal>(),
+            ),
+        ),
+        (
+            "Line 26 — Estimated tax payments",
+            fmt_money(draft.estimated_tax_payments),
+        ),
+        ("Line 27 — EITC", fmt_money(draft.eitc_claim)),
+        (
+            "Line 28 — Additional CTC (refundable)",
+            fmt_money(result.ctc.refundable_portion),
+        ),
+        ("Line 33 — Total payments", fmt_money(result.total_payments)),
+        (
+            "Line 34 — Refund (if payments > tax)",
+            fmt_money(result.refund_due),
+        ),
+        ("Line 37 — Amount you owe", fmt_money(result.tax_owed)),
     ];
     for (label, value) in lines_1040 {
         layer.use_text(label.to_string(), 9.0, Mm(20.0), Mm(y), &font);
@@ -162,16 +241,33 @@ fn render_pdf(year: i32, draft: &TaxReturn, result: &TaxResult) -> Result<Vec<u8
     }
 
     // ── Schedule C page ───────────────────────────────────────────────
-    if draft.schedule_c.gross_receipts > Decimal::ZERO || draft.schedule_c.total_expenses > Decimal::ZERO {
+    if draft.schedule_c.gross_receipts > Decimal::ZERO
+        || draft.schedule_c.total_expenses > Decimal::ZERO
+    {
         let (p3, l3) = doc.add_page(Mm(216.0), Mm(279.0), "Schedule C");
         let layer = doc.get_page(p3).get_layer(l3);
         let mut y = 260.0;
-        layer.use_text("Schedule C — Profit or Loss from Business", 16.0, Mm(20.0), Mm(y), &font_bold);
+        layer.use_text(
+            "Schedule C — Profit or Loss from Business",
+            16.0,
+            Mm(20.0),
+            Mm(y),
+            &font_bold,
+        );
         y -= 10.0;
         let lines_c = vec![
-            ("Line 1 — Gross receipts or sales",  fmt_money(draft.schedule_c.gross_receipts)),
-            ("Line 28 — Total expenses",          fmt_money(draft.schedule_c.total_expenses)),
-            ("Line 31 — Net profit (or loss)",    fmt_money(draft.schedule_c.net_profit)),
+            (
+                "Line 1 — Gross receipts or sales",
+                fmt_money(draft.schedule_c.gross_receipts),
+            ),
+            (
+                "Line 28 — Total expenses",
+                fmt_money(draft.schedule_c.total_expenses),
+            ),
+            (
+                "Line 31 — Net profit (or loss)",
+                fmt_money(draft.schedule_c.net_profit),
+            ),
         ];
         for (label, value) in lines_c {
             layer.use_text(label.to_string(), 10.0, Mm(20.0), Mm(y), &font);
@@ -185,16 +281,40 @@ fn render_pdf(year: i32, draft: &TaxReturn, result: &TaxResult) -> Result<Vec<u8
         let (p4, l4) = doc.add_page(Mm(216.0), Mm(279.0), "Schedule SE");
         let layer = doc.get_page(p4).get_layer(l4);
         let mut y = 260.0;
-        layer.use_text("Schedule SE — Self-Employment Tax", 16.0, Mm(20.0), Mm(y), &font_bold);
+        layer.use_text(
+            "Schedule SE — Self-Employment Tax",
+            16.0,
+            Mm(20.0),
+            Mm(y),
+            &font_bold,
+        );
         y -= 10.0;
         let lines_se = vec![
-            ("Line 2 — Net earnings from self-employment",     fmt_money(draft.schedule_c.net_profit)),
-            ("Line 4a — × 92.35% (SE base)",                   fmt_money(result.se_tax.se_base)),
-            ("Line 10 — SS portion (12.4%)",                   fmt_money(result.se_tax.ss_tax)),
-            ("Line 11 — Medicare portion (2.9%)",              fmt_money(result.se_tax.medicare_tax)),
-            ("Form 8959 — Additional Medicare (0.9%)",         fmt_money(result.se_tax.additional_medicare_tax)),
-            ("Line 12 — Total SE tax",                         fmt_money(result.se_tax.total)),
-            ("Line 13 — Half of SE tax (Schedule 1 line 15)",  fmt_money(result.se_tax.above_line_deduction)),
+            (
+                "Line 2 — Net earnings from self-employment",
+                fmt_money(draft.schedule_c.net_profit),
+            ),
+            (
+                "Line 4a — × 92.35% (SE base)",
+                fmt_money(result.se_tax.se_base),
+            ),
+            (
+                "Line 10 — SS portion (12.4%)",
+                fmt_money(result.se_tax.ss_tax),
+            ),
+            (
+                "Line 11 — Medicare portion (2.9%)",
+                fmt_money(result.se_tax.medicare_tax),
+            ),
+            (
+                "Form 8959 — Additional Medicare (0.9%)",
+                fmt_money(result.se_tax.additional_medicare_tax),
+            ),
+            ("Line 12 — Total SE tax", fmt_money(result.se_tax.total)),
+            (
+                "Line 13 — Half of SE tax (Schedule 1 line 15)",
+                fmt_money(result.se_tax.above_line_deduction),
+            ),
         ];
         for (label, value) in lines_se {
             layer.use_text(label.to_string(), 10.0, Mm(20.0), Mm(y), &font);
@@ -204,16 +324,33 @@ fn render_pdf(year: i32, draft: &TaxReturn, result: &TaxResult) -> Result<Vec<u8
     }
 
     // ── Schedule E page ───────────────────────────────────────────────
-    if draft.schedule_e.gross_rents > Decimal::ZERO || draft.schedule_e.total_expenses > Decimal::ZERO {
+    if draft.schedule_e.gross_rents > Decimal::ZERO
+        || draft.schedule_e.total_expenses > Decimal::ZERO
+    {
         let (p5, l5) = doc.add_page(Mm(216.0), Mm(279.0), "Schedule E");
         let layer = doc.get_page(p5).get_layer(l5);
         let mut y = 260.0;
-        layer.use_text("Schedule E — Supplemental Income (Rental Real Estate)", 16.0, Mm(20.0), Mm(y), &font_bold);
+        layer.use_text(
+            "Schedule E — Supplemental Income (Rental Real Estate)",
+            16.0,
+            Mm(20.0),
+            Mm(y),
+            &font_bold,
+        );
         y -= 10.0;
         let lines_e = vec![
-            ("Line 3 — Total rents received",  fmt_money(draft.schedule_e.gross_rents)),
-            ("Line 20 — Total expenses",       fmt_money(draft.schedule_e.total_expenses)),
-            ("Line 26 — Total rental income / (loss)", fmt_money(draft.schedule_e.net_income)),
+            (
+                "Line 3 — Total rents received",
+                fmt_money(draft.schedule_e.gross_rents),
+            ),
+            (
+                "Line 20 — Total expenses",
+                fmt_money(draft.schedule_e.total_expenses),
+            ),
+            (
+                "Line 26 — Total rental income / (loss)",
+                fmt_money(draft.schedule_e.net_income),
+            ),
         ];
         for (label, value) in lines_e {
             layer.use_text(label.to_string(), 10.0, Mm(20.0), Mm(y), &font);
@@ -244,8 +381,11 @@ mod tests {
     /// either anchor — this is the cheapest possible "did printpdf
     /// produce a valid file?" check.
     fn assert_valid_pdf(bytes: &[u8]) {
-        assert!(bytes.starts_with(b"%PDF-"),
-            "PDF must start with %PDF-, got: {:?}", &bytes[..bytes.len().min(20)]);
+        assert!(
+            bytes.starts_with(b"%PDF-"),
+            "PDF must start with %PDF-, got: {:?}",
+            &bytes[..bytes.len().min(20)]
+        );
         // %%EOF can be followed by a trailing newline — search the tail.
         let tail = &bytes[bytes.len().saturating_sub(32)..];
         assert!(
@@ -255,7 +395,11 @@ mod tests {
         );
         // Sanity floor — a useful PDF page is hundreds of bytes at
         // minimum.
-        assert!(bytes.len() > 400, "PDF suspiciously small: {} bytes", bytes.len());
+        assert!(
+            bytes.len() > 400,
+            "PDF suspiciously small: {} bytes",
+            bytes.len()
+        );
     }
 
     #[test]
@@ -303,7 +447,11 @@ mod tests {
         // Populated PDF is meaningfully bigger than the empty one — a
         // regression that silently dropped all the dynamic content
         // would shrink it.
-        assert!(bytes.len() > 2_000, "populated PDF too small: {} bytes", bytes.len());
+        assert!(
+            bytes.len() > 2_000,
+            "populated PDF too small: {} bytes",
+            bytes.len()
+        );
     }
 
     #[test]
@@ -316,7 +464,7 @@ mod tests {
             schedule_c: ScheduleC {
                 gross_receipts: Decimal::from(5_000),
                 total_expenses: Decimal::from(20_000),
-                net_profit: Decimal::from(-15_000),  // loss
+                net_profit: Decimal::from(-15_000), // loss
             },
             ..Default::default()
         };
@@ -338,7 +486,7 @@ mod tests {
             status: traderview_tax::FilingStatus::Single,
             w2s: vec![W2 {
                 employer_name: "VERIFIABLE-EMPLOYER-XYZ".into(),
-                box_1_wages: Decimal::from(73_456),  // distinctive value
+                box_1_wages: Decimal::from(73_456), // distinctive value
                 box_2_federal_income_tax_withheld: Decimal::from(8_500),
                 ..Default::default()
             }],
@@ -356,15 +504,23 @@ mod tests {
         // body — only aggregated totals are. If we ever add a W-2
         // breakdown table to the PDF, add an employer-name assertion
         // back here.
-        assert!(text.contains("73456"),
+        assert!(
+            text.contains("73456"),
             "wages amount $73,456 missing from PDF — printpdf may have \
-             dropped the dynamic value. Extract:\n{}", text);
+             dropped the dynamic value. Extract:\n{}",
+            text
+        );
         // Withholding also flows through to the 1040 line 25.
-        assert!(text.contains("8500"),
-            "withholding $8,500 missing from PDF. Extract:\n{}", text);
+        assert!(
+            text.contains("8500"),
+            "withholding $8,500 missing from PDF. Extract:\n{}",
+            text
+        );
         // Form labels — pin that the section headers reach the text layer.
-        assert!(text.contains("1040") || text.contains("Form 1040"),
-            "Form 1040 header missing from PDF");
+        assert!(
+            text.contains("1040") || text.contains("Form 1040"),
+            "Form 1040 header missing from PDF"
+        );
     }
 
     /// Empty return — verify the SUMMARY page still shows the "$0.00"
@@ -375,13 +531,15 @@ mod tests {
         let draft = TaxReturn::default();
         let result = compute_tax(&draft);
         let bytes = render_pdf(2025, &draft, &result).expect("render");
-        let text = traderview_ocr::pdf::extract_text(&bytes)
-            .expect("PDF must parse");
+        let text = traderview_ocr::pdf::extract_text(&bytes).expect("PDF must parse");
         // The cover page must show the year + at least one labeled
         // value. The exact format may evolve, so just check key labels.
         assert!(text.contains("2025"), "tax year header missing from PDF");
-        assert!(text.contains("AGI") || text.contains("income"),
-            "expected income/AGI label, got:\n{}", text);
+        assert!(
+            text.contains("AGI") || text.contains("income"),
+            "expected income/AGI label, got:\n{}",
+            text
+        );
     }
 
     #[test]
@@ -495,8 +653,11 @@ mod tests {
         let bytes = render_pdf(2025, &draft, &result).expect("render");
         assert_valid_pdf(&bytes);
         // Must be substantially larger than the empty case.
-        assert!(bytes.len() > 3_000,
-            "full-combo PDF should be ~3+ kb, got {} bytes", bytes.len());
+        assert!(
+            bytes.len() > 3_000,
+            "full-combo PDF should be ~3+ kb, got {} bytes",
+            bytes.len()
+        );
     }
 
     #[test]

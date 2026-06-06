@@ -24,14 +24,23 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+}
 
 pub fn compute(bars: &[Bar], ema_period: usize, roc_period: usize) -> Vec<Option<f64>> {
     let n = bars.len();
     let mut out = vec![None; n];
-    if ema_period < 2 || roc_period < 1
-        || n < ema_period + roc_period { return out; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite()) { return out; }
+    if ema_period < 2 || roc_period < 1 || n < ema_period + roc_period {
+        return out;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite())
+    {
+        return out;
+    }
     let ranges: Vec<f64> = bars.iter().map(|b| b.high - b.low).collect();
     let p_f = ema_period as f64;
     let k = 2.0 / (p_f + 1.0);
@@ -57,7 +66,9 @@ pub fn compute(bars: &[Bar], ema_period: usize, roc_period: usize) -> Vec<Option
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64) -> Bar { Bar { high: h, low: l } }
+    fn b(h: f64, l: f64) -> Bar {
+        Bar { high: h, low: l }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {
@@ -77,7 +88,9 @@ mod tests {
     fn constant_range_yields_zero_cvi() {
         let bars = vec![b(101.0, 99.0); 50];
         let r = compute(&bars, 10, 10);
-        for v in r.iter().flatten() { assert!(v.abs() < 1e-9); }
+        for v in r.iter().flatten() {
+            assert!(v.abs() < 1e-9);
+        }
     }
 
     #[test]
@@ -95,10 +108,12 @@ mod tests {
 
     #[test]
     fn contracting_range_yields_negative_cvi() {
-        let mut bars: Vec<_> = (0..30).map(|i| {
-            let half = 10.0 - i as f64 * 0.2;
-            b(100.0 + half, 100.0 - half)
-        }).collect();
+        let mut bars: Vec<_> = (0..30)
+            .map(|i| {
+                let half = 10.0 - i as f64 * 0.2;
+                b(100.0 + half, 100.0 - half)
+            })
+            .collect();
         bars.extend(vec![b(100.5, 99.5); 20]);
         let r = compute(&bars, 10, 10);
         let last = bars.len() - 1;

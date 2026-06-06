@@ -395,10 +395,7 @@ mod tests {
 
     #[test]
     fn per_mlp_breakdown_preserves_names() {
-        let r = compute(&input(vec![
-            mlp("ET", dec!(800)),
-            mlp("EPD", dec!(700)),
-        ]));
+        let r = compute(&input(vec![mlp("ET", dec!(800)), mlp("EPD", dec!(700))]));
         assert_eq!(r.per_mlp.len(), 2);
         assert_eq!(r.per_mlp[0].mlp_name, "ET");
         assert_eq!(r.per_mlp[1].mlp_name, "EPD");

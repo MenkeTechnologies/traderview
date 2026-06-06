@@ -112,16 +112,19 @@ pub fn check(input: &Input) -> Output {
     let mut notes: Vec<String> = Vec::new();
     let citations: Vec<String> = vec![
         "IRC § 737(a) (recognition of gain on distribution to contributing partner)".to_string(),
-        "IRC § 737(a)(1) (gain = lesser of net precontribution gain or excess distribution)".to_string(),
+        "IRC § 737(a)(1) (gain = lesser of net precontribution gain or excess distribution)"
+            .to_string(),
         "IRC § 737(b) (net precontribution gain definition; 7-year period)".to_string(),
         "IRC § 737(c) (basis adjustments)".to_string(),
         "IRC § 737(d) (exceptions, including § 751 coordination)".to_string(),
         "IRC § 704(c)(1)(B) (noncontributing-partner-side mixing-bowl rule)".to_string(),
-        "IRC § 731(a)(1) (money distribution gain recognition — § 737 carves out money)".to_string(),
+        "IRC § 731(a)(1) (money distribution gain recognition — § 737 carves out money)"
+            .to_string(),
         "Treas. Reg. § 1.737-1 (general rules)".to_string(),
         "Treas. Reg. § 1.737-2 (exceptions and special rules)".to_string(),
         "Treas. Reg. § 1.737-3 (basis adjustments and recovery)".to_string(),
-        "Energy Policy Act of 1992 (Pub. L. 102-486) — original enactment with 5-year window".to_string(),
+        "Energy Policy Act of 1992 (Pub. L. 102-486) — original enactment with 5-year window"
+            .to_string(),
         "Taxpayer Relief Act of 1997 (Pub. L. 105-34) — extended to 7-year window".to_string(),
     ];
 
@@ -375,8 +378,14 @@ mod tests {
     #[test]
     fn citations_pin_energy_policy_act_1992_and_tra_1997() {
         let out = check(&base_recognition());
-        assert!(out.citations.iter().any(|c| c.contains("Energy Policy Act of 1992")));
-        assert!(out.citations.iter().any(|c| c.contains("Taxpayer Relief Act of 1997")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("Energy Policy Act of 1992")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("Taxpayer Relief Act of 1997")));
     }
 
     #[test]

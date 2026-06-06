@@ -15,15 +15,24 @@ pub use crate::floor_pivots::PriorSession;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
-pub enum PivotTimeframe { #[default] Daily, Weekly, Monthly }
+pub enum PivotTimeframe {
+    #[default]
+    Daily,
+    Weekly,
+    Monthly,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum PivotLevelKind {
     #[default]
     Pivot,
-    R1, R2, R3,
-    S1, S2, S3,
+    R1,
+    R2,
+    R3,
+    S1,
+    S2,
+    S3,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -44,22 +53,61 @@ pub fn compute(
     monthly: Option<PriorSession>,
 ) -> CompoundPivotsReport {
     let mut levels = Vec::new();
-    let push_tf = |levels: &mut Vec<CompoundPivotLevel>, tf: PivotTimeframe, session: PriorSession| {
-        let p = crate::floor_pivots::compute(session);
-        if let Some(p) = p {
-            levels.push(CompoundPivotLevel { timeframe: tf, kind: PivotLevelKind::Pivot, price: p.pivot });
-            levels.push(CompoundPivotLevel { timeframe: tf, kind: PivotLevelKind::R1, price: p.r1 });
-            levels.push(CompoundPivotLevel { timeframe: tf, kind: PivotLevelKind::R2, price: p.r2 });
-            levels.push(CompoundPivotLevel { timeframe: tf, kind: PivotLevelKind::R3, price: p.r3 });
-            levels.push(CompoundPivotLevel { timeframe: tf, kind: PivotLevelKind::S1, price: p.s1 });
-            levels.push(CompoundPivotLevel { timeframe: tf, kind: PivotLevelKind::S2, price: p.s2 });
-            levels.push(CompoundPivotLevel { timeframe: tf, kind: PivotLevelKind::S3, price: p.s3 });
-        }
-    };
-    if let Some(d) = daily { push_tf(&mut levels, PivotTimeframe::Daily, d); }
-    if let Some(w) = weekly { push_tf(&mut levels, PivotTimeframe::Weekly, w); }
-    if let Some(m) = monthly { push_tf(&mut levels, PivotTimeframe::Monthly, m); }
-    levels.sort_by(|a, b| a.price.partial_cmp(&b.price).unwrap_or(std::cmp::Ordering::Equal));
+    let push_tf =
+        |levels: &mut Vec<CompoundPivotLevel>, tf: PivotTimeframe, session: PriorSession| {
+            let p = crate::floor_pivots::compute(session);
+            if let Some(p) = p {
+                levels.push(CompoundPivotLevel {
+                    timeframe: tf,
+                    kind: PivotLevelKind::Pivot,
+                    price: p.pivot,
+                });
+                levels.push(CompoundPivotLevel {
+                    timeframe: tf,
+                    kind: PivotLevelKind::R1,
+                    price: p.r1,
+                });
+                levels.push(CompoundPivotLevel {
+                    timeframe: tf,
+                    kind: PivotLevelKind::R2,
+                    price: p.r2,
+                });
+                levels.push(CompoundPivotLevel {
+                    timeframe: tf,
+                    kind: PivotLevelKind::R3,
+                    price: p.r3,
+                });
+                levels.push(CompoundPivotLevel {
+                    timeframe: tf,
+                    kind: PivotLevelKind::S1,
+                    price: p.s1,
+                });
+                levels.push(CompoundPivotLevel {
+                    timeframe: tf,
+                    kind: PivotLevelKind::S2,
+                    price: p.s2,
+                });
+                levels.push(CompoundPivotLevel {
+                    timeframe: tf,
+                    kind: PivotLevelKind::S3,
+                    price: p.s3,
+                });
+            }
+        };
+    if let Some(d) = daily {
+        push_tf(&mut levels, PivotTimeframe::Daily, d);
+    }
+    if let Some(w) = weekly {
+        push_tf(&mut levels, PivotTimeframe::Weekly, w);
+    }
+    if let Some(m) = monthly {
+        push_tf(&mut levels, PivotTimeframe::Monthly, m);
+    }
+    levels.sort_by(|a, b| {
+        a.price
+            .partial_cmp(&b.price)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     CompoundPivotsReport { levels }
 }
 
@@ -68,7 +116,11 @@ mod tests {
     use super::*;
 
     fn s(h: f64, l: f64, c: f64) -> PriorSession {
-        PriorSession { high: h, low: l, close: c }
+        PriorSession {
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -87,7 +139,10 @@ mod tests {
     fn single_timeframe_yields_seven_levels() {
         let r = compute(Some(s(110.0, 100.0, 105.0)), None, None);
         assert_eq!(r.levels.len(), 7);
-        assert!(r.levels.iter().all(|l| l.timeframe == PivotTimeframe::Daily));
+        assert!(r
+            .levels
+            .iter()
+            .all(|l| l.timeframe == PivotTimeframe::Daily));
     }
 
     #[test]
@@ -116,8 +171,16 @@ mod tests {
         let daily = s(110.0, 100.0, 105.0);
         let weekly = s(115.0, 95.0, 105.0);
         let r = compute(Some(daily), Some(weekly), None);
-        let daily_count = r.levels.iter().filter(|l| l.timeframe == PivotTimeframe::Daily).count();
-        let weekly_count = r.levels.iter().filter(|l| l.timeframe == PivotTimeframe::Weekly).count();
+        let daily_count = r
+            .levels
+            .iter()
+            .filter(|l| l.timeframe == PivotTimeframe::Daily)
+            .count();
+        let weekly_count = r
+            .levels
+            .iter()
+            .filter(|l| l.timeframe == PivotTimeframe::Weekly)
+            .count();
         assert_eq!(daily_count, 7);
         assert_eq!(weekly_count, 7);
     }

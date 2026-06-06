@@ -35,12 +35,31 @@ pub fn compute_with(
     signal_period: usize,
 ) -> KstReport {
     let n = closes.len();
-    let mut report = KstReport { kst: vec![None; n], signal: vec![None; n] };
-    if signal_period < 2 { return report; }
-    if [roc_periods.0, roc_periods.1, roc_periods.2, roc_periods.3,
-        sma_periods.0, sma_periods.1, sma_periods.2, sma_periods.3]
-        .iter().any(|p| *p < 2) { return report; }
-    if closes.iter().any(|x| !x.is_finite()) { return report; }
+    let mut report = KstReport {
+        kst: vec![None; n],
+        signal: vec![None; n],
+    };
+    if signal_period < 2 {
+        return report;
+    }
+    if [
+        roc_periods.0,
+        roc_periods.1,
+        roc_periods.2,
+        roc_periods.3,
+        sma_periods.0,
+        sma_periods.1,
+        sma_periods.2,
+        sma_periods.3,
+    ]
+    .iter()
+    .any(|p| *p < 2)
+    {
+        return report;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return report;
+    }
     let roc1 = roc(closes, roc_periods.0);
     let roc2 = roc(closes, roc_periods.1);
     let roc3 = roc(closes, roc_periods.2);
@@ -50,8 +69,7 @@ pub fn compute_with(
     let rocma3 = sma_opt(&roc3, sma_periods.2);
     let rocma4 = sma_opt(&roc4, sma_periods.3);
     for i in 0..n {
-        if let (Some(a), Some(b), Some(c), Some(d))
-            = (rocma1[i], rocma2[i], rocma3[i], rocma4[i]) {
+        if let (Some(a), Some(b), Some(c), Some(d)) = (rocma1[i], rocma2[i], rocma3[i], rocma4[i]) {
             report.kst[i] = Some(a + 2.0 * b + 3.0 * c + 4.0 * d);
         }
     }
@@ -74,11 +92,15 @@ fn roc(series: &[f64], period: usize) -> Vec<Option<f64>> {
 fn sma_opt(series: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     for i in (period - 1)..n {
         let win = &series[i + 1 - period..=i];
-        if win.iter().any(|x| x.is_none()) { continue; }
+        if win.iter().any(|x| x.is_none()) {
+            continue;
+        }
         let s: f64 = win.iter().filter_map(|x| *x).sum();
         out[i] = Some(s / p_f);
     }
@@ -109,8 +131,12 @@ mod tests {
         let closes = vec![100.0_f64; 100];
         let r = compute(&closes);
         // All ROCs are zero → KST zero, signal zero.
-        for v in r.kst.iter().flatten() { assert!(v.abs() < 1e-9); }
-        for v in r.signal.iter().flatten() { assert!(v.abs() < 1e-9); }
+        for v in r.kst.iter().flatten() {
+            assert!(v.abs() < 1e-9);
+        }
+        for v in r.signal.iter().flatten() {
+            assert!(v.abs() < 1e-9);
+        }
     }
 
     #[test]
@@ -118,8 +144,7 @@ mod tests {
         let closes: Vec<f64> = (0..100).map(|i| 100.0 * 1.01_f64.powi(i)).collect();
         let r = compute(&closes);
         let last = r.kst.iter().rev().find_map(|x| *x).unwrap();
-        assert!(last > 0.0,
-            "uptrend should yield positive KST, got {last}");
+        assert!(last > 0.0, "uptrend should yield positive KST, got {last}");
     }
 
     #[test]
@@ -134,9 +159,9 @@ mod tests {
     fn signal_smoother_than_kst() {
         // Sinusoidal closes → KST oscillates → 9-bar SMA signal has
         // smaller magnitude swings than the raw KST line.
-        let closes: Vec<f64> = (0..400).map(|i| {
-            100.0 + (i as f64 * 0.05).sin() * 20.0
-        }).collect();
+        let closes: Vec<f64> = (0..400)
+            .map(|i| 100.0 + (i as f64 * 0.05).sin() * 20.0)
+            .collect();
         let r = compute(&closes);
         let kst_vals: Vec<f64> = r.kst.iter().flatten().copied().collect();
         let sig_vals: Vec<f64> = r.signal.iter().flatten().copied().collect();
@@ -144,8 +169,10 @@ mod tests {
             - kst_vals.iter().cloned().fold(f64::INFINITY, f64::min);
         let sig_amp = sig_vals.iter().cloned().fold(f64::NEG_INFINITY, f64::max)
             - sig_vals.iter().cloned().fold(f64::INFINITY, f64::min);
-        assert!(sig_amp < kst_amp,
-            "signal range {sig_amp} should be smaller than KST range {kst_amp}");
+        assert!(
+            sig_amp < kst_amp,
+            "signal range {sig_amp} should be smaller than KST range {kst_amp}"
+        );
     }
 
     #[test]

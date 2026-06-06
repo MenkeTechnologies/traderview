@@ -444,7 +444,8 @@ mod tests {
     #[test]
     fn deposit_in_federally_insured_institution_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::FederallyInsuredHoldingInstitutionUnderSection535300;
+        input.compliance_aspect =
+            ComplianceAspect::FederallyInsuredHoldingInstitutionUnderSection535300;
         input.deposit_holding_arrangement =
             DepositHoldingArrangement::HeldInFederallyInsuredBankCreditUnionOrDepositoryInstitution;
         let out = check(&input);
@@ -457,7 +458,8 @@ mod tests {
     #[test]
     fn deposit_in_non_federally_insured_institution_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::FederallyInsuredHoldingInstitutionUnderSection535300;
+        input.compliance_aspect =
+            ComplianceAspect::FederallyInsuredHoldingInstitutionUnderSection535300;
         input.deposit_holding_arrangement =
             DepositHoldingArrangement::HeldInNonFederallyInsuredOrUninsuredAccount;
         let out = check(&input);
@@ -546,16 +548,21 @@ mod tests {
     #[test]
     fn no_wrongful_withholding_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::TwoxWrongfulWithholdingPenaltyUnderSection535300;
+        input.compliance_aspect =
+            ComplianceAspect::TwoxWrongfulWithholdingPenaltyUnderSection535300;
         input.deposit_wrongfully_withheld = false;
         let out = check(&input);
-        assert_eq!(out.mode, MoLandlordTenantMode::CompliantNoWrongfulWithholding);
+        assert_eq!(
+            out.mode,
+            MoLandlordTenantMode::CompliantNoWrongfulWithholding
+        );
     }
 
     #[test]
     fn wrongful_withholding_doubles_liability_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::TwoxWrongfulWithholdingPenaltyUnderSection535300;
+        input.compliance_aspect =
+            ComplianceAspect::TwoxWrongfulWithholdingPenaltyUnderSection535300;
         input.deposit_wrongfully_withheld = true;
         let out = check(&input);
         assert_eq!(
@@ -593,7 +600,8 @@ mod tests {
     #[test]
     fn habitability_repair_at_14_day_boundary_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::FourteenDayHabitabilityRepairNoticeUnderSection441234;
+        input.compliance_aspect =
+            ComplianceAspect::FourteenDayHabitabilityRepairNoticeUnderSection441234;
         input.days_landlord_made_habitability_repair = 14;
         let out = check(&input);
         assert_eq!(
@@ -605,7 +613,8 @@ mod tests {
     #[test]
     fn habitability_repair_at_15_days_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::FourteenDayHabitabilityRepairNoticeUnderSection441234;
+        input.compliance_aspect =
+            ComplianceAspect::FourteenDayHabitabilityRepairNoticeUnderSection441234;
         input.days_landlord_made_habitability_repair = 15;
         let out = check(&input);
         assert_eq!(
@@ -617,7 +626,8 @@ mod tests {
     #[test]
     fn periodic_tenancy_termination_30_days_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::PeriodicTenancyTerminationNoticeUnderSection441060;
+        input.compliance_aspect =
+            ComplianceAspect::PeriodicTenancyTerminationNoticeUnderSection441060;
         input.periodic_tenancy_termination_notice_days_given = 30;
         let out = check(&input);
         assert_eq!(
@@ -629,7 +639,8 @@ mod tests {
     #[test]
     fn periodic_tenancy_termination_29_days_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::PeriodicTenancyTerminationNoticeUnderSection441060;
+        input.compliance_aspect =
+            ComplianceAspect::PeriodicTenancyTerminationNoticeUnderSection441060;
         input.periodic_tenancy_termination_notice_days_given = 29;
         let out = check(&input);
         assert_eq!(

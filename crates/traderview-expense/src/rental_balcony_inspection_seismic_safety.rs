@@ -376,7 +376,10 @@ mod tests {
     fn compliant_first_cycle_inspection_passes() {
         let i = baseline();
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantWithFirstCycleInspection));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantWithFirstCycleInspection
+        ));
         assert_eq!(r.minimum_inspection_count_required, 6);
         assert_eq!(r.annual_rent_at_risk_cents, 0);
     }
@@ -392,7 +395,10 @@ mod tests {
         ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
         assert!(r.recommended_actions.iter().any(|a| a.contains("AB 2579")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("January 1, 2026")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("January 1, 2026")));
     }
 
     #[test]
@@ -402,7 +408,10 @@ mod tests {
         let r = check(&i);
         assert!(matches!(r.severity, Severity::InspectorNotQualified));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents / 2);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("§ 17973(d)")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("§ 17973(d)")));
     }
 
     #[test]
@@ -410,7 +419,10 @@ mod tests {
         let mut i = baseline();
         i.inspector_qualification = InspectorQualification::LicensedArchitect;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantWithFirstCycleInspection));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantWithFirstCycleInspection
+        ));
     }
 
     #[test]
@@ -418,7 +430,10 @@ mod tests {
         let mut i = baseline();
         i.inspector_qualification = InspectorQualification::ContractorWithABorC5LicenseAndFiveYears;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantWithFirstCycleInspection));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantWithFirstCycleInspection
+        ));
     }
 
     #[test]
@@ -426,7 +441,10 @@ mod tests {
         let mut i = baseline();
         i.inspector_qualification = InspectorQualification::CertifiedBuildingInspector;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantWithFirstCycleInspection));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantWithFirstCycleInspection
+        ));
     }
 
     #[test]
@@ -439,7 +457,10 @@ mod tests {
             r.severity,
             Severity::HoaSb326UsedNonStructuralEngineerInvalid
         ));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Cal. Civ. Code § 5551")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Cal. Civ. Code § 5551")));
     }
 
     #[test]
@@ -448,7 +469,10 @@ mod tests {
         i.building_type = BuildingType::HoaCondominiumSb326;
         i.inspector_qualification = InspectorQualification::LicensedCivilOrStructuralEngineer;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantWithFirstCycleInspection));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantWithFirstCycleInspection
+        ));
     }
 
     #[test]
@@ -468,7 +492,10 @@ mod tests {
         i.total_eee_count = 40;
         i.inspected_eee_count = 6;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantWithFirstCycleInspection));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantWithFirstCycleInspection
+        ));
     }
 
     #[test]
@@ -477,7 +504,10 @@ mod tests {
         i.immediate_threat_identified = true;
         i.days_since_immediate_threat_identified = 150;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::ImmediateThreatRepairOverdue120Day));
+        assert!(matches!(
+            r.severity,
+            Severity::ImmediateThreatRepairOverdue120Day
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
         assert!(r.recommended_actions.iter().any(|a| a.contains("120 days")));
     }
@@ -488,7 +518,10 @@ mod tests {
         i.immediate_threat_identified = true;
         i.days_since_immediate_threat_identified = 120;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantWithFirstCycleInspection));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantWithFirstCycleInspection
+        ));
     }
 
     #[test]
@@ -521,7 +554,10 @@ mod tests {
         assert!(r.notes.iter().any(|n| n.contains("Berkeley")));
         assert!(r.notes.iter().any(|n| n.contains("2015-06-16")));
         assert!(r.notes.iter().any(|n| n.contains("AB 2579")));
-        assert!(r.notes.iter().any(|n| n.contains("Cal. Health & Safety Code § 17973")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Cal. Health & Safety Code § 17973")));
         assert!(r.notes.iter().any(|n| n.contains("Cal. Civ. Code § 5551")));
     }
 
@@ -541,7 +577,10 @@ mod tests {
         i.jurisdiction = Jurisdiction::Default;
         let r = check(&i);
         assert!(r.notes.iter().any(|n| n.contains("Champlain Towers")));
-        assert!(r.notes.iter().any(|n| n.contains("common-law habitability")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("common-law habitability")));
     }
 
     #[test]
@@ -628,9 +667,21 @@ mod tests {
 
     #[test]
     fn citation_branch_for_each_jurisdiction() {
-        let ca = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::California; i });
-        let nyc = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::NewYorkCityFisp; i });
-        let de = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Default; i });
+        let ca = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::California;
+            i
+        });
+        let nyc = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::NewYorkCityFisp;
+            i
+        });
+        let de = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Default;
+            i
+        });
         assert!(ca.citation.contains("SB 721"));
         assert!(ca.citation.contains("SB 326"));
         assert!(ca.citation.contains("AB 2579"));

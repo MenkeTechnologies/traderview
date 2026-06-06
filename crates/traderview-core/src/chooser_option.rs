@@ -28,27 +28,55 @@ pub struct ChooserReport {
 
 #[allow(clippy::too_many_arguments)]
 pub fn price(
-    spot: f64, strike: f64,
-    time_to_choice: f64, time_to_expiry: f64,
-    risk_free: f64, dividend_yield: f64,
+    spot: f64,
+    strike: f64,
+    time_to_choice: f64,
+    time_to_expiry: f64,
+    risk_free: f64,
+    dividend_yield: f64,
     sigma: f64,
 ) -> Option<ChooserReport> {
-    if !spot.is_finite() || spot <= 0.0
-        || !strike.is_finite() || strike <= 0.0
-        || !time_to_choice.is_finite() || time_to_choice <= 0.0
-        || !time_to_expiry.is_finite() || time_to_expiry < time_to_choice
-        || !risk_free.is_finite() || !dividend_yield.is_finite()
-        || !sigma.is_finite() || sigma <= 0.0
+    if !spot.is_finite()
+        || spot <= 0.0
+        || !strike.is_finite()
+        || strike <= 0.0
+        || !time_to_choice.is_finite()
+        || time_to_choice <= 0.0
+        || !time_to_expiry.is_finite()
+        || time_to_expiry < time_to_choice
+        || !risk_free.is_finite()
+        || !dividend_yield.is_finite()
+        || !sigma.is_finite()
+        || sigma <= 0.0
     {
         return None;
     }
     // Call leg: full-maturity vanilla call at strike K.
-    let call = bs_price(spot, strike, time_to_expiry, risk_free, dividend_yield, sigma, true);
+    let call = bs_price(
+        spot,
+        strike,
+        time_to_expiry,
+        risk_free,
+        dividend_yield,
+        sigma,
+        true,
+    );
     // Put leg: maturity = t_choose, struck at K · e^{−(r−q)·(T − t_choose)}.
-    let effective_strike = strike * (-(risk_free - dividend_yield) * (time_to_expiry - time_to_choice)).exp();
-    let put = bs_price(spot, effective_strike, time_to_choice, risk_free, dividend_yield, sigma, false);
+    let effective_strike =
+        strike * (-(risk_free - dividend_yield) * (time_to_expiry - time_to_choice)).exp();
+    let put = bs_price(
+        spot,
+        effective_strike,
+        time_to_choice,
+        risk_free,
+        dividend_yield,
+        sigma,
+        false,
+    );
     let total = call + put;
-    if !total.is_finite() { return None; }
+    if !total.is_finite() {
+        return None;
+    }
     Some(ChooserReport {
         price: total.max(0.0),
         call_component: call,
@@ -69,12 +97,12 @@ fn bs_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64, is_call: bool) -
 }
 
 fn norm_cdf(x: f64) -> f64 {
-    let a1 =  0.254829592_f64;
+    let a1 = 0.254829592_f64;
     let a2 = -0.284496736_f64;
-    let a3 =  1.421413741_f64;
+    let a3 = 1.421413741_f64;
     let a4 = -1.453152027_f64;
-    let a5 =  1.061405429_f64;
-    let p  =  0.3275911_f64;
+    let a5 = 1.061405429_f64;
+    let p = 0.3275911_f64;
     let sign = if x < 0.0 { -1.0 } else { 1.0 };
     let xa = x.abs() / std::f64::consts::SQRT_2;
     let t = 1.0 / (1.0 + p * xa);
@@ -105,8 +133,12 @@ mod tests {
     fn choice_at_expiry_collapses_to_straddle() {
         // When t_choose == T the chooser becomes a straddle (call + put
         // at K both expiring at T — no waiting period).
-        let s = 100.0; let k = 100.0; let t = 0.5;
-        let r = 0.05; let q = 0.0; let v = 0.20;
+        let s = 100.0;
+        let k = 100.0;
+        let t = 0.5;
+        let r = 0.05;
+        let q = 0.0;
+        let v = 0.20;
         let ch = price(s, k, t, t, r, q, v).unwrap();
         let vanilla_call = bs_price(s, k, t, r, q, v, true);
         let vanilla_put = bs_price(s, k, t, r, q, v, false);

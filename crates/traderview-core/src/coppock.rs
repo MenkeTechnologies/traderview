@@ -27,8 +27,10 @@ pub fn compute(closes: &[f64], roc1: usize, roc2: usize, wma_period: usize) -> V
     for i in max_roc..n {
         let base1 = closes[i - roc1];
         let base2 = closes[i - roc2];
-        if base1 <= 0.0 || base2 <= 0.0
-            || !base1.is_finite() || !base2.is_finite()
+        if base1 <= 0.0
+            || base2 <= 0.0
+            || !base1.is_finite()
+            || !base2.is_finite()
             || !closes[i].is_finite()
         {
             continue;

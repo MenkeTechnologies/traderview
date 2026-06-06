@@ -146,8 +146,8 @@ pub fn compute(input: &Section7345Input) -> Section7345Result {
     let amount_above_threshold = debt - threshold;
 
     // § 7345(b)(1)(A)/(B) — collection action prong.
-    let lien_and_exhausted = input.notice_of_federal_tax_lien_filed
-        && input.administrative_remedies_exhausted;
+    let lien_and_exhausted =
+        input.notice_of_federal_tax_lien_filed && input.administrative_remedies_exhausted;
     let collection_action_initiated = lien_and_exhausted || input.levy_issued;
 
     // § 7345(b)(2) exclusions.
@@ -458,7 +458,10 @@ mod tests {
         b.collection_due_process_pending = true;
         let r = compute(&b);
         assert!(r.exclusion_engaged);
-        assert!(r.active_exclusions.iter().any(|e| e.contains("§ 6320 or § 6330")));
+        assert!(r
+            .active_exclusions
+            .iter()
+            .any(|e| e.contains("§ 6320 or § 6330")));
     }
 
     #[test]
@@ -514,14 +517,14 @@ mod tests {
     fn all_three_engagement_conditions_required_truth_table() {
         // 8-cell truth table: debt > threshold × collection action × no exclusion.
         let cells = [
-            (true, true, false, true),     // all three → engaged
-            (false, true, false, false),   // debt below threshold
-            (true, false, false, false),   // no collection action
-            (true, true, true, false),     // exclusion engaged
-            (false, false, false, false),  // nothing
-            (false, true, true, false),    // exclusion blocks even without debt above
-            (true, false, true, false),    // multiple disqualifiers
-            (false, false, true, false),   // everything against
+            (true, true, false, true),    // all three → engaged
+            (false, true, false, false),  // debt below threshold
+            (true, false, false, false),  // no collection action
+            (true, true, true, false),    // exclusion engaged
+            (false, false, false, false), // nothing
+            (false, true, true, false),   // exclusion blocks even without debt above
+            (true, false, true, false),   // multiple disqualifiers
+            (false, false, true, false),  // everything against
         ];
         for (above_threshold, collection, exclusion, expected_engaged) in cells.iter() {
             let mut b = input();

@@ -35,20 +35,27 @@ pub struct GammaPinReport {
     pub n_strikes: usize,
 }
 
-pub fn compute(
-    strike_gex: &[StrikeGex],
-    spot: f64,
-    pin_radius_pct: f64,
-) -> Option<GammaPinReport> {
-    if strike_gex.is_empty() || !spot.is_finite() || spot <= 0.0
-        || !pin_radius_pct.is_finite() || pin_radius_pct <= 0.0 {
+pub fn compute(strike_gex: &[StrikeGex], spot: f64, pin_radius_pct: f64) -> Option<GammaPinReport> {
+    if strike_gex.is_empty()
+        || !spot.is_finite()
+        || spot <= 0.0
+        || !pin_radius_pct.is_finite()
+        || pin_radius_pct <= 0.0
+    {
         return None;
     }
-    if strike_gex.iter().any(|s| !s.strike.is_finite() || s.strike <= 0.0 || !s.gex.is_finite()) {
+    if strike_gex
+        .iter()
+        .any(|s| !s.strike.is_finite() || s.strike <= 0.0 || !s.gex.is_finite())
+    {
         return None;
     }
     let mut sorted: Vec<StrikeGex> = strike_gex.to_vec();
-    sorted.sort_by(|a, b| a.strike.partial_cmp(&b.strike).unwrap_or(std::cmp::Ordering::Equal));
+    sorted.sort_by(|a, b| {
+        a.strike
+            .partial_cmp(&b.strike)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     let total_gex: f64 = sorted.iter().map(|s| s.gex).sum();
     // Gamma flip: strike where cumulative GEX from low to high crosses zero.
     let mut cum = 0.0_f64;
@@ -71,13 +78,16 @@ pub fn compute(
     }
     // Pin strike: largest |gex| near spot (within pin_radius_pct of spot).
     let radius = spot * pin_radius_pct / 100.0;
-    let near_spot: Vec<&StrikeGex> = sorted.iter()
+    let near_spot: Vec<&StrikeGex> = sorted
+        .iter()
         .filter(|s| (s.strike - spot).abs() <= radius)
         .collect();
-    let (pin_strike, pin_strength) = if let Some(top) = near_spot.iter()
-        .max_by(|a, b| a.gex.abs().partial_cmp(&b.gex.abs())
-            .unwrap_or(std::cmp::Ordering::Equal))
-    {
+    let (pin_strike, pin_strength) = if let Some(top) = near_spot.iter().max_by(|a, b| {
+        a.gex
+            .abs()
+            .partial_cmp(&b.gex.abs())
+            .unwrap_or(std::cmp::Ordering::Equal)
+    }) {
         (Some(top.strike), Some(top.gex.abs()))
     } else {
         (None, None)
@@ -95,7 +105,9 @@ pub fn compute(
 mod tests {
     use super::*;
 
-    fn s(strike: f64, gex: f64) -> StrikeGex { StrikeGex { strike, gex } }
+    fn s(strike: f64, gex: f64) -> StrikeGex {
+        StrikeGex { strike, gex }
+    }
 
     #[test]
     fn empty_or_invalid_returns_none() {
@@ -114,26 +126,23 @@ mod tests {
     fn flip_strike_detected() {
         // Cumulative GEX must actually cross zero. Sequence:
         //   90: -3, 95: -5, 100: -4, 105: +1 → flip between 100 and 105.
-        let strikes = vec![
-            s(90.0, -3.0),
-            s(95.0, -2.0),
-            s(100.0, 1.0),
-            s(105.0, 5.0),
-        ];
+        let strikes = vec![s(90.0, -3.0), s(95.0, -2.0), s(100.0, 1.0), s(105.0, 5.0)];
         let r = compute(&strikes, 100.0, 5.0).unwrap();
         assert!(r.gamma_flip.is_some());
         let flip = r.gamma_flip.unwrap();
-        assert!((100.0..=105.0).contains(&flip),
-            "flip strike {flip} should be between 100 and 105");
+        assert!(
+            (100.0..=105.0).contains(&flip),
+            "flip strike {flip} should be between 100 and 105"
+        );
     }
 
     #[test]
     fn pin_strike_is_largest_magnitude_near_spot() {
         let strikes = vec![
             s(95.0, -2.0),
-            s(100.0, 5.0),     // largest |gex| within radius
+            s(100.0, 5.0), // largest |gex| within radius
             s(105.0, -1.0),
-            s(150.0, 100.0),   // largest overall but FAR from spot
+            s(150.0, 100.0), // largest overall but FAR from spot
         ];
         let r = compute(&strikes, 100.0, 10.0).unwrap();
         assert_eq!(r.pin_strike, Some(100.0));

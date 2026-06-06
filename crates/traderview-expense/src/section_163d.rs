@@ -100,18 +100,16 @@ pub fn compute(input: &Section163dInput) -> Section163dResult {
     };
 
     // Gross investment income depends on what's elected in.
-    let qd_in =
-        if input.elect_qualified_dividends_as_investment_income {
-            input.qualified_dividends.max(Decimal::ZERO)
-        } else {
-            Decimal::ZERO
-        };
-    let ltcg_in =
-        if input.elect_long_term_capital_gain_as_investment_income {
-            input.net_long_term_capital_gain.max(Decimal::ZERO)
-        } else {
-            Decimal::ZERO
-        };
+    let qd_in = if input.elect_qualified_dividends_as_investment_income {
+        input.qualified_dividends.max(Decimal::ZERO)
+    } else {
+        Decimal::ZERO
+    };
+    let ltcg_in = if input.elect_long_term_capital_gain_as_investment_income {
+        input.net_long_term_capital_gain.max(Decimal::ZERO)
+    } else {
+        Decimal::ZERO
+    };
 
     r.gross_investment_income = input.interest_income
         + input.ordinary_dividends
@@ -121,13 +119,12 @@ pub fn compute(input: &Section163dInput) -> Section163dResult {
 
     r.net_investment_income = (r.gross_investment_income
         - input.other_investment_expenses.max(Decimal::ZERO))
-        .max(Decimal::ZERO);
+    .max(Decimal::ZERO);
 
     r.qualified_dividends_lost_preferential_rate = qd_in;
     r.long_term_capital_gain_lost_preferential_rate = ltcg_in;
 
-    r.total_expense_available =
-        input.investment_interest_expense + input.prior_year_carryforward;
+    r.total_expense_available = input.investment_interest_expense + input.prior_year_carryforward;
 
     if r.total_expense_available <= Decimal::ZERO {
         r.note = "no investment interest to limit".into();
@@ -193,7 +190,10 @@ mod tests {
         assert_eq!(r.deductible_this_year, dec!(6000));
         assert_eq!(r.carryforward_to_next_year, dec!(4000));
         assert_eq!(r.qualified_dividends_lost_preferential_rate, Decimal::ZERO);
-        assert_eq!(r.long_term_capital_gain_lost_preferential_rate, Decimal::ZERO);
+        assert_eq!(
+            r.long_term_capital_gain_lost_preferential_rate,
+            Decimal::ZERO
+        );
     }
 
     #[test]

@@ -145,17 +145,14 @@ pub struct Section6695AResult {
 pub fn check(input: &Section6695AInput) -> Section6695AResult {
     let mut failure_reasons: Vec<String> = Vec::new();
 
-    let misstatement_present =
-        !matches!(input.misstatement_category, MisstatementCategory::None);
+    let misstatement_present = !matches!(input.misstatement_category, MisstatementCategory::None);
 
-    let effective_date_satisfied = if matches!(
-        input.appraisal_type,
-        AppraisalType::FacadeEasementDonation
-    ) {
-        input.return_filed_after_july_25_2006
-    } else {
-        input.return_filed_after_august_17_2006
-    };
+    let effective_date_satisfied =
+        if matches!(input.appraisal_type, AppraisalType::FacadeEasementDonation) {
+            input.return_filed_after_july_25_2006
+        } else {
+            input.return_filed_after_august_17_2006
+        };
 
     if !effective_date_satisfied {
         failure_reasons.push(
@@ -167,10 +164,8 @@ pub fn check(input: &Section6695AInput) -> Section6695AResult {
 
     let good_faith_exception = input.more_likely_than_not_proper_value;
 
-    let imposed = misstatement_present
-        && knew_or_should
-        && effective_date_satisfied
-        && !good_faith_exception;
+    let imposed =
+        misstatement_present && knew_or_should && effective_date_satisfied && !good_faith_exception;
 
     let ten_percent = input.underpayment_cents / 10;
     let greater_of = ten_percent.max(100_000);
@@ -279,7 +274,8 @@ mod tests {
         assert!(r
             .failure_reasons
             .iter()
-            .any(|f| f.contains("§ 6695A(a)(2)") && f.contains("KNOWN OR REASONABLY SHOULD HAVE KNOWN")));
+            .any(|f| f.contains("§ 6695A(a)(2)")
+                && f.contains("KNOWN OR REASONABLY SHOULD HAVE KNOWN")));
     }
 
     #[test]
@@ -389,23 +385,28 @@ mod tests {
     #[test]
     fn note_pins_substantial_misstatement_150_percent_threshold() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6662(e)")
-            && n.contains("150%")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6662(e)") && n.contains("150%")));
     }
 
     #[test]
     fn note_pins_gross_misstatement_200_percent_threshold() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6662(h)")
-            && n.contains("200%")
-            && n.contains("40%")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6662(h)") && n.contains("200%") && n.contains("40%")));
     }
 
     #[test]
     fn note_pins_estate_gift_65_percent_threshold() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6662(g)")
-            && n.contains("65%")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6662(g)") && n.contains("65%")));
     }
 
     #[test]
@@ -430,7 +431,10 @@ mod tests {
     fn misstatement_category_truth_table_four_cells() {
         for (category, exp_penalty) in [
             (MisstatementCategory::SubstantialValuationMisstatement, true),
-            (MisstatementCategory::EstateGiftValuationUnderstatement, true),
+            (
+                MisstatementCategory::EstateGiftValuationUnderstatement,
+                true,
+            ),
             (MisstatementCategory::GrossValuationMisstatement, true),
             (MisstatementCategory::None, false),
         ] {

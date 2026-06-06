@@ -36,7 +36,11 @@ pub struct SymbolRevisions {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum RevisionDirection { Upgrade, Downgrade, Mixed }
+pub enum RevisionDirection {
+    Upgrade,
+    Downgrade,
+    Mixed,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RevisionHit {
@@ -57,35 +61,57 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
-        Self { min_abs_pct_change: 0.02, min_distinct_analysts: 3 }
+        Self {
+            min_abs_pct_change: 0.02,
+            min_distinct_analysts: 3,
+        }
     }
 }
 
 pub fn scan(symbols: &[SymbolRevisions], cfg: &Config) -> Vec<RevisionHit> {
-    let mut hits: Vec<RevisionHit> = symbols.iter().filter_map(|s| {
-        if !s.current_consensus_eps.is_finite()
-            || !s.prior_consensus_eps.is_finite()
-            || s.prior_consensus_eps.abs() < 1e-12 { return None; }
-        let distinct = s.analysts_raised + s.analysts_lowered + s.analysts_unchanged;
-        if distinct < cfg.min_distinct_analysts { return None; }
-        let pct = (s.current_consensus_eps - s.prior_consensus_eps) / s.prior_consensus_eps.abs();
-        if pct.abs() < cfg.min_abs_pct_change { return None; }
-        let net = s.analysts_raised as i64 - s.analysts_lowered as i64;
-        let direction = if pct > 0.0 && net > 0 { RevisionDirection::Upgrade }
-            else if pct < 0.0 && net < 0 { RevisionDirection::Downgrade }
-            else { RevisionDirection::Mixed };
-        Some(RevisionHit {
-            symbol: s.symbol.clone(),
-            current_consensus_eps: s.current_consensus_eps,
-            prior_consensus_eps: s.prior_consensus_eps,
-            pct_change: pct,
-            net_revisions: net,
-            distinct_analysts: distinct,
-            direction,
+    let mut hits: Vec<RevisionHit> = symbols
+        .iter()
+        .filter_map(|s| {
+            if !s.current_consensus_eps.is_finite()
+                || !s.prior_consensus_eps.is_finite()
+                || s.prior_consensus_eps.abs() < 1e-12
+            {
+                return None;
+            }
+            let distinct = s.analysts_raised + s.analysts_lowered + s.analysts_unchanged;
+            if distinct < cfg.min_distinct_analysts {
+                return None;
+            }
+            let pct =
+                (s.current_consensus_eps - s.prior_consensus_eps) / s.prior_consensus_eps.abs();
+            if pct.abs() < cfg.min_abs_pct_change {
+                return None;
+            }
+            let net = s.analysts_raised as i64 - s.analysts_lowered as i64;
+            let direction = if pct > 0.0 && net > 0 {
+                RevisionDirection::Upgrade
+            } else if pct < 0.0 && net < 0 {
+                RevisionDirection::Downgrade
+            } else {
+                RevisionDirection::Mixed
+            };
+            Some(RevisionHit {
+                symbol: s.symbol.clone(),
+                current_consensus_eps: s.current_consensus_eps,
+                prior_consensus_eps: s.prior_consensus_eps,
+                pct_change: pct,
+                net_revisions: net,
+                distinct_analysts: distinct,
+                direction,
+            })
         })
-    }).collect();
-    hits.sort_by(|a, b| b.pct_change.abs().partial_cmp(&a.pct_change.abs())
-        .unwrap_or(std::cmp::Ordering::Equal));
+        .collect();
+    hits.sort_by(|a, b| {
+        b.pct_change
+            .abs()
+            .partial_cmp(&a.pct_change.abs())
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     hits
 }
 
@@ -93,8 +119,14 @@ pub fn scan(symbols: &[SymbolRevisions], cfg: &Config) -> Vec<RevisionHit> {
 mod tests {
     use super::*;
 
-    fn s(sym: &str, cur: f64, prior: f64, raised: usize, lowered: usize, unchanged: usize)
-        -> SymbolRevisions {
+    fn s(
+        sym: &str,
+        cur: f64,
+        prior: f64,
+        raised: usize,
+        lowered: usize,
+        unchanged: usize,
+    ) -> SymbolRevisions {
         SymbolRevisions {
             symbol: sym.into(),
             current_consensus_eps: cur,
@@ -177,9 +209,9 @@ mod tests {
     #[test]
     fn sorted_by_abs_pct_change_descending() {
         let symbols = vec![
-            s("AAA", 2.05, 2.00, 3, 1, 1),    // 2.5%
-            s("BBB", 2.40, 2.00, 5, 0, 1),    // 20%
-            s("CCC", 1.90, 2.00, 0, 4, 1),    // -5%
+            s("AAA", 2.05, 2.00, 3, 1, 1), // 2.5%
+            s("BBB", 2.40, 2.00, 5, 0, 1), // 20%
+            s("CCC", 1.90, 2.00, 0, 4, 1), // -5%
         ];
         let hits = scan(&symbols, &Config::default());
         assert_eq!(hits.len(), 3);

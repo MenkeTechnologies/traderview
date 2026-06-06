@@ -46,16 +46,29 @@ pub fn analyze(port: &Portfolio, z_alpha: f64) -> Option<VarReport> {
         return None;
     }
     if port.weights.iter().any(|w| !w.is_finite())
-        || port.covariance.iter().any(|row| row.iter().any(|c| !c.is_finite()))
+        || port
+            .covariance
+            .iter()
+            .any(|row| row.iter().any(|c| !c.is_finite()))
     {
         return None;
     }
     // Σw
-    let sigma_w: Vec<f64> = port.covariance.iter()
-        .map(|row| row.iter().zip(port.weights.iter()).map(|(c, w)| c * w).sum())
+    let sigma_w: Vec<f64> = port
+        .covariance
+        .iter()
+        .map(|row| {
+            row.iter()
+                .zip(port.weights.iter())
+                .map(|(c, w)| c * w)
+                .sum()
+        })
         .collect();
     // wᵀ Σ w
-    let port_variance: f64 = port.weights.iter().zip(sigma_w.iter())
+    let port_variance: f64 = port
+        .weights
+        .iter()
+        .zip(sigma_w.iter())
         .map(|(w, sw)| w * sw)
         .sum();
     if !port_variance.is_finite() || port_variance < 0.0 {
@@ -74,10 +87,16 @@ pub fn analyze(port: &Portfolio, z_alpha: f64) -> Option<VarReport> {
     }
     let port_var_at_alpha = port_vol * z_alpha;
     let marginal: Vec<f64> = sigma_w.iter().map(|sw| z_alpha * sw / port_vol).collect();
-    let component: Vec<f64> = port.weights.iter().zip(marginal.iter())
+    let component: Vec<f64> = port
+        .weights
+        .iter()
+        .zip(marginal.iter())
         .map(|(w, m)| w * m)
         .collect();
-    let pct: Vec<f64> = component.iter().map(|c| c / port_var_at_alpha * 100.0).collect();
+    let pct: Vec<f64> = component
+        .iter()
+        .map(|c| c / port_var_at_alpha * 100.0)
+        .collect();
     Some(VarReport {
         portfolio_var: port_var_at_alpha,
         portfolio_vol: port_vol,
@@ -93,21 +112,33 @@ mod tests {
 
     #[test]
     fn empty_returns_none() {
-        let p = Portfolio { weights: vec![], covariance: vec![] };
+        let p = Portfolio {
+            weights: vec![],
+            covariance: vec![],
+        };
         assert!(analyze(&p, 1.645).is_none());
     }
 
     #[test]
     fn dim_mismatch_returns_none() {
-        let p = Portfolio { weights: vec![0.5, 0.5], covariance: vec![vec![1.0; 2]] };
+        let p = Portfolio {
+            weights: vec![0.5, 0.5],
+            covariance: vec![vec![1.0; 2]],
+        };
         assert!(analyze(&p, 1.645).is_none());
-        let p = Portfolio { weights: vec![0.5, 0.5], covariance: vec![vec![1.0; 3], vec![1.0; 3]] };
+        let p = Portfolio {
+            weights: vec![0.5, 0.5],
+            covariance: vec![vec![1.0; 3], vec![1.0; 3]],
+        };
         assert!(analyze(&p, 1.645).is_none());
     }
 
     #[test]
     fn invalid_z_returns_none() {
-        let p = Portfolio { weights: vec![1.0], covariance: vec![vec![0.04]] };
+        let p = Portfolio {
+            weights: vec![1.0],
+            covariance: vec![vec![0.04]],
+        };
         assert!(analyze(&p, 0.0).is_none());
         assert!(analyze(&p, -1.0).is_none());
         assert!(analyze(&p, f64::NAN).is_none());
@@ -115,16 +146,25 @@ mod tests {
 
     #[test]
     fn nan_input_returns_none() {
-        let p = Portfolio { weights: vec![f64::NAN], covariance: vec![vec![0.04]] };
+        let p = Portfolio {
+            weights: vec![f64::NAN],
+            covariance: vec![vec![0.04]],
+        };
         assert!(analyze(&p, 1.645).is_none());
-        let p = Portfolio { weights: vec![1.0], covariance: vec![vec![f64::NAN]] };
+        let p = Portfolio {
+            weights: vec![1.0],
+            covariance: vec![vec![f64::NAN]],
+        };
         assert!(analyze(&p, 1.645).is_none());
     }
 
     #[test]
     fn single_asset_var_matches_simple_formula() {
         // σ² = 0.04 → σ = 0.2. VaR(95%) = 0.2 · 1.645 = 0.329.
-        let p = Portfolio { weights: vec![1.0], covariance: vec![vec![0.04]] };
+        let p = Portfolio {
+            weights: vec![1.0],
+            covariance: vec![vec![0.04]],
+        };
         let r = analyze(&p, 1.645).unwrap();
         assert!((r.portfolio_var - 0.329).abs() < 1e-3);
         assert!((r.pct_contribution[0] - 100.0).abs() < 1e-9);

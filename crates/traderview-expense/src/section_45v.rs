@@ -626,8 +626,7 @@ mod tests {
     fn pwa_bonus_multiplier_claimed_without_meeting_requirements_violation() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::BonusCreditAmountForPwaUnderSection45VB2B;
-        input.pwa_status =
-            PrevailingWageApprenticeshipStatus::PwaRequirementsNotMetBaseRateOnly;
+        input.pwa_status = PrevailingWageApprenticeshipStatus::PwaRequirementsNotMetBaseRateOnly;
         input.claimed_pwa_bonus_multiplier = true;
         let out = check(&input);
         assert_eq!(
@@ -643,7 +642,10 @@ mod tests {
         input.lifecycle_ghg_emissions_tier =
             LifecycleGhgEmissionsTier::Tier1Between2Point5And4KgCo2ePerKgH2;
         let out = check(&input);
-        assert_eq!(out.mode, Section45VMode::CompliantTier1ApplicablePercentage20Percent);
+        assert_eq!(
+            out.mode,
+            Section45VMode::CompliantTier1ApplicablePercentage20Percent
+        );
     }
 
     #[test]
@@ -653,7 +655,10 @@ mod tests {
         input.lifecycle_ghg_emissions_tier =
             LifecycleGhgEmissionsTier::Tier2Between1Point5And2Point5KgCo2ePerKgH2;
         let out = check(&input);
-        assert_eq!(out.mode, Section45VMode::CompliantTier2ApplicablePercentage25Percent);
+        assert_eq!(
+            out.mode,
+            Section45VMode::CompliantTier2ApplicablePercentage25Percent
+        );
     }
 
     #[test]
@@ -676,13 +681,17 @@ mod tests {
         input.lifecycle_ghg_emissions_tier =
             LifecycleGhgEmissionsTier::Tier4LessThan0Point45KgCo2ePerKgH2;
         let out = check(&input);
-        assert_eq!(out.mode, Section45VMode::CompliantTier4ApplicablePercentage100Percent);
+        assert_eq!(
+            out.mode,
+            Section45VMode::CompliantTier4ApplicablePercentage100Percent
+        );
     }
 
     #[test]
     fn qualified_clean_hydrogen_definition_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::QualifiedCleanHydrogenDefinitionUnderSection45VC;
+        input.compliance_aspect =
+            ComplianceAspect::QualifiedCleanHydrogenDefinitionUnderSection45VC;
         let out = check(&input);
         assert_eq!(out.mode, Section45VMode::CompliantQualifiedCleanHydrogen);
     }
@@ -702,7 +711,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::TenYearCreditPeriodUnderSection45VA2;
         input.credit_year_number_within_window = 1;
         let out = check(&input);
-        assert_eq!(out.mode, Section45VMode::CompliantTenYearCreditPeriodYearWithinWindow);
+        assert_eq!(
+            out.mode,
+            Section45VMode::CompliantTenYearCreditPeriodYearWithinWindow
+        );
     }
 
     #[test]
@@ -711,7 +723,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::TenYearCreditPeriodUnderSection45VA2;
         input.credit_year_number_within_window = 10;
         let out = check(&input);
-        assert_eq!(out.mode, Section45VMode::CompliantTenYearCreditPeriodYearWithinWindow);
+        assert_eq!(
+            out.mode,
+            Section45VMode::CompliantTenYearCreditPeriodYearWithinWindow
+        );
     }
 
     #[test]
@@ -741,7 +756,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::TransferabilityElectionUnderSection6418;
         input.transferability_election_made = true;
         let out = check(&input);
-        assert_eq!(out.mode, Section45VMode::CompliantTransferabilityElectionMade);
+        assert_eq!(
+            out.mode,
+            Section45VMode::CompliantTransferabilityElectionMade
+        );
     }
 
     #[test]
@@ -759,7 +777,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::FormFilingUnderForm7210;
         input.form_7210_filed_correctly = false;
         let out = check(&input);
-        assert_eq!(out.mode, Section45VMode::ViolationForm7210NotFiledOrIncorrect);
+        assert_eq!(
+            out.mode,
+            Section45VMode::ViolationForm7210NotFiledOrIncorrect
+        );
     }
 
     #[test]

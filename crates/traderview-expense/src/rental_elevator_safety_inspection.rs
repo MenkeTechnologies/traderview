@@ -219,8 +219,8 @@ fn check_nyc(input: &RentalElevatorSafetyInspectionInput) -> RentalElevatorSafet
         );
     }
 
-    let cat3_compliant = !input.elevator_is_hydraulic
-        || input.days_since_category_3_inspection <= 365 * 3;
+    let cat3_compliant =
+        !input.elevator_is_hydraulic || input.days_since_category_3_inspection <= 365 * 3;
     if input.elevator_is_hydraulic && !cat3_compliant {
         violations.push(
             "NYC Building Code Chapter 30 + ASME A17.1 Table N1 — Category 3 hydraulic test required every 3 years".to_string(),
@@ -296,8 +296,8 @@ fn check_default(
         );
     }
 
-    let cat3_compliant = !input.elevator_is_hydraulic
-        || input.days_since_category_3_inspection <= 365 * 3;
+    let cat3_compliant =
+        !input.elevator_is_hydraulic || input.days_since_category_3_inspection <= 365 * 3;
     if input.elevator_is_hydraulic && !cat3_compliant {
         violations.push(
             "ASME A17.1 Table N1 — Category 3 hydraulic test required every 3 years".to_string(),
@@ -306,9 +306,8 @@ fn check_default(
 
     let cat5_compliant = input.days_since_category_5_inspection <= 365 * 5;
     if !cat5_compliant {
-        violations.push(
-            "ASME A17.1 Table N1 — Category 5 full test required every 5 years".to_string(),
-        );
+        violations
+            .push("ASME A17.1 Table N1 — Category 5 full test required every 5 years".to_string());
     }
 
     let inspector_ok = matches!(
@@ -413,10 +412,7 @@ mod tests {
         i.ca_form_80_posted = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("Form 80")));
+        assert!(r.violations.iter().any(|v| v.contains("Form 80")));
     }
 
     #[test]
@@ -640,10 +636,7 @@ mod tests {
     #[test]
     fn note_pins_nyc_three_test_categories() {
         let r = check(&nyc_clean());
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("Category 1 test (PCT)")));
+        assert!(r.notes.iter().any(|n| n.contains("Category 1 test (PCT)")));
         assert!(r
             .notes
             .iter()
@@ -680,10 +673,9 @@ mod tests {
     #[test]
     fn note_pins_default_three_category_schedule() {
         let r = check(&default_clean());
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("Category 1") && n.contains("Category 3") && n.contains("Category 5")));
+        assert!(r.notes.iter().any(|n| n.contains("Category 1")
+            && n.contains("Category 3")
+            && n.contains("Category 5")));
     }
 
     #[test]

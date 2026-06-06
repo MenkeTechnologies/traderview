@@ -58,7 +58,7 @@ pub fn compute(
             let candidate_long = rm - trail;
             let candidate_short = rm + trail;
             let new = match prev {
-                None => candidate_long,    // seed in the long band
+                None => candidate_long, // seed in the long band
                 Some(p) => {
                     if rm > p {
                         // up move — keep trailing band beneath
@@ -89,7 +89,11 @@ fn rsi(values: &[f64], period: usize) -> Vec<Option<f64>> {
     let mut loss = 0.0;
     for i in 1..=period {
         let d = values[i] - values[i - 1];
-        if d >= 0.0 { gain += d; } else { loss -= d; }
+        if d >= 0.0 {
+            gain += d;
+        } else {
+            loss -= d;
+        }
     }
     gain /= period as f64;
     loss /= period as f64;
@@ -105,7 +109,9 @@ fn rsi(values: &[f64], period: usize) -> Vec<Option<f64>> {
 }
 
 fn rsi_from(gain: f64, loss: f64) -> f64 {
-    if loss == 0.0 { return 100.0; }
+    if loss == 0.0 {
+        return 100.0;
+    }
     let rs = gain / loss;
     100.0 - 100.0 / (1.0 + rs)
 }
@@ -123,11 +129,19 @@ fn wilder_optional(values: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
     for (i, v) in values.iter().enumerate() {
         if v.is_some() {
             run += 1;
-            if run >= period { start = Some(i); break; }
-        } else { run = 0; }
+            if run >= period {
+                start = Some(i);
+                break;
+            }
+        } else {
+            run = 0;
+        }
     }
     let Some(s) = start else { return out };
-    let seed: f64 = values[s + 1 - period..=s].iter().map(|x| x.unwrap()).sum::<f64>()
+    let seed: f64 = values[s + 1 - period..=s]
+        .iter()
+        .map(|x| x.unwrap())
+        .sum::<f64>()
         / period as f64;
     out[s] = Some(seed);
     let mut prev = seed;
@@ -178,7 +192,10 @@ mod tests {
         let fa = r.fast_atr.last().copied().flatten().expect("populated");
         assert!(rm > 50.0, "rising series RSI-MA should be high, got {rm}");
         // In an uptrend, fast_atr trails BELOW rsi_ma (long band).
-        assert!(fa <= rm, "fast_atr={fa} should trail at-or-below rsi_ma={rm}");
+        assert!(
+            fa <= rm,
+            "fast_atr={fa} should trail at-or-below rsi_ma={rm}"
+        );
     }
 
     #[test]

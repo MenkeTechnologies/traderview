@@ -38,8 +38,12 @@ pub fn compute(closes: &[f64], period: usize) -> RegimeClassifierReport {
         efficiency: vec![None; n],
         period,
     };
-    if period < 2 || n < period + 1 { return report; }
-    if closes.iter().any(|x| !x.is_finite()) { return report; }
+    if period < 2 || n < period + 1 {
+        return report;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return report;
+    }
     for i in period..n {
         let net = (closes[i] - closes[i - period]).abs();
         let path: f64 = (i - period + 1..=i)
@@ -48,7 +52,11 @@ pub fn compute(closes: &[f64], period: usize) -> RegimeClassifierReport {
         let eff = if path > 0.0 { net / path } else { 0.0 };
         let roc = closes[i] - closes[i - period];
         let regime = if eff > 0.6 {
-            if roc > 0.0 { MarketRegime::TrendUp } else { MarketRegime::TrendDown }
+            if roc > 0.0 {
+                MarketRegime::TrendUp
+            } else {
+                MarketRegime::TrendDown
+            }
         } else if eff > 0.3 {
             MarketRegime::Range
         } else {
@@ -99,7 +107,9 @@ mod tests {
 
     #[test]
     fn alternating_classified_chop() {
-        let c: Vec<f64> = (0_usize..30).map(|i| if i.is_multiple_of(2) { 100.0 } else { 102.0 }).collect();
+        let c: Vec<f64> = (0_usize..30)
+            .map(|i| if i.is_multiple_of(2) { 100.0 } else { 102.0 })
+            .collect();
         let r = compute(&c, 20);
         let last = 29;
         // Net ≈ 2 (or 0), path ≈ 38 → eff very low → Chop.

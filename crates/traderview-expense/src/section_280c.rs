@@ -224,10 +224,18 @@ pub fn compute(input: &Input) -> Output {
     }
 
     let required_disallowance_cents = input.gross_credit_determined_cents;
-    if input.deduction_claimed_cents > input.wages_or_research_expense_cents.saturating_sub(required_disallowance_cents) {
-        let actual_disallowance_cents = input.wages_or_research_expense_cents.saturating_sub(input.deduction_claimed_cents);
+    if input.deduction_claimed_cents
+        > input
+            .wages_or_research_expense_cents
+            .saturating_sub(required_disallowance_cents)
+    {
+        let actual_disallowance_cents = input
+            .wages_or_research_expense_cents
+            .saturating_sub(input.deduction_claimed_cents);
         let shortfall_cents = required_disallowance_cents.saturating_sub(actual_disallowance_cents);
-        if input.deduction_claimed_cents == input.wages_or_research_expense_cents && shortfall_cents > 0 {
+        if input.deduction_claimed_cents == input.wages_or_research_expense_cents
+            && shortfall_cents > 0
+        {
             return Output {
                 mode: Section280cMode::ViolationDeductionAndFullCreditDoubleClaimed,
                 credit_after_section_280c_cents: input.gross_credit_determined_cents,
@@ -303,7 +311,10 @@ mod tests {
     #[test]
     fn wotc_full_disallowance_applied_compliant() {
         let result = compute(&baseline_wotc());
-        assert_eq!(result.mode, Section280cMode::CompliantFullDeductionDisallowanceApplied);
+        assert_eq!(
+            result.mode,
+            Section280cMode::CompliantFullDeductionDisallowanceApplied
+        );
         assert_eq!(result.disallowance_amount_cents, 240_000);
         assert_eq!(result.allowed_deduction_cents, 760_000);
     }
@@ -313,7 +324,10 @@ mod tests {
         let mut input = baseline_wotc();
         input.deduction_claimed_cents = 1_000_000;
         let result = compute(&input);
-        assert_eq!(result.mode, Section280cMode::ViolationDeductionAndFullCreditDoubleClaimed);
+        assert_eq!(
+            result.mode,
+            Section280cMode::ViolationDeductionAndFullCreditDoubleClaimed
+        );
         assert_eq!(result.allowed_deduction_cents, 760_000);
     }
 
@@ -327,7 +341,10 @@ mod tests {
             reduced_credit_election: ReducedCreditElection::ElectedOnOriginalReturn,
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section280cMode::CompliantReducedCreditElectionAppliedResearchOrOrphan);
+        assert_eq!(
+            result.mode,
+            Section280cMode::CompliantReducedCreditElectionAppliedResearchOrOrphan
+        );
         assert_eq!(result.credit_after_section_280c_cents, 790_000);
         assert_eq!(result.allowed_deduction_cents, 5_000_000);
         assert_eq!(result.disallowance_amount_cents, 0);
@@ -343,7 +360,10 @@ mod tests {
             reduced_credit_election: ReducedCreditElection::ElectedOnOriginalReturn,
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section280cMode::CompliantReducedCreditElectionAppliedResearchOrOrphan);
+        assert_eq!(
+            result.mode,
+            Section280cMode::CompliantReducedCreditElectionAppliedResearchOrOrphan
+        );
         assert_eq!(result.credit_after_section_280c_cents, 395_000);
         assert_eq!(result.allowed_deduction_cents, 2_000_000);
     }
@@ -358,7 +378,10 @@ mod tests {
             reduced_credit_election: ReducedCreditElection::AttemptedOnAmendedReturn,
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section280cMode::ViolationReducedCreditElectionNotOnOriginalReturn);
+        assert_eq!(
+            result.mode,
+            Section280cMode::ViolationReducedCreditElectionNotOnOriginalReturn
+        );
         assert!(result.notes.contains("§ 280C(c)(3)"));
         assert!(result.notes.contains("original return"));
     }
@@ -373,7 +396,10 @@ mod tests {
             reduced_credit_election: ReducedCreditElection::ElectedOnOriginalReturn,
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section280cMode::ViolationReducedCreditElectionAttemptedForIneligibleCredit);
+        assert_eq!(
+            result.mode,
+            Section280cMode::ViolationReducedCreditElectionAttemptedForIneligibleCredit
+        );
         assert!(result.notes.contains("§ 280C(a) wage credits"));
     }
 
@@ -387,7 +413,10 @@ mod tests {
             reduced_credit_election: ReducedCreditElection::ElectedOnOriginalReturn,
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section280cMode::ViolationReducedCreditElectionAttemptedForIneligibleCredit);
+        assert_eq!(
+            result.mode,
+            Section280cMode::ViolationReducedCreditElectionAttemptedForIneligibleCredit
+        );
     }
 
     #[test]
@@ -400,7 +429,10 @@ mod tests {
             reduced_credit_election: ReducedCreditElection::NotElected,
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section280cMode::CompliantFullDeductionDisallowanceApplied);
+        assert_eq!(
+            result.mode,
+            Section280cMode::CompliantFullDeductionDisallowanceApplied
+        );
         assert_eq!(result.disallowance_amount_cents, 30_000);
     }
 
@@ -414,7 +446,10 @@ mod tests {
             reduced_credit_election: ReducedCreditElection::NotElected,
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section280cMode::CompliantFullDeductionDisallowanceApplied);
+        assert_eq!(
+            result.mode,
+            Section280cMode::CompliantFullDeductionDisallowanceApplied
+        );
         assert_eq!(result.disallowance_amount_cents, 12_500);
         assert_eq!(result.allowed_deduction_cents, 87_500);
     }
@@ -429,7 +464,10 @@ mod tests {
             reduced_credit_election: ReducedCreditElection::NotElected,
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section280cMode::CompliantFullDeductionDisallowanceApplied);
+        assert_eq!(
+            result.mode,
+            Section280cMode::CompliantFullDeductionDisallowanceApplied
+        );
         assert_eq!(result.disallowance_amount_cents, 60_000);
     }
 
@@ -443,7 +481,10 @@ mod tests {
             reduced_credit_election: ReducedCreditElection::NotElected,
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section280cMode::CompliantFullDeductionDisallowanceApplied);
+        assert_eq!(
+            result.mode,
+            Section280cMode::CompliantFullDeductionDisallowanceApplied
+        );
         assert_eq!(result.disallowance_amount_cents, 1_000_000);
         assert_eq!(result.allowed_deduction_cents, 4_000_000);
     }
@@ -458,7 +499,10 @@ mod tests {
             reduced_credit_election: ReducedCreditElection::NotElected,
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section280cMode::ViolationDeductionDisallowanceLessThanCreditDetermined);
+        assert_eq!(
+            result.mode,
+            Section280cMode::ViolationDeductionDisallowanceLessThanCreditDetermined
+        );
         assert!(result.notes.contains("DETERMINED"));
     }
 
@@ -501,7 +545,10 @@ mod tests {
 
     #[test]
     fn constant_pin_1989_research_reduced_credit_election_year() {
-        assert_eq!(SECTION_280C_RESEARCH_REDUCED_CREDIT_ELECTION_ENACTED_YEAR, 1989);
+        assert_eq!(
+            SECTION_280C_RESEARCH_REDUCED_CREDIT_ELECTION_ENACTED_YEAR,
+            1989
+        );
     }
 
     #[test]
@@ -514,6 +561,9 @@ mod tests {
             reduced_credit_election: ReducedCreditElection::ElectedOnOriginalReturn,
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section280cMode::CompliantReducedCreditElectionAppliedResearchOrOrphan);
+        assert_eq!(
+            result.mode,
+            Section280cMode::CompliantReducedCreditElectionAppliedResearchOrOrphan
+        );
     }
 }

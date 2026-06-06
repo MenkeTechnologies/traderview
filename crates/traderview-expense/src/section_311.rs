@@ -278,8 +278,7 @@ mod tests {
     fn base_appreciated() -> Input {
         Input {
             distribution_type: DistributionType::OrdinarySection301Distribution,
-            appreciation_status:
-                AppreciationStatus::FmvExceedsAdjustedBasisAppreciated,
+            appreciation_status: AppreciationStatus::FmvExceedsAdjustedBasisAppreciated,
             partnership_trust_anti_loss_status:
                 PartnershipTrustAntiLossStatus::NotPartnershipOrTrustInterest,
             fair_market_value_cents: 100_000_00,
@@ -360,8 +359,7 @@ mod tests {
     #[test]
     fn depreciated_property_no_loss_recognition() {
         let mut input = base_appreciated();
-        input.appreciation_status =
-            AppreciationStatus::FmvBelowAdjustedBasisDepreciated;
+        input.appreciation_status = AppreciationStatus::FmvBelowAdjustedBasisDepreciated;
         input.fair_market_value_cents = 20_000_00;
         input.adjusted_basis_cents = 50_000_00;
         let output = check(&input);

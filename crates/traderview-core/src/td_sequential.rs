@@ -33,7 +33,11 @@ pub struct Config {
 }
 
 impl Default for Config {
-    fn default() -> Self { Self { countdown_max_bars: 60 } }
+    fn default() -> Self {
+        Self {
+            countdown_max_bars: 60,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -74,13 +78,21 @@ pub fn analyze(bars: &[Bar], cfg: &Config) -> TdReport {
             bear_run = 0;
             continue;
         }
-        if c < c4 { bull_run = bull_run.saturating_add(1); } else { bull_run = 0; }
-        if c > c4 { bear_run = bear_run.saturating_add(1); } else { bear_run = 0; }
+        if c < c4 {
+            bull_run = bull_run.saturating_add(1);
+        } else {
+            bull_run = 0;
+        }
+        if c > c4 {
+            bear_run = bear_run.saturating_add(1);
+        } else {
+            bear_run = 0;
+        }
         r.bullish_setup_counter[i] = bull_run.min(9);
         r.bearish_setup_counter[i] = bear_run.min(9);
         if bull_run >= 9 {
             r.bullish_setup_completed[i] = true;
-            bull_run = 0;    // reset to allow next setup
+            bull_run = 0; // reset to allow next setup
         }
         if bear_run >= 9 {
             r.bearish_setup_completed[i] = true;
@@ -98,7 +110,7 @@ pub fn analyze(bars: &[Bar], cfg: &Config) -> TdReport {
         max_bars: usize,
     ) {
         let n = bars.len();
-        let mut active: Vec<(usize, u8)> = Vec::new();    // (setup_complete_idx, count_so_far)
+        let mut active: Vec<(usize, u8)> = Vec::new(); // (setup_complete_idx, count_so_far)
         for i in 0..n {
             if completed[i] {
                 active.push((i, 0));
@@ -108,10 +120,12 @@ pub fn analyze(bars: &[Bar], cfg: &Config) -> TdReport {
             // For each active countdown, check current bar.
             if i >= 2 {
                 let qualifies = if bullish {
-                    bars[i].close.is_finite() && bars[i - 2].low.is_finite()
+                    bars[i].close.is_finite()
+                        && bars[i - 2].low.is_finite()
                         && bars[i].close <= bars[i - 2].low
                 } else {
-                    bars[i].close.is_finite() && bars[i - 2].high.is_finite()
+                    bars[i].close.is_finite()
+                        && bars[i - 2].high.is_finite()
                         && bars[i].close >= bars[i - 2].high
                 };
                 if qualifies {
@@ -134,14 +148,28 @@ pub fn analyze(bars: &[Bar], cfg: &Config) -> TdReport {
                         completed_this_bar = true;
                     }
                     false
-                } else { true }
+                } else {
+                    true
+                }
             });
         }
     }
-    run_countdown(bars, &r.bullish_setup_completed, &mut r.bullish_countdown,
-        &mut r.bullish_exhaustion, true, cfg.countdown_max_bars);
-    run_countdown(bars, &r.bearish_setup_completed, &mut r.bearish_countdown,
-        &mut r.bearish_exhaustion, false, cfg.countdown_max_bars);
+    run_countdown(
+        bars,
+        &r.bullish_setup_completed,
+        &mut r.bullish_countdown,
+        &mut r.bullish_exhaustion,
+        true,
+        cfg.countdown_max_bars,
+    );
+    run_countdown(
+        bars,
+        &r.bearish_setup_completed,
+        &mut r.bearish_countdown,
+        &mut r.bearish_exhaustion,
+        false,
+        cfg.countdown_max_bars,
+    );
     r
 }
 
@@ -149,7 +177,13 @@ pub fn analyze(bars: &[Bar], cfg: &Config) -> TdReport {
 mod tests {
     use super::*;
 
-    fn b(c: f64) -> Bar { Bar { high: c + 0.5, low: c - 0.5, close: c } }
+    fn b(c: f64) -> Bar {
+        Bar {
+            high: c + 0.5,
+            low: c - 0.5,
+            close: c,
+        }
+    }
 
     #[test]
     fn empty_returns_default() {
@@ -160,7 +194,12 @@ mod tests {
     #[test]
     fn invalid_config_returns_default() {
         let bars = vec![b(100.0); 50];
-        let r = analyze(&bars, &Config { countdown_max_bars: 0 });
+        let r = analyze(
+            &bars,
+            &Config {
+                countdown_max_bars: 0,
+            },
+        );
         assert!(r.bullish_exhaustion.is_empty());
     }
 
@@ -207,7 +246,9 @@ mod tests {
         // 100 bars steadily falling — should produce 13-count completion.
         let bars: Vec<Bar> = (0..100).map(|i| b(200.0 - i as f64 * 0.5)).collect();
         let r = analyze(&bars, &Config::default());
-        assert!(!r.bullish_exhaustion.is_empty(),
-            "long downtrend should produce bullish exhaustion countdown");
+        assert!(
+            !r.bullish_exhaustion.is_empty(),
+            "long downtrend should produce bullish exhaustion countdown"
+        );
     }
 }

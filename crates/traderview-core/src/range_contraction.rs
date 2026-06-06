@@ -50,7 +50,9 @@ pub struct PatternReport {
 
 pub fn detect(bars: &[OhlcBar]) -> PatternReport {
     let n = bars.len();
-    if n == 0 { return PatternReport::default(); }
+    if n == 0 {
+        return PatternReport::default();
+    }
     let ranges: Vec<f64> = bars.iter().map(|b| b.high - b.low).collect();
     let mut hits = Vec::new();
     let mut nr4 = 0usize;
@@ -65,7 +67,11 @@ pub fn detect(bars: &[OhlcBar]) -> PatternReport {
                 // Otherwise a flat range of 1 bar trivially "ties".
                 let strictly_smaller = window[..window.len() - 1].iter().any(|&r| ranges[i] < r);
                 if strictly_smaller {
-                    hits.push(PatternHit { bar_index: i, kind: PatternKind::Nr4, range: ranges[i] });
+                    hits.push(PatternHit {
+                        bar_index: i,
+                        kind: PatternKind::Nr4,
+                        range: ranges[i],
+                    });
                     nr4 += 1;
                 }
             }
@@ -76,7 +82,11 @@ pub fn detect(bars: &[OhlcBar]) -> PatternReport {
             if window.iter().all(|&r| ranges[i] <= r) && ranges[i] > 0.0 {
                 let strictly_smaller = window[..window.len() - 1].iter().any(|&r| ranges[i] < r);
                 if strictly_smaller {
-                    hits.push(PatternHit { bar_index: i, kind: PatternKind::Nr7, range: ranges[i] });
+                    hits.push(PatternHit {
+                        bar_index: i,
+                        kind: PatternKind::Nr7,
+                        range: ranges[i],
+                    });
                     nr7 += 1;
                 }
             }
@@ -86,7 +96,11 @@ pub fn detect(bars: &[OhlcBar]) -> PatternReport {
             let today = bars[i];
             let yesterday = bars[i - 1];
             if today.high < yesterday.high && today.low > yesterday.low {
-                hits.push(PatternHit { bar_index: i, kind: PatternKind::InsideBar, range: ranges[i] });
+                hits.push(PatternHit {
+                    bar_index: i,
+                    kind: PatternKind::InsideBar,
+                    range: ranges[i],
+                });
                 inside += 1;
             }
         }
@@ -103,7 +117,13 @@ pub fn detect(bars: &[OhlcBar]) -> PatternReport {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64) -> OhlcBar { OhlcBar { high: h, low: l, close: (h + l) / 2.0 } }
+    fn b(h: f64, l: f64) -> OhlcBar {
+        OhlcBar {
+            high: h,
+            low: l,
+            close: (h + l) / 2.0,
+        }
+    }
 
     #[test]
     fn empty_input_returns_empty_report() {
@@ -115,9 +135,18 @@ mod tests {
     #[test]
     fn nr4_fires_when_today_is_narrowest_of_last_four() {
         // Ranges: 5, 4, 3, 2 → bar 3 has the narrowest of the last 4. NR4 hit.
-        let bars = vec![b(105.0, 100.0), b(104.0, 100.0), b(103.0, 100.0), b(102.0, 100.0)];
+        let bars = vec![
+            b(105.0, 100.0),
+            b(104.0, 100.0),
+            b(103.0, 100.0),
+            b(102.0, 100.0),
+        ];
         let r = detect(&bars);
-        let nr4_hits: Vec<_> = r.hits.iter().filter(|h| matches!(h.kind, PatternKind::Nr4)).collect();
+        let nr4_hits: Vec<_> = r
+            .hits
+            .iter()
+            .filter(|h| matches!(h.kind, PatternKind::Nr4))
+            .collect();
         assert!(!nr4_hits.is_empty(), "expected NR4 at i=3");
         assert_eq!(nr4_hits[0].bar_index, 3);
     }
@@ -132,7 +161,11 @@ mod tests {
         let mut bars: Vec<OhlcBar> = (0..6).map(|i| b(110.0 - i as f64, 100.0)).collect();
         bars.push(b(101.0, 100.0));
         let r = detect(&bars);
-        let nr7_hits: Vec<_> = r.hits.iter().filter(|h| matches!(h.kind, PatternKind::Nr7)).collect();
+        let nr7_hits: Vec<_> = r
+            .hits
+            .iter()
+            .filter(|h| matches!(h.kind, PatternKind::Nr7))
+            .collect();
         assert_eq!(nr7_hits.len(), 1);
         assert_eq!(nr7_hits[0].bar_index, 6);
     }
@@ -179,7 +212,10 @@ mod tests {
         let r = detect(&bars);
         let last_bar_hits: Vec<_> = r.hits.iter().filter(|h| h.bar_index == 6).collect();
         let kinds: Vec<PatternKind> = last_bar_hits.iter().map(|h| h.kind).collect();
-        assert!(kinds.contains(&PatternKind::Nr4) && kinds.contains(&PatternKind::Nr7),
-            "narrowest-of-7 should also be narrowest-of-4, got {:?}", kinds);
+        assert!(
+            kinds.contains(&PatternKind::Nr4) && kinds.contains(&PatternKind::Nr7),
+            "narrowest-of-7 should also be narrowest-of-4, got {:?}",
+            kinds
+        );
     }
 }

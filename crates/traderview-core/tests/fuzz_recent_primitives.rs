@@ -11,32 +11,37 @@
 
 #![allow(clippy::unusual_byte_groupings, clippy::manual_is_multiple_of)]
 
+use chrono::{NaiveDate, TimeZone, Utc};
+use traderview_core::models::TradeSide;
 use traderview_core::{
-    acceleration_deceleration, anchored_vwap, aroon, arms_index, atr_cone,
-    awesome_oscillator, bond_duration, breakout_detector, chaikin_money_flow,
-    choppiness, coppock, correlation, cusum, dema, displacement, dynamic_kelly,
-    elder_ray, equity_regime, fair_value_gap, futures_roll, gap_fill_stats,
-    hull_ma, indicators, inside_bar_breakout, kama, liquidity_grab, mass_index,
-    mcclellan_oscillator, monte_carlo, opening_range, order_block, pair_trade,
-    portfolio_heat, ppo, premium_discount, put_call_ratio, random_walk_index,
-    range_contraction, range_expansion, rolling_zscore, round_levels,
-    sharpe_by_window, sortino, stoch_rsi, stochastic, stop_hunt, supertrend,
-    swing_points, tema, three_bar_reversal, treynor, tsi, ulcer_index,
+    acceleration_deceleration, anchored_vwap, arms_index, aroon, atr_cone, awesome_oscillator,
+    bond_duration, breakout_detector, chaikin_money_flow, choppiness, coppock, correlation, cusum,
+    dema, displacement, dynamic_kelly, elder_ray, equity_regime, fair_value_gap, futures_roll,
+    gap_fill_stats, hull_ma, indicators, inside_bar_breakout, kama, liquidity_grab, mass_index,
+    mcclellan_oscillator, monte_carlo, opening_range, order_block, pair_trade, portfolio_heat, ppo,
+    premium_discount, put_call_ratio, random_walk_index, range_contraction, range_expansion,
+    rolling_zscore, round_levels, sharpe_by_window, sortino, stoch_rsi, stochastic, stop_hunt,
+    supertrend, swing_points, tema, three_bar_reversal, treynor, tsi, ulcer_index,
     ultimate_oscillator, volatility_stop, volume_burst, vortex, vsa, wyckoff,
 };
-use traderview_core::models::TradeSide;
-use chrono::{NaiveDate, TimeZone, Utc};
 
 const ITERS: usize = 20_000;
 
 struct Lcg(u64);
 impl Lcg {
-    fn new(seed: u64) -> Self { Self(seed) }
+    fn new(seed: u64) -> Self {
+        Self(seed)
+    }
     fn next_u64(&mut self) -> u64 {
-        self.0 = self.0.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+        self.0 = self
+            .0
+            .wrapping_mul(6364136223846793005)
+            .wrapping_add(1442695040888963407);
         self.0
     }
-    fn range_usize(&mut self, n: usize) -> usize { (self.next_u64() as usize) % n.max(1) }
+    fn range_usize(&mut self, n: usize) -> usize {
+        (self.next_u64() as usize) % n.max(1)
+    }
     fn f64_range(&mut self, lo: f64, hi: f64) -> f64 {
         let r = (self.next_u64() >> 11) as f64 / (1u64 << 53) as f64;
         lo + (hi - lo) * r
@@ -64,7 +69,9 @@ impl Lcg {
             _ => self.next_u64() as i64,
         }
     }
-    fn pick_u64_small(&mut self) -> u64 { self.next_u64() % 1_000_000 }
+    fn pick_u64_small(&mut self) -> u64 {
+        self.next_u64() % 1_000_000
+    }
 }
 
 fn assert_finite_opt(v: &Option<f64>, msg: &str) {
@@ -81,15 +88,19 @@ fn fuzz_arms_index() {
     let mut rng = Lcg::new(0xA11_BAD_DA7A);
     for it in 0..ITERS {
         let n = rng.range_usize(64);
-        let bars: Vec<arms_index::BreadthBar> = (0..n).map(|_| arms_index::BreadthBar {
-            advancing_issues: rng.pick_u64_small(),
-            declining_issues: rng.pick_u64_small(),
-            advancing_volume: rng.pick_pathological_f64(),
-            declining_volume: rng.pick_pathological_f64(),
-        }).collect();
+        let bars: Vec<arms_index::BreadthBar> = (0..n)
+            .map(|_| arms_index::BreadthBar {
+                advancing_issues: rng.pick_u64_small(),
+                declining_issues: rng.pick_u64_small(),
+                advancing_volume: rng.pick_pathological_f64(),
+                declining_volume: rng.pick_pathological_f64(),
+            })
+            .collect();
         let r = arms_index::compute(&bars);
         assert_eq!(r.series.len(), bars.len(), "iter {it}");
-        for v in &r.series { assert_finite_opt(v, "series elem"); }
+        for v in &r.series {
+            assert_finite_opt(v, "series elem");
+        }
         assert_finite_opt(&r.latest, "latest");
     }
 }
@@ -102,12 +113,12 @@ fn fuzz_mcclellan_oscillator() {
     let mut rng = Lcg::new(0xC0FFEE_F00D);
     for it in 0..ITERS {
         let n = rng.range_usize(128);
-        let bars: Vec<mcclellan_oscillator::BreadthBar> = (0..n).map(|_| {
-            mcclellan_oscillator::BreadthBar {
+        let bars: Vec<mcclellan_oscillator::BreadthBar> = (0..n)
+            .map(|_| mcclellan_oscillator::BreadthBar {
                 advancing_issues: rng.pick_i64(),
                 declining_issues: rng.pick_i64(),
-            }
-        }).collect();
+            })
+            .collect();
         let r = mcclellan_oscillator::compute(&bars);
         assert_eq!(r.oscillator.len(), bars.len(), "iter {it} osc len");
         assert_eq!(r.summation_index.len(), bars.len(), "iter {it} sum len");
@@ -134,25 +145,36 @@ fn fuzz_inside_bar_breakout() {
     for it in 0..ITERS {
         let n = rng.range_usize(64);
         // Produce mostly-valid OHLC plus the occasional pathological bar.
-        let bars: Vec<inside_bar_breakout::OhlcBar> = (0..n).map(|_| {
-            let h = rng.f64_range(50.0, 200.0);
-            let l = rng.f64_range(50.0, h);
-            let o = rng.f64_range(l, h);
-            let c = rng.f64_range(l, h);
-            // 10% chance of NaN/Inf to exercise edges.
-            if rng.next_u64() % 10 == 0 {
-                inside_bar_breakout::OhlcBar {
-                    open: rng.pick_pathological_f64(),
-                    high: rng.pick_pathological_f64(),
-                    low:  rng.pick_pathological_f64(),
-                    close: rng.pick_pathological_f64(),
+        let bars: Vec<inside_bar_breakout::OhlcBar> = (0..n)
+            .map(|_| {
+                let h = rng.f64_range(50.0, 200.0);
+                let l = rng.f64_range(50.0, h);
+                let o = rng.f64_range(l, h);
+                let c = rng.f64_range(l, h);
+                // 10% chance of NaN/Inf to exercise edges.
+                if rng.next_u64() % 10 == 0 {
+                    inside_bar_breakout::OhlcBar {
+                        open: rng.pick_pathological_f64(),
+                        high: rng.pick_pathological_f64(),
+                        low: rng.pick_pathological_f64(),
+                        close: rng.pick_pathological_f64(),
+                    }
+                } else {
+                    inside_bar_breakout::OhlcBar {
+                        open: o,
+                        high: h,
+                        low: l,
+                        close: c,
+                    }
                 }
-            } else {
-                inside_bar_breakout::OhlcBar { open: o, high: h, low: l, close: c }
-            }
-        }).collect();
+            })
+            .collect();
         let cfg = inside_bar_breakout::IbConfig {
-            confirm_within: if rng.next_u64() % 20 == 0 { usize::MAX } else { rng.range_usize(10) },
+            confirm_within: if rng.next_u64() % 20 == 0 {
+                usize::MAX
+            } else {
+                rng.range_usize(10)
+            },
             max_range_ratio: rng.f64_range(-0.1, 1.5),
         };
         let r = inside_bar_breakout::detect(&bars, &cfg);
@@ -177,8 +199,12 @@ fn fuzz_inside_bar_breakout() {
         // dropped through).
         for e in &r.events {
             if e.range_ratio.is_finite() {
-                assert!(e.range_ratio <= cfg.max_range_ratio + 1e-12,
-                    "iter {it} ratio {} > max {}", e.range_ratio, cfg.max_range_ratio);
+                assert!(
+                    e.range_ratio <= cfg.max_range_ratio + 1e-12,
+                    "iter {it} ratio {} > max {}",
+                    e.range_ratio,
+                    cfg.max_range_ratio
+                );
             }
         }
     }
@@ -192,32 +218,50 @@ fn fuzz_gap_fill_stats() {
     let mut rng = Lcg::new(0x6AB_F177);
     for it in 0..ITERS {
         let n = rng.range_usize(64);
-        let bars: Vec<gap_fill_stats::OhlcBar> = (0..n).map(|_| {
-            if rng.next_u64() % 10 == 0 {
-                gap_fill_stats::OhlcBar {
-                    open: rng.pick_pathological_f64(),
-                    high: rng.pick_pathological_f64(),
-                    low:  rng.pick_pathological_f64(),
-                    close: rng.pick_pathological_f64(),
+        let bars: Vec<gap_fill_stats::OhlcBar> = (0..n)
+            .map(|_| {
+                if rng.next_u64() % 10 == 0 {
+                    gap_fill_stats::OhlcBar {
+                        open: rng.pick_pathological_f64(),
+                        high: rng.pick_pathological_f64(),
+                        low: rng.pick_pathological_f64(),
+                        close: rng.pick_pathological_f64(),
+                    }
+                } else {
+                    let h = rng.f64_range(50.0, 200.0);
+                    let l = rng.f64_range(50.0, h);
+                    let o = rng.f64_range(l, h);
+                    let c = rng.f64_range(l, h);
+                    gap_fill_stats::OhlcBar {
+                        open: o,
+                        high: h,
+                        low: l,
+                        close: c,
+                    }
                 }
-            } else {
-                let h = rng.f64_range(50.0, 200.0);
-                let l = rng.f64_range(50.0, h);
-                let o = rng.f64_range(l, h);
-                let c = rng.f64_range(l, h);
-                gap_fill_stats::OhlcBar { open: o, high: h, low: l, close: c }
-            }
-        }).collect();
+            })
+            .collect();
         let atr: Vec<f64> = (0..n).map(|_| rng.pick_pathological_f64()).collect();
         let r = gap_fill_stats::analyze(&bars, &atr);
         assert!(r.n_gaps == r.n_up_gaps + r.n_down_gaps, "iter {it}");
         // Fill rates are k/n with both finite small counts → always finite.
-        assert!(r.up_fill_rate.is_finite(),   "iter {it} up_fill_rate {}", r.up_fill_rate);
-        assert!(r.down_fill_rate.is_finite(), "iter {it} down_fill_rate {}", r.down_fill_rate);
+        assert!(
+            r.up_fill_rate.is_finite(),
+            "iter {it} up_fill_rate {}",
+            r.up_fill_rate
+        );
+        assert!(
+            r.down_fill_rate.is_finite(),
+            "iter {it} down_fill_rate {}",
+            r.down_fill_rate
+        );
         for e in &r.events {
             assert!(e.bar_index < n);
-            assert!(e.gap_size.is_finite() || e.gap_size.is_nan(),
-                "iter {it} gap_size {}", e.gap_size);
+            assert!(
+                e.gap_size.is_finite() || e.gap_size.is_nan(),
+                "iter {it} gap_size {}",
+                e.gap_size
+            );
             // gap_size_atrs may be NaN/Inf if the user-supplied ATR is
             // pathological — the analyze() contract just passes that
             // through. But it must NOT panic.
@@ -233,27 +277,48 @@ fn fuzz_liquidity_grab() {
     let mut rng = Lcg::new(0xF1_5CA1);
     for it in 0..ITERS {
         let n = rng.range_usize(64);
-        let bars: Vec<liquidity_grab::OhlcBar> = (0..n).map(|_| {
-            let h = rng.f64_range(50.0, 200.0);
-            let l = rng.f64_range(50.0, h);
-            let o = rng.f64_range(l, h);
-            let c = rng.f64_range(l, h);
-            liquidity_grab::OhlcBar { open: o, high: h, low: l, close: c }
-        }).collect();
+        let bars: Vec<liquidity_grab::OhlcBar> = (0..n)
+            .map(|_| {
+                let h = rng.f64_range(50.0, 200.0);
+                let l = rng.f64_range(50.0, h);
+                let o = rng.f64_range(l, h);
+                let c = rng.f64_range(l, h);
+                liquidity_grab::OhlcBar {
+                    open: o,
+                    high: h,
+                    low: l,
+                    close: c,
+                }
+            })
+            .collect();
         let atr: Vec<f64> = (0..n).map(|_| rng.f64_range(0.1, 5.0)).collect();
-        let swings_n = if n == 0 { 0 } else { rng.range_usize(n.min(8) + 1) };
-        let swings: Vec<swing_points::SwingPoint> = (0..swings_n).map(|_| {
-            let idx = if n == 0 { 0 } else { rng.range_usize(n) };
-            let kind = if rng.next_u64() & 1 == 0 {
-                swing_points::SwingKind::High
-            } else {
-                swing_points::SwingKind::Low
-            };
-            swing_points::SwingPoint { index: idx, price: rng.f64_range(50.0, 200.0), kind }
-        }).collect();
+        let swings_n = if n == 0 {
+            0
+        } else {
+            rng.range_usize(n.min(8) + 1)
+        };
+        let swings: Vec<swing_points::SwingPoint> = (0..swings_n)
+            .map(|_| {
+                let idx = if n == 0 { 0 } else { rng.range_usize(n) };
+                let kind = if rng.next_u64() & 1 == 0 {
+                    swing_points::SwingKind::High
+                } else {
+                    swing_points::SwingKind::Low
+                };
+                swing_points::SwingPoint {
+                    index: idx,
+                    price: rng.f64_range(50.0, 200.0),
+                    kind,
+                }
+            })
+            .collect();
         let cfg = liquidity_grab::GrabConfig {
             min_sweep_atrs: rng.f64_range(-0.5, 2.0),
-            confirm_within: if rng.next_u64() % 20 == 0 { usize::MAX } else { rng.range_usize(8) },
+            confirm_within: if rng.next_u64() % 20 == 0 {
+                usize::MAX
+            } else {
+                rng.range_usize(8)
+            },
             min_followthrough: rng.range_usize(8),
         };
         let r = liquidity_grab::detect(&bars, &atr, &swings, &cfg);
@@ -274,16 +339,22 @@ fn fuzz_acceleration_deceleration() {
     let mut rng = Lcg::new(0xACDC_ACDC);
     for it in 0..ITERS {
         let n = rng.range_usize(120);
-        let bars: Vec<acceleration_deceleration::HlBar> = (0..n).map(|_| {
-            let h = rng.f64_range(50.0, 200.0);
-            let l = rng.f64_range(50.0, h);
-            acceleration_deceleration::HlBar { high: h, low: l }
-        }).collect();
+        let bars: Vec<acceleration_deceleration::HlBar> = (0..n)
+            .map(|_| {
+                let h = rng.f64_range(50.0, 200.0);
+                let l = rng.f64_range(50.0, h);
+                acceleration_deceleration::HlBar { high: h, low: l }
+            })
+            .collect();
         let r = acceleration_deceleration::compute(&bars);
         assert_eq!(r.ao.len(), bars.len(), "iter {it} ao len");
         assert_eq!(r.ac.len(), bars.len(), "iter {it} ac len");
-        for v in &r.ao { assert_finite_opt(v, "ao"); }
-        for v in &r.ac { assert_finite_opt(v, "ac"); }
+        for v in &r.ao {
+            assert_finite_opt(v, "ao");
+        }
+        for v in &r.ac {
+            assert_finite_opt(v, "ac");
+        }
     }
 }
 
@@ -293,7 +364,8 @@ fn fuzz_acceleration_deceleration() {
 #[test]
 fn fuzz_atr_cone() {
     let mut rng = Lcg::new(0x4E_5C_0A_E1);
-    for it in 0..ITERS / 4 {  // smaller suite — each call alloc up to 1000 entries
+    for it in 0..ITERS / 4 {
+        // smaller suite — each call alloc up to 1000 entries
         let entry = rng.pick_pathological_f64();
         let atr = rng.pick_pathological_f64();
         // Mostly bounded, occasionally hostile.
@@ -304,8 +376,14 @@ fn fuzz_atr_cone() {
             _ => rng.range_usize(50),
         };
         let out = atr_cone::project(entry, atr, horizon);
-        assert!(out.len() <= 1001, "iter {it} unbounded growth: {}", out.len());
-        for p in &out { assert!(p.days_forward < out.len()); }
+        assert!(
+            out.len() <= 1001,
+            "iter {it} unbounded growth: {}",
+            out.len()
+        );
+        for p in &out {
+            assert!(p.days_forward < out.len());
+        }
     }
 }
 
@@ -317,22 +395,32 @@ fn fuzz_breakout_detector() {
     let mut rng = Lcg::new(0xB7E4_007);
     for it in 0..ITERS {
         let n = rng.range_usize(64);
-        let bars: Vec<breakout_detector::OhlcBar> = (0..n).map(|_| {
-            if rng.next_u64() % 5 == 0 {
-                breakout_detector::OhlcBar {
-                    high: rng.pick_pathological_f64(),
-                    low:  rng.pick_pathological_f64(),
-                    close: rng.pick_pathological_f64(),
+        let bars: Vec<breakout_detector::OhlcBar> = (0..n)
+            .map(|_| {
+                if rng.next_u64() % 5 == 0 {
+                    breakout_detector::OhlcBar {
+                        high: rng.pick_pathological_f64(),
+                        low: rng.pick_pathological_f64(),
+                        close: rng.pick_pathological_f64(),
+                    }
+                } else {
+                    let h = rng.f64_range(50.0, 200.0);
+                    let l = rng.f64_range(50.0, h);
+                    let c = rng.f64_range(l, h);
+                    breakout_detector::OhlcBar {
+                        high: h,
+                        low: l,
+                        close: c,
+                    }
                 }
-            } else {
-                let h = rng.f64_range(50.0, 200.0);
-                let l = rng.f64_range(50.0, h);
-                let c = rng.f64_range(l, h);
-                breakout_detector::OhlcBar { high: h, low: l, close: c }
-            }
-        }).collect();
+            })
+            .collect();
         let cfg = breakout_detector::BreakoutConfig {
-            lookback: if rng.next_u64() % 20 == 0 { usize::MAX } else { rng.range_usize(20) },
+            lookback: if rng.next_u64() % 20 == 0 {
+                usize::MAX
+            } else {
+                rng.range_usize(20)
+            },
             buffer: rng.f64_range(-1.0, 5.0),
             close_only: rng.next_u64() & 1 == 0,
         };
@@ -341,8 +429,11 @@ fn fuzz_breakout_detector() {
         for e in &r.events {
             assert!(e.bar_index < n);
             // After the NaN-window fix, reference_level must always be finite.
-            assert!(e.reference_level.is_finite(),
-                "iter {it} event ref_level non-finite: {}", e.reference_level);
+            assert!(
+                e.reference_level.is_finite(),
+                "iter {it} event ref_level non-finite: {}",
+                e.reference_level
+            );
         }
     }
 }
@@ -355,12 +446,18 @@ fn fuzz_choppiness() {
     let mut rng = Lcg::new(0xC4_0BB);
     for it in 0..ITERS {
         let n = rng.range_usize(64);
-        let bars: Vec<choppiness::OhlcBar> = (0..n).map(|_| {
-            let h = rng.f64_range(50.0, 200.0);
-            let l = rng.f64_range(50.0, h);
-            let c = rng.f64_range(l, h);
-            choppiness::OhlcBar { high: h, low: l, close: c }
-        }).collect();
+        let bars: Vec<choppiness::OhlcBar> = (0..n)
+            .map(|_| {
+                let h = rng.f64_range(50.0, 200.0);
+                let l = rng.f64_range(50.0, h);
+                let c = rng.f64_range(l, h);
+                choppiness::OhlcBar {
+                    high: h,
+                    low: l,
+                    close: c,
+                }
+            })
+            .collect();
         let period = match rng.next_u64() % 20 {
             0 => usize::MAX,
             1 => 0,
@@ -369,7 +466,9 @@ fn fuzz_choppiness() {
         };
         let r = choppiness::compute(&bars, period);
         assert_eq!(r.series.len(), bars.len(), "iter {it}");
-        for v in &r.series { assert_finite_opt(v, "ci"); }
+        for v in &r.series {
+            assert_finite_opt(v, "ci");
+        }
     }
 }
 
@@ -389,19 +488,27 @@ fn fuzz_dynamic_kelly() {
         };
         let r = dynamic_kelly::compute(&trades, window);
         // Either empty (window=0) or aligned to input length.
-        assert!(r.is_empty() || r.len() == trades.len(),
-            "iter {it} weird length {} for n={n}", r.len());
+        assert!(
+            r.is_empty() || r.len() == trades.len(),
+            "iter {it} weird length {} for n={n}",
+            r.len()
+        );
         for p in &r {
             // window_win_rate is unconditionally written — must be finite.
-            assert!(p.window_win_rate.is_finite(),
-                "iter {it} win_rate non-finite: {}", p.window_win_rate);
+            assert!(
+                p.window_win_rate.is_finite(),
+                "iter {it} win_rate non-finite: {}",
+                p.window_win_rate
+            );
             assert_finite_opt(&p.window_payoff_ratio, "payoff");
             assert_finite_opt(&p.kelly_fraction, "kelly");
             assert_finite_opt(&p.half_kelly_fraction, "half_kelly");
             // Kelly must be clamped to [-1, 1].
             if let Some(k) = p.kelly_fraction {
-                assert!((-1.0..=1.0).contains(&k),
-                    "iter {it} kelly outside [-1,1]: {k}");
+                assert!(
+                    (-1.0..=1.0).contains(&k),
+                    "iter {it} kelly outside [-1,1]: {k}"
+                );
             }
         }
     }
@@ -437,17 +544,20 @@ fn fuzz_futures_roll() {
     let today = NaiveDate::from_ymd_opt(2026, 5, 27).unwrap();
     for it in 0..ITERS {
         let m = rng.range_usize(16);
-        let positions: Vec<futures_roll::FuturesPosition> = (0..m).map(|i| {
-            // Spread expiry over a wide range to exercise sort + edge cases.
-            let day_offset = (rng.next_u64() % 1000) as i64 - 100;
-            let exp = today.checked_add_signed(chrono::Duration::days(day_offset))
-                .unwrap_or(today);
-            futures_roll::FuturesPosition {
-                symbol: format!("/X{i}"),
-                contracts: rng.pick_i64() / 1000,
-                expiration: exp,
-            }
-        }).collect();
+        let positions: Vec<futures_roll::FuturesPosition> = (0..m)
+            .map(|i| {
+                // Spread expiry over a wide range to exercise sort + edge cases.
+                let day_offset = (rng.next_u64() % 1000) as i64 - 100;
+                let exp = today
+                    .checked_add_signed(chrono::Duration::days(day_offset))
+                    .unwrap_or(today);
+                futures_roll::FuturesPosition {
+                    symbol: format!("/X{i}"),
+                    contracts: rng.pick_i64() / 1000,
+                    expiration: exp,
+                }
+            })
+            .collect();
         // Hostile window values to exercise saturating_mul fix.
         let window = match rng.next_u64() % 10 {
             0 => i64::MAX,
@@ -460,8 +570,12 @@ fn fuzz_futures_roll() {
         assert_eq!(r.rows.len(), m, "iter {it}");
         // Rows must be sorted ascending by days_to_expiry.
         for w in r.rows.windows(2) {
-            assert!(w[0].days_to_expiry <= w[1].days_to_expiry,
-                "iter {it} unsorted: {} then {}", w[0].days_to_expiry, w[1].days_to_expiry);
+            assert!(
+                w[0].days_to_expiry <= w[1].days_to_expiry,
+                "iter {it} unsorted: {} then {}",
+                w[0].days_to_expiry,
+                w[1].days_to_expiry
+            );
         }
     }
 }
@@ -478,8 +592,10 @@ fn fuzz_correlation_pearson_beta() {
         let b: Vec<f64> = (0..n).map(|_| rng.f64_range(-1.0, 1.0)).collect();
         if let Some(p) = correlation::pearson(&a, &b) {
             assert!(p.is_finite(), "iter {it} pearson non-finite: {p}");
-            assert!((-1.0..=1.0).contains(&p) || p.abs() <= 1.0 + 1e-9,
-                "iter {it} pearson outside [-1,1]: {p}");
+            assert!(
+                (-1.0..=1.0).contains(&p) || p.abs() <= 1.0 + 1e-9,
+                "iter {it} pearson outside [-1,1]: {p}"
+            );
         }
         if let Some(b_v) = correlation::beta(&a, &b) {
             assert!(b_v.is_finite(), "iter {it} beta non-finite");
@@ -516,22 +632,24 @@ fn fuzz_portfolio_heat() {
     let mut rng = Lcg::new(0x4E_A7);
     for it in 0..ITERS {
         let np = rng.range_usize(8);
-        let positions: Vec<portfolio_heat::OpenRiskPosition> = (0..np).map(|i| {
-            portfolio_heat::OpenRiskPosition {
+        let positions: Vec<portfolio_heat::OpenRiskPosition> = (0..np)
+            .map(|i| portfolio_heat::OpenRiskPosition {
                 symbol: format!("S{i}"),
                 dollar_risk: rng.f64_range(0.0, 10_000.0),
-            }
-        }).collect();
+            })
+            .collect();
         let nc = rng.range_usize(8);
-        let corrs: Vec<portfolio_heat::CorrEdge> = (0..nc).map(|_| {
-            let a = rng.range_usize(np.max(1));
-            let b = rng.range_usize(np.max(1));
-            portfolio_heat::CorrEdge {
-                a: format!("S{a}"),
-                b: format!("S{b}"),
-                corr: rng.f64_range(-1.0, 1.0),
-            }
-        }).collect();
+        let corrs: Vec<portfolio_heat::CorrEdge> = (0..nc)
+            .map(|_| {
+                let a = rng.range_usize(np.max(1));
+                let b = rng.range_usize(np.max(1));
+                portfolio_heat::CorrEdge {
+                    a: format!("S{a}"),
+                    b: format!("S{b}"),
+                    corr: rng.f64_range(-1.0, 1.0),
+                }
+            })
+            .collect();
         let candidate = portfolio_heat::CandidateTrade {
             symbol: format!("S{}", rng.range_usize(np.max(1) + 1)),
             dollar_risk: rng.f64_range(0.0, 5_000.0),
@@ -585,12 +703,24 @@ fn fuzz_ulcer_index() {
     for it in 0..ITERS {
         let n = rng.range_usize(64);
         let equity: Vec<f64> = (0..n).map(|_| rng.f64_range(1_000.0, 50_000.0)).collect();
-        let rf = if rng.next_u64() & 1 == 0 { None } else { Some(rng.f64_range(-10.0, 20.0)) };
+        let rf = if rng.next_u64() & 1 == 0 {
+            None
+        } else {
+            Some(rng.f64_range(-10.0, 20.0))
+        };
         let r = ulcer_index::compute(&equity, rf);
         assert!(r.ulcer_index.is_finite(), "iter {it} UI");
-        assert!(r.ulcer_index >= 0.0, "iter {it} UI negative: {}", r.ulcer_index);
+        assert!(
+            r.ulcer_index >= 0.0,
+            "iter {it} UI negative: {}",
+            r.ulcer_index
+        );
         assert!(r.max_drawdown_pct.is_finite(), "iter {it} maxdd");
-        assert!(r.max_drawdown_pct >= 0.0, "iter {it} maxdd negative: {}", r.max_drawdown_pct);
+        assert!(
+            r.max_drawdown_pct >= 0.0,
+            "iter {it} maxdd negative: {}",
+            r.max_drawdown_pct
+        );
         assert_finite_opt(&r.upi, "upi");
     }
 }
@@ -601,7 +731,8 @@ fn fuzz_ulcer_index() {
 #[test]
 fn fuzz_monte_carlo() {
     let mut rng = Lcg::new(0x_70_8C);
-    for it in 0..ITERS / 20 {  // each call iterates a lot
+    for it in 0..ITERS / 20 {
+        // each call iterates a lot
         let nh = rng.range_usize(16) + 1;
         let history: Vec<f64> = (0..nh).map(|_| rng.f64_range(-500.0, 500.0)).collect();
         let cfg = monte_carlo::McConfig {
@@ -614,10 +745,16 @@ fn fuzz_monte_carlo() {
         if let Some(r) = monte_carlo::simulate(&history, &cfg) {
             assert!(r.mean_ending_equity.is_finite(), "iter {it} mean");
             assert!(r.probability_of_ruin.is_finite(), "iter {it} ruin");
-            assert!((0.0..=1.0).contains(&r.probability_of_ruin),
-                "iter {it} ruin out of range: {}", r.probability_of_ruin);
-            assert!((0.0..=1.0).contains(&r.probability_profitable),
-                "iter {it} profit out of range: {}", r.probability_profitable);
+            assert!(
+                (0.0..=1.0).contains(&r.probability_of_ruin),
+                "iter {it} ruin out of range: {}",
+                r.probability_of_ruin
+            );
+            assert!(
+                (0.0..=1.0).contains(&r.probability_profitable),
+                "iter {it} profit out of range: {}",
+                r.probability_profitable
+            );
             // Percentiles must be monotonic.
             assert!(r.ending_equity_p05 <= r.ending_equity_p25);
             assert!(r.ending_equity_p25 <= r.ending_equity_p50);
@@ -660,14 +797,21 @@ fn fuzz_put_call_ratio() {
 #[test]
 fn fuzz_random_walk_index() {
     let mut rng = Lcg::new(0x_4B7A);
-    for it in 0..ITERS / 4 {  // RWI has O(n*N) cost — keep iters modest
+    for it in 0..ITERS / 4 {
+        // RWI has O(n*N) cost — keep iters modest
         let n = rng.range_usize(40);
-        let bars: Vec<random_walk_index::OhlcBar> = (0..n).map(|_| {
-            let h = rng.f64_range(50.0, 200.0);
-            let l = rng.f64_range(50.0, h);
-            let c = rng.f64_range(l, h);
-            random_walk_index::OhlcBar { high: h, low: l, close: c }
-        }).collect();
+        let bars: Vec<random_walk_index::OhlcBar> = (0..n)
+            .map(|_| {
+                let h = rng.f64_range(50.0, 200.0);
+                let l = rng.f64_range(50.0, h);
+                let c = rng.f64_range(l, h);
+                random_walk_index::OhlcBar {
+                    high: h,
+                    low: l,
+                    close: c,
+                }
+            })
+            .collect();
         let max_n = match rng.next_u64() % 10 {
             0 => 0,
             1 => 1,
@@ -677,8 +821,12 @@ fn fuzz_random_walk_index() {
         let r = random_walk_index::compute(&bars, max_n);
         assert_eq!(r.rwi_high.len(), n, "iter {it} high len");
         assert_eq!(r.rwi_low.len(), n, "iter {it} low len");
-        for v in &r.rwi_high { assert_finite_opt(v, "rwi_high"); }
-        for v in &r.rwi_low  { assert_finite_opt(v, "rwi_low"); }
+        for v in &r.rwi_high {
+            assert_finite_opt(v, "rwi_high");
+        }
+        for v in &r.rwi_low {
+            assert_finite_opt(v, "rwi_low");
+        }
     }
 }
 
@@ -690,13 +838,20 @@ fn fuzz_order_block() {
     let mut rng = Lcg::new(0x_0_8_DE_F);
     for it in 0..ITERS {
         let n = rng.range_usize(32);
-        let bars: Vec<order_block::OhlcBar> = (0..n).map(|_| {
-            let h = rng.f64_range(50.0, 200.0);
-            let l = rng.f64_range(50.0, h);
-            let o = rng.f64_range(l, h);
-            let c = rng.f64_range(l, h);
-            order_block::OhlcBar { open: o, high: h, low: l, close: c }
-        }).collect();
+        let bars: Vec<order_block::OhlcBar> = (0..n)
+            .map(|_| {
+                let h = rng.f64_range(50.0, 200.0);
+                let l = rng.f64_range(50.0, h);
+                let o = rng.f64_range(l, h);
+                let c = rng.f64_range(l, h);
+                order_block::OhlcBar {
+                    open: o,
+                    high: h,
+                    low: l,
+                    close: c,
+                }
+            })
+            .collect();
         let cfg = order_block::OrderBlockConfig {
             expansion_window: match rng.next_u64() % 12 {
                 0 => usize::MAX,
@@ -710,8 +865,12 @@ fn fuzz_order_block() {
         for b in &r.blocks {
             assert!(b.bar_index < n);
             assert!(b.expansion_magnitude.is_finite());
-            assert!(b.zone_high >= b.zone_low,
-                "iter {it} zone inverted: high={} low={}", b.zone_high, b.zone_low);
+            assert!(
+                b.zone_high >= b.zone_low,
+                "iter {it} zone inverted: high={} low={}",
+                b.zone_high,
+                b.zone_low
+            );
         }
     }
 }
@@ -724,22 +883,29 @@ fn fuzz_displacement() {
     let mut rng = Lcg::new(0x_D15_AA);
     for it in 0..ITERS {
         let n = rng.range_usize(48);
-        let bars: Vec<displacement::OhlcBar> = (0..n).map(|_| {
-            if rng.next_u64() % 8 == 0 {
-                displacement::OhlcBar {
-                    open: rng.pick_pathological_f64(),
-                    high: rng.pick_pathological_f64(),
-                    low:  rng.pick_pathological_f64(),
-                    close: rng.pick_pathological_f64(),
+        let bars: Vec<displacement::OhlcBar> = (0..n)
+            .map(|_| {
+                if rng.next_u64() % 8 == 0 {
+                    displacement::OhlcBar {
+                        open: rng.pick_pathological_f64(),
+                        high: rng.pick_pathological_f64(),
+                        low: rng.pick_pathological_f64(),
+                        close: rng.pick_pathological_f64(),
+                    }
+                } else {
+                    let h = rng.f64_range(50.0, 200.0);
+                    let l = rng.f64_range(50.0, h);
+                    let o = rng.f64_range(l, h);
+                    let c = rng.f64_range(l, h);
+                    displacement::OhlcBar {
+                        open: o,
+                        high: h,
+                        low: l,
+                        close: c,
+                    }
                 }
-            } else {
-                let h = rng.f64_range(50.0, 200.0);
-                let l = rng.f64_range(50.0, h);
-                let o = rng.f64_range(l, h);
-                let c = rng.f64_range(l, h);
-                displacement::OhlcBar { open: o, high: h, low: l, close: c }
-            }
-        }).collect();
+            })
+            .collect();
         let atr: Vec<f64> = (0..n).map(|_| rng.pick_pathological_f64()).collect();
         let cfg = displacement::DisplacementConfig {
             min_atrs: rng.f64_range(-1.0, 5.0),
@@ -762,17 +928,27 @@ fn fuzz_fair_value_gap() {
     let mut rng = Lcg::new(0x_F4_06_AB);
     for it in 0..ITERS {
         let n = rng.range_usize(48);
-        let bars: Vec<fair_value_gap::OhlcBar> = (0..n).map(|_| {
-            let h = rng.f64_range(50.0, 200.0);
-            let l = rng.f64_range(50.0, h);
-            let c = rng.f64_range(l, h);
-            fair_value_gap::OhlcBar { high: h, low: l, close: c }
-        }).collect();
+        let bars: Vec<fair_value_gap::OhlcBar> = (0..n)
+            .map(|_| {
+                let h = rng.f64_range(50.0, 200.0);
+                let l = rng.f64_range(50.0, h);
+                let c = rng.f64_range(l, h);
+                fair_value_gap::OhlcBar {
+                    high: h,
+                    low: l,
+                    close: c,
+                }
+            })
+            .collect();
         let r = fair_value_gap::detect(&bars);
         for g in &r.gaps {
             assert!(g.formed_at < n, "iter {it}");
-            assert!(g.gap_high >= g.gap_low,
-                "iter {it} gap inverted: high={} low={}", g.gap_high, g.gap_low);
+            assert!(
+                g.gap_high >= g.gap_low,
+                "iter {it} gap inverted: high={} low={}",
+                g.gap_high,
+                g.gap_low
+            );
             if let Some(f) = g.filled_at {
                 assert!(f < n);
                 assert!(f > g.formed_at, "iter {it} filled before formed");
@@ -793,27 +969,45 @@ fn fuzz_vsa() {
     let mut rng = Lcg::new(0x_DE_AD_F0);
     for it in 0..ITERS {
         let n = rng.range_usize(64);
-        let bars: Vec<vsa::VsaBar> = (0..n).map(|_| {
-            let h = rng.f64_range(50.0, 200.0);
-            let l = rng.f64_range(50.0, h);
-            let c = rng.f64_range(l, h);
-            let o = rng.f64_range(l, h);
-            let v = rng.f64_range(0.0, 1_000_000.0);
-            vsa::VsaBar { open: o, high: h, low: l, close: c, volume: v }
-        }).collect();
+        let bars: Vec<vsa::VsaBar> = (0..n)
+            .map(|_| {
+                let h = rng.f64_range(50.0, 200.0);
+                let l = rng.f64_range(50.0, h);
+                let c = rng.f64_range(l, h);
+                let o = rng.f64_range(l, h);
+                let v = rng.f64_range(0.0, 1_000_000.0);
+                vsa::VsaBar {
+                    open: o,
+                    high: h,
+                    low: l,
+                    close: c,
+                    volume: v,
+                }
+            })
+            .collect();
         let avg_volume: Vec<f64> = (0..n).map(|_| rng.f64_range(0.0, 500_000.0)).collect();
         let r = vsa::classify(&bars, &avg_volume);
         assert_eq!(r.n_events, r.events.len(), "iter {it}");
         for e in &r.events {
             assert!(e.bar_index < n);
-            assert!(e.spread.is_finite() && e.spread >= 0.0, "iter {it} spread {}", e.spread);
-            assert!(e.volume_ratio.is_finite() && e.volume_ratio >= 0.0,
-                "iter {it} vol_ratio {}", e.volume_ratio);
+            assert!(
+                e.spread.is_finite() && e.spread >= 0.0,
+                "iter {it} spread {}",
+                e.spread
+            );
+            assert!(
+                e.volume_ratio.is_finite() && e.volume_ratio >= 0.0,
+                "iter {it} vol_ratio {}",
+                e.volume_ratio
+            );
             assert!(e.close_position.is_finite(), "iter {it} close_pos");
             // close_position should be in [0, 1] for valid bars (close in [low, high]).
             // Bars we generate always satisfy this.
-            assert!((0.0..=1.0 + 1e-9).contains(&e.close_position),
-                "iter {it} close_position out of range: {}", e.close_position);
+            assert!(
+                (0.0..=1.0 + 1e-9).contains(&e.close_position),
+                "iter {it} close_position out of range: {}",
+                e.close_position
+            );
         }
     }
 }
@@ -851,12 +1045,18 @@ fn fuzz_stop_hunt() {
     let mut rng = Lcg::new(0x_5_70_9_4A);
     for it in 0..ITERS {
         let n = rng.range_usize(64);
-        let bars: Vec<stop_hunt::OhlcBar> = (0..n).map(|_| {
-            let h = rng.f64_range(50.0, 200.0);
-            let l = rng.f64_range(50.0, h);
-            let c = rng.f64_range(l, h);
-            stop_hunt::OhlcBar { high: h, low: l, close: c }
-        }).collect();
+        let bars: Vec<stop_hunt::OhlcBar> = (0..n)
+            .map(|_| {
+                let h = rng.f64_range(50.0, 200.0);
+                let l = rng.f64_range(50.0, h);
+                let c = rng.f64_range(l, h);
+                stop_hunt::OhlcBar {
+                    high: h,
+                    low: l,
+                    close: c,
+                }
+            })
+            .collect();
         let cfg = stop_hunt::StopHuntConfig {
             lookback: match rng.next_u64() % 20 {
                 0 => usize::MAX,
@@ -869,8 +1069,11 @@ fn fuzz_stop_hunt() {
         let r = stop_hunt::detect(&bars, &cfg);
         for e in &r.events {
             assert!(e.bar_index < n, "iter {it}");
-            assert!(e.reversal_pct.is_finite() && (0.0..=1.0 + 1e-9).contains(&e.reversal_pct),
-                "iter {it} reversal_pct out of range: {}", e.reversal_pct);
+            assert!(
+                e.reversal_pct.is_finite() && (0.0..=1.0 + 1e-9).contains(&e.reversal_pct),
+                "iter {it} reversal_pct out of range: {}",
+                e.reversal_pct
+            );
         }
     }
 }
@@ -883,12 +1086,18 @@ fn fuzz_range_expansion() {
     let mut rng = Lcg::new(0x_4A_6_8E_C);
     for it in 0..ITERS {
         let n = rng.range_usize(64);
-        let bars: Vec<range_expansion::OhlcBar> = (0..n).map(|_| {
-            let h = rng.f64_range(50.0, 200.0);
-            let l = rng.f64_range(50.0, h);
-            let c = rng.f64_range(l, h);
-            range_expansion::OhlcBar { high: h, low: l, close: c }
-        }).collect();
+        let bars: Vec<range_expansion::OhlcBar> = (0..n)
+            .map(|_| {
+                let h = rng.f64_range(50.0, 200.0);
+                let l = rng.f64_range(50.0, h);
+                let c = rng.f64_range(l, h);
+                range_expansion::OhlcBar {
+                    high: h,
+                    low: l,
+                    close: c,
+                }
+            })
+            .collect();
         let atr: Vec<f64> = (0..n).map(|_| rng.f64_range(0.1, 10.0)).collect();
         let cfg = range_expansion::ExpansionConfig {
             lookback: match rng.next_u64() % 20 {
@@ -937,12 +1146,12 @@ fn fuzz_volume_burst() {
     let mut rng = Lcg::new(0x_B0_1BA);
     for it in 0..ITERS {
         let n = rng.range_usize(64);
-        let bars: Vec<volume_burst::VolumeBar> = (0..n).map(|_| {
-            volume_burst::VolumeBar {
+        let bars: Vec<volume_burst::VolumeBar> = (0..n)
+            .map(|_| volume_burst::VolumeBar {
                 volume: rng.f64_range(0.0, 100_000.0),
                 close: rng.f64_range(10.0, 200.0),
-            }
-        }).collect();
+            })
+            .collect();
         let cfg = volume_burst::BurstConfig {
             lookback: match rng.next_u64() % 12 {
                 0 => 0,
@@ -971,9 +1180,15 @@ fn fuzz_coppock() {
         let n = rng.range_usize(80);
         // Mostly-positive prices; occasionally inject zeros to exercise the
         // (price[i]-price[i-roc])/price[i-roc] division-by-zero risk.
-        let closes: Vec<f64> = (0..n).map(|_| {
-            if rng.next_u64() % 10 == 0 { 0.0 } else { rng.f64_range(10.0, 200.0) }
-        }).collect();
+        let closes: Vec<f64> = (0..n)
+            .map(|_| {
+                if rng.next_u64() % 10 == 0 {
+                    0.0
+                } else {
+                    rng.f64_range(10.0, 200.0)
+                }
+            })
+            .collect();
         let roc1 = match rng.next_u64() % 10 {
             0 => 0,
             1 => usize::MAX,
@@ -992,7 +1207,11 @@ fn fuzz_coppock() {
         let out = coppock::compute(&closes, roc1, roc2, wma);
         assert_eq!(out.len(), n, "iter {it}");
         for v in &out {
-            assert!(v.is_finite(), "iter {it} coppock {} (price hit 0 → div-by-zero)", v);
+            assert!(
+                v.is_finite(),
+                "iter {it} coppock {} (price hit 0 → div-by-zero)",
+                v
+            );
         }
     }
 }
@@ -1005,17 +1224,27 @@ fn fuzz_three_bar_reversal() {
     let mut rng = Lcg::new(0x_38_AA_4A);
     for it in 0..ITERS {
         let n = rng.range_usize(32);
-        let bars: Vec<three_bar_reversal::OhlcBar> = (0..n).map(|_| {
-            let h = rng.f64_range(50.0, 200.0);
-            let l = rng.f64_range(50.0, h);
-            let o = rng.f64_range(l, h);
-            let c = rng.f64_range(l, h);
-            three_bar_reversal::OhlcBar { open: o, high: h, low: l, close: c }
-        }).collect();
+        let bars: Vec<three_bar_reversal::OhlcBar> = (0..n)
+            .map(|_| {
+                let h = rng.f64_range(50.0, 200.0);
+                let l = rng.f64_range(50.0, h);
+                let o = rng.f64_range(l, h);
+                let c = rng.f64_range(l, h);
+                three_bar_reversal::OhlcBar {
+                    open: o,
+                    high: h,
+                    low: l,
+                    close: c,
+                }
+            })
+            .collect();
         let r = three_bar_reversal::detect(&bars);
         for e in &r.events {
             assert!(e.bar_index < n, "iter {it}");
-            assert!(e.bar1_open.is_finite() && e.bar3_close.is_finite(), "iter {it}");
+            assert!(
+                e.bar1_open.is_finite() && e.bar3_close.is_finite(),
+                "iter {it}"
+            );
         }
     }
 }
@@ -1034,14 +1263,19 @@ fn fuzz_sortino() {
         let annualization = rng.f64_range(-100.0, 252.0);
         let r = sortino::compute(&returns, mar, annualization);
         assert!(r.mean_return.is_finite(), "iter {it} mean");
-        assert!(r.downside_deviation.is_finite() && r.downside_deviation >= 0.0,
-            "iter {it} dd {}", r.downside_deviation);
+        assert!(
+            r.downside_deviation.is_finite() && r.downside_deviation >= 0.0,
+            "iter {it} dd {}",
+            r.downside_deviation
+        );
         // sortino_ratio is Option<f64>; None is acceptable (degenerate
         // input — empty series or all-zero downside). When Some, infinite
         // values are acceptable (all-positive series); NaN is not.
         if let Some(sr) = r.sortino_ratio {
-            assert!(!sr.is_nan(),
-                "iter {it} NaN sortino with ann={annualization}");
+            assert!(
+                !sr.is_nan(),
+                "iter {it} NaN sortino with ann={annualization}"
+            );
         }
     }
 }
@@ -1054,14 +1288,17 @@ fn fuzz_sharpe_by_window() {
     let mut rng = Lcg::new(0x_5_A_E_8E);
     for it in 0..ITERS / 4 {
         let n = rng.range_usize(50);
-        let returns: Vec<sharpe_by_window::TradeReturn> = (0..n).map(|i| {
-            sharpe_by_window::TradeReturn {
-                when: Utc.with_ymd_and_hms(2026, 1, 1, (i % 24) as u32, 0, 0).unwrap(),
+        let returns: Vec<sharpe_by_window::TradeReturn> = (0..n)
+            .map(|i| sharpe_by_window::TradeReturn {
+                when: Utc
+                    .with_ymd_and_hms(2026, 1, 1, (i % 24) as u32, 0, 0)
+                    .unwrap(),
                 r: rng.f64_range(-5.0, 5.0),
-            }
-        }).collect();
+            })
+            .collect();
         let annualization = rng.f64_range(-100.0, 252.0);
-        let out = sharpe_by_window::by(&returns, sharpe_by_window::Bucket::HourOfDay, annualization);
+        let out =
+            sharpe_by_window::by(&returns, sharpe_by_window::Bucket::HourOfDay, annualization);
         for s in &out {
             assert!(s.mean_r.is_finite(), "iter {it} mean");
             assert!(s.stdev_r.is_finite() && s.stdev_r >= 0.0, "iter {it} stdev");
@@ -1083,10 +1320,14 @@ fn fuzz_treynor_information_ratio() {
         let annualization = rng.f64_range(-100.0, 252.0);
         if let Some(r) = treynor::information_ratio(&p, &b, annualization) {
             assert!(r.mean_active_return.is_finite(), "iter {it} mean");
-            assert!(r.tracking_error.is_finite() && r.tracking_error >= 0.0,
-                "iter {it} te");
-            assert!(!r.information_ratio.is_nan(),
-                "iter {it} NaN IR with ann={annualization}");
+            assert!(
+                r.tracking_error.is_finite() && r.tracking_error >= 0.0,
+                "iter {it} te"
+            );
+            assert!(
+                !r.information_ratio.is_nan(),
+                "iter {it} NaN IR with ann={annualization}"
+            );
         }
     }
 }
@@ -1111,7 +1352,10 @@ fn fuzz_premium_discount() {
         // side non-finite). Verify the early-return guard catches all bad
         // ranges so the report is always trustworthy.
         if r.note != "invalid range" {
-            assert!(r.midpoint.is_finite(), "iter {it} midpoint non-finite but range not flagged");
+            assert!(
+                r.midpoint.is_finite(),
+                "iter {it} midpoint non-finite but range not flagged"
+            );
         }
     }
 }
@@ -1124,16 +1368,26 @@ fn fuzz_range_contraction() {
     let mut rng = Lcg::new(0x_4_C_0_A_77);
     for it in 0..ITERS {
         let n = rng.range_usize(64);
-        let bars: Vec<range_contraction::OhlcBar> = (0..n).map(|_| {
-            let h = rng.f64_range(50.0, 200.0);
-            let l = rng.f64_range(50.0, h);
-            let c = rng.f64_range(l, h);
-            range_contraction::OhlcBar { high: h, low: l, close: c }
-        }).collect();
+        let bars: Vec<range_contraction::OhlcBar> = (0..n)
+            .map(|_| {
+                let h = rng.f64_range(50.0, 200.0);
+                let l = rng.f64_range(50.0, h);
+                let c = rng.f64_range(l, h);
+                range_contraction::OhlcBar {
+                    high: h,
+                    low: l,
+                    close: c,
+                }
+            })
+            .collect();
         let r = range_contraction::detect(&bars);
         for h in &r.hits {
             assert!(h.bar_index < n, "iter {it}");
-            assert!(h.range.is_finite() && h.range >= 0.0, "iter {it} range {}", h.range);
+            assert!(
+                h.range.is_finite() && h.range >= 0.0,
+                "iter {it} range {}",
+                h.range
+            );
         }
     }
 }
@@ -1146,18 +1400,26 @@ fn fuzz_volatility_stop() {
     let mut rng = Lcg::new(0x_5_70_44_70);
     for it in 0..ITERS {
         let n = rng.range_usize(64);
-        let bars: Vec<volatility_stop::Bar> = (0..n).map(|_| {
-            let h = rng.f64_range(50.0, 200.0);
-            let l = rng.f64_range(50.0, h);
-            let c = rng.f64_range(l, h);
-            volatility_stop::Bar { high: h, low: l, close: c }
-        }).collect();
+        let bars: Vec<volatility_stop::Bar> = (0..n)
+            .map(|_| {
+                let h = rng.f64_range(50.0, 200.0);
+                let l = rng.f64_range(50.0, h);
+                let c = rng.f64_range(l, h);
+                volatility_stop::Bar {
+                    high: h,
+                    low: l,
+                    close: c,
+                }
+            })
+            .collect();
         // Deliberately desync ATR length from bars half the time to make
         // sure the new guard catches mismatched arrays without panicking.
         let atr: Vec<f64> = if rng.next_u64() & 1 == 0 {
             (0..n).map(|_| rng.f64_range(0.1, 5.0)).collect()
         } else {
-            (0..rng.range_usize(n.max(1) * 2)).map(|_| rng.f64_range(0.1, 5.0)).collect()
+            (0..rng.range_usize(n.max(1) * 2))
+                .map(|_| rng.f64_range(0.1, 5.0))
+                .collect()
         };
         let cfg = volatility_stop::StopConfig {
             lookback: match rng.next_u64() % 12 {
@@ -1167,7 +1429,11 @@ fn fuzz_volatility_stop() {
             },
             atr_multiplier: rng.f64_range(-1.0, 5.0),
         };
-        let side = if rng.next_u64() & 1 == 0 { TradeSide::Long } else { TradeSide::Short };
+        let side = if rng.next_u64() & 1 == 0 {
+            TradeSide::Long
+        } else {
+            TradeSide::Short
+        };
         let _ = volatility_stop::chandelier(&bars, &atr, side, &cfg);
         let _ = volatility_stop::vol_stop_close(&bars, &atr, side, &cfg);
         let _ = it;
@@ -1182,12 +1448,12 @@ fn fuzz_anchored_vwap() {
     let mut rng = Lcg::new(0x_A_57_D7);
     for it in 0..ITERS {
         let n = rng.range_usize(64);
-        let bars: Vec<anchored_vwap::Bar> = (0..n).map(|_| {
-            anchored_vwap::Bar {
+        let bars: Vec<anchored_vwap::Bar> = (0..n)
+            .map(|_| anchored_vwap::Bar {
                 typical: rng.f64_range(10.0, 500.0),
                 volume: rng.f64_range(-1000.0, 100_000.0),
-            }
-        }).collect();
+            })
+            .collect();
         let anchor = match rng.next_u64() % 10 {
             0 => usize::MAX,
             1 => 0,
@@ -1211,16 +1477,22 @@ fn fuzz_awesome_oscillator() {
     let mut rng = Lcg::new(0x_A_05_C);
     for it in 0..ITERS {
         let n = rng.range_usize(80);
-        let bars: Vec<awesome_oscillator::Bar> = (0..n).map(|_| {
-            let h = rng.f64_range(50.0, 200.0);
-            let l = rng.f64_range(50.0, h);
-            awesome_oscillator::Bar { high: h, low: l }
-        }).collect();
+        let bars: Vec<awesome_oscillator::Bar> = (0..n)
+            .map(|_| {
+                let h = rng.f64_range(50.0, 200.0);
+                let l = rng.f64_range(50.0, h);
+                awesome_oscillator::Bar { high: h, low: l }
+            })
+            .collect();
         let short_p = match rng.next_u64() % 8 {
-            0 => 0, 1 => usize::MAX, _ => rng.range_usize(10) + 1,
+            0 => 0,
+            1 => usize::MAX,
+            _ => rng.range_usize(10) + 1,
         };
         let long_p = match rng.next_u64() % 8 {
-            0 => 0, 1 => usize::MAX, _ => rng.range_usize(40) + 1,
+            0 => 0,
+            1 => usize::MAX,
+            _ => rng.range_usize(40) + 1,
         };
         let out = awesome_oscillator::compute(&bars, short_p, long_p);
         assert_eq!(out.len(), n, "iter {it}");
@@ -1238,22 +1510,34 @@ fn fuzz_opening_range() {
     let mut rng = Lcg::new(0x_0_5B_07);
     for it in 0..ITERS {
         let n = rng.range_usize(64);
-        let bars: Vec<opening_range::OhlcBar> = (0..n).map(|_| {
-            let h = rng.f64_range(50.0, 200.0);
-            let l = rng.f64_range(50.0, h);
-            let c = rng.f64_range(l, h);
-            opening_range::OhlcBar { high: h, low: l, close: c }
-        }).collect();
+        let bars: Vec<opening_range::OhlcBar> = (0..n)
+            .map(|_| {
+                let h = rng.f64_range(50.0, 200.0);
+                let l = rng.f64_range(50.0, h);
+                let c = rng.f64_range(l, h);
+                opening_range::OhlcBar {
+                    high: h,
+                    low: l,
+                    close: c,
+                }
+            })
+            .collect();
         let cfg = opening_range::OrbConfig {
             opening_bars: match rng.next_u64() % 12 {
-                0 => 0, 1 => usize::MAX, _ => rng.range_usize(20),
+                0 => 0,
+                1 => usize::MAX,
+                _ => rng.range_usize(20),
             },
             atr: rng.pick_pathological_f64(),
             close_only: rng.next_u64() & 1 == 0,
         };
         let r = opening_range::detect(&bars, &cfg);
-        if let Some(b) = r.upper_break { assert!(b.bar_index < n, "iter {it}"); }
-        if let Some(b) = r.lower_break { assert!(b.bar_index < n, "iter {it}"); }
+        if let Some(b) = r.upper_break {
+            assert!(b.bar_index < n, "iter {it}");
+        }
+        if let Some(b) = r.lower_break {
+            assert!(b.bar_index < n, "iter {it}");
+        }
     }
 }
 
@@ -1265,16 +1549,24 @@ fn fuzz_supertrend() {
     let mut rng = Lcg::new(0x_5_F0_E4);
     for it in 0..ITERS {
         let n = rng.range_usize(64);
-        let bars: Vec<supertrend::Bar> = (0..n).map(|_| {
-            let h = rng.f64_range(50.0, 200.0);
-            let l = rng.f64_range(50.0, h);
-            let c = rng.f64_range(l, h);
-            supertrend::Bar { high: h, low: l, close: c }
-        }).collect();
+        let bars: Vec<supertrend::Bar> = (0..n)
+            .map(|_| {
+                let h = rng.f64_range(50.0, 200.0);
+                let l = rng.f64_range(50.0, h);
+                let c = rng.f64_range(l, h);
+                supertrend::Bar {
+                    high: h,
+                    low: l,
+                    close: c,
+                }
+            })
+            .collect();
         let atr: Vec<f64> = if rng.next_u64() & 1 == 0 {
             (0..n).map(|_| rng.f64_range(0.1, 5.0)).collect()
         } else {
-            (0..rng.range_usize(n.max(1) * 2)).map(|_| rng.f64_range(0.1, 5.0)).collect()
+            (0..rng.range_usize(n.max(1) * 2))
+                .map(|_| rng.f64_range(0.1, 5.0))
+                .collect()
         };
         let mult = rng.f64_range(-1.0, 5.0);
         let out = supertrend::compute(&bars, &atr, mult);
@@ -1295,7 +1587,11 @@ fn fuzz_round_levels() {
     let mut rng = Lcg::new(0x_4_0_F1_5);
     for it in 0..ITERS {
         let cur = rng.pick_pathological_f64();
-        let atr = if rng.next_u64() & 1 == 0 { None } else { Some(rng.pick_pathological_f64()) };
+        let atr = if rng.next_u64() & 1 == 0 {
+            None
+        } else {
+            Some(rng.pick_pathological_f64())
+        };
         let cfg = round_levels::LevelsConfig {
             window: rng.f64_range(-100.0, 200_000.0),
             min_weight: match rng.next_u64() % 3 {
@@ -1321,12 +1617,12 @@ fn fuzz_bond_duration() {
     let mut rng = Lcg::new(0x_B_0_07_D);
     for it in 0..ITERS {
         let n = rng.range_usize(20);
-        let cfs: Vec<bond_duration::CashFlow> = (0..n).map(|i| {
-            bond_duration::CashFlow {
+        let cfs: Vec<bond_duration::CashFlow> = (0..n)
+            .map(|i| bond_duration::CashFlow {
                 time_years: (i as f64 + 1.0) + rng.f64_range(-0.5, 0.5),
                 amount: rng.f64_range(1.0, 200.0),
-            }
-        }).collect();
+            })
+            .collect();
         // Include adversarial yields: -m (which would have given NaN via
         // 0^positive before the fix), extreme positive, etc.
         let ytm = match rng.next_u64() % 8 {
@@ -1338,16 +1634,29 @@ fn fuzz_bond_duration() {
             _ => rng.f64_range(-0.5, 0.20),
         };
         let m = match rng.next_u64() % 5 {
-            0 => 0, 1 => 1, 2 => 2, 3 => 12, _ => 4,
+            0 => 0,
+            1 => 1,
+            2 => 2,
+            3 => 12,
+            _ => 4,
         };
         let r = bond_duration::compute(&cfs, ytm, m);
         // After the guard, all numeric fields must be finite.
-        assert!(r.price.is_finite(),
-            "iter {it} price non-finite (ytm={ytm}, m={m}): {}", r.price);
-        assert!(r.macaulay_duration.is_finite(),
-            "iter {it} mac dur non-finite: {}", r.macaulay_duration);
-        assert!(r.modified_duration.is_finite(),
-            "iter {it} mod dur non-finite: {}", r.modified_duration);
+        assert!(
+            r.price.is_finite(),
+            "iter {it} price non-finite (ytm={ytm}, m={m}): {}",
+            r.price
+        );
+        assert!(
+            r.macaulay_duration.is_finite(),
+            "iter {it} mac dur non-finite: {}",
+            r.macaulay_duration
+        );
+        assert!(
+            r.modified_duration.is_finite(),
+            "iter {it} mod dur non-finite: {}",
+            r.modified_duration
+        );
     }
 }
 
@@ -1361,17 +1670,26 @@ fn fuzz_indicators_adx() {
     let mut rng = Lcg::new(0x_A_DC_8E);
     for it in 0..ITERS / 4 {
         let n = rng.range_usize(64);
-        let highs: Vec<f64>  = (0..n).map(|_| rng.f64_range(50.0, 200.0)).collect();
-        let lows: Vec<f64>   = (0..n).map(|i| highs[i] - rng.f64_range(0.0, 5.0)).collect();
+        let highs: Vec<f64> = (0..n).map(|_| rng.f64_range(50.0, 200.0)).collect();
+        let lows: Vec<f64> = (0..n).map(|i| highs[i] - rng.f64_range(0.0, 5.0)).collect();
         let closes: Vec<f64> = (0..n).map(|i| rng.f64_range(lows[i], highs[i])).collect();
         let period = match rng.next_u64() % 10 {
-            0 => 0, 1 => usize::MAX, 2 => usize::MAX - 1, _ => rng.range_usize(20) + 1,
+            0 => 0,
+            1 => usize::MAX,
+            2 => usize::MAX - 1,
+            _ => rng.range_usize(20) + 1,
         };
         let r = indicators::adx(&highs, &lows, &closes, period);
         assert_eq!(r.adx.len(), n, "iter {it} adx len");
-        for v in &r.adx { assert_finite_opt(v, "adx"); }
-        for v in &r.plus_di { assert_finite_opt(v, "+di"); }
-        for v in &r.minus_di { assert_finite_opt(v, "-di"); }
+        for v in &r.adx {
+            assert_finite_opt(v, "adx");
+        }
+        for v in &r.plus_di {
+            assert_finite_opt(v, "+di");
+        }
+        for v in &r.minus_di {
+            assert_finite_opt(v, "-di");
+        }
     }
 }
 
@@ -1383,15 +1701,20 @@ fn fuzz_indicators_atr() {
     let mut rng = Lcg::new(0x_A7_8B);
     for it in 0..ITERS / 2 {
         let n = rng.range_usize(64);
-        let highs: Vec<f64>  = (0..n).map(|_| rng.f64_range(50.0, 200.0)).collect();
-        let lows: Vec<f64>   = (0..n).map(|i| highs[i] - rng.f64_range(0.0, 5.0)).collect();
+        let highs: Vec<f64> = (0..n).map(|_| rng.f64_range(50.0, 200.0)).collect();
+        let lows: Vec<f64> = (0..n).map(|i| highs[i] - rng.f64_range(0.0, 5.0)).collect();
         let closes: Vec<f64> = (0..n).map(|i| rng.f64_range(lows[i], highs[i])).collect();
         let period = match rng.next_u64() % 10 {
-            0 => 0, 1 => usize::MAX, 2 => usize::MAX - 1, _ => rng.range_usize(20) + 1,
+            0 => 0,
+            1 => usize::MAX,
+            2 => usize::MAX - 1,
+            _ => rng.range_usize(20) + 1,
         };
         let out = indicators::atr(&highs, &lows, &closes, period);
         assert_eq!(out.len(), n, "iter {it}");
-        for v in &out { assert_finite_opt(v, "atr"); }
+        for v in &out {
+            assert_finite_opt(v, "atr");
+        }
     }
 }
 
@@ -1403,14 +1726,23 @@ fn fuzz_vortex() {
     let mut rng = Lcg::new(0x_4_07_AB);
     for it in 0..ITERS / 2 {
         let n = rng.range_usize(64);
-        let bars: Vec<vortex::Bar> = (0..n).map(|_| {
-            let h = rng.f64_range(50.0, 200.0);
-            let l = rng.f64_range(50.0, h);
-            let c = rng.f64_range(l, h);
-            vortex::Bar { high: h, low: l, close: c }
-        }).collect();
+        let bars: Vec<vortex::Bar> = (0..n)
+            .map(|_| {
+                let h = rng.f64_range(50.0, 200.0);
+                let l = rng.f64_range(50.0, h);
+                let c = rng.f64_range(l, h);
+                vortex::Bar {
+                    high: h,
+                    low: l,
+                    close: c,
+                }
+            })
+            .collect();
         let period = match rng.next_u64() % 10 {
-            0 => 0, 1 => usize::MAX, 2 => usize::MAX - 1, _ => rng.range_usize(20) + 1,
+            0 => 0,
+            1 => usize::MAX,
+            2 => usize::MAX - 1,
+            _ => rng.range_usize(20) + 1,
         };
         let out = vortex::compute(&bars, period);
         assert_eq!(out.len(), n, "iter {it}");
@@ -1429,13 +1761,18 @@ fn fuzz_aroon() {
     let mut rng = Lcg::new(0x_AA_5E_E);
     for it in 0..ITERS / 2 {
         let n = rng.range_usize(64);
-        let bars: Vec<aroon::Bar> = (0..n).map(|_| {
-            let h = rng.f64_range(50.0, 200.0);
-            let l = rng.f64_range(50.0, h);
-            aroon::Bar { high: h, low: l }
-        }).collect();
+        let bars: Vec<aroon::Bar> = (0..n)
+            .map(|_| {
+                let h = rng.f64_range(50.0, 200.0);
+                let l = rng.f64_range(50.0, h);
+                aroon::Bar { high: h, low: l }
+            })
+            .collect();
         let period = match rng.next_u64() % 10 {
-            0 => 0, 1 => usize::MAX, 2 => usize::MAX - 1, _ => rng.range_usize(20) + 1,
+            0 => 0,
+            1 => usize::MAX,
+            2 => usize::MAX - 1,
+            _ => rng.range_usize(20) + 1,
         };
         let out = aroon::compute(&bars, period);
         assert_eq!(out.len(), n, "iter {it}");
@@ -1456,16 +1793,22 @@ fn fuzz_mass_index() {
     for it in 0..ITERS / 4 {
         let n = rng.range_usize(64);
         let highs: Vec<f64> = (0..n).map(|_| rng.f64_range(50.0, 200.0)).collect();
-        let lows: Vec<f64>  = (0..n).map(|i| highs[i] - rng.f64_range(0.0, 5.0)).collect();
+        let lows: Vec<f64> = (0..n).map(|i| highs[i] - rng.f64_range(0.0, 5.0)).collect();
         let ema_p = match rng.next_u64() % 5 {
-            0 => 0, 1 => usize::MAX, _ => rng.range_usize(20) + 1,
+            0 => 0,
+            1 => usize::MAX,
+            _ => rng.range_usize(20) + 1,
         };
         let sum_p = match rng.next_u64() % 5 {
-            0 => 0, 1 => usize::MAX, _ => rng.range_usize(30) + 1,
+            0 => 0,
+            1 => usize::MAX,
+            _ => rng.range_usize(30) + 1,
         };
         let out = mass_index::compute(&highs, &lows, ema_p, sum_p);
         assert_eq!(out.len(), n, "iter {it}");
-        for v in &out { assert!(v.is_finite(), "iter {it} mi {}", v); }
+        for v in &out {
+            assert!(v.is_finite(), "iter {it} mi {}", v);
+        }
     }
 }
 
@@ -1477,18 +1820,30 @@ fn fuzz_stochastic_compute() {
     let mut rng = Lcg::new(0x_57_0C_C);
     for it in 0..ITERS {
         let n = rng.range_usize(64);
-        let bars: Vec<stochastic::Bar> = (0..n).map(|_| {
-            let h = rng.f64_range(50.0, 200.0);
-            let l = rng.f64_range(50.0, h);
-            let c = rng.f64_range(l, h);
-            stochastic::Bar { high: h, low: l, close: c }
-        }).collect();
+        let bars: Vec<stochastic::Bar> = (0..n)
+            .map(|_| {
+                let h = rng.f64_range(50.0, 200.0);
+                let l = rng.f64_range(50.0, h);
+                let c = rng.f64_range(l, h);
+                stochastic::Bar {
+                    high: h,
+                    low: l,
+                    close: c,
+                }
+            })
+            .collect();
         // Adversarial periods to exercise the saturating_add/saturating_sub fix.
         let k_period = match rng.next_u64() % 10 {
-            0 => 0, 1 => usize::MAX, 2 => usize::MAX - 1, _ => rng.range_usize(15) + 1,
+            0 => 0,
+            1 => usize::MAX,
+            2 => usize::MAX - 1,
+            _ => rng.range_usize(15) + 1,
         };
         let d_period = match rng.next_u64() % 10 {
-            0 => 0, 1 => usize::MAX, 2 => usize::MAX - 1, _ => rng.range_usize(10) + 1,
+            0 => 0,
+            1 => usize::MAX,
+            2 => usize::MAX - 1,
+            _ => rng.range_usize(10) + 1,
         };
         let out = stochastic::compute(&bars, k_period, d_period);
         assert_eq!(out.len(), n, "iter {it} length invariant");
@@ -1511,11 +1866,20 @@ fn fuzz_new_moving_averages() {
         let n = rng.range_usize(80);
         let closes: Vec<f64> = (0..n).map(|_| rng.f64_range(10.0, 500.0)).collect();
         let period = match rng.next_u64() % 10 {
-            0 => 0, 1 => 1, 2 => usize::MAX, _ => rng.range_usize(20) + 2,
+            0 => 0,
+            1 => 1,
+            2 => usize::MAX,
+            _ => rng.range_usize(20) + 2,
         };
-        for v in &hull_ma::compute(&closes, period) { assert_finite_opt(v, "hull"); }
-        for v in &tema::compute(&closes, period)    { assert_finite_opt(v, "tema"); }
-        for v in &dema::compute(&closes, period)    { assert_finite_opt(v, "dema"); }
+        for v in &hull_ma::compute(&closes, period) {
+            assert_finite_opt(v, "hull");
+        }
+        for v in &tema::compute(&closes, period) {
+            assert_finite_opt(v, "tema");
+        }
+        for v in &dema::compute(&closes, period) {
+            assert_finite_opt(v, "dema");
+        }
         let _ = it;
     }
 }
@@ -1527,16 +1891,24 @@ fn fuzz_kama() {
         let n = rng.range_usize(80);
         let closes: Vec<f64> = (0..n).map(|_| rng.f64_range(10.0, 500.0)).collect();
         let er = match rng.next_u64() % 8 {
-            0 => 0, 1 => usize::MAX, _ => rng.range_usize(15) + 1,
+            0 => 0,
+            1 => usize::MAX,
+            _ => rng.range_usize(15) + 1,
         };
         let fp = match rng.next_u64() % 8 {
-            0 => 0, 1 => usize::MAX, _ => rng.range_usize(5) + 1,
+            0 => 0,
+            1 => usize::MAX,
+            _ => rng.range_usize(5) + 1,
         };
         let sp = match rng.next_u64() % 8 {
-            0 => 0, 1 => usize::MAX, _ => rng.range_usize(40) + 1,
+            0 => 0,
+            1 => usize::MAX,
+            _ => rng.range_usize(40) + 1,
         };
         let out = kama::compute(&closes, er, fp, sp);
-        for v in &out { assert_finite_opt(v, "kama"); }
+        for v in &out {
+            assert_finite_opt(v, "kama");
+        }
         let _ = it;
     }
 }
@@ -1547,14 +1919,34 @@ fn fuzz_stoch_rsi() {
     for it in 0..ITERS / 4 {
         let n = rng.range_usize(80);
         let closes: Vec<f64> = (0..n).map(|_| rng.f64_range(10.0, 500.0)).collect();
-        let rp = match rng.next_u64() % 8 { 0 => 0, 1 => usize::MAX, _ => rng.range_usize(20)+1 };
-        let sp = match rng.next_u64() % 8 { 0 => 0, 1 => usize::MAX, _ => rng.range_usize(20)+1 };
-        let sk = match rng.next_u64() % 8 { 0 => 0, _ => rng.range_usize(5) + 1 };
-        let sd = match rng.next_u64() % 8 { 0 => 0, _ => rng.range_usize(5) + 1 };
+        let rp = match rng.next_u64() % 8 {
+            0 => 0,
+            1 => usize::MAX,
+            _ => rng.range_usize(20) + 1,
+        };
+        let sp = match rng.next_u64() % 8 {
+            0 => 0,
+            1 => usize::MAX,
+            _ => rng.range_usize(20) + 1,
+        };
+        let sk = match rng.next_u64() % 8 {
+            0 => 0,
+            _ => rng.range_usize(5) + 1,
+        };
+        let sd = match rng.next_u64() % 8 {
+            0 => 0,
+            _ => rng.range_usize(5) + 1,
+        };
         let r = stoch_rsi::compute(&closes, rp, sp, sk, sd);
-        for v in &r.raw { assert_finite_opt(v, "raw"); }
-        for v in &r.k   { assert_finite_opt(v, "k"); }
-        for v in &r.d   { assert_finite_opt(v, "d"); }
+        for v in &r.raw {
+            assert_finite_opt(v, "raw");
+        }
+        for v in &r.k {
+            assert_finite_opt(v, "k");
+        }
+        for v in &r.d {
+            assert_finite_opt(v, "d");
+        }
         let _ = it;
     }
 }
@@ -1564,17 +1956,37 @@ fn fuzz_ultimate_oscillator() {
     let mut rng = Lcg::new(0x_007_F1);
     for it in 0..ITERS / 4 {
         let n = rng.range_usize(80);
-        let bars: Vec<ultimate_oscillator::OhlcBar> = (0..n).map(|_| {
-            let h = rng.f64_range(50.0, 200.0);
-            let l = rng.f64_range(50.0, h);
-            let c = rng.f64_range(l, h);
-            ultimate_oscillator::OhlcBar { high: h, low: l, close: c }
-        }).collect();
-        let s = match rng.next_u64() % 8 { 0 => 0, 1 => usize::MAX, _ => rng.range_usize(15)+1 };
-        let m = match rng.next_u64() % 8 { 0 => 0, 1 => usize::MAX, _ => rng.range_usize(20)+1 };
-        let l = match rng.next_u64() % 8 { 0 => 0, 1 => usize::MAX, _ => rng.range_usize(40)+1 };
+        let bars: Vec<ultimate_oscillator::OhlcBar> = (0..n)
+            .map(|_| {
+                let h = rng.f64_range(50.0, 200.0);
+                let l = rng.f64_range(50.0, h);
+                let c = rng.f64_range(l, h);
+                ultimate_oscillator::OhlcBar {
+                    high: h,
+                    low: l,
+                    close: c,
+                }
+            })
+            .collect();
+        let s = match rng.next_u64() % 8 {
+            0 => 0,
+            1 => usize::MAX,
+            _ => rng.range_usize(15) + 1,
+        };
+        let m = match rng.next_u64() % 8 {
+            0 => 0,
+            1 => usize::MAX,
+            _ => rng.range_usize(20) + 1,
+        };
+        let l = match rng.next_u64() % 8 {
+            0 => 0,
+            1 => usize::MAX,
+            _ => rng.range_usize(40) + 1,
+        };
         let out = ultimate_oscillator::compute(&bars, s, m, l);
-        for v in &out { assert_finite_opt(v, "uo"); }
+        for v in &out {
+            assert_finite_opt(v, "uo");
+        }
         let _ = it;
     }
 }
@@ -1585,10 +1997,20 @@ fn fuzz_tsi() {
     for it in 0..ITERS / 4 {
         let n = rng.range_usize(80);
         let closes: Vec<f64> = (0..n).map(|_| rng.f64_range(10.0, 500.0)).collect();
-        let r = match rng.next_u64() % 8 { 0 => 0, 1 => usize::MAX, _ => rng.range_usize(40)+1 };
-        let s = match rng.next_u64() % 8 { 0 => 0, 1 => usize::MAX, _ => rng.range_usize(20)+1 };
+        let r = match rng.next_u64() % 8 {
+            0 => 0,
+            1 => usize::MAX,
+            _ => rng.range_usize(40) + 1,
+        };
+        let s = match rng.next_u64() % 8 {
+            0 => 0,
+            1 => usize::MAX,
+            _ => rng.range_usize(20) + 1,
+        };
         let out = tsi::compute(&closes, r, s);
-        for v in &out { assert_finite_opt(v, "tsi"); }
+        for v in &out {
+            assert_finite_opt(v, "tsi");
+        }
         let _ = it;
     }
 }
@@ -1598,19 +2020,30 @@ fn fuzz_chaikin_money_flow() {
     let mut rng = Lcg::new(0x_C_4_F_4);
     for it in 0..ITERS / 4 {
         let n = rng.range_usize(64);
-        let bars: Vec<chaikin_money_flow::Bar> = (0..n).map(|_| {
-            let h = rng.f64_range(50.0, 200.0);
-            let l = rng.f64_range(50.0, h);
-            let c = rng.f64_range(l, h);
-            chaikin_money_flow::Bar { high: h, low: l, close: c, volume: rng.f64_range(0.0, 1e6) }
-        }).collect();
+        let bars: Vec<chaikin_money_flow::Bar> = (0..n)
+            .map(|_| {
+                let h = rng.f64_range(50.0, 200.0);
+                let l = rng.f64_range(50.0, h);
+                let c = rng.f64_range(l, h);
+                chaikin_money_flow::Bar {
+                    high: h,
+                    low: l,
+                    close: c,
+                    volume: rng.f64_range(0.0, 1e6),
+                }
+            })
+            .collect();
         let period = match rng.next_u64() % 8 {
-            0 => 0, 1 => usize::MAX, _ => rng.range_usize(30) + 1,
+            0 => 0,
+            1 => usize::MAX,
+            _ => rng.range_usize(30) + 1,
         };
         let out = chaikin_money_flow::compute(&bars, period);
         for x in out.iter().flatten() {
-            assert!(x.is_finite() && (-1.0 - 1e-9..=1.0 + 1e-9).contains(x),
-                "iter {it} cmf out of [-1,1]: {x}");
+            assert!(
+                x.is_finite() && (-1.0 - 1e-9..=1.0 + 1e-9).contains(x),
+                "iter {it} cmf out of [-1,1]: {x}"
+            );
         }
     }
 }
@@ -1621,13 +2054,30 @@ fn fuzz_ppo() {
     for it in 0..ITERS / 4 {
         let n = rng.range_usize(120);
         let closes: Vec<f64> = (0..n).map(|_| rng.f64_range(10.0, 500.0)).collect();
-        let f = match rng.next_u64() % 8 { 0 => 0, 1 => usize::MAX, _ => rng.range_usize(15)+1 };
-        let s = match rng.next_u64() % 8 { 0 => 0, 1 => usize::MAX, _ => rng.range_usize(40)+1 };
-        let g = match rng.next_u64() % 8 { 0 => 0, _ => rng.range_usize(15)+1 };
+        let f = match rng.next_u64() % 8 {
+            0 => 0,
+            1 => usize::MAX,
+            _ => rng.range_usize(15) + 1,
+        };
+        let s = match rng.next_u64() % 8 {
+            0 => 0,
+            1 => usize::MAX,
+            _ => rng.range_usize(40) + 1,
+        };
+        let g = match rng.next_u64() % 8 {
+            0 => 0,
+            _ => rng.range_usize(15) + 1,
+        };
         let r = ppo::compute(&closes, f, s, g);
-        for v in &r.line      { assert_finite_opt(v, "ppo"); }
-        for v in &r.signal    { assert_finite_opt(v, "ppo signal"); }
-        for v in &r.histogram { assert_finite_opt(v, "ppo hist"); }
+        for v in &r.line {
+            assert_finite_opt(v, "ppo");
+        }
+        for v in &r.signal {
+            assert_finite_opt(v, "ppo signal");
+        }
+        for v in &r.histogram {
+            assert_finite_opt(v, "ppo hist");
+        }
         let _ = it;
     }
 }
@@ -1637,18 +2087,30 @@ fn fuzz_elder_ray() {
     let mut rng = Lcg::new(0x_E_1_DE);
     for it in 0..ITERS / 4 {
         let n = rng.range_usize(80);
-        let bars: Vec<elder_ray::Bar> = (0..n).map(|_| {
-            let h = rng.f64_range(50.0, 200.0);
-            let l = rng.f64_range(50.0, h);
-            let c = rng.f64_range(l, h);
-            elder_ray::Bar { high: h, low: l, close: c }
-        }).collect();
+        let bars: Vec<elder_ray::Bar> = (0..n)
+            .map(|_| {
+                let h = rng.f64_range(50.0, 200.0);
+                let l = rng.f64_range(50.0, h);
+                let c = rng.f64_range(l, h);
+                elder_ray::Bar {
+                    high: h,
+                    low: l,
+                    close: c,
+                }
+            })
+            .collect();
         let period = match rng.next_u64() % 8 {
-            0 => 0, 1 => usize::MAX, _ => rng.range_usize(30) + 1,
+            0 => 0,
+            1 => usize::MAX,
+            _ => rng.range_usize(30) + 1,
         };
         let r = elder_ray::compute(&bars, period);
-        for v in &r.bull_power { assert_finite_opt(v, "bull"); }
-        for v in &r.bear_power { assert_finite_opt(v, "bear"); }
+        for v in &r.bull_power {
+            assert_finite_opt(v, "bull");
+        }
+        for v in &r.bear_power {
+            assert_finite_opt(v, "bear");
+        }
         let _ = it;
     }
 }
@@ -1662,8 +2124,12 @@ fn fuzz_indicators_core() {
     for it in 0..ITERS / 4 {
         let n = rng.range_usize(64);
         let closes: Vec<f64> = (0..n).map(|_| rng.f64_range(10.0, 200.0)).collect();
-        let highs: Vec<f64> = (0..n).map(|i| closes[i] + rng.f64_range(0.0, 5.0)).collect();
-        let lows: Vec<f64>  = (0..n).map(|i| closes[i] - rng.f64_range(0.0, 5.0)).collect();
+        let highs: Vec<f64> = (0..n)
+            .map(|i| closes[i] + rng.f64_range(0.0, 5.0))
+            .collect();
+        let lows: Vec<f64> = (0..n)
+            .map(|i| closes[i] - rng.f64_range(0.0, 5.0))
+            .collect();
         let period = match rng.next_u64() % 10 {
             0 => 0,
             1 => usize::MAX,
@@ -1672,20 +2138,30 @@ fn fuzz_indicators_core() {
         // sma
         let sma_out = indicators::sma(&closes, period);
         assert_eq!(sma_out.len(), n, "iter {it} sma len");
-        for v in &sma_out { assert_finite_opt(v, "sma"); }
+        for v in &sma_out {
+            assert_finite_opt(v, "sma");
+        }
         // ema
         let ema_out = indicators::ema(&closes, period);
         assert_eq!(ema_out.len(), n, "iter {it} ema len");
-        for v in &ema_out { assert_finite_opt(v, "ema"); }
+        for v in &ema_out {
+            assert_finite_opt(v, "ema");
+        }
         // rsi
         let rsi_out = indicators::rsi(&closes, period);
         assert_eq!(rsi_out.len(), n, "iter {it} rsi len");
-        for v in &rsi_out { assert_finite_opt(v, "rsi"); }
+        for v in &rsi_out {
+            assert_finite_opt(v, "rsi");
+        }
         // stochastic
         let stoch = indicators::stochastic(&highs, &lows, &closes, period.max(2), 3);
         assert_eq!(stoch.k.len(), n, "iter {it} k len");
         assert_eq!(stoch.d.len(), n, "iter {it} d len");
-        for v in &stoch.k { assert_finite_opt(v, "k"); }
-        for v in &stoch.d { assert_finite_opt(v, "d"); }
+        for v in &stoch.k {
+            assert_finite_opt(v, "k");
+        }
+        for v in &stoch.d {
+            assert_finite_opt(v, "d");
+        }
     }
 }

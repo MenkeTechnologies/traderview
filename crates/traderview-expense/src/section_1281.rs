@@ -417,11 +417,10 @@ mod tests {
         assert_eq!(r.current_year_inclusion_cents, 0);
         assert!(r.citation.contains("outside scope"));
         assert!(r.citation.contains("§ 1271(a)(3)/(a)(4)"));
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1271(a)(3)") && n.contains("disposition"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1271(a)(3)") && n.contains("disposition")));
     }
 
     // ── § 1283(c) nongovernmental OID limitation ───────────────
@@ -441,11 +440,10 @@ mod tests {
         assert_eq!(r.accrual_base_cents, 4_000);
         // 4_000 × 180 / 360 = 2_000.
         assert_eq!(r.daily_portion_total_cents, 2_000);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1283(c)") && n.contains("nongovernmental"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1283(c)") && n.contains("nongovernmental")));
     }
 
     #[test]
@@ -607,7 +605,10 @@ mod tests {
             (HolderCategory::AccrualMethod, "§ 1281(b)(1)(A)"),
             (HolderCategory::DealerInSecurities, "§ 1281(b)(1)(B)"),
             (HolderCategory::Bank, "§ 1281(b)(1)(C)"),
-            (HolderCategory::RegulatedInvestmentCompany, "§ 1281(b)(1)(D)"),
+            (
+                HolderCategory::RegulatedInvestmentCompany,
+                "§ 1281(b)(1)(D)",
+            ),
             (HolderCategory::HedgingTransaction, "§ 1281(b)(1)(E)"),
             (HolderCategory::StripperStrippedBond, "§ 1281(b)(1)(F)"),
             (HolderCategory::PassThruEntity, "§ 1281(b)(2)"),
@@ -635,7 +636,10 @@ mod tests {
             (HolderCategory::AccrualMethod, "§ 1281(b)(1)(A)"),
             (HolderCategory::DealerInSecurities, "§ 1281(b)(1)(B)"),
             (HolderCategory::Bank, "§ 1281(b)(1)(C)"),
-            (HolderCategory::RegulatedInvestmentCompany, "§ 1281(b)(1)(D)"),
+            (
+                HolderCategory::RegulatedInvestmentCompany,
+                "§ 1281(b)(1)(D)",
+            ),
             (HolderCategory::HedgingTransaction, "§ 1281(b)(1)(E)"),
             (HolderCategory::StripperStrippedBond, "§ 1281(b)(1)(F)"),
             (HolderCategory::PassThruEntity, "§ 1281(b)(2)"),
@@ -676,6 +680,9 @@ mod tests {
             360,
             360,
         ));
-        assert_eq!(half.daily_portion_total_cents * 2, full.daily_portion_total_cents);
+        assert_eq!(
+            half.daily_portion_total_cents * 2,
+            full.daily_portion_total_cents
+        );
     }
 }

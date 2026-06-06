@@ -252,7 +252,8 @@ pub fn compute(input: &Input) -> Output {
     }
 
     if input.landlord_action == LandlordAction::LeaseBifurcationAgainstPerpetrator
-        && input.victim_bifurcation_status == VictimBifurcationStatus::VictimEvictedAlongsidePerpetrator
+        && input.victim_bifurcation_status
+            == VictimBifurcationStatus::VictimEvictedAlongsidePerpetrator
     {
         return Output {
             mode: Vawa2022Mode::ViolationSection12491B3LeaseBifurcationVictimImproperlyEvictedAlongsidePerpetrator,
@@ -393,7 +394,10 @@ mod tests {
             ..baseline_compliant_section_8_hcv_no_adverse_action()
         };
         let result = check(&input);
-        assert_eq!(result.mode, Vawa2022Mode::NotApplicableNotACoveredVawaHousingProgram);
+        assert_eq!(
+            result.mode,
+            Vawa2022Mode::NotApplicableNotACoveredVawaHousingProgram
+        );
     }
 
     #[test]
@@ -414,7 +418,8 @@ mod tests {
     fn lease_bifurcation_with_victim_retained_compliant() {
         let input = Input {
             landlord_action: LandlordAction::LeaseBifurcationAgainstPerpetrator,
-            victim_bifurcation_status: VictimBifurcationStatus::VictimRetainedAsTenantOrLawfulOccupant,
+            victim_bifurcation_status:
+                VictimBifurcationStatus::VictimRetainedAsTenantOrLawfulOccupant,
             ..baseline_compliant_section_8_hcv_no_adverse_action()
         };
         let result = check(&input);

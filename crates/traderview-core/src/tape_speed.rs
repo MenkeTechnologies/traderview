@@ -14,7 +14,10 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub events: u64, pub bar_seconds: f64 }
+pub struct Bar {
+    pub events: u64,
+    pub bar_seconds: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct TapeSpeedReport {
@@ -32,11 +35,19 @@ pub fn compute(bars: &[Bar], period: usize) -> TapeSpeedReport {
         spike_ratio: vec![None; n],
         period,
     };
-    if period < 2 || n < period { return report; }
-    if bars.iter().any(|b| !b.bar_seconds.is_finite() || b.bar_seconds <= 0.0) {
+    if period < 2 || n < period {
         return report;
     }
-    let speeds: Vec<f64> = bars.iter().map(|b| b.events as f64 / b.bar_seconds).collect();
+    if bars
+        .iter()
+        .any(|b| !b.bar_seconds.is_finite() || b.bar_seconds <= 0.0)
+    {
+        return report;
+    }
+    let speeds: Vec<f64> = bars
+        .iter()
+        .map(|b| b.events as f64 / b.bar_seconds)
+        .collect();
     for (i, &s) in speeds.iter().enumerate() {
         report.speed[i] = Some(s);
     }
@@ -63,7 +74,12 @@ pub fn compute(bars: &[Bar], period: usize) -> TapeSpeedReport {
 mod tests {
     use super::*;
 
-    fn b(events: u64, secs: f64) -> Bar { Bar { events, bar_seconds: secs } }
+    fn b(events: u64, secs: f64) -> Bar {
+        Bar {
+            events,
+            bar_seconds: secs,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {

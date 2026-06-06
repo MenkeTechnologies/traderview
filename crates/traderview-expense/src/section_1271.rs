@@ -475,11 +475,10 @@ mod tests {
         assert_eq!(r.ordinary_income_cents, 0);
         assert_eq!(r.capital_gain_or_loss_cents, 10_000);
         assert!(r.citation.contains("§ 1271(a)(2) carve-out"));
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1271(a)(2) tax-exempt carve-out"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1271(a)(2) tax-exempt carve-out")));
     }
 
     #[test]
@@ -497,11 +496,10 @@ mod tests {
         ));
         assert_eq!(r.ordinary_income_cents, 0);
         assert_eq!(r.capital_gain_or_loss_cents, 10_000);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1271(a)(2) premium-buyer carve-out"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1271(a)(2) premium-buyer carve-out")));
     }
 
     #[test]
@@ -607,11 +605,10 @@ mod tests {
         assert!(r.section_1271b_exception_applies);
         assert_eq!(r.ordinary_income_cents, 0);
         assert!(r.citation.contains("§ 1271(b)"));
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1271(b)") && n.contains("June 9, 1997"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1271(b)") && n.contains("June 9, 1997")));
     }
 
     // ── Regression-critical invariants ──────────────────────────
@@ -633,15 +630,7 @@ mod tests {
                 (110_000, 100_000),
             ] {
                 let r = compute(&input(
-                    debt_type,
-                    purchase,
-                    redemption,
-                    8_000,
-                    0,
-                    5_000,
-                    2_000,
-                    false,
-                    false,
+                    debt_type, purchase, redemption, 8_000, 0, 5_000, 2_000, false, false,
                 ));
                 assert_eq!(
                     r.ordinary_income_cents + r.capital_gain_or_loss_cents,
@@ -665,15 +654,7 @@ mod tests {
             DebtInstrumentType::ShortTermNonGovernment,
         ] {
             let r = compute(&input(
-                debt_type,
-                90_000,
-                100_000,
-                50_000,
-                0,
-                50_000,
-                50_000,
-                false,
-                false,
+                debt_type, 90_000, 100_000, 50_000, 0, 50_000, 50_000, false, false,
             ));
             assert!(
                 r.ordinary_income_cents <= r.gain_or_loss_cents,
@@ -692,15 +673,7 @@ mod tests {
             DebtInstrumentType::ShortTermNonGovernment,
         ] {
             let r = compute(&input(
-                debt_type,
-                90_000,
-                100_000,
-                8_000,
-                0,
-                5_000,
-                2_000,
-                false,
-                false,
+                debt_type, 90_000, 100_000, 8_000, 0, 5_000, 2_000, false, false,
             ));
             assert!(
                 r.treated_as_sale_or_exchange,

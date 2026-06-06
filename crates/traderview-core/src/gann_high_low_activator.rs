@@ -24,11 +24,19 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
-pub enum HlaDirection { #[default] Up, Down }
+pub enum HlaDirection {
+    #[default]
+    Up,
+    Down,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct GannHlaReport {
@@ -44,8 +52,13 @@ pub fn compute(bars: &[Bar], period: usize) -> GannHlaReport {
         direction: vec![None; n],
         period,
     };
-    if period < 2 || n < period + 1 { return report; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if period < 2 || n < period + 1 {
+        return report;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return report;
     }
     let p_f = period as f64;
@@ -104,7 +117,13 @@ pub fn compute(bars: &[Bar], period: usize) -> GannHlaReport {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {

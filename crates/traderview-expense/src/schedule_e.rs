@@ -18,27 +18,27 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum PropertyType {
-    SingleFamily,        // IRS code 1
-    MultiFamily,         // IRS code 2
-    VacationShortTerm,   // IRS code 3
-    Commercial,          // IRS code 4
-    Land,                // IRS code 5
-    Royalties,           // IRS code 6
-    SelfRental,          // IRS code 7
-    Other,               // IRS code 8
+    SingleFamily,      // IRS code 1
+    MultiFamily,       // IRS code 2
+    VacationShortTerm, // IRS code 3
+    Commercial,        // IRS code 4
+    Land,              // IRS code 5
+    Royalties,         // IRS code 6
+    SelfRental,        // IRS code 7
+    Other,             // IRS code 8
 }
 
 impl PropertyType {
     pub fn irs_code(self) -> u8 {
         match self {
-            PropertyType::SingleFamily      => 1,
-            PropertyType::MultiFamily       => 2,
+            PropertyType::SingleFamily => 1,
+            PropertyType::MultiFamily => 2,
             PropertyType::VacationShortTerm => 3,
-            PropertyType::Commercial        => 4,
-            PropertyType::Land              => 5,
-            PropertyType::Royalties         => 6,
-            PropertyType::SelfRental        => 7,
-            PropertyType::Other             => 8,
+            PropertyType::Commercial => 4,
+            PropertyType::Land => 5,
+            PropertyType::Royalties => 6,
+            PropertyType::SelfRental => 7,
+            PropertyType::Other => 8,
         }
     }
 }
@@ -48,64 +48,64 @@ impl PropertyType {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ScheduleECategory {
-    Advertising,        // line 5
-    AutoTravel,         // line 6
-    CleaningMaint,      // line 7
-    Commissions,        // line 8
-    Insurance,          // line 9
-    LegalProf,          // line 10
-    MgmtFees,           // line 11
-    MortgageInterest,   // line 12
-    OtherInterest,      // line 13
-    Repairs,            // line 14
-    Supplies,           // line 15
-    Taxes,              // line 16
-    Utilities,          // line 17
-    Depreciation,       // line 18 — usually computed, not entered as a raw expense
-    Other,              // line 19
+    Advertising,      // line 5
+    AutoTravel,       // line 6
+    CleaningMaint,    // line 7
+    Commissions,      // line 8
+    Insurance,        // line 9
+    LegalProf,        // line 10
+    MgmtFees,         // line 11
+    MortgageInterest, // line 12
+    OtherInterest,    // line 13
+    Repairs,          // line 14
+    Supplies,         // line 15
+    Taxes,            // line 16
+    Utilities,        // line 17
+    Depreciation,     // line 18 — usually computed, not entered as a raw expense
+    Other,            // line 19
 }
 
 impl ScheduleECategory {
     pub fn line(self) -> &'static str {
         match self {
-            ScheduleECategory::Advertising      => "5",
-            ScheduleECategory::AutoTravel       => "6",
-            ScheduleECategory::CleaningMaint    => "7",
-            ScheduleECategory::Commissions      => "8",
-            ScheduleECategory::Insurance        => "9",
-            ScheduleECategory::LegalProf        => "10",
-            ScheduleECategory::MgmtFees         => "11",
+            ScheduleECategory::Advertising => "5",
+            ScheduleECategory::AutoTravel => "6",
+            ScheduleECategory::CleaningMaint => "7",
+            ScheduleECategory::Commissions => "8",
+            ScheduleECategory::Insurance => "9",
+            ScheduleECategory::LegalProf => "10",
+            ScheduleECategory::MgmtFees => "11",
             ScheduleECategory::MortgageInterest => "12",
-            ScheduleECategory::OtherInterest    => "13",
-            ScheduleECategory::Repairs          => "14",
-            ScheduleECategory::Supplies         => "15",
-            ScheduleECategory::Taxes            => "16",
-            ScheduleECategory::Utilities        => "17",
-            ScheduleECategory::Depreciation     => "18",
-            ScheduleECategory::Other            => "19",
+            ScheduleECategory::OtherInterest => "13",
+            ScheduleECategory::Repairs => "14",
+            ScheduleECategory::Supplies => "15",
+            ScheduleECategory::Taxes => "16",
+            ScheduleECategory::Utilities => "17",
+            ScheduleECategory::Depreciation => "18",
+            ScheduleECategory::Other => "19",
         }
     }
 
     pub fn from_code(code: &str) -> Option<Self> {
         match code {
-            "e_advertising"                                 => Some(Self::Advertising),
-            "e_auto_travel"                                 => Some(Self::AutoTravel),
-            "e_cleaning_maint"                              => Some(Self::CleaningMaint),
-            "e_commissions"                                 => Some(Self::Commissions),
-            "e_insurance"                                   => Some(Self::Insurance),
-            "e_legal_prof"                                  => Some(Self::LegalProf),
-            "e_mgmt_fees"                                   => Some(Self::MgmtFees),
-            "e_mortgage_interest"                           => Some(Self::MortgageInterest),
-            "e_other_interest"                              => Some(Self::OtherInterest),
-            "e_repairs"                                     => Some(Self::Repairs),
-            "e_supplies"                                    => Some(Self::Supplies),
-            "e_taxes"                                       => Some(Self::Taxes),
-            "e_utilities"                                   => Some(Self::Utilities),
-            "e_depreciation"                                => Some(Self::Depreciation),
-            "e_other"      | "e_hoa"         | "e_landscaping"
-            | "e_pest_control" | "e_permit_license" | "e_appliance"
-            | "e_software" | "e_bank_fee"    | "e_eviction"
-            | "e_security"                                   => Some(Self::Other),
+            "e_advertising" => Some(Self::Advertising),
+            "e_auto_travel" => Some(Self::AutoTravel),
+            "e_cleaning_maint" => Some(Self::CleaningMaint),
+            "e_commissions" => Some(Self::Commissions),
+            "e_insurance" => Some(Self::Insurance),
+            "e_legal_prof" => Some(Self::LegalProf),
+            "e_mgmt_fees" => Some(Self::MgmtFees),
+            "e_mortgage_interest" => Some(Self::MortgageInterest),
+            "e_other_interest" => Some(Self::OtherInterest),
+            "e_repairs" => Some(Self::Repairs),
+            "e_supplies" => Some(Self::Supplies),
+            "e_taxes" => Some(Self::Taxes),
+            "e_utilities" => Some(Self::Utilities),
+            "e_depreciation" => Some(Self::Depreciation),
+            "e_other" | "e_hoa" | "e_landscaping" | "e_pest_control" | "e_permit_license"
+            | "e_appliance" | "e_software" | "e_bank_fee" | "e_eviction" | "e_security" => {
+                Some(Self::Other)
+            }
             _ => None,
         }
     }
@@ -148,9 +148,9 @@ pub struct MileageRow {
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ScheduleELine {
     pub property_id: String,
-    pub property_type_code: u8,        // line 1b
-    pub fair_rental_days: u32,         // line 2 (column A/B/C)
-    pub personal_use_days: u32,        // line 2
+    pub property_type_code: u8, // line 1b
+    pub fair_rental_days: u32,  // line 2 (column A/B/C)
+    pub personal_use_days: u32, // line 2
 
     pub l3a_rents_received: Decimal,
     pub l3b_royalties: Decimal,
@@ -170,21 +170,21 @@ pub struct ScheduleELine {
     pub l18_depreciation: Decimal,
     pub l19_other: Decimal,
 
-    pub l20_total_expenses: Decimal,   // sum 5-19
-    pub l21_income_or_loss: Decimal,   // 3a + 3b - 20
+    pub l20_total_expenses: Decimal, // sum 5-19
+    pub l21_income_or_loss: Decimal, // 3a + 3b - 20
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct ScheduleEReport {
     pub properties: Vec<ScheduleELine>,
-    pub l23a_total_rents: Decimal,            // sum of all l3a
-    pub l23b_total_royalties: Decimal,        // sum of all l3b
-    pub l23c_total_mortgage_interest: Decimal,// sum of all l12
-    pub l23d_total_depreciation: Decimal,     // sum of all l18
-    pub l23e_total_expenses: Decimal,         // sum of all l20
-    pub l24_income_total: Decimal,            // sum of positive l21
-    pub l25_loss_total: Decimal,              // sum of negative l21 (as positive)
-    pub l26_total_real_estate_income: Decimal,// l24 - l25
+    pub l23a_total_rents: Decimal,             // sum of all l3a
+    pub l23b_total_royalties: Decimal,         // sum of all l3b
+    pub l23c_total_mortgage_interest: Decimal, // sum of all l12
+    pub l23d_total_depreciation: Decimal,      // sum of all l18
+    pub l23e_total_expenses: Decimal,          // sum of all l20
+    pub l24_income_total: Decimal,             // sum of positive l21
+    pub l25_loss_total: Decimal,               // sum of negative l21 (as positive)
+    pub l26_total_real_estate_income: Decimal, // l24 - l25
 }
 
 #[derive(Debug, Clone)]
@@ -214,9 +214,9 @@ pub fn roll_property(p: &PropertyInput<'_>) -> ScheduleELine {
 
     for r in p.income {
         match r.kind {
-            IncomeKind::Rent    => out.l3a_rents_received += r.amount,
-            IncomeKind::Royalty => out.l3b_royalties     += r.amount,
-            IncomeKind::Other   => out.l19_other         += r.amount, // miscellaneous receipts
+            IncomeKind::Rent => out.l3a_rents_received += r.amount,
+            IncomeKind::Royalty => out.l3b_royalties += r.amount,
+            IncomeKind::Other => out.l19_other += r.amount, // miscellaneous receipts
         }
     }
 
@@ -225,21 +225,21 @@ pub fn roll_property(p: &PropertyInput<'_>) -> ScheduleELine {
             continue;
         }
         let slot = match r.category {
-            ScheduleECategory::Advertising      => &mut out.l5_advertising,
-            ScheduleECategory::AutoTravel       => &mut out.l6_auto_travel,
-            ScheduleECategory::CleaningMaint    => &mut out.l7_cleaning_maint,
-            ScheduleECategory::Commissions      => &mut out.l8_commissions,
-            ScheduleECategory::Insurance        => &mut out.l9_insurance,
-            ScheduleECategory::LegalProf        => &mut out.l10_legal_prof,
-            ScheduleECategory::MgmtFees         => &mut out.l11_mgmt_fees,
+            ScheduleECategory::Advertising => &mut out.l5_advertising,
+            ScheduleECategory::AutoTravel => &mut out.l6_auto_travel,
+            ScheduleECategory::CleaningMaint => &mut out.l7_cleaning_maint,
+            ScheduleECategory::Commissions => &mut out.l8_commissions,
+            ScheduleECategory::Insurance => &mut out.l9_insurance,
+            ScheduleECategory::LegalProf => &mut out.l10_legal_prof,
+            ScheduleECategory::MgmtFees => &mut out.l11_mgmt_fees,
             ScheduleECategory::MortgageInterest => &mut out.l12_mortgage_interest,
-            ScheduleECategory::OtherInterest    => &mut out.l13_other_interest,
-            ScheduleECategory::Repairs          => &mut out.l14_repairs,
-            ScheduleECategory::Supplies         => &mut out.l15_supplies,
-            ScheduleECategory::Taxes            => &mut out.l16_taxes,
-            ScheduleECategory::Utilities        => &mut out.l17_utilities,
-            ScheduleECategory::Depreciation     => &mut out.l18_depreciation,
-            ScheduleECategory::Other            => &mut out.l19_other,
+            ScheduleECategory::OtherInterest => &mut out.l13_other_interest,
+            ScheduleECategory::Repairs => &mut out.l14_repairs,
+            ScheduleECategory::Supplies => &mut out.l15_supplies,
+            ScheduleECategory::Taxes => &mut out.l16_taxes,
+            ScheduleECategory::Utilities => &mut out.l17_utilities,
+            ScheduleECategory::Depreciation => &mut out.l18_depreciation,
+            ScheduleECategory::Other => &mut out.l19_other,
         };
         *slot += r.amount;
     }
@@ -278,11 +278,11 @@ pub fn roll_report(lines: Vec<ScheduleELine>) -> ScheduleEReport {
     };
     let zero = Decimal::ZERO;
     for p in &r.properties {
-        r.l23a_total_rents             += p.l3a_rents_received;
-        r.l23b_total_royalties         += p.l3b_royalties;
+        r.l23a_total_rents += p.l3a_rents_received;
+        r.l23b_total_royalties += p.l3b_royalties;
         r.l23c_total_mortgage_interest += p.l12_mortgage_interest;
-        r.l23d_total_depreciation      += p.l18_depreciation;
-        r.l23e_total_expenses          += p.l20_total_expenses;
+        r.l23d_total_depreciation += p.l18_depreciation;
+        r.l23e_total_expenses += p.l20_total_expenses;
         if p.l21_income_or_loss >= zero {
             r.l24_income_total += p.l21_income_or_loss;
         } else {
@@ -299,13 +299,24 @@ mod tests {
     use rust_decimal_macros::dec;
 
     fn rent(n: Decimal) -> IncomeRow {
-        IncomeRow { kind: IncomeKind::Rent, amount: n }
+        IncomeRow {
+            kind: IncomeKind::Rent,
+            amount: n,
+        }
     }
     fn exp(cat: ScheduleECategory, amt: Decimal) -> ExpenseRow {
-        ExpenseRow { category: cat, amount: amt, is_capitalized: false }
+        ExpenseRow {
+            category: cat,
+            amount: amt,
+            is_capitalized: false,
+        }
     }
     fn cap(cat: ScheduleECategory, amt: Decimal) -> ExpenseRow {
-        ExpenseRow { category: cat, amount: amt, is_capitalized: true }
+        ExpenseRow {
+            category: cat,
+            amount: amt,
+            is_capitalized: true,
+        }
     }
 
     #[test]
@@ -315,9 +326,9 @@ mod tests {
         // $4,000 depreciation pushes Schedule E to $0.
         let income = vec![rent(dec!(24000))];
         let expenses = vec![
-            exp(ScheduleECategory::Repairs,          dec!(4000)),
-            exp(ScheduleECategory::Insurance,        dec!(3000)),
-            exp(ScheduleECategory::Taxes,            dec!(5000)),
+            exp(ScheduleECategory::Repairs, dec!(4000)),
+            exp(ScheduleECategory::Insurance, dec!(3000)),
+            exp(ScheduleECategory::Taxes, dec!(5000)),
             exp(ScheduleECategory::MortgageInterest, dec!(8000)),
         ];
         let p = PropertyInput {
@@ -343,8 +354,8 @@ mod tests {
         // line 14 (Repairs). The IRS gets it back via depreciation.
         let income = vec![rent(dec!(12000))];
         let expenses = vec![
-            exp(ScheduleECategory::Repairs, dec!(500)),    // ordinary repair
-            cap(ScheduleECategory::Repairs, dec!(15000)),  // improvement
+            exp(ScheduleECategory::Repairs, dec!(500)), // ordinary repair
+            cap(ScheduleECategory::Repairs, dec!(15000)), // improvement
         ];
         let p = PropertyInput {
             property_id: "p1",
@@ -357,14 +368,21 @@ mod tests {
             depreciation_for_year: Decimal::ZERO,
         };
         let line = roll_property(&p);
-        assert_eq!(line.l14_repairs, dec!(500), "capitalized cost must be excluded from line 14");
+        assert_eq!(
+            line.l14_repairs,
+            dec!(500),
+            "capitalized cost must be excluded from line 14"
+        );
         assert_eq!(line.l20_total_expenses, dec!(500));
     }
 
     #[test]
     fn mileage_folds_into_line_6_auto_travel() {
         let income = vec![rent(dec!(0))];
-        let mileage = vec![MileageRow { miles: dec!(1000), rate_per_mile: dec!(0.67) }];
+        let mileage = vec![MileageRow {
+            miles: dec!(1000),
+            rate_per_mile: dec!(0.67),
+        }];
         let p = PropertyInput {
             property_id: "p1",
             property_type: PropertyType::SingleFamily,
@@ -415,25 +433,43 @@ mod tests {
     fn category_code_round_trip_matches_migration() {
         // Codes here must mirror schedule_e_categories.code in 0032.sql —
         // a typo means the SQL roll-up will mis-bucket expenses.
-        assert_eq!(ScheduleECategory::from_code("e_repairs"),   Some(ScheduleECategory::Repairs));
-        assert_eq!(ScheduleECategory::from_code("e_utilities"), Some(ScheduleECategory::Utilities));
-        assert_eq!(ScheduleECategory::from_code("e_mortgage_interest"), Some(ScheduleECategory::MortgageInterest));
+        assert_eq!(
+            ScheduleECategory::from_code("e_repairs"),
+            Some(ScheduleECategory::Repairs)
+        );
+        assert_eq!(
+            ScheduleECategory::from_code("e_utilities"),
+            Some(ScheduleECategory::Utilities)
+        );
+        assert_eq!(
+            ScheduleECategory::from_code("e_mortgage_interest"),
+            Some(ScheduleECategory::MortgageInterest)
+        );
         // All line-19 detail codes collapse to ::Other.
-        assert_eq!(ScheduleECategory::from_code("e_hoa"),       Some(ScheduleECategory::Other));
-        assert_eq!(ScheduleECategory::from_code("e_landscaping"), Some(ScheduleECategory::Other));
-        assert_eq!(ScheduleECategory::from_code("e_eviction"),  Some(ScheduleECategory::Other));
-        assert_eq!(ScheduleECategory::from_code("not_a_code"),  None);
+        assert_eq!(
+            ScheduleECategory::from_code("e_hoa"),
+            Some(ScheduleECategory::Other)
+        );
+        assert_eq!(
+            ScheduleECategory::from_code("e_landscaping"),
+            Some(ScheduleECategory::Other)
+        );
+        assert_eq!(
+            ScheduleECategory::from_code("e_eviction"),
+            Some(ScheduleECategory::Other)
+        );
+        assert_eq!(ScheduleECategory::from_code("not_a_code"), None);
     }
 
     #[test]
     fn property_type_codes_match_irs_1_through_8() {
-        assert_eq!(PropertyType::SingleFamily.irs_code(),      1);
-        assert_eq!(PropertyType::MultiFamily.irs_code(),       2);
+        assert_eq!(PropertyType::SingleFamily.irs_code(), 1);
+        assert_eq!(PropertyType::MultiFamily.irs_code(), 2);
         assert_eq!(PropertyType::VacationShortTerm.irs_code(), 3);
-        assert_eq!(PropertyType::Commercial.irs_code(),        4);
-        assert_eq!(PropertyType::Land.irs_code(),              5);
-        assert_eq!(PropertyType::Royalties.irs_code(),         6);
-        assert_eq!(PropertyType::SelfRental.irs_code(),        7);
-        assert_eq!(PropertyType::Other.irs_code(),             8);
+        assert_eq!(PropertyType::Commercial.irs_code(), 4);
+        assert_eq!(PropertyType::Land.irs_code(), 5);
+        assert_eq!(PropertyType::Royalties.irs_code(), 6);
+        assert_eq!(PropertyType::SelfRental.irs_code(), 7);
+        assert_eq!(PropertyType::Other.irs_code(), 8);
     }
 }

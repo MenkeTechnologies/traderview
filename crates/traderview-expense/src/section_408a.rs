@@ -224,8 +224,7 @@ pub fn check(input: &Section408aInput) -> Section408aResult {
         );
     }
 
-    if input.roth_contribution_cents > allowed_contribution_cents
-        && allowed_contribution_cents > 0
+    if input.roth_contribution_cents > allowed_contribution_cents && allowed_contribution_cents > 0
     {
         failure_reasons.push(format!(
             "26 USC § 408A(c)(1) — Roth contribution {} cents EXCEEDS allowed phase-out-reduced limit {} cents; excess contribution subject to § 4973 6% excise tax until withdrawn",
@@ -269,8 +268,7 @@ pub fn check(input: &Section408aInput) -> Section408aResult {
             DistributionPath::NoDistribution => (0, 0),
         };
 
-    if matches!(input.distribution_path, DistributionPath::Earnings) && !distribution_qualified
-    {
+    if matches!(input.distribution_path, DistributionPath::Earnings) && !distribution_qualified {
         failure_reasons.push(
             "26 USC § 408A(d)(2) — Earnings distribution NOT QUALIFIED: requires (1) 5-YEAR HOLDING PERIOD starting January 1 of first Roth contribution year AND (2) ONE of (a) age 59½+; (b) disability per § 72(m)(7); (c) death of owner; (d) first-time home purchase up to $10,000 lifetime per § 72(t)(2)(F); 10% early withdrawal penalty applies under § 72(t)".to_string(),
         );
@@ -452,8 +450,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.distribution_qualified);
         assert_eq!(r.distribution_taxable_amount_cents, 1_000_000);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 408A(d)(2)")
-            && f.contains("5-YEAR HOLDING PERIOD")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 408A(d)(2)") && f.contains("5-YEAR HOLDING PERIOD")));
     }
 
     #[test]
@@ -515,8 +515,10 @@ mod tests {
         i.distribution_path = DistributionPath::Earnings;
         i.distribution_amount_cents = 500_000;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 72(t)(2)(F)")
-            && f.contains("$10,000 LIFETIME")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 72(t)(2)(F)") && f.contains("$10,000 LIFETIME")));
     }
 
     #[test]
@@ -529,8 +531,10 @@ mod tests {
         let r = check(&i);
         assert_eq!(r.distribution_taxable_amount_cents, 0);
         assert_eq!(r.distribution_penalty_amount_cents, 100_000);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 408A(d)(3)(A)")
-            && f.contains("5-YEAR per-conversion")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 408A(d)(3)(A)") && f.contains("5-YEAR per-conversion")));
     }
 
     #[test]
@@ -572,7 +576,9 @@ mod tests {
         assert!(r.citation.contains("SECURE Act of 2019 § 401"));
         assert!(r.citation.contains("SECURE Act 2.0 of 2022"));
         assert!(r.citation.contains("IRS Notice 2025-77"));
-        assert!(r.citation.contains("Treas. Reg. § 1.408A-1 through § 1.408A-10"));
+        assert!(r
+            .citation
+            .contains("Treas. Reg. § 1.408A-1 through § 1.408A-10"));
         assert!(r.citation.contains("Form 5498"));
     }
 
@@ -597,8 +603,9 @@ mod tests {
     #[test]
     fn note_pins_magi_disregards_conversion_income() {
         let r = check(&under_50_single_low_income());
-        assert!(r.notes.iter().any(|n| n.contains("§ 408A(c)(3)(B)")
-            && n.contains("DISREGARDING any Roth conversion")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("§ 408A(c)(3)(B)") && n.contains("DISREGARDING any Roth conversion")
+        ));
     }
 
     #[test]
@@ -647,34 +654,44 @@ mod tests {
     #[test]
     fn note_pins_1411_niit_exempt() {
         let r = check(&under_50_single_low_income());
-        assert!(r.notes.iter().any(|n| n.contains("§ 1411 NIIT 3.8%")
-            && n.contains("not investment income")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1411 NIIT 3.8%") && n.contains("not investment income")));
     }
 
     #[test]
     fn note_pins_trader_critical_fact_patterns_four() {
         let r = check(&under_50_single_low_income());
-        assert!(r.notes.iter().any(|n| n.contains("Trader-critical fact patterns")
-            && n.contains("backdoor Roth")
-            && n.contains("self-directed Roth IRA")
-            && n.contains("mega backdoor Roth")
-            && n.contains("§ 72(t) substantially-equal-periodic-payments")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-critical fact patterns")
+                && n.contains("backdoor Roth")
+                && n.contains("self-directed Roth IRA")
+                && n.contains("mega backdoor Roth")
+                && n.contains("§ 72(t) substantially-equal-periodic-payments")));
     }
 
     #[test]
     fn note_pins_taxpayer_relief_act_1997_origin() {
         let r = check(&under_50_single_low_income());
-        assert!(r.notes.iter().any(|n| n.contains("Taxpayer Relief Act of 1997 § 302")
-            && n.contains("Pub. L. 105-34")
-            && n.contains("August 5, 1997")
-            && n.contains("SECURE Act of 2019")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Taxpayer Relief Act of 1997 § 302")
+                && n.contains("Pub. L. 105-34")
+                && n.contains("August 5, 1997")
+                && n.contains("SECURE Act of 2019")));
     }
 
     #[test]
     fn note_pins_4973_excess_contribution_excise_tax() {
         let r = check(&under_50_single_low_income());
-        assert!(r.notes.iter().any(|n| n.contains("§ 4973")
-            && n.contains("6% excise tax")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 4973") && n.contains("6% excise tax")));
     }
 
     #[test]

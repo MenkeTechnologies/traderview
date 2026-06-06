@@ -27,7 +27,13 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
-pub enum HcVariant { #[default] Hc0, Hc1, Hc2, Hc3 }
+pub enum HcVariant {
+    #[default]
+    Hc0,
+    Hc1,
+    Hc2,
+    Hc3,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct WhiteRobustReport {
@@ -41,13 +47,11 @@ pub struct WhiteRobustReport {
     pub n_observations: usize,
 }
 
-pub fn estimate(
-    x: &[f64],
-    y: &[f64],
-    variant: HcVariant,
-) -> Option<WhiteRobustReport> {
+pub fn estimate(x: &[f64], y: &[f64], variant: HcVariant) -> Option<WhiteRobustReport> {
     let n = x.len();
-    if n < 5 || y.len() != n { return None; }
+    if n < 5 || y.len() != n {
+        return None;
+    }
     if x.iter().any(|v| !v.is_finite()) || y.iter().any(|v| !v.is_finite()) {
         return None;
     }
@@ -60,7 +64,9 @@ pub fn estimate(
         sxx += (x[i] - x_mean).powi(2);
         sxy += (x[i] - x_mean) * (y[i] - y_mean);
     }
-    if sxx <= 0.0 { return None; }
+    if sxx <= 0.0 {
+        return None;
+    }
     let beta = sxy / sxx;
     let alpha = y_mean - beta * x_mean;
     let resid: Vec<f64> = (0..n).map(|i| y[i] - alpha - beta * x[i]).collect();
@@ -68,9 +74,9 @@ pub fn estimate(
     let sigma2_ols = resid.iter().map(|r| r * r).sum::<f64>() / (n_f - 2.0);
     let se_beta_ols = (sigma2_ols / sxx).sqrt();
     // Leverages h_t for HC2/HC3.
-    let leverages: Vec<f64> = (0..n).map(|i| {
-        1.0 / n_f + (x[i] - x_mean).powi(2) / sxx
-    }).collect();
+    let leverages: Vec<f64> = (0..n)
+        .map(|i| 1.0 / n_f + (x[i] - x_mean).powi(2) / sxx)
+        .collect();
     // White HC sandwich.
     let mut meat_beta = 0.0_f64;
     let mut meat_alpha = 0.0_f64;
@@ -100,7 +106,11 @@ pub fn estimate(
     }
     let se_beta_white = var_beta.max(0.0).sqrt();
     let se_alpha_white = var_alpha.max(0.0).sqrt();
-    let t_stat = if se_beta_white > 0.0 { beta / se_beta_white } else { 0.0 };
+    let t_stat = if se_beta_white > 0.0 {
+        beta / se_beta_white
+    } else {
+        0.0
+    };
     Some(WhiteRobustReport {
         alpha,
         beta,
@@ -141,16 +151,24 @@ mod tests {
     fn homoskedastic_hc_close_to_ols() {
         let mut state: u64 = 42;
         let x: Vec<f64> = (0..200).map(|i| i as f64).collect();
-        let y: Vec<f64> = x.iter().map(|xi| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let eps = (state >> 32) as f64 / u32::MAX as f64 - 0.5;
-            2.0 * xi + eps
-        }).collect();
+        let y: Vec<f64> = x
+            .iter()
+            .map(|xi| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let eps = (state >> 32) as f64 / u32::MAX as f64 - 0.5;
+                2.0 * xi + eps
+            })
+            .collect();
         let r = estimate(&x, &y, HcVariant::Hc0).unwrap();
         let rel = (r.se_beta_white - r.se_beta_ols).abs() / r.se_beta_ols;
-        assert!(rel < 0.30, "homoskedastic: HC SE {} close to OLS {}",
-            r.se_beta_white, r.se_beta_ols);
+        assert!(
+            rel < 0.30,
+            "homoskedastic: HC SE {} close to OLS {}",
+            r.se_beta_white,
+            r.se_beta_ols
+        );
     }
 
     #[test]
@@ -158,28 +176,40 @@ mod tests {
         // Variance strongly proportional to x² → large HC adjustment.
         let mut state: u64 = 11;
         let x: Vec<f64> = (1..=300).map(|i| i as f64).collect();
-        let y: Vec<f64> = x.iter().map(|xi| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let eps = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * (xi * xi / 200.0);
-            2.0 * xi + eps
-        }).collect();
+        let y: Vec<f64> = x
+            .iter()
+            .map(|xi| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let eps = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * (xi * xi / 200.0);
+                2.0 * xi + eps
+            })
+            .collect();
         let r = estimate(&x, &y, HcVariant::Hc0).unwrap();
         let rel = (r.se_beta_white - r.se_beta_ols).abs() / r.se_beta_ols;
-        assert!(rel > 0.10, "heteroskedastic: HC SE {} should diverge from OLS {}",
-            r.se_beta_white, r.se_beta_ols);
+        assert!(
+            rel > 0.10,
+            "heteroskedastic: HC SE {} should diverge from OLS {}",
+            r.se_beta_white,
+            r.se_beta_ols
+        );
     }
 
     #[test]
     fn hc1_inflates_vs_hc0() {
         let mut state: u64 = 99;
         let x: Vec<f64> = (0..50).map(|i| i as f64).collect();
-        let y: Vec<f64> = x.iter().map(|xi| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let eps = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * (xi / 5.0 + 1.0);
-            2.0 * xi + eps
-        }).collect();
+        let y: Vec<f64> = x
+            .iter()
+            .map(|xi| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let eps = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * (xi / 5.0 + 1.0);
+                2.0 * xi + eps
+            })
+            .collect();
         let hc0 = estimate(&x, &y, HcVariant::Hc0).unwrap();
         let hc1 = estimate(&x, &y, HcVariant::Hc1).unwrap();
         // HC1 multiplies by n/(n-2) so se = se_hc0 · √(n/(n-2)) > se_hc0.
@@ -190,14 +220,18 @@ mod tests {
     fn hc3_largest_under_high_leverage() {
         // High-leverage observation at the right tail.
         let mut x: Vec<f64> = (0..29).map(|i| i as f64).collect();
-        x.push(1000.0);    // huge leverage
+        x.push(1000.0); // huge leverage
         let mut state: u64 = 7;
-        let y: Vec<f64> = x.iter().map(|xi| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let eps = (state >> 32) as f64 / u32::MAX as f64 - 0.5;
-            2.0 * xi + eps
-        }).collect();
+        let y: Vec<f64> = x
+            .iter()
+            .map(|xi| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let eps = (state >> 32) as f64 / u32::MAX as f64 - 0.5;
+                2.0 * xi + eps
+            })
+            .collect();
         let hc0 = estimate(&x, &y, HcVariant::Hc0).unwrap();
         let hc3 = estimate(&x, &y, HcVariant::Hc3).unwrap();
         // HC3 divides by (1 − h)², so high-leverage residual gets inflated.

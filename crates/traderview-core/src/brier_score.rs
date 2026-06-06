@@ -35,14 +35,25 @@ pub struct BrierReport {
 
 pub fn compute(probabilities: &[f64], outcomes: &[u8], n_bins: usize) -> Option<BrierReport> {
     let n = probabilities.len();
-    if n == 0 || outcomes.len() != n || n_bins == 0 { return None; }
-    if probabilities.iter().any(|p| !p.is_finite() || !(0.0..=1.0).contains(p)) {
+    if n == 0 || outcomes.len() != n || n_bins == 0 {
         return None;
     }
-    if outcomes.iter().any(|o| *o > 1) { return None; }
+    if probabilities
+        .iter()
+        .any(|p| !p.is_finite() || !(0.0..=1.0).contains(p))
+    {
+        return None;
+    }
+    if outcomes.iter().any(|o| *o > 1) {
+        return None;
+    }
     let n_f = n as f64;
-    let brier: f64 = probabilities.iter().zip(outcomes.iter())
-        .map(|(p, y)| (p - *y as f64).powi(2)).sum::<f64>() / n_f;
+    let brier: f64 = probabilities
+        .iter()
+        .zip(outcomes.iter())
+        .map(|(p, y)| (p - *y as f64).powi(2))
+        .sum::<f64>()
+        / n_f;
     let base_rate: f64 = outcomes.iter().map(|y| *y as f64).sum::<f64>() / n_f;
     let uncertainty = base_rate * (1.0 - base_rate);
     // Reliability + resolution decomposition.
@@ -58,7 +69,9 @@ pub fn compute(probabilities: &[f64], outcomes: &[u8], n_bins: usize) -> Option<
     let mut reliability = 0.0_f64;
     let mut resolution = 0.0_f64;
     for k in 0..n_bins {
-        if bin_n[k] == 0 { continue; }
+        if bin_n[k] == 0 {
+            continue;
+        }
         let nk = bin_n[k] as f64;
         let p_bar = bin_p_sum[k] / nk;
         let o_bar = bin_y_sum[k] / nk;
@@ -128,8 +141,12 @@ mod tests {
         let outcomes = vec![0_u8, 0, 1, 0, 1, 1, 0, 1, 1, 1];
         let r = compute(&probs, &outcomes, 10).unwrap();
         let recomposed = r.reliability - r.resolution + r.uncertainty;
-        assert!((r.brier_score - recomposed).abs() < 1e-9,
-            "Murphy decomposition: BS={}, recomposed={}", r.brier_score, recomposed);
+        assert!(
+            (r.brier_score - recomposed).abs() < 1e-9,
+            "Murphy decomposition: BS={}, recomposed={}",
+            r.brier_score,
+            recomposed
+        );
     }
 
     #[test]

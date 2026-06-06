@@ -21,15 +21,15 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Straddle {
     pub strike: f64,
-    pub net_premium_per_contract: f64,    // positive for debit (long), positive for credit (short)
-    pub contracts: i64,                   // > 0 = long, < 0 = short
+    pub net_premium_per_contract: f64, // positive for debit (long), positive for credit (short)
+    pub contracts: i64,                // > 0 = long, < 0 = short
     pub multiplier: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct StraddleReport {
-    pub max_profit: f64,                 // unbounded for long = +∞
-    pub max_loss: f64,                   // unbounded for short = −∞
+    pub max_profit: f64, // unbounded for long = +∞
+    pub max_loss: f64,   // unbounded for short = −∞
     pub lower_breakeven: f64,
     pub upper_breakeven: f64,
     pub profit_zone_width: f64,
@@ -37,9 +37,12 @@ pub struct StraddleReport {
 }
 
 pub fn analyze(s: &Straddle) -> Option<StraddleReport> {
-    if !s.strike.is_finite() || s.strike <= 0.0
-        || !s.net_premium_per_contract.is_finite() || s.net_premium_per_contract < 0.0
-        || !s.multiplier.is_finite() || s.multiplier <= 0.0
+    if !s.strike.is_finite()
+        || s.strike <= 0.0
+        || !s.net_premium_per_contract.is_finite()
+        || s.net_premium_per_contract < 0.0
+        || !s.multiplier.is_finite()
+        || s.multiplier <= 0.0
         || s.contracts == 0
     {
         return None;
@@ -91,13 +94,17 @@ mod tests {
 
     #[test]
     fn invalid_inputs_return_none() {
-        let mut bad = long_straddle(); bad.strike = 0.0;
+        let mut bad = long_straddle();
+        bad.strike = 0.0;
         assert!(analyze(&bad).is_none());
-        let mut bad = long_straddle(); bad.net_premium_per_contract = -1.0;
+        let mut bad = long_straddle();
+        bad.net_premium_per_contract = -1.0;
         assert!(analyze(&bad).is_none());
-        let mut bad = long_straddle(); bad.contracts = 0;
+        let mut bad = long_straddle();
+        bad.contracts = 0;
         assert!(analyze(&bad).is_none());
-        let mut bad = long_straddle(); bad.multiplier = 0.0;
+        let mut bad = long_straddle();
+        bad.multiplier = 0.0;
         assert!(analyze(&bad).is_none());
     }
 

@@ -11,8 +11,8 @@
 //!   transcribed. The wizard surfaces a "you may qualify, check IRS
 //!   Pub 596" link instead of computing.
 
-use rust_decimal::Decimal;
 use crate::engine::FilingStatus;
+use rust_decimal::Decimal;
 
 #[derive(Debug, Clone, Copy)]
 pub struct CtcInput {
@@ -45,7 +45,7 @@ pub fn child_tax_credit(input: CtcInput) -> CtcResult {
     // to the next $1,000 — i.e. $50 per $1,000 or fraction thereof).
     let threshold = Decimal::from(match input.status {
         FilingStatus::Mfj => 250_000,
-        _                 => 200_000,
+        _ => 200_000,
     });
     if input.agi > threshold {
         let excess = input.agi - threshold;
@@ -58,10 +58,10 @@ pub fn child_tax_credit(input: CtcInput) -> CtcResult {
 
     // Split back into CTC and ODC proportionally (only matters for the
     // refundable-portion calc — IRS practice phases CTC first).
-    let ctc_after  = total_credit.min(raw_ctc);
-    let odc_after  = (total_credit - ctc_after).max(Decimal::ZERO);
-    let refundable = (refundable_per_child * Decimal::from(input.qualifying_children_under_17))
-        .min(ctc_after);
+    let ctc_after = total_credit.min(raw_ctc);
+    let odc_after = (total_credit - ctc_after).max(Decimal::ZERO);
+    let refundable =
+        (refundable_per_child * Decimal::from(input.qualifying_children_under_17)).min(ctc_after);
 
     CtcResult {
         ctc: ctc_after,
@@ -125,8 +125,11 @@ mod tests {
         });
         assert_eq!(r.ctc, Decimal::ZERO);
         assert_eq!(r.odc, Decimal::from(1_500));
-        assert_eq!(r.refundable_portion, Decimal::ZERO,
-            "ODC has no refundable component");
+        assert_eq!(
+            r.refundable_portion,
+            Decimal::ZERO,
+            "ODC has no refundable component"
+        );
     }
 
     #[test]
@@ -142,8 +145,11 @@ mod tests {
             status: FilingStatus::Single,
         });
         assert_eq!(r.total, Decimal::from(1_250));
-        assert_eq!(r.refundable_portion, Decimal::from(1_250),
-            "refundable cannot exceed the CTC remaining after phase-out");
+        assert_eq!(
+            r.refundable_portion,
+            Decimal::from(1_250),
+            "refundable cannot exceed the CTC remaining after phase-out"
+        );
     }
 
     #[test]
@@ -153,7 +159,7 @@ mod tests {
         let r = child_tax_credit(CtcInput {
             qualifying_children_under_17: 1,
             other_dependents: 0,
-            agi: Decimal::from(300_000),  // way over → 0 total
+            agi: Decimal::from(300_000), // way over → 0 total
             status: FilingStatus::Single,
         });
         assert_eq!(r.total, Decimal::ZERO);
@@ -218,7 +224,7 @@ mod tests {
         let r = child_tax_credit(CtcInput {
             qualifying_children_under_17: 1,
             other_dependents: 0,
-            agi: Decimal::from(300_000),  // $100k over → $5,000 reduction
+            agi: Decimal::from(300_000), // $100k over → $5,000 reduction
             status: FilingStatus::Single,
         });
         assert_eq!(r.total, Decimal::ZERO);

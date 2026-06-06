@@ -442,7 +442,8 @@ mod tests {
             lease_specified_deposit_return_status:
                 LeaseSpecifiedDepositReturnStatus::LeaseSilentDefaultOneMonthReturn,
             habitability_condition_severity: HabitabilityConditionSeverity::NoMaterialInterference,
-            written_agreement_status: WrittenAgreementStatus::PeriodicTenancyWithoutWrittenAgreement,
+            written_agreement_status:
+                WrittenAgreementStatus::PeriodicTenancyWithoutWrittenAgreement,
             compliance_aspect: ComplianceAspect::SecurityDepositReturnUnderSection38121030,
             days_to_return_deposit: 25,
             deposit_wrongfully_withheld: false,
@@ -528,7 +529,10 @@ mod tests {
             ComplianceAspect::TrebleDamagesWrongfulWithholdingUnderSection38121030;
         input.deposit_wrongfully_withheld = false;
         let out = check(&input);
-        assert_eq!(out.mode, CoLandlordTenantMode::CompliantNoWrongfulWithholding);
+        assert_eq!(
+            out.mode,
+            CoLandlordTenantMode::CompliantNoWrongfulWithholding
+        );
     }
 
     #[test]
@@ -672,7 +676,8 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect =
             ComplianceAspect::MaterialInterferenceStandardUnderSection38125030HB19_1170;
-        input.habitability_condition_severity = HabitabilityConditionSeverity::NoMaterialInterference;
+        input.habitability_condition_severity =
+            HabitabilityConditionSeverity::NoMaterialInterference;
         let out = check(&input);
         assert_eq!(
             out.mode,

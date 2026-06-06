@@ -51,7 +51,9 @@ pub fn compute(closes: &[f64], volumes: &[f64], period: usize) -> Vec<Option<f64
     }
     out[start] = Some(ema);
     for i in (start + 1)..n {
-        if !have[i] { continue; }
+        if !have[i] {
+            continue;
+        }
         let v = alpha * raw[i] + (1.0 - alpha) * ema;
         if v.is_finite() {
             ema = v;

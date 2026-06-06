@@ -218,20 +218,22 @@ pub fn check(input: &Section422Input) -> Section422Result {
         DispositionType::SameYearDisqualifyingDisposition
     );
 
-    let amt_preference_cents = if same_year_disqualifying_reverses_amt
-        || !iso_qualifies_under_section_422_b
-    {
-        0
-    } else {
-        spread_at_exercise_cents.saturating_mul(input.shares_count)
-    };
+    let amt_preference_cents =
+        if same_year_disqualifying_reverses_amt || !iso_qualifies_under_section_422_b {
+            0
+        } else {
+            spread_at_exercise_cents.saturating_mul(input.shares_count)
+        };
 
-    let sale_minus_strike = input.sale_price_cents.saturating_sub(input.exercise_price_cents);
+    let sale_minus_strike = input
+        .sale_price_cents
+        .saturating_sub(input.exercise_price_cents);
     let lesser_ordinary = spread_at_exercise_cents.min(sale_minus_strike);
 
     let ordinary_income_on_disqualifying_disposition_cents = if matches!(
         input.disposition,
-        DispositionType::DisqualifyingDisposition | DispositionType::SameYearDisqualifyingDisposition
+        DispositionType::DisqualifyingDisposition
+            | DispositionType::SameYearDisqualifyingDisposition
     ) {
         lesser_ordinary.saturating_mul(input.shares_count)
     } else {
@@ -278,7 +280,8 @@ pub fn check(input: &Section422Input) -> Section422Result {
 
     if matches!(
         input.disposition,
-        DispositionType::DisqualifyingDisposition | DispositionType::SameYearDisqualifyingDisposition
+        DispositionType::DisqualifyingDisposition
+            | DispositionType::SameYearDisqualifyingDisposition
     ) {
         failure_reasons.push(format!(
             "26 USC § 421(b) DISQUALIFYING DISPOSITION — fails § 422(a) 2-year-from-grant + 1-year-from-exercise holding periods; spread on exercise ({} cents/share) recharacterized as ORDINARY COMPENSATION INCOME up to 37% federal; total ordinary income {} cents",
@@ -372,9 +375,10 @@ mod tests {
     fn qualifying_disposition_amt_preference_on_exercise() {
         let r = check(&iso_compliant_holding());
         assert_eq!(r.amt_preference_cents, 4900 * 50_000);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 56(b)(3)")
-            && f.contains("AMT PREFERENCE")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 56(b)(3)") && f.contains("AMT PREFERENCE")));
     }
 
     #[test]
@@ -385,9 +389,14 @@ mod tests {
         i.years_exercise_to_sale = 0;
         let r = check(&i);
         assert!(!r.holding_periods_satisfied);
-        assert_eq!(r.ordinary_income_on_disqualifying_disposition_cents, 4900 * 50_000);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 421(b) DISQUALIFYING DISPOSITION")));
+        assert_eq!(
+            r.ordinary_income_on_disqualifying_disposition_cents,
+            4900 * 50_000
+        );
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 421(b) DISQUALIFYING DISPOSITION")));
     }
 
     #[test]
@@ -398,7 +407,10 @@ mod tests {
         i.years_grant_to_sale = 1;
         i.years_exercise_to_sale = 0;
         let r = check(&i);
-        assert_eq!(r.ordinary_income_on_disqualifying_disposition_cents, 2900 * 50_000);
+        assert_eq!(
+            r.ordinary_income_on_disqualifying_disposition_cents,
+            2900 * 50_000
+        );
     }
 
     #[test]
@@ -408,9 +420,10 @@ mod tests {
         let r = check(&i);
         assert!(r.same_year_disqualifying_reverses_amt);
         assert_eq!(r.amt_preference_cents, 0);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 422(c)(2)")
-            && f.contains("REVERSES")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 422(c)(2)") && f.contains("REVERSES")));
     }
 
     #[test]
@@ -429,8 +442,7 @@ mod tests {
         let r = check(&i);
         assert_eq!(r.portion_subject_to_100k_limit_dollars, 100_000);
         assert_eq!(r.excess_treated_as_nqso_dollars, 100_000);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 422(d)")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 422(d)")
             && f.contains("$100,000 limit")
             && f.contains("$100000 treated as NQSO")));
     }
@@ -441,9 +453,10 @@ mod tests {
         i.shareholder_approved_plan = false;
         let r = check(&i);
         assert!(!r.iso_qualifies_under_section_422_b);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 422(b)(1)")
-            && f.contains("NQSO")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 422(b)(1)") && f.contains("NQSO")));
     }
 
     #[test]
@@ -452,9 +465,10 @@ mod tests {
         i.price_at_least_fmv_at_grant = false;
         let r = check(&i);
         assert!(!r.iso_qualifies_under_section_422_b);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 422(b)(4)")
-            && f.contains("LESS THAN FMV")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 422(b)(4)") && f.contains("LESS THAN FMV")));
     }
 
     #[test]
@@ -463,9 +477,10 @@ mod tests {
         i.employee_through_3_months_before_exercise = false;
         let r = check(&i);
         assert!(!r.iso_qualifies_under_section_422_b);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 422(b)(6)")
-            && f.contains("AUTOMATIC CONVERSION to NQSO")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 422(b)(6)") && f.contains("AUTOMATIC CONVERSION to NQSO")));
     }
 
     #[test]
@@ -474,8 +489,7 @@ mod tests {
         i.within_10_year_exercise_period = false;
         let r = check(&i);
         assert!(!r.iso_qualifies_under_section_422_b);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 422(b)(3)")));
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 422(b)(3)")));
     }
 
     #[test]
@@ -526,11 +540,19 @@ mod tests {
             (DispositionType::NoDisposition, false, false),
             (DispositionType::QualifyingDisposition, false, true),
             (DispositionType::DisqualifyingDisposition, true, false),
-            (DispositionType::SameYearDisqualifyingDisposition, true, false),
+            (
+                DispositionType::SameYearDisqualifyingDisposition,
+                true,
+                false,
+            ),
         ] {
             let mut i = iso_compliant_holding();
             i.disposition = disp;
-            if matches!(disp, DispositionType::DisqualifyingDisposition | DispositionType::SameYearDisqualifyingDisposition) {
+            if matches!(
+                disp,
+                DispositionType::DisqualifyingDisposition
+                    | DispositionType::SameYearDisqualifyingDisposition
+            ) {
                 i.years_grant_to_sale = 1;
                 i.years_exercise_to_sale = 0;
             }
@@ -538,12 +560,14 @@ mod tests {
             assert_eq!(
                 r.ordinary_income_on_disqualifying_disposition_cents > 0,
                 expect_dq_income,
-                "disp={:?}", disp
+                "disp={:?}",
+                disp
             );
             assert_eq!(
                 r.long_term_capital_gain_cents > 0,
                 expect_ltcg,
-                "disp={:?}", disp
+                "disp={:?}",
+                disp
             );
         }
     }
@@ -569,8 +593,12 @@ mod tests {
         assert!(r.citation.contains("§ 53 (AMT credit)"));
         assert!(r.citation.contains("§ 1411 (NIIT 3.8%)"));
         assert!(r.citation.contains("§ 162 (employer deduction)"));
-        assert!(r.citation.contains("Treas. Reg. § 1.422-1 through § 1.422-5"));
-        assert!(r.citation.contains("Treas. Reg. § 1.421-1 through § 1.421-2"));
+        assert!(r
+            .citation
+            .contains("Treas. Reg. § 1.422-1 through § 1.422-5"));
+        assert!(r
+            .citation
+            .contains("Treas. Reg. § 1.421-1 through § 1.421-2"));
         assert!(r.citation.contains("Form 3921"));
         assert!(r.citation.contains("Rev. Rul. 71-52"));
         assert!(r.citation.contains("FTB Publication 1004"));
@@ -579,8 +607,7 @@ mod tests {
     #[test]
     fn note_pins_subsection_b_six_requirements() {
         let r = check(&iso_compliant_holding());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 422(b)")
+        assert!(r.notes.iter().any(|n| n.contains("§ 422(b)")
             && n.contains("(6 conditions)")
             && n.contains("shareholder-approved")
             && n.contains("110% for 10%+")
@@ -590,17 +617,18 @@ mod tests {
     #[test]
     fn note_pins_subsection_d_100k_limit() {
         let r = check(&iso_compliant_holding());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 422(d) $100,000 ANNUAL LIMIT")
-            && n.contains("GRANT DATE")
-            && n.contains("treated as NQSO")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 422(d) $100,000 ANNUAL LIMIT")
+                && n.contains("GRANT DATE")
+                && n.contains("treated as NQSO")));
     }
 
     #[test]
     fn note_pins_subsection_a_holding_periods() {
         let r = check(&iso_compliant_holding());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 422(a)(1)-(2)")
+        assert!(r.notes.iter().any(|n| n.contains("§ 422(a)(1)-(2)")
             && n.contains("2 YEARS from GRANT DATE")
             && n.contains("1 YEAR from EXERCISE DATE")));
     }
@@ -608,42 +636,46 @@ mod tests {
     #[test]
     fn note_pins_section_421b_disqualifying_lesser_rule() {
         let r = check(&iso_compliant_holding());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 421(b) DISQUALIFYING DISPOSITION")
-            && n.contains("LESSER of")
-            && n.contains("§ 162 compensation deduction")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 421(b) DISQUALIFYING DISPOSITION")
+                && n.contains("LESSER of")
+                && n.contains("§ 162 compensation deduction")));
     }
 
     #[test]
     fn note_pins_section_56b3_amt_adjustment() {
         let r = check(&iso_compliant_holding());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 56(b)(3) AMT ADJUSTMENT")
-            && n.contains("AMT basis = FMV at exercise")
-            && n.contains("28% AMT rate")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 56(b)(3) AMT ADJUSTMENT")
+                && n.contains("AMT basis = FMV at exercise")
+                && n.contains("28% AMT rate")));
     }
 
     #[test]
     fn note_pins_section_53_amt_credit() {
         let r = check(&iso_compliant_holding());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 53 AMT CREDIT")
-            && n.contains("MINIMUM TAX CREDIT")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 53 AMT CREDIT") && n.contains("MINIMUM TAX CREDIT")));
     }
 
     #[test]
     fn note_pins_section_422c2_same_year_reversal() {
         let r = check(&iso_compliant_holding());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 422(c)(2)")
-            && n.contains("SAME-YEAR EARLY DISPOSITION REVERSAL")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("§ 422(c)(2)") && n.contains("SAME-YEAR EARLY DISPOSITION REVERSAL")
+        ));
     }
 
     #[test]
     fn note_pins_section_1411_niit_3_8() {
         let r = check(&iso_compliant_holding());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 1411 NIIT 3.8%")
+        assert!(r.notes.iter().any(|n| n.contains("§ 1411 NIIT 3.8%")
             && n.contains("$200K single")
             && n.contains("$250K MFJ")));
     }
@@ -651,18 +683,19 @@ mod tests {
     #[test]
     fn note_pins_trader_fact_patterns_five() {
         let r = check(&iso_compliant_holding());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-critical fact patterns")
-            && n.contains("50K ISOs $1 strike $50 FMV")
-            && n.contains("$686K AMT")
-            && n.contains("LTCG at 23.8%")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-critical fact patterns")
+                && n.contains("50K ISOs $1 strike $50 FMV")
+                && n.contains("$686K AMT")
+                && n.contains("LTCG at 23.8%")));
     }
 
     #[test]
     fn note_pins_form_3921() {
         let r = check(&iso_compliant_holding());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Form 3921")
+        assert!(r.notes.iter().any(|n| n.contains("Form 3921")
             && n.contains("January 31")
             && n.contains("AMT-basis vs regular-basis")));
     }
@@ -670,8 +703,7 @@ mod tests {
     #[test]
     fn note_pins_california_conformity() {
         let r = check(&iso_compliant_holding());
-        assert!(r.notes.iter().any(|n|
-            n.contains("FTB Publication 1004")
+        assert!(r.notes.iter().any(|n| n.contains("FTB Publication 1004")
             && n.contains("R&TC § 17062")
             && n.contains("CA AMT rate 7%")));
     }
@@ -679,11 +711,13 @@ mod tests {
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&iso_compliant_holding());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Companion to section_475c2")
-            && n.contains("section_1411")
-            && n.contains("section_53")
-            && n.contains("section_56")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Companion to section_475c2")
+                && n.contains("section_1411")
+                && n.contains("section_53")
+                && n.contains("section_56")));
     }
 
     #[test]

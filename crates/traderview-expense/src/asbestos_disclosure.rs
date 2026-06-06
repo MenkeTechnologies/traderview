@@ -283,9 +283,7 @@ pub fn check(input: &Input) -> CheckResult {
     }
 
     // Single-family residence OSHA exclusion.
-    if osha_in_scope
-        || !matches!(input.building_type, BuildingType::SingleFamilyResidence)
-    {
+    if osha_in_scope || !matches!(input.building_type, BuildingType::SingleFamilyResidence) {
         // no-op — handled above
     } else if input.construction_planned_in_occupied_areas {
         notes.push(
@@ -355,11 +353,10 @@ mod tests {
         // Statute doesn't engage; treated as compliant.
         assert!(r.compliant);
         assert!(!r.lease_signing_disclosure_mandate);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 25915") && n.contains("threshold"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 25915") && n.contains("threshold")));
     }
 
     #[test]
@@ -369,11 +366,10 @@ mod tests {
         i.days_since_knowledge_obtained = 16;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("§ 25916(a)") && v.contains("15 days"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 25916(a)") && v.contains("15 days")));
     }
 
     #[test]
@@ -403,11 +399,10 @@ mod tests {
         i.annual_renotification_provided = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("§ 25916(b)") && v.contains("annual"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 25916(b)") && v.contains("annual")));
     }
 
     #[test]
@@ -454,11 +449,10 @@ mod tests {
         let r = check(&i);
         assert!(r.osha_construction_notice_required);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("§ 1926.1101(k)(2)") && v.contains("construction-phase"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1926.1101(k)(2)") && v.contains("construction-phase")));
     }
 
     #[test]
@@ -519,11 +513,10 @@ mod tests {
         let mut i = base(Regime::FederalAHERA);
         i.building_type = BuildingType::MultiTenantResidential;
         let r = check(&i);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("AHERA") && n.contains("schools"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("AHERA") && n.contains("schools")));
     }
 
     // ── Default — federal floor only ───────────────────────────
@@ -579,10 +572,7 @@ mod tests {
 
     #[test]
     fn osha_construction_notice_only_for_multi_tenant_or_commercial_pre_1981_invariant() {
-        for bt in [
-            BuildingType::SingleFamilyResidence,
-            BuildingType::School,
-        ] {
+        for bt in [BuildingType::SingleFamilyResidence, BuildingType::School] {
             let mut i = base(Regime::FederalOSHA);
             i.building_type = bt;
             i.construction_planned_in_occupied_areas = true;
@@ -609,16 +599,24 @@ mod tests {
 
     #[test]
     fn citation_pins_authority_per_regime() {
-        assert!(check(&base(Regime::California)).citation.contains("§ 25915"));
-        assert!(check(&base(Regime::NewJersey)).citation.contains("N.J.A.C."));
-        assert!(check(&base(Regime::NewYork)).citation.contains("Multiple Dwelling Law"));
-        assert!(
-            check(&base(Regime::FederalOSHA))
-                .citation
-                .contains("§ 1926.1101(k)(2)")
-        );
-        assert!(check(&base(Regime::FederalAHERA)).citation.contains("AHERA"));
-        assert!(check(&base(Regime::Default)).citation.contains("Federal OSHA"));
+        assert!(check(&base(Regime::California))
+            .citation
+            .contains("§ 25915"));
+        assert!(check(&base(Regime::NewJersey))
+            .citation
+            .contains("N.J.A.C."));
+        assert!(check(&base(Regime::NewYork))
+            .citation
+            .contains("Multiple Dwelling Law"));
+        assert!(check(&base(Regime::FederalOSHA))
+            .citation
+            .contains("§ 1926.1101(k)(2)"));
+        assert!(check(&base(Regime::FederalAHERA))
+            .citation
+            .contains("AHERA"));
+        assert!(check(&base(Regime::Default))
+            .citation
+            .contains("Federal OSHA"));
     }
 
     #[test]
@@ -649,10 +647,7 @@ mod tests {
             let mut i = base(Regime::California);
             i.initial_notice_provided = false;
             i.days_since_knowledge_obtained = days;
-            let has_violation = check(&i)
-                .violations
-                .iter()
-                .any(|v| v.contains("15 days"));
+            let has_violation = check(&i).violations.iter().any(|v| v.contains("15 days"));
             assert_eq!(
                 has_violation, expect_violation,
                 "day {}: expected violation={}",

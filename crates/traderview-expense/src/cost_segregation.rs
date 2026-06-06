@@ -64,11 +64,7 @@ pub struct CostSegAllocation {
 
 impl CostSegAllocation {
     pub fn sum(&self) -> Decimal {
-        self.pct_5_year
-            + self.pct_7_year
-            + self.pct_15_year
-            + self.pct_27_5_year
-            + self.pct_39_year
+        self.pct_5_year + self.pct_7_year + self.pct_15_year + self.pct_27_5_year + self.pct_39_year
     }
 
     pub fn for_type(t: PropertyTypeDefault) -> Self {
@@ -227,7 +223,8 @@ pub fn compute(input: &CostSegInput) -> CostSegReport {
             let one = Decimal::from(1);
             let tol = Decimal::from_str("0.005").unwrap();
             if (sum - one).abs() > tol {
-                r.note = format!("allocation_override sum {sum} != 1.0; using property-type default");
+                r.note =
+                    format!("allocation_override sum {sum} != 1.0; using property-type default");
                 CostSegAllocation::for_type(input.property_type)
             } else {
                 o.clone()
@@ -359,8 +356,11 @@ mod tests {
             (2026, dec!(0.20)),
             (2027, Decimal::ZERO),
         ] {
-            assert_eq!(bonus_pct_for_year(year), expected,
-                "bonus pct {year} must match TCJA phase-down");
+            assert_eq!(
+                bonus_pct_for_year(year),
+                expected,
+                "bonus pct {year} must match TCJA phase-down"
+            );
         }
     }
 
@@ -479,9 +479,17 @@ mod tests {
     #[test]
     fn bucket_year_1_total_equals_bonus_plus_macrs_remaining() {
         let r = compute(&base());
-        for b in [&r.bucket_5_year, &r.bucket_7_year, &r.bucket_15_year,
-                  &r.bucket_27_5_year, &r.bucket_39_year] {
-            assert_eq!(b.year_1_total, b.bonus_deduction + b.macrs_year_1_on_remaining);
+        for b in [
+            &r.bucket_5_year,
+            &r.bucket_7_year,
+            &r.bucket_15_year,
+            &r.bucket_27_5_year,
+            &r.bucket_39_year,
+        ] {
+            assert_eq!(
+                b.year_1_total,
+                b.bonus_deduction + b.macrs_year_1_on_remaining
+            );
         }
     }
 

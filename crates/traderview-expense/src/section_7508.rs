@@ -297,9 +297,12 @@ mod tests {
     #[test]
     fn note_pins_hospitalization_5_year_cap() {
         let r = check(&combat_zone_base());
-        assert!(r.notes.iter().any(|n| n.contains("hospitalization extension")
-            && n.contains("5 years")
-            && n.contains("1825 days")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("hospitalization extension")
+                && n.contains("5 years")
+                && n.contains("1825 days")));
     }
 
     #[test]
@@ -377,7 +380,10 @@ mod tests {
 
     #[test]
     fn military_spouse_truth_table() {
-        for category in [TaxpayerCategory::ServiceMember, TaxpayerCategory::MilitarySpouse] {
+        for category in [
+            TaxpayerCategory::ServiceMember,
+            TaxpayerCategory::MilitarySpouse,
+        ] {
             let mut i = combat_zone_base();
             i.taxpayer_category = category;
             let r = check(&i);

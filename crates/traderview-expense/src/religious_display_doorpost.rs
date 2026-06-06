@@ -343,11 +343,10 @@ mod tests {
         i.dwelling_type = DwellingType::Dormitory;
         let r = check(&i);
         assert!(r.covers_dormitory);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1940.45") && n.contains("dormitory"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1940.45") && n.contains("dormitory")));
     }
 
     #[test]
@@ -438,11 +437,10 @@ mod tests {
         // No state statute → restriction not state-statutorily
         // impermissible, but FHA risk attaches.
         assert!(r.fha_section_3604_religious_discrimination_risk);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("Bloch v. Frischholz") && n.contains("§ 3604(b)"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Bloch v. Frischholz") && n.contains("§ 3604(b)")));
     }
 
     // ── Default — FHA § 3604 fallback ───────────────────────────
@@ -466,11 +464,10 @@ mod tests {
         // Without religious motivation, statute doesn't engage.
         assert!(r.restriction_permissible);
         assert!(!r.fha_section_3604_religious_discrimination_risk);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("sincere religious belief"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("sincere religious belief")));
     }
 
     #[test]
@@ -481,11 +478,10 @@ mod tests {
         let r = check(&i);
         // Statute protects only entry door / doorframe displays.
         assert!(r.restriction_permissible);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("entry door or entry doorframe"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("entry door or entry doorframe")));
     }
 
     // ── Temporary removal carve-out ─────────────────────────────
@@ -620,20 +616,22 @@ mod tests {
 
     #[test]
     fn citation_pins_authority_per_regime() {
-        assert!(check(&base(Regime::California)).citation.contains("§ 1940.45"));
+        assert!(check(&base(Regime::California))
+            .citation
+            .contains("§ 1940.45"));
         assert!(check(&base(Regime::Texas)).citation.contains("§ 202.018"));
-        assert!(check(&base(Regime::Florida)).citation.contains("§ 720.3045"));
-        assert!(
-            check(&base(Regime::Illinois))
-                .citation
-                .contains("765 ILCS 605/18.4")
-        );
-        assert!(check(&base(Regime::Connecticut)).citation.contains("§ 47-230a"));
-        assert!(
-            check(&base(Regime::RhodeIsland))
-                .citation
-                .contains("R.I. Gen. Laws § 34-36.1-3.18")
-        );
+        assert!(check(&base(Regime::Florida))
+            .citation
+            .contains("§ 720.3045"));
+        assert!(check(&base(Regime::Illinois))
+            .citation
+            .contains("765 ILCS 605/18.4"));
+        assert!(check(&base(Regime::Connecticut))
+            .citation
+            .contains("§ 47-230a"));
+        assert!(check(&base(Regime::RhodeIsland))
+            .citation
+            .contains("R.I. Gen. Laws § 34-36.1-3.18"));
         assert!(check(&base(Regime::NewYork)).citation.contains("S4466"));
         assert!(check(&base(Regime::Default)).citation.contains("§ 3604(b)"));
     }
@@ -642,7 +640,9 @@ mod tests {
     fn bloch_v_frischholz_cited_in_default_and_ny_paths_invariant() {
         for &regime in &[Regime::Default, Regime::NewYork] {
             assert!(
-                check(&base(regime)).citation.contains("Bloch v. Frischholz"),
+                check(&base(regime))
+                    .citation
+                    .contains("Bloch v. Frischholz"),
                 "{:?}: must cite Bloch v. Frischholz",
                 regime,
             );

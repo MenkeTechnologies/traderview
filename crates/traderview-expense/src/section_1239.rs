@@ -230,8 +230,10 @@ pub fn compute(input: &Input) -> Output {
         input.related_person_category,
         RelatedPersonCategory::ControlledCorporationOver50PctByValue
             | RelatedPersonCategory::ControlledPartnershipOver50PctCapitalOrProfits
-    ) && input.direct_ownership_percentage_basis_points <= SECTION_1239_CONTROLLED_ENTITY_THRESHOLD_BASIS_POINTS
-        && input.constructive_ownership_percentage_basis_points > SECTION_1239_CONTROLLED_ENTITY_THRESHOLD_BASIS_POINTS
+    ) && input.direct_ownership_percentage_basis_points
+        <= SECTION_1239_CONTROLLED_ENTITY_THRESHOLD_BASIS_POINTS
+        && input.constructive_ownership_percentage_basis_points
+            > SECTION_1239_CONTROLLED_ENTITY_THRESHOLD_BASIS_POINTS
         && !input.constructive_ownership_test_performed
     {
         return Output {
@@ -341,7 +343,10 @@ mod tests {
     #[test]
     fn controlled_corp_capital_gain_violation_recharacterized() {
         let result = compute(&baseline_controlled_corp_capital_misreport());
-        assert_eq!(result.mode, Section1239Mode::ViolationGainReportedAsCapitalDespiteSection1239);
+        assert_eq!(
+            result.mode,
+            Section1239Mode::ViolationGainReportedAsCapitalDespiteSection1239
+        );
         assert_eq!(result.recharacterized_ordinary_income_cents, 5_000_000);
         assert_eq!(result.correct_gain_character, GainCharacter::OrdinaryOther);
     }
@@ -349,12 +354,16 @@ mod tests {
     #[test]
     fn controlled_partnership_section_1231_misreport_violation() {
         let input = Input {
-            related_person_category: RelatedPersonCategory::ControlledPartnershipOver50PctCapitalOrProfits,
+            related_person_category:
+                RelatedPersonCategory::ControlledPartnershipOver50PctCapitalOrProfits,
             gain_character_as_reported: GainCharacter::Section1231Gain,
             ..baseline_controlled_corp_capital_misreport()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1239Mode::ViolationGainReportedAsCapitalDespiteSection1239);
+        assert_eq!(
+            result.mode,
+            Section1239Mode::ViolationGainReportedAsCapitalDespiteSection1239
+        );
         assert_eq!(result.correct_gain_character, GainCharacter::OrdinaryOther);
     }
 
@@ -378,7 +387,10 @@ mod tests {
             ..baseline_controlled_corp_capital_misreport()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1239Mode::ViolationGainReportedAsCapitalDespiteSection1239);
+        assert_eq!(
+            result.mode,
+            Section1239Mode::ViolationGainReportedAsCapitalDespiteSection1239
+        );
     }
 
     #[test]
@@ -390,28 +402,39 @@ mod tests {
             ..baseline_controlled_corp_capital_misreport()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1239Mode::ViolationConstructiveOwnershipNotAppliedToSection267C);
+        assert_eq!(
+            result.mode,
+            Section1239Mode::ViolationConstructiveOwnershipNotAppliedToSection267C
+        );
         assert_eq!(result.recharacterized_ordinary_income_cents, 5_000_000);
     }
 
     #[test]
     fn property_not_depreciable_to_transferee_not_applicable() {
         let input = Input {
-            property_depreciable_to_transferee: PropertyDepreciableToTransferee::NotDepreciableInTransfereeHands,
+            property_depreciable_to_transferee:
+                PropertyDepreciableToTransferee::NotDepreciableInTransfereeHands,
             ..baseline_controlled_corp_capital_misreport()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1239Mode::NotApplicablePropertyNotDepreciableToTransferee);
+        assert_eq!(
+            result.mode,
+            Section1239Mode::NotApplicablePropertyNotDepreciableToTransferee
+        );
     }
 
     #[test]
     fn property_amortizable_section_197_not_applicable() {
         let input = Input {
-            property_depreciable_to_transferee: PropertyDepreciableToTransferee::AmortizableUnderSection197InTransfereeHands,
+            property_depreciable_to_transferee:
+                PropertyDepreciableToTransferee::AmortizableUnderSection197InTransfereeHands,
             ..baseline_controlled_corp_capital_misreport()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1239Mode::NotApplicablePropertyNotDepreciableToTransferee);
+        assert_eq!(
+            result.mode,
+            Section1239Mode::NotApplicablePropertyNotDepreciableToTransferee
+        );
     }
 
     #[test]
@@ -433,7 +456,10 @@ mod tests {
             ..baseline_controlled_corp_capital_misreport()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1239Mode::ViolationGainReportedAsCapitalDespiteSection1239);
+        assert_eq!(
+            result.mode,
+            Section1239Mode::ViolationGainReportedAsCapitalDespiteSection1239
+        );
     }
 
     #[test]
@@ -443,7 +469,10 @@ mod tests {
             ..baseline_controlled_corp_capital_misreport()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1239Mode::CompliantTrustBeneficiaryRemoteContingentNotRelated);
+        assert_eq!(
+            result.mode,
+            Section1239Mode::CompliantTrustBeneficiaryRemoteContingentNotRelated
+        );
         assert_eq!(result.recharacterized_ordinary_income_cents, 0);
     }
 
@@ -454,17 +483,24 @@ mod tests {
             ..baseline_controlled_corp_capital_misreport()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1239Mode::ViolationGainReportedAsCapitalDespiteSection1239);
+        assert_eq!(
+            result.mode,
+            Section1239Mode::ViolationGainReportedAsCapitalDespiteSection1239
+        );
     }
 
     #[test]
     fn executor_pecuniary_bequest_satisfaction_not_related() {
         let input = Input {
-            related_person_category: RelatedPersonCategory::ExecutorBeneficiaryPecuniaryBequestSatisfaction,
+            related_person_category:
+                RelatedPersonCategory::ExecutorBeneficiaryPecuniaryBequestSatisfaction,
             ..baseline_controlled_corp_capital_misreport()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1239Mode::CompliantPecuniaryBequestSatisfactionNotRelated);
+        assert_eq!(
+            result.mode,
+            Section1239Mode::CompliantPecuniaryBequestSatisfactionNotRelated
+        );
         assert_eq!(result.recharacterized_ordinary_income_cents, 0);
     }
 
@@ -475,7 +511,10 @@ mod tests {
             ..baseline_controlled_corp_capital_misreport()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1239Mode::ViolationGainReportedAsCapitalDespiteSection1239);
+        assert_eq!(
+            result.mode,
+            Section1239Mode::ViolationGainReportedAsCapitalDespiteSection1239
+        );
     }
 
     #[test]
@@ -485,7 +524,10 @@ mod tests {
             ..baseline_controlled_corp_capital_misreport()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1239Mode::CompliantPropertyAlreadyOrdinaryUnderSection1245Or1250);
+        assert_eq!(
+            result.mode,
+            Section1239Mode::CompliantPropertyAlreadyOrdinaryUnderSection1245Or1250
+        );
     }
 
     #[test]
@@ -495,7 +537,10 @@ mod tests {
             ..baseline_controlled_corp_capital_misreport()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1239Mode::CompliantPropertyAlreadyOrdinaryUnderSection1245Or1250);
+        assert_eq!(
+            result.mode,
+            Section1239Mode::CompliantPropertyAlreadyOrdinaryUnderSection1245Or1250
+        );
     }
 
     #[test]
@@ -505,7 +550,10 @@ mod tests {
             ..baseline_controlled_corp_capital_misreport()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1239Mode::CompliantGainRecharacterizedAsOrdinaryUnderSection1239);
+        assert_eq!(
+            result.mode,
+            Section1239Mode::CompliantGainRecharacterizedAsOrdinaryUnderSection1239
+        );
     }
 
     #[test]
@@ -515,7 +563,10 @@ mod tests {
             ..baseline_controlled_corp_capital_misreport()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1239Mode::ViolationGainReportedAsCapitalDespiteSection1239);
+        assert_eq!(
+            result.mode,
+            Section1239Mode::ViolationGainReportedAsCapitalDespiteSection1239
+        );
     }
 
     #[test]
@@ -551,7 +602,10 @@ mod tests {
             ..baseline_controlled_corp_capital_misreport()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1239Mode::ViolationGainReportedAsCapitalDespiteSection1239);
+        assert_eq!(
+            result.mode,
+            Section1239Mode::ViolationGainReportedAsCapitalDespiteSection1239
+        );
         assert_eq!(result.recharacterized_ordinary_income_cents, u64::MAX);
     }
 }

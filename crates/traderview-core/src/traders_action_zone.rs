@@ -51,9 +51,12 @@ pub fn compute(closes: &[f64], fast_period: usize, slow_period: usize) -> TazRep
         fast_period,
         slow_period,
     };
-    if fast_period < 2 || slow_period < 2 || fast_period >= slow_period
-        || n < slow_period { return report; }
-    if closes.iter().any(|x| !x.is_finite()) { return report; }
+    if fast_period < 2 || slow_period < 2 || fast_period >= slow_period || n < slow_period {
+        return report;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return report;
+    }
     report.fast_ema = ema(closes, fast_period);
     report.slow_ema = ema(closes, slow_period);
     for (i, close) in closes.iter().enumerate() {
@@ -65,15 +68,23 @@ pub fn compute(closes: &[f64], fast_period: usize, slow_period: usize) -> TazRep
 }
 
 fn classify(close: f64, fast: f64, slow: f64) -> ActionZone {
-    if close == fast && fast == slow { return ActionZone::Transition; }
+    if close == fast && fast == slow {
+        return ActionZone::Transition;
+    }
     let bullish_emas = fast > slow;
     let bearish_emas = fast < slow;
     if bullish_emas {
-        if close > fast { ActionZone::BullishAligned }
-        else { ActionZone::BullishPulled }
+        if close > fast {
+            ActionZone::BullishAligned
+        } else {
+            ActionZone::BullishPulled
+        }
     } else if bearish_emas {
-        if close < fast { ActionZone::BearishAligned }
-        else { ActionZone::BearishPulled }
+        if close < fast {
+            ActionZone::BearishAligned
+        } else {
+            ActionZone::BearishPulled
+        }
     } else if close > slow {
         ActionZone::BullishExtended
     } else if close < slow {
@@ -86,7 +97,9 @@ fn classify(close: f64, fast: f64, slow: f64) -> ActionZone {
 fn ema(series: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     let k = 2.0 / (p_f + 1.0);
     let seed: f64 = series[..period].iter().sum::<f64>() / p_f;

@@ -194,8 +194,7 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.power_holder_category
-        == PowerHolderCategory::GrantorWithAdversePartyConsentRequired
+    if input.power_holder_category == PowerHolderCategory::GrantorWithAdversePartyConsentRequired
         || input.power_holder_category == PowerHolderCategory::AdversePartyAlone
     {
         return Output {
@@ -279,8 +278,7 @@ pub fn compute(input: &Input) -> Output {
     }
 
     if input.power_form == PowerForm::PowerToRevoke
-        && input.power_holder_category
-            == PowerHolderCategory::GrantorAloneOrWithNonadverseParty
+        && input.power_holder_category == PowerHolderCategory::GrantorAloneOrWithNonadverseParty
     {
         return Output {
             mode: Section676Mode::CompliantSection676ARevocableTrustClassicGrantorTrustFlowThrough,
@@ -423,8 +421,7 @@ mod tests {
         ] {
             let input = Input {
                 power_form,
-                power_holder_category:
-                    PowerHolderCategory::GrantorAloneOrWithNonadverseParty,
+                power_holder_category: PowerHolderCategory::GrantorAloneOrWithNonadverseParty,
                 ..baseline_classic_revocable_trust()
             };
             let result = check(&input);

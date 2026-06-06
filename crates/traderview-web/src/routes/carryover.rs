@@ -23,7 +23,10 @@ use traderview_expense::section_1212::{
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/tax/carryover", get(list_route).post(compute_and_save_route))
+        .route(
+            "/tax/carryover",
+            get(list_route).post(compute_and_save_route),
+        )
         .route("/tax/carryover/:year", get(get_route).delete(delete_route))
 }
 
@@ -31,9 +34,7 @@ async fn list_route(
     State(s): State<AppState>,
     u: AuthUser,
 ) -> Result<Json<Vec<CarryoverRow>>, ApiError> {
-    Ok(Json(
-        list(&s.pool, u.id).await.map_err(ApiError::Internal)?,
-    ))
+    Ok(Json(list(&s.pool, u.id).await.map_err(ApiError::Internal)?))
 }
 
 async fn get_route(
@@ -90,9 +91,16 @@ async fn compute_and_save_route(
             .await
             .map_err(ApiError::Internal)?,
     };
-    if [b.st_gains, b.st_losses, b.lt_gains, b.lt_losses, prior_st, prior_lt]
-        .iter()
-        .any(|x| *x < Decimal::ZERO)
+    if [
+        b.st_gains,
+        b.st_losses,
+        b.lt_gains,
+        b.lt_losses,
+        prior_st,
+        prior_lt,
+    ]
+    .iter()
+    .any(|x| *x < Decimal::ZERO)
     {
         return Err(ApiError::BadRequest(
             "gains/losses/carryovers must be >= 0 (losses passed as positive)".into(),
@@ -131,7 +139,10 @@ async fn compute_and_save_route(
     )
     .await
     .map_err(ApiError::Internal)?;
-    Ok(Json(ComputeOutput { computed, persisted }))
+    Ok(Json(ComputeOutput {
+        computed,
+        persisted,
+    }))
 }
 
 async fn delete_route(
@@ -147,4 +158,3 @@ async fn delete_route(
     }
     Ok(Json(serde_json::json!({"deleted": true})))
 }
-

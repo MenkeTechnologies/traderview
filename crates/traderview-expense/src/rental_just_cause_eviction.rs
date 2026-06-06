@@ -123,23 +123,25 @@ pub fn check(input: &Input) -> Output {
     let mut notes: Vec<String> = Vec::new();
     let citations: Vec<String> = vec![
         "NJ Anti-Eviction Act of 1974, N.J.S.A. 2A:18-61.1".to_string(),
-        "CA Tenant Protection Act of 2019, Cal. Civ. Code § 1946.2 + § 1947.12 (AB 1482)".to_string(),
+        "CA Tenant Protection Act of 2019, Cal. Civ. Code § 1946.2 + § 1947.12 (AB 1482)"
+            .to_string(),
         "OR SB 608 (2019), ORS 90.323 + ORS 90.427".to_string(),
-        "NY Good Cause Eviction Law of 2024, Part HH of L. 2024, c. 56 (eff. April 20, 2024)".to_string(),
+        "NY Good Cause Eviction Law of 2024, Part HH of L. 2024, c. 56 (eff. April 20, 2024)"
+            .to_string(),
         "NY RPL § 226-c".to_string(),
         "WA HB 2114 (2024), RCW 59.18.650".to_string(),
         "Urban Institute — Just Cause Eviction Laws (national survey)".to_string(),
     ];
 
-    if matches!(
-        input.jurisdiction,
-        Jurisdiction::DefaultNoJustCauseRegime
-    ) {
+    if matches!(input.jurisdiction, Jurisdiction::DefaultNoJustCauseRegime) {
         notes.push("Jurisdiction has no statewide just-cause eviction regime; common-law lease-termination rules apply.".to_string());
         return Output {
             severity: Severity::DefaultJurisdictionNoJustCauseRegime,
             rent_cap_percent_x_100: 0,
-            proposed_increase_percent_x_100: percent_change(input.current_rent_cents, input.proposed_rent_cents),
+            proposed_increase_percent_x_100: percent_change(
+                input.current_rent_cents,
+                input.proposed_rent_cents,
+            ),
             proposed_rent_within_cap: true,
             notes,
             citations,
@@ -158,7 +160,10 @@ pub fn check(input: &Input) -> Output {
             return Output {
                 severity: Severity::ExemptSmallLandlordUnder10Units,
                 rent_cap_percent_x_100: 0,
-                proposed_increase_percent_x_100: percent_change(input.current_rent_cents, input.proposed_rent_cents),
+                proposed_increase_percent_x_100: percent_change(
+                    input.current_rent_cents,
+                    input.proposed_rent_cents,
+                ),
                 proposed_rent_within_cap: true,
                 notes,
                 citations,
@@ -167,13 +172,15 @@ pub fn check(input: &Input) -> Output {
         if input.property_year_built > NY_NEW_CONSTRUCTION_YEAR_CUTOFF {
             notes.push(format!(
                 "NY new-construction exemption: built {} > {} cutoff.",
-                input.property_year_built,
-                NY_NEW_CONSTRUCTION_YEAR_CUTOFF
+                input.property_year_built, NY_NEW_CONSTRUCTION_YEAR_CUTOFF
             ));
             return Output {
                 severity: Severity::ExemptNewConstructionPostThresholdYear,
                 rent_cap_percent_x_100: 0,
-                proposed_increase_percent_x_100: percent_change(input.current_rent_cents, input.proposed_rent_cents),
+                proposed_increase_percent_x_100: percent_change(
+                    input.current_rent_cents,
+                    input.proposed_rent_cents,
+                ),
                 proposed_rent_within_cap: true,
                 notes,
                 citations,
@@ -189,7 +196,10 @@ pub fn check(input: &Input) -> Output {
             return Output {
                 severity: Severity::ExemptOwnerOccupiedUnderUnitThreshold,
                 rent_cap_percent_x_100: 0,
-                proposed_increase_percent_x_100: percent_change(input.current_rent_cents, input.proposed_rent_cents),
+                proposed_increase_percent_x_100: percent_change(
+                    input.current_rent_cents,
+                    input.proposed_rent_cents,
+                ),
                 proposed_rent_within_cap: true,
                 notes,
                 citations,
@@ -200,7 +210,10 @@ pub fn check(input: &Input) -> Output {
             return Output {
                 severity: Severity::ExemptSubsidizedOrRentStabilizedHousing,
                 rent_cap_percent_x_100: 0,
-                proposed_increase_percent_x_100: percent_change(input.current_rent_cents, input.proposed_rent_cents),
+                proposed_increase_percent_x_100: percent_change(
+                    input.current_rent_cents,
+                    input.proposed_rent_cents,
+                ),
                 proposed_rent_within_cap: true,
                 notes,
                 citations,
@@ -213,13 +226,15 @@ pub fn check(input: &Input) -> Output {
         if property_age <= OR_NEW_CONSTRUCTION_AGE_THRESHOLD_YEARS {
             notes.push(format!(
                 "OR SB 608 exemption: property age {} ≤ {} years (new construction).",
-                property_age,
-                OR_NEW_CONSTRUCTION_AGE_THRESHOLD_YEARS
+                property_age, OR_NEW_CONSTRUCTION_AGE_THRESHOLD_YEARS
             ));
             return Output {
                 severity: Severity::ExemptNewConstructionPostThresholdYear,
                 rent_cap_percent_x_100: 0,
-                proposed_increase_percent_x_100: percent_change(input.current_rent_cents, input.proposed_rent_cents),
+                proposed_increase_percent_x_100: percent_change(
+                    input.current_rent_cents,
+                    input.proposed_rent_cents,
+                ),
                 proposed_rent_within_cap: true,
                 notes,
                 citations,
@@ -235,7 +250,10 @@ pub fn check(input: &Input) -> Output {
             Output {
                 severity: Severity::NotApplicable,
                 rent_cap_percent_x_100: cap,
-                proposed_increase_percent_x_100: percent_change(input.current_rent_cents, input.proposed_rent_cents),
+                proposed_increase_percent_x_100: percent_change(
+                    input.current_rent_cents,
+                    input.proposed_rent_cents,
+                ),
                 proposed_rent_within_cap: true,
                 notes,
                 citations,
@@ -285,7 +303,10 @@ pub fn check(input: &Input) -> Output {
             Output {
                 severity,
                 rent_cap_percent_x_100: cap,
-                proposed_increase_percent_x_100: percent_change(input.current_rent_cents, input.proposed_rent_cents),
+                proposed_increase_percent_x_100: percent_change(
+                    input.current_rent_cents,
+                    input.proposed_rent_cents,
+                ),
                 proposed_rent_within_cap: true,
                 notes,
                 citations,
@@ -397,7 +418,10 @@ mod tests {
         let mut i = base_ny_rent_increase();
         i.property_year_built = 2015;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::ExemptNewConstructionPostThresholdYear);
+        assert_eq!(
+            out.severity,
+            Severity::ExemptNewConstructionPostThresholdYear
+        );
     }
 
     #[test]
@@ -445,7 +469,10 @@ mod tests {
         i.jurisdiction = Jurisdiction::OregonSb608;
         i.property_year_built = 2015;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::ExemptNewConstructionPostThresholdYear);
+        assert_eq!(
+            out.severity,
+            Severity::ExemptNewConstructionPostThresholdYear
+        );
     }
 
     #[test]
@@ -495,7 +522,10 @@ mod tests {
     #[test]
     fn citations_pin_all_five_state_regimes() {
         let out = check(&base_ny_rent_increase());
-        assert!(out.citations.iter().any(|c| c.contains("N.J.S.A. 2A:18-61.1")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("N.J.S.A. 2A:18-61.1")));
         assert!(out.citations.iter().any(|c| c.contains("§ 1946.2")));
         assert!(out.citations.iter().any(|c| c.contains("ORS 90.323")));
         assert!(out.citations.iter().any(|c| c.contains("April 20, 2024")));

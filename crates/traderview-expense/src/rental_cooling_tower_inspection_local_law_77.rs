@@ -156,7 +156,10 @@ pub fn check(input: &Input) -> Output {
     let monthly_testing_required = input.current_year >= LL159_MONTHLY_TESTING_EFFECTIVE_YEAR;
 
     if !input.has_cooling_tower {
-        notes.push("No cooling tower at property; LL 77 inspection/testing regime not triggered.".to_string());
+        notes.push(
+            "No cooling tower at property; LL 77 inspection/testing regime not triggered."
+                .to_string(),
+        );
         return Output {
             severity: Severity::NotApplicableNoCoolingTower,
             compliant: true,
@@ -505,16 +508,25 @@ mod tests {
     #[test]
     fn citations_pin_ll77_admin_code_chapter_8_nyc() {
         let out = check(&base_compliant());
-        assert!(out.citations.iter().any(|c| c.contains("Local Law 77 of 2015")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("Local Law 77 of 2015")));
         assert!(out.citations.iter().any(|c| c.contains("§ 17-194.1")));
         assert!(out.citations.iter().any(|c| c.contains("Chapter 8")));
-        assert!(out.citations.iter().any(|c| c.contains("10 NYCRR Subpart 4-1")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("10 NYCRR Subpart 4-1")));
     }
 
     #[test]
     fn citations_pin_ll159_monthly_testing_2026() {
         let out = check(&base_compliant());
-        assert!(out.citations.iter().any(|c| c.contains("Local Law 159 of 2024")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("Local Law 159 of 2024")));
         assert!(out.citations.iter().any(|c| c.contains("May 7, 2026")));
     }
 

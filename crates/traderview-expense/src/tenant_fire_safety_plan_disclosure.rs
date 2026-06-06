@@ -104,9 +104,7 @@ pub fn check(input: &TenantFireSafetyPlanDisclosureInput) -> TenantFireSafetyPla
     }
 }
 
-fn check_nyc(
-    input: &TenantFireSafetyPlanDisclosureInput,
-) -> TenantFireSafetyPlanDisclosureResult {
+fn check_nyc(input: &TenantFireSafetyPlanDisclosureInput) -> TenantFireSafetyPlanDisclosureResult {
     let mut violations: Vec<String> = Vec::new();
     let notes: Vec<String> = vec![
         "NYC HMC § 27-2046 (Article 11 Protective Devices and Fire Protection) — smoke detector duties for Class A and Class B multiple dwellings; specific HPD-approved notice format required at or near mailboxes"
@@ -126,9 +124,8 @@ fn check_nyc(
             );
         }
         if !input.fire_safety_plan_mailed_annually {
-            violations.push(
-                "NYC HPD — Fire Safety Plan must be mailed to tenants ANNUALLY".to_string(),
-            );
+            violations
+                .push("NYC HPD — Fire Safety Plan must be mailed to tenants ANNUALLY".to_string());
         }
         if !input.emergency_notice_on_apartment_doors {
             violations.push(
@@ -173,10 +170,7 @@ fn check_ca(input: &TenantFireSafetyPlanDisclosureInput) -> TenantFireSafetyPlan
 
     let in_scope = input.apartment_unit_count >= 3;
 
-    if in_scope
-        && !input.fire_safety_plan_posted_at_entrance
-        && !input.emergency_notice_in_lobby
-    {
+    if in_scope && !input.fire_safety_plan_posted_at_entrance && !input.emergency_notice_in_lobby {
         violations.push(
             "Cal. Health & Safety Code § 13145 — fire alarm system disclosure required at building entrance or in lobby/common area".to_string(),
         );
@@ -378,10 +372,7 @@ mod tests {
         i.emergency_notice_in_lobby = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("§ 13145")));
+        assert!(r.violations.iter().any(|v| v.contains("§ 13145")));
     }
 
     #[test]
@@ -397,7 +388,9 @@ mod tests {
     fn ca_citation_pins_authorities() {
         let r = check(&ca_compliant());
         assert!(r.citation.contains("§§ 13145, 17926"));
-        assert!(r.citation.contains("Carbon Monoxide Poisoning Prevention Act"));
+        assert!(r
+            .citation
+            .contains("Carbon Monoxide Poisoning Prevention Act"));
     }
 
     #[test]
@@ -484,10 +477,7 @@ mod tests {
     #[test]
     fn nyc_note_pins_3_plus_apartment_threshold() {
         let r = check(&nyc_fully_compliant());
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("3+ apartment buildings")));
+        assert!(r.notes.iter().any(|n| n.contains("3+ apartment buildings")));
     }
 
     #[test]

@@ -156,12 +156,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // NoStateAdvanceRentLimit default — 46 other states + DC.
     let default_states = [
-        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE",
-        "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS",
-        "KY", "LA", "ME", "MD", "MI", "MN", "MS", "MO",
-        "MT", "NE", "NV", "NH", "NM", "NC", "ND", "OH",
-        "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX",
-        "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA",
+        "KS", "KY", "LA", "ME", "MD", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NM", "NC",
+        "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV",
+        "WI", "WY",
     ];
     for code in default_states {
         m.insert(
@@ -235,7 +233,11 @@ pub fn check(input: &AdvanceRentInput) -> AdvanceRentResult {
     // Total months claimed = advance rent + last month if landlord
     // demanding separately.
     let total_months_claimed = input.advance_rent_months_demanded
-        + if input.landlord_demanding_last_month_rent { 1 } else { 0 };
+        + if input.landlord_demanding_last_month_rent {
+            1
+        } else {
+            0
+        };
 
     let cap_compliant = match rule.regime {
         AdvanceRentRegime::CaliforniaSixMonthLeaseOnly => {
@@ -246,10 +248,7 @@ pub fn check(input: &AdvanceRentInput) -> AdvanceRentResult {
                 ca_gate_met && total_months_claimed >= 6
             }
         }
-        _ => {
-            !ny_applies
-                || total_months_claimed <= rule.maximum_advance_months_at_signing
-        }
+        _ => !ny_applies || total_months_claimed <= rule.maximum_advance_months_at_signing,
     };
 
     // Interest compliance (MA only).
@@ -260,9 +259,7 @@ pub fn check(input: &AdvanceRentInput) -> AdvanceRentResult {
     let landlord_compliant = cap_compliant && interest_compliant;
 
     let regime_label = match rule.regime {
-        AdvanceRentRegime::NewYorkOneMonthFirstOnly => {
-            "New York HSTPA 2019 — first month only"
-        }
+        AdvanceRentRegime::NewYorkOneMonthFirstOnly => "New York HSTPA 2019 — first month only",
         AdvanceRentRegime::MassachusettsFirstLastSecurityLock => {
             "Massachusetts G.L. c. 186 § 15B — first + last + deposit + lock + 5% interest"
         }
@@ -272,9 +269,7 @@ pub fn check(input: &AdvanceRentInput) -> AdvanceRentResult {
         AdvanceRentRegime::NewJerseyAdvanceRentUnlimited => {
             "New Jersey § 46:8-21.2 — advance rent unlimited"
         }
-        AdvanceRentRegime::NoStateAdvanceRentLimit => {
-            "no statewide advance-rent cap"
-        }
+        AdvanceRentRegime::NoStateAdvanceRentLimit => "no statewide advance-rent cap",
     };
 
     let note = if landlord_compliant {
@@ -385,7 +380,10 @@ mod tests {
         let mut i = baseline("NY");
         i.landlord_demanding_last_month_rent = true;
         let r = check(&i);
-        assert!(!r.landlord_compliant, "NY HSTPA prohibits last-month demand");
+        assert!(
+            !r.landlord_compliant,
+            "NY HSTPA prohibits last-month demand"
+        );
     }
 
     #[test]
@@ -403,7 +401,10 @@ mod tests {
         i.tenancy_is_unregulated = false;
         i.advance_rent_months_demanded = 3;
         let r = check(&i);
-        assert!(r.landlord_compliant, "HSTPA caps unregulated tenancies only");
+        assert!(
+            r.landlord_compliant,
+            "HSTPA caps unregulated tenancies only"
+        );
     }
 
     // ── MA: first + last + 5% interest ─────────────────────────────
@@ -559,7 +560,10 @@ mod tests {
 
     #[test]
     fn ma_only_interest_required_state() {
-        let count = RULES.iter().filter(|(_, r)| r.interest_on_advance_rent_required).count();
+        let count = RULES
+            .iter()
+            .filter(|(_, r)| r.interest_on_advance_rent_required)
+            .count();
         assert_eq!(count, 1, "only MA requires 5% interest");
     }
 

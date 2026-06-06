@@ -166,7 +166,8 @@ pub fn compute(input: &Input) -> Output {
             ordinary_income_recharacterized_dollars: 0,
             remaining_capital_or_1231_gain_dollars: 0,
             statutory_basis: "§ 1254(a)(1) — no gain recognized; rule inapplicable".to_string(),
-            notes: "No gain on disposition of § 1254 property; recapture rule inapplicable.".to_string(),
+            notes: "No gain on disposition of § 1254 property; recapture rule inapplicable."
+                .to_string(),
             citations,
         };
     }
@@ -182,7 +183,8 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.property_category == Section1254PropertyCategory::NonproductiveWellLimitedRiskExcluded {
+    if input.property_category == Section1254PropertyCategory::NonproductiveWellLimitedRiskExcluded
+    {
         return Output {
             mode: Section1254Mode::NotApplicableNonproductiveWellExclusion,
             ordinary_income_recharacterized_dollars: 0,
@@ -365,7 +367,10 @@ mod tests {
             ..baseline_post_1987_working_interest_sale()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1254Mode::NotApplicableNotSection1254Property);
+        assert_eq!(
+            result.mode,
+            Section1254Mode::NotApplicableNotSection1254Property
+        );
     }
 
     #[test]
@@ -375,13 +380,19 @@ mod tests {
             ..baseline_post_1987_working_interest_sale()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1254Mode::NotApplicableNonproductiveWellExclusion);
+        assert_eq!(
+            result.mode,
+            Section1254Mode::NotApplicableNonproductiveWellExclusion
+        );
     }
 
     #[test]
     fn post_1987_working_interest_compliant_full_recapture() {
         let result = compute(&baseline_post_1987_working_interest_sale());
-        assert_eq!(result.mode, Section1254Mode::CompliantGainRecharacterizedAsOrdinary);
+        assert_eq!(
+            result.mode,
+            Section1254Mode::CompliantGainRecharacterizedAsOrdinary
+        );
         assert_eq!(result.ordinary_income_recharacterized_dollars, 600_000);
         assert_eq!(result.remaining_capital_or_1231_gain_dollars, 400_000);
     }
@@ -404,7 +415,10 @@ mod tests {
             ..baseline_post_1987_working_interest_sale()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1254Mode::ViolationGainReportedAsCapitalDespiteSection1254);
+        assert_eq!(
+            result.mode,
+            Section1254Mode::ViolationGainReportedAsCapitalDespiteSection1254
+        );
     }
 
     #[test]
@@ -414,7 +428,10 @@ mod tests {
             ..baseline_post_1987_working_interest_sale()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1254Mode::ViolationGainReportedAsCapitalDespiteSection1254);
+        assert_eq!(
+            result.mode,
+            Section1254Mode::ViolationGainReportedAsCapitalDespiteSection1254
+        );
     }
 
     #[test]
@@ -427,7 +444,10 @@ mod tests {
             ..baseline_post_1987_working_interest_sale()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1254Mode::CompliantPre1987PropertyDepletionOffsetApplied);
+        assert_eq!(
+            result.mode,
+            Section1254Mode::CompliantPre1987PropertyDepletionOffsetApplied
+        );
         assert_eq!(result.ordinary_income_recharacterized_dollars, 600_000);
         assert_eq!(result.remaining_capital_or_1231_gain_dollars, 400_000);
     }
@@ -440,7 +460,10 @@ mod tests {
             ..baseline_post_1987_working_interest_sale()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1254Mode::ViolationPre1987DepletionOffsetNotComputed);
+        assert_eq!(
+            result.mode,
+            Section1254Mode::ViolationPre1987DepletionOffsetNotComputed
+        );
     }
 
     #[test]
@@ -452,7 +475,10 @@ mod tests {
             ..baseline_post_1987_working_interest_sale()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1254Mode::CompliantPartialDispositionAllocationApplied);
+        assert_eq!(
+            result.mode,
+            Section1254Mode::CompliantPartialDispositionAllocationApplied
+        );
         assert_eq!(result.ordinary_income_recharacterized_dollars, 300_000);
         assert_eq!(result.remaining_capital_or_1231_gain_dollars, 700_000);
     }
@@ -465,7 +491,10 @@ mod tests {
             ..baseline_post_1987_working_interest_sale()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1254Mode::ViolationPartialDispositionAllocationOmitted);
+        assert_eq!(
+            result.mode,
+            Section1254Mode::ViolationPartialDispositionAllocationOmitted
+        );
     }
 
     #[test]
@@ -475,7 +504,10 @@ mod tests {
             ..baseline_post_1987_working_interest_sale()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1254Mode::CompliantCarryoverBasisTransfereeTreatedAsHoldingTransferorPeriod);
+        assert_eq!(
+            result.mode,
+            Section1254Mode::CompliantCarryoverBasisTransfereeTreatedAsHoldingTransferorPeriod
+        );
         assert_eq!(result.ordinary_income_recharacterized_dollars, 0);
     }
 
@@ -486,7 +518,10 @@ mod tests {
             ..baseline_post_1987_working_interest_sale()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1254Mode::CompliantGainRecharacterizedAsOrdinary);
+        assert_eq!(
+            result.mode,
+            Section1254Mode::CompliantGainRecharacterizedAsOrdinary
+        );
     }
 
     #[test]
@@ -496,7 +531,10 @@ mod tests {
             ..baseline_post_1987_working_interest_sale()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1254Mode::CompliantGainRecharacterizedAsOrdinary);
+        assert_eq!(
+            result.mode,
+            Section1254Mode::CompliantGainRecharacterizedAsOrdinary
+        );
     }
 
     #[test]
@@ -506,7 +544,10 @@ mod tests {
             ..baseline_post_1987_working_interest_sale()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1254Mode::CompliantGainRecharacterizedAsOrdinary);
+        assert_eq!(
+            result.mode,
+            Section1254Mode::CompliantGainRecharacterizedAsOrdinary
+        );
     }
 
     #[test]
@@ -546,6 +587,9 @@ mod tests {
             ..baseline_post_1987_working_interest_sale()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1254Mode::CompliantGainRecharacterizedAsOrdinary);
+        assert_eq!(
+            result.mode,
+            Section1254Mode::CompliantGainRecharacterizedAsOrdinary
+        );
     }
 }

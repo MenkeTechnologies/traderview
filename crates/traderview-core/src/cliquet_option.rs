@@ -24,11 +24,11 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct CliquetReport {
     pub total_price: f64,
-    pub per_segment_prices: [f64; 16],    // up to 16 segments
+    pub per_segment_prices: [f64; 16], // up to 16 segments
     pub n_segments: usize,
 }
 
-#[allow(clippy::too_many_arguments)]    // canonical signature
+#[allow(clippy::too_many_arguments)] // canonical signature
 pub fn price(
     spot: f64,
     reset_dates: &[f64],
@@ -38,10 +38,14 @@ pub fn price(
     reset_multiplier: f64,
 ) -> Option<CliquetReport> {
     let n = reset_dates.len();
-    if !spot.is_finite() || spot <= 0.0
-        || !risk_free.is_finite() || !dividend_yield.is_finite()
-        || !sigma.is_finite() || sigma <= 0.0
-        || !reset_multiplier.is_finite() || reset_multiplier <= 0.0
+    if !spot.is_finite()
+        || spot <= 0.0
+        || !risk_free.is_finite()
+        || !dividend_yield.is_finite()
+        || !sigma.is_finite()
+        || sigma <= 0.0
+        || !reset_multiplier.is_finite()
+        || reset_multiplier <= 0.0
         || !(2..=16).contains(&n)
         || reset_dates.iter().any(|t| !t.is_finite() || *t <= 0.0)
     {
@@ -49,7 +53,9 @@ pub fn price(
     }
     // Reset dates must be strictly increasing.
     for w in reset_dates.windows(2) {
-        if w[1] <= w[0] { return None; }
+        if w[1] <= w[0] {
+            return None;
+        }
     }
     let n_segments = n - 1;
     let mut per_segment = [0.0_f64; 16];
@@ -72,7 +78,9 @@ pub fn price(
         // Scale by the discounted expected spot at t_i:
         //   S_0 · e^{(r-q)·t_i} · e^{−r·t_i} = S_0 · e^{−q·t_i}
         let segment_value = spot * (-dividend_yield * t_i).exp() * segment_call_per_unit;
-        if !segment_value.is_finite() { return None; }
+        if !segment_value.is_finite() {
+            return None;
+        }
         per_segment[i] = segment_value;
         total += segment_value;
     }
@@ -84,12 +92,12 @@ pub fn price(
 }
 
 fn norm_cdf(x: f64) -> f64 {
-    let a1 =  0.254829592_f64;
+    let a1 = 0.254829592_f64;
     let a2 = -0.284496736_f64;
-    let a3 =  1.421413741_f64;
+    let a3 = 1.421413741_f64;
     let a4 = -1.453152027_f64;
-    let a5 =  1.061405429_f64;
-    let p  =  0.3275911_f64;
+    let a5 = 1.061405429_f64;
+    let p = 0.3275911_f64;
     let sign = if x < 0.0 { -1.0 } else { 1.0 };
     let xa = x.abs() / std::f64::consts::SQRT_2;
     let t = 1.0 / (1.0 + p * xa);

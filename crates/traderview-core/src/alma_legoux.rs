@@ -24,20 +24,21 @@
 //!
 //! Pure compute.
 
-pub fn compute(
-    closes: &[f64],
-    period: usize,
-    offset: f64,
-    sigma: f64,
-) -> Vec<Option<f64>> {
+pub fn compute(closes: &[f64], period: usize, offset: f64, sigma: f64) -> Vec<Option<f64>> {
     let n = closes.len();
     let mut out = vec![None; n];
-    if period < 2 || n < period || !offset.is_finite() || !sigma.is_finite()
-        || sigma <= 0.0 || !(0.0..=1.0).contains(&offset)
+    if period < 2
+        || n < period
+        || !offset.is_finite()
+        || !sigma.is_finite()
+        || sigma <= 0.0
+        || !(0.0..=1.0).contains(&offset)
     {
         return out;
     }
-    if closes.iter().any(|x| !x.is_finite()) { return out; }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     // Pre-compute kernel.
     let m = (offset * (period - 1) as f64).floor();
     let s = period as f64 / sigma;
@@ -49,7 +50,9 @@ pub fn compute(
         *slot = (-d * d * denom_inv).exp();
         w_sum += *slot;
     }
-    if w_sum <= 0.0 { return out; }
+    if w_sum <= 0.0 {
+        return out;
+    }
     for (i, slot) in out.iter_mut().enumerate().skip(period - 1) {
         let mut acc = 0.0_f64;
         for k in 0..period {
@@ -77,7 +80,9 @@ mod tests {
         assert!(compute(&closes, 9, 1.1, 6.0).iter().all(|x| x.is_none()));
         assert!(compute(&closes, 9, 0.85, 0.0).iter().all(|x| x.is_none()));
         assert!(compute(&closes, 9, 0.85, -1.0).iter().all(|x| x.is_none()));
-        assert!(compute(&closes, 9, f64::NAN, 6.0).iter().all(|x| x.is_none()));
+        assert!(compute(&closes, 9, f64::NAN, 6.0)
+            .iter()
+            .all(|x| x.is_none()));
     }
 
     #[test]
@@ -102,13 +107,20 @@ mod tests {
         let out = compute(&closes, 9, 0.85, 6.0);
         for i in 8..30 {
             let v = out[i].unwrap();
-            assert!(v < closes[i], "ALMA {} should lag close {} in uptrend", v, closes[i]);
+            assert!(
+                v < closes[i],
+                "ALMA {} should lag close {} in uptrend",
+                v,
+                closes[i]
+            );
         }
     }
 
     #[test]
     fn outputs_align_to_input_length() {
-        let closes: Vec<f64> = (0..50).map(|i| 100.0 + (i as f64 * 0.3).sin() * 5.0).collect();
+        let closes: Vec<f64> = (0..50)
+            .map(|i| 100.0 + (i as f64 * 0.3).sin() * 5.0)
+            .collect();
         let out = compute(&closes, 9, 0.85, 6.0);
         assert_eq!(out.len(), 50);
         assert!(out[7].is_none());
@@ -124,10 +136,12 @@ mod tests {
         closes.extend(vec![110.0_f64; 20]);
         let low_off = compute(&closes, 9, 0.10, 6.0);
         let high_off = compute(&closes, 9, 0.95, 6.0);
-        let i = 25;    // ~5 bars after the step
+        let i = 25; // ~5 bars after the step
         let low_v = low_off[i].unwrap();
         let high_v = high_off[i].unwrap();
-        assert!(high_v > low_v,
-            "high-offset ALMA ({high_v}) should react faster than low-offset ({low_v})");
+        assert!(
+            high_v > low_v,
+            "high-offset ALMA ({high_v}) should react faster than low-offset ({low_v})"
+        );
     }
 }

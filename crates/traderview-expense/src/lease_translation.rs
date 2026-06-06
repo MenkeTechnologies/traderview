@@ -94,11 +94,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // NoStateTranslationRequirement for remaining states + DC.
     let no_rule = [
-        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "GA", "HI",
-        "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA",
-        "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM",
-        "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD",
-        "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "GA", "HI", "ID", "IL", "IN", "IA", "KS",
+        "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM",
+        "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA",
+        "WA", "WV", "WI", "WY",
     ];
     for code in no_rule {
         m.insert(
@@ -228,7 +227,10 @@ mod tests {
     #[test]
     fn ca_spanish_lease_with_translation_complies() {
         let r = check(&input("CA", NegotiationLanguage::Spanish));
-        assert_eq!(r.regime, TranslationRegime::MandatoryTranslationFiveLanguages);
+        assert_eq!(
+            r.regime,
+            TranslationRegime::MandatoryTranslationFiveLanguages
+        );
         assert!(r.translation_required);
         assert!(r.landlord_compliant);
         assert!(!r.tenant_has_rescission_right);
@@ -325,7 +327,10 @@ mod tests {
     #[test]
     fn fl_no_translation_mandate() {
         let r = check(&input("FL", NegotiationLanguage::Spanish));
-        assert_eq!(r.regime, TranslationRegime::EnglishRequiredTranslationsNotBinding);
+        assert_eq!(
+            r.regime,
+            TranslationRegime::EnglishRequiredTranslationsNotBinding
+        );
         assert!(!r.translation_required);
         assert!(r.note.contains("English-only legal documents"));
     }
@@ -333,7 +338,9 @@ mod tests {
     #[test]
     fn fl_translations_not_binding_explicit_in_note() {
         let r = check(&input("FL", NegotiationLanguage::Spanish));
-        assert!(r.note.contains("translations are courtesy copies but not binding"));
+        assert!(r
+            .note
+            .contains("translations are courtesy copies but not binding"));
     }
 
     // No-rule states.
@@ -342,7 +349,11 @@ mod tests {
     fn no_rule_states_no_translation_required() {
         for st in &["TX", "NY", "IL", "WA", "MA", "OR", "DC"] {
             let r = check(&input(st, NegotiationLanguage::Spanish));
-            assert_eq!(r.regime, TranslationRegime::NoStateTranslationRequirement, "{st}");
+            assert_eq!(
+                r.regime,
+                TranslationRegime::NoStateTranslationRequirement,
+                "{st}"
+            );
             assert!(!r.translation_required, "{st}");
             assert!(r.landlord_compliant, "{st}");
         }
@@ -353,7 +364,12 @@ mod tests {
     #[test]
     fn coverage_is_all_50_states_plus_dc() {
         let codes: Vec<&'static str> = RULES.keys().copied().collect();
-        assert_eq!(codes.len(), 51, "expected 50 states + DC, got {}", codes.len());
+        assert_eq!(
+            codes.len(),
+            51,
+            "expected 50 states + DC, got {}",
+            codes.len()
+        );
     }
 
     #[test]
@@ -371,7 +387,10 @@ mod tests {
                 count += 1;
             }
         }
-        assert_eq!(count, 1, "expected CA only with mandatory translation regime");
+        assert_eq!(
+            count, 1,
+            "expected CA only with mandatory translation regime"
+        );
     }
 
     #[test]

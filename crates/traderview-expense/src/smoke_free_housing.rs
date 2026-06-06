@@ -109,11 +109,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // HudFloorOnly for all remaining states + DC.
     let hud_only = [
-        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "FL", "GA",
-        "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
-        "MA", "MI", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM",
-        "NY", "NC", "ND", "OH", "OK", "PA", "RI", "SC", "SD", "TN",
-        "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA",
+        "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM",
+        "NY", "NC", "ND", "OH", "OK", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA",
+        "WV", "WI", "WY",
     ];
     for code in hud_only {
         m.insert(
@@ -174,7 +173,8 @@ pub fn check(input: &SmokeFreeInput) -> SmokeFreeResult {
 
     let hud_indoor_ok = if hud_applies {
         if !input.indoor_smoking_policy_implemented {
-            violations.push("HUD 24 CFR § 965.653 indoor smoking policy not implemented".to_string());
+            violations
+                .push("HUD 24 CFR § 965.653 indoor smoking policy not implemented".to_string());
             false
         } else {
             true
@@ -213,8 +213,7 @@ pub fn check(input: &SmokeFreeInput) -> SmokeFreeResult {
         if input.written_notice_days_given < rule.conversion_notice_required_days {
             violations.push(format!(
                 "OR existing-tenant conversion requires {}-day written notice; only {} given",
-                rule.conversion_notice_required_days,
-                input.written_notice_days_given,
+                rule.conversion_notice_required_days, input.written_notice_days_given,
             ));
             false
         } else {
@@ -402,7 +401,12 @@ mod tests {
     #[test]
     fn coverage_is_all_50_states_plus_dc() {
         let codes: Vec<&'static str> = RULES.keys().copied().collect();
-        assert_eq!(codes.len(), 51, "expected 50 states + DC, got {}", codes.len());
+        assert_eq!(
+            codes.len(),
+            51,
+            "expected 50 states + DC, got {}",
+            codes.len()
+        );
     }
 
     #[test]
@@ -448,7 +452,10 @@ mod tests {
                 count += 1;
             }
         }
-        assert_eq!(count, 2, "expected CA + MN only with common-area requirement");
+        assert_eq!(
+            count, 2,
+            "expected CA + MN only with common-area requirement"
+        );
     }
 
     #[test]

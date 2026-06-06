@@ -187,9 +187,8 @@ pub fn check(input: &Input) -> Output {
         };
     }
 
-    let disallowed = minimum_distribution_threshold.saturating_sub(
-        input.applicable_amounts_paid_in_current_deferral_period_cents,
-    );
+    let disallowed = minimum_distribution_threshold
+        .saturating_sub(input.applicable_amounts_paid_in_current_deferral_period_cents);
     let allowed = input.applicable_amounts_paid_in_current_deferral_period_cents;
 
     Output {

@@ -341,7 +341,8 @@ mod tests {
     fn baseline_input() -> Input {
         Input {
             tenancy_type: TenancyType::ResidentialDwellingUnitCoveredByChapter83PartII,
-            compliance_aspect: ComplianceAspect::SecurityDepositReturnFifteenDayNoClaimUnderSection83_49,
+            compliance_aspect:
+                ComplianceAspect::SecurityDepositReturnFifteenDayNoClaimUnderSection83_49,
             days_since_tenant_vacated_for_deposit_return: 14,
             deposit_refunded_or_claim_notice_provided_within_window: true,
             days_since_tenant_vacated_for_claim_notice: 28,
@@ -363,7 +364,10 @@ mod tests {
         let mut input = baseline_input();
         input.tenancy_type = TenancyType::TransientLodgingOccupancyUnder6MonthsExempt;
         let output = check(&input);
-        assert_eq!(output.mode, FlaStat83PartIIMode::NotApplicableTenancyExemptFromChapter83PartII);
+        assert_eq!(
+            output.mode,
+            FlaStat83PartIIMode::NotApplicableTenancyExemptFromChapter83PartII
+        );
     }
 
     #[test]
@@ -401,7 +405,8 @@ mod tests {
     #[test]
     fn claim_notice_within_thirty_days_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SecurityDepositClaimNoticeThirtyDayUnderSection83_49;
+        input.compliance_aspect =
+            ComplianceAspect::SecurityDepositClaimNoticeThirtyDayUnderSection83_49;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -412,7 +417,8 @@ mod tests {
     #[test]
     fn claim_notice_at_exactly_thirty_day_boundary_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SecurityDepositClaimNoticeThirtyDayUnderSection83_49;
+        input.compliance_aspect =
+            ComplianceAspect::SecurityDepositClaimNoticeThirtyDayUnderSection83_49;
         input.days_since_tenant_vacated_for_claim_notice = 30;
         let output = check(&input);
         assert_eq!(
@@ -424,7 +430,8 @@ mod tests {
     #[test]
     fn claim_notice_at_thirty_one_days_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SecurityDepositClaimNoticeThirtyDayUnderSection83_49;
+        input.compliance_aspect =
+            ComplianceAspect::SecurityDepositClaimNoticeThirtyDayUnderSection83_49;
         input.days_since_tenant_vacated_for_claim_notice = 31;
         input.deposit_refunded_or_claim_notice_provided_within_window = false;
         let output = check(&input);
@@ -437,7 +444,8 @@ mod tests {
     #[test]
     fn premises_maintained_to_code_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordObligationToMaintainPremisesUnderSection83_51;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordObligationToMaintainPremisesUnderSection83_51;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -448,7 +456,8 @@ mod tests {
     #[test]
     fn premises_not_maintained_to_code_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordObligationToMaintainPremisesUnderSection83_51;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordObligationToMaintainPremisesUnderSection83_51;
         input.premises_maintained_to_applicable_code = false;
         let output = check(&input);
         assert_eq!(
@@ -500,7 +509,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::ThreeDayPayOrQuitNoticeUnderSection83_56_3;
         let output = check(&input);
-        assert_eq!(output.mode, FlaStat83PartIIMode::CompliantThreeDayPayOrQuitNoticeProvided);
+        assert_eq!(
+            output.mode,
+            FlaStat83PartIIMode::CompliantThreeDayPayOrQuitNoticeProvided
+        );
     }
 
     #[test]
@@ -520,7 +532,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::SevenDayCureOrVacateNoticeUnderSection83_56_2A;
         let output = check(&input);
-        assert_eq!(output.mode, FlaStat83PartIIMode::CompliantSevenDayCureOrVacateNoticeProvided);
+        assert_eq!(
+            output.mode,
+            FlaStat83PartIIMode::CompliantSevenDayCureOrVacateNoticeProvided
+        );
     }
 
     #[test]
@@ -538,7 +553,8 @@ mod tests {
     #[test]
     fn fifteen_day_month_to_month_termination_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::FifteenDayMonthToMonthTerminationUnderSection83_57;
+        input.compliance_aspect =
+            ComplianceAspect::FifteenDayMonthToMonthTerminationUnderSection83_57;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -549,7 +565,8 @@ mod tests {
     #[test]
     fn month_to_month_termination_under_fifteen_days_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::FifteenDayMonthToMonthTerminationUnderSection83_57;
+        input.compliance_aspect =
+            ComplianceAspect::FifteenDayMonthToMonthTerminationUnderSection83_57;
         input.month_to_month_termination_notice_days_given = 14;
         let output = check(&input);
         assert_eq!(
@@ -561,7 +578,8 @@ mod tests {
     #[test]
     fn retaliation_within_one_year_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::RetaliatoryConductProhibitedOneYearPresumptionUnderSection83_64;
+        input.compliance_aspect =
+            ComplianceAspect::RetaliatoryConductProhibitedOneYearPresumptionUnderSection83_64;
         input.protected_activity_within_one_year = true;
         input.adverse_action_taken = true;
         let output = check(&input);
@@ -574,7 +592,8 @@ mod tests {
     #[test]
     fn no_retaliation_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::RetaliatoryConductProhibitedOneYearPresumptionUnderSection83_64;
+        input.compliance_aspect =
+            ComplianceAspect::RetaliatoryConductProhibitedOneYearPresumptionUnderSection83_64;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -631,7 +650,10 @@ mod tests {
         assert_eq!(FLA_STAT_REASONABLE_TIME_START_HOUR_24H, 7);
         assert_eq!(FLA_STAT_REASONABLE_TIME_END_HOUR_24H, 20);
         assert_eq!(FLA_STAT_RETALIATION_PRESUMPTION_WINDOW_MONTHS, 12);
-        assert_eq!(FLA_STAT_SERVICEMEMBER_TERMINATION_RELOCATION_MILES_THRESHOLD, 35);
+        assert_eq!(
+            FLA_STAT_SERVICEMEMBER_TERMINATION_RELOCATION_MILES_THRESHOLD,
+            35
+        );
         assert_eq!(FLA_STAT_BASIS_POINT_DENOMINATOR, 10_000);
     }
 

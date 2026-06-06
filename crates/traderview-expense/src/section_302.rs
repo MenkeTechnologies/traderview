@@ -122,16 +122,15 @@ const SECTION_302C2_TEN_YEAR_REACQUISITION_BAR_YEARS: u32 = 10;
 pub fn check(input: &Input) -> Output {
     match input.redemption_test_path {
         RedemptionTestPath::SubstantiallyDisproportionateSection302B2 => {
-            let post_below_50 = input.post_redemption_voting_pct_bps
-                < SECTION_302B2_POST_REDEMPTION_VOTING_CAP_BPS;
+            let post_below_50 =
+                input.post_redemption_voting_pct_bps < SECTION_302B2_POST_REDEMPTION_VOTING_CAP_BPS;
             let required_post_for_80 = u32::try_from(
                 u128::from(input.pre_redemption_voting_pct_bps)
                     .saturating_mul(u128::from(SECTION_302B2_PRE_TO_POST_DROP_FACTOR_BPS))
                     .saturating_div(10_000),
             )
             .unwrap_or(u32::MAX);
-            let dropped_below_80 =
-                input.post_redemption_voting_pct_bps < required_post_for_80;
+            let dropped_below_80 = input.post_redemption_voting_pct_bps < required_post_for_80;
             if post_below_50 && dropped_below_80 {
                 return sale_exchange_output(
                     input,
@@ -149,7 +148,9 @@ pub fn check(input: &Input) -> Output {
                 severity: Severity::Section302B2SubstantiallyDisproportionate50_80TestFailed,
                 treated_as_sale_or_exchange: false,
                 capital_gain_or_loss_cents: 0,
-                dividend_treatment_cents: input.property_received_cents.min(input.acquiring_corp_eep_cents),
+                dividend_treatment_cents: input
+                    .property_received_cents
+                    .min(input.acquiring_corp_eep_cents),
                 note: format!(
                     "§ 302(b)(2) substantially disproportionate test FAILED. Required: \
                      post-redemption voting < 50% (actual {} bps, threshold {} bps) AND \
@@ -168,12 +169,11 @@ pub fn check(input: &Input) -> Output {
                 ),
             }
         }
-        RedemptionTestPath::CompleteTerminationSection302B3 => {
-            match input.attribution_status {
-                AttributionStatus::Section302C2FamilyAttributionWaiverFiled => sale_exchange_output(
-                    input,
-                    Severity::Section302B3CompleteTerminationWithAttributionWaiver,
-                    "§ 302(b)(3) COMPLETE TERMINATION test satisfied with § 302(c)(2) family-\
+        RedemptionTestPath::CompleteTerminationSection302B3 => match input.attribution_status {
+            AttributionStatus::Section302C2FamilyAttributionWaiverFiled => sale_exchange_output(
+                input,
+                Severity::Section302B3CompleteTerminationWithAttributionWaiver,
+                "§ 302(b)(3) COMPLETE TERMINATION test satisfied with § 302(c)(2) family-\
                      attribution waiver. Shareholder: (A) has no interest other than as \
                      creditor immediately after distribution (no officer/director/employee \
                      status), (B) acquires no such interest within 10-year reacquisition bar \
@@ -181,23 +181,24 @@ pub fn check(input: &Input) -> Output {
                      IRS to notify of any reacquisition and retain records. § 318(a)(1) \
                      family attribution waived; redemption treated as § 1001 sale or \
                      exchange producing capital gain or loss.",
-                ),
-                AttributionStatus::AttributionDoesNotApply => sale_exchange_output(
-                    input,
-                    Severity::Section302BTestSatisfiedSaleOrExchangeTreatment,
-                    "§ 302(b)(3) COMPLETE TERMINATION test satisfied: shareholder has no \
+            ),
+            AttributionStatus::AttributionDoesNotApply => sale_exchange_output(
+                input,
+                Severity::Section302BTestSatisfiedSaleOrExchangeTreatment,
+                "§ 302(b)(3) COMPLETE TERMINATION test satisfied: shareholder has no \
                      remaining direct OR constructive interest in the corporation. \
                      Redemption treated as § 1001 sale or exchange producing capital gain \
                      or loss.",
-                ),
-                AttributionStatus::AttributionAppliesIncreasesOwnership => {
-                    Output {
-                        severity: Severity::Section302B3CompleteTerminationAttributionDefeatsFailedWaiver,
-                        treated_as_sale_or_exchange: false,
-                        capital_gain_or_loss_cents: 0,
-                        dividend_treatment_cents: input.property_received_cents.min(input.acquiring_corp_eep_cents),
-                        note: format!(
-                            "§ 302(b)(3) complete termination DEFEATED by § 318(a) attribution. \
+            ),
+            AttributionStatus::AttributionAppliesIncreasesOwnership => Output {
+                severity: Severity::Section302B3CompleteTerminationAttributionDefeatsFailedWaiver,
+                treated_as_sale_or_exchange: false,
+                capital_gain_or_loss_cents: 0,
+                dividend_treatment_cents: input
+                    .property_received_cents
+                    .min(input.acquiring_corp_eep_cents),
+                note: format!(
+                    "§ 302(b)(3) complete termination DEFEATED by § 318(a) attribution. \
                              Shareholder still owns constructive interest through family + \
                              entity + option attribution. § 302(c)(2) waiver NOT filed (or \
                              waiver conditions not met). Required: (A) no interest other than \
@@ -205,14 +206,11 @@ pub fn check(input: &Input) -> Output {
                              within {SECTION_302C2_TEN_YEAR_REACQUISITION_BAR_YEARS}-year \
                              window (other than by bequest or inheritance), (C) signed IRS \
                              notification agreement. Default § 301 distribution treatment \
-                             applies — ordinary dividend up to acquiring-corp E&P (${})."
-                            ,
-                            input.acquiring_corp_eep_cents / 100
-                        ),
-                    }
-                }
-            }
-        }
+                             applies — ordinary dividend up to acquiring-corp E&P (${}).",
+                    input.acquiring_corp_eep_cents / 100
+                ),
+            },
+        },
         RedemptionTestPath::NotEssentiallyEquivalentSection302B1 => sale_exchange_output(
             input,
             Severity::Section302BTestSatisfiedSaleOrExchangeTreatment,
@@ -239,7 +237,9 @@ pub fn check(input: &Input) -> Output {
             severity: Severity::Section302DDefaultDistributionTreatmentSection301,
             treated_as_sale_or_exchange: false,
             capital_gain_or_loss_cents: 0,
-            dividend_treatment_cents: input.property_received_cents.min(input.acquiring_corp_eep_cents),
+            dividend_treatment_cents: input
+                .property_received_cents
+                .min(input.acquiring_corp_eep_cents),
             note: format!(
                 "§ 302(d) DEFAULT § 301 distribution treatment. No § 302(b) test asserted or \
                  satisfied; redemption defaults to § 301 distribution character — ordinary \
@@ -281,8 +281,7 @@ mod tests {
 
     fn base_sub_disp() -> Input {
         Input {
-            redemption_test_path:
-                RedemptionTestPath::SubstantiallyDisproportionateSection302B2,
+            redemption_test_path: RedemptionTestPath::SubstantiallyDisproportionateSection302B2,
             attribution_status: AttributionStatus::AttributionDoesNotApply,
             pre_redemption_voting_pct_bps: 6_000,
             post_redemption_voting_pct_bps: 2_000,
@@ -335,8 +334,7 @@ mod tests {
     fn complete_termination_with_attribution_waiver() {
         let mut input = base_sub_disp();
         input.redemption_test_path = RedemptionTestPath::CompleteTerminationSection302B3;
-        input.attribution_status =
-            AttributionStatus::Section302C2FamilyAttributionWaiverFiled;
+        input.attribution_status = AttributionStatus::Section302C2FamilyAttributionWaiverFiled;
         let output = check(&input);
         assert_eq!(
             output.severity,
@@ -375,8 +373,7 @@ mod tests {
     #[test]
     fn not_essentially_equivalent_dividend_test_asserted() {
         let mut input = base_sub_disp();
-        input.redemption_test_path =
-            RedemptionTestPath::NotEssentiallyEquivalentSection302B1;
+        input.redemption_test_path = RedemptionTestPath::NotEssentiallyEquivalentSection302B1;
         let output = check(&input);
         assert_eq!(
             output.severity,
@@ -389,8 +386,7 @@ mod tests {
     #[test]
     fn partial_liquidation_test_asserted() {
         let mut input = base_sub_disp();
-        input.redemption_test_path =
-            RedemptionTestPath::PartialLiquidationSection302B4;
+        input.redemption_test_path = RedemptionTestPath::PartialLiquidationSection302B4;
         let output = check(&input);
         assert_eq!(
             output.severity,
@@ -491,7 +487,7 @@ mod tests {
     fn boundary_post_49_pct_satisfies_50_test_if_80_also_met() {
         let mut input = base_sub_disp();
         input.post_redemption_voting_pct_bps = 4_700; // 47%
-        // Required for 80%: 6000 × 0.8 = 4800; 4700 < 4800 → satisfies 80%
+                                                      // Required for 80%: 6000 × 0.8 = 4800; 4700 < 4800 → satisfies 80%
         let output = check(&input);
         assert_eq!(
             output.severity,

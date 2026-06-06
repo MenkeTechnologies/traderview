@@ -14,16 +14,16 @@ use axum::{Json, Router};
 use rust_decimal::Decimal;
 use serde::Deserialize;
 use traderview_db::ira_basis::{
-    delete as delete_row, get_by_year, list, prior_year_basis, upsert, IraBasisRow,
-    IraBasisUpsert,
+    delete as delete_row, get_by_year, list, prior_year_basis, upsert, IraBasisRow, IraBasisUpsert,
 };
-use traderview_expense::form_8606::{
-    compute as compute_form_8606, Form8606Input, Form8606Result,
-};
+use traderview_expense::form_8606::{compute as compute_form_8606, Form8606Input, Form8606Result};
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/tax/ira-basis", get(list_route).post(compute_and_save_route))
+        .route(
+            "/tax/ira-basis",
+            get(list_route).post(compute_and_save_route),
+        )
         .route("/tax/ira-basis/:year", get(get_route).delete(delete_route))
 }
 
@@ -31,9 +31,7 @@ async fn list_route(
     State(s): State<AppState>,
     u: AuthUser,
 ) -> Result<Json<Vec<IraBasisRow>>, ApiError> {
-    Ok(Json(
-        list(&s.pool, u.id).await.map_err(ApiError::Internal)?,
-    ))
+    Ok(Json(list(&s.pool, u.id).await.map_err(ApiError::Internal)?))
 }
 
 async fn get_route(
@@ -123,7 +121,10 @@ async fn compute_and_save_route(
     )
     .await
     .map_err(ApiError::Internal)?;
-    Ok(Json(ComputeOutput { computed, persisted }))
+    Ok(Json(ComputeOutput {
+        computed,
+        persisted,
+    }))
 }
 
 async fn delete_route(

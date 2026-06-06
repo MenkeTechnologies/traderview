@@ -170,7 +170,8 @@ pub type Section642Result = Output;
 fn correct_exemption_for(entity: FiduciaryEntityType) -> u64 {
     match entity {
         FiduciaryEntityType::DomesticEstateInProbate => SECTION_642_B_ESTATE_EXEMPTION_DOLLARS,
-        FiduciaryEntityType::DomesticComplexTrust | FiduciaryEntityType::ElectingSmallBusinessTrust => {
+        FiduciaryEntityType::DomesticComplexTrust
+        | FiduciaryEntityType::ElectingSmallBusinessTrust => {
             SECTION_642_B_COMPLEX_TRUST_EXEMPTION_DOLLARS
         }
         FiduciaryEntityType::DomesticSimpleTrust => SECTION_642_B_SIMPLE_TRUST_EXEMPTION_DOLLARS,
@@ -287,7 +288,8 @@ pub fn compute(input: &Input) -> Output {
         }
         Section642Provision::Section642cFollowingYearElection => {
             if input.charitable_following_year_election_made
-                && input.charitable_source_funds == CharitableSourceFunds::GrossTaxableIncomeProperSource
+                && input.charitable_source_funds
+                    == CharitableSourceFunds::GrossTaxableIncomeProperSource
             {
                 return Output {
                     mode: Section642Mode::CompliantSection642cFollowingYearElectionApplied,
@@ -351,7 +353,9 @@ pub fn compute(input: &Input) -> Output {
             }
         }
         Section642Provision::Section642hExcessDeductionsTermination => {
-            if input.trust_or_estate_terminated_this_year && input.excess_deductions_to_pass_to_beneficiaries {
+            if input.trust_or_estate_terminated_this_year
+                && input.excess_deductions_to_pass_to_beneficiaries
+            {
                 return Output {
                     mode: Section642Mode::CompliantSection642hExcessDeductionsPassedToBeneficiaryOnTermination,
                     correct_exemption_dollars: 0,
@@ -399,13 +403,19 @@ mod tests {
             ..baseline_complex_trust_642_b_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section642Mode::NotApplicableGrantorTrustPassThrough);
+        assert_eq!(
+            result.mode,
+            Section642Mode::NotApplicableGrantorTrustPassThrough
+        );
     }
 
     #[test]
     fn complex_trust_642_b_300_exemption_compliant() {
         let result = compute(&baseline_complex_trust_642_b_compliant());
-        assert_eq!(result.mode, Section642Mode::CompliantSection642bPersonalExemptionAtCorrectLevel);
+        assert_eq!(
+            result.mode,
+            Section642Mode::CompliantSection642bPersonalExemptionAtCorrectLevel
+        );
         assert_eq!(result.correct_exemption_dollars, 300);
     }
 
@@ -417,7 +427,10 @@ mod tests {
             ..baseline_complex_trust_642_b_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section642Mode::CompliantSection642bPersonalExemptionAtCorrectLevel);
+        assert_eq!(
+            result.mode,
+            Section642Mode::CompliantSection642bPersonalExemptionAtCorrectLevel
+        );
         assert_eq!(result.correct_exemption_dollars, 100);
     }
 
@@ -429,7 +442,10 @@ mod tests {
             ..baseline_complex_trust_642_b_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section642Mode::CompliantSection642bPersonalExemptionAtCorrectLevel);
+        assert_eq!(
+            result.mode,
+            Section642Mode::CompliantSection642bPersonalExemptionAtCorrectLevel
+        );
         assert_eq!(result.correct_exemption_dollars, 600);
     }
 
@@ -441,7 +457,10 @@ mod tests {
             ..baseline_complex_trust_642_b_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section642Mode::ViolationSection642bExemptionOverclaimed);
+        assert_eq!(
+            result.mode,
+            Section642Mode::ViolationSection642bExemptionOverclaimed
+        );
     }
 
     #[test]
@@ -452,7 +471,10 @@ mod tests {
             ..baseline_complex_trust_642_b_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section642Mode::ViolationSection642bExemptionOverclaimed);
+        assert_eq!(
+            result.mode,
+            Section642Mode::ViolationSection642bExemptionOverclaimed
+        );
     }
 
     #[test]
@@ -464,7 +486,10 @@ mod tests {
             ..baseline_complex_trust_642_b_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section642Mode::CompliantSection642cCharitableUnlimitedDeductionFromGrossIncome);
+        assert_eq!(
+            result.mode,
+            Section642Mode::CompliantSection642cCharitableUnlimitedDeductionFromGrossIncome
+        );
         assert_eq!(result.allowed_charitable_deduction_dollars, 500_000);
     }
 
@@ -477,7 +502,10 @@ mod tests {
             ..baseline_complex_trust_642_b_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section642Mode::ViolationSection642cPaidFromCorpusNotGrossIncome);
+        assert_eq!(
+            result.mode,
+            Section642Mode::ViolationSection642cPaidFromCorpusNotGrossIncome
+        );
     }
 
     #[test]
@@ -489,7 +517,10 @@ mod tests {
             ..baseline_complex_trust_642_b_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section642Mode::ViolationSection642cTaxExemptIncomeIncluded);
+        assert_eq!(
+            result.mode,
+            Section642Mode::ViolationSection642cTaxExemptIncomeIncluded
+        );
     }
 
     #[test]
@@ -501,7 +532,10 @@ mod tests {
             ..baseline_complex_trust_642_b_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section642Mode::ViolationSection642cNoGoverningInstrumentDirection);
+        assert_eq!(
+            result.mode,
+            Section642Mode::ViolationSection642cNoGoverningInstrumentDirection
+        );
     }
 
     #[test]
@@ -514,7 +548,10 @@ mod tests {
             ..baseline_complex_trust_642_b_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section642Mode::CompliantSection642cFollowingYearElectionApplied);
+        assert_eq!(
+            result.mode,
+            Section642Mode::CompliantSection642cFollowingYearElectionApplied
+        );
     }
 
     #[test]
@@ -525,7 +562,10 @@ mod tests {
             ..baseline_complex_trust_642_b_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section642Mode::CompliantSection642eDepreciationAllocatedToBeneficiaries);
+        assert_eq!(
+            result.mode,
+            Section642Mode::CompliantSection642eDepreciationAllocatedToBeneficiaries
+        );
     }
 
     #[test]
@@ -536,7 +576,10 @@ mod tests {
             ..baseline_complex_trust_642_b_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section642Mode::ViolationSection642eDepreciationNotProperlyAllocated);
+        assert_eq!(
+            result.mode,
+            Section642Mode::ViolationSection642eDepreciationNotProperlyAllocated
+        );
     }
 
     #[test]
@@ -548,7 +591,10 @@ mod tests {
             ..baseline_complex_trust_642_b_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section642Mode::ViolationSection642gDoubleDeductionEstateAndIncomeTax);
+        assert_eq!(
+            result.mode,
+            Section642Mode::ViolationSection642gDoubleDeductionEstateAndIncomeTax
+        );
     }
 
     #[test]
@@ -560,7 +606,10 @@ mod tests {
             ..baseline_complex_trust_642_b_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section642Mode::CompliantSection642hExcessDeductionsPassedToBeneficiaryOnTermination);
+        assert_eq!(
+            result.mode,
+            Section642Mode::CompliantSection642hExcessDeductionsPassedToBeneficiaryOnTermination
+        );
     }
 
     #[test]
@@ -604,6 +653,9 @@ mod tests {
             ..baseline_complex_trust_642_b_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section642Mode::CompliantSection642bPersonalExemptionAtCorrectLevel);
+        assert_eq!(
+            result.mode,
+            Section642Mode::CompliantSection642bPersonalExemptionAtCorrectLevel
+        );
     }
 }

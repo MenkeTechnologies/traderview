@@ -211,12 +211,12 @@ pub fn check(input: &Section1058Input) -> Section1058Result {
         LendingArrangementType::VariablePrepaidForwardWithStockLoan
     );
 
-    let non_recognition_status = if all_four_prongs_satisfied && !arrangement_typically_fails_prong_3
-    {
-        NonRecognitionStatus::NonRecognitionApplies
-    } else {
-        NonRecognitionStatus::TaxableSaleAtFmv
-    };
+    let non_recognition_status =
+        if all_four_prongs_satisfied && !arrangement_typically_fails_prong_3 {
+            NonRecognitionStatus::NonRecognitionApplies
+        } else {
+            NonRecognitionStatus::TaxableSaleAtFmv
+        };
 
     let built_in_gain_or_loss_cents = if matches!(
         non_recognition_status,
@@ -266,7 +266,10 @@ pub fn check(input: &Section1058Input) -> Section1058Result {
         );
     }
 
-    if matches!(non_recognition_status, NonRecognitionStatus::TaxableSaleAtFmv) {
+    if matches!(
+        non_recognition_status,
+        NonRecognitionStatus::TaxableSaleAtFmv
+    ) {
         failure_reasons.push(format!(
             "§ 1058 non-recognition FAILS — TAXABLE SALE at FMV: (1) recognition of built-in gain/loss = FMV ({} cents) - basis ({} cents) = {} cents; (2) reset of basis to FMV; (3) holding period restarts (long-term treatment LOST); (4) § 1259 constructive sale potentially also engaged for offsetting positions held simultaneously",
             input.fmv_at_transfer_cents, input.basis_cents, built_in_gain_or_loss_cents
@@ -322,7 +325,10 @@ mod tests {
     #[test]
     fn syep_all_four_prongs_non_recognition() {
         let r = check(&syep_compliant());
-        assert_eq!(r.non_recognition_status, NonRecognitionStatus::NonRecognitionApplies);
+        assert_eq!(
+            r.non_recognition_status,
+            NonRecognitionStatus::NonRecognitionApplies
+        );
         assert!(r.all_four_prongs_satisfied);
         assert_eq!(r.built_in_gain_or_loss_cents, 0);
     }
@@ -339,9 +345,14 @@ mod tests {
         let mut i = syep_compliant();
         i.return_identical_securities = false;
         let r = check(&i);
-        assert_eq!(r.non_recognition_status, NonRecognitionStatus::TaxableSaleAtFmv);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 1058(b)(1)")
-            && f.contains("IDENTICAL SECURITIES")));
+        assert_eq!(
+            r.non_recognition_status,
+            NonRecognitionStatus::TaxableSaleAtFmv
+        );
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1058(b)(1)") && f.contains("IDENTICAL SECURITIES")));
     }
 
     #[test]
@@ -349,9 +360,14 @@ mod tests {
         let mut i = syep_compliant();
         i.dividend_equivalent_payments_required = false;
         let r = check(&i);
-        assert_eq!(r.non_recognition_status, NonRecognitionStatus::TaxableSaleAtFmv);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 1058(b)(2)")
-            && f.contains("EQUIVALENT")));
+        assert_eq!(
+            r.non_recognition_status,
+            NonRecognitionStatus::TaxableSaleAtFmv
+        );
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1058(b)(2)") && f.contains("EQUIVALENT")));
     }
 
     #[test]
@@ -359,9 +375,15 @@ mod tests {
         let mut i = syep_compliant();
         i.risk_of_loss_and_opportunity_for_gain_preserved = false;
         let r = check(&i);
-        assert_eq!(r.non_recognition_status, NonRecognitionStatus::TaxableSaleAtFmv);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 1058(b)(3)")
-            && f.contains("RISK OF LOSS OR OPPORTUNITY FOR GAIN")));
+        assert_eq!(
+            r.non_recognition_status,
+            NonRecognitionStatus::TaxableSaleAtFmv
+        );
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1058(b)(3)")
+                && f.contains("RISK OF LOSS OR OPPORTUNITY FOR GAIN")));
     }
 
     #[test]
@@ -369,7 +391,10 @@ mod tests {
         let mut i = syep_compliant();
         i.terminable_on_demand = false;
         let r = check(&i);
-        assert_eq!(r.non_recognition_status, NonRecognitionStatus::TaxableSaleAtFmv);
+        assert_eq!(
+            r.non_recognition_status,
+            NonRecognitionStatus::TaxableSaleAtFmv
+        );
         assert!(r.failure_reasons.iter().any(|f| f.contains("§ 1058(b)(4)")
             && f.contains("Treas. Reg. § 1.1058-1")
             && f.contains("Rev. Proc. 2008-63")
@@ -381,7 +406,10 @@ mod tests {
         let mut i = syep_compliant();
         i.arrangement_type = LendingArrangementType::VariablePrepaidForwardWithStockLoan;
         let r = check(&i);
-        assert_eq!(r.non_recognition_status, NonRecognitionStatus::TaxableSaleAtFmv);
+        assert_eq!(
+            r.non_recognition_status,
+            NonRecognitionStatus::TaxableSaleAtFmv
+        );
         assert!(r.failure_reasons.iter().any(|f| f.contains("Anshutz")
             && f.contains("Calloway")
             && f.contains("VARIABLE PREPAID FORWARD CONTRACT")
@@ -393,7 +421,10 @@ mod tests {
         let mut i = syep_compliant();
         i.arrangement_type = LendingArrangementType::FullyPaidLending;
         let r = check(&i);
-        assert_eq!(r.non_recognition_status, NonRecognitionStatus::NonRecognitionApplies);
+        assert_eq!(
+            r.non_recognition_status,
+            NonRecognitionStatus::NonRecognitionApplies
+        );
     }
 
     #[test]
@@ -401,7 +432,10 @@ mod tests {
         let mut i = syep_compliant();
         i.arrangement_type = LendingArrangementType::PrimeBrokerageLending;
         let r = check(&i);
-        assert_eq!(r.non_recognition_status, NonRecognitionStatus::NonRecognitionApplies);
+        assert_eq!(
+            r.non_recognition_status,
+            NonRecognitionStatus::NonRecognitionApplies
+        );
     }
 
     #[test]
@@ -409,7 +443,10 @@ mod tests {
         let mut i = syep_compliant();
         i.arrangement_type = LendingArrangementType::DirectLoan;
         let r = check(&i);
-        assert_eq!(r.non_recognition_status, NonRecognitionStatus::NonRecognitionApplies);
+        assert_eq!(
+            r.non_recognition_status,
+            NonRecognitionStatus::NonRecognitionApplies
+        );
     }
 
     #[test]
@@ -420,8 +457,10 @@ mod tests {
         i.basis_cents = 60_000_000;
         let r = check(&i);
         assert_eq!(r.built_in_gain_or_loss_cents, 40_000_000);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("TAXABLE SALE at FMV")
-            && f.contains("40000000 cents")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("TAXABLE SALE at FMV") && f.contains("40000000 cents")));
     }
 
     #[test]
@@ -497,11 +536,26 @@ mod tests {
     #[test]
     fn arrangement_type_truth_table_five_cells() {
         for (arr, exp) in [
-            (LendingArrangementType::RetailBrokerageSyep, NonRecognitionStatus::NonRecognitionApplies),
-            (LendingArrangementType::FullyPaidLending, NonRecognitionStatus::NonRecognitionApplies),
-            (LendingArrangementType::PrimeBrokerageLending, NonRecognitionStatus::NonRecognitionApplies),
-            (LendingArrangementType::DirectLoan, NonRecognitionStatus::NonRecognitionApplies),
-            (LendingArrangementType::VariablePrepaidForwardWithStockLoan, NonRecognitionStatus::TaxableSaleAtFmv),
+            (
+                LendingArrangementType::RetailBrokerageSyep,
+                NonRecognitionStatus::NonRecognitionApplies,
+            ),
+            (
+                LendingArrangementType::FullyPaidLending,
+                NonRecognitionStatus::NonRecognitionApplies,
+            ),
+            (
+                LendingArrangementType::PrimeBrokerageLending,
+                NonRecognitionStatus::NonRecognitionApplies,
+            ),
+            (
+                LendingArrangementType::DirectLoan,
+                NonRecognitionStatus::NonRecognitionApplies,
+            ),
+            (
+                LendingArrangementType::VariablePrepaidForwardWithStockLoan,
+                NonRecognitionStatus::TaxableSaleAtFmv,
+            ),
         ] {
             let mut i = syep_compliant();
             i.arrangement_type = arr;
@@ -515,7 +569,10 @@ mod tests {
         let mut vpf = syep_compliant();
         vpf.arrangement_type = LendingArrangementType::VariablePrepaidForwardWithStockLoan;
         let r_vpf = check(&vpf);
-        assert_eq!(r_vpf.non_recognition_status, NonRecognitionStatus::TaxableSaleAtFmv);
+        assert_eq!(
+            r_vpf.non_recognition_status,
+            NonRecognitionStatus::TaxableSaleAtFmv
+        );
 
         for arr in [
             LendingArrangementType::RetailBrokerageSyep,
@@ -526,7 +583,10 @@ mod tests {
             let mut i = syep_compliant();
             i.arrangement_type = arr;
             let r = check(&i);
-            assert_eq!(r.non_recognition_status, NonRecognitionStatus::NonRecognitionApplies);
+            assert_eq!(
+                r.non_recognition_status,
+                NonRecognitionStatus::NonRecognitionApplies
+            );
         }
     }
 
@@ -540,8 +600,12 @@ mod tests {
         assert!(r.citation.contains("§ 475"));
         assert!(r.citation.contains("Treas. Reg. § 1.1058-1"));
         assert!(r.citation.contains("Rev. Proc. 2008-63"));
-        assert!(r.citation.contains("Anshutz v. Commissioner, 135 T.C. No. 5"));
-        assert!(r.citation.contains("Calloway v. Commissioner, 135 T.C. No. 3"));
+        assert!(r
+            .citation
+            .contains("Anshutz v. Commissioner, 135 T.C. No. 5"));
+        assert!(r
+            .citation
+            .contains("Calloway v. Commissioner, 135 T.C. No. 3"));
     }
 
     #[test]
@@ -628,14 +692,18 @@ mod tests {
     #[test]
     fn note_pins_rev_proc_2008_63_safe_harbor() {
         let r = check(&syep_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("Rev. Proc. 2008-63 safe harbor")
-            && n.contains("terminable-on-demand")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Rev. Proc. 2008-63 safe harbor")
+                && n.contains("terminable-on-demand")));
     }
 
     #[test]
     fn note_pins_trader_critical_fact_patterns() {
         let r = check(&syep_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("Interactive Brokers Stock Yield Enhancement Program (SYEP)")
+        assert!(r.notes.iter().any(|n| n
+            .contains("Interactive Brokers Stock Yield Enhancement Program (SYEP)")
             && n.contains("Robinhood Securities Lending")
             && n.contains("Charles Schwab Securities Lending Fully Paid")
             && n.contains("BORROWER")));

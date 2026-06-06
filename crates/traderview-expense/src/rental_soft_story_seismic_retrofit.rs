@@ -176,8 +176,8 @@ fn check_la(input: &Input, notes: &mut Vec<String>, citations: Vec<String>) -> O
         };
     }
 
-    let is_priority_1 = input.story_count >= LA_PRIORITY_1_MIN_STORIES
-        && input.has_ground_floor_commercial;
+    let is_priority_1 =
+        input.story_count >= LA_PRIORITY_1_MIN_STORIES && input.has_ground_floor_commercial;
     let deadline_year = if is_priority_1 {
         LA_PRIORITY_1_DEADLINE_YEAR
     } else {
@@ -370,7 +370,10 @@ mod tests {
     #[test]
     fn la_priority_2_complete_certified_compliant() {
         let out = check(&base_la_priority_2());
-        assert_eq!(out.severity, Severity::CompliantRetrofitCompleteAndCertified);
+        assert_eq!(
+            out.severity,
+            Severity::CompliantRetrofitCompleteAndCertified
+        );
         assert_eq!(out.applicable_deadline_year, 2026);
     }
 
@@ -391,7 +394,10 @@ mod tests {
         i.retrofit_status = RetrofitStatus::NotStarted;
         i.current_year = 2026;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::ViolationDeadlinePastedNoRetrofitCommenced);
+        assert_eq!(
+            out.severity,
+            Severity::ViolationDeadlinePastedNoRetrofitCommenced
+        );
         assert_eq!(out.years_past_deadline, 2);
     }
 
@@ -401,7 +407,10 @@ mod tests {
         i.retrofit_status = RetrofitStatus::ConstructionUnderway;
         i.current_year = 2025;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::CompliantRetrofitInProgressBeforeDeadline);
+        assert_eq!(
+            out.severity,
+            Severity::CompliantRetrofitInProgressBeforeDeadline
+        );
     }
 
     #[test]
@@ -410,7 +419,10 @@ mod tests {
         i.retrofit_status = RetrofitStatus::NotStarted;
         i.current_year = 2027;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::ViolationDeadlinePastedNoRetrofitCommenced);
+        assert_eq!(
+            out.severity,
+            Severity::ViolationDeadlinePastedNoRetrofitCommenced
+        );
     }
 
     #[test]
@@ -419,7 +431,10 @@ mod tests {
         i.retrofit_status = RetrofitStatus::PermitsObtained;
         i.current_year = 2027;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::ViolationDeadlinePastedRetrofitIncomplete);
+        assert_eq!(
+            out.severity,
+            Severity::ViolationDeadlinePastedRetrofitIncomplete
+        );
     }
 
     #[test]
@@ -435,7 +450,10 @@ mod tests {
         let mut i = base_la_priority_2();
         i.story_count = 1;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::ExemptStoryCountBelowJurisdictionThreshold);
+        assert_eq!(
+            out.severity,
+            Severity::ExemptStoryCountBelowJurisdictionThreshold
+        );
     }
 
     #[test]
@@ -446,7 +464,10 @@ mod tests {
         i.story_count = 3;
         i.dwelling_unit_count = 8;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::CompliantRetrofitCompleteAndCertified);
+        assert_eq!(
+            out.severity,
+            Severity::CompliantRetrofitCompleteAndCertified
+        );
         assert_eq!(out.applicable_deadline_year, 2021);
     }
 
@@ -467,7 +488,10 @@ mod tests {
         i.story_count = 3;
         i.dwelling_unit_count = 4;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::ExemptUnitCountBelowJurisdictionThreshold);
+        assert_eq!(
+            out.severity,
+            Severity::ExemptUnitCountBelowJurisdictionThreshold
+        );
     }
 
     #[test]
@@ -477,7 +501,10 @@ mod tests {
         i.building_year_built = 1965;
         i.story_count = 2;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::ExemptStoryCountBelowJurisdictionThreshold);
+        assert_eq!(
+            out.severity,
+            Severity::ExemptStoryCountBelowJurisdictionThreshold
+        );
     }
 
     #[test]
@@ -489,7 +516,10 @@ mod tests {
         i.dwelling_unit_count = 8;
         i.retrofit_status = RetrofitStatus::NotStarted;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::ViolationDeadlinePastedNoRetrofitCommenced);
+        assert_eq!(
+            out.severity,
+            Severity::ViolationDeadlinePastedNoRetrofitCommenced
+        );
         assert_eq!(out.years_past_deadline, 5);
     }
 
@@ -502,7 +532,10 @@ mod tests {
         i.dwelling_unit_count = 8;
         i.retrofit_status = RetrofitStatus::ConstructionUnderway;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::ViolationDeadlinePastedRetrofitIncomplete);
+        assert_eq!(
+            out.severity,
+            Severity::ViolationDeadlinePastedRetrofitIncomplete
+        );
     }
 
     #[test]

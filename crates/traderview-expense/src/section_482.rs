@@ -277,15 +277,11 @@ fn method_label(method: TransferPricingMethodSelected) -> &'static str {
         TransferPricingMethodSelected::ResalePriceMethodRpm => {
             "§ 1.482-3(c) Resale Price Method (RPM)"
         }
-        TransferPricingMethodSelected::CostPlusMethod => {
-            "§ 1.482-3(d) Cost Plus Method"
-        }
+        TransferPricingMethodSelected::CostPlusMethod => "§ 1.482-3(d) Cost Plus Method",
         TransferPricingMethodSelected::ComparableProfitsMethodCpm => {
             "§ 1.482-5 Comparable Profits Method (CPM)"
         }
-        TransferPricingMethodSelected::ProfitSplitMethod => {
-            "§ 1.482-6 Profit Split Method"
-        }
+        TransferPricingMethodSelected::ProfitSplitMethod => "§ 1.482-6 Profit Split Method",
         TransferPricingMethodSelected::ServicesCostMethodSafeHarbor => {
             "§ 1.482-9(b) Services Cost Method (SCM) safe harbor"
         }
@@ -377,8 +373,7 @@ mod tests {
     #[test]
     fn cost_sharing_arrangement_pct_required() {
         let mut input = base();
-        input.transaction_type =
-            TransactionType::CostSharingArrangementSection1482Dash7;
+        input.transaction_type = TransactionType::CostSharingArrangementSection1482Dash7;
         let output = check(&input);
         assert_eq!(
             output.severity,
@@ -427,8 +422,7 @@ mod tests {
     #[test]
     fn cost_plus_method_label_pinned() {
         let mut input = base();
-        input.transfer_pricing_method_selected =
-            TransferPricingMethodSelected::CostPlusMethod;
+        input.transfer_pricing_method_selected = TransferPricingMethodSelected::CostPlusMethod;
         let output = check(&input);
         assert!(output.note.contains("§ 1.482-3(d)"));
     }
@@ -446,8 +440,7 @@ mod tests {
     #[test]
     fn profit_split_method_label_pinned() {
         let mut input = base();
-        input.transfer_pricing_method_selected =
-            TransferPricingMethodSelected::ProfitSplitMethod;
+        input.transfer_pricing_method_selected = TransferPricingMethodSelected::ProfitSplitMethod;
         let output = check(&input);
         assert!(output.note.contains("§ 1.482-6"));
     }
@@ -475,7 +468,10 @@ mod tests {
 
     #[test]
     fn section_6662e_threshold_constant_pins_5m() {
-        assert_eq!(SECTION_6662E_SUBSTANTIAL_VALUATION_THRESHOLD_CENTS, 500_000_000);
+        assert_eq!(
+            SECTION_6662E_SUBSTANTIAL_VALUATION_THRESHOLD_CENTS,
+            500_000_000
+        );
     }
 
     #[test]

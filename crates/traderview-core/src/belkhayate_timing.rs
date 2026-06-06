@@ -27,8 +27,12 @@
 pub fn compute(closes: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = closes.len();
     let mut out = vec![None; n];
-    if period < 5 || n < period { return out; }
-    if closes.iter().any(|x| !x.is_finite()) { return out; }
+    if period < 5 || n < period {
+        return out;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     let p_f = period as f64;
     for (i, slot) in out.iter_mut().enumerate().skip(period - 1) {
         let win = &closes[i + 1 - period..=i];
@@ -57,7 +61,9 @@ pub fn compute(closes: &[f64], period: usize) -> Vec<Option<f64>> {
         //   [sx2  sx3  sx4 ] [c]   [sx2y ]
         let m = [[p_f, sx, sx2], [sx, sx2, sx3], [sx2, sx3, sx4]];
         let b = [sy, sxy, sx2y];
-        let Some(coeffs) = solve_3x3(m, b) else { continue };
+        let Some(coeffs) = solve_3x3(m, b) else {
+            continue;
+        };
         let (a, bb, c) = (coeffs[0], coeffs[1], coeffs[2]);
         let x_end = p_f - 1.0;
         let y_hat_end = a + bb * x_end + c * x_end * x_end;
@@ -84,10 +90,21 @@ pub fn compute(closes: &[f64], period: usize) -> Vec<Option<f64>> {
 /// Solve 3×3 linear system via Cramer's rule (returns None for singular).
 fn solve_3x3(m: [[f64; 3]; 3], b: [f64; 3]) -> Option<[f64; 3]> {
     let det = det_3x3(m);
-    if det.abs() < 1e-12 { return None; }
-    let mut m_a = m; m_a[0][0] = b[0]; m_a[1][0] = b[1]; m_a[2][0] = b[2];
-    let mut m_b = m; m_b[0][1] = b[0]; m_b[1][1] = b[1]; m_b[2][1] = b[2];
-    let mut m_c = m; m_c[0][2] = b[0]; m_c[1][2] = b[1]; m_c[2][2] = b[2];
+    if det.abs() < 1e-12 {
+        return None;
+    }
+    let mut m_a = m;
+    m_a[0][0] = b[0];
+    m_a[1][0] = b[1];
+    m_a[2][0] = b[2];
+    let mut m_b = m;
+    m_b[0][1] = b[0];
+    m_b[1][1] = b[1];
+    m_b[2][1] = b[2];
+    let mut m_c = m;
+    m_c[0][2] = b[0];
+    m_c[1][2] = b[1];
+    m_c[2][2] = b[2];
     Some([det_3x3(m_a) / det, det_3x3(m_b) / det, det_3x3(m_c) / det])
 }
 
@@ -129,10 +146,12 @@ mod tests {
         // Closes follow y = a + bx + cx² exactly. The stdev floor in
         // compute() catches the near-perfect-fit case and emits 0,
         // avoiding float-noise amplification.
-        let c: Vec<f64> = (0..50).map(|i| {
-            let x = i as f64;
-            100.0 + 0.5 * x + 0.01 * x * x
-        }).collect();
+        let c: Vec<f64> = (0..50)
+            .map(|i| {
+                let x = i as f64;
+                100.0 + 0.5 * x + 0.01 * x * x
+            })
+            .collect();
         let r = compute(&c, 30);
         for v in r.iter().skip(30).flatten() {
             assert!(v.abs() < 1e-9);
@@ -142,7 +161,7 @@ mod tests {
     #[test]
     fn spike_above_fit_yields_positive_z() {
         let mut c: Vec<f64> = (0..30).map(|i| 100.0 + i as f64).collect();
-        c[29] = 200.0;    // far above fit
+        c[29] = 200.0; // far above fit
         let r = compute(&c, 30);
         assert!(r[29].unwrap() > 0.0);
     }

@@ -27,31 +27,47 @@ pub struct BartlettReport {
 
 pub fn test(groups: &[Vec<f64>]) -> Option<BartlettReport> {
     let k = groups.len();
-    if k < 2 { return None; }
-    if groups.iter().any(|g| g.len() < 2 || g.iter().any(|x| !x.is_finite())) {
+    if k < 2 {
+        return None;
+    }
+    if groups
+        .iter()
+        .any(|g| g.len() < 2 || g.iter().any(|x| !x.is_finite()))
+    {
         return None;
     }
     let n_total: usize = groups.iter().map(|g| g.len()).sum();
-    if n_total <= k { return None; }
+    if n_total <= k {
+        return None;
+    }
     // Per-group sample variance (Bessel-corrected).
     let mut variances = Vec::with_capacity(k);
     for g in groups {
         let n_g = g.len() as f64;
         let mean: f64 = g.iter().sum::<f64>() / n_g;
         let var: f64 = g.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (n_g - 1.0);
-        if var <= 0.0 { return None; }
+        if var <= 0.0 {
+            return None;
+        }
         variances.push(var);
     }
     let n_total_f = n_total as f64;
     let k_f = k as f64;
-    let pooled: f64 = groups.iter().zip(variances.iter()).map(|(g, v)| {
-        (g.len() - 1) as f64 * v
-    }).sum::<f64>() / (n_total_f - k_f);
-    if pooled <= 0.0 { return None; }
+    let pooled: f64 = groups
+        .iter()
+        .zip(variances.iter())
+        .map(|(g, v)| (g.len() - 1) as f64 * v)
+        .sum::<f64>()
+        / (n_total_f - k_f);
+    if pooled <= 0.0 {
+        return None;
+    }
     let numerator: f64 = (n_total_f - k_f) * pooled.ln()
-        - groups.iter().zip(variances.iter()).map(|(g, v)| {
-            (g.len() - 1) as f64 * v.ln()
-        }).sum::<f64>();
+        - groups
+            .iter()
+            .zip(variances.iter())
+            .map(|(g, v)| (g.len() - 1) as f64 * v.ln())
+            .sum::<f64>();
     let inv_sum: f64 = groups.iter().map(|g| 1.0 / (g.len() - 1) as f64).sum();
     let correction = 1.0 + (1.0 / (3.0 * (k_f - 1.0))) * (inv_sum - 1.0 / (n_total_f - k_f));
     let chi_sq = numerator / correction;
@@ -70,14 +86,20 @@ pub fn test(groups: &[Vec<f64>]) -> Option<BartlettReport> {
 }
 
 fn chi_squared_upper_tail(x: f64, k: f64) -> f64 {
-    if x <= 0.0 || k <= 0.0 { return 1.0; }
+    if x <= 0.0 || k <= 0.0 {
+        return 1.0;
+    }
     let z = ((x / k).powf(1.0 / 3.0) - (1.0 - 2.0 / (9.0 * k))) / (2.0 / (9.0 * k)).sqrt();
     1.0 - standard_normal_cdf(z)
 }
 
 fn chi_squared_5pct_critical(k: usize) -> f64 {
     match k {
-        1 => 3.841, 2 => 5.991, 3 => 7.815, 4 => 9.488, 5 => 11.070,
+        1 => 3.841,
+        2 => 5.991,
+        3 => 7.815,
+        4 => 9.488,
+        5 => 11.070,
         _ => k as f64 + 2.0 * (2.0 * k as f64).sqrt(),
     }
 }
@@ -90,8 +112,11 @@ fn erf(x: f64) -> f64 {
     let sign = if x < 0.0 { -1.0 } else { 1.0 };
     let x = x.abs();
     let t = 1.0 / (1.0 + 0.327_591_1 * x);
-    let y = 1.0 - (((((1.061_405_429 * t - 1.453_152_027) * t)
-        + 1.421_413_741) * t - 0.284_496_736) * t + 0.254_829_592) * t * (-x * x).exp();
+    let y = 1.0
+        - (((((1.061_405_429 * t - 1.453_152_027) * t) + 1.421_413_741) * t - 0.284_496_736) * t
+            + 0.254_829_592)
+            * t
+            * (-x * x).exp();
     sign * y
 }
 
@@ -101,15 +126,19 @@ mod tests {
 
     fn box_muller(n: usize, seed: u64, scale: f64) -> Vec<f64> {
         let mut state = seed;
-        (0..n).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u2 = (state >> 32) as f64 / u32::MAX as f64;
-            scale * (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
-        }).collect()
+        (0..n)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u2 = (state >> 32) as f64 / u32::MAX as f64;
+                scale * (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
+            })
+            .collect()
     }
 
     #[test]
@@ -129,8 +158,11 @@ mod tests {
         let g1 = box_muller(200, 42, 1.0);
         let g2 = box_muller(200, 13, 1.0);
         let r = test(&[g1, g2]).unwrap();
-        assert!(!r.reject_at_5pct,
-            "equal variances shouldn't reject, χ² = {}", r.chi_squared_statistic);
+        assert!(
+            !r.reject_at_5pct,
+            "equal variances shouldn't reject, χ² = {}",
+            r.chi_squared_statistic
+        );
     }
 
     #[test]
@@ -138,8 +170,11 @@ mod tests {
         let g1 = box_muller(200, 42, 1.0);
         let g2 = box_muller(200, 13, 5.0);
         let r = test(&[g1, g2]).unwrap();
-        assert!(r.reject_at_5pct,
-            "5x variance difference should reject, χ² = {}", r.chi_squared_statistic);
+        assert!(
+            r.reject_at_5pct,
+            "5x variance difference should reject, χ² = {}",
+            r.chi_squared_statistic
+        );
     }
 
     #[test]

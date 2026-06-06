@@ -223,9 +223,14 @@ pub fn compute(input: &Input) -> Output {
             if input.large_corporate_applicable_date_status
                 == LargeCorporateApplicableDateStatus::ThirtyDayWindowAfterDeficiencyNoticeNotPassed
             {
-                let rate = input.federal_short_term_rate_basis_points
+                let rate = input
+                    .federal_short_term_rate_basis_points
                     .saturating_add(IRC_6621_UNDERPAYMENT_STANDARD_RATE_BASIS_POINTS);
-                let interest = simple_interest(input.amount_dollars, rate, input.number_of_full_years_interest_accrues);
+                let interest = simple_interest(
+                    input.amount_dollars,
+                    rate,
+                    input.number_of_full_years_interest_accrues,
+                );
                 return Output {
                     mode: Section6621Mode::PendingLargeCorporateRateBefore30DayApplicableDateAfterDeficiencyNotice,
                     statutory_basis: "IRC § 6621(c) — large corporate underpayment 5-percentage-point rate applies only after applicable date = 30 days after earlier of proposed deficiency notice or formal deficiency notice".to_string(),
@@ -238,9 +243,14 @@ pub fn compute(input: &Input) -> Output {
                     estimated_linear_interest_dollars: interest,
                 };
             }
-            let rate = input.federal_short_term_rate_basis_points
+            let rate = input
+                .federal_short_term_rate_basis_points
                 .saturating_add(IRC_6621_LARGE_CORPORATE_UNDERPAYMENT_RATE_BASIS_POINTS);
-            let interest = simple_interest(input.amount_dollars, rate, input.number_of_full_years_interest_accrues);
+            let interest = simple_interest(
+                input.amount_dollars,
+                rate,
+                input.number_of_full_years_interest_accrues,
+            );
             return Output {
                 mode: Section6621Mode::CompliantLargeCorporateUnderpaymentRateFstrPlus5PercentagePointsUnderSection6621C,
                 statutory_basis: "IRC § 6621(c) — large corporate underpayment rate = federal short-term rate + 5 percentage points".to_string(),
@@ -257,9 +267,14 @@ pub fn compute(input: &Input) -> Output {
             };
         }
 
-        let rate = input.federal_short_term_rate_basis_points
+        let rate = input
+            .federal_short_term_rate_basis_points
             .saturating_add(IRC_6621_UNDERPAYMENT_STANDARD_RATE_BASIS_POINTS);
-        let interest = simple_interest(input.amount_dollars, rate, input.number_of_full_years_interest_accrues);
+        let interest = simple_interest(
+            input.amount_dollars,
+            rate,
+            input.number_of_full_years_interest_accrues,
+        );
         return Output {
             mode: Section6621Mode::CompliantStandardUnderpaymentRateFstrPlus3PercentagePoints,
             statutory_basis: "IRC § 6621(a)(2) — standard underpayment rate = federal short-term rate + 3 percentage points".to_string(),
@@ -281,7 +296,8 @@ pub fn compute(input: &Input) -> Output {
     match input.taxpayer_type {
         TaxpayerType::CCorporation => {
             if input.corporate_overpayment_portion_exceeding_10000_dollars > 0 {
-                let rate = input.federal_short_term_rate_basis_points
+                let rate = input
+                    .federal_short_term_rate_basis_points
                     .saturating_add(IRC_6621_OVERPAYMENT_CORPORATE_EXCESS_RATE_BASIS_POINTS);
                 let interest = simple_interest(
                     input.corporate_overpayment_portion_exceeding_10000_dollars,
@@ -304,9 +320,14 @@ pub fn compute(input: &Input) -> Output {
                     estimated_linear_interest_dollars: interest,
                 }
             } else {
-                let rate = input.federal_short_term_rate_basis_points
+                let rate = input
+                    .federal_short_term_rate_basis_points
                     .saturating_add(IRC_6621_OVERPAYMENT_CORPORATE_BASE_RATE_BASIS_POINTS);
-                let interest = simple_interest(input.amount_dollars, rate, input.number_of_full_years_interest_accrues);
+                let interest = simple_interest(
+                    input.amount_dollars,
+                    rate,
+                    input.number_of_full_years_interest_accrues,
+                );
                 Output {
                     mode: Section6621Mode::CompliantCorporateOverpaymentRateFstrPlus2PercentagePointsForFirst10000,
                     statutory_basis: "IRC § 6621(a)(1)(B) — corporate overpayment first $10,000 receives federal short-term rate + 2 percentage points".to_string(),
@@ -326,9 +347,14 @@ pub fn compute(input: &Input) -> Output {
         }
         TaxpayerType::Individual
         | TaxpayerType::OtherEntityNotCCorporationTreatedAsIndividualForRate => {
-            let rate = input.federal_short_term_rate_basis_points
+            let rate = input
+                .federal_short_term_rate_basis_points
                 .saturating_add(IRC_6621_OVERPAYMENT_INDIVIDUAL_RATE_BASIS_POINTS);
-            let interest = simple_interest(input.amount_dollars, rate, input.number_of_full_years_interest_accrues);
+            let interest = simple_interest(
+                input.amount_dollars,
+                rate,
+                input.number_of_full_years_interest_accrues,
+            );
             Output {
                 mode: Section6621Mode::CompliantIndividualOverpaymentRateFstrPlus3PercentagePoints,
                 statutory_basis: "IRC § 6621(a)(1) — individual overpayment rate = federal short-term rate + 3 percentage points".to_string(),
@@ -398,7 +424,10 @@ mod tests {
         let mut input = baseline_individual_overpayment_input();
         input.amount_status = AmountStatus::NoUnderpaymentOrOverpayment;
         let output = check(&input);
-        assert_eq!(output.mode, Section6621Mode::NotApplicableNoUnderpaymentOrOverpayment);
+        assert_eq!(
+            output.mode,
+            Section6621Mode::NotApplicableNoUnderpaymentOrOverpayment
+        );
         assert_eq!(output.applicable_rate_basis_points, 0);
         assert_eq!(output.estimated_linear_interest_dollars, 0);
     }
@@ -565,11 +594,20 @@ mod tests {
         assert_eq!(IRC_6621_OVERPAYMENT_INDIVIDUAL_RATE_BASIS_POINTS, 300);
         assert_eq!(IRC_6621_OVERPAYMENT_CORPORATE_BASE_RATE_BASIS_POINTS, 200);
         assert_eq!(IRC_6621_OVERPAYMENT_CORPORATE_EXCESS_RATE_BASIS_POINTS, 50);
-        assert_eq!(IRC_6621_OVERPAYMENT_CORPORATE_EXCESS_THRESHOLD_DOLLARS, 10_000);
+        assert_eq!(
+            IRC_6621_OVERPAYMENT_CORPORATE_EXCESS_THRESHOLD_DOLLARS,
+            10_000
+        );
         assert_eq!(IRC_6621_UNDERPAYMENT_STANDARD_RATE_BASIS_POINTS, 300);
         assert_eq!(IRC_6621_LARGE_CORPORATE_UNDERPAYMENT_RATE_BASIS_POINTS, 500);
-        assert_eq!(IRC_6621_LARGE_CORPORATE_UNDERPAYMENT_THRESHOLD_DOLLARS, 100_000);
-        assert_eq!(IRC_6621_LARGE_CORPORATE_APPLICABLE_DATE_DAYS_AFTER_NOTICE, 30);
+        assert_eq!(
+            IRC_6621_LARGE_CORPORATE_UNDERPAYMENT_THRESHOLD_DOLLARS,
+            100_000
+        );
+        assert_eq!(
+            IRC_6621_LARGE_CORPORATE_APPLICABLE_DATE_DAYS_AFTER_NOTICE,
+            30
+        );
         assert_eq!(IRC_6621_BASIS_POINT_DENOMINATOR, 10_000);
     }
 

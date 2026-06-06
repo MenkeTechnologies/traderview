@@ -254,8 +254,7 @@ fn nyc_check(input: &SnowRemovalInput) -> SnowRemovalResult {
     // pause). Multi-unit landlord = always primarily responsible.
     // Single-family lease may delegate but owner still gets ticket.
     let timeline = 4;
-    let delegation_valid =
-        input.lease_delegates_to_tenant && !input.multi_unit_building;
+    let delegation_valid = input.lease_delegates_to_tenant && !input.multi_unit_building;
     if input.lease_delegates_to_tenant && !delegation_valid {
         return SnowRemovalResult {
             regime: Regime::NewYorkCity,
@@ -595,14 +594,8 @@ mod tests {
             Regime::for_jurisdiction("NY", "New York"),
             Regime::NewYorkCity
         );
-        assert_eq!(
-            Regime::for_jurisdiction("NY", "NYC"),
-            Regime::NewYorkCity
-        );
-        assert_eq!(
-            Regime::for_jurisdiction("NY", "Buffalo"),
-            Regime::Default
-        );
+        assert_eq!(Regime::for_jurisdiction("NY", "NYC"), Regime::NewYorkCity);
+        assert_eq!(Regime::for_jurisdiction("NY", "Buffalo"), Regime::Default);
         assert_eq!(Regime::for_jurisdiction("CA", "LA"), Regime::Default);
     }
 
@@ -612,10 +605,7 @@ mod tests {
             Regime::for_jurisdiction("ma", "anywhere"),
             Regime::Massachusetts
         );
-        assert_eq!(
-            Regime::for_jurisdiction("il", "any"),
-            Regime::Illinois
-        );
+        assert_eq!(Regime::for_jurisdiction("il", "any"), Regime::Illinois);
     }
 
     #[test]

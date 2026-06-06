@@ -23,17 +23,32 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64, pub volume: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+    pub volume: f64,
+}
 
 pub fn compute(bars: &[Bar], period: usize, smoothing: usize) -> Vec<Option<f64>> {
     let n = bars.len();
     let mut out = vec![None; n];
-    if period < 2 || smoothing < 2 || n < period + smoothing { return out; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite()
-        || !b.close.is_finite() || !b.volume.is_finite() || b.volume < 0.0) {
+    if period < 2 || smoothing < 2 || n < period + smoothing {
         return out;
     }
-    let tp: Vec<f64> = bars.iter().map(|b| (b.high + b.low + b.close) / 3.0).collect();
+    if bars.iter().any(|b| {
+        !b.high.is_finite()
+            || !b.low.is_finite()
+            || !b.close.is_finite()
+            || !b.volume.is_finite()
+            || b.volume < 0.0
+    }) {
+        return out;
+    }
+    let tp: Vec<f64> = bars
+        .iter()
+        .map(|b| (b.high + b.low + b.close) / 3.0)
+        .collect();
     let mut log_ret = vec![0.0_f64; n];
     for i in 1..n {
         if tp[i - 1] > 0.0 && tp[i] > 0.0 {
@@ -49,13 +64,20 @@ pub fn compute(bars: &[Bar], period: usize, smoothing: usize) -> Vec<Option<f64>
         let var: f64 = lr_win.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / p_f;
         let stdev = var.max(0.0).sqrt();
         let cutoff = 0.2 * stdev * bars[i].close;
-        let vol_avg: f64 = bars[i + 1 - period..=i].iter()
-            .map(|b| b.volume).sum::<f64>() / p_f;
+        let vol_avg: f64 = bars[i + 1 - period..=i]
+            .iter()
+            .map(|b| b.volume)
+            .sum::<f64>()
+            / p_f;
         let vol_norm = bars[i].volume.min(vol_avg * 2.5);
         let dtp = tp[i] - tp[i - 1];
-        let flow = if dtp > cutoff { vol_norm }
-            else if dtp < -cutoff { -vol_norm }
-            else { 0.0 };
+        let flow = if dtp > cutoff {
+            vol_norm
+        } else if dtp < -cutoff {
+            -vol_norm
+        } else {
+            0.0
+        };
         if vol_avg > 0.0 {
             running += flow / vol_avg;
             cumflow[i] = Some(running);
@@ -73,18 +95,31 @@ pub fn compute(bars: &[Bar], period: usize, smoothing: usize) -> Vec<Option<f64>
 fn ema_opt(series: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 { return out; }
+    if period == 0 {
+        return out;
+    }
     let mut seed_end = None;
     let mut seed_sum = 0.0_f64;
     let mut count = 0_usize;
     for (i, v) in series.iter().enumerate() {
         match v {
-            Some(x) => { seed_sum += x; count += 1; }
-            None => { seed_sum = 0.0; count = 0; }
+            Some(x) => {
+                seed_sum += x;
+                count += 1;
+            }
+            None => {
+                seed_sum = 0.0;
+                count = 0;
+            }
         }
-        if count == period { seed_end = Some(i); break; }
+        if count == period {
+            seed_end = Some(i);
+            break;
+        }
     }
-    let Some(end) = seed_end else { return out; };
+    let Some(end) = seed_end else {
+        return out;
+    };
     let p_f = period as f64;
     let k = 2.0 / (p_f + 1.0);
     let mut cur = seed_sum / p_f;
@@ -105,7 +140,12 @@ mod tests {
     use super::*;
 
     fn b(h: f64, l: f64, c: f64, v: f64) -> Bar {
-        Bar { high: h, low: l, close: c, volume: v }
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+            volume: v,
+        }
     }
 
     #[test]
@@ -137,22 +177,25 @@ mod tests {
 
     #[test]
     fn strong_uptrend_yields_positive_vfi() {
-        let bars: Vec<_> = (0..200).map(|i| {
-            let m = 100.0 + i as f64;
-            b(m + 0.5, m - 0.5, m, 1000.0)
-        }).collect();
+        let bars: Vec<_> = (0..200)
+            .map(|i| {
+                let m = 100.0 + i as f64;
+                b(m + 0.5, m - 0.5, m, 1000.0)
+            })
+            .collect();
         let r = compute(&bars, 130, 3);
         let last = r[199].unwrap();
-        assert!(last > 0.0,
-            "uptrend should yield positive VFI, got {last}");
+        assert!(last > 0.0, "uptrend should yield positive VFI, got {last}");
     }
 
     #[test]
     fn strong_downtrend_yields_negative_vfi() {
-        let bars: Vec<_> = (0..200).map(|i| {
-            let m = 300.0 - i as f64;
-            b(m + 0.5, m - 0.5, m, 1000.0)
-        }).collect();
+        let bars: Vec<_> = (0..200)
+            .map(|i| {
+                let m = 300.0 - i as f64;
+                b(m + 0.5, m - 0.5, m, 1000.0)
+            })
+            .collect();
         let r = compute(&bars, 130, 3);
         let last = r[199].unwrap();
         assert!(last < 0.0);

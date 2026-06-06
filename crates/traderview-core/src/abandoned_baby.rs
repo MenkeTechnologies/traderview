@@ -19,7 +19,12 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub open: f64, pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AbandonedBabyReport {
@@ -33,9 +38,12 @@ pub fn compute(bars: &[Bar], doji_pct: f64) -> AbandonedBabyReport {
         bullish: vec![false; n],
         bearish: vec![false; n],
     };
-    if n < 3 || !doji_pct.is_finite() || doji_pct <= 0.0 { return report; }
-    if bars.iter().any(|b| !b.open.is_finite() || !b.high.is_finite()
-        || !b.low.is_finite() || !b.close.is_finite()) {
+    if n < 3 || !doji_pct.is_finite() || doji_pct <= 0.0 {
+        return report;
+    }
+    if bars.iter().any(|b| {
+        !b.open.is_finite() || !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()
+    }) {
         return report;
     }
     for i in 2..n {
@@ -52,7 +60,9 @@ pub fn compute(bars: &[Bar], doji_pct: f64) -> AbandonedBabyReport {
 
 fn is_doji(b: Bar, doji_pct: f64) -> bool {
     let range = b.high - b.low;
-    if range <= 0.0 { return false; }
+    if range <= 0.0 {
+        return false;
+    }
     let body = (b.close - b.open).abs();
     body <= doji_pct * range
 }
@@ -61,28 +71,48 @@ fn is_bullish_abandoned_baby(b1: Bar, b2: Bar, b3: Bar, doji_pct: f64) -> bool {
     // Bar 1: tall bearish.
     let body1 = b1.open - b1.close;
     let range1 = b1.high - b1.low;
-    if range1 <= 0.0 || body1 <= 0.0 || body1 < 0.6 * range1 { return false; }
+    if range1 <= 0.0 || body1 <= 0.0 || body1 < 0.6 * range1 {
+        return false;
+    }
     // Bar 2: doji, gap down (b2.high < b1.low).
-    if !is_doji(b2, doji_pct) { return false; }
-    if b2.high >= b1.low { return false; }
+    if !is_doji(b2, doji_pct) {
+        return false;
+    }
+    if b2.high >= b1.low {
+        return false;
+    }
     // Bar 3: tall bullish, gap up (b3.low > b2.high).
     let body3 = b3.close - b3.open;
     let range3 = b3.high - b3.low;
-    if range3 <= 0.0 || body3 <= 0.0 || body3 < 0.6 * range3 { return false; }
-    if b3.low <= b2.high { return false; }
+    if range3 <= 0.0 || body3 <= 0.0 || body3 < 0.6 * range3 {
+        return false;
+    }
+    if b3.low <= b2.high {
+        return false;
+    }
     true
 }
 
 fn is_bearish_abandoned_baby(b1: Bar, b2: Bar, b3: Bar, doji_pct: f64) -> bool {
     let body1 = b1.close - b1.open;
     let range1 = b1.high - b1.low;
-    if range1 <= 0.0 || body1 <= 0.0 || body1 < 0.6 * range1 { return false; }
-    if !is_doji(b2, doji_pct) { return false; }
-    if b2.low <= b1.high { return false; }
+    if range1 <= 0.0 || body1 <= 0.0 || body1 < 0.6 * range1 {
+        return false;
+    }
+    if !is_doji(b2, doji_pct) {
+        return false;
+    }
+    if b2.low <= b1.high {
+        return false;
+    }
     let body3 = b3.open - b3.close;
     let range3 = b3.high - b3.low;
-    if range3 <= 0.0 || body3 <= 0.0 || body3 < 0.6 * range3 { return false; }
-    if b3.high >= b2.low { return false; }
+    if range3 <= 0.0 || body3 <= 0.0 || body3 < 0.6 * range3 {
+        return false;
+    }
+    if b3.high >= b2.low {
+        return false;
+    }
     true
 }
 
@@ -91,7 +121,12 @@ mod tests {
     use super::*;
 
     fn bar(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -144,7 +179,7 @@ mod tests {
         // No gap between bar 1 and bar 2.
         let bars = vec![
             bar(110.0, 110.5, 99.5, 100.0),
-            bar(101.0, 101.5, 99.5, 100.9),    // overlaps bar 1
+            bar(101.0, 101.5, 99.5, 100.9), // overlaps bar 1
             bar(102.0, 105.5, 101.5, 105.0),
         ];
         let r = compute(&bars, 0.2);
@@ -155,7 +190,7 @@ mod tests {
     fn non_doji_middle_bar_rejects() {
         let bars = vec![
             bar(110.0, 110.5, 99.5, 100.0),
-            bar(96.0, 99.5, 90.0, 99.0),    // big body, not doji
+            bar(96.0, 99.5, 90.0, 99.0), // big body, not doji
             bar(101.0, 105.5, 100.5, 105.0),
         ];
         let r = compute(&bars, 0.1);

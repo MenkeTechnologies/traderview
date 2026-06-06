@@ -331,7 +331,10 @@ mod tests {
             ..baseline_violation_corporate_issuer()
         };
         let result = check(&input);
-        assert_eq!(result.mode, Section4701Mode::NotApplicableObligationInRegisteredForm);
+        assert_eq!(
+            result.mode,
+            Section4701Mode::NotApplicableObligationInRegisteredForm
+        );
         assert_eq!(result.section_4701_tax_owed_dollars, 0);
     }
 

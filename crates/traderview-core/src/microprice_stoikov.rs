@@ -34,21 +34,42 @@ pub struct Bar {
 }
 
 pub fn compute(quotes: &[L1Quote]) -> Vec<Option<Bar>> {
-    quotes.iter().map(|q| {
-        if !q.bid.is_finite() || !q.ask.is_finite()
-            || !q.bid_size.is_finite() || !q.ask_size.is_finite() {
-            return None;
-        }
-        if q.bid <= 0.0 || q.ask <= 0.0 || q.bid > q.ask { return None; }
-        if q.bid_size < 0.0 || q.ask_size < 0.0 { return None; }
-        let total = q.bid_size + q.ask_size;
-        if total <= 0.0 { return None; }
-        let imbalance = q.bid_size / total;
-        let micro = q.bid * (1.0 - imbalance) + q.ask * imbalance;
-        let mid = 0.5 * (q.bid + q.ask);
-        let bias_bps = if mid > 0.0 { (micro - mid) / mid * 10000.0 } else { 0.0 };
-        Some(Bar { microprice: micro, midpoint: mid, imbalance, bias_bps })
-    }).collect()
+    quotes
+        .iter()
+        .map(|q| {
+            if !q.bid.is_finite()
+                || !q.ask.is_finite()
+                || !q.bid_size.is_finite()
+                || !q.ask_size.is_finite()
+            {
+                return None;
+            }
+            if q.bid <= 0.0 || q.ask <= 0.0 || q.bid > q.ask {
+                return None;
+            }
+            if q.bid_size < 0.0 || q.ask_size < 0.0 {
+                return None;
+            }
+            let total = q.bid_size + q.ask_size;
+            if total <= 0.0 {
+                return None;
+            }
+            let imbalance = q.bid_size / total;
+            let micro = q.bid * (1.0 - imbalance) + q.ask * imbalance;
+            let mid = 0.5 * (q.bid + q.ask);
+            let bias_bps = if mid > 0.0 {
+                (micro - mid) / mid * 10000.0
+            } else {
+                0.0
+            };
+            Some(Bar {
+                microprice: micro,
+                midpoint: mid,
+                imbalance,
+                bias_bps,
+            })
+        })
+        .collect()
 }
 
 #[cfg(test)]
@@ -56,7 +77,12 @@ mod tests {
     use super::*;
 
     fn q(bid: f64, ask: f64, bs: f64, as_: f64) -> L1Quote {
-        L1Quote { bid, ask, bid_size: bs, ask_size: as_ }
+        L1Quote {
+            bid,
+            ask,
+            bid_size: bs,
+            ask_size: as_,
+        }
     }
 
     #[test]
@@ -68,11 +94,11 @@ mod tests {
     #[test]
     fn invalid_quote_yields_none() {
         let quotes = vec![
-            q(0.0, 100.0, 100.0, 100.0),       // bid = 0
-            q(-1.0, 100.0, 100.0, 100.0),      // bid < 0
-            q(100.0, 99.0, 100.0, 100.0),      // crossed
-            q(100.0, 101.0, 0.0, 0.0),         // zero total size
-            q(f64::NAN, 100.0, 1.0, 1.0),      // NaN
+            q(0.0, 100.0, 100.0, 100.0),  // bid = 0
+            q(-1.0, 100.0, 100.0, 100.0), // bid < 0
+            q(100.0, 99.0, 100.0, 100.0), // crossed
+            q(100.0, 101.0, 0.0, 0.0),    // zero total size
+            q(f64::NAN, 100.0, 1.0, 1.0), // NaN
         ];
         let r = compute(&quotes);
         assert!(r.iter().all(|x| x.is_none()));

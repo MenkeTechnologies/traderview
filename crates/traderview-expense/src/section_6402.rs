@@ -105,9 +105,8 @@ pub fn compute(input: &Section6402Input) -> Section6402Result {
     let overpayment = input.overpayment_cents.max(0);
 
     let injured_spouse_protected = if input.injured_spouse_filed_form_8379 {
-        let protected = overpayment
-            .saturating_mul(input.injured_spouse_share_bps.min(10_000) as i64)
-            / 10_000;
+        let protected =
+            overpayment.saturating_mul(input.injured_spouse_share_bps.min(10_000) as i64) / 10_000;
         notes.push(format!(
             "§ 6402(n) injured spouse rule — Form 8379 filed; non-debtor spouse's share of {} bps = {} cents protected from offset",
             input.injured_spouse_share_bps.min(10_000), protected
@@ -120,13 +119,41 @@ pub fn compute(input: &Section6402Input) -> Section6402Result {
     let mut available_for_offset = overpayment.saturating_sub(injured_spouse_protected);
 
     let priorities: [(&'static str, &'static str, i64); 7] = [
-        ("IRS internal revenue tax liability", "§ 6402(a)", input.federal_tax_liability_cents.max(0)),
-        ("past-due support assigned to State", "§ 6402(c)(1)", input.child_support_state_assigned_cents.max(0)),
-        ("federal agency non-tax debt", "§ 6402(d)", input.federal_agency_non_tax_debt_cents.max(0)),
-        ("past-due support not assigned to State", "§ 6402(c)(2)", input.child_support_non_assigned_cents.max(0)),
-        ("state income tax debt", "§ 6402(e)", input.state_income_tax_debt_cents.max(0)),
-        ("state unemployment compensation debt", "§ 6402(f)", input.state_unemployment_debt_cents.max(0)),
-        ("state TANF / past assistance", "§ 6402(g)", input.state_tanf_debt_cents.max(0)),
+        (
+            "IRS internal revenue tax liability",
+            "§ 6402(a)",
+            input.federal_tax_liability_cents.max(0),
+        ),
+        (
+            "past-due support assigned to State",
+            "§ 6402(c)(1)",
+            input.child_support_state_assigned_cents.max(0),
+        ),
+        (
+            "federal agency non-tax debt",
+            "§ 6402(d)",
+            input.federal_agency_non_tax_debt_cents.max(0),
+        ),
+        (
+            "past-due support not assigned to State",
+            "§ 6402(c)(2)",
+            input.child_support_non_assigned_cents.max(0),
+        ),
+        (
+            "state income tax debt",
+            "§ 6402(e)",
+            input.state_income_tax_debt_cents.max(0),
+        ),
+        (
+            "state unemployment compensation debt",
+            "§ 6402(f)",
+            input.state_unemployment_debt_cents.max(0),
+        ),
+        (
+            "state TANF / past assistance",
+            "§ 6402(g)",
+            input.state_tanf_debt_cents.max(0),
+        ),
     ];
 
     let mut offsets_applied: Vec<OffsetApplied> = Vec::new();
@@ -151,12 +178,11 @@ pub fn compute(input: &Section6402Input) -> Section6402Result {
     if !offsets_applied.is_empty() {
         notes.push(format!(
             "{} offsets applied in § 6402 statutory priority order; total offset = {} cents",
-            offsets_applied.len(), total_offset
+            offsets_applied.len(),
+            total_offset
         ));
     } else if overpayment > 0 {
-        notes.push(
-            "no offsets applied — full refund flows to taxpayer".to_string(),
-        );
+        notes.push("no offsets applied — full refund flows to taxpayer".to_string());
     }
 
     notes.push(
@@ -214,7 +240,10 @@ mod tests {
         assert_eq!(r.total_offset_cents, 2_000_00);
         assert_eq!(r.remaining_refund_to_taxpayer_cents, 3_000_00);
         assert_eq!(r.offsets_applied[0].statute, "§ 6402(a)");
-        assert_eq!(r.offsets_applied[0].category, "IRS internal revenue tax liability");
+        assert_eq!(
+            r.offsets_applied[0].category,
+            "IRS internal revenue tax liability"
+        );
     }
 
     #[test]
@@ -245,7 +274,10 @@ mod tests {
         assert_eq!(r.offsets_applied[0].statute, "§ 6402(a)");
         assert_eq!(r.offsets_applied[1].statute, "§ 6402(d)");
         assert_eq!(r.offsets_applied[2].statute, "§ 6402(e)");
-        assert_eq!(r.remaining_refund_to_taxpayer_cents, (10_000 - 2_000 - 1_500 - 3_000) * 100);
+        assert_eq!(
+            r.remaining_refund_to_taxpayer_cents,
+            (10_000 - 2_000 - 1_500 - 3_000) * 100
+        );
     }
 
     #[test]
@@ -306,7 +338,10 @@ mod tests {
         assert_eq!(r.injured_spouse_protected_cents, 5_000_00);
         assert_eq!(r.total_offset_cents, 5_000_00);
         assert_eq!(r.remaining_refund_to_taxpayer_cents, 5_000_00);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6402(n) injured spouse rule") && n.contains("Form 8379")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6402(n) injured spouse rule") && n.contains("Form 8379")));
     }
 
     #[test]
@@ -415,7 +450,8 @@ mod tests {
         assert!(r
             .notes
             .iter()
-            .any(|n| n.contains("Treasury Offset Program (TOP)") && n.contains("Bureau of the Fiscal Service")));
+            .any(|n| n.contains("Treasury Offset Program (TOP)")
+                && n.contains("Bureau of the Fiscal Service")));
     }
 
     #[test]

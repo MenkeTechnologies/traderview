@@ -257,8 +257,7 @@ fn jurisdiction_organic_violation_penalty(
         }
         Jurisdiction::NewYorkCity => NYC_LL97_FINE_FIRST_OFFENSE_CENTS,
         Jurisdiction::Vermont => VT_ACT_148_PENALTY_BASE_CENTS,
-        _ => SB_1383_DAILY_PENALTY_FIRST_TIER_CENTS
-            .saturating_mul(u64::from(days_since_violation)),
+        _ => SB_1383_DAILY_PENALTY_FIRST_TIER_CENTS.saturating_mul(u64::from(days_since_violation)),
     }
 }
 
@@ -314,8 +313,7 @@ mod tests {
         Input {
             jurisdiction: Jurisdiction::CaliforniaSb1383,
             building_size_coverage: BuildingSizeCoverage::CoveredByMandate,
-            compliance_status:
-                ComplianceStatus::AllStreamsProvidedWithSignageAndEducation,
+            compliance_status: ComplianceStatus::AllStreamsProvidedWithSignageAndEducation,
             days_since_violation_notice_received: 0,
         }
     }
@@ -360,8 +358,7 @@ mod tests {
     #[test]
     fn ca_organic_waste_bin_not_provided_violation() {
         let mut input = base_ca();
-        input.compliance_status =
-            ComplianceStatus::OrganicWasteBinNotProvidedViolation;
+        input.compliance_status = ComplianceStatus::OrganicWasteBinNotProvidedViolation;
         input.days_since_violation_notice_received = 10;
         let output = check(&input);
         assert_eq!(
@@ -375,8 +372,7 @@ mod tests {
     #[test]
     fn ca_organic_violation_repeat_tier_after_30_days() {
         let mut input = base_ca();
-        input.compliance_status =
-            ComplianceStatus::OrganicWasteBinNotProvidedViolation;
+        input.compliance_status = ComplianceStatus::OrganicWasteBinNotProvidedViolation;
         input.days_since_violation_notice_received = 60;
         let output = check(&input);
         // First 30 × $50 = $1,500; next 30 × $100 = $3,000; total $4,500
@@ -386,13 +382,9 @@ mod tests {
     #[test]
     fn ca_recycling_bin_not_provided_violation() {
         let mut input = base_ca();
-        input.compliance_status =
-            ComplianceStatus::RecyclingBinNotProvidedViolation;
+        input.compliance_status = ComplianceStatus::RecyclingBinNotProvidedViolation;
         let output = check(&input);
-        assert_eq!(
-            output.severity,
-            Severity::RecyclingBinNotProvidedViolation
-        );
+        assert_eq!(output.severity, Severity::RecyclingBinNotProvidedViolation);
     }
 
     #[test]
@@ -411,8 +403,7 @@ mod tests {
     #[test]
     fn ca_bins_provided_but_signage_or_monitoring_missing() {
         let mut input = base_ca();
-        input.compliance_status =
-            ComplianceStatus::BinsProvidedButSignageOrMonitoringMissing;
+        input.compliance_status = ComplianceStatus::BinsProvidedButSignageOrMonitoringMissing;
         let output = check(&input);
         assert_eq!(
             output.severity,
@@ -504,8 +495,7 @@ mod tests {
     #[test]
     fn very_large_days_no_overflow_in_ca_penalty_calc() {
         let mut input = base_ca();
-        input.compliance_status =
-            ComplianceStatus::OrganicWasteBinNotProvidedViolation;
+        input.compliance_status = ComplianceStatus::OrganicWasteBinNotProvidedViolation;
         input.days_since_violation_notice_received = u32::MAX;
         let output = check(&input);
         // saturating arithmetic prevents panic

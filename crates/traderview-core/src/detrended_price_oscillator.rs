@@ -20,11 +20,17 @@
 pub fn compute(closes: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = closes.len();
     let mut out = vec![None; n];
-    if period < 2 || n < period { return out; }
-    if closes.iter().any(|x| !x.is_finite()) { return out; }
+    if period < 2 || n < period {
+        return out;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     let shift = period / 2 + 1;
     for (i, slot) in out.iter_mut().enumerate().skip(period - 1) {
-        if i < shift { continue; }
+        if i < shift {
+            continue;
+        }
         let sma: f64 = closes[i + 1 - period..=i].iter().sum::<f64>() / period as f64;
         *slot = Some(closes[i - shift] - sma);
     }
@@ -71,20 +77,31 @@ mod tests {
         let vals: Vec<f64> = out.iter().filter_map(|x| *x).collect();
         let first = vals[0];
         for v in &vals[1..] {
-            assert!((v - first).abs() < 1e-9, "DPO not constant on linear trend: {first} vs {v}");
+            assert!(
+                (v - first).abs() < 1e-9,
+                "DPO not constant on linear trend: {first} vs {v}"
+            );
         }
     }
 
     #[test]
     fn cycle_input_dpo_oscillates_around_zero() {
-        let closes: Vec<f64> = (0..200).map(|i| 100.0 + (i as f64 * 0.1).sin() * 10.0).collect();
+        let closes: Vec<f64> = (0..200)
+            .map(|i| 100.0 + (i as f64 * 0.1).sin() * 10.0)
+            .collect();
         let out = compute(&closes, 20);
         let vals: Vec<f64> = out.iter().filter_map(|x| *x).collect();
         let mean = vals.iter().sum::<f64>() / vals.len() as f64;
-        assert!(mean.abs() < 1.0, "DPO mean should be near zero on cycle data, got {mean}");
+        assert!(
+            mean.abs() < 1.0,
+            "DPO mean should be near zero on cycle data, got {mean}"
+        );
         let max = vals.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
         let min = vals.iter().cloned().fold(f64::INFINITY, f64::min);
-        assert!(max > 0.0 && min < 0.0, "DPO should cross zero on cycle data: [{min}, {max}]");
+        assert!(
+            max > 0.0 && min < 0.0,
+            "DPO should cross zero on cycle data: [{min}, {max}]"
+        );
     }
 
     #[test]

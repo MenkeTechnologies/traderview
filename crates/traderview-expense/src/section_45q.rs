@@ -651,8 +651,7 @@ mod tests {
     fn pwa_bonus_claimed_without_meeting_requirements_violation() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::BonusCreditAmountForPwaUnderSection45QA2;
-        input.pwa_status =
-            PrevailingWageApprenticeshipStatus::PwaRequirementsNotMetBaseRateOnly;
+        input.pwa_status = PrevailingWageApprenticeshipStatus::PwaRequirementsNotMetBaseRateOnly;
         input.claimed_pwa_bonus_multiplier = true;
         let out = check(&input);
         assert_eq!(
@@ -749,7 +748,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::TransferabilityElectionUnderSection6418;
         input.transferability_election_made = true;
         let out = check(&input);
-        assert_eq!(out.mode, Section45QMode::CompliantTransferabilityElectionMade);
+        assert_eq!(
+            out.mode,
+            Section45QMode::CompliantTransferabilityElectionMade
+        );
     }
 
     #[test]
@@ -767,7 +769,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::FormFilingUnderForm8933;
         input.form_8933_filed_correctly = false;
         let out = check(&input);
-        assert_eq!(out.mode, Section45QMode::ViolationForm8933NotFiledOrIncorrect);
+        assert_eq!(
+            out.mode,
+            Section45QMode::ViolationForm8933NotFiledOrIncorrect
+        );
     }
 
     #[test]

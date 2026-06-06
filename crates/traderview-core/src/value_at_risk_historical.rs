@@ -19,9 +19,15 @@ pub struct Report {
 
 pub fn compute(returns: &[f64], confidence: f64) -> Option<Report> {
     let n = returns.len();
-    if n < 2 || !confidence.is_finite() { return None; }
-    if !(0.5..1.0).contains(&confidence) { return None; }
-    if returns.iter().any(|x| !x.is_finite()) { return None; }
+    if n < 2 || !confidence.is_finite() {
+        return None;
+    }
+    if !(0.5..1.0).contains(&confidence) {
+        return None;
+    }
+    if returns.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let mut sorted: Vec<f64> = returns.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     let alpha = 1.0 - confidence;
@@ -37,7 +43,11 @@ pub fn compute(returns: &[f64], confidence: f64) -> Option<Report> {
     } else {
         -(tail.iter().sum::<f64>() / tail.len() as f64)
     };
-    Some(Report { var, expected_shortfall: es, n })
+    Some(Report {
+        var,
+        expected_shortfall: es,
+        n,
+    })
 }
 
 #[cfg(test)]
@@ -71,11 +81,17 @@ mod tests {
 
     #[test]
     fn es_is_at_least_var() {
-        let r: Vec<f64> = (0..1000).map(|i| {
-            let x = i as f64 / 1000.0;
-            // 99% small, 1% large losses
-            if x < 0.99 { 0.0 } else { -0.5 }
-        }).collect();
+        let r: Vec<f64> = (0..1000)
+            .map(|i| {
+                let x = i as f64 / 1000.0;
+                // 99% small, 1% large losses
+                if x < 0.99 {
+                    0.0
+                } else {
+                    -0.5
+                }
+            })
+            .collect();
         let rep = compute(&r, 0.95).unwrap();
         assert!(rep.expected_shortfall >= rep.var);
     }

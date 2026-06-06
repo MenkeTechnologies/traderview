@@ -165,24 +165,30 @@ pub fn check(input: &Section6020Input) -> Section6020Result {
         );
     }
 
-    let s6020b_valid = matches!(input.return_path, ReturnPath::Section6020bSubstituteForReturn)
-        && input.form_13496_certification
+    let s6020b_valid = matches!(
+        input.return_path,
+        ReturnPath::Section6020bSubstituteForReturn
+    ) && input.form_13496_certification
         && input.taxpayer_identified
         && input.sufficient_information_for_tax_liability
         && input.purports_to_be_return;
 
-    if matches!(input.return_path, ReturnPath::Section6020bSubstituteForReturn)
-        && !input.form_13496_certification
+    if matches!(
+        input.return_path,
+        ReturnPath::Section6020bSubstituteForReturn
+    ) && !input.form_13496_certification
     {
         failure_reasons.push(
             "26 CFR § 301.6020-1 — § 6020(b) return must be certified by Form 13496 signed by authorized IRS officer or employee".to_string(),
         );
     }
 
-    if matches!(input.return_path, ReturnPath::Section6020bSubstituteForReturn)
-        && (!input.taxpayer_identified
-            || !input.sufficient_information_for_tax_liability
-            || !input.purports_to_be_return)
+    if matches!(
+        input.return_path,
+        ReturnPath::Section6020bSubstituteForReturn
+    ) && (!input.taxpayer_identified
+        || !input.sufficient_information_for_tax_liability
+        || !input.purports_to_be_return)
     {
         failure_reasons.push(
             "26 CFR § 301.6020-1 — § 6020(b) return must (1) identify taxpayer by name and ID number, (2) contain sufficient information to compute tax liability, (3) purport to be a return".to_string(),
@@ -406,15 +412,18 @@ mod tests {
     #[test]
     fn note_pins_section_b2_prima_facie_status() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6020(b)(2)")
-            && n.contains("PRIMA FACIE GOOD AND SUFFICIENT")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6020(b)(2)") && n.contains("PRIMA FACIE GOOD AND SUFFICIENT")));
     }
 
     #[test]
     fn note_pins_6020a_vs_6020b_distinction_ased_never_starts() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6020(a) vs § 6020(b)")
-            && n.contains("§ 6501 ASED NEVER STARTS")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("§ 6020(a) vs § 6020(b)") && n.contains("§ 6501 ASED NEVER STARTS")
+        ));
     }
 
     #[test]
@@ -429,8 +438,10 @@ mod tests {
     #[test]
     fn note_pins_form_13496_certification() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("Form 13496")
-            && n.contains("§ 301.6020-1")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Form 13496") && n.contains("§ 301.6020-1")));
     }
 
     #[test]

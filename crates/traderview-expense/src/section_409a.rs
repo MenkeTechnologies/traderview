@@ -126,7 +126,10 @@ pub fn compute(input: &Section409aInput) -> Section409aResult {
 
     // Check 2: §409A(a)(2)(B)(i) specified-employee 6-month delay.
     let delay_required = input.specified_employee_of_public_company
-        && matches!(input.distribution_event, DistributionEvent::SeparationFromService);
+        && matches!(
+            input.distribution_event,
+            DistributionEvent::SeparationFromService
+        );
     let delay_satisfied = if delay_required {
         match input.months_since_separation {
             Some(months) => Some(months >= SIX_MONTH_DELAY_MONTHS),
@@ -153,21 +156,14 @@ pub fn compute(input: &Section409aInput) -> Section409aResult {
 
     // Compute penalties only if non-compliant.
     let (income_inclusion, additional_tax, premium_interest, total_penalty) = if compliant {
-        (
-            Decimal::ZERO,
-            Decimal::ZERO,
-            Decimal::ZERO,
-            Decimal::ZERO,
-        )
+        (Decimal::ZERO, Decimal::ZERO, Decimal::ZERO, Decimal::ZERO)
     } else {
         let income = input.deferred_amount_vested;
         let add_tax = income * Decimal::from(ADDITIONAL_TAX_BP) / Decimal::from(10_000);
         // Premium interest: IRS rate + 1% × years × amount (simple
         // interest approximation).
         let premium_rate_bp = input.irs_underpayment_rate_basis_points + PREMIUM_RATE_ADDITION_BP;
-        let premium_interest = income
-            * Decimal::from(premium_rate_bp)
-            / Decimal::from(10_000)
+        let premium_interest = income * Decimal::from(premium_rate_bp) / Decimal::from(10_000)
             * Decimal::from(input.years_since_initial_deferral);
         let total = add_tax + premium_interest;
         (income, add_tax, premium_interest, total)

@@ -13,10 +13,10 @@
 //! resulting text via regex in `parse.rs`, identical for both paths.
 
 pub mod engine;
-pub mod tax_forms;
 pub mod matcher;
 pub mod parse;
 pub mod pdf;
+pub mod tax_forms;
 
 use chrono::{NaiveDate, NaiveTime};
 use rust_decimal::Decimal;
@@ -225,8 +225,7 @@ fn combine_results(mut rs: Vec<OcrResult>) -> OcrResult {
         acc.total = acc.total.or(other.total);
         for item in other.items {
             let dup = acc.items.iter().any(|p| {
-                p.name.to_lowercase() == item.name.to_lowercase()
-                    && p.line_total == item.line_total
+                p.name.to_lowercase() == item.name.to_lowercase() && p.line_total == item.line_total
             });
             if !dup {
                 acc.items.push(item);
@@ -268,7 +267,8 @@ mod tests {
         // error — both are PDF-path outcomes, NOT UnsupportedMime.
         assert!(
             !matches!(r, Err(OcrError::UnsupportedMime(_))),
-            "PDF with parameters must route to PDF path, got: {:?}", r,
+            "PDF with parameters must route to PDF path, got: {:?}",
+            r,
         );
     }
 
@@ -279,8 +279,11 @@ mod tests {
         let r = extract(b"\xff\xd8\xff", "IMAGE/JPEG", None);
         // Without model_dir → ModelsMissing (the image-path failure mode),
         // NOT UnsupportedMime.
-        assert!(matches!(r, Err(OcrError::ModelsMissing { .. })),
-            "uppercase image/* MIME must reach image path, got: {:?}", r);
+        assert!(
+            matches!(r, Err(OcrError::ModelsMissing { .. })),
+            "uppercase image/* MIME must reach image path, got: {:?}",
+            r
+        );
     }
 
     #[test]
@@ -311,10 +314,14 @@ mod tests {
             "category": "meals"
         }"#;
         let item: OcrLineItem = serde_json::from_str(raw).expect("legacy item must parse");
-        assert_eq!(item.tax_bucket, "unclassified",
-            "missing tax_bucket must default to 'unclassified'");
-        assert_eq!(item.rental_property_id, None,
-            "missing rental_property_id must default to None");
+        assert_eq!(
+            item.tax_bucket, "unclassified",
+            "missing tax_bucket must default to 'unclassified'"
+        );
+        assert_eq!(
+            item.rental_property_id, None,
+            "missing rental_property_id must default to None"
+        );
         assert_eq!(item.qty, None);
         assert_eq!(item.unit_price, None);
     }
@@ -368,11 +375,24 @@ mod tests {
         // JSON keys the JS reads. (snake_case Rust field names map
         // verbatim by default; serde rename_all isn't configured here.)
         for key in [
-            "\"text\":", "\"merchant\":", "\"address\":", "\"date\":",
-            "\"time\":", "\"subtotal\":", "\"tax\":", "\"total\":",
-            "\"items\":", "\"confidence\":", "\"engine\":",
-            "\"name\":", "\"qty\":", "\"unit_price\":", "\"line_total\":",
-            "\"category\":", "\"tax_bucket\":", "\"rental_property_id\":",
+            "\"text\":",
+            "\"merchant\":",
+            "\"address\":",
+            "\"date\":",
+            "\"time\":",
+            "\"subtotal\":",
+            "\"tax\":",
+            "\"total\":",
+            "\"items\":",
+            "\"confidence\":",
+            "\"engine\":",
+            "\"name\":",
+            "\"qty\":",
+            "\"unit_price\":",
+            "\"line_total\":",
+            "\"category\":",
+            "\"tax_bucket\":",
+            "\"rental_property_id\":",
         ] {
             assert!(json.contains(key), "wire field {key} missing from: {json}");
         }
@@ -395,11 +415,17 @@ mod tests {
         // the allow, the dead-code lint fires on the test struct field.
         #[derive(serde::Deserialize)]
         #[allow(dead_code)]
-        struct VL { text: String, #[serde(default)] confidence: f32 }
+        struct VL {
+            text: String,
+            #[serde(default)]
+            confidence: f32,
+        }
         #[derive(serde::Deserialize)]
         struct VO {
-            #[serde(default)] lines: Vec<VL>,
-            #[serde(default)] confidence_mean: f32,
+            #[serde(default)]
+            lines: Vec<VL>,
+            #[serde(default)]
+            confidence_mean: f32,
         }
 
         // Full shape — Swift sidecar emits all fields on a normal scan.
@@ -491,14 +517,17 @@ mod tests {
             time: None,
             subtotal: None,
             tax: None,
-            total: Some(rust_decimal::Decimal::new(4299, 2)),  // 42.99
+            total: Some(rust_decimal::Decimal::new(4299, 2)), // 42.99
             items: vec![OcrLineItem {
-                name: "Burrito".into(), qty: None, unit_price: None,
+                name: "Burrito".into(),
+                qty: None,
+                unit_price: None,
                 line_total: rust_decimal::Decimal::new(1099, 2),
-                category: "meals".into(), tax_bucket: "business".into(),
+                category: "meals".into(),
+                tax_bucket: "business".into(),
                 rental_property_id: None,
             }],
-            confidence: 0.95,  // higher
+            confidence: 0.95, // higher
             engine: "apple_vision".into(),
         };
         let b = OcrResult {
@@ -509,11 +538,14 @@ mod tests {
             time: None,
             subtotal: None,
             tax: None,
-            total: Some(rust_decimal::Decimal::new(4250, 2)),  // 42.50, lower conf
+            total: Some(rust_decimal::Decimal::new(4250, 2)), // 42.50, lower conf
             items: vec![OcrLineItem {
-                name: "Chips & Salsa".into(), qty: None, unit_price: None,
+                name: "Chips & Salsa".into(),
+                qty: None,
+                unit_price: None,
                 line_total: rust_decimal::Decimal::new(395, 2),
-                category: "meals".into(), tax_bucket: "business".into(),
+                category: "meals".into(),
+                tax_bucket: "business".into(),
                 rental_property_id: None,
             }],
             confidence: 0.85,
@@ -540,23 +572,43 @@ mod tests {
     fn combine_results_dedupes_items_by_name_and_total() {
         // Same item parsed by both engines — must collapse to one row.
         let item = OcrLineItem {
-            name: "Burrito".into(), qty: None, unit_price: None,
+            name: "Burrito".into(),
+            qty: None,
+            unit_price: None,
             line_total: rust_decimal::Decimal::new(1099, 2),
-            category: "meals".into(), tax_bucket: "business".into(),
+            category: "meals".into(),
+            tax_bucket: "business".into(),
             rental_property_id: None,
         };
         let a = OcrResult {
-            text: "a".into(), merchant: None, address: None, date: None,
-            time: None, subtotal: None, tax: None, total: None,
+            text: "a".into(),
+            merchant: None,
+            address: None,
+            date: None,
+            time: None,
+            subtotal: None,
+            tax: None,
+            total: None,
             items: vec![item.clone()],
-            confidence: 0.95, engine: "apple_vision".into(),
+            confidence: 0.95,
+            engine: "apple_vision".into(),
         };
         let b = OcrResult {
-            text: "b".into(), merchant: None, address: None, date: None,
-            time: None, subtotal: None, tax: None, total: None,
+            text: "b".into(),
+            merchant: None,
+            address: None,
+            date: None,
+            time: None,
+            subtotal: None,
+            tax: None,
+            total: None,
             // Same total + same name (case-insensitive) → duplicate.
-            items: vec![OcrLineItem { name: "BURRITO".into(), ..item }],
-            confidence: 0.85, engine: "tesseract_psm4".into(),
+            items: vec![OcrLineItem {
+                name: "BURRITO".into(),
+                ..item
+            }],
+            confidence: 0.85,
+            engine: "tesseract_psm4".into(),
         };
         let m = super::combine_results(vec![a, b]);
         assert_eq!(m.items.len(), 1, "duplicate item should be deduped");
@@ -568,13 +620,18 @@ mod tests {
         let r = OcrResult {
             text: "raw".into(),
             merchant: Some("M".into()),
-            address: None, date: None, time: None,
-            subtotal: None, tax: None, total: None,
-            items: Vec::new(), confidence: 0.7,
+            address: None,
+            date: None,
+            time: None,
+            subtotal: None,
+            tax: None,
+            total: None,
+            items: Vec::new(),
+            confidence: 0.7,
             engine: "tesseract_psm4".into(),
         };
         let m = super::combine_results(vec![r.clone()]);
-        assert_eq!(m.engine, r.engine);  // NOT prefixed with "ensemble:" when single
+        assert_eq!(m.engine, r.engine); // NOT prefixed with "ensemble:" when single
         assert_eq!(m.merchant, r.merchant);
     }
 
@@ -599,9 +656,9 @@ mod tests {
         // result label.
         let vision = OcrResult {
             text: "vision".into(),
-            merchant: Some("CHIPOTLE".into()),  // vision wins (highest conf)
+            merchant: Some("CHIPOTLE".into()), // vision wins (highest conf)
             address: None,
-            date: None,                          // missing
+            date: None, // missing
             time: None,
             subtotal: None,
             tax: None,
@@ -628,7 +685,7 @@ mod tests {
             merchant: None,
             address: None,
             date: None,
-            time: chrono::NaiveTime::from_hms_opt(18, 30, 0),  // tess6 contributes time
+            time: chrono::NaiveTime::from_hms_opt(18, 30, 0), // tess6 contributes time
             subtotal: None,
             tax: None,
             total: None,
@@ -645,7 +702,10 @@ mod tests {
         assert!(m.date.is_some());
         assert!(m.time.is_some());
         // Engine label carries all three backends in confidence-sorted order.
-        assert_eq!(m.engine, "ensemble:apple_vision+tesseract_psm4+tesseract_psm6");
+        assert_eq!(
+            m.engine,
+            "ensemble:apple_vision+tesseract_psm4+tesseract_psm6"
+        );
         // Confidence = max.
         assert_eq!(m.confidence, 0.95);
     }
@@ -657,9 +717,13 @@ mod tests {
         // whose engine label still tags both.
         let mk = |engine: &str, conf: f32| OcrResult {
             text: String::new(),
-            merchant: None, address: None,
-            date: None, time: None,
-            subtotal: None, tax: None, total: None,
+            merchant: None,
+            address: None,
+            date: None,
+            time: None,
+            subtotal: None,
+            tax: None,
+            total: None,
             items: Vec::new(),
             confidence: conf,
             engine: engine.to_string(),
@@ -675,33 +739,59 @@ mod tests {
         // Vision finds 3 items; Tesseract finds 2 (one overlap, one
         // unique). Final items = 4 (union).
         let mk_item = |name: &str, total: i64| OcrLineItem {
-            name: name.into(), qty: None, unit_price: None,
+            name: name.into(),
+            qty: None,
+            unit_price: None,
             line_total: rust_decimal::Decimal::from(total),
-            category: "meals".into(), tax_bucket: "business".into(),
+            category: "meals".into(),
+            tax_bucket: "business".into(),
             rental_property_id: None,
         };
         let vision = OcrResult {
-            text: "v".into(), merchant: None, address: None,
-            date: None, time: None, subtotal: None, tax: None, total: None,
-            items: vec![mk_item("Burrito", 12), mk_item("Chips", 4), mk_item("Drink", 3)],
-            confidence: 0.9, engine: "apple_vision".into(),
+            text: "v".into(),
+            merchant: None,
+            address: None,
+            date: None,
+            time: None,
+            subtotal: None,
+            tax: None,
+            total: None,
+            items: vec![
+                mk_item("Burrito", 12),
+                mk_item("Chips", 4),
+                mk_item("Drink", 3),
+            ],
+            confidence: 0.9,
+            engine: "apple_vision".into(),
         };
         let tess = OcrResult {
-            text: "t".into(), merchant: None, address: None,
-            date: None, time: None, subtotal: None, tax: None, total: None,
+            text: "t".into(),
+            merchant: None,
+            address: None,
+            date: None,
+            time: None,
+            subtotal: None,
+            tax: None,
+            total: None,
             // "Burrito" duplicates Vision's; "Tip" is unique to Tesseract.
             items: vec![mk_item("Burrito", 12), mk_item("Tip", 2)],
-            confidence: 0.8, engine: "tesseract_psm4".into(),
+            confidence: 0.8,
+            engine: "tesseract_psm4".into(),
         };
         let m = super::combine_results(vec![vision, tess]);
-        assert_eq!(m.items.len(), 4,
+        assert_eq!(
+            m.items.len(),
+            4,
             "expected 4 unique items, got: {:?}",
-            m.items.iter().map(|i| &i.name).collect::<Vec<_>>());
+            m.items.iter().map(|i| &i.name).collect::<Vec<_>>()
+        );
         // Ordering preserved: vision items first (highest conf), then
         // unique-to-tesseract entries appended.
         assert_eq!(m.items[0].name, "Burrito");
-        assert!(m.items.iter().any(|i| i.name == "Tip"),
-            "tess-unique 'Tip' must survive the union");
+        assert!(
+            m.items.iter().any(|i| i.name == "Tip"),
+            "tess-unique 'Tip' must survive the union"
+        );
     }
 
     #[test]
@@ -712,26 +802,46 @@ mod tests {
         // survive, which is the safe behavior: the user reviews
         // both, deletes the wrong one.
         let mk_item = |name: &str, total: i64| OcrLineItem {
-            name: name.into(), qty: None, unit_price: None,
+            name: name.into(),
+            qty: None,
+            unit_price: None,
             line_total: rust_decimal::Decimal::from(total),
-            category: "meals".into(), tax_bucket: "business".into(),
+            category: "meals".into(),
+            tax_bucket: "business".into(),
             rental_property_id: None,
         };
         let a = OcrResult {
-            text: "a".into(), merchant: None, address: None,
-            date: None, time: None, subtotal: None, tax: None, total: None,
+            text: "a".into(),
+            merchant: None,
+            address: None,
+            date: None,
+            time: None,
+            subtotal: None,
+            tax: None,
+            total: None,
             items: vec![mk_item("Burrito", 12)],
-            confidence: 0.9, engine: "apple_vision".into(),
+            confidence: 0.9,
+            engine: "apple_vision".into(),
         };
         let b = OcrResult {
-            text: "b".into(), merchant: None, address: None,
-            date: None, time: None, subtotal: None, tax: None, total: None,
-            items: vec![mk_item("Burrito", 13)],  // smudged 2 → 3
-            confidence: 0.8, engine: "tesseract_psm4".into(),
+            text: "b".into(),
+            merchant: None,
+            address: None,
+            date: None,
+            time: None,
+            subtotal: None,
+            tax: None,
+            total: None,
+            items: vec![mk_item("Burrito", 13)], // smudged 2 → 3
+            confidence: 0.8,
+            engine: "tesseract_psm4".into(),
         };
         let m = super::combine_results(vec![a, b]);
-        assert_eq!(m.items.len(), 2,
-            "different totals must NOT be deduped — user reviews both");
+        assert_eq!(
+            m.items.len(),
+            2,
+            "different totals must NOT be deduped — user reviews both"
+        );
     }
 
     #[test]
@@ -753,8 +863,10 @@ mod tests {
     fn error_unsupported_mime_includes_offending_mime() {
         // Frontend surfaces the bad MIME so user knows what they uploaded.
         let s = OcrError::UnsupportedMime("text/plain".into()).to_string();
-        assert!(s.contains("text/plain"),
-            "UnsupportedMime must echo the bad MIME, got: {s}");
+        assert!(
+            s.contains("text/plain"),
+            "UnsupportedMime must echo the bad MIME, got: {s}"
+        );
     }
 
     #[test]
@@ -782,8 +894,10 @@ mod tests {
         // User builds without `--features engine`/`paddle` and gets a
         // useful error pointing at the build flag.
         let s = OcrError::EngineDisabled.to_string();
-        assert!(s.contains("--features"),
-            "EngineDisabled should hint at the feature flag");
+        assert!(
+            s.contains("--features"),
+            "EngineDisabled should hint at the feature flag"
+        );
     }
 
     #[test]

@@ -121,8 +121,8 @@ pub fn compute(input: &Section6112Input) -> Section6112Result {
     let business_days = input.business_days_since_request.max(0);
     let reasonable_cause_days = input.days_with_reasonable_cause.max(0);
 
-    let deadline_passed = input.written_request_received
-        && business_days > PROVISION_DEADLINE_BUSINESS_DAYS;
+    let deadline_passed =
+        input.written_request_received && business_days > PROVISION_DEADLINE_BUSINESS_DAYS;
 
     let days_late = if deadline_passed && !input.list_provided_to_irs {
         business_days - PROVISION_DEADLINE_BUSINESS_DAYS
@@ -365,7 +365,10 @@ mod tests {
         let r = compute(&input(true, true, 15, true, false, 0));
         assert!(!r.compliant);
         assert!(!r.list_components_complete);
-        assert!(r.violations.iter().any(|v| v.contains("§ 301.6112-1(b)(2)")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 301.6112-1(b)(2)")));
     }
 
     #[test]

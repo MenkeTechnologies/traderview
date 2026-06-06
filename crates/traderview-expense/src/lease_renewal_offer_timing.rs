@@ -151,9 +151,7 @@ pub struct LeaseRenewalOfferTimingResult {
     pub notes: Vec<String>,
 }
 
-pub fn check(
-    input: &LeaseRenewalOfferTimingInput,
-) -> LeaseRenewalOfferTimingResult {
+pub fn check(input: &LeaseRenewalOfferTimingInput) -> LeaseRenewalOfferTimingResult {
     let mut failure_reasons: Vec<String> = Vec::new();
 
     let (window_min, window_max) = match input.jurisdiction {
@@ -345,9 +343,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.timing_compliant);
         assert!(r.rent_increase_invalidated);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 2523.5")
-            && f.contains("NOT LESS THAN 90 DAYS")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 2523.5") && f.contains("NOT LESS THAN 90 DAYS")));
     }
 
     #[test]
@@ -380,9 +379,10 @@ mod tests {
         i.ny_used_current_rtp8_form = false;
         let r = check(&i);
         assert!(!r.form_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("DHCR Form RTP-8")
-            && f.contains("INVALID")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("DHCR Form RTP-8") && f.contains("INVALID")));
     }
 
     #[test]
@@ -391,9 +391,10 @@ mod tests {
         i.ny_offered_both_one_and_two_year_terms = false;
         let r = check(&i);
         assert!(!r.content_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 2523.5")
-            && f.contains("BOTH 1-year AND 2-year")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 2523.5") && f.contains("BOTH 1-year AND 2-year")));
     }
 
     #[test]
@@ -402,9 +403,10 @@ mod tests {
         i.mail_or_personal_delivery = false;
         let r = check(&i);
         assert!(!r.method_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 2523.5")
-            && f.contains("MAIL or PERSONAL DELIVERY")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 2523.5") && f.contains("MAIL or PERSONAL DELIVERY")));
     }
 
     #[test]
@@ -464,9 +466,10 @@ mod tests {
         i.just_cause_for_non_renewal = false;
         let r = check(&i);
         assert!(r.non_renewal_invalidated);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 1946.2(b)")
-            && f.contains("JUST CAUSE")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1946.2(b)") && f.contains("JUST CAUSE")));
     }
 
     #[test]
@@ -476,9 +479,10 @@ mod tests {
         i.just_cause_for_non_renewal = false;
         i.ca_relocation_assistance_paid = false;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 1946.2(d)")
-            && f.contains("ONE MONTH'S RENT")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1946.2(d)") && f.contains("ONE MONTH'S RENT")));
     }
 
     #[test]
@@ -488,9 +492,10 @@ mod tests {
         i.just_cause_for_non_renewal = false;
         let r = check(&i);
         assert!(r.non_renewal_invalidated);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 42-3505.01")
-            && f.contains("12-MONTH RENEWAL")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 42-3505.01") && f.contains("12-MONTH RENEWAL")));
     }
 
     #[test]
@@ -498,8 +503,10 @@ mod tests {
         let mut i = ny_stabilized_compliant();
         i.renewal_offer_given = false;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("No renewal offer or non-renewal notice given")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("No renewal offer or non-renewal notice given")));
     }
 
     #[test]
@@ -518,8 +525,16 @@ mod tests {
             i.jurisdiction = j;
             i.months_of_tenancy = months;
             let r = check(&i);
-            assert_eq!(r.required_notice_window_days_min, exp_min, "j={:?} months={}", j, months);
-            assert_eq!(r.required_notice_window_days_max, exp_max, "j={:?} months={}", j, months);
+            assert_eq!(
+                r.required_notice_window_days_min, exp_min,
+                "j={:?} months={}",
+                j, months
+            );
+            assert_eq!(
+                r.required_notice_window_days_max, exp_max,
+                "j={:?} months={}",
+                j, months
+            );
         }
     }
 
@@ -551,8 +566,10 @@ mod tests {
         ca.just_cause_for_non_renewal = false;
         ca.ca_relocation_assistance_paid = false;
         let r_ca = check(&ca);
-        assert!(r_ca.failure_reasons.iter().any(|f|
-            f.contains("RELOCATION ASSISTANCE")));
+        assert!(r_ca
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("RELOCATION ASSISTANCE")));
 
         for j in [
             Jurisdiction::NewYorkRentStabilized,
@@ -565,8 +582,13 @@ mod tests {
             i.just_cause_for_non_renewal = false;
             i.ca_relocation_assistance_paid = false;
             let r = check(&i);
-            assert!(!r.failure_reasons.iter().any(|f|
-                f.contains("RELOCATION ASSISTANCE")), "j={:?}", j);
+            assert!(
+                !r.failure_reasons
+                    .iter()
+                    .any(|f| f.contains("RELOCATION ASSISTANCE")),
+                "j={:?}",
+                j
+            );
         }
     }
 
@@ -588,19 +610,20 @@ mod tests {
     #[test]
     fn note_pins_four_jurisdiction_framework() {
         let r = check(&ny_stabilized_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Four-jurisdiction framework")
-            && n.contains("NEW YORK RENT-STABILIZED")
-            && n.contains("90-150 DAY")
-            && n.contains("CALIFORNIA TPA")
-            && n.contains("D.C.")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Four-jurisdiction framework")
+                && n.contains("NEW YORK RENT-STABILIZED")
+                && n.contains("90-150 DAY")
+                && n.contains("CALIFORNIA TPA")
+                && n.contains("D.C.")));
     }
 
     #[test]
     fn note_pins_ny_2523_5() {
         let r = check(&ny_stabilized_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 2523.5")
+        assert!(r.notes.iter().any(|n| n.contains("§ 2523.5")
             && n.contains("NOT MORE THAN 150 DAYS")
             && n.contains("NOT LESS THAN 90 DAYS")
             && n.contains("60 DAYS to accept")));
@@ -609,8 +632,7 @@ mod tests {
     #[test]
     fn note_pins_ny_rpl_226c_tiers() {
         let r = check(&ny_stabilized_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("NY RPL § 226-c")
+        assert!(r.notes.iter().any(|n| n.contains("NY RPL § 226-c")
             && n.contains("(1) tenancy < 1 year → 30 days")
             && n.contains("(2) 1-2 years → 60 days")
             && n.contains("(3) 2+ years → 90 days")));
@@ -619,8 +641,7 @@ mod tests {
     #[test]
     fn note_pins_rtp8_content_six_elements() {
         let r = check(&ny_stabilized_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("DHCR Form RTP-8")
+        assert!(r.notes.iter().any(|n| n.contains("DHCR Form RTP-8")
             && n.contains("1-year OR 2-year term")
             && n.contains("RGB increase percentages")
             && n.contains("MCI or IAI surcharge")));
@@ -629,8 +650,7 @@ mod tests {
     #[test]
     fn note_pins_ca_tpa_just_cause_grounds() {
         let r = check(&ny_stabilized_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 1946.2 TPA")
+        assert!(r.notes.iter().any(|n| n.contains("§ 1946.2 TPA")
             && n.contains("at-fault just cause")
             && n.contains("no-fault just cause")
             && n.contains("ONE MONTH'S RENT relocation")));
@@ -639,8 +659,7 @@ mod tests {
     #[test]
     fn note_pins_dc_rha_just_cause() {
         let r = check(&ny_stabilized_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 42-3505.01")
+        assert!(r.notes.iter().any(|n| n.contains("§ 42-3505.01")
             && n.contains("12-MONTH RENEWAL")
             && n.contains("Rental Housing Act of 1985")));
     }
@@ -648,21 +667,25 @@ mod tests {
     #[test]
     fn note_pins_trader_fact_patterns_five() {
         let r = check(&ny_stabilized_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-landlord critical fact patterns")
-            && n.contains("NYC trader sends rent-stabilized renewal 60 days")
-            && n.contains("RPL § 226-c")
-            && n.contains("ONE MONTH RELOCATION")
-            && n.contains("RENEWAL INVALID")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-landlord critical fact patterns")
+                && n.contains("NYC trader sends rent-stabilized renewal 60 days")
+                && n.contains("RPL § 226-c")
+                && n.contains("ONE MONTH RELOCATION")
+                && n.contains("RENEWAL INVALID")));
     }
 
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&ny_stabilized_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Companion to lease_auto_renewal")
-            && n.contains("lease_succession")
-            && n.contains("rent_increase_notice_period")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Companion to lease_auto_renewal")
+                && n.contains("lease_succession")
+                && n.contains("rent_increase_notice_period")));
     }
 
     #[test]

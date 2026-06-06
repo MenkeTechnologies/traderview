@@ -38,7 +38,7 @@ pub struct ResumeBar {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum HaltReason {
-    Luld,        // limit-up / limit-down
+    Luld, // limit-up / limit-down
     News,
     Volatility,
     Other,
@@ -51,7 +51,12 @@ pub struct Config {
 }
 
 impl Default for Config {
-    fn default() -> Self { Self { confirm_bars: 3, min_followthrough_pct: 0.02 } }
+    fn default() -> Self {
+        Self {
+            confirm_bars: 3,
+            min_followthrough_pct: 0.02,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -98,21 +103,35 @@ pub fn analyze(events: &[HaltEvent], cfg: &Config) -> MonitorReport {
             continue;
         }
         let direction_pct = (resume_close - e.halt_pause_price) / e.halt_pause_price;
-        if !direction_pct.is_finite() { continue; }
+        if !direction_pct.is_finite() {
+            continue;
+        }
         // Follow-through = highest extension in direction over next N bars.
         let look_end = (1 + cfg.confirm_bars).min(e.resume_bars.len());
         let mut max_with_dir = 0.0_f64;
         let mut max_against_dir = 0.0_f64;
         for bar in &e.resume_bars[1..look_end] {
-            if !bar.close.is_finite() { continue; }
+            if !bar.close.is_finite() {
+                continue;
+            }
             let move_pct = (bar.close - resume_close) / resume_close;
-            if !move_pct.is_finite() { continue; }
+            if !move_pct.is_finite() {
+                continue;
+            }
             if direction_pct >= 0.0 {
-                if move_pct > max_with_dir { max_with_dir = move_pct; }
-                if -move_pct > max_against_dir { max_against_dir = -move_pct; }
+                if move_pct > max_with_dir {
+                    max_with_dir = move_pct;
+                }
+                if -move_pct > max_against_dir {
+                    max_against_dir = -move_pct;
+                }
             } else {
-                if -move_pct > max_with_dir { max_with_dir = -move_pct; }
-                if move_pct > max_against_dir { max_against_dir = move_pct; }
+                if -move_pct > max_with_dir {
+                    max_with_dir = -move_pct;
+                }
+                if move_pct > max_against_dir {
+                    max_against_dir = move_pct;
+                }
             }
         }
         let verdict = if max_with_dir >= cfg.min_followthrough_pct {
@@ -122,7 +141,11 @@ pub fn analyze(events: &[HaltEvent], cfg: &Config) -> MonitorReport {
         } else {
             Verdict::Indecision
         };
-        let followthrough_pct = if direction_pct >= 0.0 { max_with_dir } else { -max_with_dir };
+        let followthrough_pct = if direction_pct >= 0.0 {
+            max_with_dir
+        } else {
+            -max_with_dir
+        };
         report.classified.push(ClassifiedHalt {
             symbol: e.symbol.clone(),
             halt_reason: e.halt_reason,
@@ -143,7 +166,12 @@ pub fn analyze(events: &[HaltEvent], cfg: &Config) -> MonitorReport {
 mod tests {
     use super::*;
 
-    fn bar(c: f64, v: f64) -> ResumeBar { ResumeBar { close: c, volume: v } }
+    fn bar(c: f64, v: f64) -> ResumeBar {
+        ResumeBar {
+            close: c,
+            volume: v,
+        }
+    }
 
     fn ev(sym: &str, pause: f64, bars: Vec<ResumeBar>) -> HaltEvent {
         HaltEvent {
@@ -164,9 +192,18 @@ mod tests {
     fn invalid_config_returns_default() {
         let events = vec![ev("X", 100.0, vec![bar(105.0, 1_000.0); 5])];
         for cfg in [
-            Config { confirm_bars: 0, ..Default::default() },
-            Config { min_followthrough_pct: 0.0, ..Default::default() },
-            Config { min_followthrough_pct: f64::NAN, ..Default::default() },
+            Config {
+                confirm_bars: 0,
+                ..Default::default()
+            },
+            Config {
+                min_followthrough_pct: 0.0,
+                ..Default::default()
+            },
+            Config {
+                min_followthrough_pct: f64::NAN,
+                ..Default::default()
+            },
         ] {
             assert!(analyze(&events, &cfg).classified.is_empty());
         }
@@ -181,7 +218,12 @@ mod tests {
     #[test]
     fn upward_halt_with_followthrough_classified_continuation() {
         // Pause @ 100, resume @ 105 (+5%), then 107, 110, 112.
-        let bars = vec![bar(105.0, 100.0), bar(107.0, 100.0), bar(110.0, 100.0), bar(112.0, 100.0)];
+        let bars = vec![
+            bar(105.0, 100.0),
+            bar(107.0, 100.0),
+            bar(110.0, 100.0),
+            bar(112.0, 100.0),
+        ];
         let r = analyze(&[ev("UP", 100.0, bars)], &Config::default());
         assert_eq!(r.classified[0].verdict, Verdict::Continuation);
         assert!(r.continuations.contains(&"UP".to_string()));
@@ -190,7 +232,12 @@ mod tests {
     #[test]
     fn upward_halt_with_reversal_classified_rejection() {
         // Pause @ 100, resume @ 105, then 102, 100, 99 — gives back.
-        let bars = vec![bar(105.0, 100.0), bar(102.0, 100.0), bar(100.0, 100.0), bar(99.0, 100.0)];
+        let bars = vec![
+            bar(105.0, 100.0),
+            bar(102.0, 100.0),
+            bar(100.0, 100.0),
+            bar(99.0, 100.0),
+        ];
         let r = analyze(&[ev("REV", 100.0, bars)], &Config::default());
         assert_eq!(r.classified[0].verdict, Verdict::Rejection);
         assert!(r.rejections.contains(&"REV".to_string()));
@@ -199,7 +246,12 @@ mod tests {
     #[test]
     fn small_followthrough_yields_indecision() {
         // 105 → 105.5 → 105.3 → 104.9 (all < 2% from 105).
-        let bars = vec![bar(105.0, 100.0), bar(105.5, 100.0), bar(105.3, 100.0), bar(104.9, 100.0)];
+        let bars = vec![
+            bar(105.0, 100.0),
+            bar(105.5, 100.0),
+            bar(105.3, 100.0),
+            bar(104.9, 100.0),
+        ];
         let r = analyze(&[ev("CHOP", 100.0, bars)], &Config::default());
         assert_eq!(r.classified[0].verdict, Verdict::Indecision);
     }
@@ -207,7 +259,12 @@ mod tests {
     #[test]
     fn downward_halt_continuation_detected() {
         // Pause @ 100, resume @ 95, then 92, 90, 88.
-        let bars = vec![bar(95.0, 100.0), bar(92.0, 100.0), bar(90.0, 100.0), bar(88.0, 100.0)];
+        let bars = vec![
+            bar(95.0, 100.0),
+            bar(92.0, 100.0),
+            bar(90.0, 100.0),
+            bar(88.0, 100.0),
+        ];
         let r = analyze(&[ev("DROP", 100.0, bars)], &Config::default());
         assert_eq!(r.classified[0].verdict, Verdict::Continuation);
         assert!(r.classified[0].direction_pct < 0.0);

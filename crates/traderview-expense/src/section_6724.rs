@@ -193,7 +193,8 @@ pub fn compute(input: &Input) -> Output {
         .total_returns_or_statements_required_during_calendar_year
         .saturating_mul(IRC_6724_DE_MINIMIS_PCT_BASIS_POINTS)
         / IRC_6724_DE_MINIMIS_PCT_BASIS_POINT_DENOMINATOR;
-    let de_minimis_threshold_count = IRC_6724_DE_MINIMIS_FIXED_FLOOR_COUNT.max(de_minimis_pct_count);
+    let de_minimis_threshold_count =
+        IRC_6724_DE_MINIMIS_FIXED_FLOOR_COUNT.max(de_minimis_pct_count);
 
     if input.willful_neglect_present {
         return Output {

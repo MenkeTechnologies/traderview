@@ -39,7 +39,12 @@ pub struct OrderBlockConfig {
 }
 
 impl Default for OrderBlockConfig {
-    fn default() -> Self { Self { expansion_window: 3, expansion_multiple: 2.0 } }
+    fn default() -> Self {
+        Self {
+            expansion_window: 3,
+            expansion_multiple: 2.0,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -77,20 +82,30 @@ pub fn detect(bars: &[OhlcBar], cfg: &OrderBlockConfig) -> OrderBlockReport {
     for i in 0..n.saturating_sub(1) {
         let cand = bars[i];
         let cand_range = cand.high - cand.low;
-        if cand_range <= 0.0 { continue; }
+        if cand_range <= 0.0 {
+            continue;
+        }
         let need = cand_range * cfg.expansion_multiple;
         // saturating_add against a hostile JSON expansion_window of
         // usize::MAX which would otherwise wrap and produce `end < i+1`,
         // panicking the subsequent `bars[i+1..end]` slice.
-        let end = i.saturating_add(1).saturating_add(cfg.expansion_window).min(n);
+        let end = i
+            .saturating_add(1)
+            .saturating_add(cfg.expansion_window)
+            .min(n);
         // Bullish order block: candidate is a DOWN candle, expansion is UP.
         if cand.close < cand.open {
-            let post_high = bars[i + 1..end].iter().map(|b| b.high).fold(f64::NEG_INFINITY, f64::max);
+            let post_high = bars[i + 1..end]
+                .iter()
+                .map(|b| b.high)
+                .fold(f64::NEG_INFINITY, f64::max);
             let expansion = post_high - cand.close;
             if expansion >= need {
                 blocks.push(OrderBlock {
-                    bar_index: i, kind: BlockKind::Bullish,
-                    zone_high: cand.high, zone_low: cand.low,
+                    bar_index: i,
+                    kind: BlockKind::Bullish,
+                    zone_high: cand.high,
+                    zone_low: cand.low,
                     expansion_magnitude: expansion,
                 });
                 continue;
@@ -98,12 +113,17 @@ pub fn detect(bars: &[OhlcBar], cfg: &OrderBlockConfig) -> OrderBlockReport {
         }
         // Bearish: UP candle, expansion DOWN.
         if cand.close > cand.open {
-            let post_low = bars[i + 1..end].iter().map(|b| b.low).fold(f64::INFINITY, f64::min);
+            let post_low = bars[i + 1..end]
+                .iter()
+                .map(|b| b.low)
+                .fold(f64::INFINITY, f64::min);
             let expansion = cand.close - post_low;
             if expansion >= need {
                 blocks.push(OrderBlock {
-                    bar_index: i, kind: BlockKind::Bearish,
-                    zone_high: cand.high, zone_low: cand.low,
+                    bar_index: i,
+                    kind: BlockKind::Bearish,
+                    zone_high: cand.high,
+                    zone_low: cand.low,
                     expansion_magnitude: expansion,
                 });
             }
@@ -116,12 +136,24 @@ pub fn detect(bars: &[OhlcBar], cfg: &OrderBlockConfig) -> OrderBlockReport {
 mod tests {
     use super::*;
 
-    fn b(o: f64, h: f64, l: f64, c: f64) -> OhlcBar { OhlcBar { open: o, high: h, low: l, close: c } }
+    fn b(o: f64, h: f64, l: f64, c: f64) -> OhlcBar {
+        OhlcBar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn empty_or_one_bar_returns_no_blocks() {
         assert!(detect(&[], &OrderBlockConfig::default()).blocks.is_empty());
-        assert!(detect(&[b(100.0, 101.0, 99.0, 100.5)], &OrderBlockConfig::default()).blocks.is_empty());
+        assert!(detect(
+            &[b(100.0, 101.0, 99.0, 100.5)],
+            &OrderBlockConfig::default()
+        )
+        .blocks
+        .is_empty());
     }
 
     #[test]
@@ -167,15 +199,18 @@ mod tests {
             b(100.0, 101.0, 100.0, 100.8),
         ];
         let r = detect(&bars, &OrderBlockConfig::default());
-        assert!(r.blocks.is_empty(),
-            "weak expansion should not qualify, got {} blocks", r.blocks.len());
+        assert!(
+            r.blocks.is_empty(),
+            "weak expansion should not qualify, got {} blocks",
+            r.blocks.len()
+        );
     }
 
     #[test]
     fn doji_candidates_skipped() {
         // Open == close → neither bullish nor bearish candle; never an order block.
         let bars = vec![
-            b(100.0, 102.0, 98.0, 100.0),    // doji
+            b(100.0, 102.0, 98.0, 100.0), // doji
             b(100.0, 108.0, 100.0, 107.0),
             b(107.0, 110.0, 106.0, 109.0),
         ];
@@ -186,10 +221,7 @@ mod tests {
     #[test]
     fn zero_range_bars_skipped() {
         // Range = 0 → can't be an order block.
-        let bars = vec![
-            b(100.0, 100.0, 100.0, 100.0),
-            b(100.0, 110.0, 100.0, 109.0),
-        ];
+        let bars = vec![b(100.0, 100.0, 100.0, 100.0), b(100.0, 110.0, 100.0, 109.0)];
         let r = detect(&bars, &OrderBlockConfig::default());
         assert!(r.blocks.is_empty());
     }
@@ -197,7 +229,10 @@ mod tests {
     #[test]
     fn zero_window_config_returns_empty() {
         let bars = vec![b(101.0, 101.0, 99.0, 99.0); 5];
-        let cfg = OrderBlockConfig { expansion_window: 0, expansion_multiple: 1.0 };
+        let cfg = OrderBlockConfig {
+            expansion_window: 0,
+            expansion_multiple: 1.0,
+        };
         let r = detect(&bars, &cfg);
         assert!(r.blocks.is_empty());
     }

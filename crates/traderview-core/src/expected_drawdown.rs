@@ -41,8 +41,11 @@ pub fn simulate(
     seed: u64,
 ) -> Option<ExpectedDrawdownReport> {
     if !drift_per_period.is_finite()
-        || !vol_per_period.is_finite() || vol_per_period <= 0.0
-        || horizon < 2 || n_paths < 100 {
+        || !vol_per_period.is_finite()
+        || vol_per_period <= 0.0
+        || horizon < 2
+        || n_paths < 100
+    {
         return None;
     }
     let mut state = seed;
@@ -54,9 +57,13 @@ pub fn simulate(
         for _ in 0..horizon {
             let z = standard_normal(&mut state);
             price *= (drift_per_period + vol_per_period * z).exp();
-            if price > hwm { hwm = price; }
+            if price > hwm {
+                hwm = price;
+            }
             let dd = (hwm - price) / hwm;
-            if dd > max_dd { max_dd = dd; }
+            if dd > max_dd {
+                max_dd = dd;
+            }
         }
         mdds.push(max_dd);
     }
@@ -79,10 +86,12 @@ pub fn simulate(
 }
 
 fn standard_normal(state: &mut u64) -> f64 {
-    *state = state.wrapping_mul(6364136223846793005)
+    *state = state
+        .wrapping_mul(6364136223846793005)
         .wrapping_add(1442695040888963407);
     let u1 = ((*state >> 32) as f64 / u32::MAX as f64).max(1e-12);
-    *state = state.wrapping_mul(6364136223846793005)
+    *state = state
+        .wrapping_mul(6364136223846793005)
         .wrapping_add(1442695040888963407);
     let u2 = (*state >> 32) as f64 / u32::MAX as f64;
     (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()

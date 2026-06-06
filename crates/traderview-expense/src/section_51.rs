@@ -230,8 +230,7 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.pre_screening_status
-        == PreScreeningStatus::PreScreeningNoticeObtainedAfterJobOfferDate
+    if input.pre_screening_status == PreScreeningStatus::PreScreeningNoticeObtainedAfterJobOfferDate
     {
         return Output {
             mode: Section51Mode::NotApplicablePreScreeningNoticeAfterJobOfferDate,
@@ -455,7 +454,10 @@ mod tests {
         input.hours_worked_tier = HoursWorkedTier::FewerThan120HoursNoCredit;
         input.hours_worked = 119;
         let out = check(&input);
-        assert_eq!(out.mode, Section51Mode::NotApplicableFewerThan120HoursNoCredit);
+        assert_eq!(
+            out.mode,
+            Section51Mode::NotApplicableFewerThan120HoursNoCredit
+        );
     }
 
     #[test]
@@ -528,8 +530,7 @@ mod tests {
     fn qualified_veteran_disability_max_credit_9600_compliant() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::CreditAmountUnderSection51A;
-        input.target_group =
-            TargetGroup::QualifiedVeteranServiceConnectedDisabilityAndUnemployed;
+        input.target_group = TargetGroup::QualifiedVeteranServiceConnectedDisabilityAndUnemployed;
         input.hours_worked_tier = HoursWorkedTier::AtLeast400Hours40PercentRate;
         input.qualified_wages_dollars = 24_000;
         let out = check(&input);
@@ -548,7 +549,10 @@ mod tests {
         input.hours_worked_tier = HoursWorkedTier::AtLeast400Hours40PercentRate;
         input.qualified_wages_dollars = 3_000;
         let out = check(&input);
-        assert_eq!(out.mode, Section51Mode::CompliantSummerYouthMaximumCredit1200);
+        assert_eq!(
+            out.mode,
+            Section51Mode::CompliantSummerYouthMaximumCredit1200
+        );
         assert_eq!(out.computed_credit_dollars, 1_200);
     }
 
@@ -649,14 +653,16 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::WageDeductionReductionUnderSection280Ca;
         let out = check(&input);
-        assert_eq!(out.mode, Section51Mode::CompliantWageDeductionReductionUnder280Ca);
+        assert_eq!(
+            out.mode,
+            Section51Mode::CompliantWageDeductionReductionUnder280Ca
+        );
     }
 
     #[test]
     fn general_business_credit_aggregation_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect =
-            ComplianceAspect::GeneralBusinessCreditAggregationUnderSection38;
+        input.compliance_aspect = ComplianceAspect::GeneralBusinessCreditAggregationUnderSection38;
         let out = check(&input);
         assert_eq!(
             out.mode,
@@ -669,7 +675,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::CarrybackCarryforwardUnderSection39;
         let out = check(&input);
-        assert_eq!(out.mode, Section51Mode::CompliantCarrybackCarryforwardObserved);
+        assert_eq!(
+            out.mode,
+            Section51Mode::CompliantCarrybackCarryforwardObserved
+        );
     }
 
     #[test]
@@ -687,7 +696,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::FormFilingUnderForm5884;
         input.form_5884_filed_correctly = false;
         let out = check(&input);
-        assert_eq!(out.mode, Section51Mode::ViolationForm5884NotFiledOrIncorrect);
+        assert_eq!(
+            out.mode,
+            Section51Mode::ViolationForm5884NotFiledOrIncorrect
+        );
     }
 
     #[test]
@@ -709,11 +721,20 @@ mod tests {
         assert_eq!(IRC_51_HOURS_THRESHOLD_FOR_FULL_RATE, 400);
         assert_eq!(IRC_51_DEFAULT_WAGE_CAP_DOLLARS, 6_000);
         assert_eq!(IRC_51_QUALIFIED_VETERAN_DISABILITY_WAGE_CAP_DOLLARS, 24_000);
-        assert_eq!(IRC_51_QUALIFIED_VETERAN_DISABILITY_MAX_CREDIT_DOLLARS, 9_600);
+        assert_eq!(
+            IRC_51_QUALIFIED_VETERAN_DISABILITY_MAX_CREDIT_DOLLARS,
+            9_600
+        );
         assert_eq!(IRC_51_SUMMER_YOUTH_WAGE_CAP_DOLLARS, 3_000);
-        assert_eq!(IRC_51_LONG_TERM_FAMILY_ASSISTANCE_YEAR_1_WAGE_CAP_DOLLARS, 10_000);
+        assert_eq!(
+            IRC_51_LONG_TERM_FAMILY_ASSISTANCE_YEAR_1_WAGE_CAP_DOLLARS,
+            10_000
+        );
         assert_eq!(IRC_51_LONG_TERM_FAMILY_ASSISTANCE_YEAR_2_RATE_BPS, 5_000);
-        assert_eq!(IRC_51_LONG_TERM_FAMILY_ASSISTANCE_MAX_2_YEAR_CREDIT_DOLLARS, 9_000);
+        assert_eq!(
+            IRC_51_LONG_TERM_FAMILY_ASSISTANCE_MAX_2_YEAR_CREDIT_DOLLARS,
+            9_000
+        );
         assert_eq!(IRC_51_DEFAULT_MAX_CREDIT_DOLLARS, 2_400);
         assert_eq!(IRC_51_FORM_8850_DEADLINE_DAYS, 28);
         assert_eq!(IRC_51_ETA_FORM_9061_NUMBER, 9_061);

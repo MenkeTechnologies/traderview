@@ -148,8 +148,7 @@ pub fn compute(input: &Section1375Input) -> Section1375Result {
     // PII > 25% × GR  ≡  4 × PII > GR. Guard against GR = 0
     // (statute requires gross receipts > 0 of which 25% is
     // passive income).
-    let pii_exceeds_25_percent = gross_receipts > 0
-        && pii.saturating_mul(4) > gross_receipts;
+    let pii_exceeds_25_percent = gross_receipts > 0 && pii.saturating_mul(4) > gross_receipts;
 
     // § 1375(a) engagement: BOTH conditions required.
     let tax_engaged = e_and_p > 0 && pii_exceeds_25_percent;
@@ -161,9 +160,7 @@ pub fn compute(input: &Section1375Input) -> Section1375Result {
         let twenty_five_percent_gr = gross_receipts / 4;
         let pii_excess_over_threshold = pii.saturating_sub(twenty_five_percent_gr);
         // ENPI = NPI × pii_excess_over_threshold / PII (with overflow protection).
-        let raw = net_passive_income
-            .saturating_mul(pii_excess_over_threshold)
-            / pii.max(1);
+        let raw = net_passive_income.saturating_mul(pii_excess_over_threshold) / pii.max(1);
         let capped = raw.min(taxable_income);
         let t = capped.saturating_mul(rate_bps) / BPS_DENOMINATOR;
         (raw, capped, t)
@@ -172,9 +169,8 @@ pub fn compute(input: &Section1375Input) -> Section1375Result {
     };
 
     // § 1362(d)(3) consecutive-year termination check.
-    let s_election_terminated = pii_exceeds_25_percent
-        && e_and_p > 0
-        && consecutive_years >= TERMINATION_CONSECUTIVE_YEARS;
+    let s_election_terminated =
+        pii_exceeds_25_percent && e_and_p > 0 && consecutive_years >= TERMINATION_CONSECUTIVE_YEARS;
     let termination_risk_warning_level = if pii_exceeds_25_percent && e_and_p > 0 {
         consecutive_years.min(TERMINATION_CONSECUTIVE_YEARS - 1)
     } else {
@@ -309,11 +305,11 @@ mod tests {
 
     fn input() -> Section1375Input {
         Section1375Input {
-            accumulated_e_and_p_cents: 10_000_000,         // $100K E&P
-            passive_investment_income_cents: 50_000_000,    // $500K PII
-            gross_receipts_cents: 100_000_000,             // $1M GR (50% PII)
-            net_passive_income_cents: 40_000_000,           // $400K NPI
-            taxable_income_cents: 50_000_000,               // $500K TI
+            accumulated_e_and_p_cents: 10_000_000,       // $100K E&P
+            passive_investment_income_cents: 50_000_000, // $500K PII
+            gross_receipts_cents: 100_000_000,           // $1M GR (50% PII)
+            net_passive_income_cents: 40_000_000,        // $400K NPI
+            taxable_income_cents: 50_000_000,            // $500K TI
             corporate_tax_rate_bps: DEFAULT_CORPORATE_RATE_BPS,
             consecutive_years_pii_above_threshold: 1,
         }
@@ -475,10 +471,10 @@ mod tests {
     fn engagement_requires_both_triggers_truth_table() {
         // 4-cell truth table: E&P × PII>25%.
         let cells = [
-            (10_000_000, 50_000_000, true),   // both → engaged
-            (10_000_000, 20_000_000, false),  // E&P only, PII below
-            (0, 50_000_000, false),            // PII above, no E&P
-            (0, 20_000_000, false),            // neither
+            (10_000_000, 50_000_000, true),  // both → engaged
+            (10_000_000, 20_000_000, false), // E&P only, PII below
+            (0, 50_000_000, false),          // PII above, no E&P
+            (0, 20_000_000, false),          // neither
         ];
         for (e_and_p, pii, expected_engaged) in cells.iter() {
             let mut b = input();
@@ -486,7 +482,11 @@ mod tests {
             b.passive_investment_income_cents = *pii;
             b.gross_receipts_cents = 100_000_000;
             let r = compute(&b);
-            assert_eq!(r.tax_engaged, *expected_engaged, "e_and_p={} pii={}", e_and_p, pii);
+            assert_eq!(
+                r.tax_engaged, *expected_engaged,
+                "e_and_p={} pii={}",
+                e_and_p, pii
+            );
         }
     }
 

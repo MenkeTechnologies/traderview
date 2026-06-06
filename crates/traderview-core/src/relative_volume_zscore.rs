@@ -16,16 +16,15 @@
 //! Companion to `relative_volume`, `relative_volume_scanner`,
 //! `volume_burst`.
 
-pub fn compute(
-    volumes: &[f64],
-    rvol_period: usize,
-    zscore_period: usize,
-) -> Vec<Option<f64>> {
+pub fn compute(volumes: &[f64], rvol_period: usize, zscore_period: usize) -> Vec<Option<f64>> {
     let n = volumes.len();
     let mut out = vec![None; n];
-    if rvol_period < 2 || zscore_period < 3
-        || n < rvol_period + zscore_period { return out; }
-    if volumes.iter().any(|v| !v.is_finite() || *v < 0.0) { return out; }
+    if rvol_period < 2 || zscore_period < 3 || n < rvol_period + zscore_period {
+        return out;
+    }
+    if volumes.iter().any(|v| !v.is_finite() || *v < 0.0) {
+        return out;
+    }
     let p_f = rvol_period as f64;
     let mut rvol = vec![None; n];
     let mut sum: f64 = volumes[..rvol_period].iter().sum();
@@ -37,11 +36,15 @@ pub fn compute(
         sum += volumes[i] - volumes[i - rvol_period];
     }
     let z_f = zscore_period as f64;
-    for (i, slot) in out.iter_mut().enumerate()
+    for (i, slot) in out
+        .iter_mut()
+        .enumerate()
         .skip(rvol_period + zscore_period - 1)
     {
         let win = &rvol[i + 1 - zscore_period..=i];
-        if win.iter().any(|x| x.is_none()) { continue; }
+        if win.iter().any(|x| x.is_none()) {
+            continue;
+        }
         let vals: Vec<f64> = win.iter().filter_map(|x| *x).collect();
         let mean: f64 = vals.iter().sum::<f64>() / z_f;
         let var: f64 = vals.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / z_f;

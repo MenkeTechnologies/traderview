@@ -148,7 +148,10 @@ pub fn check(input: &Input) -> Output {
         input.building_occupancy_group,
         OccupancyGroup::R3OneOrTwoFamily
     ) {
-        notes.push("Occupancy Group R-3 (one- or two-family home) — exempt from LL 152 inspection regime.".to_string());
+        notes.push(
+            "Occupancy Group R-3 (one- or two-family home) — exempt from LL 152 inspection regime."
+                .to_string(),
+        );
         return Output {
             severity: Severity::ExemptOneOrTwoFamilyR3,
             compliant: true,
@@ -254,7 +257,8 @@ pub fn check(input: &Input) -> Output {
     }
 
     if input.owner_corrected_conditions {
-        let within_120 = input.days_to_correction_certification <= LL152_CORRECTION_CERTIFICATION_DAYS;
+        let within_120 =
+            input.days_to_correction_certification <= LL152_CORRECTION_CERTIFICATION_DAYS;
         let within_180_with_extension = input.days_to_correction_certification
             <= LL152_CORRECTION_EXTENSION_DAYS
             && input.dob_approved_extension;
@@ -571,7 +575,10 @@ mod tests {
     #[test]
     fn citations_pin_ll152_admin_code_28_318_rcny_103_10() {
         let out = check(&base_compliant_district_4());
-        assert!(out.citations.iter().any(|c| c.contains("Local Law 152 of 2016")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("Local Law 152 of 2016")));
         assert!(out.citations.iter().any(|c| c.contains("§ 28-318")));
         assert!(out.citations.iter().any(|c| c.contains("1 RCNY § 103-10")));
         assert!(out.citations.iter().any(|c| c.contains("1 RCNY § 102-01")));

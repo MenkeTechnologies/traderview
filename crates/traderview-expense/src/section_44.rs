@@ -145,8 +145,7 @@ pub fn compute(input: &Input) -> Output {
         "Cornell LII + Bloomberg Tax + Tax Notes + IRS + ADA.gov Archive + PVA + Indiana DOR + NYC Business + Work World — practitioner overviews of § 44".to_string(),
     ];
 
-    if input.eligible_small_business_status
-        == EligibleSmallBusinessStatus::NotEligibleSmallBusiness
+    if input.eligible_small_business_status == EligibleSmallBusinessStatus::NotEligibleSmallBusiness
         || (input.gross_receipts_dollars > IRC_44_ELIGIBLE_GROSS_RECEIPTS_CEILING_DOLLARS
             && input.full_time_employees > IRC_44_ELIGIBLE_EMPLOYEE_CEILING)
     {
@@ -321,7 +320,10 @@ mod tests {
         input.gross_receipts_dollars = 5_000_000;
         input.full_time_employees = 100;
         let out = check(&input);
-        assert_eq!(out.mode, Section44Mode::NotApplicableNotEligibleSmallBusiness);
+        assert_eq!(
+            out.mode,
+            Section44Mode::NotApplicableNotEligibleSmallBusiness
+        );
     }
 
     #[test]
@@ -329,7 +331,10 @@ mod tests {
         let mut input = baseline_input();
         input.expenditure_category = ExpenditureCategory::NotAdaComplianceExpenditure;
         let out = check(&input);
-        assert_eq!(out.mode, Section44Mode::NotApplicableNotAdaComplianceExpenditure);
+        assert_eq!(
+            out.mode,
+            Section44Mode::NotApplicableNotAdaComplianceExpenditure
+        );
     }
 
     #[test]
@@ -337,7 +342,10 @@ mod tests {
         let mut input = baseline_input();
         input.eligible_access_expenditures_dollars = 250;
         let out = check(&input);
-        assert_eq!(out.mode, Section44Mode::NotApplicableExpenditureBelow250DollarFloor);
+        assert_eq!(
+            out.mode,
+            Section44Mode::NotApplicableExpenditureBelow250DollarFloor
+        );
     }
 
     #[test]
@@ -345,7 +353,10 @@ mod tests {
         let mut input = baseline_input();
         input.eligible_access_expenditures_dollars = 100;
         let out = check(&input);
-        assert_eq!(out.mode, Section44Mode::NotApplicableExpenditureBelow250DollarFloor);
+        assert_eq!(
+            out.mode,
+            Section44Mode::NotApplicableExpenditureBelow250DollarFloor
+        );
     }
 
     #[test]
@@ -353,7 +364,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::EligibleSmallBusinessDefinitionUnderSection44B;
         let out = check(&input);
-        assert_eq!(out.mode, Section44Mode::CompliantEligibleSmallBusinessCertified);
+        assert_eq!(
+            out.mode,
+            Section44Mode::CompliantEligibleSmallBusinessCertified
+        );
     }
 
     #[test]
@@ -426,14 +440,16 @@ mod tests {
         input.section_190_stacking_status =
             Section190StackingStatus::StackingWithSection190DeductionElected;
         let out = check(&input);
-        assert_eq!(out.mode, Section44Mode::CompliantStackingWithSection190Deduction);
+        assert_eq!(
+            out.mode,
+            Section44Mode::CompliantStackingWithSection190Deduction
+        );
     }
 
     #[test]
     fn general_business_credit_aggregation_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect =
-            ComplianceAspect::GeneralBusinessCreditAggregationUnderSection38;
+        input.compliance_aspect = ComplianceAspect::GeneralBusinessCreditAggregationUnderSection38;
         let out = check(&input);
         assert_eq!(
             out.mode,
@@ -446,7 +462,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::CarrybackCarryforwardUnderSection39;
         let out = check(&input);
-        assert_eq!(out.mode, Section44Mode::CompliantCarrybackCarryforwardObserved);
+        assert_eq!(
+            out.mode,
+            Section44Mode::CompliantCarrybackCarryforwardObserved
+        );
     }
 
     #[test]
@@ -464,7 +483,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::FormFilingUnderForm8826;
         input.form_8826_filed_correctly = false;
         let out = check(&input);
-        assert_eq!(out.mode, Section44Mode::ViolationForm8826NotFiledOrIncorrect);
+        assert_eq!(
+            out.mode,
+            Section44Mode::ViolationForm8826NotFiledOrIncorrect
+        );
     }
 
     #[test]

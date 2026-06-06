@@ -18,7 +18,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct StarcBandsReport {
@@ -45,10 +49,18 @@ pub fn compute(
         atr_period,
         multiplier,
     };
-    if sma_period < 2 || atr_period < 2
-        || !multiplier.is_finite() || multiplier <= 0.0
-        || n < sma_period.max(atr_period) + 1 { return report; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if sma_period < 2
+        || atr_period < 2
+        || !multiplier.is_finite()
+        || multiplier <= 0.0
+        || n < sma_period.max(atr_period) + 1
+    {
+        return report;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return report;
     }
     // SMA of closes.
@@ -90,7 +102,13 @@ pub fn compute(
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn invalid_params_return_empty() {
@@ -126,10 +144,12 @@ mod tests {
 
     #[test]
     fn upper_above_lower_always() {
-        let bars: Vec<_> = (0..80).map(|i| {
-            let m = 100.0 + (i as f64 * 0.3).sin() * 5.0;
-            b(m + 1.5, m - 1.5, m)
-        }).collect();
+        let bars: Vec<_> = (0..80)
+            .map(|i| {
+                let m = 100.0 + (i as f64 * 0.3).sin() * 5.0;
+                b(m + 1.5, m - 1.5, m)
+            })
+            .collect();
         let r = compute(&bars, 5, 15, 2.0);
         for i in 0..80 {
             if let (Some(u), Some(l)) = (r.upper[i], r.lower[i]) {
@@ -140,10 +160,12 @@ mod tests {
 
     #[test]
     fn higher_multiplier_widens_bands() {
-        let bars: Vec<_> = (0..80).map(|i| {
-            let m = 100.0 + (i as f64 * 0.3).sin() * 5.0;
-            b(m + 1.5, m - 1.5, m)
-        }).collect();
+        let bars: Vec<_> = (0..80)
+            .map(|i| {
+                let m = 100.0 + (i as f64 * 0.3).sin() * 5.0;
+                b(m + 1.5, m - 1.5, m)
+            })
+            .collect();
         let r1 = compute(&bars, 5, 15, 1.0);
         let r2 = compute(&bars, 5, 15, 3.0);
         let last = 79;

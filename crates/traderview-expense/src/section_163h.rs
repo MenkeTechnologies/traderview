@@ -140,7 +140,9 @@ pub fn compute(input: &Section163hInput) -> Section163hResult {
 
     // Home equity (non-acquisition) interest: TCJA + OBBBA never
     // deductible.
-    let disallowed_he = input.interest_paid_non_acquisition_home_equity.max(Decimal::ZERO);
+    let disallowed_he = input
+        .interest_paid_non_acquisition_home_equity
+        .max(Decimal::ZERO);
 
     // PMI: only deductible for tax years ≥ 2026 per OBBBA reinstatement.
     let deductible_pmi = if input.tax_year >= 2026 {
@@ -160,7 +162,10 @@ pub fn compute(input: &Section163hInput) -> Section163hResult {
     } else if input.mortgage_grandfathered {
         format!("${} grandfathered pre-2017-12-16", grandfathered_cap)
     } else {
-        format!("${} TCJA cap (made permanent by OBBBA 2025 § 70108)", tcja_cap)
+        format!(
+            "${} TCJA cap (made permanent by OBBBA 2025 § 70108)",
+            tcja_cap
+        )
     };
     let note = format!(
         "§163(h) qualified residence interest. Cap basis: {}. Effective cap ${}. Acquisition interest: ${} deductible / ${} disallowed. Home equity interest ${} permanently disallowed (TCJA + OBBBA). PMI ${} deductible{}.",

@@ -31,7 +31,11 @@ pub struct Pivot {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
-pub enum GartleyDirection { #[default] Bullish, Bearish }
+pub enum GartleyDirection {
+    #[default]
+    Bullish,
+    Bearish,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct GartleyMatch {
@@ -56,7 +60,9 @@ pub fn detect(pivots: &[Pivot], tolerance: f64) -> Vec<GartleyMatch> {
     // walk a sliding window of 5 consecutive pivots.
     for w in pivots.windows(5) {
         let alternating = (1..5).all(|i| w[i].is_high != w[i - 1].is_high);
-        if !alternating { continue; }
+        if !alternating {
+            continue;
+        }
         let (x, a, b, c, d) = (w[0], w[1], w[2], w[3], w[4]);
         if let Some(m) = check(x, a, b, c, d, tolerance) {
             out.push(m);
@@ -71,23 +77,44 @@ fn check(x: Pivot, a: Pivot, b: Pivot, c: Pivot, d: Pivot, tol: f64) -> Option<G
     let bc = (c.price - b.price).abs();
     let cd = (d.price - c.price).abs();
     let ad = (d.price - a.price).abs();
-    if xa <= 0.0 || ab <= 0.0 || bc <= 0.0 { return None; }
+    if xa <= 0.0 || ab <= 0.0 || bc <= 0.0 {
+        return None;
+    }
     let ab_ratio = ab / xa;
     let bc_ratio = bc / ab;
     let cd_ratio = cd / bc;
     let ad_ratio = ad / xa;
     let target_ab = 0.618;
     let target_ad = 0.786;
-    if (ab_ratio - target_ab).abs() > tol { return None; }
-    if !(0.382 - tol..=0.886 + tol).contains(&bc_ratio) { return None; }
-    if !(1.272 - tol..=1.618 + tol).contains(&cd_ratio) { return None; }
-    if (ad_ratio - target_ad).abs() > tol { return None; }
+    if (ab_ratio - target_ab).abs() > tol {
+        return None;
+    }
+    if !(0.382 - tol..=0.886 + tol).contains(&bc_ratio) {
+        return None;
+    }
+    if !(1.272 - tol..=1.618 + tol).contains(&cd_ratio) {
+        return None;
+    }
+    if (ad_ratio - target_ad).abs() > tol {
+        return None;
+    }
     // Direction by initial X.
-    let direction = if x.is_high { GartleyDirection::Bearish }
-        else { GartleyDirection::Bullish };
+    let direction = if x.is_high {
+        GartleyDirection::Bearish
+    } else {
+        GartleyDirection::Bullish
+    };
     Some(GartleyMatch {
-        direction, x, a, b, c, d,
-        ab_ratio, bc_ratio, cd_ratio, ad_ratio,
+        direction,
+        x,
+        a,
+        b,
+        c,
+        d,
+        ab_ratio,
+        bc_ratio,
+        cd_ratio,
+        ad_ratio,
     })
 }
 
@@ -96,7 +123,11 @@ mod tests {
     use super::*;
 
     fn p(idx: usize, price: f64, is_high: bool) -> Pivot {
-        Pivot { index: idx, price, is_high }
+        Pivot {
+            index: idx,
+            price,
+            is_high,
+        }
     }
 
     #[test]
@@ -114,11 +145,11 @@ mod tests {
         // CD = |D - C| = |108.56 - 127.64| = 19.08; BC = 12.36;
         // CD/BC = 1.544 (within 1.272..1.618).
         let pivots = vec![
-            p(0, 100.0, false),       // X (low)
-            p(10, 140.0, true),       // A (high)
-            p(20, 115.28, false),     // B
-            p(30, 127.64, true),      // C
-            p(40, 108.56, false),     // D
+            p(0, 100.0, false),   // X (low)
+            p(10, 140.0, true),   // A (high)
+            p(20, 115.28, false), // B
+            p(30, 127.64, true),  // C
+            p(40, 108.56, false), // D
         ];
         let matches = detect(&pivots, 0.05);
         assert_eq!(matches.len(), 1);
@@ -143,7 +174,7 @@ mod tests {
     fn non_alternating_pivots_rejected() {
         let pivots = vec![
             p(0, 100.0, false),
-            p(10, 110.0, false),    // not alternating
+            p(10, 110.0, false), // not alternating
             p(20, 115.28, false),
             p(30, 127.64, true),
             p(40, 108.56, false),
@@ -158,7 +189,7 @@ mod tests {
         let pivots = vec![
             p(0, 100.0, false),
             p(10, 140.0, true),
-            p(20, 128.0, false),    // AB = 12, AB/XA = 0.3
+            p(20, 128.0, false), // AB = 12, AB/XA = 0.3
             p(30, 134.0, true),
             p(40, 108.56, false),
         ];

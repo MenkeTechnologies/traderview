@@ -176,9 +176,7 @@ pub type Section4945Result = Output;
 fn is_taxable_expenditure(input: &Input) -> bool {
     match input.category {
         ExpenditureCategory::CharitableProgramPayment => false,
-        ExpenditureCategory::LobbyingLegislation => {
-            !input.lobbying_section_4945e_exception_applies
-        }
+        ExpenditureCategory::LobbyingLegislation => !input.lobbying_section_4945e_exception_applies,
         ExpenditureCategory::PoliticalCampaignOrVoterRegistration => {
             !input.voter_registration_section_4945f_safe_harbor_satisfied
         }
@@ -186,8 +184,7 @@ fn is_taxable_expenditure(input: &Input) -> bool {
             !input.grant_to_individual_section_4945g_advance_irs_approval
         }
         ExpenditureCategory::GrantToNonPublicCharityOrganization => {
-            !input
-                .grant_to_organization_section_4945h_expenditure_responsibility_satisfied
+            !input.grant_to_organization_section_4945h_expenditure_responsibility_satisfied
         }
         ExpenditureCategory::NonCharitablePurpose => true,
     }
@@ -446,7 +443,7 @@ mod tests {
         let mut i = baseline();
         i.manager_knowingly_agreed = true;
         i.expenditure_amount_cents = 1_000_000_00; // $1M
-        // 5% × $1M = $50K, capped at $10K
+                                                   // 5% × $1M = $50K, capped at $10K
         let out = check(&i);
         assert_eq!(out.tier1_manager_tax_cents, 10_000_00);
     }
@@ -456,7 +453,7 @@ mod tests {
         let mut i = baseline();
         i.manager_knowingly_agreed = true;
         i.expenditure_amount_cents = 100_000_00; // $100K
-        // 5% × $100K = $5K (under cap)
+                                                 // 5% × $100K = $5K (under cap)
         let out = check(&i);
         assert_eq!(out.tier1_manager_tax_cents, 5_000_00);
     }

@@ -16,7 +16,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub volume: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub volume: f64,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
@@ -44,14 +48,23 @@ pub fn compute(bars: &[Bar], total_width: f64) -> EquivolumeReport {
         kinds: vec![EquivolumeKind::Normal; n],
         ..Default::default()
     };
-    if n == 0 || !total_width.is_finite() || total_width <= 0.0 { return report; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite()
-        || !b.volume.is_finite() || b.volume < 0.0 || b.high < b.low) {
+    if n == 0 || !total_width.is_finite() || total_width <= 0.0 {
+        return report;
+    }
+    if bars.iter().any(|b| {
+        !b.high.is_finite()
+            || !b.low.is_finite()
+            || !b.volume.is_finite()
+            || b.volume < 0.0
+            || b.high < b.low
+    }) {
         return report;
     }
     report.total_width = total_width;
     let total_vol: f64 = bars.iter().map(|b| b.volume).sum();
-    if total_vol <= 0.0 { return report; }
+    if total_vol <= 0.0 {
+        return report;
+    }
     for (i, bar) in bars.iter().enumerate() {
         report.widths[i] = bar.volume / total_vol * total_width;
     }
@@ -80,7 +93,13 @@ pub fn compute(bars: &[Bar], total_width: f64) -> EquivolumeReport {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, v: f64) -> Bar { Bar { high: h, low: l, volume: v } }
+    fn b(h: f64, l: f64, v: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            volume: v,
+        }
+    }
 
     #[test]
     fn empty_or_invalid_returns_empty() {
@@ -108,10 +127,7 @@ mod tests {
 
     #[test]
     fn proportional_widths() {
-        let bars = vec![
-            b(101.0, 99.0, 1000.0),
-            b(101.0, 99.0, 3000.0),
-        ];
+        let bars = vec![b(101.0, 99.0, 1000.0), b(101.0, 99.0, 3000.0)];
         let r = compute(&bars, 40.0);
         // Bar 0: 1000/4000 · 40 = 10. Bar 1: 3000/4000 · 40 = 30.
         assert!((r.widths[0] - 10.0).abs() < 1e-6);
@@ -121,10 +137,12 @@ mod tests {
     #[test]
     fn high_volume_classified_wide_or_power() {
         let mut bars = vec![b(101.0, 99.0, 1000.0); 9];
-        bars.push(b(115.0, 95.0, 5000.0));    // 5x avg vol, wide range
+        bars.push(b(115.0, 95.0, 5000.0)); // 5x avg vol, wide range
         let r = compute(&bars, 100.0);
-        assert!(matches!(r.kinds[9],
-            EquivolumeKind::Wide | EquivolumeKind::Power));
+        assert!(matches!(
+            r.kinds[9],
+            EquivolumeKind::Wide | EquivolumeKind::Power
+        ));
     }
 
     #[test]

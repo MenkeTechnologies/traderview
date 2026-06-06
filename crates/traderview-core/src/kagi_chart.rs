@@ -19,10 +19,17 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
-pub enum AmountKind { #[default] Absolute, Pct }
+pub enum AmountKind {
+    #[default]
+    Absolute,
+    Pct,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum KagiDirection { Up, Down }
+pub enum KagiDirection {
+    Up,
+    Down,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct KagiLine {
@@ -34,8 +41,12 @@ pub struct KagiLine {
 
 pub fn compute(closes: &[f64], reversal: f64, kind: AmountKind) -> Vec<KagiLine> {
     let mut out = Vec::new();
-    if closes.is_empty() || !reversal.is_finite() || reversal <= 0.0 { return out; }
-    if closes.iter().any(|x| !x.is_finite() || *x <= 0.0) { return out; }
+    if closes.is_empty() || !reversal.is_finite() || reversal <= 0.0 {
+        return out;
+    }
+    if closes.iter().any(|x| !x.is_finite() || *x <= 0.0) {
+        return out;
+    }
     let threshold = |anchor: f64| -> f64 {
         match kind {
             AmountKind::Absolute => reversal,
@@ -51,7 +62,11 @@ pub fn compute(closes: &[f64], reversal: f64, kind: AmountKind) -> Vec<KagiLine>
             None => {
                 let delta = px - anchor;
                 if delta.abs() >= threshold(anchor) {
-                    direction = Some(if delta > 0.0 { KagiDirection::Up } else { KagiDirection::Down });
+                    direction = Some(if delta > 0.0 {
+                        KagiDirection::Up
+                    } else {
+                        KagiDirection::Down
+                    });
                     extreme = px;
                 }
             }

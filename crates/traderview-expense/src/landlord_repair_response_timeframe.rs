@@ -143,9 +143,12 @@ fn check_texas(input: &LandlordRepairResponseInput) -> LandlordRepairResponseRes
     LandlordRepairResponseResult {
         compliant,
         required_response_hours: required_hours,
-        tenant_repair_and_deduct_engaged: timeframe_exceeded && !input.repair_completed_within_timeframe,
-        tenant_rent_abatement_engaged: timeframe_exceeded && !input.repair_completed_within_timeframe,
-        tenant_lease_termination_engaged: timeframe_exceeded && !input.repair_completed_within_timeframe,
+        tenant_repair_and_deduct_engaged: timeframe_exceeded
+            && !input.repair_completed_within_timeframe,
+        tenant_rent_abatement_engaged: timeframe_exceeded
+            && !input.repair_completed_within_timeframe,
+        tenant_lease_termination_engaged: timeframe_exceeded
+            && !input.repair_completed_within_timeframe,
         violations,
         citation: "Tex. Prop. Code §§ 92.052(d), 92.056, 92.0563",
         notes,
@@ -182,9 +185,12 @@ fn check_illinois(input: &LandlordRepairResponseInput) -> LandlordRepairResponse
     LandlordRepairResponseResult {
         compliant,
         required_response_hours: required_hours,
-        tenant_repair_and_deduct_engaged: timeframe_exceeded && !input.repair_completed_within_timeframe,
-        tenant_rent_abatement_engaged: timeframe_exceeded && !input.repair_completed_within_timeframe,
-        tenant_lease_termination_engaged: timeframe_exceeded && !input.repair_completed_within_timeframe,
+        tenant_repair_and_deduct_engaged: timeframe_exceeded
+            && !input.repair_completed_within_timeframe,
+        tenant_rent_abatement_engaged: timeframe_exceeded
+            && !input.repair_completed_within_timeframe,
+        tenant_lease_termination_engaged: timeframe_exceeded
+            && !input.repair_completed_within_timeframe,
         violations,
         citation: "Chicago RLTO § 5-12-110(d) (Chicago Residential Landlord and Tenant Ordinance)",
         notes,
@@ -221,9 +227,12 @@ fn check_washington(input: &LandlordRepairResponseInput) -> LandlordRepairRespon
     LandlordRepairResponseResult {
         compliant,
         required_response_hours: required_hours,
-        tenant_repair_and_deduct_engaged: timeframe_exceeded && !input.repair_completed_within_timeframe,
-        tenant_rent_abatement_engaged: timeframe_exceeded && !input.repair_completed_within_timeframe,
-        tenant_lease_termination_engaged: timeframe_exceeded && !input.repair_completed_within_timeframe,
+        tenant_repair_and_deduct_engaged: timeframe_exceeded
+            && !input.repair_completed_within_timeframe,
+        tenant_rent_abatement_engaged: timeframe_exceeded
+            && !input.repair_completed_within_timeframe,
+        tenant_lease_termination_engaged: timeframe_exceeded
+            && !input.repair_completed_within_timeframe,
         violations,
         citation: "RCW 59.18.070; RCW 59.18 (Residential Landlord-Tenant Act)",
         notes,
@@ -311,7 +320,10 @@ mod tests {
         i.repair_completed_within_timeframe = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 92.052(d)") && v.contains("169")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 92.052(d)") && v.contains("169")));
         assert!(r.tenant_repair_and_deduct_engaged);
         assert!(r.tenant_rent_abatement_engaged);
         assert!(r.tenant_lease_termination_engaged);
@@ -339,7 +351,10 @@ mod tests {
     #[test]
     fn tx_92_0563_repair_and_deduct_cap_note_present() {
         let r = check(&tx_ordinary_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("§ 92.0563") && n.contains("one month's rent OR $500")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 92.0563") && n.contains("one month's rent OR $500")));
     }
 
     #[test]
@@ -428,18 +443,30 @@ mod tests {
         let r = check(&default_base());
         assert!(r.compliant);
         assert_eq!(r.required_response_hours, 0);
-        assert!(r.notes.iter().any(|n| n.contains("common-law implied warranty")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("common-law implied warranty")));
     }
 
     #[test]
     fn default_hilder_javins_note_present() {
         let r = check(&default_base());
-        assert!(r.notes.iter().any(|n| n.contains("Hilder v. St. Peter") && n.contains("Javins v. First National Realty")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Hilder v. St. Peter")
+                && n.contains("Javins v. First National Realty")));
     }
 
     #[test]
     fn four_regimes_routed_correctly() {
-        for regime in [Regime::Texas, Regime::Illinois, Regime::Washington, Regime::Default] {
+        for regime in [
+            Regime::Texas,
+            Regime::Illinois,
+            Regime::Washington,
+            Regime::Default,
+        ] {
             let mut i = tx_ordinary_compliant();
             i.regime = regime;
             let r = check(&i);

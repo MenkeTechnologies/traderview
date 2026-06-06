@@ -166,11 +166,9 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
     // Default SelfHelpRepairAndDeduct with 1-month cap for remaining
     // states that don't have an explicit framework.
     let default_states = [
-        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "GA", "HI",
-        "ID", "IN", "IA", "KS", "KY", "LA", "ME", "MI", "MN", "MS",
-        "MO", "MT", "NE", "NV", "NH", "NM", "NY", "NC", "ND", "OH",
-        "OK", "OR", "PA", "RI", "SC", "SD", "TN", "UT", "VT", "VA",
-        "WV", "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "GA", "HI", "ID", "IN", "IA", "KS", "KY",
+        "LA", "ME", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NM", "NY", "NC", "ND", "OH",
+        "OK", "OR", "PA", "RI", "SC", "SD", "TN", "UT", "VT", "VA", "WV", "WI", "WY",
     ];
     for code in default_states {
         m.insert(
@@ -484,7 +482,12 @@ mod tests {
     #[test]
     fn coverage_is_all_50_states_plus_dc() {
         let codes: Vec<&'static str> = RULES.keys().copied().collect();
-        assert_eq!(codes.len(), 51, "expected 50 states + DC, got {}", codes.len());
+        assert_eq!(
+            codes.len(),
+            51,
+            "expected 50 states + DC, got {}",
+            codes.len()
+        );
     }
 
     #[test]
@@ -524,7 +527,10 @@ mod tests {
                 count += 1;
             }
         }
-        assert_eq!(count, 1, "expected FL only with NoticeThenWithholdOrTerminate");
+        assert_eq!(
+            count, 1,
+            "expected FL only with NoticeThenWithholdOrTerminate"
+        );
     }
 
     #[test]
@@ -535,7 +541,10 @@ mod tests {
         for (code, rule) in RULES.iter() {
             if *code != "MA" {
                 if let Some(months) = rule.repair_cap_months_rent {
-                    assert!(months <= 1, "{code} has {months}-month cap; only MA should have > 1");
+                    assert!(
+                        months <= 1,
+                        "{code} has {months}-month cap; only MA should have > 1"
+                    );
                 }
             }
         }

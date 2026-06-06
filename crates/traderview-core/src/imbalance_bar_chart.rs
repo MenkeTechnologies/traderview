@@ -19,7 +19,10 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Print { pub price: f64, pub size: f64 }
+pub struct Print {
+    pub price: f64,
+    pub size: f64,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct ImbalanceBar {
@@ -37,8 +40,10 @@ pub fn compute(prints: &[Print], imbalance_threshold: f64) -> Vec<ImbalanceBar> 
     if prints.is_empty() || !imbalance_threshold.is_finite() || imbalance_threshold <= 0.0 {
         return out;
     }
-    if prints.iter().any(|p| !p.price.is_finite() || !p.size.is_finite()
-        || p.price <= 0.0 || p.size < 0.0) {
+    if prints
+        .iter()
+        .any(|p| !p.price.is_finite() || !p.size.is_finite() || p.price <= 0.0 || p.size < 0.0)
+    {
         return out;
     }
     let mut open = prints[0].price;
@@ -57,21 +62,33 @@ pub fn compute(prints: &[Print], imbalance_threshold: f64) -> Vec<ImbalanceBar> 
             volume = 0.0;
             imbalance = 0.0;
         }
-        let sign = if p.price > prev_price { 1 }
-            else if p.price < prev_price { -1 }
-            else { prev_sign };
+        let sign = if p.price > prev_price {
+            1
+        } else if p.price < prev_price {
+            -1
+        } else {
+            prev_sign
+        };
         prev_sign = sign;
         prev_price = p.price;
-        if p.price > high { high = p.price; }
-        if p.price < low { low = p.price; }
+        if p.price > high {
+            high = p.price;
+        }
+        if p.price < low {
+            low = p.price;
+        }
         volume += p.size;
         imbalance += sign as f64 * p.size;
         tick_count += 1;
         if imbalance.abs() >= imbalance_threshold {
             out.push(ImbalanceBar {
-                open, high, low,
+                open,
+                high,
+                low,
                 close: p.price,
-                volume, imbalance, tick_count,
+                volume,
+                imbalance,
+                tick_count,
             });
             tick_count = 0;
         }
@@ -83,7 +100,9 @@ pub fn compute(prints: &[Print], imbalance_threshold: f64) -> Vec<ImbalanceBar> 
 mod tests {
     use super::*;
 
-    fn p(price: f64, size: f64) -> Print { Print { price, size } }
+    fn p(price: f64, size: f64) -> Print {
+        Print { price, size }
+    }
 
     #[test]
     fn empty_or_invalid_returns_empty() {

@@ -18,11 +18,7 @@
 //!
 //! Pure compute.
 
-pub fn compute(
-    price_changes: &[f64],
-    signed_volumes: &[f64],
-    window: usize,
-) -> Vec<Option<f64>> {
+pub fn compute(price_changes: &[f64], signed_volumes: &[f64], window: usize) -> Vec<Option<f64>> {
     let n = price_changes.len();
     let mut out = vec![None; n];
     if window < 2 || price_changes.len() != signed_volumes.len() || n < window {
@@ -36,12 +32,16 @@ pub fn compute(
         for j in lo..=i {
             let x = signed_volumes[j];
             let y = price_changes[j];
-            if !x.is_finite() || !y.is_finite() { continue; }
+            if !x.is_finite() || !y.is_finite() {
+                continue;
+            }
             sxy += x * y;
             sxx += x * x;
             valid += 1;
         }
-        if valid < 2 { continue; }
+        if valid < 2 {
+            continue;
+        }
         if sxx > 0.0 {
             let lam = sxy / sxx;
             if lam.is_finite() {
@@ -120,7 +120,9 @@ mod tests {
     fn noisy_relationship_returns_finite_estimate() {
         // y = 0.4 x + small noise — λ should be close to 0.4.
         let v: Vec<f64> = (1..=50).map(|i| i as f64).collect();
-        let p: Vec<f64> = v.iter().enumerate()
+        let p: Vec<f64> = v
+            .iter()
+            .enumerate()
             .map(|(i, x)| 0.4 * x + ((i as f64 * 0.7).sin() * 0.5))
             .collect();
         let out = compute(&p, &v, 30);

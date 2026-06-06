@@ -20,8 +20,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct IntradayBar {
-    pub date: u32,             // YYYYMMDD encoding
-    pub minute_of_day: u16,    // 0..1440
+    pub date: u32,          // YYYYMMDD encoding
+    pub minute_of_day: u16, // 0..1440
     pub close: f64,
 }
 
@@ -41,16 +41,23 @@ pub struct IntradaySeasonalityReport {
 }
 
 pub fn compute(bars: &[IntradayBar]) -> Option<IntradaySeasonalityReport> {
-    if bars.len() < 2 { return None; }
-    if bars.iter().any(|b| !b.close.is_finite() || b.close <= 0.0
-        || b.minute_of_day >= 1440) {
+    if bars.len() < 2 {
+        return None;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.close.is_finite() || b.close <= 0.0 || b.minute_of_day >= 1440)
+    {
         return None;
     }
     // Group by date, then compute per-bar within-day returns.
     let mut grouped: std::collections::BTreeMap<u32, Vec<(u16, f64)>> =
         std::collections::BTreeMap::new();
     for b in bars {
-        grouped.entry(b.date).or_default().push((b.minute_of_day, b.close));
+        grouped
+            .entry(b.date)
+            .or_default()
+            .push((b.minute_of_day, b.close));
     }
     let mut returns_by_minute: std::collections::BTreeMap<u16, Vec<f64>> =
         std::collections::BTreeMap::new();
@@ -91,7 +98,11 @@ mod tests {
     use super::*;
 
     fn b(date: u32, minute: u16, close: f64) -> IntradayBar {
-        IntradayBar { date, minute_of_day: minute, close }
+        IntradayBar {
+            date,
+            minute_of_day: minute,
+            close,
+        }
     }
 
     #[test]
@@ -120,9 +131,9 @@ mod tests {
         // Two days, no overnight returns leak in.
         let bars = vec![
             b(20200101, 0, 100.0),
-            b(20200101, 1, 101.0),    // ret = ln(1.01) for minute 1
-            b(20200102, 0, 200.0),    // new day, no return from prior close 101
-            b(20200102, 1, 202.0),    // ret = ln(1.01) for minute 1 also
+            b(20200101, 1, 101.0), // ret = ln(1.01) for minute 1
+            b(20200102, 0, 200.0), // new day, no return from prior close 101
+            b(20200102, 1, 202.0), // ret = ln(1.01) for minute 1 also
         ];
         let r = compute(&bars).unwrap();
         let m1 = r.by_minute.iter().find(|s| s.minute_of_day == 1).unwrap();
@@ -139,6 +150,6 @@ mod tests {
             b(20200101, 60, 102.0),
         ];
         let r = compute(&bars).unwrap();
-        assert_eq!(r.by_minute.len(), 2);    // returns at minute 30 and 60
+        assert_eq!(r.by_minute.len(), 2); // returns at minute 30 and 60
     }
 }

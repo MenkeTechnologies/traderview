@@ -440,17 +440,19 @@ mod tests {
     #[test]
     fn note_pins_45_day_commercial_window() {
         let r = check(&lien_priority_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6323(c)")
-            && n.contains("(d)")
-            && n.contains("45-day")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6323(c)") && n.contains("(d)") && n.contains("45-day")));
     }
 
     #[test]
     fn note_pins_10_year_refiling() {
         let r = check(&lien_priority_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6323(g)")
-            && n.contains("10 years")
-            && n.contains("§ 6502")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6323(g)") && n.contains("10 years") && n.contains("§ 6502")));
     }
 
     #[test]

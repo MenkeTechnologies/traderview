@@ -20,7 +20,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct TurtleSoupReport {
@@ -38,9 +42,13 @@ pub fn compute(bars: &[Bar], lookback: usize, confirm_bars: usize) -> TurtleSoup
         lookback,
         confirm_bars,
     };
-    if lookback < 2 || confirm_bars < 1
-        || n < lookback + confirm_bars + 1 { return report; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if lookback < 2 || confirm_bars < 1 || n < lookback + confirm_bars + 1 {
+        return report;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return report;
     }
     for i in lookback..(n - confirm_bars) {
@@ -74,7 +82,13 @@ pub fn compute(bars: &[Bar], lookback: usize, confirm_bars: usize) -> TurtleSoup
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {
@@ -107,12 +121,14 @@ mod tests {
         // Loop covers i in lookback..(n - confirm_bars). For lookback=20
         // and confirm_bars=2, need n ≥ 23 so i can reach 20.
         let mut bars = vec![b(101.0, 99.0, 100.0); 20];
-        bars.push(b(110.0, 95.0, 105.0));    // bar 20: new high
-        bars.push(b(102.0, 95.0, 99.0));     // bar 21: confirms (close < 101)
-        bars.push(b(99.0, 95.0, 96.0));      // bar 22: padding for loop bound
+        bars.push(b(110.0, 95.0, 105.0)); // bar 20: new high
+        bars.push(b(102.0, 95.0, 99.0)); // bar 21: confirms (close < 101)
+        bars.push(b(99.0, 95.0, 96.0)); // bar 22: padding for loop bound
         let r = compute(&bars, 20, 2);
-        assert!(r.short_signal[21],
-            "false high breakout should trigger short signal at bar 21");
+        assert!(
+            r.short_signal[21],
+            "false high breakout should trigger short signal at bar 21"
+        );
     }
 
     #[test]

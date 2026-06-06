@@ -396,7 +396,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::LandlordHabitabilityDutiesUnderRcw5918060;
         input.landlord_maintains_habitability_per_rcw_5918060 = true;
         let out = check(&input);
-        assert_eq!(out.mode, WaRltaMode::CompliantLandlordMaintainsHabitabilityUnderRcw5918060);
+        assert_eq!(
+            out.mode,
+            WaRltaMode::CompliantLandlordMaintainsHabitabilityUnderRcw5918060
+        );
     }
 
     #[test]
@@ -405,7 +408,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::LandlordHabitabilityDutiesUnderRcw5918060;
         input.landlord_maintains_habitability_per_rcw_5918060 = false;
         let out = check(&input);
-        assert_eq!(out.mode, WaRltaMode::ViolationLandlordFailedHabitabilityDuties);
+        assert_eq!(
+            out.mode,
+            WaRltaMode::ViolationLandlordFailedHabitabilityDuties
+        );
     }
 
     #[test]
@@ -414,7 +420,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::WrittenReceiptForPaymentsUnderRcw5918063;
         input.written_receipt_provided_upon_request = true;
         let out = check(&input);
-        assert_eq!(out.mode, WaRltaMode::CompliantWrittenReceiptProvidedUponRequest);
+        assert_eq!(
+            out.mode,
+            WaRltaMode::CompliantWrittenReceiptProvidedUponRequest
+        );
     }
 
     #[test]
@@ -423,7 +432,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::WrittenReceiptForPaymentsUnderRcw5918063;
         input.written_receipt_provided_upon_request = false;
         let out = check(&input);
-        assert_eq!(out.mode, WaRltaMode::ViolationWrittenReceiptNotProvidedDespiteRequest);
+        assert_eq!(
+            out.mode,
+            WaRltaMode::ViolationWrittenReceiptNotProvidedDespiteRequest
+        );
     }
 
     #[test]
@@ -522,7 +534,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::PayOrQuitNoticeUnderRcw5918057;
         input.pay_or_quit_notice_days_given = 13;
         let out = check(&input);
-        assert_eq!(out.mode, WaRltaMode::ViolationPayOrQuitNoticeShorterThan14Days);
+        assert_eq!(
+            out.mode,
+            WaRltaMode::ViolationPayOrQuitNoticeShorterThan14Days
+        );
     }
 
     #[test]
@@ -531,7 +546,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::PayOrQuitNoticeContentRentOnlyUnderRcw5918057;
         input.pay_or_quit_notice_content = PayOrQuitNoticeContent::OnlyRentDemanded;
         let out = check(&input);
-        assert_eq!(out.mode, WaRltaMode::CompliantPayOrQuitNoticeDemandsOnlyRent);
+        assert_eq!(
+            out.mode,
+            WaRltaMode::CompliantPayOrQuitNoticeDemandsOnlyRent
+        );
     }
 
     #[test]
@@ -577,7 +595,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::JustCauseEvictionUnderRcw5918650;
         input.eviction_asserts_statutory_just_cause_ground = true;
         let out = check(&input);
-        assert_eq!(out.mode, WaRltaMode::CompliantJustCauseEvictionGroundAsserted);
+        assert_eq!(
+            out.mode,
+            WaRltaMode::CompliantJustCauseEvictionGroundAsserted
+        );
     }
 
     #[test]
@@ -598,7 +619,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::DepositTrustAccountReceiptUnderRcw5918270;
         input.deposit_trust_account_receipt_provided = true;
         let out = check(&input);
-        assert_eq!(out.mode, WaRltaMode::CompliantDepositTrustAccountReceiptProvided);
+        assert_eq!(
+            out.mode,
+            WaRltaMode::CompliantDepositTrustAccountReceiptProvided
+        );
     }
 
     #[test]

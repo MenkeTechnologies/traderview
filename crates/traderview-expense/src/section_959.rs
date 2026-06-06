@@ -120,8 +120,7 @@ pub fn check(input: &Section959Input) -> Section959Result {
 
     if matches!(
         input.distribution_recipient,
-        DistributionRecipient::LessThan10PctNotUsShareholder
-            | DistributionRecipient::ForeignPerson
+        DistributionRecipient::LessThan10PctNotUsShareholder | DistributionRecipient::ForeignPerson
     ) {
         notes.push(
             "§ 959(a)(1) exclusion is available only to US shareholders (10% or more direct \
@@ -364,7 +363,10 @@ mod tests {
         let r = check(&i);
         assert_eq!(r.section_959_c3_distributed_taxable_cents, 50_000_000_00);
         assert_eq!(r.total_excluded_from_gross_income_cents, 0);
-        assert!(matches!(r.severity, Severity::FullyAttributableToNonPtepDividend));
+        assert!(matches!(
+            r.severity,
+            Severity::FullyAttributableToNonPtepDividend
+        ));
     }
 
     #[test]
@@ -428,9 +430,18 @@ mod tests {
     fn action_references_form_5471_schedule_j_and_p() {
         let i = baseline();
         let r = check(&i);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Form 5471")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Schedule J")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Schedule P")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Form 5471")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Schedule J")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Schedule P")));
     }
 
     #[test]
@@ -441,8 +452,14 @@ mod tests {
             .recommended_actions
             .iter()
             .any(|a| a.contains("sixteen-basket")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Notice 2019-01")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("REG-105479-18")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Notice 2019-01")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("REG-105479-18")));
     }
 
     #[test]

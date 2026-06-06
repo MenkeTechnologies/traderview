@@ -363,7 +363,10 @@ mod tests {
         let mut input = baseline_input();
         input.tenancy_coverage = TenancyCoverage::ExemptFromChapter118A;
         let out = check(&input);
-        assert_eq!(out.mode, NvLandlordTenantMode::NotApplicableTenancyExemptFromChapter118A);
+        assert_eq!(
+            out.mode,
+            NvLandlordTenantMode::NotApplicableTenancyExemptFromChapter118A
+        );
     }
 
     #[test]
@@ -372,7 +375,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::DepositCapThreeMonthsRentUnderSection118A242;
         input.deposit_amount_in_months_rent = 3;
         let out = check(&input);
-        assert_eq!(out.mode, NvLandlordTenantMode::CompliantDepositCapWithinThreeMonthsRent);
+        assert_eq!(
+            out.mode,
+            NvLandlordTenantMode::CompliantDepositCapWithinThreeMonthsRent
+        );
     }
 
     #[test]
@@ -381,7 +387,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::DepositCapThreeMonthsRentUnderSection118A242;
         input.deposit_amount_in_months_rent = 4;
         let out = check(&input);
-        assert_eq!(out.mode, NvLandlordTenantMode::ViolationDepositExceedsThreeMonthsRent);
+        assert_eq!(
+            out.mode,
+            NvLandlordTenantMode::ViolationDepositExceedsThreeMonthsRent
+        );
     }
 
     #[test]
@@ -492,7 +501,10 @@ mod tests {
         input.service_method_status =
             ServiceMethodStatus::ServedByConstableSheriffLicensedProcessServerOrAttorneyAgent;
         let out = check(&input);
-        assert_eq!(out.mode, NvLandlordTenantMode::CompliantServedByAuthorizedMethod);
+        assert_eq!(
+            out.mode,
+            NvLandlordTenantMode::CompliantServedByAuthorizedMethod
+        );
     }
 
     #[test]
@@ -501,7 +513,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::EvictionNoticeServiceMethodUnderSection402516;
         input.service_method_status = ServiceMethodStatus::NotServedByAuthorizedServiceMethod;
         let out = check(&input);
-        assert_eq!(out.mode, NvLandlordTenantMode::ViolationNotServedByAuthorizedMethod);
+        assert_eq!(
+            out.mode,
+            NvLandlordTenantMode::ViolationNotServedByAuthorizedMethod
+        );
     }
 
     #[test]
@@ -531,7 +546,8 @@ mod tests {
     #[test]
     fn landlord_maintains_habitability_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordHabitabilityObligationUnderSection118A290;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordHabitabilityObligationUnderSection118A290;
         input.landlord_maintains_habitability = true;
         let out = check(&input);
         assert_eq!(
@@ -543,7 +559,8 @@ mod tests {
     #[test]
     fn landlord_failed_habitability_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordHabitabilityObligationUnderSection118A290;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordHabitabilityObligationUnderSection118A290;
         input.landlord_maintains_habitability = false;
         let out = check(&input);
         assert_eq!(
@@ -583,7 +600,9 @@ mod tests {
         assert!(joined.contains("SEVEN JUDICIAL DAYS"));
         assert!(joined.contains("NRS § 40.2516"));
         assert!(joined.contains("UNLAWFUL DETAINER"));
-        assert!(joined.contains("NEGLECT OR FAILURE TO PERFORM ANY CONDITION OR COVENANT OF THE LEASE"));
+        assert!(
+            joined.contains("NEGLECT OR FAILURE TO PERFORM ANY CONDITION OR COVENANT OF THE LEASE")
+        );
         assert!(joined.contains("5 DAYS"));
         assert!(joined.contains("3 JUDICIAL (BUSINESS) DAYS"));
         assert!(joined.contains("FIVE-DAY NOTICE TO PERFORM LEASE CONDITION OR QUIT"));
@@ -596,7 +615,9 @@ mod tests {
         assert!(joined.contains("NRS § 118A.290"));
         assert!(joined.contains("HABITABLE CONDITION"));
         assert!(joined.contains("HEALTH, SAFETY, SANITATION OR FITNESS FOR HABITATION"));
-        assert!(joined.contains("EFFECTIVE WATERPROOFING AND WEATHER PROTECTION OF THE ROOF AND EXTERIOR WALLS"));
+        assert!(joined.contains(
+            "EFFECTIVE WATERPROOFING AND WEATHER PROTECTION OF THE ROOF AND EXTERIOR WALLS"
+        ));
         assert!(joined.contains("PLUMBING FACILITIES"));
         assert!(joined.contains("NRS § 118A.250"));
         assert!(joined.contains("SIGNED WRITTEN RECEIPT"));

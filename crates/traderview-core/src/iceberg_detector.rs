@@ -19,7 +19,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Print { pub price: f64, pub size: f64, pub timestamp_sec: f64 }
+pub struct Print {
+    pub price: f64,
+    pub size: f64,
+    pub timestamp_sec: f64,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct IcebergMatch {
@@ -38,20 +42,32 @@ pub fn detect(
     vol_threshold: f64,
 ) -> Vec<IcebergMatch> {
     let mut out = Vec::new();
-    if prints.is_empty() || min_fills < 2
-        || !price_tolerance_pct.is_finite() || price_tolerance_pct <= 0.0
-        || !max_window_sec.is_finite() || max_window_sec <= 0.0
-        || !vol_threshold.is_finite() || vol_threshold <= 0.0 {
+    if prints.is_empty()
+        || min_fills < 2
+        || !price_tolerance_pct.is_finite()
+        || price_tolerance_pct <= 0.0
+        || !max_window_sec.is_finite()
+        || max_window_sec <= 0.0
+        || !vol_threshold.is_finite()
+        || vol_threshold <= 0.0
+    {
         return out;
     }
-    if prints.iter().any(|p| !p.price.is_finite() || !p.size.is_finite()
-        || !p.timestamp_sec.is_finite() || p.price <= 0.0 || p.size <= 0.0) {
+    if prints.iter().any(|p| {
+        !p.price.is_finite()
+            || !p.size.is_finite()
+            || !p.timestamp_sec.is_finite()
+            || p.price <= 0.0
+            || p.size <= 0.0
+    }) {
         return out;
     }
     let tol_factor = price_tolerance_pct / 100.0;
     let mut used = vec![false; prints.len()];
     for i in 0..prints.len() {
-        if used[i] { continue; }
+        if used[i] {
+            continue;
+        }
         let anchor = prints[i];
         let band = anchor.price * tol_factor;
         let mut total_vol = anchor.size;
@@ -59,10 +75,16 @@ pub fn detect(
         let mut last_ts = anchor.timestamp_sec;
         let mut cluster_indices = vec![i];
         for j in (i + 1)..prints.len() {
-            if used[j] { continue; }
+            if used[j] {
+                continue;
+            }
             let p = prints[j];
-            if (p.price - anchor.price).abs() > band { continue; }
-            if p.timestamp_sec - anchor.timestamp_sec > max_window_sec { break; }
+            if (p.price - anchor.price).abs() > band {
+                continue;
+            }
+            if p.timestamp_sec - anchor.timestamp_sec > max_window_sec {
+                break;
+            }
             total_vol += p.size;
             count += 1;
             last_ts = p.timestamp_sec;
@@ -89,7 +111,11 @@ mod tests {
     use super::*;
 
     fn pr(price: f64, size: f64, ts: f64) -> Print {
-        Print { price, size, timestamp_sec: ts }
+        Print {
+            price,
+            size,
+            timestamp_sec: ts,
+        }
     }
 
     #[test]
@@ -134,7 +160,9 @@ mod tests {
     #[test]
     fn prints_outside_window_excluded() {
         // 10 prints at same price but spread over 1000 sec >> max_window.
-        let prints: Vec<_> = (0..10).map(|i| pr(100.0, 500.0, i as f64 * 200.0)).collect();
+        let prints: Vec<_> = (0..10)
+            .map(|i| pr(100.0, 500.0, i as f64 * 200.0))
+            .collect();
         let matches = detect(&prints, 0.01, 60.0, 5, 1000.0);
         // Each anchor only finds the bars within 60 sec — likely 0 fills besides self.
         assert!(matches.is_empty() || matches[0].fill_count < 5);

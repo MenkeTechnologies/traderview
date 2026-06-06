@@ -38,9 +38,12 @@ pub fn compute(
     query_times: &[f64],
     params: HawkesParams,
 ) -> Option<HawkesReport> {
-    if !params.baseline_mu.is_finite() || params.baseline_mu < 0.0
-        || !params.excitation_alpha.is_finite() || params.excitation_alpha < 0.0
-        || !params.decay_beta.is_finite() || params.decay_beta <= 0.0
+    if !params.baseline_mu.is_finite()
+        || params.baseline_mu < 0.0
+        || !params.excitation_alpha.is_finite()
+        || params.excitation_alpha < 0.0
+        || !params.decay_beta.is_finite()
+        || params.decay_beta <= 0.0
         || event_times.iter().any(|t| !t.is_finite())
         || query_times.iter().any(|t| !t.is_finite())
     {
@@ -48,7 +51,9 @@ pub fn compute(
     }
     // Verify event times are sorted ascending.
     for w in event_times.windows(2) {
-        if w[1] < w[0] { return None; }
+        if w[1] < w[0] {
+            return None;
+        }
     }
     let is_stable = params.excitation_alpha < params.decay_beta;
     let unconditional = if is_stable {
@@ -56,15 +61,20 @@ pub fn compute(
     } else {
         f64::INFINITY
     };
-    let intensities: Vec<f64> = query_times.iter().map(|&t| {
-        // Sum excitation from all events strictly before t.
-        let mut lambda = params.baseline_mu;
-        for &ev in event_times {
-            if ev >= t { break; }
-            lambda += params.excitation_alpha * (-params.decay_beta * (t - ev)).exp();
-        }
-        lambda
-    }).collect();
+    let intensities: Vec<f64> = query_times
+        .iter()
+        .map(|&t| {
+            // Sum excitation from all events strictly before t.
+            let mut lambda = params.baseline_mu;
+            for &ev in event_times {
+                if ev >= t {
+                    break;
+                }
+                lambda += params.excitation_alpha * (-params.decay_beta * (t - ev)).exp();
+            }
+            lambda
+        })
+        .collect();
     Some(HawkesReport {
         intensities,
         unconditional_mean_intensity: unconditional,
@@ -74,15 +84,20 @@ pub fn compute(
 
 /// Compute intensity JUST AFTER each event time (the "self-excited" peak).
 pub fn intensity_after_each_event(event_times: &[f64], params: HawkesParams) -> Option<Vec<f64>> {
-    if !params.baseline_mu.is_finite() || params.baseline_mu < 0.0
-        || !params.excitation_alpha.is_finite() || params.excitation_alpha < 0.0
-        || !params.decay_beta.is_finite() || params.decay_beta <= 0.0
+    if !params.baseline_mu.is_finite()
+        || params.baseline_mu < 0.0
+        || !params.excitation_alpha.is_finite()
+        || params.excitation_alpha < 0.0
+        || !params.decay_beta.is_finite()
+        || params.decay_beta <= 0.0
         || event_times.iter().any(|t| !t.is_finite())
     {
         return None;
     }
     for w in event_times.windows(2) {
-        if w[1] < w[0] { return None; }
+        if w[1] < w[0] {
+            return None;
+        }
     }
     let mut out = Vec::with_capacity(event_times.len());
     for (i, &t) in event_times.iter().enumerate() {
@@ -103,7 +118,11 @@ mod tests {
     use super::*;
 
     fn p(mu: f64, alpha: f64, beta: f64) -> HawkesParams {
-        HawkesParams { baseline_mu: mu, excitation_alpha: alpha, decay_beta: beta }
+        HawkesParams {
+            baseline_mu: mu,
+            excitation_alpha: alpha,
+            decay_beta: beta,
+        }
     }
 
     #[test]

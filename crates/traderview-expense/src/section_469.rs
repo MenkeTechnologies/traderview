@@ -149,7 +149,9 @@ pub fn compute(input: &Section469Input) -> Section469Result {
         r.loss_released_non_passive = r.total_loss_available;
         r.deductible_this_year = r.total_loss_available;
         r.suspended_to_next_year = Decimal::ZERO;
-        r.note = "STR + material participation: not a rental activity per Reg. §1.469-1T(e)(3)(ii)(A)".into();
+        r.note =
+            "STR + material participation: not a rental activity per Reg. §1.469-1T(e)(3)(ii)(A)"
+                .into();
         return r;
     }
 
@@ -174,7 +176,10 @@ pub fn compute(input: &Section469Input) -> Section469Result {
     r.suspended_to_next_year = remaining;
     if r.note.is_empty() {
         r.note = if remaining > Decimal::ZERO {
-            format!("§469(i) allowance ${} used; ${} suspended to next year", r.allowance_used, remaining)
+            format!(
+                "§469(i) allowance ${} used; ${} suspended to next year",
+                r.allowance_used, remaining
+            )
         } else {
             "§469(i) absorbed full loss within allowance + offset".to_string()
         };

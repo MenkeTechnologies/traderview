@@ -25,15 +25,23 @@ pub struct SmiReport {
 }
 
 pub fn compute(
-    highs: &[f64], lows: &[f64], closes: &[f64],
-    period: usize, smooth: usize, signal: usize,
+    highs: &[f64],
+    lows: &[f64],
+    closes: &[f64],
+    period: usize,
+    smooth: usize,
+    signal: usize,
 ) -> SmiReport {
     let n = closes.len();
     let mut report = SmiReport {
         smi: vec![None; n],
         signal: vec![None; n],
     };
-    if highs.len() != n || lows.len() != n || period == 0 || smooth == 0 || signal == 0
+    if highs.len() != n
+        || lows.len() != n
+        || period == 0
+        || smooth == 0
+        || signal == 0
         || n < period.saturating_add(2 * smooth)
     {
         return report;
@@ -44,7 +52,8 @@ pub fn compute(
         let lo = i + 1 - period;
         let win_high = &highs[lo..=i];
         let win_low = &lows[lo..=i];
-        if win_high.iter().any(|x| !x.is_finite()) || win_low.iter().any(|x| !x.is_finite())
+        if win_high.iter().any(|x| !x.is_finite())
+            || win_low.iter().any(|x| !x.is_finite())
             || !closes[i].is_finite()
         {
             continue;
@@ -80,12 +89,17 @@ pub fn compute(
 fn ema_options(values: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
     let n = values.len();
     let mut out = vec![None; n];
-    if period == 0 || n == 0 { return out; }
+    if period == 0 || n == 0 {
+        return out;
+    }
     let alpha = 2.0 / (period as f64 + 1.0);
     let mut prev: Option<f64> = None;
     for (i, v) in values.iter().enumerate() {
         match (v, prev) {
-            (Some(val), None) if val.is_finite() => { prev = Some(*val); out[i] = prev; }
+            (Some(val), None) if val.is_finite() => {
+                prev = Some(*val);
+                out[i] = prev;
+            }
             (Some(val), Some(p)) if val.is_finite() => {
                 let new = alpha * val + (1.0 - alpha) * p;
                 if new.is_finite() {
@@ -94,7 +108,9 @@ fn ema_options(values: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
                 }
             }
             _ => {
-                if let Some(p) = prev { out[i] = Some(p); }
+                if let Some(p) = prev {
+                    out[i] = Some(p);
+                }
             }
         }
     }
@@ -167,9 +183,14 @@ mod tests {
     fn smi_bounded_in_minus_100_plus_100() {
         // SMI lies in [−100, +100] when each bar's close lies inside its
         // own [low, high]. With well-formed OHLC the bound holds.
-        let h: Vec<f64> = (0..200).map(|i| 100.0 + (i as f64 * 0.1).sin() * 5.0).collect();
+        let h: Vec<f64> = (0..200)
+            .map(|i| 100.0 + (i as f64 * 0.1).sin() * 5.0)
+            .collect();
         let l: Vec<f64> = h.iter().map(|x| x - 1.0).collect();
-        let c: Vec<f64> = h.iter().zip(l.iter()).enumerate()
+        let c: Vec<f64> = h
+            .iter()
+            .zip(l.iter())
+            .enumerate()
             .map(|(i, (hi, lo))| {
                 // Close oscillates inside [low, high] via clamp.
                 let raw = hi + (i as f64 * 0.13).cos() * 0.3;
@@ -178,8 +199,10 @@ mod tests {
             .collect();
         let r = compute(&h, &l, &c, 14, 3, 3);
         for v in r.smi.iter().flatten() {
-            assert!((-100.0..=100.0).contains(v),
-                "SMI should stay in [-100, 100] for well-formed OHLC, got {v}");
+            assert!(
+                (-100.0..=100.0).contains(v),
+                "SMI should stay in [-100, 100] for well-formed OHLC, got {v}"
+            );
         }
     }
 
@@ -193,7 +216,7 @@ mod tests {
         // Signal is EMA of SMI → should never lead it.
         let smi_last = r.smi[49].unwrap();
         let sig_last = r.signal[49].unwrap();
-        assert!(sig_last <= smi_last);    // both rising in this test → signal lags
+        assert!(sig_last <= smi_last); // both rising in this test → signal lags
     }
 
     #[test]

@@ -138,19 +138,35 @@ fn ca_check(input: &LandlordIdentificationInput) -> LandlordIdentificationResult
         };
     }
     if !input.disclosure_includes_name {
-        return ca_violation(ViolationType::MissingName, attempting_ud, "Name of owner or owner's authorized agent not disclosed under § 1962.");
+        return ca_violation(
+            ViolationType::MissingName,
+            attempting_ud,
+            "Name of owner or owner's authorized agent not disclosed under § 1962.",
+        );
     }
     if !input.disclosure_includes_street_address {
-        return ca_violation(ViolationType::MissingStreetAddress, attempting_ud, "Street address for personal service of process not disclosed under § 1962.");
+        return ca_violation(
+            ViolationType::MissingStreetAddress,
+            attempting_ud,
+            "Street address for personal service of process not disclosed under § 1962.",
+        );
     }
     if !input.disclosure_includes_phone {
-        return ca_violation(ViolationType::MissingPhone, attempting_ud, "Phone number not disclosed; § 1962 requires name + phone + street address.");
+        return ca_violation(
+            ViolationType::MissingPhone,
+            attempting_ud,
+            "Phone number not disclosed; § 1962 requires name + phone + street address.",
+        );
     }
     if input.days_since_tenancy_created > deadline {
-        return ca_violation(ViolationType::LatePastStatutoryDeadline, attempting_ud, &format!(
+        return ca_violation(
+            ViolationType::LatePastStatutoryDeadline,
+            attempting_ud,
+            &format!(
             "Disclosure provided {} days after tenancy creation; § 1962 requires within 15 days.",
             input.days_since_tenancy_created
-        ));
+        ),
+        );
     }
     LandlordIdentificationResult {
         regime: Regime::California,
@@ -159,7 +175,8 @@ fn ca_check(input: &LandlordIdentificationInput) -> LandlordIdentificationResult
         violation: ViolationType::None,
         landlord_compliant: true,
         citation: "Cal. Civ. Code § 1962 — owner-identification disclosure compliance OK",
-        note: "California § 1962 owner-identification disclosure requirements satisfied.".to_string(),
+        note: "California § 1962 owner-identification disclosure requirements satisfied."
+            .to_string(),
     }
 }
 
@@ -199,8 +216,10 @@ fn nj_check(input: &LandlordIdentificationInput) -> LandlordIdentificationResult
             unlawful_detainer_jurisdictionally_barred: false,
             violation: ViolationType::MissingWrittenDisclosure,
             landlord_compliant: false,
-            citation: "N.J.S.A. 46:8-29 — landlord must supply registration information to each tenant",
-            note: "Required tenant disclosure of registration information not provided.".to_string(),
+            citation:
+                "N.J.S.A. 46:8-29 — landlord must supply registration information to each tenant",
+            note: "Required tenant disclosure of registration information not provided."
+                .to_string(),
         };
     }
     if !input.disclosure_includes_name || !input.disclosure_includes_street_address {

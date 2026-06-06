@@ -25,7 +25,12 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
-pub enum ImpulseColor { #[default] Blue, Green, Red }
+pub enum ImpulseColor {
+    #[default]
+    Blue,
+    Green,
+    Red,
+}
 
 pub fn compute(
     closes: &[f64],
@@ -36,10 +41,18 @@ pub fn compute(
 ) -> Vec<Option<ImpulseColor>> {
     let n = closes.len();
     let mut out = vec![None; n];
-    if fast_period < 2 || macd_fast < 2 || macd_slow < 2 || macd_signal < 2
+    if fast_period < 2
+        || macd_fast < 2
+        || macd_slow < 2
+        || macd_signal < 2
         || macd_fast >= macd_slow
-        || n < macd_slow + macd_signal { return out; }
-    if closes.iter().any(|x| !x.is_finite()) { return out; }
+        || n < macd_slow + macd_signal
+    {
+        return out;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     let ema_fast_for_trend = ema(closes, fast_period);
     let ema_macd_fast = ema(closes, macd_fast);
     let ema_macd_slow = ema(closes, macd_slow);
@@ -57,8 +70,12 @@ pub fn compute(
         }
     }
     for i in 1..n {
-        if let (Some(et), Some(ep), Some(ht), Some(hp))
-            = (ema_fast_for_trend[i], ema_fast_for_trend[i - 1], hist[i], hist[i - 1]) {
+        if let (Some(et), Some(ep), Some(ht), Some(hp)) = (
+            ema_fast_for_trend[i],
+            ema_fast_for_trend[i - 1],
+            hist[i],
+            hist[i - 1],
+        ) {
             out[i] = Some(classify(et > ep, ht > hp, et < ep, ht < hp));
         }
     }
@@ -66,15 +83,21 @@ pub fn compute(
 }
 
 fn classify(ema_up: bool, hist_up: bool, ema_dn: bool, hist_dn: bool) -> ImpulseColor {
-    if ema_up && hist_up { ImpulseColor::Green }
-    else if ema_dn && hist_dn { ImpulseColor::Red }
-    else { ImpulseColor::Blue }
+    if ema_up && hist_up {
+        ImpulseColor::Green
+    } else if ema_dn && hist_dn {
+        ImpulseColor::Red
+    } else {
+        ImpulseColor::Blue
+    }
 }
 
 fn ema(series: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     let k = 2.0 / (p_f + 1.0);
     let seed: f64 = series[..period].iter().sum::<f64>() / p_f;
@@ -90,18 +113,31 @@ fn ema(series: &[f64], period: usize) -> Vec<Option<f64>> {
 fn ema_opt(series: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 { return out; }
+    if period == 0 {
+        return out;
+    }
     let mut seed_end = None;
     let mut seed_sum = 0.0_f64;
     let mut count = 0_usize;
     for (i, v) in series.iter().enumerate() {
         match v {
-            Some(x) => { seed_sum += x; count += 1; }
-            None => { seed_sum = 0.0; count = 0; }
+            Some(x) => {
+                seed_sum += x;
+                count += 1;
+            }
+            None => {
+                seed_sum = 0.0;
+                count = 0;
+            }
         }
-        if count == period { seed_end = Some(i); break; }
+        if count == period {
+            seed_end = Some(i);
+            break;
+        }
     }
-    let Some(end) = seed_end else { return out; };
+    let Some(end) = seed_end else {
+        return out;
+    };
     let p_f = period as f64;
     let k = 2.0 / (p_f + 1.0);
     let mut cur = seed_sum / p_f;
@@ -143,19 +179,29 @@ mod tests {
         // Strongly accelerating uptrend widens the EMA-fast / EMA-slow
         // lag-gap monotonically → MACD line rising → histogram rising
         // alongside the EMA → Green.
-        let c: Vec<f64> = (0..200).map(|i| 100.0 + (i as f64).powi(2) * 0.01).collect();
+        let c: Vec<f64> = (0..200)
+            .map(|i| 100.0 + (i as f64).powi(2) * 0.01)
+            .collect();
         let r = compute(&c, 13, 12, 26, 9);
-        let any_green = r.iter().skip(80).flatten().any(|x| *x == ImpulseColor::Green);
-        assert!(any_green,
-            "accelerating uptrend should produce at least one Green bar");
+        let any_green = r
+            .iter()
+            .skip(80)
+            .flatten()
+            .any(|x| *x == ImpulseColor::Green);
+        assert!(
+            any_green,
+            "accelerating uptrend should produce at least one Green bar"
+        );
     }
 
     #[test]
     fn accelerating_downtrend_yields_red() {
-        let c: Vec<f64> = (0..200).map(|i| {
-            let k = i as f64;
-            1000.0 - k * k * 0.01
-        }).collect();
+        let c: Vec<f64> = (0..200)
+            .map(|i| {
+                let k = i as f64;
+                1000.0 - k * k * 0.01
+            })
+            .collect();
         let r = compute(&c, 13, 12, 26, 9);
         let any_red = r.iter().skip(80).flatten().any(|x| *x == ImpulseColor::Red);
         assert!(any_red);
@@ -296,7 +342,7 @@ mod tests {
         let s = vec![
             Some(1.0_f64),
             Some(2.0),
-            None,            // gap resets count
+            None, // gap resets count
             Some(3.0),
             Some(4.0),
             Some(5.0),

@@ -20,13 +20,23 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub close: f64, pub volume: f64 }
+pub struct Bar {
+    pub close: f64,
+    pub volume: f64,
+}
 
 pub fn compute(bars: &[Bar]) -> Vec<Option<f64>> {
     let n = bars.len();
     let mut out = vec![None; n];
-    if n == 0 { return out; }
-    if bars.iter().any(|b| !b.close.is_finite() || !b.volume.is_finite()) { return out; }
+    if n == 0 {
+        return out;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.close.is_finite() || !b.volume.is_finite())
+    {
+        return out;
+    }
     let mut pvi = 1000.0_f64;
     out[0] = Some(pvi);
     for i in 1..n {
@@ -45,10 +55,17 @@ pub fn compute(bars: &[Bar]) -> Vec<Option<f64>> {
 mod tests {
     use super::*;
 
-    fn b(c: f64, v: f64) -> Bar { Bar { close: c, volume: v } }
+    fn b(c: f64, v: f64) -> Bar {
+        Bar {
+            close: c,
+            volume: v,
+        }
+    }
 
     #[test]
-    fn empty_returns_empty() { assert!(compute(&[]).is_empty()); }
+    fn empty_returns_empty() {
+        assert!(compute(&[]).is_empty());
+    }
 
     #[test]
     fn nan_returns_all_none() {

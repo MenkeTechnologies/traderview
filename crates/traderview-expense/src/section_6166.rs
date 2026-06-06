@@ -216,7 +216,10 @@ pub fn check(input: &Input) -> Output {
         "Companion: section_1042 (iter 480), section_4978 (iter 484), section_4940 (iter 470), section_4941 (iter 468), section_4942 (iter 472), section_4943 (iter 474), section_4944 (iter 476), section_4945 (iter 478), section_4958 (iter 466), section_4960 (iter 464), section_4972 (iter 482).".to_string(),
     ];
 
-    if matches!(input.decedent_residency, DecedentResidency::NonResidentAlien) {
+    if matches!(
+        input.decedent_residency,
+        DecedentResidency::NonResidentAlien
+    ) {
         let mut n = notes;
         n.push("Decedent is non-resident alien — § 6166 election requires US citizen or resident at date of death.".to_string());
         return Output {
@@ -227,7 +230,10 @@ pub fn check(input: &Input) -> Output {
         };
     }
 
-    if matches!(input.business_interest_type, BusinessInterestType::NoQualifyingInterest) {
+    if matches!(
+        input.business_interest_type,
+        BusinessInterestType::NoQualifyingInterest
+    ) {
         let mut n = notes;
         n.push("No qualifying interest in closely held business — § 6166(a)(2) cross-references § 6166(b)(1) (sole proprietorship / partnership / corporation).".to_string());
         return Output {
@@ -239,8 +245,7 @@ pub fn check(input: &Input) -> Output {
     }
 
     let agee_pct_bps = if input.adjusted_gross_estate_cents > 0 {
-        ((input.closely_held_business_value_cents as u128)
-            .saturating_mul(10_000)
+        ((input.closely_held_business_value_cents as u128).saturating_mul(10_000)
             / input.adjusted_gross_estate_cents as u128) as u32
     } else {
         0
@@ -263,8 +268,7 @@ pub fn check(input: &Input) -> Output {
     // Type-specific qualifying tests
     match input.business_interest_type {
         BusinessInterestType::Partnership => {
-            let twenty_pct_ok =
-                input.partnership_capital_interest_basis_points >= TWENTY_PCT_BPS;
+            let twenty_pct_ok = input.partnership_capital_interest_basis_points >= TWENTY_PCT_BPS;
             let forty_five_ok = input.partnership_partner_count <= MAX_PARTNERS_OR_SHAREHOLDERS;
             if !twenty_pct_ok && !forty_five_ok {
                 let mut n = notes;
@@ -283,10 +287,8 @@ pub fn check(input: &Input) -> Output {
             }
         }
         BusinessInterestType::Corporation => {
-            let twenty_pct_ok =
-                input.corporation_voting_stock_basis_points >= TWENTY_PCT_BPS;
-            let forty_five_ok =
-                input.corporation_shareholder_count <= MAX_PARTNERS_OR_SHAREHOLDERS;
+            let twenty_pct_ok = input.corporation_voting_stock_basis_points >= TWENTY_PCT_BPS;
+            let forty_five_ok = input.corporation_shareholder_count <= MAX_PARTNERS_OR_SHAREHOLDERS;
             if !twenty_pct_ok && !forty_five_ok {
                 let mut n = notes;
                 n.push(format!(
@@ -376,17 +378,17 @@ mod tests {
         Input {
             decedent_residency: DecedentResidency::UsCitizenOrResident,
             business_interest_type: BusinessInterestType::SoleProprietorship,
-            closely_held_business_value_cents: 60_000_000_00,   // $60M closely held
-            adjusted_gross_estate_cents: 100_000_000_00,         // $100M AGEE
-            partnership_capital_interest_basis_points: 3000,     // 30%
+            closely_held_business_value_cents: 60_000_000_00, // $60M closely held
+            adjusted_gross_estate_cents: 100_000_000_00,      // $100M AGEE
+            partnership_capital_interest_basis_points: 3000,  // 30%
             partnership_partner_count: 5,
-            corporation_voting_stock_basis_points: 3000,         // 30%
+            corporation_voting_stock_basis_points: 3000, // 30%
             corporation_shareholder_count: 5,
             election_filed_with_timely_form_706: true,
             disposition_50_percent_or_more: false,
             withdrawal_50_percent_or_more: false,
             installment_payment_overdue_more_than_6_months: false,
-            deferred_estate_tax_cents: 20_000_000_00,             // $20M estate tax
+            deferred_estate_tax_cents: 20_000_000_00, // $20M estate tax
         }
     }
 
@@ -412,7 +414,10 @@ mod tests {
         // $30M / $100M = 30% < 35%
         i.closely_held_business_value_cents = 30_000_000_00;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::NotEligibleBelowThirtyFivePercentThreshold);
+        assert_eq!(
+            out.severity,
+            Severity::NotEligibleBelowThirtyFivePercentThreshold
+        );
         assert_eq!(out.adjusted_gross_estate_percentage_basis_points, 3000);
     }
 
@@ -422,7 +427,10 @@ mod tests {
         // Exactly $35M / $100M = 35%; statute says "exceeds 35%" → 35% itself fails
         i.closely_held_business_value_cents = 35_000_000_00;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::NotEligibleBelowThirtyFivePercentThreshold);
+        assert_eq!(
+            out.severity,
+            Severity::NotEligibleBelowThirtyFivePercentThreshold
+        );
     }
 
     #[test]
@@ -662,7 +670,10 @@ mod tests {
             closely_held_business_value_cents: 30_000_000_00,
             ..baseline()
         });
-        assert_eq!(c3.severity, Severity::NotEligibleBelowThirtyFivePercentThreshold);
+        assert_eq!(
+            c3.severity,
+            Severity::NotEligibleBelowThirtyFivePercentThreshold
+        );
 
         // 4. Partnership fails 20%/45
         let c4 = check(&Input {

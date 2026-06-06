@@ -390,8 +390,10 @@ mod tests {
         let mut i = clean_base();
         i.exclusion_category = ExclusionCategory::Deceased;
         let r = check(&i);
-        assert!(r.violations.iter().any(|v| v.contains("§ 6306(d)(3)")
-            && v.contains("deceased")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 6306(d)(3)") && v.contains("deceased")));
     }
 
     #[test]
@@ -399,8 +401,10 @@ mod tests {
         let mut i = clean_base();
         i.exclusion_category = ExclusionCategory::Under18;
         let r = check(&i);
-        assert!(r.violations.iter().any(|v| v.contains("§ 6306(d)(3)")
-            && v.contains("under age 18")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 6306(d)(3)") && v.contains("under age 18")));
     }
 
     #[test]
@@ -408,8 +412,10 @@ mod tests {
         let mut i = clean_base();
         i.exclusion_category = ExclusionCategory::CombatZone;
         let r = check(&i);
-        assert!(r.violations.iter().any(|v| v.contains("§ 6306(d)(3)")
-            && v.contains("combat zone")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 6306(d)(3)") && v.contains("combat zone")));
     }
 
     #[test]
@@ -417,8 +423,10 @@ mod tests {
         let mut i = clean_base();
         i.exclusion_category = ExclusionCategory::IdentityTheft;
         let r = check(&i);
-        assert!(r.violations.iter().any(|v| v.contains("§ 6306(d)(3)")
-            && v.contains("identity theft")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 6306(d)(3)") && v.contains("identity theft")));
     }
 
     #[test]
@@ -442,9 +450,10 @@ mod tests {
         let mut i = clean_base();
         i.exclusion_category = ExclusionCategory::DisabilityOrSsi;
         let r = check(&i);
-        assert!(r.violations.iter().any(|v| v.contains("§ 6306(d)(7)")
-            && v.contains("§ 223")
-            && v.contains("title XVI")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 6306(d)(7)") && v.contains("§ 223") && v.contains("title XVI")));
     }
 
     #[test]
@@ -472,8 +481,10 @@ mod tests {
         i.proposed_installment_years = 8;
         let r = check(&i);
         assert!(!r.installment_agreement_within_7_year_cap);
-        assert!(r.violations.iter().any(|v| v.contains("§ 6306(b)(1)(C)")
-            && v.contains("7 years")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 6306(b)(1)(C)") && v.contains("7 years")));
     }
 
     #[test]
@@ -482,8 +493,10 @@ mod tests {
         i.pca_attempted_enforcement_action = true;
         let r = check(&i);
         assert!(r.pca_enforcement_action_violation);
-        assert!(r.violations.iter().any(|v| v.contains("§ 6306(e)")
-            && v.contains("enforcement action")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 6306(e)") && v.contains("enforcement action")));
     }
 
     #[test]
@@ -492,8 +505,10 @@ mod tests {
         i.pca_conducted_audio_recorded_interview = true;
         let r = check(&i);
         assert!(r.pca_audio_recording_violation);
-        assert!(r.violations.iter().any(|v| v.contains("§ 6306(e)")
-            && v.contains("§ 7521(b)(2)")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 6306(e)") && v.contains("§ 7521(b)(2)")));
     }
 
     #[test]
@@ -507,7 +522,9 @@ mod tests {
     fn citation_pins_all_authorities() {
         let r = check(&clean_base());
         assert!(r.citation.contains("§ 6306(a)-(j)"));
-        assert!(r.citation.contains("American Jobs Creation Act of 2004 § 881"));
+        assert!(r
+            .citation
+            .contains("American Jobs Creation Act of 2004 § 881"));
         assert!(r.citation.contains("FAST Act"));
         assert!(r.citation.contains("§ 32102"));
         assert!(r.citation.contains("Taxpayer First Act of 2019 § 1205"));
@@ -544,8 +561,10 @@ mod tests {
     #[test]
     fn note_pins_pca_revenue_split() {
         let r = check(&clean_base());
-        assert!(r.notes.iter().any(|n| n.contains("25%")
-            && n.contains("§ 6306(j)")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("25%") && n.contains("§ 6306(j)")));
     }
 
     #[test]
@@ -567,9 +586,10 @@ mod tests {
     #[test]
     fn note_pins_section_6304_extension() {
         let r = check(&clean_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6304")
-            && n.contains("§ 7433")
-            && n.contains("FDCPA")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6304") && n.contains("§ 7433") && n.contains("FDCPA")));
     }
 
     #[test]
@@ -609,13 +629,43 @@ mod tests {
     #[test]
     fn inactivity_truth_table() {
         for (basis, assigned, days, last_contact, exp_qualifies) in [
-            (InactivityBasis::RemovedFromActiveInventory, false, 0, 0, true),
+            (
+                InactivityBasis::RemovedFromActiveInventory,
+                false,
+                0,
+                0,
+                true,
+            ),
             (InactivityBasis::OverTwoYearsUnassigned, false, 731, 0, true),
             (InactivityBasis::OverTwoYearsUnassigned, true, 731, 0, false),
-            (InactivityBasis::OverTwoYearsUnassigned, false, 730, 0, false),
-            (InactivityBasis::OverThreeSixtyFiveDaysNoContact, true, 0, 366, true),
-            (InactivityBasis::OverThreeSixtyFiveDaysNoContact, true, 0, 365, false),
-            (InactivityBasis::OverThreeSixtyFiveDaysNoContact, false, 0, 366, false),
+            (
+                InactivityBasis::OverTwoYearsUnassigned,
+                false,
+                730,
+                0,
+                false,
+            ),
+            (
+                InactivityBasis::OverThreeSixtyFiveDaysNoContact,
+                true,
+                0,
+                366,
+                true,
+            ),
+            (
+                InactivityBasis::OverThreeSixtyFiveDaysNoContact,
+                true,
+                0,
+                365,
+                false,
+            ),
+            (
+                InactivityBasis::OverThreeSixtyFiveDaysNoContact,
+                false,
+                0,
+                366,
+                false,
+            ),
             (InactivityBasis::StillActive, false, 0, 0, false),
         ] {
             let mut i = clean_base();

@@ -35,27 +35,41 @@ pub fn compute(
     periods_per_year: f64,
 ) -> Option<UlcerPerformanceReport> {
     let n = equity_curve.len();
-    if n < 2 || !risk_free_rate.is_finite()
-        || !periods_per_year.is_finite() || periods_per_year <= 0.0 {
+    if n < 2
+        || !risk_free_rate.is_finite()
+        || !periods_per_year.is_finite()
+        || periods_per_year <= 0.0
+    {
         return None;
     }
-    if equity_curve.iter().any(|x| !x.is_finite() || *x <= 0.0) { return None; }
+    if equity_curve.iter().any(|x| !x.is_finite() || *x <= 0.0) {
+        return None;
+    }
     let initial = equity_curve[0];
     let final_v = equity_curve[n - 1];
     let period_return = final_v / initial - 1.0;
     let years = (n - 1) as f64 / periods_per_year;
-    if years <= 0.0 { return None; }
+    if years <= 0.0 {
+        return None;
+    }
     let annualized = (1.0 + period_return).powf(1.0 / years) - 1.0;
     let excess = annualized - risk_free_rate;
     let ulcer = ulcer_index_value(equity_curve);
     if ulcer <= 0.0 {
         // Zero ulcer means no drawdowns; report UPI as infinity-equivalent
         // signal: if excess is positive return f64::INFINITY, else 0.
-        let upi = if excess > 0.0 { f64::INFINITY }
-            else if excess < 0.0 { f64::NEG_INFINITY }
-            else { 0.0 };
+        let upi = if excess > 0.0 {
+            f64::INFINITY
+        } else if excess < 0.0 {
+            f64::NEG_INFINITY
+        } else {
+            0.0
+        };
         return Some(UlcerPerformanceReport {
-            upi, ulcer_index: 0.0, period_return, annualized_return: annualized,
+            upi,
+            ulcer_index: 0.0,
+            period_return,
+            annualized_return: annualized,
             n_observations: n,
         });
     }
@@ -70,12 +84,20 @@ pub fn compute(
 
 fn ulcer_index_value(equity_curve: &[f64]) -> f64 {
     let n = equity_curve.len();
-    if n == 0 { return 0.0; }
+    if n == 0 {
+        return 0.0;
+    }
     let mut peak = equity_curve[0];
     let mut sum_sq = 0.0_f64;
     for v in equity_curve {
-        if *v > peak { peak = *v; }
-        let dd_pct = if peak > 0.0 { (v - peak) / peak * 100.0 } else { 0.0 };
+        if *v > peak {
+            peak = *v;
+        }
+        let dd_pct = if peak > 0.0 {
+            (v - peak) / peak * 100.0
+        } else {
+            0.0
+        };
         sum_sq += dd_pct * dd_pct;
     }
     (sum_sq / n as f64).sqrt()
@@ -105,9 +127,15 @@ mod tests {
     #[test]
     fn drawdown_curve_yields_finite_positive_upi_when_return_positive() {
         let mut eq = vec![100.0_f64];
-        for _ in 0..100 { eq.push(eq.last().unwrap() + 1.0); }
-        for _ in 0..30 { eq.push(eq.last().unwrap() - 0.5); }
-        for _ in 0..100 { eq.push(eq.last().unwrap() + 1.0); }
+        for _ in 0..100 {
+            eq.push(eq.last().unwrap() + 1.0);
+        }
+        for _ in 0..30 {
+            eq.push(eq.last().unwrap() - 0.5);
+        }
+        for _ in 0..100 {
+            eq.push(eq.last().unwrap() + 1.0);
+        }
         let r = compute(&eq, 0.0, 252.0).unwrap();
         assert!(r.ulcer_index > 0.0);
         assert!(r.upi > 0.0 && r.upi.is_finite());

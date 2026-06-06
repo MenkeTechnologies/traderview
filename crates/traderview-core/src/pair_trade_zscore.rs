@@ -36,7 +36,14 @@ pub struct Config {
 }
 
 impl Default for Config {
-    fn default() -> Self { Self { window: 30, entry_z: 2.0, exit_z: 0.5, stop_z: 4.0 } }
+    fn default() -> Self {
+        Self {
+            window: 30,
+            entry_z: 2.0,
+            exit_z: 0.5,
+            stop_z: 4.0,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -57,9 +64,12 @@ pub fn compute(
     if x.len() != n
         || n < cfg.window
         || cfg.window < 2
-        || !cfg.entry_z.is_finite() || cfg.entry_z <= 0.0
-        || !cfg.exit_z.is_finite() || cfg.exit_z < 0.0
-        || !cfg.stop_z.is_finite() || cfg.stop_z <= cfg.entry_z
+        || !cfg.entry_z.is_finite()
+        || cfg.entry_z <= 0.0
+        || !cfg.exit_z.is_finite()
+        || cfg.exit_z < 0.0
+        || !cfg.stop_z.is_finite()
+        || cfg.stop_z <= cfg.entry_z
         || !hedge_ratio.is_finite()
         || !intercept.is_finite()
     {
@@ -76,20 +86,29 @@ pub fn compute(
     let mut z = vec![None::<f64>; n];
     let mut signals = vec![None::<Signal>; n];
     for i in (cfg.window - 1)..n {
-        if !have_spread[i] { continue; }
+        if !have_spread[i] {
+            continue;
+        }
         let lo = i + 1 - cfg.window;
         let win = &spread[lo..=i];
-        let valid: Vec<f64> = win.iter().zip(have_spread[lo..=i].iter())
+        let valid: Vec<f64> = win
+            .iter()
+            .zip(have_spread[lo..=i].iter())
             .filter_map(|(s, h)| if *h { Some(*s) } else { None })
             .collect();
-        if valid.len() < 2 { continue; }
+        if valid.len() < 2 {
+            continue;
+        }
         let m = valid.iter().sum::<f64>() / valid.len() as f64;
-        let var = valid.iter().map(|s| (s - m).powi(2)).sum::<f64>()
-            / (valid.len() as f64 - 1.0);
+        let var = valid.iter().map(|s| (s - m).powi(2)).sum::<f64>() / (valid.len() as f64 - 1.0);
         let sd = var.max(0.0).sqrt();
-        if sd <= 0.0 { continue; }
+        if sd <= 0.0 {
+            continue;
+        }
         let z_i = (spread[i] - m) / sd;
-        if !z_i.is_finite() { continue; }
+        if !z_i.is_finite() {
+            continue;
+        }
         z[i] = Some(z_i);
         let abs_z = z_i.abs();
         signals[i] = Some(if abs_z >= cfg.stop_z {
@@ -104,7 +123,11 @@ pub fn compute(
             Signal::Hold
         });
     }
-    Some(PairReport { spread, z_score: z, signals })
+    Some(PairReport {
+        spread,
+        z_score: z,
+        signals,
+    })
 }
 
 #[cfg(test)]
@@ -122,9 +145,40 @@ mod tests {
     fn invalid_config_returns_none() {
         let y = vec![1.0; 50];
         let x = vec![1.0; 50];
-        assert!(compute(&y, &x, 1.0, 0.0, &Config { window: 0, ..Default::default() }).is_none());
-        assert!(compute(&y, &x, 1.0, 0.0, &Config { entry_z: 0.0, ..Default::default() }).is_none());
-        assert!(compute(&y, &x, 1.0, 0.0, &Config { stop_z: 1.0, entry_z: 2.0, ..Default::default() }).is_none());
+        assert!(compute(
+            &y,
+            &x,
+            1.0,
+            0.0,
+            &Config {
+                window: 0,
+                ..Default::default()
+            }
+        )
+        .is_none());
+        assert!(compute(
+            &y,
+            &x,
+            1.0,
+            0.0,
+            &Config {
+                entry_z: 0.0,
+                ..Default::default()
+            }
+        )
+        .is_none());
+        assert!(compute(
+            &y,
+            &x,
+            1.0,
+            0.0,
+            &Config {
+                stop_z: 1.0,
+                entry_z: 2.0,
+                ..Default::default()
+            }
+        )
+        .is_none());
         assert!(compute(&y, &x, f64::NAN, 0.0, &Config::default()).is_none());
     }
 
@@ -146,13 +200,18 @@ mod tests {
         let x = vec![10.0_f64; n];
         let mut state: u64 = 42;
         for slot in y.iter_mut().take(n - 1) {
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             let noise = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.5;
             *slot = 10.0 + noise;
         }
-        y[n - 1] = 10.0 - 5.0;    // big drop → spread = y - x = -5
+        y[n - 1] = 10.0 - 5.0; // big drop → spread = y - x = -5
         let r = compute(&y, &x, 1.0, 0.0, &Config::default()).unwrap();
-        assert!(matches!(r.signals[n - 1], Some(Signal::EnterLong) | Some(Signal::StopLoss)));
+        assert!(matches!(
+            r.signals[n - 1],
+            Some(Signal::EnterLong) | Some(Signal::StopLoss)
+        ));
     }
 
     #[test]
@@ -162,13 +221,18 @@ mod tests {
         let x = vec![10.0_f64; n];
         let mut state: u64 = 99;
         for slot in y.iter_mut().take(n - 1) {
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             let noise = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.5;
             *slot = 10.0 + noise;
         }
         y[n - 1] = 10.0 + 5.0;
         let r = compute(&y, &x, 1.0, 0.0, &Config::default()).unwrap();
-        assert!(matches!(r.signals[n - 1], Some(Signal::EnterShort) | Some(Signal::StopLoss)));
+        assert!(matches!(
+            r.signals[n - 1],
+            Some(Signal::EnterShort) | Some(Signal::StopLoss)
+        ));
     }
 
     #[test]
@@ -178,7 +242,9 @@ mod tests {
         let x = vec![10.0_f64; n];
         let mut state: u64 = 7;
         for slot in y.iter_mut().take(n) {
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             let noise = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 1.0;
             *slot = 10.0 + noise;
         }

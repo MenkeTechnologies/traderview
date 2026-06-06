@@ -42,13 +42,21 @@ pub fn compute(rates_pct: &[f64], period: usize) -> BorrowRateReport {
         stress: vec![None; n],
         period,
     };
-    if period < 1 || n < period + 1 { return report; }
-    if rates_pct.iter().any(|x| !x.is_finite() || *x < 0.0) { return report; }
+    if period < 1 || n < period + 1 {
+        return report;
+    }
+    if rates_pct.iter().any(|x| !x.is_finite() || *x < 0.0) {
+        return report;
+    }
     for i in 0..n {
         let cur = rates_pct[i];
         let change_pct = if i >= period {
             let prev = rates_pct[i - period];
-            if prev > 0.0 { Some((cur - prev) / prev * 100.0) } else { None }
+            if prev > 0.0 {
+                Some((cur - prev) / prev * 100.0)
+            } else {
+                None
+            }
         } else {
             None
         };
@@ -60,11 +68,17 @@ pub fn compute(rates_pct: &[f64], period: usize) -> BorrowRateReport {
 }
 
 fn classify(rate: f64, change_pct: f64) -> BorrowStress {
-    if rate >= 200.0 || change_pct >= 100.0 { BorrowStress::ExtremeSqueeze }
-    else if rate >= 50.0 { BorrowStress::HardToBorrow }
-    else if rate >= 10.0 { BorrowStress::Tight }
-    else if rate >= 1.0 { BorrowStress::Normal }
-    else { BorrowStress::LowAvailable }
+    if rate >= 200.0 || change_pct >= 100.0 {
+        BorrowStress::ExtremeSqueeze
+    } else if rate >= 50.0 {
+        BorrowStress::HardToBorrow
+    } else if rate >= 10.0 {
+        BorrowStress::Tight
+    } else if rate >= 1.0 {
+        BorrowStress::Normal
+    } else {
+        BorrowStress::LowAvailable
+    }
 }
 
 #[cfg(test)]

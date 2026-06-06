@@ -132,8 +132,7 @@ pub fn compute(input: &Section1374Input) -> Section1374Result {
     }
 
     // Three limits on NRBIG.
-    let recognized_big_limit = (input.recognized_big_this_year
-        - input.recognized_bil_this_year
+    let recognized_big_limit = (input.recognized_big_this_year - input.recognized_bil_this_year
         + input.nrbig_carryforward_from_prior_year)
         .max(Decimal::ZERO);
     let taxable_income_limit = input.taxable_income_as_c_corp.max(Decimal::ZERO);
@@ -150,9 +149,7 @@ pub fn compute(input: &Section1374Input) -> Section1374Result {
         && nubig_ceiling_remaining < taxable_income_limit
     {
         BindingLimit::NubigCeiling
-    } else if nrbig == taxable_income_limit
-        && taxable_income_limit < recognized_big_limit
-    {
+    } else if nrbig == taxable_income_limit && taxable_income_limit < recognized_big_limit {
         BindingLimit::TaxableIncomeLimit
     } else {
         BindingLimit::RecognizedBigLimit
@@ -163,9 +160,8 @@ pub fn compute(input: &Section1374Input) -> Section1374Result {
     let nrbig_after_nol = (nrbig - nol_applied).max(Decimal::ZERO);
 
     // §1374(b)(1): tax = highest §11(b) rate × NRBIG (after NOL).
-    let big_tax_before_credits = nrbig_after_nol
-        * Decimal::from(input.corporate_tax_rate_bp)
-        / Decimal::from(10_000);
+    let big_tax_before_credits =
+        nrbig_after_nol * Decimal::from(input.corporate_tax_rate_bp) / Decimal::from(10_000);
 
     // §1374(b)(3): C-corp credit carryforwards offset tax liability.
     let big_tax_after_credits =

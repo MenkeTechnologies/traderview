@@ -141,8 +141,7 @@ pub fn compute(input: &Section336Input) -> Section336Result {
     if input.liability_amount_on_property_dollars > input.distributed_property_fmv_dollars {
         note_parts.push(format!(
             "§ 336(b) liability rule: FMV adjusted upward to liability amount ${} (was ${}).",
-            input.liability_amount_on_property_dollars,
-            input.distributed_property_fmv_dollars,
+            input.liability_amount_on_property_dollars, input.distributed_property_fmv_dollars,
         ));
     }
     if d1_disallowed {
@@ -300,7 +299,10 @@ mod tests {
         i.property_acquired_via_351_or_capital_contribution_within_5_years = true;
         i.built_in_loss_at_contribution_dollars = 150_000;
         let r = compute(&i);
-        assert_eq!(r.section_336d2_built_in_loss_disallowed_amount_dollars, 150_000);
+        assert_eq!(
+            r.section_336d2_built_in_loss_disallowed_amount_dollars,
+            150_000
+        );
         assert_eq!(r.recognized_loss_dollars, 50_000);
     }
 
@@ -312,7 +314,10 @@ mod tests {
         i.property_acquired_via_351_or_capital_contribution_within_5_years = true;
         i.built_in_loss_at_contribution_dollars = 500_000;
         let r = compute(&i);
-        assert_eq!(r.section_336d2_built_in_loss_disallowed_amount_dollars, 100_000);
+        assert_eq!(
+            r.section_336d2_built_in_loss_disallowed_amount_dollars,
+            100_000
+        );
         assert_eq!(r.recognized_loss_dollars, 0);
     }
 

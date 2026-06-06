@@ -96,8 +96,7 @@ pub struct Section1091Result {
 /// Apply IRC §1091 to a single sale + its surrounding purchase events.
 pub fn compute(input: &Section1091Input) -> Section1091Result {
     // 1) Gross gain/loss.
-    let sale_proceeds =
-        Decimal::from(input.sale_shares) * input.sale_price_per_share;
+    let sale_proceeds = Decimal::from(input.sale_shares) * input.sale_price_per_share;
     let cost_basis = Decimal::from(input.sale_shares) * input.basis_per_share;
     let gross = sale_proceeds - cost_basis;
 
@@ -130,8 +129,7 @@ pub fn compute(input: &Section1091Input) -> Section1091Result {
             adjustments: vec![],
             ira_permanent_loss: false,
             mtm_election_exempts: true,
-            note: "§475(f) mark-to-market elector — §1091 does not apply per §475(f)(1)(C)"
-                .into(),
+            note: "§475(f) mark-to-market elector — §1091 does not apply per §475(f)(1)(C)".into(),
         };
     }
 
@@ -287,7 +285,8 @@ mod tests {
         // only applies to losses. Even a purchase a day later is fine.
         let mut i = base(d(2026, 3, 15));
         i.sale_price_per_share = dec!(110);
-        i.replacement_purchases.push(repl(d(2026, 3, 16), 100, dec!(105)));
+        i.replacement_purchases
+            .push(repl(d(2026, 3, 16), 100, dec!(105)));
         let r = compute(&i);
         assert_eq!(r.original_loss, Decimal::ZERO);
         assert!(!r.wash_sale_triggered);
@@ -312,7 +311,8 @@ mod tests {
         // window. All $1000 disallowed; ratio 1.0; FIFO adjustment lands
         // entirely on the one replacement lot.
         let mut i = base(d(2026, 3, 15));
-        i.replacement_purchases.push(repl(d(2026, 3, 20), 100, dec!(85)));
+        i.replacement_purchases
+            .push(repl(d(2026, 3, 20), 100, dec!(85)));
         let r = compute(&i);
         assert!(r.wash_sale_triggered);
         assert_eq!(r.disallowed_loss, dec!(1000));
@@ -330,7 +330,8 @@ mod tests {
         // Sold 100, repurchased 40 in window. Disallow 40% = $400.
         // Per-share addition = $10 (original loss per share). 40 × $10 = $400.
         let mut i = base(d(2026, 3, 15));
-        i.replacement_purchases.push(repl(d(2026, 3, 20), 40, dec!(85)));
+        i.replacement_purchases
+            .push(repl(d(2026, 3, 20), 40, dec!(85)));
         let r = compute(&i);
         assert!(r.wash_sale_triggered);
         assert_eq!(r.disallowed_loss, dec!(400));
@@ -345,7 +346,8 @@ mod tests {
         // The window is sale_date - 30 days through sale_date + 30 days,
         // BOTH inclusive. -30 days exactly should land in the window.
         let mut i = base(d(2026, 3, 15));
-        i.replacement_purchases.push(repl(d(2026, 2, 13), 100, dec!(85))); // -30 days
+        i.replacement_purchases
+            .push(repl(d(2026, 2, 13), 100, dec!(85))); // -30 days
         let r = compute(&i);
         assert!(r.wash_sale_triggered, "−30d boundary must be in window");
         assert_eq!(r.replacement_shares_in_window, 100);
@@ -355,7 +357,8 @@ mod tests {
     fn replacement_at_negative_31_day_outside_window() {
         // One day past the −30-day boundary is outside the window.
         let mut i = base(d(2026, 3, 15));
-        i.replacement_purchases.push(repl(d(2026, 2, 12), 100, dec!(85))); // -31
+        i.replacement_purchases
+            .push(repl(d(2026, 2, 12), 100, dec!(85))); // -31
         let r = compute(&i);
         assert!(!r.wash_sale_triggered, "−31d must be outside window");
         assert_eq!(r.replacement_shares_in_window, 0);
@@ -364,7 +367,8 @@ mod tests {
     #[test]
     fn replacement_at_positive_30_day_boundary_in_window() {
         let mut i = base(d(2026, 3, 15));
-        i.replacement_purchases.push(repl(d(2026, 4, 14), 100, dec!(85))); // +30
+        i.replacement_purchases
+            .push(repl(d(2026, 4, 14), 100, dec!(85))); // +30
         let r = compute(&i);
         assert!(r.wash_sale_triggered, "+30d boundary must be in window");
     }
@@ -372,7 +376,8 @@ mod tests {
     #[test]
     fn replacement_at_positive_31_day_outside_window() {
         let mut i = base(d(2026, 3, 15));
-        i.replacement_purchases.push(repl(d(2026, 4, 15), 100, dec!(85))); // +31
+        i.replacement_purchases
+            .push(repl(d(2026, 4, 15), 100, dec!(85))); // +31
         let r = compute(&i);
         assert!(!r.wash_sale_triggered);
     }
@@ -384,7 +389,8 @@ mod tests {
         // replacement purchase.
         let mut i = base(d(2026, 3, 15));
         i.seller_is_475f_elector = true;
-        i.replacement_purchases.push(repl(d(2026, 3, 20), 100, dec!(85)));
+        i.replacement_purchases
+            .push(repl(d(2026, 3, 20), 100, dec!(85)));
         let r = compute(&i);
         assert!(!r.wash_sale_triggered);
         assert!(r.mtm_election_exempts);
@@ -398,7 +404,8 @@ mod tests {
         // no basis adjustment available. The disallowed loss is gone
         // forever; only the allowed (zero in this 100% case) survives.
         let mut i = base(d(2026, 3, 15));
-        i.replacement_purchases.push(ira_repl(d(2026, 3, 20), 100, dec!(85)));
+        i.replacement_purchases
+            .push(ira_repl(d(2026, 3, 20), 100, dec!(85)));
         let r = compute(&i);
         assert!(r.wash_sale_triggered);
         assert!(r.ira_permanent_loss);
@@ -465,8 +472,8 @@ mod tests {
         // contributes to replacement_shares_in_window.
         let mut i = base(d(2026, 3, 15));
         i.replacement_purchases = vec![
-            repl(d(2026, 1, 1), 100, dec!(85)),  // outside (-73d)
-            repl(d(2026, 3, 20), 50, dec!(85)),  // inside (+5d)
+            repl(d(2026, 1, 1), 100, dec!(85)), // outside (-73d)
+            repl(d(2026, 3, 20), 50, dec!(85)), // inside (+5d)
         ];
         let r = compute(&i);
         assert_eq!(r.replacement_shares_in_window, 50);
@@ -480,7 +487,8 @@ mod tests {
         // caps at 1.0 (100/100); only the first 100 replacement shares
         // get a basis adjustment, the rest are unaffected.
         let mut i = base(d(2026, 3, 15));
-        i.replacement_purchases.push(repl(d(2026, 3, 20), 250, dec!(85)));
+        i.replacement_purchases
+            .push(repl(d(2026, 3, 20), 250, dec!(85)));
         let r = compute(&i);
         assert_eq!(r.disallowance_ratio, dec!(1));
         assert_eq!(r.disallowed_loss, dec!(1000));
@@ -513,7 +521,8 @@ mod tests {
         // 2026-03-13 is a Friday. Monday 2026-03-16 is +3 days, well
         // within window. Weekend doesn't carve a hole.
         let mut i = base(d(2026, 3, 13));
-        i.replacement_purchases.push(repl(d(2026, 3, 16), 100, dec!(85)));
+        i.replacement_purchases
+            .push(repl(d(2026, 3, 16), 100, dec!(85)));
         let r = compute(&i);
         assert!(r.wash_sale_triggered);
     }
@@ -523,7 +532,8 @@ mod tests {
         // Pathological input — 0 shares sold can't realize a loss.
         let mut i = base(d(2026, 3, 15));
         i.sale_shares = 0;
-        i.replacement_purchases.push(repl(d(2026, 3, 20), 100, dec!(85)));
+        i.replacement_purchases
+            .push(repl(d(2026, 3, 20), 100, dec!(85)));
         let r = compute(&i);
         assert!(!r.wash_sale_triggered);
         assert_eq!(r.original_loss, Decimal::ZERO);
@@ -536,7 +546,8 @@ mod tests {
         // for §1091 — no loss is created or destroyed, only deferred.
         for repl_shares in [10, 25, 50, 75, 100] {
             let mut i = base(d(2026, 3, 15));
-            i.replacement_purchases.push(repl(d(2026, 3, 20), repl_shares, dec!(85)));
+            i.replacement_purchases
+                .push(repl(d(2026, 3, 20), repl_shares, dec!(85)));
             let r = compute(&i);
             let total = (-r.allowed_loss) + r.disallowed_loss;
             assert_eq!(
@@ -557,7 +568,8 @@ mod tests {
         // Pinning the ordering.
         let mut i = base(d(2026, 3, 15));
         i.seller_is_475f_elector = true;
-        i.replacement_purchases.push(repl(d(2026, 3, 15), 100, dec!(85)));
+        i.replacement_purchases
+            .push(repl(d(2026, 3, 15), 100, dec!(85)));
         let r = compute(&i);
         assert!(!r.wash_sale_triggered);
         assert!(r.mtm_election_exempts);
@@ -592,7 +604,8 @@ mod tests {
         // Repurchase on the same calendar day as the sale is the
         // classic accidental wash sale (T+0 round trip).
         let mut i = base(d(2026, 3, 15));
-        i.replacement_purchases.push(repl(d(2026, 3, 15), 100, dec!(85)));
+        i.replacement_purchases
+            .push(repl(d(2026, 3, 15), 100, dec!(85)));
         let r = compute(&i);
         assert!(r.wash_sale_triggered);
         assert_eq!(r.disallowed_loss, dec!(1000));

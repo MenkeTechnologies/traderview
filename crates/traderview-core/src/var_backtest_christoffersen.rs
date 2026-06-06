@@ -23,7 +23,12 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum Significance { Pct1, Pct5, Pct10, NotRejected }
+pub enum Significance {
+    Pct1,
+    Pct5,
+    Pct10,
+    NotRejected,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct ChristoffersenReport {
@@ -47,7 +52,9 @@ pub fn test(
     let n = realized_returns.len();
     if var_forecasts.len() != n
         || n < 10
-        || !alpha.is_finite() || !(0.0..1.0).contains(&alpha) || alpha == 0.0
+        || !alpha.is_finite()
+        || !(0.0..1.0).contains(&alpha)
+        || alpha == 0.0
     {
         return None;
     }
@@ -61,10 +68,14 @@ pub fn test(
         hits.push(if loss > var_forecasts[i] { 1u8 } else { 0u8 });
     }
     let valid_n = hits.len();
-    if valid_n < 10 { return None; }
+    if valid_n < 10 {
+        return None;
+    }
     // Transition counts.
-    let mut n00 = 0usize; let mut n01 = 0usize;
-    let mut n10 = 0usize; let mut n11 = 0usize;
+    let mut n00 = 0usize;
+    let mut n01 = 0usize;
+    let mut n10 = 0usize;
+    let mut n11 = 0usize;
     for w in hits.windows(2) {
         match (w[0], w[1]) {
             (0, 0) => n00 += 1,
@@ -76,7 +87,9 @@ pub fn test(
     }
     let n_exceedances: usize = hits.iter().map(|h| *h as usize).sum();
     let total = (n00 + n01 + n10 + n11) as f64;
-    if total <= 0.0 { return None; }
+    if total <= 0.0 {
+        return None;
+    }
     let pi_marginal = (n01 + n11) as f64 / total;
     // Compute independence LR.
     // If pi_marginal == 0 or 1, the test degenerates — return LR = 0.
@@ -86,10 +99,18 @@ pub fn test(
         // π_01 = n01 / (n00 + n01); π_11 = n11 / (n10 + n11). Avoid log(0).
         let denom_0 = (n00 + n01) as f64;
         let denom_1 = (n10 + n11) as f64;
-        let pi_01 = if denom_0 > 0.0 { n01 as f64 / denom_0 } else { 0.0 };
-        let pi_11 = if denom_1 > 0.0 { n11 as f64 / denom_1 } else { 0.0 };
-        let log_l_restricted = (n00 + n10) as f64 * (1.0 - pi_marginal).ln()
-            + (n01 + n11) as f64 * pi_marginal.ln();
+        let pi_01 = if denom_0 > 0.0 {
+            n01 as f64 / denom_0
+        } else {
+            0.0
+        };
+        let pi_11 = if denom_1 > 0.0 {
+            n11 as f64 / denom_1
+        } else {
+            0.0
+        };
+        let log_l_restricted =
+            (n00 + n10) as f64 * (1.0 - pi_marginal).ln() + (n01 + n11) as f64 * pi_marginal.ln();
         let mut log_l_unrestricted = 0.0_f64;
         if n00 > 0 && pi_01 < 1.0 {
             log_l_unrestricted += n00 as f64 * (1.0 - pi_01).ln();
@@ -127,15 +148,23 @@ pub fn test(
         } else {
             (9.210, 5.991, 4.605)
         };
-        if lr > c1 { Significance::Pct1 }
-        else if lr > c5 { Significance::Pct5 }
-        else if lr > c10 { Significance::Pct10 }
-        else { Significance::NotRejected }
+        if lr > c1 {
+            Significance::Pct1
+        } else if lr > c5 {
+            Significance::Pct5
+        } else if lr > c10 {
+            Significance::Pct10
+        } else {
+            Significance::NotRejected
+        }
     };
     Some(ChristoffersenReport {
         n_observations: valid_n,
         n_exceedances,
-        n00, n01, n10, n11,
+        n00,
+        n01,
+        n10,
+        n11,
         lr_independence: lr_ind,
         lr_conditional_coverage: lr_cc,
         independence_significance: bucket(lr_ind, 1.0),
@@ -168,16 +197,20 @@ mod tests {
         let n = 200;
         let mut returns = vec![-0.001_f64; n];
         for (i, slot) in returns.iter_mut().enumerate() {
-            if i.is_multiple_of(2) { *slot = -0.10; }    // exceedance
+            if i.is_multiple_of(2) {
+                *slot = -0.10;
+            } // exceedance
         }
         let vars = vec![0.05_f64; n];
         let r = test(&returns, &vars, 0.5).unwrap();
         // Alternating gives n01 = n10 = ~99 and n00 = n11 = 0 → strongly
         // dependent (perfectly anti-correlated). LR_IND should be large.
         // This is the EXPECTED behavior — alternation rejects independence.
-        assert!(r.lr_independence > 5.0,
+        assert!(
+            r.lr_independence > 5.0,
             "alternating exceedances should reject independence, got {}",
-            r.lr_independence);
+            r.lr_independence
+        );
     }
 
     #[test]
@@ -186,7 +219,9 @@ mod tests {
         // dependent.
         let n = 200;
         let mut returns = vec![-0.001_f64; n];
-        for slot in returns.iter_mut().take(10) { *slot = -0.10; }
+        for slot in returns.iter_mut().take(10) {
+            *slot = -0.10;
+        }
         let vars = vec![0.05_f64; n];
         let r = test(&returns, &vars, 0.05).unwrap();
         // Clustering n11 transitions (9 consecutive 1→1) makes π_11 = 9/9 = 1.0.
@@ -200,7 +235,8 @@ mod tests {
         let mut returns = vec![0.0_f64; n];
         let vars = vec![0.05_f64; n];
         for slot in returns.iter_mut() {
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let u = (state >> 32) as f64 / u32::MAX as f64;
             *slot = if u < 0.05 { -0.10 } else { -0.001 };
@@ -208,8 +244,10 @@ mod tests {
         let r = test(&returns, &vars, 0.05).unwrap();
         // Random ~5% exceedances scattered iid → should NOT reject
         // independence (or conditional coverage) at 5% level (most of the time).
-        assert!(matches!(r.independence_significance,
-            Significance::NotRejected | Significance::Pct10 | Significance::Pct5));
+        assert!(matches!(
+            r.independence_significance,
+            Significance::NotRejected | Significance::Pct10 | Significance::Pct5
+        ));
     }
 
     #[test]

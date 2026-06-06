@@ -39,8 +39,13 @@ pub struct Bar {
 pub fn compute(bars: &[Bar], period: usize) -> Vec<Option<f64>> {
     let n = bars.len();
     let mut out = vec![None; n];
-    if period < 4 || !period.is_multiple_of(2_usize) || n < period { return out; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if period < 4 || !period.is_multiple_of(2_usize) || n < period {
+        return out;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return out;
     }
     let half = period / 2;
@@ -80,7 +85,13 @@ pub fn compute(bars: &[Bar], period: usize) -> Vec<Option<f64>> {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn empty_returns_empty() {
@@ -91,8 +102,8 @@ mod tests {
     fn invalid_period_returns_all_none() {
         let bars = vec![b(101.0, 99.0, 100.0); 30];
         assert!(compute(&bars, 1).iter().all(|x| x.is_none()));
-        assert!(compute(&bars, 2).iter().all(|x| x.is_none()));    // < 4
-        assert!(compute(&bars, 15).iter().all(|x| x.is_none()));   // odd
+        assert!(compute(&bars, 2).iter().all(|x| x.is_none())); // < 4
+        assert!(compute(&bars, 15).iter().all(|x| x.is_none())); // odd
     }
 
     #[test]
@@ -113,24 +124,32 @@ mod tests {
     #[test]
     fn strong_uptrend_yields_low_dimension_high_alpha() {
         // Strong trend → fractal dimension near 1 → high α → FRAMA close to price.
-        let bars: Vec<_> = (0..60).map(|i| {
-            let mid = 100.0 + i as f64;
-            b(mid + 0.5, mid - 0.5, mid)
-        }).collect();
+        let bars: Vec<_> = (0..60)
+            .map(|i| {
+                let mid = 100.0 + i as f64;
+                b(mid + 0.5, mid - 0.5, mid)
+            })
+            .collect();
         let out = compute(&bars, 16);
         let last = out[59].unwrap();
         let last_close = bars[59].close;
         // Should lag only by a small amount.
-        assert!((last_close - last).abs() < 5.0, "FRAMA {} too far from close {}",
-            last, last_close);
+        assert!(
+            (last_close - last).abs() < 5.0,
+            "FRAMA {} too far from close {}",
+            last,
+            last_close
+        );
     }
 
     #[test]
     fn output_length_matches_input() {
-        let bars: Vec<_> = (0..50).map(|i| {
-            let mid = 100.0 + (i as f64 * 0.3).sin() * 5.0;
-            b(mid + 1.0, mid - 1.0, mid)
-        }).collect();
+        let bars: Vec<_> = (0..50)
+            .map(|i| {
+                let mid = 100.0 + (i as f64 * 0.3).sin() * 5.0;
+                b(mid + 1.0, mid - 1.0, mid)
+            })
+            .collect();
         let out = compute(&bars, 16);
         assert_eq!(out.len(), 50);
         assert!(out[14].is_none());

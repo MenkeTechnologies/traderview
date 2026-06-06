@@ -48,14 +48,18 @@ pub struct KnotPoint {
 }
 
 pub fn bootstrap(bonds: &[CouponBond]) -> Option<YieldCurveReport> {
-    if bonds.is_empty() { return None; }
+    if bonds.is_empty() {
+        return None;
+    }
     let mut sorted: Vec<&CouponBond> = bonds.iter().collect();
-    if sorted.iter().any(|b| b.cash_flows.is_empty()
-        || !b.price.is_finite()
-        || b.price <= 0.0
-        || b.cash_flows.iter().any(|cf| !cf.time_years.is_finite() || !cf.amount.is_finite()
-            || cf.time_years <= 0.0))
-    {
+    if sorted.iter().any(|b| {
+        b.cash_flows.is_empty()
+            || !b.price.is_finite()
+            || b.price <= 0.0
+            || b.cash_flows.iter().any(|cf| {
+                !cf.time_years.is_finite() || !cf.amount.is_finite() || cf.time_years <= 0.0
+            })
+    }) {
         return None;
     }
     sorted.sort_by(|a, b| {
@@ -73,11 +77,17 @@ pub fn bootstrap(bonds: &[CouponBond]) -> Option<YieldCurveReport> {
             known_pv += cf.amount * df;
         }
         let unknown_pv = bond.price - known_pv;
-        if unknown_pv <= 0.0 || final_cf <= 0.0 { return None; }
+        if unknown_pv <= 0.0 || final_cf <= 0.0 {
+            return None;
+        }
         let df_t = unknown_pv / final_cf;
-        if df_t <= 0.0 || df_t > 1.0 { return None; }
+        if df_t <= 0.0 || df_t > 1.0 {
+            return None;
+        }
         let zero_rate = -df_t.ln() / maturity;
-        if !zero_rate.is_finite() { return None; }
+        if !zero_rate.is_finite() {
+            return None;
+        }
         knots.push(KnotPoint {
             time_years: maturity,
             zero_rate,
@@ -118,9 +128,17 @@ fn discount_factor_for(t: f64, knots: &[KnotPoint]) -> Option<f64> {
 mod tests {
     use super::*;
 
-    fn cf(t: f64, a: f64) -> CashFlow { CashFlow { time_years: t, amount: a } }
+    fn cf(t: f64, a: f64) -> CashFlow {
+        CashFlow {
+            time_years: t,
+            amount: a,
+        }
+    }
     fn bond(price: f64, cfs: Vec<CashFlow>) -> CouponBond {
-        CouponBond { price, cash_flows: cfs }
+        CouponBond {
+            price,
+            cash_flows: cfs,
+        }
     }
 
     #[test]
@@ -148,7 +166,8 @@ mod tests {
         let r = bootstrap(&[
             bond(95.0, vec![cf(1.0, 100.0)]),
             bond(90.0, vec![cf(2.0, 100.0)]),
-        ]).unwrap();
+        ])
+        .unwrap();
         assert_eq!(r.knots.len(), 2);
         assert!(r.knots[0].zero_rate.is_finite());
         assert!(r.knots[1].zero_rate.is_finite());
@@ -173,7 +192,8 @@ mod tests {
         let r = bootstrap(&[
             bond(90.0, vec![cf(2.0, 100.0)]),
             bond(95.0, vec![cf(1.0, 100.0)]),
-        ]).unwrap();
+        ])
+        .unwrap();
         assert!(r.knots[0].time_years < r.knots[1].time_years);
     }
 
@@ -182,7 +202,8 @@ mod tests {
         let r = bootstrap(&[
             bond(95.0, vec![cf(1.0, 100.0)]),
             bond(85.0, vec![cf(2.0, 100.0)]),
-        ]).unwrap();
+        ])
+        .unwrap();
         assert!(r.knots[1].discount_factor < r.knots[0].discount_factor);
     }
 

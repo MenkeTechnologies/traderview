@@ -30,11 +30,7 @@ pub struct RangeFilterReport {
     pub multiplier: f64,
 }
 
-pub fn compute(
-    closes: &[f64],
-    n_range: usize,
-    multiplier: f64,
-) -> RangeFilterReport {
+pub fn compute(closes: &[f64], n_range: usize, multiplier: f64) -> RangeFilterReport {
     let n = closes.len();
     let mut report = RangeFilterReport {
         filter: vec![None; n],
@@ -44,12 +40,21 @@ pub fn compute(
         n_range,
         multiplier,
     };
-    if n_range < 2 || !multiplier.is_finite() || multiplier <= 0.0
-        || n < 2 * n_range { return report; }
-    if closes.iter().any(|x| !x.is_finite()) { return report; }
-    let abs_diff: Vec<f64> = (0..n).map(|i| {
-        if i == 0 { 0.0 } else { (closes[i] - closes[i - 1]).abs() }
-    }).collect();
+    if n_range < 2 || !multiplier.is_finite() || multiplier <= 0.0 || n < 2 * n_range {
+        return report;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return report;
+    }
+    let abs_diff: Vec<f64> = (0..n)
+        .map(|i| {
+            if i == 0 {
+                0.0
+            } else {
+                (closes[i] - closes[i - 1]).abs()
+            }
+        })
+        .collect();
     let ema_range = ema(&abs_diff, n_range);
     let mut ema_range_arr = vec![0.0_f64; n];
     let mut have_inner = vec![false; n];
@@ -80,9 +85,13 @@ pub fn compute(
             };
             let trend = match last_filter {
                 Some(prev) => {
-                    if new_filter > prev { 1 }
-                    else if new_filter < prev { -1 }
-                    else { 0 }
+                    if new_filter > prev {
+                        1
+                    } else if new_filter < prev {
+                        -1
+                    } else {
+                        0
+                    }
                 }
                 None => 0,
             };
@@ -99,7 +108,9 @@ pub fn compute(
 fn ema(series: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     let k = 2.0 / (p_f + 1.0);
     let seed: f64 = series[..period].iter().sum::<f64>() / p_f;
@@ -116,8 +127,12 @@ fn ema_after_index(values: &[f64], have: &[bool], period: usize) -> Vec<Option<f
     let n = values.len();
     let mut out = vec![None; n];
     let start = have.iter().position(|x| *x);
-    let Some(seed_start) = start else { return out; };
-    if seed_start + period > n { return out; }
+    let Some(seed_start) = start else {
+        return out;
+    };
+    if seed_start + period > n {
+        return out;
+    }
     let p_f = period as f64;
     let k = 2.0 / (p_f + 1.0);
     let seed: f64 = values[seed_start..seed_start + period].iter().sum::<f64>() / p_f;

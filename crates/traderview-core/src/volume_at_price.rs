@@ -20,7 +20,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub volume: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub volume: f64,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct PriceBin {
@@ -37,24 +41,30 @@ pub struct VolumeAtPriceReport {
     pub total_volume: f64,
 }
 
-pub fn compute(
-    bars: &[Bar],
-    num_bins: usize,
-    value_area_pct: f64,
-) -> VolumeAtPriceReport {
+pub fn compute(bars: &[Bar], num_bins: usize, value_area_pct: f64) -> VolumeAtPriceReport {
     let mut report = VolumeAtPriceReport::default();
-    if bars.is_empty() || num_bins < 2
-        || !value_area_pct.is_finite() || !(1.0..=99.9).contains(&value_area_pct) {
+    if bars.is_empty()
+        || num_bins < 2
+        || !value_area_pct.is_finite()
+        || !(1.0..=99.9).contains(&value_area_pct)
+    {
         return report;
     }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite()
-        || !b.volume.is_finite() || b.volume < 0.0 || b.high < b.low) {
+    if bars.iter().any(|b| {
+        !b.high.is_finite()
+            || !b.low.is_finite()
+            || !b.volume.is_finite()
+            || b.volume < 0.0
+            || b.high < b.low
+    }) {
         return report;
     }
     let min_price = bars.iter().fold(f64::INFINITY, |a, b| a.min(b.low));
     let max_price = bars.iter().fold(f64::NEG_INFINITY, |a, b| a.max(b.high));
     let bin_size = (max_price - min_price) / num_bins as f64;
-    if bin_size <= 0.0 { return report; }
+    if bin_size <= 0.0 {
+        return report;
+    }
     let mut bin_volumes = vec![0.0_f64; num_bins];
     for bar in bars {
         let range = bar.high - bar.low;
@@ -70,12 +80,22 @@ pub fn compute(
         }
     }
     let total_volume: f64 = bin_volumes.iter().sum();
-    let bins: Vec<PriceBin> = bin_volumes.iter().enumerate().map(|(i, &v)| PriceBin {
-        center: min_price + bin_size * (i as f64 + 0.5),
-        volume: v,
-    }).collect();
-    let poc_idx = bins.iter().enumerate()
-        .max_by(|a, b| a.1.volume.partial_cmp(&b.1.volume).unwrap_or(std::cmp::Ordering::Equal))
+    let bins: Vec<PriceBin> = bin_volumes
+        .iter()
+        .enumerate()
+        .map(|(i, &v)| PriceBin {
+            center: min_price + bin_size * (i as f64 + 0.5),
+            volume: v,
+        })
+        .collect();
+    let poc_idx = bins
+        .iter()
+        .enumerate()
+        .max_by(|a, b| {
+            a.1.volume
+                .partial_cmp(&b.1.volume)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        })
         .map(|(i, _)| i);
     let target_vol = total_volume * value_area_pct / 100.0;
     let (va_low_idx, va_high_idx) = if let Some(poc) = poc_idx {
@@ -84,15 +104,31 @@ pub fn compute(
         let mut hi = poc;
         while accum < target_vol && (lo > 0 || hi + 1 < bins.len()) {
             let lo_vol = if lo > 0 { bins[lo - 1].volume } else { -1.0 };
-            let hi_vol = if hi + 1 < bins.len() { bins[hi + 1].volume } else { -1.0 };
+            let hi_vol = if hi + 1 < bins.len() {
+                bins[hi + 1].volume
+            } else {
+                -1.0
+            };
             if hi_vol >= lo_vol {
-                if hi + 1 < bins.len() { hi += 1; accum += bins[hi].volume; }
-                else if lo > 0 { lo -= 1; accum += bins[lo].volume; }
-            } else if lo > 0 { lo -= 1; accum += bins[lo].volume; }
-            else if hi + 1 < bins.len() { hi += 1; accum += bins[hi].volume; }
+                if hi + 1 < bins.len() {
+                    hi += 1;
+                    accum += bins[hi].volume;
+                } else if lo > 0 {
+                    lo -= 1;
+                    accum += bins[lo].volume;
+                }
+            } else if lo > 0 {
+                lo -= 1;
+                accum += bins[lo].volume;
+            } else if hi + 1 < bins.len() {
+                hi += 1;
+                accum += bins[hi].volume;
+            }
         }
         (Some(lo), Some(hi))
-    } else { (None, None) };
+    } else {
+        (None, None)
+    };
     report.bins = bins;
     report.poc_index = poc_idx;
     report.value_area_low = va_low_idx.map(|i| report.bins[i].center);
@@ -105,7 +141,13 @@ pub fn compute(
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, v: f64) -> Bar { Bar { high: h, low: l, volume: v } }
+    fn b(h: f64, l: f64, v: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            volume: v,
+        }
+    }
 
     #[test]
     fn empty_or_invalid_returns_empty() {
@@ -142,7 +184,7 @@ mod tests {
         // One bar with huge volume at 105-106, others at the edges.
         let bars = vec![
             b(101.0, 100.0, 100.0),
-            b(106.0, 105.0, 50000.0),    // huge volume in middle
+            b(106.0, 105.0, 50000.0), // huge volume in middle
             b(111.0, 110.0, 100.0),
         ];
         let r = compute(&bars, 12, 70.0);

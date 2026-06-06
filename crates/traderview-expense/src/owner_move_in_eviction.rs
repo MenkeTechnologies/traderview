@@ -164,12 +164,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // NoStateOwnerMoveInRestriction default — 46 other states + DC.
     let no_state = [
-        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE",
-        "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS",
-        "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS",
-        "MO", "MT", "NE", "NV", "NH", "NM", "NC", "ND",
-        "OH", "OK", "PA", "RI", "SC", "SD", "TN", "TX",
-        "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA",
+        "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NM",
+        "NC", "ND", "OH", "OK", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV",
+        "WI", "WY",
     ];
     for code in no_state {
         m.insert(
@@ -258,7 +256,11 @@ pub fn check(input: &OwnerMoveInInput) -> OwnerMoveInResult {
             // CA uses statutory § 1946.2(g) civil penalty + actual
             // damages — no statute-fixed multiplier, modeled as
             // actual damages here.
-            let award = if remedy { input.tenant_actual_damages_dollars.max(0) } else { 0 };
+            let award = if remedy {
+                input.tenant_actual_damages_dollars.max(0)
+            } else {
+                0
+            };
             (allowed_now, compliant_now, remedy, award)
         }
         OwnerMoveInRegime::OregonSb608Combined => {
@@ -269,7 +271,11 @@ pub fn check(input: &OwnerMoveInInput) -> OwnerMoveInResult {
                 && input.written_notice_provided_with_required_days
                 && input.relocation_assistance_paid;
             let remedy = !compliant_now && allowed_now;
-            let award = if remedy { input.tenant_actual_damages_dollars.max(0) } else { 0 };
+            let award = if remedy {
+                input.tenant_actual_damages_dollars.max(0)
+            } else {
+                0
+            };
             (allowed_now, compliant_now, remedy, award)
         }
         OwnerMoveInRegime::NewJerseyTripleDamagesGoodFaith => {
@@ -643,9 +649,7 @@ mod tests {
     fn nj_only_triple_damages_state() {
         let count = RULES
             .iter()
-            .filter(|(_, r)| {
-                matches!(r.regime, OwnerMoveInRegime::NewJerseyTripleDamagesGoodFaith)
-            })
+            .filter(|(_, r)| matches!(r.regime, OwnerMoveInRegime::NewJerseyTripleDamagesGoodFaith))
             .count();
         assert_eq!(count, 1);
     }
@@ -655,7 +659,10 @@ mod tests {
         let count = RULES
             .iter()
             .filter(|(_, r)| {
-                matches!(r.regime, OwnerMoveInRegime::NewYorkRentStabilizedOnlyOneUnit)
+                matches!(
+                    r.regime,
+                    OwnerMoveInRegime::NewYorkRentStabilizedOnlyOneUnit
+                )
             })
             .count();
         assert_eq!(count, 1);

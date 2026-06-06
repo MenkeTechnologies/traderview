@@ -45,28 +45,44 @@ pub fn compute(
     if cash_flows.is_empty() || !ytm.is_finite() || compounding_periods_per_year == 0 {
         return None;
     }
-    if cash_flows.iter().any(|c| !c.time_years.is_finite() || c.time_years < 0.0
-        || !c.amount.is_finite()) {
+    if cash_flows
+        .iter()
+        .any(|c| !c.time_years.is_finite() || c.time_years < 0.0 || !c.amount.is_finite())
+    {
         return None;
     }
     let m = compounding_periods_per_year as f64;
     let one_plus_y_m = 1.0 + ytm / m;
-    if one_plus_y_m <= 0.0 { return None; }
-    let pv: f64 = cash_flows.iter()
-        .map(|c| c.amount * one_plus_y_m.powf(-m * c.time_years)).sum();
-    if pv <= 0.0 { return None; }
+    if one_plus_y_m <= 0.0 {
+        return None;
+    }
+    let pv: f64 = cash_flows
+        .iter()
+        .map(|c| c.amount * one_plus_y_m.powf(-m * c.time_years))
+        .sum();
+    if pv <= 0.0 {
+        return None;
+    }
     // Analytic Macaulay duration first, then modified.
-    let mac_dur: f64 = cash_flows.iter().map(|c| {
-        let disc = one_plus_y_m.powf(-m * c.time_years);
-        c.time_years * c.amount * disc
-    }).sum::<f64>() / pv;
+    let mac_dur: f64 = cash_flows
+        .iter()
+        .map(|c| {
+            let disc = one_plus_y_m.powf(-m * c.time_years);
+            c.time_years * c.amount * disc
+        })
+        .sum::<f64>()
+        / pv;
     let mod_dur = mac_dur / one_plus_y_m;
     // Analytic convexity: weighted sum of t·(t + 1/m) at (1+y/m)^(−mt−2).
-    let analytic: f64 = cash_flows.iter().map(|c| {
-        let t = c.time_years;
-        let disc = one_plus_y_m.powf(-m * t - 2.0);
-        t * (t + 1.0 / m) * c.amount * disc
-    }).sum::<f64>() / pv;
+    let analytic: f64 = cash_flows
+        .iter()
+        .map(|c| {
+            let t = c.time_years;
+            let disc = one_plus_y_m.powf(-m * t - 2.0);
+            t * (t + 1.0 / m) * c.amount * disc
+        })
+        .sum::<f64>()
+        / pv;
     // Effective convexity via numerical ±1 bp.
     let dy = 0.0001_f64;
     let pv_up = pv_at(cash_flows, ytm + dy, m)?;
@@ -85,8 +101,14 @@ pub fn compute(
 
 fn pv_at(cf: &[CashFlow], y: f64, m: f64) -> Option<f64> {
     let g = 1.0 + y / m;
-    if g <= 0.0 { return None; }
-    Some(cf.iter().map(|c| c.amount * g.powf(-m * c.time_years)).sum())
+    if g <= 0.0 {
+        return None;
+    }
+    Some(
+        cf.iter()
+            .map(|c| c.amount * g.powf(-m * c.time_years))
+            .sum(),
+    )
 }
 
 #[cfg(test)]
@@ -96,7 +118,10 @@ mod tests {
     fn ten_year_5pct() -> Vec<CashFlow> {
         let mut cf = Vec::new();
         for t in 1..=10 {
-            cf.push(CashFlow { time_years: t as f64, amount: 5.0 });
+            cf.push(CashFlow {
+                time_years: t as f64,
+                amount: 5.0,
+            });
         }
         cf.last_mut().unwrap().amount = 105.0;
         cf
@@ -114,7 +139,10 @@ mod tests {
 
     #[test]
     fn nan_cash_flow_returns_none() {
-        let bad = vec![CashFlow { time_years: 1.0, amount: f64::NAN }];
+        let bad = vec![CashFlow {
+            time_years: 1.0,
+            amount: f64::NAN,
+        }];
         assert!(compute(&bad, 0.05, 1).is_none());
     }
 
@@ -132,9 +160,13 @@ mod tests {
         let r = compute(&cf, 0.05, 1).unwrap();
         // The two estimators should agree to a few percent.
         let rel_diff = (r.analytic_convexity - r.effective_convexity).abs() / r.analytic_convexity;
-        assert!(rel_diff < 0.02,
+        assert!(
+            rel_diff < 0.02,
             "analytic {} vs effective {} differ by {:.2}%",
-            r.analytic_convexity, r.effective_convexity, rel_diff * 100.0);
+            r.analytic_convexity,
+            r.effective_convexity,
+            rel_diff * 100.0
+        );
     }
 
     #[test]
@@ -151,14 +183,20 @@ mod tests {
         let cf10 = ten_year_5pct();
         let mut cf30 = Vec::new();
         for t in 1..=30 {
-            cf30.push(CashFlow { time_years: t as f64, amount: 5.0 });
+            cf30.push(CashFlow {
+                time_years: t as f64,
+                amount: 5.0,
+            });
         }
         cf30.last_mut().unwrap().amount = 105.0;
         let r10 = compute(&cf10, 0.05, 1).unwrap();
         let r30 = compute(&cf30, 0.05, 1).unwrap();
-        assert!(r30.analytic_convexity > r10.analytic_convexity,
+        assert!(
+            r30.analytic_convexity > r10.analytic_convexity,
             "30y convexity {} should exceed 10y {}",
-            r30.analytic_convexity, r10.analytic_convexity);
+            r30.analytic_convexity,
+            r10.analytic_convexity
+        );
     }
 
     #[test]

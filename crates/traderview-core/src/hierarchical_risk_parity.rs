@@ -25,11 +25,17 @@ pub struct HrpReport {
 
 pub fn solve(covariance: &[Vec<f64>]) -> Option<HrpReport> {
     let n = covariance.len();
-    if n < 2 || covariance.iter().any(|r| r.len() != n) { return None; }
-    if covariance.iter().any(|r| r.iter().any(|c| !c.is_finite())) { return None; }
+    if n < 2 || covariance.iter().any(|r| r.len() != n) {
+        return None;
+    }
+    if covariance.iter().any(|r| r.iter().any(|c| !c.is_finite())) {
+        return None;
+    }
     // Build correlation matrix.
     let stdev: Vec<f64> = (0..n).map(|i| covariance[i][i].max(0.0).sqrt()).collect();
-    if stdev.iter().any(|s| *s <= 0.0) { return None; }
+    if stdev.iter().any(|s| *s <= 0.0) {
+        return None;
+    }
     let mut corr = vec![vec![0.0_f64; n]; n];
     for i in 0..n {
         for j in 0..n {
@@ -46,14 +52,20 @@ pub fn solve(covariance: &[Vec<f64>]) -> Option<HrpReport> {
     // Single-linkage clustering: build a quasi-diagonal ordering by
     // recursively bisecting at the most-distant pair.
     let cluster_order = quasi_diagonal_order(&dist);
-    if cluster_order.len() != n { return None; }
+    if cluster_order.len() != n {
+        return None;
+    }
     // Recursive bisection allocation.
     let mut weights = vec![1.0_f64; n];
     bisect_allocate(covariance, &cluster_order, 0, n, &mut weights);
     // Normalize.
     let total: f64 = weights.iter().sum();
-    if total <= 0.0 { return None; }
-    for w in weights.iter_mut() { *w /= total; }
+    if total <= 0.0 {
+        return None;
+    }
+    for w in weights.iter_mut() {
+        *w /= total;
+    }
     // Portfolio variance with HRP weights.
     let mut port_var = 0.0_f64;
     for i in 0..n {
@@ -61,12 +73,18 @@ pub fn solve(covariance: &[Vec<f64>]) -> Option<HrpReport> {
             port_var += weights[i] * weights[j] * covariance[i][j];
         }
     }
-    Some(HrpReport { weights, cluster_order, portfolio_variance: port_var })
+    Some(HrpReport {
+        weights,
+        cluster_order,
+        portfolio_variance: port_var,
+    })
 }
 
 fn quasi_diagonal_order(dist: &[Vec<f64>]) -> Vec<usize> {
     let n = dist.len();
-    if n == 0 { return Vec::new(); }
+    if n == 0 {
+        return Vec::new();
+    }
     // Simple agglomerative single-linkage merge that returns a leaf
     // ordering. We track clusters as lists of indices and at each step
     // merge the two clusters with the smallest min-distance.
@@ -79,10 +97,14 @@ fn quasi_diagonal_order(dist: &[Vec<f64>]) -> Vec<usize> {
                 let mut d_min = f64::INFINITY;
                 for &a in &clusters[i] {
                     for &b in &clusters[j] {
-                        if dist[a][b] < d_min { d_min = dist[a][b]; }
+                        if dist[a][b] < d_min {
+                            d_min = dist[a][b];
+                        }
                     }
                 }
-                if d_min < best.2 { best = (i, j, d_min); }
+                if d_min < best.2 {
+                    best = (i, j, d_min);
+                }
             }
         }
         let mut merged = clusters[best.0].clone();
@@ -95,25 +117,36 @@ fn quasi_diagonal_order(dist: &[Vec<f64>]) -> Vec<usize> {
 }
 
 fn bisect_allocate(cov: &[Vec<f64>], order: &[usize], lo: usize, hi: usize, weights: &mut [f64]) {
-    if hi - lo <= 1 { return; }
+    if hi - lo <= 1 {
+        return;
+    }
     let mid = lo + (hi - lo) / 2;
     let left = &order[lo..mid];
     let right = &order[mid..hi];
     let var_l = cluster_variance(cov, left);
     let var_r = cluster_variance(cov, right);
-    if var_l + var_r <= 0.0 { return; }
-    let alpha = 1.0 - var_l / (var_l + var_r);    // smaller variance gets larger weight
-    for &i in left { weights[i] *= alpha; }
-    for &i in right { weights[i] *= 1.0 - alpha; }
+    if var_l + var_r <= 0.0 {
+        return;
+    }
+    let alpha = 1.0 - var_l / (var_l + var_r); // smaller variance gets larger weight
+    for &i in left {
+        weights[i] *= alpha;
+    }
+    for &i in right {
+        weights[i] *= 1.0 - alpha;
+    }
     bisect_allocate(cov, order, lo, mid, weights);
     bisect_allocate(cov, order, mid, hi, weights);
 }
 
 fn cluster_variance(cov: &[Vec<f64>], cluster: &[usize]) -> f64 {
     let n = cluster.len();
-    if n == 0 { return 0.0; }
+    if n == 0 {
+        return 0.0;
+    }
     // Inverse-volatility weights within cluster as the seed weights.
-    let inv_vols: Vec<f64> = cluster.iter()
+    let inv_vols: Vec<f64> = cluster
+        .iter()
         .map(|&i| 1.0 / cov[i][i].max(1e-18).sqrt())
         .collect();
     let total: f64 = inv_vols.iter().sum();
@@ -156,8 +189,11 @@ mod tests {
         ];
         let r = solve(&cov).unwrap();
         for w in &r.weights {
-            assert!((w - 0.25).abs() < 0.01,
-                "expected equal weights, got {:?}", r.weights);
+            assert!(
+                (w - 0.25).abs() < 0.01,
+                "expected equal weights, got {:?}",
+                r.weights
+            );
         }
     }
 
@@ -189,10 +225,7 @@ mod tests {
 
     #[test]
     fn cluster_order_contains_all_indices() {
-        let cov = vec![
-            vec![0.04, 0.01],
-            vec![0.01, 0.09],
-        ];
+        let cov = vec![vec![0.04, 0.01], vec![0.01, 0.09]];
         let r = solve(&cov).unwrap();
         assert_eq!(r.cluster_order.len(), 2);
         let mut sorted = r.cluster_order.clone();

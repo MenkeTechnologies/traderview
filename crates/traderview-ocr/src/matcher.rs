@@ -146,8 +146,10 @@ mod tests {
         };
         let cands = vec![cand(1, 15, -450, "blue bottle coffee")];
         let matches = score(&receipt, &cands, 0.5);
-        assert!(matches.is_empty(),
-            "all-None receipt with threshold 0.5 must produce no matches");
+        assert!(
+            matches.is_empty(),
+            "all-None receipt with threshold 0.5 must produce no matches"
+        );
     }
 
     /// Receipt with only merchant set (no total, no date) — partial
@@ -169,8 +171,11 @@ mod tests {
         // Lower threshold 0.1 → included.
         let some = score(&receipt, &cands, 0.1);
         assert_eq!(some.len(), 1);
-        assert!((some[0].score - 0.20).abs() < 0.01,
-            "merchant-only match should score ~0.20, got {}", some[0].score);
+        assert!(
+            (some[0].score - 0.20).abs() < 0.01,
+            "merchant-only match should score ~0.20, got {}",
+            some[0].score
+        );
     }
 
     /// Empty candidates Vec → empty results, no panic.
@@ -200,8 +205,10 @@ mod tests {
         // it's definitively below 1.0: date off by 1.
         let cands = vec![cand(1, 16, -2500, "uber")];
         let matches = score(&receipt, &cands, 1.0);
-        assert!(matches.is_empty(),
-            "threshold 1.0 must reject day-off-by-1 (score < 1.0)");
+        assert!(
+            matches.is_empty(),
+            "threshold 1.0 must reject day-off-by-1 (score < 1.0)"
+        );
     }
 
     /// Threshold of 0.0 accepts everything — even zero-scoring
@@ -213,13 +220,13 @@ mod tests {
             total: None,
             date: None,
         };
-        let cands = vec![
-            cand(1, 15, -450, "anything"),
-            cand(2, 16, -100, "else"),
-        ];
+        let cands = vec![cand(1, 15, -450, "anything"), cand(2, 16, -100, "else")];
         let matches = score(&receipt, &cands, 0.0);
-        assert_eq!(matches.len(), 2,
-            "threshold 0.0 must include every candidate");
+        assert_eq!(
+            matches.len(),
+            2,
+            "threshold 0.0 must include every candidate"
+        );
         // All should score exactly 0.0 (all None receipt fields).
         for m in &matches {
             assert_eq!(m.score, 0.0);

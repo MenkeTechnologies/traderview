@@ -359,7 +359,10 @@ mod tests {
             ..baseline_texas_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LeasePurchaseDisclosureMode::NotApplicableNoLeaseToOwnComponent);
+        assert_eq!(
+            result.mode,
+            LeasePurchaseDisclosureMode::NotApplicableNoLeaseToOwnComponent
+        );
     }
 
     #[test]
@@ -369,13 +372,19 @@ mod tests {
             ..baseline_texas_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LeasePurchaseDisclosureMode::NotApplicableShortTermLeaseUnder180Days);
+        assert_eq!(
+            result.mode,
+            LeasePurchaseDisclosureMode::NotApplicableShortTermLeaseUnder180Days
+        );
     }
 
     #[test]
     fn texas_baseline_compliant() {
         let result = check(&baseline_texas_compliant());
-        assert_eq!(result.mode, LeasePurchaseDisclosureMode::CompliantTexas14DayCancellationRespected);
+        assert_eq!(
+            result.mode,
+            LeasePurchaseDisclosureMode::CompliantTexas14DayCancellationRespected
+        );
     }
 
     #[test]
@@ -385,7 +394,10 @@ mod tests {
             ..baseline_texas_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LeasePurchaseDisclosureMode::ViolationTexasExecutoryContractDisclosuresMissing);
+        assert_eq!(
+            result.mode,
+            LeasePurchaseDisclosureMode::ViolationTexasExecutoryContractDisclosuresMissing
+        );
     }
 
     #[test]
@@ -395,7 +407,10 @@ mod tests {
             ..baseline_texas_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LeasePurchaseDisclosureMode::ViolationTexasSevenDayNoticeLetterNotProvided);
+        assert_eq!(
+            result.mode,
+            LeasePurchaseDisclosureMode::ViolationTexasSevenDayNoticeLetterNotProvided
+        );
     }
 
     #[test]
@@ -405,7 +420,10 @@ mod tests {
             ..baseline_texas_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LeasePurchaseDisclosureMode::ViolationTexasContractNotRecordedWithin30Days);
+        assert_eq!(
+            result.mode,
+            LeasePurchaseDisclosureMode::ViolationTexasContractNotRecordedWithin30Days
+        );
     }
 
     #[test]
@@ -415,7 +433,10 @@ mod tests {
             ..baseline_texas_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LeasePurchaseDisclosureMode::ViolationTexasAnnualAccountingNotProvided);
+        assert_eq!(
+            result.mode,
+            LeasePurchaseDisclosureMode::ViolationTexasAnnualAccountingNotProvided
+        );
     }
 
     #[test]
@@ -425,7 +446,10 @@ mod tests {
             ..baseline_texas_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LeasePurchaseDisclosureMode::ViolationSafeActRmloLicenseNotObtained);
+        assert_eq!(
+            result.mode,
+            LeasePurchaseDisclosureMode::ViolationSafeActRmloLicenseNotObtained
+        );
     }
 
     #[test]
@@ -436,7 +460,10 @@ mod tests {
             ..baseline_texas_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LeasePurchaseDisclosureMode::CompliantDoddFrankOwnerFinancingExceptionSatisfied);
+        assert_eq!(
+            result.mode,
+            LeasePurchaseDisclosureMode::CompliantDoddFrankOwnerFinancingExceptionSatisfied
+        );
     }
 
     #[test]
@@ -447,7 +474,10 @@ mod tests {
             ..baseline_texas_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LeasePurchaseDisclosureMode::ViolationDoddFrankOwnerFinancingExceptionExceeded);
+        assert_eq!(
+            result.mode,
+            LeasePurchaseDisclosureMode::ViolationDoddFrankOwnerFinancingExceptionExceeded
+        );
     }
 
     #[test]
@@ -459,7 +489,10 @@ mod tests {
             ..baseline_texas_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LeasePurchaseDisclosureMode::ViolationDoddFrankOwnerFinancingExceptionExceeded);
+        assert_eq!(
+            result.mode,
+            LeasePurchaseDisclosureMode::ViolationDoddFrankOwnerFinancingExceptionExceeded
+        );
     }
 
     #[test]
@@ -470,7 +503,10 @@ mod tests {
             ..baseline_texas_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LeasePurchaseDisclosureMode::CompliantSafeActHomesteadFamilyExemption);
+        assert_eq!(
+            result.mode,
+            LeasePurchaseDisclosureMode::CompliantSafeActHomesteadFamilyExemption
+        );
     }
 
     #[test]
@@ -480,7 +516,10 @@ mod tests {
             ..baseline_texas_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LeasePurchaseDisclosureMode::CompliantCaliforniaCiv2985DisclosuresProvided);
+        assert_eq!(
+            result.mode,
+            LeasePurchaseDisclosureMode::CompliantCaliforniaCiv2985DisclosuresProvided
+        );
     }
 
     #[test]
@@ -491,7 +530,10 @@ mod tests {
             ..baseline_texas_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LeasePurchaseDisclosureMode::ViolationTexasExecutoryContractDisclosuresMissing);
+        assert_eq!(
+            result.mode,
+            LeasePurchaseDisclosureMode::ViolationTexasExecutoryContractDisclosuresMissing
+        );
     }
 
     #[test]
@@ -501,7 +543,10 @@ mod tests {
             ..baseline_texas_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LeasePurchaseDisclosureMode::CompliantIllinois765_71_1DisclosuresProvided);
+        assert_eq!(
+            result.mode,
+            LeasePurchaseDisclosureMode::CompliantIllinois765_71_1DisclosuresProvided
+        );
     }
 
     #[test]
@@ -511,7 +556,10 @@ mod tests {
             ..baseline_texas_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LeasePurchaseDisclosureMode::CompliantTexasAllExecutoryContractDisclosuresProvided);
+        assert_eq!(
+            result.mode,
+            LeasePurchaseDisclosureMode::CompliantTexasAllExecutoryContractDisclosuresProvided
+        );
     }
 
     #[test]
@@ -521,7 +569,10 @@ mod tests {
             ..baseline_texas_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LeasePurchaseDisclosureMode::CompliantTexasAllExecutoryContractDisclosuresProvided);
+        assert_eq!(
+            result.mode,
+            LeasePurchaseDisclosureMode::CompliantTexasAllExecutoryContractDisclosuresProvided
+        );
     }
 
     #[test]
@@ -531,7 +582,10 @@ mod tests {
             ..baseline_texas_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LeasePurchaseDisclosureMode::CompliantTexas14DayCancellationRespected);
+        assert_eq!(
+            result.mode,
+            LeasePurchaseDisclosureMode::CompliantTexas14DayCancellationRespected
+        );
     }
 
     #[test]
@@ -541,7 +595,10 @@ mod tests {
             ..baseline_texas_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LeasePurchaseDisclosureMode::CompliantTexas14DayCancellationRespected);
+        assert_eq!(
+            result.mode,
+            LeasePurchaseDisclosureMode::CompliantTexas14DayCancellationRespected
+        );
     }
 
     #[test]

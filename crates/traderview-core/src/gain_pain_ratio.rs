@@ -34,14 +34,27 @@ pub fn compute(returns: &[f64]) -> Option<GpReport> {
     let mut n_loss = 0_usize;
     let mut any_valid = false;
     for r in returns {
-        if !r.is_finite() { continue; }
+        if !r.is_finite() {
+            continue;
+        }
         any_valid = true;
-        if *r > 0.0 { gain += r; n_gain += 1; }
-        else if *r < 0.0 { pain += -r; n_loss += 1; }
+        if *r > 0.0 {
+            gain += r;
+            n_gain += 1;
+        } else if *r < 0.0 {
+            pain += -r;
+            n_loss += 1;
+        }
     }
-    if !any_valid { return None; }
+    if !any_valid {
+        return None;
+    }
     let ratio = if pain == 0.0 {
-        if gain == 0.0 { 0.0 } else { f64::INFINITY }
+        if gain == 0.0 {
+            0.0
+        } else {
+            f64::INFINITY
+        }
     } else {
         gain / pain
     };
@@ -128,7 +141,9 @@ mod tests {
     #[test]
     fn rolling_window_returns_consistent_values() {
         // 100 alternating ±1% returns → GPR ≈ 1 in each window.
-        let r: Vec<f64> = (0_usize..100).map(|i| if i.is_multiple_of(2) { 0.01 } else { -0.01 }).collect();
+        let r: Vec<f64> = (0_usize..100)
+            .map(|i| if i.is_multiple_of(2) { 0.01 } else { -0.01 })
+            .collect();
         let out = rolling(&r, 20);
         for v in out.iter().flatten() {
             assert!((v - 1.0).abs() < 1e-9, "expected GPR ≈ 1, got {v}");

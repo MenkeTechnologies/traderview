@@ -41,8 +41,16 @@ pub fn compute(trade_pnls: &[f64], window: usize) -> Vec<DynamicKellyPoint> {
         // the avg/payoff escape as Inf; with NaN every comparison is
         // false so NaN trades silently get treated as zero-pnl, but a
         // mix of NaN+Inf in the same window would produce NaN payoff.
-        let wins: Vec<f64> = w.iter().filter(|p| p.is_finite() && **p > 0.0).cloned().collect();
-        let losses: Vec<f64> = w.iter().filter(|p| p.is_finite() && **p < 0.0).map(|p| -p).collect();
+        let wins: Vec<f64> = w
+            .iter()
+            .filter(|p| p.is_finite() && **p > 0.0)
+            .cloned()
+            .collect();
+        let losses: Vec<f64> = w
+            .iter()
+            .filter(|p| p.is_finite() && **p < 0.0)
+            .map(|p| -p)
+            .collect();
         let wr = wins.len() as f64 / window as f64;
         let payoff = if losses.is_empty() {
             None
@@ -55,7 +63,11 @@ pub fn compute(trade_pnls: &[f64], window: usize) -> Vec<DynamicKellyPoint> {
                 let p = avg_win / avg_loss;
                 // Subnormal avg_loss can make the ratio overflow to Inf
                 // even when both numerator and denominator are finite.
-                if p.is_finite() { Some(p) } else { None }
+                if p.is_finite() {
+                    Some(p)
+                } else {
+                    None
+                }
             } else {
                 None
             }
@@ -92,7 +104,11 @@ mod tests {
         // producing NaN in window_win_rate for every output point. The
         // empty-vec return makes window==0 an explicit error case.
         let r = compute(&[100.0, -50.0, 100.0], 0);
-        assert!(r.is_empty(), "window=0 must yield no points, got {} pts", r.len());
+        assert!(
+            r.is_empty(),
+            "window=0 must yield no points, got {} pts",
+            r.len()
+        );
     }
 
     #[test]

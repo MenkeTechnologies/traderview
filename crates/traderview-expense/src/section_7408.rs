@@ -119,13 +119,11 @@ pub fn compute(input: &Section7408Input) -> Section7408Result {
     let mut conduct_categories: Vec<String> = Vec::new();
 
     if input.engaged_in_section_6700_conduct {
-        conduct_categories
-            .push("§ 6700 — abusive tax shelter promotion".to_string());
+        conduct_categories.push("§ 6700 — abusive tax shelter promotion".to_string());
     }
     if input.engaged_in_section_6701_conduct {
-        conduct_categories.push(
-            "§ 6701 — aiding and abetting understatement of tax liability".to_string(),
-        );
+        conduct_categories
+            .push("§ 6701 — aiding and abetting understatement of tax liability".to_string());
     }
     if input.engaged_in_section_6707_conduct {
         conduct_categories.push(
@@ -139,10 +137,8 @@ pub fn compute(input: &Section7408Input) -> Section7408Result {
             .push("§ 6708 — material advisor failure to maintain advisee list".to_string());
     }
     if input.violated_circular_230 {
-        conduct_categories.push(
-            "31 U.S.C. § 330 — violation of Circular 230 (practice before IRS)"
-                .to_string(),
-        );
+        conduct_categories
+            .push("31 U.S.C. § 330 — violation of Circular 230 (practice before IRS)".to_string());
     }
 
     let specified_conduct_engaged = !conduct_categories.is_empty();
@@ -162,7 +158,11 @@ pub fn compute(input: &Section7408Input) -> Section7408Result {
              prevent recurrence. Court may permanently enjoin further conduct under \
              § 7408(b). Action proceeds in U.S. District Court ({}).",
             conduct_categories.len(),
-            if conduct_categories.len() == 1 { "y" } else { "ies" },
+            if conduct_categories.len() == 1 {
+                "y"
+            } else {
+                "ies"
+            },
             if venue_treats_as_dc {
                 "District of Columbia per § 7408(e) — non-resident provision"
             } else {
@@ -383,7 +383,10 @@ mod tests {
         b.injunction_appropriate_to_prevent_recurrence = true;
         let r = compute(&b);
         assert!(r.injunction_available);
-        assert!(r.conduct_categories.iter().any(|c| c.contains("31 U.S.C. § 330")));
+        assert!(r
+            .conduct_categories
+            .iter()
+            .any(|c| c.contains("31 U.S.C. § 330")));
     }
 
     // ── Multiple categories aggregate ─────────────────────────
@@ -427,7 +430,10 @@ mod tests {
         b.person_resides_in_us_district = false;
         let r = compute(&b);
         assert!(r.venue_treats_as_dc);
-        assert!(r.violations.iter().any(|v| v.contains("District of Columbia")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("District of Columbia")));
     }
 
     #[test]
@@ -463,12 +469,9 @@ mod tests {
             b.injunction_appropriate_to_prevent_recurrence = *app;
             let r = compute(&b);
             assert_eq!(
-                r.injunction_available,
-                *expected,
+                r.injunction_available, *expected,
                 "sec={} conduct={} app={}",
-                sec,
-                conduct,
-                app
+                sec, conduct, app
             );
         }
     }

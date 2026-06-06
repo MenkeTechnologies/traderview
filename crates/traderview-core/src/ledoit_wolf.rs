@@ -31,11 +31,19 @@ pub fn estimate(returns: &[Vec<f64>]) -> Option<LedoitWolfReport> {
     // Input: returns[t][i] — T rows × N cols. Equivalently transpose if
     // caller has assets-first; we adopt time-first.
     let t_obs = returns.len();
-    if t_obs < 3 { return None; }
+    if t_obs < 3 {
+        return None;
+    }
     let n = returns[0].len();
-    if n < 2 { return None; }
-    if returns.iter().any(|row| row.len() != n) { return None; }
-    if returns.iter().any(|row| row.iter().any(|x| !x.is_finite())) { return None; }
+    if n < 2 {
+        return None;
+    }
+    if returns.iter().any(|row| row.len() != n) {
+        return None;
+    }
+    if returns.iter().any(|row| row.iter().any(|x| !x.is_finite())) {
+        return None;
+    }
     let t_f = t_obs as f64;
     // Sample mean.
     let mut means = vec![0.0_f64; n];
@@ -62,7 +70,7 @@ pub fn estimate(returns: &[Vec<f64>]) -> Option<LedoitWolfReport> {
     // Per-asset stdev.
     let stdev: Vec<f64> = (0..n).map(|i| sample_cov[i][i].max(0.0).sqrt()).collect();
     if stdev.iter().any(|s| !s.is_finite() || *s <= 0.0) {
-        return None;    // any zero-variance asset makes correlation undefined
+        return None; // any zero-variance asset makes correlation undefined
     }
     // Average pairwise correlation r̄.
     let mut sum_corr = 0.0_f64;
@@ -74,7 +82,11 @@ pub fn estimate(returns: &[Vec<f64>]) -> Option<LedoitWolfReport> {
             pairs += 1;
         }
     }
-    let r_bar = if pairs > 0 { sum_corr / pairs as f64 } else { 0.0 };
+    let r_bar = if pairs > 0 {
+        sum_corr / pairs as f64
+    } else {
+        0.0
+    };
     // Target T_ij = r̄ · σ_i · σ_j (diagonal = σ_i²).
     let mut target = vec![vec![0.0_f64; n]; n];
     for i in 0..n {
@@ -87,7 +99,7 @@ pub fn estimate(returns: &[Vec<f64>]) -> Option<LedoitWolfReport> {
         }
     }
     // π̂ — sum of asymptotic variances of sample-cov entries.
-    #[allow(clippy::needless_range_loop)]    // i, j indices both needed for matrix access
+    #[allow(clippy::needless_range_loop)] // i, j indices both needed for matrix access
     let mut pi_hat = 0.0_f64;
     for i in 0..n {
         for j in 0..n {
@@ -110,12 +122,13 @@ pub fn estimate(returns: &[Vec<f64>]) -> Option<LedoitWolfReport> {
     }
     for i in 0..n {
         for j in 0..n {
-            if i == j { continue; }
+            if i == j {
+                continue;
+            }
             let theta_ii_ij = theta_kk_ij(&demeaned, &sample_cov, i, i, j, t_obs);
             let theta_jj_ij = theta_kk_ij(&demeaned, &sample_cov, j, i, j, t_obs);
-            rho_hat += (r_bar / 2.0) * (
-                (stdev[j] / stdev[i]) * theta_ii_ij + (stdev[i] / stdev[j]) * theta_jj_ij
-            );
+            rho_hat += (r_bar / 2.0)
+                * ((stdev[j] / stdev[i]) * theta_ii_ij + (stdev[i] / stdev[j]) * theta_jj_ij);
         }
     }
     // γ̂ — squared Frobenius distance between sample cov and target.
@@ -168,7 +181,14 @@ fn pi_term_diag(demeaned: &[Vec<f64>], cov: &[Vec<f64>], i: usize, t: usize) -> 
     sum
 }
 
-fn theta_kk_ij(demeaned: &[Vec<f64>], cov: &[Vec<f64>], k: usize, i: usize, j: usize, t: usize) -> f64 {
+fn theta_kk_ij(
+    demeaned: &[Vec<f64>],
+    cov: &[Vec<f64>],
+    k: usize,
+    i: usize,
+    j: usize,
+    t: usize,
+) -> f64 {
     let mut acc = 0.0_f64;
     for row in demeaned {
         let dk = row[k];
@@ -183,10 +203,18 @@ mod tests {
 
     fn rand_matrix(t: usize, n: usize, seed: u64) -> Vec<Vec<f64>> {
         let mut state = seed;
-        (0..t).map(|_| (0..n).map(|_| {
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
-            ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.04
-        }).collect()).collect()
+        (0..t)
+            .map(|_| {
+                (0..n)
+                    .map(|_| {
+                        state = state
+                            .wrapping_mul(6364136223846793005)
+                            .wrapping_add(1442695040888963407);
+                        ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.04
+                    })
+                    .collect()
+            })
+            .collect()
     }
 
     #[test]
@@ -228,7 +256,9 @@ mod tests {
         let r = rand_matrix(100, 4, 7);
         let report = estimate(&r).unwrap();
         for i in 0..4 {
-            assert!((report.shrunk_covariance[i][i] - report.sample_covariance[i][i]).abs() < 1e-12);
+            assert!(
+                (report.shrunk_covariance[i][i] - report.sample_covariance[i][i]).abs() < 1e-12
+            );
         }
     }
 
@@ -238,7 +268,9 @@ mod tests {
         let report = estimate(&r).unwrap();
         for i in 0..4 {
             for j in 0..4 {
-                assert!((report.shrunk_covariance[i][j] - report.shrunk_covariance[j][i]).abs() < 1e-12);
+                assert!(
+                    (report.shrunk_covariance[i][j] - report.shrunk_covariance[j][i]).abs() < 1e-12
+                );
             }
         }
     }
@@ -248,9 +280,12 @@ mod tests {
         // Fewer observations → more shrinkage toward structured target.
         let small = estimate(&rand_matrix(20, 5, 13)).unwrap();
         let large = estimate(&rand_matrix(500, 5, 13)).unwrap();
-        assert!(small.shrinkage_intensity >= large.shrinkage_intensity,
+        assert!(
+            small.shrinkage_intensity >= large.shrinkage_intensity,
             "small T should shrink more than large T: small={} large={}",
-            small.shrinkage_intensity, large.shrinkage_intensity);
+            small.shrinkage_intensity,
+            large.shrinkage_intensity
+        );
     }
 
     #[test]

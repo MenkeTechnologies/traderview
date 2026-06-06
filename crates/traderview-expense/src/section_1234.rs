@@ -412,7 +412,11 @@ mod tests {
     fn holder_exercised_no_realized_event() {
         // §1234(a)(4) — premium folds into basis of acquired underlying.
         // The option itself does not produce a separately reportable event.
-        let r = compute(&holder_input(CloseType::Exercised, dec!(500), Decimal::ZERO));
+        let r = compute(&holder_input(
+            CloseType::Exercised,
+            dec!(500),
+            Decimal::ZERO,
+        ));
         assert!(r.is_basis_adjustment_event);
         assert_eq!(r.gain_loss, Decimal::ZERO);
         assert_eq!(r.rule, Section1234Rule::HolderExercise);
@@ -482,7 +486,11 @@ mod tests {
 
     #[test]
     fn zero_premium_writer_lapsed_zero_gain() {
-        let r = compute(&writer_input(CloseType::Lapsed, Decimal::ZERO, Decimal::ZERO));
+        let r = compute(&writer_input(
+            CloseType::Lapsed,
+            Decimal::ZERO,
+            Decimal::ZERO,
+        ));
         assert_eq!(r.gain_loss, Decimal::ZERO);
         assert_eq!(r.character, TaxCharacter::ShortTermCapital);
     }

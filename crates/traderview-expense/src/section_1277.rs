@@ -500,15 +500,7 @@ mod tests {
         for prior in [0_i64, 1_000, 5_000, 10_000] {
             for ndie_paid in [0_i64, 5_000, 15_000] {
                 for accrued in [0_i64, 5_000] {
-                    let r = compute(&input(
-                        ndie_paid,
-                        0,
-                        accrued,
-                        false,
-                        true,
-                        0,
-                        prior,
-                    ));
+                    let r = compute(&input(ndie_paid, 0, accrued, false, true, 0, prior));
                     assert_eq!(
                         r.remaining_carryover_to_future_years_cents, 0,
                         "disposition year must zero carryover (prior={prior} NDIE={ndie_paid} \

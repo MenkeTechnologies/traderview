@@ -8,21 +8,22 @@
 //!
 //! Modules:
 //!   * [`brackets`] — ordinary income tax brackets per filing status.
-//!   * [`se_tax`]   — self-employment tax (Schedule SE), 15.3% on
-//!                    92.35% of net SE earnings, SS portion capped at
-//!                    the 2025 wage base.
-//!   * [`qbi`]      — § 199A qualified business income deduction.
-//!   * [`credits`]  — Child Tax Credit + Other Dependent Credit + EITC.
-//!   * [`engine`]   — `TaxReturn` → `TaxResult` orchestrator.
+//!   * [`se_tax`] — self-employment tax (Schedule SE), 15.3% on 92.35%
+//!     of net SE earnings, SS portion capped at the 2025 wage base.
+//!   * [`qbi`] — § 199A qualified business income deduction.
+//!   * [`credits`] — Child Tax Credit + Other Dependent Credit + EITC.
+//!   * [`engine`] — `TaxReturn` → `TaxResult` orchestrator.
+//!   * [`safe_harbor`] — IRC § 6654 quarterly estimated-tax safe harbor.
+//!   * [`what_if`] — scenario delta engine for refund/owed planning.
 
 pub mod brackets;
-pub mod se_tax;
-pub mod qbi;
 pub mod credits;
 pub mod engine;
+pub mod qbi;
 pub mod safe_harbor;
+pub mod se_tax;
 pub mod what_if;
 
-pub use engine::{TaxReturn, TaxResult, FilingStatus, compute};
-pub use safe_harbor::{SafeHarborInput, SafeHarborResult, compute as compute_safe_harbor};
-pub use what_if::{Scenario, WhatIfResult, compute_what_if};
+pub use engine::{compute, FilingStatus, TaxResult, TaxReturn};
+pub use safe_harbor::{compute as compute_safe_harbor, SafeHarborInput, SafeHarborResult};
+pub use what_if::{compute_what_if, Scenario, WhatIfResult};

@@ -46,11 +46,15 @@ pub struct CollarReport {
 }
 
 pub fn analyze(c: &Collar) -> Option<CollarReport> {
-    if !c.stock_basis.is_finite() || c.stock_basis <= 0.0
-        || !c.put_strike.is_finite() || c.put_strike <= 0.0
-        || !c.call_strike.is_finite() || c.call_strike <= 0.0
+    if !c.stock_basis.is_finite()
+        || c.stock_basis <= 0.0
+        || !c.put_strike.is_finite()
+        || c.put_strike <= 0.0
+        || !c.call_strike.is_finite()
+        || c.call_strike <= 0.0
         || !c.net_option_debit_per_share.is_finite()
-        || !c.shares.is_finite() || c.shares == 0.0
+        || !c.shares.is_finite()
+        || c.shares == 0.0
         || c.put_strike >= c.call_strike
     {
         return None;
@@ -104,21 +108,25 @@ mod tests {
 
     #[test]
     fn invalid_inputs_return_none() {
-        let mut bad = collar(); bad.stock_basis = 0.0;
+        let mut bad = collar();
+        bad.stock_basis = 0.0;
         assert!(analyze(&bad).is_none());
-        let mut bad = collar(); bad.shares = 0.0;
+        let mut bad = collar();
+        bad.shares = 0.0;
         assert!(analyze(&bad).is_none());
-        let mut bad = collar(); bad.put_strike = 120.0;    // put > call
+        let mut bad = collar();
+        bad.put_strike = 120.0; // put > call
         assert!(analyze(&bad).is_none());
-        let mut bad = collar(); bad.net_option_debit_per_share = f64::NAN;
+        let mut bad = collar();
+        bad.net_option_debit_per_share = f64::NAN;
         assert!(analyze(&bad).is_none());
     }
 
     #[test]
     fn zero_cost_collar_max_profit_equals_call_minus_basis() {
         let r = analyze(&collar()).unwrap();
-        assert!((r.max_profit - 1_000.0).abs() < 1e-9);    // (110-100)·100
-        assert!((r.max_loss + 500.0).abs() < 1e-9);        // (95-100)·100
+        assert!((r.max_profit - 1_000.0).abs() < 1e-9); // (110-100)·100
+        assert!((r.max_loss + 500.0).abs() < 1e-9); // (95-100)·100
     }
 
     #[test]

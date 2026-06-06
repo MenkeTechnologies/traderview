@@ -346,7 +346,10 @@ mod tests {
         i.keyless_bolting_each_exterior_door = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 92.153(a)") && v.contains("keyless bolting device")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 92.153(a)") && v.contains("keyless bolting device")));
     }
 
     #[test]
@@ -355,7 +358,10 @@ mod tests {
         i.door_viewer_each_exterior_door = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 92.153(a)") && v.contains("door viewer")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 92.153(a)") && v.contains("door viewer")));
     }
 
     #[test]
@@ -364,7 +370,10 @@ mod tests {
         i.one_door_with_keyed_and_keyless_deadbolts = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 92.153(b)") && v.contains("ONE exterior door")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 92.153(b)") && v.contains("ONE exterior door")));
     }
 
     #[test]
@@ -373,7 +382,10 @@ mod tests {
         i.sliding_door_pin_or_latch_or_bar = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 92.153(c)") && v.contains("sliding door pin lock OR")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 92.153(c)") && v.contains("sliding door pin lock OR")));
     }
 
     #[test]
@@ -383,7 +395,10 @@ mod tests {
         i.sliding_door_pin_or_latch_or_bar = false;
         let r = check(&i);
         assert!(r.compliant);
-        assert!(r.notes.iter().any(|n| n.contains("construction completed before September 1, 1993")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("construction completed before September 1, 1993")));
     }
 
     #[test]
@@ -401,7 +416,10 @@ mod tests {
         i.installed_at_landlord_expense = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 92.153(d)") && v.contains("LANDLORD'S EXPENSE")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 92.153(d)") && v.contains("LANDLORD'S EXPENSE")));
     }
 
     #[test]
@@ -410,25 +428,36 @@ mod tests {
         i.devices_operable_throughout_tenancy = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 92.153(e)") && v.contains("OPERABLE")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 92.153(e)") && v.contains("OPERABLE")));
     }
 
     #[test]
     fn tx_statutory_damages_note_present() {
         let r = check(&tx_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("§§ 92.164, 92.165") && n.contains("one month's rent plus $500")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§§ 92.164, 92.165") && n.contains("one month's rent plus $500")));
     }
 
     #[test]
     fn tx_definitions_note_describes_door_viewer() {
         let r = check(&tx_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("§ 92.151") && n.contains("door viewer")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 92.151") && n.contains("door viewer")));
     }
 
     #[test]
     fn tx_citation_pins_subchapter_d_sections() {
         let r = check(&tx_compliant());
-        assert!(r.citation.contains("§§ 92.151, 92.153, 92.156, 92.164, 92.165"));
+        assert!(r
+            .citation
+            .contains("§§ 92.151, 92.153, 92.156, 92.164, 92.165"));
         assert!(r.citation.contains("Subchapter D"));
     }
 
@@ -444,7 +473,10 @@ mod tests {
         i.deadbolt_on_main_entry_doors = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 1941.3(a)(1)") && v.contains("DEADBOLT")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1941.3(a)(1)") && v.contains("DEADBOLT")));
     }
 
     #[test]
@@ -453,7 +485,10 @@ mod tests {
         i.window_security_devices_on_accessible_windows = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 1941.3(a)(2)") && v.contains("WINDOW SECURITY")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1941.3(a)(2)") && v.contains("WINDOW SECURITY")));
     }
 
     #[test]
@@ -462,7 +497,10 @@ mod tests {
         i.garage_door_locking_mechanism_if_applicable = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 1941.3(a)(3)") && v.contains("garage doors")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1941.3(a)(3)") && v.contains("garage doors")));
     }
 
     #[test]
@@ -480,13 +518,19 @@ mod tests {
         i.devices_operable_throughout_tenancy = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 1941.3(b)") && v.contains("WORKING ORDER")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1941.3(b)") && v.contains("WORKING ORDER")));
     }
 
     #[test]
     fn ca_implied_warranty_note_present() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("§ 1941.1") && n.contains("implied warranty of habitability")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1941.1") && n.contains("implied warranty of habitability")));
     }
 
     #[test]
@@ -507,13 +551,20 @@ mod tests {
         i.devices_operable_throughout_tenancy = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("common-law") && v.contains("negligence-per-se")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("common-law") && v.contains("negligence-per-se")));
     }
 
     #[test]
     fn default_hilder_javins_note_present() {
         let r = check(&default_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("Hilder v. St. Peter") && n.contains("Javins v. First National Realty")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Hilder v. St. Peter")
+                && n.contains("Javins v. First National Realty")));
     }
 
     #[test]
@@ -537,8 +588,16 @@ mod tests {
             i.deadbolt_on_main_entry_doors = true;
             i.window_security_devices_on_accessible_windows = true;
             let r = check(&i);
-            let kb_violations: Vec<_> = r.violations.iter().filter(|v| v.contains("§ 92.153(a)")).collect();
-            assert!(kb_violations.is_empty(), "regime {:?} should not require TX keyless bolting", regime);
+            let kb_violations: Vec<_> = r
+                .violations
+                .iter()
+                .filter(|v| v.contains("§ 92.153(a)"))
+                .collect();
+            assert!(
+                kb_violations.is_empty(),
+                "regime {:?} should not require TX keyless bolting",
+                regime
+            );
         }
     }
 

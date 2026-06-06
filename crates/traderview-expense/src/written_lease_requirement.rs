@@ -107,16 +107,14 @@ pub fn check(input: &Input) -> CheckResult {
     let statute_of_frauds_requires_writing = exceeds_one_year;
 
     // Illinois year-to-year conversion for oral > 1-year lease.
-    let illinois_conversion = matches!(input.regime, Regime::Illinois)
-        && exceeds_one_year
-        && !input.lease_is_written;
+    let illinois_conversion =
+        matches!(input.regime, Regime::Illinois) && exceeds_one_year && !input.lease_is_written;
     let minimum_termination_notice_days = if illinois_conversion { 60 } else { 0 };
 
     // Part-performance exception engages where Statute of Frauds
     // would otherwise bar enforcement.
-    let part_performance_engages = exceeds_one_year
-        && !input.lease_is_written
-        && input.substantial_part_performance;
+    let part_performance_engages =
+        exceeds_one_year && !input.lease_is_written && input.substantial_part_performance;
 
     // Enforceability.
     // Enforceable if (a) written, (b) ≤ 1 year oral, (c) Illinois
@@ -276,11 +274,10 @@ mod tests {
         assert!(r.illinois_year_to_year_conversion_applies);
         assert!(r.lease_enforceable);
         assert_eq!(r.minimum_termination_notice_days, 60);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("Illinois") && n.contains("year-to-year") && n.contains("60-day"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Illinois") && n.contains("year-to-year") && n.contains("60-day")));
     }
 
     #[test]
@@ -307,11 +304,7 @@ mod tests {
         let r = check(&i);
         assert!(r.part_performance_exception_applies);
         assert!(r.lease_enforceable);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("Part-performance"))
-        );
+        assert!(r.notes.iter().any(|n| n.contains("Part-performance")));
     }
 
     #[test]
@@ -337,11 +330,10 @@ mod tests {
     #[test]
     fn new_york_plain_language_note_present() {
         let r = check(&base(Regime::NewYork, 365, true));
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 5-702") && n.contains("plain_language_lease"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 5-702") && n.contains("plain_language_lease")));
     }
 
     // ── California § 1624(a)(3) ────────────────────────────────
@@ -392,12 +384,9 @@ mod tests {
         // 365 days = at boundary = NOT requiring writing (≤ 1 year
         // permitted oral). 366 days = above boundary = requires
         // writing.
-        for (days, expected_requires_writing) in [
-            (1_u32, false),
-            (365, false),
-            (366, true),
-            (730, true),
-        ] {
+        for (days, expected_requires_writing) in
+            [(1_u32, false), (365, false), (366, true), (730, true)]
+        {
             let r = check(&base(Regime::Default, days, false));
             assert_eq!(
                 r.statute_of_frauds_requires_writing, expected_requires_writing,
@@ -443,8 +432,7 @@ mod tests {
                 assert!(
                     r.lease_enforceable,
                     "{:?} term={}: written lease must be enforceable",
-                    regime,
-                    term,
+                    regime, term,
                 );
             }
         }
@@ -464,8 +452,7 @@ mod tests {
                 assert!(
                     r.lease_enforceable,
                     "{:?} term={}: oral lease ≤ 1 year must be enforceable",
-                    regime,
-                    term,
+                    regime, term,
                 );
             }
         }
@@ -487,8 +474,7 @@ mod tests {
                     !r.lease_enforceable,
                     "{:?} term={}: oral lease > 1 year without IL conversion or part \
                      performance must NOT be enforceable",
-                    regime,
-                    term,
+                    regime, term,
                 );
             }
             // Illinois always enforces via year-to-year conversion.
@@ -519,31 +505,21 @@ mod tests {
 
     #[test]
     fn citation_pins_authority_per_regime() {
-        assert!(
-            check(&base(Regime::NewYork, 730, true))
-                .citation
-                .contains("§ 5-703")
-        );
-        assert!(
-            check(&base(Regime::Illinois, 730, true))
-                .citation
-                .contains("740 ILCS 80/2")
-        );
-        assert!(
-            check(&base(Regime::California, 730, true))
-                .citation
-                .contains("§ 1624(a)(3)")
-        );
-        assert!(
-            check(&base(Regime::Washington, 730, true))
-                .citation
-                .contains("RCW 59.18.230")
-        );
-        assert!(
-            check(&base(Regime::Default, 730, true))
-                .citation
-                .contains("UCC § 2A-201")
-        );
+        assert!(check(&base(Regime::NewYork, 730, true))
+            .citation
+            .contains("§ 5-703"));
+        assert!(check(&base(Regime::Illinois, 730, true))
+            .citation
+            .contains("740 ILCS 80/2"));
+        assert!(check(&base(Regime::California, 730, true))
+            .citation
+            .contains("§ 1624(a)(3)"));
+        assert!(check(&base(Regime::Washington, 730, true))
+            .citation
+            .contains("RCW 59.18.230"));
+        assert!(check(&base(Regime::Default, 730, true))
+            .citation
+            .contains("UCC § 2A-201"));
     }
 
     #[test]
@@ -559,8 +535,7 @@ mod tests {
             assert!(
                 r.notes
                     .iter()
-                    .any(|n| n.contains("plain_language_lease")
-                        && n.contains("lease_translation")),
+                    .any(|n| n.contains("plain_language_lease") && n.contains("lease_translation")),
                 "{:?}: sibling-module note must be present",
                 regime,
             );

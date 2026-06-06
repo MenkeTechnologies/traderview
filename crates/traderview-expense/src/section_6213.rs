@@ -159,8 +159,7 @@ pub fn compute(input: &Section6213Input) -> Section6213Result {
         );
     } else if petition_timely {
         notes.push(
-            "§ 6213(a) — assessment restricted until Tax Court decision becomes final"
-                .to_string(),
+            "§ 6213(a) — assessment restricted until Tax Court decision becomes final".to_string(),
         );
     }
 
@@ -228,10 +227,7 @@ mod tests {
         let r = compute(&i);
         assert_eq!(r.statute_period_days, 150);
         assert!(r.petition_timely);
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("150 days")));
+        assert!(r.notes.iter().any(|n| n.contains("150 days")));
     }
 
     #[test]
@@ -257,10 +253,7 @@ mod tests {
         let r = compute(&i);
         assert_eq!(r.effective_deadline_days, 91);
         assert!(r.petition_timely);
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("Saturday, Sunday")));
+        assert!(r.notes.iter().any(|n| n.contains("Saturday, Sunday")));
     }
 
     #[test]
@@ -383,7 +376,10 @@ mod tests {
         i.assessment_made_after_period = false;
         let r = compute(&i);
         assert!(!r.petition_timely);
-        assert!(r.assessment_restricted, "IRS held off → restriction preserved by inaction");
+        assert!(
+            r.assessment_restricted,
+            "IRS held off → restriction preserved by inaction"
+        );
     }
 
     #[test]

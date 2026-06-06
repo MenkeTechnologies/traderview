@@ -206,8 +206,8 @@ pub fn check(input: &TenantLeaseGuarantorDisclosureInput) -> TenantLeaseGuaranto
         );
     }
 
-    let blacklist_violation = input.jurisdiction == Jurisdiction::NewYork
-        && input.used_housing_court_blacklist;
+    let blacklist_violation =
+        input.jurisdiction == Jurisdiction::NewYork && input.used_housing_court_blacklist;
     if blacklist_violation {
         failure_reasons.push(
             "NY HSTPA 2019 — tenant blacklist prohibition: landlord may NOT use Housing Court litigation history as basis for denial; $500-$1,000 civil penalty per violation; UCS records sealed under HSTPA 2019".to_string(),
@@ -224,9 +224,9 @@ pub fn check(input: &TenantLeaseGuarantorDisclosureInput) -> TenantLeaseGuaranto
 
     let material_modification_extinguishes_guaranty = match input.jurisdiction {
         Jurisdiction::California => input.material_modification_without_consent,
-        Jurisdiction::Default
-        | Jurisdiction::NewYork
-        | Jurisdiction::NewJersey => input.material_modification_without_consent,
+        Jurisdiction::Default | Jurisdiction::NewYork | Jurisdiction::NewJersey => {
+            input.material_modification_without_consent
+        }
     };
     if material_modification_extinguishes_guaranty {
         match input.jurisdiction {
@@ -256,8 +256,8 @@ pub fn check(input: &TenantLeaseGuarantorDisclosureInput) -> TenantLeaseGuaranto
         }
     }
 
-    let fcra_adverse_action_notice_required = input.credit_report_pulled
-        && input.adverse_action_taken;
+    let fcra_adverse_action_notice_required =
+        input.credit_report_pulled && input.adverse_action_taken;
     if fcra_adverse_action_notice_required && !input.fcra_adverse_action_notice_provided {
         failure_reasons.push(
             "15 USC § 1681m + § 1681n + § 1681o — Federal FCRA ADVERSE ACTION NOTICE required when landlord denies guaranty based in whole or in part on consumer credit report; notice must include (1) identity of credit reporting agency; (2) statement of guarantor's right to free copy within 60 days; (3) statement of right to dispute inaccurate information; willful violation = actual + punitive damages + attorney fees; negligent violation = actual damages + attorney fees".to_string(),
@@ -348,8 +348,10 @@ mod tests {
         i.retroactive_guarantor_required = true;
         let r = check(&i);
         assert!(r.retroactive_guarantor_prohibited);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("HSTPA 2019")
-            && f.contains("retroactively require guarantor")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("HSTPA 2019") && f.contains("retroactively require guarantor")));
     }
 
     #[test]
@@ -421,7 +423,8 @@ mod tests {
         i.material_modification_without_consent = true;
         let r = check(&i);
         assert!(r.material_modification_extinguishes_guaranty);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("Restatement (Third) of Suretyship and Guaranty § 41")
+        assert!(r.failure_reasons.iter().any(|f| f
+            .contains("Restatement (Third) of Suretyship and Guaranty § 41")
             && f.contains("EXTINGUISHED")));
     }
 
@@ -431,8 +434,10 @@ mod tests {
         i.jurisdiction = Jurisdiction::NewJersey;
         i.copy_of_lease_provided_to_guarantor = false;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("46:8-26")
-            && f.contains("COPY OF LEASE")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("46:8-26") && f.contains("COPY OF LEASE")));
     }
 
     #[test]
@@ -441,8 +446,10 @@ mod tests {
         i.jurisdiction = Jurisdiction::NewJersey;
         i.guaranty_specifies_monetary_limit = false;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("46:8-26")
-            && f.contains("MONETARY LIMIT")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("46:8-26") && f.contains("MONETARY LIMIT")));
     }
 
     #[test]
@@ -483,7 +490,10 @@ mod tests {
         i.adverse_action_taken = true;
         i.fcra_adverse_action_notice_provided = true;
         let r = check(&i);
-        assert!(!r.failure_reasons.iter().any(|f| f.contains("§ 1681m") && f.contains("ADVERSE ACTION NOTICE")));
+        assert!(!r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1681m") && f.contains("ADVERSE ACTION NOTICE")));
     }
 
     #[test]
@@ -540,7 +550,9 @@ mod tests {
         assert!(r.citation.contains("15 USC § 1681m"));
         assert!(r.citation.contains("15 USC § 1681n"));
         assert!(r.citation.contains("15 USC § 1681o"));
-        assert!(r.citation.contains("Restatement (Third) of Suretyship and Guaranty (1996)"));
+        assert!(r
+            .citation
+            .contains("Restatement (Third) of Suretyship and Guaranty (1996)"));
     }
 
     #[test]
@@ -555,9 +567,12 @@ mod tests {
     #[test]
     fn note_pins_ny_blacklist_prohibition() {
         let r = check(&ny_rent_stabilized_baseline());
-        assert!(r.notes.iter().any(|n| n.contains("TENANT BLACKLIST PROHIBITION")
-            && n.contains("$500-$1,000")
-            && n.contains("UCS records sealed")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("TENANT BLACKLIST PROHIBITION")
+                && n.contains("$500-$1,000")
+                && n.contains("UCS records sealed")));
     }
 
     #[test]
@@ -581,15 +596,19 @@ mod tests {
     #[test]
     fn note_pins_ca_1670_5_unconscionability() {
         let r = check(&ny_rent_stabilized_baseline());
-        assert!(r.notes.iter().any(|n| n.contains("§ 1670.5")
-            && n.contains("UNCONSCIONABILITY")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1670.5") && n.contains("UNCONSCIONABILITY")));
     }
 
     #[test]
     fn note_pins_ca_2799_continuing_guaranty_revocation() {
         let r = check(&ny_rent_stabilized_baseline());
-        assert!(r.notes.iter().any(|n| n.contains("§ 2799")
-            && n.contains("CONTINUING GUARANTY REVOCATION")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 2799") && n.contains("CONTINUING GUARANTY REVOCATION")));
     }
 
     #[test]
@@ -603,10 +622,13 @@ mod tests {
     #[test]
     fn note_pins_fcra_adverse_action_notice() {
         let r = check(&ny_rent_stabilized_baseline());
-        assert!(r.notes.iter().any(|n| n.contains("§ 1681b PERMISSIBLE PURPOSE")
-            && n.contains("§ 1681m ADVERSE ACTION NOTICE")
-            && n.contains("60-day free-copy right")
-            && n.contains("dispute right")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1681b PERMISSIBLE PURPOSE")
+                && n.contains("§ 1681m ADVERSE ACTION NOTICE")
+                && n.contains("60-day free-copy right")
+                && n.contains("dispute right")));
     }
 
     #[test]
@@ -621,7 +643,8 @@ mod tests {
     #[test]
     fn note_pins_restatement_third_suretyship_1996() {
         let r = check(&ny_rent_stabilized_baseline());
-        assert!(r.notes.iter().any(|n| n.contains("Restatement (Third) of Suretyship and Guaranty (1996)")
+        assert!(r.notes.iter().any(|n| n
+            .contains("Restatement (Third) of Suretyship and Guaranty (1996)")
             && n.contains("§ 41 MATERIAL MODIFICATION EXTINGUISHES")
             && n.contains("§ 39 NOVATION EXTINGUISHES")
             && n.contains("STRICTLY CONSTRUED")));
@@ -630,11 +653,14 @@ mod tests {
     #[test]
     fn note_pins_trader_landlord_critical_summary() {
         let r = check(&ny_rent_stabilized_baseline());
-        assert!(r.notes.iter().any(|n| n.contains("Trader-landlord critical")
-            && n.contains("NY HSTPA aggregate one-month cap")
-            && n.contains("FCRA adverse-action notice")
-            && n.contains("material-modification rule")
-            && n.contains("exact monetary cap")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-landlord critical")
+                && n.contains("NY HSTPA aggregate one-month cap")
+                && n.contains("FCRA adverse-action notice")
+                && n.contains("material-modification rule")
+                && n.contains("exact monetary cap")));
     }
 
     #[test]

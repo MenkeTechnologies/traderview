@@ -21,8 +21,12 @@
 pub fn compute(closes: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = closes.len();
     let mut out = vec![None; n];
-    if period < 3 || n < period { return out; }
-    if closes.iter().any(|x| !x.is_finite()) { return out; }
+    if period < 3 || n < period {
+        return out;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     let p_f = period as f64;
     // Precomputed x statistics.
     let sx: f64 = (0..period).map(|k| k as f64).sum();
@@ -34,9 +38,15 @@ pub fn compute(closes: &[f64], period: usize) -> Vec<Option<f64>> {
         let syy: f64 = win.iter().map(|y| y * y).sum();
         let sxy: f64 = win.iter().enumerate().map(|(k, y)| k as f64 * y).sum();
         let var_y = p_f * syy - sy * sy;
-        if var_y <= 0.0 { *slot = Some(0.0); continue; }
+        if var_y <= 0.0 {
+            *slot = Some(0.0);
+            continue;
+        }
         let denom = denom_x * var_y.sqrt();
-        if denom <= 0.0 { *slot = Some(0.0); continue; }
+        if denom <= 0.0 {
+            *slot = Some(0.0);
+            continue;
+        }
         *slot = Some((p_f * sxy - sx * sy) / denom);
     }
     out
@@ -62,9 +72,9 @@ mod tests {
 
     #[test]
     fn output_in_signed_unit_range() {
-        let c: Vec<f64> = (0..200).map(|i| {
-            100.0 + (i as f64 * 0.1).sin() * 5.0
-        }).collect();
+        let c: Vec<f64> = (0..200)
+            .map(|i| 100.0 + (i as f64 * 0.1).sin() * 5.0)
+            .collect();
         let r = compute(&c, 20);
         for v in r.iter().flatten() {
             assert!((-1.0..=1.0).contains(v));
@@ -89,7 +99,9 @@ mod tests {
     fn flat_market_yields_zero() {
         let c = vec![100.0_f64; 50];
         let r = compute(&c, 20);
-        for v in r.iter().flatten() { assert!(v.abs() < 1e-9); }
+        for v in r.iter().flatten() {
+            assert!(v.abs() < 1e-9);
+        }
     }
 
     #[test]

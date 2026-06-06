@@ -291,7 +291,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.rule_applies);
         assert!(r.compliant);
-        assert!(r.notes.iter().any(|n| n.contains("does NOT qualify as covered multifamily")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("does NOT qualify as covered multifamily")));
     }
 
     #[test]
@@ -310,7 +313,10 @@ mod tests {
         i.terrain_impracticality_documented = true;
         let r = check(&i);
         assert!(r.compliant);
-        assert!(r.notes.iter().any(|n| n.contains("terrain/unusual-site impracticality defense")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("terrain/unusual-site impracticality defense")));
     }
 
     #[test]
@@ -319,7 +325,10 @@ mod tests {
         i.accessible_public_common_use_areas = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 100.205(c)(2)") && v.contains("Requirement 2")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 100.205(c)(2)") && v.contains("Requirement 2")));
     }
 
     #[test]
@@ -328,7 +337,10 @@ mod tests {
         i.usable_doors_for_wheelchair = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 100.205(c)(3)") && v.contains("wheelchair passage")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 100.205(c)(3)") && v.contains("wheelchair passage")));
     }
 
     #[test]
@@ -346,7 +358,10 @@ mod tests {
         i.environmental_controls_accessible_locations = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 100.205(c)(5)") && v.contains("thermostats")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 100.205(c)(5)") && v.contains("thermostats")));
     }
 
     #[test]
@@ -355,7 +370,10 @@ mod tests {
         i.reinforced_walls_for_grab_bars = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 100.205(c)(6)") && v.contains("grab-bar")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 100.205(c)(6)") && v.contains("grab-bar")));
     }
 
     #[test]
@@ -364,7 +382,10 @@ mod tests {
         i.usable_kitchens_and_bathrooms = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 100.205(c)(7)") && v.contains("wheelchair maneuverability")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 100.205(c)(7)") && v.contains("wheelchair maneuverability")));
     }
 
     #[test]
@@ -390,7 +411,8 @@ mod tests {
         let mut i = full_compliance();
         i.usable_doors_for_wheelchair = false;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("42 U.S.C. § 3613(c)") && n.contains("actual + punitive + attorney fees")));
+        assert!(r.notes.iter().any(|n| n.contains("42 U.S.C. § 3613(c)")
+            && n.contains("actual + punitive + attorney fees")));
     }
 
     #[test]
@@ -409,7 +431,10 @@ mod tests {
             let mut i = base.clone();
             break_fn(&mut i);
             let r = check(&i);
-            assert!(!r.compliant, "single requirement gap should violate compliance");
+            assert!(
+                !r.compliant,
+                "single requirement gap should violate compliance"
+            );
         }
     }
 
@@ -427,7 +452,10 @@ mod tests {
     #[test]
     fn federal_floor_note_always_present() {
         let r = check(&full_compliance());
-        assert!(r.notes.iter().any(|n| n.contains("FEDERAL FLOOR") && n.contains("state codes")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("FEDERAL FLOOR") && n.contains("state codes")));
     }
 
     #[test]
@@ -461,7 +489,10 @@ mod tests {
         let mut i = full_compliance();
         i.usable_doors_for_wheelchair = false;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("$25597") || n.contains("$25,597")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("$25597") || n.contains("$25,597")));
     }
 
     #[test]
@@ -470,7 +501,10 @@ mod tests {
         i.usable_doors_for_wheelchair = false;
         i.prior_violation_within_5_years = true;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("$63991") || n.contains("$63,991")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("$63991") || n.contains("$63,991")));
     }
 
     #[test]
@@ -537,8 +571,10 @@ mod tests {
             prior_violation_within_5_years: false,
         };
         let r = check(&i);
-        assert!(r.compliant, "grandfathered building immune from compliance check");
+        assert!(
+            r.compliant,
+            "grandfathered building immune from compliance check"
+        );
         assert!(r.violations.is_empty());
     }
 }
-

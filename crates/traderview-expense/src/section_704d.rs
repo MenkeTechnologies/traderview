@@ -97,8 +97,7 @@ pub fn compute(input: &Section704dInput) -> Section704dResult {
     let basis_for_loss_absorption = outside_basis_before_loss.max(Decimal::ZERO);
 
     // Step 2: Total potential loss = current + prior carryforward.
-    let total_potential_loss =
-        input.allocated_partnership_loss + input.prior_year_suspended_loss;
+    let total_potential_loss = input.allocated_partnership_loss + input.prior_year_suspended_loss;
 
     // Step 3: Allowed loss = min(total potential, basis).
     let allowed = total_potential_loss.min(basis_for_loss_absorption);

@@ -20,11 +20,20 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
-pub enum SwingDirection { #[default] Initial, Up, Down }
+pub enum SwingDirection {
+    #[default]
+    Initial,
+    Up,
+    Down,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct GannSwingReport {
@@ -44,8 +53,13 @@ pub fn compute(bars: &[Bar], reversal_bars: usize) -> GannSwingReport {
         current_low: vec![None; n],
         reversal_bars,
     };
-    if reversal_bars < 1 || n < reversal_bars + 1 { return report; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if reversal_bars < 1 || n < reversal_bars + 1 {
+        return report;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return report;
     }
     let mut dir = SwingDirection::Initial;
@@ -73,7 +87,9 @@ pub fn compute(bars: &[Bar], reversal_bars: usize) -> GannSwingReport {
                 }
             }
             SwingDirection::Up => {
-                if bar.high > cur_high { cur_high = bar.high; }
+                if bar.high > cur_high {
+                    cur_high = bar.high;
+                }
                 if bar.close < bars[i - 1].close {
                     down_count += 1;
                 } else {
@@ -88,7 +104,9 @@ pub fn compute(bars: &[Bar], reversal_bars: usize) -> GannSwingReport {
                 }
             }
             SwingDirection::Down => {
-                if bar.low < cur_low { cur_low = bar.low; }
+                if bar.low < cur_low {
+                    cur_low = bar.low;
+                }
                 if bar.close > bars[i - 1].close {
                     up_count += 1;
                 } else {
@@ -115,7 +133,13 @@ pub fn compute(bars: &[Bar], reversal_bars: usize) -> GannSwingReport {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {

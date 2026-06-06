@@ -54,9 +54,15 @@ pub fn compute(bars: &[BreadthBar]) -> BreadthReport {
         if b.up_volume.is_finite() && b.down_volume.is_finite() {
             uv += b.up_volume - b.down_volume;
         }
-        if !ad.is_finite() { ad = 0.0; }
-        if !nh.is_finite() { nh = 0.0; }
-        if !uv.is_finite() { uv = 0.0; }
+        if !ad.is_finite() {
+            ad = 0.0;
+        }
+        if !nh.is_finite() {
+            nh = 0.0;
+        }
+        if !uv.is_finite() {
+            uv = 0.0;
+        }
         report.ad_line[i] = ad;
         report.net_new_highs_line[i] = nh;
         report.up_down_volume_line[i] = uv;
@@ -70,9 +76,12 @@ mod tests {
 
     fn b(adv: i64, dec: i64, nh: i64, nl: i64, uv: f64, dv: f64) -> BreadthBar {
         BreadthBar {
-            advancing_issues: adv, declining_issues: dec,
-            new_52w_highs: nh, new_52w_lows: nl,
-            up_volume: uv, down_volume: dv,
+            advancing_issues: adv,
+            declining_issues: dec,
+            new_52w_highs: nh,
+            new_52w_lows: nl,
+            up_volume: uv,
+            down_volume: dv,
         }
     }
 
@@ -93,9 +102,9 @@ mod tests {
     #[test]
     fn ad_line_is_cumulative_sum_of_net_advances() {
         let bars = vec![
-            b(2000, 1000, 0, 0, 0.0, 0.0),    // +1000 net
-            b(1500, 1500, 0, 0, 0.0, 0.0),    // 0 net
-            b(1000, 2000, 0, 0, 0.0, 0.0),    // -1000 net
+            b(2000, 1000, 0, 0, 0.0, 0.0), // +1000 net
+            b(1500, 1500, 0, 0, 0.0, 0.0), // 0 net
+            b(1000, 2000, 0, 0, 0.0, 0.0), // -1000 net
         ];
         let r = compute(&bars);
         assert_eq!(r.ad_line, vec![1000.0, 1000.0, 0.0]);

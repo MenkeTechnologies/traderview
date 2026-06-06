@@ -133,80 +133,80 @@ pub fn compute(input: &Section1298Input) -> Section1298Result {
     let mut violations: Vec<String> = Vec::new();
 
     // § 1298(a) attribution rules.
-    let (corporation_engages, partnership_engages, option_engages, attributed_value) =
-        match input.ownership_type {
-            OwnershipType::Direct => (false, false, false, input.pfic_stock_value_cents.max(0)),
-            OwnershipType::ThroughCorporation50PctValue => {
-                let engages = input.upstream_value_ownership_bp
-                    >= SECTION_1298A2_VALUE_THRESHOLD_BP;
-                if engages {
-                    notes.push(format!(
-                        "§ 1298(a)(2) — 50%+ value corporation attribution ENGAGES; person owns \
+    let (corporation_engages, partnership_engages, option_engages, attributed_value) = match input
+        .ownership_type
+    {
+        OwnershipType::Direct => (false, false, false, input.pfic_stock_value_cents.max(0)),
+        OwnershipType::ThroughCorporation50PctValue => {
+            let engages = input.upstream_value_ownership_bp >= SECTION_1298A2_VALUE_THRESHOLD_BP;
+            if engages {
+                notes.push(format!(
+                    "§ 1298(a)(2) — 50%+ value corporation attribution ENGAGES; person owns \
                          {} basis points ({}%) of corporation's stock; proportionate share of \
                          corp's PFIC stock attributed.",
-                        input.upstream_value_ownership_bp,
-                        input.upstream_value_ownership_bp as f64 / 100.0,
-                    ));
-                }
-                let value = if engages {
-                    input
-                        .pfic_stock_value_cents
-                        .max(0)
-                        .saturating_mul(input.upstream_value_ownership_bp as i64)
-                        / 10_000
-                } else {
-                    0
-                };
-                (engages, false, false, value)
-            }
-            OwnershipType::ThroughCorporationBelow50Pct => {
-                notes.push(format!(
-                    "§ 1298(a)(2) attribution does NOT engage — corporation ownership of {} \
-                     basis points ({}%) is below 50% value threshold.",
                     input.upstream_value_ownership_bp,
                     input.upstream_value_ownership_bp as f64 / 100.0,
                 ));
-                (false, false, false, 0)
             }
-            OwnershipType::ThroughPartnership
-            | OwnershipType::ThroughTrust
-            | OwnershipType::ThroughEstate => {
-                let entity_label = match input.ownership_type {
-                    OwnershipType::ThroughPartnership => "partnership",
-                    OwnershipType::ThroughTrust => "trust",
-                    OwnershipType::ThroughEstate => "estate",
-                    _ => unreachable!(),
-                };
-                notes.push(format!(
-                    "§ 1298(a)(3) — {} proportionate attribution ENGAGES regardless of \
+            let value = if engages {
+                input
+                    .pfic_stock_value_cents
+                    .max(0)
+                    .saturating_mul(input.upstream_value_ownership_bp as i64)
+                    / 10_000
+            } else {
+                0
+            };
+            (engages, false, false, value)
+        }
+        OwnershipType::ThroughCorporationBelow50Pct => {
+            notes.push(format!(
+                "§ 1298(a)(2) attribution does NOT engage — corporation ownership of {} \
+                     basis points ({}%) is below 50% value threshold.",
+                input.upstream_value_ownership_bp,
+                input.upstream_value_ownership_bp as f64 / 100.0,
+            ));
+            (false, false, false, 0)
+        }
+        OwnershipType::ThroughPartnership
+        | OwnershipType::ThroughTrust
+        | OwnershipType::ThroughEstate => {
+            let entity_label = match input.ownership_type {
+                OwnershipType::ThroughPartnership => "partnership",
+                OwnershipType::ThroughTrust => "trust",
+                OwnershipType::ThroughEstate => "estate",
+                _ => unreachable!(),
+            };
+            notes.push(format!(
+                "§ 1298(a)(3) — {} proportionate attribution ENGAGES regardless of \
                      percentage; partner/beneficiary owns proportionate share of {}'s PFIC \
                      stock at {} basis points ({}%).",
-                    entity_label,
-                    entity_label,
-                    input.upstream_value_ownership_bp,
-                    input.upstream_value_ownership_bp as f64 / 100.0,
-                ));
-                let value = input
-                    .pfic_stock_value_cents
-                    .max(0)
-                    .saturating_mul(input.upstream_value_ownership_bp as i64)
-                    / 10_000;
-                (false, true, false, value)
-            }
-            OwnershipType::ThroughOption => {
-                notes.push(
-                    "§ 1298(a)(4) — option to acquire PFIC stock treated as ownership to the \
+                entity_label,
+                entity_label,
+                input.upstream_value_ownership_bp,
+                input.upstream_value_ownership_bp as f64 / 100.0,
+            ));
+            let value = input
+                .pfic_stock_value_cents
+                .max(0)
+                .saturating_mul(input.upstream_value_ownership_bp as i64)
+                / 10_000;
+            (false, true, false, value)
+        }
+        OwnershipType::ThroughOption => {
+            notes.push(
+                "§ 1298(a)(4) — option to acquire PFIC stock treated as ownership to the \
                      extent provided in Treasury regulations."
-                        .to_string(),
-                );
-                let value = input
-                    .pfic_stock_value_cents
-                    .max(0)
-                    .saturating_mul(input.upstream_value_ownership_bp as i64)
-                    / 10_000;
-                (false, false, true, value)
-            }
-        };
+                    .to_string(),
+            );
+            let value = input
+                .pfic_stock_value_cents
+                .max(0)
+                .saturating_mul(input.upstream_value_ownership_bp as i64)
+                / 10_000;
+            (false, false, true, value)
+        }
+    };
 
     // § 1298(b)(6) pledge-as-security deemed disposition.
     let deemed_disposition = input.stock_pledged_as_security;
@@ -346,11 +346,10 @@ mod tests {
         ));
         assert!(!r.corporation_attribution_engages);
         assert_eq!(r.attributed_pfic_ownership_cents, 0);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1298(a)(2)") && n.contains("does NOT engage"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1298(a)(2)") && n.contains("does NOT engage")));
     }
 
     // ── § 1298(a)(3) partnership/trust/estate attribution ──────
@@ -413,11 +412,10 @@ mod tests {
         ));
         assert!(r.option_attribution_engages);
         assert_eq!(r.attributed_pfic_ownership_cents, 100_000);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1298(a)(4)") && n.contains("option"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1298(a)(4)") && n.contains("option")));
     }
 
     // ── Direct ownership ───────────────────────────────────────
@@ -451,11 +449,10 @@ mod tests {
             true,
         ));
         assert!(r.deemed_disposition_under_1298b6);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1298(b)(6)") && n.to_lowercase().contains("disposed"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1298(b)(6)") && n.to_lowercase().contains("disposed")));
     }
 
     #[test]
@@ -484,35 +481,23 @@ mod tests {
             true,
         ));
         assert!(r.purging_election_made);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1298(b)(1)")
-                    && n.contains("§ 1291(d)(2)")
-                    && n.contains("§ 1297(d)"))
-        );
+        assert!(r.notes.iter().any(|n| n.contains("§ 1298(b)(1)")
+            && n.contains("§ 1291(d)(2)")
+            && n.contains("§ 1297(d)")));
     }
 
     // ── § 1298(f) annual reporting ─────────────────────────────
 
     #[test]
     fn annual_reporting_required_for_direct_ownership() {
-        let mut i = input(
-            OwnershipType::Direct,
-            10_000,
-            100_000,
-            false,
-            false,
-            false,
-        );
+        let mut i = input(OwnershipType::Direct, 10_000, 100_000, false, false, false);
         let r = compute(&i);
         assert!(r.annual_form_8621_reporting_required);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("§ 1298(f)") && v.contains("Form 8621"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1298(f)") && v.contains("Form 8621")));
         i.annual_form_8621_filed = true;
         assert!(compute(&i).compliant);
     }
@@ -566,14 +551,7 @@ mod tests {
             } else {
                 OwnershipType::ThroughCorporationBelow50Pct
             };
-            let r = compute(&input(
-                ownership_type,
-                bp,
-                100_000,
-                false,
-                false,
-                true,
-            ));
+            let r = compute(&input(ownership_type, bp, 100_000, false, false, true));
             assert_eq!(
                 r.corporation_attribution_engages, expected_engages,
                 "bp={} expected_engages={}",
@@ -592,19 +570,11 @@ mod tests {
             OwnershipType::ThroughEstate,
         ] {
             for bp in [1_u32, 100, 1_000, 5_000, 10_000] {
-                let r = compute(&input(
-                    ownership_type,
-                    bp,
-                    100_000,
-                    false,
-                    false,
-                    true,
-                ));
+                let r = compute(&input(ownership_type, bp, 100_000, false, false, true));
                 assert!(
                     r.partnership_trust_estate_attribution_engages,
                     "{:?} at {}bp: must engage",
-                    ownership_type,
-                    bp,
+                    ownership_type, bp,
                 );
             }
         }
@@ -651,24 +621,17 @@ mod tests {
     fn annual_reporting_violation_iff_required_and_not_filed_invariant() {
         // 4-cell truth table.
         for (required_via_attribution, filed, expected_compliant) in [
-            (true, true, true),    // required + filed = compliant
-            (true, false, false),  // required + not filed = violation
-            (false, true, true),   // not required + filed = compliant
-            (false, false, true),  // not required + not filed = compliant
+            (true, true, true),   // required + filed = compliant
+            (true, false, false), // required + not filed = violation
+            (false, true, true),  // not required + filed = compliant
+            (false, false, true), // not required + not filed = compliant
         ] {
             let ownership_type = if required_via_attribution {
                 OwnershipType::Direct
             } else {
                 OwnershipType::ThroughCorporationBelow50Pct
             };
-            let r = compute(&input(
-                ownership_type,
-                4_999,
-                100_000,
-                false,
-                false,
-                filed,
-            ));
+            let r = compute(&input(ownership_type, 4_999, 100_000, false, false, filed));
             assert_eq!(
                 r.compliant, expected_compliant,
                 "required_via_attribution={} filed={} expected_compliant={}",
@@ -710,14 +673,7 @@ mod tests {
             OwnershipType::ThroughEstate,
             OwnershipType::ThroughOption,
         ] {
-            let r = compute(&input(
-                ownership_type,
-                5_000,
-                100_000,
-                false,
-                false,
-                true,
-            ));
+            let r = compute(&input(ownership_type, 5_000, 100_000, false, false, true));
             assert!(
                 r.notes.iter().any(|n| n.contains("section_1297")
                     && n.contains("§ 1295")

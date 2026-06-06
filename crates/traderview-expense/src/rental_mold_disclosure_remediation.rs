@@ -158,11 +158,9 @@ pub fn check(input: &Input) -> Output {
         };
     }
 
-    let licensed_required = matches!(
-        input.jurisdiction,
-        Jurisdiction::NewYorkCityLocalLaw55
-    ) && input.estimated_affected_area_square_feet
-        > NYC_LICENSED_REMEDIATION_THRESHOLD_SQUARE_FEET;
+    let licensed_required = matches!(input.jurisdiction, Jurisdiction::NewYorkCityLocalLaw55)
+        && input.estimated_affected_area_square_feet
+            > NYC_LICENSED_REMEDIATION_THRESHOLD_SQUARE_FEET;
 
     if matches!(input.jurisdiction, Jurisdiction::NewYorkCityLocalLaw55)
         && licensed_required

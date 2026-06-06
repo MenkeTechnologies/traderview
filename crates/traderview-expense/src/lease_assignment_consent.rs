@@ -609,7 +609,10 @@ mod tests {
         silent.consent_clause_specifies_standard = false;
         silent.pre_1983_lease = true;
         let r_silent = check(&silent);
-        assert_eq!(r_silent.standard_for_consent, ConsentStandard::Unconditional);
+        assert_eq!(
+            r_silent.standard_for_consent,
+            ConsentStandard::Unconditional
+        );
 
         let mut express = input(Regime::California, TransferType::Assignment);
         express.consent_clause_specifies_standard = true;
@@ -635,8 +638,8 @@ mod tests {
                 b.tenant_request_pending_days = 30;
                 b.landlord_responded_with_reason = false;
                 let r = check(&b);
-                let should_engage = matches!(regime, Regime::NewYork)
-                    && matches!(transfer, TransferType::Sublease);
+                let should_engage =
+                    matches!(regime, Regime::NewYork) && matches!(transfer, TransferType::Sublease);
                 assert_eq!(
                     r.deemed_consent_engaged, should_engage,
                     "regime={:?}, transfer={:?}",
@@ -652,7 +655,9 @@ mod tests {
         assert!(r.citation.contains("N.Y. Real Prop. Law § 226-b"));
         assert!(r.citation.contains("Cal. Civ. Code § 1995.260"));
         assert!(r.citation.contains("Cal. Civ. Code § 1995.270"));
-        assert!(r.citation.contains("Restatement (Second) of Property § 15.2"));
+        assert!(r
+            .citation
+            .contains("Restatement (Second) of Property § 15.2"));
         assert!(r.citation.contains("Kendall v. Ernest Pestana"));
         assert!(r.citation.contains("September 23, 1983"));
     }
@@ -674,10 +679,10 @@ mod tests {
         // 4-cell truth table — release engages only on
         // (Assignment, unreasonable refusal).
         let cells = [
-            (TransferType::Assignment, false, true),  // unreasonable → release
-            (TransferType::Assignment, true, false),  // reasonable → no release
-            (TransferType::Sublease, false, false),   // sublease branch instead
-            (TransferType::Sublease, true, false),    // sublease branch
+            (TransferType::Assignment, false, true), // unreasonable → release
+            (TransferType::Assignment, true, false), // reasonable → no release
+            (TransferType::Sublease, false, false),  // sublease branch instead
+            (TransferType::Sublease, true, false),   // sublease branch
         ];
         for (transfer, reasonable, expected_release) in cells.iter() {
             let mut b = input(Regime::NewYork, *transfer);

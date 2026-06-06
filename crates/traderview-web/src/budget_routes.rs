@@ -25,7 +25,10 @@ use serde::{Deserialize, Serialize};
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/", get(list_budgets))
-        .route("/categories/:code", put(upsert_category).delete(delete_category))
+        .route(
+            "/categories/:code",
+            put(upsert_category).delete(delete_category),
+        )
         .route("/savings-goal", put(set_savings_goal))
         .route("/snapshot", get(snapshot))
 }
@@ -103,12 +106,11 @@ async fn list_budgets(
     .fetch_all(&s.pool)
     .await?;
 
-    let target: Option<Decimal> = sqlx::query_scalar(
-        "SELECT monthly_target FROM budget_savings_goals WHERE user_id = $1",
-    )
-    .bind(user.id)
-    .fetch_optional(&s.pool)
-    .await?;
+    let target: Option<Decimal> =
+        sqlx::query_scalar("SELECT monthly_target FROM budget_savings_goals WHERE user_id = $1")
+            .bind(user.id)
+            .fetch_optional(&s.pool)
+            .await?;
 
     Ok(Json(BudgetIndex {
         categories: cats,
@@ -176,7 +178,9 @@ async fn set_savings_goal(
     .bind(body.monthly_target)
     .execute(&s.pool)
     .await?;
-    Ok(Json(serde_json::json!({ "monthly_target": body.monthly_target })))
+    Ok(Json(
+        serde_json::json!({ "monthly_target": body.monthly_target }),
+    ))
 }
 
 async fn snapshot(
@@ -252,9 +256,13 @@ async fn snapshot(
             continue;
         }
         categories.push(CategoryProgress {
-            category_code: code, label,
-            monthly_limit: limit, spent,
-            pct, over, paused,
+            category_code: code,
+            label,
+            monthly_limit: limit,
+            spent,
+            pct,
+            over,
+            paused,
         });
     }
 
@@ -277,33 +285,34 @@ async fn snapshot(
     let income = income_row.unwrap_or(Decimal::ZERO);
 
     let net = income - total_expense;
-    let target: Option<Decimal> = sqlx::query_scalar(
-        "SELECT monthly_target FROM budget_savings_goals WHERE user_id = $1",
-    )
-    .bind(user.id)
-    .fetch_optional(&s.pool)
-    .await?;
+    let target: Option<Decimal> =
+        sqlx::query_scalar("SELECT monthly_target FROM budget_savings_goals WHERE user_id = $1")
+            .bind(user.id)
+            .fetch_optional(&s.pool)
+            .await?;
     let target = target.unwrap_or(Decimal::ZERO);
 
     let savings_rate = if income > Decimal::ZERO {
         let r = net / income;
         let f: f32 = r.try_into().unwrap_or(0.0);
-        (f * 100.0).max(-999.0).min(999.0)
+        (f * 100.0).clamp(-999.0, 999.0)
     } else {
         0.0
     };
     let target_met = net >= target;
 
     // Sort the categories: over-budget first, then by absolute spend.
-    categories.sort_by(|a, b| {
-        b.over.cmp(&a.over)
-            .then_with(|| b.spent.cmp(&a.spent))
-    });
+    categories.sort_by(|a, b| b.over.cmp(&a.over).then_with(|| b.spent.cmp(&a.spent)));
 
     Ok(Json(BudgetSnapshot {
-        year, month, income, expense: total_expense, net,
+        year,
+        month,
+        income,
+        expense: total_expense,
+        net,
         monthly_savings_target: target,
-        savings_rate, target_met,
+        savings_rate,
+        target_met,
         categories,
         over_budget_categories: over_count,
     }))
@@ -327,7 +336,7 @@ mod logic {
         let savings_rate = if income > Decimal::ZERO {
             let r = net / income;
             let f: f32 = r.try_into().unwrap_or(0.0);
-            (f * 100.0).max(-999.0).min(999.0)
+            (f * 100.0).clamp(-999.0, 999.0)
         } else {
             0.0
         };
@@ -356,8 +365,10 @@ mod logic {
             Decimal::from(500),
         );
         assert_eq!(net, Decimal::from(-1_000));
-        assert!((rate - (-25.0)).abs() < 0.01,
-            "rate should be -25%, got {rate}");
+        assert!(
+            (rate - (-25.0)).abs() < 0.01,
+            "rate should be -25%, got {rate}"
+        );
         assert!(!met, "overspending must not meet positive savings target");
     }
 
@@ -370,7 +381,10 @@ mod logic {
             Decimal::from(1_500),
         );
         assert_eq!(net, Decimal::from(2_000));
-        assert!((rate - 33.333_3).abs() < 0.01, "33.3% savings rate expected, got {rate}");
+        assert!(
+            (rate - 33.333_3).abs() < 0.01,
+            "33.3% savings rate expected, got {rate}"
+        );
         assert!(met);
     }
 
@@ -393,8 +407,8 @@ mod logic {
             !paused && limit > Decimal::ZERO && spent > limit
         }
         assert!(over(Decimal::from(120), Decimal::from(100), false));
-        assert!(!over(Decimal::from(120), Decimal::from(100), true));  // paused
-        assert!(!over(Decimal::from(120), Decimal::ZERO, false));      // no limit set
+        assert!(!over(Decimal::from(120), Decimal::from(100), true)); // paused
+        assert!(!over(Decimal::from(120), Decimal::ZERO, false)); // no limit set
         assert!(!over(Decimal::from(100), Decimal::from(100), false)); // at the limit (not over)
     }
 
@@ -416,10 +430,7 @@ mod logic {
 
     /// Mirror of the handler's sort: over-budget first, then spend DESC.
     fn sort_cats(mut v: Vec<CP>) -> Vec<CP> {
-        v.sort_by(|a, b| {
-            b.over.cmp(&a.over)
-                .then_with(|| b.spent.cmp(&a.spent))
-        });
+        v.sort_by(|a, b| b.over.cmp(&a.over).then_with(|| b.spent.cmp(&a.spent)));
         v
     }
 
@@ -433,13 +444,31 @@ mod logic {
         // A high-spending but on-budget category must rank BELOW a
         // low-spend over-budget category.
         let cats = vec![
-            CP { code: "rent",   spent: Decimal::from(2000), limit: Decimal::from(2500), paused: false, over: false },
-            CP { code: "candy",  spent: Decimal::from(60),   limit: Decimal::from(50),   paused: false, over: true  },
-            CP { code: "food",   spent: Decimal::from(800),  limit: Decimal::from(1000), paused: false, over: false },
+            CP {
+                code: "rent",
+                spent: Decimal::from(2000),
+                limit: Decimal::from(2500),
+                paused: false,
+                over: false,
+            },
+            CP {
+                code: "candy",
+                spent: Decimal::from(60),
+                limit: Decimal::from(50),
+                paused: false,
+                over: true,
+            },
+            CP {
+                code: "food",
+                spent: Decimal::from(800),
+                limit: Decimal::from(1000),
+                paused: false,
+                over: false,
+            },
         ];
         let sorted = sort_cats(cats);
         assert_eq!(sorted[0].code, "candy", "over-budget always first");
-        assert_eq!(sorted[1].code, "rent",  "highest spend among on-budget next");
+        assert_eq!(sorted[1].code, "rent", "highest spend among on-budget next");
         assert_eq!(sorted[2].code, "food");
     }
 
@@ -447,8 +476,20 @@ mod logic {
     fn sort_breaks_tie_on_spend_desc_when_both_over() {
         // Two over-budget categories — higher spend wins.
         let cats = vec![
-            CP { code: "smaller", spent: Decimal::from(120), limit: Decimal::from(100), paused: false, over: true },
-            CP { code: "bigger",  spent: Decimal::from(450), limit: Decimal::from(400), paused: false, over: true },
+            CP {
+                code: "smaller",
+                spent: Decimal::from(120),
+                limit: Decimal::from(100),
+                paused: false,
+                over: true,
+            },
+            CP {
+                code: "bigger",
+                spent: Decimal::from(450),
+                limit: Decimal::from(400),
+                paused: false,
+                over: true,
+            },
         ];
         let sorted = sort_cats(cats);
         assert_eq!(sorted[0].code, "bigger");
@@ -459,14 +500,47 @@ mod logic {
     fn over_count_skips_paused_and_unlimited() {
         // 5 categories: 2 over (1 paused), 1 unlimited (not counted), 2 ok.
         let cats = vec![
-            CP { code: "a", spent: Decimal::from(200), limit: Decimal::from(100), paused: false, over: true },
-            CP { code: "b", spent: Decimal::from(200), limit: Decimal::from(100), paused: true,  over: false }, // over but paused → over=false
-            CP { code: "c", spent: Decimal::from(900), limit: Decimal::ZERO,      paused: false, over: false }, // unlimited
-            CP { code: "d", spent: Decimal::from(80),  limit: Decimal::from(100), paused: false, over: false },
-            CP { code: "e", spent: Decimal::from(150), limit: Decimal::from(120), paused: false, over: true },
+            CP {
+                code: "a",
+                spent: Decimal::from(200),
+                limit: Decimal::from(100),
+                paused: false,
+                over: true,
+            },
+            CP {
+                code: "b",
+                spent: Decimal::from(200),
+                limit: Decimal::from(100),
+                paused: true,
+                over: false,
+            }, // over but paused → over=false
+            CP {
+                code: "c",
+                spent: Decimal::from(900),
+                limit: Decimal::ZERO,
+                paused: false,
+                over: false,
+            }, // unlimited
+            CP {
+                code: "d",
+                spent: Decimal::from(80),
+                limit: Decimal::from(100),
+                paused: false,
+                over: false,
+            },
+            CP {
+                code: "e",
+                spent: Decimal::from(150),
+                limit: Decimal::from(120),
+                paused: false,
+                over: true,
+            },
         ];
-        assert_eq!(over_count(&cats), 2,
-            "only the two with over=true should count");
+        assert_eq!(
+            over_count(&cats),
+            2,
+            "only the two with over=true should count"
+        );
     }
 
     #[test]

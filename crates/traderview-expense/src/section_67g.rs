@@ -222,8 +222,7 @@ pub fn check(input: &Section67gInput) -> Section67gResult {
         ExpenseCategory::Section162TradeOrBusinessExpense => true,
         ExpenseCategory::Section212InvestmentExpense => matches!(
             input.taxpayer_status,
-            TaxpayerStatus::TraderWithSection475fElection
-                | TaxpayerStatus::HedgeFundLpTraderFund
+            TaxpayerStatus::TraderWithSection475fElection | TaxpayerStatus::HedgeFundLpTraderFund
         ),
         ExpenseCategory::UnreimbursedEmployeeBusinessExpense => false,
         ExpenseCategory::TaxReturnPreparationFee => false,
@@ -239,9 +238,7 @@ pub fn check(input: &Section67gInput) -> Section67gResult {
     };
 
     let deduction_pathway = match (input.expense_category, escapes_suspension) {
-        (ExpenseCategory::Section67bExemptItem, _) => {
-            "§ 67(b) exempt — itemized deduction allowed"
-        }
+        (ExpenseCategory::Section67bExemptItem, _) => "§ 67(b) exempt — itemized deduction allowed",
         (ExpenseCategory::Section67eEstateAdminExpense, true) => {
             "§ 67(e) estate/trust carveout — administration expense allowed"
         }
@@ -260,9 +257,7 @@ pub fn check(input: &Section67gInput) -> Section67gResult {
         (ExpenseCategory::TaxReturnPreparationFee, _) => {
             "§ 67(g) suspension — tax preparation fee NON-DEDUCTIBLE"
         }
-        (ExpenseCategory::HobbyLoss, _) => {
-            "§ 67(g) suspension + § 183 hobby loss NON-DEDUCTIBLE"
-        }
+        (ExpenseCategory::HobbyLoss, _) => "§ 67(g) suspension + § 183 hobby loss NON-DEDUCTIBLE",
         _ => "general suspension",
     };
 
@@ -286,12 +281,13 @@ pub fn check(input: &Section67gInput) -> Section67gResult {
         );
     }
 
-    if matches!(input.taxpayer_status, TaxpayerStatus::EstateOrNonGrantorTrust)
-        && !matches!(
-            input.expense_category,
-            ExpenseCategory::Section67eEstateAdminExpense
-        )
-        && post_tcja
+    if matches!(
+        input.taxpayer_status,
+        TaxpayerStatus::EstateOrNonGrantorTrust
+    ) && !matches!(
+        input.expense_category,
+        ExpenseCategory::Section67eEstateAdminExpense
+    ) && post_tcja
     {
         failure_reasons.push(
             "26 USC § 67(e) + Treas. Reg. § 1.67-4 + IRS Notice 2018-61 — estate or non-grantor trust may deduct ONLY (1) costs paid or incurred in connection with administration of estate/trust which would not have been incurred if property were not held in such trust or estate; (2) distributions to beneficiaries; (3) distributable net income computations".to_string(),
@@ -564,18 +560,24 @@ mod tests {
     #[test]
     fn note_pins_tcja_2017_origin() {
         let r = check(&investor_212_expense());
-        assert!(r.notes.iter().any(|n| n.contains("Tax Cuts and Jobs Act of 2017 § 11045")
-            && n.contains("Pub. L. 115-97")
-            && n.contains("December 22, 2017")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Tax Cuts and Jobs Act of 2017 § 11045")
+                && n.contains("Pub. L. 115-97")
+                && n.contains("December 22, 2017")));
     }
 
     #[test]
     fn note_pins_obbba_2025_permanent() {
         let r = check(&investor_212_expense());
-        assert!(r.notes.iter().any(|n| n.contains("One Big Beautiful Bill Act of 2025")
-            && n.contains("H.R. 1")
-            && n.contains("July 4, 2025")
-            && n.contains("PERMANENT")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("One Big Beautiful Bill Act of 2025")
+                && n.contains("H.R. 1")
+                && n.contains("July 4, 2025")
+                && n.contains("PERMANENT")));
     }
 
     #[test]
@@ -623,20 +625,26 @@ mod tests {
     #[test]
     fn note_pins_trader_fact_patterns_five() {
         let r = check(&investor_212_expense());
-        assert!(r.notes.iter().any(|n| n.contains("Trader-critical fact patterns")
-            && n.contains("Investor WITHOUT § 475(f)")
-            && n.contains("Trader WITH § 475(f)")
-            && n.contains("Hedge fund LP investor in NON-TRADER fund")
-            && n.contains("Hedge fund LP investor in TRADER-STATUS fund")
-            && n.contains("Estate or non-grantor trust")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-critical fact patterns")
+                && n.contains("Investor WITHOUT § 475(f)")
+                && n.contains("Trader WITH § 475(f)")
+                && n.contains("Hedge fund LP investor in NON-TRADER fund")
+                && n.contains("Hedge fund LP investor in TRADER-STATUS fund")
+                && n.contains("Estate or non-grantor trust")));
     }
 
     #[test]
     fn note_pins_pfic_interaction() {
         let r = check(&investor_212_expense());
-        assert!(r.notes.iter().any(|n| n.contains("PFIC fund expense interaction")
-            && n.contains("QEF (§ 1295)")
-            && n.contains("mark-to-market (§ 1296)")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("PFIC fund expense interaction")
+                && n.contains("QEF (§ 1295)")
+                && n.contains("mark-to-market (§ 1296)")));
     }
 
     #[test]
@@ -651,7 +659,9 @@ mod tests {
     fn deduction_pathway_text_investor_212_suspension() {
         let r = check(&investor_212_expense());
         assert!(r.deduction_pathway.contains("§ 67(g) suspension"));
-        assert!(r.deduction_pathway.contains("§ 212 investment expense NON-DEDUCTIBLE"));
+        assert!(r
+            .deduction_pathway
+            .contains("§ 212 investment expense NON-DEDUCTIBLE"));
     }
 
     #[test]
@@ -677,7 +687,9 @@ mod tests {
         i.taxpayer_status = TaxpayerStatus::EstateOrNonGrantorTrust;
         i.expense_category = ExpenseCategory::Section67eEstateAdminExpense;
         let r = check(&i);
-        assert!(r.deduction_pathway.contains("§ 67(e) estate/trust carveout"));
+        assert!(r
+            .deduction_pathway
+            .contains("§ 67(e) estate/trust carveout"));
     }
 
     #[test]

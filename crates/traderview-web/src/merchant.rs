@@ -41,7 +41,10 @@ pub async fn load_aliases(pool: &PgPool, user_id: Uuid) -> Result<Vec<MerchantAl
     .await?;
     Ok(rows
         .into_iter()
-        .map(|(canonical, patterns)| MerchantAlias { canonical, patterns })
+        .map(|(canonical, patterns)| MerchantAlias {
+            canonical,
+            patterns,
+        })
         .collect())
 }
 
@@ -56,10 +59,7 @@ pub fn canonicalize(raw: &str, aliases: &[MerchantAlias]) -> String {
             // Compile each pattern case-insensitively. We DON'T cache —
             // the alias list is short and the regex crate's caching of
             // common patterns means compilation is microseconds.
-            let re = match RegexBuilder::new(pattern)
-                .case_insensitive(true)
-                .build()
-            {
+            let re = match RegexBuilder::new(pattern).case_insensitive(true).build() {
                 Ok(re) => re,
                 Err(_) => continue, // malformed user-supplied regex — skip silently
             };
@@ -163,7 +163,7 @@ mod tests {
         // a bug, and document the behavior here.
         let aliases = vec![MerchantAlias {
             canonical: "Amazon".into(),
-            patterns: vec!["AMZN\\s*MKTP".into()],  // Properly escaped
+            patterns: vec!["AMZN\\s*MKTP".into()], // Properly escaped
         }];
         assert_eq!(canonicalize("AMZN MKTP US*RT4G81234", &aliases), "Amazon");
         assert_eq!(canonicalize("AMZN  MKTP", &aliases), "Amazon");
@@ -213,7 +213,10 @@ mod tests {
             },
         ];
         let out = canonicalize("WAL-MART", &aliases);
-        assert_eq!(out, "Walmart Grocery", "first alias must win on ambiguous match");
+        assert_eq!(
+            out, "Walmart Grocery",
+            "first alias must win on ambiguous match"
+        );
     }
 
     #[test]

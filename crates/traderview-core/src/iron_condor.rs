@@ -30,7 +30,7 @@ pub struct IronCondor {
     pub put_short_strike: f64,
     pub call_short_strike: f64,
     pub call_long_strike: f64,
-    pub net_credit_per_contract: f64,    // positive number (credit received)
+    pub net_credit_per_contract: f64, // positive number (credit received)
     pub contracts: i64,
     pub multiplier: f64,
 }
@@ -61,26 +61,23 @@ pub fn analyze(ic: &IronCondor) -> Option<IronCondorReport> {
     {
         return None;
     }
-    if ic.net_credit_per_contract < 0.0
-        || ic.multiplier <= 0.0
-        || ic.contracts == 0
-    {
+    if ic.net_credit_per_contract < 0.0 || ic.multiplier <= 0.0 || ic.contracts == 0 {
         return None;
     }
     let scale = ic.contracts.unsigned_abs() as f64 * ic.multiplier;
     let put_width = ic.put_short_strike - ic.put_long_strike;
     let call_width = ic.call_long_strike - ic.call_short_strike;
-    let wing_width = put_width.max(call_width);    // worst-case wing
+    let wing_width = put_width.max(call_width); // worst-case wing
     let max_profit_per = ic.net_credit_per_contract;
     let max_loss_per = wing_width - ic.net_credit_per_contract;
     if max_loss_per < 0.0 {
-        return None;    // sanity: credit exceeds wing width → mispriced
+        return None; // sanity: credit exceeds wing width → mispriced
     }
     let lower_be = ic.put_short_strike - ic.net_credit_per_contract;
     let upper_be = ic.call_short_strike + ic.net_credit_per_contract;
     let sign = ic.contracts.signum() as f64;
     let max_profit = max_profit_per * scale * sign;
-    let max_loss  = -max_loss_per * scale * sign;
+    let max_loss = -max_loss_per * scale * sign;
     Some(IronCondorReport {
         max_profit,
         max_loss,
@@ -97,7 +94,8 @@ pub fn analyze(ic: &IronCondor) -> Option<IronCondorReport> {
 
 /// P&L at expiration for a single underlying spot, scaled by contracts.
 pub fn pnl_at_expiration(ic: &IronCondor, spot: f64) -> Option<f64> {
-    if !spot.is_finite() || !ic.net_credit_per_contract.is_finite()
+    if !spot.is_finite()
+        || !ic.net_credit_per_contract.is_finite()
         || !ic.put_long_strike.is_finite()
         || !ic.put_short_strike.is_finite()
         || !ic.call_short_strike.is_finite()
@@ -107,9 +105,9 @@ pub fn pnl_at_expiration(ic: &IronCondor, spot: f64) -> Option<f64> {
     }
     let credit = ic.net_credit_per_contract;
     let short_put = (ic.put_short_strike - spot).max(0.0);
-    let long_put  = (ic.put_long_strike - spot).max(0.0);
+    let long_put = (ic.put_long_strike - spot).max(0.0);
     let short_call = (spot - ic.call_short_strike).max(0.0);
-    let long_call  = (spot - ic.call_long_strike).max(0.0);
+    let long_call = (spot - ic.call_long_strike).max(0.0);
     let per = credit - short_put + long_put - short_call + long_call;
     let scale = ic.contracts.unsigned_abs() as f64 * ic.multiplier;
     let sign = ic.contracts.signum() as f64;
@@ -156,7 +154,7 @@ mod tests {
     #[test]
     fn credit_exceeding_wing_returns_none() {
         let mut bad = ic();
-        bad.net_credit_per_contract = 100.0;    // > 5 wing width
+        bad.net_credit_per_contract = 100.0; // > 5 wing width
         assert!(analyze(&bad).is_none());
     }
 

@@ -40,7 +40,9 @@ pub struct GonzaloGrangerReport {
 
 pub fn decompose(price_1: &[f64], price_2: &[f64]) -> Option<GonzaloGrangerReport> {
     let n = price_1.len();
-    if n < 10 || price_2.len() != n { return None; }
+    if n < 10 || price_2.len() != n {
+        return None;
+    }
     if price_1.iter().any(|x| !x.is_finite()) || price_2.iter().any(|x| !x.is_finite()) {
         return None;
     }
@@ -54,7 +56,9 @@ pub fn decompose(price_1: &[f64], price_2: &[f64]) -> Option<GonzaloGrangerRepor
         sxx += (price_2[i] - m2).powi(2);
         sxy += (price_2[i] - m2) * (price_1[i] - m1);
     }
-    if sxx <= 0.0 { return None; }
+    if sxx <= 0.0 {
+        return None;
+    }
     let beta = sxy / sxx;
     // Use β to set normalized loading weights w_1, w_2 ≥ 0 summing to 1.
     // Positive-slope cointegration → w_1 = β / (β + 1), w_2 = 1 / (β + 1).
@@ -65,12 +69,21 @@ pub fn decompose(price_1: &[f64], price_2: &[f64]) -> Option<GonzaloGrangerRepor
     } else {
         (0.5, 0.5)
     };
-    let permanent: Vec<f64> = price_1.iter().zip(price_2.iter())
-        .map(|(p1, p2)| w1 * p1 + w2 * p2).collect();
-    let transitory_1: Vec<f64> = price_1.iter().zip(permanent.iter())
-        .map(|(p, f)| p - f).collect();
-    let transitory_2: Vec<f64> = price_2.iter().zip(permanent.iter())
-        .map(|(p, f)| p - f).collect();
+    let permanent: Vec<f64> = price_1
+        .iter()
+        .zip(price_2.iter())
+        .map(|(p1, p2)| w1 * p1 + w2 * p2)
+        .collect();
+    let transitory_1: Vec<f64> = price_1
+        .iter()
+        .zip(permanent.iter())
+        .map(|(p, f)| p - f)
+        .collect();
+    let transitory_2: Vec<f64> = price_2
+        .iter()
+        .zip(permanent.iter())
+        .map(|(p, f)| p - f)
+        .collect();
     Some(GonzaloGrangerReport {
         permanent_component: permanent,
         transitory_component_1: transitory_1,
@@ -107,8 +120,12 @@ mod tests {
     fn identical_series_yield_zero_transitory() {
         let p: Vec<f64> = (1..=20).map(|i| i as f64).collect();
         let r = decompose(&p, &p).unwrap();
-        for t in &r.transitory_component_1 { assert!(t.abs() < 1e-9); }
-        for t in &r.transitory_component_2 { assert!(t.abs() < 1e-9); }
+        for t in &r.transitory_component_1 {
+            assert!(t.abs() < 1e-9);
+        }
+        for t in &r.transitory_component_2 {
+            assert!(t.abs() < 1e-9);
+        }
         for (perm, orig) in r.permanent_component.iter().zip(p.iter()) {
             assert!((perm - orig).abs() < 1e-9);
         }
@@ -127,9 +144,7 @@ mod tests {
         let p1: Vec<f64> = (1..=30).map(|i| i as f64 + 1.0).collect();
         let p2: Vec<f64> = (1..=30).map(|i| i as f64 - 1.0).collect();
         let r = decompose(&p1, &p2).unwrap();
-        for ((perm, p1v), p2v) in r.permanent_component.iter()
-            .zip(p1.iter()).zip(p2.iter())
-        {
+        for ((perm, p1v), p2v) in r.permanent_component.iter().zip(p1.iter()).zip(p2.iter()) {
             let min = p1v.min(*p2v);
             let max = p1v.max(*p2v);
             assert!(*perm >= min - 1e-9 && *perm <= max + 1e-9);
@@ -142,7 +157,11 @@ mod tests {
         let p1: Vec<f64> = (0..20).map(|i| 100.0 + (i as f64).sin()).collect();
         let p2: Vec<f64> = (0..20).map(|i| 100.0 - (i as f64).sin()).collect();
         let r = decompose(&p1, &p2).unwrap();
-        for (t1, t2) in r.transitory_component_1.iter().zip(r.transitory_component_2.iter()) {
+        for (t1, t2) in r
+            .transitory_component_1
+            .iter()
+            .zip(r.transitory_component_2.iter())
+        {
             // w1*t1 + w2*t2 should be ~ 0 by construction of f.
             let combined = r.loading_weight_1 * t1 + r.loading_weight_2 * t2;
             assert!(combined.abs() < 1e-9);

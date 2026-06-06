@@ -133,8 +133,9 @@ pub fn compute(input: &Section170Input) -> Section170Result {
 
     // Itemizer path. Apply per-category ceilings first (in ordering rule),
     // then apply 0.5% AGI floor (if 2026+) reducing the aggregate.
-    let after_ceilings = aggregate
-        .min(cash_public.min(sixty_cap) + cap_gain_public.min(thirty_cap) + cash_private.min(thirty_cap));
+    let after_ceilings = aggregate.min(
+        cash_public.min(sixty_cap) + cap_gain_public.min(thirty_cap) + cash_private.min(thirty_cap),
+    );
     let amount_above_ceiling = aggregate - after_ceilings;
 
     let floor_applies = input.year >= 2026;
@@ -460,29 +461,13 @@ mod tests {
 
     #[test]
     fn negative_inputs_clamped() {
-        let r = compute(&input(
-            2026,
-            FilingStatus::Single,
-            true,
-            -1,
-            -1,
-            -1,
-            -1,
-        ));
+        let r = compute(&input(2026, FilingStatus::Single, true, -1, -1, -1, -1));
         assert_eq!(r.allowed_itemized_deduction_cents, 0);
     }
 
     #[test]
     fn zero_agi_zero_floor() {
-        let r = compute(&input(
-            2026,
-            FilingStatus::Single,
-            true,
-            0,
-            500_00,
-            0,
-            0,
-        ));
+        let r = compute(&input(2026, FilingStatus::Single, true, 0, 500_00, 0, 0));
         assert_eq!(r.agi_floor_threshold_cents, 0);
     }
 

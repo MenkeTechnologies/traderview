@@ -371,10 +371,7 @@ mod tests {
     fn california_compliant_one_month_rent() {
         let input = base_ca();
         let output = check(&input);
-        assert_eq!(
-            output.severity,
-            Severity::CompliantRelocationAssistancePaid
-        );
+        assert_eq!(output.severity, Severity::CompliantRelocationAssistancePaid);
         assert_eq!(output.statutory_relocation_amount_cents, 3_000_00);
     }
 
@@ -411,10 +408,7 @@ mod tests {
         input.sb_567_owner_moves_in_within_90_days = true;
         input.sb_567_owner_resides_one_year_primary_residence = true;
         let output = check(&input);
-        assert_eq!(
-            output.severity,
-            Severity::CompliantRelocationAssistancePaid
-        );
+        assert_eq!(output.severity, Severity::CompliantRelocationAssistancePaid);
     }
 
     #[test]
@@ -441,10 +435,7 @@ mod tests {
         input.nyc_dhcr_demolition_approval_obtained = true;
         input.relocation_assistance_paid_cents = 5_000_00;
         let output = check(&input);
-        assert_eq!(
-            output.severity,
-            Severity::CompliantRelocationAssistancePaid
-        );
+        assert_eq!(output.severity, Severity::CompliantRelocationAssistancePaid);
     }
 
     #[test]
@@ -453,10 +444,7 @@ mod tests {
         input.jurisdiction = Jurisdiction::Washington;
         input.tenant_income_status = TenantIncomeStatus::AboveFiftyPctAmi;
         let output = check(&input);
-        assert_eq!(
-            output.severity,
-            Severity::WashingtonNonLowIncomeNotCovered
-        );
+        assert_eq!(output.severity, Severity::WashingtonNonLowIncomeNotCovered);
         assert!(output.note.contains("RCW 59.18.440"));
         assert!(output.note.contains("50% area median income"));
     }
@@ -470,10 +458,7 @@ mod tests {
         let output = check(&input);
         // 3 × $3K = $9K
         assert_eq!(output.statutory_relocation_amount_cents, 9_000_00);
-        assert_eq!(
-            output.severity,
-            Severity::CompliantRelocationAssistancePaid
-        );
+        assert_eq!(output.severity, Severity::CompliantRelocationAssistancePaid);
     }
 
     #[test]
@@ -485,10 +470,7 @@ mod tests {
         let output = check(&input);
         // Cap: min($3K, $2.5K) = $2.5K; max($1.5K, $2.5K) = $2.5K
         assert_eq!(output.statutory_relocation_amount_cents, 2_500_00);
-        assert_eq!(
-            output.severity,
-            Severity::CompliantRelocationAssistancePaid
-        );
+        assert_eq!(output.severity, Severity::CompliantRelocationAssistancePaid);
     }
 
     #[test]
@@ -583,10 +565,7 @@ mod tests {
         input.relocation_assistance_paid_cents = 0;
         let output = check(&input);
         // Required = 0; paid = 0 → compliant
-        assert_eq!(
-            output.severity,
-            Severity::CompliantRelocationAssistancePaid
-        );
+        assert_eq!(output.severity, Severity::CompliantRelocationAssistancePaid);
     }
 
     #[test]

@@ -275,7 +275,8 @@ pub fn compute(input: &Input) -> Output {
         .gross_reportable_amount_dollars
         .saturating_mul(IRC_6048_REPORTING_PENALTY_PCT_BASIS_POINTS)
         / IRC_6048_PENALTY_BASIS_POINT_DENOMINATOR;
-    let section_6048_penalty_dollars = IRC_6048_REPORTING_PENALTY_FLOOR_DOLLARS.max(pct_penalty_dollars);
+    let section_6048_penalty_dollars =
+        IRC_6048_REPORTING_PENALTY_FLOOR_DOLLARS.max(pct_penalty_dollars);
 
     if !input.form_3520_filed_timely && !input.form_3520_a_filed_timely {
         return Output {
@@ -424,7 +425,8 @@ mod tests {
     #[test]
     fn beneficiary_became_us_person_over_5_years_after_transfer_not_applicable() {
         let input = Input {
-            us_beneficiary_status: UsBeneficiaryStatus::BeneficiaryBecameUsPersonOver5YearsAfterTransfer,
+            us_beneficiary_status:
+                UsBeneficiaryStatus::BeneficiaryBecameUsPersonOver5YearsAfterTransfer,
             ..baseline_section_679_compliant()
         };
         let result = check(&input);
@@ -501,7 +503,8 @@ mod tests {
     #[test]
     fn beneficiary_became_us_person_within_5_years_section_679_active() {
         let input = Input {
-            us_beneficiary_status: UsBeneficiaryStatus::BeneficiaryBecameUsPersonWithin5YearsOfTransfer,
+            us_beneficiary_status:
+                UsBeneficiaryStatus::BeneficiaryBecameUsPersonWithin5YearsOfTransfer,
             ..baseline_section_679_compliant()
         };
         let result = check(&input);

@@ -239,10 +239,7 @@ pub struct ManagerAum {
     pub quarter_end: NaiveDate,
 }
 
-pub async fn top_managers_by_aum(
-    pool: &PgPool,
-    limit: i64,
-) -> anyhow::Result<Vec<ManagerAum>> {
+pub async fn top_managers_by_aum(pool: &PgPool, limit: i64) -> anyhow::Result<Vec<ManagerAum>> {
     Ok(sqlx::query_as(
         "SELECT m.id AS manager_id, m.name AS manager_name, m.notable,
                 COALESCE(lf.total_value_usd, 0) AS aum_usd,

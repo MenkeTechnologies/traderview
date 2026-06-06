@@ -116,13 +116,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // DefaultLeaseGoverns — 48 other states + DC.
     let default_states = [
-        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE",
-        "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS",
-        "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS",
-        "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NC",
-        "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD",
-        "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI",
-        "WY",
+        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA",
+        "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+        "NM", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA",
+        "WA", "WV", "WI", "WY",
     ];
     for code in default_states {
         m.insert(
@@ -194,8 +191,8 @@ pub fn check(input: &RoommateAuthorizationInput) -> RoommateAuthorizationResult 
             // NY: permits 1 additional occupant per tenant + must be
             // tenant's primary residence. Multi-tenant leases cap
             // total tenants+occupants at lease tenant count.
-            let per_tenant_cap = rule.additional_unrelated_occupants_per_tenant
-                * input.tenants_on_lease;
+            let per_tenant_cap =
+                rule.additional_unrelated_occupants_per_tenant * input.tenants_on_lease;
             let multi_tenant_cap_ok = if input.tenants_on_lease > 1 {
                 input.tenants_on_lease + input.additional_unrelated_adults_proposed
                     <= input.tenants_on_lease + per_tenant_cap
@@ -542,7 +539,10 @@ mod tests {
 
     #[test]
     fn ny_only_lease_restrictions_void_state() {
-        let count = RULES.iter().filter(|(_, r)| r.lease_restrictions_void).count();
+        let count = RULES
+            .iter()
+            .filter(|(_, r)| r.lease_restrictions_void)
+            .count();
         assert_eq!(count, 1, "only NY makes lease restrictions VOID");
     }
 

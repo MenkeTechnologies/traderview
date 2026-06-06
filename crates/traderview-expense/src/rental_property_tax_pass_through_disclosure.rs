@@ -172,7 +172,10 @@ pub fn check(input: &Input) -> Output {
         ));
     } else if matches!(input.jurisdiction, Jurisdiction::NewYorkCity)
         && matches!(input.unit_class, UnitClass::NycRentStabilized)
-        && matches!(input.pass_through_type, PassThroughType::MajorCapitalImprovementMci)
+        && matches!(
+            input.pass_through_type,
+            PassThroughType::MajorCapitalImprovementMci
+        )
     {
         let annual_cap = (u128::from(input.annual_rent_cents)
             * u128::from(NYC_MCI_HSTPA_ANNUAL_CAP_BPS)
@@ -240,9 +243,15 @@ pub fn check(input: &Input) -> Output {
             ));
         }
     } else if matches!(input.jurisdiction, Jurisdiction::California)
-        && matches!(input.pass_through_type, PassThroughType::PropertyTaxReassessment)
+        && matches!(
+            input.pass_through_type,
+            PassThroughType::PropertyTaxReassessment
+        )
         && input.lease_contains_pass_through_clause
-        && matches!(input.unit_class, UnitClass::Pre1995MultifamilyRentControlled)
+        && matches!(
+            input.unit_class,
+            UnitClass::Pre1995MultifamilyRentControlled
+        )
     {
         severity = Severity::ChangeOfOwnershipReassessmentImproperlyPassed;
         actions.push(format!(
@@ -411,7 +420,10 @@ mod tests {
     fn compliant_mci_within_2_pct_cap() {
         let i = baseline();
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantPassThroughAuthorized));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantPassThroughAuthorized
+        ));
         assert_eq!(r.permitted_pass_through_amount_cents, 720_00);
         assert_eq!(r.annual_rent_at_risk_cents, 0);
     }
@@ -421,9 +433,15 @@ mod tests {
         let mut i = baseline();
         i.annual_pass_through_amount_cents = 1_200_00;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::MciExceeds2PctAnnualCapViolation));
+        assert!(matches!(
+            r.severity,
+            Severity::MciExceeds2PctAnnualCapViolation
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents / 2);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("HSTPA 2019")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("HSTPA 2019")));
     }
 
     #[test]
@@ -437,7 +455,10 @@ mod tests {
         ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
         assert!(r.recommended_actions.iter().any(|a| a.contains("DHCR")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("treble damages")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("treble damages")));
     }
 
     #[test]
@@ -453,8 +474,14 @@ mod tests {
             Severity::PropertyTaxPassThroughVoidNonCommercial
         ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Proposition 13")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("§ 1947.13")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Proposition 13")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("§ 1947.13")));
     }
 
     #[test]
@@ -469,7 +496,10 @@ mod tests {
             r.severity,
             Severity::ChangeOfOwnershipReassessmentImproperlyPassed
         ));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Costa-Hawkins")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Costa-Hawkins")));
         assert!(r.recommended_actions.iter().any(|a| a.contains("Berkeley")));
     }
 
@@ -479,7 +509,10 @@ mod tests {
         i.pass_through_type = PassThroughType::IndividualApartmentImprovementIai;
         i.mci_iai_total_amortized_cents = 20_000_00;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::IaiExceeds15KOver15YearCapViolation));
+        assert!(matches!(
+            r.severity,
+            Severity::IaiExceeds15KOver15YearCapViolation
+        ));
         assert!(r.recommended_actions.iter().any(|a| a.contains("15000")));
     }
 
@@ -489,7 +522,10 @@ mod tests {
         i.pass_through_type = PassThroughType::IndividualApartmentImprovementIai;
         i.mci_iai_total_amortized_cents = 10_000_00;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantPassThroughAuthorized));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantPassThroughAuthorized
+        ));
     }
 
     #[test]
@@ -563,10 +599,19 @@ mod tests {
     fn coordination_note_references_siblings() {
         let i = baseline();
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("rental_property_registration")));
-        assert!(r.notes.iter().any(|n| n.contains("rental_hoa_disclosure_at_lease")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("rental_property_registration")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("rental_hoa_disclosure_at_lease")));
         assert!(r.notes.iter().any(|n| n.contains("tenant_late_fee_cap")));
-        assert!(r.notes.iter().any(|n| n.contains("rental_junk_fee_transparency")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("rental_junk_fee_transparency")));
         assert!(r
             .notes
             .iter()
@@ -620,11 +665,27 @@ mod tests {
 
     #[test]
     fn citation_branch_for_each_jurisdiction() {
-        let ca = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::California; i });
+        let ca = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::California;
+            i
+        });
         let nyc = check(&baseline());
-        let sf = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::SanFrancisco; i });
-        let bos = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Boston; i });
-        let de = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Default; i });
+        let sf = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::SanFrancisco;
+            i
+        });
+        let bos = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Boston;
+            i
+        });
+        let de = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Default;
+            i
+        });
         assert!(ca.citation.contains("Cal. Const."));
         assert!(nyc.citation.contains("9 NYCRR"));
         assert!(sf.citation.contains("SF Rent Ordinance"));

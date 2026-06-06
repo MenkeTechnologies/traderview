@@ -162,39 +162,36 @@ pub fn check(input: &Input) -> CheckResult {
         };
     }
 
-    let (
-        statutory_damages_cents,
-        punitive_damages_cents,
-        attorney_fees_statutory_recoverable,
-    ) = match input.regime {
-        Regime::California => {
-            // § 1942.5(h) — actual damages + punitive $100-$2,000 per act.
-            let acts = input.retaliation_acts_count.max(0);
-            let punitive = if input.fraud_oppression_or_malice_shown && acts > 0 {
-                let per_act = input
-                    .punitive_per_act_cents
-                    .clamp(CA_PUNITIVE_MIN_CENTS, CA_PUNITIVE_MAX_CENTS);
-                acts.saturating_mul(per_act)
-            } else {
-                0
-            };
-            (actual_damages, punitive, true)
-        }
-        Regime::Massachusetts => {
-            // § 18 — damages = max(1-month-rent floor, actual_damages).
-            let one_month = monthly_rent.saturating_mul(MA_MIN_MONTHS_RENT);
-            let damages = one_month.max(actual_damages);
-            (damages, 0, true)
-        }
-        Regime::NewJersey => {
-            // § 2A:42-10.10 — actual damages + injunctive (case-by-case).
-            (actual_damages, 0, true)
-        }
-        Regime::Default => {
-            // Common-law actual damages only. Attorney fees only if lease permits.
-            (actual_damages, 0, false)
-        }
-    };
+    let (statutory_damages_cents, punitive_damages_cents, attorney_fees_statutory_recoverable) =
+        match input.regime {
+            Regime::California => {
+                // § 1942.5(h) — actual damages + punitive $100-$2,000 per act.
+                let acts = input.retaliation_acts_count.max(0);
+                let punitive = if input.fraud_oppression_or_malice_shown && acts > 0 {
+                    let per_act = input
+                        .punitive_per_act_cents
+                        .clamp(CA_PUNITIVE_MIN_CENTS, CA_PUNITIVE_MAX_CENTS);
+                    acts.saturating_mul(per_act)
+                } else {
+                    0
+                };
+                (actual_damages, punitive, true)
+            }
+            Regime::Massachusetts => {
+                // § 18 — damages = max(1-month-rent floor, actual_damages).
+                let one_month = monthly_rent.saturating_mul(MA_MIN_MONTHS_RENT);
+                let damages = one_month.max(actual_damages);
+                (damages, 0, true)
+            }
+            Regime::NewJersey => {
+                // § 2A:42-10.10 — actual damages + injunctive (case-by-case).
+                (actual_damages, 0, true)
+            }
+            Regime::Default => {
+                // Common-law actual damages only. Attorney fees only if lease permits.
+                (actual_damages, 0, false)
+            }
+        };
 
     let total_recoverable_cents = statutory_damages_cents.saturating_add(punitive_damages_cents);
 
@@ -337,7 +334,7 @@ mod tests {
     fn input(regime: Regime) -> Input {
         Input {
             regime,
-            monthly_rent_cents: 200_000, // $2,000/mo
+            monthly_rent_cents: 200_000,          // $2,000/mo
             tenant_actual_damages_cents: 500_000, // $5,000
             fraud_oppression_or_malice_shown: false,
             punitive_per_act_cents: 200_000, // $2,000 per act (max)
@@ -543,7 +540,11 @@ mod tests {
         ] {
             let r = check(&input(regime));
             let expected = matches!(regime, Regime::Massachusetts);
-            assert_eq!(r.clear_and_convincing_rebuttal_required, expected, "{:?}", regime);
+            assert_eq!(
+                r.clear_and_convincing_rebuttal_required, expected,
+                "{:?}",
+                regime
+            );
         }
     }
 
@@ -559,8 +560,7 @@ mod tests {
             let r = check(&input(regime));
             let expected = !matches!(regime, Regime::Default);
             assert_eq!(
-                r.attorney_fees_statutory_recoverable,
-                expected,
+                r.attorney_fees_statutory_recoverable, expected,
                 "{:?}",
                 regime
             );
@@ -571,10 +571,10 @@ mod tests {
     fn ca_punitive_clamped_truth_table() {
         // 5-cell sweep: input vs clamped output.
         let cells = [
-            (5_000, CA_PUNITIVE_MIN_CENTS),   // below min → floor
-            (10_000, CA_PUNITIVE_MIN_CENTS),  // exactly min
-            (100_000, 100_000),                // within range
-            (200_000, CA_PUNITIVE_MAX_CENTS), // exactly max
+            (5_000, CA_PUNITIVE_MIN_CENTS),     // below min → floor
+            (10_000, CA_PUNITIVE_MIN_CENTS),    // exactly min
+            (100_000, 100_000),                 // within range
+            (200_000, CA_PUNITIVE_MAX_CENTS),   // exactly max
             (1_000_000, CA_PUNITIVE_MAX_CENTS), // above max → ceiling
         ];
         for (input_amount, expected) in cells.iter() {
@@ -605,7 +605,9 @@ mod tests {
         assert!(r.citation.contains("G.L. c. 186 § 18"));
         assert!(r.citation.contains("N.J.S.A. 2A:42-10.10"));
         assert!(r.citation.contains("N.J.S.A. 2A:42-10.11"));
-        assert!(r.citation.contains("Restatement (Second) of Property § 14.8"));
+        assert!(r
+            .citation
+            .contains("Restatement (Second) of Property § 14.8"));
         assert!(r.citation.contains("clear-and-convincing"));
     }
 

@@ -190,8 +190,7 @@ pub fn check(input: &Input) -> Output {
             }
             ExceptionStatus::TradeOrBusinessExceptionSatisfied => {
                 return Output {
-                    severity:
-                        Severity::Section264cTradeOrBusinessExceptionPreservesDeduction,
+                    severity: Severity::Section264cTradeOrBusinessExceptionPreservesDeduction,
                     disallowed_interest_cents: 0,
                     allowed_interest_cents: input.interest_expense_cents,
                     effective_disallowance_basis_points: 0,
@@ -208,8 +207,7 @@ pub fn check(input: &Input) -> Output {
             }
             ExceptionStatus::UnforeseenLossExceptionSatisfied => {
                 return Output {
-                    severity:
-                        Severity::Section264cUnforeseenLossExceptionPreservesDeduction,
+                    severity: Severity::Section264cUnforeseenLossExceptionPreservesDeduction,
                     disallowed_interest_cents: 0,
                     allowed_interest_cents: input.interest_expense_cents,
                     effective_disallowance_basis_points: 0,
@@ -227,8 +225,7 @@ pub fn check(input: &Input) -> Output {
                 if input.interest_expense_cents <= SECTION_264C_DE_MINIMIS_THRESHOLD_CENTS =>
             {
                 return Output {
-                    severity:
-                        Severity::Section264cDeMinimisInterestExceptionPreservesDeduction,
+                    severity: Severity::Section264cDeMinimisInterestExceptionPreservesDeduction,
                     disallowed_interest_cents: 0,
                     allowed_interest_cents: input.interest_expense_cents,
                     effective_disallowance_basis_points: 0,
@@ -376,8 +373,7 @@ mod tests {
     #[test]
     fn systematic_borrowing_no_exception_disallowance_applies() {
         let mut input = base();
-        input.contract_type =
-            ContractType::NonSinglePremiumLifeWithSystematicBorrowingPlan;
+        input.contract_type = ContractType::NonSinglePremiumLifeWithSystematicBorrowingPlan;
         let output = check(&input);
         assert_eq!(
             output.severity,
@@ -391,8 +387,7 @@ mod tests {
     #[test]
     fn four_of_seven_exception_preserves_deduction() {
         let mut input = base();
-        input.contract_type =
-            ContractType::NonSinglePremiumLifeWithSystematicBorrowingPlan;
+        input.contract_type = ContractType::NonSinglePremiumLifeWithSystematicBorrowingPlan;
         input.exception_status = ExceptionStatus::FourOfSevenExceptionSatisfied;
         let output = check(&input);
         assert_eq!(
@@ -407,8 +402,7 @@ mod tests {
     #[test]
     fn trade_or_business_exception_preserves_deduction() {
         let mut input = base();
-        input.contract_type =
-            ContractType::NonSinglePremiumLifeWithSystematicBorrowingPlan;
+        input.contract_type = ContractType::NonSinglePremiumLifeWithSystematicBorrowingPlan;
         input.exception_status = ExceptionStatus::TradeOrBusinessExceptionSatisfied;
         let output = check(&input);
         assert_eq!(
@@ -421,8 +415,7 @@ mod tests {
     #[test]
     fn unforeseen_loss_exception_preserves_deduction() {
         let mut input = base();
-        input.contract_type =
-            ContractType::NonSinglePremiumLifeWithSystematicBorrowingPlan;
+        input.contract_type = ContractType::NonSinglePremiumLifeWithSystematicBorrowingPlan;
         input.exception_status = ExceptionStatus::UnforeseenLossExceptionSatisfied;
         let output = check(&input);
         assert_eq!(
@@ -435,8 +428,7 @@ mod tests {
     #[test]
     fn de_minimis_interest_under_100_preserves_deduction() {
         let mut input = base();
-        input.contract_type =
-            ContractType::NonSinglePremiumLifeWithSystematicBorrowingPlan;
+        input.contract_type = ContractType::NonSinglePremiumLifeWithSystematicBorrowingPlan;
         input.exception_status =
             ExceptionStatus::DeMinimisInterestUnderHundredDollarsExceptionSatisfied;
         input.interest_expense_cents = 99_00;
@@ -452,8 +444,7 @@ mod tests {
     #[test]
     fn de_minimis_exception_over_100_falls_through_to_disallowance() {
         let mut input = base();
-        input.contract_type =
-            ContractType::NonSinglePremiumLifeWithSystematicBorrowingPlan;
+        input.contract_type = ContractType::NonSinglePremiumLifeWithSystematicBorrowingPlan;
         input.exception_status =
             ExceptionStatus::DeMinimisInterestUnderHundredDollarsExceptionSatisfied;
         input.interest_expense_cents = 200_00;
@@ -488,8 +479,7 @@ mod tests {
     fn section_264f4_owner_employee_exception_no_disallowance() {
         let mut input = base();
         input.contract_type = ContractType::BusinessOwnedLifeInsuranceWithUnborrowedCashValue;
-        input.exception_status =
-            ExceptionStatus::OwnerEmployeeTwentyPctPolicySection264f4Exception;
+        input.exception_status = ExceptionStatus::OwnerEmployeeTwentyPctPolicySection264f4Exception;
         let output = check(&input);
         assert_eq!(
             output.severity,
@@ -591,8 +581,7 @@ mod tests {
     fn note_pins_101j_eoli_notice_consent_pension_protection_act_2006() {
         let mut input = base();
         input.contract_type = ContractType::BusinessOwnedLifeInsuranceWithUnborrowedCashValue;
-        input.exception_status =
-            ExceptionStatus::OwnerEmployeeTwentyPctPolicySection264f4Exception;
+        input.exception_status = ExceptionStatus::OwnerEmployeeTwentyPctPolicySection264f4Exception;
         let output = check(&input);
         assert!(output.note.contains("§ 101(j)"));
         assert!(output.note.contains("Pension Protection Act of 2006"));

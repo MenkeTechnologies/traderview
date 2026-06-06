@@ -18,7 +18,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct FiftyTwoWeekReport {
@@ -38,8 +42,13 @@ pub fn compute(bars: &[Bar], lookback: usize) -> FiftyTwoWeekReport {
         at_new_low: vec![None; n],
         lookback,
     };
-    if lookback < 2 || n < lookback + 1 { return report; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if lookback < 2 || n < lookback + 1 {
+        return report;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return report;
     }
     for i in lookback..n {
@@ -48,12 +57,10 @@ pub fn compute(bars: &[Bar], lookback: usize) -> FiftyTwoWeekReport {
         let win_low = win.iter().fold(f64::INFINITY, |a, b| a.min(b.low));
         let cur = bars[i];
         if win_high > 0.0 {
-            report.distance_from_high_pct[i] =
-                Some((win_high - cur.close) / win_high * 100.0);
+            report.distance_from_high_pct[i] = Some((win_high - cur.close) / win_high * 100.0);
         }
         if win_low > 0.0 {
-            report.distance_from_low_pct[i] =
-                Some((cur.close - win_low) / win_low * 100.0);
+            report.distance_from_low_pct[i] = Some((cur.close - win_low) / win_low * 100.0);
         }
         report.at_new_high[i] = Some(cur.high > win_high);
         report.at_new_low[i] = Some(cur.low < win_low);
@@ -65,7 +72,13 @@ pub fn compute(bars: &[Bar], lookback: usize) -> FiftyTwoWeekReport {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {

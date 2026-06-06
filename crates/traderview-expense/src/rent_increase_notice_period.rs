@@ -256,7 +256,8 @@ fn default_check(_input: &RentIncreaseNoticeInput) -> RentIncreaseNoticeResult {
         violation: ViolationType::None,
         landlord_compliant: true,
         citation: "No statewide rent-increase notice statute identified — lease terms control",
-        note: "Default regime: lease terms govern the required notice period for rent increases.".to_string(),
+        note: "Default regime: lease terms govern the required notice period for rent increases."
+            .to_string(),
     }
 }
 

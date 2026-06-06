@@ -232,7 +232,8 @@ pub fn compute(input: &Input) -> Output {
         && input.tree_imminently_dangerous_to_neighboring_property
     {
         match input.jurisdiction {
-            TreeJurisdiction::HawaiiRuleStates | TreeJurisdiction::OtherStateCommonLawNegligenceRestatement => {
+            TreeJurisdiction::HawaiiRuleStates
+            | TreeJurisdiction::OtherStateCommonLawNegligenceRestatement => {
                 if input.landlord_paid_neighbor_damages_for_tree_harm
                     || input.landlord_action == LandlordAction::PaidDamagesAndCutBackBranches
                 {
@@ -332,7 +333,9 @@ pub fn compute(input: &Input) -> Output {
         return Output {
             mode: TreeRemovalDangerousDisclosureMode::CompliantNeighborTreeRiskAddressedByLandlord,
             statutory_basis: "Storm damage — landlord addressed risk where foreseeable".to_string(),
-            notes: "COMPLIANT: storm-damaged tree addressed by landlord or not reasonably foreseeable.".to_string(),
+            notes:
+                "COMPLIANT: storm-damaged tree addressed by landlord or not reasonably foreseeable."
+                    .to_string(),
             citations,
         };
     }
@@ -371,13 +374,19 @@ mod tests {
             ..baseline_california_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TreeRemovalDangerousDisclosureMode::NotApplicableNoTreeIssueOrLandlordNotPropertyOwner);
+        assert_eq!(
+            result.mode,
+            TreeRemovalDangerousDisclosureMode::NotApplicableNoTreeIssueOrLandlordNotPropertyOwner
+        );
     }
 
     #[test]
     fn california_booska_patel_ordinary_care_compliant() {
         let result = check(&baseline_california_compliant());
-        assert_eq!(result.mode, TreeRemovalDangerousDisclosureMode::CompliantCaliforniaBooskaPatelOrdinaryCareExercised);
+        assert_eq!(
+            result.mode,
+            TreeRemovalDangerousDisclosureMode::CompliantCaliforniaBooskaPatelOrdinaryCareExercised
+        );
     }
 
     #[test]
@@ -409,7 +418,10 @@ mod tests {
             ..baseline_california_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TreeRemovalDangerousDisclosureMode::CompliantHawaiiRuleSelfHelpOrPayDamages);
+        assert_eq!(
+            result.mode,
+            TreeRemovalDangerousDisclosureMode::CompliantHawaiiRuleSelfHelpOrPayDamages
+        );
     }
 
     #[test]
@@ -420,7 +432,10 @@ mod tests {
             ..baseline_california_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TreeRemovalDangerousDisclosureMode::CompliantMassachusettsRuleSelfHelpOnly);
+        assert_eq!(
+            result.mode,
+            TreeRemovalDangerousDisclosureMode::CompliantMassachusettsRuleSelfHelpOnly
+        );
     }
 
     #[test]
@@ -434,7 +449,10 @@ mod tests {
             ..baseline_california_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TreeRemovalDangerousDisclosureMode::CompliantHawaiiRuleSelfHelpOrPayDamages);
+        assert_eq!(
+            result.mode,
+            TreeRemovalDangerousDisclosureMode::CompliantHawaiiRuleSelfHelpOrPayDamages
+        );
     }
 
     #[test]
@@ -447,7 +465,10 @@ mod tests {
             ..baseline_california_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TreeRemovalDangerousDisclosureMode::ViolationHawaiiRuleNuisanceTreeDamagesNotPaid);
+        assert_eq!(
+            result.mode,
+            TreeRemovalDangerousDisclosureMode::ViolationHawaiiRuleNuisanceTreeDamagesNotPaid
+        );
     }
 
     #[test]
@@ -459,7 +480,10 @@ mod tests {
             ..baseline_california_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TreeRemovalDangerousDisclosureMode::CompliantMassachusettsRuleSelfHelpOnly);
+        assert_eq!(
+            result.mode,
+            TreeRemovalDangerousDisclosureMode::CompliantMassachusettsRuleSelfHelpOnly
+        );
     }
 
     #[test]
@@ -471,7 +495,10 @@ mod tests {
             ..baseline_california_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TreeRemovalDangerousDisclosureMode::CompliantDangerousTreeDisclosedToTenant);
+        assert_eq!(
+            result.mode,
+            TreeRemovalDangerousDisclosureMode::CompliantDangerousTreeDisclosedToTenant
+        );
     }
 
     #[test]
@@ -484,7 +511,10 @@ mod tests {
             ..baseline_california_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TreeRemovalDangerousDisclosureMode::ViolationLandlordFailedToWarnTenantOfTreeHazard);
+        assert_eq!(
+            result.mode,
+            TreeRemovalDangerousDisclosureMode::ViolationLandlordFailedToWarnTenantOfTreeHazard
+        );
     }
 
     #[test]
@@ -532,7 +562,10 @@ mod tests {
             ..baseline_california_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TreeRemovalDangerousDisclosureMode::CompliantNeighborTreeRiskAddressedByLandlord);
+        assert_eq!(
+            result.mode,
+            TreeRemovalDangerousDisclosureMode::CompliantNeighborTreeRiskAddressedByLandlord
+        );
     }
 
     #[test]
@@ -542,7 +575,10 @@ mod tests {
             ..baseline_california_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TreeRemovalDangerousDisclosureMode::CompliantNeighborTreeRiskAddressedByLandlord);
+        assert_eq!(
+            result.mode,
+            TreeRemovalDangerousDisclosureMode::CompliantNeighborTreeRiskAddressedByLandlord
+        );
     }
 
     #[test]

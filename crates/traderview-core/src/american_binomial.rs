@@ -16,7 +16,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum OptionKind { Call, Put }
+pub enum OptionKind {
+    Call,
+    Put,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct AmericanReport {
@@ -27,18 +30,25 @@ pub struct AmericanReport {
 
 #[allow(clippy::too_many_arguments)]
 pub fn price(
-    spot: f64, strike: f64,
+    spot: f64,
+    strike: f64,
     time_to_expiry: f64,
-    risk_free: f64, dividend_yield: f64,
+    risk_free: f64,
+    dividend_yield: f64,
     sigma: f64,
     n_steps: usize,
     kind: OptionKind,
 ) -> Option<AmericanReport> {
-    if !spot.is_finite() || spot <= 0.0
-        || !strike.is_finite() || strike <= 0.0
-        || !time_to_expiry.is_finite() || time_to_expiry <= 0.0
-        || !risk_free.is_finite() || !dividend_yield.is_finite()
-        || !sigma.is_finite() || sigma <= 0.0
+    if !spot.is_finite()
+        || spot <= 0.0
+        || !strike.is_finite()
+        || strike <= 0.0
+        || !time_to_expiry.is_finite()
+        || time_to_expiry <= 0.0
+        || !risk_free.is_finite()
+        || !dividend_yield.is_finite()
+        || !sigma.is_finite()
+        || sigma <= 0.0
         || !(1..=5_000).contains(&n_steps)
     {
         return None;
@@ -50,7 +60,7 @@ pub fn price(
     let drift = ((risk_free - dividend_yield) * dt).exp();
     let p = (drift - d) / (u - d);
     if !(0.0..=1.0).contains(&p) || !p.is_finite() {
-        return None;    // unstable tree (rare on sane inputs)
+        return None; // unstable tree (rare on sane inputs)
     }
     let q = 1.0 - p;
     // Terminal payoffs at step n.
@@ -59,7 +69,7 @@ pub fn price(
         let s = spot * u.powi((n_steps as i32) - (j as i32) * 2);
         let intrinsic = match kind {
             OptionKind::Call => (s - strike).max(0.0),
-            OptionKind::Put  => (strike - s).max(0.0),
+            OptionKind::Put => (strike - s).max(0.0),
         };
         *slot = intrinsic;
     }
@@ -71,7 +81,7 @@ pub fn price(
             let continuation = disc * (p * values[j] + q * values[j + 1]);
             let intrinsic = match kind {
                 OptionKind::Call => (s - strike).max(0.0),
-                OptionKind::Put  => (strike - s).max(0.0),
+                OptionKind::Put => (strike - s).max(0.0),
             };
             values[j] = continuation.max(intrinsic);
             also_european[j] = disc * (p * also_european[j] + q * also_european[j + 1]);
@@ -109,8 +119,11 @@ mod tests {
         // a non-dividend-paying stock → equals European call. Early-
         // exercise premium should be effectively zero.
         let r = price(100.0, 100.0, 1.0, 0.05, 0.0, 0.20, 200, OptionKind::Call).unwrap();
-        assert!(r.early_exercise_premium < 0.01,
-            "non-div American call should ~= European: premium={}", r.early_exercise_premium);
+        assert!(
+            r.early_exercise_premium < 0.01,
+            "non-div American call should ~= European: premium={}",
+            r.early_exercise_premium
+        );
     }
 
     #[test]
@@ -118,8 +131,10 @@ mod tests {
         // American puts ARE worth more than European puts (the canonical
         // counter to Merton's call result).
         let r = price(100.0, 100.0, 1.0, 0.05, 0.0, 0.20, 500, OptionKind::Put).unwrap();
-        assert!(r.early_exercise_premium > 0.0,
-            "American put should be > European put");
+        assert!(
+            r.early_exercise_premium > 0.0,
+            "American put should be > European put"
+        );
     }
 
     #[test]
@@ -127,9 +142,11 @@ mod tests {
         // With dividend yield, even calls can be optimal to exercise
         // early; deep-ITM call before ex-div date is the textbook case.
         let r = price(150.0, 100.0, 1.0, 0.05, 0.06, 0.20, 500, OptionKind::Call).unwrap();
-        assert!(r.early_exercise_premium > 0.0,
+        assert!(
+            r.early_exercise_premium > 0.0,
             "div-paying ITM call should have early-exercise value, got {}",
-            r.early_exercise_premium);
+            r.early_exercise_premium
+        );
     }
 
     #[test]
@@ -137,19 +154,23 @@ mod tests {
         // At spot = 50 vs strike 100, intrinsic = 50. American put value
         // ≥ 50 (immediate exercise pays exactly that).
         let r = price(50.0, 100.0, 0.5, 0.05, 0.0, 0.20, 500, OptionKind::Put).unwrap();
-        assert!(r.price >= 49.99, "deep ITM put should be ≥ intrinsic, got {}", r.price);
+        assert!(
+            r.price >= 49.99,
+            "deep ITM put should be ≥ intrinsic, got {}",
+            r.price
+        );
     }
 
     #[test]
     fn longer_expiry_inflates_atm_american_call() {
         let r_short = price(100.0, 100.0, 0.10, 0.05, 0.0, 0.20, 200, OptionKind::Call).unwrap();
-        let r_long  = price(100.0, 100.0, 1.00, 0.05, 0.0, 0.20, 200, OptionKind::Call).unwrap();
+        let r_long = price(100.0, 100.0, 1.00, 0.05, 0.0, 0.20, 200, OptionKind::Call).unwrap();
         assert!(r_long.price > r_short.price);
     }
 
     #[test]
     fn higher_vol_inflates_atm_american() {
-        let r_low  = price(100.0, 100.0, 0.5, 0.05, 0.0, 0.10, 200, OptionKind::Call).unwrap();
+        let r_low = price(100.0, 100.0, 0.5, 0.05, 0.0, 0.10, 200, OptionKind::Call).unwrap();
         let r_high = price(100.0, 100.0, 0.5, 0.05, 0.0, 0.40, 200, OptionKind::Call).unwrap();
         assert!(r_high.price > r_low.price);
     }

@@ -143,8 +143,8 @@ pub fn check(input: &Section7216Input) -> Section7216Result {
             .to_string(),
     );
 
-    let consent_engaged = input.taxpayer_consent_obtained
-        && input.consent_complied_with_regs_301_7216_3;
+    let consent_engaged =
+        input.taxpayer_consent_obtained && input.consent_complied_with_regs_301_7216_3;
     let non_consent_engaged = input.authorized_by_301_7216_2_non_consent;
     let any_exception_engaged = consent_engaged || non_consent_engaged;
 
@@ -198,8 +198,8 @@ pub fn check(input: &Section7216Input) -> Section7216Result {
 
     let civil_per_disclosure = 25_000i64;
     let civil_annual_cap = 1_000_000i64;
-    let raw_civil = (input.number_of_prohibited_disclosures as i64)
-        .saturating_mul(civil_per_disclosure);
+    let raw_civil =
+        (input.number_of_prohibited_disclosures as i64).saturating_mul(civil_per_disclosure);
     let civil_penalty = if civil_engaged {
         raw_civil.min(civil_annual_cap)
     } else {
@@ -232,10 +232,7 @@ pub fn check(input: &Section7216Input) -> Section7216Result {
         );
     }
 
-    notes.push(
-        "IRM 25.5.1 + IRM 4.10 — preparer penalty procedural manuals"
-            .to_string(),
-    );
+    notes.push("IRM 25.5.1 + IRM 4.10 — preparer penalty procedural manuals".to_string());
 
     Section7216Result {
         criminal_prosecution_authorized: criminal_engaged,
@@ -341,7 +338,10 @@ mod tests {
         assert!(r.criminal_prosecution_authorized);
         assert!(r.civil_penalty_authorized);
         assert!(!r.consent_exception_engaged);
-        assert!(r.notes.iter().any(|n| n.contains("does NOT comply with regulations")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("does NOT comply with regulations")));
     }
 
     #[test]
@@ -360,7 +360,10 @@ mod tests {
         i.disclosure_involves_identity_theft = true;
         let r = check(&i);
         assert!(r.identity_theft_enhancement_engaged);
-        assert!(r.notes.iter().any(|n| n.contains("identity-theft enhancement") && n.contains("$100,000")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("identity-theft enhancement") && n.contains("$100,000")));
     }
 
     #[test]
@@ -405,7 +408,10 @@ mod tests {
     fn criminal_sol_3_years_general() {
         let r = check(&full_violation());
         assert_eq!(r.criminal_sol_years, 3);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6531 general 3-year criminal SOL")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6531 general 3-year criminal SOL")));
     }
 
     #[test]
@@ -414,7 +420,10 @@ mod tests {
         i.taxpayer_consent_obtained = true;
         i.consent_complied_with_regs_301_7216_3 = true;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("§ 301.7216-3") && n.contains("Rev. Proc. 2013-14") && n.contains("written") && n.contains("prominent")));
+        assert!(r.notes.iter().any(|n| n.contains("§ 301.7216-3")
+            && n.contains("Rev. Proc. 2013-14")
+            && n.contains("written")
+            && n.contains("prominent")));
     }
 
     #[test]
@@ -422,25 +431,36 @@ mod tests {
         let mut i = full_violation();
         i.authorized_by_301_7216_2_non_consent = true;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("§ 301.7216-2") && n.contains("court orders") && n.contains("malpractice insurance")));
+        assert!(r.notes.iter().any(|n| n.contains("§ 301.7216-2")
+            && n.contains("court orders")
+            && n.contains("malpractice insurance")));
     }
 
     #[test]
     fn tax_return_information_broad_definition_note() {
         let r = check(&full_violation());
-        assert!(r.notes.iter().any(|n| n.contains("brokerage statements") && n.contains("K-1s")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("brokerage statements") && n.contains("K-1s")));
     }
 
     #[test]
     fn cfia_18_usc_3571_note_present() {
         let r = check(&full_violation());
-        assert!(r.notes.iter().any(|n| n.contains("18 U.S.C. § 3571") && n.contains("$100,000")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("18 U.S.C. § 3571") && n.contains("$100,000")));
     }
 
     #[test]
     fn irm_notes_present() {
         let r = check(&full_violation());
-        assert!(r.notes.iter().any(|n| n.contains("IRM 25.5.1") && n.contains("IRM 4.10")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("IRM 25.5.1") && n.contains("IRM 4.10")));
     }
 
     #[test]
@@ -459,7 +479,9 @@ mod tests {
     #[test]
     fn criminal_authorized_note_describes_misdemeanor() {
         let r = check(&full_violation());
-        assert!(r.notes.iter().any(|n| n.contains("§ 7216(a)") && n.contains("misdemeanor prosecution AUTHORIZED") && n.contains("1-year")));
+        assert!(r.notes.iter().any(|n| n.contains("§ 7216(a)")
+            && n.contains("misdemeanor prosecution AUTHORIZED")
+            && n.contains("1-year")));
     }
 
     #[test]

@@ -36,18 +36,30 @@ pub struct MahalanobisReport {
 
 pub fn compute(observations: &[Vec<f64>]) -> Option<MahalanobisReport> {
     let n = observations.len();
-    if n < 2 { return None; }
+    if n < 2 {
+        return None;
+    }
     let p = observations[0].len();
-    if p == 0 { return None; }
-    if observations.iter().any(|row| row.len() != p
-        || row.iter().any(|x| !x.is_finite())) { return None; }
+    if p == 0 {
+        return None;
+    }
+    if observations
+        .iter()
+        .any(|row| row.len() != p || row.iter().any(|x| !x.is_finite()))
+    {
+        return None;
+    }
     let n_f = n as f64;
     // Sample mean per variable.
     let mut mean = vec![0.0_f64; p];
     for row in observations {
-        for (j, x) in row.iter().enumerate() { mean[j] += x; }
+        for (j, x) in row.iter().enumerate() {
+            mean[j] += x;
+        }
     }
-    for m in mean.iter_mut() { *m /= n_f; }
+    for m in mean.iter_mut() {
+        *m /= n_f;
+    }
     // Sample covariance (Bessel-corrected). Loops cross-index across
     // multiple matrices, so iterator rewrites obscure the intent.
     #[allow(clippy::needless_range_loop)]
@@ -61,9 +73,13 @@ pub fn compute(observations: &[Vec<f64>]) -> Option<MahalanobisReport> {
             }
         }
         let dof = (n - 1) as f64;
-        if dof <= 0.0 { return None; }
+        if dof <= 0.0 {
+            return None;
+        }
         for j in 0..p {
-            for k in 0..p { cov[j][k] /= dof; }
+            for k in 0..p {
+                cov[j][k] /= dof;
+            }
         }
         cov
     };
@@ -78,12 +94,17 @@ pub fn compute(observations: &[Vec<f64>]) -> Option<MahalanobisReport> {
         let mut acc = 0.0_f64;
         for j in 0..p {
             let mut row_acc = 0.0_f64;
-            for k in 0..p { row_acc += cov_inv[j][k] * diff[k]; }
+            for k in 0..p {
+                row_acc += cov_inv[j][k] * diff[k];
+            }
             acc += diff[j] * row_acc;
         }
         let d = acc.max(0.0).sqrt();
         distances.push(d);
-        if d > max_d { max_d = d; max_i = i; }
+        if d > max_d {
+            max_d = d;
+            max_i = i;
+        }
     }
     Some(MahalanobisReport {
         distances,
@@ -98,27 +119,43 @@ pub fn compute(observations: &[Vec<f64>]) -> Option<MahalanobisReport> {
 
 fn invert(m: &[Vec<f64>]) -> Option<Vec<Vec<f64>>> {
     let n = m.len();
-    if n == 0 || m.iter().any(|r| r.len() != n) { return None; }
+    if n == 0 || m.iter().any(|r| r.len() != n) {
+        return None;
+    }
     let mut aug = vec![vec![0.0_f64; 2 * n]; n];
     for i in 0..n {
-        for j in 0..n { aug[i][j] = m[i][j]; }
+        for j in 0..n {
+            aug[i][j] = m[i][j];
+        }
         aug[i][n + i] = 1.0;
     }
     for i in 0..n {
         let mut pivot = i;
         for r in (i + 1)..n {
-            if aug[r][i].abs() > aug[pivot][i].abs() { pivot = r; }
+            if aug[r][i].abs() > aug[pivot][i].abs() {
+                pivot = r;
+            }
         }
-        if aug[pivot][i].abs() < 1e-18 { return None; }
+        if aug[pivot][i].abs() < 1e-18 {
+            return None;
+        }
         aug.swap(i, pivot);
         let div = aug[i][i];
-        for v in aug[i].iter_mut() { *v /= div; }
+        for v in aug[i].iter_mut() {
+            *v /= div;
+        }
         for r in 0..n {
-            if r == i { continue; }
+            if r == i {
+                continue;
+            }
             let f = aug[r][i];
-            if f == 0.0 { continue; }
+            if f == 0.0 {
+                continue;
+            }
             let pivot_row = aug[i].clone();
-            for (j, v) in aug[r].iter_mut().enumerate() { *v -= f * pivot_row[j]; }
+            for (j, v) in aug[r].iter_mut().enumerate() {
+                *v -= f * pivot_row[j];
+            }
         }
     }
     Some((0..n).map(|i| aug[i][n..].to_vec()).collect())
@@ -163,7 +200,10 @@ mod tests {
         let sd = var.sqrt();
         for (i, d) in r.distances.iter().enumerate() {
             let expected = (i as f64 - mean).abs() / sd;
-            assert!((d - expected).abs() < 1e-9, "i={i}: got {d}, expected {expected}");
+            assert!(
+                (d - expected).abs() < 1e-9,
+                "i={i}: got {d}, expected {expected}"
+            );
         }
     }
 
@@ -177,19 +217,22 @@ mod tests {
             vec![5.0, 2.0],
             vec![3.0, 7.0],
             vec![6.0, 5.0],
-            vec![3.75, 3.75],    // = mean of the previous 4
+            vec![3.75, 3.75], // = mean of the previous 4
         ];
         let r = compute(&obs).unwrap();
-        assert!(r.distances[4] < 1e-9,
-            "mean obs should have distance ~0, got {}", r.distances[4]);
+        assert!(
+            r.distances[4] < 1e-9,
+            "mean obs should have distance ~0, got {}",
+            r.distances[4]
+        );
     }
 
     #[test]
     fn outlier_has_largest_distance() {
         // Cluster of 9 near-identical points + 1 obvious outlier.
-        let mut obs: Vec<Vec<f64>> = (0..9).map(|i| {
-            vec![100.0 + i as f64 * 0.1, 50.0 + i as f64 * 0.05]
-        }).collect();
+        let mut obs: Vec<Vec<f64>> = (0..9)
+            .map(|i| vec![100.0 + i as f64 * 0.1, 50.0 + i as f64 * 0.05])
+            .collect();
         obs.push(vec![200.0, 200.0]);
         let r = compute(&obs).unwrap();
         assert_eq!(r.argmax_index, 9);
@@ -199,10 +242,10 @@ mod tests {
     fn correlated_dimensions_handled() {
         // x = i, y = 2i: perfectly correlated. Outlier breaks correlation.
         let mut obs: Vec<Vec<f64>> = (0..10).map(|i| vec![i as f64, 2.0 * i as f64]).collect();
-        obs.push(vec![5.0, 0.0]);    // breaks the y = 2x pattern
-        // Mahalanobis correctly handles correlation; but here the
-        // correlation matrix is nearly singular, which may yield None.
-        // Skip if so — the test is about not panicking on near-singular input.
+        obs.push(vec![5.0, 0.0]); // breaks the y = 2x pattern
+                                  // Mahalanobis correctly handles correlation; but here the
+                                  // correlation matrix is nearly singular, which may yield None.
+                                  // Skip if so — the test is about not panicking on near-singular input.
         let _ = compute(&obs);
     }
 }

@@ -178,7 +178,8 @@ pub fn check(input: &Input) -> Output {
         "IRC § 168(d)(3) (mid-quarter convention — 40% last-quarter trigger)".to_string(),
         "IRC § 168(e)(2)(A) (residential rental 80% dwelling-income threshold)".to_string(),
         "IRC § 168(e)(2)(B) (nonresidential real property)".to_string(),
-        "IRC § 168(g) (Alternative Depreciation System — straight-line over class life)".to_string(),
+        "IRC § 168(g) (Alternative Depreciation System — straight-line over class life)"
+            .to_string(),
         "IRC § 168(k) (bonus depreciation — separate provision)".to_string(),
         "Tax Reform Act of 1986 (Pub. L. 99-514) — MACRS enactment".to_string(),
         "IRS Publication 946 (MACRS percentage tables)".to_string(),
@@ -580,7 +581,10 @@ mod tests {
     #[test]
     fn citations_pin_tax_reform_act_1986_and_pub_946() {
         let out = check(&base_residential());
-        assert!(out.citations.iter().any(|c| c.contains("Tax Reform Act of 1986")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("Tax Reform Act of 1986")));
         assert!(out.citations.iter().any(|c| c.contains("Publication 946")));
     }
 
@@ -611,7 +615,10 @@ mod tests {
 
     #[test]
     fn constant_pin_80_pct_residential_dwelling_threshold() {
-        assert_eq!(RESIDENTIAL_RENTAL_GROSS_RENT_FROM_DWELLING_THRESHOLD_PERCENT, 80);
+        assert_eq!(
+            RESIDENTIAL_RENTAL_GROSS_RENT_FROM_DWELLING_THRESHOLD_PERCENT,
+            80
+        );
     }
 
     #[test]

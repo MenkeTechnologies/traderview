@@ -40,16 +40,29 @@ pub fn compute(bars: &[Bar], period: usize) -> AroonReport {
     let mut dn = vec![None; n];
     let mut osc = vec![None; n];
     if period < 2 || n < period + 1 {
-        return AroonReport { aroon_up: up, aroon_down: dn, aroon_oscillator: osc };
+        return AroonReport {
+            aroon_up: up,
+            aroon_down: dn,
+            aroon_oscillator: osc,
+        };
     }
     for i in period..n {
-        let win = &bars[i - period..=i];     // (period + 1) bars: 0..period
-        if win.iter().any(|b| !b.high.is_finite() || !b.low.is_finite()) { continue; }
+        let win = &bars[i - period..=i]; // (period + 1) bars: 0..period
+        if win
+            .iter()
+            .any(|b| !b.high.is_finite() || !b.low.is_finite())
+        {
+            continue;
+        }
         let mut high_idx = 0;
         let mut low_idx = 0;
         for (k, b) in win.iter().enumerate() {
-            if b.high > win[high_idx].high { high_idx = k; }
-            if b.low < win[low_idx].low { low_idx = k; }
+            if b.high > win[high_idx].high {
+                high_idx = k;
+            }
+            if b.low < win[low_idx].low {
+                low_idx = k;
+            }
         }
         // bars_since_high = period − high_idx; the most recent bar at idx
         // `period` has bars_since = 0 → Aroon = 100.
@@ -62,14 +75,20 @@ pub fn compute(bars: &[Bar], period: usize) -> AroonReport {
         dn[i] = Some(d);
         osc[i] = Some(u - d);
     }
-    AroonReport { aroon_up: up, aroon_down: dn, aroon_oscillator: osc }
+    AroonReport {
+        aroon_up: up,
+        aroon_down: dn,
+        aroon_oscillator: osc,
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64) -> Bar { Bar { high: h, low: l } }
+    fn b(h: f64, l: f64) -> Bar {
+        Bar { high: h, low: l }
+    }
 
     #[test]
     fn empty_returns_empty_outputs() {
@@ -86,29 +105,46 @@ mod tests {
 
     #[test]
     fn strict_uptrend_yields_aroonup_100() {
-        let bars: Vec<_> = (0..30).map(|i| b(100.0 + i as f64, 99.0 + i as f64)).collect();
+        let bars: Vec<_> = (0..30)
+            .map(|i| b(100.0 + i as f64, 99.0 + i as f64))
+            .collect();
         let r = compute(&bars, 25);
         let last_up = r.aroon_up[29].unwrap();
         let last_down = r.aroon_down[29].unwrap();
-        assert!((last_up - 100.0).abs() < 1e-9, "uptrend: AroonUp should be 100, got {last_up}");
+        assert!(
+            (last_up - 100.0).abs() < 1e-9,
+            "uptrend: AroonUp should be 100, got {last_up}"
+        );
         // Lowest low is at the OLDEST bar (index 0 in window) → AroonDown = 0.
-        assert!(last_down.abs() < 1e-9, "uptrend: AroonDown should be 0, got {last_down}");
+        assert!(
+            last_down.abs() < 1e-9,
+            "uptrend: AroonDown should be 0, got {last_down}"
+        );
     }
 
     #[test]
     fn strict_downtrend_yields_aroondown_100() {
-        let bars: Vec<_> = (0..30).map(|i| b(100.0 - i as f64, 99.0 - i as f64)).collect();
+        let bars: Vec<_> = (0..30)
+            .map(|i| b(100.0 - i as f64, 99.0 - i as f64))
+            .collect();
         let r = compute(&bars, 25);
         let last_up = r.aroon_up[29].unwrap();
         let last_down = r.aroon_down[29].unwrap();
-        assert!((last_down - 100.0).abs() < 1e-9, "downtrend: AroonDown should be 100, got {last_down}");
-        assert!(last_up.abs() < 1e-9, "downtrend: AroonUp should be 0, got {last_up}");
+        assert!(
+            (last_down - 100.0).abs() < 1e-9,
+            "downtrend: AroonDown should be 100, got {last_down}"
+        );
+        assert!(
+            last_up.abs() < 1e-9,
+            "downtrend: AroonUp should be 0, got {last_up}"
+        );
     }
 
     #[test]
     fn oscillator_equals_up_minus_down() {
-        let bars: Vec<_> = (0..30).map(|i| b(100.0 + (i % 5) as f64,
-            99.0 + (i % 5) as f64)).collect();
+        let bars: Vec<_> = (0..30)
+            .map(|i| b(100.0 + (i % 5) as f64, 99.0 + (i % 5) as f64))
+            .collect();
         let r = compute(&bars, 25);
         for i in 25..30 {
             let u = r.aroon_up[i].unwrap();
@@ -134,8 +170,9 @@ mod tests {
 
     #[test]
     fn outputs_aligned_to_input_length() {
-        let bars: Vec<_> = (0..50).map(|i| b(101.0 + i as f64 * 0.1,
-            99.0 + i as f64 * 0.1)).collect();
+        let bars: Vec<_> = (0..50)
+            .map(|i| b(101.0 + i as f64 * 0.1, 99.0 + i as f64 * 0.1))
+            .collect();
         let r = compute(&bars, 25);
         assert_eq!(r.aroon_up.len(), 50);
         assert!(r.aroon_up[24].is_none());

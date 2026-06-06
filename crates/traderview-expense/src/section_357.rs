@@ -226,8 +226,7 @@ mod tests {
     #[test]
     fn section_357b_tax_avoidance_full_liability_as_boot() {
         let mut input = base();
-        input.purpose_status =
-            PurposeStatus::TaxAvoidanceOrNoBonaFideBusinessPurposeSection357B;
+        input.purpose_status = PurposeStatus::TaxAvoidanceOrNoBonaFideBusinessPurposeSection357B;
         let output = check(&input);
         assert_eq!(
             output.severity,
@@ -271,8 +270,7 @@ mod tests {
     #[test]
     fn section_357c2a_deductible_discharge_exception_no_gain() {
         let mut input = base();
-        input.liability_type =
-            LiabilityType::DeductibleDischargeLiabilitySection357C2A;
+        input.liability_type = LiabilityType::DeductibleDischargeLiabilitySection357C2A;
         input.aggregate_liabilities_assumed_cents = 200_000_00;
         let output = check(&input);
         assert_eq!(
@@ -301,8 +299,7 @@ mod tests {
     #[test]
     fn section_357b_takes_priority_over_357c() {
         let mut input = base();
-        input.purpose_status =
-            PurposeStatus::TaxAvoidanceOrNoBonaFideBusinessPurposeSection357B;
+        input.purpose_status = PurposeStatus::TaxAvoidanceOrNoBonaFideBusinessPurposeSection357B;
         input.aggregate_liabilities_assumed_cents = 200_000_00;
         // Tax-avoidance: all $200K treated as boot (not the $100K excess gain)
         let output = check(&input);
@@ -316,8 +313,7 @@ mod tests {
     #[test]
     fn section_357c2_exception_overrides_357c1_excess_gain() {
         let mut input = base();
-        input.liability_type =
-            LiabilityType::DeductibleDischargeLiabilitySection357C2A;
+        input.liability_type = LiabilityType::DeductibleDischargeLiabilitySection357C2A;
         input.aggregate_liabilities_assumed_cents = 500_000_00;
         // Even with $400K excess, § 357(c)(2)(A) exception → no gain
         let output = check(&input);

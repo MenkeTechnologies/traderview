@@ -47,18 +47,38 @@ pub fn compute(portfolio: &[f64], benchmark: &[f64]) -> Option<CaptureReport> {
     let mut dn_n = 0_usize;
     let mut neutral = 0_usize;
     for (p, b) in portfolio.iter().zip(benchmark.iter()) {
-        if !p.is_finite() || !b.is_finite() { continue; }
-        if *b > 0.0 { up_p += p; up_b += b; up_n += 1; }
-        else if *b < 0.0 { dn_p += p; dn_b += b; dn_n += 1; }
-        else { neutral += 1; }
+        if !p.is_finite() || !b.is_finite() {
+            continue;
+        }
+        if *b > 0.0 {
+            up_p += p;
+            up_b += b;
+            up_n += 1;
+        } else if *b < 0.0 {
+            dn_p += p;
+            dn_b += b;
+            dn_n += 1;
+        } else {
+            neutral += 1;
+        }
     }
-    if up_n == 0 && dn_n == 0 { return None; }
+    if up_n == 0 && dn_n == 0 {
+        return None;
+    }
     let up_p_mean = if up_n > 0 { up_p / up_n as f64 } else { 0.0 };
     let up_b_mean = if up_n > 0 { up_b / up_n as f64 } else { 0.0 };
     let dn_p_mean = if dn_n > 0 { dn_p / dn_n as f64 } else { 0.0 };
     let dn_b_mean = if dn_n > 0 { dn_b / dn_n as f64 } else { 0.0 };
-    let up_cap = if up_n > 0 && up_b_mean != 0.0 { Some(up_p_mean / up_b_mean * 100.0) } else { None };
-    let dn_cap = if dn_n > 0 && dn_b_mean != 0.0 { Some(dn_p_mean / dn_b_mean * 100.0) } else { None };
+    let up_cap = if up_n > 0 && up_b_mean != 0.0 {
+        Some(up_p_mean / up_b_mean * 100.0)
+    } else {
+        None
+    };
+    let dn_cap = if dn_n > 0 && dn_b_mean != 0.0 {
+        Some(dn_p_mean / dn_b_mean * 100.0)
+    } else {
+        None
+    };
     let spread = match (up_cap, dn_cap) {
         (Some(u), Some(d)) => Some(u - d),
         _ => None,

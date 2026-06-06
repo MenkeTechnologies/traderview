@@ -31,8 +31,12 @@ pub struct MedianRvReport {
 
 pub fn compute(returns: &[f64]) -> Option<MedianRvReport> {
     let n = returns.len();
-    if n < 5 { return None; }
-    if returns.iter().any(|x| !x.is_finite()) { return None; }
+    if n < 5 {
+        return None;
+    }
+    if returns.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let n_f = n as f64;
     let constant = std::f64::consts::PI / (6.0 - 4.0 * 3.0_f64.sqrt() + std::f64::consts::PI);
     let scale = (n_f / (n_f - 2.0)) * constant;
@@ -63,15 +67,19 @@ mod tests {
 
     fn box_muller(n: usize, seed: u64, scale: f64) -> Vec<f64> {
         let mut state = seed;
-        (0..n).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u2 = (state >> 32) as f64 / u32::MAX as f64;
-            scale * (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
-        }).collect()
+        (0..n)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u2 = (state >> 32) as f64 / u32::MAX as f64;
+                scale * (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
+            })
+            .collect()
     }
 
     #[test]
@@ -100,9 +108,13 @@ mod tests {
         let result = compute(&r).unwrap();
         let rel = (result.median_realized_variance - result.realized_variance).abs()
             / result.realized_variance;
-        assert!(rel < 0.30,
+        assert!(
+            rel < 0.30,
             "MedRV {} should track RV {} when no jumps, rel diff = {:.2}",
-            result.median_realized_variance, result.realized_variance, rel);
+            result.median_realized_variance,
+            result.realized_variance,
+            rel
+        );
     }
 
     #[test]
@@ -110,9 +122,12 @@ mod tests {
         let mut r = vec![0.001_f64; 500];
         r[200] = 0.50;
         let result = compute(&r).unwrap();
-        assert!(result.realized_variance > result.median_realized_variance,
+        assert!(
+            result.realized_variance > result.median_realized_variance,
             "jump should inflate RV {} above MedRV {}",
-            result.realized_variance, result.median_realized_variance);
+            result.realized_variance,
+            result.median_realized_variance
+        );
         assert!(result.jump_variation_estimate > 0.0);
     }
 
@@ -141,7 +156,8 @@ mod tests {
         let result = compute(&r).unwrap();
         // Each triple median = c, so sum = (n-2)·c². Scaled by π/(6-4√3+π)·n/(n-2).
         let n_f = r.len() as f64;
-        let const_factor = std::f64::consts::PI / (6.0 - 4.0 * 3.0_f64.sqrt() + std::f64::consts::PI);
+        let const_factor =
+            std::f64::consts::PI / (6.0 - 4.0 * 3.0_f64.sqrt() + std::f64::consts::PI);
         let expected = const_factor * (n_f / (n_f - 2.0)) * (n_f - 2.0) * c * c;
         assert!((result.median_realized_variance - expected).abs() < 1e-12);
     }

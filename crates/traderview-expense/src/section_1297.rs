@@ -163,10 +163,7 @@ pub fn compute(input: &Section1297Input) -> Section1297Result {
         .max(0)
         .saturating_add(input.active_insurance_carve_out_cents.max(0))
         .saturating_add(input.related_party_carve_out_cents.max(0));
-    let net_passive_income = input
-        .passive_income_cents
-        .saturating_sub(carve_outs)
-        .max(0);
+    let net_passive_income = input.passive_income_cents.saturating_sub(carve_outs).max(0);
 
     // § 1297(c) look-through rule — add subsidiary's proportionate
     // passive income to numerator AND total income to denominator.
@@ -175,8 +172,8 @@ pub fn compute(input: &Section1297Input) -> Section1297Result {
     if input.has_25_pct_owned_subsidiary {
         effective_passive_income = effective_passive_income
             .saturating_add(input.subsidiary_passive_income_share_cents.max(0));
-        effective_gross_income = effective_gross_income
-            .saturating_add(input.subsidiary_total_income_share_cents.max(0));
+        effective_gross_income =
+            effective_gross_income.saturating_add(input.subsidiary_total_income_share_cents.max(0));
         notes.push(
             "§ 1297(c) look-through rule APPLIES — foreign corp owns at least 25% (by value) \
              of another corporation; subsidiary's proportionate passive income and total \
@@ -198,8 +195,8 @@ pub fn compute(input: &Section1297Input) -> Section1297Result {
     let asset_test_satisfied = input.avg_passive_assets_bp >= SECTION_1297_ASSET_TEST_BP;
 
     // § 1297(d) once-a-PFIC qualified-portion exception.
-    let once_a_pfic_qualified = input.purging_election_applied
-        && input.in_qualified_portion_of_holding_period;
+    let once_a_pfic_qualified =
+        input.purging_election_applied && input.in_qualified_portion_of_holding_period;
     if once_a_pfic_qualified {
         notes.push(
             "§ 1297(d) — once-a-PFIC qualified portion applies: shareholder has made the \
@@ -397,11 +394,10 @@ mod tests {
         ));
         assert_eq!(r.net_passive_income_cents, 50_000);
         assert!(!r.income_test_satisfied);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1297(b)(2)(A)") && n.contains("active banking"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1297(b)(2)(A)") && n.contains("active banking")));
     }
 
     #[test]
@@ -410,11 +406,10 @@ mod tests {
             100_000, 80_000, 0, 20_000, 0, 0, 0, false, 0, 0, false, false,
         ));
         assert_eq!(r.net_passive_income_cents, 60_000);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1297(b)(2)(B)") && n.contains("active insurance"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1297(b)(2)(B)") && n.contains("active insurance")));
     }
 
     #[test]
@@ -423,11 +418,10 @@ mod tests {
             100_000, 80_000, 0, 0, 15_000, 0, 0, false, 0, 0, false, false,
         ));
         assert_eq!(r.net_passive_income_cents, 65_000);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1297(b)(2)(C)") && n.contains("related-party"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1297(b)(2)(C)") && n.contains("related-party")));
     }
 
     #[test]
@@ -461,11 +455,10 @@ mod tests {
         assert!(r.look_through_rule_applies);
         assert_eq!(r.passive_income_percentage_bp, 5_000);
         assert!(!r.income_test_satisfied);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1297(c)") && n.contains("25%"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1297(c)") && n.contains("25%")));
     }
 
     #[test]
@@ -578,7 +571,7 @@ mod tests {
     fn income_test_75_pct_threshold_strict_boundary_invariant() {
         for (bp, expected_satisfied) in [
             (7_499_u32, false),
-            (7_500, true),  // ≥ 75% — at boundary satisfies
+            (7_500, true), // ≥ 75% — at boundary satisfies
             (7_501, true),
         ] {
             let passive = bp as i64 * 10; // out of 100_000
@@ -597,7 +590,7 @@ mod tests {
     fn asset_test_50_pct_threshold_strict_boundary_invariant() {
         for (bp, expected_satisfied) in [
             (4_999_u32, false),
-            (5_000, true),  // ≥ 50% — at boundary satisfies
+            (5_000, true), // ≥ 50% — at boundary satisfies
             (5_001, true),
         ] {
             let r = compute(&input(

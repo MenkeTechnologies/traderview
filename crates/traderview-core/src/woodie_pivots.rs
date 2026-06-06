@@ -19,7 +19,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct PriorSession { pub high: f64, pub low: f64, pub close: f64 }
+pub struct PriorSession {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Default)]
 pub struct WoodiePivotLevels {
@@ -35,8 +39,11 @@ pub struct WoodiePivotLevels {
 }
 
 pub fn compute(session: PriorSession) -> Option<WoodiePivotLevels> {
-    if !session.high.is_finite() || !session.low.is_finite()
-        || !session.close.is_finite() || session.high < session.low {
+    if !session.high.is_finite()
+        || !session.low.is_finite()
+        || !session.close.is_finite()
+        || session.high < session.low
+    {
         return None;
     }
     let p = (session.high + session.low + 2.0 * session.close) / 4.0;
@@ -66,8 +73,18 @@ mod tests {
 
     #[test]
     fn invalid_session_returns_none() {
-        assert!(compute(PriorSession { high: f64::NAN, low: 99.0, close: 100.0 }).is_none());
-        assert!(compute(PriorSession { high: 99.0, low: 101.0, close: 100.0 }).is_none());
+        assert!(compute(PriorSession {
+            high: f64::NAN,
+            low: 99.0,
+            close: 100.0
+        })
+        .is_none());
+        assert!(compute(PriorSession {
+            high: 99.0,
+            low: 101.0,
+            close: 100.0
+        })
+        .is_none());
     }
 
     #[test]
@@ -75,31 +92,56 @@ mod tests {
         // Floor pivot for H=110,L=100,C=105 = 105.
         // Woodie pivot = (110 + 100 + 210)/4 = 105.
         // For C=108: Floor = (110+100+108)/3 = 106; Woodie = (110+100+216)/4 = 106.5.
-        let r = compute(PriorSession { high: 110.0, low: 100.0, close: 108.0 }).unwrap();
+        let r = compute(PriorSession {
+            high: 110.0,
+            low: 100.0,
+            close: 108.0,
+        })
+        .unwrap();
         assert!((r.pivot - 106.5).abs() < 1e-9);
     }
 
     #[test]
     fn resistance_levels_ordered() {
-        let r = compute(PriorSession { high: 110.0, low: 100.0, close: 108.0 }).unwrap();
+        let r = compute(PriorSession {
+            high: 110.0,
+            low: 100.0,
+            close: 108.0,
+        })
+        .unwrap();
         assert!(r.pivot < r.r1 && r.r1 < r.r2 && r.r2 < r.r3 && r.r3 < r.r4);
     }
 
     #[test]
     fn support_levels_ordered() {
-        let r = compute(PriorSession { high: 110.0, low: 100.0, close: 102.0 }).unwrap();
+        let r = compute(PriorSession {
+            high: 110.0,
+            low: 100.0,
+            close: 102.0,
+        })
+        .unwrap();
         assert!(r.pivot > r.s1 && r.s1 > r.s2 && r.s2 > r.s3 && r.s3 > r.s4);
     }
 
     #[test]
     fn r4_above_r3_by_r2_minus_r1() {
-        let r = compute(PriorSession { high: 110.0, low: 100.0, close: 105.0 }).unwrap();
+        let r = compute(PriorSession {
+            high: 110.0,
+            low: 100.0,
+            close: 105.0,
+        })
+        .unwrap();
         assert!((r.r4 - r.r3 - (r.r2 - r.r1)).abs() < 1e-9);
     }
 
     #[test]
     fn zero_range_collapses_levels_to_close() {
-        let r = compute(PriorSession { high: 100.0, low: 100.0, close: 100.0 }).unwrap();
+        let r = compute(PriorSession {
+            high: 100.0,
+            low: 100.0,
+            close: 100.0,
+        })
+        .unwrap();
         for lvl in [r.r4, r.r3, r.r2, r.r1, r.s1, r.s2, r.s3, r.s4] {
             assert!((lvl - 100.0).abs() < 1e-9);
         }

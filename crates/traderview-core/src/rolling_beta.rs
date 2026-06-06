@@ -30,13 +30,17 @@ pub fn compute(
     periods_per_year: f64,
 ) -> Option<RollingBetaReport> {
     let n = asset_returns.len();
-    if n < window || benchmark_returns.len() != n
+    if n < window
+        || benchmark_returns.len() != n
         || window < 5
-        || !periods_per_year.is_finite() || periods_per_year <= 0.0 {
+        || !periods_per_year.is_finite()
+        || periods_per_year <= 0.0
+    {
         return None;
     }
     if asset_returns.iter().any(|x| !x.is_finite())
-        || benchmark_returns.iter().any(|x| !x.is_finite()) {
+        || benchmark_returns.iter().any(|x| !x.is_finite())
+    {
         return None;
     }
     let mut beta = vec![None; n];
@@ -58,10 +62,16 @@ pub fn compute(
             sxy += dx * dy;
             syy += dy * dy;
         }
-        if sxx <= 0.0 { continue; }
+        if sxx <= 0.0 {
+            continue;
+        }
         let bb = sxy / sxx;
         let aa = a_mean - bb * b_mean;
-        let r2 = if syy > 0.0 { (bb * bb * sxx / syy).clamp(0.0, 1.0) } else { 0.0 };
+        let r2 = if syy > 0.0 {
+            (bb * bb * sxx / syy).clamp(0.0, 1.0)
+        } else {
+            0.0
+        };
         beta[i] = Some(bb);
         alpha_ann[i] = Some(aa * periods_per_year);
         r_sq[i] = Some(r2);
@@ -97,11 +107,14 @@ mod tests {
     #[test]
     fn asset_equals_benchmark_yields_beta_one() {
         let mut state: u64 = 42;
-        let b: Vec<f64> = (0..200).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.02
-        }).collect();
+        let b: Vec<f64> = (0..200)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.02
+            })
+            .collect();
         let r = compute(&b, &b, 60, 252.0).unwrap();
         for v in r.rolling_beta.iter().skip(59).flatten() {
             assert!((v - 1.0).abs() < 1e-9);
@@ -114,11 +127,14 @@ mod tests {
     #[test]
     fn high_leverage_asset_yields_beta_above_one() {
         let mut state: u64 = 11;
-        let b: Vec<f64> = (0..200).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.02
-        }).collect();
+        let b: Vec<f64> = (0..200)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.02
+            })
+            .collect();
         let a: Vec<f64> = b.iter().map(|x| 2.0 * x).collect();
         let r = compute(&a, &b, 60, 252.0).unwrap();
         let last_beta = r.rolling_beta[199].unwrap();

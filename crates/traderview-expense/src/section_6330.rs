@@ -263,10 +263,7 @@ mod tests {
         let r = compute(&i);
         assert!(!r.cdp_hearing_entitlement);
         assert!(!r.collection_suspended_pending_review);
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("equivalent hearing")));
+        assert!(r.notes.iter().any(|n| n.contains("equivalent hearing")));
     }
 
     #[test]
@@ -478,7 +475,10 @@ mod tests {
                 collection_alternative_proposed: true,
             };
             let r = compute(&i);
-            assert!(!r.cdp_hearing_entitlement, "jeopardy cancels CDP regardless of timing");
+            assert!(
+                !r.cdp_hearing_entitlement,
+                "jeopardy cancels CDP regardless of timing"
+            );
             assert!(!r.collection_suspended_pending_review);
             assert!(!r.tax_court_petition_timely);
         }

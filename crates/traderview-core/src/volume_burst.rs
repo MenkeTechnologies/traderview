@@ -31,7 +31,12 @@ pub struct BurstConfig {
 }
 
 impl Default for BurstConfig {
-    fn default() -> Self { Self { lookback: 20, min_ratio: 3.0 } }
+    fn default() -> Self {
+        Self {
+            lookback: 20,
+            min_ratio: 3.0,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -58,7 +63,10 @@ pub struct BurstReport {
 pub fn detect(bars: &[VolumeBar], cfg: &BurstConfig) -> BurstReport {
     let n = bars.len();
     if n == 0 || cfg.lookback == 0 || cfg.min_ratio <= 0.0 {
-        return BurstReport { n_bars: n, ..Default::default() };
+        return BurstReport {
+            n_bars: n,
+            ..Default::default()
+        };
     }
     let mut events = Vec::new();
     let mut max_ratio = 0.0_f64;
@@ -69,16 +77,26 @@ pub fn detect(bars: &[VolumeBar], cfg: &BurstConfig) -> BurstReport {
         let window = &bars[(i - cfg.lookback)..i];
         let sum: f64 = window.iter().map(|b| b.volume).sum();
         let avg = sum / cfg.lookback as f64;
-        if avg <= 0.0 { continue; }
+        if avg <= 0.0 {
+            continue;
+        }
         let ratio = bars[i].volume / avg;
-        if ratio > max_ratio { max_ratio = ratio; }
+        if ratio > max_ratio {
+            max_ratio = ratio;
+        }
         if ratio >= cfg.min_ratio {
             let direction = if i > 0 {
                 let prev_close = bars[i - 1].close;
-                if bars[i].close > prev_close      { "up" }
-                else if bars[i].close < prev_close { "down" }
-                else                               { "neutral" }
-            } else { "neutral" };
+                if bars[i].close > prev_close {
+                    "up"
+                } else if bars[i].close < prev_close {
+                    "down"
+                } else {
+                    "neutral"
+                }
+            } else {
+                "neutral"
+            };
             events.push(BurstEvent {
                 bar_index: i,
                 volume: bars[i].volume,
@@ -90,14 +108,24 @@ pub fn detect(bars: &[VolumeBar], cfg: &BurstConfig) -> BurstReport {
         }
     }
     let n_bursts = events.len();
-    BurstReport { events, n_bars: n, n_bursts, max_ratio }
+    BurstReport {
+        events,
+        n_bars: n,
+        n_bursts,
+        max_ratio,
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn bar(v: f64, c: f64) -> VolumeBar { VolumeBar { volume: v, close: c } }
+    fn bar(v: f64, c: f64) -> VolumeBar {
+        VolumeBar {
+            volume: v,
+            close: c,
+        }
+    }
 
     #[test]
     fn empty_input_returns_zero_report() {
@@ -109,7 +137,9 @@ mod tests {
     #[test]
     fn no_burst_in_flat_volume() {
         // 25 bars of constant 1000 volume → no bar exceeds 3× the average.
-        let bars: Vec<VolumeBar> = (0..25).map(|i| bar(1000.0, 100.0 + i as f64 * 0.01)).collect();
+        let bars: Vec<VolumeBar> = (0..25)
+            .map(|i| bar(1000.0, 100.0 + i as f64 * 0.01))
+            .collect();
         let r = detect(&bars, &BurstConfig::default());
         assert!(r.events.is_empty(), "flat volume should produce 0 bursts");
         assert!((r.max_ratio - 1.0).abs() < 1e-9);
@@ -150,17 +180,38 @@ mod tests {
         // giving a ratio of only 4.17. Strict-prior averaging gives ratio = 5.0.
         let mut bars: Vec<VolumeBar> = (0..20).map(|_| bar(1000.0, 100.0)).collect();
         bars.push(bar(5000.0, 101.0));
-        let r = detect(&bars, &BurstConfig { lookback: 20, min_ratio: 3.0 });
-        assert!((r.events[0].ratio - 5.0).abs() < 1e-9,
-            "current-bar exclusion gives ratio 5.0, got {}", r.events[0].ratio);
+        let r = detect(
+            &bars,
+            &BurstConfig {
+                lookback: 20,
+                min_ratio: 3.0,
+            },
+        );
+        assert!(
+            (r.events[0].ratio - 5.0).abs() < 1e-9,
+            "current-bar exclusion gives ratio 5.0, got {}",
+            r.events[0].ratio
+        );
     }
 
     #[test]
     fn zero_lookback_or_threshold_returns_empty() {
         let bars = vec![bar(1000.0, 100.0); 5];
-        let r0 = detect(&bars, &BurstConfig { lookback: 0, min_ratio: 3.0 });
+        let r0 = detect(
+            &bars,
+            &BurstConfig {
+                lookback: 0,
+                min_ratio: 3.0,
+            },
+        );
         assert!(r0.events.is_empty());
-        let rt = detect(&bars, &BurstConfig { lookback: 3, min_ratio: 0.0 });
+        let rt = detect(
+            &bars,
+            &BurstConfig {
+                lookback: 3,
+                min_ratio: 0.0,
+            },
+        );
         assert!(rt.events.is_empty());
     }
 
@@ -169,7 +220,13 @@ mod tests {
         // A 2.5× spike doesn't fire (threshold 3.0) but should still bump max_ratio.
         let mut bars: Vec<VolumeBar> = (0..20).map(|_| bar(1000.0, 100.0)).collect();
         bars.push(bar(2500.0, 101.0));
-        let r = detect(&bars, &BurstConfig { lookback: 20, min_ratio: 3.0 });
+        let r = detect(
+            &bars,
+            &BurstConfig {
+                lookback: 20,
+                min_ratio: 3.0,
+            },
+        );
         assert!(r.events.is_empty());
         assert!((r.max_ratio - 2.5).abs() < 1e-9);
     }

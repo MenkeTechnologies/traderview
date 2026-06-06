@@ -212,7 +212,12 @@ pub fn check(input: &Input) -> Output {
         // NJ: no statutory mandate absent contract
         // MA: multifamily common-area required
         match input.jurisdiction {
-            Jurisdiction::Massachusetts if !matches!(input.building_type, BuildingType::SingleFamily | BuildingType::DuplexTwoUnit) => {
+            Jurisdiction::Massachusetts
+                if !matches!(
+                    input.building_type,
+                    BuildingType::SingleFamily | BuildingType::DuplexTwoUnit
+                ) =>
+            {
                 actions.push("Massachusetts multifamily (3+ unit): 527 C.M.R. 1.00 Comprehensive Fire Safety Code adopting NFPA 10 + local fire-marshal authority typically requires portable extinguishers in common areas, on each floor, near exits; M.G.L. c. 148 § 26G + § 28A.".to_string());
             }
             _ => {
@@ -226,7 +231,10 @@ pub fn check(input: &Input) -> Output {
         let severity = if input.fire_injury_event_reported {
             Severity::FireInjuryEvent
         } else if matches!(input.jurisdiction, Jurisdiction::Massachusetts)
-            && !matches!(input.building_type, BuildingType::SingleFamily | BuildingType::DuplexTwoUnit)
+            && !matches!(
+                input.building_type,
+                BuildingType::SingleFamily | BuildingType::DuplexTwoUnit
+            )
         {
             Severity::StatutoryDutyBreach
         } else {
@@ -286,7 +294,9 @@ pub fn check(input: &Input) -> Output {
         statutory_duty_breach = true;
         let citation = match input.jurisdiction {
             Jurisdiction::Texas => "Tex. Prop. Code § 92.255 explicit duty",
-            Jurisdiction::Massachusetts => "NFPA 10 recharge-after-use (adopted via 527 C.M.R. 1.00)",
+            Jurisdiction::Massachusetts => {
+                "NFPA 10 recharge-after-use (adopted via 527 C.M.R. 1.00)"
+            }
             Jurisdiction::NewJersey => "NFPA 10 recharge-after-use (adopted via N.J.A.C. 5:70-3)",
             Jurisdiction::Default => "NFPA 10 recharge-after-use",
         };

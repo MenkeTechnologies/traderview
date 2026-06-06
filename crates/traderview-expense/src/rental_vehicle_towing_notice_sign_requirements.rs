@@ -153,8 +153,10 @@ pub fn compute(input: &Input) -> Output {
     if !input.tow_performed {
         return Output {
             mode: VehicleTowingNoticeSignRequirementsMode::NotApplicableNoTowingPerformed,
-            statutory_basis: "No tow performed; signage and notice requirements not invoked".to_string(),
-            notes: "No tow performed; sign + notice + storage requirements not invoked.".to_string(),
+            statutory_basis: "No tow performed; signage and notice requirements not invoked"
+                .to_string(),
+            notes: "No tow performed; sign + notice + storage requirements not invoked."
+                .to_string(),
             citations,
         };
     }
@@ -354,7 +356,10 @@ mod tests {
             ..baseline_california_22658_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VehicleTowingNoticeSignRequirementsMode::NotApplicableNoTowingPerformed);
+        assert_eq!(
+            result.mode,
+            VehicleTowingNoticeSignRequirementsMode::NotApplicableNoTowingPerformed
+        );
     }
 
     #[test]
@@ -364,13 +369,19 @@ mod tests {
             ..baseline_california_22658_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VehicleTowingNoticeSignRequirementsMode::NotApplicableFireLaneOrEmergencyTow);
+        assert_eq!(
+            result.mode,
+            VehicleTowingNoticeSignRequirementsMode::NotApplicableFireLaneOrEmergencyTow
+        );
     }
 
     #[test]
     fn california_22658_minimum_signage_compliant() {
         let result = check(&baseline_california_22658_compliant());
-        assert_eq!(result.mode, VehicleTowingNoticeSignRequirementsMode::CompliantCa22658FullSignageAndAuthorization);
+        assert_eq!(
+            result.mode,
+            VehicleTowingNoticeSignRequirementsMode::CompliantCa22658FullSignageAndAuthorization
+        );
     }
 
     #[test]
@@ -380,7 +391,10 @@ mod tests {
             ..baseline_california_22658_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VehicleTowingNoticeSignRequirementsMode::ViolationCaliforniaSignSizeBelowMinimum);
+        assert_eq!(
+            result.mode,
+            VehicleTowingNoticeSignRequirementsMode::ViolationCaliforniaSignSizeBelowMinimum
+        );
     }
 
     #[test]
@@ -390,7 +404,10 @@ mod tests {
             ..baseline_california_22658_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VehicleTowingNoticeSignRequirementsMode::ViolationCaliforniaSignSizeBelowMinimum);
+        assert_eq!(
+            result.mode,
+            VehicleTowingNoticeSignRequirementsMode::ViolationCaliforniaSignSizeBelowMinimum
+        );
     }
 
     #[test]
@@ -400,7 +417,10 @@ mod tests {
             ..baseline_california_22658_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VehicleTowingNoticeSignRequirementsMode::ViolationCaliforniaSignSizeBelowMinimum);
+        assert_eq!(
+            result.mode,
+            VehicleTowingNoticeSignRequirementsMode::ViolationCaliforniaSignSizeBelowMinimum
+        );
     }
 
     #[test]
@@ -410,7 +430,10 @@ mod tests {
             ..baseline_california_22658_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VehicleTowingNoticeSignRequirementsMode::ViolationCaliforniaLetteringBelow1Inch);
+        assert_eq!(
+            result.mode,
+            VehicleTowingNoticeSignRequirementsMode::ViolationCaliforniaLetteringBelow1Inch
+        );
     }
 
     #[test]
@@ -420,7 +443,10 @@ mod tests {
             ..baseline_california_22658_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VehicleTowingNoticeSignRequirementsMode::ViolationMissingLawEnforcementPhoneOnSign);
+        assert_eq!(
+            result.mode,
+            VehicleTowingNoticeSignRequirementsMode::ViolationMissingLawEnforcementPhoneOnSign
+        );
     }
 
     #[test]
@@ -464,7 +490,10 @@ mod tests {
             ..baseline_california_22658_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VehicleTowingNoticeSignRequirementsMode::CompliantLa80714LargerSignWithLapdPhone);
+        assert_eq!(
+            result.mode,
+            VehicleTowingNoticeSignRequirementsMode::CompliantLa80714LargerSignWithLapdPhone
+        );
     }
 
     #[test]
@@ -477,7 +506,10 @@ mod tests {
             ..baseline_california_22658_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VehicleTowingNoticeSignRequirementsMode::ViolationLosAngelesSignBelow24x24);
+        assert_eq!(
+            result.mode,
+            VehicleTowingNoticeSignRequirementsMode::ViolationLosAngelesSignBelow24x24
+        );
     }
 
     #[test]
@@ -491,7 +523,10 @@ mod tests {
             ..baseline_california_22658_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VehicleTowingNoticeSignRequirementsMode::ViolationLosAngelesSignBelow24x24);
+        assert_eq!(
+            result.mode,
+            VehicleTowingNoticeSignRequirementsMode::ViolationLosAngelesSignBelow24x24
+        );
     }
 
     #[test]
@@ -502,7 +537,10 @@ mod tests {
             ..baseline_california_22658_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VehicleTowingNoticeSignRequirementsMode::ViolationTenantVehicleNoWrittenNoticeProvided);
+        assert_eq!(
+            result.mode,
+            VehicleTowingNoticeSignRequirementsMode::ViolationTenantVehicleNoWrittenNoticeProvided
+        );
     }
 
     #[test]
@@ -513,7 +551,10 @@ mod tests {
             ..baseline_california_22658_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VehicleTowingNoticeSignRequirementsMode::CompliantCa22658FullSignageAndAuthorization);
+        assert_eq!(
+            result.mode,
+            VehicleTowingNoticeSignRequirementsMode::CompliantCa22658FullSignageAndAuthorization
+        );
     }
 
     #[test]
@@ -523,7 +564,10 @@ mod tests {
             ..baseline_california_22658_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VehicleTowingNoticeSignRequirementsMode::CompliantTx2308SignAndStorageAccess);
+        assert_eq!(
+            result.mode,
+            VehicleTowingNoticeSignRequirementsMode::CompliantTx2308SignAndStorageAccess
+        );
     }
 
     #[test]
@@ -544,7 +588,10 @@ mod tests {
             ..baseline_california_22658_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VehicleTowingNoticeSignRequirementsMode::CompliantFl71507SignAnd30DayStorage);
+        assert_eq!(
+            result.mode,
+            VehicleTowingNoticeSignRequirementsMode::CompliantFl71507SignAnd30DayStorage
+        );
     }
 
     #[test]
@@ -555,7 +602,10 @@ mod tests {
             ..baseline_california_22658_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VehicleTowingNoticeSignRequirementsMode::ViolationFlorida30DayStorageNotObserved);
+        assert_eq!(
+            result.mode,
+            VehicleTowingNoticeSignRequirementsMode::ViolationFlorida30DayStorageNotObserved
+        );
     }
 
     #[test]
@@ -565,7 +615,10 @@ mod tests {
             ..baseline_california_22658_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VehicleTowingNoticeSignRequirementsMode::CompliantNjPredatoryTowingMaxChargesObserved);
+        assert_eq!(
+            result.mode,
+            VehicleTowingNoticeSignRequirementsMode::CompliantNjPredatoryTowingMaxChargesObserved
+        );
     }
 
     #[test]
@@ -575,7 +628,10 @@ mod tests {
             ..baseline_california_22658_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VehicleTowingNoticeSignRequirementsMode::CompliantIlVehicleCode18aIccRegulatedRates);
+        assert_eq!(
+            result.mode,
+            VehicleTowingNoticeSignRequirementsMode::CompliantIlVehicleCode18aIccRegulatedRates
+        );
     }
 
     #[test]

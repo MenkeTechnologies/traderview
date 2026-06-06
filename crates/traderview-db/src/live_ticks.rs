@@ -305,8 +305,12 @@ impl LiveTickStore {
                 closed = Some((t.symbol.clone(), prev));
             }
             // Always fold the incoming trade into the now-current bucket.
-            if t.price > entry.high { entry.high = t.price; }
-            if t.price < entry.low  { entry.low  = t.price; }
+            if t.price > entry.high {
+                entry.high = t.price;
+            }
+            if t.price < entry.low {
+                entry.low = t.price;
+            }
             entry.close = t.price;
             entry.volume += t.volume;
         }

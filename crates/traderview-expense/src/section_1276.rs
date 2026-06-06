@@ -157,7 +157,9 @@ pub fn compute(input: &Section1276Input) -> Section1276Result {
              there is no market discount and § 1276 does not apply."
                 .to_string(),
         );
-        let total_gain = input.realized_amount_cents.saturating_sub(input.purchase_price_cents);
+        let total_gain = input
+            .realized_amount_cents
+            .saturating_sub(input.purchase_price_cents);
         return Section1276Result {
             market_discount_cents: 0,
             accrued_market_discount_cents: 0,
@@ -180,9 +182,7 @@ pub fn compute(input: &Section1276Input) -> Section1276Result {
             if input.days_from_acquisition_to_maturity == 0 {
                 market_discount
             } else {
-                let held = input
-                    .days_held
-                    .min(input.days_from_acquisition_to_maturity) as i64;
+                let held = input.days_held.min(input.days_from_acquisition_to_maturity) as i64;
                 let total = input.days_from_acquisition_to_maturity as i64;
                 let computed = market_discount.saturating_mul(held) / total;
                 computed.min(market_discount)
@@ -196,7 +196,10 @@ pub fn compute(input: &Section1276Input) -> Section1276Result {
                  formula; election is irrevocable as to this bond."
                     .to_string(),
             );
-            input.constant_yield_accrual_cents.max(0).min(market_discount)
+            input
+                .constant_yield_accrual_cents
+                .max(0)
+                .min(market_discount)
         }
     };
 
@@ -237,7 +240,10 @@ pub fn compute(input: &Section1276Input) -> Section1276Result {
         );
     }
 
-    if matches!(input.disposition_type, DispositionType::PartialPrincipalPayment) {
+    if matches!(
+        input.disposition_type,
+        DispositionType::PartialPrincipalPayment
+    ) {
         notes.push(
             "§ 1276(a)(3) — partial principal payment treated as ordinary income up to \
              accrued market discount; basis is reduced for the principal-payment portion."
@@ -494,11 +500,10 @@ mod tests {
         ));
         assert_eq!(r.ordinary_income_cents, 7_000);
         assert_eq!(r.capital_gain_cents, 0);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1276(a)(2)") && n.contains("fair market value"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1276(a)(2)") && n.contains("fair market value")));
         assert!(r.citation.contains("§ 1276(a)(2)"));
     }
 
@@ -520,11 +525,10 @@ mod tests {
         assert_eq!(r.ordinary_income_cents, 3_000);
         assert_eq!(r.capital_gain_cents, 0);
         assert!(r.citation.contains("§ 1276(a)(3)"));
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1276(a)(3)") && n.contains("partial principal"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1276(a)(3)") && n.contains("partial principal")));
     }
 
     #[test]
@@ -547,14 +551,7 @@ mod tests {
 
     #[test]
     fn constant_yield_election_uses_caller_supplied_accrual() {
-        let mut i = input(
-            90_000,
-            100_000,
-            730,
-            365,
-            DispositionType::Sale,
-            100_000,
-        );
+        let mut i = input(90_000, 100_000, 730, 365, DispositionType::Sale, 100_000);
         i.accrual_method = AccrualMethod::ConstantYield;
         // Constant-yield computation yields more than ratable would
         // (e.g., 6_000 vs ratable 5_000) for a back-loaded yield.
@@ -563,25 +560,17 @@ mod tests {
         assert_eq!(r.accrued_market_discount_cents, 6_000);
         assert_eq!(r.ordinary_income_cents, 6_000);
         assert_eq!(r.capital_gain_cents, 4_000);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1276(b)(2)") && n.contains("§ 1272(a)"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1276(b)(2)") && n.contains("§ 1272(a)")));
     }
 
     #[test]
     fn constant_yield_caller_supplied_exceeds_market_discount_caps() {
         // Caller-supplied accrual $15_000 must cap at $10_000 (full
         // market discount).
-        let mut i = input(
-            90_000,
-            100_000,
-            730,
-            365,
-            DispositionType::Sale,
-            100_000,
-        );
+        let mut i = input(90_000, 100_000, 730, 365, DispositionType::Sale, 100_000);
         i.accrual_method = AccrualMethod::ConstantYield;
         i.constant_yield_accrual_cents = 15_000;
         let r = compute(&i);
@@ -590,14 +579,7 @@ mod tests {
 
     #[test]
     fn constant_yield_negative_caller_supplied_clamps_at_zero() {
-        let mut i = input(
-            90_000,
-            100_000,
-            730,
-            365,
-            DispositionType::Sale,
-            100_000,
-        );
+        let mut i = input(90_000, 100_000, 730, 365, DispositionType::Sale, 100_000);
         i.accrual_method = AccrualMethod::ConstantYield;
         i.constant_yield_accrual_cents = -500;
         let r = compute(&i);
@@ -612,37 +594,22 @@ mod tests {
         // Total accrued $10_000; prior-year taxed $4_000. Net
         // recharacterizable = $6_000. Total gain $10_000. Ordinary
         // = $6_000; capital = $4_000 (not $0).
-        let mut i = input(
-            90_000,
-            100_000,
-            365,
-            365,
-            DispositionType::Sale,
-            100_000,
-        );
+        let mut i = input(90_000, 100_000, 365, 365, DispositionType::Sale, 100_000);
         i.current_inclusion_election = true;
         i.prior_years_accrual_already_taxed_cents = 4_000;
         let r = compute(&i);
         assert_eq!(r.accrued_market_discount_cents, 10_000);
         assert_eq!(r.ordinary_income_cents, 6_000);
         assert_eq!(r.capital_gain_cents, 4_000);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1278(b)") && n.contains("current-inclusion"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1278(b)") && n.contains("current-inclusion")));
     }
 
     #[test]
     fn current_inclusion_prior_year_equals_accrued_zero_recharacterization() {
-        let mut i = input(
-            90_000,
-            100_000,
-            365,
-            365,
-            DispositionType::Sale,
-            100_000,
-        );
+        let mut i = input(90_000, 100_000, 365, 365, DispositionType::Sale, 100_000);
         i.current_inclusion_election = true;
         i.prior_years_accrual_already_taxed_cents = 10_000;
         let r = compute(&i);
@@ -652,14 +619,7 @@ mod tests {
 
     #[test]
     fn current_inclusion_prior_year_exceeds_accrued_does_not_negate() {
-        let mut i = input(
-            90_000,
-            100_000,
-            365,
-            365,
-            DispositionType::Sale,
-            100_000,
-        );
+        let mut i = input(90_000, 100_000, 365, 365, DispositionType::Sale, 100_000);
         i.current_inclusion_election = true;
         i.prior_years_accrual_already_taxed_cents = 25_000;
         let r = compute(&i);
@@ -703,18 +663,8 @@ mod tests {
     #[test]
     fn ordinary_plus_capital_equals_total_gain_invariant() {
         // Sale + NonSale paths.
-        for &disp in &[
-            DispositionType::Sale,
-            DispositionType::NonSaleDisposition,
-        ] {
-            let r = compute(&input(
-                90_000,
-                100_000,
-                365,
-                200,
-                disp,
-                100_000,
-            ));
+        for &disp in &[DispositionType::Sale, DispositionType::NonSaleDisposition] {
+            let r = compute(&input(90_000, 100_000, 365, 200, disp, 100_000));
             let total_gain = 100_000_i64.saturating_sub(90_000).max(0);
             assert_eq!(
                 r.ordinary_income_cents + r.capital_gain_cents,
@@ -733,14 +683,7 @@ mod tests {
             DispositionType::NonSaleDisposition,
         ] {
             for realized in [50_000_i64, 95_000, 99_000, 100_000, 110_000, 150_000] {
-                let r = compute(&input(
-                    90_000,
-                    100_000,
-                    365,
-                    365,
-                    disp,
-                    realized,
-                ));
+                let r = compute(&input(90_000, 100_000, 365, 365, disp, realized));
                 assert!(
                     r.ordinary_income_cents <= r.accrued_market_discount_cents,
                     "{:?} realized={}: ordinary > accrued",

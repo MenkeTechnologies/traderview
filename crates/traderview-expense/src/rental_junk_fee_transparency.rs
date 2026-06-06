@@ -116,9 +116,7 @@ pub fn check(input: &RentalJunkFeeTransparencyInput) -> RentalJunkFeeTransparenc
     }
 }
 
-fn check_massachusetts(
-    input: &RentalJunkFeeTransparencyInput,
-) -> RentalJunkFeeTransparencyResult {
+fn check_massachusetts(input: &RentalJunkFeeTransparencyInput) -> RentalJunkFeeTransparencyResult {
     let mut violations: Vec<String> = Vec::new();
     let mut notes: Vec<String> = Vec::new();
 
@@ -349,7 +347,10 @@ mod tests {
         i.total_price_disclosed_as_single_number = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("940 CMR 38.00") && v.contains("TOTAL PRICE")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("940 CMR 38.00") && v.contains("TOTAL PRICE")));
     }
 
     #[test]
@@ -358,13 +359,19 @@ mod tests {
         i.disclosure_clear_and_conspicuous = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("CLEARLY AND CONSPICUOUSLY")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("CLEARLY AND CONSPICUOUSLY")));
     }
 
     #[test]
     fn ma_chapter_93a_treble_damages_note_present() {
         let r = check(&ma_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("c. 93A") && n.contains("TREBLE damages")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("c. 93A") && n.contains("TREBLE damages")));
     }
 
     #[test]
@@ -376,7 +383,10 @@ mod tests {
     #[test]
     fn ma_advertising_leasing_renewals_scope_note() {
         let r = check(&ma_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("advertising, leasing, AND renewals")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("advertising, leasing, AND renewals")));
     }
 
     #[test]
@@ -399,7 +409,10 @@ mod tests {
         i.utility_markup_above_provider_cost = true;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("utility markup ABOVE provider's actual charges")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("utility markup ABOVE provider's actual charges")));
     }
 
     #[test]
@@ -408,7 +421,10 @@ mod tests {
         i.cam_charge_imposed = true;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("Common Area Maintenance (CAM)")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("Common Area Maintenance (CAM)")));
     }
 
     #[test]
@@ -417,7 +433,10 @@ mod tests {
         i.markup_fee_exceeds_two_percent_or_ten_dollars = true;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("2% OR $10 per month")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("2% OR $10 per month")));
     }
 
     #[test]
@@ -426,7 +445,10 @@ mod tests {
         i.charge_for_undelivered_service = true;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("services NOT actually provided")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("services NOT actually provided")));
     }
 
     #[test]
@@ -435,7 +457,10 @@ mod tests {
         i.landlord_responsibility_costs_shifted_to_tenant = true;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("landlord's responsibilities")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("landlord's responsibilities")));
     }
 
     #[test]
@@ -477,13 +502,19 @@ mod tests {
     #[test]
     fn ca_ab_12_security_deposit_cap_note_present() {
         let r = check(&ca_base());
-        assert!(r.notes.iter().any(|n| n.contains("AB 12") && n.contains("ONE month's rent")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("AB 12") && n.contains("ONE month's rent")));
     }
 
     #[test]
     fn ca_no_statewide_mandate_note_when_missing_disclosure() {
         let r = check(&ca_base());
-        assert!(r.notes.iter().any(|n| n.contains("no statewide statutory total-price-disclosure mandate")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("no statewide statutory total-price-disclosure mandate")));
     }
 
     #[test]
@@ -495,13 +526,19 @@ mod tests {
     #[test]
     fn default_ftc_part_464_note_present() {
         let r = check(&default_base());
-        assert!(r.notes.iter().any(|n| n.contains("16 CFR Part 464") && n.contains("short-term rentals")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("16 CFR Part 464") && n.contains("short-term rentals")));
     }
 
     #[test]
     fn default_ftc_act_section_5_note_present() {
         let r = check(&default_base());
-        assert!(r.notes.iter().any(|n| n.contains("15 U.S.C. § 45") && n.contains("Unfair or Deceptive")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("15 U.S.C. § 45") && n.contains("Unfair or Deceptive")));
     }
 
     #[test]
@@ -532,8 +569,16 @@ mod tests {
             i.regime = regime;
             i.cam_charge_imposed = true;
             let r = check(&i);
-            let cam_violations: Vec<_> = r.violations.iter().filter(|v| v.contains("Common Area Maintenance")).collect();
-            assert!(cam_violations.is_empty(), "regime {:?} should not flag CAM as violation", regime);
+            let cam_violations: Vec<_> = r
+                .violations
+                .iter()
+                .filter(|v| v.contains("Common Area Maintenance"))
+                .collect();
+            assert!(
+                cam_violations.is_empty(),
+                "regime {:?} should not flag CAM as violation",
+                regime
+            );
         }
     }
 
@@ -549,14 +594,27 @@ mod tests {
             i.regime = regime;
             i.utility_markup_above_provider_cost = true;
             let r = check(&i);
-            let util_violations: Vec<_> = r.violations.iter().filter(|v| v.contains("utility markup")).collect();
-            assert!(util_violations.is_empty(), "regime {:?} should not flag utility markup as violation", regime);
+            let util_violations: Vec<_> = r
+                .violations
+                .iter()
+                .filter(|v| v.contains("utility markup"))
+                .collect();
+            assert!(
+                util_violations.is_empty(),
+                "regime {:?} should not flag utility markup as violation",
+                regime
+            );
         }
     }
 
     #[test]
     fn four_regimes_routed_correctly() {
-        for regime in [Regime::Massachusetts, Regime::Colorado, Regime::California, Regime::Default] {
+        for regime in [
+            Regime::Massachusetts,
+            Regime::Colorado,
+            Regime::California,
+            Regime::Default,
+        ] {
             let mut i = ma_compliant();
             i.regime = regime;
             let r = check(&i);

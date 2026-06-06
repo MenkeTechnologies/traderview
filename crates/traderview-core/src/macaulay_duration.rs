@@ -48,29 +48,38 @@ pub fn compute(
     {
         return None;
     }
-    if cash_flows.iter().any(|cf| !cf.time_years.is_finite() || !cf.amount.is_finite()
-        || cf.time_years < 0.0)
+    if cash_flows
+        .iter()
+        .any(|cf| !cf.time_years.is_finite() || !cf.amount.is_finite() || cf.time_years < 0.0)
     {
         return None;
     }
     let f = compounding_freq as f64;
     let y_per = yield_to_maturity / f;
     let one_plus = 1.0 + y_per;
-    if one_plus <= 0.0 { return None; }
+    if one_plus <= 0.0 {
+        return None;
+    }
     let mut price = 0.0_f64;
     let mut weighted_time = 0.0_f64;
     let mut convexity_num = 0.0_f64;
     for cf in cash_flows {
         let n_periods = cf.time_years * f;
         let discount = one_plus.powf(n_periods);
-        if !discount.is_finite() || discount == 0.0 { return None; }
+        if !discount.is_finite() || discount == 0.0 {
+            return None;
+        }
         let pv = cf.amount / discount;
-        if !pv.is_finite() { return None; }
+        if !pv.is_finite() {
+            return None;
+        }
         price += pv;
         weighted_time += cf.time_years * pv;
         convexity_num += cf.time_years * (cf.time_years + 1.0 / f) * pv;
     }
-    if price <= 0.0 || !price.is_finite() { return None; }
+    if price <= 0.0 || !price.is_finite() {
+        return None;
+    }
     let macaulay = weighted_time / price;
     let modified = macaulay / one_plus;
     let dv01 = price * modified * 0.0001;
@@ -88,7 +97,12 @@ pub fn compute(
 mod tests {
     use super::*;
 
-    fn cf(t: f64, a: f64) -> CashFlow { CashFlow { time_years: t, amount: a } }
+    fn cf(t: f64, a: f64) -> CashFlow {
+        CashFlow {
+            time_years: t,
+            amount: a,
+        }
+    }
 
     #[test]
     fn empty_returns_none() {
@@ -118,22 +132,31 @@ mod tests {
         // 5-year 5% semi-annual bond at 5% yield → priced at par. Macaulay < 5.
         let mut cfs = Vec::new();
         for k in 1..=10 {
-            cfs.push(cf(k as f64 / 2.0, 2.5));    // semi-annual coupons
+            cfs.push(cf(k as f64 / 2.0, 2.5)); // semi-annual coupons
         }
-        cfs.push(cf(5.0, 100.0));    // principal at maturity
+        cfs.push(cf(5.0, 100.0)); // principal at maturity
         let r = compute(&cfs, 0.05, 2).unwrap();
-        assert!(r.macaulay_duration < 5.0 && r.macaulay_duration > 4.0,
-            "expected Macaulay duration ~4.5y for 5y 5% bond, got {}", r.macaulay_duration);
+        assert!(
+            r.macaulay_duration < 5.0 && r.macaulay_duration > 4.0,
+            "expected Macaulay duration ~4.5y for 5y 5% bond, got {}",
+            r.macaulay_duration
+        );
     }
 
     #[test]
     fn par_bond_priced_at_par() {
         // 5y 5% coupon at 5% yield → exactly $100.
         let mut cfs = Vec::new();
-        for k in 1..=10 { cfs.push(cf(k as f64 / 2.0, 2.5)); }
+        for k in 1..=10 {
+            cfs.push(cf(k as f64 / 2.0, 2.5));
+        }
         cfs.push(cf(5.0, 100.0));
         let r = compute(&cfs, 0.05, 2).unwrap();
-        assert!((r.price - 100.0).abs() < 1e-6, "expected par price, got {}", r.price);
+        assert!(
+            (r.price - 100.0).abs() < 1e-6,
+            "expected par price, got {}",
+            r.price
+        );
     }
 
     #[test]
@@ -155,7 +178,9 @@ mod tests {
     #[test]
     fn convexity_positive_for_standard_bond() {
         let mut cfs = Vec::new();
-        for k in 1..=10 { cfs.push(cf(k as f64 / 2.0, 2.5)); }
+        for k in 1..=10 {
+            cfs.push(cf(k as f64 / 2.0, 2.5));
+        }
         cfs.push(cf(5.0, 100.0));
         let r = compute(&cfs, 0.05, 2).unwrap();
         assert!(r.convexity > 0.0);
@@ -164,7 +189,9 @@ mod tests {
     #[test]
     fn higher_yield_lowers_price() {
         let mut cfs = Vec::new();
-        for k in 1..=10 { cfs.push(cf(k as f64 / 2.0, 2.5)); }
+        for k in 1..=10 {
+            cfs.push(cf(k as f64 / 2.0, 2.5));
+        }
         cfs.push(cf(5.0, 100.0));
         let r_low = compute(&cfs, 0.03, 2).unwrap();
         let r_high = compute(&cfs, 0.08, 2).unwrap();

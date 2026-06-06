@@ -80,10 +80,8 @@ pub fn compute(input: &Section1014eInput) -> Section1014eResult {
 
     // §1014(e) applies only when ALL conditions met AND trust does
     // not break the pass-back.
-    let applies = within_year
-        && appreciated
-        && input.passes_back_to_donor_or_donor_spouse
-        && !trust_breaks;
+    let applies =
+        within_year && appreciated && input.passes_back_to_donor_or_donor_spouse && !trust_breaks;
 
     let (effective_basis, step_up_avoided) = if applies {
         // §1014(e): basis = decedent's adjusted basis immediately
@@ -111,7 +109,8 @@ pub fn compute(input: &Section1014eInput) -> Section1014eResult {
         );
     }
     if !input.passes_back_to_donor_or_donor_spouse && !trust_breaks {
-        failure_reasons.push("property does not pass back to original donor or donor's spouse".to_string());
+        failure_reasons
+            .push("property does not pass back to original donor or donor's spouse".to_string());
     }
     if trust_breaks {
         failure_reasons.push(

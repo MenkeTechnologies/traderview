@@ -162,9 +162,15 @@ pub fn check(input: &Section960Input) -> Section960Result {
         ),
         InclusionType::GiltiOrNctiSection951A => {
             let (rate, sev) = if input.taxable_year >= OBBBA_EFFECTIVE_YEAR {
-                (POST_OBBBA_GILTI_DEEMED_PAID_BPS, Severity::GiltiNcti90PctPostObbba)
+                (
+                    POST_OBBBA_GILTI_DEEMED_PAID_BPS,
+                    Severity::GiltiNcti90PctPostObbba,
+                )
             } else {
-                (PRE_OBBBA_GILTI_DEEMED_PAID_BPS, Severity::GiltiNcti80PctPreObbba)
+                (
+                    PRE_OBBBA_GILTI_DEEMED_PAID_BPS,
+                    Severity::GiltiNcti80PctPreObbba,
+                )
             };
             let credit: u64 = (u128::from(proportional_taxes) * u128::from(rate) / 10_000) as u64;
             let haircut_amt = proportional_taxes.saturating_sub(credit);
@@ -227,10 +233,7 @@ pub fn check(input: &Section960Input) -> Section960Result {
         ));
     }
 
-    if matches!(
-        input.inclusion_type,
-        InclusionType::GiltiOrNctiSection951A
-    ) {
+    if matches!(input.inclusion_type, InclusionType::GiltiOrNctiSection951A) {
         notes.push(format!(
             "§ 960(d) GILTI / NCTI deemed-paid credit: pre-OBBBA rate 80% (per TCJA 2017 \
              original § 960(d)(1)); post-OBBBA rate 90% effective for US shareholder taxable \
@@ -325,7 +328,10 @@ mod tests {
         let mut i = baseline();
         i.shareholder_type = ShareholderType::IndividualWithoutSection962Election;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::NotEligibleNoSection962Election));
+        assert!(matches!(
+            r.severity,
+            Severity::NotEligibleNoSection962Election
+        ));
         assert_eq!(r.deemed_paid_credit_cents, 0);
         assert!(r.notes.iter().any(|n| n.contains("§ 962")));
     }
@@ -396,8 +402,14 @@ mod tests {
         ));
         assert_eq!(r.applicable_rate_bps, 9_000);
         assert_eq!(r.deemed_paid_credit_cents, 900_000_00);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Notice 2025-77")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("2025-06-28")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Notice 2025-77")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("2025-06-28")));
     }
 
     #[test]
@@ -461,8 +473,14 @@ mod tests {
     fn action_references_form_1118_and_1116() {
         let i = baseline();
         let r = check(&i);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Form 1118")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Form 1116")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Form 1118")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Form 1116")));
     }
 
     #[test]

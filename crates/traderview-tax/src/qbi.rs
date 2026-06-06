@@ -6,6 +6,7 @@
 //! Above-threshold (2025 per Rev. Proc. 2024-40 § 3.27):
 //!   * Single / MFS / HoH: $241,950
 //!   * MFJ:                $483,900
+//!
 //! Phase-in window = $50,000 single / $100,000 MFJ above the threshold.
 //! Above the phase-in fully, SSTB (specified service trade or business)
 //! deduction is $0 and non-SSTB is capped by the W-2 / UBIA tests.
@@ -24,8 +25,8 @@
 //!   * IRC § 199A.
 //!   * Rev. Proc. 2024-40 § 3.27.
 
-use rust_decimal::Decimal;
 use crate::engine::FilingStatus;
+use rust_decimal::Decimal;
 
 #[derive(Debug, Clone, Copy)]
 pub struct QbiInput {
@@ -61,12 +62,15 @@ pub fn compute(input: QbiInput) -> QbiResult {
         .round_dp(2);
 
     let threshold = sstb_threshold(input.status);
-    let window    = sstb_phase_window(input.status);
+    let window = sstb_phase_window(input.status);
 
     if input.taxable_income_before_qbi <= threshold {
         // Sub-threshold — simple cap.
         let deduction = qbi_20.min(ti_cap);
-        return QbiResult { deduction, needs_manual_review: false };
+        return QbiResult {
+            deduction,
+            needs_manual_review: false,
+        };
     }
 
     let over = (input.taxable_income_before_qbi - threshold).max(Decimal::ZERO);
@@ -74,33 +78,42 @@ pub fn compute(input: QbiInput) -> QbiResult {
     if input.is_sstb {
         if over >= window {
             // SSTB phased out entirely.
-            return QbiResult { deduction: Decimal::ZERO, needs_manual_review: false };
+            return QbiResult {
+                deduction: Decimal::ZERO,
+                needs_manual_review: false,
+            };
         }
         // Linear phase-out for SSTB: allowed share = (window - over)/window.
         let allowed = (window - over) / window;
         let deduction = (qbi_20.min(ti_cap) * allowed).round_dp(2);
         // Flag for review — we're not enforcing the W-2/UBIA test.
-        return QbiResult { deduction, needs_manual_review: true };
+        return QbiResult {
+            deduction,
+            needs_manual_review: true,
+        };
     }
 
     // Non-SSTB above the threshold. Without W-2 wages / UBIA data we
     // CAN'T enforce the wage-based cap. Return the simple 20% × QBI
     // (capped by TI) and flag for review.
     let deduction = qbi_20.min(ti_cap);
-    QbiResult { deduction, needs_manual_review: true }
+    QbiResult {
+        deduction,
+        needs_manual_review: true,
+    }
 }
 
 fn sstb_threshold(status: FilingStatus) -> Decimal {
     Decimal::from(match status {
         FilingStatus::Mfj => 483_900,
-        _                 => 241_950,
+        _ => 241_950,
     })
 }
 
 fn sstb_phase_window(status: FilingStatus) -> Decimal {
     Decimal::from(match status {
         FilingStatus::Mfj => 100_000,
-        _                 =>  50_000,
+        _ => 50_000,
     })
 }
 

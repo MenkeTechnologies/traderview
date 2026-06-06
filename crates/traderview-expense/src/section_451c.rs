@@ -323,7 +323,10 @@ mod tests {
         let mut input = baseline_input();
         input.payment_category = PaymentCategory::NotEligibleAdvancePaymentCategory;
         let output = check(&input);
-        assert_eq!(output.mode, Section451CMode::NotApplicableNotAnAdvancePayment);
+        assert_eq!(
+            output.mode,
+            Section451CMode::NotApplicableNotAnAdvancePayment
+        );
     }
 
     #[test]
@@ -362,7 +365,10 @@ mod tests {
         let mut input = baseline_input();
         input.deferral_years_after_receipt = 2;
         let output = check(&input);
-        assert_eq!(output.mode, Section451CMode::ViolationDeferralBeyondOneYearMaximum);
+        assert_eq!(
+            output.mode,
+            Section451CMode::ViolationDeferralBeyondOneYearMaximum
+        );
     }
 
     #[test]
@@ -379,7 +385,8 @@ mod tests {
     #[test]
     fn eligible_advance_payment_category_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::EligibleAdvancePaymentCategoryUnderTreasReg1_451_8A1;
+        input.compliance_aspect =
+            ComplianceAspect::EligibleAdvancePaymentCategoryUnderTreasReg1_451_8A1;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -392,7 +399,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::MethodChangeUnderRevProc2021_34;
         let output = check(&input);
-        assert_eq!(output.mode, Section451CMode::CompliantMethodChangeFiledUnderRevProc2021_34);
+        assert_eq!(
+            output.mode,
+            Section451CMode::CompliantMethodChangeFiledUnderRevProc2021_34
+        );
     }
 
     #[test]
@@ -410,24 +420,33 @@ mod tests {
     #[test]
     fn acceleration_on_cessation_or_merger_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::AccelerationOnCessationOrMergerUnderTreasReg1_451_8F;
+        input.compliance_aspect =
+            ComplianceAspect::AccelerationOnCessationOrMergerUnderTreasReg1_451_8F;
         let output = check(&input);
-        assert_eq!(output.mode, Section451CMode::CompliantAccelerationOnCessationOrMergerHandled);
+        assert_eq!(
+            output.mode,
+            Section451CMode::CompliantAccelerationOnCessationOrMergerHandled
+        );
     }
 
     #[test]
     fn failure_to_accelerate_on_cessation_or_merger_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::AccelerationOnCessationOrMergerUnderTreasReg1_451_8F;
+        input.compliance_aspect =
+            ComplianceAspect::AccelerationOnCessationOrMergerUnderTreasReg1_451_8F;
         input.deferred_balance_accelerated_on_cessation_or_merger = false;
         let output = check(&input);
-        assert_eq!(output.mode, Section451CMode::ViolationDeferralBeyondOneYearMaximum);
+        assert_eq!(
+            output.mode,
+            Section451CMode::ViolationDeferralBeyondOneYearMaximum
+        );
     }
 
     #[test]
     fn accrual_method_without_afs_compliant_baseline() {
         let mut input = baseline_input();
-        input.accounting_method = AccountingMethod::AccrualMethodWithoutApplicableFinancialStatement;
+        input.accounting_method =
+            AccountingMethod::AccrualMethodWithoutApplicableFinancialStatement;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -443,13 +462,28 @@ mod tests {
         assert_eq!(IRC_451C_TCJA_PUBLIC_LAW_CONGRESS, 115);
         assert_eq!(IRC_451C_TCJA_PUBLIC_LAW_ENACTMENT, 97);
         assert_eq!(IRC_451C_TCJA_ENABLING_SECTION, 13221);
-        assert_eq!(IRC_451C_EFFECTIVE_FOR_TAX_YEARS_BEGINNING_AFTER_DATE_YEAR, 2017);
-        assert_eq!(IRC_451C_EFFECTIVE_FOR_TAX_YEARS_BEGINNING_AFTER_DATE_MONTH, 12);
-        assert_eq!(IRC_451C_EFFECTIVE_FOR_TAX_YEARS_BEGINNING_AFTER_DATE_DAY, 31);
+        assert_eq!(
+            IRC_451C_EFFECTIVE_FOR_TAX_YEARS_BEGINNING_AFTER_DATE_YEAR,
+            2017
+        );
+        assert_eq!(
+            IRC_451C_EFFECTIVE_FOR_TAX_YEARS_BEGINNING_AFTER_DATE_MONTH,
+            12
+        );
+        assert_eq!(
+            IRC_451C_EFFECTIVE_FOR_TAX_YEARS_BEGINNING_AFTER_DATE_DAY,
+            31
+        );
         assert_eq!(IRC_451C_MAXIMUM_DEFERRAL_YEARS, 1);
         assert_eq!(IRC_451C_FINAL_REGS_TD_NUMBER, 9941);
-        assert_eq!(IRC_451C_FINAL_REGS_FEDERAL_REGISTER_PUBLICATION_DATE_YEAR, 2021);
-        assert_eq!(IRC_451C_FINAL_REGS_FEDERAL_REGISTER_PUBLICATION_DATE_MONTH, 1);
+        assert_eq!(
+            IRC_451C_FINAL_REGS_FEDERAL_REGISTER_PUBLICATION_DATE_YEAR,
+            2021
+        );
+        assert_eq!(
+            IRC_451C_FINAL_REGS_FEDERAL_REGISTER_PUBLICATION_DATE_MONTH,
+            1
+        );
         assert_eq!(IRC_451C_FINAL_REGS_FEDERAL_REGISTER_PUBLICATION_DATE_DAY, 6);
         assert_eq!(IRC_451C_FINAL_REGS_EFFECTIVE_DATE_YEAR, 2021);
         assert_eq!(IRC_451C_FINAL_REGS_EFFECTIVE_DATE_MONTH, 1);

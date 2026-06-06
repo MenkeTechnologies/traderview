@@ -405,7 +405,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::WrongfulWithholdingPenaltyUnderSection504B178;
         input.deposit_wrongfully_withheld = false;
         let out = check(&input);
-        assert_eq!(out.mode, MnLandlordTenantMode::CompliantNoWrongfulWithholding);
+        assert_eq!(
+            out.mode,
+            MnLandlordTenantMode::CompliantNoWrongfulWithholding
+        );
     }
 
     #[test]
@@ -423,7 +426,8 @@ mod tests {
     #[test]
     fn non_waivable_covenants_preserved_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::NonWaivableHabitabilityCovenantsUnderSection504B161;
+        input.compliance_aspect =
+            ComplianceAspect::NonWaivableHabitabilityCovenantsUnderSection504B161;
         input.landlord_covenant_waiver_status =
             LandlordCovenantWaiverStatus::LandlordCovenantsNotWaivedOrModified;
         let out = check(&input);
@@ -436,7 +440,8 @@ mod tests {
     #[test]
     fn lease_attempts_to_waive_covenants_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::NonWaivableHabitabilityCovenantsUnderSection504B161;
+        input.compliance_aspect =
+            ComplianceAspect::NonWaivableHabitabilityCovenantsUnderSection504B161;
         input.landlord_covenant_waiver_status =
             LandlordCovenantWaiverStatus::LeaseAttemptsToWaiveOrModifyLandlordCovenants;
         let out = check(&input);
@@ -509,7 +514,8 @@ mod tests {
     #[test]
     fn utilities_maintained_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::UnlawfulUtilityTerminationProhibitedUnderSection504B221;
+        input.compliance_aspect =
+            ComplianceAspect::UnlawfulUtilityTerminationProhibitedUnderSection504B221;
         input.utility_termination_status = UtilityTerminationStatus::UtilitiesMaintainedByLandlord;
         let out = check(&input);
         assert_eq!(out.mode, MnLandlordTenantMode::CompliantUtilitiesMaintained);
@@ -518,7 +524,8 @@ mod tests {
     #[test]
     fn unlawful_utility_termination_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::UnlawfulUtilityTerminationProhibitedUnderSection504B221;
+        input.compliance_aspect =
+            ComplianceAspect::UnlawfulUtilityTerminationProhibitedUnderSection504B221;
         input.utility_termination_status =
             UtilityTerminationStatus::LandlordUnlawfullyTerminatedUtilities;
         let out = check(&input);
@@ -578,7 +585,9 @@ mod tests {
         assert!(joined.contains("SIMPLE NONCOMPOUNDED INTEREST"));
         assert!(joined.contains("ONE PERCENT (1%) PER ANNUM"));
         assert!(joined.contains("FAIR PREPONDERANCE OF THE EVIDENCE"));
-        assert!(joined.contains("DAMAGES IN AN AMOUNT EQUAL TO THE PORTION OF THE DEPOSIT WITHHELD"));
+        assert!(
+            joined.contains("DAMAGES IN AN AMOUNT EQUAL TO THE PORTION OF THE DEPOSIT WITHHELD")
+        );
         assert!(joined.contains("INTEREST THEREON"));
         assert!(joined.contains("PENALTY"));
         assert!(joined.contains("Minn. Stat. § 504B.161"));

@@ -30,15 +30,18 @@ pub fn compute(
 ) -> Vec<Option<f64>> {
     let n = closes.len();
     let mut out = vec![None; n];
-    if long_period < 2 || short_period < 2 || wma_period < 2
-        || n <= long_period + wma_period {
+    if long_period < 2 || short_period < 2 || wma_period < 2 || n <= long_period + wma_period {
         return out;
     }
-    if closes.iter().any(|x| !x.is_finite() || *x <= 0.0) { return out; }
+    if closes.iter().any(|x| !x.is_finite() || *x <= 0.0) {
+        return out;
+    }
     // Compute the ROC sum series.
     let mut roc_sum: Vec<Option<f64>> = vec![None; n];
     for (i, slot) in roc_sum.iter_mut().enumerate().skip(long_period) {
-        if i < short_period { continue; }
+        if i < short_period {
+            continue;
+        }
         let roc_long = 100.0 * (closes[i] / closes[i - long_period] - 1.0);
         let roc_short = 100.0 * (closes[i] / closes[i - short_period] - 1.0);
         *slot = Some(roc_long + roc_short);
@@ -52,10 +55,15 @@ pub fn compute(
             let idx = i + 1 - wma_period + k;
             match roc_sum[idx] {
                 Some(v) => acc += v * (k + 1) as f64,
-                None => { ok = false; break; }
+                None => {
+                    ok = false;
+                    break;
+                }
             }
         }
-        if ok { *slot = Some(acc / weight_sum); }
+        if ok {
+            *slot = Some(acc / weight_sum);
+        }
     }
     out
 }
@@ -116,12 +124,17 @@ mod tests {
         let closes: Vec<f64> = (0..100).map(|i| 200.0 - i as f64).collect();
         let out = compute(&closes, 14, 11, 10);
         let last = out[99].unwrap();
-        assert!(last < 0.0, "downtrend Coppock should be negative, got {last}");
+        assert!(
+            last < 0.0,
+            "downtrend Coppock should be negative, got {last}"
+        );
     }
 
     #[test]
     fn output_length_matches_input() {
-        let closes: Vec<f64> = (1..=100).map(|i| 100.0 + (i as f64 * 0.1).sin() * 5.0).collect();
+        let closes: Vec<f64> = (1..=100)
+            .map(|i| 100.0 + (i as f64 * 0.1).sin() * 5.0)
+            .collect();
         let out = compute(&closes, 14, 11, 10);
         assert_eq!(out.len(), 100);
     }

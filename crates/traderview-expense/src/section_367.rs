@@ -145,7 +145,9 @@ pub fn check(input: &Section367Input) -> Section367Result {
 
     match (input.transfer_direction, input.property_type) {
         (TransferDirection::Outbound, PropertyType::TangibleProperty) => {
-            let built_in_gain = input.property_fmv_cents.saturating_sub(input.adjusted_basis_cents);
+            let built_in_gain = input
+                .property_fmv_cents
+                .saturating_sub(input.adjusted_basis_cents);
             actions.push(format!(
                 "§ 367(a)(1) outbound transfer of tangible property to foreign corporation: \
                  FULL GAIN RECOGNITION at fair market value. FMV = {} cents; adjusted basis \
@@ -170,10 +172,7 @@ pub fn check(input: &Section367Input) -> Section367Result {
                 notes: build_coord_notes(notes),
             }
         }
-        (
-            TransferDirection::Outbound,
-            PropertyType::StockOfForeignCorporationPartyToExchange,
-        ) => {
+        (TransferDirection::Outbound, PropertyType::StockOfForeignCorporationPartyToExchange) => {
             if input.gain_recognition_agreement_elected {
                 actions.push(
                     "§ 367(a)(8) gain-recognition agreement (GRA) elected for outbound \
@@ -216,10 +215,7 @@ pub fn check(input: &Section367Input) -> Section367Result {
                 }
             }
         }
-        (
-            TransferDirection::Outbound,
-            PropertyType::Section936IntangibleIncludingGoodwill,
-        ) => {
+        (TransferDirection::Outbound, PropertyType::Section936IntangibleIncludingGoodwill) => {
             let useful_life = input.intangible_useful_life_years.max(1);
             let annual_royalty = input.property_fmv_cents / u64::from(useful_life);
             actions.push(format!(
@@ -265,10 +261,7 @@ pub fn check(input: &Section367Input) -> Section367Result {
                 notes: build_coord_notes(notes),
             }
         }
-        (
-            TransferDirection::Outbound,
-            PropertyType::InventoryOrReceivables,
-        ) => {
+        (TransferDirection::Outbound, PropertyType::InventoryOrReceivables) => {
             actions.push(
                 "Outbound transfer of inventory or receivables to foreign corp: § 367(a) \
                  general rule applies — full gain recognition. Inventory does not qualify \
@@ -365,7 +358,10 @@ mod tests {
         ));
         assert_eq!(r.recognized_gain_cents, 70_000_000_00);
         assert!(r.recommended_actions.iter().any(|a| a.contains("Form 926")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("TCJA § 14102(e)")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("TCJA § 14102(e)")));
     }
 
     #[test]
@@ -379,7 +375,10 @@ mod tests {
             Severity::OutboundStockGainRecognitionAgreementAvailable
         ));
         assert_eq!(r.recognized_gain_cents, 0);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("§ 367(a)(8)")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("§ 367(a)(8)")));
         assert!(r.recommended_actions.iter().any(|a| a.contains("5-year")));
     }
 
@@ -398,10 +397,16 @@ mod tests {
         i.property_type = PropertyType::Section936IntangibleIncludingGoodwill;
         i.intangible_useful_life_years = 10;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::OutboundIntangibleDeemedRoyalty));
+        assert!(matches!(
+            r.severity,
+            Severity::OutboundIntangibleDeemedRoyalty
+        ));
         let expected_annual = 100_000_000_00u64 / 10;
         assert_eq!(r.deemed_annual_royalty_cents, expected_annual);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("TCJA § 14221")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("TCJA § 14221")));
         assert!(r.recommended_actions.iter().any(|a| a.contains("goodwill")));
     }
 
@@ -420,13 +425,19 @@ mod tests {
         i.transfer_direction = TransferDirection::Inbound;
         i.foreign_corp_post_1986_ep_cents = 50_000_000_00;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::InboundEarningsAndProfitsInclusion));
+        assert!(matches!(
+            r.severity,
+            Severity::InboundEarningsAndProfitsInclusion
+        ));
         assert_eq!(r.deemed_dividend_inclusion_cents, 50_000_000_00);
         assert!(r
             .recommended_actions
             .iter()
             .any(|a| a.contains("Treas. Reg. § 1.367(b)-3")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Notice 2024-16")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Notice 2024-16")));
     }
 
     #[test]
@@ -434,8 +445,14 @@ mod tests {
         let mut i = baseline();
         i.transfer_direction = TransferDirection::ForeignToForeignWithUsShareholder;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::ForeignToForeignNoUsConsequence));
-        assert!(r.notes.iter().any(|n| n.contains("Treas. Reg. § 1.367(b)-4")));
+        assert!(matches!(
+            r.severity,
+            Severity::ForeignToForeignNoUsConsequence
+        ));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Treas. Reg. § 1.367(b)-4")));
         assert!(r.notes.iter().any(|n| n.contains("§ 1248")));
     }
 
@@ -448,7 +465,10 @@ mod tests {
             r.severity,
             Severity::OutboundTangibleFullGainRecognition
         ));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Inventory")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Inventory")));
     }
 
     #[test]
@@ -471,7 +491,10 @@ mod tests {
         let i = baseline();
         let r = check(&i);
         assert!(r.recommended_actions.iter().any(|a| a.contains("Form 926")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Form 1120")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Form 1120")));
     }
 
     #[test]

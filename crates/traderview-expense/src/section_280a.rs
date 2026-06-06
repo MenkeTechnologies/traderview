@@ -153,10 +153,12 @@ pub fn compute(input: &Section280AInput) -> Section280AResult {
             );
         }
         Classification::Rental => {
-            r.rental_allocation_pct = allocation_pct(input.fair_rental_days, input.personal_use_days);
+            r.rental_allocation_pct =
+                allocation_pct(input.fair_rental_days, input.personal_use_days);
             r.gross_rental_income_reported = input.gross_rental_income;
             // Full deduction at the rental allocation %.
-            let t1 = (input.tier_1_expenses_personal_deductible * r.rental_allocation_pct).round_dp(2);
+            let t1 =
+                (input.tier_1_expenses_personal_deductible * r.rental_allocation_pct).round_dp(2);
             let t2 = (input.tier_2_operating_expenses * r.rental_allocation_pct).round_dp(2);
             let t3 = (input.tier_3_depreciation * r.rental_allocation_pct).round_dp(2);
             r.tier_1_deductions_allowed = t1;
@@ -170,11 +172,13 @@ pub fn compute(input: &Section280AInput) -> Section280AResult {
             );
         }
         Classification::VacationHome => {
-            r.rental_allocation_pct = allocation_pct(input.fair_rental_days, input.personal_use_days);
+            r.rental_allocation_pct =
+                allocation_pct(input.fair_rental_days, input.personal_use_days);
             r.gross_rental_income_reported = input.gross_rental_income;
 
             // Tier 1 always allowed at the rental allocation.
-            let t1 = (input.tier_1_expenses_personal_deductible * r.rental_allocation_pct).round_dp(2);
+            let t1 =
+                (input.tier_1_expenses_personal_deductible * r.rental_allocation_pct).round_dp(2);
             r.tier_1_deductions_allowed = t1;
 
             // Tier 2: allocated then capped by remaining income after tier 1.
@@ -186,7 +190,8 @@ pub fn compute(input: &Section280AInput) -> Section280AResult {
 
             // Tier 3: allocated then capped by remaining income after tier 1 + tier 2.
             let t3_full = (input.tier_3_depreciation * r.rental_allocation_pct).round_dp(2);
-            let income_after_t2 = (income_after_t1 - r.tier_2_deductions_allowed).max(Decimal::ZERO);
+            let income_after_t2 =
+                (income_after_t1 - r.tier_2_deductions_allowed).max(Decimal::ZERO);
             r.tier_3_deductions_allowed = t3_full.min(income_after_t2);
             let t3_suspended = (t3_full - r.tier_3_deductions_allowed).max(Decimal::ZERO);
 
@@ -194,8 +199,8 @@ pub fn compute(input: &Section280AInput) -> Section280AResult {
                 + r.tier_2_deductions_allowed
                 + r.tier_3_deductions_allowed;
             r.deductions_suspended_to_next_year = t2_suspended + t3_suspended;
-            r.net_rental_income = (r.gross_rental_income_reported - r.deductions_allowed)
-                .max(Decimal::ZERO);
+            r.net_rental_income =
+                (r.gross_rental_income_reported - r.deductions_allowed).max(Decimal::ZERO);
             r.note = format!(
                 "§280A vacation home: {} personal days > {} threshold; ${} deductions allowed (capped), ${} suspended",
                 input.personal_use_days, r.personal_use_threshold,
@@ -394,8 +399,10 @@ mod tests {
         assert_eq!(r.classification, Classification::VacationHome);
         // Tier 2 should pick up the prior suspended within remaining
         // income-after-tier-1.
-        assert!(r.tier_2_deductions_allowed >= dec!(15000)
-            || r.deductions_suspended_to_next_year > Decimal::ZERO);
+        assert!(
+            r.tier_2_deductions_allowed >= dec!(15000)
+                || r.deductions_suspended_to_next_year > Decimal::ZERO
+        );
     }
 
     #[test]
@@ -416,9 +423,9 @@ mod tests {
 
     #[test]
     fn personal_use_ceiling_uses_greater_of_14_or_10pct() {
-        assert_eq!(personal_use_ceiling(100), 14);  // 10% = 10, floor 14
-        assert_eq!(personal_use_ceiling(140), 14);  // 10% = 14, tie -> 14
-        assert_eq!(personal_use_ceiling(200), 20);  // 10% = 20 > 14
-        assert_eq!(personal_use_ceiling(365), 36);  // 10% = 36 > 14
+        assert_eq!(personal_use_ceiling(100), 14); // 10% = 10, floor 14
+        assert_eq!(personal_use_ceiling(140), 14); // 10% = 14, tie -> 14
+        assert_eq!(personal_use_ceiling(200), 20); // 10% = 20 > 14
+        assert_eq!(personal_use_ceiling(365), 36); // 10% = 36 > 14
     }
 }

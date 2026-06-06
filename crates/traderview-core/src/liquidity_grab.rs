@@ -35,13 +35,20 @@ pub struct GrabConfig {
 
 impl Default for GrabConfig {
     fn default() -> Self {
-        Self { min_sweep_atrs: 0.1, confirm_within: 3, min_followthrough: 2 }
+        Self {
+            min_sweep_atrs: 0.1,
+            confirm_within: 3,
+            min_followthrough: 2,
+        }
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum GrabSide { High, Low }
+pub enum GrabSide {
+    High,
+    Low,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct GrabEvent {
@@ -63,7 +70,10 @@ pub struct GrabReport {
 }
 
 pub fn detect(
-    bars: &[OhlcBar], atr: &[f64], swings: &[SwingPoint], cfg: &GrabConfig,
+    bars: &[OhlcBar],
+    atr: &[f64],
+    swings: &[SwingPoint],
+    cfg: &GrabConfig,
 ) -> GrabReport {
     let n = bars.len();
     if n == 0 || atr.len() != n || swings.is_empty() {
@@ -77,28 +87,39 @@ pub fn detect(
         // Look forward starting one bar after the swing was made.
         for i in (bar_idx + 1)..n {
             let a = atr[i];
-            if !(a.is_finite() && a > 0.0) { continue; }
+            if !(a.is_finite() && a > 0.0) {
+                continue;
+            }
             let swept = if is_high {
                 bars[i].high > level + cfg.min_sweep_atrs * a
             } else {
                 bars[i].low < level - cfg.min_sweep_atrs * a
             };
-            if !swept { continue; }
+            if !swept {
+                continue;
+            }
             // Confirmation: reversal close past the sweeping bar's open.
             let mut confirm_at: Option<usize> = None;
             // saturating_add on the i side mirrors saturating_sub on the n
             // side — both endpoints are JSON-controlled and could overflow
             // usize on a hostile payload.
-            let end = i.saturating_add(cfg.confirm_within).min(n.saturating_sub(1));
+            let end = i
+                .saturating_add(cfg.confirm_within)
+                .min(n.saturating_sub(1));
             for j in (i + 1)..=end {
                 let reversed = if is_high {
                     bars[j].close < bars[i].open && bars[j].close < level
                 } else {
                     bars[j].close > bars[i].open && bars[j].close > level
                 };
-                if reversed { confirm_at = Some(j); break; }
+                if reversed {
+                    confirm_at = Some(j);
+                    break;
+                }
             }
-            let Some(confirm) = confirm_at else { break; };
+            let Some(confirm) = confirm_at else {
+                break;
+            };
             // Followthrough — count bars after confirm continuing in the
             // reversal direction without breaching the swept level again.
             let mut ft = 0usize;
@@ -108,19 +129,31 @@ pub fn detect(
                 } else {
                     bars[j].low >= bars[i].low
                 };
-                if still_reversed { ft += 1; } else { break; }
+                if still_reversed {
+                    ft += 1;
+                } else {
+                    break;
+                }
             }
-            if ft < cfg.min_followthrough { break; }
+            if ft < cfg.min_followthrough {
+                break;
+            }
             let sweep_distance = if is_high {
                 bars[i].high - level
             } else {
                 level - bars[i].low
             };
             events.push(GrabEvent {
-                sweep_bar: i, confirm_bar: confirm,
+                sweep_bar: i,
+                confirm_bar: confirm,
                 swing_index: sw_idx,
-                side: if is_high { GrabSide::High } else { GrabSide::Low },
-                sweep_distance, followthrough_bars: ft,
+                side: if is_high {
+                    GrabSide::High
+                } else {
+                    GrabSide::Low
+                },
+                sweep_distance,
+                followthrough_bars: ft,
             });
             break; // One grab per swing.
         }
@@ -134,10 +167,21 @@ mod tests {
     use super::*;
     use crate::swing_points::{SwingKind, SwingPoint};
 
-    fn b(o: f64, h: f64, l: f64, c: f64) -> OhlcBar { OhlcBar { open: o, high: h, low: l, close: c } }
+    fn b(o: f64, h: f64, l: f64, c: f64) -> OhlcBar {
+        OhlcBar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     fn make_swing(idx: usize, price: f64, kind: SwingKind) -> SwingPoint {
-        SwingPoint { index: idx, price, kind }
+        SwingPoint {
+            index: idx,
+            price,
+            kind,
+        }
     }
 
     #[test]
@@ -155,12 +199,12 @@ mod tests {
         // Swing high at bar 0 (price 110). Bar 1 sweeps to 111.
         // Bar 2 reverses close < bar1.open AND < 110. Bars 3,4 stay below 111.
         let bars = vec![
-            b(108.0, 110.0, 107.0, 109.5),    // 0  swing high
-            b(109.5, 111.0, 109.0, 110.5),    // 1  sweep (high 111 > 110+0.1*1=110.1)
-            b(110.5, 110.6, 108.0, 108.5),    // 2  confirm: close 108.5 < bar1.open=109.5 AND < 110
-            b(108.5, 109.0, 107.5, 108.0),    // 3  followthrough (high 109 < 111)
-            b(108.0, 109.5, 107.0, 107.5),    // 4  followthrough (high 109.5 < 111)
-            b(107.5, 108.0, 106.5, 106.8),    // 5  followthrough
+            b(108.0, 110.0, 107.0, 109.5), // 0  swing high
+            b(109.5, 111.0, 109.0, 110.5), // 1  sweep (high 111 > 110+0.1*1=110.1)
+            b(110.5, 110.6, 108.0, 108.5), // 2  confirm: close 108.5 < bar1.open=109.5 AND < 110
+            b(108.5, 109.0, 107.5, 108.0), // 3  followthrough (high 109 < 111)
+            b(108.0, 109.5, 107.0, 107.5), // 4  followthrough (high 109.5 < 111)
+            b(107.5, 108.0, 106.5, 106.8), // 5  followthrough
         ];
         let atr = vec![1.0; bars.len()];
         let swings = vec![make_swing(0, 110.0, SwingKind::High)];
@@ -176,11 +220,11 @@ mod tests {
     #[test]
     fn low_sweep_with_reversal_fires() {
         let bars = vec![
-            b(101.0, 102.0, 100.0, 101.0),    // 0  swing low
-            b(100.5, 101.0, 99.0, 99.5),      // 1  sweep (low 99 < 100-0.1)
-            b(99.5, 102.0, 99.4, 101.5),      // 2  confirm: close 101.5 > bar1.open=100.5 AND > 100
-            b(101.5, 102.5, 101.0, 102.0),    // 3  followthrough (low 101 > 99)
-            b(102.0, 103.0, 101.5, 102.5),    // 4  followthrough
+            b(101.0, 102.0, 100.0, 101.0), // 0  swing low
+            b(100.5, 101.0, 99.0, 99.5),   // 1  sweep (low 99 < 100-0.1)
+            b(99.5, 102.0, 99.4, 101.5),   // 2  confirm: close 101.5 > bar1.open=100.5 AND > 100
+            b(101.5, 102.5, 101.0, 102.0), // 3  followthrough (low 101 > 99)
+            b(102.0, 103.0, 101.5, 102.5), // 4  followthrough
         ];
         let atr = vec![1.0; bars.len()];
         let swings = vec![make_swing(0, 100.0, SwingKind::Low)];
@@ -192,9 +236,9 @@ mod tests {
     #[test]
     fn sweep_without_reversal_doesnt_fire() {
         let bars = vec![
-            b(108.0, 110.0, 107.0, 109.5),    // swing high
-            b(109.5, 111.0, 109.0, 110.5),    // sweep
-            b(110.5, 112.0, 110.0, 111.5),    // continuation, not reversal
+            b(108.0, 110.0, 107.0, 109.5), // swing high
+            b(109.5, 111.0, 109.0, 110.5), // sweep
+            b(110.5, 112.0, 110.0, 111.5), // continuation, not reversal
             b(111.5, 113.0, 111.0, 112.5),
             b(112.5, 114.0, 112.0, 113.5),
         ];
@@ -208,10 +252,10 @@ mod tests {
     fn sweep_without_followthrough_doesnt_fire() {
         // Sweep + 1-bar reversal then immediate recovery.
         let bars = vec![
-            b(108.0, 110.0, 107.0, 109.5),    // swing high
-            b(109.5, 111.0, 109.0, 110.5),    // sweep
-            b(110.5, 110.6, 108.0, 108.5),    // confirm
-            b(108.5, 112.0, 108.0, 111.5),    // RECOVERS above sweeping high — followthrough=0
+            b(108.0, 110.0, 107.0, 109.5), // swing high
+            b(109.5, 111.0, 109.0, 110.5), // sweep
+            b(110.5, 110.6, 108.0, 108.5), // confirm
+            b(108.5, 112.0, 108.0, 111.5), // RECOVERS above sweeping high — followthrough=0
         ];
         let atr = vec![1.0; bars.len()];
         let swings = vec![make_swing(0, 110.0, SwingKind::High)];

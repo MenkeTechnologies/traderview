@@ -121,11 +121,9 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
     // deposit and last month's rent (covered in other modules), not
     // monthly rent payments.
     let no_rule = [
-        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "FL", "GA",
-        "HI", "ID", "IN", "IA", "KS", "KY", "LA", "ME", "MA", "MI",
-        "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NM", "NC", "ND",
-        "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT",
-        "VT", "VA", "WV", "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "ID", "IN", "IA", "KS",
+        "KY", "LA", "ME", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NM", "NC", "ND",
+        "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WV", "WI", "WY",
     ];
     for code in no_rule {
         let citation: &'static str = if code == "MA" {
@@ -370,7 +368,12 @@ mod tests {
     #[test]
     fn coverage_is_all_50_states_plus_dc() {
         let codes: Vec<&'static str> = RULES.keys().copied().collect();
-        assert_eq!(codes.len(), 51, "expected 50 states + DC, got {}", codes.len());
+        assert_eq!(
+            codes.len(),
+            51,
+            "expected 50 states + DC, got {}",
+            codes.len()
+        );
     }
 
     #[test]
@@ -388,7 +391,10 @@ mod tests {
                 count += 1;
             }
         }
-        assert_eq!(count, 1, "expected NY only with MandatoryReceiptEveryPayment");
+        assert_eq!(
+            count, 1,
+            "expected NY only with MandatoryReceiptEveryPayment"
+        );
     }
 
     #[test]
@@ -399,7 +405,10 @@ mod tests {
                 count += 1;
             }
         }
-        assert_eq!(count, 4, "expected CA + MD + NJ + IL only with cash-only regime");
+        assert_eq!(
+            count, 4,
+            "expected CA + MD + NJ + IL only with cash-only regime"
+        );
     }
 
     #[test]

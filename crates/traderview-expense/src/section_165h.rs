@@ -111,7 +111,11 @@ pub fn compute(input: &Section165HInput) -> Section165HResult {
     }
 
     // Per-event floor: $500 if qualified-disaster, $100 otherwise.
-    let per_event_floor = if input.qualified_disaster_loss { 50000 } else { 10000 };
+    let per_event_floor = if input.qualified_disaster_loss {
+        50000
+    } else {
+        10000
+    };
     let after_per_event = (raw_loss - per_event_floor).max(0);
 
     // 10% AGI floor: exempt for qualified-disaster losses.
@@ -229,7 +233,15 @@ mod tests {
     #[test]
     fn pre_tcja_non_disaster_qualifies() {
         // 2017 auto accident, $20K loss, $0 insurance, $100K AGI.
-        let r = compute(&input(2017, DisasterType::NonDisaster, 50_000_00, 20_000_00, 0, 100_000_00, false));
+        let r = compute(&input(
+            2017,
+            DisasterType::NonDisaster,
+            50_000_00,
+            20_000_00,
+            0,
+            100_000_00,
+            false,
+        ));
         assert!(r.loss_eligible);
         // Raw $20K − $100 floor = $19,900. − 10% AGI ($10K) = $9,900.
         assert_eq!(r.allowed_deduction_cents, 9_900_00);
@@ -238,7 +250,15 @@ mod tests {
 
     #[test]
     fn tcja_2024_federally_declared_qualifies() {
-        let r = compute(&input(2024, DisasterType::FederallyDeclared, 50_000_00, 30_000_00, 5_000_00, 100_000_00, false));
+        let r = compute(&input(
+            2024,
+            DisasterType::FederallyDeclared,
+            50_000_00,
+            30_000_00,
+            5_000_00,
+            100_000_00,
+            false,
+        ));
         assert!(r.loss_eligible);
         // Raw = min($50K, $30K) - $5K = $25K. - $100 floor = $24,900. - 10% AGI $10K = $14,900.
         assert_eq!(r.raw_loss_cents, 25_000_00);
@@ -248,22 +268,48 @@ mod tests {
 
     #[test]
     fn tcja_2024_state_declared_NOT_eligible() {
-        let r = compute(&input(2024, DisasterType::StateDeclared, 50_000_00, 30_000_00, 0, 100_000_00, false));
+        let r = compute(&input(
+            2024,
+            DisasterType::StateDeclared,
+            50_000_00,
+            30_000_00,
+            0,
+            100_000_00,
+            false,
+        ));
         assert!(!r.loss_eligible);
         assert_eq!(r.allowed_deduction_cents, 0);
-        assert!(r.note.contains("suspends personal casualty losses 2018-2025"));
+        assert!(r
+            .note
+            .contains("suspends personal casualty losses 2018-2025"));
     }
 
     #[test]
     fn tcja_2024_non_disaster_NOT_eligible() {
-        let r = compute(&input(2024, DisasterType::NonDisaster, 50_000_00, 30_000_00, 0, 100_000_00, false));
+        let r = compute(&input(
+            2024,
+            DisasterType::NonDisaster,
+            50_000_00,
+            30_000_00,
+            0,
+            100_000_00,
+            false,
+        ));
         assert!(!r.loss_eligible);
         assert_eq!(r.allowed_deduction_cents, 0);
     }
 
     #[test]
     fn obbba_2026_state_declared_now_qualifies() {
-        let r = compute(&input(2026, DisasterType::StateDeclared, 50_000_00, 30_000_00, 5_000_00, 100_000_00, false));
+        let r = compute(&input(
+            2026,
+            DisasterType::StateDeclared,
+            50_000_00,
+            30_000_00,
+            5_000_00,
+            100_000_00,
+            false,
+        ));
         assert!(r.loss_eligible);
         assert_eq!(r.allowed_deduction_cents, 14_900_00);
         assert!(r.citation.contains("OBBBA § 70423"));
@@ -272,14 +318,30 @@ mod tests {
 
     #[test]
     fn obbba_2026_federally_declared_still_qualifies() {
-        let r = compute(&input(2026, DisasterType::FederallyDeclared, 50_000_00, 30_000_00, 5_000_00, 100_000_00, false));
+        let r = compute(&input(
+            2026,
+            DisasterType::FederallyDeclared,
+            50_000_00,
+            30_000_00,
+            5_000_00,
+            100_000_00,
+            false,
+        ));
         assert!(r.loss_eligible);
         assert_eq!(r.allowed_deduction_cents, 14_900_00);
     }
 
     #[test]
     fn obbba_2026_non_disaster_PERMANENTLY_suspended() {
-        let r = compute(&input(2026, DisasterType::NonDisaster, 50_000_00, 30_000_00, 0, 100_000_00, false));
+        let r = compute(&input(
+            2026,
+            DisasterType::NonDisaster,
+            50_000_00,
+            30_000_00,
+            0,
+            100_000_00,
+            false,
+        ));
         assert!(!r.loss_eligible);
         assert!(r.citation.contains("PERMANENT"));
         assert!(r.note.contains("PERMANENT"));
@@ -288,16 +350,40 @@ mod tests {
     #[test]
     fn raw_loss_uses_lesser_of_basis_or_fmv_decline() {
         // Basis $50K, FMV decline $30K → use $30K.
-        let r1 = compute(&input(2024, DisasterType::FederallyDeclared, 50_000_00, 30_000_00, 0, 100_000_00, false));
+        let r1 = compute(&input(
+            2024,
+            DisasterType::FederallyDeclared,
+            50_000_00,
+            30_000_00,
+            0,
+            100_000_00,
+            false,
+        ));
         assert_eq!(r1.raw_loss_cents, 30_000_00);
         // Basis $30K, FMV decline $50K → use $30K (basis caps).
-        let r2 = compute(&input(2024, DisasterType::FederallyDeclared, 30_000_00, 50_000_00, 0, 100_000_00, false));
+        let r2 = compute(&input(
+            2024,
+            DisasterType::FederallyDeclared,
+            30_000_00,
+            50_000_00,
+            0,
+            100_000_00,
+            false,
+        ));
         assert_eq!(r2.raw_loss_cents, 30_000_00);
     }
 
     #[test]
     fn insurance_reimbursement_reduces_raw_loss() {
-        let r = compute(&input(2024, DisasterType::FederallyDeclared, 50_000_00, 50_000_00, 40_000_00, 100_000_00, false));
+        let r = compute(&input(
+            2024,
+            DisasterType::FederallyDeclared,
+            50_000_00,
+            50_000_00,
+            40_000_00,
+            100_000_00,
+            false,
+        ));
         // Raw = $50K - $40K = $10K. - $100 = $9,900. - 10% AGI $10K = $0.
         assert_eq!(r.raw_loss_cents, 10_000_00);
         assert_eq!(r.allowed_deduction_cents, 0);
@@ -305,14 +391,30 @@ mod tests {
 
     #[test]
     fn insurance_exceeding_loss_zero_deduction() {
-        let r = compute(&input(2024, DisasterType::FederallyDeclared, 50_000_00, 30_000_00, 100_000_00, 100_000_00, false));
+        let r = compute(&input(
+            2024,
+            DisasterType::FederallyDeclared,
+            50_000_00,
+            30_000_00,
+            100_000_00,
+            100_000_00,
+            false,
+        ));
         assert_eq!(r.raw_loss_cents, 0);
         assert_eq!(r.allowed_deduction_cents, 0);
     }
 
     #[test]
     fn qualified_disaster_500_floor_not_100() {
-        let r = compute(&input(2024, DisasterType::FederallyDeclared, 50_000_00, 30_000_00, 0, 100_000_00, true));
+        let r = compute(&input(
+            2024,
+            DisasterType::FederallyDeclared,
+            50_000_00,
+            30_000_00,
+            0,
+            100_000_00,
+            true,
+        ));
         assert_eq!(r.per_event_floor_cents, 50000);
         // Raw $30K - $500 = $29,500. NO 10% AGI floor (qualified-disaster exempt).
         assert_eq!(r.allowed_deduction_cents, 29_500_00);
@@ -320,14 +422,30 @@ mod tests {
 
     #[test]
     fn qualified_disaster_exempt_from_10_percent_agi() {
-        let r = compute(&input(2024, DisasterType::FederallyDeclared, 50_000_00, 30_000_00, 0, 100_000_00, true));
+        let r = compute(&input(
+            2024,
+            DisasterType::FederallyDeclared,
+            50_000_00,
+            30_000_00,
+            0,
+            100_000_00,
+            true,
+        ));
         assert!(!r.agi_floor_applies);
         assert_eq!(r.agi_floor_cents, 0);
     }
 
     #[test]
     fn non_qualified_disaster_uses_100_floor_and_agi() {
-        let r = compute(&input(2024, DisasterType::FederallyDeclared, 50_000_00, 30_000_00, 0, 100_000_00, false));
+        let r = compute(&input(
+            2024,
+            DisasterType::FederallyDeclared,
+            50_000_00,
+            30_000_00,
+            0,
+            100_000_00,
+            false,
+        ));
         assert_eq!(r.per_event_floor_cents, 10000);
         assert!(r.agi_floor_applies);
         assert_eq!(r.agi_floor_cents, 10_000_00);
@@ -336,14 +454,30 @@ mod tests {
     #[test]
     fn agi_floor_can_zero_allowed_deduction() {
         // Raw $15K - $100 = $14,900. 10% AGI on $200K = $20K → exceeds, allowed = 0.
-        let r = compute(&input(2024, DisasterType::FederallyDeclared, 20_000_00, 15_000_00, 0, 200_000_00, false));
+        let r = compute(&input(
+            2024,
+            DisasterType::FederallyDeclared,
+            20_000_00,
+            15_000_00,
+            0,
+            200_000_00,
+            false,
+        ));
         assert_eq!(r.allowed_deduction_cents, 0);
     }
 
     #[test]
     fn small_loss_per_event_floor_zeros_loss() {
         // Raw $50 < $100 floor → 0.
-        let r = compute(&input(2024, DisasterType::FederallyDeclared, 100_00, 50_00, 0, 50_000_00, false));
+        let r = compute(&input(
+            2024,
+            DisasterType::FederallyDeclared,
+            100_00,
+            50_00,
+            0,
+            50_000_00,
+            false,
+        ));
         assert_eq!(r.after_per_event_floor_cents, 0);
         assert_eq!(r.allowed_deduction_cents, 0);
     }
@@ -351,20 +485,60 @@ mod tests {
     #[test]
     fn tcja_window_boundary_2018_and_2025() {
         // 2018 federally declared still works.
-        let r_2018 = compute(&input(2018, DisasterType::FederallyDeclared, 50_000_00, 30_000_00, 0, 100_000_00, false));
+        let r_2018 = compute(&input(
+            2018,
+            DisasterType::FederallyDeclared,
+            50_000_00,
+            30_000_00,
+            0,
+            100_000_00,
+            false,
+        ));
         assert!(r_2018.loss_eligible);
         // 2025 federally declared still works.
-        let r_2025 = compute(&input(2025, DisasterType::FederallyDeclared, 50_000_00, 30_000_00, 0, 100_000_00, false));
+        let r_2025 = compute(&input(
+            2025,
+            DisasterType::FederallyDeclared,
+            50_000_00,
+            30_000_00,
+            0,
+            100_000_00,
+            false,
+        ));
         assert!(r_2025.loss_eligible);
         // 2025 state-declared NOT eligible (OBBBA expansion not effective yet).
-        let r_2025_state = compute(&input(2025, DisasterType::StateDeclared, 50_000_00, 30_000_00, 0, 100_000_00, false));
+        let r_2025_state = compute(&input(
+            2025,
+            DisasterType::StateDeclared,
+            50_000_00,
+            30_000_00,
+            0,
+            100_000_00,
+            false,
+        ));
         assert!(!r_2025_state.loss_eligible);
     }
 
     #[test]
     fn obbba_threshold_2026_state_declared() {
-        let r_2025 = compute(&input(2025, DisasterType::StateDeclared, 50_000_00, 30_000_00, 0, 100_000_00, false));
-        let r_2026 = compute(&input(2026, DisasterType::StateDeclared, 50_000_00, 30_000_00, 0, 100_000_00, false));
+        let r_2025 = compute(&input(
+            2025,
+            DisasterType::StateDeclared,
+            50_000_00,
+            30_000_00,
+            0,
+            100_000_00,
+            false,
+        ));
+        let r_2026 = compute(&input(
+            2026,
+            DisasterType::StateDeclared,
+            50_000_00,
+            30_000_00,
+            0,
+            100_000_00,
+            false,
+        ));
         assert!(!r_2025.loss_eligible);
         assert!(r_2026.loss_eligible);
     }
@@ -372,26 +546,58 @@ mod tests {
     #[test]
     fn pre_tcja_2017_state_declared_qualifies() {
         // Pre-TCJA: state-declared (or any casualty) qualified.
-        let r = compute(&input(2017, DisasterType::StateDeclared, 50_000_00, 30_000_00, 0, 100_000_00, false));
+        let r = compute(&input(
+            2017,
+            DisasterType::StateDeclared,
+            50_000_00,
+            30_000_00,
+            0,
+            100_000_00,
+            false,
+        ));
         assert!(r.loss_eligible);
     }
 
     #[test]
     fn citation_pins_obbba_70423_for_2026_plus() {
-        let r = compute(&input(2026, DisasterType::FederallyDeclared, 50_000_00, 30_000_00, 0, 100_000_00, false));
+        let r = compute(&input(
+            2026,
+            DisasterType::FederallyDeclared,
+            50_000_00,
+            30_000_00,
+            0,
+            100_000_00,
+            false,
+        ));
         assert!(r.citation.contains("OBBBA § 70423"));
         assert!(r.citation.contains("2025-12-31"));
     }
 
     #[test]
     fn citation_pins_tcja_11044_for_tcja_window() {
-        let r = compute(&input(2022, DisasterType::FederallyDeclared, 50_000_00, 30_000_00, 0, 100_000_00, false));
+        let r = compute(&input(
+            2022,
+            DisasterType::FederallyDeclared,
+            50_000_00,
+            30_000_00,
+            0,
+            100_000_00,
+            false,
+        ));
         assert!(r.citation.contains("TCJA § 11044"));
     }
 
     #[test]
     fn negative_inputs_clamped() {
-        let r = compute(&input(2026, DisasterType::FederallyDeclared, -100, -100, -100, -100, false));
+        let r = compute(&input(
+            2026,
+            DisasterType::FederallyDeclared,
+            -100,
+            -100,
+            -100,
+            -100,
+            false,
+        ));
         assert_eq!(r.raw_loss_cents, 0);
         assert_eq!(r.allowed_deduction_cents, 0);
     }
@@ -404,7 +610,15 @@ mod tests {
         // Raw = min($80K, $50K) - $10K = $40K.
         // Per-event $100 floor → $39,900.
         // 10% AGI on $100K = $10K floor → $39,900 - $10K = $29,900.
-        let r = compute(&input(2024, DisasterType::FederallyDeclared, 80_000_00, 50_000_00, 10_000_00, 100_000_00, false));
+        let r = compute(&input(
+            2024,
+            DisasterType::FederallyDeclared,
+            80_000_00,
+            50_000_00,
+            10_000_00,
+            100_000_00,
+            false,
+        ));
         assert_eq!(r.raw_loss_cents, 40_000_00);
         assert_eq!(r.allowed_deduction_cents, 29_900_00);
     }
@@ -416,15 +630,39 @@ mod tests {
         // Raw = $40K.
         // Per-event $500 floor → $39,500.
         // NO 10% AGI floor → allowed = $39,500.
-        let r = compute(&input(2024, DisasterType::FederallyDeclared, 80_000_00, 50_000_00, 10_000_00, 100_000_00, true));
+        let r = compute(&input(
+            2024,
+            DisasterType::FederallyDeclared,
+            80_000_00,
+            50_000_00,
+            10_000_00,
+            100_000_00,
+            true,
+        ));
         assert_eq!(r.allowed_deduction_cents, 39_500_00);
         assert!(!r.agi_floor_applies);
     }
 
     #[test]
     fn eligibility_invariant_2025_state_vs_2026_state() {
-        let r25 = compute(&input(2025, DisasterType::StateDeclared, 50_000_00, 30_000_00, 0, 100_000_00, false));
-        let r26 = compute(&input(2026, DisasterType::StateDeclared, 50_000_00, 30_000_00, 0, 100_000_00, false));
+        let r25 = compute(&input(
+            2025,
+            DisasterType::StateDeclared,
+            50_000_00,
+            30_000_00,
+            0,
+            100_000_00,
+            false,
+        ));
+        let r26 = compute(&input(
+            2026,
+            DisasterType::StateDeclared,
+            50_000_00,
+            30_000_00,
+            0,
+            100_000_00,
+            false,
+        ));
         assert!(!r25.loss_eligible);
         assert!(r26.loss_eligible);
         assert!(r25.allowed_deduction_cents == 0);
@@ -433,7 +671,15 @@ mod tests {
 
     #[test]
     fn obbba_2030_still_permanent_suspension_for_non_disaster() {
-        let r = compute(&input(2030, DisasterType::NonDisaster, 50_000_00, 30_000_00, 0, 100_000_00, false));
+        let r = compute(&input(
+            2030,
+            DisasterType::NonDisaster,
+            50_000_00,
+            30_000_00,
+            0,
+            100_000_00,
+            false,
+        ));
         assert!(!r.loss_eligible);
         assert!(r.citation.contains("PERMANENT"));
     }

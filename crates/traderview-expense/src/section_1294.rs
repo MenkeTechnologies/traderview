@@ -185,8 +185,7 @@ pub struct Section1294Result {
 pub fn check(input: &Section1294Input) -> Section1294Result {
     let mut failure_reasons: Vec<String> = Vec::new();
 
-    let election_available =
-        !input.section_551_fphc_engaged && !input.section_951_cfc_engaged;
+    let election_available = !input.section_551_fphc_engaged && !input.section_951_cfc_engaged;
 
     let undistributed_earnings_cents = input
         .section_1293_includible_amount_cents
@@ -194,8 +193,7 @@ pub fn check(input: &Section1294Input) -> Section1294Result {
         .saturating_sub(input.disposed_stock_portion_cents);
 
     let deferred_tax_cents = if input.election_made && election_available {
-        undistributed_earnings_cents
-            .saturating_mul(input.tax_rate_on_undistributed_bps as u64)
+        undistributed_earnings_cents.saturating_mul(input.tax_rate_on_undistributed_bps as u64)
             / 10_000
     } else {
         0
@@ -372,9 +370,10 @@ mod tests {
         i.section_951_cfc_engaged = true;
         let r = check(&i);
         assert!(!r.election_available);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 1294(d)(2)")
-            && f.contains("§ 951")
-            && f.contains("§ 1297(d)")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1294(d)(2)") && f.contains("§ 951") && f.contains("§ 1297(d)")));
     }
 
     #[test]
@@ -410,7 +409,10 @@ mod tests {
         i.termination_event = TerminationEvent::QefStockDisposition;
         let r = check(&i);
         assert!(r.termination_engaged);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("QEF stock disposition")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("QEF stock disposition")));
     }
 
     #[test]
@@ -456,7 +458,10 @@ mod tests {
     fn termination_event_truth_table_seven_cells() {
         for (event, exp_engaged) in [
             (TerminationEvent::NoTermination, false),
-            (TerminationEvent::DistributionReducingUndistributedEarnings, true),
+            (
+                TerminationEvent::DistributionReducingUndistributedEarnings,
+                true,
+            ),
             (TerminationEvent::QefStockDisposition, true),
             (TerminationEvent::AffirmativeTermination, true),
             (TerminationEvent::ShareholderDeath, true),
@@ -532,9 +537,10 @@ mod tests {
     #[test]
     fn note_pins_subsection_d2_cfc_carveout() {
         let r = check(&baseline_election());
-        assert!(r.notes.iter().any(|n| n.contains("§ 1294(d)(2)")
-            && n.contains("§ 951")
-            && n.contains("§ 1297(d)")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1294(d)(2)") && n.contains("§ 951") && n.contains("§ 1297(d)")));
     }
 
     #[test]
@@ -552,8 +558,10 @@ mod tests {
     #[test]
     fn note_pins_termination_due_and_payable() {
         let r = check(&baseline_election());
-        assert!(r.notes.iter().any(|n| n.contains("§ 1294(e) TERMINATION")
-            && n.contains("DUE AND PAYABLE")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1294(e) TERMINATION") && n.contains("DUE AND PAYABLE")));
     }
 
     #[test]
@@ -596,9 +604,12 @@ mod tests {
     #[test]
     fn note_pins_1986_tax_reform_origin() {
         let r = check(&baseline_election());
-        assert!(r.notes.iter().any(|n| n.contains("Tax Reform Act of 1986 § 1235")
-            && n.contains("Pub. L. 99-514")
-            && n.contains("October 22, 1986")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Tax Reform Act of 1986 § 1235")
+                && n.contains("Pub. L. 99-514")
+                && n.contains("October 22, 1986")));
     }
 
     #[test]

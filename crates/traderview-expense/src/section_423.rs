@@ -209,9 +209,8 @@ pub fn check(input: &Section423Input) -> Section423Result {
     } else {
         input.fmv_at_purchase_cents
     };
-    let effective_purchase_price_cents = lower_fmv
-        .saturating_mul(100u64.saturating_sub(input.discount_percent as u64))
-        / 100;
+    let effective_purchase_price_cents =
+        lower_fmv.saturating_mul(100u64.saturating_sub(input.discount_percent as u64)) / 100;
 
     let effective_discount_cents_per_share = input
         .fmv_at_purchase_cents
@@ -241,14 +240,12 @@ pub fn check(input: &Section423Input) -> Section423Result {
     let full_spread_at_purchase = input
         .fmv_at_purchase_cents
         .saturating_sub(input.purchase_price_cents);
-    let ordinary_income_disqualifying_disposition_cents = if matches!(
-        input.disposition,
-        DispositionType::DisqualifyingDisposition
-    ) {
-        full_spread_at_purchase.saturating_mul(input.shares_count)
-    } else {
-        0
-    };
+    let ordinary_income_disqualifying_disposition_cents =
+        if matches!(input.disposition, DispositionType::DisqualifyingDisposition) {
+            full_spread_at_purchase.saturating_mul(input.shares_count)
+        } else {
+            0
+        };
 
     let long_term_capital_gain_cents = if holding_periods_satisfied {
         let total_gain = input
@@ -397,9 +394,10 @@ mod tests {
     fn qualifying_disposition_fica_exempt() {
         let r = check(&espp_qualifying_lookback());
         assert!(r.fica_exempt);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("Notice 2002-47")
-            && f.contains("NO FICA")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("Notice 2002-47") && f.contains("NO FICA")));
     }
 
     #[test]
@@ -426,10 +424,16 @@ mod tests {
         i.sale_price_cents = 13_000;
         let r = check(&i);
         assert!(!r.holding_periods_satisfied);
-        assert_eq!(r.ordinary_income_disqualifying_disposition_cents, (13_000 - 8_500) * 250);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 421(b) DISQUALIFYING DISPOSITION")
-            && f.contains("FULL SPREAD")));
+        assert_eq!(
+            r.ordinary_income_disqualifying_disposition_cents,
+            (13_000 - 8_500) * 250
+        );
+        assert!(
+            r.failure_reasons
+                .iter()
+                .any(|f| f.contains("§ 421(b) DISQUALIFYING DISPOSITION")
+                    && f.contains("FULL SPREAD"))
+        );
     }
 
     #[test]
@@ -448,9 +452,10 @@ mod tests {
         i.shareholder_approved_within_12_months = false;
         let r = check(&i);
         assert!(!r.plan_qualifies_under_section_423_b);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 423(b)(2)")
-            && f.contains("12 months")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 423(b)(2)") && f.contains("12 months")));
     }
 
     #[test]
@@ -459,8 +464,7 @@ mod tests {
         i.five_percent_shareholder = true;
         let r = check(&i);
         assert!(!r.plan_qualifies_under_section_423_b);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 423(b)(3)")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 423(b)(3)")
             && f.contains("5%+ SHAREHOLDER")
             && f.contains("§ 424(d)")));
     }
@@ -471,9 +475,10 @@ mod tests {
         i.offering_period_within_outer_limit = false;
         let r = check(&i);
         assert!(!r.plan_qualifies_under_section_423_b);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 423(b)(7)")
-            && f.contains("27 months WITH look-back")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 423(b)(7)") && f.contains("27 months WITH look-back")));
     }
 
     #[test]
@@ -482,9 +487,10 @@ mod tests {
         i.same_rights_and_privileges = false;
         let r = check(&i);
         assert!(!r.plan_qualifies_under_section_423_b);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 423(b)(5)")
-            && f.contains("SAME RIGHTS AND PRIVILEGES")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 423(b)(5)") && f.contains("SAME RIGHTS AND PRIVILEGES")));
     }
 
     #[test]
@@ -493,9 +499,10 @@ mod tests {
         i.discount_percent = 20;
         let r = check(&i);
         assert!(!r.plan_qualifies_under_section_423_b);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 423(b)(6)")
-            && f.contains("EXCEEDS 15% maximum")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 423(b)(6)") && f.contains("EXCEEDS 15% maximum")));
     }
 
     #[test]
@@ -504,8 +511,7 @@ mod tests {
         i.annual_accrual_grant_fmv_dollars = 30_000;
         let r = check(&i);
         assert!(r.annual_accrual_cap_exceeded);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 423(b)(8)")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 423(b)(8)")
             && f.contains("$25,000 cap")
             && f.contains("GRANT DATE")));
     }
@@ -564,11 +570,15 @@ mod tests {
             let r = check(&i);
             assert_eq!(
                 r.ordinary_income_qualifying_disposition_cents > 0,
-                expect_qd, "disp={:?}", disp
+                expect_qd,
+                "disp={:?}",
+                disp
             );
             assert_eq!(
                 r.ordinary_income_disqualifying_disposition_cents > 0,
-                expect_dq, "disp={:?}", disp
+                expect_dq,
+                "disp={:?}",
+                disp
             );
         }
     }
@@ -596,8 +606,12 @@ mod tests {
         assert!(r.citation.contains("§ 424(d)"));
         assert!(r.citation.contains("§ 1411 (NIIT 3.8%)"));
         assert!(r.citation.contains("§ 162 (employer deduction)"));
-        assert!(r.citation.contains("Treas. Reg. § 1.423-1 through § 1.423-2"));
-        assert!(r.citation.contains("Treas. Reg. § 1.421-1 through § 1.421-2"));
+        assert!(r
+            .citation
+            .contains("Treas. Reg. § 1.423-1 through § 1.423-2"));
+        assert!(r
+            .citation
+            .contains("Treas. Reg. § 1.421-1 through § 1.421-2"));
         assert!(r.citation.contains("IRS Notice 2002-47"));
         assert!(r.citation.contains("Rev. Rul. 71-52"));
         assert!(r.citation.contains("Form 3922"));
@@ -606,8 +620,7 @@ mod tests {
     #[test]
     fn note_pins_subsection_b_nine_requirements() {
         let r = check(&espp_qualifying_lookback());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 423(b)")
+        assert!(r.notes.iter().any(|n| n.contains("§ 423(b)")
             && n.contains("(9 conditions)")
             && n.contains("§ 424(d)")
             && n.contains("$25K annual accrual")));
@@ -616,26 +629,30 @@ mod tests {
     #[test]
     fn note_pins_subsection_b6_look_back() {
         let r = check(&espp_qualifying_lookback());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 423(b)(6) LOOK-BACK PROVISION")
-            && n.contains("85% of LOWER")
-            && n.contains("substantially exceed 15%")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 423(b)(6) LOOK-BACK PROVISION")
+                && n.contains("85% of LOWER")
+                && n.contains("substantially exceed 15%")));
     }
 
     #[test]
     fn note_pins_subsection_b8_25k_cap() {
         let r = check(&espp_qualifying_lookback());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 423(b)(8) $25,000 ANNUAL ACCRUAL CAP")
-            && n.contains("GRANT DATE")
-            && n.contains("NOT carried over")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 423(b)(8) $25,000 ANNUAL ACCRUAL CAP")
+                && n.contains("GRANT DATE")
+                && n.contains("NOT carried over")));
     }
 
     #[test]
     fn note_pins_subsection_421a_holding_periods() {
         let r = check(&espp_qualifying_lookback());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 421(a) QUALIFYING DISPOSITION HOLDING PERIODS")
+        assert!(r.notes.iter().any(|n| n
+            .contains("§ 421(a) QUALIFYING DISPOSITION HOLDING PERIODS")
             && n.contains("2 YEARS from OFFERING")
             && n.contains("1 YEAR from PURCHASE")));
     }
@@ -643,27 +660,29 @@ mod tests {
     #[test]
     fn note_pins_subsection_423c_qualifying_treatment() {
         let r = check(&espp_qualifying_lookback());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 423(c) QUALIFYING DISPOSITION TREATMENT")
-            && n.contains("LESSER of")
-            && n.contains("NO FICA")
-            && n.contains("NO § 162 deduction")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 423(c) QUALIFYING DISPOSITION TREATMENT")
+                && n.contains("LESSER of")
+                && n.contains("NO FICA")
+                && n.contains("NO § 162 deduction")));
     }
 
     #[test]
     fn note_pins_subsection_421b_disqualifying_treatment() {
         let r = check(&espp_qualifying_lookback());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 421(b) DISQUALIFYING DISPOSITION TREATMENT")
-            && n.contains("FULL SPREAD")
-            && n.contains("GETS § 162 compensation deduction")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("§ 421(b) DISQUALIFYING DISPOSITION TREATMENT")
+                && n.contains("FULL SPREAD")
+                && n.contains("GETS § 162 compensation deduction")
+        ));
     }
 
     #[test]
     fn note_pins_notice_2002_47_fica() {
         let r = check(&espp_qualifying_lookback());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Notice 2002-47")
+        assert!(r.notes.iter().any(|n| n.contains("Notice 2002-47")
             && n.contains("Rev. Rul. 71-52")
             && n.contains("FICA EXEMPTION")));
     }
@@ -671,17 +690,18 @@ mod tests {
     #[test]
     fn note_pins_section_424d_constructive_ownership() {
         let r = check(&espp_qualifying_lookback());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 424(d) CONSTRUCTIVE OWNERSHIP")
-            && n.contains("family")
-            && n.contains("partnership/corporation/estate/trust")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 424(d) CONSTRUCTIVE OWNERSHIP")
+                && n.contains("family")
+                && n.contains("partnership/corporation/estate/trust")));
     }
 
     #[test]
     fn note_pins_section_1411_niit() {
         let r = check(&espp_qualifying_lookback());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 1411 NIIT 3.8%")
+        assert!(r.notes.iter().any(|n| n.contains("§ 1411 NIIT 3.8%")
             && n.contains("$200K single")
             && n.contains("$250K MFJ")));
     }
@@ -689,18 +709,19 @@ mod tests {
     #[test]
     fn note_pins_trader_fact_patterns() {
         let r = check(&espp_qualifying_lookback());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-critical fact patterns")
-            && n.contains("$25K contributions")
-            && n.contains("look-back")
-            && n.contains("$45/share FULL SPREAD")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-critical fact patterns")
+                && n.contains("$25K contributions")
+                && n.contains("look-back")
+                && n.contains("$45/share FULL SPREAD")));
     }
 
     #[test]
     fn note_pins_form_3922() {
         let r = check(&espp_qualifying_lookback());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Form 3922")
+        assert!(r.notes.iter().any(|n| n.contains("Form 3922")
             && n.contains("FIRST TRANSFER")
             && n.contains("January 31")));
     }
@@ -708,8 +729,7 @@ mod tests {
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&espp_qualifying_lookback());
-        assert!(r.notes.iter().any(|n|
-            n.contains("section_422")
+        assert!(r.notes.iter().any(|n| n.contains("section_422")
             && n.contains("section_475c2")
             && n.contains("section_1411")
             && n.contains("section_424")

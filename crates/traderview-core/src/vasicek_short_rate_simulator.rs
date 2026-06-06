@@ -30,13 +30,25 @@ pub struct Report {
 
 #[allow(clippy::too_many_arguments)]
 pub fn compute(
-    r0: f64, a: f64, b: f64, sigma: f64,
-    dt: f64, steps: usize, paths: usize, seed: u64,
+    r0: f64,
+    a: f64,
+    b: f64,
+    sigma: f64,
+    dt: f64,
+    steps: usize,
+    paths: usize,
+    seed: u64,
 ) -> Option<Report> {
     let finites = [r0, a, b, sigma, dt];
-    if finites.iter().any(|x| !x.is_finite()) { return None; }
-    if a <= 0.0 || sigma < 0.0 || dt <= 0.0 { return None; }
-    if steps < 1 || paths < 1 { return None; }
+    if finites.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
+    if a <= 0.0 || sigma < 0.0 || dt <= 0.0 {
+        return None;
+    }
+    if steps < 1 || paths < 1 {
+        return None;
+    }
     let decay = (-a * dt).exp();
     let two_a_dt = 2.0 * a * dt;
     let one_minus_decay2 = 1.0 - (-two_a_dt).exp();
@@ -50,10 +62,14 @@ pub fn compute(
         for _ in 0..steps {
             let z = next_normal(&mut state);
             r = b + (r - b) * decay + noise_scale * z;
-            if r < 0.0 { hit_neg = true; }
+            if r < 0.0 {
+                hit_neg = true;
+            }
         }
         terminals.push(r);
-        if hit_neg { went_negative += 1; }
+        if hit_neg {
+            went_negative += 1;
+        }
     }
     let n = terminals.len() as f64;
     let mean = terminals.iter().sum::<f64>() / n;
@@ -72,7 +88,9 @@ pub fn compute(
 }
 
 fn next_u64(state: &mut u64) -> u64 {
-    *state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+    *state = state
+        .wrapping_mul(6364136223846793005)
+        .wrapping_add(1442695040888963407);
     *state
 }
 
@@ -85,7 +103,9 @@ fn next_uniform(state: &mut u64) -> f64 {
 fn next_normal(state: &mut u64) -> f64 {
     let mut u1 = next_uniform(state);
     let u2 = next_uniform(state);
-    if u1 < 1e-300 { u1 = 1e-300; }
+    if u1 < 1e-300 {
+        u1 = 1e-300;
+    }
     (-2.0 * u1.ln()).sqrt() * (std::f64::consts::TAU * u2).cos()
 }
 
@@ -129,7 +149,10 @@ mod tests {
     fn reproducible_with_same_seed() {
         let a = compute(0.03, 0.5, 0.04, 0.01, 0.01, 100, 100, 99).unwrap();
         let b = compute(0.03, 0.5, 0.04, 0.01, 0.01, 100, 100, 99).unwrap();
-        assert_eq!(a.mean_terminal_rate.to_bits(), b.mean_terminal_rate.to_bits());
+        assert_eq!(
+            a.mean_terminal_rate.to_bits(),
+            b.mean_terminal_rate.to_bits()
+        );
     }
 
     #[test]

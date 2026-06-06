@@ -193,11 +193,11 @@ fn check_vt(
     }
 
     let penalty_in_range = input.vt_civil_penalty_cents == 0
-        || (input.vt_civil_penalty_cents >= 20_000
-            && input.vt_civil_penalty_cents <= 100_000);
+        || (input.vt_civil_penalty_cents >= 20_000 && input.vt_civil_penalty_cents <= 100_000);
     if !penalty_in_range {
         violations.push(
-            "10 V.S.A. § 8007 — civil penalty must be between $200 and $1,000 for first offense".to_string(),
+            "10 V.S.A. § 8007 — civil penalty must be between $200 and $1,000 for first offense"
+                .to_string(),
         );
     }
 
@@ -385,10 +385,7 @@ mod tests {
         i.days_to_new_tenant_information = 15;
         let r = check(&i);
         assert!(!r.fourteen_day_new_tenant_window_compliant);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("14 days")));
+        assert!(r.violations.iter().any(|v| v.contains("14 days")));
     }
 
     #[test]
@@ -468,10 +465,7 @@ mod tests {
         i.organics_bins_provided = false;
         let r = check(&i);
         assert!(!r.disclosure_compliant);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("SMC 21.36.082")));
+        assert!(r.violations.iter().any(|v| v.contains("SMC 21.36.082")));
     }
 
     #[test]
@@ -550,8 +544,10 @@ mod tests {
     #[test]
     fn note_pins_ca_75_percent_diversion_target() {
         let r = check(&ca_clean());
-        assert!(r.notes.iter().any(|n| n.contains("75%")
-            && n.contains("2025")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("75%") && n.contains("2025")));
     }
 
     #[test]
@@ -566,19 +562,13 @@ mod tests {
     #[test]
     fn note_pins_seattle_50_dollar_contamination_fine() {
         let r = check(&seattle_clean());
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("$50 contamination fine")));
+        assert!(r.notes.iter().any(|n| n.contains("$50 contamination fine")));
     }
 
     #[test]
     fn note_pins_default_rcra_subtitle_d() {
         let r = check(&default_clean());
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("RCRA Subtitle D")));
+        assert!(r.notes.iter().any(|n| n.contains("RCRA Subtitle D")));
     }
 
     #[test]

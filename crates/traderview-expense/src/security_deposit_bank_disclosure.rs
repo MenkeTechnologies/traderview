@@ -179,15 +179,13 @@ pub fn check(input: &Input) -> CheckResult {
             }
             if !input.bank_address_disclosed {
                 violations.push(
-                    "N.Y. Gen. Oblig. Law § 7-103 — bank address was not disclosed."
-                        .to_string(),
+                    "N.Y. Gen. Oblig. Law § 7-103 — bank address was not disclosed.".to_string(),
                 );
                 bank_disclosure_violation = true;
             }
             if !input.amount_disclosed {
                 violations.push(
-                    "N.Y. Gen. Oblig. Law § 7-103 — deposit amount was not disclosed."
-                        .to_string(),
+                    "N.Y. Gen. Oblig. Law § 7-103 — deposit amount was not disclosed.".to_string(),
                 );
                 bank_disclosure_violation = true;
             }
@@ -212,7 +210,11 @@ pub fn check(input: &Input) -> CheckResult {
                  be commingled with landlord's personal funds. Bank disclosure required. \
                  Building has {} unit{}; interest-bearing requirement {}.",
                 input.units_in_building,
-                if input.units_in_building == 1 { "" } else { "s" },
+                if input.units_in_building == 1 {
+                    ""
+                } else {
+                    "s"
+                },
                 if ny_interest_bearing_required {
                     "ENGAGED (≥ 6 unit threshold)"
                 } else {
@@ -297,8 +299,7 @@ pub fn check(input: &Input) -> CheckResult {
                 missing_components.push("account number");
             }
 
-            let receipt_overdue =
-                input.days_since_deposit_received > MA_RECEIPT_WINDOW_DAYS;
+            let receipt_overdue = input.days_since_deposit_received > MA_RECEIPT_WINDOW_DAYS;
 
             if !missing_components.is_empty() || receipt_overdue {
                 violations.push(format!(
@@ -490,7 +491,10 @@ mod tests {
         b.interest_rate_disclosed = false;
         let r = check(&b);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("current interest rate")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("current interest rate")));
     }
 
     #[test]
@@ -500,7 +504,10 @@ mod tests {
         b.days_since_deposit_received = 31;
         let r = check(&b);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("30-day notice window EXPIRED")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("30-day notice window EXPIRED")));
     }
 
     #[test]
@@ -605,7 +612,11 @@ mod tests {
             b.days_since_deposit_received = 60;
             let r = check(&b);
             let expected = matches!(regime, Regime::Massachusetts);
-            assert_eq!(r.ma_immediate_return_remedy_engaged, expected, "{:?}", regime);
+            assert_eq!(
+                r.ma_immediate_return_remedy_engaged, expected,
+                "{:?}",
+                regime
+            );
         }
     }
 
@@ -649,8 +660,7 @@ mod tests {
             b.units_in_building = *units;
             let r = check(&b);
             assert_eq!(
-                r.ny_interest_bearing_required,
-                *expected_required,
+                r.ny_interest_bearing_required, *expected_required,
                 "units={}",
                 units
             );
@@ -731,6 +741,9 @@ mod tests {
         b.days_since_deposit_received = 31;
         let r = check(&b);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("30-day notice window EXPIRED")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("30-day notice window EXPIRED")));
     }
 }

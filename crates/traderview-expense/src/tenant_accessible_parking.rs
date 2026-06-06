@@ -375,10 +375,7 @@ mod tests {
         i.on_accessible_route = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("accessible route")));
+        assert!(r.violations.iter().any(|v| v.contains("accessible route")));
     }
 
     #[test]
@@ -467,8 +464,12 @@ mod tests {
     #[test]
     fn note_pins_exemptions() {
         let r = check(&ra_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("fewer than 4 units")
-            && n.contains("townhouses without elevator")));
+        assert!(
+            r.notes
+                .iter()
+                .any(|n| n.contains("fewer than 4 units")
+                    && n.contains("townhouses without elevator"))
+        );
     }
 
     #[test]

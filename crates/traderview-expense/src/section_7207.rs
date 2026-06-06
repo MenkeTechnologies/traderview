@@ -153,8 +153,7 @@ pub fn check(input: &Section7207Input) -> Section7207Result {
         );
         if cheek_engaged {
             notes.push(
-                "Cheek defense SUCCESSFUL — willfulness element of § 7207 defeated"
-                    .to_string(),
+                "Cheek defense SUCCESSFUL — willfulness element of § 7207 defeated".to_string(),
             );
         }
     }
@@ -176,9 +175,8 @@ pub fn check(input: &Section7207Input) -> Section7207Result {
         count
     ));
 
-    let felony_alternative = all_three
-        && !cheek_engaged
-        && input.document_signed_under_penalties_of_perjury;
+    let felony_alternative =
+        all_three && !cheek_engaged && input.document_signed_under_penalties_of_perjury;
 
     if felony_alternative {
         notes.push(
@@ -222,8 +220,7 @@ pub fn check(input: &Section7207Input) -> Section7207Result {
     );
 
     notes.push(
-        "IRM 9.1.3 — Criminal Statutory Provisions and Common Law procedural manual"
-            .to_string(),
+        "IRM 9.1.3 — Criminal Statutory Provisions and Common Law procedural manual".to_string(),
     );
 
     Section7207Result {
@@ -350,7 +347,12 @@ mod tests {
         i.document_signed_under_penalties_of_perjury = true;
         let r = check(&i);
         assert!(r.section_7206_felony_alternative_available);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7206(1) FELONY alternative") && n.contains("perjury statute") && n.contains("$250,000")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7206(1) FELONY alternative")
+                && n.contains("perjury statute")
+                && n.contains("$250,000")));
     }
 
     #[test]
@@ -364,32 +366,46 @@ mod tests {
         let mut i = full_violation();
         i.computed_tax_deficiency_de_minimis = true;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("DE MINIMIS") && n.contains("misdemeanor over § 7206 felony")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("DE MINIMIS") && n.contains("misdemeanor over § 7206 felony")));
     }
 
     #[test]
     fn criminal_sol_6_years() {
         let r = check(&full_violation());
         assert_eq!(r.criminal_sol_years, 6);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6531(2)") && n.contains("6-year")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6531(2)") && n.contains("6-year")));
     }
 
     #[test]
     fn cfia_supersedes_fine_caps_note() {
         let r = check(&full_violation());
-        assert!(r.notes.iter().any(|n| n.contains("18 U.S.C. § 3571") && n.contains("$100,000")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("18 U.S.C. § 3571") && n.contains("$100,000")));
     }
 
     #[test]
     fn spies_daly_parallel_civil_note_present() {
         let r = check(&full_violation());
-        assert!(r.notes.iter().any(|n| n.contains("Spies-Daly") && n.contains("§ 7434") && n.contains("§ 6663") && n.contains("§ 6501(c)(1)")));
+        assert!(r.notes.iter().any(|n| n.contains("Spies-Daly")
+            && n.contains("§ 7434")
+            && n.contains("§ 6663")
+            && n.contains("§ 6501(c)(1)")));
     }
 
     #[test]
     fn typical_fact_patterns_note_present() {
         let r = check(&full_violation());
-        assert!(r.notes.iter().any(|n| n.contains("fabricated receipts") && n.contains("altered Schedule K-1") && n.contains("Form 433")));
+        assert!(r.notes.iter().any(|n| n.contains("fabricated receipts")
+            && n.contains("altered Schedule K-1")
+            && n.contains("Form 433")));
     }
 
     #[test]
@@ -417,7 +433,9 @@ mod tests {
     #[test]
     fn distinction_from_7206_note_describes_perjury_scope() {
         let r = check(&full_violation());
-        assert!(r.notes.iter().any(|n| n.contains("§ 7207") && n.contains("broader scope") && n.contains("NOT signed under penalties of perjury")));
+        assert!(r.notes.iter().any(|n| n.contains("§ 7207")
+            && n.contains("broader scope")
+            && n.contains("NOT signed under penalties of perjury")));
     }
 
     #[test]
@@ -441,7 +459,9 @@ mod tests {
     #[test]
     fn misdemeanor_authorized_note_describes_pathway() {
         let r = check(&full_violation());
-        assert!(r.notes.iter().any(|n| n.contains("§ 7207 — misdemeanor prosecution AUTHORIZED") && n.contains("1-year")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("§ 7207 — misdemeanor prosecution AUTHORIZED") && n.contains("1-year")
+        ));
     }
 
     #[test]
@@ -478,7 +498,10 @@ mod tests {
         let mut i = full_violation();
         i.cheek_defense_asserted = true;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("Cheek v. United States") && n.contains("subjective belief")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Cheek v. United States") && n.contains("subjective belief")));
     }
 
     #[test]
@@ -486,6 +509,10 @@ mod tests {
         let mut i = full_violation();
         i.element_1_delivery_or_disclosure_to_irs = false;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("government has not established all three") && n.contains("prosecution NOT authorized")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("government has not established all three")
+                && n.contains("prosecution NOT authorized")));
     }
 }

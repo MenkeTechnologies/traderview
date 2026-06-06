@@ -17,13 +17,19 @@
 pub fn compute(closes: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = closes.len();
     let mut out = vec![None; n];
-    if period < 2 || n < period { return out; }
-    if closes.iter().any(|x| !x.is_finite()) { return out; }
+    if period < 2 || n < period {
+        return out;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     let p_f = period as f64;
     let mut sum: f64 = closes[..period].iter().sum();
     let emit = |i: usize, sum: f64, out: &mut Vec<Option<f64>>| {
         let sma = sum / p_f;
-        if sma != 0.0 { out[i] = Some((closes[i] - sma) / sma * 100.0); }
+        if sma != 0.0 {
+            out[i] = Some((closes[i] - sma) / sma * 100.0);
+        }
     };
     emit(period - 1, sum, &mut out);
     for i in period..n {
@@ -38,7 +44,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn empty_returns_empty() { assert!(compute(&[], 14).is_empty()); }
+    fn empty_returns_empty() {
+        assert!(compute(&[], 14).is_empty());
+    }
 
     #[test]
     fn invalid_params_return_all_none() {
@@ -58,7 +66,9 @@ mod tests {
     fn flat_market_yields_zero_di() {
         let c = vec![100.0_f64; 30];
         let r = compute(&c, 14);
-        for v in r.iter().flatten() { assert!(v.abs() < 1e-9); }
+        for v in r.iter().flatten() {
+            assert!(v.abs() < 1e-9);
+        }
     }
 
     #[test]

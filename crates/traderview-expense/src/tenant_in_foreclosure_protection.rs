@@ -187,8 +187,8 @@ pub fn check(input: &Input) -> CheckResult {
             || input.ny_tenant_not_named_in_foreclosure);
 
     // California § 2924.8(d) tear-down infraction.
-    let ca_72_hour_tear_down_infraction = matches!(input.regime, Regime::California)
-        && input.ca_notice_torn_down_within_72_hours;
+    let ca_72_hour_tear_down_infraction =
+        matches!(input.regime, Regime::California) && input.ca_notice_torn_down_within_72_hours;
 
     // Violation: California missing pre-sale notice posting.
     if matches!(input.regime, Regime::California)
@@ -580,12 +580,9 @@ mod tests {
             b.rent_is_substantially_less_than_market = !*rent_ok_flag;
             let r = check(&b);
             assert_eq!(
-                r.bona_fide_tenant_status,
-                *expected_bona_fide,
+                r.bona_fide_tenant_status, *expected_bona_fide,
                 "family={} arms={} rent_ok={}",
-                family,
-                arms_length,
-                rent_ok_flag,
+                family, arms_length, rent_ok_flag,
             );
         }
     }
@@ -632,10 +629,12 @@ mod tests {
     fn sibling_distinction_note_present() {
         let r = check(&input(Regime::Default));
         assert!(
-            r.notes.iter().any(|n| n.contains("foreclosure_tenant_rights")
-                && n.contains("mid_tenancy_ownership_change")
-                && n.contains("eviction_notices")
-                && n.contains("national FLOOR")),
+            r.notes
+                .iter()
+                .any(|n| n.contains("foreclosure_tenant_rights")
+                    && n.contains("mid_tenancy_ownership_change")
+                    && n.contains("eviction_notices")
+                    && n.contains("national FLOOR")),
             "sibling distinction note must reference related modules + federal floor concept"
         );
     }

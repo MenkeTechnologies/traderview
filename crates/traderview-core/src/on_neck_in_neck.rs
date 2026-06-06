@@ -20,7 +20,12 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub open: f64, pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct NeckPatternReport {
@@ -36,9 +41,12 @@ pub fn compute(bars: &[Bar], tolerance_pct: f64) -> NeckPatternReport {
         in_neck: vec![false; n],
         tolerance_pct,
     };
-    if n < 2 || !tolerance_pct.is_finite() || tolerance_pct <= 0.0 { return report; }
-    if bars.iter().any(|b| !b.open.is_finite() || !b.high.is_finite()
-        || !b.low.is_finite() || !b.close.is_finite()) {
+    if n < 2 || !tolerance_pct.is_finite() || tolerance_pct <= 0.0 {
+        return report;
+    }
+    if bars.iter().any(|b| {
+        !b.open.is_finite() || !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()
+    }) {
         return report;
     }
     let tol_factor = tolerance_pct / 100.0;
@@ -48,10 +56,16 @@ pub fn compute(bars: &[Bar], tolerance_pct: f64) -> NeckPatternReport {
         // Bar 1 must be tall bearish.
         let body1 = prev.open - prev.close;
         let range1 = prev.high - prev.low;
-        if range1 <= 0.0 || body1 <= 0.0 || body1 < 0.6 * range1 { continue; }
+        if range1 <= 0.0 || body1 <= 0.0 || body1 < 0.6 * range1 {
+            continue;
+        }
         // Bar 2 must be bullish opening below bar 1 low.
-        if cur.close <= cur.open { continue; }
-        if cur.open >= prev.low { continue; }
+        if cur.close <= cur.open {
+            continue;
+        }
+        if cur.open >= prev.low {
+            continue;
+        }
         let mid1 = (prev.open + prev.close) / 2.0;
         // On-neck: closes near bar 1 low.
         let tol = prev.low.abs() * tol_factor;
@@ -71,7 +85,12 @@ mod tests {
     use super::*;
 
     fn bar(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -84,8 +103,10 @@ mod tests {
 
     #[test]
     fn nan_returns_empty() {
-        let bars = vec![bar(100.0, 101.0, 99.0, 100.0),
-                        bar(f64::NAN, 101.0, 99.0, 100.0)];
+        let bars = vec![
+            bar(100.0, 101.0, 99.0, 100.0),
+            bar(f64::NAN, 101.0, 99.0, 100.0),
+        ];
         let r = compute(&bars, 0.5);
         assert!(!r.on_neck.iter().any(|x| *x));
     }
@@ -94,10 +115,7 @@ mod tests {
     fn on_neck_detected() {
         // Bar 1: bearish 110→100, low=99.5.
         // Bar 2: bullish, opens 95 (< 99.5), closes near low (99.5).
-        let bars = vec![
-            bar(110.0, 110.5, 99.5, 100.0),
-            bar(95.0, 100.0, 94.5, 99.7),
-        ];
+        let bars = vec![bar(110.0, 110.5, 99.5, 100.0), bar(95.0, 100.0, 94.5, 99.7)];
         let r = compute(&bars, 0.5);
         assert!(r.on_neck[1]);
         assert!(!r.in_neck[1]);
@@ -120,7 +138,7 @@ mod tests {
     fn close_above_midpoint_no_signal() {
         let bars = vec![
             bar(110.0, 110.5, 99.5, 100.0),
-            bar(95.0, 108.0, 94.5, 107.0),    // close above midpoint 105
+            bar(95.0, 108.0, 94.5, 107.0), // close above midpoint 105
         ];
         let r = compute(&bars, 0.5);
         assert!(!r.on_neck[1]);

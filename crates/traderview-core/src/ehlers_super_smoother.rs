@@ -88,14 +88,17 @@ mod tests {
     fn noisy_series_smoother_than_raw() {
         // Construct a noisy series — verify the output has lower variance
         // than the input over the same window.
-        let v: Vec<f64> = (0..200).map(|i| {
-            100.0 + (i as f64 * 0.5).sin() * 5.0 + ((i as f64 * 17.3).sin() * 2.0)
-        }).collect();
+        let v: Vec<f64> = (0..200)
+            .map(|i| 100.0 + (i as f64 * 0.5).sin() * 5.0 + ((i as f64 * 17.3).sin() * 2.0))
+            .collect();
         let out = compute(&v, 10);
         let smoothed: Vec<f64> = out.iter().filter_map(|x| *x).collect();
         let raw_var = variance(&v);
         let smoothed_var = variance(&smoothed);
-        assert!(smoothed_var < raw_var, "smoothed var {smoothed_var} should be < raw var {raw_var}");
+        assert!(
+            smoothed_var < raw_var,
+            "smoothed var {smoothed_var} should be < raw var {raw_var}"
+        );
     }
 
     fn variance(v: &[f64]) -> f64 {

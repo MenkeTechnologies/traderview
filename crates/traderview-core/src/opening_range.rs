@@ -41,12 +41,21 @@ pub struct OrbConfig {
 }
 
 impl Default for OrbConfig {
-    fn default() -> Self { Self { opening_bars: 6, atr: 0.0, close_only: false } }
+    fn default() -> Self {
+        Self {
+            opening_bars: 6,
+            atr: 0.0,
+            close_only: false,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum OrbDirection { Up, Down }
+pub enum OrbDirection {
+    Up,
+    Down,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct OrbBreak {
@@ -73,15 +82,18 @@ pub fn detect(bars: &[OhlcBar], cfg: &OrbConfig) -> OrbReport {
         return OrbReport::default();
     }
     let opening = &bars[..cfg.opening_bars];
-    let opening_high = opening.iter().map(|b| b.high).fold(f64::NEG_INFINITY, f64::max);
-    let opening_low  = opening.iter().map(|b| b.low).fold(f64::INFINITY, f64::min);
+    let opening_high = opening
+        .iter()
+        .map(|b| b.high)
+        .fold(f64::NEG_INFINITY, f64::max);
+    let opening_low = opening.iter().map(|b| b.low).fold(f64::INFINITY, f64::min);
     let opening_range = opening_high - opening_low;
 
     let mut upper_break = None;
     let mut lower_break = None;
     let atr_some = if cfg.atr > 0.0 { Some(cfg.atr) } else { None };
     for (i, bar) in bars.iter().enumerate().take(n).skip(cfg.opening_bars) {
-        let probe_up   = if cfg.close_only { bar.close } else { bar.high };
+        let probe_up = if cfg.close_only { bar.close } else { bar.high };
         let probe_down = if cfg.close_only { bar.close } else { bar.low };
         if upper_break.is_none() && probe_up > opening_high {
             let dist = probe_up - opening_high;
@@ -104,11 +116,16 @@ pub fn detect(bars: &[OhlcBar], cfg: &OrbConfig) -> OrbReport {
             });
         }
         // Once both directions have fired, no more events possible.
-        if upper_break.is_some() && lower_break.is_some() { break; }
+        if upper_break.is_some() && lower_break.is_some() {
+            break;
+        }
     }
     OrbReport {
-        opening_high, opening_low, opening_range,
-        upper_break, lower_break,
+        opening_high,
+        opening_low,
+        opening_range,
+        upper_break,
+        lower_break,
     }
 }
 
@@ -116,14 +133,20 @@ pub fn detect(bars: &[OhlcBar], cfg: &OrbConfig) -> OrbReport {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> OhlcBar { OhlcBar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> OhlcBar {
+        OhlcBar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn empty_or_short_input_returns_default() {
         assert_eq!(detect(&[], &OrbConfig::default()).opening_range, 0.0);
         let short: Vec<OhlcBar> = (0..3).map(|_| b(100.0, 99.0, 99.5)).collect();
         let r = detect(&short, &OrbConfig::default());
-        assert_eq!(r.opening_high, 0.0);    // Default OrbConfig opening_bars=6 > 3.
+        assert_eq!(r.opening_high, 0.0); // Default OrbConfig opening_bars=6 > 3.
     }
 
     #[test]
@@ -168,16 +191,27 @@ mod tests {
         // close_only mode shouldn't trigger upper break.
         let mut bars: Vec<OhlcBar> = (0..6).map(|_| b(101.5, 99.5, 100.5)).collect();
         bars.push(b(105.0, 100.0, 101.0));
-        let cfg = OrbConfig { opening_bars: 6, atr: 0.0, close_only: true };
+        let cfg = OrbConfig {
+            opening_bars: 6,
+            atr: 0.0,
+            close_only: true,
+        };
         let r = detect(&bars, &cfg);
-        assert!(r.upper_break.is_none(), "wick shouldn't trigger close-only ORB");
+        assert!(
+            r.upper_break.is_none(),
+            "wick shouldn't trigger close-only ORB"
+        );
     }
 
     #[test]
     fn atr_annotates_breach_in_atrs() {
         let mut bars: Vec<OhlcBar> = (0..6).map(|_| b(101.5, 99.5, 100.5)).collect();
-        bars.push(b(103.5, 101.0, 103.0));    // breach 2 above 101.5
-        let cfg = OrbConfig { opening_bars: 6, atr: 1.0, close_only: false };
+        bars.push(b(103.5, 101.0, 103.0)); // breach 2 above 101.5
+        let cfg = OrbConfig {
+            opening_bars: 6,
+            atr: 1.0,
+            close_only: false,
+        };
         let r = detect(&bars, &cfg);
         let ub = r.upper_break.unwrap();
         assert!((ub.breach_atrs.unwrap() - 2.0).abs() < 1e-9);
@@ -187,8 +221,8 @@ mod tests {
     fn both_breaks_fire_in_same_session() {
         // Session shows an up break then a down break — both should fire.
         let mut bars: Vec<OhlcBar> = (0..6).map(|_| b(101.5, 99.5, 100.5)).collect();
-        bars.push(b(102.5, 101.0, 102.0));    // upper break
-        bars.push(b(102.0, 99.0, 99.5));      // lower break
+        bars.push(b(102.5, 101.0, 102.0)); // upper break
+        bars.push(b(102.0, 99.0, 99.5)); // lower break
         let r = detect(&bars, &OrbConfig::default());
         assert!(r.upper_break.is_some());
         assert!(r.lower_break.is_some());
@@ -203,7 +237,10 @@ mod tests {
         bars.push(b(102.0, 100.5, 101.8));
         bars.push(b(103.0, 101.5, 102.5));
         let r = detect(&bars, &OrbConfig::default());
-        assert_eq!(r.upper_break.unwrap().bar_index, 6,
-            "first breaker is at bar 6, not bar 7");
+        assert_eq!(
+            r.upper_break.unwrap().bar_index,
+            6,
+            "first breaker is at bar 6, not bar 7"
+        );
     }
 }

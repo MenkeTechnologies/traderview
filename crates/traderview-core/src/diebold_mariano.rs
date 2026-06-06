@@ -27,7 +27,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum LossFunction { SquaredError, AbsoluteError }
+pub enum LossFunction {
+    SquaredError,
+    AbsoluteError,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct DieboldMarianoReport {
@@ -47,17 +50,22 @@ pub fn test(
     horizon: usize,
 ) -> Option<DieboldMarianoReport> {
     let n = forecast_errors_1.len();
-    if n < 10 || forecast_errors_2.len() != n || horizon == 0 { return None; }
-    if forecast_errors_1.iter().any(|x| !x.is_finite())
-        || forecast_errors_2.iter().any(|x| !x.is_finite()) {
+    if n < 10 || forecast_errors_2.len() != n || horizon == 0 {
         return None;
     }
-    let d: Vec<f64> = forecast_errors_1.iter().zip(forecast_errors_2.iter()).map(|(e1, e2)| {
-        match loss {
+    if forecast_errors_1.iter().any(|x| !x.is_finite())
+        || forecast_errors_2.iter().any(|x| !x.is_finite())
+    {
+        return None;
+    }
+    let d: Vec<f64> = forecast_errors_1
+        .iter()
+        .zip(forecast_errors_2.iter())
+        .map(|(e1, e2)| match loss {
             LossFunction::SquaredError => e1.powi(2) - e2.powi(2),
             LossFunction::AbsoluteError => e1.abs() - e2.abs(),
-        }
-    }).collect();
+        })
+        .collect();
     let n_f = n as f64;
     let mean_d: f64 = d.iter().sum::<f64>() / n_f;
     // HAC variance estimate with Bartlett kernel; lag = h - 1 (no
@@ -67,8 +75,10 @@ pub fn test(
     let mut var_hac = gamma_0;
     for k in 1..=lag {
         let w = 1.0 - k as f64 / (lag as f64 + 1.0);
-        let gamma_k: f64 = (k..n).map(|t| (d[t] - mean_d) * (d[t - k] - mean_d))
-            .sum::<f64>() / n_f;
+        let gamma_k: f64 = (k..n)
+            .map(|t| (d[t] - mean_d) * (d[t - k] - mean_d))
+            .sum::<f64>()
+            / n_f;
         var_hac += 2.0 * w * gamma_k;
     }
     // Degenerate case: zero loss differential AND zero variance — the
@@ -91,7 +101,9 @@ pub fn test(
     let dm = mean_d / se;
     // Harvey-Leybourne-Newbold small-sample correction.
     let h = horizon as f64;
-    let correction = ((n_f + 1.0 - 2.0 * h + h * (h - 1.0) / n_f) / n_f).max(0.0).sqrt();
+    let correction = ((n_f + 1.0 - 2.0 * h + h * (h - 1.0) / n_f) / n_f)
+        .max(0.0)
+        .sqrt();
     let dm_hln = dm * correction;
     let p_two = 2.0 * (1.0 - standard_normal_cdf(dm_hln.abs())).clamp(0.0, 1.0);
     Some(DieboldMarianoReport {
@@ -113,8 +125,11 @@ fn erf(x: f64) -> f64 {
     let sign = if x < 0.0 { -1.0 } else { 1.0 };
     let x = x.abs();
     let t = 1.0 / (1.0 + 0.327_591_1 * x);
-    let y = 1.0 - (((((1.061_405_429 * t - 1.453_152_027) * t)
-        + 1.421_413_741) * t - 0.284_496_736) * t + 0.254_829_592) * t * (-x * x).exp();
+    let y = 1.0
+        - (((((1.061_405_429 * t - 1.453_152_027) * t) + 1.421_413_741) * t - 0.284_496_736) * t
+            + 0.254_829_592)
+            * t
+            * (-x * x).exp();
     sign * y
 }
 
@@ -124,15 +139,19 @@ mod tests {
 
     fn box_muller(n: usize, seed: u64, scale: f64) -> Vec<f64> {
         let mut state = seed;
-        (0..n).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u2 = (state >> 32) as f64 / u32::MAX as f64;
-            scale * (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
-        }).collect()
+        (0..n)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u2 = (state >> 32) as f64 / u32::MAX as f64;
+                scale * (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
+            })
+            .collect()
     }
 
     #[test]

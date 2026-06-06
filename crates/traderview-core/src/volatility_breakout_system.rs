@@ -16,7 +16,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct VolatilityBreakoutReport {
@@ -27,11 +31,7 @@ pub struct VolatilityBreakoutReport {
     pub multiplier: f64,
 }
 
-pub fn compute(
-    bars: &[Bar],
-    period: usize,
-    multiplier: f64,
-) -> VolatilityBreakoutReport {
+pub fn compute(bars: &[Bar], period: usize, multiplier: f64) -> VolatilityBreakoutReport {
     let n = bars.len();
     let mut report = VolatilityBreakoutReport {
         long_signal: vec![false; n],
@@ -40,9 +40,13 @@ pub fn compute(
         period,
         multiplier,
     };
-    if period < 2 || !multiplier.is_finite() || multiplier <= 0.0
-        || n < period + 1 { return report; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if period < 2 || !multiplier.is_finite() || multiplier <= 0.0 || n < period + 1 {
+        return report;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return report;
     }
     let p_f = period as f64;
@@ -56,8 +60,12 @@ pub fn compute(
         let trig = avg * multiplier;
         report.trigger[i] = Some(trig);
         let pc = bars[i - 1].close;
-        if bars[i].high > pc + trig { report.long_signal[i] = true; }
-        if bars[i].low < pc - trig { report.short_signal[i] = true; }
+        if bars[i].high > pc + trig {
+            report.long_signal[i] = true;
+        }
+        if bars[i].low < pc - trig {
+            report.short_signal[i] = true;
+        }
     }
     report
 }
@@ -66,7 +74,13 @@ pub fn compute(
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {

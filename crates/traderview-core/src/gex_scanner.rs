@@ -54,22 +54,39 @@ pub struct GexReport {
 }
 
 pub fn scan(chain: &[OptionStrike]) -> Option<GexReport> {
-    if chain.is_empty() { return None; }
-    if chain.iter().any(|c| !c.strike.is_finite() || c.strike <= 0.0
-        || !c.call_open_interest.is_finite() || c.call_open_interest < 0.0
-        || !c.put_open_interest.is_finite() || c.put_open_interest < 0.0
-        || !c.call_gamma_per_contract.is_finite()
-        || !c.put_gamma_per_contract.is_finite()) {
+    if chain.is_empty() {
+        return None;
+    }
+    if chain.iter().any(|c| {
+        !c.strike.is_finite()
+            || c.strike <= 0.0
+            || !c.call_open_interest.is_finite()
+            || c.call_open_interest < 0.0
+            || !c.put_open_interest.is_finite()
+            || c.put_open_interest < 0.0
+            || !c.call_gamma_per_contract.is_finite()
+            || !c.put_gamma_per_contract.is_finite()
+    }) {
         return None;
     }
     // Dealers short calls (positive call OI → negative dealer gamma) and
     // long puts (positive put OI → positive dealer gamma).
-    let mut per: Vec<StrikeGex> = chain.iter().map(|c| {
-        let dealer_gex = c.put_open_interest * c.put_gamma_per_contract
-            - c.call_open_interest * c.call_gamma_per_contract;
-        StrikeGex { strike: c.strike, gex_dollars: dealer_gex }
-    }).collect();
-    per.sort_by(|a, b| a.strike.partial_cmp(&b.strike).unwrap_or(std::cmp::Ordering::Equal));
+    let mut per: Vec<StrikeGex> = chain
+        .iter()
+        .map(|c| {
+            let dealer_gex = c.put_open_interest * c.put_gamma_per_contract
+                - c.call_open_interest * c.call_gamma_per_contract;
+            StrikeGex {
+                strike: c.strike,
+                gex_dollars: dealer_gex,
+            }
+        })
+        .collect();
+    per.sort_by(|a, b| {
+        a.strike
+            .partial_cmp(&b.strike)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     let total: f64 = per.iter().map(|s| s.gex_dollars).sum();
     // Walk strikes to find the first sign change for zero-gamma estimate.
     let mut zero_gamma = None;
@@ -93,11 +110,13 @@ pub fn scan(chain: &[OptionStrike]) -> Option<GexReport> {
         prev_cum = cumulative;
         prev_strike = s.strike;
     }
-    let largest_pos = per.iter()
+    let largest_pos = per
+        .iter()
         .filter(|s| s.gex_dollars > 0.0)
         .max_by(|a, b| a.gex_dollars.partial_cmp(&b.gex_dollars).unwrap())
         .map(|s| s.strike);
-    let largest_neg = per.iter()
+    let largest_neg = per
+        .iter()
         .filter(|s| s.gex_dollars < 0.0)
         .min_by(|a, b| a.gex_dollars.partial_cmp(&b.gex_dollars).unwrap())
         .map(|s| s.strike);
@@ -153,7 +172,11 @@ mod tests {
         // Retail buys calls → dealers short calls → negative dealer gamma.
         let chain = vec![s(100.0, 5000.0, 100.0, 0.05)];
         let r = scan(&chain).unwrap();
-        assert!(r.total_gex < 0.0, "call-heavy chain: GEX should be negative, got {}", r.total_gex);
+        assert!(
+            r.total_gex < 0.0,
+            "call-heavy chain: GEX should be negative, got {}",
+            r.total_gex
+        );
     }
 
     #[test]
@@ -161,7 +184,11 @@ mod tests {
         // Retail sells puts → dealers long puts → positive dealer gamma.
         let chain = vec![s(100.0, 100.0, 5000.0, 0.05)];
         let r = scan(&chain).unwrap();
-        assert!(r.total_gex > 0.0, "put-heavy chain: GEX should be positive, got {}", r.total_gex);
+        assert!(
+            r.total_gex > 0.0,
+            "put-heavy chain: GEX should be positive, got {}",
+            r.total_gex
+        );
     }
 
     #[test]
@@ -183,20 +210,23 @@ mod tests {
         // crosses zero between them. Need put-side big enough that cumulative
         // sign flips, not just zeroes out.
         let chain = vec![
-            s(95.0, 1000.0, 0.0, 0.05),    // dealer = -50
-            s(100.0, 0.0, 2000.0, 0.05),    // dealer = +100; cumulative -50 → +50
+            s(95.0, 1000.0, 0.0, 0.05),  // dealer = -50
+            s(100.0, 0.0, 2000.0, 0.05), // dealer = +100; cumulative -50 → +50
         ];
         let r = scan(&chain).unwrap();
         assert!(r.zero_gamma_strike.is_some());
         let zg = r.zero_gamma_strike.unwrap();
-        assert!((95.0..=100.0).contains(&zg), "zero-gamma {zg} not in [95, 100]");
+        assert!(
+            (95.0..=100.0).contains(&zg),
+            "zero-gamma {zg} not in [95, 100]"
+        );
     }
 
     #[test]
     fn largest_positive_and_negative_strikes_identified() {
         let chain = vec![
-            s(95.0, 100.0, 5000.0, 0.05),    // strongly positive
-            s(100.0, 5000.0, 100.0, 0.05),    // strongly negative
+            s(95.0, 100.0, 5000.0, 0.05),  // strongly positive
+            s(100.0, 5000.0, 100.0, 0.05), // strongly negative
         ];
         let r = scan(&chain).unwrap();
         assert_eq!(r.largest_positive_strike, Some(95.0));

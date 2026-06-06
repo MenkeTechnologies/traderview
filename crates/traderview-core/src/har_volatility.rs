@@ -37,12 +37,16 @@ pub struct HarVolatilityReport {
 
 pub fn estimate(realized_variance: &[f64]) -> Option<HarVolatilityReport> {
     let n = realized_variance.len();
-    if n < 30 { return None; }
-    if realized_variance.iter().any(|x| !x.is_finite() || *x < 0.0) { return None; }
+    if n < 30 {
+        return None;
+    }
+    if realized_variance.iter().any(|x| !x.is_finite() || *x < 0.0) {
+        return None;
+    }
     // Build the regressors at each forecast origin t.
     // We can compute targets for t = 22..n-1 (need 22 history bars and 1
     // future bar for target). The response is RV_{t+1}.
-    let mut rows: Vec<[f64; 4]> = Vec::new();    // [1, RV_t, RV_w, RV_m]
+    let mut rows: Vec<[f64; 4]> = Vec::new(); // [1, RV_t, RV_w, RV_m]
     let mut targets: Vec<f64> = Vec::new();
     for t in 22..(n - 1) {
         let rv_d = realized_variance[t];
@@ -51,7 +55,9 @@ pub fn estimate(realized_variance: &[f64]) -> Option<HarVolatilityReport> {
         rows.push([1.0, rv_d, rv_w, rv_m]);
         targets.push(realized_variance[t + 1]);
     }
-    if rows.len() < 8 { return None; }
+    if rows.len() < 8 {
+        return None;
+    }
     let n_obs = rows.len();
     // OLS via normal equations on X'X (4×4) and X'y (4×1).
     let p = 4_usize;
@@ -60,7 +66,9 @@ pub fn estimate(realized_variance: &[f64]) -> Option<HarVolatilityReport> {
     for (row, y) in rows.iter().zip(targets.iter()) {
         for j in 0..p {
             xty[j] += row[j] * y;
-            for k in 0..p { xtx[j][k] += row[j] * row[k]; }
+            for k in 0..p {
+                xtx[j][k] += row[j] * row[k];
+            }
         }
     }
     let coef = solve_linear(&xtx, &xty)?;
@@ -73,7 +81,9 @@ pub fn estimate(realized_variance: &[f64]) -> Option<HarVolatilityReport> {
         tss += (y - y_mean).powi(2);
     }
     let dof = (n_obs - p) as f64;
-    if dof <= 0.0 { return None; }
+    if dof <= 0.0 {
+        return None;
+    }
     let sigma2 = ssr / dof;
     let r_sq = if tss > 0.0 { 1.0 - ssr / tss } else { 0.0 };
     // 1-step-ahead forecast at t = n - 1 (most recent fully-observable origin).
@@ -96,27 +106,43 @@ pub fn estimate(realized_variance: &[f64]) -> Option<HarVolatilityReport> {
 
 fn solve_linear(m: &[Vec<f64>], y: &[f64]) -> Option<Vec<f64>> {
     let n = m.len();
-    if n == 0 || y.len() != n { return None; }
+    if n == 0 || y.len() != n {
+        return None;
+    }
     let mut aug = vec![vec![0.0_f64; n + 1]; n];
     for (i, row) in aug.iter_mut().enumerate() {
-        for (j, slot) in row.iter_mut().enumerate().take(n) { *slot = m[i][j]; }
+        for (j, slot) in row.iter_mut().enumerate().take(n) {
+            *slot = m[i][j];
+        }
         row[n] = y[i];
     }
     for i in 0..n {
         let mut pivot = i;
         for r in (i + 1)..n {
-            if aug[r][i].abs() > aug[pivot][i].abs() { pivot = r; }
+            if aug[r][i].abs() > aug[pivot][i].abs() {
+                pivot = r;
+            }
         }
-        if aug[pivot][i].abs() < 1e-18 { return None; }
+        if aug[pivot][i].abs() < 1e-18 {
+            return None;
+        }
         aug.swap(i, pivot);
         let div = aug[i][i];
-        for v in aug[i].iter_mut() { *v /= div; }
+        for v in aug[i].iter_mut() {
+            *v /= div;
+        }
         for r in 0..n {
-            if r == i { continue; }
+            if r == i {
+                continue;
+            }
             let f = aug[r][i];
-            if f == 0.0 { continue; }
+            if f == 0.0 {
+                continue;
+            }
             let pivot_row = aug[i].clone();
-            for (j, v) in aug[r].iter_mut().enumerate() { *v -= f * pivot_row[j]; }
+            for (j, v) in aug[r].iter_mut().enumerate() {
+                *v -= f * pivot_row[j];
+            }
         }
     }
     Some((0..n).map(|i| aug[i][n]).collect())
@@ -165,31 +191,48 @@ mod tests {
             let d = rv[t - 1];
             let w = rv[t - 5..t].iter().sum::<f64>() / 5.0;
             let m = rv[t - 22..t].iter().sum::<f64>() / 22.0;
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let eps = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.00002;
-            let next = (true_beta[0] + true_beta[1] * d + true_beta[2] * w
-                + true_beta[3] * m + eps).max(1e-8);
+            let next =
+                (true_beta[0] + true_beta[1] * d + true_beta[2] * w + true_beta[3] * m + eps)
+                    .max(1e-8);
             rv.push(next);
         }
         let r = estimate(&rv).unwrap();
         // Estimates should be within 0.15 of true values for this scale.
-        assert!((r.beta_daily - true_beta[1]).abs() < 0.15,
-            "β_d: estimated {} vs true {}", r.beta_daily, true_beta[1]);
-        assert!((r.beta_weekly - true_beta[2]).abs() < 0.2,
-            "β_w: estimated {} vs true {}", r.beta_weekly, true_beta[2]);
-        assert!((r.beta_monthly - true_beta[3]).abs() < 0.2,
-            "β_m: estimated {} vs true {}", r.beta_monthly, true_beta[3]);
+        assert!(
+            (r.beta_daily - true_beta[1]).abs() < 0.15,
+            "β_d: estimated {} vs true {}",
+            r.beta_daily,
+            true_beta[1]
+        );
+        assert!(
+            (r.beta_weekly - true_beta[2]).abs() < 0.2,
+            "β_w: estimated {} vs true {}",
+            r.beta_weekly,
+            true_beta[2]
+        );
+        assert!(
+            (r.beta_monthly - true_beta[3]).abs() < 0.2,
+            "β_m: estimated {} vs true {}",
+            r.beta_monthly,
+            true_beta[3]
+        );
     }
 
     #[test]
     fn forecast_non_negative() {
         let mut state: u64 = 11;
-        let rv: Vec<f64> = (0..200).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            ((state >> 32) as f64 / u32::MAX as f64).max(1e-6) * 0.0005
-        }).collect();
+        let rv: Vec<f64> = (0..200)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                ((state >> 32) as f64 / u32::MAX as f64).max(1e-6) * 0.0005
+            })
+            .collect();
         let r = estimate(&rv).unwrap();
         assert!(r.one_step_forecast >= 0.0);
     }
@@ -197,13 +240,19 @@ mod tests {
     #[test]
     fn r_squared_in_unit_range() {
         let mut state: u64 = 99;
-        let rv: Vec<f64> = (0..200).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            ((state >> 32) as f64 / u32::MAX as f64).max(1e-6) * 0.0005
-        }).collect();
+        let rv: Vec<f64> = (0..200)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                ((state >> 32) as f64 / u32::MAX as f64).max(1e-6) * 0.0005
+            })
+            .collect();
         let r = estimate(&rv).unwrap();
-        assert!((0.0..=1.0).contains(&r.r_squared) || r.r_squared < 0.0,
-            "R² {} should be in [0,1] or negative for bad fit", r.r_squared);
+        assert!(
+            (0.0..=1.0).contains(&r.r_squared) || r.r_squared < 0.0,
+            "R² {} should be in [0,1] or negative for bad fit",
+            r.r_squared
+        );
     }
 }

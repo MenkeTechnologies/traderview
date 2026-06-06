@@ -17,15 +17,23 @@
 pub fn compute(closes: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = closes.len();
     let mut out = vec![None; n];
-    if period < 3 || n < period { return out; }
-    if closes.iter().any(|x| !x.is_finite()) { return out; }
+    if period < 3 || n < period {
+        return out;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     let p_f = period as f64;
     let x_mean = (p_f - 1.0) / 2.0;
-    let x_var: f64 = (0..period).map(|i| {
-        let dx = i as f64 - x_mean;
-        dx * dx
-    }).sum();
-    if x_var <= 0.0 { return out; }
+    let x_var: f64 = (0..period)
+        .map(|i| {
+            let dx = i as f64 - x_mean;
+            dx * dx
+        })
+        .sum();
+    if x_var <= 0.0 {
+        return out;
+    }
     for (i, slot) in out.iter_mut().enumerate().skip(period - 1) {
         let win = &closes[i + 1 - period..=i];
         let y_mean: f64 = win.iter().sum::<f64>() / p_f;

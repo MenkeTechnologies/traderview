@@ -17,8 +17,16 @@
 pub fn compute(series_x: &[f64], series_y: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = series_x.len();
     let mut out = vec![None; n];
-    if period < 3 || n < period || series_y.len() != n { return out; }
-    if series_x.iter().chain(series_y.iter()).any(|v| !v.is_finite()) { return out; }
+    if period < 3 || n < period || series_y.len() != n {
+        return out;
+    }
+    if series_x
+        .iter()
+        .chain(series_y.iter())
+        .any(|v| !v.is_finite())
+    {
+        return out;
+    }
     let p_f = period as f64;
     for (i, slot) in out.iter_mut().enumerate().skip(period - 1) {
         let x_win = &series_x[i + 1 - period..=i];
@@ -88,25 +96,33 @@ mod tests {
         let x = vec![100.0_f64; 50];
         let y: Vec<f64> = (0..50).map(|i| i as f64).collect();
         let r = compute(&x, &y, 30);
-        for v in r.iter().flatten() { assert!(v.abs() < 1e-9); }
+        for v in r.iter().flatten() {
+            assert!(v.abs() < 1e-9);
+        }
     }
 
     #[test]
     fn output_in_signed_unit_range() {
         let mut state: u64 = 42;
-        let x: Vec<f64> = (0..200).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
-            (r - 0.5) * 10.0
-        }).collect();
+        let x: Vec<f64> = (0..200)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
+                (r - 0.5) * 10.0
+            })
+            .collect();
         let mut state2: u64 = 99;
-        let y: Vec<f64> = (0..200).map(|_| {
-            state2 = state2.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let r = (state2 >> 32) as u32 as f64 / u32::MAX as f64;
-            (r - 0.5) * 10.0
-        }).collect();
+        let y: Vec<f64> = (0..200)
+            .map(|_| {
+                state2 = state2
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let r = (state2 >> 32) as u32 as f64 / u32::MAX as f64;
+                (r - 0.5) * 10.0
+            })
+            .collect();
         let r = compute(&x, &y, 30);
         for v in r.iter().flatten() {
             assert!((-1.0..=1.0).contains(v));

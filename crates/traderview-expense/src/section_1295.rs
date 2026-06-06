@@ -85,14 +85,11 @@ pub fn compute(input: &Section1295Input) -> Section1295Result {
     let mut r = Section1295Result {
         tax_year: input.tax_year,
         ordinary_income_inclusion: input.pro_rata_ordinary_earnings.max(Decimal::ZERO),
-        long_term_capital_gain_inclusion: input
-            .pro_rata_net_capital_gain
-            .max(Decimal::ZERO),
+        long_term_capital_gain_inclusion: input.pro_rata_net_capital_gain.max(Decimal::ZERO),
         ..Section1295Result::default()
     };
 
-    let total_inclusion =
-        r.ordinary_income_inclusion + r.long_term_capital_gain_inclusion;
+    let total_inclusion = r.ordinary_income_inclusion + r.long_term_capital_gain_inclusion;
 
     // PTI account before distributions = prior PTI + current inclusion.
     let pti_pool_before_distributions =
@@ -105,16 +102,14 @@ pub fn compute(input: &Section1295Input) -> Section1295Result {
     r.taxable_dividend_distribution =
         (distributions_for_year - r.distribution_from_pti).max(Decimal::ZERO);
 
-    r.pti_account_year_end =
-        pti_pool_before_distributions - r.distribution_from_pti;
+    r.pti_account_year_end = pti_pool_before_distributions - r.distribution_from_pti;
 
     // Basis evolves: +inclusion, -PTI distributions per §1293(d).
     r.adjusted_basis_year_end = (input.adjusted_basis_year_start + total_inclusion
         - r.distribution_from_pti)
         .max(Decimal::ZERO);
 
-    r.note = if total_inclusion == Decimal::ZERO && distributions_for_year == Decimal::ZERO
-    {
+    r.note = if total_inclusion == Decimal::ZERO && distributions_for_year == Decimal::ZERO {
         "no QEF inclusion or distribution this year".into()
     } else if r.taxable_dividend_distribution > Decimal::ZERO {
         format!(

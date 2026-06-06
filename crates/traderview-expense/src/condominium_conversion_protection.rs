@@ -446,11 +446,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.compliant);
         assert!(r.conversion_barred);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("MAJORITY") && v.contains("BARRED"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("MAJORITY") && v.contains("BARRED")));
     }
 
     // ── Massachusetts G.L. c. 527 ───────────────────────────────
@@ -476,11 +475,10 @@ mod tests {
         assert!(!r.size_threshold_met);
         // Below threshold → no statutory violation.
         assert!(r.compliant);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("4 or more rental units") && n.contains("below the threshold"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("4 or more rental units") && n.contains("below the threshold")));
     }
 
     #[test]
@@ -534,7 +532,10 @@ mod tests {
         i.notice_days_before_conversion = 364;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("365") && v.contains("364")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("365") && v.contains("364")));
     }
 
     #[test]
@@ -543,11 +544,10 @@ mod tests {
         i.relocation_assistance_paid_cents = 50_000; // $500
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("Relocation assistance") && v.contains("75000"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("Relocation assistance") && v.contains("75000")));
     }
 
     // ── New Jersey 2A:18-61.22 Protected Tenancy Act ────────────
@@ -560,11 +560,10 @@ mod tests {
         assert!(r.conversion_barred);
         assert!(!r.compliant);
         assert!(r.citation.contains("2A:18-61.22"));
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("40 years") && n.contains("BARRED"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("40 years") && n.contains("BARRED")));
     }
 
     #[test]
@@ -601,11 +600,10 @@ mod tests {
         i.ny_tenant_purchase_commitment_bp = 5_000;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("EVICTION PLAN") && v.contains("51%"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("EVICTION PLAN") && v.contains("51%")));
     }
 
     #[test]
@@ -624,11 +622,10 @@ mod tests {
         i.ny_tenant_purchase_commitment_bp = 1_400;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("NON-EVICTION PLAN") && v.contains("15%"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("NON-EVICTION PLAN") && v.contains("15%")));
     }
 
     #[test]
@@ -638,11 +635,7 @@ mod tests {
         i.ny_plan_type = NyPlanType::NonEvictionPlan;
         i.ny_tenant_purchase_commitment_bp = 1_500;
         let r = check(&i);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("99-year non-eviction"))
-        );
+        assert!(r.notes.iter().any(|n| n.contains("99-year non-eviction")));
     }
 
     // ── Maryland Montgomery County ─────────────────────────────
@@ -685,11 +678,10 @@ mod tests {
         i.right_of_first_refusal_offered = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("right of first refusal"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("right of first refusal")));
     }
 
     #[test]
@@ -698,7 +690,10 @@ mod tests {
         i.days_for_first_refusal_acceptance = 89;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("First-refusal") && v.contains("90")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("First-refusal") && v.contains("90")));
     }
 
     // ── Regression-critical multi-regime invariants ────────────
@@ -819,36 +814,22 @@ mod tests {
 
     #[test]
     fn citation_pins_authority_per_regime() {
-        assert!(
-            check(&base(Regime::DistrictOfColumbia))
-                .citation
-                .contains("§ 42-3401.01")
-        );
-        assert!(
-            check(&base(Regime::Massachusetts))
-                .citation
-                .contains("c. 527")
-        );
-        assert!(
-            check(&base(Regime::NewJersey))
-                .citation
-                .contains("2A:18-61.22")
-        );
-        assert!(
-            check(&base(Regime::NewYork))
-                .citation
-                .contains("§ 352-e")
-        );
-        assert!(
-            check(&base(Regime::MarylandMontgomery))
-                .citation
-                .contains("Mont. County Code Ch. 11A")
-        );
-        assert!(
-            check(&base(Regime::Default))
-                .citation
-                .contains("No statewide")
-        );
+        assert!(check(&base(Regime::DistrictOfColumbia))
+            .citation
+            .contains("§ 42-3401.01"));
+        assert!(check(&base(Regime::Massachusetts))
+            .citation
+            .contains("c. 527"));
+        assert!(check(&base(Regime::NewJersey))
+            .citation
+            .contains("2A:18-61.22"));
+        assert!(check(&base(Regime::NewYork)).citation.contains("§ 352-e"));
+        assert!(check(&base(Regime::MarylandMontgomery))
+            .citation
+            .contains("Mont. County Code Ch. 11A"));
+        assert!(check(&base(Regime::Default))
+            .citation
+            .contains("No statewide"));
     }
 
     #[test]
@@ -863,9 +844,11 @@ mod tests {
         ] {
             let r = check(&base(regime));
             assert!(
-                r.notes.iter().any(|n| n.contains("tenant_relocation_assistance")
-                    && n.contains("foreclosure_tenant_rights")
-                    && n.contains("OWNER-INITIATED")),
+                r.notes
+                    .iter()
+                    .any(|n| n.contains("tenant_relocation_assistance")
+                        && n.contains("foreclosure_tenant_rights")
+                        && n.contains("OWNER-INITIATED")),
                 "{:?}: sibling-module note must be present",
                 regime,
             );

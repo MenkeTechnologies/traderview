@@ -192,29 +192,25 @@ pub struct TenantEstoppelCertificateResult {
     pub notes: Vec<String>,
 }
 
-pub fn check(
-    input: &TenantEstoppelCertificateInput,
-) -> TenantEstoppelCertificateResult {
+pub fn check(input: &TenantEstoppelCertificateInput) -> TenantEstoppelCertificateResult {
     let mut failure_reasons: Vec<String> = Vec::new();
 
     let estoppel_demand_enforceable = input.lease_has_express_estoppel_provision;
 
-    let deemed_admission_clause_enforceable = match (
-        input.jurisdiction,
-        input.lease_use_type,
-    ) {
+    let deemed_admission_clause_enforceable = match (input.jurisdiction, input.lease_use_type) {
         (Jurisdiction::NewYork, LeaseUseType::Residential) => false,
-        _ => input.form_includes_deemed_admission_clause
-            && input.lease_has_express_estoppel_provision,
+        _ => {
+            input.form_includes_deemed_admission_clause
+                && input.lease_has_express_estoppel_provision
+        }
     };
 
-    let attorney_in_fact_clause_enforceable = match (
-        input.jurisdiction,
-        input.lease_use_type,
-    ) {
+    let attorney_in_fact_clause_enforceable = match (input.jurisdiction, input.lease_use_type) {
         (Jurisdiction::NewYork, LeaseUseType::Residential) => false,
-        _ => input.form_includes_attorney_in_fact_clause
-            && input.lease_has_express_estoppel_provision,
+        _ => {
+            input.form_includes_attorney_in_fact_clause
+                && input.lease_has_express_estoppel_provision
+        }
     };
 
     let statutory_waiver_attempt_void = input.form_waives_statutory_protections;
@@ -271,9 +267,7 @@ pub fn check(
         );
     }
 
-    if input.tenant_signed_with_material_misrep
-        && !input.contents_within_tenant_knowledge
-    {
+    if input.tenant_signed_with_material_misrep && !input.contents_within_tenant_knowledge {
         failure_reasons.push(
             "Estoppel contents NOT WITHIN TENANT'S PERSONAL KNOWLEDGE; cannot be bound to facts tenant could not have known; estoppel binding limited to matters within tenant's knowledge at signing".to_string(),
         );
@@ -367,8 +361,10 @@ mod tests {
         assert!(!r.estoppel_demand_enforceable);
         assert!(!r.deemed_admission_clause_enforceable);
         assert!(!r.attorney_in_fact_clause_enforceable);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("EXPRESS WRITTEN ESTOPPEL COOPERATION PROVISION")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("EXPRESS WRITTEN ESTOPPEL COOPERATION PROVISION")));
     }
 
     #[test]
@@ -378,10 +374,12 @@ mod tests {
         i.lease_use_type = LeaseUseType::Residential;
         let r = check(&i);
         assert!(!r.deemed_admission_clause_enforceable);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("NY RPL § 235-c")
-            && f.contains("deemed-admission")
-            && f.contains("UNCONSCIONABLE")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("NY RPL § 235-c")
+                && f.contains("deemed-admission")
+                && f.contains("UNCONSCIONABLE")));
     }
 
     #[test]
@@ -391,10 +389,12 @@ mod tests {
         i.lease_use_type = LeaseUseType::Residential;
         let r = check(&i);
         assert!(!r.attorney_in_fact_clause_enforceable);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("NY RPL § 235-c")
-            && f.contains("attorney-in-fact")
-            && f.contains("UNCONSCIONABLE")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("NY RPL § 235-c")
+                && f.contains("attorney-in-fact")
+                && f.contains("UNCONSCIONABLE")));
     }
 
     #[test]
@@ -423,9 +423,10 @@ mod tests {
         let r = check(&i);
         assert!(r.statutory_waiver_attempt_void);
         assert!(r.tenant_retains_rights_despite_estoppel);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("STATUTORY PROTECTIONS")
-            && f.contains("VOID")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("STATUTORY PROTECTIONS") && f.contains("VOID")));
     }
 
     #[test]
@@ -435,9 +436,10 @@ mod tests {
         let r = check(&i);
         assert!(r.pre_dispute_waiver_attempt_void);
         assert!(r.tenant_retains_rights_despite_estoppel);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("PRE-DISPUTE WAIVER")
-            && f.contains("VOID")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("PRE-DISPUTE WAIVER") && f.contains("VOID")));
     }
 
     #[test]
@@ -450,9 +452,11 @@ mod tests {
         let r = check(&i);
         assert!(r.tenant_bound_by_signed_estoppel);
         assert!(!r.tenant_retains_rights_despite_estoppel);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("SIGNED estoppel")
-            && f.contains("Restatement (Second) of Contracts § 90")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("SIGNED estoppel")
+                && f.contains("Restatement (Second) of Contracts § 90")));
     }
 
     #[test]
@@ -463,9 +467,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.tenant_bound_by_signed_estoppel);
         assert!(r.tenant_retains_rights_despite_estoppel);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("INDUCED BY LANDLORD")
-            && f.contains("Cal. Civ. Code § 1668")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("INDUCED BY LANDLORD") && f.contains("Cal. Civ. Code § 1668")));
     }
 
     #[test]
@@ -476,8 +481,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.tenant_bound_by_signed_estoppel);
         assert!(r.tenant_retains_rights_despite_estoppel);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("NOT WITHIN TENANT'S PERSONAL KNOWLEDGE")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("NOT WITHIN TENANT'S PERSONAL KNOWLEDGE")));
     }
 
     #[test]
@@ -486,10 +493,12 @@ mod tests {
         i.tenant_responded_within_window = false;
         i.response_window_business_days = 10;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("FAILED to respond within 10 business days")
-            && f.contains("deemed-admission")
-            && f.contains("DEEMED TRUE")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("FAILED to respond within 10 business days")
+                && f.contains("deemed-admission")
+                && f.contains("DEEMED TRUE")));
     }
 
     #[test]
@@ -499,8 +508,10 @@ mod tests {
         i.lease_use_type = LeaseUseType::Residential;
         i.tenant_responded_within_window = false;
         let r = check(&i);
-        assert!(!r.failure_reasons.iter().any(|f|
-            f.contains("deemed-admission clause TRIGGERED")));
+        assert!(!r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("deemed-admission clause TRIGGERED")));
     }
 
     #[test]
@@ -520,8 +531,10 @@ mod tests {
         i.tenant_responded_within_window = false;
         i.response_window_business_days = 15;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("FAILED to respond within 15 business days")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("FAILED to respond within 15 business days")));
     }
 
     #[test]
@@ -541,7 +554,8 @@ mod tests {
             let r = check(&i);
             assert_eq!(
                 r.deemed_admission_clause_enforceable, exp,
-                "j={:?} use={:?}", j, use_type
+                "j={:?} use={:?}",
+                j, use_type
             );
         }
     }
@@ -564,21 +578,24 @@ mod tests {
     #[test]
     fn citation_pins_all_authorities() {
         let r = check(&commercial_with_provision());
-        assert!(r.citation.contains("Restatement (Second) of Contracts § 90"));
+        assert!(r
+            .citation
+            .contains("Restatement (Second) of Contracts § 90"));
         assert!(r.citation.contains("NY GOL § 5-703"));
         assert!(r.citation.contains("NY GOL § 5-321"));
         assert!(r.citation.contains("NY RPL § 235-c"));
         assert!(r.citation.contains("Cal. Civ. Code § 1962"));
         assert!(r.citation.contains("Cal. Civ. Code § 1668"));
         assert!(r.citation.contains("ALTA/ACSM"));
-        assert!(r.citation.contains("Fannie Mae Multifamily Guide Form 6402"));
+        assert!(r
+            .citation
+            .contains("Fannie Mae Multifamily Guide Form 6402"));
     }
 
     #[test]
     fn note_pins_estoppel_function() {
         let r = check(&commercial_with_provision());
-        assert!(r.notes.iter().any(|n|
-            n.contains("certifies")
+        assert!(r.notes.iter().any(|n| n.contains("certifies")
             && n.contains("RELIES")
             && n.contains("BOUND BY CONTENTS")));
     }
@@ -586,18 +603,19 @@ mod tests {
     #[test]
     fn note_pins_restatement_section_90_promissory_estoppel() {
         let r = check(&commercial_with_provision());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Restatement (Second) of Contracts § 90")
-            && n.contains("PROMISSORY ESTOPPEL")
-            && n.contains("clear and definite promise")
-            && n.contains("foreseeable reliance")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Restatement (Second) of Contracts § 90")
+                && n.contains("PROMISSORY ESTOPPEL")
+                && n.contains("clear and definite promise")
+                && n.contains("foreseeable reliance")));
     }
 
     #[test]
     fn note_pins_response_window_consequences() {
         let r = check(&commercial_with_provision());
-        assert!(r.notes.iter().any(|n|
-            n.contains("10-15 BUSINESS DAYS")
+        assert!(r.notes.iter().any(|n| n.contains("10-15 BUSINESS DAYS")
             && n.contains("DEEMED-ADMISSION")
             && n.contains("ATTORNEY-IN-FACT")
             && n.contains("MONETARY PENALTY")
@@ -607,24 +625,25 @@ mod tests {
     #[test]
     fn note_pins_ny_gol_5_321() {
         let r = check(&commercial_with_provision());
-        assert!(r.notes.iter().any(|n|
-            n.contains("NY GOL § 5-321")
-            && n.contains("residential lease")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("NY GOL § 5-321") && n.contains("residential lease")));
     }
 
     #[test]
     fn note_pins_ny_rpl_235_c() {
         let r = check(&commercial_with_provision());
-        assert!(r.notes.iter().any(|n|
-            n.contains("NY RPL § 235-c")
-            && n.contains("unconscionability")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("NY RPL § 235-c") && n.contains("unconscionability")));
     }
 
     #[test]
     fn note_pins_ny_gol_5_703_statute_of_frauds() {
         let r = check(&commercial_with_provision());
-        assert!(r.notes.iter().any(|n|
-            n.contains("NY GOL § 5-703")
+        assert!(r.notes.iter().any(|n| n.contains("NY GOL § 5-703")
             && n.contains("Statute of Frauds")
             && n.contains("> 1 year")));
     }
@@ -632,16 +651,16 @@ mod tests {
     #[test]
     fn note_pins_ca_civ_code_1962() {
         let r = check(&commercial_with_provision());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Cal. Civ. Code § 1962")
-            && n.contains("landlord identification")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Cal. Civ. Code § 1962") && n.contains("landlord identification")));
     }
 
     #[test]
     fn note_pins_ca_civ_code_1668_no_fraud_exculpation() {
         let r = check(&commercial_with_provision());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Cal. Civ. Code § 1668")
+        assert!(r.notes.iter().any(|n| n.contains("Cal. Civ. Code § 1668")
             && n.contains("NO EXCULPATION FOR FRAUD")
             && n.contains("INDUCED BY LANDLORD")));
     }
@@ -649,52 +668,62 @@ mod tests {
     #[test]
     fn note_pins_required_contents_nine_items() {
         let r = check(&commercial_with_provision());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Required estoppel contents")
-            && n.contains("ALTA/ACSM")
-            && n.contains("Fannie Mae Multifamily Guide Form 6402")
-            && n.contains("(1) lease commencement")
-            && n.contains("(9) tenant's current address")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Required estoppel contents")
+                && n.contains("ALTA/ACSM")
+                && n.contains("Fannie Mae Multifamily Guide Form 6402")
+                && n.contains("(1) lease commencement")
+                && n.contains("(9) tenant's current address")));
     }
 
     #[test]
     fn note_pins_tenant_protections_four() {
         let r = check(&commercial_with_provision());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Tenant protections against false estoppels")
-            && n.contains("FACTS NOT KNOWN")
-            && n.contains("STATUTORY rights")
-            && n.contains("PRE-DISPUTE WAIVER")
-            && n.contains("VOID in NY residential")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Tenant protections against false estoppels")
+                && n.contains("FACTS NOT KNOWN")
+                && n.contains("STATUTORY rights")
+                && n.contains("PRE-DISPUTE WAIVER")
+                && n.contains("VOID in NY residential")));
     }
 
     #[test]
     fn note_pins_trader_fact_patterns_five() {
         let r = check(&commercial_with_provision());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-landlord critical fact patterns")
-            && n.contains("$5M apartment building")
-            && n.contains("rate-lock expiry")
-            && n.contains("DHCR rules")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-landlord critical fact patterns")
+                && n.contains("$5M apartment building")
+                && n.contains("rate-lock expiry")
+                && n.contains("DHCR rules")));
     }
 
     #[test]
     fn note_pins_three_jurisdiction_framework() {
         let r = check(&commercial_with_provision());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Three-jurisdiction framework")
-            && n.contains("NEW YORK")
-            && n.contains("CALIFORNIA")
-            && n.contains("DEFAULT/RESTATEMENT")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Three-jurisdiction framework")
+                && n.contains("NEW YORK")
+                && n.contains("CALIFORNIA")
+                && n.contains("DEFAULT/RESTATEMENT")));
     }
 
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&commercial_with_provision());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Companion to lease_disclosures")
-            && n.contains("tenant_lease_guarantor_disclosure")
-            && n.contains("landlord_identification_disclosure")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Companion to lease_disclosures")
+                && n.contains("tenant_lease_guarantor_disclosure")
+                && n.contains("landlord_identification_disclosure")));
     }
 
     #[test]

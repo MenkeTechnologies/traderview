@@ -191,7 +191,10 @@ pub fn check(input: &BedbugCheckInput) -> BedbugCheckResult {
 
     let complies = violations.is_empty();
     let note = if complies {
-        format!("{}: bedbug disclosure / inspection requirements satisfied", rule.state_name)
+        format!(
+            "{}: bedbug disclosure / inspection requirements satisfied",
+            rule.state_name
+        )
     } else {
         format!(
             "{}: {} bedbug compliance violation(s)",
@@ -239,7 +242,17 @@ const fn rule(
 static TABLE: Lazy<HashMap<&'static str, &'static StateBedbugRule>> = Lazy::new(|| {
     use BedbugDisclosureRegime::*;
     static RULES: &[StateBedbugRule] = &[
-        rule("AK", "Alaska", NoStateStatute, false, false, None, None, false, "no statewide statute"),
+        rule(
+            "AK",
+            "Alaska",
+            NoStateStatute,
+            false,
+            false,
+            None,
+            None,
+            false,
+            "no statewide statute",
+        ),
         rule(
             "AL",
             "Alabama",
@@ -251,7 +264,17 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateBedbugRule>> = Lazy::new(
             false,
             "Ala. Code § 35-9A-204 (general habitability)",
         ),
-        rule("AR", "Arkansas", NoStateStatute, false, false, None, None, false, "no statewide statute"),
+        rule(
+            "AR",
+            "Arkansas",
+            NoStateStatute,
+            false,
+            false,
+            None,
+            None,
+            false,
+            "no statewide statute",
+        ),
         rule(
             "AZ",
             "Arizona",
@@ -274,10 +297,50 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateBedbugRule>> = Lazy::new(
             false,
             "Cal. Civ. Code § 1954.603 (2017)",
         ),
-        rule("CO", "Colorado", NoStateStatute, false, false, None, None, false, "no statewide statute"),
-        rule("CT", "Connecticut", NoStateStatute, false, false, None, None, false, "no statewide statute"),
-        rule("DC", "District of Columbia", NoStateStatute, false, false, None, None, false, "no statewide statute"),
-        rule("DE", "Delaware", NoStateStatute, false, false, None, None, false, "no statewide statute"),
+        rule(
+            "CO",
+            "Colorado",
+            NoStateStatute,
+            false,
+            false,
+            None,
+            None,
+            false,
+            "no statewide statute",
+        ),
+        rule(
+            "CT",
+            "Connecticut",
+            NoStateStatute,
+            false,
+            false,
+            None,
+            None,
+            false,
+            "no statewide statute",
+        ),
+        rule(
+            "DC",
+            "District of Columbia",
+            NoStateStatute,
+            false,
+            false,
+            None,
+            None,
+            false,
+            "no statewide statute",
+        ),
+        rule(
+            "DE",
+            "Delaware",
+            NoStateStatute,
+            false,
+            false,
+            None,
+            None,
+            false,
+            "no statewide statute",
+        ),
         rule(
             "FL",
             "Florida",
@@ -300,7 +363,17 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateBedbugRule>> = Lazy::new(
             false,
             "O.C.G.A. § 44-7-13 (general habitability)",
         ),
-        rule("HI", "Hawaii", NoStateStatute, false, false, None, None, false, "no statewide statute"),
+        rule(
+            "HI",
+            "Hawaii",
+            NoStateStatute,
+            false,
+            false,
+            None,
+            None,
+            false,
+            "no statewide statute",
+        ),
         rule(
             "IA",
             "Iowa",
@@ -312,7 +385,17 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateBedbugRule>> = Lazy::new(
             false,
             "Iowa Code § 562A.15 (general habitability + 7d response)",
         ),
-        rule("ID", "Idaho", NoStateStatute, false, false, None, None, false, "no statewide statute"),
+        rule(
+            "ID",
+            "Idaho",
+            NoStateStatute,
+            false,
+            false,
+            None,
+            None,
+            false,
+            "no statewide statute",
+        ),
         rule(
             "IL",
             "Illinois",
@@ -324,7 +407,17 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateBedbugRule>> = Lazy::new(
             false,
             "Chicago Municipal Code § 13-12-090",
         ),
-        rule("IN", "Indiana", NoStateStatute, false, false, None, None, false, "no statewide statute"),
+        rule(
+            "IN",
+            "Indiana",
+            NoStateStatute,
+            false,
+            false,
+            None,
+            None,
+            false,
+            "no statewide statute",
+        ),
         rule(
             "KS",
             "Kansas",
@@ -336,10 +429,50 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateBedbugRule>> = Lazy::new(
             false,
             "K.S.A. § 58-2576a (5d inspect)",
         ),
-        rule("KY", "Kentucky", NoStateStatute, false, false, None, None, false, "no statewide statute"),
-        rule("LA", "Louisiana", NoStateStatute, false, false, None, None, false, "no statewide statute"),
-        rule("MA", "Massachusetts", NoStateStatute, false, false, None, None, false, "no statewide bedbug statute; M.G.L. c. 111 § 127A habitability"),
-        rule("MD", "Maryland", NoStateStatute, false, false, None, None, false, "no statewide statute"),
+        rule(
+            "KY",
+            "Kentucky",
+            NoStateStatute,
+            false,
+            false,
+            None,
+            None,
+            false,
+            "no statewide statute",
+        ),
+        rule(
+            "LA",
+            "Louisiana",
+            NoStateStatute,
+            false,
+            false,
+            None,
+            None,
+            false,
+            "no statewide statute",
+        ),
+        rule(
+            "MA",
+            "Massachusetts",
+            NoStateStatute,
+            false,
+            false,
+            None,
+            None,
+            false,
+            "no statewide bedbug statute; M.G.L. c. 111 § 127A habitability",
+        ),
+        rule(
+            "MD",
+            "Maryland",
+            NoStateStatute,
+            false,
+            false,
+            None,
+            None,
+            false,
+            "no statewide statute",
+        ),
         rule(
             "ME",
             "Maine",
@@ -373,11 +506,61 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateBedbugRule>> = Lazy::new(
             false,
             "Minn. Stat. § 504B.181",
         ),
-        rule("MO", "Missouri", NoStateStatute, false, false, None, None, false, "no statewide statute"),
-        rule("MS", "Mississippi", NoStateStatute, false, false, None, None, false, "no statewide statute"),
-        rule("MT", "Montana", NoStateStatute, false, false, None, None, false, "no statewide statute"),
-        rule("NC", "North Carolina", NoStateStatute, false, false, None, None, false, "no statewide statute"),
-        rule("ND", "North Dakota", NoStateStatute, false, false, None, None, false, "no statewide statute"),
+        rule(
+            "MO",
+            "Missouri",
+            NoStateStatute,
+            false,
+            false,
+            None,
+            None,
+            false,
+            "no statewide statute",
+        ),
+        rule(
+            "MS",
+            "Mississippi",
+            NoStateStatute,
+            false,
+            false,
+            None,
+            None,
+            false,
+            "no statewide statute",
+        ),
+        rule(
+            "MT",
+            "Montana",
+            NoStateStatute,
+            false,
+            false,
+            None,
+            None,
+            false,
+            "no statewide statute",
+        ),
+        rule(
+            "NC",
+            "North Carolina",
+            NoStateStatute,
+            false,
+            false,
+            None,
+            None,
+            false,
+            "no statewide statute",
+        ),
+        rule(
+            "ND",
+            "North Dakota",
+            NoStateStatute,
+            false,
+            false,
+            None,
+            None,
+            false,
+            "no statewide statute",
+        ),
         rule(
             "NE",
             "Nebraska",
@@ -411,7 +594,17 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateBedbugRule>> = Lazy::new(
             false,
             "N.J.A.C. § 5:10-3 (Bedbug Protocol)",
         ),
-        rule("NM", "New Mexico", NoStateStatute, false, false, None, None, false, "no statewide statute"),
+        rule(
+            "NM",
+            "New Mexico",
+            NoStateStatute,
+            false,
+            false,
+            None,
+            None,
+            false,
+            "no statewide statute",
+        ),
         rule(
             "NV",
             "Nevada",
@@ -445,7 +638,17 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateBedbugRule>> = Lazy::new(
             false,
             "ORC § 5321.04 (habitability)",
         ),
-        rule("OK", "Oklahoma", NoStateStatute, false, false, None, None, false, "no statewide statute"),
+        rule(
+            "OK",
+            "Oklahoma",
+            NoStateStatute,
+            false,
+            false,
+            None,
+            None,
+            false,
+            "no statewide statute",
+        ),
         rule(
             "OR",
             "Oregon",
@@ -479,7 +682,17 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateBedbugRule>> = Lazy::new(
             false,
             "R.I.G.L. § 34-37 + Code",
         ),
-        rule("SC", "South Carolina", NoStateStatute, false, false, None, None, false, "no statewide statute"),
+        rule(
+            "SC",
+            "South Carolina",
+            NoStateStatute,
+            false,
+            false,
+            None,
+            None,
+            false,
+            "no statewide statute",
+        ),
         rule(
             "SD",
             "South Dakota",
@@ -491,7 +704,17 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateBedbugRule>> = Lazy::new(
             false,
             "SDCL § 43-32 (habitability)",
         ),
-        rule("TN", "Tennessee", NoStateStatute, false, false, None, None, false, "no statewide statute"),
+        rule(
+            "TN",
+            "Tennessee",
+            NoStateStatute,
+            false,
+            false,
+            None,
+            None,
+            false,
+            "no statewide statute",
+        ),
         rule(
             "TX",
             "Texas",
@@ -503,10 +726,50 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateBedbugRule>> = Lazy::new(
             false,
             "Tex. Prop. Code § 92.052 (habitability)",
         ),
-        rule("UT", "Utah", NoStateStatute, false, false, None, None, false, "no statewide statute"),
-        rule("VA", "Virginia", NoStateStatute, false, false, None, None, false, "no statewide statute"),
-        rule("VT", "Vermont", NoStateStatute, false, false, None, None, false, "no statewide statute"),
-        rule("WA", "Washington", NoStateStatute, false, false, None, None, false, "no statewide statute"),
+        rule(
+            "UT",
+            "Utah",
+            NoStateStatute,
+            false,
+            false,
+            None,
+            None,
+            false,
+            "no statewide statute",
+        ),
+        rule(
+            "VA",
+            "Virginia",
+            NoStateStatute,
+            false,
+            false,
+            None,
+            None,
+            false,
+            "no statewide statute",
+        ),
+        rule(
+            "VT",
+            "Vermont",
+            NoStateStatute,
+            false,
+            false,
+            None,
+            None,
+            false,
+            "no statewide statute",
+        ),
+        rule(
+            "WA",
+            "Washington",
+            NoStateStatute,
+            false,
+            false,
+            None,
+            None,
+            false,
+            "no statewide statute",
+        ),
         rule(
             "WI",
             "Wisconsin",
@@ -529,7 +792,17 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateBedbugRule>> = Lazy::new(
             false,
             "W. Va. Code § 37-6 (habitability)",
         ),
-        rule("WY", "Wyoming", NoStateStatute, false, false, None, None, false, "no statewide statute"),
+        rule(
+            "WY",
+            "Wyoming",
+            NoStateStatute,
+            false,
+            false,
+            None,
+            None,
+            false,
+            "no statewide statute",
+        ),
     ];
     RULES.iter().map(|r| (r.state_code, r)).collect()
 });
@@ -565,7 +838,10 @@ mod tests {
         i.pre_lease_history_disclosed = false;
         let r = check(&i);
         assert!(!r.complies);
-        assert!(r.violations.iter().any(|v| v.contains("pre-lease disclosure")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("pre-lease disclosure")));
     }
 
     #[test]
@@ -574,7 +850,10 @@ mod tests {
         i.info_pamphlet_provided = false;
         let r = check(&i);
         assert!(!r.complies);
-        assert!(r.violations.iter().any(|v| v.contains("informational pamphlet")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("informational pamphlet")));
     }
 
     #[test]
@@ -609,7 +888,10 @@ mod tests {
         i.adjacent_units_notified = false;
         let r = check(&i);
         assert!(!r.complies);
-        assert!(r.violations.iter().any(|v| v.contains("72h") || v.contains("72 ")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("72h") || v.contains("72 ")));
     }
 
     #[test]
@@ -655,7 +937,10 @@ mod tests {
         i.inspection_completed = false;
         let r = check(&i);
         assert!(!r.complies);
-        assert!(r.violations.iter().any(|v| v.contains("inspection") && v.contains("5d")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("inspection") && v.contains("5d")));
     }
 
     #[test]
@@ -719,7 +1004,10 @@ mod tests {
         // States with NoStateStatute regime: AK / AR / CO / CT / DC /
         // HI / etc. Even with all flags missing, compute reports
         // complies=true and no_statute_in_state=true.
-        for code in ["AK", "AR", "CO", "CT", "DC", "HI", "ID", "IN", "KY", "LA", "MO", "MS", "MT", "NC", "ND", "NM", "OK", "SC", "TN", "UT", "VA", "VT", "WA", "WY"] {
+        for code in [
+            "AK", "AR", "CO", "CT", "DC", "HI", "ID", "IN", "KY", "LA", "MO", "MS", "MT", "NC",
+            "ND", "NM", "OK", "SC", "TN", "UT", "VA", "VT", "WA", "WY",
+        ] {
             let mut i = fully_compliant(code);
             i.pre_lease_history_disclosed = false;
             i.info_pamphlet_provided = false;

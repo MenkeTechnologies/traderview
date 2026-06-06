@@ -397,10 +397,12 @@ mod tests {
 
     fn baseline_input() -> Input {
         Input {
-            construction_begin_date_status: ConstructionBeginDateStatus::ConstructionBeginsOnOrBeforeJune30_2026Eligible,
+            construction_begin_date_status:
+                ConstructionBeginDateStatus::ConstructionBeginsOnOrBeforeJune30_2026Eligible,
             building_system: BuildingSystem::InteriorLightingSystems,
             building_owner_type: BuildingOwnerType::PrivateBuildingOwner,
-            compliance_aspect: ComplianceAspect::BaseDeductionAtFiftyCentsToOneDollarPerSqFtUnderSection179DB1,
+            compliance_aspect:
+                ComplianceAspect::BaseDeductionAtFiftyCentsToOneDollarPerSqFtUnderSection179DB1,
             energy_reduction_percentage_points: 25,
             deduction_claimed_dollars_per_sq_ft_cents: 50,
             prevailing_wage_requirement_met: true,
@@ -440,7 +442,10 @@ mod tests {
         let mut input = baseline_input();
         input.building_system = BuildingSystem::NotEligibleBuildingSystem;
         let output = check(&input);
-        assert_eq!(output.mode, Section179DMode::NotApplicableNotEligibleBuildingSystem);
+        assert_eq!(
+            output.mode,
+            Section179DMode::NotApplicableNotEligibleBuildingSystem
+        );
     }
 
     #[test]
@@ -495,7 +500,10 @@ mod tests {
         let mut input = baseline_input();
         input.deduction_claimed_dollars_per_sq_ft_cents = 51;
         let output = check(&input);
-        assert_eq!(output.mode, Section179DMode::ViolationDeductionExceedsApplicableCap);
+        assert_eq!(
+            output.mode,
+            Section179DMode::ViolationDeductionExceedsApplicableCap
+        );
     }
 
     #[test]
@@ -549,7 +557,10 @@ mod tests {
             ComplianceAspect::BonusDeductionWithPrevailingWageAndApprenticeshipUnderSection179DB3;
         input.prevailing_wage_requirement_met = false;
         let output = check(&input);
-        assert_eq!(output.mode, Section179DMode::ViolationPrevailingWageRequirementNotMet);
+        assert_eq!(
+            output.mode,
+            Section179DMode::ViolationPrevailingWageRequirementNotMet
+        );
     }
 
     #[test]
@@ -559,7 +570,10 @@ mod tests {
             ComplianceAspect::BonusDeductionWithPrevailingWageAndApprenticeshipUnderSection179DB3;
         input.apprenticeship_requirement_met = false;
         let output = check(&input);
-        assert_eq!(output.mode, Section179DMode::ViolationApprenticeshipRequirementNotMet);
+        assert_eq!(
+            output.mode,
+            Section179DMode::ViolationApprenticeshipRequirementNotMet
+        );
     }
 
     #[test]
@@ -579,13 +593,17 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::EligibleBuildingSystemUnderSection179DC1;
         input.certification_obtained = false;
         let output = check(&input);
-        assert_eq!(output.mode, Section179DMode::ViolationDeductionClaimedWithoutCertification);
+        assert_eq!(
+            output.mode,
+            Section179DMode::ViolationDeductionClaimedWithoutCertification
+        );
     }
 
     #[test]
     fn designer_allocation_from_government_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::DesignerAllocationFromGovernmentOrTaxExemptEntityUnderSection179DD2;
+        input.compliance_aspect =
+            ComplianceAspect::DesignerAllocationFromGovernmentOrTaxExemptEntityUnderSection179DD2;
         input.building_owner_type = BuildingOwnerType::GovernmentEntityFederalStateOrLocal;
         input.designer_allocation_properly_documented = true;
         let output = check(&input);
@@ -598,7 +616,8 @@ mod tests {
     #[test]
     fn designer_allocation_from_tax_exempt_post_ira_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::DesignerAllocationFromGovernmentOrTaxExemptEntityUnderSection179DD2;
+        input.compliance_aspect =
+            ComplianceAspect::DesignerAllocationFromGovernmentOrTaxExemptEntityUnderSection179DD2;
         input.building_owner_type = BuildingOwnerType::TaxExemptOrganizationPostIra2022;
         input.designer_allocation_properly_documented = true;
         let output = check(&input);
@@ -611,10 +630,14 @@ mod tests {
     #[test]
     fn designer_allocation_from_private_owner_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::DesignerAllocationFromGovernmentOrTaxExemptEntityUnderSection179DD2;
+        input.compliance_aspect =
+            ComplianceAspect::DesignerAllocationFromGovernmentOrTaxExemptEntityUnderSection179DD2;
         input.building_owner_type = BuildingOwnerType::PrivateBuildingOwner;
         let output = check(&input);
-        assert_eq!(output.mode, Section179DMode::ViolationDeductionClaimedWithoutCertification);
+        assert_eq!(
+            output.mode,
+            Section179DMode::ViolationDeductionClaimedWithoutCertification
+        );
     }
 
     #[test]
@@ -622,7 +645,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::AshraeReferenceStandardCompliance;
         let output = check(&input);
-        assert_eq!(output.mode, Section179DMode::CompliantAshraeReferenceStandardMet);
+        assert_eq!(
+            output.mode,
+            Section179DMode::CompliantAshraeReferenceStandardMet
+        );
     }
 
     #[test]
@@ -631,7 +657,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::AshraeReferenceStandardCompliance;
         input.ashrae_reference_standard_met = false;
         let output = check(&input);
-        assert_eq!(output.mode, Section179DMode::ViolationAshraeReferenceStandardNotMet);
+        assert_eq!(
+            output.mode,
+            Section179DMode::ViolationAshraeReferenceStandardNotMet
+        );
     }
 
     #[test]
@@ -639,7 +668,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::InflationAdjustmentUnderSection179DG;
         let output = check(&input);
-        assert_eq!(output.mode, Section179DMode::CompliantInflationAdjustedTy2025MaxAt5_81PerSqFt);
+        assert_eq!(
+            output.mode,
+            Section179DMode::CompliantInflationAdjustedTy2025MaxAt5_81PerSqFt
+        );
         assert_eq!(output.computed_deduction_cents_per_sq_ft, 581);
     }
 
@@ -658,7 +690,10 @@ mod tests {
         assert_eq!(IRC_179D_OBBBA_ENACTMENT_DATE_YEAR, 2025);
         assert_eq!(IRC_179D_OBBBA_ENACTMENT_DATE_MONTH, 7);
         assert_eq!(IRC_179D_OBBBA_ENACTMENT_DATE_DAY, 4);
-        assert_eq!(IRC_179D_OBBBA_TERMINATION_CONSTRUCTION_BEGIN_DATE_YEAR, 2026);
+        assert_eq!(
+            IRC_179D_OBBBA_TERMINATION_CONSTRUCTION_BEGIN_DATE_YEAR,
+            2026
+        );
         assert_eq!(IRC_179D_OBBBA_TERMINATION_CONSTRUCTION_BEGIN_DATE_MONTH, 6);
         assert_eq!(IRC_179D_OBBBA_TERMINATION_CONSTRUCTION_BEGIN_DATE_DAY, 30);
         assert_eq!(IRC_179D_ENERGY_REDUCTION_THRESHOLD_BPS, 2_500);
@@ -666,9 +701,18 @@ mod tests {
         assert_eq!(IRC_179D_BASE_DEDUCTION_CEILING_CENTS_PER_SQ_FT, 100);
         assert_eq!(IRC_179D_BONUS_DEDUCTION_FLOOR_CENTS_PER_SQ_FT, 250);
         assert_eq!(IRC_179D_BONUS_DEDUCTION_CEILING_CENTS_PER_SQ_FT, 500);
-        assert_eq!(IRC_179D_BASE_DEDUCTION_INCREMENT_CENTS_PER_PERCENTAGE_POINT, 2);
-        assert_eq!(IRC_179D_BONUS_DEDUCTION_INCREMENT_CENTS_PER_PERCENTAGE_POINT, 10);
-        assert_eq!(IRC_179D_TY_2025_MAX_BONUS_INFLATION_ADJUSTED_CENTS_PER_SQ_FT, 581);
+        assert_eq!(
+            IRC_179D_BASE_DEDUCTION_INCREMENT_CENTS_PER_PERCENTAGE_POINT,
+            2
+        );
+        assert_eq!(
+            IRC_179D_BONUS_DEDUCTION_INCREMENT_CENTS_PER_PERCENTAGE_POINT,
+            10
+        );
+        assert_eq!(
+            IRC_179D_TY_2025_MAX_BONUS_INFLATION_ADJUSTED_CENTS_PER_SQ_FT,
+            581
+        );
         assert_eq!(IRC_179D_BASIS_POINT_DENOMINATOR, 10_000);
     }
 

@@ -239,8 +239,7 @@ pub fn check(input: &Input) -> CheckResult {
     // Virginia locks + peepholes.
     if matches!(input.regime, Regime::Virginia) && !input.door_has_peephole {
         violations.push(
-            "Va. Code § 55.1-1221 — rental dwelling unit lacks peephole on entry door."
-                .to_string(),
+            "Va. Code § 55.1-1221 — rental dwelling unit lacks peephole on entry door.".to_string(),
         );
     }
 
@@ -317,7 +316,10 @@ mod tests {
         i.days_from_move_in_to_rekey = 8;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("Texas") && v.contains("8 days")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("Texas") && v.contains("8 days")));
     }
 
     #[test]
@@ -326,11 +328,10 @@ mod tests {
         i.landlord_rekeyed_security_device = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("Texas") && v.contains("not performed"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("Texas") && v.contains("not performed")));
     }
 
     #[test]
@@ -339,11 +340,10 @@ mod tests {
         i.rekeying_at_landlord_expense = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("landlord's expense") && v.contains("violates"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("landlord's expense") && v.contains("violates")));
     }
 
     // ── California § 1941.3 ─────────────────────────────────────
@@ -364,11 +364,10 @@ mod tests {
         i.main_entry_door_has_operable_deadbolt = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("§ 1941.3(a)(1)") && v.contains("lacks operable deadbolt"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1941.3(a)(1)") && v.contains("lacks operable deadbolt")));
     }
 
     #[test]
@@ -377,11 +376,10 @@ mod tests {
         i.deadbolt_extension_meets_spec = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("§ 1941.3(a)(2)") && v.contains("13/16"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1941.3(a)(2)") && v.contains("13/16")));
     }
 
     // ── Illinois same-day rekey ─────────────────────────────────
@@ -430,11 +428,10 @@ mod tests {
         i.door_has_peephole = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("§ 55.1-1221") && v.contains("peephole"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 55.1-1221") && v.contains("peephole")));
     }
 
     // ── New York — no statewide rekeying mandate ────────────────
@@ -552,11 +549,19 @@ mod tests {
     #[test]
     fn citation_pins_authority_per_regime() {
         assert!(check(&base(Regime::Texas)).citation.contains("§ 92.156"));
-        assert!(check(&base(Regime::California)).citation.contains("§ 1941.3"));
+        assert!(check(&base(Regime::California))
+            .citation
+            .contains("§ 1941.3"));
         assert!(check(&base(Regime::Illinois)).citation.contains("765 ILCS"));
-        assert!(check(&base(Regime::Virginia)).citation.contains("§ 55.1-1221"));
-        assert!(check(&base(Regime::NewYork)).citation.contains("No statewide NY"));
-        assert!(check(&base(Regime::Default)).citation.contains("common-law"));
+        assert!(check(&base(Regime::Virginia))
+            .citation
+            .contains("§ 55.1-1221"));
+        assert!(check(&base(Regime::NewYork))
+            .citation
+            .contains("No statewide NY"));
+        assert!(check(&base(Regime::Default))
+            .citation
+            .contains("common-law"));
     }
 
     #[test]

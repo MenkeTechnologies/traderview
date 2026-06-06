@@ -16,7 +16,12 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub open: f64, pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct StarPatternReport {
@@ -30,9 +35,12 @@ pub fn compute(bars: &[Bar]) -> StarPatternReport {
         morning_star: vec![false; n],
         evening_star: vec![false; n],
     };
-    if n < 3 { return report; }
-    if bars.iter().any(|b| !b.open.is_finite() || !b.high.is_finite()
-        || !b.low.is_finite() || !b.close.is_finite()) {
+    if n < 3 {
+        return report;
+    }
+    if bars.iter().any(|b| {
+        !b.open.is_finite() || !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()
+    }) {
         return report;
     }
     for i in 2..n {
@@ -48,39 +56,63 @@ pub fn compute(bars: &[Bar]) -> StarPatternReport {
 }
 
 fn is_morning_star(b1: Bar, b2: Bar, b3: Bar) -> bool {
-    let body1 = b1.open - b1.close;            // > 0 if bearish
+    let body1 = b1.open - b1.close; // > 0 if bearish
     let range1 = b1.high - b1.low;
     let body2 = (b2.close - b2.open).abs();
     let range2 = b2.high - b2.low;
-    let body3 = b3.close - b3.open;             // > 0 if bullish
+    let body3 = b3.close - b3.open; // > 0 if bullish
     let range3 = b3.high - b3.low;
-    if range1 <= 0.0 || range2 <= 0.0 || range3 <= 0.0 { return false; }
+    if range1 <= 0.0 || range2 <= 0.0 || range3 <= 0.0 {
+        return false;
+    }
     // Bar 1: tall bearish body (≥ 60% of range, close < open).
-    if body1 <= 0.0 || body1 < 0.6 * range1 { return false; }
+    if body1 <= 0.0 || body1 < 0.6 * range1 {
+        return false;
+    }
     // Bar 2: small body, gaps down vs bar 1 close.
-    if body2 >= 0.4 * range2 { return false; }
-    if b2.high >= b1.close { return false; }
+    if body2 >= 0.4 * range2 {
+        return false;
+    }
+    if b2.high >= b1.close {
+        return false;
+    }
     // Bar 3: tall bullish body, closes above midpoint of bar 1.
-    if body3 <= 0.0 || body3 < 0.6 * range3 { return false; }
+    if body3 <= 0.0 || body3 < 0.6 * range3 {
+        return false;
+    }
     let mid1 = (b1.open + b1.close) / 2.0;
-    if b3.close <= mid1 { return false; }
+    if b3.close <= mid1 {
+        return false;
+    }
     true
 }
 
 fn is_evening_star(b1: Bar, b2: Bar, b3: Bar) -> bool {
-    let body1 = b1.close - b1.open;            // > 0 if bullish
+    let body1 = b1.close - b1.open; // > 0 if bullish
     let range1 = b1.high - b1.low;
     let body2 = (b2.close - b2.open).abs();
     let range2 = b2.high - b2.low;
-    let body3 = b3.open - b3.close;             // > 0 if bearish
+    let body3 = b3.open - b3.close; // > 0 if bearish
     let range3 = b3.high - b3.low;
-    if range1 <= 0.0 || range2 <= 0.0 || range3 <= 0.0 { return false; }
-    if body1 <= 0.0 || body1 < 0.6 * range1 { return false; }
-    if body2 >= 0.4 * range2 { return false; }
-    if b2.low <= b1.close { return false; }
-    if body3 <= 0.0 || body3 < 0.6 * range3 { return false; }
+    if range1 <= 0.0 || range2 <= 0.0 || range3 <= 0.0 {
+        return false;
+    }
+    if body1 <= 0.0 || body1 < 0.6 * range1 {
+        return false;
+    }
+    if body2 >= 0.4 * range2 {
+        return false;
+    }
+    if b2.low <= b1.close {
+        return false;
+    }
+    if body3 <= 0.0 || body3 < 0.6 * range3 {
+        return false;
+    }
     let mid1 = (b1.open + b1.close) / 2.0;
-    if b3.close >= mid1 { return false; }
+    if b3.close >= mid1 {
+        return false;
+    }
     true
 }
 
@@ -89,7 +121,12 @@ mod tests {
     use super::*;
 
     fn bar(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -100,9 +137,11 @@ mod tests {
 
     #[test]
     fn nan_returns_empty() {
-        let bars = vec![bar(100.0, 101.0, 99.0, 100.5),
-                        bar(f64::NAN, 101.0, 99.0, 100.5),
-                        bar(100.0, 101.0, 99.0, 100.5)];
+        let bars = vec![
+            bar(100.0, 101.0, 99.0, 100.5),
+            bar(f64::NAN, 101.0, 99.0, 100.5),
+            bar(100.0, 101.0, 99.0, 100.5),
+        ];
         let r = compute(&bars);
         assert!(!r.morning_star.iter().any(|x| *x));
         assert!(!r.evening_star.iter().any(|x| *x));

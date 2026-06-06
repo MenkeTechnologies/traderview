@@ -69,7 +69,11 @@ pub fn compute(returns: &[f64], mar: f64, annualization: f64) -> SortinoReport {
         }
     } else {
         let v = (mean - mar) / downside_dev * ann_sqrt;
-        if v.is_finite() { Some(v) } else { None }
+        if v.is_finite() {
+            Some(v)
+        } else {
+            None
+        }
     };
     SortinoReport {
         mean_return: mean,

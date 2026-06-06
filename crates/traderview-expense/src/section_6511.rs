@@ -192,12 +192,7 @@ fn compute_deadline(
                 "applies to § 166 bad debt, § 832(c) insurance, § 165(g) worthless security"
                     .to_string(),
             );
-            (
-                7,
-                deadline,
-                3,
-                "IRC § 6511(d)(1); §§ 166, 832(c), 165(g)",
-            )
+            (7, deadline, 3, "IRC § 6511(d)(1); §§ 166, 832(c), 165(g)")
         }
         ClaimType::NolOrCapitalLossCarryback => {
             let loss_year = input.carryback_loss_year.unwrap_or(input.return_tax_year);
@@ -365,10 +360,7 @@ mod tests {
         let r = compute(&i);
         assert_eq!(r.deadline_year, 2024);
         assert!(r.claim_timely);
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("LOSS YEAR")));
+        assert!(r.notes.iter().any(|n| n.contains("LOSS YEAR")));
     }
 
     #[test]
@@ -449,10 +441,7 @@ mod tests {
             financially_disabled: false,
         };
         let r = compute(&i);
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("Rev. Rul. 2020-8")));
+        assert!(r.notes.iter().any(|n| n.contains("Rev. Rul. 2020-8")));
         assert!(r.notes.iter().any(|n| n.contains("Rev. Rul. 71-533")));
     }
 
@@ -539,7 +528,10 @@ mod tests {
     #[test]
     fn claim_at_deadline_boundary_year_timely() {
         let r = compute(&standard(2022, 2023, 2023, 2026));
-        assert!(r.claim_timely, "claim filed in exact deadline year is timely");
+        assert!(
+            r.claim_timely,
+            "claim filed in exact deadline year is timely"
+        );
     }
 
     #[test]

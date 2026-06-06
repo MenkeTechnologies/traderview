@@ -165,9 +165,7 @@ pub fn check(input: &Input) -> CheckResult {
 
     match input.regime {
         Regime::Colorado => {
-            if portability_required
-                && report_meets_requirements
-                && !input.landlord_accepted_report
+            if portability_required && report_meets_requirements && !input.landlord_accepted_report
             {
                 penalty_amount_cents = if input.landlord_cured_within_7_days {
                     COLORADO_CURED_PENALTY_CENTS
@@ -507,13 +505,19 @@ mod tests {
         // CO full penalty $2,500 > WA penalty $100 cap.
         assert!(COLORADO_FULL_PENALTY_CENTS > WASHINGTON_VIOLATION_PENALTY_CENTS);
         // CO 25× WA penalty.
-        assert_eq!(COLORADO_FULL_PENALTY_CENTS, 25 * WASHINGTON_VIOLATION_PENALTY_CENTS);
+        assert_eq!(
+            COLORADO_FULL_PENALTY_CENTS,
+            25 * WASHINGTON_VIOLATION_PENALTY_CENTS
+        );
     }
 
     #[test]
     fn colorado_cure_reduces_penalty_50x_invariant() {
         // $50 cured / $2500 full = 1/50.
-        assert_eq!(COLORADO_FULL_PENALTY_CENTS, 50 * COLORADO_CURED_PENALTY_CENTS);
+        assert_eq!(
+            COLORADO_FULL_PENALTY_CENTS,
+            50 * COLORADO_CURED_PENALTY_CENTS
+        );
     }
 
     #[test]

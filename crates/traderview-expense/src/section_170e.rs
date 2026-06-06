@@ -136,8 +136,7 @@ pub fn compute(input: &Section170eInput) -> Section170eResult {
             (input.basis, Section170eRule::TangibleUnrelatedReduction)
         }
         // §170(e)(1)(A) ordinary/STCG property → basis
-        (PropertyKind::ShortTermCapitalGain, _, _, _)
-        | (PropertyKind::OrdinaryIncome, _, _, _) => {
+        (PropertyKind::ShortTermCapitalGain, _, _, _) | (PropertyKind::OrdinaryIncome, _, _, _) => {
             (input.basis, Section170eRule::StcgOrOrdinaryReduction)
         }
         // §170(b)(1)(C)(iii) basis election → basis at 50% cap
@@ -172,10 +171,9 @@ pub fn compute(input: &Section170eInput) -> Section170eResult {
         }
     };
 
-    let agi_limit_dollars =
-        input.agi * Decimal::from(agi_bp) / Decimal::from(10_000);
-    let remaining = (agi_limit_dollars - input.other_charity_contributions_this_year)
-        .max(Decimal::ZERO);
+    let agi_limit_dollars = input.agi * Decimal::from(agi_bp) / Decimal::from(10_000);
+    let remaining =
+        (agi_limit_dollars - input.other_charity_contributions_this_year).max(Decimal::ZERO);
 
     // Step 3: Deductible this year = min(contribution + prior_cf, remaining).
     let total_claimed = contribution + input.prior_year_carryover;
@@ -193,18 +191,14 @@ pub fn compute(input: &Section170eInput) -> Section170eResult {
 
     let path_label = match rule {
         Section170eRule::LtcgPublicFmv => "§170(b)(1)(C)(i) LTCG → public charity at FMV",
-        Section170eRule::LtcgPublicBasisElect => {
-            "§170(b)(1)(C)(iii) basis election → 50% AGI cap"
-        }
+        Section170eRule::LtcgPublicBasisElect => "§170(b)(1)(C)(iii) basis election → 50% AGI cap",
         Section170eRule::LtcgPrivateFoundationQas => {
             "§170(e)(5) qualified appreciated stock → private foundation at FMV"
         }
         Section170eRule::LtcgPrivateFoundationBasis => {
             "§170(e)(1)(B)(ii) private foundation reduction → basis"
         }
-        Section170eRule::StcgOrOrdinaryReduction => {
-            "§170(e)(1)(A) STCG/ordinary reduction → basis"
-        }
+        Section170eRule::StcgOrOrdinaryReduction => "§170(e)(1)(A) STCG/ordinary reduction → basis",
         Section170eRule::TangibleUnrelatedReduction => {
             "§170(e)(1)(B)(i) tangible personal unrelated use → basis"
         }
@@ -505,7 +499,10 @@ mod tests {
         i.agi = dec!(20_000_000_000);
         let r = compute(&i);
         assert_eq!(r.agi_limit_dollars, dec!(6_000_000_000));
-        assert_eq!(r.contribution_amount_after_170e_reduction, dec!(9_876_543_210.99));
+        assert_eq!(
+            r.contribution_amount_after_170e_reduction,
+            dec!(9_876_543_210.99)
+        );
         assert_eq!(r.deductible_this_year, dec!(6_000_000_000));
         assert_eq!(
             r.carryforward_to_next_year,

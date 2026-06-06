@@ -331,7 +331,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.fee_enforceable);
         assert!(r.fl_two_month_cap_violated);
-        assert!(r.violations.iter().any(|v| v.contains("§ 83.595(4)") && v.contains("2 MONTHS' RENT")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 83.595(4)") && v.contains("2 MONTHS' RENT")));
     }
 
     #[test]
@@ -357,13 +360,19 @@ mod tests {
     #[test]
     fn fl_menu_of_remedies_note_present() {
         let r = check(&fl_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("§ 83.595(2)") && n.contains("menu of remedies")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 83.595(2)") && n.contains("menu of remedies")));
     }
 
     #[test]
     fn fl_election_waiver_note_present() {
         let r = check(&fl_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("§ 83.595(4)") && n.contains("WAIVES additional rent")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 83.595(4)") && n.contains("WAIVES additional rent")));
     }
 
     #[test]
@@ -409,7 +418,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.fee_enforceable);
         assert!(!r.mitigation_compliance);
-        assert!(r.violations.iter().any(|v| v.contains("§ 1951.2") && v.contains("mitigate")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1951.2") && v.contains("mitigate")));
     }
 
     #[test]
@@ -418,13 +430,19 @@ mod tests {
         i.clause_reasonable_pre_estimate_of_damages = false;
         let r = check(&i);
         assert!(!r.fee_enforceable);
-        assert!(r.violations.iter().any(|v| v.contains("§ 1671(d)") && v.contains("penalty clauses VOID")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1671(d)") && v.contains("penalty clauses VOID")));
     }
 
     #[test]
     fn ca_actual_damages_framework_note() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("§ 1951.2") && n.contains("ACTUAL DAMAGES (not liquidated cap)")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1951.2") && n.contains("ACTUAL DAMAGES (not liquidated cap)")));
     }
 
     #[test]
@@ -456,7 +474,10 @@ mod tests {
         i.landlord_attempted_mitigation = false;
         let r = check(&i);
         assert!(!r.fee_enforceable);
-        assert!(r.violations.iter().any(|v| v.contains("default common-law rule") && v.contains("Restatement")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("default common-law rule") && v.contains("Restatement")));
     }
 
     #[test]
@@ -465,7 +486,10 @@ mod tests {
         i.clause_reasonable_pre_estimate_of_damages = false;
         let r = check(&i);
         assert!(!r.fee_enforceable);
-        assert!(r.violations.iter().any(|v| v.contains("§ 356") && v.contains("penalty clauses VOID")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 356") && v.contains("penalty clauses VOID")));
     }
 
     #[test]
@@ -490,7 +514,11 @@ mod tests {
             i.monthly_rent_cents = 200_000;
             i.landlord_attempted_mitigation = true;
             let r = check(&i);
-            assert!(!r.fl_two_month_cap_violated, "regime {:?} should not engage FL 2-month cap", regime);
+            assert!(
+                !r.fl_two_month_cap_violated,
+                "regime {:?} should not engage FL 2-month cap",
+                regime
+            );
         }
     }
 
@@ -507,7 +535,11 @@ mod tests {
             i.separate_addendum_signed = false;
             i.landlord_attempted_mitigation = true;
             let r = check(&i);
-            assert!(r.fee_enforceable, "regime {:?} should not require FL separate addendum", regime);
+            assert!(
+                r.fee_enforceable,
+                "regime {:?} should not require FL separate addendum",
+                regime
+            );
         }
     }
 

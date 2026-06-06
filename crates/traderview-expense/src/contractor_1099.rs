@@ -125,7 +125,9 @@ pub fn compute(input: &Contractor1099Input) -> Contractor1099Report {
         let total_paid: Decimal = payments.iter().map(|e| e.amount).sum();
         let count = payments.len() as u32;
         let latest = payments.iter().map(|e| e.posted_at).max();
-        let all_card = payments.iter().all(|e| e.method.eq_ignore_ascii_case("card"));
+        let all_card = payments
+            .iter()
+            .all(|e| e.method.eq_ignore_ascii_case("card"));
         let any_non_corp = !payments.iter().all(|e| e.vendor_is_corporation);
         let any_non_corp_services_non_card: Vec<&&ExpenseEntry> = payments
             .iter()

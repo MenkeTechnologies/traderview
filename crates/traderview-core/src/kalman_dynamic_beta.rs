@@ -18,17 +18,30 @@
 //! `kalman_alpha_beta`.
 
 pub fn compute(
-    asset: &[f64], bench: &[f64],
-    process_noise_q: f64, obs_noise_r: f64,
-    beta0: f64, p0: f64,
+    asset: &[f64],
+    bench: &[f64],
+    process_noise_q: f64,
+    obs_noise_r: f64,
+    beta0: f64,
+    p0: f64,
 ) -> Vec<Option<f64>> {
     let n = asset.len();
     let mut out = vec![None; n];
-    if n == 0 || bench.len() != n { return out; }
-    if !process_noise_q.is_finite() || !obs_noise_r.is_finite() { return out; }
-    if !beta0.is_finite() || !p0.is_finite() { return out; }
-    if process_noise_q < 0.0 || obs_noise_r <= 0.0 || p0 < 0.0 { return out; }
-    if asset.iter().chain(bench.iter()).any(|x| !x.is_finite()) { return out; }
+    if n == 0 || bench.len() != n {
+        return out;
+    }
+    if !process_noise_q.is_finite() || !obs_noise_r.is_finite() {
+        return out;
+    }
+    if !beta0.is_finite() || !p0.is_finite() {
+        return out;
+    }
+    if process_noise_q < 0.0 || obs_noise_r <= 0.0 || p0 < 0.0 {
+        return out;
+    }
+    if asset.iter().chain(bench.iter()).any(|x| !x.is_finite()) {
+        return out;
+    }
     let mut beta = beta0;
     let mut p = p0;
     for (i, slot) in out.iter_mut().enumerate() {
@@ -40,7 +53,9 @@ pub fn compute(
         let resid = asset[i] - beta * rb;
         beta += k * resid;
         p *= 1.0 - k * rb;
-        if p < 0.0 { p = 0.0; }
+        if p < 0.0 {
+            p = 0.0;
+        }
         *slot = Some(beta);
     }
     out
@@ -55,9 +70,15 @@ mod tests {
         let a = vec![0.01_f64; 50];
         let b = vec![0.01_f64; 50];
         let bad = vec![0.01_f64; 40];
-        assert!(compute(&a, &bad, 1e-6, 1e-4, 1.0, 1.0).iter().all(|x| x.is_none()));
-        assert!(compute(&a, &b, -1.0, 1e-4, 1.0, 1.0).iter().all(|x| x.is_none()));
-        assert!(compute(&a, &b, 1e-6, 0.0, 1.0, 1.0).iter().all(|x| x.is_none()));
+        assert!(compute(&a, &bad, 1e-6, 1e-4, 1.0, 1.0)
+            .iter()
+            .all(|x| x.is_none()));
+        assert!(compute(&a, &b, -1.0, 1e-4, 1.0, 1.0)
+            .iter()
+            .all(|x| x.is_none()));
+        assert!(compute(&a, &b, 1e-6, 0.0, 1.0, 1.0)
+            .iter()
+            .all(|x| x.is_none()));
     }
 
     #[test]
@@ -65,7 +86,9 @@ mod tests {
         let mut a = vec![0.01_f64; 50];
         let b = vec![0.01_f64; 50];
         a[5] = f64::NAN;
-        assert!(compute(&a, &b, 1e-6, 1e-4, 1.0, 1.0).iter().all(|x| x.is_none()));
+        assert!(compute(&a, &b, 1e-6, 1e-4, 1.0, 1.0)
+            .iter()
+            .all(|x| x.is_none()));
     }
 
     #[test]

@@ -164,7 +164,8 @@ pub fn compute(input: &Input) -> Output {
         return Output {
             mode: ScrieDrieMode::NotApplicableNotInNyc,
             statutory_basis: "Property outside NYC; SCRIE/DRIE inapplicable".to_string(),
-            notes: "Property not located in NYC; SCRIE / DRIE local-law programs inapplicable.".to_string(),
+            notes: "Property not located in NYC; SCRIE / DRIE local-law programs inapplicable."
+                .to_string(),
             citations,
         };
     }
@@ -353,13 +354,19 @@ mod tests {
             ..baseline_scrie_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, ScrieDrieMode::NotApplicableNotInRentRegulatedUnit);
+        assert_eq!(
+            result.mode,
+            ScrieDrieMode::NotApplicableNotInRentRegulatedUnit
+        );
     }
 
     #[test]
     fn scrie_compliant_baseline() {
         let result = check(&baseline_scrie_compliant());
-        assert_eq!(result.mode, ScrieDrieMode::CompliantScrieFrozenRentAndPropertyTaxAbatementApplied);
+        assert_eq!(
+            result.mode,
+            ScrieDrieMode::CompliantScrieFrozenRentAndPropertyTaxAbatementApplied
+        );
     }
 
     #[test]
@@ -371,7 +378,10 @@ mod tests {
             ..baseline_scrie_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, ScrieDrieMode::CompliantDrieFrozenRentAndPropertyTaxAbatementApplied);
+        assert_eq!(
+            result.mode,
+            ScrieDrieMode::CompliantDrieFrozenRentAndPropertyTaxAbatementApplied
+        );
     }
 
     #[test]
@@ -381,7 +391,10 @@ mod tests {
             ..baseline_scrie_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, ScrieDrieMode::ViolationTenantUnderAge62ForScrie);
+        assert_eq!(
+            result.mode,
+            ScrieDrieMode::ViolationTenantUnderAge62ForScrie
+        );
     }
 
     #[test]
@@ -391,7 +404,10 @@ mod tests {
             ..baseline_scrie_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, ScrieDrieMode::CompliantScrieFrozenRentAndPropertyTaxAbatementApplied);
+        assert_eq!(
+            result.mode,
+            ScrieDrieMode::CompliantScrieFrozenRentAndPropertyTaxAbatementApplied
+        );
     }
 
     #[test]
@@ -403,7 +419,10 @@ mod tests {
             ..baseline_scrie_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, ScrieDrieMode::ViolationTenantNotReceivingQualifyingFederalDisabilityForDrie);
+        assert_eq!(
+            result.mode,
+            ScrieDrieMode::ViolationTenantNotReceivingQualifyingFederalDisabilityForDrie
+        );
     }
 
     #[test]
@@ -435,7 +454,10 @@ mod tests {
             ..baseline_scrie_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, ScrieDrieMode::ViolationIncomeLimitExceeded50000);
+        assert_eq!(
+            result.mode,
+            ScrieDrieMode::ViolationIncomeLimitExceeded50000
+        );
     }
 
     #[test]
@@ -445,7 +467,10 @@ mod tests {
             ..baseline_scrie_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, ScrieDrieMode::CompliantScrieFrozenRentAndPropertyTaxAbatementApplied);
+        assert_eq!(
+            result.mode,
+            ScrieDrieMode::CompliantScrieFrozenRentAndPropertyTaxAbatementApplied
+        );
     }
 
     #[test]
@@ -456,7 +481,10 @@ mod tests {
             ..baseline_scrie_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, ScrieDrieMode::ViolationRentBurdenBelowOneThirdThreshold);
+        assert_eq!(
+            result.mode,
+            ScrieDrieMode::ViolationRentBurdenBelowOneThirdThreshold
+        );
     }
 
     #[test]
@@ -467,7 +495,10 @@ mod tests {
             ..baseline_scrie_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, ScrieDrieMode::ViolationRentBurdenBelowOneThirdThreshold);
+        assert_eq!(
+            result.mode,
+            ScrieDrieMode::ViolationRentBurdenBelowOneThirdThreshold
+        );
     }
 
     #[test]
@@ -478,7 +509,10 @@ mod tests {
             ..baseline_scrie_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, ScrieDrieMode::CompliantScrieFrozenRentAndPropertyTaxAbatementApplied);
+        assert_eq!(
+            result.mode,
+            ScrieDrieMode::CompliantScrieFrozenRentAndPropertyTaxAbatementApplied
+        );
     }
 
     #[test]
@@ -489,7 +523,10 @@ mod tests {
             ..baseline_scrie_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, ScrieDrieMode::ViolationRenewalNotSubmittedExpirationLapsed);
+        assert_eq!(
+            result.mode,
+            ScrieDrieMode::ViolationRenewalNotSubmittedExpirationLapsed
+        );
     }
 
     #[test]
@@ -500,7 +537,10 @@ mod tests {
             ..baseline_scrie_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, ScrieDrieMode::CompliantRenewalSubmittedWithin2YearWindow);
+        assert_eq!(
+            result.mode,
+            ScrieDrieMode::CompliantRenewalSubmittedWithin2YearWindow
+        );
     }
 
     #[test]
@@ -510,7 +550,10 @@ mod tests {
             ..baseline_scrie_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, ScrieDrieMode::ViolationLandlordChargedTenantPostFreezeIncreases);
+        assert_eq!(
+            result.mode,
+            ScrieDrieMode::ViolationLandlordChargedTenantPostFreezeIncreases
+        );
     }
 
     #[test]
@@ -520,7 +563,10 @@ mod tests {
             ..baseline_scrie_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, ScrieDrieMode::ViolationLandlordFailedToReflectPropertyTaxAbatement);
+        assert_eq!(
+            result.mode,
+            ScrieDrieMode::ViolationLandlordFailedToReflectPropertyTaxAbatement
+        );
     }
 
     #[test]
@@ -532,7 +578,10 @@ mod tests {
             ..baseline_scrie_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, ScrieDrieMode::CompliantDrieFrozenRentAndPropertyTaxAbatementApplied);
+        assert_eq!(
+            result.mode,
+            ScrieDrieMode::CompliantDrieFrozenRentAndPropertyTaxAbatementApplied
+        );
     }
 
     #[test]
@@ -540,11 +589,15 @@ mod tests {
         let input = Input {
             program: ScrieDrieProgram::DrieDisability,
             tenant_age_years: 45,
-            federal_disability_benefit: FederalDisabilityBenefit::MedicaidBasedOnDisabilityDetermination,
+            federal_disability_benefit:
+                FederalDisabilityBenefit::MedicaidBasedOnDisabilityDetermination,
             ..baseline_scrie_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, ScrieDrieMode::CompliantDrieFrozenRentAndPropertyTaxAbatementApplied);
+        assert_eq!(
+            result.mode,
+            ScrieDrieMode::CompliantDrieFrozenRentAndPropertyTaxAbatementApplied
+        );
     }
 
     #[test]
@@ -554,7 +607,10 @@ mod tests {
             ..baseline_scrie_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, ScrieDrieMode::CompliantScrieFrozenRentAndPropertyTaxAbatementApplied);
+        assert_eq!(
+            result.mode,
+            ScrieDrieMode::CompliantScrieFrozenRentAndPropertyTaxAbatementApplied
+        );
     }
 
     #[test]
@@ -564,7 +620,10 @@ mod tests {
             ..baseline_scrie_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, ScrieDrieMode::CompliantScrieFrozenRentAndPropertyTaxAbatementApplied);
+        assert_eq!(
+            result.mode,
+            ScrieDrieMode::CompliantScrieFrozenRentAndPropertyTaxAbatementApplied
+        );
     }
 
     #[test]

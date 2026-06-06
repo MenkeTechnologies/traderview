@@ -134,7 +134,9 @@ fn lease_required_response_days(c: LeaseEstoppelClauseType) -> u32 {
         LeaseEstoppelClauseType::NoEstoppelClauseInLease => 0,
         LeaseEstoppelClauseType::TenDayEstoppelClause => 10,
         LeaseEstoppelClauseType::SevenDayEstoppelClause => 7,
-        LeaseEstoppelClauseType::StatutoryReasonableTimeNoExplicitDays => ESTOPPEL_TYPICAL_RESPONSE_DAYS,
+        LeaseEstoppelClauseType::StatutoryReasonableTimeNoExplicitDays => {
+            ESTOPPEL_TYPICAL_RESPONSE_DAYS
+        }
     }
 }
 
@@ -197,7 +199,9 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.estoppel_draft_content_defect == EstoppelDraftContentDefect::WaivedTenantRentStabilizationStatus {
+    if input.estoppel_draft_content_defect
+        == EstoppelDraftContentDefect::WaivedTenantRentStabilizationStatus
+    {
         return Output {
             mode: TenantEstoppelCertificateMode::ViolationLandlordWaivedTenantProtectedTenancyStatus,
             allowed_response_days: allowed_days,
@@ -313,7 +317,10 @@ mod tests {
             ..baseline_california_sale_with_10_day_clause_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantEstoppelCertificateMode::NotApplicableNoTransactionPending);
+        assert_eq!(
+            result.mode,
+            TenantEstoppelCertificateMode::NotApplicableNoTransactionPending
+        );
     }
 
     #[test]
@@ -324,7 +331,10 @@ mod tests {
             ..baseline_california_sale_with_10_day_clause_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantEstoppelCertificateMode::CompliantTenantRefusedAbsentLeaseClause);
+        assert_eq!(
+            result.mode,
+            TenantEstoppelCertificateMode::CompliantTenantRefusedAbsentLeaseClause
+        );
     }
 
     #[test]
@@ -335,13 +345,19 @@ mod tests {
             ..baseline_california_sale_with_10_day_clause_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantEstoppelCertificateMode::ViolationLandlordDemandedEstoppelWithoutLeaseAuthority);
+        assert_eq!(
+            result.mode,
+            TenantEstoppelCertificateMode::ViolationLandlordDemandedEstoppelWithoutLeaseAuthority
+        );
     }
 
     #[test]
     fn ten_day_clause_signed_compliant() {
         let result = check(&baseline_california_sale_with_10_day_clause_compliant());
-        assert_eq!(result.mode, TenantEstoppelCertificateMode::CompliantTenantSignedEstoppelWithinTimeframe);
+        assert_eq!(
+            result.mode,
+            TenantEstoppelCertificateMode::CompliantTenantSignedEstoppelWithinTimeframe
+        );
         assert_eq!(result.allowed_response_days, 10);
     }
 
@@ -352,7 +368,10 @@ mod tests {
             ..baseline_california_sale_with_10_day_clause_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantEstoppelCertificateMode::CompliantTenantSignedWithCorrectionsNoted);
+        assert_eq!(
+            result.mode,
+            TenantEstoppelCertificateMode::CompliantTenantSignedWithCorrectionsNoted
+        );
     }
 
     #[test]
@@ -362,7 +381,10 @@ mod tests {
             ..baseline_california_sale_with_10_day_clause_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantEstoppelCertificateMode::ViolationTenantRefusedToSignDespiteLeaseClause);
+        assert_eq!(
+            result.mode,
+            TenantEstoppelCertificateMode::ViolationTenantRefusedToSignDespiteLeaseClause
+        );
     }
 
     #[test]
@@ -372,17 +394,24 @@ mod tests {
             ..baseline_california_sale_with_10_day_clause_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantEstoppelCertificateMode::ViolationEstoppelTimeframeShorterThanLeaseProvision);
+        assert_eq!(
+            result.mode,
+            TenantEstoppelCertificateMode::ViolationEstoppelTimeframeShorterThanLeaseProvision
+        );
     }
 
     #[test]
     fn waived_rent_stabilization_status_violation() {
         let input = Input {
-            estoppel_draft_content_defect: EstoppelDraftContentDefect::WaivedTenantRentStabilizationStatus,
+            estoppel_draft_content_defect:
+                EstoppelDraftContentDefect::WaivedTenantRentStabilizationStatus,
             ..baseline_california_sale_with_10_day_clause_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantEstoppelCertificateMode::ViolationLandlordWaivedTenantProtectedTenancyStatus);
+        assert_eq!(
+            result.mode,
+            TenantEstoppelCertificateMode::ViolationLandlordWaivedTenantProtectedTenancyStatus
+        );
     }
 
     #[test]
@@ -392,7 +421,10 @@ mod tests {
             ..baseline_california_sale_with_10_day_clause_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantEstoppelCertificateMode::ViolationLandlordIncludedFalseStatementsInEstoppelDraft);
+        assert_eq!(
+            result.mode,
+            TenantEstoppelCertificateMode::ViolationLandlordIncludedFalseStatementsInEstoppelDraft
+        );
     }
 
     #[test]
@@ -402,7 +434,10 @@ mod tests {
             ..baseline_california_sale_with_10_day_clause_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantEstoppelCertificateMode::ViolationLandlordIncludedFalseStatementsInEstoppelDraft);
+        assert_eq!(
+            result.mode,
+            TenantEstoppelCertificateMode::ViolationLandlordIncludedFalseStatementsInEstoppelDraft
+        );
     }
 
     #[test]
@@ -412,7 +447,10 @@ mod tests {
             ..baseline_california_sale_with_10_day_clause_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantEstoppelCertificateMode::ViolationLandlordIncludedFalseStatementsInEstoppelDraft);
+        assert_eq!(
+            result.mode,
+            TenantEstoppelCertificateMode::ViolationLandlordIncludedFalseStatementsInEstoppelDraft
+        );
     }
 
     #[test]
@@ -423,7 +461,10 @@ mod tests {
             ..baseline_california_sale_with_10_day_clause_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantEstoppelCertificateMode::CompliantTenantNotYetWithinResponseWindow);
+        assert_eq!(
+            result.mode,
+            TenantEstoppelCertificateMode::CompliantTenantNotYetWithinResponseWindow
+        );
     }
 
     #[test]
@@ -434,7 +475,10 @@ mod tests {
             ..baseline_california_sale_with_10_day_clause_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantEstoppelCertificateMode::CompliantTenantNotYetWithinResponseWindow);
+        assert_eq!(
+            result.mode,
+            TenantEstoppelCertificateMode::CompliantTenantNotYetWithinResponseWindow
+        );
     }
 
     #[test]
@@ -445,7 +489,10 @@ mod tests {
             ..baseline_california_sale_with_10_day_clause_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantEstoppelCertificateMode::ViolationTenantMissedResponseDeadline);
+        assert_eq!(
+            result.mode,
+            TenantEstoppelCertificateMode::ViolationTenantMissedResponseDeadline
+        );
     }
 
     #[test]
@@ -456,7 +503,10 @@ mod tests {
             ..baseline_california_sale_with_10_day_clause_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantEstoppelCertificateMode::CompliantTenantSignedEstoppelWithinTimeframe);
+        assert_eq!(
+            result.mode,
+            TenantEstoppelCertificateMode::CompliantTenantSignedEstoppelWithinTimeframe
+        );
         assert_eq!(result.allowed_response_days, 7);
     }
 
@@ -478,7 +528,10 @@ mod tests {
             ..baseline_california_sale_with_10_day_clause_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantEstoppelCertificateMode::CompliantTenantSignedEstoppelWithinTimeframe);
+        assert_eq!(
+            result.mode,
+            TenantEstoppelCertificateMode::CompliantTenantSignedEstoppelWithinTimeframe
+        );
     }
 
     #[test]

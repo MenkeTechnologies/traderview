@@ -185,7 +185,8 @@ pub fn compute(input: &Section72tInput) -> Section72tResult {
     let non_qualifying = (includible - qualifying).max(0);
 
     let additional_tax_applies = !age_exempt && non_qualifying > 0;
-    let additional_tax = ((non_qualifying as i128) * (ADDITIONAL_TAX_RATE_BP as i128) / 10_000) as i64;
+    let additional_tax =
+        ((non_qualifying as i128) * (ADDITIONAL_TAX_RATE_BP as i128) / 10_000) as i64;
 
     let exception_label = match input.asserted_exception {
         Section72tException::None => "no exception asserted",

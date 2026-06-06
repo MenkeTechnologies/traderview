@@ -453,7 +453,9 @@ mod tests {
     #[test]
     fn citation_mentions_voting_rights_differences_permitted() {
         let r = compute(&base());
-        assert!(r.citation.contains("voting-rights differences ARE permitted"));
+        assert!(r
+            .citation
+            .contains("voting-rights differences ARE permitted"));
     }
 
     // ── Notes ──────────────────────────────────────────────────────
@@ -479,6 +481,8 @@ mod tests {
         i.distinct_families_for_attribution = 5;
         i.non_family_shareholders = 20;
         let r = compute(&i);
-        assert!(r.note.contains("effective shareholders post-§1361(c)(1) attribution: 25"));
+        assert!(r
+            .note
+            .contains("effective shareholders post-§1361(c)(1) attribution: 25"));
     }
 }

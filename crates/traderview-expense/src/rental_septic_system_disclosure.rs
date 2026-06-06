@@ -191,7 +191,8 @@ pub fn check(input: &Input) -> Output {
     notes.push("Companion modules: rental_underground_storage_tank_disclosure (UST + LUST), rental_basement_water_intrusion_disclosure, rental_sinkhole_disclosure, rental_flood_hazard_disclosure, rent_abatement_construction_nuisance.".to_string());
 
     if !input.property_served_by_septic {
-        notes.push("Property is on municipal sewer — septic disclosure not applicable.".to_string());
+        notes
+            .push("Property is on municipal sewer — septic disclosure not applicable.".to_string());
         return Output {
             severity: Severity::NotApplicable,
             jurisdiction_specific_actions: actions,

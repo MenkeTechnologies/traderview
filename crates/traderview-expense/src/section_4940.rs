@@ -351,7 +351,7 @@ mod tests {
     fn allowable_deductions_reduce_nii() {
         let mut i = baseline();
         i.allowable_deductions_cents = 500_000_00; // larger deduction
-        // GII $1M − $500K = $500K NII × 1.39% = $6,950
+                                                   // GII $1M − $500K = $500K NII × 1.39% = $6,950
         let out = check(&i);
         assert_eq!(out.net_investment_income_cents, 500_000_00);
         assert_eq!(out.excise_tax_cents, 6_950_00);
@@ -361,9 +361,9 @@ mod tests {
     fn capital_gain_included_in_nii() {
         let mut i = baseline();
         i.net_capital_gain_investment_property_cents = 1_000_000_00; // $1M gain
-        // GII = $500K + $100K + $0 + $1M = $1.6M
-        // NII = $1.6M − $100K = $1.5M
-        // Tax = $1.5M × 1.39% = $20,850
+                                                                     // GII = $500K + $100K + $0 + $1M = $1.6M
+                                                                     // NII = $1.6M − $100K = $1.5M
+                                                                     // Tax = $1.5M × 1.39% = $20,850
         let out = check(&i);
         assert_eq!(out.gross_investment_income_cents, 1_600_000_00);
         assert_eq!(out.net_investment_income_cents, 1_500_000_00);

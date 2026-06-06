@@ -30,7 +30,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ChopZoneReport {
@@ -48,11 +52,19 @@ pub fn compute(bars: &[Bar], period: usize) -> ChopZoneReport {
         ema_typical: vec![None; n],
         period,
     };
-    if period < 2 || n < period + 1 { return report; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if period < 2 || n < period + 1 {
         return report;
     }
-    let tp: Vec<f64> = bars.iter().map(|b| (b.high + b.low + b.close) / 3.0).collect();
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
+        return report;
+    }
+    let tp: Vec<f64> = bars
+        .iter()
+        .map(|b| (b.high + b.low + b.close) / 3.0)
+        .collect();
     report.ema_typical = ema(&tp, period);
     // ATR for normalization scale.
     let mut tr = vec![0.0_f64; n];
@@ -74,8 +86,13 @@ pub fn compute(bars: &[Bar], period: usize) -> ChopZoneReport {
     }
     for (i, a_opt) in atr.iter().enumerate().skip(1) {
         let (Some(et), Some(ep), Some(a)) =
-            (report.ema_typical[i], report.ema_typical[i - 1], *a_opt) else { continue };
-        if a <= 0.0 { continue; }
+            (report.ema_typical[i], report.ema_typical[i - 1], *a_opt)
+        else {
+            continue;
+        };
+        if a <= 0.0 {
+            continue;
+        }
         let slope = et - ep;
         let angle = (slope / a).atan().to_degrees();
         report.angle_degrees[i] = Some(angle);
@@ -85,21 +102,33 @@ pub fn compute(bars: &[Bar], period: usize) -> ChopZoneReport {
 }
 
 fn classify(angle: f64) -> u8 {
-    if angle > 45.0 { 9 }
-    else if angle > 30.0 { 8 }
-    else if angle > 15.0 { 7 }
-    else if angle > 5.0 { 6 }
-    else if angle > -5.0 { 5 }
-    else if angle > -15.0 { 4 }
-    else if angle > -30.0 { 3 }
-    else if angle > -45.0 { 2 }
-    else { 1 }
+    if angle > 45.0 {
+        9
+    } else if angle > 30.0 {
+        8
+    } else if angle > 15.0 {
+        7
+    } else if angle > 5.0 {
+        6
+    } else if angle > -5.0 {
+        5
+    } else if angle > -15.0 {
+        4
+    } else if angle > -30.0 {
+        3
+    } else if angle > -45.0 {
+        2
+    } else {
+        1
+    }
 }
 
 fn ema(series: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     let k = 2.0 / (p_f + 1.0);
     let seed: f64 = series[..period].iter().sum::<f64>() / p_f;
@@ -116,7 +145,13 @@ fn ema(series: &[f64], period: usize) -> Vec<Option<f64>> {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {
@@ -140,16 +175,18 @@ mod tests {
         let bars = vec![b(101.0, 99.0, 100.0); 80];
         let r = compute(&bars, 30);
         for v in r.zone.iter().skip(50).flatten() {
-            assert_eq!(*v, 5);    // chop
+            assert_eq!(*v, 5); // chop
         }
     }
 
     #[test]
     fn strong_uptrend_zones_above_six() {
-        let bars: Vec<_> = (0..100).map(|i| {
-            let m = 100.0 + i as f64;
-            b(m + 0.5, m - 0.5, m)
-        }).collect();
+        let bars: Vec<_> = (0..100)
+            .map(|i| {
+                let m = 100.0 + i as f64;
+                b(m + 0.5, m - 0.5, m)
+            })
+            .collect();
         let r = compute(&bars, 30);
         let last = r.zone[99].unwrap();
         assert!(last >= 6, "expected zone ≥ 6, got {last}");
@@ -157,10 +194,12 @@ mod tests {
 
     #[test]
     fn strong_downtrend_zones_below_four() {
-        let bars: Vec<_> = (0..100).map(|i| {
-            let m = 200.0 - i as f64;
-            b(m + 0.5, m - 0.5, m)
-        }).collect();
+        let bars: Vec<_> = (0..100)
+            .map(|i| {
+                let m = 200.0 - i as f64;
+                b(m + 0.5, m - 0.5, m)
+            })
+            .collect();
         let r = compute(&bars, 30);
         let last = r.zone[99].unwrap();
         assert!(last <= 4);

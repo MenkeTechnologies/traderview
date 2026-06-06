@@ -131,9 +131,7 @@ pub fn compute(input: &Section6662AInput) -> Section6662AResult {
     let tax_rate_bps = input.highest_tax_rate_bps.clamp(0, BPS_DENOMINATOR);
 
     // § 6662A(b)(1)(A) — income increase × highest tax rate.
-    let tax_from_income_increase = income_increase
-        .saturating_mul(tax_rate_bps)
-        / BPS_DENOMINATOR;
+    let tax_from_income_increase = income_increase.saturating_mul(tax_rate_bps) / BPS_DENOMINATOR;
     // § 6662A(b)(1) — sum of (A) + (B).
     let understatement = tax_from_income_increase.saturating_add(credit_decrease);
 
@@ -143,9 +141,7 @@ pub fn compute(input: &Section6662AInput) -> Section6662AResult {
         DisclosureStatus::NotDisclosed => PENALTY_RATE_NOT_DISCLOSED_BPS,
     };
 
-    let penalty_before = understatement
-        .saturating_mul(penalty_rate_bps)
-        / BPS_DENOMINATOR;
+    let penalty_before = understatement.saturating_mul(penalty_rate_bps) / BPS_DENOMINATOR;
 
     // § 6664(d) reasonable-cause + good-faith exception.
     let reasonable_cause_excused = input.reasonable_cause_claimed
@@ -173,7 +169,10 @@ pub fn compute(input: &Section6662AInput) -> Section6662AResult {
                 DisclosureStatus::AdequatelyDisclosed => "20% baseline",
                 DisclosureStatus::NotDisclosed => "30% enhanced — nondisclosure",
             },
-            matches!(input.disclosure_status, DisclosureStatus::AdequatelyDisclosed),
+            matches!(
+                input.disclosure_status,
+                DisclosureStatus::AdequatelyDisclosed
+            ),
         ));
     }
 
@@ -195,16 +194,21 @@ pub fn compute(input: &Section6662AInput) -> Section6662AResult {
         },
         penalty_rate_bps / 100,
         match input.disclosure_status {
-            DisclosureStatus::AdequatelyDisclosed => "Form 8886 timely filed per § 6011 — \
+            DisclosureStatus::AdequatelyDisclosed =>
+                "Form 8886 timely filed per § 6011 — \
                                                        baseline 20%",
-            DisclosureStatus::NotDisclosed => "No Form 8886 or untimely — enhanced 30% \
+            DisclosureStatus::NotDisclosed =>
+                "No Form 8886 or untimely — enhanced 30% \
                                                 under § 6662A(c)",
         },
     ));
 
     if input.reasonable_cause_claimed {
         let missing_prongs: Vec<&str> = [
-            (input.facts_adequately_disclosed, "§ 6664(d)(3)(A) facts adequately disclosed"),
+            (
+                input.facts_adequately_disclosed,
+                "§ 6664(d)(3)(A) facts adequately disclosed",
+            ),
             (
                 input.substantial_authority_exists,
                 "§ 6664(d)(3)(B) substantial authority",
@@ -307,12 +311,7 @@ mod tests {
 
     #[test]
     fn not_disclosed_30_percent_enhanced_rate() {
-        let r = compute(&input(
-            DisclosureStatus::NotDisclosed,
-            10_000_000,
-            0,
-            3700,
-        ));
+        let r = compute(&input(DisclosureStatus::NotDisclosed, 10_000_000, 0, 3700));
         assert_eq!(r.penalty_rate_bps, 3000);
     }
 
@@ -385,12 +384,7 @@ mod tests {
             0,
             3700,
         ));
-        let not_disclosed = compute(&input(
-            DisclosureStatus::NotDisclosed,
-            10_000_000,
-            0,
-            3700,
-        ));
+        let not_disclosed = compute(&input(DisclosureStatus::NotDisclosed, 10_000_000, 0, 3700));
         // 30% / 20% = 1.5× ratio.
         assert_eq!(not_disclosed.penalty_cents, 1_110_000);
         assert_eq!(disclosed.penalty_cents, 740_000);
@@ -468,7 +462,10 @@ mod tests {
         assert_eq!(PENALTY_RATE_NOT_DISCLOSED_BPS, 3000);
         assert_eq!(PENALTY_RATE_DISCLOSED_BPS, 2000);
         // 30% is exactly 1.5× 20%.
-        assert_eq!(PENALTY_RATE_NOT_DISCLOSED_BPS * 2, PENALTY_RATE_DISCLOSED_BPS * 3);
+        assert_eq!(
+            PENALTY_RATE_NOT_DISCLOSED_BPS * 2,
+            PENALTY_RATE_DISCLOSED_BPS * 3
+        );
     }
 
     #[test]
@@ -478,8 +475,7 @@ mod tests {
         for facts in [false, true] {
             for authority in [false, true] {
                 for belief in [false, true] {
-                    let mut b =
-                        input(DisclosureStatus::AdequatelyDisclosed, 10_000_000, 0, 3700);
+                    let mut b = input(DisclosureStatus::AdequatelyDisclosed, 10_000_000, 0, 3700);
                     b.reasonable_cause_claimed = true;
                     b.facts_adequately_disclosed = facts;
                     b.substantial_authority_exists = authority;
@@ -505,13 +501,11 @@ mod tests {
             0,
             3700,
         ));
-        let not_disclosed = compute(&input(
-            DisclosureStatus::NotDisclosed,
-            10_000_000,
-            0,
-            3700,
-        ));
-        assert_eq!(disclosed.reportable_transaction_understatement_cents, not_disclosed.reportable_transaction_understatement_cents);
+        let not_disclosed = compute(&input(DisclosureStatus::NotDisclosed, 10_000_000, 0, 3700));
+        assert_eq!(
+            disclosed.reportable_transaction_understatement_cents,
+            not_disclosed.reportable_transaction_understatement_cents
+        );
         assert_ne!(disclosed.penalty_rate_bps, not_disclosed.penalty_rate_bps);
         assert!(not_disclosed.penalty_cents > disclosed.penalty_cents);
     }
@@ -556,24 +550,14 @@ mod tests {
 
     #[test]
     fn defensive_negative_income_increase_clamped() {
-        let r = compute(&input(
-            DisclosureStatus::NotDisclosed,
-            -1_000_000,
-            0,
-            3700,
-        ));
+        let r = compute(&input(DisclosureStatus::NotDisclosed, -1_000_000, 0, 3700));
         assert_eq!(r.reportable_transaction_understatement_cents, 0);
         assert_eq!(r.penalty_cents, 0);
     }
 
     #[test]
     fn defensive_negative_credit_decrease_clamped() {
-        let r = compute(&input(
-            DisclosureStatus::NotDisclosed,
-            0,
-            -1_000_000,
-            3700,
-        ));
+        let r = compute(&input(DisclosureStatus::NotDisclosed, 0, -1_000_000, 3700));
         assert_eq!(r.reportable_transaction_understatement_cents, 0);
     }
 
@@ -591,12 +575,7 @@ mod tests {
 
     #[test]
     fn defensive_negative_tax_rate_clamped_to_zero() {
-        let r = compute(&input(
-            DisclosureStatus::NotDisclosed,
-            10_000_000,
-            0,
-            -100,
-        ));
+        let r = compute(&input(DisclosureStatus::NotDisclosed, 10_000_000, 0, -100));
         // Negative rate → 0 contribution from income component;
         // credit-decrease still passes through (0 here).
         assert_eq!(r.reportable_transaction_understatement_cents, 0);
@@ -624,7 +603,10 @@ mod tests {
             0,
             3700,
         ));
-        assert_eq!(r.reportable_transaction_understatement_cents, 37_000_000_000);
+        assert_eq!(
+            r.reportable_transaction_understatement_cents,
+            37_000_000_000
+        );
         assert_eq!(r.penalty_cents, 11_100_000_000);
     }
 }

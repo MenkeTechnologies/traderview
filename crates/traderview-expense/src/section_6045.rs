@@ -248,7 +248,15 @@ mod tests {
 
     #[test]
     fn stock_acquired_2015_covered() {
-        let r = compute(&input(InstrumentType::Stock, 2015, 6, 1, 2026, 1_000_00, false));
+        let r = compute(&input(
+            InstrumentType::Stock,
+            2015,
+            6,
+            1,
+            2026,
+            1_000_00,
+            false,
+        ));
         assert!(r.covered_security);
         assert!(r.basis_reporting_required);
         assert_eq!(r.form_required, FormRequired::Form1099B);
@@ -256,7 +264,15 @@ mod tests {
 
     #[test]
     fn stock_acquired_2010_non_covered() {
-        let r = compute(&input(InstrumentType::Stock, 2010, 6, 1, 2026, 1_000_00, false));
+        let r = compute(&input(
+            InstrumentType::Stock,
+            2010,
+            6,
+            1,
+            2026,
+            1_000_00,
+            false,
+        ));
         assert!(!r.covered_security);
         assert!(!r.basis_reporting_required);
         assert_eq!(r.form_required, FormRequired::Form1099B);
@@ -264,7 +280,15 @@ mod tests {
 
     #[test]
     fn stock_at_2011_01_01_boundary_covered() {
-        let r = compute(&input(InstrumentType::Stock, 2011, 1, 1, 2026, 1_000_00, false));
+        let r = compute(&input(
+            InstrumentType::Stock,
+            2011,
+            1,
+            1,
+            2026,
+            1_000_00,
+            false,
+        ));
         assert!(r.covered_security);
     }
 
@@ -462,7 +486,15 @@ mod tests {
 
     #[test]
     fn citations_pin_correct_authorities() {
-        let r_stock = compute(&input(InstrumentType::Stock, 2015, 1, 1, 2026, 1000_00, false));
+        let r_stock = compute(&input(
+            InstrumentType::Stock,
+            2015,
+            1,
+            1,
+            2026,
+            1000_00,
+            false,
+        ));
         assert!(r_stock.citation.contains("§ 6045(g)"));
         assert!(r_stock.citation.contains("(a)(15)(i)(A)"));
 
@@ -504,8 +536,16 @@ mod tests {
         for (instr, y, m, d) in cases {
             let at_boundary = compute(&input(instr, y, m, d, 2026, 1000_00, true));
             let just_before = compute(&input(instr, y - 1, 12, 31, 2026, 1000_00, true));
-            assert!(at_boundary.covered_security, "{:?} at {} cutoff should be covered", instr, y);
-            assert!(!just_before.covered_security, "{:?} one day before {} cutoff should NOT be covered", instr, y);
+            assert!(
+                at_boundary.covered_security,
+                "{:?} at {} cutoff should be covered",
+                instr, y
+            );
+            assert!(
+                !just_before.covered_security,
+                "{:?} one day before {} cutoff should NOT be covered",
+                instr, y
+            );
         }
     }
 
@@ -545,7 +585,15 @@ mod tests {
             1000_00,
             true,
         ));
-        let stock = compute(&input(InstrumentType::Stock, 2020, 1, 1, 2026, 1000_00, false));
+        let stock = compute(&input(
+            InstrumentType::Stock,
+            2020,
+            1,
+            1,
+            2026,
+            1000_00,
+            false,
+        ));
         assert_eq!(da.form_required, FormRequired::Form1099Da);
         assert_eq!(stock.form_required, FormRequired::Form1099B);
     }

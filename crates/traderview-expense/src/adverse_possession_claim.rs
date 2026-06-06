@@ -217,9 +217,8 @@ fn check_texas(
         }
         TexasPath::FiveYearRecordedDeed => {
             if !input.paid_taxes_for_full_period {
-                violations.push(
-                    "§ 16.025 requires tax payment throughout the 5-year period".to_string(),
-                );
+                violations
+                    .push("§ 16.025 requires tax payment throughout the 5-year period".to_string());
             }
             notes.push(
                 "§ 16.025 — recorded deed + cultivation/use + tax payment + 5 years required"
@@ -273,7 +272,10 @@ fn check_florida(
                 .to_string(),
         );
     } else {
-        notes.push("§ 95.16 — color of title cuts the appraiser-return and 1-year-tax-cure burdens".to_string());
+        notes.push(
+            "§ 95.16 — color of title cuts the appraiser-return and 1-year-tax-cure burdens"
+                .to_string(),
+        );
     }
     7
 }
@@ -416,16 +418,16 @@ mod tests {
         i.years_of_possession = 4;
         let r = check(&i);
         assert!(!r.claim_satisfied);
-        assert!(r.violations.iter().any(|v| v.contains("short of required 5 years")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("short of required 5 years")));
     }
 
     #[test]
     fn ca_notes_gilardi_assessed_year_rule() {
         let r = check(&ca_full_satisfied());
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("Gilardi v. Hallam")));
+        assert!(r.notes.iter().any(|n| n.contains("Gilardi v. Hallam")));
     }
 
     #[test]
@@ -521,26 +523,24 @@ mod tests {
         i.fl_paid_taxes_within_one_year_of_entry = false;
         let r = check(&i);
         assert!(!r.claim_satisfied);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("WITHIN 1 YEAR")));
+        assert!(r.violations.iter().any(|v| v.contains("WITHIN 1 YEAR")));
     }
 
     #[test]
     fn fl_with_color_no_appraiser_or_one_year_cure_needed() {
         let r = check(&fl_with_color_full());
         assert!(r.claim_satisfied);
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("§ 95.16")));
+        assert!(r.notes.iter().any(|n| n.contains("§ 95.16")));
     }
 
     #[test]
     fn fl_no_tax_payment_fails_in_both_paths() {
         for has_color in [true, false] {
-            let mut i = if has_color { fl_with_color_full() } else { fl_without_color_full() };
+            let mut i = if has_color {
+                fl_with_color_full()
+            } else {
+                fl_without_color_full()
+            };
             i.paid_taxes_for_full_period = false;
             let r = check(&i);
             assert!(!r.claim_satisfied);
@@ -575,7 +575,10 @@ mod tests {
         i.five_elements_satisfied = false;
         let r = check(&i);
         assert!(!r.claim_satisfied);
-        assert!(r.violations.iter().any(|v| v.contains("five common-law elements")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("five common-law elements")));
     }
 
     #[test]

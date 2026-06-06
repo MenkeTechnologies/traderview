@@ -173,9 +173,7 @@ pub fn compute(input: &GarnishmentInput) -> GarnishmentResult {
         }
         StateRegime::FederalFloor => {
             let twenty_five_pct = input.weekly_disposable_earnings_cents.saturating_mul(25) / 100;
-            let thirty_x_min = input
-                .federal_minimum_wage_cents_per_hour
-                .saturating_mul(30);
+            let thirty_x_min = input.federal_minimum_wage_cents_per_hour.saturating_mul(30);
             let excess_over_30x = input
                 .weekly_disposable_earnings_cents
                 .saturating_sub(thirty_x_min)
@@ -195,9 +193,7 @@ pub fn compute(input: &GarnishmentInput) -> GarnishmentResult {
         }
         StateRegime::StateMoreProtective => {
             let twenty_five_pct = input.weekly_disposable_earnings_cents.saturating_mul(25) / 100;
-            let federal_thirty_x = input
-                .federal_minimum_wage_cents_per_hour
-                .saturating_mul(30);
+            let federal_thirty_x = input.federal_minimum_wage_cents_per_hour.saturating_mul(30);
             let federal_excess = input
                 .weekly_disposable_earnings_cents
                 .saturating_sub(federal_thirty_x)
@@ -257,11 +253,11 @@ mod tests {
         let r = compute(&base(StateRegime::FullyProhibited, 1_000));
         assert!(!r.garnishment_allowed);
         assert_eq!(r.max_weekly_garnishment_cents, 0);
+        assert!(r.notes.iter().any(|n| n.contains("ABSOLUTELY PROHIBITED")));
         assert!(r
             .notes
             .iter()
-            .any(|n| n.contains("ABSOLUTELY PROHIBITED")));
-        assert!(r.notes.iter().any(|n| n.contains("Tex. Const. art. XVI § 28")));
+            .any(|n| n.contains("Tex. Const. art. XVI § 28")));
     }
 
     #[test]
@@ -347,10 +343,12 @@ mod tests {
         i.judgment_type = JudgmentType::ChildSupportOrAlimony;
         let r = compute(&i);
         assert!(r.garnishment_allowed);
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("child support") && n.contains("bypasses civil-debt prohibitions")));
+        assert!(
+            r.notes
+                .iter()
+                .any(|n| n.contains("child support")
+                    && n.contains("bypasses civil-debt prohibitions"))
+        );
     }
 
     #[test]
@@ -420,7 +418,11 @@ mod tests {
             let mut i = base(StateRegime::FullyProhibited, 1_000);
             i.judgment_type = jt;
             let r = compute(&i);
-            assert!(r.garnishment_allowed, "non-civil judgment type {:?} should not be blocked in fully-prohibited states", jt);
+            assert!(
+                r.garnishment_allowed,
+                "non-civil judgment type {:?} should not be blocked in fully-prohibited states",
+                jt
+            );
         }
         let i = base(StateRegime::FullyProhibited, 1_000);
         let r = compute(&i);
@@ -432,7 +434,10 @@ mod tests {
         let mut i = base(StateRegime::FederalFloor, 0);
         i.weekly_disposable_earnings_cents = 725 * 30 + 100;
         let r = compute(&i);
-        assert_eq!(r.max_weekly_garnishment_cents, 100i64.min((725 * 30 + 100) * 25 / 100));
+        assert_eq!(
+            r.max_weekly_garnishment_cents,
+            100i64.min((725 * 30 + 100) * 25 / 100)
+        );
     }
 
     #[test]
@@ -479,7 +484,11 @@ mod tests {
 
     #[test]
     fn empty_disposable_earnings_zero_garnishment_all_regimes() {
-        for regime in [StateRegime::FullyProhibited, StateRegime::FederalFloor, StateRegime::StateMoreProtective] {
+        for regime in [
+            StateRegime::FullyProhibited,
+            StateRegime::FederalFloor,
+            StateRegime::StateMoreProtective,
+        ] {
             let r = compute(&base(regime, 0));
             assert_eq!(r.max_weekly_garnishment_cents, 0);
         }

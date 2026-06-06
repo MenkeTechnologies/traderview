@@ -113,25 +113,21 @@ pub fn compute(input: &Section1233Input) -> Section1233Result {
     // §1233(b)(1) triggers:
     //   (a) any substantially identical held ≤ 1 year on short_sale_date, OR
     //   (b) any substantially identical acquired during the short period
-    let any_short_held_at_open = input
-        .substantially_identical_held_at_open
-        .iter()
-        .any(|p| {
-            let days = (input.short_sale_date - p.acquisition_date).num_days();
-            days <= ONE_YEAR_DAYS
-        });
-    let any_acquired_during_short = !input.substantially_identical_acquired_during_short.is_empty();
+    let any_short_held_at_open = input.substantially_identical_held_at_open.iter().any(|p| {
+        let days = (input.short_sale_date - p.acquisition_date).num_days();
+        days <= ONE_YEAR_DAYS
+    });
+    let any_acquired_during_short = !input
+        .substantially_identical_acquired_during_short
+        .is_empty();
     let subsection_b_triggered = any_short_held_at_open || any_acquired_during_short;
 
     // §1233(d) triggers if any substantially identical held > 1 year on
     // short_sale_date.
-    let any_long_held_at_open = input
-        .substantially_identical_held_at_open
-        .iter()
-        .any(|p| {
-            let days = (input.short_sale_date - p.acquisition_date).num_days();
-            days > ONE_YEAR_DAYS
-        });
+    let any_long_held_at_open = input.substantially_identical_held_at_open.iter().any(|p| {
+        let days = (input.short_sale_date - p.acquisition_date).num_days();
+        days > ONE_YEAR_DAYS
+    });
     let subsection_d_triggered = any_long_held_at_open;
 
     // Loss path: §1233(d) governs.
@@ -257,7 +253,8 @@ mod tests {
         // close. §1233(b) applies: gain is ST (default anyway) and
         // holding period of long position resets to short close date.
         let mut i = base();
-        i.substantially_identical_held_at_open.push(long(d(2026, 3, 3), 100));
+        i.substantially_identical_held_at_open
+            .push(long(d(2026, 3, 3), 100));
         let r = compute(&i);
         assert_eq!(r.character, TaxCharacter::ShortTerm);
         assert_eq!(r.rule_triggered, Section1233Rule::SubsectionB);
@@ -276,7 +273,8 @@ mod tests {
         // property was held.
         let mut i = base();
         i.gain_loss_amount = dec!(-500);
-        i.substantially_identical_held_at_open.push(long(d(2016, 1, 1), 100));
+        i.substantially_identical_held_at_open
+            .push(long(d(2016, 1, 1), 100));
         let r = compute(&i);
         assert_eq!(r.character, TaxCharacter::LongTerm);
         assert_eq!(r.rule_triggered, Section1233Rule::SubsectionD);
@@ -289,7 +287,8 @@ mod tests {
         // GAIN. §1233(d) only governs losses; §1233(b) requires
         // short-held. Default ST applies, no rule triggered.
         let mut i = base();
-        i.substantially_identical_held_at_open.push(long(d(2016, 1, 1), 100));
+        i.substantially_identical_held_at_open
+            .push(long(d(2016, 1, 1), 100));
         let r = compute(&i);
         assert_eq!(r.character, TaxCharacter::ShortTerm);
         assert_eq!(r.rule_triggered, Section1233Rule::None);
@@ -303,7 +302,8 @@ mod tests {
         // Default ST loss; no rule triggered.
         let mut i = base();
         i.gain_loss_amount = dec!(-500);
-        i.substantially_identical_held_at_open.push(long(d(2026, 3, 3), 100));
+        i.substantially_identical_held_at_open
+            .push(long(d(2026, 3, 3), 100));
         let r = compute(&i);
         assert_eq!(r.character, TaxCharacter::ShortTerm);
         assert_eq!(r.rule_triggered, Section1233Rule::None);
@@ -320,10 +320,7 @@ mod tests {
         let r = compute(&i);
         assert_eq!(r.rule_triggered, Section1233Rule::SubsectionB);
         assert_eq!(r.holding_period_resets.len(), 1);
-        assert_eq!(
-            r.holding_period_resets[0].reason,
-            "§1233(b)(1)(B)"
-        );
+        assert_eq!(r.holding_period_resets[0].reason, "§1233(b)(1)(B)");
     }
 
     #[test]
@@ -333,8 +330,10 @@ mod tests {
         // (those are §1233(b)(2) which doesn't fire on the loss path).
         let mut i = base();
         i.gain_loss_amount = dec!(-2000);
-        i.substantially_identical_held_at_open.push(long(d(2026, 3, 3), 50));
-        i.substantially_identical_held_at_open.push(long(d(2016, 1, 1), 50));
+        i.substantially_identical_held_at_open
+            .push(long(d(2026, 3, 3), 50));
+        i.substantially_identical_held_at_open
+            .push(long(d(2016, 1, 1), 50));
         let r = compute(&i);
         assert_eq!(r.character, TaxCharacter::LongTerm);
         assert_eq!(r.rule_triggered, Section1233Rule::SubsectionD);
@@ -349,8 +348,10 @@ mod tests {
         // triggered (b), and only the short-held does).
         let mut i = base();
         i.gain_loss_amount = dec!(2000);
-        i.substantially_identical_held_at_open.push(long(d(2026, 3, 3), 50));
-        i.substantially_identical_held_at_open.push(long(d(2016, 1, 1), 50));
+        i.substantially_identical_held_at_open
+            .push(long(d(2026, 3, 3), 50));
+        i.substantially_identical_held_at_open
+            .push(long(d(2016, 1, 1), 50));
         let r = compute(&i);
         assert_eq!(r.character, TaxCharacter::ShortTerm);
         assert_eq!(r.rule_triggered, Section1233Rule::SubsectionB);
@@ -376,9 +377,15 @@ mod tests {
         ];
         let r = compute(&i);
         assert_eq!(r.holding_period_resets.len(), 2);
-        assert_eq!(r.holding_period_resets[0].original_acquisition_date, d(2026, 3, 1));
+        assert_eq!(
+            r.holding_period_resets[0].original_acquisition_date,
+            d(2026, 3, 1)
+        );
         assert_eq!(r.holding_period_resets[0].shares_affected, 50);
-        assert_eq!(r.holding_period_resets[1].original_acquisition_date, d(2026, 4, 1));
+        assert_eq!(
+            r.holding_period_resets[1].original_acquisition_date,
+            d(2026, 4, 1)
+        );
         assert_eq!(r.holding_period_resets[1].shares_affected, 50);
     }
 
@@ -389,7 +396,8 @@ mod tests {
         // on gain. Day 366 → long-held → §1233(b) does NOT trigger on
         // gain (but §1233(d) triggers on loss).
         let mut i = base();
-        i.substantially_identical_held_at_open.push(long(d(2025, 6, 1), 100));
+        i.substantially_identical_held_at_open
+            .push(long(d(2025, 6, 1), 100));
         let days = (i.short_sale_date - d(2025, 6, 1)).num_days();
         assert_eq!(days, 365, "test setup: exactly 365 days");
         let r = compute(&i);
@@ -399,7 +407,8 @@ mod tests {
     #[test]
     fn one_year_boundary_held_366_days_is_long_term() {
         let mut i = base();
-        i.substantially_identical_held_at_open.push(long(d(2025, 5, 31), 100));
+        i.substantially_identical_held_at_open
+            .push(long(d(2025, 5, 31), 100));
         let days = (i.short_sale_date - d(2025, 5, 31)).num_days();
         assert_eq!(days, 366, "test setup: exactly 366 days");
         // Gain path — no rule triggers since long-held.
@@ -418,7 +427,8 @@ mod tests {
     fn zero_gain_loss_no_rule() {
         let mut i = base();
         i.gain_loss_amount = Decimal::ZERO;
-        i.substantially_identical_held_at_open.push(long(d(2026, 3, 3), 100));
+        i.substantially_identical_held_at_open
+            .push(long(d(2026, 3, 3), 100));
         let r = compute(&i);
         assert_eq!(r.rule_triggered, Section1233Rule::None);
     }
@@ -430,7 +440,8 @@ mod tests {
         let mut i = base();
         i.short_sale_date = d(2026, 6, 1);
         i.short_close_date = d(2027, 1, 15);
-        i.substantially_identical_held_at_open.push(long(d(2026, 4, 1), 100));
+        i.substantially_identical_held_at_open
+            .push(long(d(2026, 4, 1), 100));
         let r = compute(&i);
         assert_eq!(
             r.holding_period_resets[0].new_holding_period_start,
@@ -459,8 +470,10 @@ mod tests {
         // §1233(b)(2) deliberately excludes it — the rule's whole point
         // is to penalize NEW positions, not existing LTCG-qualified ones.
         let mut i = base();
-        i.substantially_identical_held_at_open.push(long(d(2016, 1, 1), 200));
-        i.substantially_identical_held_at_open.push(long(d(2026, 5, 1), 50));
+        i.substantially_identical_held_at_open
+            .push(long(d(2016, 1, 1), 200));
+        i.substantially_identical_held_at_open
+            .push(long(d(2026, 5, 1), 50));
         let r = compute(&i);
         assert_eq!(r.rule_triggered, Section1233Rule::SubsectionB);
         assert_eq!(r.holding_period_resets.len(), 1);
@@ -477,13 +490,21 @@ mod tests {
         // acquisition date — April first.
         let mut i = base();
         i.short_shares = 200;
-        i.substantially_identical_held_at_open.push(long(d(2026, 4, 1), 100));
-        i.substantially_identical_acquired_during_short.push(long(d(2026, 8, 1), 100));
+        i.substantially_identical_held_at_open
+            .push(long(d(2026, 4, 1), 100));
+        i.substantially_identical_acquired_during_short
+            .push(long(d(2026, 8, 1), 100));
         let r = compute(&i);
         assert_eq!(r.holding_period_resets.len(), 2);
-        assert_eq!(r.holding_period_resets[0].original_acquisition_date, d(2026, 4, 1));
+        assert_eq!(
+            r.holding_period_resets[0].original_acquisition_date,
+            d(2026, 4, 1)
+        );
         assert_eq!(r.holding_period_resets[0].reason, "§1233(b)(1)(A)");
-        assert_eq!(r.holding_period_resets[1].original_acquisition_date, d(2026, 8, 1));
+        assert_eq!(
+            r.holding_period_resets[1].original_acquisition_date,
+            d(2026, 8, 1)
+        );
         assert_eq!(r.holding_period_resets[1].reason, "§1233(b)(1)(B)");
     }
 
@@ -493,7 +514,8 @@ mod tests {
         // → §1233(b)(1)(A) applies. Not (B), because acquisition wasn't
         // strictly AFTER the short open.
         let mut i = base();
-        i.substantially_identical_held_at_open.push(long(d(2026, 6, 1), 100));
+        i.substantially_identical_held_at_open
+            .push(long(d(2026, 6, 1), 100));
         let r = compute(&i);
         assert_eq!(r.holding_period_resets[0].reason, "§1233(b)(1)(A)");
     }
@@ -502,7 +524,8 @@ mod tests {
     fn empty_during_short_with_short_held_at_open_works() {
         // Only the (A) bucket populated — should still trigger §1233(b).
         let mut i = base();
-        i.substantially_identical_held_at_open.push(long(d(2026, 4, 1), 100));
+        i.substantially_identical_held_at_open
+            .push(long(d(2026, 4, 1), 100));
         let r = compute(&i);
         assert_eq!(r.rule_triggered, Section1233Rule::SubsectionB);
     }
@@ -511,7 +534,8 @@ mod tests {
     fn empty_held_at_open_with_during_short_only_works() {
         // Only the (B) bucket populated — should still trigger §1233(b).
         let mut i = base();
-        i.substantially_identical_acquired_during_short.push(long(d(2026, 7, 1), 100));
+        i.substantially_identical_acquired_during_short
+            .push(long(d(2026, 7, 1), 100));
         let r = compute(&i);
         assert_eq!(r.rule_triggered, Section1233Rule::SubsectionB);
     }
@@ -519,7 +543,8 @@ mod tests {
     #[test]
     fn note_mentions_short_close_date_when_resets_emit() {
         let mut i = base();
-        i.substantially_identical_held_at_open.push(long(d(2026, 4, 1), 100));
+        i.substantially_identical_held_at_open
+            .push(long(d(2026, 4, 1), 100));
         let r = compute(&i);
         assert!(r.note.contains("§1233(b)(1)"));
         assert!(r.note.contains("2026-12-01"));
@@ -529,7 +554,8 @@ mod tests {
     fn note_mentions_loss_amount_when_subsection_d_fires() {
         let mut i = base();
         i.gain_loss_amount = dec!(-1234.56);
-        i.substantially_identical_held_at_open.push(long(d(2016, 1, 1), 100));
+        i.substantially_identical_held_at_open
+            .push(long(d(2016, 1, 1), 100));
         let r = compute(&i);
         assert!(r.note.contains("§1233(d)"));
         assert!(r.note.contains("1234.56"));

@@ -18,7 +18,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum ColumnKind { X, O }
+pub enum ColumnKind {
+    X,
+    O,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Column {
@@ -36,17 +39,13 @@ pub struct PfReport {
     pub columns: Vec<Column>,
 }
 
-pub fn compute(
-    prices: &[f64],
-    box_size: f64,
-    reversal_boxes: usize,
-) -> Option<PfReport> {
-    if prices.is_empty() || !box_size.is_finite() || box_size <= 0.0
-        || reversal_boxes < 2
-    {
+pub fn compute(prices: &[f64], box_size: f64, reversal_boxes: usize) -> Option<PfReport> {
+    if prices.is_empty() || !box_size.is_finite() || box_size <= 0.0 || reversal_boxes < 2 {
         return None;
     }
-    if prices.iter().any(|x| !x.is_finite()) { return None; }
+    if prices.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let mut cols: Vec<Column> = Vec::new();
     // Initialize the first column from the first two distinct boxes.
     let first_box = price_to_box(prices[0], box_size);
@@ -94,7 +93,11 @@ pub fn compute(
         }
     }
     cols.push(current);
-    Some(PfReport { box_size, reversal_boxes, columns: cols })
+    Some(PfReport {
+        box_size,
+        reversal_boxes,
+        columns: cols,
+    })
 }
 
 fn price_to_box(price: f64, box_size: f64) -> i64 {
@@ -115,7 +118,7 @@ mod tests {
         let prices = vec![100.0, 101.0, 102.0];
         assert!(compute(&prices, 0.0, 3).is_none());
         assert!(compute(&prices, -1.0, 3).is_none());
-        assert!(compute(&prices, 1.0, 1).is_none());     // reversal < 2
+        assert!(compute(&prices, 1.0, 1).is_none()); // reversal < 2
         assert!(compute(&prices, f64::NAN, 3).is_none());
     }
 
@@ -174,8 +177,10 @@ mod tests {
         // Both still 1 column, but range of end_box - start_box differs.
         let range_1 = r1.columns[0].end_box - r1.columns[0].start_box;
         let range_5 = r5.columns[0].end_box - r5.columns[0].start_box;
-        assert!(range_1 > range_5,
-            "box=1 produces wider P&F range ({range_1}) than box=5 ({range_5})");
+        assert!(
+            range_1 > range_5,
+            "box=1 produces wider P&F range ({range_1}) than box=5 ({range_5})"
+        );
     }
 
     #[test]

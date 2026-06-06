@@ -19,15 +19,23 @@
 pub fn compute(closes: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = closes.len();
     let mut out = vec![None; n];
-    if period < 3 || n < period { return out; }
-    if closes.iter().any(|x| !x.is_finite()) { return out; }
+    if period < 3 || n < period {
+        return out;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     let p_f = period as f64;
     let x_mean = (p_f - 1.0) / 2.0;
-    let x_var: f64 = (0..period).map(|i| {
-        let dx = i as f64 - x_mean;
-        dx * dx
-    }).sum();
-    if x_var <= 0.0 { return out; }
+    let x_var: f64 = (0..period)
+        .map(|i| {
+            let dx = i as f64 - x_mean;
+            dx * dx
+        })
+        .sum();
+    if x_var <= 0.0 {
+        return out;
+    }
     for (i, slot) in out.iter_mut().enumerate().skip(period - 1) {
         let win = &closes[i + 1 - period..=i];
         let y_mean: f64 = win.iter().sum::<f64>() / p_f;
@@ -75,20 +83,27 @@ mod tests {
         let c: Vec<f64> = (0..50).map(|i| i as f64).collect();
         let r = compute(&c, 14);
         for i in 13..50 {
-            assert!((r[i].unwrap() - c[i]).abs() < 1e-9,
-                "at i={i}: lrc {} != close {}", r[i].unwrap(), c[i]);
+            assert!(
+                (r[i].unwrap() - c[i]).abs() < 1e-9,
+                "at i={i}: lrc {} != close {}",
+                r[i].unwrap(),
+                c[i]
+            );
         }
     }
 
     #[test]
     fn noisy_uptrend_lrc_near_input_range() {
         let mut state: u64 = 42;
-        let c: Vec<f64> = (0..100).map(|i| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
-            100.0 + i as f64 * 0.5 + (r - 0.5) * 4.0
-        }).collect();
+        let c: Vec<f64> = (0..100)
+            .map(|i| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
+                100.0 + i as f64 * 0.5 + (r - 0.5) * 4.0
+            })
+            .collect();
         let r = compute(&c, 14);
         let mn = c.iter().cloned().fold(f64::INFINITY, f64::min);
         let mx = c.iter().cloned().fold(f64::NEG_INFINITY, f64::max);

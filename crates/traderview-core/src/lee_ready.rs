@@ -25,7 +25,11 @@ pub struct TradeWithQuote {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum Direction { Buy, Sell, Unknown }
+pub enum Direction {
+    Buy,
+    Sell,
+    Unknown,
+}
 
 pub fn classify(trades: &[TradeWithQuote]) -> Vec<Direction> {
     let n = trades.len();
@@ -40,9 +44,13 @@ pub fn classify(trades: &[TradeWithQuote]) -> Vec<Direction> {
         let quote_decision = match (t.bid, t.ask) {
             (Some(b), Some(a)) if b.is_finite() && a.is_finite() && a >= b => {
                 let mid = (a + b) / 2.0;
-                if t.price > mid { Some(Direction::Buy) }
-                else if t.price < mid { Some(Direction::Sell) }
-                else { None }
+                if t.price > mid {
+                    Some(Direction::Buy)
+                } else if t.price < mid {
+                    Some(Direction::Sell)
+                } else {
+                    None
+                }
             }
             _ => None,
         };
@@ -53,9 +61,13 @@ pub fn classify(trades: &[TradeWithQuote]) -> Vec<Direction> {
             match last_price {
                 None => Direction::Unknown,
                 Some(prev) if prev.is_finite() => {
-                    if t.price > prev { Direction::Buy }
-                    else if t.price < prev { Direction::Sell }
-                    else { last_direction }
+                    if t.price > prev {
+                        Direction::Buy
+                    } else if t.price < prev {
+                        Direction::Sell
+                    } else {
+                        last_direction
+                    }
                 }
                 Some(_) => Direction::Unknown,
             }
@@ -92,9 +104,17 @@ pub fn summarize(
         let v = volumes[i];
         let v_safe = if v.is_finite() && v >= 0.0 { v } else { 0.0 };
         match d {
-            Direction::Buy => { s.buys += 1; s.buy_volume += v_safe; }
-            Direction::Sell => { s.sells += 1; s.sell_volume += v_safe; }
-            Direction::Unknown => { s.unknown += 1; }
+            Direction::Buy => {
+                s.buys += 1;
+                s.buy_volume += v_safe;
+            }
+            Direction::Sell => {
+                s.sells += 1;
+                s.sell_volume += v_safe;
+            }
+            Direction::Unknown => {
+                s.unknown += 1;
+            }
         }
     }
     s
@@ -105,7 +125,11 @@ mod tests {
     use super::*;
 
     fn t(p: f64, b: Option<f64>, a: Option<f64>) -> TradeWithQuote {
-        TradeWithQuote { price: p, bid: b, ask: a }
+        TradeWithQuote {
+            price: p,
+            bid: b,
+            ask: a,
+        }
     }
 
     #[test]
@@ -130,10 +154,10 @@ mod tests {
     #[test]
     fn tick_rule_used_when_quotes_missing() {
         let trades = vec![
-            t(100.00, None, None),    // unknown — no prior
-            t(100.05, None, None),    // uptick → buy
-            t(100.05, None, None),    // zero-tick → carry buy
-            t(100.00, None, None),    // downtick → sell
+            t(100.00, None, None), // unknown — no prior
+            t(100.05, None, None), // uptick → buy
+            t(100.05, None, None), // zero-tick → carry buy
+            t(100.00, None, None), // downtick → sell
         ];
         let out = classify(&trades);
         assert_eq!(out[0], Direction::Unknown);
@@ -146,9 +170,9 @@ mod tests {
     fn midpoint_trade_falls_through_to_tick_rule() {
         // Trade at midpoint → quote rule None → tick rule decides.
         let trades = vec![
-            t(100.00, Some(99.95), Some(100.05)),     // mid = 100.00 → tick: no prior → unknown
-            t(100.05, Some(100.00), Some(100.10)),    // above mid → buy (quote rule)
-            t(100.05, Some(100.00), Some(100.10)),    // mid = 100.05 → tick: uptick from 100.00 → wait, prev was 100.05 → zero-tick → carry buy
+            t(100.00, Some(99.95), Some(100.05)), // mid = 100.00 → tick: no prior → unknown
+            t(100.05, Some(100.00), Some(100.10)), // above mid → buy (quote rule)
+            t(100.05, Some(100.00), Some(100.10)), // mid = 100.05 → tick: uptick from 100.00 → wait, prev was 100.05 → zero-tick → carry buy
         ];
         let out = classify(&trades);
         // Trade 0: mid trade, no prior price → unknown
@@ -175,7 +199,7 @@ mod tests {
         // bid > ask is malformed; quote rule should reject, tick rule decides.
         let trades = vec![
             t(100.00, None, None),
-            t(100.05, Some(100.10), Some(100.00)),    // crossed: quote rule skips → tick: uptick → buy
+            t(100.05, Some(100.10), Some(100.00)), // crossed: quote rule skips → tick: uptick → buy
         ];
         let out = classify(&trades);
         assert_eq!(out[1], Direction::Buy);
@@ -184,9 +208,9 @@ mod tests {
     #[test]
     fn summarize_counts_correctly() {
         let trades = vec![
-            t(100.10, Some(100.00), Some(100.10)),    // quote-buy at ask
-            t(100.00, Some(100.00), Some(100.10)),    // quote-sell at bid (downtick from 100.10)
-            t(100.05, Some(100.00), Some(100.10)),    // mid → tick: uptick from 100.00 → buy
+            t(100.10, Some(100.00), Some(100.10)), // quote-buy at ask
+            t(100.00, Some(100.00), Some(100.10)), // quote-sell at bid (downtick from 100.10)
+            t(100.05, Some(100.00), Some(100.10)), // mid → tick: uptick from 100.00 → buy
         ];
         let dirs = classify(&trades);
         let vols = vec![100.0, 200.0, 300.0];

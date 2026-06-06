@@ -14,7 +14,10 @@
 //! `multi_leg_option_pricer`.
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum OptionKind { Call, Put }
+pub enum OptionKind {
+    Call,
+    Put,
+}
 
 #[derive(Debug)]
 pub struct Report {
@@ -29,24 +32,50 @@ pub struct Report {
 
 #[allow(clippy::too_many_arguments)]
 pub fn compute(
-    kind: OptionKind, spot: f64, strike: f64,
-    t_years: f64, rate_dom: f64, rate_for: f64, sigma: f64,
+    kind: OptionKind,
+    spot: f64,
+    strike: f64,
+    t_years: f64,
+    rate_dom: f64,
+    rate_for: f64,
+    sigma: f64,
 ) -> Option<Report> {
     let scalars = [spot, strike, t_years, rate_dom, rate_for, sigma];
-    if scalars.iter().any(|x| !x.is_finite()) { return None; }
-    if spot <= 0.0 || strike <= 0.0 || t_years < 0.0 || sigma < 0.0 { return None; }
+    if scalars.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
+    if spot <= 0.0 || strike <= 0.0 || t_years < 0.0 || sigma < 0.0 {
+        return None;
+    }
     if t_years == 0.0 || sigma == 0.0 {
         let intrinsic = match kind {
             OptionKind::Call => (spot - strike).max(0.0),
             OptionKind::Put => (strike - spot).max(0.0),
         };
         let delta = match kind {
-            OptionKind::Call => if spot > strike { 1.0 } else { 0.0 },
-            OptionKind::Put => if spot < strike { -1.0 } else { 0.0 },
+            OptionKind::Call => {
+                if spot > strike {
+                    1.0
+                } else {
+                    0.0
+                }
+            }
+            OptionKind::Put => {
+                if spot < strike {
+                    -1.0
+                } else {
+                    0.0
+                }
+            }
         };
         return Some(Report {
-            price: intrinsic, delta, gamma: 0.0, vega: 0.0,
-            theta: 0.0, rho_domestic: 0.0, rho_foreign: 0.0,
+            price: intrinsic,
+            delta,
+            gamma: 0.0,
+            vega: 0.0,
+            theta: 0.0,
+            rho_domestic: 0.0,
+            rho_foreign: 0.0,
         });
     }
     let st = sigma * t_years.sqrt();
@@ -84,8 +113,13 @@ pub fn compute(
     let gamma = disc_f * pdf_d1 / (spot * st);
     let vega = spot * disc_f * pdf_d1 * t_years.sqrt();
     Some(Report {
-        price, delta, gamma, vega, theta,
-        rho_domestic: rho_d, rho_foreign: rho_f,
+        price,
+        delta,
+        gamma,
+        vega,
+        theta,
+        rho_domestic: rho_d,
+        rho_foreign: rho_f,
     })
 }
 
@@ -129,8 +163,12 @@ mod tests {
     #[test]
     fn put_call_parity_holds() {
         // c - p = S·e^(-r_f·T) - K·e^(-r_d·T)
-        let s = 1.20; let k = 1.15; let t = 0.5;
-        let r_d = 0.04; let r_f = 0.02; let sigma = 0.10;
+        let s = 1.20;
+        let k = 1.15;
+        let t = 0.5;
+        let r_d = 0.04;
+        let r_f = 0.02;
+        let sigma = 0.10;
         let c = compute(OptionKind::Call, s, k, t, r_d, r_f, sigma).unwrap();
         let p = compute(OptionKind::Put, s, k, t, r_d, r_f, sigma).unwrap();
         let parity = s * (-r_f * t).exp() - k * (-r_d * t).exp();

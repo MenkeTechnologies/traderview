@@ -28,7 +28,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum OptionType { Call, Put }
+pub enum OptionType {
+    Call,
+    Put,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ForwardStartReport {
@@ -50,17 +53,31 @@ pub fn price(
     volatility: f64,
     option_type: OptionType,
 ) -> Option<ForwardStartReport> {
-    if !spot.is_finite() || spot <= 0.0
-        || !moneyness_factor_alpha.is_finite() || moneyness_factor_alpha <= 0.0
-        || !time_to_strike_set_years.is_finite() || time_to_strike_set_years < 0.0
-        || !time_strike_to_expiry_years.is_finite() || time_strike_to_expiry_years <= 0.0
-        || !risk_free_rate.is_finite() || !dividend_yield.is_finite()
-        || !volatility.is_finite() || volatility <= 0.0 {
+    if !spot.is_finite()
+        || spot <= 0.0
+        || !moneyness_factor_alpha.is_finite()
+        || moneyness_factor_alpha <= 0.0
+        || !time_to_strike_set_years.is_finite()
+        || time_to_strike_set_years < 0.0
+        || !time_strike_to_expiry_years.is_finite()
+        || time_strike_to_expiry_years <= 0.0
+        || !risk_free_rate.is_finite()
+        || !dividend_yield.is_finite()
+        || !volatility.is_finite()
+        || volatility <= 0.0
+    {
         return None;
     }
     // BS price for spot=1, strike=α, time=t₂, rates r/q, vol σ.
-    let bs_unit = black_scholes(1.0, moneyness_factor_alpha,
-        time_strike_to_expiry_years, risk_free_rate, dividend_yield, volatility, option_type);
+    let bs_unit = black_scholes(
+        1.0,
+        moneyness_factor_alpha,
+        time_strike_to_expiry_years,
+        risk_free_rate,
+        dividend_yield,
+        volatility,
+        option_type,
+    );
     let discount_to_strike_set = (-dividend_yield * time_to_strike_set_years).exp();
     let pv = spot * discount_to_strike_set * bs_unit;
     Some(ForwardStartReport {
@@ -72,9 +89,7 @@ pub fn price(
     })
 }
 
-fn black_scholes(
-    s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64, opt: OptionType,
-) -> f64 {
+fn black_scholes(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64, opt: OptionType) -> f64 {
     let sigma_sqrt_t = sigma * t.sqrt();
     if sigma_sqrt_t <= 0.0 {
         return match opt {
@@ -85,10 +100,8 @@ fn black_scholes(
     let d1 = ((s / k).ln() + (r - q + 0.5 * sigma * sigma) * t) / sigma_sqrt_t;
     let d2 = d1 - sigma_sqrt_t;
     match opt {
-        OptionType::Call => s * (-q * t).exp() * norm_cdf(d1)
-            - k * (-r * t).exp() * norm_cdf(d2),
-        OptionType::Put => k * (-r * t).exp() * norm_cdf(-d2)
-            - s * (-q * t).exp() * norm_cdf(-d1),
+        OptionType::Call => s * (-q * t).exp() * norm_cdf(d1) - k * (-r * t).exp() * norm_cdf(d2),
+        OptionType::Put => k * (-r * t).exp() * norm_cdf(-d2) - s * (-q * t).exp() * norm_cdf(-d1),
     }
 }
 
@@ -99,8 +112,11 @@ fn erf(x: f64) -> f64 {
     let sign = if x < 0.0 { -1.0 } else { 1.0 };
     let x = x.abs();
     let t = 1.0 / (1.0 + 0.327_591_1 * x);
-    let y = 1.0 - (((((1.061_405_429 * t - 1.453_152_027) * t)
-        + 1.421_413_741) * t - 0.284_496_736) * t + 0.254_829_592) * t * (-x * x).exp();
+    let y = 1.0
+        - (((((1.061_405_429 * t - 1.453_152_027) * t) + 1.421_413_741) * t - 0.284_496_736) * t
+            + 0.254_829_592)
+            * t
+            * (-x * x).exp();
     sign * y
 }
 

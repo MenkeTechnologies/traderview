@@ -20,7 +20,12 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub open: f64, pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct BalanceOfPowerReport {
@@ -34,11 +39,20 @@ pub fn compute(bars: &[Bar], smoothing_period: usize) -> BalanceOfPowerReport {
     let mut raw = vec![None; n];
     let mut smoothed = vec![None; n];
     if n == 0 || smoothing_period == 0 {
-        return BalanceOfPowerReport { raw_bop: raw, smoothed_bop: smoothed, smoothing_period };
+        return BalanceOfPowerReport {
+            raw_bop: raw,
+            smoothed_bop: smoothed,
+            smoothing_period,
+        };
     }
-    if bars.iter().any(|b| !b.open.is_finite() || !b.high.is_finite()
-        || !b.low.is_finite() || !b.close.is_finite()) {
-        return BalanceOfPowerReport { raw_bop: raw, smoothed_bop: smoothed, smoothing_period };
+    if bars.iter().any(|b| {
+        !b.open.is_finite() || !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()
+    }) {
+        return BalanceOfPowerReport {
+            raw_bop: raw,
+            smoothed_bop: smoothed,
+            smoothing_period,
+        };
     }
     for (i, bar) in bars.iter().enumerate() {
         let range = bar.high - bar.low;
@@ -57,14 +71,25 @@ pub fn compute(bars: &[Bar], smoothing_period: usize) -> BalanceOfPowerReport {
     } else {
         smoothed = raw.clone();
     }
-    BalanceOfPowerReport { raw_bop: raw, smoothed_bop: smoothed, smoothing_period }
+    BalanceOfPowerReport {
+        raw_bop: raw,
+        smoothed_bop: smoothed,
+        smoothing_period,
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn b(o: f64, h: f64, l: f64, c: f64) -> Bar { Bar { open: o, high: h, low: l, close: c } }
+    fn b(o: f64, h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn empty_returns_empty_outputs() {
@@ -119,9 +144,9 @@ mod tests {
     #[test]
     fn smoothed_bop_is_sma_of_raw() {
         let bars = vec![
-            b(99.0, 101.0, 99.0, 101.0),     // +1
-            b(101.0, 101.0, 99.0, 99.0),     // -1
-            b(100.0, 101.0, 99.0, 100.0),    // 0
+            b(99.0, 101.0, 99.0, 101.0),  // +1
+            b(101.0, 101.0, 99.0, 99.0),  // -1
+            b(100.0, 101.0, 99.0, 100.0), // 0
         ];
         let r = compute(&bars, 3);
         // Average of +1, -1, 0 = 0.

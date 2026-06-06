@@ -18,7 +18,12 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub open: f64, pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct KickerReport {
@@ -32,16 +37,23 @@ pub fn compute(bars: &[Bar]) -> KickerReport {
         bullish: vec![false; n],
         bearish: vec![false; n],
     };
-    if n < 2 { return report; }
-    if bars.iter().any(|b| !b.open.is_finite() || !b.high.is_finite()
-        || !b.low.is_finite() || !b.close.is_finite()) {
+    if n < 2 {
+        return report;
+    }
+    if bars.iter().any(|b| {
+        !b.open.is_finite() || !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()
+    }) {
         return report;
     }
     for i in 1..n {
         let prev = bars[i - 1];
         let cur = bars[i];
-        if is_bullish_kicker(prev, cur) { report.bullish[i] = true; }
-        if is_bearish_kicker(prev, cur) { report.bearish[i] = true; }
+        if is_bullish_kicker(prev, cur) {
+            report.bullish[i] = true;
+        }
+        if is_bearish_kicker(prev, cur) {
+            report.bearish[i] = true;
+        }
     }
     report
 }
@@ -54,20 +66,36 @@ fn is_full_body(b: Bar) -> bool {
 
 fn is_bullish_kicker(prev: Bar, cur: Bar) -> bool {
     // Bar 1 bearish.
-    if prev.close >= prev.open { return false; }
-    if !is_full_body(prev) { return false; }
+    if prev.close >= prev.open {
+        return false;
+    }
+    if !is_full_body(prev) {
+        return false;
+    }
     // Bar 2 bullish.
-    if cur.close <= cur.open { return false; }
-    if !is_full_body(cur) { return false; }
+    if cur.close <= cur.open {
+        return false;
+    }
+    if !is_full_body(cur) {
+        return false;
+    }
     // Gap above prior body (open > prev.open, full skip over body).
     cur.open >= prev.open && cur.low >= prev.open
 }
 
 fn is_bearish_kicker(prev: Bar, cur: Bar) -> bool {
-    if prev.close <= prev.open { return false; }
-    if !is_full_body(prev) { return false; }
-    if cur.close >= cur.open { return false; }
-    if !is_full_body(cur) { return false; }
+    if prev.close <= prev.open {
+        return false;
+    }
+    if !is_full_body(prev) {
+        return false;
+    }
+    if cur.close >= cur.open {
+        return false;
+    }
+    if !is_full_body(cur) {
+        return false;
+    }
     cur.open <= prev.open && cur.high <= prev.open
 }
 
@@ -76,7 +104,12 @@ mod tests {
     use super::*;
 
     fn bar(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -89,8 +122,10 @@ mod tests {
 
     #[test]
     fn nan_returns_empty() {
-        let bars = vec![bar(100.0, 101.0, 99.0, 100.0),
-                        bar(f64::NAN, 101.0, 99.0, 100.5)];
+        let bars = vec![
+            bar(100.0, 101.0, 99.0, 100.0),
+            bar(f64::NAN, 101.0, 99.0, 100.5),
+        ];
         let r = compute(&bars);
         assert!(!r.bullish.iter().any(|x| *x));
     }
@@ -109,10 +144,7 @@ mod tests {
 
     #[test]
     fn bearish_kicker_detected() {
-        let bars = vec![
-            bar(100.0, 110.0, 100.0, 110.0),
-            bar(95.0, 95.0, 85.0, 85.0),
-        ];
+        let bars = vec![bar(100.0, 110.0, 100.0, 110.0), bar(95.0, 95.0, 85.0, 85.0)];
         let r = compute(&bars);
         assert!(r.bearish[1]);
     }
@@ -122,7 +154,7 @@ mod tests {
         // Bar 2 opens above bar 1.open but bar 2.low < bar 1.open → overlap.
         let bars = vec![
             bar(110.0, 110.0, 100.0, 100.0),
-            bar(115.0, 125.0, 108.0, 125.0),    // low 108 < 110
+            bar(115.0, 125.0, 108.0, 125.0), // low 108 < 110
         ];
         let r = compute(&bars);
         assert!(!r.bullish[1]);
@@ -132,7 +164,7 @@ mod tests {
     fn small_body_rejects_kicker() {
         let bars = vec![
             bar(110.0, 110.5, 99.5, 100.0),
-            bar(115.0, 125.0, 115.0, 117.0),    // body 2 of range 10 = 20%
+            bar(115.0, 125.0, 115.0, 117.0), // body 2 of range 10 = 20%
         ];
         let r = compute(&bars);
         assert!(!r.bullish[1]);

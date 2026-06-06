@@ -164,8 +164,8 @@ pub fn check(input: &Input) -> Output {
         };
     }
 
-    let built_in = (input.fair_market_value_at_contribution_cents as i128)
-        - (correct_inside_basis as i128);
+    let built_in =
+        (input.fair_market_value_at_contribution_cents as i128) - (correct_inside_basis as i128);
 
     let severity = if input.section_721b_gain_recognized_cents > 0 {
         notes.push(format!(

@@ -204,7 +204,10 @@ pub fn check(input: &Input) -> CheckResult {
     };
 
     // Location must be tenant-exclusive use.
-    let covered_location = matches!(input.installation_location, InstallationLocation::TenantExclusiveUse);
+    let covered_location = matches!(
+        input.installation_location,
+        InstallationLocation::TenantExclusiveUse
+    );
     if !covered_location && covered_antenna_type {
         notes.push(
             "Installation location is in a common area (shared rooftop, exterior wall, \
@@ -362,7 +365,10 @@ mod tests {
 
     #[test]
     fn dbs_satellite_dish_on_patio_protected() {
-        let r = check(&base(AntennaType::DBS, InstallationLocation::TenantExclusiveUse));
+        let r = check(&base(
+            AntennaType::DBS,
+            InstallationLocation::TenantExclusiveUse,
+        ));
         assert!(r.otard_protected);
         assert!(r.restriction_permissible);
         assert!(r.burden_of_proof_on_restricting_party);
@@ -371,7 +377,10 @@ mod tests {
 
     #[test]
     fn mmds_antenna_on_balcony_protected() {
-        let r = check(&base(AntennaType::MMDS, InstallationLocation::TenantExclusiveUse));
+        let r = check(&base(
+            AntennaType::MMDS,
+            InstallationLocation::TenantExclusiveUse,
+        ));
         assert!(r.otard_protected);
     }
 
@@ -392,11 +401,10 @@ mod tests {
         ));
         assert!(!r.otard_protected);
         assert!(!r.burden_of_proof_on_restricting_party);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("outside the OTARD rule scope"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("outside the OTARD rule scope")));
     }
 
     // ── 2021 fixed-wireless expansion ───────────────────────────
@@ -420,11 +428,10 @@ mod tests {
         i.fixed_wireless_serves_on_premises_customer = false;
         let r = check(&i);
         assert!(!r.otard_protected);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("on-premises-customer requirement is not satisfied"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("on-premises-customer requirement is not satisfied")));
     }
 
     #[test]
@@ -436,11 +443,10 @@ mod tests {
         i.fixed_wireless_broadband_only = false;
         let r = check(&i);
         assert!(!r.otard_protected);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("broadband-only requirement is not satisfied"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("broadband-only requirement is not satisfied")));
     }
 
     // ── § 1.4000(a)(2) tenant-exclusive-use scope ───────────────
@@ -449,11 +455,10 @@ mod tests {
     fn common_area_installation_not_protected() {
         let r = check(&base(AntennaType::DBS, InstallationLocation::CommonArea));
         assert!(!r.otard_protected);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("common area") && n.contains("OUTSIDE"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("common area") && n.contains("OUTSIDE")));
     }
 
     #[test]
@@ -482,11 +487,7 @@ mod tests {
         let r = check(&i);
         assert!(r.otard_protected);
         assert!(r.restriction_permissible);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1.4000(b)(1) safety"))
-        );
+        assert!(r.notes.iter().any(|n| n.contains("§ 1.4000(b)(1) safety")));
     }
 
     #[test]
@@ -496,11 +497,10 @@ mod tests {
         i.restriction_unreasonably_delays = true;
         let r = check(&i);
         assert!(!r.restriction_permissible);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("no-impairment standard") && v.contains("delay"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("no-impairment standard") && v.contains("delay")));
     }
 
     #[test]
@@ -527,11 +527,10 @@ mod tests {
         i.restriction_type = RestrictionType::HistoricPreservation;
         let r = check(&i);
         assert!(r.restriction_permissible);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1.4000(b)(2) historic-preservation"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1.4000(b)(2) historic-preservation")));
     }
 
     #[test]
@@ -549,11 +548,10 @@ mod tests {
         i.restriction_type = RestrictionType::Aesthetic;
         let r = check(&i);
         assert!(!r.restriction_permissible);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("aesthetic") && v.contains("NOT permissible"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("aesthetic") && v.contains("NOT permissible")));
     }
 
     #[test]
@@ -562,11 +560,10 @@ mod tests {
         i.restriction_type = RestrictionType::BlanketProhibition;
         let r = check(&i);
         assert!(!r.restriction_permissible);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("blanket prohibitions") && v.contains("NOT permissible"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("blanket prohibitions") && v.contains("NOT permissible")));
     }
 
     #[test]
@@ -575,18 +572,20 @@ mod tests {
         i.restriction_type = RestrictionType::PreApprovalDelay;
         let r = check(&i);
         assert!(!r.restriction_permissible);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("pre-installation approval") && v.contains("delay"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("pre-installation approval") && v.contains("delay")));
     }
 
     // ── § 1.4000(c) burden of proof ─────────────────────────────
 
     #[test]
     fn burden_on_restricting_party_when_otard_protected() {
-        let r = check(&base(AntennaType::DBS, InstallationLocation::TenantExclusiveUse));
+        let r = check(&base(
+            AntennaType::DBS,
+            InstallationLocation::TenantExclusiveUse,
+        ));
         assert!(r.burden_of_proof_on_restricting_party);
     }
 
@@ -620,8 +619,7 @@ mod tests {
                 assert!(
                     !r.restriction_permissible,
                     "{:?} + {:?}: must not be permissible",
-                    at,
-                    rt,
+                    at, rt,
                 );
             }
         }
@@ -722,7 +720,10 @@ mod tests {
 
     #[test]
     fn no_restriction_path_compliant_when_protected() {
-        let r = check(&base(AntennaType::DBS, InstallationLocation::TenantExclusiveUse));
+        let r = check(&base(
+            AntennaType::DBS,
+            InstallationLocation::TenantExclusiveUse,
+        ));
         assert!(r.otard_protected);
         assert!(r.restriction_permissible);
         assert!(r.violations.is_empty());

@@ -42,23 +42,40 @@ pub fn fair_strike(
     time_to_expiry: f64,
     quotes: &[OptionQuote],
 ) -> Option<VarianceSwapReport> {
-    if !spot.is_finite() || spot <= 0.0
+    if !spot.is_finite()
+        || spot <= 0.0
         || !risk_free.is_finite()
-        || !time_to_expiry.is_finite() || time_to_expiry <= 0.0
+        || !time_to_expiry.is_finite()
+        || time_to_expiry <= 0.0
         || quotes.len() < 2
     {
         return None;
     }
     // Sort by strike + dedup; reject non-finite or non-positive strikes/prices.
-    let mut qs: Vec<OptionQuote> = quotes.iter().copied()
-        .filter(|q| q.strike.is_finite() && q.strike > 0.0
-            && q.put_price.is_finite() && q.put_price >= 0.0
-            && q.call_price.is_finite() && q.call_price >= 0.0)
+    let mut qs: Vec<OptionQuote> = quotes
+        .iter()
+        .copied()
+        .filter(|q| {
+            q.strike.is_finite()
+                && q.strike > 0.0
+                && q.put_price.is_finite()
+                && q.put_price >= 0.0
+                && q.call_price.is_finite()
+                && q.call_price >= 0.0
+        })
         .collect();
-    if qs.len() < 2 { return None; }
-    qs.sort_by(|a, b| a.strike.partial_cmp(&b.strike).unwrap_or(std::cmp::Ordering::Equal));
+    if qs.len() < 2 {
+        return None;
+    }
+    qs.sort_by(|a, b| {
+        a.strike
+            .partial_cmp(&b.strike)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     qs.dedup_by(|a, b| a.strike == b.strike);
-    if qs.len() < 2 { return None; }
+    if qs.len() < 2 {
+        return None;
+    }
     // Cutoff S* = closest strike at or below spot — caller picked the strip.
     let s_star_idx = qs.iter().rposition(|q| q.strike <= spot).unwrap_or(0);
     let s_star = qs[s_star_idx].strike;
@@ -69,9 +86,7 @@ pub fn fair_strike(
     let strip = 2.0 * exp_rt / time_to_expiry * (put_integral + call_integral);
     // Constant terms (cash-and-carry adjustment).
     let constant = (2.0 / time_to_expiry)
-        * (risk_free * time_to_expiry
-            - (spot * exp_rt / s_star - 1.0)
-            - (s_star / spot).ln());
+        * (risk_free * time_to_expiry - (spot * exp_rt / s_star - 1.0) - (s_star / spot).ln());
     let fair_var = constant + strip;
     if !fair_var.is_finite() || fair_var < 0.0 {
         return None;
@@ -86,7 +101,9 @@ pub fn fair_strike(
 }
 
 fn trapezoid<F: Fn(&OptionQuote) -> f64>(qs: &[OptionQuote], f: F) -> f64 {
-    if qs.len() < 2 { return 0.0; }
+    if qs.len() < 2 {
+        return 0.0;
+    }
     let mut sum = 0.0_f64;
     for w in qs.windows(2) {
         let (a, b) = (&w[0], &w[1]);
@@ -102,7 +119,11 @@ mod tests {
     use super::*;
 
     fn q(k: f64, p: f64, c: f64) -> OptionQuote {
-        OptionQuote { strike: k, put_price: p, call_price: c }
+        OptionQuote {
+            strike: k,
+            put_price: p,
+            call_price: c,
+        }
     }
 
     #[test]
@@ -124,7 +145,10 @@ mod tests {
     fn flat_option_strip_yields_finite_estimate() {
         // 11 strikes at 90..110 with put/call prices of 1.0 each — degenerate
         // but should still produce a finite (positive) variance.
-        let qs: Vec<OptionQuote> = (90..=110).step_by(2).map(|k| q(k as f64, 1.0, 1.0)).collect();
+        let qs: Vec<OptionQuote> = (90..=110)
+            .step_by(2)
+            .map(|k| q(k as f64, 1.0, 1.0))
+            .collect();
         let r = fair_strike(100.0, 0.05, 0.25, &qs).unwrap();
         assert!(r.fair_variance > 0.0);
         assert!(r.fair_vol > 0.0);
@@ -141,8 +165,12 @@ mod tests {
     #[test]
     fn strike_strip_more_concentrated_around_spot_yields_more_accurate_estimate() {
         // Two scenarios with the same total strike range, different density.
-        let dense: Vec<OptionQuote> = (95..=105).step_by(1).map(|k| q(k as f64, 1.0, 1.0)).collect();
-        let sparse: Vec<OptionQuote> = vec![q(95.0, 1.0, 1.0), q(100.0, 1.0, 1.0), q(105.0, 1.0, 1.0)];
+        let dense: Vec<OptionQuote> = (95..=105)
+            .step_by(1)
+            .map(|k| q(k as f64, 1.0, 1.0))
+            .collect();
+        let sparse: Vec<OptionQuote> =
+            vec![q(95.0, 1.0, 1.0), q(100.0, 1.0, 1.0), q(105.0, 1.0, 1.0)];
         let r_dense = fair_strike(100.0, 0.05, 0.25, &dense).unwrap();
         let r_sparse = fair_strike(100.0, 0.05, 0.25, &sparse).unwrap();
         // Both should be finite — denser strip generally produces slightly different value.
@@ -153,8 +181,14 @@ mod tests {
     #[test]
     fn fair_variance_grows_with_option_prices() {
         // Double the option prices → roughly double the strip integral → larger variance.
-        let qs_cheap: Vec<OptionQuote> = (90..=110).step_by(2).map(|k| q(k as f64, 0.5, 0.5)).collect();
-        let qs_expensive: Vec<OptionQuote> = (90..=110).step_by(2).map(|k| q(k as f64, 5.0, 5.0)).collect();
+        let qs_cheap: Vec<OptionQuote> = (90..=110)
+            .step_by(2)
+            .map(|k| q(k as f64, 0.5, 0.5))
+            .collect();
+        let qs_expensive: Vec<OptionQuote> = (90..=110)
+            .step_by(2)
+            .map(|k| q(k as f64, 5.0, 5.0))
+            .collect();
         let r_cheap = fair_strike(100.0, 0.05, 0.25, &qs_cheap).unwrap();
         let r_expensive = fair_strike(100.0, 0.05, 0.25, &qs_expensive).unwrap();
         assert!(r_expensive.fair_variance > r_cheap.fair_variance);
@@ -162,7 +196,10 @@ mod tests {
 
     #[test]
     fn put_strip_contribution_separable() {
-        let qs: Vec<OptionQuote> = (90..=110).step_by(2).map(|k| q(k as f64, 1.0, 0.5)).collect();
+        let qs: Vec<OptionQuote> = (90..=110)
+            .step_by(2)
+            .map(|k| q(k as f64, 1.0, 0.5))
+            .collect();
         let r = fair_strike(100.0, 0.05, 0.25, &qs).unwrap();
         assert!(r.put_strip_contribution > 0.0);
         assert!(r.call_strip_contribution > 0.0);

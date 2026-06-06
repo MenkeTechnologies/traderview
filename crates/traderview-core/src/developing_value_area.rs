@@ -15,7 +15,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub volume: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub volume: f64,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Default)]
 pub struct DevelopingPoint {
@@ -32,30 +36,36 @@ pub struct DevelopingValueAreaReport {
     pub value_area_pct: f64,
 }
 
-pub fn compute(
-    bars: &[Bar],
-    num_bins: usize,
-    value_area_pct: f64,
-) -> DevelopingValueAreaReport {
+pub fn compute(bars: &[Bar], num_bins: usize, value_area_pct: f64) -> DevelopingValueAreaReport {
     let n = bars.len();
     let mut report = DevelopingValueAreaReport {
         per_bar: vec![DevelopingPoint::default(); n],
         num_bins,
         value_area_pct,
     };
-    if n == 0 || num_bins < 2
-        || !value_area_pct.is_finite() || !(1.0..=99.9).contains(&value_area_pct) {
+    if n == 0
+        || num_bins < 2
+        || !value_area_pct.is_finite()
+        || !(1.0..=99.9).contains(&value_area_pct)
+    {
         return report;
     }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite()
-        || !b.volume.is_finite() || b.volume < 0.0 || b.high < b.low) {
+    if bars.iter().any(|b| {
+        !b.high.is_finite()
+            || !b.low.is_finite()
+            || !b.volume.is_finite()
+            || b.volume < 0.0
+            || b.high < b.low
+    }) {
         return report;
     }
     // Session-wide bin range fixed by overall min/max for stability.
     let min_price = bars.iter().fold(f64::INFINITY, |a, b| a.min(b.low));
     let max_price = bars.iter().fold(f64::NEG_INFINITY, |a, b| a.max(b.high));
     let bin_size = (max_price - min_price) / num_bins as f64;
-    if bin_size <= 0.0 { return report; }
+    if bin_size <= 0.0 {
+        return report;
+    }
     let mut bin_volumes = vec![0.0_f64; num_bins];
     let mut cumulative = 0.0_f64;
     for (i, bar) in bars.iter().enumerate() {
@@ -72,7 +82,9 @@ pub fn compute(
         }
         cumulative += bar.volume;
         // Find POC.
-        let poc_idx = bin_volumes.iter().enumerate()
+        let poc_idx = bin_volumes
+            .iter()
+            .enumerate()
             .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
             .map(|(i, _)| i);
         if let Some(poc) = poc_idx {
@@ -83,12 +95,26 @@ pub fn compute(
             let mut hi = poc;
             while accum < target && (lo > 0 || hi + 1 < bin_volumes.len()) {
                 let lo_vol = if lo > 0 { bin_volumes[lo - 1] } else { -1.0 };
-                let hi_vol = if hi + 1 < bin_volumes.len() { bin_volumes[hi + 1] } else { -1.0 };
+                let hi_vol = if hi + 1 < bin_volumes.len() {
+                    bin_volumes[hi + 1]
+                } else {
+                    -1.0
+                };
                 if hi_vol >= lo_vol {
-                    if hi + 1 < bin_volumes.len() { hi += 1; accum += bin_volumes[hi]; }
-                    else if lo > 0 { lo -= 1; accum += bin_volumes[lo]; }
-                } else if lo > 0 { lo -= 1; accum += bin_volumes[lo]; }
-                else if hi + 1 < bin_volumes.len() { hi += 1; accum += bin_volumes[hi]; }
+                    if hi + 1 < bin_volumes.len() {
+                        hi += 1;
+                        accum += bin_volumes[hi];
+                    } else if lo > 0 {
+                        lo -= 1;
+                        accum += bin_volumes[lo];
+                    }
+                } else if lo > 0 {
+                    lo -= 1;
+                    accum += bin_volumes[lo];
+                } else if hi + 1 < bin_volumes.len() {
+                    hi += 1;
+                    accum += bin_volumes[hi];
+                }
             }
             report.per_bar[i] = DevelopingPoint {
                 poc: Some(min_price + bin_size * (poc as f64 + 0.5)),
@@ -105,7 +131,13 @@ pub fn compute(
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, v: f64) -> Bar { Bar { high: h, low: l, volume: v } }
+    fn b(h: f64, l: f64, v: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            volume: v,
+        }
+    }
 
     #[test]
     fn empty_or_invalid_returns_empty() {
@@ -127,7 +159,7 @@ mod tests {
     fn poc_developed_per_bar() {
         let bars = vec![
             b(101.0, 100.0, 1000.0),
-            b(105.0, 100.0, 5000.0),    // higher volume at higher prices
+            b(105.0, 100.0, 5000.0), // higher volume at higher prices
             b(110.0, 105.0, 1000.0),
         ];
         let r = compute(&bars, 10, 70.0);
@@ -140,7 +172,8 @@ mod tests {
         let bars = vec![b(110.0, 100.0, 1000.0); 10];
         let r = compute(&bars, 10, 70.0);
         for p in &r.per_bar {
-            if let (Some(poc), Some(vah), Some(val)) = (p.poc, p.value_area_high, p.value_area_low) {
+            if let (Some(poc), Some(vah), Some(val)) = (p.poc, p.value_area_high, p.value_area_low)
+            {
                 assert!(val <= poc + 1e-9 && poc <= vah + 1e-9);
             }
         }

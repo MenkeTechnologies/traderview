@@ -118,8 +118,8 @@ fn threshold_for_year(year: i32) -> Decimal {
 pub fn compute(input: &Section461lInput) -> Section461lResult {
     // §461(l) applies only to noncorporate taxpayers in tax years 2021+
     // (CARES Act suspended for 2018-2020).
-    let applies = matches!(input.taxpayer_kind, TaxpayerKind::Noncorporate)
-        && input.tax_year >= 2021;
+    let applies =
+        matches!(input.taxpayer_kind, TaxpayerKind::Noncorporate) && input.tax_year >= 2021;
 
     if !applies {
         return Section461lResult {
@@ -130,7 +130,8 @@ pub fn compute(input: &Section461lInput) -> Section461lResult {
             allowed_loss_deduction: input.aggregate_business_deductions_after_prior_limits,
             limit_binding: false,
             note: if matches!(input.taxpayer_kind, TaxpayerKind::Ccorporation) {
-                "§461(l) does NOT apply — C-corporation; corporate loss treatment under §172 only".into()
+                "§461(l) does NOT apply — C-corporation; corporate loss treatment under §172 only"
+                    .into()
             } else if input.tax_year < 2021 {
                 format!(
                     "§461(l) suspended for {} (CARES Act §2304 suspended 2018-2020 + statute first effective 2021)",
@@ -257,7 +258,10 @@ mod tests {
         assert_eq!(single_2026, dec!(256_000));
         assert_eq!(single_2025 - single_2026, dec!(57_000));
         // MFJ delta is 2× single delta.
-        assert_eq!((single_2025 - single_2026) * Decimal::from(2), dec!(114_000));
+        assert_eq!(
+            (single_2025 - single_2026) * Decimal::from(2),
+            dec!(114_000)
+        );
     }
 
     #[test]

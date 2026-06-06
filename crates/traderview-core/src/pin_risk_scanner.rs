@@ -25,7 +25,7 @@ pub struct Contract {
     pub spot: f64,
     pub days_to_expiry: f64,
     pub open_interest: u64,
-    pub kind: String,           // "call" / "put" — free-form, passed through
+    pub kind: String, // "call" / "put" — free-form, passed through
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -68,11 +68,19 @@ pub fn scan(contracts: &[Contract], config: Config) -> Vec<Match> {
         if !c.strike.is_finite() || !c.spot.is_finite() || !c.days_to_expiry.is_finite() {
             continue;
         }
-        if c.spot <= 0.0 || c.strike <= 0.0 { continue; }
-        if c.days_to_expiry < 0.0 || c.days_to_expiry > config.max_days_to_expiry { continue; }
-        if c.open_interest < config.min_open_interest { continue; }
+        if c.spot <= 0.0 || c.strike <= 0.0 {
+            continue;
+        }
+        if c.days_to_expiry < 0.0 || c.days_to_expiry > config.max_days_to_expiry {
+            continue;
+        }
+        if c.open_interest < config.min_open_interest {
+            continue;
+        }
         let distance_pct = (c.spot - c.strike).abs() / c.spot * 100.0;
-        if distance_pct > config.atm_band_pct { continue; }
+        if distance_pct > config.atm_band_pct {
+            continue;
+        }
         let band_norm = distance_pct / config.atm_band_pct;
         let proximity = 1.0 - band_norm;
         let oi_factor = ((c.open_interest as f64) + 1.0).log10();
@@ -87,7 +95,11 @@ pub fn scan(contracts: &[Contract], config: Config) -> Vec<Match> {
             score,
         });
     }
-    matches.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+    matches.sort_by(|a, b| {
+        b.score
+            .partial_cmp(&a.score)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     matches
 }
 
@@ -97,8 +109,12 @@ mod tests {
 
     fn c(sym: &str, k: f64, s: f64, dte: f64, oi: u64, kind: &str) -> Contract {
         Contract {
-            symbol: sym.into(), strike: k, spot: s,
-            days_to_expiry: dte, open_interest: oi, kind: kind.into(),
+            symbol: sym.into(),
+            strike: k,
+            spot: s,
+            days_to_expiry: dte,
+            open_interest: oi,
+            kind: kind.into(),
         }
     }
 
@@ -155,7 +171,7 @@ mod tests {
     fn matches_sorted_by_score_descending() {
         // Two pin candidates: one perfectly at strike + high OI, one slightly off + lower OI.
         let strong = c("STRONG", 100.0, 100.0, 0.1, 10_000, "call");
-        let weak   = c("WEAK",   100.5, 100.0, 0.5, 1_000, "call");
+        let weak = c("WEAK", 100.5, 100.0, 0.5, 1_000, "call");
         let r = scan(&[weak, strong], Config::default());
         assert_eq!(r.len(), 2);
         assert!(r[0].score >= r[1].score);

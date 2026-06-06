@@ -37,13 +37,20 @@ pub struct ExpansionConfig {
 
 impl Default for ExpansionConfig {
     fn default() -> Self {
-        Self { lookback: 5, min_expansion_atrs: 1.5, prior_atr_max: 0.7 }
+        Self {
+            lookback: 5,
+            min_expansion_atrs: 1.5,
+            prior_atr_max: 0.7,
+        }
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum ExpansionDirection { Up, Down }
+pub enum ExpansionDirection {
+    Up,
+    Down,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct ExpansionEvent {
@@ -67,7 +74,9 @@ pub fn detect(bars: &[OhlcBar], atr: &[f64], cfg: &ExpansionConfig) -> Expansion
     let mut events = Vec::new();
     let prior_close = |i: usize| -> f64 { bars[i - 1].close };
     let true_range = |i: usize| -> f64 {
-        if i == 0 { bars[0].high - bars[0].low } else {
+        if i == 0 {
+            bars[0].high - bars[0].low
+        } else {
             let pc = prior_close(i);
             let a = bars[i].high - bars[i].low;
             let b = (bars[i].high - pc).abs();
@@ -77,9 +86,13 @@ pub fn detect(bars: &[OhlcBar], atr: &[f64], cfg: &ExpansionConfig) -> Expansion
     };
     for i in cfg.lookback..n {
         let a = atr[i];
-        if !(a.is_finite() && a > 0.0) { continue; }
+        if !(a.is_finite() && a > 0.0) {
+            continue;
+        }
         let cur_range = true_range(i);
-        if cur_range / a < cfg.min_expansion_atrs { continue; }
+        if cur_range / a < cfg.min_expansion_atrs {
+            continue;
+        }
         // Look back for compression.
         let mut compressed = 0usize;
         for (j, &a_j) in atr.iter().enumerate().take(i).skip(i - cfg.lookback) {
@@ -90,14 +103,17 @@ pub fn detect(bars: &[OhlcBar], atr: &[f64], cfg: &ExpansionConfig) -> Expansion
                 }
             }
         }
-        if compressed == 0 { continue; }
+        if compressed == 0 {
+            continue;
+        }
         let direction = if bars[i].close >= bars[i - 1].close {
             ExpansionDirection::Up
         } else {
             ExpansionDirection::Down
         };
         events.push(ExpansionEvent {
-            bar_index: i, direction,
+            bar_index: i,
+            direction,
             range_atrs: cur_range / a,
             compressed_bars_in_lookback: compressed,
         });
@@ -110,7 +126,13 @@ pub fn detect(bars: &[OhlcBar], atr: &[f64], cfg: &ExpansionConfig) -> Expansion
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> OhlcBar { OhlcBar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> OhlcBar {
+        OhlcBar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn empty_input_returns_no_events() {
@@ -121,7 +143,7 @@ mod tests {
     #[test]
     fn mismatched_atr_returns_no_events() {
         let bars = vec![b(100.0, 99.0, 99.5); 10];
-        let atr  = vec![1.0; 5];
+        let atr = vec![1.0; 5];
         let r = detect(&bars, &atr, &ExpansionConfig::default());
         assert!(r.events.is_empty());
     }
@@ -163,7 +185,7 @@ mod tests {
     #[test]
     fn down_direction_when_close_falls() {
         let mut bars: Vec<OhlcBar> = (0..5).map(|_| b(100.5, 100.0, 100.3)).collect();
-        bars.push(b(100.5, 98.0, 98.5));    // wide range, close DOWN
+        bars.push(b(100.5, 98.0, 98.5)); // wide range, close DOWN
         let atr: Vec<f64> = bars.iter().map(|_| 1.0).collect();
         let r = detect(&bars, &atr, &ExpansionConfig::default());
         assert!(matches!(r.events[0].direction, ExpansionDirection::Down));
@@ -172,7 +194,7 @@ mod tests {
     #[test]
     fn zero_atr_skipped_safely() {
         let bars = vec![b(100.0, 99.0, 99.5); 10];
-        let atr  = vec![0.0; 10];
+        let atr = vec![0.0; 10];
         let r = detect(&bars, &atr, &ExpansionConfig::default());
         assert!(r.events.is_empty());
     }

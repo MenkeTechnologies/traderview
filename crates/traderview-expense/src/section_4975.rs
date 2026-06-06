@@ -252,10 +252,7 @@ pub fn check(input: &Section4975Input) -> Section4975Result {
         CounterpartyStatus::UnrelatedThirdParty
     );
 
-    let in_scope_category = !matches!(
-        input.category,
-        ProhibitedTransactionCategory::None
-    );
+    let in_scope_category = !matches!(input.category, ProhibitedTransactionCategory::None);
 
     let prohibited_transaction_engaged = in_scope_category
         && counterparty_is_disqualified_person
@@ -267,13 +264,12 @@ pub fn check(input: &Section4975Input) -> Section4975Result {
         0
     };
 
-    let hundred_percent_excise_tax_cents = if prohibited_transaction_engaged
-        && !input.corrected_within_taxable_period
-    {
-        input.amount_involved_cents
-    } else {
-        0
-    };
+    let hundred_percent_excise_tax_cents =
+        if prohibited_transaction_engaged && !input.corrected_within_taxable_period {
+            input.amount_involved_cents
+        } else {
+            0
+        };
 
     let ira_deemed_distribution_cents = if input.ira_disqualified {
         input.fmv_of_entire_ira_cents
@@ -288,8 +284,8 @@ pub fn check(input: &Section4975Input) -> Section4975Result {
             0
         };
 
-    let abatement_eligible = hundred_percent_excise_tax_cents > 0
-        && input.corrected_within_90_days_of_deficiency_notice;
+    let abatement_eligible =
+        hundred_percent_excise_tax_cents > 0 && input.corrected_within_90_days_of_deficiency_notice;
 
     if prohibited_transaction_engaged {
         let category_label = match input.category {
@@ -496,8 +492,10 @@ mod tests {
         i.dol_pte_exemption_applies = true;
         let r = check(&i);
         assert!(!r.prohibited_transaction_engaged);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 4975(c)(2)")
-            && f.contains("PTE 80-26")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 4975(c)(2)") && f.contains("PTE 80-26")));
     }
 
     #[test]
@@ -514,7 +512,10 @@ mod tests {
         i.category = ProhibitedTransactionCategory::LendingOrCredit;
         let r = check(&i);
         assert!(r.prohibited_transaction_engaged);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 4975(c)(1)(B)")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 4975(c)(1)(B)")));
     }
 
     #[test]
@@ -523,7 +524,10 @@ mod tests {
         i.category = ProhibitedTransactionCategory::FurnishingGoodsServicesFacilities;
         let r = check(&i);
         assert!(r.prohibited_transaction_engaged);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 4975(c)(1)(C)")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 4975(c)(1)(C)")));
     }
 
     #[test]
@@ -532,7 +536,10 @@ mod tests {
         i.category = ProhibitedTransactionCategory::TransferOrUseForDisqualifiedPerson;
         let r = check(&i);
         assert!(r.prohibited_transaction_engaged);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 4975(c)(1)(D)")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 4975(c)(1)(D)")));
     }
 
     #[test]
@@ -541,7 +548,10 @@ mod tests {
         i.category = ProhibitedTransactionCategory::FiduciarySelfDealing;
         let r = check(&i);
         assert!(r.prohibited_transaction_engaged);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 4975(c)(1)(E)")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 4975(c)(1)(E)")));
     }
 
     #[test]
@@ -550,7 +560,10 @@ mod tests {
         i.category = ProhibitedTransactionCategory::FiduciaryKickback;
         let r = check(&i);
         assert!(r.prohibited_transaction_engaged);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 4975(c)(1)(F)")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 4975(c)(1)(F)")));
     }
 
     #[test]
@@ -559,9 +572,10 @@ mod tests {
         i.corrected_within_90_days_of_deficiency_notice = true;
         let r = check(&i);
         assert!(r.abatement_eligible);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 4975(h)")
-            && f.contains("90 DAYS")
-            && f.contains("ABATE")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 4975(h)") && f.contains("90 DAYS") && f.contains("ABATE")));
     }
 
     #[test]
@@ -578,8 +592,14 @@ mod tests {
         for (cat, exp_engaged) in [
             (ProhibitedTransactionCategory::SaleExchangeLease, true),
             (ProhibitedTransactionCategory::LendingOrCredit, true),
-            (ProhibitedTransactionCategory::FurnishingGoodsServicesFacilities, true),
-            (ProhibitedTransactionCategory::TransferOrUseForDisqualifiedPerson, true),
+            (
+                ProhibitedTransactionCategory::FurnishingGoodsServicesFacilities,
+                true,
+            ),
+            (
+                ProhibitedTransactionCategory::TransferOrUseForDisqualifiedPerson,
+                true,
+            ),
             (ProhibitedTransactionCategory::FiduciarySelfDealing, true),
             (ProhibitedTransactionCategory::FiduciaryKickback, true),
             (ProhibitedTransactionCategory::None, false),
@@ -587,7 +607,11 @@ mod tests {
             let mut i = ira_owner_sale();
             i.category = cat;
             let r = check(&i);
-            assert_eq!(r.prohibited_transaction_engaged, exp_engaged, "cat={:?}", cat);
+            assert_eq!(
+                r.prohibited_transaction_engaged, exp_engaged,
+                "cat={:?}",
+                cat
+            );
         }
     }
 
@@ -603,7 +627,11 @@ mod tests {
             let mut i = ira_owner_sale();
             i.counterparty_status = status;
             let r = check(&i);
-            assert_eq!(r.counterparty_is_disqualified_person, exp_disq, "status={:?}", status);
+            assert_eq!(
+                r.counterparty_is_disqualified_person, exp_disq,
+                "status={:?}",
+                status
+            );
         }
     }
 
@@ -619,7 +647,9 @@ mod tests {
         assert!(r.citation.contains("DOL PTE 80-26"));
         assert!(r.citation.contains("DOL PTE 75-1"));
         assert!(r.citation.contains("DOL PTE 84-24"));
-        assert!(r.citation.contains("Treas. Reg. § 54.4975-1 through § 54.4975-15"));
+        assert!(r
+            .citation
+            .contains("Treas. Reg. § 54.4975-1 through § 54.4975-15"));
         assert!(r.citation.contains("Form 5330"));
         assert!(r.citation.contains("Rev. Rul. 2006-38"));
         assert!(r.citation.contains("Rev. Rul. 89-87"));
@@ -714,11 +744,14 @@ mod tests {
     #[test]
     fn note_pins_trader_fact_patterns_seven() {
         let r = check(&ira_owner_sale());
-        assert!(r.notes.iter().any(|n| n.contains("Trader-critical fact patterns")
-            && n.contains("self-directed IRA buys property")
-            && n.contains("lineal descendant family member")
-            && n.contains("50%+ owned business")
-            && n.contains("kickback")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-critical fact patterns")
+                && n.contains("self-directed IRA buys property")
+                && n.contains("lineal descendant family member")
+                && n.contains("50%+ owned business")
+                && n.contains("kickback")));
     }
 
     #[test]
@@ -730,9 +763,11 @@ mod tests {
     #[test]
     fn note_pins_treas_reg_and_rev_rulings() {
         let r = check(&ira_owner_sale());
-        assert!(r.notes.iter().any(|n| n.contains("Treas. Reg. § 54.4975-1 through § 54.4975-15")
-            && n.contains("Rev. Rul. 2006-38")
-            && n.contains("Rev. Rul. 89-87")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("Treas. Reg. § 54.4975-1 through § 54.4975-15")
+                && n.contains("Rev. Rul. 2006-38")
+                && n.contains("Rev. Rul. 89-87")
+        ));
     }
 
     #[test]

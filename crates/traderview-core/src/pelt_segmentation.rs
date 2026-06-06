@@ -34,8 +34,12 @@ pub struct PeltReport {
 
 pub fn detect(series: &[f64], penalty: Option<f64>) -> Option<PeltReport> {
     let n = series.len();
-    if n < 4 { return None; }
-    if series.iter().any(|x| !x.is_finite()) { return None; }
+    if n < 4 {
+        return None;
+    }
+    if series.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     // Default penalty: 2·σ²·ln(n).
     let mean: f64 = series.iter().sum::<f64>() / n as f64;
     let var: f64 = series.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / n as f64;
@@ -82,14 +86,22 @@ pub fn detect(series: &[f64], penalty: Option<f64>) -> Option<PeltReport> {
     while t > 0 {
         let tau = prev_cp[t];
         starts.push(tau);
-        if tau == 0 { break; }
+        if tau == 0 {
+            break;
+        }
         t = tau;
     }
     starts.reverse();
-    if starts.first() != Some(&0) { starts.insert(0, 0); }
+    if starts.first() != Some(&0) {
+        starts.insert(0, 0);
+    }
     let mut means = Vec::with_capacity(starts.len());
     for (i, &start) in starts.iter().enumerate() {
-        let end = if i + 1 < starts.len() { starts[i + 1] } else { n };
+        let end = if i + 1 < starts.len() {
+            starts[i + 1]
+        } else {
+            n
+        };
         let seg_sum: f64 = (csum[end] - csum[start]) / (end - start) as f64;
         means.push(seg_sum);
     }
@@ -132,11 +144,18 @@ mod tests {
         let mut s = vec![0.0_f64; 50];
         s.extend(vec![10.0_f64; 50]);
         let r = detect(&s, None).unwrap();
-        assert!(r.n_changepoints >= 1,
-            "expected ≥1 changepoint, got {}", r.n_changepoints);
+        assert!(
+            r.n_changepoints >= 1,
+            "expected ≥1 changepoint, got {}",
+            r.n_changepoints
+        );
         // Some segment start should be near index 50.
         let near_50 = r.segment_starts.iter().any(|s| s.abs_diff(50) <= 3);
-        assert!(near_50, "no segment start near index 50: {:?}", r.segment_starts);
+        assert!(
+            near_50,
+            "no segment start near index 50: {:?}",
+            r.segment_starts
+        );
     }
 
     #[test]
@@ -146,9 +165,12 @@ mod tests {
         s.extend(vec![0.0_f64; 30]);
         let low_pen = detect(&s, Some(1.0)).unwrap();
         let high_pen = detect(&s, Some(1000.0)).unwrap();
-        assert!(low_pen.n_changepoints >= high_pen.n_changepoints,
+        assert!(
+            low_pen.n_changepoints >= high_pen.n_changepoints,
             "high penalty {} should yield ≤ low-penalty CPs {}",
-            high_pen.n_changepoints, low_pen.n_changepoints);
+            high_pen.n_changepoints,
+            low_pen.n_changepoints
+        );
     }
 
     #[test]
@@ -160,9 +182,10 @@ mod tests {
             for (i, &start) in r.segment_starts.iter().enumerate() {
                 let end = if i + 1 < r.segment_starts.len() {
                     r.segment_starts[i + 1]
-                } else { s.len() };
-                let actual_mean: f64 = s[start..end].iter().sum::<f64>()
-                    / (end - start) as f64;
+                } else {
+                    s.len()
+                };
+                let actual_mean: f64 = s[start..end].iter().sum::<f64>() / (end - start) as f64;
                 assert!((r.segment_means[i] - actual_mean).abs() < 1e-9);
             }
         }

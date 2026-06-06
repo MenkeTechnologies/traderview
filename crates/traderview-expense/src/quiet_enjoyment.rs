@@ -82,11 +82,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // Common-law states.
     let common_law = [
-        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "FL", "GA",
-        "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
-        "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM",
-        "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN",
-        "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA",
+        "KS", "KY", "LA", "ME", "MD", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM",
+        "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA",
+        "WV", "WI", "WY",
     ];
     for code in common_law {
         let citation: &'static str = if code == "CA" {
@@ -155,9 +154,7 @@ pub fn check(input: &QuietEnjoymentInput) -> QuietEnjoymentResult {
         input.actual_damages_dollars.max(statutory_floor)
     };
 
-    let criminal = rule.criminal_exposure_possible
-        && actionable
-        && input.breach_intentional;
+    let criminal = rule.criminal_exposure_possible && actionable && input.breach_intentional;
 
     let note = match (rule.regime, actionable) {
         (_, false) => {
@@ -212,7 +209,10 @@ mod tests {
     fn ma_substantial_breach_yields_3x_rent_floor() {
         // Actual $1k vs 3 × $2k = $6k → recover $6k.
         let r = check(&input("MA"));
-        assert_eq!(r.regime, QuietEnjoymentRegime::MassachusettsTrebleDamagesAndCriminal);
+        assert_eq!(
+            r.regime,
+            QuietEnjoymentRegime::MassachusettsTrebleDamagesAndCriminal
+        );
         assert!(r.breach_actionable);
         assert_eq!(r.statutory_damages_floor_dollars, 6_000);
         assert_eq!(r.recoverable_damages_dollars, 6_000);
@@ -312,7 +312,12 @@ mod tests {
     #[test]
     fn coverage_is_all_50_states_plus_dc() {
         let codes: Vec<&'static str> = RULES.keys().copied().collect();
-        assert_eq!(codes.len(), 51, "expected 50 states + DC, got {}", codes.len());
+        assert_eq!(
+            codes.len(),
+            51,
+            "expected 50 states + DC, got {}",
+            codes.len()
+        );
     }
 
     #[test]

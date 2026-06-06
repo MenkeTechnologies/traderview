@@ -118,7 +118,11 @@ pub fn compute(input: &Section6050WInput) -> Section6050WResult {
         exceeds_dollar && exceeds_count
     };
 
-    let conjunction = if transaction_threshold == 0 { "" } else { " AND " };
+    let conjunction = if transaction_threshold == 0 {
+        ""
+    } else {
+        " AND "
+    };
     let count_part = if transaction_threshold == 0 {
         String::new()
     } else {
@@ -358,7 +362,10 @@ mod tests {
             2023,
         ));
         assert_eq!(r.regime, ThresholdRegime::TwentyKAnd200Transactions);
-        assert!(!r.reporting_required, "$5K + 201 tx in 2023 below threshold");
+        assert!(
+            !r.reporting_required,
+            "$5K + 201 tx in 2023 below threshold"
+        );
         assert!(r.citation.contains("Notice 2023-74"));
     }
 
@@ -395,7 +402,10 @@ mod tests {
             150,
             2021,
         ));
-        assert!(!r.reporting_required, "Pre-ARPA requires BOTH prongs > thresholds");
+        assert!(
+            !r.reporting_required,
+            "Pre-ARPA requires BOTH prongs > thresholds"
+        );
     }
 
     #[test]
@@ -483,12 +493,12 @@ mod tests {
     fn boundary_invariant_at_each_prong_for_2026() {
         // Both prongs must be STRICTLY exceeded.
         let cases = [
-            (2000000, 200, false),     // both at threshold
-            (2000000, 201, false),     // dollar at, count over
-            (2000001, 200, false),     // dollar over, count at
-            (2000001, 201, true),      // both over
-            (1999999, 201, false),     // dollar under
-            (2000001, 199, false),     // count under
+            (2000000, 200, false), // both at threshold
+            (2000000, 201, false), // dollar at, count over
+            (2000001, 200, false), // dollar over, count at
+            (2000001, 201, true),  // both over
+            (1999999, 201, false), // dollar under
+            (2000001, 199, false), // count under
         ];
         for (gross, count, expected) in cases {
             let r = compute(&input(

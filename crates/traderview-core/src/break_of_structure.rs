@@ -49,23 +49,27 @@ pub fn detect(closes: &[f64], swings: &[SwingPoint]) -> BosReport {
     // BEFORE this bar. Check whether the close breaks the prior swing.
     // Track which swings have already been "broken" so we don't re-fire.
     let mut last_broken_high_idx: Option<usize> = None;
-    let mut last_broken_low_idx:  Option<usize> = None;
+    let mut last_broken_low_idx: Option<usize> = None;
     for (i, &close) in closes.iter().enumerate() {
         // Find the most recent swing HIGH and LOW with index < i.
         let mut latest_high: Option<&SwingPoint> = None;
-        let mut latest_low:  Option<&SwingPoint> = None;
+        let mut latest_low: Option<&SwingPoint> = None;
         for s in swings {
-            if s.index >= i { break; }
+            if s.index >= i {
+                break;
+            }
             match s.kind {
                 SwingKind::High => latest_high = Some(s),
-                SwingKind::Low  => latest_low  = Some(s),
+                SwingKind::Low => latest_low = Some(s),
             }
         }
         if let Some(sh) = latest_high {
             if Some(sh.index) != last_broken_high_idx && close > sh.price {
                 events.push(BosEvent {
-                    bar_index: i, kind: BosKind::Bullish,
-                    broken_level: sh.price, close_at_break: close,
+                    bar_index: i,
+                    kind: BosKind::Bullish,
+                    broken_level: sh.price,
+                    close_at_break: close,
                 });
                 last_broken_high_idx = Some(sh.index);
             }
@@ -73,8 +77,10 @@ pub fn detect(closes: &[f64], swings: &[SwingPoint]) -> BosReport {
         if let Some(sl) = latest_low {
             if Some(sl.index) != last_broken_low_idx && close < sl.price {
                 events.push(BosEvent {
-                    bar_index: i, kind: BosKind::Bearish,
-                    broken_level: sl.price, close_at_break: close,
+                    bar_index: i,
+                    kind: BosKind::Bearish,
+                    broken_level: sl.price,
+                    close_at_break: close,
                 });
                 last_broken_low_idx = Some(sl.index);
             }
@@ -89,7 +95,11 @@ mod tests {
     use super::*;
 
     fn sp(idx: usize, price: f64, kind: SwingKind) -> SwingPoint {
-        SwingPoint { index: idx, price, kind }
+        SwingPoint {
+            index: idx,
+            price,
+            kind,
+        }
     }
 
     #[test]
@@ -138,13 +148,17 @@ mod tests {
         // Then a new swing high at idx 6 = 108. First subsequent close that
         // breaks 108 is at idx 8 (109 > 108). 110 at idx 9 would re-fire if
         // the engine didn't dedupe — but it shouldn't.
-        let closes = vec![100.0, 102.0, 105.0, 103.0, 104.0, 106.0, 108.0, 107.0, 109.0, 110.0];
+        let closes = vec![
+            100.0, 102.0, 105.0, 103.0, 104.0, 106.0, 108.0, 107.0, 109.0, 110.0,
+        ];
         let swings = vec![sp(2, 105.0, SwingKind::High), sp(6, 108.0, SwingKind::High)];
         let r = detect(&closes, &swings);
         assert_eq!(r.events.len(), 2);
         assert_eq!(r.events[0].bar_index, 5);
-        assert_eq!(r.events[1].bar_index, 8,
-            "first close > 108 lives at idx 8 (close 109), not idx 9");
+        assert_eq!(
+            r.events[1].bar_index, 8,
+            "first close > 108 lives at idx 8 (close 109), not idx 9"
+        );
         assert!((r.events[1].broken_level - 108.0).abs() < 1e-9);
     }
 

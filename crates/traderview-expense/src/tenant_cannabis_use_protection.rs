@@ -457,10 +457,7 @@ mod tests {
 
     #[test]
     fn state_routing_ny_il_default() {
-        assert_eq!(
-            Regime::for_state("NY"),
-            Regime::NewYorkCannabisLaw134
-        );
+        assert_eq!(Regime::for_state("NY"), Regime::NewYorkCannabisLaw134);
         assert_eq!(Regime::for_state("IL"), Regime::IllinoisCrta);
         assert_eq!(Regime::for_state("CA"), Regime::Default);
         assert_eq!(Regime::for_state("TX"), Regime::Default);
@@ -468,10 +465,7 @@ mod tests {
 
     #[test]
     fn state_routing_case_insensitive() {
-        assert_eq!(
-            Regime::for_state("ny"),
-            Regime::NewYorkCannabisLaw134
-        );
+        assert_eq!(Regime::for_state("ny"), Regime::NewYorkCannabisLaw134);
         assert_eq!(Regime::for_state("Il"), Regime::IllinoisCrta);
     }
 

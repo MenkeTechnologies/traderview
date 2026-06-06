@@ -31,13 +31,18 @@ pub struct PitchforkLines {
 pub fn fit(p1: Pivot, p2: Pivot, p3: Pivot) -> Option<(f64, f64, f64, f64)> {
     // Returns (slope, median_intercept, upper_intercept, lower_intercept)
     // where y = slope · x + intercept.
-    if [p1.x, p1.y, p2.x, p2.y, p3.x, p3.y].iter().any(|v| !v.is_finite()) {
+    if [p1.x, p1.y, p2.x, p2.y, p3.x, p3.y]
+        .iter()
+        .any(|v| !v.is_finite())
+    {
         return None;
     }
     let mid_x = (p2.x + p3.x) / 2.0;
     let mid_y = (p2.y + p3.y) / 2.0;
     let dx = mid_x - p1.x;
-    if dx == 0.0 { return None; }
+    if dx == 0.0 {
+        return None;
+    }
     let slope = (mid_y - p1.y) / dx;
     let median_intercept = p1.y - slope * p1.x;
     let upper_intercept = p2.y - slope * p2.x;
@@ -46,15 +51,25 @@ pub fn fit(p1: Pivot, p2: Pivot, p3: Pivot) -> Option<(f64, f64, f64, f64)> {
 }
 
 pub fn project(p1: Pivot, p2: Pivot, p3: Pivot, x: f64) -> Option<PitchforkLines> {
-    if !x.is_finite() { return None; }
+    if !x.is_finite() {
+        return None;
+    }
     let (slope, m, u, l) = fit(p1, p2, p3)?;
     // Caller decides which of u/l is the "upper" — we report them as the
     // value that's larger at x as upper, smaller as lower.
     let median = slope * x + m;
     let u_at_x = slope * x + u;
     let l_at_x = slope * x + l;
-    let (upper, lower) = if u_at_x >= l_at_x { (u_at_x, l_at_x) } else { (l_at_x, u_at_x) };
-    Some(PitchforkLines { median_at_x: median, upper_at_x: upper, lower_at_x: lower })
+    let (upper, lower) = if u_at_x >= l_at_x {
+        (u_at_x, l_at_x)
+    } else {
+        (l_at_x, u_at_x)
+    };
+    Some(PitchforkLines {
+        median_at_x: median,
+        upper_at_x: upper,
+        lower_at_x: lower,
+    })
 }
 
 /// Project the pitchfork over a vector of x values.
@@ -66,12 +81,14 @@ pub fn series(p1: Pivot, p2: Pivot, p3: Pivot, xs: &[f64]) -> Vec<Option<Pitchfo
 mod tests {
     use super::*;
 
-    fn p(x: f64, y: f64) -> Pivot { Pivot { x, y } }
+    fn p(x: f64, y: f64) -> Pivot {
+        Pivot { x, y }
+    }
 
     #[test]
     fn collinear_p1_to_midpoint_undefined() {
         let p1 = p(0.0, 0.0);
-        let p2 = p(0.0, 1.0);    // mid_x = 0 → dx = 0
+        let p2 = p(0.0, 1.0); // mid_x = 0 → dx = 0
         let p3 = p(0.0, -1.0);
         assert!(project(p1, p2, p3, 5.0).is_none());
     }

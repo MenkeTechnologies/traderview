@@ -389,8 +389,7 @@ mod tests {
     #[test]
     fn ads_straight_line_depreciation_adjustment() {
         let mut input = base();
-        input.adjustment_type =
-            AdjustmentType::AdsStraightLineDepreciationSection312K3;
+        input.adjustment_type = AdjustmentType::AdsStraightLineDepreciationSection312K3;
         let output = check(&input);
         // Tax accel $100K - ADS $60K = +$40K E&P
         assert_eq!(output.eep_adjustment_cents, 40_000_00);

@@ -129,8 +129,7 @@ pub fn check(input: &Input) -> Output {
     let section_383_credit_limit = u128::from(remaining_382_limit_after_nols)
         .saturating_mul(u128::from(input.effective_corporate_tax_rate_bps))
         .saturating_div(10_000);
-    let section_383_credit_limit_u64 =
-        u64::try_from(section_383_credit_limit).unwrap_or(u64::MAX);
+    let section_383_credit_limit_u64 = u64::try_from(section_383_credit_limit).unwrap_or(u64::MAX);
 
     match input.attribute_type {
         AttributeType::Section1212NetCapitalLossCarryover => {
@@ -250,8 +249,7 @@ mod tests {
 
     fn base() -> Input {
         Input {
-            ownership_change_status:
-                OwnershipChangeStatus::OwnershipChangeOccurredSection382G,
+            ownership_change_status: OwnershipChangeStatus::OwnershipChangeOccurredSection382G,
             attribute_type: AttributeType::Section39GeneralBusinessCredit,
             section_382_annual_limitation_cents: 10_000_000_00,
             effective_corporate_tax_rate_bps: 2_100,

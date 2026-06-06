@@ -168,18 +168,21 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // NoStatePrivacyLaw for remaining states + DC.
     let no_rule = [
-        "AL", "AK", "AZ", "AR", "DC", "FL", "GA", "HI", "ID", "IN",
-        "IA", "KS", "KY", "LA", "ME", "MA", "MI", "MS", "MO", "MT",
-        "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK",
-        "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "WA", "WV",
-        "WI", "WY",
+        "AL", "AK", "AZ", "AR", "DC", "FL", "GA", "HI", "ID", "IN", "IA", "KS", "KY", "LA", "ME",
+        "MA", "MI", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK",
+        "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "WA", "WV", "WI", "WY",
     ];
     for code in no_rule {
         m.insert(
             code,
             rule(
                 NoStatePrivacyLaw,
-                None, None, None, false, 0, 0,
+                None,
+                None,
+                None,
+                false,
+                0,
+                0,
                 "No comprehensive state privacy law; common-law and contract terms govern",
             ),
         );
@@ -249,22 +252,20 @@ pub fn check(input: &PrivacyInput) -> PrivacyResult {
     // Biometric compliance.
     let biometric_required =
         rule.biometric_written_consent_required && input.uses_biometric_building_entry;
-    let biometric_compliant =
-        !biometric_required || input.biometric_written_consent_obtained;
-    let biometric_exposure =
-        if rule.regime == PrivacyRegime::BiometricStrictWrittenConsent
-            && input.uses_biometric_building_entry
-            && !input.biometric_written_consent_obtained
-        {
-            let per_violation = if input.biometric_violation_intentional {
-                rule.biometric_intentional_damages_dollars
-            } else {
-                rule.biometric_negligent_damages_dollars
-            };
-            per_violation * input.number_of_affected_tenants as i64
+    let biometric_compliant = !biometric_required || input.biometric_written_consent_obtained;
+    let biometric_exposure = if rule.regime == PrivacyRegime::BiometricStrictWrittenConsent
+        && input.uses_biometric_building_entry
+        && !input.biometric_written_consent_obtained
+    {
+        let per_violation = if input.biometric_violation_intentional {
+            rule.biometric_intentional_damages_dollars
         } else {
-            0
+            rule.biometric_negligent_damages_dollars
         };
+        per_violation * input.number_of_affected_tenants as i64
+    } else {
+        0
+    };
 
     // DSAR compliance.
     let dsar_required = subject && input.tenant_dsar_received;
@@ -530,7 +531,12 @@ mod tests {
     #[test]
     fn coverage_is_all_50_states_plus_dc() {
         let codes: Vec<&'static str> = RULES.keys().copied().collect();
-        assert_eq!(codes.len(), 51, "expected 50 states + DC, got {}", codes.len());
+        assert_eq!(
+            codes.len(),
+            51,
+            "expected 50 states + DC, got {}",
+            codes.len()
+        );
     }
 
     #[test]

@@ -21,9 +21,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ShortInterestEntry {
     pub symbol: String,
-    pub short_float_pct: f64,    // 0..1 (0.30 = 30%)
+    pub short_float_pct: f64, // 0..1 (0.30 = 30%)
     pub days_to_cover: f64,
-    pub recent_price_pct_change: f64,    // last N days, e.g. +0.15 = +15%
+    pub recent_price_pct_change: f64, // last N days, e.g. +0.15 = +15%
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -37,15 +37,19 @@ pub enum SqueezeRisk {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScannerConfig {
-    pub high_short_float: f64,    // default 0.20
-    pub high_dtc: f64,            // default 5.0
+    pub high_short_float: f64, // default 0.20
+    pub high_dtc: f64,         // default 5.0
     /// Minimum recent price move to confirm the squeeze is starting.
-    pub min_squeeze_move: f64,    // default 0.05 (+5%)
+    pub min_squeeze_move: f64, // default 0.05 (+5%)
 }
 
 impl Default for ScannerConfig {
     fn default() -> Self {
-        Self { high_short_float: 0.20, high_dtc: 5.0, min_squeeze_move: 0.05 }
+        Self {
+            high_short_float: 0.20,
+            high_dtc: 5.0,
+            min_squeeze_move: 0.05,
+        }
     }
 }
 
@@ -144,9 +148,18 @@ mod tests {
     fn invalid_config_returns_default() {
         let entries = vec![e("X", 0.30, 10.0, 0.10)];
         for cfg in [
-            ScannerConfig { high_short_float: 0.0, ..Default::default() },
-            ScannerConfig { high_dtc: 0.0, ..Default::default() },
-            ScannerConfig { min_squeeze_move: f64::NAN, ..Default::default() },
+            ScannerConfig {
+                high_short_float: 0.0,
+                ..Default::default()
+            },
+            ScannerConfig {
+                high_dtc: 0.0,
+                ..Default::default()
+            },
+            ScannerConfig {
+                min_squeeze_move: f64::NAN,
+                ..Default::default()
+            },
         ] {
             assert!(analyze(&entries, &cfg).candidates.is_empty());
         }
@@ -154,10 +167,7 @@ mod tests {
 
     #[test]
     fn primed_squeeze_when_all_three_hit() {
-        let r = analyze(
-            &[e("GME", 0.30, 8.0, 0.15)],
-            &ScannerConfig::default(),
-        );
+        let r = analyze(&[e("GME", 0.30, 8.0, 0.15)], &ScannerConfig::default());
         assert_eq!(r.candidates.len(), 1);
         assert_eq!(r.candidates[0].risk, SqueezeRisk::PrimedSqueeze);
         assert!(r.primed.contains(&"GME".to_string()));
@@ -165,46 +175,34 @@ mod tests {
 
     #[test]
     fn high_interest_when_both_metrics_but_no_move() {
-        let r = analyze(
-            &[e("AMC", 0.30, 8.0, 0.01)],
-            &ScannerConfig::default(),
-        );
+        let r = analyze(&[e("AMC", 0.30, 8.0, 0.01)], &ScannerConfig::default());
         assert_eq!(r.candidates[0].risk, SqueezeRisk::HighShortInterest);
     }
 
     #[test]
     fn crowded_when_only_one_metric() {
-        let r = analyze(
-            &[e("ONLY_SF", 0.25, 2.0, 0.0)],
-            &ScannerConfig::default(),
-        );
+        let r = analyze(&[e("ONLY_SF", 0.25, 2.0, 0.0)], &ScannerConfig::default());
         assert_eq!(r.candidates[0].risk, SqueezeRisk::CrowdedShort);
     }
 
     #[test]
     fn low_short_interest_filtered() {
-        let r = analyze(
-            &[e("NORM", 0.05, 1.0, 0.0)],
-            &ScannerConfig::default(),
-        );
+        let r = analyze(&[e("NORM", 0.05, 1.0, 0.0)], &ScannerConfig::default());
         assert!(r.candidates.is_empty());
     }
 
     #[test]
     fn nan_inputs_skipped_safely() {
-        let r = analyze(
-            &[e("X", f64::NAN, 8.0, 0.10)],
-            &ScannerConfig::default(),
-        );
+        let r = analyze(&[e("X", f64::NAN, 8.0, 0.10)], &ScannerConfig::default());
         assert!(r.candidates.is_empty());
     }
 
     #[test]
     fn candidates_sorted_primed_first_then_by_short_float_desc() {
         let entries = vec![
-            e("CROWD",  0.25, 2.0, 0.0),     // crowded
-            e("PRIMED", 0.22, 7.0, 0.10),    // primed (lower SF than CROWD2)
-            e("HIGH",   0.40, 8.0, 0.01),    // high interest, no move
+            e("CROWD", 0.25, 2.0, 0.0),   // crowded
+            e("PRIMED", 0.22, 7.0, 0.10), // primed (lower SF than CROWD2)
+            e("HIGH", 0.40, 8.0, 0.01),   // high interest, no move
         ];
         let r = analyze(&entries, &ScannerConfig::default());
         // PRIMED first (highest rank), then HIGH (high_interest), then CROWD.

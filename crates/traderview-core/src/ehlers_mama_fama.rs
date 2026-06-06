@@ -45,11 +45,18 @@ pub fn compute(series: &[f64], fast_limit: f64, slow_limit: f64) -> MamaFamaRepo
         fast_limit,
         slow_limit,
     };
-    if n < 7 || !fast_limit.is_finite() || !slow_limit.is_finite()
-        || fast_limit <= 0.0 || slow_limit <= 0.0 || slow_limit > fast_limit {
+    if n < 7
+        || !fast_limit.is_finite()
+        || !slow_limit.is_finite()
+        || fast_limit <= 0.0
+        || slow_limit <= 0.0
+        || slow_limit > fast_limit
+    {
         return report;
     }
-    if series.iter().any(|x| !x.is_finite()) { return report; }
+    if series.iter().any(|x| !x.is_finite()) {
+        return report;
+    }
     let mut smooth = vec![0.0_f64; n];
     let mut detrender = vec![0.0_f64; n];
     let mut q1 = vec![0.0_f64; n];
@@ -73,18 +80,22 @@ pub fn compute(series: &[f64], fast_limit: f64, slow_limit: f64) -> MamaFamaRepo
         report.period[i] = Some(0.0);
     }
     for i in 6..n {
-        smooth[i] = (4.0 * series[i] + 3.0 * series[i - 1]
-            + 2.0 * series[i - 2] + series[i - 3]) / 10.0;
+        smooth[i] =
+            (4.0 * series[i] + 3.0 * series[i - 1] + 2.0 * series[i - 2] + series[i - 3]) / 10.0;
         let p_factor = 0.075 * period[i - 1] + 0.54;
         detrender[i] = (0.0962 * smooth[i] + 0.5769 * smooth[i - 2]
-            - 0.5769 * smooth[i - 4] - 0.0962 * smooth[i - 6]) * p_factor;
+            - 0.5769 * smooth[i - 4]
+            - 0.0962 * smooth[i - 6])
+            * p_factor;
         q1[i] = (0.0962 * detrender[i] + 0.5769 * detrender[i - 2]
-            - 0.5769 * detrender[i - 4] - 0.0962 * detrender[i - 6]) * p_factor;
+            - 0.5769 * detrender[i - 4]
+            - 0.0962 * detrender[i - 6])
+            * p_factor;
         i1[i] = detrender[i - 3];
-        ji[i] = (0.0962 * i1[i] + 0.5769 * i1[i - 2]
-            - 0.5769 * i1[i - 4] - 0.0962 * i1[i - 6]) * p_factor;
-        jq[i] = (0.0962 * q1[i] + 0.5769 * q1[i - 2]
-            - 0.5769 * q1[i - 4] - 0.0962 * q1[i - 6]) * p_factor;
+        ji[i] = (0.0962 * i1[i] + 0.5769 * i1[i - 2] - 0.5769 * i1[i - 4] - 0.0962 * i1[i - 6])
+            * p_factor;
+        jq[i] = (0.0962 * q1[i] + 0.5769 * q1[i - 2] - 0.5769 * q1[i - 4] - 0.0962 * q1[i - 6])
+            * p_factor;
         i2[i] = i1[i] - jq[i];
         q2[i] = q1[i] + ji[i];
         // Smooth I2, Q2.
@@ -100,8 +111,12 @@ pub fn compute(series: &[f64], fast_limit: f64, slow_limit: f64) -> MamaFamaRepo
             period[i - 1]
         };
         // Constrain period changes.
-        if p > 1.5 * period[i - 1] { p = 1.5 * period[i - 1]; }
-        if p < 0.67 * period[i - 1] { p = 0.67 * period[i - 1]; }
+        if p > 1.5 * period[i - 1] {
+            p = 1.5 * period[i - 1];
+        }
+        if p < 0.67 * period[i - 1] {
+            p = 0.67 * period[i - 1];
+        }
         p = p.clamp(6.0, 50.0);
         period[i] = 0.2 * p + 0.8 * period[i - 1];
         smooth_period[i] = 0.33 * period[i] + 0.67 * smooth_period[i - 1];
@@ -124,7 +139,7 @@ mod tests {
         let s = vec![100.0_f64; 50];
         let r = compute(&s, 0.0, 0.05);
         assert!(r.mama.iter().all(|x| x.is_none()));
-        let r2 = compute(&s, 0.05, 0.5);    // slow > fast
+        let r2 = compute(&s, 0.05, 0.5); // slow > fast
         assert!(r2.mama.iter().all(|x| x.is_none()));
         let r3 = compute(&s[..3], 0.5, 0.05);
         assert!(r3.mama.iter().all(|x| x.is_none()));
@@ -166,8 +181,10 @@ mod tests {
         let last = 199;
         let m = r.mama[last].unwrap();
         let f = r.fama[last].unwrap();
-        assert!(m >= f - 1e-9,
-            "MAMA {m} should lead or equal FAMA {f} in steady uptrend");
+        assert!(
+            m >= f - 1e-9,
+            "MAMA {m} should lead or equal FAMA {f} in steady uptrend"
+        );
     }
 
     #[test]

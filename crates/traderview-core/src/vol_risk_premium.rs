@@ -40,32 +40,43 @@ pub struct VrpReport {
 }
 
 pub fn compute(observations: &[VrpObservation]) -> Option<VrpReport> {
-    if observations.is_empty() { return None; }
-    if observations.iter().any(|o| !o.implied_volatility_annualized.is_finite()
-        || o.implied_volatility_annualized < 0.0
-        || !o.subsequent_realized_volatility_annualized.is_finite()
-        || o.subsequent_realized_volatility_annualized < 0.0) {
+    if observations.is_empty() {
+        return None;
+    }
+    if observations.iter().any(|o| {
+        !o.implied_volatility_annualized.is_finite()
+            || o.implied_volatility_annualized < 0.0
+            || !o.subsequent_realized_volatility_annualized.is_finite()
+            || o.subsequent_realized_volatility_annualized < 0.0
+    }) {
         return None;
     }
     let n = observations.len();
-    let vrp_var: Vec<f64> = observations.iter().map(|o| {
-        o.implied_volatility_annualized.powi(2)
-            - o.subsequent_realized_volatility_annualized.powi(2)
-    }).collect();
-    let vrp_vol: Vec<f64> = observations.iter().map(|o| {
-        o.implied_volatility_annualized - o.subsequent_realized_volatility_annualized
-    }).collect();
+    let vrp_var: Vec<f64> = observations
+        .iter()
+        .map(|o| {
+            o.implied_volatility_annualized.powi(2)
+                - o.subsequent_realized_volatility_annualized.powi(2)
+        })
+        .collect();
+    let vrp_vol: Vec<f64> = observations
+        .iter()
+        .map(|o| o.implied_volatility_annualized - o.subsequent_realized_volatility_annualized)
+        .collect();
     let n_f = n as f64;
     let mean_var: f64 = vrp_var.iter().sum::<f64>() / n_f;
     let mean_vol: f64 = vrp_vol.iter().sum::<f64>() / n_f;
-    let var_var: f64 = vrp_var.iter().map(|x| (x - mean_var).powi(2)).sum::<f64>()
-        / (n_f - 1.0).max(1.0);
+    let var_var: f64 =
+        vrp_var.iter().map(|x| (x - mean_var).powi(2)).sum::<f64>() / (n_f - 1.0).max(1.0);
     let sd_var = var_var.max(0.0).sqrt();
     let min_var = vrp_var.iter().cloned().fold(f64::INFINITY, f64::min);
     let max_var = vrp_var.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
     let seller_hits = vrp_var.iter().filter(|x| **x > 0.0).count() as f64 / n_f;
-    let fair_vol: f64 = observations.iter()
-        .map(|o| o.subsequent_realized_volatility_annualized).sum::<f64>() / n_f;
+    let fair_vol: f64 = observations
+        .iter()
+        .map(|o| o.subsequent_realized_volatility_annualized)
+        .sum::<f64>()
+        / n_f;
     Some(VrpReport {
         per_obs_vrp_variance: vrp_var,
         per_obs_vrp_volatility: vrp_vol,
@@ -123,12 +134,7 @@ mod tests {
 
     #[test]
     fn fair_vol_equals_mean_rv() {
-        let obs = vec![
-            o(0.30, 0.20),
-            o(0.30, 0.25),
-            o(0.30, 0.30),
-            o(0.30, 0.15),
-        ];
+        let obs = vec![o(0.30, 0.20), o(0.30, 0.25), o(0.30, 0.30), o(0.30, 0.15)];
         let r = compute(&obs).unwrap();
         let expected = (0.20 + 0.25 + 0.30 + 0.15) / 4.0;
         assert!((r.fair_vol_estimate - expected).abs() < 1e-12);
@@ -137,9 +143,9 @@ mod tests {
     #[test]
     fn min_max_reported_correctly() {
         let obs = vec![
-            o(0.30, 0.20),    // VRP_var = 0.09 - 0.04 = 0.05
-            o(0.25, 0.25),    // VRP_var = 0
-            o(0.10, 0.20),    // VRP_var = 0.01 - 0.04 = -0.03
+            o(0.30, 0.20), // VRP_var = 0.09 - 0.04 = 0.05
+            o(0.25, 0.25), // VRP_var = 0
+            o(0.10, 0.20), // VRP_var = 0.01 - 0.04 = -0.03
         ];
         let r = compute(&obs).unwrap();
         assert!((r.max_vrp_variance - 0.05).abs() < 1e-12);
@@ -149,9 +155,9 @@ mod tests {
     #[test]
     fn seller_hit_rate_in_unit_range() {
         let obs = vec![
-            o(0.30, 0.20),    // hit
-            o(0.30, 0.25),    // hit
-            o(0.20, 0.30),    // miss
+            o(0.30, 0.20), // hit
+            o(0.30, 0.25), // hit
+            o(0.20, 0.30), // miss
         ];
         let r = compute(&obs).unwrap();
         assert!((0.0..=1.0).contains(&r.seller_hit_rate));

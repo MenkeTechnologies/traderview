@@ -23,7 +23,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum OptionKind { Caplet, Floorlet }
+pub enum OptionKind {
+    Caplet,
+    Floorlet,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct CapletReport {
@@ -44,21 +47,29 @@ pub fn price(
     notional: f64,
     kind: OptionKind,
 ) -> Option<CapletReport> {
-    if !forward_rate.is_finite() || forward_rate <= 0.0
-        || !strike_rate.is_finite() || strike_rate <= 0.0
-        || !sigma.is_finite() || sigma <= 0.0
-        || !t_expiry.is_finite() || t_expiry <= 0.0
-        || !t_end.is_finite() || t_end < t_expiry
-        || !discount_factor_t_end.is_finite() || discount_factor_t_end <= 0.0
+    if !forward_rate.is_finite()
+        || forward_rate <= 0.0
+        || !strike_rate.is_finite()
+        || strike_rate <= 0.0
+        || !sigma.is_finite()
+        || sigma <= 0.0
+        || !t_expiry.is_finite()
+        || t_expiry <= 0.0
+        || !t_end.is_finite()
+        || t_end < t_expiry
+        || !discount_factor_t_end.is_finite()
+        || discount_factor_t_end <= 0.0
         || discount_factor_t_end > 1.0 + 1e-9
-        || !accrual.is_finite() || accrual <= 0.0
-        || !notional.is_finite() || notional == 0.0
+        || !accrual.is_finite()
+        || accrual <= 0.0
+        || !notional.is_finite()
+        || notional == 0.0
     {
         return None;
     }
     let sqrt_t = t_expiry.sqrt();
-    let d1 = ((forward_rate / strike_rate).ln() + 0.5 * sigma * sigma * t_expiry)
-        / (sigma * sqrt_t);
+    let d1 =
+        ((forward_rate / strike_rate).ln() + 0.5 * sigma * sigma * t_expiry) / (sigma * sqrt_t);
     let d2 = d1 - sigma * sqrt_t;
     let nd1 = norm_cdf(d1);
     let nd2 = norm_cdf(d2);
@@ -67,17 +78,23 @@ pub fn price(
         OptionKind::Caplet => scale * (forward_rate * nd1 - strike_rate * nd2),
         OptionKind::Floorlet => scale * (strike_rate * (1.0 - nd2) - forward_rate * (1.0 - nd1)),
     };
-    if !p.is_finite() { return None; }
-    Some(CapletReport { price: p.max(0.0), d1, d2 })
+    if !p.is_finite() {
+        return None;
+    }
+    Some(CapletReport {
+        price: p.max(0.0),
+        d1,
+        d2,
+    })
 }
 
 fn norm_cdf(x: f64) -> f64 {
-    let a1 =  0.254829592_f64;
+    let a1 = 0.254829592_f64;
     let a2 = -0.284496736_f64;
-    let a3 =  1.421413741_f64;
+    let a3 = 1.421413741_f64;
     let a4 = -1.453152027_f64;
-    let a5 =  1.061405429_f64;
-    let p  =  0.3275911_f64;
+    let a5 = 1.061405429_f64;
+    let p = 0.3275911_f64;
     let sign = if x < 0.0 { -1.0 } else { 1.0 };
     let xa = x.abs() / std::f64::consts::SQRT_2;
     let t = 1.0 / (1.0 + p * xa);
@@ -96,10 +113,12 @@ mod tests {
         let sigma = 0.20;
         let t_expiry = 1.0;
         let t_end = 1.5;
-        let p_end = (-0.05_f64 * 1.5).exp();    // simple flat-rate discount
+        let p_end = (-0.05_f64 * 1.5).exp(); // simple flat-rate discount
         let accrual = 0.5;
         let notional = 1_000_000.0;
-        (forward, strike, sigma, t_expiry, t_end, p_end, accrual, notional)
+        (
+            forward, strike, sigma, t_expiry, t_end, p_end, accrual, notional,
+        )
     }
 
     #[test]
@@ -152,10 +171,30 @@ mod tests {
     #[test]
     fn longer_expiry_inflates_atm_caplet() {
         let (f, k, s, _, _, _, a, n) = args();
-        let r_short = price(f, k, s, 0.5, 1.0,
-            (-0.05_f64 * 1.0).exp(), a, n, OptionKind::Caplet).unwrap();
-        let r_long  = price(f, k, s, 2.0, 2.5,
-            (-0.05_f64 * 2.5).exp(), a, n, OptionKind::Caplet).unwrap();
+        let r_short = price(
+            f,
+            k,
+            s,
+            0.5,
+            1.0,
+            (-0.05_f64 * 1.0).exp(),
+            a,
+            n,
+            OptionKind::Caplet,
+        )
+        .unwrap();
+        let r_long = price(
+            f,
+            k,
+            s,
+            2.0,
+            2.5,
+            (-0.05_f64 * 2.5).exp(),
+            a,
+            n,
+            OptionKind::Caplet,
+        )
+        .unwrap();
         assert!(r_long.price > r_short.price);
     }
 

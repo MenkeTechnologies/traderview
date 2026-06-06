@@ -374,7 +374,8 @@ pub fn compute(input: &Input) -> Output {
                 let treble = if input.willfulness_status
                     == WillfulnessStatus::WillfulOrMaliciousViolation3xActualDamagesApplies
                 {
-                    actual_damages.saturating_mul(u64::from(CA_SB_567_WILLFUL_VIOLATION_DAMAGES_MULTIPLIER))
+                    actual_damages
+                        .saturating_mul(u64::from(CA_SB_567_WILLFUL_VIOLATION_DAMAGES_MULTIPLIER))
                 } else {
                     0
                 };
@@ -403,7 +404,8 @@ pub fn compute(input: &Input) -> Output {
                 let treble = if input.willfulness_status
                     == WillfulnessStatus::WillfulOrMaliciousViolation3xActualDamagesApplies
                 {
-                    actual_damages.saturating_mul(u64::from(CA_SB_567_WILLFUL_VIOLATION_DAMAGES_MULTIPLIER))
+                    actual_damages
+                        .saturating_mul(u64::from(CA_SB_567_WILLFUL_VIOLATION_DAMAGES_MULTIPLIER))
                 } else {
                     0
                 };
@@ -432,7 +434,8 @@ pub fn compute(input: &Input) -> Output {
                     == WillfulnessStatus::WillfulOrMaliciousViolation3xActualDamagesApplies
                 {
                     let actual_damages = input.monthly_rent_cents.saturating_mul(3);
-                    let treble = actual_damages.saturating_mul(u64::from(CA_SB_567_WILLFUL_VIOLATION_DAMAGES_MULTIPLIER));
+                    let treble = actual_damages
+                        .saturating_mul(u64::from(CA_SB_567_WILLFUL_VIOLATION_DAMAGES_MULTIPLIER));
                     return Output {
                         mode: CaSb567Mode::ViolationWillfulOrMalicious3xActualDamagesAndPunitiveDamagesApply,
                         statutory_basis: "Civ. Code § 1946.2(h)(3) as amended by SB 567 — willful or malicious TPA violation triggers up to 3x actual damages + attorney fees + punitive damages".to_string(),
@@ -580,7 +583,10 @@ mod tests {
         let mut input = baseline_omi_compliant_input();
         input.property_jurisdiction = PropertyJurisdiction::OutsideCalifornia;
         let output = check(&input);
-        assert_eq!(output.mode, CaSb567Mode::NotApplicablePropertyOutsideCalifornia);
+        assert_eq!(
+            output.mode,
+            CaSb567Mode::NotApplicablePropertyOutsideCalifornia
+        );
     }
 
     #[test]
@@ -691,7 +697,8 @@ mod tests {
         let mut input = baseline_omi_compliant_input();
         input.omi_actual_occupancy_status =
             OmiActualOccupancyStatus::OwnerDidNotMoveInWithin90DaysOfTenantVacate;
-        input.reoccupancy_offer_status = ReoccupancyOfferStatus::NoReoccupancyOfferAfterOmiFailureToComply;
+        input.reoccupancy_offer_status =
+            ReoccupancyOfferStatus::NoReoccupancyOfferAfterOmiFailureToComply;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -708,7 +715,8 @@ mod tests {
         let mut input = baseline_omi_compliant_input();
         input.omi_actual_occupancy_status =
             OmiActualOccupancyStatus::OwnerMovedInButDidNotOccupyFor12ContinuousMonths;
-        input.reoccupancy_offer_status = ReoccupancyOfferStatus::NoReoccupancyOfferAfterOmiFailureToComply;
+        input.reoccupancy_offer_status =
+            ReoccupancyOfferStatus::NoReoccupancyOfferAfterOmiFailureToComply;
         input.willfulness_status =
             WillfulnessStatus::WillfulOrMaliciousViolation3xActualDamagesApplies;
         let output = check(&input);

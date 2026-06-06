@@ -111,15 +111,13 @@ pub fn check(input: &Section6303Input) -> Section6303Result {
     }
 
     if input.notice_given && !input.amount_stated {
-        failure_reasons.push(
-            "26 USC § 6303(a) — notice must STATE THE AMOUNT of unpaid tax".to_string(),
-        );
+        failure_reasons
+            .push("26 USC § 6303(a) — notice must STATE THE AMOUNT of unpaid tax".to_string());
     }
 
     if input.notice_given && !input.payment_demanded {
-        failure_reasons.push(
-            "26 USC § 6303(a) — notice must DEMAND PAYMENT of unpaid tax".to_string(),
-        );
+        failure_reasons
+            .push("26 USC § 6303(a) — notice must DEMAND PAYMENT of unpaid tax".to_string());
     }
 
     let within_60_day = input.days_since_assessment <= 60;
@@ -342,9 +340,10 @@ mod tests {
     #[test]
     fn note_pins_60_day_rule() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6303(a)")
-            && n.contains("60 days")
-            && n.contains("§ 6203")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6303(a)") && n.contains("60 days") && n.contains("§ 6203")));
     }
 
     #[test]
@@ -359,24 +358,28 @@ mod tests {
     #[test]
     fn note_pins_late_notice_valid() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("NOT invalidate")
-            && n.contains("late notice")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("NOT invalidate") && n.contains("late notice")));
     }
 
     #[test]
     fn note_pins_delayed_demand_jeopardy_exception() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6303(b)")
-            && n.contains("§ 6861")
-            && n.contains("§ 7429")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6303(b)") && n.contains("§ 6861") && n.contains("§ 7429")));
     }
 
     #[test]
     fn note_pins_cross_reference_predicate_for_lien_and_levy() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6321")
-            && n.contains("§ 6331")
-            && n.contains("predicate")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6321") && n.contains("§ 6331") && n.contains("predicate")));
     }
 
     #[test]

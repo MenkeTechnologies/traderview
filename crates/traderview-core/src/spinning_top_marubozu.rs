@@ -14,7 +14,12 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub open: f64, pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SpinningTopMarubozuReport {
@@ -30,20 +35,21 @@ pub fn compute(bars: &[Bar]) -> SpinningTopMarubozuReport {
         bullish_marubozu: vec![false; n],
         bearish_marubozu: vec![false; n],
     };
-    if bars.iter().any(|b| !b.open.is_finite() || !b.high.is_finite()
-        || !b.low.is_finite() || !b.close.is_finite()) {
+    if bars.iter().any(|b| {
+        !b.open.is_finite() || !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()
+    }) {
         return report;
     }
     for (i, bar) in bars.iter().enumerate() {
         let range = bar.high - bar.low;
-        if range <= 0.0 { continue; }
+        if range <= 0.0 {
+            continue;
+        }
         let body = (bar.close - bar.open).abs();
         let upper = bar.high - bar.close.max(bar.open);
         let lower = bar.close.min(bar.open) - bar.low;
         // Spinning top: small body, both wicks substantial.
-        if body <= 0.3 * range
-            && upper >= 0.3 * range
-            && lower >= 0.3 * range {
+        if body <= 0.3 * range && upper >= 0.3 * range && lower >= 0.3 * range {
             report.spinning_top[i] = true;
         }
         // Marubozu: body ≥ 95% of range.
@@ -63,7 +69,12 @@ mod tests {
     use super::*;
 
     fn bar(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -74,8 +85,10 @@ mod tests {
 
     #[test]
     fn nan_returns_empty() {
-        let bars = vec![bar(100.0, 101.0, 99.0, 100.0),
-                        bar(f64::NAN, 101.0, 99.0, 100.0)];
+        let bars = vec![
+            bar(100.0, 101.0, 99.0, 100.0),
+            bar(f64::NAN, 101.0, 99.0, 100.0),
+        ];
         let r = compute(&bars);
         assert!(!r.spinning_top.iter().any(|x| *x));
     }

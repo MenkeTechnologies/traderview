@@ -261,12 +261,8 @@ fn control_label(control: LandlordControlOverPremises) -> &'static str {
         LandlordControlOverPremises::BiteInCommonAreaControlledByLandlord => {
             "common area controlled by landlord"
         }
-        LandlordControlOverPremises::BiteInTenantsLeasedPremises => {
-            "tenant's leased premises"
-        }
-        LandlordControlOverPremises::BiteOffPremisesDuringWalk => {
-            "off-premises during walk"
-        }
+        LandlordControlOverPremises::BiteInTenantsLeasedPremises => "tenant's leased premises",
+        LandlordControlOverPremises::BiteOffPremisesDuringWalk => "off-premises during walk",
     }
 }
 
@@ -382,8 +378,7 @@ mod tests {
     #[test]
     fn off_premises_walk_without_knowledge_dog_owner_only() {
         let mut input = base_ca();
-        input.landlord_knowledge_status =
-            LandlordKnowledgeStatus::ConstructiveKnowledgePresumed;
+        input.landlord_knowledge_status = LandlordKnowledgeStatus::ConstructiveKnowledgePresumed;
         input.landlord_control_over_premises =
             LandlordControlOverPremises::BiteOffPremisesDuringWalk;
         let output = check(&input);
@@ -485,8 +480,7 @@ mod tests {
     #[test]
     fn constructive_knowledge_with_common_area_failure_liability() {
         let mut input = base_ca();
-        input.landlord_knowledge_status =
-            LandlordKnowledgeStatus::ConstructiveKnowledgePresumed;
+        input.landlord_knowledge_status = LandlordKnowledgeStatus::ConstructiveKnowledgePresumed;
         let output = check(&input);
         assert_eq!(
             output.severity,

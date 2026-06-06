@@ -140,7 +140,10 @@ pub fn check(input: &Input) -> Output {
     ];
 
     if !input.corporate_shareholder {
-        notes.push("Non-corporate shareholder — § 1059 applies only to corporate shareholders.".to_string());
+        notes.push(
+            "Non-corporate shareholder — § 1059 applies only to corporate shareholders."
+                .to_string(),
+        );
         return Output {
             severity: Severity::NotCorporateShareholderNoBasisReduction,
             is_extraordinary_dividend: false,

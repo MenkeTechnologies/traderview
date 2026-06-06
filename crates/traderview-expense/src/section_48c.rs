@@ -405,8 +405,7 @@ mod tests {
                 ProjectCategory::CleanEnergyManufacturingAndRecyclingUnderSection48CcA,
             pwa_status: PwaStatus::SatisfiesPwaRequirements,
             certification_status: CertificationStatus::CertifiedUnderSection48Ce,
-            energy_community_status:
-                EnergyCommunityStatus::NotLocatedInEnergyCommunityCensusTract,
+            energy_community_status: EnergyCommunityStatus::NotLocatedInEnergyCommunityCensusTract,
             certification_evidence_timing_status:
                 CertificationEvidenceTimingStatus::EvidenceProvidedWithin2YearsFromAcceptance,
             place_in_service_timing_status:
@@ -473,7 +472,10 @@ mod tests {
         input.pwa_status = PwaStatus::DoesNotSatisfyPwaRequirements;
         input.qualified_investment_dollars = 100_000_000;
         let out = check(&input);
-        assert_eq!(out.mode, Section48cMode::CompliantBaseRate6PercentWithoutPwa);
+        assert_eq!(
+            out.mode,
+            Section48cMode::CompliantBaseRate6PercentWithoutPwa
+        );
         assert_eq!(out.credit_amount_dollars, 6_000_000);
     }
 
@@ -484,7 +486,10 @@ mod tests {
         input.pwa_status = PwaStatus::SatisfiesPwaRequirements;
         input.qualified_investment_dollars = 100_000_000;
         let out = check(&input);
-        assert_eq!(out.mode, Section48cMode::CompliantBumpedRate30PercentWithPwa);
+        assert_eq!(
+            out.mode,
+            Section48cMode::CompliantBumpedRate30PercentWithPwa
+        );
         assert_eq!(out.credit_amount_dollars, 30_000_000);
     }
 
@@ -504,14 +509,16 @@ mod tests {
         let out_pwa = check(&input_pwa);
         assert_eq!(out_base.credit_amount_dollars, 60_000_000);
         assert_eq!(out_pwa.credit_amount_dollars, 300_000_000);
-        assert_eq!(out_pwa.credit_amount_dollars / out_base.credit_amount_dollars, 5);
+        assert_eq!(
+            out_pwa.credit_amount_dollars / out_base.credit_amount_dollars,
+            5
+        );
     }
 
     #[test]
     fn certified_under_section_48ce_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect =
-            ComplianceAspect::Section48CeCompetitiveAllocationCertification;
+        input.compliance_aspect = ComplianceAspect::Section48CeCompetitiveAllocationCertification;
         input.certification_status = CertificationStatus::CertifiedUnderSection48Ce;
         let out = check(&input);
         assert_eq!(out.mode, Section48cMode::CompliantCertifiedUnderSection48Ce);
@@ -520,11 +527,13 @@ mod tests {
     #[test]
     fn not_certified_under_section_48ce_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect =
-            ComplianceAspect::Section48CeCompetitiveAllocationCertification;
+        input.compliance_aspect = ComplianceAspect::Section48CeCompetitiveAllocationCertification;
         input.certification_status = CertificationStatus::NotCertifiedUnderSection48Ce;
         let out = check(&input);
-        assert_eq!(out.mode, Section48cMode::ViolationNotCertifiedUnderSection48Ce);
+        assert_eq!(
+            out.mode,
+            Section48cMode::ViolationNotCertifiedUnderSection48Ce
+        );
     }
 
     #[test]
@@ -532,8 +541,7 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect =
             ComplianceAspect::EnergyCommunities40PercentReservationUnderSection48Ce3A;
-        input.energy_community_status =
-            EnergyCommunityStatus::LocatedInEnergyCommunityCensusTract;
+        input.energy_community_status = EnergyCommunityStatus::LocatedInEnergyCommunityCensusTract;
         let out = check(&input);
         assert_eq!(
             out.mode,
@@ -648,7 +656,10 @@ mod tests {
         input.pwa_status = PwaStatus::SatisfiesPwaRequirements;
         input.qualified_investment_dollars = u64::MAX;
         let out = check(&input);
-        assert_eq!(out.mode, Section48cMode::CompliantBumpedRate30PercentWithPwa);
+        assert_eq!(
+            out.mode,
+            Section48cMode::CompliantBumpedRate30PercentWithPwa
+        );
         assert!(out.credit_amount_dollars > 0);
     }
 

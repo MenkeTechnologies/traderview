@@ -37,11 +37,16 @@ pub struct CirZcb {
 }
 
 pub fn zero_coupon_bond(p: &CirParams, tenor: f64) -> Option<CirZcb> {
-    if !p.kappa.is_finite() || p.kappa <= 0.0
-        || !p.theta.is_finite() || p.theta < 0.0
-        || !p.sigma.is_finite() || p.sigma < 0.0
-        || !p.r0.is_finite() || p.r0 < 0.0
-        || !tenor.is_finite() || tenor <= 0.0
+    if !p.kappa.is_finite()
+        || p.kappa <= 0.0
+        || !p.theta.is_finite()
+        || p.theta < 0.0
+        || !p.sigma.is_finite()
+        || p.sigma < 0.0
+        || !p.r0.is_finite()
+        || p.r0 < 0.0
+        || !tenor.is_finite()
+        || tenor <= 0.0
     {
         return None;
     }
@@ -53,17 +58,29 @@ pub fn zero_coupon_bond(p: &CirParams, tenor: f64) -> Option<CirZcb> {
     let gamma = (k * k + 2.0 * sigma2).sqrt();
     let e_gt = (gamma * tenor).exp();
     let denom = (gamma + k) * (e_gt - 1.0) + 2.0 * gamma;
-    if !denom.is_finite() || denom == 0.0 { return None; }
+    if !denom.is_finite() || denom == 0.0 {
+        return None;
+    }
     let b = 2.0 * (e_gt - 1.0) / denom;
     // A is positive for valid parameters.
     let a_num = 2.0 * gamma * ((k + gamma) * tenor / 2.0).exp();
     let a_base = a_num / denom;
-    if !a_base.is_finite() || a_base <= 0.0 { return None; }
-    let a_exp = if sigma2 > 0.0 { 2.0 * k * theta / sigma2 } else { 0.0 };
+    if !a_base.is_finite() || a_base <= 0.0 {
+        return None;
+    }
+    let a_exp = if sigma2 > 0.0 {
+        2.0 * k * theta / sigma2
+    } else {
+        0.0
+    };
     let a = a_base.powf(a_exp);
-    if !a.is_finite() || a <= 0.0 { return None; }
+    if !a.is_finite() || a <= 0.0 {
+        return None;
+    }
     let price = a * (-b * r0).exp();
-    if !price.is_finite() || price <= 0.0 { return None; }
+    if !price.is_finite() || price <= 0.0 {
+        return None;
+    }
     let zero_rate = -price.ln() / tenor;
     let feller = 2.0 * k * theta >= sigma2;
     Some(CirZcb {
@@ -84,7 +101,12 @@ mod tests {
     use super::*;
 
     fn p(k: f64, theta: f64, sigma: f64, r0: f64) -> CirParams {
-        CirParams { kappa: k, theta, sigma, r0 }
+        CirParams {
+            kappa: k,
+            theta,
+            sigma,
+            r0,
+        }
     }
 
     #[test]
@@ -152,8 +174,12 @@ mod tests {
         let bound = 2.0 * kappa * theta / (gamma + kappa);
         let r = zero_coupon_bond(&pp, 100.0).unwrap();
         // At T=100 with κ=0.5 the rate should be close to the bound.
-        assert!((r.zero_rate - bound).abs() < 0.01,
-            "long-run rate {} should be close to bound {}", r.zero_rate, bound);
+        assert!(
+            (r.zero_rate - bound).abs() < 0.01,
+            "long-run rate {} should be close to bound {}",
+            r.zero_rate,
+            bound
+        );
         // And the bound itself should be below θ (convexity-adjusted).
         assert!(bound < pp.theta);
     }

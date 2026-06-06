@@ -333,17 +333,17 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateApplicationFeeRule>> = La
         rule("HI", "Hawaii", NoStatute, "no statute"),
         rule("IA", "Iowa", NoStatute, "no statute"),
         rule("ID", "Idaho", NoStatute, "no statute"),
-        rule("IL", "Illinois", NoStatute, "no statewide statute (Chicago RLTO local)"),
+        rule(
+            "IL",
+            "Illinois",
+            NoStatute,
+            "no statewide statute (Chicago RLTO local)",
+        ),
         rule("IN", "Indiana", NoStatute, "no statute"),
         rule("KS", "Kansas", NoStatute, "no statute"),
         rule("KY", "Kentucky", NoStatute, "no statute"),
         rule("LA", "Louisiana", NoStatute, "no statute"),
-        rule(
-            "MA",
-            "Massachusetts",
-            Prohibited,
-            "M.G.L. c. 186 § 15B",
-        ),
+        rule("MA", "Massachusetts", Prohibited, "M.G.L. c. 186 § 15B"),
         rule(
             "MD",
             "Maryland",
@@ -622,7 +622,11 @@ mod tests {
     #[test]
     fn citation_present_for_every_row() {
         for r in TABLE.values() {
-            assert!(!r.citation.is_empty(), "{} has empty citation", r.state_code);
+            assert!(
+                !r.citation.is_empty(),
+                "{} has empty citation",
+                r.state_code
+            );
         }
     }
 

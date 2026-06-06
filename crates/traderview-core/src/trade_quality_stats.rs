@@ -24,8 +24,8 @@ pub struct Trade {
     pub entry_unix_seconds: i64,
     pub exit_unix_seconds: i64,
     pub pnl: f64,
-    pub max_adverse_excursion: f64,    // negative or zero (max loss during trade)
-    pub max_favorable_excursion: f64,  // positive or zero (max gain during trade)
+    pub max_adverse_excursion: f64, // negative or zero (max loss during trade)
+    pub max_favorable_excursion: f64, // positive or zero (max gain during trade)
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Default)]
@@ -50,7 +50,9 @@ pub struct TradeQualityReport {
 }
 
 pub fn analyze(trades: &[Trade]) -> Option<TradeQualityReport> {
-    if trades.is_empty() { return None; }
+    if trades.is_empty() {
+        return None;
+    }
     let mut r = TradeQualityReport::default();
     let mut sum_hold = 0.0_f64;
     let mut sum_mae_losers = 0.0_f64;
@@ -73,39 +75,69 @@ pub fn analyze(trades: &[Trade]) -> Option<TradeQualityReport> {
         if t.pnl > 0.0 {
             r.n_winners += 1;
             r.gross_profit += t.pnl;
-            if t.pnl > r.largest_winner { r.largest_winner = t.pnl; }
+            if t.pnl > r.largest_winner {
+                r.largest_winner = t.pnl;
+            }
             sum_mfe_winners += t.max_favorable_excursion.max(t.pnl);
             sum_winner_pnl += t.pnl;
         } else if t.pnl < 0.0 {
             r.n_losers += 1;
             r.gross_loss += -t.pnl;
-            if t.pnl < r.largest_loser { r.largest_loser = t.pnl; }
+            if t.pnl < r.largest_loser {
+                r.largest_loser = t.pnl;
+            }
             sum_mae_losers += (-t.max_adverse_excursion).max(-t.pnl);
             sum_loser_pnl += -t.pnl;
         }
     }
-    if r.n_trades == 0 { return None; }
+    if r.n_trades == 0 {
+        return None;
+    }
     let n_f = r.n_trades as f64;
     r.win_rate = r.n_winners as f64 / n_f;
     r.expectancy = r.net_pnl / n_f;
-    r.avg_winner = if r.n_winners > 0 { r.gross_profit / r.n_winners as f64 } else { 0.0 };
-    r.avg_loser = if r.n_losers > 0 { -r.gross_loss / r.n_losers as f64 } else { 0.0 };
+    r.avg_winner = if r.n_winners > 0 {
+        r.gross_profit / r.n_winners as f64
+    } else {
+        0.0
+    };
+    r.avg_loser = if r.n_losers > 0 {
+        -r.gross_loss / r.n_losers as f64
+    } else {
+        0.0
+    };
     r.avg_hold_seconds = sum_hold / n_f;
     r.profit_factor = if r.gross_loss > 0.0 {
         r.gross_profit / r.gross_loss
-    } else if r.gross_profit > 0.0 { f64::INFINITY } else { 0.0 };
+    } else if r.gross_profit > 0.0 {
+        f64::INFINITY
+    } else {
+        0.0
+    };
     r.mae_to_loss_ratio = if sum_loser_pnl > 0.0 {
         sum_mae_losers / sum_loser_pnl
-    } else { 0.0 };
+    } else {
+        0.0
+    };
     r.mfe_capture_ratio = if sum_mfe_winners > 0.0 {
         sum_winner_pnl / sum_mfe_winners
-    } else { 0.0 };
+    } else {
+        0.0
+    };
     r.payoff_ratio = if r.avg_loser.abs() > 0.0 {
         r.avg_winner / r.avg_loser.abs()
-    } else if r.avg_winner > 0.0 { f64::INFINITY } else { 0.0 };
+    } else if r.avg_winner > 0.0 {
+        f64::INFINITY
+    } else {
+        0.0
+    };
     // Cleanup sentinel extremes when zero winners / losers.
-    if r.n_winners == 0 { r.largest_winner = 0.0; }
-    if r.n_losers == 0 { r.largest_loser = 0.0; }
+    if r.n_winners == 0 {
+        r.largest_winner = 0.0;
+    }
+    if r.n_losers == 0 {
+        r.largest_loser = 0.0;
+    }
     Some(r)
 }
 
@@ -187,10 +219,7 @@ mod tests {
 
     #[test]
     fn payoff_ratio_avg_winner_over_avg_loser() {
-        let trades = vec![
-            t(0, 100, 100.0, 0.0, 100.0),
-            t(0, 100, -25.0, -25.0, 0.0),
-        ];
+        let trades = vec![t(0, 100, 100.0, 0.0, 100.0), t(0, 100, -25.0, -25.0, 0.0)];
         let r = analyze(&trades).unwrap();
         assert!((r.payoff_ratio - 4.0).abs() < 1e-9);
     }
@@ -225,8 +254,8 @@ mod tests {
     #[test]
     fn average_hold_seconds_computed() {
         let trades = vec![
-            t(100, 200, 10.0, 0.0, 0.0),    // 100s hold
-            t(0, 300, 10.0, 0.0, 0.0),      // 300s hold
+            t(100, 200, 10.0, 0.0, 0.0), // 100s hold
+            t(0, 300, 10.0, 0.0, 0.0),   // 300s hold
         ];
         let r = analyze(&trades).unwrap();
         assert!((r.avg_hold_seconds - 200.0).abs() < 1e-9);

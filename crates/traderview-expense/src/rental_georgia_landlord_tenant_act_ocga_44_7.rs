@@ -276,7 +276,9 @@ pub fn compute(input: &Input) -> Output {
             }
         }
         ComplianceAspect::ThreeBusinessDayPayOrQuitNoticeUnderOcga44_7_50 => {
-            if input.pay_or_quit_notice_business_days_given >= GA_LANDLORD_TENANT_PAY_OR_QUIT_NOTICE_BUSINESS_DAYS {
+            if input.pay_or_quit_notice_business_days_given
+                >= GA_LANDLORD_TENANT_PAY_OR_QUIT_NOTICE_BUSINESS_DAYS
+            {
                 Output {
                     mode: GaLandlordTenantMode::CompliantThreeBusinessDayPayOrQuitNoticeProvided,
                     statutory_basis: "O.C.G.A. § 44-7-50 — 3-business-day pay or quit notice provided (Safe at Home Act 2024)".to_string(),
@@ -344,7 +346,8 @@ mod tests {
     fn baseline_input() -> Input {
         Input {
             tenancy_type: TenancyType::ResidentialRentalCoveredByChapter7,
-            compliance_aspect: ComplianceAspect::SecurityDepositReturnAndItemizedStatementUnderOcga44_7_34,
+            compliance_aspect:
+                ComplianceAspect::SecurityDepositReturnAndItemizedStatementUnderOcga44_7_34,
             notice_party_type: NoticePartyType::LandlordTerminatingTenancyAtWill,
             monthly_rent_dollars: 1_500,
             security_deposit_dollars: 1_500,
@@ -367,7 +370,10 @@ mod tests {
         let mut input = baseline_input();
         input.tenancy_type = TenancyType::CommercialRentalExempt;
         let output = check(&input);
-        assert_eq!(output.mode, GaLandlordTenantMode::NotApplicableTenancyExemptFromChapter7);
+        assert_eq!(
+            output.mode,
+            GaLandlordTenantMode::NotApplicableTenancyExemptFromChapter7
+        );
     }
 
     #[test]
@@ -442,7 +448,8 @@ mod tests {
     #[test]
     fn bad_faith_retention_treble_damages_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SecurityDepositBadFaithRetentionTrebleDamagesUnderOcga44_7_35;
+        input.compliance_aspect =
+            ComplianceAspect::SecurityDepositBadFaithRetentionTrebleDamagesUnderOcga44_7_35;
         input.portion_of_deposit_wrongfully_withheld_dollars = 800;
         let output = check(&input);
         assert_eq!(
@@ -455,7 +462,8 @@ mod tests {
     #[test]
     fn no_bad_faith_retention_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SecurityDepositBadFaithRetentionTrebleDamagesUnderOcga44_7_35;
+        input.compliance_aspect =
+            ComplianceAspect::SecurityDepositBadFaithRetentionTrebleDamagesUnderOcga44_7_35;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -466,7 +474,8 @@ mod tests {
     #[test]
     fn landlord_repair_and_habitability_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordObligationToRepairAndHabitabilityUnderOcga44_7_13;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordObligationToRepairAndHabitabilityUnderOcga44_7_13;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -477,10 +486,14 @@ mod tests {
     #[test]
     fn landlord_repair_obligations_breached_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordObligationToRepairAndHabitabilityUnderOcga44_7_13;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordObligationToRepairAndHabitabilityUnderOcga44_7_13;
         input.landlord_repair_and_habitability_obligations_met = false;
         let output = check(&input);
-        assert_eq!(output.mode, GaLandlordTenantMode::ViolationLandlordRepairObligationsBreached);
+        assert_eq!(
+            output.mode,
+            GaLandlordTenantMode::ViolationLandlordRepairObligationsBreached
+        );
     }
 
     #[test]
@@ -599,7 +612,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::Section8RetaliationProhibitedUnderOcga44_7_103;
         let output = check(&input);
-        assert_eq!(output.mode, GaLandlordTenantMode::CompliantNoSection8Retaliation);
+        assert_eq!(
+            output.mode,
+            GaLandlordTenantMode::CompliantNoSection8Retaliation
+        );
     }
 
     #[test]
@@ -608,7 +624,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::Section8RetaliationProhibitedUnderOcga44_7_103;
         input.section_8_voucher_tenant_retaliation_occurred = true;
         let output = check(&input);
-        assert_eq!(output.mode, GaLandlordTenantMode::ViolationSection8RetaliationProhibited);
+        assert_eq!(
+            output.mode,
+            GaLandlordTenantMode::ViolationSection8RetaliationProhibited
+        );
     }
 
     #[test]
@@ -616,13 +635,22 @@ mod tests {
         assert_eq!(GA_LANDLORD_TENANT_TITLE_NUMBER, 44);
         assert_eq!(GA_LANDLORD_TENANT_CHAPTER_NUMBER, 7);
         assert_eq!(GA_LANDLORD_TENANT_SAFE_AT_HOME_ACT_ENACTMENT_YEAR, 2024);
-        assert_eq!(GA_LANDLORD_TENANT_SAFE_AT_HOME_ACT_EFFECTIVE_DATE_YEAR, 2024);
+        assert_eq!(
+            GA_LANDLORD_TENANT_SAFE_AT_HOME_ACT_EFFECTIVE_DATE_YEAR,
+            2024
+        );
         assert_eq!(GA_LANDLORD_TENANT_SAFE_AT_HOME_ACT_EFFECTIVE_DATE_MONTH, 7);
         assert_eq!(GA_LANDLORD_TENANT_SAFE_AT_HOME_ACT_EFFECTIVE_DATE_DAY, 1);
         assert_eq!(GA_LANDLORD_TENANT_SECURITY_DEPOSIT_RETURN_DEADLINE_DAYS, 30);
         assert_eq!(GA_LANDLORD_TENANT_PAY_OR_QUIT_NOTICE_BUSINESS_DAYS, 3);
-        assert_eq!(GA_LANDLORD_TENANT_LANDLORD_NOTICE_TO_TERMINATE_AT_WILL_DAYS, 60);
-        assert_eq!(GA_LANDLORD_TENANT_TENANT_NOTICE_TO_TERMINATE_AT_WILL_DAYS, 30);
+        assert_eq!(
+            GA_LANDLORD_TENANT_LANDLORD_NOTICE_TO_TERMINATE_AT_WILL_DAYS,
+            60
+        );
+        assert_eq!(
+            GA_LANDLORD_TENANT_TENANT_NOTICE_TO_TERMINATE_AT_WILL_DAYS,
+            30
+        );
         assert_eq!(GA_LANDLORD_TENANT_TREBLE_DAMAGES_MULTIPLIER, 3);
         assert_eq!(GA_LANDLORD_TENANT_SMALL_LANDLORD_UNIT_THRESHOLD, 10);
         assert_eq!(GA_LANDLORD_TENANT_BASIS_POINT_DENOMINATOR, 10_000);
@@ -660,7 +688,8 @@ mod tests {
     #[test]
     fn treble_damages_saturating_overflow_defense() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SecurityDepositBadFaithRetentionTrebleDamagesUnderOcga44_7_35;
+        input.compliance_aspect =
+            ComplianceAspect::SecurityDepositBadFaithRetentionTrebleDamagesUnderOcga44_7_35;
         input.portion_of_deposit_wrongfully_withheld_dollars = u64::MAX;
         let output = check(&input);
         assert_eq!(

@@ -631,7 +631,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::TraDisclosureRequirementUnderMcl554_634;
         input.tra_disclosure_provided = true;
         let out = check(&input);
-        assert_eq!(out.mode, MiLandlordTenantMode::CompliantTraDisclosureProvided);
+        assert_eq!(
+            out.mode,
+            MiLandlordTenantMode::CompliantTraDisclosureProvided
+        );
     }
 
     #[test]
@@ -640,7 +643,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::TraDisclosureRequirementUnderMcl554_634;
         input.tra_disclosure_provided = false;
         let out = check(&input);
-        assert_eq!(out.mode, MiLandlordTenantMode::ViolationTraDisclosureOmitted);
+        assert_eq!(
+            out.mode,
+            MiLandlordTenantMode::ViolationTraDisclosureOmitted
+        );
     }
 
     #[test]

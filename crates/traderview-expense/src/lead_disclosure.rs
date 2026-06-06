@@ -150,32 +150,27 @@ pub fn check(input: &LeadCheckInput) -> LeadCheckResult {
     };
 
     let federal_required = input.year_built < FEDERAL_PRE_1978_CUTOFF;
-    let state_required = !matches!(rule.regime, LeadStateRegime::FederalFloorOnly) && federal_required;
+    let state_required =
+        !matches!(rule.regime, LeadStateRegime::FederalFloorOnly) && federal_required;
 
     let mut violations: Vec<String> = Vec::new();
 
     // Federal floor violations (only if pre-1978).
     if federal_required {
         if !input.federal_lead_warning_in_lease {
-            violations.push(
-                "Federal Title X Lead Warning Statement language missing from lease".into(),
-            );
+            violations
+                .push("Federal Title X Lead Warning Statement language missing from lease".into());
         }
         if !input.epa_pamphlet_provided {
             violations.push(
-                "EPA pamphlet \"Protect Your Family From Lead in Your Home\" not provided"
-                    .into(),
+                "EPA pamphlet \"Protect Your Family From Lead in Your Home\" not provided".into(),
             );
         }
         if !input.known_lead_records_disclosed {
-            violations.push(
-                "Known lead records / prior inspections not disclosed".into(),
-            );
+            violations.push("Known lead records / prior inspections not disclosed".into());
         }
         if !input.ten_day_assessment_window_offered {
-            violations.push(
-                "10-day risk-assessment window not offered to tenant".into(),
-            );
+            violations.push("10-day risk-assessment window not offered to tenant".into());
         }
     }
 
@@ -190,17 +185,13 @@ pub fn check(input: &LeadCheckInput) -> LeadCheckResult {
                 rule.state_name
             ));
         }
-        if rule.periodic_inspection_required
-            && !input.state_required_inspection_completed
-        {
+        if rule.periodic_inspection_required && !input.state_required_inspection_completed {
             violations.push(format!(
                 "{} requires periodic lead inspection; not completed",
                 rule.state_name
             ));
         }
-        if rule.inspection_at_change_of_occupancy
-            && !input.state_required_inspection_completed
-        {
+        if rule.inspection_at_change_of_occupancy && !input.state_required_inspection_completed {
             violations.push(format!(
                 "{} requires inspection at change of occupancy; not completed",
                 rule.state_name

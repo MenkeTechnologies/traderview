@@ -150,8 +150,7 @@ pub fn check(input: &SelfHelpEvictionInput) -> SelfHelpEvictionResult {
 
     let action_engaged = !matches!(input.action, SelfHelpAction::None);
     let intent_required = input.jurisdiction == Jurisdiction::California;
-    let intent_satisfied =
-        !intent_required || input.acted_with_intent_to_terminate_occupancy;
+    let intent_satisfied = !intent_required || input.acted_with_intent_to_terminate_occupancy;
 
     let violation_engaged =
         action_engaged && !input.court_eviction_judgment_obtained && intent_satisfied;
@@ -378,8 +377,9 @@ mod tests {
         i.jurisdiction = Jurisdiction::Florida;
         i.subsequent_non_contemporaneous_violation = true;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 83.67")
-            && f.contains("SUBSEQUENT non-contemporaneous violation")));
+        assert!(r.failure_reasons.iter().any(
+            |f| f.contains("§ 83.67") && f.contains("SUBSEQUENT non-contemporaneous violation")
+        ));
     }
 
     #[test]
@@ -388,7 +388,10 @@ mod tests {
         i.jurisdiction = Jurisdiction::Florida;
         let r = check(&i);
         assert!(r.injunctive_relief_available);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("IRREPARABLE HARM")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("IRREPARABLE HARM")));
     }
 
     #[test]
@@ -418,8 +421,10 @@ mod tests {
         i.actual_damages_cents = 500_000;
         let r = check(&i);
         assert_eq!(r.statutory_damages_cents, 500_000);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("Common law wrongful eviction")
-            && f.contains("PUNITIVE damages")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("Common law wrongful eviction") && f.contains("PUNITIVE damages")));
     }
 
     #[test]
@@ -459,8 +464,10 @@ mod tests {
     #[test]
     fn note_pins_california_intent_element() {
         let r = check(&ca_violation());
-        assert!(r.notes.iter().any(|n| n.contains("§ 789.3")
-            && n.contains("INTENT TO TERMINATE OCCUPANCY")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 789.3") && n.contains("INTENT TO TERMINATE OCCUPANCY")));
     }
 
     #[test]
@@ -474,8 +481,10 @@ mod tests {
     #[test]
     fn note_pins_new_york_marshal_warrant_requirement() {
         let r = check(&ca_violation());
-        assert!(r.notes.iter().any(|n| n.contains("marshal's warrant")
-            && n.contains("EVERY residential eviction")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("marshal's warrant") && n.contains("EVERY residential eviction")));
     }
 
     #[test]
@@ -505,8 +514,10 @@ mod tests {
     #[test]
     fn note_pins_default_punitive_damages() {
         let r = check(&ca_violation());
-        assert!(r.notes.iter().any(|n| n.contains("Common law wrongful eviction")
-            && n.contains("PUNITIVE damages")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Common law wrongful eviction") && n.contains("PUNITIVE damages")));
     }
 
     #[test]

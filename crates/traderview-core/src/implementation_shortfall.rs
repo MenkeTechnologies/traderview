@@ -23,7 +23,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum TradeDirection { Buy, Sell }
+pub enum TradeDirection {
+    Buy,
+    Sell,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ShortfallInput {
@@ -60,16 +63,22 @@ pub struct ShortfallReport {
 
 pub fn analyze(input: &ShortfallInput) -> ShortfallReport {
     if input.intended_qty <= 0.0 {
-        return ShortfallReport { note: "intended_qty must be > 0".into(), ..Default::default() };
+        return ShortfallReport {
+            note: "intended_qty must be > 0".into(),
+            ..Default::default()
+        };
     }
     if !input.decision_mid.is_finite() || input.decision_mid <= 0.0 {
-        return ShortfallReport { note: "decision_mid must be positive finite".into(), ..Default::default() };
+        return ShortfallReport {
+            note: "decision_mid must be positive finite".into(),
+            ..Default::default()
+        };
     }
     // Sign convention: for a Buy, costs are POSITIVE when the market moves
     // up against the trader. For a Sell, costs are POSITIVE when the market
     // moves down.
     let sign = match input.direction {
-        TradeDirection::Buy  =>  1.0,
+        TradeDirection::Buy => 1.0,
         TradeDirection::Sell => -1.0,
     };
     let filled = input.filled_qty.max(0.0).min(input.intended_qty);
@@ -86,19 +95,32 @@ pub fn analyze(input: &ShortfallInput) -> ShortfallReport {
     let opportunity_cost = sign * (input.final_mid - input.decision_mid) * unfilled;
     let total = spread_cost + timing_cost + impact_cost + opportunity_cost;
     let notional = input.intended_qty * input.decision_mid;
-    let total_bps = if notional > 0.0 { total / notional * 10_000.0 } else { 0.0 };
+    let total_bps = if notional > 0.0 {
+        total / notional * 10_000.0
+    } else {
+        0.0
+    };
 
     let note = if filled == 0.0 {
         format!("unfilled order — opportunity cost ${:.2}", opportunity_cost)
     } else if unfilled > 0.0 {
-        format!("partial fill ({:.0}%) — shortfall ${:.2} ({:.1} bps)",
-                filled / input.intended_qty * 100.0, total, total_bps)
+        format!(
+            "partial fill ({:.0}%) — shortfall ${:.2} ({:.1} bps)",
+            filled / input.intended_qty * 100.0,
+            total,
+            total_bps
+        )
     } else {
         format!("full fill — shortfall ${:.2} ({:.1} bps)", total, total_bps)
     };
     ShortfallReport {
-        spread_cost, timing_cost, impact_cost, opportunity_cost,
-        total_dollars: total, total_bps, note,
+        spread_cost,
+        timing_cost,
+        impact_cost,
+        opportunity_cost,
+        total_dollars: total,
+        total_bps,
+        note,
     }
 }
 
@@ -110,8 +132,13 @@ mod tests {
     fn invalid_intended_qty_returns_zero_with_note() {
         let r = analyze(&ShortfallInput {
             direction: TradeDirection::Buy,
-            decision_mid: 100.0, arrival_mid: 100.0, vwap_fill: 100.0, final_mid: 100.0,
-            half_spread_at_decision: 0.01, intended_qty: 0.0, filled_qty: 0.0,
+            decision_mid: 100.0,
+            arrival_mid: 100.0,
+            vwap_fill: 100.0,
+            final_mid: 100.0,
+            half_spread_at_decision: 0.01,
+            intended_qty: 0.0,
+            filled_qty: 0.0,
         });
         assert_eq!(r.total_dollars, 0.0);
         assert!(r.note.contains("intended_qty"));
@@ -125,13 +152,21 @@ mod tests {
         // total is just the spread paid: $1.
         let r = analyze(&ShortfallInput {
             direction: TradeDirection::Buy,
-            decision_mid: 100.0, arrival_mid: 100.0, vwap_fill: 100.01, final_mid: 100.0,
-            half_spread_at_decision: 0.01, intended_qty: 100.0, filled_qty: 100.0,
+            decision_mid: 100.0,
+            arrival_mid: 100.0,
+            vwap_fill: 100.01,
+            final_mid: 100.0,
+            half_spread_at_decision: 0.01,
+            intended_qty: 100.0,
+            filled_qty: 100.0,
         });
         assert!((r.spread_cost - 1.0).abs() < 1e-9);
         assert!(r.timing_cost.abs() < 1e-9);
-        assert!(r.impact_cost.abs() < 1e-9,
-            "no excess impact when fill = ask, got {}", r.impact_cost);
+        assert!(
+            r.impact_cost.abs() < 1e-9,
+            "no excess impact when fill = ask, got {}",
+            r.impact_cost
+        );
         assert!(r.opportunity_cost.abs() < 1e-9);
         assert!((r.total_dollars - 1.0).abs() < 1e-9);
     }
@@ -144,12 +179,20 @@ mod tests {
         // Total = $0 — trader paid nothing vs decision.
         let r = analyze(&ShortfallInput {
             direction: TradeDirection::Buy,
-            decision_mid: 100.0, arrival_mid: 100.0, vwap_fill: 100.0, final_mid: 100.0,
-            half_spread_at_decision: 0.01, intended_qty: 100.0, filled_qty: 100.0,
+            decision_mid: 100.0,
+            arrival_mid: 100.0,
+            vwap_fill: 100.0,
+            final_mid: 100.0,
+            half_spread_at_decision: 0.01,
+            intended_qty: 100.0,
+            filled_qty: 100.0,
         });
         assert!((r.spread_cost - 1.0).abs() < 1e-9);
-        assert!((r.impact_cost - (-1.0)).abs() < 1e-9,
-            "midpoint fill should give -spread impact credit, got {}", r.impact_cost);
+        assert!(
+            (r.impact_cost - (-1.0)).abs() < 1e-9,
+            "midpoint fill should give -spread impact credit, got {}",
+            r.impact_cost
+        );
         assert!(r.total_dollars.abs() < 1e-9);
     }
 
@@ -158,11 +201,19 @@ mod tests {
         // Decision at $100, arrival at $100.50 → $0.50 × 100 shares = $50 timing.
         let r = analyze(&ShortfallInput {
             direction: TradeDirection::Buy,
-            decision_mid: 100.0, arrival_mid: 100.5, vwap_fill: 100.5, final_mid: 100.5,
-            half_spread_at_decision: 0.0, intended_qty: 100.0, filled_qty: 100.0,
+            decision_mid: 100.0,
+            arrival_mid: 100.5,
+            vwap_fill: 100.5,
+            final_mid: 100.5,
+            half_spread_at_decision: 0.0,
+            intended_qty: 100.0,
+            filled_qty: 100.0,
         });
         assert!((r.timing_cost - 50.0).abs() < 1e-9);
-        assert!(r.impact_cost.abs() < 1e-9, "no impact when fill = arrival_mid");
+        assert!(
+            r.impact_cost.abs() < 1e-9,
+            "no impact when fill = arrival_mid"
+        );
     }
 
     #[test]
@@ -171,11 +222,19 @@ mod tests {
         // $102. Opportunity cost = $2 × 50 unfilled = $100.
         let r = analyze(&ShortfallInput {
             direction: TradeDirection::Buy,
-            decision_mid: 100.0, arrival_mid: 100.0, vwap_fill: 100.0, final_mid: 102.0,
-            half_spread_at_decision: 0.0, intended_qty: 100.0, filled_qty: 50.0,
+            decision_mid: 100.0,
+            arrival_mid: 100.0,
+            vwap_fill: 100.0,
+            final_mid: 102.0,
+            half_spread_at_decision: 0.0,
+            intended_qty: 100.0,
+            filled_qty: 50.0,
         });
-        assert!((r.opportunity_cost - 100.0).abs() < 1e-9,
-            "expected $100 opportunity cost, got {}", r.opportunity_cost);
+        assert!(
+            (r.opportunity_cost - 100.0).abs() < 1e-9,
+            "expected $100 opportunity cost, got {}",
+            r.opportunity_cost
+        );
         assert!(r.spread_cost.abs() < 1e-9, "no spread when half_spread=0");
     }
 
@@ -186,10 +245,18 @@ mod tests {
         // Decision $100, arrival $101, no spread, all filled. Sell cost = -$100.
         let r = analyze(&ShortfallInput {
             direction: TradeDirection::Sell,
-            decision_mid: 100.0, arrival_mid: 101.0, vwap_fill: 101.0, final_mid: 101.0,
-            half_spread_at_decision: 0.0, intended_qty: 100.0, filled_qty: 100.0,
+            decision_mid: 100.0,
+            arrival_mid: 101.0,
+            vwap_fill: 101.0,
+            final_mid: 101.0,
+            half_spread_at_decision: 0.0,
+            intended_qty: 100.0,
+            filled_qty: 100.0,
         });
-        assert!(r.timing_cost < 0.0, "seller captured upside as negative cost");
+        assert!(
+            r.timing_cost < 0.0,
+            "seller captured upside as negative cost"
+        );
     }
 
     #[test]
@@ -198,8 +265,13 @@ mod tests {
         // Total cost = $0.02 × 1000 = $20. Notional $50,000 → 4 bps.
         let r = analyze(&ShortfallInput {
             direction: TradeDirection::Buy,
-            decision_mid: 50.0, arrival_mid: 50.0, vwap_fill: 50.02, final_mid: 50.0,
-            half_spread_at_decision: 0.02, intended_qty: 1000.0, filled_qty: 1000.0,
+            decision_mid: 50.0,
+            arrival_mid: 50.0,
+            vwap_fill: 50.02,
+            final_mid: 50.0,
+            half_spread_at_decision: 0.02,
+            intended_qty: 1000.0,
+            filled_qty: 1000.0,
         });
         assert!((r.total_dollars - 20.0).abs() < 1e-9);
         assert!((r.total_bps - 4.0).abs() < 1e-9);

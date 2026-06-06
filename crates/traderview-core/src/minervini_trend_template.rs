@@ -38,13 +38,14 @@ pub struct MinerviniReport {
     pub last_price: f64,
 }
 
-pub fn classify(
-    closes: &[f64],
-    relative_strength_rank: f64,
-) -> Option<MinerviniReport> {
+pub fn classify(closes: &[f64], relative_strength_rank: f64) -> Option<MinerviniReport> {
     let n = closes.len();
-    if n < 252 { return None; }
-    if closes.iter().any(|x| !x.is_finite() || *x <= 0.0) { return None; }
+    if n < 252 {
+        return None;
+    }
+    if closes.iter().any(|x| !x.is_finite() || *x <= 0.0) {
+        return None;
+    }
     if !relative_strength_rank.is_finite() || !(0.0..=100.0).contains(&relative_strength_rank) {
         return None;
     }
@@ -58,8 +59,14 @@ pub fn classify(
     let ma_150 = sma(150, 0);
     let ma_200 = sma(200, 0);
     let ma_200_one_month_ago = sma(200, 22);
-    let high_52w = closes[n - 252..n].iter().cloned().fold(f64::NEG_INFINITY, f64::max);
-    let low_52w = closes[n - 252..n].iter().cloned().fold(f64::INFINITY, f64::min);
+    let high_52w = closes[n - 252..n]
+        .iter()
+        .cloned()
+        .fold(f64::NEG_INFINITY, f64::max);
+    let low_52w = closes[n - 252..n]
+        .iter()
+        .cloned()
+        .fold(f64::INFINITY, f64::min);
     let c1 = last_price > ma_150 && last_price > ma_200;
     let c2 = ma_150 > ma_200;
     let c3 = ma_200 > ma_200_one_month_ago;

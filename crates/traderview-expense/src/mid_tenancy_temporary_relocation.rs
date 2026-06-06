@@ -146,7 +146,9 @@ fn check_california(
     violations: &mut Vec<String>,
     notes: &mut Vec<String>,
 ) -> TemporaryRelocationResult {
-    if matches!(input.work_type, WorkType::SubstantialRemodel) && !input.vacancy_required_30_plus_days {
+    if matches!(input.work_type, WorkType::SubstantialRemodel)
+        && !input.vacancy_required_30_plus_days
+    {
         violations.push(
             "Cal. Civ. Code § 1946.2(d)(2) — substantial remodel requires vacancy ≥ 30 days; work not meeting 30-day threshold does NOT qualify as substantial remodel just-cause"
                 .to_string(),
@@ -345,13 +347,21 @@ mod tests {
 
     #[test]
     fn cosmetic_improvement_no_relocation_required_universal() {
-        for regime in [Regime::California, Regime::NewJersey, Regime::Washington, Regime::Default] {
+        for regime in [
+            Regime::California,
+            Regime::NewJersey,
+            Regime::Washington,
+            Regime::Default,
+        ] {
             let mut i = ca_base();
             i.regime = regime;
             i.work_type = WorkType::CosmeticImprovement;
             let r = check(&i);
             assert!(r.compliant);
-            assert!(r.notes.iter().any(|n| n.contains("cosmetic improvements") && n.contains("do NOT qualify")));
+            assert!(r
+                .notes
+                .iter()
+                .any(|n| n.contains("cosmetic improvements") && n.contains("do NOT qualify")));
         }
     }
 
@@ -367,7 +377,10 @@ mod tests {
         i.vacancy_required_30_plus_days = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 1946.2(d)(2)") && v.contains("30 days")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1946.2(d)(2)") && v.contains("30 days")));
     }
 
     #[test]
@@ -376,7 +389,10 @@ mod tests {
         i.written_notice_provided = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 1946.2") && v.contains("written notice")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1946.2") && v.contains("written notice")));
     }
 
     #[test]
@@ -386,7 +402,10 @@ mod tests {
         i.alternative_housing_offered = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 1946.2(d)(3)") && v.contains("one-month rent")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1946.2(d)(3)") && v.contains("one-month rent")));
     }
 
     #[test]
@@ -412,7 +431,10 @@ mod tests {
         let mut i = ca_base();
         i.local_jurisdiction_overlay_applies = true;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("SF Rent Ordinance") || n.contains("Long Beach SRTD")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("SF Rent Ordinance") || n.contains("Long Beach SRTD")));
     }
 
     #[test]
@@ -470,7 +492,10 @@ mod tests {
         i.relocation_assistance_paid = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("tenant relocation assistance required")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("tenant relocation assistance required")));
     }
 
     #[test]
@@ -478,20 +503,28 @@ mod tests {
         let mut i = wa_base();
         i.local_jurisdiction_overlay_applies = true;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("Seattle SMC 22.210") || n.contains("Bellingham")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Seattle SMC 22.210") || n.contains("Bellingham")));
     }
 
     #[test]
     fn default_compliant_with_lease_plus_common_law() {
         let r = check(&default_base());
         assert!(r.compliant);
-        assert!(r.notes.iter().any(|n| n.contains("lease + common-law habitability")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("lease + common-law habitability")));
     }
 
     #[test]
     fn default_municipal_overlay_note_always_present() {
         let r = check(&default_base());
-        assert!(r.notes.iter().any(|n| n.contains("San Francisco") || n.contains("Long Beach") || n.contains("Seattle")));
+        assert!(r.notes.iter().any(|n| n.contains("San Francisco")
+            || n.contains("Long Beach")
+            || n.contains("Seattle")));
     }
 
     #[test]

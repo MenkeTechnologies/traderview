@@ -110,11 +110,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // NoStateRegulation — all remaining states + DC.
     let no_rule = [
-        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "FL", "GA",
-        "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
-        "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
-        "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
-        "SD", "TN", "UT", "VT", "WA", "WV", "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA",
+        "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+        "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "UT", "VT", "WA",
+        "WV", "WI", "WY",
     ];
     for code in no_rule {
         m.insert(
@@ -172,8 +171,7 @@ pub fn check(input: &SubmeteringInput) -> SubmeteringResult {
 
     let mut violations: Vec<String> = Vec::new();
 
-    let disclosure_ok = if rule.written_lease_disclosure_required
-        && input.submetering_or_rubs_used
+    let disclosure_ok = if rule.written_lease_disclosure_required && input.submetering_or_rubs_used
     {
         if input.disclosed_in_lease {
             true
@@ -211,9 +209,7 @@ pub fn check(input: &SubmeteringInput) -> SubmeteringResult {
     };
 
     let service_ok = match rule.service_charge_cap_pct_bp {
-        Some(cap)
-            if input.submetering_or_rubs_used && input.service_charge_pct_bp > cap =>
-        {
+        Some(cap) if input.submetering_or_rubs_used && input.service_charge_pct_bp > cap => {
             violations.push(format!(
                 "service charge {}.{}% exceeds {}.{}% statutory cap",
                 input.service_charge_pct_bp / 100,
@@ -432,7 +428,12 @@ mod tests {
     #[test]
     fn coverage_is_all_50_states_plus_dc() {
         let codes: Vec<&'static str> = RULES.keys().copied().collect();
-        assert_eq!(codes.len(), 51, "expected 50 states + DC, got {}", codes.len());
+        assert_eq!(
+            codes.len(),
+            51,
+            "expected 50 states + DC, got {}",
+            codes.len()
+        );
     }
 
     #[test]
@@ -450,7 +451,10 @@ mod tests {
                 count += 1;
             }
         }
-        assert_eq!(count, 2, "expected CA + VA only with DisclosureAndTestingRequired");
+        assert_eq!(
+            count, 2,
+            "expected CA + VA only with DisclosureAndTestingRequired"
+        );
     }
 
     #[test]
@@ -468,8 +472,7 @@ mod tests {
     fn only_tx_has_fee_caps() {
         let mut count = 0;
         for rule in RULES.values() {
-            if rule.late_fee_cap_pct_bp.is_some() || rule.service_charge_cap_pct_bp.is_some()
-            {
+            if rule.late_fee_cap_pct_bp.is_some() || rule.service_charge_cap_pct_bp.is_some() {
                 count += 1;
             }
         }

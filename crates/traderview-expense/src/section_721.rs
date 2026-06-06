@@ -140,15 +140,15 @@ pub fn compute(input: &Section721Input) -> Section721Result {
     let realized_gain_cents = (fmv - basis).max(0);
     let realized_loss_cents = (basis - fmv).max(0);
 
-    let investment_company_exception_engaged = input.partnership_treated_as_investment_company
-        && realized_gain_cents > 0;
+    let investment_company_exception_engaged =
+        input.partnership_treated_as_investment_company && realized_gain_cents > 0;
 
     let section_721c_gain_recognition_required = input.related_foreign_person_is_partner
         && input.partnership_formed_on_or_after_jan_18_2017
         && realized_gain_cents > 0;
 
-    let gain_deferral_method_engaged = section_721c_gain_recognition_required
-        && input.gain_deferral_method_adopted;
+    let gain_deferral_method_engaged =
+        section_721c_gain_recognition_required && input.gain_deferral_method_adopted;
 
     // Compute immediate recognition under each exception.
     let gain_recognized_under_721b_cents = if investment_company_exception_engaged {
@@ -157,13 +157,12 @@ pub fn compute(input: &Section721Input) -> Section721Result {
         0
     };
 
-    let gain_recognized_under_721c_cents = if section_721c_gain_recognition_required
-        && !gain_deferral_method_engaged
-    {
-        realized_gain_cents
-    } else {
-        0
-    };
+    let gain_recognized_under_721c_cents =
+        if section_721c_gain_recognition_required && !gain_deferral_method_engaged {
+            realized_gain_cents
+        } else {
+            0
+        };
 
     let gain_deferred_under_gdm_cents = if gain_deferral_method_engaged {
         realized_gain_cents
@@ -172,12 +171,12 @@ pub fn compute(input: &Section721Input) -> Section721Result {
     };
 
     // § 721(a) applies if neither (b) nor (c) overrides.
-    let section_721a_applies = !investment_company_exception_engaged
-        && !section_721c_gain_recognition_required;
+    let section_721a_applies =
+        !investment_company_exception_engaged && !section_721c_gain_recognition_required;
 
     // Total immediate recognition.
-    let total_gain_recognized_cents = gain_recognized_under_721b_cents
-        .saturating_add(gain_recognized_under_721c_cents);
+    let total_gain_recognized_cents =
+        gain_recognized_under_721b_cents.saturating_add(gain_recognized_under_721c_cents);
 
     // Notes.
     if section_721a_applies {
@@ -228,8 +227,7 @@ pub fn compute(input: &Section721Input) -> Section721Result {
         }
     }
 
-    if input.related_foreign_person_is_partner
-        && !input.partnership_formed_on_or_after_jan_18_2017
+    if input.related_foreign_person_is_partner && !input.partnership_formed_on_or_after_jan_18_2017
     {
         notes.push(
             "Related foreign person is a partner, BUT partnership was formed BEFORE \
@@ -312,8 +310,8 @@ mod tests {
 
     fn input() -> Section721Input {
         Section721Input {
-            fmv_contributed_cents: 10_000_000,   // $100K FMV
-            basis_contributed_cents: 4_000_000,  // $40K basis
+            fmv_contributed_cents: 10_000_000,  // $100K FMV
+            basis_contributed_cents: 4_000_000, // $40K basis
             partnership_treated_as_investment_company: false,
             related_foreign_person_is_partner: false,
             partnership_formed_on_or_after_jan_18_2017: false,
@@ -335,7 +333,7 @@ mod tests {
     #[test]
     fn loss_property_no_recognition() {
         let mut b = input();
-        b.fmv_contributed_cents = 3_000_000;  // $30K FMV
+        b.fmv_contributed_cents = 3_000_000; // $30K FMV
         b.basis_contributed_cents = 10_000_000; // $100K basis (loss)
         let r = compute(&b);
         assert!(r.section_721a_applies);
@@ -426,10 +424,7 @@ mod tests {
         assert!(!r.section_721c_gain_recognition_required);
         assert!(r.section_721a_applies);
         // Pre-2017 grandfather note.
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("January 18, 2017")));
+        assert!(r.notes.iter().any(|n| n.contains("January 18, 2017")));
     }
 
     #[test]
@@ -480,10 +475,10 @@ mod tests {
     fn section_721a_applies_when_no_exception_engaged_invariant() {
         // 4-cell sweep: (investment_company × related_foreign_post_2017).
         let cells = [
-            (false, false, true),   // neither → § 721(a) applies
-            (true, false, false),   // (b) only → no § 721(a)
-            (false, true, false),   // (c) only → no § 721(a)
-            (true, true, false),    // both → no § 721(a)
+            (false, false, true), // neither → § 721(a) applies
+            (true, false, false), // (b) only → no § 721(a)
+            (false, true, false), // (c) only → no § 721(a)
+            (true, true, false),  // both → no § 721(a)
         ];
         for (inv_co, foreign, expected_721a) in cells.iter() {
             let mut b = input();
@@ -492,11 +487,9 @@ mod tests {
             b.partnership_formed_on_or_after_jan_18_2017 = *foreign;
             let r = compute(&b);
             assert_eq!(
-                r.section_721a_applies,
-                *expected_721a,
+                r.section_721a_applies, *expected_721a,
                 "inv_co={} foreign={}",
-                inv_co,
-                foreign
+                inv_co, foreign
             );
         }
     }
@@ -533,10 +526,10 @@ mod tests {
     fn realized_gain_loss_arithmetic_invariant() {
         // 4-cell sweep over (FMV, basis) combinations.
         let cells = [
-            (10_000_000, 4_000_000, 6_000_000, 0),     // gain
-            (4_000_000, 10_000_000, 0, 6_000_000),     // loss
-            (10_000_000, 10_000_000, 0, 0),             // no gain/loss
-            (0, 5_000_000, 0, 5_000_000),               // zero FMV (full loss)
+            (10_000_000, 4_000_000, 6_000_000, 0), // gain
+            (4_000_000, 10_000_000, 0, 6_000_000), // loss
+            (10_000_000, 10_000_000, 0, 0),        // no gain/loss
+            (0, 5_000_000, 0, 5_000_000),          // zero FMV (full loss)
         ];
         for (fmv, basis, expected_gain, expected_loss) in cells.iter() {
             let mut b = input();
@@ -591,8 +584,9 @@ mod tests {
     fn section_721d_recapture_note_present() {
         let r = compute(&input());
         assert!(
-            r.notes.iter().any(|n| n.contains("§ 721(d)")
-                && n.contains("§ 736(a)")),
+            r.notes
+                .iter()
+                .any(|n| n.contains("§ 721(d)") && n.contains("§ 736(a)")),
             "§ 721(d) recapture note must reference § 736(a) retiring partner distribution"
         );
     }
@@ -621,7 +615,7 @@ mod tests {
     fn extreme_amounts_no_overflow() {
         let mut b = input();
         b.fmv_contributed_cents = 100_000_000_000; // $1B
-        b.basis_contributed_cents = 1_000_000_000;  // $10M
+        b.basis_contributed_cents = 1_000_000_000; // $10M
         b.partnership_treated_as_investment_company = true;
         let r = compute(&b);
         // $1B - $10M = $990M gain recognized.

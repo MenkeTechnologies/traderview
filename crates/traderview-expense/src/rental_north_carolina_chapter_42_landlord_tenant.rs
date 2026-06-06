@@ -184,15 +184,20 @@ pub fn compute(input: &Input) -> Output {
         }
         ComplianceAspect::SecurityDepositCapBasedOnTenancyTermUnderGs42_51 => {
             let cap = match input.tenancy_term_length {
-                TenancyTermLength::WeekToWeek => input
-                    .weekly_rent_dollars
-                    .saturating_mul(u64::from(NC_LANDLORD_TENANT_SECURITY_DEPOSIT_CAP_WEEKS_WEEK_TO_WEEK)),
+                TenancyTermLength::WeekToWeek => input.weekly_rent_dollars.saturating_mul(
+                    u64::from(NC_LANDLORD_TENANT_SECURITY_DEPOSIT_CAP_WEEKS_WEEK_TO_WEEK),
+                ),
                 TenancyTermLength::MonthToMonth => {
                     (u128::from(input.monthly_rent_dollars)
-                        * u128::from(NC_LANDLORD_TENANT_SECURITY_DEPOSIT_CAP_TENTHS_OF_MONTHS_MONTH_TO_MONTH)
-                        / u128::from(NC_LANDLORD_TENANT_SECURITY_DEPOSIT_CAP_DENOMINATOR_TENTHS)) as u64
+                        * u128::from(
+                            NC_LANDLORD_TENANT_SECURITY_DEPOSIT_CAP_TENTHS_OF_MONTHS_MONTH_TO_MONTH,
+                        )
+                        / u128::from(NC_LANDLORD_TENANT_SECURITY_DEPOSIT_CAP_DENOMINATOR_TENTHS))
+                        as u64
                 }
-                TenancyTermLength::TermGreaterThanMonthToMonth => input.monthly_rent_dollars.saturating_mul(u64::from(
+                TenancyTermLength::TermGreaterThanMonthToMonth => input
+                    .monthly_rent_dollars
+                    .saturating_mul(u64::from(
                     NC_LANDLORD_TENANT_SECURITY_DEPOSIT_CAP_MONTHS_TERM_GREATER_THAN_MONTH_TO_MONTH,
                 )),
             };
@@ -300,7 +305,9 @@ pub fn compute(input: &Input) -> Output {
         ComplianceAspect::AdministrativeComplaintFilingFeeCapUnderGs42_46B => {
             let five_pct_cap = (u128::from(input.monthly_rent_dollars) * 500 / 10_000) as u64;
             let cap = NC_LANDLORD_TENANT_LATE_FEE_FLAT_DOLLAR_CAP.max(five_pct_cap);
-            if input.administrative_fee_four_prerequisites_met && input.administrative_fee_charged_dollars <= cap {
+            if input.administrative_fee_four_prerequisites_met
+                && input.administrative_fee_charged_dollars <= cap
+            {
                 Output {
                     mode: NcLandlordTenantMode::CompliantAdministrativeFeeAtOrBelowGreaterOf15Or5PercentWithRequiredConditions,
                     statutory_basis: "N.C. Gen. Stat. § 42-46(b) — administrative fee at or below cap with four prerequisites met".to_string(),
@@ -386,7 +393,10 @@ mod tests {
         let mut input = baseline_input();
         input.tenancy_type = TenancyType::CommercialRentalExempt;
         let output = check(&input);
-        assert_eq!(output.mode, NcLandlordTenantMode::NotApplicableTenancyExemptFromChapter42);
+        assert_eq!(
+            output.mode,
+            NcLandlordTenantMode::NotApplicableTenancyExemptFromChapter42
+        );
     }
 
     #[test]
@@ -485,7 +495,8 @@ mod tests {
     #[test]
     fn deposit_return_within_30_days_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SecurityDepositReturn30DayWithItemizedStatementUnderGs42_52;
+        input.compliance_aspect =
+            ComplianceAspect::SecurityDepositReturn30DayWithItemizedStatementUnderGs42_52;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -496,7 +507,8 @@ mod tests {
     #[test]
     fn deposit_return_at_31_days_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SecurityDepositReturn30DayWithItemizedStatementUnderGs42_52;
+        input.compliance_aspect =
+            ComplianceAspect::SecurityDepositReturn30DayWithItemizedStatementUnderGs42_52;
         input.days_since_tenancy_termination_for_deposit_return = 31;
         input.deposit_returned_with_itemized_statement_within_window = false;
         let output = check(&input);
@@ -509,7 +521,8 @@ mod tests {
     #[test]
     fn interim_and_final_accounting_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SecurityDepositInterimAndFinalAccountingUnderGs42_52;
+        input.compliance_aspect =
+            ComplianceAspect::SecurityDepositInterimAndFinalAccountingUnderGs42_52;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -520,7 +533,8 @@ mod tests {
     #[test]
     fn final_accounting_at_61_days_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SecurityDepositInterimAndFinalAccountingUnderGs42_52;
+        input.compliance_aspect =
+            ComplianceAspect::SecurityDepositInterimAndFinalAccountingUnderGs42_52;
         input.days_since_tenancy_termination_for_final_accounting = 61;
         let output = check(&input);
         assert_eq!(
@@ -532,7 +546,8 @@ mod tests {
     #[test]
     fn landlord_obligations_met_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordObligationToMaintainPremisesUnderGs42_42;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordObligationToMaintainPremisesUnderGs42_42;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -543,7 +558,8 @@ mod tests {
     #[test]
     fn landlord_obligations_breached_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordObligationToMaintainPremisesUnderGs42_42;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordObligationToMaintainPremisesUnderGs42_42;
         input.landlord_repair_and_maintenance_obligations_met = false;
         let output = check(&input);
         assert_eq!(
@@ -603,7 +619,8 @@ mod tests {
     #[test]
     fn administrative_fee_with_prerequisites_met_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::AdministrativeComplaintFilingFeeCapUnderGs42_46B;
+        input.compliance_aspect =
+            ComplianceAspect::AdministrativeComplaintFilingFeeCapUnderGs42_46B;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -614,7 +631,8 @@ mod tests {
     #[test]
     fn administrative_fee_without_prerequisites_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::AdministrativeComplaintFilingFeeCapUnderGs42_46B;
+        input.compliance_aspect =
+            ComplianceAspect::AdministrativeComplaintFilingFeeCapUnderGs42_46B;
         input.administrative_fee_four_prerequisites_met = false;
         let output = check(&input);
         assert_eq!(
@@ -628,7 +646,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::TenDayPayOrQuitDemandUnderGs42_26;
         let output = check(&input);
-        assert_eq!(output.mode, NcLandlordTenantMode::CompliantTenDayPayOrQuitDemandProvided);
+        assert_eq!(
+            output.mode,
+            NcLandlordTenantMode::CompliantTenDayPayOrQuitDemandProvided
+        );
     }
 
     #[test]
@@ -660,24 +681,36 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::SelfHelpEvictionProhibitedUnderGs42_25_6;
         input.used_self_help_eviction = true;
         let output = check(&input);
-        assert_eq!(output.mode, NcLandlordTenantMode::ViolationSelfHelpEvictionProhibited);
+        assert_eq!(
+            output.mode,
+            NcLandlordTenantMode::ViolationSelfHelpEvictionProhibited
+        );
     }
 
     #[test]
     fn constants_pin_statutory_facts() {
         assert_eq!(NC_LANDLORD_TENANT_CHAPTER_NUMBER, 42);
-        assert_eq!(NC_LANDLORD_TENANT_SECURITY_DEPOSIT_CAP_WEEKS_WEEK_TO_WEEK, 2);
+        assert_eq!(
+            NC_LANDLORD_TENANT_SECURITY_DEPOSIT_CAP_WEEKS_WEEK_TO_WEEK,
+            2
+        );
         assert_eq!(
             NC_LANDLORD_TENANT_SECURITY_DEPOSIT_CAP_TENTHS_OF_MONTHS_MONTH_TO_MONTH,
             15
         );
-        assert_eq!(NC_LANDLORD_TENANT_SECURITY_DEPOSIT_CAP_DENOMINATOR_TENTHS, 10);
+        assert_eq!(
+            NC_LANDLORD_TENANT_SECURITY_DEPOSIT_CAP_DENOMINATOR_TENTHS,
+            10
+        );
         assert_eq!(
             NC_LANDLORD_TENANT_SECURITY_DEPOSIT_CAP_MONTHS_TERM_GREATER_THAN_MONTH_TO_MONTH,
             2
         );
         assert_eq!(NC_LANDLORD_TENANT_SECURITY_DEPOSIT_RETURN_DEADLINE_DAYS, 30);
-        assert_eq!(NC_LANDLORD_TENANT_SECURITY_DEPOSIT_FINAL_ACCOUNTING_DEADLINE_DAYS, 60);
+        assert_eq!(
+            NC_LANDLORD_TENANT_SECURITY_DEPOSIT_FINAL_ACCOUNTING_DEADLINE_DAYS,
+            60
+        );
         assert_eq!(NC_LANDLORD_TENANT_UNKNOWN_ADDRESS_HOLD_PERIOD_MONTHS, 6);
         assert_eq!(NC_LANDLORD_TENANT_LATE_FEE_FLAT_DOLLAR_CAP, 15);
         assert_eq!(NC_LANDLORD_TENANT_LATE_FEE_PERCENT_CAP_BPS, 500);

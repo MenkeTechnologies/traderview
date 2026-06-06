@@ -233,8 +233,7 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.applicable_entity_category
-        == ApplicableEntityCategory::NotApplicableEntityNotEligible
+    if input.applicable_entity_category == ApplicableEntityCategory::NotApplicableEntityNotEligible
     {
         return Output {
             mode: Section6417Mode::NotApplicableNotEligibleEntityOrElectingTaxpayer,
@@ -444,8 +443,7 @@ mod tests {
     #[test]
     fn not_eligible_entity_not_applicable() {
         let mut input = baseline_input();
-        input.applicable_entity_category =
-            ApplicableEntityCategory::NotApplicableEntityNotEligible;
+        input.applicable_entity_category = ApplicableEntityCategory::NotApplicableEntityNotEligible;
         let out = check(&input);
         assert_eq!(
             out.mode,

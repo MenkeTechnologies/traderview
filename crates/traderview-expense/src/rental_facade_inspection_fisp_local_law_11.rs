@@ -142,8 +142,10 @@ pub fn check(input: &Input) -> Output {
         "1 RCNY § 103-04(c)(1) (QEWI qualification)".to_string(),
         "NYC Admin Code § 28-301.1.1 (facade compliance)".to_string(),
         "NYC DOB Facade & Local Law page".to_string(),
-        "Grace Gold incident (May 16, 1979) — 115 Madison Avenue — original impetus for LL 10/1980".to_string(),
-        "Erica Tishman incident (Dec. 17, 2019) — 729 7th Avenue — enforcement intensification".to_string(),
+        "Grace Gold incident (May 16, 1979) — 115 Madison Avenue — original impetus for LL 10/1980"
+            .to_string(),
+        "Erica Tishman incident (Dec. 17, 2019) — 729 7th Avenue — enforcement intensification"
+            .to_string(),
     ];
 
     if input.story_count <= LL11_BUILDING_STORY_THRESHOLD_OVER {
@@ -307,7 +309,9 @@ pub fn check(input: &Input) -> Output {
             }
         }
         ReportClassification::NotFiled => {
-            notes.push("No FISP report filed at all — per se failure-to-file violation.".to_string());
+            notes.push(
+                "No FISP report filed at all — per se failure-to-file violation.".to_string(),
+            );
             Output {
                 severity: Severity::ViolationFailureToFile,
                 compliant: false,
@@ -509,9 +513,18 @@ mod tests {
     #[test]
     fn citations_pin_ll11_1998_ll10_1980_ll38_2007() {
         let out = check(&base_compliant_safe());
-        assert!(out.citations.iter().any(|c| c.contains("Local Law 11 of 1998")));
-        assert!(out.citations.iter().any(|c| c.contains("Local Law 10 of 1980")));
-        assert!(out.citations.iter().any(|c| c.contains("Local Law 38 of 2007")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("Local Law 11 of 1998")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("Local Law 10 of 1980")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("Local Law 38 of 2007")));
     }
 
     #[test]

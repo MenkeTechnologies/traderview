@@ -23,7 +23,12 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub open: f64, pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct HangingShootingReport {
@@ -39,9 +44,12 @@ pub fn compute(bars: &[Bar], trend_period: usize) -> HangingShootingReport {
         inverted_hammer: vec![false; n],
         trend_period,
     };
-    if trend_period < 2 || n < trend_period + 1 { return report; }
-    if bars.iter().any(|b| !b.open.is_finite() || !b.high.is_finite()
-        || !b.low.is_finite() || !b.close.is_finite()) {
+    if trend_period < 2 || n < trend_period + 1 {
+        return report;
+    }
+    if bars.iter().any(|b| {
+        !b.open.is_finite() || !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()
+    }) {
         return report;
     }
     for i in trend_period..n {
@@ -63,7 +71,9 @@ pub fn compute(bars: &[Bar], trend_period: usize) -> HangingShootingReport {
 /// Small body near top, lower wick ≥ 2× body, upper wick small.
 fn is_hammer_shape(b: Bar) -> bool {
     let range = b.high - b.low;
-    if range <= 0.0 { return false; }
+    if range <= 0.0 {
+        return false;
+    }
     let body = (b.close - b.open).abs();
     let upper = b.high - b.close.max(b.open);
     let lower = b.close.min(b.open) - b.low;
@@ -74,7 +84,9 @@ fn is_hammer_shape(b: Bar) -> bool {
 /// equal to body.
 fn is_shooting_star_shape(b: Bar) -> bool {
     let range = b.high - b.low;
-    if range <= 0.0 { return false; }
+    if range <= 0.0 {
+        return false;
+    }
     let body = (b.close - b.open).abs();
     let upper = b.high - b.close.max(b.open);
     let lower = b.close.min(b.open) - b.low;
@@ -86,7 +98,12 @@ mod tests {
     use super::*;
 
     fn bar(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -109,10 +126,12 @@ mod tests {
     #[test]
     fn hanging_man_at_uptrend_top_detected() {
         // 5 rising bars then a hammer-shape bar.
-        let mut bars: Vec<_> = (0..5).map(|i| {
-            let p = 100.0 + i as f64;
-            bar(p, p + 0.5, p - 0.5, p + 0.4)
-        }).collect();
+        let mut bars: Vec<_> = (0..5)
+            .map(|i| {
+                let p = 100.0 + i as f64;
+                bar(p, p + 0.5, p - 0.5, p + 0.4)
+            })
+            .collect();
         // Hammer-shape: open=105, high=105.1, low=100, close=105.1.
         // body = 0.1, upper = 0 (close at high), lower = 5.0 (50× body).
         bars.push(bar(105.0, 105.1, 100.0, 105.1));
@@ -122,10 +141,12 @@ mod tests {
 
     #[test]
     fn inverted_hammer_at_downtrend_bottom_detected() {
-        let mut bars: Vec<_> = (0..5).map(|i| {
-            let p = 100.0 - i as f64;
-            bar(p, p + 0.5, p - 0.5, p - 0.4)
-        }).collect();
+        let mut bars: Vec<_> = (0..5)
+            .map(|i| {
+                let p = 100.0 - i as f64;
+                bar(p, p + 0.5, p - 0.5, p - 0.4)
+            })
+            .collect();
         // Shooting-star-shape: open=95, high=100, low=94.9, close=95.1.
         // body = 0.1, upper = 4.9 (49× body), lower = 0.1 (= body).
         bars.push(bar(95.0, 100.0, 94.9, 95.1));
@@ -137,10 +158,12 @@ mod tests {
     fn hammer_shape_in_downtrend_not_hanging_man() {
         // Hammer geometry but downtrend → no hanging man (would be a
         // bullish hammer instead, handled by candle_patterns).
-        let mut bars: Vec<_> = (0..5).map(|i| {
-            let p = 100.0 - i as f64;
-            bar(p, p + 0.5, p - 0.5, p - 0.4)
-        }).collect();
+        let mut bars: Vec<_> = (0..5)
+            .map(|i| {
+                let p = 100.0 - i as f64;
+                bar(p, p + 0.5, p - 0.5, p - 0.4)
+            })
+            .collect();
         bars.push(bar(95.0, 95.5, 90.0, 95.2));
         let r = compute(&bars, 5);
         assert!(!r.hanging_man[5]);

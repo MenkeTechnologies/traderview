@@ -589,7 +589,10 @@ mod tests {
         let mut input = baseline_input();
         input.property_jurisdiction = PropertyJurisdiction::OutsideStateOfHawaii;
         let output = check(&input);
-        assert_eq!(output.mode, HawaiiHrs521Mode::NotApplicablePropertyOutsideHawaii);
+        assert_eq!(
+            output.mode,
+            HawaiiHrs521Mode::NotApplicablePropertyOutsideHawaii
+        );
     }
 
     #[test]
@@ -597,7 +600,10 @@ mod tests {
         let mut input = baseline_input();
         input.unit_type = UnitType::TransientLodgingUnder90DaysExemptUnderHrs521_8;
         let output = check(&input);
-        assert_eq!(output.mode, HawaiiHrs521Mode::NotApplicableTransientLodgingExempt);
+        assert_eq!(
+            output.mode,
+            HawaiiHrs521Mode::NotApplicableTransientLodgingExempt
+        );
     }
 
     #[test]
@@ -605,7 +611,10 @@ mod tests {
         let mut input = baseline_input();
         input.unit_type = UnitType::NonResidentialUnitExempt;
         let output = check(&input);
-        assert_eq!(output.mode, HawaiiHrs521Mode::NotApplicableNonResidentialUnit);
+        assert_eq!(
+            output.mode,
+            HawaiiHrs521Mode::NotApplicableNonResidentialUnit
+        );
     }
 
     #[test]
@@ -843,7 +852,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::RetaliatoryEvictionProhibition;
         let output = check(&input);
-        assert_eq!(output.mode, HawaiiHrs521Mode::CompliantNoRetaliatoryActionTaken);
+        assert_eq!(
+            output.mode,
+            HawaiiHrs521Mode::CompliantNoRetaliatoryActionTaken
+        );
     }
 
     #[test]

@@ -32,12 +32,18 @@ pub fn compute(
     volume_curve: &[f64],
     participation_rate: f64,
 ) -> Option<Report> {
-    if !total_order_size.is_finite() || total_order_size <= 0.0 { return None; }
+    if !total_order_size.is_finite() || total_order_size <= 0.0 {
+        return None;
+    }
     if !participation_rate.is_finite() || !(0.0..=1.0).contains(&participation_rate) {
         return None;
     }
-    if volume_curve.is_empty() { return None; }
-    if volume_curve.iter().any(|x| !x.is_finite() || *x < 0.0) { return None; }
+    if volume_curve.is_empty() {
+        return None;
+    }
+    if volume_curve.iter().any(|x| !x.is_finite() || *x < 0.0) {
+        return None;
+    }
     let n = volume_curve.len();
     let mut slices = vec![0.0_f64; n];
     let mut cumulative_fill = vec![0.0_f64; n];
@@ -55,7 +61,12 @@ pub fn compute(
         }
     }
     let shortfall = (total_order_size - filled).max(0.0);
-    Some(Report { slices, cumulative_fill, completion_bar, shortfall })
+    Some(Report {
+        slices,
+        cumulative_fill,
+        completion_bar,
+        shortfall,
+    })
 }
 
 #[cfg(test)]
@@ -85,7 +96,9 @@ mod tests {
         let r = compute(100.0, &v, 0.1).unwrap();
         // First bar should fill 100 then stop.
         assert!((r.slices[0] - 100.0).abs() < 1e-9);
-        for v in &r.slices[1..] { assert_eq!(*v, 0.0); }
+        for v in &r.slices[1..] {
+            assert_eq!(*v, 0.0);
+        }
         assert_eq!(r.completion_bar, Some(0));
         assert_eq!(r.shortfall, 0.0);
     }
@@ -135,7 +148,9 @@ mod tests {
     fn full_participation_takes_all_volume() {
         let v = vec![100.0, 100.0, 100.0];
         let r = compute(300.0, &v, 1.0).unwrap();
-        for s in &r.slices { assert!((s - 100.0).abs() < 1e-9); }
+        for s in &r.slices {
+            assert!((s - 100.0).abs() < 1e-9);
+        }
         assert_eq!(r.completion_bar, Some(2));
     }
 

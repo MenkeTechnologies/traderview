@@ -169,7 +169,8 @@ pub fn check(input: &Input) -> Output {
         "IRC § 1031(f) (related party exchanges — 2-year holding)".to_string(),
         "Treas. Reg. § 1.1031(a)-1 (general rules)".to_string(),
         "Treas. Reg. § 1.1031(k)-1 (deferred exchanges)".to_string(),
-        "Treas. Reg. § 1.1031(k)-1(c)(4) (3-property + 200% + 95% identification rules)".to_string(),
+        "Treas. Reg. § 1.1031(k)-1(c)(4) (3-property + 200% + 95% identification rules)"
+            .to_string(),
         "Treas. Reg. § 1.1031(k)-1(c)(5) (incidental personal property 15% test)".to_string(),
         "Treas. Reg. § 1.1031(k)-1(g)(4) (qualified intermediary safe harbor)".to_string(),
         "TCJA 2017 (Pub. L. 115-97 § 13303 — real property only restriction)".to_string(),
@@ -203,7 +204,10 @@ pub fn check(input: &Input) -> Output {
                 };
             }
             PropertyType::InventoryOrStockInTrade => {
-                notes.push("Inventory or stock in trade — excluded from § 1031 as primarily for sale.".to_string());
+                notes.push(
+                    "Inventory or stock in trade — excluded from § 1031 as primarily for sale."
+                        .to_string(),
+                );
                 return Output {
                     severity: Severity::ViolationInventoryStockInTradeExcluded,
                     compliant: false,
@@ -215,7 +219,10 @@ pub fn check(input: &Input) -> Output {
                 };
             }
             PropertyType::ForeignRealProperty => {
-                notes.push("Foreign real property — excluded from § 1031 since 1989 amendment.".to_string());
+                notes.push(
+                    "Foreign real property — excluded from § 1031 since 1989 amendment."
+                        .to_string(),
+                );
                 return Output {
                     severity: Severity::ViolationForeignRealPropertyExcluded,
                     compliant: false,
@@ -227,7 +234,10 @@ pub fn check(input: &Input) -> Output {
                 };
             }
             PropertyType::CertificateOfTrustOrChoseInAction => {
-                notes.push("Certificate of trust or chose in action — excluded under § 1031(a)(2).".to_string());
+                notes.push(
+                    "Certificate of trust or chose in action — excluded under § 1031(a)(2)."
+                        .to_string(),
+                );
                 return Output {
                     severity: Severity::ViolationStocksBondsNotesPartnershipInterestExcluded,
                     compliant: false,
@@ -306,11 +316,10 @@ pub fn check(input: &Input) -> Output {
         };
     }
 
-    let three_property_rule_satisfied = input.count_of_identified_properties
-        <= THREE_PROPERTY_RULE_MAX;
-    let two_hundred_pct_rule_satisfied = input
-        .aggregate_fmv_identified_vs_relinquished_percent
-        <= TWO_HUNDRED_PERCENT_RULE_PERCENT;
+    let three_property_rule_satisfied =
+        input.count_of_identified_properties <= THREE_PROPERTY_RULE_MAX;
+    let two_hundred_pct_rule_satisfied =
+        input.aggregate_fmv_identified_vs_relinquished_percent <= TWO_HUNDRED_PERCENT_RULE_PERCENT;
     let ninety_five_pct_rule_satisfied = input.percent_of_identified_properties_actually_acquired
         >= NINETY_FIVE_PERCENT_ACQUIRED_RULE_PERCENT;
     if !three_property_rule_satisfied
@@ -451,7 +460,10 @@ mod tests {
         let mut i = base_compliant_deferred();
         i.property_type = PropertyType::InventoryOrStockInTrade;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::ViolationInventoryStockInTradeExcluded);
+        assert_eq!(
+            out.severity,
+            Severity::ViolationInventoryStockInTradeExcluded
+        );
     }
 
     #[test]
@@ -486,10 +498,7 @@ mod tests {
         let mut i = base_compliant_deferred();
         i.days_to_complete_exchange = 181;
         let out = check(&i);
-        assert_eq!(
-            out.severity,
-            Severity::Violation180DayExchangePeriodMissed
-        );
+        assert_eq!(out.severity, Severity::Violation180DayExchangePeriodMissed);
     }
 
     #[test]
@@ -608,8 +617,14 @@ mod tests {
     fn citations_pin_treas_reg_and_td_9935() {
         let out = check(&base_compliant_deferred());
         assert!(out.citations.iter().any(|c| c.contains("§ 1.1031(k)-1")));
-        assert!(out.citations.iter().any(|c| c.contains("§ 1.1031(k)-1(c)(4)")));
-        assert!(out.citations.iter().any(|c| c.contains("§ 1.1031(k)-1(g)(4)")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("§ 1.1031(k)-1(c)(4)")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("§ 1.1031(k)-1(g)(4)")));
         assert!(out.citations.iter().any(|c| c.contains("T.D. 9935")));
         assert!(out.citations.iter().any(|c| c.contains("TCJA 2017")));
     }

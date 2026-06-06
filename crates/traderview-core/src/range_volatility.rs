@@ -47,11 +47,17 @@ pub fn compute(bars: &[Bar], period: usize) -> RangeVolReport {
     let mut gk = vec![None::<f64>; n];
     let mut rs = vec![None::<f64>; n];
     // Close-to-open and open-to-close returns for Yang-Zhang.
-    let mut co = vec![None::<f64>; n];        // ln(O_t / C_{t−1})
-    let mut oc = vec![None::<f64>; n];        // ln(C_t / O_t)
+    let mut co = vec![None::<f64>; n]; // ln(O_t / C_{t−1})
+    let mut oc = vec![None::<f64>; n]; // ln(C_t / O_t)
     for (i, b) in bars.iter().enumerate() {
-        if !b.open.is_finite() || !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()
-            || b.open <= 0.0 || b.high <= 0.0 || b.low <= 0.0 || b.close <= 0.0
+        if !b.open.is_finite()
+            || !b.high.is_finite()
+            || !b.low.is_finite()
+            || !b.close.is_finite()
+            || b.open <= 0.0
+            || b.high <= 0.0
+            || b.low <= 0.0
+            || b.close <= 0.0
             || b.high < b.low
         {
             continue;
@@ -59,14 +65,16 @@ pub fn compute(bars: &[Bar], period: usize) -> RangeVolReport {
         let ln_hl = (b.high / b.low).ln();
         let ln_co = (b.close / b.open).ln();
         let ln_ho = (b.high / b.open).ln();
-        let ln_lo = (b.low  / b.open).ln();
+        let ln_lo = (b.low / b.open).ln();
         let ln_hc = (b.high / b.close).ln();
-        let ln_lc = (b.low  / b.close).ln();
+        let ln_lc = (b.low / b.close).ln();
         pk[i] = Some(pk_const * ln_hl * ln_hl);
         gk[i] = Some(0.5 * ln_hl * ln_hl - (2.0 * std::f64::consts::LN_2 - 1.0) * ln_co * ln_co);
-        rs[i] = Some(ln_ho * (ln_ho - ln_co) + ln_lo * (ln_lo - ln_co)
+        rs[i] = Some(
+            ln_ho * (ln_ho - ln_co) + ln_lo * (ln_lo - ln_co)
             // Equivalent form using (h−c)(h−o) + (l−c)(l−o):
-            + ln_hc * 0.0 + ln_lc * 0.0);
+            + ln_hc * 0.0 + ln_lc * 0.0,
+        );
         oc[i] = Some(ln_co);
         if i > 0 && bars[i - 1].close.is_finite() && bars[i - 1].close > 0.0 {
             co[i] = Some((b.open / bars[i - 1].close).ln());
@@ -76,7 +84,9 @@ pub fn compute(bars: &[Bar], period: usize) -> RangeVolReport {
     fn rolling_mean(v: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
         let n = v.len();
         let mut out = vec![None; n];
-        if period == 0 || period > n { return out; }
+        if period == 0 || period > n {
+            return out;
+        }
         for i in (period - 1)..n {
             let win = &v[i + 1 - period..=i];
             let mut sum = 0.0;
@@ -84,7 +94,10 @@ pub fn compute(bars: &[Bar], period: usize) -> RangeVolReport {
             for x in win {
                 match x {
                     Some(val) if val.is_finite() => sum += val,
-                    _ => { ok = false; break; }
+                    _ => {
+                        ok = false;
+                        break;
+                    }
                 }
             }
             if ok {
@@ -97,9 +110,21 @@ pub fn compute(bars: &[Bar], period: usize) -> RangeVolReport {
     let gk_avg = rolling_mean(&gk, period);
     let rs_avg = rolling_mean(&rs, period);
     for i in 0..n {
-        if let Some(v) = pk_avg[i] { if v >= 0.0 { report.parkinson[i] = Some(v.sqrt()); } }
-        if let Some(v) = gk_avg[i] { if v >= 0.0 { report.garman_klass[i] = Some(v.sqrt()); } }
-        if let Some(v) = rs_avg[i] { if v >= 0.0 { report.rogers_satchell[i] = Some(v.sqrt()); } }
+        if let Some(v) = pk_avg[i] {
+            if v >= 0.0 {
+                report.parkinson[i] = Some(v.sqrt());
+            }
+        }
+        if let Some(v) = gk_avg[i] {
+            if v >= 0.0 {
+                report.garman_klass[i] = Some(v.sqrt());
+            }
+        }
+        if let Some(v) = rs_avg[i] {
+            if v >= 0.0 {
+                report.rogers_satchell[i] = Some(v.sqrt());
+            }
+        }
     }
     // Yang-Zhang: σ² = σ²_overnight + k·σ²_open-to-close + (1-k)·σ²_RS
     // where k = 0.34 / (1.34 + (period+1)/(period-1))
@@ -108,9 +133,7 @@ pub fn compute(bars: &[Bar], period: usize) -> RangeVolReport {
         let co_var = rolling_var(&co, period);
         let oc_var = rolling_var(&oc, period);
         for i in 0..n {
-            if let (Some(o_var), Some(c_var), Some(rs_var))
-                = (co_var[i], oc_var[i], rs_avg[i])
-            {
+            if let (Some(o_var), Some(c_var), Some(rs_var)) = (co_var[i], oc_var[i], rs_avg[i]) {
                 let yz_var = o_var + k * c_var + (1.0 - k) * rs_var;
                 if yz_var.is_finite() && yz_var >= 0.0 {
                     report.yang_zhang[i] = Some(yz_var.sqrt());
@@ -124,7 +147,9 @@ pub fn compute(bars: &[Bar], period: usize) -> RangeVolReport {
 fn rolling_var(v: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
     let n = v.len();
     let mut out = vec![None; n];
-    if period < 2 || period > n { return out; }
+    if period < 2 || period > n {
+        return out;
+    }
     for i in (period - 1)..n {
         let win = &v[i + 1 - period..=i];
         let mut sum = 0.0;
@@ -138,7 +163,10 @@ fn rolling_var(v: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
                     sum_sq += val * val;
                     count += 1;
                 }
-                _ => { ok = false; break; }
+                _ => {
+                    ok = false;
+                    break;
+                }
             }
         }
         if ok && count >= 2 {
@@ -162,7 +190,12 @@ mod tests {
     use super::*;
 
     fn b(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]

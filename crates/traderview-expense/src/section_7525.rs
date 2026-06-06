@@ -129,10 +129,7 @@ pub struct Section7525Result {
 pub fn check(input: &Section7525Input) -> Section7525Result {
     let mut failure_reasons: Vec<String> = Vec::new();
 
-    let fatp_qualified = !matches!(
-        input.practitioner_type,
-        PractitionerType::NonFatpIndividual
-    );
+    let fatp_qualified = !matches!(input.practitioner_type, PractitionerType::NonFatpIndividual);
     if !fatp_qualified {
         failure_reasons.push(
             "26 USC § 7525(a)(2) — practitioner not a federally authorized tax practitioner (must be authorized under 31 USC § 330 / Circular 230)"
@@ -488,8 +485,7 @@ mod tests {
         assert!(!r_oral.tax_shelter_promotion_exception);
 
         let mut i_written_shelter = privileged_base();
-        i_written_shelter.communication_type =
-            CommunicationType::WrittenTaxShelterPromotion;
+        i_written_shelter.communication_type = CommunicationType::WrittenTaxShelterPromotion;
         let r_written_shelter = check(&i_written_shelter);
         assert!(!r_written_shelter.privilege_assertable);
         assert!(r_written_shelter.tax_shelter_promotion_exception);

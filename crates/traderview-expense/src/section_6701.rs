@@ -150,8 +150,8 @@ pub fn compute(input: &Section6701Input) -> Section6701Result {
         documents
     };
 
-    let total_penalty_cents = number_of_penalties_assessable
-        .saturating_mul(per_document_penalty_cents);
+    let total_penalty_cents =
+        number_of_penalties_assessable.saturating_mul(per_document_penalty_cents);
 
     // § 6701(f) coordination — § 6701 supersedes § 6694.
     let supersedes_section_6694 = aiding_abetting_engaged;
@@ -164,7 +164,11 @@ pub fn compute(input: &Section6701Input) -> Section6701Result {
              liability. § 6701(b)(1)({}) penalty rate: {} cents per document × {} \
              penalties assessable = {} cents total. § 6701(f) — supersedes § 6694(a)/(b) \
              on the same document.",
-            if input.relates_to_corporate_taxpayer { "B) ($10,000 corporate" } else { "A) ($1,000 non-corporate" },
+            if input.relates_to_corporate_taxpayer {
+                "B) ($10,000 corporate"
+            } else {
+                "A) ($1,000 non-corporate"
+            },
             per_document_penalty_cents,
             number_of_penalties_assessable,
             total_penalty_cents,
@@ -203,9 +207,7 @@ pub fn compute(input: &Section6701Input) -> Section6701Result {
              prepared for {} distinct taxpayers in same taxable period → max {} \
              penalties assessable (min of documents and distinct-taxpayers). Multiple \
              documents for the same taxpayer in the same period count as ONE penalty.",
-            documents,
-            distinct_taxpayers,
-            number_of_penalties_assessable,
+            documents, distinct_taxpayers, number_of_penalties_assessable,
         ));
     }
 
@@ -482,12 +484,9 @@ mod tests {
             b.knew_understatement_would_result = *under;
             let r = compute(&b);
             assert_eq!(
-                r.aiding_abetting_engaged,
-                *expected,
+                r.aiding_abetting_engaged, *expected,
                 "aid={} mat={} under={}",
-                aid,
-                mat,
-                under
+                aid, mat, under
             );
         }
     }

@@ -393,7 +393,8 @@ mod tests {
     fn baseline_input() -> Input {
         Input {
             tenancy_type: TenancyType::ResidentialRentalCoveredByChapter5321,
-            compliance_aspect: ComplianceAspect::SecurityDepositReturnAndItemizedDeductionsUnderSection5321_16B,
+            compliance_aspect:
+                ComplianceAspect::SecurityDepositReturnAndItemizedDeductionsUnderSection5321_16B,
             tenancy_term_length: TenancyTermLength::MonthToMonth,
             monthly_rent_dollars: 1_200,
             security_deposit_dollars: 1_200,
@@ -417,7 +418,10 @@ mod tests {
         let mut input = baseline_input();
         input.tenancy_type = TenancyType::CommercialRentalExempt;
         let output = check(&input);
-        assert_eq!(output.mode, OhioRc5321Mode::NotApplicableTenancyExemptFromChapter5321);
+        assert_eq!(
+            output.mode,
+            OhioRc5321Mode::NotApplicableTenancyExemptFromChapter5321
+        );
     }
 
     #[test]
@@ -498,13 +502,17 @@ mod tests {
         input.security_deposit_dollars = 5_000;
         input.interest_paid_on_excess_deposit = false;
         let output = check(&input);
-        assert_eq!(output.mode, OhioRc5321Mode::ViolationSecurityDepositInterestNotPaid);
+        assert_eq!(
+            output.mode,
+            OhioRc5321Mode::ViolationSecurityDepositInterestNotPaid
+        );
     }
 
     #[test]
     fn double_damages_wrongful_retention_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SecurityDepositDoubleDamagesUnderSection5321_16C;
+        input.compliance_aspect =
+            ComplianceAspect::SecurityDepositDoubleDamagesUnderSection5321_16C;
         input.portion_of_deposit_wrongfully_withheld_dollars = 800;
         let output = check(&input);
         assert_eq!(
@@ -528,13 +536,17 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::LandlordObligationsUnderSection5321_04;
         input.landlord_obligations_met = false;
         let output = check(&input);
-        assert_eq!(output.mode, OhioRc5321Mode::ViolationLandlordObligationsBreached);
+        assert_eq!(
+            output.mode,
+            OhioRc5321Mode::ViolationLandlordObligationsBreached
+        );
     }
 
     #[test]
     fn landlord_entry_twenty_four_hours_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordEntryTwentyFourHourNoticeUnderSection5321_04A8;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordEntryTwentyFourHourNoticeUnderSection5321_04A8;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -545,7 +557,8 @@ mod tests {
     #[test]
     fn landlord_entry_under_twenty_four_hours_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordEntryTwentyFourHourNoticeUnderSection5321_04A8;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordEntryTwentyFourHourNoticeUnderSection5321_04A8;
         input.landlord_entry_notice_hours_given = 12;
         let output = check(&input);
         assert_eq!(
@@ -585,7 +598,8 @@ mod tests {
     #[test]
     fn termination_notice_month_to_month_thirty_days_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::TerminationNoticeBasedOnTenancyTermUnderSection5321_17;
+        input.compliance_aspect =
+            ComplianceAspect::TerminationNoticeBasedOnTenancyTermUnderSection5321_17;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -596,7 +610,8 @@ mod tests {
     #[test]
     fn termination_notice_week_to_week_seven_days_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::TerminationNoticeBasedOnTenancyTermUnderSection5321_17;
+        input.compliance_aspect =
+            ComplianceAspect::TerminationNoticeBasedOnTenancyTermUnderSection5321_17;
         input.tenancy_term_length = TenancyTermLength::WeekToWeek;
         input.termination_notice_days_given = 7;
         let output = check(&input);
@@ -609,7 +624,8 @@ mod tests {
     #[test]
     fn termination_notice_month_to_month_twenty_nine_days_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::TerminationNoticeBasedOnTenancyTermUnderSection5321_17;
+        input.compliance_aspect =
+            ComplianceAspect::TerminationNoticeBasedOnTenancyTermUnderSection5321_17;
         input.termination_notice_days_given = 29;
         let output = check(&input);
         assert_eq!(
@@ -623,7 +639,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::ThreeDayPayOrQuitNoticeUnderSection1923_04;
         let output = check(&input);
-        assert_eq!(output.mode, OhioRc5321Mode::CompliantThreeDayPayOrQuitNoticeProvided);
+        assert_eq!(
+            output.mode,
+            OhioRc5321Mode::CompliantThreeDayPayOrQuitNoticeProvided
+        );
     }
 
     #[test]
@@ -632,13 +651,17 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::ThreeDayPayOrQuitNoticeUnderSection1923_04;
         input.pay_or_quit_notice_days_given = 2;
         let output = check(&input);
-        assert_eq!(output.mode, OhioRc5321Mode::ViolationPayOrQuitNoticeShorterThanThreeDays);
+        assert_eq!(
+            output.mode,
+            OhioRc5321Mode::ViolationPayOrQuitNoticeShorterThanThreeDays
+        );
     }
 
     #[test]
     fn written_rental_agreement_required_over_ninety_days_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::WrittenRentalAgreementRequiredForOverNinetyDaysUnderSection5321_18;
+        input.compliance_aspect =
+            ComplianceAspect::WrittenRentalAgreementRequiredForOverNinetyDaysUnderSection5321_18;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -649,7 +672,8 @@ mod tests {
     #[test]
     fn oral_rental_agreement_over_ninety_days_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::WrittenRentalAgreementRequiredForOverNinetyDaysUnderSection5321_18;
+        input.compliance_aspect =
+            ComplianceAspect::WrittenRentalAgreementRequiredForOverNinetyDaysUnderSection5321_18;
         input.rental_agreement_in_writing = false;
         let output = check(&input);
         assert_eq!(
@@ -666,7 +690,10 @@ mod tests {
         assert_eq!(OHIO_RC_5321_ENACTMENT_DAY, 4);
         assert_eq!(OHIO_RC_5321_ENABLING_AM_HB_NUMBER, 144);
         assert_eq!(OHIO_RC_5321_SECURITY_DEPOSIT_INTEREST_THRESHOLD_DOLLARS, 50);
-        assert_eq!(OHIO_RC_5321_SECURITY_DEPOSIT_INTEREST_THRESHOLD_MONTHS_OF_RENT, 1);
+        assert_eq!(
+            OHIO_RC_5321_SECURITY_DEPOSIT_INTEREST_THRESHOLD_MONTHS_OF_RENT,
+            1
+        );
         assert_eq!(OHIO_RC_5321_SECURITY_DEPOSIT_INTEREST_RATE_BPS, 500);
         assert_eq!(OHIO_RC_5321_SECURITY_DEPOSIT_INTEREST_MIN_HOLDING_MONTHS, 6);
         assert_eq!(OHIO_RC_5321_SECURITY_DEPOSIT_RETURN_DEADLINE_DAYS, 30);
@@ -715,7 +742,8 @@ mod tests {
     #[test]
     fn double_damages_saturating_overflow_defense() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SecurityDepositDoubleDamagesUnderSection5321_16C;
+        input.compliance_aspect =
+            ComplianceAspect::SecurityDepositDoubleDamagesUnderSection5321_16C;
         input.portion_of_deposit_wrongfully_withheld_dollars = u64::MAX;
         let output = check(&input);
         assert_eq!(

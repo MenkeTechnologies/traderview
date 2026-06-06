@@ -144,13 +144,15 @@ pub type DcTopaResult = Output;
 pub fn check(input: &Input) -> Output {
     let mut notes: Vec<String> = Vec::new();
     let citations: Vec<String> = vec![
-        "D.C. Code § 42-3401.01 et seq. (Rental Housing Conversion and Sale Act of 1980 — TOPA)".to_string(),
+        "D.C. Code § 42-3401.01 et seq. (Rental Housing Conversion and Sale Act of 1980 — TOPA)"
+            .to_string(),
         "D.C. Code § 42-3404.02 (tenant opportunity to purchase — operative provision)".to_string(),
         "D.C. Code § 42-3404.11 (tenant organization registration with DHCD)".to_string(),
         "D.C. Code § 42-3405.03 (civil cause of action — attorney fees + costs)".to_string(),
         "D.C. Code § 42-3509.01 (housing-code-violation civil penalty)".to_string(),
         "14 DCMR § 4300 et seq. (TOPA implementing regulations)".to_string(),
-        "D.C. Law 3-86 (Tenant Opportunity to Purchase Act of 1980 — original enactment)".to_string(),
+        "D.C. Law 3-86 (Tenant Opportunity to Purchase Act of 1980 — original enactment)"
+            .to_string(),
         "TOPA Single-Family Home Exemption Amendment Act of 2017 (eff. July 3, 2018)".to_string(),
         "RENTAL Act of 2025 (passed Sep 17, 2025; eff. Dec 31, 2025)".to_string(),
         "DHCD Tenant Opportunity to Purchase Assistance program".to_string(),
@@ -264,7 +266,10 @@ pub fn check(input: &Input) -> Output {
     }
 
     if input.third_party_contract_signed && input.right_of_first_refusal_provided {
-        notes.push("Right of first refusal properly provided to tenants on third-party contract terms.".to_string());
+        notes.push(
+            "Right of first refusal properly provided to tenants on third-party contract terms."
+                .to_string(),
+        );
         return Output {
             severity: Severity::CompliantRightOfFirstRefusalRespectedOnThirdPartyContract,
             applicable_negotiation_days: negotiation_days,
@@ -280,7 +285,11 @@ pub fn check(input: &Input) -> Output {
         notes.push(format!(
             "TOPA 5+ unit process active: {}-day {} window + {}-day negotiation.",
             statement_window_days,
-            if input.tenant_association_pre_existing { "Statement of Interest" } else { "cooling-off" },
+            if input.tenant_association_pre_existing {
+                "Statement of Interest"
+            } else {
+                "cooling-off"
+            },
             negotiation_days
         ));
         return Output {
@@ -381,10 +390,7 @@ mod tests {
         let mut i = base_5_plus_unit_compliant();
         i.offer_of_sale_provided_to_tenants = false;
         let out = check(&i);
-        assert_eq!(
-            out.severity,
-            Severity::ViolationFailedToProvideOfferOfSale
-        );
+        assert_eq!(out.severity, Severity::ViolationFailedToProvideOfferOfSale);
         assert!(out.civil_cause_of_action_exposure);
     }
 
@@ -469,14 +475,20 @@ mod tests {
     fn citations_pin_d_c_law_3_86_and_rental_act_2025() {
         let out = check(&base_5_plus_unit_compliant());
         assert!(out.citations.iter().any(|c| c.contains("D.C. Law 3-86")));
-        assert!(out.citations.iter().any(|c| c.contains("RENTAL Act of 2025")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("RENTAL Act of 2025")));
         assert!(out.citations.iter().any(|c| c.contains("Sep 17, 2025")));
     }
 
     #[test]
     fn citations_pin_single_family_exemption_2018() {
         let out = check(&base_5_plus_unit_compliant());
-        assert!(out.citations.iter().any(|c| c.contains("Single-Family Home Exemption")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("Single-Family Home Exemption")));
         assert!(out.citations.iter().any(|c| c.contains("July 3, 2018")));
     }
 

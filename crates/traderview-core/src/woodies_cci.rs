@@ -19,7 +19,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct WoodiesCciReport {
@@ -41,26 +45,45 @@ pub fn compute(
     let mut turbo = vec![None; n];
     let mut standard = vec![None; n];
     let mut tlb = vec![None; n];
-    if turbo_period < 2 || standard_period < 2 || tlb_period < 2
-        || n < standard_period.max(turbo_period).max(tlb_period) {
+    if turbo_period < 2
+        || standard_period < 2
+        || tlb_period < 2
+        || n < standard_period.max(turbo_period).max(tlb_period)
+    {
         return WoodiesCciReport {
-            turbo_cci: turbo, standard_cci: standard, trend_line_break: tlb,
-            turbo_period, standard_period, tlb_period,
+            turbo_cci: turbo,
+            standard_cci: standard,
+            trend_line_break: tlb,
+            turbo_period,
+            standard_period,
+            tlb_period,
         };
     }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return WoodiesCciReport {
-            turbo_cci: turbo, standard_cci: standard, trend_line_break: tlb,
-            turbo_period, standard_period, tlb_period,
+            turbo_cci: turbo,
+            standard_cci: standard,
+            trend_line_break: tlb,
+            turbo_period,
+            standard_period,
+            tlb_period,
         };
     }
-    let typical: Vec<f64> = bars.iter().map(|b| (b.high + b.low + b.close) / 3.0).collect();
+    let typical: Vec<f64> = bars
+        .iter()
+        .map(|b| (b.high + b.low + b.close) / 3.0)
+        .collect();
     turbo = cci_series(&typical, turbo_period);
     standard = cci_series(&typical, standard_period);
     // TLB = SMA of standard CCI over tlb_period.
     for i in (tlb_period - 1)..n {
         let win = &standard[i + 1 - tlb_period..=i];
-        if win.iter().any(|x| x.is_none()) { continue; }
+        if win.iter().any(|x| x.is_none()) {
+            continue;
+        }
         let sum: f64 = win.iter().filter_map(|x| *x).sum();
         tlb[i] = Some(sum / tlb_period as f64);
     }
@@ -77,7 +100,9 @@ pub fn compute(
 fn cci_series(typical: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = typical.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     for (i, slot) in out.iter_mut().enumerate().skip(period - 1) {
         let win = &typical[i + 1 - period..=i];
@@ -96,7 +121,13 @@ fn cci_series(typical: &[f64], period: usize) -> Vec<Option<f64>> {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn empty_or_invalid_returns_all_none() {
@@ -117,10 +148,12 @@ mod tests {
 
     #[test]
     fn uptrend_yields_positive_cci() {
-        let bars: Vec<_> = (0..50).map(|i| {
-            let mid = 100.0 + i as f64;
-            b(mid + 0.5, mid - 0.5, mid)
-        }).collect();
+        let bars: Vec<_> = (0..50)
+            .map(|i| {
+                let mid = 100.0 + i as f64;
+                b(mid + 0.5, mid - 0.5, mid)
+            })
+            .collect();
         let r = compute(&bars, 6, 14, 25);
         // CCI is bounded; uptrend yields large positive values.
         assert!(r.standard_cci[49].unwrap() > 0.0);
@@ -129,10 +162,12 @@ mod tests {
 
     #[test]
     fn downtrend_yields_negative_cci() {
-        let bars: Vec<_> = (0..50).map(|i| {
-            let mid = 200.0 - i as f64;
-            b(mid + 0.5, mid - 0.5, mid)
-        }).collect();
+        let bars: Vec<_> = (0..50)
+            .map(|i| {
+                let mid = 200.0 - i as f64;
+                b(mid + 0.5, mid - 0.5, mid)
+            })
+            .collect();
         let r = compute(&bars, 6, 14, 25);
         assert!(r.standard_cci[49].unwrap() < 0.0);
     }
@@ -146,10 +181,12 @@ mod tests {
 
     #[test]
     fn tlb_present_after_full_warmup() {
-        let bars: Vec<_> = (0..80).map(|i| {
-            let mid = 100.0 + (i as f64 * 0.1).sin();
-            b(mid + 1.0, mid - 1.0, mid)
-        }).collect();
+        let bars: Vec<_> = (0..80)
+            .map(|i| {
+                let mid = 100.0 + (i as f64 * 0.1).sin();
+                b(mid + 1.0, mid - 1.0, mid)
+            })
+            .collect();
         let r = compute(&bars, 6, 14, 25);
         // TLB needs standard_period + tlb_period bars of warmup.
         assert!(r.trend_line_break[79].is_some());

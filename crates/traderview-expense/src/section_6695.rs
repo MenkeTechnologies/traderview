@@ -165,10 +165,22 @@ pub fn compute(input: &Section6695Input) -> Section6695Result {
         .saturating_mul(higher_tier);
 
     // § 6695(g) — sum of four credit categories, each at higher-tier rate.
-    let g_eitc = input.due_diligence_eitc_failures.max(0).saturating_mul(higher_tier);
-    let g_ctc = input.due_diligence_ctc_failures.max(0).saturating_mul(higher_tier);
-    let g_aotc = input.due_diligence_aotc_failures.max(0).saturating_mul(higher_tier);
-    let g_hoh = input.due_diligence_hoh_failures.max(0).saturating_mul(higher_tier);
+    let g_eitc = input
+        .due_diligence_eitc_failures
+        .max(0)
+        .saturating_mul(higher_tier);
+    let g_ctc = input
+        .due_diligence_ctc_failures
+        .max(0)
+        .saturating_mul(higher_tier);
+    let g_aotc = input
+        .due_diligence_aotc_failures
+        .max(0)
+        .saturating_mul(higher_tier);
+    let g_hoh = input
+        .due_diligence_hoh_failures
+        .max(0)
+        .saturating_mul(higher_tier);
     let section_6695g_penalty_cents = g_eitc
         .saturating_add(g_ctc)
         .saturating_add(g_aotc)
@@ -186,13 +198,34 @@ pub fn compute(input: &Section6695Input) -> Section6695Result {
 
     // Violations.
     let subsections = [
-        (section_6695a_penalty_cents, "§ 6695(a) failure to furnish copy to taxpayer"),
-        (section_6695b_penalty_cents, "§ 6695(b) failure to sign return"),
-        (section_6695c_penalty_cents, "§ 6695(c) failure to furnish PTIN identifying number"),
-        (section_6695d_penalty_cents, "§ 6695(d) failure to retain copy or list"),
-        (section_6695e_penalty_cents, "§ 6695(e) failure to file correct information returns"),
-        (section_6695f_penalty_cents, "§ 6695(f) negotiation of refund check"),
-        (section_6695g_penalty_cents, "§ 6695(g) failure to exercise due diligence on credits/HOH"),
+        (
+            section_6695a_penalty_cents,
+            "§ 6695(a) failure to furnish copy to taxpayer",
+        ),
+        (
+            section_6695b_penalty_cents,
+            "§ 6695(b) failure to sign return",
+        ),
+        (
+            section_6695c_penalty_cents,
+            "§ 6695(c) failure to furnish PTIN identifying number",
+        ),
+        (
+            section_6695d_penalty_cents,
+            "§ 6695(d) failure to retain copy or list",
+        ),
+        (
+            section_6695e_penalty_cents,
+            "§ 6695(e) failure to file correct information returns",
+        ),
+        (
+            section_6695f_penalty_cents,
+            "§ 6695(f) negotiation of refund check",
+        ),
+        (
+            section_6695g_penalty_cents,
+            "§ 6695(g) failure to exercise due diligence on credits/HOH",
+        ),
     ];
     for (penalty, label) in subsections.iter() {
         if *penalty > 0 {
@@ -382,7 +415,9 @@ mod tests {
         let r = compute(&b);
         // Each of three caps at $31,500 → $94,500 total.
         assert_eq!(
-            r.section_6695a_penalty_cents + r.section_6695b_penalty_cents + r.section_6695c_penalty_cents,
+            r.section_6695a_penalty_cents
+                + r.section_6695b_penalty_cents
+                + r.section_6695c_penalty_cents,
             3 * ANNUAL_MAX_CAP_2025_CENTS
         );
     }

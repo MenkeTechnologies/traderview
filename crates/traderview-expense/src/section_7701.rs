@@ -162,7 +162,9 @@ pub fn compute(input: &Section7701Input) -> Section7701Result {
         EntityType::DomesticCorporationStatute => {
             "domestic corporation (federal/state corporate statute)"
         }
-        EntityType::ForeignPerSeCorporation => "foreign per-se corporation (Treas. Reg. § 301.7701-2(b)(8))",
+        EntityType::ForeignPerSeCorporation => {
+            "foreign per-se corporation (Treas. Reg. § 301.7701-2(b)(8))"
+        }
         EntityType::ForeignEligibleEntity => "foreign eligible entity",
     };
 
@@ -240,8 +242,14 @@ mod tests {
     #[test]
     fn single_member_llc_defaults_to_disregarded() {
         let r = compute(&base_single_member_llc());
-        assert_eq!(r.default_classification, TaxClassification::DisregardedEntity);
-        assert_eq!(r.current_classification, TaxClassification::DisregardedEntity);
+        assert_eq!(
+            r.default_classification,
+            TaxClassification::DisregardedEntity
+        );
+        assert_eq!(
+            r.current_classification,
+            TaxClassification::DisregardedEntity
+        );
         assert!(!r.is_per_se_corporation);
         assert!(r.eligible_to_elect);
     }
@@ -275,7 +283,10 @@ mod tests {
     fn domestic_corporation_statute_is_per_se() {
         let r = compute(&base_per_se_corp());
         assert!(r.is_per_se_corporation);
-        assert_eq!(r.current_classification, TaxClassification::PerSeCorporation);
+        assert_eq!(
+            r.current_classification,
+            TaxClassification::PerSeCorporation
+        );
         assert!(!r.eligible_to_elect);
         assert!(!r.can_change_classification_now);
     }
@@ -295,7 +306,10 @@ mod tests {
         let mut i = base_per_se_corp();
         i.form_8832_election_to_corporation = true;
         let r = compute(&i);
-        assert_eq!(r.current_classification, TaxClassification::PerSeCorporation);
+        assert_eq!(
+            r.current_classification,
+            TaxClassification::PerSeCorporation
+        );
     }
 
     // ── Form 8832 election to corporation ─────────────────────────
@@ -305,7 +319,10 @@ mod tests {
         let mut i = base_single_member_llc();
         i.form_8832_election_to_corporation = true;
         let r = compute(&i);
-        assert_eq!(r.default_classification, TaxClassification::DisregardedEntity);
+        assert_eq!(
+            r.default_classification,
+            TaxClassification::DisregardedEntity
+        );
         assert_eq!(r.current_classification, TaxClassification::CCorporation);
     }
 

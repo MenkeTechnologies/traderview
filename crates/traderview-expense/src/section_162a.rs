@@ -330,11 +330,11 @@ pub fn check(input: &Section162aInput) -> Section162aResult {
 
     let section_280e_cannabis_disallowance = input.cannabis_or_controlled_substance_trafficking;
 
-    let section_183_hobby_loss_concern = !input.engaged_in_for_profit
-        && !input.three_of_five_year_profit_presumption;
+    let section_183_hobby_loss_concern =
+        !input.engaged_in_for_profit && !input.three_of_five_year_profit_presumption;
 
-    let trader_status_required = !input.carrying_on_trade_or_business
-        && !input.section_475f_election;
+    let trader_status_required =
+        !input.carrying_on_trade_or_business && !input.section_475f_election;
 
     let categorically_disallowed = matches!(
         input.category,
@@ -506,10 +506,12 @@ mod tests {
         i.ordinary = false;
         let r = check(&i);
         assert!(!r.welch_four_element_test_satisfied);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("ORDINARY ELEMENT FAILED")
-            && f.contains("Welch v. Helvering")
-            && f.contains("common and accepted")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("ORDINARY ELEMENT FAILED")
+                && f.contains("Welch v. Helvering")
+                && f.contains("common and accepted")));
     }
 
     #[test]
@@ -518,9 +520,9 @@ mod tests {
         i.necessary = false;
         let r = check(&i);
         assert!(!r.welch_four_element_test_satisfied);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("NECESSARY ELEMENT FAILED")
-            && f.contains("appropriate and helpful")));
+        assert!(r.failure_reasons.iter().any(
+            |f| f.contains("NECESSARY ELEMENT FAILED") && f.contains("appropriate and helpful")
+        ));
     }
 
     #[test]
@@ -529,9 +531,11 @@ mod tests {
         i.carrying_on_trade_or_business = false;
         let r = check(&i);
         assert!(!r.welch_four_element_test_satisfied);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("Higgins v. Commissioner")
-            && f.contains("investor activity NOT a trade or business")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("Higgins v. Commissioner")
+                && f.contains("investor activity NOT a trade or business")));
     }
 
     #[test]
@@ -540,9 +544,11 @@ mod tests {
         i.carrying_on_trade_or_business = false;
         i.section_475f_election = true;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 475(f) TRADER MARK-TO-MARKET ELECTION")
-            && f.contains("Estate of Yaeger")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 475(f) TRADER MARK-TO-MARKET ELECTION")
+                && f.contains("Estate of Yaeger")));
     }
 
     #[test]
@@ -552,8 +558,7 @@ mod tests {
         let r = check(&i);
         assert!(!r.welch_four_element_test_satisfied);
         assert!(r.capitalization_required);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("INDOPCO")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("INDOPCO")
             && f.contains("LONG-TERM BENEFIT")
             && f.contains("§ 263")
             && f.contains("§ 167/§ 168")));
@@ -566,10 +571,12 @@ mod tests {
         let r = check(&i);
         assert!(r.capitalization_required);
         assert!(!r.deduction_allowed);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("CAPITAL EXPENDITURE")
-            && f.contains("$2,500 safe harbor")
-            && f.contains("Notice 2015-82")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("CAPITAL EXPENDITURE")
+                && f.contains("$2,500 safe harbor")
+                && f.contains("Notice 2015-82")));
     }
 
     #[test]
@@ -578,8 +585,7 @@ mod tests {
         i.category = ExpenseCategory::IllegalPayment;
         let r = check(&i);
         assert!(!r.deduction_allowed);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 162(c)")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 162(c)")
             && f.contains("§ 162(c)(1)")
             && f.contains("§ 162(c)(2)")
             && f.contains("§ 162(c)(3)")));
@@ -591,8 +597,7 @@ mod tests {
         i.category = ExpenseCategory::LobbyingExpense;
         let r = check(&i);
         assert!(!r.deduction_allowed);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 162(e)")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 162(e)")
             && f.contains("influencing legislation")
             && f.contains("OBRA 1993")));
     }
@@ -603,8 +608,7 @@ mod tests {
         i.category = ExpenseCategory::FinesAndPenalties;
         let r = check(&i);
         assert!(!r.deduction_allowed);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 162(f)")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 162(f)")
             && f.contains("§ 162(f)(2)")
             && f.contains("post-TCJA 2017")
             && f.contains("restitution")));
@@ -617,10 +621,12 @@ mod tests {
         let r = check(&i);
         assert!(r.section_280e_cannabis_disallowance);
         assert!(!r.deduction_allowed);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 280E CANNABIS TRAFFICKING DISALLOWANCE")
-            && f.contains("Schedule I or II")
-            && f.contains("only COGS allowed")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 280E CANNABIS TRAFFICKING DISALLOWANCE")
+                && f.contains("Schedule I or II")
+                && f.contains("only COGS allowed")));
     }
 
     #[test]
@@ -631,11 +637,13 @@ mod tests {
         let r = check(&i);
         assert!(r.section_183_hobby_loss_concern);
         assert!(!r.deduction_allowed);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 183 HOBBY LOSS CONCERN")
-            && f.contains("§ 183(d) 3-of-5 year")
-            && f.contains("9-factor")
-            && f.contains("§ 1.183-2(b)")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 183 HOBBY LOSS CONCERN")
+                && f.contains("§ 183(d) 3-of-5 year")
+                && f.contains("9-factor")
+                && f.contains("§ 1.183-2(b)")));
     }
 
     #[test]
@@ -654,10 +662,12 @@ mod tests {
         i.category = ExpenseCategory::ReasonableCompensation;
         let r = check(&i);
         assert!(r.deduction_allowed);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 162(a)(1) REASONABLE COMPENSATION")
-            && f.contains("§ 162(m) $1M")
-            && f.contains("§ 280G")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 162(a)(1) REASONABLE COMPENSATION")
+                && f.contains("§ 162(m) $1M")
+                && f.contains("§ 280G")));
     }
 
     #[test]
@@ -666,12 +676,14 @@ mod tests {
         i.category = ExpenseCategory::TravelingExpenses;
         let r = check(&i);
         assert!(r.deduction_allowed);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 162(a)(2) TRAVELING EXPENSES")
-            && f.contains("§ 274(k)/(n) 50% meals")
-            && f.contains("§ 274(b) $25 gift cap")
-            && f.contains("§ 274(h) foreign convention")
-            && f.contains("§ 274(m) luxury water travel")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 162(a)(2) TRAVELING EXPENSES")
+                && f.contains("§ 274(k)/(n) 50% meals")
+                && f.contains("§ 274(b) $25 gift cap")
+                && f.contains("§ 274(h) foreign convention")
+                && f.contains("§ 274(m) luxury water travel")));
     }
 
     #[test]
@@ -680,8 +692,10 @@ mod tests {
         i.category = ExpenseCategory::RentalsOrOtherPayments;
         let r = check(&i);
         assert!(r.deduction_allowed);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 162(a)(3) RENTALS OR OTHER PAYMENTS")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 162(a)(3) RENTALS OR OTHER PAYMENTS")));
     }
 
     #[test]
@@ -736,12 +750,24 @@ mod tests {
         assert!(r.citation.contains("§ 280E"));
         assert!(r.citation.contains("§ 475(f)"));
         assert!(r.citation.contains("§ 1221"));
-        assert!(r.citation.contains("Welch v. Helvering, 290 U.S. 111 (1933)"));
-        assert!(r.citation.contains("Commissioner v. Heininger, 320 U.S. 467 (1943)"));
-        assert!(r.citation.contains("Higgins v. Commissioner, 312 U.S. 212 (1941)"));
-        assert!(r.citation.contains("Lincoln Sav. & Loan Ass'n v. Commissioner, 403 U.S. 345 (1971)"));
-        assert!(r.citation.contains("INDOPCO, Inc. v. Commissioner, 503 U.S. 79 (1992)"));
-        assert!(r.citation.contains("Estate of Yaeger v. Commissioner, 889 F.2d 29 (2d Cir. 1989)"));
+        assert!(r
+            .citation
+            .contains("Welch v. Helvering, 290 U.S. 111 (1933)"));
+        assert!(r
+            .citation
+            .contains("Commissioner v. Heininger, 320 U.S. 467 (1943)"));
+        assert!(r
+            .citation
+            .contains("Higgins v. Commissioner, 312 U.S. 212 (1941)"));
+        assert!(r
+            .citation
+            .contains("Lincoln Sav. & Loan Ass'n v. Commissioner, 403 U.S. 345 (1971)"));
+        assert!(r
+            .citation
+            .contains("INDOPCO, Inc. v. Commissioner, 503 U.S. 79 (1992)"));
+        assert!(r
+            .citation
+            .contains("Estate of Yaeger v. Commissioner, 889 F.2d 29 (2d Cir. 1989)"));
         assert!(r.citation.contains("Treas. Reg. § 1.162-1"));
         assert!(r.citation.contains("Treas. Reg. § 1.183-2(b)"));
     }
@@ -749,73 +775,84 @@ mod tests {
     #[test]
     fn note_pins_foundational_deduction_provision() {
         let r = check(&compliant_ordinary_and_necessary());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 162(a) — FOUNDATIONAL DEDUCTION PROVISION")
-            && n.contains("ORDINARY AND NECESSARY")
-            && n.contains("CARRYING ON ANY TRADE OR BUSINESS")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("§ 162(a) — FOUNDATIONAL DEDUCTION PROVISION")
+                && n.contains("ORDINARY AND NECESSARY")
+                && n.contains("CARRYING ON ANY TRADE OR BUSINESS")
+        ));
     }
 
     #[test]
     fn note_pins_welch_four_element_test_with_four_cases() {
         let r = check(&compliant_ordinary_and_necessary());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Welch v. Helvering 4-element test")
-            && n.contains("Welch v. Helvering 290 U.S. 111 (1933)")
-            && n.contains("Commissioner v. Heininger 320 U.S. 467 (1943)")
-            && n.contains("Lincoln Sav. & Loan Ass'n 403 U.S. 345 (1971)")
-            && n.contains("INDOPCO 503 U.S. 79 (1992)")
-            && n.contains("Higgins v. Commissioner 312 U.S. 212 (1941)")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Welch v. Helvering 4-element test")
+                && n.contains("Welch v. Helvering 290 U.S. 111 (1933)")
+                && n.contains("Commissioner v. Heininger 320 U.S. 467 (1943)")
+                && n.contains("Lincoln Sav. & Loan Ass'n 403 U.S. 345 (1971)")
+                && n.contains("INDOPCO 503 U.S. 79 (1992)")
+                && n.contains("Higgins v. Commissioner 312 U.S. 212 (1941)")));
     }
 
     #[test]
     fn note_pins_three_enumerated_categories() {
         let r = check(&compliant_ordinary_and_necessary());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 162(a) ENUMERATED CATEGORIES (3)")
-            && n.contains("§ 162(a)(1)")
-            && n.contains("§ 162(a)(2)")
-            && n.contains("§ 162(a)(3)")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 162(a) ENUMERATED CATEGORIES (3)")
+                && n.contains("§ 162(a)(1)")
+                && n.contains("§ 162(a)(2)")
+                && n.contains("§ 162(a)(3)")));
     }
 
     #[test]
     fn note_pins_subsection_c_illegal_payments() {
         let r = check(&compliant_ordinary_and_necessary());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 162(c) ILLEGAL PAYMENT EXCEPTIONS")
-            && n.contains("Medicare/Medicaid")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 162(c) ILLEGAL PAYMENT EXCEPTIONS")
+                && n.contains("Medicare/Medicaid")));
     }
 
     #[test]
     fn note_pins_subsection_e_lobbying() {
         let r = check(&compliant_ordinary_and_necessary());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 162(e) LOBBYING")
-            && n.contains("OBRA 1993")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 162(e) LOBBYING") && n.contains("OBRA 1993")));
     }
 
     #[test]
     fn note_pins_subsection_f_fines_and_penalties() {
         let r = check(&compliant_ordinary_and_necessary());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 162(f) FINES AND PENALTIES")
-            && n.contains("§ 162(f)(2)")
-            && n.contains("post-TCJA 2017")
-            && n.contains("restitution")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 162(f) FINES AND PENALTIES")
+                && n.contains("§ 162(f)(2)")
+                && n.contains("post-TCJA 2017")
+                && n.contains("restitution")));
     }
 
     #[test]
     fn note_pins_subsection_m_exec_comp_cap() {
         let r = check(&compliant_ordinary_and_necessary());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 162(m) $1M PUBLIC-COMPANY EXEC COMP CAP")
-            && n.contains("ARPA FIVE")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 162(m) $1M PUBLIC-COMPANY EXEC COMP CAP")
+                && n.contains("ARPA FIVE")));
     }
 
     #[test]
     fn note_pins_section_263_indopco_capitalization() {
         let r = check(&compliant_ordinary_and_necessary());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 263 + § 263A UNICAP")
+        assert!(r.notes.iter().any(|n| n.contains("§ 263 + § 263A UNICAP")
             && n.contains("INDOPCO")
             && n.contains("§ 167/§ 168")));
     }
@@ -823,8 +860,7 @@ mod tests {
     #[test]
     fn note_pins_section_274_specific_limits() {
         let r = check(&compliant_ordinary_and_necessary());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 274 SPECIFIC LIMITS")
+        assert!(r.notes.iter().any(|n| n.contains("§ 274 SPECIFIC LIMITS")
             && n.contains("50% meals")
             && n.contains("§ 274(d) substantiation")
             && n.contains("§ 274(o)")
@@ -834,8 +870,7 @@ mod tests {
     #[test]
     fn note_pins_section_183_hobby_loss() {
         let r = check(&compliant_ordinary_and_necessary());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 183 HOBBY LOSS")
+        assert!(r.notes.iter().any(|n| n.contains("§ 183 HOBBY LOSS")
             && n.contains("9-factor")
             && n.contains("§ 1.183-2(b)")));
     }
@@ -843,34 +878,40 @@ mod tests {
     #[test]
     fn note_pins_section_280e_cannabis_trafficking() {
         let r = check(&compliant_ordinary_and_necessary());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 280E CANNABIS TRAFFICKING")
-            && n.contains("Schedule I or II")
-            && n.contains("only COGS")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 280E CANNABIS TRAFFICKING")
+                && n.contains("Schedule I or II")
+                && n.contains("only COGS")));
     }
 
     #[test]
     fn note_pins_trader_critical_fact_patterns() {
         let r = check(&compliant_ordinary_and_necessary());
-        assert!(r.notes.iter().any(|n|
-            n.contains("trader-critical fact patterns")
-            && n.contains("Estate of Yaeger")
-            && n.contains("§ 1221(a)(1) dealer property")
-            && n.contains("Welch scenario")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("trader-critical fact patterns")
+                && n.contains("Estate of Yaeger")
+                && n.contains("§ 1221(a)(1) dealer property")
+                && n.contains("Welch scenario")));
     }
 
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&compliant_ordinary_and_necessary());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Companion to section_274")
-            && n.contains("section_162f")
-            && n.contains("section_162m")
-            && n.contains("section_280e")
-            && n.contains("section_263a")
-            && n.contains("section_461g")
-            && n.contains("section_475c2")
-            && n.contains("section_183")
-            && n.contains("section_280g")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Companion to section_274")
+                && n.contains("section_162f")
+                && n.contains("section_162m")
+                && n.contains("section_280e")
+                && n.contains("section_263a")
+                && n.contains("section_461g")
+                && n.contains("section_475c2")
+                && n.contains("section_183")
+                && n.contains("section_280g")));
     }
 }

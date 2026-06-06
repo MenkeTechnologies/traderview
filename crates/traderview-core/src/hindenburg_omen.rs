@@ -28,11 +28,11 @@ pub struct DailyBar {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Config {
-    pub min_extreme_pct: f64,        // typically 0.028 (2.8%)
-    pub min_smaller_count: i64,      // typically 79 (NYSE classic)
-    pub index_ma_period: usize,      // typically 50 (NYSE Comp)
-    pub max_high_to_low_ratio: f64,  // typically 2.0
-    pub confirmation_window: usize,  // typically 36 trading days
+    pub min_extreme_pct: f64,          // typically 0.028 (2.8%)
+    pub min_smaller_count: i64,        // typically 79 (NYSE classic)
+    pub index_ma_period: usize,        // typically 50 (NYSE Comp)
+    pub max_high_to_low_ratio: f64,    // typically 2.0
+    pub confirmation_window: usize,    // typically 36 trading days
     pub min_confirmation_count: usize, // typically 2
 }
 
@@ -103,7 +103,9 @@ pub fn analyze(bars: &[DailyBar], cfg: &Config) -> Report {
     // Pass over bars: evaluate each condition.
     for (i, b) in bars.iter().enumerate() {
         let issues = b.issues_traded as f64;
-        if issues <= 0.0 { continue; }
+        if issues <= 0.0 {
+            continue;
+        }
         let high_pct = b.new_52w_highs as f64 / issues;
         let low_pct = b.new_52w_lows as f64 / issues;
         let cond1 = high_pct >= cfg.min_extreme_pct && low_pct >= cfg.min_extreme_pct;
@@ -123,7 +125,9 @@ pub fn analyze(bars: &[DailyBar], cfg: &Config) -> Report {
     let win = cfg.confirmation_window;
     let need = cfg.min_confirmation_count;
     for i in 0..n {
-        if !report.triggers[i] { continue; }
+        if !report.triggers[i] {
+            continue;
+        }
         // Count triggers in [i - win + 1, i] inclusive.
         let lo = i.saturating_sub(win - 1);
         let cnt = report.triggers[lo..=i].iter().filter(|t| **t).count();
@@ -159,12 +163,30 @@ mod tests {
     fn invalid_config_returns_default() {
         let bars = vec![b(100.0, 3000, 100, 100, -5.0); 60];
         for cfg in [
-            Config { min_extreme_pct: 0.0, ..Default::default() },
-            Config { min_extreme_pct: 1.5, ..Default::default() },
-            Config { max_high_to_low_ratio: 0.0, ..Default::default() },
-            Config { index_ma_period: 0, ..Default::default() },
-            Config { confirmation_window: 0, ..Default::default() },
-            Config { min_confirmation_count: 0, ..Default::default() },
+            Config {
+                min_extreme_pct: 0.0,
+                ..Default::default()
+            },
+            Config {
+                min_extreme_pct: 1.5,
+                ..Default::default()
+            },
+            Config {
+                max_high_to_low_ratio: 0.0,
+                ..Default::default()
+            },
+            Config {
+                index_ma_period: 0,
+                ..Default::default()
+            },
+            Config {
+                confirmation_window: 0,
+                ..Default::default()
+            },
+            Config {
+                min_confirmation_count: 0,
+                ..Default::default()
+            },
         ] {
             let r = analyze(&bars, &cfg);
             assert!(r.trigger_indices.is_empty());
@@ -182,7 +204,7 @@ mod tests {
     fn all_conditions_satisfied_yields_trigger() {
         // 60 days flat at index=100, then a day with extreme breadth.
         let mut bars = vec![b(100.0, 3000, 5, 5, 5.0); 60];
-        bars.push(b(110.0, 3000, 100, 95, -10.0));    // satisfies all 5
+        bars.push(b(110.0, 3000, 100, 95, -10.0)); // satisfies all 5
         let r = analyze(&bars, &Config::default());
         assert!(r.triggers[60], "day 60 should trigger");
     }
@@ -190,11 +212,16 @@ mod tests {
     #[test]
     fn confirmation_requires_second_trigger_within_window() {
         let mut bars = vec![b(100.0, 3000, 5, 5, 5.0); 60];
-        bars.push(b(110.0, 3000, 100, 95, -10.0));    // trigger 1
-        for _ in 0..10 { bars.push(b(105.0, 3000, 5, 5, -2.0)); }    // no trigger
-        bars.push(b(110.0, 3000, 100, 95, -10.0));    // trigger 2 within window
+        bars.push(b(110.0, 3000, 100, 95, -10.0)); // trigger 1
+        for _ in 0..10 {
+            bars.push(b(105.0, 3000, 5, 5, -2.0));
+        } // no trigger
+        bars.push(b(110.0, 3000, 100, 95, -10.0)); // trigger 2 within window
         let r = analyze(&bars, &Config::default());
-        assert!(r.confirmation_indices.contains(&71), "should confirm on second trigger");
+        assert!(
+            r.confirmation_indices.contains(&71),
+            "should confirm on second trigger"
+        );
     }
 
     #[test]
@@ -203,13 +230,16 @@ mod tests {
         bars.push(b(110.0, 3000, 100, 95, -10.0));
         let r = analyze(&bars, &Config::default());
         assert!(r.trigger_indices.contains(&60));
-        assert!(r.confirmation_indices.is_empty(), "single trigger should not confirm");
+        assert!(
+            r.confirmation_indices.is_empty(),
+            "single trigger should not confirm"
+        );
     }
 
     #[test]
     fn positive_mcclellan_blocks_trigger() {
         let mut bars = vec![b(100.0, 3000, 5, 5, 5.0); 60];
-        bars.push(b(110.0, 3000, 100, 95, 5.0));    // positive McClellan
+        bars.push(b(110.0, 3000, 100, 95, 5.0)); // positive McClellan
         let r = analyze(&bars, &Config::default());
         assert!(r.trigger_indices.is_empty());
     }

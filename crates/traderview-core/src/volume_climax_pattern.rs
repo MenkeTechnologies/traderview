@@ -19,7 +19,12 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64, pub volume: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+    pub volume: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct VolumeClimaxReport {
@@ -47,12 +52,23 @@ pub fn compute(
         vol_multiplier,
         range_multiplier,
     };
-    if period < 2 || lookback < 2
-        || !vol_multiplier.is_finite() || vol_multiplier <= 0.0
-        || !range_multiplier.is_finite() || range_multiplier <= 0.0
-        || n < period.max(lookback) + 1 { return report; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite()
-        || !b.close.is_finite() || !b.volume.is_finite() || b.volume < 0.0) {
+    if period < 2
+        || lookback < 2
+        || !vol_multiplier.is_finite()
+        || vol_multiplier <= 0.0
+        || !range_multiplier.is_finite()
+        || range_multiplier <= 0.0
+        || n < period.max(lookback) + 1
+    {
+        return report;
+    }
+    if bars.iter().any(|b| {
+        !b.high.is_finite()
+            || !b.low.is_finite()
+            || !b.close.is_finite()
+            || !b.volume.is_finite()
+            || b.volume < 0.0
+    }) {
         return report;
     }
     let p_f = period as f64;
@@ -64,12 +80,18 @@ pub fn compute(
         let cur_range = cur.high - cur.low;
         let big_vol = cur.volume > avg_vol * vol_multiplier;
         let big_range = cur_range > avg_range * range_multiplier;
-        if !big_vol || !big_range { continue; }
+        if !big_vol || !big_range {
+            continue;
+        }
         let win_l = &bars[i - lookback..i];
         let win_high = win_l.iter().fold(f64::NEG_INFINITY, |a, b| a.max(b.high));
         let win_low = win_l.iter().fold(f64::INFINITY, |a, b| a.min(b.low));
-        if cur.high > win_high { report.buying_climax[i] = true; }
-        if cur.low < win_low { report.selling_climax[i] = true; }
+        if cur.high > win_high {
+            report.buying_climax[i] = true;
+        }
+        if cur.low < win_low {
+            report.selling_climax[i] = true;
+        }
     }
     report
 }
@@ -79,7 +101,12 @@ mod tests {
     use super::*;
 
     fn b(h: f64, l: f64, c: f64, v: f64) -> Bar {
-        Bar { high: h, low: l, close: c, volume: v }
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+            volume: v,
+        }
     }
 
     #[test]
@@ -127,7 +154,7 @@ mod tests {
     #[test]
     fn small_volume_rejects() {
         let mut bars = vec![b(101.0, 99.0, 100.0, 1000.0); 25];
-        bars.push(b(115.0, 99.0, 114.0, 1500.0));    // wide range but normal volume
+        bars.push(b(115.0, 99.0, 114.0, 1500.0)); // wide range but normal volume
         let r = compute(&bars, 20, 20, 2.0, 1.5);
         assert!(!r.buying_climax[25]);
     }

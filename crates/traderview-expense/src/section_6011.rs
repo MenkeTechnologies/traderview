@@ -157,9 +157,7 @@ pub fn compute(input: &Section6011Input) -> Section6011Result {
 
     let is_corporate = matches!(
         input.taxpayer_status,
-        TaxpayerStatus::Corporation
-            | TaxpayerStatus::Partnership
-            | TaxpayerStatus::SCorporation
+        TaxpayerStatus::Corporation | TaxpayerStatus::Partnership | TaxpayerStatus::SCorporation
     );
 
     // § 1.6011-4(b)(3) confidential-transaction fee threshold.
@@ -261,7 +259,11 @@ pub fn compute(input: &Section6011Input) -> Section6011Result {
                 CONFIDENTIAL_CORPORATE_FEE_THRESHOLD_CENTS,
                 CONFIDENTIAL_NONCORPORATE_FEE_THRESHOLD_CENTS,
                 input.fee_paid_to_advisor_cents,
-                if confidential_threshold_met { "met" } else { "not met" },
+                if confidential_threshold_met {
+                    "met"
+                } else {
+                    "not met"
+                },
             ));
         }
         TransactionCategory::ContractualProtection => {
@@ -686,9 +688,16 @@ mod tests {
     fn corporate_thresholds_higher_than_individual_invariant() {
         // 5 cells comparing corporate vs individual thresholds for
         // confidential + loss.
-        assert!(CONFIDENTIAL_CORPORATE_FEE_THRESHOLD_CENTS > CONFIDENTIAL_NONCORPORATE_FEE_THRESHOLD_CENTS);
-        assert!(LOSS_ENTITY_SINGLE_YEAR_THRESHOLD_CENTS > LOSS_INDIVIDUAL_SINGLE_YEAR_THRESHOLD_CENTS);
-        assert!(LOSS_ENTITY_MULTI_YEAR_THRESHOLD_CENTS > LOSS_INDIVIDUAL_MULTI_YEAR_THRESHOLD_CENTS);
+        assert!(
+            CONFIDENTIAL_CORPORATE_FEE_THRESHOLD_CENTS
+                > CONFIDENTIAL_NONCORPORATE_FEE_THRESHOLD_CENTS
+        );
+        assert!(
+            LOSS_ENTITY_SINGLE_YEAR_THRESHOLD_CENTS > LOSS_INDIVIDUAL_SINGLE_YEAR_THRESHOLD_CENTS
+        );
+        assert!(
+            LOSS_ENTITY_MULTI_YEAR_THRESHOLD_CENTS > LOSS_INDIVIDUAL_MULTI_YEAR_THRESHOLD_CENTS
+        );
         assert!(SECTION_6707A_MIN_ENTITY_CENTS > SECTION_6707A_MIN_INDIVIDUAL_CENTS);
         assert!(SECTION_6707A_MAX_ENTITY_LISTED_CENTS > SECTION_6707A_MAX_INDIVIDUAL_LISTED_CENTS);
     }
@@ -696,10 +705,15 @@ mod tests {
     #[test]
     fn listed_max_higher_than_other_max_invariant() {
         // Listed transaction max penalty > other reportable max.
-        assert!(SECTION_6707A_MAX_INDIVIDUAL_LISTED_CENTS > SECTION_6707A_MAX_INDIVIDUAL_OTHER_CENTS);
+        assert!(
+            SECTION_6707A_MAX_INDIVIDUAL_LISTED_CENTS > SECTION_6707A_MAX_INDIVIDUAL_OTHER_CENTS
+        );
         // Entity listed and other-reportable max are equal at $200K
         // — both higher than individual.
-        assert_eq!(SECTION_6707A_MAX_ENTITY_LISTED_CENTS, SECTION_6707A_MAX_ENTITY_OTHER_CENTS);
+        assert_eq!(
+            SECTION_6707A_MAX_ENTITY_LISTED_CENTS,
+            SECTION_6707A_MAX_ENTITY_OTHER_CENTS
+        );
     }
 
     #[test]

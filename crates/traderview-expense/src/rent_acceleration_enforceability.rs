@@ -153,7 +153,8 @@ pub fn check(input: &Input) -> CheckResult {
                 if input.landlord_rebutted_residential_presumption {
                     // Even with rebuttal, must meet § 1671(b) reasonableness.
                     // Use actual damages as cap.
-                    enforceability_status = EnforceabilityStatus::EnforceableReducedByMitigationOrPv;
+                    enforceability_status =
+                        EnforceabilityStatus::EnforceableReducedByMitigationOrPv;
                     enforceable_amount = acceleration.min(actual_damages);
                 } else {
                     enforceability_status = EnforceabilityStatus::PresumedInvalidResidential;
@@ -178,7 +179,8 @@ pub fn check(input: &Input) -> CheckResult {
                 let after_mitigation = (acceleration - mitigation_offset).max(0);
                 if acceleration <= actual_damages.saturating_mul(2) {
                     // Reasonable estimate — enforceable (subject to mitigation).
-                    enforceability_status = EnforceabilityStatus::EnforceableReducedByMitigationOrPv;
+                    enforceability_status =
+                        EnforceabilityStatus::EnforceableReducedByMitigationOrPv;
                     enforceable_amount = after_mitigation;
                 } else {
                     enforceability_status = EnforceabilityStatus::VoidAsPenalty;
@@ -216,7 +218,8 @@ pub fn check(input: &Input) -> CheckResult {
                 mitigation_required = true;
                 let mitigation_reduced = (acceleration - mitigation_offset).max(0);
                 if acceleration <= actual_damages.saturating_mul(2) {
-                    enforceability_status = EnforceabilityStatus::EnforceableReducedByMitigationOrPv;
+                    enforceability_status =
+                        EnforceabilityStatus::EnforceableReducedByMitigationOrPv;
                     enforceable_amount = mitigation_reduced;
                 } else {
                     enforceability_status = EnforceabilityStatus::VoidAsPenalty;
@@ -240,7 +243,8 @@ pub fn check(input: &Input) -> CheckResult {
                     enforceability_status = EnforceabilityStatus::Enforceable;
                     enforceable_amount = acceleration;
                 } else {
-                    enforceability_status = EnforceabilityStatus::EnforceableReducedByMitigationOrPv;
+                    enforceability_status =
+                        EnforceabilityStatus::EnforceableReducedByMitigationOrPv;
                     enforceable_amount = acceleration;
                     violations.push(
                         "New York Court of Appeals — accelerated rent must be DISCOUNTED \
@@ -272,7 +276,8 @@ pub fn check(input: &Input) -> CheckResult {
                     enforceability_status = EnforceabilityStatus::Enforceable;
                     enforceable_amount = after_mitigation;
                 } else {
-                    enforceability_status = EnforceabilityStatus::EnforceableReducedByMitigationOrPv;
+                    enforceability_status =
+                        EnforceabilityStatus::EnforceableReducedByMitigationOrPv;
                     enforceable_amount = after_mitigation;
                     violations.push(
                         "Default common law — present-value discount required for \
@@ -304,9 +309,7 @@ pub fn check(input: &Input) -> CheckResult {
         }
     }
 
-    if input.landlord_attempted_mitigation
-        && input.mitigation_offset_cents > 0
-    {
+    if input.landlord_attempted_mitigation && input.mitigation_offset_cents > 0 {
         notes.push(format!(
             "Mitigation offset {} cents credited against acceleration demand {} cents → \
              net recovery {} cents.",
@@ -369,7 +372,7 @@ mod tests {
             regime,
             lease_is_residential: residential,
             acceleration_amount_demanded_cents: 12_000_000, // $120K (12 months × $10K)
-            actual_damages_estimate_cents: 6_000_000,        // $60K (6 months actual loss)
+            actual_damages_estimate_cents: 6_000_000,       // $60K (6 months actual loss)
             present_value_discount_applied: true,
             landlord_attempted_mitigation: true,
             mitigation_offset_cents: 0,
@@ -412,7 +415,10 @@ mod tests {
         b.acceleration_amount_demanded_cents = 6_000_000; // = actual damages
         b.mitigation_offset_cents = 1_000_000;
         let r = check(&b);
-        assert_eq!(r.enforceability_status, EnforceabilityStatus::EnforceableReducedByMitigationOrPv);
+        assert_eq!(
+            r.enforceability_status,
+            EnforceabilityStatus::EnforceableReducedByMitigationOrPv
+        );
         assert!(r.mitigation_required);
         // $6M - $1M mitigation = $5M.
         assert_eq!(r.enforceable_amount_cents, 5_000_000);
@@ -445,7 +451,10 @@ mod tests {
         b.present_value_discount_applied = false;
         let r = check(&b);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("DISCOUNTED TO PRESENT VALUE")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("DISCOUNTED TO PRESENT VALUE")));
     }
 
     #[test]
@@ -506,7 +515,10 @@ mod tests {
         b.acceleration_amount_demanded_cents = 6_000_000;
         b.present_value_discount_applied = false;
         let r = check(&b);
-        assert_eq!(r.enforceability_status, EnforceabilityStatus::EnforceableReducedByMitigationOrPv);
+        assert_eq!(
+            r.enforceability_status,
+            EnforceabilityStatus::EnforceableReducedByMitigationOrPv
+        );
         assert!(!r.compliant);
     }
 
@@ -517,7 +529,10 @@ mod tests {
         b.landlord_attempted_mitigation = false;
         let r = check(&b);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("did not attempt to mitigate")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("did not attempt to mitigate")));
     }
 
     // ── Multi-regime invariants ───────────────────────────────
@@ -545,8 +560,7 @@ mod tests {
             let r = check(&input(regime, false));
             let expected_no_mitigation = matches!(regime, Regime::NewYork);
             assert_eq!(
-                !r.mitigation_required,
-                expected_no_mitigation,
+                !r.mitigation_required, expected_no_mitigation,
                 "{:?}",
                 regime
             );
@@ -609,20 +623,26 @@ mod tests {
         assert!(r.citation.contains("§ 1951.2"));
         assert!(r.citation.contains("Holy Properties"));
         assert!(r.citation.contains("87 N.Y.2d 130 (1995)"));
-        assert!(r.citation.contains("Restatement (Second) of Contracts § 356"));
-        assert!(r.citation.contains("Restatement (Second) of Property § 12.1"));
+        assert!(r
+            .citation
+            .contains("Restatement (Second) of Contracts § 356"));
+        assert!(r
+            .citation
+            .contains("Restatement (Second) of Property § 12.1"));
     }
 
     #[test]
     fn sibling_distinction_note_present() {
         let r = check(&input(Regime::California, false));
         assert!(
-            r.notes.iter().any(|n| n.contains("duty_to_mitigate_damages")
-                && n.contains("late_fee_caps")
-                && n.contains("lease_cure_period")
-                && n.contains("holdover_tenant_damages")
-                && n.contains("§ 1671(d)")
-                && n.contains("Holy Properties")),
+            r.notes
+                .iter()
+                .any(|n| n.contains("duty_to_mitigate_damages")
+                    && n.contains("late_fee_caps")
+                    && n.contains("lease_cure_period")
+                    && n.contains("holdover_tenant_damages")
+                    && n.contains("§ 1671(d)")
+                    && n.contains("Holy Properties")),
             "sibling distinction note must reference sibling modules + key regime authorities"
         );
     }

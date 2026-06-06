@@ -20,14 +20,22 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 pub fn compute(bars: &[Bar], stoch_period: usize, ema_period: usize) -> Vec<Option<f64>> {
     let n = bars.len();
     let mut out = vec![None; n];
-    if stoch_period < 2 || ema_period < 2
-        || n < stoch_period + 2 * ema_period { return out; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if stoch_period < 2 || ema_period < 2 || n < stoch_period + 2 * ema_period {
+        return out;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return out;
     }
     // Raw %K.
@@ -37,7 +45,11 @@ pub fn compute(bars: &[Bar], stoch_period: usize, ema_period: usize) -> Vec<Opti
         let hh = win.iter().fold(f64::NEG_INFINITY, |a, b| a.max(b.high));
         let ll = win.iter().fold(f64::INFINITY, |a, b| a.min(b.low));
         let range = hh - ll;
-        *slot = Some(if range > 0.0 { (bars[i].close - ll) / range * 100.0 } else { 50.0 });
+        *slot = Some(if range > 0.0 {
+            (bars[i].close - ll) / range * 100.0
+        } else {
+            50.0
+        });
     }
     let s1 = ema_opt(&raw_k, ema_period);
     let s2 = ema_opt(&s1, ema_period);
@@ -45,13 +57,19 @@ pub fn compute(bars: &[Bar], stoch_period: usize, ema_period: usize) -> Vec<Opti
     for i in stoch_period - 1..n {
         let win_start = i + 1 - stoch_period;
         let win = &s2[win_start..=i];
-        if win.iter().any(|x| x.is_none()) { continue; }
+        if win.iter().any(|x| x.is_none()) {
+            continue;
+        }
         let vals: Vec<f64> = win.iter().filter_map(|x| *x).collect();
         let hh = vals.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
         let ll = vals.iter().cloned().fold(f64::INFINITY, f64::min);
         let cur = s2[i].unwrap();
         let range = hh - ll;
-        out[i] = Some(if range > 0.0 { (cur - ll) / range * 100.0 } else { 50.0 });
+        out[i] = Some(if range > 0.0 {
+            (cur - ll) / range * 100.0
+        } else {
+            50.0
+        });
     }
     out
 }
@@ -59,18 +77,31 @@ pub fn compute(bars: &[Bar], stoch_period: usize, ema_period: usize) -> Vec<Opti
 fn ema_opt(series: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 { return out; }
+    if period == 0 {
+        return out;
+    }
     let mut seed_end = None;
     let mut seed_sum = 0.0_f64;
     let mut count = 0_usize;
     for (i, v) in series.iter().enumerate() {
         match v {
-            Some(x) => { seed_sum += x; count += 1; }
-            None => { seed_sum = 0.0; count = 0; }
+            Some(x) => {
+                seed_sum += x;
+                count += 1;
+            }
+            None => {
+                seed_sum = 0.0;
+                count = 0;
+            }
         }
-        if count == period { seed_end = Some(i); break; }
+        if count == period {
+            seed_end = Some(i);
+            break;
+        }
     }
-    let Some(end) = seed_end else { return out; };
+    let Some(end) = seed_end else {
+        return out;
+    };
     let p_f = period as f64;
     let k = 2.0 / (p_f + 1.0);
     let mut cur = seed_sum / p_f;
@@ -90,7 +121,13 @@ fn ema_opt(series: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {
@@ -108,10 +145,12 @@ mod tests {
 
     #[test]
     fn output_in_zero_hundred_range() {
-        let bars: Vec<_> = (0..200).map(|i| {
-            let m = 100.0 + (i as f64 * 0.2).sin() * 5.0;
-            b(m + 1.0, m - 1.0, m)
-        }).collect();
+        let bars: Vec<_> = (0..200)
+            .map(|i| {
+                let m = 100.0 + (i as f64 * 0.2).sin() * 5.0;
+                b(m + 1.0, m - 1.0, m)
+            })
+            .collect();
         let r = compute(&bars, 13, 8);
         for v in r.iter().flatten() {
             assert!((0.0..=100.0).contains(v));
@@ -132,16 +171,20 @@ mod tests {
         let r = compute(&bars, 13, 8);
         let last = bars.len() - 1;
         let v = r[last].unwrap();
-        assert!(v > 50.0,
-            "breakout-from-base should yield DSS > 50, got {v}");
+        assert!(
+            v > 50.0,
+            "breakout-from-base should yield DSS > 50, got {v}"
+        );
     }
 
     #[test]
     fn output_within_zero_hundred_in_sin_wave() {
-        let bars: Vec<_> = (0..200).map(|i| {
-            let m = 100.0 + (i as f64 * 0.1).sin() * 5.0;
-            b(m + 1.0, m - 1.0, m)
-        }).collect();
+        let bars: Vec<_> = (0..200)
+            .map(|i| {
+                let m = 100.0 + (i as f64 * 0.1).sin() * 5.0;
+                b(m + 1.0, m - 1.0, m)
+            })
+            .collect();
         let r = compute(&bars, 13, 8);
         for v in r.iter().flatten() {
             assert!((0.0..=100.0).contains(v));

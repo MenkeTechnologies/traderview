@@ -125,11 +125,7 @@ pub fn parse_with(bytes: &[u8], map: &ColumnMap) -> Result<Vec<ParsedExecution>,
             if !map.status_allow.is_empty() {
                 if let Some(raw) = row.field(status_col) {
                     let s = raw.trim();
-                    if !map
-                        .status_allow
-                        .iter()
-                        .any(|a| a.eq_ignore_ascii_case(s))
-                    {
+                    if !map.status_allow.iter().any(|a| a.eq_ignore_ascii_case(s)) {
                         continue;
                     }
                 }

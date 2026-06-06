@@ -189,13 +189,10 @@ pub fn compute(input: &Section6038DInput) -> Section6038DResult {
         // § 6038D(e) — continuing $10k per 30-day period after
         // 90-day notice grace.
         let continuing = if input.days_since_irs_notice > SECTION_6038D_NOTICE_GRACE_DAYS {
-            let days_past_grace =
-                input.days_since_irs_notice - SECTION_6038D_NOTICE_GRACE_DAYS;
+            let days_past_grace = input.days_since_irs_notice - SECTION_6038D_NOTICE_GRACE_DAYS;
             // Number of 30-day periods or fractions.
-            let periods =
-                days_past_grace.div_ceil(SECTION_6038D_CONTINUING_PERIOD_DAYS) as i64;
-            let raw = periods
-                .saturating_mul(SECTION_6038D_CONTINUING_PENALTY_PER_PERIOD_CENTS);
+            let periods = days_past_grace.div_ceil(SECTION_6038D_CONTINUING_PERIOD_DAYS) as i64;
+            let raw = periods.saturating_mul(SECTION_6038D_CONTINUING_PENALTY_PER_PERIOD_CENTS);
             raw.min(SECTION_6038D_CONTINUING_PENALTY_CAP_CENTS)
         } else {
             0
@@ -433,11 +430,10 @@ mod tests {
         ));
         assert_eq!(r.initial_penalty_cents, 1_000_000);
         assert_eq!(r.total_penalty_cents, 1_000_000);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("§ 6038D(d)") && v.contains("$10,000"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 6038D(d)") && v.contains("$10,000")));
     }
 
     #[test]
@@ -469,11 +465,10 @@ mod tests {
             false,
         ));
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("§ 6038D(c)") && v.contains("required information is missing"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 6038D(c)") && v.contains("required information is missing")));
     }
 
     // ── § 6038D(e) continuing failure penalty ──────────────────
@@ -651,9 +646,9 @@ mod tests {
         // For Single/MFS Domestic ($50k/$75k):
         for (year_end, any_time, expected) in [
             (4_000_000_i64, 6_000_000_i64, false),
-            (5_000_001, 6_000_000, true), // year-end above
-            (4_000_000, 7_500_001, true), // any-time above
-            (5_000_001, 7_500_001, true), // both above
+            (5_000_001, 6_000_000, true),  // year-end above
+            (4_000_000, 7_500_001, true),  // any-time above
+            (5_000_001, 7_500_001, true),  // both above
             (5_000_000, 7_500_000, false), // both exactly at threshold
         ] {
             let r = compute(&input(
@@ -726,10 +721,22 @@ mod tests {
     #[test]
     fn thresholds_per_filing_status_invariant() {
         let cases = [
-            (FilingStatus::SingleOrMFSDomestic, 5_000_000_i64, 7_500_000_i64),
-            (FilingStatus::MarriedFilingJointlyDomestic, 10_000_000, 15_000_000),
+            (
+                FilingStatus::SingleOrMFSDomestic,
+                5_000_000_i64,
+                7_500_000_i64,
+            ),
+            (
+                FilingStatus::MarriedFilingJointlyDomestic,
+                10_000_000,
+                15_000_000,
+            ),
             (FilingStatus::SingleOrMFSAbroad, 20_000_000, 30_000_000),
-            (FilingStatus::MarriedFilingJointlyAbroad, 40_000_000, 60_000_000),
+            (
+                FilingStatus::MarriedFilingJointlyAbroad,
+                40_000_000,
+                60_000_000,
+            ),
         ];
         for (status, ye, any) in cases {
             let r = compute(&input(status, 0, 0, false, false, 0, false, false));

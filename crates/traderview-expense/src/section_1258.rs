@@ -198,7 +198,9 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.conversion_transaction_category == ConversionTransactionCategory::NotAConversionTransaction {
+    if input.conversion_transaction_category
+        == ConversionTransactionCategory::NotAConversionTransaction
+    {
         return Output {
             mode: Section1258Mode::NotApplicableNoConversionTransactionCategoryMet,
             statutory_basis: "IRC § 1258(c)(2) — transaction must fall within one of four enumerated categories".to_string(),
@@ -236,7 +238,8 @@ pub fn compute(input: &Input) -> Output {
         .saturating_add(input.section_263g_capitalized_amount_cents)
         .saturating_add(input.other_ordinary_income_received_cents);
 
-    let applicable_imputed_income_amount_cents = imputed_interest_at_120pct.saturating_sub(reductions);
+    let applicable_imputed_income_amount_cents =
+        imputed_interest_at_120pct.saturating_sub(reductions);
 
     let ordinary_income_recharacterization_cents = input
         .gain_recognized_on_disposition_cents
@@ -357,7 +360,10 @@ mod tests {
             ..baseline_conversion_transaction_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, Section1258Mode::NotApplicableNoGainOnDisposition);
+        assert_eq!(
+            result.mode,
+            Section1258Mode::NotApplicableNoGainOnDisposition
+        );
     }
 
     #[test]
@@ -377,7 +383,8 @@ mod tests {
     #[test]
     fn no_conversion_category_not_applicable() {
         let input = Input {
-            conversion_transaction_category: ConversionTransactionCategory::NotAConversionTransaction,
+            conversion_transaction_category:
+                ConversionTransactionCategory::NotAConversionTransaction,
             ..baseline_conversion_transaction_compliant()
         };
         let result = check(&input);
@@ -395,7 +402,10 @@ mod tests {
             ..baseline_conversion_transaction_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, Section1258Mode::ViolationApplicableRateMisidentified);
+        assert_eq!(
+            result.mode,
+            Section1258Mode::ViolationApplicableRateMisidentified
+        );
     }
 
     #[test]

@@ -101,9 +101,7 @@ pub fn check(input: &LandlordAnnualRentStatementInput) -> LandlordAnnualRentStat
     }
 }
 
-fn check_minnesota(
-    input: &LandlordAnnualRentStatementInput,
-) -> LandlordAnnualRentStatementResult {
+fn check_minnesota(input: &LandlordAnnualRentStatementInput) -> LandlordAnnualRentStatementResult {
     let mut violations: Vec<String> = Vec::new();
     let mut notes: Vec<String> = Vec::new();
 
@@ -125,10 +123,8 @@ fn check_minnesota(
         "Minn. Stat. § 290A.19 — CRP supports tenant's claim for Property Tax Refund (Renter's Credit) under § 290A"
             .to_string(),
     );
-    notes.push(
-        "Minn. Stat. § 290A.19 — CRP may be provided as ELECTRONIC OR HARD COPY"
-            .to_string(),
-    );
+    notes
+        .push("Minn. Stat. § 290A.19 — CRP may be provided as ELECTRONIC OR HARD COPY".to_string());
 
     let affidavit_available = !input.statement_issued_by_deadline;
     if affidavit_available {
@@ -151,7 +147,8 @@ fn check_minnesota(
         state_penalty_exposure: !compliant,
         affidavit_alternative_available: affidavit_available,
         violations,
-        citation: "Minn. Stat. §§ 290A.19, 290A (MN Property Tax Refund + Renter's Credit framework)",
+        citation:
+            "Minn. Stat. §§ 290A.19, 290A (MN Property Tax Refund + Renter's Credit framework)",
         notes,
     }
 }
@@ -175,8 +172,7 @@ fn check_vermont(input: &LandlordAnnualRentStatementInput) -> LandlordAnnualRent
     }
 
     notes.push(
-        "Vt. Stat. tit. 32 § 6066 — Renter Rebate Program supports tenant rebate claim"
-            .to_string(),
+        "Vt. Stat. tit. 32 § 6066 — Renter Rebate Program supports tenant rebate claim".to_string(),
     );
 
     let compliant = violations.is_empty();
@@ -260,7 +256,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.compliant);
         assert!(r.state_penalty_exposure);
-        assert!(r.violations.iter().any(|v| v.contains("§ 290A.19") && v.contains("JANUARY 31")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 290A.19") && v.contains("JANUARY 31")));
     }
 
     #[test]
@@ -269,7 +268,11 @@ mod tests {
         i.statement_issued_by_deadline = false;
         let r = check(&i);
         assert!(r.affidavit_alternative_available);
-        assert!(r.notes.iter().any(|n| n.contains("Rent Paid Affidavit") && n.contains("Minnesota Department of Revenue")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Rent Paid Affidavit")
+                && n.contains("Minnesota Department of Revenue")));
     }
 
     #[test]
@@ -278,7 +281,10 @@ mod tests {
         i.statement_issued_by_deadline = false;
         i.tenant_requested_rent_paid_affidavit = true;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("invoked the Rent Paid Affidavit alternative") && n.contains("state-law penalties")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("invoked the Rent Paid Affidavit alternative")
+                && n.contains("state-law penalties")
+        ));
     }
 
     #[test]
@@ -287,19 +293,28 @@ mod tests {
         i.statement_includes_required_information = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 290A.19") && v.contains("MUST include")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 290A.19") && v.contains("MUST include")));
     }
 
     #[test]
     fn mn_electronic_or_hard_copy_note_present() {
         let r = check(&mn_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("ELECTRONIC OR HARD COPY")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("ELECTRONIC OR HARD COPY")));
     }
 
     #[test]
     fn mn_property_tax_refund_note_present() {
         let r = check(&mn_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("Property Tax Refund") && n.contains("Renter's Credit")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Property Tax Refund") && n.contains("Renter's Credit")));
     }
 
     #[test]
@@ -322,7 +337,10 @@ mod tests {
         i.statement_issued_by_deadline = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("Vt. Stat. tit. 32 § 6066") && v.contains("Form LRC-147")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("Vt. Stat. tit. 32 § 6066") && v.contains("Form LRC-147")));
     }
 
     #[test]
@@ -331,7 +349,10 @@ mod tests {
         i.statement_includes_required_information = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("LRC-147") && v.contains("MUST include")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("LRC-147") && v.contains("MUST include")));
     }
 
     #[test]
@@ -364,19 +385,26 @@ mod tests {
     #[test]
     fn default_renter_tax_credit_cross_references_note() {
         let r = check(&default_base());
-        assert!(r.notes.iter().any(|n| n.contains("MA Renter Deduction") && n.contains("IN Renter Deduction") && n.contains("ME Renters Rebate")));
+        assert!(r.notes.iter().any(|n| n.contains("MA Renter Deduction")
+            && n.contains("IN Renter Deduction")
+            && n.contains("ME Renters Rebate")));
     }
 
     #[test]
     fn default_records_on_request_obligation_note() {
         let r = check(&default_base());
-        assert!(r.notes.iter().any(|n| n.contains("landlord must produce records on tenant request")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("landlord must produce records on tenant request")));
     }
 
     #[test]
     fn default_citation_references_no_statewide_mandate() {
         let r = check(&default_base());
-        assert!(r.citation.contains("no statewide proactive landlord statement mandate"));
+        assert!(r
+            .citation
+            .contains("no statewide proactive landlord statement mandate"));
     }
 
     #[test]
@@ -403,7 +431,10 @@ mod tests {
         let mut i_default = default_base();
         i_default.statement_issued_by_deadline = false;
         let r_default = check(&i_default);
-        assert!(!r_default.violations.iter().any(|v| v.contains("Form LRC-147")));
+        assert!(!r_default
+            .violations
+            .iter()
+            .any(|v| v.contains("Form LRC-147")));
     }
 
     #[test]
@@ -429,7 +460,11 @@ mod tests {
             i.regime = regime;
             i.statement_issued_by_deadline = false;
             let r = check(&i);
-            assert!(!r.affidavit_alternative_available, "regime {:?} should not engage MN affidavit alternative", regime);
+            assert!(
+                !r.affidavit_alternative_available,
+                "regime {:?} should not engage MN affidavit alternative",
+                regime
+            );
         }
     }
 

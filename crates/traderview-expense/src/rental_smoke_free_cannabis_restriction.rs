@@ -324,8 +324,7 @@ mod tests {
         Input {
             jurisdiction: Jurisdiction::California,
             substance_category: SubstanceCategory::LitTobaccoCigarettesOrCigarOrPipe,
-            lease_disclosure_status:
-                LeaseDisclosureStatus::DisclosedInLeaseWithDesignatedAreas,
+            lease_disclosure_status: LeaseDisclosureStatus::DisclosedInLeaseWithDesignatedAreas,
             tenancy_status: TenancyStatus::NewTenancyPostPolicyImplementation,
         }
     }
@@ -358,8 +357,7 @@ mod tests {
     #[test]
     fn ca_designated_areas_missing_defective() {
         let mut input = base_ca();
-        input.lease_disclosure_status =
-            LeaseDisclosureStatus::DisclosedButDesignatedAreasMissing;
+        input.lease_disclosure_status = LeaseDisclosureStatus::DisclosedButDesignatedAreasMissing;
         let output = check(&input);
         assert_eq!(
             output.severity,

@@ -68,21 +68,36 @@ pub fn ff3(inputs: &Ff3Inputs<'_>) -> Option<Ff3Report> {
         x_hml.push(h);
     }
     let n_obs = y.len();
-    if n_obs < 10 { return None; }
+    if n_obs < 10 {
+        return None;
+    }
     let cols = vec![vec![1.0; n_obs], x_mkt, x_smb, x_hml];
     let (b, se) = ols_with_se(&cols, &y)?;
-    if b.len() != 4 || se.len() != 4 { return None; }
+    if b.len() != 4 || se.len() != 4 {
+        return None;
+    }
     let y_mean: f64 = y.iter().sum::<f64>() / n_obs as f64;
-    let mut ss_tot = 0.0; let mut ss_res = 0.0;
+    let mut ss_tot = 0.0;
+    let mut ss_res = 0.0;
     for k in 0..n_obs {
         let pred = b[0] + b[1] * cols[1][k] + b[2] * cols[2][k] + b[3] * cols[3][k];
         ss_tot += (y[k] - y_mean).powi(2);
         ss_res += (y[k] - pred).powi(2);
     }
-    let r2 = if ss_tot > 0.0 { 1.0 - ss_res / ss_tot } else { 0.0 };
+    let r2 = if ss_tot > 0.0 {
+        1.0 - ss_res / ss_tot
+    } else {
+        0.0
+    };
     Some(Ff3Report {
-        alpha: b[0], beta_mkt: b[1], beta_smb: b[2], beta_hml: b[3],
-        alpha_se: se[0], beta_mkt_se: se[1], beta_smb_se: se[2], beta_hml_se: se[3],
+        alpha: b[0],
+        beta_mkt: b[1],
+        beta_smb: b[2],
+        beta_hml: b[3],
+        alpha_se: se[0],
+        beta_mkt_se: se[1],
+        beta_smb_se: se[2],
+        beta_hml_se: se[3],
         alpha_tstat: if se[0] > 0.0 { b[0] / se[0] } else { 0.0 },
         r_squared: r2,
         n_observations: n_obs,
@@ -139,8 +154,13 @@ pub fn carhart4(inputs: &Carhart4Inputs<'_>) -> Option<Carhart4Report> {
         let h = inputs.hml[i];
         let w = inputs.wml[i];
         let rf = inputs.risk_free[i];
-        if !p.is_finite() || !m.is_finite() || !s.is_finite() || !h.is_finite()
-            || !w.is_finite() || !rf.is_finite() {
+        if !p.is_finite()
+            || !m.is_finite()
+            || !s.is_finite()
+            || !h.is_finite()
+            || !w.is_finite()
+            || !rf.is_finite()
+        {
             continue;
         }
         y.push(p - rf);
@@ -150,21 +170,38 @@ pub fn carhart4(inputs: &Carhart4Inputs<'_>) -> Option<Carhart4Report> {
         x_wml.push(w);
     }
     let n_obs = y.len();
-    if n_obs < 10 { return None; }
+    if n_obs < 10 {
+        return None;
+    }
     let cols = vec![vec![1.0; n_obs], x_mkt, x_smb, x_hml, x_wml];
     let (b, se) = ols_with_se(&cols, &y)?;
-    if b.len() != 5 || se.len() != 5 { return None; }
+    if b.len() != 5 || se.len() != 5 {
+        return None;
+    }
     let y_mean: f64 = y.iter().sum::<f64>() / n_obs as f64;
-    let mut ss_tot = 0.0; let mut ss_res = 0.0;
+    let mut ss_tot = 0.0;
+    let mut ss_res = 0.0;
     for k in 0..n_obs {
-        let pred = b[0] + b[1] * cols[1][k] + b[2] * cols[2][k] + b[3] * cols[3][k] + b[4] * cols[4][k];
+        let pred =
+            b[0] + b[1] * cols[1][k] + b[2] * cols[2][k] + b[3] * cols[3][k] + b[4] * cols[4][k];
         ss_tot += (y[k] - y_mean).powi(2);
         ss_res += (y[k] - pred).powi(2);
     }
-    let r2 = if ss_tot > 0.0 { 1.0 - ss_res / ss_tot } else { 0.0 };
+    let r2 = if ss_tot > 0.0 {
+        1.0 - ss_res / ss_tot
+    } else {
+        0.0
+    };
     Some(Carhart4Report {
-        alpha: b[0], beta_mkt: b[1], beta_smb: b[2], beta_hml: b[3], beta_wml: b[4],
-        alpha_se: se[0], beta_mkt_se: se[1], beta_smb_se: se[2], beta_hml_se: se[3],
+        alpha: b[0],
+        beta_mkt: b[1],
+        beta_smb: b[2],
+        beta_hml: b[3],
+        beta_wml: b[4],
+        alpha_se: se[0],
+        beta_mkt_se: se[1],
+        beta_smb_se: se[2],
+        beta_hml_se: se[3],
         beta_wml_se: se[4],
         alpha_tstat: if se[0] > 0.0 { b[0] / se[0] } else { 0.0 },
         r_squared: r2,
@@ -175,7 +212,9 @@ pub fn carhart4(inputs: &Carhart4Inputs<'_>) -> Option<Carhart4Report> {
 fn ols_with_se(x: &[Vec<f64>], y: &[f64]) -> Option<(Vec<f64>, Vec<f64>)> {
     let p = x.len();
     let n = y.len();
-    if p == 0 || n == 0 || x.iter().any(|c| c.len() != n) { return None; }
+    if p == 0 || n == 0 || x.iter().any(|c| c.len() != n) {
+        return None;
+    }
     let mut xtx = vec![vec![0.0_f64; p]; p];
     let mut xty = vec![0.0_f64; p];
     for i in 0..p {
@@ -195,18 +234,30 @@ fn ols_with_se(x: &[Vec<f64>], y: &[f64]) -> Option<(Vec<f64>, Vec<f64>)> {
     for i in 0..p {
         let mut pivot = i;
         for r in (i + 1)..p {
-            if aug[r][i].abs() > aug[pivot][i].abs() { pivot = r; }
+            if aug[r][i].abs() > aug[pivot][i].abs() {
+                pivot = r;
+            }
         }
-        if aug[pivot][i].abs() < 1e-18 { return None; }
+        if aug[pivot][i].abs() < 1e-18 {
+            return None;
+        }
         aug.swap(i, pivot);
         let div = aug[i][i];
-        for v in aug[i].iter_mut() { *v /= div; }
+        for v in aug[i].iter_mut() {
+            *v /= div;
+        }
         for r in 0..p {
-            if r == i { continue; }
+            if r == i {
+                continue;
+            }
             let f = aug[r][i];
-            if f == 0.0 { continue; }
+            if f == 0.0 {
+                continue;
+            }
             let pivot_row = aug[i].clone();
-            for (j, v) in aug[r].iter_mut().enumerate() { *v -= f * pivot_row[j]; }
+            for (j, v) in aug[r].iter_mut().enumerate() {
+                *v -= f * pivot_row[j];
+            }
         }
     }
     let beta: Vec<f64> = (0..p).map(|i| aug[i][2 * p]).collect();
@@ -237,7 +288,11 @@ mod tests {
         let h = vec![0.01; 30];
         let rf = vec![0.0; 15];
         let inputs = Ff3Inputs {
-            portfolio_returns: &p, market_excess: &m, smb: &s, hml: &h, risk_free: &rf,
+            portfolio_returns: &p,
+            market_excess: &m,
+            smb: &s,
+            hml: &h,
+            risk_free: &rf,
         };
         assert!(ff3(&inputs).is_none());
     }
@@ -266,25 +321,53 @@ mod tests {
         let mut rf = Vec::with_capacity(n);
         let mut p = Vec::with_capacity(n);
         for _ in 0..n {
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             let m_i = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.04;
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             let s_i = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.03;
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             let h_i = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.025;
             let rf_i = 0.00005;
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             let eps = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.005;
             let p_i = rf_i + 0.001 + 1.0 * m_i + 0.3 * s_i - 0.5 * h_i + eps;
-            m.push(m_i); s.push(s_i); h.push(h_i); rf.push(rf_i); p.push(p_i);
+            m.push(m_i);
+            s.push(s_i);
+            h.push(h_i);
+            rf.push(rf_i);
+            p.push(p_i);
         }
         let inputs = Ff3Inputs {
-            portfolio_returns: &p, market_excess: &m, smb: &s, hml: &h, risk_free: &rf,
+            portfolio_returns: &p,
+            market_excess: &m,
+            smb: &s,
+            hml: &h,
+            risk_free: &rf,
         };
         let report = ff3(&inputs).unwrap();
-        assert!((report.beta_mkt - 1.0).abs() < 0.1, "β_mkt: got {}", report.beta_mkt);
-        assert!((report.beta_smb - 0.3).abs() < 0.1, "β_smb: got {}", report.beta_smb);
-        assert!((report.beta_hml - (-0.5)).abs() < 0.1, "β_hml: got {}", report.beta_hml);
+        assert!(
+            (report.beta_mkt - 1.0).abs() < 0.1,
+            "β_mkt: got {}",
+            report.beta_mkt
+        );
+        assert!(
+            (report.beta_smb - 0.3).abs() < 0.1,
+            "β_smb: got {}",
+            report.beta_smb
+        );
+        assert!(
+            (report.beta_hml - (-0.5)).abs() < 0.1,
+            "β_hml: got {}",
+            report.beta_hml
+        );
         assert!(report.r_squared > 0.5);
     }
 
@@ -299,27 +382,50 @@ mod tests {
         let mut rf = Vec::with_capacity(n);
         let mut p = Vec::with_capacity(n);
         for _ in 0..n {
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             let m_i = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.04;
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             let s_i = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.03;
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             let h_i = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.025;
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             let w_i = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.02;
             let rf_i = 0.00005;
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             let eps = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.005;
             // Momentum-tilted: β_wml = 0.8.
             let p_i = rf_i + 0.001 + 0.9 * m_i + 0.0 + 0.0 + 0.8 * w_i + eps;
-            m.push(m_i); s.push(s_i); h.push(h_i); w.push(w_i); rf.push(rf_i); p.push(p_i);
+            m.push(m_i);
+            s.push(s_i);
+            h.push(h_i);
+            w.push(w_i);
+            rf.push(rf_i);
+            p.push(p_i);
         }
         let inputs = Carhart4Inputs {
-            portfolio_returns: &p, market_excess: &m, smb: &s, hml: &h, wml: &w, risk_free: &rf,
+            portfolio_returns: &p,
+            market_excess: &m,
+            smb: &s,
+            hml: &h,
+            wml: &w,
+            risk_free: &rf,
         };
         let report = carhart4(&inputs).unwrap();
-        assert!((report.beta_wml - 0.8).abs() < 0.1,
-            "β_wml: got {}", report.beta_wml);
+        assert!(
+            (report.beta_wml - 0.8).abs() < 0.1,
+            "β_wml: got {}",
+            report.beta_wml
+        );
     }
 
     #[test]
@@ -333,7 +439,11 @@ mod tests {
         let rf = vec![0.0; 100];
         p[20] = f64::NAN;
         let inputs = Ff3Inputs {
-            portfolio_returns: &p, market_excess: &m, smb: &s, hml: &h, risk_free: &rf,
+            portfolio_returns: &p,
+            market_excess: &m,
+            smb: &s,
+            hml: &h,
+            risk_free: &rf,
         };
         let report = ff3(&inputs).unwrap();
         assert!(report.n_observations < 100);

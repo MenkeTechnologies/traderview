@@ -179,9 +179,7 @@ pub fn check(input: &Section961Input) -> Section961Result {
                      cannot go negative). Report on Form 1040 Schedule D (individual) or \
                      Form 1120 Schedule D (corp); long-term vs. short-term depends on stock \
                      holding period.",
-                    input.event_amount_cents,
-                    input.pre_event_basis_cents,
-                    recognized_gain
+                    input.event_amount_cents, input.pre_event_basis_cents, recognized_gain
                 ));
                 Section961Result {
                     severity: Severity::BasisFloorExcessDistributionGainSection961b2,
@@ -250,7 +248,10 @@ mod tests {
     fn ptep_subpart_f_inclusion_increases_basis() {
         let i = baseline();
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::BasisIncreaseUnderSection961a));
+        assert!(matches!(
+            r.severity,
+            Severity::BasisIncreaseUnderSection961a
+        ));
         assert_eq!(r.post_event_basis_cents, 110_000_000_00);
         assert_eq!(r.recognized_gain_cents, 0);
     }
@@ -260,7 +261,10 @@ mod tests {
         let mut i = baseline();
         i.event = BasisAdjustmentEvent::PtepInclusionGiltiOrNcti;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::BasisIncreaseUnderSection961a));
+        assert!(matches!(
+            r.severity,
+            Severity::BasisIncreaseUnderSection961a
+        ));
         assert_eq!(r.post_event_basis_cents, 110_000_000_00);
     }
 
@@ -269,7 +273,10 @@ mod tests {
         let mut i = baseline();
         i.event = BasisAdjustmentEvent::PtepInclusionSection956;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::BasisIncreaseUnderSection961a));
+        assert!(matches!(
+            r.severity,
+            Severity::BasisIncreaseUnderSection961a
+        ));
     }
 
     #[test]
@@ -279,7 +286,10 @@ mod tests {
         i.pre_event_basis_cents = 100_000_000_00;
         i.event_amount_cents = 40_000_000_00;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::BasisDecreaseUnderSection961b));
+        assert!(matches!(
+            r.severity,
+            Severity::BasisDecreaseUnderSection961b
+        ));
         assert_eq!(r.post_event_basis_cents, 60_000_000_00);
         assert_eq!(r.recognized_gain_cents, 0);
     }
@@ -291,7 +301,10 @@ mod tests {
         i.pre_event_basis_cents = 100_000_000_00;
         i.event_amount_cents = 100_000_000_00;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::BasisDecreaseUnderSection961b));
+        assert!(matches!(
+            r.severity,
+            Severity::BasisDecreaseUnderSection961b
+        ));
         assert_eq!(r.post_event_basis_cents, 0);
         assert_eq!(r.recognized_gain_cents, 0);
     }
@@ -309,8 +322,14 @@ mod tests {
         ));
         assert_eq!(r.post_event_basis_cents, 0);
         assert_eq!(r.recognized_gain_cents, 50_000_000_00);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("§ 301(c)(3)")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Schedule D")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("§ 301(c)(3)")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Schedule D")));
     }
 
     #[test]
@@ -335,8 +354,14 @@ mod tests {
             r.severity,
             Severity::InboundNonrecognitionCarryoverUnderNotice2024_16
         ));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Notice 2024-16")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("REG-105479-18")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Notice 2024-16")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("REG-105479-18")));
         assert_eq!(r.post_event_basis_cents, i.pre_event_basis_cents);
     }
 
@@ -370,9 +395,18 @@ mod tests {
     fn action_references_form_5471_schedule_j_and_p() {
         let i = baseline();
         let r = check(&i);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Form 5471")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Schedule J")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Schedule P")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Form 5471")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Schedule J")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Schedule P")));
     }
 
     #[test]

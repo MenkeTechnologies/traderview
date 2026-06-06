@@ -46,8 +46,12 @@ pub fn compute(bars: &[Bar], period: usize) -> FisherReport {
         let mut hi = f64::NEG_INFINITY;
         let mut lo = f64::INFINITY;
         for b in window {
-            if b.high.is_finite() && b.high > hi { hi = b.high; }
-            if b.low.is_finite()  && b.low  < lo { lo = b.low; }
+            if b.high.is_finite() && b.high > hi {
+                hi = b.high;
+            }
+            if b.low.is_finite() && b.low < lo {
+                lo = b.low;
+            }
         }
         let range = hi - lo;
         if !range.is_finite() || range <= 0.0 {
@@ -94,16 +98,20 @@ mod tests {
     fn flat_range_skipped_safely() {
         let bars = vec![b(100.0, 100.0); 30];
         let r = compute(&bars, 10);
-        for v in &r.fisher { assert!(v.is_none()); }
+        for v in &r.fisher {
+            assert!(v.is_none());
+        }
     }
 
     #[test]
     fn rising_then_falling_produces_sign_flip() {
         // Construct a wave: 20 rising then 20 falling.
-        let mut bars: Vec<Bar> = (1..=20).map(|i| {
-            let m = 100.0 + i as f64;
-            b(m + 0.5, m - 0.5)
-        }).collect();
+        let mut bars: Vec<Bar> = (1..=20)
+            .map(|i| {
+                let m = 100.0 + i as f64;
+                b(m + 0.5, m - 0.5)
+            })
+            .collect();
         bars.extend((1..=20).map(|i| {
             let m = 120.0 - i as f64;
             b(m + 0.5, m - 0.5)
@@ -112,13 +120,17 @@ mod tests {
         // Late in the rise → fisher likely positive; deep into fall → negative.
         let rise = r.fisher[19].expect("populated");
         let fall = r.fisher[39].expect("populated");
-        assert!(rise.signum() != fall.signum() || rise.abs() < 0.1 || fall.abs() < 0.1,
-            "fisher should flip sign across reversal, got rise={rise} fall={fall}");
+        assert!(
+            rise.signum() != fall.signum() || rise.abs() < 0.1 || fall.abs() < 0.1,
+            "fisher should flip sign across reversal, got rise={rise} fall={fall}"
+        );
     }
 
     #[test]
     fn trigger_one_bar_behind_fisher() {
-        let bars: Vec<Bar> = (1..=40).map(|i| b(100.0 + i as f64, 99.0 + i as f64)).collect();
+        let bars: Vec<Bar> = (1..=40)
+            .map(|i| b(100.0 + i as f64, 99.0 + i as f64))
+            .collect();
         let r = compute(&bars, 10);
         // At any populated index, trigger[i] == fisher[i-1].
         for i in 1..r.fisher.len() {

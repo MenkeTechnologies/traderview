@@ -84,15 +84,18 @@ mod tests {
     fn pure_cycle_with_period_matching_decycler_removes_it() {
         // sin wave at exactly the filter period — should largely be wiped.
         let period = 20;
-        let v: Vec<f64> = (0..200).map(|i| {
-            100.0 + (i as f64 * 2.0 * PI / period as f64).sin() * 5.0
-        }).collect();
+        let v: Vec<f64> = (0..200)
+            .map(|i| 100.0 + (i as f64 * 2.0 * PI / period as f64).sin() * 5.0)
+            .collect();
         let out = compute(&v, period);
         // Tail variance should be much lower than input variance.
         let smooth: Vec<f64> = out.iter().filter_map(|x| *x).collect();
         let raw_var = var(&v);
         let smooth_var = var(&smooth);
-        assert!(smooth_var < raw_var, "raw_var={raw_var} smooth_var={smooth_var}");
+        assert!(
+            smooth_var < raw_var,
+            "raw_var={raw_var} smooth_var={smooth_var}"
+        );
     }
 
     fn var(s: &[f64]) -> f64 {

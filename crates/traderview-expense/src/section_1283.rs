@@ -180,16 +180,17 @@ pub fn compute(input: &Section1283Input) -> Section1283Result {
         .max(0);
 
     // § 1283(c) nongovernmental substitution.
-    let effective_discount_base = if matches!(input.obligation_type, ObligationType::NonGovernmental) {
-        notes.push(
-            "§ 1283(c) — nongovernmental short-term obligation; § 1281 and § 1282 apply using \
+    let effective_discount_base =
+        if matches!(input.obligation_type, ObligationType::NonGovernmental) {
+            notes.push(
+                "§ 1283(c) — nongovernmental short-term obligation; § 1281 and § 1282 apply using \
              ORIGINAL ISSUE DISCOUNT in lieu of acquisition discount."
-                .to_string(),
-        );
-        input.oid_amount_for_nongovernmental_cents.max(0)
-    } else {
-        acquisition_discount
-    };
+                    .to_string(),
+            );
+            input.oid_amount_for_nongovernmental_cents.max(0)
+        } else {
+            acquisition_discount
+        };
 
     // § 1283(b) daily portion.
     let daily_portion = match input.accrual_method {
@@ -337,11 +338,10 @@ mod tests {
             0,
         ));
         assert!(!r.is_short_term_obligation);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("366 days") && n.contains("§ 1272"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("366 days") && n.contains("§ 1272")));
     }
 
     #[test]
@@ -359,11 +359,10 @@ mod tests {
             0,
         ));
         assert!(!r.is_short_term_obligation);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1283(a)(1)") && n.contains("tax-exempt"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1283(a)(1)") && n.contains("tax-exempt")));
     }
 
     // ── § 1283(a)(2) acquisition discount ──────────────────────
@@ -503,11 +502,10 @@ mod tests {
         ));
         assert_eq!(r.daily_portion_cents, 3);
         assert_eq!(r.current_year_accrual_cents, 3 * 90);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1283(b)(2)") && n.contains("constant-yield"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1283(b)(2)") && n.contains("constant-yield")));
     }
 
     // ── § 1283(c) nongovernmental OID substitution ────────────
@@ -532,11 +530,10 @@ mod tests {
         assert_eq!(r.effective_discount_base_cents, 300);
         // daily_portion = 300 / 180 = 1.
         assert_eq!(r.daily_portion_cents, 1);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1283(c)") && n.contains("ORIGINAL ISSUE DISCOUNT"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1283(c)") && n.contains("ORIGINAL ISSUE DISCOUNT")));
     }
 
     #[test]
@@ -577,11 +574,10 @@ mod tests {
         ));
         // Basis 9,500 + 100 = 9,600.
         assert_eq!(r.adjusted_basis_cents, 9_600);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1283(d)") && n.contains("100 cents"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1283(d)") && n.contains("100 cents")));
     }
 
     #[test]
@@ -682,7 +678,7 @@ mod tests {
         for (days, expected_short_term) in [
             (1_u32, true),
             (180, true),
-            (365, true),    // at boundary inclusive
+            (365, true), // at boundary inclusive
             (366, false),
             (730, false),
         ] {
@@ -817,11 +813,9 @@ mod tests {
             0,
         ));
         assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("section_1281")
-                    && n.contains("section_1271")
-                    && n.contains("section_1272")),
+            r.notes.iter().any(|n| n.contains("section_1281")
+                && n.contains("section_1271")
+                && n.contains("section_1272")),
             "sibling-module note must be present"
         );
     }

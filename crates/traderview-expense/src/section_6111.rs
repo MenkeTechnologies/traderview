@@ -165,20 +165,21 @@ pub fn compute(input: &Section6111Input) -> Section6111Result {
 
     // § 6707 penalty calculation.
     let raw_50_percent = gross_income / 2;
-    let penalty = if filing_required && (!input.form_8918_filed || input.days_late_after_quarter_end > 0) {
-        match input.transaction_type {
-            TransactionType::ListedTransaction => {
-                if input.failure_was_unintentional {
-                    PENALTY_NON_LISTED_CENTS
-                } else {
-                    raw_50_percent.max(PENALTY_LISTED_FLOOR_CENTS)
+    let penalty =
+        if filing_required && (!input.form_8918_filed || input.days_late_after_quarter_end > 0) {
+            match input.transaction_type {
+                TransactionType::ListedTransaction => {
+                    if input.failure_was_unintentional {
+                        PENALTY_NON_LISTED_CENTS
+                    } else {
+                        raw_50_percent.max(PENALTY_LISTED_FLOOR_CENTS)
+                    }
                 }
+                TransactionType::ReportableTransactionNonListed => PENALTY_NON_LISTED_CENTS,
             }
-            TransactionType::ReportableTransactionNonListed => PENALTY_NON_LISTED_CENTS,
-        }
-    } else {
-        0
-    };
+        } else {
+            0
+        };
 
     if filing_required && !input.form_8918_filed {
         violations.push(format!(
@@ -504,10 +505,7 @@ mod tests {
     #[test]
     fn listed_penalty_floor_above_non_listed_penalty_invariant() {
         assert!(PENALTY_LISTED_FLOOR_CENTS > PENALTY_NON_LISTED_CENTS);
-        assert_eq!(
-            PENALTY_LISTED_FLOOR_CENTS,
-            4 * PENALTY_NON_LISTED_CENTS
-        );
+        assert_eq!(PENALTY_LISTED_FLOOR_CENTS, 4 * PENALTY_NON_LISTED_CENTS);
     }
 
     #[test]
@@ -515,10 +513,10 @@ mod tests {
         // 5-cell truth table: gross income vs penalty.
         let cells = [
             (10_000_000_i64, PENALTY_LISTED_FLOOR_CENTS), // 50% = 5M; floor wins
-            (40_000_000, PENALTY_LISTED_FLOOR_CENTS),    // 50% = 20M; ties floor
-            (40_000_001, 20_000_000),                    // 50% = 20.00M; floor still wins via max
-            (50_000_000, 25_000_000),                    // 50% = 25M; gross wins
-            (200_000_000, 100_000_000),                  // 50% = 100M; gross wins
+            (40_000_000, PENALTY_LISTED_FLOOR_CENTS),     // 50% = 20M; ties floor
+            (40_000_001, 20_000_000),                     // 50% = 20.00M; floor still wins via max
+            (50_000_000, 25_000_000),                     // 50% = 25M; gross wins
+            (200_000_000, 100_000_000),                   // 50% = 100M; gross wins
         ];
         for (gross, expected) in cells.iter() {
             let r = compute(&input(
@@ -542,9 +540,9 @@ mod tests {
     fn both_prongs_required_invariant() {
         // 4-cell truth table for material advisor status.
         let cells = [
-            (true, true, AdvisorStatus::MaterialAdvisor),       // both prongs
-            (true, false, AdvisorStatus::NotMaterialAdvisor),  // only A
-            (false, true, AdvisorStatus::NotMaterialAdvisor),  // only B
+            (true, true, AdvisorStatus::MaterialAdvisor), // both prongs
+            (true, false, AdvisorStatus::NotMaterialAdvisor), // only A
+            (false, true, AdvisorStatus::NotMaterialAdvisor), // only B
             (false, false, AdvisorStatus::NotMaterialAdvisor), // neither
         ];
         for (prong_a, prong_b_met, expected) in cells.iter() {
@@ -707,7 +705,10 @@ mod tests {
             false,
         ));
         assert_eq!(ind.material_advisor_status, AdvisorStatus::MaterialAdvisor);
-        assert_eq!(other.material_advisor_status, AdvisorStatus::NotMaterialAdvisor);
+        assert_eq!(
+            other.material_advisor_status,
+            AdvisorStatus::NotMaterialAdvisor
+        );
     }
 
     #[test]
@@ -731,8 +732,14 @@ mod tests {
             0,
             true,
         ));
-        assert_eq!(intentional.section_6707_penalty_cents, PENALTY_NON_LISTED_CENTS);
-        assert_eq!(unintentional.section_6707_penalty_cents, PENALTY_NON_LISTED_CENTS);
+        assert_eq!(
+            intentional.section_6707_penalty_cents,
+            PENALTY_NON_LISTED_CENTS
+        );
+        assert_eq!(
+            unintentional.section_6707_penalty_cents,
+            PENALTY_NON_LISTED_CENTS
+        );
         // For listed, unintentionality reduces from listed tier to non-listed.
         let listed_intentional = compute(&input(
             TransactionType::ListedTransaction,
@@ -757,6 +764,9 @@ mod tests {
             listed_unintentional.section_6707_penalty_cents,
             PENALTY_NON_LISTED_CENTS
         );
-        assert!(listed_intentional.section_6707_penalty_cents > listed_unintentional.section_6707_penalty_cents);
+        assert!(
+            listed_intentional.section_6707_penalty_cents
+                > listed_unintentional.section_6707_penalty_cents
+        );
     }
 }

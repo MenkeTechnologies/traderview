@@ -169,9 +169,7 @@ pub struct RentConcessionDisclosureResult {
     pub notes: Vec<String>,
 }
 
-pub fn check(
-    input: &RentConcessionDisclosureInput,
-) -> RentConcessionDisclosureResult {
+pub fn check(input: &RentConcessionDisclosureInput) -> RentConcessionDisclosureResult {
     let mut failure_reasons: Vec<String> = Vec::new();
 
     let gross_total = input
@@ -189,10 +187,8 @@ pub fn check(
         _ => true,
     };
 
-    let ny_preferential_rent_revocation_prohibited = matches!(
-        input.jurisdiction,
-        Jurisdiction::NewYorkRentStabilized
-    );
+    let ny_preferential_rent_revocation_prohibited =
+        matches!(input.jurisdiction, Jurisdiction::NewYorkRentStabilized);
 
     let ny_renewal_calculation_compliant = match input.jurisdiction {
         Jurisdiction::NewYorkRentStabilized => {
@@ -348,10 +344,12 @@ mod tests {
         assert!(!r.ny_dhcr_registration_compliant);
         assert!(r.fraud_exposure_engaged);
         assert!(r.treble_damages_available);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("DHCR Operational Bulletin 2016-1")
-            && f.contains("NET EFFECTIVE")
-            && f.contains("FRAUD")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("DHCR Operational Bulletin 2016-1")
+                && f.contains("NET EFFECTIVE")
+                && f.contains("FRAUD")));
     }
 
     #[test]
@@ -360,9 +358,9 @@ mod tests {
         i.landlord_attempts_revoke_preferential_at_renewal = true;
         let r = check(&i);
         assert!(!r.ny_renewal_calculation_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 26-511(c)(14)")
-            && f.contains("CANNOT REVOKE preferential rent")));
+        assert!(r.failure_reasons.iter().any(
+            |f| f.contains("§ 26-511(c)(14)") && f.contains("CANNOT REVOKE preferential rent")
+        ));
     }
 
     #[test]
@@ -371,10 +369,12 @@ mod tests {
         i.renewal_increase_on_preferential = false;
         let r = check(&i);
         assert!(!r.ny_renewal_calculation_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 26-511(c)(14)")
-            && f.contains("PREFERENTIAL RENT")
-            && f.contains("legal regulated rent")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 26-511(c)(14)")
+                && f.contains("PREFERENTIAL RENT")
+                && f.contains("legal regulated rent")));
     }
 
     #[test]
@@ -382,8 +382,7 @@ mod tests {
         let mut i = ny_stabilized_compliant();
         i.ny_registered_net_effective_with_dhcr = false;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 26-516(a)")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 26-516(a)")
             && f.contains("6-YEAR LOOKBACK")
             && f.contains("TREBLE DAMAGES")));
     }
@@ -394,8 +393,7 @@ mod tests {
         i.jurisdiction = Jurisdiction::NewYorkNonStabilized;
         i.credit_reports_gross_not_effective = true;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 349 (UDAP)")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 349 (UDAP)")
             && f.contains("credit-reporting GROSS rent")
             && f.contains("deceptive practice")));
     }
@@ -406,9 +404,10 @@ mod tests {
         i.lease_discloses_concession = false;
         let r = check(&i);
         assert!(!r.disclosure_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("FAILS to clearly disclose concession")
-            && f.contains("UDAP")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("FAILS to clearly disclose concession") && f.contains("UDAP")));
     }
 
     #[test]
@@ -444,8 +443,7 @@ mod tests {
         i.ca_cpi_percent = 3;
         let r = check(&i);
         assert!(!r.ca_rent_increase_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 1947.12")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 1947.12")
             && f.contains("AB 1482")
             && f.contains("EXCEEDS AB 1482 cap")));
     }
@@ -508,10 +506,7 @@ mod tests {
             i.jurisdiction = j;
             i.ny_registered_net_effective_with_dhcr = false;
             let r = check(&i);
-            assert_eq!(
-                r.fraud_exposure_engaged, expect_fraud_possible,
-                "j={:?}", j
-            );
+            assert_eq!(r.fraud_exposure_engaged, expect_fraud_possible, "j={:?}", j);
         }
     }
 
@@ -535,18 +530,19 @@ mod tests {
     #[test]
     fn note_pins_three_jurisdiction_framework() {
         let r = check(&ny_stabilized_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Three-jurisdiction framework")
-            && n.contains("NEW YORK RENT-STABILIZED")
-            && n.contains("NEW YORK NON-STABILIZED")
-            && n.contains("CALIFORNIA")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Three-jurisdiction framework")
+                && n.contains("NEW YORK RENT-STABILIZED")
+                && n.contains("NEW YORK NON-STABILIZED")
+                && n.contains("CALIFORNIA")));
     }
 
     #[test]
     fn note_pins_hstpa_four_reforms() {
         let r = check(&ny_stabilized_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("NY HSTPA 2019")
+        assert!(r.notes.iter().any(|n| n.contains("NY HSTPA 2019")
             && n.contains("§ 26-511(c)(14)")
             && n.contains("CANNOT be revoked")
             && n.contains("§ 26-516(a)")
@@ -557,28 +553,31 @@ mod tests {
     #[test]
     fn note_pins_dhcr_amortization_formula() {
         let r = check(&ny_stabilized_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("DHCR Operational Bulletin 2016-1")
-            && n.contains("Fact Sheet #40")
-            && n.contains("Net Effective Monthly Rent")
-            && n.contains("Lease Term Months")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("DHCR Operational Bulletin 2016-1")
+                && n.contains("Fact Sheet #40")
+                && n.contains("Net Effective Monthly Rent")
+                && n.contains("Lease Term Months")));
     }
 
     #[test]
     fn note_pins_trader_fact_patterns_five() {
         let r = check(&ny_stabilized_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-critical fact patterns")
-            && n.contains("2 months free on 12-month")
-            && n.contains("FRAUD")
-            && n.contains("UDAP § 349")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-critical fact patterns")
+                && n.contains("2 months free on 12-month")
+                && n.contains("FRAUD")
+                && n.contains("UDAP § 349")));
     }
 
     #[test]
     fn note_pins_ca_ab1482() {
         let r = check(&ny_stabilized_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 1947.12")
+        assert!(r.notes.iter().any(|n| n.contains("§ 1947.12")
             && n.contains("AB 1482 Tenant Protection Act")
             && n.contains("CPI+5% or 10%")
             && n.contains("LOWEST gross rent")));
@@ -587,8 +586,7 @@ mod tests {
     #[test]
     fn note_pins_ny_rpl_235a_udap() {
         let r = check(&ny_stabilized_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("NY RPL § 235-a")
+        assert!(r.notes.iter().any(|n| n.contains("NY RPL § 235-a")
             && n.contains("NY GBL § 349 (UDAP)")
             && n.contains("deceptive practices")));
     }
@@ -596,17 +594,21 @@ mod tests {
     #[test]
     fn note_pins_pre_hstpa_two_tier_elimination() {
         let r = check(&ny_stabilized_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Pre-HSTPA two-tier structure ELIMINATED")
-            && n.contains("locks in preferential rent")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Pre-HSTPA two-tier structure ELIMINATED")
+                && n.contains("locks in preferential rent")));
     }
 
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&ny_stabilized_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Companion to lease_disclosures")
-            && n.contains("lease_renewal_offer_timing")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Companion to lease_disclosures")
+                && n.contains("lease_renewal_offer_timing")));
     }
 
     #[test]

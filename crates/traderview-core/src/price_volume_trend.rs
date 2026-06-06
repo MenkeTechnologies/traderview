@@ -21,13 +21,23 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub close: f64, pub volume: f64 }
+pub struct Bar {
+    pub close: f64,
+    pub volume: f64,
+}
 
 pub fn compute(bars: &[Bar]) -> Vec<Option<f64>> {
     let n = bars.len();
     let mut out = vec![None; n];
-    if n == 0 { return out; }
-    if bars.iter().any(|b| !b.close.is_finite() || !b.volume.is_finite()) { return out; }
+    if n == 0 {
+        return out;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.close.is_finite() || !b.volume.is_finite())
+    {
+        return out;
+    }
     let mut pvt = 0.0_f64;
     out[0] = Some(pvt);
     for i in 1..n {
@@ -44,10 +54,17 @@ pub fn compute(bars: &[Bar]) -> Vec<Option<f64>> {
 mod tests {
     use super::*;
 
-    fn b(c: f64, v: f64) -> Bar { Bar { close: c, volume: v } }
+    fn b(c: f64, v: f64) -> Bar {
+        Bar {
+            close: c,
+            volume: v,
+        }
+    }
 
     #[test]
-    fn empty_returns_empty() { assert!(compute(&[]).is_empty()); }
+    fn empty_returns_empty() {
+        assert!(compute(&[]).is_empty());
+    }
 
     #[test]
     fn nan_returns_all_none() {
@@ -81,7 +98,9 @@ mod tests {
     fn flat_market_yields_constant_pvt() {
         let bars = vec![b(100.0, 1000.0); 10];
         let r = compute(&bars);
-        for v in r.iter().flatten() { assert!(v.abs() < 1e-9); }
+        for v in r.iter().flatten() {
+            assert!(v.abs() < 1e-9);
+        }
     }
 
     #[test]
@@ -94,11 +113,11 @@ mod tests {
     fn cumulative_correct_three_bar() {
         let bars = vec![
             b(100.0, 1000.0),
-            b(110.0, 2000.0),    // +100
-            b(99.0, 1000.0),     // 1000·(-11/110) = -100
+            b(110.0, 2000.0), // +100
+            b(99.0, 1000.0),  // 1000·(-11/110) = -100
         ];
         let r = compute(&bars);
-        assert!((r[1].unwrap() - 200.0).abs() < 1e-9);    // 0 + 2000·0.1
-        assert!((r[2].unwrap() - 100.0).abs() < 1e-9);    // 200 + 1000·(-0.1)
+        assert!((r[1].unwrap() - 200.0).abs() < 1e-9); // 0 + 2000·0.1
+        assert!((r[2].unwrap() - 100.0).abs() < 1e-9); // 200 + 1000·(-0.1)
     }
 }

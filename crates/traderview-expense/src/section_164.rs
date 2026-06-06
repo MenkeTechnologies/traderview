@@ -88,7 +88,8 @@ pub fn compute(input: &Section164Input) -> Section164Result {
             reduced_cap_cents: cap,
             allowed_deduction_cents: allowed,
             blocked_by_cap_cents: salt_paid - allowed,
-            citation: "26 U.S.C. § 164(b)(6) (TCJA) — $10,000 / $5,000 MFS SALT cap (tax years 2018-2024)",
+            citation:
+                "26 U.S.C. § 164(b)(6) (TCJA) — $10,000 / $5,000 MFS SALT cap (tax years 2018-2024)",
             note: format!(
                 "TCJA SALT cap = {} cents for {:?}. No phaseout. Allowed deduction = {} cents.",
                 cap, input.filing_status, allowed
@@ -185,12 +186,7 @@ fn compound_one_percent(years: i32) -> i128 {
 mod tests {
     use super::*;
 
-    fn input(
-        year: u32,
-        status: FilingStatus,
-        salt_paid: i64,
-        magi: i64,
-    ) -> Section164Input {
+    fn input(year: u32, status: FilingStatus, salt_paid: i64, magi: i64) -> Section164Input {
         Section164Input {
             year,
             filing_status: status,
@@ -392,10 +388,7 @@ mod tests {
     fn blocked_by_cap_equals_salt_paid_minus_allowed() {
         for year in [2024, 2025, 2026, 2030] {
             let r = compute(&input(year, FilingStatus::Single, 5000000, 10000000));
-            assert_eq!(
-                r.blocked_by_cap_cents,
-                5000000 - r.allowed_deduction_cents
-            );
+            assert_eq!(r.blocked_by_cap_cents, 5000000 - r.allowed_deduction_cents);
         }
     }
 

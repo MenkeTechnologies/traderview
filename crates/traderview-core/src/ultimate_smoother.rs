@@ -19,8 +19,12 @@
 pub fn compute(series: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if n < 3 || period < 4 { return out; }
-    if series.iter().any(|x| !x.is_finite()) { return out; }
+    if n < 3 || period < 4 {
+        return out;
+    }
+    if series.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     let pi = std::f64::consts::PI;
     let a1 = (-1.414 * pi / period as f64).exp();
     let b1 = 2.0 * a1 * (1.414 * pi / period as f64).cos();
@@ -34,8 +38,7 @@ pub fn compute(series: &[f64], period: usize) -> Vec<Option<f64>> {
     out[0] = Some(us[0]);
     out[1] = Some(us[1]);
     for i in 2..n {
-        us[i] = (1.0 - c1) * series[i]
-            + (2.0 * c1 - c2) * series[i - 1]
+        us[i] = (1.0 - c1) * series[i] + (2.0 * c1 - c2) * series[i - 1]
             - (c1 + c3) * series[i - 2]
             + c2 * us[i - 1]
             + c3 * us[i - 2];
@@ -77,25 +80,31 @@ mod tests {
         let r = compute(&s, 10);
         let last = r[199].unwrap();
         // Ultimate Smoother claims zero lag at cutoff — should match input closely.
-        assert!((last - 199.0).abs() < 1.0,
-            "Ultimate Smoother {last} should be near input 199");
+        assert!(
+            (last - 199.0).abs() < 1.0,
+            "Ultimate Smoother {last} should be near input 199"
+        );
     }
 
     #[test]
     fn noise_amplitude_reduced() {
         let mut state: u64 = 42;
-        let s: Vec<f64> = (0..400).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
-            100.0 + (r - 0.5) * 10.0
-        }).collect();
+        let s: Vec<f64> = (0..400)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
+                100.0 + (r - 0.5) * 10.0
+            })
+            .collect();
         let r = compute(&s, 10);
         let vals: Vec<f64> = r.iter().skip(50).flatten().copied().collect();
         let mean_in: f64 = s.iter().sum::<f64>() / s.len() as f64;
         let var_in: f64 = s.iter().map(|x| (x - mean_in).powi(2)).sum::<f64>() / s.len() as f64;
         let mean_us: f64 = vals.iter().sum::<f64>() / vals.len() as f64;
-        let var_us: f64 = vals.iter().map(|x| (x - mean_us).powi(2)).sum::<f64>() / vals.len() as f64;
+        let var_us: f64 =
+            vals.iter().map(|x| (x - mean_us).powi(2)).sum::<f64>() / vals.len() as f64;
         assert!(var_us < var_in);
     }
 

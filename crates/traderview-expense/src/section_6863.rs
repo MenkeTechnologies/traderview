@@ -488,8 +488,10 @@ mod tests {
     #[test]
     fn note_pins_subsection_b2_proportional_reduction() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6863(b)(2)")
-            && n.contains("PROPORTIONATELY REDUCED")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6863(b)(2)") && n.contains("PROPORTIONATELY REDUCED")));
     }
 
     #[test]
@@ -512,8 +514,10 @@ mod tests {
     #[test]
     fn note_pins_subsection_g_abatement() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6863(g)")
-            && n.contains("ABATE")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6863(g)") && n.contains("ABATE")));
     }
 
     #[test]

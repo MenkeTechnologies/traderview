@@ -49,19 +49,21 @@ pub fn compute(bars: &[Bar], period: usize, bb_k: f64, kc_k: f64) -> SqueezeMome
         return report;
     }
     let closes: Vec<f64> = bars.iter().map(|b| b.close).collect();
-    let highs:  Vec<f64> = bars.iter().map(|b| b.high).collect();
-    let lows:   Vec<f64> = bars.iter().map(|b| b.low).collect();
+    let highs: Vec<f64> = bars.iter().map(|b| b.high).collect();
+    let lows: Vec<f64> = bars.iter().map(|b| b.low).collect();
     let sma_close = sma(&closes, period);
     let stdev_close = rolling_stdev(&closes, period);
     let atr_series = atr(&highs, &lows, &closes, period);
     // Squeeze-state inputs.
-    let inputs: Vec<SqueezeInput> = (0..n).map(|i| SqueezeInput {
-        close: closes[i],
-        sma_20: sma_close[i].unwrap_or(closes[i]),
-        stdev_20: stdev_close[i].unwrap_or(0.0) * bb_k,
-        ema_20: sma_close[i].unwrap_or(closes[i]),    // simple-MA as KC center for parity
-        atr_20: atr_series[i].unwrap_or(0.0) * kc_k,
-    }).collect();
+    let inputs: Vec<SqueezeInput> = (0..n)
+        .map(|i| SqueezeInput {
+            close: closes[i],
+            sma_20: sma_close[i].unwrap_or(closes[i]),
+            stdev_20: stdev_close[i].unwrap_or(0.0) * bb_k,
+            ema_20: sma_close[i].unwrap_or(closes[i]), // simple-MA as KC center for parity
+            atr_20: atr_series[i].unwrap_or(0.0) * kc_k,
+        })
+        .collect();
     let sq = bb_analyze(&inputs);
     for (i, bar) in sq.iter().enumerate() {
         report.state[i] = Some(bar.state);
@@ -73,8 +75,12 @@ pub fn compute(bars: &[Bar], period: usize, bb_k: f64, kc_k: f64) -> SqueezeMome
         let mut max_h = f64::NEG_INFINITY;
         let mut min_l = f64::INFINITY;
         for j in window_start..=i {
-            if highs[j].is_finite() && highs[j] > max_h { max_h = highs[j]; }
-            if lows[j].is_finite() && lows[j] < min_l { min_l = lows[j]; }
+            if highs[j].is_finite() && highs[j] > max_h {
+                max_h = highs[j];
+            }
+            if lows[j].is_finite() && lows[j] < min_l {
+                min_l = lows[j];
+            }
         }
         if !max_h.is_finite() || !min_l.is_finite() {
             continue;
@@ -108,8 +114,12 @@ fn sma(values: &[f64], period: usize) -> Vec<Option<f64>> {
     let mut sum = 0.0;
     for i in 0..n {
         sum += values[i];
-        if i >= period { sum -= values[i - period]; }
-        if i + 1 >= period { out[i] = Some(sum / period as f64); }
+        if i >= period {
+            sum -= values[i - period];
+        }
+        if i + 1 >= period {
+            out[i] = Some(sum / period as f64);
+        }
     }
     out
 }
@@ -117,7 +127,9 @@ fn sma(values: &[f64], period: usize) -> Vec<Option<f64>> {
 fn rolling_stdev(values: &[f64], window: usize) -> Vec<Option<f64>> {
     let n = values.len();
     let mut out = vec![None; n];
-    if window == 0 || n < window { return out; }
+    if window == 0 || n < window {
+        return out;
+    }
     for i in (window - 1)..n {
         let slice = &values[(i + 1 - window)..=i];
         let m = slice.iter().sum::<f64>() / window as f64;
@@ -155,7 +167,9 @@ fn atr(highs: &[f64], lows: &[f64], closes: &[f64], period: usize) -> Vec<Option
 
 fn linear_regression_slope(values: &[f64]) -> f64 {
     let n = values.len();
-    if n < 2 { return 0.0; }
+    if n < 2 {
+        return 0.0;
+    }
     let n_f = n as f64;
     let mean_x = (n_f - 1.0) / 2.0;
     let mean_y = values.iter().sum::<f64>() / n_f;
@@ -166,7 +180,11 @@ fn linear_regression_slope(values: &[f64]) -> f64 {
         num += dx * (y - mean_y);
         den += dx * dx;
     }
-    if den > 0.0 { num / den } else { 0.0 }
+    if den > 0.0 {
+        num / den
+    } else {
+        0.0
+    }
 }
 
 #[cfg(test)]
@@ -174,7 +192,11 @@ mod tests {
     use super::*;
 
     fn b(h: f64, l: f64, c: f64) -> Bar {
-        Bar { high: h, low: l, close: c }
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -197,7 +219,10 @@ mod tests {
         let bars = vec![b(101.0, 99.0, 100.0); 60];
         let r = compute(&bars, 20, 2.0, 1.5);
         let mom = r.momentum[59].expect("populated");
-        assert!(mom.abs() < 1e-6, "flat series momentum should be ~0, got {mom}");
+        assert!(
+            mom.abs() < 1e-6,
+            "flat series momentum should be ~0, got {mom}"
+        );
         // Flat → stdev=0, ATR small → BB inside KC → squeeze.
         // (May fluctuate based on bar-shape exactness; just verify the field is populated.)
         assert!(r.state[59].is_some());
@@ -205,21 +230,28 @@ mod tests {
 
     #[test]
     fn rising_series_positive_momentum() {
-        let bars: Vec<Bar> = (1..=60).map(|i| {
-            let c = 100.0 + i as f64;
-            b(c + 1.0, c - 1.0, c)
-        }).collect();
+        let bars: Vec<Bar> = (1..=60)
+            .map(|i| {
+                let c = 100.0 + i as f64;
+                b(c + 1.0, c - 1.0, c)
+            })
+            .collect();
         let r = compute(&bars, 20, 2.0, 1.5);
         let mom = r.momentum[59].expect("populated");
-        assert!(mom > 0.0, "rising series should yield + momentum, got {mom}");
+        assert!(
+            mom > 0.0,
+            "rising series should yield + momentum, got {mom}"
+        );
     }
 
     #[test]
     fn falling_series_negative_momentum() {
-        let bars: Vec<Bar> = (1..=60).map(|i| {
-            let c = 200.0 - i as f64;
-            b(c + 1.0, c - 1.0, c)
-        }).collect();
+        let bars: Vec<Bar> = (1..=60)
+            .map(|i| {
+                let c = 200.0 - i as f64;
+                b(c + 1.0, c - 1.0, c)
+            })
+            .collect();
         let r = compute(&bars, 20, 2.0, 1.5);
         let mom = r.momentum[59].expect("populated");
         assert!(mom < 0.0);

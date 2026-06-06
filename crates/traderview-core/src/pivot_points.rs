@@ -35,25 +35,35 @@ pub struct SessionOhlc {
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ClassicPivots {
     pub pivot: f64,
-    pub r1: f64, pub s1: f64,
-    pub r2: f64, pub s2: f64,
-    pub r3: f64, pub s3: f64,
+    pub r1: f64,
+    pub s1: f64,
+    pub r2: f64,
+    pub s2: f64,
+    pub r3: f64,
+    pub s3: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct FibonacciPivots {
     pub pivot: f64,
-    pub r1: f64, pub s1: f64,
-    pub r2: f64, pub s2: f64,
-    pub r3: f64, pub s3: f64,
+    pub r1: f64,
+    pub s1: f64,
+    pub r2: f64,
+    pub s2: f64,
+    pub r3: f64,
+    pub s3: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct CamarillaPivots {
-    pub r1: f64, pub s1: f64,
-    pub r2: f64, pub s2: f64,
-    pub r3: f64, pub s3: f64,
-    pub r4: f64, pub s4: f64,
+    pub r1: f64,
+    pub s1: f64,
+    pub r2: f64,
+    pub s2: f64,
+    pub r3: f64,
+    pub s3: f64,
+    pub r4: f64,
+    pub s4: f64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -67,7 +77,9 @@ pub fn compute(prev: SessionOhlc) -> Option<PivotReport> {
     if !prev.high.is_finite() || !prev.low.is_finite() || !prev.close.is_finite() {
         return None;
     }
-    if prev.high < prev.low { return None; }
+    if prev.high < prev.low {
+        return None;
+    }
     let h = prev.high;
     let l = prev.low;
     let c = prev.close;
@@ -101,7 +113,11 @@ pub fn compute(prev: SessionOhlc) -> Option<PivotReport> {
         r4: c + range * 1.1 / 2.0,
         s4: c - range * 1.1 / 2.0,
     };
-    Some(PivotReport { classic, fibonacci, camarilla })
+    Some(PivotReport {
+        classic,
+        fibonacci,
+        camarilla,
+    })
 }
 
 #[cfg(test)]
@@ -110,19 +126,39 @@ mod tests {
 
     #[test]
     fn nan_or_invalid_returns_none() {
-        assert!(compute(SessionOhlc { high: f64::NAN, low: 99.0, close: 100.0 }).is_none());
-        assert!(compute(SessionOhlc { high: 95.0, low: 99.0, close: 100.0 }).is_none());
+        assert!(compute(SessionOhlc {
+            high: f64::NAN,
+            low: 99.0,
+            close: 100.0
+        })
+        .is_none());
+        assert!(compute(SessionOhlc {
+            high: 95.0,
+            low: 99.0,
+            close: 100.0
+        })
+        .is_none());
     }
 
     #[test]
     fn classic_pivot_is_typical_price() {
-        let r = compute(SessionOhlc { high: 110.0, low: 100.0, close: 105.0 }).unwrap();
+        let r = compute(SessionOhlc {
+            high: 110.0,
+            low: 100.0,
+            close: 105.0,
+        })
+        .unwrap();
         assert!((r.classic.pivot - 105.0).abs() < 1e-9);
     }
 
     #[test]
     fn classic_resistance_above_support() {
-        let r = compute(SessionOhlc { high: 110.0, low: 100.0, close: 105.0 }).unwrap();
+        let r = compute(SessionOhlc {
+            high: 110.0,
+            low: 100.0,
+            close: 105.0,
+        })
+        .unwrap();
         assert!(r.classic.r1 > r.classic.pivot);
         assert!(r.classic.s1 < r.classic.pivot);
         assert!(r.classic.r2 > r.classic.r1);
@@ -133,7 +169,12 @@ mod tests {
 
     #[test]
     fn fibonacci_levels_use_correct_ratios() {
-        let r = compute(SessionOhlc { high: 110.0, low: 100.0, close: 105.0 }).unwrap();
+        let r = compute(SessionOhlc {
+            high: 110.0,
+            low: 100.0,
+            close: 105.0,
+        })
+        .unwrap();
         let range = 10.0;
         let p = 105.0;
         assert!((r.fibonacci.r1 - (p + 0.382 * range)).abs() < 1e-9);
@@ -143,7 +184,12 @@ mod tests {
 
     #[test]
     fn camarilla_has_four_pairs_increasing_distance() {
-        let r = compute(SessionOhlc { high: 110.0, low: 100.0, close: 105.0 }).unwrap();
+        let r = compute(SessionOhlc {
+            high: 110.0,
+            low: 100.0,
+            close: 105.0,
+        })
+        .unwrap();
         assert!(r.camarilla.r4 > r.camarilla.r3);
         assert!(r.camarilla.r3 > r.camarilla.r2);
         assert!(r.camarilla.r2 > r.camarilla.r1);
@@ -156,7 +202,12 @@ mod tests {
 
     #[test]
     fn zero_range_collapses_all_levels() {
-        let r = compute(SessionOhlc { high: 100.0, low: 100.0, close: 100.0 }).unwrap();
+        let r = compute(SessionOhlc {
+            high: 100.0,
+            low: 100.0,
+            close: 100.0,
+        })
+        .unwrap();
         // All levels collapse to the close.
         assert!((r.classic.pivot - 100.0).abs() < 1e-12);
         assert!((r.classic.r1 - 100.0).abs() < 1e-12);

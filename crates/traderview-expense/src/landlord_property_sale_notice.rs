@@ -159,9 +159,7 @@ pub struct LandlordPropertySaleNoticeResult {
     pub notes: Vec<String>,
 }
 
-pub fn check(
-    input: &LandlordPropertySaleNoticeInput,
-) -> LandlordPropertySaleNoticeResult {
+pub fn check(input: &LandlordPropertySaleNoticeInput) -> LandlordPropertySaleNoticeResult {
     let mut failure_reasons: Vec<String> = Vec::new();
 
     let jurisdiction_window_days: u32 = match input.jurisdiction {
@@ -176,25 +174,19 @@ pub fn check(
             input.notice_method,
             NoticeMethod::PersonalDelivery | NoticeMethod::FirstClassMail
         ),
-        Jurisdiction::NewYork => matches!(
-            input.notice_method,
-            NoticeMethod::RegisteredOrCertifiedMail
-        ),
-        Jurisdiction::Massachusetts => !matches!(
-            input.notice_method,
-            NoticeMethod::NoNotice
-        ),
-        Jurisdiction::Default => !matches!(
-            input.notice_method,
-            NoticeMethod::NoNotice
-        ),
+        Jurisdiction::NewYork => {
+            matches!(input.notice_method, NoticeMethod::RegisteredOrCertifiedMail)
+        }
+        Jurisdiction::Massachusetts => !matches!(input.notice_method, NoticeMethod::NoNotice),
+        Jurisdiction::Default => !matches!(input.notice_method, NoticeMethod::NoNotice),
     };
 
     let within_window = input.days_since_sale <= jurisdiction_window_days;
 
     let deposit_transfer_compliant = input.deposit_transferred_to_buyer && within_window;
 
-    let basic_notice = input.tenant_received_new_owner_notice && notice_method_valid && within_window;
+    let basic_notice =
+        input.tenant_received_new_owner_notice && notice_method_valid && within_window;
 
     let tenant_notice_compliant = match input.jurisdiction {
         Jurisdiction::California => {
@@ -208,8 +200,8 @@ pub fn check(
     let joint_and_several_liability_attaches =
         !(deposit_transfer_compliant && tenant_notice_compliant);
 
-    let treble_damages_available = matches!(input.jurisdiction, Jurisdiction::Massachusetts)
-        && input.willful_violation;
+    let treble_damages_available =
+        matches!(input.jurisdiction, Jurisdiction::Massachusetts) && input.willful_violation;
 
     if !input.deposit_transferred_to_buyer {
         failure_reasons.push(
@@ -373,9 +365,11 @@ mod tests {
         let r = check(&i);
         assert!(!r.notice_method_valid);
         assert!(r.joint_and_several_liability_attaches);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 1950.5(h)")
-            && f.contains("PERSONAL DELIVERY or FIRST-CLASS MAIL")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1950.5(h)")
+                && f.contains("PERSONAL DELIVERY or FIRST-CLASS MAIL")));
     }
 
     #[test]
@@ -384,8 +378,10 @@ mod tests {
         i.notice_includes_deposit_amount = false;
         let r = check(&i);
         assert!(!r.tenant_notice_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("AMOUNT of deposit transferred")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("AMOUNT of deposit transferred")));
     }
 
     #[test]
@@ -394,8 +390,10 @@ mod tests {
         i.notice_includes_deduction_claims = false;
         let r = check(&i);
         assert!(!r.tenant_notice_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("ANY CLAIMS made against security")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("ANY CLAIMS made against security")));
     }
 
     #[test]
@@ -419,10 +417,12 @@ mod tests {
         let r = check(&i);
         assert!(!r.deposit_transfer_compliant);
         assert!(r.joint_and_several_liability_attaches);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("NY GOL § 7-105")
-            && f.contains("5-DAY")
-            && f.contains("EXCEEDED (10 days)")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("NY GOL § 7-105")
+                && f.contains("5-DAY")
+                && f.contains("EXCEEDED (10 days)")));
     }
 
     #[test]
@@ -432,9 +432,10 @@ mod tests {
         i.notice_method = NoticeMethod::FirstClassMail;
         let r = check(&i);
         assert!(!r.notice_method_valid);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("NY GOL § 7-105")
-            && f.contains("REGISTERED OR CERTIFIED MAIL")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("NY GOL § 7-105") && f.contains("REGISTERED OR CERTIFIED MAIL")));
     }
 
     #[test]
@@ -445,10 +446,12 @@ mod tests {
         i.ny_six_plus_unit_building = true;
         i.accrued_interest_transferred = false;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("NY GOL § 7-103(2)")
-            && f.contains("6+ family dwelling units")
-            && f.contains("ACCRUED INTEREST")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("NY GOL § 7-103(2)")
+                && f.contains("6+ family dwelling units")
+                && f.contains("ACCRUED INTEREST")));
     }
 
     #[test]
@@ -468,8 +471,7 @@ mod tests {
         i.days_since_sale = 50;
         let r = check(&i);
         assert!(!r.deposit_transfer_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 15B(7)")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 15B(7)")
             && f.contains("45-DAY")
             && f.contains("EXCEEDED (50 days)")));
     }
@@ -481,8 +483,7 @@ mod tests {
         i.willful_violation = true;
         let r = check(&i);
         assert!(r.treble_damages_available);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 15B(7)")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 15B(7)")
             && f.contains("WILLFUL")
             && f.contains("TREBLE DAMAGES")));
     }
@@ -521,8 +522,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.deposit_transfer_compliant);
         assert!(r.joint_and_several_liability_attaches);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("NOT TRANSFERRED to successor")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("NOT TRANSFERRED to successor")));
     }
 
     #[test]
@@ -530,8 +533,7 @@ mod tests {
         let mut i = ca_baseline_compliant();
         i.sale_during_foreclosure = true;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("12 USC § 5220")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("12 USC § 5220")
             && f.contains("PTFA 90-day")
             && f.contains("STACKS")));
     }
@@ -599,37 +601,44 @@ mod tests {
         assert!(r.citation.contains("NY GOL § 7-105"));
         assert!(r.citation.contains("Mass. Gen. Laws c. 186 § 15B(7)"));
         assert!(r.citation.contains("12 USC § 5220"));
-        assert!(r.citation.contains("Protecting Tenants at Foreclosure Act of 2009"));
-        assert!(r.citation.contains("Restatement (Second) of Property: Landlord and Tenant § 12.1"));
+        assert!(r
+            .citation
+            .contains("Protecting Tenants at Foreclosure Act of 2009"));
+        assert!(r
+            .citation
+            .contains("Restatement (Second) of Property: Landlord and Tenant § 12.1"));
     }
 
     #[test]
     fn note_pins_four_jurisdiction_framework() {
         let r = check(&ca_baseline_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Four-jurisdiction framework")
-            && n.contains("CALIFORNIA")
-            && n.contains("NEW YORK")
-            && n.contains("MASSACHUSETTS")
-            && n.contains("DEFAULT")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Four-jurisdiction framework")
+                && n.contains("CALIFORNIA")
+                && n.contains("NEW YORK")
+                && n.contains("MASSACHUSETTS")
+                && n.contains("DEFAULT")));
     }
 
     #[test]
     fn note_pins_ca_section_1950_5h_five_elements() {
         let r = check(&ca_baseline_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Cal. Civ. Code § 1950.5(h) requirements")
-            && n.contains("PERSONAL DELIVERY or FIRST-CLASS MAIL")
-            && n.contains("AMOUNT")
-            && n.contains("any claims")
-            && n.contains("JOINT AND SEVERAL LIABILITY")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Cal. Civ. Code § 1950.5(h) requirements")
+                && n.contains("PERSONAL DELIVERY or FIRST-CLASS MAIL")
+                && n.contains("AMOUNT")
+                && n.contains("any claims")
+                && n.contains("JOINT AND SEVERAL LIABILITY")));
     }
 
     #[test]
     fn note_pins_ny_gol_7_105() {
         let r = check(&ca_baseline_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("NY GOL § 7-105")
+        assert!(r.notes.iter().any(|n| n.contains("NY GOL § 7-105")
             && n.contains("5 DAYS")
             && n.contains("REGISTERED OR CERTIFIED MAIL")
             && n.contains("ACCRUED INTEREST")));
@@ -638,8 +647,7 @@ mod tests {
     #[test]
     fn note_pins_ny_gol_7_103_2_six_plus_unit() {
         let r = check(&ca_baseline_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("NY GOL § 7-103(2)")
+        assert!(r.notes.iter().any(|n| n.contains("NY GOL § 7-103(2)")
             && n.contains("6+ family dwelling units")
             && n.contains("1% per annum")));
     }
@@ -647,18 +655,19 @@ mod tests {
     #[test]
     fn note_pins_ma_section_15b_7() {
         let r = check(&ca_baseline_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Mass. Gen. Laws c. 186 § 15B(7)")
-            && n.contains("45 DAYS")
-            && n.contains("TREBLE DAMAGES")
-            && n.contains("REGARDLESS")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Mass. Gen. Laws c. 186 § 15B(7)")
+                && n.contains("45 DAYS")
+                && n.contains("TREBLE DAMAGES")
+                && n.contains("REGARDLESS")));
     }
 
     #[test]
     fn note_pins_ptfa_federal() {
         let r = check(&ca_baseline_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("12 USC § 5220")
+        assert!(r.notes.iter().any(|n| n.contains("12 USC § 5220")
             && n.contains("Protecting Tenants at Foreclosure Act")
             && n.contains("90-day")
             && n.contains("STACKS")));
@@ -667,36 +676,40 @@ mod tests {
     #[test]
     fn note_pins_restatement_second_property_12_1() {
         let r = check(&ca_baseline_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Restatement (Second) of Property: Landlord and Tenant § 12.1")
+        assert!(r.notes.iter().any(|n| n
+            .contains("Restatement (Second) of Property: Landlord and Tenant § 12.1")
             && n.contains("successor in interest")));
     }
 
     #[test]
     fn note_pins_joint_several_liability_rule() {
         let r = check(&ca_baseline_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Joint and several liability rule")
-            && n.contains("BOTH seller and buyer")
-            && n.contains("equitable contribution")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Joint and several liability rule")
+                && n.contains("BOTH seller and buyer")
+                && n.contains("equitable contribution")));
     }
 
     #[test]
     fn note_pins_trader_fact_patterns_five() {
         let r = check(&ca_baseline_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-landlord critical fact patterns")
-            && n.contains("$5M")
-            && n.contains("$36K deposits")
-            && n.contains("TREBLE DAMAGES")
-            && n.contains("PTFA")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-landlord critical fact patterns")
+                && n.contains("$5M")
+                && n.contains("$36K deposits")
+                && n.contains("TREBLE DAMAGES")
+                && n.contains("PTFA")));
     }
 
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&ca_baseline_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Companion to security_deposit_bank_disclosure")
+        assert!(r.notes.iter().any(|n| n
+            .contains("Companion to security_deposit_bank_disclosure")
             && n.contains("foreclosure_tenant_rights")
             && n.contains("tenant_estoppel_certificate")));
     }

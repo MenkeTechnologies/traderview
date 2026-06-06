@@ -20,7 +20,12 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub open: f64, pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PinBarReport {
@@ -34,30 +39,37 @@ pub fn compute(bars: &[Bar]) -> PinBarReport {
         bullish: vec![false; n],
         bearish: vec![false; n],
     };
-    if bars.iter().any(|b| !b.open.is_finite() || !b.high.is_finite()
-        || !b.low.is_finite() || !b.close.is_finite()) {
+    if bars.iter().any(|b| {
+        !b.open.is_finite() || !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()
+    }) {
         return report;
     }
     for (i, bar) in bars.iter().enumerate() {
         let range = bar.high - bar.low;
-        if range <= 0.0 { continue; }
+        if range <= 0.0 {
+            continue;
+        }
         let body = (bar.close - bar.open).abs();
         let body_high = bar.close.max(bar.open);
         let body_low = bar.close.min(bar.open);
         let upper_wick = bar.high - body_high;
         let lower_wick = body_low - bar.low;
         // Small body (≤ 1/3 of range).
-        if body > range / 3.0 { continue; }
+        if body > range / 3.0 {
+            continue;
+        }
         // Body must be non-zero for primary-wick comparisons.
-        if body <= 0.0 { continue; }
+        if body <= 0.0 {
+            continue;
+        }
         // Bullish pin: long lower wick + tiny upper wick.
-        if (lower_wick >= 2.0 * body || lower_wick >= 2.0 * range / 3.0)
-            && upper_wick <= body / 3.0 {
+        if (lower_wick >= 2.0 * body || lower_wick >= 2.0 * range / 3.0) && upper_wick <= body / 3.0
+        {
             report.bullish[i] = true;
         }
         // Bearish pin: long upper wick + tiny lower wick.
-        if (upper_wick >= 2.0 * body || upper_wick >= 2.0 * range / 3.0)
-            && lower_wick <= body / 3.0 {
+        if (upper_wick >= 2.0 * body || upper_wick >= 2.0 * range / 3.0) && lower_wick <= body / 3.0
+        {
             report.bearish[i] = true;
         }
     }
@@ -69,7 +81,12 @@ mod tests {
     use super::*;
 
     fn bar(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -80,8 +97,10 @@ mod tests {
 
     #[test]
     fn nan_returns_empty() {
-        let bars = vec![bar(100.0, 101.0, 99.0, 100.0),
-                        bar(f64::NAN, 101.0, 99.0, 100.0)];
+        let bars = vec![
+            bar(100.0, 101.0, 99.0, 100.0),
+            bar(f64::NAN, 101.0, 99.0, 100.0),
+        ];
         let r = compute(&bars);
         assert!(!r.bullish.iter().any(|x| *x));
     }

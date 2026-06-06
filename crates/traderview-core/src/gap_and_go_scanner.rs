@@ -60,32 +60,66 @@ pub struct Match {
 
 pub fn scan(symbols: &[Symbol], config: Config) -> Vec<Match> {
     let mut matches = Vec::new();
-    if !config.min_gap_pct.is_finite() || config.min_gap_pct <= 0.0 { return matches; }
-    if !config.volume_ratio_min.is_finite() || config.volume_ratio_min <= 0.0 { return matches; }
-    if !config.min_range_pct.is_finite() || config.min_range_pct < 0.0 { return matches; }
+    if !config.min_gap_pct.is_finite() || config.min_gap_pct <= 0.0 {
+        return matches;
+    }
+    if !config.volume_ratio_min.is_finite() || config.volume_ratio_min <= 0.0 {
+        return matches;
+    }
+    if !config.min_range_pct.is_finite() || config.min_range_pct < 0.0 {
+        return matches;
+    }
     for sym in symbols {
-        let fields = [sym.prior_close, sym.first_bar_open, sym.first_bar_high,
-                      sym.first_bar_low, sym.first_bar_close,
-                      sym.first_bar_volume, sym.avg_first_bar_volume];
-        if fields.iter().any(|x| !x.is_finite()) { continue; }
-        if sym.prior_close <= 0.0 || sym.first_bar_open <= 0.0 { continue; }
-        if sym.avg_first_bar_volume <= 0.0 { continue; }
+        let fields = [
+            sym.prior_close,
+            sym.first_bar_open,
+            sym.first_bar_high,
+            sym.first_bar_low,
+            sym.first_bar_close,
+            sym.first_bar_volume,
+            sym.avg_first_bar_volume,
+        ];
+        if fields.iter().any(|x| !x.is_finite()) {
+            continue;
+        }
+        if sym.prior_close <= 0.0 || sym.first_bar_open <= 0.0 {
+            continue;
+        }
+        if sym.avg_first_bar_volume <= 0.0 {
+            continue;
+        }
         let gap_pct = (sym.first_bar_open - sym.prior_close) / sym.prior_close * 100.0;
-        if gap_pct < config.min_gap_pct { continue; }
+        if gap_pct < config.min_gap_pct {
+            continue;
+        }
         let volume_ratio = sym.first_bar_volume / sym.avg_first_bar_volume;
-        if volume_ratio < config.volume_ratio_min { continue; }
-        if sym.first_bar_close < sym.first_bar_open { continue; }
+        if volume_ratio < config.volume_ratio_min {
+            continue;
+        }
+        if sym.first_bar_close < sym.first_bar_open {
+            continue;
+        }
         let range_pct = (sym.first_bar_high - sym.first_bar_low) / sym.first_bar_open * 100.0;
-        if range_pct < config.min_range_pct { continue; }
-        if sym.first_bar_low < sym.prior_close { continue; }
-        let score = ((gap_pct - config.min_gap_pct) + (volume_ratio - 1.0) * 5.0)
-            .clamp(0.0, 100.0);
+        if range_pct < config.min_range_pct {
+            continue;
+        }
+        if sym.first_bar_low < sym.prior_close {
+            continue;
+        }
+        let score = ((gap_pct - config.min_gap_pct) + (volume_ratio - 1.0) * 5.0).clamp(0.0, 100.0);
         matches.push(Match {
             symbol: sym.symbol.clone(),
-            gap_pct, volume_ratio, range_pct, score,
+            gap_pct,
+            volume_ratio,
+            range_pct,
+            score,
         });
     }
-    matches.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+    matches.sort_by(|a, b| {
+        b.score
+            .partial_cmp(&a.score)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     matches
 }
 
@@ -98,8 +132,12 @@ mod tests {
         Symbol {
             symbol: name.into(),
             prior_close: prior,
-            first_bar_open: o, first_bar_high: h, first_bar_low: l, first_bar_close: c,
-            first_bar_volume: v, avg_first_bar_volume: avg_v,
+            first_bar_open: o,
+            first_bar_high: h,
+            first_bar_low: l,
+            first_bar_close: c,
+            first_bar_volume: v,
+            avg_first_bar_volume: avg_v,
         }
     }
 
@@ -112,7 +150,16 @@ mod tests {
     #[test]
     fn classic_setup_matches() {
         // Prior 100, opens 110 (+10% gap), strong volume, holds gap.
-        let s = sym("ABCD", 100.0, 110.0, 115.0, 110.5, 114.0, 5_000_000.0, 1_000_000.0);
+        let s = sym(
+            "ABCD",
+            100.0,
+            110.0,
+            115.0,
+            110.5,
+            114.0,
+            5_000_000.0,
+            1_000_000.0,
+        );
         let r = scan(&[s], Config::default());
         assert_eq!(r.len(), 1);
         assert!((r[0].gap_pct - 10.0).abs() < 1e-9);
@@ -122,14 +169,32 @@ mod tests {
 
     #[test]
     fn small_gap_rejected() {
-        let s = sym("ABCD", 100.0, 101.0, 102.0, 101.0, 101.5, 5_000_000.0, 1_000_000.0);
+        let s = sym(
+            "ABCD",
+            100.0,
+            101.0,
+            102.0,
+            101.0,
+            101.5,
+            5_000_000.0,
+            1_000_000.0,
+        );
         let r = scan(&[s], Config::default());
         assert!(r.is_empty());
     }
 
     #[test]
     fn thin_volume_rejected() {
-        let s = sym("ABCD", 100.0, 110.0, 115.0, 110.5, 114.0, 1_500_000.0, 1_000_000.0);
+        let s = sym(
+            "ABCD",
+            100.0,
+            110.0,
+            115.0,
+            110.5,
+            114.0,
+            1_500_000.0,
+            1_000_000.0,
+        );
         let r = scan(&[s], Config::default());
         assert!(r.is_empty());
     }
@@ -137,7 +202,16 @@ mod tests {
     #[test]
     fn reversal_first_bar_rejected() {
         // Close < open → didn't hold the gap.
-        let s = sym("ABCD", 100.0, 110.0, 115.0, 105.0, 106.0, 5_000_000.0, 1_000_000.0);
+        let s = sym(
+            "ABCD",
+            100.0,
+            110.0,
+            115.0,
+            105.0,
+            106.0,
+            5_000_000.0,
+            1_000_000.0,
+        );
         let r = scan(&[s], Config::default());
         assert!(r.is_empty());
     }
@@ -145,14 +219,32 @@ mod tests {
     #[test]
     fn gap_fill_rejected() {
         // First-bar low < prior close → gap got filled.
-        let s = sym("ABCD", 100.0, 110.0, 115.0, 99.0, 112.0, 5_000_000.0, 1_000_000.0);
+        let s = sym(
+            "ABCD",
+            100.0,
+            110.0,
+            115.0,
+            99.0,
+            112.0,
+            5_000_000.0,
+            1_000_000.0,
+        );
         let r = scan(&[s], Config::default());
         assert!(r.is_empty());
     }
 
     #[test]
     fn invalid_fields_skip_symbol() {
-        let mut s = sym("ABCD", 100.0, 110.0, 115.0, 110.5, 114.0, 5_000_000.0, 1_000_000.0);
+        let mut s = sym(
+            "ABCD",
+            100.0,
+            110.0,
+            115.0,
+            110.5,
+            114.0,
+            5_000_000.0,
+            1_000_000.0,
+        );
         s.prior_close = f64::NAN;
         assert!(scan(&[s.clone()], Config::default()).is_empty());
         s.prior_close = 0.0;
@@ -164,8 +256,26 @@ mod tests {
 
     #[test]
     fn matches_sorted_by_score_descending() {
-        let strong = sym("STRONG", 100.0, 115.0, 120.0, 115.5, 119.0, 10_000_000.0, 1_000_000.0);
-        let weak = sym("WEAK",     100.0, 105.0, 108.0, 105.0, 107.0,  4_000_000.0, 1_000_000.0);
+        let strong = sym(
+            "STRONG",
+            100.0,
+            115.0,
+            120.0,
+            115.5,
+            119.0,
+            10_000_000.0,
+            1_000_000.0,
+        );
+        let weak = sym(
+            "WEAK",
+            100.0,
+            105.0,
+            108.0,
+            105.0,
+            107.0,
+            4_000_000.0,
+            1_000_000.0,
+        );
         let r = scan(&[weak, strong], Config::default());
         assert_eq!(r.len(), 2);
         assert!(r[0].score >= r[1].score);

@@ -32,20 +32,31 @@ pub struct BarrierReport {
     pub knocked_out_immediately: bool,
 }
 
-#[allow(clippy::too_many_arguments)]    // Black-Scholes-style API mirrors the math; bundling into a struct
-                                        // forces every caller to construct it for a stateless one-shot call.
+#[allow(clippy::too_many_arguments)] // Black-Scholes-style API mirrors the math; bundling into a struct
+                                     // forces every caller to construct it for a stateless one-shot call.
 pub fn price(
-    spot: f64, strike: f64, barrier: f64,
-    time_to_expiry: f64, risk_free: f64, dividend_yield: f64,
-    sigma: f64, rebate: f64,
+    spot: f64,
+    strike: f64,
+    barrier: f64,
+    time_to_expiry: f64,
+    risk_free: f64,
+    dividend_yield: f64,
+    sigma: f64,
+    rebate: f64,
     kind: BarrierKind,
 ) -> Option<BarrierReport> {
-    if !spot.is_finite() || spot <= 0.0
-        || !strike.is_finite() || strike <= 0.0
-        || !barrier.is_finite() || barrier <= 0.0
-        || !time_to_expiry.is_finite() || time_to_expiry <= 0.0
-        || !risk_free.is_finite() || !dividend_yield.is_finite()
-        || !sigma.is_finite() || sigma <= 0.0
+    if !spot.is_finite()
+        || spot <= 0.0
+        || !strike.is_finite()
+        || strike <= 0.0
+        || !barrier.is_finite()
+        || barrier <= 0.0
+        || !time_to_expiry.is_finite()
+        || time_to_expiry <= 0.0
+        || !risk_free.is_finite()
+        || !dividend_yield.is_finite()
+        || !sigma.is_finite()
+        || sigma <= 0.0
         || !rebate.is_finite()
     {
         return None;
@@ -79,7 +90,7 @@ pub fn price(
     // (Reiner-Rubinstein closed form below).
     // Determine "in" price for down-and-in call (H ≤ S₀, K > H typical):
     let down_in_call_price = if h >= s {
-        bs_call(k)    // already knocked in
+        bs_call(k) // already knocked in
     } else {
         let factor1 = (h / s).powf(2.0 * mu + 2.0);
         let factor2 = (h / s).powf(2.0 * mu);
@@ -88,8 +99,7 @@ pub fn price(
             // K ≥ H: classical formula.
             let y = ((h * h / (s * k)).ln() + (r - q + 0.5 * v * v) * t) / (v * sqrt_t);
             let yt = y - v * sqrt_t;
-            s * (-q * t).exp() * factor1 * norm_cdf(y)
-                - k * (-r * t).exp() * factor2 * norm_cdf(yt)
+            s * (-q * t).exp() * factor1 * norm_cdf(y) - k * (-r * t).exp() * factor2 * norm_cdf(yt)
         } else {
             // K < H: more complex; not commonly traded → approximate.
             // (Lower barrier above strike means option knocks in too easily;
@@ -113,7 +123,7 @@ pub fn price(
     };
     let vanilla = match kind {
         BarrierKind::DownAndOutCall | BarrierKind::DownAndInCall => bs_call(k),
-        BarrierKind::UpAndOutPut    | BarrierKind::UpAndInPut    => bs_put(k),
+        BarrierKind::UpAndOutPut | BarrierKind::UpAndInPut => bs_put(k),
     };
     let (option_price, knocked_out) = match kind {
         BarrierKind::DownAndInCall => (down_in_call_price.max(rebate * (-r * t).exp()), false),
@@ -142,12 +152,12 @@ pub fn price(
 }
 
 fn norm_cdf(x: f64) -> f64 {
-    let a1 =  0.254829592_f64;
+    let a1 = 0.254829592_f64;
     let a2 = -0.284496736_f64;
-    let a3 =  1.421413741_f64;
+    let a3 = 1.421413741_f64;
     let a4 = -1.453152027_f64;
-    let a5 =  1.061405429_f64;
-    let p  =  0.3275911_f64;
+    let a5 = 1.061405429_f64;
+    let p = 0.3275911_f64;
     let sign = if x < 0.0 { -1.0 } else { 1.0 };
     let xa = x.abs() / std::f64::consts::SQRT_2;
     let t = 1.0 / (1.0 + p * xa);
@@ -162,22 +172,72 @@ mod tests {
     #[test]
     fn invalid_inputs_return_none() {
         for bad in [0.0, -1.0, f64::NAN] {
-            assert!(price(bad, 100.0, 90.0, 0.5, 0.05, 0.0, 0.2, 0.0,
-                BarrierKind::DownAndOutCall).is_none());
-            assert!(price(100.0, bad, 90.0, 0.5, 0.05, 0.0, 0.2, 0.0,
-                BarrierKind::DownAndOutCall).is_none());
-            assert!(price(100.0, 100.0, bad, 0.5, 0.05, 0.0, 0.2, 0.0,
-                BarrierKind::DownAndOutCall).is_none());
-            assert!(price(100.0, 100.0, 90.0, 0.5, 0.05, 0.0, bad, 0.0,
-                BarrierKind::DownAndOutCall).is_none());
+            assert!(price(
+                bad,
+                100.0,
+                90.0,
+                0.5,
+                0.05,
+                0.0,
+                0.2,
+                0.0,
+                BarrierKind::DownAndOutCall
+            )
+            .is_none());
+            assert!(price(
+                100.0,
+                bad,
+                90.0,
+                0.5,
+                0.05,
+                0.0,
+                0.2,
+                0.0,
+                BarrierKind::DownAndOutCall
+            )
+            .is_none());
+            assert!(price(
+                100.0,
+                100.0,
+                bad,
+                0.5,
+                0.05,
+                0.0,
+                0.2,
+                0.0,
+                BarrierKind::DownAndOutCall
+            )
+            .is_none());
+            assert!(price(
+                100.0,
+                100.0,
+                90.0,
+                0.5,
+                0.05,
+                0.0,
+                bad,
+                0.0,
+                BarrierKind::DownAndOutCall
+            )
+            .is_none());
         }
     }
 
     #[test]
     fn knocked_out_immediately_yields_rebate() {
         // Spot at or below the down-and-out barrier → immediate KO.
-        let r = price(80.0, 100.0, 90.0, 0.5, 0.05, 0.0, 0.2, 5.0,
-            BarrierKind::DownAndOutCall).unwrap();
+        let r = price(
+            80.0,
+            100.0,
+            90.0,
+            0.5,
+            0.05,
+            0.0,
+            0.2,
+            5.0,
+            BarrierKind::DownAndOutCall,
+        )
+        .unwrap();
         assert!(r.knocked_out_immediately);
         assert!((r.price - 5.0 * (-0.05_f64 * 0.5).exp()).abs() < 1e-9);
     }
@@ -185,8 +245,13 @@ mod tests {
     #[test]
     fn in_out_parity_for_down_call() {
         // DI + DO = vanilla call.
-        let s = 100.0; let k = 100.0; let h = 90.0;
-        let t = 0.5; let r = 0.05; let q = 0.0; let v = 0.20;
+        let s = 100.0;
+        let k = 100.0;
+        let h = 90.0;
+        let t = 0.5;
+        let r = 0.05;
+        let q = 0.0;
+        let v = 0.20;
         let di = price(s, k, h, t, r, q, v, 0.0, BarrierKind::DownAndInCall).unwrap();
         let dout = price(s, k, h, t, r, q, v, 0.0, BarrierKind::DownAndOutCall).unwrap();
         let vanilla = di.vanilla_price;
@@ -195,8 +260,13 @@ mod tests {
 
     #[test]
     fn in_out_parity_for_up_put() {
-        let s = 100.0; let k = 100.0; let h = 110.0;
-        let t = 0.5; let r = 0.05; let q = 0.0; let v = 0.20;
+        let s = 100.0;
+        let k = 100.0;
+        let h = 110.0;
+        let t = 0.5;
+        let r = 0.05;
+        let q = 0.0;
+        let v = 0.20;
         let ui = price(s, k, h, t, r, q, v, 0.0, BarrierKind::UpAndInPut).unwrap();
         let uo = price(s, k, h, t, r, q, v, 0.0, BarrierKind::UpAndOutPut).unwrap();
         let vanilla = ui.vanilla_price;
@@ -205,24 +275,64 @@ mod tests {
 
     #[test]
     fn down_and_out_call_cheaper_than_vanilla() {
-        let r = price(100.0, 100.0, 90.0, 0.5, 0.05, 0.0, 0.2, 0.0,
-            BarrierKind::DownAndOutCall).unwrap();
+        let r = price(
+            100.0,
+            100.0,
+            90.0,
+            0.5,
+            0.05,
+            0.0,
+            0.2,
+            0.0,
+            BarrierKind::DownAndOutCall,
+        )
+        .unwrap();
         assert!(r.price < r.vanilla_price);
     }
 
     #[test]
     fn closer_barrier_makes_out_option_cheaper() {
-        let r_far = price(100.0, 100.0, 70.0, 0.5, 0.05, 0.0, 0.2, 0.0,
-            BarrierKind::DownAndOutCall).unwrap();
-        let r_near = price(100.0, 100.0, 95.0, 0.5, 0.05, 0.0, 0.2, 0.0,
-            BarrierKind::DownAndOutCall).unwrap();
+        let r_far = price(
+            100.0,
+            100.0,
+            70.0,
+            0.5,
+            0.05,
+            0.0,
+            0.2,
+            0.0,
+            BarrierKind::DownAndOutCall,
+        )
+        .unwrap();
+        let r_near = price(
+            100.0,
+            100.0,
+            95.0,
+            0.5,
+            0.05,
+            0.0,
+            0.2,
+            0.0,
+            BarrierKind::DownAndOutCall,
+        )
+        .unwrap();
         assert!(r_near.price < r_far.price);
     }
 
     #[test]
     fn up_out_put_cheaper_than_vanilla() {
-        let r = price(100.0, 100.0, 110.0, 0.5, 0.05, 0.0, 0.2, 0.0,
-            BarrierKind::UpAndOutPut).unwrap();
+        let r = price(
+            100.0,
+            100.0,
+            110.0,
+            0.5,
+            0.05,
+            0.0,
+            0.2,
+            0.0,
+            BarrierKind::UpAndOutPut,
+        )
+        .unwrap();
         assert!(r.price < r.vanilla_price);
     }
 }

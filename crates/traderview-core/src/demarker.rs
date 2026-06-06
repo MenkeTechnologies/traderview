@@ -83,7 +83,10 @@ mod tests {
         let last = out[39].expect("populated");
         // Only demax accrues — demin stays 0 (lows rising means demin=0).
         // So ratio = s_max / (s_max + 0) = 1.0.
-        assert!((last - 1.0).abs() < 1e-9, "all rising → DeM = 1, got {last}");
+        assert!(
+            (last - 1.0).abs() < 1e-9,
+            "all rising → DeM = 1, got {last}"
+        );
     }
 
     #[test]
@@ -98,7 +101,9 @@ mod tests {
 
     #[test]
     fn output_always_in_range_0_1() {
-        let h: Vec<f64> = (0..200).map(|i| 100.0 + (i as f64 * 0.3).sin() * 5.0).collect();
+        let h: Vec<f64> = (0..200)
+            .map(|i| 100.0 + (i as f64 * 0.3).sin() * 5.0)
+            .collect();
         let l: Vec<f64> = h.iter().map(|x| x - 1.0).collect();
         let out = compute(&h, &l, 14);
         for x in out.iter().flatten() {

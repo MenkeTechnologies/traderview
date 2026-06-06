@@ -29,19 +29,37 @@
 
 #[derive(Debug)]
 pub struct Report {
-    pub forward_vols: Vec<f64>,       // length = n - 1
+    pub forward_vols: Vec<f64>, // length = n - 1
     pub cumulative_variance: Vec<f64>,
-    pub arbitrage_violations: Vec<usize>,    // indices in `forward_vols` flagged
+    pub arbitrage_violations: Vec<usize>, // indices in `forward_vols` flagged
 }
 
 pub fn compute(expiries: &[f64], spot_iv: &[f64]) -> Option<Report> {
     let n = expiries.len();
-    if n < 2 || spot_iv.len() != n { return None; }
-    if expiries.iter().chain(spot_iv.iter()).any(|x| !x.is_finite()) { return None; }
-    if expiries.iter().any(|&t| t <= 0.0) { return None; }
-    if spot_iv.iter().any(|&v| v < 0.0) { return None; }
-    for w in expiries.windows(2) { if w[1] <= w[0] { return None; } }
-    let total_variance: Vec<f64> = expiries.iter().zip(spot_iv.iter())
+    if n < 2 || spot_iv.len() != n {
+        return None;
+    }
+    if expiries
+        .iter()
+        .chain(spot_iv.iter())
+        .any(|x| !x.is_finite())
+    {
+        return None;
+    }
+    if expiries.iter().any(|&t| t <= 0.0) {
+        return None;
+    }
+    if spot_iv.iter().any(|&v| v < 0.0) {
+        return None;
+    }
+    for w in expiries.windows(2) {
+        if w[1] <= w[0] {
+            return None;
+        }
+    }
+    let total_variance: Vec<f64> = expiries
+        .iter()
+        .zip(spot_iv.iter())
         .map(|(t, iv)| iv * iv * t)
         .collect();
     let mut forward_vols = Vec::with_capacity(n - 1);

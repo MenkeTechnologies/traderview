@@ -172,10 +172,7 @@ fn check_ca(input: &RentalGasApplianceBanInput) -> RentalGasApplianceBanResult {
 
     let heat_pump_required = matches!(input.project_type, ProjectType::NewConstruction);
 
-    if heat_pump_required
-        && input.gas_appliance_installation
-        && !input.heat_pump_installation
-    {
+    if heat_pump_required && input.gas_appliance_installation && !input.heat_pump_installation {
         violations.push(
             "CA Title 24 Part 6 (2025 Energy Code) — new construction permits require heat pumps for most space and water heating; gas appliance installed without heat pump alternative".to_string(),
         );

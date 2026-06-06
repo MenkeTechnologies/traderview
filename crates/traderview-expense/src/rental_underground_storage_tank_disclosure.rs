@@ -174,7 +174,8 @@ fn check_federal(
     let tank_exists = !matches!(input.tank_status, TankStatus::NoTank);
     let regulated = tank_exists && !input.heating_oil_residential_on_premises;
 
-    if regulated && !input.annual_inspection_completed
+    if regulated
+        && !input.annual_inspection_completed
         && !matches!(input.tank_status, TankStatus::RemovedWithDocumentation)
     {
         violations.push(
@@ -209,7 +210,8 @@ fn check_ca(
 
     let tank_exists = !matches!(input.tank_status, TankStatus::NoTank);
 
-    if tank_exists && !input.annual_inspection_completed
+    if tank_exists
+        && !input.annual_inspection_completed
         && !matches!(input.tank_status, TankStatus::RemovedWithDocumentation)
     {
         violations.push(
@@ -373,10 +375,7 @@ mod tests {
         i.annual_inspection_completed = false;
         let r = check(&i);
         assert!(!r.disclosure_compliant);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("40 CFR Part 280")));
+        assert!(r.violations.iter().any(|v| v.contains("40 CFR Part 280")));
     }
 
     #[test]
@@ -446,10 +445,7 @@ mod tests {
         let r = check(&i);
         assert!(!r.disclosure_compliant);
         assert!(r.fraud_concealment_violation);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("common-law fraud")));
+        assert!(r.violations.iter().any(|v| v.contains("common-law fraud")));
     }
 
     #[test]
@@ -477,10 +473,7 @@ mod tests {
         i.known_contamination_concealed = true;
         let r = check(&i);
         assert!(!r.disclosure_compliant);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("Johnson v. Davis")));
+        assert!(r.violations.iter().any(|v| v.contains("Johnson v. Davis")));
     }
 
     #[test]
@@ -575,8 +568,10 @@ mod tests {
     #[test]
     fn note_pins_fl_johnson_davis_doctrine() {
         let r = check(&fl_clean());
-        assert!(r.notes.iter().any(|n| n.contains("Johnson v. Davis")
-            && n.contains("480 So. 2d 625")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Johnson v. Davis") && n.contains("480 So. 2d 625")));
     }
 
     #[test]
@@ -591,8 +586,10 @@ mod tests {
     #[test]
     fn note_pins_nj_unregulated_heating_oil_grant() {
         let r = check(&nj_clean());
-        assert!(r.notes.iter().any(|n| n.contains("$250,000 grant")
-            && n.contains("NJEDA")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("$250,000 grant") && n.contains("NJEDA")));
     }
 
     #[test]

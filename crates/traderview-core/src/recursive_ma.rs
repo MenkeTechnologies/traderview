@@ -18,8 +18,12 @@
 pub fn compute(series: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period < 2 || n < period { return out; }
-    if series.iter().any(|x| !x.is_finite()) { return out; }
+    if period < 2 || n < period {
+        return out;
+    }
+    if series.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     let p_f = period as f64;
     let alpha = 1.0 / p_f;
     let one_minus = 1.0 - alpha;
@@ -69,25 +73,32 @@ mod tests {
         let last = r[199].unwrap();
         // Steady-state offset ≈ (period - 1) below input.
         let expected_lag = 13.0;
-        assert!((s[199] - last - expected_lag).abs() < 0.5,
-            "RMA lag for slope-1 linear trend should be ~13, got {}", s[199] - last);
+        assert!(
+            (s[199] - last - expected_lag).abs() < 0.5,
+            "RMA lag for slope-1 linear trend should be ~13, got {}",
+            s[199] - last
+        );
     }
 
     #[test]
     fn rma_smoother_than_input() {
         let mut state: u64 = 42;
-        let s: Vec<f64> = (0..400).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
-            100.0 + (r - 0.5) * 10.0
-        }).collect();
+        let s: Vec<f64> = (0..400)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
+                100.0 + (r - 0.5) * 10.0
+            })
+            .collect();
         let r = compute(&s, 14);
         let vals: Vec<f64> = r.iter().flatten().copied().collect();
         let mean_in: f64 = s.iter().sum::<f64>() / s.len() as f64;
         let var_in: f64 = s.iter().map(|x| (x - mean_in).powi(2)).sum::<f64>() / s.len() as f64;
         let mean_rma: f64 = vals.iter().sum::<f64>() / vals.len() as f64;
-        let var_rma: f64 = vals.iter().map(|x| (x - mean_rma).powi(2)).sum::<f64>() / vals.len() as f64;
+        let var_rma: f64 =
+            vals.iter().map(|x| (x - mean_rma).powi(2)).sum::<f64>() / vals.len() as f64;
         assert!(var_rma < var_in);
     }
 

@@ -125,8 +125,7 @@ pub fn check(input: &Section6332Input) -> Section6332Result {
         0
     };
 
-    let fifty_percent_penalty = if personal_liability > 0
-        && input.failure_without_reasonable_cause
+    let fifty_percent_penalty = if personal_liability > 0 && input.failure_without_reasonable_cause
     {
         personal_liability.saturating_mul(50) / 100
     } else {
@@ -238,10 +237,9 @@ mod tests {
         assert_eq!(r.personal_liability_cents, 5_000_000_000);
         assert_eq!(r.fifty_percent_penalty_cents, 2_500_000_000);
         assert_eq!(r.total_third_party_exposure_cents, 7_500_000_000);
-        assert!(r
-            .failure_reasons
-            .iter()
-            .any(|f| f.contains("§ 6332(d)(2)") && f.contains("REASONABLE CAUSE") && f.contains("50%")));
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 6332(d)(2)")
+            && f.contains("REASONABLE CAUSE")
+            && f.contains("50%")));
     }
 
     #[test]

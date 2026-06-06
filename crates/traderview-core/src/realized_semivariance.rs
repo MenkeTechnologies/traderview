@@ -40,12 +40,20 @@ pub fn compute(returns: &[f64], periods_per_year: f64) -> Option<SemivarianceRep
     let mut pos = 0.0_f64;
     let mut n = 0_usize;
     for r in returns {
-        if !r.is_finite() { continue; }
+        if !r.is_finite() {
+            continue;
+        }
         let sq = r * r;
-        if *r < 0.0 { neg += sq; } else if *r > 0.0 { pos += sq; }
+        if *r < 0.0 {
+            neg += sq;
+        } else if *r > 0.0 {
+            pos += sq;
+        }
         n += 1;
     }
-    if n == 0 { return None; }
+    if n == 0 {
+        return None;
+    }
     let rv = neg + pos;
     let downside_share = if rv > 0.0 { neg / rv } else { 0.0 };
     let n_f = n as f64;
@@ -86,7 +94,9 @@ mod tests {
     fn symmetric_returns_yield_balanced_decomposition() {
         let returns = vec![0.01, -0.01, 0.02, -0.02, 0.005, -0.005];
         let r = compute(&returns, 252.0).unwrap();
-        assert!((r.realized_semivariance_negative - r.realized_semivariance_positive).abs() < 1e-12);
+        assert!(
+            (r.realized_semivariance_negative - r.realized_semivariance_positive).abs() < 1e-12
+        );
         assert!((r.downside_share - 0.5).abs() < 1e-12);
     }
 

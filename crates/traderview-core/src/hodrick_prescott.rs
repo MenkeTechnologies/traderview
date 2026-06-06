@@ -29,10 +29,7 @@ pub struct HpReport {
 
 pub fn compute(series: &[f64], lambda: f64) -> Option<HpReport> {
     let n = series.len();
-    if n < 4
-        || !lambda.is_finite() || lambda <= 0.0
-        || series.iter().any(|x| !x.is_finite())
-    {
+    if n < 4 || !lambda.is_finite() || lambda <= 0.0 || series.iter().any(|x| !x.is_finite()) {
         return None;
     }
     if n > 1_000 {
@@ -43,7 +40,9 @@ pub fn compute(series: &[f64], lambda: f64) -> Option<HpReport> {
     // Build (I + λ·F'·F) where F (n−2 × n) is the 2nd-difference matrix:
     //   F[i, i] = 1, F[i, i+1] = -2, F[i, i+2] = 1
     let mut m = vec![vec![0.0_f64; n]; n];
-    for (i, row) in m.iter_mut().enumerate() { row[i] = 1.0; }
+    for (i, row) in m.iter_mut().enumerate() {
+        row[i] = 1.0;
+    }
     // λ·F'·F is the pentadiagonal "smoothness penalty" matrix.
     // For each row i in F, contributes λ to:
     //   m[i][i] += λ;   m[i][i+1] -= 2λ;  m[i][i+2] += λ
@@ -61,33 +60,53 @@ pub fn compute(series: &[f64], lambda: f64) -> Option<HpReport> {
         m[i + 2][i + 2] += lambda;
     }
     let trend = solve_linear(&m, series)?;
-    let cycle: Vec<f64> = series.iter().zip(trend.iter()).map(|(y, t)| y - t).collect();
+    let cycle: Vec<f64> = series
+        .iter()
+        .zip(trend.iter())
+        .map(|(y, t)| y - t)
+        .collect();
     Some(HpReport { trend, cycle })
 }
 
 fn solve_linear(m: &[Vec<f64>], y: &[f64]) -> Option<Vec<f64>> {
     let n = m.len();
-    if n == 0 || m.iter().any(|r| r.len() != n) || y.len() != n { return None; }
+    if n == 0 || m.iter().any(|r| r.len() != n) || y.len() != n {
+        return None;
+    }
     let mut aug = vec![vec![0.0_f64; n + 1]; n];
     for i in 0..n {
-        for j in 0..n { aug[i][j] = m[i][j]; }
+        for j in 0..n {
+            aug[i][j] = m[i][j];
+        }
         aug[i][n] = y[i];
     }
     for i in 0..n {
         let mut pivot = i;
         for r in (i + 1)..n {
-            if aug[r][i].abs() > aug[pivot][i].abs() { pivot = r; }
+            if aug[r][i].abs() > aug[pivot][i].abs() {
+                pivot = r;
+            }
         }
-        if aug[pivot][i].abs() < 1e-18 { return None; }
+        if aug[pivot][i].abs() < 1e-18 {
+            return None;
+        }
         aug.swap(i, pivot);
         let div = aug[i][i];
-        for v in aug[i].iter_mut() { *v /= div; }
+        for v in aug[i].iter_mut() {
+            *v /= div;
+        }
         for r in 0..n {
-            if r == i { continue; }
+            if r == i {
+                continue;
+            }
             let f = aug[r][i];
-            if f == 0.0 { continue; }
+            if f == 0.0 {
+                continue;
+            }
             let pivot_row = aug[i].clone();
-            for (j, v) in aug[r].iter_mut().enumerate() { *v -= f * pivot_row[j]; }
+            for (j, v) in aug[r].iter_mut().enumerate() {
+                *v -= f * pivot_row[j];
+            }
         }
     }
     Some((0..n).map(|i| aug[i][n]).collect())
@@ -141,12 +160,15 @@ mod tests {
     #[test]
     fn higher_lambda_yields_smoother_trend() {
         let mut state: u64 = 42;
-        let s: Vec<f64> = (0..50).map(|i| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let noise = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 5.0;
-            100.0 + i as f64 * 0.5 + noise
-        }).collect();
+        let s: Vec<f64> = (0..50)
+            .map(|i| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let noise = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 5.0;
+                100.0 + i as f64 * 0.5 + noise
+            })
+            .collect();
         let r_low = compute(&s, 100.0).unwrap();
         let r_high = compute(&s, 1_000_000.0).unwrap();
         // Sum of squared 2nd-differences of the trend should be smaller
@@ -159,13 +181,17 @@ mod tests {
             }
             sum
         };
-        assert!(smoothness(&r_high.trend) < smoothness(&r_low.trend),
-            "high-λ trend should be smoother");
+        assert!(
+            smoothness(&r_high.trend) < smoothness(&r_low.trend),
+            "high-λ trend should be smoother"
+        );
     }
 
     #[test]
     fn cycle_plus_trend_equals_series() {
-        let s: Vec<f64> = (0..20).map(|i| (i as f64 * 0.1).sin() * 5.0 + 100.0).collect();
+        let s: Vec<f64> = (0..20)
+            .map(|i| (i as f64 * 0.1).sin() * 5.0 + 100.0)
+            .collect();
         let r = compute(&s, 1600.0).unwrap();
         for (i, y) in s.iter().enumerate() {
             assert!((y - r.trend[i] - r.cycle[i]).abs() < 1e-9);

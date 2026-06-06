@@ -30,17 +30,20 @@ pub struct TailDependenceReport {
 
 pub fn compute(x: &[f64], y: &[f64], alpha: f64) -> Option<TailDependenceReport> {
     let n = x.len();
-    if y.len() != n || n < 10
-        || !alpha.is_finite() || !(0.0..0.5).contains(&alpha) || alpha <= 0.0
+    if y.len() != n || n < 10 || !alpha.is_finite() || !(0.0..0.5).contains(&alpha) || alpha <= 0.0
     {
         return None;
     }
-    let clean: Vec<(f64, f64)> = x.iter().zip(y.iter())
+    let clean: Vec<(f64, f64)> = x
+        .iter()
+        .zip(y.iter())
         .filter(|(a, b)| a.is_finite() && b.is_finite())
         .map(|(a, b)| (*a, *b))
         .collect();
     let m = clean.len();
-    if m < 10 { return None; }
+    if m < 10 {
+        return None;
+    }
     let xs: Vec<f64> = clean.iter().map(|p| p.0).collect();
     let ys: Vec<f64> = clean.iter().map(|p| p.1).collect();
     let rx = ranks(&xs);
@@ -52,8 +55,12 @@ pub fn compute(x: &[f64], y: &[f64], alpha: f64) -> Option<TailDependenceReport>
     let mut upper_count = 0_usize;
     let upper_thresh = m - k + 1;
     for i in 0..m {
-        if rx[i] <= k && ry[i] <= k { lower_count += 1; }
-        if rx[i] >= upper_thresh && ry[i] >= upper_thresh { upper_count += 1; }
+        if rx[i] <= k && ry[i] <= k {
+            lower_count += 1;
+        }
+        if rx[i] >= upper_thresh && ry[i] >= upper_thresh {
+            upper_count += 1;
+        }
     }
     let lambda_l = lower_count as f64 / k as f64;
     let lambda_u = upper_count as f64 / k as f64;
@@ -129,9 +136,13 @@ mod tests {
         let mut x = Vec::with_capacity(1_000);
         let mut y = Vec::with_capacity(1_000);
         for _ in 0..1_000 {
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             x.push((state >> 32) as f64 / u32::MAX as f64);
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             y.push((state >> 32) as f64 / u32::MAX as f64);
         }
         let r = compute(&x, &y, 0.10).unwrap();

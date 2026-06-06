@@ -31,11 +31,7 @@ pub struct LinearRegressionChannelReport {
     pub n_stdev: f64,
 }
 
-pub fn compute(
-    closes: &[f64],
-    period: usize,
-    n_stdev: f64,
-) -> LinearRegressionChannelReport {
+pub fn compute(closes: &[f64], period: usize, n_stdev: f64) -> LinearRegressionChannelReport {
     let n = closes.len();
     let mut report = LinearRegressionChannelReport {
         slope: vec![None; n],
@@ -47,16 +43,21 @@ pub fn compute(
         period,
         n_stdev,
     };
-    if period < 3 || n < period
-        || !n_stdev.is_finite() || n_stdev <= 0.0 { return report; }
-    if closes.iter().any(|x| !x.is_finite()) { return report; }
+    if period < 3 || n < period || !n_stdev.is_finite() || n_stdev <= 0.0 {
+        return report;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return report;
+    }
     let p_f = period as f64;
     // Precomputed x statistics for x = 0..period-1.
     let x_mean = (p_f - 1.0) / 2.0;
-    let x_var: f64 = (0..period).map(|i| {
-        let dx = i as f64 - x_mean;
-        dx * dx
-    }).sum();
+    let x_var: f64 = (0..period)
+        .map(|i| {
+            let dx = i as f64 - x_mean;
+            dx * dx
+        })
+        .sum();
     for i in (period - 1)..n {
         let win = &closes[i + 1 - period..=i];
         let y_mean: f64 = win.iter().sum::<f64>() / p_f;
@@ -143,12 +144,15 @@ mod tests {
     fn bands_widen_with_noise() {
         // Noisy series → R² < 1, bands wider than zero.
         let mut state: u64 = 42;
-        let c: Vec<f64> = (0..100).map(|i| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let noise = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 10.0;
-            100.0 + i as f64 * 0.5 + noise
-        }).collect();
+        let c: Vec<f64> = (0..100)
+            .map(|i| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let noise = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 10.0;
+                100.0 + i as f64 * 0.5 + noise
+            })
+            .collect();
         let r = compute(&c, 20, 2.0);
         let last = 99;
         assert!(r.upper_band[last].unwrap() > r.regression[last].unwrap());

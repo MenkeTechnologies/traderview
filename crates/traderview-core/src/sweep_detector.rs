@@ -44,7 +44,11 @@ pub struct SweepConfig {
 
 impl Default for SweepConfig {
     fn default() -> Self {
-        Self { time_window_ms: 500, min_venues: 3, min_aggregate_size: 1000.0 }
+        Self {
+            time_window_ms: 500,
+            min_venues: 3,
+            min_aggregate_size: 1000.0,
+        }
     }
 }
 
@@ -69,7 +73,11 @@ pub struct SweepReport {
 
 pub fn detect(ticks: &[RoutedTick], cfg: &SweepConfig) -> SweepReport {
     let mut report = SweepReport::default();
-    if ticks.len() < 2 || cfg.time_window_ms <= 0 || cfg.min_venues < 2 || cfg.min_aggregate_size <= 0.0 {
+    if ticks.len() < 2
+        || cfg.time_window_ms <= 0
+        || cfg.min_venues < 2
+        || cfg.min_aggregate_size <= 0.0
+    {
         return report;
     }
     // Sliding window: walk right pointer; advance left while window > time_window_ms.
@@ -119,33 +127,50 @@ pub fn detect(ticks: &[RoutedTick], cfg: &SweepConfig) -> SweepReport {
                     last.end_index = right;
                     last.print_count = right - last.start_index + 1;
                     last.total_size = ticks[last.start_index..=right]
-                        .iter().map(|t| t.size.max(0.0)).sum();
+                        .iter()
+                        .map(|t| t.size.max(0.0))
+                        .sum();
                     let v: HashSet<&str> = ticks[last.start_index..=right]
-                        .iter().map(|t| t.venue.as_str()).collect();
+                        .iter()
+                        .map(|t| t.venue.as_str())
+                        .collect();
                     last.venue_count = v.len();
                     last.max_price = ticks[last.start_index..=right]
-                        .iter().filter(|t| t.price.is_finite())
-                        .map(|t| t.price).fold(f64::NEG_INFINITY, f64::max);
+                        .iter()
+                        .filter(|t| t.price.is_finite())
+                        .map(|t| t.price)
+                        .fold(f64::NEG_INFINITY, f64::max);
                     last.min_price = ticks[last.start_index..=right]
-                        .iter().filter(|t| t.price.is_finite())
-                        .map(|t| t.price).fold(f64::INFINITY, f64::min);
+                        .iter()
+                        .filter(|t| t.price.is_finite())
+                        .map(|t| t.price)
+                        .fold(f64::INFINITY, f64::min);
                     last_event_end = Some(end_ts);
                     continue;
                 }
             }
         }
-        let min_price = cluster.iter().filter(|t| t.price.is_finite())
-            .map(|t| t.price).fold(f64::INFINITY, f64::min);
-        let max_price = cluster.iter().filter(|t| t.price.is_finite())
-            .map(|t| t.price).fold(f64::NEG_INFINITY, f64::max);
+        let min_price = cluster
+            .iter()
+            .filter(|t| t.price.is_finite())
+            .map(|t| t.price)
+            .fold(f64::INFINITY, f64::min);
+        let max_price = cluster
+            .iter()
+            .filter(|t| t.price.is_finite())
+            .map(|t| t.price)
+            .fold(f64::NEG_INFINITY, f64::max);
         report.events.push(SweepEvent {
-            start_ts, end_ts,
-            start_index: left, end_index: right,
+            start_ts,
+            end_ts,
+            start_index: left,
+            end_index: right,
             venue_count: venues.len(),
             print_count: cluster.len(),
             total_size,
             side,
-            min_price, max_price,
+            min_price,
+            max_price,
         });
         last_event_end = Some(end_ts);
         last_end = right as i64;
@@ -162,7 +187,8 @@ mod tests {
     fn t(ms: i64, price: f64, size: f64, venue: &str, side: SweepSide) -> RoutedTick {
         RoutedTick {
             ts: Utc.timestamp_millis_opt(ms).unwrap(),
-            price, size,
+            price,
+            size,
             venue: venue.into(),
             side,
         }
@@ -171,7 +197,10 @@ mod tests {
     #[test]
     fn empty_or_single_returns_empty() {
         assert!(detect(&[], &SweepConfig::default()).events.is_empty());
-        let r = detect(&[t(0, 100.0, 1000.0, "ARCA", SweepSide::Buy)], &SweepConfig::default());
+        let r = detect(
+            &[t(0, 100.0, 1000.0, "ARCA", SweepSide::Buy)],
+            &SweepConfig::default(),
+        );
         assert!(r.events.is_empty());
     }
 
@@ -179,10 +208,22 @@ mod tests {
     fn invalid_config_returns_empty() {
         let ticks = vec![t(0, 100.0, 500.0, "ARCA", SweepSide::Buy); 5];
         for cfg in [
-            SweepConfig { time_window_ms: 0, ..Default::default() },
-            SweepConfig { time_window_ms: -1, ..Default::default() },
-            SweepConfig { min_venues: 1, ..Default::default() },
-            SweepConfig { min_aggregate_size: 0.0, ..Default::default() },
+            SweepConfig {
+                time_window_ms: 0,
+                ..Default::default()
+            },
+            SweepConfig {
+                time_window_ms: -1,
+                ..Default::default()
+            },
+            SweepConfig {
+                min_venues: 1,
+                ..Default::default()
+            },
+            SweepConfig {
+                min_aggregate_size: 0.0,
+                ..Default::default()
+            },
         ] {
             assert!(detect(&ticks, &cfg).events.is_empty());
         }
@@ -191,9 +232,9 @@ mod tests {
     #[test]
     fn single_venue_doesnt_qualify() {
         // 5 prints in 100ms all on ARCA — not a multi-venue sweep.
-        let ticks: Vec<RoutedTick> = (0..5).map(|i|
-            t(i * 20, 100.0, 500.0, "ARCA", SweepSide::Buy)
-        ).collect();
+        let ticks: Vec<RoutedTick> = (0..5)
+            .map(|i| t(i * 20, 100.0, 500.0, "ARCA", SweepSide::Buy))
+            .collect();
         let r = detect(&ticks, &SweepConfig::default());
         assert!(r.events.is_empty());
     }
@@ -202,8 +243,8 @@ mod tests {
     fn multi_venue_burst_flagged() {
         // 3 venues, 1.5k aggregate, within 200ms — should fire.
         let ticks = vec![
-            t(0,   100.0, 600.0, "ARCA", SweepSide::Buy),
-            t(50,  100.1, 500.0, "NSDQ", SweepSide::Buy),
+            t(0, 100.0, 600.0, "ARCA", SweepSide::Buy),
+            t(50, 100.1, 500.0, "NSDQ", SweepSide::Buy),
             t(120, 100.2, 400.0, "BATS", SweepSide::Buy),
         ];
         let r = detect(&ticks, &SweepConfig::default());
@@ -216,8 +257,8 @@ mod tests {
     #[test]
     fn mixed_side_classified_as_mixed() {
         let ticks = vec![
-            t(0,   100.0, 600.0, "ARCA", SweepSide::Buy),
-            t(50,  100.0, 500.0, "NSDQ", SweepSide::Sell),
+            t(0, 100.0, 600.0, "ARCA", SweepSide::Buy),
+            t(50, 100.0, 500.0, "NSDQ", SweepSide::Sell),
             t(120, 100.0, 400.0, "BATS", SweepSide::Buy),
         ];
         let r = detect(&ticks, &SweepConfig::default());
@@ -228,8 +269,8 @@ mod tests {
     fn cluster_outside_time_window_doesnt_fire() {
         // 3 venues but spread over 2 seconds — beyond 500ms window.
         let ticks = vec![
-            t(0,    100.0, 600.0, "ARCA", SweepSide::Buy),
-            t(700,  100.0, 500.0, "NSDQ", SweepSide::Buy),
+            t(0, 100.0, 600.0, "ARCA", SweepSide::Buy),
+            t(700, 100.0, 500.0, "NSDQ", SweepSide::Buy),
             t(1500, 100.0, 400.0, "BATS", SweepSide::Buy),
         ];
         let r = detect(&ticks, &SweepConfig::default());
@@ -241,10 +282,10 @@ mod tests {
         // 4 ticks all within 200ms; should produce ONE event, not multiple
         // overlapping sweep events as the window slides.
         let ticks = vec![
-            t(0,   100.0, 500.0, "ARCA", SweepSide::Buy),
-            t(50,  100.1, 400.0, "NSDQ", SweepSide::Buy),
+            t(0, 100.0, 500.0, "ARCA", SweepSide::Buy),
+            t(50, 100.1, 400.0, "NSDQ", SweepSide::Buy),
             t(100, 100.2, 300.0, "BATS", SweepSide::Buy),
-            t(150, 100.3, 600.0, "IEX",  SweepSide::Buy),
+            t(150, 100.3, 600.0, "IEX", SweepSide::Buy),
         ];
         let r = detect(&ticks, &SweepConfig::default());
         assert_eq!(r.events.len(), 1, "expected coalesced single event");

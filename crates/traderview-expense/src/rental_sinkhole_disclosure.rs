@@ -157,8 +157,8 @@ fn check_fl(input: &RentalSinkholeDisclosureInput) -> RentalSinkholeDisclosureRe
         );
     }
 
-    let engineer_ok = !input.sinkhole_claim_made_by_seller
-        || input.engineer_or_geologist_report_completed;
+    let engineer_ok =
+        !input.sinkhole_claim_made_by_seller || input.engineer_or_geologist_report_completed;
 
     if input.sinkhole_claim_made_by_seller && !engineer_ok {
         violations.push(
@@ -278,10 +278,7 @@ mod tests {
         let r = check(&i);
         assert!(!r.disclosure_compliant);
         assert!(r.common_law_disclosure_required);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("Johnson v. Davis")));
+        assert!(r.violations.iter().any(|v| v.contains("Johnson v. Davis")));
     }
 
     #[test]

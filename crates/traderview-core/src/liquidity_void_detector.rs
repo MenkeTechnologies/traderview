@@ -19,7 +19,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub volume: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub volume: f64,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct LiquidityVoid {
@@ -37,11 +41,20 @@ pub fn detect(
     vol_multiplier: f64,
 ) -> Vec<LiquidityVoid> {
     let mut out = Vec::new();
-    if period < 2 || !range_multiplier.is_finite() || range_multiplier <= 0.0
-        || !vol_multiplier.is_finite() || vol_multiplier <= 0.0
-        || bars.len() < period + 1 { return out; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite()
-        || !b.volume.is_finite() || b.volume < 0.0) { return out; }
+    if period < 2
+        || !range_multiplier.is_finite()
+        || range_multiplier <= 0.0
+        || !vol_multiplier.is_finite()
+        || vol_multiplier <= 0.0
+        || bars.len() < period + 1
+    {
+        return out;
+    }
+    if bars.iter().any(|b| {
+        !b.high.is_finite() || !b.low.is_finite() || !b.volume.is_finite() || b.volume < 0.0
+    }) {
+        return out;
+    }
     let p_f = period as f64;
     for i in period..bars.len() {
         let win = &bars[i - period..i];
@@ -66,7 +79,13 @@ pub fn detect(
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, v: f64) -> Bar { Bar { high: h, low: l, volume: v } }
+    fn b(h: f64, l: f64, v: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            volume: v,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {

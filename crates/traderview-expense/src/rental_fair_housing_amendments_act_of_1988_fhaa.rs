@@ -393,10 +393,12 @@ mod tests {
         Input {
             property_type: PropertyType::CoveredHousingUnderFha,
             action_date_satisfies_general_effective_date: true,
-            compliance_aspect: ComplianceAspect::NondiscriminationOnAnyProtectedClassUnderSection3604,
+            compliance_aspect:
+                ComplianceAspect::NondiscriminationOnAnyProtectedClassUnderSection3604,
             protected_class_at_issue: ProtectedClassAtIssue::NoProtectedClassDiscriminationAtIssue,
             discriminatory_action_status: DiscriminatoryActionStatus::NoDiscriminatoryActionTaken,
-            covered_multifamily_status: CoveredMultifamilyStatus::NotCoveredMultifamilyDwellingExempt,
+            covered_multifamily_status:
+                CoveredMultifamilyStatus::NotCoveredMultifamilyDwellingExempt,
             design_and_construction_requirements_met: true,
             reasonable_accommodation_provided: true,
             reasonable_modification_permitted: true,
@@ -408,7 +410,10 @@ mod tests {
         let mut input = baseline_input();
         input.property_type = PropertyType::NotHousingOutsideFhaScope;
         let output = check(&input);
-        assert_eq!(output.mode, FhaaMode::NotApplicableNotHousingOutsideFhaScope);
+        assert_eq!(
+            output.mode,
+            FhaaMode::NotApplicableNotHousingOutsideFhaScope
+        );
     }
 
     #[test]
@@ -416,7 +421,10 @@ mod tests {
         let mut input = baseline_input();
         input.action_date_satisfies_general_effective_date = false;
         let output = check(&input);
-        assert_eq!(output.mode, FhaaMode::NotApplicablePreEffectiveDateMarch12_1989);
+        assert_eq!(
+            output.mode,
+            FhaaMode::NotApplicablePreEffectiveDateMarch12_1989
+        );
     }
 
     #[test]
@@ -435,7 +443,10 @@ mod tests {
         let mut input = baseline_input();
         input.property_type = PropertyType::MrsMurphyExemptUnderSection3603B2;
         let output = check(&input);
-        assert_eq!(output.mode, FhaaMode::NotApplicableMrsMurphyExemptUnderSection3603B2);
+        assert_eq!(
+            output.mode,
+            FhaaMode::NotApplicableMrsMurphyExemptUnderSection3603B2
+        );
     }
 
     #[test]
@@ -452,7 +463,10 @@ mod tests {
     #[test]
     fn no_discrimination_compliant() {
         let output = check(&baseline_input());
-        assert_eq!(output.mode, FhaaMode::CompliantNoDiscriminationOnAnyProtectedClass);
+        assert_eq!(
+            output.mode,
+            FhaaMode::CompliantNoDiscriminationOnAnyProtectedClass
+        );
     }
 
     #[test]
@@ -490,7 +504,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::ReasonableAccommodationUnderSection3604F3B;
         let output = check(&input);
-        assert_eq!(output.mode, FhaaMode::CompliantReasonableAccommodationProvided);
+        assert_eq!(
+            output.mode,
+            FhaaMode::CompliantReasonableAccommodationProvided
+        );
     }
 
     #[test]
@@ -510,7 +527,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::ReasonableModificationUnderSection3604F3A;
         let output = check(&input);
-        assert_eq!(output.mode, FhaaMode::CompliantReasonableModificationPermitted);
+        assert_eq!(
+            output.mode,
+            FhaaMode::CompliantReasonableModificationPermitted
+        );
     }
 
     #[test]
@@ -528,7 +548,8 @@ mod tests {
     #[test]
     fn design_and_construction_post_march_13_1991_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::DesignAndConstructionRequirementsUnderSection3604F3C;
+        input.compliance_aspect =
+            ComplianceAspect::DesignAndConstructionRequirementsUnderSection3604F3C;
         input.covered_multifamily_status =
             CoveredMultifamilyStatus::CoveredMultifamilyDwellingFirstOccupancyAfterMarch13_1991;
         let output = check(&input);
@@ -541,7 +562,8 @@ mod tests {
     #[test]
     fn design_and_construction_post_march_13_1991_not_met_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::DesignAndConstructionRequirementsUnderSection3604F3C;
+        input.compliance_aspect =
+            ComplianceAspect::DesignAndConstructionRequirementsUnderSection3604F3C;
         input.covered_multifamily_status =
             CoveredMultifamilyStatus::CoveredMultifamilyDwellingFirstOccupancyAfterMarch13_1991;
         input.design_and_construction_requirements_met = false;
@@ -555,25 +577,34 @@ mod tests {
     #[test]
     fn design_and_construction_pre_march_13_1991_not_applicable() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::DesignAndConstructionRequirementsUnderSection3604F3C;
+        input.compliance_aspect =
+            ComplianceAspect::DesignAndConstructionRequirementsUnderSection3604F3C;
         input.covered_multifamily_status =
             CoveredMultifamilyStatus::CoveredMultifamilyDwellingFirstOccupancyOnOrBeforeMarch13_1991PreEffectiveDate;
         let output = check(&input);
-        assert_eq!(output.mode, FhaaMode::NotApplicablePreEffectiveDateMarch12_1989);
+        assert_eq!(
+            output.mode,
+            FhaaMode::NotApplicablePreEffectiveDateMarch12_1989
+        );
     }
 
     #[test]
     fn familial_status_protections_applied_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::FamilialStatusProtectionsForFamiliesWithChildrenUnder18;
+        input.compliance_aspect =
+            ComplianceAspect::FamilialStatusProtectionsForFamiliesWithChildrenUnder18;
         let output = check(&input);
-        assert_eq!(output.mode, FhaaMode::CompliantFamilialStatusProtectionsApplied);
+        assert_eq!(
+            output.mode,
+            FhaaMode::CompliantFamilialStatusProtectionsApplied
+        );
     }
 
     #[test]
     fn familial_status_discrimination_under_compliance_aspect_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::FamilialStatusProtectionsForFamiliesWithChildrenUnder18;
+        input.compliance_aspect =
+            ComplianceAspect::FamilialStatusProtectionsForFamiliesWithChildrenUnder18;
         input.discriminatory_action_status =
             DiscriminatoryActionStatus::DiscriminatoryActionTakenAgainstProtectedClass;
         let output = check(&input);

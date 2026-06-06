@@ -361,7 +361,10 @@ mod tests {
         let mut input = baseline_input();
         input.property_type = PropertyType::PartnershipInterestUnderSubchapterK;
         let output = check(&input);
-        assert_eq!(output.mode, Section1012Mode::NotApplicablePropertyUnderSubchapterCOrK);
+        assert_eq!(
+            output.mode,
+            Section1012Mode::NotApplicablePropertyUnderSubchapterCOrK
+        );
     }
 
     #[test]
@@ -369,7 +372,10 @@ mod tests {
         let mut input = baseline_input();
         input.basis_method_elected = BasisMethodElected::LifoMethodNotAllowedForSecurities;
         let output = check(&input);
-        assert_eq!(output.mode, Section1012Mode::ViolationLifoMethodAppliedToSecurity);
+        assert_eq!(
+            output.mode,
+            Section1012Mode::ViolationLifoMethodAppliedToSecurity
+        );
     }
 
     #[test]
@@ -384,8 +390,10 @@ mod tests {
     #[test]
     fn specific_identification_with_confirmation_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SpecificIdentificationOrFifoDefaultUnderTreasReg1_1012_1C;
-        input.basis_method_elected = BasisMethodElected::SpecificIdentificationUnderTreasReg1_1012_1C;
+        input.compliance_aspect =
+            ComplianceAspect::SpecificIdentificationOrFifoDefaultUnderTreasReg1_1012_1C;
+        input.basis_method_elected =
+            BasisMethodElected::SpecificIdentificationUnderTreasReg1_1012_1C;
         input.specific_identification_made_at_time_of_sale = true;
         input.written_confirmation_of_identification_received = true;
         let output = check(&input);
@@ -398,7 +406,8 @@ mod tests {
     #[test]
     fn fifo_default_when_no_specific_identification_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SpecificIdentificationOrFifoDefaultUnderTreasReg1_1012_1C;
+        input.compliance_aspect =
+            ComplianceAspect::SpecificIdentificationOrFifoDefaultUnderTreasReg1_1012_1C;
         input.basis_method_elected = BasisMethodElected::FifoDefaultWhenNoSpecificIdentification;
         let output = check(&input);
         assert_eq!(
@@ -410,8 +419,10 @@ mod tests {
     #[test]
     fn specific_identification_without_confirmation_falls_to_fifo_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SpecificIdentificationOrFifoDefaultUnderTreasReg1_1012_1C;
-        input.basis_method_elected = BasisMethodElected::SpecificIdentificationUnderTreasReg1_1012_1C;
+        input.compliance_aspect =
+            ComplianceAspect::SpecificIdentificationOrFifoDefaultUnderTreasReg1_1012_1C;
+        input.basis_method_elected =
+            BasisMethodElected::SpecificIdentificationUnderTreasReg1_1012_1C;
         input.specific_identification_made_at_time_of_sale = true;
         input.written_confirmation_of_identification_received = false;
         let output = check(&input);
@@ -425,8 +436,7 @@ mod tests {
     fn average_cost_for_ric_mutual_fund_compliant() {
         let mut input = baseline_input();
         input.property_type = PropertyType::RegulatedInvestmentCompanyMutualFundShares;
-        input.basis_method_elected =
-            BasisMethodElected::AverageCostSingleCategoryForRicOrDripStock;
+        input.basis_method_elected = BasisMethodElected::AverageCostSingleCategoryForRicOrDripStock;
         input.compliance_aspect = ComplianceAspect::AverageCostMethodForRicOrDripUnderSection1012C2;
         let output = check(&input);
         assert_eq!(
@@ -439,8 +449,7 @@ mod tests {
     fn average_cost_for_drip_stock_compliant() {
         let mut input = baseline_input();
         input.property_type = PropertyType::DividendReinvestmentPlanStock;
-        input.basis_method_elected =
-            BasisMethodElected::AverageCostSingleCategoryForRicOrDripStock;
+        input.basis_method_elected = BasisMethodElected::AverageCostSingleCategoryForRicOrDripStock;
         input.compliance_aspect = ComplianceAspect::AverageCostMethodForRicOrDripUnderSection1012C2;
         let output = check(&input);
         assert_eq!(
@@ -453,8 +462,7 @@ mod tests {
     fn average_cost_for_non_ric_non_drip_security_violation() {
         let mut input = baseline_input();
         input.property_type = PropertyType::StockNonRicEquitySecurity;
-        input.basis_method_elected =
-            BasisMethodElected::AverageCostSingleCategoryForRicOrDripStock;
+        input.basis_method_elected = BasisMethodElected::AverageCostSingleCategoryForRicOrDripStock;
         input.compliance_aspect = ComplianceAspect::AverageCostMethodForRicOrDripUnderSection1012C2;
         let output = check(&input);
         assert_eq!(
@@ -477,7 +485,8 @@ mod tests {
     #[test]
     fn pre_2012_post_2012_ric_separate_accounts_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::Pre2012Post2012RicSeparateAccountUnderSection1012C3;
+        input.compliance_aspect =
+            ComplianceAspect::Pre2012Post2012RicSeparateAccountUnderSection1012C3;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -488,7 +497,8 @@ mod tests {
     #[test]
     fn pre_2012_post_2012_ric_not_separate_accounts_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::Pre2012Post2012RicSeparateAccountUnderSection1012C3;
+        input.compliance_aspect =
+            ComplianceAspect::Pre2012Post2012RicSeparateAccountUnderSection1012C3;
         input.pre_2012_and_post_2012_ric_stock_in_separate_accounts = false;
         let output = check(&input);
         assert_eq!(
@@ -515,7 +525,8 @@ mod tests {
     fn real_property_taxes_excluded_from_cost_compliant() {
         let mut input = baseline_input();
         input.property_type = PropertyType::RealEstate;
-        input.compliance_aspect = ComplianceAspect::RealPropertyTaxesExclusionUnderSection1012BAndSection164D;
+        input.compliance_aspect =
+            ComplianceAspect::RealPropertyTaxesExclusionUnderSection1012BAndSection164D;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -527,7 +538,8 @@ mod tests {
     fn real_property_taxes_included_in_cost_violation() {
         let mut input = baseline_input();
         input.property_type = PropertyType::RealEstate;
-        input.compliance_aspect = ComplianceAspect::RealPropertyTaxesExclusionUnderSection1012BAndSection164D;
+        input.compliance_aspect =
+            ComplianceAspect::RealPropertyTaxesExclusionUnderSection1012BAndSection164D;
         input.real_property_taxes_included_in_cost = true;
         let output = check(&input);
         assert_eq!(
@@ -557,7 +569,10 @@ mod tests {
         assert_eq!(IRC_1012_DRIP_EFFECTIVE_DATE_MONTH, 1);
         assert_eq!(IRC_1012_DRIP_EFFECTIVE_DATE_DAY, 1);
         assert_eq!(IRC_1012_STOCK_COST_BASIS_REPORTING_START_YEAR, 2011);
-        assert_eq!(IRC_1012_MUTUAL_FUND_DRIP_COST_BASIS_REPORTING_START_YEAR, 2012);
+        assert_eq!(
+            IRC_1012_MUTUAL_FUND_DRIP_COST_BASIS_REPORTING_START_YEAR,
+            2012
+        );
         assert_eq!(IRC_1012_DEBT_OPTIONS_COST_BASIS_REPORTING_START_YEAR, 2014);
         assert_eq!(IRC_1012_BASIS_POINT_DENOMINATOR, 10_000);
     }

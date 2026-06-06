@@ -53,7 +53,9 @@ pub fn compute(bars: &[OhlcBar], period: usize) -> ChopReport {
         };
     }
     let tr = |i: usize| -> f64 {
-        if i == 0 { bars[0].high - bars[0].low } else {
+        if i == 0 {
+            bars[0].high - bars[0].low
+        } else {
             let pc = bars[i - 1].close;
             let a = bars[i].high - bars[i].low;
             let b = (bars[i].high - pc).abs();
@@ -66,8 +68,14 @@ pub fn compute(bars: &[OhlcBar], period: usize) -> ChopReport {
     for i in period..n {
         let window_start = i + 1 - period;
         let sum_tr: f64 = (window_start..=i).map(tr).sum();
-        let hi = bars[window_start..=i].iter().map(|b| b.high).fold(f64::NEG_INFINITY, f64::max);
-        let lo = bars[window_start..=i].iter().map(|b| b.low).fold(f64::INFINITY, f64::min);
+        let hi = bars[window_start..=i]
+            .iter()
+            .map(|b| b.high)
+            .fold(f64::NEG_INFINITY, f64::max);
+        let lo = bars[window_start..=i]
+            .iter()
+            .map(|b| b.low)
+            .fold(f64::INFINITY, f64::min);
         let env = hi - lo;
         if env <= 0.0 || sum_tr <= 0.0 {
             // Degenerate — leave as None.
@@ -87,14 +95,25 @@ pub fn compute(bars: &[OhlcBar], period: usize) -> ChopReport {
         Some(v) => format!("CI = {v:.1} → {:?}", regime),
         None => "no value yet".into(),
     };
-    ChopReport { series: out, latest, regime, note }
+    ChopReport {
+        series: out,
+        latest,
+        regime,
+        note,
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> OhlcBar { OhlcBar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> OhlcBar {
+        OhlcBar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn too_few_bars_returns_default() {
@@ -114,10 +133,12 @@ mod tests {
     fn monotonic_trend_gives_low_ci() {
         // Strong uptrend: bars step from 100 → 130. Sum-TR ≈ envelope → ratio ≈ 1
         // → CI ≈ 0 (very trending).
-        let bars: Vec<OhlcBar> = (0..30).map(|i| {
-            let p = 100.0 + i as f64;
-            b(p + 0.5, p - 0.5, p + 0.3)
-        }).collect();
+        let bars: Vec<OhlcBar> = (0..30)
+            .map(|i| {
+                let p = 100.0 + i as f64;
+                b(p + 0.5, p - 0.5, p + 0.3)
+            })
+            .collect();
         let r = compute(&bars, 14);
         let v = r.latest.expect("populated");
         assert!(v < 50.0, "trending series CI should be low, got {v}");
@@ -128,10 +149,12 @@ mod tests {
     fn flat_oscillation_gives_high_ci() {
         // Oscillates ±0.5 around 100. Sum-TR builds up while envelope stays narrow
         // → ratio large → CI ≈ 100.
-        let bars: Vec<OhlcBar> = (0..30).map(|i| {
-            let p = if i % 2 == 0 { 100.5 } else { 99.5 };
-            b(p + 0.1, p - 0.1, p)
-        }).collect();
+        let bars: Vec<OhlcBar> = (0..30)
+            .map(|i| {
+                let p = if i % 2 == 0 { 100.5 } else { 99.5 };
+                b(p + 0.1, p - 0.1, p)
+            })
+            .collect();
         let r = compute(&bars, 14);
         let v = r.latest.expect("populated");
         assert!(v > 50.0, "choppy series CI should be high, got {v}");

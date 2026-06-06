@@ -279,8 +279,8 @@ mod tests {
 
     fn input() -> Section1368Input {
         Section1368Input {
-            distribution_cents: 5_000_000,        // $50K
-            beginning_aaa_cents: 10_000_000,      // $100K
+            distribution_cents: 5_000_000,   // $50K
+            beginning_aaa_cents: 10_000_000, // $100K
             accumulated_e_and_p_cents: 0,
             beginning_stock_basis_cents: 20_000_000, // $200K
             net_positive_adjustments_for_year_cents: 0,
@@ -340,13 +340,13 @@ mod tests {
     #[test]
     fn with_e_and_p_aaa_exhausted_then_dividend() {
         let mut b = input();
-        b.distribution_cents = 15_000_000;       // $150K
-        b.beginning_aaa_cents = 5_000_000;        // $50K AAA
-        b.accumulated_e_and_p_cents = 8_000_000;  // $80K E&P
-        // Step 1: $50K from AAA. Remaining: $100K.
-        // Step 2: $80K dividend. Remaining: $20K.
-        // Step 3: $20K tax-free from basis (basis was $200K - $50K = $150K).
-        // Step 4: $0 capital gain.
+        b.distribution_cents = 15_000_000; // $150K
+        b.beginning_aaa_cents = 5_000_000; // $50K AAA
+        b.accumulated_e_and_p_cents = 8_000_000; // $80K E&P
+                                                 // Step 1: $50K from AAA. Remaining: $100K.
+                                                 // Step 2: $80K dividend. Remaining: $20K.
+                                                 // Step 3: $20K tax-free from basis (basis was $200K - $50K = $150K).
+                                                 // Step 4: $0 capital gain.
         let r = compute(&b);
         assert_eq!(r.tax_free_from_aaa_cents, 5_000_000);
         assert_eq!(r.dividend_from_e_and_p_cents, 8_000_000);
@@ -360,14 +360,14 @@ mod tests {
     #[test]
     fn with_e_and_p_exhausts_all_four_paths_capital_gain() {
         let mut b = input();
-        b.distribution_cents = 100_000_000;       // $1M huge
-        b.beginning_aaa_cents = 5_000_000;        // $50K
-        b.accumulated_e_and_p_cents = 8_000_000;  // $80K
+        b.distribution_cents = 100_000_000; // $1M huge
+        b.beginning_aaa_cents = 5_000_000; // $50K
+        b.accumulated_e_and_p_cents = 8_000_000; // $80K
         b.beginning_stock_basis_cents = 10_000_000; // $100K
-        // AAA: $50K, basis decreases to $50K. Remaining $950K.
-        // Dividend: $80K. Remaining $870K.
-        // Basis: $50K applied. Remaining $820K.
-        // Capital gain: $820K.
+                                                    // AAA: $50K, basis decreases to $50K. Remaining $950K.
+                                                    // Dividend: $80K. Remaining $870K.
+                                                    // Basis: $50K applied. Remaining $820K.
+                                                    // Capital gain: $820K.
         let r = compute(&b);
         assert_eq!(r.tax_free_from_aaa_cents, 5_000_000);
         assert_eq!(r.dividend_from_e_and_p_cents, 8_000_000);
@@ -381,9 +381,9 @@ mod tests {
     #[test]
     fn election_e_and_p_first_reorders() {
         let mut b = input();
-        b.distribution_cents = 10_000_000;        // $100K
-        b.beginning_aaa_cents = 3_000_000;        // $30K
-        b.accumulated_e_and_p_cents = 4_000_000;  // $40K
+        b.distribution_cents = 10_000_000; // $100K
+        b.beginning_aaa_cents = 3_000_000; // $30K
+        b.accumulated_e_and_p_cents = 4_000_000; // $40K
         b.elects_e_and_p_first_under_1368e3 = true;
         // Election order: $40K dividend → $30K AAA → $30K basis → $0 cap gain.
         let r = compute(&b);
@@ -410,8 +410,8 @@ mod tests {
     #[test]
     fn net_negative_adjustment_ignored_for_distribution() {
         let mut b = input();
-        b.distribution_cents = 8_000_000;            // $80K
-        b.beginning_aaa_cents = 10_000_000;          // $100K
+        b.distribution_cents = 8_000_000; // $80K
+        b.beginning_aaa_cents = 10_000_000; // $100K
         b.accumulated_e_and_p_cents = 5_000_000;
         b.net_positive_adjustments_for_year_cents = 3_000_000;
         b.net_negative_adjustments_for_year_cents = 8_000_000;
@@ -534,7 +534,10 @@ mod tests {
         assert!(!r_default.e_and_p_first_election_engaged);
         assert!(r_election.e_and_p_first_election_engaged);
         // Both produce same dividend amount in this specific case.
-        assert_eq!(r_default.dividend_from_e_and_p_cents, r_election.dividend_from_e_and_p_cents);
+        assert_eq!(
+            r_default.dividend_from_e_and_p_cents,
+            r_election.dividend_from_e_and_p_cents
+        );
     }
 
     // ── Citation + sibling cluster ────────────────────────────

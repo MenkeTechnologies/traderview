@@ -166,13 +166,14 @@ pub fn compute(input: &Section6694Input) -> Section6694Result {
     };
 
     // § 6694(a)(3) — reasonable-cause exception.
-    let reasonable_cause_excused_6694a = unreasonable_position_engaged
-        && input.reasonable_cause_and_good_faith;
+    let reasonable_cause_excused_6694a =
+        unreasonable_position_engaged && input.reasonable_cause_and_good_faith;
 
     // § 6694(a) penalty calc.
-    let section_6694a_penalty_cents = if unreasonable_position_engaged && !reasonable_cause_excused_6694a {
-        let fee_based = preparer_fee.saturating_mul(SECTION_6694A_PERCENT_BPS)
-            / BPS_DENOMINATOR;
+    let section_6694a_penalty_cents = if unreasonable_position_engaged
+        && !reasonable_cause_excused_6694a
+    {
+        let fee_based = preparer_fee.saturating_mul(SECTION_6694A_PERCENT_BPS) / BPS_DENOMINATOR;
         fee_based.max(SECTION_6694A_MIN_CENTS)
     } else {
         0
@@ -183,8 +184,7 @@ pub fn compute(input: &Section6694Input) -> Section6694Result {
         && (input.willful_understatement || input.reckless_or_intentional_disregard);
 
     let section_6694b_penalty_cents = if willful_reckless_engaged {
-        let fee_based = preparer_fee.saturating_mul(SECTION_6694B_PERCENT_BPS)
-            / BPS_DENOMINATOR;
+        let fee_based = preparer_fee.saturating_mul(SECTION_6694B_PERCENT_BPS) / BPS_DENOMINATOR;
         fee_based.max(SECTION_6694B_MIN_CENTS)
     } else {
         0
@@ -208,7 +208,11 @@ pub fn compute(input: &Section6694Input) -> Section6694Result {
             section_6694a_penalty_cents,
             preparer_fee,
             preparer_fee.saturating_mul(SECTION_6694A_PERCENT_BPS) / BPS_DENOMINATOR,
-            if reasonable_cause_excused_6694a { "ENGAGED but failed to defeat trigger" } else { "NOT" },
+            if reasonable_cause_excused_6694a {
+                "ENGAGED but failed to defeat trigger"
+            } else {
+                "NOT"
+            },
         ));
     }
     if section_6694b_penalty_cents > 0 {
@@ -229,23 +233,47 @@ pub fn compute(input: &Section6694Input) -> Section6694Result {
                 "§ 6694(a)(2)(C) tax-shelter / § 6662A reportable-transaction path. \
                  Required standard: MORE LIKELY THAN NOT sustained on the merits. \
                  Standard {}: position {} qualify.",
-                if input.position_more_likely_than_not_sustained { "MET" } else { "NOT MET" },
-                if input.position_more_likely_than_not_sustained { "DOES" } else { "does NOT" },
+                if input.position_more_likely_than_not_sustained {
+                    "MET"
+                } else {
+                    "NOT MET"
+                },
+                if input.position_more_likely_than_not_sustained {
+                    "DOES"
+                } else {
+                    "does NOT"
+                },
             ));
         } else if !input.position_was_disclosed {
             notes.push(format!(
                 "§ 6694(a)(2)(A) — non-disclosed position path. Required: SUBSTANTIAL \
                  AUTHORITY (35-40% probability). Substantial authority {}: position {} \
                  qualify.",
-                if input.position_has_substantial_authority { "PRESENT" } else { "ABSENT" },
-                if input.position_has_substantial_authority { "DOES" } else { "does NOT" },
+                if input.position_has_substantial_authority {
+                    "PRESENT"
+                } else {
+                    "ABSENT"
+                },
+                if input.position_has_substantial_authority {
+                    "DOES"
+                } else {
+                    "does NOT"
+                },
             ));
         } else {
             notes.push(format!(
                 "§ 6694(a)(2)(B) — disclosed-position path. Required: REASONABLE BASIS \
                  (≥ 20% probability). Reasonable basis {}: position {} qualify.",
-                if input.position_has_reasonable_basis { "PRESENT" } else { "ABSENT" },
-                if input.position_has_reasonable_basis { "DOES" } else { "does NOT" },
+                if input.position_has_reasonable_basis {
+                    "PRESENT"
+                } else {
+                    "ABSENT"
+                },
+                if input.position_has_reasonable_basis {
+                    "DOES"
+                } else {
+                    "does NOT"
+                },
             ));
         }
     } else {
@@ -271,9 +299,7 @@ pub fn compute(input: &Section6694Input) -> Section6694Result {
         notes.push(format!(
             "§ 6694(b)(3) NO-STACKING COORDINATION engaged. Both § 6694(a) ({} cents) and \
              § 6694(b) ({} cents) trigger; total penalty = max of the two = {} cents.",
-            section_6694a_penalty_cents,
-            section_6694b_penalty_cents,
-            total_preparer_penalty_cents,
+            section_6694a_penalty_cents, section_6694b_penalty_cents, total_preparer_penalty_cents,
         ));
     }
 
@@ -509,8 +535,8 @@ mod tests {
         b.position_has_substantial_authority = false; // engages (a)
         b.willful_understatement = true; // engages (b)
         b.preparer_fee_cents = 10_000_000; // $100K fee
-        // (a) = $100K × 50% = $50K; (b) = $100K × 75% = $75K.
-        // Total = max = $75K.
+                                           // (a) = $100K × 50% = $50K; (b) = $100K × 75% = $75K.
+                                           // Total = max = $75K.
         let r = compute(&b);
         assert_eq!(r.section_6694a_penalty_cents, 5_000_000);
         assert_eq!(r.section_6694b_penalty_cents, 7_500_000);
@@ -522,7 +548,10 @@ mod tests {
         let mut b = input();
         b.position_has_substantial_authority = false;
         let r = compute(&b);
-        assert_eq!(r.total_preparer_penalty_cents, r.section_6694a_penalty_cents);
+        assert_eq!(
+            r.total_preparer_penalty_cents,
+            r.section_6694a_penalty_cents
+        );
     }
 
     #[test]
@@ -530,7 +559,10 @@ mod tests {
         let mut b = input();
         b.willful_understatement = true;
         let r = compute(&b);
-        assert_eq!(r.total_preparer_penalty_cents, r.section_6694b_penalty_cents);
+        assert_eq!(
+            r.total_preparer_penalty_cents,
+            r.section_6694b_penalty_cents
+        );
     }
 
     // ── Multi-regime invariants ───────────────────────────────

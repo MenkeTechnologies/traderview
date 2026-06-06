@@ -133,7 +133,13 @@ pub fn check(input: &Section245aInput) -> Section245aResult {
              under § 245 (limited DRD for dividends from 10%-or-more foreign subsidiary).",
             SECTION_245A_EFFECTIVE_YEAR
         ));
-        return empty_result(Severity::PreEffectiveDate, input, actions, notes, "26 U.S.C. § 245A; Pub. L. 115-97 § 14101");
+        return empty_result(
+            Severity::PreEffectiveDate,
+            input,
+            actions,
+            notes,
+            "26 U.S.C. § 245A; Pub. L. 115-97 § 14101",
+        );
     }
 
     if !matches!(
@@ -196,8 +202,7 @@ pub fn check(input: &Section245aInput) -> Section245aResult {
              at least {} days). Dividend taxed at ordinary corporate rate without § 245A \
              100% DRD; FTC under § 901 / § 904 remains available since § 245A(d) \
              disallowance only attaches to DRD-eligible dividends.",
-            input.days_held_in_731_day_window,
-            SECTION_246C_HOLDING_PERIOD_DAYS
+            input.days_held_in_731_day_window, SECTION_246C_HOLDING_PERIOD_DAYS
         ));
         return empty_result(
             Severity::HoldingPeriodNotSatisfied,
@@ -243,8 +248,8 @@ pub fn check(input: &Section245aInput) -> Section245aResult {
         ));
     }
 
-    let deduction: u64 = (u128::from(foreign_source) * u128::from(SECTION_245A_DRD_RATE_BPS)
-        / 10_000) as u64;
+    let deduction: u64 =
+        (u128::from(foreign_source) * u128::from(SECTION_245A_DRD_RATE_BPS) / 10_000) as u64;
     let taxable_after_deduction: u64 = total.saturating_sub(deduction);
 
     let severity = if us_source == 0 && foreign_source == total {
@@ -383,7 +388,10 @@ mod tests {
         let mut i = baseline();
         i.foreign_corp_type = ForeignCorpType::PficNotCfcExcludedFromSfc;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::NotSpecifiedTenPercentOwnedForeignCorp));
+        assert!(matches!(
+            r.severity,
+            Severity::NotSpecifiedTenPercentOwnedForeignCorp
+        ));
         assert!(r.notes.iter().any(|n| n.contains("section_1297")));
     }
 
@@ -392,7 +400,10 @@ mod tests {
         let mut i = baseline();
         i.foreign_corp_type = ForeignCorpType::LessThanTenPercentNotSfc;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::NotSpecifiedTenPercentOwnedForeignCorp));
+        assert!(matches!(
+            r.severity,
+            Severity::NotSpecifiedTenPercentOwnedForeignCorp
+        ));
         assert!(r.notes.iter().any(|n| n.contains("Portfolio dividend")));
     }
 
@@ -418,7 +429,10 @@ mod tests {
         let mut i = baseline();
         i.is_hybrid_dividend = true;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::HybridDividendRecharacterizedNoDeduction));
+        assert!(matches!(
+            r.severity,
+            Severity::HybridDividendRecharacterizedNoDeduction
+        ));
         assert_eq!(r.deduction_cents, 0);
         assert_eq!(
             r.taxable_dividend_after_deduction_cents,
@@ -447,7 +461,10 @@ mod tests {
         i.foreign_source_portion_cents = 70_000_000_00;
         i.us_source_portion_cents = 30_000_000_00;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::PartialDeductionForeignSourcePortionOnly));
+        assert!(matches!(
+            r.severity,
+            Severity::PartialDeductionForeignSourcePortionOnly
+        ));
         assert_eq!(r.deduction_cents, 70_000_000_00);
         assert_eq!(r.taxable_dividend_after_deduction_cents, 30_000_000_00);
     }
@@ -456,16 +473,28 @@ mod tests {
     fn ftc_disallowed_pinned_in_action() {
         let i = baseline();
         let r = check(&i);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("§ 245A(d)")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("permanent book-tax")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("§ 245A(d)")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("permanent book-tax")));
     }
 
     #[test]
     fn action_references_form_8993_and_form_1120_schedule_c() {
         let i = baseline();
         let r = check(&i);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Form 8993")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Schedule C")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Form 8993")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Schedule C")));
     }
 
     #[test]
@@ -508,7 +537,10 @@ mod tests {
         i.us_source_portion_cents = 100_000_000_00;
         let r = check(&i);
         assert_eq!(r.deduction_cents, 0);
-        assert!(matches!(r.severity, Severity::PartialDeductionForeignSourcePortionOnly));
+        assert!(matches!(
+            r.severity,
+            Severity::PartialDeductionForeignSourcePortionOnly
+        ));
     }
 
     #[test]

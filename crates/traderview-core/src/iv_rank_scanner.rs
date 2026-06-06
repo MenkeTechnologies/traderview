@@ -54,9 +54,15 @@ pub fn analyze(symbols: &[SymbolIv]) -> IvRankReport {
         let mut min_iv = f64::INFINITY;
         let mut max_iv = f64::NEG_INFINITY;
         for &v in &s.history {
-            if !v.is_finite() { continue; }
-            if v < min_iv { min_iv = v; }
-            if v > max_iv { max_iv = v; }
+            if !v.is_finite() {
+                continue;
+            }
+            if v < min_iv {
+                min_iv = v;
+            }
+            if v > max_iv {
+                max_iv = v;
+            }
         }
         if !min_iv.is_finite() || !max_iv.is_finite() {
             continue;
@@ -74,7 +80,8 @@ pub fn analyze(symbols: &[SymbolIv]) -> IvRankReport {
             symbol: s.symbol.clone(),
             current_iv: s.current_iv,
             iv_rank_pct: rank,
-            min_iv, max_iv,
+            min_iv,
+            max_iv,
         });
     }
     // Sort by IV-rank descending so the dashboard shows highest first.
@@ -99,7 +106,11 @@ mod tests {
     use super::*;
 
     fn s(sym: &str, current: f64, hist: Vec<f64>) -> SymbolIv {
-        SymbolIv { symbol: sym.into(), current_iv: current, history: hist }
+        SymbolIv {
+            symbol: sym.into(),
+            current_iv: current,
+            history: hist,
+        }
     }
 
     #[test]
@@ -141,9 +152,21 @@ mod tests {
     #[test]
     fn high_iv_candidates_take_top_quartile() {
         let inputs = vec![
-            s("HIGH", 0.95, (0..50).map(|i| 0.1 + i as f64 * 0.02).collect()),    // current at max
-            s("LOW",  0.10, (0..50).map(|i| 0.1 + i as f64 * 0.02).collect()),    // current at min
-            s("MID",  0.50, (0..50).map(|i| 0.1 + i as f64 * 0.02).collect()),    // middle
+            s(
+                "HIGH",
+                0.95,
+                (0..50).map(|i| 0.1 + i as f64 * 0.02).collect(),
+            ), // current at max
+            s(
+                "LOW",
+                0.10,
+                (0..50).map(|i| 0.1 + i as f64 * 0.02).collect(),
+            ), // current at min
+            s(
+                "MID",
+                0.50,
+                (0..50).map(|i| 0.1 + i as f64 * 0.02).collect(),
+            ), // middle
         ];
         let r = analyze(&inputs);
         assert!(r.high_iv_candidates.contains(&"HIGH".to_string()));
@@ -154,9 +177,9 @@ mod tests {
     #[test]
     fn output_sorted_by_iv_rank_descending() {
         let inputs = vec![
-            s("A", 0.1, vec![0.1, 0.5]),    // rank 0
-            s("B", 0.5, vec![0.1, 0.5]),    // rank 100
-            s("C", 0.3, vec![0.1, 0.5]),    // rank 50
+            s("A", 0.1, vec![0.1, 0.5]), // rank 0
+            s("B", 0.5, vec![0.1, 0.5]), // rank 100
+            s("C", 0.3, vec![0.1, 0.5]), // rank 50
         ];
         let r = analyze(&inputs);
         let order: Vec<_> = r.entries.iter().map(|e| e.symbol.as_str()).collect();

@@ -163,12 +163,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // DefaultLeaseGoverns — 46 other states + DC.
     let default_states = [
-        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE",
-        "FL", "GA", "ID", "IN", "IA", "KS", "KY", "LA",
-        "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT",
-        "NE", "NV", "NH", "NM", "NY", "NC", "ND", "OH",
-        "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX",
-        "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "FL", "GA", "ID", "IN", "IA", "KS", "KY",
+        "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NM", "NY", "NC",
+        "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV",
+        "WI", "WY",
     ];
     for code in default_states {
         m.insert(
@@ -253,9 +251,8 @@ pub fn check(input: &EvChargerInput) -> EvChargerResult {
         !rule.new_construction_only || input.building_is_new_construction;
     let multi_unit_gate_ok =
         !rule.multi_unit_residential_required || input.building_is_multi_unit_residential;
-    let lease_date_gate_ok =
-        matches!(rule.regime, EvChargerRegime::DefaultLeaseGoverns)
-            || input.lease_signed_after_effective_date;
+    let lease_date_gate_ok = matches!(rule.regime, EvChargerRegime::DefaultLeaseGoverns)
+        || input.lease_signed_after_effective_date;
 
     let applies = !matches!(rule.regime, EvChargerRegime::DefaultLeaseGoverns)
         && new_construction_gate_ok
@@ -599,19 +596,28 @@ mod tests {
 
     #[test]
     fn ca_only_insurance_required_state() {
-        let count = RULES.iter().filter(|(_, r)| r.liability_insurance_required).count();
+        let count = RULES
+            .iter()
+            .filter(|(_, r)| r.liability_insurance_required)
+            .count();
         assert_eq!(count, 1, "only CA requires liability insurance");
     }
 
     #[test]
     fn hi_only_lease_void_state() {
-        let count = RULES.iter().filter(|(_, r)| r.lease_restrictions_void).count();
+        let count = RULES
+            .iter()
+            .filter(|(_, r)| r.lease_restrictions_void)
+            .count();
         assert_eq!(count, 1, "only HI voids lease restrictions");
     }
 
     #[test]
     fn il_only_new_construction_state() {
-        let count = RULES.iter().filter(|(_, r)| r.new_construction_only).count();
+        let count = RULES
+            .iter()
+            .filter(|(_, r)| r.new_construction_only)
+            .count();
         assert_eq!(count, 1, "only IL restricts to new construction");
     }
 

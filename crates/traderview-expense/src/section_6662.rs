@@ -203,14 +203,12 @@ pub fn compute(input: &Section6662Input) -> Section6662Result {
         penalty_rate_bp
     };
 
-    let penalty = ((input.underpayment_dollars.max(0) as i128) * (final_rate_bp as i128) / 10_000)
-        as i64;
+    let penalty =
+        ((input.underpayment_dollars.max(0) as i128) * (final_rate_bp as i128) / 10_000) as i64;
 
     let category_label = match triggered {
         MisconductCategory::NegligenceOrDisregard => "§6662(b)(1) negligence or disregard",
-        MisconductCategory::SubstantialUnderstatement => {
-            "§6662(b)(2) substantial understatement"
-        }
+        MisconductCategory::SubstantialUnderstatement => "§6662(b)(2) substantial understatement",
         MisconductCategory::SubstantialValuationMisstatement => {
             "§6662(b)(3) substantial valuation misstatement"
         }
@@ -326,7 +324,10 @@ mod tests {
         i.underpayment_dollars = 10_000; // below threshold
         i.negligence_or_disregard = true;
         let r = compute(&i);
-        assert_eq!(r.triggered_category, MisconductCategory::NegligenceOrDisregard);
+        assert_eq!(
+            r.triggered_category,
+            MisconductCategory::NegligenceOrDisregard
+        );
         assert_eq!(r.penalty_rate_bp, 2000);
         assert_eq!(r.penalty_dollars, 2_000);
     }
@@ -336,7 +337,10 @@ mod tests {
         // $100k underpayment > $50k threshold.
         let r = compute(&base());
         assert!(r.substantial_understatement_triggered);
-        assert_eq!(r.triggered_category, MisconductCategory::SubstantialUnderstatement);
+        assert_eq!(
+            r.triggered_category,
+            MisconductCategory::SubstantialUnderstatement
+        );
         assert_eq!(r.penalty_dollars, 20_000);
     }
 
@@ -549,7 +553,10 @@ mod tests {
         i.correct_tax_required_dollars = 5_000_000_000;
         let r = compute(&i);
         assert_eq!(r.substantial_understatement_threshold_dollars, 500_000_000);
-        assert_eq!(r.triggered_category, MisconductCategory::SubstantialUnderstatement);
+        assert_eq!(
+            r.triggered_category,
+            MisconductCategory::SubstantialUnderstatement
+        );
         // $1B × 20% = $200M.
         assert_eq!(r.penalty_dollars, 200_000_000);
     }

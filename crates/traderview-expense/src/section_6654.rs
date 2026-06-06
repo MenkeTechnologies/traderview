@@ -130,7 +130,10 @@ pub fn compute(input: &Section6654Input) -> Section6654Result {
 
     let (required_annual, safe_harbor_used) = if prior_year_required < ninety_pct {
         if high_agi {
-            (prior_year_required, SafeHarbor::PriorYearOneHundredTenPercent)
+            (
+                prior_year_required,
+                SafeHarbor::PriorYearOneHundredTenPercent,
+            )
         } else {
             (prior_year_required, SafeHarbor::PriorYearOneHundredPercent)
         }

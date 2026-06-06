@@ -179,10 +179,7 @@ pub fn check(input: &SquatterRemovalInput) -> SquatterRemovalResult {
     }
 }
 
-fn check_florida(
-    input: &SquatterRemovalInput,
-    notes: &mut Vec<String>,
-) -> SquatterRemovalResult {
+fn check_florida(input: &SquatterRemovalInput, notes: &mut Vec<String>) -> SquatterRemovalResult {
     let eligible = input.owner_directed_to_leave
         && !input.current_former_tenant_or_family_member
         && !input.pending_occupancy_litigation;
@@ -250,10 +247,7 @@ fn check_florida(
     }
 }
 
-fn check_new_york(
-    input: &SquatterRemovalInput,
-    notes: &mut Vec<String>,
-) -> SquatterRemovalResult {
+fn check_new_york(input: &SquatterRemovalInput, notes: &mut Vec<String>) -> SquatterRemovalResult {
     if !input.ny_post_april_22_2024 {
         notes.push(
             "pre-April 22, 2024 events governed by prior NY law where squatters acquired tenant-like protections after 30 days of occupancy; consult NY counsel"
@@ -330,10 +324,7 @@ fn check_california(
     }
 }
 
-fn check_texas(
-    input: &SquatterRemovalInput,
-    notes: &mut Vec<String>,
-) -> SquatterRemovalResult {
+fn check_texas(input: &SquatterRemovalInput, notes: &mut Vec<String>) -> SquatterRemovalResult {
     if !input.tx_3_day_notice_served {
         notes.push(
             "Tex. Prop. Code § 24.005 — 3-day notice to vacate prerequisite to forcible entry and detainer (FED) action"
@@ -366,10 +357,7 @@ fn check_texas(
     }
 }
 
-fn check_default(
-    _input: &SquatterRemovalInput,
-    notes: &mut Vec<String>,
-) -> SquatterRemovalResult {
+fn check_default(_input: &SquatterRemovalInput, notes: &mut Vec<String>) -> SquatterRemovalResult {
     notes.push(
         "default rule — common-law ejectment action OR state-specific summary procedure; self-help removal universally prohibited (exposes landlord to lockout damages)"
             .to_string(),
@@ -482,7 +470,10 @@ mod tests {
         let r = check(&fl_base());
         assert_eq!(r.removal_pathway, RemovalPathway::Sheriff24HourRemoval);
         assert!(r.pathway_available);
-        assert!(r.notes.iter().any(|n| n.contains("HB 621") && n.contains("24-hour")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("HB 621") && n.contains("24-hour")));
     }
 
     #[test]
@@ -491,7 +482,10 @@ mod tests {
         i.current_former_tenant_or_family_member = true;
         let r = check(&i);
         assert_eq!(r.removal_pathway, RemovalPathway::NoPathwayAvailable);
-        assert!(r.notes.iter().any(|n| n.contains("tenant in dispute or family member")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("tenant in dispute or family member")));
     }
 
     #[test]
@@ -500,7 +494,10 @@ mod tests {
         i.pending_occupancy_litigation = true;
         let r = check(&i);
         assert_eq!(r.removal_pathway, RemovalPathway::NoPathwayAvailable);
-        assert!(r.notes.iter().any(|n| n.contains("pending occupancy litigation")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("pending occupancy litigation")));
     }
 
     #[test]
@@ -528,14 +525,23 @@ mod tests {
         let r = check(&i);
         assert_eq!(r.removal_pathway, RemovalPathway::Sheriff24HourRemoval);
         assert!(r.criminal_exposure_for_squatter);
-        assert!(r.notes.iter().any(|n| n.contains("§ 82.036(8)") && n.contains("felony")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 82.036(8)") && n.contains("felony")));
     }
 
     #[test]
     fn ny_post_april_2024_with_notice_yields_section_713_holdover() {
         let r = check(&ny_base());
-        assert_eq!(r.removal_pathway, RemovalPathway::NySection713SummaryHoldover);
-        assert!(r.notes.iter().any(|n| n.contains("§ 711(1)") && n.contains("EXCLUDE squatters")));
+        assert_eq!(
+            r.removal_pathway,
+            RemovalPathway::NySection713SummaryHoldover
+        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 711(1)") && n.contains("EXCLUDE squatters")));
     }
 
     #[test]
@@ -543,7 +549,10 @@ mod tests {
         let mut i = ny_base();
         i.ny_post_april_22_2024 = false;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("pre-April 22, 2024") && n.contains("30 days")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("pre-April 22, 2024") && n.contains("30 days")));
     }
 
     #[test]
@@ -552,15 +561,27 @@ mod tests {
         i.ny_10_day_notice_served = false;
         let r = check(&i);
         assert_eq!(r.removal_pathway, RemovalPathway::NoPathwayAvailable);
-        assert!(r.notes.iter().any(|n| n.contains("§ 713") && n.contains("10-day notice to quit")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 713") && n.contains("10-day notice to quit")));
     }
 
     #[test]
     fn ca_with_3_day_notice_yields_unlawful_detainer() {
         let r = check(&ca_base());
-        assert_eq!(r.removal_pathway, RemovalPathway::CaliforniaUnlawfulDetainer);
-        assert!(r.notes.iter().any(|n| n.contains("§ 1161") && n.contains("3-6 week")));
-        assert!(r.notes.iter().any(|n| n.contains("has NOT enacted expedited squatter removal")));
+        assert_eq!(
+            r.removal_pathway,
+            RemovalPathway::CaliforniaUnlawfulDetainer
+        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1161") && n.contains("3-6 week")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("has NOT enacted expedited squatter removal")));
     }
 
     #[test]
@@ -574,9 +595,18 @@ mod tests {
     #[test]
     fn tx_with_3_day_notice_yields_fed_action() {
         let r = check(&tx_base());
-        assert_eq!(r.removal_pathway, RemovalPathway::TexasForcibleEntryDetainer);
-        assert!(r.notes.iter().any(|n| n.contains("§§ 24.005, 24.002") && n.contains("Justice of the Peace")));
-        assert!(r.notes.iter().any(|n| n.contains("§ 24.005(c)") && n.contains("tenant-at-sufferance")));
+        assert_eq!(
+            r.removal_pathway,
+            RemovalPathway::TexasForcibleEntryDetainer
+        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§§ 24.005, 24.002") && n.contains("Justice of the Peace")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 24.005(c)") && n.contains("tenant-at-sufferance")));
     }
 
     #[test]
@@ -591,18 +621,30 @@ mod tests {
     fn default_yields_common_law_ejectment() {
         let r = check(&default_base());
         assert_eq!(r.removal_pathway, RemovalPathway::CommonLawEjectment);
-        assert!(r.notes.iter().any(|n| n.contains("self-help removal universally prohibited")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("self-help removal universally prohibited")));
     }
 
     #[test]
     fn no_unauthorized_entry_no_pathway_all_regimes() {
-        for regime in [Regime::Florida, Regime::NewYork, Regime::California, Regime::Texas, Regime::Default] {
+        for regime in [
+            Regime::Florida,
+            Regime::NewYork,
+            Regime::California,
+            Regime::Texas,
+            Regime::Default,
+        ] {
             let mut i = fl_base();
             i.regime = regime;
             i.unauthorized_entry = false;
             let r = check(&i);
             assert_eq!(r.removal_pathway, RemovalPathway::NoPathwayAvailable);
-            assert!(r.notes.iter().any(|n| n.contains("did NOT enter unlawfully")));
+            assert!(r
+                .notes
+                .iter()
+                .any(|n| n.contains("did NOT enter unlawfully")));
         }
     }
 
@@ -611,7 +653,12 @@ mod tests {
         let r_fl = check(&fl_base());
         assert_eq!(r_fl.removal_pathway, RemovalPathway::Sheriff24HourRemoval);
 
-        for regime in [Regime::NewYork, Regime::California, Regime::Texas, Regime::Default] {
+        for regime in [
+            Regime::NewYork,
+            Regime::California,
+            Regime::Texas,
+            Regime::Default,
+        ] {
             let mut i = fl_base();
             i.regime = regime;
             i.ny_10_day_notice_served = true;
@@ -619,7 +666,11 @@ mod tests {
             i.ca_3_day_notice_served = true;
             i.tx_3_day_notice_served = true;
             let r = check(&i);
-            assert_ne!(r.removal_pathway, RemovalPathway::Sheriff24HourRemoval, "only FL has 24-hour sheriff removal");
+            assert_ne!(
+                r.removal_pathway,
+                RemovalPathway::Sheriff24HourRemoval,
+                "only FL has 24-hour sheriff removal"
+            );
         }
     }
 
@@ -669,19 +720,28 @@ mod tests {
     #[test]
     fn ny_post_amendment_note_describes_police_arrest_authority() {
         let r = check(&ny_base());
-        assert!(r.notes.iter().any(|n| n.contains("police may arrest squatters as trespassers")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("police may arrest squatters as trespassers")));
     }
 
     #[test]
     fn ca_self_help_removal_warning_in_notes() {
         let r = check(&ca_base());
-        assert!(r.notes.iter().any(|n| n.contains("self-help removal exposes landlord")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("self-help removal exposes landlord")));
     }
 
     #[test]
     fn default_self_help_warning_in_notes() {
         let r = check(&default_base());
-        assert!(r.notes.iter().any(|n| n.contains("self-help removal universally prohibited")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("self-help removal universally prohibited")));
     }
 
     #[test]
@@ -699,14 +759,21 @@ mod tests {
         i.current_former_tenant_or_family_member = true;
         i.pending_occupancy_litigation = true;
         let r = check(&i);
-        let eligibility_notes = r.notes.iter().filter(|n| n.contains("§ 82.036 eligibility")).count();
+        let eligibility_notes = r
+            .notes
+            .iter()
+            .filter(|n| n.contains("§ 82.036 eligibility"))
+            .count();
         assert_eq!(eligibility_notes, 3);
     }
 
     #[test]
     fn ny_amendment_abolishes_30_day_threshold_note() {
         let r = check(&ny_base());
-        assert!(r.notes.iter().any(|n| n.contains("30-day-occupancy threshold abolished")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("30-day-occupancy threshold abolished")));
     }
 
     #[test]
@@ -716,7 +783,12 @@ mod tests {
         let r_fl = check(&i);
         assert!(r_fl.criminal_exposure_for_squatter);
 
-        for regime in [Regime::NewYork, Regime::California, Regime::Texas, Regime::Default] {
+        for regime in [
+            Regime::NewYork,
+            Regime::California,
+            Regime::Texas,
+            Regime::Default,
+        ] {
             let mut i2 = fl_base();
             i2.regime = regime;
             i2.fl_fraudulent_documents_or_damage = true;
@@ -725,7 +797,11 @@ mod tests {
             i2.ca_3_day_notice_served = true;
             i2.tx_3_day_notice_served = true;
             let r = check(&i2);
-            assert!(!r.criminal_exposure_for_squatter, "regime {:?} does not surface criminal exposure flag", regime);
+            assert!(
+                !r.criminal_exposure_for_squatter,
+                "regime {:?} does not surface criminal exposure flag",
+                regime
+            );
         }
     }
 }

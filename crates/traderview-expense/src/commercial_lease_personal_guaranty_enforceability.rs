@@ -203,8 +203,8 @@ pub fn check(
         && input.obligation_within_covid_blackout
         && input.tenant_covered_business_category;
 
-    let good_guy_guaranty_limits_liability = input.has_good_guy_guaranty
-        && input.tenant_properly_surrendered;
+    let good_guy_guaranty_limits_liability =
+        input.has_good_guy_guaranty && input.tenant_properly_surrendered;
 
     let material_modification_discharge = input.material_modification_without_consent;
 
@@ -325,8 +325,7 @@ mod tests {
         let r = check(&i);
         assert!(!r.guaranty_enforceable);
         assert!(!r.statute_of_frauds_satisfied);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 5-701(a)(1)")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 5-701(a)(1)")
             && f.contains("UNENFORCEABLE")
             && f.contains("§ 5-701(a)(2)")));
     }
@@ -349,8 +348,7 @@ mod tests {
         let r = check(&i);
         assert!(r.nyc_section_22_1005_engaged);
         assert!(!r.guaranty_enforceable);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 22-1005")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 22-1005")
             && f.contains("UNENFORCEABLE")
             && f.contains("March 7, 2020")
             && f.contains("June 30, 2021")));
@@ -384,8 +382,7 @@ mod tests {
         i.obligation_within_covid_blackout = true;
         i.tenant_covered_business_category = true;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("Melendez")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("Melendez")
             && f.contains("27 F.4th 119")
             && f.contains("Contracts Clause")
             && f.contains("U.S. Const. art. I § 10")
@@ -399,11 +396,13 @@ mod tests {
         i.tenant_properly_surrendered = true;
         let r = check(&i);
         assert!(r.good_guy_guaranty_limits_liability);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("GOOD GUY GUARANTY")
-            && f.contains("DATE OF SURRENDER")
-            && f.contains("keys delivered")
-            && f.contains("surrender-date-arrears")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("GOOD GUY GUARANTY")
+                && f.contains("DATE OF SURRENDER")
+                && f.contains("keys delivered")
+                && f.contains("surrender-date-arrears")));
     }
 
     #[test]
@@ -423,10 +422,12 @@ mod tests {
         let r = check(&i);
         assert!(r.material_modification_discharge);
         assert!(!r.guaranty_enforceable);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("Cal. Civ. Code § 2819")
-            && f.contains("MATERIAL MODIFICATION")
-            && f.contains("DISCHARGES")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("Cal. Civ. Code § 2819")
+                && f.contains("MATERIAL MODIFICATION")
+                && f.contains("DISCHARGES")));
     }
 
     #[test]
@@ -436,9 +437,11 @@ mod tests {
         i.material_modification_without_consent = true;
         let r = check(&i);
         assert!(r.material_modification_discharge);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("Restatement (Third) of Suretyship § 41")
-            && f.contains("EXTINGUISHES")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("Restatement (Third) of Suretyship § 41")
+                && f.contains("EXTINGUISHES")));
     }
 
     #[test]
@@ -448,18 +451,22 @@ mod tests {
         let r = check(&i);
         assert!(r.novation_extinguishes_guaranty);
         assert!(!r.guaranty_enforceable);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("Restatement (Third) of Suretyship § 39")
-            && f.contains("NOVATION")
-            && f.contains("EXTINGUISHES")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("Restatement (Third) of Suretyship § 39")
+                && f.contains("NOVATION")
+                && f.contains("EXTINGUISHES")));
     }
 
     #[test]
     fn enforceable_guaranty_message_displayed() {
         let r = check(&ny_enforceable());
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("Personal guaranty ENFORCEABLE")
-            && f.contains("Statute of Frauds satisfied")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("Personal guaranty ENFORCEABLE")
+                && f.contains("Statute of Frauds satisfied")));
     }
 
     #[test]
@@ -506,49 +513,65 @@ mod tests {
     fn citation_pins_all_authorities() {
         let r = check(&ny_enforceable());
         assert!(r.citation.contains("NYC Admin. Code § 22-1005"));
-        assert!(r.citation.contains("Melendez v. City of New York, 16 F.4th 992"));
-        assert!(r.citation.contains("Melendez v. City of New York, 27 F.4th 119"));
-        assert!(r.citation.contains("Melendez v. City of New York, 668 F. Supp. 3d 184"));
+        assert!(r
+            .citation
+            .contains("Melendez v. City of New York, 16 F.4th 992"));
+        assert!(r
+            .citation
+            .contains("Melendez v. City of New York, 27 F.4th 119"));
+        assert!(r
+            .citation
+            .contains("Melendez v. City of New York, 668 F. Supp. 3d 184"));
         assert!(r.citation.contains("NY GOL § 5-701(a)(1)"));
         assert!(r.citation.contains("NY GOL § 5-701(a)(2)"));
         assert!(r.citation.contains("Cal. Civ. Code § 2787-2856"));
         assert!(r.citation.contains("Cal. Civ. Code § 2819"));
         assert!(r.citation.contains("Cal. Civ. Code § 1670.5"));
         assert!(r.citation.contains("Cal. Civ. Code § 2799"));
-        assert!(r.citation.contains("Restatement (Third) of Suretyship and Guaranty"));
-        assert!(r.citation.contains("Restatement (Third) of Suretyship § 41"));
-        assert!(r.citation.contains("Restatement (Third) of Suretyship § 39"));
+        assert!(r
+            .citation
+            .contains("Restatement (Third) of Suretyship and Guaranty"));
+        assert!(r
+            .citation
+            .contains("Restatement (Third) of Suretyship § 41"));
+        assert!(r
+            .citation
+            .contains("Restatement (Third) of Suretyship § 39"));
         assert!(r.citation.contains("U.S. Const. art. I § 10"));
     }
 
     #[test]
     fn note_pins_four_jurisdiction_framework() {
         let r = check(&ny_enforceable());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Four-jurisdiction framework")
-            && n.contains("NEW YORK CITY")
-            && n.contains("§ 22-1005")
-            && n.contains("CALIFORNIA")
-            && n.contains("DEFAULT")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Four-jurisdiction framework")
+                && n.contains("NEW YORK CITY")
+                && n.contains("§ 22-1005")
+                && n.contains("CALIFORNIA")
+                && n.contains("DEFAULT")));
     }
 
     #[test]
     fn note_pins_nyc_22_1005_three_categories() {
         let r = check(&ny_enforceable());
-        assert!(r.notes.iter().any(|n|
-            n.contains("NYC Admin. Code § 22-1005")
-            && n.contains("May 26, 2020")
-            && n.contains("March 7, 2020 through June 30, 2021")
-            && n.contains("food/beverage on-premises")
-            && n.contains("non-essential retail")
-            && n.contains("close under executive orders")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("NYC Admin. Code § 22-1005")
+                && n.contains("May 26, 2020")
+                && n.contains("March 7, 2020 through June 30, 2021")
+                && n.contains("food/beverage on-premises")
+                && n.contains("non-essential retail")
+                && n.contains("close under executive orders")));
     }
 
     #[test]
     fn note_pins_melendez_three_decisions() {
         let r = check(&ny_enforceable());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Melendez v. City of New York constitutional history")
+        assert!(r.notes.iter().any(|n| n
+            .contains("Melendez v. City of New York constitutional history")
             && n.contains("16 F.4th 992")
             && n.contains("27 F.4th 119")
             && n.contains("668 F. Supp. 3d 184")
@@ -558,19 +581,20 @@ mod tests {
     #[test]
     fn note_pins_second_circuit_five_concerns() {
         let r = check(&ny_enforceable());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Second Circuit constitutional concerns")
-            && n.contains("PERMANENT")
-            && n.contains("not limited")
-            && n.contains("not conditioned")
-            && n.contains("alternative remedial avenues")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Second Circuit constitutional concerns")
+                && n.contains("PERMANENT")
+                && n.contains("not limited")
+                && n.contains("not conditioned")
+                && n.contains("alternative remedial avenues")));
     }
 
     #[test]
     fn note_pins_good_guy_guaranty_five_elements() {
         let r = check(&ny_enforceable());
-        assert!(r.notes.iter().any(|n|
-            n.contains("GOOD GUY GUARANTY (GGG)")
+        assert!(r.notes.iter().any(|n| n.contains("GOOD GUY GUARANTY (GGG)")
             && n.contains("DATE OF SURRENDER")
             && n.contains("30-90 days")
             && n.contains("surrender-date-arrears")));
@@ -579,8 +603,7 @@ mod tests {
     #[test]
     fn note_pins_ny_gol_5_701_two_subsections() {
         let r = check(&ny_enforceable());
-        assert!(r.notes.iter().any(|n|
-            n.contains("NY GOL § 5-701(a)")
+        assert!(r.notes.iter().any(|n| n.contains("NY GOL § 5-701(a)")
             && n.contains("§ 5-701(a)(1)")
             && n.contains("§ 5-701(a)(2)")
             && n.contains("ALL guaranties")));
@@ -589,20 +612,22 @@ mod tests {
     #[test]
     fn note_pins_ca_suretyship_framework() {
         let r = check(&ny_enforceable());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Cal. Civ. Code suretyship framework")
-            && n.contains("§ 2787")
-            && n.contains("§ 2819")
-            && n.contains("§ 1670.5")
-            && n.contains("§ 2799")
-            && n.contains("§ 2810")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Cal. Civ. Code suretyship framework")
+                && n.contains("§ 2787")
+                && n.contains("§ 2819")
+                && n.contains("§ 1670.5")
+                && n.contains("§ 2799")
+                && n.contains("§ 2810")));
     }
 
     #[test]
     fn note_pins_restatement_third_suretyship_1996() {
         let r = check(&ny_enforceable());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Restatement (Third) of Suretyship and Guaranty (1996)")
+        assert!(r.notes.iter().any(|n| n
+            .contains("Restatement (Third) of Suretyship and Guaranty (1996)")
             && n.contains("§ 41 MATERIAL MODIFICATION")
             && n.contains("§ 39 NOVATION")
             && n.contains("strict construction")));
@@ -611,19 +636,21 @@ mod tests {
     #[test]
     fn note_pins_trader_fact_patterns_five() {
         let r = check(&ny_enforceable());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-landlord critical fact patterns")
-            && n.contains("NYC retail LLC")
-            && n.contains("Good Guy Guaranty")
-            && n.contains("§ 2819 MATERIAL MODIFICATION")
-            && n.contains("§ 39 NOVATION")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-landlord critical fact patterns")
+                && n.contains("NYC retail LLC")
+                && n.contains("Good Guy Guaranty")
+                && n.contains("§ 2819 MATERIAL MODIFICATION")
+                && n.contains("§ 39 NOVATION")));
     }
 
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&ny_enforceable());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Companion to tenant_lease_guarantor_disclosure")
+        assert!(r.notes.iter().any(|n| n
+            .contains("Companion to tenant_lease_guarantor_disclosure")
             && n.contains("residential")
             && n.contains("tenant_estoppel_certificate")));
     }

@@ -56,10 +56,19 @@ pub fn compute(
         band_period,
         n_stdev,
     };
-    if rsi_period < 2 || price_period < 2 || signal_period < 2 || band_period < 2
-        || !n_stdev.is_finite() || n_stdev <= 0.0
-        || n < rsi_period + band_period { return report; }
-    if closes.iter().any(|x| !x.is_finite()) { return report; }
+    if rsi_period < 2
+        || price_period < 2
+        || signal_period < 2
+        || band_period < 2
+        || !n_stdev.is_finite()
+        || n_stdev <= 0.0
+        || n < rsi_period + band_period
+    {
+        return report;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return report;
+    }
     let rsi = wilder_rsi(closes, rsi_period);
     report.price_line = sma_opt(&rsi, price_period);
     report.signal_line = sma_opt(&rsi, signal_period);
@@ -77,13 +86,19 @@ pub fn compute(
 fn wilder_rsi(closes: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = closes.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period + 1 { return out; }
+    if period == 0 || n < period + 1 {
+        return out;
+    }
     let p_f = period as f64;
     let mut sum_gain = 0.0_f64;
     let mut sum_loss = 0.0_f64;
     for i in 1..=period {
         let diff = closes[i] - closes[i - 1];
-        if diff > 0.0 { sum_gain += diff; } else { sum_loss -= diff; }
+        if diff > 0.0 {
+            sum_gain += diff;
+        } else {
+            sum_loss -= diff;
+        }
     }
     let mut avg_gain = sum_gain / p_f;
     let mut avg_loss = sum_loss / p_f;
@@ -101,7 +116,11 @@ fn wilder_rsi(closes: &[f64], period: usize) -> Vec<Option<f64>> {
 
 fn rsi_of(avg_gain: f64, avg_loss: f64) -> f64 {
     if avg_loss <= 0.0 {
-        if avg_gain <= 0.0 { 50.0 } else { 100.0 }
+        if avg_gain <= 0.0 {
+            50.0
+        } else {
+            100.0
+        }
     } else {
         let rs = avg_gain / avg_loss;
         100.0 - 100.0 / (1.0 + rs)
@@ -111,11 +130,15 @@ fn rsi_of(avg_gain: f64, avg_loss: f64) -> f64 {
 fn sma_opt(series: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     for i in (period - 1)..n {
         let win = &series[i + 1 - period..=i];
-        if win.iter().any(|x| x.is_none()) { continue; }
+        if win.iter().any(|x| x.is_none()) {
+            continue;
+        }
         let s: f64 = win.iter().filter_map(|x| *x).sum();
         out[i] = Some(s / p_f);
     }
@@ -125,14 +148,22 @@ fn sma_opt(series: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
 fn rolling_stdev_opt(series: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     for i in (period - 1)..n {
         let win = &series[i + 1 - period..=i];
-        if win.iter().any(|x| x.is_none()) { continue; }
+        if win.iter().any(|x| x.is_none()) {
+            continue;
+        }
         let mean: f64 = win.iter().filter_map(|x| *x).sum::<f64>() / p_f;
-        let var: f64 = win.iter().filter_map(|x| *x)
-            .map(|x| (x - mean).powi(2)).sum::<f64>() / p_f;
+        let var: f64 = win
+            .iter()
+            .filter_map(|x| *x)
+            .map(|x| (x - mean).powi(2))
+            .sum::<f64>()
+            / p_f;
         out[i] = Some(var.max(0.0).sqrt());
     }
     out
@@ -164,10 +195,18 @@ mod tests {
         let c = vec![100.0_f64; 80];
         let r = compute(&c, 14, 2, 7, 34, 1.6185);
         // Flat market → RSI = 50 → all lines = 50, bands collapse on midband.
-        for v in r.price_line.iter().skip(50).flatten() { assert!((v - 50.0).abs() < 1e-6); }
-        for v in r.market_base.iter().skip(50).flatten() { assert!((v - 50.0).abs() < 1e-6); }
-        for v in r.bb_upper.iter().skip(50).flatten() { assert!((v - 50.0).abs() < 1e-6); }
-        for v in r.bb_lower.iter().skip(50).flatten() { assert!((v - 50.0).abs() < 1e-6); }
+        for v in r.price_line.iter().skip(50).flatten() {
+            assert!((v - 50.0).abs() < 1e-6);
+        }
+        for v in r.market_base.iter().skip(50).flatten() {
+            assert!((v - 50.0).abs() < 1e-6);
+        }
+        for v in r.bb_upper.iter().skip(50).flatten() {
+            assert!((v - 50.0).abs() < 1e-6);
+        }
+        for v in r.bb_lower.iter().skip(50).flatten() {
+            assert!((v - 50.0).abs() < 1e-6);
+        }
     }
 
     #[test]
@@ -187,12 +226,15 @@ mod tests {
     #[test]
     fn bands_widen_with_higher_stdev_factor() {
         let mut state: u64 = 42;
-        let c: Vec<f64> = (0..200).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
-            100.0 + (r - 0.5) * 10.0
-        }).collect();
+        let c: Vec<f64> = (0..200)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
+                100.0 + (r - 0.5) * 10.0
+            })
+            .collect();
         let r1 = compute(&c, 14, 2, 7, 34, 1.0);
         let r2 = compute(&c, 14, 2, 7, 34, 3.0);
         let last = 199;

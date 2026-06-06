@@ -50,7 +50,9 @@ pub fn compute(
         let p = portfolio_returns[i];
         let m = market_returns[i];
         let rf = risk_free_returns[i];
-        if !p.is_finite() || !m.is_finite() || !rf.is_finite() { continue; }
+        if !p.is_finite() || !m.is_finite() || !rf.is_finite() {
+            continue;
+        }
         ep.push(p - rf);
         em.push(m - rf);
         p_raw.push(p);
@@ -59,32 +61,57 @@ pub fn compute(
         rf_count += 1;
     }
     let n_obs = ep.len();
-    if n_obs < 4 { return None; }
+    if n_obs < 4 {
+        return None;
+    }
     let n_f = n_obs as f64;
     let mean_ep = ep.iter().sum::<f64>() / n_f;
     let mean_em = em.iter().sum::<f64>() / n_f;
     let mean_rf = rf_acc / rf_count.max(1) as f64;
     // β = Cov(ep, em) / Var(em).
-    let cov: f64 = ep.iter().zip(em.iter())
+    let cov: f64 = ep
+        .iter()
+        .zip(em.iter())
         .map(|(a, b)| (a - mean_ep) * (b - mean_em))
-        .sum::<f64>() / (n_f - 1.0);
+        .sum::<f64>()
+        / (n_f - 1.0);
     let var_em: f64 = em.iter().map(|x| (x - mean_em).powi(2)).sum::<f64>() / (n_f - 1.0);
     // Relative tolerance: identical-input float accumulation can leave
     // a residual variance below ~1e-30 even for "constant" series.
     let flat_threshold = mean_em.abs() * mean_em.abs() * 1e-20 + f64::EPSILON;
-    if var_em <= flat_threshold { return None; }
+    if var_em <= flat_threshold {
+        return None;
+    }
     let beta = cov / var_em;
-    if !beta.is_finite() { return None; }
+    if !beta.is_finite() {
+        return None;
+    }
     let alpha = mean_ep - beta * mean_em;
-    let stdev_p = (p_raw.iter().map(|x| {
-        let m = p_raw.iter().sum::<f64>() / n_f;
-        (x - m).powi(2)
-    }).sum::<f64>() / (n_f - 1.0)).max(0.0).sqrt();
-    let stdev_m = (m_raw.iter().map(|x| {
-        let m = m_raw.iter().sum::<f64>() / n_f;
-        (x - m).powi(2)
-    }).sum::<f64>() / (n_f - 1.0)).max(0.0).sqrt();
-    let treynor = if beta != 0.0 { mean_ep / beta } else { f64::NAN };
+    let stdev_p = (p_raw
+        .iter()
+        .map(|x| {
+            let m = p_raw.iter().sum::<f64>() / n_f;
+            (x - m).powi(2)
+        })
+        .sum::<f64>()
+        / (n_f - 1.0))
+        .max(0.0)
+        .sqrt();
+    let stdev_m = (m_raw
+        .iter()
+        .map(|x| {
+            let m = m_raw.iter().sum::<f64>() / n_f;
+            (x - m).powi(2)
+        })
+        .sum::<f64>()
+        / (n_f - 1.0))
+        .max(0.0)
+        .sqrt();
+    let treynor = if beta != 0.0 {
+        mean_ep / beta
+    } else {
+        f64::NAN
+    };
     let m_sq = if stdev_p > 0.0 {
         mean_ep * (stdev_m / stdev_p) + mean_rf
     } else {

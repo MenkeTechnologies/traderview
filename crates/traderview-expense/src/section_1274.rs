@@ -262,7 +262,9 @@ pub fn compute(input: &Input) -> Output {
 
     if input.is_sale_leaseback {
         let leaseback_afr = u128::from(input.applicable_federal_rate_basis_points)
-            .saturating_mul(u128::from(IRC_1274_SALE_LEASEBACK_AFR_MULTIPLIER_BASIS_POINTS))
+            .saturating_mul(u128::from(
+                IRC_1274_SALE_LEASEBACK_AFR_MULTIPLIER_BASIS_POINTS,
+            ))
             .checked_div(u128::from(IRC_1274_BASIS_POINT_DENOMINATOR))
             .unwrap_or(0)
             .min(u128::from(u64::MAX)) as u64;
@@ -330,7 +332,8 @@ mod tests {
         Input {
             transaction_type: TransactionType::DebtInstrumentInExchangeForProperty,
             exception_status: ExceptionStatus::NoExceptionFullyCoveredBySection1274,
-            payment_timing_status: PaymentTimingStatus::AtLeastOnePaymentDueMoreThan6MonthsAfterSale,
+            payment_timing_status:
+                PaymentTimingStatus::AtLeastOnePaymentDueMoreThan6MonthsAfterSale,
             debt_term_category: DebtTermCategory::MidTermAfrTermOver3YearsButAtOrUnder9Years,
             stated_interest_rate_basis_points: 500,
             applicable_federal_rate_basis_points: 450,
@@ -348,7 +351,10 @@ mod tests {
         let mut input = baseline_input();
         input.transaction_type = TransactionType::OtherTransactionNotCoveredBySection1274;
         let output = check(&input);
-        assert_eq!(output.mode, Section1274Mode::NotApplicableNotDebtInstrumentForProperty);
+        assert_eq!(
+            output.mode,
+            Section1274Mode::NotApplicableNotDebtInstrumentForProperty
+        );
     }
 
     #[test]
@@ -357,7 +363,10 @@ mod tests {
         input.payment_timing_status =
             PaymentTimingStatus::AllPaymentsWithin6MonthsOfSaleSection1274C1RequirementNotMet;
         let output = check(&input);
-        assert_eq!(output.mode, Section1274Mode::NotApplicableAllPaymentsWithin6MonthsOfSale);
+        assert_eq!(
+            output.mode,
+            Section1274Mode::NotApplicableAllPaymentsWithin6MonthsOfSale
+        );
     }
 
     #[test]
@@ -408,8 +417,7 @@ mod tests {
     #[test]
     fn patent_transfer_exception() {
         let mut input = baseline_input();
-        input.exception_status =
-            ExceptionStatus::PatentTransferUnderSection1235Section1274C3E;
+        input.exception_status = ExceptionStatus::PatentTransferUnderSection1235Section1274C3E;
         let output = check(&input);
         assert_eq!(
             output.mode,

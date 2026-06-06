@@ -116,7 +116,9 @@ pub fn compute(input: &Section1033Input) -> Section1033Result {
     } else {
         // Standard formula: gain recognized to extent amount realized
         // exceeds replacement cost.
-        (amount_realized - replacement_cost).max(0).min(realized_gain)
+        (amount_realized - replacement_cost)
+            .max(0)
+            .min(realized_gain)
     };
     let deferred_gain = realized_gain - recognized_gain;
     // § 1033(b)(2): basis in replacement = cost − deferred gain.

@@ -52,17 +52,14 @@ pub fn analyze(b: &IronButterfly) -> Option<IronButterflyReport> {
     let put_width = b.body_strike - b.put_long_strike;
     let call_width = b.call_long_strike - b.body_strike;
     if (put_width - call_width).abs() > 1e-9 {
-        return None;    // not symmetric → would be a broken-wing variant
+        return None; // not symmetric → would be a broken-wing variant
     }
-    if b.net_credit_per_contract <= 0.0
-        || b.multiplier <= 0.0
-        || b.contracts == 0
-    {
+    if b.net_credit_per_contract <= 0.0 || b.multiplier <= 0.0 || b.contracts == 0 {
         return None;
     }
     let wing = put_width;
     if b.net_credit_per_contract > wing {
-        return None;    // credit exceeds wing width → mispriced
+        return None; // credit exceeds wing width → mispriced
     }
     let scale = b.contracts.unsigned_abs() as f64 * b.multiplier;
     let sign = b.contracts.signum() as f64;
@@ -113,7 +110,7 @@ mod tests {
     #[test]
     fn asymmetric_wings_rejected() {
         let mut bad = ib();
-        bad.call_long_strike = 110.0;    // wing 5/10
+        bad.call_long_strike = 110.0; // wing 5/10
         assert!(analyze(&bad).is_none());
     }
 
@@ -134,7 +131,7 @@ mod tests {
     #[test]
     fn credit_exceeding_wing_rejected() {
         let mut bad = ib();
-        bad.net_credit_per_contract = 10.0;    // > wing 5
+        bad.net_credit_per_contract = 10.0; // > wing 5
         assert!(analyze(&bad).is_none());
     }
 

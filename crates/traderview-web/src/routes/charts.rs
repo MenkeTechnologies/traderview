@@ -7,8 +7,8 @@ use chrono::{DateTime, TimeZone, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use traderview_core::{
-    candlestick_patterns, fibonacci, heikin_ashi, ichimoku, indicators, pivots, renko,
-    supertrend, swing_points, volume_profile, BarInterval, PriceBar,
+    candlestick_patterns, fibonacci, heikin_ashi, ichimoku, indicators, pivots, renko, supertrend,
+    swing_points, volume_profile, BarInterval, PriceBar,
 };
 
 pub fn router() -> Router<AppState> {
@@ -21,9 +21,15 @@ pub fn router() -> Router<AppState> {
         .route("/bars/:symbol/fibonacci", get(fibonacci_route))
         .route("/bars/:symbol/supertrend", get(supertrend_route))
         .route("/bars/:symbol/swing-points", get(swing_points_route))
-        .route("/bars/:symbol/candlestick-patterns", get(candlestick_patterns_route))
+        .route(
+            "/bars/:symbol/candlestick-patterns",
+            get(candlestick_patterns_route),
+        )
         .route("/bars/:symbol/pivots/floor", get(pivots_floor_route))
-        .route("/bars/:symbol/pivots/camarilla", get(pivots_camarilla_route))
+        .route(
+            "/bars/:symbol/pivots/camarilla",
+            get(pivots_camarilla_route),
+        )
         .route("/bars/:symbol/pivots/woodie", get(pivots_woodie_route))
         .route("/bars/:symbol/pivots/demark", get(pivots_demark_route))
 }
@@ -50,7 +56,11 @@ async fn bars(
     Query(q): Query<BarsQ>,
 ) -> Result<Json<BarsResponse>, ApiError> {
     let (iv, fetched) = fetch_bars(&s, &symbol, &q).await?;
-    Ok(Json(BarsResponse { symbol, interval: iv.label().into(), bars: fetched }))
+    Ok(Json(BarsResponse {
+        symbol,
+        interval: iv.label().into(),
+        bars: fetched,
+    }))
 }
 
 // ---------------------------------------------------------------------------
@@ -93,7 +103,9 @@ fn parse_interval(s: &str) -> Option<BarInterval> {
     })
 }
 
-fn dec_f64(d: Decimal) -> f64 { d.to_string().parse().unwrap_or(0.0) }
+fn dec_f64(d: Decimal) -> f64 {
+    d.to_string().parse().unwrap_or(0.0)
+}
 
 #[cfg(test)]
 mod tests {
@@ -103,12 +115,12 @@ mod tests {
     #[test]
     fn parse_interval_accepts_known_strings() {
         assert!(matches!(parse_interval("10s"), Some(BarInterval::S10)));
-        assert!(matches!(parse_interval("1m"),  Some(BarInterval::M1)));
-        assert!(matches!(parse_interval("5m"),  Some(BarInterval::M5)));
+        assert!(matches!(parse_interval("1m"), Some(BarInterval::M1)));
+        assert!(matches!(parse_interval("5m"), Some(BarInterval::M5)));
         assert!(matches!(parse_interval("15m"), Some(BarInterval::M15)));
-        assert!(matches!(parse_interval("1h"),  Some(BarInterval::H1)));
-        assert!(matches!(parse_interval("1d"),  Some(BarInterval::D1)));
-        assert!(matches!(parse_interval("1w"),  Some(BarInterval::W1)));
+        assert!(matches!(parse_interval("1h"), Some(BarInterval::H1)));
+        assert!(matches!(parse_interval("1d"), Some(BarInterval::D1)));
+        assert!(matches!(parse_interval("1w"), Some(BarInterval::W1)));
     }
 
     #[test]
@@ -116,7 +128,7 @@ mod tests {
         // Case-sensitive, no aliases — these must all return None so the
         // route layer can 400-out with a clean error rather than silently
         // bucketing into a wrong interval.
-        assert!(parse_interval("1M").is_none(),  "case-sensitive");
+        assert!(parse_interval("1M").is_none(), "case-sensitive");
         assert!(parse_interval("daily").is_none(), "no aliases");
         assert!(parse_interval("").is_none());
         assert!(parse_interval(" 1m ").is_none(), "no whitespace tolerance");
@@ -129,7 +141,10 @@ mod tests {
             let d = Decimal::from_str(s).unwrap();
             let f = dec_f64(d);
             let want: f64 = s.parse().unwrap();
-            assert!((f - want).abs() < 1e-9, "round trip lost precision: {s} → {f}");
+            assert!(
+                (f - want).abs() < 1e-9,
+                "round trip lost precision: {s} → {f}"
+            );
         }
     }
 
@@ -176,16 +191,32 @@ async fn heikin_ashi_route(
     Query(q): Query<BarsQ>,
 ) -> Result<Json<HaResponse>, ApiError> {
     let (iv, bars) = fetch_bars(&s, &symbol, &q).await?;
-    let inputs: Vec<heikin_ashi::Bar> = bars.iter().map(|b| heikin_ashi::Bar {
-        open: dec_f64(b.open), high: dec_f64(b.high),
-        low: dec_f64(b.low), close: dec_f64(b.close),
-    }).collect();
+    let inputs: Vec<heikin_ashi::Bar> = bars
+        .iter()
+        .map(|b| heikin_ashi::Bar {
+            open: dec_f64(b.open),
+            high: dec_f64(b.high),
+            low: dec_f64(b.low),
+            close: dec_f64(b.close),
+        })
+        .collect();
     let ha = heikin_ashi::compute(&inputs);
-    let out = bars.iter().zip(ha.iter()).map(|(src, h)| HaBarOut {
-        bar_time: src.bar_time,
-        open: h.open, high: h.high, low: h.low, close: h.close,
-    }).collect();
-    Ok(Json(HaResponse { symbol, interval: iv.label().into(), bars: out }))
+    let out = bars
+        .iter()
+        .zip(ha.iter())
+        .map(|(src, h)| HaBarOut {
+            bar_time: src.bar_time,
+            open: h.open,
+            high: h.high,
+            low: h.low,
+            close: h.close,
+        })
+        .collect();
+    Ok(Json(HaResponse {
+        symbol,
+        interval: iv.label().into(),
+        bars: out,
+    }))
 }
 
 // ---------------------------------------------------------------------------
@@ -194,7 +225,9 @@ async fn heikin_ashi_route(
 
 #[derive(Deserialize)]
 struct RenkoQ {
-    interval: String, from: i64, to: i64,
+    interval: String,
+    from: i64,
+    to: i64,
     /// Brick size in price units. Required (no sensible default — depends on symbol).
     brick: f64,
 }
@@ -212,17 +245,30 @@ async fn renko_route(
     Query(rq): Query<RenkoQ>,
 ) -> Result<Json<RenkoResponse>, ApiError> {
     if !(rq.brick.is_finite() && rq.brick > 0.0) {
-        return Err(ApiError::BadRequest("brick must be a positive finite number".into()));
+        return Err(ApiError::BadRequest(
+            "brick must be a positive finite number".into(),
+        ));
     }
-    let q = BarsQ { interval: rq.interval, from: rq.from, to: rq.to };
+    let q = BarsQ {
+        interval: rq.interval,
+        from: rq.from,
+        to: rq.to,
+    };
     let (_, bars) = fetch_bars(&s, &symbol, &q).await?;
     // Treat each bar's close as a tick at bar_time. Adequate for chart-level
     // Renko; intra-bar tick reconstruction is out of scope here.
-    let ticks: Vec<renko::PriceTick> = bars.iter()
-        .map(|b| renko::PriceTick { price: dec_f64(b.close) })
+    let ticks: Vec<renko::PriceTick> = bars
+        .iter()
+        .map(|b| renko::PriceTick {
+            price: dec_f64(b.close),
+        })
         .collect();
     let bricks = renko::build(&ticks, rq.brick);
-    Ok(Json(RenkoResponse { symbol, brick_size: rq.brick, bricks }))
+    Ok(Json(RenkoResponse {
+        symbol,
+        brick_size: rq.brick,
+        bricks,
+    }))
 }
 
 // ---------------------------------------------------------------------------
@@ -231,7 +277,9 @@ async fn renko_route(
 
 #[derive(Deserialize)]
 struct VpvrQ {
-    interval: String, from: i64, to: i64,
+    interval: String,
+    from: i64,
+    to: i64,
     /// Price bin width (tick size). Required.
     tick: f64,
 }
@@ -242,17 +290,29 @@ async fn volume_profile_route(
     Query(vq): Query<VpvrQ>,
 ) -> Result<Json<volume_profile::VolumeProfile>, ApiError> {
     if !(vq.tick.is_finite() && vq.tick > 0.0) {
-        return Err(ApiError::BadRequest("tick must be a positive finite number".into()));
+        return Err(ApiError::BadRequest(
+            "tick must be a positive finite number".into(),
+        ));
     }
-    let q = BarsQ { interval: vq.interval, from: vq.from, to: vq.to };
+    let q = BarsQ {
+        interval: vq.interval,
+        from: vq.from,
+        to: vq.to,
+    };
     let (_, bars) = fetch_bars(&s, &symbol, &q).await?;
     // Approximation: place each bar's volume at its typical price (HLC/3).
     // Tick-level prints would be more accurate; this matches what most
     // bar-data VPVRs show.
-    let prints: Vec<volume_profile::PrintAt> = bars.iter().map(|b| {
-        let typical = (dec_f64(b.high) + dec_f64(b.low) + dec_f64(b.close)) / 3.0;
-        volume_profile::PrintAt { price: typical, volume: dec_f64(b.volume) }
-    }).collect();
+    let prints: Vec<volume_profile::PrintAt> = bars
+        .iter()
+        .map(|b| {
+            let typical = (dec_f64(b.high) + dec_f64(b.low) + dec_f64(b.close)) / 3.0;
+            volume_profile::PrintAt {
+                price: typical,
+                volume: dec_f64(b.volume),
+            }
+        })
+        .collect();
     let _ = symbol;
     Ok(Json(volume_profile::build(&prints, vq.tick)))
 }
@@ -274,12 +334,22 @@ async fn ichimoku_route(
     Query(q): Query<BarsQ>,
 ) -> Result<Json<Vec<IchimokuPointOut>>, ApiError> {
     let (_, bars) = fetch_bars(&s, &symbol, &q).await?;
-    let inputs: Vec<ichimoku::Bar> = bars.iter().map(|b| ichimoku::Bar {
-        high: dec_f64(b.high), low: dec_f64(b.low), close: dec_f64(b.close),
-    }).collect();
+    let inputs: Vec<ichimoku::Bar> = bars
+        .iter()
+        .map(|b| ichimoku::Bar {
+            high: dec_f64(b.high),
+            low: dec_f64(b.low),
+            close: dec_f64(b.close),
+        })
+        .collect();
     let points = ichimoku::compute(&inputs);
-    let out = bars.iter().zip(points)
-        .map(|(src, point)| IchimokuPointOut { bar_time: src.bar_time, point })
+    let out = bars
+        .iter()
+        .zip(points)
+        .map(|(src, point)| IchimokuPointOut {
+            bar_time: src.bar_time,
+            point,
+        })
         .collect();
     Ok(Json(out))
 }
@@ -306,11 +376,25 @@ async fn fibonacci_route(
     for (i, b) in bars.iter().enumerate() {
         let h = dec_f64(b.high);
         let l = dec_f64(b.low);
-        if h > hi { hi = h; hi_idx = i; }
-        if l < lo { lo = l; lo_idx = i; }
+        if h > hi {
+            hi = h;
+            hi_idx = i;
+        }
+        if l < lo {
+            lo = l;
+            lo_idx = i;
+        }
     }
-    let direction = if hi_idx <= lo_idx { fibonacci::SwingDirection::Down } else { fibonacci::SwingDirection::Up };
-    let input = fibonacci::FibInput { swing_high: hi, swing_low: lo, direction };
+    let direction = if hi_idx <= lo_idx {
+        fibonacci::SwingDirection::Down
+    } else {
+        fibonacci::SwingDirection::Up
+    };
+    let input = fibonacci::FibInput {
+        swing_high: hi,
+        swing_low: lo,
+        direction,
+    };
     Ok(Json(fibonacci::compute(&input)))
 }
 
@@ -320,14 +404,20 @@ async fn fibonacci_route(
 
 #[derive(Deserialize)]
 struct SupertrendQ {
-    interval: String, from: i64, to: i64,
+    interval: String,
+    from: i64,
+    to: i64,
     #[serde(default = "default_st_period")]
     period: usize,
     #[serde(default = "default_st_mult")]
     multiplier: f64,
 }
-fn default_st_period() -> usize { 10 }
-fn default_st_mult() -> f64 { 3.0 }
+fn default_st_period() -> usize {
+    10
+}
+fn default_st_mult() -> f64 {
+    3.0
+}
 
 #[derive(Serialize)]
 struct SupertrendOut {
@@ -342,12 +432,18 @@ async fn supertrend_route(
     Query(sq): Query<SupertrendQ>,
 ) -> Result<Json<Vec<SupertrendOut>>, ApiError> {
     if sq.period == 0 || !(sq.multiplier.is_finite() && sq.multiplier > 0.0) {
-        return Err(ApiError::BadRequest("period and multiplier must be positive".into()));
+        return Err(ApiError::BadRequest(
+            "period and multiplier must be positive".into(),
+        ));
     }
-    let q = BarsQ { interval: sq.interval, from: sq.from, to: sq.to };
+    let q = BarsQ {
+        interval: sq.interval,
+        from: sq.from,
+        to: sq.to,
+    };
     let (_, bars) = fetch_bars(&s, &symbol, &q).await?;
-    let highs:  Vec<f64> = bars.iter().map(|b| dec_f64(b.high)).collect();
-    let lows:   Vec<f64> = bars.iter().map(|b| dec_f64(b.low)).collect();
+    let highs: Vec<f64> = bars.iter().map(|b| dec_f64(b.high)).collect();
+    let lows: Vec<f64> = bars.iter().map(|b| dec_f64(b.low)).collect();
     let closes: Vec<f64> = bars.iter().map(|b| dec_f64(b.close)).collect();
     // Fill the pre-warmup ATR slots with 0.0 so the supertrend output stays
     // length-aligned with input bars (front-of-series ATR is None until period).
@@ -355,12 +451,22 @@ async fn supertrend_route(
         .into_iter()
         .map(|v| v.unwrap_or(0.0))
         .collect();
-    let inputs: Vec<supertrend::Bar> = bars.iter().map(|b| supertrend::Bar {
-        high: dec_f64(b.high), low: dec_f64(b.low), close: dec_f64(b.close),
-    }).collect();
+    let inputs: Vec<supertrend::Bar> = bars
+        .iter()
+        .map(|b| supertrend::Bar {
+            high: dec_f64(b.high),
+            low: dec_f64(b.low),
+            close: dec_f64(b.close),
+        })
+        .collect();
     let pts = supertrend::compute(&inputs, &atr, sq.multiplier);
-    let out = bars.iter().zip(pts)
-        .map(|(src, point)| SupertrendOut { bar_time: src.bar_time, point })
+    let out = bars
+        .iter()
+        .zip(pts)
+        .map(|(src, point)| SupertrendOut {
+            bar_time: src.bar_time,
+            point,
+        })
         .collect();
     Ok(Json(out))
 }
@@ -371,11 +477,15 @@ async fn supertrend_route(
 
 #[derive(Deserialize)]
 struct SwingQ {
-    interval: String, from: i64, to: i64,
+    interval: String,
+    from: i64,
+    to: i64,
     #[serde(default = "default_swing_lookback")]
     lookback: usize,
 }
-fn default_swing_lookback() -> usize { 3 }
+fn default_swing_lookback() -> usize {
+    3
+}
 
 #[derive(Serialize)]
 struct SwingOut {
@@ -392,15 +502,29 @@ async fn swing_points_route(
     if sq.lookback == 0 {
         return Err(ApiError::BadRequest("lookback must be > 0".into()));
     }
-    let q = BarsQ { interval: sq.interval, from: sq.from, to: sq.to };
+    let q = BarsQ {
+        interval: sq.interval,
+        from: sq.from,
+        to: sq.to,
+    };
     let (_, bars) = fetch_bars(&s, &symbol, &q).await?;
-    let inputs: Vec<swing_points::Bar> = bars.iter()
-        .map(|b| swing_points::Bar { high: dec_f64(b.high), low: dec_f64(b.low) })
+    let inputs: Vec<swing_points::Bar> = bars
+        .iter()
+        .map(|b| swing_points::Bar {
+            high: dec_f64(b.high),
+            low: dec_f64(b.low),
+        })
         .collect();
     let hits = swing_points::detect(&inputs, sq.lookback);
-    let out = hits.into_iter().filter_map(|p| {
-        bars.get(p.index).map(|src| SwingOut { bar_time: src.bar_time, point: p })
-    }).collect();
+    let out = hits
+        .into_iter()
+        .filter_map(|p| {
+            bars.get(p.index).map(|src| SwingOut {
+                bar_time: src.bar_time,
+                point: p,
+            })
+        })
+        .collect();
     Ok(Json(out))
 }
 
@@ -421,14 +545,25 @@ async fn candlestick_patterns_route(
     Query(q): Query<BarsQ>,
 ) -> Result<Json<Vec<PatternOut>>, ApiError> {
     let (_, bars) = fetch_bars(&s, &symbol, &q).await?;
-    let inputs: Vec<candlestick_patterns::Bar> = bars.iter().map(|b| candlestick_patterns::Bar {
-        open: dec_f64(b.open), high: dec_f64(b.high),
-        low: dec_f64(b.low), close: dec_f64(b.close),
-    }).collect();
+    let inputs: Vec<candlestick_patterns::Bar> = bars
+        .iter()
+        .map(|b| candlestick_patterns::Bar {
+            open: dec_f64(b.open),
+            high: dec_f64(b.high),
+            low: dec_f64(b.low),
+            close: dec_f64(b.close),
+        })
+        .collect();
     let hits = candlestick_patterns::detect(&inputs);
-    let out = hits.into_iter().filter_map(|hit| {
-        bars.get(hit.bar_index).map(|src| PatternOut { bar_time: src.bar_time, hit })
-    }).collect();
+    let out = hits
+        .into_iter()
+        .filter_map(|hit| {
+            bars.get(hit.bar_index).map(|src| PatternOut {
+                bar_time: src.bar_time,
+                hit,
+            })
+        })
+        .collect();
     Ok(Json(out))
 }
 
@@ -439,7 +574,9 @@ async fn candlestick_patterns_route(
 // ---------------------------------------------------------------------------
 
 fn prior_bar_from(bars: &[PriceBar]) -> Result<pivots::PriorBar, ApiError> {
-    let b = bars.last().ok_or_else(|| ApiError::BadRequest("no bars in window".into()))?;
+    let b = bars
+        .last()
+        .ok_or_else(|| ApiError::BadRequest("no bars in window".into()))?;
     Ok(pivots::PriorBar {
         high: dec_f64(b.high),
         low: dec_f64(b.low),

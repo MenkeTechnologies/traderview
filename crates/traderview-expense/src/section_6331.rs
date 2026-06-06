@@ -132,8 +132,8 @@ pub fn check(input: &Section6331Input) -> Section6331Result {
         ));
     }
 
-    let jeopardy_bypass = matches!(input.levy_type, LevyType::JeopardyLevy)
-        || input.jeopardy_finding_made;
+    let jeopardy_bypass =
+        matches!(input.levy_type, LevyType::JeopardyLevy) || input.jeopardy_finding_made;
 
     let thirty_day_required = !jeopardy_bypass;
 
@@ -373,9 +373,10 @@ mod tests {
     #[test]
     fn note_pins_10_day_demand() {
         let r = check(&authorized_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6331(a)")
-            && n.contains("10 days")
-            && n.contains("§ 6303")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6331(a)") && n.contains("10 days") && n.contains("§ 6303")));
     }
 
     #[test]
@@ -405,17 +406,19 @@ mod tests {
     #[test]
     fn note_pins_jeopardy_levy_exception() {
         let r = check(&authorized_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6331(j)")
-            && n.contains("jeopardy")
-            && n.contains("§ 7429")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6331(j)") && n.contains("jeopardy") && n.contains("§ 7429")));
     }
 
     #[test]
     fn note_pins_k_subsection_blockers() {
         let r = check(&authorized_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6331(k)")
-            && n.contains("§ 6015")
-            && n.contains("§ 6330")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6331(k)") && n.contains("§ 6015") && n.contains("§ 6330")));
     }
 
     #[test]

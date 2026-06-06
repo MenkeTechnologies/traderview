@@ -7,8 +7,8 @@
 //! `upper_inclusive_taxable_income = None` is the open-ended top bracket.
 //! Rates are basis points (e.g. 1000 = 10%) to keep integer-safe math.
 
-use rust_decimal::Decimal;
 use crate::engine::FilingStatus;
+use rust_decimal::Decimal;
 
 /// One bracket row.
 #[derive(Debug, Clone, Copy)]
@@ -21,55 +21,61 @@ pub struct Bracket {
 }
 
 const fn b(upper: i64, rate_bps: u32) -> Bracket {
-    Bracket { upper: Some(upper), rate_bps }
+    Bracket {
+        upper: Some(upper),
+        rate_bps,
+    }
 }
 const fn top(rate_bps: u32) -> Bracket {
-    Bracket { upper: None, rate_bps }
+    Bracket {
+        upper: None,
+        rate_bps,
+    }
 }
 
 // 2025 brackets per Rev. Proc. 2024-40 § 3.01 Tables 1-4.
 
 /// Single filer.
 pub const SINGLE: &[Bracket] = &[
-    b(11_925,   1000),
-    b(48_475,   1200),
-    b(103_350,  2200),
-    b(197_300,  2400),
-    b(250_525,  3200),
-    b(626_350,  3500),
+    b(11_925, 1000),
+    b(48_475, 1200),
+    b(103_350, 2200),
+    b(197_300, 2400),
+    b(250_525, 3200),
+    b(626_350, 3500),
     top(3700),
 ];
 
 /// Married filing jointly + qualifying surviving spouse.
 pub const MFJ: &[Bracket] = &[
-    b(23_850,   1000),
-    b(96_950,   1200),
-    b(206_700,  2200),
-    b(394_600,  2400),
-    b(501_050,  3200),
-    b(751_600,  3500),
+    b(23_850, 1000),
+    b(96_950, 1200),
+    b(206_700, 2200),
+    b(394_600, 2400),
+    b(501_050, 3200),
+    b(751_600, 3500),
     top(3700),
 ];
 
 /// Married filing separately.
 pub const MFS: &[Bracket] = &[
-    b(11_925,   1000),
-    b(48_475,   1200),
-    b(103_350,  2200),
-    b(197_300,  2400),
-    b(250_525,  3200),
-    b(375_800,  3500),
+    b(11_925, 1000),
+    b(48_475, 1200),
+    b(103_350, 2200),
+    b(197_300, 2400),
+    b(250_525, 3200),
+    b(375_800, 3500),
     top(3700),
 ];
 
 /// Head of household.
 pub const HOH: &[Bracket] = &[
-    b(17_000,   1000),
-    b(64_850,   1200),
-    b(103_350,  2200),
-    b(197_300,  2400),
-    b(250_500,  3200),
-    b(626_350,  3500),
+    b(17_000, 1000),
+    b(64_850, 1200),
+    b(103_350, 2200),
+    b(197_300, 2400),
+    b(250_500, 3200),
+    b(626_350, 3500),
     top(3700),
 ];
 
@@ -77,8 +83,8 @@ pub const HOH: &[Bracket] = &[
 pub fn standard_deduction(status: FilingStatus) -> Decimal {
     let n: i64 = match status {
         FilingStatus::Single | FilingStatus::Mfs => 15_000,
-        FilingStatus::Mfj                        => 30_000,
-        FilingStatus::Hoh                        => 22_500,
+        FilingStatus::Mfj => 30_000,
+        FilingStatus::Hoh => 22_500,
     };
     Decimal::from(n)
 }
@@ -131,9 +137,9 @@ pub fn ordinary_income_tax(taxable_income: Decimal, status: FilingStatus) -> Dec
 fn brackets_for(status: FilingStatus) -> &'static [Bracket] {
     match status {
         FilingStatus::Single => SINGLE,
-        FilingStatus::Mfj    => MFJ,
-        FilingStatus::Mfs    => MFS,
-        FilingStatus::Hoh    => HOH,
+        FilingStatus::Mfj => MFJ,
+        FilingStatus::Mfs => MFS,
+        FilingStatus::Hoh => HOH,
     }
 }
 
@@ -145,7 +151,10 @@ mod tests {
 
     #[test]
     fn single_zero_income_no_tax() {
-        assert_eq!(ordinary_income_tax(Decimal::ZERO, FilingStatus::Single), Decimal::ZERO);
+        assert_eq!(
+            ordinary_income_tax(Decimal::ZERO, FilingStatus::Single),
+            Decimal::ZERO
+        );
     }
 
     #[test]
@@ -200,10 +209,13 @@ mod tests {
     #[test]
     fn standard_deduction_values_match_irs() {
         // Rev. Proc. 2024-40 § 3.16 — pins all four statuses.
-        assert_eq!(standard_deduction(FilingStatus::Single), Decimal::from(15_000));
-        assert_eq!(standard_deduction(FilingStatus::Mfj),    Decimal::from(30_000));
-        assert_eq!(standard_deduction(FilingStatus::Mfs),    Decimal::from(15_000));
-        assert_eq!(standard_deduction(FilingStatus::Hoh),    Decimal::from(22_500));
+        assert_eq!(
+            standard_deduction(FilingStatus::Single),
+            Decimal::from(15_000)
+        );
+        assert_eq!(standard_deduction(FilingStatus::Mfj), Decimal::from(30_000));
+        assert_eq!(standard_deduction(FilingStatus::Mfs), Decimal::from(15_000));
+        assert_eq!(standard_deduction(FilingStatus::Hoh), Decimal::from(22_500));
     }
 
     #[test]
@@ -234,8 +246,10 @@ mod tests {
         // HoH: 17,000 @ 10% + 43,000 @ 12% = 1,700 + 5,160 = 6,860.
         assert_eq!(t_hoh, Decimal::from(6_860));
         // Single (same income) is higher because the 22% bracket starts lower.
-        assert!(t_single > t_hoh,
-            "single must owe more than HoH at $60k; got single={t_single} hoh={t_hoh}");
+        assert!(
+            t_single > t_hoh,
+            "single must owe more than HoH at $60k; got single={t_single} hoh={t_hoh}"
+        );
     }
 
     #[test]
@@ -251,21 +265,26 @@ mod tests {
         //       = 1,700.00 + 5,742.00 + 3,333.00 = 10,775.00
         let income = Decimal::from(80_000);
         let single = ordinary_income_tax(income, FilingStatus::Single);
-        let mfj    = ordinary_income_tax(income, FilingStatus::Mfj);
-        let mfs    = ordinary_income_tax(income, FilingStatus::Mfs);
-        let hoh    = ordinary_income_tax(income, FilingStatus::Hoh);
+        let mfj = ordinary_income_tax(income, FilingStatus::Mfj);
+        let mfs = ordinary_income_tax(income, FilingStatus::Mfs);
+        let hoh = ordinary_income_tax(income, FilingStatus::Hoh);
 
         assert_eq!(single, Decimal::from(12_514));
-        assert_eq!(mfj,    Decimal::from(9_123));
-        assert_eq!(mfs,    Decimal::from(12_514));
-        assert_eq!(hoh,    Decimal::from(10_775));
+        assert_eq!(mfj, Decimal::from(9_123));
+        assert_eq!(mfs, Decimal::from(12_514));
+        assert_eq!(hoh, Decimal::from(10_775));
 
         // Ordering invariant — pins the rule that MFJ < HoH < Single = MFS
         // (at this income level). A bracket-table swap would catch here.
-        assert!(mfj < hoh,    "MFJ ({mfj}) must be cheaper than HoH ({hoh})");
-        assert!(hoh < single, "HoH ({hoh}) must be cheaper than Single ({single})");
-        assert_eq!(single, mfs,
-            "Single and MFS bracket math diverges only above $250,525");
+        assert!(mfj < hoh, "MFJ ({mfj}) must be cheaper than HoH ({hoh})");
+        assert!(
+            hoh < single,
+            "HoH ({hoh}) must be cheaper than Single ({single})"
+        );
+        assert_eq!(
+            single, mfs,
+            "Single and MFS bracket math diverges only above $250,525"
+        );
     }
 
     #[test]
@@ -275,9 +294,11 @@ mod tests {
         // $24,200 while Single is still in 35%.
         let income = Decimal::from(400_000);
         let single = ordinary_income_tax(income, FilingStatus::Single);
-        let mfs    = ordinary_income_tax(income, FilingStatus::Mfs);
-        assert!(mfs > single,
-            "MFS ({mfs}) must owe more than Single ({single}) above 375,800");
+        let mfs = ordinary_income_tax(income, FilingStatus::Mfs);
+        assert!(
+            mfs > single,
+            "MFS ({mfs}) must owe more than Single ({single}) above 375,800"
+        );
     }
 
     #[test]

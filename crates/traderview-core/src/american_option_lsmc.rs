@@ -18,7 +18,10 @@
 //! `gbm_path_simulator`, `monte_carlo_option`.
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum OptionKind { Call, Put }
+pub enum OptionKind {
+    Call,
+    Put,
+}
 
 #[derive(Debug)]
 pub struct Report {
@@ -32,14 +35,26 @@ pub struct Report {
 #[allow(clippy::too_many_arguments)]
 pub fn compute(
     kind: OptionKind,
-    spot: f64, strike: f64, t_years: f64,
-    rate: f64, dividend: f64, sigma: f64,
-    steps: usize, paths: usize, seed: u64,
+    spot: f64,
+    strike: f64,
+    t_years: f64,
+    rate: f64,
+    dividend: f64,
+    sigma: f64,
+    steps: usize,
+    paths: usize,
+    seed: u64,
 ) -> Option<Report> {
     let scalars = [spot, strike, t_years, rate, dividend, sigma];
-    if scalars.iter().any(|x| !x.is_finite()) { return None; }
-    if spot <= 0.0 || strike <= 0.0 || t_years <= 0.0 || sigma < 0.0 { return None; }
-    if steps < 2 || paths < 10 { return None; }
+    if scalars.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
+    if spot <= 0.0 || strike <= 0.0 || t_years <= 0.0 || sigma < 0.0 {
+        return None;
+    }
+    if steps < 2 || paths < 10 {
+        return None;
+    }
     let dt = t_years / steps as f64;
     let drift = (rate - dividend - 0.5 * sigma * sigma) * dt;
     let diffusion = sigma * dt.sqrt();
@@ -55,9 +70,10 @@ pub fn compute(
         }
     }
     // Cashflows: each path's payoff at the time it is exercised.
-    let mut cashflow: Vec<f64> = s_paths.iter().map(|p|
-        payoff(kind, p[steps], strike)
-    ).collect();
+    let mut cashflow: Vec<f64> = s_paths
+        .iter()
+        .map(|p| payoff(kind, p[steps], strike))
+        .collect();
     let mut exercise_step: Vec<usize> = vec![steps; paths];
     // Backward induction from steps-1 down to 1.
     for t in (1..steps).rev() {
@@ -65,16 +81,23 @@ pub fn compute(
         let payoffs: Vec<f64> = spots.iter().map(|&s| payoff(kind, s, strike)).collect();
         // In-the-money paths only.
         let itm: Vec<usize> = (0..paths).filter(|&p| payoffs[p] > 0.0).collect();
-        if itm.len() < 4 { continue; }
+        if itm.len() < 4 {
+            continue;
+        }
         // Discount cashflow from exercise_step back to t.
         let x: Vec<f64> = itm.iter().map(|&p| spots[p]).collect();
-        let y: Vec<f64> = itm.iter().map(|&p| {
-            let steps_to_disc = exercise_step[p] - t;
-            cashflow[p] * discount_step.powi(steps_to_disc as i32)
-        }).collect();
+        let y: Vec<f64> = itm
+            .iter()
+            .map(|&p| {
+                let steps_to_disc = exercise_step[p] - t;
+                cashflow[p] * discount_step.powi(steps_to_disc as i32)
+            })
+            .collect();
         // OLS on {1, S, S²}.
         let beta = ols_quadratic(&x, &y);
-        if beta.is_none() { continue; }
+        if beta.is_none() {
+            continue;
+        }
         let (b0, b1, b2) = beta.unwrap();
         // Exercise if intrinsic > regressed continuation.
         for &p in &itm {
@@ -87,17 +110,19 @@ pub fn compute(
         }
     }
     // Discount all cashflows back to t=0.
-    let discounted: Vec<f64> = (0..paths).map(|p|
-        cashflow[p] * discount_step.powi(exercise_step[p] as i32)
-    ).collect();
+    let discounted: Vec<f64> = (0..paths)
+        .map(|p| cashflow[p] * discount_step.powi(exercise_step[p] as i32))
+        .collect();
     let n_f = paths as f64;
     let mean = discounted.iter().sum::<f64>() / n_f;
     let var = discounted.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / n_f;
     let se = (var / n_f).max(0.0).sqrt();
     // Also compare with European exercise (no early stop) — take max.
-    let euro: f64 = s_paths.iter().map(|p|
-        payoff(kind, p[steps], strike) * discount_step.powi(steps as i32)
-    ).sum::<f64>() / n_f;
+    let euro: f64 = s_paths
+        .iter()
+        .map(|p| payoff(kind, p[steps], strike) * discount_step.powi(steps as i32))
+        .sum::<f64>()
+        / n_f;
     let price = mean.max(euro);
     Some(Report {
         price,
@@ -117,8 +142,13 @@ fn payoff(kind: OptionKind, s: f64, k: f64) -> f64 {
 
 fn ols_quadratic(x: &[f64], y: &[f64]) -> Option<(f64, f64, f64)> {
     let n = x.len() as f64;
-    let mut sx = 0.0; let mut sx2 = 0.0; let mut sx3 = 0.0; let mut sx4 = 0.0;
-    let mut sy = 0.0; let mut sxy = 0.0; let mut sx2y = 0.0;
+    let mut sx = 0.0;
+    let mut sx2 = 0.0;
+    let mut sx3 = 0.0;
+    let mut sx4 = 0.0;
+    let mut sy = 0.0;
+    let mut sxy = 0.0;
+    let mut sx2y = 0.0;
     for (xi, yi) in x.iter().zip(y.iter()) {
         let x2 = xi * xi;
         sx += xi;
@@ -132,10 +162,21 @@ fn ols_quadratic(x: &[f64], y: &[f64]) -> Option<(f64, f64, f64)> {
     let m = [[n, sx, sx2], [sx, sx2, sx3], [sx2, sx3, sx4]];
     let b = [sy, sxy, sx2y];
     let det = det3(m);
-    if det.abs() < 1e-12 { return None; }
-    let mut m0 = m; m0[0][0] = b[0]; m0[1][0] = b[1]; m0[2][0] = b[2];
-    let mut m1 = m; m1[0][1] = b[0]; m1[1][1] = b[1]; m1[2][1] = b[2];
-    let mut m2 = m; m2[0][2] = b[0]; m2[1][2] = b[1]; m2[2][2] = b[2];
+    if det.abs() < 1e-12 {
+        return None;
+    }
+    let mut m0 = m;
+    m0[0][0] = b[0];
+    m0[1][0] = b[1];
+    m0[2][0] = b[2];
+    let mut m1 = m;
+    m1[0][1] = b[0];
+    m1[1][1] = b[1];
+    m1[2][1] = b[2];
+    let mut m2 = m;
+    m2[0][2] = b[0];
+    m2[1][2] = b[1];
+    m2[2][2] = b[2];
     Some((det3(m0) / det, det3(m1) / det, det3(m2) / det))
 }
 
@@ -146,7 +187,9 @@ fn det3(m: [[f64; 3]; 3]) -> f64 {
 }
 
 fn next_u64(state: &mut u64) -> u64 {
-    *state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+    *state = state
+        .wrapping_mul(6364136223846793005)
+        .wrapping_add(1442695040888963407);
     *state
 }
 
@@ -159,7 +202,9 @@ fn next_uniform(state: &mut u64) -> f64 {
 fn next_normal(state: &mut u64) -> f64 {
     let mut u1 = next_uniform(state);
     let u2 = next_uniform(state);
-    if u1 < 1e-300 { u1 = 1e-300; }
+    if u1 < 1e-300 {
+        u1 = 1e-300;
+    }
     (-2.0 * u1.ln()).sqrt() * (std::f64::consts::TAU * u2).cos()
 }
 
@@ -175,8 +220,12 @@ mod tests {
     }
 
     fn norm_cdf(x: f64) -> f64 {
-        let a1 = 0.254829592_f64; let a2 = -0.284496736; let a3 = 1.421413741;
-        let a4 = -1.453152027; let a5 = 1.061405429; let p = 0.3275911_f64;
+        let a1 = 0.254829592_f64;
+        let a2 = -0.284496736;
+        let a3 = 1.421413741;
+        let a4 = -1.453152027;
+        let a5 = 1.061405429;
+        let p = 0.3275911_f64;
         let sign = if x < 0.0 { -1.0 } else { 1.0 };
         let x_abs = (x / std::f64::consts::SQRT_2).abs();
         let t = 1.0 / (1.0 + p * x_abs);
@@ -186,20 +235,95 @@ mod tests {
 
     #[test]
     fn invalid_inputs_return_none() {
-        assert!(compute(OptionKind::Call, -1.0, 100.0, 0.5, 0.05, 0.0, 0.2, 50, 1000, 1).is_none());
-        assert!(compute(OptionKind::Call, 100.0, 100.0, 0.0, 0.05, 0.0, 0.2, 50, 1000, 1).is_none());
-        assert!(compute(OptionKind::Call, 100.0, 100.0, 0.5, 0.05, 0.0, -0.1, 50, 1000, 1).is_none());
-        assert!(compute(OptionKind::Call, 100.0, 100.0, 0.5, 0.05, 0.0, 0.2, 1, 1000, 1).is_none());
-        assert!(compute(OptionKind::Call, 100.0, 100.0, 0.5, 0.05, 0.0, 0.2, 50, 5, 1).is_none());
-        assert!(compute(OptionKind::Call, f64::NAN, 100.0, 0.5, 0.05, 0.0, 0.2, 50, 1000, 1).is_none());
+        assert!(compute(
+            OptionKind::Call,
+            -1.0,
+            100.0,
+            0.5,
+            0.05,
+            0.0,
+            0.2,
+            50,
+            1000,
+            1
+        )
+        .is_none());
+        assert!(compute(
+            OptionKind::Call,
+            100.0,
+            100.0,
+            0.0,
+            0.05,
+            0.0,
+            0.2,
+            50,
+            1000,
+            1
+        )
+        .is_none());
+        assert!(compute(
+            OptionKind::Call,
+            100.0,
+            100.0,
+            0.5,
+            0.05,
+            0.0,
+            -0.1,
+            50,
+            1000,
+            1
+        )
+        .is_none());
+        assert!(compute(
+            OptionKind::Call,
+            100.0,
+            100.0,
+            0.5,
+            0.05,
+            0.0,
+            0.2,
+            1,
+            1000,
+            1
+        )
+        .is_none());
+        assert!(compute(
+            OptionKind::Call,
+            100.0,
+            100.0,
+            0.5,
+            0.05,
+            0.0,
+            0.2,
+            50,
+            5,
+            1
+        )
+        .is_none());
+        assert!(compute(
+            OptionKind::Call,
+            f64::NAN,
+            100.0,
+            0.5,
+            0.05,
+            0.0,
+            0.2,
+            50,
+            1000,
+            1
+        )
+        .is_none());
     }
 
     #[test]
     fn american_call_no_dividend_equals_european() {
         // Famous result: American call on non-dividend stock has no early
         // exercise premium → LSMC value ≈ BS European call.
-        let s = 100.0; let k = 100.0; let t = 0.5;
-        let r = 0.05; let sigma = 0.25;
+        let s = 100.0;
+        let k = 100.0;
+        let t = 0.5;
+        let r = 0.05;
+        let sigma = 0.25;
         let lsmc = compute(OptionKind::Call, s, k, t, r, 0.0, sigma, 50, 5000, 7).unwrap();
         let euro = bs_call(s, k, t, r, sigma);
         // Allow 5% MC tolerance + std-error coverage.
@@ -210,8 +334,11 @@ mod tests {
     fn american_put_above_european_intrinsic() {
         // American put on non-dividend stock IS worth more than European
         // when ITM → LSMC must report at least the intrinsic value.
-        let s = 90.0; let k = 100.0; let t = 0.5;
-        let r = 0.05; let sigma = 0.25;
+        let s = 90.0;
+        let k = 100.0;
+        let t = 0.5;
+        let r = 0.05;
+        let sigma = 0.25;
         let r_lsmc = compute(OptionKind::Put, s, k, t, r, 0.0, sigma, 50, 5000, 7).unwrap();
         // Intrinsic = 10. American put should beat it (and beat European put).
         assert!(r_lsmc.price >= 10.0 - 3.0 * r_lsmc.standard_error);
@@ -219,20 +346,68 @@ mod tests {
 
     #[test]
     fn deep_otm_option_priced_near_zero() {
-        let r = compute(OptionKind::Call, 50.0, 200.0, 0.1, 0.05, 0.0, 0.20, 20, 2000, 7).unwrap();
+        let r = compute(
+            OptionKind::Call,
+            50.0,
+            200.0,
+            0.1,
+            0.05,
+            0.0,
+            0.20,
+            20,
+            2000,
+            7,
+        )
+        .unwrap();
         assert!(r.price < 0.5);
     }
 
     #[test]
     fn reproducible_with_same_seed() {
-        let a = compute(OptionKind::Put, 100.0, 100.0, 0.5, 0.05, 0.0, 0.25, 50, 1000, 99).unwrap();
-        let b = compute(OptionKind::Put, 100.0, 100.0, 0.5, 0.05, 0.0, 0.25, 50, 1000, 99).unwrap();
+        let a = compute(
+            OptionKind::Put,
+            100.0,
+            100.0,
+            0.5,
+            0.05,
+            0.0,
+            0.25,
+            50,
+            1000,
+            99,
+        )
+        .unwrap();
+        let b = compute(
+            OptionKind::Put,
+            100.0,
+            100.0,
+            0.5,
+            0.05,
+            0.0,
+            0.25,
+            50,
+            1000,
+            99,
+        )
+        .unwrap();
         assert_eq!(a.price.to_bits(), b.price.to_bits());
     }
 
     #[test]
     fn confidence_interval_brackets_price() {
-        let r = compute(OptionKind::Put, 100.0, 100.0, 0.5, 0.05, 0.0, 0.25, 50, 1000, 7).unwrap();
+        let r = compute(
+            OptionKind::Put,
+            100.0,
+            100.0,
+            0.5,
+            0.05,
+            0.0,
+            0.25,
+            50,
+            1000,
+            7,
+        )
+        .unwrap();
         assert!(r.ci_lower <= r.price && r.price <= r.ci_upper);
     }
 }

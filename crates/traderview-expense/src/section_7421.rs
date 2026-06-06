@@ -117,50 +117,34 @@ pub fn check(input: &Section7421Input) -> Section7421Result {
         SuitPurpose::RestrainAssessment | SuitPurpose::RestrainCollection
     );
 
-    let cic_services_carveout = matches!(
-        input.suit_purpose,
-        SuitPurpose::RegulatoryPreEnforcement
-    );
+    let cic_services_carveout = matches!(input.suit_purpose, SuitPurpose::RegulatoryPreEnforcement);
 
     let refund_suit_path = matches!(input.suit_purpose, SuitPurpose::RefundAfterPayment);
 
     let statutory_engaged = !matches!(input.statutory_exception, StatutoryException::None);
 
-    let enochs_engaged =
-        input.government_cannot_prevail && input.equity_jurisdiction_exists;
+    let enochs_engaged = input.government_cannot_prevail && input.equity_jurisdiction_exists;
 
-    if assessment_or_collection
-        && !statutory_engaged
-        && !enochs_engaged
-        && !cic_services_carveout
-    {
+    if assessment_or_collection && !statutory_engaged && !enochs_engaged && !cic_services_carveout {
         bar_reasons.push(
             "26 USC § 7421(a) — Anti-Injunction Act bars suits to restrain assessment or collection of any tax".to_string(),
         );
     }
 
-    if assessment_or_collection
-        && !statutory_engaged
-        && !input.government_cannot_prevail
-    {
+    if assessment_or_collection && !statutory_engaged && !input.government_cannot_prevail {
         bar_reasons.push(
             "Enochs v. Williams Packing, 370 U.S. 1 (1962) prong 1 NOT satisfied — government could ultimately prevail under some circumstances".to_string(),
         );
     }
 
-    if assessment_or_collection
-        && !statutory_engaged
-        && !input.equity_jurisdiction_exists
-    {
+    if assessment_or_collection && !statutory_engaged && !input.equity_jurisdiction_exists {
         bar_reasons.push(
             "Enochs v. Williams Packing, 370 U.S. 1 (1962) prong 2 NOT satisfied — no equity jurisdiction (no irreparable harm OR legal remedy adequate)".to_string(),
         );
     }
 
-    let suit_permitted = !assessment_or_collection
-        || statutory_engaged
-        || enochs_engaged
-        || cic_services_carveout;
+    let suit_permitted =
+        !assessment_or_collection || statutory_engaged || enochs_engaged || cic_services_carveout;
 
     let aia_bar_engaged = assessment_or_collection;
 

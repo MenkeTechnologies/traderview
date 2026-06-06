@@ -33,13 +33,19 @@ pub struct Bar {
 pub fn compute(bars: &[Bar], fast: usize, slow: usize) -> Vec<Option<f64>> {
     let n = bars.len();
     let mut out = vec![None; n];
-    if n == 0 || fast == 0 || slow == 0 || fast >= slow { return out; }
+    if n == 0 || fast == 0 || slow == 0 || fast >= slow {
+        return out;
+    }
     // Compute ADL series first.
-    let adl_input: Vec<accumulation_distribution_line::Bar> = bars.iter().map(|b| {
-        accumulation_distribution_line::Bar {
-            high: b.high, low: b.low, close: b.close, volume: b.volume,
-        }
-    }).collect();
+    let adl_input: Vec<accumulation_distribution_line::Bar> = bars
+        .iter()
+        .map(|b| accumulation_distribution_line::Bar {
+            high: b.high,
+            low: b.low,
+            close: b.close,
+            volume: b.volume,
+        })
+        .collect();
     let adl = accumulation_distribution_line::compute(&adl_input);
     let fast_ema = ema(&adl, fast);
     let slow_ema = ema(&adl, slow);
@@ -54,17 +60,24 @@ pub fn compute(bars: &[Bar], fast: usize, slow: usize) -> Vec<Option<f64>> {
 fn ema(series: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     // Seed with SMA of first `period` values.
     let mut have_seed = true;
     let mut seed_sum = 0.0;
     for v in series.iter().take(period) {
         match v {
             Some(x) => seed_sum += x,
-            None => { have_seed = false; break; }
+            None => {
+                have_seed = false;
+                break;
+            }
         }
     }
-    if !have_seed { return out; }
+    if !have_seed {
+        return out;
+    }
     let k = 2.0 / (period as f64 + 1.0);
     let mut cur = seed_sum / period as f64;
     out[period - 1] = Some(cur);
@@ -84,7 +97,12 @@ mod tests {
     use super::*;
 
     fn b(h: f64, l: f64, c: f64, v: f64) -> Bar {
-        Bar { high: h, low: l, close: c, volume: v }
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+            volume: v,
+        }
     }
 
     #[test]
@@ -96,7 +114,7 @@ mod tests {
     fn invalid_periods_return_all_none() {
         let bars = vec![b(101.0, 99.0, 100.0, 1000.0); 20];
         assert!(compute(&bars, 0, 10).iter().all(|x| x.is_none()));
-        assert!(compute(&bars, 10, 3).iter().all(|x| x.is_none()));    // fast >= slow
+        assert!(compute(&bars, 10, 3).iter().all(|x| x.is_none())); // fast >= slow
         assert!(compute(&bars, 5, 5).iter().all(|x| x.is_none()));
     }
 
@@ -115,7 +133,10 @@ mod tests {
         let last = out[29].unwrap();
         // ADL is strictly linearly increasing; the fast EMA tracks it more
         // closely than the slow EMA, so fast > slow → positive oscillator.
-        assert!(last > 0.0, "accumulation should yield positive CO, got {last}");
+        assert!(
+            last > 0.0,
+            "accumulation should yield positive CO, got {last}"
+        );
     }
 
     #[test]
@@ -123,7 +144,10 @@ mod tests {
         let bars = vec![b(101.0, 99.0, 99.0, 1000.0); 30];
         let out = compute(&bars, 3, 10);
         let last = out[29].unwrap();
-        assert!(last < 0.0, "distribution should yield negative CO, got {last}");
+        assert!(
+            last < 0.0,
+            "distribution should yield negative CO, got {last}"
+        );
     }
 
     #[test]

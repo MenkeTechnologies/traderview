@@ -146,7 +146,9 @@ pub fn compute(input: &Input) -> Output {
         "Tax Notes + Bloomberg Tax + Cornell LII + FORVIS + CCH AnswerConnect + Every CRS Report + Wiley + Uncle Kam + FindLaw + House Office of Law Revision Counsel — practitioner overviews of § 162(e)".to_string(),
     ];
 
-    if input.expenditure_category == ExpenditureCategory::NonLobbyingNonPoliticalExpenditureOrdinaryBusinessExpense {
+    if input.expenditure_category
+        == ExpenditureCategory::NonLobbyingNonPoliticalExpenditureOrdinaryBusinessExpense
+    {
         return Output {
             mode: Section162EMode::NotApplicableNonLobbyingNonPoliticalOrdinaryBusinessExpense,
             statutory_basis: "IRC § 162(a) — ordinary business expense not subject to § 162(e) lobbying / political disallowance".to_string(),
@@ -283,7 +285,8 @@ mod tests {
         Input {
             tax_year_status: TaxYearStatus::TaxYearBeginningAfterDecember22_2017PostTcja,
             expenditure_category: ExpenditureCategory::InfluencingLegislationUnderSection162E1A,
-            expenditure_source: ExpenditureSource::InHouseLobbyingExpenditureExclusiveOfProfessionalLobbyistOrDues,
+            expenditure_source:
+                ExpenditureSource::InHouseLobbyingExpenditureExclusiveOfProfessionalLobbyistOrDues,
             compliance_aspect: ComplianceAspect::LobbyingExpenseDeductibilityDetermination,
             expenditure_amount_dollars: 5_000,
         }
@@ -292,7 +295,8 @@ mod tests {
     #[test]
     fn non_lobbying_ordinary_expense_not_applicable() {
         let mut input = baseline_input();
-        input.expenditure_category = ExpenditureCategory::NonLobbyingNonPoliticalExpenditureOrdinaryBusinessExpense;
+        input.expenditure_category =
+            ExpenditureCategory::NonLobbyingNonPoliticalExpenditureOrdinaryBusinessExpense;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -321,7 +325,8 @@ mod tests {
     #[test]
     fn political_campaign_violation_under_162e1b() {
         let mut input = baseline_input();
-        input.expenditure_category = ExpenditureCategory::PoliticalCampaignParticipationOrInterventionUnderSection162E1B;
+        input.expenditure_category =
+            ExpenditureCategory::PoliticalCampaignParticipationOrInterventionUnderSection162E1B;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -367,7 +372,8 @@ mod tests {
     #[test]
     fn de_minimis_in_house_at_or_below_2000_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::DeMinimisInHouseLobbyingExceptionUnderSection162E5B;
+        input.compliance_aspect =
+            ComplianceAspect::DeMinimisInHouseLobbyingExceptionUnderSection162E5B;
         input.expenditure_amount_dollars = 2_000;
         let output = check(&input);
         assert_eq!(
@@ -380,7 +386,8 @@ mod tests {
     #[test]
     fn de_minimis_in_house_at_exactly_2000_boundary_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::DeMinimisInHouseLobbyingExceptionUnderSection162E5B;
+        input.compliance_aspect =
+            ComplianceAspect::DeMinimisInHouseLobbyingExceptionUnderSection162E5B;
         input.expenditure_amount_dollars = 2_000;
         let output = check(&input);
         assert_eq!(
@@ -392,7 +399,8 @@ mod tests {
     #[test]
     fn de_minimis_in_house_at_2001_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::DeMinimisInHouseLobbyingExceptionUnderSection162E5B;
+        input.compliance_aspect =
+            ComplianceAspect::DeMinimisInHouseLobbyingExceptionUnderSection162E5B;
         input.expenditure_amount_dollars = 2_001;
         let output = check(&input);
         assert_eq!(
@@ -405,7 +413,8 @@ mod tests {
     #[test]
     fn de_minimis_professional_lobbyist_payment_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::DeMinimisInHouseLobbyingExceptionUnderSection162E5B;
+        input.compliance_aspect =
+            ComplianceAspect::DeMinimisInHouseLobbyingExceptionUnderSection162E5B;
         input.expenditure_source = ExpenditureSource::PaidToProfessionalLobbyist;
         input.expenditure_amount_dollars = 500;
         let output = check(&input);
@@ -418,7 +427,8 @@ mod tests {
     #[test]
     fn de_minimis_dues_to_organization_lobbying_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::DeMinimisInHouseLobbyingExceptionUnderSection162E5B;
+        input.compliance_aspect =
+            ComplianceAspect::DeMinimisInHouseLobbyingExceptionUnderSection162E5B;
         input.expenditure_source = ExpenditureSource::DuesPaidToOrganizationThatLobbies;
         input.expenditure_amount_dollars = 1_000;
         let output = check(&input);
@@ -438,7 +448,10 @@ mod tests {
         assert_eq!(IRC_162E_TCJA_ENABLING_SECTION, 13308);
         assert_eq!(IRC_162E_TCJA_STAT_VOLUME, 131);
         assert_eq!(IRC_162E_TCJA_STAT_PAGE, 2054);
-        assert_eq!(IRC_162E_DE_MINIMIS_IN_HOUSE_LOBBYING_EXCEPTION_DOLLARS, 2_000);
+        assert_eq!(
+            IRC_162E_DE_MINIMIS_IN_HOUSE_LOBBYING_EXCEPTION_DOLLARS,
+            2_000
+        );
         assert_eq!(IRC_162E_BASIS_POINT_DENOMINATOR, 10_000);
     }
 

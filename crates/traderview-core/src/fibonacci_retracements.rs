@@ -31,7 +31,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum LegDirection { Up, Down }
+pub enum LegDirection {
+    Up,
+    Down,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct FibonacciLevels {
@@ -48,19 +51,25 @@ const RETRACEMENT_PCTS: [f64; 5] = [0.236, 0.382, 0.500, 0.618, 0.786];
 const EXTENSION_PCTS: [f64; 5] = [1.000, 1.272, 1.618, 2.000, 2.618];
 
 pub fn compute(leg_start: f64, leg_end: f64) -> Option<FibonacciLevels> {
-    if !leg_start.is_finite() || !leg_end.is_finite() { return None; }
+    if !leg_start.is_finite() || !leg_end.is_finite() {
+        return None;
+    }
     let dir = match leg_end.partial_cmp(&leg_start) {
         Some(std::cmp::Ordering::Greater) => Some(LegDirection::Up),
         Some(std::cmp::Ordering::Less) => Some(LegDirection::Down),
-        _ => None,    // zero-length leg
+        _ => None, // zero-length leg
     };
     let range = leg_end - leg_start;
     // Retracements: pull back from leg_end toward leg_start.
-    let retracement: Vec<f64> = RETRACEMENT_PCTS.iter()
-        .map(|p| leg_end - range * p).collect();
+    let retracement: Vec<f64> = RETRACEMENT_PCTS
+        .iter()
+        .map(|p| leg_end - range * p)
+        .collect();
     // Extensions: project beyond leg_end in the leg direction.
-    let extension: Vec<f64> = EXTENSION_PCTS.iter()
-        .map(|p| leg_start + range * p).collect();
+    let extension: Vec<f64> = EXTENSION_PCTS
+        .iter()
+        .map(|p| leg_start + range * p)
+        .collect();
     Some(FibonacciLevels {
         leg_start,
         leg_end,
@@ -99,8 +108,12 @@ mod tests {
         let r = compute(100.0, 100.0).unwrap();
         assert!(r.leg_direction.is_none());
         // All retracements and extensions degenerate to the same price.
-        for v in &r.retracement_levels { assert_eq!(*v, 100.0); }
-        for v in &r.extension_levels { assert_eq!(*v, 100.0); }
+        for v in &r.retracement_levels {
+            assert_eq!(*v, 100.0);
+        }
+        for v in &r.extension_levels {
+            assert_eq!(*v, 100.0);
+        }
     }
 
     #[test]
@@ -111,7 +124,11 @@ mod tests {
             assert!(*v >= 100.0 && *v <= 200.0);
         }
         // 50% retracement = midpoint.
-        let idx = r.retracement_pct.iter().position(|p| (p - 0.5).abs() < 1e-9).unwrap();
+        let idx = r
+            .retracement_pct
+            .iter()
+            .position(|p| (p - 0.5).abs() < 1e-9)
+            .unwrap();
         assert!((r.retracement_levels[idx] - 150.0).abs() < 1e-9);
     }
 
@@ -128,7 +145,10 @@ mod tests {
         let r = compute(100.0, 200.0).unwrap();
         for (pct, lvl) in r.extension_pct.iter().zip(r.extension_levels.iter()) {
             if *pct > 1.0 {
-                assert!(*lvl > 200.0, "extension at {pct} = {lvl} should exceed leg_end 200");
+                assert!(
+                    *lvl > 200.0,
+                    "extension at {pct} = {lvl} should exceed leg_end 200"
+                );
             }
         }
     }
@@ -138,7 +158,10 @@ mod tests {
         let r = compute(200.0, 100.0).unwrap();
         for (pct, lvl) in r.extension_pct.iter().zip(r.extension_levels.iter()) {
             if *pct > 1.0 {
-                assert!(*lvl < 100.0, "downtrend extension at {pct} = {lvl} should sit below 100");
+                assert!(
+                    *lvl < 100.0,
+                    "downtrend extension at {pct} = {lvl} should sit below 100"
+                );
             }
         }
     }
@@ -147,7 +170,11 @@ mod tests {
     fn known_618_retracement_value() {
         // From 100 to 200, the 61.8% retracement is 200 - 100·0.618 = 138.2.
         let r = compute(100.0, 200.0).unwrap();
-        let idx = r.retracement_pct.iter().position(|p| (p - 0.618).abs() < 1e-9).unwrap();
+        let idx = r
+            .retracement_pct
+            .iter()
+            .position(|p| (p - 0.618).abs() < 1e-9)
+            .unwrap();
         assert!((r.retracement_levels[idx] - 138.2).abs() < 1e-9);
     }
 }

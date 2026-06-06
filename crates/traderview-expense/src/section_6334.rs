@@ -193,9 +193,7 @@ pub fn check(input: &Section6334Input) -> Section6334Result {
 
     let approval_satisfied = match input.property_category {
         PropertyCategory::PrincipalResidence => !input.district_court_written_approval,
-        PropertyCategory::SelfEmployedAssetsOrNonRentalResidence => {
-            !input.area_director_approval
-        }
+        PropertyCategory::SelfEmployedAssetsOrNonRentalResidence => !input.area_director_approval,
         _ => true,
     };
 
@@ -352,10 +350,7 @@ mod tests {
         i.area_director_approval = true;
         let r = check(&i);
         assert!(!r.exempt_from_levy);
-        assert!(r
-            .failure_reasons
-            .iter()
-            .any(|f| f.contains("§ 6334(e)(2)")));
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 6334(e)(2)")));
     }
 
     #[test]
@@ -477,16 +472,19 @@ mod tests {
     #[test]
     fn note_pins_2026_inflation_amounts() {
         let r = check(&base());
-        assert!(r.notes.iter().any(|n| n.contains("$11,980")
-            && n.contains("$5,990")
-            && n.contains("2026")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("$11,980") && n.contains("$5,990") && n.contains("2026")));
     }
 
     #[test]
     fn note_pins_principal_residence_judicial_gate() {
         let r = check(&base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6334(e)(1)")
-            && n.contains("EXCLUSIVE jurisdiction")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6334(e)(1)") && n.contains("EXCLUSIVE jurisdiction")));
     }
 
     #[test]
@@ -615,15 +613,13 @@ mod tests {
         assert!(!r_p_yes.exempt_from_levy);
 
         let mut i_self_emp_no = base();
-        i_self_emp_no.property_category =
-            PropertyCategory::SelfEmployedAssetsOrNonRentalResidence;
+        i_self_emp_no.property_category = PropertyCategory::SelfEmployedAssetsOrNonRentalResidence;
         i_self_emp_no.area_director_approval = false;
         let r_se_no = check(&i_self_emp_no);
         assert!(r_se_no.approval_satisfied);
 
         let mut i_self_emp_yes = base();
-        i_self_emp_yes.property_category =
-            PropertyCategory::SelfEmployedAssetsOrNonRentalResidence;
+        i_self_emp_yes.property_category = PropertyCategory::SelfEmployedAssetsOrNonRentalResidence;
         i_self_emp_yes.area_director_approval = true;
         let r_se_yes = check(&i_self_emp_yes);
         assert!(!r_se_yes.approval_satisfied);

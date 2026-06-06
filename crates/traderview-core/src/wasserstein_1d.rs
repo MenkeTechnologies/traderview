@@ -38,9 +38,12 @@ pub struct WassersteinReport {
 pub fn compute(sample_a: &[f64], sample_b: &[f64]) -> Option<WassersteinReport> {
     let m = sample_a.len();
     let n = sample_b.len();
-    if m == 0 || n == 0 { return None; }
-    if sample_a.iter().any(|x| !x.is_finite())
-        || sample_b.iter().any(|x| !x.is_finite()) { return None; }
+    if m == 0 || n == 0 {
+        return None;
+    }
+    if sample_a.iter().any(|x| !x.is_finite()) || sample_b.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let mut a = sample_a.to_vec();
     let mut b = sample_b.to_vec();
     a.sort_by(|x, y| x.partial_cmp(y).unwrap_or(std::cmp::Ordering::Equal));
@@ -55,13 +58,23 @@ pub fn compute(sample_a: &[f64], sample_b: &[f64]) -> Option<WassersteinReport> 
     let n_f = n as f64;
     let mut acc = 0.0_f64;
     while i < m || j < n {
-        let next = if i == m { b[j] }
-            else if j == n { a[i] }
-            else { a[i].min(b[j]) };
+        let next = if i == m {
+            b[j]
+        } else if j == n {
+            a[i]
+        } else {
+            a[i].min(b[j])
+        };
         acc += (next - prev) * (f_a - f_b).abs();
         // Advance pointer(s) at this step's value.
-        if i < m && a[i] == next { i += 1; f_a = i as f64 / m_f; }
-        if j < n && b[j] == next { j += 1; f_b = j as f64 / n_f; }
+        if i < m && a[i] == next {
+            i += 1;
+            f_a = i as f64 / m_f;
+        }
+        if j < n && b[j] == next {
+            j += 1;
+            f_b = j as f64 / n_f;
+        }
         prev = next;
     }
     Some(WassersteinReport {
@@ -99,8 +112,11 @@ mod tests {
         let a: Vec<f64> = (1..=10).map(|i| i as f64).collect();
         let b: Vec<f64> = (6..=15).map(|i| i as f64).collect();
         let r = compute(&a, &b).unwrap();
-        assert!((r.wasserstein_1 - 5.0).abs() < 1e-9,
-            "shifted by 5 should yield W₁ ≈ 5, got {}", r.wasserstein_1);
+        assert!(
+            (r.wasserstein_1 - 5.0).abs() < 1e-9,
+            "shifted by 5 should yield W₁ ≈ 5, got {}",
+            r.wasserstein_1
+        );
     }
 
     #[test]

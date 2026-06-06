@@ -162,11 +162,9 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // NoStateRequirement — all remaining states + DC.
     let no_rule_states = [
-        "AL", "AK", "AR", "CO", "CT", "DC", "DE", "FL", "GA", "HI",
-        "ID", "IL", "IN", "IA", "KS", "LA", "ME", "MA", "MN", "MS",
-        "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND",
-        "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT",
-        "VT", "VA", "WV", "WI", "WY",
+        "AL", "AK", "AR", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS",
+        "LA", "ME", "MA", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND",
+        "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WV", "WI", "WY",
     ];
     for code in no_rule_states {
         m.insert(
@@ -233,8 +231,7 @@ pub fn check(input: &InspectionInput) -> InspectionResult {
                         input.day_landlord_delivered_relative_to_commencement <= 0
                     } else {
                         input.day_landlord_delivered_relative_to_commencement >= 0
-                            && input.day_landlord_delivered_relative_to_commencement
-                                <= w as i64
+                            && input.day_landlord_delivered_relative_to_commencement <= w as i64
                     }
                 }
                 None => true,
@@ -246,9 +243,9 @@ pub fn check(input: &InspectionInput) -> InspectionResult {
         }
         InspectionRegime::TenantRequestedMoveInChecklist => {
             let request_timely = input.tenant_requested_damage_list
-                && rule.tenant_request_window_days.is_some_and(|w| {
-                    input.tenant_request_day_after_commencement <= w
-                });
+                && rule
+                    .tenant_request_window_days
+                    .is_some_and(|w| input.tenant_request_day_after_commencement <= w);
             // Only "required" if tenant timely requested.
             if request_timely {
                 (true, input.landlord_provided_move_in_checklist)
@@ -257,10 +254,9 @@ pub fn check(input: &InspectionInput) -> InspectionResult {
                 (false, true)
             }
         }
-        InspectionRegime::PreMoveOutInspectionOffer => (
-            true,
-            input.landlord_offered_pre_move_out_inspection,
-        ),
+        InspectionRegime::PreMoveOutInspectionOffer => {
+            (true, input.landlord_offered_pre_move_out_inspection)
+        }
         InspectionRegime::NoStateRequirement => (false, true),
     };
 
@@ -501,7 +497,12 @@ mod tests {
     #[test]
     fn coverage_is_all_50_states_plus_dc() {
         let codes: Vec<&'static str> = RULES.keys().copied().collect();
-        assert_eq!(codes.len(), 51, "expected 50 states + DC, got {}", codes.len());
+        assert_eq!(
+            codes.len(),
+            51,
+            "expected 50 states + DC, got {}",
+            codes.len()
+        );
     }
 
     #[test]
@@ -530,8 +531,7 @@ mod tests {
         // Invariant: WA is the only state with FullDepositPlusAttorneysFees.
         let mut count = 0;
         for rule in RULES.values() {
-            if rule.forfeit_penalty == DepositForfeitPenalty::FullDepositPlusAttorneysFees
-            {
+            if rule.forfeit_penalty == DepositForfeitPenalty::FullDepositPlusAttorneysFees {
                 count += 1;
             }
         }

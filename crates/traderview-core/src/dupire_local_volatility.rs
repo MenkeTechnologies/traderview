@@ -34,16 +34,38 @@ pub fn compute(
 ) -> Option<Report> {
     let nt = expiries.len();
     let nk = strikes.len();
-    if nt < 3 || nk < 3 { return None; }
-    if call_prices.len() != nt { return None; }
-    if call_prices.iter().any(|row| row.len() != nk) { return None; }
-    if !risk_free_rate.is_finite() { return None; }
-    if expiries.iter().any(|x| !x.is_finite() || *x <= 0.0) { return None; }
-    if strikes.iter().any(|x| !x.is_finite() || *x <= 0.0) { return None; }
-    if call_prices.iter().any(|r| r.iter().any(|c| !c.is_finite())) { return None; }
+    if nt < 3 || nk < 3 {
+        return None;
+    }
+    if call_prices.len() != nt {
+        return None;
+    }
+    if call_prices.iter().any(|row| row.len() != nk) {
+        return None;
+    }
+    if !risk_free_rate.is_finite() {
+        return None;
+    }
+    if expiries.iter().any(|x| !x.is_finite() || *x <= 0.0) {
+        return None;
+    }
+    if strikes.iter().any(|x| !x.is_finite() || *x <= 0.0) {
+        return None;
+    }
+    if call_prices.iter().any(|r| r.iter().any(|c| !c.is_finite())) {
+        return None;
+    }
     // Strikes and expiries must be monotonic increasing.
-    for w in strikes.windows(2) { if w[1] <= w[0] { return None; } }
-    for w in expiries.windows(2) { if w[1] <= w[0] { return None; } }
+    for w in strikes.windows(2) {
+        if w[1] <= w[0] {
+            return None;
+        }
+    }
+    for w in expiries.windows(2) {
+        if w[1] <= w[0] {
+            return None;
+        }
+    }
     let mut local_var = vec![vec![None::<f64>; nk]; nt];
     let mut local_vol = vec![vec![None::<f64>; nk]; nt];
     for ti in 1..nt - 1 {
@@ -52,17 +74,16 @@ pub fn compute(
             let h_t_hi = expiries[ti + 1] - expiries[ti];
             let h_k_lo = strikes[ki] - strikes[ki - 1];
             let h_k_hi = strikes[ki + 1] - strikes[ki];
-            let dc_dt = (call_prices[ti + 1][ki] - call_prices[ti - 1][ki])
-                / (h_t_lo + h_t_hi);
-            let dc_dk = (call_prices[ti][ki + 1] - call_prices[ti][ki - 1])
-                / (h_k_lo + h_k_hi);
-            let d2c_dk2 = 2.0 * (
-                h_k_lo * call_prices[ti][ki + 1]
-                - (h_k_lo + h_k_hi) * call_prices[ti][ki]
-                + h_k_hi * call_prices[ti][ki - 1]
-            ) / (h_k_lo * h_k_hi * (h_k_lo + h_k_hi));
+            let dc_dt = (call_prices[ti + 1][ki] - call_prices[ti - 1][ki]) / (h_t_lo + h_t_hi);
+            let dc_dk = (call_prices[ti][ki + 1] - call_prices[ti][ki - 1]) / (h_k_lo + h_k_hi);
+            let d2c_dk2 = 2.0
+                * (h_k_lo * call_prices[ti][ki + 1] - (h_k_lo + h_k_hi) * call_prices[ti][ki]
+                    + h_k_hi * call_prices[ti][ki - 1])
+                / (h_k_lo * h_k_hi * (h_k_lo + h_k_hi));
             let denom = 0.5 * strikes[ki] * strikes[ki] * d2c_dk2;
-            if denom <= 1e-15 { continue; }
+            if denom <= 1e-15 {
+                continue;
+            }
             let numer = dc_dt + risk_free_rate * strikes[ki] * dc_dk;
             let var = numer / denom;
             if var.is_finite() && var > 0.0 {
@@ -71,7 +92,10 @@ pub fn compute(
             }
         }
     }
-    Some(Report { local_var, local_vol })
+    Some(Report {
+        local_var,
+        local_vol,
+    })
 }
 
 #[cfg(test)]
@@ -79,7 +103,9 @@ mod tests {
     use super::*;
 
     fn bs_call(s: f64, k: f64, t: f64, r: f64, sigma: f64) -> f64 {
-        if t <= 0.0 || sigma <= 0.0 { return (s - k).max(0.0); }
+        if t <= 0.0 || sigma <= 0.0 {
+            return (s - k).max(0.0);
+        }
         let st = sigma * t.sqrt();
         let d1 = ((s / k).ln() + (r + 0.5 * sigma * sigma) * t) / st;
         let d2 = d1 - st;
@@ -87,8 +113,12 @@ mod tests {
     }
 
     fn norm_cdf(x: f64) -> f64 {
-        let a1 = 0.254829592_f64; let a2 = -0.284496736; let a3 = 1.421413741;
-        let a4 = -1.453152027; let a5 = 1.061405429; let p = 0.3275911_f64;
+        let a1 = 0.254829592_f64;
+        let a2 = -0.284496736;
+        let a3 = 1.421413741;
+        let a4 = -1.453152027;
+        let a5 = 1.061405429;
+        let p = 0.3275911_f64;
         let sign = if x < 0.0 { -1.0 } else { 1.0 };
         let x_abs = (x / std::f64::consts::SQRT_2).abs();
         let t = 1.0 / (1.0 + p * x_abs);
@@ -103,7 +133,7 @@ mod tests {
         let expiries = vec![0.1, 0.2, 0.3, 0.4, 0.5];
         let bad = vec![vec![1.0; 5]; 2];
         assert!(compute(&bad, &strikes, &expiries, 0.05).is_none());
-        let bad_strikes = vec![80.0, 120.0, 100.0, 110.0, 130.0];   // not monotonic
+        let bad_strikes = vec![80.0, 120.0, 100.0, 110.0, 130.0]; // not monotonic
         assert!(compute(&prices, &bad_strikes, &expiries, 0.05).is_none());
         let bad_expiries = vec![0.0, 0.2, 0.3, 0.4, 0.5];
         assert!(compute(&prices, &strikes, &bad_expiries, 0.05).is_none());
@@ -114,11 +144,19 @@ mod tests {
     fn dupire_recovers_constant_vol_for_bs_grid() {
         // Build a BS call grid with constant σ = 0.25, then run Dupire.
         // Interior cells should recover ~0.25² = 0.0625.
-        let s0 = 100.0; let sigma = 0.25; let r = 0.0;
+        let s0 = 100.0;
+        let sigma = 0.25;
+        let r = 0.0;
         let strikes: Vec<f64> = (-10_i32..=10).map(|i| s0 + i as f64 * 2.0).collect();
         let expiries: Vec<f64> = (1..=10).map(|i| i as f64 * 0.1).collect();
-        let prices: Vec<Vec<f64>> = expiries.iter()
-            .map(|&t| strikes.iter().map(|&k| bs_call(s0, k, t, r, sigma)).collect())
+        let prices: Vec<Vec<f64>> = expiries
+            .iter()
+            .map(|&t| {
+                strikes
+                    .iter()
+                    .map(|&k| bs_call(s0, k, t, r, sigma))
+                    .collect()
+            })
             .collect();
         let rep = compute(&prices, &strikes, &expiries, r).unwrap();
         // Check ATM cell in middle expiry.
@@ -154,11 +192,19 @@ mod tests {
 
     #[test]
     fn local_vol_equals_sqrt_local_var() {
-        let s0 = 100.0; let sigma = 0.25; let r = 0.0;
+        let s0 = 100.0;
+        let sigma = 0.25;
+        let r = 0.0;
         let strikes: Vec<f64> = (-5_i32..=5).map(|i| s0 + i as f64 * 4.0).collect();
         let expiries: Vec<f64> = (1..=6).map(|i| i as f64 * 0.1).collect();
-        let prices: Vec<Vec<f64>> = expiries.iter()
-            .map(|&t| strikes.iter().map(|&k| bs_call(s0, k, t, r, sigma)).collect())
+        let prices: Vec<Vec<f64>> = expiries
+            .iter()
+            .map(|&t| {
+                strikes
+                    .iter()
+                    .map(|&k| bs_call(s0, k, t, r, sigma))
+                    .collect()
+            })
             .collect();
         let rep = compute(&prices, &strikes, &expiries, r).unwrap();
         for (i, row) in rep.local_var.iter().enumerate() {

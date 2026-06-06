@@ -369,7 +369,8 @@ fn check_california(input: &TenantSmartLockBiometricInput) -> TenantSmartLockBio
         traditional_key_access_required: key_access_required,
         attorney_fees_recoverable: false,
         violations,
-        citation: "Cal. Civ. Code §§ 1798.80, 1798.100 et seq. (CCPA/CPRA); Cal. Civ. Code § 1940.2",
+        citation:
+            "Cal. Civ. Code §§ 1798.80, 1798.100 et seq. (CCPA/CPRA); Cal. Civ. Code § 1940.2",
         notes,
     }
 }
@@ -474,7 +475,10 @@ mod tests {
     fn il_missing_consent_triggers_violation() {
         let r = check(&il_violation());
         assert!(r.biometric_law_violated);
-        assert!(r.violations.iter().any(|v| v.contains("14/15(b)(3)") && v.contains("WRITTEN RELEASE")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("14/15(b)(3)") && v.contains("WRITTEN RELEASE")));
     }
 
     #[test]
@@ -484,7 +488,10 @@ mod tests {
         i.written_purpose_and_length_disclosure_provided = false;
         let r = check(&i);
         assert!(r.biometric_law_violated);
-        assert!(r.violations.iter().any(|v| v.contains("14/15(b)(2)") && v.contains("PURPOSE and LENGTH OF TERM")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("14/15(b)(2)") && v.contains("PURPOSE and LENGTH OF TERM")));
     }
 
     #[test]
@@ -493,7 +500,10 @@ mod tests {
         i.landlord_profited_from_biometric_information = true;
         let r = check(&i);
         assert!(r.biometric_law_violated);
-        assert!(r.violations.iter().any(|v| v.contains("14/15(c)") && v.contains("profit")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("14/15(c)") && v.contains("profit")));
     }
 
     #[test]
@@ -516,7 +526,9 @@ mod tests {
         i.biometric_scans_collected = 50;
         let r = check(&i);
         assert_eq!(r.total_statutory_damages_exposure_cents, 50 * 100_000);
-        assert!(r.notes.iter().any(|n| n.contains("Cothron v. White Castle") && n.contains("SEPARATE BIPA violation")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("Cothron v. White Castle") && n.contains("SEPARATE BIPA violation")
+        ));
     }
 
     #[test]
@@ -549,7 +561,10 @@ mod tests {
     #[test]
     fn il_anti_tying_violation_when_no_key_alternative() {
         let r = check(&il_violation());
-        assert!(r.violations.iter().any(|v| v.contains("anti-tying") && v.contains("traditional key access")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("anti-tying") && v.contains("traditional key access")));
     }
 
     #[test]
@@ -572,7 +587,11 @@ mod tests {
     fn wa_no_private_right_of_action() {
         let r = check(&wa_violation());
         assert!(!r.private_right_of_action_available);
-        assert!(r.notes.iter().any(|n| n.contains("Washington Attorney General") && n.contains("NO statutory private right of action")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Washington Attorney General")
+                && n.contains("NO statutory private right of action")));
     }
 
     #[test]
@@ -585,7 +604,10 @@ mod tests {
     fn tx_missing_consent_violation() {
         let r = check(&tx_violation());
         assert!(r.biometric_law_violated);
-        assert!(r.violations.iter().any(|v| v.contains("§ 503.001") && v.contains("$25,000 per violation")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 503.001") && v.contains("$25,000 per violation")));
     }
 
     #[test]
@@ -603,37 +625,58 @@ mod tests {
     #[test]
     fn ca_ccpa_classifies_biometric_as_sensitive_pi() {
         let r = check(&ca_violation());
-        assert!(r.notes.iter().any(|n| n.contains("CCPA / CPRA") && n.contains("SENSITIVE PERSONAL INFORMATION")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("CCPA / CPRA") && n.contains("SENSITIVE PERSONAL INFORMATION")));
     }
 
     #[test]
     fn ca_missing_consent_violation() {
         let r = check(&ca_violation());
         assert!(r.biometric_law_violated);
-        assert!(r.violations.iter().any(|v| v.contains("§ 1798.100") && v.contains("CCPA/CPRA")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1798.100") && v.contains("CCPA/CPRA")));
     }
 
     #[test]
     fn ca_no_state_specific_biometric_statute_note() {
         let r = check(&ca_violation());
-        assert!(r.notes.iter().any(|n| n.contains("no California-specific biometric statute")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("no California-specific biometric statute")));
     }
 
     #[test]
     fn default_no_state_specific_statute_note() {
         let r = check(&default_violation());
-        assert!(r.notes.iter().any(|n| n.contains("no state-specific biometric privacy statute") && n.contains("FTC Act § 5")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("no state-specific biometric privacy statute")
+                && n.contains("FTC Act § 5")
+        ));
     }
 
     #[test]
     fn default_anti_tying_violation_when_no_key_alternative() {
         let r = check(&default_violation());
-        assert!(r.violations.iter().any(|v| v.contains("anti-tying") && v.contains("common-law privacy")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("anti-tying") && v.contains("common-law privacy")));
     }
 
     #[test]
     fn traditional_key_access_required_when_biometric_lock_installed() {
-        for regime in [Regime::Illinois, Regime::Washington, Regime::Texas, Regime::California, Regime::Default] {
+        for regime in [
+            Regime::Illinois,
+            Regime::Washington,
+            Regime::Texas,
+            Regime::California,
+            Regime::Default,
+        ] {
             let mut i = il_violation();
             i.regime = regime;
             let r = check(&i);
@@ -651,7 +694,13 @@ mod tests {
 
     #[test]
     fn five_regimes_routed_correctly() {
-        for regime in [Regime::Illinois, Regime::Washington, Regime::Texas, Regime::California, Regime::Default] {
+        for regime in [
+            Regime::Illinois,
+            Regime::Washington,
+            Regime::Texas,
+            Regime::California,
+            Regime::Default,
+        ] {
             let mut i = il_violation();
             i.regime = regime;
             let r = check(&i);
@@ -665,11 +714,20 @@ mod tests {
         let r_il = check(&il_violation());
         assert!(r_il.private_right_of_action_available);
 
-        for regime in [Regime::Washington, Regime::Texas, Regime::California, Regime::Default] {
+        for regime in [
+            Regime::Washington,
+            Regime::Texas,
+            Regime::California,
+            Regime::Default,
+        ] {
             let mut i = il_violation();
             i.regime = regime;
             let r = check(&i);
-            assert!(!r.private_right_of_action_available, "regime {:?} should not have private right of action", regime);
+            assert!(
+                !r.private_right_of_action_available,
+                "regime {:?} should not have private right of action",
+                regime
+            );
         }
     }
 
@@ -696,7 +754,10 @@ mod tests {
         i.violation_characterization = ViolationCharacterization::RecklessOrIntentional;
         let r_reck = check(&i);
 
-        assert_eq!(r_reck.statutory_damages_per_violation_cents, r_neg.statutory_damages_per_violation_cents * 5);
+        assert_eq!(
+            r_reck.statutory_damages_per_violation_cents,
+            r_neg.statutory_damages_per_violation_cents * 5
+        );
     }
 
     #[test]
@@ -718,14 +779,24 @@ mod tests {
 
     #[test]
     fn anti_tying_violation_across_all_regimes_when_no_key_alternative() {
-        for regime in [Regime::Illinois, Regime::Washington, Regime::Texas, Regime::California, Regime::Default] {
+        for regime in [
+            Regime::Illinois,
+            Regime::Washington,
+            Regime::Texas,
+            Regime::California,
+            Regime::Default,
+        ] {
             let mut i = il_violation();
             i.regime = regime;
             i.written_consent_obtained = true;
             i.written_purpose_and_length_disclosure_provided = true;
             i.traditional_key_access_offered_as_alternative = false;
             let r = check(&i);
-            assert!(r.violations.iter().any(|v| v.contains("anti-tying")), "regime {:?} should engage anti-tying violation", regime);
+            assert!(
+                r.violations.iter().any(|v| v.contains("anti-tying")),
+                "regime {:?} should engage anti-tying violation",
+                regime
+            );
         }
     }
 

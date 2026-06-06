@@ -121,10 +121,18 @@ pub fn run_sma_cross(
     }
     if !report.rows.is_empty() {
         let n = report.rows.len() as f64;
-        report.mean_in_sample_return =
-            report.rows.iter().map(|r| r.in_sample_return_pct).sum::<f64>() / n;
-        report.mean_out_of_sample_return =
-            report.rows.iter().map(|r| r.out_of_sample_return_pct).sum::<f64>() / n;
+        report.mean_in_sample_return = report
+            .rows
+            .iter()
+            .map(|r| r.in_sample_return_pct)
+            .sum::<f64>()
+            / n;
+        report.mean_out_of_sample_return = report
+            .rows
+            .iter()
+            .map(|r| r.out_of_sample_return_pct)
+            .sum::<f64>()
+            / n;
         report.stability_ratio = if report.mean_in_sample_return.abs() > 1e-9 {
             report.mean_out_of_sample_return / report.mean_in_sample_return
         } else {
@@ -156,12 +164,17 @@ mod tests {
     }
 
     fn trending(n: usize) -> Vec<PriceBar> {
-        (1..=n).map(|i| bar(100.0 + i as f64 * 0.1, i as i64)).collect()
+        (1..=n)
+            .map(|i| bar(100.0 + i as f64 * 0.1, i as i64))
+            .collect()
     }
 
     #[test]
     fn empty_returns_default() {
-        let g = SmaCrossGrid { fasts: vec![5], slows: vec![20] };
+        let g = SmaCrossGrid {
+            fasts: vec![5],
+            slows: vec![20],
+        };
         let r = run_sma_cross(&[], &g, &WalkForwardConfig::default());
         assert!(r.rows.is_empty());
     }
@@ -169,7 +182,10 @@ mod tests {
     #[test]
     fn invalid_window_returns_default() {
         let bars = trending(100);
-        let g = SmaCrossGrid { fasts: vec![5], slows: vec![20] };
+        let g = SmaCrossGrid {
+            fasts: vec![5],
+            slows: vec![20],
+        };
         let cfg = WalkForwardConfig {
             in_sample_bars: 0,
             out_of_sample_bars: 10,
@@ -182,7 +198,10 @@ mod tests {
     #[test]
     fn series_shorter_than_window_returns_default() {
         let bars = trending(50);
-        let g = SmaCrossGrid { fasts: vec![5], slows: vec![20] };
+        let g = SmaCrossGrid {
+            fasts: vec![5],
+            slows: vec![20],
+        };
         let cfg = WalkForwardConfig {
             in_sample_bars: 100,
             out_of_sample_bars: 30,
@@ -195,7 +214,10 @@ mod tests {
     #[test]
     fn produces_one_row_per_window() {
         let bars = trending(500);
-        let g = SmaCrossGrid { fasts: vec![5, 10], slows: vec![20, 30] };
+        let g = SmaCrossGrid {
+            fasts: vec![5, 10],
+            slows: vec![20, 30],
+        };
         let cfg = WalkForwardConfig {
             in_sample_bars: 100,
             out_of_sample_bars: 50,
@@ -206,17 +228,26 @@ mod tests {
         let r = run_sma_cross(&bars, &g, &cfg);
         // Windows: start at 0, advance by 50 until start + 150 > 500.
         // 500 - 150 = 350 / 50 + 1 = 8 windows.
-        assert!(r.rows.len() >= 6 && r.rows.len() <= 8,
-            "expected ~7 windows, got {}", r.rows.len());
+        assert!(
+            r.rows.len() >= 6 && r.rows.len() <= 8,
+            "expected ~7 windows, got {}",
+            r.rows.len()
+        );
     }
 
     #[test]
     fn stability_ratio_finite() {
         let bars = trending(500);
-        let g = SmaCrossGrid { fasts: vec![5], slows: vec![20] };
+        let g = SmaCrossGrid {
+            fasts: vec![5],
+            slows: vec![20],
+        };
         let cfg = WalkForwardConfig {
-            in_sample_bars: 100, out_of_sample_bars: 50, step_bars: 50,
-            initial_capital: 10_000.0, fee_per_trade: 1.0,
+            in_sample_bars: 100,
+            out_of_sample_bars: 50,
+            step_bars: 50,
+            initial_capital: 10_000.0,
+            fee_per_trade: 1.0,
         };
         let r = run_sma_cross(&bars, &g, &cfg);
         assert!(r.stability_ratio.is_finite());
@@ -227,11 +258,14 @@ mod tests {
         let bars = trending(500);
         let g = SmaCrossGrid {
             fasts: vec![0, 20, 5],
-            slows: vec![20, 20],    // fast=20 vs slow=20 → invalid
+            slows: vec![20, 20], // fast=20 vs slow=20 → invalid
         };
         let cfg = WalkForwardConfig {
-            in_sample_bars: 100, out_of_sample_bars: 50, step_bars: 50,
-            initial_capital: 10_000.0, fee_per_trade: 1.0,
+            in_sample_bars: 100,
+            out_of_sample_bars: 50,
+            step_bars: 50,
+            initial_capital: 10_000.0,
+            fee_per_trade: 1.0,
         };
         let r = run_sma_cross(&bars, &g, &cfg);
         // Only fast=5/slow=20 survives; no panic.

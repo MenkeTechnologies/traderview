@@ -17,7 +17,12 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub open: f64, pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ThreeWhiteSoldiersReport {
@@ -31,9 +36,12 @@ pub fn compute(bars: &[Bar]) -> ThreeWhiteSoldiersReport {
         white_soldiers: vec![false; n],
         black_crows: vec![false; n],
     };
-    if n < 3 { return report; }
-    if bars.iter().any(|b| !b.open.is_finite() || !b.high.is_finite()
-        || !b.low.is_finite() || !b.close.is_finite()) {
+    if n < 3 {
+        return report;
+    }
+    if bars.iter().any(|b| {
+        !b.open.is_finite() || !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()
+    }) {
         return report;
     }
     for i in 2..n {
@@ -50,23 +58,47 @@ pub fn compute(bars: &[Bar]) -> ThreeWhiteSoldiersReport {
 
 fn is_three_white_soldiers(b1: Bar, b2: Bar, b3: Bar) -> bool {
     let bullish = |b: Bar| b.close > b.open;
-    if !(bullish(b1) && bullish(b2) && bullish(b3)) { return false; }
-    if !(b2.close > b1.close && b3.close > b2.close) { return false; }
+    if !(bullish(b1) && bullish(b2) && bullish(b3)) {
+        return false;
+    }
+    if !(b2.close > b1.close && b3.close > b2.close) {
+        return false;
+    }
     // Each open inside prior body (not deep gap up).
-    if !(b2.open > b1.open && b2.open < b1.close) { return false; }
-    if !(b3.open > b2.open && b3.open < b2.close) { return false; }
-    body_test(b1) && body_test(b2) && body_test(b3)
-        && upper_wick_test_bull(b1) && upper_wick_test_bull(b2) && upper_wick_test_bull(b3)
+    if !(b2.open > b1.open && b2.open < b1.close) {
+        return false;
+    }
+    if !(b3.open > b2.open && b3.open < b2.close) {
+        return false;
+    }
+    body_test(b1)
+        && body_test(b2)
+        && body_test(b3)
+        && upper_wick_test_bull(b1)
+        && upper_wick_test_bull(b2)
+        && upper_wick_test_bull(b3)
 }
 
 fn is_three_black_crows(b1: Bar, b2: Bar, b3: Bar) -> bool {
     let bearish = |b: Bar| b.close < b.open;
-    if !(bearish(b1) && bearish(b2) && bearish(b3)) { return false; }
-    if !(b2.close < b1.close && b3.close < b2.close) { return false; }
-    if !(b2.open < b1.open && b2.open > b1.close) { return false; }
-    if !(b3.open < b2.open && b3.open > b2.close) { return false; }
-    body_test(b1) && body_test(b2) && body_test(b3)
-        && lower_wick_test_bear(b1) && lower_wick_test_bear(b2) && lower_wick_test_bear(b3)
+    if !(bearish(b1) && bearish(b2) && bearish(b3)) {
+        return false;
+    }
+    if !(b2.close < b1.close && b3.close < b2.close) {
+        return false;
+    }
+    if !(b2.open < b1.open && b2.open > b1.close) {
+        return false;
+    }
+    if !(b3.open < b2.open && b3.open > b2.close) {
+        return false;
+    }
+    body_test(b1)
+        && body_test(b2)
+        && body_test(b3)
+        && lower_wick_test_bear(b1)
+        && lower_wick_test_bear(b2)
+        && lower_wick_test_bear(b3)
 }
 
 fn body_test(b: Bar) -> bool {
@@ -92,7 +124,12 @@ mod tests {
     use super::*;
 
     fn bar(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -103,9 +140,11 @@ mod tests {
 
     #[test]
     fn nan_returns_empty() {
-        let bars = vec![bar(100.0, 101.0, 99.0, 100.5),
-                        bar(f64::NAN, 101.0, 99.0, 100.5),
-                        bar(100.0, 101.0, 99.0, 100.5)];
+        let bars = vec![
+            bar(100.0, 101.0, 99.0, 100.5),
+            bar(f64::NAN, 101.0, 99.0, 100.5),
+            bar(100.0, 101.0, 99.0, 100.5),
+        ];
         let r = compute(&bars);
         assert!(!r.white_soldiers.iter().any(|x| *x));
         assert!(!r.black_crows.iter().any(|x| *x));

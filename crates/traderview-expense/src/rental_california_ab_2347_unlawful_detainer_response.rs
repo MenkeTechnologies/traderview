@@ -354,7 +354,10 @@ mod tests {
             ..baseline_post_ab2347_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, CaliforniaAb2347Mode::NotApplicableNotInCalifornia);
+        assert_eq!(
+            result.mode,
+            CaliforniaAb2347Mode::NotApplicableNotInCalifornia
+        );
     }
 
     #[test]

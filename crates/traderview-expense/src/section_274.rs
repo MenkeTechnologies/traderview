@@ -274,8 +274,8 @@ pub fn check(input: &Section274Input) -> Section274Result {
             | ExpenseCategory::RestaurantMeal2021Or2022
     );
 
-    let substantiation_compliant = !section_274d_compliance_required
-        || input.substantiation_complete;
+    let substantiation_compliant =
+        !section_274d_compliance_required || input.substantiation_complete;
 
     let (deductible_amount_cents, fully_disallowed) = match input.category {
         ExpenseCategory::Entertainment => (0u64, true),
@@ -317,8 +317,8 @@ pub fn check(input: &Section274Input) -> Section274Result {
             } else if !input.substantiation_complete {
                 (0u64, true)
             } else {
-                let per_recipient_max = gift_limit_per_recipient_cents
-                    .saturating_mul(input.gift_recipients as u64);
+                let per_recipient_max =
+                    gift_limit_per_recipient_cents.saturating_mul(input.gift_recipients as u64);
                 let actual_deductible = input.expense_amount_cents.min(per_recipient_max);
                 (actual_deductible, false)
             }
@@ -365,7 +365,10 @@ pub fn check(input: &Section274Input) -> Section274Result {
                 "26 USC § 274(k)(2) BUSINESS MEAL TAXPAYER/EMPLOYEE NOT PRESENT — meal disallowed unless taxpayer or employee of taxpayer present when food or beverages furnished; addresses pre-TCJA abuse of treating client-only meals as business meals".to_string(),
             );
         }
-        if substantiation_compliant && !input.lavish_or_extravagant && input.taxpayer_or_employee_present {
+        if substantiation_compliant
+            && !input.lavish_or_extravagant
+            && input.taxpayer_or_employee_present
+        {
             failure_reasons.push(format!(
                 "26 USC § 274(n) GENERAL 50% LIMIT — business meal of {} cents allowed at 50% = {} cents deductible; § 274(k) two conditions met (not lavish; taxpayer/employee present); § 274(d) substantiation met",
                 input.expense_amount_cents,
@@ -471,9 +474,10 @@ mod tests {
         let r = check(&i);
         assert_eq!(r.deductible_amount_cents, 0);
         assert!(r.fully_disallowed);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 274(k)(1)")
-            && f.contains("LAVISH OR EXTRAVAGANT")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 274(k)(1)") && f.contains("LAVISH OR EXTRAVAGANT")));
     }
 
     #[test]
@@ -482,9 +486,10 @@ mod tests {
         i.taxpayer_or_employee_present = false;
         let r = check(&i);
         assert_eq!(r.deductible_amount_cents, 0);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 274(k)(2)")
-            && f.contains("NOT PRESENT")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 274(k)(2)") && f.contains("NOT PRESENT")));
     }
 
     #[test]
@@ -495,10 +500,12 @@ mod tests {
         let r = check(&i);
         assert_eq!(r.deductible_amount_cents, 0);
         assert!(r.fully_disallowed);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 274(a) ENTERTAINMENT FULLY DISALLOWED")
-            && f.contains("TCJA 2017 § 13304")
-            && f.contains("Pub. L. 115-97")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 274(a) ENTERTAINMENT FULLY DISALLOWED")
+                && f.contains("TCJA 2017 § 13304")
+                && f.contains("Pub. L. 115-97")));
     }
 
     #[test]
@@ -508,11 +515,13 @@ mod tests {
         i.expense_amount_cents = 100_000;
         let r = check(&i);
         assert_eq!(r.deductible_amount_cents, 0);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 274(o) PER SE")
-            && f.contains("country clubs")
-            && f.contains("golf clubs")
-            && f.contains("§ 274(e)(4)")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 274(o) PER SE")
+                && f.contains("country clubs")
+                && f.contains("golf clubs")
+                && f.contains("§ 274(e)(4)")));
     }
 
     #[test]
@@ -522,10 +531,12 @@ mod tests {
         let r = check(&i);
         assert!(!r.substantiation_compliant);
         assert_eq!(r.deductible_amount_cents, 0);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 274(d) SUBSTANTIATION")
-            && f.contains("Sanford v. Commissioner")
-            && f.contains("COHAN RULE rejected")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 274(d) SUBSTANTIATION")
+                && f.contains("Sanford v. Commissioner")
+                && f.contains("COHAN RULE rejected")));
     }
 
     #[test]
@@ -554,9 +565,11 @@ mod tests {
         i.foreign_convention_reasonable = false;
         let r = check(&i);
         assert_eq!(r.deductible_amount_cents, 0);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 274(h) FOREIGN CONVENTION")
-            && f.contains("4-PART REASONABLENESS TEST")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 274(h) FOREIGN CONVENTION")
+                && f.contains("4-PART REASONABLENESS TEST")));
     }
 
     #[test]
@@ -587,10 +600,12 @@ mod tests {
         i.gift_recipients = 1;
         let r = check(&i);
         assert_eq!(r.deductible_amount_cents, 2_500);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 274(b) GIFT LIMITATION")
-            && f.contains("$25 per recipient")
-            && f.contains("1962")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 274(b) GIFT LIMITATION")
+                && f.contains("$25 per recipient")
+                && f.contains("1962")));
     }
 
     #[test]
@@ -612,9 +627,10 @@ mod tests {
         i.promotional_item_exception = true;
         let r = check(&i);
         assert_eq!(r.deductible_amount_cents, 8_000);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 274(b)(1)(A)")
-            && f.contains("PROMOTIONAL ITEM")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 274(b)(1)(A)") && f.contains("PROMOTIONAL ITEM")));
     }
 
     #[test]
@@ -626,9 +642,10 @@ mod tests {
         i.luxury_water_days = 5;
         let r = check(&i);
         assert_eq!(r.deductible_amount_cents, 570_000);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 274(m) LUXURY WATER TRAVEL")
-            && f.contains("$1,140/day")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 274(m) LUXURY WATER TRAVEL") && f.contains("$1,140/day")));
     }
 
     #[test]
@@ -638,10 +655,12 @@ mod tests {
         i.expense_amount_cents = 30_000;
         let r = check(&i);
         assert_eq!(r.deductible_amount_cents, 30_000);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("TEMPORARY 100% RESTAURANT MEAL EXCEPTION")
-            && f.contains("§ 210")
-            && f.contains("EXPIRED January 1, 2023")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("TEMPORARY 100% RESTAURANT MEAL EXCEPTION")
+                && f.contains("§ 210")
+                && f.contains("EXPIRED January 1, 2023")));
     }
 
     #[test]
@@ -734,17 +753,18 @@ mod tests {
     #[test]
     fn note_pins_section_274_overlay_on_section_162a() {
         let r = check(&business_meal_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 274 — DEDUCTION LIMITATIONS")
-            && n.contains("§ 162(a) ordinary and necessary")
-            && n.contains("lesser of")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 274 — DEDUCTION LIMITATIONS")
+                && n.contains("§ 162(a) ordinary and necessary")
+                && n.contains("lesser of")));
     }
 
     #[test]
     fn note_pins_subsection_a_entertainment_tcja_repeal() {
         let r = check(&business_meal_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 274(a) ENTERTAINMENT")
+        assert!(r.notes.iter().any(|n| n.contains("§ 274(a) ENTERTAINMENT")
             && n.contains("TCJA 2017")
             && n.contains("REPEALED")
             && n.contains("§ 274(e)(4)")
@@ -755,8 +775,7 @@ mod tests {
     #[test]
     fn note_pins_subsection_k_two_conditions() {
         let r = check(&business_meal_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 274(k) BUSINESS MEALS")
+        assert!(r.notes.iter().any(|n| n.contains("§ 274(k) BUSINESS MEALS")
             && n.contains("NOT LAVISH OR EXTRAVAGANT")
             && n.contains("TAXPAYER (or employee of taxpayer) PRESENT")));
     }
@@ -764,69 +783,80 @@ mod tests {
     #[test]
     fn note_pins_subsection_n_50_percent_with_2021_2022_exception() {
         let r = check(&business_meal_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 274(n) GENERAL 50% LIMIT")
-            && n.contains("TEMPORARY 100% RESTAURANT MEAL EXCEPTION")
-            && n.contains("§ 210")
-            && n.contains("EXPIRED January 1, 2023")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 274(n) GENERAL 50% LIMIT")
+                && n.contains("TEMPORARY 100% RESTAURANT MEAL EXCEPTION")
+                && n.contains("§ 210")
+                && n.contains("EXPIRED January 1, 2023")));
     }
 
     #[test]
     fn note_pins_subsection_o_eight_per_se_facilities() {
         let r = check(&business_meal_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 274(o) PER SE ENTERTAINMENT FACILITIES")
-            && n.contains("country clubs")
-            && n.contains("golf clubs")
-            && n.contains("yachts")
-            && n.contains("hunting/fishing lodges")
-            && n.contains("vacation resorts")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 274(o) PER SE ENTERTAINMENT FACILITIES")
+                && n.contains("country clubs")
+                && n.contains("golf clubs")
+                && n.contains("yachts")
+                && n.contains("hunting/fishing lodges")
+                && n.contains("vacation resorts")));
     }
 
     #[test]
     fn note_pins_subsection_d_substantiation_four_elements() {
         let r = check(&business_meal_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 274(d) SUBSTANTIATION REQUIREMENTS")
-            && n.contains("(4 elements)")
-            && n.contains("COMPLETE DENIAL")
-            && n.contains("Sanford v. Commissioner")
-            && n.contains("COHAN RULE rejected")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 274(d) SUBSTANTIATION REQUIREMENTS")
+                && n.contains("(4 elements)")
+                && n.contains("COMPLETE DENIAL")
+                && n.contains("Sanford v. Commissioner")
+                && n.contains("COHAN RULE rejected")));
     }
 
     #[test]
     fn note_pins_subsection_b_gift_25_dollar_limit() {
         let r = check(&business_meal_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 274(b) GIFT LIMITATION")
-            && n.contains("$25 PER RECIPIENT")
-            && n.contains("unchanged since 1962")
-            && n.contains("promotional items")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 274(b) GIFT LIMITATION")
+                && n.contains("$25 PER RECIPIENT")
+                && n.contains("unchanged since 1962")
+                && n.contains("promotional items")));
     }
 
     #[test]
     fn note_pins_subsection_h_foreign_convention_four_factor() {
         let r = check(&business_meal_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 274(h) FOREIGN CONVENTIONS")
-            && n.contains("4-part test")
-            && n.contains("residences of active members")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 274(h) FOREIGN CONVENTIONS")
+                && n.contains("4-part test")
+                && n.contains("residences of active members")));
     }
 
     #[test]
     fn note_pins_subsection_m_luxury_water_travel() {
         let r = check(&business_meal_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 274(m) LUXURY WATER TRAVEL")
-            && n.contains("2× highest federal per diem")
-            && n.contains("$1,140/day")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 274(m) LUXURY WATER TRAVEL")
+                && n.contains("2× highest federal per diem")
+                && n.contains("$1,140/day")));
     }
 
     #[test]
     fn note_pins_obbba_2026_update() {
         let r = check(&business_meal_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("OBBBA 2026")
+        assert!(r.notes.iter().any(|n| n.contains("OBBBA 2026")
             && n.contains("Pub. L. 119-21 § 70202")
             && n.contains("§ 274(o)(1)")
             && n.contains("employer-provided meals")));
@@ -835,21 +865,25 @@ mod tests {
     #[test]
     fn note_pins_trader_fact_patterns_five() {
         let r = check(&business_meal_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-critical fact patterns")
-            && n.contains("$400")
-            && n.contains("NBA game")
-            && n.contains("country club")
-            && n.contains("§ 475(f) trader")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-critical fact patterns")
+                && n.contains("$400")
+                && n.contains("NBA game")
+                && n.contains("country club")
+                && n.contains("§ 475(f) trader")));
     }
 
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&business_meal_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Companion to section_162f")
-            && n.contains("section_280e")
-            && n.contains("section_162m")
-            && n.contains("section_409a")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Companion to section_162f")
+                && n.contains("section_280e")
+                && n.contains("section_162m")
+                && n.contains("section_409a")));
     }
 }

@@ -26,7 +26,9 @@ pub fn compute(closes: &[f64], anchor: usize, smooth_period: usize) -> Vec<Optio
     let mut raw = vec![None::<f64>; n];
     for (i, item) in raw.iter_mut().enumerate().skip(anchor) {
         let c = closes[i];
-        if !c.is_finite() { continue; }
+        if !c.is_finite() {
+            continue;
+        }
         let v = (c - anchor_close) / anchor_close;
         if v.is_finite() {
             *item = Some(v);
@@ -43,15 +45,22 @@ pub fn compute(closes: &[f64], anchor: usize, smooth_period: usize) -> Vec<Optio
     }
     let weight_sum = smooth_period as f64 * (smooth_period as f64 + 1.0) / 2.0;
     for (i, slot) in out.iter_mut().enumerate() {
-        if i < anchor + smooth_period - 1 { continue; }
+        if i < anchor + smooth_period - 1 {
+            continue;
+        }
         let lo = i + 1 - smooth_period;
-        if lo < anchor { continue; }
+        if lo < anchor {
+            continue;
+        }
         let mut numer = 0.0_f64;
         let mut ok = true;
         for (k, j) in (lo..=i).enumerate() {
             match raw[j] {
                 Some(v) => numer += v * (k + 1) as f64,
-                None => { ok = false; break; }
+                None => {
+                    ok = false;
+                    break;
+                }
             }
         }
         if ok && numer.is_finite() {

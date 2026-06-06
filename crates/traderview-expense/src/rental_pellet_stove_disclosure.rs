@@ -289,9 +289,8 @@ pub fn check(input: &Input) -> Output {
     );
 
     let annual_rent_at_risk: u64 = match severity {
-        Severity::NonCertifiedInNonAttainmentAreaProhibited | Severity::CoDetectorMissingViolation => {
-            input.annual_rent_cents
-        }
+        Severity::NonCertifiedInNonAttainmentAreaProhibited
+        | Severity::CoDetectorMissingViolation => input.annual_rent_cents,
         Severity::ChimneyAnnualInspectionOverdueViolation
         | Severity::AugerJamCoReleaseExposureWithoutDisclosure
         | Severity::OwnersManualNotProvidedViolation
@@ -353,7 +352,10 @@ mod tests {
     fn compliant_step2_full_disclosure() {
         let i = baseline();
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantStep2WithFullDisclosure));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantStep2WithFullDisclosure
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, 0);
         assert!(r
             .recommended_actions
@@ -367,7 +369,10 @@ mod tests {
         i.stove_certification = StoveCertification::Pre1988NonCertified;
         i.in_pm25_non_attainment_area = true;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::NonCertifiedInNonAttainmentAreaProhibited));
+        assert!(matches!(
+            r.severity,
+            Severity::NonCertifiedInNonAttainmentAreaProhibited
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
         assert!(r
             .recommended_actions
@@ -381,7 +386,10 @@ mod tests {
         i.stove_certification = StoveCertification::Pre1988NonCertified;
         i.in_pm25_non_attainment_area = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantStep2WithFullDisclosure));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantStep2WithFullDisclosure
+        ));
     }
 
     #[test]
@@ -391,8 +399,14 @@ mod tests {
         let r = check(&i);
         assert!(matches!(r.severity, Severity::CoDetectorMissingViolation));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("9 V.S.A. § 2882")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("UL 2034-listed")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("9 V.S.A. § 2882")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("UL 2034-listed")));
     }
 
     #[test]
@@ -400,7 +414,10 @@ mod tests {
         let mut i = baseline();
         i.chimney_inspection_within_12_months = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::ChimneyAnnualInspectionOverdueViolation));
+        assert!(matches!(
+            r.severity,
+            Severity::ChimneyAnnualInspectionOverdueViolation
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents / 2);
         assert!(r.recommended_actions.iter().any(|a| a.contains("NFPA 211")));
         assert!(r.recommended_actions.iter().any(|a| a.contains("CSIA")));
@@ -411,7 +428,10 @@ mod tests {
         let mut i = baseline();
         i.owners_manual_replacement_provided = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::OwnersManualNotProvidedViolation));
+        assert!(matches!(
+            r.severity,
+            Severity::OwnersManualNotProvidedViolation
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents / 2);
         assert!(r
             .recommended_actions
@@ -428,7 +448,10 @@ mod tests {
         let mut i = baseline();
         i.disclosure_includes_co_risk_and_auger_jam = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::AugerJamCoReleaseExposureWithoutDisclosure));
+        assert!(matches!(
+            r.severity,
+            Severity::AugerJamCoReleaseExposureWithoutDisclosure
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents / 2);
     }
 
@@ -437,7 +460,10 @@ mod tests {
         let mut i = baseline();
         i.disclosure_provided_at_lease_signing = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::DisclosureRequiredAtLeaseSigning));
+        assert!(matches!(
+            r.severity,
+            Severity::DisclosureRequiredAtLeaseSigning
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents / 2);
     }
 
@@ -446,7 +472,10 @@ mod tests {
         let mut i = baseline();
         i.disclosure_includes_operation_responsibility = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::DisclosureRequiredAtLeaseSigning));
+        assert!(matches!(
+            r.severity,
+            Severity::DisclosureRequiredAtLeaseSigning
+        ));
     }
 
     #[test]
@@ -571,12 +600,36 @@ mod tests {
 
     #[test]
     fn citation_branch_for_each_jurisdiction() {
-        let vt = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Vermont; i });
-        let me = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Maine; i });
-        let nh = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::NewHampshire; i });
-        let wa = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Washington; i });
-        let co = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Colorado; i });
-        let de = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Default; i });
+        let vt = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Vermont;
+            i
+        });
+        let me = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Maine;
+            i
+        });
+        let nh = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::NewHampshire;
+            i
+        });
+        let wa = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Washington;
+            i
+        });
+        let co = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Colorado;
+            i
+        });
+        let de = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Default;
+            i
+        });
         assert!(vt.citation.contains("V.S.A."));
         assert!(me.citation.contains("M.R.S."));
         assert!(nh.citation.contains("RSA"));
@@ -601,7 +654,10 @@ mod tests {
         i.in_pm25_non_attainment_area = true;
         i.co_detector_installed_adjacent = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::NonCertifiedInNonAttainmentAreaProhibited));
+        assert!(matches!(
+            r.severity,
+            Severity::NonCertifiedInNonAttainmentAreaProhibited
+        ));
     }
 
     #[test]
@@ -618,6 +674,9 @@ mod tests {
         let mut i = baseline();
         i.stove_certification = StoveCertification::Phase2_1988To2015Certified;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantStep2WithFullDisclosure));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantStep2WithFullDisclosure
+        ));
     }
 }

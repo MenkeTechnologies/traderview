@@ -36,9 +36,13 @@ pub fn compute(returns: &[f64], chunk_sizes: &[usize]) -> Option<HurstReport> {
     }
     let mut points: Vec<(f64, f64)> = Vec::new();
     for &chunk in chunk_sizes {
-        if chunk < 4 || chunk > r.len() { continue; }
+        if chunk < 4 || chunk > r.len() {
+            continue;
+        }
         let n_chunks = r.len() / chunk;
-        if n_chunks == 0 { continue; }
+        if n_chunks == 0 {
+            continue;
+        }
         let mut rs_sum = 0.0_f64;
         let mut rs_count = 0usize;
         for c in 0..n_chunks {
@@ -52,8 +56,12 @@ pub fn compute(returns: &[f64], chunk_sizes: &[usize]) -> Option<HurstReport> {
             let mut min_y = f64::INFINITY;
             for d in &dev {
                 cum += d;
-                if cum > max_y { max_y = cum; }
-                if cum < min_y { min_y = cum; }
+                if cum > max_y {
+                    max_y = cum;
+                }
+                if cum < min_y {
+                    min_y = cum;
+                }
             }
             let r_range = max_y - min_y;
             // Sample stdev (n-1 denom) for robustness — match canonical Mandelbrot.
@@ -90,7 +98,9 @@ pub fn compute(returns: &[f64], chunk_sizes: &[usize]) -> Option<HurstReport> {
         den += dx * dx;
         ss_tot += dy * dy;
     }
-    if den <= 0.0 { return None; }
+    if den <= 0.0 {
+        return None;
+    }
     let slope = num / den;
     let intercept = y_mean - slope * x_mean;
     let mut ss_res = 0.0_f64;
@@ -98,9 +108,20 @@ pub fn compute(returns: &[f64], chunk_sizes: &[usize]) -> Option<HurstReport> {
         let predicted = slope * x + intercept;
         ss_res += (y - predicted).powi(2);
     }
-    let r_squared = if ss_tot > 0.0 { 1.0 - ss_res / ss_tot } else { 0.0 };
-    if !slope.is_finite() { return None; }
-    Some(HurstReport { hurst: slope, log_n, log_rs, r_squared })
+    let r_squared = if ss_tot > 0.0 {
+        1.0 - ss_res / ss_tot
+    } else {
+        0.0
+    };
+    if !slope.is_finite() {
+        return None;
+    }
+    Some(HurstReport {
+        hurst: slope,
+        log_n,
+        log_rs,
+        r_squared,
+    })
 }
 
 #[cfg(test)]
@@ -110,7 +131,9 @@ mod tests {
     fn lcg_seed(seed: u64) -> impl FnMut() -> f64 {
         let mut state = seed;
         move || {
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             ((state >> 32) as f64 / u32::MAX as f64) - 0.5
         }
     }
@@ -138,8 +161,11 @@ mod tests {
         let chunks: Vec<usize> = vec![10, 20, 50, 100, 250, 500];
         let report = compute(&r, &chunks).expect("populated");
         // R/S is biased on finite samples — allow generous band.
-        assert!((report.hurst - 0.5).abs() < 0.15,
-            "random walk should yield H ≈ 0.5, got {}", report.hurst);
+        assert!(
+            (report.hurst - 0.5).abs() < 0.15,
+            "random walk should yield H ≈ 0.5, got {}",
+            report.hurst
+        );
     }
 
     #[test]
@@ -148,8 +174,11 @@ mod tests {
         let r: Vec<f64> = (0..2_000).map(|i| 0.001 + (i as f64 * 0.0001)).collect();
         let chunks: Vec<usize> = vec![10, 20, 50, 100, 250];
         let report = compute(&r, &chunks).expect("populated");
-        assert!(report.hurst > 0.5,
-            "trending series should yield H > 0.5, got {}", report.hurst);
+        assert!(
+            report.hurst > 0.5,
+            "trending series should yield H > 0.5, got {}",
+            report.hurst
+        );
     }
 
     #[test]

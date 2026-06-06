@@ -108,12 +108,10 @@ const SUBSTANTIAL_BIL_THRESHOLD_DOLLARS: i64 = 250_000;
 
 pub fn compute(input: &Section754Input) -> Section754Result {
     let threshold = Decimal::from(SUBSTANTIAL_BIL_THRESHOLD_DOLLARS);
-    let raw_adjustment =
-        input.transferee_outside_basis - input.transferee_share_of_inside_basis;
+    let raw_adjustment = input.transferee_outside_basis - input.transferee_share_of_inside_basis;
 
     // §743(d) mandatory adjustment tests.
-    let partnership_bil_excess =
-        input.partnership_total_inside_basis - input.partnership_total_fmv;
+    let partnership_bil_excess = input.partnership_total_inside_basis - input.partnership_total_fmv;
     let test_a = partnership_bil_excess > threshold;
     let test_b = input.transferee_hypothetical_loss_on_immediate_sale > threshold;
     let mandatory = test_a || test_b;
@@ -143,7 +141,9 @@ pub fn compute(input: &Section754Input) -> Section754Result {
         if test_b {
             reasons.push(format!(
                 "§743(d)(1)(B) transferee loss ${} > $250k",
-                input.transferee_hypothetical_loss_on_immediate_sale.round_dp(2)
+                input
+                    .transferee_hypothetical_loss_on_immediate_sale
+                    .round_dp(2)
             ));
         }
         format!(" MANDATORY: {}", reasons.join("; "))
@@ -153,8 +153,12 @@ pub fn compute(input: &Section754Input) -> Section754Result {
 
     let path_label = match (input.election_in_effect, mandatory) {
         (true, _) => "§754 election in effect",
-        (false, true) => "§754 election NOT in effect but §743(d) substantial BIL forces mandatory adjustment",
-        (false, false) => "§754 election NOT in effect and no §743(d) trigger — §743(b) does NOT apply",
+        (false, true) => {
+            "§754 election NOT in effect but §743(d) substantial BIL forces mandatory adjustment"
+        }
+        (false, false) => {
+            "§754 election NOT in effect and no §743(d) trigger — §743(b) does NOT apply"
+        }
     };
 
     let transfer_label = match input.transfer_type {
@@ -418,7 +422,9 @@ mod tests {
         i.partnership_total_inside_basis = dec!(6_000_000);
         i.partnership_total_fmv = dec!(5_500_000);
         let r = compute(&i);
-        assert!(r.note.contains("§754 election NOT in effect but §743(d) substantial BIL forces"));
+        assert!(r
+            .note
+            .contains("§754 election NOT in effect but §743(d) substantial BIL forces"));
     }
 
     #[test]

@@ -118,8 +118,10 @@ fn check_california(input: &TenantUtilityAccountInput) -> TenantUtilityAccountRe
     let mut violations: Vec<String> = Vec::new();
     let mut notes: Vec<String> = Vec::new();
 
-    let metering_applies =
-        matches!(input.metering_type, UtilityMeteringType::IndividuallyMetered);
+    let metering_applies = matches!(
+        input.metering_type,
+        UtilityMeteringType::IndividuallyMetered
+    );
 
     notes.push(
         "Cal. Pub. Util. Code § 777 — tenant in INDIVIDUALLY METERED residential service has right to become direct customer when landlord is customer of record"
@@ -183,8 +185,7 @@ fn check_california(input: &TenantUtilityAccountInput) -> TenantUtilityAccountRe
 fn check_new_york(input: &TenantUtilityAccountInput) -> TenantUtilityAccountResult {
     let mut notes: Vec<String> = Vec::new();
 
-    let metering_applies =
-        !matches!(input.metering_type, UtilityMeteringType::MasterMetered);
+    let metering_applies = !matches!(input.metering_type, UtilityMeteringType::MasterMetered);
 
     notes.push(
         "N.Y. Pub. Serv. Law §§ 32, 33, 33-a (Home Energy Fair Practices Act / HEFPA) — residential utility customer protections under PSC tariff framework"
@@ -279,7 +280,10 @@ mod tests {
         let r = check(&ca_master_metered());
         assert!(!r.tenant_right_to_become_customer_engaged);
         assert!(!r.regime_applies_to_metering_type);
-        assert!(r.notes.iter().any(|n| n.contains("§ 777 does NOT apply to master-metered")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 777 does NOT apply to master-metered")));
     }
 
     #[test]
@@ -311,7 +315,10 @@ mod tests {
         let mut i = ca_individually_metered_base();
         i.utility_provided_notice_of_tenant_right = false;
         let r = check(&i);
-        assert!(r.violations.iter().any(|v| v.contains("§ 777") && v.contains("MUST inform residential occupants")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 777") && v.contains("MUST inform residential occupants")));
     }
 
     #[test]
@@ -326,13 +333,18 @@ mod tests {
     #[test]
     fn ca_right_engaged_note_describes_delinquent_amount_protection() {
         let r = check(&ca_individually_metered_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 777") && n.contains("NOT required to pay any delinquent amount")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("§ 777") && n.contains("NOT required to pay any delinquent amount")
+        ));
     }
 
     #[test]
     fn ca_verification_methods_note_present() {
         let r = check(&ca_individually_metered_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 777") && n.contains("lease, rent receipts")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 777") && n.contains("lease, rent receipts")));
     }
 
     #[test]
@@ -353,7 +365,10 @@ mod tests {
     fn ny_hefpa_individually_metered_right_engaged() {
         let r = check(&ny_base());
         assert!(r.tenant_right_to_become_customer_engaged);
-        assert!(r.notes.iter().any(|n| n.contains("HEFPA") && n.contains("PSC tariff framework")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("HEFPA") && n.contains("PSC tariff framework")));
     }
 
     #[test]
@@ -368,7 +383,10 @@ mod tests {
     #[test]
     fn ny_psc_petition_note_for_shared_meter() {
         let r = check(&ny_base());
-        assert!(r.notes.iter().any(|n| n.contains("petition NY PSC for separate account")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("petition NY PSC for separate account")));
     }
 
     #[test]
@@ -389,7 +407,10 @@ mod tests {
     fn default_individually_metered_within_scope_note() {
         let r = check(&default_base());
         assert!(r.regime_applies_to_metering_type);
-        assert!(r.notes.iter().any(|n| n.contains("individually metered") && n.contains("master-metered buildings")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("individually metered") && n.contains("master-metered buildings")));
     }
 
     #[test]
@@ -437,8 +458,7 @@ mod tests {
             let mut i = ca_individually_metered_base();
             i.metering_type = metering;
             let r = check(&i);
-            let expected_applies =
-                matches!(metering, UtilityMeteringType::IndividuallyMetered);
+            let expected_applies = matches!(metering, UtilityMeteringType::IndividuallyMetered);
             assert_eq!(r.regime_applies_to_metering_type, expected_applies);
         }
     }
@@ -496,7 +516,10 @@ mod tests {
     #[test]
     fn ca_777_1_disclosure_note_present() {
         let r = check(&ca_individually_metered_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 777.1") && n.contains("disclosure obligations")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 777.1") && n.contains("disclosure obligations")));
     }
 
     #[test]

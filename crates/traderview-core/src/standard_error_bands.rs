@@ -44,16 +44,25 @@ pub fn compute(
         smoothing,
         multiplier,
     };
-    if period < 3 || smoothing < 1
-        || !multiplier.is_finite() || multiplier <= 0.0
-        || n < period + smoothing { return report; }
-    if closes.iter().any(|x| !x.is_finite()) { return report; }
+    if period < 3
+        || smoothing < 1
+        || !multiplier.is_finite()
+        || multiplier <= 0.0
+        || n < period + smoothing
+    {
+        return report;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return report;
+    }
     let p_f = period as f64;
     let x_mean = (p_f - 1.0) / 2.0;
-    let x_var: f64 = (0..period).map(|i| {
-        let dx = i as f64 - x_mean;
-        dx * dx
-    }).sum();
+    let x_var: f64 = (0..period)
+        .map(|i| {
+            let dx = i as f64 - x_mean;
+            dx * dx
+        })
+        .sum();
     let mut reg_line = vec![None; n];
     let mut se = vec![None; n];
     for i in (period - 1)..n {
@@ -73,7 +82,11 @@ pub fn compute(
         }
         reg_line[i] = Some(y_hat_last);
         // Standard error of regression: sqrt(SSE / (n - 2)).
-        let se_val = if period > 2 { (sse / (p_f - 2.0)).max(0.0).sqrt() } else { 0.0 };
+        let se_val = if period > 2 {
+            (sse / (p_f - 2.0)).max(0.0).sqrt()
+        } else {
+            0.0
+        };
         se[i] = Some(se_val);
     }
     let midline = sma_opt(&reg_line, smoothing);
@@ -91,11 +104,15 @@ pub fn compute(
 fn sma_opt(series: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     for i in (period - 1)..n {
         let win = &series[i + 1 - period..=i];
-        if win.iter().any(|x| x.is_none()) { continue; }
+        if win.iter().any(|x| x.is_none()) {
+            continue;
+        }
         let s: f64 = win.iter().filter_map(|x| *x).sum();
         out[i] = Some(s / p_f);
     }
@@ -131,8 +148,11 @@ mod tests {
         let last = 99;
         let u = r.upper[last].unwrap();
         let l = r.lower[last].unwrap();
-        assert!((u - l).abs() < 1e-6,
-            "perfect trend should collapse SE bands, got width {}", u - l);
+        assert!(
+            (u - l).abs() < 1e-6,
+            "perfect trend should collapse SE bands, got width {}",
+            u - l
+        );
     }
 
     #[test]
@@ -149,29 +169,38 @@ mod tests {
     #[test]
     fn noisy_input_widens_bands() {
         let mut state: u64 = 42;
-        let c: Vec<f64> = (0..100).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
-            100.0 + (r - 0.5) * 20.0
-        }).collect();
+        let c: Vec<f64> = (0..100)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
+                100.0 + (r - 0.5) * 20.0
+            })
+            .collect();
         let r = compute(&c, 21, 3, 2.0);
         let last = 99;
         let u = r.upper[last].unwrap();
         let l = r.lower[last].unwrap();
-        assert!(u > l + 1.0,
-            "noisy input should produce nonzero band width, got {}", u - l);
+        assert!(
+            u > l + 1.0,
+            "noisy input should produce nonzero band width, got {}",
+            u - l
+        );
     }
 
     #[test]
     fn upper_above_lower_always() {
         let mut state: u64 = 42;
-        let c: Vec<f64> = (0..100).map(|i| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
-            100.0 + i as f64 * 0.5 + (r - 0.5) * 5.0
-        }).collect();
+        let c: Vec<f64> = (0..100)
+            .map(|i| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
+                100.0 + i as f64 * 0.5 + (r - 0.5) * 5.0
+            })
+            .collect();
         let r = compute(&c, 21, 3, 2.0);
         for i in 30..100 {
             if let (Some(u), Some(l)) = (r.upper[i], r.lower[i]) {

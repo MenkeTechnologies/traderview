@@ -16,7 +16,12 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub open: f64, pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct BreakawayReport {
@@ -30,14 +35,16 @@ pub fn compute(bars: &[Bar]) -> BreakawayReport {
         bullish: vec![false; n],
         bearish: vec![false; n],
     };
-    if n < 5 { return report; }
-    if bars.iter().any(|b| !b.open.is_finite() || !b.high.is_finite()
-        || !b.low.is_finite() || !b.close.is_finite()) {
+    if n < 5 {
+        return report;
+    }
+    if bars.iter().any(|b| {
+        !b.open.is_finite() || !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()
+    }) {
         return report;
     }
     for i in 4..n {
-        let (b1, b2, b3, b4, b5) = (bars[i - 4], bars[i - 3], bars[i - 2],
-                                     bars[i - 1], bars[i]);
+        let (b1, b2, b3, b4, b5) = (bars[i - 4], bars[i - 3], bars[i - 2], bars[i - 1], bars[i]);
         if is_bullish_breakaway(b1, b2, b3, b4, b5) {
             report.bullish[i] = true;
         }
@@ -52,18 +59,32 @@ fn is_bullish_breakaway(b1: Bar, b2: Bar, b3: Bar, b4: Bar, b5: Bar) -> bool {
     // Bar 1: tall bearish.
     let body1 = b1.open - b1.close;
     let range1 = b1.high - b1.low;
-    if range1 <= 0.0 || body1 <= 0.0 || body1 < 0.6 * range1 { return false; }
+    if range1 <= 0.0 || body1 <= 0.0 || body1 < 0.6 * range1 {
+        return false;
+    }
     // Bar 2: bearish, gaps down from bar 1.
-    if b2.close >= b2.open { return false; }
-    if b2.high >= b1.low { return false; }
+    if b2.close >= b2.open {
+        return false;
+    }
+    if b2.high >= b1.low {
+        return false;
+    }
     // Bars 3, 4: bearish, each making lower lows.
-    if b3.close >= b3.open || b4.close >= b4.open { return false; }
-    if b3.low >= b2.low { return false; }
-    if b4.low >= b3.low { return false; }
+    if b3.close >= b3.open || b4.close >= b4.open {
+        return false;
+    }
+    if b3.low >= b2.low {
+        return false;
+    }
+    if b4.low >= b3.low {
+        return false;
+    }
     // Bar 5: tall bullish.
     let body5 = b5.close - b5.open;
     let range5 = b5.high - b5.low;
-    if range5 <= 0.0 || body5 <= 0.0 || body5 < 0.6 * range5 { return false; }
+    if range5 <= 0.0 || body5 <= 0.0 || body5 < 0.6 * range5 {
+        return false;
+    }
     // Closes back through the gap (above b2.open).
     b5.close > b2.open && b5.close < b1.close
 }
@@ -71,15 +92,29 @@ fn is_bullish_breakaway(b1: Bar, b2: Bar, b3: Bar, b4: Bar, b5: Bar) -> bool {
 fn is_bearish_breakaway(b1: Bar, b2: Bar, b3: Bar, b4: Bar, b5: Bar) -> bool {
     let body1 = b1.close - b1.open;
     let range1 = b1.high - b1.low;
-    if range1 <= 0.0 || body1 <= 0.0 || body1 < 0.6 * range1 { return false; }
-    if b2.close <= b2.open { return false; }
-    if b2.low <= b1.high { return false; }
-    if b3.close <= b3.open || b4.close <= b4.open { return false; }
-    if b3.high <= b2.high { return false; }
-    if b4.high <= b3.high { return false; }
+    if range1 <= 0.0 || body1 <= 0.0 || body1 < 0.6 * range1 {
+        return false;
+    }
+    if b2.close <= b2.open {
+        return false;
+    }
+    if b2.low <= b1.high {
+        return false;
+    }
+    if b3.close <= b3.open || b4.close <= b4.open {
+        return false;
+    }
+    if b3.high <= b2.high {
+        return false;
+    }
+    if b4.high <= b3.high {
+        return false;
+    }
     let body5 = b5.open - b5.close;
     let range5 = b5.high - b5.low;
-    if range5 <= 0.0 || body5 <= 0.0 || body5 < 0.6 * range5 { return false; }
+    if range5 <= 0.0 || body5 <= 0.0 || body5 < 0.6 * range5 {
+        return false;
+    }
     b5.close < b2.open && b5.close > b1.close
 }
 
@@ -88,7 +123,12 @@ mod tests {
     use super::*;
 
     fn bar(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -128,7 +168,7 @@ mod tests {
     fn no_gap_at_bar2_rejects() {
         let bars = vec![
             bar(110.0, 110.5, 99.0, 100.0),
-            bar(100.0, 101.0, 95.0, 96.0),    // no gap (high 101 > bar 1 low 99)
+            bar(100.0, 101.0, 95.0, 96.0), // no gap (high 101 > bar 1 low 99)
             bar(96.0, 96.5, 92.0, 93.0),
             bar(93.0, 93.5, 89.0, 90.0),
             bar(89.0, 96.0, 88.5, 95.0),

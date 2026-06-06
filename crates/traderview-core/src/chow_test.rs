@@ -38,14 +38,14 @@ pub struct ChowTestReport {
 /// Univariate Chow test: y = α + β · x split at `break_index`.
 /// `break_index` is the first index of the SECOND segment (so segment 1
 /// is [0, break_index), segment 2 is [break_index, n)).
-pub fn univariate(
-    x: &[f64],
-    y: &[f64],
-    break_index: usize,
-) -> Option<ChowTestReport> {
+pub fn univariate(x: &[f64], y: &[f64], break_index: usize) -> Option<ChowTestReport> {
     let n = x.len();
-    if n < 8 || y.len() != n { return None; }
-    if break_index < 4 || break_index > n - 4 { return None; }
+    if n < 8 || y.len() != n {
+        return None;
+    }
+    if break_index < 4 || break_index > n - 4 {
+        return None;
+    }
     if x.iter().any(|v| !v.is_finite()) || y.iter().any(|v| !v.is_finite()) {
         return None;
     }
@@ -56,7 +56,9 @@ pub fn univariate(
     let n_f = n as f64;
     let num = (pooled_ssr - seg1_ssr - seg2_ssr) / k;
     let den = (seg1_ssr + seg2_ssr) / (n_f - 2.0 * k);
-    if den <= 0.0 { return None; }
+    if den <= 0.0 {
+        return None;
+    }
     let f_stat = num / den;
     // Critical value for F(2, n-4) at 5%; use χ²(2)/2 = 3.0 large-sample
     // approximation when dof_denom > 30.
@@ -76,7 +78,9 @@ pub fn univariate(
 
 fn ols_ssr(x: &[f64], y: &[f64]) -> Option<f64> {
     let n = x.len() as f64;
-    if n < 3.0 { return None; }
+    if n < 3.0 {
+        return None;
+    }
     let x_mean: f64 = x.iter().sum::<f64>() / n;
     let y_mean: f64 = y.iter().sum::<f64>() / n;
     let mut sxx = 0.0_f64;
@@ -86,7 +90,9 @@ fn ols_ssr(x: &[f64], y: &[f64]) -> Option<f64> {
         sxx += dx * dx;
         sxy += dx * (y[i] - y_mean);
     }
-    if sxx <= 0.0 { return None; }
+    if sxx <= 0.0 {
+        return None;
+    }
     let beta = sxy / sxx;
     let alpha = y_mean - beta * x_mean;
     let mut ssr = 0.0_f64;
@@ -107,8 +113,8 @@ mod tests {
         let y: Vec<f64> = (0..20).map(|i| 2.0 * i as f64).collect();
         assert!(univariate(&x[..5], &y[..5], 2).is_none());
         assert!(univariate(&x, &y[..10], 5).is_none());
-        assert!(univariate(&x, &y, 2).is_none());     // break too early
-        assert!(univariate(&x, &y, 18).is_none());    // break too late
+        assert!(univariate(&x, &y, 2).is_none()); // break too early
+        assert!(univariate(&x, &y, 18).is_none()); // break too late
     }
 
     #[test]
@@ -124,15 +130,22 @@ mod tests {
         // Constant linear relation y = 2x. F should be very small.
         let mut state: u64 = 42;
         let x: Vec<f64> = (0..200).map(|i| i as f64).collect();
-        let y: Vec<f64> = x.iter().map(|xi| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let eps = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.5;
-            2.0 * xi + eps
-        }).collect();
+        let y: Vec<f64> = x
+            .iter()
+            .map(|xi| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let eps = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.5;
+                2.0 * xi + eps
+            })
+            .collect();
         let r = univariate(&x, &y, 100).unwrap();
-        assert!(!r.reject_at_5pct,
-            "stable relation shouldn't reject, F={}", r.f_statistic);
+        assert!(
+            !r.reject_at_5pct,
+            "stable relation shouldn't reject, F={}",
+            r.f_statistic
+        );
     }
 
     #[test]
@@ -140,17 +153,23 @@ mod tests {
         // y = 2x for first half, y = 5x for second half.
         let mut state: u64 = 11;
         let x: Vec<f64> = (0..200).map(|i| i as f64).collect();
-        let y: Vec<f64> = (0..200).map(|i| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let eps = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.5;
-            let xi = i as f64;
-            let slope = if i < 100 { 2.0 } else { 5.0 };
-            slope * xi + eps
-        }).collect();
+        let y: Vec<f64> = (0..200)
+            .map(|i| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let eps = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.5;
+                let xi = i as f64;
+                let slope = if i < 100 { 2.0 } else { 5.0 };
+                slope * xi + eps
+            })
+            .collect();
         let r = univariate(&x, &y, 100).unwrap();
-        assert!(r.reject_at_5pct,
-            "slope change should reject, F={}", r.f_statistic);
+        assert!(
+            r.reject_at_5pct,
+            "slope change should reject, F={}",
+            r.f_statistic
+        );
     }
 
     #[test]
@@ -158,12 +177,16 @@ mod tests {
         // Use noisy y so OLS has nonzero SSR (otherwise denominator = 0).
         let mut state: u64 = 7;
         let x: Vec<f64> = (0..30).map(|i| i as f64).collect();
-        let y: Vec<f64> = x.iter().map(|xi| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let eps = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.5;
-            2.0 * xi + eps
-        }).collect();
+        let y: Vec<f64> = x
+            .iter()
+            .map(|xi| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let eps = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.5;
+                2.0 * xi + eps
+            })
+            .collect();
         let r = univariate(&x, &y, 12).unwrap();
         assert_eq!(r.n_segment_1, 12);
         assert_eq!(r.n_segment_2, 18);
@@ -174,9 +197,11 @@ mod tests {
         // Segment with no x variation makes OLS singular.
         let mut x = vec![1.0_f64; 12];
         x.extend((12..24).map(|i| i as f64));
-        let y: Vec<f64> = x.iter().enumerate().map(|(i, _)| {
-            if i < 12 { 5.0 } else { 2.0 * i as f64 }
-        }).collect();
+        let y: Vec<f64> = x
+            .iter()
+            .enumerate()
+            .map(|(i, _)| if i < 12 { 5.0 } else { 2.0 * i as f64 })
+            .collect();
         assert!(univariate(&x, &y, 12).is_none());
     }
 
@@ -184,16 +209,23 @@ mod tests {
     fn ssr_pooled_at_least_as_large_as_sum_of_segment_ssr() {
         let mut state: u64 = 11;
         let x: Vec<f64> = (0..200).map(|i| i as f64).collect();
-        let y: Vec<f64> = (0..200).map(|i| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let eps = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.5;
-            let slope = if i < 100 { 2.0 } else { 5.0 };
-            slope * (i as f64) + eps
-        }).collect();
+        let y: Vec<f64> = (0..200)
+            .map(|i| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let eps = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.5;
+                let slope = if i < 100 { 2.0 } else { 5.0 };
+                slope * (i as f64) + eps
+            })
+            .collect();
         let r = univariate(&x, &y, 100).unwrap();
         let split_sum = r.ssr_segment_1 + r.ssr_segment_2;
-        assert!(r.ssr_pooled >= split_sum - 1e-6,
-            "pooled SSR {} should be >= split SSR sum {}", r.ssr_pooled, split_sum);
+        assert!(
+            r.ssr_pooled >= split_sum - 1e-6,
+            "pooled SSR {} should be >= split SSR sum {}",
+            r.ssr_pooled,
+            split_sum
+        );
     }
 }

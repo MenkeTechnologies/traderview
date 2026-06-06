@@ -260,10 +260,7 @@ mod tests {
         i.multifamily_residential = false;
         let r = check(&i);
         assert!(!r.denial_lawful);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("SB 103")));
+        assert!(r.violations.iter().any(|v| v.contains("SB 103")));
     }
 
     #[test]

@@ -20,7 +20,9 @@
 pub fn compute(highs: &[f64], lows: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = highs.len();
     let mut out = vec![None; n];
-    if period < 2 || lows.len() != n || n < period + 1 { return out; }
+    if period < 2 || lows.len() != n || n < period + 1 {
+        return out;
+    }
     if highs.iter().any(|x| !x.is_finite()) || lows.iter().any(|x| !x.is_finite()) {
         return out;
     }
@@ -35,7 +37,11 @@ pub fn compute(highs: &[f64], lows: &[f64], period: usize) -> Vec<Option<f64>> {
         let sma_max: f64 = demax[i + 1 - period..=i].iter().sum::<f64>() / p_f;
         let sma_min: f64 = demin[i + 1 - period..=i].iter().sum::<f64>() / p_f;
         let denom = sma_max + sma_min;
-        *slot = if denom > 0.0 { Some(sma_max / denom) } else { Some(0.5) };
+        *slot = if denom > 0.0 {
+            Some(sma_max / denom)
+        } else {
+            Some(0.5)
+        };
     }
     out
 }
@@ -62,11 +68,14 @@ mod tests {
     #[test]
     fn output_in_unit_range() {
         let mut state: u64 = 42;
-        let h: Vec<f64> = (0..100).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            101.0 + ((state >> 32) as f64 / u32::MAX as f64) * 2.0
-        }).collect();
+        let h: Vec<f64> = (0..100)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                101.0 + ((state >> 32) as f64 / u32::MAX as f64) * 2.0
+            })
+            .collect();
         let l: Vec<f64> = h.iter().map(|x| x - 2.0).collect();
         let r = compute(&h, &l, 14);
         for v in r.iter().flatten() {
@@ -88,8 +97,11 @@ mod tests {
         let h: Vec<f64> = (0..30).map(|i| 100.0 - i as f64 * 0.1).collect();
         let l: Vec<f64> = (0..30).map(|i| 99.0 - i as f64).collect();
         let r = compute(&h, &l, 14);
-        assert!(r[29].unwrap() < 0.05,
-            "falling lows should yield DeMarker ≈ 0, got {}", r[29].unwrap());
+        assert!(
+            r[29].unwrap() < 0.05,
+            "falling lows should yield DeMarker ≈ 0, got {}",
+            r[29].unwrap()
+        );
     }
 
     #[test]

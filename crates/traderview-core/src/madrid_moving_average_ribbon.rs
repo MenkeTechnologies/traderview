@@ -47,8 +47,12 @@ pub fn compute_with(closes: &[f64], periods: Vec<usize>) -> MadridRibbonReport {
         periods: periods.clone(),
         regime: vec![MadridRibbonRegime::Neutral; n],
     };
-    if periods.is_empty() || periods.iter().any(|p| *p < 2) { return report; }
-    if closes.iter().any(|x| !x.is_finite()) { return report; }
+    if periods.is_empty() || periods.iter().any(|p| *p < 2) {
+        return report;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return report;
+    }
     for p in &periods {
         report.ribbons.push(ema(closes, *p));
     }
@@ -59,8 +63,11 @@ pub fn compute_with(closes: &[f64], periods: Vec<usize>) -> MadridRibbonReport {
         let mut up_pairs = 0_usize;
         let mut dn_pairs = 0_usize;
         for w in vals.windows(2) {
-            if w[0] > w[1] { up_pairs += 1; }
-            else if w[0] < w[1] { dn_pairs += 1; }
+            if w[0] > w[1] {
+                up_pairs += 1;
+            } else if w[0] < w[1] {
+                dn_pairs += 1;
+            }
         }
         let total = vals.len() - 1;
         report.regime[i] = if up_pairs == total {
@@ -81,7 +88,9 @@ pub fn compute_with(closes: &[f64], periods: Vec<usize>) -> MadridRibbonReport {
 fn ema(series: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     let k = 2.0 / (p_f + 1.0);
     let seed: f64 = series[..period].iter().sum::<f64>() / p_f;

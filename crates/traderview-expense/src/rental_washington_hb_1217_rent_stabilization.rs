@@ -225,7 +225,8 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.notice_provided == NoticeProvided::NoNoticeProvided && input.rent_increase_basis_points > 0
+    if input.notice_provided == NoticeProvided::NoNoticeProvided
+        && input.rent_increase_basis_points > 0
     {
         return Output {
             mode: WashingtonHb1217Mode::ViolationNoNoticeProvided,
@@ -338,7 +339,8 @@ mod tests {
 
     fn baseline_post_first_year_compliant() -> Input {
         Input {
-            property_classification: PropertyClassification::StandardResidentialDwellingUnitUnderRcw59_18,
+            property_classification:
+                PropertyClassification::StandardResidentialDwellingUnitUnderRcw59_18,
             tenancy_status: TenancyStatus::PostFirstYearMonthToMonth,
             notice_provided: NoticeProvided::NoticeProvided90DaysOrMore,
             rent_increase_basis_points: 500,
@@ -355,25 +357,33 @@ mod tests {
             ..baseline_post_first_year_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, WashingtonHb1217Mode::NotApplicablePropertyOutsideWashington);
+        assert_eq!(
+            result.mode,
+            WashingtonHb1217Mode::NotApplicablePropertyOutsideWashington
+        );
     }
 
     #[test]
     fn new_construction_within_12_years_not_applicable() {
         let input = Input {
-            property_classification: PropertyClassification::NewConstructionWithin12YearsOfCertificateOfOccupancy,
+            property_classification:
+                PropertyClassification::NewConstructionWithin12YearsOfCertificateOfOccupancy,
             years_since_first_certificate_of_occupancy: 5,
             rent_increase_basis_points: 1_500,
             ..baseline_post_first_year_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, WashingtonHb1217Mode::NotApplicableNewConstructionWithin12YearsExemption);
+        assert_eq!(
+            result.mode,
+            WashingtonHb1217Mode::NotApplicableNewConstructionWithin12YearsExemption
+        );
     }
 
     #[test]
     fn new_construction_at_exactly_12_years_no_longer_exempt() {
         let input = Input {
-            property_classification: PropertyClassification::NewConstructionWithin12YearsOfCertificateOfOccupancy,
+            property_classification:
+                PropertyClassification::NewConstructionWithin12YearsOfCertificateOfOccupancy,
             years_since_first_certificate_of_occupancy: 12,
             rent_increase_basis_points: 600,
             ..baseline_post_first_year_compliant()
@@ -517,7 +527,10 @@ mod tests {
             ..baseline_post_first_year_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, WashingtonHb1217Mode::ViolationNoticeBelow90DayMinimum);
+        assert_eq!(
+            result.mode,
+            WashingtonHb1217Mode::ViolationNoticeBelow90DayMinimum
+        );
     }
 
     #[test]

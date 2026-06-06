@@ -449,7 +449,10 @@ mod tests {
         let mut input = baseline_aga_input();
         input.property_jurisdiction = PropertyJurisdiction::OutsideBerkeleyCityLimits;
         let output = check(&input);
-        assert_eq!(output.mode, BerkeleyRentOrdinanceMode::NotApplicablePropertyOutsideBerkeley);
+        assert_eq!(
+            output.mode,
+            BerkeleyRentOrdinanceMode::NotApplicablePropertyOutsideBerkeley
+        );
     }
 
     #[test]
@@ -457,7 +460,10 @@ mod tests {
         let mut input = baseline_aga_input();
         input.unit_type = UnitType::NonResidentialUnitExempt;
         let output = check(&input);
-        assert_eq!(output.mode, BerkeleyRentOrdinanceMode::NotApplicableNonResidentialUnit);
+        assert_eq!(
+            output.mode,
+            BerkeleyRentOrdinanceMode::NotApplicableNonResidentialUnit
+        );
     }
 
     #[test]
@@ -511,7 +517,10 @@ mod tests {
             output.mode,
             BerkeleyRentOrdinanceMode::CompliantAnnualGeneralAdjustmentAtOrBelowMeasureBb5PctCap
         );
-        assert_eq!(output.statutory_annual_general_adjustment_cap_basis_points, 500);
+        assert_eq!(
+            output.statutory_annual_general_adjustment_cap_basis_points,
+            500
+        );
     }
 
     #[test]
@@ -541,7 +550,8 @@ mod tests {
     fn just_cause_ellis_act_withdrawal_compliant() {
         let mut input = baseline_aga_input();
         input.compliance_aspect = ComplianceAspect::JustCauseEviction;
-        input.just_cause_ground_asserted = JustCauseGroundAsserted::EllisActWithdrawalUnderCaliforniaGovCode7060;
+        input.just_cause_ground_asserted =
+            JustCauseGroundAsserted::EllisActWithdrawalUnderCaliforniaGovCode7060;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -699,12 +709,18 @@ mod tests {
     fn constants_pin_statutory_facts() {
         assert_eq!(BERKELEY_RENT_ORDINANCE_ENACTMENT_YEAR, 1980);
         assert_eq!(BERKELEY_RENT_ORDINANCE_ENACTMENT_MONTH, 6);
-        assert_eq!(BERKELEY_RENT_ORDINANCE_BASE_RENT_CEILING_REFERENCE_YEAR, 1980);
+        assert_eq!(
+            BERKELEY_RENT_ORDINANCE_BASE_RENT_CEILING_REFERENCE_YEAR,
+            1980
+        );
         assert_eq!(BERKELEY_RENT_ORDINANCE_BASE_RENT_CEILING_REFERENCE_MONTH, 5);
         assert_eq!(BERKELEY_RENT_ORDINANCE_BASE_RENT_CEILING_REFERENCE_DAY, 31);
         assert_eq!(BERKELEY_RENT_ORDINANCE_AGA_CAP_BASIS_POINTS, 500);
         assert_eq!(BERKELEY_RENT_ORDINANCE_OMI_VACANCY_SEARCH_DAYS, 90);
-        assert_eq!(BERKELEY_RENT_ORDINANCE_NOTICE_OF_TERMINATION_FILING_BUSINESS_DAYS, 3);
+        assert_eq!(
+            BERKELEY_RENT_ORDINANCE_NOTICE_OF_TERMINATION_FILING_BUSINESS_DAYS,
+            3
+        );
         assert_eq!(
             BERKELEY_RENT_ORDINANCE_NUMBER_OF_JUST_CAUSE_GROUNDS_POST_2024_AMENDMENT,
             11
@@ -715,7 +731,10 @@ mod tests {
         );
         assert_eq!(BERKELEY_RENT_ORDINANCE_NON_PAYMENT_NOTICE_DAYS, 3);
         assert_eq!(BERKELEY_RENT_ORDINANCE_BASIS_POINT_DENOMINATOR, 10_000);
-        assert_eq!(BERKELEY_RENT_ORDINANCE_COSTA_HAWKINS_VACANCY_DECONTROL_YEAR, 1995);
+        assert_eq!(
+            BERKELEY_RENT_ORDINANCE_COSTA_HAWKINS_VACANCY_DECONTROL_YEAR,
+            1995
+        );
     }
 
     #[test]

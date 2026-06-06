@@ -400,8 +400,7 @@ mod tests {
         for (straddle, hedging) in [(true, false), (true, true), (false, false)] {
             let r = compute(&input(straddle, hedging, 8_000, 0, 1_500, 0, 0, 0, 0));
             assert_eq!(
-                r.disallowed_deduction_cents,
-                r.capitalized_to_basis_cents,
+                r.disallowed_deduction_cents, r.capitalized_to_basis_cents,
                 "straddle={straddle} hedging={hedging}: disallowed and capitalized must match",
             );
         }

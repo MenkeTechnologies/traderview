@@ -28,12 +28,7 @@ pub struct MaEnvelopeReport {
     pub use_ema: bool,
 }
 
-pub fn compute(
-    closes: &[f64],
-    period: usize,
-    pct: f64,
-    use_ema: bool,
-) -> MaEnvelopeReport {
+pub fn compute(closes: &[f64], period: usize, pct: f64, use_ema: bool) -> MaEnvelopeReport {
     let n = closes.len();
     let mut report = MaEnvelopeReport {
         middle: vec![None; n],
@@ -43,9 +38,17 @@ pub fn compute(
         pct,
         use_ema,
     };
-    if period < 2 || !pct.is_finite() || pct <= 0.0 || n < period { return report; }
-    if closes.iter().any(|x| !x.is_finite()) { return report; }
-    report.middle = if use_ema { ema(closes, period) } else { sma(closes, period) };
+    if period < 2 || !pct.is_finite() || pct <= 0.0 || n < period {
+        return report;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return report;
+    }
+    report.middle = if use_ema {
+        ema(closes, period)
+    } else {
+        sma(closes, period)
+    };
     let factor = pct / 100.0;
     for (i, m_opt) in report.middle.iter().enumerate() {
         if let Some(m) = m_opt {
@@ -59,7 +62,9 @@ pub fn compute(
 fn sma(series: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     let mut sum: f64 = series[..period].iter().sum();
     out[period - 1] = Some(sum / p_f);
@@ -73,7 +78,9 @@ fn sma(series: &[f64], period: usize) -> Vec<Option<f64>> {
 fn ema(series: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     let k = 2.0 / (p_f + 1.0);
     let seed: f64 = series[..period].iter().sum::<f64>() / p_f;
@@ -135,9 +142,12 @@ mod tests {
         let r_sma = compute(&c, 20, 2.5, false);
         let r_ema = compute(&c, 20, 2.5, true);
         let last = c.len() - 1;
-        assert!(r_ema.middle[last].unwrap() > r_sma.middle[last].unwrap(),
+        assert!(
+            r_ema.middle[last].unwrap() > r_sma.middle[last].unwrap(),
             "EMA midline {} should respond faster to step than SMA {}",
-            r_ema.middle[last].unwrap(), r_sma.middle[last].unwrap());
+            r_ema.middle[last].unwrap(),
+            r_sma.middle[last].unwrap()
+        );
     }
 
     #[test]

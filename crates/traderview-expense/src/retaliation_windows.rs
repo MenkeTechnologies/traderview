@@ -248,7 +248,12 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateRetaliationRule>> = Lazy:
         rule("CA", "California", Days(180), "Cal. Civ. Code § 1942.5"),
         rule("CO", "Colorado", Days(180), "C.R.S. § 38-12-509"),
         rule("CT", "Connecticut", Months(6), "Conn. Gen. Stat. § 47a-20"),
-        rule("DC", "District of Columbia", Months(6), "D.C. Code § 42-3505.02"),
+        rule(
+            "DC",
+            "District of Columbia",
+            Months(6),
+            "D.C. Code § 42-3505.02",
+        ),
         rule("DE", "Delaware", Days(90), "25 Del. C. § 5516"),
         rule("FL", "Florida", NoPresumptionPeriod, "Fla. Stat. § 83.64"),
         rule("GA", "Georgia", NoStatute, "no statute"),
@@ -272,7 +277,12 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateRetaliationRule>> = Lazy:
         rule("ND", "North Dakota", NoStatute, "no statute"),
         rule("NE", "Nebraska", Months(6), "Neb. Rev. Stat. § 76-1439"),
         rule("NH", "New Hampshire", Months(6), "RSA 540:13-a"),
-        rule("NJ", "New Jersey", CaseByCase, "N.J.S.A. § 2A:42-10.10 (Anti-Reprisal Act)"),
+        rule(
+            "NJ",
+            "New Jersey",
+            CaseByCase,
+            "N.J.S.A. § 2A:42-10.10 (Anti-Reprisal Act)",
+        ),
         rule("NM", "New Mexico", Months(6), "NMSA § 47-8-39"),
         rule("NV", "Nevada", Months(6), "NRS § 118A.510"),
         rule("NY", "New York", Months(12), "RPL § 223-b"),
@@ -407,7 +417,9 @@ mod tests {
         // States with no anti-retaliation statute (AR/GA/ID/IN/LA/MO/MS/
         // ND/SD/UT/WV/WY): no presumption applies regardless of timing,
         // and the no_statute flag is set.
-        for code in ["AR", "GA", "ID", "IN", "LA", "MO", "MS", "ND", "SD", "UT", "WV", "WY"] {
+        for code in [
+            "AR", "GA", "ID", "IN", "LA", "MO", "MS", "ND", "SD", "UT", "WV", "WY",
+        ] {
             let r = check(&input(code, d(2026, 1, 1), d(2026, 1, 2)));
             assert!(!r.presumption_applies, "{code} should not have presumption");
             assert!(r.no_statute_in_state, "{code} should flag no statute");
@@ -495,7 +507,11 @@ mod tests {
     #[test]
     fn citation_present_for_every_row() {
         for r in TABLE.values() {
-            assert!(!r.citation.is_empty(), "{} has empty citation", r.state_code);
+            assert!(
+                !r.citation.is_empty(),
+                "{} has empty citation",
+                r.state_code
+            );
         }
     }
 

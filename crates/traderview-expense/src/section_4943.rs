@@ -346,7 +346,7 @@ mod tests {
         Input {
             foundation_status: FoundationStatus::PrivateFoundation,
             enterprise_exclusion: BusinessEnterpriseExclusion::None,
-            pf_voting_percentage_basis_points: 1500,         // 15%
+            pf_voting_percentage_basis_points: 1500, // 15%
             combined_pf_and_dp_voting_percentage_basis_points: 2500, // 25% — over 20% limit
             effective_control_in_non_dp_satisfied: false,
             section_4943g_family_business_exception_applies: false,
@@ -484,7 +484,10 @@ mod tests {
         i.combined_pf_and_dp_voting_percentage_basis_points = 2000; // exactly 20%
         let out = check(&i);
         assert_eq!(out.severity, Severity::Compliant);
-        assert_eq!(out.applicable_combined_limit_basis_points, DEFAULT_LIMIT_BPS);
+        assert_eq!(
+            out.applicable_combined_limit_basis_points,
+            DEFAULT_LIMIT_BPS
+        );
     }
 
     #[test]

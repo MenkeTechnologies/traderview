@@ -129,8 +129,9 @@ pub fn check(input: &DeathDisclosureInput) -> DeathDisclosureResult {
     // Cal. Civ. Code § 1710.2(b) override: even outside the 3-year window
     // OR if the cause is HIV/AIDS (otherwise carve-out), intentional
     // misrepresentation in response to a direct inquiry is actionable.
-    let direct_inquiry_misrep =
-        input.direct_inquiry_made && !input.truthful_response_given && input.regime == Regime::California1710_2;
+    let direct_inquiry_misrep = input.direct_inquiry_made
+        && !input.truthful_response_given
+        && input.regime == Regime::California1710_2;
 
     let disclosure_required = within_window && cause_covered;
 
@@ -387,7 +388,9 @@ mod tests {
             false,
         ));
         assert!(!r.disclosure_required);
-        assert!(r.citation.contains("homicides, suicides, and felonies only"));
+        assert!(r
+            .citation
+            .contains("homicides, suicides, and felonies only"));
     }
 
     #[test]

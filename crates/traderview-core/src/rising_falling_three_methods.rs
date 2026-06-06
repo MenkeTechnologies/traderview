@@ -19,7 +19,12 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub open: f64, pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ThreeMethodsReport {
@@ -33,14 +38,16 @@ pub fn compute(bars: &[Bar]) -> ThreeMethodsReport {
         rising: vec![false; n],
         falling: vec![false; n],
     };
-    if n < 5 { return report; }
-    if bars.iter().any(|b| !b.open.is_finite() || !b.high.is_finite()
-        || !b.low.is_finite() || !b.close.is_finite()) {
+    if n < 5 {
+        return report;
+    }
+    if bars.iter().any(|b| {
+        !b.open.is_finite() || !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()
+    }) {
         return report;
     }
     for i in 4..n {
-        let (b1, b2, b3, b4, b5) = (bars[i - 4], bars[i - 3], bars[i - 2],
-                                     bars[i - 1], bars[i]);
+        let (b1, b2, b3, b4, b5) = (bars[i - 4], bars[i - 3], bars[i - 2], bars[i - 1], bars[i]);
         if is_rising_three_methods(b1, b2, b3, b4, b5) {
             report.rising[i] = true;
         }
@@ -54,42 +61,62 @@ pub fn compute(bars: &[Bar]) -> ThreeMethodsReport {
 fn is_rising_three_methods(b1: Bar, b2: Bar, b3: Bar, b4: Bar, b5: Bar) -> bool {
     let body1 = b1.close - b1.open;
     let range1 = b1.high - b1.low;
-    if range1 <= 0.0 || body1 <= 0.0 || body1 < 0.6 * range1 { return false; }
+    if range1 <= 0.0 || body1 <= 0.0 || body1 < 0.6 * range1 {
+        return false;
+    }
     // Bars 2-4: small bodies, contained within bar 1's range.
     let small = |b: Bar| {
         let r = b.high - b.low;
         let bd = (b.close - b.open).abs();
         r > 0.0 && bd < 0.5 * r
     };
-    if !(small(b2) && small(b3) && small(b4)) { return false; }
+    if !(small(b2) && small(b3) && small(b4)) {
+        return false;
+    }
     let middle_low = b2.low.min(b3.low).min(b4.low);
     let middle_high = b2.high.max(b3.high).max(b4.high);
-    if middle_low < b1.low { return false; }
-    if middle_high > b1.high { return false; }
+    if middle_low < b1.low {
+        return false;
+    }
+    if middle_high > b1.high {
+        return false;
+    }
     // Bar 5: bullish, closes above bar 1's close.
     let body5 = b5.close - b5.open;
     let range5 = b5.high - b5.low;
-    if range5 <= 0.0 || body5 <= 0.0 || body5 < 0.6 * range5 { return false; }
+    if range5 <= 0.0 || body5 <= 0.0 || body5 < 0.6 * range5 {
+        return false;
+    }
     b5.close > b1.close
 }
 
 fn is_falling_three_methods(b1: Bar, b2: Bar, b3: Bar, b4: Bar, b5: Bar) -> bool {
     let body1 = b1.open - b1.close;
     let range1 = b1.high - b1.low;
-    if range1 <= 0.0 || body1 <= 0.0 || body1 < 0.6 * range1 { return false; }
+    if range1 <= 0.0 || body1 <= 0.0 || body1 < 0.6 * range1 {
+        return false;
+    }
     let small = |b: Bar| {
         let r = b.high - b.low;
         let bd = (b.close - b.open).abs();
         r > 0.0 && bd < 0.5 * r
     };
-    if !(small(b2) && small(b3) && small(b4)) { return false; }
+    if !(small(b2) && small(b3) && small(b4)) {
+        return false;
+    }
     let middle_low = b2.low.min(b3.low).min(b4.low);
     let middle_high = b2.high.max(b3.high).max(b4.high);
-    if middle_low < b1.low { return false; }
-    if middle_high > b1.high { return false; }
+    if middle_low < b1.low {
+        return false;
+    }
+    if middle_high > b1.high {
+        return false;
+    }
     let body5 = b5.open - b5.close;
     let range5 = b5.high - b5.low;
-    if range5 <= 0.0 || body5 <= 0.0 || body5 < 0.6 * range5 { return false; }
+    if range5 <= 0.0 || body5 <= 0.0 || body5 < 0.6 * range5 {
+        return false;
+    }
     b5.close < b1.close
 }
 
@@ -98,7 +125,12 @@ mod tests {
     use super::*;
 
     fn bar(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -151,7 +183,7 @@ mod tests {
         let bars = vec![
             bar(100.0, 111.0, 99.0, 110.0),
             bar(109.0, 110.0, 105.0, 106.0),
-            bar(106.0, 108.0, 95.0, 97.0),    // breaks bar 1 low (99)
+            bar(106.0, 108.0, 95.0, 97.0), // breaks bar 1 low (99)
             bar(107.0, 109.0, 103.0, 105.0),
             bar(105.0, 116.0, 104.0, 115.0),
         ];
@@ -166,7 +198,7 @@ mod tests {
             bar(109.0, 110.0, 105.0, 106.0),
             bar(106.0, 108.0, 104.0, 107.0),
             bar(107.0, 109.0, 103.0, 105.0),
-            bar(105.0, 109.0, 104.0, 108.0),    // doesn't close above bar 1.close
+            bar(105.0, 109.0, 104.0, 108.0), // doesn't close above bar 1.close
         ];
         let r = compute(&bars);
         assert!(!r.rising[4]);

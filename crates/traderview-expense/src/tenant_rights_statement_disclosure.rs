@@ -299,7 +299,10 @@ mod tests {
         i.statement_distributed_within_30_days_of_publication = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("46:8-45") && v.contains("30 DAYS")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("46:8-45") && v.contains("30 DAYS")));
     }
 
     #[test]
@@ -308,7 +311,10 @@ mod tests {
         i.statement_delivered_to_new_tenant_at_occupancy = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("46:8-45") && v.contains("new tenant")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("46:8-45") && v.contains("new tenant")));
     }
 
     #[test]
@@ -317,7 +323,10 @@ mod tests {
         i.statement_posted_in_prominent_location = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("46:8-46") && v.contains("prominent")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("46:8-46") && v.contains("prominent")));
     }
 
     #[test]
@@ -326,7 +335,10 @@ mod tests {
         i.relying_on_tenant_waiver = true;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("46:8-48") && v.contains("no waiver")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("46:8-48") && v.contains("no waiver")));
     }
 
     #[test]
@@ -337,7 +349,10 @@ mod tests {
         let r = check(&i);
         assert!(r.compliant);
         assert!(!r.regime_applies_to_building);
-        assert!(r.notes.iter().any(|n| n.contains("46:8-47") && n.contains("outside scope")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("46:8-47") && n.contains("outside scope")));
     }
 
     #[test]
@@ -370,7 +385,10 @@ mod tests {
     #[test]
     fn nj_dca_annual_publication_note_present() {
         let r = check(&nj_base());
-        assert!(r.notes.iter().any(|n| n.contains("46:8-44") && n.contains("DCA") && n.contains("ANNUALLY")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("46:8-44") && n.contains("DCA") && n.contains("ANNUALLY")));
     }
 
     #[test]
@@ -382,7 +400,9 @@ mod tests {
     #[test]
     fn nj_penalties_note_with_consumer_fraud_act() {
         let r = check(&nj_base());
-        assert!(r.notes.iter().any(|n| n.contains("46:8-49") && n.contains("56:8-1") && n.contains("treble damages")));
+        assert!(r.notes.iter().any(|n| n.contains("46:8-49")
+            && n.contains("56:8-1")
+            && n.contains("treble damages")));
     }
 
     #[test]
@@ -414,7 +434,10 @@ mod tests {
     #[test]
     fn md_county_municipal_supplement_note() {
         let r = check(&md_base());
-        assert!(r.notes.iter().any(|n| n.contains("Montgomery County") && n.contains("Prince George's County")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Montgomery County") && n.contains("Prince George's County")));
     }
 
     #[test]
@@ -427,26 +450,36 @@ mod tests {
     fn ny_no_violations_no_mandate_note() {
         let r = check(&ny_base());
         assert!(r.compliant);
-        assert!(r.notes.iter().any(|n| n.contains("HSTPA of 2019") && n.contains("NO statutory annual-distribution mandate")));
+        assert!(r.notes.iter().any(|n| n.contains("HSTPA of 2019")
+            && n.contains("NO statutory annual-distribution mandate")));
     }
 
     #[test]
     fn ny_dhcr_and_ag_guide_note() {
         let r = check(&ny_base());
-        assert!(r.notes.iter().any(|n| n.contains("DHCR") && n.contains("AG Residential Tenants' Rights Guide")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("DHCR") && n.contains("AG Residential Tenants' Rights Guide")));
     }
 
     #[test]
     fn default_no_obligation_compliant() {
         let r = check(&default_base());
         assert!(r.compliant);
-        assert!(r.notes.iter().any(|n| n.contains("NO statewide Tenant-Rights-Statement distribution mandate")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("NO statewide Tenant-Rights-Statement distribution mandate")));
     }
 
     #[test]
     fn default_municipal_examples_note() {
         let r = check(&default_base());
-        assert!(r.notes.iter().any(|n| n.contains("Chicago") && n.contains("San Francisco Rent Ordinance § 37")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Chicago") && n.contains("San Francisco Rent Ordinance § 37")));
     }
 
     #[test]
@@ -463,13 +496,22 @@ mod tests {
             i.statement_delivered_to_new_tenant_at_occupancy = false;
             i.statement_posted_in_prominent_location = false;
             let r = check(&i);
-            assert!(r.compliant, "regime {:?} should not impose annual distribution mandate", regime);
+            assert!(
+                r.compliant,
+                "regime {:?} should not impose annual distribution mandate",
+                regime
+            );
         }
     }
 
     #[test]
     fn four_regimes_routed_correctly() {
-        for regime in [Regime::NewJersey, Regime::Maryland, Regime::NewYork, Regime::Default] {
+        for regime in [
+            Regime::NewJersey,
+            Regime::Maryland,
+            Regime::NewYork,
+            Regime::Default,
+        ] {
             let mut i = nj_base();
             i.regime = regime;
             let r = check(&i);

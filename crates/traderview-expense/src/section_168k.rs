@@ -136,7 +136,7 @@ pub fn compute(input: &Section168KInput) -> Section168KResult {
     } else {
         // Pre-OBBBA schedule. Use placed-in-service year.
         match input.placed_in_service_year {
-            y if y < 2018 => 5000,  // Pre-TCJA 50%
+            y if y < 2018 => 5000,                    // Pre-TCJA 50%
             y if (2018..=2022).contains(&y) => 10000, // TCJA 100%
             2023 => 8000,
             2024 => 6000,
@@ -449,9 +449,7 @@ mod tests {
 
     #[test]
     fn negative_cost_clamped() {
-        let r = compute(&input(
-            2026, 6, 1, 2026, 6, 1, -100, 5, false, false, false,
-        ));
+        let r = compute(&input(2026, 6, 1, 2026, 6, 1, -100, 5, false, false, false));
         assert_eq!(r.bonus_depreciation_amount_cents, 0);
     }
 

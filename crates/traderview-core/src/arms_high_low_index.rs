@@ -39,15 +39,20 @@ pub fn compute(breadth: &[DailyBreadth], period: usize) -> ArmsHighLowReport {
         ahli: vec![None; n],
         period,
     };
-    if period < 2 || n < period { return report; }
-    let raw: Vec<f64> = breadth.iter().map(|d| {
-        let denom = d.new_highs + d.new_lows;
-        if denom > 0 {
-            d.new_highs as f64 / denom as f64 * 100.0
-        } else {
-            50.0
-        }
-    }).collect();
+    if period < 2 || n < period {
+        return report;
+    }
+    let raw: Vec<f64> = breadth
+        .iter()
+        .map(|d| {
+            let denom = d.new_highs + d.new_lows;
+            if denom > 0 {
+                d.new_highs as f64 / denom as f64 * 100.0
+            } else {
+                50.0
+            }
+        })
+        .collect();
     for (i, &v) in raw.iter().enumerate() {
         report.raw_ratio[i] = Some(v);
     }
@@ -68,7 +73,10 @@ mod tests {
     use super::*;
 
     fn d(highs: u64, lows: u64) -> DailyBreadth {
-        DailyBreadth { new_highs: highs, new_lows: lows }
+        DailyBreadth {
+            new_highs: highs,
+            new_lows: lows,
+        }
     }
 
     #[test]
@@ -117,14 +125,17 @@ mod tests {
     #[test]
     fn output_in_zero_hundred_range() {
         let mut state: u64 = 42;
-        let breadth: Vec<_> = (0..200).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
-            let total = 100;
-            let highs = (r * total as f64) as u64;
-            d(highs, total - highs)
-        }).collect();
+        let breadth: Vec<_> = (0..200)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
+                let total = 100;
+                let highs = (r * total as f64) as u64;
+                d(highs, total - highs)
+            })
+            .collect();
         let r = compute(&breadth, 10);
         for v in r.ahli.iter().flatten() {
             assert!((0.0..=100.0).contains(v));

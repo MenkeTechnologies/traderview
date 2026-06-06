@@ -35,26 +35,34 @@ pub struct PotReport {
     pub quantile_used: f64,
 }
 
-pub fn run(
-    losses: &[f64],
-    quantile: f64,
-    mrl_grid: &[f64],
-) -> Option<PotReport> {
+pub fn run(losses: &[f64], quantile: f64, mrl_grid: &[f64]) -> Option<PotReport> {
     if losses.len() < 50 || !quantile.is_finite() || !(0.5..1.0).contains(&quantile) {
         return None;
     }
     let mut clean: Vec<f64> = losses.iter().copied().filter(|x| x.is_finite()).collect();
-    if clean.len() < 50 { return None; }
+    if clean.len() < 50 {
+        return None;
+    }
     clean.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     let threshold = clean[((quantile * clean.len() as f64).floor() as usize).min(clean.len() - 1)];
     let gpd = gpd_tail_fit::fit(losses, threshold)?;
     let mut mrl = Vec::with_capacity(mrl_grid.len());
     for &t in mrl_grid {
-        if !t.is_finite() { continue; }
-        let exc: Vec<f64> = losses.iter().copied()
-            .filter(|x| x.is_finite() && *x > t).map(|x| x - t).collect();
+        if !t.is_finite() {
+            continue;
+        }
+        let exc: Vec<f64> = losses
+            .iter()
+            .copied()
+            .filter(|x| x.is_finite() && *x > t)
+            .map(|x| x - t)
+            .collect();
         if exc.is_empty() {
-            mrl.push(ThresholdDiagnostic { threshold: t, n_exceedances: 0, mean_excess: 0.0 });
+            mrl.push(ThresholdDiagnostic {
+                threshold: t,
+                n_exceedances: 0,
+                mean_excess: 0.0,
+            });
             continue;
         }
         let mean: f64 = exc.iter().sum::<f64>() / exc.len() as f64;
@@ -77,16 +85,19 @@ mod tests {
 
     fn sim(n: usize, xi: f64, beta: f64, seed: u64) -> Vec<f64> {
         let mut state = seed;
-        (0..n).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
-            if xi.abs() < 1e-9 {
-                -beta * (1.0 - u).ln()
-            } else {
-                beta / xi * ((1.0 - u).powf(-xi) - 1.0)
-            }
-        }).collect()
+        (0..n)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
+                if xi.abs() < 1e-9 {
+                    -beta * (1.0 - u).ln()
+                } else {
+                    beta / xi * ((1.0 - u).powf(-xi) - 1.0)
+                }
+            })
+            .collect()
     }
 
     #[test]

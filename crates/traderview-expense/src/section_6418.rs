@@ -202,8 +202,7 @@ pub fn compute(input: &Input) -> Output {
         "Cornell LII + Bloomberg Tax + Federal Register + IRS + Arnold & Porter + BDO + RSM + Cherry Bekaert + Sidley Austin + Holland & Knight + Akin Gump + Pillsbury Law + Novogradac + Greenberg Traurig + Womble Bond Dickinson + Paul Hastings — practitioner overviews of IRC § 6418 transferability of clean energy tax credits".to_string(),
     ];
 
-    if input.eligible_credit_category == EligibleCreditCategory::NotEligibleForSection6418Transfer
-    {
+    if input.eligible_credit_category == EligibleCreditCategory::NotEligibleForSection6418Transfer {
         return Output {
             mode: Section6418Mode::NotApplicableCreditNotEligibleUnderSection6418F1,
             statutory_basis: "IRC § 6418(f)(1) — credit not within 11 eligible categories".to_string(),
@@ -551,7 +550,8 @@ mod tests {
     fn unrelated_parties_compliant() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::UnrelatedPartiesRequirementUnderSection6418A;
-        input.transferor_transferee_relationship = TransferorTransfereeRelationship::UnrelatedParties;
+        input.transferor_transferee_relationship =
+            TransferorTransfereeRelationship::UnrelatedParties;
         let out = check(&input);
         assert_eq!(
             out.mode,
@@ -565,7 +565,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::UnrelatedPartiesRequirementUnderSection6418A;
         input.transferor_transferee_relationship = TransferorTransfereeRelationship::RelatedParties;
         let out = check(&input);
-        assert_eq!(out.mode, Section6418Mode::ViolationRelatedPartiesNotPermitted);
+        assert_eq!(
+            out.mode,
+            Section6418Mode::ViolationRelatedPartiesNotPermitted
+        );
     }
 
     #[test]

@@ -30,8 +30,12 @@ pub struct Report {
 
 pub fn compute(series: &[f64], m: usize, top_k_discords: usize) -> Option<Report> {
     let n = series.len();
-    if m < 4 || n < 2 * m { return None; }
-    if series.iter().any(|x| !x.is_finite()) { return None; }
+    if m < 4 || n < 2 * m {
+        return None;
+    }
+    if series.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let num_windows = n - m + 1;
     // Pre-compute z-normalized windows.
     let mut z_windows: Vec<Option<Vec<f64>>> = Vec::with_capacity(num_windows);
@@ -44,8 +48,12 @@ pub fn compute(series: &[f64], m: usize, top_k_discords: usize) -> Option<Report
     for (i, zi_opt) in z_windows.iter().enumerate() {
         let Some(zi) = zi_opt else { continue };
         for (j, zj_opt) in z_windows.iter().enumerate() {
-            if i == j { continue; }
-            if i.abs_diff(j) <= exclusion { continue; }
+            if i == j {
+                continue;
+            }
+            if i.abs_diff(j) <= exclusion {
+                continue;
+            }
             let Some(zj) = zj_opt else { continue };
             let d = euclid(zi, zj);
             if d < profile[i] {
@@ -55,19 +63,27 @@ pub fn compute(series: &[f64], m: usize, top_k_discords: usize) -> Option<Report
         }
     }
     // Top-k discords by descending finite distance.
-    let mut ranked: Vec<(usize, f64)> = profile.iter().enumerate()
+    let mut ranked: Vec<(usize, f64)> = profile
+        .iter()
+        .enumerate()
         .filter(|(_, &d)| d.is_finite())
         .map(|(i, &d)| (i, d))
         .collect();
     ranked.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
-    let top_discords: Vec<(usize, f64)> = ranked.into_iter()
-        .take(top_k_discords).collect();
+    let top_discords: Vec<(usize, f64)> = ranked.into_iter().take(top_k_discords).collect();
     // Top motif: globally smallest distance.
-    let top_motif_pair = profile.iter().enumerate()
+    let top_motif_pair = profile
+        .iter()
+        .enumerate()
         .filter(|(_, &d)| d.is_finite())
         .min_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
         .map(|(i, &d)| (i, indices[i], d));
-    Some(Report { profile, indices, top_discords, top_motif_pair })
+    Some(Report {
+        profile,
+        indices,
+        top_discords,
+        top_motif_pair,
+    })
 }
 
 fn znorm(win: &[f64]) -> Option<Vec<f64>> {
@@ -75,12 +91,18 @@ fn znorm(win: &[f64]) -> Option<Vec<f64>> {
     let mean = win.iter().sum::<f64>() / n;
     let var = win.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / n;
     let std = var.max(0.0).sqrt();
-    if std < 1e-12 { return None; }
+    if std < 1e-12 {
+        return None;
+    }
     Some(win.iter().map(|x| (x - mean) / std).collect())
 }
 
 fn euclid(a: &[f64], b: &[f64]) -> f64 {
-    a.iter().zip(b.iter()).map(|(x, y)| (x - y).powi(2)).sum::<f64>().sqrt()
+    a.iter()
+        .zip(b.iter())
+        .map(|(x, y)| (x - y).powi(2))
+        .sum::<f64>()
+        .sqrt()
 }
 
 #[cfg(test)]
@@ -90,8 +112,8 @@ mod tests {
     #[test]
     fn invalid_inputs_return_none() {
         let s = vec![1.0_f64; 50];
-        assert!(compute(&s, 3, 5).is_none());            // m too small
-        assert!(compute(&s, 30, 5).is_none());           // 2m > n
+        assert!(compute(&s, 3, 5).is_none()); // m too small
+        assert!(compute(&s, 30, 5).is_none()); // 2m > n
         let mut s_nan = s.clone();
         s_nan[5] = f64::NAN;
         assert!(compute(&s_nan, 5, 5).is_none());

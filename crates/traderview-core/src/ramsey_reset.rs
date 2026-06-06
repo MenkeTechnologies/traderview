@@ -39,7 +39,9 @@ pub struct RamseyResetReport {
 
 pub fn test(x: &[f64], y: &[f64]) -> Option<RamseyResetReport> {
     let n = x.len();
-    if n < 10 || y.len() != n { return None; }
+    if n < 10 || y.len() != n {
+        return None;
+    }
     if x.iter().any(|v| !v.is_finite()) || y.iter().any(|v| !v.is_finite()) {
         return None;
     }
@@ -52,7 +54,9 @@ pub fn test(x: &[f64], y: &[f64]) -> Option<RamseyResetReport> {
         sxx += (x[i] - x_mean).powi(2);
         sxy += (x[i] - x_mean) * (y[i] - y_mean);
     }
-    if sxx <= 0.0 { return None; }
+    if sxx <= 0.0 {
+        return None;
+    }
     let beta = sxy / sxx;
     let alpha = y_mean - beta * x_mean;
     let y_hat: Vec<f64> = x.iter().map(|xi| alpha + beta * xi).collect();
@@ -65,22 +69,25 @@ pub fn test(x: &[f64], y: &[f64]) -> Option<RamseyResetReport> {
         let row = [1.0, x[i], y_hat[i].powi(2), y_hat[i].powi(3)];
         for j in 0..p {
             xty[j] += row[j] * y[i];
-            for k in 0..p { xtx[j][k] += row[j] * row[k]; }
+            for k in 0..p {
+                xtx[j][k] += row[j] * row[k];
+            }
         }
     }
     let coef = solve_linear(&xtx, &xty)?;
     let mut ssr_unrestricted = 0.0_f64;
     for i in 0..n {
-        let yhat_full = coef[0] + coef[1] * x[i]
-            + coef[2] * y_hat[i].powi(2) + coef[3] * y_hat[i].powi(3);
+        let yhat_full =
+            coef[0] + coef[1] * x[i] + coef[2] * y_hat[i].powi(2) + coef[3] * y_hat[i].powi(3);
         ssr_unrestricted += (y[i] - yhat_full).powi(2);
     }
     let q = 2.0_f64;
     let dof_den = (n - p) as f64;
-    if dof_den <= 0.0 || ssr_unrestricted <= 0.0 { return None; }
-    let f_stat = ((ssr_restricted - ssr_unrestricted) / q)
-        / (ssr_unrestricted / dof_den);
-    let crit_5pct = 3.10;    // ~F(2, ∞) at 5%
+    if dof_den <= 0.0 || ssr_unrestricted <= 0.0 {
+        return None;
+    }
+    let f_stat = ((ssr_restricted - ssr_unrestricted) / q) / (ssr_unrestricted / dof_den);
+    let crit_5pct = 3.10; // ~F(2, ∞) at 5%
     Some(RamseyResetReport {
         f_statistic: f_stat,
         ssr_restricted,
@@ -94,27 +101,43 @@ pub fn test(x: &[f64], y: &[f64]) -> Option<RamseyResetReport> {
 
 fn solve_linear(m: &[Vec<f64>], y: &[f64]) -> Option<Vec<f64>> {
     let n = m.len();
-    if n == 0 || y.len() != n { return None; }
+    if n == 0 || y.len() != n {
+        return None;
+    }
     let mut aug = vec![vec![0.0_f64; n + 1]; n];
     for (i, row) in aug.iter_mut().enumerate() {
-        for (j, slot) in row.iter_mut().enumerate().take(n) { *slot = m[i][j]; }
+        for (j, slot) in row.iter_mut().enumerate().take(n) {
+            *slot = m[i][j];
+        }
         row[n] = y[i];
     }
     for i in 0..n {
         let mut pivot = i;
         for r in (i + 1)..n {
-            if aug[r][i].abs() > aug[pivot][i].abs() { pivot = r; }
+            if aug[r][i].abs() > aug[pivot][i].abs() {
+                pivot = r;
+            }
         }
-        if aug[pivot][i].abs() < 1e-18 { return None; }
+        if aug[pivot][i].abs() < 1e-18 {
+            return None;
+        }
         aug.swap(i, pivot);
         let div = aug[i][i];
-        for v in aug[i].iter_mut() { *v /= div; }
+        for v in aug[i].iter_mut() {
+            *v /= div;
+        }
         for r in 0..n {
-            if r == i { continue; }
+            if r == i {
+                continue;
+            }
             let f = aug[r][i];
-            if f == 0.0 { continue; }
+            if f == 0.0 {
+                continue;
+            }
             let pivot_row = aug[i].clone();
-            for (j, v) in aug[r].iter_mut().enumerate() { *v -= f * pivot_row[j]; }
+            for (j, v) in aug[r].iter_mut().enumerate() {
+                *v -= f * pivot_row[j];
+            }
         }
     }
     Some((0..n).map(|i| aug[i][n]).collect())
@@ -151,15 +174,22 @@ mod tests {
         // y = 2x + noise → linear is the correct form.
         let mut state: u64 = 42;
         let x: Vec<f64> = (0..300).map(|i| i as f64).collect();
-        let y: Vec<f64> = x.iter().map(|xi| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let eps = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.5;
-            2.0 * xi + eps
-        }).collect();
+        let y: Vec<f64> = x
+            .iter()
+            .map(|xi| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let eps = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.5;
+                2.0 * xi + eps
+            })
+            .collect();
         let r = test(&x, &y).unwrap();
-        assert!(!r.reject_at_5pct,
-            "linear relation shouldn't reject, F = {}", r.f_statistic);
+        assert!(
+            !r.reject_at_5pct,
+            "linear relation shouldn't reject, F = {}",
+            r.f_statistic
+        );
     }
 
     #[test]
@@ -167,15 +197,22 @@ mod tests {
         // y = x² → linear model is misspecified.
         let mut state: u64 = 11;
         let x: Vec<f64> = (1..=100).map(|i| i as f64).collect();
-        let y: Vec<f64> = x.iter().map(|xi| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let eps = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 100.0;
-            xi * xi + eps
-        }).collect();
+        let y: Vec<f64> = x
+            .iter()
+            .map(|xi| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let eps = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 100.0;
+                xi * xi + eps
+            })
+            .collect();
         let r = test(&x, &y).unwrap();
-        assert!(r.reject_at_5pct,
-            "y = x² shouldn't fit linear, F = {}", r.f_statistic);
+        assert!(
+            r.reject_at_5pct,
+            "y = x² shouldn't fit linear, F = {}",
+            r.f_statistic
+        );
     }
 
     #[test]

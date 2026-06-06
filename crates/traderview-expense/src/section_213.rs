@@ -111,10 +111,10 @@ pub fn compute(input: &Section213Input) -> Section213Result {
     let ltc_allowed = input.ltc_premiums_paid.min(ltc_cap);
     let ltc_excess = (input.ltc_premiums_paid - ltc_cap).max(Decimal::ZERO);
 
-    let total_qualified_gross = input.qualified_medical_expenses_other_than_ltc_premiums
-        + ltc_allowed;
-    let total_after_reimb = (total_qualified_gross - input.hsa_fsa_hra_reimbursements)
-        .max(Decimal::ZERO);
+    let total_qualified_gross =
+        input.qualified_medical_expenses_other_than_ltc_premiums + ltc_allowed;
+    let total_after_reimb =
+        (total_qualified_gross - input.hsa_fsa_hra_reimbursements).max(Decimal::ZERO);
     let deductible = (total_after_reimb - floor).max(Decimal::ZERO);
 
     let note = format!(
@@ -206,7 +206,10 @@ mod tests {
         let mut i = base();
         i.hsa_fsa_hra_reimbursements = dec!(5_000);
         let r = compute(&i);
-        assert_eq!(r.total_qualified_expenses_after_reimbursements, dec!(10_000));
+        assert_eq!(
+            r.total_qualified_expenses_after_reimbursements,
+            dec!(10_000)
+        );
         assert_eq!(r.deductible_medical_expense, dec!(2_500));
     }
 
@@ -216,7 +219,10 @@ mod tests {
         i.qualified_medical_expenses_other_than_ltc_premiums = dec!(5_000);
         i.hsa_fsa_hra_reimbursements = dec!(10_000);
         let r = compute(&i);
-        assert_eq!(r.total_qualified_expenses_after_reimbursements, Decimal::ZERO);
+        assert_eq!(
+            r.total_qualified_expenses_after_reimbursements,
+            Decimal::ZERO
+        );
         assert_eq!(r.deductible_medical_expense, Decimal::ZERO);
     }
 
@@ -346,7 +352,10 @@ mod tests {
         i.insured_age_at_year_end = 50;
         i.ltc_premiums_paid = dec!(900);
         let r = compute(&i);
-        assert_eq!(r.total_qualified_expenses_after_reimbursements, dec!(15_900));
+        assert_eq!(
+            r.total_qualified_expenses_after_reimbursements,
+            dec!(15_900)
+        );
         assert_eq!(r.deductible_medical_expense, dec!(8_400));
     }
 

@@ -203,8 +203,8 @@ pub fn check(input: &Input) -> Output {
     let treble_exposure = input
         .actual_damages_to_tenant_cents
         .saturating_mul(TREBLE_DAMAGES_MULTIPLIER);
-    let total_exposure = TITLE_X_SECTION_1018_CIVIL_PENALTY_MAX_CENTS_2025
-        .saturating_add(treble_exposure);
+    let total_exposure =
+        TITLE_X_SECTION_1018_CIVIL_PENALTY_MAX_CENTS_2025.saturating_add(treble_exposure);
 
     if missing >= 2 {
         notes.push(format!(
@@ -231,13 +231,19 @@ pub fn check(input: &Input) -> Output {
         notes.push("Failed to disclose known LBP/LBP-hazards or affirmatively state no knowledge — per se Title X § 1018 violation.".to_string());
         Severity::DisclosureIncompleteMissingKnownLbpDisclosureViolation
     } else if !input.available_reports_provided {
-        notes.push("Failed to provide available LBP records/reports — per se Title X § 1018 violation.".to_string());
+        notes.push(
+            "Failed to provide available LBP records/reports — per se Title X § 1018 violation."
+                .to_string(),
+        );
         Severity::DisclosureIncompleteMissingAvailableReportsViolation
     } else if !input.epa_pamphlet_provided {
         notes.push("Failed to provide EPA Protect Your Family From Lead in Your Home pamphlet (EPA-747-K-12-001) — per se Title X § 1018 violation.".to_string());
         Severity::DisclosureIncompleteMissingEpaPamphletViolation
     } else {
-        notes.push("Missing tenant signed acknowledgment of disclosure — per se Title X § 1018 violation.".to_string());
+        notes.push(
+            "Missing tenant signed acknowledgment of disclosure — per se Title X § 1018 violation."
+                .to_string(),
+        );
         Severity::DisclosureIncompleteMissingSignedAcknowledgmentViolation
     };
 
@@ -452,10 +458,19 @@ mod tests {
     #[test]
     fn citations_pin_42_usc_4852d_title_x_24_cfr_40_cfr() {
         let out = check(&base_pre_1978_compliant());
-        assert!(out.citations.iter().any(|c| c.contains("42 U.S.C. § 4852d")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("42 U.S.C. § 4852d")));
         assert!(out.citations.iter().any(|c| c.contains("Title X § 1018")));
-        assert!(out.citations.iter().any(|c| c.contains("24 C.F.R. Part 35")));
-        assert!(out.citations.iter().any(|c| c.contains("40 C.F.R. Part 745")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("24 C.F.R. Part 35")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("40 C.F.R. Part 745")));
     }
 
     #[test]

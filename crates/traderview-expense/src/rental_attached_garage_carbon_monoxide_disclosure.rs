@@ -128,7 +128,10 @@ pub fn check(input: &Input) -> Output {
     let mut notes: Vec<String> = Vec::new();
     let severity: Severity;
 
-    if matches!(input.exposure_risk, CoExposureRisk::MinimalNoFossilFuelOrGarage) {
+    if matches!(
+        input.exposure_risk,
+        CoExposureRisk::MinimalNoFossilFuelOrGarage
+    ) {
         notes.push(
             "No attached garage AND no fossil-fuel-burning appliance — CO detector \
              requirement not statutorily triggered absent state law catch-all (some states \
@@ -224,7 +227,9 @@ pub fn check(input: &Input) -> Output {
              manufacture-date replacement calendar. CDC public-health surveillance reports \
              {} annual US non-fire CO deaths plus {} nonfatal injuries — compliance \
              materially reduces tenant injury exposure.",
-            UL_2034_END_OF_LIFE_YEARS, CDC_ANNUAL_NON_FIRE_CO_DEATHS, CDC_ANNUAL_CO_NONFATAL_INJURIES
+            UL_2034_END_OF_LIFE_YEARS,
+            CDC_ANNUAL_NON_FIRE_CO_DEATHS,
+            CDC_ANNUAL_CO_NONFATAL_INJURIES
         ));
     }
 
@@ -314,9 +319,7 @@ pub fn check(input: &Input) -> Output {
         | Severity::DetectorNotInstalledStatutoryViolation => input.annual_rent_cents,
         Severity::DetectorPastEndOfLifeReplacementRequired
         | Severity::DetectorNotUL2034ListedNonCompliant
-        | Severity::DisclosureRequiredAtLeaseSigning => {
-            input.annual_rent_cents.saturating_div(2)
-        }
+        | Severity::DisclosureRequiredAtLeaseSigning => input.annual_rent_cents.saturating_div(2),
         _ => 0,
     };
 
@@ -328,11 +331,15 @@ pub fn check(input: &Input) -> Output {
             Jurisdiction::California => {
                 "Cal. SB 183 + Cal. Health & Safety Code § 17926-17926.2 + Cal. Civ. Code § 1947.13"
             }
-            Jurisdiction::NewYork => "NY PHL § 1399-bbb-1 Amanda's Law + NYC Admin § 27-2046.2 + HPD LL 7 of 2004",
+            Jurisdiction::NewYork => {
+                "NY PHL § 1399-bbb-1 Amanda's Law + NYC Admin § 27-2046.2 + HPD LL 7 of 2004"
+            }
             Jurisdiction::Washington => "RCW 19.27.530 + WA DOH",
             Jurisdiction::Connecticut => "C.G.S. § 29-292(b) + § 47a-7 + CT SFMO",
             Jurisdiction::Massachusetts => "M.G.L. ch. 148 § 26F Nicole's Law + 527 CMR 1.00",
-            Jurisdiction::Default => "CDC public-health surveillance + UL 2034 federal standard + 30+ state mandates",
+            Jurisdiction::Default => {
+                "CDC public-health surveillance + UL 2034 federal standard + 30+ state mandates"
+            }
         },
         notes,
     }
@@ -388,8 +395,14 @@ mod tests {
             Severity::DetectorNotInstalledStatutoryViolation
         ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("CA SB 183")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Amanda's Law")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("CA SB 183")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Amanda's Law")));
     }
 
     #[test]
@@ -402,7 +415,10 @@ mod tests {
             Severity::DetectorPastEndOfLifeReplacementRequired
         ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents / 2);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("10-year sealed-battery")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("10-year sealed-battery")));
     }
 
     #[test]
@@ -433,9 +449,15 @@ mod tests {
         let mut i = baseline();
         i.disclosure_provided_at_lease_signing = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::DisclosureRequiredAtLeaseSigning));
+        assert!(matches!(
+            r.severity,
+            Severity::DisclosureRequiredAtLeaseSigning
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents / 2);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("§ 17926.1")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("§ 17926.1")));
     }
 
     #[test]
@@ -450,7 +472,10 @@ mod tests {
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
         assert!(r.recommended_actions.iter().any(|a| a.contains("400 ppm")));
         assert!(r.recommended_actions.iter().any(|a| a.contains("$1M-$5M")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("carboxyhemoglobin")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("carboxyhemoglobin")));
     }
 
     #[test]
@@ -516,7 +541,10 @@ mod tests {
     fn coordination_note_references_siblings() {
         let i = baseline();
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("rental_natural_gas_leak_response")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("rental_natural_gas_leak_response")));
         assert!(r
             .notes
             .iter()
@@ -563,12 +591,36 @@ mod tests {
 
     #[test]
     fn citation_branch_for_each_jurisdiction() {
-        let ca = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::California; i });
-        let ny = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::NewYork; i });
-        let wa = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Washington; i });
-        let ct = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Connecticut; i });
-        let ma = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Massachusetts; i });
-        let de = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Default; i });
+        let ca = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::California;
+            i
+        });
+        let ny = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::NewYork;
+            i
+        });
+        let wa = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Washington;
+            i
+        });
+        let ct = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Connecticut;
+            i
+        });
+        let ma = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Massachusetts;
+            i
+        });
+        let de = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Default;
+            i
+        });
         assert!(ca.citation.contains("Cal. SB 183"));
         assert!(ny.citation.contains("Amanda's Law"));
         assert!(wa.citation.contains("RCW 19.27.530"));
@@ -594,7 +646,10 @@ mod tests {
         i.exposure_risk = CoExposureRisk::DetachedGarageWithSharedHvacReturn;
         i.disclosure_provided_at_lease_signing = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::DisclosureRequiredAtLeaseSigning));
+        assert!(matches!(
+            r.severity,
+            Severity::DisclosureRequiredAtLeaseSigning
+        ));
     }
 
     #[test]

@@ -25,9 +25,14 @@ pub fn compute(
 ) -> Vec<Option<f64>> {
     let n = long_yield_pct.len();
     let mut out = vec![None; n];
-    if lookback < 2 || n < lookback || short_yield_pct.len() != n { return out; }
-    if long_yield_pct.iter().chain(short_yield_pct.iter())
-        .any(|x| !x.is_finite()) {
+    if lookback < 2 || n < lookback || short_yield_pct.len() != n {
+        return out;
+    }
+    if long_yield_pct
+        .iter()
+        .chain(short_yield_pct.iter())
+        .any(|x| !x.is_finite())
+    {
         return out;
     }
     let p_f = lookback as f64;

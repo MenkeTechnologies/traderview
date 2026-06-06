@@ -59,20 +59,34 @@ pub fn compute_with(
         long_periods: long_periods.clone(),
         regime: vec![GuppyRegime::MixedOrTransition; n],
     };
-    if short_periods.is_empty() || long_periods.is_empty() { return report; }
-    if short_periods.iter().chain(long_periods.iter()).any(|p| *p < 2) { return report; }
-    if closes.iter().any(|x| !x.is_finite()) { return report; }
-    let all_periods: Vec<usize> = short_periods.iter().chain(long_periods.iter()).copied().collect();
+    if short_periods.is_empty() || long_periods.is_empty() {
+        return report;
+    }
+    if short_periods
+        .iter()
+        .chain(long_periods.iter())
+        .any(|p| *p < 2)
+    {
+        return report;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return report;
+    }
+    let all_periods: Vec<usize> = short_periods
+        .iter()
+        .chain(long_periods.iter())
+        .copied()
+        .collect();
     for p in &all_periods {
         report.ribbons.push(ema(closes, *p));
     }
     let n_short = short_periods.len();
     let n_long = long_periods.len();
     for i in 0..n {
-        let short_vals: Option<Vec<f64>> = (0..n_short)
-            .map(|k| report.ribbons[k][i]).collect();
+        let short_vals: Option<Vec<f64>> = (0..n_short).map(|k| report.ribbons[k][i]).collect();
         let long_vals: Option<Vec<f64>> = (0..n_long)
-            .map(|k| report.ribbons[n_short + k][i]).collect();
+            .map(|k| report.ribbons[n_short + k][i])
+            .collect();
         if let (Some(s), Some(l)) = (short_vals, long_vals) {
             let s_min = s.iter().cloned().fold(f64::INFINITY, f64::min);
             let s_max = s.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
@@ -95,7 +109,9 @@ pub fn compute_with(
 fn ema(series: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     let k = 2.0 / (p_f + 1.0);
     let seed: f64 = series[..period].iter().sum::<f64>() / p_f;

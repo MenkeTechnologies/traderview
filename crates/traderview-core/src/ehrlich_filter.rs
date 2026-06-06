@@ -17,13 +17,22 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 pub fn compute(bars: &[Bar], period: usize) -> Vec<Option<f64>> {
     let n = bars.len();
     let mut out = vec![None; n];
-    if period < 2 || n < period + 1 { return out; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if period < 2 || n < period + 1 {
+        return out;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return out;
     }
     let median: Vec<f64> = bars.iter().map(|b| (b.high + b.low) / 2.0).collect();
@@ -56,7 +65,13 @@ pub fn compute(bars: &[Bar], period: usize) -> Vec<Option<f64>> {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {
@@ -83,10 +98,12 @@ mod tests {
 
     #[test]
     fn linear_trend_tracks_input() {
-        let bars: Vec<_> = (0..50).map(|i| {
-            let m = 100.0 + i as f64;
-            b(m + 0.5, m - 0.5, m)
-        }).collect();
+        let bars: Vec<_> = (0..50)
+            .map(|i| {
+                let m = 100.0 + i as f64;
+                b(m + 0.5, m - 0.5, m)
+            })
+            .collect();
         let r = compute(&bars, 14);
         let last = r[49].unwrap();
         // Filter lags input by < period.
@@ -96,18 +113,22 @@ mod tests {
     #[test]
     fn filter_smoother_than_input() {
         let mut state: u64 = 42;
-        let bars: Vec<_> = (0..200).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
-            let m = 100.0 + (r - 0.5) * 10.0;
-            b(m + 1.0, m - 1.0, m)
-        }).collect();
+        let bars: Vec<_> = (0..200)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
+                let m = 100.0 + (r - 0.5) * 10.0;
+                b(m + 1.0, m - 1.0, m)
+            })
+            .collect();
         let r = compute(&bars, 14);
         let medians: Vec<f64> = bars.iter().map(|b| (b.high + b.low) / 2.0).collect();
         let vals: Vec<f64> = r.iter().flatten().copied().collect();
         let mean_m: f64 = medians.iter().sum::<f64>() / medians.len() as f64;
-        let var_m: f64 = medians.iter().map(|x| (x - mean_m).powi(2)).sum::<f64>() / medians.len() as f64;
+        let var_m: f64 =
+            medians.iter().map(|x| (x - mean_m).powi(2)).sum::<f64>() / medians.len() as f64;
         let mean_f: f64 = vals.iter().sum::<f64>() / vals.len() as f64;
         let var_f: f64 = vals.iter().map(|x| (x - mean_f).powi(2)).sum::<f64>() / vals.len() as f64;
         assert!(var_f < var_m);

@@ -18,13 +18,22 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 pub fn compute(bars: &[Bar], period: usize) -> Vec<Option<f64>> {
     let n = bars.len();
     let mut out = vec![None; n];
-    if period < 2 || n < period + 1 { return out; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if period < 2 || n < period + 1 {
+        return out;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return out;
     }
     let p_f = period as f64;
@@ -45,12 +54,18 @@ pub fn compute(bars: &[Bar], period: usize) -> Vec<Option<f64>> {
         atr[i] = Some(cur);
     }
     for (i, slot) in out.iter_mut().enumerate().skip(period) {
-        if i < period { continue; }
+        if i < period {
+            continue;
+        }
         let prev_close = bars[i - period].close;
-        if prev_close == 0.0 || bars[i].close == 0.0 { continue; }
+        if prev_close == 0.0 || bars[i].close == 0.0 {
+            continue;
+        }
         let Some(a) = atr[i] else { continue };
         let atr_pct = a / bars[i].close;
-        if atr_pct <= 0.0 { continue; }
+        if atr_pct <= 0.0 {
+            continue;
+        }
         let roc = (bars[i].close - prev_close) / prev_close;
         *slot = Some(roc / atr_pct);
     }
@@ -61,7 +76,13 @@ pub fn compute(bars: &[Bar], period: usize) -> Vec<Option<f64>> {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {
@@ -88,10 +109,12 @@ mod tests {
 
     #[test]
     fn rising_close_yields_positive_velocity() {
-        let bars: Vec<_> = (0..50).map(|i| {
-            let m = 100.0 + i as f64;
-            b(m + 0.5, m - 0.5, m)
-        }).collect();
+        let bars: Vec<_> = (0..50)
+            .map(|i| {
+                let m = 100.0 + i as f64;
+                b(m + 0.5, m - 0.5, m)
+            })
+            .collect();
         let r = compute(&bars, 14);
         let last = r[49].unwrap();
         assert!(last > 0.0);
@@ -99,10 +122,12 @@ mod tests {
 
     #[test]
     fn falling_close_yields_negative_velocity() {
-        let bars: Vec<_> = (0..50).map(|i| {
-            let m = 200.0 - i as f64;
-            b(m + 0.5, m - 0.5, m)
-        }).collect();
+        let bars: Vec<_> = (0..50)
+            .map(|i| {
+                let m = 200.0 - i as f64;
+                b(m + 0.5, m - 0.5, m)
+            })
+            .collect();
         let r = compute(&bars, 14);
         let last = r[49].unwrap();
         assert!(last < 0.0);

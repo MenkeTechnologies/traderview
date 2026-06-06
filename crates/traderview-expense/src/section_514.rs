@@ -252,8 +252,7 @@ pub fn check(input: &Section514Input) -> Section514Result {
 
     let is_trust_taxed = matches!(
         input.exempt_entity_type,
-        ExemptEntityType::Section401aQualifiedTrust
-            | ExemptEntityType::IndividualRetirementAccount
+        ExemptEntityType::Section401aQualifiedTrust | ExemptEntityType::IndividualRetirementAccount
     );
 
     let applicable_rate = if is_trust_taxed {
@@ -262,8 +261,7 @@ pub fn check(input: &Section514Input) -> Section514Result {
         input.corporate_tax_rate_bps
     };
 
-    let tax_owed: u64 =
-        (u128::from(net_ubti) * u128::from(applicable_rate) / 10_000) as u64;
+    let tax_owed: u64 = (u128::from(net_ubti) * u128::from(applicable_rate) / 10_000) as u64;
 
     let severity = if is_trust_taxed {
         Severity::DebtFinancedUbtiSubjectToTrustRate
@@ -423,7 +421,10 @@ mod tests {
         i.qualified_organization_for_514c9_exception = true;
         i.fractions_rule_satisfied = true;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::QualifiedRealPropertyExceptionApplies));
+        assert!(matches!(
+            r.severity,
+            Severity::QualifiedRealPropertyExceptionApplies
+        ));
         assert!(r.notes.iter().any(|n| n.contains("§ 514(c)(9)")));
         assert!(r.notes.iter().any(|n| n.contains("fractions rule")));
     }
@@ -436,7 +437,10 @@ mod tests {
         i.qualified_organization_for_514c9_exception = true;
         i.fractions_rule_satisfied = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::DebtFinancedUbtiSubjectToTrustRate));
+        assert!(matches!(
+            r.severity,
+            Severity::DebtFinancedUbtiSubjectToTrustRate
+        ));
     }
 
     #[test]
@@ -444,7 +448,10 @@ mod tests {
         let mut i = baseline();
         i.exempt_entity_type = ExemptEntityType::IndividualRetirementAccount;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::DebtFinancedUbtiSubjectToTrustRate));
+        assert!(matches!(
+            r.severity,
+            Severity::DebtFinancedUbtiSubjectToTrustRate
+        ));
         assert_eq!(r.applicable_tax_rate_bps, i.trust_tax_rate_bps);
         assert!(r
             .recommended_actions
@@ -457,7 +464,10 @@ mod tests {
         let mut i = baseline();
         i.exempt_entity_type = ExemptEntityType::Section401aQualifiedTrust;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::DebtFinancedUbtiSubjectToTrustRate));
+        assert!(matches!(
+            r.severity,
+            Severity::DebtFinancedUbtiSubjectToTrustRate
+        ));
         assert_eq!(r.applicable_tax_rate_bps, i.trust_tax_rate_bps);
     }
 
@@ -466,7 +476,10 @@ mod tests {
         let mut i = baseline();
         i.exempt_entity_type = ExemptEntityType::Section501c3PublicCharity;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::DebtFinancedUbtiSubjectToCorporateRate));
+        assert!(matches!(
+            r.severity,
+            Severity::DebtFinancedUbtiSubjectToCorporateRate
+        ));
         assert_eq!(r.applicable_tax_rate_bps, i.corporate_tax_rate_bps);
     }
 
@@ -475,7 +488,10 @@ mod tests {
         let mut i = baseline();
         i.exempt_entity_type = ExemptEntityType::Section501c3PrivateFoundation;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::DebtFinancedUbtiSubjectToCorporateRate));
+        assert!(matches!(
+            r.severity,
+            Severity::DebtFinancedUbtiSubjectToCorporateRate
+        ));
     }
 
     #[test]
@@ -525,7 +541,8 @@ mod tests {
         let r = check(&i);
         assert_eq!(
             r.net_ubti_cents,
-            r.gross_ubti_cents.saturating_sub(r.allocable_deductions_cents)
+            r.gross_ubti_cents
+                .saturating_sub(r.allocable_deductions_cents)
         );
     }
 
@@ -550,8 +567,14 @@ mod tests {
     fn action_references_form_990_t() {
         let i = baseline();
         let r = check(&i);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Form 990-T")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("§ 6012(a)(2)")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Form 990-T")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("§ 6012(a)(2)")));
     }
 
     #[test]
@@ -593,7 +616,10 @@ mod tests {
         i.qualified_organization_for_514c9_exception = true;
         i.fractions_rule_satisfied = true;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::QualifiedRealPropertyExceptionApplies));
+        assert!(matches!(
+            r.severity,
+            Severity::QualifiedRealPropertyExceptionApplies
+        ));
         assert_eq!(r.tax_owed_cents, 0);
     }
 
@@ -649,7 +675,10 @@ mod tests {
         i.qualified_organization_for_514c9_exception = true;
         i.fractions_rule_satisfied = true;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::QualifiedRealPropertyExceptionApplies));
+        assert!(matches!(
+            r.severity,
+            Severity::QualifiedRealPropertyExceptionApplies
+        ));
     }
 
     #[test]
@@ -660,6 +689,9 @@ mod tests {
         i.qualified_organization_for_514c9_exception = true;
         i.fractions_rule_satisfied = true;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::DebtFinancedUbtiSubjectToTrustRate));
+        assert!(matches!(
+            r.severity,
+            Severity::DebtFinancedUbtiSubjectToTrustRate
+        ));
     }
 }

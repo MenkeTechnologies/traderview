@@ -414,12 +414,13 @@ pub fn compute(input: &Input) -> Output {
 
     let flat_portion_cents = COOK_COUNTY_RTLO_LATE_FEE_FLAT_PORTION_DOLLARS.saturating_mul(100);
     let monthly_rent_dollars = input.monthly_rent_cents / 100;
-    let rent_excess_over_threshold_dollars =
-        monthly_rent_dollars.saturating_sub(COOK_COUNTY_RTLO_LATE_FEE_FLAT_PORTION_RENT_THRESHOLD_DOLLARS);
+    let rent_excess_over_threshold_dollars = monthly_rent_dollars
+        .saturating_sub(COOK_COUNTY_RTLO_LATE_FEE_FLAT_PORTION_RENT_THRESHOLD_DOLLARS);
     let excess_portion_dollars = rent_excess_over_threshold_dollars
         .saturating_mul(COOK_COUNTY_RTLO_LATE_FEE_EXCESS_BASIS_POINTS)
         / COOK_COUNTY_RTLO_BASIS_POINT_DENOMINATOR;
-    let late_fee_cap_cents = flat_portion_cents.saturating_add(excess_portion_dollars.saturating_mul(100));
+    let late_fee_cap_cents =
+        flat_portion_cents.saturating_add(excess_portion_dollars.saturating_mul(100));
 
     match input.compliance_aspect {
         ComplianceAspect::AntiLockoutProhibition => {
@@ -648,7 +649,7 @@ mod tests {
             property_jurisdiction: PropertyJurisdiction::WithinSuburbanCookCountyCovered,
             exemption_status: ExemptionStatus::NotExemptFullyCovered,
             compliance_aspect: ComplianceAspect::SecurityDepositCollectionAndReturn,
-            monthly_rent_cents: 200_000, // $2000
+            monthly_rent_cents: 200_000,          // $2000
             security_deposit_held_cents: 300_000, // $3000 = 1.5x cap
             security_deposit_return_days_after_termination: 25,
             security_deposit_itemization_provided: true,
@@ -667,7 +668,10 @@ mod tests {
         let mut input = baseline_input();
         input.property_jurisdiction = PropertyJurisdiction::OutsideCookCounty;
         let output = check(&input);
-        assert_eq!(output.mode, CookCountyRtloMode::NotApplicablePropertyOutsideCookCounty);
+        assert_eq!(
+            output.mode,
+            CookCountyRtloMode::NotApplicablePropertyOutsideCookCounty
+        );
     }
 
     #[test]
@@ -728,7 +732,9 @@ mod tests {
             output.mode,
             CookCountyRtloMode::ViolationLockoutOrSelfHelpEvictionPerformed
         );
-        assert!(output.notes.contains("regardless of any other ordinance exemption"));
+        assert!(output
+            .notes
+            .contains("regardless of any other ordinance exemption"));
     }
 
     #[test]
@@ -795,7 +801,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::LateFeeAssessment;
         input.late_fee_charged_cents = 1_000; // $10 — at flat-portion cap
         let output = check(&input);
-        assert_eq!(output.mode, CookCountyRtloMode::CompliantLateFeeAtOrBelowStatutoryCap);
+        assert_eq!(
+            output.mode,
+            CookCountyRtloMode::CompliantLateFeeAtOrBelowStatutoryCap
+        );
         // Flat-portion only: $10 = 1000 cents
         assert_eq!(output.statutory_late_fee_cap_cents, 1_000);
     }
@@ -809,7 +818,10 @@ mod tests {
         let output = check(&input);
         // Cap = $10 + 5% × ($2000 − $1000) = $10 + $50 = $60 = 6000 cents
         assert_eq!(output.statutory_late_fee_cap_cents, 6_000);
-        assert_eq!(output.mode, CookCountyRtloMode::CompliantLateFeeAtOrBelowStatutoryCap);
+        assert_eq!(
+            output.mode,
+            CookCountyRtloMode::CompliantLateFeeAtOrBelowStatutoryCap
+        );
     }
 
     #[test]
@@ -819,7 +831,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::LateFeeAssessment;
         input.late_fee_charged_cents = 10_000; // $100 > $60 cap
         let output = check(&input);
-        assert_eq!(output.mode, CookCountyRtloMode::ViolationLateFeeExceedsStatutoryCap);
+        assert_eq!(
+            output.mode,
+            CookCountyRtloMode::ViolationLateFeeExceedsStatutoryCap
+        );
         // Excess = $100 − $60 = $40 = 4000 cents
         assert_eq!(output.statutory_damages_owed_cents, 4_000);
     }
@@ -923,7 +938,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::RetaliationProhibition;
         let output = check(&input);
-        assert_eq!(output.mode, CookCountyRtloMode::CompliantNoRetaliatoryActionTaken);
+        assert_eq!(
+            output.mode,
+            CookCountyRtloMode::CompliantNoRetaliatoryActionTaken
+        );
     }
 
     #[test]
@@ -938,11 +956,20 @@ mod tests {
         assert_eq!(COOK_COUNTY_RTLO_SECURITY_DEPOSIT_CAP_DENOMINATOR, 2);
         assert_eq!(COOK_COUNTY_RTLO_SECURITY_DEPOSIT_RETURN_DAYS, 30);
         assert_eq!(COOK_COUNTY_RTLO_LATE_FEE_FLAT_PORTION_DOLLARS, 10);
-        assert_eq!(COOK_COUNTY_RTLO_LATE_FEE_FLAT_PORTION_RENT_THRESHOLD_DOLLARS, 1_000);
+        assert_eq!(
+            COOK_COUNTY_RTLO_LATE_FEE_FLAT_PORTION_RENT_THRESHOLD_DOLLARS,
+            1_000
+        );
         assert_eq!(COOK_COUNTY_RTLO_LATE_FEE_EXCESS_BASIS_POINTS, 500);
         assert_eq!(COOK_COUNTY_RTLO_BASIS_POINT_DENOMINATOR, 10_000);
-        assert_eq!(COOK_COUNTY_RTLO_OWNER_OCCUPIED_BUILDING_EXEMPTION_MAX_UNITS, 6);
-        assert_eq!(COOK_COUNTY_RTLO_SINGLE_FAMILY_OWNER_LIVED_THERE_MONTHS_THRESHOLD, 12);
+        assert_eq!(
+            COOK_COUNTY_RTLO_OWNER_OCCUPIED_BUILDING_EXEMPTION_MAX_UNITS,
+            6
+        );
+        assert_eq!(
+            COOK_COUNTY_RTLO_SINGLE_FAMILY_OWNER_LIVED_THERE_MONTHS_THRESHOLD,
+            12
+        );
         assert_eq!(COOK_COUNTY_RTLO_HOTEL_MOTEL_COVERAGE_DAYS_THRESHOLD, 32);
         assert_eq!(COOK_COUNTY_RTLO_MATERIAL_NONCOMPLIANCE_CURE_NOTICE_DAYS, 10);
         assert_eq!(COOK_COUNTY_RTLO_LEASE_RENEWAL_NOTICE_DAYS, 60);

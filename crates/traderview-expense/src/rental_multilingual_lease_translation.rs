@@ -125,11 +125,10 @@ pub fn check(input: &Input) -> Output {
         "Reyes v. Superior Court, 118 Cal. App. 3d 159 (1981) — original Spanish-language translation case".to_string(),
     ];
 
-    if matches!(
-        input.negotiation_language,
-        NegotiationLanguage::English
-    ) {
-        notes.push("Negotiation in English — § 1632 translation requirement not triggered.".to_string());
+    if matches!(input.negotiation_language, NegotiationLanguage::English) {
+        notes.push(
+            "Negotiation in English — § 1632 translation requirement not triggered.".to_string(),
+        );
         return Output {
             severity: Severity::NotApplicableEnglishNegotiation,
             translation_required: false,
@@ -479,7 +478,10 @@ mod tests {
     fn citations_pin_sb_1103_and_reyes_case_law() {
         let out = check(&base_spanish_residential());
         assert!(out.citations.iter().any(|c| c.contains("SB 1103")));
-        assert!(out.citations.iter().any(|c| c.contains("Reyes v. Superior Court")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("Reyes v. Superior Court")));
     }
 
     #[test]

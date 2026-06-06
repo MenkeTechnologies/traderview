@@ -22,13 +22,23 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub close: f64, pub volume: f64 }
+pub struct Bar {
+    pub close: f64,
+    pub volume: f64,
+}
 
 pub fn compute(bars: &[Bar], reversal_pct: f64) -> Vec<Option<f64>> {
     let n = bars.len();
     let mut out = vec![None; n];
-    if n == 0 || !reversal_pct.is_finite() || reversal_pct <= 0.0 { return out; }
-    if bars.iter().any(|b| !b.close.is_finite() || !b.volume.is_finite()) { return out; }
+    if n == 0 || !reversal_pct.is_finite() || reversal_pct <= 0.0 {
+        return out;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.close.is_finite() || !b.volume.is_finite())
+    {
+        return out;
+    }
     // direction: +1 = up wave, -1 = down wave, 0 = undetermined.
     let mut direction = 0_i32;
     let mut wave_anchor_close = bars[0].close;
@@ -72,7 +82,8 @@ pub fn compute(bars: &[Bar], reversal_pct: f64) -> Vec<Option<f64>> {
                     wave_cum_vol += bars[i].volume;
                     out[i] = Some(signed(wave_cum_vol, direction));
                 } else {
-                    let rally_pct = (close - wave_anchor_close) / wave_anchor_close.abs().max(1e-12);
+                    let rally_pct =
+                        (close - wave_anchor_close) / wave_anchor_close.abs().max(1e-12);
                     if rally_pct >= threshold {
                         direction = 1;
                         wave_anchor_close = close;
@@ -94,7 +105,7 @@ fn signed(vol: f64, direction: i32) -> f64 {
     match direction {
         1 => vol,
         -1 => -vol,
-        _ => vol,    // pre-direction: report positive
+        _ => vol, // pre-direction: report positive
     }
 }
 
@@ -102,10 +113,17 @@ fn signed(vol: f64, direction: i32) -> f64 {
 mod tests {
     use super::*;
 
-    fn b(c: f64, v: f64) -> Bar { Bar { close: c, volume: v } }
+    fn b(c: f64, v: f64) -> Bar {
+        Bar {
+            close: c,
+            volume: v,
+        }
+    }
 
     #[test]
-    fn empty_returns_empty() { assert!(compute(&[], 1.0).is_empty()); }
+    fn empty_returns_empty() {
+        assert!(compute(&[], 1.0).is_empty());
+    }
 
     #[test]
     fn invalid_reversal_returns_all_none() {

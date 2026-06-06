@@ -15,7 +15,10 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct StrikeIv { pub strike: f64, pub iv: f64 }
+pub struct StrikeIv {
+    pub strike: f64,
+    pub iv: f64,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Default)]
 pub struct VolatilitySmileReport {
@@ -33,21 +36,36 @@ pub fn compute(
     put_25d_strike: f64,
     call_25d_strike: f64,
 ) -> Option<VolatilitySmileReport> {
-    if strike_iv.len() < 3 || !spot.is_finite() || spot <= 0.0
-        || !put_25d_strike.is_finite() || !call_25d_strike.is_finite() {
+    if strike_iv.len() < 3
+        || !spot.is_finite()
+        || spot <= 0.0
+        || !put_25d_strike.is_finite()
+        || !call_25d_strike.is_finite()
+    {
         return None;
     }
-    if strike_iv.iter().any(|s| !s.strike.is_finite() || !s.iv.is_finite()
-        || s.strike <= 0.0 || s.iv <= 0.0) {
+    if strike_iv
+        .iter()
+        .any(|s| !s.strike.is_finite() || !s.iv.is_finite() || s.strike <= 0.0 || s.iv <= 0.0)
+    {
         return None;
     }
     let mut sorted: Vec<StrikeIv> = strike_iv.to_vec();
-    sorted.sort_by(|a, b| a.strike.partial_cmp(&b.strike).unwrap_or(std::cmp::Ordering::Equal));
-    // ATM IV: closest strike to spot.
-    let atm = sorted.iter().min_by(|a, b| {
-        (a.strike - spot).abs().partial_cmp(&(b.strike - spot).abs())
+    sorted.sort_by(|a, b| {
+        a.strike
+            .partial_cmp(&b.strike)
             .unwrap_or(std::cmp::Ordering::Equal)
-    }).unwrap();
+    });
+    // ATM IV: closest strike to spot.
+    let atm = sorted
+        .iter()
+        .min_by(|a, b| {
+            (a.strike - spot)
+                .abs()
+                .partial_cmp(&(b.strike - spot).abs())
+                .unwrap_or(std::cmp::Ordering::Equal)
+        })
+        .unwrap();
     let atm_iv = atm.iv;
     // 25-delta skew.
     let interp = |target: f64| -> f64 {
@@ -67,7 +85,9 @@ pub fn compute(
                 break;
             }
         }
-        if (hi.strike - lo.strike).abs() < 1e-12 { return lo.iv; }
+        if (hi.strike - lo.strike).abs() < 1e-12 {
+            return lo.iv;
+        }
         let t = (target - lo.strike) / (hi.strike - lo.strike);
         lo.iv + t * (hi.iv - lo.iv)
     };
@@ -76,31 +96,44 @@ pub fn compute(
     let skew = put_iv - call_iv;
     // Smile curvature: 2nd derivative of IV at ATM using central diff.
     // Find ATM index in sorted.
-    let atm_idx = sorted.iter().position(|s| s.strike == atm.strike).unwrap_or(sorted.len() / 2);
+    let atm_idx = sorted
+        .iter()
+        .position(|s| s.strike == atm.strike)
+        .unwrap_or(sorted.len() / 2);
     let curvature = if atm_idx > 0 && atm_idx + 1 < sorted.len() {
         let lo = sorted[atm_idx - 1];
         let hi = sorted[atm_idx + 1];
         let dx_lo = atm.strike - lo.strike;
         let dx_hi = hi.strike - atm.strike;
         if dx_lo > 0.0 && dx_hi > 0.0 {
-            2.0 * (
-                (hi.iv - atm.iv) / dx_hi - (atm.iv - lo.iv) / dx_lo
-            ) / (dx_lo + dx_hi)
-        } else { 0.0 }
-    } else { 0.0 };
+            2.0 * ((hi.iv - atm.iv) / dx_hi - (atm.iv - lo.iv) / dx_lo) / (dx_lo + dx_hi)
+        } else {
+            0.0
+        }
+    } else {
+        0.0
+    };
     // Wing slopes: linear slope from ATM to the most-OTM point on each side.
     let put_wing = if atm_idx > 0 {
         let edge = sorted[0];
         if (atm.strike - edge.strike).abs() > 0.0 {
             (atm.iv - edge.iv) / (atm.strike - edge.strike)
-        } else { 0.0 }
-    } else { 0.0 };
+        } else {
+            0.0
+        }
+    } else {
+        0.0
+    };
     let call_wing = if atm_idx + 1 < sorted.len() {
         let edge = sorted[sorted.len() - 1];
         if (edge.strike - atm.strike).abs() > 0.0 {
             (edge.iv - atm.iv) / (edge.strike - atm.strike)
-        } else { 0.0 }
-    } else { 0.0 };
+        } else {
+            0.0
+        }
+    } else {
+        0.0
+    };
     Some(VolatilitySmileReport {
         atm_iv,
         skew_25d: skew,
@@ -115,7 +148,9 @@ pub fn compute(
 mod tests {
     use super::*;
 
-    fn s(strike: f64, iv: f64) -> StrikeIv { StrikeIv { strike, iv } }
+    fn s(strike: f64, iv: f64) -> StrikeIv {
+        StrikeIv { strike, iv }
+    }
 
     #[test]
     fn empty_or_invalid_returns_none() {
@@ -141,7 +176,7 @@ mod tests {
     fn put_skew_yields_positive_skew() {
         let curve = vec![s(90.0, 30.0), s(100.0, 20.0), s(110.0, 18.0)];
         let r = compute(&curve, 100.0, 90.0, 110.0).unwrap();
-        assert!(r.skew_25d > 0.0);    // put IV > call IV
+        assert!(r.skew_25d > 0.0); // put IV > call IV
     }
 
     #[test]

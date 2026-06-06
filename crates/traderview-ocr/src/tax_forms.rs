@@ -97,7 +97,11 @@ pub fn extract(text: &str) -> Option<TaxFormExtract> {
     // Confidence = recovered / expected, clamped.
     let expected = labels.len() as f32;
     let recovered = payload.len() as f32;
-    let confidence = if expected > 0.0 { recovered / expected } else { 0.0 };
+    let confidence = if expected > 0.0 {
+        recovered / expected
+    } else {
+        0.0
+    };
 
     let party_name = extract_party_name(text, kind);
 
@@ -115,13 +119,19 @@ pub fn extract(text: &str) -> Option<TaxFormExtract> {
 fn box_labels_for(kind: TaxFormKind) -> &'static [(&'static str, &'static [&'static str])] {
     match kind {
         TaxFormKind::W2 => &[
-            ("box_1",  &["Wages, tips, other compensation", "Wages tips"]),
-            ("box_2",  &["Federal income tax withheld", "Federal income tax"]),
-            ("box_3",  &["Social security wages", "SS wages"]),
-            ("box_4",  &["Social security tax withheld", "SS tax withheld"]),
-            ("box_5",  &["Medicare wages and tips", "Medicare wages"]),
-            ("box_6",  &["Medicare tax withheld"]),
-            ("box_7",  &["Social security tips", "SS tips"]),
+            ("box_1", &["Wages, tips, other compensation", "Wages tips"]),
+            (
+                "box_2",
+                &["Federal income tax withheld", "Federal income tax"],
+            ),
+            ("box_3", &["Social security wages", "SS wages"]),
+            (
+                "box_4",
+                &["Social security tax withheld", "SS tax withheld"],
+            ),
+            ("box_5", &["Medicare wages and tips", "Medicare wages"]),
+            ("box_6", &["Medicare tax withheld"]),
+            ("box_7", &["Social security tips", "SS tips"]),
             ("box_12", &["See instructions for box 12", "Box 12"]),
             ("box_17", &["State income tax"]),
         ],
@@ -139,19 +149,28 @@ fn box_labels_for(kind: TaxFormKind) -> &'static [(&'static str, &'static [&'sta
         TaxFormKind::Form1099Int => &[
             ("box_1", &["Interest income"]),
             ("box_2", &["Early withdrawal penalty"]),
-            ("box_3", &["Interest on U.S. Savings Bonds", "Interest on US Savings Bonds"]),
+            (
+                "box_3",
+                &[
+                    "Interest on U.S. Savings Bonds",
+                    "Interest on US Savings Bonds",
+                ],
+            ),
             ("box_4", &["Federal income tax withheld"]),
             ("box_8", &["Tax-exempt interest", "Tax exempt interest"]),
         ],
         TaxFormKind::Form1099Div => &[
-            ("box_1a", &["Total ordinary dividends", "Ordinary dividends"]),
+            (
+                "box_1a",
+                &["Total ordinary dividends", "Ordinary dividends"],
+            ),
             ("box_1b", &["Qualified dividends"]),
             ("box_2a", &["Total capital gain distr", "Capital gain"]),
-            ("box_4",  &["Federal income tax withheld"]),
+            ("box_4", &["Federal income tax withheld"]),
         ],
         TaxFormKind::Form1099K => &[
             ("box_1a", &["Gross amount of payment card", "Gross amount"]),
-            ("box_4",  &["Federal income tax withheld"]),
+            ("box_4", &["Federal income tax withheld"]),
         ],
     }
 }
@@ -174,7 +193,10 @@ fn find_amount_near_label(text: &str, label: &str) -> Option<Decimal> {
         }
         // Try the matching line first — most W-2 layouts put the
         // number to the right of the label on the same line.
-        let label_end = line_lower.find(&lower_label).map(|p| p + lower_label.len()).unwrap_or(0);
+        let label_end = line_lower
+            .find(&lower_label)
+            .map(|p| p + lower_label.len())
+            .unwrap_or(0);
         let after_label = &raw_line[label_end.min(raw_line.len())..];
         if let Some(d) = parse_amount(after_label) {
             return Some(d);
@@ -206,7 +228,9 @@ fn parse_amount(s: &str) -> Option<Decimal> {
             let start = i;
             let mut neg = false;
             if c == '-' || c == '(' {
-                if c == '(' { neg = true; }
+                if c == '(' {
+                    neg = true;
+                }
                 i += 1;
             }
             let num_start = i;
@@ -222,7 +246,9 @@ fn parse_amount(s: &str) -> Option<Decimal> {
             let clean: String = raw.chars().filter(|c| *c != ',').collect();
             if let Ok(mut d) = clean.parse::<Decimal>() {
                 // Re-apply negative if the token was paren-wrapped.
-                if neg { d = -d; }
+                if neg {
+                    d = -d;
+                }
                 // Reject zero-length / pure-noise tokens.
                 if !clean.is_empty() && clean != "." {
                     let _ = start;
@@ -244,7 +270,7 @@ fn parse_amount(s: &str) -> Option<Decimal> {
 fn extract_party_name(text: &str, kind: TaxFormKind) -> Option<String> {
     let needles: &[&str] = match kind {
         TaxFormKind::W2 => &["employer's name", "Employer's name"],
-        _               => &["payer's name", "PAYER'S name", "Payer name"],
+        _ => &["payer's name", "PAYER'S name", "Payer name"],
     };
     let lower = text.to_lowercase();
     let lines: Vec<&str> = text.lines().collect();
@@ -284,7 +310,9 @@ mod tests {
     fn box_labels_w2_covers_all_major_boxes() {
         let labels = box_labels_for(TaxFormKind::W2);
         let keys: Vec<&str> = labels.iter().map(|(k, _)| *k).collect();
-        for k in ["box_1", "box_2", "box_3", "box_4", "box_5", "box_6", "box_17"] {
+        for k in [
+            "box_1", "box_2", "box_3", "box_4", "box_5", "box_6", "box_17",
+        ] {
             assert!(keys.contains(&k), "W-2 must define {k}, have: {:?}", keys);
         }
     }
@@ -294,7 +322,10 @@ mod tests {
         let labels = box_labels_for(TaxFormKind::Form1099Nec);
         let keys: Vec<&str> = labels.iter().map(|(k, _)| *k).collect();
         assert!(keys.contains(&"box_1"), "1099-NEC needs box_1");
-        assert!(keys.contains(&"box_4"), "1099-NEC needs box_4 (fed withhold)");
+        assert!(
+            keys.contains(&"box_4"),
+            "1099-NEC needs box_4 (fed withhold)"
+        );
     }
 
     #[test]
@@ -309,8 +340,14 @@ mod tests {
     fn box_labels_1099_div_has_qualified_distinct_from_ordinary() {
         let labels = box_labels_for(TaxFormKind::Form1099Div);
         let keys: Vec<&str> = labels.iter().map(|(k, _)| *k).collect();
-        assert!(keys.contains(&"box_1a"), "1099-DIV needs box_1a (ordinary div)");
-        assert!(keys.contains(&"box_1b"), "1099-DIV needs box_1b (qualified div) — separate from 1a");
+        assert!(
+            keys.contains(&"box_1a"),
+            "1099-DIV needs box_1a (ordinary div)"
+        );
+        assert!(
+            keys.contains(&"box_1b"),
+            "1099-DIV needs box_1b (qualified div) — separate from 1a"
+        );
         assert!(keys.contains(&"box_2a"), "1099-DIV needs box_2a (cap gain)");
     }
 
@@ -336,21 +373,30 @@ mod tests {
             TaxFormKind::Form1099K,
         ] {
             for (key, patterns) in box_labels_for(kind) {
-                assert!(!patterns.is_empty(),
+                assert!(
+                    !patterns.is_empty(),
                     "{:?} box {} has no label patterns — would silently skip extraction",
-                    kind, key);
+                    kind,
+                    key
+                );
             }
         }
     }
 
     #[test]
     fn detect_w2_by_title() {
-        assert_eq!(detect("Form W-2 Wage and Tax Statement"), Some(TaxFormKind::W2));
+        assert_eq!(
+            detect("Form W-2 Wage and Tax Statement"),
+            Some(TaxFormKind::W2)
+        );
     }
 
     #[test]
     fn detect_1099_nec_by_label() {
-        assert_eq!(detect("Form 1099-NEC\nNonemployee Compensation"), Some(TaxFormKind::Form1099Nec));
+        assert_eq!(
+            detect("Form 1099-NEC\nNonemployee Compensation"),
+            Some(TaxFormKind::Form1099Nec)
+        );
     }
 
     #[test]
@@ -367,8 +413,10 @@ mod tests {
         // ("Box1") would be picked up first — by design, since the
         // upstream `find_amount_near_label` call lops off the label
         // prefix before calling here.
-        assert_eq!(parse_amount("Total 12345.67 Tax 999.00"),
-                   Some("12345.67".parse().unwrap()));
+        assert_eq!(
+            parse_amount("Total 12345.67 Tax 999.00"),
+            Some("12345.67".parse().unwrap())
+        );
     }
 
     #[test]
@@ -399,8 +447,11 @@ Wages, tips, other compensation 50000.00
 Wages, tips, other compensation 99999.00
 ";
         let r = extract(text).expect("w2");
-        assert_eq!(r.payload.get("box_1"), Some(&"50000.00".parse().unwrap()),
-            "first label occurrence wins");
+        assert_eq!(
+            r.payload.get("box_1"),
+            Some(&"50000.00".parse().unwrap()),
+            "first label occurrence wins"
+        );
     }
 
     #[test]
@@ -415,13 +466,22 @@ Wages, tips, other compensation 99999.00
     #[test]
     fn parse_amount_handles_dollar_and_commas() {
         assert_eq!(parse_amount("$1,234.56"), Some("1234.56".parse().unwrap()));
-        assert_eq!(parse_amount("  $50,000.00"), Some("50000.00".parse().unwrap()));
-        assert_eq!(parse_amount("Total: 9,999.99"), Some("9999.99".parse().unwrap()));
+        assert_eq!(
+            parse_amount("  $50,000.00"),
+            Some("50000.00".parse().unwrap())
+        );
+        assert_eq!(
+            parse_amount("Total: 9,999.99"),
+            Some("9999.99".parse().unwrap())
+        );
     }
 
     #[test]
     fn parse_amount_handles_parens_negative() {
-        assert_eq!(parse_amount("(1,234.56)"), Some("-1234.56".parse().unwrap()));
+        assert_eq!(
+            parse_amount("(1,234.56)"),
+            Some("-1234.56".parse().unwrap())
+        );
     }
 
     #[test]
@@ -523,7 +583,7 @@ Federal income tax withheld 0.00
         assert_eq!(r.payload.get("box_1a"), Some(&"4523.18".parse().unwrap()));
         assert_eq!(r.payload.get("box_1b"), Some(&"3200.00".parse().unwrap()));
         assert_eq!(r.payload.get("box_2a"), Some(&"850.45".parse().unwrap()));
-        assert_eq!(r.payload.get("box_4"),  Some(&"0.00".parse().unwrap()));
+        assert_eq!(r.payload.get("box_4"), Some(&"0.00".parse().unwrap()));
         assert_eq!(r.party_name.as_deref(), Some("Vanguard Brokerage"));
     }
 
@@ -569,8 +629,11 @@ Federal income tax withheld 0.00
         // doesn't shadow MISC.
         let text = "Form 1099-MISC Miscellaneous Information\nOther income 5000.00";
         let r = detect(text);
-        assert_eq!(r, Some(TaxFormKind::Form1099Misc),
-            "form-MISC must take precedence even when 'income' appears");
+        assert_eq!(
+            r,
+            Some(TaxFormKind::Form1099Misc),
+            "form-MISC must take precedence even when 'income' appears"
+        );
     }
 
     #[test]
@@ -625,8 +688,11 @@ Acme Corp
 Wages, tips, other compensation 50000.00
 ";
         let r = extract(text).expect("w2");
-        assert_eq!(r.party_name.as_deref(), Some("Acme Corp"),
-            "must skip the labeled-section header, not return it as the name");
+        assert_eq!(
+            r.party_name.as_deref(),
+            Some("Acme Corp"),
+            "must skip the labeled-section header, not return it as the name"
+        );
     }
 
     #[test]
@@ -634,7 +700,8 @@ Wages, tips, other compensation 50000.00
         // OCR engines sometimes emit massive line concatenations
         // without spacing on smudged images. Pin that parse_amount
         // doesn't go quadratic + doesn't panic on >10kb single lines.
-        let mut text = String::from("Form W-2 Wage and Tax Statement\nWages, tips, other compensation ");
+        let mut text =
+            String::from("Form W-2 Wage and Tax Statement\nWages, tips, other compensation ");
         text.push_str(&"x".repeat(5_000));
         text.push_str(" 12345.67");
         let r = extract(&text);
@@ -681,8 +748,11 @@ Federal income tax withheld 1500.00
 ";
         let r = extract(text).expect("w2");
         assert_eq!(r.payload.get("box_1"), Some(&"0.00".parse().unwrap()));
-        assert_eq!(r.payload.get("box_2"), Some(&"1500.00".parse().unwrap()),
-            "box 2 should be 1500, not 0 (the parser must not collapse adjacent zeros)");
+        assert_eq!(
+            r.payload.get("box_2"),
+            Some(&"1500.00".parse().unwrap()),
+            "box 2 should be 1500, not 0 (the parser must not collapse adjacent zeros)"
+        );
     }
 
     #[test]
@@ -706,11 +776,18 @@ Federal income tax withheld 0
 Tax-exempt interest 50
 ";
         let r_full = extract(full).unwrap();
-        assert!(r_full.confidence > 0.95, "full match should be ~1.0, got {}", r_full.confidence);
+        assert!(
+            r_full.confidence > 0.95,
+            "full match should be ~1.0, got {}",
+            r_full.confidence
+        );
 
         let sparse = "Form 1099-INT\nInterest income 100";
         let r_sparse = extract(sparse).unwrap();
-        assert!(r_sparse.confidence < 0.5 && r_sparse.confidence > 0.0,
-            "1-of-5 should be ~0.2, got {}", r_sparse.confidence);
+        assert!(
+            r_sparse.confidence < 0.5 && r_sparse.confidence > 0.0,
+            "1-of-5 should be ~0.2, got {}",
+            r_sparse.confidence
+        );
     }
 }

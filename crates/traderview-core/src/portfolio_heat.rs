@@ -105,19 +105,33 @@ pub fn evaluate(
     let bundle_projected = bundle_existing + candidate.dollar_risk;
 
     let (decision, note) = if portfolio_projected > cfg.total_budget {
-        (HeatDecision::TotalOverBudget,
-         format!("portfolio projected ${} exceeds total budget ${}",
-                 portfolio_projected as i64, cfg.total_budget as i64))
+        (
+            HeatDecision::TotalOverBudget,
+            format!(
+                "portfolio projected ${} exceeds total budget ${}",
+                portfolio_projected as i64, cfg.total_budget as i64
+            ),
+        )
     } else if bundle_projected > cfg.bundle_budget {
-        (HeatDecision::BundleOverBudget,
-         format!("bundle of {} symbols projected ${} exceeds bundle budget ${}",
-                 bundle_members.len(), bundle_projected as i64, cfg.bundle_budget as i64))
+        (
+            HeatDecision::BundleOverBudget,
+            format!(
+                "bundle of {} symbols projected ${} exceeds bundle budget ${}",
+                bundle_members.len(),
+                bundle_projected as i64,
+                cfg.bundle_budget as i64
+            ),
+        )
     } else {
-        (HeatDecision::Admit, format!("admitted into {} symbol bundle", bundle_members.len()))
+        (
+            HeatDecision::Admit,
+            format!("admitted into {} symbol bundle", bundle_members.len()),
+        )
     };
 
     HeatReport {
-        decision, bundle_members,
+        decision,
+        bundle_members,
         bundle_existing_heat: bundle_existing,
         bundle_projected_heat: bundle_projected,
         portfolio_existing_heat: portfolio_existing,
@@ -131,20 +145,34 @@ mod tests {
     use super::*;
 
     fn pos(sym: &str, risk: f64) -> OpenRiskPosition {
-        OpenRiskPosition { symbol: sym.into(), dollar_risk: risk }
+        OpenRiskPosition {
+            symbol: sym.into(),
+            dollar_risk: risk,
+        }
     }
 
     fn cand(sym: &str, risk: f64) -> CandidateTrade {
-        CandidateTrade { symbol: sym.into(), dollar_risk: risk }
+        CandidateTrade {
+            symbol: sym.into(),
+            dollar_risk: risk,
+        }
     }
 
     fn edge(a: &str, b: &str, c: f64) -> CorrEdge {
-        CorrEdge { a: a.into(), b: b.into(), corr: c }
+        CorrEdge {
+            a: a.into(),
+            b: b.into(),
+            corr: c,
+        }
     }
 
     #[test]
     fn empty_portfolio_admits_when_under_budgets() {
-        let cfg = HeatConfig { bundle_threshold: 0.7, bundle_budget: 500.0, total_budget: 2000.0 };
+        let cfg = HeatConfig {
+            bundle_threshold: 0.7,
+            bundle_budget: 500.0,
+            total_budget: 2000.0,
+        };
         let r = evaluate(&[], &[], &cand("AAPL", 100.0), &cfg);
         assert!(matches!(r.decision, HeatDecision::Admit));
         assert_eq!(r.bundle_members, vec!["AAPL".to_string()]);
@@ -155,9 +183,17 @@ mod tests {
     fn correlated_position_joins_bundle_and_blocks_when_over_budget() {
         // AAPL + MSFT correlated 0.9. Bundle budget $300. Adding another
         // correlated trade puts the bundle at $500 — over budget.
-        let cfg = HeatConfig { bundle_threshold: 0.7, bundle_budget: 300.0, total_budget: 5000.0 };
+        let cfg = HeatConfig {
+            bundle_threshold: 0.7,
+            bundle_budget: 300.0,
+            total_budget: 5000.0,
+        };
         let open = vec![pos("AAPL", 200.0), pos("MSFT", 100.0)];
-        let corrs = vec![edge("AAPL", "MSFT", 0.9), edge("AAPL", "NVDA", 0.85), edge("MSFT", "NVDA", 0.88)];
+        let corrs = vec![
+            edge("AAPL", "MSFT", 0.9),
+            edge("AAPL", "NVDA", 0.85),
+            edge("MSFT", "NVDA", 0.88),
+        ];
         let r = evaluate(&open, &corrs, &cand("NVDA", 200.0), &cfg);
         assert!(matches!(r.decision, HeatDecision::BundleOverBudget));
         // Bundle = NVDA + AAPL + MSFT — 3 symbols.
@@ -168,34 +204,56 @@ mod tests {
     #[test]
     fn uncorrelated_position_doesnt_join_bundle() {
         // Gold (GLD) uncorrelated with tech — admits even if portfolio is hot.
-        let cfg = HeatConfig { bundle_threshold: 0.7, bundle_budget: 300.0, total_budget: 5000.0 };
+        let cfg = HeatConfig {
+            bundle_threshold: 0.7,
+            bundle_budget: 300.0,
+            total_budget: 5000.0,
+        };
         let open = vec![pos("AAPL", 250.0), pos("MSFT", 250.0)];
         let corrs = vec![
             edge("AAPL", "MSFT", 0.9),
-            edge("GLD",  "AAPL", 0.1),
-            edge("GLD",  "MSFT", 0.1),
+            edge("GLD", "AAPL", 0.1),
+            edge("GLD", "MSFT", 0.1),
         ];
         let r = evaluate(&open, &corrs, &cand("GLD", 200.0), &cfg);
-        assert!(matches!(r.decision, HeatDecision::Admit),
-            "uncorrelated GLD should be admitted, got {:?}", r.decision);
+        assert!(
+            matches!(r.decision, HeatDecision::Admit),
+            "uncorrelated GLD should be admitted, got {:?}",
+            r.decision
+        );
         assert_eq!(r.bundle_members, vec!["GLD".to_string()]);
     }
 
     #[test]
     fn total_budget_blocks_even_uncorrelated_when_portfolio_is_already_at_cap() {
         // Total budget is the hard cap.
-        let cfg = HeatConfig { bundle_threshold: 0.7, bundle_budget: 10_000.0, total_budget: 500.0 };
+        let cfg = HeatConfig {
+            bundle_threshold: 0.7,
+            bundle_budget: 10_000.0,
+            total_budget: 500.0,
+        };
         let open = vec![pos("AAPL", 300.0), pos("GLD", 200.0)];
-        let corrs = vec![edge("AAPL", "GLD", 0.1), edge("TLT", "AAPL", 0.0), edge("TLT", "GLD", 0.0)];
+        let corrs = vec![
+            edge("AAPL", "GLD", 0.1),
+            edge("TLT", "AAPL", 0.0),
+            edge("TLT", "GLD", 0.0),
+        ];
         let r = evaluate(&open, &corrs, &cand("TLT", 50.0), &cfg);
-        assert!(matches!(r.decision, HeatDecision::TotalOverBudget),
-            "portfolio cap should block, got {:?}", r.decision);
+        assert!(
+            matches!(r.decision, HeatDecision::TotalOverBudget),
+            "portfolio cap should block, got {:?}",
+            r.decision
+        );
     }
 
     #[test]
     fn missing_correlation_defaults_to_zero() {
         // No corr edge between candidate and existing positions.
-        let cfg = HeatConfig { bundle_threshold: 0.7, bundle_budget: 100.0, total_budget: 10_000.0 };
+        let cfg = HeatConfig {
+            bundle_threshold: 0.7,
+            bundle_budget: 100.0,
+            total_budget: 10_000.0,
+        };
         let open = vec![pos("AAPL", 500.0)];
         let r = evaluate(&open, &[], &cand("XYZ", 50.0), &cfg);
         // No correlation → not bundled → admitted.
@@ -208,7 +266,11 @@ mod tests {
         // -0.85 is a strong INVERSE relationship — those positions still move
         // together (in opposite directions), and that's still a concentration
         // risk if you're long one and short the other.
-        let cfg = HeatConfig { bundle_threshold: 0.7, bundle_budget: 200.0, total_budget: 10_000.0 };
+        let cfg = HeatConfig {
+            bundle_threshold: 0.7,
+            bundle_budget: 200.0,
+            total_budget: 10_000.0,
+        };
         let open = vec![pos("SPY", 150.0)];
         let corrs = vec![edge("SPY", "VIX", -0.85)];
         let r = evaluate(&open, &corrs, &cand("VIX", 100.0), &cfg);

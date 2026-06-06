@@ -68,11 +68,17 @@ pub struct TiltReport {
 
 /// Discrete bias thresholds. Match TopstepX-style five-tier classification.
 fn classify(long_ratio: f64) -> TiltBias {
-    if long_ratio >= 0.75      { TiltBias::StronglyLong  }
-    else if long_ratio >= 0.60 { TiltBias::Long          }
-    else if long_ratio >= 0.40 { TiltBias::Balanced      }
-    else if long_ratio >= 0.25 { TiltBias::Short         }
-    else                       { TiltBias::StronglyShort }
+    if long_ratio >= 0.75 {
+        TiltBias::StronglyLong
+    } else if long_ratio >= 0.60 {
+        TiltBias::Long
+    } else if long_ratio >= 0.40 {
+        TiltBias::Balanced
+    } else if long_ratio >= 0.25 {
+        TiltBias::Short
+    } else {
+        TiltBias::StronglyShort
+    }
 }
 
 pub fn aggregate(positions: &[TraderPosition]) -> TiltReport {
@@ -94,24 +100,27 @@ pub fn aggregate(positions: &[TraderPosition]) -> TiltReport {
         }
         entry.3 += p.net_contracts;
     }
-    let mut by_symbol: Vec<SymbolTilt> = by_sym.into_iter().map(|(symbol, (long_t, short_t, flat_t, net))| {
-        let total_positioned = long_t + short_t;
-        let long_ratio = if total_positioned == 0 {
-            None
-        } else {
-            Some(long_t as f64 / total_positioned as f64)
-        };
-        let bias = long_ratio.map(classify).unwrap_or_default();
-        SymbolTilt {
-            symbol,
-            long_traders: long_t,
-            short_traders: short_t,
-            flat_traders: flat_t,
-            net_contracts: net,
-            long_ratio,
-            bias,
-        }
-    }).collect();
+    let mut by_symbol: Vec<SymbolTilt> = by_sym
+        .into_iter()
+        .map(|(symbol, (long_t, short_t, flat_t, net))| {
+            let total_positioned = long_t + short_t;
+            let long_ratio = if total_positioned == 0 {
+                None
+            } else {
+                Some(long_t as f64 / total_positioned as f64)
+            };
+            let bias = long_ratio.map(classify).unwrap_or_default();
+            SymbolTilt {
+                symbol,
+                long_traders: long_t,
+                short_traders: short_t,
+                flat_traders: flat_t,
+                net_contracts: net,
+                long_ratio,
+                bias,
+            }
+        })
+        .collect();
     // Sort symbols by lopsidedness so the UI surfaces the most-skewed names first.
     by_symbol.sort_by(|a, b| {
         let aw = a.long_ratio.map(|r| (r - 0.5).abs()).unwrap_or(0.0);
@@ -131,7 +140,11 @@ mod tests {
     use super::*;
 
     fn pos(id: &str, sym: &str, n: i64) -> TraderPosition {
-        TraderPosition { trader_id: id.into(), symbol: sym.into(), net_contracts: n }
+        TraderPosition {
+            trader_id: id.into(),
+            symbol: sym.into(),
+            net_contracts: n,
+        }
     }
 
     #[test]
@@ -145,21 +158,25 @@ mod tests {
     #[test]
     fn flat_positions_dont_count_as_active_traders() {
         // 3 traders, all flat. None of them are "positioned".
-        let r = aggregate(&[
-            pos("a", "ES", 0), pos("b", "ES", 0), pos("c", "ES", 0),
-        ]);
+        let r = aggregate(&[pos("a", "ES", 0), pos("b", "ES", 0), pos("c", "ES", 0)]);
         assert_eq!(r.active_traders, 0);
         assert_eq!(r.by_symbol[0].flat_traders, 3);
-        assert!(r.by_symbol[0].long_ratio.is_none(),
-            "long_ratio undefined when nobody's positioned");
+        assert!(
+            r.by_symbol[0].long_ratio.is_none(),
+            "long_ratio undefined when nobody's positioned"
+        );
     }
 
     #[test]
     fn balanced_room_is_classified_balanced() {
         // 5 long + 5 short = 0.50 long_ratio → Balanced.
         let mut ps = Vec::new();
-        for i in 0..5  { ps.push(pos(&format!("L{i}"), "ES",  1)); }
-        for i in 0..5  { ps.push(pos(&format!("S{i}"), "ES", -1)); }
+        for i in 0..5 {
+            ps.push(pos(&format!("L{i}"), "ES", 1));
+        }
+        for i in 0..5 {
+            ps.push(pos(&format!("S{i}"), "ES", -1));
+        }
         let r = aggregate(&ps);
         let es = &r.by_symbol[0];
         assert_eq!(es.long_ratio, Some(0.5));
@@ -170,8 +187,12 @@ mod tests {
     fn heavy_long_room_is_strongly_long() {
         // 8 long + 2 short = 0.80 → StronglyLong.
         let mut ps = Vec::new();
-        for i in 0..8 { ps.push(pos(&format!("L{i}"), "ES",  3)); }
-        for i in 0..2 { ps.push(pos(&format!("S{i}"), "ES", -3)); }
+        for i in 0..8 {
+            ps.push(pos(&format!("L{i}"), "ES", 3));
+        }
+        for i in 0..2 {
+            ps.push(pos(&format!("S{i}"), "ES", -3));
+        }
         let r = aggregate(&ps);
         let es = &r.by_symbol[0];
         assert_eq!(es.long_ratio, Some(0.8));
@@ -184,8 +205,11 @@ mod tests {
     fn heavy_short_room_is_strongly_short() {
         // 1 long + 4 short = 0.20 → StronglyShort.
         let r = aggregate(&[
-            pos("a", "NQ",  1), pos("b", "NQ", -2), pos("c", "NQ", -2),
-            pos("d", "NQ", -2), pos("e", "NQ", -2),
+            pos("a", "NQ", 1),
+            pos("b", "NQ", -2),
+            pos("c", "NQ", -2),
+            pos("d", "NQ", -2),
+            pos("e", "NQ", -2),
         ]);
         let nq = &r.by_symbol[0];
         assert_eq!(nq.long_ratio, Some(0.2));
@@ -197,9 +221,11 @@ mod tests {
         // ES is 0.50 (Balanced), NQ is 0.80 (StronglyLong).
         // NQ should bubble to the top of the report.
         let mut ps = Vec::new();
-        ps.push(pos("a", "ES",  1));
+        ps.push(pos("a", "ES", 1));
         ps.push(pos("b", "ES", -1));
-        for i in 0..4 { ps.push(pos(&format!("L{i}"), "NQ",  1)); }
+        for i in 0..4 {
+            ps.push(pos(&format!("L{i}"), "NQ", 1));
+        }
         ps.push(pos("S0", "NQ", -1));
         let r = aggregate(&ps);
         assert_eq!(r.by_symbol[0].symbol, "NQ");
@@ -209,9 +235,7 @@ mod tests {
     #[test]
     fn same_trader_in_two_symbols_counted_once_in_active() {
         // Trader "a" is long ES AND short NQ → counts once as active.
-        let r = aggregate(&[
-            pos("a", "ES", 1), pos("a", "NQ", -1),
-        ]);
+        let r = aggregate(&[pos("a", "ES", 1), pos("a", "NQ", -1)]);
         assert_eq!(r.active_traders, 1);
     }
 }

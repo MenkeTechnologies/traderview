@@ -172,7 +172,9 @@ pub fn check(input: &Input) -> Output {
     ];
 
     if !input.former_commercial_or_manufacturing_use {
-        notes.push("Building was residential from inception — Article 7-C does not apply.".to_string());
+        notes.push(
+            "Building was residential from inception — Article 7-C does not apply.".to_string(),
+        );
         return Output {
             severity: Severity::ExemptResidentialFromInception,
             compliant: true,
@@ -240,7 +242,10 @@ pub fn check(input: &Input) -> Output {
     }
 
     if !input.imd_registered_with_loft_board {
-        notes.push("IMD not registered with NYC Loft Board — 29 RCNY § 2-05 registration violation.".to_string());
+        notes.push(
+            "IMD not registered with NYC Loft Board — 29 RCNY § 2-05 registration violation."
+                .to_string(),
+        );
         let penalty = LOFT_BOARD_CIVIL_PENALTY_MIN_CENTS_PER_DAY
             .saturating_mul(input.days_of_continuing_violation as u64);
         return Output {
@@ -383,7 +388,10 @@ pub fn check(input: &Input) -> Output {
         };
     }
 
-    notes.push("IMD registered with Loft Board; legalization on schedule per MDL § 284 timetable.".to_string());
+    notes.push(
+        "IMD registered with Loft Board; legalization on schedule per MDL § 284 timetable."
+            .to_string(),
+    );
     Output {
         severity: Severity::CompliantImdRegisteredAndLegalizationOnSchedule,
         compliant: true,

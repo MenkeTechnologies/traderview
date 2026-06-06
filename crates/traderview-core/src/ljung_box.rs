@@ -23,13 +23,19 @@ pub struct LjungBoxReport {
 
 pub fn test(series: &[f64], lags: usize) -> Option<LjungBoxReport> {
     let n = series.len();
-    if n < lags + 2 || lags == 0 { return None; }
+    if n < lags + 2 || lags == 0 {
+        return None;
+    }
     let clean: Vec<f64> = series.iter().copied().filter(|x| x.is_finite()).collect();
     let n_clean = clean.len();
-    if n_clean < lags + 2 { return None; }
+    if n_clean < lags + 2 {
+        return None;
+    }
     let mean = clean.iter().sum::<f64>() / n_clean as f64;
     let var: f64 = clean.iter().map(|x| (x - mean).powi(2)).sum();
-    if var <= 0.0 { return None; }
+    if var <= 0.0 {
+        return None;
+    }
     let mut acf = vec![0.0_f64; lags];
     for k in 1..=lags {
         let mut cov = 0.0_f64;
@@ -39,9 +45,13 @@ pub fn test(series: &[f64], lags: usize) -> Option<LjungBoxReport> {
         acf[k - 1] = cov / var;
     }
     let n_f = n_clean as f64;
-    let q: f64 = acf.iter().enumerate()
+    let q: f64 = acf
+        .iter()
+        .enumerate()
         .map(|(idx, rho)| rho * rho / (n_f - (idx + 1) as f64))
-        .sum::<f64>() * n_f * (n_f + 2.0);
+        .sum::<f64>()
+        * n_f
+        * (n_f + 2.0);
     Some(LjungBoxReport {
         q_statistic: q,
         autocorrelations: acf,
@@ -75,21 +85,27 @@ mod tests {
         let mut state: u64 = 42;
         let mut x = Vec::with_capacity(n);
         for _ in 0..n / 2 {
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let u2 = (state >> 32) as f64 / u32::MAX as f64;
             let z1 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
             let z2 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).sin();
-            x.push(z1); x.push(z2);
+            x.push(z1);
+            x.push(z2);
         }
         let r = test(&x, 10).unwrap();
         // Under H₀ Q ~ χ²(10) → mean = 10, 95th percentile ≈ 18.3. Be lenient
         // for one-sample sampling noise.
-        assert!(r.q_statistic < 40.0,
-            "iid series should NOT have huge Q, got {}", r.q_statistic);
+        assert!(
+            r.q_statistic < 40.0,
+            "iid series should NOT have huge Q, got {}",
+            r.q_statistic
+        );
     }
 
     #[test]
@@ -99,15 +115,19 @@ mod tests {
         let mut state: u64 = 999;
         let mut x = vec![0.0_f64; n];
         for t in 1..n {
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let noise = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.5;
             x[t] = 0.7 * x[t - 1] + noise;
         }
         let r = test(&x, 10).unwrap();
         // Should massively reject H₀.
-        assert!(r.q_statistic > 50.0,
-            "AR(1) series should produce large Q, got {}", r.q_statistic);
+        assert!(
+            r.q_statistic > 50.0,
+            "AR(1) series should produce large Q, got {}",
+            r.q_statistic
+        );
     }
 
     #[test]
@@ -116,7 +136,8 @@ mod tests {
         let mut state: u64 = 7;
         let mut x = vec![0.0_f64; n];
         for t in 1..n {
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let noise = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.5;
             x[t] = 0.5 * x[t - 1] + noise;

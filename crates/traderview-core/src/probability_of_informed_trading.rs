@@ -45,9 +45,13 @@ pub struct PinReport {
 }
 
 pub fn estimate(flow: &[DailyOrderFlow]) -> Option<PinReport> {
-    if flow.len() < 10 { return None; }
-    if flow.iter().any(|d| !d.buys.is_finite() || !d.sells.is_finite()
-        || d.buys < 0.0 || d.sells < 0.0) {
+    if flow.len() < 10 {
+        return None;
+    }
+    if flow
+        .iter()
+        .any(|d| !d.buys.is_finite() || !d.sells.is_finite() || d.buys < 0.0 || d.sells < 0.0)
+    {
         return None;
     }
     let n = flow.len();
@@ -60,15 +64,24 @@ pub fn estimate(flow: &[DailyOrderFlow]) -> Option<PinReport> {
     let mu = mean_imbalance;
     // α̂ = fraction of days where |B - S| > 1·σ_{B-S}.
     let imb_mean: f64 = flow.iter().map(|d| d.buys - d.sells).sum::<f64>() / n_f;
-    let imb_var: f64 = flow.iter()
-        .map(|d| (d.buys - d.sells - imb_mean).powi(2)).sum::<f64>() / n_f;
+    let imb_var: f64 = flow
+        .iter()
+        .map(|d| (d.buys - d.sells - imb_mean).powi(2))
+        .sum::<f64>()
+        / n_f;
     let imb_sd = imb_var.max(0.0).sqrt();
     let threshold = imb_sd;
     let alpha = if threshold > 0.0 {
         imbalances.iter().filter(|i| **i > threshold).count() as f64 / n_f
-    } else { 0.0 };
+    } else {
+        0.0
+    };
     let pin_denom = alpha * mu + 2.0 * epsilon;
-    let pin = if pin_denom > 0.0 { (alpha * mu) / pin_denom } else { 0.0 };
+    let pin = if pin_denom > 0.0 {
+        (alpha * mu) / pin_denom
+    } else {
+        0.0
+    };
     Some(PinReport {
         alpha,
         mu,
@@ -83,7 +96,9 @@ pub fn estimate(flow: &[DailyOrderFlow]) -> Option<PinReport> {
 mod tests {
     use super::*;
 
-    fn d(b: f64, s: f64) -> DailyOrderFlow { DailyOrderFlow { buys: b, sells: s } }
+    fn d(b: f64, s: f64) -> DailyOrderFlow {
+        DailyOrderFlow { buys: b, sells: s }
+    }
 
     #[test]
     fn too_short_returns_none() {
@@ -108,11 +123,16 @@ mod tests {
     #[test]
     fn balanced_flow_yields_low_pin() {
         // Every day has B ≈ S, no informed events.
-        let flow: Vec<_> = (0..50).map(|i| d(100.0 + (i % 3) as f64,
-            100.0 + (i % 3) as f64)).collect();
+        let flow: Vec<_> = (0..50)
+            .map(|i| d(100.0 + (i % 3) as f64, 100.0 + (i % 3) as f64))
+            .collect();
         let r = estimate(&flow).unwrap();
         // PIN should be very low since μ ≈ 0.
-        assert!(r.pin < 0.1, "balanced flow PIN should be low, got {}", r.pin);
+        assert!(
+            r.pin < 0.1,
+            "balanced flow PIN should be low, got {}",
+            r.pin
+        );
     }
 
     #[test]
@@ -127,24 +147,36 @@ mod tests {
         }
         let r_bal = estimate(&balanced).unwrap();
         let r_imb = estimate(&imbalanced).unwrap();
-        assert!(r_imb.pin > r_bal.pin,
-            "imbalanced PIN {} should exceed balanced PIN {}", r_imb.pin, r_bal.pin);
+        assert!(
+            r_imb.pin > r_bal.pin,
+            "imbalanced PIN {} should exceed balanced PIN {}",
+            r_imb.pin,
+            r_bal.pin
+        );
         // And the imbalanced PIN should be appreciable (> 0.05).
-        assert!(r_imb.pin > 0.05, "imbalanced PIN should be > 0.05, got {}", r_imb.pin);
+        assert!(
+            r_imb.pin > 0.05,
+            "imbalanced PIN should be > 0.05, got {}",
+            r_imb.pin
+        );
     }
 
     #[test]
     fn pin_in_unit_range() {
         let mut state: u64 = 42;
-        let flow: Vec<_> = (0..100).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let b = ((state >> 32) as f64 / u32::MAX as f64) * 200.0;
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let s = ((state >> 32) as f64 / u32::MAX as f64) * 200.0;
-            d(b, s)
-        }).collect();
+        let flow: Vec<_> = (0..100)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let b = ((state >> 32) as f64 / u32::MAX as f64) * 200.0;
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let s = ((state >> 32) as f64 / u32::MAX as f64) * 200.0;
+                d(b, s)
+            })
+            .collect();
         let r = estimate(&flow).unwrap();
         assert!((0.0..=1.0).contains(&r.pin), "PIN {} out of [0,1]", r.pin);
         assert!((0.0..=1.0).contains(&r.alpha));
@@ -153,16 +185,16 @@ mod tests {
     #[test]
     fn epsilon_is_mean_min_volume() {
         let mut flow = vec![
-            d(100.0, 50.0),     // min 50
-            d(80.0, 120.0),     // min 80
-            d(60.0, 60.0),      // min 60
-            d(40.0, 200.0),     // min 40
-            d(150.0, 50.0),     // min 50
+            d(100.0, 50.0), // min 50
+            d(80.0, 120.0), // min 80
+            d(60.0, 60.0),  // min 60
+            d(40.0, 200.0), // min 40
+            d(150.0, 50.0), // min 50
         ];
         flow.extend(std::iter::repeat_n(d(100.0, 100.0), 10));
         let r = estimate(&flow).unwrap();
-        let expected_eps = flow.iter().map(|d| d.buys.min(d.sells)).sum::<f64>()
-            / flow.len() as f64;
+        let expected_eps =
+            flow.iter().map(|d| d.buys.min(d.sells)).sum::<f64>() / flow.len() as f64;
         assert!((r.epsilon - expected_eps).abs() < 1e-12);
     }
 

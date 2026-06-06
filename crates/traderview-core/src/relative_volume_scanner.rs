@@ -61,33 +61,46 @@ impl Default for Config {
 }
 
 pub fn scan(symbols: &[SymbolVolume], cfg: &Config) -> Vec<RvolHit> {
-    let mut hits: Vec<RvolHit> = symbols.iter().filter_map(|s| {
-        if !s.today_volume_to_date.is_finite()
-            || !s.n_day_avg_volume_to_date.is_finite()
-            || !s.last_close.is_finite() || !s.last_price.is_finite()
-            || s.last_close <= 0.0
-            || s.n_day_avg_volume_to_date <= 0.0
-            || s.today_volume_to_date < 0.0 { return None; }
-        let intraday_rvol = s.today_volume_to_date / s.n_day_avg_volume_to_date;
-        let daily_rvol = match (s.today_full_day_volume, s.n_day_avg_full_day_volume) {
-            (Some(t), Some(a)) if t.is_finite() && a.is_finite() && a > 0.0 => Some(t / a),
-            _ => None,
-        };
-        let pct_chg = (s.last_price - s.last_close) / s.last_close;
-        if intraday_rvol < cfg.min_intraday_rvol
-            || s.n_day_avg_volume_to_date < cfg.min_avg_volume
-            || pct_chg.abs() < cfg.min_abs_price_change_pct { return None; }
-        Some(RvolHit {
-            symbol: s.symbol.clone(),
-            intraday_rvol,
-            daily_rvol,
-            today_volume: s.today_volume_to_date,
-            avg_volume: s.n_day_avg_volume_to_date,
-            price_change_pct: pct_chg,
+    let mut hits: Vec<RvolHit> = symbols
+        .iter()
+        .filter_map(|s| {
+            if !s.today_volume_to_date.is_finite()
+                || !s.n_day_avg_volume_to_date.is_finite()
+                || !s.last_close.is_finite()
+                || !s.last_price.is_finite()
+                || s.last_close <= 0.0
+                || s.n_day_avg_volume_to_date <= 0.0
+                || s.today_volume_to_date < 0.0
+            {
+                return None;
+            }
+            let intraday_rvol = s.today_volume_to_date / s.n_day_avg_volume_to_date;
+            let daily_rvol = match (s.today_full_day_volume, s.n_day_avg_full_day_volume) {
+                (Some(t), Some(a)) if t.is_finite() && a.is_finite() && a > 0.0 => Some(t / a),
+                _ => None,
+            };
+            let pct_chg = (s.last_price - s.last_close) / s.last_close;
+            if intraday_rvol < cfg.min_intraday_rvol
+                || s.n_day_avg_volume_to_date < cfg.min_avg_volume
+                || pct_chg.abs() < cfg.min_abs_price_change_pct
+            {
+                return None;
+            }
+            Some(RvolHit {
+                symbol: s.symbol.clone(),
+                intraday_rvol,
+                daily_rvol,
+                today_volume: s.today_volume_to_date,
+                avg_volume: s.n_day_avg_volume_to_date,
+                price_change_pct: pct_chg,
+            })
         })
-    }).collect();
-    hits.sort_by(|a, b| b.intraday_rvol.partial_cmp(&a.intraday_rvol)
-        .unwrap_or(std::cmp::Ordering::Equal));
+        .collect();
+    hits.sort_by(|a, b| {
+        b.intraday_rvol
+            .partial_cmp(&a.intraday_rvol)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     hits
 }
 
@@ -139,9 +152,9 @@ mod tests {
 
     #[test]
     fn sorted_by_rvol_descending() {
-        let a = sv("AAA", 1_000_000.0, 200_000.0, 50.0, 52.0);    // 5x
-        let b = sv("BBB", 5_000_000.0, 200_000.0, 50.0, 52.0);    // 25x
-        let c = sv("CCC", 2_000_000.0, 200_000.0, 50.0, 52.0);    // 10x
+        let a = sv("AAA", 1_000_000.0, 200_000.0, 50.0, 52.0); // 5x
+        let b = sv("BBB", 5_000_000.0, 200_000.0, 50.0, 52.0); // 25x
+        let c = sv("CCC", 2_000_000.0, 200_000.0, 50.0, 52.0); // 10x
         let hits = scan(&[a, b, c], &Config::default());
         assert_eq!(hits[0].symbol, "BBB");
         assert_eq!(hits[1].symbol, "CCC");
@@ -150,9 +163,12 @@ mod tests {
 
     #[test]
     fn min_price_change_filter_works() {
-        let cfg = Config { min_abs_price_change_pct: 0.05, ..Default::default() };
-        let small_change = sv("X", 1_000_000.0, 200_000.0, 50.0, 51.0);    // 2% change
-        let big_change = sv("Y", 1_000_000.0, 200_000.0, 50.0, 55.0);    // 10% change
+        let cfg = Config {
+            min_abs_price_change_pct: 0.05,
+            ..Default::default()
+        };
+        let small_change = sv("X", 1_000_000.0, 200_000.0, 50.0, 51.0); // 2% change
+        let big_change = sv("Y", 1_000_000.0, 200_000.0, 50.0, 55.0); // 10% change
         let hits = scan(&[small_change, big_change], &cfg);
         assert_eq!(hits.len(), 1);
         assert_eq!(hits[0].symbol, "Y");

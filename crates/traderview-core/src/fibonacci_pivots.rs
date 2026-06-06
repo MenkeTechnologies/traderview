@@ -17,7 +17,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct PriorSession { pub high: f64, pub low: f64, pub close: f64 }
+pub struct PriorSession {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Default)]
 pub struct FibPivotLevels {
@@ -31,8 +35,11 @@ pub struct FibPivotLevels {
 }
 
 pub fn compute(session: PriorSession) -> Option<FibPivotLevels> {
-    if !session.high.is_finite() || !session.low.is_finite()
-        || !session.close.is_finite() || session.high < session.low {
+    if !session.high.is_finite()
+        || !session.low.is_finite()
+        || !session.close.is_finite()
+        || session.high < session.low
+    {
         return None;
     }
     let p = (session.high + session.low + session.close) / 3.0;
@@ -54,13 +61,28 @@ mod tests {
 
     #[test]
     fn invalid_session_returns_none() {
-        assert!(compute(PriorSession { high: f64::NAN, low: 99.0, close: 100.0 }).is_none());
-        assert!(compute(PriorSession { high: 99.0, low: 101.0, close: 100.0 }).is_none());
+        assert!(compute(PriorSession {
+            high: f64::NAN,
+            low: 99.0,
+            close: 100.0
+        })
+        .is_none());
+        assert!(compute(PriorSession {
+            high: 99.0,
+            low: 101.0,
+            close: 100.0
+        })
+        .is_none());
     }
 
     #[test]
     fn exact_fib_ratios_applied() {
-        let r = compute(PriorSession { high: 110.0, low: 100.0, close: 105.0 }).unwrap();
+        let r = compute(PriorSession {
+            high: 110.0,
+            low: 100.0,
+            close: 105.0,
+        })
+        .unwrap();
         // P = 105, range = 10.
         assert!((r.r1 - (105.0 + 3.82)).abs() < 1e-9);
         assert!((r.r2 - (105.0 + 6.18)).abs() < 1e-9);
@@ -72,19 +94,34 @@ mod tests {
 
     #[test]
     fn resistance_levels_ordered() {
-        let r = compute(PriorSession { high: 110.0, low: 100.0, close: 105.0 }).unwrap();
+        let r = compute(PriorSession {
+            high: 110.0,
+            low: 100.0,
+            close: 105.0,
+        })
+        .unwrap();
         assert!(r.pivot < r.r1 && r.r1 < r.r2 && r.r2 < r.r3);
     }
 
     #[test]
     fn support_levels_ordered() {
-        let r = compute(PriorSession { high: 110.0, low: 100.0, close: 105.0 }).unwrap();
+        let r = compute(PriorSession {
+            high: 110.0,
+            low: 100.0,
+            close: 105.0,
+        })
+        .unwrap();
         assert!(r.pivot > r.s1 && r.s1 > r.s2 && r.s2 > r.s3);
     }
 
     #[test]
     fn symmetric_around_pivot() {
-        let r = compute(PriorSession { high: 110.0, low: 100.0, close: 105.0 }).unwrap();
+        let r = compute(PriorSession {
+            high: 110.0,
+            low: 100.0,
+            close: 105.0,
+        })
+        .unwrap();
         assert!((r.r1 - r.pivot - (r.pivot - r.s1)).abs() < 1e-9);
         assert!((r.r2 - r.pivot - (r.pivot - r.s2)).abs() < 1e-9);
         assert!((r.r3 - r.pivot - (r.pivot - r.s3)).abs() < 1e-9);
@@ -92,7 +129,12 @@ mod tests {
 
     #[test]
     fn zero_range_collapses_to_close() {
-        let r = compute(PriorSession { high: 100.0, low: 100.0, close: 100.0 }).unwrap();
+        let r = compute(PriorSession {
+            high: 100.0,
+            low: 100.0,
+            close: 100.0,
+        })
+        .unwrap();
         for lvl in [r.r3, r.r2, r.r1, r.s1, r.s2, r.s3] {
             assert!((lvl - 100.0).abs() < 1e-9);
         }

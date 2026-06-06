@@ -34,12 +34,7 @@ pub fn compute(
         k: vec![None; n],
         d: vec![None; n],
     };
-    if rsi_period == 0
-        || stoch_period == 0
-        || smooth_k == 0
-        || smooth_d == 0
-        || n <= rsi_period
-    {
+    if rsi_period == 0 || stoch_period == 0 || smooth_k == 0 || smooth_d == 0 || n <= rsi_period {
         return report;
     }
     let rsi_series = rsi(closes, rsi_period);
@@ -163,7 +158,10 @@ mod tests {
         v.extend((1..=30).map(|i| 100.5 + i as f64));
         let r = compute(&v, 14, 14, 3, 3);
         let last = r.k.last().copied().flatten().expect("populated");
-        assert!(last > 70.0, "post-chop rising series should be overbought, got {last}");
+        assert!(
+            last > 70.0,
+            "post-chop rising series should be overbought, got {last}"
+        );
     }
 
     #[test]
@@ -173,8 +171,10 @@ mod tests {
         let v: Vec<f64> = (1..=60).map(|i| 100.0 + i as f64).collect();
         let r = compute(&v, 14, 14, 3, 3);
         let last = r.k.last().copied().flatten().expect("populated");
-        assert!((last - 50.0).abs() < 1.0,
-            "monotonic rise → RSI saturates at 100 → StochRSI fallback ≈ 50, got {last}");
+        assert!(
+            (last - 50.0).abs() < 1.0,
+            "monotonic rise → RSI saturates at 100 → StochRSI fallback ≈ 50, got {last}"
+        );
     }
 
     #[test]

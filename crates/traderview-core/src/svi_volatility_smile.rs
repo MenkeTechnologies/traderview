@@ -44,15 +44,28 @@ pub struct Report {
 
 pub fn compute(log_moneyness: &[f64], total_variance: &[f64], expiry_years: f64) -> Option<Report> {
     let n = log_moneyness.len();
-    if n < 5 || total_variance.len() != n { return None; }
-    if !expiry_years.is_finite() || expiry_years <= 0.0 { return None; }
-    if log_moneyness.iter().chain(total_variance.iter()).any(|x| !x.is_finite()) {
+    if n < 5 || total_variance.len() != n {
         return None;
     }
-    if total_variance.iter().any(|&v| v < 0.0) { return None; }
+    if !expiry_years.is_finite() || expiry_years <= 0.0 {
+        return None;
+    }
+    if log_moneyness
+        .iter()
+        .chain(total_variance.iter())
+        .any(|x| !x.is_finite())
+    {
+        return None;
+    }
+    if total_variance.iter().any(|&v| v < 0.0) {
+        return None;
+    }
     // Reasonable init from data.
     let w_min = total_variance.iter().copied().fold(f64::INFINITY, f64::min);
-    let w_max = total_variance.iter().copied().fold(f64::NEG_INFINITY, f64::max);
+    let w_max = total_variance
+        .iter()
+        .copied()
+        .fold(f64::NEG_INFINITY, f64::max);
     let mut a = (w_min * 0.95).max(0.0);
     let mut b = ((w_max - w_min) / 0.5).max(1e-4);
     let mut rho = -0.3_f64;
@@ -65,41 +78,104 @@ pub fn compute(log_moneyness: &[f64], total_variance: &[f64], expiry_years: f64)
         for _ in 0..4 {
             // a sweep
             let (na, nr) = sweep_param(
-                log_moneyness, total_variance, a, b, rho, m, sigma,
-                0.05 * scale * w_max.max(0.01), |v| v.max(0.0), 0,
+                log_moneyness,
+                total_variance,
+                a,
+                b,
+                rho,
+                m,
+                sigma,
+                0.05 * scale * w_max.max(0.01),
+                |v| v.max(0.0),
+                0,
             );
-            if nr < best_rmse { a = na; best_rmse = nr; }
+            if nr < best_rmse {
+                a = na;
+                best_rmse = nr;
+            }
             // b sweep
             let (nb, nr) = sweep_param(
-                log_moneyness, total_variance, a, b, rho, m, sigma,
-                0.2 * scale, |v| v.max(0.0), 1,
+                log_moneyness,
+                total_variance,
+                a,
+                b,
+                rho,
+                m,
+                sigma,
+                0.2 * scale,
+                |v| v.max(0.0),
+                1,
             );
-            if nr < best_rmse { b = nb; best_rmse = nr; }
+            if nr < best_rmse {
+                b = nb;
+                best_rmse = nr;
+            }
             // rho sweep
             let (nrho, nr) = sweep_param(
-                log_moneyness, total_variance, a, b, rho, m, sigma,
-                0.2 * scale, |v| v.clamp(-0.999, 0.999), 2,
+                log_moneyness,
+                total_variance,
+                a,
+                b,
+                rho,
+                m,
+                sigma,
+                0.2 * scale,
+                |v| v.clamp(-0.999, 0.999),
+                2,
             );
-            if nr < best_rmse { rho = nrho; best_rmse = nr; }
+            if nr < best_rmse {
+                rho = nrho;
+                best_rmse = nr;
+            }
             // m sweep
             let (nm, nr) = sweep_param(
-                log_moneyness, total_variance, a, b, rho, m, sigma,
-                0.05 * scale, |v| v, 3,
+                log_moneyness,
+                total_variance,
+                a,
+                b,
+                rho,
+                m,
+                sigma,
+                0.05 * scale,
+                |v| v,
+                3,
             );
-            if nr < best_rmse { m = nm; best_rmse = nr; }
+            if nr < best_rmse {
+                m = nm;
+                best_rmse = nr;
+            }
             // sigma sweep
             let (nsig, nr) = sweep_param(
-                log_moneyness, total_variance, a, b, rho, m, sigma,
-                0.05 * scale, |v| v.max(1e-4), 4,
+                log_moneyness,
+                total_variance,
+                a,
+                b,
+                rho,
+                m,
+                sigma,
+                0.05 * scale,
+                |v| v.max(1e-4),
+                4,
             );
-            if nr < best_rmse { sigma = nsig; best_rmse = nr; }
+            if nr < best_rmse {
+                sigma = nsig;
+                best_rmse = nr;
+            }
         }
     }
-    let params = SviParams { a, b, rho, m, sigma };
-    let fitted_total_var: Vec<f64> = log_moneyness.iter()
+    let params = SviParams {
+        a,
+        b,
+        rho,
+        m,
+        sigma,
+    };
+    let fitted_total_var: Vec<f64> = log_moneyness
+        .iter()
         .map(|&k| eval(a, b, rho, m, sigma, k).max(0.0))
         .collect();
-    let fitted_iv: Vec<f64> = fitted_total_var.iter()
+    let fitted_iv: Vec<f64> = fitted_total_var
+        .iter()
         .map(|w| (w / expiry_years).max(0.0).sqrt())
         .collect();
     let arbitrage_ok = b * (1.0 + rho.abs()) <= 4.0 / expiry_years;
@@ -114,12 +190,23 @@ pub fn compute(log_moneyness: &[f64], total_variance: &[f64], expiry_years: f64)
 
 #[allow(clippy::too_many_arguments)]
 fn sweep_param<F: Fn(f64) -> f64>(
-    k: &[f64], w: &[f64],
-    a: f64, b: f64, rho: f64, m: f64, sigma: f64,
-    half: f64, clip: F, idx: u8,
+    k: &[f64],
+    w: &[f64],
+    a: f64,
+    b: f64,
+    rho: f64,
+    m: f64,
+    sigma: f64,
+    half: f64,
+    clip: F,
+    idx: u8,
 ) -> (f64, f64) {
     let center = match idx {
-        0 => a, 1 => b, 2 => rho, 3 => m, _ => sigma,
+        0 => a,
+        1 => b,
+        2 => rho,
+        3 => m,
+        _ => sigma,
     };
     let mut best = center;
     let mut best_rmse = rmse(k, w, a, b, rho, m, sigma);
@@ -133,7 +220,10 @@ fn sweep_param<F: Fn(f64) -> f64>(
             _ => (a, b, rho, m, candidate),
         };
         let r = rmse(k, w, aa, bb, rr, mm, ss);
-        if r < best_rmse { best_rmse = r; best = candidate; }
+        if r < best_rmse {
+            best_rmse = r;
+            best = candidate;
+        }
     }
     (best, best_rmse)
 }
@@ -145,10 +235,14 @@ fn eval(a: f64, b: f64, rho: f64, m: f64, sigma: f64, k: f64) -> f64 {
 
 fn rmse(k: &[f64], w: &[f64], a: f64, b: f64, rho: f64, m: f64, sigma: f64) -> f64 {
     let n = k.len() as f64;
-    let sse: f64 = k.iter().zip(w.iter()).map(|(&kk, &ww)| {
-        let e = eval(a, b, rho, m, sigma, kk) - ww;
-        e * e
-    }).sum();
+    let sse: f64 = k
+        .iter()
+        .zip(w.iter())
+        .map(|(&kk, &ww)| {
+            let e = eval(a, b, rho, m, sigma, kk) - ww;
+            e * e
+        })
+        .sum();
     (sse / n).sqrt()
 }
 
@@ -182,11 +276,26 @@ mod tests {
     #[test]
     fn smile_shape_recovers_curvature() {
         // Build a SVI-shaped smile and fit. Recovered w should match.
-        let true_params = SviParams { a: 0.02, b: 0.1, rho: -0.4, m: 0.05, sigma: 0.1 };
+        let true_params = SviParams {
+            a: 0.02,
+            b: 0.1,
+            rho: -0.4,
+            m: 0.05,
+            sigma: 0.1,
+        };
         let k: Vec<f64> = (-20_i32..=20).map(|i| i as f64 * 0.05).collect();
-        let w: Vec<f64> = k.iter()
-            .map(|&kk| eval(true_params.a, true_params.b, true_params.rho,
-                            true_params.m, true_params.sigma, kk))
+        let w: Vec<f64> = k
+            .iter()
+            .map(|&kk| {
+                eval(
+                    true_params.a,
+                    true_params.b,
+                    true_params.rho,
+                    true_params.m,
+                    true_params.sigma,
+                    kk,
+                )
+            })
             .collect();
         let r = compute(&k, &w, 1.0).unwrap();
         assert!(r.rmse_total_var < 0.01);

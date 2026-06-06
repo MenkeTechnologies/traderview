@@ -17,8 +17,12 @@
 pub fn compute(tick: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = tick.len();
     let mut out = vec![None; n];
-    if period < 3 || n < period { return out; }
-    if tick.iter().any(|x| !x.is_finite()) { return out; }
+    if period < 3 || n < period {
+        return out;
+    }
+    if tick.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     let mut cum = vec![0.0_f64; n];
     cum[0] = tick[0];
     for i in 1..n {

@@ -170,7 +170,7 @@ pub struct Input {
     pub all_affected_shareholders_consented_section_1377a2: bool,
     pub election_filed_with_timely_form_1120s: bool,
     pub shareholder_held_pct_basis_points: u32, // 0-10,000 bps
-    pub days_held_in_year: u32, // 0-365 (or 366 leap year)
+    pub days_held_in_year: u32,                 // 0-365 (or 366 leap year)
     pub days_in_year: u32,
     pub corp_annual_income_cents: u64,
     pub pttp_period: PttpPeriod,
@@ -213,7 +213,10 @@ pub fn check(input: &Input) -> Output {
     ];
 
     // Validate terminating election
-    if matches!(input.allocation_method, AllocationMethod::Section1377a2TerminatingElection) {
+    if matches!(
+        input.allocation_method,
+        AllocationMethod::Section1377a2TerminatingElection
+    ) {
         let qualifying_event = matches!(
             input.termination_event,
             TerminationEvent::FullDisposition
@@ -308,7 +311,9 @@ fn compute_pttp_distribution(input: &Input) -> (u64, u64) {
         return (0, 0);
     }
     // PTTP: § 1377(b)(2) — distribution reduces AAA first, then E&P
-    let against_aaa = input.distribution_during_pttp_cents.min(input.aaa_balance_cents);
+    let against_aaa = input
+        .distribution_during_pttp_cents
+        .min(input.aaa_balance_cents);
     let against_enp = input
         .distribution_during_pttp_cents
         .saturating_sub(against_aaa);

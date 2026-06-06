@@ -187,7 +187,10 @@ pub fn check(input: &Input) -> Output {
              fitter. Verify annual leak test per § 401.7."
                 .to_string(),
         );
-    } else if matches!(input.grill_location, GrillLocation::DesignatedCommonAreaGrillStation) {
+    } else if matches!(
+        input.grill_location,
+        GrillLocation::DesignatedCommonAreaGrillStation
+    ) {
         severity = Severity::CompliantDesignatedCommonAreaStation;
         actions.push(
             "Designated common-area grill station maintained by landlord at least 10 feet \
@@ -209,10 +212,7 @@ pub fn check(input: &Input) -> Output {
              photographs; reference NFPA 1 § 10.10.5 in cease notice.",
             US_BBQ_FIRE_DEATHS_PER_YEAR, US_BBQ_FIRE_INJURIES_PER_YEAR
         ));
-        if matches!(
-            input.grill_type,
-            GrillType::PropaneTwentyPoundCylinder
-        ) {
+        if matches!(input.grill_type, GrillType::PropaneTwentyPoundCylinder) {
             actions.push(format!(
                 "ADDITIONAL VIOLATION: NFPA 1 § 6.18 LP-gas cylinder above 1-pound disposable \
                  size ({}-pound water capacity max) PROHIBITED from storage above first floor \
@@ -222,13 +222,9 @@ pub fn check(input: &Input) -> Output {
                 NFPA_1_LP_GAS_MAX_DISPOSABLE_WATER_CAPACITY_POUNDS
             ));
         }
-    } else if matches!(
-        input.grill_type,
-        GrillType::PropaneTwentyPoundCylinder
-    ) && matches!(
-        input.grill_location,
-        GrillLocation::BalconyAboveFirstFloor
-    ) {
+    } else if matches!(input.grill_type, GrillType::PropaneTwentyPoundCylinder)
+        && matches!(input.grill_location, GrillLocation::BalconyAboveFirstFloor)
+    {
         severity = Severity::NfpaPropaneAbove1PoundStoredAboveFirstFloorViolation;
         actions.push(format!(
             "NFPA 1 § 6.18 violation: 20-pound LP-gas BBQ cylinder stored above first floor. \
@@ -297,7 +293,8 @@ pub fn check(input: &Input) -> Output {
                  Bureau of Fire Investigation may issue summons. NYC FC 307.5 specifically \
                  prohibits LP-gas grills with > 1-pound cylinders on multifamily balconies; \
                  enforcement intensifies during summer cookout season.",
-                FDNY_NYC_PENALTY_MIN_CENTS / 100, FDNY_NYC_PENALTY_MAX_CENTS / 100
+                FDNY_NYC_PENALTY_MIN_CENTS / 100,
+                FDNY_NYC_PENALTY_MAX_CENTS / 100
             ));
         }
         Jurisdiction::Massachusetts => {
@@ -348,9 +345,7 @@ pub fn check(input: &Input) -> Output {
     let annual_rent_at_risk: u64 = match severity {
         Severity::IndoorGrillCategoricallyProhibited
         | Severity::NfpaOpenFlameOnBalconyViolation
-        | Severity::NfpaPropaneAbove1PoundStoredAboveFirstFloorViolation => {
-            input.annual_rent_cents
-        }
+        | Severity::NfpaPropaneAbove1PoundStoredAboveFirstFloorViolation => input.annual_rent_cents,
         Severity::NfpaWithin10FeetOfStructureViolation
         | Severity::LeaseEnforcementRequiredTenantViolation => {
             input.annual_rent_cents.saturating_div(2)
@@ -368,9 +363,7 @@ pub fn check(input: &Input) -> Output {
             Jurisdiction::California => {
                 "Cal. Fire Code § 308.1.4 + § 308.1.6.2 + Cal. Health & Safety Code § 18900"
             }
-            Jurisdiction::NewYorkCity => {
-                "FDNY 3 RCNY 102-01 + NYC Admin Title 29 + NYC FC 307.5"
-            }
+            Jurisdiction::NewYorkCity => "FDNY 3 RCNY 102-01 + NYC Admin Title 29 + NYC FC 307.5",
             Jurisdiction::Massachusetts => "527 CMR 1.00 + M.G.L. ch. 148 § 26G",
             Jurisdiction::Texas => "Tex. Local Gov't Code Ch. 235 + State Fire Marshal Office",
             Jurisdiction::Default => "NFPA 1 § 10.10.5 + § 6.18",
@@ -412,9 +405,15 @@ mod tests {
         let mut i = baseline();
         i.grill_location = GrillLocation::Indoor;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::IndoorGrillCategoricallyProhibited));
+        assert!(matches!(
+            r.severity,
+            Severity::IndoorGrillCategoricallyProhibited
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("§ 10.10.4")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("§ 10.10.4")));
     }
 
     #[test]
@@ -422,7 +421,10 @@ mod tests {
         let mut i = baseline();
         i.grill_type = GrillType::Electric;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantElectricOrPermanentInstall));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantElectricOrPermanentInstall
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, 0);
     }
 
@@ -431,8 +433,14 @@ mod tests {
         let mut i = baseline();
         i.grill_type = GrillType::NaturalGasHardwired;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantElectricOrPermanentInstall));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("IFGC § 401")));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantElectricOrPermanentInstall
+        ));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("IFGC § 401")));
     }
 
     #[test]
@@ -440,7 +448,10 @@ mod tests {
         let mut i = baseline();
         i.grill_location = GrillLocation::DesignatedCommonAreaGrillStation;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantDesignatedCommonAreaStation));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantDesignatedCommonAreaStation
+        ));
         assert!(r.recommended_actions.iter().any(|a| a.contains("Class K")));
         assert!(r.recommended_actions.iter().any(|a| a.contains("NFPA 10")));
     }
@@ -451,9 +462,15 @@ mod tests {
         i.grill_location = GrillLocation::BalconyAboveFirstFloor;
         i.grill_type = GrillType::PropaneTwentyPoundCylinder;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::NfpaOpenFlameOnBalconyViolation));
+        assert!(matches!(
+            r.severity,
+            Severity::NfpaOpenFlameOnBalconyViolation
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("§ 10.10.5")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("§ 10.10.5")));
         assert!(r
             .recommended_actions
             .iter()
@@ -479,8 +496,14 @@ mod tests {
         i.grill_location = GrillLocation::BalconyAboveFirstFloor;
         i.grill_type = GrillType::Charcoal;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::NfpaOpenFlameOnBalconyViolation));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("§ 10.10.5")));
+        assert!(matches!(
+            r.severity,
+            Severity::NfpaOpenFlameOnBalconyViolation
+        ));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("§ 10.10.5")));
         assert!(!r.recommended_actions.iter().any(|a| a.contains("§ 6.18")));
     }
 
@@ -490,7 +513,10 @@ mod tests {
         i.grill_location = GrillLocation::BalconyAboveFirstFloor;
         i.grill_type = GrillType::Hibachi;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::NfpaOpenFlameOnBalconyViolation));
+        assert!(matches!(
+            r.severity,
+            Severity::NfpaOpenFlameOnBalconyViolation
+        ));
     }
 
     #[test]
@@ -499,7 +525,10 @@ mod tests {
         i.grill_location = GrillLocation::GroundFloorPatioWithin10Feet;
         i.grill_type = GrillType::Charcoal;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::NfpaWithin10FeetOfStructureViolation));
+        assert!(matches!(
+            r.severity,
+            Severity::NfpaWithin10FeetOfStructureViolation
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents / 2);
         assert!(r.recommended_actions.iter().any(|a| a.contains("10 feet")));
     }
@@ -510,7 +539,10 @@ mod tests {
         i.grill_location = GrillLocation::GroundFloorPatioAtLeast10Feet;
         i.grill_type = GrillType::Charcoal;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantBeyond10FeetGroundFloor));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantBeyond10FeetGroundFloor
+        ));
     }
 
     #[test]
@@ -519,7 +551,10 @@ mod tests {
         i.grill_type = GrillType::PropaneOnePoundDisposable;
         i.grill_location = GrillLocation::GroundFloorPatioAtLeast10Feet;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantBeyond10FeetGroundFloor));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantBeyond10FeetGroundFloor
+        ));
     }
 
     #[test]
@@ -535,14 +570,20 @@ mod tests {
             Severity::LeaseEnforcementRequiredTenantViolation
         ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents / 2);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("3-day Notice to Cure")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("3-day Notice to Cure")));
     }
 
     #[test]
     fn ca_jurisdiction_pins_fire_code_308_1_4() {
         let i = baseline();
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("Cal. Fire Code § 308.1.4")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Cal. Fire Code § 308.1.4")));
         assert!(r.notes.iter().any(|n| n.contains("CAL FIRE")));
     }
 
@@ -571,8 +612,14 @@ mod tests {
         let mut i = baseline();
         i.jurisdiction = Jurisdiction::Texas;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("Texas Local Government Code Ch. 235")));
-        assert!(r.notes.iter().any(|n| n.contains("State Fire Marshal Office")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Texas Local Government Code Ch. 235")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("State Fire Marshal Office")));
     }
 
     #[test]
@@ -580,7 +627,10 @@ mod tests {
         let mut i = baseline();
         i.jurisdiction = Jurisdiction::Default;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("NFPA 1 (2018 + 2021 editions)")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("NFPA 1 (2018 + 2021 editions)")));
         assert!(r.notes.iter().any(|n| n.contains("§ 10.10.5")));
         assert!(r.notes.iter().any(|n| n.contains("§ 6.18")));
     }
@@ -597,7 +647,10 @@ mod tests {
             .notes
             .iter()
             .any(|n| n.contains("rental_natural_gas_leak_response")));
-        assert!(r.notes.iter().any(|n| n.contains("rental_pellet_stove_disclosure")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("rental_pellet_stove_disclosure")));
         assert!(r
             .notes
             .iter()
@@ -653,11 +706,31 @@ mod tests {
 
     #[test]
     fn citation_branch_for_each_jurisdiction() {
-        let ca = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::California; i });
-        let nyc = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::NewYorkCity; i });
-        let ma = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Massachusetts; i });
-        let tx = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Texas; i });
-        let de = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Default; i });
+        let ca = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::California;
+            i
+        });
+        let nyc = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::NewYorkCity;
+            i
+        });
+        let ma = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Massachusetts;
+            i
+        });
+        let tx = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Texas;
+            i
+        });
+        let de = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Default;
+            i
+        });
         assert!(ca.citation.contains("Cal. Fire Code"));
         assert!(nyc.citation.contains("FDNY"));
         assert!(ma.citation.contains("527 CMR 1.00"));
@@ -671,7 +744,10 @@ mod tests {
         i.grill_location = GrillLocation::Indoor;
         i.grill_type = GrillType::Electric;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::IndoorGrillCategoricallyProhibited));
+        assert!(matches!(
+            r.severity,
+            Severity::IndoorGrillCategoricallyProhibited
+        ));
     }
 
     #[test]

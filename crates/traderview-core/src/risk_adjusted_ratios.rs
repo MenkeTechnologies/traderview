@@ -42,15 +42,21 @@ pub fn compute(
     if equity_curve.len() < 2
         || period_returns.is_empty()
         || !risk_free_annual.is_finite()
-        || !periods_per_year.is_finite() || periods_per_year <= 0.0
+        || !periods_per_year.is_finite()
+        || periods_per_year <= 0.0
         || n_worst_drawdowns == 0
     {
         return None;
     }
     // Annualized return from the return series.
-    let clean_returns: Vec<f64> = period_returns.iter().copied()
-        .filter(|x| x.is_finite()).collect();
-    if clean_returns.is_empty() { return None; }
+    let clean_returns: Vec<f64> = period_returns
+        .iter()
+        .copied()
+        .filter(|x| x.is_finite())
+        .collect();
+    if clean_returns.is_empty() {
+        return None;
+    }
     let mean_ret = clean_returns.iter().sum::<f64>() / clean_returns.len() as f64;
     let annual_ret = mean_ret * periods_per_year;
     // Drawdown series along the equity curve.
@@ -58,13 +64,23 @@ pub fn compute(
     let mut peak = f64::NEG_INFINITY;
     let mut any_valid = false;
     for v in equity_curve {
-        if !v.is_finite() { continue; }
+        if !v.is_finite() {
+            continue;
+        }
         any_valid = true;
-        if *v > peak { peak = *v; }
-        let dd = if peak > 0.0 { (peak - v).max(0.0) / peak } else { 0.0 };
+        if *v > peak {
+            peak = *v;
+        }
+        let dd = if peak > 0.0 {
+            (peak - v).max(0.0) / peak
+        } else {
+            0.0
+        };
         dds.push(dd);
     }
-    if !any_valid || dds.is_empty() { return None; }
+    if !any_valid || dds.is_empty() {
+        return None;
+    }
     let n = dds.len();
     // Ulcer index = √(mean(DD²)) where DD is in percent — output unitless.
     let mean_dd_sq = dds.iter().map(|d| d * d).sum::<f64>() / n as f64;
@@ -77,12 +93,27 @@ pub fn compute(
     let k = n_worst_drawdowns.min(n);
     let avg_max_dd = sorted_dds[..k].iter().sum::<f64>() / k as f64;
     let excess = annual_ret - risk_free_annual;
-    let sterling = if avg_max_dd > 0.0 { excess / avg_max_dd }
-        else if excess.abs() < 1e-12 { 0.0 } else { f64::INFINITY * excess.signum() };
-    let burke = if rms_dd > 0.0 { excess / rms_dd }
-        else if excess.abs() < 1e-12 { 0.0 } else { f64::INFINITY * excess.signum() };
-    let upi = if ulcer > 0.0 { excess / ulcer }
-        else if excess.abs() < 1e-12 { 0.0 } else { f64::INFINITY * excess.signum() };
+    let sterling = if avg_max_dd > 0.0 {
+        excess / avg_max_dd
+    } else if excess.abs() < 1e-12 {
+        0.0
+    } else {
+        f64::INFINITY * excess.signum()
+    };
+    let burke = if rms_dd > 0.0 {
+        excess / rms_dd
+    } else if excess.abs() < 1e-12 {
+        0.0
+    } else {
+        f64::INFINITY * excess.signum()
+    };
+    let upi = if ulcer > 0.0 {
+        excess / ulcer
+    } else if excess.abs() < 1e-12 {
+        0.0
+    } else {
+        f64::INFINITY * excess.signum()
+    };
     Some(RiskAdjustedReport {
         annualized_return: annual_ret,
         sterling_ratio: sterling,
@@ -179,16 +210,26 @@ mod tests {
         // many zero-DD bars, Sterling's denom is FAR bigger than UPI's
         // → Sterling ratio < UPI ratio. Construct exactly that.
         let mut curve = vec![100.0_f64];
-        curve.extend(std::iter::repeat_n(100.0, 50));    // 50 flat (zero DD)
-        curve.push(60.0);                                 // 40% drawdown
-        curve.extend(std::iter::repeat_n(100.0, 50));    // recover + 50 flat
-        let rets: Vec<f64> = curve.windows(2)
-            .map(|w| if w[0] > 0.0 { (w[1] - w[0]) / w[0] } else { 0.0 })
+        curve.extend(std::iter::repeat_n(100.0, 50)); // 50 flat (zero DD)
+        curve.push(60.0); // 40% drawdown
+        curve.extend(std::iter::repeat_n(100.0, 50)); // recover + 50 flat
+        let rets: Vec<f64> = curve
+            .windows(2)
+            .map(|w| {
+                if w[0] > 0.0 {
+                    (w[1] - w[0]) / w[0]
+                } else {
+                    0.0
+                }
+            })
             .collect();
         let r = compute(&curve, &rets, 0.0, 252.0, 5).unwrap();
         // Sterling 5-worst should differ measurably from RMS-all.
-        assert!((r.sterling_ratio - r.ulcer_performance_index).abs() > 1e-6,
+        assert!(
+            (r.sterling_ratio - r.ulcer_performance_index).abs() > 1e-6,
             "expected Sterling ({}) ≠ UPI ({})",
-            r.sterling_ratio, r.ulcer_performance_index);
+            r.sterling_ratio,
+            r.ulcer_performance_index
+        );
     }
 }

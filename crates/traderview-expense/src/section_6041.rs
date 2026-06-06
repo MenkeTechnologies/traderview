@@ -221,7 +221,9 @@ pub fn compute(input: &Input) -> Output {
             applicable_threshold_dollars: 0,
             required_backup_withholding_dollars: 0,
             statutory_basis: "§ 6041(a) — payer not engaged in trade or business".to_string(),
-            notes: "Payer is consumer not engaged in trade or business; § 6041 reporting inapplicable.".to_string(),
+            notes:
+                "Payer is consumer not engaged in trade or business; § 6041 reporting inapplicable."
+                    .to_string(),
             citations,
         };
     }
@@ -277,7 +279,10 @@ pub fn compute(input: &Input) -> Output {
     }
 
     if input.payee_classification == PayeeClassification::CorporationGeneralExempt {
-        if matches!(input.payment_type, PaymentType::AttorneyFeesLegal | PaymentType::MedicalHealthcarePayments) {
+        if matches!(
+            input.payment_type,
+            PaymentType::AttorneyFeesLegal | PaymentType::MedicalHealthcarePayments
+        ) {
             return Output {
                 mode: Section6041Mode::ViolationLawyerPaymentExceptionMisappliedAsCorpExempt,
                 applicable_threshold_dollars: threshold,
@@ -304,7 +309,10 @@ pub fn compute(input: &Input) -> Output {
     }
 
     if !input.payee_provided_w9_with_tin {
-        let required_bw = apply_rate(input.payment_amount_dollars, SECTION_3406_BACKUP_WITHHOLDING_BASIS_POINTS);
+        let required_bw = apply_rate(
+            input.payment_amount_dollars,
+            SECTION_3406_BACKUP_WITHHOLDING_BASIS_POINTS,
+        );
         if !input.payer_actually_applied_backup_withholding
             || input.actual_backup_withholding_dollars < required_bw
         {
@@ -363,12 +371,14 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if matches!(input.payment_type, PaymentType::AttorneyFeesLegal | PaymentType::MedicalHealthcarePayments)
-        && matches!(
-            input.payee_classification,
-            PayeeClassification::CorporationAttorneyLawFirm | PayeeClassification::CorporationMedicalHealthcareProvider
-        )
-    {
+    if matches!(
+        input.payment_type,
+        PaymentType::AttorneyFeesLegal | PaymentType::MedicalHealthcarePayments
+    ) && matches!(
+        input.payee_classification,
+        PayeeClassification::CorporationAttorneyLawFirm
+            | PayeeClassification::CorporationMedicalHealthcareProvider
+    ) {
         return Output {
             mode: Section6041Mode::CompliantAttorneyOrMedicalPaymentReportedDespiteCorpStatus,
             applicable_threshold_dollars: threshold,
@@ -383,7 +393,9 @@ pub fn compute(input: &Input) -> Output {
     }
 
     let mode = match input.payment_type {
-        PaymentType::NonemployeeCompensationServices => Section6041Mode::CompliantForm1099NecFiledTimelyJanuary31,
+        PaymentType::NonemployeeCompensationServices => {
+            Section6041Mode::CompliantForm1099NecFiledTimelyJanuary31
+        }
         _ => Section6041Mode::CompliantForm1099MiscFiledTimely,
     };
 
@@ -413,7 +425,8 @@ mod tests {
             payee_classification: PayeeClassification::IndividualSoleProprietorContractor,
             payment_type: PaymentType::NonemployeeCompensationServices,
             payment_amount_dollars: 5_000,
-            payment_year_obbba_status: PaymentYearOBBBAStatus::PaymentMadeOnOrAfterJanuary1_2026NewThreshold,
+            payment_year_obbba_status:
+                PaymentYearOBBBAStatus::PaymentMadeOnOrAfterJanuary1_2026NewThreshold,
             payee_provided_w9_with_tin: true,
             payer_actually_applied_backup_withholding: false,
             actual_backup_withholding_dollars: 0,
@@ -430,25 +443,35 @@ mod tests {
             ..baseline_2026_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section6041Mode::NotApplicableNotTradeOrBusiness);
+        assert_eq!(
+            result.mode,
+            Section6041Mode::NotApplicableNotTradeOrBusiness
+        );
     }
 
     #[test]
     fn pre_2026_payment_uses_600_threshold() {
         let input = Input {
-            payment_year_obbba_status: PaymentYearOBBBAStatus::PaymentMadeBeforeJanuary1_2026OldThreshold,
+            payment_year_obbba_status:
+                PaymentYearOBBBAStatus::PaymentMadeBeforeJanuary1_2026OldThreshold,
             payment_amount_dollars: 700,
             ..baseline_2026_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section6041Mode::CompliantForm1099NecFiledTimelyJanuary31);
+        assert_eq!(
+            result.mode,
+            Section6041Mode::CompliantForm1099NecFiledTimelyJanuary31
+        );
         assert_eq!(result.applicable_threshold_dollars, 600);
     }
 
     #[test]
     fn post_2025_payment_uses_2000_threshold() {
         let result = compute(&baseline_2026_compliant());
-        assert_eq!(result.mode, Section6041Mode::CompliantForm1099NecFiledTimelyJanuary31);
+        assert_eq!(
+            result.mode,
+            Section6041Mode::CompliantForm1099NecFiledTimelyJanuary31
+        );
         assert_eq!(result.applicable_threshold_dollars, 2_000);
     }
 
@@ -459,7 +482,10 @@ mod tests {
             ..baseline_2026_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section6041Mode::NotApplicableBelowReportingThreshold);
+        assert_eq!(
+            result.mode,
+            Section6041Mode::NotApplicableBelowReportingThreshold
+        );
     }
 
     #[test]
@@ -469,7 +495,10 @@ mod tests {
             ..baseline_2026_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section6041Mode::CompliantForm1099NecFiledTimelyJanuary31);
+        assert_eq!(
+            result.mode,
+            Section6041Mode::CompliantForm1099NecFiledTimelyJanuary31
+        );
     }
 
     #[test]
@@ -479,7 +508,10 @@ mod tests {
             ..baseline_2026_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section6041Mode::NotApplicableCorporationGeneralExemption);
+        assert_eq!(
+            result.mode,
+            Section6041Mode::NotApplicableCorporationGeneralExemption
+        );
     }
 
     #[test]
@@ -490,7 +522,10 @@ mod tests {
             ..baseline_2026_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section6041Mode::CompliantAttorneyOrMedicalPaymentReportedDespiteCorpStatus);
+        assert_eq!(
+            result.mode,
+            Section6041Mode::CompliantAttorneyOrMedicalPaymentReportedDespiteCorpStatus
+        );
     }
 
     #[test]
@@ -501,7 +536,10 @@ mod tests {
             ..baseline_2026_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section6041Mode::ViolationLawyerPaymentExceptionMisappliedAsCorpExempt);
+        assert_eq!(
+            result.mode,
+            Section6041Mode::ViolationLawyerPaymentExceptionMisappliedAsCorpExempt
+        );
     }
 
     #[test]
@@ -512,7 +550,10 @@ mod tests {
             ..baseline_2026_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section6041Mode::CompliantAttorneyOrMedicalPaymentReportedDespiteCorpStatus);
+        assert_eq!(
+            result.mode,
+            Section6041Mode::CompliantAttorneyOrMedicalPaymentReportedDespiteCorpStatus
+        );
     }
 
     #[test]
@@ -524,7 +565,10 @@ mod tests {
             ..baseline_2026_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section6041Mode::CompliantBackupWithholdingAppliedNoW9);
+        assert_eq!(
+            result.mode,
+            Section6041Mode::CompliantBackupWithholdingAppliedNoW9
+        );
         assert_eq!(result.required_backup_withholding_dollars, 1_200);
     }
 
@@ -537,7 +581,10 @@ mod tests {
             ..baseline_2026_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section6041Mode::ViolationFailedToObtainW9OrApplyBackupWithholding);
+        assert_eq!(
+            result.mode,
+            Section6041Mode::ViolationFailedToObtainW9OrApplyBackupWithholding
+        );
     }
 
     #[test]
@@ -549,7 +596,10 @@ mod tests {
             ..baseline_2026_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section6041Mode::ViolationFailedToObtainW9OrApplyBackupWithholding);
+        assert_eq!(
+            result.mode,
+            Section6041Mode::ViolationFailedToObtainW9OrApplyBackupWithholding
+        );
     }
 
     #[test]
@@ -560,7 +610,10 @@ mod tests {
             ..baseline_2026_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section6041Mode::ViolationFailedToFileForm1099Section6721);
+        assert_eq!(
+            result.mode,
+            Section6041Mode::ViolationFailedToFileForm1099Section6721
+        );
     }
 
     #[test]
@@ -571,7 +624,10 @@ mod tests {
             ..baseline_2026_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section6041Mode::ViolationLateFiledMoreThan30DaysAfterDueDate);
+        assert_eq!(
+            result.mode,
+            Section6041Mode::ViolationLateFiledMoreThan30DaysAfterDueDate
+        );
     }
 
     #[test]
@@ -581,7 +637,10 @@ mod tests {
             ..baseline_2026_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section6041Mode::ViolationFailedToFurnishPayeeStatementSection6722);
+        assert_eq!(
+            result.mode,
+            Section6041Mode::ViolationFailedToFurnishPayeeStatementSection6722
+        );
     }
 
     #[test]
@@ -592,7 +651,10 @@ mod tests {
             ..baseline_2026_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section6041Mode::NotApplicableForeignPayeeWithW8DocumentationFatcaApplies);
+        assert_eq!(
+            result.mode,
+            Section6041Mode::NotApplicableForeignPayeeWithW8DocumentationFatcaApplies
+        );
     }
 
     #[test]
@@ -603,7 +665,10 @@ mod tests {
             ..baseline_2026_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section6041Mode::CompliantForm1042SFiledForForeignPayeeNoDocumentation);
+        assert_eq!(
+            result.mode,
+            Section6041Mode::CompliantForm1042SFiledForForeignPayeeNoDocumentation
+        );
     }
 
     #[test]
@@ -614,7 +679,10 @@ mod tests {
             ..baseline_2026_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section6041Mode::ViolationFailedToFurnishPayeeStatementSection6722);
+        assert_eq!(
+            result.mode,
+            Section6041Mode::ViolationFailedToFurnishPayeeStatementSection6722
+        );
     }
 
     #[test]
@@ -624,7 +692,10 @@ mod tests {
             ..baseline_2026_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section6041Mode::CompliantForm1099MiscFiledTimely);
+        assert_eq!(
+            result.mode,
+            Section6041Mode::CompliantForm1099MiscFiledTimely
+        );
     }
 
     #[test]
@@ -670,6 +741,9 @@ mod tests {
             ..baseline_2026_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section6041Mode::CompliantForm1099NecFiledTimelyJanuary31);
+        assert_eq!(
+            result.mode,
+            Section6041Mode::CompliantForm1099NecFiledTimelyJanuary31
+        );
     }
 }

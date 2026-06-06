@@ -259,29 +259,45 @@ mod tests {
     #[test]
     fn syndication_expenses_permanently_capitalized() {
         let r = compute(&input(10_000, 50_000, 12));
-        assert_eq!(r.syndication_expenses_permanently_capitalized_cents, 5_000_000);
+        assert_eq!(
+            r.syndication_expenses_permanently_capitalized_cents,
+            5_000_000
+        );
         assert_eq!(r.first_year_immediate_deduction_cents, 500_000);
-        assert!(r.notes.iter().any(|n| n.contains("§ 709(b)(3)") && n.contains("PERMANENTLY CAPITALIZED")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 709(b)(3)") && n.contains("PERMANENTLY CAPITALIZED")));
     }
 
     #[test]
     fn syndication_expenses_treasury_reg_definition_note() {
         let r = compute(&input(10_000, 25_000, 12));
-        assert!(r.notes.iter().any(|n| n.contains("§ 1.709-2(b)") && n.contains("brokerage fees")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1.709-2(b)") && n.contains("brokerage fees")));
     }
 
     #[test]
     fn syndication_expenses_separately_capitalized_from_organizational_amortization() {
         let r = compute(&input(10_000, 100_000, 12));
         assert_eq!(r.amortization_pool_cents, 500_000);
-        assert_eq!(r.syndication_expenses_permanently_capitalized_cents, 10_000_000);
+        assert_eq!(
+            r.syndication_expenses_permanently_capitalized_cents,
+            10_000_000
+        );
         assert!(r.amortization_pool_cents < r.syndication_expenses_permanently_capitalized_cents);
     }
 
     #[test]
     fn no_syndication_no_syndication_note() {
         let r = compute(&input(10_000, 0, 12));
-        let synd_notes: Vec<_> = r.notes.iter().filter(|n| n.contains("§ 709(b)(3)")).collect();
+        let synd_notes: Vec<_> = r
+            .notes
+            .iter()
+            .filter(|n| n.contains("§ 709(b)(3)"))
+            .collect();
         assert!(synd_notes.is_empty());
     }
 
@@ -301,7 +317,10 @@ mod tests {
         i.affirmative_capitalization_election = true;
         let r = compute(&i);
         assert!(!r.election_applies);
-        assert_eq!(r.syndication_expenses_permanently_capitalized_cents, 2_500_000);
+        assert_eq!(
+            r.syndication_expenses_permanently_capitalized_cents,
+            2_500_000
+        );
     }
 
     #[test]
@@ -389,7 +408,10 @@ mod tests {
         let r = compute(&input(1_000_000, 0, 12));
         assert_eq!(r.first_year_immediate_deduction_cents, 0);
         assert_eq!(r.amortization_pool_cents, 100_000_000);
-        assert_eq!(r.monthly_amortization_cents, 100_000_000 / AMORTIZATION_MONTHS);
+        assert_eq!(
+            r.monthly_amortization_cents,
+            100_000_000 / AMORTIZATION_MONTHS
+        );
     }
 
     #[test]
@@ -409,8 +431,14 @@ mod tests {
     #[test]
     fn syndication_distinct_from_section_248_share_issuance_invariant() {
         let r = compute(&input(10_000, 25_000, 12));
-        assert_eq!(r.syndication_expenses_permanently_capitalized_cents, 2_500_000);
-        assert!(r.notes.iter().any(|n| n.contains("brokerage fees + registration fees")));
+        assert_eq!(
+            r.syndication_expenses_permanently_capitalized_cents,
+            2_500_000
+        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("brokerage fees + registration fees")));
     }
 
     #[test]
@@ -422,19 +450,28 @@ mod tests {
     #[test]
     fn automatic_election_note_present() {
         let r = compute(&input(10_000, 0, 12));
-        assert!(r.notes.iter().any(|n| n.contains("T.D. 9542") && n.contains("automatic election")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("T.D. 9542") && n.contains("automatic election")));
     }
 
     #[test]
     fn organizational_expense_definition_note_present() {
         let r = compute(&input(10_000, 0, 12));
-        assert!(r.notes.iter().any(|n| n.contains("§ 1.709-2(a)") && n.contains("incident to creation")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1.709-2(a)") && n.contains("incident to creation")));
     }
 
     #[test]
     fn syndication_capitalized_amount_returned_in_result_field() {
         let r = compute(&input(10_000, 75_000, 12));
-        assert_eq!(r.syndication_expenses_permanently_capitalized_cents, 7_500_000);
+        assert_eq!(
+            r.syndication_expenses_permanently_capitalized_cents,
+            7_500_000
+        );
     }
 
     #[test]
@@ -455,7 +492,10 @@ mod tests {
             r_high_synd.first_year_immediate_deduction_cents,
             "syndication does not affect organizational phase-out"
         );
-        assert_eq!(r_low_synd.phase_out_reduction_cents, r_high_synd.phase_out_reduction_cents);
+        assert_eq!(
+            r_low_synd.phase_out_reduction_cents,
+            r_high_synd.phase_out_reduction_cents
+        );
     }
 
     #[test]

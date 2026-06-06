@@ -42,10 +42,13 @@ pub struct KalmanReport1d {
 pub fn filter(observations: &[f64], params: &KalmanParams1d) -> Option<KalmanReport1d> {
     if !params.transition_f.is_finite()
         || !params.observation_h.is_finite()
-        || !params.process_noise_q.is_finite() || params.process_noise_q < 0.0
-        || !params.measurement_noise_r.is_finite() || params.measurement_noise_r < 0.0
+        || !params.process_noise_q.is_finite()
+        || params.process_noise_q < 0.0
+        || !params.measurement_noise_r.is_finite()
+        || params.measurement_noise_r < 0.0
         || !params.initial_state.is_finite()
-        || !params.initial_uncertainty.is_finite() || params.initial_uncertainty < 0.0
+        || !params.initial_uncertainty.is_finite()
+        || params.initial_uncertainty < 0.0
         || observations.is_empty()
     {
         return None;
@@ -77,8 +80,12 @@ pub fn filter(observations: &[f64], params: &KalmanParams1d) -> Option<KalmanRep
         x = x_pred + k * (z - h * x_pred);
         p = (1.0 - k * h) * p_pred;
         // Guard against numerical drift to non-finite.
-        if !x.is_finite() { x = x_pred; }
-        if !p.is_finite() || p < 0.0 { p = p_pred.max(0.0); }
+        if !x.is_finite() {
+            x = x_pred;
+        }
+        if !p.is_finite() || p < 0.0 {
+            p = p_pred.max(0.0);
+        }
         filtered.push(x);
         uncertainty.push(p);
         gain.push(k);
@@ -96,9 +103,12 @@ mod tests {
 
     fn p(f: f64, h: f64, q: f64, r: f64, x0: f64, p0: f64) -> KalmanParams1d {
         KalmanParams1d {
-            transition_f: f, observation_h: h,
-            process_noise_q: q, measurement_noise_r: r,
-            initial_state: x0, initial_uncertainty: p0,
+            transition_f: f,
+            observation_h: h,
+            process_noise_q: q,
+            measurement_noise_r: r,
+            initial_state: x0,
+            initial_uncertainty: p0,
         }
     }
 
@@ -116,8 +126,10 @@ mod tests {
         let obs = vec![100.0; 50];
         let r = filter(&obs, &p(1.0, 1.0, 0.01, 1.0, 0.0, 1000.0)).unwrap();
         let last = *r.filtered_state.last().unwrap();
-        assert!((last - 100.0).abs() < 0.5,
-            "filtered should converge to 100, got {last}");
+        assert!(
+            (last - 100.0).abs() < 0.5,
+            "filtered should converge to 100, got {last}"
+        );
     }
 
     #[test]

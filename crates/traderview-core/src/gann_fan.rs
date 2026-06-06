@@ -84,8 +84,10 @@ mod tests {
     #[test]
     fn at_anchor_all_lines_equal_anchor() {
         let r = compute(100.0, 0, 1.0, true).unwrap();
-        for v in [r.line_1x8, r.line_1x4, r.line_1x3, r.line_1x2,
-                  r.line_1x1, r.line_2x1, r.line_3x1, r.line_4x1, r.line_8x1] {
+        for v in [
+            r.line_1x8, r.line_1x4, r.line_1x3, r.line_1x2, r.line_1x1, r.line_2x1, r.line_3x1,
+            r.line_4x1, r.line_8x1,
+        ] {
             assert!((v - 100.0).abs() < 1e-9);
         }
     }

@@ -281,31 +281,30 @@ pub fn check(
 ) -> RentAbatementConstructionNuisanceResult {
     let mut failure_reasons: Vec<String> = Vec::new();
 
-    let habitability_warranty_breached = matches!(
-        input.category,
-        ConstructionNuisanceCategory::ServiceInterruption
-            | ConstructionNuisanceCategory::Dust
-            | ConstructionNuisanceCategory::Debris
-    ) || (matches!(input.category, ConstructionNuisanceCategory::Noise)
-        && !input.within_permitted_hours);
+    let habitability_warranty_breached =
+        matches!(
+            input.category,
+            ConstructionNuisanceCategory::ServiceInterruption
+                | ConstructionNuisanceCategory::Dust
+                | ConstructionNuisanceCategory::Debris
+        ) || (matches!(input.category, ConstructionNuisanceCategory::Noise)
+            && !input.within_permitted_hours);
 
     let quiet_enjoyment_breached = matches!(
         input.category,
         ConstructionNuisanceCategory::Noise | ConstructionNuisanceCategory::Vibration
     );
 
-    let nyc_dhcr_rent_reduction_available = matches!(
-        input.jurisdiction,
-        Jurisdiction::NewYorkCityRentStabilized
-    ) && input.dhcr_ra84_filed;
+    let nyc_dhcr_rent_reduction_available =
+        matches!(input.jurisdiction, Jurisdiction::NewYorkCityRentStabilized)
+            && input.dhcr_ra84_filed;
 
-    let construction_harassment_civil_penalty_engaged = matches!(
-        input.jurisdiction,
-        Jurisdiction::NewYorkCityRentStabilized
-    ) && (input.bad_faith_construction_harassment
-        || !input.nyc_24_72_hour_notice_provided
-        || !input.within_permitted_hours
-        || !input.permits_obtained);
+    let construction_harassment_civil_penalty_engaged =
+        matches!(input.jurisdiction, Jurisdiction::NewYorkCityRentStabilized)
+            && (input.bad_faith_construction_harassment
+                || !input.nyc_24_72_hour_notice_provided
+                || !input.within_permitted_hours
+                || !input.permits_obtained);
 
     let abatement_amount_cents = if input.constructive_eviction_invoked {
         input
@@ -340,7 +339,9 @@ pub fn check(
     if construction_harassment_civil_penalty_engaged {
         let mut reasons: Vec<String> = Vec::new();
         if !input.nyc_24_72_hour_notice_provided {
-            reasons.push("NYC HMC § 27-2005.1 24-72 hour pre-construction notice violation".to_string());
+            reasons.push(
+                "NYC HMC § 27-2005.1 24-72 hour pre-construction notice violation".to_string(),
+            );
         }
         if !input.within_permitted_hours {
             reasons.push("NYC Noise Code § 24-218 hours-of-operation violation (jackhammering outside 7 AM - 6 PM weekdays)".to_string());
@@ -388,8 +389,7 @@ pub fn check(
         );
     }
 
-    if matches!(input.jurisdiction, Jurisdiction::California)
-        && input.ca_repair_and_deduct_invoked
+    if matches!(input.jurisdiction, Jurisdiction::California) && input.ca_repair_and_deduct_invoked
     {
         failure_reasons.push(
             "Cal. Civ. Code § 1942 REPAIR-AND-DEDUCT INVOKED — tenant gave reasonable notice; landlord failed to remediate within reasonable time; tenant may repair and deduct from rent UP TO ONE MONTH'S RENT; limit twice in any 12-month period; Cal. Civ. Code § 1942.4 separately prohibits landlord collecting rent during uninhabitable conditions following code-violation notice".to_string(),
@@ -465,9 +465,11 @@ mod tests {
     fn service_interruption_habitability_breach() {
         let r = check(&nyc_stabilized_baseline());
         assert!(r.habitability_warranty_breached);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("WARRANTY OF HABITABILITY BREACHED")
-            && f.contains("Park West Mgmt. Corp. v. Mitchell")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("WARRANTY OF HABITABILITY BREACHED")
+                && f.contains("Park West Mgmt. Corp. v. Mitchell")));
     }
 
     #[test]
@@ -518,8 +520,8 @@ mod tests {
         i.nyc_24_72_hour_notice_provided = false;
         let r = check(&i);
         assert!(r.construction_harassment_civil_penalty_engaged);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("NYC HMC § 27-2005(d) + Tenant Anti-Harassment Act 2018")
+        assert!(r.failure_reasons.iter().any(|f| f
+            .contains("NYC HMC § 27-2005(d) + Tenant Anti-Harassment Act 2018")
             && f.contains("§ 27-2005.1 24-72 hour")
             && f.contains("$1,000-$10,000")));
     }
@@ -530,9 +532,10 @@ mod tests {
         i.within_permitted_hours = false;
         let r = check(&i);
         assert!(r.construction_harassment_civil_penalty_engaged);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("NYC Noise Code § 24-218")
-            && f.contains("7 AM - 6 PM weekdays")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("NYC Noise Code § 24-218") && f.contains("7 AM - 6 PM weekdays")));
     }
 
     #[test]
@@ -541,8 +544,10 @@ mod tests {
         i.permits_obtained = false;
         let r = check(&i);
         assert!(r.construction_harassment_civil_penalty_engaged);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("NYC Department of Buildings permit violation")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("NYC Department of Buildings permit violation")));
     }
 
     #[test]
@@ -551,9 +556,11 @@ mod tests {
         i.bad_faith_construction_harassment = true;
         let r = check(&i);
         assert!(r.construction_harassment_civil_penalty_engaged);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("BAD-FAITH CONSTRUCTION HARASSMENT")
-            && f.contains("designed to force tenant out")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("BAD-FAITH CONSTRUCTION HARASSMENT")
+                && f.contains("designed to force tenant out")));
     }
 
     #[test]
@@ -564,10 +571,12 @@ mod tests {
         i.dhcr_ra84_filed = false;
         let r = check(&i);
         assert_eq!(r.abatement_amount_cents, 300_000);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 1942 REPAIR-AND-DEDUCT INVOKED")
-            && f.contains("ONE MONTH'S RENT")
-            && f.contains("§ 1942.4")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1942 REPAIR-AND-DEDUCT INVOKED")
+                && f.contains("ONE MONTH'S RENT")
+                && f.contains("§ 1942.4")));
     }
 
     #[test]
@@ -578,8 +587,10 @@ mod tests {
         i.dhcr_ra84_filed = false;
         let r = check(&i);
         assert!(r.quiet_enjoyment_breached);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("Cal. Civ. Code § 1927")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("Cal. Civ. Code § 1927")));
     }
 
     #[test]
@@ -589,11 +600,13 @@ mod tests {
         i.dhcr_ra84_filed = false;
         let r = check(&i);
         assert_eq!(r.abatement_amount_cents, 300_000_u64 * 8);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("CONSTRUCTIVE EVICTION INVOKED")
-            && f.contains("Park West")
-            && f.contains("Green v. Superior Court")
-            && f.contains("Hemingway")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("CONSTRUCTIVE EVICTION INVOKED")
+                && f.contains("Park West")
+                && f.contains("Green v. Superior Court")
+                && f.contains("Hemingway")));
     }
 
     #[test]
@@ -702,65 +715,81 @@ mod tests {
         assert!(r.citation.contains("Cal. Civ. Code § 1941.1"));
         assert!(r.citation.contains("Cal. Civ. Code § 1942"));
         assert!(r.citation.contains("Cal. Civ. Code § 1942.4"));
-        assert!(r.citation.contains("Green v. Superior Court, 10 Cal. 3d 616 (1974)"));
-        assert!(r.citation.contains("Park West Mgmt. Corp. v. Mitchell, 47 N.Y.2d 316 (1979)"));
-        assert!(r.citation.contains("Boston Housing Auth. v. Hemingway, 363 Mass. 184 (1973)"));
+        assert!(r
+            .citation
+            .contains("Green v. Superior Court, 10 Cal. 3d 616 (1974)"));
+        assert!(r
+            .citation
+            .contains("Park West Mgmt. Corp. v. Mitchell, 47 N.Y.2d 316 (1979)"));
+        assert!(r
+            .citation
+            .contains("Boston Housing Auth. v. Hemingway, 363 Mass. 184 (1973)"));
         assert!(r.citation.contains("SF Rent Ordinance § 37.10B"));
         assert!(r.citation.contains("URLTA § 2.104"));
         assert!(r.citation.contains("URLTA § 4.103"));
         assert!(r.citation.contains("URLTA § 4.107"));
-        assert!(r.citation.contains("Restatement (Second) of Property: Landlord and Tenant § 5.4"));
-        assert!(r.citation.contains("Restatement (Second) of Property § 6.1"));
+        assert!(r
+            .citation
+            .contains("Restatement (Second) of Property: Landlord and Tenant § 5.4"));
+        assert!(r
+            .citation
+            .contains("Restatement (Second) of Property § 6.1"));
     }
 
     #[test]
     fn note_pins_three_jurisdiction_framework() {
         let r = check(&nyc_stabilized_baseline());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Three-jurisdiction framework")
-            && n.contains("NEW YORK CITY (rent-stabilized)")
-            && n.contains("CALIFORNIA")
-            && n.contains("DEFAULT")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Three-jurisdiction framework")
+                && n.contains("NEW YORK CITY (rent-stabilized)")
+                && n.contains("CALIFORNIA")
+                && n.contains("DEFAULT")));
     }
 
     #[test]
     fn note_pins_five_nuisance_categories() {
         let r = check(&nyc_stabilized_baseline());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Five categories of construction nuisance")
-            && n.contains("NOISE")
-            && n.contains("DUST")
-            && n.contains("VIBRATION")
-            && n.contains("DEBRIS")
-            && n.contains("SERVICE INTERRUPTION")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Five categories of construction nuisance")
+                && n.contains("NOISE")
+                && n.contains("DUST")
+                && n.contains("VIBRATION")
+                && n.contains("DEBRIS")
+                && n.contains("SERVICE INTERRUPTION")));
     }
 
     #[test]
     fn note_pins_abatement_calculation_framework() {
         let r = check(&nyc_stabilized_baseline());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Rent abatement amount calculation framework")
-            && n.contains("§ 2523.4")
-            && n.contains("22-40%")
-            && n.contains("ONE MONTH'S RENT")
-            && n.contains("100% rent abatement for period vacated")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("Rent abatement amount calculation framework")
+                && n.contains("§ 2523.4")
+                && n.contains("22-40%")
+                && n.contains("ONE MONTH'S RENT")
+                && n.contains("100% rent abatement for period vacated")
+        ));
     }
 
     #[test]
     fn note_pins_construction_harassment_seven_elements() {
         let r = check(&nyc_stabilized_baseline());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Construction harassment / bad-faith elements")
-            && n.contains("permitted hours")
-            && n.contains("required municipal permits")
-            && n.contains("§ 27-2005.1")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("Construction harassment / bad-faith elements")
+                && n.contains("permitted hours")
+                && n.contains("required municipal permits")
+                && n.contains("§ 27-2005.1")
+        ));
     }
 
     #[test]
     fn note_pins_nyc_hmc_27_2005_1_notice_requirements() {
         let r = check(&nyc_stabilized_baseline());
-        assert!(r.notes.iter().any(|n|
-            n.contains("NYC HMC § 27-2005.1 tenant notification requirements")
+        assert!(r.notes.iter().any(|n| n
+            .contains("NYC HMC § 27-2005.1 tenant notification requirements")
             && n.contains("24-72 hour")
             && n.contains("building permit number")
             && n.contains("$1,000-$10,000")));
@@ -769,17 +798,18 @@ mod tests {
     #[test]
     fn note_pins_nyc_dhcr_form_ra84() {
         let r = check(&nyc_stabilized_baseline());
-        assert!(r.notes.iter().any(|n|
-            n.contains("9 NYCRR § 2523.4 NYC DHCR rent reduction")
-            && n.contains("DHCR Form RA-84")
-            && n.contains("LEVEL IMMEDIATELY PRECEDING DECREASE")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("9 NYCRR § 2523.4 NYC DHCR rent reduction")
+                && n.contains("DHCR Form RA-84")
+                && n.contains("LEVEL IMMEDIATELY PRECEDING DECREASE")));
     }
 
     #[test]
     fn note_pins_california_framework() {
         let r = check(&nyc_stabilized_baseline());
-        assert!(r.notes.iter().any(|n|
-            n.contains("California framework")
+        assert!(r.notes.iter().any(|n| n.contains("California framework")
             && n.contains("§ 1927")
             && n.contains("§ 1941.1(a)(1)")
             && n.contains("§ 1942")
@@ -790,8 +820,7 @@ mod tests {
     #[test]
     fn note_pins_default_common_law_three_states() {
         let r = check(&nyc_stabilized_baseline());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Default / common law")
+        assert!(r.notes.iter().any(|n| n.contains("Default / common law")
             && n.contains("Park West Mgmt. Corp. v. Mitchell")
             && n.contains("Green v. Superior Court")
             && n.contains("Hemingway")
@@ -801,19 +830,21 @@ mod tests {
     #[test]
     fn note_pins_trader_fact_patterns_five() {
         let r = check(&nyc_stabilized_baseline());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-landlord critical fact patterns")
-            && n.contains("50-unit rent-stabilized")
-            && n.contains("DHCR Form RA-84")
-            && n.contains("MCI rent increase")
-            && n.contains("HSTPA")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-landlord critical fact patterns")
+                && n.contains("50-unit rent-stabilized")
+                && n.contains("DHCR Form RA-84")
+                && n.contains("MCI rent increase")
+                && n.contains("HSTPA")));
     }
 
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&nyc_stabilized_baseline());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Companion to landlord_water_heat_emergency_response")
+        assert!(r.notes.iter().any(|n| n
+            .contains("Companion to landlord_water_heat_emergency_response")
             && n.contains("habitability_remedies")
             && n.contains("tenant_emotional_distress_damages")));
     }

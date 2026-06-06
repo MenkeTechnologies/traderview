@@ -79,8 +79,8 @@ impl ExclusionBand {
 
     pub fn exclusion_pct(self) -> Decimal {
         match self {
-            ExclusionBand::Pct50  => Decimal::from_str("0.50").unwrap(),
-            ExclusionBand::Pct75  => Decimal::from_str("0.75").unwrap(),
+            ExclusionBand::Pct50 => Decimal::from_str("0.50").unwrap(),
+            ExclusionBand::Pct75 => Decimal::from_str("0.75").unwrap(),
             ExclusionBand::Pct100 => Decimal::from_str("1.00").unwrap(),
         }
     }
@@ -213,8 +213,8 @@ pub fn compute(input: &Section1202Input) -> Section1202Result {
     // Per-issuer cap: max($10M, 10 × basis).
     let ten_x_basis = input.taxpayer_basis * Decimal::from(10);
     r.per_issuer_cap_total = ten_million().max(ten_x_basis);
-    r.cap_remaining = (r.per_issuer_cap_total - input.prior_exclusion_used_this_issuer)
-        .max(Decimal::ZERO);
+    r.cap_remaining =
+        (r.per_issuer_cap_total - input.prior_exclusion_used_this_issuer).max(Decimal::ZERO);
 
     // Eligible gain (before exclusion %) is bounded by the cap REMAINING.
     r.eligible_gain_before_cap = input.realized_gain.min(r.cap_remaining);
@@ -290,7 +290,7 @@ mod tests {
         i.acquisition_date = d(2008, 1, 1);
         let r = compute(&i);
         assert_eq!(r.band, Some(ExclusionBand::Pct50));
-        assert_eq!(r.gain_excluded, dec!(2450000));     // 50% of $4.9M
+        assert_eq!(r.gain_excluded, dec!(2450000)); // 50% of $4.9M
         assert_eq!(r.taxable_long_term_gain, dec!(2450000));
         // 7% AMT preference on excluded portion.
         assert_eq!(r.amt_preference, dec!(171500));
@@ -302,9 +302,9 @@ mod tests {
         i.acquisition_date = d(2010, 1, 1);
         let r = compute(&i);
         assert_eq!(r.band, Some(ExclusionBand::Pct75));
-        assert_eq!(r.gain_excluded, dec!(3675000));     // 75% of $4.9M
+        assert_eq!(r.gain_excluded, dec!(3675000)); // 75% of $4.9M
         assert_eq!(r.taxable_long_term_gain, dec!(1225000));
-        assert_eq!(r.amt_preference, dec!(257250));     // 7% × $3.675M
+        assert_eq!(r.amt_preference, dec!(257250)); // 7% × $3.675M
     }
 
     #[test]

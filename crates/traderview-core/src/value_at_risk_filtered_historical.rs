@@ -26,25 +26,42 @@ pub struct Report {
 
 pub fn compute(returns: &[f64], confidence: f64, lambda: f64) -> Option<Report> {
     let n = returns.len();
-    if n < 20 || !confidence.is_finite() || !lambda.is_finite() { return None; }
-    if !(0.5..1.0).contains(&confidence) { return None; }
-    if !(0.5..1.0).contains(&lambda) { return None; }
-    if returns.iter().any(|x| !x.is_finite()) { return None; }
+    if n < 20 || !confidence.is_finite() || !lambda.is_finite() {
+        return None;
+    }
+    if !(0.5..1.0).contains(&confidence) {
+        return None;
+    }
+    if !(0.5..1.0).contains(&lambda) {
+        return None;
+    }
+    if returns.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     // Seed variance: variance of first 10 returns.
     let seed_window = 10.min(n);
     let mu = returns[..seed_window].iter().sum::<f64>() / seed_window as f64;
     let mut var = returns[..seed_window]
-        .iter().map(|r| (r - mu).powi(2)).sum::<f64>() / seed_window as f64;
-    if var < 1e-18 { var = 1e-18; }
+        .iter()
+        .map(|r| (r - mu).powi(2))
+        .sum::<f64>()
+        / seed_window as f64;
+    if var < 1e-18 {
+        var = 1e-18;
+    }
     let mut sigmas = Vec::with_capacity(n);
     sigmas.push(var.sqrt());
     for r in returns.iter().take(n - 1) {
         var = lambda * var + (1.0 - lambda) * r * r;
-        if var < 1e-18 { var = 1e-18; }
+        if var < 1e-18 {
+            var = 1e-18;
+        }
         sigmas.push(var.sqrt());
     }
     let current_sigma = sigmas[n - 1];
-    let mut scaled: Vec<f64> = returns.iter().zip(sigmas.iter())
+    let mut scaled: Vec<f64> = returns
+        .iter()
+        .zip(sigmas.iter())
         .map(|(r, s)| (r / s) * current_sigma)
         .collect();
     scaled.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
@@ -61,7 +78,12 @@ pub fn compute(returns: &[f64], confidence: f64, lambda: f64) -> Option<Report> 
     } else {
         -(tail.iter().sum::<f64>() / tail.len() as f64)
     };
-    Some(Report { var: var_out, expected_shortfall: es, current_sigma, n })
+    Some(Report {
+        var: var_out,
+        expected_shortfall: es,
+        current_sigma,
+        n,
+    })
 }
 
 #[cfg(test)]

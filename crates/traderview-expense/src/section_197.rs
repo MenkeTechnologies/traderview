@@ -169,7 +169,9 @@ pub fn compute(input: &Section197Input) -> Section197Result {
 
     if matches!(
         input.intangible_type,
-        IntangibleType::Land | IntangibleType::FinancialInterest | IntangibleType::LeaseOfTangibleProperty
+        IntangibleType::Land
+            | IntangibleType::FinancialInterest
+            | IntangibleType::LeaseOfTangibleProperty
     ) {
         let exception_cite = match input.intangible_type {
             IntangibleType::Land => "§ 197(e)(2)",
@@ -207,10 +209,7 @@ pub fn compute(input: &Section197Input) -> Section197Result {
     ));
 
     if months_active >= AMORTIZATION_MONTHS {
-        notes.push(
-            "180-month amortization period exhausted — basis fully amortized"
-                .to_string(),
-        );
+        notes.push("180-month amortization period exhausted — basis fully amortized".to_string());
     }
 
     let category_note = category_description(input.intangible_type);
@@ -268,11 +267,7 @@ fn citation() -> &'static str {
 mod tests {
     use super::*;
 
-    fn base(
-        intangible_type: IntangibleType,
-        basis_dollars: i64,
-        months: u32,
-    ) -> Section197Input {
+    fn base(intangible_type: IntangibleType, basis_dollars: i64, months: u32) -> Section197Input {
         Section197Input {
             intangible_type,
             adjusted_basis_cents: basis_dollars * 100,
@@ -327,7 +322,11 @@ mod tests {
 
     #[test]
     fn franchise_trademark_trade_name_amortizable() {
-        let r = compute(&base(IntangibleType::FranchiseTrademarkTradeName, 540_000, 60));
+        let r = compute(&base(
+            IntangibleType::FranchiseTrademarkTradeName,
+            540_000,
+            60,
+        ));
         assert!(r.amortizable);
         assert_eq!(r.monthly_amortization_cents, 300_000);
     }
@@ -336,40 +335,28 @@ mod tests {
     fn government_license_amortizable() {
         let r = compute(&base(IntangibleType::GovernmentLicense, 180_000, 24));
         assert!(r.amortizable);
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("§ 197(d)(1)(G)")));
+        assert!(r.notes.iter().any(|n| n.contains("§ 197(d)(1)(G)")));
     }
 
     #[test]
     fn going_concern_value_amortizable() {
         let r = compute(&base(IntangibleType::GoingConcernValue, 180_000, 36));
         assert!(r.amortizable);
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("§ 197(d)(1)(B)")));
+        assert!(r.notes.iter().any(|n| n.contains("§ 197(d)(1)(B)")));
     }
 
     #[test]
     fn business_books_and_records_amortizable() {
         let r = compute(&base(IntangibleType::BusinessBooksAndRecords, 36_000, 12));
         assert!(r.amortizable);
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("§ 197(d)(1)(D)")));
+        assert!(r.notes.iter().any(|n| n.contains("§ 197(d)(1)(D)")));
     }
 
     #[test]
     fn patent_or_copyright_amortizable() {
         let r = compute(&base(IntangibleType::PatentOrCopyright, 360_000, 60));
         assert!(r.amortizable);
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("§ 197(d)(1)(E)")));
+        assert!(r.notes.iter().any(|n| n.contains("§ 197(d)(1)(E)")));
     }
 
     #[test]
@@ -385,20 +372,14 @@ mod tests {
     fn financial_interest_excluded_no_amortization() {
         let r = compute(&base(IntangibleType::FinancialInterest, 100_000, 60));
         assert!(!r.amortizable);
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("§ 197(e)(1)")));
+        assert!(r.notes.iter().any(|n| n.contains("§ 197(e)(1)")));
     }
 
     #[test]
     fn lease_of_tangible_property_excluded() {
         let r = compute(&base(IntangibleType::LeaseOfTangibleProperty, 100_000, 60));
         assert!(!r.amortizable);
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("§ 197(e)(4)")));
+        assert!(r.notes.iter().any(|n| n.contains("§ 197(e)(4)")));
     }
 
     #[test]
@@ -407,10 +388,7 @@ mod tests {
         i.held_in_trade_or_business = false;
         let r = compute(&i);
         assert!(!r.amortizable);
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("§ 197(c)(2)")));
+        assert!(r.notes.iter().any(|n| n.contains("§ 197(c)(2)")));
     }
 
     #[test]
@@ -488,7 +466,10 @@ mod tests {
     #[test]
     fn annual_amortization_equals_monthly_times_twelve() {
         let r = compute(&base(IntangibleType::Goodwill, 360_000, 12));
-        assert_eq!(r.annual_amortization_cents, r.monthly_amortization_cents * 12);
+        assert_eq!(
+            r.annual_amortization_cents,
+            r.monthly_amortization_cents * 12
+        );
     }
 
     #[test]
@@ -528,7 +509,11 @@ mod tests {
         ];
         for cat in exceptions {
             let r = compute(&base(cat, 180_000, 12));
-            assert!(!r.amortizable, "exception {:?} should NOT be amortizable", cat);
+            assert!(
+                !r.amortizable,
+                "exception {:?} should NOT be amortizable",
+                cat
+            );
         }
     }
 

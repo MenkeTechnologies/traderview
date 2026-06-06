@@ -346,7 +346,9 @@ pub fn check(input: &Input) -> Output {
         fdny_civil_penalty_min_per_day_cents: FDNY_CIVIL_PENALTY_MIN_CENTS,
         fdny_civil_penalty_max_per_day_cents: FDNY_CIVIL_PENALTY_MAX_CENTS,
         citation: match input.jurisdiction {
-            Jurisdiction::NewYorkCity => "NYC Local Law 26 of 2004 + FDNY 3 RCNY § 404-01 + NYC Admin § 28-202.1",
+            Jurisdiction::NewYorkCity => {
+                "NYC Local Law 26 of 2004 + FDNY 3 RCNY § 404-01 + NYC Admin § 28-202.1"
+            }
             Jurisdiction::Chicago => "Chicago Municipal Code § 13-160-070 + CFD code enforcement",
             Jurisdiction::LosAngeles => "Cal. Fire Code + LAMC § 57.4901 + LA County Title 32",
             Jurisdiction::InternationalFireCodeAdopted => "IFC § 404.2.1 + § 404.3 + § 404.4",
@@ -366,8 +368,7 @@ mod tests {
     fn baseline() -> Input {
         Input {
             jurisdiction: Jurisdiction::NewYorkCity,
-            building_classification:
-                BuildingClassification::HighRiseResidential75FtOr7Stories,
+            building_classification: BuildingClassification::HighRiseResidential75FtOr7Stories,
             compliance_status: ComplianceStatus::AllRequirementsCurrent,
             fsd_holds_fdny_f_32_certification: true,
             building_height_feet: 200,
@@ -393,7 +394,10 @@ mod tests {
         let r = check(&i);
         assert!(matches!(r.severity, Severity::CompliantAllRequirements));
         assert_eq!(r.annual_rent_at_risk_cents, 0);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Local Law 26")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Local Law 26")));
     }
 
     #[test]
@@ -401,10 +405,16 @@ mod tests {
         let mut i = baseline();
         i.compliance_status = ComplianceStatus::FireSafetyDirectorNotPresent;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::FireSafetyDirectorPresenceViolation));
+        assert!(matches!(
+            r.severity,
+            Severity::FireSafetyDirectorPresenceViolation
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents / 2);
         assert!(r.recommended_actions.iter().any(|a| a.contains("F-32")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("FDNY 3 RCNY § 404-01")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("FDNY 3 RCNY § 404-01")));
     }
 
     #[test]
@@ -412,7 +422,10 @@ mod tests {
         let mut i = baseline();
         i.fsd_holds_fdny_f_32_certification = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::FireSafetyDirectorPresenceViolation));
+        assert!(matches!(
+            r.severity,
+            Severity::FireSafetyDirectorPresenceViolation
+        ));
     }
 
     #[test]
@@ -420,8 +433,14 @@ mod tests {
         let mut i = baseline();
         i.compliance_status = ComplianceStatus::FspEapNotFiledWithAhj;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::FspEapFilingDelinquentViolation));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("IFC § 404.2.1")));
+        assert!(matches!(
+            r.severity,
+            Severity::FspEapFilingDelinquentViolation
+        ));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("IFC § 404.2.1")));
     }
 
     #[test]
@@ -430,7 +449,10 @@ mod tests {
         i.compliance_status = ComplianceStatus::AnnualFireDrillMissed;
         let r = check(&i);
         assert!(matches!(r.severity, Severity::AnnualDrillMissedViolation));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("NFPA 101 § 4.7")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("NFPA 101 § 4.7")));
     }
 
     #[test]
@@ -442,7 +464,10 @@ mod tests {
             r.severity,
             Severity::TenantInstructionsNotDistributedViolation
         ));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("NFPA 1 § 11.10")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("NFPA 1 § 11.10")));
     }
 
     #[test]
@@ -450,11 +475,23 @@ mod tests {
         let mut i = baseline();
         i.compliance_status = ComplianceStatus::AccessibleEvacuationMissing;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::AccessibleEvacuationFhaAdaViolation));
+        assert!(matches!(
+            r.severity,
+            Severity::AccessibleEvacuationFhaAdaViolation
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("NFPA 101 § 7.2.12")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Areas of Refuge")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("§ 3604(f)(3)(B)")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("NFPA 101 § 7.2.12")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Areas of Refuge")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("§ 3604(f)(3)(B)")));
     }
 
     #[test]
@@ -462,7 +499,10 @@ mod tests {
         let mut i = baseline();
         i.compliance_status = ComplianceStatus::EmergencyIncidentDuringNonCompliance;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::PostIncidentNonComplianceFatalityRisk));
+        assert!(matches!(
+            r.severity,
+            Severity::PostIncidentNonComplianceFatalityRisk
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
         assert!(r.recommended_actions.iter().any(|a| a.contains("$5M-$50M")));
     }
@@ -482,7 +522,10 @@ mod tests {
         i.jurisdiction = Jurisdiction::Chicago;
         let r = check(&i);
         assert!(r.notes.iter().any(|n| n.contains("§ 13-160-070")));
-        assert!(r.notes.iter().any(|n| n.contains("Cook County Administration Building")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Cook County Administration Building")));
     }
 
     #[test]
@@ -509,7 +552,10 @@ mod tests {
         i.jurisdiction = Jurisdiction::Default;
         let r = check(&i);
         assert!(r.notes.iter().any(|n| n.contains("NFPA 1 § 10.8")));
-        assert!(r.notes.iter().any(|n| n.contains("NFPA 101 Life Safety Code")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("NFPA 101 Life Safety Code")));
         assert!(r.notes.iter().any(|n| n.contains("29 C.F.R. § 1910.38")));
     }
 
@@ -517,8 +563,14 @@ mod tests {
     fn coordination_note_references_siblings() {
         let i = baseline();
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("rental_elevator_safety_inspection")));
-        assert!(r.notes.iter().any(|n| n.contains("rental_fire_extinguisher_requirement")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("rental_elevator_safety_inspection")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("rental_fire_extinguisher_requirement")));
         assert!(r
             .notes
             .iter()
@@ -554,10 +606,26 @@ mod tests {
     #[test]
     fn citation_branch_for_each_jurisdiction() {
         let nyc = check(&baseline());
-        let chi = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Chicago; i });
-        let la = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::LosAngeles; i });
-        let ifc = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::InternationalFireCodeAdopted; i });
-        let de = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Default; i });
+        let chi = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Chicago;
+            i
+        });
+        let la = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::LosAngeles;
+            i
+        });
+        let ifc = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::InternationalFireCodeAdopted;
+            i
+        });
+        let de = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Default;
+            i
+        });
         assert!(nyc.citation.contains("Local Law 26"));
         assert!(chi.citation.contains("§ 13-160-070"));
         assert!(la.citation.contains("§ 57.4901"));
@@ -570,7 +638,10 @@ mod tests {
         let mut i = baseline();
         i.compliance_status = ComplianceStatus::EmergencyIncidentDuringNonCompliance;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::PostIncidentNonComplianceFatalityRisk));
+        assert!(matches!(
+            r.severity,
+            Severity::PostIncidentNonComplianceFatalityRisk
+        ));
     }
 
     #[test]

@@ -79,7 +79,9 @@ async fn main() -> anyhow::Result<()> {
     // persist closed buckets into `price_bars` (interval='10s'). Without
     // this call, incoming trades still update in-memory SymbolState but no
     // 10s rows ever land in the DB — multichart's 10s pane stays empty.
-    traderview_db::live_ticks::global().set_pool(pool.clone()).await;
+    traderview_db::live_ticks::global()
+        .set_pool(pool.clone())
+        .await;
 
     // Background disclosure poller — every 20s for sub-30s EDGAR/Congress alerts.
     {
@@ -226,9 +228,7 @@ async fn main() -> anyhow::Result<()> {
     {
         let hub = state.hub.clone();
         traderview_db::candidates::spawn_aggregator(traderview_db::candidates::global());
-        traderview_db::squeeze_detector::spawn_pump(
-            traderview_db::squeeze_detector::global(),
-        );
+        traderview_db::squeeze_detector::spawn_pump(traderview_db::squeeze_detector::global());
         // Bridge SqueezeEvent → realtime hub so the global WS event stream
         // surfaces squeeze fires alongside disclosures / news / sentiment.
         tokio::spawn(async move {

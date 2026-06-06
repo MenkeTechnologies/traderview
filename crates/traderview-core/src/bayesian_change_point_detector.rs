@@ -31,8 +31,12 @@ pub fn compute(returns: &[f64], hazard: f64) -> BocpdReport {
         expected_run_length: vec![None; n],
         hazard,
     };
-    if n < 2 || !hazard.is_finite() || !(0.0..=1.0).contains(&hazard) { return report; }
-    if returns.iter().any(|x| !x.is_finite()) { return report; }
+    if n < 2 || !hazard.is_finite() || !(0.0..=1.0).contains(&hazard) {
+        return report;
+    }
+    if returns.iter().any(|x| !x.is_finite()) {
+        return report;
+    }
     // Simplified BOCPD with Gaussian likelihood + conjugate normal prior.
     // We maintain run-length distribution truncated to last `n + 1` values.
     let mut run_post = vec![1.0_f64]; // posterior over run lengths
@@ -56,7 +60,9 @@ pub fn compute(returns: &[f64], hazard: f64) -> BocpdReport {
         new_post.extend(growth);
         let total: f64 = new_post.iter().sum();
         if total > 0.0 {
-            for v in new_post.iter_mut() { *v /= total; }
+            for v in new_post.iter_mut() {
+                *v /= total;
+            }
         }
         run_post = new_post;
         // Update running stats.
@@ -104,8 +110,12 @@ mod tests {
         // 100 bars of small, similar returns → no change points.
         let r = vec![0.001_f64; 100];
         let report = compute(&r, 0.01);
-        let final_cp = report.change_point_probability.iter()
-            .rev().find_map(|x| *x).unwrap();
+        let final_cp = report
+            .change_point_probability
+            .iter()
+            .rev()
+            .find_map(|x| *x)
+            .unwrap();
         assert!(final_cp < 0.5);
     }
 
@@ -113,8 +123,12 @@ mod tests {
     fn run_length_grows_for_stable_series() {
         let r = vec![0.001_f64; 100];
         let report = compute(&r, 0.01);
-        let last_rl = report.expected_run_length.iter()
-            .rev().find_map(|x| *x).unwrap();
+        let last_rl = report
+            .expected_run_length
+            .iter()
+            .rev()
+            .find_map(|x| *x)
+            .unwrap();
         assert!(last_rl > 10.0);
     }
 

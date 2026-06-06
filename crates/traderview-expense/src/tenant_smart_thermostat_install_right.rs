@@ -169,10 +169,7 @@ pub fn check(input: &Input) -> Output {
              for wrongful refusal of disability accommodation)."
                 .to_string(),
         );
-    } else if matches!(
-        input.hvac_wiring,
-        HvacWiringType::SteamOrHotWaterRadiator
-    ) {
+    } else if matches!(input.hvac_wiring, HvacWiringType::SteamOrHotWaterRadiator) {
         severity = Severity::WiringIncompatibilityRefusalPermitted;
         actions.push(
             "Steam or hot-water radiator with mechanical knob valve has NO electronic \
@@ -183,10 +180,7 @@ pub fn check(input: &Input) -> Output {
              leases."
                 .to_string(),
         );
-    } else if matches!(
-        input.hvac_wiring,
-        HvacWiringType::HighVoltage120vBaseboard
-    ) {
+    } else if matches!(input.hvac_wiring, HvacWiringType::HighVoltage120vBaseboard) {
         severity = Severity::WiringIncompatibilityRefusalPermitted;
         actions.push(
             "120V line-voltage baseboard or radiant heat requires line-voltage smart \
@@ -250,7 +244,8 @@ pub fn check(input: &Input) -> Output {
              § 235-b implied warranty."
                 .to_string(),
         );
-    } else if input.landlord_consent_obtained_in_writing && input.tenant_agrees_restore_on_lease_end {
+    } else if input.landlord_consent_obtained_in_writing && input.tenant_agrees_restore_on_lease_end
+    {
         severity = Severity::InstallationPermittedRoutine;
         actions.push(
             "Written landlord consent obtained and tenant agrees restoration on lease end; \
@@ -397,7 +392,10 @@ mod tests {
         i.installation_request = InstallationRequest::AdaFhaReasonableAccommodation;
         i.tenant_disability_certified = true;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::AdaFhaReasonableAccommodationRequired));
+        assert!(matches!(
+            r.severity,
+            Severity::AdaFhaReasonableAccommodationRequired
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
         assert!(r
             .recommended_actions
@@ -423,7 +421,10 @@ mod tests {
         let mut i = baseline();
         i.hvac_wiring = HvacWiringType::SteamOrHotWaterRadiator;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::WiringIncompatibilityRefusalPermitted));
+        assert!(matches!(
+            r.severity,
+            Severity::WiringIncompatibilityRefusalPermitted
+        ));
         assert!(r
             .recommended_actions
             .iter()
@@ -435,11 +436,11 @@ mod tests {
         let mut i = baseline();
         i.hvac_wiring = HvacWiringType::HighVoltage120vBaseboard;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::WiringIncompatibilityRefusalPermitted));
-        assert!(r
-            .recommended_actions
-            .iter()
-            .any(|a| a.contains("Mysa")));
+        assert!(matches!(
+            r.severity,
+            Severity::WiringIncompatibilityRefusalPermitted
+        ));
+        assert!(r.recommended_actions.iter().any(|a| a.contains("Mysa")));
     }
 
     #[test]
@@ -447,7 +448,10 @@ mod tests {
         let mut i = baseline();
         i.historic_district_landmark_property = true;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::HistoricDistrictRestrictionApplies));
+        assert!(matches!(
+            r.severity,
+            Severity::HistoricDistrictRestrictionApplies
+        ));
         assert!(r
             .recommended_actions
             .iter()
@@ -459,11 +463,11 @@ mod tests {
         let mut i = baseline();
         i.hvac_warranty_active_and_change_voids = true;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::HvacWarrantyVoidRefusalPermitted));
-        assert!(r
-            .recommended_actions
-            .iter()
-            .any(|a| a.contains("indemnif")));
+        assert!(matches!(
+            r.severity,
+            Severity::HvacWarrantyVoidRefusalPermitted
+        ));
+        assert!(r.recommended_actions.iter().any(|a| a.contains("indemnif")));
     }
 
     #[test]
@@ -473,8 +477,14 @@ mod tests {
         i.installation_request = InstallationRequest::UtilityRebateProgramUpgrade;
         i.state_utility_rebate_available_dollars_cents = 0;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::EnergyEfficiencyRebateEligibleApprovalLikely));
-        assert_eq!(r.utility_rebate_dollars_cents, MA_MASS_SAVE_STANDARD_REBATE_CENTS);
+        assert!(matches!(
+            r.severity,
+            Severity::EnergyEfficiencyRebateEligibleApprovalLikely
+        ));
+        assert_eq!(
+            r.utility_rebate_dollars_cents,
+            MA_MASS_SAVE_STANDARD_REBATE_CENTS
+        );
     }
 
     #[test]
@@ -483,7 +493,10 @@ mod tests {
         i.installation_request = InstallationRequest::UtilityRebateProgramUpgrade;
         i.state_utility_rebate_available_dollars_cents = 75_00;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::EnergyEfficiencyRebateEligibleApprovalLikely));
+        assert!(matches!(
+            r.severity,
+            Severity::EnergyEfficiencyRebateEligibleApprovalLikely
+        ));
         assert_eq!(r.utility_rebate_dollars_cents, 75_00);
     }
 
@@ -493,7 +506,10 @@ mod tests {
         i.lease_explicitly_prohibits_thermostat_change = true;
         i.landlord_consent_obtained_in_writing = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::LandlordRefusalUnreasonableHabitabilityBreach));
+        assert!(matches!(
+            r.severity,
+            Severity::LandlordRefusalUnreasonableHabitabilityBreach
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents / 2);
     }
 
@@ -513,9 +529,15 @@ mod tests {
         i.jurisdiction = Jurisdiction::NewYork;
         let r = check(&i);
         assert!(r.notes.iter().any(|n| n.contains("Local Law 97")));
-        assert!(r.notes.iter().any(|n| n.contains("Real Property Law § 235-b")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Real Property Law § 235-b")));
         assert!(r.notes.iter().any(|n| n.contains("April 18, 2019")));
-        assert!(r.notes.iter().any(|n| n.contains("NYC Admin Code § 27-2029")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("NYC Admin Code § 27-2029")));
     }
 
     #[test]
@@ -534,7 +556,10 @@ mod tests {
         let mut i = baseline();
         i.jurisdiction = Jurisdiction::Default;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("42 U.S.C. § 3604(f)(3)(B)")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("42 U.S.C. § 3604(f)(3)(B)")));
         assert!(r.notes.iter().any(|n| n.contains("24 C.F.R. § 100.203")));
     }
 
@@ -542,7 +567,10 @@ mod tests {
     fn coordination_note_references_solar_ev_clothesline_window_ac() {
         let i = baseline();
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("tenant_solar_installation")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("tenant_solar_installation")));
         assert!(r
             .notes
             .iter()
@@ -573,7 +601,9 @@ mod tests {
             i.jurisdiction = j;
             let r = check(&i);
             assert!(
-                r.notes.iter().any(|n| n.contains("tenant_solar_installation")),
+                r.notes
+                    .iter()
+                    .any(|n| n.contains("tenant_solar_installation")),
                 "coordination note missing for {j:?}"
             );
         }
@@ -637,10 +667,26 @@ mod tests {
 
     #[test]
     fn citation_branch_for_each_jurisdiction() {
-        let ca = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::California; i });
-        let ny = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::NewYork; i });
-        let ma = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Massachusetts; i });
-        let de = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Default; i });
+        let ca = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::California;
+            i
+        });
+        let ny = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::NewYork;
+            i
+        });
+        let ma = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Massachusetts;
+            i
+        });
+        let de = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Default;
+            i
+        });
         assert!(ca.citation.contains("Cal. Civ. Code"));
         assert!(ny.citation.contains("Local Law 97"));
         assert!(ma.citation.contains("Stretch Code"));
@@ -653,7 +699,10 @@ mod tests {
         i.hvac_wiring = HvacWiringType::SteamOrHotWaterRadiator;
         i.hvac_warranty_active_and_change_voids = true;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::WiringIncompatibilityRefusalPermitted));
+        assert!(matches!(
+            r.severity,
+            Severity::WiringIncompatibilityRefusalPermitted
+        ));
     }
 
     #[test]
@@ -662,6 +711,9 @@ mod tests {
         i.historic_district_landmark_property = true;
         i.hvac_warranty_active_and_change_voids = true;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::HistoricDistrictRestrictionApplies));
+        assert!(matches!(
+            r.severity,
+            Severity::HistoricDistrictRestrictionApplies
+        ));
     }
 }

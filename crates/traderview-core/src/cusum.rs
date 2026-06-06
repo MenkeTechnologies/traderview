@@ -17,7 +17,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum ChangeDirection { Up, Down }
+pub enum ChangeDirection {
+    Up,
+    Down,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct ChangeEvent {
@@ -74,19 +77,28 @@ pub fn detect(series: &[f64], cfg: &CusumConfig) -> CusumReport {
         g_neg = (g_neg - dev - cfg.slack).max(0.0);
         if g_pos > threshold {
             events.push(ChangeEvent {
-                bar_index: i, direction: ChangeDirection::Up, cusum_value: g_pos,
+                bar_index: i,
+                direction: ChangeDirection::Up,
+                cusum_value: g_pos,
             });
             g_pos = 0.0;
         }
         if g_neg > threshold {
             events.push(ChangeEvent {
-                bar_index: i, direction: ChangeDirection::Down, cusum_value: g_neg,
+                bar_index: i,
+                direction: ChangeDirection::Down,
+                cusum_value: g_neg,
             });
             g_neg = 0.0;
         }
     }
     let n_events = events.len();
-    CusumReport { events, final_g_pos: g_pos, final_g_neg: g_neg, n_events }
+    CusumReport {
+        events,
+        final_g_pos: g_pos,
+        final_g_neg: g_neg,
+        n_events,
+    }
 }
 
 #[cfg(test)]
@@ -102,7 +114,9 @@ mod tests {
     #[test]
     fn series_around_mean_emits_no_events() {
         // Series of values ±0.5 around mean 0 — should never breach threshold (5σ).
-        let series: Vec<f64> = (0..100).map(|i| if i % 2 == 0 { 0.5 } else { -0.5 }).collect();
+        let series: Vec<f64> = (0..100)
+            .map(|i| if i % 2 == 0 { 0.5 } else { -0.5 })
+            .collect();
         let r = detect(&series, &CusumConfig::default());
         assert!(r.events.is_empty(), "small variance shouldn't trigger");
     }
@@ -110,10 +124,12 @@ mod tests {
     #[test]
     fn sustained_upward_drift_triggers_up_event() {
         // Mean = 0, but series persistently above mean → cumulative sum builds.
-        let series: Vec<f64> = (0..30).map(|_| 1.0).collect();    // every sample is +1
+        let series: Vec<f64> = (0..30).map(|_| 1.0).collect(); // every sample is +1
         let cfg = CusumConfig {
-            reference_mean: 0.0, reference_stdev: 1.0,
-            threshold_stdevs: 3.0, slack: 0.0,
+            reference_mean: 0.0,
+            reference_stdev: 1.0,
+            threshold_stdevs: 3.0,
+            slack: 0.0,
         };
         let r = detect(&series, &cfg);
         assert!(!r.events.is_empty(), "sustained drift should fire");
@@ -127,8 +143,10 @@ mod tests {
     fn sustained_downward_drift_triggers_down_event() {
         let series: Vec<f64> = (0..30).map(|_| -1.0).collect();
         let cfg = CusumConfig {
-            reference_mean: 0.0, reference_stdev: 1.0,
-            threshold_stdevs: 3.0, slack: 0.0,
+            reference_mean: 0.0,
+            reference_stdev: 1.0,
+            threshold_stdevs: 3.0,
+            slack: 0.0,
         };
         let r = detect(&series, &cfg);
         assert!(!r.events.is_empty());
@@ -141,12 +159,17 @@ mod tests {
         // (0.3 - 0.5) = -0.2 → g_pos stays at zero. No events.
         let series: Vec<f64> = (0..30).map(|_| 0.3).collect();
         let cfg = CusumConfig {
-            reference_mean: 0.0, reference_stdev: 1.0,
-            threshold_stdevs: 3.0, slack: 0.5,
+            reference_mean: 0.0,
+            reference_stdev: 1.0,
+            threshold_stdevs: 3.0,
+            slack: 0.5,
         };
         let r = detect(&series, &cfg);
-        assert!(r.events.is_empty(),
-            "slack 0.5 should eat the 0.3 drift, got {} events", r.events.len());
+        assert!(
+            r.events.is_empty(),
+            "slack 0.5 should eat the 0.3 drift, got {} events",
+            r.events.len()
+        );
     }
 
     #[test]
@@ -154,20 +177,31 @@ mod tests {
         // 30 bars of +1 should fire MULTIPLE events because the sum resets after each.
         let series: Vec<f64> = (0..30).map(|_| 1.0).collect();
         let cfg = CusumConfig {
-            reference_mean: 0.0, reference_stdev: 1.0,
-            threshold_stdevs: 3.0, slack: 0.0,
+            reference_mean: 0.0,
+            reference_stdev: 1.0,
+            threshold_stdevs: 3.0,
+            slack: 0.0,
         };
         let r = detect(&series, &cfg);
         // 30 bars / ~4 bars per event ≈ 7-8 events.
-        assert!(r.events.len() >= 5, "expected ≥ 5 events, got {}", r.events.len());
+        assert!(
+            r.events.len() >= 5,
+            "expected ≥ 5 events, got {}",
+            r.events.len()
+        );
     }
 
     #[test]
     fn zero_stdev_returns_default_without_panic() {
-        let r = detect(&[1.0, 2.0, 3.0], &CusumConfig {
-            reference_mean: 0.0, reference_stdev: 0.0,
-            threshold_stdevs: 3.0, slack: 0.0,
-        });
+        let r = detect(
+            &[1.0, 2.0, 3.0],
+            &CusumConfig {
+                reference_mean: 0.0,
+                reference_stdev: 0.0,
+                threshold_stdevs: 3.0,
+                slack: 0.0,
+            },
+        );
         assert!(r.events.is_empty());
     }
 }

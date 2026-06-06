@@ -102,8 +102,15 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
         "CA",
         rule(
             PerDayStatutoryPenalty,
-            Some(100), Some(250), None, None,
-            true, true, false, false, false,
+            Some(100),
+            Some(250),
+            None,
+            None,
+            true,
+            true,
+            false,
+            false,
+            false,
             "Cal. Civ. Code § 789.3 — $100/day + $250 minimum + actual damages + attorney's fees",
         ),
     );
@@ -152,11 +159,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // GeneralProhibitionStandardRemedies for remaining states + DC.
     let no_specific = [
-        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "GA", "HI",
-        "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA",
-        "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM",
-        "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN",
-        "UT", "VT", "VA", "WV", "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "GA", "HI", "ID", "IL", "IN", "IA", "KS",
+        "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM",
+        "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "UT", "VT", "VA", "WV", "WI",
+        "WY",
     ];
     for code in no_specific {
         m.insert(
@@ -216,8 +222,8 @@ pub fn check(input: &ShutoffInput) -> ShutoffResult {
     });
 
     // Bona-fide repair/emergency exception bars any violation.
-    let violation = input.landlord_caused_shutoff
-        && !input.interruption_due_to_bona_fide_repair_or_emergency;
+    let violation =
+        input.landlord_caused_shutoff && !input.interruption_due_to_bona_fide_repair_or_emergency;
 
     let per_day_total = if violation {
         rule.per_day_penalty_dollars
@@ -254,9 +260,7 @@ pub fn check(input: &ShutoffInput) -> ShutoffResult {
             rent_multiple.max(input.tenant_actual_damages_dollars)
         }
         ShutoffRegime::PunitiveDamagesFramework => input.tenant_actual_damages_dollars,
-        ShutoffRegime::GeneralProhibitionStandardRemedies => {
-            input.tenant_actual_damages_dollars
-        }
+        ShutoffRegime::GeneralProhibitionStandardRemedies => input.tenant_actual_damages_dollars,
     };
 
     let note = match (rule.regime, violation) {
@@ -478,7 +482,12 @@ mod tests {
     #[test]
     fn coverage_is_all_50_states_plus_dc() {
         let codes: Vec<&'static str> = RULES.keys().copied().collect();
-        assert_eq!(codes.len(), 51, "expected 50 states + DC, got {}", codes.len());
+        assert_eq!(
+            codes.len(),
+            51,
+            "expected 50 states + DC, got {}",
+            codes.len()
+        );
     }
 
     #[test]

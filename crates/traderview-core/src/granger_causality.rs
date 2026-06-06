@@ -39,8 +39,10 @@ pub fn test(x: &[f64], y: &[f64], lags: usize) -> Option<GrangerReport> {
     // Build design matrices.
     let start = lags;
     let m = n - start;
-    if m < 2 * lags + 2 { return None; }
-    let mut y_target = Vec::with_capacity(m);    // dependent variable = X_t
+    if m < 2 * lags + 2 {
+        return None;
+    }
+    let mut y_target = Vec::with_capacity(m); // dependent variable = X_t
     let intercept = vec![1.0_f64; m];
     let mut x_lags: Vec<Vec<f64>> = (0..lags).map(|_| Vec::with_capacity(m)).collect();
     let mut y_lags: Vec<Vec<f64>> = (0..lags).map(|_| Vec::with_capacity(m)).collect();
@@ -51,8 +53,9 @@ pub fn test(x: &[f64], y: &[f64], lags: usize) -> Option<GrangerReport> {
             y_lags[i].push(y[t - 1 - i]);
         }
     }
-    let restricted_cols: Vec<Vec<f64>> =
-        std::iter::once(intercept.clone()).chain(x_lags.clone()).collect();
+    let restricted_cols: Vec<Vec<f64>> = std::iter::once(intercept.clone())
+        .chain(x_lags.clone())
+        .collect();
     let rss_r = ols_rss(&restricted_cols, &y_target)?;
     let mut unrestricted_cols = Vec::with_capacity(2 * lags + 1);
     unrestricted_cols.append(&mut intercept.clone().iter().map(|x| vec![*x]).collect());
@@ -63,9 +66,13 @@ pub fn test(x: &[f64], y: &[f64], lags: usize) -> Option<GrangerReport> {
     unrestricted_cols.extend(y_lags);
     let rss_u = ols_rss(&unrestricted_cols, &y_target)?;
     let dof_u = m as isize - 2 * lags as isize - 1;
-    if dof_u <= 0 { return None; }
+    if dof_u <= 0 {
+        return None;
+    }
     let f_stat = ((rss_r - rss_u) / lags as f64) / (rss_u / dof_u as f64);
-    if !f_stat.is_finite() || f_stat.is_nan() { return None; }
+    if !f_stat.is_finite() || f_stat.is_nan() {
+        return None;
+    }
     Some(GrangerReport {
         f_statistic: f_stat,
         rss_restricted: rss_r,
@@ -78,7 +85,9 @@ pub fn test(x: &[f64], y: &[f64], lags: usize) -> Option<GrangerReport> {
 fn ols_rss(x: &[Vec<f64>], y: &[f64]) -> Option<f64> {
     let p = x.len();
     let n = y.len();
-    if p == 0 || n == 0 || x.iter().any(|c| c.len() != n) { return None; }
+    if p == 0 || n == 0 || x.iter().any(|c| c.len() != n) {
+        return None;
+    }
     let mut xtx = vec![vec![0.0_f64; p]; p];
     let mut xty = vec![0.0_f64; p];
     for i in 0..p {
@@ -89,25 +98,39 @@ fn ols_rss(x: &[Vec<f64>], y: &[f64]) -> Option<f64> {
     }
     let mut aug = vec![vec![0.0_f64; p + 1]; p];
     for i in 0..p {
-        for j in 0..p { aug[i][j] = xtx[i][j]; }
+        for j in 0..p {
+            aug[i][j] = xtx[i][j];
+        }
         aug[i][p] = xty[i];
     }
     // Gauss-Jordan with partial pivoting.
     for i in 0..p {
         let mut pivot = i;
         for r in (i + 1)..p {
-            if aug[r][i].abs() > aug[pivot][i].abs() { pivot = r; }
+            if aug[r][i].abs() > aug[pivot][i].abs() {
+                pivot = r;
+            }
         }
-        if aug[pivot][i].abs() < 1e-18 { return None; }
+        if aug[pivot][i].abs() < 1e-18 {
+            return None;
+        }
         aug.swap(i, pivot);
         let div = aug[i][i];
-        for v in aug[i].iter_mut() { *v /= div; }
+        for v in aug[i].iter_mut() {
+            *v /= div;
+        }
         for r in 0..p {
-            if r == i { continue; }
+            if r == i {
+                continue;
+            }
             let f = aug[r][i];
-            if f == 0.0 { continue; }
+            if f == 0.0 {
+                continue;
+            }
             let pivot_row = aug[i].clone();
-            for (j, v) in aug[r].iter_mut().enumerate() { *v -= f * pivot_row[j]; }
+            for (j, v) in aug[r].iter_mut().enumerate() {
+                *v -= f * pivot_row[j];
+            }
         }
     }
     let beta: Vec<f64> = (0..p).map(|i| aug[i][p]).collect();
@@ -153,18 +176,25 @@ mod tests {
         let mut state: u64 = 42;
         let mut y = vec![0.0_f64; n];
         for slot in y.iter_mut() {
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             *slot = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 2.0;
         }
         let mut x = vec![0.0_f64; n];
         for i in 1..n {
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             let noise = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.1;
             x[i] = 0.5 * y[i - 1] + noise;
         }
         let r = test(&x, &y, 2).unwrap();
-        assert!(r.f_statistic > 3.0,
-            "expected large F (Y causes X), got {}", r.f_statistic);
+        assert!(
+            r.f_statistic > 3.0,
+            "expected large F (Y causes X), got {}",
+            r.f_statistic
+        );
     }
 
     #[test]
@@ -174,17 +204,24 @@ mod tests {
         let mut x = vec![0.0; n];
         let mut y = vec![0.0; n];
         for (xs, ys) in x.iter_mut().zip(y.iter_mut()) {
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             *xs = (state >> 32) as f64 / u32::MAX as f64 - 0.5;
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             *ys = (state >> 32) as f64 / u32::MAX as f64 - 0.5;
         }
         let r = test(&x, &y, 2).unwrap();
         // Under the null, F has expected value 1 for large n; samples
         // can deviate but the value should not be in the highly-significant
         // tail.
-        assert!(r.f_statistic < 10.0,
-            "independent series shouldn't show large F, got {}", r.f_statistic);
+        assert!(
+            r.f_statistic < 10.0,
+            "independent series shouldn't show large F, got {}",
+            r.f_statistic
+        );
     }
 
     #[test]

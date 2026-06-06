@@ -18,7 +18,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum PatternKind { SaucerTop, SaucerBottom }
+pub enum PatternKind {
+    SaucerTop,
+    SaucerBottom,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SaucerCandidate {
@@ -50,21 +53,31 @@ impl Default for Config {
 pub fn detect(closes: &[f64], cfg: &Config) -> Vec<SaucerCandidate> {
     let n = closes.len();
     let mut out = Vec::new();
-    if n < cfg.window || cfg.window < 10
+    if n < cfg.window
+        || cfg.window < 10
         || !cfg.min_abs_quadratic_coef.is_finite()
-        || !cfg.min_r_squared.is_finite() {
+        || !cfg.min_r_squared.is_finite()
+    {
         return out;
     }
-    if closes.iter().any(|x| !x.is_finite()) { return out; }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     for start in 0..=(n - cfg.window) {
         let end = start + cfg.window;
         let slice = &closes[start..end];
         let (a, _b, _c, r_sq) = quadratic_fit(slice);
-        if a.abs() < cfg.min_abs_quadratic_coef || r_sq < cfg.min_r_squared { continue; }
-        let kind = if a < 0.0 { PatternKind::SaucerTop } else { PatternKind::SaucerBottom };
+        if a.abs() < cfg.min_abs_quadratic_coef || r_sq < cfg.min_r_squared {
+            continue;
+        }
+        let kind = if a < 0.0 {
+            PatternKind::SaucerTop
+        } else {
+            PatternKind::SaucerBottom
+        };
         // Apex at vertex: x_v = −b / (2a). Convert to integer index inside window.
-        let apex_rel = ((-_b / (2.0 * a)).round() as i64)
-            .clamp(0, (cfg.window - 1) as i64) as usize;
+        let apex_rel =
+            ((-_b / (2.0 * a)).round() as i64).clamp(0, (cfg.window - 1) as i64) as usize;
         out.push(SaucerCandidate {
             kind,
             start_index: start,
@@ -100,16 +113,14 @@ fn quadratic_fit(y: &[f64]) -> (f64, f64, f64, f64) {
         sx2y += x2 * yi;
     }
     // Normal equations: M · [c, b, a]ᵀ = [sy, sxy, sx2y]ᵀ
-    let m = [
-        [n_f, sx, sx2],
-        [sx, sx2, sx3],
-        [sx2, sx3, sx4],
-    ];
+    let m = [[n_f, sx, sx2], [sx, sx2, sx3], [sx2, sx3, sx4]];
     let rhs = [sy, sxy, sx2y];
     let det = m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1])
         - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0])
         + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
-    if det.abs() < 1e-18 { return (0.0, 0.0, sy / n_f, 0.0); }
+    if det.abs() < 1e-18 {
+        return (0.0, 0.0, sy / n_f, 0.0);
+    }
     // Cramer's rule.
     let det_a = m[0][0] * (m[1][1] * rhs[2] - rhs[1] * m[2][1])
         - m[0][1] * (m[1][0] * rhs[2] - rhs[1] * m[2][0])
@@ -126,11 +137,15 @@ fn quadratic_fit(y: &[f64]) -> (f64, f64, f64, f64) {
     // R²
     let y_mean = sy / n_f;
     let tss: f64 = y.iter().map(|yi| (yi - y_mean).powi(2)).sum();
-    let ssr: f64 = y.iter().enumerate().map(|(i, yi)| {
-        let xi = i as f64;
-        let yhat = a * xi * xi + b * xi + c;
-        (yi - yhat).powi(2)
-    }).sum();
+    let ssr: f64 = y
+        .iter()
+        .enumerate()
+        .map(|(i, yi)| {
+            let xi = i as f64;
+            let yhat = a * xi * xi + b * xi + c;
+            (yi - yhat).powi(2)
+        })
+        .sum();
     let r_sq = if tss > 1e-18 { 1.0 - ssr / tss } else { 0.0 };
     (a, b, c, r_sq.clamp(0.0, 1.0))
 }
@@ -165,21 +180,27 @@ mod tests {
     #[test]
     fn parabolic_top_detected() {
         // Inverted-U: y = -0.01·(i - 40)² + 116. Min at i=0 and i=80; max at i=40.
-        let c: Vec<f64> = (0..100).map(|i| {
-            let x = i as f64 - 40.0;
-            -0.01 * x * x + 116.0
-        }).collect();
+        let c: Vec<f64> = (0..100)
+            .map(|i| {
+                let x = i as f64 - 40.0;
+                -0.01 * x * x + 116.0
+            })
+            .collect();
         let cands = detect(&c, &Config::default());
-        assert!(cands.iter().any(|x| x.kind == PatternKind::SaucerTop),
-            "expected saucer top, got {cands:?}");
+        assert!(
+            cands.iter().any(|x| x.kind == PatternKind::SaucerTop),
+            "expected saucer top, got {cands:?}"
+        );
     }
 
     #[test]
     fn parabolic_bottom_detected() {
-        let c: Vec<f64> = (0..100).map(|i| {
-            let x = i as f64 - 40.0;
-            0.01 * x * x + 100.0
-        }).collect();
+        let c: Vec<f64> = (0..100)
+            .map(|i| {
+                let x = i as f64 - 40.0;
+                0.01 * x * x + 100.0
+            })
+            .collect();
         let cands = detect(&c, &Config::default());
         assert!(cands.iter().any(|x| x.kind == PatternKind::SaucerBottom));
     }
@@ -187,11 +208,19 @@ mod tests {
     #[test]
     fn apex_near_vertex() {
         // Vertex at i=40 in the input. Find candidate starting at 0 (or near it).
-        let c: Vec<f64> = (0..100).map(|i| {
-            let x = i as f64 - 40.0;
-            -0.01 * x * x + 116.0
-        }).collect();
-        let cands = detect(&c, &Config { window: 80, ..Default::default() });
+        let c: Vec<f64> = (0..100)
+            .map(|i| {
+                let x = i as f64 - 40.0;
+                -0.01 * x * x + 116.0
+            })
+            .collect();
+        let cands = detect(
+            &c,
+            &Config {
+                window: 80,
+                ..Default::default()
+            },
+        );
         if let Some(c0) = cands.first() {
             // Window 0..79, apex ~40 in that window.
             assert!((c0.apex_index_relative as i64 - 40).abs() < 10);
@@ -201,13 +230,24 @@ mod tests {
     #[test]
     fn high_min_r_squared_filters_noisy_input() {
         let mut state: u64 = 42;
-        let c: Vec<f64> = (0..100).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            100.0 + ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 50.0
-        }).collect();
-        let cands = detect(&c, &Config { min_r_squared: 0.95, ..Default::default() });
-        assert!(cands.is_empty(),
-            "random noise shouldn't fit a clean parabola at R² ≥ 0.95");
+        let c: Vec<f64> = (0..100)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                100.0 + ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 50.0
+            })
+            .collect();
+        let cands = detect(
+            &c,
+            &Config {
+                min_r_squared: 0.95,
+                ..Default::default()
+            },
+        );
+        assert!(
+            cands.is_empty(),
+            "random noise shouldn't fit a clean parabola at R² ≥ 0.95"
+        );
     }
 }

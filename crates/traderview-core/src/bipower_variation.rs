@@ -35,34 +35,44 @@ pub struct BipowerReport {
     pub n_observations: usize,
 }
 
-const MU1: f64 = 0.797_884_560_802_865_4;            // √(2/π)
+const MU1: f64 = 0.797_884_560_802_865_4; // √(2/π)
 const THETA: f64 = std::f64::consts::PI * std::f64::consts::PI / 4.0 + std::f64::consts::PI - 5.0;
 
 pub fn compute(returns: &[f64]) -> Option<BipowerReport> {
-    if returns.len() < 4 { return None; }
-    if returns.iter().any(|x| !x.is_finite()) { return None; }
+    if returns.len() < 4 {
+        return None;
+    }
+    if returns.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let n = returns.len();
     let n_f = n as f64;
     let rv: f64 = returns.iter().map(|x| x * x).sum();
     // BPV = μ₁⁻² · Σ |r_i| · |r_{i-1}|; μ₁⁻² = π/2.
-    let bpv: f64 = (1.0 / (MU1 * MU1)) * (1..n)
-        .map(|i| returns[i].abs() * returns[i - 1].abs()).sum::<f64>();
+    let bpv: f64 = (1.0 / (MU1 * MU1))
+        * (1..n)
+            .map(|i| returns[i].abs() * returns[i - 1].abs())
+            .sum::<f64>();
     let jump = (rv - bpv).max(0.0);
     // Tripower Quarticity: TQ = n · μ_{4/3}⁻³ · Σ |r|^{4/3} · |r|^{4/3} · |r|^{4/3}
     // (with the standard 3-period overlapping product). Used as robust IQ.
     let mu_43 = 2.0_f64.powf(2.0 / 3.0) * gamma_7_6() / gamma_1_2();
     let mu_43_cubed_inv = 1.0 / mu_43.powi(3);
-    let tq_sum: f64 = (2..n).map(|i| {
-        returns[i].abs().powf(4.0 / 3.0)
-            * returns[i - 1].abs().powf(4.0 / 3.0)
-            * returns[i - 2].abs().powf(4.0 / 3.0)
-    }).sum();
+    let tq_sum: f64 = (2..n)
+        .map(|i| {
+            returns[i].abs().powf(4.0 / 3.0)
+                * returns[i - 1].abs().powf(4.0 / 3.0)
+                * returns[i - 2].abs().powf(4.0 / 3.0)
+        })
+        .sum();
     let tq = n_f * mu_43_cubed_inv * tq_sum;
     // Huang-Tauchen z statistic with TQ-based scaling.
     let scale_denom = (THETA * (1.0_f64).max(tq / (bpv * bpv))).max(0.0).sqrt();
     let z = if bpv > 0.0 && scale_denom > 0.0 {
         n_f.sqrt() * (rv - bpv) / bpv / scale_denom
-    } else { 0.0 };
+    } else {
+        0.0
+    };
     let p_value = 1.0 - standard_normal_cdf(z);
     Some(BipowerReport {
         realized_variance: rv,
@@ -75,8 +85,12 @@ pub fn compute(returns: &[f64]) -> Option<BipowerReport> {
     })
 }
 
-fn gamma_7_6() -> f64 { 0.927_553_793_283_388_2 }
-fn gamma_1_2() -> f64 { std::f64::consts::PI.sqrt() }
+fn gamma_7_6() -> f64 {
+    0.927_553_793_283_388_2
+}
+fn gamma_1_2() -> f64 {
+    std::f64::consts::PI.sqrt()
+}
 
 fn standard_normal_cdf(z: f64) -> f64 {
     0.5 * (1.0 + erf(z / std::f64::consts::SQRT_2))
@@ -87,8 +101,11 @@ fn erf(x: f64) -> f64 {
     let sign = if x < 0.0 { -1.0 } else { 1.0 };
     let x = x.abs();
     let t = 1.0 / (1.0 + 0.327_591_1 * x);
-    let y = 1.0 - (((((1.061_405_429 * t - 1.453_152_027) * t)
-        + 1.421_413_741) * t - 0.284_496_736) * t + 0.254_829_592) * t * (-x * x).exp();
+    let y = 1.0
+        - (((((1.061_405_429 * t - 1.453_152_027) * t) + 1.421_413_741) * t - 0.284_496_736) * t
+            + 0.254_829_592)
+            * t
+            * (-x * x).exp();
     sign * y
 }
 
@@ -110,19 +127,26 @@ mod tests {
     fn no_jump_yields_bpv_close_to_rv() {
         // Smooth-ish path: small symmetric returns; BPV should track RV.
         let mut state: u64 = 12345;
-        let r: Vec<f64> = (0..500).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u2 = (state >> 32) as f64 / u32::MAX as f64;
-            (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos() * 0.01
-        }).collect();
+        let r: Vec<f64> = (0..500)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u2 = (state >> 32) as f64 / u32::MAX as f64;
+                (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos() * 0.01
+            })
+            .collect();
         let rep = compute(&r).unwrap();
-        let rel_diff = (rep.realized_variance - rep.bipower_variation).abs()
-            / rep.realized_variance;
-        assert!(rel_diff < 0.30, "BPV should track RV in no-jump regime, rel diff = {rel_diff}");
+        let rel_diff =
+            (rep.realized_variance - rep.bipower_variation).abs() / rep.realized_variance;
+        assert!(
+            rel_diff < 0.30,
+            "BPV should track RV in no-jump regime, rel diff = {rel_diff}"
+        );
     }
 
     #[test]
@@ -132,8 +156,12 @@ mod tests {
         r[100] = 0.50;
         let rep = compute(&r).unwrap();
         assert!(rep.jump_variation > 0.0);
-        assert!(rep.realized_variance > rep.bipower_variation,
-            "RV ({}) should exceed BPV ({}) with jump", rep.realized_variance, rep.bipower_variation);
+        assert!(
+            rep.realized_variance > rep.bipower_variation,
+            "RV ({}) should exceed BPV ({}) with jump",
+            rep.realized_variance,
+            rep.bipower_variation
+        );
     }
 
     #[test]

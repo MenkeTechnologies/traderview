@@ -410,7 +410,8 @@ mod tests {
     #[test]
     fn pre_ira_acquisition_not_applicable() {
         let mut input = baseline_input();
-        input.acquisition_date_status = AcquisitionDateStatus::AcquiredOnOrBeforeDecember31_2022PreIra;
+        input.acquisition_date_status =
+            AcquisitionDateStatus::AcquiredOnOrBeforeDecember31_2022PreIra;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -435,7 +436,10 @@ mod tests {
         let mut input = baseline_input();
         input.power_source = PowerSource::NotEligiblePowerSource;
         let output = check(&input);
-        assert_eq!(output.mode, Section45WMode::NotApplicableNotEligiblePowerSource);
+        assert_eq!(
+            output.mode,
+            Section45WMode::NotApplicableNotEligiblePowerSource
+        );
     }
 
     #[test]
@@ -443,7 +447,10 @@ mod tests {
         let mut input = baseline_input();
         input.taxpayer_type = TaxpayerType::IndividualUsingForPersonalUseNotEligible;
         let output = check(&input);
-        assert_eq!(output.mode, Section45WMode::NotApplicableIndividualUsingForPersonalUse);
+        assert_eq!(
+            output.mode,
+            Section45WMode::NotApplicableIndividualUsingForPersonalUse
+        );
     }
 
     #[test]
@@ -515,7 +522,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::PerVehicleMaximumCreditUnderSection45WB4;
         input.credit_claimed_dollars = 7_501;
         let output = check(&input);
-        assert_eq!(output.mode, Section45WMode::ViolationCreditExceedsApplicableCap);
+        assert_eq!(
+            output.mode,
+            Section45WMode::ViolationCreditExceedsApplicableCap
+        );
     }
 
     #[test]
@@ -525,7 +535,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::PerVehicleMaximumCreditUnderSection45WB4;
         input.credit_claimed_dollars = 40_001;
         let output = check(&input);
-        assert_eq!(output.mode, Section45WMode::ViolationCreditExceedsApplicableCap);
+        assert_eq!(
+            output.mode,
+            Section45WMode::ViolationCreditExceedsApplicableCap
+        );
     }
 
     #[test]
@@ -534,7 +547,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::BatteryCapacityRequirement;
         input.battery_capacity_kwh = 7;
         let output = check(&input);
-        assert_eq!(output.mode, Section45WMode::CompliantBatteryCapacityMeetsThreshold);
+        assert_eq!(
+            output.mode,
+            Section45WMode::CompliantBatteryCapacityMeetsThreshold
+        );
     }
 
     #[test]
@@ -543,7 +559,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::BatteryCapacityRequirement;
         input.battery_capacity_kwh = 6;
         let output = check(&input);
-        assert_eq!(output.mode, Section45WMode::ViolationBatteryCapacityBelowThreshold);
+        assert_eq!(
+            output.mode,
+            Section45WMode::ViolationBatteryCapacityBelowThreshold
+        );
     }
 
     #[test]
@@ -553,7 +572,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::BatteryCapacityRequirement;
         input.battery_capacity_kwh = 15;
         let output = check(&input);
-        assert_eq!(output.mode, Section45WMode::CompliantBatteryCapacityMeetsThreshold);
+        assert_eq!(
+            output.mode,
+            Section45WMode::CompliantBatteryCapacityMeetsThreshold
+        );
     }
 
     #[test]
@@ -563,7 +585,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::BatteryCapacityRequirement;
         input.battery_capacity_kwh = 14;
         let output = check(&input);
-        assert_eq!(output.mode, Section45WMode::ViolationBatteryCapacityBelowThreshold);
+        assert_eq!(
+            output.mode,
+            Section45WMode::ViolationBatteryCapacityBelowThreshold
+        );
     }
 
     #[test]
@@ -571,7 +596,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::EligibleBusinessTaxpayerUnderSection45WC;
         let output = check(&input);
-        assert_eq!(output.mode, Section45WMode::CompliantEligibleBusinessTaxpayer);
+        assert_eq!(
+            output.mode,
+            Section45WMode::CompliantEligibleBusinessTaxpayer
+        );
     }
 
     #[test]
@@ -580,15 +608,22 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::DirectPayElectionForTaxExemptUnderSection6417;
         input.taxpayer_type = TaxpayerType::TaxExemptOrganizationWithDirectPayElection;
         let output = check(&input);
-        assert_eq!(output.mode, Section45WMode::CompliantTaxExemptDirectPayElectionMade);
+        assert_eq!(
+            output.mode,
+            Section45WMode::CompliantTaxExemptDirectPayElectionMade
+        );
     }
 
     #[test]
     fn qualified_commercial_clean_vehicle_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::QualifiedCommercialCleanVehicleDefinitionUnderSection45WD;
+        input.compliance_aspect =
+            ComplianceAspect::QualifiedCommercialCleanVehicleDefinitionUnderSection45WD;
         let output = check(&input);
-        assert_eq!(output.mode, Section45WMode::CompliantQualifiedCommercialCleanVehicle);
+        assert_eq!(
+            output.mode,
+            Section45WMode::CompliantQualifiedCommercialCleanVehicle
+        );
     }
 
     #[test]
@@ -596,7 +631,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::FormFilingUnderForm8936A;
         let output = check(&input);
-        assert_eq!(output.mode, Section45WMode::CompliantForm8936AFiledCorrectly);
+        assert_eq!(
+            output.mode,
+            Section45WMode::CompliantForm8936AFiledCorrectly
+        );
     }
 
     #[test]
@@ -605,7 +643,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::FormFilingUnderForm8936A;
         input.form_8936a_filed_correctly = false;
         let output = check(&input);
-        assert_eq!(output.mode, Section45WMode::ViolationForm8936ANotFiledOrIncorrect);
+        assert_eq!(
+            output.mode,
+            Section45WMode::ViolationForm8936ANotFiledOrIncorrect
+        );
     }
 
     #[test]

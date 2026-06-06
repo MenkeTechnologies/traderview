@@ -21,7 +21,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct TtmSqueezeReport {
@@ -36,12 +40,7 @@ pub struct TtmSqueezeReport {
     pub kc_mult: f64,
 }
 
-pub fn compute(
-    bars: &[Bar],
-    period: usize,
-    bb_mult: f64,
-    kc_mult: f64,
-) -> TtmSqueezeReport {
+pub fn compute(bars: &[Bar], period: usize, bb_mult: f64, kc_mult: f64) -> TtmSqueezeReport {
     let n = bars.len();
     let mut report = TtmSqueezeReport {
         squeeze_on: vec![None; n],
@@ -54,10 +53,19 @@ pub fn compute(
         bb_mult,
         kc_mult,
     };
-    if period < 3 || !bb_mult.is_finite() || bb_mult <= 0.0
-        || !kc_mult.is_finite() || kc_mult <= 0.0
-        || n < period + 1 { return report; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if period < 3
+        || !bb_mult.is_finite()
+        || bb_mult <= 0.0
+        || !kc_mult.is_finite()
+        || kc_mult <= 0.0
+        || n < period + 1
+    {
+        return report;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return report;
     }
     let p_f = period as f64;
@@ -92,7 +100,8 @@ pub fn compute(
         atr[i] = Some(cur);
     }
     for i in 0..n {
-        if let (Some(bb_u), Some(bb_l), Some(a)) = (report.bb_upper[i], report.bb_lower[i], atr[i]) {
+        if let (Some(bb_u), Some(bb_l), Some(a)) = (report.bb_upper[i], report.bb_lower[i], atr[i])
+        {
             let win = &bars[i + 1 - period..=i];
             let sma: f64 = win.iter().map(|b| b.close).sum::<f64>() / p_f;
             let kc_u = sma + kc_mult * a;
@@ -125,14 +134,20 @@ fn lin_reg_endpoint(y: &[f64]) -> f64 {
     }
     let slope = if sxx > 0.0 { sxy / sxx } else { 0.0 };
     let intercept = y_mean - slope * x_mean;
-    intercept + slope * (n - 1.0)    // value at last bar
+    intercept + slope * (n - 1.0) // value at last bar
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {
@@ -167,22 +182,25 @@ mod tests {
         // Strong trend: ATR settles small (HL=1 each bar) but closes
         // span 80 points → BB stdev ≈ 5.77 → BB ±11.5; KC ±1.5.
         // BB outside KC → squeeze OFF.
-        let bars: Vec<_> = (0..80).map(|i| {
-            let m = 100.0 + i as f64;
-            b(m + 0.5, m - 0.5, m)
-        }).collect();
+        let bars: Vec<_> = (0..80)
+            .map(|i| {
+                let m = 100.0 + i as f64;
+                b(m + 0.5, m - 0.5, m)
+            })
+            .collect();
         let r = compute(&bars, 20, 2.0, 1.5);
         let any_off = r.squeeze_on.iter().skip(40).flatten().any(|x| !*x);
-        assert!(any_off,
-            "trending market should have some squeeze-OFF bars");
+        assert!(any_off, "trending market should have some squeeze-OFF bars");
     }
 
     #[test]
     fn momentum_positive_in_uptrend() {
-        let bars: Vec<_> = (0..80).map(|i| {
-            let m = 100.0 + i as f64;
-            b(m + 0.5, m - 0.5, m)
-        }).collect();
+        let bars: Vec<_> = (0..80)
+            .map(|i| {
+                let m = 100.0 + i as f64;
+                b(m + 0.5, m - 0.5, m)
+            })
+            .collect();
         let r = compute(&bars, 20, 2.0, 1.5);
         let last = r.momentum[79].unwrap();
         assert!(last > 0.0);
@@ -190,10 +208,12 @@ mod tests {
 
     #[test]
     fn momentum_negative_in_downtrend() {
-        let bars: Vec<_> = (0..80).map(|i| {
-            let m = 200.0 - i as f64;
-            b(m + 0.5, m - 0.5, m)
-        }).collect();
+        let bars: Vec<_> = (0..80)
+            .map(|i| {
+                let m = 200.0 - i as f64;
+                b(m + 0.5, m - 0.5, m)
+            })
+            .collect();
         let r = compute(&bars, 20, 2.0, 1.5);
         let last = r.momentum[79].unwrap();
         assert!(last < 0.0);

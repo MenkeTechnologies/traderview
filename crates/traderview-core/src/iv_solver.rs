@@ -20,7 +20,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum OptionKind { Call, Put }
+pub enum OptionKind {
+    Call,
+    Put,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct IvReport {
@@ -38,11 +41,16 @@ pub fn solve(
     dividend_yield: f64,
     kind: OptionKind,
 ) -> Option<IvReport> {
-    if !market_price.is_finite() || market_price <= 0.0
-        || !spot.is_finite() || spot <= 0.0
-        || !strike.is_finite() || strike <= 0.0
-        || !time_to_expiry.is_finite() || time_to_expiry <= 0.0
-        || !risk_free.is_finite() || !dividend_yield.is_finite()
+    if !market_price.is_finite()
+        || market_price <= 0.0
+        || !spot.is_finite()
+        || spot <= 0.0
+        || !strike.is_finite()
+        || strike <= 0.0
+        || !time_to_expiry.is_finite()
+        || time_to_expiry <= 0.0
+        || !risk_free.is_finite()
+        || !dividend_yield.is_finite()
     {
         return None;
     }
@@ -51,7 +59,7 @@ pub fn solve(
     let dr = (-risk_free * time_to_expiry).exp();
     let (lower_bound, upper_bound) = match kind {
         OptionKind::Call => ((spot * dq - strike * dr).max(0.0), spot * dq),
-        OptionKind::Put  => ((strike * dr - spot * dq).max(0.0), strike * dr),
+        OptionKind::Put => ((strike * dr - spot * dq).max(0.0), strike * dr),
     };
     // Strict bounds violation → unsolvable; allow tiny rounding slop.
     if market_price + 1e-12 < lower_bound || market_price > upper_bound + 1e-12 {
@@ -61,13 +69,20 @@ pub fn solve(
     let sigma_lo = 1e-6_f64;
     let sigma_hi = 5.0_f64;
     let f = |sigma: f64| -> f64 {
-        bs_price(spot, strike, time_to_expiry, risk_free, dividend_yield, sigma, kind)
-            - market_price
+        bs_price(
+            spot,
+            strike,
+            time_to_expiry,
+            risk_free,
+            dividend_yield,
+            sigma,
+            kind,
+        ) - market_price
     };
     let f_lo = f(sigma_lo);
     let f_hi = f(sigma_hi);
     if f_lo.signum() == f_hi.signum() && f_lo != 0.0 && f_hi != 0.0 {
-        return None;    // root not bracketed
+        return None; // root not bracketed
     }
     let (a, b, fa, fb, iters, residual) = brent(sigma_lo, sigma_hi, f_lo, f_hi, &f, 100, 1e-9)?;
     let _ = (fa, fb);
@@ -75,11 +90,18 @@ pub fn solve(
         implied_vol: b,
         iterations: iters,
         residual,
-    }).filter(|r| (r.implied_vol - a).is_finite() || (r.implied_vol - sigma_lo).is_finite())
+    })
+    .filter(|r| (r.implied_vol - a).is_finite() || (r.implied_vol - sigma_lo).is_finite())
 }
 
 fn brent<F: Fn(f64) -> f64>(
-    a: f64, b: f64, fa: f64, fb: f64, f: &F, max_iter: usize, tol: f64,
+    a: f64,
+    b: f64,
+    fa: f64,
+    fb: f64,
+    f: &F,
+    max_iter: usize,
+    tol: f64,
 ) -> Option<(f64, f64, f64, f64, usize, f64)> {
     let (mut a, mut b, mut fa, mut fb) = (a, b, fa, fb);
     if fa.abs() < fb.abs() {
@@ -110,7 +132,7 @@ fn brent<F: Fn(f64) -> f64>(
         let cond5 = !mflag && ((c - d).abs() < tol);
         let s = if cond1 || cond2 || cond3 || cond4 || cond5 {
             mflag = true;
-            (a + b) / 2.0    // bisection fallback
+            (a + b) / 2.0 // bisection fallback
         } else {
             mflag = false;
             s
@@ -120,9 +142,11 @@ fn brent<F: Fn(f64) -> f64>(
         c = b;
         fc = fb;
         if fa * fs < 0.0 {
-            b = s; fb = fs;
+            b = s;
+            fb = fs;
         } else {
-            a = s; fa = fs;
+            a = s;
+            fa = fs;
         }
         if fa.abs() < fb.abs() {
             std::mem::swap(&mut a, &mut b);
@@ -145,18 +169,18 @@ fn bs_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64, kind: OptionKind
     let dr = (-r * t).exp();
     match kind {
         OptionKind::Call => s * dq * nd1 - k * dr * nd2,
-        OptionKind::Put  => k * dr * (1.0 - nd2) - s * dq * (1.0 - nd1),
+        OptionKind::Put => k * dr * (1.0 - nd2) - s * dq * (1.0 - nd1),
     }
 }
 
 fn norm_cdf(x: f64) -> f64 {
     // A&S 26.2.17, max err 7.5e-8.
-    let a1 =  0.254829592_f64;
+    let a1 = 0.254829592_f64;
     let a2 = -0.284496736_f64;
-    let a3 =  1.421413741_f64;
+    let a3 = 1.421413741_f64;
     let a4 = -1.453152027_f64;
-    let a5 =  1.061405429_f64;
-    let p  =  0.3275911_f64;
+    let a5 = 1.061405429_f64;
+    let p = 0.3275911_f64;
     let sign = if x < 0.0 { -1.0 } else { 1.0 };
     let xa = x.abs() / std::f64::consts::SQRT_2;
     let t = 1.0 / (1.0 + p * xa);
@@ -187,18 +211,29 @@ mod tests {
     #[test]
     fn round_trip_recovers_known_volatility() {
         // Compute a BS price at σ=0.25 then invert: should recover 0.25.
-        let s = 100.0; let k = 100.0; let t = 0.5; let r = 0.05; let q = 0.0;
+        let s = 100.0;
+        let k = 100.0;
+        let t = 0.5;
+        let r = 0.05;
+        let q = 0.0;
         let true_sigma = 0.25;
         let price = bs_price(s, k, t, r, q, true_sigma, OptionKind::Call);
         let report = solve(price, s, k, t, r, q, OptionKind::Call).unwrap();
-        assert!((report.implied_vol - true_sigma).abs() < 1e-6,
-            "IV should recover {true_sigma}, got {}", report.implied_vol);
+        assert!(
+            (report.implied_vol - true_sigma).abs() < 1e-6,
+            "IV should recover {true_sigma}, got {}",
+            report.implied_vol
+        );
         assert!(report.iterations <= 100);
     }
 
     #[test]
     fn round_trip_deep_otm_put() {
-        let s = 100.0; let k = 80.0; let t = 0.5; let r = 0.05; let q = 0.0;
+        let s = 100.0;
+        let k = 80.0;
+        let t = 0.5;
+        let r = 0.05;
+        let q = 0.0;
         let true_sigma = 0.40;
         let price = bs_price(s, k, t, r, q, true_sigma, OptionKind::Put);
         let report = solve(price, s, k, t, r, q, OptionKind::Put).unwrap();
@@ -208,7 +243,11 @@ mod tests {
     #[test]
     fn round_trip_high_vol_extreme() {
         // 200% IV (event-day reprice). Should still converge.
-        let s = 100.0; let k = 100.0; let t = 0.05; let r = 0.05; let q = 0.0;
+        let s = 100.0;
+        let k = 100.0;
+        let t = 0.05;
+        let r = 0.05;
+        let q = 0.0;
         let true_sigma = 2.0;
         let price = bs_price(s, k, t, r, q, true_sigma, OptionKind::Call);
         let report = solve(price, s, k, t, r, q, OptionKind::Call).unwrap();
@@ -218,8 +257,12 @@ mod tests {
     #[test]
     fn upper_bound_violation_returns_none() {
         // Call price cannot exceed S·e^{-qT}.
-        let s = 100.0_f64; let k = 100.0_f64; let t = 0.5_f64; let r = 0.05_f64; let q = 0.0_f64;
-        let upper = s * (-q * t).exp() + 1.0;    // above the no-arb upper bound
+        let s = 100.0_f64;
+        let k = 100.0_f64;
+        let t = 0.5_f64;
+        let r = 0.05_f64;
+        let q = 0.0_f64;
+        let upper = s * (-q * t).exp() + 1.0; // above the no-arb upper bound
         assert!(solve(upper, s, k, t, r, q, OptionKind::Call).is_none());
     }
 }

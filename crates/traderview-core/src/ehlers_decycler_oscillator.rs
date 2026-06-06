@@ -20,8 +20,12 @@
 pub fn compute(series: &[f64], hp_period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if n < 3 || hp_period < 4 { return out; }
-    if series.iter().any(|x| !x.is_finite()) { return out; }
+    if n < 3 || hp_period < 4 {
+        return out;
+    }
+    if series.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     let pi = std::f64::consts::PI;
     let arg = 0.707 * 2.0 * pi / hp_period as f64;
     let cos_arg = arg.cos();
@@ -32,8 +36,7 @@ pub fn compute(series: &[f64], hp_period: usize) -> Vec<Option<f64>> {
     let c3 = one_minus_a * one_minus_a;
     let mut hp = vec![0.0_f64; n];
     for i in 2..n {
-        hp[i] = c1 * (series[i] - 2.0 * series[i - 1] + series[i - 2])
-            + c2 * hp[i - 1]
+        hp[i] = c1 * (series[i] - 2.0 * series[i - 1] + series[i - 2]) + c2 * hp[i - 1]
             - c3 * hp[i - 2];
         out[i] = Some(hp[i]);
     }
@@ -74,21 +77,29 @@ mod tests {
         let r = compute(&s, 30);
         let vals: Vec<f64> = r.iter().skip(50).flatten().copied().collect();
         let mean: f64 = vals.iter().sum::<f64>() / vals.len() as f64;
-        assert!(mean.abs() < 1.0,
-            "linear trend filtered, mean ≈ 0, got {mean}");
+        assert!(
+            mean.abs() < 1.0,
+            "linear trend filtered, mean ≈ 0, got {mean}"
+        );
     }
 
     #[test]
     fn sin_wave_passes_through_within_band() {
         // Period-15 sine: shorter than hp_period=30 → HP passes it through.
-        let s: Vec<f64> = (0..400).map(|i| 100.0 + (i as f64 * 2.0 * std::f64::consts::PI / 15.0).sin()).collect();
+        let s: Vec<f64> = (0..400)
+            .map(|i| 100.0 + (i as f64 * 2.0 * std::f64::consts::PI / 15.0).sin())
+            .collect();
         let r = compute(&s, 30);
         let vals: Vec<f64> = r.iter().skip(100).flatten().copied().collect();
         let amp_max = vals.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
         let amp_min = vals.iter().cloned().fold(f64::INFINITY, f64::min);
         // Output amplitude should reflect at least part of the 1.0 input amplitude.
-        assert!(amp_max - amp_min > 0.5,
-            "in-band sine should pass through with substantial amplitude, got {}-{}", amp_min, amp_max);
+        assert!(
+            amp_max - amp_min > 0.5,
+            "in-band sine should pass through with substantial amplitude, got {}-{}",
+            amp_min,
+            amp_max
+        );
     }
 
     #[test]

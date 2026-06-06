@@ -124,11 +124,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // GenericLandlordTenantLaw — all other states + DC.
     let generic_states = [
-        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "GA", "HI",
-        "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA",
-        "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM",
-        "NY", "NC", "ND", "OH", "OK", "PA", "RI", "SC", "SD", "TN",
-        "TX", "UT", "VT", "VA", "WV", "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "GA", "HI", "ID", "IL", "IN", "IA", "KS",
+        "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM",
+        "NY", "NC", "ND", "OH", "OK", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WV",
+        "WI", "WY",
     ];
     for code in generic_states {
         m.insert(
@@ -400,7 +399,12 @@ mod tests {
     #[test]
     fn coverage_is_all_50_states_plus_dc() {
         let codes: Vec<&'static str> = RULES.keys().copied().collect();
-        assert_eq!(codes.len(), 51, "expected 50 states + DC, got {}", codes.len());
+        assert_eq!(
+            codes.len(),
+            51,
+            "expected 50 states + DC, got {}",
+            codes.len()
+        );
     }
 
     #[test]
@@ -429,7 +433,10 @@ mod tests {
                 count += 1;
             }
         }
-        assert_eq!(count, 2, "expected FL + WA only with NoticeAndJustCauseNoCap");
+        assert_eq!(
+            count, 2,
+            "expected FL + WA only with NoticeAndJustCauseNoCap"
+        );
     }
 
     #[test]

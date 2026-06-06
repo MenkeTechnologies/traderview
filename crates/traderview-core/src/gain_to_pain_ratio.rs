@@ -29,14 +29,26 @@ pub struct GainToPainReport {
 }
 
 pub fn compute(returns: &[f64]) -> Option<GainToPainReport> {
-    if returns.is_empty() { return None; }
-    if returns.iter().any(|x| !x.is_finite()) { return None; }
+    if returns.is_empty() {
+        return None;
+    }
+    if returns.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let sum: f64 = returns.iter().sum();
     let losses: Vec<f64> = returns.iter().filter(|r| **r < 0.0).copied().collect();
     let sum_abs_losses: f64 = losses.iter().map(|l| l.abs()).sum();
     let sum_sq_losses: f64 = losses.iter().map(|l| l * l).sum();
-    let gpr = if sum_abs_losses > 0.0 { sum / sum_abs_losses } else { f64::INFINITY };
-    let gpi = if sum_sq_losses > 0.0 { sum / sum_sq_losses.sqrt() } else { f64::INFINITY };
+    let gpr = if sum_abs_losses > 0.0 {
+        sum / sum_abs_losses
+    } else {
+        f64::INFINITY
+    };
+    let gpi = if sum_sq_losses > 0.0 {
+        sum / sum_sq_losses.sqrt()
+    } else {
+        f64::INFINITY
+    };
     Some(GainToPainReport {
         gain_to_pain_ratio: gpr,
         gain_to_pain_index: gpi,
@@ -99,15 +111,18 @@ mod tests {
     fn gpi_uses_squared_losses() {
         // Single big loss vs many small ones with same |sum|:
         // big-loss version has larger sum_sq → smaller GPI.
-        let small = vec![0.10, -0.01, -0.01, -0.01, -0.01, -0.01];    // 5x -0.01
-        let big = vec![0.10, -0.05];                                    // 1x -0.05
+        let small = vec![0.10, -0.01, -0.01, -0.01, -0.01, -0.01]; // 5x -0.01
+        let big = vec![0.10, -0.05]; // 1x -0.05
         let s = compute(&small).unwrap();
         let b = compute(&big).unwrap();
         // sum_abs_losses both 0.05; sum_sq for small = 5·0.0001 = 0.0005;
         // for big = 0.0025. So sqrt(0.0025) > sqrt(0.0005), making GPI smaller.
-        assert!(b.gain_to_pain_index < s.gain_to_pain_index,
+        assert!(
+            b.gain_to_pain_index < s.gain_to_pain_index,
             "concentrated loss should depress GPI more, big={}, small={}",
-            b.gain_to_pain_index, s.gain_to_pain_index);
+            b.gain_to_pain_index,
+            s.gain_to_pain_index
+        );
     }
 
     #[test]

@@ -172,13 +172,19 @@ pub fn check(input: &Input) -> CheckResult {
         && florida_military_size_ok;
 
     let florida_owner_protected = matches!(input.regime, Regime::Florida)
-        && matches!(input.ownership_status, PropertyOwnershipStatus::OwnerWithExclusiveUse)
+        && matches!(
+            input.ownership_status,
+            PropertyOwnershipStatus::OwnerWithExclusiveUse
+        )
         && florida_renter_eligible_flag
         && input.respectful_manner_of_display
         && florida_military_size_ok;
 
     let virginia_protection = matches!(input.regime, Regime::Virginia)
-        && matches!(input.ownership_status, PropertyOwnershipStatus::OwnerWithExclusiveUse)
+        && matches!(
+            input.ownership_status,
+            PropertyOwnershipStatus::OwnerWithExclusiveUse
+        )
         && matches!(input.flag_type, FlagType::UnitedStatesFlag);
 
     let federal_protection = matches!(input.regime, Regime::Federal) && federal_act_applies;
@@ -291,11 +297,7 @@ pub fn check(input: &Input) -> CheckResult {
 mod tests {
     use super::*;
 
-    fn base(
-        regime: Regime,
-        ownership: PropertyOwnershipStatus,
-        flag: FlagType,
-    ) -> Input {
+    fn base(regime: Regime, ownership: PropertyOwnershipStatus, flag: FlagType) -> Input {
         Input {
             regime,
             ownership_status: ownership,
@@ -333,11 +335,7 @@ mod tests {
         ));
         assert!(!r.federal_act_applies);
         assert!(!r.statutory_protection);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("applies only to OWNERS"))
-        );
+        assert!(r.notes.iter().any(|n| n.contains("applies only to OWNERS")));
     }
 
     #[test]
@@ -358,11 +356,10 @@ mod tests {
             PropertyOwnershipStatus::OwnerWithExclusiveUse,
             FlagType::UnitedStatesFlag,
         ));
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("PRIVATE RIGHT OF ACTION") && n.contains("Pub. L. 109-243"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("PRIVATE RIGHT OF ACTION") && n.contains("Pub. L. 109-243")));
     }
 
     // ── Florida § 720.304 + renter extension ────────────────────
@@ -378,11 +375,10 @@ mod tests {
         assert!(r.state_protection_for_renter);
         assert!(r.citation.contains("§ 720.304(2)"));
         assert!(r.citation.contains("TRUMPS LEASE"));
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("STATE LAW EXPLICITLY TRUMPS LEASE"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("STATE LAW EXPLICITLY TRUMPS LEASE")));
     }
 
     #[test]
@@ -551,12 +547,14 @@ mod tests {
 
     #[test]
     fn only_federal_lacks_private_right_of_action_invariant() {
-        assert!(!check(&base(
-            Regime::Federal,
-            PropertyOwnershipStatus::OwnerWithExclusiveUse,
-            FlagType::UnitedStatesFlag,
-        ))
-        .private_right_of_action);
+        assert!(
+            !check(&base(
+                Regime::Federal,
+                PropertyOwnershipStatus::OwnerWithExclusiveUse,
+                FlagType::UnitedStatesFlag,
+            ))
+            .private_right_of_action
+        );
 
         for &regime in &[Regime::Florida, Regime::Virginia, Regime::Default] {
             let r = check(&base(
@@ -575,10 +573,7 @@ mod tests {
     #[test]
     fn military_size_limit_applies_only_to_military_and_pow_mia_invariant() {
         // For non-military flags, the size limit input is a no-op.
-        for flag in [
-            FlagType::UnitedStatesFlag,
-            FlagType::StateFlag,
-        ] {
+        for flag in [FlagType::UnitedStatesFlag, FlagType::StateFlag] {
             let mut within = base(Regime::Florida, PropertyOwnershipStatus::Renter, flag);
             within.dimensions_within_florida_limit = true;
             let mut over = base(Regime::Florida, PropertyOwnershipStatus::Renter, flag);
@@ -618,8 +613,7 @@ mod tests {
                     i.respectful_manner_of_display = flip_respectful;
                     i.infringes_on_other_residents = !flip_infringes;
                     let r = check(&i);
-                    let expected_protected =
-                        flip_portable && flip_respectful && flip_infringes;
+                    let expected_protected = flip_portable && flip_respectful && flip_infringes;
                     assert_eq!(
                         r.state_protection_for_renter, expected_protected,
                         "portable={} respectful={} not_infringes={} expected={}",
@@ -632,56 +626,55 @@ mod tests {
 
     #[test]
     fn citation_pins_authority_per_regime() {
-        assert!(
-            check(&base(
-                Regime::Federal,
-                PropertyOwnershipStatus::OwnerWithExclusiveUse,
-                FlagType::UnitedStatesFlag,
-            ))
-            .citation
-            .contains("4 U.S.C. § 5")
-        );
-        assert!(
-            check(&base(
-                Regime::Florida,
-                PropertyOwnershipStatus::Renter,
-                FlagType::UnitedStatesFlag,
-            ))
-            .citation
-            .contains("§ 720.304(2)")
-        );
-        assert!(
-            check(&base(
-                Regime::Virginia,
-                PropertyOwnershipStatus::OwnerWithExclusiveUse,
-                FlagType::UnitedStatesFlag,
-            ))
-            .citation
-            .contains("§ 55.1-1820")
-        );
-        assert!(
-            check(&base(
-                Regime::Default,
-                PropertyOwnershipStatus::Renter,
-                FlagType::UnitedStatesFlag,
-            ))
-            .citation
-            .contains("no general landlord-tenant")
-        );
+        assert!(check(&base(
+            Regime::Federal,
+            PropertyOwnershipStatus::OwnerWithExclusiveUse,
+            FlagType::UnitedStatesFlag,
+        ))
+        .citation
+        .contains("4 U.S.C. § 5"));
+        assert!(check(&base(
+            Regime::Florida,
+            PropertyOwnershipStatus::Renter,
+            FlagType::UnitedStatesFlag,
+        ))
+        .citation
+        .contains("§ 720.304(2)"));
+        assert!(check(&base(
+            Regime::Virginia,
+            PropertyOwnershipStatus::OwnerWithExclusiveUse,
+            FlagType::UnitedStatesFlag,
+        ))
+        .citation
+        .contains("§ 55.1-1820"));
+        assert!(check(&base(
+            Regime::Default,
+            PropertyOwnershipStatus::Renter,
+            FlagType::UnitedStatesFlag,
+        ))
+        .citation
+        .contains("no general landlord-tenant"));
     }
 
     #[test]
     fn sibling_module_note_present_across_all_regimes() {
-        for &regime in &[Regime::Federal, Regime::Florida, Regime::Virginia, Regime::Default] {
+        for &regime in &[
+            Regime::Federal,
+            Regime::Florida,
+            Regime::Virginia,
+            Regime::Default,
+        ] {
             for &ownership in &[
                 PropertyOwnershipStatus::OwnerWithExclusiveUse,
                 PropertyOwnershipStatus::Renter,
             ] {
                 let r = check(&base(regime, ownership, FlagType::UnitedStatesFlag));
                 assert!(
-                    r.notes.iter().any(|n| n.contains("religious_display_doorpost")
-                        && n.contains("firearms_in_rental_unit")
-                        && n.contains("otard_antenna_installation")),
+                    r.notes
+                        .iter()
+                        .any(|n| n.contains("religious_display_doorpost")
+                            && n.contains("firearms_in_rental_unit")
+                            && n.contains("otard_antenna_installation")),
                     "{:?} {:?}: sibling-module note must be present",
                     regime,
                     ownership,

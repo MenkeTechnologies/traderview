@@ -27,18 +27,19 @@ pub struct TailRatioReport {
     pub n_observations: usize,
 }
 
-pub fn compute(
-    returns: &[f64],
-    upper_q: f64,
-    lower_q: f64,
-) -> Option<TailRatioReport> {
+pub fn compute(returns: &[f64], upper_q: f64, lower_q: f64) -> Option<TailRatioReport> {
     let n = returns.len();
-    if n < 20 || !upper_q.is_finite() || !lower_q.is_finite()
+    if n < 20
+        || !upper_q.is_finite()
+        || !lower_q.is_finite()
         || !(0.5..1.0).contains(&upper_q)
-        || !(0.0..0.5).contains(&lower_q) {
+        || !(0.0..0.5).contains(&lower_q)
+    {
         return None;
     }
-    if returns.iter().any(|x| !x.is_finite()) { return None; }
+    if returns.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let mut sorted = returns.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     let q = |p: f64| {
@@ -47,12 +48,18 @@ pub fn compute(
     };
     let right = q(upper_q);
     let left = q(lower_q);
-    if left.abs() <= 0.0 { return None; }
+    if left.abs() <= 0.0 {
+        return None;
+    }
     let tail = right.abs() / left.abs();
     // Profit factor: sum positive / sum |negative|.
     let pos_sum: f64 = returns.iter().filter(|r| **r > 0.0).sum();
     let neg_sum: f64 = returns.iter().filter(|r| **r < 0.0).map(|r| r.abs()).sum();
-    let pf = if neg_sum > 0.0 { pos_sum / neg_sum } else { f64::INFINITY };
+    let pf = if neg_sum > 0.0 {
+        pos_sum / neg_sum
+    } else {
+        f64::INFINITY
+    };
     let common_sense = pf * tail;
     Some(TailRatioReport {
         tail_ratio: tail,
@@ -95,8 +102,11 @@ mod tests {
     fn symmetric_returns_yield_tail_near_one() {
         let r: Vec<f64> = (-25..=25).map(|i| i as f64 * 0.001).collect();
         let result = compute(&r, 0.95, 0.05).unwrap();
-        assert!((result.tail_ratio - 1.0).abs() < 0.20,
-            "symmetric tail ratio ≈ 1, got {}", result.tail_ratio);
+        assert!(
+            (result.tail_ratio - 1.0).abs() < 0.20,
+            "symmetric tail ratio ≈ 1, got {}",
+            result.tail_ratio
+        );
     }
 
     #[test]
@@ -106,8 +116,11 @@ mod tests {
         let mut r = vec![-0.001_f64; 80];
         r.extend(vec![0.1_f64; 20]);
         let result = compute(&r, 0.95, 0.05).unwrap();
-        assert!(result.tail_ratio > 1.0,
-            "positive skew should yield tail > 1, got {}", result.tail_ratio);
+        assert!(
+            result.tail_ratio > 1.0,
+            "positive skew should yield tail > 1, got {}",
+            result.tail_ratio
+        );
     }
 
     #[test]
@@ -117,8 +130,11 @@ mod tests {
         let mut r = vec![-0.1_f64; 20];
         r.extend(vec![0.001_f64; 80]);
         let result = compute(&r, 0.95, 0.05).unwrap();
-        assert!(result.tail_ratio < 1.0,
-            "negative skew should yield tail < 1, got {}", result.tail_ratio);
+        assert!(
+            result.tail_ratio < 1.0,
+            "negative skew should yield tail < 1, got {}",
+            result.tail_ratio
+        );
     }
 
     #[test]

@@ -31,52 +31,56 @@ pub struct DivergenceEvent {
     pub recent_pivot_index: usize,
 }
 
-pub fn detect(
-    prices: &[f64],
-    indicator: &[Option<f64>],
-    lookback: usize,
-) -> Vec<DivergenceEvent> {
+pub fn detect(prices: &[f64], indicator: &[Option<f64>], lookback: usize) -> Vec<DivergenceEvent> {
     let n = prices.len();
     if n != indicator.len() || lookback == 0 || n < 2 * lookback + 1 {
         return Vec::new();
     }
     // Find pivot highs/lows on prices.
     let highs = find_pivots(prices, lookback, true);
-    let lows  = find_pivots(prices, lookback, false);
+    let lows = find_pivots(prices, lookback, false);
     let mut events = Vec::new();
     // Regular/Hidden bearish: pair adjacent price highs.
     for w in highs.windows(2) {
         let (prior, recent) = (w[0], w[1]);
-        let (Some(p_ind), Some(r_ind)) = (indicator[prior], indicator[recent]) else { continue };
+        let (Some(p_ind), Some(r_ind)) = (indicator[prior], indicator[recent]) else {
+            continue;
+        };
         let price_higher = prices[recent] > prices[prior];
         let ind_lower = r_ind < p_ind;
         if price_higher && ind_lower {
             events.push(DivergenceEvent {
                 kind: DivergenceKind::RegularBearish,
-                prior_pivot_index: prior, recent_pivot_index: recent,
+                prior_pivot_index: prior,
+                recent_pivot_index: recent,
             });
         } else if !price_higher && r_ind > p_ind {
             events.push(DivergenceEvent {
                 kind: DivergenceKind::HiddenBearish,
-                prior_pivot_index: prior, recent_pivot_index: recent,
+                prior_pivot_index: prior,
+                recent_pivot_index: recent,
             });
         }
     }
     // Regular/Hidden bullish: pair adjacent price lows.
     for w in lows.windows(2) {
         let (prior, recent) = (w[0], w[1]);
-        let (Some(p_ind), Some(r_ind)) = (indicator[prior], indicator[recent]) else { continue };
+        let (Some(p_ind), Some(r_ind)) = (indicator[prior], indicator[recent]) else {
+            continue;
+        };
         let price_lower = prices[recent] < prices[prior];
         let ind_higher = r_ind > p_ind;
         if price_lower && ind_higher {
             events.push(DivergenceEvent {
                 kind: DivergenceKind::RegularBullish,
-                prior_pivot_index: prior, recent_pivot_index: recent,
+                prior_pivot_index: prior,
+                recent_pivot_index: recent,
             });
         } else if !price_lower && r_ind < p_ind {
             events.push(DivergenceEvent {
                 kind: DivergenceKind::HiddenBullish,
-                prior_pivot_index: prior, recent_pivot_index: recent,
+                prior_pivot_index: prior,
+                recent_pivot_index: recent,
             });
         }
     }
@@ -92,7 +96,9 @@ fn find_pivots(values: &[f64], lookback: usize, find_high: bool) -> Vec<usize> {
         return out;
     }
     for i in lookback..(n - lookback) {
-        if !values[i].is_finite() { continue; }
+        if !values[i].is_finite() {
+            continue;
+        }
         let center = values[i];
         let mut is_pivot = true;
         for k in 1..=lookback {
@@ -104,10 +110,12 @@ fn find_pivots(values: &[f64], lookback: usize, find_high: bool) -> Vec<usize> {
             }
             if find_high {
                 if left >= center || right >= center {
-                    is_pivot = false; break;
+                    is_pivot = false;
+                    break;
                 }
             } else if left <= center || right <= center {
-                is_pivot = false; break;
+                is_pivot = false;
+                break;
             }
         }
         if is_pivot {
@@ -156,7 +164,7 @@ mod tests {
         p[18] = 110.0;
         let mut ind: Vec<Option<f64>> = (0..25).map(|_| Some(50.0)).collect();
         ind[8] = Some(80.0);
-        ind[18] = Some(60.0);    // lower indicator high
+        ind[18] = Some(60.0); // lower indicator high
         let ev = detect(&p, &ind, 3);
         assert!(ev.iter().any(|e| e.kind == DivergenceKind::RegularBearish));
     }
@@ -168,7 +176,7 @@ mod tests {
         p[18] = 90.0;
         let mut ind: Vec<Option<f64>> = (0..25).map(|_| Some(50.0)).collect();
         ind[8] = Some(20.0);
-        ind[18] = Some(30.0);    // higher indicator low
+        ind[18] = Some(30.0); // higher indicator low
         let ev = detect(&p, &ind, 3);
         assert!(ev.iter().any(|e| e.kind == DivergenceKind::RegularBullish));
     }

@@ -222,10 +222,8 @@ pub fn compute(input: &Section168gInput) -> Section168gResult {
             .unwrap_or(7);
         half_year_first_or_last(r.year_of_life, gds_total) / gds_life
     };
-    r.gds_comparison_deduction =
-        (input.depreciable_basis * gds_year_rate).round_dp(2);
-    r.annual_depreciation_difference =
-        r.gds_comparison_deduction - r.annual_ads_deduction;
+    r.gds_comparison_deduction = (input.depreciable_basis * gds_year_rate).round_dp(2);
+    r.annual_depreciation_difference = r.gds_comparison_deduction - r.annual_ads_deduction;
 
     r.note = format!(
         "ADS year {}: ${} ({}y straight-line, {} convention). GDS comparison ${} → ${} per-year deduction sacrificed for §163(j) headroom.",
@@ -267,10 +265,8 @@ pub struct Section163jTradeoffResult {
 pub fn analyze_tradeoff(input: &Section163jTradeoffInput) -> Section163jTradeoffResult {
     let mut r = Section163jTradeoffResult::default();
     let rate = input.marginal_federal_rate.max(Decimal::ZERO);
-    r.annual_depreciation_tax_loss =
-        (input.annual_depreciation_sacrificed * rate).round_dp(2);
-    r.annual_interest_tax_gain =
-        (input.annual_interest_disallowed_under_163j * rate).round_dp(2);
+    r.annual_depreciation_tax_loss = (input.annual_depreciation_sacrificed * rate).round_dp(2);
+    r.annual_interest_tax_gain = (input.annual_interest_disallowed_under_163j * rate).round_dp(2);
     r.net_annual_benefit = r.annual_interest_tax_gain - r.annual_depreciation_tax_loss;
     r.election_recommended = r.net_annual_benefit > Decimal::ZERO;
     r.note = if r.election_recommended {
@@ -298,7 +294,7 @@ mod tests {
             property_class: AdsPropertyClass::Residential30,
             placed_in_service_year: 2024,
             placed_in_service_month: 1, // January
-            tax_year: 2025, // year 2 — full year
+            tax_year: 2025,             // year 2 — full year
         }
     }
 
@@ -430,11 +426,23 @@ mod tests {
 
     #[test]
     fn recovery_period_helper_matches_class() {
-        assert_eq!(AdsPropertyClass::Residential30.recovery_period_years(), dec!(30));
-        assert_eq!(AdsPropertyClass::Commercial40.recovery_period_years(), dec!(40));
-        assert_eq!(AdsPropertyClass::QualifiedImprovementProperty20.recovery_period_years(), dec!(20));
+        assert_eq!(
+            AdsPropertyClass::Residential30.recovery_period_years(),
+            dec!(30)
+        );
+        assert_eq!(
+            AdsPropertyClass::Commercial40.recovery_period_years(),
+            dec!(40)
+        );
+        assert_eq!(
+            AdsPropertyClass::QualifiedImprovementProperty20.recovery_period_years(),
+            dec!(20)
+        );
         assert_eq!(AdsPropertyClass::Personal5.recovery_period_years(), dec!(5));
-        assert_eq!(AdsPropertyClass::Residential40Legacy.recovery_period_years(), dec!(40));
+        assert_eq!(
+            AdsPropertyClass::Residential40Legacy.recovery_period_years(),
+            dec!(40)
+        );
     }
 
     #[test]

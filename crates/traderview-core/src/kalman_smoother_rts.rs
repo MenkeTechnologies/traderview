@@ -30,15 +30,28 @@ pub struct Report {
 }
 
 pub fn compute(
-    observations: &[f64], process_noise_q: f64, obs_noise_r: f64,
-    x0: f64, p0: f64,
+    observations: &[f64],
+    process_noise_q: f64,
+    obs_noise_r: f64,
+    x0: f64,
+    p0: f64,
 ) -> Option<Report> {
     let n = observations.len();
-    if n == 0 { return None; }
-    if !process_noise_q.is_finite() || !obs_noise_r.is_finite() { return None; }
-    if !x0.is_finite() || !p0.is_finite() { return None; }
-    if process_noise_q < 0.0 || obs_noise_r <= 0.0 || p0 < 0.0 { return None; }
-    if observations.iter().any(|y| !y.is_finite()) { return None; }
+    if n == 0 {
+        return None;
+    }
+    if !process_noise_q.is_finite() || !obs_noise_r.is_finite() {
+        return None;
+    }
+    if !x0.is_finite() || !p0.is_finite() {
+        return None;
+    }
+    if process_noise_q < 0.0 || obs_noise_r <= 0.0 || p0 < 0.0 {
+        return None;
+    }
+    if observations.iter().any(|y| !y.is_finite()) {
+        return None;
+    }
     // Forward pass: standard 1-D Kalman.
     let mut x_pred = vec![0.0_f64; n];
     let mut p_pred = vec![0.0_f64; n];
@@ -48,7 +61,7 @@ pub fn compute(
     let mut p = p0;
     for t in 0..n {
         // Predict.
-        let xp = x;                  // F = 1
+        let xp = x; // F = 1
         let pp = p + process_noise_q;
         x_pred[t] = xp;
         p_pred[t] = pp;
@@ -57,7 +70,9 @@ pub fn compute(
         let k = pp / s;
         x = xp + k * (observations[t] - xp);
         p = (1.0 - k) * pp;
-        if p < 0.0 { p = 0.0; }
+        if p < 0.0 {
+            p = 0.0;
+        }
         x_filt[t] = x;
         p_filt[t] = p;
     }
@@ -74,7 +89,9 @@ pub fn compute(
         let j = p_filt[t] / p_next_pred;
         x_smooth[t] = x_filt[t] + j * (x_smooth[t + 1] - x_pred[t + 1]);
         p_smooth[t] = p_filt[t] + j * j * (p_smooth[t + 1] - p_next_pred);
-        if p_smooth[t] < 0.0 { p_smooth[t] = 0.0; }
+        if p_smooth[t] < 0.0 {
+            p_smooth[t] = 0.0;
+        }
     }
     Some(Report {
         smoothed_state: x_smooth,
@@ -101,12 +118,16 @@ mod tests {
     #[test]
     fn endpoint_equals_filtered_endpoint() {
         // RTS smoother converges to the forward filter at the last sample.
-        let y: Vec<f64> = (0..30).map(|i| (i as f64 * 0.2).sin() + 0.01 * i as f64).collect();
+        let y: Vec<f64> = (0..30)
+            .map(|i| (i as f64 * 0.2).sin() + 0.01 * i as f64)
+            .collect();
         let r = compute(&y, 1e-3, 1e-2, 0.0, 1.0).unwrap();
         // Run a manual forward pass to get the filtered endpoint.
-        let mut x = 0.0; let mut p = 1.0;
+        let mut x = 0.0;
+        let mut p = 1.0;
         for &obs in &y {
-            let xp = x; let pp = p + 1e-3;
+            let xp = x;
+            let pp = p + 1e-3;
             let s = pp + 1e-2;
             let k = pp / s;
             x = xp + k * (obs - xp);

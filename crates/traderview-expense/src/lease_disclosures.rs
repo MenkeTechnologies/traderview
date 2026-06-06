@@ -79,9 +79,8 @@ pub struct DisclosureRule {
 }
 
 fn rules() -> &'static [DisclosureRule] {
-    static R: once_cell::sync::Lazy<Vec<DisclosureRule>> =
-        once_cell::sync::Lazy::new(|| {
-            vec![
+    static R: once_cell::sync::Lazy<Vec<DisclosureRule>> = once_cell::sync::Lazy::new(|| {
+        vec![
                 // ─── Federal Title X — applies in every state ──────────
                 DisclosureRule {
                     state: "*",
@@ -348,7 +347,7 @@ fn rules() -> &'static [DisclosureRule] {
                     },
                 },
             ]
-        });
+    });
     &R
 }
 
@@ -418,9 +417,7 @@ fn applies(rule: &DisclosureRule, facts: &PropertyFacts) -> bool {
 pub fn required_for(input: &DisclosuresRequiredInput) -> DisclosuresRequiredReport {
     let upper = input.state.to_uppercase();
     let mut r = DisclosuresRequiredReport {
-        state_recognized: rules()
-            .iter()
-            .any(|rule| rule.state == upper.as_str()),
+        state_recognized: rules().iter().any(|rule| rule.state == upper.as_str()),
         ..DisclosuresRequiredReport::default()
     };
 
@@ -435,7 +432,11 @@ pub fn required_for(input: &DisclosuresRequiredInput) -> DisclosuresRequiredRepo
         }
         r.required_disclosures.push(DisclosureRequirement {
             disclosure: rule.disclosure,
-            state_or_federal: if federal { "federal".into() } else { rule.state.into() },
+            state_or_federal: if federal {
+                "federal".into()
+            } else {
+                rule.state.into()
+            },
             max_civil_penalty_usd: rule.max_civil_penalty_usd,
             statute: rule.citation.statute.into(),
             source: rule.citation.source.into(),

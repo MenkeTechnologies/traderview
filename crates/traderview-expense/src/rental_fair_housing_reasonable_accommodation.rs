@@ -316,9 +316,7 @@ fn state_law_floor_citation(jurisdiction: Jurisdiction) -> &'static str {
         Jurisdiction::NewJersey => {
             "NJ LAD N.J.S.A. 10:5-12.4 reasonable accommodation duty; NJ DCR enforcement."
         }
-        Jurisdiction::Massachusetts => {
-            "MA Gen. L. ch. 151B § 4(7A) reasonable accommodation duty."
-        }
+        Jurisdiction::Massachusetts => "MA Gen. L. ch. 151B § 4(7A) reasonable accommodation duty.",
         Jurisdiction::FederalFhaOnlyPost2026EsaReversal => {
             "Federal floor under 42 U.S.C. § 3604(f)(3)(B) + HUD enforcement post May 22, \
              2026 reversal. ESA-specific enforcement narrowed."
@@ -336,12 +334,9 @@ mod tests {
     fn base() -> Input {
         Input {
             jurisdiction: Jurisdiction::California,
-            accommodation_request_type:
-                AccommodationRequestType::EmotionalSupportAnimal,
-            disability_nexus_status:
-                DisabilityNexusStatus::DisabilityAndNexusDocumented,
-            landlord_response_status:
-                LandlordResponseStatus::GrantedAccommodationOrModification,
+            accommodation_request_type: AccommodationRequestType::EmotionalSupportAnimal,
+            disability_nexus_status: DisabilityNexusStatus::DisabilityAndNexusDocumented,
+            landlord_response_status: LandlordResponseStatus::GrantedAccommodationOrModification,
             tenant_actual_damages_cents: 5_000_00,
         }
     }
@@ -385,8 +380,7 @@ mod tests {
     #[test]
     fn pet_fee_on_service_animal_per_se_violation() {
         let mut input = base();
-        input.accommodation_request_type =
-            AccommodationRequestType::ServiceAnimalAdaStandard;
+        input.accommodation_request_type = AccommodationRequestType::ServiceAnimalAdaStandard;
         input.landlord_response_status =
             LandlordResponseStatus::ImposedPetFeeOrDepositOnAssistanceAnimal;
         let output = check(&input);
@@ -399,8 +393,7 @@ mod tests {
     #[test]
     fn restoration_demanded_normal_wear_modification_violation() {
         let mut input = base();
-        input.accommodation_request_type =
-            AccommodationRequestType::PhysicalModificationToDwelling;
+        input.accommodation_request_type = AccommodationRequestType::PhysicalModificationToDwelling;
         input.landlord_response_status =
             LandlordResponseStatus::RequiredRestorationOfNormalWearModification;
         let output = check(&input);
@@ -442,8 +435,7 @@ mod tests {
     fn federal_only_esa_post_2026_reversal_state_floor_note() {
         let mut input = base();
         input.jurisdiction = Jurisdiction::FederalFhaOnlyPost2026EsaReversal;
-        input.accommodation_request_type =
-            AccommodationRequestType::EmotionalSupportAnimal;
+        input.accommodation_request_type = AccommodationRequestType::EmotionalSupportAnimal;
         input.landlord_response_status =
             LandlordResponseStatus::EngagedInInteractiveDialogueProposedAlternative;
         let output = check(&input);
@@ -491,8 +483,7 @@ mod tests {
     #[test]
     fn service_animal_request_separately_protected() {
         let mut input = base();
-        input.accommodation_request_type =
-            AccommodationRequestType::ServiceAnimalAdaStandard;
+        input.accommodation_request_type = AccommodationRequestType::ServiceAnimalAdaStandard;
         let output = check(&input);
         assert_eq!(output.severity, Severity::CompliantAccommodationGranted);
     }
@@ -500,8 +491,7 @@ mod tests {
     #[test]
     fn live_in_aide_request_compliant_when_granted() {
         let mut input = base();
-        input.accommodation_request_type =
-            AccommodationRequestType::LiveInAideCaregiverSupport;
+        input.accommodation_request_type = AccommodationRequestType::LiveInAideCaregiverSupport;
         let output = check(&input);
         assert_eq!(output.severity, Severity::CompliantAccommodationGranted);
     }

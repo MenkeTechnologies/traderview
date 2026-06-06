@@ -22,7 +22,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct HikkakeReport {
@@ -38,8 +42,13 @@ pub fn compute(bars: &[Bar], confirm_bars: usize) -> HikkakeReport {
         short_signal: vec![false; n],
         confirm_bars,
     };
-    if confirm_bars < 1 || n < confirm_bars + 3 { return report; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if confirm_bars < 1 || n < confirm_bars + 3 {
+        return report;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return report;
     }
     for i in 2..(n - confirm_bars) {
@@ -47,7 +56,9 @@ pub fn compute(bars: &[Bar], confirm_bars: usize) -> HikkakeReport {
         let inside = bars[i - 1];
         let trigger = bars[i];
         // Inside-bar requirement.
-        if !(inside.high < mother.high && inside.low > mother.low) { continue; }
+        if !(inside.high < mother.high && inside.low > mother.low) {
+            continue;
+        }
         // Downside false break → look for upside reclaim.
         if trigger.close < inside.low {
             for k in 1..=confirm_bars {
@@ -74,7 +85,13 @@ pub fn compute(bars: &[Bar], confirm_bars: usize) -> HikkakeReport {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {
@@ -124,8 +141,8 @@ mod tests {
         let bars = vec![
             b(110.0, 100.0, 105.0),
             b(108.0, 102.0, 105.0),
-            b(110.5, 104.0, 110.0),    // upside false break (close > inside.high)
-            b(105.0, 100.0, 101.0),     // downside reclaim (close < inside.low)
+            b(110.5, 104.0, 110.0), // upside false break (close > inside.high)
+            b(105.0, 100.0, 101.0), // downside reclaim (close < inside.low)
             b(101.0, 95.0, 96.0),
             b(96.0, 90.0, 91.0),
         ];

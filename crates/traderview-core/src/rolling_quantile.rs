@@ -14,11 +14,12 @@
 pub fn compute(series: &[f64], period: usize, q: f64) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period < 1 || n < period
-        || !q.is_finite() || !(0.0..=1.0).contains(&q) {
+    if period < 1 || n < period || !q.is_finite() || !(0.0..=1.0).contains(&q) {
         return out;
     }
-    if series.iter().any(|x| !x.is_finite()) { return out; }
+    if series.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     for (i, slot) in out.iter_mut().enumerate().skip(period - 1) {
         let win = &series[i + 1 - period..=i];
         let mut sorted: Vec<f64> = win.to_vec();
@@ -30,8 +31,12 @@ pub fn compute(series: &[f64], period: usize, q: f64) -> Vec<Option<f64>> {
 
 fn quantile_type7(sorted: &[f64], q: f64) -> f64 {
     let n = sorted.len();
-    if n == 0 { return f64::NAN; }
-    if n == 1 { return sorted[0]; }
+    if n == 0 {
+        return f64::NAN;
+    }
+    if n == 1 {
+        return sorted[0];
+    }
     let h = q * (n as f64 - 1.0);
     let lo = h.floor() as usize;
     let hi = (lo + 1).min(n - 1);

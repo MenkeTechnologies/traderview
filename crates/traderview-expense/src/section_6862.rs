@@ -461,7 +461,10 @@ mod tests {
     #[test]
     fn note_pins_section_a_immediately_due_and_payable() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("IMMEDIATELY DUE AND PAYABLE")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("IMMEDIATELY DUE AND PAYABLE")));
     }
 
     #[test]
@@ -592,10 +595,7 @@ mod tests {
             i.tax_category = chapter;
             let r = check(&i);
             assert!(!r.section_6862_applies);
-            assert!(r
-                .failure_reasons
-                .iter()
-                .any(|f| f.contains("§ 6861")));
+            assert!(r.failure_reasons.iter().any(|f| f.contains("§ 6861")));
         }
     }
 }

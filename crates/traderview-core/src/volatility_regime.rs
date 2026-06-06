@@ -60,25 +60,39 @@ pub fn classify(current_vol: f64, history: &[f64]) -> VolRegimeReport {
     // Compute percentile as the fraction of history strictly below current_vol.
     let lower = history.iter().filter(|&&h| h < current_vol).count() as f64;
     let percentile = lower / history.len() as f64;
-    let regime = if percentile >= 0.95      { VolRegime::Crisis }
-                 else if percentile >= 0.75 { VolRegime::Elevated }
-                 else if percentile <= 0.25 { VolRegime::Calm }
-                 else                       { VolRegime::Normal };
+    let regime = if percentile >= 0.95 {
+        VolRegime::Crisis
+    } else if percentile >= 0.75 {
+        VolRegime::Elevated
+    } else if percentile <= 0.25 {
+        VolRegime::Calm
+    } else {
+        VolRegime::Normal
+    };
     let mult = match regime {
-        VolRegime::Calm     => 1.5,
-        VolRegime::Normal   => 1.0,
+        VolRegime::Calm => 1.5,
+        VolRegime::Normal => 1.0,
         VolRegime::Elevated => 0.5,
-        VolRegime::Crisis   => 0.0,
+        VolRegime::Crisis => 0.0,
     };
     let note = match regime {
-        VolRegime::Calm     => format!("vol at {:.0}th percentile — historically calm", percentile * 100.0),
-        VolRegime::Normal   => format!("vol at {:.0}th percentile — normal regime", percentile * 100.0),
+        VolRegime::Calm => format!(
+            "vol at {:.0}th percentile — historically calm",
+            percentile * 100.0
+        ),
+        VolRegime::Normal => format!(
+            "vol at {:.0}th percentile — normal regime",
+            percentile * 100.0
+        ),
         VolRegime::Elevated => format!("vol at {:.0}th percentile — size down", percentile * 100.0),
-        VolRegime::Crisis   => format!("vol at {:.0}th percentile — step aside", percentile * 100.0),
+        VolRegime::Crisis => format!("vol at {:.0}th percentile — step aside", percentile * 100.0),
     };
     VolRegimeReport {
-        regime, percentile, suggested_size_multiplier: mult,
-        current_vol, note,
+        regime,
+        percentile,
+        suggested_size_multiplier: mult,
+        current_vol,
+        note,
     }
 }
 
@@ -99,8 +113,12 @@ mod tests {
         let hist: Vec<f64> = (0..100).map(|i| i as f64 / 100.0).collect();
         // 0.75 is at the 75th percentile within 0..=0.99.
         let r = classify(0.75, &hist);
-        assert!(matches!(r.regime, VolRegime::Elevated),
-            "got {:?} pct={}", r.regime, r.percentile);
+        assert!(
+            matches!(r.regime, VolRegime::Elevated),
+            "got {:?} pct={}",
+            r.regime,
+            r.percentile
+        );
         assert_eq!(r.suggested_size_multiplier, 0.5);
     }
 

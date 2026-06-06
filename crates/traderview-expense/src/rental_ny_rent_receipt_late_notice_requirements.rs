@@ -132,7 +132,8 @@ pub fn check(input: &Input) -> Output {
         "NY RPL § 235-e(a) (written receipt — five required elements)".to_string(),
         "NY RPL § 235-e(b) (cash payment recordkeeping — 3 years)".to_string(),
         "NY RPL § 235-e(d) (HSTPA 2019 — 5-day late rent notice by certified mail)".to_string(),
-        "NY Housing Stability and Tenant Protection Act of 2019 (HSTPA, Laws of 2019, c. 36)".to_string(),
+        "NY Housing Stability and Tenant Protection Act of 2019 (HSTPA, Laws of 2019, c. 36)"
+            .to_string(),
         "NY RPAPL § 711 (nonpayment proceeding — affirmative defense)".to_string(),
         "NY State Senate — RPL § 235-E Duty to provide a written receipt".to_string(),
         "NY State Bar Association — HSTPA Part III guidance".to_string(),
@@ -174,9 +175,7 @@ pub fn check(input: &Input) -> Output {
         };
     }
 
-    if requires_receipt
-        && input.payment_received_personally
-        && !input.receipt_provided_immediately
+    if requires_receipt && input.payment_received_personally && !input.receipt_provided_immediately
     {
         notes.push("Personally-transmitted rent payment — receipt not provided immediately as required by § 235-e(a).".to_string());
         return Output {
@@ -339,10 +338,7 @@ mod tests {
         let mut i = base_compliant_cash_personal();
         i.cash_payment_records_retained_years = 2;
         let out = check(&i);
-        assert_eq!(
-            out.severity,
-            Severity::ViolationRecordsNotMaintained3Years
-        );
+        assert_eq!(out.severity, Severity::ViolationRecordsNotMaintained3Years);
     }
 
     #[test]

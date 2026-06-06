@@ -35,22 +35,36 @@ pub struct DividendYieldCurveReport {
 }
 
 pub fn compute(observations: &[DividendObservation]) -> Option<DividendYieldCurveReport> {
-    if observations.is_empty() { return None; }
-    if observations.iter().any(|o| !o.tenor_years.is_finite() || o.tenor_years <= 0.0
-        || !o.dividend_amount.is_finite() || o.dividend_amount < 0.0
-        || !o.underlying_spot.is_finite() || o.underlying_spot <= 0.0) {
+    if observations.is_empty() {
         return None;
     }
-    let mut curve: Vec<YieldPoint> = observations.iter().map(|o| {
-        YieldPoint {
+    if observations.iter().any(|o| {
+        !o.tenor_years.is_finite()
+            || o.tenor_years <= 0.0
+            || !o.dividend_amount.is_finite()
+            || o.dividend_amount < 0.0
+            || !o.underlying_spot.is_finite()
+            || o.underlying_spot <= 0.0
+    }) {
+        return None;
+    }
+    let mut curve: Vec<YieldPoint> = observations
+        .iter()
+        .map(|o| YieldPoint {
             tenor_years: o.tenor_years,
             yield_pct: o.dividend_amount / (o.underlying_spot * o.tenor_years) * 100.0,
-        }
-    }).collect();
-    curve.sort_by(|a, b| a.tenor_years.partial_cmp(&b.tenor_years).unwrap_or(std::cmp::Ordering::Equal));
+        })
+        .collect();
+    curve.sort_by(|a, b| {
+        a.tenor_years
+            .partial_cmp(&b.tenor_years)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     let slope = if curve.len() >= 2 {
         Some(curve.last().unwrap().yield_pct - curve[0].yield_pct)
-    } else { None };
+    } else {
+        None
+    };
     let curvature = if curve.len() >= 3 {
         let lo = curve[0];
         let hi = curve.last().unwrap();
@@ -59,8 +73,14 @@ pub fn compute(observations: &[DividendObservation]) -> Option<DividendYieldCurv
         let t = (mid.tenor_years - lo.tenor_years) / (hi.tenor_years - lo.tenor_years);
         let linear_interp = lo.yield_pct + t * (hi.yield_pct - lo.yield_pct);
         Some(mid.yield_pct - linear_interp)
-    } else { None };
-    Some(DividendYieldCurveReport { curve, slope, curvature })
+    } else {
+        None
+    };
+    Some(DividendYieldCurveReport {
+        curve,
+        slope,
+        curvature,
+    })
 }
 
 #[cfg(test)]
@@ -68,11 +88,17 @@ mod tests {
     use super::*;
 
     fn d(tenor: f64, div: f64, spot: f64) -> DividendObservation {
-        DividendObservation { tenor_years: tenor, dividend_amount: div, underlying_spot: spot }
+        DividendObservation {
+            tenor_years: tenor,
+            dividend_amount: div,
+            underlying_spot: spot,
+        }
     }
 
     #[test]
-    fn empty_returns_none() { assert!(compute(&[]).is_none()); }
+    fn empty_returns_none() {
+        assert!(compute(&[]).is_none());
+    }
 
     #[test]
     fn invalid_observation_returns_none() {
@@ -92,11 +118,7 @@ mod tests {
 
     #[test]
     fn curve_sorted_by_tenor() {
-        let obs = vec![
-            d(5.0, 10.0, 100.0),
-            d(1.0, 2.0, 100.0),
-            d(3.0, 6.0, 100.0),
-        ];
+        let obs = vec![d(5.0, 10.0, 100.0), d(1.0, 2.0, 100.0), d(3.0, 6.0, 100.0)];
         let r = compute(&obs).unwrap();
         for w in r.curve.windows(2) {
             assert!(w[0].tenor_years <= w[1].tenor_years);
@@ -106,8 +128,8 @@ mod tests {
     #[test]
     fn upward_sloping_curve_yields_positive_slope() {
         let obs = vec![
-            d(1.0, 1.0, 100.0),    // 1% yield
-            d(5.0, 15.0, 100.0),   // 3% yield
+            d(1.0, 1.0, 100.0),  // 1% yield
+            d(5.0, 15.0, 100.0), // 3% yield
         ];
         let r = compute(&obs).unwrap();
         assert!(r.slope.unwrap() > 0.0);

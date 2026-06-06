@@ -30,7 +30,11 @@ pub struct MeanRevConfig {
 
 impl Default for MeanRevConfig {
     fn default() -> Self {
-        Self { window: 20, extension_z: 2.0, min_cross_density: 0.15 }
+        Self {
+            window: 20,
+            extension_z: 2.0,
+            min_cross_density: 0.15,
+        }
     }
 }
 
@@ -70,13 +74,19 @@ pub fn analyze(closes: &[f64], cfg: &MeanRevConfig) -> MeanRevReport {
     let var: f64 = slice.iter().map(|c| (c - mean).powi(2)).sum::<f64>() / cfg.window as f64;
     let stdev = var.sqrt();
     let latest = *slice.last().expect("window > 0");
-    let z = if stdev > 0.0 { (latest - mean) / stdev } else { 0.0 };
+    let z = if stdev > 0.0 {
+        (latest - mean) / stdev
+    } else {
+        0.0
+    };
     // Count mean-crossings within the window.
     let mut crosses = 0usize;
     let mut prev_above = slice[0] > mean;
     for &c in &slice[1..] {
         let above = c > mean;
-        if above != prev_above { crosses += 1; }
+        if above != prev_above {
+            crosses += 1;
+        }
         prev_above = above;
     }
     let cross_density = crosses as f64 / cfg.window as f64;
@@ -92,18 +102,30 @@ pub fn analyze(closes: &[f64], cfg: &MeanRevConfig) -> MeanRevReport {
         Verdict::Neutral
     };
     let note = match verdict {
-        Verdict::OverboughtMeanReversion =>
-            format!("z={:.2} ≥ {:.2} in a mean-reverting series — fade longs", z, cfg.extension_z),
-        Verdict::OversoldMeanReversion =>
-            format!("z={:.2} ≤ -{:.2} — fade shorts", z, cfg.extension_z),
-        Verdict::Trending =>
-            format!("cross density {:.2} < {:.2} — series is trending, don't fade", cross_density, cfg.min_cross_density),
-        Verdict::Neutral =>
-            format!("z={:.2} within ±{:.2} — no extension signal", z, cfg.extension_z),
+        Verdict::OverboughtMeanReversion => format!(
+            "z={:.2} ≥ {:.2} in a mean-reverting series — fade longs",
+            z, cfg.extension_z
+        ),
+        Verdict::OversoldMeanReversion => {
+            format!("z={:.2} ≤ -{:.2} — fade shorts", z, cfg.extension_z)
+        }
+        Verdict::Trending => format!(
+            "cross density {:.2} < {:.2} — series is trending, don't fade",
+            cross_density, cfg.min_cross_density
+        ),
+        Verdict::Neutral => format!(
+            "z={:.2} within ±{:.2} — no extension signal",
+            z, cfg.extension_z
+        ),
     };
     MeanRevReport {
-        verdict, latest_z: z, mean, stdev,
-        mean_cross_count: crosses, mean_cross_density: cross_density, note,
+        verdict,
+        latest_z: z,
+        mean,
+        stdev,
+        mean_cross_count: crosses,
+        mean_cross_density: cross_density,
+        note,
     }
 }
 
@@ -123,30 +145,52 @@ mod tests {
         // Monotonic uptrend → 0 mean crosses in the window → trending.
         let v: Vec<f64> = (1..=25).map(|i| i as f64).collect();
         let r = analyze(&v, &MeanRevConfig::default());
-        assert!(matches!(r.verdict, Verdict::Trending),
-            "monotonic series must classify as Trending, got {:?}", r.verdict);
-        assert_eq!(r.mean_cross_count, 1, "monotonic = exactly 1 cross at the midpoint of the window");
+        assert!(
+            matches!(r.verdict, Verdict::Trending),
+            "monotonic series must classify as Trending, got {:?}",
+            r.verdict
+        );
+        assert_eq!(
+            r.mean_cross_count, 1,
+            "monotonic = exactly 1 cross at the midpoint of the window"
+        );
     }
 
     #[test]
     fn oscillating_series_with_extreme_latest_is_overbought() {
         // Saw-tooth oscillation gives high cross density. Force the LAST close
         // to be far above the mean for an OverboughtMeanReversion verdict.
-        let mut v: Vec<f64> = (0..20).map(|i| if i % 2 == 0 { 1.0 } else { -1.0 }).collect();
+        let mut v: Vec<f64> = (0..20)
+            .map(|i| if i % 2 == 0 { 1.0 } else { -1.0 })
+            .collect();
         // Push the last sample to +5σ above the rolling mean (~0).
         v.push(10.0);
-        let cfg = MeanRevConfig { window: 21, extension_z: 2.0, min_cross_density: 0.15 };
+        let cfg = MeanRevConfig {
+            window: 21,
+            extension_z: 2.0,
+            min_cross_density: 0.15,
+        };
         let r = analyze(&v, &cfg);
-        assert!(matches!(r.verdict, Verdict::OverboughtMeanReversion),
+        assert!(
+            matches!(r.verdict, Verdict::OverboughtMeanReversion),
             "expected OverboughtMeanReversion, got {:?} (z={}, cross={})",
-            r.verdict, r.latest_z, r.mean_cross_density);
+            r.verdict,
+            r.latest_z,
+            r.mean_cross_density
+        );
     }
 
     #[test]
     fn oscillating_with_extreme_low_is_oversold() {
-        let mut v: Vec<f64> = (0..20).map(|i| if i % 2 == 0 { 1.0 } else { -1.0 }).collect();
+        let mut v: Vec<f64> = (0..20)
+            .map(|i| if i % 2 == 0 { 1.0 } else { -1.0 })
+            .collect();
         v.push(-10.0);
-        let cfg = MeanRevConfig { window: 21, extension_z: 2.0, min_cross_density: 0.15 };
+        let cfg = MeanRevConfig {
+            window: 21,
+            extension_z: 2.0,
+            min_cross_density: 0.15,
+        };
         let r = analyze(&v, &cfg);
         assert!(matches!(r.verdict, Verdict::OversoldMeanReversion));
     }
@@ -154,10 +198,15 @@ mod tests {
     #[test]
     fn within_bounds_is_neutral() {
         // Oscillating ±1 around 0, last value near the mean.
-        let v: Vec<f64> = (0..20).map(|i| if i % 2 == 0 { 0.5 } else { -0.5 }).collect();
+        let v: Vec<f64> = (0..20)
+            .map(|i| if i % 2 == 0 { 0.5 } else { -0.5 })
+            .collect();
         let r = analyze(&v, &MeanRevConfig::default());
-        assert!(matches!(r.verdict, Verdict::Neutral),
-            "small z should be Neutral, got {:?}", r.verdict);
+        assert!(
+            matches!(r.verdict, Verdict::Neutral),
+            "small z should be Neutral, got {:?}",
+            r.verdict
+        );
         assert!(r.latest_z.abs() < 2.0);
     }
 
@@ -168,7 +217,10 @@ mod tests {
         // Constant series has zero variance → z=0 → Neutral verdict.
         assert_eq!(r.latest_z, 0.0);
         // Cross count = 0 → cross_density = 0 → Trending verdict.
-        assert!(matches!(r.verdict, Verdict::Trending),
-            "constant series should be Trending (0 crosses), got {:?}", r.verdict);
+        assert!(
+            matches!(r.verdict, Verdict::Trending),
+            "constant series should be Trending (0 crosses), got {:?}",
+            r.verdict
+        );
     }
 }

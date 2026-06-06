@@ -152,10 +152,14 @@ pub fn check(input: &Section1293Input) -> Section1293Result {
 
     let pro_rata_factor = input.pro_rata_share_bps as u64;
 
-    let ordinary_income_inclusion_cents =
-        input.fund_ordinary_earnings_cents.saturating_mul(pro_rata_factor) / 10_000;
-    let long_term_capital_gain_inclusion_cents =
-        input.fund_net_capital_gain_cents.saturating_mul(pro_rata_factor) / 10_000;
+    let ordinary_income_inclusion_cents = input
+        .fund_ordinary_earnings_cents
+        .saturating_mul(pro_rata_factor)
+        / 10_000;
+    let long_term_capital_gain_inclusion_cents = input
+        .fund_net_capital_gain_cents
+        .saturating_mul(pro_rata_factor)
+        / 10_000;
     let total_inclusion_cents =
         ordinary_income_inclusion_cents.saturating_add(long_term_capital_gain_inclusion_cents);
 
@@ -163,9 +167,7 @@ pub fn check(input: &Section1293Input) -> Section1293Result {
         .starting_basis_cents
         .saturating_add(total_inclusion_cents);
 
-    let pti_distribution_cents = input
-        .distribution_received_cents
-        .min(total_inclusion_cents);
+    let pti_distribution_cents = input.distribution_received_cents.min(total_inclusion_cents);
 
     let basis_after_pti_distribution_cents =
         basis_after_inclusion_cents.saturating_sub(pti_distribution_cents);
@@ -262,9 +264,12 @@ mod tests {
         i.pfic_annual_information_statement_provided = false;
         let r = check(&i);
         assert!(!r.character_preserved);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("Treas. Reg. § 1.1295-1(g)")
-            && f.contains("PFIC Annual Information Statement")
-            && f.contains("§ 1293(a)(1)(B)")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("Treas. Reg. § 1.1295-1(g)")
+                && f.contains("PFIC Annual Information Statement")
+                && f.contains("§ 1293(a)(1)(B)")));
     }
 
     #[test]
@@ -359,7 +364,9 @@ mod tests {
         assert!(r.citation.contains("§ 951"));
         assert!(r.citation.contains("§ 1(h)(11)"));
         assert!(r.citation.contains("§ 1298(f)"));
-        assert!(r.citation.contains("Treas. Reg. § 1.1293-1 through § 1.1293-3"));
+        assert!(r
+            .citation
+            .contains("Treas. Reg. § 1.1293-1 through § 1.1293-3"));
         assert!(r.citation.contains("Treas. Reg. § 1.1295-1(g)"));
         assert!(r.citation.contains("Form 8621"));
         assert!(r.citation.contains("Tax Reform Act of 1986 § 1235"));
@@ -449,9 +456,12 @@ mod tests {
     #[test]
     fn note_pins_1295_1g_information_statement() {
         let r = check(&baseline_qef());
-        assert!(r.notes.iter().any(|n| n.contains("Treas. Reg. § 1.1295-1(g)")
-            && n.contains("PFIC Annual Information Statement")
-            && n.contains("§ 1293(a)(1)(B) LTCG character preservation")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Treas. Reg. § 1.1295-1(g)")
+                && n.contains("PFIC Annual Information Statement")
+                && n.contains("§ 1293(a)(1)(B) LTCG character preservation")));
     }
 
     #[test]
@@ -484,10 +494,13 @@ mod tests {
     #[test]
     fn note_pins_1986_tax_reform_origin() {
         let r = check(&baseline_qef());
-        assert!(r.notes.iter().any(|n| n.contains("Tax Reform Act of 1986 § 1235")
-            && n.contains("Pub. L. 99-514")
-            && n.contains("October 22, 1986")
-            && n.contains("HIRE Act of 2010 § 521")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Tax Reform Act of 1986 § 1235")
+                && n.contains("Pub. L. 99-514")
+                && n.contains("October 22, 1986")
+                && n.contains("HIRE Act of 2010 § 521")));
     }
 
     #[test]

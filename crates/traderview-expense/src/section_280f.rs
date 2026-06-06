@@ -228,7 +228,11 @@ pub fn compute(input: &Section280FInput) -> Section280FResult {
     } else {
         format!(
             "§280F cap year {}: ${} deduction under ${} cap ({} business use). {}",
-            r.year_of_life, r.allowed_deduction, r.applicable_cap_after_business_use, biz_pct, r.rev_proc_citation,
+            r.year_of_life,
+            r.allowed_deduction,
+            r.applicable_cap_after_business_use,
+            biz_pct,
+            r.rev_proc_citation,
         )
     };
     r
@@ -369,8 +373,8 @@ mod tests {
             (2023, dec!(12200)),
             (2024, dec!(12400)),
         ] {
-            let caps = published_caps(year)
-                .unwrap_or_else(|| panic!("year {year} should have caps"));
+            let caps =
+                published_caps(year).unwrap_or_else(|| panic!("year {year} should have caps"));
             assert_eq!(caps.year_1_no_bonus, year_1_no_bonus, "year {}", year);
         }
     }
@@ -394,7 +398,10 @@ mod tests {
             rev_proc_citation: "Rev. Proc. 2099-XX".into(),
         });
         let r_with_override = compute(&i);
-        assert_eq!(r_with_override.applicable_cap_before_business_use, dec!(15000));
+        assert_eq!(
+            r_with_override.applicable_cap_before_business_use,
+            dec!(15000)
+        );
         assert_eq!(r_with_override.rev_proc_citation, "Rev. Proc. 2099-XX");
     }
 

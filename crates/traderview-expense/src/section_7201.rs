@@ -188,8 +188,7 @@ pub fn check(input: &Section7201Input) -> Section7201Result {
     );
 
     notes.push(
-        "§ 6531 criminal statute of limitations — 6 years for § 7201 attempt to evade"
-            .to_string(),
+        "§ 6531 criminal statute of limitations — 6 years for § 7201 attempt to evade".to_string(),
     );
 
     notes.push(format!(
@@ -235,8 +234,7 @@ pub fn check(input: &Section7201Input) -> Section7201Result {
 
     let element_1_deficiency_exists = input.tax_deficiency_amount_cents > 0;
     let element_2_willful = input.willfulness_voluntary_intentional;
-    let element_3_affirmative =
-        input.affirmative_act_of_evasion && !input.conduct_is_mere_omission;
+    let element_3_affirmative = input.affirmative_act_of_evasion && !input.conduct_is_mere_omission;
     let element_4_substantial = input.substantial_amount;
 
     let count = [
@@ -259,8 +257,7 @@ pub fn check(input: &Section7201Input) -> Section7201Result {
 
     if felony_authorized {
         notes.push(
-            "§ 7201 — all four elements satisfied; FELONY PROSECUTION AUTHORIZED"
-                .to_string(),
+            "§ 7201 — all four elements satisfied; FELONY PROSECUTION AUTHORIZED".to_string(),
         );
     } else if !all_four {
         notes.push(
@@ -419,7 +416,9 @@ mod tests {
         let r = check(&i);
         assert!(r.mere_omission_defeats_affirmative_act);
         assert!(!r.felony_prosecution_authorized);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7201") && n.contains("mere failure to file") && n.contains("Spies")));
+        assert!(r.notes.iter().any(|n| n.contains("§ 7201")
+            && n.contains("mere failure to file")
+            && n.contains("Spies")));
     }
 
     #[test]
@@ -440,7 +439,10 @@ mod tests {
         i.spies_handling_affairs_to_avoid_records = true;
         let r = check(&i);
         assert_eq!(r.spies_indicia_count, 7);
-        assert!(r.notes.iter().any(|n| n.contains("Spies v. United States") && n.contains("7 of 7")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Spies v. United States") && n.contains("7 of 7")));
     }
 
     #[test]
@@ -451,7 +453,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.felony_prosecution_authorized);
         assert!(r.cheek_defense_engaged_and_successful);
-        assert!(r.notes.iter().any(|n| n.contains("Cheek defense SUCCESSFUL")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Cheek defense SUCCESSFUL")));
     }
 
     #[test]
@@ -469,13 +474,18 @@ mod tests {
         let mut i = full_prosecution();
         i.cheek_defense_asserted = true;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("Cheek v. United States, 498 U.S. 192 (1991)") && n.contains("subjective")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("Cheek v. United States, 498 U.S. 192 (1991)")
+                && n.contains("subjective")
+        ));
     }
 
     #[test]
     fn sansone_evasion_of_assessment_note_present() {
         let r = check(&full_prosecution());
-        assert!(r.notes.iter().any(|n| n.contains("Sansone v. United States, 380 U.S. 343 (1965)") && n.contains("evasion of ASSESSMENT")));
+        assert!(r.notes.iter().any(|n| n
+            .contains("Sansone v. United States, 380 U.S. 343 (1965)")
+            && n.contains("evasion of ASSESSMENT")));
     }
 
     #[test]
@@ -510,21 +520,30 @@ mod tests {
     fn criminal_sol_6_years() {
         let r = check(&full_prosecution());
         assert_eq!(r.criminal_sol_years, 6);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6531") && n.contains("6 years for § 7201")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6531") && n.contains("6 years for § 7201")));
     }
 
     #[test]
     fn section_6663_civil_parallel_always_available() {
         let r = check(&full_prosecution());
         assert!(r.section_6663_civil_parallel_available);
-        assert!(r.notes.iter().any(|n| n.contains("Spies-Daly doctrine") && n.contains("PARALLEL")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Spies-Daly doctrine") && n.contains("PARALLEL")));
     }
 
     #[test]
     fn unlimited_ased_triggered_when_prosecution_authorized() {
         let r = check(&full_prosecution());
         assert!(r.unlimited_ased_triggered);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6501(c)(1) UNLIMITED ASED")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6501(c)(1) UNLIMITED ASED")));
     }
 
     #[test]
@@ -538,13 +557,19 @@ mod tests {
     #[test]
     fn section_7491_burden_shifts_excluded_note() {
         let r = check(&full_prosecution());
-        assert!(r.notes.iter().any(|n| n.contains("§ 7491") && n.contains("BEYOND REASONABLE DOUBT")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7491") && n.contains("BEYOND REASONABLE DOUBT")));
     }
 
     #[test]
     fn cfia_18_usc_3571_supersedes_note() {
         let r = check(&full_prosecution());
-        assert!(r.notes.iter().any(|n| n.contains("18 U.S.C. § 3571") && n.contains("$250,000")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("18 U.S.C. § 3571") && n.contains("$250,000")));
     }
 
     #[test]

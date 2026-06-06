@@ -23,7 +23,10 @@ pub struct OhlcBar {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum GapDirection { Up, Down }
+pub enum GapDirection {
+    Up,
+    Down,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct GapEvent {
@@ -58,8 +61,11 @@ pub fn analyze(bars: &[OhlcBar], atr: &[f64]) -> GapStatsReport {
         // Skip bars with non-finite OHLC — they produce Inf gap sizes,
         // misleading downstream consumers. Real market data never carries
         // NaN/Inf; this is defensive against pathological JSON inputs.
-        if !(prev.high.is_finite() && prev.low.is_finite()
-            && cur.open.is_finite() && cur.high.is_finite() && cur.low.is_finite())
+        if !(prev.high.is_finite()
+            && prev.low.is_finite()
+            && cur.open.is_finite()
+            && cur.high.is_finite()
+            && cur.low.is_finite())
         {
             continue;
         }
@@ -72,37 +78,60 @@ pub fn analyze(bars: &[OhlcBar], atr: &[f64]) -> GapStatsReport {
         };
         if let Some(dir) = direction {
             let gap_size = match dir {
-                GapDirection::Up   => cur.open - prev.high,
+                GapDirection::Up => cur.open - prev.high,
                 GapDirection::Down => prev.low - cur.open,
             };
             let gap_size_atrs = if a > 0.0 { gap_size / a } else { 0.0 };
             let filled = match dir {
-                GapDirection::Up   => cur.low <= prev.high,
+                GapDirection::Up => cur.low <= prev.high,
                 GapDirection::Down => cur.high >= prev.low,
             };
             events.push(GapEvent {
-                bar_index: i, direction: dir, gap_size, gap_size_atrs,
+                bar_index: i,
+                direction: dir,
+                gap_size,
+                gap_size_atrs,
                 filled_same_day: filled,
             });
         }
     }
     let n_gaps = events.len();
-    let n_up_gaps = events.iter().filter(|e| matches!(e.direction, GapDirection::Up)).count();
+    let n_up_gaps = events
+        .iter()
+        .filter(|e| matches!(e.direction, GapDirection::Up))
+        .count();
     let n_down_gaps = n_gaps - n_up_gaps;
-    let up_filled = events.iter()
+    let up_filled = events
+        .iter()
         .filter(|e| matches!(e.direction, GapDirection::Up) && e.filled_same_day)
         .count();
-    let down_filled = events.iter()
+    let down_filled = events
+        .iter()
         .filter(|e| matches!(e.direction, GapDirection::Down) && e.filled_same_day)
         .count();
-    let up_fill_rate = if n_up_gaps > 0 { up_filled as f64 / n_up_gaps as f64 } else { 0.0 };
-    let down_fill_rate = if n_down_gaps > 0 { down_filled as f64 / n_down_gaps as f64 } else { 0.0 };
+    let up_fill_rate = if n_up_gaps > 0 {
+        up_filled as f64 / n_up_gaps as f64
+    } else {
+        0.0
+    };
+    let down_fill_rate = if n_down_gaps > 0 {
+        down_filled as f64 / n_down_gaps as f64
+    } else {
+        0.0
+    };
     let mean_gap_atrs = if n_gaps > 0 {
         events.iter().map(|e| e.gap_size_atrs).sum::<f64>() / n_gaps as f64
-    } else { 0.0 };
+    } else {
+        0.0
+    };
     GapStatsReport {
-        events, n_gaps, n_up_gaps, n_down_gaps,
-        up_fill_rate, down_fill_rate, mean_gap_atrs,
+        events,
+        n_gaps,
+        n_up_gaps,
+        n_down_gaps,
+        up_fill_rate,
+        down_fill_rate,
+        mean_gap_atrs,
     }
 }
 
@@ -110,7 +139,14 @@ pub fn analyze(bars: &[OhlcBar], atr: &[f64]) -> GapStatsReport {
 mod tests {
     use super::*;
 
-    fn b(o: f64, h: f64, l: f64, c: f64) -> OhlcBar { OhlcBar { open: o, high: h, low: l, close: c } }
+    fn b(o: f64, h: f64, l: f64, c: f64) -> OhlcBar {
+        OhlcBar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn empty_or_short_returns_default() {
@@ -124,7 +160,7 @@ mod tests {
     fn no_gap_when_open_inside_prior_range() {
         let bars = vec![
             b(100.0, 102.0, 98.0, 101.0),
-            b(101.0, 103.0, 100.0, 102.0),   // open 101 ∈ [98, 102]
+            b(101.0, 103.0, 100.0, 102.0), // open 101 ∈ [98, 102]
         ];
         let atr = vec![1.0; 2];
         assert_eq!(analyze(&bars, &atr).n_gaps, 0);
@@ -133,10 +169,7 @@ mod tests {
     #[test]
     fn up_gap_filled_same_day() {
         // Prior bar 98..102. Today opens at 103 (gap up), low 101 (fills).
-        let bars = vec![
-            b(100.0, 102.0, 98.0, 101.0),
-            b(103.0, 105.0, 101.0, 104.5),
-        ];
+        let bars = vec![b(100.0, 102.0, 98.0, 101.0), b(103.0, 105.0, 101.0, 104.5)];
         let atr = vec![1.0; 2];
         let r = analyze(&bars, &atr);
         assert_eq!(r.n_up_gaps, 1);
@@ -148,10 +181,7 @@ mod tests {
     #[test]
     fn up_gap_unfilled() {
         // Today gaps up to 103, low stays at 102.5 (above 102 prior high).
-        let bars = vec![
-            b(100.0, 102.0, 98.0, 101.0),
-            b(103.0, 105.0, 102.5, 104.5),
-        ];
+        let bars = vec![b(100.0, 102.0, 98.0, 101.0), b(103.0, 105.0, 102.5, 104.5)];
         let atr = vec![1.0; 2];
         let r = analyze(&bars, &atr);
         assert_eq!(r.n_up_gaps, 1);
@@ -163,7 +193,7 @@ mod tests {
     fn down_gap_filled_same_day() {
         let bars = vec![
             b(100.0, 102.0, 98.0, 101.0),
-            b(96.0, 99.0, 95.0, 98.5),     // gap down (open 96 < prior low 98), high 99 fills back to 98
+            b(96.0, 99.0, 95.0, 98.5), // gap down (open 96 < prior low 98), high 99 fills back to 98
         ];
         let atr = vec![1.0; 2];
         let r = analyze(&bars, &atr);
@@ -173,10 +203,7 @@ mod tests {
 
     #[test]
     fn down_gap_unfilled() {
-        let bars = vec![
-            b(100.0, 102.0, 98.0, 101.0),
-            b(96.0, 97.5, 95.0, 96.5),
-        ];
+        let bars = vec![b(100.0, 102.0, 98.0, 101.0), b(96.0, 97.5, 95.0, 96.5)];
         let atr = vec![1.0; 2];
         let r = analyze(&bars, &atr);
         assert_eq!(r.n_down_gaps, 1);
@@ -187,18 +214,26 @@ mod tests {
     fn mixed_series_aggregates_correctly() {
         // 4 bars: 1 up filled, 1 up unfilled, 1 down filled.
         let bars = vec![
-            b(100.0, 102.0, 98.0, 101.0),    // 0
-            b(103.0, 105.0, 101.0, 104.5),   // 1 up gap, filled (low 101 ≤ 102)
-            b(108.0, 110.0, 107.0, 109.0),   // 2 up gap (105 → 108), unfilled (low 107 > 105)
-            b(104.0, 106.0, 102.0, 103.0),   // 3 down gap (107 → 104), filled (high 106 ≥ 107? no — 106 < 107, NOT filled)
+            b(100.0, 102.0, 98.0, 101.0),  // 0
+            b(103.0, 105.0, 101.0, 104.5), // 1 up gap, filled (low 101 ≤ 102)
+            b(108.0, 110.0, 107.0, 109.0), // 2 up gap (105 → 108), unfilled (low 107 > 105)
+            b(104.0, 106.0, 102.0, 103.0), // 3 down gap (107 → 104), filled (high 106 ≥ 107? no — 106 < 107, NOT filled)
         ];
         let atr = vec![1.0; 4];
         let r = analyze(&bars, &atr);
         assert_eq!(r.n_gaps, 3);
         assert_eq!(r.n_up_gaps, 2);
         assert_eq!(r.n_down_gaps, 1);
-        assert!((r.up_fill_rate - 0.5).abs() < 1e-9, "1/2 up gaps filled, got {}", r.up_fill_rate);
-        assert!((r.down_fill_rate - 0.0).abs() < 1e-9, "0/1 down gaps filled, got {}", r.down_fill_rate);
+        assert!(
+            (r.up_fill_rate - 0.5).abs() < 1e-9,
+            "1/2 up gaps filled, got {}",
+            r.up_fill_rate
+        );
+        assert!(
+            (r.down_fill_rate - 0.0).abs() < 1e-9,
+            "0/1 down gaps filled, got {}",
+            r.down_fill_rate
+        );
     }
 
     #[test]

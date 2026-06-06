@@ -141,7 +141,10 @@ const DEFAULT_PRESUMPTION_WINDOW_DAYS: u32 = 180;
 
 #[must_use]
 pub fn check(input: &Input) -> Output {
-    if matches!(input.protected_tenant_act, ProtectedTenantAct::NoProtectedActExercised) {
+    if matches!(
+        input.protected_tenant_act,
+        ProtectedTenantAct::NoProtectedActExercised
+    ) {
         return Output {
             severity: Severity::NoProtectedActNoPresumptionTriggered,
             presumption_window_days: 0,
@@ -322,13 +325,13 @@ pub fn check(input: &Input) -> Output {
             ),
         },
         Jurisdiction::IllinoisChicagoRlto => {
-            let two_month_rent =
-                input.monthly_rent_cents.saturating_mul(IL_CHICAGO_RLTO_TWO_MONTH_MULTIPLIER);
+            let two_month_rent = input
+                .monthly_rent_cents
+                .saturating_mul(IL_CHICAGO_RLTO_TWO_MONTH_MULTIPLIER);
             let twice_damages = input.tenant_actual_damages_cents.saturating_mul(2);
             let exposure = two_month_rent.max(twice_damages);
             Output {
-                severity:
-                    Severity::IllinoisChicagoRlto5_12_150OneYearPresumptionTwoMonthRent,
+                severity: Severity::IllinoisChicagoRlto5_12_150OneYearPresumptionTwoMonthRent,
                 presumption_window_days: IL_CHICAGO_RLTO_PRESUMPTION_WINDOW_DAYS,
                 estimated_landlord_exposure_cents: exposure,
                 note: format!(
@@ -387,7 +390,8 @@ mod tests {
     fn base() -> Input {
         Input {
             jurisdiction: Jurisdiction::California,
-            protected_tenant_act: ProtectedTenantAct::ComplaintToGovernmentAgencyHousingCodeOrHealth,
+            protected_tenant_act:
+                ProtectedTenantAct::ComplaintToGovernmentAgencyHousingCodeOrHealth,
             landlord_action: LandlordAction::EvictionOrTerminationServed,
             days_between_protected_act_and_landlord_action: 30,
             monthly_rent_cents: 3_000_00,
@@ -401,7 +405,10 @@ mod tests {
         let mut input = base();
         input.protected_tenant_act = ProtectedTenantAct::NoProtectedActExercised;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::NoProtectedActNoPresumptionTriggered);
+        assert_eq!(
+            output.severity,
+            Severity::NoProtectedActNoPresumptionTriggered
+        );
         assert_eq!(output.estimated_landlord_exposure_cents, 0);
     }
 
@@ -420,7 +427,10 @@ mod tests {
         input.landlord_rebuttal_evidence =
             LandlordRebuttalEvidence::ActionPredatesTenantProtectedAct;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::LandlordRebuttalProbablySuccessful);
+        assert_eq!(
+            output.severity,
+            Severity::LandlordRebuttalProbablySuccessful
+        );
         assert!(output.note.contains("BEFORE"));
         assert!(output.note.contains("Temporal sequence"));
     }
@@ -445,7 +455,10 @@ mod tests {
         let mut input = base();
         input.days_between_protected_act_and_landlord_action = 181;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::OutsidePresumptionWindowBurdenOnTenant);
+        assert_eq!(
+            output.severity,
+            Severity::OutsidePresumptionWindowBurdenOnTenant
+        );
         assert_eq!(output.presumption_window_days, 180);
         assert_eq!(output.estimated_landlord_exposure_cents, 0);
     }
@@ -510,7 +523,10 @@ mod tests {
         input.jurisdiction = Jurisdiction::Washington;
         input.days_between_protected_act_and_landlord_action = 91;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::OutsidePresumptionWindowBurdenOnTenant);
+        assert_eq!(
+            output.severity,
+            Severity::OutsidePresumptionWindowBurdenOnTenant
+        );
     }
 
     #[test]

@@ -222,7 +222,8 @@ pub fn compute(input: &Input) -> Output {
 
     if input.property_classification
         == PropertyClassification::ManufacturedHomeParkWith30OrFewerSpacesExempt
-        && input.manufactured_home_park_total_spaces <= OR_MANUFACTURED_HOME_PARK_EXEMPT_SPACES_THRESHOLD
+        && input.manufactured_home_park_total_spaces
+            <= OR_MANUFACTURED_HOME_PARK_EXEMPT_SPACES_THRESHOLD
     {
         return Output {
             mode: OregonRentMode::NotApplicableManufacturedHomeParkWith30OrFewerSpacesExempt,
@@ -251,7 +252,8 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.notice_provided == NoticeProvided::NoNoticeProvided && input.rent_increase_basis_points > 0
+    if input.notice_provided == NoticeProvided::NoNoticeProvided
+        && input.rent_increase_basis_points > 0
     {
         return Output {
             mode: OregonRentMode::ViolationNoNoticeProvided,
@@ -271,7 +273,9 @@ pub fn compute(input: &Input) -> Output {
             return Output {
                 mode: OregonRentMode::ViolationWeekToWeekNoticeBelow7DayMinimum,
                 statutory_basis: "Oregon SB 608 — week-to-week 7-day notice minimum".to_string(),
-                notes: "VIOLATION: week-to-week rent increase notice below 7-day statutory minimum.".to_string(),
+                notes:
+                    "VIOLATION: week-to-week rent increase notice below 7-day statutory minimum."
+                        .to_string(),
                 citations,
                 allowed_cap_basis_points: 0,
             };
@@ -396,7 +400,10 @@ mod tests {
             ..baseline_post_first_year_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, OregonRentMode::NotApplicablePropertyOutsideOregon);
+        assert_eq!(
+            result.mode,
+            OregonRentMode::NotApplicablePropertyOutsideOregon
+        );
     }
 
     #[test]

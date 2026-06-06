@@ -187,7 +187,8 @@ pub fn check(input: &Input) -> CheckResult {
 
     // Determine whether the regime imposes a duty under the present
     // facts.
-    let (duty_applies, waiver_prohibited, citation): (bool, bool, &'static str) = match input.regime {
+    let (duty_applies, waiver_prohibited, citation): (bool, bool, &'static str) = match input.regime
+    {
         Regime::California => {
             if input.california_assignment_permitted {
                 (
@@ -424,11 +425,10 @@ mod tests {
         i.waiver_clause_in_lease = true;
         let r = check(&i);
         assert!(r.waiver_clause_invalid);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("waive") && v.contains("VOID"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("waive") && v.contains("VOID")));
     }
 
     // ── Texas § 91.006 ──────────────────────────────────────────
@@ -555,14 +555,13 @@ mod tests {
     fn relet_at_lower_rent_recovers_difference() {
         let mut i = base(Regime::California);
         i.re_rented_monthly_rent_cents = 1_500_00; // $1500
-        // (2000 − 1500) × 6 = 3000 = 300_000 cents.
+                                                   // (2000 − 1500) × 6 = 3000 = 300_000 cents.
         let r = check(&i);
         assert_eq!(r.recoverable_damages_estimate_cents, 300_000);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("Re-rented") && n.contains("difference"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Re-rented") && n.contains("difference")));
     }
 
     #[test]
@@ -589,11 +588,7 @@ mod tests {
             Regime::Default,
         ] {
             let r = check(&base(regime));
-            assert!(
-                r.duty_to_mitigate_applies,
-                "{:?}: duty must apply",
-                regime,
-            );
+            assert!(r.duty_to_mitigate_applies, "{:?}: duty must apply", regime,);
         }
         for &regime in &[Regime::Mississippi, Regime::Georgia] {
             let r = check(&base(regime));
@@ -721,20 +716,18 @@ mod tests {
 
     #[test]
     fn citation_pins_authority_per_regime() {
-        assert!(check(&base(Regime::California)).citation.contains("§ 1951.2"));
+        assert!(check(&base(Regime::California))
+            .citation
+            .contains("§ 1951.2"));
         assert!(check(&base(Regime::NewYork)).citation.contains("§ 227-e"));
         assert!(check(&base(Regime::Texas)).citation.contains("§ 91.006"));
-        assert!(
-            check(&base(Regime::Illinois))
-                .citation
-                .contains("735 ILCS 5/9-213.1")
-        );
+        assert!(check(&base(Regime::Illinois))
+            .citation
+            .contains("735 ILCS 5/9-213.1"));
         assert!(check(&base(Regime::Florida)).citation.contains("§ 83.595"));
-        assert!(
-            check(&base(Regime::Mississippi))
-                .citation
-                .contains("Alsup v. Banks")
-        );
+        assert!(check(&base(Regime::Mississippi))
+            .citation
+            .contains("Alsup v. Banks"));
     }
 
     #[test]

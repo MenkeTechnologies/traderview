@@ -15,7 +15,12 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub open: f64, pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct DojiVariantsReport {
@@ -33,17 +38,24 @@ pub fn compute(bars: &[Bar], doji_pct: f64) -> DojiVariantsReport {
         dragonfly: vec![false; n],
         doji_pct,
     };
-    if !doji_pct.is_finite() || doji_pct <= 0.0 || doji_pct >= 1.0 { return report; }
-    if bars.iter().any(|b| !b.open.is_finite() || !b.high.is_finite()
-        || !b.low.is_finite() || !b.close.is_finite()) {
+    if !doji_pct.is_finite() || doji_pct <= 0.0 || doji_pct >= 1.0 {
+        return report;
+    }
+    if bars.iter().any(|b| {
+        !b.open.is_finite() || !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()
+    }) {
         return report;
     }
     for (i, bar) in bars.iter().enumerate() {
         let range = bar.high - bar.low;
-        if range <= 0.0 { continue; }
+        if range <= 0.0 {
+            continue;
+        }
         let body = (bar.close - bar.open).abs();
         let is_doji = body <= doji_pct * range;
-        if !is_doji { continue; }
+        if !is_doji {
+            continue;
+        }
         let upper = bar.high - bar.close.max(bar.open);
         let lower = bar.close.min(bar.open) - bar.low;
         let upper_pct = upper / range;
@@ -66,7 +78,12 @@ mod tests {
     use super::*;
 
     fn bar(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]

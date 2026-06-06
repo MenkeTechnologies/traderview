@@ -23,9 +23,7 @@ use traderview_tax::{
 /// upload_form path.
 fn w2_from_extract(extract: &tax_forms::TaxFormExtract) -> W2 {
     assert_eq!(extract.kind, TaxFormKind::W2, "expected W-2 extract");
-    let g = |k: &str| {
-        extract.payload.get(k).copied().unwrap_or(Decimal::ZERO)
-    };
+    let g = |k: &str| extract.payload.get(k).copied().unwrap_or(Decimal::ZERO);
     W2 {
         employer_name: extract.party_name.clone().unwrap_or_default(),
         box_1_wages: g("box_1"),
@@ -161,11 +159,7 @@ Nonemployee compensation 15000.00
     let ne = tax_forms::extract(nec_text).expect("nec");
     assert_eq!(ne.kind, TaxFormKind::Form1099Nec);
 
-    let nec_box1 = ne
-        .payload
-        .get("box_1")
-        .copied()
-        .unwrap_or(Decimal::ZERO);
+    let nec_box1 = ne.payload.get("box_1").copied().unwrap_or(Decimal::ZERO);
 
     let r = TaxReturn {
         tax_year: 2025,
@@ -185,7 +179,10 @@ Nonemployee compensation 15000.00
     //   SS = 13,852.50 × 0.124 = 1,717.71
     //   Medicare = 13,852.50 × 0.029 = 401.72 (round 401.7225 → 401.72)
     //   total = 2,119.43
-    assert!(res.se_tax.total > Decimal::ZERO,
-        "Schedule C net should produce SE tax, got {:?}", res.se_tax);
+    assert!(
+        res.se_tax.total > Decimal::ZERO,
+        "Schedule C net should produce SE tax, got {:?}",
+        res.se_tax
+    );
     assert_eq!(res.se_tax.se_base, "13852.50".parse::<Decimal>().unwrap());
 }

@@ -48,7 +48,9 @@ pub fn compute(sample: &[f64], confidence: f64) -> Option<EcdfReport> {
     if n < 5 || !confidence.is_finite() || !(0.5..1.0).contains(&confidence) {
         return None;
     }
-    if sample.iter().any(|x| !x.is_finite()) { return None; }
+    if sample.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let mut sorted = sample.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     let alpha = 1.0 - confidence;
@@ -58,7 +60,9 @@ pub fn compute(sample: &[f64], confidence: f64) -> Option<EcdfReport> {
     let mut i = 0;
     while i < n {
         let mut j = i;
-        while j + 1 < n && sorted[j + 1] == sorted[i] { j += 1; }
+        while j + 1 < n && sorted[j + 1] == sorted[i] {
+            j += 1;
+        }
         let prob = (j + 1) as f64 / n_f;
         points.push(EcdfPoint {
             x: sorted[i],

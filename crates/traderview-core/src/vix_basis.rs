@@ -30,8 +30,14 @@ pub fn compute(vix_spot: &[f64], vx_front: &[f64]) -> VixBasisReport {
         basis_pct: vec![None; n],
         in_backwardation: vec![None; n],
     };
-    if n == 0 || vx_front.len() != n { return report; }
-    if vix_spot.iter().chain(vx_front.iter()).any(|x| !x.is_finite() || *x <= 0.0) {
+    if n == 0 || vx_front.len() != n {
+        return report;
+    }
+    if vix_spot
+        .iter()
+        .chain(vx_front.iter())
+        .any(|x| !x.is_finite() || *x <= 0.0)
+    {
         return report;
     }
     for i in 0..n {

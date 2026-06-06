@@ -167,8 +167,8 @@ fn ca_check(input: &PreMoveOutInspectionInput) -> PreMoveOutInspectionResult {
         // § 1950.5(f)(4) waiver: if premises were CLEAR of tenant
         // possessions AND landlord did the inspection AND the landlord
         // tries to deduct undisclosed items → waiver violation.
-        let waiver_applies = !input.premises_had_blocking_tenant_possessions
-            && input.itemized_statement_provided;
+        let waiver_applies =
+            !input.premises_had_blocking_tenant_possessions && input.itemized_statement_provided;
         if waiver_applies && input.deducted_for_items_not_on_itemized_statement {
             return PreMoveOutInspectionResult {
                 regime: Regime::CaliforniaCivCode19505F,
@@ -423,7 +423,9 @@ mod tests {
         assert!(!r.statute_applies);
         assert_eq!(r.violation, ViolationType::None);
         assert!(r.landlord_compliant);
-        assert!(r.citation.contains("No statewide pre-move-out inspection statute"));
+        assert!(r
+            .citation
+            .contains("No statewide pre-move-out inspection statute"));
     }
 
     #[test]
@@ -447,10 +449,7 @@ mod tests {
 
     #[test]
     fn state_routing_ca_default() {
-        assert_eq!(
-            Regime::for_state("CA"),
-            Regime::CaliforniaCivCode19505F
-        );
+        assert_eq!(Regime::for_state("CA"), Regime::CaliforniaCivCode19505F);
         assert_eq!(Regime::for_state("TX"), Regime::Default);
         assert_eq!(Regime::for_state("NY"), Regime::Default);
         assert_eq!(Regime::for_state("FL"), Regime::Default);
@@ -458,10 +457,7 @@ mod tests {
 
     #[test]
     fn state_routing_case_insensitive() {
-        assert_eq!(
-            Regime::for_state("ca"),
-            Regime::CaliforniaCivCode19505F
-        );
+        assert_eq!(Regime::for_state("ca"), Regime::CaliforniaCivCode19505F);
     }
 
     #[test]

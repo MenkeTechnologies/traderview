@@ -287,7 +287,10 @@ mod tests {
         let mut i = base();
         i.hardship_category = HardshipCategory::ImmediateAdverseAction;
         let r = compute(&i);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7811(a)(2)(A)") && n.contains("immediate threat")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7811(a)(2)(A)") && n.contains("immediate threat")));
     }
 
     #[test]
@@ -295,7 +298,10 @@ mod tests {
         let mut i = base();
         i.hardship_category = HardshipCategory::Delay30PlusDays;
         let r = compute(&i);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7811(a)(2)(B)") && n.contains("30 days")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7811(a)(2)(B)") && n.contains("30 days")));
     }
 
     #[test]
@@ -303,7 +309,10 @@ mod tests {
         let mut i = base();
         i.hardship_category = HardshipCategory::SignificantCosts;
         let r = compute(&i);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7811(a)(2)(C)") && n.contains("professional representation")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7811(a)(2)(C)") && n.contains("professional representation")));
     }
 
     #[test]
@@ -311,7 +320,10 @@ mod tests {
         let mut i = base();
         i.hardship_category = HardshipCategory::IrreparableInjury;
         let r = compute(&i);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7811(a)(2)(D)") && n.contains("irreparable injury")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7811(a)(2)(D)") && n.contains("irreparable injury")));
     }
 
     #[test]
@@ -320,13 +332,19 @@ mod tests {
         i.hardship_category = HardshipCategory::OtherHardship;
         let r = compute(&i);
         assert!(r.tao_pathway_available);
-        assert!(r.notes.iter().any(|n| n.contains("non-exclusive") || n.contains("includes")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("non-exclusive") || n.contains("includes")));
     }
 
     #[test]
     fn release_levied_property_action_note() {
         let r = compute(&base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 7811(b)(1)") && n.contains("release of property")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7811(b)(1)") && n.contains("release of property")));
     }
 
     #[test]
@@ -334,7 +352,10 @@ mod tests {
         let mut i = base();
         i.requested_action = RequestedAction::CeaseAction;
         let r = compute(&i);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7811(b)(2)") && n.contains("cease")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7811(b)(2)") && n.contains("cease")));
     }
 
     #[test]
@@ -342,7 +363,10 @@ mod tests {
         let mut i = base();
         i.requested_action = RequestedAction::TakeAction;
         let r = compute(&i);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7811(b)(2)") && n.contains("take action authorized by law")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7811(b)(2)") && n.contains("take action authorized by law")));
     }
 
     #[test]
@@ -350,14 +374,20 @@ mod tests {
         let mut i = base();
         i.requested_action = RequestedAction::RefrainFromAction;
         let r = compute(&i);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7811(b)(2)") && n.contains("refrain")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7811(b)(2)") && n.contains("refrain")));
     }
 
     #[test]
     fn statute_of_limitations_suspension_engaged_with_tao_pathway() {
         let r = compute(&base());
         assert!(r.statute_of_limitations_suspended);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7811(d)") && n.contains("SUSPENDED")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7811(d)") && n.contains("SUSPENDED")));
     }
 
     #[test]
@@ -365,13 +395,17 @@ mod tests {
         let mut i = base();
         i.parallel_cdp_pending = true;
         let r = compute(&i);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7811(e)") && n.contains("INDEPENDENT")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7811(e)") && n.contains("INDEPENDENT")));
     }
 
     #[test]
     fn no_parallel_cdp_no_independence_note() {
         let r = compute(&base());
-        let independence_notes: Vec<_> = r.notes.iter().filter(|n| n.contains("§ 7811(e)")).collect();
+        let independence_notes: Vec<_> =
+            r.notes.iter().filter(|n| n.contains("§ 7811(e)")).collect();
         assert!(independence_notes.is_empty());
     }
 
@@ -382,7 +416,10 @@ mod tests {
         i.modifying_official = ModifyingOfficial::NationalTaxpayerAdvocate;
         let r = compute(&i);
         assert!(r.modification_or_rescission_valid);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7811(c)") && n.contains("valid")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7811(c)") && n.contains("valid")));
     }
 
     #[test]
@@ -410,14 +447,18 @@ mod tests {
         i.modifying_official = ModifyingOfficial::Other;
         let r = compute(&i);
         assert!(!r.modification_or_rescission_valid);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7811(c)") && n.contains("INVALID")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7811(c)") && n.contains("INVALID")));
     }
 
     #[test]
     fn no_modification_attempt_no_modification_note() {
         let r = compute(&base());
         assert!(!r.modification_or_rescission_valid);
-        let modification_notes: Vec<_> = r.notes.iter().filter(|n| n.contains("§ 7811(c)")).collect();
+        let modification_notes: Vec<_> =
+            r.notes.iter().filter(|n| n.contains("§ 7811(c)")).collect();
         assert!(modification_notes.is_empty());
     }
 
@@ -448,7 +489,11 @@ mod tests {
             i.modification_attempted = true;
             i.modifying_official = official;
             let r = compute(&i);
-            assert!(r.modification_or_rescission_valid, "official {:?} should be valid", official);
+            assert!(
+                r.modification_or_rescission_valid,
+                "official {:?} should be valid",
+                official
+            );
         }
         let mut i_other = base();
         i_other.modification_attempted = true;
@@ -479,7 +524,11 @@ mod tests {
             let mut i = base();
             i.hardship_category = cat;
             let r = compute(&i);
-            assert!(r.tao_pathway_available, "hardship category {:?} should engage pathway", cat);
+            assert!(
+                r.tao_pathway_available,
+                "hardship category {:?} should engage pathway",
+                cat
+            );
         }
     }
 
@@ -496,7 +545,11 @@ mod tests {
             let r = compute(&i);
             assert!(r.tao_pathway_available);
             let action_notes: Vec<_> = r.notes.iter().filter(|n| n.contains("§ 7811(b)")).collect();
-            assert!(!action_notes.is_empty(), "action {:?} should surface § 7811(b) note", action);
+            assert!(
+                !action_notes.is_empty(),
+                "action {:?} should surface § 7811(b) note",
+                action
+            );
         }
     }
 
@@ -521,7 +574,10 @@ mod tests {
     #[test]
     fn statute_suspension_note_includes_application_through_decision_period() {
         let r = compute(&base());
-        assert!(r.notes.iter().any(|n| n.contains("application date through NTA decision date")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("application date through NTA decision date")));
     }
 
     #[test]
@@ -531,6 +587,9 @@ mod tests {
         i.modifying_official = ModifyingOfficial::Other;
         let r = compute(&i);
         assert!(!r.modification_or_rescission_valid);
-        assert!(r.tao_pathway_available, "underlying TAO pathway remains valid");
+        assert!(
+            r.tao_pathway_available,
+            "underlying TAO pathway remains valid"
+        );
     }
 }

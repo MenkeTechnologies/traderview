@@ -114,7 +114,10 @@ pub fn check(input: &Input) -> Output {
         };
     }
 
-    if matches!(input.underlying_drd_section, UnderlyingDrdSection::SbicDividendExempt) {
+    if matches!(
+        input.underlying_drd_section,
+        UnderlyingDrdSection::SbicDividendExempt
+    ) {
         return Output {
             severity: Severity::SbicExemptionPreservesFullDrd,
             base_drd_percent: 100,
@@ -201,10 +204,9 @@ pub fn check(input: &Input) -> Output {
     let base_deduction = u128::from(input.dividend_received_cents)
         .saturating_mul(u128::from(base_drd_percent))
         .saturating_div(100);
-    let substituted_deduction =
-        u128::from(input.dividend_received_cents)
-            .saturating_mul(substituted_drd_percent)
-            .saturating_div(100);
+    let substituted_deduction = u128::from(input.dividend_received_cents)
+        .saturating_mul(substituted_drd_percent)
+        .saturating_div(100);
     let raw_reduction = base_deduction.saturating_sub(substituted_deduction);
 
     let capped_reduction = raw_reduction.min(u128::from(input.interest_deduction_allocable_cents));
@@ -288,7 +290,9 @@ mod tests {
         assert_eq!(output.severity, Severity::SbicExemptionPreservesFullDrd);
         assert_eq!(output.allowed_deduction_cents, 1_000_000_00);
         assert!(output.note.contains("§ 246A(e)"));
-        assert!(output.note.contains("Small Business Investment Act of 1958"));
+        assert!(output
+            .note
+            .contains("Small Business Investment Act of 1958"));
     }
 
     #[test]

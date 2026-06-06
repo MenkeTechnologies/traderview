@@ -168,9 +168,11 @@ fn pre_offer_violation_check(
 }
 
 fn nj_check(input: &FairChanceInput) -> FairChanceResult {
-    if let Some(v) =
-        pre_offer_violation_check(input, Regime::NewJerseyFcha, "N.J.S.A. 46:8-52 et seq. (FCHA)")
-    {
+    if let Some(v) = pre_offer_violation_check(
+        input,
+        Regime::NewJerseyFcha,
+        "N.J.S.A. 46:8-52 et seq. (FCHA)",
+    ) {
         return v;
     }
     let barred = matches!(
@@ -687,10 +689,7 @@ mod tests {
             Regime::for_jurisdiction("CA", "Los Angeles"),
             Regime::CaliforniaFeha
         );
-        assert_eq!(
-            Regime::for_jurisdiction("TX", "Austin"),
-            Regime::Default
-        );
+        assert_eq!(Regime::for_jurisdiction("TX", "Austin"), Regime::Default);
     }
 
     #[test]

@@ -179,8 +179,7 @@ pub fn check(input: &Section7212Input) -> Section7212Result {
     .filter(|&&b| b)
     .count() as u32;
 
-    let marinello_satisfied =
-        input.marinello_nexus_to_pending_or_foreseeable_proceeding;
+    let marinello_satisfied = input.marinello_nexus_to_pending_or_foreseeable_proceeding;
 
     let prosecution_authorized = match input.clause_target {
         ClauseTarget::OfficerSpecific => officer_specific_count == 3,
@@ -263,15 +262,18 @@ pub fn check(input: &Section7212Input) -> Section7212Result {
     if prosecution_authorized {
         notes.push(format!(
             "§ 7212 — prosecution AUTHORIZED; {} (imprisonment up to {} year{})",
-            if felony { "FELONY" } else { "misdemeanor threats-only" },
+            if felony {
+                "FELONY"
+            } else {
+                "misdemeanor threats-only"
+            },
             max_imprisonment,
             if max_imprisonment == 1 { "" } else { "s" }
         ));
     }
 
     notes.push(
-        "IRM 9.1.3 — Criminal Statutory Provisions and Common Law procedural manual"
-            .to_string(),
+        "IRM 9.1.3 — Criminal Statutory Provisions and Common Law procedural manual".to_string(),
     );
 
     Section7212Result {
@@ -372,7 +374,11 @@ mod tests {
         let r = check(&i);
         assert!(!r.prosecution_authorized);
         assert!(!r.marinello_nexus_satisfied);
-        assert!(r.notes.iter().any(|n| n.contains("Marinello v. United States") && n.contains("routine non-compliance")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Marinello v. United States")
+                && n.contains("routine non-compliance")));
     }
 
     #[test]
@@ -475,7 +481,10 @@ mod tests {
     #[test]
     fn marinello_nexus_satisfied_note_present_when_satisfied() {
         let r = check(&omnibus_full());
-        assert!(r.notes.iter().any(|n| n.contains("Marinello v. United States") && n.contains("SATISFIED")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Marinello v. United States") && n.contains("SATISFIED")));
     }
 
     #[test]
@@ -489,20 +498,28 @@ mod tests {
     #[test]
     fn corrupt_definition_note_present() {
         let r = check(&officer_specific_full());
-        assert!(r.notes.iter().any(|n| n.contains("INTENTION TO SECURE AN UNLAWFUL BENEFIT")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("INTENTION TO SECURE AN UNLAWFUL BENEFIT")));
     }
 
     #[test]
     fn criminal_sol_3_years_general() {
         let r = check(&officer_specific_full());
         assert_eq!(r.criminal_sol_years, 3);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6531") && n.contains("general 3-year")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6531") && n.contains("general 3-year")));
     }
 
     #[test]
     fn parallel_civil_consequences_note_present() {
         let r = check(&officer_specific_full());
-        assert!(r.notes.iter().any(|n| n.contains("Spies-Daly") && n.contains("§ 6663") && n.contains("§ 6501(c)(1)")));
+        assert!(r.notes.iter().any(|n| n.contains("Spies-Daly")
+            && n.contains("§ 6663")
+            && n.contains("§ 6501(c)(1)")));
     }
 
     #[test]
@@ -562,7 +579,10 @@ mod tests {
     #[test]
     fn cfia_18_usc_3571_supersedes_note_when_felony() {
         let r = check(&officer_specific_full());
-        assert!(r.notes.iter().any(|n| n.contains("§ 3571") && n.contains("$250,000")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 3571") && n.contains("$250,000")));
     }
 
     #[test]
@@ -571,19 +591,27 @@ mod tests {
         i.threats_only_no_force_or_corruption = true;
         i.corruptly_acted = false;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("threats-only downgrade") && n.contains("1 YEAR")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("threats-only downgrade") && n.contains("1 YEAR")));
     }
 
     #[test]
     fn prosecution_authorized_note_describes_pathway() {
         let r = check(&officer_specific_full());
-        assert!(r.notes.iter().any(|n| n.contains("§ 7212 — prosecution AUTHORIZED") && n.contains("FELONY")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7212 — prosecution AUTHORIZED") && n.contains("FELONY")));
     }
 
     #[test]
     fn two_clauses_note_always_present() {
         let r = check(&officer_specific_full());
-        assert!(r.notes.iter().any(|n| n.contains("§ 7212(a) two clauses") && n.contains("officer-specific") && n.contains("omnibus")));
+        assert!(r.notes.iter().any(|n| n.contains("§ 7212(a) two clauses")
+            && n.contains("officer-specific")
+            && n.contains("omnibus")));
     }
 
     #[test]
@@ -598,7 +626,10 @@ mod tests {
         let r_omn = check(&omnibus_full());
         assert!(r_off.prosecution_authorized);
         assert!(r_omn.prosecution_authorized);
-        assert!(r_off.notes.iter().any(|n| n.contains("officer-specific clause")));
+        assert!(r_off
+            .notes
+            .iter()
+            .any(|n| n.contains("officer-specific clause")));
         assert!(r_omn.notes.iter().any(|n| n.contains("omnibus clause")));
     }
 }

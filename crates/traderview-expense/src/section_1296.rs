@@ -83,14 +83,12 @@ pub fn compute(input: &Section1296Input) -> Section1296Result {
         ..Section1296Result::default()
     };
 
-    r.mtm_unrealized_change =
-        input.fair_market_value_year_end - input.adjusted_basis_year_start;
+    r.mtm_unrealized_change = input.fair_market_value_year_end - input.adjusted_basis_year_start;
 
     if r.mtm_unrealized_change > Decimal::ZERO {
         // Year of MTM gain.
         r.ordinary_income_recognized = r.mtm_unrealized_change;
-        r.adjusted_basis_year_end =
-            input.adjusted_basis_year_start + r.mtm_unrealized_change;
+        r.adjusted_basis_year_end = input.adjusted_basis_year_start + r.mtm_unrealized_change;
         r.unreversed_inclusions_year_end =
             input.prior_unreversed_inclusions + r.mtm_unrealized_change;
         r.note = format!(
@@ -107,8 +105,7 @@ pub fn compute(input: &Section1296Input) -> Section1296Result {
         r.suspended_loss = loss_magnitude - r.ordinary_loss_recognized;
         // Basis reduces only by the deductible loss; suspended portion
         // doesn't reduce basis (it's just gone).
-        r.adjusted_basis_year_end =
-            input.adjusted_basis_year_start - r.ordinary_loss_recognized;
+        r.adjusted_basis_year_end = input.adjusted_basis_year_start - r.ordinary_loss_recognized;
         r.unreversed_inclusions_year_end =
             input.prior_unreversed_inclusions - r.ordinary_loss_recognized;
         r.note = if r.suspended_loss > Decimal::ZERO {

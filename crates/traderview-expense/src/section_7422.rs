@@ -147,10 +147,10 @@ pub fn check(input: &Section7422Input) -> Section7422Result {
         ));
     }
 
-    let jurisdiction_stayed = input.deficiency_notice_before_hearing
-        && !input.tax_court_petition_filed;
-    let jurisdiction_transferred = input.deficiency_notice_before_hearing
-        && input.tax_court_petition_filed;
+    let jurisdiction_stayed =
+        input.deficiency_notice_before_hearing && !input.tax_court_petition_filed;
+    let jurisdiction_transferred =
+        input.deficiency_notice_before_hearing && input.tax_court_petition_filed;
 
     if jurisdiction_stayed {
         failure_reasons.push(
@@ -383,9 +383,10 @@ mod tests {
     #[test]
     fn note_pins_6_month_2_year_section_6532a() {
         let r = check(&maintainable_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6532(a)")
-            && n.contains("6 months")
-            && n.contains("2 years")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6532(a)") && n.contains("6 months") && n.contains("2 years")));
     }
 
     #[test]

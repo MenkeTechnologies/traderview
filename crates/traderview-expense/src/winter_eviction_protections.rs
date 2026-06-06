@@ -225,13 +225,7 @@ mod tests {
 
     #[test]
     fn dc_sub_freezing_31f_blocks_eviction() {
-        let r = check(&input(
-            Regime::DistrictOfColumbia,
-            31,
-            false,
-            false,
-            false,
-        ));
+        let r = check(&input(Regime::DistrictOfColumbia, 31, false, false, false));
         assert!(!r.eviction_permitted);
         assert_eq!(r.restriction_type, RestrictionType::SubFreezing);
         assert!(r.citation.contains("§ 42-3505.01(k)(1)"));
@@ -240,26 +234,14 @@ mod tests {
     #[test]
     fn dc_at_32f_boundary_eviction_permitted() {
         // Strictly BELOW 32°F triggers restriction — at exactly 32°F OK.
-        let r = check(&input(
-            Regime::DistrictOfColumbia,
-            32,
-            false,
-            false,
-            false,
-        ));
+        let r = check(&input(Regime::DistrictOfColumbia, 32, false, false, false));
         assert!(r.eviction_permitted);
         assert_eq!(r.restriction_type, RestrictionType::None);
     }
 
     #[test]
     fn dc_extreme_heat_96f_blocks_eviction() {
-        let r = check(&input(
-            Regime::DistrictOfColumbia,
-            96,
-            false,
-            false,
-            false,
-        ));
+        let r = check(&input(Regime::DistrictOfColumbia, 96, false, false, false));
         assert!(!r.eviction_permitted);
         assert_eq!(r.restriction_type, RestrictionType::ExtremeHeat);
         assert!(r.citation.contains("§ 42-3505.01(k)(3)"));
@@ -268,25 +250,13 @@ mod tests {
     #[test]
     fn dc_at_95f_boundary_eviction_permitted() {
         // Strictly ABOVE 95°F triggers restriction.
-        let r = check(&input(
-            Regime::DistrictOfColumbia,
-            95,
-            false,
-            false,
-            false,
-        ));
+        let r = check(&input(Regime::DistrictOfColumbia, 95, false, false, false));
         assert!(r.eviction_permitted);
     }
 
     #[test]
     fn dc_precipitation_blocks_eviction() {
-        let r = check(&input(
-            Regime::DistrictOfColumbia,
-            70,
-            true,
-            false,
-            false,
-        ));
+        let r = check(&input(Regime::DistrictOfColumbia, 70, true, false, false));
         assert!(!r.eviction_permitted);
         assert_eq!(r.restriction_type, RestrictionType::PrecipitationAtUnit);
         assert!(r.citation.contains("§ 42-3505.01(k)(2)"));
@@ -294,26 +264,14 @@ mod tests {
 
     #[test]
     fn dc_mild_weather_no_precipitation_eviction_permitted() {
-        let r = check(&input(
-            Regime::DistrictOfColumbia,
-            55,
-            false,
-            false,
-            false,
-        ));
+        let r = check(&input(Regime::DistrictOfColumbia, 55, false, false, false));
         assert!(r.eviction_permitted);
         assert_eq!(r.restriction_type, RestrictionType::None);
     }
 
     #[test]
     fn cook_county_holiday_moratorium_blocks() {
-        let r = check(&input(
-            Regime::CookCountyIllinois,
-            50,
-            false,
-            true,
-            false,
-        ));
+        let r = check(&input(Regime::CookCountyIllinois, 50, false, true, false));
         assert!(!r.eviction_permitted);
         assert_eq!(r.restriction_type, RestrictionType::HolidayMoratorium);
         assert!(r.citation.contains("December 19 through January 5"));
@@ -321,13 +279,7 @@ mod tests {
 
     #[test]
     fn cook_county_15f_or_colder_blocks() {
-        let r = check(&input(
-            Regime::CookCountyIllinois,
-            15,
-            false,
-            false,
-            false,
-        ));
+        let r = check(&input(Regime::CookCountyIllinois, 15, false, false, false));
         assert!(!r.eviction_permitted);
         assert_eq!(r.restriction_type, RestrictionType::SubFreezing);
         assert!(r.citation.contains("15°F or COLDER"));
@@ -335,13 +287,7 @@ mod tests {
 
     #[test]
     fn cook_county_14f_blocks() {
-        let r = check(&input(
-            Regime::CookCountyIllinois,
-            14,
-            false,
-            false,
-            false,
-        ));
+        let r = check(&input(Regime::CookCountyIllinois, 14, false, false, false));
         assert!(!r.eviction_permitted);
         assert_eq!(r.restriction_type, RestrictionType::SubFreezing);
     }
@@ -349,25 +295,13 @@ mod tests {
     #[test]
     fn cook_county_16f_eviction_permitted() {
         // 16°F > 15°F threshold — eviction permitted.
-        let r = check(&input(
-            Regime::CookCountyIllinois,
-            16,
-            false,
-            false,
-            false,
-        ));
+        let r = check(&input(Regime::CookCountyIllinois, 16, false, false, false));
         assert!(r.eviction_permitted);
     }
 
     #[test]
     fn cook_county_extreme_weather_blocks() {
-        let r = check(&input(
-            Regime::CookCountyIllinois,
-            45,
-            false,
-            false,
-            true,
-        ));
+        let r = check(&input(Regime::CookCountyIllinois, 45, false, false, true));
         assert!(!r.eviction_permitted);
         assert_eq!(
             r.restriction_type,
@@ -377,26 +311,14 @@ mod tests {
 
     #[test]
     fn cook_county_normal_conditions_permitted() {
-        let r = check(&input(
-            Regime::CookCountyIllinois,
-            45,
-            false,
-            false,
-            false,
-        ));
+        let r = check(&input(Regime::CookCountyIllinois, 45, false, false, false));
         assert!(r.eviction_permitted);
         assert_eq!(r.restriction_type, RestrictionType::None);
     }
 
     #[test]
     fn default_no_obligation() {
-        let r = check(&input(
-            Regime::Default,
-            0,
-            true,
-            true,
-            true,
-        ));
+        let r = check(&input(Regime::Default, 0, true, true, true));
         // Default regime: no statutory restriction even with extreme inputs.
         assert!(r.eviction_permitted);
         assert!(r.citation.contains("No statutory winter"));
@@ -404,13 +326,7 @@ mod tests {
 
     #[test]
     fn dc_extreme_cold_negative_temp_blocks() {
-        let r = check(&input(
-            Regime::DistrictOfColumbia,
-            -10,
-            false,
-            false,
-            false,
-        ));
+        let r = check(&input(Regime::DistrictOfColumbia, -10, false, false, false));
         assert!(!r.eviction_permitted);
         assert_eq!(r.restriction_type, RestrictionType::SubFreezing);
     }
@@ -418,26 +334,14 @@ mod tests {
     #[test]
     fn dc_temperature_priority_over_precipitation() {
         // Both cold AND precipitation. SubFreezing fires first.
-        let r = check(&input(
-            Regime::DistrictOfColumbia,
-            20,
-            true,
-            false,
-            false,
-        ));
+        let r = check(&input(Regime::DistrictOfColumbia, 20, true, false, false));
         assert_eq!(r.restriction_type, RestrictionType::SubFreezing);
     }
 
     #[test]
     fn cook_county_holiday_priority_over_temperature() {
         // Within holiday window AND cold temp. Holiday fires first.
-        let r = check(&input(
-            Regime::CookCountyIllinois,
-            10,
-            false,
-            true,
-            false,
-        ));
+        let r = check(&input(Regime::CookCountyIllinois, 10, false, true, false));
         assert_eq!(r.restriction_type, RestrictionType::HolidayMoratorium);
     }
 
@@ -455,14 +359,8 @@ mod tests {
             Regime::for_jurisdiction("IL", "Cook County"),
             Regime::CookCountyIllinois
         );
-        assert_eq!(
-            Regime::for_jurisdiction("IL", "DuPage"),
-            Regime::Default
-        );
-        assert_eq!(
-            Regime::for_jurisdiction("NY", "New York"),
-            Regime::Default
-        );
+        assert_eq!(Regime::for_jurisdiction("IL", "DuPage"), Regime::Default);
+        assert_eq!(Regime::for_jurisdiction("NY", "New York"), Regime::Default);
     }
 
     #[test]
@@ -480,27 +378,9 @@ mod tests {
     #[test]
     fn only_dc_has_precipitation_restriction() {
         // Same precipitation scenario across regimes.
-        let dc = check(&input(
-            Regime::DistrictOfColumbia,
-            50,
-            true,
-            false,
-            false,
-        ));
-        let cook = check(&input(
-            Regime::CookCountyIllinois,
-            50,
-            true,
-            false,
-            false,
-        ));
-        let d = check(&input(
-            Regime::Default,
-            50,
-            true,
-            false,
-            false,
-        ));
+        let dc = check(&input(Regime::DistrictOfColumbia, 50, true, false, false));
+        let cook = check(&input(Regime::CookCountyIllinois, 50, true, false, false));
+        let d = check(&input(Regime::Default, 50, true, false, false));
         assert_eq!(dc.restriction_type, RestrictionType::PrecipitationAtUnit);
         assert!(cook.eviction_permitted);
         assert!(d.eviction_permitted);
@@ -509,20 +389,8 @@ mod tests {
     #[test]
     fn only_dc_has_extreme_heat_restriction() {
         // 100°F scenario across regimes.
-        let dc = check(&input(
-            Regime::DistrictOfColumbia,
-            100,
-            false,
-            false,
-            false,
-        ));
-        let cook = check(&input(
-            Regime::CookCountyIllinois,
-            100,
-            false,
-            false,
-            false,
-        ));
+        let dc = check(&input(Regime::DistrictOfColumbia, 100, false, false, false));
+        let cook = check(&input(Regime::CookCountyIllinois, 100, false, false, false));
         assert_eq!(dc.restriction_type, RestrictionType::ExtremeHeat);
         assert!(cook.eviction_permitted);
     }
@@ -530,27 +398,9 @@ mod tests {
     #[test]
     fn only_cook_county_has_holiday_moratorium() {
         // Same within-holiday scenario across regimes.
-        let cook = check(&input(
-            Regime::CookCountyIllinois,
-            50,
-            false,
-            true,
-            false,
-        ));
-        let dc = check(&input(
-            Regime::DistrictOfColumbia,
-            50,
-            false,
-            true,
-            false,
-        ));
-        let d = check(&input(
-            Regime::Default,
-            50,
-            false,
-            true,
-            false,
-        ));
+        let cook = check(&input(Regime::CookCountyIllinois, 50, false, true, false));
+        let dc = check(&input(Regime::DistrictOfColumbia, 50, false, true, false));
+        let d = check(&input(Regime::Default, 50, false, true, false));
         assert_eq!(cook.restriction_type, RestrictionType::HolidayMoratorium);
         // DC + Default ignore the holiday flag.
         assert!(dc.eviction_permitted);
@@ -561,34 +411,10 @@ mod tests {
     fn dc_threshold_chronology_31_32_95_96() {
         // DC: 31°F blocks (sub-freezing), 32°F permitted, 95°F permitted,
         // 96°F blocks (extreme heat).
-        let r31 = check(&input(
-            Regime::DistrictOfColumbia,
-            31,
-            false,
-            false,
-            false,
-        ));
-        let r32 = check(&input(
-            Regime::DistrictOfColumbia,
-            32,
-            false,
-            false,
-            false,
-        ));
-        let r95 = check(&input(
-            Regime::DistrictOfColumbia,
-            95,
-            false,
-            false,
-            false,
-        ));
-        let r96 = check(&input(
-            Regime::DistrictOfColumbia,
-            96,
-            false,
-            false,
-            false,
-        ));
+        let r31 = check(&input(Regime::DistrictOfColumbia, 31, false, false, false));
+        let r32 = check(&input(Regime::DistrictOfColumbia, 32, false, false, false));
+        let r95 = check(&input(Regime::DistrictOfColumbia, 95, false, false, false));
+        let r96 = check(&input(Regime::DistrictOfColumbia, 96, false, false, false));
         assert!(!r31.eviction_permitted);
         assert!(r32.eviction_permitted);
         assert!(r95.eviction_permitted);
@@ -597,40 +423,16 @@ mod tests {
 
     #[test]
     fn citations_pin_correct_authorities() {
-        let dc_cold = check(&input(
-            Regime::DistrictOfColumbia,
-            31,
-            false,
-            false,
-            false,
-        ));
+        let dc_cold = check(&input(Regime::DistrictOfColumbia, 31, false, false, false));
         assert!(dc_cold.citation.contains("§ 42-3505.01(k)(1)"));
 
-        let dc_heat = check(&input(
-            Regime::DistrictOfColumbia,
-            96,
-            false,
-            false,
-            false,
-        ));
+        let dc_heat = check(&input(Regime::DistrictOfColumbia, 96, false, false, false));
         assert!(dc_heat.citation.contains("§ 42-3505.01(k)(3)"));
 
-        let dc_precip = check(&input(
-            Regime::DistrictOfColumbia,
-            50,
-            true,
-            false,
-            false,
-        ));
+        let dc_precip = check(&input(Regime::DistrictOfColumbia, 50, true, false, false));
         assert!(dc_precip.citation.contains("§ 42-3505.01(k)(2)"));
 
-        let cook = check(&input(
-            Regime::CookCountyIllinois,
-            10,
-            false,
-            false,
-            false,
-        ));
+        let cook = check(&input(Regime::CookCountyIllinois, 10, false, false, false));
         assert!(cook.citation.contains("Cook County Sheriff Order"));
     }
 }

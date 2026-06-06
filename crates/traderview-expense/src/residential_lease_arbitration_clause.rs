@@ -297,7 +297,10 @@ mod tests {
             i.regime = regime;
             i.dispute_type = DisputeType::SexualHarassmentOrAssault;
             let r = check(&i);
-            assert!(!r.arbitration_enforceable, "Speak Out Act bars arbitration in all regimes");
+            assert!(
+                !r.arbitration_enforceable,
+                "Speak Out Act bars arbitration in all regimes"
+            );
             assert!(r.notes.iter().any(|n| n.contains("Speak Out Act")));
         }
     }
@@ -317,7 +320,10 @@ mod tests {
         i.duress_or_misrepresentation = true;
         let r = check(&i);
         assert!(!r.arbitration_enforceable);
-        assert!(r.notes.iter().any(|n| n.contains("duress / misrepresentation")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("duress / misrepresentation")));
     }
 
     #[test]
@@ -332,7 +338,10 @@ mod tests {
         let mut i = ca_base();
         i.dispute_type = DisputeType::UnlawfulDetainer;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("§ 1953(a)(4) traditional rule")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1953(a)(4) traditional rule")));
     }
 
     #[test]
@@ -340,7 +349,10 @@ mod tests {
         let mut i = ca_base();
         i.dispute_type = DisputeType::SecurityDeposit;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("§ 1953(a)(4) traditional rule")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1953(a)(4) traditional rule")));
     }
 
     #[test]
@@ -349,14 +361,20 @@ mod tests {
         i.dispute_type = DisputeType::Other;
         let r = check(&i);
         assert!(r.arbitration_enforceable);
-        assert!(r.notes.iter().any(|n| n.contains("non-procedural-rights disputes generally arbitrable")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("non-procedural-rights disputes generally arbitrable")));
     }
 
     #[test]
     fn nj_explicit_judicial_waiver_satisfies_atalese() {
         let r = check(&nj_base());
         assert!(r.arbitration_enforceable);
-        assert!(r.notes.iter().any(|n| n.contains("Atalese standard satisfied")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Atalese standard satisfied")));
     }
 
     #[test]
@@ -365,14 +383,19 @@ mod tests {
         i.nj_explicit_judicial_waiver_language = false;
         let r = check(&i);
         assert!(!r.arbitration_enforceable);
-        assert!(r.notes.iter().any(|n| n.contains("Atalese") && n.contains("EXPLICITLY waive judicial forum")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Atalese") && n.contains("EXPLICITLY waive judicial forum")));
     }
 
     #[test]
     fn default_faa_general_enforceability() {
         let r = check(&default_base());
         assert!(r.arbitration_enforceable);
-        assert!(r.notes.iter().any(|n| n.contains("9 U.S.C. § 2") && n.contains("valid, irrevocable, and enforceable")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("9 U.S.C. § 2") && n.contains("valid, irrevocable, and enforceable")
+        ));
     }
 
     #[test]
@@ -388,7 +411,11 @@ mod tests {
         i.class_action_waiver = false;
         let r = check(&i);
         assert!(!r.class_action_waiver_enforceable);
-        let epic_notes: Vec<_> = r.notes.iter().filter(|n| n.contains("Epic Systems")).collect();
+        let epic_notes: Vec<_> = r
+            .notes
+            .iter()
+            .filter(|n| n.contains("Epic Systems"))
+            .collect();
         assert!(epic_notes.is_empty());
     }
 
@@ -466,7 +493,11 @@ mod tests {
             i.nj_explicit_judicial_waiver_language = false;
             i.dispute_type = DisputeType::Other;
             let r = check(&i);
-            assert!(r.arbitration_enforceable, "regime {:?} does not require Atalese explicit waiver", regime);
+            assert!(
+                r.arbitration_enforceable,
+                "regime {:?} does not require Atalese explicit waiver",
+                regime
+            );
         }
     }
 
@@ -481,7 +512,11 @@ mod tests {
             let mut i = default_base();
             i.dispute_type = dt;
             let r = check(&i);
-            assert!(r.arbitration_enforceable, "dispute type {:?} should be arbitrable in Default regime", dt);
+            assert!(
+                r.arbitration_enforceable,
+                "dispute type {:?} should be arbitrable in Default regime",
+                dt
+            );
         }
 
         let mut i_harass = default_base();
@@ -501,13 +536,19 @@ mod tests {
             let mut i = ca_base();
             i.dispute_type = dt;
             let r = check(&i);
-            assert!(r.notes.iter().any(|n| n.contains("§ 1953(a)(4) traditional rule")));
+            assert!(r
+                .notes
+                .iter()
+                .any(|n| n.contains("§ 1953(a)(4) traditional rule")));
         }
 
         let mut i_other = ca_base();
         i_other.dispute_type = DisputeType::Other;
         let r_other = check(&i_other);
-        assert!(r_other.notes.iter().any(|n| n.contains("non-procedural-rights disputes")));
+        assert!(r_other
+            .notes
+            .iter()
+            .any(|n| n.contains("non-procedural-rights disputes")));
     }
 
     #[test]
@@ -523,7 +564,10 @@ mod tests {
         let mut i = default_base();
         i.unconscionable = true;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("AT&T Mobility v. Concepcion")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("AT&T Mobility v. Concepcion")));
     }
 
     #[test]
@@ -538,7 +582,10 @@ mod tests {
         i.nj_explicit_judicial_waiver_language = false;
         let r = check(&i);
         assert!(!r.arbitration_enforceable);
-        assert!(r.notes.iter().any(|n| n.contains("boilerplate clauses fail Atalese")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("boilerplate clauses fail Atalese")));
     }
 
     #[test]

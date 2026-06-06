@@ -117,8 +117,7 @@ pub fn check(input: &Section6502Input) -> Section6502Result {
     let mut notes: Vec<String> = Vec::new();
 
     let oic_30_day = input.offer_in_compromise_pending && input.offer_in_compromise_rejected;
-    let cdp_90_day_floor =
-        input.cdp_hearing_requested && input.cdp_less_than_90_days_remaining;
+    let cdp_90_day_floor = input.cdp_hearing_requested && input.cdp_less_than_90_days_remaining;
 
     let active_count = [
         input.installment_agreement_in_effect,
@@ -154,8 +153,7 @@ pub fn check(input: &Section6502Input) -> Section6502Result {
         );
         if input.offer_in_compromise_rejected {
             notes.push(
-                "§ 6331(k)(1) — OIC rejected triggers ADDITIONAL 30-day CSED extension"
-                    .to_string(),
+                "§ 6331(k)(1) — OIC rejected triggers ADDITIONAL 30-day CSED extension".to_string(),
             );
         }
     }
@@ -262,7 +260,10 @@ mod tests {
     #[test]
     fn base_period_note_describes_csed_consequence() {
         let r = check(&base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6502(a)(1)") && n.contains("BARRED from collecting")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6502(a)(1)") && n.contains("BARRED from collecting")));
     }
 
     #[test]
@@ -272,7 +273,10 @@ mod tests {
         let r = check(&i);
         assert!(r.installment_agreement_suspension_engaged);
         assert!(r.any_suspension_engaged);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6502(a)(2)") && n.contains("90 days after period expires")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6502(a)(2)") && n.contains("90 days after period expires")));
     }
 
     #[test]
@@ -282,7 +286,10 @@ mod tests {
         let r = check(&i);
         assert!(r.oic_suspension_engaged);
         assert!(!r.oic_post_decision_30_day_extension_engaged);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6331(k)(1)") && n.contains("OIC suspends CSED")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6331(k)(1)") && n.contains("OIC suspends CSED")));
     }
 
     #[test]
@@ -310,7 +317,10 @@ mod tests {
         i.cdp_hearing_requested = true;
         let r = check(&i);
         assert!(r.cdp_suspension_engaged);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6330(e)(1)") && n.contains("CDP hearing request")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6330(e)(1)") && n.contains("CDP hearing request")));
     }
 
     #[test]
@@ -337,7 +347,10 @@ mod tests {
         i.bankruptcy_stay_active = true;
         let r = check(&i);
         assert!(r.bankruptcy_suspension_engaged);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6503(h)") && n.contains("6 MONTHS")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6503(h)") && n.contains("6 MONTHS")));
     }
 
     #[test]
@@ -346,7 +359,10 @@ mod tests {
         i.military_combat_zone_deferment = true;
         let r = check(&i);
         assert!(r.military_deferment_engaged);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7508(a)") && n.contains("180 days")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7508(a)") && n.contains("180 days")));
     }
 
     #[test]
@@ -355,7 +371,10 @@ mod tests {
         i.taxpayer_continuously_absent_six_plus_months = true;
         let r = check(&i);
         assert!(r.continuous_absence_suspension_engaged);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6503(c)") && n.contains("absent from US 6+ months")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6503(c)") && n.contains("absent from US 6+ months")));
     }
 
     #[test]
@@ -365,7 +384,10 @@ mod tests {
         i.cdp_hearing_requested = true;
         let r = check(&i);
         assert!(r.overlapping_suspensions_concurrent_warning);
-        assert!(r.notes.iter().any(|n| n.contains("IRM 5.1.19.3.4") && n.contains("CONCURRENTLY")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("IRM 5.1.19.3.4") && n.contains("CONCURRENTLY")));
     }
 
     #[test]
@@ -415,18 +437,39 @@ mod tests {
     #[test]
     fn irm_8_21_5_note_always_present() {
         let r = check(&base());
-        assert!(r.notes.iter().any(|n| n.contains("IRM 8.21.5") && n.contains("statutes on collection cases")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("IRM 8.21.5") && n.contains("statutes on collection cases")));
     }
 
     #[test]
     fn truth_table_six_independent_triggers_each_sets_flag() {
         let triggers: [(fn(&mut Section6502Input), fn(&Section6502Result) -> bool); 6] = [
-            (|i| i.installment_agreement_in_effect = true, |r| r.installment_agreement_suspension_engaged),
-            (|i| i.offer_in_compromise_pending = true, |r| r.oic_suspension_engaged),
-            (|i| i.cdp_hearing_requested = true, |r| r.cdp_suspension_engaged),
-            (|i| i.bankruptcy_stay_active = true, |r| r.bankruptcy_suspension_engaged),
-            (|i| i.military_combat_zone_deferment = true, |r| r.military_deferment_engaged),
-            (|i| i.taxpayer_continuously_absent_six_plus_months = true, |r| r.continuous_absence_suspension_engaged),
+            (
+                |i| i.installment_agreement_in_effect = true,
+                |r| r.installment_agreement_suspension_engaged,
+            ),
+            (
+                |i| i.offer_in_compromise_pending = true,
+                |r| r.oic_suspension_engaged,
+            ),
+            (
+                |i| i.cdp_hearing_requested = true,
+                |r| r.cdp_suspension_engaged,
+            ),
+            (
+                |i| i.bankruptcy_stay_active = true,
+                |r| r.bankruptcy_suspension_engaged,
+            ),
+            (
+                |i| i.military_combat_zone_deferment = true,
+                |r| r.military_deferment_engaged,
+            ),
+            (
+                |i| i.taxpayer_continuously_absent_six_plus_months = true,
+                |r| r.continuous_absence_suspension_engaged,
+            ),
         ];
 
         for (setter, getter) in triggers {
@@ -468,8 +511,16 @@ mod tests {
         i.offer_in_compromise_pending = true;
         i.offer_in_compromise_rejected = true;
         let r = check(&i);
-        let suspends_count = r.notes.iter().filter(|n| n.contains("OIC suspends CSED")).count();
-        let thirty_day_count = r.notes.iter().filter(|n| n.contains("ADDITIONAL 30-day")).count();
+        let suspends_count = r
+            .notes
+            .iter()
+            .filter(|n| n.contains("OIC suspends CSED"))
+            .count();
+        let thirty_day_count = r
+            .notes
+            .iter()
+            .filter(|n| n.contains("ADDITIONAL 30-day"))
+            .count();
         assert_eq!(suspends_count, 1);
         assert_eq!(thirty_day_count, 1);
     }

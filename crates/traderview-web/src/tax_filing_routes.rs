@@ -20,9 +20,9 @@ use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use traderview_tax::{compute as compute_tax, TaxReturn, TaxResult};
-use traderview_tax::safe_harbor::{self, SafeHarborInput, SafeHarborResult, BindingHarbor};
+use traderview_tax::safe_harbor::{self, BindingHarbor, SafeHarborInput, SafeHarborResult};
 use traderview_tax::what_if::{self, Scenario, WhatIfResult};
+use traderview_tax::{compute as compute_tax, TaxResult, TaxReturn};
 
 pub fn router() -> Router<AppState> {
     Router::new()
@@ -45,21 +45,22 @@ async fn load_or_create(
     user_id: Uuid,
     year: i32,
 ) -> Result<(Uuid, TaxReturn), ApiError> {
-    let row: Option<(Uuid, serde_json::Value)> = sqlx::query_as(
-        "SELECT id, data FROM tax_returns WHERE user_id = $1 AND tax_year = $2",
-    )
-    .bind(user_id)
-    .bind(year)
-    .fetch_optional(&s.pool)
-    .await?;
+    let row: Option<(Uuid, serde_json::Value)> =
+        sqlx::query_as("SELECT id, data FROM tax_returns WHERE user_id = $1 AND tax_year = $2")
+            .bind(user_id)
+            .bind(year)
+            .fetch_optional(&s.pool)
+            .await?;
 
     if let Some((id, data)) = row {
         let draft = serde_json::from_value::<TaxReturn>(data).unwrap_or_default();
         return Ok((id, draft));
     }
 
-    let mut draft = TaxReturn::default();
-    draft.tax_year = year;
+    let draft = TaxReturn {
+        tax_year: year,
+        ..Default::default()
+    };
     let payload = serde_json::to_value(&draft).unwrap();
     let id: Uuid = sqlx::query_scalar(
         "INSERT INTO tax_returns (user_id, tax_year, data) VALUES ($1, $2, $3) RETURNING id",
@@ -127,12 +128,10 @@ async fn get_return(
 ) -> Result<Json<ReturnView>, ApiError> {
     let (id, draft) = load_or_create(&s, user.id, year).await?;
     let result = compute_tax(&draft);
-    let status: Option<String> = sqlx::query_scalar(
-        "SELECT status FROM tax_returns WHERE id = $1",
-    )
-    .bind(id)
-    .fetch_optional(&s.pool)
-    .await?;
+    let status: Option<String> = sqlx::query_scalar("SELECT status FROM tax_returns WHERE id = $1")
+        .bind(id)
+        .fetch_optional(&s.pool)
+        .await?;
     Ok(Json(ReturnView {
         id,
         tax_year: year,
@@ -171,7 +170,13 @@ async fn put_return(
             .await?;
     }
     let status = body.status.unwrap_or_else(|| "personal".into());
-    Ok(Json(ReturnView { id, tax_year: year, status, draft, result }))
+    Ok(Json(ReturnView {
+        id,
+        tax_year: year,
+        status,
+        draft,
+        result,
+    }))
 }
 
 async fn compute_endpoint(
@@ -186,7 +191,7 @@ async fn compute_endpoint(
 // ── Auto-populate from existing data ───────────────────────────────────
 
 /// Pull Schedule C totals from receipts (items with tax_bucket='business')
-/// + Schedule E totals from rental_properties (or items with
+/// plus Schedule E totals from rental_properties (or items with
 /// tax_bucket='rental') for the given year. Overlays them into the
 /// current draft and returns the new draft + computed result.
 async fn autopopulate(
@@ -215,9 +220,7 @@ async fn autopopulate(
     .bind(year)
     .fetch_optional(&s.pool)
     .await?;
-    let sched_c_expenses: Decimal = sched_c_row
-        .and_then(|(d,)| d)
-        .unwrap_or(Decimal::ZERO);
+    let sched_c_expenses: Decimal = sched_c_row.and_then(|(d,)| d).unwrap_or(Decimal::ZERO);
 
     // Gross receipts come from positive-amount transactions
     // (or a future "self-employment income" feed). For now, leave
@@ -267,12 +270,9 @@ async fn autopopulate(
     .bind(year)
     .fetch_optional(&s.pool)
     .await?;
-    let sched_e_expenses: Decimal = sched_e_row
-        .and_then(|(d,)| d)
-        .unwrap_or(Decimal::ZERO);
+    let sched_e_expenses: Decimal = sched_e_row.and_then(|(d,)| d).unwrap_or(Decimal::ZERO);
     draft.schedule_e.total_expenses = sched_e_expenses;
-    draft.schedule_e.net_income =
-        draft.schedule_e.gross_rents - draft.schedule_e.total_expenses;
+    draft.schedule_e.net_income = draft.schedule_e.gross_rents - draft.schedule_e.total_expenses;
 
     // Estimated tax payments — sum across the year.
     let est_pay: Option<(Option<Decimal>,)> = sqlx::query_as(
@@ -292,7 +292,11 @@ async fn autopopulate(
     let result = compute_tax(&draft);
     save_return(&s, id, &draft, &result, "autopopulate").await?;
     Ok(Json(ReturnView {
-        id, tax_year: year, status: "income".into(), draft, result,
+        id,
+        tax_year: year,
+        status: "income".into(),
+        draft,
+        result,
     }))
 }
 
@@ -323,10 +327,10 @@ fn default_quarter() -> u32 {
     let now = Utc::now();
     let month = now.month();
     match month {
-        1..=3   => 1,
-        4..=5   => 2,   // Q2 covers Jun 15 deadline
-        6..=8   => 3,
-        _       => 4,
+        1..=3 => 1,
+        4..=5 => 2, // Q2 covers Jun 15 deadline
+        6..=8 => 3,
+        _ => 4,
     }
 }
 
@@ -357,7 +361,11 @@ async fn safe_harbor_endpoint(
         }
     };
 
-    let w2_wh: Decimal = draft.w2s.iter().map(|w| w.box_2_federal_income_tax_withheld).sum();
+    let w2_wh: Decimal = draft
+        .w2s
+        .iter()
+        .map(|w| w.box_2_federal_income_tax_withheld)
+        .sum();
 
     let input = SafeHarborInput {
         prior_year_tax,
@@ -385,11 +393,11 @@ async fn what_if_endpoint(
     Json(body): Json<WhatIfBody>,
 ) -> Result<Json<WhatIfResult>, ApiError> {
     let (_, draft) = load_or_create(&s, user.id, year).await?;
-    let result = what_if::compute_what_if(&draft, body.scenario)
-        .ok_or_else(|| ApiError::BadRequest(
-            "scenario.path not recognized — see what_if::Scenario doc for valid field slugs"
-                .into(),
-        ))?;
+    let result = what_if::compute_what_if(&draft, body.scenario).ok_or_else(|| {
+        ApiError::BadRequest(
+            "scenario.path not recognized — see what_if::Scenario doc for valid field slugs".into(),
+        )
+    })?;
     Ok(Json(result))
 }
 
@@ -398,7 +406,9 @@ async fn what_if_endpoint(
 // see the variant names. Touch via a noop assertion to anchor the
 // dependency.
 #[allow(dead_code)]
-fn _anchor_binding_harbor() -> BindingHarbor { BindingHarbor::default() }
+fn _anchor_binding_harbor() -> BindingHarbor {
+    BindingHarbor::default()
+}
 
 #[derive(Serialize)]
 struct FormUploadResult {
@@ -417,12 +427,19 @@ async fn upload_form(
 ) -> Result<Json<FormUploadResult>, ApiError> {
     let mut bytes: Vec<u8> = Vec::new();
     let mut mime: String = String::new();
-    let mut tax_year: i32 = (Utc::now().year() - 1) as i32; // default: last tax year
+    let mut tax_year: i32 = Utc::now().year() - 1; // default: last tax year
 
-    while let Some(field) = mp.next_field().await.map_err(|e| ApiError::BadRequest(e.to_string()))? {
+    while let Some(field) = mp
+        .next_field()
+        .await
+        .map_err(|e| ApiError::BadRequest(e.to_string()))?
+    {
         match field.name() {
             Some("file") => {
-                mime = field.content_type().unwrap_or("application/octet-stream").to_string();
+                mime = field
+                    .content_type()
+                    .unwrap_or("application/octet-stream")
+                    .to_string();
                 bytes = field
                     .bytes()
                     .await
@@ -450,13 +467,15 @@ async fn upload_form(
     let model_dir = s.ocr_model_dir();
     let extract = tokio::task::spawn_blocking(move || {
         let result = traderview_ocr::extract(&bytes, &mime, Some(&model_dir));
-        result.ok().and_then(|r| traderview_ocr::tax_forms::extract(&r.text))
+        result
+            .ok()
+            .and_then(|r| traderview_ocr::tax_forms::extract(&r.text))
     })
     .await
     .map_err(|e| ApiError::Internal(anyhow::anyhow!("join: {e}")))?
-    .ok_or_else(|| ApiError::BadRequest(
-        "no recognizable tax form detected — upload a W-2 or 1099".into(),
-    ))?;
+    .ok_or_else(|| {
+        ApiError::BadRequest("no recognizable tax form detected — upload a W-2 or 1099".into())
+    })?;
 
     let kind_str = serde_json::to_string(&extract.kind)
         .ok()

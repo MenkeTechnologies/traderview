@@ -22,7 +22,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PinballReport {
@@ -40,9 +44,13 @@ pub fn compute(bars: &[Bar], sma_period: usize, lookback: usize) -> PinballRepor
         sma_period,
         lookback,
     };
-    if sma_period < 2 || lookback < 2
-        || n < sma_period.max(lookback) + 1 { return report; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if sma_period < 2 || lookback < 2 || n < sma_period.max(lookback) + 1 {
+        return report;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return report;
     }
     let s_f = sma_period as f64;
@@ -58,7 +66,9 @@ pub fn compute(bars: &[Bar], sma_period: usize, lookback: usize) -> PinballRepor
         let close = bars[i].close;
         let prev_close = bars[i - 1].close;
         let range = bars[i].high - bars[i].low;
-        if range <= 0.0 { continue; }
+        if range <= 0.0 {
+            continue;
+        }
         let mid = bars[i].low + range / 2.0;
         // Look at the prior `lookback` bars (excluding current) for new
         // extreme.
@@ -79,7 +89,13 @@ pub fn compute(bars: &[Bar], sma_period: usize, lookback: usize) -> PinballRepor
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {
@@ -111,10 +127,12 @@ mod tests {
     fn classic_bullish_pinball_triggers_long() {
         // 60 bars in mild downtrend, then a new low bar that closes in
         // the upper half of its range above prior close.
-        let mut bars: Vec<Bar> = (0..60).map(|i| {
-            let m = 100.0 - i as f64 * 0.2;
-            b(m + 0.5, m - 0.5, m - 0.3)
-        }).collect();
+        let mut bars: Vec<Bar> = (0..60)
+            .map(|i| {
+                let m = 100.0 - i as f64 * 0.2;
+                b(m + 0.5, m - 0.5, m - 0.3)
+            })
+            .collect();
         // Capitulation bar: new low, but closes near high.
         bars.push(b(90.0, 80.0, 89.0));
         let r = compute(&bars, 50, 20);
@@ -126,10 +144,12 @@ mod tests {
     fn classic_bearish_pinball_triggers_short() {
         // Mild uptrend then a blow-off bar: new high, close in lower
         // half of range, close < prior close (the intrabar reversal).
-        let mut bars: Vec<Bar> = (0..60).map(|i| {
-            let m = 100.0 + i as f64 * 0.2;
-            b(m + 0.5, m - 0.5, m + 0.3)
-        }).collect();
+        let mut bars: Vec<Bar> = (0..60)
+            .map(|i| {
+                let m = 100.0 + i as f64 * 0.2;
+                b(m + 0.5, m - 0.5, m + 0.3)
+            })
+            .collect();
         // Prior close at bar 59 = 100 + 59·0.2 + 0.3 = 112.1.
         // Blow-off: spike to 125, but close at 109 (below prior 112.1
         // and in lower half of [108..125]).

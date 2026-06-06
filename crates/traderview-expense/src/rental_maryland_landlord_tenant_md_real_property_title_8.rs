@@ -445,7 +445,10 @@ mod tests {
         let mut input = baseline_input();
         input.tenancy_coverage = TenancyCoverage::ExemptFromTitle8;
         let out = check(&input);
-        assert_eq!(out.mode, MdLandlordTenantMode::NotApplicableTenancyExemptFromTitle8);
+        assert_eq!(
+            out.mode,
+            MdLandlordTenantMode::NotApplicableTenancyExemptFromTitle8
+        );
     }
 
     #[test]
@@ -518,7 +521,10 @@ mod tests {
             LeaseExecutionDateStatus::LeaseExecutedBeforeOctober1_2024PreRrsa2024TwoMonthCap;
         input.deposit_amount_in_tenths_of_months_rent = 21;
         let out = check(&input);
-        assert_eq!(out.mode, MdLandlordTenantMode::ViolationDepositExceedsTwoMonthCap);
+        assert_eq!(
+            out.mode,
+            MdLandlordTenantMode::ViolationDepositExceedsTwoMonthCap
+        );
     }
 
     #[test]
@@ -572,7 +578,8 @@ mod tests {
     #[test]
     fn deposit_in_interest_bearing_maryland_account_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::InterestBearingAccountRequirementUnderSection8_203D;
+        input.compliance_aspect =
+            ComplianceAspect::InterestBearingAccountRequirementUnderSection8_203D;
         input.deposit_holding_arrangement =
             DepositHoldingArrangement::HeldInInterestBearingAccountMarylandBranchFederallyInsured;
         let out = check(&input);
@@ -585,7 +592,8 @@ mod tests {
     #[test]
     fn deposit_not_in_interest_bearing_maryland_account_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::InterestBearingAccountRequirementUnderSection8_203D;
+        input.compliance_aspect =
+            ComplianceAspect::InterestBearingAccountRequirementUnderSection8_203D;
         input.deposit_holding_arrangement =
             DepositHoldingArrangement::HeldInNonInterestBearingOrNonMarylandAccount;
         let out = check(&input);

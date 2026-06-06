@@ -83,9 +83,12 @@ pub async fn set(pool: &PgPool, user_id: Uuid, dto: &DataSourceKeysDto) -> anyho
         .execute(pool)
         .await?;
 
-    let finnhub_supplied = matches!(dto.finnhub_api_key.as_deref(), Some(k) if k != MASK && !k.is_empty());
-    let alpaca_id_supplied = matches!(dto.alpaca_key_id.as_deref(), Some(k) if k != MASK && !k.is_empty());
-    let alpaca_secret_supplied = matches!(dto.alpaca_secret_key.as_deref(), Some(k) if k != MASK && !k.is_empty());
+    let finnhub_supplied =
+        matches!(dto.finnhub_api_key.as_deref(), Some(k) if k != MASK && !k.is_empty());
+    let alpaca_id_supplied =
+        matches!(dto.alpaca_key_id.as_deref(), Some(k) if k != MASK && !k.is_empty());
+    let alpaca_secret_supplied =
+        matches!(dto.alpaca_secret_key.as_deref(), Some(k) if k != MASK && !k.is_empty());
 
     // Build a coalescing UPDATE so the caller can change a subset of fields
     // without re-supplying the others.
@@ -99,9 +102,21 @@ pub async fn set(pool: &PgPool, user_id: Uuid, dto: &DataSourceKeysDto) -> anyho
            WHERE user_id = $1",
     )
     .bind(user_id)
-    .bind(if finnhub_supplied { dto.finnhub_api_key.as_deref() } else { None })
-    .bind(if alpaca_id_supplied { dto.alpaca_key_id.as_deref() } else { None })
-    .bind(if alpaca_secret_supplied { dto.alpaca_secret_key.as_deref() } else { None })
+    .bind(if finnhub_supplied {
+        dto.finnhub_api_key.as_deref()
+    } else {
+        None
+    })
+    .bind(if alpaca_id_supplied {
+        dto.alpaca_key_id.as_deref()
+    } else {
+        None
+    })
+    .bind(if alpaca_secret_supplied {
+        dto.alpaca_secret_key.as_deref()
+    } else {
+        None
+    })
     .bind(dto.alpaca_paper)
     .execute(pool)
     .await?;
@@ -128,28 +143,28 @@ pub async fn any_finnhub_key(pool: &PgPool) -> anyhow::Result<Option<String>> {
             return Ok(Some(k));
         }
     }
-    Ok(std::env::var("FINNHUB_API_KEY").ok().filter(|s| !s.is_empty()))
+    Ok(std::env::var("FINNHUB_API_KEY")
+        .ok()
+        .filter(|s| !s.is_empty()))
 }
 
 /// Plaintext finnhub key for backend callers (the data router, the live-ticks
 /// loop). Returns env-var fallback when the DB column is empty, so headless
 /// / CI deployments work without going through the UI.
-pub async fn finnhub_key_plain(
-    pool: &PgPool,
-    user_id: Uuid,
-) -> anyhow::Result<Option<String>> {
-    let row: Option<(Option<String>,)> = sqlx::query_as(
-        "SELECT finnhub_api_key FROM user_settings WHERE user_id = $1",
-    )
-    .bind(user_id)
-    .fetch_optional(pool)
-    .await?;
+pub async fn finnhub_key_plain(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Option<String>> {
+    let row: Option<(Option<String>,)> =
+        sqlx::query_as("SELECT finnhub_api_key FROM user_settings WHERE user_id = $1")
+            .bind(user_id)
+            .fetch_optional(pool)
+            .await?;
     if let Some((Some(k),)) = row {
         if !k.is_empty() {
             return Ok(Some(k));
         }
     }
-    Ok(std::env::var("FINNHUB_API_KEY").ok().filter(|s| !s.is_empty()))
+    Ok(std::env::var("FINNHUB_API_KEY")
+        .ok()
+        .filter(|s| !s.is_empty()))
 }
 
 /// Plaintext alpaca credentials for backend callers. Returns the
@@ -170,8 +185,12 @@ pub async fn alpaca_creds_plain(
             return Ok(Some((id, sec, paper)));
         }
     }
-    let id = std::env::var("ALPACA_KEY_ID").ok().filter(|s| !s.is_empty());
-    let sec = std::env::var("ALPACA_SECRET_KEY").ok().filter(|s| !s.is_empty());
+    let id = std::env::var("ALPACA_KEY_ID")
+        .ok()
+        .filter(|s| !s.is_empty());
+    let sec = std::env::var("ALPACA_SECRET_KEY")
+        .ok()
+        .filter(|s| !s.is_empty());
     let paper = std::env::var("ALPACA_PAPER")
         .ok()
         .map(|s| !matches!(s.as_str(), "0" | "false" | "no"))

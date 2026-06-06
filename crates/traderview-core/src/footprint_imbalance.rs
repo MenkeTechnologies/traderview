@@ -41,7 +41,12 @@ pub struct ImbalanceConfig {
 }
 
 impl Default for ImbalanceConfig {
-    fn default() -> Self { Self { min_ratio: 3.0, min_stack: 3 } }
+    fn default() -> Self {
+        Self {
+            min_ratio: 3.0,
+            min_stack: 3,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -102,7 +107,9 @@ fn scan_diagonal(
                 let denom = cur.ask_volume;
                 denom > 0.0 && nxt.bid_volume / denom >= cfg.min_ratio
             };
-            if !qualifies { break; }
+            if !qualifies {
+                break;
+            }
             run_end += 1;
         }
         let stack_size = run_end - i + 1;
@@ -128,7 +135,11 @@ mod tests {
     use super::*;
 
     fn lvl(p: f64, b: f64, a: f64) -> PriceLevel {
-        PriceLevel { price: p, bid_volume: b, ask_volume: a }
+        PriceLevel {
+            price: p,
+            bid_volume: b,
+            ask_volume: a,
+        }
     }
 
     #[test]
@@ -139,12 +150,26 @@ mod tests {
 
     #[test]
     fn invalid_config_returns_empty() {
-        let bar = FootprintBar { levels: vec![lvl(100.0, 10.0, 30.0); 5] };
+        let bar = FootprintBar {
+            levels: vec![lvl(100.0, 10.0, 30.0); 5],
+        };
         for cfg in [
-            ImbalanceConfig { min_ratio: 0.0, min_stack: 3 },
-            ImbalanceConfig { min_ratio: -1.0, min_stack: 3 },
-            ImbalanceConfig { min_ratio: f64::NAN, min_stack: 3 },
-            ImbalanceConfig { min_ratio: 3.0, min_stack: 1 },
+            ImbalanceConfig {
+                min_ratio: 0.0,
+                min_stack: 3,
+            },
+            ImbalanceConfig {
+                min_ratio: -1.0,
+                min_stack: 3,
+            },
+            ImbalanceConfig {
+                min_ratio: f64::NAN,
+                min_stack: 3,
+            },
+            ImbalanceConfig {
+                min_ratio: 3.0,
+                min_stack: 1,
+            },
         ] {
             assert!(detect(std::slice::from_ref(&bar), &cfg).events.is_empty());
         }
@@ -155,10 +180,10 @@ mod tests {
         // 3 levels where ask[i] / bid[i+1] >= 3.0.
         let bar = FootprintBar {
             levels: vec![
-                lvl(101.0, 5.0, 30.0),    // ask 30 / next bid 5 = 6 ✓
-                lvl(100.5, 5.0, 30.0),    // ask 30 / next bid 5 = 6 ✓
-                lvl(100.0, 5.0, 30.0),    // ask 30 / next bid 5 = 6 ✓ (needs level 3)
-                lvl(99.5,  5.0, 5.0),
+                lvl(101.0, 5.0, 30.0), // ask 30 / next bid 5 = 6 ✓
+                lvl(100.5, 5.0, 30.0), // ask 30 / next bid 5 = 6 ✓
+                lvl(100.0, 5.0, 30.0), // ask 30 / next bid 5 = 6 ✓ (needs level 3)
+                lvl(99.5, 5.0, 5.0),
             ],
         };
         let r = detect(&[bar], &ImbalanceConfig::default());
@@ -174,9 +199,9 @@ mod tests {
         let bar = FootprintBar {
             levels: vec![
                 lvl(101.0, 30.0, 5.0),
-                lvl(100.5, 30.0, 5.0),    // bid 30 / prev ask 5 = 6 ✓
-                lvl(100.0, 30.0, 5.0),    // bid 30 / prev ask 5 = 6 ✓
-                lvl(99.5,  30.0, 5.0),    // bid 30 / prev ask 5 = 6 ✓ — 3 transitions = stack of 3
+                lvl(100.5, 30.0, 5.0), // bid 30 / prev ask 5 = 6 ✓
+                lvl(100.0, 30.0, 5.0), // bid 30 / prev ask 5 = 6 ✓
+                lvl(99.5, 30.0, 5.0),  // bid 30 / prev ask 5 = 6 ✓ — 3 transitions = stack of 3
             ],
         };
         let r = detect(&[bar], &ImbalanceConfig::default());
@@ -195,7 +220,9 @@ mod tests {
 
     #[test]
     fn short_bar_skipped() {
-        let bar = FootprintBar { levels: vec![lvl(100.0, 5.0, 30.0)] };
+        let bar = FootprintBar {
+            levels: vec![lvl(100.0, 5.0, 30.0)],
+        };
         let r = detect(&[bar], &ImbalanceConfig::default());
         assert!(r.events.is_empty());
     }
@@ -211,6 +238,9 @@ mod tests {
             ],
         };
         let r = detect(&[bar], &ImbalanceConfig::default());
-        assert!(r.events.is_empty(), "zero bid denom shouldn't crash or fire");
+        assert!(
+            r.events.is_empty(),
+            "zero bid denom shouldn't crash or fire"
+        );
     }
 }

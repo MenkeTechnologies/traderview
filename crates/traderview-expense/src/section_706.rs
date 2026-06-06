@@ -232,7 +232,8 @@ pub fn check(input: &Input) -> Output {
                     return Output {
                         severity: Severity::ViolationProrationMethodWithoutWrittenAgreement,
                         partnership_year_closes_for_partner: false,
-                        distributive_share_method: VaryingInterestMethod::InterimClosingMethodDefault,
+                        distributive_share_method:
+                            VaryingInterestMethod::InterimClosingMethodDefault,
                         notes,
                         citations,
                     };
@@ -427,9 +428,18 @@ mod tests {
     fn citations_pin_706_subsections() {
         let out = check(&base_pship_year());
         assert!(out.citations.iter().any(|c| c.contains("§ 706(a)")));
-        assert!(out.citations.iter().any(|c| c.contains("§ 706(b)(1)(B)(i)")));
-        assert!(out.citations.iter().any(|c| c.contains("§ 706(b)(1)(B)(ii)")));
-        assert!(out.citations.iter().any(|c| c.contains("§ 706(b)(1)(B)(iii)")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("§ 706(b)(1)(B)(i)")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("§ 706(b)(1)(B)(ii)")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("§ 706(b)(1)(B)(iii)")));
         assert!(out.citations.iter().any(|c| c.contains("§ 706(c)(1)")));
         assert!(out.citations.iter().any(|c| c.contains("§ 706(c)(2)")));
         assert!(out.citations.iter().any(|c| c.contains("§ 706(d)")));

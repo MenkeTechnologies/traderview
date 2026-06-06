@@ -40,7 +40,12 @@ pub struct DepthConfig {
 }
 
 impl Default for DepthConfig {
-    fn default() -> Self { Self { levels: 10, min_delta_pct: 0.05 } }
+    fn default() -> Self {
+        Self {
+            levels: 10,
+            min_delta_pct: 0.05,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -86,15 +91,31 @@ pub fn analyze(snapshots: &[DepthSnapshot], cfg: &DepthConfig) -> DepthReport {
         let bid_total: f64 = snap.bids.iter().take(levels).map(|l| l.size.max(0.0)).sum();
         let ask_total: f64 = snap.asks.iter().take(levels).map(|l| l.size.max(0.0)).sum();
         let denom = bid_total + ask_total;
-        let imb = if denom > 0.0 { (bid_total - ask_total) / denom } else { 0.0 };
-        report.imbalances.push(if imb.is_finite() { imb } else { 0.0 });
+        let imb = if denom > 0.0 {
+            (bid_total - ask_total) / denom
+        } else {
+            0.0
+        };
+        report
+            .imbalances
+            .push(if imb.is_finite() { imb } else { 0.0 });
     }
     // Cross-snapshot deltas.
     for i in 1..snapshots.len() {
         let prev = &snapshots[i - 1];
         let cur = &snapshots[i];
-        let book_total_cur: f64 = cur.bids.iter().take(levels).map(|l| l.size.max(0.0)).sum::<f64>()
-            + cur.asks.iter().take(levels).map(|l| l.size.max(0.0)).sum::<f64>();
+        let book_total_cur: f64 = cur
+            .bids
+            .iter()
+            .take(levels)
+            .map(|l| l.size.max(0.0))
+            .sum::<f64>()
+            + cur
+                .asks
+                .iter()
+                .take(levels)
+                .map(|l| l.size.max(0.0))
+                .sum::<f64>();
         if book_total_cur <= 0.0 {
             continue;
         }
@@ -116,7 +137,11 @@ pub fn analyze(snapshots: &[DepthSnapshot], cfg: &DepthConfig) -> DepthReport {
                     report.events.push(DepthEvent {
                         snapshot_index: i,
                         side,
-                        kind: if delta > 0.0 { ChangeKind::Added } else { ChangeKind::Pulled },
+                        kind: if delta > 0.0 {
+                            ChangeKind::Added
+                        } else {
+                            ChangeKind::Pulled
+                        },
                         price: cl.price,
                         size_delta: delta,
                         pct_of_book: delta.abs() / book_total_cur,
@@ -149,7 +174,9 @@ pub fn analyze(snapshots: &[DepthSnapshot], cfg: &DepthConfig) -> DepthReport {
 mod tests {
     use super::*;
 
-    fn lvl(p: f64, s: f64) -> DepthLevel { DepthLevel { price: p, size: s } }
+    fn lvl(p: f64, s: f64) -> DepthLevel {
+        DepthLevel { price: p, size: s }
+    }
 
     #[test]
     fn empty_returns_default() {
@@ -159,8 +186,17 @@ mod tests {
 
     #[test]
     fn zero_levels_returns_default() {
-        let snap = DepthSnapshot { bids: vec![lvl(100.0, 10.0)], asks: vec![lvl(101.0, 10.0)] };
-        let r = analyze(&[snap], &DepthConfig { levels: 0, min_delta_pct: 0.05 });
+        let snap = DepthSnapshot {
+            bids: vec![lvl(100.0, 10.0)],
+            asks: vec![lvl(101.0, 10.0)],
+        };
+        let r = analyze(
+            &[snap],
+            &DepthConfig {
+                levels: 0,
+                min_delta_pct: 0.05,
+            },
+        );
         assert!(r.imbalances.is_empty());
     }
 
@@ -195,8 +231,16 @@ mod tests {
             bids: vec![lvl(99.0, 100.0)],
             asks: vec![lvl(101.0, 100.0)],
         };
-        let r = analyze(&[s1, s2], &DepthConfig { levels: 10, min_delta_pct: 0.10 });
-        let pulled: Vec<_> = r.events.iter()
+        let r = analyze(
+            &[s1, s2],
+            &DepthConfig {
+                levels: 10,
+                min_delta_pct: 0.10,
+            },
+        );
+        let pulled: Vec<_> = r
+            .events
+            .iter()
             .filter(|e| e.kind == ChangeKind::Pulled && (e.price - 100.0).abs() < 1e-9)
             .collect();
         assert!(!pulled.is_empty(), "expected pull event at price 100");
@@ -209,11 +253,21 @@ mod tests {
             asks: vec![lvl(101.0, 100.0)],
         };
         let s2 = DepthSnapshot {
-            bids: vec![lvl(100.0, 500.0)],   // 4× added
+            bids: vec![lvl(100.0, 500.0)], // 4× added
             asks: vec![lvl(101.0, 100.0)],
         };
-        let r = analyze(&[s1, s2], &DepthConfig { levels: 10, min_delta_pct: 0.10 });
-        let added: Vec<_> = r.events.iter().filter(|e| e.kind == ChangeKind::Added).collect();
+        let r = analyze(
+            &[s1, s2],
+            &DepthConfig {
+                levels: 10,
+                min_delta_pct: 0.10,
+            },
+        );
+        let added: Vec<_> = r
+            .events
+            .iter()
+            .filter(|e| e.kind == ChangeKind::Added)
+            .collect();
         assert!(!added.is_empty());
     }
 
@@ -224,10 +278,16 @@ mod tests {
             asks: vec![lvl(101.0, 1000.0); 5],
         };
         let s2 = DepthSnapshot {
-            bids: vec![lvl(100.0, 1005.0); 5],    // 0.5% change
+            bids: vec![lvl(100.0, 1005.0); 5], // 0.5% change
             asks: vec![lvl(101.0, 1000.0); 5],
         };
-        let r = analyze(&[s1, s2], &DepthConfig { levels: 10, min_delta_pct: 0.10 });
+        let r = analyze(
+            &[s1, s2],
+            &DepthConfig {
+                levels: 10,
+                min_delta_pct: 0.10,
+            },
+        );
         assert!(r.events.is_empty());
     }
 }

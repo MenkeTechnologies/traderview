@@ -50,13 +50,20 @@ pub fn compute(
         teeth_period,
         lips_period,
     };
-    if highs.len() != lows.len() || n == 0 { return report; }
-    if jaw_period < 2 || teeth_period < 2 || lips_period < 2 { return report; }
+    if highs.len() != lows.len() || n == 0 {
+        return report;
+    }
+    if jaw_period < 2 || teeth_period < 2 || lips_period < 2 {
+        return report;
+    }
     if highs.iter().any(|x| !x.is_finite()) || lows.iter().any(|x| !x.is_finite()) {
         return report;
     }
-    let median_price: Vec<f64> = highs.iter().zip(lows.iter())
-        .map(|(h, l)| (h + l) / 2.0).collect();
+    let median_price: Vec<f64> = highs
+        .iter()
+        .zip(lows.iter())
+        .map(|(h, l)| (h + l) / 2.0)
+        .collect();
     let jaw_raw = smma(&median_price, jaw_period);
     let teeth_raw = smma(&median_price, teeth_period);
     let lips_raw = smma(&median_price, lips_period);
@@ -75,7 +82,9 @@ pub fn compute(
 fn smma(series: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     let seed: f64 = series[..period].iter().sum::<f64>() / p_f;
     out[period - 1] = Some(seed);
@@ -122,24 +131,36 @@ mod tests {
         let h = vec![101.0_f64; 50];
         let l = vec![99.0_f64; 50];
         let r = compute(&h, &l, 13, 8, 8, 5, 5, 3);
-        for v in r.upper.iter().skip(30).flatten() { assert!(v.abs() < 1e-9); }
-        for v in r.lower.iter().skip(30).flatten() { assert!(v.abs() < 1e-9); }
+        for v in r.upper.iter().skip(30).flatten() {
+            assert!(v.abs() < 1e-9);
+        }
+        for v in r.lower.iter().skip(30).flatten() {
+            assert!(v.abs() < 1e-9);
+        }
     }
 
     #[test]
     fn upper_always_non_negative() {
-        let h: Vec<f64> = (0..80).map(|i| 100.0 + (i as f64 * 0.2).sin() * 5.0).collect();
+        let h: Vec<f64> = (0..80)
+            .map(|i| 100.0 + (i as f64 * 0.2).sin() * 5.0)
+            .collect();
         let l: Vec<f64> = h.iter().map(|x| x - 2.0).collect();
         let r = compute(&h, &l, 13, 8, 8, 5, 5, 3);
-        for v in r.upper.iter().flatten() { assert!(*v >= 0.0); }
+        for v in r.upper.iter().flatten() {
+            assert!(*v >= 0.0);
+        }
     }
 
     #[test]
     fn lower_always_non_positive() {
-        let h: Vec<f64> = (0..80).map(|i| 100.0 + (i as f64 * 0.2).sin() * 5.0).collect();
+        let h: Vec<f64> = (0..80)
+            .map(|i| 100.0 + (i as f64 * 0.2).sin() * 5.0)
+            .collect();
         let l: Vec<f64> = h.iter().map(|x| x - 2.0).collect();
         let r = compute(&h, &l, 13, 8, 8, 5, 5, 3);
-        for v in r.lower.iter().flatten() { assert!(*v <= 0.0); }
+        for v in r.lower.iter().flatten() {
+            assert!(*v <= 0.0);
+        }
     }
 
     #[test]

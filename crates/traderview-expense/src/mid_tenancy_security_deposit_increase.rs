@@ -94,9 +94,7 @@ pub fn check(input: &MidTenancySecurityDepositInput) -> MidTenancySecurityDeposi
     }
 }
 
-fn check_california(
-    input: &MidTenancySecurityDepositInput,
-) -> MidTenancySecurityDepositResult {
+fn check_california(input: &MidTenancySecurityDepositInput) -> MidTenancySecurityDepositResult {
     let mut violations: Vec<String> = Vec::new();
     let notes: Vec<String> = vec![
         "Cal. Civ. Code § 1950.5(c) — initial security deposit cap one month's rent (unfurnished) or two months (furnished) per AB 12 effective July 1, 2024"
@@ -136,9 +134,7 @@ fn check_california(
     }
 }
 
-fn check_new_jersey(
-    input: &MidTenancySecurityDepositInput,
-) -> MidTenancySecurityDepositResult {
+fn check_new_jersey(input: &MidTenancySecurityDepositInput) -> MidTenancySecurityDepositResult {
     let mut violations: Vec<String> = Vec::new();
     let notes: Vec<String> = vec![
         "N.J.S.A. 46:8-21.2 — mid-tenancy security deposit increase prohibited absent lease modification basis OR proportional annual rent increase basis"
@@ -157,8 +153,7 @@ fn check_new_jersey(
         );
     }
 
-    if input.mid_tenancy_increase_attempted && input.statutory_cap_exceeded_after_increase
-    {
+    if input.mid_tenancy_increase_attempted && input.statutory_cap_exceeded_after_increase {
         violations.push(
             "N.J.S.A. 46:8-19 — total security deposit cap is 1.5 months' rent; mid-tenancy increase exceeding cap is bad-faith violation with double-damages exposure"
                 .to_string(),
@@ -184,8 +179,7 @@ fn check_new_york(input: &MidTenancySecurityDepositInput) -> MidTenancySecurityD
             .to_string(),
     ];
 
-    if input.mid_tenancy_increase_attempted && input.statutory_cap_exceeded_after_increase
-    {
+    if input.mid_tenancy_increase_attempted && input.statutory_cap_exceeded_after_increase {
         violations.push(
             "N.Y. Gen. Oblig. Law § 7-108(1-a)(a) — increase would exceed statewide one-month cap under HSTPA 2019"
                 .to_string(),
@@ -281,7 +275,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.compliant);
         assert!(!r.mid_tenancy_increase_authorized);
-        assert!(r.violations.iter().any(|v| v.contains("lease modification basis")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("lease modification basis")));
     }
 
     #[test]
@@ -299,7 +296,10 @@ mod tests {
         i.tenant_consented_in_writing = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("tenant written consent")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("tenant written consent")));
     }
 
     #[test]
@@ -332,7 +332,10 @@ mod tests {
         i.statutory_cap_exceeded_after_increase = true;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("46:8-19") && v.contains("1.5 months")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("46:8-19") && v.contains("1.5 months")));
     }
 
     #[test]
@@ -354,7 +357,10 @@ mod tests {
         i.statutory_cap_exceeded_after_increase = true;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 7-108(1-a)(a)") && v.contains("one-month")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 7-108(1-a)(a)") && v.contains("one-month")));
     }
 
     #[test]
@@ -398,7 +404,12 @@ mod tests {
 
     #[test]
     fn no_increase_attempted_always_compliant() {
-        for regime in [Regime::California, Regime::NewJersey, Regime::NewYork, Regime::Default] {
+        for regime in [
+            Regime::California,
+            Regime::NewJersey,
+            Regime::NewYork,
+            Regime::Default,
+        ] {
             let mut i = ca_compliant_increase();
             i.regime = regime;
             i.mid_tenancy_increase_attempted = false;
@@ -410,7 +421,12 @@ mod tests {
 
     #[test]
     fn four_regimes_routed_correctly() {
-        for regime in [Regime::California, Regime::NewJersey, Regime::NewYork, Regime::Default] {
+        for regime in [
+            Regime::California,
+            Regime::NewJersey,
+            Regime::NewYork,
+            Regime::Default,
+        ] {
             let mut i = ca_compliant_increase();
             i.regime = regime;
             i.proportional_to_annual_rent_increase = true;

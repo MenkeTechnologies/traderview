@@ -109,10 +109,8 @@ pub fn check(input: &LeadInDrinkingWaterInput) -> LeadInDrinkingWaterResult {
     let federal_action_level = 15i64;
     let michigan_action_level = 12i64;
 
-    let federal_exceeded =
-        input.lead_concentration_micrograms_per_liter > federal_action_level;
-    let michigan_exceeded =
-        input.lead_concentration_micrograms_per_liter > michigan_action_level;
+    let federal_exceeded = input.lead_concentration_micrograms_per_liter > federal_action_level;
+    let michigan_exceeded = input.lead_concentration_micrograms_per_liter > michigan_action_level;
 
     match input.regime {
         Regime::NewJersey => check_new_jersey(input, federal_exceeded, michigan_exceeded),
@@ -161,7 +159,8 @@ fn check_new_jersey(
         michigan_state_action_level_exceeded: michigan_exceeded,
         private_right_of_action_available: true,
         violations,
-        citation: "N.J.S.A. 58:12A-12.4 et seq.; P.L. 2021, c. 82; P.L. 2021, c. 183; N.J.A.C. 7:10",
+        citation:
+            "N.J.S.A. 58:12A-12.4 et seq.; P.L. 2021, c. 82; P.L. 2021, c. 183; N.J.A.C. 7:10",
         notes,
     }
 }
@@ -286,7 +285,10 @@ mod tests {
         i.distributed_to_tenants_within_3_business_days = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("58:12A-12.4") && v.contains("THREE BUSINESS DAYS")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("58:12A-12.4") && v.contains("THREE BUSINESS DAYS")));
     }
 
     #[test]
@@ -295,7 +297,10 @@ mod tests {
         i.posted_in_prominent_location = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("58:12A-12.4") && v.contains("PROMINENT LOCATION")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("58:12A-12.4") && v.contains("PROMINENT LOCATION")));
     }
 
     #[test]
@@ -335,7 +340,10 @@ mod tests {
     #[test]
     fn nj_p_l_2021_amendments_note_present() {
         let r = check(&nj_clean());
-        assert!(r.notes.iter().any(|n| n.contains("P.L. 2021, c. 82") && n.contains("P.L. 2021, c. 183")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("P.L. 2021, c. 82") && n.contains("P.L. 2021, c. 183")));
     }
 
     #[test]
@@ -362,7 +370,10 @@ mod tests {
     #[test]
     fn mi_action_level_12_below_federal_note() {
         let r = check(&mi_clean());
-        assert!(r.notes.iter().any(|n| n.contains("12 µg/L") && n.contains("BELOW federal 15 µg/L")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("12 µg/L") && n.contains("BELOW federal 15 µg/L")));
     }
 
     #[test]
@@ -417,7 +428,11 @@ mod tests {
     #[test]
     fn default_no_landlord_distribution_mandate_note() {
         let r = check(&default_clean());
-        assert!(r.notes.iter().any(|n| n.contains("NO statutory landlord-tenant distribution mandate at federal level")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n
+                .contains("NO statutory landlord-tenant distribution mandate at federal level")));
     }
 
     #[test]
@@ -425,13 +440,20 @@ mod tests {
         let mut i = default_clean();
         i.ccr_delivered_annually = false;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("40 CFR Part 141 Subpart O") && n.contains("Consumer Confidence Report")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("40 CFR Part 141 Subpart O")
+                && n.contains("Consumer Confidence Report")));
     }
 
     #[test]
     fn default_state_udap_and_negligence_note() {
         let r = check(&default_clean());
-        assert!(r.notes.iter().any(|n| n.contains("UDAP") && n.contains("negligence per se")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("UDAP") && n.contains("negligence per se")));
     }
 
     #[test]
@@ -465,7 +487,10 @@ mod tests {
         i_nj.distributed_to_tenants_within_3_business_days = false;
         let r_nj = check(&i_nj);
         assert!(!r_nj.compliant);
-        assert!(r_nj.violations.iter().any(|v| v.contains("THREE BUSINESS DAYS")));
+        assert!(r_nj
+            .violations
+            .iter()
+            .any(|v| v.contains("THREE BUSINESS DAYS")));
 
         let mut i_default = default_clean();
         i_default.distributed_to_tenants_within_3_business_days = false;

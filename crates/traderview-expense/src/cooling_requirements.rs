@@ -382,7 +382,10 @@ mod tests {
         i.measured_temperature_f = 85;
         let r = check(&i);
         assert_eq!(r.compliant_with_temperature, Some(false));
-        assert!(r.violations.iter().any(|v| v.contains("85") && v.contains("82")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("85") && v.contains("82")));
         assert!(r.citation.contains("A.R.S. § 33-1364"));
     }
 
@@ -412,7 +415,10 @@ mod tests {
         i.days_since_written_notice = 6;
         let r = check(&i);
         assert!(r.cure_period_expired);
-        assert!(r.violations.iter().any(|v| v.contains("cure period") && v.contains("5")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("cure period") && v.contains("5")));
     }
 
     #[test]
@@ -467,7 +473,10 @@ mod tests {
         assert!(!r.in_effective_season);
         assert_eq!(r.maximum_temperature_threshold_f, None);
         assert_eq!(r.compliant_with_temperature, None);
-        assert!(r.notes.iter().any(|n| n.contains("outside the effective season")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("outside the effective season")));
     }
 
     #[test]
@@ -520,11 +529,7 @@ mod tests {
         let r = check(&i);
         assert_eq!(r.maximum_temperature_threshold_f, None);
         assert_eq!(r.compliant_with_temperature, None);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("does not trigger"))
-        );
+        assert!(r.notes.iter().any(|n| n.contains("does not trigger")));
     }
 
     #[test]
@@ -536,7 +541,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.in_effective_season);
         assert_eq!(r.maximum_temperature_threshold_f, None);
-        assert!(r.notes.iter().any(|n| n.contains("outside the effective season")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("outside the effective season")));
     }
 
     #[test]
@@ -688,26 +696,18 @@ mod tests {
 
     #[test]
     fn citation_pins_authority_per_regime() {
-        assert!(
-            check(&base(Regime::ArizonaPhoenix))
-                .citation
-                .contains("A.R.S. § 33-1364")
-        );
-        assert!(
-            check(&base(Regime::Dallas))
-                .citation
-                .contains("Dallas City Code Chapter 27")
-        );
-        assert!(
-            check(&base(Regime::NYCCoolHomes))
-                .citation
-                .contains("Int 0994-2024")
-        );
-        assert!(
-            check(&base(Regime::California))
-                .citation
-                .contains("§ 1941.1")
-        );
+        assert!(check(&base(Regime::ArizonaPhoenix))
+            .citation
+            .contains("A.R.S. § 33-1364"));
+        assert!(check(&base(Regime::Dallas))
+            .citation
+            .contains("Dallas City Code Chapter 27"));
+        assert!(check(&base(Regime::NYCCoolHomes))
+            .citation
+            .contains("Int 0994-2024"));
+        assert!(check(&base(Regime::California))
+            .citation
+            .contains("§ 1941.1"));
     }
 
     #[test]

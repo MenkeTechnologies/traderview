@@ -22,11 +22,19 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64, pub open: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+    pub open: f64,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum PatternKind { IslandTop, IslandBottom }
+pub enum PatternKind {
+    IslandTop,
+    IslandBottom,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct IslandCandidate {
@@ -45,16 +53,24 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
-        Self { min_gap_pct: 0.01, max_island_bars: 5 }
+        Self {
+            min_gap_pct: 0.01,
+            max_island_bars: 5,
+        }
     }
 }
 
 pub fn detect(bars: &[Bar], cfg: &Config) -> Vec<IslandCandidate> {
     let n = bars.len();
     let mut out = Vec::new();
-    if n < 3 || cfg.max_island_bars == 0 || cfg.min_gap_pct <= 0.0 { return out; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite()
-        || !b.close.is_finite() || !b.open.is_finite()) { return out; }
+    if n < 3 || cfg.max_island_bars == 0 || cfg.min_gap_pct <= 0.0 {
+        return out;
+    }
+    if bars.iter().any(|b| {
+        !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite() || !b.open.is_finite()
+    }) {
+        return out;
+    }
     // For each potential entry-gap at index i (gap between bars[i-1] and bars[i]),
     // scan forward up to max_island_bars looking for an opposite-direction exit gap.
     for i in 1..(n - 1) {
@@ -64,8 +80,14 @@ pub fn detect(bars: &[Bar], cfg: &Config) -> Vec<IslandCandidate> {
         // Entry gap down = entry.high < prev.low.
         let gap_up = entry.low > prev.high * (1.0 + cfg.min_gap_pct);
         let gap_down = entry.high < prev.low * (1.0 - cfg.min_gap_pct);
-        if !gap_up && !gap_down { continue; }
-        let kind = if gap_up { PatternKind::IslandTop } else { PatternKind::IslandBottom };
+        if !gap_up && !gap_down {
+            continue;
+        }
+        let kind = if gap_up {
+            PatternKind::IslandTop
+        } else {
+            PatternKind::IslandBottom
+        };
         let entry_gap_pct = if gap_up {
             (entry.low - prev.high) / prev.high
         } else {
@@ -74,13 +96,19 @@ pub fn detect(bars: &[Bar], cfg: &Config) -> Vec<IslandCandidate> {
         // Scan island lengths from 1 to max_island_bars.
         for island_len in 1..=cfg.max_island_bars.min(n - i - 1) {
             let exit_idx = i + island_len;
-            if exit_idx >= n { break; }
+            if exit_idx >= n {
+                break;
+            }
             let last_island = bars[exit_idx - 1];
             let exit = bars[exit_idx];
             // For an Island Top: exit must gap DOWN below the island's low.
             // For an Island Bottom: exit must gap UP above the island's high.
-            let island_low = (i..exit_idx).map(|j| bars[j].low).fold(f64::INFINITY, f64::min);
-            let island_high = (i..exit_idx).map(|j| bars[j].high).fold(f64::NEG_INFINITY, f64::max);
+            let island_low = (i..exit_idx)
+                .map(|j| bars[j].low)
+                .fold(f64::INFINITY, f64::min);
+            let island_high = (i..exit_idx)
+                .map(|j| bars[j].high)
+                .fold(f64::NEG_INFINITY, f64::max);
             let _ = last_island;
             let (exit_gap, valid) = match kind {
                 PatternKind::IslandTop => {
@@ -102,7 +130,7 @@ pub fn detect(bars: &[Bar], cfg: &Config) -> Vec<IslandCandidate> {
                     entry_gap_pct,
                     exit_gap_pct: exit_gap,
                 });
-                break;    // first valid exit-gap completes the pattern
+                break; // first valid exit-gap completes the pattern
             }
         }
     }
@@ -114,7 +142,12 @@ mod tests {
     use super::*;
 
     fn b(h: f64, l: f64, o: f64, c: f64) -> Bar {
-        Bar { high: h, low: l, open: o, close: c }
+        Bar {
+            high: h,
+            low: l,
+            open: o,
+            close: c,
+        }
     }
 
     #[test]
@@ -125,7 +158,10 @@ mod tests {
     #[test]
     fn invalid_config_returns_empty() {
         let bars = vec![b(101.0, 99.0, 100.0, 100.0); 10];
-        let cfg = Config { min_gap_pct: 0.0, ..Default::default() };
+        let cfg = Config {
+            min_gap_pct: 0.0,
+            ..Default::default()
+        };
         assert!(detect(&bars, &cfg).is_empty());
     }
 
@@ -147,18 +183,20 @@ mod tests {
         // Bars 0-2: range 99-101. Gap up at bar 3 to 110-115.
         // Island bar 3: high=115, low=110. Bar 4 gap down to 98-101.
         let mut bars = vec![b(101.0, 99.0, 100.0, 100.0); 8];
-        bars[3] = b(115.0, 110.0, 112.0, 113.0);    // gap up
-        bars[4] = b(101.0, 98.0, 100.0, 99.0);      // gap down → exit
+        bars[3] = b(115.0, 110.0, 112.0, 113.0); // gap up
+        bars[4] = b(101.0, 98.0, 100.0, 99.0); // gap down → exit
         let cands = detect(&bars, &Config::default());
-        assert!(cands.iter().any(|c| c.kind == PatternKind::IslandTop),
-            "expected island top, got {cands:?}");
+        assert!(
+            cands.iter().any(|c| c.kind == PatternKind::IslandTop),
+            "expected island top, got {cands:?}"
+        );
     }
 
     #[test]
     fn classic_island_bottom_detected() {
         let mut bars = vec![b(101.0, 99.0, 100.0, 100.0); 8];
-        bars[3] = b(91.0, 85.0, 89.0, 88.0);       // gap down
-        bars[4] = b(101.0, 95.0, 99.0, 100.0);     // gap up exit
+        bars[3] = b(91.0, 85.0, 89.0, 88.0); // gap down
+        bars[4] = b(101.0, 95.0, 99.0, 100.0); // gap up exit
         let cands = detect(&bars, &Config::default());
         assert!(cands.iter().any(|c| c.kind == PatternKind::IslandBottom));
     }
@@ -169,17 +207,18 @@ mod tests {
         bars[3] = b(115.0, 110.0, 112.0, 113.0);
         bars[4] = b(115.0, 112.0, 113.0, 114.0);
         bars[5] = b(116.0, 111.0, 112.0, 115.0);
-        bars[6] = b(101.0, 98.0, 100.0, 99.0);    // exit gap
+        bars[6] = b(101.0, 98.0, 100.0, 99.0); // exit gap
         let cands = detect(&bars, &Config::default());
-        assert!(cands.iter().any(|c| c.kind == PatternKind::IslandTop
-            && c.island_end - c.island_start == 2));
+        assert!(cands
+            .iter()
+            .any(|c| c.kind == PatternKind::IslandTop && c.island_end - c.island_start == 2));
     }
 
     #[test]
     fn min_gap_pct_filter_works() {
         // Small 0.3% gap < default 1% threshold → no detection.
         let mut bars = vec![b(101.0, 99.0, 100.0, 100.0); 8];
-        bars[3] = b(102.0, 101.3, 101.5, 101.5);    // tiny gap
+        bars[3] = b(102.0, 101.3, 101.5, 101.5); // tiny gap
         bars[4] = b(101.0, 98.0, 100.0, 99.0);
         assert!(detect(&bars, &Config::default()).is_empty());
     }

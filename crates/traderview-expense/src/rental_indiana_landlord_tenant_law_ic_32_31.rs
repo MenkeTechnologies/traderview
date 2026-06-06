@@ -379,7 +379,10 @@ mod tests {
         let mut input = baseline_input();
         input.tenancy_coverage = TenancyCoverage::ExemptFromArticle31;
         let out = check(&input);
-        assert_eq!(out.mode, InLandlordTenantMode::NotApplicableTenancyExemptFromArticle31);
+        assert_eq!(
+            out.mode,
+            InLandlordTenantMode::NotApplicableTenancyExemptFromArticle31
+        );
     }
 
     #[test]

@@ -92,7 +92,9 @@ pub fn close(
     let mut entries = Vec::new();
     let mut total_gain = Decimal::ZERO;
     for lot in working {
-        if remaining <= Decimal::ZERO { break; }
+        if remaining <= Decimal::ZERO {
+            break;
+        }
         let take = remaining.min(lot.qty_open);
         let gain_per_share = sell_price - lot.cost_per_share;
         let gain = take * gain_per_share;
@@ -118,9 +120,15 @@ mod tests {
     use super::*;
     use std::str::FromStr;
 
-    fn dec(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn dec(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
     fn lot(id: &str, qty: &str, cost: &str) -> CostLot {
-        CostLot { lot_id: id.into(), qty_open: dec(qty), cost_per_share: dec(cost) }
+        CostLot {
+            lot_id: id.into(),
+            qty_open: dec(qty),
+            cost_per_share: dec(cost),
+        }
     }
 
     #[test]
@@ -145,16 +153,28 @@ mod tests {
         // 3 lots @ $50, $80, $100. Sell 1 share at $90 → HIFO picks $100 lot
         // (loss of $10). FIFO would pick $50 (gain of $40). HIFO is the
         // tax-minimizing choice.
-        let lots = vec![lot("low", "1", "50"), lot("mid", "1", "80"), lot("high", "1", "100")];
+        let lots = vec![
+            lot("low", "1", "50"),
+            lot("mid", "1", "80"),
+            lot("high", "1", "100"),
+        ];
         let r = close(&lots, dec("1"), dec("90"), LotStrategy::Hifo);
         assert_eq!(r.entries.len(), 1);
         assert_eq!(r.entries[0].lot_id, "high");
-        assert_eq!(r.total_realized_gain, dec("-10"), "HIFO at sell=90 gives -10 from $100 cost");
+        assert_eq!(
+            r.total_realized_gain,
+            dec("-10"),
+            "HIFO at sell=90 gives -10 from $100 cost"
+        );
     }
 
     #[test]
     fn lifoust_consumes_lowest_cost_first_to_maximize_gain() {
-        let lots = vec![lot("low", "1", "50"), lot("mid", "1", "80"), lot("high", "1", "100")];
+        let lots = vec![
+            lot("low", "1", "50"),
+            lot("mid", "1", "80"),
+            lot("high", "1", "100"),
+        ];
         let r = close(&lots, dec("1"), dec("90"), LotStrategy::Lifoust);
         assert_eq!(r.entries[0].lot_id, "low");
         assert_eq!(r.total_realized_gain, dec("40"));
@@ -165,7 +185,11 @@ mod tests {
         // At sell=90: lot at $50 = +$40 gain (skip), $80 = +$10 gain (skip),
         // $100 = -$10 loss (eligible). Asked for 5 qty but only 1 losing
         // share exists — partial fill.
-        let lots = vec![lot("low", "5", "50"), lot("mid", "5", "80"), lot("high", "1", "100")];
+        let lots = vec![
+            lot("low", "5", "50"),
+            lot("mid", "5", "80"),
+            lot("high", "1", "100"),
+        ];
         let r = close(&lots, dec("5"), dec("90"), LotStrategy::MaxLossHarvest);
         assert_eq!(r.entries.len(), 1);
         assert_eq!(r.entries[0].lot_id, "high");

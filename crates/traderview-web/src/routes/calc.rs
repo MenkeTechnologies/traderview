@@ -23,410 +23,417 @@ use traderview_core::{
 pub fn router() -> Router<AppState> {
     Router::new()
         // ── Position sizing ───────────────────────────────────────────
-        .route("/calc/kelly",                 post(kelly_route))
-        .route("/calc/dynamic-kelly",         post(dynamic_kelly_route))
-        .route("/calc/optimal-f",             post(optimal_f_route))
+        .route("/calc/kelly", post(kelly_route))
+        .route("/calc/dynamic-kelly", post(dynamic_kelly_route))
+        .route("/calc/optimal-f", post(optimal_f_route))
         // ── Risk / VaR ────────────────────────────────────────────────
-        .route("/calc/var-historical",        post(var_historical_route))
-        .route("/calc/var-gaussian",          post(var_gaussian_route))
-        .route("/calc/monte-carlo",           post(monte_carlo_route))
-        .route("/calc/risk-parity",           post(risk_parity_route))
-        .route("/calc/risk-on-off",           post(risk_on_off_route))
+        .route("/calc/var-historical", post(var_historical_route))
+        .route("/calc/var-gaussian", post(var_gaussian_route))
+        .route("/calc/monte-carlo", post(monte_carlo_route))
+        .route("/calc/risk-parity", post(risk_parity_route))
+        .route("/calc/risk-on-off", post(risk_on_off_route))
         // ── Margin / buying power ─────────────────────────────────────
-        .route("/calc/margin-call",           post(margin_call_route))
-        .route("/calc/margin-runway",         post(margin_runway_route))
-        .route("/calc/buying-power",          post(buying_power_route))
+        .route("/calc/margin-call", post(margin_call_route))
+        .route("/calc/margin-runway", post(margin_runway_route))
+        .route("/calc/buying-power", post(buying_power_route))
         // ── Tax / fees ────────────────────────────────────────────────
-        .route("/calc/tax-loss-harvest",      post(tax_loss_harvest_route))
-        .route("/calc/wash-sale",             post(wash_sale_route))
-        .route("/calc/cost-basis",            post(cost_basis_route))
-        .route("/calc/section-1244",          post(section_1244_route))
-        .route("/calc/section-1248",          post(section_1248_route))
-        .route("/calc/section-1252",          post(section_1252_route))
-        .route("/calc/section-1254",          post(section_1254_route))
-        .route("/calc/section-1255",          post(section_1255_route))
-        .route("/calc/section-1245-1250",     post(section_1245_1250_route))
-        .route("/calc/section-1202",          post(section_1202_route))
-        .route("/calc/section-1045",          post(section_1045_route))
-        .route("/calc/section-121",           post(section_121_route))
-        .route("/calc/section-121d",          post(section_121d_route))
-        .route("/calc/section-132",           post(section_132_route))
-        .route("/calc/reps-qualification",    post(reps_qualification_route))
-        .route("/calc/section-163j",          post(section_163j_route))
-        .route("/calc/section-165d",          post(section_165d_route))
-        .route("/calc/section-165g",          post(section_165g_route))
-        .route("/calc/section-267",           post(section_267_route))
-        .route("/calc/section-269",           post(section_269_route))
-        .route("/calc/section-269a",          post(section_269a_route))
-        .route("/calc/section-274",           post(section_274_route))
-        .route("/calc/section-279",           post(section_279_route))
-        .route("/calc/section-988",           post(section_988_route))
-        .route("/calc/section-1296",          post(section_1296_route))
-        .route("/calc/section-1341",          post(section_1341_route))
-        .route("/calc/section-168",           post(section_168_route))
-        .route("/calc/section-168g",          post(section_168g_route))
-        .route("/calc/section-168k",          post(section_168k_route))
-        .route("/calc/section-163j-tradeoff", post(section_163j_tradeoff_route))
-        .route("/calc/section-164",           post(section_164_route))
-        .route("/calc/section-165h",          post(section_165h_route))
-        .route("/calc/section-25c",           post(section_25c_route))
-        .route("/calc/section-25d",           post(section_25d_route))
-        .route("/calc/section-25e",           post(section_25e_route))
-        .route("/calc/section-30c",           post(section_30c_route))
-        .route("/calc/section-30d",           post(section_30d_route))
-        .route("/calc/mlp-ubti",              post(mlp_ubti_route))
-        .route("/calc/section-1258",          post(section_1258_route))
-        .route("/calc/section-1259",          post(section_1259_route))
-        .route("/calc/section-1260",          post(section_1260_route))
-        .route("/calc/section-1361",          post(section_1361_route))
-        .route("/calc/section-1366",          post(section_1366_route))
-        .route("/calc/section-1377",          post(section_1377_route))
-        .route("/calc/section-1367",          post(section_1367_route))
-        .route("/calc/section-1368",          post(section_1368_route))
-        .route("/calc/section-1374",          post(section_1374_route))
-        .route("/calc/section-1375",          post(section_1375_route))
-        .route("/calc/section-1400z-2",       post(section_1400z_2_route))
-        .route("/calc/section-1402",          post(section_1402_route))
-        .route("/calc/section-1411",          post(section_1411_route))
-        .route("/calc/section-1445",          post(section_1445_route))
-        .route("/calc/section-1446",          post(section_1446_route))
-        .route("/calc/section-1471",          post(section_1471_route))
-        .route("/calc/section-475c2",         post(section_475c2_route))
-        .route("/calc/section-475f",          post(section_475f_route))
-        .route("/calc/section-4701",          post(section_4701_route))
-        .route("/calc/section-213",           post(section_213_route))
-        .route("/calc/section-170",           post(section_170_route))
-        .route("/calc/section-219",           post(section_219_route))
-        .route("/calc/section-221",           post(section_221_route))
-        .route("/calc/section-223",           post(section_223_route))
-        .route("/calc/section-243",           post(section_243_route))
-        .route("/calc/section-245a",          post(section_245a_route))
-        .route("/calc/section-246",           post(section_246_route))
-        .route("/calc/section-246a",          post(section_246a_route))
-        .route("/calc/section-250",           post(section_250_route))
-        .route("/calc/section-56a",           post(section_56a_route))
-        .route("/calc/section-59a",           post(section_59a_route))
-        .route("/calc/section-641",           post(section_641_route))
-        .route("/calc/section-642",           post(section_642_route))
-        .route("/calc/section-643",           post(section_643_route))
-        .route("/calc/section-651",           post(section_651_route))
-        .route("/calc/section-661",           post(section_661_route))
-        .route("/calc/section-671",           post(section_671_route))
-        .route("/calc/section-673",           post(section_673_route))
-        .route("/calc/section-674",           post(section_674_route))
-        .route("/calc/section-675",           post(section_675_route))
-        .route("/calc/section-676",           post(section_676_route))
-        .route("/calc/section-677",           post(section_677_route))
-        .route("/calc/section-678",           post(section_678_route))
-        .route("/calc/section-679",           post(section_679_route))
-        .route("/calc/section-67g",           post(section_67g_route))
-        .route("/calc/section-6041",          post(section_6041_route))
-        .route("/calc/section-6109",          post(section_6109_route))
-        .route("/calc/section-6042",          post(section_6042_route))
-        .route("/calc/section-6045",          post(section_6045_route))
-        .route("/calc/section-6049",          post(section_6049_route))
-        .route("/calc/section-6050i",         post(section_6050i_route))
-        .route("/calc/section-6050w",         post(section_6050w_route))
-        .route("/calc/section-6212",          post(section_6212_route))
-        .route("/calc/section-6213",          post(section_6213_route))
-        .route("/calc/section-6201",          post(section_6201_route))
-        .route("/calc/section-6203",          post(section_6203_route))
-        .route("/calc/section-6303",          post(section_6303_route))
-        .route("/calc/section-6304",          post(section_6304_route))
-        .route("/calc/section-6306",          post(section_6306_route))
-        .route("/calc/section-6320",          post(section_6320_route))
-        .route("/calc/section-6321",          post(section_6321_route))
-        .route("/calc/section-6323",          post(section_6323_route))
-        .route("/calc/section-6325",          post(section_6325_route))
-        .route("/calc/section-6330",          post(section_6330_route))
-        .route("/calc/section-6331",          post(section_6331_route))
-        .route("/calc/section-6332",          post(section_6332_route))
-        .route("/calc/section-6334",          post(section_6334_route))
-        .route("/calc/section-6402",          post(section_6402_route))
-        .route("/calc/section-6404",          post(section_6404_route))
-        .route("/calc/section-6411",          post(section_6411_route))
-        .route("/calc/section-6417",          post(section_6417_route))
-        .route("/calc/section-6418",          post(section_6418_route))
-        .route("/calc/section-6425",          post(section_6425_route))
-        .route("/calc/section-7201",          post(section_7201_route))
-        .route("/calc/section-7202",          post(section_7202_route))
-        .route("/calc/section-7203",          post(section_7203_route))
-        .route("/calc/section-7212",          post(section_7212_route))
-        .route("/calc/section-7216",          post(section_7216_route))
-        .route("/calc/section-7206",          post(section_7206_route))
-        .route("/calc/section-7207",          post(section_7207_route))
-        .route("/calc/section-7421",          post(section_7421_route))
-        .route("/calc/section-7422",          post(section_7422_route))
-        .route("/calc/section-7426",          post(section_7426_route))
-        .route("/calc/section-7429",          post(section_7429_route))
-        .route("/calc/section-7430",          post(section_7430_route))
-        .route("/calc/section-7433",          post(section_7433_route))
-        .route("/calc/section-7434",          post(section_7434_route))
-        .route("/calc/section-7463",          post(section_7463_route))
-        .route("/calc/section-7491",          post(section_7491_route))
-        .route("/calc/section-162a",          post(section_162a_route))
-        .route("/calc/section-162e",          post(section_162e_route))
-        .route("/calc/section-162f",          post(section_162f_route))
-        .route("/calc/section-162l",          post(section_162l_route))
-        .route("/calc/section-162m",          post(section_162m_route))
-        .route("/calc/section-7502",          post(section_7502_route))
-        .route("/calc/section-7503",          post(section_7503_route))
-        .route("/calc/section-7508",          post(section_7508_route))
-        .route("/calc/section-7508a",         post(section_7508a_route))
-        .route("/calc/section-7521",          post(section_7521_route))
-        .route("/calc/section-7522",          post(section_7522_route))
-        .route("/calc/section-7525",          post(section_7525_route))
-        .route("/calc/section-7811",          post(section_7811_route))
-        .route("/calc/section-6501",          post(section_6501_route))
-        .route("/calc/section-6502",          post(section_6502_route))
-        .route("/calc/section-6531",          post(section_6531_route))
-        .route("/calc/section-6532",          post(section_6532_route))
-        .route("/calc/section-6511",          post(section_6511_route))
-        .route("/calc/section-6601",          post(section_6601_route))
-        .route("/calc/section-6611",          post(section_6611_route))
-        .route("/calc/section-6621",          post(section_6621_route))
-        .route("/calc/section-6651",          post(section_6651_route))
-        .route("/calc/section-6654",          post(section_6654_route))
-        .route("/calc/section-6655",          post(section_6655_route))
-        .route("/calc/section-6662",          post(section_6662_route))
-        .route("/calc/section-448",           post(section_448_route))
-        .route("/calc/section-446",           post(section_446_route))
-        .route("/calc/section-444",           post(section_444_route))
-        .route("/calc/section-3406",          post(section_3406_route))
-        .route("/calc/section-302",           post(section_302_route))
-        .route("/calc/section-304",           post(section_304_route))
-        .route("/calc/section-305",           post(section_305_route))
-        .route("/calc/section-311",           post(section_311_route))
-        .route("/calc/section-312",           post(section_312_route))
-        .route("/calc/section-318",           post(section_318_route))
-        .route("/calc/section-331",           post(section_331_route))
-        .route("/calc/section-332",           post(section_332_route))
-        .route("/calc/section-1234a",         post(section_1234a_route))
-        .route("/calc/section-1234b",         post(section_1234b_route))
-        .route("/calc/section-263g",          post(section_263g_route))
-        .route("/calc/section-264",           post(section_264_route))
-        .route("/calc/section-265",           post(section_265_route))
-        .route("/calc/section-1276",          post(section_1276_route))
-        .route("/calc/section-1277",          post(section_1277_route))
-        .route("/calc/section-1278",          post(section_1278_route))
-        .route("/calc/section-1271",          post(section_1271_route))
-        .route("/calc/section-1272",          post(section_1272_route))
-        .route("/calc/section-1273",          post(section_1273_route))
-        .route("/calc/section-1274",          post(section_1274_route))
-        .route("/calc/section-1275",          post(section_1275_route))
-        .route("/calc/section-1281",          post(section_1281_route))
-        .route("/calc/section-1283",          post(section_1283_route))
-        .route("/calc/section-1286",          post(section_1286_route))
-        .route("/calc/section-1287",          post(section_1287_route))
-        .route("/calc/section-1288",          post(section_1288_route))
-        .route("/calc/section-1282",          post(section_1282_route))
-        .route("/calc/section-7704",          post(section_7704_route))
-        .route("/calc/section-6045b",         post(section_6045b_route))
-        .route("/calc/section-6045a",         post(section_6045a_route))
-        .route("/calc/section-1297",          post(section_1297_route))
-        .route("/calc/section-1298",          post(section_1298_route))
-        .route("/calc/section-6020",          post(section_6020_route))
-        .route("/calc/section-6035",          post(section_6035_route))
-        .route("/calc/section-6038a",         post(section_6038a_route))
-        .route("/calc/section-6038b",         post(section_6038b_route))
-        .route("/calc/section-6038c",         post(section_6038c_route))
-        .route("/calc/section-6038d",         post(section_6038d_route))
-        .route("/calc/section-6039",          post(section_6039_route))
-        .route("/calc/section-6011",          post(section_6011_route))
-        .route("/calc/section-6111",          post(section_6111_route))
-        .route("/calc/section-6112",          post(section_6112_route))
-        .route("/calc/section-6662a",         post(section_6662a_route))
-        .route("/calc/section-6663",          post(section_6663_route))
-        .route("/calc/section-6664",          post(section_6664_route))
-        .route("/calc/section-6672",          post(section_6672_route))
-        .route("/calc/section-6694",          post(section_6694_route))
-        .route("/calc/section-6695",          post(section_6695_route))
-        .route("/calc/section-6695a",         post(section_6695a_route))
-        .route("/calc/section-6700",          post(section_6700_route))
-        .route("/calc/section-6701",          post(section_6701_route))
-        .route("/calc/section-6707",          post(section_6707_route))
-        .route("/calc/section-6707a",         post(section_6707a_route))
-        .route("/calc/section-6708",          post(section_6708_route))
-        .route("/calc/section-6713",          post(section_6713_route))
-        .route("/calc/section-6721",          post(section_6721_route))
-        .route("/calc/section-6722",          post(section_6722_route))
-        .route("/calc/section-6723",          post(section_6723_route))
-        .route("/calc/section-6724",          post(section_6724_route))
-        .route("/calc/section-6851",          post(section_6851_route))
-        .route("/calc/section-6861",          post(section_6861_route))
-        .route("/calc/section-6862",          post(section_6862_route))
-        .route("/calc/section-6863",          post(section_6863_route))
-        .route("/calc/section-336",           post(section_336_route))
-        .route("/calc/section-351",           post(section_351_route))
-        .route("/calc/section-354",           post(section_354_route))
-        .route("/calc/section-357",           post(section_357_route))
-        .route("/calc/section-358",           post(section_358_route))
-        .route("/calc/section-362",           post(section_362_route))
-        .route("/calc/section-367",           post(section_367_route))
-        .route("/calc/section-45l",           post(section_45l_route))
-        .route("/calc/section-45q",           post(section_45q_route))
-        .route("/calc/section-45u",           post(section_45u_route))
-        .route("/calc/section-45v",           post(section_45v_route))
-        .route("/calc/section-45w",           post(section_45w_route))
-        .route("/calc/section-45x",           post(section_45x_route))
-        .route("/calc/section-45y",           post(section_45y_route))
-        .route("/calc/section-45z",           post(section_45z_route))
-        .route("/calc/section-47",            post(section_47_route))
-        .route("/calc/section-48",            post(section_48_route))
-        .route("/calc/section-48c",           post(section_48c_route))
-        .route("/calc/section-48e",           post(section_48e_route))
-        .route("/calc/section-51",            post(section_51_route))
-        .route("/calc/section-451b",          post(section_451b_route))
-        .route("/calc/section-451c",          post(section_451c_route))
-        .route("/calc/section-1031",          post(section_1031_route))
-        .route("/calc/section-1031-f",        post(section_1031_f_route))
-        .route("/calc/section-1033",          post(section_1033_route))
-        .route("/calc/section-481",           post(section_481_route))
-        .route("/calc/section-482",           post(section_482_route))
-        .route("/calc/section-514",           post(section_514_route))
-        .route("/calc/section-530",           post(section_530_route))
-        .route("/calc/section-280f",          post(section_280f_route))
-        .route("/calc/section-280b",          post(section_280b_route))
-        .route("/calc/section-280c",          post(section_280c_route))
-        .route("/calc/section-280e",          post(section_280e_route))
-        .route("/calc/section-280g",          post(section_280g_route))
-        .route("/calc/section-280h",          post(section_280h_route))
-        .route("/calc/section-163d",          post(section_163d_route))
-        .route("/calc/section-163h",          post(section_163h_route))
-        .route("/calc/section-864b2",         post(section_864b2_route))
-        .route("/calc/section-72t",           post(section_72t_route))
-        .route("/calc/section-7345",          post(section_7345_route))
-        .route("/calc/section-7623",          post(section_7623_route))
-        .route("/calc/section-7405",          post(section_7405_route))
-        .route("/calc/section-7408",          post(section_7408_route))
-        .route("/calc/section-7701",          post(section_7701_route))
-        .route("/calc/section-7872",          post(section_7872_route))
-        .route("/calc/section-1291",          post(section_1291_route))
-        .route("/calc/section-1293",          post(section_1293_route))
-        .route("/calc/section-1294",          post(section_1294_route))
-        .route("/calc/section-1295",          post(section_1295_route))
-        .route("/calc/section-1058",          post(section_1058_route))
-        .route("/calc/section-1092",          post(section_1092_route))
-        .route("/calc/section-408",           post(section_408_route))
-        .route("/calc/section-401k",          post(section_401k_route))
-        .route("/calc/section-415",           post(section_415_route))
-        .route("/calc/section-408a",          post(section_408a_route))
-        .route("/calc/section-421",           post(section_421_route))
-        .route("/calc/section-422",           post(section_422_route))
-        .route("/calc/section-423",           post(section_423_route))
-        .route("/calc/section-4501",          post(section_4501_route))
-        .route("/calc/section-4940",          post(section_4940_route))
-        .route("/calc/section-4941",          post(section_4941_route))
-        .route("/calc/section-4942",          post(section_4942_route))
-        .route("/calc/section-4943",          post(section_4943_route))
-        .route("/calc/section-4944",          post(section_4944_route))
-        .route("/calc/section-4945",          post(section_4945_route))
-        .route("/calc/section-4958",          post(section_4958_route))
-        .route("/calc/section-4960",          post(section_4960_route))
-        .route("/calc/section-4972",          post(section_4972_route))
-        .route("/calc/section-4973",          post(section_4973_route))
-        .route("/calc/section-4974",          post(section_4974_route))
-        .route("/calc/section-4975",          post(section_4975_route))
-        .route("/calc/section-4978",          post(section_4978_route))
-        .route("/calc/section-6166",          post(section_6166_route))
-        .route("/calc/section-4980",          post(section_4980_route))
-        .route("/calc/section-4980h",         post(section_4980h_route))
-        .route("/calc/section-453",           post(section_453_route))
-        .route("/calc/section-453a",          post(section_453a_route))
-        .route("/calc/section-457a",          post(section_457a_route))
-        .route("/calc/section-457b",          post(section_457b_route))
-        .route("/calc/section-461g",          post(section_461g_route))
-        .route("/calc/section-461h",          post(section_461h_route))
-        .route("/calc/section-461l",          post(section_461l_route))
-        .route("/calc/section-465",           post(section_465_route))
-        .route("/calc/section-691",           post(section_691_route))
-        .route("/calc/section-704d",          post(section_704d_route))
-        .route("/calc/section-704c",          post(section_704c_route))
-        .route("/calc/section-706",           post(section_706_route))
-        .route("/calc/section-707",           post(section_707_route))
-        .route("/calc/section-721",           post(section_721_route))
-        .route("/calc/section-723",           post(section_723_route))
-        .route("/calc/section-731",           post(section_731_route))
-        .route("/calc/section-732",           post(section_732_route))
-        .route("/calc/section-734",           post(section_734_route))
-        .route("/calc/section-736",           post(section_736_route))
-        .route("/calc/section-737",           post(section_737_route))
-        .route("/calc/section-741",           post(section_741_route))
-        .route("/calc/section-743",           post(section_743_route))
-        .route("/calc/section-751",           post(section_751_route))
-        .route("/calc/section-752",           post(section_752_route))
-        .route("/calc/section-1235",          post(section_1235_route))
-        .route("/calc/section-1239",          post(section_1239_route))
-        .route("/calc/section-754",           post(section_754_route))
-        .route("/calc/section-755",           post(section_755_route))
-        .route("/calc/section-871m",          post(section_871m_route))
-        .route("/calc/section-901",           post(section_901_route))
-        .route("/calc/section-903",           post(section_903_route))
-        .route("/calc/section-904",           post(section_904_route))
-        .route("/calc/section-911",           post(section_911_route))
-        .route("/calc/section-951a",          post(section_951a_route))
-        .route("/calc/section-956",           post(section_956_route))
-        .route("/calc/section-959",           post(section_959_route))
-        .route("/calc/section-960",           post(section_960_route))
-        .route("/calc/section-961",           post(section_961_route))
-        .route("/calc/section-962",           post(section_962_route))
-        .route("/calc/section-965",           post(section_965_route))
-        .route("/calc/section-401a9",         post(section_401a9_route))
-        .route("/calc/section-409a",          post(section_409a_route))
-        .route("/calc/section-382",           post(section_382_route))
-        .route("/calc/section-383",           post(section_383_route))
-        .route("/calc/section-384",           post(section_384_route))
-        .route("/calc/section-83i",           post(section_83i_route))
-        .route("/calc/section-408-d3",        post(section_408_d3_route))
-        .route("/calc/section-408m",          post(section_408m_route))
-        .route("/calc/section-41",            post(section_41_route))
-        .route("/calc/section-38",            post(section_38_route))
-        .route("/calc/section-42",            post(section_42_route))
-        .route("/calc/section-44",            post(section_44_route))
-        .route("/calc/section-408a-d3",       post(section_408A_d3_route))
-        .route("/calc/section-174",           post(section_174_route))
-        .route("/calc/section-179",           post(section_179_route))
-        .route("/calc/section-179d",          post(section_179d_route))
-        .route("/calc/section-183",           post(section_183_route))
-        .route("/calc/section-263",           post(section_263_route))
-        .route("/calc/section-263a",          post(section_263a_route))
-        .route("/calc/section-168-e6",        post(section_168_e6_route))
-        .route("/calc/section-108",           post(section_108_route))
-        .route("/calc/section-104",           post(section_104_route))
-        .route("/calc/section-1012",          post(section_1012_route))
-        .route("/calc/section-1014",          post(section_1014_route))
-        .route("/calc/section-1014e",         post(section_1014e_route))
-        .route("/calc/section-1015",          post(section_1015_route))
-        .route("/calc/section-1041",          post(section_1041_route))
-        .route("/calc/section-1042",          post(section_1042_route))
-        .route("/calc/section-170e",          post(section_170e_route))
-        .route("/calc/section-172",           post(section_172_route))
-        .route("/calc/section-195",           post(section_195_route))
-        .route("/calc/section-248",           post(section_248_route))
-        .route("/calc/section-709",           post(section_709_route))
-        .route("/calc/section-197",           post(section_197_route))
-        .route("/calc/section-199a",          post(section_199a_route))
-        .route("/calc/section-83b",           post(section_83b_route))
-        .route("/calc/section-83c",           post(section_83c_route))
-        .route("/calc/section-1059",          post(section_1059_route))
-        .route("/calc/section-1060",          post(section_1060_route))
-        .route("/calc/section-1091",          post(section_1091_route))
-        .route("/calc/section-1231",          post(section_1231_route))
-        .route("/calc/section-1233",          post(section_1233_route))
-        .route("/calc/section-1234",          post(section_1234_route))
-        .route("/calc/commission-optimizer",  post(commission_optimizer_route))
+        .route("/calc/tax-loss-harvest", post(tax_loss_harvest_route))
+        .route("/calc/wash-sale", post(wash_sale_route))
+        .route("/calc/cost-basis", post(cost_basis_route))
+        .route("/calc/section-1244", post(section_1244_route))
+        .route("/calc/section-1248", post(section_1248_route))
+        .route("/calc/section-1252", post(section_1252_route))
+        .route("/calc/section-1254", post(section_1254_route))
+        .route("/calc/section-1255", post(section_1255_route))
+        .route("/calc/section-1245-1250", post(section_1245_1250_route))
+        .route("/calc/section-1202", post(section_1202_route))
+        .route("/calc/section-1045", post(section_1045_route))
+        .route("/calc/section-121", post(section_121_route))
+        .route("/calc/section-121d", post(section_121d_route))
+        .route("/calc/section-132", post(section_132_route))
+        .route("/calc/reps-qualification", post(reps_qualification_route))
+        .route("/calc/section-163j", post(section_163j_route))
+        .route("/calc/section-165d", post(section_165d_route))
+        .route("/calc/section-165g", post(section_165g_route))
+        .route("/calc/section-267", post(section_267_route))
+        .route("/calc/section-269", post(section_269_route))
+        .route("/calc/section-269a", post(section_269a_route))
+        .route("/calc/section-274", post(section_274_route))
+        .route("/calc/section-279", post(section_279_route))
+        .route("/calc/section-988", post(section_988_route))
+        .route("/calc/section-1296", post(section_1296_route))
+        .route("/calc/section-1341", post(section_1341_route))
+        .route("/calc/section-168", post(section_168_route))
+        .route("/calc/section-168g", post(section_168g_route))
+        .route("/calc/section-168k", post(section_168k_route))
+        .route(
+            "/calc/section-163j-tradeoff",
+            post(section_163j_tradeoff_route),
+        )
+        .route("/calc/section-164", post(section_164_route))
+        .route("/calc/section-165h", post(section_165h_route))
+        .route("/calc/section-25c", post(section_25c_route))
+        .route("/calc/section-25d", post(section_25d_route))
+        .route("/calc/section-25e", post(section_25e_route))
+        .route("/calc/section-30c", post(section_30c_route))
+        .route("/calc/section-30d", post(section_30d_route))
+        .route("/calc/mlp-ubti", post(mlp_ubti_route))
+        .route("/calc/section-1258", post(section_1258_route))
+        .route("/calc/section-1259", post(section_1259_route))
+        .route("/calc/section-1260", post(section_1260_route))
+        .route("/calc/section-1361", post(section_1361_route))
+        .route("/calc/section-1366", post(section_1366_route))
+        .route("/calc/section-1377", post(section_1377_route))
+        .route("/calc/section-1367", post(section_1367_route))
+        .route("/calc/section-1368", post(section_1368_route))
+        .route("/calc/section-1374", post(section_1374_route))
+        .route("/calc/section-1375", post(section_1375_route))
+        .route("/calc/section-1400z-2", post(section_1400z_2_route))
+        .route("/calc/section-1402", post(section_1402_route))
+        .route("/calc/section-1411", post(section_1411_route))
+        .route("/calc/section-1445", post(section_1445_route))
+        .route("/calc/section-1446", post(section_1446_route))
+        .route("/calc/section-1471", post(section_1471_route))
+        .route("/calc/section-475c2", post(section_475c2_route))
+        .route("/calc/section-475f", post(section_475f_route))
+        .route("/calc/section-4701", post(section_4701_route))
+        .route("/calc/section-213", post(section_213_route))
+        .route("/calc/section-170", post(section_170_route))
+        .route("/calc/section-219", post(section_219_route))
+        .route("/calc/section-221", post(section_221_route))
+        .route("/calc/section-223", post(section_223_route))
+        .route("/calc/section-243", post(section_243_route))
+        .route("/calc/section-245a", post(section_245a_route))
+        .route("/calc/section-246", post(section_246_route))
+        .route("/calc/section-246a", post(section_246a_route))
+        .route("/calc/section-250", post(section_250_route))
+        .route("/calc/section-56a", post(section_56a_route))
+        .route("/calc/section-59a", post(section_59a_route))
+        .route("/calc/section-641", post(section_641_route))
+        .route("/calc/section-642", post(section_642_route))
+        .route("/calc/section-643", post(section_643_route))
+        .route("/calc/section-651", post(section_651_route))
+        .route("/calc/section-661", post(section_661_route))
+        .route("/calc/section-671", post(section_671_route))
+        .route("/calc/section-673", post(section_673_route))
+        .route("/calc/section-674", post(section_674_route))
+        .route("/calc/section-675", post(section_675_route))
+        .route("/calc/section-676", post(section_676_route))
+        .route("/calc/section-677", post(section_677_route))
+        .route("/calc/section-678", post(section_678_route))
+        .route("/calc/section-679", post(section_679_route))
+        .route("/calc/section-67g", post(section_67g_route))
+        .route("/calc/section-6041", post(section_6041_route))
+        .route("/calc/section-6109", post(section_6109_route))
+        .route("/calc/section-6042", post(section_6042_route))
+        .route("/calc/section-6045", post(section_6045_route))
+        .route("/calc/section-6049", post(section_6049_route))
+        .route("/calc/section-6050i", post(section_6050i_route))
+        .route("/calc/section-6050w", post(section_6050w_route))
+        .route("/calc/section-6212", post(section_6212_route))
+        .route("/calc/section-6213", post(section_6213_route))
+        .route("/calc/section-6201", post(section_6201_route))
+        .route("/calc/section-6203", post(section_6203_route))
+        .route("/calc/section-6303", post(section_6303_route))
+        .route("/calc/section-6304", post(section_6304_route))
+        .route("/calc/section-6306", post(section_6306_route))
+        .route("/calc/section-6320", post(section_6320_route))
+        .route("/calc/section-6321", post(section_6321_route))
+        .route("/calc/section-6323", post(section_6323_route))
+        .route("/calc/section-6325", post(section_6325_route))
+        .route("/calc/section-6330", post(section_6330_route))
+        .route("/calc/section-6331", post(section_6331_route))
+        .route("/calc/section-6332", post(section_6332_route))
+        .route("/calc/section-6334", post(section_6334_route))
+        .route("/calc/section-6402", post(section_6402_route))
+        .route("/calc/section-6404", post(section_6404_route))
+        .route("/calc/section-6411", post(section_6411_route))
+        .route("/calc/section-6417", post(section_6417_route))
+        .route("/calc/section-6418", post(section_6418_route))
+        .route("/calc/section-6425", post(section_6425_route))
+        .route("/calc/section-7201", post(section_7201_route))
+        .route("/calc/section-7202", post(section_7202_route))
+        .route("/calc/section-7203", post(section_7203_route))
+        .route("/calc/section-7212", post(section_7212_route))
+        .route("/calc/section-7216", post(section_7216_route))
+        .route("/calc/section-7206", post(section_7206_route))
+        .route("/calc/section-7207", post(section_7207_route))
+        .route("/calc/section-7421", post(section_7421_route))
+        .route("/calc/section-7422", post(section_7422_route))
+        .route("/calc/section-7426", post(section_7426_route))
+        .route("/calc/section-7429", post(section_7429_route))
+        .route("/calc/section-7430", post(section_7430_route))
+        .route("/calc/section-7433", post(section_7433_route))
+        .route("/calc/section-7434", post(section_7434_route))
+        .route("/calc/section-7463", post(section_7463_route))
+        .route("/calc/section-7491", post(section_7491_route))
+        .route("/calc/section-162a", post(section_162a_route))
+        .route("/calc/section-162e", post(section_162e_route))
+        .route("/calc/section-162f", post(section_162f_route))
+        .route("/calc/section-162l", post(section_162l_route))
+        .route("/calc/section-162m", post(section_162m_route))
+        .route("/calc/section-7502", post(section_7502_route))
+        .route("/calc/section-7503", post(section_7503_route))
+        .route("/calc/section-7508", post(section_7508_route))
+        .route("/calc/section-7508a", post(section_7508a_route))
+        .route("/calc/section-7521", post(section_7521_route))
+        .route("/calc/section-7522", post(section_7522_route))
+        .route("/calc/section-7525", post(section_7525_route))
+        .route("/calc/section-7811", post(section_7811_route))
+        .route("/calc/section-6501", post(section_6501_route))
+        .route("/calc/section-6502", post(section_6502_route))
+        .route("/calc/section-6531", post(section_6531_route))
+        .route("/calc/section-6532", post(section_6532_route))
+        .route("/calc/section-6511", post(section_6511_route))
+        .route("/calc/section-6601", post(section_6601_route))
+        .route("/calc/section-6611", post(section_6611_route))
+        .route("/calc/section-6621", post(section_6621_route))
+        .route("/calc/section-6651", post(section_6651_route))
+        .route("/calc/section-6654", post(section_6654_route))
+        .route("/calc/section-6655", post(section_6655_route))
+        .route("/calc/section-6662", post(section_6662_route))
+        .route("/calc/section-448", post(section_448_route))
+        .route("/calc/section-446", post(section_446_route))
+        .route("/calc/section-444", post(section_444_route))
+        .route("/calc/section-3406", post(section_3406_route))
+        .route("/calc/section-302", post(section_302_route))
+        .route("/calc/section-304", post(section_304_route))
+        .route("/calc/section-305", post(section_305_route))
+        .route("/calc/section-311", post(section_311_route))
+        .route("/calc/section-312", post(section_312_route))
+        .route("/calc/section-318", post(section_318_route))
+        .route("/calc/section-331", post(section_331_route))
+        .route("/calc/section-332", post(section_332_route))
+        .route("/calc/section-1234a", post(section_1234a_route))
+        .route("/calc/section-1234b", post(section_1234b_route))
+        .route("/calc/section-263g", post(section_263g_route))
+        .route("/calc/section-264", post(section_264_route))
+        .route("/calc/section-265", post(section_265_route))
+        .route("/calc/section-1276", post(section_1276_route))
+        .route("/calc/section-1277", post(section_1277_route))
+        .route("/calc/section-1278", post(section_1278_route))
+        .route("/calc/section-1271", post(section_1271_route))
+        .route("/calc/section-1272", post(section_1272_route))
+        .route("/calc/section-1273", post(section_1273_route))
+        .route("/calc/section-1274", post(section_1274_route))
+        .route("/calc/section-1275", post(section_1275_route))
+        .route("/calc/section-1281", post(section_1281_route))
+        .route("/calc/section-1283", post(section_1283_route))
+        .route("/calc/section-1286", post(section_1286_route))
+        .route("/calc/section-1287", post(section_1287_route))
+        .route("/calc/section-1288", post(section_1288_route))
+        .route("/calc/section-1282", post(section_1282_route))
+        .route("/calc/section-7704", post(section_7704_route))
+        .route("/calc/section-6045b", post(section_6045b_route))
+        .route("/calc/section-6045a", post(section_6045a_route))
+        .route("/calc/section-1297", post(section_1297_route))
+        .route("/calc/section-1298", post(section_1298_route))
+        .route("/calc/section-6020", post(section_6020_route))
+        .route("/calc/section-6035", post(section_6035_route))
+        .route("/calc/section-6038a", post(section_6038a_route))
+        .route("/calc/section-6038b", post(section_6038b_route))
+        .route("/calc/section-6038c", post(section_6038c_route))
+        .route("/calc/section-6038d", post(section_6038d_route))
+        .route("/calc/section-6039", post(section_6039_route))
+        .route("/calc/section-6011", post(section_6011_route))
+        .route("/calc/section-6111", post(section_6111_route))
+        .route("/calc/section-6112", post(section_6112_route))
+        .route("/calc/section-6662a", post(section_6662a_route))
+        .route("/calc/section-6663", post(section_6663_route))
+        .route("/calc/section-6664", post(section_6664_route))
+        .route("/calc/section-6672", post(section_6672_route))
+        .route("/calc/section-6694", post(section_6694_route))
+        .route("/calc/section-6695", post(section_6695_route))
+        .route("/calc/section-6695a", post(section_6695a_route))
+        .route("/calc/section-6700", post(section_6700_route))
+        .route("/calc/section-6701", post(section_6701_route))
+        .route("/calc/section-6707", post(section_6707_route))
+        .route("/calc/section-6707a", post(section_6707a_route))
+        .route("/calc/section-6708", post(section_6708_route))
+        .route("/calc/section-6713", post(section_6713_route))
+        .route("/calc/section-6721", post(section_6721_route))
+        .route("/calc/section-6722", post(section_6722_route))
+        .route("/calc/section-6723", post(section_6723_route))
+        .route("/calc/section-6724", post(section_6724_route))
+        .route("/calc/section-6851", post(section_6851_route))
+        .route("/calc/section-6861", post(section_6861_route))
+        .route("/calc/section-6862", post(section_6862_route))
+        .route("/calc/section-6863", post(section_6863_route))
+        .route("/calc/section-336", post(section_336_route))
+        .route("/calc/section-351", post(section_351_route))
+        .route("/calc/section-354", post(section_354_route))
+        .route("/calc/section-357", post(section_357_route))
+        .route("/calc/section-358", post(section_358_route))
+        .route("/calc/section-362", post(section_362_route))
+        .route("/calc/section-367", post(section_367_route))
+        .route("/calc/section-45l", post(section_45l_route))
+        .route("/calc/section-45q", post(section_45q_route))
+        .route("/calc/section-45u", post(section_45u_route))
+        .route("/calc/section-45v", post(section_45v_route))
+        .route("/calc/section-45w", post(section_45w_route))
+        .route("/calc/section-45x", post(section_45x_route))
+        .route("/calc/section-45y", post(section_45y_route))
+        .route("/calc/section-45z", post(section_45z_route))
+        .route("/calc/section-47", post(section_47_route))
+        .route("/calc/section-48", post(section_48_route))
+        .route("/calc/section-48c", post(section_48c_route))
+        .route("/calc/section-48e", post(section_48e_route))
+        .route("/calc/section-51", post(section_51_route))
+        .route("/calc/section-451b", post(section_451b_route))
+        .route("/calc/section-451c", post(section_451c_route))
+        .route("/calc/section-1031", post(section_1031_route))
+        .route("/calc/section-1031-f", post(section_1031_f_route))
+        .route("/calc/section-1033", post(section_1033_route))
+        .route("/calc/section-481", post(section_481_route))
+        .route("/calc/section-482", post(section_482_route))
+        .route("/calc/section-514", post(section_514_route))
+        .route("/calc/section-530", post(section_530_route))
+        .route("/calc/section-280f", post(section_280f_route))
+        .route("/calc/section-280b", post(section_280b_route))
+        .route("/calc/section-280c", post(section_280c_route))
+        .route("/calc/section-280e", post(section_280e_route))
+        .route("/calc/section-280g", post(section_280g_route))
+        .route("/calc/section-280h", post(section_280h_route))
+        .route("/calc/section-163d", post(section_163d_route))
+        .route("/calc/section-163h", post(section_163h_route))
+        .route("/calc/section-864b2", post(section_864b2_route))
+        .route("/calc/section-72t", post(section_72t_route))
+        .route("/calc/section-7345", post(section_7345_route))
+        .route("/calc/section-7623", post(section_7623_route))
+        .route("/calc/section-7405", post(section_7405_route))
+        .route("/calc/section-7408", post(section_7408_route))
+        .route("/calc/section-7701", post(section_7701_route))
+        .route("/calc/section-7872", post(section_7872_route))
+        .route("/calc/section-1291", post(section_1291_route))
+        .route("/calc/section-1293", post(section_1293_route))
+        .route("/calc/section-1294", post(section_1294_route))
+        .route("/calc/section-1295", post(section_1295_route))
+        .route("/calc/section-1058", post(section_1058_route))
+        .route("/calc/section-1092", post(section_1092_route))
+        .route("/calc/section-408", post(section_408_route))
+        .route("/calc/section-401k", post(section_401k_route))
+        .route("/calc/section-415", post(section_415_route))
+        .route("/calc/section-408a", post(section_408a_route))
+        .route("/calc/section-421", post(section_421_route))
+        .route("/calc/section-422", post(section_422_route))
+        .route("/calc/section-423", post(section_423_route))
+        .route("/calc/section-4501", post(section_4501_route))
+        .route("/calc/section-4940", post(section_4940_route))
+        .route("/calc/section-4941", post(section_4941_route))
+        .route("/calc/section-4942", post(section_4942_route))
+        .route("/calc/section-4943", post(section_4943_route))
+        .route("/calc/section-4944", post(section_4944_route))
+        .route("/calc/section-4945", post(section_4945_route))
+        .route("/calc/section-4958", post(section_4958_route))
+        .route("/calc/section-4960", post(section_4960_route))
+        .route("/calc/section-4972", post(section_4972_route))
+        .route("/calc/section-4973", post(section_4973_route))
+        .route("/calc/section-4974", post(section_4974_route))
+        .route("/calc/section-4975", post(section_4975_route))
+        .route("/calc/section-4978", post(section_4978_route))
+        .route("/calc/section-6166", post(section_6166_route))
+        .route("/calc/section-4980", post(section_4980_route))
+        .route("/calc/section-4980h", post(section_4980h_route))
+        .route("/calc/section-453", post(section_453_route))
+        .route("/calc/section-453a", post(section_453a_route))
+        .route("/calc/section-457a", post(section_457a_route))
+        .route("/calc/section-457b", post(section_457b_route))
+        .route("/calc/section-461g", post(section_461g_route))
+        .route("/calc/section-461h", post(section_461h_route))
+        .route("/calc/section-461l", post(section_461l_route))
+        .route("/calc/section-465", post(section_465_route))
+        .route("/calc/section-691", post(section_691_route))
+        .route("/calc/section-704d", post(section_704d_route))
+        .route("/calc/section-704c", post(section_704c_route))
+        .route("/calc/section-706", post(section_706_route))
+        .route("/calc/section-707", post(section_707_route))
+        .route("/calc/section-721", post(section_721_route))
+        .route("/calc/section-723", post(section_723_route))
+        .route("/calc/section-731", post(section_731_route))
+        .route("/calc/section-732", post(section_732_route))
+        .route("/calc/section-734", post(section_734_route))
+        .route("/calc/section-736", post(section_736_route))
+        .route("/calc/section-737", post(section_737_route))
+        .route("/calc/section-741", post(section_741_route))
+        .route("/calc/section-743", post(section_743_route))
+        .route("/calc/section-751", post(section_751_route))
+        .route("/calc/section-752", post(section_752_route))
+        .route("/calc/section-1235", post(section_1235_route))
+        .route("/calc/section-1239", post(section_1239_route))
+        .route("/calc/section-754", post(section_754_route))
+        .route("/calc/section-755", post(section_755_route))
+        .route("/calc/section-871m", post(section_871m_route))
+        .route("/calc/section-901", post(section_901_route))
+        .route("/calc/section-903", post(section_903_route))
+        .route("/calc/section-904", post(section_904_route))
+        .route("/calc/section-911", post(section_911_route))
+        .route("/calc/section-951a", post(section_951a_route))
+        .route("/calc/section-956", post(section_956_route))
+        .route("/calc/section-959", post(section_959_route))
+        .route("/calc/section-960", post(section_960_route))
+        .route("/calc/section-961", post(section_961_route))
+        .route("/calc/section-962", post(section_962_route))
+        .route("/calc/section-965", post(section_965_route))
+        .route("/calc/section-401a9", post(section_401a9_route))
+        .route("/calc/section-409a", post(section_409a_route))
+        .route("/calc/section-382", post(section_382_route))
+        .route("/calc/section-383", post(section_383_route))
+        .route("/calc/section-384", post(section_384_route))
+        .route("/calc/section-83i", post(section_83i_route))
+        .route("/calc/section-408-d3", post(section_408_d3_route))
+        .route("/calc/section-408m", post(section_408m_route))
+        .route("/calc/section-41", post(section_41_route))
+        .route("/calc/section-38", post(section_38_route))
+        .route("/calc/section-42", post(section_42_route))
+        .route("/calc/section-44", post(section_44_route))
+        .route("/calc/section-408a-d3", post(section_408A_d3_route))
+        .route("/calc/section-174", post(section_174_route))
+        .route("/calc/section-179", post(section_179_route))
+        .route("/calc/section-179d", post(section_179d_route))
+        .route("/calc/section-183", post(section_183_route))
+        .route("/calc/section-263", post(section_263_route))
+        .route("/calc/section-263a", post(section_263a_route))
+        .route("/calc/section-168-e6", post(section_168_e6_route))
+        .route("/calc/section-108", post(section_108_route))
+        .route("/calc/section-104", post(section_104_route))
+        .route("/calc/section-1012", post(section_1012_route))
+        .route("/calc/section-1014", post(section_1014_route))
+        .route("/calc/section-1014e", post(section_1014e_route))
+        .route("/calc/section-1015", post(section_1015_route))
+        .route("/calc/section-1041", post(section_1041_route))
+        .route("/calc/section-1042", post(section_1042_route))
+        .route("/calc/section-170e", post(section_170e_route))
+        .route("/calc/section-172", post(section_172_route))
+        .route("/calc/section-195", post(section_195_route))
+        .route("/calc/section-248", post(section_248_route))
+        .route("/calc/section-709", post(section_709_route))
+        .route("/calc/section-197", post(section_197_route))
+        .route("/calc/section-199a", post(section_199a_route))
+        .route("/calc/section-83b", post(section_83b_route))
+        .route("/calc/section-83c", post(section_83c_route))
+        .route("/calc/section-1059", post(section_1059_route))
+        .route("/calc/section-1060", post(section_1060_route))
+        .route("/calc/section-1091", post(section_1091_route))
+        .route("/calc/section-1231", post(section_1231_route))
+        .route("/calc/section-1233", post(section_1233_route))
+        .route("/calc/section-1234", post(section_1234_route))
+        .route(
+            "/calc/commission-optimizer",
+            post(commission_optimizer_route),
+        )
         // ── Fixed income / FX ─────────────────────────────────────────
-        .route("/calc/yield-curve",           post(yield_curve_route))
-        .route("/calc/bond-duration",         post(bond_duration_route))
-        .route("/calc/carry-score",           post(carry_score_route))
-        .route("/calc/currency-exposure",     post(currency_exposure_route))
-        .route("/calc/vix-term-structure",    post(vix_term_structure_route))
+        .route("/calc/yield-curve", post(yield_curve_route))
+        .route("/calc/bond-duration", post(bond_duration_route))
+        .route("/calc/carry-score", post(carry_score_route))
+        .route("/calc/currency-exposure", post(currency_exposure_route))
+        .route("/calc/vix-term-structure", post(vix_term_structure_route))
 }
 
 // ─── Position sizing ────────────────────────────────────────────────────
 
 async fn kelly_route(
-    _u: AuthUser, Json(input): Json<kelly::KellyInput>,
+    _u: AuthUser,
+    Json(input): Json<kelly::KellyInput>,
 ) -> Json<kelly::KellyOutput> {
     Json(kelly::compute(&input))
 }
@@ -438,7 +445,8 @@ struct DynamicKellyBody {
 }
 
 async fn dynamic_kelly_route(
-    _u: AuthUser, Json(b): Json<DynamicKellyBody>,
+    _u: AuthUser,
+    Json(b): Json<DynamicKellyBody>,
 ) -> Result<Json<Vec<dynamic_kelly::DynamicKellyPoint>>, ApiError> {
     if b.window == 0 {
         return Err(ApiError::BadRequest("window must be > 0".into()));
@@ -452,7 +460,8 @@ struct OptimalFBody {
 }
 
 async fn optimal_f_route(
-    _u: AuthUser, Json(b): Json<OptimalFBody>,
+    _u: AuthUser,
+    Json(b): Json<OptimalFBody>,
 ) -> Json<optimal_f::OptimalFReport> {
     Json(optimal_f::compute(&b.returns))
 }
@@ -468,22 +477,34 @@ struct VarBody {
 }
 
 async fn var_historical_route(
-    _u: AuthUser, Json(b): Json<VarBody>,
+    _u: AuthUser,
+    Json(b): Json<VarBody>,
 ) -> Result<Json<var_estimator::VarReport>, ApiError> {
     validate_confidence(b.confidence)?;
-    Ok(Json(var_estimator::historical(&b.daily_returns, b.position_value, b.confidence)))
+    Ok(Json(var_estimator::historical(
+        &b.daily_returns,
+        b.position_value,
+        b.confidence,
+    )))
 }
 
 async fn var_gaussian_route(
-    _u: AuthUser, Json(b): Json<VarBody>,
+    _u: AuthUser,
+    Json(b): Json<VarBody>,
 ) -> Result<Json<var_estimator::VarReport>, ApiError> {
     validate_confidence(b.confidence)?;
-    Ok(Json(var_estimator::parametric_gaussian(&b.daily_returns, b.position_value, b.confidence)))
+    Ok(Json(var_estimator::parametric_gaussian(
+        &b.daily_returns,
+        b.position_value,
+        b.confidence,
+    )))
 }
 
 fn validate_confidence(c: f64) -> Result<(), ApiError> {
     if !(c > 0.0 && c < 1.0) {
-        return Err(ApiError::BadRequest("confidence must be in (0, 1) exclusive".into()));
+        return Err(ApiError::BadRequest(
+            "confidence must be in (0, 1) exclusive".into(),
+        ));
     }
     Ok(())
 }
@@ -497,7 +518,8 @@ struct MonteCarloBody {
 }
 
 async fn monte_carlo_route(
-    _u: AuthUser, Json(b): Json<MonteCarloBody>,
+    _u: AuthUser,
+    Json(b): Json<MonteCarloBody>,
 ) -> Result<Json<monte_carlo::McReport>, ApiError> {
     monte_carlo::simulate(&b.historical_r, &b.config)
         .ok_or_else(|| ApiError::BadRequest(
@@ -514,13 +536,15 @@ struct RiskParityBody {
 }
 
 async fn risk_parity_route(
-    _u: AuthUser, Json(b): Json<RiskParityBody>,
+    _u: AuthUser,
+    Json(b): Json<RiskParityBody>,
 ) -> Json<risk_parity::RiskParityReport> {
     Json(risk_parity::allocate(&b.assets))
 }
 
 async fn risk_on_off_route(
-    _u: AuthUser, Json(snap): Json<risk_on_off::CrossAssetSnapshot>,
+    _u: AuthUser,
+    Json(snap): Json<risk_on_off::CrossAssetSnapshot>,
 ) -> Json<risk_on_off::RiskReport> {
     Json(risk_on_off::evaluate(&snap))
 }
@@ -528,7 +552,8 @@ async fn risk_on_off_route(
 // ─── Margin / buying power ──────────────────────────────────────────────
 
 async fn margin_call_route(
-    _u: AuthUser, Json(snap): Json<margin_call::AccountSnapshot>,
+    _u: AuthUser,
+    Json(snap): Json<margin_call::AccountSnapshot>,
 ) -> Json<margin_call::MarginCallReport> {
     Json(margin_call::evaluate(&snap))
 }
@@ -541,13 +566,19 @@ struct MarginRunwayBody {
 }
 
 async fn margin_runway_route(
-    _u: AuthUser, Json(b): Json<MarginRunwayBody>,
+    _u: AuthUser,
+    Json(b): Json<MarginRunwayBody>,
 ) -> Json<margin_runway::MarginRunwayReport> {
-    Json(margin_runway::compute(b.account_equity, b.position_value, b.maintenance_req_pct))
+    Json(margin_runway::compute(
+        b.account_equity,
+        b.position_value,
+        b.maintenance_req_pct,
+    ))
 }
 
 async fn buying_power_route(
-    _u: AuthUser, Json(input): Json<buying_power::BpInput>,
+    _u: AuthUser,
+    Json(input): Json<buying_power::BpInput>,
 ) -> Json<buying_power::BpReport> {
     Json(buying_power::compute(&input))
 }
@@ -569,10 +600,15 @@ struct TaxLossHarvestBody {
 }
 
 async fn tax_loss_harvest_route(
-    _u: AuthUser, Json(b): Json<TaxLossHarvestBody>,
+    _u: AuthUser,
+    Json(b): Json<TaxLossHarvestBody>,
 ) -> Json<tax_loss_harvest::HarvestReport> {
     Json(tax_loss_harvest::suggest(
-        &b.losers, &b.recent_buys, b.today, b.realized_loss_ytd, b.mtm_elected,
+        &b.losers,
+        &b.recent_buys,
+        b.today,
+        b.realized_loss_ytd,
+        b.mtm_elected,
     ))
 }
 
@@ -588,12 +624,13 @@ struct WashSaleResp {
     total_disallowed: Decimal,
 }
 
-async fn wash_sale_route(
-    _u: AuthUser, Json(b): Json<WashSaleBody>,
-) -> Json<WashSaleResp> {
+async fn wash_sale_route(_u: AuthUser, Json(b): Json<WashSaleBody>) -> Json<WashSaleResp> {
     let hits = wash_sale::detect_hits(&b.closings, &b.openings);
     let total_disallowed = wash_sale::total_disallowed(&hits);
-    Json(WashSaleResp { hits, total_disallowed })
+    Json(WashSaleResp {
+        hits,
+        total_disallowed,
+    })
 }
 
 #[derive(Deserialize)]
@@ -605,9 +642,15 @@ struct CostBasisBody {
 }
 
 async fn cost_basis_route(
-    _u: AuthUser, Json(b): Json<CostBasisBody>,
+    _u: AuthUser,
+    Json(b): Json<CostBasisBody>,
 ) -> Json<cost_basis::CloseReport> {
-    Json(cost_basis::close(&b.lots, b.qty_to_close, b.price_per_share, b.method))
+    Json(cost_basis::close(
+        &b.lots,
+        b.qty_to_close,
+        b.price_per_share,
+        b.method,
+    ))
 }
 
 #[derive(Deserialize)]
@@ -617,7 +660,8 @@ struct CommissionOptimizerBody {
 }
 
 async fn commission_optimizer_route(
-    _u: AuthUser, Json(b): Json<CommissionOptimizerBody>,
+    _u: AuthUser,
+    Json(b): Json<CommissionOptimizerBody>,
 ) -> Json<commission_optimizer::OptimizerReport> {
     Json(commission_optimizer::evaluate(&b.executions, &b.tiers))
 }
@@ -625,7 +669,8 @@ async fn commission_optimizer_route(
 // ─── Fixed income / FX ──────────────────────────────────────────────────
 
 async fn yield_curve_route(
-    _u: AuthUser, Json(c): Json<yield_curve::YieldCurve>,
+    _u: AuthUser,
+    Json(c): Json<yield_curve::YieldCurve>,
 ) -> Json<yield_curve::CurveReport> {
     Json(yield_curve::classify(&c))
 }
@@ -638,9 +683,14 @@ struct BondDurationBody {
 }
 
 async fn bond_duration_route(
-    _u: AuthUser, Json(b): Json<BondDurationBody>,
+    _u: AuthUser,
+    Json(b): Json<BondDurationBody>,
 ) -> Json<bond_duration::DurationReport> {
-    Json(bond_duration::compute(&b.cash_flows, b.ytm, b.compounding_per_year))
+    Json(bond_duration::compute(
+        &b.cash_flows,
+        b.ytm,
+        b.compounding_per_year,
+    ))
 }
 
 #[derive(Deserialize)]
@@ -651,9 +701,14 @@ struct CarryScoreBody {
 }
 
 async fn carry_score_route(
-    _u: AuthUser, Json(b): Json<CarryScoreBody>,
+    _u: AuthUser,
+    Json(b): Json<CarryScoreBody>,
 ) -> Json<carry_score::CarryReport> {
-    Json(carry_score::score(b.long_rate, b.funding_rate, b.annualized_vol))
+    Json(carry_score::score(
+        b.long_rate,
+        b.funding_rate,
+        b.annualized_vol,
+    ))
 }
 
 #[derive(Deserialize)]
@@ -666,13 +721,19 @@ struct CurrencyExposureBody {
 }
 
 async fn currency_exposure_route(
-    _u: AuthUser, Json(b): Json<CurrencyExposureBody>,
+    _u: AuthUser,
+    Json(b): Json<CurrencyExposureBody>,
 ) -> Json<currency_exposure::CurrencyReport> {
-    Json(currency_exposure::analyze(&b.positions, &b.home_currency, &b.fx_to_home))
+    Json(currency_exposure::analyze(
+        &b.positions,
+        &b.home_currency,
+        &b.fx_to_home,
+    ))
 }
 
 async fn vix_term_structure_route(
-    _u: AuthUser, Json(ts): Json<vix_term_structure::VixTermStructure>,
+    _u: AuthUser,
+    Json(ts): Json<vix_term_structure::VixTermStructure>,
 ) -> Json<vix_term_structure::TermStructureReport> {
     Json(vix_term_structure::analyze(&ts))
 }
@@ -711,9 +772,7 @@ async fn section_1245_1250_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_1245_1250::Section1245_1250Input>,
 ) -> Result<Json<traderview_expense::section_1245_1250::Section1245_1250Result>, ApiError> {
-    if b.accumulated_depreciation_dollars < 0
-        || b.additional_depreciation_dollars < 0
-    {
+    if b.accumulated_depreciation_dollars < 0 || b.additional_depreciation_dollars < 0 {
         return Err(ApiError::BadRequest(
             "non-negative depreciation inputs required".into(),
         ));
@@ -1666,9 +1725,7 @@ async fn section_168_e6_route(
     Json(b): Json<traderview_expense::section_168_e6::Section168E6Input>,
 ) -> Result<Json<traderview_expense::section_168_e6::Section168E6Result>, ApiError> {
     if b.improvement_cost < Decimal::ZERO {
-        return Err(ApiError::BadRequest(
-            "improvement_cost must be >= 0".into(),
-        ));
+        return Err(ApiError::BadRequest("improvement_cost must be >= 0".into()));
     }
     Ok(Json(traderview_expense::section_168_e6::compute(&b)))
 }
@@ -1728,9 +1785,7 @@ async fn section_174_route(
     Json(b): Json<traderview_expense::section_174::Section174Input>,
 ) -> Result<Json<traderview_expense::section_174::Section174Result>, ApiError> {
     if b.r_and_d_amount < Decimal::ZERO {
-        return Err(ApiError::BadRequest(
-            "r_and_d_amount must be >= 0".into(),
-        ));
+        return Err(ApiError::BadRequest("r_and_d_amount must be >= 0".into()));
     }
     Ok(Json(traderview_expense::section_174::compute(&b)))
 }
@@ -1853,9 +1908,7 @@ async fn section_1231_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_1231::Section1231Input>,
 ) -> Result<Json<traderview_expense::section_1231::Section1231Result>, ApiError> {
-    if b.current_year_gains_dollars < 0
-        || b.current_year_losses_dollars < 0
-    {
+    if b.current_year_gains_dollars < 0 || b.current_year_losses_dollars < 0 {
         return Err(ApiError::BadRequest(
             "current_year_gains_dollars and current_year_losses_dollars must be >= 0".into(),
         ));
@@ -2154,9 +2207,7 @@ async fn section_197_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_197::Section197Input>,
 ) -> Result<Json<traderview_expense::section_197::Section197Result>, ApiError> {
-    if b.adjusted_basis_cents < -10_000_000_000
-        || b.adjusted_basis_cents > 10_000_000_000_000
-    {
+    if b.adjusted_basis_cents < -10_000_000_000 || b.adjusted_basis_cents > 10_000_000_000_000 {
         return Err(ApiError::BadRequest(
             "adjusted_basis_cents out of plausible range".into(),
         ));
@@ -2834,8 +2885,7 @@ async fn section_721_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_721::Section721Input>,
 ) -> Result<Json<traderview_expense::section_721::Section721Result>, ApiError> {
-    if b.fmv_contributed_cents > 1_000_000_000_000
-        || b.basis_contributed_cents > 1_000_000_000_000
+    if b.fmv_contributed_cents > 1_000_000_000_000 || b.basis_contributed_cents > 1_000_000_000_000
     {
         return Err(ApiError::BadRequest(
             "fmv_contributed_cents or basis_contributed_cents out of range".into(),
@@ -3363,9 +3413,7 @@ async fn section_401a9_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_401a9::Section401a9Input>,
 ) -> Result<Json<traderview_expense::section_401a9::Section401a9Result>, ApiError> {
-    if b.prior_year_end_balance < Decimal::ZERO
-        || b.actual_distribution_taken < Decimal::ZERO
-    {
+    if b.prior_year_end_balance < Decimal::ZERO || b.actual_distribution_taken < Decimal::ZERO {
         return Err(ApiError::BadRequest(
             "prior_year_end_balance and actual_distribution_taken must be >= 0".into(),
         ));
@@ -3692,7 +3740,8 @@ async fn section_382_route(
 async fn section_383_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_383::Section383ExcessCreditLimitationInput>,
-) -> Result<Json<traderview_expense::section_383::Section383ExcessCreditLimitationOutput>, ApiError> {
+) -> Result<Json<traderview_expense::section_383::Section383ExcessCreditLimitationOutput>, ApiError>
+{
     Ok(Json(traderview_expense::section_383::check(&b)))
 }
 
@@ -3740,7 +3789,10 @@ async fn section_383_route(
 async fn section_384_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_384::Section384PreacquisitionLossDisallowanceInput>,
-) -> Result<Json<traderview_expense::section_384::Section384PreacquisitionLossDisallowanceOutput>, ApiError> {
+) -> Result<
+    Json<traderview_expense::section_384::Section384PreacquisitionLossDisallowanceOutput>,
+    ApiError,
+> {
     Ok(Json(traderview_expense::section_384::check(&b)))
 }
 
@@ -3788,9 +3840,7 @@ async fn section_408m_route(
     Json(b): Json<traderview_expense::section_408m::Section408mInput>,
 ) -> Result<Json<traderview_expense::section_408m::Section408mResult>, ApiError> {
     if b.purchase_price < Decimal::ZERO {
-        return Err(ApiError::BadRequest(
-            "purchase_price must be >= 0".into(),
-        ));
+        return Err(ApiError::BadRequest("purchase_price must be >= 0".into()));
     }
     Ok(Json(traderview_expense::section_408m::compute(&b)))
 }
@@ -3962,7 +4012,8 @@ async fn section_901_route(
 async fn section_903_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_903::Section903InLieuOfTaxCreditabilityInput>,
-) -> Result<Json<traderview_expense::section_903::Section903InLieuOfTaxCreditabilityOutput>, ApiError> {
+) -> Result<Json<traderview_expense::section_903::Section903InLieuOfTaxCreditabilityOutput>, ApiError>
+{
     Ok(Json(traderview_expense::section_903::check(&b)))
 }
 
@@ -4339,8 +4390,7 @@ async fn section_1291_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_1291::Section1291Input>,
 ) -> Result<Json<traderview_expense::section_1291::Section1291Result>, ApiError> {
-    if b.current_year_marginal_rate_bps > 10_000
-        || b.prior_year_highest_marginal_rate_bps > 10_000
+    if b.current_year_marginal_rate_bps > 10_000 || b.prior_year_highest_marginal_rate_bps > 10_000
     {
         return Err(ApiError::BadRequest(
             "marginal rate bps must be ≤ 10000 (100%)".into(),
@@ -4408,9 +4458,7 @@ async fn section_1294_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_1294::Section1294Input>,
 ) -> Result<Json<traderview_expense::section_1294::Section1294Result>, ApiError> {
-    if b.tax_rate_on_undistributed_bps > 10_000
-        || b.section_6601_interest_rate_bps > 10_000
-    {
+    if b.tax_rate_on_undistributed_bps > 10_000 || b.section_6601_interest_rate_bps > 10_000 {
         return Err(ApiError::BadRequest(
             "rate bps must be ≤ 10000 (100%)".into(),
         ));
@@ -4666,7 +4714,8 @@ async fn section_280g_route(
 async fn section_280h_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_280h::Section280HPscMinimumDistributionInput>,
-) -> Result<Json<traderview_expense::section_280h::Section280HPscMinimumDistributionOutput>, ApiError> {
+) -> Result<Json<traderview_expense::section_280h::Section280HPscMinimumDistributionOutput>, ApiError>
+{
     Ok(Json(traderview_expense::section_280h::check(&b)))
 }
 
@@ -4788,17 +4837,13 @@ async fn section_530_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_530::Section530Input>,
 ) -> Result<Json<traderview_expense::section_530::Section530Result>, ApiError> {
-    if b.contributor_modified_agi_cents < 0
-        || b.aggregate_contributions_for_beneficiary_cents < 0
-    {
+    if b.contributor_modified_agi_cents < 0 || b.aggregate_contributions_for_beneficiary_cents < 0 {
         return Err(ApiError::BadRequest(
             "non-negative cents inputs required".into(),
         ));
     }
     if !(1990..=2100).contains(&b.year) {
-        return Err(ApiError::BadRequest(
-            "year must be in [1990, 2100]".into(),
-        ));
+        return Err(ApiError::BadRequest("year must be in [1990, 2100]".into()));
     }
     Ok(Json(traderview_expense::section_530::compute(&b)))
 }
@@ -4860,9 +4905,7 @@ async fn section_1033_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_1033::Section1033Input>,
 ) -> Result<Json<traderview_expense::section_1033::Section1033Result>, ApiError> {
-    if b.amount_realized_cents < 0
-        || b.replacement_cost_cents < 0
-    {
+    if b.amount_realized_cents < 0 || b.replacement_cost_cents < 0 {
         return Err(ApiError::BadRequest(
             "amount_realized_cents and replacement_cost_cents must be non-negative".into(),
         ));
@@ -5420,9 +5463,7 @@ async fn section_170_route(
         ));
     }
     if !(1990..=2100).contains(&b.year) {
-        return Err(ApiError::BadRequest(
-            "year must be in [1990, 2100]".into(),
-        ));
+        return Err(ApiError::BadRequest("year must be in [1990, 2100]".into()));
     }
     Ok(Json(traderview_expense::section_170::compute(&b)))
 }
@@ -5450,9 +5491,7 @@ async fn section_219_route(
         ));
     }
     if !(1990..=2100).contains(&b.year) {
-        return Err(ApiError::BadRequest(
-            "year must be in [1990, 2100]".into(),
-        ));
+        return Err(ApiError::BadRequest("year must be in [1990, 2100]".into()));
     }
     Ok(Json(traderview_expense::section_219::compute(&b)))
 }
@@ -5476,9 +5515,7 @@ async fn section_221_route(
         ));
     }
     if !(1990..=2100).contains(&b.year) {
-        return Err(ApiError::BadRequest(
-            "year must be in [1990, 2100]".into(),
-        ));
+        return Err(ApiError::BadRequest("year must be in [1990, 2100]".into()));
     }
     Ok(Json(traderview_expense::section_221::compute(&b)))
 }
@@ -5505,9 +5542,7 @@ async fn section_223_route(
         ));
     }
     if !(1990..=2100).contains(&b.year) {
-        return Err(ApiError::BadRequest(
-            "year must be in [1990, 2100]".into(),
-        ));
+        return Err(ApiError::BadRequest("year must be in [1990, 2100]".into()));
     }
     Ok(Json(traderview_expense::section_223::compute(&b)))
 }
@@ -5608,7 +5643,10 @@ async fn section_245a_route(
 async fn section_246_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_246::Section246DividendsReceivedDeductionLimitsInput>,
-) -> Result<Json<traderview_expense::section_246::Section246DividendsReceivedDeductionLimitsOutput>, ApiError> {
+) -> Result<
+    Json<traderview_expense::section_246::Section246DividendsReceivedDeductionLimitsOutput>,
+    ApiError,
+> {
     Ok(Json(traderview_expense::section_246::check(&b)))
 }
 
@@ -5654,7 +5692,10 @@ async fn section_246_route(
 async fn section_246a_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_246a::Section246aDebtFinancedPortfolioStockInput>,
-) -> Result<Json<traderview_expense::section_246a::Section246aDebtFinancedPortfolioStockOutput>, ApiError> {
+) -> Result<
+    Json<traderview_expense::section_246a::Section246aDebtFinancedPortfolioStockOutput>,
+    ApiError,
+> {
     Ok(Json(traderview_expense::section_246a::check(&b)))
 }
 
@@ -6330,9 +6371,7 @@ async fn section_6050i_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_6050i::Section6050IInput>,
 ) -> Result<Json<traderview_expense::section_6050i::Section6050IResult>, ApiError> {
-    if b.single_instrument_face_amount_cents < 0
-        || b.aggregate_related_24_hour_amount_cents < 0
-    {
+    if b.single_instrument_face_amount_cents < 0 || b.aggregate_related_24_hour_amount_cents < 0 {
         return Err(ApiError::BadRequest(
             "non-negative cents inputs required".into(),
         ));
@@ -6363,9 +6402,7 @@ async fn section_6050w_route(
         ));
     }
     if !(1990..=2100).contains(&b.year) {
-        return Err(ApiError::BadRequest(
-            "year must be in [1990, 2100]".into(),
-        ));
+        return Err(ApiError::BadRequest("year must be in [1990, 2100]".into()));
     }
     Ok(Json(traderview_expense::section_6050w::compute(&b)))
 }
@@ -7948,9 +7985,7 @@ async fn section_6651_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_6651::Section6651Input>,
 ) -> Result<Json<traderview_expense::section_6651::Section6651Result>, ApiError> {
-    if b.tax_required_dollars < 0
-        || b.minimum_penalty_inflation_adjusted_dollars < 0
-    {
+    if b.tax_required_dollars < 0 || b.minimum_penalty_inflation_adjusted_dollars < 0 {
         return Err(ApiError::BadRequest(
             "non-negative dollar inputs required".into(),
         ));
@@ -8270,7 +8305,8 @@ async fn section_302_route(
 async fn section_304_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_304::Section304RelatedCorpRedemptionInput>,
-) -> Result<Json<traderview_expense::section_304::Section304RelatedCorpRedemptionOutput>, ApiError> {
+) -> Result<Json<traderview_expense::section_304::Section304RelatedCorpRedemptionOutput>, ApiError>
+{
     Ok(Json(traderview_expense::section_304::check(&b)))
 }
 
@@ -8320,8 +8356,13 @@ async fn section_304_route(
 
 async fn section_311_route(
     _u: AuthUser,
-    Json(b): Json<traderview_expense::section_311::Section311CorporateDistributionGainRecognitionInput>,
-) -> Result<Json<traderview_expense::section_311::Section311CorporateDistributionGainRecognitionOutput>, ApiError> {
+    Json(b): Json<
+        traderview_expense::section_311::Section311CorporateDistributionGainRecognitionInput,
+    >,
+) -> Result<
+    Json<traderview_expense::section_311::Section311CorporateDistributionGainRecognitionOutput>,
+    ApiError,
+> {
     Ok(Json(traderview_expense::section_311::check(&b)))
 }
 
@@ -8422,7 +8463,8 @@ async fn section_312_route(
 async fn section_318_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_318::Section318ConstructiveOwnershipInput>,
-) -> Result<Json<traderview_expense::section_318::Section318ConstructiveOwnershipOutput>, ApiError> {
+) -> Result<Json<traderview_expense::section_318::Section318ConstructiveOwnershipOutput>, ApiError>
+{
     Ok(Json(traderview_expense::section_318::check(&b)))
 }
 
@@ -8601,7 +8643,10 @@ async fn section_263g_route(
 async fn section_264_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_264::Section264InsuranceInterestDisallowanceInput>,
-) -> Result<Json<traderview_expense::section_264::Section264InsuranceInterestDisallowanceOutput>, ApiError> {
+) -> Result<
+    Json<traderview_expense::section_264::Section264InsuranceInterestDisallowanceOutput>,
+    ApiError,
+> {
     Ok(Json(traderview_expense::section_264::check(&b)))
 }
 
@@ -8659,7 +8704,10 @@ async fn section_264_route(
 async fn section_265_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_265::Section265TaxExemptInterestDisallowanceInput>,
-) -> Result<Json<traderview_expense::section_265::Section265TaxExemptInterestDisallowanceOutput>, ApiError> {
+) -> Result<
+    Json<traderview_expense::section_265::Section265TaxExemptInterestDisallowanceOutput>,
+    ApiError,
+> {
     Ok(Json(traderview_expense::section_265::check(&b)))
 }
 
@@ -9186,9 +9234,7 @@ async fn section_1282_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_1282::Section1282Input>,
 ) -> Result<Json<traderview_expense::section_1282::Section1282Result>, ApiError> {
-    if b.interest_expense_on_indebtedness_cents < 0
-        || b.interest_income_includible_cents < 0
-    {
+    if b.interest_expense_on_indebtedness_cents < 0 || b.interest_income_includible_cents < 0 {
         return Err(ApiError::BadRequest(
             "non-negative cents inputs required".into(),
         ));
@@ -9303,9 +9349,7 @@ async fn section_1297_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_1297::Section1297Input>,
 ) -> Result<Json<traderview_expense::section_1297::Section1297Result>, ApiError> {
-    if b.gross_income_total_cents < 0
-        || b.passive_income_cents < 0
-        || b.avg_total_assets_cents < 0
+    if b.gross_income_total_cents < 0 || b.passive_income_cents < 0 || b.avg_total_assets_cents < 0
     {
         return Err(ApiError::BadRequest(
             "non-negative cents inputs required".into(),
@@ -9532,9 +9576,7 @@ async fn section_6038d_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_6038d::Section6038DInput>,
 ) -> Result<Json<traderview_expense::section_6038d::Section6038DResult>, ApiError> {
-    if b.aggregate_value_year_end_cents < 0
-        || b.aggregate_value_any_time_during_year_cents < 0
-    {
+    if b.aggregate_value_year_end_cents < 0 || b.aggregate_value_any_time_during_year_cents < 0 {
         return Err(ApiError::BadRequest(
             "non-negative cents inputs required".into(),
         ));
@@ -9650,16 +9692,12 @@ async fn section_6112_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_6112::Section6112Input>,
 ) -> Result<Json<traderview_expense::section_6112::Section6112Result>, ApiError> {
-    if b.business_days_since_request < 0
-        || b.business_days_since_request > 100_000
-    {
+    if b.business_days_since_request < 0 || b.business_days_since_request > 100_000 {
         return Err(ApiError::BadRequest(
             "business_days_since_request out of range".into(),
         ));
     }
-    if b.days_with_reasonable_cause < 0
-        || b.days_with_reasonable_cause > 100_000
-    {
+    if b.days_with_reasonable_cause < 0 || b.days_with_reasonable_cause > 100_000 {
         return Err(ApiError::BadRequest(
             "days_with_reasonable_cause out of range".into(),
         ));
@@ -9919,9 +9957,7 @@ async fn section_6701_route(
             "number_of_documents out of range".into(),
         ));
     }
-    if b.number_of_distinct_taxpayers < 0
-        || b.number_of_distinct_taxpayers > 1_000_000
-    {
+    if b.number_of_distinct_taxpayers < 0 || b.number_of_distinct_taxpayers > 1_000_000 {
         return Err(ApiError::BadRequest(
             "number_of_distinct_taxpayers out of range".into(),
         ));
@@ -10588,9 +10624,7 @@ async fn section_163j_tradeoff_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_168g::Section163jTradeoffInput>,
 ) -> Result<Json<traderview_expense::section_168g::Section163jTradeoffResult>, ApiError> {
-    if b.marginal_federal_rate < Decimal::ZERO
-        || b.marginal_federal_rate > Decimal::ONE
-    {
+    if b.marginal_federal_rate < Decimal::ZERO || b.marginal_federal_rate > Decimal::ONE {
         return Err(ApiError::BadRequest(
             "marginal_federal_rate must be 0..1".into(),
         ));
@@ -10625,9 +10659,7 @@ async fn section_164_route(
         ));
     }
     if !(1900..=2100).contains(&b.year) {
-        return Err(ApiError::BadRequest(
-            "year must be in [1900, 2100]".into(),
-        ));
+        return Err(ApiError::BadRequest("year must be in [1900, 2100]".into()));
     }
     Ok(Json(traderview_expense::section_164::compute(&b)))
 }
@@ -10649,17 +10681,17 @@ async fn section_165h_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_165h::Section165HInput>,
 ) -> Result<Json<traderview_expense::section_165h::Section165HResult>, ApiError> {
-    if b.adjusted_basis_cents < 0 || b.decline_in_fmv_cents < 0
-        || b.insurance_reimbursement_cents < 0 || b.agi_cents < 0
+    if b.adjusted_basis_cents < 0
+        || b.decline_in_fmv_cents < 0
+        || b.insurance_reimbursement_cents < 0
+        || b.agi_cents < 0
     {
         return Err(ApiError::BadRequest(
             "non-negative cents inputs required".into(),
         ));
     }
     if !(1900..=2100).contains(&b.year) {
-        return Err(ApiError::BadRequest(
-            "year must be in [1900, 2100]".into(),
-        ));
+        return Err(ApiError::BadRequest("year must be in [1900, 2100]".into()));
     }
     Ok(Json(traderview_expense::section_165h::compute(&b)))
 }
@@ -10827,7 +10859,9 @@ async fn section_1296_route(
         || b.fair_market_value_year_end < Decimal::ZERO
         || b.prior_unreversed_inclusions < Decimal::ZERO
     {
-        return Err(ApiError::BadRequest("all dollar inputs must be >= 0".into()));
+        return Err(ApiError::BadRequest(
+            "all dollar inputs must be >= 0".into(),
+        ));
     }
     Ok(Json(traderview_expense::section_1296::compute(&b)))
 }
@@ -10937,7 +10971,8 @@ async fn section_267_route(
 async fn section_269_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_269::Section269AcquisitionsToEvadeTaxInput>,
-) -> Result<Json<traderview_expense::section_269::Section269AcquisitionsToEvadeTaxOutput>, ApiError> {
+) -> Result<Json<traderview_expense::section_269::Section269AcquisitionsToEvadeTaxOutput>, ApiError>
+{
     Ok(Json(traderview_expense::section_269::check(&b)))
 }
 
@@ -10992,7 +11027,10 @@ async fn section_269_route(
 async fn section_269a_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_269a::Section269APersonalServiceCorpAllocationInput>,
-) -> Result<Json<traderview_expense::section_269a::Section269APersonalServiceCorpAllocationOutput>, ApiError> {
+) -> Result<
+    Json<traderview_expense::section_269a::Section269APersonalServiceCorpAllocationOutput>,
+    ApiError,
+> {
     Ok(Json(traderview_expense::section_269a::check(&b)))
 }
 
@@ -11065,7 +11103,10 @@ async fn section_274_route(
 async fn section_279_route(
     _u: AuthUser,
     Json(b): Json<traderview_expense::section_279::Section279CorporateAcquisitionIndebtednessInput>,
-) -> Result<Json<traderview_expense::section_279::Section279CorporateAcquisitionIndebtednessOutput>, ApiError> {
+) -> Result<
+    Json<traderview_expense::section_279::Section279CorporateAcquisitionIndebtednessOutput>,
+    ApiError,
+> {
     Ok(Json(traderview_expense::section_279::check(&b)))
 }
 

@@ -21,11 +21,19 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
-pub enum ChandelierDirection { #[default] Long, Short }
+pub enum ChandelierDirection {
+    #[default]
+    Long,
+    Short,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ChandelierReport {
@@ -47,9 +55,13 @@ pub fn compute(bars: &[Bar], period: usize, multiplier: f64) -> ChandelierReport
         period,
         multiplier,
     };
-    if period < 2 || !multiplier.is_finite() || multiplier <= 0.0
-        || n < period + 1 { return report; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if period < 2 || !multiplier.is_finite() || multiplier <= 0.0 || n < period + 1 {
+        return report;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return report;
     }
     // Wilder ATR.
@@ -86,7 +98,9 @@ pub fn compute(bars: &[Bar], period: usize, multiplier: f64) -> ChandelierReport
     for (i, bar) in bars.iter().enumerate() {
         let raw_long = report.long_stop[i];
         let raw_short = report.short_stop[i];
-        if raw_long.is_none() || raw_short.is_none() { continue; }
+        if raw_long.is_none() || raw_short.is_none() {
+            continue;
+        }
         let raw_long = raw_long.unwrap();
         let raw_short = raw_short.unwrap();
         let close = bar.close;
@@ -118,7 +132,13 @@ pub fn compute(bars: &[Bar], period: usize, multiplier: f64) -> ChandelierReport
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {
@@ -150,10 +170,12 @@ mod tests {
 
     #[test]
     fn uptrend_keeps_long_direction() {
-        let bars: Vec<_> = (0..50).map(|i| {
-            let m = 100.0 + i as f64;
-            b(m + 0.5, m - 0.5, m)
-        }).collect();
+        let bars: Vec<_> = (0..50)
+            .map(|i| {
+                let m = 100.0 + i as f64;
+                b(m + 0.5, m - 0.5, m)
+            })
+            .collect();
         let r = compute(&bars, 22, 3.0);
         assert_eq!(r.direction[49].unwrap(), ChandelierDirection::Long);
     }
@@ -161,10 +183,12 @@ mod tests {
     #[test]
     fn downtrend_flips_to_short() {
         // Start uptrend, then sharp reversal.
-        let mut bars: Vec<_> = (0..30).map(|i| {
-            let m = 100.0 + i as f64;
-            b(m + 0.5, m - 0.5, m)
-        }).collect();
+        let mut bars: Vec<_> = (0..30)
+            .map(|i| {
+                let m = 100.0 + i as f64;
+                b(m + 0.5, m - 0.5, m)
+            })
+            .collect();
         for i in 0..30 {
             let m = 130.0 - 2.0 * i as f64;
             bars.push(b(m + 0.5, m - 0.5, m));

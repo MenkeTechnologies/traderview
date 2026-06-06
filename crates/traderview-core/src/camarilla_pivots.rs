@@ -23,7 +23,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct PriorSession { pub high: f64, pub low: f64, pub close: f64 }
+pub struct PriorSession {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, Default)]
 pub struct CamarillaLevels {
@@ -39,8 +43,11 @@ pub struct CamarillaLevels {
 }
 
 pub fn compute(session: PriorSession) -> Option<CamarillaLevels> {
-    if !session.high.is_finite() || !session.low.is_finite()
-        || !session.close.is_finite() || session.high < session.low {
+    if !session.high.is_finite()
+        || !session.low.is_finite()
+        || !session.close.is_finite()
+        || session.high < session.low
+    {
         return None;
     }
     let range = session.high - session.low;
@@ -65,13 +72,28 @@ mod tests {
 
     #[test]
     fn invalid_session_returns_none() {
-        assert!(compute(PriorSession { high: f64::NAN, low: 99.0, close: 100.0 }).is_none());
-        assert!(compute(PriorSession { high: 99.0, low: 101.0, close: 100.0 }).is_none());
+        assert!(compute(PriorSession {
+            high: f64::NAN,
+            low: 99.0,
+            close: 100.0
+        })
+        .is_none());
+        assert!(compute(PriorSession {
+            high: 99.0,
+            low: 101.0,
+            close: 100.0
+        })
+        .is_none());
     }
 
     #[test]
     fn levels_centered_around_close() {
-        let r = compute(PriorSession { high: 110.0, low: 100.0, close: 105.0 }).unwrap();
+        let r = compute(PriorSession {
+            high: 110.0,
+            low: 100.0,
+            close: 105.0,
+        })
+        .unwrap();
         // Symmetric around close.
         assert!((r.h1 - 105.0 - (105.0 - r.l1)).abs() < 1e-9);
         assert!((r.h4 - 105.0 - (105.0 - r.l4)).abs() < 1e-9);
@@ -83,7 +105,12 @@ mod tests {
     #[test]
     fn exact_formula_values() {
         // range = 10, k = 11.
-        let r = compute(PriorSession { high: 110.0, low: 100.0, close: 105.0 }).unwrap();
+        let r = compute(PriorSession {
+            high: 110.0,
+            low: 100.0,
+            close: 105.0,
+        })
+        .unwrap();
         assert!((r.h4 - (105.0 + 11.0 / 2.0)).abs() < 1e-9);
         assert!((r.h3 - (105.0 + 11.0 / 4.0)).abs() < 1e-9);
         assert!((r.l3 - (105.0 - 11.0 / 4.0)).abs() < 1e-9);
@@ -92,13 +119,23 @@ mod tests {
 
     #[test]
     fn pivot_is_typical_price() {
-        let r = compute(PriorSession { high: 110.0, low: 100.0, close: 108.0 }).unwrap();
+        let r = compute(PriorSession {
+            high: 110.0,
+            low: 100.0,
+            close: 108.0,
+        })
+        .unwrap();
         assert!((r.pivot - (110.0 + 100.0 + 108.0) / 3.0).abs() < 1e-9);
     }
 
     #[test]
     fn zero_range_collapses_to_close() {
-        let r = compute(PriorSession { high: 100.0, low: 100.0, close: 100.0 }).unwrap();
+        let r = compute(PriorSession {
+            high: 100.0,
+            low: 100.0,
+            close: 100.0,
+        })
+        .unwrap();
         for lvl in [r.h4, r.h3, r.h2, r.h1, r.l1, r.l2, r.l3, r.l4] {
             assert!((lvl - 100.0).abs() < 1e-9);
         }

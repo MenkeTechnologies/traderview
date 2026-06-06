@@ -98,11 +98,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // CommonLawSuretyRules for all other states + DC.
     let common_law = [
-        "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL",
-        "GA", "HI", "ID", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
-        "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
-        "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
-        "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "ID", "IN", "IA",
+        "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+        "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT",
+        "VA", "WA", "WV", "WI", "WY",
     ];
     for code in common_law {
         let citation: &'static str = if code == "CA" {
@@ -169,9 +168,7 @@ pub fn check(input: &CosignerInput) -> CosignerResult {
 
     // Statutory notice analysis under IL regime.
     let (notice_required, notice_compliant, exposure) = match rule.regime {
-        CosignerRegime::IllinoisStatutoryNoticeRequired
-            if input.collection_action_initiated =>
-        {
+        CosignerRegime::IllinoisStatutoryNoticeRequired if input.collection_action_initiated => {
             let req = true;
             let compliant = input.landlord_sent_notice_before_collection
                 && input.days_between_notice_and_collection
@@ -369,7 +366,12 @@ mod tests {
     #[test]
     fn coverage_is_all_50_states_plus_dc() {
         let codes: Vec<&'static str> = RULES.keys().copied().collect();
-        assert_eq!(codes.len(), 51, "expected 50 states + DC, got {}", codes.len());
+        assert_eq!(
+            codes.len(),
+            51,
+            "expected 50 states + DC, got {}",
+            codes.len()
+        );
     }
 
     #[test]
@@ -387,7 +389,10 @@ mod tests {
                 count += 1;
             }
         }
-        assert_eq!(count, 1, "expected IL only with IllinoisStatutoryNoticeRequired");
+        assert_eq!(
+            count, 1,
+            "expected IL only with IllinoisStatutoryNoticeRequired"
+        );
     }
 
     #[test]

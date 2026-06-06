@@ -180,13 +180,19 @@ pub fn check(input: &Input) -> Output {
     }
 
     let is_custom_violation = input.installed_or_replaced_after_may_30_2023
-        && matches!(input.covering_type, WindowCoveringType::AccessibleCordedCustom);
+        && matches!(
+            input.covering_type,
+            WindowCoveringType::AccessibleCordedCustom
+        );
     if is_custom_violation {
         actions.push("Custom window covering installed after May 30, 2023 with accessible cord — VIOLATES 16 C.F.R. Part 1260 mandatory standard under 87 Fed. Reg. 73118 (Nov 28, 2022); federal CPSC enforcement + state AG action exposure; replace immediately with cordless or inaccessible-cord design.".to_string());
     }
 
     let is_stock_violation = input.stock_product_installed_after_may_2022
-        && matches!(input.covering_type, WindowCoveringType::AccessibleCordedStock);
+        && matches!(
+            input.covering_type,
+            WindowCoveringType::AccessibleCordedStock
+        );
     if is_stock_violation {
         actions.push("Stock window-covering product installed after May 2022 with accessible cord — violates ANSI/WCMA A100.1-2018 cordless-stock requirement; product likely non-conforming + subject to CPSC recall investigation; replace immediately.".to_string());
     }

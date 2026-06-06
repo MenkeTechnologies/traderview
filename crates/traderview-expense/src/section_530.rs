@@ -136,9 +136,7 @@ pub fn compute(input: &Section530Input) -> Section530Result {
 
 fn phaseout_range(fs: FilingStatus) -> (i64, i64) {
     match fs {
-        FilingStatus::MarriedFilingJointly | FilingStatus::QualifyingWidow => {
-            (19000000, 22000000)
-        }
+        FilingStatus::MarriedFilingJointly | FilingStatus::QualifyingWidow => (19000000, 22000000),
         _ => (9500000, 11000000),
     }
 }

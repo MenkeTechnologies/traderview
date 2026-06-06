@@ -134,7 +134,8 @@ pub fn check(input: &Input) -> Output {
     if matches!(
         input.notice_and_cure_status,
         NoticeAndCureStatus::NoWrittenNoticeToLandlord
-    ) && !matches!(input.jurisdiction, Jurisdiction::Massachusetts) {
+    ) && !matches!(input.jurisdiction, Jurisdiction::Massachusetts)
+    {
         return Output {
             severity: Severity::NoNoticeOrPrematureActionTenantEvictionRisk,
             statutory_cap_cents: 0,
@@ -155,7 +156,8 @@ pub fn check(input: &Input) -> Output {
     if matches!(
         input.notice_and_cure_status,
         NoticeAndCureStatus::WrittenNoticeWithinCureWindowPrematureAction
-    ) && !matches!(input.jurisdiction, Jurisdiction::Massachusetts) {
+    ) && !matches!(input.jurisdiction, Jurisdiction::Massachusetts)
+    {
         return Output {
             severity: Severity::NoNoticeOrPrematureActionTenantEvictionRisk,
             statutory_cap_cents: 0,
@@ -248,9 +250,7 @@ pub fn check(input: &Input) -> Output {
             return Output {
                 severity: Severity::ChicagoRltoWithholdingCapExceededExposure,
                 statutory_cap_cents: cap,
-                excess_over_cap_cents: input
-                    .withheld_or_deducted_amount_cents
-                    .saturating_sub(cap),
+                excess_over_cap_cents: input.withheld_or_deducted_amount_cents.saturating_sub(cap),
                 note: format!(
                     "Chicago RLTO § 5-12-110 violation: withholding (${}) EXCEEDS the cap \
                      of GREATER of $500 or 50% of monthly rent (${}). Excess (${}) creates \
@@ -258,10 +258,7 @@ pub fn check(input: &Input) -> Output {
                      resume rent payment for the difference.",
                     input.withheld_or_deducted_amount_cents / 100,
                     cap / 100,
-                    input
-                        .withheld_or_deducted_amount_cents
-                        .saturating_sub(cap)
-                        / 100
+                    input.withheld_or_deducted_amount_cents.saturating_sub(cap) / 100
                 ),
             };
         }
@@ -290,9 +287,7 @@ pub fn check(input: &Input) -> Output {
             return Output {
                 severity: Severity::TenantRemedyCapExceededLandlordEvictionExposure,
                 statutory_cap_cents: cap,
-                excess_over_cap_cents: input
-                    .withheld_or_deducted_amount_cents
-                    .saturating_sub(cap),
+                excess_over_cap_cents: input.withheld_or_deducted_amount_cents.saturating_sub(cap),
                 note: format!(
                     "Texas Prop. Code § 92.0561 cap exceeded. Repair-and-deduct cap is the \
                      GREATER of one month's rent (${}) or $500 — deduction ${} exceeds cap \
@@ -300,10 +295,7 @@ pub fn check(input: &Input) -> Output {
                     input.monthly_rent_cents / 100,
                     input.withheld_or_deducted_amount_cents / 100,
                     cap / 100,
-                    input
-                        .withheld_or_deducted_amount_cents
-                        .saturating_sub(cap)
-                        / 100
+                    input.withheld_or_deducted_amount_cents.saturating_sub(cap) / 100
                 ),
             };
         }
@@ -515,8 +507,7 @@ mod tests {
     fn chicago_rlto_within_cap_compliant() {
         let mut input = base_ca();
         input.jurisdiction = Jurisdiction::IllinoisChicagoRlto;
-        input.tenant_remedy_action =
-            TenantRemedyAction::RentWithholdingDepositedToEscrowAccount;
+        input.tenant_remedy_action = TenantRemedyAction::RentWithholdingDepositedToEscrowAccount;
         input.withheld_or_deducted_amount_cents = 1_500_00;
         let output = check(&input);
         // Cap = max($500, 50% × $3K) = max($500, $1500) = $1500
@@ -531,8 +522,7 @@ mod tests {
     fn chicago_rlto_exceeds_50_percent_rent_cap_violation() {
         let mut input = base_ca();
         input.jurisdiction = Jurisdiction::IllinoisChicagoRlto;
-        input.tenant_remedy_action =
-            TenantRemedyAction::RentWithholdingDepositedToEscrowAccount;
+        input.tenant_remedy_action = TenantRemedyAction::RentWithholdingDepositedToEscrowAccount;
         input.withheld_or_deducted_amount_cents = 2_000_00;
         let output = check(&input);
         // Cap = $1500; withheld $2000 → $500 excess
@@ -547,8 +537,7 @@ mod tests {
     fn chicago_rlto_low_rent_uses_500_dollar_floor() {
         let mut input = base_ca();
         input.jurisdiction = Jurisdiction::IllinoisChicagoRlto;
-        input.tenant_remedy_action =
-            TenantRemedyAction::RentWithholdingDepositedToEscrowAccount;
+        input.tenant_remedy_action = TenantRemedyAction::RentWithholdingDepositedToEscrowAccount;
         input.monthly_rent_cents = 500_00; // 50% = $250 < $500 floor
         input.withheld_or_deducted_amount_cents = 500_00;
         let output = check(&input);
@@ -591,8 +580,7 @@ mod tests {
     fn massachusetts_immediate_withholding_no_cure_required() {
         let mut input = base_ca();
         input.jurisdiction = Jurisdiction::Massachusetts;
-        input.tenant_remedy_action =
-            TenantRemedyAction::RentWithholdingDepositedToEscrowAccount;
+        input.tenant_remedy_action = TenantRemedyAction::RentWithholdingDepositedToEscrowAccount;
         input.notice_and_cure_status = NoticeAndCureStatus::NoCureRequiredImmediateAction;
         let output = check(&input);
         assert_eq!(
@@ -628,8 +616,7 @@ mod tests {
     fn new_york_compliant_rent_withholding_with_escrow() {
         let mut input = base_ca();
         input.jurisdiction = Jurisdiction::NewYork;
-        input.tenant_remedy_action =
-            TenantRemedyAction::RentWithholdingDepositedToEscrowAccount;
+        input.tenant_remedy_action = TenantRemedyAction::RentWithholdingDepositedToEscrowAccount;
         let output = check(&input);
         assert_eq!(
             output.severity,
@@ -673,8 +660,7 @@ mod tests {
     fn very_large_rent_no_overflow_in_chicago_50_pct_calc() {
         let mut input = base_ca();
         input.jurisdiction = Jurisdiction::IllinoisChicagoRlto;
-        input.tenant_remedy_action =
-            TenantRemedyAction::RentWithholdingDepositedToEscrowAccount;
+        input.tenant_remedy_action = TenantRemedyAction::RentWithholdingDepositedToEscrowAccount;
         input.monthly_rent_cents = u64::MAX / 2;
         let output = check(&input);
         assert!(output.statutory_cap_cents > 0);
@@ -684,8 +670,7 @@ mod tests {
     fn zero_rent_falls_back_to_chicago_floor() {
         let mut input = base_ca();
         input.jurisdiction = Jurisdiction::IllinoisChicagoRlto;
-        input.tenant_remedy_action =
-            TenantRemedyAction::RentWithholdingDepositedToEscrowAccount;
+        input.tenant_remedy_action = TenantRemedyAction::RentWithholdingDepositedToEscrowAccount;
         input.monthly_rent_cents = 0;
         input.withheld_or_deducted_amount_cents = 100;
         let output = check(&input);

@@ -23,7 +23,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum OptionKind { Call, Put }
+pub enum OptionKind {
+    Call,
+    Put,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct BachelierReport {
@@ -35,15 +38,20 @@ pub struct BachelierReport {
 
 #[allow(clippy::too_many_arguments)]
 pub fn price(
-    forward: f64, strike: f64,
-    time_to_expiry: f64, risk_free: f64,
+    forward: f64,
+    strike: f64,
+    time_to_expiry: f64,
+    risk_free: f64,
     normal_sigma: f64,
     kind: OptionKind,
 ) -> Option<BachelierReport> {
-    if !forward.is_finite() || !strike.is_finite()
-        || !time_to_expiry.is_finite() || time_to_expiry <= 0.0
+    if !forward.is_finite()
+        || !strike.is_finite()
+        || !time_to_expiry.is_finite()
+        || time_to_expiry <= 0.0
         || !risk_free.is_finite()
-        || !normal_sigma.is_finite() || normal_sigma <= 0.0
+        || !normal_sigma.is_finite()
+        || normal_sigma <= 0.0
     {
         return None;
     }
@@ -55,22 +63,34 @@ pub fn price(
     let dr = (-risk_free * time_to_expiry).exp();
     let (intrinsic, sign) = match kind {
         OptionKind::Call => ((forward - strike) * nd, 1.0_f64),
-        OptionKind::Put  => ((strike - forward) * norm_cdf(-d), -1.0),
+        OptionKind::Put => ((strike - forward) * norm_cdf(-d), -1.0),
     };
     let price = dr * (intrinsic + sigma_sqrt_t * pd);
-    if !price.is_finite() { return None; }
-    let delta = sign * dr * (match kind { OptionKind::Call => nd, OptionKind::Put => norm_cdf(-d) });
+    if !price.is_finite() {
+        return None;
+    }
+    let delta = sign
+        * dr
+        * (match kind {
+            OptionKind::Call => nd,
+            OptionKind::Put => norm_cdf(-d),
+        });
     let vega = dr * sqrt_t * pd;
-    Some(BachelierReport { price: price.max(0.0), d, delta, vega })
+    Some(BachelierReport {
+        price: price.max(0.0),
+        d,
+        delta,
+        vega,
+    })
 }
 
 fn norm_cdf(x: f64) -> f64 {
-    let a1 =  0.254829592_f64;
+    let a1 = 0.254829592_f64;
     let a2 = -0.284496736_f64;
-    let a3 =  1.421413741_f64;
+    let a3 = 1.421413741_f64;
     let a4 = -1.453152027_f64;
-    let a5 =  1.061405429_f64;
-    let p  =  0.3275911_f64;
+    let a5 = 1.061405429_f64;
+    let p = 0.3275911_f64;
     let sign = if x < 0.0 { -1.0 } else { 1.0 };
     let xa = x.abs() / std::f64::consts::SQRT_2;
     let t = 1.0 / (1.0 + p * xa);
@@ -106,7 +126,10 @@ mod tests {
     #[test]
     fn at_the_money_call_equals_sigma_sqrt_t_over_sqrt_2pi() {
         // d = 0 → call = e^{−rT} · σ·√T · φ(0) = σ·√T / √(2π) (when r=0).
-        let f = 100.0; let k = 100.0; let t = 1.0; let sigma = 5.0;
+        let f = 100.0;
+        let k = 100.0;
+        let t = 1.0;
+        let sigma = 5.0;
         let r = price(f, k, t, 0.0, sigma, OptionKind::Call).unwrap();
         let expected = sigma * t.sqrt() / (2.0 * std::f64::consts::PI).sqrt();
         assert!((r.price - expected).abs() < 1e-9);
@@ -115,7 +138,11 @@ mod tests {
     #[test]
     fn put_call_parity_holds() {
         // Bachelier parity: c − p = (F − K) · e^{−rT}.
-        let f = 100.0; let k = 95.0; let t = 0.5; let r = 0.05; let sigma = 5.0;
+        let f = 100.0;
+        let k = 95.0;
+        let t = 0.5;
+        let r = 0.05;
+        let sigma = 5.0;
         let c = price(f, k, t, r, sigma, OptionKind::Call).unwrap();
         let p = price(f, k, t, r, sigma, OptionKind::Put).unwrap();
         let parity = (f - k) * (-r * t).exp();
@@ -131,7 +158,11 @@ mod tests {
 
     #[test]
     fn deep_itm_call_approaches_intrinsic_discounted() {
-        let f = 200.0; let k = 100.0; let t = 0.25; let r = 0.05; let sigma = 1.0;
+        let f = 200.0;
+        let k = 100.0;
+        let t = 0.25;
+        let r = 0.05;
+        let sigma = 1.0;
         let res = price(f, k, t, r, sigma, OptionKind::Call).unwrap();
         let intrinsic = (f - k) * (-r * t).exp();
         assert!((res.price - intrinsic).abs() < 0.5);
@@ -139,11 +170,19 @@ mod tests {
 
     #[test]
     fn vega_matches_finite_difference() {
-        let f = 100.0; let k = 100.0; let t = 0.5; let r = 0.05; let sigma = 5.0;
+        let f = 100.0;
+        let k = 100.0;
+        let t = 0.5;
+        let r = 0.05;
+        let sigma = 5.0;
         let analytic = price(f, k, t, r, sigma, OptionKind::Call).unwrap().vega;
         let bump = 1e-4;
-        let up = price(f, k, t, r, sigma + bump, OptionKind::Call).unwrap().price;
-        let dn = price(f, k, t, r, sigma - bump, OptionKind::Call).unwrap().price;
+        let up = price(f, k, t, r, sigma + bump, OptionKind::Call)
+            .unwrap()
+            .price;
+        let dn = price(f, k, t, r, sigma - bump, OptionKind::Call)
+            .unwrap()
+            .price;
         let fd = (up - dn) / (2.0 * bump);
         assert!((analytic - fd).abs() / analytic.abs() < 1e-4);
     }

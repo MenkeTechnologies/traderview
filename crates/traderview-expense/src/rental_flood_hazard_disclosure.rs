@@ -175,122 +175,121 @@ pub struct FloodHazardDisclosureResult {
 pub fn check(input: &FloodHazardDisclosureInput) -> FloodHazardDisclosureResult {
     let mut failure_reasons: Vec<String> = Vec::new();
 
-    let (disclosure_obligation_triggered, disclosure_compliant, tenant_lease_termination_right_engaged) =
-        match input.jurisdiction {
-            Jurisdiction::California => {
-                let post_effective = input.lease_year > 2018
-                    || (input.lease_year == 2018 && input.lease_month >= 7);
-                let obligation_triggered = post_effective
-                    && input.landlord_has_actual_knowledge
-                    && input.in_special_flood_hazard_area;
+    let (
+        disclosure_obligation_triggered,
+        disclosure_compliant,
+        tenant_lease_termination_right_engaged,
+    ) = match input.jurisdiction {
+        Jurisdiction::California => {
+            let post_effective =
+                input.lease_year > 2018 || (input.lease_year == 2018 && input.lease_month >= 7);
+            let obligation_triggered = post_effective
+                && input.landlord_has_actual_knowledge
+                && input.in_special_flood_hazard_area;
 
-                let mut compliant = true;
-                if obligation_triggered {
-                    if !input.disclosure_provided_before_lease {
-                        compliant = false;
-                        failure_reasons.push(
+            let mut compliant = true;
+            if obligation_triggered {
+                if !input.disclosure_provided_before_lease {
+                    compliant = false;
+                    failure_reasons.push(
                             "Cal. Gov. Code § 8589.45(a) — every residential lease entered into on or after July 1, 2018 MUST include written flood-hazard disclosure when owner has ACTUAL KNOWLEDGE that the property is in a special flood hazard area or area of potential flooding".to_string(),
                         );
-                    }
-                    if !input.myhazards_url_included {
-                        compliant = false;
-                        failure_reasons.push(
+                }
+                if !input.myhazards_url_included {
+                    compliant = false;
+                    failure_reasons.push(
                             "Cal. Gov. Code § 8589.45(a)(2) — disclosure MUST state that tenant may obtain hazard information from Cal OES MyHazards website (URL required in disclosure)".to_string(),
                         );
-                    }
-                    if !input.insurance_recommendation_included {
-                        compliant = false;
-                        failure_reasons.push(
+                }
+                if !input.insurance_recommendation_included {
+                    compliant = false;
+                    failure_reasons.push(
                             "Cal. Gov. Code § 8589.45(a)(3) — disclosure MUST state that owner's insurance does NOT cover loss of tenant's personal possessions and recommend tenant purchase renter's insurance and flood insurance".to_string(),
                         );
-                    }
-                    if !input.minimum_type_size_satisfied {
-                        compliant = false;
-                        failure_reasons.push(
+                }
+                if !input.minimum_type_size_satisfied {
+                    compliant = false;
+                    failure_reasons.push(
                             "Cal. Gov. Code § 8589.45(c) — disclosure MUST be in 8-point minimum type size".to_string(),
                         );
-                    }
                 }
-                (obligation_triggered, compliant, false)
             }
-            Jurisdiction::Texas => {
-                let post_effective = input.lease_year >= 2022;
-                let prong_1_triggered = input.in_special_flood_hazard_area
-                    && !input.elevation_above_floodplain_federal_compliant;
-                let prong_2_triggered = input.landlord_knows_5_year_prior_flooding;
-                let obligation_triggered =
-                    post_effective && (prong_1_triggered || prong_2_triggered);
+            (obligation_triggered, compliant, false)
+        }
+        Jurisdiction::Texas => {
+            let post_effective = input.lease_year >= 2022;
+            let prong_1_triggered = input.in_special_flood_hazard_area
+                && !input.elevation_above_floodplain_federal_compliant;
+            let prong_2_triggered = input.landlord_knows_5_year_prior_flooding;
+            let obligation_triggered = post_effective && (prong_1_triggered || prong_2_triggered);
 
-                let compliant = !obligation_triggered || input.disclosure_provided_before_lease;
-                if obligation_triggered && !compliant {
-                    failure_reasons.push(
+            let compliant = !obligation_triggered || input.disclosure_provided_before_lease;
+            if obligation_triggered && !compliant {
+                failure_reasons.push(
                         "Tex. Prop. Code § 92.0135 — landlord must provide written flood notice before lease signing: (1) whether dwelling located in 100-year floodplain (unless elevation raised above per federal regulations); (2) whether flooding damaged any portion of dwelling within 5 years preceding lease".to_string(),
                     );
-                }
+            }
 
-                let tx_terminate = obligation_triggered
-                    && !compliant
-                    && input.tenant_substantial_loss_engaged
-                    && input.days_since_substantial_loss <= 30;
-                if obligation_triggered
-                    && !compliant
-                    && input.tenant_substantial_loss_engaged
-                {
-                    failure_reasons.push(format!(
+            let tx_terminate = obligation_triggered
+                && !compliant
+                && input.tenant_substantial_loss_engaged
+                && input.days_since_substantial_loss <= 30;
+            if obligation_triggered && !compliant && input.tenant_substantial_loss_engaged {
+                failure_reasons.push(format!(
                         "Tex. Prop. Code § 92.0135(c) — tenant remedy: if substantial loss (50%+ of personal property value) results from flooding AND landlord failed to disclose, tenant may TERMINATE LEASE within 30 days of loss; current {} days post-loss",
                         input.days_since_substantial_loss
                     ));
-                }
-                (obligation_triggered, compliant, tx_terminate)
             }
-            Jurisdiction::NewJersey => {
-                let post_effective = input.lease_year > 2024
-                    || (input.lease_year == 2024 && input.lease_month >= 3);
-                let unit_threshold = if input.owner_occupied {
-                    input.dwelling_unit_count > 3
-                } else {
-                    input.dwelling_unit_count > 2
-                };
-                let obligation_triggered = post_effective
-                    && (input.commercial_property || unit_threshold)
-                    && (input.in_special_flood_hazard_area || input.in_moderate_risk_flood_area);
+            (obligation_triggered, compliant, tx_terminate)
+        }
+        Jurisdiction::NewJersey => {
+            let post_effective =
+                input.lease_year > 2024 || (input.lease_year == 2024 && input.lease_month >= 3);
+            let unit_threshold = if input.owner_occupied {
+                input.dwelling_unit_count > 3
+            } else {
+                input.dwelling_unit_count > 2
+            };
+            let obligation_triggered = post_effective
+                && (input.commercial_property || unit_threshold)
+                && (input.in_special_flood_hazard_area || input.in_moderate_risk_flood_area);
 
-                let mut compliant = true;
-                if obligation_triggered {
-                    if !input.disclosure_provided_before_lease {
-                        compliant = false;
-                        failure_reasons.push(
+            let mut compliant = true;
+            if obligation_triggered {
+                if !input.disclosure_provided_before_lease {
+                    compliant = false;
+                    failure_reasons.push(
                             "N.J.S.A. 46:8-50 (NJ Flood Risk Notification Law, effective March 20, 2024) — landlords of commercial space OR residential premises containing MORE THAN 2 dwelling units (or more than 3 where one is owner-occupied) MUST notify tenant in writing PRIOR TO lease signing/renewal of FEMA Special Flood Hazard Area (100-year) OR Moderate Risk Flood Hazard Area (500-year)".to_string(),
                         );
-                    }
-                    if !input.nj_separate_rider_with_signature {
-                        compliant = false;
-                        failure_reasons.push(
+                }
+                if !input.nj_separate_rider_with_signature {
+                    compliant = false;
+                    failure_reasons.push(
                             "N.J.S.A. 46:8-50(c) — for residential leases, written notice must appear as SEPARATE RIDER, 12-point minimum typeface, SIGNED OR ACKNOWLEDGED by tenant".to_string(),
                         );
-                    }
-                    if !input.minimum_type_size_satisfied {
-                        compliant = false;
-                        failure_reasons.push(
+                }
+                if !input.minimum_type_size_satisfied {
+                    compliant = false;
+                    failure_reasons.push(
                             "N.J.S.A. 46:8-50(c) — disclosure rider must be in 12-point MINIMUM typeface".to_string(),
                         );
-                    }
                 }
+            }
 
-                let nj_terminate = obligation_triggered && !compliant;
-                if nj_terminate {
-                    failure_reasons.push(
+            let nj_terminate = obligation_triggered && !compliant;
+            if nj_terminate {
+                failure_reasons.push(
                         "N.J.S.A. 46:8-50(d) — tenant remedy: right to TERMINATE LEASE for which landlord has failed to make required flood disclosures + statutory damages + attorney fees".to_string(),
                     );
-                }
-                (obligation_triggered, compliant, nj_terminate)
             }
-            Jurisdiction::Default => {
-                let obligation_triggered = false;
-                let compliant = true;
-                (obligation_triggered, compliant, false)
-            }
-        };
+            (obligation_triggered, compliant, nj_terminate)
+        }
+        Jurisdiction::Default => {
+            let obligation_triggered = false;
+            let compliant = true;
+            (obligation_triggered, compliant, false)
+        }
+    };
 
     let notes: Vec<String> = vec![
         "Cal. Gov. Code § 8589.45 (AB 646 of 2017, effective July 1, 2018) — every residential lease entered into on or after July 1, 2018 must include written flood-hazard disclosure when owner has ACTUAL KNOWLEDGE that property is in FEMA Special Flood Hazard Area OR Cal OES area of potential flooding".to_string(),
@@ -379,8 +378,10 @@ mod tests {
         let r = check(&i);
         assert!(r.disclosure_obligation_triggered);
         assert!(!r.disclosure_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 8589.45(a)")
-            && f.contains("July 1, 2018")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 8589.45(a)") && f.contains("July 1, 2018")));
     }
 
     #[test]
@@ -389,8 +390,10 @@ mod tests {
         i.myhazards_url_included = false;
         let r = check(&i);
         assert!(!r.disclosure_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 8589.45(a)(2)")
-            && f.contains("MyHazards")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 8589.45(a)(2)") && f.contains("MyHazards")));
     }
 
     #[test]
@@ -399,8 +402,11 @@ mod tests {
         i.insurance_recommendation_included = false;
         let r = check(&i);
         assert!(!r.disclosure_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 8589.45(a)(3)")
-            && f.contains("renter's insurance and flood insurance")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 8589.45(a)(3)")
+                && f.contains("renter's insurance and flood insurance")));
     }
 
     #[test]
@@ -409,8 +415,10 @@ mod tests {
         i.minimum_type_size_satisfied = false;
         let r = check(&i);
         assert!(!r.disclosure_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 8589.45(c)")
-            && f.contains("8-point minimum")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 8589.45(c)") && f.contains("8-point minimum")));
     }
 
     #[test]
@@ -524,8 +532,10 @@ mod tests {
         };
         let r = check(&i);
         assert!(r.tenant_lease_termination_right_engaged);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 92.0135(c)")
-            && f.contains("TERMINATE LEASE within 30 days")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 92.0135(c)") && f.contains("TERMINATE LEASE within 30 days")));
         i.days_since_substantial_loss = 31;
         let r2 = check(&i);
         assert!(!r2.tenant_lease_termination_right_engaged);
@@ -645,8 +655,10 @@ mod tests {
         i.nj_separate_rider_with_signature = false;
         let r = check(&i);
         assert!(!r.disclosure_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("N.J.S.A. 46:8-50(c)")
-            && f.contains("SEPARATE RIDER")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("N.J.S.A. 46:8-50(c)") && f.contains("SEPARATE RIDER")));
     }
 
     #[test]
@@ -657,8 +669,10 @@ mod tests {
         i.disclosure_provided_before_lease = false;
         let r = check(&i);
         assert!(r.tenant_lease_termination_right_engaged);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("N.J.S.A. 46:8-50(d)")
-            && f.contains("TERMINATE LEASE")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("N.J.S.A. 46:8-50(d)") && f.contains("TERMINATE LEASE")));
     }
 
     #[test]
@@ -679,8 +693,12 @@ mod tests {
         assert!(r.citation.contains("Tex. Prop. Code § 92.0135"));
         assert!(r.citation.contains("HB 531 of 2021"));
         assert!(r.citation.contains("N.J.S.A. 46:8-50"));
-        assert!(r.citation.contains("NJ Flood Risk Notification Law of 2024"));
-        assert!(r.citation.contains("FEMA NFIP regulations 44 CFR § 59.1 and § 60.3"));
+        assert!(r
+            .citation
+            .contains("NJ Flood Risk Notification Law of 2024"));
+        assert!(r
+            .citation
+            .contains("FEMA NFIP regulations 44 CFR § 59.1 and § 60.3"));
     }
 
     #[test]
@@ -694,22 +712,28 @@ mod tests {
     #[test]
     fn note_pins_ca_myhazards_website() {
         let r = check(&ca_baseline());
-        assert!(r.notes.iter().any(|n| n.contains("§ 8589.45(a)(2)")
-            && n.contains("MyHazards")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 8589.45(a)(2)") && n.contains("MyHazards")));
     }
 
     #[test]
     fn note_pins_ca_renters_flood_insurance_recommendation() {
         let r = check(&ca_baseline());
-        assert!(r.notes.iter().any(|n| n.contains("§ 8589.45(a)(3)")
-            && n.contains("renter's AND flood insurance")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 8589.45(a)(3)") && n.contains("renter's AND flood insurance")));
     }
 
     #[test]
     fn note_pins_ca_8_point_type_requirement() {
         let r = check(&ca_baseline());
-        assert!(r.notes.iter().any(|n| n.contains("§ 8589.45(c)")
-            && n.contains("8-point MINIMUM")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 8589.45(c)") && n.contains("8-point MINIMUM")));
     }
 
     #[test]
@@ -751,8 +775,10 @@ mod tests {
     #[test]
     fn note_pins_nj_lease_termination_remedy() {
         let r = check(&ca_baseline());
-        assert!(r.notes.iter().any(|n| n.contains("N.J.S.A. 46:8-50(d)")
-            && n.contains("TERMINATE LEASE")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("N.J.S.A. 46:8-50(d)") && n.contains("TERMINATE LEASE")));
     }
 
     #[test]

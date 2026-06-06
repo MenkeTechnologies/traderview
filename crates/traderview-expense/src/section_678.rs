@@ -199,7 +199,8 @@ pub fn compute(input: &Input) -> Output {
         return Output {
             mode: Section678Mode::NotApplicableNoWithdrawalPower,
             lapse_excess_above_5x5_dollars: 0,
-            statutory_basis: "§ 678 requires withdrawal power to vest corpus or income in person".to_string(),
+            statutory_basis: "§ 678 requires withdrawal power to vest corpus or income in person"
+                .to_string(),
             notes: "No § 678(a)(1) withdrawal power exists; § 678 inapplicable.".to_string(),
             citations,
         };
@@ -215,7 +216,9 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.withdrawal_power_status == WithdrawalPowerStatus::PowerRenouncedOrDisclaimedWithinReasonableTime {
+    if input.withdrawal_power_status
+        == WithdrawalPowerStatus::PowerRenouncedOrDisclaimedWithinReasonableTime
+    {
         return Output {
             mode: Section678Mode::NotApplicablePowerRenouncedOrDisclaimedSubsectionD,
             lapse_excess_above_5x5_dollars: 0,
@@ -373,17 +376,24 @@ mod tests {
             ..baseline_bdit_classic_within_5x5()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section678Mode::NotApplicableGrantorOtherwiseOwnerSubsectionB);
+        assert_eq!(
+            result.mode,
+            Section678Mode::NotApplicableGrantorOtherwiseOwnerSubsectionB
+        );
     }
 
     #[test]
     fn power_renounced_or_disclaimed_subsection_d() {
         let input = Input {
-            withdrawal_power_status: WithdrawalPowerStatus::PowerRenouncedOrDisclaimedWithinReasonableTime,
+            withdrawal_power_status:
+                WithdrawalPowerStatus::PowerRenouncedOrDisclaimedWithinReasonableTime,
             ..baseline_bdit_classic_within_5x5()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section678Mode::NotApplicablePowerRenouncedOrDisclaimedSubsectionD);
+        assert_eq!(
+            result.mode,
+            Section678Mode::NotApplicablePowerRenouncedOrDisclaimedSubsectionD
+        );
     }
 
     #[test]
@@ -394,7 +404,10 @@ mod tests {
             ..baseline_bdit_classic_within_5x5()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section678Mode::CompliantHemsTrusteeDistributionStandardSafeFromSection678a);
+        assert_eq!(
+            result.mode,
+            Section678Mode::CompliantHemsTrusteeDistributionStandardSafeFromSection678a
+        );
     }
 
     #[test]
@@ -405,13 +418,19 @@ mod tests {
             ..baseline_bdit_classic_within_5x5()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section678Mode::ViolationHemsTrusteeDistributionImproperlyClaimedAsSection678aExempt);
+        assert_eq!(
+            result.mode,
+            Section678Mode::ViolationHemsTrusteeDistributionImproperlyClaimedAsSection678aExempt
+        );
     }
 
     #[test]
     fn bdit_classic_lapse_within_5x5_compliant() {
         let result = compute(&baseline_bdit_classic_within_5x5());
-        assert_eq!(result.mode, Section678Mode::CompliantBditClassicWithdrawalPowerAndLapseFlowsTroughToBeneficiary);
+        assert_eq!(
+            result.mode,
+            Section678Mode::CompliantBditClassicWithdrawalPowerAndLapseFlowsTroughToBeneficiary
+        );
     }
 
     #[test]
@@ -421,7 +440,10 @@ mod tests {
             ..baseline_bdit_classic_within_5x5()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section678Mode::ViolationCrummeyPowerActiveButBeneficiaryFailedToReportItems);
+        assert_eq!(
+            result.mode,
+            Section678Mode::ViolationCrummeyPowerActiveButBeneficiaryFailedToReportItems
+        );
     }
 
     #[test]
@@ -432,7 +454,10 @@ mod tests {
             ..baseline_bdit_classic_within_5x5()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section678Mode::CompliantSection678a1WithdrawalPowerActiveBeneficiaryAsOwner);
+        assert_eq!(
+            result.mode,
+            Section678Mode::CompliantSection678a1WithdrawalPowerActiveBeneficiaryAsOwner
+        );
     }
 
     #[test]
@@ -444,7 +469,10 @@ mod tests {
             ..baseline_bdit_classic_within_5x5()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section678Mode::ViolationCrummeyPowerActiveButBeneficiaryFailedToReportItems);
+        assert_eq!(
+            result.mode,
+            Section678Mode::ViolationCrummeyPowerActiveButBeneficiaryFailedToReportItems
+        );
     }
 
     #[test]
@@ -457,7 +485,10 @@ mod tests {
             ..baseline_bdit_classic_within_5x5()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section678Mode::ViolationSection678a2LapseExceeds5x5GiftTaxTriggerUnderSection2514e);
+        assert_eq!(
+            result.mode,
+            Section678Mode::ViolationSection678a2LapseExceeds5x5GiftTaxTriggerUnderSection2514e
+        );
         assert_eq!(result.lapse_excess_above_5x5_dollars, 15_000);
     }
 
@@ -470,7 +501,10 @@ mod tests {
             ..baseline_bdit_classic_within_5x5()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section678Mode::CompliantBditClassicWithdrawalPowerAndLapseFlowsTroughToBeneficiary);
+        assert_eq!(
+            result.mode,
+            Section678Mode::CompliantBditClassicWithdrawalPowerAndLapseFlowsTroughToBeneficiary
+        );
     }
 
     #[test]
@@ -482,7 +516,10 @@ mod tests {
             ..baseline_bdit_classic_within_5x5()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section678Mode::CompliantBditClassicWithdrawalPowerAndLapseFlowsTroughToBeneficiary);
+        assert_eq!(
+            result.mode,
+            Section678Mode::CompliantBditClassicWithdrawalPowerAndLapseFlowsTroughToBeneficiary
+        );
     }
 
     #[test]
@@ -492,7 +529,10 @@ mod tests {
             ..baseline_bdit_classic_within_5x5()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section678Mode::CompliantBdotIncomeOnlyVariantBeneficiaryAsOwnerOverIncomePortion);
+        assert_eq!(
+            result.mode,
+            Section678Mode::CompliantBdotIncomeOnlyVariantBeneficiaryAsOwnerOverIncomePortion
+        );
     }
 
     #[test]
@@ -503,7 +543,10 @@ mod tests {
             ..baseline_bdit_classic_within_5x5()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section678Mode::ViolationCrummeyPowerActiveButBeneficiaryFailedToReportItems);
+        assert_eq!(
+            result.mode,
+            Section678Mode::ViolationCrummeyPowerActiveButBeneficiaryFailedToReportItems
+        );
     }
 
     #[test]
@@ -532,7 +575,10 @@ mod tests {
     #[test]
     fn constant_pin_5x5_safe_harbor_and_plr_date() {
         assert_eq!(SECTION_2514_E_LAPSE_SAFE_HARBOR_DOLLARS, 5_000);
-        assert_eq!(SECTION_2514_E_LAPSE_SAFE_HARBOR_CORPUS_PCT_BASIS_POINTS, 500);
+        assert_eq!(
+            SECTION_2514_E_LAPSE_SAFE_HARBOR_CORPUS_PCT_BASIS_POINTS,
+            500
+        );
         assert_eq!(SECTION_678_BASIS_POINT_DENOMINATOR, 10_000);
         assert_eq!(PLR_200949012_BDIT_YEAR, 2009);
         assert_eq!(PLR_200949012_BDIT_MONTH, 12);

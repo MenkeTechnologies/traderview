@@ -159,9 +159,7 @@ pub fn check(input: &Section6325Input) -> Section6325Result {
     let property_value = input.property_value_cents.max(0);
     let lien_amount = input.federal_tax_lien_amount_cents.max(0);
     let senior_liens = input.senior_liens_total_cents.max(0);
-    let required_value = lien_amount
-        .saturating_add(senior_liens)
-        .saturating_mul(2);
+    let required_value = lien_amount.saturating_add(senior_liens).saturating_mul(2);
     let double_value_satisfied = property_value >= required_value;
 
     let release_30_day = input.days_since_qualifying_event <= 30;
@@ -186,10 +184,8 @@ pub fn check(input: &Section6325Input) -> Section6325Result {
                     "26 USC § 6325(b) — discharge certificate requires one of (b)(1) double-value rule + (b)(2)(A) partial payment + (b)(2)(B) no-value determination + (b)(3) proceeds substituted + (b)(4) purchaser deposit".to_string(),
                 );
             }
-            if matches!(
-                input.discharge_basis,
-                DischargeBasis::DoubleValueRule
-            ) && !double_value_satisfied
+            if matches!(input.discharge_basis, DischargeBasis::DoubleValueRule)
+                && !double_value_satisfied
             {
                 failure_reasons.push(format!(
                     "26 USC § 6325(b)(1) — property value ({} cents) does not meet 2× threshold (required {} cents = 2 × (lien {} + senior liens {}))",
@@ -198,10 +194,7 @@ pub fn check(input: &Section6325Input) -> Section6325Result {
             }
         }
         CertificateType::Subordination => {
-            if matches!(
-                input.subordination_basis,
-                SubordinationBasis::NotApplicable
-            ) {
+            if matches!(input.subordination_basis, SubordinationBasis::NotApplicable) {
                 failure_reasons.push(
                     "26 USC § 6325(d) — subordination certificate requires (d)(1) payment for subordinated amount OR (d)(2) ultimate collection facilitated".to_string(),
                 );

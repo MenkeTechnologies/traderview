@@ -150,7 +150,9 @@ pub fn compute(input: &Section1367Input) -> Section1367Result {
     let nondeductibles = input.noncapital_nondeductible_expenses_cents.max(0);
     let depletion_ded = input.depletion_deduction_cents.max(0);
 
-    let total_increases = inc_sep.saturating_add(inc_nonsep).saturating_add(inc_depletion);
+    let total_increases = inc_sep
+        .saturating_add(inc_nonsep)
+        .saturating_add(inc_depletion);
     let total_losses = loss_sep.saturating_add(loss_nonsep);
     let total_nondeductibles = nondeductibles.saturating_add(depletion_ded);
 
@@ -176,8 +178,7 @@ pub fn compute(input: &Section1367Input) -> Section1367Result {
         let basis_after_losses = basis_after_distributions.saturating_sub(losses_allowed);
         // Step 4: Nondeductibles (suspended if exceed basis).
         let nondeductibles_applied = total_nondeductibles.min(basis_after_losses);
-        let nondeductibles_suspended =
-            total_nondeductibles.saturating_sub(nondeductibles_applied);
+        let nondeductibles_suspended = total_nondeductibles.saturating_sub(nondeductibles_applied);
         let ending = basis_after_losses.saturating_sub(nondeductibles_applied);
         (
             nondeductibles_applied,
@@ -264,7 +265,11 @@ pub fn compute(input: &Section1367Input) -> Section1367Result {
         beginning,
         basis_after_increases,
         basis_after_distributions,
-        if input.elects_alternative_ordering_g { "losses" } else { "nondeductibles" },
+        if input.elects_alternative_ordering_g {
+            "losses"
+        } else {
+            "nondeductibles"
+        },
         if input.elects_alternative_ordering_g {
             basis_after_distributions.saturating_sub(losses_allowed)
         } else {
@@ -354,8 +359,8 @@ mod tests {
     fn standard_loss_exceeds_basis_suspended() {
         let mut b = input();
         b.nonseparately_computed_loss_cents = 20_000_000; // $200K loss
-        // After increases: $150K. After dist: $120K. After nondeductibles: $100K.
-        // $200K loss → $100K allowed, $100K suspended.
+                                                          // After increases: $150K. After dist: $120K. After nondeductibles: $100K.
+                                                          // $200K loss → $100K allowed, $100K suspended.
         let r = compute(&b);
         assert_eq!(r.losses_allowed_cents, 10_000_000);
         assert_eq!(r.losses_suspended_carryforward_cents, 10_000_000);
@@ -607,8 +612,14 @@ mod tests {
         b.elects_alternative_ordering_g = true;
         let r_election = compute(&b);
         assert_eq!(r_standard.ending_basis_cents, r_election.ending_basis_cents);
-        assert_eq!(r_standard.losses_allowed_cents, r_election.losses_allowed_cents);
-        assert_eq!(r_standard.nondeductibles_applied_cents, r_election.nondeductibles_applied_cents);
+        assert_eq!(
+            r_standard.losses_allowed_cents,
+            r_election.losses_allowed_cents
+        );
+        assert_eq!(
+            r_standard.nondeductibles_applied_cents,
+            r_election.nondeductibles_applied_cents
+        );
     }
 
     #[test]

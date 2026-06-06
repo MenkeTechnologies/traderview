@@ -27,7 +27,9 @@ pub fn compute(closes: &[f64], period: usize, n_stdev: f64) -> Vec<Option<f64>> 
     if period < 2 || !n_stdev.is_finite() || n_stdev <= 0.0 || n < period {
         return out;
     }
-    if closes.iter().any(|x| !x.is_finite()) { return out; }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     let p_f = period as f64;
     for (i, slot) in out.iter_mut().enumerate().skip(period - 1) {
         let win = &closes[i + 1 - period..=i];
@@ -84,7 +86,10 @@ mod tests {
         c.push(100.0);
         // But stdev = 0 → returns 0. Need stdev > 0.
         // Use a non-degenerate fixture: 18 at 99 + 1 at 100 + close at midline.
-        let c2: Vec<f64> = (0_usize..19).map(|i| if i.is_multiple_of(2) { 99.0 } else { 101.0 }).chain(std::iter::once(100.0)).collect();
+        let c2: Vec<f64> = (0_usize..19)
+            .map(|i| if i.is_multiple_of(2) { 99.0 } else { 101.0 })
+            .chain(std::iter::once(100.0))
+            .collect();
         let r = compute(&c2, 20, 2.0);
         let v = r[19].unwrap();
         // Mean ≈ 100, stdev > 0, close = 100 → distance to either band = half band width.
@@ -95,7 +100,10 @@ mod tests {
     fn close_at_upper_band_yields_zero() {
         // Construct so the close lands at the upper band.
         // 18 at 100, 1 at 100, then close at upper band.
-        let c: Vec<f64> = (0_usize..19).map(|i| if i.is_multiple_of(2) { 99.0 } else { 101.0 }).chain(std::iter::once(103.0)).collect();
+        let c: Vec<f64> = (0_usize..19)
+            .map(|i| if i.is_multiple_of(2) { 99.0 } else { 101.0 })
+            .chain(std::iter::once(103.0))
+            .collect();
         let r = compute(&c, 20, 2.0);
         let v = r[19].unwrap();
         // Mean ≈ 100, stdev ≈ 1, upper ≈ 102. Close 103 > upper → distance ≈ 1.

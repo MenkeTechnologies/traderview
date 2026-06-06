@@ -25,14 +25,23 @@ pub struct Report {
 }
 
 pub fn compute(
-    s0: f64, mu: f64, sigma: f64, dt: f64,
-    steps: usize, paths: usize, seed: u64,
+    s0: f64,
+    mu: f64,
+    sigma: f64,
+    dt: f64,
+    steps: usize,
+    paths: usize,
+    seed: u64,
 ) -> Option<Report> {
     if !s0.is_finite() || !mu.is_finite() || !sigma.is_finite() || !dt.is_finite() {
         return None;
     }
-    if s0 <= 0.0 || sigma < 0.0 || dt <= 0.0 { return None; }
-    if steps < 1 || paths < 1 { return None; }
+    if s0 <= 0.0 || sigma < 0.0 || dt <= 0.0 {
+        return None;
+    }
+    if steps < 1 || paths < 1 {
+        return None;
+    }
     let drift = (mu - 0.5 * sigma * sigma) * dt;
     let diffusion = sigma * dt.sqrt();
     let mut state = if seed == 0 { 0x9E3779B97F4A7C15 } else { seed };
@@ -61,7 +70,9 @@ pub fn compute(
 }
 
 fn next_u64(state: &mut u64) -> u64 {
-    *state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+    *state = state
+        .wrapping_mul(6364136223846793005)
+        .wrapping_add(1442695040888963407);
     *state
 }
 
@@ -75,7 +86,9 @@ fn next_normal(state: &mut u64) -> f64 {
     // Box-Muller.
     let mut u1 = next_uniform(state);
     let u2 = next_uniform(state);
-    if u1 < 1e-300 { u1 = 1e-300; }
+    if u1 < 1e-300 {
+        u1 = 1e-300;
+    }
     (-2.0 * u1.ln()).sqrt() * (std::f64::consts::TAU * u2).cos()
 }
 

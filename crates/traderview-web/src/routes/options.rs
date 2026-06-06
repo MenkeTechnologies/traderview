@@ -97,12 +97,16 @@ async fn fetch_chain(symbol: &str, expiration: Option<NaiveDate>) -> Result<Chai
 /// strikes collapse to bucket 0 (no panic), but real option strikes are
 /// always positive finite so that path is unreachable on real Yahoo data.
 fn strike_key(k: f64) -> u64 {
-    if !k.is_finite() || k <= 0.0 { return 0; }
+    if !k.is_finite() || k <= 0.0 {
+        return 0;
+    }
     (k * 10_000.0).round() as u64
 }
 
 /// Inverse of `strike_key` — recover the canonical strike from the bucket.
-fn strike_from_key(k: u64) -> f64 { k as f64 / 10_000.0 }
+fn strike_from_key(k: u64) -> f64 {
+    k as f64 / 10_000.0
+}
 
 // Merge a chain's calls + puts into one StrikeOi per strike. Yahoo's chain
 // splits calls/puts but they share strike keys; OI analytics need them paired.
@@ -116,17 +120,21 @@ fn merge_oi(chain: &Chain) -> Vec<max_pain::StrikeOi> {
         let e = by_strike.entry(strike_key(p.strike)).or_default();
         e.1 += p.open_interest.unwrap_or(0).max(0) as u64;
     }
-    by_strike.into_iter()
+    by_strike
+        .into_iter()
         .map(|(k, (call_oi, put_oi))| max_pain::StrikeOi {
             strike: strike_from_key(k),
-            call_oi, put_oi,
+            call_oi,
+            put_oi,
         })
         .collect()
 }
 
 async fn max_pain_route(
-    _s: State<AppState>, _u: AuthUser,
-    Path(symbol): Path<String>, Query(q): Query<OptionsAnalyticsQ>,
+    _s: State<AppState>,
+    _u: AuthUser,
+    Path(symbol): Path<String>,
+    Query(q): Query<OptionsAnalyticsQ>,
 ) -> Result<Json<max_pain::MaxPainReport>, ApiError> {
     let chain = fetch_chain(&symbol, q.expiration).await?;
     Ok(Json(max_pain::compute(&merge_oi(&chain))))
@@ -139,7 +147,9 @@ struct IvSkewQ {
     #[serde(default = "default_iv_pct_dist")]
     pct_distance: f64,
 }
-fn default_iv_pct_dist() -> f64 { 0.05 }
+fn default_iv_pct_dist() -> f64 {
+    0.05
+}
 
 fn merge_iv(chain: &Chain) -> Vec<iv_skew::IvByStrike> {
     let mut by_strike: BTreeMap<u64, (Option<f64>, Option<f64>)> = BTreeMap::new();
@@ -155,18 +165,23 @@ fn merge_iv(chain: &Chain) -> Vec<iv_skew::IvByStrike> {
     }
     // Skew needs IV on BOTH legs at the same strike — drop strikes that only
     // quote one side; partial chains would skew the smile calculation.
-    by_strike.into_iter().filter_map(|(k, (cv, pv))| {
-        Some(iv_skew::IvByStrike {
-            strike: strike_from_key(k),
-            call_iv: cv?,
-            put_iv: pv?,
+    by_strike
+        .into_iter()
+        .filter_map(|(k, (cv, pv))| {
+            Some(iv_skew::IvByStrike {
+                strike: strike_from_key(k),
+                call_iv: cv?,
+                put_iv: pv?,
+            })
         })
-    }).collect()
+        .collect()
 }
 
 async fn iv_skew_route(
-    _s: State<AppState>, _u: AuthUser,
-    Path(symbol): Path<String>, Query(q): Query<IvSkewQ>,
+    _s: State<AppState>,
+    _u: AuthUser,
+    Path(symbol): Path<String>,
+    Query(q): Query<IvSkewQ>,
 ) -> Result<Json<iv_skew::SkewReport>, ApiError> {
     let chain = fetch_chain(&symbol, q.expiration).await?;
     let pairs = merge_iv(&chain);
@@ -176,36 +191,56 @@ async fn iv_skew_route(
 // GEX — Black–Scholes price each strike using the leg's IV + the chain's
 // spot + days-to-expiry to derive gamma, then weight by OI.
 async fn gex_route(
-    _s: State<AppState>, _u: AuthUser,
-    Path(symbol): Path<String>, Query(q): Query<OptionsAnalyticsQ>,
+    _s: State<AppState>,
+    _u: AuthUser,
+    Path(symbol): Path<String>,
+    Query(q): Query<OptionsAnalyticsQ>,
 ) -> Result<Json<gex::GexReport>, ApiError> {
     let chain = fetch_chain(&symbol, q.expiration).await?;
     let today = Utc::now().date_naive();
     let dte_days = (chain.expiration - today).num_days().max(0);
     let t_years = dte_days as f64 / 365.0;
     if t_years <= 0.0 {
-        return Err(ApiError::BadRequest("expiration is in the past — gamma undefined".into()));
+        return Err(ApiError::BadRequest(
+            "expiration is in the past — gamma undefined".into(),
+        ));
     }
-    let r = 0.045_f64;    // matches the /greeks default
+    let r = 0.045_f64; // matches the /greeks default
     let div = 0.0_f64;
     let mut by_strike: BTreeMap<u64, gex::StrikeGreeks> = BTreeMap::new();
     for c in &chain.calls {
         let Some(iv) = c.implied_vol else { continue };
-        if iv <= 0.0 { continue; }
+        if iv <= 0.0 {
+            continue;
+        }
         let g = price_and_greeks(OptKind::Call, chain.spot, c.strike, t_years, iv, r, div);
-        let e = by_strike.entry(strike_key(c.strike)).or_insert(gex::StrikeGreeks {
-            strike: c.strike, call_gamma: 0.0, call_oi: 0, put_gamma: 0.0, put_oi: 0,
-        });
+        let e = by_strike
+            .entry(strike_key(c.strike))
+            .or_insert(gex::StrikeGreeks {
+                strike: c.strike,
+                call_gamma: 0.0,
+                call_oi: 0,
+                put_gamma: 0.0,
+                put_oi: 0,
+            });
         e.call_gamma = g.gamma;
         e.call_oi = c.open_interest.unwrap_or(0).max(0) as u64;
     }
     for p in &chain.puts {
         let Some(iv) = p.implied_vol else { continue };
-        if iv <= 0.0 { continue; }
+        if iv <= 0.0 {
+            continue;
+        }
         let g = price_and_greeks(OptKind::Put, chain.spot, p.strike, t_years, iv, r, div);
-        let e = by_strike.entry(strike_key(p.strike)).or_insert(gex::StrikeGreeks {
-            strike: p.strike, call_gamma: 0.0, call_oi: 0, put_gamma: 0.0, put_oi: 0,
-        });
+        let e = by_strike
+            .entry(strike_key(p.strike))
+            .or_insert(gex::StrikeGreeks {
+                strike: p.strike,
+                call_gamma: 0.0,
+                call_oi: 0,
+                put_gamma: 0.0,
+                put_oi: 0,
+            });
         e.put_gamma = g.gamma;
         e.put_oi = p.open_interest.unwrap_or(0).max(0) as u64;
     }
@@ -240,9 +275,12 @@ mod tests {
         // path while the put-side fetcher computes it as `50.0025 + 50.0025`.
         // Both should bucket together.
         let from_string = 100.005_f64;
-        let from_arith  = 50.0025_f64 + 50.0025_f64;
-        assert_eq!(strike_key(from_string), strike_key(from_arith),
-            "identical strikes from different float paths must share a bucket");
+        let from_arith = 50.0025_f64 + 50.0025_f64;
+        assert_eq!(
+            strike_key(from_string),
+            strike_key(from_arith),
+            "identical strikes from different float paths must share a bucket"
+        );
     }
 
     #[test]
@@ -262,8 +300,10 @@ mod tests {
         for strike in [1.0, 50.0, 100.5, 250.25, 4_995.50, 100.005] {
             let k = strike_key(strike);
             let back = strike_from_key(k);
-            assert!((back - strike).abs() < 1e-9,
-                "round-trip lost precision: {strike} → {k} → {back}");
+            assert!(
+                (back - strike).abs() < 1e-9,
+                "round-trip lost precision: {strike} → {k} → {back}"
+            );
         }
     }
 }

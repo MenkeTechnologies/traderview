@@ -287,10 +287,8 @@ pub fn check(input: &Section457bInput) -> Section457bResult {
     let enhanced_catch_up_available = matches!(input.plan_type, PlanType::Governmental)
         && matches!(input.age_bracket, AgeBracket::SixtyToSixtyThree);
 
-    let special_three_year_catch_up_available = matches!(
-        input.age_bracket,
-        AgeBracket::WithinThreeYearsOfNra
-    );
+    let special_three_year_catch_up_available =
+        matches!(input.age_bracket, AgeBracket::WithinThreeYearsOfNra);
 
     let catch_up_limit_cents: u64 = if special_three_year_catch_up_available {
         0
@@ -327,13 +325,13 @@ pub fn check(input: &Section457bInput) -> Section457bResult {
 
     let double_deferral_strategy_available = input.stacked_with_401k_or_403b;
 
-    let section_72t_penalty_applies = matches!(input.plan_type, PlanType::TaxExempt)
-        && input.early_withdrawal_under_59_5;
+    let section_72t_penalty_applies =
+        matches!(input.plan_type, PlanType::TaxExempt) && input.early_withdrawal_under_59_5;
 
     let rollover_permitted_to_other_plan = matches!(input.plan_type, PlanType::Governmental);
 
-    let credit_risk_disclosure_engaged = matches!(input.plan_type, PlanType::TaxExempt)
-        && input.employer_financial_distress;
+    let credit_risk_disclosure_engaged =
+        matches!(input.plan_type, PlanType::TaxExempt) && input.employer_financial_distress;
 
     if !elective_deferral_compliant {
         let applicable_limit = if special_three_year_catch_up_available {
@@ -489,9 +487,10 @@ mod tests {
         i.elective_deferral_cents = 2_500_000;
         let r = check(&i);
         assert!(!r.elective_deferral_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 457(b)(2)")
-            && f.contains("EXCEEDED")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 457(b)(2)") && f.contains("EXCEEDED")));
     }
 
     #[test]
@@ -532,9 +531,10 @@ mod tests {
         i.catch_up_contribution_cents = 800_000;
         let r = check(&i);
         assert!(!r.age_50_catch_up_available);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 414(v)(3)")
-            && f.contains("TAX-EXEMPT")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 414(v)(3)") && f.contains("TAX-EXEMPT")));
     }
 
     #[test]
@@ -575,9 +575,11 @@ mod tests {
         i.catch_up_contribution_cents = 800_000;
         let r = check(&i);
         assert!(!r.catch_up_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 457(b)(3) ANTI-STACKING")
-            && f.contains("ONE catch-up mechanism per year")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 457(b)(3) ANTI-STACKING")
+                && f.contains("ONE catch-up mechanism per year")));
     }
 
     #[test]
@@ -586,8 +588,10 @@ mod tests {
         i.early_withdrawal_under_59_5 = true;
         let r = check(&i);
         assert!(!r.section_72t_penalty_applies);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("GOVERNMENTAL § 457(b) NO 10% § 72(t)")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("GOVERNMENTAL § 457(b) NO 10% § 72(t)")));
     }
 
     #[test]
@@ -597,8 +601,7 @@ mod tests {
         i.early_withdrawal_under_59_5 = true;
         let r = check(&i);
         assert!(r.section_72t_penalty_applies);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 72(t)")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 72(t)")
             && f.contains("TAX-EXEMPT")
             && f.contains("10% additional tax")));
     }
@@ -609,8 +612,7 @@ mod tests {
         i.rollover_to_other_plan_type = true;
         let r = check(&i);
         assert!(r.rollover_permitted_to_other_plan);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 457(d)(2)")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 457(d)(2)")
             && f.contains("GOVERNMENTAL")
             && f.contains("ROLLOVER PERMITTED")));
     }
@@ -622,8 +624,7 @@ mod tests {
         i.rollover_to_other_plan_type = true;
         let r = check(&i);
         assert!(!r.rollover_permitted_to_other_plan);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 457(d)(2)")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 457(d)(2)")
             && f.contains("TAX-EXEMPT")
             && f.contains("NOT PERMITTED")));
     }
@@ -634,10 +635,12 @@ mod tests {
         i.stacked_with_401k_or_403b = true;
         let r = check(&i);
         assert!(r.double_deferral_strategy_available);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 402(g)(1) NON-AGGREGATION")
-            && f.contains("DOUBLE DEFERRAL")
-            && f.contains("$49,000")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 402(g)(1) NON-AGGREGATION")
+                && f.contains("DOUBLE DEFERRAL")
+                && f.contains("$49,000")));
     }
 
     #[test]
@@ -647,9 +650,11 @@ mod tests {
         i.employer_financial_distress = true;
         let r = check(&i);
         assert!(r.credit_risk_disclosure_engaged);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("TAX-EXEMPT § 457(b) CREDIT RISK")
-            && f.contains("UNSECURED CREDITOR")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("TAX-EXEMPT § 457(b) CREDIT RISK")
+                && f.contains("UNSECURED CREDITOR")));
     }
 
     #[test]
@@ -665,9 +670,11 @@ mod tests {
         let mut i = governmental_age_40_max();
         i.separating_from_service = true;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 457(d)(1) DISTRIBUTION TRIGGER")
-            && f.contains("NO 10% § 72(t) penalty regardless of age")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 457(d)(1) DISTRIBUTION TRIGGER")
+                && f.contains("NO 10% § 72(t) penalty regardless of age")));
     }
 
     #[test]
@@ -685,7 +692,8 @@ mod tests {
             let r = check(&i);
             assert_eq!(
                 r.catch_up_limit_cents, exp_catch_up_limit,
-                "bracket={:?}", bracket
+                "bracket={:?}",
+                bracket
             );
         }
     }
@@ -743,17 +751,18 @@ mod tests {
     #[test]
     fn note_pins_eligible_deferred_compensation_plan() {
         let r = check(&governmental_age_40_max());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 457(b) ELIGIBLE DEFERRED COMPENSATION PLAN")
-            && n.contains("state/local government")
-            && n.contains("tax-exempt entity")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("§ 457(b) ELIGIBLE DEFERRED COMPENSATION PLAN")
+                && n.contains("state/local government")
+                && n.contains("tax-exempt entity")
+        ));
     }
 
     #[test]
     fn note_pins_two_plan_types_governmental_vs_tax_exempt() {
         let r = check(&governmental_age_40_max());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Two structurally distinct § 457(b) plan types")
+        assert!(r.notes.iter().any(|n| n
+            .contains("Two structurally distinct § 457(b) plan types")
             && n.contains("GOVERNMENTAL")
             && n.contains("§ 457(g)")
             && n.contains("TAX-EXEMPT")
@@ -764,20 +773,22 @@ mod tests {
     #[test]
     fn note_pins_2026_limits() {
         let r = check(&governmental_age_40_max());
-        assert!(r.notes.iter().any(|n|
-            n.contains("2026 contribution limits")
-            && n.contains("IRS Notice 2025-67")
-            && n.contains("$24,500")
-            && n.contains("$8,000")
-            && n.contains("$11,250")
-            && n.contains("$49,000")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("2026 contribution limits")
+                && n.contains("IRS Notice 2025-67")
+                && n.contains("$24,500")
+                && n.contains("$8,000")
+                && n.contains("$11,250")
+                && n.contains("$49,000")));
     }
 
     #[test]
     fn note_pins_special_three_year_anti_stacking() {
         let r = check(&governmental_age_40_max());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 457(b)(3) SPECIAL 3-YEAR PRE-RETIREMENT CATCH-UP")
+        assert!(r.notes.iter().any(|n| n
+            .contains("§ 457(b)(3) SPECIAL 3-YEAR PRE-RETIREMENT CATCH-UP")
             && n.contains("ANTI-STACKING")
             && n.contains("ONE catch-up mechanism per year")
             && n.contains("BOTH governmental AND tax-exempt")));
@@ -786,71 +797,84 @@ mod tests {
     #[test]
     fn note_pins_section_457g_trust_requirement() {
         let r = check(&governmental_age_40_max());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 457(g) TRUST REQUIREMENT")
-            && n.contains("Pub. L. 104-188")
-            && n.contains("January 1, 1999")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 457(g) TRUST REQUIREMENT")
+                && n.contains("Pub. L. 104-188")
+                && n.contains("January 1, 1999")));
     }
 
     #[test]
     fn note_pins_section_72t_interaction() {
         let r = check(&governmental_age_40_max());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 72(t) early-withdrawal penalty interaction")
-            && n.contains("GOVERNMENTAL")
-            && n.contains("TAX-EXEMPT")
-            && n.contains("first-time homebuyer up to $10K")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("§ 72(t) early-withdrawal penalty interaction")
+                && n.contains("GOVERNMENTAL")
+                && n.contains("TAX-EXEMPT")
+                && n.contains("first-time homebuyer up to $10K")
+        ));
     }
 
     #[test]
     fn note_pins_section_402g1_double_deferral() {
         let r = check(&governmental_age_40_max());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 402(g)(1) AGGREGATION RULE")
-            && n.contains("NOT AGGREGATED")
-            && n.contains("DOUBLE DEFERRAL STRATEGY")
-            && n.contains("$49,000")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 402(g)(1) AGGREGATION RULE")
+                && n.contains("NOT AGGREGATED")
+                && n.contains("DOUBLE DEFERRAL STRATEGY")
+                && n.contains("$49,000")));
     }
 
     #[test]
     fn note_pins_section_457d1_distribution_triggers() {
         let r = check(&governmental_age_40_max());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 457(d)(1) DISTRIBUTION TRIGGERS")
-            && n.contains("SEPARATION FROM SERVICE")
-            && n.contains("UNFORESEEABLE EMERGENCY")
-            && n.contains("SECURE Act 2.0 § 314")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 457(d)(1) DISTRIBUTION TRIGGERS")
+                && n.contains("SEPARATION FROM SERVICE")
+                && n.contains("UNFORESEEABLE EMERGENCY")
+                && n.contains("SECURE Act 2.0 § 314")));
     }
 
     #[test]
     fn note_pins_section_457d2_rollover_rules() {
         let r = check(&governmental_age_40_max());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 457(d)(2) ROLLOVER RULES")
-            && n.contains("GOVERNMENTAL § 457(b) — rollovers PERMITTED")
-            && n.contains("TAX-EXEMPT § 457(b) — rollovers NOT PERMITTED")
-            && n.contains("60-day window")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 457(d)(2) ROLLOVER RULES")
+                && n.contains("GOVERNMENTAL § 457(b) — rollovers PERMITTED")
+                && n.contains("TAX-EXEMPT § 457(b) — rollovers NOT PERMITTED")
+                && n.contains("60-day window")));
     }
 
     #[test]
     fn note_pins_trader_fact_patterns_five() {
         let r = check(&governmental_age_40_max());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-critical fact patterns")
-            && n.contains("$49,000 DOUBLE DEFERRAL")
-            && n.contains("§ 414(v)(3) ineligibility")
-            && n.contains("special 3-year catch-up")
-            && n.contains("UNSECURED CREDITOR")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-critical fact patterns")
+                && n.contains("$49,000 DOUBLE DEFERRAL")
+                && n.contains("§ 414(v)(3) ineligibility")
+                && n.contains("special 3-year catch-up")
+                && n.contains("UNSECURED CREDITOR")));
     }
 
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&governmental_age_40_max());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Companion to section_401k")
-            && n.contains("section_408")
-            && n.contains("section_4974")
-            && n.contains("section_162m")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Companion to section_401k")
+                && n.contains("section_408")
+                && n.contains("section_4974")
+                && n.contains("section_162m")));
     }
 
     #[test]

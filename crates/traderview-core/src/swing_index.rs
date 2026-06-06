@@ -49,13 +49,17 @@ pub fn compute(bars: &[Bar], limit_move: f64) -> SwingIndexReport {
         let t = bars[i];
         let p = bars[i - 1];
         // Sanity: skip non-finite bars.
-        if !(t.open.is_finite() && t.high.is_finite() && t.low.is_finite() && t.close.is_finite()
-            && p.open.is_finite() && p.close.is_finite())
+        if !(t.open.is_finite()
+            && t.high.is_finite()
+            && t.low.is_finite()
+            && t.close.is_finite()
+            && p.open.is_finite()
+            && p.close.is_finite())
         {
             continue;
         }
         let move_a = (t.high - p.close).abs();
-        let move_b = (t.low  - p.close).abs();
+        let move_b = (t.low - p.close).abs();
         let move_c = (t.high - t.low).abs();
         let k = move_a.max(move_b);
         // Wilder's R selection (largest of the three movements, then add
@@ -70,9 +74,7 @@ pub fn compute(bars: &[Bar], limit_move: f64) -> SwingIndexReport {
         if r.abs() < f64::EPSILON {
             continue;
         }
-        let numer = (t.close - p.close)
-            + 0.5 * (t.close - t.open)
-            + 0.25 * (p.close - p.open);
+        let numer = (t.close - p.close) + 0.5 * (t.close - t.open) + 0.25 * (p.close - p.open);
         let si = 50.0 * numer * (k / limit_move) / r;
         if !si.is_finite() {
             continue;
@@ -96,7 +98,12 @@ mod tests {
     use super::*;
 
     fn b(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -130,10 +137,12 @@ mod tests {
     #[test]
     fn rising_close_sequence_positive_si() {
         // close[i] > close[i-1] → numer > 0 → SI > 0.
-        let bars: Vec<Bar> = (1..=20).map(|i| {
-            let c = 100.0 + i as f64;
-            b(c - 0.5, c + 0.5, c - 0.5, c)
-        }).collect();
+        let bars: Vec<Bar> = (1..=20)
+            .map(|i| {
+                let c = 100.0 + i as f64;
+                b(c - 0.5, c + 0.5, c - 0.5, c)
+            })
+            .collect();
         let r = compute(&bars, 3.0);
         let last = r.si[19].expect("populated");
         assert!(last > 0.0, "rising closes should yield + SI, got {last}");
@@ -144,17 +153,23 @@ mod tests {
 
     #[test]
     fn asi_is_running_sum_of_si() {
-        let bars: Vec<Bar> = (0..20).map(|i| {
-            let c = 100.0 + (i as f64 * 0.5).sin() * 2.0;
-            b(c - 0.5, c + 1.0, c - 1.0, c)
-        }).collect();
+        let bars: Vec<Bar> = (0..20)
+            .map(|i| {
+                let c = 100.0 + (i as f64 * 0.5).sin() * 2.0;
+                b(c - 0.5, c + 1.0, c - 1.0, c)
+            })
+            .collect();
         let r = compute(&bars, 3.0);
         let mut running = 0.0;
         let mut seeded = false;
         for i in 0..r.si.len() {
             if let Some(si) = r.si[i] {
-                if !seeded { running = si; seeded = true; }
-                else { running += si; }
+                if !seeded {
+                    running = si;
+                    seeded = true;
+                } else {
+                    running += si;
+                }
                 let asi = r.asi[i].expect("ASI must accompany SI");
                 assert!((asi - running).abs() < 1e-9, "i={i}");
             }

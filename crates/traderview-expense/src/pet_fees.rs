@@ -107,10 +107,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
         "CO",
         rule(
             SpecificPetDepositAndRentCap,
-            Some(30_000),   // $300
+            Some(30_000), // $300
             false,
-            Some(3_500),    // $35 OR 1.5%
-            Some(150),      // 1.5% of monthly rent
+            Some(3_500), // $35 OR 1.5%
+            Some(150),   // 1.5% of monthly rent
             true,
             true,
             "CRS § 38-12-106 (HB 23-1068, eff. 2024-01-01)",
@@ -164,11 +164,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
     // deposit/rent (each has its own overall security deposit
     // framework but no pet-specific cap).
     let no_rule_states = [
-        "AL", "AK", "AZ", "AR", "CT", "DE", "DC", "FL", "GA", "HI", "ID",
-        "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MI", "MN",
-        "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND",
-        "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT",
-        "VT", "VA", "WV", "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CT", "DE", "DC", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS",
+        "KY", "LA", "ME", "MD", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY",
+        "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WV",
+        "WI", "WY",
     ];
     for code in no_rule_states {
         m.insert(
@@ -491,16 +490,18 @@ mod tests {
     fn coverage_is_all_50_states_plus_dc() {
         let mut codes: Vec<&'static str> = RULES.keys().copied().collect();
         codes.sort_unstable();
-        assert_eq!(codes.len(), 51, "expected 50 states + DC, got {}", codes.len());
+        assert_eq!(
+            codes.len(),
+            51,
+            "expected 50 states + DC, got {}",
+            codes.len()
+        );
     }
 
     #[test]
     fn citations_never_empty() {
         for (code, rule) in RULES.iter() {
-            assert!(
-                !rule.citation.is_empty(),
-                "state {code} missing citation"
-            );
+            assert!(!rule.citation.is_empty(), "state {code} missing citation");
         }
     }
 

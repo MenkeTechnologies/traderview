@@ -34,8 +34,12 @@ pub struct OuReport {
 
 pub fn fit(series: &[f64]) -> Option<OuReport> {
     let n = series.len();
-    if n < 4 { return None; }
-    if series.iter().any(|x| !x.is_finite()) { return None; }
+    if n < 4 {
+        return None;
+    }
+    if series.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     // Build (x_{t−1}, x_t) pairs and run OLS.
     let m = n - 1;
     let mean_x = series[..m].iter().sum::<f64>() / m as f64;
@@ -48,7 +52,9 @@ pub fn fit(series: &[f64]) -> Option<OuReport> {
         sxy += dx * dy;
         sxx += dx * dx;
     }
-    if sxx <= 0.0 { return None; }
+    if sxx <= 0.0 {
+        return None;
+    }
     let beta = sxy / sxx;
     let alpha = mean_y - beta * mean_x;
     if !(0.0..1.0).contains(&beta) {
@@ -56,7 +62,9 @@ pub fn fit(series: &[f64]) -> Option<OuReport> {
         return None;
     }
     let theta = -beta.ln();
-    if !theta.is_finite() || theta <= 0.0 { return None; }
+    if !theta.is_finite() || theta <= 0.0 {
+        return None;
+    }
     let mu = alpha / (1.0 - beta);
     // Residuals + σ̂.
     let mut residuals = Vec::with_capacity(m);
@@ -70,7 +78,13 @@ pub fn fit(series: &[f64]) -> Option<OuReport> {
     let sigma2 = var_resid / factor.max(1e-18);
     let sigma = sigma2.max(0.0).sqrt();
     let half_life = std::f64::consts::LN_2 / theta;
-    Some(OuReport { mu, theta, sigma, half_life, residuals })
+    Some(OuReport {
+        mu,
+        theta,
+        sigma,
+        half_life,
+        residuals,
+    })
 }
 
 #[cfg(test)]
@@ -105,15 +119,20 @@ mod tests {
         let mut s = vec![0.0_f64];
         let mut state = 42u64;
         for _ in 0..2_000 {
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             let u = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.05;
             s.push(s.last().unwrap() + u);
         }
         match fit(&s) {
-            None => {}    // strong-reversion guard rejected: also fine
+            None => {} // strong-reversion guard rejected: also fine
             Some(report) => {
-                assert!(report.half_life > 10.0,
-                    "random walk half-life should be long, got {}", report.half_life);
+                assert!(
+                    report.half_life > 10.0,
+                    "random walk half-life should be long, got {}",
+                    report.half_life
+                );
             }
         }
     }
@@ -125,15 +144,24 @@ mod tests {
         let mut s = vec![10.0_f64];
         let mut state = 999u64;
         for _ in 0..2_000 {
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             let u = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.5;
             let prev = *s.last().unwrap();
             s.push(0.5 * prev + 5.0 + u);
         }
         let report = fit(&s).expect("populated");
-        assert!((report.mu - 10.0).abs() < 0.2, "μ should be ≈ 10, got {}", report.mu);
-        assert!((report.theta - 0.693).abs() < 0.05,
-            "θ should be ≈ ln(2) ≈ 0.693, got {}", report.theta);
+        assert!(
+            (report.mu - 10.0).abs() < 0.2,
+            "μ should be ≈ 10, got {}",
+            report.mu
+        );
+        assert!(
+            (report.theta - 0.693).abs() < 0.05,
+            "θ should be ≈ ln(2) ≈ 0.693, got {}",
+            report.theta
+        );
         assert!((report.half_life - 1.0).abs() < 0.1);
         assert!(report.sigma > 0.0);
     }
@@ -143,7 +171,9 @@ mod tests {
         let mut slow = vec![10.0_f64];
         let mut state = 7u64;
         for _ in 0..2_000 {
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             let u = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.5;
             let prev = *slow.last().unwrap();
             slow.push(0.95 * prev + 0.5 + u);
@@ -152,14 +182,20 @@ mod tests {
         let mut fast = vec![10.0_f64];
         let mut state = 7u64;
         for _ in 0..2_000 {
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             let u = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.5;
             let prev = *fast.last().unwrap();
             fast.push(0.3 * prev + 7.0 + u);
         }
         let r_fast = fit(&fast).expect("populated");
-        assert!(r_slow.half_life > r_fast.half_life,
-            "β=0.95 should have longer HL ({}) than β=0.3 ({})", r_slow.half_life, r_fast.half_life);
+        assert!(
+            r_slow.half_life > r_fast.half_life,
+            "β=0.95 should have longer HL ({}) than β=0.3 ({})",
+            r_slow.half_life,
+            r_fast.half_life
+        );
     }
 
     #[test]
@@ -167,7 +203,9 @@ mod tests {
         let mut s = vec![10.0_f64];
         let mut state = 1u64;
         for _ in 0..100 {
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             let u = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.5;
             let prev = *s.last().unwrap();
             s.push(0.5 * prev + 5.0 + u);

@@ -336,7 +336,10 @@ mod tests {
         let mut input = baseline_input();
         input.tenancy_coverage = TenancyCoverage::ExemptFromChapter35_9A;
         let out = check(&input);
-        assert_eq!(out.mode, AlLandlordTenantMode::NotApplicableTenancyExemptFromChapter359A);
+        assert_eq!(
+            out.mode,
+            AlLandlordTenantMode::NotApplicableTenancyExemptFromChapter359A
+        );
     }
 
     #[test]
@@ -403,7 +406,8 @@ mod tests {
     #[test]
     fn landlord_maintains_habitability_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordHabitabilityObligationUnderSection359A204;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordHabitabilityObligationUnderSection359A204;
         input.landlord_maintains_habitability = true;
         let out = check(&input);
         assert_eq!(
@@ -415,7 +419,8 @@ mod tests {
     #[test]
     fn landlord_failed_habitability_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordHabitabilityObligationUnderSection359A204;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordHabitabilityObligationUnderSection359A204;
         input.landlord_maintains_habitability = false;
         let out = check(&input);
         assert_eq!(
@@ -506,7 +511,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::LandlordEntryNoticeUnderSection359A303;
         input.entry_notice_days_given = 1;
         let out = check(&input);
-        assert_eq!(out.mode, AlLandlordTenantMode::ViolationEntryNoticeShorterThan2Days);
+        assert_eq!(
+            out.mode,
+            AlLandlordTenantMode::ViolationEntryNoticeShorterThan2Days
+        );
     }
 
     #[test]
@@ -516,7 +524,10 @@ mod tests {
         input.entry_was_emergency = true;
         input.entry_notice_days_given = 0;
         let out = check(&input);
-        assert_eq!(out.mode, AlLandlordTenantMode::CompliantEmergencyEntryWithoutNotice);
+        assert_eq!(
+            out.mode,
+            AlLandlordTenantMode::CompliantEmergencyEntryWithoutNotice
+        );
     }
 
     #[test]

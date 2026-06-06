@@ -171,7 +171,8 @@ pub fn compute(input: &Input) -> Output {
         return Output {
             mode: NycCoopConversionMode::NotApplicableNoConversionInProgress,
             statutory_basis: "No conversion plan filed; GBL § 352-eeee not invoked".to_string(),
-            notes: "No conversion plan has been filed; GBL § 352-eeee procedures not invoked.".to_string(),
+            notes: "No conversion plan has been filed; GBL § 352-eeee procedures not invoked."
+                .to_string(),
             citations,
         };
     }
@@ -283,7 +284,9 @@ pub fn compute(input: &Input) -> Output {
                 citations,
             };
         }
-        if !input.eviction_reason_non_payment_or_illegal_use && input.plan_type != ConversionPlanType::EvictionPlan51Pct {
+        if !input.eviction_reason_non_payment_or_illegal_use
+            && input.plan_type != ConversionPlanType::EvictionPlan51Pct
+        {
             return Output {
                 mode: NycCoopConversionMode::ViolationEvictionForReasonOtherThanRentOrIllegalUse,
                 statutory_basis: "GBL § 352-eeee — non-eviction plan tenants cannot be evicted for failure to purchase".to_string(),
@@ -352,7 +355,10 @@ mod tests {
             ..baseline_non_eviction_plan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, NycCoopConversionMode::NotApplicableNoConversionInProgress);
+        assert_eq!(
+            result.mode,
+            NycCoopConversionMode::NotApplicableNoConversionInProgress
+        );
     }
 
     #[test]
@@ -362,13 +368,19 @@ mod tests {
             ..baseline_non_eviction_plan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, NycCoopConversionMode::NotApplicableNotInNycSubjectToSeparateStatute);
+        assert_eq!(
+            result.mode,
+            NycCoopConversionMode::NotApplicableNotInNycSubjectToSeparateStatute
+        );
     }
 
     #[test]
     fn non_eviction_plan_51_pct_compliant() {
         let result = check(&baseline_non_eviction_plan_compliant());
-        assert_eq!(result.mode, NycCoopConversionMode::CompliantNonEvictionPlanWith51PctSubscription);
+        assert_eq!(
+            result.mode,
+            NycCoopConversionMode::CompliantNonEvictionPlanWith51PctSubscription
+        );
     }
 
     #[test]
@@ -388,7 +400,10 @@ mod tests {
             ..baseline_non_eviction_plan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, NycCoopConversionMode::CompliantNonEvictionPlanWith51PctSubscription);
+        assert_eq!(
+            result.mode,
+            NycCoopConversionMode::CompliantNonEvictionPlanWith51PctSubscription
+        );
     }
 
     #[test]
@@ -398,7 +413,10 @@ mod tests {
             ..baseline_non_eviction_plan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, NycCoopConversionMode::CompliantEvictionPlanWith51PctSubscription);
+        assert_eq!(
+            result.mode,
+            NycCoopConversionMode::CompliantEvictionPlanWith51PctSubscription
+        );
     }
 
     #[test]
@@ -411,7 +429,10 @@ mod tests {
             ..baseline_non_eviction_plan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, NycCoopConversionMode::CompliantNonEvictionPlanWith15PctSmallBuildingException);
+        assert_eq!(
+            result.mode,
+            NycCoopConversionMode::CompliantNonEvictionPlanWith15PctSmallBuildingException
+        );
     }
 
     #[test]
@@ -433,7 +454,10 @@ mod tests {
             ..baseline_non_eviction_plan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, NycCoopConversionMode::CompliantSeniorOrDisabledTenantPermanentlyProtected);
+        assert_eq!(
+            result.mode,
+            NycCoopConversionMode::CompliantSeniorOrDisabledTenantPermanentlyProtected
+        );
     }
 
     #[test]
@@ -444,7 +468,10 @@ mod tests {
             ..baseline_non_eviction_plan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, NycCoopConversionMode::ViolationSeniorOrDisabledTenantEvictionAttempted);
+        assert_eq!(
+            result.mode,
+            NycCoopConversionMode::ViolationSeniorOrDisabledTenantEvictionAttempted
+        );
     }
 
     #[test]
@@ -455,7 +482,10 @@ mod tests {
             ..baseline_non_eviction_plan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, NycCoopConversionMode::ViolationSeniorOrDisabledTenantEvictionAttempted);
+        assert_eq!(
+            result.mode,
+            NycCoopConversionMode::ViolationSeniorOrDisabledTenantEvictionAttempted
+        );
     }
 
     #[test]
@@ -465,7 +495,10 @@ mod tests {
             ..baseline_non_eviction_plan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, NycCoopConversionMode::ViolationTenant90DayExclusivePurchaseRightDenied);
+        assert_eq!(
+            result.mode,
+            NycCoopConversionMode::ViolationTenant90DayExclusivePurchaseRightDenied
+        );
     }
 
     #[test]
@@ -475,7 +508,10 @@ mod tests {
             ..baseline_non_eviction_plan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, NycCoopConversionMode::ViolationTenantRightOfFirstRefusalDenied);
+        assert_eq!(
+            result.mode,
+            NycCoopConversionMode::ViolationTenantRightOfFirstRefusalDenied
+        );
     }
 
     #[test]
@@ -488,7 +524,10 @@ mod tests {
             ..baseline_non_eviction_plan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, NycCoopConversionMode::ViolationNonPurchasingTenantEvictionBefore3YearPeriod);
+        assert_eq!(
+            result.mode,
+            NycCoopConversionMode::ViolationNonPurchasingTenantEvictionBefore3YearPeriod
+        );
     }
 
     #[test]
@@ -501,7 +540,10 @@ mod tests {
             ..baseline_non_eviction_plan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, NycCoopConversionMode::CompliantEvictionPlanWith51PctSubscription);
+        assert_eq!(
+            result.mode,
+            NycCoopConversionMode::CompliantEvictionPlanWith51PctSubscription
+        );
     }
 
     #[test]
@@ -513,7 +555,10 @@ mod tests {
             ..baseline_non_eviction_plan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, NycCoopConversionMode::CompliantNonPurchasingTenant3YearGracePeriod);
+        assert_eq!(
+            result.mode,
+            NycCoopConversionMode::CompliantNonPurchasingTenant3YearGracePeriod
+        );
     }
 
     #[test]
@@ -526,7 +571,10 @@ mod tests {
             ..baseline_non_eviction_plan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, NycCoopConversionMode::ViolationEvictionForReasonOtherThanRentOrIllegalUse);
+        assert_eq!(
+            result.mode,
+            NycCoopConversionMode::ViolationEvictionForReasonOtherThanRentOrIllegalUse
+        );
     }
 
     #[test]
@@ -555,7 +603,10 @@ mod tests {
     fn constant_pin_thresholds_and_grace_period() {
         assert_eq!(GBL_352_EEEE_EVICTION_PLAN_THRESHOLD_BASIS_POINTS, 5_100);
         assert_eq!(GBL_352_EEEE_NON_EVICTION_PLAN_THRESHOLD_BASIS_POINTS, 5_100);
-        assert_eq!(GBL_352_EEEE_SMALL_BUILDING_NON_EVICTION_THRESHOLD_BASIS_POINTS, 1_500);
+        assert_eq!(
+            GBL_352_EEEE_SMALL_BUILDING_NON_EVICTION_THRESHOLD_BASIS_POINTS,
+            1_500
+        );
         assert_eq!(GBL_352_EEEE_3_YEAR_GRACE_PERIOD_YEARS, 3);
         assert_eq!(GBL_352_EEEE_90_DAY_EXCLUSIVE_PURCHASE_DAYS, 90);
         assert_eq!(GBL_352_EEEE_6_MONTH_RIGHT_FIRST_REFUSAL_MONTHS, 6);

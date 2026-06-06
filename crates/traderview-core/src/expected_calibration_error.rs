@@ -46,17 +46,20 @@ pub struct EceReport {
     pub n_bins: usize,
 }
 
-pub fn compute(
-    probabilities: &[f64],
-    outcomes: &[u8],
-    n_bins: usize,
-) -> Option<EceReport> {
+pub fn compute(probabilities: &[f64], outcomes: &[u8], n_bins: usize) -> Option<EceReport> {
     let n = probabilities.len();
-    if n == 0 || outcomes.len() != n || n_bins == 0 { return None; }
-    if probabilities.iter().any(|p| !p.is_finite() || !(0.0..=1.0).contains(p)) {
+    if n == 0 || outcomes.len() != n || n_bins == 0 {
         return None;
     }
-    if outcomes.iter().any(|o| *o > 1) { return None; }
+    if probabilities
+        .iter()
+        .any(|p| !p.is_finite() || !(0.0..=1.0).contains(p))
+    {
+        return None;
+    }
+    if outcomes.iter().any(|o| *o > 1) {
+        return None;
+    }
     let mut bin_p_sum = vec![0.0_f64; n_bins];
     let mut bin_y_sum = vec![0.0_f64; n_bins];
     let mut bin_n = vec![0_usize; n_bins];
@@ -86,7 +89,9 @@ pub fn compute(
         let o_bar = bin_y_sum[k] / nk;
         let gap = (p_bar - o_bar).abs();
         ece += (nk / n_f) * gap;
-        if gap > mce { mce = gap; }
+        if gap > mce {
+            mce = gap;
+        }
         diagnostics.push(BinDiagnostic {
             bin_index: k,
             mean_predicted_probability: p_bar,
@@ -136,7 +141,9 @@ mod tests {
         // All forecasts say 0.9 but only 30% of outcomes are positive.
         let probs = vec![0.9_f64; 100];
         let mut outcomes = vec![0_u8; 100];
-        for slot in outcomes.iter_mut().take(30) { *slot = 1; }
+        for slot in outcomes.iter_mut().take(30) {
+            *slot = 1;
+        }
         let r = compute(&probs, &outcomes, 10).unwrap();
         // Bin = floor(0.9 · 10) = 9. p_bar = 0.9, o_bar = 0.3 → gap 0.6.
         assert!((r.expected_calibration_error - 0.6).abs() < 1e-9);
@@ -166,7 +173,11 @@ mod tests {
         let outcomes = vec![1_u8; 5];
         let r = compute(&probs, &outcomes, 10).unwrap();
         // Most bins should be empty.
-        let empty_count = r.bin_diagnostics.iter().filter(|b| b.n_observations == 0).count();
+        let empty_count = r
+            .bin_diagnostics
+            .iter()
+            .filter(|b| b.n_observations == 0)
+            .count();
         assert!(empty_count >= 5);
     }
 

@@ -21,7 +21,10 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ElderSafeZoneReport {
@@ -31,11 +34,7 @@ pub struct ElderSafeZoneReport {
     pub k_multiplier: f64,
 }
 
-pub fn compute(
-    bars: &[Bar],
-    period: usize,
-    k_multiplier: f64,
-) -> ElderSafeZoneReport {
+pub fn compute(bars: &[Bar], period: usize, k_multiplier: f64) -> ElderSafeZoneReport {
     let n = bars.len();
     let mut report = ElderSafeZoneReport {
         long_stop: vec![None; n],
@@ -43,9 +42,15 @@ pub fn compute(
         period,
         k_multiplier,
     };
-    if period < 2 || !k_multiplier.is_finite() || k_multiplier <= 0.0
-        || n < period + 1 { return report; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite()) { return report; }
+    if period < 2 || !k_multiplier.is_finite() || k_multiplier <= 0.0 || n < period + 1 {
+        return report;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite())
+    {
+        return report;
+    }
     let mut pen_down = vec![0.0_f64; n];
     let mut pen_up = vec![0.0_f64; n];
     for i in 1..n {
@@ -59,7 +64,10 @@ pub fn compute(
     for i in 1..n {
         if let Some(avg) = avg_down[i - 1] {
             let raw = bars[i].low - k_multiplier * avg;
-            let chosen = match last_long { Some(p) => raw.max(p), None => raw };
+            let chosen = match last_long {
+                Some(p) => raw.max(p),
+                None => raw,
+            };
             last_long = Some(chosen);
             report.long_stop[i] = Some(chosen);
         }
@@ -69,7 +77,10 @@ pub fn compute(
     for i in 1..n {
         if let Some(avg) = avg_up[i - 1] {
             let raw = bars[i].high + k_multiplier * avg;
-            let chosen = match last_short { Some(p) => raw.min(p), None => raw };
+            let chosen = match last_short {
+                Some(p) => raw.min(p),
+                None => raw,
+            };
             last_short = Some(chosen);
             report.short_stop[i] = Some(chosen);
         }
@@ -80,7 +91,9 @@ pub fn compute(
 fn wilder_ema(series: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     let seed: f64 = series[..period].iter().sum::<f64>() / p_f;
     out[period - 1] = Some(seed);
@@ -96,7 +109,9 @@ fn wilder_ema(series: &[f64], period: usize) -> Vec<Option<f64>> {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64) -> Bar { Bar { high: h, low: l } }
+    fn b(h: f64, l: f64) -> Bar {
+        Bar { high: h, low: l }
+    }
 
     #[test]
     fn invalid_params_return_empty() {
@@ -130,7 +145,9 @@ mod tests {
 
     #[test]
     fn long_stop_ratchets_up_in_uptrend() {
-        let bars: Vec<_> = (0..30).map(|i| b(101.0 + i as f64, 99.0 + i as f64)).collect();
+        let bars: Vec<_> = (0..30)
+            .map(|i| b(101.0 + i as f64, 99.0 + i as f64))
+            .collect();
         let r = compute(&bars, 14, 3.0);
         let vals: Vec<f64> = r.long_stop.iter().flatten().copied().collect();
         for w in vals.windows(2) {
@@ -140,7 +157,9 @@ mod tests {
 
     #[test]
     fn short_stop_ratchets_down_in_downtrend() {
-        let bars: Vec<_> = (0..30).map(|i| b(200.0 - i as f64, 198.0 - i as f64)).collect();
+        let bars: Vec<_> = (0..30)
+            .map(|i| b(200.0 - i as f64, 198.0 - i as f64))
+            .collect();
         let r = compute(&bars, 14, 3.0);
         let vals: Vec<f64> = r.short_stop.iter().flatten().copied().collect();
         for w in vals.windows(2) {
@@ -151,12 +170,15 @@ mod tests {
     #[test]
     fn long_stop_below_low_short_stop_above_high() {
         let mut state: u64 = 42;
-        let bars: Vec<_> = (0..100).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let mid = 100.0 + ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 4.0;
-            b(mid + 1.0, mid - 1.0)
-        }).collect();
+        let bars: Vec<_> = (0..100)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let mid = 100.0 + ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 4.0;
+                b(mid + 1.0, mid - 1.0)
+            })
+            .collect();
         let r = compute(&bars, 14, 3.0);
         // raw_stop for long = low - k·avg ≤ low. But ratcheted stop can
         // climb ABOVE the current low if a prior low's stop was higher.

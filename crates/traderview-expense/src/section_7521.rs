@@ -278,7 +278,10 @@ mod tests {
         i.taxpayer_requested_recording_in_advance = true;
         let r = compute(&i);
         assert!(r.taxpayer_recording_rights_engaged);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7521(a)(1)") && n.contains("own expense")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7521(a)(1)") && n.contains("own expense")));
     }
 
     #[test]
@@ -301,7 +304,10 @@ mod tests {
         i.taxpayer_requested_recording_in_advance = true;
         let r = compute(&i);
         assert!(!r.taxpayer_recording_rights_engaged);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7521(a)(1)") && n.contains("only to")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7521(a)(1)") && n.contains("only to")));
     }
 
     #[test]
@@ -310,7 +316,10 @@ mod tests {
         i.irs_provided_advance_notice_of_irs_recording = true;
         let r = compute(&i);
         assert!(r.irs_recording_complies);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7521(a)(2)") && n.contains("advance notice")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7521(a)(2)") && n.contains("advance notice")));
     }
 
     #[test]
@@ -323,14 +332,20 @@ mod tests {
     fn explanation_of_rights_satisfied_for_tax_determination() {
         let r = compute(&base(InterviewType::TaxDetermination));
         assert!(r.explanation_of_rights_satisfied);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7521(b)(1)(A) audit process")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7521(b)(1)(A) audit process")));
     }
 
     #[test]
     fn explanation_of_rights_satisfied_for_collection() {
         let r = compute(&base(InterviewType::Collection));
         assert!(r.explanation_of_rights_satisfied);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7521(b)(1)(B) collection process")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7521(b)(1)(B) collection process")));
     }
 
     #[test]
@@ -339,14 +354,21 @@ mod tests {
         i.irs_explanation_of_rights_provided = false;
         let r = compute(&i);
         assert!(!r.explanation_of_rights_satisfied);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7521(b)(1)") && n.contains("failure may render")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7521(b)(1)") && n.contains("failure may render")));
     }
 
     #[test]
     fn explanation_of_rights_does_not_apply_to_administrative_summons() {
         let r = compute(&base(InterviewType::AdministrativeSummons));
         assert!(!r.explanation_of_rights_satisfied);
-        let exp_notes: Vec<_> = r.notes.iter().filter(|n| n.contains("§ 7521(b)(1)")).collect();
+        let exp_notes: Vec<_> = r
+            .notes
+            .iter()
+            .filter(|n| n.contains("§ 7521(b)(1)"))
+            .collect();
         assert!(exp_notes.is_empty());
     }
 
@@ -356,7 +378,10 @@ mod tests {
         i.taxpayer_has_power_of_attorney = true;
         let r = compute(&i);
         assert!(r.representation_right_engaged);
-        assert!(r.notes.iter().any(|n| n.contains("Form 2848") && n.contains("Treas. Reg. § 601.502")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Form 2848") && n.contains("Treas. Reg. § 601.502")));
     }
 
     #[test]
@@ -377,7 +402,10 @@ mod tests {
         let r = compute(&i);
         assert!(r.interview_suspension_required);
         assert!(r.interview_suspension_satisfied);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7521(c)") && n.contains("regardless of prior answers")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7521(c)") && n.contains("regardless of prior answers")));
     }
 
     #[test]
@@ -386,7 +414,10 @@ mod tests {
         i.taxpayer_requested_representation_consultation = true;
         let r = compute(&i);
         assert!(!r.interview_suspension_required);
-        assert!(r.notes.iter().any(|n| n.contains("does NOT apply") && n.contains("ADMINISTRATIVE SUMMONS")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("does NOT apply") && n.contains("ADMINISTRATIVE SUMMONS")));
     }
 
     #[test]
@@ -396,13 +427,19 @@ mod tests {
         i.unreasonable_delay_bypass_approved_by_supervisor = true;
         let r = compute(&i);
         assert!(!r.interview_suspension_required);
-        assert!(r.notes.iter().any(|n| n.contains("Immediate Supervisor consent")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Immediate Supervisor consent")));
     }
 
     #[test]
     fn criminal_investigation_warning_note_engaged() {
         let r = compute(&base(InterviewType::CriminalInvestigation));
-        assert!(r.notes.iter().any(|n| n.contains("criminal investigation") && n.contains("Jencks Act")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("criminal investigation") && n.contains("Jencks Act")));
     }
 
     #[test]
@@ -440,14 +477,25 @@ mod tests {
             let mut i = base(interview_type);
             i.taxpayer_requested_recording_in_advance = true;
             let r = compute(&i);
-            assert!(r.taxpayer_recording_rights_engaged, "{:?} should engage taxpayer recording right", interview_type);
+            assert!(
+                r.taxpayer_recording_rights_engaged,
+                "{:?} should engage taxpayer recording right",
+                interview_type
+            );
         }
-        let other_types = [InterviewType::AdministrativeSummons, InterviewType::CriminalInvestigation];
+        let other_types = [
+            InterviewType::AdministrativeSummons,
+            InterviewType::CriminalInvestigation,
+        ];
         for interview_type in other_types {
             let mut i = base(interview_type);
             i.taxpayer_requested_recording_in_advance = true;
             let r = compute(&i);
-            assert!(!r.taxpayer_recording_rights_engaged, "{:?} should NOT engage taxpayer recording right", interview_type);
+            assert!(
+                !r.taxpayer_recording_rights_engaged,
+                "{:?} should NOT engage taxpayer recording right",
+                interview_type
+            );
         }
     }
 

@@ -39,7 +39,9 @@ pub fn compute(closes: &[f64], period: usize, k: f64) -> BollingerOscReport {
     }
     for i in (period - 1)..n {
         let win = &closes[i + 1 - period..=i];
-        if win.iter().any(|x| !x.is_finite()) || !closes[i].is_finite() { continue; }
+        if win.iter().any(|x| !x.is_finite()) || !closes[i].is_finite() {
+            continue;
+        }
         let mean = win.iter().sum::<f64>() / period as f64;
         let var = win.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / period as f64;
         let stdev = var.max(0.0).sqrt();
@@ -89,7 +91,7 @@ mod tests {
             assert!(v.abs() < 1e-12);
         }
         for pb in r.percent_b.iter().take(30) {
-            assert!(pb.is_none());    // division by zero band width
+            assert!(pb.is_none()); // division by zero band width
         }
     }
 
@@ -111,7 +113,9 @@ mod tests {
 
     #[test]
     fn bandwidth_positive_after_real_movement() {
-        let closes: Vec<f64> = (0..50).map(|i| 100.0 + (i as f64 * 0.1).sin() * 5.0).collect();
+        let closes: Vec<f64> = (0..50)
+            .map(|i| 100.0 + (i as f64 * 0.1).sin() * 5.0)
+            .collect();
         let r = compute(&closes, 20, 2.0);
         let bw = r.bandwidth[49].unwrap();
         assert!(bw > 0.0);
@@ -119,7 +123,9 @@ mod tests {
 
     #[test]
     fn percent_b_in_typical_range_for_oscillating_input() {
-        let closes: Vec<f64> = (0..200).map(|i| 100.0 + (i as f64 * 0.07).sin() * 5.0).collect();
+        let closes: Vec<f64> = (0..200)
+            .map(|i| 100.0 + (i as f64 * 0.07).sin() * 5.0)
+            .collect();
         let r = compute(&closes, 20, 2.0);
         for pb in r.percent_b.iter().flatten() {
             // %B normally between -0.5 and 1.5 for oscillating data with ±2σ bands.
@@ -138,7 +144,9 @@ mod tests {
 
     #[test]
     fn middle_upper_lower_ordered() {
-        let closes: Vec<f64> = (0..50).map(|i| 100.0 + (i as f64 * 0.07).cos() * 5.0).collect();
+        let closes: Vec<f64> = (0..50)
+            .map(|i| 100.0 + (i as f64 * 0.07).cos() * 5.0)
+            .collect();
         let r = compute(&closes, 20, 2.0);
         for i in 0..50 {
             if let (Some(l), Some(m), Some(u)) = (r.lower[i], r.middle[i], r.upper[i]) {
@@ -149,7 +157,9 @@ mod tests {
 
     #[test]
     fn higher_k_yields_wider_bands() {
-        let closes: Vec<f64> = (0..50).map(|i| 100.0 + (i as f64 * 0.07).sin() * 5.0).collect();
+        let closes: Vec<f64> = (0..50)
+            .map(|i| 100.0 + (i as f64 * 0.07).sin() * 5.0)
+            .collect();
         let r_1k = compute(&closes, 20, 1.0);
         let r_2k = compute(&closes, 20, 2.0);
         let bw_1 = r_1k.bandwidth[49].unwrap();

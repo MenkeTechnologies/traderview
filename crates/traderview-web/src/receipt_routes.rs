@@ -46,8 +46,7 @@ pub fn router() -> Router<AppState> {
         .route("/:id/retry-ocr", post(retry_receipt_ocr))
         .route(
             "/:id/items/:idx",
-            axum::routing::patch(patch_receipt_item)
-                .delete(delete_receipt_item),
+            axum::routing::patch(patch_receipt_item).delete(delete_receipt_item),
         )
         .route("/:id/items", post(add_receipt_item))
         .route("/tax-rollup", get(tax_rollup))
@@ -195,7 +194,10 @@ async fn list_receipts(
     // a tracker so the row count + the data query share the same args.
     // status validation: only the known enum members pass through.
     let status_valid = q.status.as_deref().map(|s| {
-        matches!(s, "pending" | "matching" | "done" | "failed" | "needs_image")
+        matches!(
+            s,
+            "pending" | "matching" | "done" | "failed" | "needs_image"
+        )
     });
     if let Some(false) = status_valid {
         return Err(ApiError::BadRequest(format!(
@@ -500,12 +502,11 @@ async fn run_ocr(
             // proceed with the auto-guessed categories.
             if let Some(merchant_raw) = ocr.merchant.as_deref() {
                 if !merchant_raw.is_empty() {
-                    if let Ok(Some((user_id,))) = sqlx::query_as::<_, (Uuid,)>(
-                        "SELECT user_id FROM receipts WHERE id = $1",
-                    )
-                    .bind(receipt_id)
-                    .fetch_optional(&s.pool)
-                    .await
+                    if let Ok(Some((user_id,))) =
+                        sqlx::query_as::<_, (Uuid,)>("SELECT user_id FROM receipts WHERE id = $1")
+                            .bind(receipt_id)
+                            .fetch_optional(&s.pool)
+                            .await
                     {
                         let aliases = crate::merchant::load_aliases(&s.pool, user_id)
                             .await
@@ -547,8 +548,7 @@ async fn run_ocr(
             // migration 0041. Falls back to `{}` on serialize failure so
             // a malformed item never blocks the receipt row from
             // landing.
-            let extracted = serde_json::to_value(&ocr)
-                .unwrap_or_else(|_| serde_json::json!({}));
+            let extracted = serde_json::to_value(&ocr).unwrap_or_else(|_| serde_json::json!({}));
             sqlx::query(
                 "UPDATE receipts SET
                     ocr_status = 'done'::ocr_status_t,
@@ -634,12 +634,11 @@ async fn retry_receipt_ocr(
     user: AuthUser,
     Path(id): Path<Uuid>,
 ) -> Result<Json<Receipt>, ApiError> {
-    let row: Option<(Uuid, String, String)> = sqlx::query_as(
-        "SELECT user_id, storage_path, mime FROM receipts WHERE id = $1",
-    )
-    .bind(id)
-    .fetch_optional(&s.pool)
-    .await?;
+    let row: Option<(Uuid, String, String)> =
+        sqlx::query_as("SELECT user_id, storage_path, mime FROM receipts WHERE id = $1")
+            .bind(id)
+            .fetch_optional(&s.pool)
+            .await?;
     let (owner, rel_path, mime) = row.ok_or(ApiError::NotFound)?;
     if owner != user.id {
         return Err(ApiError::Forbidden);
@@ -965,11 +964,10 @@ async fn patch_receipt_meta(
     if body.merchant.is_none() && body.total.is_none() && body.date.is_none() {
         return Err(ApiError::BadRequest("no fields to update".into()));
     }
-    let owner: Option<Uuid> =
-        sqlx::query_scalar("SELECT user_id FROM receipts WHERE id = $1")
-            .bind(id)
-            .fetch_optional(&s.pool)
-            .await?;
+    let owner: Option<Uuid> = sqlx::query_scalar("SELECT user_id FROM receipts WHERE id = $1")
+        .bind(id)
+        .fetch_optional(&s.pool)
+        .await?;
     let owner = owner.ok_or(ApiError::NotFound)?;
     if owner != user.id {
         return Err(ApiError::Forbidden);
@@ -1081,12 +1079,11 @@ async fn patch_receipt_item(
         }
     }
 
-    let row: Option<(Uuid, Option<serde_json::Value>, Option<String>)> = sqlx::query_as(
-        "SELECT user_id, ocr_extracted, ocr_merchant FROM receipts WHERE id = $1",
-    )
-    .bind(receipt_id)
-    .fetch_optional(&s.pool)
-    .await?;
+    let row: Option<(Uuid, Option<serde_json::Value>, Option<String>)> =
+        sqlx::query_as("SELECT user_id, ocr_extracted, ocr_merchant FROM receipts WHERE id = $1")
+            .bind(receipt_id)
+            .fetch_optional(&s.pool)
+            .await?;
     let (owner, extracted, ocr_merchant) = row.ok_or(ApiError::NotFound)?;
     if owner != user.id {
         return Err(ApiError::Forbidden);
@@ -1277,12 +1274,11 @@ async fn add_receipt_item(
         )));
     }
 
-    let row: Option<(Uuid, Option<serde_json::Value>)> = sqlx::query_as(
-        "SELECT user_id, ocr_extracted FROM receipts WHERE id = $1",
-    )
-    .bind(receipt_id)
-    .fetch_optional(&s.pool)
-    .await?;
+    let row: Option<(Uuid, Option<serde_json::Value>)> =
+        sqlx::query_as("SELECT user_id, ocr_extracted FROM receipts WHERE id = $1")
+            .bind(receipt_id)
+            .fetch_optional(&s.pool)
+            .await?;
     let (owner, extracted) = row.ok_or(ApiError::NotFound)?;
     if owner != user.id {
         return Err(ApiError::Forbidden);
@@ -1340,12 +1336,11 @@ async fn delete_receipt_item(
     user: AuthUser,
     Path((receipt_id, idx)): Path<(Uuid, usize)>,
 ) -> Result<Json<serde_json::Value>, ApiError> {
-    let row: Option<(Uuid, Option<serde_json::Value>)> = sqlx::query_as(
-        "SELECT user_id, ocr_extracted FROM receipts WHERE id = $1",
-    )
-    .bind(receipt_id)
-    .fetch_optional(&s.pool)
-    .await?;
+    let row: Option<(Uuid, Option<serde_json::Value>)> =
+        sqlx::query_as("SELECT user_id, ocr_extracted FROM receipts WHERE id = $1")
+            .bind(receipt_id)
+            .fetch_optional(&s.pool)
+            .await?;
     let (owner, extracted) = row.ok_or(ApiError::NotFound)?;
     if owner != user.id {
         return Err(ApiError::Forbidden);
@@ -1410,21 +1405,20 @@ async fn bulk_attach(
     // Pull every unattached `done` receipt in scope. Streaming would be
     // nicer for 10k+ but `fetch_all` is simpler and a Receipt row is
     // small (~hundred bytes once we trim ocr_text out below).
-    let receipts: Vec<(Uuid, Option<String>, Option<Decimal>, Option<NaiveDate>)> =
-        sqlx::query_as(
-            "SELECT id, ocr_merchant, ocr_total, ocr_date
+    let receipts: Vec<(Uuid, Option<String>, Option<Decimal>, Option<NaiveDate>)> = sqlx::query_as(
+        "SELECT id, ocr_merchant, ocr_total, ocr_date
                FROM receipts
               WHERE user_id = $1
                 AND ocr_status = 'done'::ocr_status_t
                 AND transaction_id IS NULL
                 AND ($2::date IS NULL OR ocr_date >= $2)
                 AND ($3::date IS NULL OR ocr_date <= $3)",
-        )
-        .bind(user.id)
-        .bind(body.from)
-        .bind(body.to)
-        .fetch_all(&s.pool)
-        .await?;
+    )
+    .bind(user.id)
+    .bind(body.from)
+    .bind(body.to)
+    .fetch_all(&s.pool)
+    .await?;
 
     let mut result = BulkAttachResult {
         examined: receipts.len() as u32,
@@ -1541,13 +1535,11 @@ async fn bulk_delete(
     // intact; orphan blobs are GC'd by a background sweeper. For now
     // the orphan-cleanup is intentional dead weight — the
     // dedup-by-sha layer means re-upload reclaims them anyway.
-    let r = sqlx::query(
-        "DELETE FROM receipts WHERE user_id = $1 AND id = ANY($2)",
-    )
-    .bind(user.id)
-    .bind(&body.ids)
-    .execute(&s.pool)
-    .await?;
+    let r = sqlx::query("DELETE FROM receipts WHERE user_id = $1 AND id = ANY($2)")
+        .bind(user.id)
+        .bind(&body.ids)
+        .execute(&s.pool)
+        .await?;
     Ok(Json(BulkResult {
         affected: r.rows_affected() as u32,
     }))
@@ -1578,7 +1570,9 @@ struct BulkReocrBody {
     filter: String,
 }
 
-fn default_reocr_filter() -> String { "non_vision".into() }
+fn default_reocr_filter() -> String {
+    "non_vision".into()
+}
 
 #[derive(Serialize)]
 struct BulkReocrResult {
@@ -1807,7 +1801,9 @@ async fn receipts_by_merchant(
     let mut by_canon: HashMap<String, Acc> = HashMap::new();
 
     for (receipt_id, merchant_raw, extracted) in rows {
-        let Some(merchant_raw) = merchant_raw else { continue };
+        let Some(merchant_raw) = merchant_raw else {
+            continue;
+        };
         let Some(extracted) = extracted else { continue };
         let canonical = crate::merchant::canonicalize(&merchant_raw, &aliases);
         if canonical.is_empty() {
@@ -1905,7 +1901,7 @@ async fn receipts_by_merchant(
         .collect();
 
     // Sort by item_count DESC — the most-impactful groups first.
-    out.sort_by(|a, b| b.item_count.cmp(&a.item_count));
+    out.sort_by_key(|g| std::cmp::Reverse(g.item_count));
 
     Ok(Json(out))
 }
@@ -1951,8 +1947,13 @@ async fn receipts_search(
     // StopSel use literal tokens the UI escapes itself — never inject
     // raw HTML from Postgres into innerHTML.
     let rows: Vec<(
-        Uuid, Option<String>, Option<Decimal>, Option<NaiveDate>,
-        f32, String, Option<Uuid>,
+        Uuid,
+        Option<String>,
+        Option<Decimal>,
+        Option<NaiveDate>,
+        f32,
+        String,
+        Option<Uuid>,
     )> = sqlx::query_as(
         "SELECT id, ocr_merchant, ocr_total, ocr_date,
                 ts_rank(ocr_text_tsv, plainto_tsquery('english', $2)) AS rank,
@@ -1977,9 +1978,17 @@ async fn receipts_search(
 
     let hits = rows
         .into_iter()
-        .map(|(id, merchant, total, date, rank, snippet, transaction_id)| SearchHit {
-            id, merchant, total, date, rank, snippet, transaction_id,
-        })
+        .map(
+            |(id, merchant, total, date, rank, snippet, transaction_id)| SearchHit {
+                id,
+                merchant,
+                total,
+                date,
+                rank,
+                snippet,
+                transaction_id,
+            },
+        )
         .collect();
     Ok(Json(hits))
 }
@@ -2032,8 +2041,12 @@ async fn receipts_duplicates(
     let tol_dollars = Decimal::new(tol_cents, 2);
 
     let rows: Vec<(
-        Uuid, String, Option<String>, Option<NaiveDate>,
-        Option<Decimal>, Option<Uuid>,
+        Uuid,
+        String,
+        Option<String>,
+        Option<NaiveDate>,
+        Option<Decimal>,
+        Option<Uuid>,
     )> = sqlx::query_as(
         "SELECT id, filename, ocr_merchant, ocr_date, ocr_total, transaction_id
            FROM receipts
@@ -2066,8 +2079,14 @@ async fn receipts_duplicates(
     }
     let mut all: Vec<R> = Vec::with_capacity(rows.len());
     for (id, filename, merchant, date, total, txn) in rows {
-        let date = match date { Some(d) => d, None => continue };
-        let total = match total { Some(t) => t, None => continue };
+        let date = match date {
+            Some(d) => d,
+            None => continue,
+        };
+        let total = match total {
+            Some(t) => t,
+            None => continue,
+        };
         let raw = merchant.clone().unwrap_or_default();
         let canonical = if raw.is_empty() {
             continue;
@@ -2078,8 +2097,13 @@ async fn receipts_duplicates(
             continue;
         }
         all.push(R {
-            id, filename, merchant, date, total,
-            transaction_id: txn, canonical,
+            id,
+            filename,
+            merchant,
+            date,
+            total,
+            transaction_id: txn,
+            canonical,
         });
     }
 
@@ -2091,16 +2115,22 @@ async fn receipts_duplicates(
 
     let mut groups: Vec<DuplicateGroup> = Vec::new();
     for (canon, idxs) in by_canon {
-        if idxs.len() < 2 { continue; }
+        if idxs.len() < 2 {
+            continue;
+        }
         // Naive O(n²) — fine for ≤200 receipts per merchant; the
         // user-corpus shape rarely concentrates that hard.
         let mut consumed = vec![false; idxs.len()];
         for i in 0..idxs.len() {
-            if consumed[i] { continue; }
+            if consumed[i] {
+                continue;
+            }
             let mut hits: Vec<usize> = vec![idxs[i]];
             consumed[i] = true;
             for j in (i + 1)..idxs.len() {
-                if consumed[j] { continue; }
+                if consumed[j] {
+                    continue;
+                }
                 let a = &all[idxs[i]];
                 let b = &all[idxs[j]];
                 let date_ok = (a.date - b.date).num_days().abs() <= within_days;
@@ -2111,17 +2141,20 @@ async fn receipts_duplicates(
                 }
             }
             if hits.len() >= 2 {
-                let receipts = hits.iter().map(|&k| {
-                    let r = &all[k];
-                    DuplicateReceipt {
-                        id: r.id,
-                        filename: r.filename.clone(),
-                        ocr_merchant: r.merchant.clone(),
-                        ocr_date: Some(r.date),
-                        ocr_total: Some(r.total),
-                        transaction_id: r.transaction_id,
-                    }
-                }).collect::<Vec<_>>();
+                let receipts = hits
+                    .iter()
+                    .map(|&k| {
+                        let r = &all[k];
+                        DuplicateReceipt {
+                            id: r.id,
+                            filename: r.filename.clone(),
+                            ocr_merchant: r.merchant.clone(),
+                            ocr_date: Some(r.date),
+                            ocr_total: Some(r.total),
+                            transaction_id: r.transaction_id,
+                        }
+                    })
+                    .collect::<Vec<_>>();
                 let total_anchor = all[hits[0]].total;
                 groups.push(DuplicateGroup {
                     canonical_merchant: canon.clone(),
@@ -2133,7 +2166,7 @@ async fn receipts_duplicates(
     }
 
     // Largest duplicate groups first so the user attacks the highest-leverage cleanup.
-    groups.sort_by(|a, b| b.receipts.len().cmp(&a.receipts.len()));
+    groups.sort_by_key(|g| std::cmp::Reverse(g.receipts.len()));
     Ok(Json(groups))
 }
 
@@ -2173,9 +2206,7 @@ async fn bulk_patch_items(
     }
     if let Some(b) = body.tax_bucket.as_deref() {
         if !matches!(b, "business" | "rental" | "personal" | "unclassified") {
-            return Err(ApiError::BadRequest(format!(
-                "invalid tax_bucket: {b}"
-            )));
+            return Err(ApiError::BadRequest(format!("invalid tax_bucket: {b}")));
         }
     }
 
@@ -2194,13 +2225,13 @@ async fn bulk_patch_items(
     let mut affected: u32 = 0;
     for (rid, extracted) in rows {
         let mut ex = extracted.unwrap_or_else(|| serde_json::json!({}));
-        let items = ex
-            .get_mut("items")
-            .and_then(|v| v.as_array_mut());
+        let items = ex.get_mut("items").and_then(|v| v.as_array_mut());
         let Some(items) = items else { continue };
         let mut changed = false;
         for it in items.iter_mut() {
-            let Some(obj) = it.as_object_mut() else { continue };
+            let Some(obj) = it.as_object_mut() else {
+                continue;
+            };
             if let Some(c) = body.category.as_ref() {
                 obj.insert("category".into(), serde_json::Value::String(c.clone()));
                 changed = true;
@@ -2302,19 +2333,19 @@ fn schedule_c_line(category: &str) -> Option<&'static str> {
         "advertising" => "8",
         "vehicle_fuel" | "vehicle_maintenance" => "9",
         "contract_labor" => "11",
-        "office_equipment_software" => "13",   // depreciable; line 13
+        "office_equipment_software" => "13", // depreciable; line 13
         "insurance" => "15",
         "professional_services" => "17",
         "office_supplies" => "18",
-        "rent_lease" => "20",                  // 20a vehicles / 20b other; collapsed
+        "rent_lease" => "20", // 20a vehicles / 20b other; collapsed
         "repairs_maintenance" => "21",
         "supplies_cogs" => "22",
         "taxes_licenses_dues" => "23",
         "travel_transport" | "travel_lodging" => "24a",
-        "meals" => "24b",                      // 50% deductible — line 24b
+        "meals" => "24b", // 50% deductible — line 24b
         "utilities" => "25",
         "wages_benefits" => "26",
-        "bank_fees" | "education_training" => "27a",   // Other Expenses
+        "bank_fees" | "education_training" => "27a", // Other Expenses
         _ => return None,
     })
 }
@@ -2325,18 +2356,16 @@ fn schedule_c_line(category: &str) -> Option<&'static str> {
 fn schedule_e_line(category: &str) -> Option<&'static str> {
     Some(match category {
         "advertising" => "5",
-        "vehicle_fuel" | "vehicle_maintenance" |
-        "travel_transport" | "travel_lodging" => "6",        // Auto and travel
-        "repairs_maintenance" => "14",                       // Repairs (or 7 Cleaning)
+        "vehicle_fuel" | "vehicle_maintenance" | "travel_transport" | "travel_lodging" => "6", // Auto and travel
+        "repairs_maintenance" => "14", // Repairs (or 7 Cleaning)
         "insurance" => "9",
         "professional_services" => "10",
-        "rent_lease" => "11",                                // Management fees
-        "supplies_cogs" | "office_supplies" => "15",         // Supplies
+        "rent_lease" => "11",                        // Management fees
+        "supplies_cogs" | "office_supplies" => "15", // Supplies
         "taxes_licenses_dues" => "16",
         "utilities" => "17",
-        "office_equipment_software" => "18",                 // Depreciation
-        "meals" | "contract_labor" | "wages_benefits" |
-        "bank_fees" | "education_training" => "19",          // Other
+        "office_equipment_software" => "18", // Depreciation
+        "meals" | "contract_labor" | "wages_benefits" | "bank_fees" | "education_training" => "19", // Other
         _ => return None,
     })
 }
@@ -2349,7 +2378,9 @@ async fn tax_rollup(
     // Default window: current calendar year.
     let now = Utc::now().date_naive();
     let year = now.year();
-    let from = q.from.unwrap_or_else(|| NaiveDate::from_ymd_opt(year, 1, 1).unwrap());
+    let from = q
+        .from
+        .unwrap_or_else(|| NaiveDate::from_ymd_opt(year, 1, 1).unwrap());
     let to = q.to.unwrap_or(now);
 
     // Pull receipts in window with their extracted JSONB blob.
@@ -2380,15 +2411,19 @@ async fn tax_rollup(
     let mut personal: std::collections::BTreeMap<String, Decimal> = Default::default();
     let mut unclassified: std::collections::BTreeMap<String, Decimal> = Default::default();
     // property_id → category → total
-    let mut rental: std::collections::BTreeMap<Option<Uuid>,
-        std::collections::BTreeMap<String, Decimal>> = Default::default();
+    let mut rental: std::collections::BTreeMap<
+        Option<Uuid>,
+        std::collections::BTreeMap<String, Decimal>,
+    > = Default::default();
 
     let mut receipts_counted: u32 = 0;
     let mut items_counted: u32 = 0;
 
     for (_id, _date, extracted) in rows {
         let Some(ext) = extracted else { continue };
-        let Some(items) = ext.get("items").and_then(|v| v.as_array()) else { continue };
+        let Some(items) = ext.get("items").and_then(|v| v.as_array()) else {
+            continue;
+        };
         if items.is_empty() {
             continue;
         }
@@ -2423,11 +2458,7 @@ async fn tax_rollup(
                         .get("rental_property_id")
                         .and_then(|v| v.as_str())
                         .and_then(|s| Uuid::parse_str(s).ok());
-                    *rental
-                        .entry(prop_id)
-                        .or_default()
-                        .entry(cat)
-                        .or_default() += total;
+                    *rental.entry(prop_id).or_default().entry(cat).or_default() += total;
                 }
                 _ => *unclassified.entry(cat).or_default() += total,
             }
@@ -2445,15 +2476,26 @@ async fn tax_rollup(
         let mut categories: Vec<CategoryTotal> = map
             .into_iter()
             .map(|(category, total)| CategoryTotal {
-                schedule_c_line: if with_c { schedule_c_line(&category) } else { None },
-                schedule_e_line: if with_e { schedule_e_line(&category) } else { None },
+                schedule_c_line: if with_c {
+                    schedule_c_line(&category)
+                } else {
+                    None
+                },
+                schedule_e_line: if with_e {
+                    schedule_e_line(&category)
+                } else {
+                    None
+                },
                 category,
                 total,
             })
             .collect();
-        categories.sort_by(|a, b| b.total.cmp(&a.total));
+        categories.sort_by_key(|c| std::cmp::Reverse(c.total));
         let grand_total = categories.iter().map(|c| c.total).sum();
-        BucketRollup { grand_total, categories }
+        BucketRollup {
+            grand_total,
+            categories,
+        }
     }
 
     let rental_properties: Vec<PropertyRollup> = rental
@@ -2468,7 +2510,7 @@ async fn tax_rollup(
                     total,
                 })
                 .collect();
-            categories.sort_by(|a, b| b.total.cmp(&a.total));
+            categories.sort_by_key(|c| std::cmp::Reverse(c.total));
             let grand_total = categories.iter().map(|c| c.total).sum();
             PropertyRollup {
                 property_name: prop_id.and_then(|id| prop_name.get(&id).cloned()),
@@ -2512,14 +2554,18 @@ async fn tax_rollup_csv(
     // Re-use the JSON handler's body — saves duplicating the aggregation
     // loop. We rebuild the response with `tax_rollup`'s logic by calling
     // it via direct fn invocation.
-    let rollup = match tax_rollup(State(s.clone()), user.clone(), axum::extract::Query(q)).await? {
-        Json(v) => v,
-    };
+    let Json(rollup) = tax_rollup(State(s.clone()), user, axum::extract::Query(q)).await?;
 
     let mut csv = String::new();
     csv.push_str("bucket,schedule,line,category,property,total\n");
 
-    fn write_cat(csv: &mut String, bucket: &str, schedule: &str, ct: &CategoryTotal, property: &str) {
+    fn write_cat(
+        csv: &mut String,
+        bucket: &str,
+        schedule: &str,
+        ct: &CategoryTotal,
+        property: &str,
+    ) {
         let line = match (schedule, ct.schedule_c_line, ct.schedule_e_line) {
             ("C", Some(l), _) => l,
             ("E", _, Some(l)) => l,
@@ -2623,13 +2669,12 @@ async fn tax_rollup_pdf(
     user: AuthUser,
     axum::extract::Query(q): axum::extract::Query<PdfRollupQ>,
 ) -> Result<Response, ApiError> {
-    let rollup_query = RollupQ { from: q.from, to: q.to };
-    let Json(rollup) = tax_rollup(
-        State(s.clone()),
-        user,
-        axum::extract::Query(rollup_query),
-    )
-    .await?;
+    let rollup_query = RollupQ {
+        from: q.from,
+        to: q.to,
+    };
+    let Json(rollup) =
+        tax_rollup(State(s.clone()), user, axum::extract::Query(rollup_query)).await?;
     let want_detail = q.detail.unwrap_or(0) != 0;
     let detail = if want_detail {
         // Pull transactions for the same window. Capped at 5000 rows
@@ -2682,12 +2727,8 @@ fn render_tax_pdf(
     detail: Option<&Vec<(DateTime<Utc>, String, Decimal, Option<String>)>>,
 ) -> Vec<u8> {
     use printpdf::*;
-    let (doc, page1, layer1) = PdfDocument::new(
-        "TraderView Tax Rollup",
-        Mm(215.9),
-        Mm(279.4),
-        "Layer 1",
-    );
+    let (doc, page1, layer1) =
+        PdfDocument::new("TraderView Tax Rollup", Mm(215.9), Mm(279.4), "Layer 1");
     let font = doc.add_builtin_font(BuiltinFont::Helvetica).unwrap();
     let font_b = doc.add_builtin_font(BuiltinFont::HelveticaBold).unwrap();
     let mono = doc.add_builtin_font(BuiltinFont::Courier).unwrap();
@@ -2728,18 +2769,18 @@ fn render_tax_pdf(
     for (i, (label, total)) in stats.iter().enumerate() {
         let x = left + (i as f32) * 46.0;
         layer.use_text(*label, 8.0, Mm(x), Mm(y), &font);
-        layer.use_text(
-            format!("${total:.2}"),
-            12.0,
-            Mm(x),
-            Mm(y - 5.0),
-            &mono,
-        );
+        layer.use_text(format!("${total:.2}"), 12.0, Mm(x), Mm(y - 5.0), &mono);
     }
     y -= 14.0;
 
     // ── Schedule C section ───────────────────────────────────────────
-    layer.use_text("SCHEDULE C — BUSINESS BREAKDOWN", 10.0, Mm(left), Mm(y), &font_b);
+    layer.use_text(
+        "SCHEDULE C — BUSINESS BREAKDOWN",
+        10.0,
+        Mm(left),
+        Mm(y),
+        &font_b,
+    );
     y -= 6.0;
     if rollup.business.categories.is_empty() {
         layer.use_text("(none in range)", 9.0, Mm(left), Mm(y), &font);
@@ -2752,12 +2793,14 @@ fn render_tax_pdf(
         y -= 4.0;
         for c in &rollup.business.categories {
             if y < 25.0 {
-                let (next_page, next_layer) =
-                    doc.add_page(Mm(215.9), Mm(279.4), "next");
+                let (next_page, next_layer) = doc.add_page(Mm(215.9), Mm(279.4), "next");
                 layer = doc.get_page(next_page).get_layer(next_layer);
                 y = 265.0;
             }
-            let line = c.schedule_c_line.map(|l| format!("C{l}")).unwrap_or_default();
+            let line = c
+                .schedule_c_line
+                .map(|l| format!("C{l}"))
+                .unwrap_or_default();
             layer.use_text(line, 9.0, Mm(left), Mm(y), &mono);
             layer.use_text(&c.category, 9.0, Mm(left + 16.0), Mm(y), &font);
             layer.use_text(
@@ -2778,7 +2821,13 @@ fn render_tax_pdf(
         layer = doc.get_page(np).get_layer(nl);
         y = 265.0;
     }
-    layer.use_text("SCHEDULE E — RENTAL BREAKDOWN", 10.0, Mm(left), Mm(y), &font_b);
+    layer.use_text(
+        "SCHEDULE E — RENTAL BREAKDOWN",
+        10.0,
+        Mm(left),
+        Mm(y),
+        &font_b,
+    );
     y -= 6.0;
     if rollup.rental.properties.is_empty() {
         layer.use_text("(none in range)", 9.0, Mm(left), Mm(y), &font);
@@ -2807,7 +2856,10 @@ fn render_tax_pdf(
                     layer = doc.get_page(np).get_layer(nl);
                     y = 265.0;
                 }
-                let line = c.schedule_e_line.map(|l| format!("E{l}")).unwrap_or_default();
+                let line = c
+                    .schedule_e_line
+                    .map(|l| format!("E{l}"))
+                    .unwrap_or_default();
                 layer.use_text(line, 9.0, Mm(left + 4.0), Mm(y), &mono);
                 layer.use_text(&c.category, 9.0, Mm(left + 20.0), Mm(y), &font);
                 layer.use_text(
@@ -2864,12 +2916,9 @@ fn render_tax_pdf(
     }
 
     let mut buf = Vec::with_capacity(64 * 1024);
-    doc.save(&mut std::io::BufWriter::new(&mut buf))
-        .unwrap_or_else(|_| {
-            // Save failure → return an empty PDF rather than a 500. The
-            // browser will render nothing; the rollup JSON endpoint
-            // remains the source of truth.
-        });
+    // Save failure → return an empty PDF rather than a 500. The browser
+    // renders nothing; the rollup JSON endpoint stays the source of truth.
+    let _ = doc.save(&mut std::io::BufWriter::new(&mut buf));
     buf
 }
 
@@ -2930,11 +2979,20 @@ async fn ocr_models_status(
                 // whichever's non-empty.
                 let s1 = String::from_utf8_lossy(&o.stdout);
                 let s2 = String::from_utf8_lossy(&o.stderr);
-                let first = s1.lines().next().or_else(|| s2.lines().next())
+                let first = s1
+                    .lines()
+                    .next()
+                    .or_else(|| s2.lines().next())
                     .map(|s| s.trim().to_string())
                     .unwrap_or_default();
-                if !first.is_empty() { Some(first) } else { None }
-            } else { None }
+                if !first.is_empty() {
+                    Some(first)
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
         })
         .unwrap_or_else(|| "not installed".to_string());
     let ready = version != "not installed";
@@ -3009,7 +3067,8 @@ async fn ocr_models_download(
         "tesseract is installed and ready — no download required".to_string()
     } else {
         "tesseract not on PATH — install with `brew install tesseract` (macOS) or \
-         `apt install tesseract-ocr tesseract-ocr-eng` (Linux)".to_string()
+         `apt install tesseract-ocr tesseract-ocr-eng` (Linux)"
+            .to_string()
     };
     Ok(Json(OcrModelsDownloadResult {
         bytes_total: 0,

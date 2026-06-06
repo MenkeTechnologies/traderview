@@ -122,10 +122,9 @@ pub fn compute(input: &Section475c2Input) -> Section475c2Result {
     // §475(c)(2) two-prong dealer test (both prongs gated on
     // having customers).
     let customer_prong_raw = input.has_customers
-        && (input.regularly_purchases_from_customers
-            || input.regularly_sells_to_customers);
-    let inventory_prong = input.has_customers
-        && input.regularly_offers_derivative_positions_to_customers;
+        && (input.regularly_purchases_from_customers || input.regularly_sells_to_customers);
+    let inventory_prong =
+        input.has_customers && input.regularly_offers_derivative_positions_to_customers;
 
     // Negligible-sales exception: regularly purchases BUT negligible
     // sales → not a dealer unless inventory or election.
@@ -144,9 +143,9 @@ pub fn compute(input: &Section475c2Input) -> Section475c2Result {
         || input.accounts_as_inventory_under_section_471;
 
     // Trader prongs (only meaningful if not a dealer).
-    let short_term_motive =
-        input.primary_income_source == PrimaryIncomeSource::ShortTermPriceSwings
-            && input.average_holding_period_days <= SHORT_TERM_HOLDING_PERIOD_CEILING;
+    let short_term_motive = input.primary_income_source
+        == PrimaryIncomeSource::ShortTermPriceSwings
+        && input.average_holding_period_days <= SHORT_TERM_HOLDING_PERIOD_CEILING;
     let substantial_activity = input.trades_per_year >= SUBSTANTIAL_ACTIVITY_TRADES_FLOOR;
     let continuous_regular = input.trading_days_per_year >= CONTINUOUS_REGULAR_TRADING_DAYS_FLOOR;
 

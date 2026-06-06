@@ -353,10 +353,26 @@ mod tests {
     #[test]
     fn cap_amounts_truth_table_2x2() {
         for (taxpayer, transaction, expected_cap) in [
-            (TaxpayerType::NaturalPerson, TransactionType::Listed, 10_000_000_i64),
-            (TaxpayerType::Entity, TransactionType::Listed, 20_000_000_i64),
-            (TaxpayerType::NaturalPerson, TransactionType::OtherReportable, 1_000_000_i64),
-            (TaxpayerType::Entity, TransactionType::OtherReportable, 5_000_000_i64),
+            (
+                TaxpayerType::NaturalPerson,
+                TransactionType::Listed,
+                10_000_000_i64,
+            ),
+            (
+                TaxpayerType::Entity,
+                TransactionType::Listed,
+                20_000_000_i64,
+            ),
+            (
+                TaxpayerType::NaturalPerson,
+                TransactionType::OtherReportable,
+                1_000_000_i64,
+            ),
+            (
+                TaxpayerType::Entity,
+                TransactionType::OtherReportable,
+                5_000_000_i64,
+            ),
         ] {
             let mut i = np_listed_base();
             i.taxpayer_type = taxpayer;

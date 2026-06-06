@@ -299,11 +299,10 @@ mod tests {
         i.contractual_lien_in_conspicuous_bold = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("§ 54.043") && v.contains("conspicuous bold"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 54.043") && v.contains("conspicuous bold")));
     }
 
     #[test]
@@ -343,11 +342,10 @@ mod tests {
         i.court_order_obtained = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("California") && v.contains("unlawful"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("California") && v.contains("unlawful")));
     }
 
     #[test]
@@ -369,11 +367,10 @@ mod tests {
         i.property_is_livelihood_or_household_necessary = true;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("§ 1861(a)") && v.contains("livelihood"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1861(a)") && v.contains("livelihood")));
     }
 
     #[test]
@@ -433,11 +430,10 @@ mod tests {
         i.judgment_for_unpaid_rent_obtained = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("Illinois") && v.contains("judgment"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("Illinois") && v.contains("judgment")));
     }
 
     #[test]
@@ -574,11 +570,19 @@ mod tests {
     #[test]
     fn citation_pins_authority_per_regime() {
         assert!(check(&base(Regime::Texas)).citation.contains("§ 54.041(a)"));
-        assert!(check(&base(Regime::California)).citation.contains("§ 1861(a)"));
-        assert!(check(&base(Regime::NewYork)).citation.contains("General Obligations"));
-        assert!(check(&base(Regime::Massachusetts)).citation.contains("UCC Article 9"));
+        assert!(check(&base(Regime::California))
+            .citation
+            .contains("§ 1861(a)"));
+        assert!(check(&base(Regime::NewYork))
+            .citation
+            .contains("General Obligations"));
+        assert!(check(&base(Regime::Massachusetts))
+            .citation
+            .contains("UCC Article 9"));
         assert!(check(&base(Regime::Illinois)).citation.contains("735 ILCS"));
-        assert!(check(&base(Regime::Default)).citation.contains("common-law"));
+        assert!(check(&base(Regime::Default))
+            .citation
+            .contains("common-law"));
     }
 
     #[test]

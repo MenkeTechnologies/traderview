@@ -139,9 +139,7 @@ pub fn compute(input: &Section25DInput) -> Section25DResult {
     }
 
     // Battery-storage ≥ 3 kWh capacity test (§ 25D(d)(6)).
-    if input.property_type == QualifyingProperty::BatteryStorage
-        && input.battery_capacity_kwh < 3
-    {
+    if input.property_type == QualifyingProperty::BatteryStorage && input.battery_capacity_kwh < 3 {
         return Section25DResult {
             credit_eligible: false,
             expenditure_after_obbba_termination: false,
@@ -235,7 +233,15 @@ mod tests {
     fn solar_panels_30_percent_credit() {
         // $30K solar → $9K credit, $100K tax liability → fully usable.
         let r = compute(&input(
-            2024, 6, 1, 30_000_00, QualifyingProperty::SolarElectric, 0, true, 100_000_00, 0,
+            2024,
+            6,
+            1,
+            30_000_00,
+            QualifyingProperty::SolarElectric,
+            0,
+            true,
+            100_000_00,
+            0,
         ));
         assert!(r.credit_eligible);
         assert_eq!(r.gross_credit_cents, 9_000_00);
@@ -246,7 +252,15 @@ mod tests {
     #[test]
     fn obbba_termination_after_2025_12_31() {
         let r = compute(&input(
-            2026, 1, 1, 30_000_00, QualifyingProperty::SolarElectric, 0, true, 100_000_00, 0,
+            2026,
+            1,
+            1,
+            30_000_00,
+            QualifyingProperty::SolarElectric,
+            0,
+            true,
+            100_000_00,
+            0,
         ));
         assert!(!r.credit_eligible);
         assert!(r.expenditure_after_obbba_termination);
@@ -257,7 +271,15 @@ mod tests {
     #[test]
     fn at_2025_12_31_boundary_still_eligible() {
         let r = compute(&input(
-            2025, 12, 31, 30_000_00, QualifyingProperty::SolarElectric, 0, true, 100_000_00, 0,
+            2025,
+            12,
+            31,
+            30_000_00,
+            QualifyingProperty::SolarElectric,
+            0,
+            true,
+            100_000_00,
+            0,
         ));
         assert!(r.credit_eligible);
         assert!(!r.expenditure_after_obbba_termination);
@@ -266,7 +288,15 @@ mod tests {
     #[test]
     fn one_day_after_cutoff_terminated() {
         let r = compute(&input(
-            2026, 1, 1, 30_000_00, QualifyingProperty::SolarElectric, 0, true, 100_000_00, 0,
+            2026,
+            1,
+            1,
+            30_000_00,
+            QualifyingProperty::SolarElectric,
+            0,
+            true,
+            100_000_00,
+            0,
         ));
         assert!(!r.credit_eligible);
     }
@@ -274,7 +304,15 @@ mod tests {
     #[test]
     fn pure_rental_no_residence_requirement_fail() {
         let r = compute(&input(
-            2024, 6, 1, 30_000_00, QualifyingProperty::SolarElectric, 0, false, 100_000_00, 0,
+            2024,
+            6,
+            1,
+            30_000_00,
+            QualifyingProperty::SolarElectric,
+            0,
+            false,
+            100_000_00,
+            0,
         ));
         assert!(!r.credit_eligible);
         assert!(!r.residence_requirement_met);
@@ -285,7 +323,15 @@ mod tests {
     #[test]
     fn biomass_fuel_no_longer_qualifying() {
         let r = compute(&input(
-            2024, 6, 1, 5_000_00, QualifyingProperty::BiomassFuel, 0, true, 100_000_00, 0,
+            2024,
+            6,
+            1,
+            5_000_00,
+            QualifyingProperty::BiomassFuel,
+            0,
+            true,
+            100_000_00,
+            0,
         ));
         assert!(!r.credit_eligible);
         assert!(r.citation.contains("biomass"));
@@ -295,7 +341,15 @@ mod tests {
     #[test]
     fn battery_storage_above_3_kwh_qualifies() {
         let r = compute(&input(
-            2024, 6, 1, 10_000_00, QualifyingProperty::BatteryStorage, 13, true, 50_000_00, 0,
+            2024,
+            6,
+            1,
+            10_000_00,
+            QualifyingProperty::BatteryStorage,
+            13,
+            true,
+            50_000_00,
+            0,
         ));
         assert!(r.credit_eligible);
         assert_eq!(r.gross_credit_cents, 3_000_00);
@@ -304,7 +358,15 @@ mod tests {
     #[test]
     fn battery_storage_at_3_kwh_boundary_qualifies() {
         let r = compute(&input(
-            2024, 6, 1, 10_000_00, QualifyingProperty::BatteryStorage, 3, true, 50_000_00, 0,
+            2024,
+            6,
+            1,
+            10_000_00,
+            QualifyingProperty::BatteryStorage,
+            3,
+            true,
+            50_000_00,
+            0,
         ));
         assert!(r.credit_eligible);
     }
@@ -312,7 +374,15 @@ mod tests {
     #[test]
     fn battery_storage_below_3_kwh_fails() {
         let r = compute(&input(
-            2024, 6, 1, 10_000_00, QualifyingProperty::BatteryStorage, 2, true, 50_000_00, 0,
+            2024,
+            6,
+            1,
+            10_000_00,
+            QualifyingProperty::BatteryStorage,
+            2,
+            true,
+            50_000_00,
+            0,
         ));
         assert!(!r.credit_eligible);
         assert!(r.citation.contains("§ 25D(d)(6)"));
@@ -323,7 +393,15 @@ mod tests {
     fn carryforward_when_credit_exceeds_tax_liability() {
         // $30K solar → $9K credit. Tax liability $5K → $4K carries forward.
         let r = compute(&input(
-            2024, 6, 1, 30_000_00, QualifyingProperty::SolarElectric, 0, true, 5_000_00, 0,
+            2024,
+            6,
+            1,
+            30_000_00,
+            QualifyingProperty::SolarElectric,
+            0,
+            true,
+            5_000_00,
+            0,
         ));
         assert_eq!(r.gross_credit_cents, 9_000_00);
         assert_eq!(r.current_year_credit_used_cents, 5_000_00);
@@ -335,7 +413,15 @@ mod tests {
         // $20K solar this year = $6K. Prior carryforward $3K. Total avail
         // $9K. Tax liability $10K → all $9K used; no remaining carryforward.
         let r = compute(&input(
-            2024, 6, 1, 20_000_00, QualifyingProperty::SolarElectric, 0, true, 10_000_00, 3_000_00,
+            2024,
+            6,
+            1,
+            20_000_00,
+            QualifyingProperty::SolarElectric,
+            0,
+            true,
+            10_000_00,
+            3_000_00,
         ));
         assert_eq!(r.gross_credit_cents, 6_000_00);
         assert_eq!(r.current_year_credit_used_cents, 9_000_00);
@@ -347,7 +433,15 @@ mod tests {
         // 2026 post-termination expenditure: no new credit but prior
         // carryforward is preserved (use against current tax).
         let r = compute(&input(
-            2026, 1, 1, 30_000_00, QualifyingProperty::SolarElectric, 0, true, 100_000_00, 5_000_00,
+            2026,
+            1,
+            1,
+            30_000_00,
+            QualifyingProperty::SolarElectric,
+            0,
+            true,
+            100_000_00,
+            5_000_00,
         ));
         assert!(!r.credit_eligible);
         // The compute function for termination returns the unused
@@ -360,7 +454,15 @@ mod tests {
     #[test]
     fn solar_water_heater_qualifies() {
         let r = compute(&input(
-            2024, 6, 1, 5_000_00, QualifyingProperty::SolarWaterHeater, 0, true, 50_000_00, 0,
+            2024,
+            6,
+            1,
+            5_000_00,
+            QualifyingProperty::SolarWaterHeater,
+            0,
+            true,
+            50_000_00,
+            0,
         ));
         assert!(r.credit_eligible);
         assert_eq!(r.gross_credit_cents, 1_500_00);
@@ -369,7 +471,15 @@ mod tests {
     #[test]
     fn geothermal_heat_pump_qualifies() {
         let r = compute(&input(
-            2024, 6, 1, 20_000_00, QualifyingProperty::GeothermalHeatPump, 0, true, 100_000_00, 0,
+            2024,
+            6,
+            1,
+            20_000_00,
+            QualifyingProperty::GeothermalHeatPump,
+            0,
+            true,
+            100_000_00,
+            0,
         ));
         assert!(r.credit_eligible);
         assert_eq!(r.gross_credit_cents, 6_000_00);
@@ -378,7 +488,15 @@ mod tests {
     #[test]
     fn small_wind_energy_qualifies() {
         let r = compute(&input(
-            2024, 6, 1, 15_000_00, QualifyingProperty::SmallWindEnergy, 0, true, 100_000_00, 0,
+            2024,
+            6,
+            1,
+            15_000_00,
+            QualifyingProperty::SmallWindEnergy,
+            0,
+            true,
+            100_000_00,
+            0,
         ));
         assert!(r.credit_eligible);
         assert_eq!(r.gross_credit_cents, 4_500_00);
@@ -387,7 +505,15 @@ mod tests {
     #[test]
     fn fuel_cell_qualifies() {
         let r = compute(&input(
-            2024, 6, 1, 10_000_00, QualifyingProperty::FuelCell, 0, true, 100_000_00, 0,
+            2024,
+            6,
+            1,
+            10_000_00,
+            QualifyingProperty::FuelCell,
+            0,
+            true,
+            100_000_00,
+            0,
         ));
         assert!(r.credit_eligible);
         assert_eq!(r.gross_credit_cents, 3_000_00);
@@ -396,7 +522,15 @@ mod tests {
     #[test]
     fn zero_cost_no_credit() {
         let r = compute(&input(
-            2024, 6, 1, 0, QualifyingProperty::SolarElectric, 0, true, 100_000_00, 0,
+            2024,
+            6,
+            1,
+            0,
+            QualifyingProperty::SolarElectric,
+            0,
+            true,
+            100_000_00,
+            0,
         ));
         assert!(r.credit_eligible);
         assert_eq!(r.gross_credit_cents, 0);
@@ -405,7 +539,15 @@ mod tests {
     #[test]
     fn negative_inputs_clamped() {
         let r = compute(&input(
-            2024, 6, 1, -1000, QualifyingProperty::SolarElectric, 0, true, -1, -1,
+            2024,
+            6,
+            1,
+            -1000,
+            QualifyingProperty::SolarElectric,
+            0,
+            true,
+            -1,
+            -1,
         ));
         assert_eq!(r.gross_credit_cents, 0);
         assert_eq!(r.current_year_credit_used_cents, 0);
@@ -415,7 +557,15 @@ mod tests {
     fn termination_check_precedence_over_residence() {
         // Post-termination + no-residence: termination check fires first.
         let r = compute(&input(
-            2026, 1, 1, 30_000_00, QualifyingProperty::SolarElectric, 0, false, 100_000_00, 0,
+            2026,
+            1,
+            1,
+            30_000_00,
+            QualifyingProperty::SolarElectric,
+            0,
+            false,
+            100_000_00,
+            0,
         ));
         assert!(r.expenditure_after_obbba_termination);
         assert!(r.citation.contains("TERMINATED"));
@@ -424,24 +574,56 @@ mod tests {
     #[test]
     fn citations_pin_correct_authorities() {
         let solar = compute(&input(
-            2024, 6, 1, 30_000_00, QualifyingProperty::SolarElectric, 0, true, 100_000_00, 0,
+            2024,
+            6,
+            1,
+            30_000_00,
+            QualifyingProperty::SolarElectric,
+            0,
+            true,
+            100_000_00,
+            0,
         ));
         assert!(solar.citation.contains("§ 25D(a)"));
         assert!(solar.citation.contains("§ 25D(c)"));
         assert!(solar.citation.contains("OBBBA § 70426"));
 
         let post = compute(&input(
-            2026, 1, 1, 30_000_00, QualifyingProperty::SolarElectric, 0, true, 100_000_00, 0,
+            2026,
+            1,
+            1,
+            30_000_00,
+            QualifyingProperty::SolarElectric,
+            0,
+            true,
+            100_000_00,
+            0,
         ));
         assert!(post.citation.contains("OBBBA § 70426"));
 
         let no_residence = compute(&input(
-            2024, 6, 1, 30_000_00, QualifyingProperty::SolarElectric, 0, false, 100_000_00, 0,
+            2024,
+            6,
+            1,
+            30_000_00,
+            QualifyingProperty::SolarElectric,
+            0,
+            false,
+            100_000_00,
+            0,
         ));
         assert!(no_residence.citation.contains("§ 25D(d)"));
 
         let small_battery = compute(&input(
-            2024, 6, 1, 5_000_00, QualifyingProperty::BatteryStorage, 1, true, 50_000_00, 0,
+            2024,
+            6,
+            1,
+            5_000_00,
+            QualifyingProperty::BatteryStorage,
+            1,
+            true,
+            50_000_00,
+            0,
         ));
         assert!(small_battery.citation.contains("§ 25D(d)(6)"));
     }
@@ -449,13 +631,37 @@ mod tests {
     #[test]
     fn date_boundary_dec_30_31_jan_1() {
         let d30 = compute(&input(
-            2025, 12, 30, 30_000_00, QualifyingProperty::SolarElectric, 0, true, 100_000_00, 0,
+            2025,
+            12,
+            30,
+            30_000_00,
+            QualifyingProperty::SolarElectric,
+            0,
+            true,
+            100_000_00,
+            0,
         ));
         let d31 = compute(&input(
-            2025, 12, 31, 30_000_00, QualifyingProperty::SolarElectric, 0, true, 100_000_00, 0,
+            2025,
+            12,
+            31,
+            30_000_00,
+            QualifyingProperty::SolarElectric,
+            0,
+            true,
+            100_000_00,
+            0,
         ));
         let jan1 = compute(&input(
-            2026, 1, 1, 30_000_00, QualifyingProperty::SolarElectric, 0, true, 100_000_00, 0,
+            2026,
+            1,
+            1,
+            30_000_00,
+            QualifyingProperty::SolarElectric,
+            0,
+            true,
+            100_000_00,
+            0,
         ));
         assert!(d30.credit_eligible);
         assert!(d31.credit_eligible);
@@ -467,7 +673,15 @@ mod tests {
         // $300K commercial-scale residential solar: $90K gross credit.
         // High-income trader with $200K tax liability → $90K fully used.
         let r = compute(&input(
-            2024, 6, 1, 300_000_00, QualifyingProperty::SolarElectric, 0, true, 200_000_00, 0,
+            2024,
+            6,
+            1,
+            300_000_00,
+            QualifyingProperty::SolarElectric,
+            0,
+            true,
+            200_000_00,
+            0,
         ));
         assert_eq!(r.gross_credit_cents, 90_000_00);
         assert_eq!(r.current_year_credit_used_cents, 90_000_00);
@@ -478,7 +692,15 @@ mod tests {
     fn ultra_large_credit_with_low_tax_creates_long_carryforward() {
         // $1M solar = $300K credit. $20K tax liability → $280K carryforward.
         let r = compute(&input(
-            2024, 6, 1, 1_000_000_00, QualifyingProperty::SolarElectric, 0, true, 20_000_00, 0,
+            2024,
+            6,
+            1,
+            1_000_000_00,
+            QualifyingProperty::SolarElectric,
+            0,
+            true,
+            20_000_00,
+            0,
         ));
         assert_eq!(r.gross_credit_cents, 300_000_00);
         assert_eq!(r.current_year_credit_used_cents, 20_000_00);

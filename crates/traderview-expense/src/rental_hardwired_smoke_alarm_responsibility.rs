@@ -251,10 +251,8 @@ pub fn check(input: &Input) -> Output {
         actions.push("Tenant reported inoperable alarm NOT corrected: violates landlord-correction duty under Cal. Health & Safety Code § 13113.7 + habitability breach (Hilder v. St. Peter) + retaliation exposure under landlord_retaliation_damages.".to_string());
     }
 
-    let downgrade_risk = matches!(
-        input.alarm_technology,
-        AlarmTechnology::ReplaceableBattery
-    ) && matches!(input.jurisdiction, Jurisdiction::California);
+    let downgrade_risk = matches!(input.alarm_technology, AlarmTechnology::ReplaceableBattery)
+        && matches!(input.jurisdiction, Jurisdiction::California);
 
     if downgrade_risk {
         actions.push("California legacy replaceable-battery alarm: post-2014 State Fire Marshal mandate requires 10-year sealed-battery for new battery-operated installations; existing operable alarms need not be replaced preemptively but should be upgraded at rolling end-of-life for liability mitigation; consider hardwired-with-backup for new installations after January 1, 2016 building standard.".to_string());
@@ -262,14 +260,20 @@ pub fn check(input: &Input) -> Output {
 
     let post_2016_hardwired_required = matches!(input.jurisdiction, Jurisdiction::California)
         && input.property_built_or_renovated_after_2016
-        && !matches!(input.alarm_technology, AlarmTechnology::HardwiredWithBatteryBackup);
+        && !matches!(
+            input.alarm_technology,
+            AlarmTechnology::HardwiredWithBatteryBackup
+        );
 
     if post_2016_hardwired_required {
         actions.push("California post-January-1-2016 property: building standard requires HARDWIRED-WITH-BATTERY-BACKUP smoke alarms in newly constructed or substantially renovated dwellings; battery-only alarms insufficient.".to_string());
     }
 
     if matches!(input.jurisdiction, Jurisdiction::Massachusetts)
-        && !matches!(input.sensor_type, SensorType::Photoelectric | SensorType::DualSensor)
+        && !matches!(
+            input.sensor_type,
+            SensorType::Photoelectric | SensorType::DualSensor
+        )
         && input.installed_in_every_bedroom
     {
         actions.push("Massachusetts bedroom photoelectric mandate: M.G.L. c. 148 § 26F + 527 C.M.R. 1.00 require photoelectric (or dual-sensor) technology in bedrooms and adjacent sleeping areas; ionization-only insufficient.".to_string());

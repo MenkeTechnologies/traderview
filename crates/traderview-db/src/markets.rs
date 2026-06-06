@@ -25,7 +25,7 @@ pub struct MarketTile {
     pub prev_close: f64,
     pub change_pct: f64,
     pub currency: &'static str,
-    pub market_state: String,   // "REGULAR" | "CLOSED" | "PRE" | "POST" — best-effort from chart meta
+    pub market_state: String, // "REGULAR" | "CLOSED" | "PRE" | "POST" — best-effort from chart meta
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -60,60 +60,401 @@ struct Pin {
 
 const PINS: &[Pin] = &[
     // Indices — anchored at the exchange city for the map pin.
-    Pin { symbol: "^GSPC",   label: "S&P 500",      flag: "🇺🇸", lat: 40.71,  lng: -74.01, currency: "USD", kind: Kind::Index },
-    Pin { symbol: "^IXIC",   label: "Nasdaq",       flag: "🇺🇸", lat: 40.72,  lng: -73.99, currency: "USD", kind: Kind::Index },
-    Pin { symbol: "^GSPTSE", label: "S&P Toronto",  flag: "🇨🇦", lat: 43.65,  lng: -79.38, currency: "CAD", kind: Kind::Index },
-    Pin { symbol: "^BVSP",   label: "Bovespa",      flag: "🇧🇷", lat: -23.55, lng: -46.63, currency: "BRL", kind: Kind::Index },
-    Pin { symbol: "^FTSE",   label: "FTSE London",  flag: "🇬🇧", lat: 51.51,  lng:  -0.10, currency: "GBP", kind: Kind::Index },
-    Pin { symbol: "^FCHI",   label: "CAC Paris",    flag: "🇫🇷", lat: 48.85,  lng:   2.35, currency: "EUR", kind: Kind::Index },
-    Pin { symbol: "^GDAXI",  label: "DAX",          flag: "🇩🇪", lat: 50.11,  lng:   8.68, currency: "EUR", kind: Kind::Index },
-    Pin { symbol: "^N225",   label: "Nikkei",       flag: "🇯🇵", lat: 35.69,  lng: 139.69, currency: "JPY", kind: Kind::Index },
-    Pin { symbol: "^HSI",    label: "Hang Seng",    flag: "🇭🇰", lat: 22.30,  lng: 114.17, currency: "HKD", kind: Kind::Index },
-    Pin { symbol: "000001.SS", label: "Shanghai",   flag: "🇨🇳", lat: 31.23,  lng: 121.47, currency: "CNY", kind: Kind::Index },
-    Pin { symbol: "^NSEI",   label: "Nifty India",  flag: "🇮🇳", lat: 19.08,  lng:  72.87, currency: "INR", kind: Kind::Index },
-    Pin { symbol: "^AORD",   label: "Aus All Ords", flag: "🇦🇺", lat: -33.86, lng: 151.21, currency: "AUD", kind: Kind::Index },
-
+    Pin {
+        symbol: "^GSPC",
+        label: "S&P 500",
+        flag: "🇺🇸",
+        lat: 40.71,
+        lng: -74.01,
+        currency: "USD",
+        kind: Kind::Index,
+    },
+    Pin {
+        symbol: "^IXIC",
+        label: "Nasdaq",
+        flag: "🇺🇸",
+        lat: 40.72,
+        lng: -73.99,
+        currency: "USD",
+        kind: Kind::Index,
+    },
+    Pin {
+        symbol: "^GSPTSE",
+        label: "S&P Toronto",
+        flag: "🇨🇦",
+        lat: 43.65,
+        lng: -79.38,
+        currency: "CAD",
+        kind: Kind::Index,
+    },
+    Pin {
+        symbol: "^BVSP",
+        label: "Bovespa",
+        flag: "🇧🇷",
+        lat: -23.55,
+        lng: -46.63,
+        currency: "BRL",
+        kind: Kind::Index,
+    },
+    Pin {
+        symbol: "^FTSE",
+        label: "FTSE London",
+        flag: "🇬🇧",
+        lat: 51.51,
+        lng: -0.10,
+        currency: "GBP",
+        kind: Kind::Index,
+    },
+    Pin {
+        symbol: "^FCHI",
+        label: "CAC Paris",
+        flag: "🇫🇷",
+        lat: 48.85,
+        lng: 2.35,
+        currency: "EUR",
+        kind: Kind::Index,
+    },
+    Pin {
+        symbol: "^GDAXI",
+        label: "DAX",
+        flag: "🇩🇪",
+        lat: 50.11,
+        lng: 8.68,
+        currency: "EUR",
+        kind: Kind::Index,
+    },
+    Pin {
+        symbol: "^N225",
+        label: "Nikkei",
+        flag: "🇯🇵",
+        lat: 35.69,
+        lng: 139.69,
+        currency: "JPY",
+        kind: Kind::Index,
+    },
+    Pin {
+        symbol: "^HSI",
+        label: "Hang Seng",
+        flag: "🇭🇰",
+        lat: 22.30,
+        lng: 114.17,
+        currency: "HKD",
+        kind: Kind::Index,
+    },
+    Pin {
+        symbol: "000001.SS",
+        label: "Shanghai",
+        flag: "🇨🇳",
+        lat: 31.23,
+        lng: 121.47,
+        currency: "CNY",
+        kind: Kind::Index,
+    },
+    Pin {
+        symbol: "^NSEI",
+        label: "Nifty India",
+        flag: "🇮🇳",
+        lat: 19.08,
+        lng: 72.87,
+        currency: "INR",
+        kind: Kind::Index,
+    },
+    Pin {
+        symbol: "^AORD",
+        label: "Aus All Ords",
+        flag: "🇦🇺",
+        lat: -33.86,
+        lng: 151.21,
+        currency: "AUD",
+        kind: Kind::Index,
+    },
     // Commodities — front-month futures via Yahoo continuous contracts.
     // Energy
-    Pin { symbol: "CL=F", label: "Crude Oil (WTI)", flag: "🛢️", lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Commodity },
-    Pin { symbol: "BZ=F", label: "Brent Crude",     flag: "🛢️", lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Commodity },
-    Pin { symbol: "NG=F", label: "Natural Gas",     flag: "🔥", lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Commodity },
-    Pin { symbol: "RB=F", label: "Gasoline",        flag: "⛽", lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Commodity },
-    Pin { symbol: "HO=F", label: "Heating Oil",     flag: "🔥", lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Commodity },
+    Pin {
+        symbol: "CL=F",
+        label: "Crude Oil (WTI)",
+        flag: "🛢️",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Commodity,
+    },
+    Pin {
+        symbol: "BZ=F",
+        label: "Brent Crude",
+        flag: "🛢️",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Commodity,
+    },
+    Pin {
+        symbol: "NG=F",
+        label: "Natural Gas",
+        flag: "🔥",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Commodity,
+    },
+    Pin {
+        symbol: "RB=F",
+        label: "Gasoline",
+        flag: "⛽",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Commodity,
+    },
+    Pin {
+        symbol: "HO=F",
+        label: "Heating Oil",
+        flag: "🔥",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Commodity,
+    },
     // Metals
-    Pin { symbol: "GC=F", label: "Gold",            flag: "🥇", lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Commodity },
-    Pin { symbol: "SI=F", label: "Silver",          flag: "🥈", lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Commodity },
-    Pin { symbol: "HG=F", label: "Copper",          flag: "🟤", lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Commodity },
-    Pin { symbol: "PL=F", label: "Platinum",        flag: "⚪", lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Commodity },
-    Pin { symbol: "PA=F", label: "Palladium",       flag: "⚫", lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Commodity },
+    Pin {
+        symbol: "GC=F",
+        label: "Gold",
+        flag: "🥇",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Commodity,
+    },
+    Pin {
+        symbol: "SI=F",
+        label: "Silver",
+        flag: "🥈",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Commodity,
+    },
+    Pin {
+        symbol: "HG=F",
+        label: "Copper",
+        flag: "🟤",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Commodity,
+    },
+    Pin {
+        symbol: "PL=F",
+        label: "Platinum",
+        flag: "⚪",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Commodity,
+    },
+    Pin {
+        symbol: "PA=F",
+        label: "Palladium",
+        flag: "⚫",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Commodity,
+    },
     // Grains
-    Pin { symbol: "ZC=F", label: "Corn",            flag: "🌽", lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Commodity },
-    Pin { symbol: "ZW=F", label: "Wheat",           flag: "🌾", lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Commodity },
-    Pin { symbol: "ZS=F", label: "Soybeans",        flag: "🫘", lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Commodity },
-    Pin { symbol: "ZO=F", label: "Oats",            flag: "🌾", lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Commodity },
+    Pin {
+        symbol: "ZC=F",
+        label: "Corn",
+        flag: "🌽",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Commodity,
+    },
+    Pin {
+        symbol: "ZW=F",
+        label: "Wheat",
+        flag: "🌾",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Commodity,
+    },
+    Pin {
+        symbol: "ZS=F",
+        label: "Soybeans",
+        flag: "🫘",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Commodity,
+    },
+    Pin {
+        symbol: "ZO=F",
+        label: "Oats",
+        flag: "🌾",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Commodity,
+    },
     // Softs
-    Pin { symbol: "KC=F", label: "Coffee",          flag: "☕", lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Commodity },
-    Pin { symbol: "SB=F", label: "Sugar",           flag: "🍬", lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Commodity },
-    Pin { symbol: "CC=F", label: "Cocoa",           flag: "🍫", lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Commodity },
-    Pin { symbol: "CT=F", label: "Cotton",          flag: "🧵", lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Commodity },
-    Pin { symbol: "OJ=F", label: "Orange Juice",    flag: "🍊", lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Commodity },
+    Pin {
+        symbol: "KC=F",
+        label: "Coffee",
+        flag: "☕",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Commodity,
+    },
+    Pin {
+        symbol: "SB=F",
+        label: "Sugar",
+        flag: "🍬",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Commodity,
+    },
+    Pin {
+        symbol: "CC=F",
+        label: "Cocoa",
+        flag: "🍫",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Commodity,
+    },
+    Pin {
+        symbol: "CT=F",
+        label: "Cotton",
+        flag: "🧵",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Commodity,
+    },
+    Pin {
+        symbol: "OJ=F",
+        label: "Orange Juice",
+        flag: "🍊",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Commodity,
+    },
     // Livestock
-    Pin { symbol: "LE=F", label: "Live Cattle",     flag: "🐂", lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Commodity },
-    Pin { symbol: "HE=F", label: "Lean Hogs",       flag: "🐖", lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Commodity },
-
+    Pin {
+        symbol: "LE=F",
+        label: "Live Cattle",
+        flag: "🐂",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Commodity,
+    },
+    Pin {
+        symbol: "HE=F",
+        label: "Lean Hogs",
+        flag: "🐖",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Commodity,
+    },
     // FX — major pairs.
-    Pin { symbol: "EURUSD=X", label: "EUR/USD", flag: "💶", lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Fx },
-    Pin { symbol: "GBPUSD=X", label: "GBP/USD", flag: "💷", lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Fx },
-    Pin { symbol: "USDJPY=X", label: "USD/JPY", flag: "💴", lat: 0.0, lng: 0.0, currency: "JPY", kind: Kind::Fx },
-    Pin { symbol: "USDCHF=X", label: "USD/CHF", flag: "🇨🇭", lat: 0.0, lng: 0.0, currency: "CHF", kind: Kind::Fx },
-    Pin { symbol: "AUDUSD=X", label: "AUD/USD", flag: "🇦🇺", lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Fx },
-    Pin { symbol: "USDCAD=X", label: "USD/CAD", flag: "🇨🇦", lat: 0.0, lng: 0.0, currency: "CAD", kind: Kind::Fx },
-    Pin { symbol: "DX=F",     label: "DXY",     flag: "🇺🇸", lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Fx },
-
+    Pin {
+        symbol: "EURUSD=X",
+        label: "EUR/USD",
+        flag: "💶",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Fx,
+    },
+    Pin {
+        symbol: "GBPUSD=X",
+        label: "GBP/USD",
+        flag: "💷",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Fx,
+    },
+    Pin {
+        symbol: "USDJPY=X",
+        label: "USD/JPY",
+        flag: "💴",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "JPY",
+        kind: Kind::Fx,
+    },
+    Pin {
+        symbol: "USDCHF=X",
+        label: "USD/CHF",
+        flag: "🇨🇭",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "CHF",
+        kind: Kind::Fx,
+    },
+    Pin {
+        symbol: "AUDUSD=X",
+        label: "AUD/USD",
+        flag: "🇦🇺",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Fx,
+    },
+    Pin {
+        symbol: "USDCAD=X",
+        label: "USD/CAD",
+        flag: "🇨🇦",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "CAD",
+        kind: Kind::Fx,
+    },
+    Pin {
+        symbol: "DX=F",
+        label: "DXY",
+        flag: "🇺🇸",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Fx,
+    },
     // Crypto — majors via Yahoo's USD pairs.
-    Pin { symbol: "BTC-USD", label: "Bitcoin",  flag: "🟠", lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Crypto },
-    Pin { symbol: "ETH-USD", label: "Ethereum", flag: "⟠",  lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Crypto },
-    Pin { symbol: "SOL-USD", label: "Solana",   flag: "◎",  lat: 0.0, lng: 0.0, currency: "USD", kind: Kind::Crypto },
+    Pin {
+        symbol: "BTC-USD",
+        label: "Bitcoin",
+        flag: "🟠",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Crypto,
+    },
+    Pin {
+        symbol: "ETH-USD",
+        label: "Ethereum",
+        flag: "⟠",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Crypto,
+    },
+    Pin {
+        symbol: "SOL-USD",
+        label: "Solana",
+        flag: "◎",
+        lat: 0.0,
+        lng: 0.0,
+        currency: "USD",
+        kind: Kind::Crypto,
+    },
 ];
 
 // In-process snapshot cache. The world-map view polls this on every dashboard
@@ -167,7 +508,7 @@ pub async fn snapshot() -> anyhow::Result<MarketsSnapshot> {
             Some(Kind::Commodity) => commodities.push(r),
             Some(Kind::Fx) => fx.push(r),
             Some(Kind::Crypto) => crypto.push(r),
-            None => commodities.push(r),  // shouldn't happen — keep round-trip honest
+            None => commodities.push(r), // shouldn't happen — keep round-trip honest
         }
     }
     let snap = MarketsSnapshot {
@@ -202,7 +543,9 @@ async fn fetch_one(client: &reqwest::Client, p: &Pin) -> Option<MarketTile> {
     let result = raw.chart.result?.into_iter().next()?;
     let meta = result.meta;
     let price = meta.regular_market_price?;
-    let prev_close = meta.chart_previous_close.unwrap_or(meta.previous_close.unwrap_or(price));
+    let prev_close = meta
+        .chart_previous_close
+        .unwrap_or(meta.previous_close.unwrap_or(price));
     let change_pct = if prev_close > 0.0 {
         (price - prev_close) / prev_close * 100.0
     } else {
@@ -228,11 +571,17 @@ fn urlencoding(s: &str) -> String {
 }
 
 #[derive(serde::Deserialize)]
-struct ChartResp { chart: ChartInner }
+struct ChartResp {
+    chart: ChartInner,
+}
 #[derive(serde::Deserialize)]
-struct ChartInner { result: Option<Vec<ChartResult>> }
+struct ChartInner {
+    result: Option<Vec<ChartResult>>,
+}
 #[derive(serde::Deserialize)]
-struct ChartResult { meta: ChartMeta }
+struct ChartResult {
+    meta: ChartMeta,
+}
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct ChartMeta {
@@ -285,8 +634,10 @@ mod tests {
             "cache hit should be near-instant; got {:?}",
             started.elapsed()
         );
-        assert_eq!(got.fetched_at, stored_at,
-            "cache hit returned a different snapshot than what we stored");
+        assert_eq!(
+            got.fetched_at, stored_at,
+            "cache hit returned a different snapshot than what we stored"
+        );
     }
 
     /// Verify TTL: an entry stored 2 minutes ago must be treated as stale.
@@ -311,14 +662,16 @@ mod tests {
         // Re-read the cache and verify the freshness check would reject it.
         let guard = CACHE.lock().await;
         let (when, _) = guard.as_ref().expect("we just set it");
-        assert!(when.elapsed() > CACHE_TTL,
-            "backdated entry must be older than CACHE_TTL");
+        assert!(
+            when.elapsed() > CACHE_TTL,
+            "backdated entry must be older than CACHE_TTL"
+        );
     }
 
     #[test]
     fn urlencoding_handles_yahoo_caret_and_equals() {
         assert_eq!(urlencoding("^GSPC"), "%5EGSPC");
         assert_eq!(urlencoding("EURUSD=X"), "EURUSD%3DX");
-        assert_eq!(urlencoding("AAPL"), "AAPL");  // pass-through for plain
+        assert_eq!(urlencoding("AAPL"), "AAPL"); // pass-through for plain
     }
 }

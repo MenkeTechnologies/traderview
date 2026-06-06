@@ -64,7 +64,11 @@ mod tests {
         let v = vec![1.0, 2.0, 3.0, 4.0, 5.0];
         let out = compute(&v, 5);
         let last = out[4].expect("populated");
-        assert!((last - 11.0 / 3.0).abs() < 1e-9, "WMA={last}, expected {}", 11.0 / 3.0);
+        assert!(
+            (last - 11.0 / 3.0).abs() < 1e-9,
+            "WMA={last}, expected {}",
+            11.0 / 3.0
+        );
     }
 
     #[test]
@@ -73,7 +77,10 @@ mod tests {
         let out = compute(&v, 5);
         // Final window [6,7,8,9,10] — midpoint 8, WMA pulled up by larger weights on 10.
         let last = out[9].expect("populated");
-        assert!(last > 8.0, "WMA should be above midpoint on rising series, got {last}");
+        assert!(
+            last > 8.0,
+            "WMA should be above midpoint on rising series, got {last}"
+        );
     }
 
     #[test]

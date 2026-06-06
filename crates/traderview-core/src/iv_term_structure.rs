@@ -29,7 +29,12 @@ pub struct ExpiryIv {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
-pub enum TermShape { Contango, Backwardation, #[default] Flat }
+pub enum TermShape {
+    Contango,
+    Backwardation,
+    #[default]
+    Flat,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct IvTermStructureReport {
@@ -44,15 +49,24 @@ pub struct IvTermStructureReport {
 }
 
 pub fn compute(expiries: &[ExpiryIv]) -> Option<IvTermStructureReport> {
-    if expiries.len() < 2 { return None; }
-    if expiries.iter().any(|e| !e.time_to_expiry_years.is_finite()
-        || !e.atm_iv.is_finite() || e.time_to_expiry_years <= 0.0 || e.atm_iv <= 0.0) {
+    if expiries.len() < 2 {
+        return None;
+    }
+    if expiries.iter().any(|e| {
+        !e.time_to_expiry_years.is_finite()
+            || !e.atm_iv.is_finite()
+            || e.time_to_expiry_years <= 0.0
+            || e.atm_iv <= 0.0
+    }) {
         return None;
     }
     // Sort by tenor ascending.
     let mut sorted = expiries.to_vec();
-    sorted.sort_by(|a, b| a.time_to_expiry_years.partial_cmp(&b.time_to_expiry_years)
-        .unwrap_or(std::cmp::Ordering::Equal));
+    sorted.sort_by(|a, b| {
+        a.time_to_expiry_years
+            .partial_cmp(&b.time_to_expiry_years)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     let front = sorted.first().unwrap();
     let back = sorted.last().unwrap();
     // Linear OLS of IV on T.
@@ -66,17 +80,25 @@ pub fn compute(expiries: &[ExpiryIv]) -> Option<IvTermStructureReport> {
         sxx += dx * dx;
         sxy += dx * (e.atm_iv - iv_mean);
     }
-    if sxx <= 0.0 { return None; }
+    if sxx <= 0.0 {
+        return None;
+    }
     let slope = sxy / sxx;
     let intercept = iv_mean - slope * t_mean;
     // Quadratic convexity if ≥ 3 expiries.
     let convexity = if sorted.len() >= 3 {
         ols_quadratic(&sorted).map(|c| c.beta_2)
-    } else { None };
+    } else {
+        None
+    };
     let front_back_spread = front.atm_iv - back.atm_iv;
-    let shape = if slope > 0.001 { TermShape::Contango }
-        else if slope < -0.001 { TermShape::Backwardation }
-        else { TermShape::Flat };
+    let shape = if slope > 0.001 {
+        TermShape::Contango
+    } else if slope < -0.001 {
+        TermShape::Backwardation
+    } else {
+        TermShape::Flat
+    };
     Some(IvTermStructureReport {
         slope,
         intercept,
@@ -89,11 +111,19 @@ pub fn compute(expiries: &[ExpiryIv]) -> Option<IvTermStructureReport> {
     })
 }
 
-struct Quadratic { #[allow(dead_code)] beta_0: f64, #[allow(dead_code)] beta_1: f64, beta_2: f64 }
+struct Quadratic {
+    #[allow(dead_code)]
+    beta_0: f64,
+    #[allow(dead_code)]
+    beta_1: f64,
+    beta_2: f64,
+}
 
 fn ols_quadratic(points: &[ExpiryIv]) -> Option<Quadratic> {
     let n = points.len();
-    if n < 3 { return None; }
+    if n < 3 {
+        return None;
+    }
     let mut xtx = [[0.0_f64; 3]; 3];
     let mut xty = [0.0_f64; 3];
     for e in points {
@@ -101,13 +131,17 @@ fn ols_quadratic(points: &[ExpiryIv]) -> Option<Quadratic> {
         let y = e.atm_iv;
         for j in 0..3 {
             xty[j] += row[j] * y;
-            for k in 0..3 { xtx[j][k] += row[j] * row[k]; }
+            for k in 0..3 {
+                xtx[j][k] += row[j] * row[k];
+            }
         }
     }
     let det = xtx[0][0] * (xtx[1][1] * xtx[2][2] - xtx[1][2] * xtx[2][1])
         - xtx[0][1] * (xtx[1][0] * xtx[2][2] - xtx[1][2] * xtx[2][0])
         + xtx[0][2] * (xtx[1][0] * xtx[2][1] - xtx[1][1] * xtx[2][0]);
-    if det.abs() < 1e-18 { return None; }
+    if det.abs() < 1e-18 {
+        return None;
+    }
     let inv00 = (xtx[1][1] * xtx[2][2] - xtx[1][2] * xtx[2][1]) / det;
     let inv01 = -(xtx[0][1] * xtx[2][2] - xtx[0][2] * xtx[2][1]) / det;
     let inv02 = (xtx[0][1] * xtx[1][2] - xtx[0][2] * xtx[1][1]) / det;
@@ -120,7 +154,11 @@ fn ols_quadratic(points: &[ExpiryIv]) -> Option<Quadratic> {
     let beta_0 = inv00 * xty[0] + inv01 * xty[1] + inv02 * xty[2];
     let beta_1 = inv10 * xty[0] + inv11 * xty[1] + inv12 * xty[2];
     let beta_2 = inv20 * xty[0] + inv21 * xty[1] + inv22 * xty[2];
-    Some(Quadratic { beta_0, beta_1, beta_2 })
+    Some(Quadratic {
+        beta_0,
+        beta_1,
+        beta_2,
+    })
 }
 
 #[cfg(test)]
@@ -128,7 +166,10 @@ mod tests {
     use super::*;
 
     fn e(t: f64, iv: f64) -> ExpiryIv {
-        ExpiryIv { time_to_expiry_years: t, atm_iv: iv }
+        ExpiryIv {
+            time_to_expiry_years: t,
+            atm_iv: iv,
+        }
     }
 
     #[test]
@@ -146,9 +187,9 @@ mod tests {
     #[test]
     fn contango_detected() {
         let expiries = vec![
-            e(1.0 / 12.0, 0.18),    // 1m: 18%
-            e(3.0 / 12.0, 0.20),    // 3m: 20%
-            e(6.0 / 12.0, 0.22),    // 6m: 22%
+            e(1.0 / 12.0, 0.18), // 1m: 18%
+            e(3.0 / 12.0, 0.20), // 3m: 20%
+            e(6.0 / 12.0, 0.22), // 6m: 22%
         ];
         let r = compute(&expiries).unwrap();
         assert_eq!(r.shape, TermShape::Contango);
@@ -159,9 +200,9 @@ mod tests {
     #[test]
     fn backwardation_detected() {
         let expiries = vec![
-            e(1.0 / 12.0, 0.40),    // 1m: 40% (event-rich)
-            e(3.0 / 12.0, 0.30),    // 3m: 30%
-            e(6.0 / 12.0, 0.25),    // 6m: 25%
+            e(1.0 / 12.0, 0.40), // 1m: 40% (event-rich)
+            e(3.0 / 12.0, 0.30), // 3m: 30%
+            e(6.0 / 12.0, 0.25), // 6m: 25%
         ];
         let r = compute(&expiries).unwrap();
         assert_eq!(r.shape, TermShape::Backwardation);
@@ -191,8 +232,11 @@ mod tests {
             e(12.0 / 12.0, 0.32),
         ];
         let r = compute(&expiries).unwrap();
-        assert!(r.convexity_beta_2.unwrap() > 0.0,
-            "smile term should have positive convexity, got {:?}", r.convexity_beta_2);
+        assert!(
+            r.convexity_beta_2.unwrap() > 0.0,
+            "smile term should have positive convexity, got {:?}",
+            r.convexity_beta_2
+        );
     }
 
     #[test]
@@ -204,12 +248,7 @@ mod tests {
 
     #[test]
     fn n_expiries_reported() {
-        let expiries = vec![
-            e(0.08, 0.20),
-            e(0.25, 0.22),
-            e(0.5, 0.24),
-            e(1.0, 0.26),
-        ];
+        let expiries = vec![e(0.08, 0.20), e(0.25, 0.22), e(0.5, 0.24), e(1.0, 0.26)];
         let r = compute(&expiries).unwrap();
         assert_eq!(r.n_expiries, 4);
     }

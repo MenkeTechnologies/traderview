@@ -25,7 +25,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum OptionKind { Call, Put }
+pub enum OptionKind {
+    Call,
+    Put,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct AsianReport {
@@ -37,16 +40,24 @@ pub struct AsianReport {
 }
 
 pub fn price(
-    spot: f64, strike: f64,
-    time_to_expiry: f64, risk_free: f64,
-    dividend_yield: f64, sigma: f64,
+    spot: f64,
+    strike: f64,
+    time_to_expiry: f64,
+    risk_free: f64,
+    dividend_yield: f64,
+    sigma: f64,
     kind: OptionKind,
 ) -> Option<AsianReport> {
-    if !spot.is_finite() || spot <= 0.0
-        || !strike.is_finite() || strike <= 0.0
-        || !time_to_expiry.is_finite() || time_to_expiry <= 0.0
-        || !risk_free.is_finite() || !dividend_yield.is_finite()
-        || !sigma.is_finite() || sigma <= 0.0
+    if !spot.is_finite()
+        || spot <= 0.0
+        || !strike.is_finite()
+        || strike <= 0.0
+        || !time_to_expiry.is_finite()
+        || time_to_expiry <= 0.0
+        || !risk_free.is_finite()
+        || !dividend_yield.is_finite()
+        || !sigma.is_finite()
+        || sigma <= 0.0
     {
         return None;
     }
@@ -63,24 +74,27 @@ pub fn price(
     let pv_factor = ((risk_free - q_avg) * time_to_expiry).exp();
     let price = match kind {
         OptionKind::Call => dr * (spot * pv_factor * nd1 - strike * nd2),
-        OptionKind::Put  => dr * (strike * (1.0 - nd2) - spot * pv_factor * (1.0 - nd1)),
+        OptionKind::Put => dr * (strike * (1.0 - nd2) - spot * pv_factor * (1.0 - nd1)),
     };
-    if !price.is_finite() { return None; }
+    if !price.is_finite() {
+        return None;
+    }
     Some(AsianReport {
         price: price.max(0.0),
         adjusted_sigma: sigma_avg,
         adjusted_dividend: q_avg,
-        d1, d2,
+        d1,
+        d2,
     })
 }
 
 fn norm_cdf(x: f64) -> f64 {
-    let a1 =  0.254829592_f64;
+    let a1 = 0.254829592_f64;
     let a2 = -0.284496736_f64;
-    let a3 =  1.421413741_f64;
+    let a3 = 1.421413741_f64;
     let a4 = -1.453152027_f64;
-    let a5 =  1.061405429_f64;
-    let p  =  0.3275911_f64;
+    let a5 = 1.061405429_f64;
+    let p = 0.3275911_f64;
     let sign = if x < 0.0 { -1.0 } else { 1.0 };
     let xa = x.abs() / std::f64::consts::SQRT_2;
     let t = 1.0 / (1.0 + p * xa);
@@ -125,7 +139,12 @@ mod tests {
     #[test]
     fn put_call_parity_holds_approximately() {
         // For geometric Asian: c − p = e^{−rT} · (S · e^{(r−q_avg)T} − K).
-        let s = 100.0; let k = 100.0; let t = 0.5; let r = 0.05; let q = 0.02; let sigma = 0.25;
+        let s = 100.0;
+        let k = 100.0;
+        let t = 0.5;
+        let r = 0.05;
+        let q = 0.02;
+        let sigma = 0.25;
         let c = price(s, k, t, r, q, sigma, OptionKind::Call).unwrap().price;
         let p = price(s, k, t, r, q, sigma, OptionKind::Put).unwrap().price;
         let q_avg = 0.5 * (r + q + sigma * sigma / 6.0);
@@ -136,15 +155,23 @@ mod tests {
     #[test]
     fn geometric_asian_priced_below_vanilla() {
         // Averaging always reduces vol → Asian < vanilla for ATM call (no skew).
-        let s = 100.0; let k = 100.0; let t = 1.0; let r = 0.05; let q = 0.0; let sigma = 0.30;
+        let s = 100.0;
+        let k = 100.0;
+        let t = 1.0;
+        let r = 0.05;
+        let q = 0.0;
+        let sigma = 0.30;
         let asian = price(s, k, t, r, q, sigma, OptionKind::Call).unwrap().price;
         let vanilla = vanilla_bs_call(s, k, t, r, q, sigma);
-        assert!(asian < vanilla, "Asian {asian} should be below vanilla {vanilla}");
+        assert!(
+            asian < vanilla,
+            "Asian {asian} should be below vanilla {vanilla}"
+        );
     }
 
     #[test]
     fn higher_vol_yields_higher_atm_asian_price() {
-        let r_low  = price(100.0, 100.0, 1.0, 0.05, 0.0, 0.10, OptionKind::Call).unwrap();
+        let r_low = price(100.0, 100.0, 1.0, 0.05, 0.0, 0.10, OptionKind::Call).unwrap();
         let r_high = price(100.0, 100.0, 1.0, 0.05, 0.0, 0.40, OptionKind::Call).unwrap();
         assert!(r_high.price > r_low.price);
     }
@@ -158,7 +185,7 @@ mod tests {
     #[test]
     fn longer_time_yields_higher_atm_call() {
         let r_short = price(100.0, 100.0, 0.10, 0.05, 0.0, 0.20, OptionKind::Call).unwrap();
-        let r_long  = price(100.0, 100.0, 1.00, 0.05, 0.0, 0.20, OptionKind::Call).unwrap();
+        let r_long = price(100.0, 100.0, 1.00, 0.05, 0.0, 0.20, OptionKind::Call).unwrap();
         assert!(r_long.price > r_short.price);
     }
 }

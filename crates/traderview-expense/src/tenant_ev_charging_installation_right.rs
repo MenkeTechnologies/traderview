@@ -168,110 +168,121 @@ pub fn check(
 ) -> TenantEvChargingInstallationRightResult {
     let mut failure_reasons: Vec<String> = Vec::new();
 
-    let (right_to_charge_engaged, approval_obligation_satisfied, ca_exemption_engaged, tenant_obligations_compliant) =
-        match input.jurisdiction {
-            Jurisdiction::California => {
-                let post_effective = input.lease_year > 2015
-                    || (input.lease_year == 2015 && input.lease_month >= 7);
+    let (
+        right_to_charge_engaged,
+        approval_obligation_satisfied,
+        ca_exemption_engaged,
+        tenant_obligations_compliant,
+    ) = match input.jurisdiction {
+        Jurisdiction::California => {
+            let post_effective =
+                input.lease_year > 2015 || (input.lease_year == 2015 && input.lease_month >= 7);
 
-                let exemption_10pct = input.total_parking_spaces > 0
-                    && input.existing_evcs_count * 10 >= input.total_parking_spaces;
-                let exemption_no_parking = !input.parking_provided_in_lease;
-                let exemption_lt_5_spaces = input.total_parking_spaces < 5;
-                let exemption_rent_controlled = input.rent_controlled_property;
-                let exemption_engaged = exemption_10pct
-                    || exemption_no_parking
-                    || exemption_lt_5_spaces
-                    || exemption_rent_controlled;
+            let exemption_10pct = input.total_parking_spaces > 0
+                && input.existing_evcs_count * 10 >= input.total_parking_spaces;
+            let exemption_no_parking = !input.parking_provided_in_lease;
+            let exemption_lt_5_spaces = input.total_parking_spaces < 5;
+            let exemption_rent_controlled = input.rent_controlled_property;
+            let exemption_engaged = exemption_10pct
+                || exemption_no_parking
+                || exemption_lt_5_spaces
+                || exemption_rent_controlled;
 
-                let right_engaged = post_effective && !exemption_engaged
-                    && input.written_request_submitted;
+            let right_engaged =
+                post_effective && !exemption_engaged && input.written_request_submitted;
 
-                let tenant_obligations_complete = input.written_agreement_consented
-                    && input.tenant_payment_obligations_accepted
-                    && input.one_million_liability_insurance_maintained;
+            let tenant_obligations_complete = input.written_agreement_consented
+                && input.tenant_payment_obligations_accepted
+                && input.one_million_liability_insurance_maintained;
 
-                let approval_satisfied = !right_engaged || input.landlord_approved_request;
+            let approval_satisfied = !right_engaged || input.landlord_approved_request;
 
-                if right_engaged && !tenant_obligations_complete {
-                    if !input.written_agreement_consented {
-                        failure_reasons.push(
+            if right_engaged && !tenant_obligations_complete {
+                if !input.written_agreement_consented {
+                    failure_reasons.push(
                             "Cal. Civ. Code § 1947.6(c) — lessee's written request must include CONSENT TO ENTER written agreement covering compliance with lessor's installation/use/maintenance/removal requirements".to_string(),
                         );
-                    }
-                    if !input.tenant_payment_obligations_accepted {
-                        failure_reasons.push(
+                }
+                if !input.tenant_payment_obligations_accepted {
+                    failure_reasons.push(
                             "Cal. Civ. Code § 1947.6(c)(1)-(7) — tenant must agree to pay for ALL electrical usage + damage + maintenance + repair + removal + replacement + modifications/improvements to property associated with EVCS installation".to_string(),
                         );
-                    }
-                    if !input.one_million_liability_insurance_maintained {
-                        failure_reasons.push(
+                }
+                if !input.one_million_liability_insurance_maintained {
+                    failure_reasons.push(
                             "Cal. Civ. Code § 1947.6(c)(8) — tenant MUST maintain $1,000,000 LIABILITY INSURANCE naming landlord as ADDITIONAL INSURED".to_string(),
                         );
-                    }
                 }
+            }
 
-                if right_engaged && !input.landlord_approved_request {
-                    failure_reasons.push(
+            if right_engaged && !input.landlord_approved_request {
+                failure_reasons.push(
                         "Cal. Civ. Code § 1947.6(a) — for any lease executed, extended, or renewed on or after July 1, 2015, lessor SHALL APPROVE written tenant request to install EVCS at allotted parking space that meets § 1947.6 requirements and complies with lessor's procedural approval process".to_string(),
                     );
-                }
-
-                (right_engaged, approval_satisfied, exemption_engaged, tenant_obligations_complete)
             }
-            Jurisdiction::Colorado => {
-                let post_effective = input.lease_year > 2023
-                    || (input.lease_year == 2023 && input.lease_month >= 8);
-                let right_engaged = post_effective && input.level_1_or_2_evcs;
-                let approval_satisfied = !right_engaged || (!input.unreasonable_fee_assessed && input.landlord_approved_request);
 
-                if right_engaged && input.unreasonable_fee_assessed {
-                    failure_reasons.push(
+            (
+                right_engaged,
+                approval_satisfied,
+                exemption_engaged,
+                tenant_obligations_complete,
+            )
+        }
+        Jurisdiction::Colorado => {
+            let post_effective =
+                input.lease_year > 2023 || (input.lease_year == 2023 && input.lease_month >= 8);
+            let right_engaged = post_effective && input.level_1_or_2_evcs;
+            let approval_satisfied = !right_engaged
+                || (!input.unreasonable_fee_assessed && input.landlord_approved_request);
+
+            if right_engaged && input.unreasonable_fee_assessed {
+                failure_reasons.push(
                         "Colorado HB 23-1233 (effective August 7, 2023) — landlord SHALL NOT assess or charge any fee for placement or use of EVCS; landlord MAY require reimbursement for ACTUAL COST of electricity provided OR REASONABLE access fee (with network fee pass-through); unreasonable fee imposition violates statute".to_string(),
                     );
-                }
+            }
 
-                if right_engaged && !input.landlord_approved_request {
-                    failure_reasons.push(
+            if right_engaged && !input.landlord_approved_request {
+                failure_reasons.push(
                         "Colorado HB 23-1233 — tenant MAY install at tenant's expense for own use Level 1 OR Level 2 EVCS on or in leased premises; landlord refusal absent bona fide safety concern violates right-to-charge".to_string(),
                     );
-                }
-
-                (right_engaged, approval_satisfied, false, true)
             }
-            Jurisdiction::Maryland => {
-                let post_effective = input.lease_year >= 2023;
-                let right_engaged = post_effective
-                    && input.newly_constructed_or_renovated
-                    && input.separate_garage_carport_driveway_per_unit;
-                let approval_satisfied = !right_engaged || input.evse_installed_or_ev_ready_parking_space;
 
-                if right_engaged && !input.evse_installed_or_ev_ready_parking_space {
-                    failure_reasons.push(
+            (right_engaged, approval_satisfied, false, true)
+        }
+        Jurisdiction::Maryland => {
+            let post_effective = input.lease_year >= 2023;
+            let right_engaged = post_effective
+                && input.newly_constructed_or_renovated
+                && input.separate_garage_carport_driveway_per_unit;
+            let approval_satisfied =
+                !right_engaged || input.evse_installed_or_ev_ready_parking_space;
+
+            if right_engaged && !input.evse_installed_or_ev_ready_parking_space {
+                failure_reasons.push(
                         "Maryland HB 830 (Chapter 582 of 2023) — all newly constructed OR renovated housing units with SEPARATE GARAGES, CARPORTS, OR DRIVEWAYS for each unit MUST include an EVSE-INSTALLED OR EV-READY parking space".to_string(),
                     );
-                }
-
-                (right_engaged, approval_satisfied, false, true)
             }
-            Jurisdiction::NewYork => {
-                let right_engaged = input.written_request_submitted;
-                let approval_satisfied = !right_engaged || input.landlord_approved_request;
 
-                if right_engaged && !input.landlord_approved_request {
-                    failure_reasons.push(
+            (right_engaged, approval_satisfied, false, true)
+        }
+        Jurisdiction::NewYork => {
+            let right_engaged = input.written_request_submitted;
+            let approval_satisfied = !right_engaged || input.landlord_approved_request;
+
+            if right_engaged && !input.landlord_approved_request {
+                failure_reasons.push(
                         "NY Gen. Bus. Law § 399-zzz + NY Multiple Dwelling Law amendments — tenant has right to install EVCS subject to landlord's reasonable procedural approval; landlord MAY NOT unreasonably withhold approval".to_string(),
                     );
-                }
+            }
 
-                (right_engaged, approval_satisfied, false, true)
-            }
-            Jurisdiction::Default => {
-                let right_engaged = false;
-                let approval_satisfied = true;
-                (right_engaged, approval_satisfied, false, true)
-            }
-        };
+            (right_engaged, approval_satisfied, false, true)
+        }
+        Jurisdiction::Default => {
+            let right_engaged = false;
+            let approval_satisfied = true;
+            (right_engaged, approval_satisfied, false, true)
+        }
+    };
 
     let notes: Vec<String> = vec![
         "Cal. Civ. Code § 1947.6(a) (AB 2565 of 2014, effective July 1, 2015) — for any lease executed, extended, or renewed on or after July 1, 2015, lessor of a dwelling SHALL APPROVE written tenant request to install EVCS at parking space allotted for lessee that meets § 1947.6 requirements".to_string(),
@@ -409,8 +420,10 @@ mod tests {
         i.written_agreement_consented = false;
         let r = check(&i);
         assert!(!r.tenant_obligations_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 1947.6(c)")
-            && f.contains("CONSENT TO ENTER")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1947.6(c)") && f.contains("CONSENT TO ENTER")));
     }
 
     #[test]
@@ -419,9 +432,12 @@ mod tests {
         i.tenant_payment_obligations_accepted = false;
         let r = check(&i);
         assert!(!r.tenant_obligations_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 1947.6(c)(1)-(7)")
-            && f.contains("electrical usage")
-            && f.contains("damage")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1947.6(c)(1)-(7)")
+                && f.contains("electrical usage")
+                && f.contains("damage")));
     }
 
     #[test]
@@ -430,9 +446,12 @@ mod tests {
         i.one_million_liability_insurance_maintained = false;
         let r = check(&i);
         assert!(!r.tenant_obligations_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 1947.6(c)(8)")
-            && f.contains("$1,000,000 LIABILITY INSURANCE")
-            && f.contains("ADDITIONAL INSURED")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1947.6(c)(8)")
+                && f.contains("$1,000,000 LIABILITY INSURANCE")
+                && f.contains("ADDITIONAL INSURED")));
     }
 
     #[test]
@@ -475,8 +494,10 @@ mod tests {
         i.unreasonable_fee_assessed = true;
         let r = check(&i);
         assert!(!r.approval_obligation_satisfied);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("HB 23-1233")
-            && f.contains("SHALL NOT assess")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("HB 23-1233") && f.contains("SHALL NOT assess")));
     }
 
     #[test]
@@ -532,8 +553,10 @@ mod tests {
         i.landlord_approved_request = false;
         let r = check(&i);
         assert!(!r.approval_obligation_satisfied);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 399-zzz")
-            && f.contains("unreasonably withhold")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 399-zzz") && f.contains("unreasonably withhold")));
     }
 
     #[test]
@@ -634,8 +657,10 @@ mod tests {
     #[test]
     fn note_pins_ca_commercial_companion() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("§ 1952.7")
-            && n.contains("commercial-lease companion")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1952.7") && n.contains("commercial-lease companion")));
     }
 
     #[test]
@@ -674,30 +699,38 @@ mod tests {
     #[test]
     fn note_pins_default_common_law_ada() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("Default")
-            && n.contains("ADA reasonable accommodation")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Default") && n.contains("ADA reasonable accommodation")));
     }
 
     #[test]
     fn note_pins_ten_state_right_to_charge_list() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("States with right-to-charge laws")
-            && n.contains("California")
-            && n.contains("Colorado")
-            && n.contains("Florida")
-            && n.contains("Hawaii")
-            && n.contains("Illinois")
-            && n.contains("Maryland")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("States with right-to-charge laws")
+                && n.contains("California")
+                && n.contains("Colorado")
+                && n.contains("Florida")
+                && n.contains("Hawaii")
+                && n.contains("Illinois")
+                && n.contains("Maryland")));
     }
 
     #[test]
     fn note_pins_cross_jurisdictional_architecture() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("Cross-jurisdictional architecture")
-            && n.contains("APPROVAL-MANDATE")
-            && n.contains("PROHIBITION-OF-FEE")
-            && n.contains("NEW-CONSTRUCTION-INFRASTRUCTURE-MANDATE")
-            && n.contains("REASONABLENESS-REVIEW")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Cross-jurisdictional architecture")
+                && n.contains("APPROVAL-MANDATE")
+                && n.contains("PROHIBITION-OF-FEE")
+                && n.contains("NEW-CONSTRUCTION-INFRASTRUCTURE-MANDATE")
+                && n.contains("REASONABLENESS-REVIEW")));
     }
 
     #[test]

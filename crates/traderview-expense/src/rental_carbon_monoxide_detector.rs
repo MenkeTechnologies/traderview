@@ -143,12 +143,10 @@ fn check_ca(input: &RentalCarbonMonoxideDetectorInput) -> RentalCarbonMonoxideDe
         );
     }
 
-    if input.has_co_source
-        && input.alarm_installed
-        && !input.ca_state_fire_marshal_certified
-    {
+    if input.has_co_source && input.alarm_installed && !input.ca_state_fire_marshal_certified {
         violations.push(
-            "Cal. Health & Safety Code § 13261 — CO alarm must be State Fire Marshal certified".to_string(),
+            "Cal. Health & Safety Code § 13261 — CO alarm must be State Fire Marshal certified"
+                .to_string(),
         );
     }
 
@@ -182,18 +180,16 @@ fn check_ny(input: &RentalCarbonMonoxideDetectorInput) -> RentalCarbonMonoxideDe
 
     if input.has_co_source && !input.alarm_installed {
         violations.push(
-            "NY Exec. Law § 378(5-a) (Amanda's Law) — CO alarm required where CO source is present".to_string(),
+            "NY Exec. Law § 378(5-a) (Amanda's Law) — CO alarm required where CO source is present"
+                .to_string(),
         );
     }
 
     if input.has_co_source && input.alarm_installed && !input.ul_2034_listed {
-        violations.push(
-            "NY Exec. Law § 378(5-a) — UL 2034 listed CO alarm required".to_string(),
-        );
+        violations.push("NY Exec. Law § 378(5-a) — UL 2034 listed CO alarm required".to_string());
     }
 
-    let distance_compliant = !input.alarm_installed
-        || input.distance_from_sleeping_area_feet <= 15;
+    let distance_compliant = !input.alarm_installed || input.distance_from_sleeping_area_feet <= 15;
     if input.has_co_source && input.alarm_installed && !distance_compliant {
         violations.push(
             "NY Exec. Law § 378(5-a) — CO alarm must be within 15 feet of each sleeping area entrance".to_string(),
@@ -229,16 +225,14 @@ fn check_il(input: &RentalCarbonMonoxideDetectorInput) -> RentalCarbonMonoxideDe
     }
 
     if input.has_co_source && input.alarm_installed && !input.ul_2034_listed {
-        violations.push(
-            "430 ILCS 135/10 — UL 2034 listed CO detector required".to_string(),
-        );
+        violations.push("430 ILCS 135/10 — UL 2034 listed CO detector required".to_string());
     }
 
-    let distance_compliant = !input.alarm_installed
-        || input.distance_from_sleeping_area_feet <= 15;
+    let distance_compliant = !input.alarm_installed || input.distance_from_sleeping_area_feet <= 15;
     if input.has_co_source && input.alarm_installed && !distance_compliant {
         violations.push(
-            "430 ILCS 135/10 — CO detector must be within 15 feet of every sleeping room".to_string(),
+            "430 ILCS 135/10 — CO detector must be within 15 feet of every sleeping room"
+                .to_string(),
         );
     }
 
@@ -283,12 +277,12 @@ fn check_ma(input: &RentalCarbonMonoxideDetectorInput) -> RentalCarbonMonoxideDe
 
     if input.has_co_source && input.alarm_installed && !input.alarm_on_every_level {
         violations.push(
-            "M.G.L. c. 148 § 26F½ — interconnected CO alarms required on every level of dwelling".to_string(),
+            "M.G.L. c. 148 § 26F½ — interconnected CO alarms required on every level of dwelling"
+                .to_string(),
         );
     }
 
-    let distance_compliant = !input.alarm_installed
-        || input.distance_from_sleeping_area_feet <= 10;
+    let distance_compliant = !input.alarm_installed || input.distance_from_sleeping_area_feet <= 10;
     if input.has_co_source && input.alarm_installed && !distance_compliant {
         violations.push(
             "M.G.L. c. 148 § 26F½ — CO alarm must be within 10 feet of each bedroom door (stricter than NY/IL 15-foot rule)".to_string(),
@@ -296,9 +290,7 @@ fn check_ma(input: &RentalCarbonMonoxideDetectorInput) -> RentalCarbonMonoxideDe
     }
 
     if input.has_co_source && input.alarm_installed && !input.ul_2034_listed {
-        violations.push(
-            "M.G.L. c. 148 § 26F½ — UL 2034 listed CO alarm required".to_string(),
-        );
+        violations.push("M.G.L. c. 148 § 26F½ — UL 2034 listed CO alarm required".to_string());
     }
 
     if input.has_co_source && !input.ma_fire_dept_certificate_obtained {
@@ -459,10 +451,7 @@ mod tests {
         i.ul_2034_listed = false;
         let r = check(&i);
         assert!(!r.installation_compliant);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("UL 2034")));
+        assert!(r.violations.iter().any(|v| v.contains("UL 2034")));
     }
 
     #[test]
@@ -479,10 +468,7 @@ mod tests {
         i.distance_from_sleeping_area_feet = 16;
         let r = check(&i);
         assert!(!r.distance_compliant);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("15 feet")));
+        assert!(r.violations.iter().any(|v| v.contains("15 feet")));
     }
 
     #[test]
@@ -533,10 +519,7 @@ mod tests {
         i.power_source = PowerSource::BatteryOnly;
         let r = check(&i);
         assert!(!r.interconnection_compliant);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("interconnected")));
+        assert!(r.violations.iter().any(|v| v.contains("interconnected")));
     }
 
     #[test]

@@ -166,12 +166,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // NoStatutoryRentEscrowFramework default — 46 other states + DC.
     let default_states = [
-        "AL", "AK", "AZ", "AR", "CA", "CT", "DC", "DE",
-        "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS",
-        "KY", "LA", "ME", "MI", "MN", "MS", "MO", "MT",
-        "NE", "NV", "NH", "NM", "NY", "NC", "ND", "OH",
-        "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX",
-        "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CA", "CT", "DC", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA",
+        "KS", "KY", "LA", "ME", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NM", "NY", "NC",
+        "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV",
+        "WI", "WY",
     ];
     for code in default_states {
         m.insert(
@@ -255,8 +253,7 @@ pub fn check(input: &RentEscrowInput) -> RentEscrowResult {
             input.tenant_deposited_all_unpaid_rent
         }
         RentEscrowRegime::ColoradoLimitedWithholding => {
-            !input.tenant_withholding_entire_rent
-                && input.landlord_notified_of_defect
+            !input.tenant_withholding_entire_rent && input.landlord_notified_of_defect
         }
         RentEscrowRegime::NoStatutoryRentEscrowFramework => input.landlord_notified_of_defect,
     };
@@ -307,12 +304,16 @@ pub fn check(input: &RentEscrowInput) -> RentEscrowResult {
             }
             RentEscrowRegime::MassachusettsCounterclaimDefense => {
                 if !input.tenant_asserting_eviction_counterclaim {
-                    reasons.push("tenant not asserting eviction counterclaim (MA mechanism requires it)");
+                    reasons.push(
+                        "tenant not asserting eviction counterclaim (MA mechanism requires it)",
+                    );
                 }
             }
             RentEscrowRegime::NewJerseyMariniHearingAdministrator => {
                 if !input.tenant_deposited_all_unpaid_rent {
-                    reasons.push("all unpaid rent not deposited with court (NJ Marini-hearing requirement)");
+                    reasons.push(
+                        "all unpaid rent not deposited with court (NJ Marini-hearing requirement)",
+                    );
                 }
             }
             RentEscrowRegime::ColoradoLimitedWithholding => {
@@ -370,10 +371,7 @@ mod tests {
     #[test]
     fn ma_counterclaim_defense_regime() {
         let r = check(&baseline("MA"));
-        assert_eq!(
-            r.regime,
-            RentEscrowRegime::MassachusettsCounterclaimDefense
-        );
+        assert_eq!(r.regime, RentEscrowRegime::MassachusettsCounterclaimDefense);
     }
 
     #[test]
@@ -506,7 +504,9 @@ mod tests {
         let r = check(&baseline("CA"));
         assert!(!r.statutory_remedy_available);
         assert!(!r.tenant_may_pursue_escrow);
-        assert!(r.note.contains("common-law warranty-of-habitability remedies"));
+        assert!(r
+            .note
+            .contains("common-law warranty-of-habitability remedies"));
     }
 
     // ── Citations ──────────────────────────────────────────────────
@@ -567,7 +567,10 @@ mod tests {
 
     #[test]
     fn ma_only_counterclaim_mechanism_state() {
-        let count = RULES.iter().filter(|(_, r)| r.counterclaim_defense_mechanism).count();
+        let count = RULES
+            .iter()
+            .filter(|(_, r)| r.counterclaim_defense_mechanism)
+            .count();
         assert_eq!(count, 1);
     }
 
@@ -582,13 +585,19 @@ mod tests {
 
     #[test]
     fn nj_only_all_unpaid_rent_deposit_state() {
-        let count = RULES.iter().filter(|(_, r)| r.all_unpaid_rent_deposit_required).count();
+        let count = RULES
+            .iter()
+            .filter(|(_, r)| r.all_unpaid_rent_deposit_required)
+            .count();
         assert_eq!(count, 1);
     }
 
     #[test]
     fn co_only_entire_rent_withholding_prohibited_state() {
-        let count = RULES.iter().filter(|(_, r)| r.entire_rent_withholding_prohibited).count();
+        let count = RULES
+            .iter()
+            .filter(|(_, r)| r.entire_rent_withholding_prohibited)
+            .count();
         assert_eq!(count, 1);
     }
 

@@ -40,10 +40,17 @@ pub fn compute(
         slow_period,
         signal_period,
     };
-    if fast_period < 2 || slow_period < 2 || signal_period < 2
+    if fast_period < 2
+        || slow_period < 2
+        || signal_period < 2
         || fast_period >= slow_period
-        || n < slow_period + signal_period { return report; }
-    if closes.iter().any(|x| !x.is_finite()) { return report; }
+        || n < slow_period + signal_period
+    {
+        return report;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return report;
+    }
     let fast_sma = sma(closes, fast_period);
     let slow_sma = sma(closes, slow_period);
     for i in 0..n {
@@ -63,7 +70,9 @@ pub fn compute(
 fn sma(series: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     let mut sum: f64 = series[..period].iter().sum();
     out[period - 1] = Some(sum / p_f);
@@ -77,11 +86,15 @@ fn sma(series: &[f64], period: usize) -> Vec<Option<f64>> {
 fn sma_opt(series: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     for i in (period - 1)..n {
         let win = &series[i + 1 - period..=i];
-        if win.iter().any(|x| x.is_none()) { continue; }
+        if win.iter().any(|x| x.is_none()) {
+            continue;
+        }
         let s: f64 = win.iter().filter_map(|x| *x).sum();
         out[i] = Some(s / p_f);
     }
@@ -97,7 +110,7 @@ mod tests {
         let c = vec![100.0_f64; 100];
         let r = compute(&c, 1, 10, 16);
         assert!(r.fast.iter().all(|x| x.is_none()));
-        let r2 = compute(&c, 10, 3, 16);    // fast > slow
+        let r2 = compute(&c, 10, 3, 16); // fast > slow
         assert!(r2.fast.iter().all(|x| x.is_none()));
     }
 
@@ -113,9 +126,15 @@ mod tests {
     fn flat_market_yields_zero_lines() {
         let c = vec![100.0_f64; 100];
         let r = compute(&c, 3, 10, 16);
-        for v in r.fast.iter().flatten() { assert!(v.abs() < 1e-9); }
-        for v in r.signal.iter().flatten() { assert!(v.abs() < 1e-9); }
-        for v in r.histogram.iter().flatten() { assert!(v.abs() < 1e-9); }
+        for v in r.fast.iter().flatten() {
+            assert!(v.abs() < 1e-9);
+        }
+        for v in r.signal.iter().flatten() {
+            assert!(v.abs() < 1e-9);
+        }
+        for v in r.histogram.iter().flatten() {
+            assert!(v.abs() < 1e-9);
+        }
     }
 
     #[test]

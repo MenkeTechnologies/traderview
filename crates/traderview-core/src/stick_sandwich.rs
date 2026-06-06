@@ -17,7 +17,12 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub open: f64, pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct StickSandwichReport {
@@ -33,9 +38,12 @@ pub fn compute(bars: &[Bar], tolerance_pct: f64) -> StickSandwichReport {
         bearish: vec![false; n],
         tolerance_pct,
     };
-    if n < 3 || !tolerance_pct.is_finite() || tolerance_pct <= 0.0 { return report; }
-    if bars.iter().any(|b| !b.open.is_finite() || !b.high.is_finite()
-        || !b.low.is_finite() || !b.close.is_finite()) {
+    if n < 3 || !tolerance_pct.is_finite() || tolerance_pct <= 0.0 {
+        return report;
+    }
+    if bars.iter().any(|b| {
+        !b.open.is_finite() || !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()
+    }) {
         return report;
     }
     let tol_factor = tolerance_pct / 100.0;
@@ -48,7 +56,8 @@ pub fn compute(bars: &[Bar], tolerance_pct: f64) -> StickSandwichReport {
             && b2.close > b2.open
             && b2.open >= b1.close
             && b3.close < b3.open
-            && (b3.close - b1.close).abs() <= tol {
+            && (b3.close - b1.close).abs() <= tol
+        {
             report.bullish[i] = true;
         }
         // Bearish: b1 bullish, b2 bearish below b1's body, b3 bullish
@@ -57,7 +66,8 @@ pub fn compute(bars: &[Bar], tolerance_pct: f64) -> StickSandwichReport {
             && b2.close < b2.open
             && b2.open <= b1.close
             && b3.close > b3.open
-            && (b3.close - b1.close).abs() <= tol {
+            && (b3.close - b1.close).abs() <= tol
+        {
             report.bearish[i] = true;
         }
     }
@@ -69,7 +79,12 @@ mod tests {
     use super::*;
 
     fn bar(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -80,9 +95,11 @@ mod tests {
 
     #[test]
     fn nan_returns_empty() {
-        let bars = vec![bar(100.0, 101.0, 99.0, 100.0),
-                        bar(f64::NAN, 101.0, 99.0, 100.0),
-                        bar(100.0, 101.0, 99.0, 100.0)];
+        let bars = vec![
+            bar(100.0, 101.0, 99.0, 100.0),
+            bar(f64::NAN, 101.0, 99.0, 100.0),
+            bar(100.0, 101.0, 99.0, 100.0),
+        ];
         let r = compute(&bars, 0.3);
         assert!(!r.bullish.iter().any(|x| *x));
     }
@@ -117,7 +134,7 @@ mod tests {
         let bars = vec![
             bar(110.0, 110.5, 99.5, 100.0),
             bar(100.0, 105.5, 99.8, 105.0),
-            bar(106.0, 106.5, 95.0, 95.0),    // close 95 ≠ b1.close 100
+            bar(106.0, 106.5, 95.0, 95.0), // close 95 ≠ b1.close 100
         ];
         let r = compute(&bars, 0.3);
         assert!(!r.bullish[2]);

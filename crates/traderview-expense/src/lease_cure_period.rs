@@ -150,11 +150,12 @@ pub fn check(input: &Input) -> CheckResult {
 
     let tenant_may_cure = matches!(input.violation_type, ViolationType::Curable);
 
-    let days_for_comparison = if input.regime == Regime::California && input.weekends_holidays_excluded {
-        input.business_days_since_notice
-    } else {
-        input.days_since_notice_served
-    };
+    let days_for_comparison =
+        if input.regime == Regime::California && input.weekends_holidays_excluded {
+            input.business_days_since_notice
+        } else {
+            input.days_since_notice_served
+        };
     let cure_window_expired = days_for_comparison >= cure_period_days;
 
     let second_notice_required_on_recurrence = match input.regime {
@@ -172,7 +173,11 @@ pub fn check(input: &Input) -> CheckResult {
                  expired.",
                 input.days_since_notice_served,
                 input.business_days_since_notice,
-                if cure_window_expired { "HAS" } else { "has NOT" },
+                if cure_window_expired {
+                    "HAS"
+                } else {
+                    "has NOT"
+                },
             ));
             if !tenant_may_cure {
                 notes.push(
@@ -184,37 +189,39 @@ pub fn check(input: &Input) -> CheckResult {
                 );
             }
         }
-        Regime::Florida => {
-            match input.violation_type {
-                ViolationType::Curable => {
-                    notes.push(format!(
-                        "Fla. Stat. § 83.56(2)(b) — 7-day cure for curable noncompliance \
+        Regime::Florida => match input.violation_type {
+            ViolationType::Curable => {
+                notes.push(format!(
+                    "Fla. Stat. § 83.56(2)(b) — 7-day cure for curable noncompliance \
                          (unauthorized pets, guests, vehicles; parking; cleanliness). \
                          Days since notice: {}. Cure window {} expired.",
-                        input.days_since_notice_served,
-                        if cure_window_expired { "HAS" } else { "has NOT" },
-                    ));
-                    if input.recurrence_within_12_months {
-                        notes.push(
-                            "§ 83.56(2)(b) 12-MONTH RECURRENCE RULE engaged — same curable \
+                    input.days_since_notice_served,
+                    if cure_window_expired {
+                        "HAS"
+                    } else {
+                        "has NOT"
+                    },
+                ));
+                if input.recurrence_within_12_months {
+                    notes.push(
+                        "§ 83.56(2)(b) 12-MONTH RECURRENCE RULE engaged — same curable \
                              noncompliance has recurred within 12 months of initial notice. \
                              Landlord may commence eviction WITHOUT delivering subsequent \
                              notice. Tenant's cure right does not reset on recurrence."
-                                .to_string(),
-                        );
-                    }
+                            .to_string(),
+                    );
                 }
-                ViolationType::NonCurable => {
-                    notes.push(format!(
-                        "Fla. Stat. § 83.56(2)(a) — NON-CURABLE noncompliance (destruction, \
+            }
+            ViolationType::NonCurable => {
+                notes.push(format!(
+                    "Fla. Stat. § 83.56(2)(a) — NON-CURABLE noncompliance (destruction, \
                          damage, or intentional misuse; continued unreasonable disturbance) \
                          gets a 7-day NOTICE TO VACATE with NO cure right. Tenant must \
                          vacate within 7 days of notice. Days since notice: {}.",
-                        input.days_since_notice_served,
-                    ));
-                }
+                    input.days_since_notice_served,
+                ));
             }
-        }
+        },
         Regime::NewYork => {
             notes.push(format!(
                 "N.Y. RPAPL § 753(4) — 10-day cure for breach of lease covenant in \
@@ -222,7 +229,11 @@ pub fn check(input: &Input) -> CheckResult {
                  Distinct from HSTPA 2019 30-day cure for chronic late-rent/nuisance \
                  defenses.",
                 input.days_since_notice_served,
-                if cure_window_expired { "HAS" } else { "has NOT" },
+                if cure_window_expired {
+                    "HAS"
+                } else {
+                    "has NOT"
+                },
             ));
         }
         Regime::Default => {
@@ -231,8 +242,7 @@ pub fn check(input: &Input) -> CheckResult {
                  nature of breach + good-faith effort to remedy. Restatement (Second) of \
                  Property § 13.1 + § 16.1. Safe-harbor baseline {} days; actual reasonable \
                  period may vary. Days since notice: {}.",
-                DEFAULT_REASONABLE_CURE_DAYS,
-                input.days_since_notice_served,
+                DEFAULT_REASONABLE_CURE_DAYS, input.days_since_notice_served,
             ));
         }
     }
@@ -241,7 +251,11 @@ pub fn check(input: &Input) -> CheckResult {
         violations.push(format!(
             "Cure window of {} {} expired; landlord may proceed with eviction proceeding.",
             cure_period_days,
-            if weekends_excluded { "business days" } else { "calendar days" },
+            if weekends_excluded {
+                "business days"
+            } else {
+                "calendar days"
+            },
         ));
     } else if !tenant_may_cure {
         violations.push(format!(
@@ -334,7 +348,12 @@ mod tests {
 
     #[test]
     fn california_non_curable_no_cure_right() {
-        let r = check(&input(Regime::California, ViolationType::NonCurable, 10, 10));
+        let r = check(&input(
+            Regime::California,
+            ViolationType::NonCurable,
+            10,
+            10,
+        ));
         assert!(!r.tenant_may_cure);
         assert!(!r.compliant);
     }
@@ -369,7 +388,10 @@ mod tests {
         b.recurrence_within_12_months = true;
         let r = check(&b);
         assert!(!r.second_notice_required_on_recurrence);
-        assert!(r.notes.iter().any(|n| n.contains("12-MONTH RECURRENCE RULE")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("12-MONTH RECURRENCE RULE")));
     }
 
     #[test]
@@ -427,7 +449,12 @@ mod tests {
 
     #[test]
     fn only_california_excludes_weekends_invariant() {
-        for regime in [Regime::California, Regime::Florida, Regime::NewYork, Regime::Default] {
+        for regime in [
+            Regime::California,
+            Regime::Florida,
+            Regime::NewYork,
+            Regime::Default,
+        ] {
             let r = check(&input(regime, ViolationType::Curable, 0, 0));
             let expected = matches!(regime, Regime::California);
             assert_eq!(r.weekends_excluded, expected, "{:?}", regime);
@@ -436,15 +463,19 @@ mod tests {
 
     #[test]
     fn only_florida_has_recurrence_bypass_invariant() {
-        for regime in [Regime::California, Regime::Florida, Regime::NewYork, Regime::Default] {
+        for regime in [
+            Regime::California,
+            Regime::Florida,
+            Regime::NewYork,
+            Regime::Default,
+        ] {
             let mut b = input(regime, ViolationType::Curable, 0, 0);
             b.recurrence_within_12_months = true;
             let r = check(&b);
             // Only Florida should report no second notice required.
             let expected_no_second_notice = matches!(regime, Regime::Florida);
             assert_eq!(
-                !r.second_notice_required_on_recurrence,
-                expected_no_second_notice,
+                !r.second_notice_required_on_recurrence, expected_no_second_notice,
                 "{:?}",
                 regime
             );
@@ -453,7 +484,12 @@ mod tests {
 
     #[test]
     fn non_curable_no_cure_right_all_regimes_invariant() {
-        for regime in [Regime::California, Regime::Florida, Regime::NewYork, Regime::Default] {
+        for regime in [
+            Regime::California,
+            Regime::Florida,
+            Regime::NewYork,
+            Regime::Default,
+        ] {
             let r = check(&input(regime, ViolationType::NonCurable, 0, 0));
             assert!(!r.tenant_may_cure, "{:?}", regime);
         }
@@ -470,7 +506,9 @@ mod tests {
         assert!(r.citation.contains("§ 83.56(3)"));
         assert!(r.citation.contains("§ 753(4)"));
         assert!(r.citation.contains("HSTPA"));
-        assert!(r.citation.contains("Restatement (Second) of Property § 13.1"));
+        assert!(r
+            .citation
+            .contains("Restatement (Second) of Property § 13.1"));
         assert!(r.citation.contains("§ 16.1"));
     }
 
@@ -495,17 +533,22 @@ mod tests {
     fn cure_window_expired_truth_table_curable() {
         // 4 regimes × 2 day-counts (within vs past) = 8-cell sweep.
         let cells = [
-            (Regime::California, 2, 2, false),  // 2 business days within 3
-            (Regime::California, 3, 3, true),   // 3 business days = boundary
-            (Regime::Florida, 6, 0, false),     // 6 < 7
-            (Regime::Florida, 7, 0, true),      // boundary
-            (Regime::NewYork, 9, 0, false),     // 9 < 10
-            (Regime::NewYork, 10, 0, true),     // boundary
-            (Regime::Default, 13, 0, false),    // 13 < 14
-            (Regime::Default, 14, 0, true),     // boundary
+            (Regime::California, 2, 2, false), // 2 business days within 3
+            (Regime::California, 3, 3, true),  // 3 business days = boundary
+            (Regime::Florida, 6, 0, false),    // 6 < 7
+            (Regime::Florida, 7, 0, true),     // boundary
+            (Regime::NewYork, 9, 0, false),    // 9 < 10
+            (Regime::NewYork, 10, 0, true),    // boundary
+            (Regime::Default, 13, 0, false),   // 13 < 14
+            (Regime::Default, 14, 0, true),    // boundary
         ];
         for (regime, days_cal, days_biz, expected_expired) in cells.iter() {
-            let r = check(&input(*regime, ViolationType::Curable, *days_cal, *days_biz));
+            let r = check(&input(
+                *regime,
+                ViolationType::Curable,
+                *days_cal,
+                *days_biz,
+            ));
             assert_eq!(
                 r.cure_window_expired, *expected_expired,
                 "regime={:?} cal={} biz={}",

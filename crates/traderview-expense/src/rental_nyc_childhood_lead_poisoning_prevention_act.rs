@@ -307,8 +307,7 @@ pub fn check(input: &Input) -> Output {
             EPA_CERTIFIED_RRP_DISTURBANCE_THRESHOLD_SQFT
         ));
         return Output {
-            severity:
-                Severity::ViolationEpaCertifiedRrpRenovatorNotUsedForDisturbanceOver100Sqft,
+            severity: Severity::ViolationEpaCertifiedRrpRenovatorNotUsedForDisturbanceOver100Sqft,
             compliant: false,
             total_penalty_cents: LL31_CIVIL_PENALTY_MAX_CENTS,
             xrf_testing_required: true,
@@ -517,7 +516,10 @@ mod tests {
     #[test]
     fn citations_pin_ll1_admin_code_subsections() {
         let out = check(&base_compliant_pre_1960());
-        assert!(out.citations.iter().any(|c| c.contains("Local Law 1 of 2004")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("Local Law 1 of 2004")));
         assert!(out.citations.iter().any(|c| c.contains("§ 27-2056")));
         assert!(out.citations.iter().any(|c| c.contains("§ 27-2056.4")));
         assert!(out.citations.iter().any(|c| c.contains("§ 27-2056.11")));
@@ -528,16 +530,28 @@ mod tests {
     #[test]
     fn citations_pin_ll31_2020_xrf_and_ll66_2019_threshold() {
         let out = check(&base_compliant_pre_1960());
-        assert!(out.citations.iter().any(|c| c.contains("Local Law 31 of 2020")));
-        assert!(out.citations.iter().any(|c| c.contains("Local Law 66 of 2019")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("Local Law 31 of 2020")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("Local Law 66 of 2019")));
         assert!(out.citations.iter().any(|c| c.contains("0.5 mg/cm²")));
     }
 
     #[test]
     fn citations_pin_28_rcny_and_epa_rrp() {
         let out = check(&base_compliant_pre_1960());
-        assert!(out.citations.iter().any(|c| c.contains("28 RCNY Subchapter K")));
-        assert!(out.citations.iter().any(|c| c.contains("40 C.F.R. Part 745 Subpart E")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("28 RCNY Subchapter K")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("40 C.F.R. Part 745 Subpart E")));
     }
 
     #[test]

@@ -387,8 +387,7 @@ mod tests {
     fn low_income_housing_credit_section_42_compliant() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::ComponentCreditsUnderSection38B;
-        input.component_credit_category =
-            ComponentCreditCategory::LowIncomeHousingCreditSection42;
+        input.component_credit_category = ComponentCreditCategory::LowIncomeHousingCreditSection42;
         let out = check(&input);
         assert_eq!(
             out.mode,
@@ -419,7 +418,10 @@ mod tests {
         input.current_year_business_credit_dollars = 100_000;
         input.carryback_dollars = 0;
         let out = check(&input);
-        assert_eq!(out.mode, Section38Mode::CompliantLimitationAppliedUnderSection38C1);
+        assert_eq!(
+            out.mode,
+            Section38Mode::CompliantLimitationAppliedUnderSection38C1
+        );
     }
 
     #[test]
@@ -443,16 +445,19 @@ mod tests {
     fn specified_credit_allowed_against_tmt_compliant() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::SpecifiedCreditsUnderSection38C4;
-        input.specified_credit_status =
-            SpecifiedCreditStatus::SpecifiedCreditAllowedAgainstTmt;
+        input.specified_credit_status = SpecifiedCreditStatus::SpecifiedCreditAllowedAgainstTmt;
         let out = check(&input);
-        assert_eq!(out.mode, Section38Mode::CompliantSpecifiedCreditAllowedAgainstTmt);
+        assert_eq!(
+            out.mode,
+            Section38Mode::CompliantSpecifiedCreditAllowedAgainstTmt
+        );
     }
 
     #[test]
     fn married_filing_separately_threshold_reduced_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::MarriedFilingSeparatelyAdjustmentUnderSection38C2;
+        input.compliance_aspect =
+            ComplianceAspect::MarriedFilingSeparatelyAdjustmentUnderSection38C2;
         input.filing_status = FilingStatus::MarriedFilingSeparately;
         let out = check(&input);
         assert_eq!(
@@ -464,10 +469,14 @@ mod tests {
     #[test]
     fn married_filing_jointly_full_threshold_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::MarriedFilingSeparatelyAdjustmentUnderSection38C2;
+        input.compliance_aspect =
+            ComplianceAspect::MarriedFilingSeparatelyAdjustmentUnderSection38C2;
         input.filing_status = FilingStatus::MarriedFilingJointlyOrSingleOrHeadOfHousehold;
         let out = check(&input);
-        assert_eq!(out.mode, Section38Mode::CompliantLimitationAppliedUnderSection38C1);
+        assert_eq!(
+            out.mode,
+            Section38Mode::CompliantLimitationAppliedUnderSection38C1
+        );
     }
 
     #[test]
@@ -504,7 +513,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::FormFilingUnderForm3800;
         input.form_3800_filed_correctly = false;
         let out = check(&input);
-        assert_eq!(out.mode, Section38Mode::ViolationForm3800NotFiledOrIncorrect);
+        assert_eq!(
+            out.mode,
+            Section38Mode::ViolationForm3800NotFiledOrIncorrect
+        );
     }
 
     #[test]

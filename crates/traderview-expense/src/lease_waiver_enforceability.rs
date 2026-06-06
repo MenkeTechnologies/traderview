@@ -149,148 +149,152 @@ pub fn check(input: &Input) -> CheckResult {
         };
     }
 
-    let (waiver_enforceable, statutory_void_provision_engaged, public_policy_unenforceable,
-        residential_only_protection_engaged) =
-        match input.regime {
-            Regime::NewYork => {
-                // § 5-321 — narrow scope. Only landlord-negligence exculpatory clauses
-                // are statutorily void. Applies to residential AND commercial leases.
-                let exculpatory_clause = matches!(
-                    input.waiver_type,
-                    WaiverType::LandlordNegligenceExculpatory
-                );
-                if exculpatory_clause {
-                    violations.push(
-                        "N.Y. Gen. Oblig. Law § 5-321 — landlord-negligence exculpatory \
+    let (
+        waiver_enforceable,
+        statutory_void_provision_engaged,
+        public_policy_unenforceable,
+        residential_only_protection_engaged,
+    ) = match input.regime {
+        Regime::NewYork => {
+            // § 5-321 — narrow scope. Only landlord-negligence exculpatory clauses
+            // are statutorily void. Applies to residential AND commercial leases.
+            let exculpatory_clause =
+                matches!(input.waiver_type, WaiverType::LandlordNegligenceExculpatory);
+            if exculpatory_clause {
+                violations.push(
+                    "N.Y. Gen. Oblig. Law § 5-321 — landlord-negligence exculpatory \
                          clause is VOID as against public policy and wholly unenforceable. \
                          Applies to BOTH residential and commercial leases. Distinct from \
                          indemnification clauses (Great N. Ins. Co. v. Interior Constr. \
                          Corp., 7 N.Y.3d 412 (2006) — indemnity remains enforceable)."
-                            .to_string(),
-                    );
-                    notes.push(
-                        "§ 5-321 narrow-scope statute — landlord may still seek \
+                        .to_string(),
+                );
+                notes.push(
+                    "§ 5-321 narrow-scope statute — landlord may still seek \
                          INDEMNIFICATION (separate doctrine) for liability paid to \
                          injured third parties. The void clause is only the one \
                          exempting LANDLORD from liability to tenant for landlord's own \
                          negligence."
-                            .to_string(),
-                    );
-                    (false, true, true, false)
-                } else {
-                    notes.push(format!(
-                        "N.Y. Gen. Oblig. Law § 5-321 narrow scope — {:?} waiver is NOT \
+                        .to_string(),
+                );
+                (false, true, true, false)
+            } else {
+                notes.push(format!(
+                    "N.Y. Gen. Oblig. Law § 5-321 narrow scope — {:?} waiver is NOT \
                          within the statute's negligence-exculpatory scope. Common-law \
                          analysis applies; jury-trial waivers + procedural waivers may \
                          be enforceable if knowing and voluntary.",
-                        input.waiver_type,
-                    ));
-                    let cl_enforceable = input.tenant_knowing_and_voluntary_consent;
-                    (cl_enforceable, false, !cl_enforceable, false)
-                }
+                    input.waiver_type,
+                ));
+                let cl_enforceable = input.tenant_knowing_and_voluntary_consent;
+                (cl_enforceable, false, !cl_enforceable, false)
             }
-            Regime::California => {
-                // § 1953 — broad scope, residential leases only.
-                if !input.lease_is_residential {
-                    notes.push(
-                        "Cal. Civ. Code § 1953 applies only to RESIDENTIAL leases. \
+        }
+        Regime::California => {
+            // § 1953 — broad scope, residential leases only.
+            if !input.lease_is_residential {
+                notes.push(
+                    "Cal. Civ. Code § 1953 applies only to RESIDENTIAL leases. \
                          Commercial lease waivers are analyzed under common-law \
                          contract principles + Restatement (Second) of Contracts § 178 \
                          public-policy test."
-                            .to_string(),
-                    );
-                    let cl_enforceable = input.tenant_knowing_and_voluntary_consent;
-                    (cl_enforceable, false, !cl_enforceable, false)
-                } else {
-                    // All six § 1953(a) waiver categories are void in residential.
-                    let void_category = matches!(
-                        input.waiver_type,
-                        WaiverType::DepositOrEntryRightsWaiver
-                            | WaiverType::FutureCauseOfActionWaiver
-                            | WaiverType::NoticeOrHearingRightsWaiver
-                            | WaiverType::JuryTrialWaiver
-                            | WaiverType::HabitabilityOrDutyOfCareWaiver
-                            | WaiverType::CumulativeRemediesWaiver
-                            | WaiverType::LandlordNegligenceExculpatory
-                    );
-                    if void_category {
-                        let (subsection, label) = match input.waiver_type {
-                            WaiverType::DepositOrEntryRightsWaiver => {
-                                ("§ 1953(a)(1)", "§ 1950.5 (deposit) or § 1954 (entry) rights")
-                            }
-                            WaiverType::FutureCauseOfActionWaiver => {
-                                ("§ 1953(a)(2)", "future cause of action against lessor")
-                            }
-                            WaiverType::NoticeOrHearingRightsWaiver => {
-                                ("§ 1953(a)(3)", "right to notice or hearing required by law")
-                            }
-                            WaiverType::JuryTrialWaiver => {
-                                ("§ 1953(a)(4)", "procedural rights in litigation including jury trial")
-                            }
-                            WaiverType::HabitabilityOrDutyOfCareWaiver
-                            | WaiverType::LandlordNegligenceExculpatory => {
-                                ("§ 1953(a)(5)", "duty of care to prevent personal injury or property damage")
-                            }
-                            WaiverType::CumulativeRemediesWaiver => {
-                                ("§ 1953(a)(6)", "cumulative remedies under the lease")
-                            }
-                        };
-                        violations.push(format!(
-                            "Cal. Civ. Code {} — residential lease waiver of {} is VOID \
+                        .to_string(),
+                );
+                let cl_enforceable = input.tenant_knowing_and_voluntary_consent;
+                (cl_enforceable, false, !cl_enforceable, false)
+            } else {
+                // All six § 1953(a) waiver categories are void in residential.
+                let void_category = matches!(
+                    input.waiver_type,
+                    WaiverType::DepositOrEntryRightsWaiver
+                        | WaiverType::FutureCauseOfActionWaiver
+                        | WaiverType::NoticeOrHearingRightsWaiver
+                        | WaiverType::JuryTrialWaiver
+                        | WaiverType::HabitabilityOrDutyOfCareWaiver
+                        | WaiverType::CumulativeRemediesWaiver
+                        | WaiverType::LandlordNegligenceExculpatory
+                );
+                if void_category {
+                    let (subsection, label) = match input.waiver_type {
+                        WaiverType::DepositOrEntryRightsWaiver => (
+                            "§ 1953(a)(1)",
+                            "§ 1950.5 (deposit) or § 1954 (entry) rights",
+                        ),
+                        WaiverType::FutureCauseOfActionWaiver => {
+                            ("§ 1953(a)(2)", "future cause of action against lessor")
+                        }
+                        WaiverType::NoticeOrHearingRightsWaiver => {
+                            ("§ 1953(a)(3)", "right to notice or hearing required by law")
+                        }
+                        WaiverType::JuryTrialWaiver => (
+                            "§ 1953(a)(4)",
+                            "procedural rights in litigation including jury trial",
+                        ),
+                        WaiverType::HabitabilityOrDutyOfCareWaiver
+                        | WaiverType::LandlordNegligenceExculpatory => (
+                            "§ 1953(a)(5)",
+                            "duty of care to prevent personal injury or property damage",
+                        ),
+                        WaiverType::CumulativeRemediesWaiver => {
+                            ("§ 1953(a)(6)", "cumulative remedies under the lease")
+                        }
+                    };
+                    violations.push(format!(
+                        "Cal. Civ. Code {} — residential lease waiver of {} is VOID \
                              as contrary to public policy. California § 1953 imposes the \
                              strictest residential-protection regime in the U.S.; ANY of \
                              the six § 1953(a) waiver categories is automatically void.",
-                            subsection, label,
-                        ));
-                        (false, true, true, true)
-                    } else {
-                        notes.push(
-                            "Waiver type not within Cal. Civ. Code § 1953(a)(1)-(6) \
-                             enumerated categories. Common-law analysis applies."
-                                .to_string(),
-                        );
-                        (true, false, false, false)
-                    }
-                }
-            }
-            Regime::Default => {
-                // Common-law analysis: knowing + voluntary + public policy.
-                let public_policy_violation = matches!(
-                    input.waiver_type,
-                    WaiverType::HabitabilityOrDutyOfCareWaiver
-                        | WaiverType::LandlordNegligenceExculpatory
-                );
-                if public_policy_violation {
-                    violations.push(format!(
-                        "Common-law public-policy doctrine + Restatement (Second) of \
-                         Contracts § 178 — {:?} waiver in lease is unenforceable as \
-                         against public policy regardless of knowing/voluntary consent. \
-                         Modern majority voids broad waivers of statutory tenant rights \
-                         and landlord negligence liability.",
-                        input.waiver_type,
+                        subsection, label,
                     ));
-                    (false, false, true, false)
-                } else if !input.tenant_knowing_and_voluntary_consent {
-                    violations.push(
-                        "Common-law analysis — waiver was not knowing or voluntary \
-                         (e.g., adhesion contract without meaningful negotiation). \
-                         Procedural unconscionability defense may invalidate the \
-                         waiver."
-                            .to_string(),
-                    );
-                    (false, false, true, false)
+                    (false, true, true, true)
                 } else {
                     notes.push(
-                        "Common-law analysis — waiver appears enforceable: not a public-\
-                         policy-protected category AND tenant gave knowing + voluntary \
-                         consent. Restatement (Second) of Contracts § 178 public-policy \
-                         test does not engage."
+                        "Waiver type not within Cal. Civ. Code § 1953(a)(1)-(6) \
+                             enumerated categories. Common-law analysis applies."
                             .to_string(),
                     );
                     (true, false, false, false)
                 }
             }
-        };
+        }
+        Regime::Default => {
+            // Common-law analysis: knowing + voluntary + public policy.
+            let public_policy_violation = matches!(
+                input.waiver_type,
+                WaiverType::HabitabilityOrDutyOfCareWaiver
+                    | WaiverType::LandlordNegligenceExculpatory
+            );
+            if public_policy_violation {
+                violations.push(format!(
+                    "Common-law public-policy doctrine + Restatement (Second) of \
+                         Contracts § 178 — {:?} waiver in lease is unenforceable as \
+                         against public policy regardless of knowing/voluntary consent. \
+                         Modern majority voids broad waivers of statutory tenant rights \
+                         and landlord negligence liability.",
+                    input.waiver_type,
+                ));
+                (false, false, true, false)
+            } else if !input.tenant_knowing_and_voluntary_consent {
+                violations.push(
+                    "Common-law analysis — waiver was not knowing or voluntary \
+                         (e.g., adhesion contract without meaningful negotiation). \
+                         Procedural unconscionability defense may invalidate the \
+                         waiver."
+                        .to_string(),
+                );
+                (false, false, true, false)
+            } else {
+                notes.push(
+                    "Common-law analysis — waiver appears enforceable: not a public-\
+                         policy-protected category AND tenant gave knowing + voluntary \
+                         consent. Restatement (Second) of Contracts § 178 public-policy \
+                         test does not engage."
+                        .to_string(),
+                );
+                (true, false, false, false)
+            }
+        }
+    };
 
     notes.push(
         "Sibling distinction: this module covers LEASE-DRAFTED WAIVER PROVISIONS — when \
@@ -415,7 +419,10 @@ mod tests {
 
     #[test]
     fn ca_residential_deposit_rights_waiver_void() {
-        let r = check(&input(Regime::California, WaiverType::DepositOrEntryRightsWaiver));
+        let r = check(&input(
+            Regime::California,
+            WaiverType::DepositOrEntryRightsWaiver,
+        ));
         assert!(!r.waiver_enforceable);
         assert!(r.violations.iter().any(|v| v.contains("§ 1953(a)(1)")));
     }
@@ -452,7 +459,10 @@ mod tests {
 
     #[test]
     fn ca_residential_cumulative_remedies_void() {
-        let r = check(&input(Regime::California, WaiverType::CumulativeRemediesWaiver));
+        let r = check(&input(
+            Regime::California,
+            WaiverType::CumulativeRemediesWaiver,
+        ));
         assert!(!r.waiver_enforceable);
         assert!(r.violations.iter().any(|v| v.contains("§ 1953(a)(6)")));
     }
@@ -515,7 +525,11 @@ mod tests {
         for regime in [Regime::NewYork, Regime::California, Regime::Default] {
             let r = check(&input(regime, WaiverType::JuryTrialWaiver));
             let expected = matches!(regime, Regime::California);
-            assert_eq!(r.residential_only_protection_engaged, expected, "{:?}", regime);
+            assert_eq!(
+                r.residential_only_protection_engaged, expected,
+                "{:?}",
+                regime
+            );
         }
     }
 
@@ -568,7 +582,7 @@ mod tests {
         let cells = [
             (WaiverType::LandlordNegligenceExculpatory, true, false),
             (WaiverType::LandlordNegligenceExculpatory, false, false),
-            (WaiverType::JuryTrialWaiver, true, true),  // not protected; consent OK
+            (WaiverType::JuryTrialWaiver, true, true), // not protected; consent OK
             (WaiverType::JuryTrialWaiver, false, false), // not consented
         ];
         for (waiver_type, consent, expected_enforceable) in cells.iter() {
@@ -576,11 +590,9 @@ mod tests {
             b.tenant_knowing_and_voluntary_consent = *consent;
             let r = check(&b);
             assert_eq!(
-                r.waiver_enforceable,
-                *expected_enforceable,
+                r.waiver_enforceable, *expected_enforceable,
                 "waiver={:?} consent={}",
-                waiver_type,
-                consent
+                waiver_type, consent
             );
         }
     }
@@ -589,10 +601,7 @@ mod tests {
 
     #[test]
     fn citation_pins_all_subsections() {
-        let r = check(&input(
-            Regime::California,
-            WaiverType::JuryTrialWaiver,
-        ));
+        let r = check(&input(Regime::California, WaiverType::JuryTrialWaiver));
         assert!(r.citation.contains("§ 5-321"));
         assert!(r.citation.contains("§ 1953"));
         assert!(r.citation.contains("§ 1953(a)(1)"));
@@ -603,17 +612,16 @@ mod tests {
         assert!(r.citation.contains("§ 1953(a)(6)"));
         assert!(r.citation.contains("§ 1950.5"));
         assert!(r.citation.contains("§ 1954"));
-        assert!(r.citation.contains("Restatement (Second) of Contracts § 178"));
+        assert!(r
+            .citation
+            .contains("Restatement (Second) of Contracts § 178"));
         assert!(r.citation.contains("Great N. Ins. Co."));
         assert!(r.citation.contains("7 N.Y.3d 412"));
     }
 
     #[test]
     fn sibling_distinction_note_present() {
-        let r = check(&input(
-            Regime::California,
-            WaiverType::JuryTrialWaiver,
-        ));
+        let r = check(&input(Regime::California, WaiverType::JuryTrialWaiver));
         assert!(
             r.notes.iter().any(|n| n.contains("landlord_harassment")
                 && n.contains("habitability_remedies")

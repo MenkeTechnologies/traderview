@@ -68,7 +68,11 @@ pub fn compute(
         let z2 = inv_norm_cdf(1.0 - 1.0 / (n_trials as f64 * std::f64::consts::E));
         // Conservative fallback: simple √(2 ln N) bound.
         let approx = (1.0 - gamma_em) * z1 + gamma_em * z2;
-        if approx.is_finite() && approx > 0.0 { approx } else { (2.0 * ln_n).sqrt() }
+        if approx.is_finite() && approx > 0.0 {
+            approx
+        } else {
+            (2.0 * ln_n).sqrt()
+        }
     };
     let z = (observed_sharpe - sr_star) / sr_se;
     let prob = norm_cdf(z);
@@ -82,12 +86,12 @@ pub fn compute(
 }
 
 fn norm_cdf(x: f64) -> f64 {
-    let a1 =  0.254829592_f64;
+    let a1 = 0.254829592_f64;
     let a2 = -0.284496736_f64;
-    let a3 =  1.421413741_f64;
+    let a3 = 1.421413741_f64;
     let a4 = -1.453152027_f64;
-    let a5 =  1.061405429_f64;
-    let p  =  0.3275911_f64;
+    let a5 = 1.061405429_f64;
+    let p = 0.3275911_f64;
     let sign = if x < 0.0 { -1.0 } else { 1.0 };
     let xa = x.abs() / std::f64::consts::SQRT_2;
     let t = 1.0 / (1.0 + p * xa);
@@ -101,21 +105,43 @@ fn inv_norm_cdf(p: f64) -> f64 {
     if !(0.0..=1.0).contains(&p) || !p.is_finite() {
         return f64::NAN;
     }
-    if p == 0.0 { return f64::NEG_INFINITY; }
-    if p == 1.0 { return f64::INFINITY; }
+    if p == 0.0 {
+        return f64::NEG_INFINITY;
+    }
+    if p == 1.0 {
+        return f64::INFINITY;
+    }
     let plow = 0.02425;
     let phigh = 1.0 - plow;
-    let a = [-3.969_683_028_665_376e1, 2.209_460_984_245_205e2,
-        -2.759_285_104_469_687e2, 1.383_577_518_672_69e2,
-        -3.066_479_806_614_716e1, 2.506_628_277_153_46];
-    let b = [-5.447_609_879_822_406e1, 1.615_858_368_580_409e2,
-        -1.556_989_798_598_866e2, 6.680_131_188_771_972e1,
-        -1.328_068_155_288_572e1];
-    let c = [-7.784_894_002_430_293e-3, -3.223_964_580_411_365e-1,
-        -2.400_758_277_161_838, -2.549_732_539_343_734,
-        4.374_664_141_464_968, 2.938_163_982_698_783];
-    let d = [7.784_695_709_041_462e-3, 3.224_671_290_700_398e-1,
-        2.445_134_137_142_996, 3.754_408_661_907_416];
+    let a = [
+        -3.969_683_028_665_376e1,
+        2.209_460_984_245_205e2,
+        -2.759_285_104_469_687e2,
+        1.383_577_518_672_69e2,
+        -3.066_479_806_614_716e1,
+        2.506_628_277_153_46,
+    ];
+    let b = [
+        -5.447_609_879_822_406e1,
+        1.615_858_368_580_409e2,
+        -1.556_989_798_598_866e2,
+        6.680_131_188_771_972e1,
+        -1.328_068_155_288_572e1,
+    ];
+    let c = [
+        -7.784_894_002_430_293e-3,
+        -3.223_964_580_411_365e-1,
+        -2.400_758_277_161_838,
+        -2.549_732_539_343_734,
+        4.374_664_141_464_968,
+        2.938_163_982_698_783,
+    ];
+    let d = [
+        7.784_695_709_041_462e-3,
+        3.224_671_290_700_398e-1,
+        2.445_134_137_142_996,
+        3.754_408_661_907_416,
+    ];
     if p < plow {
         let q = (-2.0 * p.ln()).sqrt();
         (((((c[0] * q + c[1]) * q + c[2]) * q + c[3]) * q + c[4]) * q + c[5])
@@ -165,8 +191,11 @@ mod tests {
     fn high_observed_sharpe_yields_high_probability() {
         // SR_obs = 3.0 (impressive), Gaussian returns, 252 obs, single trial.
         let r = compute(3.0, 252, 0.0, 3.0, 1).unwrap();
-        assert!(r.probability_true_sr_above_threshold > 0.99,
-            "high SR should yield high p, got {}", r.probability_true_sr_above_threshold);
+        assert!(
+            r.probability_true_sr_above_threshold > 0.99,
+            "high SR should yield high p, got {}",
+            r.probability_true_sr_above_threshold
+        );
     }
 
     #[test]
@@ -174,8 +203,11 @@ mod tests {
         // SR_obs = 1.5, 252 obs, but 1_000_000 trials → SR_★ very large.
         let r = compute(1.5, 252, 0.0, 3.0, 1_000_000).unwrap();
         // After massive multi-test correction, the probability should drop.
-        assert!(r.probability_true_sr_above_threshold < 0.20,
-            "1M trials should deflate, got prob={}", r.probability_true_sr_above_threshold);
+        assert!(
+            r.probability_true_sr_above_threshold < 0.20,
+            "1M trials should deflate, got prob={}",
+            r.probability_true_sr_above_threshold
+        );
     }
 
     #[test]
@@ -189,16 +221,18 @@ mod tests {
         // range where Φ(·) hasn't bottomed/topped out.
         let r_pos = compute(0.3, 30, 0.5, 3.0, 1).unwrap();
         let r_neg = compute(0.3, 30, -0.5, 3.0, 1).unwrap();
-        assert!(r_neg.probability_true_sr_above_threshold < r_pos.probability_true_sr_above_threshold,
+        assert!(
+            r_neg.probability_true_sr_above_threshold < r_pos.probability_true_sr_above_threshold,
             "negative skew should lower PSR: pos={} neg={}",
             r_pos.probability_true_sr_above_threshold,
-            r_neg.probability_true_sr_above_threshold);
+            r_neg.probability_true_sr_above_threshold
+        );
     }
 
     #[test]
     fn fat_tails_increase_sr_variance() {
         let r_gauss = compute(1.5, 252, 0.0, 3.0, 1).unwrap();
-        let r_fat   = compute(1.5, 252, 0.0, 8.0, 1).unwrap();
+        let r_fat = compute(1.5, 252, 0.0, 8.0, 1).unwrap();
         assert!(r_fat.sharpe_variance > r_gauss.sharpe_variance);
     }
 

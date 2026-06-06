@@ -222,9 +222,7 @@ pub fn check(input: &Input) -> Output {
              8 feet or extend rigid metal exhaust duct to within 8 feet of dryer.",
             input.transition_duct_length_feet, UL_2158A_TRANSITION_DUCT_MAX_LENGTH_FEET
         ));
-    } else if input.dryer_fuel_is_gas
-        && !input.gas_dryer_combustion_air_ventilation_compliant
-    {
+    } else if input.dryer_fuel_is_gas && !input.gas_dryer_combustion_air_ventilation_compliant {
         severity = Severity::GasDryerCoExposureWithoutAdequateVentilation;
         actions.push(
             "Gas dryer without adequate combustion-air ventilation per IFC 504 plus IRC \
@@ -349,9 +347,7 @@ pub fn check(input: &Input) -> Output {
         | Severity::GasDryerCoExposureWithoutAdequateVentilation
         | Severity::LandlordProvidedRepairOverdueHabitabilityBreach => input.annual_rent_cents,
         Severity::LintBuildupAnnualMaintenanceOverdueFireRisk
-        | Severity::DisclosureRequiredAtLeaseSigning => {
-            input.annual_rent_cents.saturating_div(2)
-        }
+        | Severity::DisclosureRequiredAtLeaseSigning => input.annual_rent_cents.saturating_div(2),
         _ => 0,
     };
 
@@ -409,17 +405,17 @@ mod tests {
         i.provision_status = ApplianceProvisionStatus::TenantOwnedTenantMaintained;
         let r = check(&i);
         assert!(matches!(r.severity, Severity::NotApplicable));
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("dryer vent enclosure")));
+        assert!(r.notes.iter().any(|n| n.contains("dryer vent enclosure")));
     }
 
     #[test]
     fn compliant_with_maintenance_cadence() {
         let i = baseline();
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantWithMaintenanceCadence));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantWithMaintenanceCadence
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, 0);
     }
 
@@ -428,7 +424,10 @@ mod tests {
         let mut i = baseline();
         i.dryer_vent_termination = DryerVentTermination::AtticTerminationProhibited;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::ImproperVentingAtticOrCrawlspaceMoldRisk));
+        assert!(matches!(
+            r.severity,
+            Severity::ImproperVentingAtticOrCrawlspaceMoldRisk
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
         assert!(r
             .recommended_actions
@@ -441,7 +440,10 @@ mod tests {
         let mut i = baseline();
         i.dryer_vent_termination = DryerVentTermination::CrawlspaceTerminationProhibited;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::ImproperVentingAtticOrCrawlspaceMoldRisk));
+        assert!(matches!(
+            r.severity,
+            Severity::ImproperVentingAtticOrCrawlspaceMoldRisk
+        ));
     }
 
     #[test]
@@ -449,7 +451,10 @@ mod tests {
         let mut i = baseline();
         i.transition_duct_is_metal = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::NonCompliantTransitionDuctFireRisk));
+        assert!(matches!(
+            r.severity,
+            Severity::NonCompliantTransitionDuctFireRisk
+        ));
         assert!(r.recommended_actions.iter().any(|a| a.contains("430°F")));
         assert!(r.recommended_actions.iter().any(|a| a.contains("UL 2158A")));
     }
@@ -459,7 +464,10 @@ mod tests {
         let mut i = baseline();
         i.transition_duct_length_feet = 12;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::NonCompliantTransitionDuctFireRisk));
+        assert!(matches!(
+            r.severity,
+            Severity::NonCompliantTransitionDuctFireRisk
+        ));
         assert!(r.recommended_actions.iter().any(|a| a.contains("8 feet")));
     }
 
@@ -468,7 +476,10 @@ mod tests {
         let mut i = baseline();
         i.transition_duct_length_feet = 8;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantWithMaintenanceCadence));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantWithMaintenanceCadence
+        ));
     }
 
     #[test]
@@ -476,7 +487,10 @@ mod tests {
         let mut i = baseline();
         i.transition_duct_ul_2158a_certified = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::NonCompliantTransitionDuctFireRisk));
+        assert!(matches!(
+            r.severity,
+            Severity::NonCompliantTransitionDuctFireRisk
+        ));
     }
 
     #[test]
@@ -485,9 +499,15 @@ mod tests {
         i.dryer_fuel_is_gas = true;
         i.gas_dryer_combustion_air_ventilation_compliant = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::GasDryerCoExposureWithoutAdequateVentilation));
+        assert!(matches!(
+            r.severity,
+            Severity::GasDryerCoExposureWithoutAdequateVentilation
+        ));
         assert!(r.recommended_actions.iter().any(|a| a.contains("IFC 504")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("IRC G2407.5")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("IRC G2407.5")));
     }
 
     #[test]
@@ -495,7 +515,10 @@ mod tests {
         let mut i = baseline();
         i.dryer_fuel_is_gas = true;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::CompliantWithMaintenanceCadence));
+        assert!(matches!(
+            r.severity,
+            Severity::CompliantWithMaintenanceCadence
+        ));
     }
 
     #[test]
@@ -503,7 +526,10 @@ mod tests {
         let mut i = baseline();
         i.appliance_in_disrepair_with_overdue_tenant_notice = true;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::LandlordProvidedRepairOverdueHabitabilityBreach));
+        assert!(matches!(
+            r.severity,
+            Severity::LandlordProvidedRepairOverdueHabitabilityBreach
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
     }
 
@@ -512,9 +538,15 @@ mod tests {
         let mut i = baseline();
         i.annual_lint_cleaning_within_12_months = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::LintBuildupAnnualMaintenanceOverdueFireRisk));
+        assert!(matches!(
+            r.severity,
+            Severity::LintBuildupAnnualMaintenanceOverdueFireRisk
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents / 2);
-        assert!(r.recommended_actions.iter().any(|a| a.contains(&US_DRYER_FIRES_ANNUALLY.to_string())));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains(&US_DRYER_FIRES_ANNUALLY.to_string())));
     }
 
     #[test]
@@ -522,7 +554,10 @@ mod tests {
         let mut i = baseline();
         i.annual_lint_cleaning_within_12_months = false;
         let r = check(&i);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("IAQA Standard 3000")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("IAQA Standard 3000")));
     }
 
     #[test]
@@ -530,7 +565,10 @@ mod tests {
         let mut i = baseline();
         i.disclosure_provided_at_lease_signing = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::DisclosureRequiredAtLeaseSigning));
+        assert!(matches!(
+            r.severity,
+            Severity::DisclosureRequiredAtLeaseSigning
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents / 2);
     }
 
@@ -558,7 +596,10 @@ mod tests {
         let mut i = baseline();
         i.jurisdiction = Jurisdiction::NewYork;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("Real Property Law § 235-b")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Real Property Law § 235-b")));
         assert!(r.notes.iter().any(|n| n.contains("Local Law 55 of 2018")));
         assert!(r.notes.iter().any(|n| n.contains("MDL § 78")));
     }
@@ -590,9 +631,18 @@ mod tests {
             .notes
             .iter()
             .any(|n| n.contains("tenant_in_unit_appliance_repair_responsibility")));
-        assert!(r.notes.iter().any(|n| n.contains("rental_natural_gas_leak_response")));
-        assert!(r.notes.iter().any(|n| n.contains("rental_gas_appliance_ban")));
-        assert!(r.notes.iter().any(|n| n.contains("rental_pellet_stove_disclosure")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("rental_natural_gas_leak_response")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("rental_gas_appliance_ban")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("rental_pellet_stove_disclosure")));
     }
 
     #[test]
@@ -637,7 +687,10 @@ mod tests {
         i.dryer_vent_termination = DryerVentTermination::AtticTerminationProhibited;
         i.annual_lint_cleaning_within_12_months = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::ImproperVentingAtticOrCrawlspaceMoldRisk));
+        assert!(matches!(
+            r.severity,
+            Severity::ImproperVentingAtticOrCrawlspaceMoldRisk
+        ));
     }
 
     #[test]
@@ -646,7 +699,10 @@ mod tests {
         i.transition_duct_is_metal = false;
         i.transition_duct_length_feet = 100;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::NonCompliantTransitionDuctFireRisk));
+        assert!(matches!(
+            r.severity,
+            Severity::NonCompliantTransitionDuctFireRisk
+        ));
     }
 
     #[test]
@@ -660,11 +716,31 @@ mod tests {
 
     #[test]
     fn citation_branch_for_each_jurisdiction() {
-        let ca = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::California; i });
-        let ma = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Massachusetts; i });
-        let ny = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::NewYork; i });
-        let wa = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Washington; i });
-        let de = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Default; i });
+        let ca = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::California;
+            i
+        });
+        let ma = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Massachusetts;
+            i
+        });
+        let ny = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::NewYork;
+            i
+        });
+        let wa = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Washington;
+            i
+        });
+        let de = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Default;
+            i
+        });
         assert!(ca.citation.contains("AB 628"));
         assert!(ma.citation.contains("105 CMR 410"));
         assert!(ny.citation.contains("MDL § 78"));
@@ -678,6 +754,9 @@ mod tests {
         i.provision_status = ApplianceProvisionStatus::SharedCoinOpLaundryRoom;
         i.appliance_in_disrepair_with_overdue_tenant_notice = true;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::LandlordProvidedRepairOverdueHabitabilityBreach));
+        assert!(matches!(
+            r.severity,
+            Severity::LandlordProvidedRepairOverdueHabitabilityBreach
+        ));
     }
 }

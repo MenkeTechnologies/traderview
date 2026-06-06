@@ -321,12 +321,10 @@ mod tests {
         let co = check(&input(Regime::Colorado, true, false, false));
         let mt = check(&input(Regime::Montana, true, false, false));
         assert!(
-            az.remediation_standard_ug_per_100cm2_x10
-                < co.remediation_standard_ug_per_100cm2_x10
+            az.remediation_standard_ug_per_100cm2_x10 < co.remediation_standard_ug_per_100cm2_x10
         );
         assert!(
-            co.remediation_standard_ug_per_100cm2_x10
-                < mt.remediation_standard_ug_per_100cm2_x10
+            co.remediation_standard_ug_per_100cm2_x10 < mt.remediation_standard_ug_per_100cm2_x10
         );
     }
 

@@ -32,13 +32,17 @@ pub struct TsrvReport {
 
 pub fn compute(returns: &[f64], k_subsamples: Option<usize>) -> Option<TsrvReport> {
     let n = returns.len();
-    if n < 30 { return None; }
-    if returns.iter().any(|x| !x.is_finite()) { return None; }
+    if n < 30 {
+        return None;
+    }
+    if returns.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let n_f = n as f64;
-    let k = k_subsamples.unwrap_or_else(|| {
-        (n_f.powf(2.0 / 3.0).round() as usize).clamp(2, n / 4)
-    });
-    if k < 2 || k >= n { return None; }
+    let k = k_subsamples.unwrap_or_else(|| (n_f.powf(2.0 / 3.0).round() as usize).clamp(2, n / 4));
+    if k < 2 || k >= n {
+        return None;
+    }
     let rv_all: f64 = returns.iter().map(|r| r * r).sum();
     // Subsampled RV: for each k = 0..K-1, sum r_i² for i ≡ k mod K.
     let mut rv_subsamples = vec![0.0_f64; k];
@@ -66,15 +70,19 @@ mod tests {
 
     fn box_muller(n: usize, seed: u64, scale: f64) -> Vec<f64> {
         let mut state = seed;
-        (0..n).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u2 = (state >> 32) as f64 / u32::MAX as f64;
-            scale * (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
-        }).collect()
+        (0..n)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u2 = (state >> 32) as f64 / u32::MAX as f64;
+                scale * (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
+            })
+            .collect()
     }
 
     #[test]
@@ -112,26 +120,41 @@ mod tests {
         let mut state: u64 = 0xDEAD_BEEF_CAFE_BABE;
         let n = 1000_usize;
         let true_returns = box_muller(n, 42, 0.01);
-        let noise: Vec<f64> = (0..=n).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u2 = (state >> 32) as f64 / u32::MAX as f64;
-            0.005 * (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
-        }).collect();
+        let noise: Vec<f64> = (0..=n)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u2 = (state >> 32) as f64 / u32::MAX as f64;
+                0.005 * (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
+            })
+            .collect();
         // Observed return = true return + (η_t - η_{t-1}).
-        let observed: Vec<f64> = true_returns.iter().enumerate()
-            .map(|(i, r)| r + noise[i + 1] - noise[i]).collect();
+        let observed: Vec<f64> = true_returns
+            .iter()
+            .enumerate()
+            .map(|(i, r)| r + noise[i + 1] - noise[i])
+            .collect();
         let r = compute(&observed, None).unwrap();
         let true_iv: f64 = true_returns.iter().map(|r| r * r).sum();
         // RV_all is heavily noise-inflated.
-        assert!(r.rv_all > true_iv * 1.5,
-            "RV_all = {} should be inflated above true IV {}", r.rv_all, true_iv);
+        assert!(
+            r.rv_all > true_iv * 1.5,
+            "RV_all = {} should be inflated above true IV {}",
+            r.rv_all,
+            true_iv
+        );
         // TSRV should be much closer to true IV.
-        assert!(r.tsrv < r.rv_all,
-            "TSRV {} should be below noise-inflated RV_all {}", r.tsrv, r.rv_all);
+        assert!(
+            r.tsrv < r.rv_all,
+            "TSRV {} should be below noise-inflated RV_all {}",
+            r.tsrv,
+            r.rv_all
+        );
     }
 
     #[test]

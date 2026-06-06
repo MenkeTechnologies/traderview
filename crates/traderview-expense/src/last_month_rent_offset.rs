@@ -156,8 +156,8 @@ pub fn check(input: &Input) -> CheckResult {
                 if input.tenant_attempted_offset {
                     if input.tenant_bad_faith {
                         texas_treble_damages_engaged = true;
-                        texas_treble_damages_cents = monthly_rent
-                            .saturating_mul(TEXAS_TREBLE_MULTIPLIER);
+                        texas_treble_damages_cents =
+                            monthly_rent.saturating_mul(TEXAS_TREBLE_MULTIPLIER);
                         attorney_fees_recoverable = true;
                         violations.push(format!(
                             "Tex. Prop. Code § 92.108 — STRICT PROHIBITION violated. \
@@ -409,7 +409,10 @@ mod tests {
         let r = check(&b);
         assert!(!r.offset_permitted);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("Common-law separation")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("Common-law separation")));
     }
 
     #[test]
@@ -457,9 +460,9 @@ mod tests {
     fn texas_treble_math_invariant() {
         // 3× monthly rent across multiple rent levels.
         let cells = [
-            (100_000, 300_000),   // $1K → $3K
-            (200_000, 600_000),   // $2K → $6K
-            (500_000, 1_500_000), // $5K → $15K
+            (100_000, 300_000),     // $1K → $3K
+            (200_000, 600_000),     // $2K → $6K
+            (500_000, 1_500_000),   // $5K → $15K
             (1_000_000, 3_000_000), // $10K → $30K
         ];
         for (rent, expected_treble) in cells.iter() {
@@ -468,7 +471,11 @@ mod tests {
             b.tenant_bad_faith = true;
             b.monthly_rent_cents = *rent;
             let r = check(&b);
-            assert_eq!(r.texas_treble_damages_cents, *expected_treble, "rent={}", rent);
+            assert_eq!(
+                r.texas_treble_damages_cents, *expected_treble,
+                "rent={}",
+                rent
+            );
         }
     }
 

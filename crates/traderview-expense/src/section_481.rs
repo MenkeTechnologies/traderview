@@ -337,15 +337,8 @@ mod tests {
         // $100k / 4 = $25k exactly — no rounding needed.
         // $100,001 / 4 = $25,000.25 each. Final year = $100,001 - 3 ×
         // $25,000.25 = $25,000.25 too. Verify schedule sums to total.
-        let r = compute(&base_input(
-            vec![pos("AAPL", dec!(0), dec!(100001))],
-            2024,
-        ));
-        let sum: Decimal = r
-            .annual_recognition_schedule
-            .iter()
-            .map(|x| x.amount)
-            .sum();
+        let r = compute(&base_input(vec![pos("AAPL", dec!(0), dec!(100001))], 2024));
+        let sum: Decimal = r.annual_recognition_schedule.iter().map(|x| x.amount).sum();
         assert_eq!(sum, dec!(100001));
     }
 
@@ -353,15 +346,8 @@ mod tests {
     fn final_year_absorbs_rounding_residual_odd_total() {
         // $100,003 / 4 = $25,000.75 each. Final year absorbs the
         // residual so the sum ties out.
-        let r = compute(&base_input(
-            vec![pos("AAPL", dec!(0), dec!(100003))],
-            2024,
-        ));
-        let sum: Decimal = r
-            .annual_recognition_schedule
-            .iter()
-            .map(|x| x.amount)
-            .sum();
+        let r = compute(&base_input(vec![pos("AAPL", dec!(0), dec!(100003))], 2024));
+        let sum: Decimal = r.annual_recognition_schedule.iter().map(|x| x.amount).sum();
         assert_eq!(sum, dec!(100003));
     }
 
@@ -379,10 +365,7 @@ mod tests {
 
     #[test]
     fn override_spread_years_to_2_distributes_50_pct_each() {
-        let mut i = base_input(
-            vec![pos("AAPL", dec!(100000), dec!(200000))],
-            2024,
-        );
+        let mut i = base_input(vec![pos("AAPL", dec!(100000), dec!(200000))], 2024);
         i.spread_years_override = Some(2);
         let r = compute(&i);
         assert_eq!(r.spread_years, 2);
@@ -414,10 +397,7 @@ mod tests {
     #[test]
     fn negative_adjustment_with_current_year_before_election_zero_recognition() {
         // -$50k loss, but caller asking about a year BEFORE election.
-        let mut i = base_input(
-            vec![pos("TSLA", dec!(200000), dec!(150000))],
-            2023,
-        );
+        let mut i = base_input(vec![pos("TSLA", dec!(200000), dec!(150000))], 2023);
         i.election_year = 2024;
         let r = compute(&i);
         assert_eq!(r.current_year_recognition, Decimal::ZERO);
@@ -429,9 +409,9 @@ mod tests {
         // 3 positions: +$10k, +$5k, -$49.9k = net -$34.9k loss.
         let r = compute(&base_input(
             vec![
-                pos("AAPL", dec!(100), dec!(10100)),     // +$10,000
-                pos("MSFT", dec!(100), dec!(5100)),      // +$5,000
-                pos("TSLA", dec!(100000), dec!(50100)),  // -$49,900
+                pos("AAPL", dec!(100), dec!(10100)),    // +$10,000
+                pos("MSFT", dec!(100), dec!(5100)),     // +$5,000
+                pos("TSLA", dec!(100000), dec!(50100)), // -$49,900
             ],
             2024,
         ));

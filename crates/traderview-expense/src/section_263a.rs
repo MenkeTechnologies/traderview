@@ -118,8 +118,7 @@ pub fn compute(input: &Section263AInput) -> Section263AResult {
         ..Section263AResult::default()
     };
 
-    let total_costs =
-        input.direct_costs + input.indirect_costs_allocable_to_inventory;
+    let total_costs = input.direct_costs + input.indirect_costs_allocable_to_inventory;
 
     // Classification short-circuits.
     match input.classification {
@@ -163,8 +162,7 @@ pub fn compute(input: &Section263AInput) -> Section263AResult {
     r.indirect_costs_capitalized = input
         .indirect_costs_allocable_to_inventory
         .max(Decimal::ZERO);
-    r.total_costs_capitalized =
-        r.direct_costs_capitalized + r.indirect_costs_capitalized;
+    r.total_costs_capitalized = r.direct_costs_capitalized + r.indirect_costs_capitalized;
     r.costs_currently_deductible = Decimal::ZERO;
     r.note = format!(
         "§263A applies: dealer with avg gross receipts ${} > ${} threshold. ${} direct + ${} indirect = ${} capitalized into inventory basis.",

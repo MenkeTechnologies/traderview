@@ -152,7 +152,8 @@ pub fn compute(input: &Input) -> Output {
             mode: RentIncreaseNoticeMode::NotApplicableNoIncrease,
             required_notice_days: 0,
             statutory_basis: "No rent increase proposed".to_string(),
-            notes: "Landlord is not proposing any rent increase; notice statutes do not apply.".to_string(),
+            notes: "Landlord is not proposing any rent increase; notice statutes do not apply."
+                .to_string(),
             citations,
         };
     }
@@ -236,12 +237,20 @@ pub fn compute(input: &Input) -> Output {
                 RentIncreaseNoticeMode::ViolationCaliforniaUnder30DaysShortIncrease
             }
         }
-        RentIncreaseJurisdiction::Washington => RentIncreaseNoticeMode::ViolationWashingtonUnder60Days,
+        RentIncreaseJurisdiction::Washington => {
+            RentIncreaseNoticeMode::ViolationWashingtonUnder60Days
+        }
         RentIncreaseJurisdiction::Oregon => RentIncreaseNoticeMode::ViolationOregonUnder90Days,
         RentIncreaseJurisdiction::NewYork => match input.occupancy_or_lease_length {
-            OccupancyOrLeaseLength::LessThan1Year => RentIncreaseNoticeMode::ViolationNyUnder30DayShortOccupancy,
-            OccupancyOrLeaseLength::Between1And2Years => RentIncreaseNoticeMode::ViolationNyUnder60DayMediumOccupancy,
-            OccupancyOrLeaseLength::TwoYearsOrMore => RentIncreaseNoticeMode::ViolationNyUnder90DayLongOccupancy,
+            OccupancyOrLeaseLength::LessThan1Year => {
+                RentIncreaseNoticeMode::ViolationNyUnder30DayShortOccupancy
+            }
+            OccupancyOrLeaseLength::Between1And2Years => {
+                RentIncreaseNoticeMode::ViolationNyUnder60DayMediumOccupancy
+            }
+            OccupancyOrLeaseLength::TwoYearsOrMore => {
+                RentIncreaseNoticeMode::ViolationNyUnder90DayLongOccupancy
+            }
         },
         RentIncreaseJurisdiction::OtherStateWithoutStatutoryMandate => {
             RentIncreaseNoticeMode::NotApplicableJurisdictionLacksStatutoryMandate
@@ -297,13 +306,19 @@ mod tests {
             ..baseline_ca_small_increase_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentIncreaseNoticeMode::NotApplicableJurisdictionLacksStatutoryMandate);
+        assert_eq!(
+            result.mode,
+            RentIncreaseNoticeMode::NotApplicableJurisdictionLacksStatutoryMandate
+        );
     }
 
     #[test]
     fn california_small_increase_30_days_compliant() {
         let result = check(&baseline_ca_small_increase_compliant());
-        assert_eq!(result.mode, RentIncreaseNoticeMode::CompliantNoticeServedWithinStatutoryWindow);
+        assert_eq!(
+            result.mode,
+            RentIncreaseNoticeMode::CompliantNoticeServedWithinStatutoryWindow
+        );
         assert_eq!(result.required_notice_days, 30);
     }
 
@@ -314,7 +329,10 @@ mod tests {
             ..baseline_ca_small_increase_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentIncreaseNoticeMode::CompliantNoticeServedWithinStatutoryWindow);
+        assert_eq!(
+            result.mode,
+            RentIncreaseNoticeMode::CompliantNoticeServedWithinStatutoryWindow
+        );
     }
 
     #[test]
@@ -324,7 +342,10 @@ mod tests {
             ..baseline_ca_small_increase_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentIncreaseNoticeMode::ViolationCaliforniaUnder30DaysShortIncrease);
+        assert_eq!(
+            result.mode,
+            RentIncreaseNoticeMode::ViolationCaliforniaUnder30DaysShortIncrease
+        );
     }
 
     #[test]
@@ -335,7 +356,10 @@ mod tests {
             ..baseline_ca_small_increase_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentIncreaseNoticeMode::CompliantNoticeServedWithinStatutoryWindow);
+        assert_eq!(
+            result.mode,
+            RentIncreaseNoticeMode::CompliantNoticeServedWithinStatutoryWindow
+        );
         assert_eq!(result.required_notice_days, 30);
     }
 
@@ -347,7 +371,10 @@ mod tests {
             ..baseline_ca_small_increase_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentIncreaseNoticeMode::ViolationCaliforniaUnder90DaysLargeIncrease);
+        assert_eq!(
+            result.mode,
+            RentIncreaseNoticeMode::ViolationCaliforniaUnder90DaysLargeIncrease
+        );
     }
 
     #[test]
@@ -358,7 +385,10 @@ mod tests {
             ..baseline_ca_small_increase_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentIncreaseNoticeMode::CompliantNoticeServedWithinStatutoryWindow);
+        assert_eq!(
+            result.mode,
+            RentIncreaseNoticeMode::CompliantNoticeServedWithinStatutoryWindow
+        );
     }
 
     #[test]
@@ -370,7 +400,10 @@ mod tests {
             ..baseline_ca_small_increase_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentIncreaseNoticeMode::CompliantNoticeServedWithinStatutoryWindow);
+        assert_eq!(
+            result.mode,
+            RentIncreaseNoticeMode::CompliantNoticeServedWithinStatutoryWindow
+        );
         assert_eq!(result.required_notice_days, 60);
     }
 
@@ -383,7 +416,10 @@ mod tests {
             ..baseline_ca_small_increase_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentIncreaseNoticeMode::ViolationWashingtonUnder60Days);
+        assert_eq!(
+            result.mode,
+            RentIncreaseNoticeMode::ViolationWashingtonUnder60Days
+        );
     }
 
     #[test]
@@ -395,7 +431,10 @@ mod tests {
             ..baseline_ca_small_increase_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentIncreaseNoticeMode::CompliantNoticeServedWithinStatutoryWindow);
+        assert_eq!(
+            result.mode,
+            RentIncreaseNoticeMode::CompliantNoticeServedWithinStatutoryWindow
+        );
         assert_eq!(result.required_notice_days, 90);
     }
 
@@ -408,7 +447,10 @@ mod tests {
             ..baseline_ca_small_increase_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentIncreaseNoticeMode::ViolationOregonUnder90Days);
+        assert_eq!(
+            result.mode,
+            RentIncreaseNoticeMode::ViolationOregonUnder90Days
+        );
     }
 
     #[test]
@@ -419,7 +461,10 @@ mod tests {
             ..baseline_ca_small_increase_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentIncreaseNoticeMode::NotApplicableNyIncreaseBelow5PctThreshold);
+        assert_eq!(
+            result.mode,
+            RentIncreaseNoticeMode::NotApplicableNyIncreaseBelow5PctThreshold
+        );
     }
 
     #[test]
@@ -432,7 +477,10 @@ mod tests {
             ..baseline_ca_small_increase_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentIncreaseNoticeMode::CompliantNoticeServedWithinStatutoryWindow);
+        assert_eq!(
+            result.mode,
+            RentIncreaseNoticeMode::CompliantNoticeServedWithinStatutoryWindow
+        );
         assert_eq!(result.required_notice_days, 30);
     }
 
@@ -446,7 +494,10 @@ mod tests {
             ..baseline_ca_small_increase_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentIncreaseNoticeMode::ViolationNyUnder30DayShortOccupancy);
+        assert_eq!(
+            result.mode,
+            RentIncreaseNoticeMode::ViolationNyUnder30DayShortOccupancy
+        );
     }
 
     #[test]
@@ -459,7 +510,10 @@ mod tests {
             ..baseline_ca_small_increase_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentIncreaseNoticeMode::CompliantNoticeServedWithinStatutoryWindow);
+        assert_eq!(
+            result.mode,
+            RentIncreaseNoticeMode::CompliantNoticeServedWithinStatutoryWindow
+        );
         assert_eq!(result.required_notice_days, 60);
     }
 
@@ -473,7 +527,10 @@ mod tests {
             ..baseline_ca_small_increase_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentIncreaseNoticeMode::ViolationNyUnder60DayMediumOccupancy);
+        assert_eq!(
+            result.mode,
+            RentIncreaseNoticeMode::ViolationNyUnder60DayMediumOccupancy
+        );
     }
 
     #[test]
@@ -486,7 +543,10 @@ mod tests {
             ..baseline_ca_small_increase_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentIncreaseNoticeMode::CompliantNoticeServedWithinStatutoryWindow);
+        assert_eq!(
+            result.mode,
+            RentIncreaseNoticeMode::CompliantNoticeServedWithinStatutoryWindow
+        );
         assert_eq!(result.required_notice_days, 90);
     }
 
@@ -500,7 +560,10 @@ mod tests {
             ..baseline_ca_small_increase_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentIncreaseNoticeMode::ViolationNyUnder90DayLongOccupancy);
+        assert_eq!(
+            result.mode,
+            RentIncreaseNoticeMode::ViolationNyUnder90DayLongOccupancy
+        );
     }
 
     #[test]
@@ -522,7 +585,10 @@ mod tests {
             ..baseline_ca_small_increase_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentIncreaseNoticeMode::ViolationOccupancyMisclassifiedToReduceNoticeWindow);
+        assert_eq!(
+            result.mode,
+            RentIncreaseNoticeMode::ViolationOccupancyMisclassifiedToReduceNoticeWindow
+        );
     }
 
     #[test]

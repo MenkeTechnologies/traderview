@@ -41,8 +41,12 @@ pub struct ExpectancyReport {
 }
 
 pub fn compute(trade_pnls: &[f64]) -> Option<ExpectancyReport> {
-    if trade_pnls.is_empty() { return None; }
-    if trade_pnls.iter().any(|x| !x.is_finite()) { return None; }
+    if trade_pnls.is_empty() {
+        return None;
+    }
+    if trade_pnls.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let n = trade_pnls.len();
     let wins: Vec<f64> = trade_pnls.iter().copied().filter(|x| *x > 0.0).collect();
     let losses: Vec<f64> = trade_pnls.iter().copied().filter(|x| *x < 0.0).collect();
@@ -50,8 +54,16 @@ pub fn compute(trade_pnls: &[f64]) -> Option<ExpectancyReport> {
     let n_losses = losses.len();
     let n_f = n as f64;
     let win_rate = n_wins as f64 / n_f;
-    let avg_win = if n_wins > 0 { wins.iter().sum::<f64>() / n_wins as f64 } else { 0.0 };
-    let avg_loss = if n_losses > 0 { losses.iter().sum::<f64>() / n_losses as f64 } else { 0.0 };
+    let avg_win = if n_wins > 0 {
+        wins.iter().sum::<f64>() / n_wins as f64
+    } else {
+        0.0
+    };
+    let avg_loss = if n_losses > 0 {
+        losses.iter().sum::<f64>() / n_losses as f64
+    } else {
+        0.0
+    };
     let expectancy = win_rate * avg_win + (1.0 - win_rate) * avg_loss;
     // Wrap mathematically-infinite values in `None` so serde_json can
     // serialize (refuses `f64::INFINITY`).

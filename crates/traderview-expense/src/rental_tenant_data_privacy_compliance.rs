@@ -151,8 +151,7 @@ pub fn check(input: &Input) -> Output {
             .saturating_mul(per_record_penalty)
             .saturating_add(input.tenant_actual_damages_cents);
         return Output {
-            severity:
-                Severity::BipaBiometricCollectionWithoutWrittenConsentViolation,
+            severity: Severity::BipaBiometricCollectionWithoutWrittenConsentViolation,
             estimated_landlord_exposure_cents: exposure,
             note: format!(
                 "IL BIPA VIOLATION (740 ILCS 14/15): biometric identifier (fingerprint, face \
@@ -224,9 +223,8 @@ pub fn check(input: &Input) -> Output {
                 | ConsentAndNoticeStatus::ConsentObtainedButNoticeInsufficient
         )
     {
-        let exposure = CCPA_INTENTIONAL_VIOLATION_PENALTY_CENTS.saturating_add(
-            input.tenant_actual_damages_cents,
-        );
+        let exposure = CCPA_INTENTIONAL_VIOLATION_PENALTY_CENTS
+            .saturating_add(input.tenant_actual_damages_cents);
         return Output {
             severity: Severity::CcpaCpraConsumerRightsNotProvidedViolation,
             estimated_landlord_exposure_cents: exposure,
@@ -257,7 +255,8 @@ pub fn check(input: &Input) -> Output {
             ConsentAndNoticeStatus::WrittenConsentAndNoticeProvided
         )
     {
-        let exposure = CCPA_CIVIL_PENALTY_PER_VIOLATION_CENTS.saturating_mul(2)
+        let exposure = CCPA_CIVIL_PENALTY_PER_VIOLATION_CENTS
+            .saturating_mul(2)
             .saturating_add(input.tenant_actual_damages_cents);
         return Output {
             severity: Severity::NycTenantDataPrivacyActViolation,
@@ -343,8 +342,7 @@ mod tests {
         Input {
             jurisdiction: Jurisdiction::California,
             data_category: DataCategory::StandardRentalApplicationPii,
-            consent_and_notice_status:
-                ConsentAndNoticeStatus::WrittenConsentAndNoticeProvided,
+            consent_and_notice_status: ConsentAndNoticeStatus::WrittenConsentAndNoticeProvided,
             estimated_records_collected: 100,
             tenant_actual_damages_cents: 5_000_00,
         }
@@ -354,7 +352,10 @@ mod tests {
     fn california_compliant_with_consent_and_notice() {
         let input = base_ca();
         let output = check(&input);
-        assert_eq!(output.severity, Severity::CompliantConsentAndNoticeFramework);
+        assert_eq!(
+            output.severity,
+            Severity::CompliantConsentAndNoticeFramework
+        );
         assert!(output.note.contains("CCPA"));
         assert!(output.note.contains("CPRA"));
     }
@@ -420,8 +421,7 @@ mod tests {
     fn fcra_consumer_report_consent_obtained_compliant() {
         let mut input = base_ca();
         input.data_category = DataCategory::FcraConsumerReport;
-        input.consent_and_notice_status =
-            ConsentAndNoticeStatus::FcraAdverseActionNoticeProvided;
+        input.consent_and_notice_status = ConsentAndNoticeStatus::FcraAdverseActionNoticeProvided;
         let output = check(&input);
         assert_eq!(
             output.severity,
@@ -437,10 +437,7 @@ mod tests {
         input.data_category = DataCategory::SmartAccessOrIotUsageData;
         input.consent_and_notice_status = ConsentAndNoticeStatus::NoConsentObtained;
         let output = check(&input);
-        assert_eq!(
-            output.severity,
-            Severity::NycTenantDataPrivacyActViolation
-        );
+        assert_eq!(output.severity, Severity::NycTenantDataPrivacyActViolation);
         assert!(output.note.contains("§§ 26-3001 to 26-3007"));
         assert!(output.note.contains("SHIELD Act"));
     }
@@ -464,7 +461,10 @@ mod tests {
         let mut input = base_ca();
         input.jurisdiction = Jurisdiction::Virginia;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::CompliantConsentAndNoticeFramework);
+        assert_eq!(
+            output.severity,
+            Severity::CompliantConsentAndNoticeFramework
+        );
         assert!(output.note.contains("VA CDPA"));
         assert!(output.note.contains("§§ 59.1-575"));
     }
@@ -554,9 +554,6 @@ mod tests {
         input.consent_and_notice_status =
             ConsentAndNoticeStatus::ConsentObtainedButNoticeInsufficient;
         let output = check(&input);
-        assert_eq!(
-            output.severity,
-            Severity::NycTenantDataPrivacyActViolation
-        );
+        assert_eq!(output.severity, Severity::NycTenantDataPrivacyActViolation);
     }
 }

@@ -117,11 +117,11 @@ pub fn check(input: &Input) -> CheckResult {
     let mut violations: Vec<String> = Vec::new();
     let mut notes: Vec<String> = Vec::new();
 
-    let (
-        lease_disclosure_mandate,
-        verbatim_language_required,
-        citation,
-    ): (bool, bool, &'static str) = match input.regime {
+    let (lease_disclosure_mandate, verbatim_language_required, citation): (
+        bool,
+        bool,
+        &'static str,
+    ) = match input.regime {
         Regime::California => (
             true,
             true,
@@ -176,7 +176,8 @@ pub fn check(input: &Input) -> CheckResult {
     // Common-law fraudulent-concealment liability — triggered where
     // landlord ACTIVELY misrepresents the absence of registered
     // offenders (applies in any regime).
-    let common_law_fraud_liability_triggered = input.landlord_actively_misrepresented_offender_absence;
+    let common_law_fraud_liability_triggered =
+        input.landlord_actively_misrepresented_offender_absence;
     if common_law_fraud_liability_triggered {
         violations.push(
             "Common-law fraudulent-concealment liability — landlord actively misrepresented \
@@ -257,11 +258,10 @@ mod tests {
         i.lease_contains_megans_law_notice = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("§ 2079.10a(a)") && v.contains("not present"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 2079.10a(a)") && v.contains("not present")));
     }
 
     #[test]
@@ -270,11 +270,10 @@ mod tests {
         i.notice_is_verbatim_statutory_language = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("VERBATIM") && v.contains("paraphrased"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("VERBATIM") && v.contains("paraphrased")));
     }
 
     #[test]
@@ -283,11 +282,10 @@ mod tests {
         i.notice_provided_at_lease_execution = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("§ 2079.10a(b)") && v.contains("lease execution"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 2079.10a(b)") && v.contains("lease execution")));
     }
 
     #[test]
@@ -304,12 +302,10 @@ mod tests {
     #[test]
     fn california_no_duty_to_investigate_note() {
         let r = check(&base(Regime::California));
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("NO statutory duty to investigate")
-                    && n.contains("FHA"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("NO statutory duty to investigate") && n.contains("FHA")));
     }
 
     // ── New Jersey 2C:7-1 et seq. ───────────────────────────────
@@ -360,11 +356,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.compliant);
         assert!(r.common_law_fraud_liability_triggered);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("fraudulent-concealment"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("fraudulent-concealment")));
     }
 
     #[test]
@@ -465,9 +460,7 @@ mod tests {
             let r = check(&i);
             assert!(!r.compliant);
             assert!(
-                r.violations
-                    .iter()
-                    .any(|v| v.contains(expected_substring)),
+                r.violations.iter().any(|v| v.contains(expected_substring)),
                 "config (present={}, verbatim={}, at_execution={}): expected '{}' violation",
                 notice_present,
                 verbatim,
@@ -479,26 +472,18 @@ mod tests {
 
     #[test]
     fn citation_pins_authority_per_regime() {
-        assert!(
-            check(&base(Regime::California))
-                .citation
-                .contains("§ 2079.10a")
-        );
-        assert!(
-            check(&base(Regime::California))
-                .citation
-                .contains("§ 290.46")
-        );
-        assert!(
-            check(&base(Regime::NewJersey))
-                .citation
-                .contains("N.J.S.A. 2C:7-1")
-        );
-        assert!(
-            check(&base(Regime::Default))
-                .citation
-                .contains("34 U.S.C. § 20911")
-        );
+        assert!(check(&base(Regime::California))
+            .citation
+            .contains("§ 2079.10a"));
+        assert!(check(&base(Regime::California))
+            .citation
+            .contains("§ 290.46"));
+        assert!(check(&base(Regime::NewJersey))
+            .citation
+            .contains("N.J.S.A. 2C:7-1"));
+        assert!(check(&base(Regime::Default))
+            .citation
+            .contains("34 U.S.C. § 20911"));
     }
 
     #[test]

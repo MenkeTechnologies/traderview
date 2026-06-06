@@ -180,7 +180,9 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.required_liability_coverage_dollars >= RENTERS_INSURANCE_EXCESSIVE_LIABILITY_THRESHOLD_DOLLARS {
+    if input.required_liability_coverage_dollars
+        >= RENTERS_INSURANCE_EXCESSIVE_LIABILITY_THRESHOLD_DOLLARS
+    {
         return Output {
             mode: RentersInsuranceRequirementMode::ViolationExcessiveLiabilityRequirementProhibitive,
             enforceability_basis: "Excessive liability requirement effectively prohibitive".to_string(),
@@ -202,7 +204,8 @@ pub fn compute(input: &Input) -> Output {
     }
 
     if input.landlord_additional_insured_naming_required_in_lease
-        && input.additional_insured_status == AdditionalInsuredStatus::LandlordNotNamedButPolicyInForce
+        && input.additional_insured_status
+            == AdditionalInsuredStatus::LandlordNotNamedButPolicyInForce
     {
         return Output {
             mode: RentersInsuranceRequirementMode::ViolationTenantFailedToMaintainPolicy,
@@ -276,7 +279,8 @@ mod tests {
     fn baseline_california_standard_compliant() -> Input {
         Input {
             jurisdiction: InsuranceJurisdiction::California,
-            lease_requirement_formality: LeaseRequirementFormality::WrittenLeaseClauseClearAndUnambiguous,
+            lease_requirement_formality:
+                LeaseRequirementFormality::WrittenLeaseClauseClearAndUnambiguous,
             required_liability_coverage_dollars: 100_000,
             required_personal_property_coverage_dollars: 10_000,
             landlord_additional_insured_naming_required_in_lease: false,
@@ -296,7 +300,8 @@ mod tests {
     fn additional_insured_naming_with_proof_compliant() {
         let input = Input {
             landlord_additional_insured_naming_required_in_lease: true,
-            additional_insured_status: AdditionalInsuredStatus::LandlordNamedAdditionalInsuredProofProvided,
+            additional_insured_status:
+                AdditionalInsuredStatus::LandlordNamedAdditionalInsuredProofProvided,
             ..baseline_california_standard_compliant()
         };
         let result = check(&input);
@@ -310,7 +315,10 @@ mod tests {
             ..baseline_california_standard_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentersInsuranceRequirementMode::NotApplicableNoLeaseRequirement);
+        assert_eq!(
+            result.mode,
+            RentersInsuranceRequirementMode::NotApplicableNoLeaseRequirement
+        );
     }
 
     #[test]
@@ -320,7 +328,10 @@ mod tests {
             ..baseline_california_standard_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentersInsuranceRequirementMode::ViolationVerbalRequirementOnlyNotInLease);
+        assert_eq!(
+            result.mode,
+            RentersInsuranceRequirementMode::ViolationVerbalRequirementOnlyNotInLease
+        );
     }
 
     #[test]
@@ -330,28 +341,39 @@ mod tests {
             ..baseline_california_standard_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentersInsuranceRequirementMode::ViolationAmbiguousLeaseClauseNotEnforceable);
+        assert_eq!(
+            result.mode,
+            RentersInsuranceRequirementMode::ViolationAmbiguousLeaseClauseNotEnforceable
+        );
         assert!(result.notes.contains("Contra proferentem"));
     }
 
     #[test]
     fn mid_lease_imposition_without_amendment_violation() {
         let input = Input {
-            lease_requirement_formality: LeaseRequirementFormality::AttemptedMidLeaseImpositionWithoutAmendment,
+            lease_requirement_formality:
+                LeaseRequirementFormality::AttemptedMidLeaseImpositionWithoutAmendment,
             ..baseline_california_standard_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentersInsuranceRequirementMode::ViolationMidLeaseImpositionWithoutAmendment);
+        assert_eq!(
+            result.mode,
+            RentersInsuranceRequirementMode::ViolationMidLeaseImpositionWithoutAmendment
+        );
     }
 
     #[test]
     fn mid_lease_imposition_with_signed_amendment_compliant() {
         let input = Input {
-            lease_requirement_formality: LeaseRequirementFormality::AttemptedMidLeaseImpositionWithSignedAmendment,
+            lease_requirement_formality:
+                LeaseRequirementFormality::AttemptedMidLeaseImpositionWithSignedAmendment,
             ..baseline_california_standard_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentersInsuranceRequirementMode::CompliantMidLeaseAmendmentSignedByTenant);
+        assert_eq!(
+            result.mode,
+            RentersInsuranceRequirementMode::CompliantMidLeaseAmendmentSignedByTenant
+        );
     }
 
     #[test]
@@ -361,7 +383,10 @@ mod tests {
             ..baseline_california_standard_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentersInsuranceRequirementMode::ViolationExcessiveLiabilityRequirementProhibitive);
+        assert_eq!(
+            result.mode,
+            RentersInsuranceRequirementMode::ViolationExcessiveLiabilityRequirementProhibitive
+        );
     }
 
     #[test]
@@ -371,7 +396,10 @@ mod tests {
             ..baseline_california_standard_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentersInsuranceRequirementMode::ViolationExcessiveLiabilityRequirementProhibitive);
+        assert_eq!(
+            result.mode,
+            RentersInsuranceRequirementMode::ViolationExcessiveLiabilityRequirementProhibitive
+        );
     }
 
     #[test]
@@ -397,7 +425,10 @@ mod tests {
             ..baseline_california_standard_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentersInsuranceRequirementMode::ViolationTenantFailedToMaintainPolicy);
+        assert_eq!(
+            result.mode,
+            RentersInsuranceRequirementMode::ViolationTenantFailedToMaintainPolicy
+        );
     }
 
     #[test]
@@ -408,7 +439,10 @@ mod tests {
             ..baseline_california_standard_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentersInsuranceRequirementMode::ViolationTenantFailedToMaintainPolicy);
+        assert_eq!(
+            result.mode,
+            RentersInsuranceRequirementMode::ViolationTenantFailedToMaintainPolicy
+        );
         assert!(result.notes.contains("additional insured"));
     }
 
@@ -419,7 +453,10 @@ mod tests {
             ..baseline_california_standard_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, RentersInsuranceRequirementMode::ViolationLandlordRequiredProofNotProvidedByTenant);
+        assert_eq!(
+            result.mode,
+            RentersInsuranceRequirementMode::ViolationLandlordRequiredProofNotProvidedByTenant
+        );
     }
 
     #[test]
@@ -469,9 +506,18 @@ mod tests {
 
     #[test]
     fn constant_pin_industry_standard_thresholds() {
-        assert_eq!(RENTERS_INSURANCE_INDUSTRY_STANDARD_LIABILITY_DOLLARS, 100_000);
-        assert_eq!(RENTERS_INSURANCE_INDUSTRY_STANDARD_PERSONAL_PROPERTY_DOLLARS, 10_000);
+        assert_eq!(
+            RENTERS_INSURANCE_INDUSTRY_STANDARD_LIABILITY_DOLLARS,
+            100_000
+        );
+        assert_eq!(
+            RENTERS_INSURANCE_INDUSTRY_STANDARD_PERSONAL_PROPERTY_DOLLARS,
+            10_000
+        );
         assert_eq!(RENTERS_INSURANCE_HIGH_END_PERSONAL_PROPERTY_DOLLARS, 30_000);
-        assert_eq!(RENTERS_INSURANCE_EXCESSIVE_LIABILITY_THRESHOLD_DOLLARS, 1_000_000);
+        assert_eq!(
+            RENTERS_INSURANCE_EXCESSIVE_LIABILITY_THRESHOLD_DOLLARS,
+            1_000_000
+        );
     }
 }

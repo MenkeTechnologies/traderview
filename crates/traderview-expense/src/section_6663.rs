@@ -326,7 +326,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.penalty_imposable);
         assert_eq!(r.penalty_amount_cents, 0);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7454(a)") && n.contains("CLEAR AND CONVINCING")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7454(a)") && n.contains("CLEAR AND CONVINCING")));
     }
 
     #[test]
@@ -368,7 +371,10 @@ mod tests {
         let r = check(&i);
         assert!(r.joint_return_innocent_spouse_carveout_engaged);
         assert!(!r.penalty_imposable);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6663(c)") && n.contains("§ 6015")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6663(c)") && n.contains("§ 6015")));
     }
 
     #[test]
@@ -407,7 +413,10 @@ mod tests {
     fn section_6662_accuracy_penalty_barred_when_6663_imposable() {
         let r = check(&base());
         assert!(r.section_6662_accuracy_penalty_barred);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6662(b)(7)") && n.contains("BARRED")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6662(b)(7)") && n.contains("BARRED")));
     }
 
     #[test]
@@ -448,43 +457,64 @@ mod tests {
         i.badge_implausible_inconsistent_explanations = true;
         let r = check(&i);
         assert_eq!(r.badges_of_fraud_count, 9);
-        assert!(r.notes.iter().any(|n| n.contains("Spies v. United States") && n.contains("9 of 9")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Spies v. United States") && n.contains("9 of 9")));
     }
 
     #[test]
     fn spies_case_always_cited_in_notes() {
         let r = check(&base());
-        assert!(r.notes.iter().any(|n| n.contains("Spies v. United States, 317 U.S. 492 (1943)")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Spies v. United States, 317 U.S. 492 (1943)")));
     }
 
     #[test]
     fn unlimited_ased_cross_reference_note() {
         let r = check(&base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6501(c)(1)") && n.contains("UNLIMITED ASED")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6501(c)(1)") && n.contains("UNLIMITED ASED")));
     }
 
     #[test]
     fn parallel_failure_to_file_75_percent_note() {
         let r = check(&base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6651(f)") && n.contains("75%")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6651(f)") && n.contains("75%")));
     }
 
     #[test]
     fn nondischargeable_bankruptcy_note() {
         let r = check(&base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 523(a)(1)(C)") && n.contains("NONDISCHARGEABLE")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 523(a)(1)(C)") && n.contains("NONDISCHARGEABLE")));
     }
 
     #[test]
     fn criminal_parallel_prosecution_note() {
         let r = check(&base());
-        assert!(r.notes.iter().any(|n| n.contains("Spies-Daly") && n.contains("§ 7201") && n.contains("§ 7206")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Spies-Daly") && n.contains("§ 7201") && n.contains("§ 7206")));
     }
 
     #[test]
     fn section_6664_defense_cross_reference_note() {
         let r = check(&base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6664(c)(1)") && n.contains("rarely succeeds")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6664(c)(1)") && n.contains("rarely succeeds")));
     }
 
     #[test]

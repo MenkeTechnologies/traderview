@@ -63,9 +63,8 @@ fn d(s: &str) -> Decimal {
 }
 
 fn rules() -> &'static [StateReturnRule] {
-    static R: once_cell::sync::Lazy<Vec<StateReturnRule>> =
-        once_cell::sync::Lazy::new(|| {
-            vec![
+    static R: once_cell::sync::Lazy<Vec<StateReturnRule>> = once_cell::sync::Lazy::new(|| {
+        vec![
                 StateReturnRule {
                     state: "AZ",
                     return_window_days: 14,
@@ -375,13 +374,15 @@ fn rules() -> &'static [StateReturnRule] {
                     },
                 },
             ]
-        });
+    });
     &R
 }
 
 pub fn rule_for(state: &str) -> Option<&'static StateReturnRule> {
     let upper = state.to_uppercase();
-    rules().iter().find(|r| r.state.eq_ignore_ascii_case(&upper))
+    rules()
+        .iter()
+        .find(|r| r.state.eq_ignore_ascii_case(&upper))
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -445,8 +446,7 @@ pub fn check(input: &DepositReturnCheckInput) -> DepositReturnCheckResult {
     } else {
         Decimal::ZERO
     };
-    let max_penalty_exposure =
-        wrongful_withholding * rule.bad_faith_damages_multiplier;
+    let max_penalty_exposure = wrongful_withholding * rule.bad_faith_damages_multiplier;
 
     DepositReturnCheckResult {
         state_recognized: true,
@@ -455,8 +455,7 @@ pub fn check(input: &DepositReturnCheckInput) -> DepositReturnCheckResult {
         compliant,
         days_late,
         max_penalty_exposure,
-        attorney_fees_at_risk: input.bad_faith_alleged
-            && rule.attorney_fees_to_prevailing_tenant,
+        attorney_fees_at_risk: input.bad_faith_alleged && rule.attorney_fees_to_prevailing_tenant,
         statute: rule.citation.statute.into(),
         source: rule.citation.source.into(),
         notes: rule.notes.into(),
@@ -693,7 +692,11 @@ mod tests {
     fn states_with_attorney_fees_flag_correctly() {
         for state in ["CO", "GA", "MA", "MD", "MN", "NJ", "OH", "OR", "TX", "WA"] {
             let r = rule_for(state).unwrap();
-            assert!(r.attorney_fees_to_prevailing_tenant, "{} should award attorney fees", state);
+            assert!(
+                r.attorney_fees_to_prevailing_tenant,
+                "{} should award attorney fees",
+                state
+            );
         }
     }
 
@@ -701,7 +704,11 @@ mod tests {
     fn states_without_attorney_fees_flag_correctly() {
         for state in ["CA", "CT", "MI", "NV", "NY", "NC", "PA"] {
             let r = rule_for(state).unwrap();
-            assert!(!r.attorney_fees_to_prevailing_tenant, "{} should NOT award attorney fees by statute", state);
+            assert!(
+                !r.attorney_fees_to_prevailing_tenant,
+                "{} should NOT award attorney fees by statute",
+                state
+            );
         }
     }
 

@@ -116,7 +116,10 @@ pub fn check(input: &Input) -> Output {
     ];
 
     if matches!(input.adjustment_type, AdjustmentType::NotApplicable) {
-        notes.push("No § 743(b) or § 734(b) adjustment recorded; § 755 allocation not triggered.".to_string());
+        notes.push(
+            "No § 743(b) or § 734(b) adjustment recorded; § 755 allocation not triggered."
+                .to_string(),
+        );
         return Output {
             severity: Severity::NotApplicable,
             ordinary_income_class_allocation_cents: 0,
@@ -209,7 +212,9 @@ pub fn check(input: &Input) -> Output {
         ));
         Severity::AllocationToCapitalGainClassOnly
     } else {
-        notes.push("Adjustment is zero or net-zero across classes; no allocation required.".to_string());
+        notes.push(
+            "Adjustment is zero or net-zero across classes; no allocation required.".to_string(),
+        );
         Severity::NotApplicable
     };
 

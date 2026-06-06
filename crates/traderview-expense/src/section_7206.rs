@@ -186,7 +186,8 @@ pub fn check(input: &Section7206Input) -> Section7206Result {
             SubsectionTarget::Section7206_2Aiding => "§ 7206(2) aiding or assisting",
             SubsectionTarget::Section7206_3FraudulentDocuments => "§ 7206(3) fraudulent documents",
             SubsectionTarget::Section7206_4ConcealmentRemoval => "§ 7206(4) concealment / removal",
-            SubsectionTarget::Section7206_5CompromisesClosingAgreements => "§ 7206(5) compromises and closing agreements",
+            SubsectionTarget::Section7206_5CompromisesClosingAgreements =>
+                "§ 7206(5) compromises and closing agreements",
         }
     ));
 
@@ -387,7 +388,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.felony_prosecution_authorized);
         assert!(r.cheek_defense_engaged_and_successful);
-        assert!(r.notes.iter().any(|n| n.contains("Cheek defense SUCCESSFUL")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Cheek defense SUCCESSFUL")));
     }
 
     #[test]
@@ -398,7 +402,10 @@ mod tests {
         let r = check(&i);
         assert!(r.felony_prosecution_authorized);
         assert!(!r.cheek_defense_engaged_and_successful);
-        assert!(r.notes.iter().any(|n| n.contains("Cheek defense ASSERTED but NOT successful")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Cheek defense ASSERTED but NOT successful")));
     }
 
     #[test]
@@ -413,7 +420,10 @@ mod tests {
         let mut i = section_1_full();
         i.cheek_defense_asserted = true;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("Cheek v. United States, 498 U.S. 192 (1991)") && n.contains("subjective belief")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("Cheek v. United States, 498 U.S. 192 (1991)")
+                && n.contains("subjective belief")
+        ));
     }
 
     #[test]
@@ -470,7 +480,9 @@ mod tests {
     fn section_2_aiding_full_elements_authorizes() {
         let r = check(&section_2_full());
         assert!(r.felony_prosecution_authorized);
-        assert!(r.notes.iter().any(|n| n.contains("§ 7206(2)") && n.contains("EVEN WHEN taxpayer-signer is innocent")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("§ 7206(2)") && n.contains("EVEN WHEN taxpayer-signer is innocent")
+        ));
     }
 
     #[test]
@@ -502,25 +514,37 @@ mod tests {
     fn section_6663_civil_parallel_always_available() {
         let r = check(&section_1_full());
         assert!(r.section_6663_civil_parallel_available);
-        assert!(r.notes.iter().any(|n| n.contains("Spies-Daly doctrine") && n.contains("PARALLEL")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Spies-Daly doctrine") && n.contains("PARALLEL")));
     }
 
     #[test]
     fn unlimited_ased_cross_reference_note() {
         let r = check(&section_1_full());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6501(c)(1) UNLIMITED ASED")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6501(c)(1) UNLIMITED ASED")));
     }
 
     #[test]
     fn section_7491_burden_shifts_excluded_note() {
         let r = check(&section_1_full());
-        assert!(r.notes.iter().any(|n| n.contains("§ 7491") && n.contains("BEYOND REASONABLE DOUBT")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7491") && n.contains("BEYOND REASONABLE DOUBT")));
     }
 
     #[test]
     fn cfia_18_usc_3571_supersedes_note() {
         let r = check(&section_1_full());
-        assert!(r.notes.iter().any(|n| n.contains("18 U.S.C. § 3571") && n.contains("$250,000")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("18 U.S.C. § 3571") && n.contains("$250,000")));
     }
 
     #[test]
@@ -532,7 +556,9 @@ mod tests {
     #[test]
     fn citation_pins_all_subsections() {
         let r = check(&section_1_full());
-        assert!(r.citation.contains("§§ 7206(1), 7206(2), 7206(3), 7206(4), 7206(5)"));
+        assert!(r
+            .citation
+            .contains("§§ 7206(1), 7206(2), 7206(3), 7206(4), 7206(5)"));
         assert!(r.citation.contains("6531"));
         assert!(r.citation.contains("6663"));
         assert!(r.citation.contains("6501(c)(1)"));
@@ -599,13 +625,19 @@ mod tests {
     #[test]
     fn section_1_five_element_note_present() {
         let r = check(&section_1_full());
-        assert!(r.notes.iter().any(|n| n.contains("§ 7206(1) five-element test") && n.contains("5/5")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7206(1) five-element test") && n.contains("5/5")));
     }
 
     #[test]
     fn section_2_aiding_element_note_describes_reach() {
         let r = check(&section_2_full());
-        assert!(r.notes.iter().any(|n| n.contains("§ 7206(2)") && n.contains("preparers, advisors, third parties")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7206(2)") && n.contains("preparers, advisors, third parties")));
     }
 
     #[test]
@@ -630,7 +662,10 @@ mod tests {
             (SubsectionTarget::Section7206_2Aiding, 6),
             (SubsectionTarget::Section7206_3FraudulentDocuments, 6),
             (SubsectionTarget::Section7206_4ConcealmentRemoval, 6),
-            (SubsectionTarget::Section7206_5CompromisesClosingAgreements, 3),
+            (
+                SubsectionTarget::Section7206_5CompromisesClosingAgreements,
+                3,
+            ),
         ];
         for (target, expected_sol) in pairs {
             let mut i = section_1_full();

@@ -35,8 +35,11 @@ pub fn compute(bars: &[Bar], period: usize) -> Vec<Option<f64>> {
         let b = bars[i];
         let range = b.high - b.low;
         // Skip zero-range bars (and non-finite OHLC) — MFM is undefined.
-        if !(range > 0.0 && b.high.is_finite() && b.low.is_finite()
-            && b.close.is_finite() && b.volume.is_finite())
+        if !(range > 0.0
+            && b.high.is_finite()
+            && b.low.is_finite()
+            && b.close.is_finite()
+            && b.volume.is_finite())
         {
             // Leave mfv[i]=0 and vol[i]=0; the bar contributes nothing.
             continue;
@@ -63,7 +66,12 @@ mod tests {
     use super::*;
 
     fn b(h: f64, l: f64, c: f64, v: f64) -> Bar {
-        Bar { high: h, low: l, close: c, volume: v }
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+            volume: v,
+        }
     }
 
     #[test]

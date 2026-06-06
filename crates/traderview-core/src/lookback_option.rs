@@ -31,7 +31,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum OptionKind { Call, Put }
+pub enum OptionKind {
+    Call,
+    Put,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct LookbackReport {
@@ -41,17 +44,24 @@ pub struct LookbackReport {
 }
 
 pub fn price(
-    spot: f64, observed_extreme: f64,
+    spot: f64,
+    observed_extreme: f64,
     time_to_expiry: f64,
-    risk_free: f64, dividend_yield: f64,
+    risk_free: f64,
+    dividend_yield: f64,
     sigma: f64,
     kind: OptionKind,
 ) -> Option<LookbackReport> {
-    if !spot.is_finite() || spot <= 0.0
-        || !observed_extreme.is_finite() || observed_extreme <= 0.0
-        || !time_to_expiry.is_finite() || time_to_expiry <= 0.0
-        || !risk_free.is_finite() || !dividend_yield.is_finite()
-        || !sigma.is_finite() || sigma <= 0.0
+    if !spot.is_finite()
+        || spot <= 0.0
+        || !observed_extreme.is_finite()
+        || observed_extreme <= 0.0
+        || !time_to_expiry.is_finite()
+        || time_to_expiry <= 0.0
+        || !risk_free.is_finite()
+        || !dividend_yield.is_finite()
+        || !sigma.is_finite()
+        || sigma <= 0.0
     {
         return None;
     }
@@ -59,7 +69,7 @@ pub fn price(
     // for a PUT, observed_extreme is max and must be ≥ S.
     match kind {
         OptionKind::Call if observed_extreme > spot => return None,
-        OptionKind::Put  if observed_extreme < spot => return None,
+        OptionKind::Put if observed_extreme < spot => return None,
         _ => {}
     }
     let s = spot;
@@ -73,7 +83,11 @@ pub fn price(
     let v_sqrt_t = v * sqrt_t;
     let a1 = ((s / m).ln() + (b + 0.5 * v * v) * t) / v_sqrt_t;
     let a2 = a1 - v_sqrt_t;
-    let two_b_over_v2 = if b.abs() < 1e-12 { 0.0 } else { 2.0 * b / (v * v) };
+    let two_b_over_v2 = if b.abs() < 1e-12 {
+        0.0
+    } else {
+        2.0 * b / (v * v)
+    };
     let a3 = a1 - two_b_over_v2 * v_sqrt_t;
     let dq = (-q * t).exp();
     let dr = (-r * t).exp();
@@ -84,14 +98,18 @@ pub fn price(
             OptionKind::Call => {
                 let term = s * dr * v_sqrt_t * (norm_pdf(a1) + a1 * norm_cdf(a1));
                 s * dr * norm_cdf(a1) - m * dr * norm_cdf(a2) + term
-                    - s * dr * (-a1.abs()).exp() * 0.0    // limit term
+                    - s * dr * (-a1.abs()).exp() * 0.0 // limit term
             }
             OptionKind::Put => {
                 let term = s * dr * v_sqrt_t * (norm_pdf(a1) + a1 * norm_cdf(-a1));
                 m * dr * norm_cdf(-a2) - s * dr * norm_cdf(-a1) + term
             }
         };
-        return Some(LookbackReport { price: price.max(0.0), a1, a2 });
+        return Some(LookbackReport {
+            price: price.max(0.0),
+            a1,
+            a2,
+        });
     }
     let sm_pow = (s / m).powf(-two_b_over_v2);
     let factor = s * dr * (v * v) / (2.0 * b);
@@ -105,17 +123,23 @@ pub fn price(
                 + factor * (-sm_pow * norm_cdf(a3) + (b * t).exp() * norm_cdf(a1))
         }
     };
-    if !price.is_finite() { return None; }
-    Some(LookbackReport { price: price.max(0.0), a1, a2 })
+    if !price.is_finite() {
+        return None;
+    }
+    Some(LookbackReport {
+        price: price.max(0.0),
+        a1,
+        a2,
+    })
 }
 
 fn norm_cdf(x: f64) -> f64 {
-    let a1 =  0.254829592_f64;
+    let a1 = 0.254829592_f64;
     let a2 = -0.284496736_f64;
-    let a3 =  1.421413741_f64;
+    let a3 = 1.421413741_f64;
     let a4 = -1.453152027_f64;
-    let a5 =  1.061405429_f64;
-    let p  =  0.3275911_f64;
+    let a5 = 1.061405429_f64;
+    let p = 0.3275911_f64;
     let sign = if x < 0.0 { -1.0 } else { 1.0 };
     let xa = x.abs() / std::f64::consts::SQRT_2;
     let t = 1.0 / (1.0 + p * xa);
@@ -195,7 +219,7 @@ mod tests {
     #[test]
     fn longer_time_inflates_atm_lookback() {
         let r_short = price(100.0, 100.0, 0.10, 0.05, 0.0, 0.20, OptionKind::Call).unwrap();
-        let r_long  = price(100.0, 100.0, 1.00, 0.05, 0.0, 0.20, OptionKind::Call).unwrap();
+        let r_long = price(100.0, 100.0, 1.00, 0.05, 0.0, 0.20, OptionKind::Call).unwrap();
         assert!(r_long.price > r_short.price);
     }
 }

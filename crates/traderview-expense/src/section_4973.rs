@@ -199,8 +199,8 @@ pub fn check(input: &Section4973Input) -> Section4973Result {
         excess_contribution_cents.saturating_mul(6) / 100
     };
 
-    let cumulative_excise_tax_cents = annual_excise_tax_cents
-        .saturating_mul(input.years_uncorrected.max(1) as u64);
+    let cumulative_excise_tax_cents =
+        annual_excise_tax_cents.saturating_mul(input.years_uncorrected.max(1) as u64);
 
     if excess_contribution_cents == 0 {
         failure_reasons.push(
@@ -238,10 +238,7 @@ pub fn check(input: &Section4973Input) -> Section4973Result {
         AccountType::Hsa223 => "§ 223 HSA — 2026 self-only $4,400; family $8,800; + $1,000 catch-up at age 55+",
         AccountType::CoverdellEsa530 => "§ 530 Coverdell ESA — $2,000 per beneficiary per year (NOT inflation-adjusted)",
     };
-    failure_reasons.push(format!(
-        "Account type: {}",
-        account_label
-    ));
+    failure_reasons.push(format!("Account type: {}", account_label));
 
     let notes: Vec<String> = vec![
         "26 USC § 4973(a) — 6% EXCISE TAX on excess contributions to (1) § 408(a) traditional IRA; (2) § 408A Roth IRA; (3) § 408(b) IRA annuity; (4) § 408(p) SIMPLE IRA; (5) § 530 Coverdell ESA; (6) § 220 Archer MSA; (7) § 223 HSA; annual, non-deductible, COMPOUNDS each year uncorrected".to_string(),
@@ -308,8 +305,10 @@ mod tests {
         let r = check(&i);
         assert_eq!(r.excess_contribution_cents, 0);
         assert_eq!(r.annual_excise_tax_cents, 0);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("No excess contribution")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("No excess contribution")));
     }
 
     #[test]
@@ -320,8 +319,7 @@ mod tests {
         let r = check(&i);
         assert!(r.correction_qualifies);
         assert_eq!(r.annual_excise_tax_cents, 0);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 4973(c)")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 4973(c)")
             && f.contains("PLUS EXTENSIONS")
             && f.contains("SECURE Act 2.0 § 333")));
     }
@@ -343,9 +341,11 @@ mod tests {
         let r = check(&i);
         assert!(r.statute_of_limitations_bars_assessment);
         assert_eq!(r.annual_excise_tax_cents, 0);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("SECURE Act 2.0 § 313")
-            && f.contains("6-YEAR STATUTE OF LIMITATIONS")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("SECURE Act 2.0 § 313")
+                && f.contains("6-YEAR STATUTE OF LIMITATIONS")));
     }
 
     #[test]
@@ -353,8 +353,7 @@ mod tests {
         let mut i = roth_excess_750();
         i.account_type = AccountType::TraditionalIra408a;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("Account type:")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("Account type:")
             && f.contains("§ 408(a) traditional IRA")
             && f.contains("§ 219(b)(5)")));
     }
@@ -364,9 +363,10 @@ mod tests {
         let mut i = roth_excess_750();
         i.account_type = AccountType::SimpleIra408p;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 408(p) SIMPLE IRA")
-            && f.contains("SECURE 2.0 § 109")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 408(p) SIMPLE IRA") && f.contains("SECURE 2.0 § 109")));
     }
 
     #[test]
@@ -374,8 +374,7 @@ mod tests {
         let mut i = roth_excess_750();
         i.account_type = AccountType::Hsa223;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 223 HSA")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 223 HSA")
             && f.contains("$4,400")
             && f.contains("$8,800")
             && f.contains("age 55+")));
@@ -386,10 +385,12 @@ mod tests {
         let mut i = roth_excess_750();
         i.account_type = AccountType::CoverdellEsa530;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 530 Coverdell ESA")
-            && f.contains("$2,000")
-            && f.contains("NOT inflation-adjusted")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 530 Coverdell ESA")
+                && f.contains("$2,000")
+                && f.contains("NOT inflation-adjusted")));
     }
 
     #[test]
@@ -397,9 +398,10 @@ mod tests {
         let mut i = roth_excess_750();
         i.account_type = AccountType::SepIra408k;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 408(k) SEP-IRA")
-            && f.contains("$70,000")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 408(k) SEP-IRA") && f.contains("$70,000")));
     }
 
     #[test]
@@ -407,9 +409,10 @@ mod tests {
         let mut i = roth_excess_750();
         i.account_type = AccountType::ArcherMsa220;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 220 Archer MSA")
-            && f.contains("closed")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 220 Archer MSA") && f.contains("closed")));
     }
 
     #[test]
@@ -433,9 +436,10 @@ mod tests {
     #[test]
     fn carryover_absorption_note_present_when_uncorrected() {
         let r = check(&roth_excess_750());
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 4973(g)")
-            && f.contains("CONTRIBUTION IN SUBSEQUENT YEAR")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 4973(g)") && f.contains("CONTRIBUTION IN SUBSEQUENT YEAR")));
     }
 
     #[test]
@@ -488,8 +492,7 @@ mod tests {
     #[test]
     fn note_pins_subsection_a_six_percent() {
         let r = check(&roth_excess_750());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 4973(a)")
+        assert!(r.notes.iter().any(|n| n.contains("§ 4973(a)")
             && n.contains("6% EXCISE TAX")
             && n.contains("seven")
             || (n.contains("§ 4973(a)")
@@ -500,34 +503,38 @@ mod tests {
     #[test]
     fn note_pins_subsection_b_traditional_excess() {
         let r = check(&roth_excess_750());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 4973(b) traditional IRA EXCESS")
-            && n.contains("§ 219")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 4973(b) traditional IRA EXCESS") && n.contains("§ 219")));
     }
 
     #[test]
     fn note_pins_subsection_f_roth_excess() {
         let r = check(&roth_excess_750());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 4973(f) Roth IRA EXCESS")
-            && n.contains("§ 408A(e) qualified rollover")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 4973(f) Roth IRA EXCESS")
+                && n.contains("§ 408A(e) qualified rollover")));
     }
 
     #[test]
     fn note_pins_subsection_c_correction_window() {
         let r = check(&roth_excess_750());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 4973(c) CORRECTION WINDOW")
-            && n.contains("April 15")
-            && n.contains("October 15")
-            && n.contains("Treas. Reg. § 1.408-11(b)")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 4973(c) CORRECTION WINDOW")
+                && n.contains("April 15")
+                && n.contains("October 15")
+                && n.contains("Treas. Reg. § 1.408-11(b)")));
     }
 
     #[test]
     fn note_pins_secure_2_section_333() {
         let r = check(&roth_excess_750());
-        assert!(r.notes.iter().any(|n|
-            n.contains("SECURE Act 2.0 § 333")
+        assert!(r.notes.iter().any(|n| n.contains("SECURE Act 2.0 § 333")
             && n.contains("Pub. L. 117-328")
             && n.contains("§ 72(t) 10%")));
     }
@@ -535,8 +542,7 @@ mod tests {
     #[test]
     fn note_pins_secure_2_section_313_statute_six_years() {
         let r = check(&roth_excess_750());
-        assert!(r.notes.iter().any(|n|
-            n.contains("SECURE Act 2.0 § 313")
+        assert!(r.notes.iter().any(|n| n.contains("SECURE Act 2.0 § 313")
             && n.contains("6-YEAR STATUTE OF LIMITATIONS")
             && n.contains("excluding extensions")));
     }
@@ -544,16 +550,18 @@ mod tests {
     #[test]
     fn note_pins_subsection_g_carryover() {
         let r = check(&roth_excess_750());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 4973(g) CARRYOVER ABSORPTION")
-            && n.contains("SUBSEQUENT YEAR")));
+        assert!(
+            r.notes
+                .iter()
+                .any(|n| n.contains("§ 4973(g) CARRYOVER ABSORPTION")
+                    && n.contains("SUBSEQUENT YEAR"))
+        );
     }
 
     #[test]
     fn note_pins_form_5329_seven_parts() {
         let r = check(&roth_excess_750());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Form 5329 reporting")
+        assert!(r.notes.iter().any(|n| n.contains("Form 5329 reporting")
             && n.contains("Part III")
             && n.contains("Part IV")
             && n.contains("Part VII")
@@ -564,31 +572,37 @@ mod tests {
     #[test]
     fn note_pins_2026_limits() {
         let r = check(&roth_excess_750());
-        assert!(r.notes.iter().any(|n|
-            n.contains("2026 contribution limits")
-            && n.contains("$7,500 + $1,100 catch-up")
-            && n.contains("SECURE 2.0 § 109 enhanced catch-up")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("2026 contribution limits")
+                && n.contains("$7,500 + $1,100 catch-up")
+                && n.contains("SECURE 2.0 § 109 enhanced catch-up")));
     }
 
     #[test]
     fn note_pins_trader_fact_patterns_five() {
         let r = check(&roth_excess_750());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-critical fact patterns")
-            && n.contains("$7,500 Roth")
-            && n.contains("$450/year")
-            && n.contains("6-year statute")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-critical fact patterns")
+                && n.contains("$7,500 Roth")
+                && n.contains("$450/year")
+                && n.contains("6-year statute")));
     }
 
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&roth_excess_750());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Companion to section_408")
-            && n.contains("section_4974")
-            && n.contains("section_4975")
-            && n.contains("section_72t")
-            && n.contains("section_219")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Companion to section_408")
+                && n.contains("section_4974")
+                && n.contains("section_4975")
+                && n.contains("section_72t")
+                && n.contains("section_219")));
     }
 
     #[test]

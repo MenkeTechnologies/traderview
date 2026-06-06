@@ -30,14 +30,22 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub open: f64, pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 pub fn compute(bars: &[Bar], limit_move: f64) -> Vec<Option<f64>> {
     let n = bars.len();
     let mut out = vec![None; n];
-    if n == 0 || !limit_move.is_finite() || limit_move <= 0.0 { return out; }
-    if bars.iter().any(|b| !b.open.is_finite() || !b.high.is_finite()
-        || !b.low.is_finite() || !b.close.is_finite()) {
+    if n == 0 || !limit_move.is_finite() || limit_move <= 0.0 {
+        return out;
+    }
+    if bars.iter().any(|b| {
+        !b.open.is_finite() || !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()
+    }) {
         return out;
     }
     let mut asi = 0.0_f64;
@@ -76,11 +84,18 @@ mod tests {
     use super::*;
 
     fn bar(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
-    fn empty_returns_empty() { assert!(compute(&[], 10.0).is_empty()); }
+    fn empty_returns_empty() {
+        assert!(compute(&[], 10.0).is_empty());
+    }
 
     #[test]
     fn invalid_limit_move_returns_all_none() {
@@ -107,20 +122,24 @@ mod tests {
 
     #[test]
     fn uptrending_bars_yield_positive_asi() {
-        let bars: Vec<_> = (0..30).map(|i| {
-            let p = 100.0 + i as f64;
-            bar(p, p + 0.5, p - 0.5, p + 0.4)
-        }).collect();
+        let bars: Vec<_> = (0..30)
+            .map(|i| {
+                let p = 100.0 + i as f64;
+                bar(p, p + 0.5, p - 0.5, p + 0.4)
+            })
+            .collect();
         let r = compute(&bars, 10.0);
         assert!(r[29].unwrap() > 0.0);
     }
 
     #[test]
     fn downtrending_bars_yield_negative_asi() {
-        let bars: Vec<_> = (0..30).map(|i| {
-            let p = 200.0 - i as f64;
-            bar(p, p + 0.5, p - 0.5, p - 0.4)
-        }).collect();
+        let bars: Vec<_> = (0..30)
+            .map(|i| {
+                let p = 200.0 - i as f64;
+                bar(p, p + 0.5, p - 0.5, p - 0.4)
+            })
+            .collect();
         let r = compute(&bars, 10.0);
         assert!(r[29].unwrap() < 0.0);
     }
@@ -129,7 +148,9 @@ mod tests {
     fn flat_market_yields_zero_asi() {
         let bars = vec![bar(100.0, 101.0, 99.0, 100.0); 30];
         let r = compute(&bars, 10.0);
-        for v in r.iter().flatten() { assert!(v.abs() < 1e-9); }
+        for v in r.iter().flatten() {
+            assert!(v.abs() < 1e-9);
+        }
     }
 
     #[test]

@@ -140,7 +140,8 @@ pub fn check(input: &Input) -> Output {
         "NYC Admin Code § 28-311 (sub-metering)".to_string(),
         "NYC Admin Code § 28-311.4 (monthly tenant billing + reporting)".to_string(),
         "NYC Admin Code § 28-311.5 (penalty schedule)".to_string(),
-        "NYC Energy Conservation Code (NYCECC) — current standards for new lighting systems".to_string(),
+        "NYC Energy Conservation Code (NYCECC) — current standards for new lighting systems"
+            .to_string(),
         "Greener, Greater Buildings Plan (GGBP)".to_string(),
         "NYC DOB BEAM (Building Energy Audit Management) system".to_string(),
         "NYC DOB Local Law 88 User Guide (Sub-Metering Article 311)".to_string(),
@@ -180,12 +181,11 @@ pub fn check(input: &Input) -> Output {
     let mut violations_count: u32 = 0;
     let mut annual_penalty: u64 = 0;
 
-    if !input.lighting_upgraded_by_jan_1_2025
-        && input.current_year >= LL88_COMPLIANCE_DEADLINE_YEAR
+    if !input.lighting_upgraded_by_jan_1_2025 && input.current_year >= LL88_COMPLIANCE_DEADLINE_YEAR
     {
         violations_count += 1;
-        annual_penalty = annual_penalty
-            .saturating_add(LL88_REPORT_NOT_FILED_PENALTY_CENTS_PER_REPORT_PER_YEAR);
+        annual_penalty =
+            annual_penalty.saturating_add(LL88_REPORT_NOT_FILED_PENALTY_CENTS_PER_REPORT_PER_YEAR);
         notes.push(format!(
             "Lighting upgrade not completed by January 1, {} deadline — § 28-310 violation.",
             LL88_COMPLIANCE_DEADLINE_YEAR
@@ -213,8 +213,8 @@ pub fn check(input: &Input) -> Output {
         && input.current_year >= LL88_COMPLIANCE_DEADLINE_YEAR
     {
         violations_count += 1;
-        annual_penalty = annual_penalty
-            .saturating_add(LL88_REPORT_NOT_FILED_PENALTY_CENTS_PER_REPORT_PER_YEAR);
+        annual_penalty =
+            annual_penalty.saturating_add(LL88_REPORT_NOT_FILED_PENALTY_CENTS_PER_REPORT_PER_YEAR);
         notes.push(format!(
             "Lighting upgrade compliance report not filed by May 1, {} — $1,500/year penalty.",
             LL88_COMPLIANCE_DEADLINE_YEAR
@@ -226,8 +226,8 @@ pub fn check(input: &Input) -> Output {
         && input.current_year >= LL88_COMPLIANCE_DEADLINE_YEAR
     {
         violations_count += 1;
-        annual_penalty = annual_penalty
-            .saturating_add(LL88_REPORT_NOT_FILED_PENALTY_CENTS_PER_REPORT_PER_YEAR);
+        annual_penalty =
+            annual_penalty.saturating_add(LL88_REPORT_NOT_FILED_PENALTY_CENTS_PER_REPORT_PER_YEAR);
         notes.push(format!(
             "Sub-metering installation compliance report not filed by May 1, {} — $1,500/year penalty.",
             LL88_COMPLIANCE_DEADLINE_YEAR
@@ -460,7 +460,10 @@ mod tests {
     #[test]
     fn citations_pin_ll88_admin_code_28_310_311() {
         let out = check(&base_compliant());
-        assert!(out.citations.iter().any(|c| c.contains("Local Law 88 of 2009")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("Local Law 88 of 2009")));
         assert!(out.citations.iter().any(|c| c.contains("§ 28-310")));
         assert!(out.citations.iter().any(|c| c.contains("§ 28-311")));
         assert!(out.citations.iter().any(|c| c.contains("§ 28-311.4")));
@@ -471,7 +474,10 @@ mod tests {
     fn citations_pin_nycecc_ggbp_beam() {
         let out = check(&base_compliant());
         assert!(out.citations.iter().any(|c| c.contains("NYCECC")));
-        assert!(out.citations.iter().any(|c| c.contains("Greener, Greater Buildings Plan")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("Greener, Greater Buildings Plan")));
         assert!(out.citations.iter().any(|c| c.contains("BEAM")));
     }
 
@@ -492,12 +498,18 @@ mod tests {
 
     #[test]
     fn constant_pin_500_per_tenant_space_penalty() {
-        assert_eq!(LL88_NO_SUBMETER_PENALTY_CENTS_PER_TENANT_SPACE_PER_YEAR, 50_000);
+        assert_eq!(
+            LL88_NO_SUBMETER_PENALTY_CENTS_PER_TENANT_SPACE_PER_YEAR,
+            50_000
+        );
     }
 
     #[test]
     fn constant_pin_1500_per_report_penalty() {
-        assert_eq!(LL88_REPORT_NOT_FILED_PENALTY_CENTS_PER_REPORT_PER_YEAR, 150_000);
+        assert_eq!(
+            LL88_REPORT_NOT_FILED_PENALTY_CENTS_PER_REPORT_PER_YEAR,
+            150_000
+        );
     }
 
     #[test]

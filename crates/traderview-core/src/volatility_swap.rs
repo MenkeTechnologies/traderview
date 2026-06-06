@@ -35,9 +35,13 @@ pub fn fair_strike(
     vol_of_vol_annualized: f64,
     time_to_expiry_years: f64,
 ) -> Option<VolatilitySwapReport> {
-    if !variance_strike.is_finite() || variance_strike < 0.0
-        || !vol_of_vol_annualized.is_finite() || vol_of_vol_annualized < 0.0
-        || !time_to_expiry_years.is_finite() || time_to_expiry_years <= 0.0 {
+    if !variance_strike.is_finite()
+        || variance_strike < 0.0
+        || !vol_of_vol_annualized.is_finite()
+        || vol_of_vol_annualized < 0.0
+        || !time_to_expiry_years.is_finite()
+        || time_to_expiry_years <= 0.0
+    {
         return None;
     }
     let naive_vol = variance_strike.sqrt();

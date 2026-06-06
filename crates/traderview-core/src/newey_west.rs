@@ -42,7 +42,9 @@ pub struct NeweyWestReport {
 
 pub fn estimate(x: &[f64], y: &[f64], lag: Option<usize>) -> Option<NeweyWestReport> {
     let n = x.len();
-    if n < 10 || y.len() != n { return None; }
+    if n < 10 || y.len() != n {
+        return None;
+    }
     if x.iter().any(|v| !v.is_finite()) || y.iter().any(|v| !v.is_finite()) {
         return None;
     }
@@ -55,7 +57,9 @@ pub fn estimate(x: &[f64], y: &[f64], lag: Option<usize>) -> Option<NeweyWestRep
         sxx += (x[i] - x_mean).powi(2);
         sxy += (x[i] - x_mean) * (y[i] - y_mean);
     }
-    if sxx <= 0.0 { return None; }
+    if sxx <= 0.0 {
+        return None;
+    }
     let beta = sxy / sxx;
     let alpha = y_mean - beta * x_mean;
     let resid: Vec<f64> = (0..n).map(|i| y[i] - alpha - beta * x[i]).collect();
@@ -67,9 +71,9 @@ pub fn estimate(x: &[f64], y: &[f64], lag: Option<usize>) -> Option<NeweyWestRep
     // HAC variance via Newey-West Bartlett kernel.
     // Use mean-deviation z_t = (x_t − x̄) · ê_t (slope-equation moment).
     let z: Vec<f64> = (0..n).map(|i| (x[i] - x_mean) * resid[i]).collect();
-    let l = lag.unwrap_or_else(|| {
-        (4.0 * (n_f / 100.0).powf(2.0 / 9.0)).floor() as usize
-    }).min(n - 1);
+    let l = lag
+        .unwrap_or_else(|| (4.0 * (n_f / 100.0).powf(2.0 / 9.0)).floor() as usize)
+        .min(n - 1);
     let mut omega: f64 = z.iter().map(|zi| zi * zi).sum();
     for k in 1..=l {
         let w = 1.0 - k as f64 / (l as f64 + 1.0);
@@ -88,7 +92,11 @@ pub fn estimate(x: &[f64], y: &[f64], lag: Option<usize>) -> Option<NeweyWestRep
     }
     let var_alpha_hac = omega_alpha * (1.0 / n_f + x_mean * x_mean / sxx).powi(2);
     let se_alpha_hac = var_alpha_hac.max(0.0).sqrt();
-    let t_beta = if se_beta_hac > 0.0 { beta / se_beta_hac } else { 0.0 };
+    let t_beta = if se_beta_hac > 0.0 {
+        beta / se_beta_hac
+    } else {
+        0.0
+    };
     Some(NeweyWestReport {
         alpha,
         beta,
@@ -130,16 +138,24 @@ mod tests {
     fn iid_residuals_hac_equals_ols_at_lag_zero() {
         let mut state: u64 = 42;
         let x: Vec<f64> = (0..200).map(|i| i as f64).collect();
-        let y: Vec<f64> = x.iter().map(|xi| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let eps = (state >> 32) as f64 / u32::MAX as f64 - 0.5;
-            2.0 * xi + eps
-        }).collect();
+        let y: Vec<f64> = x
+            .iter()
+            .map(|xi| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let eps = (state >> 32) as f64 / u32::MAX as f64 - 0.5;
+                2.0 * xi + eps
+            })
+            .collect();
         let r = estimate(&x, &y, Some(0)).unwrap();
         let rel = (r.se_beta_hac - r.se_beta_ols).abs() / r.se_beta_ols;
-        assert!(rel < 0.1, "HAC(0) should track OLS: HAC={}, OLS={}",
-            r.se_beta_hac, r.se_beta_ols);
+        assert!(
+            rel < 0.1,
+            "HAC(0) should track OLS: HAC={}, OLS={}",
+            r.se_beta_hac,
+            r.se_beta_ols
+        );
     }
 
     #[test]
@@ -150,16 +166,24 @@ mod tests {
         let x: Vec<f64> = (0..n).map(|i| i as f64).collect();
         let mut e = vec![0.0_f64; n];
         for i in 1..n {
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let eta = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 2.0;
             e[i] = 0.85 * e[i - 1] + eta;
         }
-        let y: Vec<f64> = x.iter().zip(e.iter()).map(|(xi, ei)| 2.0 * xi + ei).collect();
+        let y: Vec<f64> = x
+            .iter()
+            .zip(e.iter())
+            .map(|(xi, ei)| 2.0 * xi + ei)
+            .collect();
         let r = estimate(&x, &y, Some(20)).unwrap();
-        assert!(r.se_beta_hac > r.se_beta_ols,
+        assert!(
+            r.se_beta_hac > r.se_beta_ols,
             "AR(1) residuals: HAC SE {} should exceed OLS SE {}",
-            r.se_beta_hac, r.se_beta_ols);
+            r.se_beta_hac,
+            r.se_beta_ols
+        );
     }
 
     #[test]

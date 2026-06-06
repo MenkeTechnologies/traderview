@@ -45,16 +45,29 @@ pub fn compute(repo_rate: &[f64], target_rate: &[f64]) -> RepoRateSpreadReport {
         max_spread_bps: 0.0,
         days_in_stress: 0,
     };
-    if n == 0 || target_rate.len() != n { return report; }
-    if repo_rate.iter().chain(target_rate.iter()).any(|x| !x.is_finite()) { return report; }
+    if n == 0 || target_rate.len() != n {
+        return report;
+    }
+    if repo_rate
+        .iter()
+        .chain(target_rate.iter())
+        .any(|x| !x.is_finite())
+    {
+        return report;
+    }
     let mut max_spread = f64::NEG_INFINITY;
     let mut stress_count = 0_usize;
     for i in 0..n {
         let spread = (repo_rate[i] - target_rate[i]) * 10000.0;
         report.spread_bps[i] = spread;
         report.regime[i] = classify(spread);
-        if spread > max_spread { max_spread = spread; }
-        if matches!(report.regime[i], RepoRegime::Tight | RepoRegime::StressedSpike) {
+        if spread > max_spread {
+            max_spread = spread;
+        }
+        if matches!(
+            report.regime[i],
+            RepoRegime::Tight | RepoRegime::StressedSpike
+        ) {
             stress_count += 1;
         }
     }
@@ -64,11 +77,17 @@ pub fn compute(repo_rate: &[f64], target_rate: &[f64]) -> RepoRateSpreadReport {
 }
 
 fn classify(spread_bps: f64) -> RepoRegime {
-    if spread_bps >= 75.0 { RepoRegime::StressedSpike }
-    else if spread_bps >= 25.0 { RepoRegime::Tight }
-    else if spread_bps >= 10.0 { RepoRegime::MildlyTight }
-    else if spread_bps < -10.0 { RepoRegime::Easy }
-    else { RepoRegime::Normal }
+    if spread_bps >= 75.0 {
+        RepoRegime::StressedSpike
+    } else if spread_bps >= 25.0 {
+        RepoRegime::Tight
+    } else if spread_bps >= 10.0 {
+        RepoRegime::MildlyTight
+    } else if spread_bps < -10.0 {
+        RepoRegime::Easy
+    } else {
+        RepoRegime::Normal
+    }
 }
 
 #[cfg(test)]
@@ -113,10 +132,7 @@ mod tests {
 
     #[test]
     fn stress_count_aggregates() {
-        let r = compute(
-            &[0.045, 0.05, 0.055, 0.0425],
-            &[0.04, 0.04, 0.04, 0.0425],
-        );
+        let r = compute(&[0.045, 0.05, 0.055, 0.0425], &[0.04, 0.04, 0.04, 0.0425]);
         // Spreads: 50, 100, 150, 0 → 3 stress (Tight or above).
         assert_eq!(r.days_in_stress, 3);
         assert!((r.max_spread_bps - 150.0).abs() < 1e-6);

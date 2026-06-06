@@ -166,7 +166,8 @@ pub fn check(input: &DvEarlyTerminationInput) -> DvEarlyTerminationResult {
     let actual_notice_days = (input.planned_termination_date - input.notice_date).num_days();
 
     // Immediate termination triggers — override notice requirement.
-    let immediate_available = (rule.immediate_for_co_tenant_violence && input.violence_by_co_tenant)
+    let immediate_available = (rule.immediate_for_co_tenant_violence
+        && input.violence_by_co_tenant)
         || (rule.immediate_for_landlord_violence && input.violence_by_landlord_or_agent);
 
     if matches!(rule.notice, NoticePeriod::NoStatute) {
@@ -297,8 +298,24 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateDvRule>> = Lazy::new(|| {
         rule("AK", "Alaska", NoStatute, None, false, false, "VAWA only"),
         rule("AL", "Alabama", NoStatute, None, false, false, "VAWA only"),
         rule("AR", "Arkansas", NoStatute, None, false, false, "VAWA only"),
-        rule("AZ", "Arizona", Days(30), Some(30), true, true, "A.R.S. § 33-1318"),
-        rule("CA", "California", Days(14), Some(180), false, false, "Cal. Civ. Code § 1946.7"),
+        rule(
+            "AZ",
+            "Arizona",
+            Days(30),
+            Some(30),
+            true,
+            true,
+            "A.R.S. § 33-1318",
+        ),
+        rule(
+            "CA",
+            "California",
+            Days(14),
+            Some(180),
+            false,
+            false,
+            "Cal. Civ. Code § 1946.7",
+        ),
         rule(
             "CO",
             "Colorado",
@@ -308,7 +325,15 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateDvRule>> = Lazy::new(|| {
             false,
             "C.R.S. § 38-12-402",
         ),
-        rule("CT", "Connecticut", Days(30), Some(30), false, false, "Conn. Gen. Stat. § 47a-11e"),
+        rule(
+            "CT",
+            "Connecticut",
+            Days(30),
+            Some(30),
+            false,
+            false,
+            "Conn. Gen. Stat. § 47a-11e",
+        ),
         rule(
             "DC",
             "District of Columbia",
@@ -318,10 +343,26 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateDvRule>> = Lazy::new(|| {
             true,
             "D.C. Code § 42-3505.07",
         ),
-        rule("DE", "Delaware", Days(30), Some(180), false, false, "25 Del. C. § 5314"),
+        rule(
+            "DE",
+            "Delaware",
+            Days(30),
+            Some(180),
+            false,
+            false,
+            "25 Del. C. § 5314",
+        ),
         rule("FL", "Florida", NoStatute, None, false, false, "VAWA only"),
         rule("GA", "Georgia", NoStatute, None, false, false, "VAWA only"),
-        rule("HI", "Hawaii", Days(14), Some(90), true, true, "HRS § 521-80"),
+        rule(
+            "HI",
+            "Hawaii",
+            Days(14),
+            Some(90),
+            true,
+            true,
+            "HRS § 521-80",
+        ),
         rule(
             "IA",
             "Iowa",
@@ -341,10 +382,26 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateDvRule>> = Lazy::new(|| {
             true,
             "Safe Homes Act (765 ILCS 750/15)",
         ),
-        rule("IN", "Indiana", Days(30), Some(30), false, false, "Ind. Code § 32-31-9-12"),
+        rule(
+            "IN",
+            "Indiana",
+            Days(30),
+            Some(30),
+            false,
+            false,
+            "Ind. Code § 32-31-9-12",
+        ),
         rule("KS", "Kansas", NoStatute, None, false, false, "VAWA only"),
         rule("KY", "Kentucky", NoStatute, None, false, false, "VAWA only"),
-        rule("LA", "Louisiana", Days(30), None, false, false, "La. R.S. § 9:3261.1"),
+        rule(
+            "LA",
+            "Louisiana",
+            Days(30),
+            None,
+            false,
+            false,
+            "La. R.S. § 9:3261.1",
+        ),
         rule(
             "MA",
             "Massachusetts",
@@ -363,8 +420,24 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateDvRule>> = Lazy::new(|| {
             false,
             "Md. Code Real Prop. § 8-5A-02",
         ),
-        rule("ME", "Maine", Days(7), None, false, false, "14 M.R.S. § 6002"),
-        rule("MI", "Michigan", Days(30), None, false, false, "MCL § 554.601b"),
+        rule(
+            "ME",
+            "Maine",
+            Days(7),
+            None,
+            false,
+            false,
+            "14 M.R.S. § 6002",
+        ),
+        rule(
+            "MI",
+            "Michigan",
+            Days(30),
+            None,
+            false,
+            false,
+            "MCL § 554.601b",
+        ),
         rule(
             "MN",
             "Minnesota",
@@ -375,10 +448,42 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateDvRule>> = Lazy::new(|| {
             "Minn. Stat. § 504B.206 (immediate with documentation)",
         ),
         rule("MO", "Missouri", NoStatute, None, false, false, "VAWA only"),
-        rule("MS", "Mississippi", NoStatute, None, false, false, "VAWA only"),
-        rule("MT", "Montana", Days(30), None, false, false, "Mont. Code § 70-24-321"),
-        rule("NC", "North Carolina", Days(30), Some(90), false, false, "N.C.G.S. § 42-45.1"),
-        rule("ND", "North Dakota", Days(30), None, false, false, "N.D.C.C. § 47-16-17.1"),
+        rule(
+            "MS",
+            "Mississippi",
+            NoStatute,
+            None,
+            false,
+            false,
+            "VAWA only",
+        ),
+        rule(
+            "MT",
+            "Montana",
+            Days(30),
+            None,
+            false,
+            false,
+            "Mont. Code § 70-24-321",
+        ),
+        rule(
+            "NC",
+            "North Carolina",
+            Days(30),
+            Some(90),
+            false,
+            false,
+            "N.C.G.S. § 42-45.1",
+        ),
+        rule(
+            "ND",
+            "North Dakota",
+            Days(30),
+            None,
+            false,
+            false,
+            "N.D.C.C. § 47-16-17.1",
+        ),
         rule(
             "NE",
             "Nebraska",
@@ -397,18 +502,98 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateDvRule>> = Lazy::new(|| {
             false,
             "RSA § 540:2-a",
         ),
-        rule("NJ", "New Jersey", Days(30), Some(60), false, false, "N.J.S.A. § 46:8-9.6"),
-        rule("NM", "New Mexico", Days(7), None, false, false, "NMSA § 47-8-33"),
-        rule("NV", "Nevada", Days(30), Some(60), false, false, "NRS § 118A.345"),
-        rule("NY", "New York", Days(30), None, false, false, "RPL § 227-c"),
+        rule(
+            "NJ",
+            "New Jersey",
+            Days(30),
+            Some(60),
+            false,
+            false,
+            "N.J.S.A. § 46:8-9.6",
+        ),
+        rule(
+            "NM",
+            "New Mexico",
+            Days(7),
+            None,
+            false,
+            false,
+            "NMSA § 47-8-33",
+        ),
+        rule(
+            "NV",
+            "Nevada",
+            Days(30),
+            Some(60),
+            false,
+            false,
+            "NRS § 118A.345",
+        ),
+        rule(
+            "NY",
+            "New York",
+            Days(30),
+            None,
+            false,
+            false,
+            "RPL § 227-c",
+        ),
         rule("OH", "Ohio", NoStatute, None, false, false, "VAWA only"),
         rule("OK", "Oklahoma", NoStatute, None, false, false, "VAWA only"),
-        rule("OR", "Oregon", Days(14), Some(90), true, true, "ORS § 90.453"),
-        rule("PA", "Pennsylvania", Days(30), None, false, false, "68 Pa. C.S. § 250.510-A"),
-        rule("RI", "Rhode Island", Days(30), Some(180), false, false, "R.I.G.L. § 34-37-1"),
-        rule("SC", "South Carolina", NoStatute, None, false, false, "VAWA only"),
-        rule("SD", "South Dakota", Days(30), None, false, false, "SDCL § 43-32-19"),
-        rule("TN", "Tennessee", Days(14), None, false, false, "Tenn. Code § 66-28-512"),
+        rule(
+            "OR",
+            "Oregon",
+            Days(14),
+            Some(90),
+            true,
+            true,
+            "ORS § 90.453",
+        ),
+        rule(
+            "PA",
+            "Pennsylvania",
+            Days(30),
+            None,
+            false,
+            false,
+            "68 Pa. C.S. § 250.510-A",
+        ),
+        rule(
+            "RI",
+            "Rhode Island",
+            Days(30),
+            Some(180),
+            false,
+            false,
+            "R.I.G.L. § 34-37-1",
+        ),
+        rule(
+            "SC",
+            "South Carolina",
+            NoStatute,
+            None,
+            false,
+            false,
+            "VAWA only",
+        ),
+        rule(
+            "SD",
+            "South Dakota",
+            Days(30),
+            None,
+            false,
+            false,
+            "SDCL § 43-32-19",
+        ),
+        rule(
+            "TN",
+            "Tennessee",
+            Days(14),
+            None,
+            false,
+            false,
+            "Tenn. Code § 66-28-512",
+        ),
         rule(
             "TX",
             "Texas",
@@ -418,7 +603,15 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateDvRule>> = Lazy::new(|| {
             false,
             "Tex. Prop. Code § 92.0161",
         ),
-        rule("UT", "Utah", Days(30), None, false, false, "Utah Code § 57-22-5.1"),
+        rule(
+            "UT",
+            "Utah",
+            Days(30),
+            None,
+            false,
+            false,
+            "Utah Code § 57-22-5.1",
+        ),
         rule(
             "VA",
             "Virginia",
@@ -428,7 +621,15 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateDvRule>> = Lazy::new(|| {
             false,
             "Va. Code § 55.1-1236",
         ),
-        rule("VT", "Vermont", Days(14), Some(30), false, false, "9 V.S.A. § 4474b"),
+        rule(
+            "VT",
+            "Vermont",
+            Days(14),
+            Some(30),
+            false,
+            false,
+            "9 V.S.A. § 4474b",
+        ),
         rule(
             "WA",
             "Washington",
@@ -438,8 +639,24 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateDvRule>> = Lazy::new(|| {
             true,
             "RCW § 59.18.575",
         ),
-        rule("WI", "Wisconsin", Days(28), Some(60), false, false, "Wis. Stat. § 704.16"),
-        rule("WV", "West Virginia", NoStatute, None, false, false, "VAWA only"),
+        rule(
+            "WI",
+            "Wisconsin",
+            Days(28),
+            Some(60),
+            false,
+            false,
+            "Wis. Stat. § 704.16",
+        ),
+        rule(
+            "WV",
+            "West Virginia",
+            NoStatute,
+            None,
+            false,
+            false,
+            "VAWA only",
+        ),
         rule("WY", "Wyoming", NoStatute, None, false, false, "VAWA only"),
     ];
     RULES.iter().map(|r| (r.state_code, r)).collect()
@@ -538,7 +755,12 @@ mod tests {
         // Year-end boundary: Dec 15 notice → end of month = Dec 31.
         // Pinned because the end_of_month helper has year-rollover
         // arithmetic that could regress.
-        let r = check(&input("WA", d(2026, 12, 15), d(2026, 12, 31), d(2026, 12, 10)));
+        let r = check(&input(
+            "WA",
+            d(2026, 12, 15),
+            d(2026, 12, 31),
+            d(2026, 12, 10),
+        ));
         assert!(r.complies_with_notice);
     }
 
@@ -607,13 +829,23 @@ mod tests {
     fn california_180_day_freshness_window() {
         // CA accepts documentation up to 180 days old. Incident 179
         // days before notice → within window.
-        let r = check(&input("CA", d(2026, 6, 28), d(2026, 7, 12), d(2025, 12, 31)));
+        let r = check(&input(
+            "CA",
+            d(2026, 6, 28),
+            d(2026, 7, 12),
+            d(2025, 12, 31),
+        ));
         let days = (d(2026, 6, 28) - d(2025, 12, 31)).num_days();
         assert_eq!(days, 179);
         assert!(r.documentation_within_freshness_window);
 
         // Incident 181 days before → outside window.
-        let r2 = check(&input("CA", d(2026, 6, 30), d(2026, 7, 14), d(2025, 12, 31)));
+        let r2 = check(&input(
+            "CA",
+            d(2026, 6, 30),
+            d(2026, 7, 14),
+            d(2025, 12, 31),
+        ));
         assert!(!r2.documentation_within_freshness_window);
     }
 
@@ -627,12 +859,12 @@ mod tests {
 
     #[test]
     fn no_statute_states_flagged_correctly() {
-        for code in ["AL", "AR", "FL", "GA", "ID", "KS", "KY", "MO", "MS", "OH", "OK", "SC", "WV", "WY", "AK"] {
+        for code in [
+            "AL", "AR", "FL", "GA", "ID", "KS", "KY", "MO", "MS", "OH", "OK", "SC", "WV", "WY",
+            "AK",
+        ] {
             let r = check(&input(code, d(2026, 1, 1), d(2026, 1, 31), d(2025, 12, 15)));
-            assert!(
-                r.no_statute_in_state,
-                "{code} should be flagged no statute"
-            );
+            assert!(r.no_statute_in_state, "{code} should be flagged no statute");
             assert!(!r.complies_with_notice);
             assert!(r.note.contains("VAWA"));
         }

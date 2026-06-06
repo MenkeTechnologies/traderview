@@ -469,7 +469,9 @@ fn rules() -> &'static [StateNoticeRules] {
 
 pub fn rule_for(state: &str) -> Option<&'static StateNoticeRules> {
     let upper = state.to_uppercase();
-    rules().iter().find(|r| r.state.eq_ignore_ascii_case(&upper))
+    rules()
+        .iter()
+        .find(|r| r.state.eq_ignore_ascii_case(&upper))
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -737,7 +739,10 @@ mod tests {
                 ground: EvictionGround::PayOrQuit,
                 tenancy_months: 12,
             });
-            assert!(!r.just_cause_required, "{state} should NOT require just cause");
+            assert!(
+                !r.just_cause_required,
+                "{state} should NOT require just cause"
+            );
         }
     }
 

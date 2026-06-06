@@ -216,11 +216,9 @@ pub fn check(input: &Input) -> Output {
 
 fn jurisdiction_cap_bps(jurisdiction: Jurisdiction, cpi_bps: u32) -> u32 {
     match jurisdiction {
-        Jurisdiction::CaliforniaAb1482Statewide => {
-            CA_AB1482_FIXED_INCREMENT_BPS
-                .saturating_add(cpi_bps)
-                .min(CA_AB1482_HARD_CAP_BPS)
-        }
+        Jurisdiction::CaliforniaAb1482Statewide => CA_AB1482_FIXED_INCREMENT_BPS
+            .saturating_add(cpi_bps)
+            .min(CA_AB1482_HARD_CAP_BPS),
         Jurisdiction::OregonSb608Statewide => OR_SB608_FIXED_INCREMENT_BPS
             .saturating_add(cpi_bps)
             .min(OR_SB608_HARD_CAP_BPS),
@@ -245,9 +243,7 @@ fn exemption_label(status: PropertyExemptionStatus) -> &'static str {
         PropertyExemptionStatus::BuildingTooSmallForCoverage => {
             "building below minimum-unit threshold (e.g., 4 or fewer units NYC RSL)"
         }
-        PropertyExemptionStatus::OwnerOccupiedSmallProperty => {
-            "owner-occupied small property"
-        }
+        PropertyExemptionStatus::OwnerOccupiedSmallProperty => "owner-occupied small property",
         PropertyExemptionStatus::NotExemptSubjectToRentCap => "not exempt",
     }
 }
@@ -288,8 +284,7 @@ mod tests {
     fn base_ca() -> Input {
         Input {
             jurisdiction: Jurisdiction::CaliforniaAb1482Statewide,
-            property_exemption_status:
-                PropertyExemptionStatus::NotExemptSubjectToRentCap,
+            property_exemption_status: PropertyExemptionStatus::NotExemptSubjectToRentCap,
             current_monthly_rent_cents: 2_000_00,
             proposed_monthly_rent_cents: 2_140_00,
             local_cpi_bps: 200,
@@ -364,7 +359,7 @@ mod tests {
     fn ca_ab1482_hard_cap_at_10_pct_even_with_high_cpi() {
         let mut input = base_ca();
         input.local_cpi_bps = 800; // 8% CPI
-        // 5% + 8% = 13%; cap = min(13%, 10%) = 10%
+                                   // 5% + 8% = 13%; cap = min(13%, 10%) = 10%
         let output = check(&input);
         assert_eq!(output.statutory_cap_bps, 1_000);
     }
@@ -374,7 +369,7 @@ mod tests {
         let mut input = base_ca();
         input.jurisdiction = Jurisdiction::OregonSb608Statewide;
         input.local_cpi_bps = 500; // 5% CPI
-        // 7% + 5% = 12%; cap = min(12%, 10%) = 10%
+                                   // 7% + 5% = 12%; cap = min(12%, 10%) = 10%
         let output = check(&input);
         assert_eq!(output.statutory_cap_bps, 1_000);
     }

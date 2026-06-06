@@ -18,7 +18,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SfpReport {
@@ -34,8 +38,13 @@ pub fn compute(bars: &[Bar], lookback: usize) -> SfpReport {
         bearish: vec![false; n],
         lookback,
     };
-    if lookback < 2 || n < lookback + 1 { return report; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if lookback < 2 || n < lookback + 1 {
+        return report;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return report;
     }
     for i in lookback..n {
@@ -57,7 +66,13 @@ pub fn compute(bars: &[Bar], lookback: usize) -> SfpReport {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {
@@ -105,7 +120,7 @@ mod tests {
     #[test]
     fn true_breakout_close_below_prior_low_not_sfp() {
         let mut bars = vec![b(101.0, 99.0, 100.0); 20];
-        bars.push(b(101.0, 90.0, 92.0));    // close 92 < prior low 99
+        bars.push(b(101.0, 90.0, 92.0)); // close 92 < prior low 99
         let r = compute(&bars, 20);
         assert!(!r.bullish[20]);
     }

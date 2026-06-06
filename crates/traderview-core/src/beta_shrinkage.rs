@@ -46,28 +46,39 @@ pub struct ShrinkageReport {
     pub assets: Vec<ShrunkBeta>,
 }
 
-pub fn shrink(
-    assets: &[AssetReturns],
-    market_returns: &[f64],
-) -> Option<ShrinkageReport> {
-    if assets.is_empty() || market_returns.len() < 5 { return None; }
-    if market_returns.iter().any(|x| !x.is_finite()) { return None; }
+pub fn shrink(assets: &[AssetReturns], market_returns: &[f64]) -> Option<ShrinkageReport> {
+    if assets.is_empty() || market_returns.len() < 5 {
+        return None;
+    }
+    if market_returns.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let n_obs = market_returns.len() as f64;
     let mut ols: Vec<(String, f64, f64)> = Vec::with_capacity(assets.len());
     for a in assets {
-        if a.asset_returns.len() != market_returns.len() { continue; }
-        if a.asset_returns.iter().any(|x| !x.is_finite()) { continue; }
+        if a.asset_returns.len() != market_returns.len() {
+            continue;
+        }
+        if a.asset_returns.iter().any(|x| !x.is_finite()) {
+            continue;
+        }
         if let Some((beta, se)) = ols_beta(&a.asset_returns, market_returns) {
             ols.push((a.symbol.clone(), beta, se));
         }
     }
-    if ols.is_empty() { return None; }
+    if ols.is_empty() {
+        return None;
+    }
     // Cross-sectional prior + variance (across assets, not across time).
     let prior_beta: f64 = ols.iter().map(|(_, b, _)| *b).sum::<f64>() / ols.len() as f64;
     let cs_var: f64 = if ols.len() > 1 {
-        ols.iter().map(|(_, b, _)| (b - prior_beta).powi(2)).sum::<f64>()
+        ols.iter()
+            .map(|(_, b, _)| (b - prior_beta).powi(2))
+            .sum::<f64>()
             / (ols.len() - 1) as f64
-    } else { 0.0 };
+    } else {
+        0.0
+    };
     let mut report = Vec::with_capacity(ols.len());
     for (sym, beta, se) in ols {
         let var_ols = se * se;
@@ -83,12 +94,18 @@ pub fn shrink(
         });
     }
     let _ = n_obs;
-    Some(ShrinkageReport { prior_beta, cross_sectional_variance: cs_var, assets: report })
+    Some(ShrinkageReport {
+        prior_beta,
+        cross_sectional_variance: cs_var,
+        assets: report,
+    })
 }
 
 fn ols_beta(y: &[f64], x: &[f64]) -> Option<(f64, f64)> {
     let n = y.len();
-    if n < 5 || x.len() != n { return None; }
+    if n < 5 || x.len() != n {
+        return None;
+    }
     let n_f = n as f64;
     let x_mean: f64 = x.iter().sum::<f64>() / n_f;
     let y_mean: f64 = y.iter().sum::<f64>() / n_f;
@@ -100,7 +117,9 @@ fn ols_beta(y: &[f64], x: &[f64]) -> Option<(f64, f64)> {
         s_xy += dx * dy;
         s_xx += dx * dx;
     }
-    if s_xx <= 0.0 { return None; }
+    if s_xx <= 0.0 {
+        return None;
+    }
     let beta = s_xy / s_xx;
     let alpha = y_mean - beta * x_mean;
     // Residual variance → SE(β).
@@ -110,7 +129,9 @@ fn ols_beta(y: &[f64], x: &[f64]) -> Option<(f64, f64)> {
         ssr += resid * resid;
     }
     let dof = (n - 2) as f64;
-    if dof <= 0.0 { return None; }
+    if dof <= 0.0 {
+        return None;
+    }
     let sigma2 = ssr / dof;
     let se = (sigma2 / s_xx).max(0.0).sqrt();
     Some((beta, se))
@@ -121,7 +142,10 @@ mod tests {
     use super::*;
 
     fn a(sym: &str, r: Vec<f64>) -> AssetReturns {
-        AssetReturns { symbol: sym.into(), asset_returns: r }
+        AssetReturns {
+            symbol: sym.into(),
+            asset_returns: r,
+        }
     }
 
     #[test]
@@ -159,7 +183,8 @@ mod tests {
         // one is mostly noise (high se).
         let mut state: u64 = 7;
         let mut rand = || {
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             ((state >> 32) as f64 / u32::MAX as f64) - 0.5
         };
@@ -168,10 +193,22 @@ mod tests {
         let noisy: Vec<f64> = m.iter().map(|x| x * 1.5 + rand() * 0.05).collect();
         let assets = vec![a("TIGHT", tight), a("NOISY", noisy)];
         let r = shrink(&assets, &m).unwrap();
-        let tight_w = r.assets.iter().find(|s| s.symbol == "TIGHT").unwrap().shrinkage_weight;
-        let noisy_w = r.assets.iter().find(|s| s.symbol == "NOISY").unwrap().shrinkage_weight;
-        assert!(tight_w > noisy_w,
-            "tight-fit asset should retain more OLS weight ({tight_w}) than noisy ({noisy_w})");
+        let tight_w = r
+            .assets
+            .iter()
+            .find(|s| s.symbol == "TIGHT")
+            .unwrap()
+            .shrinkage_weight;
+        let noisy_w = r
+            .assets
+            .iter()
+            .find(|s| s.symbol == "NOISY")
+            .unwrap()
+            .shrinkage_weight;
+        assert!(
+            tight_w > noisy_w,
+            "tight-fit asset should retain more OLS weight ({tight_w}) than noisy ({noisy_w})"
+        );
     }
 
     #[test]
@@ -186,8 +223,14 @@ mod tests {
         for s in &r.assets {
             let lo = s.beta_ols.min(r.prior_beta);
             let hi = s.beta_ols.max(r.prior_beta);
-            assert!(s.beta_shrunk >= lo - 1e-9 && s.beta_shrunk <= hi + 1e-9,
-                "{} shrunk {} outside [{}, {}]", s.symbol, s.beta_shrunk, lo, hi);
+            assert!(
+                s.beta_shrunk >= lo - 1e-9 && s.beta_shrunk <= hi + 1e-9,
+                "{} shrunk {} outside [{}, {}]",
+                s.symbol,
+                s.beta_shrunk,
+                lo,
+                hi
+            );
         }
     }
 

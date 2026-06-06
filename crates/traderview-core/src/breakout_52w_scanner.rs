@@ -39,12 +39,24 @@ pub struct Config {
 }
 
 impl Default for Config {
-    fn default() -> Self { Self { period: 252, min_volume_ratio: 1.5, stalk_pct: 0.02 } }
+    fn default() -> Self {
+        Self {
+            period: 252,
+            min_volume_ratio: 1.5,
+            stalk_pct: 0.02,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum BreakoutKind { NewHigh, NewLow, StalkingHigh, StalkingLow, None }
+pub enum BreakoutKind {
+    NewHigh,
+    NewLow,
+    StalkingHigh,
+    StalkingLow,
+    None,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BreakoutHit {
@@ -65,29 +77,42 @@ pub struct ScannerReport {
 pub fn scan(symbols: &[SymbolSeries], cfg: &Config) -> ScannerReport {
     let mut report = ScannerReport::default();
     if cfg.period == 0
-        || !cfg.min_volume_ratio.is_finite() || cfg.min_volume_ratio <= 0.0
-        || !cfg.stalk_pct.is_finite() || cfg.stalk_pct < 0.0
+        || !cfg.min_volume_ratio.is_finite()
+        || cfg.min_volume_ratio <= 0.0
+        || !cfg.stalk_pct.is_finite()
+        || cfg.stalk_pct < 0.0
     {
         return report;
     }
     for sym in symbols {
         let n = sym.bars.len();
-        if n < cfg.period + 1 { continue; }
+        if n < cfg.period + 1 {
+            continue;
+        }
         let cur = sym.bars[n - 1];
-        if !cur.close.is_finite() || !cur.volume.is_finite()
-            || cur.close <= 0.0 || cur.volume < 0.0
+        if !cur.close.is_finite() || !cur.volume.is_finite() || cur.close <= 0.0 || cur.volume < 0.0
         {
             continue;
         }
         let prior = &sym.bars[n - 1 - cfg.period..n - 1];
         // Validate prior window.
-        if prior.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.volume.is_finite()) {
+        if prior
+            .iter()
+            .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.volume.is_finite())
+        {
             continue;
         }
-        let prior_high = prior.iter().map(|b| b.high).fold(f64::NEG_INFINITY, f64::max);
-        let prior_low  = prior.iter().map(|b| b.low).fold(f64::INFINITY, f64::min);
+        let prior_high = prior
+            .iter()
+            .map(|b| b.high)
+            .fold(f64::NEG_INFINITY, f64::max);
+        let prior_low = prior.iter().map(|b| b.low).fold(f64::INFINITY, f64::min);
         let avg_volume = prior.iter().map(|b| b.volume).sum::<f64>() / prior.len() as f64;
-        let vol_ratio = if avg_volume > 0.0 { cur.volume / avg_volume } else { f64::INFINITY };
+        let vol_ratio = if avg_volume > 0.0 {
+            cur.volume / avg_volume
+        } else {
+            f64::INFINITY
+        };
         let mut emitted = false;
         if cur.close > prior_high && vol_ratio >= cfg.min_volume_ratio {
             report.new_highs.push(BreakoutHit {
@@ -110,10 +135,10 @@ pub fn scan(symbols: &[SymbolSeries], cfg: &Config) -> ScannerReport {
         }
         if !emitted {
             // Stalking: within stalk_pct of extreme.
-            let near_high = (prior_high - cur.close) / prior_high <= cfg.stalk_pct
-                && cur.close <= prior_high;
-            let near_low = (cur.close - prior_low) / prior_low <= cfg.stalk_pct
-                && cur.close >= prior_low;
+            let near_high =
+                (prior_high - cur.close) / prior_high <= cfg.stalk_pct && cur.close <= prior_high;
+            let near_low =
+                (cur.close - prior_low) / prior_low <= cfg.stalk_pct && cur.close >= prior_low;
             if near_high {
                 report.stalking.push(BreakoutHit {
                     symbol: sym.symbol.clone(),
@@ -134,10 +159,16 @@ pub fn scan(symbols: &[SymbolSeries], cfg: &Config) -> ScannerReport {
         }
     }
     // Sort each bucket: new_highs/lows by vol_ratio desc, stalking by proximity.
-    report.new_highs.sort_by(|a, b| b.volume_ratio.partial_cmp(&a.volume_ratio)
-        .unwrap_or(std::cmp::Ordering::Equal));
-    report.new_lows.sort_by(|a, b| b.volume_ratio.partial_cmp(&a.volume_ratio)
-        .unwrap_or(std::cmp::Ordering::Equal));
+    report.new_highs.sort_by(|a, b| {
+        b.volume_ratio
+            .partial_cmp(&a.volume_ratio)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+    report.new_lows.sort_by(|a, b| {
+        b.volume_ratio
+            .partial_cmp(&a.volume_ratio)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     report
 }
 
@@ -146,11 +177,19 @@ mod tests {
     use super::*;
 
     fn b(c: f64, v: f64) -> Bar {
-        Bar { high: c + 0.5, low: c - 0.5, close: c, volume: v }
+        Bar {
+            high: c + 0.5,
+            low: c - 0.5,
+            close: c,
+            volume: v,
+        }
     }
 
     fn ser(sym: &str, bars: Vec<Bar>) -> SymbolSeries {
-        SymbolSeries { symbol: sym.into(), bars }
+        SymbolSeries {
+            symbol: sym.into(),
+            bars,
+        }
     }
 
     #[test]
@@ -161,12 +200,23 @@ mod tests {
 
     #[test]
     fn invalid_config_returns_default() {
-        let bars: Vec<Bar> = (0..260).map(|i| b(100.0 + i as f64 * 0.1, 1_000.0)).collect();
+        let bars: Vec<Bar> = (0..260)
+            .map(|i| b(100.0 + i as f64 * 0.1, 1_000.0))
+            .collect();
         let series = vec![ser("X", bars)];
         for cfg in [
-            Config { period: 0, ..Default::default() },
-            Config { min_volume_ratio: 0.0, ..Default::default() },
-            Config { stalk_pct: -1.0, ..Default::default() },
+            Config {
+                period: 0,
+                ..Default::default()
+            },
+            Config {
+                min_volume_ratio: 0.0,
+                ..Default::default()
+            },
+            Config {
+                stalk_pct: -1.0,
+                ..Default::default()
+            },
         ] {
             let r = scan(&series, &cfg);
             assert!(r.new_highs.is_empty() && r.new_lows.is_empty());
@@ -193,7 +243,7 @@ mod tests {
     #[test]
     fn new_high_rejected_without_volume_confirmation() {
         let mut bars = vec![b(100.0, 1_000.0); 252];
-        bars.push(b(110.0, 1_000.0));    // only 1x vol
+        bars.push(b(110.0, 1_000.0)); // only 1x vol
         let r = scan(&[ser("WEAK", bars)], &Config::default());
         assert!(r.new_highs.is_empty());
     }
@@ -213,7 +263,10 @@ mod tests {
         let mut bars = vec![b(100.0, 1_000.0); 252];
         bars.push(b(99.0, 800.0));
         let r = scan(&[ser("STALK", bars)], &Config::default());
-        assert!(r.stalking.iter().any(|h| h.kind == BreakoutKind::StalkingHigh));
+        assert!(r
+            .stalking
+            .iter()
+            .any(|h| h.kind == BreakoutKind::StalkingHigh));
     }
 
     #[test]

@@ -30,8 +30,16 @@ pub fn compute(closes_a: &[f64], closes_b: &[f64]) -> RatioChartReport {
         ratio_normalized: vec![None; n],
         n,
     };
-    if n == 0 || closes_b.len() != n { return report; }
-    if closes_a.iter().chain(closes_b.iter()).any(|x| !x.is_finite()) { return report; }
+    if n == 0 || closes_b.len() != n {
+        return report;
+    }
+    if closes_a
+        .iter()
+        .chain(closes_b.iter())
+        .any(|x| !x.is_finite())
+    {
+        return report;
+    }
     let mut first_ratio: Option<f64> = None;
     for i in 0..n {
         if closes_b[i] != 0.0 {

@@ -178,7 +178,8 @@ fn check_default(_input: &SwimmingPoolSafetyInput) -> SwimmingPoolSafetyResult {
         features_present_count: 0,
         minimum_features_required: 0,
         violations: Vec::new(),
-        citation: "common-law premises liability + local pool ordinances + IPC § 305 (where adopted)",
+        citation:
+            "common-law premises liability + local pool ordinances + IPC § 305 (where adopted)",
         notes,
     }
 }
@@ -331,9 +332,10 @@ mod tests {
     #[test]
     fn ca_note_pins_multifamily_carve_out() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("multifamily")
-            && n.contains("CalCode")
-            && n.contains("Title 22")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("multifamily") && n.contains("CalCode") && n.contains("Title 22")));
     }
 
     #[test]
@@ -442,10 +444,7 @@ mod tests {
     #[test]
     fn default_note_pins_48_inch_fencing_baseline() {
         let r = check(&default_base());
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("48-inch fencing")));
+        assert!(r.notes.iter().any(|n| n.contains("48-inch fencing")));
     }
 
     #[test]

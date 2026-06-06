@@ -246,10 +246,42 @@ const fn rule(
 static TABLE: Lazy<HashMap<&'static str, &'static StateAbandonmentRule>> = Lazy::new(|| {
     use AbandonmentRegime::*;
     static RULES: &[StateAbandonmentRule] = &[
-        rule("AK", "Alaska", NoStateStatute, None, None, None, "no statewide statute"),
-        rule("AL", "Alabama", CaseByCasePresumption, None, None, None, "common law"),
-        rule("AR", "Arkansas", NoStateStatute, None, None, None, "no statewide statute"),
-        rule("AZ", "Arizona", StatutoryAbandonment, Some(7), Some(5), Some(14), "A.R.S. § 33-1370"),
+        rule(
+            "AK",
+            "Alaska",
+            NoStateStatute,
+            None,
+            None,
+            None,
+            "no statewide statute",
+        ),
+        rule(
+            "AL",
+            "Alabama",
+            CaseByCasePresumption,
+            None,
+            None,
+            None,
+            "common law",
+        ),
+        rule(
+            "AR",
+            "Arkansas",
+            NoStateStatute,
+            None,
+            None,
+            None,
+            "no statewide statute",
+        ),
+        rule(
+            "AZ",
+            "Arizona",
+            StatutoryAbandonment,
+            Some(7),
+            Some(5),
+            Some(14),
+            "A.R.S. § 33-1370",
+        ),
         rule(
             "CA",
             "California",
@@ -259,10 +291,42 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateAbandonmentRule>> = Lazy:
             Some(18),
             "Cal. Civ. Code § 1951.3 + § 1986",
         ),
-        rule("CO", "Colorado", CourtProcessOnly, None, None, None, "C.R.S. § 13-40-122 (must file possession action)"),
-        rule("CT", "Connecticut", CaseByCasePresumption, None, None, None, "common law"),
-        rule("DC", "District of Columbia", CourtProcessOnly, None, None, None, "D.C. Code § 42-3505.01 (must file)"),
-        rule("DE", "Delaware", StatutoryAbandonment, Some(7), Some(7), Some(7), "25 Del. C. § 5715"),
+        rule(
+            "CO",
+            "Colorado",
+            CourtProcessOnly,
+            None,
+            None,
+            None,
+            "C.R.S. § 13-40-122 (must file possession action)",
+        ),
+        rule(
+            "CT",
+            "Connecticut",
+            CaseByCasePresumption,
+            None,
+            None,
+            None,
+            "common law",
+        ),
+        rule(
+            "DC",
+            "District of Columbia",
+            CourtProcessOnly,
+            None,
+            None,
+            None,
+            "D.C. Code § 42-3505.01 (must file)",
+        ),
+        rule(
+            "DE",
+            "Delaware",
+            StatutoryAbandonment,
+            Some(7),
+            Some(7),
+            Some(7),
+            "25 Del. C. § 5715",
+        ),
         rule(
             "FL",
             "Florida",
@@ -272,8 +336,24 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateAbandonmentRule>> = Lazy:
             None,
             "Fla. Stat. § 83.59 (rebuttable presumption)",
         ),
-        rule("GA", "Georgia", NoStateStatute, None, None, None, "no statewide statute"),
-        rule("HI", "Hawaii", StatutoryAbandonment, Some(20), Some(15), Some(15), "HRS § 521-72"),
+        rule(
+            "GA",
+            "Georgia",
+            NoStateStatute,
+            None,
+            None,
+            None,
+            "no statewide statute",
+        ),
+        rule(
+            "HI",
+            "Hawaii",
+            StatutoryAbandonment,
+            Some(20),
+            Some(15),
+            Some(15),
+            "HRS § 521-72",
+        ),
         rule(
             "IA",
             "Iowa",
@@ -283,7 +363,15 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateAbandonmentRule>> = Lazy:
             Some(7),
             "Iowa Code § 562A.29",
         ),
-        rule("ID", "Idaho", NoStateStatute, None, None, None, "no statewide statute"),
+        rule(
+            "ID",
+            "Idaho",
+            NoStateStatute,
+            None,
+            None,
+            None,
+            "no statewide statute",
+        ),
         rule(
             "IL",
             "Illinois",
@@ -293,22 +381,150 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateAbandonmentRule>> = Lazy:
             Some(7),
             "765 ILCS 705/2",
         ),
-        rule("IN", "Indiana", NoStateStatute, None, None, None, "no statewide statute"),
-        rule("KS", "Kansas", StatutoryAbandonment, Some(15), Some(15), Some(30), "K.S.A. § 58-2565"),
-        rule("KY", "Kentucky", CaseByCasePresumption, None, None, None, "KRS § 383.670"),
-        rule("LA", "Louisiana", NoStateStatute, None, None, None, "no statewide statute"),
-        rule("MA", "Massachusetts", CaseByCasePresumption, None, None, None, "M.G.L. c. 186 § 14"),
-        rule("MD", "Maryland", CaseByCasePresumption, None, None, None, "common law"),
-        rule("ME", "Maine", StatutoryAbandonment, Some(14), Some(14), Some(14), "14 M.R.S. § 6005"),
-        rule("MI", "Michigan", StatutoryAbandonment, Some(14), Some(10), Some(30), "MCL § 600.2918"),
-        rule("MN", "Minnesota", StatutoryAbandonment, Some(28), Some(28), Some(60), "Minn. Stat. § 504B.271"),
-        rule("MO", "Missouri", CaseByCasePresumption, None, None, None, "common law"),
-        rule("MS", "Mississippi", NoStateStatute, None, None, None, "no statewide statute"),
-        rule("MT", "Montana", StatutoryAbandonment, Some(7), Some(7), Some(15), "Mont. Code § 70-24-430"),
-        rule("NC", "North Carolina", StatutoryAbandonment, Some(15), Some(10), Some(7), "N.C.G.S. § 42-25.9"),
-        rule("ND", "North Dakota", StatutoryAbandonment, Some(15), Some(10), Some(28), "N.D.C.C. § 47-16-30.1"),
-        rule("NE", "Nebraska", StatutoryAbandonment, Some(14), Some(7), Some(14), "Neb. Rev. Stat. § 76-1432"),
-        rule("NH", "New Hampshire", CaseByCasePresumption, None, None, None, "common law"),
+        rule(
+            "IN",
+            "Indiana",
+            NoStateStatute,
+            None,
+            None,
+            None,
+            "no statewide statute",
+        ),
+        rule(
+            "KS",
+            "Kansas",
+            StatutoryAbandonment,
+            Some(15),
+            Some(15),
+            Some(30),
+            "K.S.A. § 58-2565",
+        ),
+        rule(
+            "KY",
+            "Kentucky",
+            CaseByCasePresumption,
+            None,
+            None,
+            None,
+            "KRS § 383.670",
+        ),
+        rule(
+            "LA",
+            "Louisiana",
+            NoStateStatute,
+            None,
+            None,
+            None,
+            "no statewide statute",
+        ),
+        rule(
+            "MA",
+            "Massachusetts",
+            CaseByCasePresumption,
+            None,
+            None,
+            None,
+            "M.G.L. c. 186 § 14",
+        ),
+        rule(
+            "MD",
+            "Maryland",
+            CaseByCasePresumption,
+            None,
+            None,
+            None,
+            "common law",
+        ),
+        rule(
+            "ME",
+            "Maine",
+            StatutoryAbandonment,
+            Some(14),
+            Some(14),
+            Some(14),
+            "14 M.R.S. § 6005",
+        ),
+        rule(
+            "MI",
+            "Michigan",
+            StatutoryAbandonment,
+            Some(14),
+            Some(10),
+            Some(30),
+            "MCL § 600.2918",
+        ),
+        rule(
+            "MN",
+            "Minnesota",
+            StatutoryAbandonment,
+            Some(28),
+            Some(28),
+            Some(60),
+            "Minn. Stat. § 504B.271",
+        ),
+        rule(
+            "MO",
+            "Missouri",
+            CaseByCasePresumption,
+            None,
+            None,
+            None,
+            "common law",
+        ),
+        rule(
+            "MS",
+            "Mississippi",
+            NoStateStatute,
+            None,
+            None,
+            None,
+            "no statewide statute",
+        ),
+        rule(
+            "MT",
+            "Montana",
+            StatutoryAbandonment,
+            Some(7),
+            Some(7),
+            Some(15),
+            "Mont. Code § 70-24-430",
+        ),
+        rule(
+            "NC",
+            "North Carolina",
+            StatutoryAbandonment,
+            Some(15),
+            Some(10),
+            Some(7),
+            "N.C.G.S. § 42-25.9",
+        ),
+        rule(
+            "ND",
+            "North Dakota",
+            StatutoryAbandonment,
+            Some(15),
+            Some(10),
+            Some(28),
+            "N.D.C.C. § 47-16-30.1",
+        ),
+        rule(
+            "NE",
+            "Nebraska",
+            StatutoryAbandonment,
+            Some(14),
+            Some(7),
+            Some(14),
+            "Neb. Rev. Stat. § 76-1432",
+        ),
+        rule(
+            "NH",
+            "New Hampshire",
+            CaseByCasePresumption,
+            None,
+            None,
+            None,
+            "common law",
+        ),
         rule(
             "NJ",
             "New Jersey",
@@ -318,8 +534,24 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateAbandonmentRule>> = Lazy:
             None,
             "N.J.S.A. § 2A:18-72 (Anti-Eviction Act — no self-help)",
         ),
-        rule("NM", "New Mexico", StatutoryAbandonment, Some(7), Some(7), Some(30), "NMSA § 47-8-34.1"),
-        rule("NV", "Nevada", StatutoryAbandonment, Some(5), Some(5), Some(30), "NRS § 118A.450"),
+        rule(
+            "NM",
+            "New Mexico",
+            StatutoryAbandonment,
+            Some(7),
+            Some(7),
+            Some(30),
+            "NMSA § 47-8-34.1",
+        ),
+        rule(
+            "NV",
+            "Nevada",
+            StatutoryAbandonment,
+            Some(5),
+            Some(5),
+            Some(30),
+            "NRS § 118A.450",
+        ),
         rule(
             "NY",
             "New York",
@@ -329,8 +561,24 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateAbandonmentRule>> = Lazy:
             None,
             "RPAPL § 711 + § 711-a (must file holdover proceeding)",
         ),
-        rule("OH", "Ohio", CaseByCasePresumption, None, None, None, "ORC § 5321.04"),
-        rule("OK", "Oklahoma", StatutoryAbandonment, Some(7), Some(15), Some(15), "41 O.S. § 130"),
+        rule(
+            "OH",
+            "Ohio",
+            CaseByCasePresumption,
+            None,
+            None,
+            None,
+            "ORC § 5321.04",
+        ),
+        rule(
+            "OK",
+            "Oklahoma",
+            StatutoryAbandonment,
+            Some(7),
+            Some(15),
+            Some(15),
+            "41 O.S. § 130",
+        ),
         rule(
             "OR",
             "Oregon",
@@ -340,11 +588,51 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateAbandonmentRule>> = Lazy:
             Some(8),
             "ORS § 90.425",
         ),
-        rule("PA", "Pennsylvania", StatutoryAbandonment, Some(10), Some(10), Some(10), "68 P.S. § 250.505a"),
-        rule("RI", "Rhode Island", CaseByCasePresumption, None, None, None, "R.I.G.L. § 34-18-19"),
-        rule("SC", "South Carolina", StatutoryAbandonment, Some(15), Some(5), Some(15), "S.C. Code § 27-40-730"),
-        rule("SD", "South Dakota", NoStateStatute, None, None, None, "no statewide statute"),
-        rule("TN", "Tennessee", StatutoryAbandonment, Some(30), Some(10), Some(30), "Tenn. Code § 66-28-405"),
+        rule(
+            "PA",
+            "Pennsylvania",
+            StatutoryAbandonment,
+            Some(10),
+            Some(10),
+            Some(10),
+            "68 P.S. § 250.505a",
+        ),
+        rule(
+            "RI",
+            "Rhode Island",
+            CaseByCasePresumption,
+            None,
+            None,
+            None,
+            "R.I.G.L. § 34-18-19",
+        ),
+        rule(
+            "SC",
+            "South Carolina",
+            StatutoryAbandonment,
+            Some(15),
+            Some(5),
+            Some(15),
+            "S.C. Code § 27-40-730",
+        ),
+        rule(
+            "SD",
+            "South Dakota",
+            NoStateStatute,
+            None,
+            None,
+            None,
+            "no statewide statute",
+        ),
+        rule(
+            "TN",
+            "Tennessee",
+            StatutoryAbandonment,
+            Some(30),
+            Some(10),
+            Some(30),
+            "Tenn. Code § 66-28-405",
+        ),
         rule(
             "TX",
             "Texas",
@@ -354,9 +642,33 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateAbandonmentRule>> = Lazy:
             Some(30),
             "Tex. Prop. Code § 92.014",
         ),
-        rule("UT", "Utah", StatutoryAbandonment, Some(15), Some(15), Some(15), "Utah Code § 78B-6-816"),
-        rule("VA", "Virginia", StatutoryAbandonment, Some(7), Some(7), Some(24), "Va. Code § 55.1-1254"),
-        rule("VT", "Vermont", CaseByCasePresumption, None, None, None, "9 V.S.A. § 4456"),
+        rule(
+            "UT",
+            "Utah",
+            StatutoryAbandonment,
+            Some(15),
+            Some(15),
+            Some(15),
+            "Utah Code § 78B-6-816",
+        ),
+        rule(
+            "VA",
+            "Virginia",
+            StatutoryAbandonment,
+            Some(7),
+            Some(7),
+            Some(24),
+            "Va. Code § 55.1-1254",
+        ),
+        rule(
+            "VT",
+            "Vermont",
+            CaseByCasePresumption,
+            None,
+            None,
+            None,
+            "9 V.S.A. § 4456",
+        ),
         rule(
             "WA",
             "Washington",
@@ -366,9 +678,33 @@ static TABLE: Lazy<HashMap<&'static str, &'static StateAbandonmentRule>> = Lazy:
             Some(45),
             "RCW § 59.18.310",
         ),
-        rule("WI", "Wisconsin", StatutoryAbandonment, Some(21), Some(7), Some(30), "Wis. Stat. § 704.05"),
-        rule("WV", "West Virginia", CaseByCasePresumption, None, None, None, "common law"),
-        rule("WY", "Wyoming", NoStateStatute, None, None, None, "no statewide statute"),
+        rule(
+            "WI",
+            "Wisconsin",
+            StatutoryAbandonment,
+            Some(21),
+            Some(7),
+            Some(30),
+            "Wis. Stat. § 704.05",
+        ),
+        rule(
+            "WV",
+            "West Virginia",
+            CaseByCasePresumption,
+            None,
+            None,
+            None,
+            "common law",
+        ),
+        rule(
+            "WY",
+            "Wyoming",
+            NoStateStatute,
+            None,
+            None,
+            None,
+            "no statewide statute",
+        ),
     ];
     RULES.iter().map(|r| (r.state_code, r)).collect()
 });
@@ -552,9 +888,21 @@ mod tests {
         // notice + belongings disposal day counts set.
         for r in TABLE.values() {
             if matches!(r.regime, AbandonmentRegime::StatutoryAbandonment) {
-                assert!(r.rent_unpaid_threshold_days.is_some(), "{} missing rent threshold", r.state_code);
-                assert!(r.notice_of_belief_period_days.is_some(), "{} missing notice period", r.state_code);
-                assert!(r.belongings_disposal_period_days.is_some(), "{} missing belongings period", r.state_code);
+                assert!(
+                    r.rent_unpaid_threshold_days.is_some(),
+                    "{} missing rent threshold",
+                    r.state_code
+                );
+                assert!(
+                    r.notice_of_belief_period_days.is_some(),
+                    "{} missing notice period",
+                    r.state_code
+                );
+                assert!(
+                    r.belongings_disposal_period_days.is_some(),
+                    "{} missing belongings period",
+                    r.state_code
+                );
             }
         }
     }
@@ -565,7 +913,11 @@ mod tests {
         // counts — those are fixed-threshold-only fields.
         for r in TABLE.values() {
             if matches!(r.regime, AbandonmentRegime::CaseByCasePresumption) {
-                assert!(r.rent_unpaid_threshold_days.is_none(), "{} should not have rent threshold", r.state_code);
+                assert!(
+                    r.rent_unpaid_threshold_days.is_none(),
+                    "{} should not have rent threshold",
+                    r.state_code
+                );
             }
         }
     }
@@ -579,7 +931,12 @@ mod tests {
         // Verify no other state has a longer window.
         for r in TABLE.values() {
             if let Some(days) = r.belongings_disposal_period_days {
-                assert!(days <= 60, "{} has unusually long belongings window {}", r.state_code, days);
+                assert!(
+                    days <= 60,
+                    "{} has unusually long belongings window {}",
+                    r.state_code,
+                    days
+                );
             }
         }
     }

@@ -393,10 +393,7 @@ mod tests {
         i.us_tb_status = UsTradeOrBusinessStatus::NoUsTradeOrBusiness;
         i.limited_agent_authorization_in_place = false;
         let r = check(&i);
-        assert!(!r
-            .failure_reasons
-            .iter()
-            .any(|f| f.contains("§ 6038C(c)")));
+        assert!(!r.failure_reasons.iter().any(|f| f.contains("§ 6038C(c)")));
     }
 
     #[test]
@@ -405,8 +402,10 @@ mod tests {
         i.form_5472_filed = false;
         let r = check(&i);
         assert!(r.section_6501_c8_sol_tolled);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 6501(c)(8)")
-            && f.contains("OPEN INDEFINITELY")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 6501(c)(8)") && f.contains("OPEN INDEFINITELY")));
     }
 
     #[test]
@@ -419,7 +418,9 @@ mod tests {
     fn citation_pins_all_authorities() {
         let r = check(&engaged_base());
         assert!(r.citation.contains("§ 6038C(a)-(d)"));
-        assert!(r.citation.contains("Omnibus Budget Reconciliation Act of 1990 § 11315"));
+        assert!(r
+            .citation
+            .contains("Omnibus Budget Reconciliation Act of 1990 § 11315"));
         assert!(r.citation.contains("Pub. L. 101-508"));
         assert!(r.citation.contains("November 5, 1990"));
         assert!(r.citation.contains("§ 6038A(b)-(e)"));
@@ -427,7 +428,9 @@ mod tests {
         assert!(r.citation.contains("§ 864(b) and § 864(b)(2)"));
         assert!(r.citation.contains("§ 882"));
         assert!(r.citation.contains("§ 7602 and § 7603 and § 7604"));
-        assert!(r.citation.contains("Treas. Reg. § 1.6038A-1 through § 1.6038A-7"));
+        assert!(r
+            .citation
+            .contains("Treas. Reg. § 1.6038A-1 through § 1.6038A-7"));
         assert!(r.citation.contains("Form 5472"));
         assert!(r.citation.contains("IRM 8.11.5"));
         assert!(r.citation.contains("IRM 20.1.9"));
@@ -471,9 +474,12 @@ mod tests {
     #[test]
     fn note_pins_864b2_trading_safe_harbor() {
         let r = check(&engaged_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 864(b)(2) trading safe harbor")
-            && n.contains("foreign person NOT a dealer")
-            && n.contains("trades for own account")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 864(b)(2) trading safe harbor")
+                && n.contains("foreign person NOT a dealer")
+                && n.contains("trades for own account")));
     }
 
     #[test]
@@ -487,7 +493,8 @@ mod tests {
     #[test]
     fn note_pins_omnibus_budget_reconciliation_1990_origin() {
         let r = check(&engaged_base());
-        assert!(r.notes.iter().any(|n| n.contains("Omnibus Budget Reconciliation Act of 1990 § 11315")
+        assert!(r.notes.iter().any(|n| n
+            .contains("Omnibus Budget Reconciliation Act of 1990 § 11315")
             && n.contains("Pub. L. 101-508")
             && n.contains("November 5, 1990")
             && n.contains("March 20, 1990")));
@@ -496,36 +503,50 @@ mod tests {
     #[test]
     fn note_pins_6501_c8_indefinite_sol() {
         let r = check(&engaged_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6501(c)(8)")
-            && n.contains("OPEN INDEFINITELY")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6501(c)(8)") && n.contains("OPEN INDEFINITELY")));
     }
 
     #[test]
     fn note_pins_anti_avoidance_backstop_role() {
         let r = check(&engaged_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6038C is the anti-avoidance backstop")
-            && n.contains("§ 6038A")
-            && n.contains("§ 6038B")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6038C is the anti-avoidance backstop")
+                && n.contains("§ 6038A")
+                && n.contains("§ 6038B")));
     }
 
     #[test]
     fn note_pins_form_5472_shared_with_6038a() {
         let r = check(&engaged_base());
-        assert!(r.notes.iter().any(|n| n.contains("Treas. Reg. § 1.6038A-1 through § 1.6038A-7")
-            && n.contains("Form 5472 instructions")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("Treas. Reg. § 1.6038A-1 through § 1.6038A-7")
+                && n.contains("Form 5472 instructions")
+        ));
     }
 
     #[test]
     fn us_tb_status_truth_table_three_cells() {
         for (status, exp_subject) in [
             (UsTradeOrBusinessStatus::EngagedInUsTradeOrBusiness, true),
-            (UsTradeOrBusinessStatus::Section864b2TradingSafeHarbor, false),
+            (
+                UsTradeOrBusinessStatus::Section864b2TradingSafeHarbor,
+                false,
+            ),
             (UsTradeOrBusinessStatus::NoUsTradeOrBusiness, false),
         ] {
             let mut i = engaged_base();
             i.us_tb_status = status;
             let r = check(&i);
-            assert_eq!(r.subject_to_section_6038c, exp_subject, "status={:?}", status);
+            assert_eq!(
+                r.subject_to_section_6038c, exp_subject,
+                "status={:?}",
+                status
+            );
         }
     }
 

@@ -20,14 +20,22 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64, pub volume: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+    pub volume: f64,
+}
 
 pub fn compute(bars: &[Bar], period: usize) -> Vec<Option<f64>> {
     let n = bars.len();
     let mut out = vec![None; n];
-    if period < 2 || n < period + 1 { return out; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite()
-        || !b.close.is_finite() || !b.volume.is_finite()) {
+    if period < 2 || n < period + 1 {
+        return out;
+    }
+    if bars.iter().any(|b| {
+        !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite() || !b.volume.is_finite()
+    }) {
         return out;
     }
     // Per-bar volume-weighted AD using true-range high/low.
@@ -47,7 +55,9 @@ pub fn compute(bars: &[Bar], period: usize) -> Vec<Option<f64>> {
     for (k, slot) in out.iter_mut().enumerate().skip(1) {
         let idx = k - 1;
         if let (Some(a), Some(v)) = (ema_ad[idx], ema_vol[idx]) {
-            if v > 0.0 { *slot = Some(a / v); }
+            if v > 0.0 {
+                *slot = Some(a / v);
+            }
         }
     }
     out
@@ -56,7 +66,9 @@ pub fn compute(bars: &[Bar], period: usize) -> Vec<Option<f64>> {
 fn wilder_ema(series: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     let seed: f64 = series[..period].iter().sum::<f64>() / p_f;
     out[period - 1] = Some(seed);
@@ -73,7 +85,12 @@ mod tests {
     use super::*;
 
     fn b(h: f64, l: f64, c: f64, v: f64) -> Bar {
-        Bar { high: h, low: l, close: c, volume: v }
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+            volume: v,
+        }
     }
 
     #[test]
@@ -97,8 +114,10 @@ mod tests {
         let bars = vec![b(101.0, 99.0, 101.0, 1000.0); 30];
         let r = compute(&bars, 14);
         let last = r[29].unwrap();
-        assert!(last > 0.9,
-            "close-at-high should yield TMF near +1, got {last}");
+        assert!(
+            last > 0.9,
+            "close-at-high should yield TMF near +1, got {last}"
+        );
     }
 
     #[test]
@@ -114,29 +133,34 @@ mod tests {
         let bars = vec![b(101.0, 99.0, 100.0, 1000.0); 30];
         let r = compute(&bars, 14);
         for v in r.iter().skip(15).flatten() {
-            assert!(v.abs() < 0.05,
-                "close-at-mid should yield TMF near zero, got {v}");
+            assert!(
+                v.abs() < 0.05,
+                "close-at-mid should yield TMF near zero, got {v}"
+            );
         }
     }
 
     #[test]
     fn output_in_unit_signed_range() {
         let mut state: u64 = 42;
-        let bars: Vec<_> = (0..200).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let r1 = (state >> 32) as u32 as f64 / u32::MAX as f64;
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let r2 = (state >> 32) as u32 as f64 / u32::MAX as f64;
-            let mid = 100.0 + (r1 - 0.5) * 4.0;
-            let close_in_range = (mid - 1.0) + r2 * 2.0;    // strictly within [low, high]
-            b(mid + 1.0, mid - 1.0, close_in_range, 1000.0)
-        }).collect();
+        let bars: Vec<_> = (0..200)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let r1 = (state >> 32) as u32 as f64 / u32::MAX as f64;
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let r2 = (state >> 32) as u32 as f64 / u32::MAX as f64;
+                let mid = 100.0 + (r1 - 0.5) * 4.0;
+                let close_in_range = (mid - 1.0) + r2 * 2.0; // strictly within [low, high]
+                b(mid + 1.0, mid - 1.0, close_in_range, 1000.0)
+            })
+            .collect();
         let r = compute(&bars, 14);
         for v in r.iter().flatten() {
-            assert!((-1.0..=1.0).contains(v),
-                "TMF out of [-1, 1]: {v}");
+            assert!((-1.0..=1.0).contains(v), "TMF out of [-1, 1]: {v}");
         }
     }
 

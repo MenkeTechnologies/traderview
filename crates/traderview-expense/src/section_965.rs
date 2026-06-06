@@ -171,13 +171,10 @@ pub fn check(input: &Section965Input) -> Section965Result {
         .aggregate_inclusion_cents
         .saturating_sub(input.aggregate_ep_deficit_cents);
 
-    let cash_portion = input
-        .cash_position_portion_cents
-        .min(net_inclusion);
+    let cash_portion = input.cash_position_portion_cents.min(net_inclusion);
     let non_cash_portion = net_inclusion.saturating_sub(cash_portion);
 
-    let cash_tax: u64 =
-        (u128::from(cash_portion) * u128::from(CASH_RATE_BPS) / 10_000) as u64;
+    let cash_tax: u64 = (u128::from(cash_portion) * u128::from(CASH_RATE_BPS) / 10_000) as u64;
     let non_cash_tax: u64 =
         (u128::from(non_cash_portion) * u128::from(NON_CASH_RATE_BPS) / 10_000) as u64;
     let total_tax = cash_tax.saturating_add(non_cash_tax);
@@ -195,9 +192,7 @@ pub fn check(input: &Section965Input) -> Section965Result {
 
     let severity = match input.payment_election {
         PaymentElection::SingleYearFull => Severity::SingleYearPaymentFull,
-        PaymentElection::EightYearInstallment => {
-            Severity::EightYearInstallmentScheduleAdopted
-        }
+        PaymentElection::EightYearInstallment => Severity::EightYearInstallmentScheduleAdopted,
         PaymentElection::SCorpDeferralUntilTriggeringEvent => {
             if input.s_corp_triggering_event_occurred {
                 Severity::SingleYearPaymentFull
@@ -470,10 +465,7 @@ mod tests {
         i.payment_election = PaymentElection::SCorpDeferralUntilTriggeringEvent;
         let r = check(&i);
         assert!(matches!(r.severity, Severity::SCorpDeferralActive));
-        assert!(r
-            .recommended_actions
-            .iter()
-            .any(|a| a.contains("§ 965(i)")));
+        assert!(r.recommended_actions.iter().any(|a| a.contains("§ 965(i)")));
     }
 
     #[test]
@@ -570,7 +562,10 @@ mod tests {
     fn action_references_form_5471_and_form_965() {
         let i = baseline();
         let r = check(&i);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Form 5471")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Form 5471")));
         assert!(r.recommended_actions.iter().any(|a| a.contains("Form 965")));
     }
 

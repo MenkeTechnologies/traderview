@@ -217,10 +217,8 @@ pub fn check(input: &Input) -> Output {
                 input.appliance_type
             ));
         }
-    } else if matches!(
-        input.appliance_type,
-        ApplianceType::Stove
-    ) && input.tenant_signed_voluntary_refrigerator_opt_out
+    } else if matches!(input.appliance_type, ApplianceType::Stove)
+        && input.tenant_signed_voluntary_refrigerator_opt_out
         && ab_628_in_force
     {
         severity = Severity::StoveOptOutAttemptedProhibited;
@@ -326,9 +324,7 @@ pub fn check(input: &Input) -> Output {
         | Severity::AppliancePastDueRepairOrReplacementHabitabilityBreach => {
             input.annual_rent_cents
         }
-        Severity::StoveOptOutAttemptedProhibited => {
-            input.annual_rent_cents.saturating_div(2)
-        }
+        Severity::StoveOptOutAttemptedProhibited => input.annual_rent_cents.saturating_div(2),
         _ => 0,
     };
 
@@ -338,9 +334,13 @@ pub fn check(input: &Input) -> Output {
         annual_rent_at_risk_cents: annual_rent_at_risk,
         citation: match input.jurisdiction {
             Jurisdiction::California => "Cal. Civ. Code § 1941.1 + § 1942 + AB 628 + § 17920.3",
-            Jurisdiction::Massachusetts => "105 CMR 410.100(E) + M.G.L. ch. 186 § 14 + ch. 111 § 127A",
+            Jurisdiction::Massachusetts => {
+                "105 CMR 410.100(E) + M.G.L. ch. 186 § 14 + ch. 111 § 127A"
+            }
             Jurisdiction::NewYork => "NYC Admin § 27-2017.2 + MDL § 76 + RPL § 235-b",
-            Jurisdiction::Illinois => "Chicago Municipal Code § 5-12-110 RLTO + common-law habitability",
+            Jurisdiction::Illinois => {
+                "Chicago Municipal Code § 5-12-110 RLTO + common-law habitability"
+            }
             Jurisdiction::Default => "Common-law habitability + 15 U.S.C. § 2064 CPSC",
         },
         notes,
@@ -407,9 +407,15 @@ mod tests {
         i.appliance_type = ApplianceType::Stove;
         i.appliance_condition = ApplianceCondition::NotProvided;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::NoApplianceProvidedAb628Violation));
+        assert!(matches!(
+            r.severity,
+            Severity::NoApplianceProvidedAb628Violation
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("CANNOT opt")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("CANNOT opt")));
     }
 
     #[test]
@@ -419,7 +425,10 @@ mod tests {
         i.appliance_condition = ApplianceCondition::NotProvided;
         i.tenant_signed_voluntary_refrigerator_opt_out = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::NoApplianceProvidedAb628Violation));
+        assert!(matches!(
+            r.severity,
+            Severity::NoApplianceProvidedAb628Violation
+        ));
     }
 
     #[test]
@@ -447,7 +456,10 @@ mod tests {
         i.appliance_condition = ApplianceCondition::WorkingProperly;
         i.tenant_signed_voluntary_refrigerator_opt_out = true;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::StoveOptOutAttemptedProhibited));
+        assert!(matches!(
+            r.severity,
+            Severity::StoveOptOutAttemptedProhibited
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents / 2);
         assert!(r
             .recommended_actions
@@ -558,7 +570,10 @@ mod tests {
         let mut i = baseline();
         i.jurisdiction = Jurisdiction::Illinois;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("Chicago Municipal Code § 5-12-110")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Chicago Municipal Code § 5-12-110")));
         assert!(r.notes.iter().any(|n| n.contains("RLTO")));
     }
 
@@ -594,7 +609,10 @@ mod tests {
             .notes
             .iter()
             .any(|n| n.contains("rental_in_unit_laundry_appliance_provision")));
-        assert!(r.notes.iter().any(|n| n.contains("rental_gas_appliance_ban")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("rental_gas_appliance_ban")));
         assert!(r
             .notes
             .iter()
@@ -624,11 +642,31 @@ mod tests {
 
     #[test]
     fn citation_branch_for_each_jurisdiction() {
-        let ca = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::California; i });
-        let ma = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Massachusetts; i });
-        let ny = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::NewYork; i });
-        let il = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Illinois; i });
-        let de = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Default; i });
+        let ca = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::California;
+            i
+        });
+        let ma = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Massachusetts;
+            i
+        });
+        let ny = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::NewYork;
+            i
+        });
+        let il = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Illinois;
+            i
+        });
+        let de = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Default;
+            i
+        });
         assert!(ca.citation.contains("AB 628"));
         assert!(ma.citation.contains("105 CMR 410.100(E)"));
         assert!(ny.citation.contains("§ 27-2017.2"));

@@ -28,27 +28,39 @@ pub struct MargrabeReport {
     pub delta_s2: f64,
 }
 
-#[allow(clippy::too_many_arguments)]    // Margrabe formula signature is canonical; struct-bundling adds noise
-                                        // without changing what the caller has to compute.
+#[allow(clippy::too_many_arguments)] // Margrabe formula signature is canonical; struct-bundling adds noise
+                                     // without changing what the caller has to compute.
 pub fn price(
-    s1: f64, s2: f64,
-    sigma1: f64, sigma2: f64,
+    s1: f64,
+    s2: f64,
+    sigma1: f64,
+    sigma2: f64,
     correlation: f64,
-    q1: f64, q2: f64,
+    q1: f64,
+    q2: f64,
     time_to_expiry: f64,
 ) -> Option<MargrabeReport> {
-    if !s1.is_finite() || s1 <= 0.0
-        || !s2.is_finite() || s2 <= 0.0
-        || !sigma1.is_finite() || sigma1 < 0.0
-        || !sigma2.is_finite() || sigma2 < 0.0
-        || !correlation.is_finite() || !(-1.0..=1.0).contains(&correlation)
-        || !q1.is_finite() || !q2.is_finite()
-        || !time_to_expiry.is_finite() || time_to_expiry <= 0.0
+    if !s1.is_finite()
+        || s1 <= 0.0
+        || !s2.is_finite()
+        || s2 <= 0.0
+        || !sigma1.is_finite()
+        || sigma1 < 0.0
+        || !sigma2.is_finite()
+        || sigma2 < 0.0
+        || !correlation.is_finite()
+        || !(-1.0..=1.0).contains(&correlation)
+        || !q1.is_finite()
+        || !q2.is_finite()
+        || !time_to_expiry.is_finite()
+        || time_to_expiry <= 0.0
     {
         return None;
     }
     let sigma2_combined = sigma1.powi(2) + sigma2.powi(2) - 2.0 * correlation * sigma1 * sigma2;
-    if sigma2_combined < 0.0 { return None; }
+    if sigma2_combined < 0.0 {
+        return None;
+    }
     let sigma = sigma2_combined.sqrt();
     let sqrt_t = time_to_expiry.sqrt();
     let dq1 = (-q1 * time_to_expiry).exp();
@@ -76,19 +88,20 @@ pub fn price(
     Some(MargrabeReport {
         price,
         combined_vol: sigma,
-        d1, d2,
+        d1,
+        d2,
         delta_s1: dq1 * nd1,
         delta_s2: -dq2 * nd2,
     })
 }
 
 fn norm_cdf(x: f64) -> f64 {
-    let a1 =  0.254829592_f64;
+    let a1 = 0.254829592_f64;
     let a2 = -0.284496736_f64;
-    let a3 =  1.421413741_f64;
+    let a3 = 1.421413741_f64;
     let a4 = -1.453152027_f64;
-    let a5 =  1.061405429_f64;
-    let p  =  0.3275911_f64;
+    let a5 = 1.061405429_f64;
+    let p = 0.3275911_f64;
     let sign = if x < 0.0 { -1.0 } else { 1.0 };
     let xa = x.abs() / std::f64::consts::SQRT_2;
     let t = 1.0 / (1.0 + p * xa);
@@ -132,8 +145,8 @@ mod tests {
     fn perfect_negative_correlation_inflates_combined_vol() {
         // Compare two scenarios that differ ONLY in correlation. Holding
         // q1/q2 + T fixed eliminates asymmetric-discount confounding.
-        let r_neg  = price(100.0, 100.0, 0.20, 0.20, -1.0, 0.0, 0.0, 0.5).unwrap();
-        let r_zero = price(100.0, 100.0, 0.20, 0.20, 0.0,  0.0, 0.0, 0.5).unwrap();
+        let r_neg = price(100.0, 100.0, 0.20, 0.20, -1.0, 0.0, 0.0, 0.5).unwrap();
+        let r_zero = price(100.0, 100.0, 0.20, 0.20, 0.0, 0.0, 0.0, 0.5).unwrap();
         assert!(r_neg.combined_vol > r_zero.combined_vol);
         assert!(r_neg.price > r_zero.price);
     }
@@ -158,7 +171,7 @@ mod tests {
     #[test]
     fn dividend_yields_reduce_pv_legs() {
         let r_q0 = price(100.0, 100.0, 0.20, 0.25, 0.3, 0.0, 0.0, 1.0).unwrap();
-        let r_q  = price(100.0, 100.0, 0.20, 0.25, 0.3, 0.05, 0.01, 1.0).unwrap();
+        let r_q = price(100.0, 100.0, 0.20, 0.25, 0.3, 0.05, 0.01, 1.0).unwrap();
         // Higher q1 strictly lowers the S1 leg → typically lower price.
         assert!(r_q.price < r_q0.price);
     }

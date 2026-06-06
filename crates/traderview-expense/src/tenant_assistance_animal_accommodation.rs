@@ -220,17 +220,18 @@ pub fn check(input: &AssistanceAnimalAccommodationInput) -> AssistanceAnimalAcco
         AnimalType::ServiceAnimal | AnimalType::SupportAnimal
     );
 
-    let accommodation_required =
-        is_assistance_animal && input.tenant_has_disability && !input.individualized_direct_threat_finding
-            && !input.substantial_property_damage_finding;
+    let accommodation_required = is_assistance_animal
+        && input.tenant_has_disability
+        && !input.individualized_direct_threat_finding
+        && !input.substantial_property_damage_finding;
 
     let pet_fee_prohibition_applies = is_assistance_animal && input.tenant_has_disability;
-    let generic_pet_restrictions_prohibited =
-        is_assistance_animal && input.tenant_has_disability;
+    let generic_pet_restrictions_prohibited = is_assistance_animal && input.tenant_has_disability;
 
     let direct_threat_defense_engaged = is_assistance_animal
         && input.tenant_has_disability
-        && (input.individualized_direct_threat_finding || input.substantial_property_damage_finding);
+        && (input.individualized_direct_threat_finding
+            || input.substantial_property_damage_finding);
 
     let hud_administrative_penalty_max_cents: u64 = match input.offense_history {
         OffenseHistory::FirstOffense => 2_559_700,
@@ -384,9 +385,12 @@ mod tests {
         let mut i = esa_compliant();
         i.pet_fee_or_deposit_charged = true;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 3604(f)(3)(B)")
-            && f.contains("HUD FHEO Notice 2020-01")
-            && f.contains("NOT charge a pet fee")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 3604(f)(3)(B)")
+                && f.contains("HUD FHEO Notice 2020-01")
+                && f.contains("NOT charge a pet fee")));
     }
 
     #[test]
@@ -394,9 +398,12 @@ mod tests {
         let mut i = esa_compliant();
         i.generic_pet_restrictions_applied = true;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("HUD FHEO Notice 2020-01")
-            && f.contains("breed bans")
-            && f.contains("weight caps")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("HUD FHEO Notice 2020-01")
+                && f.contains("breed bans")
+                && f.contains("weight caps")));
     }
 
     #[test]
@@ -404,8 +411,11 @@ mod tests {
         let mut i = esa_compliant();
         i.accommodation_refused = true;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 3604(f)(3)(B)")
-            && f.contains("refusal to make reasonable accommodation")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 3604(f)(3)(B)")
+                && f.contains("refusal to make reasonable accommodation")));
     }
 
     #[test]
@@ -413,10 +423,13 @@ mod tests {
         let mut i = esa_compliant();
         i.excessive_documentation_required = true;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("HUD FHEO Notice 2020-01")
-            && f.contains("notarized statements")
-            && f.contains("penalty of perjury")
-            && f.contains("diagnosis")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("HUD FHEO Notice 2020-01")
+                && f.contains("notarized statements")
+                && f.contains("penalty of perjury")
+                && f.contains("diagnosis")));
     }
 
     #[test]
@@ -426,9 +439,12 @@ mod tests {
         i.disability_need_obvious = false;
         i.documentation_provided = false;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("HUD FHEO Notice 2020-01")
-            && f.contains("non-obvious")
-            && f.contains("licensed health care professional")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("HUD FHEO Notice 2020-01")
+                && f.contains("non-obvious")
+                && f.contains("licensed health care professional")));
     }
 
     #[test]
@@ -460,8 +476,10 @@ mod tests {
         let r = check(&i);
         assert!(r.direct_threat_defense_engaged);
         assert!(!r.accommodation_required);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 3604(f)(9)")
-            && f.contains("substantial-property-damage")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 3604(f)(9)") && f.contains("substantial-property-damage")));
     }
 
     #[test]
@@ -518,8 +536,14 @@ mod tests {
         let first = make(OffenseHistory::FirstOffense);
         let second = make(OffenseHistory::SecondOffense);
         let third = make(OffenseHistory::ThirdOrSubsequent);
-        assert!(first.hud_administrative_penalty_max_cents < second.hud_administrative_penalty_max_cents);
-        assert!(second.hud_administrative_penalty_max_cents < third.hud_administrative_penalty_max_cents);
+        assert!(
+            first.hud_administrative_penalty_max_cents
+                < second.hud_administrative_penalty_max_cents
+        );
+        assert!(
+            second.hud_administrative_penalty_max_cents
+                < third.hud_administrative_penalty_max_cents
+        );
     }
 
     #[test]
@@ -532,7 +556,11 @@ mod tests {
             let mut i = esa_compliant();
             i.animal_type = animal;
             let r = check(&i);
-            assert_eq!(r.accommodation_required, exp_required, "animal={:?}", animal);
+            assert_eq!(
+                r.accommodation_required, exp_required,
+                "animal={:?}",
+                animal
+            );
         }
     }
 
@@ -590,7 +618,8 @@ mod tests {
     #[test]
     fn note_pins_documentation_standards_five_prohibitions() {
         let r = check(&esa_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("HUD FHEO Notice 2020-01 documentation standards")
+        assert!(r.notes.iter().any(|n| n
+            .contains("HUD FHEO Notice 2020-01 documentation standards")
             && n.contains("specific form")
             && n.contains("notarized statements")
             && n.contains("penalty of perjury")
@@ -636,10 +665,13 @@ mod tests {
     #[test]
     fn note_pins_section_504_rehabilitation_act() {
         let r = check(&esa_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("§ 504 of Rehabilitation Act of 1973")
-            && n.contains("29 USC § 794")
-            && n.contains("Section 8")
-            && n.contains("LIHTC")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 504 of Rehabilitation Act of 1973")
+                && n.contains("29 USC § 794")
+                && n.contains("Section 8")
+                && n.contains("LIHTC")));
     }
 
     #[test]

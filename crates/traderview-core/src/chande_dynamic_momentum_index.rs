@@ -24,9 +24,18 @@ pub fn compute(
 ) -> Vec<Option<f64>> {
     let n = closes.len();
     let mut out = vec![None; n];
-    if td_const < 2 || std_period < 2 || td_min < 2 || td_max < td_min
-        || td_max < td_const || n < 2 * std_period + td_max { return out; }
-    if closes.iter().any(|x| !x.is_finite()) { return out; }
+    if td_const < 2
+        || std_period < 2
+        || td_min < 2
+        || td_max < td_min
+        || td_max < td_const
+        || n < 2 * std_period + td_max
+    {
+        return out;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     // Rolling sample stdev (over std_period bars).
     let mut std_series = vec![None; n];
     let p_f = std_period as f64;
@@ -42,14 +51,24 @@ pub fn compute(
     // RSI period and compute Wilder RSI freshly.
     let td_c = td_const as f64;
     for (i, slot) in out.iter_mut().enumerate() {
-        let s = match std_series[i] { Some(v) => v, None => continue };
-        let a = match avg_std[i] { Some(v) => v, None => continue };
-        if a <= 0.0 || s <= 0.0 { continue; }
+        let s = match std_series[i] {
+            Some(v) => v,
+            None => continue,
+        };
+        let a = match avg_std[i] {
+            Some(v) => v,
+            None => continue,
+        };
+        if a <= 0.0 || s <= 0.0 {
+            continue;
+        }
         let vi = s / a;
         let td = (td_c / vi).round().clamp(td_min as f64, td_max as f64) as usize;
         // Compute Wilder RSI(td) at bar i — requires i ≥ td. We have
         // i ≥ 2·std_period - 1 by gating above which exceeds td_max ≥ td.
-        if i < td { continue; }
+        if i < td {
+            continue;
+        }
         if let Some(rsi) = wilder_rsi_at(closes, i, td) {
             *slot = Some(rsi);
         }
@@ -59,14 +78,20 @@ pub fn compute(
 
 /// Wilder RSI evaluated at index `i` with period `td`.
 fn wilder_rsi_at(closes: &[f64], i: usize, td: usize) -> Option<f64> {
-    if i < td { return None; }
+    if i < td {
+        return None;
+    }
     let p_f = td as f64;
     let mut sum_gain = 0.0_f64;
     let mut sum_loss = 0.0_f64;
     let start = i + 1 - td;
     for k in (start + 1)..=i {
         let diff = closes[k] - closes[k - 1];
-        if diff > 0.0 { sum_gain += diff; } else { sum_loss -= diff; }
+        if diff > 0.0 {
+            sum_gain += diff;
+        } else {
+            sum_loss -= diff;
+        }
     }
     // Note: this uses simple-average smoothing inside the window
     // (matches DMI variant as published by Chande for variable-period
@@ -85,11 +110,15 @@ fn wilder_rsi_at(closes: &[f64], i: usize, td: usize) -> Option<f64> {
 fn sma_opt(series: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     for i in (period - 1)..n {
         let win = &series[i + 1 - period..=i];
-        if win.iter().any(|x| x.is_none()) { continue; }
+        if win.iter().any(|x| x.is_none()) {
+            continue;
+        }
         let s: f64 = win.iter().filter_map(|x| *x).sum();
         out[i] = Some(s / p_f);
     }
@@ -119,7 +148,9 @@ mod tests {
         // Flat market → stdev = 0 → avg_std = 0 → no output.
         let c = vec![100.0_f64; 200];
         let r = compute(&c, 14, 5, 5, 30);
-        for v in &r { assert!(v.is_none()); }
+        for v in &r {
+            assert!(v.is_none());
+        }
     }
 
     #[test]
@@ -127,8 +158,10 @@ mod tests {
         let c: Vec<f64> = (0..200).map(|i| 100.0 + i as f64).collect();
         let r = compute(&c, 14, 5, 5, 30);
         let last = r.iter().rev().find_map(|x| *x).unwrap();
-        assert!(last > 80.0,
-            "strong uptrend should yield DMI > 80, got {last}");
+        assert!(
+            last > 80.0,
+            "strong uptrend should yield DMI > 80, got {last}"
+        );
     }
 
     #[test]
@@ -142,12 +175,15 @@ mod tests {
     #[test]
     fn output_in_zero_hundred_range() {
         let mut state: u64 = 42;
-        let c: Vec<f64> = (0..400).map(|i| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
-            100.0 + i as f64 * 0.1 + (r - 0.5) * 5.0
-        }).collect();
+        let c: Vec<f64> = (0..400)
+            .map(|i| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
+                100.0 + i as f64 * 0.1 + (r - 0.5) * 5.0
+            })
+            .collect();
         let r = compute(&c, 14, 5, 5, 30);
         for v in r.iter().flatten() {
             assert!((0.0..=100.0).contains(v));

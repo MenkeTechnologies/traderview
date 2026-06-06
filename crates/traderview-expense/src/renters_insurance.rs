@@ -89,11 +89,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // All other states + DC: GenerallyAllowedNoStateCap.
     let no_cap_states = [
-        "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL",
-        "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME",
-        "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH",
-        "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "PA", "RI", "SC",
-        "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "ID", "IL", "IN",
+        "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH",
+        "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT",
+        "VA", "WA", "WV", "WI", "WY",
     ];
     for code in no_cap_states {
         m.insert(
@@ -152,8 +151,8 @@ pub fn check(input: &RentersInsuranceInput) -> RentersInsuranceResult {
     };
 
     // Additional-insured violation.
-    let additional_insured_violation = rule.landlord_additional_insured_prohibited
-        && input.landlord_named_as_additional_insured;
+    let additional_insured_violation =
+        rule.landlord_additional_insured_prohibited && input.landlord_named_as_additional_insured;
 
     // Low-income exemption.
     let low_income_exemption = rule
@@ -243,7 +242,10 @@ mod tests {
         let mut i = input("OR");
         i.required_liability_coverage_dollars = 100_000;
         let r = check(&i);
-        assert_eq!(r.regime, InsuranceRegime::StatutoryCapWithLowIncomeExemption);
+        assert_eq!(
+            r.regime,
+            InsuranceRegime::StatutoryCapWithLowIncomeExemption
+        );
         assert!(!r.coverage_exceeds_state_cap);
         assert!(r.overall_compliant);
     }
@@ -386,7 +388,12 @@ mod tests {
     #[test]
     fn coverage_is_all_50_states_plus_dc() {
         let codes: Vec<&'static str> = RULES.keys().copied().collect();
-        assert_eq!(codes.len(), 51, "expected 50 states + DC, got {}", codes.len());
+        assert_eq!(
+            codes.len(),
+            51,
+            "expected 50 states + DC, got {}",
+            codes.len()
+        );
     }
 
     #[test]
@@ -404,7 +411,10 @@ mod tests {
                 count += 1;
             }
         }
-        assert_eq!(count, 1, "expected OR only with StatutoryCapWithLowIncomeExemption regime");
+        assert_eq!(
+            count, 1,
+            "expected OR only with StatutoryCapWithLowIncomeExemption regime"
+        );
     }
 
     #[test]
@@ -415,7 +425,10 @@ mod tests {
                 count += 1;
             }
         }
-        assert_eq!(count, 1, "expected OR only with additional_insured_prohibited");
+        assert_eq!(
+            count, 1,
+            "expected OR only with additional_insured_prohibited"
+        );
     }
 
     #[test]
@@ -448,7 +461,9 @@ mod tests {
     #[test]
     fn or_compliant_note_describes_state_path() {
         let r = check(&input("OR"));
-        assert!(r.note.contains("StatutoryCapWithLowIncomeExemption: compliant"));
+        assert!(r
+            .note
+            .contains("StatutoryCapWithLowIncomeExemption: compliant"));
     }
 
     #[test]

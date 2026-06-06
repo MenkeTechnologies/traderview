@@ -47,33 +47,52 @@ pub struct CdReport {
 }
 
 pub fn compute(ticks: &[TickWithPrice]) -> CdReport {
-    if ticks.is_empty() { return CdReport::default(); }
+    if ticks.is_empty() {
+        return CdReport::default();
+    }
     let mut points: Vec<CdPoint> = Vec::with_capacity(ticks.len());
     let mut cd = 0.0_f64;
     for t in ticks {
         match t.classified.side {
-            Side::Buy        => cd += t.classified.volume,
-            Side::Sell       => cd -= t.classified.volume,
+            Side::Buy => cd += t.classified.volume,
+            Side::Sell => cd -= t.classified.volume,
             // Uncertain ticks contribute 0 net delta — they're noise
             // unless caller pre-classified differently.
-            Side::Uncertain  => {}
+            Side::Uncertain => {}
         }
-        points.push(CdPoint { price: t.price, cumulative_delta: cd });
+        points.push(CdPoint {
+            price: t.price,
+            cumulative_delta: cd,
+        });
     }
-    let max_cd = points.iter().map(|p| p.cumulative_delta).fold(f64::NEG_INFINITY, f64::max);
-    let min_cd = points.iter().map(|p| p.cumulative_delta).fold(f64::INFINITY, f64::min);
+    let max_cd = points
+        .iter()
+        .map(|p| p.cumulative_delta)
+        .fold(f64::NEG_INFINITY, f64::max);
+    let min_cd = points
+        .iter()
+        .map(|p| p.cumulative_delta)
+        .fold(f64::INFINITY, f64::min);
     let final_cd = points.last().map(|p| p.cumulative_delta).unwrap_or(0.0);
     // Divergence: did the LAST point's price make a new extreme while CD didn't?
     let last = *points.last().expect("non-empty");
-    let prior_max_price = points[..points.len() - 1].iter().map(|p| p.price)
+    let prior_max_price = points[..points.len() - 1]
+        .iter()
+        .map(|p| p.price)
         .fold(f64::NEG_INFINITY, f64::max);
-    let prior_min_price = points[..points.len() - 1].iter().map(|p| p.price)
+    let prior_min_price = points[..points.len() - 1]
+        .iter()
+        .map(|p| p.price)
         .fold(f64::INFINITY, f64::min);
     let bearish_divergence = last.price > prior_max_price && last.cumulative_delta < max_cd;
     let bullish_divergence = last.price < prior_min_price && last.cumulative_delta > min_cd;
     CdReport {
-        points, max_cd, min_cd, final_cd,
-        bearish_divergence, bullish_divergence,
+        points,
+        max_cd,
+        min_cd,
+        final_cd,
+        bearish_divergence,
+        bullish_divergence,
     }
 }
 
@@ -82,7 +101,10 @@ mod tests {
     use super::*;
 
     fn tick(price: f64, volume: f64, side: Side) -> TickWithPrice {
-        TickWithPrice { price, classified: ClassifiedTick { volume, side } }
+        TickWithPrice {
+            price,
+            classified: ClassifiedTick { volume, side },
+        }
     }
 
     #[test]
@@ -108,10 +130,7 @@ mod tests {
 
     #[test]
     fn all_sells_produces_monotonic_negative_cd() {
-        let r = compute(&[
-            tick(100.0, 1.0, Side::Sell),
-            tick(99.0, 2.0, Side::Sell),
-        ]);
+        let r = compute(&[tick(100.0, 1.0, Side::Sell), tick(99.0, 2.0, Side::Sell)]);
         assert_eq!(r.final_cd, -3.0);
         assert_eq!(r.min_cd, -3.0);
     }
@@ -130,21 +149,23 @@ mod tests {
         // Setup: price goes up 100 → 102 → 104, but during the rally
         // there's heavy selling so CD goes 5 → 4 → 3.
         let r = compute(&[
-            tick(100.0, 5.0, Side::Buy),    // CD = 5
-            tick(102.0, 1.0, Side::Sell),   // CD = 4 (price up but CD down)
-            tick(104.0, 1.0, Side::Sell),   // price NEW HIGH (104), CD = 3 < max_cd 5 = divergence
+            tick(100.0, 5.0, Side::Buy),  // CD = 5
+            tick(102.0, 1.0, Side::Sell), // CD = 4 (price up but CD down)
+            tick(104.0, 1.0, Side::Sell), // price NEW HIGH (104), CD = 3 < max_cd 5 = divergence
         ]);
-        assert!(r.bearish_divergence,
-            "price 104 > prior max 102; CD 3 < max_cd 5 → bearish div");
+        assert!(
+            r.bearish_divergence,
+            "price 104 > prior max 102; CD 3 < max_cd 5 → bearish div"
+        );
         assert!(!r.bullish_divergence);
     }
 
     #[test]
     fn bullish_divergence_when_price_new_low_but_cd_not() {
         let r = compute(&[
-            tick(100.0, 5.0, Side::Sell),   // CD = -5
-            tick(98.0, 1.0, Side::Buy),     // CD = -4
-            tick(96.0, 1.0, Side::Buy),     // new low 96, CD -3 > min -5 → bullish div
+            tick(100.0, 5.0, Side::Sell), // CD = -5
+            tick(98.0, 1.0, Side::Buy),   // CD = -4
+            tick(96.0, 1.0, Side::Buy),   // new low 96, CD -3 > min -5 → bullish div
         ]);
         assert!(r.bullish_divergence);
     }

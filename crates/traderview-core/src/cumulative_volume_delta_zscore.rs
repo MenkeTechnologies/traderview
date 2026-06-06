@@ -16,8 +16,12 @@
 pub fn compute(cvd: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = cvd.len();
     let mut out = vec![None; n];
-    if period < 2 || n < period { return out; }
-    if cvd.iter().any(|x| !x.is_finite()) { return out; }
+    if period < 2 || n < period {
+        return out;
+    }
+    if cvd.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     let p_f = period as f64;
     for (i, slot) in out.iter_mut().enumerate().skip(period - 1) {
         let win = &cvd[i + 1 - period..=i];

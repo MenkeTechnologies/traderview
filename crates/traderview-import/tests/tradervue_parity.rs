@@ -15,7 +15,7 @@ use std::collections::HashMap;
 use std::str::FromStr;
 use traderview_core::rollup::{rollup_with, CloseModel, LotMethod};
 use traderview_core::{TradeSide, TradeStatus};
-use traderview_import::{Parser, brokers::WebullParser};
+use traderview_import::{brokers::WebullParser, Parser};
 
 fn d(s: &str) -> Decimal {
     Decimal::from_str(s).expect("decimal")
@@ -56,8 +56,7 @@ fn roll(csv_bytes: &[u8]) -> Vec<traderview_core::Trade> {
         })
         .collect();
 
-    let rolled =
-        rollup_with(&execs, LotMethod::Fifo, CloseModel::PerCloseExec).expect("rollup");
+    let rolled = rollup_with(&execs, LotMethod::Fifo, CloseModel::PerCloseExec).expect("rollup");
     rolled.into_iter().map(|r| r.trade).collect()
 }
 
@@ -105,10 +104,7 @@ fn twnp_matches_tradervue_trade_count_and_pnls() {
 
     // Sum of gross P&Ls must match Tradervue's total (within 1¢).
     // Tradervue: -15.7281 + 8.4480 + 10.3842 + 0.0000 = 3.1041
-    let total: Decimal = closed
-        .iter()
-        .filter_map(|t| t.gross_pnl)
-        .sum();
+    let total: Decimal = closed.iter().filter_map(|t| t.gross_pnl).sum();
     assert!(
         approx(total, d("3.1041")),
         "TWNP total gross P&L must match Tradervue's 3.1041; got {}",
@@ -140,8 +136,7 @@ fn twnp_entry_avg_matches_tradervue_per_trade() {
         .filter(|t| t.status == TradeStatus::Closed)
         .collect();
 
-    let entry: HashMap<Decimal, Decimal> =
-        closed.iter().map(|t| (t.qty, t.entry_avg)).collect();
+    let entry: HashMap<Decimal, Decimal> = closed.iter().map(|t| (t.qty, t.entry_avg)).collect();
 
     // Tradervue trade 1: entry 0.6446 (single buy @0.6446)
     assert!((entry[&d("1342")] - d("0.6446")).abs() < d("0.0001"));
@@ -157,8 +152,7 @@ fn twnp_entry_avg_matches_tradervue_per_trade() {
     // = 0.706379... — different from Tradervue's display value (0.7128).
     // The Gross P&L still matches because P&L is per-share matched. This
     // test pins our behavior (weighted avg) and documents the divergence.
-    let expected_weighted = (d("1219") * d("0.7128") + d("1249") * d("0.7001"))
-        / d("2468");
+    let expected_weighted = (d("1219") * d("0.7128") + d("1249") * d("0.7001")) / d("2468");
     assert!(
         (entry[&d("2468")] - expected_weighted).abs() < d("0.0001"),
         "weighted entry_avg for 2-buy trade; got {} expected {}",
@@ -218,7 +212,7 @@ fn pdc_round_trip_gross_pnls_match_tradervue_exact() {
         .collect();
     // 5 clean round trips (qty distinct from each other). Each must match
     // Tradervue's exported gross P&L within 1¢.
-    assert!(approx(by_qty[&d("138")],  d("-33.30")));
+    assert!(approx(by_qty[&d("138")], d("-33.30")));
     assert!(approx(by_qty[&d("1145")], d("-252.145")));
     assert!(approx(by_qty[&d("1234")], d("678.70")));
     assert!(approx(by_qty[&d("1197")], d("241.54")));
@@ -241,7 +235,8 @@ fn pdc_total_gross_pnl_within_tolerance_of_tradervue() {
     assert!(
         (our_total - tv_total).abs() < d("20"),
         "PDC sum gross P&L must be within $20 of Tradervue's; ours={}, tv={}",
-        our_total, tv_total,
+        our_total,
+        tv_total,
     );
 }
 

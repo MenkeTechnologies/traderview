@@ -217,7 +217,8 @@ pub fn check(input: &Input) -> Output {
         actions.push("Cross-connection with storm drain observed: illicit discharge violation under 33 U.S.C. § 1342; municipal cleanup cost-recovery exposure; immediate disconnection and dye-test required.".to_string());
     }
 
-    let inspection_overdue = input.last_video_inspection_months_ago > RECOMMENDED_INSPECTION_INTERVAL_MONTHS;
+    let inspection_overdue =
+        input.last_video_inspection_months_ago > RECOMMENDED_INSPECTION_INTERVAL_MONTHS;
     let aged_material_recommends_inspection = matches!(
         input.lateral_material,
         LateralMaterial::VitrifiedClay | LateralMaterial::Orangeburg | LateralMaterial::CastIron

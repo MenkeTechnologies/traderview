@@ -162,10 +162,7 @@ pub fn check(input: &Section6501Input) -> Section6501Result {
     }
 
     if input.willful_attempt_to_evade {
-        notes.push(
-            "§ 6501(c)(2) — UNLIMITED ASED for willful attempt to evade tax"
-                .to_string(),
-        );
+        notes.push("§ 6501(c)(2) — UNLIMITED ASED for willful attempt to evade tax".to_string());
         return Section6501Result {
             pathway: AsedPathway::UnlimitedWillfulEvade,
             ased_period_years: None,
@@ -244,10 +241,7 @@ pub fn check(input: &Section6501Input) -> Section6501Result {
         };
     }
 
-    notes.push(
-        "§ 6501(a) — 3-year default ASED from filing date; most common pathway"
-            .to_string(),
-    );
+    notes.push("§ 6501(a) — 3-year default ASED from filing date; most common pathway".to_string());
     Section6501Result {
         pathway: AsedPathway::ThreeYearDefault,
         ased_period_years: Some(3),
@@ -305,7 +299,10 @@ mod tests {
     #[test]
     fn three_year_default_note_describes_pathway() {
         let r = check(&base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6501(a)") && n.contains("3-year default")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6501(a)") && n.contains("3-year default")));
     }
 
     #[test]
@@ -324,7 +321,11 @@ mod tests {
         let mut i = base();
         i.return_filed = false;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6501(c)(3)") && n.contains("3-year clock starts only upon filing")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6501(c)(3)")
+                && n.contains("3-year clock starts only upon filing")));
     }
 
     #[test]
@@ -342,7 +343,10 @@ mod tests {
         let mut i = base();
         i.fraudulent_return_intent_to_evade = true;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6501(c)(1)") && n.contains("clear-and-convincing")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6501(c)(1)") && n.contains("clear-and-convincing")));
     }
 
     #[test]
@@ -391,7 +395,10 @@ mod tests {
         let mut i = base();
         i.basis_overstatement = true;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6501(e)(1)(B)") && n.contains("overrules Home Concrete")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6501(e)(1)(B)") && n.contains("overrules Home Concrete")));
     }
 
     #[test]
@@ -408,7 +415,10 @@ mod tests {
         let mut i = base();
         i.filed_before_due_date = true;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6501(b)(1)") && n.contains("early filing does NOT shorten")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6501(b)(1)") && n.contains("early filing does NOT shorten")));
     }
 
     #[test]
@@ -428,7 +438,10 @@ mod tests {
         i.form_872_three_rights_disclosed = false;
         let r = check(&i);
         assert!(r.form_872_three_rights_violation);
-        assert!(r.notes.iter().any(|n| n.contains("IRM 25.6.22") && n.contains("THREE rights")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("IRM 25.6.22") && n.contains("THREE rights")));
     }
 
     #[test]
@@ -437,7 +450,10 @@ mod tests {
         i.form_872_signed = true;
         i.form_872_three_rights_disclosed = true;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6501(c)(4)") && n.contains("Form 872-A open-ended")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6501(c)(4)") && n.contains("Form 872-A open-ended")));
     }
 
     #[test]
@@ -543,86 +559,110 @@ mod tests {
     #[test]
     fn pathway_routing_eight_cells_invariant() {
         let pathways = [
-            (Section6501Input {
-                return_filed: false,
-                filed_before_due_date: false,
-                fraudulent_return_intent_to_evade: false,
-                willful_attempt_to_evade: false,
-                gross_income_omission_exceeds_25_percent: false,
-                basis_overstatement: false,
-                form_872_signed: false,
-                form_872_three_rights_disclosed: false,
-            }, AsedPathway::UnlimitedNoReturnFiled),
-            (Section6501Input {
-                return_filed: true,
-                filed_before_due_date: false,
-                fraudulent_return_intent_to_evade: true,
-                willful_attempt_to_evade: false,
-                gross_income_omission_exceeds_25_percent: false,
-                basis_overstatement: false,
-                form_872_signed: false,
-                form_872_three_rights_disclosed: false,
-            }, AsedPathway::UnlimitedFraud),
-            (Section6501Input {
-                return_filed: true,
-                filed_before_due_date: false,
-                fraudulent_return_intent_to_evade: false,
-                willful_attempt_to_evade: true,
-                gross_income_omission_exceeds_25_percent: false,
-                basis_overstatement: false,
-                form_872_signed: false,
-                form_872_three_rights_disclosed: false,
-            }, AsedPathway::UnlimitedWillfulEvade),
-            (Section6501Input {
-                return_filed: true,
-                filed_before_due_date: false,
-                fraudulent_return_intent_to_evade: false,
-                willful_attempt_to_evade: false,
-                gross_income_omission_exceeds_25_percent: false,
-                basis_overstatement: false,
-                form_872_signed: true,
-                form_872_three_rights_disclosed: true,
-            }, AsedPathway::Form872Consent),
-            (Section6501Input {
-                return_filed: true,
-                filed_before_due_date: false,
-                fraudulent_return_intent_to_evade: false,
-                willful_attempt_to_evade: false,
-                gross_income_omission_exceeds_25_percent: true,
-                basis_overstatement: false,
-                form_872_signed: false,
-                form_872_three_rights_disclosed: false,
-            }, AsedPathway::SixYearGrossIncomeOmission),
-            (Section6501Input {
-                return_filed: true,
-                filed_before_due_date: false,
-                fraudulent_return_intent_to_evade: false,
-                willful_attempt_to_evade: false,
-                gross_income_omission_exceeds_25_percent: false,
-                basis_overstatement: true,
-                form_872_signed: false,
-                form_872_three_rights_disclosed: false,
-            }, AsedPathway::SixYearBasisOverstatement),
-            (Section6501Input {
-                return_filed: true,
-                filed_before_due_date: true,
-                fraudulent_return_intent_to_evade: false,
-                willful_attempt_to_evade: false,
-                gross_income_omission_exceeds_25_percent: false,
-                basis_overstatement: false,
-                form_872_signed: false,
-                form_872_three_rights_disclosed: false,
-            }, AsedPathway::EarlyFilingDeemedDueDate),
-            (Section6501Input {
-                return_filed: true,
-                filed_before_due_date: false,
-                fraudulent_return_intent_to_evade: false,
-                willful_attempt_to_evade: false,
-                gross_income_omission_exceeds_25_percent: false,
-                basis_overstatement: false,
-                form_872_signed: false,
-                form_872_three_rights_disclosed: false,
-            }, AsedPathway::ThreeYearDefault),
+            (
+                Section6501Input {
+                    return_filed: false,
+                    filed_before_due_date: false,
+                    fraudulent_return_intent_to_evade: false,
+                    willful_attempt_to_evade: false,
+                    gross_income_omission_exceeds_25_percent: false,
+                    basis_overstatement: false,
+                    form_872_signed: false,
+                    form_872_three_rights_disclosed: false,
+                },
+                AsedPathway::UnlimitedNoReturnFiled,
+            ),
+            (
+                Section6501Input {
+                    return_filed: true,
+                    filed_before_due_date: false,
+                    fraudulent_return_intent_to_evade: true,
+                    willful_attempt_to_evade: false,
+                    gross_income_omission_exceeds_25_percent: false,
+                    basis_overstatement: false,
+                    form_872_signed: false,
+                    form_872_three_rights_disclosed: false,
+                },
+                AsedPathway::UnlimitedFraud,
+            ),
+            (
+                Section6501Input {
+                    return_filed: true,
+                    filed_before_due_date: false,
+                    fraudulent_return_intent_to_evade: false,
+                    willful_attempt_to_evade: true,
+                    gross_income_omission_exceeds_25_percent: false,
+                    basis_overstatement: false,
+                    form_872_signed: false,
+                    form_872_three_rights_disclosed: false,
+                },
+                AsedPathway::UnlimitedWillfulEvade,
+            ),
+            (
+                Section6501Input {
+                    return_filed: true,
+                    filed_before_due_date: false,
+                    fraudulent_return_intent_to_evade: false,
+                    willful_attempt_to_evade: false,
+                    gross_income_omission_exceeds_25_percent: false,
+                    basis_overstatement: false,
+                    form_872_signed: true,
+                    form_872_three_rights_disclosed: true,
+                },
+                AsedPathway::Form872Consent,
+            ),
+            (
+                Section6501Input {
+                    return_filed: true,
+                    filed_before_due_date: false,
+                    fraudulent_return_intent_to_evade: false,
+                    willful_attempt_to_evade: false,
+                    gross_income_omission_exceeds_25_percent: true,
+                    basis_overstatement: false,
+                    form_872_signed: false,
+                    form_872_three_rights_disclosed: false,
+                },
+                AsedPathway::SixYearGrossIncomeOmission,
+            ),
+            (
+                Section6501Input {
+                    return_filed: true,
+                    filed_before_due_date: false,
+                    fraudulent_return_intent_to_evade: false,
+                    willful_attempt_to_evade: false,
+                    gross_income_omission_exceeds_25_percent: false,
+                    basis_overstatement: true,
+                    form_872_signed: false,
+                    form_872_three_rights_disclosed: false,
+                },
+                AsedPathway::SixYearBasisOverstatement,
+            ),
+            (
+                Section6501Input {
+                    return_filed: true,
+                    filed_before_due_date: true,
+                    fraudulent_return_intent_to_evade: false,
+                    willful_attempt_to_evade: false,
+                    gross_income_omission_exceeds_25_percent: false,
+                    basis_overstatement: false,
+                    form_872_signed: false,
+                    form_872_three_rights_disclosed: false,
+                },
+                AsedPathway::EarlyFilingDeemedDueDate,
+            ),
+            (
+                Section6501Input {
+                    return_filed: true,
+                    filed_before_due_date: false,
+                    fraudulent_return_intent_to_evade: false,
+                    willful_attempt_to_evade: false,
+                    gross_income_omission_exceeds_25_percent: false,
+                    basis_overstatement: false,
+                    form_872_signed: false,
+                    form_872_three_rights_disclosed: false,
+                },
+                AsedPathway::ThreeYearDefault,
+            ),
         ];
 
         for (input, expected) in pathways {

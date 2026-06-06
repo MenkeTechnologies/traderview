@@ -139,14 +139,12 @@ pub async fn upsert(
 
 pub async fn delete(pool: &PgPool, user_id: Uuid, year: i32) -> anyhow::Result<bool> {
     Ok(
-        sqlx::query(
-            "DELETE FROM capital_loss_carryovers WHERE user_id = $1 AND tax_year = $2",
-        )
-        .bind(user_id)
-        .bind(year)
-        .execute(pool)
-        .await?
-        .rows_affected()
+        sqlx::query("DELETE FROM capital_loss_carryovers WHERE user_id = $1 AND tax_year = $2")
+            .bind(user_id)
+            .bind(year)
+            .execute(pool)
+            .await?
+            .rows_affected()
             > 0,
     )
 }

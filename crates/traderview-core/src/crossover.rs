@@ -41,31 +41,53 @@ pub struct CrossReport {
 
 pub fn detect(a: &[Option<f64>], b: &[Option<f64>]) -> CrossReport {
     let n = a.len().min(b.len());
-    if n < 2 { return CrossReport::default(); }
+    if n < 2 {
+        return CrossReport::default();
+    }
     let mut crosses = Vec::new();
     for i in 1..n {
-        let (Some(a_prev), Some(b_prev)) = (a[i - 1], b[i - 1]) else { continue };
-        let (Some(a_cur),  Some(b_cur))  = (a[i],     b[i])     else { continue };
+        let (Some(a_prev), Some(b_prev)) = (a[i - 1], b[i - 1]) else {
+            continue;
+        };
+        let (Some(a_cur), Some(b_cur)) = (a[i], b[i]) else {
+            continue;
+        };
         // Skip ties on either edge — a cross requires strict prior position.
-        if a_prev == b_prev || a_cur == b_cur { continue; }
+        if a_prev == b_prev || a_cur == b_cur {
+            continue;
+        }
         if a_prev < b_prev && a_cur > b_cur {
-            crosses.push(Crossover { bar_index: i, direction: CrossDirection::Up,
-                                     a_value: a_cur, b_value: b_cur });
+            crosses.push(Crossover {
+                bar_index: i,
+                direction: CrossDirection::Up,
+                a_value: a_cur,
+                b_value: b_cur,
+            });
         } else if a_prev > b_prev && a_cur < b_cur {
-            crosses.push(Crossover { bar_index: i, direction: CrossDirection::Down,
-                                     a_value: a_cur, b_value: b_cur });
+            crosses.push(Crossover {
+                bar_index: i,
+                direction: CrossDirection::Down,
+                a_value: a_cur,
+                b_value: b_cur,
+            });
         }
     }
     let last_cross = crosses.last().copied();
     let bars_since_last = last_cross.map(|c| n.saturating_sub(1).saturating_sub(c.bar_index));
-    CrossReport { crosses, last_cross, bars_since_last }
+    CrossReport {
+        crosses,
+        last_cross,
+        bars_since_last,
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn s(v: &[f64]) -> Vec<Option<f64>> { v.iter().map(|x| Some(*x)).collect() }
+    fn s(v: &[f64]) -> Vec<Option<f64>> {
+        v.iter().map(|x| Some(*x)).collect()
+    }
 
     #[test]
     fn empty_or_too_short_input_returns_empty() {
@@ -93,8 +115,11 @@ mod tests {
     fn touch_without_breach_doesnt_emit() {
         // A=[1, 2], B=[2, 2]. A approaches but only touches B — no cross.
         let r = detect(&s(&[1.0, 2.0]), &s(&[2.0, 2.0]));
-        assert!(r.crosses.is_empty(),
-            "tying B doesn't count as a cross, got {:?}", r.crosses);
+        assert!(
+            r.crosses.is_empty(),
+            "tying B doesn't count as a cross, got {:?}",
+            r.crosses
+        );
     }
 
     #[test]
@@ -113,7 +138,10 @@ mod tests {
         let r = detect(&a, &b);
         assert_eq!(r.crosses.len(), 4, "expected 4 crosses in zig-zag");
         // Last one is Down (3 → 1 below 2).
-        assert!(matches!(r.last_cross.unwrap().direction, CrossDirection::Down));
+        assert!(matches!(
+            r.last_cross.unwrap().direction,
+            CrossDirection::Down
+        ));
         assert_eq!(r.bars_since_last, Some(0));
     }
 
@@ -126,6 +154,6 @@ mod tests {
         let b = s(&[2.0, 2.0, 2.0, 2.0, 2.0]);
         let r = detect(&a, &b);
         assert_eq!(r.crosses.len(), 1);
-        assert_eq!(r.bars_since_last, Some(3));    // last bar - cross bar = 4 - 1 = 3
+        assert_eq!(r.bars_since_last, Some(3)); // last bar - cross bar = 4 - 1 = 3
     }
 }

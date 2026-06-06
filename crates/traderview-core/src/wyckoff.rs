@@ -31,7 +31,11 @@ pub struct WyckoffConfig {
 
 impl Default for WyckoffConfig {
     fn default() -> Self {
-        Self { lookback: 40, flat_slope_pct: 0.001, tight_range_pct: 0.05 }
+        Self {
+            lookback: 40,
+            flat_slope_pct: 0.001,
+            tight_range_pct: 0.05,
+        }
     }
 }
 
@@ -71,7 +75,10 @@ pub fn classify(closes: &[f64], cfg: &WyckoffConfig) -> WyckoffReport {
     let slice = &closes[n - lookback..];
     let mean: f64 = slice.iter().sum::<f64>() / lookback as f64;
     if mean <= 0.0 {
-        return WyckoffReport { note: "non-positive mean price".into(), ..Default::default() };
+        return WyckoffReport {
+            note: "non-positive mean price".into(),
+            ..Default::default()
+        };
     }
     // Linear-regression slope of price vs index.
     let mean_x = (lookback as f64 - 1.0) / 2.0;
@@ -84,15 +91,19 @@ pub fn classify(closes: &[f64], cfg: &WyckoffConfig) -> WyckoffReport {
     let slope = if den > 0.0 { num / den } else { 0.0 };
     let slope_pct = slope / mean;
     let high = slice.iter().copied().fold(f64::NEG_INFINITY, f64::max);
-    let low  = slice.iter().copied().fold(f64::INFINITY, f64::min);
+    let low = slice.iter().copied().fold(f64::INFINITY, f64::min);
     let range_pct = if mean > 0.0 { (high - low) / mean } else { 0.0 };
     let latest = *slice.last().expect("non-empty slice");
-    let position = if (high - low) > 0.0 { (latest - low) / (high - low) } else { 0.5 };
+    let position = if (high - low) > 0.0 {
+        (latest - low) / (high - low)
+    } else {
+        0.5
+    };
 
     let flat = slope_pct.abs() < cfg.flat_slope_pct;
     let tight = range_pct < cfg.tight_range_pct;
     // "Near low" = bottom 30% of the range; "near high" = top 30%.
-    let near_low  = position < 0.30;
+    let near_low = position < 0.30;
     let near_high = position > 0.70;
     let phase = if flat && tight && near_low {
         WyckoffPhase::Accumulation
@@ -106,10 +117,18 @@ pub fn classify(closes: &[f64], cfg: &WyckoffConfig) -> WyckoffReport {
         WyckoffPhase::Indeterminate
     };
     let note = match phase {
-        WyckoffPhase::Accumulation  => format!("flat tight range near low (position {:.0}%) — smart money likely buying", position * 100.0),
-        WyckoffPhase::Markup        => format!("positive slope {:.3}%/bar — trend up", slope_pct * 100.0),
-        WyckoffPhase::Distribution  => format!("flat tight range near high (position {:.0}%) — smart money likely selling", position * 100.0),
-        WyckoffPhase::Markdown      => format!("negative slope {:.3}%/bar — trend down", slope_pct * 100.0),
+        WyckoffPhase::Accumulation => format!(
+            "flat tight range near low (position {:.0}%) — smart money likely buying",
+            position * 100.0
+        ),
+        WyckoffPhase::Markup => format!("positive slope {:.3}%/bar — trend up", slope_pct * 100.0),
+        WyckoffPhase::Distribution => format!(
+            "flat tight range near high (position {:.0}%) — smart money likely selling",
+            position * 100.0
+        ),
+        WyckoffPhase::Markdown => {
+            format!("negative slope {:.3}%/bar — trend down", slope_pct * 100.0)
+        }
         WyckoffPhase::Indeterminate => "no clear phase signal".into(),
     };
     WyckoffReport {
@@ -136,8 +155,11 @@ mod tests {
     fn monotonic_uptrend_is_markup() {
         let v: Vec<f64> = (1..=50).map(|i| 100.0 + i as f64 * 0.5).collect();
         let r = classify(&v, &WyckoffConfig::default());
-        assert!(matches!(r.phase, WyckoffPhase::Markup),
-            "expected Markup, got {:?}", r.phase);
+        assert!(
+            matches!(r.phase, WyckoffPhase::Markup),
+            "expected Markup, got {:?}",
+            r.phase
+        );
         assert!(r.slope_pct > 0.0);
     }
 
@@ -151,21 +173,25 @@ mod tests {
     #[test]
     fn tight_flat_near_low_is_accumulation() {
         // 40 bars between 100 and 100.5 (tight range), latest at 100.05 (near low).
-        let mut v: Vec<f64> = (0..40).map(|i| {
-            if i % 2 == 0 { 100.0 } else { 100.5 }
-        }).collect();
+        let mut v: Vec<f64> = (0..40)
+            .map(|i| if i % 2 == 0 { 100.0 } else { 100.5 })
+            .collect();
         v[39] = 100.05;
         let r = classify(&v, &WyckoffConfig::default());
-        assert!(matches!(r.phase, WyckoffPhase::Accumulation),
+        assert!(
+            matches!(r.phase, WyckoffPhase::Accumulation),
             "expected Accumulation, got {:?} pos={:.2} range={:.4}",
-            r.phase, r.price_position_in_range, r.range_pct);
+            r.phase,
+            r.price_position_in_range,
+            r.range_pct
+        );
     }
 
     #[test]
     fn tight_flat_near_high_is_distribution() {
-        let mut v: Vec<f64> = (0..40).map(|i| {
-            if i % 2 == 0 { 100.0 } else { 100.5 }
-        }).collect();
+        let mut v: Vec<f64> = (0..40)
+            .map(|i| if i % 2 == 0 { 100.0 } else { 100.5 })
+            .collect();
         v[39] = 100.45;
         let r = classify(&v, &WyckoffConfig::default());
         assert!(matches!(r.phase, WyckoffPhase::Distribution));
@@ -174,10 +200,10 @@ mod tests {
     #[test]
     fn mid_range_flat_is_indeterminate() {
         // Flat oscillation centered on mid → no Accumulation or Distribution.
-        let mut v: Vec<f64> = (0..40).map(|i| {
-            if i % 2 == 0 { 100.0 } else { 100.5 }
-        }).collect();
-        v[39] = 100.25;    // dead center of [100, 100.5]
+        let mut v: Vec<f64> = (0..40)
+            .map(|i| if i % 2 == 0 { 100.0 } else { 100.5 })
+            .collect();
+        v[39] = 100.25; // dead center of [100, 100.5]
         let r = classify(&v, &WyckoffConfig::default());
         assert!(matches!(r.phase, WyckoffPhase::Indeterminate));
     }

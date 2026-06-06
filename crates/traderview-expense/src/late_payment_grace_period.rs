@@ -175,12 +175,9 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
     // NoStatutoryGracePeriodReasonablenessOnly default — 44 other
     // states + DC.
     let no_state = [
-        "AL", "AK", "AZ", "AR", "CA", "CO", "DC", "DE",
-        "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS",
-        "KY", "LA", "ME", "MD", "MI", "MN", "MS", "MO",
-        "MT", "NE", "NV", "NH", "NJ", "NM", "ND", "OH",
-        "OK", "PA", "RI", "SC", "SD", "TN", "UT", "VT",
-        "WV", "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CA", "CO", "DC", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA",
+        "KS", "KY", "LA", "ME", "MD", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM",
+        "ND", "OH", "OK", "PA", "RI", "SC", "SD", "TN", "UT", "VT", "WV", "WI", "WY",
     ];
     for code in no_state {
         m.insert(
@@ -247,8 +244,8 @@ pub fn check(input: &GracePeriodInput) -> GracePeriodResult {
         !rule.requires_written_lease_disclosure || input.late_fee_in_written_lease;
 
     let attempting_to_charge = input.late_fee_charged_dollars > 0;
-    let landlord_compliant = !attempting_to_charge
-        || (grace_satisfied && lease_disclosure_satisfied);
+    let landlord_compliant =
+        !attempting_to_charge || (grace_satisfied && lease_disclosure_satisfied);
 
     let regime_label = match rule.regime {
         GracePeriodRegime::MassachusettsLongGracePeriod => "Massachusetts 30-day long grace period",

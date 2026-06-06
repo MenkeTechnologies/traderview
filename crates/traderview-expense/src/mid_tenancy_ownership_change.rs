@@ -208,8 +208,8 @@ pub fn check(input: &Input) -> CheckResult {
 
     // Deposit disposition compliance — either transfer or refund
     // satisfies. Both false = violation.
-    let deposit_disposition_compliant = input.deposit_transferred_to_successor
-        || input.deposit_refunded_to_tenant;
+    let deposit_disposition_compliant =
+        input.deposit_transferred_to_successor || input.deposit_refunded_to_tenant;
     if !deposit_disposition_compliant {
         violations.push(format!(
             "{:?} — security deposit must be either transferred to successor or refunded to \
@@ -309,11 +309,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.compliant);
         assert!(r.disclosure_deadline_passed);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("California") && v.contains("16 days"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("California") && v.contains("16 days")));
     }
 
     #[test]
@@ -333,11 +332,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.compliant);
         assert!(r.nonpayment_eviction_barred);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("§ 1962(c)") && v.contains("BARRED"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1962(c)") && v.contains("BARRED")));
     }
 
     #[test]
@@ -357,11 +355,10 @@ mod tests {
         i.deposit_refunded_to_tenant = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("neither has occurred"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("neither has occurred")));
     }
 
     #[test]
@@ -371,11 +368,10 @@ mod tests {
         i.tenant_notified_of_deposit_transfer = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("written notice of security-deposit transfer"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("written notice of security-deposit transfer")));
     }
 
     // ── Massachusetts G.L. c. 186 § 15B(2)(b) — 45-day ─────────
@@ -507,9 +503,12 @@ mod tests {
             }
             let r = check(&i);
             assert_eq!(
-                r.deposit_disposition_compliant, transfer || refund,
+                r.deposit_disposition_compliant,
+                transfer || refund,
                 "transfer={} refund={} expected disposition compliant={}",
-                transfer, refund, transfer || refund,
+                transfer,
+                refund,
+                transfer || refund,
             );
             assert_eq!(
                 r.compliant, expected_compliant,
@@ -579,10 +578,18 @@ mod tests {
 
     #[test]
     fn citation_pins_authority_per_regime() {
-        assert!(check(&base(Regime::California)).citation.contains("§ 1962(c)"));
-        assert!(check(&base(Regime::Massachusetts)).citation.contains("c. 186 § 15B"));
-        assert!(check(&base(Regime::Florida)).citation.contains("§ 83.49(5)"));
-        assert!(check(&base(Regime::Washington)).citation.contains("RCW 59.18.060"));
+        assert!(check(&base(Regime::California))
+            .citation
+            .contains("§ 1962(c)"));
+        assert!(check(&base(Regime::Massachusetts))
+            .citation
+            .contains("c. 186 § 15B"));
+        assert!(check(&base(Regime::Florida))
+            .citation
+            .contains("§ 83.49(5)"));
+        assert!(check(&base(Regime::Washington))
+            .citation
+            .contains("RCW 59.18.060"));
         assert!(check(&base(Regime::NewYork)).citation.contains("§ 7-105"));
         assert!(check(&base(Regime::Default)).citation.contains("Default"));
     }
@@ -599,9 +606,11 @@ mod tests {
         ] {
             let r = check(&base(regime));
             assert!(
-                r.notes.iter().any(|n| n.contains("landlord_identification_disclosure")
-                    && n.contains("foreclosure_tenant_rights")
-                    && n.contains("VOLUNTARY")),
+                r.notes
+                    .iter()
+                    .any(|n| n.contains("landlord_identification_disclosure")
+                        && n.contains("foreclosure_tenant_rights")
+                        && n.contains("VOLUNTARY")),
                 "{:?}: sibling-module note must be present",
                 regime,
             );
@@ -610,7 +619,13 @@ mod tests {
 
     #[test]
     fn five_day_boundary_truth_table_new_york_invariant() {
-        for (days, expected_passed) in [(0_u32, false), (4, false), (5, false), (6, true), (30, true)] {
+        for (days, expected_passed) in [
+            (0_u32, false),
+            (4, false),
+            (5, false),
+            (6, true),
+            (30, true),
+        ] {
             let mut i = base(Regime::NewYork);
             i.days_since_ownership_transfer = days;
             i.successor_provided_identity_disclosure = false;

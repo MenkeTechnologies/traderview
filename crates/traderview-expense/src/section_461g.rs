@@ -420,9 +420,11 @@ mod tests {
         assert!(r.section_461g2_exception_applies);
         assert_eq!(r.current_year_deduction_cents, 3_000_000);
         assert!(!r.amortization_required);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 461(g)(2) EXCEPTION APPLIES")
-            && f.contains("PURCHASE OR IMPROVEMENT")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 461(g)(2) EXCEPTION APPLIES")
+                && f.contains("PURCHASE OR IMPROVEMENT")));
     }
 
     #[test]
@@ -432,9 +434,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.section_461g2_exception_applies);
         assert!(r.amortization_required);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 461(g)(2)(A)")
-            && f.contains("ESTABLISHED PRACTICE")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 461(g)(2)(A)") && f.contains("ESTABLISHED PRACTICE")));
     }
 
     #[test]
@@ -443,9 +446,10 @@ mod tests {
         i.not_excessive_in_area = false;
         let r = check(&i);
         assert!(!r.section_461g2_exception_applies);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 461(g)(2)(B)")
-            && f.contains("NOT EXCEED")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 461(g)(2)(B)") && f.contains("NOT EXCEED")));
     }
 
     #[test]
@@ -454,9 +458,10 @@ mod tests {
         i.computed_as_percentage_of_principal = false;
         let r = check(&i);
         assert!(!r.section_461g2_exception_applies);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 461(g)(2)(C)")
-            && f.contains("PERCENTAGE OF PRINCIPAL")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 461(g)(2)(C)") && f.contains("PERCENTAGE OF PRINCIPAL")));
     }
 
     #[test]
@@ -468,8 +473,8 @@ mod tests {
         assert_eq!(r.current_year_deduction_cents, 0);
         let expected = 3_000_000_u64 / 30;
         assert_eq!(r.annual_amortization_cents, expected);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("Rev. Rul. 87-22 REFINANCING EXCLUSION")
+        assert!(r.failure_reasons.iter().any(|f| f
+            .contains("Rev. Rul. 87-22 REFINANCING EXCLUSION")
             && f.contains("AMORTIZED")));
     }
 
@@ -492,10 +497,12 @@ mod tests {
         assert_eq!(r.current_year_deduction_cents, 0);
         let expected = 3_000_000_u64 / 30;
         assert_eq!(r.annual_amortization_cents, expected);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("Rev. Rul. 70-540 RENTAL PROPERTY")
-            && f.contains("Schedule E")
-            && f.contains("does NOT apply to rental property")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("Rev. Rul. 70-540 RENTAL PROPERTY")
+                && f.contains("Schedule E")
+                && f.contains("does NOT apply to rental property")));
     }
 
     #[test]
@@ -516,11 +523,13 @@ mod tests {
         let r = check(&i);
         assert!(r.amortization_required);
         assert_eq!(r.current_year_deduction_cents, 0);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 461(g)(1) GENERAL RULE")
-            && f.contains("margin loan interest")
-            && f.contains("§ 163(d)")
-            && f.contains("net investment income")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 461(g)(1) GENERAL RULE")
+                && f.contains("margin loan interest")
+                && f.contains("§ 163(d)")
+                && f.contains("net investment income")));
     }
 
     #[test]
@@ -529,10 +538,12 @@ mod tests {
         i.category = InterestCategory::MarginLoanInterestPrepayment;
         i.section_475f_election = true;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 475(f) TRADER MARK-TO-MARKET ELECTION")
-            && f.contains("§ 162 business interest expense")
-            && f.contains("§ 163(j)")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 475(f) TRADER MARK-TO-MARKET ELECTION")
+                && f.contains("§ 162 business interest expense")
+                && f.contains("§ 163(j)")));
     }
 
     #[test]
@@ -541,10 +552,12 @@ mod tests {
         i.category = InterestCategory::BusinessLoanInterestPrepayment;
         let r = check(&i);
         assert!(r.amortization_required);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 461(g)(1) GENERAL RULE")
-            && f.contains("business loan interest")
-            && f.contains("§ 163(j)")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 461(g)(1) GENERAL RULE")
+                && f.contains("business loan interest")
+                && f.contains("§ 163(j)")));
     }
 
     #[test]
@@ -555,10 +568,12 @@ mod tests {
         assert!(r.seller_paid_points_treated_as_buyer);
         assert!(r.section_461g2_exception_applies);
         assert_eq!(r.current_year_deduction_cents, 3_000_000);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("Rev. Proc. 94-27 SELLER-PAID POINTS")
-            && f.contains("TREATED AS PAID BY BUYER")
-            && f.contains("basis in residence REDUCED")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("Rev. Proc. 94-27 SELLER-PAID POINTS")
+                && f.contains("TREATED AS PAID BY BUYER")
+                && f.contains("basis in residence REDUCED")));
     }
 
     #[test]
@@ -633,17 +648,18 @@ mod tests {
     #[test]
     fn note_pins_subsection_g1_general_rule() {
         let r = check(&principal_residence_purchase_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 461(g)(1) GENERAL RULE")
-            && n.contains("converts cash-basis to accrual-basis")
-            && n.contains("ALL types of interest")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 461(g)(1) GENERAL RULE")
+                && n.contains("converts cash-basis to accrual-basis")
+                && n.contains("ALL types of interest")));
     }
 
     #[test]
     fn note_pins_subsection_g2_five_conditions() {
         let r = check(&principal_residence_purchase_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 461(g)(2) EXCEPTION")
+        assert!(r.notes.iter().any(|n| n.contains("§ 461(g)(2) EXCEPTION")
             && n.contains("PURCHASE OR IMPROVEMENT")
             && n.contains("SECURED BY")
             && n.contains("ESTABLISHED PRACTICE")
@@ -654,81 +670,96 @@ mod tests {
     #[test]
     fn note_pins_refinancing_exclusion_rev_rul_87_22() {
         let r = check(&principal_residence_purchase_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 461(g)(2) REFINANCING EXCLUSION")
-            && n.contains("Rev. Rul. 87-22")
-            && n.contains("IRS Pub. 936")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 461(g)(2) REFINANCING EXCLUSION")
+                && n.contains("Rev. Rul. 87-22")
+                && n.contains("IRS Pub. 936")));
     }
 
     #[test]
     fn note_pins_rental_property_amortization_rev_rul_70_540() {
         let r = check(&principal_residence_purchase_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 461(g) APPLICATION TO RENTAL PROPERTY")
-            && n.contains("Rev. Rul. 70-540")
-            && n.contains("straight-line method")
-            && n.contains("Schedule E")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 461(g) APPLICATION TO RENTAL PROPERTY")
+                && n.contains("Rev. Rul. 70-540")
+                && n.contains("straight-line method")
+                && n.contains("Schedule E")));
     }
 
     #[test]
     fn note_pins_margin_loan_section_163d_interaction() {
         let r = check(&principal_residence_purchase_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 461(g) APPLICATION TO MARGIN LOAN INTEREST")
-            && n.contains("§ 163(d) investment interest limitation")
-            && n.contains("net investment income")
-            && n.contains("§ 163(d)(2)")
-            && n.contains("§ 475(f) trader-status election")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("§ 461(g) APPLICATION TO MARGIN LOAN INTEREST")
+                && n.contains("§ 163(d) investment interest limitation")
+                && n.contains("net investment income")
+                && n.contains("§ 163(d)(2)")
+                && n.contains("§ 475(f) trader-status election")
+        ));
     }
 
     #[test]
     fn note_pins_rev_proc_94_27_seller_paid_points() {
         let r = check(&principal_residence_purchase_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Rev. Proc. 94-27 SELLER-PAID POINTS")
-            && n.contains("TREATED AS PAID BY BUYER")
-            && n.contains("basis in residence REDUCED")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Rev. Proc. 94-27 SELLER-PAID POINTS")
+                && n.contains("TREATED AS PAID BY BUYER")
+                && n.contains("basis in residence REDUCED")));
     }
 
     #[test]
     fn note_pins_section_263a_unicap_interaction() {
         let r = check(&principal_residence_purchase_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 461(g) INTERACTION WITH § 263A UNICAP")
-            && n.contains("CONSTRUCTION period interest")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 461(g) INTERACTION WITH § 263A UNICAP")
+                && n.contains("CONSTRUCTION period interest")));
     }
 
     #[test]
     fn note_pins_section_163h_qualified_residence_interaction() {
         let r = check(&principal_residence_purchase_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 461(g) INTERACTION WITH § 163(h)")
-            && n.contains("ACQUISITION INDEBTEDNESS")
-            && n.contains("HOME EQUITY INDEBTEDNESS")
-            && n.contains("TCJA 2017")
-            && n.contains("OBBBA 2025")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 461(g) INTERACTION WITH § 163(h)")
+                && n.contains("ACQUISITION INDEBTEDNESS")
+                && n.contains("HOME EQUITY INDEBTEDNESS")
+                && n.contains("TCJA 2017")
+                && n.contains("OBBBA 2025")));
     }
 
     #[test]
     fn note_pins_trader_fact_patterns_five() {
         let r = check(&principal_residence_purchase_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-critical fact patterns")
-            && n.contains("$30,000 DEDUCTIBLE")
-            && n.contains("§ 461(g)(2) EXCLUSION")
-            && n.contains("Schedule E")
-            && n.contains("§ 475(f) trader-status election")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-critical fact patterns")
+                && n.contains("$30,000 DEDUCTIBLE")
+                && n.contains("§ 461(g)(2) EXCLUSION")
+                && n.contains("Schedule E")
+                && n.contains("§ 475(f) trader-status election")));
     }
 
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&principal_residence_purchase_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Companion to section_163d")
-            && n.contains("section_163h")
-            && n.contains("section_163j")
-            && n.contains("section_263a")
-            && n.contains("section_475c2")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Companion to section_163d")
+                && n.contains("section_163h")
+                && n.contains("section_163j")
+                && n.contains("section_263a")
+                && n.contains("section_475c2")));
     }
 
     #[test]

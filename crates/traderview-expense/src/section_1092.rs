@@ -332,8 +332,8 @@ mod tests {
         // unrecognized-gain pool.
         let r = compute(&Section1092Input {
             legs: vec![
-                leg("WINNER", dec!(11000), dec!(10000), false),    // +$1k
-                leg("LOSER", dec!(8000), dec!(10000), false),      // -$2k (ignored)
+                leg("WINNER", dec!(11000), dec!(10000), false), // +$1k
+                leg("LOSER", dec!(8000), dec!(10000), false),   // -$2k (ignored)
                 leg("DISPOSED", dec!(0), dec!(3000), true),
             ],
             realized_loss_on_disposed_leg: dec!(3000),

@@ -236,8 +236,8 @@ impl SqueezeStore {
         // Normalize the baseline to a per-burst-window equivalent so the
         // ratio is dimensionless.
         let baseline_window_secs = (WINDOW_SECS - cfg.burst_window_secs).max(1);
-        let baseline_per_burst = baseline_volume / (baseline_window_secs as f64)
-            * (cfg.burst_window_secs as f64);
+        let baseline_per_burst =
+            baseline_volume / (baseline_window_secs as f64) * (cfg.burst_window_secs as f64);
         let burst_ratio = if baseline_per_burst > 0.0 {
             burst_volume / baseline_per_burst
         } else {
@@ -322,7 +322,7 @@ mod tests {
         let mut w = SymbolWindow::default();
         w.push(0, 10.0, 100.0);
         w.push(1_000, 10.0, 50.0); // simulated reset (would be a glitch)
-        // last delta should be 0, not -50.
+                                   // last delta should be 0, not -50.
         assert!(w.trades.iter().all(|(_, _, v)| *v >= 0.0));
     }
 

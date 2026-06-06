@@ -42,10 +42,15 @@ pub fn simulate(
     steps_per_year: f64,
 ) -> Option<GammaScalpingReport> {
     let n = spot_path.len();
-    if n < 2 { return None; }
-    if !gamma.is_finite() || !theta_per_step.is_finite()
-        || !transaction_cost_pct.is_finite() || transaction_cost_pct < 0.0
-        || !steps_per_year.is_finite() || steps_per_year <= 0.0
+    if n < 2 {
+        return None;
+    }
+    if !gamma.is_finite()
+        || !theta_per_step.is_finite()
+        || !transaction_cost_pct.is_finite()
+        || transaction_cost_pct < 0.0
+        || !steps_per_year.is_finite()
+        || steps_per_year <= 0.0
         || spot_path.iter().any(|s| !s.is_finite() || *s <= 0.0)
     {
         return None;
@@ -83,7 +88,9 @@ pub fn simulate(
     let mid_spot: f64 = spot_path.iter().sum::<f64>() / n as f64;
     let breakeven_var_per_step = if gamma > 0.0 {
         2.0 * cost_per_step / (gamma * mid_spot * mid_spot)
-    } else { 0.0 };
+    } else {
+        0.0
+    };
     let breakeven_iv = (breakeven_var_per_step * steps_per_year).max(0.0).sqrt();
     Some(GammaScalpingReport {
         per_step_pnl: per_step,
@@ -129,9 +136,11 @@ mod tests {
         let spots: Vec<f64> = (0..50).map(|i| 100.0 * (1.0 + 0.001 * i as f64)).collect();
         let r = simulate(&spots, 0.01, -0.05, 0.0, 252.0).unwrap();
         // Manual check.
-        let log_returns: Vec<f64> = (1..spots.len()).map(|i| (spots[i] / spots[i - 1]).ln()).collect();
-        let var_per_step: f64 = log_returns.iter().map(|x| x * x).sum::<f64>()
-            / log_returns.len() as f64;
+        let log_returns: Vec<f64> = (1..spots.len())
+            .map(|i| (spots[i] / spots[i - 1]).ln())
+            .collect();
+        let var_per_step: f64 =
+            log_returns.iter().map(|x| x * x).sum::<f64>() / log_returns.len() as f64;
         let expected = (var_per_step * 252.0).sqrt();
         assert!((r.realized_vol_annualized - expected).abs() < 1e-9);
     }
@@ -139,13 +148,16 @@ mod tests {
     #[test]
     fn long_gamma_positive_realized_yields_positive_gamma_pnl() {
         let mut state: u64 = 42;
-        let spots: Vec<f64> = (0..200).scan(100.0_f64, |s, _| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let r = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.02;
-            *s *= 1.0 + r;
-            Some(*s)
-        }).collect();
+        let spots: Vec<f64> = (0..200)
+            .scan(100.0_f64, |s, _| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let r = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.02;
+                *s *= 1.0 + r;
+                Some(*s)
+            })
+            .collect();
         let r = simulate(&spots, 0.01, 0.0, 0.0, 252.0).unwrap();
         assert!(r.total_gamma_pnl > 0.0);
     }
@@ -153,13 +165,16 @@ mod tests {
     #[test]
     fn transaction_cost_subtracts_from_pnl() {
         let mut state: u64 = 11;
-        let spots: Vec<f64> = (0..100).scan(100.0_f64, |s, _| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let r = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.02;
-            *s *= 1.0 + r;
-            Some(*s)
-        }).collect();
+        let spots: Vec<f64> = (0..100)
+            .scan(100.0_f64, |s, _| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let r = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.02;
+                *s *= 1.0 + r;
+                Some(*s)
+            })
+            .collect();
         let no_tc = simulate(&spots, 0.01, 0.0, 0.0, 252.0).unwrap();
         let with_tc = simulate(&spots, 0.01, 0.0, 0.001, 252.0).unwrap();
         assert!(with_tc.total_pnl < no_tc.total_pnl);

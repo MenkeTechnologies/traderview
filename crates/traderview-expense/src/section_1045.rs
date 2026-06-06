@@ -76,8 +76,7 @@ pub struct Section1045Result {
 
 pub fn compute(input: &Section1045Input) -> Section1045Result {
     let mut r = Section1045Result {
-        days_held_original: (input.original_sale_date - input.original_acquisition_date)
-            .num_days(),
+        days_held_original: (input.original_sale_date - input.original_acquisition_date).num_days(),
         days_to_replacement: (input.replacement_purchase_date - input.original_sale_date)
             .num_days(),
         ..Section1045Result::default()
@@ -220,7 +219,10 @@ mod tests {
         i.replacement_purchase_date = d(2022, 6, 15);
         let r = compute(&i);
         assert!(r.disqualified);
-        assert!(r.disqualification_reasons.iter().any(|s| s.contains("6 months")));
+        assert!(r
+            .disqualification_reasons
+            .iter()
+            .any(|s| s.contains("6 months")));
         assert_eq!(r.gain_recognized_this_year, dec!(1000000));
     }
 
@@ -230,7 +232,10 @@ mod tests {
         i.replacement_purchase_date = d(2023, 4, 1); // 76 days after sale
         let r = compute(&i);
         assert!(r.disqualified);
-        assert!(r.disqualification_reasons.iter().any(|s| s.contains("60-day")));
+        assert!(r
+            .disqualification_reasons
+            .iter()
+            .any(|s| s.contains("60-day")));
     }
 
     #[test]
@@ -239,7 +244,10 @@ mod tests {
         i.replacement_purchase_date = d(2022, 12, 1); // BEFORE sale
         let r = compute(&i);
         assert!(r.disqualified);
-        assert!(r.disqualification_reasons.iter().any(|s| s.contains("BEFORE")));
+        assert!(r
+            .disqualification_reasons
+            .iter()
+            .any(|s| s.contains("BEFORE")));
     }
 
     #[test]
@@ -248,7 +256,10 @@ mod tests {
         i.original_qsbs_qualified = false;
         let r = compute(&i);
         assert!(r.disqualified);
-        assert!(r.disqualification_reasons.iter().any(|s| s.contains("original")));
+        assert!(r
+            .disqualification_reasons
+            .iter()
+            .any(|s| s.contains("original")));
     }
 
     #[test]
@@ -257,7 +268,10 @@ mod tests {
         i.replacement_qsbs_qualified = false;
         let r = compute(&i);
         assert!(r.disqualified);
-        assert!(r.disqualification_reasons.iter().any(|s| s.contains("replacement")));
+        assert!(r
+            .disqualification_reasons
+            .iter()
+            .any(|s| s.contains("replacement")));
     }
 
     #[test]

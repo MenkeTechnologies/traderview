@@ -117,7 +117,8 @@ pub fn compute(input: &Section453aInput) -> Section453aResult {
 
     // Applicable percentage — only meaningful when applicable.
     let applicable_pct_bp = if matches!(applicability, ApplicabilityResult::Applicable) {
-        let numerator = input.aggregate_year_end_face_obligations_dollars - AGGREGATE_THRESHOLD_DOLLARS;
+        let numerator =
+            input.aggregate_year_end_face_obligations_dollars - AGGREGATE_THRESHOLD_DOLLARS;
         let denom = input.aggregate_year_end_face_obligations_dollars;
         ((numerator as i128 * 10_000 / denom as i128).max(0) as u64).min(10_000) as u32
     } else {
@@ -192,7 +193,7 @@ mod tests {
             aggregate_year_end_face_obligations_dollars: 10_000_000,
             unrecognized_gain_dollars: 8_000_000,
             maximum_applicable_tax_rate_bp: 2000, // 20% LTCG
-            underpayment_rate_bp: 800,           // 8% — 5% AFR + 3% spread (illustrative)
+            underpayment_rate_bp: 800,            // 8% — 5% AFR + 3% spread (illustrative)
             taxpayer_is_dealer: false,
             property_is_personal_use: false,
             property_is_residential_lots_or_timeshares: false,
@@ -396,7 +397,9 @@ mod tests {
     #[test]
     fn citation_mentions_obra_1987_origin() {
         let r = compute(&baseline());
-        assert!(r.citation.contains("Omnibus Budget Reconciliation Act of 1987"));
+        assert!(r
+            .citation
+            .contains("Omnibus Budget Reconciliation Act of 1987"));
     }
 
     #[test]

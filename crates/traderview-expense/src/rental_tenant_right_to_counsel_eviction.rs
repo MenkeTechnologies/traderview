@@ -164,7 +164,9 @@ fn statutory_basis_for(j: RtcJurisdiction) -> &'static str {
     match j {
         RtcJurisdiction::NewYorkCity => "NYC Admin Code § 26-1301 et seq. (Local Law 136 of 2017)",
         RtcJurisdiction::Newark => "Newark Right to Counsel Ordinance 2018",
-        RtcJurisdiction::SanFranciscoPropF => "SF Proposition F (2018) — universal RTC, no income test",
+        RtcJurisdiction::SanFranciscoPropF => {
+            "SF Proposition F (2018) — universal RTC, no income test"
+        }
         RtcJurisdiction::Cleveland => "Cleveland Right to Counsel Ordinance 2019",
         RtcJurisdiction::Philadelphia => "Philadelphia Bill 190386 (2019)",
         RtcJurisdiction::Boulder => "Boulder Ordinance 8377 (2020)",
@@ -172,7 +174,9 @@ fn statutory_basis_for(j: RtcJurisdiction) -> &'static str {
         RtcJurisdiction::WashingtonStatewide => {
             "RCW 59.18.640 (added by 2021 Senate Bill 5160) — FIRST U.S. statewide RTC"
         }
-        RtcJurisdiction::MarylandStatewide => "MD Access to Counsel in Evictions Act 2021 (HB 18 / SB 154)",
+        RtcJurisdiction::MarylandStatewide => {
+            "MD Access to Counsel in Evictions Act 2021 (HB 18 / SB 154)"
+        }
         RtcJurisdiction::ConnecticutStatewide => "CT Public Act 21-34 (2021)",
         RtcJurisdiction::OtherJurisdictionWithoutRtc => "None — jurisdiction lacks RTC program",
     }
@@ -331,7 +335,8 @@ mod tests {
         Input {
             jurisdiction: RtcJurisdiction::NewYorkCity,
             income_band: TenantIncomeBand::AtOrBelowJurisdictionalThreshold,
-            representation_status: RepresentationStatus::CourtAppointedRtcAttorneyEnrolledLegalServicesProvider,
+            representation_status:
+                RepresentationStatus::CourtAppointedRtcAttorneyEnrolledLegalServicesProvider,
             proceeding_type: EvictionProceedingType::Nonpayment,
             court_provided_rtc_notice_to_tenant: true,
             tenant_waived_after_advisement: false,
@@ -341,7 +346,10 @@ mod tests {
     #[test]
     fn nyc_eligible_tenant_with_appointed_counsel_compliant() {
         let result = check(&baseline_nyc_eligible());
-        assert_eq!(result.mode, TenantRightToCounselMode::CompliantAttorneyAppointedUnderRtc);
+        assert_eq!(
+            result.mode,
+            TenantRightToCounselMode::CompliantAttorneyAppointedUnderRtc
+        );
         assert_eq!(result.jurisdictional_threshold_basis_points, 20_000);
     }
 
@@ -352,7 +360,10 @@ mod tests {
             ..baseline_nyc_eligible()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantRightToCounselMode::ViolationCourtFailedToAppointEligibleTenant);
+        assert_eq!(
+            result.mode,
+            TenantRightToCounselMode::ViolationCourtFailedToAppointEligibleTenant
+        );
     }
 
     #[test]
@@ -363,7 +374,10 @@ mod tests {
             ..baseline_nyc_eligible()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantRightToCounselMode::CompliantTenantWaivedRepresentationAfterAdvisement);
+        assert_eq!(
+            result.mode,
+            TenantRightToCounselMode::CompliantTenantWaivedRepresentationAfterAdvisement
+        );
     }
 
     #[test]
@@ -374,7 +388,10 @@ mod tests {
             ..baseline_nyc_eligible()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantRightToCounselMode::CompliantTenantAboveThresholdSelfRepresentedOrPrivateCounsel);
+        assert_eq!(
+            result.mode,
+            TenantRightToCounselMode::CompliantTenantAboveThresholdSelfRepresentedOrPrivateCounsel
+        );
     }
 
     #[test]
@@ -382,13 +399,17 @@ mod tests {
         let input = Input {
             jurisdiction: RtcJurisdiction::SanFranciscoPropF,
             income_band: TenantIncomeBand::AboveAllRtcThresholds,
-            representation_status: RepresentationStatus::CourtAppointedRtcAttorneyEnrolledLegalServicesProvider,
+            representation_status:
+                RepresentationStatus::CourtAppointedRtcAttorneyEnrolledLegalServicesProvider,
             proceeding_type: EvictionProceedingType::HoldoverNoCause,
             court_provided_rtc_notice_to_tenant: true,
             tenant_waived_after_advisement: false,
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantRightToCounselMode::CompliantSanFranciscoUniversalRtcNoIncomeTest);
+        assert_eq!(
+            result.mode,
+            TenantRightToCounselMode::CompliantSanFranciscoUniversalRtcNoIncomeTest
+        );
         assert_eq!(result.jurisdictional_threshold_basis_points, 0);
     }
 
@@ -403,7 +424,10 @@ mod tests {
             tenant_waived_after_advisement: false,
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantRightToCounselMode::ViolationCourtFailedToNotifyTenantOfRtcRight);
+        assert_eq!(
+            result.mode,
+            TenantRightToCounselMode::ViolationCourtFailedToNotifyTenantOfRtcRight
+        );
     }
 
     #[test]
@@ -411,13 +435,17 @@ mod tests {
         let input = Input {
             jurisdiction: RtcJurisdiction::WashingtonStatewide,
             income_band: TenantIncomeBand::ReceivingPublicAssistanceCategoricallyIndigent,
-            representation_status: RepresentationStatus::CourtAppointedRtcAttorneyEnrolledLegalServicesProvider,
+            representation_status:
+                RepresentationStatus::CourtAppointedRtcAttorneyEnrolledLegalServicesProvider,
             proceeding_type: EvictionProceedingType::Nonpayment,
             court_provided_rtc_notice_to_tenant: true,
             tenant_waived_after_advisement: false,
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantRightToCounselMode::CompliantAttorneyAppointedUnderRtc);
+        assert_eq!(
+            result.mode,
+            TenantRightToCounselMode::CompliantAttorneyAppointedUnderRtc
+        );
         assert!(result.statutory_basis.contains("RCW 59.18.640"));
     }
 
@@ -426,13 +454,17 @@ mod tests {
         let input = Input {
             jurisdiction: RtcJurisdiction::WashingtonStatewide,
             income_band: TenantIncomeBand::AtOrBelowJurisdictionalThreshold,
-            representation_status: RepresentationStatus::TenantRequestedAttorneyButCourtFailedToAppoint,
+            representation_status:
+                RepresentationStatus::TenantRequestedAttorneyButCourtFailedToAppoint,
             proceeding_type: EvictionProceedingType::HoldoverNoCause,
             court_provided_rtc_notice_to_tenant: true,
             tenant_waived_after_advisement: false,
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantRightToCounselMode::ViolationCourtFailedToAppointEligibleTenant);
+        assert_eq!(
+            result.mode,
+            TenantRightToCounselMode::ViolationCourtFailedToAppointEligibleTenant
+        );
     }
 
     #[test]
@@ -440,7 +472,8 @@ mod tests {
         let input = Input {
             jurisdiction: RtcJurisdiction::Cleveland,
             income_band: TenantIncomeBand::AtOrBelowJurisdictionalThreshold,
-            representation_status: RepresentationStatus::CourtAppointedRtcAttorneyEnrolledLegalServicesProvider,
+            representation_status:
+                RepresentationStatus::CourtAppointedRtcAttorneyEnrolledLegalServicesProvider,
             proceeding_type: EvictionProceedingType::Nonpayment,
             court_provided_rtc_notice_to_tenant: true,
             tenant_waived_after_advisement: false,
@@ -454,7 +487,8 @@ mod tests {
         let input = Input {
             jurisdiction: RtcJurisdiction::MarylandStatewide,
             income_band: TenantIncomeBand::AtOrBelowJurisdictionalThreshold,
-            representation_status: RepresentationStatus::CourtAppointedRtcAttorneyEnrolledLegalServicesProvider,
+            representation_status:
+                RepresentationStatus::CourtAppointedRtcAttorneyEnrolledLegalServicesProvider,
             proceeding_type: EvictionProceedingType::Nonpayment,
             court_provided_rtc_notice_to_tenant: true,
             tenant_waived_after_advisement: false,
@@ -468,7 +502,8 @@ mod tests {
         let input = Input {
             jurisdiction: RtcJurisdiction::ConnecticutStatewide,
             income_band: TenantIncomeBand::AtOrBelowJurisdictionalThreshold,
-            representation_status: RepresentationStatus::CourtAppointedRtcAttorneyEnrolledLegalServicesProvider,
+            representation_status:
+                RepresentationStatus::CourtAppointedRtcAttorneyEnrolledLegalServicesProvider,
             proceeding_type: EvictionProceedingType::Nonpayment,
             court_provided_rtc_notice_to_tenant: true,
             tenant_waived_after_advisement: false,
@@ -488,7 +523,10 @@ mod tests {
             tenant_waived_after_advisement: false,
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantRightToCounselMode::NotApplicableJurisdictionLacksRtc);
+        assert_eq!(
+            result.mode,
+            TenantRightToCounselMode::NotApplicableJurisdictionLacksRtc
+        );
     }
 
     #[test]
@@ -498,17 +536,24 @@ mod tests {
             ..baseline_nyc_eligible()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantRightToCounselMode::ViolationLandlordObstructedTenantAccessToCounsel);
+        assert_eq!(
+            result.mode,
+            TenantRightToCounselMode::ViolationLandlordObstructedTenantAccessToCounsel
+        );
     }
 
     #[test]
     fn court_denied_continuance_for_attorney_appointment_violation() {
         let input = Input {
-            representation_status: RepresentationStatus::CourtDeniedContinuanceForAttorneyAppointment,
+            representation_status:
+                RepresentationStatus::CourtDeniedContinuanceForAttorneyAppointment,
             ..baseline_nyc_eligible()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantRightToCounselMode::ViolationCourtDeniedContinuanceForAttorneyAppointment);
+        assert_eq!(
+            result.mode,
+            TenantRightToCounselMode::ViolationCourtDeniedContinuanceForAttorneyAppointment
+        );
     }
 
     #[test]
@@ -519,7 +564,10 @@ mod tests {
             ..baseline_nyc_eligible()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantRightToCounselMode::ViolationCourtFailedToNotifyTenantOfRtcRight);
+        assert_eq!(
+            result.mode,
+            TenantRightToCounselMode::ViolationCourtFailedToNotifyTenantOfRtcRight
+        );
     }
 
     #[test]
@@ -562,6 +610,9 @@ mod tests {
             ..baseline_nyc_eligible()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantRightToCounselMode::CompliantAttorneyAppointedUnderRtc);
+        assert_eq!(
+            result.mode,
+            TenantRightToCounselMode::CompliantAttorneyAppointedUnderRtc
+        );
     }
 }

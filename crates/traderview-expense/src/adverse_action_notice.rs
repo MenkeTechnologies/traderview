@@ -126,11 +126,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // FederalFcraOnly regime — all remaining states + DC.
     let federal_only = [
-        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "FL", "GA",
-        "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
-        "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
-        "NM", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD",
-        "TN", "TX", "UT", "VT", "VA", "WV", "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA",
+        "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+        "NM", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA",
+        "WV", "WI", "WY",
     ];
     for code in federal_only {
         m.insert(
@@ -216,9 +215,7 @@ pub fn check(input: &AdverseActionInput) -> AdverseActionResult {
         if rule.state_requires_but_for_reason && !input.notice_includes_but_for_analysis {
             missing.push("state-required but-for analysis".to_string());
         }
-        if rule.state_requires_formatting_standards
-            && !input.notice_meets_formatting_standards
-        {
+        if rule.state_requires_formatting_standards && !input.notice_meets_formatting_standards {
             missing.push("state-required formatting standards".to_string());
         }
     }
@@ -231,8 +228,7 @@ pub fn check(input: &AdverseActionInput) -> AdverseActionResult {
             && input.notice_includes_dispute_right);
     let state_satisfied = !fcra_required
         || ((!rule.state_requires_specific_reason || input.notice_states_specific_reason)
-            && (!rule.state_requires_but_for_reason
-                || input.notice_includes_but_for_analysis)
+            && (!rule.state_requires_but_for_reason || input.notice_includes_but_for_analysis)
             && (!rule.state_requires_formatting_standards
                 || input.notice_meets_formatting_standards));
 
@@ -323,7 +319,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.federal_fcra_elements_satisfied);
         assert!(!r.overall_compliant);
-        assert!(r.missing_required_elements.iter().any(|s| s.contains("CRA name/address/phone")));
+        assert!(r
+            .missing_required_elements
+            .iter()
+            .any(|s| s.contains("CRA name/address/phone")));
     }
 
     #[test]
@@ -332,7 +331,10 @@ mod tests {
         i.notice_includes_free_copy_60_day_right = false;
         let r = check(&i);
         assert!(!r.overall_compliant);
-        assert!(r.missing_required_elements.iter().any(|s| s.contains("60-day")));
+        assert!(r
+            .missing_required_elements
+            .iter()
+            .any(|s| s.contains("60-day")));
     }
 
     // California state-adds regime.
@@ -347,9 +349,18 @@ mod tests {
         assert!(!r.state_elements_satisfied);
         assert!(!r.overall_compliant);
         // 3 state-specific elements should be missing.
-        assert!(r.missing_required_elements.iter().any(|s| s.contains("specific reason")));
-        assert!(r.missing_required_elements.iter().any(|s| s.contains("but-for")));
-        assert!(r.missing_required_elements.iter().any(|s| s.contains("formatting")));
+        assert!(r
+            .missing_required_elements
+            .iter()
+            .any(|s| s.contains("specific reason")));
+        assert!(r
+            .missing_required_elements
+            .iter()
+            .any(|s| s.contains("but-for")));
+        assert!(r
+            .missing_required_elements
+            .iter()
+            .any(|s| s.contains("formatting")));
     }
 
     #[test]
@@ -375,7 +386,10 @@ mod tests {
         i.notice_includes_but_for_analysis = false;
         let r = check(&i);
         assert!(!r.state_elements_satisfied);
-        assert!(r.missing_required_elements.iter().any(|s| s.contains("but-for")));
+        assert!(r
+            .missing_required_elements
+            .iter()
+            .any(|s| s.contains("but-for")));
     }
 
     #[test]
@@ -403,7 +417,10 @@ mod tests {
         i2.notice_states_specific_reason = false;
         let r2 = check(&i2);
         assert!(!r2.state_elements_satisfied);
-        assert!(r2.missing_required_elements.iter().any(|s| s.contains("specific reason")));
+        assert!(r2
+            .missing_required_elements
+            .iter()
+            .any(|s| s.contains("specific reason")));
     }
 
     // No adverse action / no consumer report cases.
@@ -433,7 +450,12 @@ mod tests {
     #[test]
     fn coverage_is_all_50_states_plus_dc() {
         let codes: Vec<&'static str> = RULES.keys().copied().collect();
-        assert_eq!(codes.len(), 51, "expected 50 states + DC, got {}", codes.len());
+        assert_eq!(
+            codes.len(),
+            51,
+            "expected 50 states + DC, got {}",
+            codes.len()
+        );
     }
 
     #[test]
@@ -451,7 +473,10 @@ mod tests {
                 count += 1;
             }
         }
-        assert_eq!(count, 3, "expected CA + WA + NY only on StateAddsRequirements");
+        assert_eq!(
+            count, 3,
+            "expected CA + WA + NY only on StateAddsRequirements"
+        );
     }
 
     #[test]

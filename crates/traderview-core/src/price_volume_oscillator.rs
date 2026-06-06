@@ -21,7 +21,10 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub close: f64, pub volume: f64 }
+pub struct Bar {
+    pub close: f64,
+    pub volume: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PvoReport {
@@ -48,10 +51,18 @@ pub fn compute(
         slow_period,
         signal_period,
     };
-    if fast_period < 2 || slow_period < 2 || signal_period < 2
+    if fast_period < 2
+        || slow_period < 2
+        || signal_period < 2
         || fast_period >= slow_period
-        || n < slow_period + signal_period { return report; }
-    if bars.iter().any(|b| !b.close.is_finite() || !b.volume.is_finite() || b.volume < 0.0) {
+        || n < slow_period + signal_period
+    {
+        return report;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.close.is_finite() || !b.volume.is_finite() || b.volume < 0.0)
+    {
         return report;
     }
     let pv: Vec<f64> = bars.iter().map(|b| b.close * b.volume).collect();
@@ -76,7 +87,9 @@ pub fn compute(
 fn ema(series: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     let k = 2.0 / (p_f + 1.0);
     let seed: f64 = series[..period].iter().sum::<f64>() / p_f;
@@ -92,18 +105,31 @@ fn ema(series: &[f64], period: usize) -> Vec<Option<f64>> {
 fn ema_opt(series: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 { return out; }
+    if period == 0 {
+        return out;
+    }
     let mut seed_end = None;
     let mut seed_sum = 0.0_f64;
     let mut count = 0_usize;
     for (i, v) in series.iter().enumerate() {
         match v {
-            Some(x) => { seed_sum += x; count += 1; }
-            None => { seed_sum = 0.0; count = 0; }
+            Some(x) => {
+                seed_sum += x;
+                count += 1;
+            }
+            None => {
+                seed_sum = 0.0;
+                count = 0;
+            }
         }
-        if count == period { seed_end = Some(i); break; }
+        if count == period {
+            seed_end = Some(i);
+            break;
+        }
     }
-    let Some(end) = seed_end else { return out; };
+    let Some(end) = seed_end else {
+        return out;
+    };
     let p_f = period as f64;
     let k = 2.0 / (p_f + 1.0);
     let mut cur = seed_sum / p_f;
@@ -123,14 +149,22 @@ fn ema_opt(series: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
 mod tests {
     use super::*;
 
-    fn b(c: f64, v: f64) -> Bar { Bar { close: c, volume: v } }
+    fn b(c: f64, v: f64) -> Bar {
+        Bar {
+            close: c,
+            volume: v,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {
         let bars = vec![b(100.0, 1000.0); 50];
         assert!(compute(&bars, 1, 26, 9).pvo.iter().all(|x| x.is_none()));
         assert!(compute(&bars, 26, 12, 9).pvo.iter().all(|x| x.is_none()));
-        assert!(compute(&bars[..5], 12, 26, 9).pvo.iter().all(|x| x.is_none()));
+        assert!(compute(&bars[..5], 12, 26, 9)
+            .pvo
+            .iter()
+            .all(|x| x.is_none()));
     }
 
     #[test]
@@ -144,7 +178,9 @@ mod tests {
     fn constant_pv_yields_zero_pvo() {
         let bars = vec![b(100.0, 1000.0); 80];
         let r = compute(&bars, 12, 26, 9);
-        for v in r.pvo.iter().flatten() { assert!(v.abs() < 1e-9); }
+        for v in r.pvo.iter().flatten() {
+            assert!(v.abs() < 1e-9);
+        }
     }
 
     #[test]

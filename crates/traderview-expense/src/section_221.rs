@@ -151,12 +151,7 @@ fn phaseout_range(year: u32, fs: FilingStatus) -> (i64, i64) {
 mod tests {
     use super::*;
 
-    fn input(
-        year: u32,
-        fs: FilingStatus,
-        magi: i64,
-        interest: i64,
-    ) -> Section221Input {
+    fn input(year: u32, fs: FilingStatus, magi: i64, interest: i64) -> Section221Input {
         Section221Input {
             year,
             filing_status: fs,
@@ -339,12 +334,7 @@ mod tests {
 
     #[test]
     fn one_dollar_above_phaseout_low_starts_phaseout() {
-        let r = compute(&input(
-            2026,
-            FilingStatus::Single,
-            85_000_00 + 1,
-            3_000_00,
-        ));
+        let r = compute(&input(2026, FilingStatus::Single, 85_000_00 + 1, 3_000_00));
         assert!(r.in_phaseout_range);
         assert!(r.allowed_deduction_cents < 2_500_00);
     }
@@ -352,12 +342,7 @@ mod tests {
     #[test]
     fn one_dollar_above_phaseout_high_no_deduction() {
         // 100K+1 → above high end → zero deduction.
-        let r = compute(&input(
-            2026,
-            FilingStatus::Single,
-            100_000_00 + 1,
-            3_000_00,
-        ));
+        let r = compute(&input(2026, FilingStatus::Single, 100_000_00 + 1, 3_000_00));
         assert!(r.in_phaseout_range);
         assert_eq!(r.allowed_deduction_cents, 0);
     }

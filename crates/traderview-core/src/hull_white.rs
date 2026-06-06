@@ -29,9 +29,9 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct HullWhiteParams {
-    pub mean_reversion: f64,    // a (typical 0.05–0.15)
-    pub sigma: f64,             // σ (volatility of short rate)
-    pub r_t: f64,               // current short rate at time t
+    pub mean_reversion: f64, // a (typical 0.05–0.15)
+    pub sigma: f64,          // σ (volatility of short rate)
+    pub r_t: f64,            // current short rate at time t
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -52,11 +52,15 @@ pub fn zero_coupon_bond_flat_forward(
     tau: f64,
     flat_forward_rate: f64,
 ) -> Option<HullWhiteZcb> {
-    if !params.mean_reversion.is_finite() || params.mean_reversion <= 0.0
-        || !params.sigma.is_finite() || params.sigma < 0.0
+    if !params.mean_reversion.is_finite()
+        || params.mean_reversion <= 0.0
+        || !params.sigma.is_finite()
+        || params.sigma < 0.0
         || !params.r_t.is_finite()
-        || !t.is_finite() || t < 0.0
-        || !tau.is_finite() || tau <= 0.0
+        || !t.is_finite()
+        || t < 0.0
+        || !tau.is_finite()
+        || tau <= 0.0
         || !flat_forward_rate.is_finite()
     {
         return None;
@@ -75,11 +79,20 @@ pub fn zero_coupon_bond_flat_forward(
     let convexity = sigma * sigma / (4.0 * a) * (1.0 - (-2.0 * a * t).exp()) * b * b;
     let ln_a = log_p_maturity - log_p_now + b * f_at_t - convexity;
     let a_factor = ln_a.exp();
-    if !a_factor.is_finite() || a_factor <= 0.0 { return None; }
+    if !a_factor.is_finite() || a_factor <= 0.0 {
+        return None;
+    }
     let price = a_factor * (-b * r).exp();
-    if !price.is_finite() || price <= 0.0 { return None; }
+    if !price.is_finite() || price <= 0.0 {
+        return None;
+    }
     let zero_rate = -price.ln() / tau;
-    Some(HullWhiteZcb { bond_price: price, zero_rate, a_factor, b_factor: b })
+    Some(HullWhiteZcb {
+        bond_price: price,
+        zero_rate,
+        a_factor,
+        b_factor: b,
+    })
 }
 
 #[cfg(test)]
@@ -87,7 +100,11 @@ mod tests {
     use super::*;
 
     fn p(a: f64, sigma: f64, r: f64) -> HullWhiteParams {
-        HullWhiteParams { mean_reversion: a, sigma, r_t: r }
+        HullWhiteParams {
+            mean_reversion: a,
+            sigma,
+            r_t: r,
+        }
     }
 
     #[test]
@@ -108,8 +125,12 @@ mod tests {
         let f = 0.04;
         let r = zero_coupon_bond_flat_forward(&p(0.1, 0.01, f), 0.0, 5.0, f).unwrap();
         let market = (-f * 5.0_f64).exp();
-        assert!((r.bond_price - market).abs() < 1e-9,
-            "HW at t=0 should match market: model={} market={}", r.bond_price, market);
+        assert!(
+            (r.bond_price - market).abs() < 1e-9,
+            "HW at t=0 should match market: model={} market={}",
+            r.bond_price,
+            market
+        );
     }
 
     #[test]
@@ -121,8 +142,12 @@ mod tests {
 
     #[test]
     fn b_factor_increases_with_tenor() {
-        let b1 = zero_coupon_bond_flat_forward(&p(0.1, 0.01, 0.03), 0.0, 1.0, 0.03).unwrap().b_factor;
-        let b5 = zero_coupon_bond_flat_forward(&p(0.1, 0.01, 0.03), 0.0, 5.0, 0.03).unwrap().b_factor;
+        let b1 = zero_coupon_bond_flat_forward(&p(0.1, 0.01, 0.03), 0.0, 1.0, 0.03)
+            .unwrap()
+            .b_factor;
+        let b5 = zero_coupon_bond_flat_forward(&p(0.1, 0.01, 0.03), 0.0, 5.0, 0.03)
+            .unwrap()
+            .b_factor;
         assert!(b5 > b1);
     }
 

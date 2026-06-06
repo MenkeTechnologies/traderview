@@ -125,10 +125,8 @@ pub fn check(input: &Input) -> Output {
         "NYC DOB 2025 Filing Extension Service Notice (March 31, 2026 deadline)".to_string(),
     ];
 
-    let assigned_filing_year = compute_assigned_filing_year(
-        input.building_tax_block_last_digit,
-        input.current_year,
-    );
+    let assigned_filing_year =
+        compute_assigned_filing_year(input.building_tax_block_last_digit, input.current_year);
     let next_filing_year = assigned_filing_year + LL87_REPORTING_CYCLE_YEARS;
 
     if input.gross_floor_area_sqft <= LL87_BUILDING_SIZE_THRESHOLD_SQFT {
@@ -218,11 +216,10 @@ pub fn check(input: &Input) -> Output {
         };
     }
 
-    let penalty = LL87_FIRST_YEAR_CIVIL_PENALTY_CENTS
-        .saturating_add(
-            LL87_SUBSEQUENT_YEAR_CIVIL_PENALTY_CENTS
-                .saturating_mul(input.years_of_continuing_non_submittal.saturating_sub(1) as u64),
-        );
+    let penalty = LL87_FIRST_YEAR_CIVIL_PENALTY_CENTS.saturating_add(
+        LL87_SUBSEQUENT_YEAR_CIVIL_PENALTY_CENTS
+            .saturating_mul(input.years_of_continuing_non_submittal.saturating_sub(1) as u64),
+    );
 
     if input.years_of_continuing_non_submittal > 1 {
         notes.push(format!(
@@ -289,7 +286,10 @@ mod tests {
     #[test]
     fn fully_compliant_baseline() {
         let out = check(&base_compliant());
-        assert_eq!(out.severity, Severity::CompliantEerFiledOnTimeForAssignedYear);
+        assert_eq!(
+            out.severity,
+            Severity::CompliantEerFiledOnTimeForAssignedYear
+        );
         assert!(out.compliant);
         assert_eq!(out.total_penalty_cents, 0);
     }
@@ -315,7 +315,10 @@ mod tests {
         let mut i = base_compliant();
         i.gross_floor_area_sqft = 50_001;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::CompliantEerFiledOnTimeForAssignedYear);
+        assert_eq!(
+            out.severity,
+            Severity::CompliantEerFiledOnTimeForAssignedYear
+        );
     }
 
     #[test]
@@ -420,7 +423,10 @@ mod tests {
     #[test]
     fn citations_pin_ll87_admin_code_28_308() {
         let out = check(&base_compliant());
-        assert!(out.citations.iter().any(|c| c.contains("Local Law 87 of 2009")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("Local Law 87 of 2009")));
         assert!(out.citations.iter().any(|c| c.contains("§ 28-308")));
         assert!(out.citations.iter().any(|c| c.contains("§ 28-308.7")));
     }
@@ -429,14 +435,20 @@ mod tests {
     fn citations_pin_ashrae_level_ii_ggbp_eer2() {
         let out = check(&base_compliant());
         assert!(out.citations.iter().any(|c| c.contains("ASHRAE")));
-        assert!(out.citations.iter().any(|c| c.contains("Greener, Greater Buildings Plan")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("Greener, Greater Buildings Plan")));
         assert!(out.citations.iter().any(|c| c.contains("EER2")));
     }
 
     #[test]
     fn citations_pin_2025_extension_march_31_2026() {
         let out = check(&base_compliant());
-        assert!(out.citations.iter().any(|c| c.contains("2025 Filing Extension")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("2025 Filing Extension")));
         assert!(out.citations.iter().any(|c| c.contains("March 31, 2026")));
     }
 

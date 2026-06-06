@@ -42,18 +42,15 @@ pub struct NssFitReport {
     pub n_points: usize,
 }
 
-pub fn fit(
-    points: &[CurvePoint],
-    tau_1: f64,
-    tau_2: f64,
-) -> Option<NssFitReport> {
+pub fn fit(points: &[CurvePoint], tau_1: f64, tau_2: f64) -> Option<NssFitReport> {
     let n = points.len();
-    if n < 6 || !tau_1.is_finite() || tau_1 <= 0.0
-        || !tau_2.is_finite() || tau_2 <= tau_1 {
+    if n < 6 || !tau_1.is_finite() || tau_1 <= 0.0 || !tau_2.is_finite() || tau_2 <= tau_1 {
         return None;
     }
-    if points.iter().any(|p| !p.time_years.is_finite() || p.time_years <= 0.0
-        || !p.yield_decimal.is_finite()) {
+    if points
+        .iter()
+        .any(|p| !p.time_years.is_finite() || p.time_years <= 0.0 || !p.yield_decimal.is_finite())
+    {
         return None;
     }
     // Design matrix columns:
@@ -83,7 +80,9 @@ pub fn fit(
         sum_y_sq += y * y;
         for j in 0..p {
             xty[j] += row[j] * y;
-            for k in 0..p { xtx[j][k] += row[j] * row[k]; }
+            for k in 0..p {
+                xtx[j][k] += row[j] * row[k];
+            }
         }
     }
     let coef = solve_linear(&xtx, &xty)?;
@@ -104,7 +103,9 @@ pub fn fit(
         ssr += (pt.yield_decimal - yhat).powi(2);
     }
     let dof = (n - p) as f64;
-    if dof <= 0.0 { return None; }
+    if dof <= 0.0 {
+        return None;
+    }
     let r_sq = if tss > 1e-18 { 1.0 - ssr / tss } else { 0.0 };
     let sigma = (ssr / dof).sqrt();
     Some(NssFitReport {
@@ -122,27 +123,43 @@ pub fn fit(
 
 fn solve_linear(m: &[Vec<f64>], y: &[f64]) -> Option<Vec<f64>> {
     let n = m.len();
-    if n == 0 || y.len() != n { return None; }
+    if n == 0 || y.len() != n {
+        return None;
+    }
     let mut aug = vec![vec![0.0_f64; n + 1]; n];
     for (i, row) in aug.iter_mut().enumerate() {
-        for (j, slot) in row.iter_mut().enumerate().take(n) { *slot = m[i][j]; }
+        for (j, slot) in row.iter_mut().enumerate().take(n) {
+            *slot = m[i][j];
+        }
         row[n] = y[i];
     }
     for i in 0..n {
         let mut pivot = i;
         for r in (i + 1)..n {
-            if aug[r][i].abs() > aug[pivot][i].abs() { pivot = r; }
+            if aug[r][i].abs() > aug[pivot][i].abs() {
+                pivot = r;
+            }
         }
-        if aug[pivot][i].abs() < 1e-18 { return None; }
+        if aug[pivot][i].abs() < 1e-18 {
+            return None;
+        }
         aug.swap(i, pivot);
         let div = aug[i][i];
-        for v in aug[i].iter_mut() { *v /= div; }
+        for v in aug[i].iter_mut() {
+            *v /= div;
+        }
         for r in 0..n {
-            if r == i { continue; }
+            if r == i {
+                continue;
+            }
             let f = aug[r][i];
-            if f == 0.0 { continue; }
+            if f == 0.0 {
+                continue;
+            }
             let pivot_row = aug[i].clone();
-            for (j, v) in aug[r].iter_mut().enumerate() { *v -= f * pivot_row[j]; }
+            for (j, v) in aug[r].iter_mut().enumerate() {
+                *v -= f * pivot_row[j];
+            }
         }
     }
     Some((0..n).map(|i| aug[i][n]).collect())
@@ -152,7 +169,12 @@ fn solve_linear(m: &[Vec<f64>], y: &[f64]) -> Option<Vec<f64>> {
 mod tests {
     use super::*;
 
-    fn p(t: f64, y: f64) -> CurvePoint { CurvePoint { time_years: t, yield_decimal: y } }
+    fn p(t: f64, y: f64) -> CurvePoint {
+        CurvePoint {
+            time_years: t,
+            yield_decimal: y,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_none() {
@@ -166,8 +188,12 @@ mod tests {
     #[test]
     fn nan_returns_none() {
         let bad = vec![
-            p(0.5, 0.04), p(1.0, 0.045), p(2.0, 0.05),
-            p(3.0, f64::NAN), p(5.0, 0.058), p(10.0, 0.06),
+            p(0.5, 0.04),
+            p(1.0, 0.045),
+            p(2.0, 0.05),
+            p(3.0, f64::NAN),
+            p(5.0, 0.058),
+            p(10.0, 0.06),
         ];
         assert!(fit(&bad, 1.0, 5.0).is_none());
     }
@@ -181,8 +207,12 @@ mod tests {
     #[test]
     fn nonpositive_time_returns_none() {
         let pts = vec![
-            p(0.0, 0.04), p(1.0, 0.045), p(2.0, 0.05),
-            p(3.0, 0.055), p(5.0, 0.058), p(10.0, 0.06),
+            p(0.0, 0.04),
+            p(1.0, 0.045),
+            p(2.0, 0.05),
+            p(3.0, 0.055),
+            p(5.0, 0.058),
+            p(10.0, 0.06),
         ];
         assert!(fit(&pts, 1.0, 5.0).is_none());
     }
@@ -190,7 +220,9 @@ mod tests {
     #[test]
     fn flat_yield_curve_yields_beta_0_only() {
         let pts: Vec<_> = vec![0.5, 1.0, 2.0, 3.0, 5.0, 7.0, 10.0, 20.0, 30.0]
-            .into_iter().map(|t| p(t, 0.04)).collect();
+            .into_iter()
+            .map(|t| p(t, 0.04))
+            .collect();
         let r = fit(&pts, 1.0, 5.0).unwrap();
         assert!((r.beta_0 - 0.04).abs() < 0.005);
         // Other betas should be ~0 (or small).
@@ -204,10 +236,19 @@ mod tests {
         // Yields ~3% short, ~6% long → β₁ should be negative (since
         // β₀ = long-run level and β₁ = short - long).
         let pts: Vec<_> = vec![
-            (0.25, 0.030), (0.5, 0.032), (1.0, 0.035), (2.0, 0.040),
-            (3.0, 0.045), (5.0, 0.050), (10.0, 0.055), (20.0, 0.060),
+            (0.25, 0.030),
+            (0.5, 0.032),
+            (1.0, 0.035),
+            (2.0, 0.040),
+            (3.0, 0.045),
+            (5.0, 0.050),
+            (10.0, 0.055),
+            (20.0, 0.060),
             (30.0, 0.062),
-        ].into_iter().map(|(t, y)| p(t, y)).collect();
+        ]
+        .into_iter()
+        .map(|(t, y)| p(t, y))
+        .collect();
         let r = fit(&pts, 1.0, 5.0).unwrap();
         assert!(r.beta_1 < 0.0);
     }
@@ -215,16 +256,27 @@ mod tests {
     #[test]
     fn r_squared_high_on_smooth_curve() {
         let pts: Vec<_> = vec![
-            (0.5, 0.030), (1.0, 0.033), (2.0, 0.038), (3.0, 0.042),
-            (5.0, 0.048), (10.0, 0.055), (20.0, 0.058), (30.0, 0.060),
-        ].into_iter().map(|(t, y)| p(t, y)).collect();
+            (0.5, 0.030),
+            (1.0, 0.033),
+            (2.0, 0.038),
+            (3.0, 0.042),
+            (5.0, 0.048),
+            (10.0, 0.055),
+            (20.0, 0.058),
+            (30.0, 0.060),
+        ]
+        .into_iter()
+        .map(|(t, y)| p(t, y))
+        .collect();
         let r = fit(&pts, 1.0, 5.0).unwrap();
         assert!(r.r_squared > 0.95);
     }
 
     #[test]
     fn n_points_reported() {
-        let pts: Vec<_> = (1..=10).map(|i| p(i as f64, 0.04 + i as f64 * 0.001)).collect();
+        let pts: Vec<_> = (1..=10)
+            .map(|i| p(i as f64, 0.04 + i as f64 * 0.001))
+            .collect();
         let r = fit(&pts, 1.0, 5.0).unwrap();
         assert_eq!(r.n_points, 10);
     }

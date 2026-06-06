@@ -61,7 +61,8 @@ pub fn compute(bars: &[BreadthBar]) -> McClellanReport {
     // pathological JSON inputs (e.g. advancing_issues=i64::MIN paired with
     // a positive declining_issues panics in debug, wraps in release).
     // Real exchange data is tiny so this is purely a hardening fix.
-    let net: Vec<f64> = bars.iter()
+    let net: Vec<f64> = bars
+        .iter()
         .map(|b| b.advancing_issues as f64 - b.declining_issues as f64)
         .collect();
     // Seed both EMAs with the first net-advances value.
@@ -75,7 +76,7 @@ pub fn compute(bars: &[BreadthBar]) -> McClellanReport {
     sum_idx.push(Some(0.0));
     for &v in net.iter().skip(1) {
         ema_short = v * k_short + ema_short * (1.0 - k_short);
-        ema_long  = v * k_long  + ema_long  * (1.0 - k_long);
+        ema_long = v * k_long + ema_long * (1.0 - k_long);
         let o = ema_short - ema_long;
         running += o;
         osc.push(Some(o));
@@ -84,20 +85,31 @@ pub fn compute(bars: &[BreadthBar]) -> McClellanReport {
     let latest_osc = osc.last().copied().flatten();
     let latest_summation = sum_idx.last().copied().flatten();
     let regime = match latest_osc {
-        Some(v) if v >  100.0 => McClellanRegime::OverboughtBreadth,
-        Some(v) if v >    0.0 => McClellanRegime::Bullish,
+        Some(v) if v > 100.0 => McClellanRegime::OverboughtBreadth,
+        Some(v) if v > 0.0 => McClellanRegime::Bullish,
         Some(v) if v < -100.0 => McClellanRegime::OversoldBreadth,
-        Some(v) if v <    0.0 => McClellanRegime::Bearish,
-        _                     => McClellanRegime::Neutral,
+        Some(v) if v < 0.0 => McClellanRegime::Bearish,
+        _ => McClellanRegime::Neutral,
     };
-    McClellanReport { oscillator: osc, summation_index: sum_idx, latest_osc, latest_summation, regime }
+    McClellanReport {
+        oscillator: osc,
+        summation_index: sum_idx,
+        latest_osc,
+        latest_summation,
+        regime,
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn bar(ai: i64, di: i64) -> BreadthBar { BreadthBar { advancing_issues: ai, declining_issues: di } }
+    fn bar(ai: i64, di: i64) -> BreadthBar {
+        BreadthBar {
+            advancing_issues: ai,
+            declining_issues: di,
+        }
+    }
 
     #[test]
     fn empty_returns_default() {
@@ -118,13 +130,19 @@ mod tests {
         // Start from balanced (seed 0) then jump to strongly positive breadth.
         // Short-19 EMA rises faster than long-39 EMA on the step, so the
         // oscillator is positive throughout the ramp.
-        let mut bars = vec![bar(1500, 1500); 5];          // seed near zero net
-        bars.extend(vec![bar(2000, 1000); 40]);            // sustained +1000 net
+        let mut bars = vec![bar(1500, 1500); 5]; // seed near zero net
+        bars.extend(vec![bar(2000, 1000); 40]); // sustained +1000 net
         let r = compute(&bars);
         let v = r.latest_osc.unwrap();
-        assert!(v > 0.0, "rising-breadth oscillator should be positive, got {v}");
+        assert!(
+            v > 0.0,
+            "rising-breadth oscillator should be positive, got {v}"
+        );
         assert!(r.latest_summation.unwrap() > 0.0);
-        assert!(matches!(r.regime, McClellanRegime::Bullish | McClellanRegime::OverboughtBreadth));
+        assert!(matches!(
+            r.regime,
+            McClellanRegime::Bullish | McClellanRegime::OverboughtBreadth
+        ));
     }
 
     #[test]
@@ -135,14 +153,20 @@ mod tests {
         let r = compute(&bars);
         let v = r.latest_osc.unwrap();
         assert!(v < 0.0, "post-flip oscillator should be negative, got {v}");
-        assert!(matches!(r.regime, McClellanRegime::Bearish | McClellanRegime::OversoldBreadth));
+        assert!(matches!(
+            r.regime,
+            McClellanRegime::Bearish | McClellanRegime::OversoldBreadth
+        ));
     }
 
     #[test]
     fn summation_index_is_cumulative() {
         let bars = vec![
-            bar(2000, 1000), bar(2000, 1000), bar(2000, 1000),
-            bar(1000, 2000), bar(1000, 2000),
+            bar(2000, 1000),
+            bar(2000, 1000),
+            bar(2000, 1000),
+            bar(1000, 2000),
+            bar(1000, 2000),
         ];
         let r = compute(&bars);
         // Manually verify summation = running sum of oscillator.
@@ -158,7 +182,7 @@ mod tests {
         // Force a strong positive impulse to push oscillator > 100.
         // 1-bar large net-advance starting from balanced seed.
         let mut bars = vec![bar(1500, 1500); 5]; // seed
-        bars.push(bar(10_000, 100));             // big up-spike
+        bars.push(bar(10_000, 100)); // big up-spike
         let r = compute(&bars);
         let v = r.latest_osc.unwrap();
         assert!(v > 100.0, "expected overbought breadth (>100), got {v}");

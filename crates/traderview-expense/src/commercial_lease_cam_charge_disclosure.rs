@@ -228,13 +228,13 @@ pub fn check(
 ) -> CommercialLeaseCamChargeDisclosureResult {
     let mut failure_reasons: Vec<String> = Vec::new();
 
-    let disclosure_compliant = input.annual_budget_delivered
-        && input.year_end_reconciliation_delivered;
+    let disclosure_compliant =
+        input.annual_budget_delivered && input.year_end_reconciliation_delivered;
 
     let reconciliation_timely = input.days_since_fye_for_reconciliation <= 180;
 
-    let gross_up_proper = !input.gross_up_provision_applied_floor_95
-        || input.building_occupancy_percent <= 95;
+    let gross_up_proper =
+        !input.gross_up_provision_applied_floor_95 || input.building_occupancy_percent <= 95;
 
     let capital_improvement_classification_proper = !input.capital_improvements_passed_as_operating;
 
@@ -246,7 +246,10 @@ pub fn check(
 
     let tenant_cam_owed_cents = match input.escalation_structure {
         CamEscalationStructure::FullPassThrough => {
-            input.current_year_total_cam_cents.saturating_mul(input.tenant_pro_rata_share_percent as u64) / 100
+            input
+                .current_year_total_cam_cents
+                .saturating_mul(input.tenant_pro_rata_share_percent as u64)
+                / 100
         }
         CamEscalationStructure::BaseYearEscalation => {
             input
@@ -395,8 +398,10 @@ mod tests {
         assert!(r.affiliated_party_expense_proper);
         assert!(r.leasing_costs_excluded_proper);
         assert!(r.tenant_audit_right_available);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("CAM disclosure FULLY COMPLIANT")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("CAM disclosure FULLY COMPLIANT")));
     }
 
     #[test]
@@ -427,9 +432,11 @@ mod tests {
         i.annual_budget_delivered = false;
         let r = check(&i);
         assert!(!r.disclosure_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("Annual CAM BUDGET not delivered")
-            && f.contains("Garrett v. Coast and Southern")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("Annual CAM BUDGET not delivered")
+                && f.contains("Garrett v. Coast and Southern")));
     }
 
     #[test]
@@ -438,8 +445,8 @@ mod tests {
         i.year_end_reconciliation_delivered = false;
         let r = check(&i);
         assert!(!r.disclosure_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("Year-end CAM RECONCILIATION not delivered")
+        assert!(r.failure_reasons.iter().any(|f| f
+            .contains("Year-end CAM RECONCILIATION not delivered")
             && f.contains("WAIVER")));
     }
 
@@ -449,9 +456,10 @@ mod tests {
         i.days_since_fye_for_reconciliation = 200;
         let r = check(&i);
         assert!(!r.reconciliation_timely);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("200 days after fiscal year-end")
-            && f.contains("180-day window")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("200 days after fiscal year-end") && f.contains("180-day window")));
     }
 
     #[test]
@@ -461,9 +469,10 @@ mod tests {
         i.building_occupancy_percent = 97;
         let r = check(&i);
         assert!(!r.gross_up_proper);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("GROSS-UP IMPROPER")
-            && f.contains("97%")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("GROSS-UP IMPROPER") && f.contains("97%")));
     }
 
     #[test]
@@ -490,10 +499,12 @@ mod tests {
         i.capital_improvements_passed_as_operating = true;
         let r = check(&i);
         assert!(!r.capital_improvement_classification_proper);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("CAPITAL IMPROVEMENT MISCLASSIFIED")
-            && f.contains("AMORTIZED")
-            && f.contains("10-15 years")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("CAPITAL IMPROVEMENT MISCLASSIFIED")
+                && f.contains("AMORTIZED")
+                && f.contains("10-15 years")));
     }
 
     #[test]
@@ -502,9 +513,11 @@ mod tests {
         i.above_market_affiliated_management_fee = true;
         let r = check(&i);
         assert!(!r.affiliated_party_expense_proper);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("ABOVE-MARKET AFFILIATED-PARTY")
-            && f.contains("ARMS-LENGTH market rate")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("ABOVE-MARKET AFFILIATED-PARTY")
+                && f.contains("ARMS-LENGTH market rate")));
     }
 
     #[test]
@@ -513,9 +526,11 @@ mod tests {
         i.leasing_costs_included_in_cam = true;
         let r = check(&i);
         assert!(!r.leasing_costs_excluded_proper);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("LEASING COSTS / BROKER COMMISSIONS")
-            && f.contains("standard BOMA exclusion")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("LEASING COSTS / BROKER COMMISSIONS")
+                && f.contains("standard BOMA exclusion")));
     }
 
     #[test]
@@ -524,10 +539,12 @@ mod tests {
         i.tenant_audit_right_in_lease = false;
         let r = check(&i);
         assert!(!r.tenant_audit_right_available);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("TENANT AUDIT RIGHT NOT IN LEASE")
-            && f.contains("BOMA Operating Expense Guide")
-            && f.contains("3-5% threshold")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("TENANT AUDIT RIGHT NOT IN LEASE")
+                && f.contains("BOMA Operating Expense Guide")
+                && f.contains("3-5% threshold")));
     }
 
     #[test]
@@ -535,9 +552,10 @@ mod tests {
         let mut i = compliant_full_pass_through();
         i.annual_cap_exceeded_without_explanation = true;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("ANNUAL CAM CAP EXCEEDED")
-            && f.contains("5%")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("ANNUAL CAM CAP EXCEEDED") && f.contains("5%")));
     }
 
     #[test]
@@ -558,10 +576,16 @@ mod tests {
     fn citation_pins_all_authorities() {
         let r = check(&compliant_full_pass_through());
         assert!(r.citation.contains("Cal. Civ. Code § 1938"));
-        assert!(r.citation.contains("Garrett v. Coast and Southern, 9 Cal. 4th 1 (1995)"));
-        assert!(r.citation.contains("BOMA International Operating Expense Guide (2024 edition)"));
+        assert!(r
+            .citation
+            .contains("Garrett v. Coast and Southern, 9 Cal. 4th 1 (1995)"));
+        assert!(r
+            .citation
+            .contains("BOMA International Operating Expense Guide (2024 edition)"));
         assert!(r.citation.contains("ANSI/BOMA Z65.1-2017"));
-        assert!(r.citation.contains("Restatement (Second) of Contracts § 200"));
+        assert!(r
+            .citation
+            .contains("Restatement (Second) of Contracts § 200"));
         assert!(r.citation.contains("N.Y. CPLR § 4519"));
         assert!(r.citation.contains("UCC Article 2A"));
     }
@@ -569,40 +593,45 @@ mod tests {
     #[test]
     fn note_pins_three_jurisdiction_framework() {
         let r = check(&compliant_full_pass_through());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Three-jurisdiction framework")
-            && n.contains("CALIFORNIA")
-            && n.contains("NEW YORK")
-            && n.contains("DEFAULT")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Three-jurisdiction framework")
+                && n.contains("CALIFORNIA")
+                && n.contains("NEW YORK")
+                && n.contains("DEFAULT")));
     }
 
     #[test]
     fn note_pins_thirteen_cam_categories() {
         let r = check(&compliant_full_pass_through());
-        assert!(r.notes.iter().any(|n|
-            n.contains("BOMA Operating Expense Guide categories")
-            && n.contains("(13 categories)")
-            && n.contains("utilities")
-            && n.contains("real estate taxes")
-            && n.contains("AMORTIZED")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("BOMA Operating Expense Guide categories")
+                && n.contains("(13 categories)")
+                && n.contains("utilities")
+                && n.contains("real estate taxes")
+                && n.contains("AMORTIZED")));
     }
 
     #[test]
     fn note_pins_twelve_exclusions() {
         let r = check(&compliant_full_pass_through());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Standard EXCLUSIONS from CAM")
-            && n.contains("(12 categories)")
-            && n.contains("capital improvements")
-            && n.contains("broker commissions")
-            && n.contains("affiliated-party")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Standard EXCLUSIONS from CAM")
+                && n.contains("(12 categories)")
+                && n.contains("capital improvements")
+                && n.contains("broker commissions")
+                && n.contains("affiliated-party")));
     }
 
     #[test]
     fn note_pins_gross_up_provision() {
         let r = check(&compliant_full_pass_through());
-        assert!(r.notes.iter().any(|n|
-            n.contains("GROSS-UP PROVISION")
+        assert!(r.notes.iter().any(|n| n.contains("GROSS-UP PROVISION")
             && n.contains("95-100%")
             && n.contains("FIXED expenses")));
     }
@@ -610,8 +639,7 @@ mod tests {
     #[test]
     fn note_pins_base_year_escalation_formula() {
         let r = check(&compliant_full_pass_through());
-        assert!(r.notes.iter().any(|n|
-            n.contains("BASE-YEAR ESCALATION")
+        assert!(r.notes.iter().any(|n| n.contains("BASE-YEAR ESCALATION")
             && n.contains("Tenant CAM = (Current Year Total - Base Year Total)")
             && n.contains("Pro-Rata Share")));
     }
@@ -619,29 +647,32 @@ mod tests {
     #[test]
     fn note_pins_audit_seven_elements() {
         let r = check(&compliant_full_pass_through());
-        assert!(r.notes.iter().any(|n|
-            n.contains("TENANT AUDIT RIGHTS STANDARD PROVISIONS")
-            && n.contains("(7 elements)")
-            && n.contains("annual right")
-            && n.contains("3-5% threshold")
-            && n.contains("refund obligation")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("TENANT AUDIT RIGHTS STANDARD PROVISIONS")
+                && n.contains("(7 elements)")
+                && n.contains("annual right")
+                && n.contains("3-5% threshold")
+                && n.contains("refund obligation")));
     }
 
     #[test]
     fn note_pins_boma_survey_statistics() {
         let r = check(&compliant_full_pass_through());
-        assert!(r.notes.iter().any(|n|
-            n.contains("BOMA-survey CAM dispute statistics")
-            && n.contains("1 in 4 (25%)")
-            && n.contains("5-15%")
-            && n.contains("incorrect gross-up")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("BOMA-survey CAM dispute statistics")
+                && n.contains("1 in 4 (25%)")
+                && n.contains("5-15%")
+                && n.contains("incorrect gross-up")));
     }
 
     #[test]
     fn note_pins_ca_section_1938_casp() {
         let r = check(&compliant_full_pass_through());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Cal. Civ. Code § 1938")
+        assert!(r.notes.iter().any(|n| n.contains("Cal. Civ. Code § 1938")
             && n.contains("CASp")
             && n.contains("Garrett v. Coast and Southern")));
     }
@@ -649,19 +680,21 @@ mod tests {
     #[test]
     fn note_pins_trader_fact_patterns_five() {
         let r = check(&compliant_full_pass_through());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-landlord critical fact patterns")
-            && n.contains("65% occupied")
-            && n.contains("HVAC")
-            && n.contains("$500K")
-            && n.contains("artificially deflated base year")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-landlord critical fact patterns")
+                && n.contains("65% occupied")
+                && n.contains("HVAC")
+                && n.contains("$500K")
+                && n.contains("artificially deflated base year")));
     }
 
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&compliant_full_pass_through());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Companion to commercial_lease_personal_guaranty_enforceability")
+        assert!(r.notes.iter().any(|n| n
+            .contains("Companion to commercial_lease_personal_guaranty_enforceability")
             && n.contains("tenant_estoppel_certificate")));
     }
 

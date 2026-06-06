@@ -350,7 +350,11 @@ mod tests {
         let r = check(&input(
             Regime::Philadelphia,
             EvictionGround::ImminentHarmHarassment,
-            false, 0, false, false, false,
+            false,
+            0,
+            false,
+            false,
+            false,
         ));
         assert!(r.imminent_harm_carve_out_applied);
         assert!(r.can_proceed_to_filing);
@@ -364,7 +368,11 @@ mod tests {
         let r = check(&input(
             Regime::Philadelphia,
             EvictionGround::Nonpayment,
-            false, 0, false, false, false,
+            false,
+            0,
+            false,
+            false,
+            false,
         ));
         assert_eq!(r.violation, ViolationType::NotEnrolledInDiversionProgram);
         assert!(!r.can_proceed_to_filing);
@@ -376,7 +384,11 @@ mod tests {
         let r = check(&input(
             Regime::Philadelphia,
             EvictionGround::Nonpayment,
-            true, 35, false, false, true,
+            true,
+            35,
+            false,
+            false,
+            true,
         ));
         assert_eq!(r.violation, ViolationType::MissingNoticeToTenant);
         assert!(!r.can_proceed_to_filing);
@@ -387,7 +399,11 @@ mod tests {
         let r = check(&input(
             Regime::Philadelphia,
             EvictionGround::Nonpayment,
-            true, 29, true, false, true,
+            true,
+            29,
+            true,
+            false,
+            true,
         ));
         assert_eq!(r.violation, ViolationType::InsufficientWaitingPeriod);
         assert!(r.note.contains("29 days"));
@@ -399,7 +415,11 @@ mod tests {
         let r = check(&input(
             Regime::Philadelphia,
             EvictionGround::Nonpayment,
-            true, 30, true, false, true,
+            true,
+            30,
+            true,
+            false,
+            true,
         ));
         assert_eq!(r.violation, ViolationType::None);
         assert!(r.can_proceed_to_filing);
@@ -410,7 +430,11 @@ mod tests {
         let r = check(&input(
             Regime::Philadelphia,
             EvictionGround::Nonpayment,
-            true, 35, true, false, false,
+            true,
+            35,
+            true,
+            false,
+            false,
         ));
         assert_eq!(r.violation, ViolationType::NotGoodFaithParticipation);
     }
@@ -420,7 +444,11 @@ mod tests {
         let r = check(&input(
             Regime::Philadelphia,
             EvictionGround::Nonpayment,
-            true, 45, true, false, true,
+            true,
+            45,
+            true,
+            false,
+            true,
         ));
         assert!(r.landlord_compliant);
         assert!(r.can_proceed_to_filing);
@@ -431,7 +459,11 @@ mod tests {
         let r = check(&input(
             Regime::Philadelphia,
             EvictionGround::LeaseBreach,
-            false, 0, false, false, false,
+            false,
+            0,
+            false,
+            false,
+            false,
         ));
         // Post-2022 amendment: lease breach is covered.
         assert_eq!(r.violation, ViolationType::NotEnrolledInDiversionProgram);
@@ -442,7 +474,11 @@ mod tests {
         let r = check(&input(
             Regime::Philadelphia,
             EvictionGround::TermExpiration,
-            false, 0, false, false, false,
+            false,
+            0,
+            false,
+            false,
+            false,
         ));
         assert_eq!(r.violation, ViolationType::NotEnrolledInDiversionProgram);
     }
@@ -452,7 +488,11 @@ mod tests {
         let r = check(&input(
             Regime::NewJersey,
             EvictionGround::Nonpayment,
-            false, 0, false, false, false,
+            false,
+            0,
+            false,
+            false,
+            false,
         ));
         assert_eq!(r.violation, ViolationType::NotEnrolledInDiversionProgram);
         assert!(r.citation.contains("NJ DCA"));
@@ -463,7 +503,11 @@ mod tests {
         let r = check(&input(
             Regime::NewJersey,
             EvictionGround::Nonpayment,
-            true, 50, false, true, true,
+            true,
+            50,
+            false,
+            true,
+            true,
         ));
         assert_eq!(r.violation, ViolationType::MissingNoticeToTenant);
         assert!(r.citation.contains("14-day notice"));
@@ -476,7 +520,11 @@ mod tests {
         let r = check(&input(
             Regime::NewJersey,
             EvictionGround::Nonpayment,
-            true, 14, true, false, true,
+            true,
+            14,
+            true,
+            false,
+            true,
         ));
         assert!(r.can_proceed_to_filing);
         assert_eq!(r.violation, ViolationType::None);
@@ -488,7 +536,11 @@ mod tests {
         let r = check(&input(
             Regime::NewJersey,
             EvictionGround::Nonpayment,
-            true, 44, true, true, true,
+            true,
+            44,
+            true,
+            true,
+            true,
         ));
         assert_eq!(r.violation, ViolationType::InsufficientWaitingPeriod);
         assert!(r.note.contains("44 days"));
@@ -500,7 +552,11 @@ mod tests {
         let r = check(&input(
             Regime::NewJersey,
             EvictionGround::Nonpayment,
-            true, 45, true, true, true,
+            true,
+            45,
+            true,
+            true,
+            true,
         ));
         assert_eq!(r.violation, ViolationType::None);
         assert!(r.can_proceed_to_filing);
@@ -511,7 +567,11 @@ mod tests {
         let r = check(&input(
             Regime::NewJersey,
             EvictionGround::Nonpayment,
-            true, 60, true, true, false,
+            true,
+            60,
+            true,
+            true,
+            false,
         ));
         assert_eq!(r.violation, ViolationType::NotGoodFaithParticipation);
     }
@@ -521,7 +581,11 @@ mod tests {
         let r = check(&input(
             Regime::Default,
             EvictionGround::Nonpayment,
-            false, 0, false, false, false,
+            false,
+            0,
+            false,
+            false,
+            false,
         ));
         assert!(r.can_proceed_to_filing);
         assert!(!r.pre_filing_diversion_required);
@@ -542,10 +606,7 @@ mod tests {
             Regime::for_jurisdiction("PA", "Pittsburgh"),
             Regime::Default
         );
-        assert_eq!(
-            Regime::for_jurisdiction("NJ", "Newark"),
-            Regime::NewJersey
-        );
+        assert_eq!(Regime::for_jurisdiction("NJ", "Newark"), Regime::NewJersey);
         assert_eq!(
             Regime::for_jurisdiction("CA", "Los Angeles"),
             Regime::Default
@@ -558,10 +619,7 @@ mod tests {
             Regime::for_jurisdiction("pa", "philadelphia"),
             Regime::Philadelphia
         );
-        assert_eq!(
-            Regime::for_jurisdiction("nj", "any"),
-            Regime::NewJersey
-        );
+        assert_eq!(Regime::for_jurisdiction("nj", "any"), Regime::NewJersey);
     }
 
     #[test]
@@ -569,12 +627,20 @@ mod tests {
         let phl = check(&input(
             Regime::Philadelphia,
             EvictionGround::ImminentHarmHarassment,
-            false, 0, false, false, false,
+            false,
+            0,
+            false,
+            false,
+            false,
         ));
         let nj = check(&input(
             Regime::NewJersey,
             EvictionGround::ImminentHarmHarassment,
-            false, 0, false, false, false,
+            false,
+            0,
+            false,
+            false,
+            false,
         ));
         assert!(phl.imminent_harm_carve_out_applied);
         assert!(phl.can_proceed_to_filing);
@@ -590,13 +656,21 @@ mod tests {
         let phl = check(&input(
             Regime::Philadelphia,
             EvictionGround::Nonpayment,
-            true, 5, true, false, true,
+            true,
+            5,
+            true,
+            false,
+            true,
         ));
         // NJ: tenant didn't schedule → landlord may proceed.
         let nj = check(&input(
             Regime::NewJersey,
             EvictionGround::Nonpayment,
-            true, 5, true, false, true,
+            true,
+            5,
+            true,
+            false,
+            true,
         ));
         assert_eq!(phl.violation, ViolationType::InsufficientWaitingPeriod);
         assert!(nj.can_proceed_to_filing);
@@ -607,12 +681,20 @@ mod tests {
         let phl = check(&input(
             Regime::Philadelphia,
             EvictionGround::Nonpayment,
-            true, 40, true, false, true,
+            true,
+            40,
+            true,
+            false,
+            true,
         ));
         let nj = check(&input(
             Regime::NewJersey,
             EvictionGround::Nonpayment,
-            true, 40, true, true, true,
+            true,
+            40,
+            true,
+            true,
+            true,
         ));
         assert!(phl.minimum_waiting_period_days < nj.minimum_waiting_period_days);
         assert_eq!(phl.minimum_waiting_period_days, 30);
@@ -624,14 +706,22 @@ mod tests {
         let phl = check(&input(
             Regime::Philadelphia,
             EvictionGround::Nonpayment,
-            true, 30, true, false, true,
+            true,
+            30,
+            true,
+            false,
+            true,
         ));
         assert!(phl.citation.contains("Philadelphia Code § 9-811"));
 
         let nj = check(&input(
             Regime::NewJersey,
             EvictionGround::Nonpayment,
-            true, 45, true, true, true,
+            true,
+            45,
+            true,
+            true,
+            true,
         ));
         assert!(nj.citation.contains("NJ DCA"));
     }

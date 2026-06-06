@@ -135,7 +135,8 @@ pub const SF_RENT_ORDINANCE_CPI_PERCENTAGE_BASIS_POINTS: u64 = 6_000;
 pub const SF_RENT_ORDINANCE_ANNUAL_INCREASE_CEILING_BASIS_POINTS: u64 = 700;
 pub const SF_RENT_ORDINANCE_BASIS_POINT_DENOMINATOR: u64 = 10_000;
 pub const SF_RENT_ORDINANCE_NUMBER_OF_JUST_CAUSE_GROUNDS: u32 = 16;
-pub const SF_RENT_ORDINANCE_CAPITAL_IMPROVEMENT_PASSTHROUGH_ANNUAL_CAP_HIGH_BASIS_POINTS: u64 = 1_000;
+pub const SF_RENT_ORDINANCE_CAPITAL_IMPROVEMENT_PASSTHROUGH_ANNUAL_CAP_HIGH_BASIS_POINTS: u64 =
+    1_000;
 pub const SF_RENT_ORDINANCE_CAPITAL_IMPROVEMENT_PASSTHROUGH_ANNUAL_CAP_LOW_BASIS_POINTS: u64 = 500;
 pub const SF_RENT_ORDINANCE_NOTICE_FILING_DAYS: u32 = 10;
 
@@ -289,18 +290,20 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    let rent_increase_cap_from_cpi = u128::from(input.published_san_francisco_cpi_increase_basis_points)
-        .saturating_mul(u128::from(SF_RENT_ORDINANCE_CPI_PERCENTAGE_BASIS_POINTS))
-        .checked_div(u128::from(SF_RENT_ORDINANCE_BASIS_POINT_DENOMINATOR))
-        .unwrap_or(0)
-        .min(u128::from(u64::MAX)) as u64;
+    let rent_increase_cap_from_cpi =
+        u128::from(input.published_san_francisco_cpi_increase_basis_points)
+            .saturating_mul(u128::from(SF_RENT_ORDINANCE_CPI_PERCENTAGE_BASIS_POINTS))
+            .checked_div(u128::from(SF_RENT_ORDINANCE_BASIS_POINT_DENOMINATOR))
+            .unwrap_or(0)
+            .min(u128::from(u64::MAX)) as u64;
     let annual_rent_increase_cap_basis_points =
         rent_increase_cap_from_cpi.min(SF_RENT_ORDINANCE_ANNUAL_INCREASE_CEILING_BASIS_POINTS);
 
     if input.compliance_aspect == ComplianceAspect::AnnualRentIncrease {
         let costa_hawkins_applies = matches!(
             input.unit_type,
-            UnitType::SingleFamilyHomeCostaHawkinsApplies | UnitType::CondominiumUnitCostaHawkinsApplies
+            UnitType::SingleFamilyHomeCostaHawkinsApplies
+                | UnitType::CondominiumUnitCostaHawkinsApplies
         );
         if costa_hawkins_applies {
             return Output {
@@ -326,7 +329,8 @@ pub fn compute(input: &Input) -> Output {
             };
         }
 
-        if input.proposed_annual_rent_increase_basis_points > annual_rent_increase_cap_basis_points {
+        if input.proposed_annual_rent_increase_basis_points > annual_rent_increase_cap_basis_points
+        {
             return Output {
                 mode: SfRentOrdinanceMode::ViolationAnnualRentIncreaseExceeds60PctOfCpiOr7PctAbsoluteCeiling,
                 statutory_basis: "SF Admin Code § 37.3(a) — annual rent increase capped at 60 % of CPI subject to 7 % absolute ceiling".to_string(),
@@ -508,7 +512,10 @@ mod tests {
         let mut input = baseline_rent_increase_input();
         input.property_jurisdiction = PropertyJurisdiction::OutsideSanFranciscoCityAndCounty;
         let output = check(&input);
-        assert_eq!(output.mode, SfRentOrdinanceMode::NotApplicablePropertyOutsideSanFrancisco);
+        assert_eq!(
+            output.mode,
+            SfRentOrdinanceMode::NotApplicablePropertyOutsideSanFrancisco
+        );
     }
 
     #[test]
@@ -516,7 +523,10 @@ mod tests {
         let mut input = baseline_rent_increase_input();
         input.unit_type = UnitType::NonResidentialUnitExempt;
         let output = check(&input);
-        assert_eq!(output.mode, SfRentOrdinanceMode::NotApplicableNonResidentialUnit);
+        assert_eq!(
+            output.mode,
+            SfRentOrdinanceMode::NotApplicableNonResidentialUnit
+        );
     }
 
     #[test]
@@ -762,8 +772,14 @@ mod tests {
         assert_eq!(SF_RENT_ORDINANCE_ANNUAL_INCREASE_CEILING_BASIS_POINTS, 700);
         assert_eq!(SF_RENT_ORDINANCE_BASIS_POINT_DENOMINATOR, 10_000);
         assert_eq!(SF_RENT_ORDINANCE_NUMBER_OF_JUST_CAUSE_GROUNDS, 16);
-        assert_eq!(SF_RENT_ORDINANCE_CAPITAL_IMPROVEMENT_PASSTHROUGH_ANNUAL_CAP_HIGH_BASIS_POINTS, 1_000);
-        assert_eq!(SF_RENT_ORDINANCE_CAPITAL_IMPROVEMENT_PASSTHROUGH_ANNUAL_CAP_LOW_BASIS_POINTS, 500);
+        assert_eq!(
+            SF_RENT_ORDINANCE_CAPITAL_IMPROVEMENT_PASSTHROUGH_ANNUAL_CAP_HIGH_BASIS_POINTS,
+            1_000
+        );
+        assert_eq!(
+            SF_RENT_ORDINANCE_CAPITAL_IMPROVEMENT_PASSTHROUGH_ANNUAL_CAP_LOW_BASIS_POINTS,
+            500
+        );
         assert_eq!(SF_RENT_ORDINANCE_NOTICE_FILING_DAYS, 10);
     }
 

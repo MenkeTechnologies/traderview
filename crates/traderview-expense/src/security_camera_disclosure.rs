@@ -137,12 +137,13 @@ pub struct SecurityCameraResult {
 }
 
 pub fn check(input: &SecurityCameraInput) -> SecurityCameraResult {
-    let (audio_standard, audio_civil_penalty, criminal): (ConsentStandard, i64, bool) = match input.regime {
-        Regime::California => (ConsentStandard::TwoParty, 250000, true),
-        Regime::NewYork => (ConsentStandard::OneParty, 0, false),
-        Regime::Texas => (ConsentStandard::OneParty, 0, false),
-        Regime::Default => (ConsentStandard::OneParty, 0, false),
-    };
+    let (audio_standard, audio_civil_penalty, criminal): (ConsentStandard, i64, bool) =
+        match input.regime {
+            Regime::California => (ConsentStandard::TwoParty, 250000, true),
+            Regime::NewYork => (ConsentStandard::OneParty, 0, false),
+            Regime::Texas => (ConsentStandard::OneParty, 0, false),
+            Regime::Default => (ConsentStandard::OneParty, 0, false),
+        };
 
     // Universal bar: recording inside the tenant's private unit is never
     // permitted regardless of consent.
@@ -192,8 +193,8 @@ pub fn check(input: &SecurityCameraInput) -> SecurityCameraResult {
         // For 2-party states, the audio rule applies most strongly when
         // there's a reasonable expectation of privacy (CA Penal Code §
         // 632 "confidential communications" requirement).
-        let actually_requires_consent = input.regime != Regime::California
-            || input.reasonable_expectation_of_privacy;
+        let actually_requires_consent =
+            input.regime != Regime::California || input.reasonable_expectation_of_privacy;
         if actually_requires_consent && !consent_satisfied {
             return SecurityCameraResult {
                 regime: input.regime,

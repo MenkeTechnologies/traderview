@@ -334,8 +334,7 @@ mod tests {
         let mut input = base_351();
         input.transferor_adjusted_basis_aggregate_cents = 500_000_00;
         input.aggregate_fmv_cents = 200_000_00;
-        input.loss_limitation_status =
-            LossLimitationStatus::Section362E1AntiLossImportationApplied;
+        input.loss_limitation_status = LossLimitationStatus::Section362E1AntiLossImportationApplied;
         let output = check(&input);
         assert_eq!(
             output.severity,
@@ -431,8 +430,7 @@ mod tests {
         let mut input = base_351();
         input.transferor_adjusted_basis_aggregate_cents = 500_000_00;
         input.aggregate_fmv_cents = 200_000_00;
-        input.loss_limitation_status =
-            LossLimitationStatus::Section362E1AntiLossImportationApplied;
+        input.loss_limitation_status = LossLimitationStatus::Section362E1AntiLossImportationApplied;
         let output = check(&input);
         assert!(output.note.contains("§ 334(b)(1)(B)"));
     }
@@ -442,8 +440,7 @@ mod tests {
         let mut input = base_351();
         input.transferor_adjusted_basis_aggregate_cents = 500_000_00;
         input.aggregate_fmv_cents = 200_000_00;
-        input.loss_limitation_status =
-            LossLimitationStatus::Section362E1AntiLossImportationApplied;
+        input.loss_limitation_status = LossLimitationStatus::Section362E1AntiLossImportationApplied;
         let output = check(&input);
         assert!(output.note.contains("§ 358(h)"));
     }

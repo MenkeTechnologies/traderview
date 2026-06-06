@@ -31,8 +31,12 @@ pub struct Report {
 
 pub fn compute(x: &[f64], y: &[f64]) -> Option<Report> {
     let n = x.len();
-    if n < 2 || y.len() != n { return None; }
-    if x.iter().chain(y.iter()).any(|v| !v.is_finite()) { return None; }
+    if n < 2 || y.len() != n {
+        return None;
+    }
+    if x.iter().chain(y.iter()).any(|v| !v.is_finite()) {
+        return None;
+    }
     let mut n_c: u64 = 0;
     let mut n_d: u64 = 0;
     let mut t_x: u64 = 0;
@@ -43,11 +47,16 @@ pub fn compute(x: &[f64], y: &[f64]) -> Option<Report> {
             let dy = y[i] - y[j];
             let tied_x = dx == 0.0;
             let tied_y = dy == 0.0;
-            if tied_x && tied_y { /* contributes to neither */ }
-            else if tied_x { t_x += 1; }
-            else if tied_y { t_y += 1; }
-            else if dx.signum() == dy.signum() { n_c += 1; }
-            else { n_d += 1; }
+            if tied_x && tied_y { /* contributes to neither */
+            } else if tied_x {
+                t_x += 1;
+            } else if tied_y {
+                t_y += 1;
+            } else if dx.signum() == dy.signum() {
+                n_c += 1;
+            } else {
+                n_d += 1;
+            }
         }
     }
     let n_pairs = (n as u64) * (n as u64 - 1) / 2;

@@ -133,9 +133,7 @@ pub fn check(
     }
 }
 
-fn check_ca(
-    input: &RentalSexOffenderRegistryNoticeInput,
-) -> RentalSexOffenderRegistryNoticeResult {
+fn check_ca(input: &RentalSexOffenderRegistryNoticeInput) -> RentalSexOffenderRegistryNoticeResult {
     let mut violations: Vec<String> = Vec::new();
     let notes: Vec<String> = vec![
         "Cal. Civ. Code § 2079.10a — every residential rental agreement must include exact statutory Megan's Law notice directing tenant to www.meganslaw.ca.gov".to_string(),
@@ -189,9 +187,7 @@ fn check_ca(
     }
 }
 
-fn check_nj(
-    input: &RentalSexOffenderRegistryNoticeInput,
-) -> RentalSexOffenderRegistryNoticeResult {
+fn check_nj(input: &RentalSexOffenderRegistryNoticeInput) -> RentalSexOffenderRegistryNoticeResult {
     let mut violations: Vec<String> = Vec::new();
     let notes: Vec<String> = vec![
         "N.J.S.A. 2C:7-21 + N.J.S.A. 2C:7-2 (NJ Megan's Law) — NJ does NOT require landlord disclosure in lease; registry is publicly accessible via NJ State Police Sex Offender Internet Registry".to_string(),
@@ -321,10 +317,7 @@ mod tests {
         i.ten_point_type_minimum = false;
         let r = check(&i);
         assert!(!r.disclosure_compliant);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("10-point type")));
+        assert!(r.violations.iter().any(|v| v.contains("10-point type")));
     }
 
     #[test]
@@ -333,10 +326,7 @@ mod tests {
         i.directs_to_ca_meganslaw_website = false;
         let r = check(&i);
         assert!(!r.disclosure_compliant);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("meganslaw.ca.gov")));
+        assert!(r.violations.iter().any(|v| v.contains("meganslaw.ca.gov")));
     }
 
     #[test]
@@ -388,8 +378,7 @@ mod tests {
         assert!(r
             .violations
             .iter()
-            .any(|v| v.contains("NJ Law Against Discrimination")
-                && v.contains("Tier 1")));
+            .any(|v| v.contains("NJ Law Against Discrimination") && v.contains("Tier 1")));
     }
 
     #[test]
@@ -460,37 +449,46 @@ mod tests {
     #[test]
     fn note_pins_ca_exact_statutory_notice_requirement() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("exact statutory")
-            && n.contains("meganslaw.ca.gov")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("exact statutory") && n.contains("meganslaw.ca.gov")));
     }
 
     #[test]
     fn note_pins_ca_anti_discrimination_protection() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("CANNOT use registry")
-            && n.contains("§ 12955")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("CANNOT use registry") && n.contains("§ 12955")));
     }
 
     #[test]
     fn note_pins_nj_three_tier_framework() {
         let r = check(&nj_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("Tier 1")
-            && n.contains("Tier 2")
-            && n.contains("Tier 3")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Tier 1") && n.contains("Tier 2") && n.contains("Tier 3")));
     }
 
     #[test]
     fn note_pins_default_sorna_42_usc_16901() {
         let r = check(&default_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("SORNA")
-            && n.contains("42 USC § 16901")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("SORNA") && n.contains("42 USC § 16901")));
     }
 
     #[test]
     fn note_pins_default_hud_2016_guidance() {
         let r = check(&default_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("HUD 2016 Guidance")
-            && n.contains("disparate-impact")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("HUD 2016 Guidance") && n.contains("disparate-impact")));
     }
 
     #[test]

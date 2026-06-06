@@ -38,7 +38,12 @@ pub struct Config {
 }
 
 impl Default for Config {
-    fn default() -> Self { Self { trin_period: 5, oversold_threshold: 1.5 } }
+    fn default() -> Self {
+        Self {
+            trin_period: 5,
+            oversold_threshold: 1.5,
+        }
+    }
 }
 
 pub fn compute(samples: &[Sample], cfg: &Config) -> Report {
@@ -57,7 +62,9 @@ pub fn compute(samples: &[Sample], cfg: &Config) -> Report {
         if s.tick.is_finite() {
             acc += s.tick;
         }
-        if !acc.is_finite() { acc = 0.0; }
+        if !acc.is_finite() {
+            acc = 0.0;
+        }
         report.cumulative_tick[i] = acc;
     }
     // Rolling SMA of TRIN.
@@ -69,7 +76,10 @@ pub fn compute(samples: &[Sample], cfg: &Config) -> Report {
             let mut sum = 0.0;
             let mut ok = true;
             for s in window {
-                if !s.trin.is_finite() || s.trin <= 0.0 { ok = false; break; }
+                if !s.trin.is_finite() || s.trin <= 0.0 {
+                    ok = false;
+                    break;
+                }
                 sum += s.trin;
             }
             if ok {
@@ -108,9 +118,21 @@ mod tests {
     #[test]
     fn invalid_config_returns_default() {
         let samples = vec![s(100.0, 1.0); 10];
-        let r = compute(&samples, &Config { trin_period: 0, ..Default::default() });
+        let r = compute(
+            &samples,
+            &Config {
+                trin_period: 0,
+                ..Default::default()
+            },
+        );
         assert!(r.trin_sma.iter().all(|x| x.is_none()));
-        let r = compute(&samples, &Config { oversold_threshold: f64::NAN, ..Default::default() });
+        let r = compute(
+            &samples,
+            &Config {
+                oversold_threshold: f64::NAN,
+                ..Default::default()
+            },
+        );
         assert!(r.trin_sma.iter().all(|x| x.is_none()));
     }
 
@@ -142,8 +164,12 @@ mod tests {
     fn oversold_cross_above_detected() {
         // TRIN rises from 1.0 → 2.0 — crosses 1.5 threshold.
         let mut samples: Vec<Sample> = Vec::new();
-        for _ in 0..5 { samples.push(s(0.0, 1.0)); }    // SMA = 1.0
-        for _ in 0..5 { samples.push(s(0.0, 2.0)); }    // SMA pulled toward 2
+        for _ in 0..5 {
+            samples.push(s(0.0, 1.0));
+        } // SMA = 1.0
+        for _ in 0..5 {
+            samples.push(s(0.0, 2.0));
+        } // SMA pulled toward 2
         let r = compute(&samples, &Config::default());
         assert!(!r.oversold_signals.is_empty(), "should cross 1.5 threshold");
     }

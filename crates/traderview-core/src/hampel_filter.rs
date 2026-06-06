@@ -31,15 +31,13 @@ pub struct HampelReport {
     pub n_outliers: usize,
 }
 
-pub fn compute(
-    series: &[f64],
-    half_window: usize,
-    k_sigma: f64,
-) -> Option<HampelReport> {
+pub fn compute(series: &[f64], half_window: usize, k_sigma: f64) -> Option<HampelReport> {
     if series.is_empty() || half_window == 0 || !k_sigma.is_finite() || k_sigma <= 0.0 {
         return None;
     }
-    if series.iter().any(|x| !x.is_finite()) { return None; }
+    if series.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let n = series.len();
     let mut filtered = series.to_vec();
     let mut is_outlier = vec![false; n];
@@ -127,7 +125,7 @@ mod tests {
     #[test]
     fn single_outlier_detected() {
         let mut s: Vec<f64> = (0..30).map(|_| 100.0_f64).collect();
-        s[15] = 500.0;    // gross outlier
+        s[15] = 500.0; // gross outlier
         let r = compute(&s, 5, 3.0).unwrap();
         assert!(r.is_outlier[15]);
         // Filtered value at that index = local median.
@@ -160,7 +158,7 @@ mod tests {
     #[test]
     fn higher_k_sigma_flags_fewer_outliers() {
         let mut s: Vec<f64> = (0..30).map(|_| 100.0_f64).collect();
-        s[15] = 120.0;    // moderate outlier (~20σ-equivalent for flat noise)
+        s[15] = 120.0; // moderate outlier (~20σ-equivalent for flat noise)
         let strict = compute(&s, 5, 3.0).unwrap();
         let loose = compute(&s, 5, 30.0).unwrap();
         assert!(strict.n_outliers >= loose.n_outliers);

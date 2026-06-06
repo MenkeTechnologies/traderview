@@ -22,7 +22,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum Direction { Buy, Sell }
+pub enum Direction {
+    Buy,
+    Sell,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct SpreadObservation {
@@ -44,20 +47,29 @@ pub struct SpreadReport {
 }
 
 pub fn analyze(obs: &[SpreadObservation]) -> Option<SpreadReport> {
-    if obs.is_empty() { return None; }
+    if obs.is_empty() {
+        return None;
+    }
     let mut sum_q = 0.0_f64;
     let mut sum_eff = 0.0_f64;
     let mut sum_real = 0.0_f64;
     let mut count = 0_usize;
     for o in obs {
-        if !o.trade_price.is_finite() || o.trade_price <= 0.0
-            || !o.current_mid.is_finite() || o.current_mid <= 0.0
-            || !o.delayed_mid.is_finite() || o.delayed_mid <= 0.0
-            || !o.quoted_spread.is_finite() || o.quoted_spread < 0.0
+        if !o.trade_price.is_finite()
+            || o.trade_price <= 0.0
+            || !o.current_mid.is_finite()
+            || o.current_mid <= 0.0
+            || !o.delayed_mid.is_finite()
+            || o.delayed_mid <= 0.0
+            || !o.quoted_spread.is_finite()
+            || o.quoted_spread < 0.0
         {
             continue;
         }
-        let d: f64 = match o.direction { Direction::Buy => 1.0, Direction::Sell => -1.0 };
+        let d: f64 = match o.direction {
+            Direction::Buy => 1.0,
+            Direction::Sell => -1.0,
+        };
         let effective = 2.0 * d * (o.trade_price - o.current_mid);
         let realized = 2.0 * d * (o.trade_price - o.delayed_mid);
         sum_q += o.quoted_spread;
@@ -65,13 +77,19 @@ pub fn analyze(obs: &[SpreadObservation]) -> Option<SpreadReport> {
         sum_real += realized;
         count += 1;
     }
-    if count == 0 { return None; }
+    if count == 0 {
+        return None;
+    }
     let n_f = count as f64;
     let avg_q = sum_q / n_f;
     let avg_eff = sum_eff / n_f;
     let avg_real = sum_real / n_f;
     let avg_impact = avg_eff - avg_real;
-    let ratio = if avg_q > 0.0 { avg_eff / avg_q } else { f64::NAN };
+    let ratio = if avg_q > 0.0 {
+        avg_eff / avg_q
+    } else {
+        f64::NAN
+    };
     Some(SpreadReport {
         avg_quoted_spread: avg_q,
         avg_effective_spread: avg_eff,
@@ -87,8 +105,13 @@ mod tests {
     use super::*;
 
     fn obs(tp: f64, mid: f64, dmid: f64, qs: f64, dir: Direction) -> SpreadObservation {
-        SpreadObservation { trade_price: tp, current_mid: mid, delayed_mid: dmid,
-            quoted_spread: qs, direction: dir }
+        SpreadObservation {
+            trade_price: tp,
+            current_mid: mid,
+            delayed_mid: dmid,
+            quoted_spread: qs,
+            direction: dir,
+        }
     }
 
     #[test]
@@ -99,7 +122,7 @@ mod tests {
     #[test]
     fn invalid_entries_filtered() {
         let bad = vec![
-            obs(0.0, 100.0, 100.0, 0.10, Direction::Buy),    // bad trade price
+            obs(0.0, 100.0, 100.0, 0.10, Direction::Buy), // bad trade price
             obs(100.10, -1.0, 100.0, 0.10, Direction::Buy),
             obs(100.10, 100.0, f64::NAN, 0.10, Direction::Buy),
         ];
@@ -109,9 +132,7 @@ mod tests {
     #[test]
     fn buy_at_ask_yields_effective_eq_quoted() {
         // Trade @ ask (mid + 0.5·spread). Effective = 2 · 0.5·spread = spread.
-        let observations = vec![
-            obs(100.05, 100.00, 100.00, 0.10, Direction::Buy),
-        ];
+        let observations = vec![obs(100.05, 100.00, 100.00, 0.10, Direction::Buy)];
         let r = analyze(&observations).unwrap();
         assert!((r.avg_effective_spread - 0.10).abs() < 1e-9);
     }
@@ -120,9 +141,7 @@ mod tests {
     fn sell_at_bid_yields_positive_effective() {
         // Trade @ bid (mid − 0.5·spread), direction Sell, sign flips.
         // effective = 2 · (-1) · (-0.05) = +0.10
-        let observations = vec![
-            obs(99.95, 100.00, 100.00, 0.10, Direction::Sell),
-        ];
+        let observations = vec![obs(99.95, 100.00, 100.00, 0.10, Direction::Sell)];
         let r = analyze(&observations).unwrap();
         assert!((r.avg_effective_spread - 0.10).abs() < 1e-9);
     }
@@ -144,9 +163,7 @@ mod tests {
         // Buy @ 100.05, then mid drifts to 100.10 (informed buy).
         // Realized = 2 · 1 · (100.05 - 100.10) = -0.10 (LP lost money).
         // Effective = +0.10. Impact = effective − realized = +0.20.
-        let observations = vec![
-            obs(100.05, 100.00, 100.10, 0.10, Direction::Buy),
-        ];
+        let observations = vec![obs(100.05, 100.00, 100.10, 0.10, Direction::Buy)];
         let r = analyze(&observations).unwrap();
         assert!((r.avg_realized_spread + 0.10).abs() < 1e-9);
         assert!(r.avg_price_impact > 0.0);
@@ -165,9 +182,7 @@ mod tests {
     #[test]
     fn inside_quote_trade_yields_effective_below_quoted() {
         // Trade INSIDE the spread (price improvement) → effective < quoted.
-        let observations = vec![
-            obs(100.02, 100.00, 100.00, 0.10, Direction::Buy),
-        ];
+        let observations = vec![obs(100.02, 100.00, 100.00, 0.10, Direction::Buy)];
         let r = analyze(&observations).unwrap();
         assert!(r.effective_to_quoted_ratio < 1.0);
     }

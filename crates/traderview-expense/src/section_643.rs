@@ -248,7 +248,9 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.dni_inclusion_approach == DniInclusionApproach::PowerToAdjustReallocatedUnderTreasReg1_643B {
+    if input.dni_inclusion_approach
+        == DniInclusionApproach::PowerToAdjustReallocatedUnderTreasReg1_643B
+    {
         let dni = input
             .taxable_income_before_dni_modifications_dollars
             .saturating_add(input.tax_exempt_interest_dollars);
@@ -264,7 +266,9 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.trust_or_estate_type == TrustOrEstateType::ForeignTrust && input.foreign_trust_dni_modification_applied {
+    if input.trust_or_estate_type == TrustOrEstateType::ForeignTrust
+        && input.foreign_trust_dni_modification_applied
+    {
         let dni = input
             .taxable_income_before_dni_modifications_dollars
             .saturating_add(input.tax_exempt_interest_dollars);
@@ -314,7 +318,8 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.tax_exempt_interest_dollars > 0 && !input.tax_exempt_income_included_in_dni_by_taxpayer {
+    if input.tax_exempt_interest_dollars > 0 && !input.tax_exempt_income_included_in_dni_by_taxpayer
+    {
         return Output {
             mode: Section643Mode::ViolationTaxExemptIncomeOmittedFromDni,
             computed_dni_dollars: input.taxable_income_before_dni_modifications_dollars,
@@ -408,42 +413,57 @@ mod tests {
     #[test]
     fn complex_trust_capital_gain_to_corpus_excluded_compliant() {
         let result = compute(&baseline_complex_trust_capital_gain_to_corpus());
-        assert_eq!(result.mode, Section643Mode::CompliantCapitalGainsExcludedAllocatedToCorpus);
+        assert_eq!(
+            result.mode,
+            Section643Mode::CompliantCapitalGainsExcludedAllocatedToCorpus
+        );
         assert_eq!(result.computed_dni_dollars, 100_000);
     }
 
     #[test]
     fn capital_gain_distributed_must_be_in_dni_compliant() {
         let input = Input {
-            capital_gain_treatment: CapitalGainTreatment::AllocatedToCorpusButDistributedToBeneficiary,
+            capital_gain_treatment:
+                CapitalGainTreatment::AllocatedToCorpusButDistributedToBeneficiary,
             capital_gain_included_in_dni_by_taxpayer: true,
             ..baseline_complex_trust_capital_gain_to_corpus()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section643Mode::CompliantCapitalGainsIncludedInDniDistributedOrSetAside);
+        assert_eq!(
+            result.mode,
+            Section643Mode::CompliantCapitalGainsIncludedInDniDistributedOrSetAside
+        );
         assert_eq!(result.computed_dni_dollars, 150_000);
     }
 
     #[test]
     fn capital_gain_distributed_but_excluded_violation() {
         let input = Input {
-            capital_gain_treatment: CapitalGainTreatment::AllocatedToCorpusButDistributedToBeneficiary,
+            capital_gain_treatment:
+                CapitalGainTreatment::AllocatedToCorpusButDistributedToBeneficiary,
             capital_gain_included_in_dni_by_taxpayer: false,
             ..baseline_complex_trust_capital_gain_to_corpus()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section643Mode::ViolationCapitalGainsImproperlyExcludedDespiteDistribution);
+        assert_eq!(
+            result.mode,
+            Section643Mode::ViolationCapitalGainsImproperlyExcludedDespiteDistribution
+        );
     }
 
     #[test]
     fn capital_gain_required_to_be_distributed_must_be_in_dni() {
         let input = Input {
-            capital_gain_treatment: CapitalGainTreatment::AllocatedToCorpusButRequiredToBeDistributed,
+            capital_gain_treatment:
+                CapitalGainTreatment::AllocatedToCorpusButRequiredToBeDistributed,
             capital_gain_included_in_dni_by_taxpayer: true,
             ..baseline_complex_trust_capital_gain_to_corpus()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section643Mode::CompliantCapitalGainsIncludedInDniDistributedOrSetAside);
+        assert_eq!(
+            result.mode,
+            Section643Mode::CompliantCapitalGainsIncludedInDniDistributedOrSetAside
+        );
     }
 
     #[test]
@@ -454,7 +474,10 @@ mod tests {
             ..baseline_complex_trust_capital_gain_to_corpus()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section643Mode::CompliantCapitalGainsIncludedInDniDistributedOrSetAside);
+        assert_eq!(
+            result.mode,
+            Section643Mode::CompliantCapitalGainsIncludedInDniDistributedOrSetAside
+        );
     }
 
     #[test]
@@ -465,7 +488,10 @@ mod tests {
             ..baseline_complex_trust_capital_gain_to_corpus()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section643Mode::ViolationCapitalGainsImproperlyIncludedInDni);
+        assert_eq!(
+            result.mode,
+            Section643Mode::ViolationCapitalGainsImproperlyIncludedInDni
+        );
     }
 
     #[test]
@@ -477,7 +503,10 @@ mod tests {
             ..baseline_complex_trust_capital_gain_to_corpus()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section643Mode::CompliantTaxExemptIncomeIncludedInDni);
+        assert_eq!(
+            result.mode,
+            Section643Mode::CompliantTaxExemptIncomeIncludedInDni
+        );
         assert_eq!(result.computed_dni_dollars, 110_000);
     }
 
@@ -490,7 +519,10 @@ mod tests {
             ..baseline_complex_trust_capital_gain_to_corpus()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section643Mode::ViolationTaxExemptIncomeOmittedFromDni);
+        assert_eq!(
+            result.mode,
+            Section643Mode::ViolationTaxExemptIncomeOmittedFromDni
+        );
     }
 
     #[test]
@@ -500,7 +532,10 @@ mod tests {
             ..baseline_complex_trust_capital_gain_to_corpus()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section643Mode::ViolationDniComputationIncludedPersonalExemption);
+        assert_eq!(
+            result.mode,
+            Section643Mode::ViolationDniComputationIncludedPersonalExemption
+        );
     }
 
     #[test]
@@ -510,7 +545,10 @@ mod tests {
             ..baseline_complex_trust_capital_gain_to_corpus()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section643Mode::ViolationDniComputationIncludedDistributionDeduction);
+        assert_eq!(
+            result.mode,
+            Section643Mode::ViolationDniComputationIncludedDistributionDeduction
+        );
     }
 
     #[test]
@@ -520,7 +558,10 @@ mod tests {
             ..baseline_complex_trust_capital_gain_to_corpus()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section643Mode::ViolationMultipleTrustsAggregatedNotPerSection643f);
+        assert_eq!(
+            result.mode,
+            Section643Mode::ViolationMultipleTrustsAggregatedNotPerSection643f
+        );
     }
 
     #[test]
@@ -531,7 +572,10 @@ mod tests {
             ..baseline_complex_trust_capital_gain_to_corpus()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section643Mode::ViolationForeignTrustDniModificationOmitted);
+        assert_eq!(
+            result.mode,
+            Section643Mode::ViolationForeignTrustDniModificationOmitted
+        );
     }
 
     #[test]
@@ -543,17 +587,24 @@ mod tests {
             ..baseline_complex_trust_capital_gain_to_corpus()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section643Mode::CompliantForeignTrustDniModificationApplied);
+        assert_eq!(
+            result.mode,
+            Section643Mode::CompliantForeignTrustDniModificationApplied
+        );
     }
 
     #[test]
     fn power_to_adjust_treas_reg_compliant() {
         let input = Input {
-            dni_inclusion_approach: DniInclusionApproach::PowerToAdjustReallocatedUnderTreasReg1_643B,
+            dni_inclusion_approach:
+                DniInclusionApproach::PowerToAdjustReallocatedUnderTreasReg1_643B,
             ..baseline_complex_trust_capital_gain_to_corpus()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section643Mode::CompliantPowerToAdjustAppliedTreasReg1_643B);
+        assert_eq!(
+            result.mode,
+            Section643Mode::CompliantPowerToAdjustAppliedTreasReg1_643B
+        );
     }
 
     #[test]
@@ -564,7 +615,10 @@ mod tests {
             ..baseline_complex_trust_capital_gain_to_corpus()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section643Mode::CompliantCapitalGainsIncludedInDniDistributedOrSetAside);
+        assert_eq!(
+            result.mode,
+            Section643Mode::CompliantCapitalGainsIncludedInDniDistributedOrSetAside
+        );
     }
 
     #[test]

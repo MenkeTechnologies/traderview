@@ -33,23 +33,34 @@ pub struct AcfReport {
 
 pub fn compute(series: &[f64], max_lag: usize) -> Option<AcfReport> {
     let n = series.len();
-    if n < 5 || max_lag == 0 || max_lag >= n { return None; }
-    if series.iter().any(|x| !x.is_finite()) { return None; }
+    if n < 5 || max_lag == 0 || max_lag >= n {
+        return None;
+    }
+    if series.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let n_f = n as f64;
     let mean: f64 = series.iter().sum::<f64>() / n_f;
     let denom: f64 = series.iter().map(|x| (x - mean).powi(2)).sum();
-    if denom <= 0.0 { return None; }
+    if denom <= 0.0 {
+        return None;
+    }
     let mut acfs = Vec::with_capacity(max_lag + 1);
     let mut lags = Vec::with_capacity(max_lag + 1);
     for k in 0..=max_lag {
-        let num: f64 = (k..n).map(|t| (series[t] - mean) * (series[t - k] - mean)).sum();
+        let num: f64 = (k..n)
+            .map(|t| (series[t] - mean) * (series[t - k] - mean))
+            .sum();
         acfs.push(num / denom);
         lags.push(k);
     }
     let band = 1.96 / n_f.sqrt();
-    let significant_lags: Vec<usize> = acfs.iter().enumerate()
+    let significant_lags: Vec<usize> = acfs
+        .iter()
+        .enumerate()
         .filter(|(k, v)| *k > 0 && v.abs() > band)
-        .map(|(k, _)| k).collect();
+        .map(|(k, _)| k)
+        .collect();
     Some(AcfReport {
         lags,
         autocorrelations: acfs,
@@ -100,30 +111,41 @@ mod tests {
         let mut state: u64 = 42;
         let mut s = vec![0.0_f64; 200];
         for i in 1..200 {
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let step = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 2.0;
             s[i] = s[i - 1] + step;
         }
         let r = compute(&s, 10).unwrap();
-        assert!(r.autocorrelations[1] > 0.8, "RW lag-1 ACF should be near 1, got {}",
-            r.autocorrelations[1]);
+        assert!(
+            r.autocorrelations[1] > 0.8,
+            "RW lag-1 ACF should be near 1, got {}",
+            r.autocorrelations[1]
+        );
     }
 
     #[test]
     fn white_noise_yields_small_acf_at_low_lags() {
         let mut state: u64 = 11;
-        let s: Vec<f64> = (0..500).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 2.0
-        }).collect();
+        let s: Vec<f64> = (0..500)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 2.0
+            })
+            .collect();
         let r = compute(&s, 10).unwrap();
         // Most lag-1..10 ACFs should be inside the Bartlett band for white noise.
         let outside: usize = (1..=10)
-            .filter(|k| r.autocorrelations[*k].abs() > r.confidence_band).count();
-        assert!(outside <= 3, "{outside} lags outside 95% band on white noise: {:?}",
-            &r.autocorrelations[1..=10]);
+            .filter(|k| r.autocorrelations[*k].abs() > r.confidence_band)
+            .count();
+        assert!(
+            outside <= 3,
+            "{outside} lags outside 95% band on white noise: {:?}",
+            &r.autocorrelations[1..=10]
+        );
     }
 
     #[test]
@@ -133,15 +155,19 @@ mod tests {
         let phi = 0.8_f64;
         let mut s = vec![0.0_f64; 1000];
         for i in 1..1000 {
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let eps = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.5;
             s[i] = phi * s[i - 1] + eps;
         }
         let r = compute(&s, 5).unwrap();
         // Lag-1 ACF should be close to φ = 0.8.
-        assert!((r.autocorrelations[1] - phi).abs() < 0.05,
-            "AR(1) lag-1 ACF expected ~0.8, got {}", r.autocorrelations[1]);
+        assert!(
+            (r.autocorrelations[1] - phi).abs() < 0.05,
+            "AR(1) lag-1 ACF expected ~0.8, got {}",
+            r.autocorrelations[1]
+        );
     }
 
     #[test]
@@ -152,7 +178,11 @@ mod tests {
         let r500 = compute(&s500, 5).unwrap();
         let ratio = r50.confidence_band / r500.confidence_band;
         let expected = (500.0_f64 / 50.0).sqrt();
-        assert!((ratio - expected).abs() < 0.01,
-            "Bartlett ratio {}, expected {}", ratio, expected);
+        assert!(
+            (ratio - expected).abs() < 0.01,
+            "Bartlett ratio {}, expected {}",
+            ratio,
+            expected
+        );
     }
 }

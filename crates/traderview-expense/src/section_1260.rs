@@ -238,7 +238,8 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.financial_asset_type == FinancialAssetType::NotPassThruEntityInterestExcludedFromSection1260
+    if input.financial_asset_type
+        == FinancialAssetType::NotPassThruEntityInterestExcludedFromSection1260
     {
         return Output {
             mode: Section1260Mode::NotApplicableNotPassThruEntityInterest,
@@ -309,7 +310,9 @@ pub fn compute(input: &Input) -> Output {
         .saturating_sub(input.net_underlying_long_term_capital_gain_dollars);
 
     let interest_charge_dollars = u128::from(excess_gain_dollars)
-        .saturating_mul(u128::from(input.applicable_federal_rate_basis_points_annual))
+        .saturating_mul(u128::from(
+            input.applicable_federal_rate_basis_points_annual,
+        ))
         .saturating_mul(u128::from(input.number_of_full_years_transaction_open))
         .checked_div(u128::from(IRC_1260_AFR_BASIS_POINT_DENOMINATOR))
         .unwrap_or(0)
@@ -375,7 +378,10 @@ mod tests {
         input.financial_asset_type =
             FinancialAssetType::NotPassThruEntityInterestExcludedFromSection1260;
         let output = check(&input);
-        assert_eq!(output.mode, Section1260Mode::NotApplicableNotPassThruEntityInterest);
+        assert_eq!(
+            output.mode,
+            Section1260Mode::NotApplicableNotPassThruEntityInterest
+        );
     }
 
     #[test]
@@ -406,10 +412,12 @@ mod tests {
     #[test]
     fn short_term_gain_not_applicable() {
         let mut input = baseline_input();
-        input.gain_status =
-            GainStatus::GainIsShortTermNoSection1260RecharacterizationApplicable;
+        input.gain_status = GainStatus::GainIsShortTermNoSection1260RecharacterizationApplicable;
         let output = check(&input);
-        assert_eq!(output.mode, Section1260Mode::NotApplicableNoGainOrShortTermGain);
+        assert_eq!(
+            output.mode,
+            Section1260Mode::NotApplicableNoGainOrShortTermGain
+        );
     }
 
     #[test]
@@ -417,7 +425,10 @@ mod tests {
         let mut input = baseline_input();
         input.gain_status = GainStatus::NoGainOrLoss;
         let output = check(&input);
-        assert_eq!(output.mode, Section1260Mode::NotApplicableNoGainOrShortTermGain);
+        assert_eq!(
+            output.mode,
+            Section1260Mode::NotApplicableNoGainOrShortTermGain
+        );
     }
 
     #[test]
@@ -547,8 +558,7 @@ mod tests {
     #[test]
     fn pass_thru_entity_common_trust_fund_recharacterization() {
         let mut input = baseline_input();
-        input.financial_asset_type =
-            FinancialAssetType::PassThruEntityInterestCommonTrustFund;
+        input.financial_asset_type = FinancialAssetType::PassThruEntityInterestCommonTrustFund;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -589,7 +599,10 @@ mod tests {
         assert_eq!(IRC_1260_EFFECTIVE_DATE_MONTH, 7);
         assert_eq!(IRC_1260_EFFECTIVE_DATE_DAY, 11);
         assert_eq!(IRC_1260_NUMBER_OF_ENUMERATED_PASS_THRU_ENTITY_TYPES, 8);
-        assert_eq!(IRC_1260_NUMBER_OF_CONSTRUCTIVE_OWNERSHIP_TRANSACTION_TYPES, 4);
+        assert_eq!(
+            IRC_1260_NUMBER_OF_CONSTRUCTIVE_OWNERSHIP_TRANSACTION_TYPES,
+            4
+        );
         assert_eq!(IRC_1260_AFR_BASIS_POINT_DENOMINATOR, 10_000);
     }
 

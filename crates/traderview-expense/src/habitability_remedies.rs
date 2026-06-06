@@ -94,9 +94,8 @@ fn d(s: &str) -> Decimal {
 use std::str::FromStr;
 
 fn rules() -> &'static [RemedyRule] {
-    static R: once_cell::sync::Lazy<Vec<RemedyRule>> =
-        once_cell::sync::Lazy::new(|| {
-            vec![
+    static R: once_cell::sync::Lazy<Vec<RemedyRule>> = once_cell::sync::Lazy::new(|| {
+        vec![
                 // ─── California ──────────────────────────────────
                 RemedyRule {
                     state: "CA",
@@ -364,7 +363,7 @@ fn rules() -> &'static [RemedyRule] {
                     },
                 },
             ]
-        });
+    });
     &R
 }
 
@@ -461,9 +460,18 @@ mod tests {
         });
         assert!(r.state_recognized);
         assert_eq!(r.remedies.len(), 3);
-        assert!(r.remedies.iter().any(|x| x.remedy == HabitabilityRemedy::RepairAndDeduct));
-        assert!(r.remedies.iter().any(|x| x.remedy == HabitabilityRemedy::DamagesAction));
-        assert!(r.remedies.iter().any(|x| x.remedy == HabitabilityRemedy::EvictionAffirmativeDefense));
+        assert!(r
+            .remedies
+            .iter()
+            .any(|x| x.remedy == HabitabilityRemedy::RepairAndDeduct));
+        assert!(r
+            .remedies
+            .iter()
+            .any(|x| x.remedy == HabitabilityRemedy::DamagesAction));
+        assert!(r
+            .remedies
+            .iter()
+            .any(|x| x.remedy == HabitabilityRemedy::EvictionAffirmativeDefense));
     }
 
     #[test]
@@ -472,7 +480,11 @@ mod tests {
             state: "CA".into(),
             monthly_rent: dec!(2500),
         });
-        let rd = r.remedies.iter().find(|x| x.remedy == HabitabilityRemedy::RepairAndDeduct).unwrap();
+        let rd = r
+            .remedies
+            .iter()
+            .find(|x| x.remedy == HabitabilityRemedy::RepairAndDeduct)
+            .unwrap();
         assert_eq!(rd.repair_deduct_cap_dollars, dec!(2500));
     }
 
@@ -482,7 +494,11 @@ mod tests {
             state: "TX".into(),
             monthly_rent: dec!(1800),
         });
-        let rd = r.remedies.iter().find(|x| x.remedy == HabitabilityRemedy::RepairAndDeduct).unwrap();
+        let rd = r
+            .remedies
+            .iter()
+            .find(|x| x.remedy == HabitabilityRemedy::RepairAndDeduct)
+            .unwrap();
         assert_eq!(rd.notice_days_required, 7);
         assert_eq!(rd.cure_period_days, 7);
         assert_eq!(rd.repair_deduct_cap_dollars, dec!(1800));
@@ -494,7 +510,11 @@ mod tests {
             state: "IL".into(),
             monthly_rent: dec!(3000),
         });
-        let rd = r.remedies.iter().find(|x| x.remedy == HabitabilityRemedy::RepairAndDeduct).unwrap();
+        let rd = r
+            .remedies
+            .iter()
+            .find(|x| x.remedy == HabitabilityRemedy::RepairAndDeduct)
+            .unwrap();
         // Chicago RLTO: $500 fixed cap (we don't model the "half month's rent" alternative here).
         assert_eq!(rd.repair_deduct_cap_dollars, dec!(500));
     }
@@ -506,7 +526,11 @@ mod tests {
             state: "VA".into(),
             monthly_rent: dec!(1000),
         });
-        let escrow = r.remedies.iter().find(|x| x.remedy == HabitabilityRemedy::RentWithholdingEscrow).unwrap();
+        let escrow = r
+            .remedies
+            .iter()
+            .find(|x| x.remedy == HabitabilityRemedy::RentWithholdingEscrow)
+            .unwrap();
         assert_eq!(escrow.repair_deduct_cap_dollars, dec!(1500));
 
         // $2000 monthly rent → cap = max($2k, $1500) = $2000.
@@ -514,7 +538,11 @@ mod tests {
             state: "VA".into(),
             monthly_rent: dec!(2000),
         });
-        let escrow2 = r2.remedies.iter().find(|x| x.remedy == HabitabilityRemedy::RentWithholdingEscrow).unwrap();
+        let escrow2 = r2
+            .remedies
+            .iter()
+            .find(|x| x.remedy == HabitabilityRemedy::RentWithholdingEscrow)
+            .unwrap();
         assert_eq!(escrow2.repair_deduct_cap_dollars, dec!(2000));
     }
 
@@ -524,7 +552,11 @@ mod tests {
             state: "MA".into(),
             monthly_rent: dec!(2500),
         });
-        let withhold = r.remedies.iter().find(|x| x.remedy == HabitabilityRemedy::RentWithholdingEscrow).unwrap();
+        let withhold = r
+            .remedies
+            .iter()
+            .find(|x| x.remedy == HabitabilityRemedy::RentWithholdingEscrow)
+            .unwrap();
         assert_eq!(withhold.damages_multiplier, dec!(3));
         assert!(withhold.attorney_fees_to_prevailing_tenant);
     }
@@ -535,10 +567,19 @@ mod tests {
             state: "NY".into(),
             monthly_rent: dec!(3000),
         });
-        assert!(r.remedies.iter().any(|x| x.remedy == HabitabilityRemedy::RentWithholdingEscrow));
-        assert!(r.remedies.iter().any(|x| x.remedy == HabitabilityRemedy::EvictionAffirmativeDefense));
+        assert!(r
+            .remedies
+            .iter()
+            .any(|x| x.remedy == HabitabilityRemedy::RentWithholdingEscrow));
+        assert!(r
+            .remedies
+            .iter()
+            .any(|x| x.remedy == HabitabilityRemedy::EvictionAffirmativeDefense));
         // NY doesn't have a state-wide repair-and-deduct statute.
-        assert!(!r.remedies.iter().any(|x| x.remedy == HabitabilityRemedy::RepairAndDeduct));
+        assert!(!r
+            .remedies
+            .iter()
+            .any(|x| x.remedy == HabitabilityRemedy::RepairAndDeduct));
     }
 
     #[test]
@@ -547,7 +588,11 @@ mod tests {
             state: "FL".into(),
             monthly_rent: dec!(1500),
         });
-        let withhold = r.remedies.iter().find(|x| x.remedy == HabitabilityRemedy::RentWithholdingEscrow).unwrap();
+        let withhold = r
+            .remedies
+            .iter()
+            .find(|x| x.remedy == HabitabilityRemedy::RentWithholdingEscrow)
+            .unwrap();
         assert_eq!(withhold.notice_days_required, 7);
         assert_eq!(withhold.cure_period_days, 7);
     }
@@ -558,10 +603,17 @@ mod tests {
             state: "OR".into(),
             monthly_rent: dec!(2000),
         });
-        let rd = r.remedies.iter().find(|x| x.remedy == HabitabilityRemedy::RepairAndDeduct).unwrap();
+        let rd = r
+            .remedies
+            .iter()
+            .find(|x| x.remedy == HabitabilityRemedy::RepairAndDeduct)
+            .unwrap();
         assert_eq!(rd.repair_deduct_cap_dollars, dec!(300));
         assert!(rd.attorney_fees_to_prevailing_tenant);
-        assert!(r.remedies.iter().any(|x| x.remedy == HabitabilityRemedy::LeaseTermination));
+        assert!(r
+            .remedies
+            .iter()
+            .any(|x| x.remedy == HabitabilityRemedy::LeaseTermination));
     }
 
     #[test]
@@ -590,7 +642,11 @@ mod tests {
             state: "WA".into(),
             monthly_rent: dec!(2200),
         });
-        let rd = r.remedies.iter().find(|x| x.remedy == HabitabilityRemedy::RepairAndDeduct).unwrap();
+        let rd = r
+            .remedies
+            .iter()
+            .find(|x| x.remedy == HabitabilityRemedy::RepairAndDeduct)
+            .unwrap();
         assert_eq!(rd.cure_period_days, 10);
         assert_eq!(rd.repair_deduct_cap_dollars, dec!(2200));
     }
@@ -601,7 +657,11 @@ mod tests {
             state: "WA".into(),
             monthly_rent: dec!(2200),
         });
-        let escrow = r.remedies.iter().find(|x| x.remedy == HabitabilityRemedy::RentWithholdingEscrow).unwrap();
+        let escrow = r
+            .remedies
+            .iter()
+            .find(|x| x.remedy == HabitabilityRemedy::RentWithholdingEscrow)
+            .unwrap();
         assert_eq!(escrow.cure_period_days, 30);
     }
 
@@ -611,7 +671,11 @@ mod tests {
             state: "CA".into(),
             monthly_rent: dec!(2500),
         });
-        let damages = r.remedies.iter().find(|x| x.remedy == HabitabilityRemedy::DamagesAction).unwrap();
+        let damages = r
+            .remedies
+            .iter()
+            .find(|x| x.remedy == HabitabilityRemedy::DamagesAction)
+            .unwrap();
         assert_eq!(damages.repair_deduct_cap_dollars, dec!(5000));
         assert!(damages.attorney_fees_to_prevailing_tenant);
     }
@@ -624,8 +688,16 @@ mod tests {
                 state: state.into(),
                 monthly_rent: dec!(2000),
             });
-            let rd = r.remedies.iter().find(|x| x.remedy == HabitabilityRemedy::RepairAndDeduct).unwrap();
-            assert!(rd.attorney_fees_to_prevailing_tenant, "{} should award attorney fees", state);
+            let rd = r
+                .remedies
+                .iter()
+                .find(|x| x.remedy == HabitabilityRemedy::RepairAndDeduct)
+                .unwrap();
+            assert!(
+                rd.attorney_fees_to_prevailing_tenant,
+                "{} should award attorney fees",
+                state
+            );
         }
     }
 
@@ -636,7 +708,11 @@ mod tests {
             state: "CA".into(),
             monthly_rent: dec!(2000),
         });
-        let defense = r.remedies.iter().find(|x| x.remedy == HabitabilityRemedy::EvictionAffirmativeDefense).unwrap();
+        let defense = r
+            .remedies
+            .iter()
+            .find(|x| x.remedy == HabitabilityRemedy::EvictionAffirmativeDefense)
+            .unwrap();
         assert_eq!(defense.notice_days_required, 0);
         assert_eq!(defense.cure_period_days, 0);
     }

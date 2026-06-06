@@ -14,7 +14,10 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct SwapPoint { pub tenor_years: f64, pub rate_pct: f64 }
+pub struct SwapPoint {
+    pub tenor_years: f64,
+    pub rate_pct: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SwapRateCurveReport {
@@ -26,24 +29,37 @@ pub struct SwapRateCurveReport {
 }
 
 pub fn compute(points: &[SwapPoint]) -> Option<SwapRateCurveReport> {
-    if points.is_empty() { return None; }
-    if points.iter().any(|p| !p.tenor_years.is_finite() || p.tenor_years <= 0.0
-        || !p.rate_pct.is_finite()) {
+    if points.is_empty() {
+        return None;
+    }
+    if points
+        .iter()
+        .any(|p| !p.tenor_years.is_finite() || p.tenor_years <= 0.0 || !p.rate_pct.is_finite())
+    {
         return None;
     }
     let mut curve: Vec<SwapPoint> = points.to_vec();
-    curve.sort_by(|a, b| a.tenor_years.partial_cmp(&b.tenor_years)
-        .unwrap_or(std::cmp::Ordering::Equal));
+    curve.sort_by(|a, b| {
+        a.tenor_years
+            .partial_cmp(&b.tenor_years)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     let slope = if curve.len() >= 2 {
         Some((curve.last().unwrap().rate_pct - curve[0].rate_pct) * 100.0)
-    } else { None };
+    } else {
+        None
+    };
     let butterfly = if curve.len() >= 3 {
         let mid = curve[curve.len() / 2];
         let avg_ends = (curve[0].rate_pct + curve.last().unwrap().rate_pct) / 2.0;
         Some((mid.rate_pct - avg_ends) * 100.0)
-    } else { None };
+    } else {
+        None
+    };
     let find_rate = |target: f64| -> Option<f64> {
-        curve.iter().find(|p| (p.tenor_years - target).abs() < 0.01)
+        curve
+            .iter()
+            .find(|p| (p.tenor_years - target).abs() < 0.01)
             .map(|p| p.rate_pct)
     };
     let spread_2s10s = match (find_rate(2.0), find_rate(10.0)) {
@@ -55,8 +71,11 @@ pub fn compute(points: &[SwapPoint]) -> Option<SwapRateCurveReport> {
         _ => None,
     };
     Some(SwapRateCurveReport {
-        curve, slope_bps: slope, butterfly_bps: butterfly,
-        spread_2s10s_bps: spread_2s10s, spread_5s30s_bps: spread_5s30s,
+        curve,
+        slope_bps: slope,
+        butterfly_bps: butterfly,
+        spread_2s10s_bps: spread_2s10s,
+        spread_5s30s_bps: spread_5s30s,
     })
 }
 
@@ -65,11 +84,16 @@ mod tests {
     use super::*;
 
     fn p(tenor: f64, rate: f64) -> SwapPoint {
-        SwapPoint { tenor_years: tenor, rate_pct: rate }
+        SwapPoint {
+            tenor_years: tenor,
+            rate_pct: rate,
+        }
     }
 
     #[test]
-    fn empty_returns_none() { assert!(compute(&[]).is_none()); }
+    fn empty_returns_none() {
+        assert!(compute(&[]).is_none());
+    }
 
     #[test]
     fn invalid_returns_none() {

@@ -42,7 +42,10 @@ pub fn compute(closes: &[f64], lookback: usize) -> EfficiencyReport {
         // total == 0 means a flat segment — leave as None (undefined).
     }
     let latest = out.last().copied().flatten();
-    EfficiencyReport { series: out, latest }
+    EfficiencyReport {
+        series: out,
+        latest,
+    }
 }
 
 #[cfg(test)]

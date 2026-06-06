@@ -31,15 +31,30 @@ pub struct Report {
 
 #[allow(clippy::too_many_arguments)]
 pub fn compute(
-    s0: f64, mu: f64, sigma: f64,
-    jump_lambda: f64, jump_mean: f64, jump_stdev: f64,
-    dt: f64, steps: usize, paths: usize, seed: u64,
+    s0: f64,
+    mu: f64,
+    sigma: f64,
+    jump_lambda: f64,
+    jump_mean: f64,
+    jump_stdev: f64,
+    dt: f64,
+    steps: usize,
+    paths: usize,
+    seed: u64,
 ) -> Option<Report> {
     let finites = [s0, mu, sigma, jump_lambda, jump_mean, jump_stdev, dt];
-    if finites.iter().any(|x| !x.is_finite()) { return None; }
-    if s0 <= 0.0 || sigma < 0.0 || dt <= 0.0 { return None; }
-    if jump_lambda < 0.0 || jump_stdev < 0.0 { return None; }
-    if steps < 1 || paths < 1 { return None; }
+    if finites.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
+    if s0 <= 0.0 || sigma < 0.0 || dt <= 0.0 {
+        return None;
+    }
+    if jump_lambda < 0.0 || jump_stdev < 0.0 {
+        return None;
+    }
+    if steps < 1 || paths < 1 {
+        return None;
+    }
     let kappa = (jump_mean + 0.5 * jump_stdev * jump_stdev).exp() - 1.0;
     let drift = (mu - jump_lambda * kappa - 0.5 * sigma * sigma) * dt;
     let diffusion_coef = sigma * dt.sqrt();
@@ -67,11 +82,21 @@ pub fn compute(
     let stdev = var.max(0.0).sqrt();
     let log_returns: Vec<f64> = terminals.iter().map(|x| (x / s0).ln()).collect();
     let mean_lr = log_returns.iter().sum::<f64>() / n;
-    let var_lr = log_returns.iter().map(|x| (x - mean_lr).powi(2)).sum::<f64>() / n;
+    let var_lr = log_returns
+        .iter()
+        .map(|x| (x - mean_lr).powi(2))
+        .sum::<f64>()
+        / n;
     let std_lr = var_lr.max(0.0).sqrt();
     let skew_lr = if std_lr > 1e-12 {
-        log_returns.iter().map(|x| ((x - mean_lr) / std_lr).powi(3)).sum::<f64>() / n
-    } else { 0.0 };
+        log_returns
+            .iter()
+            .map(|x| ((x - mean_lr) / std_lr).powi(3))
+            .sum::<f64>()
+            / n
+    } else {
+        0.0
+    };
     Some(Report {
         mean_terminal: mean,
         stdev_terminal: stdev,
@@ -83,7 +108,9 @@ pub fn compute(
 }
 
 fn next_u64(state: &mut u64) -> u64 {
-    *state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+    *state = state
+        .wrapping_mul(6364136223846793005)
+        .wrapping_add(1442695040888963407);
     *state
 }
 
@@ -96,21 +123,29 @@ fn next_uniform(state: &mut u64) -> f64 {
 fn next_normal(state: &mut u64) -> f64 {
     let mut u1 = next_uniform(state);
     let u2 = next_uniform(state);
-    if u1 < 1e-300 { u1 = 1e-300; }
+    if u1 < 1e-300 {
+        u1 = 1e-300;
+    }
     (-2.0 * u1.ln()).sqrt() * (std::f64::consts::TAU * u2).cos()
 }
 
 /// Knuth's algorithm — exact for small lambda·dt (the trading case).
 fn next_poisson(state: &mut u64, lam: f64) -> u32 {
-    if lam <= 0.0 { return 0; }
+    if lam <= 0.0 {
+        return 0;
+    }
     let limit = (-lam).exp();
     let mut p = 1.0;
     let mut k: u32 = 0;
     loop {
         k += 1;
         p *= next_uniform(state);
-        if p <= limit { return k - 1; }
-        if k > 1000 { return k; }     // safety cap
+        if p <= limit {
+            return k - 1;
+        }
+        if k > 1000 {
+            return k;
+        } // safety cap
     }
 }
 
@@ -142,11 +177,7 @@ mod tests {
         // Downward jumps → fat left tail in log-returns → negative skew.
         // (Skew of terminal prices is dominated by lognormal right-skew
         // and can't be used directly.)
-        let r = compute(
-            100.0, 0.0, 0.10,
-            5.0, -0.05, 0.05,
-            0.01, 252, 5000, 7,
-        ).unwrap();
+        let r = compute(100.0, 0.0, 0.10, 5.0, -0.05, 0.05, 0.01, 252, 5000, 7).unwrap();
         assert!(r.skew_log_return < 0.0);
     }
 

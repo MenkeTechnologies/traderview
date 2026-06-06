@@ -197,7 +197,8 @@ pub fn compute(input: &Input) -> Output {
             }
             if matches!(
                 input.foreclosure_stage,
-                ForeclosureStage::ForeclosureSaleScheduled | ForeclosureStage::ForeclosureSaleCompleted
+                ForeclosureStage::ForeclosureSaleScheduled
+                    | ForeclosureStage::ForeclosureSaleCompleted
             ) && !input.ca_trustee_posted_within_5_business_days_of_nots
             {
                 return Output {
@@ -233,7 +234,8 @@ pub fn compute(input: &Input) -> Output {
                 };
             }
             if input.foreclosure_stage == ForeclosureStage::LegalActionFiled
-                && input.days_tenant_notice_after_summons_and_complaint > NY_RPAPL_1303_TENANT_NOTICE_DAYS
+                && input.days_tenant_notice_after_summons_and_complaint
+                    > NY_RPAPL_1303_TENANT_NOTICE_DAYS
             {
                 return Output {
                     mode: PreForeclosureTenantNotificationMode::ViolationNy1303_10DayTenantNoticeMissed,
@@ -245,7 +247,8 @@ pub fn compute(input: &Input) -> Output {
                     citations,
                 };
             }
-            if input.days_tenant_notice_after_summons_and_complaint <= NY_RPAPL_1303_TENANT_NOTICE_DAYS
+            if input.days_tenant_notice_after_summons_and_complaint
+                <= NY_RPAPL_1303_TENANT_NOTICE_DAYS
                 && input.foreclosure_stage == ForeclosureStage::LegalActionFiled
             {
                 Output {
@@ -394,7 +397,10 @@ mod tests {
             ..baseline_california_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PreForeclosureTenantNotificationMode::NotApplicableNoForeclosurePending);
+        assert_eq!(
+            result.mode,
+            PreForeclosureTenantNotificationMode::NotApplicableNoForeclosurePending
+        );
     }
 
     #[test]
@@ -404,7 +410,10 @@ mod tests {
             ..baseline_california_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PreForeclosureTenantNotificationMode::NotApplicableJurisdictionPtfaOnly);
+        assert_eq!(
+            result.mode,
+            PreForeclosureTenantNotificationMode::NotApplicableJurisdictionPtfaOnly
+        );
     }
 
     #[test]
@@ -420,7 +429,10 @@ mod tests {
             ..baseline_california_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PreForeclosureTenantNotificationMode::ViolationCaServicerContact30DayWindowMissed);
+        assert_eq!(
+            result.mode,
+            PreForeclosureTenantNotificationMode::ViolationCaServicerContact30DayWindowMissed
+        );
     }
 
     #[test]
@@ -431,7 +443,10 @@ mod tests {
             ..baseline_california_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PreForeclosureTenantNotificationMode::ViolationCa2924_8TrusteePostingMissedAfterNots);
+        assert_eq!(
+            result.mode,
+            PreForeclosureTenantNotificationMode::ViolationCa2924_8TrusteePostingMissedAfterNots
+        );
     }
 
     #[test]
@@ -454,7 +469,10 @@ mod tests {
             ..baseline_california_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PreForeclosureTenantNotificationMode::ViolationNy1304_90DayPreForeclosureNoticeMissed);
+        assert_eq!(
+            result.mode,
+            PreForeclosureTenantNotificationMode::ViolationNy1304_90DayPreForeclosureNoticeMissed
+        );
     }
 
     #[test]
@@ -466,7 +484,10 @@ mod tests {
             ..baseline_california_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PreForeclosureTenantNotificationMode::CompliantNyRpapl1303TenantNoticeWithin10Days);
+        assert_eq!(
+            result.mode,
+            PreForeclosureTenantNotificationMode::CompliantNyRpapl1303TenantNoticeWithin10Days
+        );
     }
 
     #[test]
@@ -478,7 +499,10 @@ mod tests {
             ..baseline_california_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PreForeclosureTenantNotificationMode::ViolationNy1303_10DayTenantNoticeMissed);
+        assert_eq!(
+            result.mode,
+            PreForeclosureTenantNotificationMode::ViolationNy1303_10DayTenantNoticeMissed
+        );
     }
 
     #[test]
@@ -501,7 +525,10 @@ mod tests {
             ..baseline_california_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PreForeclosureTenantNotificationMode::ViolationWaTrusteeSale90DayNoticeMissed);
+        assert_eq!(
+            result.mode,
+            PreForeclosureTenantNotificationMode::ViolationWaTrusteeSale90DayNoticeMissed
+        );
     }
 
     #[test]
@@ -512,7 +539,10 @@ mod tests {
             ..baseline_california_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PreForeclosureTenantNotificationMode::CompliantWaRcw612414660DayNoticeToVacate);
+        assert_eq!(
+            result.mode,
+            PreForeclosureTenantNotificationMode::CompliantWaRcw612414660DayNoticeToVacate
+        );
     }
 
     #[test]
@@ -524,7 +554,10 @@ mod tests {
             ..baseline_california_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PreForeclosureTenantNotificationMode::ViolationWa60DayWrittenNoticeToVacateMissed);
+        assert_eq!(
+            result.mode,
+            PreForeclosureTenantNotificationMode::ViolationWa60DayWrittenNoticeToVacateMissed
+        );
     }
 
     #[test]
@@ -569,7 +602,10 @@ mod tests {
             ..baseline_california_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PreForeclosureTenantNotificationMode::CompliantIl735ILCS5_15_1701BonaFideLeaseProtected);
+        assert_eq!(
+            result.mode,
+            PreForeclosureTenantNotificationMode::CompliantIl735ILCS5_15_1701BonaFideLeaseProtected
+        );
     }
 
     #[test]
@@ -612,7 +648,10 @@ mod tests {
         assert_eq!(NY_RPAPL_1304_PRE_FORECLOSURE_DAYS, 90);
         assert_eq!(WA_RCW_6124_146_NOTICE_TO_VACATE_DAYS, 60);
         assert_eq!(WA_RCW_6124_143_TRUSTEE_SALE_NOTICE_DAYS_BEFORE_SALE, 90);
-        assert_eq!(MA_244_35C_NEW_OWNER_NOTICE_POSTING_DAYS_BEFORE_RENT_NONPAYMENT_EVICTION, 30);
+        assert_eq!(
+            MA_244_35C_NEW_OWNER_NOTICE_POSTING_DAYS_BEFORE_RENT_NONPAYMENT_EVICTION,
+            30
+        );
         assert_eq!(MA_POST_FORECLOSURE_NOTICE_TO_QUIT_DAYS, 90);
         assert_eq!(PTFA_FEDERAL_90_DAY_NOTICE_DAYS, 90);
     }

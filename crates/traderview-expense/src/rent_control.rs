@@ -87,9 +87,8 @@ fn d(s: &str) -> Decimal {
 }
 
 fn rules() -> &'static [StateRule] {
-    static R: once_cell::sync::Lazy<Vec<StateRule>> =
-        once_cell::sync::Lazy::new(|| {
-            vec![
+    static R: once_cell::sync::Lazy<Vec<StateRule>> = once_cell::sync::Lazy::new(|| {
+        vec![
                 // ─── Statewide caps ───────────────────────────────
                 StateRule {
                     state: "CA",
@@ -332,13 +331,15 @@ fn rules() -> &'static [StateRule] {
                     },
                 },
             ]
-        });
+    });
     &R
 }
 
 pub fn rule_for(state: &str) -> Option<&'static StateRule> {
     let upper = state.to_uppercase();
-    rules().iter().find(|r| r.state.eq_ignore_ascii_case(&upper))
+    rules()
+        .iter()
+        .find(|r| r.state.eq_ignore_ascii_case(&upper))
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -407,8 +408,7 @@ pub fn check(input: &RentIncreaseCheckInput) -> RentIncreaseCheckResult {
     };
 
     let proposed_pct = if input.current_rent > Decimal::ZERO {
-        ((input.proposed_new_rent - input.current_rent) / input.current_rent)
-            .round_dp(4)
+        ((input.proposed_new_rent - input.current_rent) / input.current_rent).round_dp(4)
     } else {
         Decimal::ZERO
     };
@@ -421,8 +421,7 @@ pub fn check(input: &RentIncreaseCheckInput) -> RentIncreaseCheckResult {
         proposed_increase_pct: proposed_pct,
         compliant: true,
         exemption_applied: None,
-        just_cause_required: rule.just_cause_required_after_12mo
-            && input.tenancy_months >= 12,
+        just_cause_required: rule.just_cause_required_after_12mo && input.tenancy_months >= 12,
         statute: rule.citation.statute.into(),
         source: rule.citation.source.into(),
         notes: rule.notes.into(),
@@ -524,7 +523,10 @@ mod tests {
         i.proposed_new_rent = dec!(3000); // huge increase
         let r = check(&i);
         assert!(r.compliant); // exempt
-        assert_eq!(r.exemption_applied, Some("single-family non-corporate owner"));
+        assert_eq!(
+            r.exemption_applied,
+            Some("single-family non-corporate owner")
+        );
     }
 
     #[test]
@@ -534,7 +536,10 @@ mod tests {
         i.proposed_new_rent = dec!(5000);
         let r = check(&i);
         assert!(r.compliant);
-        assert_eq!(r.exemption_applied, Some("owner-occupied 2-4 unit building"));
+        assert_eq!(
+            r.exemption_applied,
+            Some("owner-occupied 2-4 unit building")
+        );
     }
 
     #[test]
@@ -544,7 +549,10 @@ mod tests {
         i.proposed_new_rent = dec!(3000);
         let r = check(&i);
         assert!(r.compliant);
-        assert_eq!(r.exemption_applied, Some("new construction (< 15 years old)"));
+        assert_eq!(
+            r.exemption_applied,
+            Some("new construction (< 15 years old)")
+        );
     }
 
     #[test]
@@ -562,7 +570,10 @@ mod tests {
         i.proposed_new_rent = dec!(3000);
         let r = check(&i);
         assert!(r.compliant);
-        assert_eq!(r.exemption_applied, Some("tenancy < 12 months (cap doesn't kick in until renewal)"));
+        assert_eq!(
+            r.exemption_applied,
+            Some("tenancy < 12 months (cap doesn't kick in until renewal)")
+        );
     }
 
     #[test]
@@ -680,7 +691,10 @@ mod tests {
         i.single_family_non_corporate = true;
         i.year_built = Some(2000); // old enough to not be new construction
         let r = check(&i);
-        assert_eq!(r.exemption_applied, Some("single-family non-corporate owner"));
+        assert_eq!(
+            r.exemption_applied,
+            Some("single-family non-corporate owner")
+        );
     }
 
     #[test]

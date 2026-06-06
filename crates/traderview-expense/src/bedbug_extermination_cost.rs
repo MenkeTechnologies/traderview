@@ -127,13 +127,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // DefaultImpliedWarrantyOfHabitability — 48 other states + DC.
     let default_states = [
-        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE",
-        "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS",
-        "KY", "LA", "MD", "MA", "MI", "MN", "MS", "MO",
-        "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC",
-        "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD",
-        "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI",
-        "WY",
+        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA",
+        "KS", "KY", "LA", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM",
+        "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA",
+        "WA", "WV", "WI", "WY",
     ];
     for code in default_states {
         m.insert(
@@ -276,7 +273,10 @@ pub fn check(input: &BedbugExterminationInput) -> BedbugExterminationResult {
             reasons.push("follow-up / maintenance treatments NOT scheduled".to_string());
         }
         if vacant_unit_prohibition_violated {
-            reasons.push("§ 1954.602 prohibition violated — showing vacant unit with known infestation".to_string());
+            reasons.push(
+                "§ 1954.602 prohibition violated — showing vacant unit with known infestation"
+                    .to_string(),
+            );
         }
         format!(
             "State applies {} regime; landlord NON-COMPLIANT: {}.",
@@ -542,7 +542,10 @@ mod tests {
 
     #[test]
     fn ca_only_vacant_unit_prohibition_state() {
-        let count = RULES.iter().filter(|(_, r)| r.vacant_unit_show_prohibition).count();
+        let count = RULES
+            .iter()
+            .filter(|(_, r)| r.vacant_unit_show_prohibition)
+            .count();
         assert_eq!(count, 1);
     }
 
@@ -557,7 +560,10 @@ mod tests {
 
     #[test]
     fn me_only_licensed_pest_control_required_state() {
-        let count = RULES.iter().filter(|(_, r)| r.licensed_pest_control_required).count();
+        let count = RULES
+            .iter()
+            .filter(|(_, r)| r.licensed_pest_control_required)
+            .count();
         assert_eq!(count, 1);
     }
 

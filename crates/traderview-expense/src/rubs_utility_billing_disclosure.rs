@@ -187,9 +187,7 @@ fn check_texas(input: &RubsUtilityBillingInput) -> RubsUtilityBillingResult {
     }
 }
 
-fn check_district_of_columbia(
-    input: &RubsUtilityBillingInput,
-) -> RubsUtilityBillingResult {
+fn check_district_of_columbia(input: &RubsUtilityBillingInput) -> RubsUtilityBillingResult {
     let mut violations: Vec<String> = Vec::new();
     let notes: Vec<String> = vec![
         "D.C. Code § 42-3502.06A + DC AG Schwalb guidance — landlord must clearly identify RUBS allocation method in lease + provide ANNUAL RECONCILIATION STATEMENT showing actual utility costs vs amounts collected; no surcharges permitted"
@@ -198,8 +196,7 @@ fn check_district_of_columbia(
             .to_string(),
     ];
 
-    if !input.lease_states_rubs_allocation || !input.lease_specifies_exact_calculation_method
-    {
+    if !input.lease_states_rubs_allocation || !input.lease_specifies_exact_calculation_method {
         violations.push(
             "D.C. Code § 42-3502.06A — landlord must clearly identify RUBS allocation method in lease"
                 .to_string(),
@@ -323,7 +320,10 @@ mod tests {
         i.allocation_method = AllocationMethod::Other;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("occupants OR unit square footage")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("occupants OR unit square footage")));
     }
 
     #[test]
@@ -341,7 +341,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.compliant);
         assert!(r.service_fee_violation_engaged);
-        assert!(r.violations.iter().any(|v| v.contains("service charge or administrative fee")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("service charge or administrative fee")));
     }
 
     #[test]
@@ -376,7 +379,11 @@ mod tests {
         let mut i = tx_compliant();
         i.landlord_added_service_or_administrative_fee = true;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("uniquely prohibits service") && n.contains("absorb administrative cost")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("uniquely prohibits service")
+                && n.contains("absorb administrative cost")));
     }
 
     #[test]
@@ -398,7 +405,10 @@ mod tests {
         i.annual_reconciliation_statement_provided = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("ANNUAL RECONCILIATION STATEMENT")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("ANNUAL RECONCILIATION STATEMENT")));
     }
 
     #[test]
@@ -407,7 +417,10 @@ mod tests {
         i.landlord_added_service_or_administrative_fee = true;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 42-3502.06A") && v.contains("no surcharges")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 42-3502.06A") && v.contains("no surcharges")));
     }
 
     #[test]
@@ -427,7 +440,10 @@ mod tests {
     fn default_no_specific_rubs_statute_compliant() {
         let r = check(&default_base());
         assert!(r.compliant);
-        assert!(r.notes.iter().any(|n| n.contains("no specific RUBS statute")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("no specific RUBS statute")));
     }
 
     #[test]
@@ -441,7 +457,10 @@ mod tests {
     #[test]
     fn default_state_udap_note_present() {
         let r = check(&default_base());
-        assert!(r.notes.iter().any(|n| n.contains("unconscionability") && n.contains("UDAP")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("unconscionability") && n.contains("UDAP")));
     }
 
     #[test]

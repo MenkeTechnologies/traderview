@@ -27,20 +27,28 @@ pub struct ArchLmReport {
 
 pub fn test(returns: &[f64], lags: usize) -> Option<ArchLmReport> {
     let n = returns.len();
-    if n < 3 * lags + 2 || lags == 0 { return None; }
-    if returns.iter().any(|r| !r.is_finite()) { return None; }
+    if n < 3 * lags + 2 || lags == 0 {
+        return None;
+    }
+    if returns.iter().any(|r| !r.is_finite()) {
+        return None;
+    }
     // Demean.
     let mean = returns.iter().sum::<f64>() / n as f64;
     let e_sq: Vec<f64> = returns.iter().map(|r| (r - mean).powi(2)).collect();
     let start = lags;
     let m = n - start;
-    if m < lags + 2 { return None; }
+    if m < lags + 2 {
+        return None;
+    }
     let mut x_intercept = Vec::with_capacity(m);
     let mut x_lags: Vec<Vec<f64>> = (0..lags).map(|_| Vec::with_capacity(m)).collect();
     let mut y = Vec::with_capacity(m);
     for t in start..n {
         x_intercept.push(1.0);
-        for i in 0..lags { x_lags[i].push(e_sq[t - 1 - i]); }
+        for i in 0..lags {
+            x_lags[i].push(e_sq[t - 1 - i]);
+        }
         y.push(e_sq[t]);
     }
     let mut cols = vec![x_intercept];
@@ -53,7 +61,9 @@ pub fn test(returns: &[f64], lags: usize) -> Option<ArchLmReport> {
     }
     let y_mean: f64 = y.iter().sum::<f64>() / m as f64;
     let ss_tot: f64 = y.iter().map(|yv| (yv - y_mean).powi(2)).sum();
-    if ss_tot <= 0.0 { return None; }
+    if ss_tot <= 0.0 {
+        return None;
+    }
     let r2 = 1.0 - ss_res / ss_tot;
     let lm = (m as f64) * r2;
     Some(ArchLmReport {
@@ -67,7 +77,9 @@ pub fn test(returns: &[f64], lags: usize) -> Option<ArchLmReport> {
 fn ols(x: &[Vec<f64>], y: &[f64]) -> Option<Vec<f64>> {
     let p = x.len();
     let n = y.len();
-    if p == 0 || n == 0 || x.iter().any(|c| c.len() != n) { return None; }
+    if p == 0 || n == 0 || x.iter().any(|c| c.len() != n) {
+        return None;
+    }
     let mut xtx = vec![vec![0.0_f64; p]; p];
     let mut xty = vec![0.0_f64; p];
     for i in 0..p {
@@ -78,24 +90,38 @@ fn ols(x: &[Vec<f64>], y: &[f64]) -> Option<Vec<f64>> {
     }
     let mut aug = vec![vec![0.0_f64; p + 1]; p];
     for i in 0..p {
-        for j in 0..p { aug[i][j] = xtx[i][j]; }
+        for j in 0..p {
+            aug[i][j] = xtx[i][j];
+        }
         aug[i][p] = xty[i];
     }
     for i in 0..p {
         let mut pivot = i;
         for r in (i + 1)..p {
-            if aug[r][i].abs() > aug[pivot][i].abs() { pivot = r; }
+            if aug[r][i].abs() > aug[pivot][i].abs() {
+                pivot = r;
+            }
         }
-        if aug[pivot][i].abs() < 1e-18 { return None; }
+        if aug[pivot][i].abs() < 1e-18 {
+            return None;
+        }
         aug.swap(i, pivot);
         let div = aug[i][i];
-        for v in aug[i].iter_mut() { *v /= div; }
+        for v in aug[i].iter_mut() {
+            *v /= div;
+        }
         for r in 0..p {
-            if r == i { continue; }
+            if r == i {
+                continue;
+            }
             let f = aug[r][i];
-            if f == 0.0 { continue; }
+            if f == 0.0 {
+                continue;
+            }
             let pivot_row = aug[i].clone();
-            for (j, v) in aug[r].iter_mut().enumerate() { *v -= f * pivot_row[j]; }
+            for (j, v) in aug[r].iter_mut().enumerate() {
+                *v -= f * pivot_row[j];
+            }
         }
     }
     Some((0..p).map(|i| aug[i][p]).collect())
@@ -129,10 +155,12 @@ mod tests {
         let mut state: u64 = 42;
         let mut r = vec![0.0_f64; n];
         for t in 1..n {
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let u2 = (state >> 32) as f64 / u32::MAX as f64;
             let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
@@ -141,9 +169,11 @@ mod tests {
         }
         let report = test(&r, 5).unwrap();
         // Strong ARCH effects → LM well above 5% χ²(5) critical (11.07).
-        assert!(report.lm_statistic > 20.0,
+        assert!(
+            report.lm_statistic > 20.0,
             "ARCH(1) series should reject homoscedasticity, got LM={}",
-            report.lm_statistic);
+            report.lm_statistic
+        );
     }
 
     #[test]
@@ -152,10 +182,12 @@ mod tests {
         let mut state: u64 = 999;
         let mut r = Vec::with_capacity(n);
         for _ in 0..n / 2 {
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let u2 = (state >> 32) as f64 / u32::MAX as f64;
             let z1 = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
@@ -165,9 +197,11 @@ mod tests {
         }
         let report = test(&r, 5).unwrap();
         // Under the null, LM has mean = lags = 5. Allow generous band.
-        assert!(report.lm_statistic < 25.0,
+        assert!(
+            report.lm_statistic < 25.0,
             "iid Gaussian should NOT show strong ARCH, got LM={}",
-            report.lm_statistic);
+            report.lm_statistic
+        );
     }
 
     #[test]

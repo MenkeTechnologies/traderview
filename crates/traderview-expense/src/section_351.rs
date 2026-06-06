@@ -176,10 +176,12 @@ pub fn compute(input: &Section351Input) -> Section351Result {
             };
             // §351(b)(2): no loss recognized under §351 — preserved
             // in basis.
-            (total_recognized.min(realized_gain.max(0) + section_357c_gain), 0)
+            (
+                total_recognized.min(realized_gain.max(0) + section_357c_gain),
+                0,
+            )
         }
-        NonRecognitionResult::ControlTestFailed
-        | NonRecognitionResult::PureServicesExcluded => {
+        NonRecognitionResult::ControlTestFailed | NonRecognitionResult::PureServicesExcluded => {
             // Outside §351 → full recognition under general §1001
             // realization rules.
             (realized_gain, realized_loss)

@@ -40,7 +40,10 @@ fn single_window(returns: &[f64]) -> Option<WindowMetrics> {
     let mut rv = 0.0_f64;
     let mut ok = true;
     for r in returns {
-        if !r.is_finite() { ok = false; break; }
+        if !r.is_finite() {
+            ok = false;
+            break;
+        }
         rv += r * r;
     }
     if !ok || !rv.is_finite() || rv < 0.0 {
@@ -50,10 +53,15 @@ fn single_window(returns: &[f64]) -> Option<WindowMetrics> {
         let mut sum = 0.0_f64;
         let mut bv_ok = true;
         for w in returns.windows(2) {
-            if !w[0].is_finite() || !w[1].is_finite() { bv_ok = false; break; }
+            if !w[0].is_finite() || !w[1].is_finite() {
+                bv_ok = false;
+                break;
+            }
             sum += w[0].abs() * w[1].abs();
         }
-        if !bv_ok { return None; }
+        if !bv_ok {
+            return None;
+        }
         (std::f64::consts::PI / 2.0) * sum
     } else {
         0.0
@@ -108,9 +116,12 @@ mod tests {
         let m = out[0].unwrap();
         // |RV − BV| should be tiny vs RV magnitude.
         if m.realized_variance > 1e-12 {
-            assert!(m.jump_component / m.realized_variance < 0.5,
+            assert!(
+                m.jump_component / m.realized_variance < 0.5,
                 "smooth process should have small jump fraction: jump={} RV={}",
-                m.jump_component, m.realized_variance);
+                m.jump_component,
+                m.realized_variance
+            );
         }
     }
 
@@ -119,12 +130,16 @@ mod tests {
         // All small returns + one huge spike → RV dominated by spike,
         // BV barely sees it (only paired with neighbors).
         let mut returns = vec![0.0001; 100];
-        returns[50] = 0.5;    // huge jump
+        returns[50] = 0.5; // huge jump
         let out = compute(&[returns]);
         let m = out[0].unwrap();
         // Jump component should be the dominant share of RV.
-        assert!(m.jump_component > 0.5 * m.realized_variance,
-            "jump should dominate RV: jump={} RV={}", m.jump_component, m.realized_variance);
+        assert!(
+            m.jump_component > 0.5 * m.realized_variance,
+            "jump should dominate RV: jump={} RV={}",
+            m.jump_component,
+            m.realized_variance
+        );
     }
 
     #[test]
@@ -138,11 +153,7 @@ mod tests {
 
     #[test]
     fn multiple_windows_processed_independently() {
-        let out = compute(&[
-            vec![0.01, 0.02, 0.01],
-            vec![0.05, 0.05, 0.05],
-            vec![],
-        ]);
+        let out = compute(&[vec![0.01, 0.02, 0.01], vec![0.05, 0.05, 0.05], vec![]]);
         assert!(out[0].is_some());
         assert!(out[1].is_some());
         assert!(out[2].is_none());

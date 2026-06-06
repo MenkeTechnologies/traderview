@@ -39,16 +39,24 @@ pub fn compute(
     confidence: f64,
 ) -> Option<EvtVarReport> {
     if !threshold.is_finite()
-        || n_exceedances == 0 || n_total == 0 || n_exceedances >= n_total
-        || !shape_xi.is_finite() || !scale_beta.is_finite() || scale_beta <= 0.0
-        || !confidence.is_finite() || !(0.5..1.0).contains(&confidence) {
+        || n_exceedances == 0
+        || n_total == 0
+        || n_exceedances >= n_total
+        || !shape_xi.is_finite()
+        || !scale_beta.is_finite()
+        || scale_beta <= 0.0
+        || !confidence.is_finite()
+        || !(0.5..1.0).contains(&confidence)
+    {
         return None;
     }
     let n_f = n_total as f64;
     let n_u = n_exceedances as f64;
     let p_u = n_u / n_f;
     let alpha_excess = n_f / n_u * (1.0 - confidence);
-    if alpha_excess <= 0.0 || alpha_excess > 1.0 { return None; }
+    if alpha_excess <= 0.0 || alpha_excess > 1.0 {
+        return None;
+    }
     let (var, es) = if shape_xi.abs() < 1e-9 {
         let v = threshold + scale_beta * (1.0 / alpha_excess).ln();
         let e = v + scale_beta;
@@ -59,8 +67,7 @@ pub fn compute(
             // ES not defined; just return VaR.
             (v, f64::INFINITY)
         } else {
-            let e = v / (1.0 - shape_xi)
-                + (scale_beta - shape_xi * threshold) / (1.0 - shape_xi);
+            let e = v / (1.0 - shape_xi) + (scale_beta - shape_xi * threshold) / (1.0 - shape_xi);
             (v, e)
         }
     };

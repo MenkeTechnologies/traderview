@@ -332,10 +332,7 @@ mod tests {
         let mut input = base_ca();
         input.landlord_response = LandlordResponse::UnreasonableConditionsImposed;
         let output = check(&input);
-        assert_eq!(
-            output.severity,
-            Severity::UnreasonableConditionsViolation
-        );
+        assert_eq!(output.severity, Severity::UnreasonableConditionsViolation);
         // $5K + $10K = $15K
         assert_eq!(output.estimated_landlord_exposure_cents, 15_000_00);
     }

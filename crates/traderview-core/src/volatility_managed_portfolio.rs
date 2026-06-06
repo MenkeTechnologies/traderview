@@ -41,13 +41,20 @@ pub fn compute(
     max_leverage: f64,
 ) -> Option<VolManagedReport> {
     let n = returns.len();
-    if n < lookback + 1 || lookback < 5
-        || !target_annualized_vol.is_finite() || target_annualized_vol <= 0.0
-        || !periods_per_year.is_finite() || periods_per_year <= 0.0
-        || !max_leverage.is_finite() || max_leverage <= 0.0 {
+    if n < lookback + 1
+        || lookback < 5
+        || !target_annualized_vol.is_finite()
+        || target_annualized_vol <= 0.0
+        || !periods_per_year.is_finite()
+        || periods_per_year <= 0.0
+        || !max_leverage.is_finite()
+        || max_leverage <= 0.0
+    {
         return None;
     }
-    if returns.iter().any(|x| !x.is_finite()) { return None; }
+    if returns.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let target_var_period = target_annualized_vol * target_annualized_vol / periods_per_year;
     let mut managed = vec![None; n];
     let mut leverages = vec![None; n];
@@ -62,7 +69,9 @@ pub fn compute(
         let var: f64 = win.iter().map(|r| (r - mean).powi(2)).sum::<f64>() / n_f;
         let lev = if var > 0.0 {
             (target_var_period / var).min(max_leverage)
-        } else { max_leverage };
+        } else {
+            max_leverage
+        };
         let managed_ret = lev * returns[i];
         equity *= 1.0 + managed_ret;
         managed[i] = Some(managed_ret);
@@ -71,12 +80,16 @@ pub fn compute(
         lev_sum += lev;
         lev_count += 1;
     }
-    let mean_lev = if lev_count > 0 { lev_sum / lev_count as f64 } else { 0.0 };
+    let mean_lev = if lev_count > 0 {
+        lev_sum / lev_count as f64
+    } else {
+        0.0
+    };
     let realized: Vec<f64> = managed.iter().filter_map(|x| *x).collect();
     let r_n = realized.len();
     let r_mean: f64 = realized.iter().sum::<f64>() / r_n as f64;
-    let r_var: f64 = realized.iter().map(|r| (r - r_mean).powi(2)).sum::<f64>()
-        / (r_n - 1).max(1) as f64;
+    let r_var: f64 =
+        realized.iter().map(|r| (r - r_mean).powi(2)).sum::<f64>() / (r_n - 1).max(1) as f64;
     let managed_vol_ann = r_var.max(0.0).sqrt() * periods_per_year.sqrt();
     let unmanaged: Vec<f64> = returns[lookback..].to_vec();
     let u_mean: f64 = unmanaged.iter().sum::<f64>() / unmanaged.len() as f64;
@@ -129,11 +142,14 @@ mod tests {
     fn high_volatility_lookback_yields_low_leverage() {
         // High realized vol → leverage scales down.
         let mut state: u64 = 42;
-        let r: Vec<f64> = (0..200).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.10
-        }).collect();
+        let r: Vec<f64> = (0..200)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.10
+            })
+            .collect();
         let result = compute(&r, 60, 0.15, 252.0, 10.0).unwrap();
         // The realized vol is high → mean_leverage should be below cap.
         assert!(result.mean_leverage < 10.0);
@@ -144,22 +160,30 @@ mod tests {
         // Stationary iid returns with σ ≈ 1% per period → realized vol
         // matches; managed should achieve target_vol approximately.
         let mut state: u64 = 11;
-        let r: Vec<f64> = (0..1000).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u2 = (state >> 32) as f64 / u32::MAX as f64;
-            0.01 * (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
-        }).collect();
+        let r: Vec<f64> = (0..1000)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u2 = (state >> 32) as f64 / u32::MAX as f64;
+                0.01 * (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
+            })
+            .collect();
         let target_vol = 0.10;
         let result = compute(&r, 60, target_vol, 252.0, 50.0).unwrap();
         // Should be in the ballpark of target.
         let rel = (result.annualized_managed_vol - target_vol).abs() / target_vol;
-        assert!(rel < 0.50,
+        assert!(
+            rel < 0.50,
             "managed vol {} vs target {}, rel diff {}",
-            result.annualized_managed_vol, target_vol, rel);
+            result.annualized_managed_vol,
+            target_vol,
+            rel
+        );
     }
 
     #[test]

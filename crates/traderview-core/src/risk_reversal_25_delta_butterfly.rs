@@ -35,10 +35,18 @@ pub struct WingReport {
     pub sigma_25_put: f64,
 }
 
-pub fn decompose(sigma_25_call: f64, sigma_25_put: f64, sigma_atm: f64) -> Option<DecompositionReport> {
+pub fn decompose(
+    sigma_25_call: f64,
+    sigma_25_put: f64,
+    sigma_atm: f64,
+) -> Option<DecompositionReport> {
     let vs = [sigma_25_call, sigma_25_put, sigma_atm];
-    if vs.iter().any(|x| !x.is_finite()) { return None; }
-    if vs.iter().any(|&x| x <= 0.0) { return None; }
+    if vs.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
+    if vs.iter().any(|&x| x <= 0.0) {
+        return None;
+    }
     let wing_avg = 0.5 * (sigma_25_call + sigma_25_put);
     let rr = sigma_25_call - sigma_25_put;
     let bf = wing_avg - sigma_atm;
@@ -54,12 +62,21 @@ pub fn decompose(sigma_25_call: f64, sigma_25_put: f64, sigma_atm: f64) -> Optio
 
 pub fn from_atm_rr_bf(atm: f64, rr: f64, bf: f64) -> Option<WingReport> {
     let vs = [atm, rr, bf];
-    if vs.iter().any(|x| !x.is_finite()) { return None; }
-    if atm <= 0.0 { return None; }
+    if vs.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
+    if atm <= 0.0 {
+        return None;
+    }
     let sigma_25_call = atm + bf + 0.5 * rr;
     let sigma_25_put = atm + bf - 0.5 * rr;
-    if sigma_25_call < 0.0 || sigma_25_put < 0.0 { return None; }
-    Some(WingReport { sigma_25_call, sigma_25_put })
+    if sigma_25_call < 0.0 || sigma_25_put < 0.0 {
+        return None;
+    }
+    Some(WingReport {
+        sigma_25_call,
+        sigma_25_put,
+    })
 }
 
 #[cfg(test)]
@@ -99,7 +116,9 @@ mod tests {
 
     #[test]
     fn roundtrip_decompose_reconstruct() {
-        let c = 0.135; let p = 0.115; let atm = 0.12;
+        let c = 0.135;
+        let p = 0.115;
+        let atm = 0.12;
         let d = decompose(c, p, atm).unwrap();
         let w = from_atm_rr_bf(d.atm, d.risk_reversal, d.butterfly).unwrap();
         assert!((w.sigma_25_call - c).abs() < 1e-12);

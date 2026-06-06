@@ -75,7 +75,11 @@ mod tests {
         let out = compute(&v, 10);
         let last = out[59].expect("populated");
         // ZLEMA on a linear trend ≈ current price (the pre-shift cancels the lag).
-        assert!((last - v[59]).abs() < 3.0, "ZLEMA={last} vs price={}", v[59]);
+        assert!(
+            (last - v[59]).abs() < 3.0,
+            "ZLEMA={last} vs price={}",
+            v[59]
+        );
     }
 
     #[test]

@@ -88,14 +88,23 @@ pub fn detect(bars: &[Bar], cfg: &Config) -> Option<CupHandleCandidate> {
         let right_rim_idx = last - handle_len;
         let handle_slice = &bars[right_rim_idx + 1..=last];
         let right_rim_price = bars[right_rim_idx].high;
-        if !right_rim_price.is_finite() || right_rim_price <= 0.0 { continue; }
-        // Handle bars: all closes ≤ right rim AND lowest handle close is
-        // within max_handle_depth_pct of rim.
-        if handle_slice.iter().any(|b| !b.close.is_finite() || b.close > right_rim_price) {
+        if !right_rim_price.is_finite() || right_rim_price <= 0.0 {
             continue;
         }
-        let (handle_low_offset, handle_low_bar) = handle_slice.iter().enumerate()
-            .min_by(|a, b| a.1.low.partial_cmp(&b.1.low).unwrap_or(std::cmp::Ordering::Equal))?;
+        // Handle bars: all closes ≤ right rim AND lowest handle close is
+        // within max_handle_depth_pct of rim.
+        if handle_slice
+            .iter()
+            .any(|b| !b.close.is_finite() || b.close > right_rim_price)
+        {
+            continue;
+        }
+        let (handle_low_offset, handle_low_bar) =
+            handle_slice.iter().enumerate().min_by(|a, b| {
+                a.1.low
+                    .partial_cmp(&b.1.low)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            })?;
         let handle_low_price = handle_low_bar.low;
         let handle_depth_pct = (right_rim_price - handle_low_price) / right_rim_price;
         if handle_depth_pct > cfg.max_handle_depth_pct {
@@ -106,16 +115,27 @@ pub fn detect(bars: &[Bar], cfg: &Config) -> Option<CupHandleCandidate> {
         for cup_len in cfg.cup_min_bars..=cfg.cup_max_bars.min(right_rim_idx) {
             let left_rim_idx = right_rim_idx - cup_len;
             let left_rim_price = bars[left_rim_idx].high;
-            if !left_rim_price.is_finite() || left_rim_price <= 0.0 { continue; }
+            if !left_rim_price.is_finite() || left_rim_price <= 0.0 {
+                continue;
+            }
             let rim_diff_pct = (left_rim_price - right_rim_price).abs() / left_rim_price;
-            if rim_diff_pct > cfg.rim_tolerance_pct { continue; }
+            if rim_diff_pct > cfg.rim_tolerance_pct {
+                continue;
+            }
             let cup_slice = &bars[left_rim_idx + 1..right_rim_idx];
-            if cup_slice.is_empty() { continue; }
-            let (trough_offset, trough_bar) = cup_slice.iter().enumerate()
-                .min_by(|a, b| a.1.low.partial_cmp(&b.1.low).unwrap_or(std::cmp::Ordering::Equal))?;
+            if cup_slice.is_empty() {
+                continue;
+            }
+            let (trough_offset, trough_bar) = cup_slice.iter().enumerate().min_by(|a, b| {
+                a.1.low
+                    .partial_cmp(&b.1.low)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            })?;
             let trough_price = trough_bar.low;
             let depth_pct = (left_rim_price - trough_price) / left_rim_price;
-            if depth_pct < cfg.min_depth_pct || depth_pct > cfg.max_depth_pct { continue; }
+            if depth_pct < cfg.min_depth_pct || depth_pct > cfg.max_depth_pct {
+                continue;
+            }
             // Right side must roughly recover (already enforced by rim
             // similarity). Pivot = right_rim_price (canonical IBD).
             return Some(CupHandleCandidate {
@@ -142,7 +162,11 @@ mod tests {
     use super::*;
 
     fn b(c: f64) -> Bar {
-        Bar { high: c + 0.5, low: c - 0.5, close: c }
+        Bar {
+            high: c + 0.5,
+            low: c - 0.5,
+            close: c,
+        }
     }
 
     #[test]
@@ -155,7 +179,10 @@ mod tests {
     #[test]
     fn invalid_config_returns_none() {
         let bars = vec![b(100.0); 100];
-        let cfg = Config { cup_max_bars: 0, ..Default::default() };
+        let cfg = Config {
+            cup_max_bars: 0,
+            ..Default::default()
+        };
         assert!(detect(&bars, &cfg).is_none());
     }
 
@@ -197,9 +224,15 @@ mod tests {
     fn rims_too_unequal_rejected() {
         // Left rim 100, right rim 80 — clearly not a cup.
         let mut bars: Vec<Bar> = Vec::new();
-        for i in 0..30 { bars.push(b(100.0 - (i as f64) * 0.7)); }
-        for i in 0..30 { bars.push(b(79.0 + (i as f64) * 0.0)); }
-        for _ in 0..7  { bars.push(b(79.0)); }
+        for i in 0..30 {
+            bars.push(b(100.0 - (i as f64) * 0.7));
+        }
+        for i in 0..30 {
+            bars.push(b(79.0 + (i as f64) * 0.0));
+        }
+        for _ in 0..7 {
+            bars.push(b(79.0));
+        }
         assert!(detect(&bars, &Config::default()).is_none());
     }
 
@@ -207,9 +240,15 @@ mod tests {
     fn handle_too_deep_rejected() {
         // Cup 100 → 80 → 100, then handle drops 30% to 70 — way over 15%.
         let mut bars: Vec<Bar> = Vec::new();
-        for i in 0..30 { bars.push(b(100.0 - (i as f64) * (20.0 / 29.0))); }
-        for i in 0..30 { bars.push(b(80.0 + (i as f64 + 1.0) * (20.0 / 30.0))); }
-        for i in 0..7  { bars.push(b(100.0 - (i as f64 + 1.0) * 5.0)); }    // huge handle drop
+        for i in 0..30 {
+            bars.push(b(100.0 - (i as f64) * (20.0 / 29.0)));
+        }
+        for i in 0..30 {
+            bars.push(b(80.0 + (i as f64 + 1.0) * (20.0 / 30.0)));
+        }
+        for i in 0..7 {
+            bars.push(b(100.0 - (i as f64 + 1.0) * 5.0));
+        } // huge handle drop
         assert!(detect(&bars, &Config::default()).is_none());
     }
 }

@@ -133,12 +133,13 @@ pub fn check(input: &Section7463Input) -> Section7463Result {
         );
     }
 
-    let election_concurred = input.taxpayer_s_case_election
-        && input.tax_court_concurred_before_hearing;
+    let election_concurred =
+        input.taxpayer_s_case_election && input.tax_court_concurred_before_hearing;
 
     if input.taxpayer_s_case_election && !input.tax_court_concurred_before_hearing {
         failure_reasons.push(
-            "26 USC § 7463(a) — Tax Court concurrence required BEFORE the hearing of the case".to_string(),
+            "26 USC § 7463(a) — Tax Court concurrence required BEFORE the hearing of the case"
+                .to_string(),
         );
     }
 
@@ -354,8 +355,10 @@ mod tests {
     #[test]
     fn note_pins_subsection_c_discontinue_motion() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 7463(c)")
-            && n.contains("discontinue")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7463(c)") && n.contains("discontinue")));
     }
 
     #[test]

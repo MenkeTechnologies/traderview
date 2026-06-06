@@ -209,13 +209,7 @@ mod tests {
     fn other_holder_ndie_above_accrual_deferred_to_accrual_cap() {
         // NDIE = 1000 - 200 = 800. Accrual = 5 × 100 = 500.
         // Deferred = min(800, 500) = 500. Currently deductible = 300.
-        let r = compute(&input(
-            HolderStatus::OtherHolder,
-            1_000,
-            200,
-            5,
-            100,
-        ));
+        let r = compute(&input(HolderStatus::OtherHolder, 1_000, 200, 5, 100));
         assert_eq!(r.net_direct_interest_expense_cents, 800);
         assert_eq!(r.accumulated_discount_for_year_cents, 500);
         assert_eq!(r.deferred_interest_cents, 500);
@@ -228,13 +222,7 @@ mod tests {
     fn other_holder_ndie_below_accrual_full_deferral() {
         // NDIE = 300. Accrual = 500. Deferred = min(300, 500) = 300.
         // Currently deductible = 0.
-        let r = compute(&input(
-            HolderStatus::OtherHolder,
-            500,
-            200,
-            5,
-            100,
-        ));
+        let r = compute(&input(HolderStatus::OtherHolder, 500, 200, 5, 100));
         assert_eq!(r.net_direct_interest_expense_cents, 300);
         assert_eq!(r.deferred_interest_cents, 300);
         assert_eq!(r.currently_deductible_interest_cents, 0);
@@ -243,13 +231,7 @@ mod tests {
     #[test]
     fn other_holder_zero_ndie_no_deferral() {
         // Interest income exceeds interest paid → NDIE = 0.
-        let r = compute(&input(
-            HolderStatus::OtherHolder,
-            500,
-            700,
-            5,
-            100,
-        ));
+        let r = compute(&input(HolderStatus::OtherHolder, 500, 700, 5, 100));
         assert_eq!(r.net_direct_interest_expense_cents, 0);
         assert_eq!(r.deferred_interest_cents, 0);
         assert_eq!(r.currently_deductible_interest_cents, 0);
@@ -258,13 +240,7 @@ mod tests {
     #[test]
     fn other_holder_zero_accrual_no_deferral() {
         // No daily portion → no deferral; full NDIE deductible.
-        let r = compute(&input(
-            HolderStatus::OtherHolder,
-            1_000,
-            200,
-            0,
-            100,
-        ));
+        let r = compute(&input(HolderStatus::OtherHolder, 1_000, 200, 0, 100));
         assert_eq!(r.deferred_interest_cents, 0);
         assert_eq!(r.currently_deductible_interest_cents, 800);
     }
@@ -273,21 +249,14 @@ mod tests {
 
     #[test]
     fn section_1281_holder_exception_no_deferral() {
-        let r = compute(&input(
-            HolderStatus::Section1281Holder,
-            1_000,
-            200,
-            5,
-            100,
-        ));
+        let r = compute(&input(HolderStatus::Section1281Holder, 1_000, 200, 5, 100));
         assert!(r.section_1282b_exception_applies);
         assert_eq!(r.deferred_interest_cents, 0);
         assert_eq!(r.currently_deductible_interest_cents, 800);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1282(b)") && n.contains("§ 1281 current inclusion"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1282(b)") && n.contains("§ 1281 current inclusion")));
     }
 
     // ── § 1282(b)(2) election to apply § 1281 to all STOs ──────
@@ -304,12 +273,10 @@ mod tests {
         assert!(r.section_1282b_exception_applies);
         assert_eq!(r.deferred_interest_cents, 0);
         assert_eq!(r.currently_deductible_interest_cents, 800);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1282(b)(2) election")
-                    && n.contains("apply § 1281"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1282(b)(2) election") && n.contains("apply § 1281")));
     }
 
     // ── Conservation invariants ────────────────────────────────
@@ -339,13 +306,7 @@ mod tests {
     #[test]
     fn deferred_never_exceeds_accrual_invariant() {
         for interest_paid in [100_i64, 500, 1_000, 5_000] {
-            let r = compute(&input(
-                HolderStatus::OtherHolder,
-                interest_paid,
-                0,
-                10,
-                100,
-            ));
+            let r = compute(&input(HolderStatus::OtherHolder, interest_paid, 0, 10, 100));
             assert!(
                 r.deferred_interest_cents <= r.accumulated_discount_for_year_cents,
                 "interest_paid={} deferred={} accrual={}",
@@ -380,15 +341,9 @@ mod tests {
 
     #[test]
     fn exception_applies_for_1281_holder_and_election_invariant() {
-        assert!(
-            check_exception(HolderStatus::Section1281Holder),
-        );
-        assert!(
-            check_exception(HolderStatus::ElectionToApplyToAllStOs),
-        );
-        assert!(
-            !check_exception(HolderStatus::OtherHolder),
-        );
+        assert!(check_exception(HolderStatus::Section1281Holder),);
+        assert!(check_exception(HolderStatus::ElectionToApplyToAllStOs),);
+        assert!(!check_exception(HolderStatus::OtherHolder),);
     }
 
     fn check_exception(holder: HolderStatus) -> bool {
@@ -412,13 +367,7 @@ mod tests {
         // Same daily portion, increasing days held → increasing
         // deferral (up to NDIE cap).
         for days_held in [50_u32, 100, 200, 500] {
-            let r = compute(&input(
-                HolderStatus::OtherHolder,
-                10_000,
-                0,
-                5,
-                days_held,
-            ));
+            let r = compute(&input(HolderStatus::OtherHolder, 10_000, 0, 5, days_held));
             let expected_deferred = std::cmp::min(10_000_i64, 5_i64 * days_held as i64);
             assert_eq!(r.deferred_interest_cents, expected_deferred);
         }
@@ -426,13 +375,7 @@ mod tests {
 
     #[test]
     fn citation_pins_all_subsections() {
-        let r = compute(&input(
-            HolderStatus::OtherHolder,
-            1_000,
-            200,
-            5,
-            100,
-        ));
+        let r = compute(&input(HolderStatus::OtherHolder, 1_000, 200, 5, 100));
         assert!(r.citation.contains("§ 1282(a)"));
         assert!(r.citation.contains("§ 1282(b)(1)"));
         assert!(r.citation.contains("§ 1282(b)(2)"));
@@ -445,13 +388,7 @@ mod tests {
 
     #[test]
     fn sibling_module_note_present() {
-        let r = compute(&input(
-            HolderStatus::OtherHolder,
-            1_000,
-            200,
-            5,
-            100,
-        ));
+        let r = compute(&input(HolderStatus::OtherHolder, 1_000, 200, 5, 100));
         assert!(
             r.notes.iter().any(|n| n.contains("section_1281")
                 && n.contains("section_1283")
@@ -464,13 +401,7 @@ mod tests {
     fn defensive_negative_inputs_clamp_at_zero() {
         // Negative daily portion shouldn't produce negative
         // accrual.
-        let r = compute(&input(
-            HolderStatus::OtherHolder,
-            1_000,
-            200,
-            -50,
-            100,
-        ));
+        let r = compute(&input(HolderStatus::OtherHolder, 1_000, 200, -50, 100));
         assert_eq!(r.accumulated_discount_for_year_cents, 0);
         assert_eq!(r.deferred_interest_cents, 0);
         assert_eq!(r.currently_deductible_interest_cents, 800);
@@ -478,37 +409,19 @@ mod tests {
 
     #[test]
     fn ndie_clamps_at_zero_when_interest_income_exceeds_paid() {
-        let r = compute(&input(
-            HolderStatus::OtherHolder,
-            100,
-            500,
-            10,
-            100,
-        ));
+        let r = compute(&input(HolderStatus::OtherHolder, 100, 500, 10, 100));
         assert_eq!(r.net_direct_interest_expense_cents, 0);
     }
 
     #[test]
     fn full_year_holding_accumulates_365_day_portions() {
-        let r = compute(&input(
-            HolderStatus::OtherHolder,
-            100_000,
-            0,
-            10,
-            365,
-        ));
+        let r = compute(&input(HolderStatus::OtherHolder, 100_000, 0, 10, 365));
         assert_eq!(r.accumulated_discount_for_year_cents, 3_650);
     }
 
     #[test]
     fn zero_days_held_zero_accrual_zero_deferral() {
-        let r = compute(&input(
-            HolderStatus::OtherHolder,
-            1_000,
-            200,
-            5,
-            0,
-        ));
+        let r = compute(&input(HolderStatus::OtherHolder, 1_000, 200, 5, 0));
         assert_eq!(r.accumulated_discount_for_year_cents, 0);
         assert_eq!(r.deferred_interest_cents, 0);
         assert_eq!(r.currently_deductible_interest_cents, 800);

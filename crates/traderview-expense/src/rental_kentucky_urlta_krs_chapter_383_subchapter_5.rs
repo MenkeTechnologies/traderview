@@ -400,7 +400,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::LocalOptionAdoptionUnderSection383_500;
         let out = check(&input);
-        assert_eq!(out.mode, KyLandlordTenantMode::CompliantJurisdictionAdoptedUrlta);
+        assert_eq!(
+            out.mode,
+            KyLandlordTenantMode::CompliantJurisdictionAdoptedUrlta
+        );
     }
 
     #[test]
@@ -449,7 +452,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::BadFaithWithholding2xPenaltyUnderSection383_580;
         input.bad_faith_status = BadFaithStatus::NoBadFaithGoodFaithDispute;
         let out = check(&input);
-        assert_eq!(out.mode, KyLandlordTenantMode::CompliantNoBadFaithGoodFaithDispute);
+        assert_eq!(
+            out.mode,
+            KyLandlordTenantMode::CompliantNoBadFaithGoodFaithDispute
+        );
     }
 
     #[test]
@@ -458,7 +464,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::BadFaithWithholding2xPenaltyUnderSection383_580;
         input.bad_faith_status = BadFaithStatus::NoBadFaithProperReturn;
         let out = check(&input);
-        assert_eq!(out.mode, KyLandlordTenantMode::CompliantNoBadFaithProperReturn);
+        assert_eq!(
+            out.mode,
+            KyLandlordTenantMode::CompliantNoBadFaithProperReturn
+        );
     }
 
     #[test]
@@ -476,7 +485,8 @@ mod tests {
     #[test]
     fn landlord_maintains_habitability_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordHabitabilityObligationUnderSection383_595;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordHabitabilityObligationUnderSection383_595;
         input.landlord_maintains_general_habitability = true;
         input.landlord_provides_heat_when_required = true;
         let out = check(&input);
@@ -489,7 +499,8 @@ mod tests {
     #[test]
     fn landlord_failed_habitability_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordHabitabilityObligationUnderSection383_595;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordHabitabilityObligationUnderSection383_595;
         input.landlord_maintains_general_habitability = false;
         let out = check(&input);
         assert_eq!(
@@ -501,7 +512,8 @@ mod tests {
     #[test]
     fn landlord_failed_heat_obligation_october_to_may_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordHabitabilityObligationUnderSection383_595;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordHabitabilityObligationUnderSection383_595;
         input.landlord_maintains_general_habitability = true;
         input.heat_obligation_period = HeatObligationPeriod::WithinOctober1ToMay1Period;
         input.landlord_provides_heat_when_required = false;
@@ -654,7 +666,8 @@ mod tests {
         assert!(joined.contains("BUILDING AND HOUSING CODES"));
         assert!(joined.contains("FIT AND HABITABLE CONDITION"));
         assert!(joined.contains("COMMON AREAS"));
-        assert!(joined.contains("ELECTRICAL, PLUMBING, SANITARY, HEATING, VENTILATING, AIR-CONDITIONING"));
+        assert!(joined
+            .contains("ELECTRICAL, PLUMBING, SANITARY, HEATING, VENTILATING, AIR-CONDITIONING"));
         assert!(joined.contains("ELEVATORS"));
         assert!(joined.contains("RUNNING WATER"));
         assert!(joined.contains("REASONABLE AMOUNTS OF HOT WATER AT ALL TIMES"));

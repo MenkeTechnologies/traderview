@@ -229,7 +229,9 @@ pub fn check(input: &Section6038bInput) -> Section6038bResult {
     }
 
     let gain_recognition_forced_cents = if reporting_required && !input.form_filed {
-        input.fmv_at_transfer_cents.saturating_sub(input.basis_cents)
+        input
+            .fmv_at_transfer_cents
+            .saturating_sub(input.basis_cents)
     } else {
         0
     };
@@ -322,8 +324,10 @@ mod tests {
         let r = check(&i);
         assert_eq!(r.monetary_penalty_cents, 5_000_000);
         assert!(!r.penalty_uncapped_intentional_disregard);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 6038B(b)(1)")
-            && f.contains("10% of FMV")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 6038B(b)(1)") && f.contains("10% of FMV")));
     }
 
     #[test]
@@ -344,9 +348,12 @@ mod tests {
         let r = check(&i);
         assert_eq!(r.monetary_penalty_cents, 50_000_000);
         assert!(r.penalty_uncapped_intentional_disregard);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 6038B(b)(1)(B)")
-            && f.contains("INTENTIONAL DISREGARD")
-            && f.contains("UNCAPPED")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 6038B(b)(1)(B)")
+                && f.contains("INTENTIONAL DISREGARD")
+                && f.contains("UNCAPPED")));
     }
 
     #[test]
@@ -356,8 +363,10 @@ mod tests {
         i.reasonable_cause_engaged = true;
         let r = check(&i);
         assert_eq!(r.monetary_penalty_cents, 0);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 6038B(c)")
-            && f.contains("reasonable cause")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 6038B(c)") && f.contains("reasonable cause")));
     }
 
     #[test]
@@ -482,7 +491,9 @@ mod tests {
         assert!(r.citation.contains("§ 6501(c)(8)"));
         assert!(r.citation.contains("§ 367(a) and § 367(d)"));
         assert!(r.citation.contains("§ 721 and § 721(c)"));
-        assert!(r.citation.contains("Treas. Reg. § 1.6038B-1 and § 1.6038B-2"));
+        assert!(r
+            .citation
+            .contains("Treas. Reg. § 1.6038B-1 and § 1.6038B-2"));
         assert!(r.citation.contains("Treas. Reg. § 1.721(c)-3"));
         assert!(r.citation.contains("Form 926"));
         assert!(r.citation.contains("Form 8865"));
@@ -516,15 +527,19 @@ mod tests {
     #[test]
     fn note_pins_subsection_b1_10_percent_fmv_penalty() {
         let r = check(&foreign_corp_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6038B(b)(1)")
-            && n.contains("10 PERCENT OF FAIR MARKET VALUE")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6038B(b)(1)") && n.contains("10 PERCENT OF FAIR MARKET VALUE")));
     }
 
     #[test]
     fn note_pins_subsection_b1A_100k_cap() {
         let r = check(&foreign_corp_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6038B(b)(1)(A)")
-            && n.contains("$100,000")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6038B(b)(1)(A)") && n.contains("$100,000")));
     }
 
     #[test]
@@ -563,25 +578,33 @@ mod tests {
     #[test]
     fn note_pins_form_8865_100k_or_10_percent_threshold() {
         let r = check(&foreign_corp_base());
-        assert!(r.notes.iter().any(|n| n.contains("Treas. Reg. § 1.6038B-2(c)")
-            && n.contains("$100,000+ contribution")
-            && n.contains("12-month period")
-            && n.contains("10% of foreign partnership")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Treas. Reg. § 1.6038B-2(c)")
+                && n.contains("$100,000+ contribution")
+                && n.contains("12-month period")
+                && n.contains("10% of foreign partnership")));
     }
 
     #[test]
     fn note_pins_721c_gain_deferral_method() {
         let r = check(&foreign_corp_base());
-        assert!(r.notes.iter().any(|n| n.contains("Treas. Reg. § 1.721(c)-3")
-            && n.contains("§ 721(c) gain-deferral method")
-            && n.contains("multi-year reporting")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Treas. Reg. § 1.721(c)-3")
+                && n.contains("§ 721(c) gain-deferral method")
+                && n.contains("multi-year reporting")));
     }
 
     #[test]
     fn note_pins_6501_c8_sol_tolling() {
         let r = check(&foreign_corp_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6501(c)(8)")
-            && n.contains("OPEN INDEFINITELY")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6501(c)(8)") && n.contains("OPEN INDEFINITELY")));
     }
 
     #[test]

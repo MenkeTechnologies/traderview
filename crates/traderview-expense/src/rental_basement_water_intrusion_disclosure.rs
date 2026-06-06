@@ -239,8 +239,8 @@ fn check_va(
         );
     }
 
-    let va_remediation_compliant = !input.va_tenant_elected_to_stay
-        || input.va_days_since_tenant_stay_election <= 5;
+    let va_remediation_compliant =
+        !input.va_tenant_elected_to_stay || input.va_days_since_tenant_stay_election <= 5;
 
     if input.va_tenant_elected_to_stay && input.va_days_since_tenant_stay_election > 5 {
         violations.push(
@@ -281,9 +281,8 @@ fn check_ny(
     }
 
     if !input.ny_natural_flood_history_disclosed {
-        violations.push(
-            "NY GOL § 5-905 — natural flood event history must be disclosed".to_string(),
-        );
+        violations
+            .push("NY GOL § 5-905 — natural flood event history must be disclosed".to_string());
     }
 
     let ll55_engaged = input.nyc_multi_unit_building;
@@ -541,10 +540,7 @@ mod tests {
         i.ny_natural_flood_history_disclosed = false;
         let r = check(&i);
         assert!(!r.disclosure_compliant);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("§ 5-905")));
+        assert!(r.violations.iter().any(|v| v.contains("§ 5-905")));
     }
 
     #[test]
@@ -639,8 +635,7 @@ mod tests {
         assert!(r
             .notes
             .iter()
-            .any(|n| n.contains("§ 55.1-1216")
-                && n.contains("remediate within 5 days")));
+            .any(|n| n.contains("§ 55.1-1216") && n.contains("remediate within 5 days")));
     }
 
     #[test]
@@ -649,8 +644,7 @@ mod tests {
         assert!(r
             .notes
             .iter()
-            .any(|n| n.contains("§ 5-905")
-                && n.contains("plumbing/mechanical floods NOT")));
+            .any(|n| n.contains("§ 5-905") && n.contains("plumbing/mechanical floods NOT")));
     }
 
     #[test]

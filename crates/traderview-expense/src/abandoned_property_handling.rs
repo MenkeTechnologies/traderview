@@ -280,7 +280,8 @@ fn wa_check(input: &AbandonedPropertyInput) -> AbandonedPropertyResult {
             violation: ViolationType::MissingWrittenNotice,
             landlord_compliant: false,
             citation: "RCW 59.18.310 — written notice of intent to sell/dispose required",
-            note: "Required RCW 59.18.310 notice of intent to sell/dispose not provided.".to_string(),
+            note: "Required RCW 59.18.310 notice of intent to sell/dispose not provided."
+                .to_string(),
         };
     }
     // 7-day rule applies only if value < $250 AND no personal-papers

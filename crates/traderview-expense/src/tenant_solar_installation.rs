@@ -140,8 +140,8 @@ pub fn check(input: &Input) -> CheckResult {
         );
     }
 
-    let universal_safety_ok = input.installation_meets_safety_code
-        && input.installation_does_not_damage_property;
+    let universal_safety_ok =
+        input.installation_meets_safety_code && input.installation_does_not_damage_property;
 
     let (statutory_protection, citation): (bool, &'static str) = match input.regime {
         Regime::California => {
@@ -197,8 +197,8 @@ pub fn check(input: &Input) -> CheckResult {
         ));
     }
 
-    let installation_permitted = universal_safety_ok
-        && (statutory_protection || input.landlord_consent_obtained);
+    let installation_permitted =
+        universal_safety_ok && (statutory_protection || input.landlord_consent_obtained);
 
     // Installation-type notes.
     match input.installation_type {
@@ -366,13 +366,10 @@ mod tests {
                 assert!(
                     !r.installation_permitted,
                     "{:?} {:?}: unsafe installation must not be permitted",
-                    regime,
-                    installation,
+                    regime, installation,
                 );
                 assert!(
-                    r.violations
-                        .iter()
-                        .any(|v| v.contains("safety code")),
+                    r.violations.iter().any(|v| v.contains("safety code")),
                     "{:?} {:?}: safety-code violation must appear",
                     regime,
                     installation,
@@ -425,11 +422,10 @@ mod tests {
         i.landlord_consent_obtained = false;
         let r = check(&i);
         assert!(!r.installation_permitted);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("landlord consent required"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("landlord consent required")));
     }
 
     // ── Regression-critical multi-regime invariants ────────────
@@ -518,18 +514,26 @@ mod tests {
 
     #[test]
     fn citation_pins_authority_per_regime() {
-        assert!(check(&base(Regime::California, InstallationType::PlugInPortable))
-            .citation
-            .contains("§ 714"));
-        assert!(check(&base(Regime::Colorado, InstallationType::PlugInPortable))
-            .citation
-            .contains("HB22-1020"));
-        assert!(check(&base(Regime::NewJersey, InstallationType::PlugInPortable))
-            .citation
-            .contains("45:22A-48.2"));
-        assert!(check(&base(Regime::Default, InstallationType::PlugInPortable))
-            .citation
-            .contains("Most states"));
+        assert!(
+            check(&base(Regime::California, InstallationType::PlugInPortable))
+                .citation
+                .contains("§ 714")
+        );
+        assert!(
+            check(&base(Regime::Colorado, InstallationType::PlugInPortable))
+                .citation
+                .contains("HB22-1020")
+        );
+        assert!(
+            check(&base(Regime::NewJersey, InstallationType::PlugInPortable))
+                .citation
+                .contains("45:22A-48.2")
+        );
+        assert!(
+            check(&base(Regime::Default, InstallationType::PlugInPortable))
+                .citation
+                .contains("Most states")
+        );
     }
 
     #[test]

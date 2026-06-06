@@ -27,12 +27,21 @@ pub struct Report {
 }
 
 pub fn compute(total_order_size: f64, volume_curve: &[f64]) -> Option<Report> {
-    if !total_order_size.is_finite() || total_order_size <= 0.0 { return None; }
-    if volume_curve.is_empty() { return None; }
-    if volume_curve.iter().any(|x| !x.is_finite() || *x < 0.0) { return None; }
+    if !total_order_size.is_finite() || total_order_size <= 0.0 {
+        return None;
+    }
+    if volume_curve.is_empty() {
+        return None;
+    }
+    if volume_curve.iter().any(|x| !x.is_finite() || *x < 0.0) {
+        return None;
+    }
     let total_volume: f64 = volume_curve.iter().sum();
-    if total_volume <= 0.0 { return None; }
-    let slices: Vec<f64> = volume_curve.iter()
+    if total_volume <= 0.0 {
+        return None;
+    }
+    let slices: Vec<f64> = volume_curve
+        .iter()
         .map(|v| total_order_size * (v / total_volume))
         .collect();
     let mut cumulative_fill = vec![0.0_f64; slices.len()];
@@ -41,10 +50,16 @@ pub fn compute(total_order_size: f64, volume_curve: &[f64]) -> Option<Report> {
         acc += s;
         cumulative_fill[i] = acc;
     }
-    let max_participation_rate = slices.iter().zip(volume_curve.iter())
+    let max_participation_rate = slices
+        .iter()
+        .zip(volume_curve.iter())
         .map(|(s, v)| if *v > 0.0 { s / v } else { 0.0 })
         .fold(0.0_f64, f64::max);
-    Some(Report { slices, cumulative_fill, max_participation_rate })
+    Some(Report {
+        slices,
+        cumulative_fill,
+        max_participation_rate,
+    })
 }
 
 #[cfg(test)]
@@ -72,7 +87,9 @@ mod tests {
         // Flat volume → VWAP collapses to TWAP.
         let v = vec![1000.0_f64; 10];
         let r = compute(1000.0, &v).unwrap();
-        for s in &r.slices { assert!((s - 100.0).abs() < 1e-9); }
+        for s in &r.slices {
+            assert!((s - 100.0).abs() < 1e-9);
+        }
     }
 
     #[test]

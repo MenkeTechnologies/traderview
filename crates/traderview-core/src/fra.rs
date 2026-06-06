@@ -34,18 +34,27 @@ pub fn analyze(
     contract_rate: f64,
     notional: f64,
 ) -> Option<FraReport> {
-    if !discount_start.is_finite() || discount_start <= 0.0 || discount_start > 1.0 + 1e-9
-        || !discount_end.is_finite() || discount_end <= 0.0 || discount_end > 1.0 + 1e-9
-        || !t_start.is_finite() || t_start < 0.0
-        || !t_end.is_finite() || t_end <= t_start
+    if !discount_start.is_finite()
+        || discount_start <= 0.0
+        || discount_start > 1.0 + 1e-9
+        || !discount_end.is_finite()
+        || discount_end <= 0.0
+        || discount_end > 1.0 + 1e-9
+        || !t_start.is_finite()
+        || t_start < 0.0
+        || !t_end.is_finite()
+        || t_end <= t_start
         || !contract_rate.is_finite()
-        || !notional.is_finite() || notional == 0.0
+        || !notional.is_finite()
+        || notional == 0.0
     {
         return None;
     }
     let accrual = t_end - t_start;
     let forward_rate = (discount_start / discount_end - 1.0) / accrual;
-    if !forward_rate.is_finite() { return None; }
+    if !forward_rate.is_finite() {
+        return None;
+    }
     let pv_per_unit = (forward_rate - contract_rate) * accrual * discount_end;
     Some(FraReport {
         forward_rate,
@@ -114,7 +123,7 @@ mod tests {
     #[test]
     fn longer_accrual_inflates_pv_magnitude() {
         let r_short = analyze(0.97, 0.95, 1.0, 1.25, 0.04, 1_000_000.0).unwrap();
-        let r_long  = analyze(0.97, 0.92, 1.0, 2.00, 0.04, 1_000_000.0).unwrap();
+        let r_long = analyze(0.97, 0.92, 1.0, 2.00, 0.04, 1_000_000.0).unwrap();
         assert!(r_long.pv_per_unit_notional.abs() > r_short.pv_per_unit_notional.abs());
     }
 

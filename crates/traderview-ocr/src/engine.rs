@@ -89,8 +89,7 @@ pub fn run(bytes: &[u8], model_dir: &Path) -> Result<RawText, OcrError> {
 ///   1. Apple Vision (`apple_vision`)         — macOS only, when sidecar present.
 ///   2. Tesseract LSTM with `--psm 4`         — single column of variable text.
 ///   3. Tesseract LSTM with `--psm 6`         — single uniform block. Catches
-///                                              cases where receipt rows are
-///                                              tightly packed.
+///      cases where receipt rows are tightly packed.
 ///
 /// On a 4-core macOS desktop with the sidecar built, all three run in
 /// parallel via `rayon::join`-style concurrency (currently sequential
@@ -235,14 +234,8 @@ fn run_paddle(bytes: &[u8], model_dir: &Path) -> Result<RawText, OcrError> {
 fn polygon_top_left(p: &geo_types::Polygon<f64>) -> (f64, f64) {
     use geo_types::Coord;
     let exterior = p.exterior().0.iter().collect::<Vec<&Coord<f64>>>();
-    let min_x = exterior
-        .iter()
-        .map(|c| c.x)
-        .fold(f64::INFINITY, f64::min);
-    let min_y = exterior
-        .iter()
-        .map(|c| c.y)
-        .fold(f64::INFINITY, f64::min);
+    let min_x = exterior.iter().map(|c| c.x).fold(f64::INFINITY, f64::min);
+    let min_y = exterior.iter().map(|c| c.y).fold(f64::INFINITY, f64::min);
     (min_x, min_y)
 }
 
@@ -263,8 +256,9 @@ fn find_vision_binary() -> Option<PathBuf> {
     //    CARGO_MANIFEST_DIR. Works for `cargo run` / `cargo test` /
     //    `cargo tauri dev` because the workspace layout is stable.
     let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    if let Some(ws) = manifest.ancestors().find(|p| p.join("Cargo.toml").exists()
-        && p.join("crates").is_dir())
+    if let Some(ws) = manifest
+        .ancestors()
+        .find(|p| p.join("Cargo.toml").exists() && p.join("crates").is_dir())
     {
         let p = ws.join("target/release-sidecars/tv-ocr-vision");
         if p.is_file() {
@@ -401,18 +395,24 @@ fn run_tesseract(bytes: &[u8], model_dir: &Path, psm: &str) -> Result<RawText, O
     let mut cmd = Command::new("tesseract");
     cmd.arg("-")
         .arg("-")
-        .arg("-l").arg("eng")
-        .arg("--psm").arg(psm)
-        .arg("--oem").arg("1")
-        .arg("-c").arg("preserve_interword_spaces=1");
+        .arg("-l")
+        .arg("eng")
+        .arg("--psm")
+        .arg(psm)
+        .arg("--oem")
+        .arg("1")
+        .arg("-c")
+        .arg("preserve_interword_spaces=1");
     if model_dir.join("eng.traineddata").exists() {
         cmd.env("TESSDATA_PREFIX", model_dir);
     }
     cmd.stdin(Stdio::piped())
-       .stdout(Stdio::piped())
-       .stderr(Stdio::piped());
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped());
 
-    let mut child = cmd.spawn().map_err(|e| OcrError::Engine(format!("spawn tesseract: {e}")))?;
+    let mut child = cmd
+        .spawn()
+        .map_err(|e| OcrError::Engine(format!("spawn tesseract: {e}")))?;
     {
         let stdin = child
             .stdin
@@ -474,19 +474,14 @@ fn preprocess(bytes: &[u8]) -> Result<Vec<u8>, OcrError> {
     let target_min: u32 = 1600;
     let min_dim = w.min(h);
     let scale = if min_dim < target_min {
-        ((target_min as f32 / min_dim as f32).min(3.0)).max(1.0)
+        (target_min as f32 / min_dim as f32).clamp(1.0, 3.0)
     } else {
         1.0
     };
     let upscaled = if scale > 1.0 {
         let new_w = ((w as f32) * scale) as u32;
         let new_h = ((h as f32) * scale) as u32;
-        image::imageops::resize(
-            &gray,
-            new_w,
-            new_h,
-            image::imageops::FilterType::Lanczos3,
-        )
+        image::imageops::resize(&gray, new_w, new_h, image::imageops::FilterType::Lanczos3)
     } else {
         gray
     };
@@ -541,7 +536,7 @@ fn sauvola_threshold(
             let idx_below = (y + 1) * stride + (x + 1);
             let idx_above = y * stride + (x + 1);
             s_sum[idx_below] = s_sum[idx_above] + row_sum;
-            s_sq[idx_below]  = s_sq[idx_above]  + row_sq;
+            s_sq[idx_below] = s_sq[idx_above] + row_sq;
         }
     }
 
@@ -563,7 +558,7 @@ fn sauvola_threshold(
             let x0 = x.saturating_sub(w_half);
             let x1 = (x + w_half + 1).min(width);
             let n = ((x1 - x0) * (y1 - y0)) as f32;
-            let s  = sum_in(x0, y0, x1, y1, &s_sum) as f32;
+            let s = sum_in(x0, y0, x1, y1, &s_sum) as f32;
             let s2 = sum_in(x0, y0, x1, y1, &s_sq) as f32;
             let mean = s / n;
             // variance = E[x^2] - E[x]^2; clamp to 0 to dodge fp jitter.
@@ -635,31 +630,42 @@ mod tests {
         let _guard = ENV_LOCK.lock().unwrap_or_else(|e| e.into_inner());
 
         let prior = std::env::var("TV_OCR_VISION_BIN").ok();
-        let restore = |prior: &Option<String>| {
-            match prior {
-                Some(v) => unsafe { std::env::set_var("TV_OCR_VISION_BIN", v); },
-                None    => unsafe { std::env::remove_var("TV_OCR_VISION_BIN"); },
-            }
+        let restore = |prior: &Option<String>| match prior {
+            Some(v) => unsafe {
+                std::env::set_var("TV_OCR_VISION_BIN", v);
+            },
+            None => unsafe {
+                std::env::remove_var("TV_OCR_VISION_BIN");
+            },
         };
 
         // ── Case 1: env points at a REAL file → return it verbatim ──
         let real_file = std::env::current_exe().expect("test binary path");
-        unsafe { std::env::set_var("TV_OCR_VISION_BIN", &real_file); }
+        unsafe {
+            std::env::set_var("TV_OCR_VISION_BIN", &real_file);
+        }
         let got_real = find_vision_binary();
 
         // ── Case 2: env points at a non-existent file → fall through ──
         let bogus = "/no/such/path/tv-ocr-vision-does-not-exist";
-        unsafe { std::env::set_var("TV_OCR_VISION_BIN", bogus); }
+        unsafe {
+            std::env::set_var("TV_OCR_VISION_BIN", bogus);
+        }
         let got_bogus = find_vision_binary();
 
         // Restore BEFORE asserting so a failure here doesn't leave the
         // env in a polluted state for later tests.
         restore(&prior);
 
-        assert_eq!(got_real, Some(real_file),
-            "explicit env override pointing at a real file must win");
+        assert_eq!(
+            got_real,
+            Some(real_file),
+            "explicit env override pointing at a real file must win"
+        );
         assert_ne!(
-            got_bogus.as_deref().map(|p| p.to_string_lossy().into_owned()),
+            got_bogus
+                .as_deref()
+                .map(|p| p.to_string_lossy().into_owned()),
             Some(bogus.to_string()),
             "bogus env-var path must not be returned"
         );
@@ -733,10 +739,16 @@ mod tests {
         assert_eq!(out.height(), 20);
         // The dark "ink" rows should be foreground (0) — they're well
         // below the local mean of the mostly-light window.
-        assert_eq!(out.get_pixel(0, 5).0[0], 0,
-            "dark pixel surrounded by light must be foreground");
-        assert_eq!(out.get_pixel(0, 15).0[0], 0,
-            "dark pixel surrounded by light must be foreground");
+        assert_eq!(
+            out.get_pixel(0, 5).0[0],
+            0,
+            "dark pixel surrounded by light must be foreground"
+        );
+        assert_eq!(
+            out.get_pixel(0, 15).0[0],
+            0,
+            "dark pixel surrounded by light must be foreground"
+        );
         // A typical light row is background (255).
         assert_eq!(out.get_pixel(0, 0).0[0], 255);
     }
@@ -751,9 +763,17 @@ mod tests {
         img.put_pixel(1, 0, image::Luma([128]));
         img.put_pixel(2, 0, image::Luma([255]));
         let out = sauvola_threshold(&img, 0, 0.34);
-        assert_eq!(out.get_pixel(0, 0).0[0], 0,   "0 pixel: 0 ≤ 0 → foreground");
-        assert_eq!(out.get_pixel(1, 0).0[0], 255, "128 pixel: 128 > 84.48 → background");
-        assert_eq!(out.get_pixel(2, 0).0[0], 255, "255 pixel: 255 > 168 → background");
+        assert_eq!(out.get_pixel(0, 0).0[0], 0, "0 pixel: 0 ≤ 0 → foreground");
+        assert_eq!(
+            out.get_pixel(1, 0).0[0],
+            255,
+            "128 pixel: 128 > 84.48 → background"
+        );
+        assert_eq!(
+            out.get_pixel(2, 0).0[0],
+            255,
+            "255 pixel: 255 > 168 → background"
+        );
     }
 
     /// End-to-end smoke — `run()` returns Ok or one of the documented
@@ -764,15 +784,11 @@ mod tests {
     #[test]
     fn run_returns_models_missing_when_tesseract_absent_or_succeeds() {
         let png: &[u8] = &[
-            0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
-            0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
-            0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
-            0x08, 0x06, 0x00, 0x00, 0x00, 0x1f, 0x15, 0xc4,
-            0x89, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x44, 0x41,
-            0x54, 0x78, 0x9c, 0x62, 0x00, 0x01, 0x00, 0x00,
-            0x05, 0x00, 0x01, 0x0d, 0x0a, 0x2d, 0xb4, 0x00,
-            0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae,
-            0x42, 0x60, 0x82,
+            0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48,
+            0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x06, 0x00, 0x00,
+            0x00, 0x1f, 0x15, 0xc4, 0x89, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x44, 0x41, 0x54, 0x78,
+            0x9c, 0x62, 0x00, 0x01, 0x00, 0x00, 0x05, 0x00, 0x01, 0x0d, 0x0a, 0x2d, 0xb4, 0x00,
+            0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82,
         ];
         let r = run(png, Path::new("/nonexistent"));
         match r {

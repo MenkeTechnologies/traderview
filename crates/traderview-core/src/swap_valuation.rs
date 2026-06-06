@@ -46,22 +46,37 @@ pub fn value(
     next_reset_time: f64,
     curve: &[SpotPoint],
 ) -> Option<SwapValuationReport> {
-    if notional <= 0.0 || !notional.is_finite()
-        || !fixed_rate.is_finite() || !next_reset_time.is_finite()
+    if notional <= 0.0
+        || !notional.is_finite()
+        || !fixed_rate.is_finite()
+        || !next_reset_time.is_finite()
         || next_reset_time < 0.0
-        || schedule_times.is_empty() || curve.len() < 2 {
+        || schedule_times.is_empty()
+        || curve.len() < 2
+    {
         return None;
     }
-    if schedule_times.iter().any(|t| !t.is_finite() || *t < next_reset_time) {
+    if schedule_times
+        .iter()
+        .any(|t| !t.is_finite() || *t < next_reset_time)
+    {
         return None;
     }
     for w in schedule_times.windows(2) {
-        if w[1] <= w[0] { return None; }
+        if w[1] <= w[0] {
+            return None;
+        }
     }
-    if curve.iter().any(|s| !s.time_years.is_finite() || !s.spot_rate.is_finite()
-        || s.time_years < 0.0) { return None; }
+    if curve
+        .iter()
+        .any(|s| !s.time_years.is_finite() || !s.spot_rate.is_finite() || s.time_years < 0.0)
+    {
+        return None;
+    }
     for w in curve.windows(2) {
-        if w[1].time_years <= w[0].time_years { return None; }
+        if w[1].time_years <= w[0].time_years {
+            return None;
+        }
     }
     // Day-count fractions: prefix with next_reset_time.
     let mut prev = next_reset_time;
@@ -87,7 +102,11 @@ pub fn value(
     let d_end = (-r_end * t_end).exp();
     let float_pv = notional * (d0 - d_end);
     let net = float_pv - fixed_pv;
-    let par_rate = if annuity > 0.0 { (d0 - d_end) / annuity } else { f64::NAN };
+    let par_rate = if annuity > 0.0 {
+        (d0 - d_end) / annuity
+    } else {
+        f64::NAN
+    };
     Some(SwapValuationReport {
         fixed_leg_pv: fixed_pv,
         floating_leg_pv: float_pv,
@@ -98,15 +117,21 @@ pub fn value(
 }
 
 fn interp_rate(t: f64, curve: &[SpotPoint]) -> Option<f64> {
-    if curve.is_empty() { return None; }
-    if t <= curve[0].time_years { return Some(curve[0].spot_rate); }
+    if curve.is_empty() {
+        return None;
+    }
+    if t <= curve[0].time_years {
+        return Some(curve[0].spot_rate);
+    }
     if t >= curve[curve.len() - 1].time_years {
         return Some(curve[curve.len() - 1].spot_rate);
     }
     for w in curve.windows(2) {
         if t >= w[0].time_years && t <= w[1].time_years {
             let span = w[1].time_years - w[0].time_years;
-            if span <= 0.0 { return Some(w[0].spot_rate); }
+            if span <= 0.0 {
+                return Some(w[0].spot_rate);
+            }
             let frac = (t - w[0].time_years) / span;
             return Some(w[0].spot_rate + frac * (w[1].spot_rate - w[0].spot_rate));
         }
@@ -120,9 +145,18 @@ mod tests {
 
     fn flat(rate: f64) -> Vec<SpotPoint> {
         vec![
-            SpotPoint { time_years: 0.5, spot_rate: rate },
-            SpotPoint { time_years: 2.0, spot_rate: rate },
-            SpotPoint { time_years: 5.0, spot_rate: rate },
+            SpotPoint {
+                time_years: 0.5,
+                spot_rate: rate,
+            },
+            SpotPoint {
+                time_years: 2.0,
+                spot_rate: rate,
+            },
+            SpotPoint {
+                time_years: 5.0,
+                spot_rate: rate,
+            },
         ]
     }
 
@@ -156,8 +190,11 @@ mod tests {
         let sched = semi_annual_schedule(5.0);
         let r = value(1_000_000.0, 0.05, &sched, 0.0, &curve).unwrap();
         // For flat continuously-compounded curve, par_rate ≈ flat rate to ~1%.
-        assert!((r.par_swap_rate - 0.05).abs() < 0.005,
-            "par rate {} vs flat 5%", r.par_swap_rate);
+        assert!(
+            (r.par_swap_rate - 0.05).abs() < 0.005,
+            "par rate {} vs flat 5%",
+            r.par_swap_rate
+        );
     }
 
     #[test]
@@ -168,8 +205,11 @@ mod tests {
         let r_temp = value(1_000_000.0, 0.05, &sched, 0.0, &curve).unwrap();
         let par_rate = r_temp.par_swap_rate;
         let r = value(1_000_000.0, par_rate, &sched, 0.0, &curve).unwrap();
-        assert!(r.net_value_pay_fixed.abs() < 1.0,
-            "at par rate, net value {} should be ~0", r.net_value_pay_fixed);
+        assert!(
+            r.net_value_pay_fixed.abs() < 1.0,
+            "at par rate, net value {} should be ~0",
+            r.net_value_pay_fixed
+        );
     }
 
     #[test]
@@ -178,8 +218,11 @@ mod tests {
         let curve = flat(0.05);
         let sched = semi_annual_schedule(5.0);
         let r = value(1_000_000.0, 0.10, &sched, 0.0, &curve).unwrap();
-        assert!(r.net_value_pay_fixed < 0.0,
-            "pay 10% on 5% curve should be negative, got {}", r.net_value_pay_fixed);
+        assert!(
+            r.net_value_pay_fixed < 0.0,
+            "pay 10% on 5% curve should be negative, got {}",
+            r.net_value_pay_fixed
+        );
     }
 
     #[test]
@@ -187,8 +230,11 @@ mod tests {
         let curve = flat(0.05);
         let sched = semi_annual_schedule(5.0);
         let r = value(1_000_000.0, 0.01, &sched, 0.0, &curve).unwrap();
-        assert!(r.net_value_pay_fixed > 0.0,
-            "pay 1% on 5% curve should be positive, got {}", r.net_value_pay_fixed);
+        assert!(
+            r.net_value_pay_fixed > 0.0,
+            "pay 1% on 5% curve should be positive, got {}",
+            r.net_value_pay_fixed
+        );
     }
 
     #[test]

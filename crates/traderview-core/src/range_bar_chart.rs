@@ -15,7 +15,10 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Print { pub price: f64, pub size: f64 }
+pub struct Print {
+    pub price: f64,
+    pub size: f64,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct RangeBar {
@@ -32,8 +35,10 @@ pub fn compute(prints: &[Print], target_range: f64) -> Vec<RangeBar> {
     if prints.is_empty() || !target_range.is_finite() || target_range <= 0.0 {
         return out;
     }
-    if prints.iter().any(|p| !p.price.is_finite() || !p.size.is_finite()
-        || p.price <= 0.0 || p.size < 0.0) {
+    if prints
+        .iter()
+        .any(|p| !p.price.is_finite() || !p.size.is_finite() || p.price <= 0.0 || p.size < 0.0)
+    {
         return out;
     }
     let mut open = prints[0].price;
@@ -42,13 +47,19 @@ pub fn compute(prints: &[Print], target_range: f64) -> Vec<RangeBar> {
     let mut volume = prints[0].size;
     let mut tick_count = 1_u32;
     for p in prints.iter().skip(1) {
-        if p.price > high { high = p.price; }
-        if p.price < low { low = p.price; }
+        if p.price > high {
+            high = p.price;
+        }
+        if p.price < low {
+            low = p.price;
+        }
         volume += p.size;
         tick_count += 1;
         if high - low >= target_range {
             out.push(RangeBar {
-                open, high, low,
+                open,
+                high,
+                low,
                 close: p.price,
                 volume,
                 tick_count,
@@ -69,7 +80,9 @@ pub fn compute(prints: &[Print], target_range: f64) -> Vec<RangeBar> {
 mod tests {
     use super::*;
 
-    fn p(price: f64, size: f64) -> Print { Print { price, size } }
+    fn p(price: f64, size: f64) -> Print {
+        Print { price, size }
+    }
 
     #[test]
     fn empty_or_invalid_returns_empty() {

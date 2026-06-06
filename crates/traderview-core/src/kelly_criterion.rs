@@ -36,14 +36,12 @@ pub struct KellyReport {
 }
 
 /// Discrete win/loss Kelly:  f* = (p·b − q) / b.
-pub fn discrete(
-    win_probability: f64,
-    win_loss_payoff_ratio: f64,
-) -> Option<KellyReport> {
+pub fn discrete(win_probability: f64, win_loss_payoff_ratio: f64) -> Option<KellyReport> {
     if !win_probability.is_finite()
         || !(0.0..=1.0).contains(&win_probability)
         || !win_loss_payoff_ratio.is_finite()
-        || win_loss_payoff_ratio <= 0.0 {
+        || win_loss_payoff_ratio <= 0.0
+    {
         return None;
     }
     let p = win_probability;
@@ -82,8 +80,10 @@ pub fn continuous(
     risk_free_rate: f64,
 ) -> Option<KellyReport> {
     if !expected_return.is_finite()
-        || !return_volatility.is_finite() || return_volatility <= 0.0
-        || !risk_free_rate.is_finite() {
+        || !return_volatility.is_finite()
+        || return_volatility <= 0.0
+        || !risk_free_rate.is_finite()
+    {
         return None;
     }
     let excess = expected_return - risk_free_rate;

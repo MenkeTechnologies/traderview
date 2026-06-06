@@ -137,8 +137,7 @@ pub fn check(input: &Section6672Input) -> Section6672Result {
     let preliminary_notice_compliance = input.preliminary_notice_60_day_window_provided;
     let preliminary_notice_violation = tfrp_imposable && !preliminary_notice_compliance;
 
-    let contribution_right_engaged =
-        tfrp_imposable && input.multiple_responsible_persons_involved;
+    let contribution_right_engaged = tfrp_imposable && input.multiple_responsible_persons_involved;
 
     notes.push(
         "§ 6672(a) — 100% PERSONAL liability on responsible persons for unpaid trust fund portion of employment taxes; one of the most severe penalties in the Code"
@@ -359,7 +358,9 @@ mod tests {
         let r = check(&i);
         assert!(!r.preliminary_notice_compliance);
         assert!(r.preliminary_notice_violation);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6672(b)(1)") && n.contains("Letter 1153") && n.contains("Form 2751")));
+        assert!(r.notes.iter().any(|n| n.contains("§ 6672(b)(1)")
+            && n.contains("Letter 1153")
+            && n.contains("Form 2751")));
     }
 
     #[test]
@@ -376,7 +377,10 @@ mod tests {
         i.multiple_responsible_persons_involved = true;
         let r = check(&i);
         assert!(r.contribution_right_engaged);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6672(d)") && n.contains("JOINTLY AND SEVERALLY")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6672(d)") && n.contains("JOINTLY AND SEVERALLY")));
     }
 
     #[test]
@@ -398,13 +402,19 @@ mod tests {
         let mut i = full_tfrp();
         i.bankruptcy_discharge_attempted = true;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("§ 523(a)(7)") && n.contains("NONDISCHARGEABLE")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 523(a)(7)") && n.contains("NONDISCHARGEABLE")));
     }
 
     #[test]
     fn no_bankruptcy_attempt_no_nondischargeable_note() {
         let r = check(&full_tfrp());
-        assert!(!r.notes.iter().any(|n| n.contains("§ 523(a)(7)") && n.contains("NONDISCHARGEABLE")));
+        assert!(!r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 523(a)(7)") && n.contains("NONDISCHARGEABLE")));
     }
 
     #[test]
@@ -422,19 +432,28 @@ mod tests {
     #[test]
     fn trust_fund_taxes_note_lists_3402_and_3101() {
         let r = check(&base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 3402") && n.contains("§ 3101")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 3402") && n.contains("§ 3101")));
     }
 
     #[test]
     fn non_trust_fund_note_lists_3111_and_3301() {
         let r = check(&base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 3111") && n.contains("§ 3301")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 3111") && n.contains("§ 3301")));
     }
 
     #[test]
     fn tfrp_imposable_note_describes_100_percent_personal() {
         let r = check(&full_tfrp());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6672 TFRP IMPOSABLE") && n.contains("100%")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6672 TFRP IMPOSABLE") && n.contains("100%")));
     }
 
     #[test]
@@ -442,13 +461,21 @@ mod tests {
         let mut i = base();
         i.significant_control_over_company_finances = true;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("responsible person prong satisfied") && n.contains("status") && n.contains("authority")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("responsible person prong satisfied")
+                && n.contains("status")
+                && n.contains("authority")));
     }
 
     #[test]
     fn responsible_person_not_satisfied_note_when_no_factors() {
         let r = check(&base());
-        assert!(r.notes.iter().any(|n| n.contains("responsible person prong NOT satisfied")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("responsible person prong NOT satisfied")));
     }
 
     #[test]
@@ -457,7 +484,10 @@ mod tests {
         i.significant_control_over_company_finances = true;
         i.used_funds_to_pay_other_creditors = true;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("willfulness prong satisfied") && n.contains("OTHER creditors")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("willfulness prong satisfied") && n.contains("OTHER creditors")));
     }
 
     #[test]
@@ -466,7 +496,10 @@ mod tests {
         i.significant_control_over_company_finances = true;
         i.knew_trust_fund_taxes_were_due = true;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("no evil intent required")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("no evil intent required")));
     }
 
     #[test]
@@ -545,12 +578,18 @@ mod tests {
         let mut i = base();
         i.significant_control_over_company_finances = true;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("willfulness prong NOT satisfied")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("willfulness prong NOT satisfied")));
     }
 
     #[test]
     fn preliminary_notice_compliance_note_when_satisfied_and_tfrp_imposable() {
         let r = check(&full_tfrp());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6672(b)(1)") && n.contains("60-day waiting period satisfied")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6672(b)(1)") && n.contains("60-day waiting period satisfied")));
     }
 }

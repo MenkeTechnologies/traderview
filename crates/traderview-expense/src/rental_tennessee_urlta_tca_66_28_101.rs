@@ -147,7 +147,9 @@ pub fn compute(input: &Input) -> Output {
         "Justia + FindLaw + Blount County Government + Paine Bickers + LawServer + American Apartment Owners Association + PayRent + Nolo + iPropertyManagement + Hemlane + DoorLoop + Rentable + eForms + Landlord Studio + LegalTemplates + Landlord Guidance — primary statutory text and practitioner guides".to_string(),
     ];
 
-    if input.county_applicability == CountyApplicability::CountyAtOrBelowSeventyFiveThousandPopulationCommonLawApplies {
+    if input.county_applicability
+        == CountyApplicability::CountyAtOrBelowSeventyFiveThousandPopulationCommonLawApplies
+    {
         return Output {
             mode: TnUrltaMode::NotApplicableCountyAtOrBelowSeventyFiveThousandPopulation,
             statutory_basis: "T.C.A. § 66-28-102 — URLTA applies only to counties with population greater than 75,000".to_string(),
@@ -196,7 +198,8 @@ pub fn compute(input: &Input) -> Output {
             }
         }
         ComplianceAspect::LandlordAccessUnderTca66_28_403 => {
-            if input.landlord_entry_with_reasonable_notice_or_emergency_or_final_thirty_days_showing {
+            if input.landlord_entry_with_reasonable_notice_or_emergency_or_final_thirty_days_showing
+            {
                 Output {
                     mode: TnUrltaMode::CompliantLandlordEntryReasonableNoticeOrEmergencyOrFinalThirtyDayShowingNotice,
                     statutory_basis: "T.C.A. § 66-28-403 — landlord entry with reasonable notice, emergency exception, or final 30-day showing notice".to_string(),
@@ -213,7 +216,9 @@ pub fn compute(input: &Input) -> Output {
             }
         }
         ComplianceAspect::FourteenDayCureOrQuitNoticeUnderTca66_28_505 => {
-            if input.pay_or_quit_or_cure_notice_days_given >= TN_URLTA_PAY_OR_QUIT_OR_CURE_NOTICE_DAYS {
+            if input.pay_or_quit_or_cure_notice_days_given
+                >= TN_URLTA_PAY_OR_QUIT_OR_CURE_NOTICE_DAYS
+            {
                 Output {
                     mode: TnUrltaMode::CompliantFourteenDayCureOrQuitNoticeProvided,
                     statutory_basis: "T.C.A. § 66-28-505(a)(2) — 14-day cure or quit notice provided for nonpayment or remediable breach".to_string(),
@@ -231,7 +236,8 @@ pub fn compute(input: &Input) -> Output {
         }
         ComplianceAspect::SevenDayNoCureNoticeForSecondViolationUnderTca66_28_505AB => {
             if input.breach_category == BreachCategory::SecondViolationWithinSixMonths
-                && input.second_violation_no_cure_notice_days_given >= TN_URLTA_SECOND_VIOLATION_NO_CURE_NOTICE_DAYS
+                && input.second_violation_no_cure_notice_days_given
+                    >= TN_URLTA_SECOND_VIOLATION_NO_CURE_NOTICE_DAYS
             {
                 Output {
                     mode: TnUrltaMode::CompliantSevenDayNoCureNoticeForSecondViolationProvided,
@@ -256,7 +262,9 @@ pub fn compute(input: &Input) -> Output {
             }
         }
         ComplianceAspect::PeriodicTenancyTerminationThirtyDayNoticeUnderTca66_28_512 => {
-            if input.periodic_tenancy_termination_notice_days_given >= TN_URLTA_MONTH_TO_MONTH_TERMINATION_NOTICE_DAYS {
+            if input.periodic_tenancy_termination_notice_days_given
+                >= TN_URLTA_MONTH_TO_MONTH_TERMINATION_NOTICE_DAYS
+            {
                 Output {
                     mode: TnUrltaMode::CompliantPeriodicTenancyThirtyDayTerminationNoticeProvided,
                     statutory_basis: "T.C.A. § 66-28-512 — 30-day periodic tenancy termination notice provided".to_string(),
@@ -290,7 +298,9 @@ pub fn compute(input: &Input) -> Output {
             }
         }
         ComplianceAspect::LandlordRepairFourteenDayResponseUnderTca66_28_502 => {
-            if input.landlord_repair_response_days <= TN_URLTA_LANDLORD_REPAIR_RESPONSE_DEADLINE_DAYS {
+            if input.landlord_repair_response_days
+                <= TN_URLTA_LANDLORD_REPAIR_RESPONSE_DEADLINE_DAYS
+            {
                 Output {
                     mode: TnUrltaMode::CompliantLandlordRepairWithinFourteenDayResponse,
                     statutory_basis: "T.C.A. § 66-28-502 — landlord repair within 14-day response window".to_string(),
@@ -315,8 +325,10 @@ mod tests {
 
     fn baseline_input() -> Input {
         Input {
-            county_applicability: CountyApplicability::CountyAboveSeventyFiveThousandPopulationCoveredByUrlta,
-            compliance_aspect: ComplianceAspect::SecurityDepositSeparateAccountAndReturnUnderTca66_28_301,
+            county_applicability:
+                CountyApplicability::CountyAboveSeventyFiveThousandPopulationCoveredByUrlta,
+            compliance_aspect:
+                ComplianceAspect::SecurityDepositSeparateAccountAndReturnUnderTca66_28_301,
             breach_category: BreachCategory::NonpaymentOfRent,
             deposit_in_separate_federally_insured_account_in_tennessee: true,
             deposit_returned_with_itemized_statement_within_window: true,
@@ -334,7 +346,8 @@ mod tests {
     #[test]
     fn rural_county_below_75000_not_applicable() {
         let mut input = baseline_input();
-        input.county_applicability = CountyApplicability::CountyAtOrBelowSeventyFiveThousandPopulationCommonLawApplies;
+        input.county_applicability =
+            CountyApplicability::CountyAtOrBelowSeventyFiveThousandPopulationCommonLawApplies;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -388,7 +401,8 @@ mod tests {
     #[test]
     fn landlord_obligations_met_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordObligationsToMaintainPremisesUnderTca66_28_302;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordObligationsToMaintainPremisesUnderTca66_28_302;
         let output = check(&input);
         assert_eq!(output.mode, TnUrltaMode::CompliantLandlordObligationsMet);
     }
@@ -396,10 +410,14 @@ mod tests {
     #[test]
     fn landlord_obligations_breached_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordObligationsToMaintainPremisesUnderTca66_28_302;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordObligationsToMaintainPremisesUnderTca66_28_302;
         input.landlord_obligations_met = false;
         let output = check(&input);
-        assert_eq!(output.mode, TnUrltaMode::ViolationLandlordObligationsBreached);
+        assert_eq!(
+            output.mode,
+            TnUrltaMode::ViolationLandlordObligationsBreached
+        );
     }
 
     #[test]
@@ -417,7 +435,8 @@ mod tests {
     fn landlord_entry_unreasonable_violation() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::LandlordAccessUnderTca66_28_403;
-        input.landlord_entry_with_reasonable_notice_or_emergency_or_final_thirty_days_showing = false;
+        input.landlord_entry_with_reasonable_notice_or_emergency_or_final_thirty_days_showing =
+            false;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -430,7 +449,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::FourteenDayCureOrQuitNoticeUnderTca66_28_505;
         let output = check(&input);
-        assert_eq!(output.mode, TnUrltaMode::CompliantFourteenDayCureOrQuitNoticeProvided);
+        assert_eq!(
+            output.mode,
+            TnUrltaMode::CompliantFourteenDayCureOrQuitNoticeProvided
+        );
     }
 
     #[test]
@@ -439,13 +461,17 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::FourteenDayCureOrQuitNoticeUnderTca66_28_505;
         input.pay_or_quit_or_cure_notice_days_given = 13;
         let output = check(&input);
-        assert_eq!(output.mode, TnUrltaMode::ViolationCureOrQuitNoticeShorterThanFourteenDays);
+        assert_eq!(
+            output.mode,
+            TnUrltaMode::ViolationCureOrQuitNoticeShorterThanFourteenDays
+        );
     }
 
     #[test]
     fn seven_day_no_cure_notice_for_second_violation_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SevenDayNoCureNoticeForSecondViolationUnderTca66_28_505AB;
+        input.compliance_aspect =
+            ComplianceAspect::SevenDayNoCureNoticeForSecondViolationUnderTca66_28_505AB;
         input.breach_category = BreachCategory::SecondViolationWithinSixMonths;
         let output = check(&input);
         assert_eq!(
@@ -457,7 +483,8 @@ mod tests {
     #[test]
     fn seven_day_no_cure_notice_under_7_days_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SevenDayNoCureNoticeForSecondViolationUnderTca66_28_505AB;
+        input.compliance_aspect =
+            ComplianceAspect::SevenDayNoCureNoticeForSecondViolationUnderTca66_28_505AB;
         input.breach_category = BreachCategory::SecondViolationWithinSixMonths;
         input.second_violation_no_cure_notice_days_given = 6;
         let output = check(&input);
@@ -470,7 +497,8 @@ mod tests {
     #[test]
     fn periodic_tenancy_30_day_termination_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::PeriodicTenancyTerminationThirtyDayNoticeUnderTca66_28_512;
+        input.compliance_aspect =
+            ComplianceAspect::PeriodicTenancyTerminationThirtyDayNoticeUnderTca66_28_512;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -481,7 +509,8 @@ mod tests {
     #[test]
     fn periodic_tenancy_termination_under_30_days_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::PeriodicTenancyTerminationThirtyDayNoticeUnderTca66_28_512;
+        input.compliance_aspect =
+            ComplianceAspect::PeriodicTenancyTerminationThirtyDayNoticeUnderTca66_28_512;
         input.periodic_tenancy_termination_notice_days_given = 29;
         let output = check(&input);
         assert_eq!(
@@ -510,24 +539,33 @@ mod tests {
     #[test]
     fn landlord_repair_within_14_days_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordRepairFourteenDayResponseUnderTca66_28_502;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordRepairFourteenDayResponseUnderTca66_28_502;
         let output = check(&input);
-        assert_eq!(output.mode, TnUrltaMode::CompliantLandlordRepairWithinFourteenDayResponse);
+        assert_eq!(
+            output.mode,
+            TnUrltaMode::CompliantLandlordRepairWithinFourteenDayResponse
+        );
     }
 
     #[test]
     fn landlord_repair_at_exactly_14_days_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordRepairFourteenDayResponseUnderTca66_28_502;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordRepairFourteenDayResponseUnderTca66_28_502;
         input.landlord_repair_response_days = 14;
         let output = check(&input);
-        assert_eq!(output.mode, TnUrltaMode::CompliantLandlordRepairWithinFourteenDayResponse);
+        assert_eq!(
+            output.mode,
+            TnUrltaMode::CompliantLandlordRepairWithinFourteenDayResponse
+        );
     }
 
     #[test]
     fn landlord_repair_at_15_days_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordRepairFourteenDayResponseUnderTca66_28_502;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordRepairFourteenDayResponseUnderTca66_28_502;
         input.landlord_repair_response_days = 15;
         let output = check(&input);
         assert_eq!(

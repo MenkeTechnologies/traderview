@@ -34,7 +34,7 @@ pub struct AppState {
 impl AppState {
     pub fn new(pool: PgPool, mode: AppMode, jwt_secret: Vec<u8>, data_dir: PathBuf) -> Self {
         let permits = std::thread::available_parallelism()
-            .map(|n| n.get().min(4).max(1))
+            .map(|n| n.get().clamp(1, 4))
             .unwrap_or(2);
         Self {
             pool,

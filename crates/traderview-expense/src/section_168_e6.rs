@@ -78,14 +78,18 @@ impl ImprovementType {
 
     fn exclusion_reason(self) -> Option<&'static str> {
         match self {
-            ImprovementType::BuildingEnlargement =>
-                Some("§168(e)(6)(A) excludes building enlargement"),
-            ImprovementType::ElevatorOrEscalator =>
-                Some("§168(e)(6)(B) excludes elevators and escalators"),
-            ImprovementType::InternalStructuralFramework =>
-                Some("§168(e)(6)(C) excludes internal structural framework"),
-            ImprovementType::ResidentialRental =>
-                Some("residential rental — QIP is nonresidential property only"),
+            ImprovementType::BuildingEnlargement => {
+                Some("§168(e)(6)(A) excludes building enlargement")
+            }
+            ImprovementType::ElevatorOrEscalator => {
+                Some("§168(e)(6)(B) excludes elevators and escalators")
+            }
+            ImprovementType::InternalStructuralFramework => {
+                Some("§168(e)(6)(C) excludes internal structural framework")
+            }
+            ImprovementType::ResidentialRental => {
+                Some("residential rental — QIP is nonresidential property only")
+            }
             ImprovementType::InteriorNonresidential => None,
         }
     }
@@ -161,8 +165,7 @@ pub fn compute(input: &Section168E6Input) -> Section168E6Result {
             r.exclusion_reason = Some(reason.into());
         } else if input.placed_in_service_year <= input.building_first_placed_in_service_year {
             r.exclusion_reason = Some(
-                "improvement not made AFTER the building's original placed-in-service date"
-                    .into(),
+                "improvement not made AFTER the building's original placed-in-service date".into(),
             );
         }
         r.recovery_period_years = 39;
@@ -187,11 +190,9 @@ pub fn compute(input: &Section168E6Input) -> Section168E6Result {
     };
     r.bonus_pct_applied = actual_bonus_pct;
 
-    let bonus_amount =
-        (input.improvement_cost * actual_bonus_pct).round_dp(2);
+    let bonus_amount = (input.improvement_cost * actual_bonus_pct).round_dp(2);
     let remaining_basis = input.improvement_cost - bonus_amount;
-    let macrs_amount =
-        (remaining_basis * macrs_15_year_year_1_rate()).round_dp(2);
+    let macrs_amount = (remaining_basis * macrs_15_year_year_1_rate()).round_dp(2);
 
     r.year_1_bonus_deduction = bonus_amount;
     r.year_1_macrs_deduction = macrs_amount;
@@ -390,7 +391,10 @@ mod tests {
             i.placed_in_service_year = year;
             i.current_tax_year = year;
             let r = compute(&i);
-            assert_eq!(r.recovery_period_years, 15, "year {year} should be 15-year QIP");
+            assert_eq!(
+                r.recovery_period_years, 15,
+                "year {year} should be 15-year QIP"
+            );
         }
     }
 

@@ -348,9 +348,9 @@ pub async fn poll_all(pool: &PgPool) -> (usize, usize) {
 /// errors, etc.) stay at WARN because they indicate something we should
 /// look at — schema drift, rate-limit ban, etc.
 fn log_poll_error(source: &str, err: &anyhow::Error) {
-    let is_transient = err.downcast_ref::<reqwest::Error>().is_some_and(|re| {
-        re.is_connect() || re.is_timeout() || re.is_request()
-    });
+    let is_transient = err
+        .downcast_ref::<reqwest::Error>()
+        .is_some_and(|re| re.is_connect() || re.is_timeout() || re.is_request());
     if is_transient {
         tracing::debug!(error = ?err, source, "sentiment poll skipped (transient network error)");
     } else {

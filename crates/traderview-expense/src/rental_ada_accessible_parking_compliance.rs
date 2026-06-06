@@ -133,7 +133,10 @@ pub fn check(input: &Input) -> Output {
         };
     }
 
-    if matches!(input.regime_category, RegimeCategory::FhaReasonableAccommodationRequest) {
+    if matches!(
+        input.regime_category,
+        RegimeCategory::FhaReasonableAccommodationRequest
+    ) {
         match input.compliance_status {
             ComplianceStatus::FhaTenantAccommodationGranted => {
                 return Output {
@@ -177,20 +180,18 @@ pub fn check(input: &Input) -> Output {
         }
     }
 
-    let required_accessible = if matches!(
-        input.regime_category,
-        RegimeCategory::FhaCoveredMultifamily
-    ) {
-        u32::try_from(
-            u128::from(input.total_parking_spaces)
-                .saturating_mul(u128::from(FHA_COVERED_MULTIFAMILY_PERCENT_BPS))
-                .saturating_div(10_000),
-        )
-        .unwrap_or(u32::MAX)
-        .max(1)
-    } else {
-        ada_title_iii_minimum_table(input.total_parking_spaces)
-    };
+    let required_accessible =
+        if matches!(input.regime_category, RegimeCategory::FhaCoveredMultifamily) {
+            u32::try_from(
+                u128::from(input.total_parking_spaces)
+                    .saturating_mul(u128::from(FHA_COVERED_MULTIFAMILY_PERCENT_BPS))
+                    .saturating_div(10_000),
+            )
+            .unwrap_or(u32::MAX)
+            .max(1)
+        } else {
+            ada_title_iii_minimum_table(input.total_parking_spaces)
+        };
 
     let required_van = required_accessible
         .saturating_add(VAN_ACCESSIBLE_RATIO_DIVISOR - 1)
@@ -199,10 +200,7 @@ pub fn check(input: &Input) -> Output {
     if input.accessible_spaces_provided < required_accessible {
         let exposure = ADA_FHA_TYPICAL_EMOTIONAL_DISTRESS_CENTS
             .saturating_add(ADA_FHA_CIVIL_PENALTY_FIRST_VIOLATION_CENTS);
-        let severity = if matches!(
-            input.regime_category,
-            RegimeCategory::FhaCoveredMultifamily
-        ) {
+        let severity = if matches!(input.regime_category, RegimeCategory::FhaCoveredMultifamily) {
             Severity::FhaCoveredMultifamilyTwoPercentRequirementViolation
         } else {
             Severity::InsufficientAccessibleSpaceCountAdaViolation
@@ -221,10 +219,7 @@ pub fn check(input: &Input) -> Output {
                  to retrofit + barrier-removal cost.",
                 input.total_parking_spaces,
                 required_accessible,
-                if matches!(
-                    input.regime_category,
-                    RegimeCategory::FhaCoveredMultifamily
-                ) {
+                if matches!(input.regime_category, RegimeCategory::FhaCoveredMultifamily) {
                     "FHA 2% minimum"
                 } else {
                     "2010 ADA Standards § 208.2 minimum table"

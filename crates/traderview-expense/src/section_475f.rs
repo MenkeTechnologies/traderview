@@ -134,7 +134,10 @@ pub fn check(input: &Input) -> Output {
 
     let tts = classify_tts(input);
 
-    if matches!(tts, TraderTaxStatusQualification::DoesNotQualifyInsufficientActivity) {
+    if matches!(
+        tts,
+        TraderTaxStatusQualification::DoesNotQualifyInsufficientActivity
+    ) {
         notes.push(format!(
             "TTS floor missed: below {} trades/year or below {} hours/day. Cannot elect § 475(f) without trader-in-securities status.",
             TYPICAL_TRADER_SUBSTANTIAL_TRADES_FLOOR_PER_YEAR,
@@ -146,8 +149,8 @@ pub fn check(input: &Input) -> Output {
             wash_sale_exemption_applies: false,
             ordinary_loss_treatment_unlimited: false,
             section_1211b_3000_cap_removed: false,
-            deductible_loss_against_ordinary_income_cents: SECTION_1211B_CAPITAL_LOSS_CAP_CENTS_PER_YEAR
-                .min(input.net_securities_loss_cents),
+            deductible_loss_against_ordinary_income_cents:
+                SECTION_1211B_CAPITAL_LOSS_CAP_CENTS_PER_YEAR.min(input.net_securities_loss_cents),
             notes,
             citations,
         };
@@ -167,8 +170,8 @@ pub fn check(input: &Input) -> Output {
             wash_sale_exemption_applies: false,
             ordinary_loss_treatment_unlimited: false,
             section_1211b_3000_cap_removed: false,
-            deductible_loss_against_ordinary_income_cents: SECTION_1211B_CAPITAL_LOSS_CAP_CENTS_PER_YEAR
-                .min(input.net_securities_loss_cents),
+            deductible_loss_against_ordinary_income_cents:
+                SECTION_1211B_CAPITAL_LOSS_CAP_CENTS_PER_YEAR.min(input.net_securities_loss_cents),
             notes,
             citations,
         };
@@ -199,9 +202,7 @@ pub fn check(input: &Input) -> Output {
         ElectionStatementFilingStatus::MissedAprilOrMarchDeadlineFatal
     ) {
         let deadline_day = match input.filer_entity_type {
-            FilerEntityType::IndividualSchedC => {
-                ELECTION_DEADLINE_APRIL_15_INDIVIDUAL_DAY_OF_MONTH
-            }
+            FilerEntityType::IndividualSchedC => ELECTION_DEADLINE_APRIL_15_INDIVIDUAL_DAY_OF_MONTH,
             FilerEntityType::SCorp | FilerEntityType::Partnership => {
                 ELECTION_DEADLINE_MARCH_15_ENTITY_DAY_OF_MONTH
             }
@@ -222,8 +223,8 @@ pub fn check(input: &Input) -> Output {
             wash_sale_exemption_applies: false,
             ordinary_loss_treatment_unlimited: false,
             section_1211b_3000_cap_removed: false,
-            deductible_loss_against_ordinary_income_cents: SECTION_1211B_CAPITAL_LOSS_CAP_CENTS_PER_YEAR
-                .min(input.net_securities_loss_cents),
+            deductible_loss_against_ordinary_income_cents:
+                SECTION_1211B_CAPITAL_LOSS_CAP_CENTS_PER_YEAR.min(input.net_securities_loss_cents),
             notes,
             citations,
         };
@@ -238,13 +239,14 @@ pub fn check(input: &Input) -> Output {
     ) {
         notes.push("Election statement timely filed but Form 3115 omitted from year-of-election return — accounting-method change incomplete per Rev. Proc. 2025-23 § 24.01.".to_string());
         return Output {
-            severity: Severity::TraderQualifiesElectionFiledButForm3115MissingAccountingMethodViolation,
+            severity:
+                Severity::TraderQualifiesElectionFiledButForm3115MissingAccountingMethodViolation,
             trader_tax_status: tts,
             wash_sale_exemption_applies: false,
             ordinary_loss_treatment_unlimited: false,
             section_1211b_3000_cap_removed: false,
-            deductible_loss_against_ordinary_income_cents: SECTION_1211B_CAPITAL_LOSS_CAP_CENTS_PER_YEAR
-                .min(input.net_securities_loss_cents),
+            deductible_loss_against_ordinary_income_cents:
+                SECTION_1211B_CAPITAL_LOSS_CAP_CENTS_PER_YEAR.min(input.net_securities_loss_cents),
             notes,
             citations,
         };
@@ -270,15 +272,18 @@ pub fn check(input: &Input) -> Output {
         };
     }
 
-    notes.push("No election action recorded; capital character + § 1211(b) cap apply by default.".to_string());
+    notes.push(
+        "No election action recorded; capital character + § 1211(b) cap apply by default."
+            .to_string(),
+    );
     Output {
         severity: Severity::TraderDoesNotQualifyTtsCannotElect475f,
         trader_tax_status: tts,
         wash_sale_exemption_applies: false,
         ordinary_loss_treatment_unlimited: false,
         section_1211b_3000_cap_removed: false,
-        deductible_loss_against_ordinary_income_cents: SECTION_1211B_CAPITAL_LOSS_CAP_CENTS_PER_YEAR
-            .min(input.net_securities_loss_cents),
+        deductible_loss_against_ordinary_income_cents:
+            SECTION_1211B_CAPITAL_LOSS_CAP_CENTS_PER_YEAR.min(input.net_securities_loss_cents),
         notes,
         citations,
     }
@@ -307,7 +312,8 @@ mod tests {
             filer_entity_type: FilerEntityType::IndividualSchedC,
             annual_trades: 1_000,
             hours_per_trading_day: 6,
-            election_statement: ElectionStatementFilingStatus::FiledByOriginalDueDateWithoutExtensions,
+            election_statement:
+                ElectionStatementFilingStatus::FiledByOriginalDueDateWithoutExtensions,
             form_3115_status: Form3115FilingStatus::Form3115WillBeFiledWithReturn,
             prior_revocation: PriorRevocationStatus::NoPriorElectionOrRevocation,
             net_securities_loss_cents: 5_000_000,
@@ -387,14 +393,18 @@ mod tests {
             Severity::PriorElectionRevokedWithin5YearsLockedCannotReElect
         );
         assert!(!out.section_1211b_3000_cap_removed);
-        assert!(out.notes.iter().any(|n| n.contains("5") && n.contains("years")));
+        assert!(out
+            .notes
+            .iter()
+            .any(|n| n.contains("5") && n.contains("years")));
     }
 
     #[test]
     fn newly_formed_entity_internal_books_2_5_month_window() {
         let mut i = base();
         i.filer_entity_type = FilerEntityType::NewlyFormedEntityFirstYear;
-        i.election_statement = ElectionStatementFilingStatus::NewEntityElectionInternalBooksWithin2_5Months;
+        i.election_statement =
+            ElectionStatementFilingStatus::NewEntityElectionInternalBooksWithin2_5Months;
         let out = check(&i);
         assert_eq!(
             out.severity,
@@ -446,7 +456,10 @@ mod tests {
         assert!(out.citations.iter().any(|c| c.contains("§ 475(f)")));
         assert!(out.citations.iter().any(|c| c.contains("Form 3115")));
         assert!(out.citations.iter().any(|c| c.contains("Rev. Proc. 99-17")));
-        assert!(out.citations.iter().any(|c| c.contains("Rev. Proc. 2025-23")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("Rev. Proc. 2025-23")));
     }
 
     #[test]

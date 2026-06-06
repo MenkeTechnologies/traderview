@@ -91,7 +91,10 @@ mod tests {
     use super::*;
 
     fn b(c: f64, v: f64) -> PvBar {
-        PvBar { close: c, volume: v }
+        PvBar {
+            close: c,
+            volume: v,
+        }
     }
 
     #[test]
@@ -105,12 +108,12 @@ mod tests {
     fn nvi_starts_at_seed_and_only_moves_on_volume_drops() {
         let bars = vec![
             b(100.0, 1000.0),
-            b(110.0, 2000.0),    // volume UP → NVI flat
-            b(120.0, 1500.0),    // volume DOWN → NVI moves +9.09%
+            b(110.0, 2000.0), // volume UP → NVI flat
+            b(120.0, 1500.0), // volume DOWN → NVI moves +9.09%
         ];
         let out = nvi(&bars);
         assert_eq!(out[0], SEED);
-        assert_eq!(out[1], SEED);                  // volume rose → no update
+        assert_eq!(out[1], SEED); // volume rose → no update
         assert!((out[2] - SEED * 1.0_f64.mul_add(120.0 / 110.0, 0.0)).abs() < 1.0);
     }
 
@@ -118,8 +121,8 @@ mod tests {
     fn pvi_only_moves_on_volume_rises() {
         let bars = vec![
             b(100.0, 1000.0),
-            b(110.0, 2000.0),    // volume UP → PVI updates +10%
-            b(105.0, 500.0),     // volume DOWN → PVI flat
+            b(110.0, 2000.0), // volume UP → PVI updates +10%
+            b(105.0, 500.0),  // volume DOWN → PVI flat
         ];
         let out = pvi(&bars);
         assert_eq!(out[0], SEED);
@@ -131,8 +134,8 @@ mod tests {
     fn pvt_accumulates_volume_weighted_pct_change() {
         let bars = vec![
             b(100.0, 1000.0),
-            b(110.0, 2000.0),     // +10% × 2000 = +200
-            b(99.0, 1000.0),      // -10% × 1000 = -100
+            b(110.0, 2000.0), // +10% × 2000 = +200
+            b(99.0, 1000.0),  // -10% × 1000 = -100
         ];
         let out = pvt(&bars);
         assert_eq!(out[0], 0.0);
@@ -144,8 +147,8 @@ mod tests {
     fn zero_or_negative_prior_close_skipped() {
         let bars = vec![
             b(100.0, 1000.0),
-            b(0.0, 2000.0),       // close=0, but prior_close=100 ✓ valid
-            b(50.0, 500.0),       // prior_close=0 → skip
+            b(0.0, 2000.0), // close=0, but prior_close=100 ✓ valid
+            b(50.0, 500.0), // prior_close=0 → skip
         ];
         // NVI at index 2: volume dropped 2000→500, but prior_close=0 → no update.
         let out = nvi(&bars);

@@ -115,9 +115,7 @@ pub fn check(input: &MandatoryRentersInsuranceInput) -> MandatoryRentersInsuranc
     }
 }
 
-fn check_california(
-    input: &MandatoryRentersInsuranceInput,
-) -> MandatoryRentersInsuranceResult {
+fn check_california(input: &MandatoryRentersInsuranceInput) -> MandatoryRentersInsuranceResult {
     let mut violations: Vec<String> = Vec::new();
     let notes: Vec<String> = vec![
         "California — landlord may RECOMMEND a list of providers without mandating one; recommendation is not anti-tying"
@@ -141,12 +139,12 @@ fn check_california(
         }
     }
 
-    let enforceable = input.landlord_requires_renters_insurance
-        && !input.landlord_mandated_specific_provider;
+    let enforceable =
+        input.landlord_requires_renters_insurance && !input.landlord_mandated_specific_provider;
     let anti_tying = input.landlord_mandated_specific_provider;
     let right_to_choose = input.landlord_requires_renters_insurance;
-    let affiliate_scrutiny = input.landlord_mandated_specific_provider
-        && input.landlord_or_affiliate_is_provider;
+    let affiliate_scrutiny =
+        input.landlord_mandated_specific_provider && input.landlord_or_affiliate_is_provider;
 
     MandatoryRentersInsuranceResult {
         requirement_enforceable: enforceable,
@@ -155,7 +153,8 @@ fn check_california(
         coverage_minimum_specification_permitted: input.lease_specifies_coverage_minimums,
         affiliate_financial_interest_heightens_scrutiny: affiliate_scrutiny,
         violations,
-        citation: "Cal. Ins. Code; Cal. Civ. Code §§ 1942.6, 1750 et seq.; Cal. Bus. & Prof. Code § 17200",
+        citation:
+            "Cal. Ins. Code; Cal. Civ. Code §§ 1942.6, 1750 et seq.; Cal. Bus. & Prof. Code § 17200",
         notes,
     }
 }
@@ -178,12 +177,12 @@ fn check_new_york(input: &MandatoryRentersInsuranceInput) -> MandatoryRentersIns
         );
     }
 
-    let enforceable = input.landlord_requires_renters_insurance
-        && !input.landlord_mandated_specific_provider;
+    let enforceable =
+        input.landlord_requires_renters_insurance && !input.landlord_mandated_specific_provider;
     let anti_tying = input.landlord_mandated_specific_provider;
     let right_to_choose = input.landlord_requires_renters_insurance;
-    let affiliate_scrutiny = input.landlord_mandated_specific_provider
-        && input.landlord_or_affiliate_is_provider;
+    let affiliate_scrutiny =
+        input.landlord_mandated_specific_provider && input.landlord_or_affiliate_is_provider;
 
     MandatoryRentersInsuranceResult {
         requirement_enforceable: enforceable,
@@ -213,12 +212,12 @@ fn check_default(input: &MandatoryRentersInsuranceInput) -> MandatoryRentersInsu
         );
     }
 
-    let enforceable = input.landlord_requires_renters_insurance
-        && !input.landlord_mandated_specific_provider;
+    let enforceable =
+        input.landlord_requires_renters_insurance && !input.landlord_mandated_specific_provider;
     let anti_tying = input.landlord_mandated_specific_provider;
     let right_to_choose = input.landlord_requires_renters_insurance;
-    let affiliate_scrutiny = input.landlord_mandated_specific_provider
-        && input.landlord_or_affiliate_is_provider;
+    let affiliate_scrutiny =
+        input.landlord_mandated_specific_provider && input.landlord_or_affiliate_is_provider;
 
     MandatoryRentersInsuranceResult {
         requirement_enforceable: enforceable,
@@ -227,7 +226,8 @@ fn check_default(input: &MandatoryRentersInsuranceInput) -> MandatoryRentersInsu
         coverage_minimum_specification_permitted: input.lease_specifies_coverage_minimums,
         affiliate_financial_interest_heightens_scrutiny: affiliate_scrutiny,
         violations,
-        citation: "common-law anti-tying + state-specific UDAP statutes + 15 U.S.C. § 45 (FTC Act § 5)",
+        citation:
+            "common-law anti-tying + state-specific UDAP statutes + 15 U.S.C. § 45 (FTC Act § 5)",
         notes,
     }
 }
@@ -275,8 +275,14 @@ mod tests {
         let r = check(&i);
         assert!(!r.requirement_enforceable);
         assert!(r.anti_tying_violation);
-        assert!(r.violations.iter().any(|v| v.contains("§ 1942.6") && v.contains("MAY NOT mandate")));
-        assert!(r.violations.iter().any(|v| v.contains("§ 17200") && v.contains("UDAP")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1942.6") && v.contains("MAY NOT mandate")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 17200") && v.contains("UDAP")));
     }
 
     #[test]
@@ -286,7 +292,10 @@ mod tests {
         i.landlord_or_affiliate_is_provider = true;
         let r = check(&i);
         assert!(r.affiliate_financial_interest_heightens_scrutiny);
-        assert!(r.violations.iter().any(|v| v.contains("§ 1750") && v.contains("Consumers Legal Remedies Act")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1750") && v.contains("Consumers Legal Remedies Act")));
     }
 
     #[test]
@@ -300,7 +309,10 @@ mod tests {
     #[test]
     fn ca_recommendation_note_describes_permitted_path() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("RECOMMEND a list of providers")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("RECOMMEND a list of providers")));
     }
 
     #[test]
@@ -324,7 +336,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.requirement_enforceable);
         assert!(r.anti_tying_violation);
-        assert!(r.violations.iter().any(|v| v.contains("§ 349") && v.contains("treble damages")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 349") && v.contains("treble damages")));
     }
 
     #[test]
@@ -332,7 +347,10 @@ mod tests {
         let mut i = ny_compliant();
         i.landlord_mandated_specific_provider = true;
         let r = check(&i);
-        assert!(r.violations.iter().any(|v| v.contains("§ 2502") && v.contains("de facto insurance agent")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 2502") && v.contains("de facto insurance agent")));
     }
 
     #[test]
@@ -355,13 +373,19 @@ mod tests {
         let r = check(&i);
         assert!(!r.requirement_enforceable);
         assert!(r.anti_tying_violation);
-        assert!(r.violations.iter().any(|v| v.contains("common-law anti-tying") && v.contains("UDAP")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("common-law anti-tying") && v.contains("UDAP")));
     }
 
     #[test]
     fn default_ftc_act_section_5_note_present() {
         let r = check(&default_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("15 U.S.C. § 45") && n.contains("47 states + DC")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("15 U.S.C. § 45") && n.contains("47 states + DC")));
     }
 
     #[test]
@@ -414,7 +438,11 @@ mod tests {
             i.regime = regime;
             i.landlord_mandated_specific_provider = true;
             let r = check(&i);
-            assert!(r.anti_tying_violation, "regime {:?} should flag anti-tying violation", regime);
+            assert!(
+                r.anti_tying_violation,
+                "regime {:?} should flag anti-tying violation",
+                regime
+            );
             assert!(!r.requirement_enforceable);
         }
     }
@@ -438,7 +466,10 @@ mod tests {
                 i.landlord_mandated_specific_provider = mandate;
                 i.landlord_or_affiliate_is_provider = affiliate;
                 let r = check(&i);
-                assert_eq!(r.affiliate_financial_interest_heightens_scrutiny, mandate && affiliate);
+                assert_eq!(
+                    r.affiliate_financial_interest_heightens_scrutiny,
+                    mandate && affiliate
+                );
             }
         }
     }

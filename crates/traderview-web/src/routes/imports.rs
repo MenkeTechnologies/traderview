@@ -139,7 +139,11 @@ async fn upload(
     // row 39 would land rows 1-38, and the user's retry would re-insert
     // 1-38 a second time (compounded if the dedupe index doesn't cover the
     // null-broker_order_id case).
-    let mut tx = s.pool.begin().await.map_err(|e| ApiError::Internal(e.into()))?;
+    let mut tx = s
+        .pool
+        .begin()
+        .await
+        .map_err(|e| ApiError::Internal(e.into()))?;
     let mut inserted = 0usize;
     let mut duplicates = 0usize;
     for p in &parsed {
@@ -151,7 +155,9 @@ async fn upload(
             Err(e) => return Err(ApiError::Internal(e)),
         }
     }
-    tx.commit().await.map_err(|e| ApiError::Internal(e.into()))?;
+    tx.commit()
+        .await
+        .map_err(|e| ApiError::Internal(e.into()))?;
 
     let trades_rolled = traderview_db::trades::rollup_account(&s.pool, account_id)
         .await

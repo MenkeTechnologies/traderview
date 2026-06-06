@@ -24,12 +24,19 @@
 pub fn compute(closes: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = closes.len();
     let mut out = vec![None; n];
-    if period < 3 || n < period + 2 { return out; }
-    if closes.iter().any(|x| !x.is_finite()) { return out; }
+    if period < 3 || n < period + 2 {
+        return out;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     let mut smooth = vec![0.0_f64; n];
     for i in 0..n {
-        smooth[i] = if i < 2 { closes[i] }
-            else { (3.0 * closes[i] + 2.0 * closes[i - 1] + closes[i - 2]) / 6.0 };
+        smooth[i] = if i < 2 {
+            closes[i]
+        } else {
+            (3.0 * closes[i] + 2.0 * closes[i - 1] + closes[i - 2]) / 6.0
+        };
     }
     let ema_smooth = ema(&smooth, period);
     let mut detrend = vec![None; n];
@@ -41,7 +48,9 @@ pub fn compute(closes: &[f64], period: usize) -> Vec<Option<f64>> {
     // Center detrended series by its rolling midline over period.
     for i in (period - 1)..n {
         let win = &detrend[i + 1 - period..=i];
-        if win.iter().any(|x| x.is_none()) { continue; }
+        if win.iter().any(|x| x.is_none()) {
+            continue;
+        }
         let vals: Vec<f64> = win.iter().filter_map(|x| *x).collect();
         let max = vals.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
         let min = vals.iter().cloned().fold(f64::INFINITY, f64::min);
@@ -54,7 +63,9 @@ pub fn compute(closes: &[f64], period: usize) -> Vec<Option<f64>> {
 fn ema(series: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     let k = 2.0 / (p_f + 1.0);
     let seed: f64 = series[..period].iter().sum::<f64>() / p_f;
@@ -102,20 +113,24 @@ mod tests {
         // Expect bounded magnitude regardless of how large the trend
         // gets, since the EMA-subtraction removes the level drift.
         let max_abs = r.iter().flatten().fold(0.0_f64, |a, b| a.max(b.abs()));
-        assert!(max_abs < 50.0,
-            "linear trend should be detrended to bounded amplitude, got {max_abs}");
+        assert!(
+            max_abs < 50.0,
+            "linear trend should be detrended to bounded amplitude, got {max_abs}"
+        );
     }
 
     #[test]
     fn sin_wave_centered_near_zero() {
-        let s: Vec<f64> = (0..400).map(|i| {
-            100.0 + (i as f64 * 0.1).sin() * 5.0
-        }).collect();
+        let s: Vec<f64> = (0..400)
+            .map(|i| 100.0 + (i as f64 * 0.1).sin() * 5.0)
+            .collect();
         let r = compute(&s, 14);
         let vals: Vec<f64> = r.iter().flatten().copied().collect();
         let mean: f64 = vals.iter().sum::<f64>() / vals.len() as f64;
-        assert!(mean.abs() < 0.5,
-            "sin wave detrended mean should be near 0, got {mean}");
+        assert!(
+            mean.abs() < 0.5,
+            "sin wave detrended mean should be near 0, got {mean}"
+        );
     }
 
     #[test]

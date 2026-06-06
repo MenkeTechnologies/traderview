@@ -130,8 +130,7 @@ pub fn compute(input: &Section7704Input) -> Section7704Result {
 
     let is_ptp = matches!(
         input.trading_status,
-        TradingStatus::EstablishedSecuritiesMarket
-            | TradingStatus::ReadilyTradableSecondaryMarket,
+        TradingStatus::EstablishedSecuritiesMarket | TradingStatus::ReadilyTradableSecondaryMarket,
     );
 
     // Compute qualifying-income percentage in basis points × 100.
@@ -317,11 +316,10 @@ mod tests {
             false,
         ));
         assert!(r.is_publicly_traded_partnership);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 7704(b)(1)") && n.contains("established"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7704(b)(1)") && n.contains("established")));
     }
 
     #[test]
@@ -336,11 +334,10 @@ mod tests {
             false,
         ));
         assert!(r.is_publicly_traded_partnership);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 7704(b)(2)") && n.contains("secondary market"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7704(b)(2)") && n.contains("secondary market")));
     }
 
     // ── § 7704(c)(2) 90% qualifying-income test ─────────────────
@@ -411,11 +408,10 @@ mod tests {
         assert_eq!(r.qualifying_income_percentage_bp, 5_000);
         assert!(!r.meets_90_pct_test);
         assert!(r.treated_as_corporation);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 7704(c)(2)") && n.contains("FAILED"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7704(c)(2)") && n.contains("FAILED")));
     }
 
     // ── § 7704(c)(1) continuous-compliance requirement ─────────
@@ -434,11 +430,10 @@ mod tests {
         assert!(r.meets_90_pct_test);
         assert!(!r.continuous_compliance_satisfied);
         assert!(r.treated_as_corporation);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 7704(c)(1)") && n.contains("continuous-compliance"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7704(c)(1)") && n.contains("continuous-compliance")));
     }
 
     // ── § 7704(e) inadvertent-termination relief ───────────────
@@ -450,9 +445,9 @@ mod tests {
             100_000,
             85_000, // fails 90% test
             true,
-            true,  // inadvertent
-            true,  // corrective steps
-            true,  // agreement to adjustments
+            true, // inadvertent
+            true, // corrective steps
+            true, // agreement to adjustments
         ));
         assert!(!r.meets_90_pct_test);
         assert!(r.inadvertent_termination_relief_applies);
@@ -560,15 +555,7 @@ mod tests {
             TradingStatus::EstablishedSecuritiesMarket,
             TradingStatus::ReadilyTradableSecondaryMarket,
         ] {
-            let r = compute(&input(
-                status,
-                100_000,
-                95_000,
-                true,
-                false,
-                false,
-                false,
-            ));
+            let r = compute(&input(status, 100_000, 95_000, true, false, false, false));
             assert!(
                 r.is_publicly_traded_partnership,
                 "{:?}: must be PTP",

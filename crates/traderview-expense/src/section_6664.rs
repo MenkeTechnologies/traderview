@@ -204,9 +204,7 @@ pub fn check(input: &Section6664Input) -> Section6664Result {
         }
     }
 
-    let defense_engaged = base_elements_met
-        && !economic_substance_bar
-        && !reportable_inadequate;
+    let defense_engaged = base_elements_met && !economic_substance_bar && !reportable_inadequate;
 
     notes.push(
         "Treas. Reg. § 1.6664-4 facts-and-circumstances factors: taxpayer's education, sophistication, business experience; reasonable effort to assess proper tax liability; reliance on professional advisor; complete + accurate facts provided to advisor"
@@ -311,7 +309,9 @@ mod tests {
         let r = check(&i);
         assert!(!r.defense_engaged);
         assert!(r.defense_barred_by_economic_substance);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6664(c)(2)") && n.contains("strict-liability") && n.contains("§ 7701(o)")));
+        assert!(r.notes.iter().any(|n| n.contains("§ 6664(c)(2)")
+            && n.contains("strict-liability")
+            && n.contains("§ 7701(o)")));
     }
 
     #[test]
@@ -329,7 +329,10 @@ mod tests {
     fn advisor_reliance_supports_defense_when_all_elements_met() {
         let r = check(&base_6662());
         assert!(r.advisor_reliance_supports_defense);
-        assert!(r.notes.iter().any(|n| n.contains("§ 1.6664-4") && n.contains("advisor reliance supports defense")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1.6664-4") && n.contains("advisor reliance supports defense")));
     }
 
     #[test]
@@ -363,7 +366,10 @@ mod tests {
         i.relied_on_professional_tax_advisor = false;
         let r = check(&i);
         assert!(!r.advisor_reliance_supports_defense);
-        assert!(!r.notes.iter().any(|n| n.contains("advisor reliance supports defense")));
+        assert!(!r
+            .notes
+            .iter()
+            .any(|n| n.contains("advisor reliance supports defense")));
     }
 
     #[test]
@@ -380,7 +386,9 @@ mod tests {
         let r = check(&base_6662a());
         assert!(r.defense_engaged);
         assert!(!r.defense_barred_by_reportable_transaction_inadequate_disclosure);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6664(d)(3)") && n.contains("all three") && n.contains("satisfied")));
+        assert!(r.notes.iter().any(|n| n.contains("§ 6664(d)(3)")
+            && n.contains("all three")
+            && n.contains("satisfied")));
     }
 
     #[test]
@@ -390,7 +398,9 @@ mod tests {
         let r = check(&i);
         assert!(!r.defense_engaged);
         assert!(r.defense_barred_by_reportable_transaction_inadequate_disclosure);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6664(d)(3)") && n.contains("ALL THREE") && n.contains("missing any one")));
+        assert!(r.notes.iter().any(|n| n.contains("§ 6664(d)(3)")
+            && n.contains("ALL THREE")
+            && n.contains("missing any one")));
     }
 
     #[test]
@@ -446,7 +456,10 @@ mod tests {
     #[test]
     fn civil_fraud_target_note_describes_clear_and_convincing() {
         let r = check(&base_6663());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6663") && n.contains("clear-and-convincing")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6663") && n.contains("clear-and-convincing")));
     }
 
     #[test]
@@ -458,7 +471,9 @@ mod tests {
     #[test]
     fn accuracy_target_note_describes_facts_and_circumstances() {
         let r = check(&base_6662());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6662 accuracy penalty") && n.contains("facts-and-circumstances")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("§ 6662 accuracy penalty") && n.contains("facts-and-circumstances")
+        ));
     }
 
     #[test]
@@ -466,7 +481,10 @@ mod tests {
         let mut i = base_6662();
         i.regulation_invalidity_position_adequately_disclosed = false;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("§ 1.6662-3(c)(2)") && n.contains("regulation is invalid")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1.6662-3(c)(2)") && n.contains("regulation is invalid")));
     }
 
     #[test]
@@ -478,19 +496,27 @@ mod tests {
     #[test]
     fn general_rule_note_always_present() {
         let r = check(&base_6662());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6664(c)(1)") && n.contains("reasonable cause AND good faith")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6664(c)(1)") && n.contains("reasonable cause AND good faith")));
     }
 
     #[test]
     fn facts_and_circumstances_factors_note_present() {
         let r = check(&base_6662());
-        assert!(r.notes.iter().any(|n| n.contains("§ 1.6664-4 facts-and-circumstances factors")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1.6664-4 facts-and-circumstances factors")));
     }
 
     #[test]
     fn citation_pins_all_subsections_and_treas_regs() {
         let r = check(&base_6662());
-        assert!(r.citation.contains("§§ 6664(c)(1), 6664(c)(2), 6664(c)(3), 6664(d)"));
+        assert!(r
+            .citation
+            .contains("§§ 6664(c)(1), 6664(c)(2), 6664(c)(3), 6664(d)"));
         assert!(r.citation.contains("6664(d)(3)(A)"));
         assert!(r.citation.contains("6664(d)(3)(B)"));
         assert!(r.citation.contains("6664(d)(3)(C)"));

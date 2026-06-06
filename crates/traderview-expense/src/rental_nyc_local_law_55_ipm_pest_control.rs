@@ -203,7 +203,8 @@ pub fn compute(input: &Input) -> Output {
             mode: LocalLaw55Mode::ViolationTenantAnnualNoticeNotProvided,
             accrued_daily_penalty_dollars: 0,
             statutory_basis: "LL 55 annual tenant notice required".to_string(),
-            notes: "VIOLATION: LL 55 annual notice + DOHMH fact sheet not provided to tenant.".to_string(),
+            notes: "VIOLATION: LL 55 annual notice + DOHMH fact sheet not provided to tenant."
+                .to_string(),
             citations,
         };
     }
@@ -223,7 +224,8 @@ pub fn compute(input: &Input) -> Output {
             mode: LocalLaw55Mode::ViolationTenantAnnualNoticeNotProvided,
             accrued_daily_penalty_dollars: 0,
             statutory_basis: "LL 55 tenant notice must include DOHMH fact sheet".to_string(),
-            notes: "VIOLATION: DOHMH Local Law 55 fact sheet not attached to tenant annual notice.".to_string(),
+            notes: "VIOLATION: DOHMH Local Law 55 fact sheet not attached to tenant annual notice."
+                .to_string(),
             citations,
         };
     }
@@ -243,9 +245,15 @@ pub fn compute(input: &Input) -> Output {
 
     if input.false_certification_of_correction_made {
         let (min_penalty, max_penalty) = if input.violation_classified_as_hazardous {
-            (LL55_FALSE_CERT_HAZARDOUS_MIN_DOLLARS, LL55_FALSE_CERT_HAZARDOUS_MAX_DOLLARS)
+            (
+                LL55_FALSE_CERT_HAZARDOUS_MIN_DOLLARS,
+                LL55_FALSE_CERT_HAZARDOUS_MAX_DOLLARS,
+            )
         } else {
-            (LL55_FALSE_CERT_NON_HAZARDOUS_MIN_DOLLARS, LL55_FALSE_CERT_NON_HAZARDOUS_MAX_DOLLARS)
+            (
+                LL55_FALSE_CERT_NON_HAZARDOUS_MIN_DOLLARS,
+                LL55_FALSE_CERT_NON_HAZARDOUS_MAX_DOLLARS,
+            )
         };
         return Output {
             mode: LocalLaw55Mode::ViolationFalseCertificationOfCorrectionMade,
@@ -309,7 +317,8 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.pesticide_operator_license == PesticideOperatorLicense::NysDecLicensedPestProfessional {
+    if input.pesticide_operator_license == PesticideOperatorLicense::NysDecLicensedPestProfessional
+    {
         return Output {
             mode: LocalLaw55Mode::CompliantIPMOperatorLicensedDecApplied,
             accrued_daily_penalty_dollars: 0,
@@ -362,7 +371,10 @@ mod tests {
             ..baseline_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LocalLaw55Mode::NotApplicableNotMultipleDwellingOrOutsideNyc);
+        assert_eq!(
+            result.mode,
+            LocalLaw55Mode::NotApplicableNotMultipleDwellingOrOutsideNyc
+        );
     }
 
     #[test]
@@ -372,7 +384,10 @@ mod tests {
             ..baseline_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LocalLaw55Mode::NotApplicableNotMultipleDwellingOrOutsideNyc);
+        assert_eq!(
+            result.mode,
+            LocalLaw55Mode::NotApplicableNotMultipleDwellingOrOutsideNyc
+        );
     }
 
     #[test]
@@ -382,13 +397,19 @@ mod tests {
             ..baseline_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LocalLaw55Mode::NotApplicableNoAllergenHazardAndAnnualInspectionPerformed);
+        assert_eq!(
+            result.mode,
+            LocalLaw55Mode::NotApplicableNoAllergenHazardAndAnnualInspectionPerformed
+        );
     }
 
     #[test]
     fn nys_dec_licensed_operator_compliant() {
         let result = check(&baseline_compliant());
-        assert_eq!(result.mode, LocalLaw55Mode::CompliantIPMOperatorLicensedDecApplied);
+        assert_eq!(
+            result.mode,
+            LocalLaw55Mode::CompliantIPMOperatorLicensedDecApplied
+        );
     }
 
     #[test]
@@ -399,7 +420,10 @@ mod tests {
             ..baseline_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LocalLaw55Mode::ViolationIpmOperatorNotLicensedDec);
+        assert_eq!(
+            result.mode,
+            LocalLaw55Mode::ViolationIpmOperatorNotLicensedDec
+        );
         assert_eq!(result.accrued_daily_penalty_dollars, 625);
     }
 
@@ -411,7 +435,10 @@ mod tests {
             ..baseline_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LocalLaw55Mode::ViolationAnnualInspectionNotPerformed);
+        assert_eq!(
+            result.mode,
+            LocalLaw55Mode::ViolationAnnualInspectionNotPerformed
+        );
         assert_eq!(result.accrued_daily_penalty_dollars, 100);
     }
 
@@ -422,7 +449,10 @@ mod tests {
             ..baseline_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LocalLaw55Mode::ViolationTenantAnnualNoticeNotProvided);
+        assert_eq!(
+            result.mode,
+            LocalLaw55Mode::ViolationTenantAnnualNoticeNotProvided
+        );
     }
 
     #[test]
@@ -432,7 +462,10 @@ mod tests {
             ..baseline_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LocalLaw55Mode::ViolationTenantLeaseRenewalNoticeNotProvided);
+        assert_eq!(
+            result.mode,
+            LocalLaw55Mode::ViolationTenantLeaseRenewalNoticeNotProvided
+        );
     }
 
     #[test]
@@ -442,7 +475,10 @@ mod tests {
             ..baseline_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LocalLaw55Mode::ViolationTenantAnnualNoticeNotProvided);
+        assert_eq!(
+            result.mode,
+            LocalLaw55Mode::ViolationTenantAnnualNoticeNotProvided
+        );
     }
 
     #[test]
@@ -452,7 +488,10 @@ mod tests {
             ..baseline_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LocalLaw55Mode::Violation24HourAccessNoticeNotProvided);
+        assert_eq!(
+            result.mode,
+            LocalLaw55Mode::Violation24HourAccessNoticeNotProvided
+        );
     }
 
     #[test]
@@ -462,7 +501,10 @@ mod tests {
             ..baseline_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LocalLaw55Mode::CompliantIPMOperatorLicensedDecApplied);
+        assert_eq!(
+            result.mode,
+            LocalLaw55Mode::CompliantIPMOperatorLicensedDecApplied
+        );
     }
 
     #[test]
@@ -473,7 +515,10 @@ mod tests {
             ..baseline_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LocalLaw55Mode::ViolationFalseCertificationOfCorrectionMade);
+        assert_eq!(
+            result.mode,
+            LocalLaw55Mode::ViolationFalseCertificationOfCorrectionMade
+        );
         assert_eq!(result.accrued_daily_penalty_dollars, 250);
     }
 
@@ -485,7 +530,10 @@ mod tests {
             ..baseline_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LocalLaw55Mode::ViolationFalseCertificationOfCorrectionMade);
+        assert_eq!(
+            result.mode,
+            LocalLaw55Mode::ViolationFalseCertificationOfCorrectionMade
+        );
         assert_eq!(result.accrued_daily_penalty_dollars, 500);
     }
 
@@ -520,7 +568,10 @@ mod tests {
             ..baseline_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LocalLaw55Mode::CompliantIPMOperatorLicensedDecApplied);
+        assert_eq!(
+            result.mode,
+            LocalLaw55Mode::CompliantIPMOperatorLicensedDecApplied
+        );
     }
 
     #[test]
@@ -530,7 +581,10 @@ mod tests {
             ..baseline_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LocalLaw55Mode::CompliantIPMOperatorLicensedDecApplied);
+        assert_eq!(
+            result.mode,
+            LocalLaw55Mode::CompliantIPMOperatorLicensedDecApplied
+        );
     }
 
     #[test]
@@ -540,7 +594,10 @@ mod tests {
             ..baseline_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, LocalLaw55Mode::CompliantIPMOperatorLicensedDecApplied);
+        assert_eq!(
+            result.mode,
+            LocalLaw55Mode::CompliantIPMOperatorLicensedDecApplied
+        );
     }
 
     #[test]

@@ -120,8 +120,7 @@ pub fn check(input: &Section7508AInput) -> Section7508AResult {
         && input.taxpayer_in_disaster_area
         && matches!(
             input.postponement_basis,
-            PostponementBasis::FederallyDeclaredDisaster
-                | PostponementBasis::SignificantFire
+            PostponementBasis::FederallyDeclaredDisaster | PostponementBasis::SignificantFire
         )
         && input.disaster_declared_after_dec_20_2019;
 
@@ -324,9 +323,10 @@ mod tests {
     #[test]
     fn note_pins_one_year_and_60_day() {
         let r = check(&disaster_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 7508A(a)")
-            && n.contains("ONE YEAR")
-            && n.contains("365 days")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7508A(a)") && n.contains("ONE YEAR") && n.contains("365 days")));
         assert!(r.notes.iter().any(|n| n.contains("§ 7508A(d)")
             && n.contains("MANDATORY 60-day")
             && n.contains("December 20, 2019")));

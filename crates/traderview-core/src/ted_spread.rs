@@ -27,7 +27,13 @@ pub struct DailyRate {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
-pub enum StressLevel { #[default] Benign, Elevated, Stress, Crisis }
+pub enum StressLevel {
+    #[default]
+    Benign,
+    Elevated,
+    Stress,
+    Crisis,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct TedSpreadReport {
@@ -42,28 +48,49 @@ pub struct TedSpreadReport {
 }
 
 pub fn compute(daily_rates: &[DailyRate]) -> Option<TedSpreadReport> {
-    if daily_rates.is_empty() { return None; }
-    if daily_rates.iter().any(|r| !r.interbank_rate.is_finite()
-        || !r.treasury_bill_rate.is_finite()) {
+    if daily_rates.is_empty() {
         return None;
     }
-    let spreads_bps: Vec<f64> = daily_rates.iter()
+    if daily_rates
+        .iter()
+        .any(|r| !r.interbank_rate.is_finite() || !r.treasury_bill_rate.is_finite())
+    {
+        return None;
+    }
+    let spreads_bps: Vec<f64> = daily_rates
+        .iter()
         .map(|r| (r.interbank_rate - r.treasury_bill_rate) * 10_000.0)
         .collect();
-    let levels: Vec<StressLevel> = spreads_bps.iter().map(|s| {
-        if *s < 25.0 { StressLevel::Benign }
-        else if *s < 50.0 { StressLevel::Elevated }
-        else if *s < 100.0 { StressLevel::Stress }
-        else { StressLevel::Crisis }
-    }).collect();
+    let levels: Vec<StressLevel> = spreads_bps
+        .iter()
+        .map(|s| {
+            if *s < 25.0 {
+                StressLevel::Benign
+            } else if *s < 50.0 {
+                StressLevel::Elevated
+            } else if *s < 100.0 {
+                StressLevel::Stress
+            } else {
+                StressLevel::Crisis
+            }
+        })
+        .collect();
     let n = spreads_bps.len();
     let n_f = n as f64;
     let mean: f64 = spreads_bps.iter().sum::<f64>() / n_f;
-    let max = spreads_bps.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+    let max = spreads_bps
+        .iter()
+        .cloned()
+        .fold(f64::NEG_INFINITY, f64::max);
     let min = spreads_bps.iter().cloned().fold(f64::INFINITY, f64::min);
-    let stress = levels.iter().filter(|l|
-        matches!(l, StressLevel::Stress | StressLevel::Crisis)).count();
-    let crisis = levels.iter().filter(|l| matches!(l, StressLevel::Crisis)).count();
+    let stress = levels
+        .iter()
+        .filter(|l| matches!(l, StressLevel::Stress | StressLevel::Crisis))
+        .count();
+    let crisis = levels
+        .iter()
+        .filter(|l| matches!(l, StressLevel::Crisis))
+        .count();
     Some(TedSpreadReport {
         per_day_spread_bps: spreads_bps,
         stress_levels: levels,
@@ -81,11 +108,16 @@ mod tests {
     use super::*;
 
     fn d(ib: f64, tb: f64) -> DailyRate {
-        DailyRate { interbank_rate: ib, treasury_bill_rate: tb }
+        DailyRate {
+            interbank_rate: ib,
+            treasury_bill_rate: tb,
+        }
     }
 
     #[test]
-    fn empty_returns_none() { assert!(compute(&[]).is_none()); }
+    fn empty_returns_none() {
+        assert!(compute(&[]).is_none());
+    }
 
     #[test]
     fn nan_returns_none() {
@@ -94,16 +126,22 @@ mod tests {
 
     #[test]
     fn benign_regime_classified() {
-        let rates = vec![d(0.0510, 0.0500); 5];    // 10 bps
+        let rates = vec![d(0.0510, 0.0500); 5]; // 10 bps
         let r = compute(&rates).unwrap();
-        assert!(r.stress_levels.iter().all(|l| matches!(l, StressLevel::Benign)));
+        assert!(r
+            .stress_levels
+            .iter()
+            .all(|l| matches!(l, StressLevel::Benign)));
     }
 
     #[test]
     fn crisis_regime_flagged() {
-        let rates = vec![d(0.0650, 0.0500); 5];    // 150 bps
+        let rates = vec![d(0.0650, 0.0500); 5]; // 150 bps
         let r = compute(&rates).unwrap();
-        assert!(r.stress_levels.iter().all(|l| matches!(l, StressLevel::Crisis)));
+        assert!(r
+            .stress_levels
+            .iter()
+            .all(|l| matches!(l, StressLevel::Crisis)));
         assert_eq!(r.days_in_crisis, 5);
     }
 
@@ -117,8 +155,8 @@ mod tests {
     #[test]
     fn min_max_reported() {
         let rates = vec![
-            d(0.0505, 0.0500),    // 5 bps
-            d(0.0660, 0.0500),    // 160 bps
+            d(0.0505, 0.0500), // 5 bps
+            d(0.0660, 0.0500), // 160 bps
         ];
         let r = compute(&rates).unwrap();
         assert!((r.min_spread_bps - 5.0).abs() < 1e-9);

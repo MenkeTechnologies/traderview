@@ -20,7 +20,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SymbolMonthlyCloses {
     pub symbol: String,
-    pub monthly_closes: Vec<f64>,    // most recent last
+    pub monthly_closes: Vec<f64>, // most recent last
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -47,35 +47,47 @@ pub struct MomentumReport {
 }
 
 pub fn scan(symbols: &[SymbolMonthlyCloses]) -> Option<MomentumReport> {
-    if symbols.is_empty() { return None; }
+    if symbols.is_empty() {
+        return None;
+    }
     let mut returns: Vec<(String, f64)> = Vec::new();
     for s in symbols {
         let n = s.monthly_closes.len();
-        if n < 13 { continue; }
+        if n < 13 {
+            continue;
+        }
         // Use the close 12 months ago vs the close from 1 month ago.
-        let start_idx = n - 13;    // 13 months back from current = 12 months back from last-month
-        let end_idx = n - 2;       // skip the most recent month
+        let start_idx = n - 13; // 13 months back from current = 12 months back from last-month
+        let end_idx = n - 2; // skip the most recent month
         let start = s.monthly_closes[start_idx];
         let end = s.monthly_closes[end_idx];
-        if !start.is_finite() || start <= 0.0
-            || !end.is_finite() || end <= 0.0
-        {
+        if !start.is_finite() || start <= 0.0 || !end.is_finite() || end <= 0.0 {
             continue;
         }
         let ret_12_1 = (end - start) / start;
-        if !ret_12_1.is_finite() { continue; }
+        if !ret_12_1.is_finite() {
+            continue;
+        }
         returns.push((s.symbol.clone(), ret_12_1));
     }
-    if returns.is_empty() { return None; }
+    if returns.is_empty() {
+        return None;
+    }
     // Sort ascending by return, then assign percentile = rank / n.
     returns.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
     let n = returns.len();
-    let mut all_ranked: Vec<MomentumHit> = returns.iter().enumerate()
+    let mut all_ranked: Vec<MomentumHit> = returns
+        .iter()
+        .enumerate()
         .map(|(i, (sym, ret))| {
             let pct = (i + 1) as f64 / n as f64 * 100.0;
-            let bucket = if pct >= 90.0 { MomentumBucket::WinnerDecile }
-                else if pct <= 10.0 { MomentumBucket::LoserDecile }
-                else { MomentumBucket::Neutral };
+            let bucket = if pct >= 90.0 {
+                MomentumBucket::WinnerDecile
+            } else if pct <= 10.0 {
+                MomentumBucket::LoserDecile
+            } else {
+                MomentumBucket::Neutral
+            };
             MomentumHit {
                 symbol: sym.clone(),
                 trailing_12_1_return: *ret,
@@ -85,15 +97,26 @@ pub fn scan(symbols: &[SymbolMonthlyCloses]) -> Option<MomentumReport> {
         })
         .collect();
     // Reorder so winners come first, losers second, neutrals last.
-    all_ranked.sort_by(|a, b| b.trailing_12_1_return.partial_cmp(&a.trailing_12_1_return)
-        .unwrap_or(std::cmp::Ordering::Equal));
-    let winners: Vec<MomentumHit> = all_ranked.iter()
+    all_ranked.sort_by(|a, b| {
+        b.trailing_12_1_return
+            .partial_cmp(&a.trailing_12_1_return)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+    let winners: Vec<MomentumHit> = all_ranked
+        .iter()
         .filter(|h| h.bucket == MomentumBucket::WinnerDecile)
-        .cloned().collect();
-    let losers: Vec<MomentumHit> = all_ranked.iter()
+        .cloned()
+        .collect();
+    let losers: Vec<MomentumHit> = all_ranked
+        .iter()
         .filter(|h| h.bucket == MomentumBucket::LoserDecile)
-        .cloned().collect();
-    Some(MomentumReport { winners, losers, all_ranked })
+        .cloned()
+        .collect();
+    Some(MomentumReport {
+        winners,
+        losers,
+        all_ranked,
+    })
 }
 
 #[cfg(test)]
@@ -101,7 +124,10 @@ mod tests {
     use super::*;
 
     fn s(sym: &str, closes: Vec<f64>) -> SymbolMonthlyCloses {
-        SymbolMonthlyCloses { symbol: sym.into(), monthly_closes: closes }
+        SymbolMonthlyCloses {
+            symbol: sym.into(),
+            monthly_closes: closes,
+        }
     }
 
     #[test]
@@ -161,8 +187,8 @@ mod tests {
         // NOT including the current-month 100.
         let closes = vec![
             100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0,
-            200.0,    // 1 month back
-            100.0,    // current (skipped)
+            200.0, // 1 month back
+            100.0, // current (skipped)
         ];
         let r = scan(&[s("SKIP", closes)]).unwrap();
         assert!((r.all_ranked[0].trailing_12_1_return - 1.0).abs() < 1e-9);

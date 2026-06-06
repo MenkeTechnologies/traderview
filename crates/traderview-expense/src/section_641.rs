@@ -159,7 +159,8 @@ pub type Section641Result = Output;
 fn correct_exemption_for(entity: FiduciaryEntityType) -> u64 {
     match entity {
         FiduciaryEntityType::DomesticEstateInProbate => SECTION_642_B_ESTATE_EXEMPTION_DOLLARS,
-        FiduciaryEntityType::DomesticComplexTrust | FiduciaryEntityType::ElectingSmallBusinessTrust => {
+        FiduciaryEntityType::DomesticComplexTrust
+        | FiduciaryEntityType::ElectingSmallBusinessTrust => {
             SECTION_642_B_COMPLEX_TRUST_EXEMPTION_DOLLARS
         }
         FiduciaryEntityType::DomesticSimpleTrust => SECTION_642_B_SIMPLE_TRUST_EXEMPTION_DOLLARS,
@@ -405,7 +406,11 @@ pub fn compute(input: &Input) -> Output {
         Section641Mode::CompliantTaxComputedAtBracket10
     };
 
-    let final_mode = if niit > 0 { Section641Mode::CompliantNiitAppliedAtTopBracketThreshold } else { mode };
+    let final_mode = if niit > 0 {
+        Section641Mode::CompliantNiitAppliedAtTopBracketThreshold
+    } else {
+        mode
+    };
 
     Output {
         mode: final_mode,
@@ -456,7 +461,10 @@ mod tests {
             ..baseline_complex_trust_top_bracket()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section641Mode::NotApplicableGrantorTrustPassThroughNoTaxAtTrustLevel);
+        assert_eq!(
+            result.mode,
+            Section641Mode::NotApplicableGrantorTrustPassThroughNoTaxAtTrustLevel
+        );
     }
 
     #[test]
@@ -513,7 +521,10 @@ mod tests {
             ..baseline_complex_trust_top_bracket()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section641Mode::CompliantTaxComputedAtBracket37TopBracket);
+        assert_eq!(
+            result.mode,
+            Section641Mode::CompliantTaxComputedAtBracket37TopBracket
+        );
     }
 
     #[test]
@@ -535,7 +546,10 @@ mod tests {
             ..baseline_complex_trust_top_bracket()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section641Mode::CompliantTaxComputedAtBracket37TopBracket);
+        assert_eq!(
+            result.mode,
+            Section641Mode::CompliantTaxComputedAtBracket37TopBracket
+        );
     }
 
     #[test]
@@ -545,7 +559,10 @@ mod tests {
             ..baseline_complex_trust_top_bracket()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section641Mode::ViolationIndividualBracketsUsedInsteadOfTrustCompressed);
+        assert_eq!(
+            result.mode,
+            Section641Mode::ViolationIndividualBracketsUsedInsteadOfTrustCompressed
+        );
     }
 
     #[test]
@@ -559,7 +576,10 @@ mod tests {
             ..baseline_complex_trust_top_bracket()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section641Mode::CompliantEsbtSCorpPortionTaxedAtHighestRate);
+        assert_eq!(
+            result.mode,
+            Section641Mode::CompliantEsbtSCorpPortionTaxedAtHighestRate
+        );
         assert_eq!(result.computed_tax_dollars, 18_500);
     }
 
@@ -572,7 +592,10 @@ mod tests {
             ..baseline_complex_trust_top_bracket()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section641Mode::ViolationEsbtSCorpPortionImproperlyDistributionDeducted);
+        assert_eq!(
+            result.mode,
+            Section641Mode::ViolationEsbtSCorpPortionImproperlyDistributionDeducted
+        );
     }
 
     #[test]
@@ -583,7 +606,10 @@ mod tests {
             ..baseline_complex_trust_top_bracket()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section641Mode::ViolationDniCeilingExceededByDistributionDeduction);
+        assert_eq!(
+            result.mode,
+            Section641Mode::ViolationDniCeilingExceededByDistributionDeduction
+        );
     }
 
     #[test]
@@ -596,7 +622,10 @@ mod tests {
             ..baseline_complex_trust_top_bracket()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section641Mode::CompliantDistributionDeductionAppliedSimpleTrust);
+        assert_eq!(
+            result.mode,
+            Section641Mode::CompliantDistributionDeductionAppliedSimpleTrust
+        );
     }
 
     #[test]
@@ -627,7 +656,10 @@ mod tests {
             ..baseline_complex_trust_top_bracket()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section641Mode::ViolationNiitOmittedAtTopBracket);
+        assert_eq!(
+            result.mode,
+            Section641Mode::ViolationNiitOmittedAtTopBracket
+        );
     }
 
     #[test]
@@ -638,7 +670,10 @@ mod tests {
             ..baseline_complex_trust_top_bracket()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section641Mode::ViolationSection642bExemptionOverclaimed);
+        assert_eq!(
+            result.mode,
+            Section641Mode::ViolationSection642bExemptionOverclaimed
+        );
     }
 
     #[test]
@@ -649,7 +684,10 @@ mod tests {
             ..baseline_complex_trust_top_bracket()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section641Mode::CompliantTaxComputedAtBracket37TopBracket);
+        assert_eq!(
+            result.mode,
+            Section641Mode::CompliantTaxComputedAtBracket37TopBracket
+        );
     }
 
     #[test]
@@ -697,6 +735,9 @@ mod tests {
             ..baseline_complex_trust_top_bracket()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section641Mode::CompliantTaxComputedAtBracket37TopBracket);
+        assert_eq!(
+            result.mode,
+            Section641Mode::CompliantTaxComputedAtBracket37TopBracket
+        );
     }
 }

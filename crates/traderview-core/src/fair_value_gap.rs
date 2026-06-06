@@ -25,7 +25,10 @@ pub struct OhlcBar {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum GapDirection { Bullish, Bearish }
+pub enum GapDirection {
+    Bullish,
+    Bearish,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct FvgEvent {
@@ -51,19 +54,27 @@ pub struct FvgReport {
 
 pub fn detect(bars: &[OhlcBar]) -> FvgReport {
     let n = bars.len();
-    if n < 3 { return FvgReport::default(); }
+    if n < 3 {
+        return FvgReport::default();
+    }
     let mut gaps: Vec<FvgEvent> = Vec::new();
     for i in 2..n {
         let (a, c) = (bars[i - 2], bars[i]);
         if c.low > a.high {
             gaps.push(FvgEvent {
-                formed_at: i, direction: GapDirection::Bullish,
-                gap_low: a.high, gap_high: c.low, filled_at: None,
+                formed_at: i,
+                direction: GapDirection::Bullish,
+                gap_low: a.high,
+                gap_high: c.low,
+                filled_at: None,
             });
         } else if c.high < a.low {
             gaps.push(FvgEvent {
-                formed_at: i, direction: GapDirection::Bearish,
-                gap_low: c.high, gap_high: a.low, filled_at: None,
+                formed_at: i,
+                direction: GapDirection::Bearish,
+                gap_low: c.high,
+                gap_high: a.low,
+                filled_at: None,
             });
         }
     }
@@ -71,14 +82,21 @@ pub fn detect(bars: &[OhlcBar]) -> FvgReport {
     // A bar "fills" the gap if its [low, high] range overlaps the gap zone.
     for g in &mut gaps {
         let start = g.formed_at + 1;
-        for (offset, bar) in bars.iter().enumerate().skip(start).take(n.saturating_sub(start)) {
+        for (offset, bar) in bars
+            .iter()
+            .enumerate()
+            .skip(start)
+            .take(n.saturating_sub(start))
+        {
             if bar.low <= g.gap_high && bar.high >= g.gap_low {
                 g.filled_at = Some(offset);
                 break;
             }
         }
     }
-    let open_gaps: Vec<usize> = gaps.iter().enumerate()
+    let open_gaps: Vec<usize> = gaps
+        .iter()
+        .enumerate()
         .filter_map(|(i, g)| if g.filled_at.is_none() { Some(i) } else { None })
         .collect();
     FvgReport { gaps, open_gaps }
@@ -88,12 +106,20 @@ pub fn detect(bars: &[OhlcBar]) -> FvgReport {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> OhlcBar { OhlcBar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> OhlcBar {
+        OhlcBar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn fewer_than_three_bars_returns_empty() {
         assert!(detect(&[]).gaps.is_empty());
-        assert!(detect(&[b(100.0, 99.0, 99.5), b(101.0, 100.0, 100.5)]).gaps.is_empty());
+        assert!(detect(&[b(100.0, 99.0, 99.5), b(101.0, 100.0, 100.5)])
+            .gaps
+            .is_empty());
     }
 
     #[test]
@@ -102,7 +128,7 @@ mod tests {
         // → gap [100, 102] uncovered by bar[1] doesn't matter for FORMATION.
         let bars = vec![
             b(100.0, 99.0, 99.5),
-            b(101.5, 101.0, 101.3),    // middle bar — could be anywhere
+            b(101.5, 101.0, 101.3), // middle bar — could be anywhere
             b(103.0, 102.0, 102.5),
         ];
         let r = detect(&bars);
@@ -148,7 +174,7 @@ mod tests {
             b(100.0, 99.0, 99.5),
             b(101.5, 101.0, 101.3),
             b(103.0, 102.0, 102.5),
-            b(102.5, 100.5, 101.0),    // overlaps gap [100, 102] → fills it
+            b(102.5, 100.5, 101.0), // overlaps gap [100, 102] → fills it
         ];
         let r = detect(&bars);
         assert_eq!(r.gaps[0].filled_at, Some(3));
@@ -170,7 +196,10 @@ mod tests {
         ];
         let r = detect(&bars);
         assert_eq!(r.gaps.len(), 1);
-        assert!(r.gaps[0].filled_at.is_none(), "no bars after formation → can't be filled");
+        assert!(
+            r.gaps[0].filled_at.is_none(),
+            "no bars after formation → can't be filled"
+        );
         assert_eq!(r.open_gaps, vec![0]);
     }
 
@@ -180,11 +209,15 @@ mod tests {
         let bars = vec![
             b(100.0, 99.0, 99.5),
             b(101.0, 100.5, 100.8),
-            b(103.0, 102.0, 102.5),     // gap 1: [100, 102]
-            b(103.5, 103.0, 103.2),     // makes no gap with bar 1 (high 101 vs low 103 → bullish gap [101, 103])
-            b(105.0, 104.0, 104.5),     // gap 2 vs bar 2 high 103 vs low 104 → gap [103, 104]
+            b(103.0, 102.0, 102.5), // gap 1: [100, 102]
+            b(103.5, 103.0, 103.2), // makes no gap with bar 1 (high 101 vs low 103 → bullish gap [101, 103])
+            b(105.0, 104.0, 104.5), // gap 2 vs bar 2 high 103 vs low 104 → gap [103, 104]
         ];
         let r = detect(&bars);
-        assert!(r.gaps.len() >= 2, "expected at least 2 gaps, got {}", r.gaps.len());
+        assert!(
+            r.gaps.len() >= 2,
+            "expected at least 2 gaps, got {}",
+            r.gaps.len()
+        );
     }
 }

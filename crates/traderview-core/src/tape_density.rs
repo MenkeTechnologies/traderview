@@ -33,7 +33,11 @@ pub struct DensityConfig {
 
 impl Default for DensityConfig {
     fn default() -> Self {
-        Self { window_secs: 60, large_threshold: 10_000.0, burst_multiplier: 3.0 }
+        Self {
+            window_secs: 60,
+            large_threshold: 10_000.0,
+            burst_multiplier: 3.0,
+        }
     }
 }
 
@@ -73,7 +77,10 @@ pub fn analyze(ticks: &[Tick], cfg: &DensityConfig) -> DensityReport {
     for (i, t) in ticks.iter().enumerate() {
         if t.size.is_finite() && t.size >= cfg.large_threshold {
             report.large_prints.push(LargePrint {
-                tick_index: i, ts: t.ts, price: t.price, size: t.size,
+                tick_index: i,
+                ts: t.ts,
+                price: t.price,
+                size: t.size,
             });
         }
     }
@@ -109,8 +116,12 @@ pub fn analyze(ticks: &[Tick], cfg: &DensityConfig) -> DensityReport {
             }
             if !extended {
                 report.bursts.push(BurstWindow {
-                    start_index: left, end_index: right,
-                    print_count: count, baseline_rate, burst_rate: window_rate, ratio,
+                    start_index: left,
+                    end_index: right,
+                    print_count: count,
+                    baseline_rate,
+                    burst_rate: window_rate,
+                    ratio,
                 });
             }
         }
@@ -124,23 +135,43 @@ mod tests {
     use chrono::TimeZone;
 
     fn t(s: i64, price: f64, size: f64) -> Tick {
-        Tick { ts: Utc.timestamp_opt(s, 0).unwrap(), price, size }
+        Tick {
+            ts: Utc.timestamp_opt(s, 0).unwrap(),
+            price,
+            size,
+        }
     }
 
     #[test]
     fn empty_or_single_returns_default() {
-        assert!(analyze(&[], &DensityConfig::default()).large_prints.is_empty());
-        assert!(analyze(&[t(0, 100.0, 100.0)], &DensityConfig::default()).large_prints.is_empty());
+        assert!(analyze(&[], &DensityConfig::default())
+            .large_prints
+            .is_empty());
+        assert!(analyze(&[t(0, 100.0, 100.0)], &DensityConfig::default())
+            .large_prints
+            .is_empty());
     }
 
     #[test]
     fn invalid_config_returns_default() {
         let ticks = vec![t(0, 100.0, 100.0); 10];
         for cfg in [
-            DensityConfig { window_secs: 0, ..Default::default() },
-            DensityConfig { window_secs: -1, ..Default::default() },
-            DensityConfig { large_threshold: 0.0, ..Default::default() },
-            DensityConfig { burst_multiplier: 0.5, ..Default::default() },
+            DensityConfig {
+                window_secs: 0,
+                ..Default::default()
+            },
+            DensityConfig {
+                window_secs: -1,
+                ..Default::default()
+            },
+            DensityConfig {
+                large_threshold: 0.0,
+                ..Default::default()
+            },
+            DensityConfig {
+                burst_multiplier: 0.5,
+                ..Default::default()
+            },
         ] {
             let r = analyze(&ticks, &cfg);
             assert!(r.large_prints.is_empty() && r.bursts.is_empty());
@@ -151,9 +182,9 @@ mod tests {
     fn large_prints_flagged_at_threshold() {
         let ticks = vec![
             t(0, 100.0, 500.0),
-            t(1, 100.0, 15_000.0),    // large
+            t(1, 100.0, 15_000.0), // large
             t(2, 100.0, 800.0),
-            t(3, 100.0, 50_000.0),    // larger
+            t(3, 100.0, 50_000.0), // larger
         ];
         let r = analyze(&ticks, &DensityConfig::default());
         assert_eq!(r.large_prints.len(), 2);
@@ -165,8 +196,14 @@ mod tests {
         // 10 ticks over 10 minutes (baseline = 1/min), then 30 ticks in
         // 30 seconds (window rate = 60/min → 60× baseline).
         let mut ticks: Vec<Tick> = (0..10).map(|i| t(i * 60, 100.0, 100.0)).collect();
-        for i in 0..30 { ticks.push(t(10 * 60 + i, 100.0, 100.0)); }
-        let cfg = DensityConfig { window_secs: 60, large_threshold: 1e9, burst_multiplier: 3.0 };
+        for i in 0..30 {
+            ticks.push(t(10 * 60 + i, 100.0, 100.0));
+        }
+        let cfg = DensityConfig {
+            window_secs: 60,
+            large_threshold: 1e9,
+            burst_multiplier: 3.0,
+        };
         let r = analyze(&ticks, &cfg);
         assert!(!r.bursts.is_empty(), "expected a burst window");
         // The burst rate should be much higher than baseline.

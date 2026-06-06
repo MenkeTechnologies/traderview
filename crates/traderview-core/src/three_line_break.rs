@@ -18,7 +18,10 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum TlbDirection { Up, Down }
+pub enum TlbDirection {
+    Up,
+    Down,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct TlbLine {
@@ -30,8 +33,12 @@ pub struct TlbLine {
 
 pub fn compute(closes: &[f64], num_lines: usize) -> Vec<TlbLine> {
     let mut out = Vec::new();
-    if closes.is_empty() || num_lines < 1 { return out; }
-    if closes.iter().any(|x| !x.is_finite()) { return out; }
+    if closes.is_empty() || num_lines < 1 {
+        return out;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     let mut direction: Option<TlbDirection> = None;
     let mut last_close = closes[0];
     for (i, &px) in closes.iter().enumerate().skip(1) {
@@ -68,13 +75,16 @@ pub fn compute(closes: &[f64], num_lines: usize) -> Vec<TlbLine> {
                     last_close = px;
                 } else {
                     // Need to break low of last `num_lines` up-lines to reverse.
-                    let recent_up: Vec<&TlbLine> = out.iter()
+                    let recent_up: Vec<&TlbLine> = out
+                        .iter()
                         .rev()
                         .filter(|l| l.direction == TlbDirection::Up)
                         .take(num_lines)
                         .collect();
                     if recent_up.len() >= num_lines {
-                        let break_level = recent_up.iter().map(|l| l.open)
+                        let break_level = recent_up
+                            .iter()
+                            .map(|l| l.open)
                             .fold(f64::INFINITY, f64::min);
                         if px < break_level {
                             out.push(TlbLine {
@@ -99,13 +109,16 @@ pub fn compute(closes: &[f64], num_lines: usize) -> Vec<TlbLine> {
                     });
                     last_close = px;
                 } else {
-                    let recent_down: Vec<&TlbLine> = out.iter()
+                    let recent_down: Vec<&TlbLine> = out
+                        .iter()
                         .rev()
                         .filter(|l| l.direction == TlbDirection::Down)
                         .take(num_lines)
                         .collect();
                     if recent_down.len() >= num_lines {
-                        let break_level = recent_down.iter().map(|l| l.open)
+                        let break_level = recent_down
+                            .iter()
+                            .map(|l| l.open)
                             .fold(f64::NEG_INFINITY, f64::max);
                         if px > break_level {
                             out.push(TlbLine {
@@ -151,7 +164,7 @@ mod tests {
         let closes: Vec<f64> = (0..10).map(|i| 100.0 + i as f64).collect();
         let r = compute(&closes, 3);
         assert!(r.iter().all(|l| l.direction == TlbDirection::Up));
-        assert_eq!(r.len(), 9);    // each new close > prior → 9 lines
+        assert_eq!(r.len(), 9); // each new close > prior → 9 lines
     }
 
     #[test]

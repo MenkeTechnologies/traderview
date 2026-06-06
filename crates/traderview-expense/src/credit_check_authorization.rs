@@ -181,11 +181,7 @@ fn wa_check(input: &CreditCheckInput) -> CreditCheckResult {
     }
 }
 
-fn wa_violation(
-    v: ViolationType,
-    citation: &'static str,
-    note_text: &str,
-) -> CreditCheckResult {
+fn wa_violation(v: ViolationType, citation: &'static str, note_text: &str) -> CreditCheckResult {
     CreditCheckResult {
         regime: Regime::Washington,
         per_violation_penalty_cents: 10000,
@@ -194,7 +190,10 @@ fn wa_violation(
         violation: v,
         landlord_compliant: false,
         citation,
-        note: format!("{} $100/violation penalty + attorney fees recoverable.", note_text),
+        note: format!(
+            "{} $100/violation penalty + attorney fees recoverable.",
+            note_text
+        ),
     }
 }
 
@@ -328,7 +327,10 @@ mod tests {
             false,
             0,
         ));
-        assert_eq!(r.violation, ViolationType::MissingTypesOfInformationDisclosure);
+        assert_eq!(
+            r.violation,
+            ViolationType::MissingTypesOfInformationDisclosure
+        );
         assert!(r.citation.contains("RCW 59.18.257(1)(a)"));
     }
 

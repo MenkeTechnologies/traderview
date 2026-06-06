@@ -33,20 +33,21 @@ pub struct BootstrapPnlReport {
     pub n_trades: usize,
 }
 
-pub fn bootstrap(
-    trade_pnls: &[f64],
-    n_resamples: usize,
-    seed: u64,
-) -> Option<BootstrapPnlReport> {
+pub fn bootstrap(trade_pnls: &[f64], n_resamples: usize, seed: u64) -> Option<BootstrapPnlReport> {
     let n = trade_pnls.len();
-    if n < 5 || n_resamples < 100 { return None; }
-    if trade_pnls.iter().any(|x| !x.is_finite()) { return None; }
+    if n < 5 || n_resamples < 100 {
+        return None;
+    }
+    if trade_pnls.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let mut state = seed;
     let mut resampled_totals = Vec::with_capacity(n_resamples);
     for _ in 0..n_resamples {
         let mut total = 0.0_f64;
         for _ in 0..n {
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let idx = ((state >> 32) as usize) % n;
             total += trade_pnls[idx];
@@ -106,7 +107,12 @@ mod tests {
         let expected_total = input_mean * trades.len() as f64;
         let r = bootstrap(&trades, 5000, 42).unwrap();
         let rel = (r.mean_total_pnl - expected_total).abs() / expected_total.abs();
-        assert!(rel < 0.15, "mean {} vs expected {}", r.mean_total_pnl, expected_total);
+        assert!(
+            rel < 0.15,
+            "mean {} vs expected {}",
+            r.mean_total_pnl,
+            expected_total
+        );
     }
 
     #[test]

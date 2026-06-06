@@ -116,18 +116,17 @@ pub struct Section199AResult {
 }
 
 pub fn check(input: &Section199AInput) -> Section199AResult {
-    let (phase_in_threshold, phase_out_complete, phase_in_window): (i64, i64, i64) =
-        match input.filing_status {
-            FilingStatus::Single | FilingStatus::HeadOfHousehold => {
-                (20_175_000_000, 27_675_000_000, 7_500_000_000)
-            }
-            FilingStatus::MarriedFilingJointly | FilingStatus::QualifyingSurvivingSpouse => {
-                (40_350_000_000, 55_350_000_000, 15_000_000_000)
-            }
-            FilingStatus::MarriedFilingSeparately => {
-                (20_175_000_000, 27_675_000_000, 7_500_000_000)
-            }
-        };
+    let (phase_in_threshold, phase_out_complete, phase_in_window): (i64, i64, i64) = match input
+        .filing_status
+    {
+        FilingStatus::Single | FilingStatus::HeadOfHousehold => {
+            (20_175_000_000, 27_675_000_000, 7_500_000_000)
+        }
+        FilingStatus::MarriedFilingJointly | FilingStatus::QualifyingSurvivingSpouse => {
+            (40_350_000_000, 55_350_000_000, 15_000_000_000)
+        }
+        FilingStatus::MarriedFilingSeparately => (20_175_000_000, 27_675_000_000, 7_500_000_000),
+    };
 
     let taxable_income = input.taxable_income_cents.max(0);
     let net_capital_gain = input.net_capital_gain_cents.max(0).min(taxable_income);
@@ -190,10 +189,8 @@ pub fn check(input: &Section199AInput) -> Section199AResult {
     let mut deduction = qbi_limited.min(twenty_percent_overall);
     let overall_cap_engaged = twenty_percent_qbi > twenty_percent_overall;
 
-    let obbba_min_applies = qbi >= 100_000
-        && input.materially_participates
-        && !above_phase_out
-        && taxable_income > 0;
+    let obbba_min_applies =
+        qbi >= 100_000 && input.materially_participates && !above_phase_out && taxable_income > 0;
     if obbba_min_applies {
         let minimum = 40_000_i64;
         if deduction < minimum {
@@ -530,7 +527,10 @@ mod tests {
     fn mfj_uniquely_double_phase_in_window_invariant() {
         let r_mfj = check(&mfj_below_threshold());
         let r_single = check(&single_below_threshold());
-        assert_eq!(r_mfj.phase_in_window_cents, 2 * r_single.phase_in_window_cents);
+        assert_eq!(
+            r_mfj.phase_in_window_cents,
+            2 * r_single.phase_in_window_cents
+        );
     }
 
     #[test]

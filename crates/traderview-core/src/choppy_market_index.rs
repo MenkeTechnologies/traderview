@@ -18,13 +18,22 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 pub fn compute(bars: &[Bar], period: usize) -> Vec<Option<f64>> {
     let n = bars.len();
     let mut out = vec![None; n];
-    if period < 2 || n < period + 1 { return out; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if period < 2 || n < period + 1 {
+        return out;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return out;
     }
     let mut deltas = vec![0.0_f64; n];
@@ -47,7 +56,13 @@ pub fn compute(bars: &[Bar], period: usize) -> Vec<Option<f64>> {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {
@@ -67,28 +82,36 @@ mod tests {
     fn flat_market_yields_zero_cmi() {
         let bars = vec![b(101.0, 99.0, 100.0); 30];
         let r = compute(&bars, 14);
-        for v in r.iter().flatten() { assert!(v.abs() < 1e-9); }
+        for v in r.iter().flatten() {
+            assert!(v.abs() < 1e-9);
+        }
     }
 
     #[test]
     fn pure_uptrend_yields_high_cmi() {
-        let bars: Vec<_> = (0..30).map(|i| {
-            let m = 100.0 + i as f64;
-            b(m + 0.5, m - 0.5, m)
-        }).collect();
+        let bars: Vec<_> = (0..30)
+            .map(|i| {
+                let m = 100.0 + i as f64;
+                b(m + 0.5, m - 0.5, m)
+            })
+            .collect();
         let r = compute(&bars, 14);
         let last = r[29].unwrap();
         // Sum-change = 14 (one per bar), sum-range = 14 (1 per bar) → CMI = 100.
-        assert!(last > 95.0,
-            "pure uptrend should yield CMI near 100, got {last}");
+        assert!(
+            last > 95.0,
+            "pure uptrend should yield CMI near 100, got {last}"
+        );
     }
 
     #[test]
     fn pure_downtrend_yields_high_cmi() {
-        let bars: Vec<_> = (0..30).map(|i| {
-            let m = 200.0 - i as f64;
-            b(m + 0.5, m - 0.5, m)
-        }).collect();
+        let bars: Vec<_> = (0..30)
+            .map(|i| {
+                let m = 200.0 - i as f64;
+                b(m + 0.5, m - 0.5, m)
+            })
+            .collect();
         let r = compute(&bars, 14);
         let last = r[29].unwrap();
         assert!(last > 95.0);
@@ -97,13 +120,16 @@ mod tests {
     #[test]
     fn output_in_zero_hundred_range() {
         let mut state: u64 = 42;
-        let bars: Vec<_> = (0..200).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
-            let m = 100.0 + (r - 0.5) * 4.0;
-            b(m + 1.0, m - 1.0, m)
-        }).collect();
+        let bars: Vec<_> = (0..200)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
+                let m = 100.0 + (r - 0.5) * 4.0;
+                b(m + 1.0, m - 1.0, m)
+            })
+            .collect();
         let r = compute(&bars, 14);
         for v in r.iter().flatten() {
             assert!((0.0..=100.0).contains(v));

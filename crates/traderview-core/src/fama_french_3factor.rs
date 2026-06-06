@@ -44,11 +44,16 @@ pub fn estimate(
     hml: &[f64],
 ) -> Option<FamaFrenchReport> {
     let n = excess_returns.len();
-    if n < 8 || mkt.len() != n || smb.len() != n || hml.len() != n { return None; }
+    if n < 8 || mkt.len() != n || smb.len() != n || hml.len() != n {
+        return None;
+    }
     if excess_returns.iter().any(|x| !x.is_finite())
         || mkt.iter().any(|x| !x.is_finite())
         || smb.iter().any(|x| !x.is_finite())
-        || hml.iter().any(|x| !x.is_finite()) { return None; }
+        || hml.iter().any(|x| !x.is_finite())
+    {
+        return None;
+    }
     // X = [1, MKT, SMB, HML], Y = excess_returns. Solve (X'X) β = X'y.
     let p = 4_usize;
     let mut xtx = vec![vec![0.0_f64; p]; p];
@@ -56,7 +61,9 @@ pub fn estimate(
     for i in 0..n {
         let row = [1.0, mkt[i], smb[i], hml[i]];
         for j in 0..p {
-            for k in 0..p { xtx[j][k] += row[j] * row[k]; }
+            for k in 0..p {
+                xtx[j][k] += row[j] * row[k];
+            }
             xty[j] += row[j] * excess_returns[i];
         }
     }
@@ -76,13 +83,17 @@ pub fn estimate(
         tss += (excess_returns[i] - y_mean).powi(2);
     }
     let dof = (n - p) as f64;
-    if dof <= 0.0 { return None; }
+    if dof <= 0.0 {
+        return None;
+    }
     let sigma2 = ssr / dof;
     let se = sigma2.sqrt();
     let r_sq = if tss > 0.0 { 1.0 - ssr / tss } else { 0.0 };
     let adj_r_sq = if dof > 0.0 && tss > 0.0 {
         1.0 - (1.0 - r_sq) * (n - 1) as f64 / dof
-    } else { 0.0 };
+    } else {
+        0.0
+    };
     // Standard errors from σ² · (X'X)⁻¹ diagonal.
     let xtx_inv = invert_4x4(&xtx)?;
     let se_alpha = (sigma2 * xtx_inv[0][0]).max(0.0).sqrt();
@@ -108,27 +119,43 @@ pub fn estimate(
 
 fn solve_linear(m: &[Vec<f64>], y: &[f64]) -> Option<Vec<f64>> {
     let n = m.len();
-    if n == 0 || y.len() != n { return None; }
+    if n == 0 || y.len() != n {
+        return None;
+    }
     let mut aug = vec![vec![0.0_f64; n + 1]; n];
     for (i, row) in aug.iter_mut().enumerate() {
-        for (j, slot) in row.iter_mut().enumerate().take(n) { *slot = m[i][j]; }
+        for (j, slot) in row.iter_mut().enumerate().take(n) {
+            *slot = m[i][j];
+        }
         row[n] = y[i];
     }
     for i in 0..n {
         let mut pivot = i;
         for r in (i + 1)..n {
-            if aug[r][i].abs() > aug[pivot][i].abs() { pivot = r; }
+            if aug[r][i].abs() > aug[pivot][i].abs() {
+                pivot = r;
+            }
         }
-        if aug[pivot][i].abs() < 1e-18 { return None; }
+        if aug[pivot][i].abs() < 1e-18 {
+            return None;
+        }
         aug.swap(i, pivot);
         let div = aug[i][i];
-        for v in aug[i].iter_mut() { *v /= div; }
+        for v in aug[i].iter_mut() {
+            *v /= div;
+        }
         for r in 0..n {
-            if r == i { continue; }
+            if r == i {
+                continue;
+            }
             let f = aug[r][i];
-            if f == 0.0 { continue; }
+            if f == 0.0 {
+                continue;
+            }
             let pivot_row = aug[i].clone();
-            for (j, v) in aug[r].iter_mut().enumerate() { *v -= f * pivot_row[j]; }
+            for (j, v) in aug[r].iter_mut().enumerate() {
+                *v -= f * pivot_row[j];
+            }
         }
     }
     Some((0..n).map(|i| aug[i][n]).collect())
@@ -138,29 +165,45 @@ fn invert_4x4(m: &[Vec<f64>]) -> Option<Vec<Vec<f64>>> {
     let n = 4;
     let mut aug = vec![vec![0.0_f64; 2 * n]; n];
     for i in 0..n {
-        for j in 0..n { aug[i][j] = m[i][j]; }
+        for j in 0..n {
+            aug[i][j] = m[i][j];
+        }
         aug[i][n + i] = 1.0;
     }
     for i in 0..n {
         let mut pivot = i;
         for r in (i + 1)..n {
-            if aug[r][i].abs() > aug[pivot][i].abs() { pivot = r; }
+            if aug[r][i].abs() > aug[pivot][i].abs() {
+                pivot = r;
+            }
         }
-        if aug[pivot][i].abs() < 1e-18 { return None; }
+        if aug[pivot][i].abs() < 1e-18 {
+            return None;
+        }
         aug.swap(i, pivot);
         let div = aug[i][i];
-        for v in aug[i].iter_mut() { *v /= div; }
+        for v in aug[i].iter_mut() {
+            *v /= div;
+        }
         for r in 0..n {
-            if r == i { continue; }
+            if r == i {
+                continue;
+            }
             let f = aug[r][i];
-            if f == 0.0 { continue; }
+            if f == 0.0 {
+                continue;
+            }
             let pivot_row = aug[i].clone();
-            for (j, v) in aug[r].iter_mut().enumerate() { *v -= f * pivot_row[j]; }
+            for (j, v) in aug[r].iter_mut().enumerate() {
+                *v -= f * pivot_row[j];
+            }
         }
     }
     let mut inv = vec![vec![0.0_f64; n]; n];
     for i in 0..n {
-        for j in 0..n { inv[i][j] = aug[i][n + j]; }
+        for j in 0..n {
+            inv[i][j] = aug[i][n + j];
+        }
     }
     Some(inv)
 }
@@ -195,32 +238,48 @@ mod tests {
         // True model: r = 0.001 + 0.8·MKT + 0.3·SMB − 0.2·HML + ε
         let mut state: u64 = 11;
         let n = 200;
-        let mkt: Vec<f64> = (0..n).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.04
-        }).collect();
-        let smb: Vec<f64> = (0..n).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.02
-        }).collect();
-        let hml: Vec<f64> = (0..n).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.02
-        }).collect();
-        let eps: Vec<f64> = (0..n).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.005
-        }).collect();
-        let ret: Vec<f64> = (0..n).map(|i| {
-            0.001 + 0.8 * mkt[i] + 0.3 * smb[i] - 0.2 * hml[i] + eps[i]
-        }).collect();
+        let mkt: Vec<f64> = (0..n)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.04
+            })
+            .collect();
+        let smb: Vec<f64> = (0..n)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.02
+            })
+            .collect();
+        let hml: Vec<f64> = (0..n)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.02
+            })
+            .collect();
+        let eps: Vec<f64> = (0..n)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.005
+            })
+            .collect();
+        let ret: Vec<f64> = (0..n)
+            .map(|i| 0.001 + 0.8 * mkt[i] + 0.3 * smb[i] - 0.2 * hml[i] + eps[i])
+            .collect();
         let r = estimate(&ret, &mkt, &smb, &hml).unwrap();
         assert!((r.alpha - 0.001).abs() < 0.001, "alpha {}", r.alpha);
-        assert!((r.beta_market - 0.8).abs() < 0.1, "beta_mkt {}", r.beta_market);
+        assert!(
+            (r.beta_market - 0.8).abs() < 0.1,
+            "beta_mkt {}",
+            r.beta_market
+        );
         assert!((r.beta_smb - 0.3).abs() < 0.2, "beta_smb {}", r.beta_smb);
         assert!((r.beta_hml + 0.2).abs() < 0.2, "beta_hml {}", r.beta_hml);
         assert!(r.r_squared > 0.5, "r² {}", r.r_squared);
@@ -231,8 +290,12 @@ mod tests {
         let mkt = vec![0.01, 0.02, -0.01, 0.03, -0.02, 0.015, 0.0, -0.005];
         let smb = vec![0.005, -0.01, 0.0, 0.02, -0.015, 0.01, 0.005, -0.01];
         let hml = vec![-0.005, 0.01, 0.005, -0.01, 0.02, -0.01, 0.0, 0.005];
-        let ret: Vec<f64> = mkt.iter().zip(smb.iter()).zip(hml.iter())
-            .map(|((m, s), h)| 0.5 * m + 0.3 * s - 0.2 * h).collect();
+        let ret: Vec<f64> = mkt
+            .iter()
+            .zip(smb.iter())
+            .zip(hml.iter())
+            .map(|((m, s), h)| 0.5 * m + 0.3 * s - 0.2 * h)
+            .collect();
         let r = estimate(&ret, &mkt, &smb, &hml).unwrap();
         assert!((r.r_squared - 1.0).abs() < 1e-9);
         assert!(r.residual_std_error < 1e-9);

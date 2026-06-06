@@ -114,8 +114,7 @@ pub fn compute(input: &Section108Input) -> Section108Result {
     let gross = input.canceled_debt_amount;
 
     // §108(d)(3) insolvency amount.
-    let insolvency_amount =
-        (input.debtor_liabilities - input.debtor_assets_fmv).max(Decimal::ZERO);
+    let insolvency_amount = (input.debtor_liabilities - input.debtor_assets_fmv).max(Decimal::ZERO);
 
     // Priority 1: bankruptcy → full exclusion under §108(a)(1)(A).
     if input.debtor_in_bankruptcy_case {
@@ -179,10 +178,8 @@ pub fn compute(input: &Section108Input) -> Section108Result {
 
         // Insolvency exclusion partial. Check if farm or real-property-
         // business can further exclude the remainder.
-        let (further_excl, further_rule) = further_exclusion_for_remainder(
-            input,
-            remaining_after_insolvency,
-        );
+        let (further_excl, further_rule) =
+            further_exclusion_for_remainder(input, remaining_after_insolvency);
         let total_excl = insol_exclusion + further_excl;
         let includible = (gross - total_excl).max(Decimal::ZERO);
 
@@ -251,8 +248,7 @@ fn further_exclusion_for_remainder(
     if input.debt_is_qualified_farm_indebtedness && input.debtor_is_qualified_farmer {
         return (remainder, Section108Rule::QualifiedFarmExclusion);
     }
-    if input.debt_is_qualified_real_property_business_indebtedness
-        && !input.debtor_is_c_corporation
+    if input.debt_is_qualified_real_property_business_indebtedness && !input.debtor_is_c_corporation
     {
         return (
             remainder,

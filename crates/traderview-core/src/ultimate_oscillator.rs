@@ -22,12 +22,7 @@ pub struct OhlcBar {
     pub close: f64,
 }
 
-pub fn compute(
-    bars: &[OhlcBar],
-    short: usize,
-    mid: usize,
-    long: usize,
-) -> Vec<Option<f64>> {
+pub fn compute(bars: &[OhlcBar], short: usize, mid: usize, long: usize) -> Vec<Option<f64>> {
     let n = bars.len();
     let mut out = vec![None; n];
     if short == 0 || mid == 0 || long == 0 {
@@ -73,7 +68,11 @@ mod tests {
     use super::*;
 
     fn b(h: f64, l: f64, c: f64) -> OhlcBar {
-        OhlcBar { high: h, low: l, close: c }
+        OhlcBar {
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -97,7 +96,10 @@ mod tests {
         let last = out[39].expect("populated");
         // For identical bars: BP = 100 - min(99, 100) = 1; TR = max(101,100) - min(99,100) = 2.
         // ratio = 1/2 = 0.5 → UO = 100 × 0.5 = 50.
-        assert!((last - 50.0).abs() < 1e-9, "flat UO should be 50, got {last}");
+        assert!(
+            (last - 50.0).abs() < 1e-9,
+            "flat UO should be 50, got {last}"
+        );
     }
 
     #[test]

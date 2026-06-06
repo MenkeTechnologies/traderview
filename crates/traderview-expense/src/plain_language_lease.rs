@@ -158,12 +158,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // NoStatewidePlainLanguageRequirement default — 46 other states + DC.
     let no_state = [
-        "AL", "AK", "AZ", "AR", "CA", "CO", "DC", "DE",
-        "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS",
-        "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS",
-        "MO", "MT", "NE", "NV", "NH", "NM", "NC", "ND",
-        "OH", "OK", "OR", "RI", "SC", "SD", "TN", "TX",
-        "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CA", "CO", "DC", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA",
+        "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NM",
+        "NC", "ND", "OH", "OK", "OR", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV",
+        "WI", "WY",
     ];
     for code in no_state {
         m.insert(
@@ -247,8 +245,7 @@ pub fn check(input: &PlainLanguageInput) -> PlainLanguageResult {
 
     // Compliance: lease meets plain-language standard AND (for PA)
     // all 9 tests pass.
-    let lease_compliant =
-        input.lease_complies_with_plain_language_standard && pa_compliant;
+    let lease_compliant = input.lease_complies_with_plain_language_standard && pa_compliant;
 
     // NY good-faith defense — even non-compliant lease can avoid
     // penalty if landlord shows good-faith attempt.
@@ -263,21 +260,17 @@ pub fn check(input: &PlainLanguageInput) -> PlainLanguageResult {
         PlainLanguageRegime::NewYorkClearCoherent50DollarPenalty
     ) && input.both_parties_fully_performed;
 
-    let landlord_compliant = !applies
-        || lease_compliant
-        || good_faith_defense_applies
-        || action_barred;
+    let landlord_compliant =
+        !applies || lease_compliant || good_faith_defense_applies || action_barred;
 
     let tenant_remedy = if landlord_compliant {
         0
     } else {
         // NJ: max($100 min, actual). NY: actual + $50.
         match rule.regime {
-            PlainLanguageRegime::NewJersey100DollarMinimumPlusAttorneyFees => {
-                input
-                    .tenant_actual_damages_dollars
-                    .max(rule.statutory_penalty_dollars)
-            }
+            PlainLanguageRegime::NewJersey100DollarMinimumPlusAttorneyFees => input
+                .tenant_actual_damages_dollars
+                .max(rule.statutory_penalty_dollars),
             PlainLanguageRegime::NewYorkClearCoherent50DollarPenalty => {
                 input.tenant_actual_damages_dollars + rule.statutory_penalty_dollars
             }
@@ -332,7 +325,9 @@ pub fn check(input: &PlainLanguageInput) -> PlainLanguageResult {
             tenant_remedy,
             if rule.attorney_fees_recoverable {
                 " plus reasonable attorney fees"
-            } else { "" },
+            } else {
+                ""
+            },
         )
     };
 
@@ -388,7 +383,10 @@ mod tests {
     #[test]
     fn pa_nine_tests_regime() {
         let r = check(&baseline("PA"));
-        assert_eq!(r.regime, PlainLanguageRegime::PennsylvaniaPlainLanguageNineTests);
+        assert_eq!(
+            r.regime,
+            PlainLanguageRegime::PennsylvaniaPlainLanguageNineTests
+        );
     }
 
     #[test]
@@ -647,7 +645,10 @@ mod tests {
 
     #[test]
     fn ny_only_good_faith_defense_state() {
-        let count = RULES.iter().filter(|(_, r)| r.good_faith_defense_available).count();
+        let count = RULES
+            .iter()
+            .filter(|(_, r)| r.good_faith_defense_available)
+            .count();
         assert_eq!(count, 1, "only NY has good-faith defense");
     }
 

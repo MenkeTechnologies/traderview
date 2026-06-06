@@ -51,7 +51,10 @@ pub fn sma(series: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
         for v in win {
             match v {
                 Some(x) if x.is_finite() => sum += x,
-                _ => { ok = false; break; }
+                _ => {
+                    ok = false;
+                    break;
+                }
             }
         }
         if ok {

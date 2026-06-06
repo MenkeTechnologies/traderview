@@ -468,7 +468,10 @@ mod tests {
         let mut input = baseline_input();
         input.census_tract_eligibility = CensusTractEligibility::NotEligibleCensusTract;
         let output = check(&input);
-        assert_eq!(output.mode, Section30CMode::NotApplicableNotInEligibleCensusTract);
+        assert_eq!(
+            output.mode,
+            Section30CMode::NotApplicableNotInEligibleCensusTract
+        );
     }
 
     #[test]
@@ -562,7 +565,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::PerItemCapUnderSection30CE6;
         input.credit_claimed_dollars = 1_000;
         let output = check(&input);
-        assert_eq!(output.mode, Section30CMode::CompliantResidentialPropertyCapAtOneThousand);
+        assert_eq!(
+            output.mode,
+            Section30CMode::CompliantResidentialPropertyCapAtOneThousand
+        );
     }
 
     #[test]
@@ -572,13 +578,17 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::PerItemCapUnderSection30CE6;
         input.credit_claimed_dollars = 1_001;
         let output = check(&input);
-        assert_eq!(output.mode, Section30CMode::ViolationResidentialPropertyClaimExceedsOneThousandCap);
+        assert_eq!(
+            output.mode,
+            Section30CMode::ViolationResidentialPropertyClaimExceedsOneThousandCap
+        );
     }
 
     #[test]
     fn pwa_requirements_met_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::PrevailingWageAndApprenticeshipBonusUnderSection30CG;
+        input.compliance_aspect =
+            ComplianceAspect::PrevailingWageAndApprenticeshipBonusUnderSection30CG;
         let output = check(&input);
         assert_eq!(output.mode, Section30CMode::CompliantPwaRequirementsMet);
     }
@@ -586,7 +596,8 @@ mod tests {
     #[test]
     fn pwa_requirements_not_met_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::PrevailingWageAndApprenticeshipBonusUnderSection30CG;
+        input.compliance_aspect =
+            ComplianceAspect::PrevailingWageAndApprenticeshipBonusUnderSection30CG;
         input.prevailing_wage_and_apprenticeship_requirements_met = false;
         let output = check(&input);
         assert_eq!(output.mode, Section30CMode::ViolationPwaRequirementsNotMet);
@@ -597,14 +608,18 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::EligibleCensusTractRequirementUnderSection30CC;
         let output = check(&input);
-        assert_eq!(output.mode, Section30CMode::CompliantLowIncomeCommunityCensusTract);
+        assert_eq!(
+            output.mode,
+            Section30CMode::CompliantLowIncomeCommunityCensusTract
+        );
     }
 
     #[test]
     fn non_urban_census_tract_compliant() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::EligibleCensusTractRequirementUnderSection30CC;
-        input.census_tract_eligibility = CensusTractEligibility::NonUrbanCensusTractUnderTreasuryGuidance;
+        input.census_tract_eligibility =
+            CensusTractEligibility::NonUrbanCensusTractUnderTreasuryGuidance;
         let output = check(&input);
         assert_eq!(output.mode, Section30CMode::CompliantNonUrbanCensusTract);
     }

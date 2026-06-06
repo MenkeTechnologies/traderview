@@ -136,9 +136,9 @@ pub fn compute(input: &Section465Input) -> Section465Result {
     let related_party_reduction = input.related_party_borrowing;
 
     // Total at-risk before applying current-year loss. Clamp at zero.
-    let pre_loss_at_risk =
-        (contributed + recourse + pledged + qnf_at_risk - related_party_reduction)
-            .max(Decimal::ZERO);
+    let pre_loss_at_risk = (contributed + recourse + pledged + qnf_at_risk
+        - related_party_reduction)
+        .max(Decimal::ZERO);
 
     // Loss to absorb = current year + prior carryover.
     let total_potential_loss = input.activity_loss_this_year + input.prior_year_suspended_loss;
@@ -151,9 +151,8 @@ pub fn compute(input: &Section465Input) -> Section465Result {
     //       the §465(a) cap, OR
     //   (b) the at-risk amount before subtracting related-party
     //       borrowing was negative (unusual but possible).
-    let recapture_triggered = (contributed + recourse + pledged + qnf_at_risk
-        - related_party_reduction)
-        < Decimal::ZERO;
+    let recapture_triggered =
+        (contributed + recourse + pledged + qnf_at_risk - related_party_reduction) < Decimal::ZERO;
 
     let note = if recapture_triggered {
         format!(

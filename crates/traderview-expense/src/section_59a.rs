@@ -190,8 +190,7 @@ pub fn compute(input: &Section59aInput) -> Section59aResult {
     };
     let mti = input.taxable_income_dollars + input.base_erosion_payments_dollars + nol_addback;
 
-    let tentative_min_tax =
-        ((mti.max(0) as i128) * (beat_rate_bp as i128) / 10_000) as i64;
+    let tentative_min_tax = ((mti.max(0) as i128) * (beat_rate_bp as i128) / 10_000) as i64;
 
     let beat_tax = if matches!(applicability, ApplicabilityResult::Applicable) {
         (tentative_min_tax - input.regular_tax_liability_dollars).max(0)
@@ -400,7 +399,10 @@ mod tests {
         i.gross_receipts_year_minus_2_dollars = 500_000_000;
         i.gross_receipts_year_minus_3_dollars = 500_000_000;
         let r = compute(&i);
-        assert!(r.meets_gross_receipts_test, "$500M exact meets threshold (>=)");
+        assert!(
+            r.meets_gross_receipts_test,
+            "$500M exact meets threshold (>=)"
+        );
     }
 
     // ── Base erosion percentage ────────────────────────────────────

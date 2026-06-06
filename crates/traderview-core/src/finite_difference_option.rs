@@ -23,7 +23,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum OptionType { Call, Put }
+pub enum OptionType {
+    Call,
+    Put,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct FdOptionReport {
@@ -47,13 +50,20 @@ pub fn price(
     n_t_steps: usize,
     s_max_multiplier: f64,
 ) -> Option<FdOptionReport> {
-    if !spot.is_finite() || spot <= 0.0
-        || !strike.is_finite() || strike <= 0.0
-        || !time_to_expiry.is_finite() || time_to_expiry <= 0.0
-        || !risk_free_rate.is_finite() || !dividend_yield.is_finite()
-        || !volatility.is_finite() || volatility <= 0.0
-        || n_s_steps < 20 || n_t_steps < 10
-        || !s_max_multiplier.is_finite() || s_max_multiplier <= 1.0
+    if !spot.is_finite()
+        || spot <= 0.0
+        || !strike.is_finite()
+        || strike <= 0.0
+        || !time_to_expiry.is_finite()
+        || time_to_expiry <= 0.0
+        || !risk_free_rate.is_finite()
+        || !dividend_yield.is_finite()
+        || !volatility.is_finite()
+        || volatility <= 0.0
+        || n_s_steps < 20
+        || n_t_steps < 10
+        || !s_max_multiplier.is_finite()
+        || s_max_multiplier <= 1.0
     {
         return None;
     }
@@ -62,10 +72,13 @@ pub fn price(
     let dt = time_to_expiry / n_t_steps as f64;
     // Terminal payoff.
     let s_grid: Vec<f64> = (0..=n_s_steps).map(|i| i as f64 * ds).collect();
-    let mut v: Vec<f64> = s_grid.iter().map(|s| match option_type {
-        OptionType::Call => (s - strike).max(0.0),
-        OptionType::Put => (strike - s).max(0.0),
-    }).collect();
+    let mut v: Vec<f64> = s_grid
+        .iter()
+        .map(|s| match option_type {
+            OptionType::Call => (s - strike).max(0.0),
+            OptionType::Put => (strike - s).max(0.0),
+        })
+        .collect();
     let q = dividend_yield;
     // Coefficients for Crank-Nicolson. For each interior i:
     //   a_i = ¼ · dt · (σ²·i² − (r − q)·i)
@@ -120,7 +133,9 @@ pub fn price(
         dp[1] = rhs[1] / beta[1];
         for i in 2..n_s_steps {
             let denom = beta[i] - alpha[i] * cp[i - 1];
-            if denom.abs() < 1e-18 { return None; }
+            if denom.abs() < 1e-18 {
+                return None;
+            }
             cp[i] = gamma_v[i] / denom;
             dp[i] = (rhs[i] - alpha[i] * dp[i - 1]) / denom;
         }
@@ -138,7 +153,9 @@ pub fn price(
     let delta = (v[i_lo + 1] - v[i_lo]) / ds;
     let gamma_val = if i_lo > 0 && i_lo + 1 < n_s_steps {
         (v[i_lo + 1] - 2.0 * v[i_lo] + v[i_lo - 1]) / (ds * ds)
-    } else { 0.0 };
+    } else {
+        0.0
+    };
     Some(FdOptionReport {
         present_value: pv,
         delta,
@@ -165,18 +182,82 @@ mod tests {
         let sign = if x < 0.0 { -1.0 } else { 1.0 };
         let x = x.abs();
         let t = 1.0 / (1.0 + 0.327_591_1 * x);
-        let y = 1.0 - (((((1.061_405_429 * t - 1.453_152_027) * t)
-            + 1.421_413_741) * t - 0.284_496_736) * t + 0.254_829_592) * t * (-x * x).exp();
+        let y = 1.0
+            - (((((1.061_405_429 * t - 1.453_152_027) * t) + 1.421_413_741) * t - 0.284_496_736)
+                * t
+                + 0.254_829_592)
+                * t
+                * (-x * x).exp();
         sign * y
     }
 
     #[test]
     fn invalid_inputs_return_none() {
-        assert!(price(0.0, 100.0, 0.5, 0.05, 0.0, 0.20, OptionType::Call, 100, 50, 3.0).is_none());
-        assert!(price(100.0, 0.0, 0.5, 0.05, 0.0, 0.20, OptionType::Call, 100, 50, 3.0).is_none());
-        assert!(price(100.0, 100.0, 0.0, 0.05, 0.0, 0.20, OptionType::Call, 100, 50, 3.0).is_none());
-        assert!(price(100.0, 100.0, 0.5, 0.05, 0.0, 0.0, OptionType::Call, 100, 50, 3.0).is_none());
-        assert!(price(100.0, 100.0, 0.5, 0.05, 0.0, 0.20, OptionType::Call, 10, 50, 3.0).is_none());
+        assert!(price(
+            0.0,
+            100.0,
+            0.5,
+            0.05,
+            0.0,
+            0.20,
+            OptionType::Call,
+            100,
+            50,
+            3.0
+        )
+        .is_none());
+        assert!(price(
+            100.0,
+            0.0,
+            0.5,
+            0.05,
+            0.0,
+            0.20,
+            OptionType::Call,
+            100,
+            50,
+            3.0
+        )
+        .is_none());
+        assert!(price(
+            100.0,
+            100.0,
+            0.0,
+            0.05,
+            0.0,
+            0.20,
+            OptionType::Call,
+            100,
+            50,
+            3.0
+        )
+        .is_none());
+        assert!(price(
+            100.0,
+            100.0,
+            0.5,
+            0.05,
+            0.0,
+            0.0,
+            OptionType::Call,
+            100,
+            50,
+            3.0
+        )
+        .is_none());
+        assert!(price(
+            100.0,
+            100.0,
+            0.5,
+            0.05,
+            0.0,
+            0.20,
+            OptionType::Call,
+            10,
+            50,
+            3.0
+        )
+        .is_none());
     }
 
     #[test]
@@ -190,33 +271,101 @@ mod tests {
         let fd = price(s, k, t, r, q, sigma, OptionType::Call, 200, 100, 4.0).unwrap();
         let bs = bs_call(s, k, t, r, q, sigma);
         let rel = (fd.present_value - bs).abs() / bs;
-        assert!(rel < 0.02, "FD {} vs BS {}, rel diff {:.4}",
-            fd.present_value, bs, rel);
+        assert!(
+            rel < 0.02,
+            "FD {} vs BS {}, rel diff {:.4}",
+            fd.present_value,
+            bs,
+            rel
+        );
     }
 
     #[test]
     fn put_value_positive_when_in_the_money() {
-        let fd = price(80.0, 100.0, 0.5, 0.05, 0.0, 0.20, OptionType::Put, 200, 100, 4.0).unwrap();
-        assert!(fd.present_value > 15.0,
-            "in-the-money put should have value > intrinsic, got {}", fd.present_value);
+        let fd = price(
+            80.0,
+            100.0,
+            0.5,
+            0.05,
+            0.0,
+            0.20,
+            OptionType::Put,
+            200,
+            100,
+            4.0,
+        )
+        .unwrap();
+        assert!(
+            fd.present_value > 15.0,
+            "in-the-money put should have value > intrinsic, got {}",
+            fd.present_value
+        );
     }
 
     #[test]
     fn delta_call_in_unit_range() {
-        let fd = price(100.0, 100.0, 0.5, 0.05, 0.0, 0.20, OptionType::Call, 200, 100, 4.0).unwrap();
+        let fd = price(
+            100.0,
+            100.0,
+            0.5,
+            0.05,
+            0.0,
+            0.20,
+            OptionType::Call,
+            200,
+            100,
+            4.0,
+        )
+        .unwrap();
         assert!((0.0..=1.0).contains(&fd.delta));
     }
 
     #[test]
     fn gamma_non_negative() {
-        let fd = price(100.0, 100.0, 0.5, 0.05, 0.0, 0.20, OptionType::Call, 200, 100, 4.0).unwrap();
+        let fd = price(
+            100.0,
+            100.0,
+            0.5,
+            0.05,
+            0.0,
+            0.20,
+            OptionType::Call,
+            200,
+            100,
+            4.0,
+        )
+        .unwrap();
         assert!(fd.gamma >= 0.0);
     }
 
     #[test]
     fn higher_vol_increases_value() {
-        let low = price(100.0, 100.0, 0.5, 0.05, 0.0, 0.10, OptionType::Call, 200, 100, 4.0).unwrap();
-        let high = price(100.0, 100.0, 0.5, 0.05, 0.0, 0.40, OptionType::Call, 200, 100, 4.0).unwrap();
+        let low = price(
+            100.0,
+            100.0,
+            0.5,
+            0.05,
+            0.0,
+            0.10,
+            OptionType::Call,
+            200,
+            100,
+            4.0,
+        )
+        .unwrap();
+        let high = price(
+            100.0,
+            100.0,
+            0.5,
+            0.05,
+            0.0,
+            0.40,
+            OptionType::Call,
+            200,
+            100,
+            4.0,
+        )
+        .unwrap();
         assert!(high.present_value > low.present_value);
     }
 }

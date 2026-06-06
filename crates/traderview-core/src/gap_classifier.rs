@@ -25,7 +25,13 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64, pub open: f64, pub volume: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+    pub open: f64,
+    pub volume: f64,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
@@ -54,16 +60,25 @@ pub fn compute(bars: &[Bar], lookback: usize, fill_bars: usize) -> GapClassifier
         lookback,
         fill_bars,
     };
-    if lookback < 5 || fill_bars < 1 || n < lookback + fill_bars + 1 { return report; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite()
-        || !b.close.is_finite() || !b.open.is_finite() || !b.volume.is_finite()
-        || b.volume < 0.0) {
+    if lookback < 5 || fill_bars < 1 || n < lookback + fill_bars + 1 {
+        return report;
+    }
+    if bars.iter().any(|b| {
+        !b.high.is_finite()
+            || !b.low.is_finite()
+            || !b.close.is_finite()
+            || !b.open.is_finite()
+            || !b.volume.is_finite()
+            || b.volume < 0.0
+    }) {
         return report;
     }
     for i in lookback..(n - fill_bars) {
         let prev_close = bars[i - 1].close;
         let cur = bars[i];
-        if prev_close == 0.0 { continue; }
+        if prev_close == 0.0 {
+            continue;
+        }
         let gap_size = cur.open - prev_close;
         let gap_pct = gap_size / prev_close;
         report.gap_pct[i] = Some(gap_pct);
@@ -78,14 +93,20 @@ pub fn compute(bars: &[Bar], lookback: usize, fill_bars: usize) -> GapClassifier
         let win_mean_close: f64 = win.iter().map(|b| b.close).sum::<f64>() / lookback as f64;
         let win_range_pct = if win_mean_close > 0.0 {
             (win_high - win_low) / win_mean_close
-        } else { 0.0 };
+        } else {
+            0.0
+        };
         let avg_vol: f64 = win.iter().map(|b| b.volume).sum::<f64>() / lookback as f64;
         let direction_run = consecutive_run(win);
         // Exhaustion check first: long trend AND gap gets filled within window.
         let gap_filled = if gap_pct > 0.0 {
-            bars[i + 1..=(i + fill_bars).min(n - 1)].iter().any(|b| b.low <= prev_close)
+            bars[i + 1..=(i + fill_bars).min(n - 1)]
+                .iter()
+                .any(|b| b.low <= prev_close)
         } else {
-            bars[i + 1..=(i + fill_bars).min(n - 1)].iter().any(|b| b.high >= prev_close)
+            bars[i + 1..=(i + fill_bars).min(n - 1)]
+                .iter()
+                .any(|b| b.high >= prev_close)
         };
         if direction_run.abs() >= 5 && gap_filled {
             report.gap_kind[i] = GapKind::Exhaustion;
@@ -97,8 +118,8 @@ pub fn compute(bars: &[Bar], lookback: usize, fill_bars: usize) -> GapClassifier
             continue;
         }
         // Runaway: trend in same direction as gap + volume confirmation.
-        let same_direction = (gap_pct > 0.0 && direction_run > 0)
-            || (gap_pct < 0.0 && direction_run < 0);
+        let same_direction =
+            (gap_pct > 0.0 && direction_run > 0) || (gap_pct < 0.0 && direction_run < 0);
         if same_direction && cur.volume > avg_vol * 1.5 {
             report.gap_kind[i] = GapKind::Runaway;
             continue;
@@ -109,7 +130,9 @@ pub fn compute(bars: &[Bar], lookback: usize, fill_bars: usize) -> GapClassifier
 }
 
 fn consecutive_run(win: &[Bar]) -> i32 {
-    if win.len() < 2 { return 0; }
+    if win.len() < 2 {
+        return 0;
+    }
     let mut run = 0_i32;
     for i in 1..win.len() {
         if win[i].close > win[i - 1].close {
@@ -128,7 +151,13 @@ mod tests {
     use super::*;
 
     fn b(o: f64, h: f64, l: f64, c: f64, v: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c, volume: v }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+            volume: v,
+        }
     }
 
     #[test]

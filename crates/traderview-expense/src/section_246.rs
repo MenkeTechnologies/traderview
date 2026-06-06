@@ -310,9 +310,7 @@ fn issuer_label(issuer: DividendIssuerType) -> &'static str {
         DividendIssuerType::NonQualifiedRicDistribution => {
             "non-qualified RIC distribution (not a § 854 pass-through)"
         }
-        DividendIssuerType::NonCapitalGainReitDistribution => {
-            "non-capital-gain REIT distribution"
-        }
+        DividendIssuerType::NonCapitalGainReitDistribution => "non-capital-gain REIT distribution",
     }
 }
 
@@ -336,7 +334,10 @@ mod tests {
     fn full_drd_allowed_common_stock_50_pct_tier() {
         let input = base();
         let output = check(&input);
-        assert_eq!(output.severity, Severity::FullDrdAllowedHoldingPeriodAndCapsMet);
+        assert_eq!(
+            output.severity,
+            Severity::FullDrdAllowedHoldingPeriodAndCapsMet
+        );
         // $100K × 50% = $50K; cap = $1M × 50% = $500K; $50K ≤ $500K → full DRD
         assert_eq!(output.allowed_drd_cents, 50_000_00);
         assert_eq!(output.drd_percentage_basis_points, 5_000);
@@ -361,7 +362,10 @@ mod tests {
         let mut input = base();
         input.days_held_during_required_window = 47;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::FullDrdAllowedHoldingPeriodAndCapsMet);
+        assert_eq!(
+            output.severity,
+            Severity::FullDrdAllowedHoldingPeriodAndCapsMet
+        );
     }
 
     #[test]
@@ -372,7 +376,10 @@ mod tests {
         let output = check(&input);
         assert_eq!(output.required_holding_period_days, 91);
         assert_eq!(output.testing_window_days, 181);
-        assert_eq!(output.severity, Severity::FullDrdAllowedHoldingPeriodAndCapsMet);
+        assert_eq!(
+            output.severity,
+            Severity::FullDrdAllowedHoldingPeriodAndCapsMet
+        );
     }
 
     #[test]
@@ -394,7 +401,10 @@ mod tests {
         input.days_held_during_required_window = 50;
         let output = check(&input);
         assert_eq!(output.required_holding_period_days, 46);
-        assert_eq!(output.severity, Severity::FullDrdAllowedHoldingPeriodAndCapsMet);
+        assert_eq!(
+            output.severity,
+            Severity::FullDrdAllowedHoldingPeriodAndCapsMet
+        );
     }
 
     #[test]
@@ -453,10 +463,12 @@ mod tests {
     #[test]
     fn sanctioned_country_drd_denied() {
         let mut input = base();
-        input.dividend_issuer_type =
-            DividendIssuerType::SanctionedCountryForeignCorporation;
+        input.dividend_issuer_type = DividendIssuerType::SanctionedCountryForeignCorporation;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::Section246AExcludedIssuerDrdDenied);
+        assert_eq!(
+            output.severity,
+            Severity::Section246AExcludedIssuerDrdDenied
+        );
         assert_eq!(output.allowed_drd_cents, 0);
         assert!(output.note.contains("§ 901(j)"));
     }
@@ -464,10 +476,12 @@ mod tests {
     #[test]
     fn section_501_tax_exempt_drd_denied() {
         let mut input = base();
-        input.dividend_issuer_type =
-            DividendIssuerType::Section501Or521TaxExemptCorporation;
+        input.dividend_issuer_type = DividendIssuerType::Section501Or521TaxExemptCorporation;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::Section246AExcludedIssuerDrdDenied);
+        assert_eq!(
+            output.severity,
+            Severity::Section246AExcludedIssuerDrdDenied
+        );
         assert!(output.note.contains("§ 501"));
         assert!(output.note.contains("§ 521"));
     }
@@ -477,7 +491,10 @@ mod tests {
         let mut input = base();
         input.dividend_issuer_type = DividendIssuerType::NonQualifiedRicDistribution;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::Section246AExcludedIssuerDrdDenied);
+        assert_eq!(
+            output.severity,
+            Severity::Section246AExcludedIssuerDrdDenied
+        );
         assert!(output.note.contains("§ 854"));
     }
 
@@ -486,7 +503,10 @@ mod tests {
         let mut input = base();
         input.dividend_issuer_type = DividendIssuerType::NonCapitalGainReitDistribution;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::Section246AExcludedIssuerDrdDenied);
+        assert_eq!(
+            output.severity,
+            Severity::Section246AExcludedIssuerDrdDenied
+        );
         assert!(output.note.contains("REIT"));
     }
 

@@ -28,11 +28,17 @@ pub struct RealizedSkewnessReport {
 
 pub fn compute(returns: &[f64]) -> Option<RealizedSkewnessReport> {
     let n = returns.len();
-    if n < 5 { return None; }
-    if returns.iter().any(|x| !x.is_finite()) { return None; }
+    if n < 5 {
+        return None;
+    }
+    if returns.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let n_f = n as f64;
     let rv: f64 = returns.iter().map(|r| r * r).sum();
-    if rv <= 0.0 { return None; }
+    if rv <= 0.0 {
+        return None;
+    }
     let m3: f64 = returns.iter().map(|r| r * r * r).sum();
     let rs = n_f.sqrt() * m3 / rv.powf(1.5);
     Some(RealizedSkewnessReport {
@@ -66,8 +72,11 @@ mod tests {
     fn symmetric_returns_yield_near_zero_skew() {
         let returns = vec![0.01, -0.01, 0.02, -0.02, 0.005, -0.005, 0.015, -0.015];
         let r = compute(&returns).unwrap();
-        assert!(r.realized_skewness.abs() < 1e-12,
-            "symmetric returns should have skew ~0, got {}", r.realized_skewness);
+        assert!(
+            r.realized_skewness.abs() < 1e-12,
+            "symmetric returns should have skew ~0, got {}",
+            r.realized_skewness
+        );
     }
 
     #[test]
@@ -76,8 +85,11 @@ mod tests {
         let mut returns = vec![0.005_f64; 50];
         returns.push(-0.30);
         let r = compute(&returns).unwrap();
-        assert!(r.realized_skewness < 0.0,
-            "left-skewed returns: RS should be negative, got {}", r.realized_skewness);
+        assert!(
+            r.realized_skewness < 0.0,
+            "left-skewed returns: RS should be negative, got {}",
+            r.realized_skewness
+        );
     }
 
     #[test]
@@ -85,8 +97,11 @@ mod tests {
         let mut returns = vec![-0.005_f64; 50];
         returns.push(0.30);
         let r = compute(&returns).unwrap();
-        assert!(r.realized_skewness > 0.0,
-            "right-skewed returns: RS should be positive, got {}", r.realized_skewness);
+        assert!(
+            r.realized_skewness > 0.0,
+            "right-skewed returns: RS should be positive, got {}",
+            r.realized_skewness
+        );
     }
 
     #[test]

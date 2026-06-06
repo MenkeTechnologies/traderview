@@ -267,7 +267,8 @@ pub fn compute(input: &Section6611Input) -> Section6611Result {
         ));
     }
 
-    let interest = compute_daily_compound_interest(principal, annual_rate_bps, effective_days as u32);
+    let interest =
+        compute_daily_compound_interest(principal, annual_rate_bps, effective_days as u32);
 
     notes.push(
         "§ 6622(a) daily compounding applied; interest received treated as gross income to taxpayer under § 61(a)(4)"
@@ -369,7 +370,13 @@ mod tests {
 
     #[test]
     fn q1_2026_corporate_gatt_rate_450_bps() {
-        let r = compute(&base(100_000, TaxpayerType::CorporateOver10kGatt, 2026, 1, 395));
+        let r = compute(&base(
+            100_000,
+            TaxpayerType::CorporateOver10kGatt,
+            2026,
+            1,
+            395,
+        ));
         assert_eq!(r.annual_rate_bps, 450);
         assert!(r
             .notes
@@ -385,14 +392,26 @@ mod tests {
 
     #[test]
     fn q2_2026_corporate_gatt_rate_350_bps() {
-        let r = compute(&base(100_000, TaxpayerType::CorporateOver10kGatt, 2026, 2, 395));
+        let r = compute(&base(
+            100_000,
+            TaxpayerType::CorporateOver10kGatt,
+            2026,
+            2,
+            395,
+        ));
         assert_eq!(r.annual_rate_bps, 350);
     }
 
     #[test]
     fn corporate_gatt_one_percentage_point_below_corporate_regular_invariant() {
         let r_corp = compute(&base(10_000, TaxpayerType::CorporateRegular, 2026, 1, 395));
-        let r_gatt = compute(&base(10_000, TaxpayerType::CorporateOver10kGatt, 2026, 1, 395));
+        let r_gatt = compute(&base(
+            10_000,
+            TaxpayerType::CorporateOver10kGatt,
+            2026,
+            1,
+            395,
+        ));
         assert_eq!(r_corp.annual_rate_bps - r_gatt.annual_rate_bps, 150);
     }
 
@@ -446,10 +465,7 @@ mod tests {
         i.rate_override_bps = Some(500);
         let r = compute(&i);
         assert_eq!(r.annual_rate_bps, 500);
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("rate override applied")));
+        assert!(r.notes.iter().any(|n| n.contains("rate override applied")));
     }
 
     #[test]
@@ -541,8 +557,20 @@ mod tests {
         let q2_corp = compute(&base(10_000, TaxpayerType::CorporateRegular, 2026, 2, 395));
         assert_eq!(q1_corp.annual_rate_bps - q2_corp.annual_rate_bps, 100);
 
-        let q1_gatt = compute(&base(10_000, TaxpayerType::CorporateOver10kGatt, 2026, 1, 395));
-        let q2_gatt = compute(&base(10_000, TaxpayerType::CorporateOver10kGatt, 2026, 2, 395));
+        let q1_gatt = compute(&base(
+            10_000,
+            TaxpayerType::CorporateOver10kGatt,
+            2026,
+            1,
+            395,
+        ));
+        let q2_gatt = compute(&base(
+            10_000,
+            TaxpayerType::CorporateOver10kGatt,
+            2026,
+            2,
+            395,
+        ));
         assert_eq!(q1_gatt.annual_rate_bps - q2_gatt.annual_rate_bps, 100);
     }
 

@@ -161,7 +161,9 @@ pub fn compute(input: &Section911Input) -> Section911Result {
 
     let test_label = match qualifying_test {
         QualifyingTest::BonaFideResidence => "§911(d)(1)(A) bona fide residence test",
-        QualifyingTest::PhysicalPresence => "§911(d)(1)(B) physical presence test (≥ 330 full days)",
+        QualifyingTest::PhysicalPresence => {
+            "§911(d)(1)(B) physical presence test (≥ 330 full days)"
+        }
         QualifyingTest::NotQualified => "neither §911(d)(1) test satisfied",
     };
 

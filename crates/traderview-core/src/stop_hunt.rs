@@ -38,7 +38,13 @@ pub struct StopHuntConfig {
 }
 
 impl Default for StopHuntConfig {
-    fn default() -> Self { Self { lookback: 10, min_pierce: 0.0, min_reversal_pct: 0.5 } }
+    fn default() -> Self {
+        Self {
+            lookback: 10,
+            min_pierce: 0.0,
+            min_reversal_pct: 0.5,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -74,20 +80,27 @@ pub fn detect(bars: &[OhlcBar], cfg: &StopHuntConfig) -> SweepReport {
     let mut events = Vec::new();
     for i in cfg.lookback..n {
         let window = &bars[(i - cfg.lookback)..i];
-        let prior_high = window.iter().map(|b| b.high).fold(f64::NEG_INFINITY, f64::max);
-        let prior_low  = window.iter().map(|b| b.low).fold(f64::INFINITY, f64::min);
+        let prior_high = window
+            .iter()
+            .map(|b| b.high)
+            .fold(f64::NEG_INFINITY, f64::max);
+        let prior_low = window.iter().map(|b| b.low).fold(f64::INFINITY, f64::min);
         let cur = bars[i];
         let bar_range = cur.high - cur.low;
-        if bar_range <= 0.0 { continue; }
+        if bar_range <= 0.0 {
+            continue;
+        }
 
         // Down sweep: low below prior_low by min_pierce AND close back above prior_low.
         if cur.low < prior_low - cfg.min_pierce && cur.close > prior_low {
             let reversal = (cur.close - cur.low) / bar_range;
             if reversal >= cfg.min_reversal_pct {
                 events.push(SweepEvent {
-                    bar_index: i, direction: SweepDirection::DownSweep,
+                    bar_index: i,
+                    direction: SweepDirection::DownSweep,
                     swept_level: prior_low,
-                    bar_extreme: cur.low, bar_close: cur.close,
+                    bar_extreme: cur.low,
+                    bar_close: cur.close,
                     reversal_pct: reversal,
                 });
                 continue;
@@ -98,9 +111,11 @@ pub fn detect(bars: &[OhlcBar], cfg: &StopHuntConfig) -> SweepReport {
             let reversal = (cur.high - cur.close) / bar_range;
             if reversal >= cfg.min_reversal_pct {
                 events.push(SweepEvent {
-                    bar_index: i, direction: SweepDirection::UpSweep,
+                    bar_index: i,
+                    direction: SweepDirection::UpSweep,
                     swept_level: prior_high,
-                    bar_extreme: cur.high, bar_close: cur.close,
+                    bar_extreme: cur.high,
+                    bar_close: cur.close,
                     reversal_pct: reversal,
                 });
             }
@@ -114,7 +129,13 @@ pub fn detect(bars: &[OhlcBar], cfg: &StopHuntConfig) -> SweepReport {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> OhlcBar { OhlcBar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> OhlcBar {
+        OhlcBar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn empty_input_returns_no_events() {
@@ -136,7 +157,7 @@ mod tests {
     #[test]
     fn detects_up_sweep_with_close_back_inside() {
         let mut bars: Vec<OhlcBar> = (0..10).map(|_| b(101.0, 100.0, 100.5)).collect();
-        bars.push(b(103.0, 100.5, 100.7));    // pierces 101, closes back below
+        bars.push(b(103.0, 100.5, 100.7)); // pierces 101, closes back below
         let r = detect(&bars, &StopHuntConfig::default());
         assert_eq!(r.events.len(), 1);
         assert!(matches!(r.events[0].direction, SweepDirection::UpSweep));
@@ -147,10 +168,13 @@ mod tests {
         // Low pierces but close finishes near the low — not a stop hunt,
         // just a continuation. Reversal pct < 0.5.
         let mut bars: Vec<OhlcBar> = (0..10).map(|_| b(100.0, 99.0, 99.5)).collect();
-        bars.push(b(100.0, 98.0, 98.5));    // close near low — only 0.25 reversal
+        bars.push(b(100.0, 98.0, 98.5)); // close near low — only 0.25 reversal
         let r = detect(&bars, &StopHuntConfig::default());
-        assert!(r.events.is_empty(),
-            "close near low is continuation, not sweep — got {} events", r.events.len());
+        assert!(
+            r.events.is_empty(),
+            "close near low is continuation, not sweep — got {} events",
+            r.events.len()
+        );
     }
 
     #[test]
@@ -160,7 +184,10 @@ mod tests {
         let mut bars: Vec<OhlcBar> = (0..10).map(|_| b(100.0, 99.0, 99.5)).collect();
         bars.push(b(100.0, 98.5, 99.0));
         let r = detect(&bars, &StopHuntConfig::default());
-        assert!(r.events.is_empty(), "close at prior_low boundary is not a sweep");
+        assert!(
+            r.events.is_empty(),
+            "close at prior_low boundary is not a sweep"
+        );
     }
 
     #[test]
@@ -168,9 +195,16 @@ mod tests {
         // Pierce of just 0.05 below prior low — config requires 0.10 minimum.
         let mut bars: Vec<OhlcBar> = (0..10).map(|_| b(100.0, 99.0, 99.5)).collect();
         bars.push(b(100.0, 98.95, 99.8));
-        let cfg = StopHuntConfig { lookback: 10, min_pierce: 0.10, min_reversal_pct: 0.5 };
+        let cfg = StopHuntConfig {
+            lookback: 10,
+            min_pierce: 0.10,
+            min_reversal_pct: 0.5,
+        };
         let r = detect(&bars, &cfg);
-        assert!(r.events.is_empty(), "0.05 wick below pivot doesn't qualify with 0.10 buffer");
+        assert!(
+            r.events.is_empty(),
+            "0.05 wick below pivot doesn't qualify with 0.10 buffer"
+        );
     }
 
     #[test]

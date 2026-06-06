@@ -182,17 +182,30 @@ fn additional_medicare_threshold_for(status: FilingStatus) -> u64 {
     }
 }
 
-fn compute_seca_tax(net_earnings: u64, other_wages: u64, status: FilingStatus) -> (u64, u64, u64, u64) {
-    let net_earnings_after_se_adjustment = apply_rate(net_earnings, SECTION_1402_NET_EARNINGS_MULTIPLIER_BASIS_POINTS);
+fn compute_seca_tax(
+    net_earnings: u64,
+    other_wages: u64,
+    status: FilingStatus,
+) -> (u64, u64, u64, u64) {
+    let net_earnings_after_se_adjustment = apply_rate(
+        net_earnings,
+        SECTION_1402_NET_EARNINGS_MULTIPLIER_BASIS_POINTS,
+    );
     let oasdi_base = SECTION_1402_2025_OASDI_WAGE_BASE_DOLLARS
         .saturating_sub(other_wages)
         .min(net_earnings_after_se_adjustment);
     let oasdi = apply_rate(oasdi_base, SECTION_1402_OASDI_RATE_BASIS_POINTS);
-    let medicare = apply_rate(net_earnings_after_se_adjustment, SECTION_1402_MEDICARE_RATE_BASIS_POINTS);
+    let medicare = apply_rate(
+        net_earnings_after_se_adjustment,
+        SECTION_1402_MEDICARE_RATE_BASIS_POINTS,
+    );
     let threshold = additional_medicare_threshold_for(status);
     let amt_base = net_earnings_after_se_adjustment.saturating_sub(threshold);
-    let additional_medicare = apply_rate(amt_base, SECTION_1402_ADDITIONAL_MEDICARE_RATE_BASIS_POINTS);
-    let total = oasdi.saturating_add(medicare).saturating_add(additional_medicare);
+    let additional_medicare =
+        apply_rate(amt_base, SECTION_1402_ADDITIONAL_MEDICARE_RATE_BASIS_POINTS);
+    let total = oasdi
+        .saturating_add(medicare)
+        .saturating_add(additional_medicare);
     (oasdi, medicare, additional_medicare, total)
 }
 
@@ -222,7 +235,8 @@ pub fn compute(input: &Input) -> Output {
             medicare_portion_dollars: 0,
             additional_medicare_portion_dollars: 0,
             total_seca_tax_dollars: 0,
-            statutory_basis: "§ 1402(a)(3)(A) — capital asset gain/loss excluded from SE income".to_string(),
+            statutory_basis: "§ 1402(a)(3)(A) — capital asset gain/loss excluded from SE income"
+                .to_string(),
             notes: format!(
                 "Capital gain of ${} excluded from SE income per § 1402(a)(3)(A).",
                 input.gross_item_amount_dollars
@@ -239,7 +253,8 @@ pub fn compute(input: &Input) -> Output {
             medicare_portion_dollars: 0,
             additional_medicare_portion_dollars: 0,
             total_seca_tax_dollars: 0,
-            statutory_basis: "§ 1402(a)(3)(B) — § 1231 property gain/loss excluded from SE income".to_string(),
+            statutory_basis: "§ 1402(a)(3)(B) — § 1231 property gain/loss excluded from SE income"
+                .to_string(),
             notes: format!(
                 "§ 1231 property gain of ${} excluded from SE income per § 1402(a)(3)(B).",
                 input.gross_item_amount_dollars
@@ -248,8 +263,10 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if matches!(input.income_item_type, IncomeItemType::RentalRealEstateIncome)
-        && input.activity_type != TaxpayerActivityType::RealEstateDealerInTrade
+    if matches!(
+        input.income_item_type,
+        IncomeItemType::RentalRealEstateIncome
+    ) && input.activity_type != TaxpayerActivityType::RealEstateDealerInTrade
     {
         return Output {
             mode: Section1402Mode::CompliantRentalRealEstateExcludedSection1402a1,
@@ -267,8 +284,10 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if matches!(input.income_item_type, IncomeItemType::PortfolioInterestDividends)
-        && input.activity_type != TaxpayerActivityType::DealerInSecurities
+    if matches!(
+        input.income_item_type,
+        IncomeItemType::PortfolioInterestDividends
+    ) && input.activity_type != TaxpayerActivityType::DealerInSecurities
     {
         return Output {
             mode: Section1402Mode::CompliantPortfolioInterestDividendsExcludedSection1402a2,
@@ -340,9 +359,14 @@ pub fn compute(input: &Input) -> Output {
         TaxpayerActivityType::ActiveLimitedPartnerInInvestmentPartnership
     ) && input.claimed_se_income_exclusion
     {
-        let net_earnings = input.gross_item_amount_dollars.saturating_sub(input.attributable_deductions_dollars);
-        let (oasdi, medicare, additional_medicare, total) =
-            compute_seca_tax(net_earnings, input.other_wages_subject_to_oasdi_dollars, input.filing_status);
+        let net_earnings = input
+            .gross_item_amount_dollars
+            .saturating_sub(input.attributable_deductions_dollars);
+        let (oasdi, medicare, additional_medicare, total) = compute_seca_tax(
+            net_earnings,
+            input.other_wages_subject_to_oasdi_dollars,
+            input.filing_status,
+        );
         return Output {
             mode: Section1402Mode::ViolationActiveLimitedPartnerExclusionImproperlyClaimed,
             se_income_subject_to_seca_dollars: net_earnings,
@@ -365,12 +389,22 @@ pub fn compute(input: &Input) -> Output {
     ) || matches!(
         input.income_item_type,
         IncomeItemType::GeneralPartnerDistributiveShare | IncomeItemType::OrdinaryBusinessIncome
-    ) || (matches!(input.activity_type, TaxpayerActivityType::DealerInSecurities)
-        && matches!(input.income_item_type, IncomeItemType::PortfolioInterestDividends))
-        || (matches!(input.activity_type, TaxpayerActivityType::RealEstateDealerInTrade)
-            && matches!(input.income_item_type, IncomeItemType::RentalRealEstateIncome))
-    {
-        let net_earnings = input.gross_item_amount_dollars.saturating_sub(input.attributable_deductions_dollars);
+    ) || (matches!(
+        input.activity_type,
+        TaxpayerActivityType::DealerInSecurities
+    ) && matches!(
+        input.income_item_type,
+        IncomeItemType::PortfolioInterestDividends
+    )) || (matches!(
+        input.activity_type,
+        TaxpayerActivityType::RealEstateDealerInTrade
+    ) && matches!(
+        input.income_item_type,
+        IncomeItemType::RentalRealEstateIncome
+    )) {
+        let net_earnings = input
+            .gross_item_amount_dollars
+            .saturating_sub(input.attributable_deductions_dollars);
         if net_earnings == 0 {
             return Output {
                 mode: Section1402Mode::NotApplicableNoSeIncome,
@@ -380,12 +414,16 @@ pub fn compute(input: &Input) -> Output {
                 additional_medicare_portion_dollars: 0,
                 total_seca_tax_dollars: 0,
                 statutory_basis: "§ 1402(a) — net earnings zero or negative".to_string(),
-                notes: "Net earnings from self-employment is zero or negative; no SECA tax.".to_string(),
+                notes: "Net earnings from self-employment is zero or negative; no SECA tax."
+                    .to_string(),
                 citations,
             };
         }
-        let (oasdi, medicare, additional_medicare, total) =
-            compute_seca_tax(net_earnings, input.other_wages_subject_to_oasdi_dollars, input.filing_status);
+        let (oasdi, medicare, additional_medicare, total) = compute_seca_tax(
+            net_earnings,
+            input.other_wages_subject_to_oasdi_dollars,
+            input.filing_status,
+        );
         return Output {
             mode: Section1402Mode::CompliantSeTaxComputedOnNetEarningsFromSelfEmployment,
             se_income_subject_to_seca_dollars: net_earnings,
@@ -443,7 +481,10 @@ mod tests {
     #[test]
     fn section_475f_trader_gains_excluded_from_se_income() {
         let result = compute(&baseline_section_475f_trader());
-        assert_eq!(result.mode, Section1402Mode::CompliantSection475fMtmTraderGainsExcludedFromSeIncome);
+        assert_eq!(
+            result.mode,
+            Section1402Mode::CompliantSection475fMtmTraderGainsExcludedFromSeIncome
+        );
         assert_eq!(result.total_seca_tax_dollars, 0);
     }
 
@@ -455,7 +496,10 @@ mod tests {
             ..baseline_section_475f_trader()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1402Mode::CompliantCapitalAssetGainExcludedSection1402a3A);
+        assert_eq!(
+            result.mode,
+            Section1402Mode::CompliantCapitalAssetGainExcludedSection1402a3A
+        );
     }
 
     #[test]
@@ -466,7 +510,10 @@ mod tests {
             ..baseline_section_475f_trader()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1402Mode::CompliantSection1231GainExcludedSection1402a3B);
+        assert_eq!(
+            result.mode,
+            Section1402Mode::CompliantSection1231GainExcludedSection1402a3B
+        );
     }
 
     #[test]
@@ -477,7 +524,10 @@ mod tests {
             ..baseline_section_475f_trader()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1402Mode::CompliantRentalRealEstateExcludedSection1402a1);
+        assert_eq!(
+            result.mode,
+            Section1402Mode::CompliantRentalRealEstateExcludedSection1402a1
+        );
     }
 
     #[test]
@@ -489,7 +539,10 @@ mod tests {
             ..baseline_section_475f_trader()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1402Mode::CompliantSeTaxComputedOnNetEarningsFromSelfEmployment);
+        assert_eq!(
+            result.mode,
+            Section1402Mode::CompliantSeTaxComputedOnNetEarningsFromSelfEmployment
+        );
         assert!(result.total_seca_tax_dollars > 0);
     }
 
@@ -501,7 +554,10 @@ mod tests {
             ..baseline_section_475f_trader()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1402Mode::CompliantPortfolioInterestDividendsExcludedSection1402a2);
+        assert_eq!(
+            result.mode,
+            Section1402Mode::CompliantPortfolioInterestDividendsExcludedSection1402a2
+        );
     }
 
     #[test]
@@ -513,7 +569,10 @@ mod tests {
             ..baseline_section_475f_trader()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1402Mode::CompliantSeTaxComputedOnNetEarningsFromSelfEmployment);
+        assert_eq!(
+            result.mode,
+            Section1402Mode::CompliantSeTaxComputedOnNetEarningsFromSelfEmployment
+        );
     }
 
     #[test]
@@ -524,7 +583,10 @@ mod tests {
             ..baseline_section_475f_trader()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1402Mode::CompliantLimitedPartnerDistributiveShareExcludedSection1402a13);
+        assert_eq!(
+            result.mode,
+            Section1402Mode::CompliantLimitedPartnerDistributiveShareExcludedSection1402a13
+        );
     }
 
     #[test]
@@ -537,9 +599,15 @@ mod tests {
             ..baseline_section_475f_trader()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1402Mode::ViolationActiveLimitedPartnerExclusionImproperlyClaimed);
+        assert_eq!(
+            result.mode,
+            Section1402Mode::ViolationActiveLimitedPartnerExclusionImproperlyClaimed
+        );
         assert!(result.total_seca_tax_dollars > 0);
-        assert!(result.notes.contains("Soroban / Denham / Sirius") || result.statutory_basis.contains("Soroban"));
+        assert!(
+            result.notes.contains("Soroban / Denham / Sirius")
+                || result.statutory_basis.contains("Soroban")
+        );
     }
 
     #[test]
@@ -551,7 +619,10 @@ mod tests {
             ..baseline_section_475f_trader()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1402Mode::CompliantSeTaxComputedOnNetEarningsFromSelfEmployment);
+        assert_eq!(
+            result.mode,
+            Section1402Mode::CompliantSeTaxComputedOnNetEarningsFromSelfEmployment
+        );
     }
 
     #[test]
@@ -563,7 +634,10 @@ mod tests {
             ..baseline_section_475f_trader()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1402Mode::CompliantSeTaxComputedOnNetEarningsFromSelfEmployment);
+        assert_eq!(
+            result.mode,
+            Section1402Mode::CompliantSeTaxComputedOnNetEarningsFromSelfEmployment
+        );
     }
 
     #[test]
@@ -575,9 +649,14 @@ mod tests {
             ..baseline_section_475f_trader()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1402Mode::CompliantSeTaxComputedOnNetEarningsFromSelfEmployment);
-        let net_earnings_after_se = apply_rate(100_000, SECTION_1402_NET_EARNINGS_MULTIPLIER_BASIS_POINTS);
-        let expected_oasdi = apply_rate(net_earnings_after_se, SECTION_1402_OASDI_RATE_BASIS_POINTS);
+        assert_eq!(
+            result.mode,
+            Section1402Mode::CompliantSeTaxComputedOnNetEarningsFromSelfEmployment
+        );
+        let net_earnings_after_se =
+            apply_rate(100_000, SECTION_1402_NET_EARNINGS_MULTIPLIER_BASIS_POINTS);
+        let expected_oasdi =
+            apply_rate(net_earnings_after_se, SECTION_1402_OASDI_RATE_BASIS_POINTS);
         assert_eq!(result.oasdi_portion_dollars, expected_oasdi);
     }
 
@@ -591,7 +670,10 @@ mod tests {
             ..baseline_section_475f_trader()
         };
         let result = compute(&input);
-        let max_oasdi = apply_rate(SECTION_1402_2025_OASDI_WAGE_BASE_DOLLARS, SECTION_1402_OASDI_RATE_BASIS_POINTS);
+        let max_oasdi = apply_rate(
+            SECTION_1402_2025_OASDI_WAGE_BASE_DOLLARS,
+            SECTION_1402_OASDI_RATE_BASIS_POINTS,
+        );
         assert_eq!(result.oasdi_portion_dollars, max_oasdi);
     }
 
@@ -636,7 +718,10 @@ mod tests {
         };
         let result_single = compute(&input_single);
         let result_mfj = compute(&input_mfj);
-        assert!(result_single.additional_medicare_portion_dollars > result_mfj.additional_medicare_portion_dollars);
+        assert!(
+            result_single.additional_medicare_portion_dollars
+                > result_mfj.additional_medicare_portion_dollars
+        );
     }
 
     #[test]
@@ -679,9 +764,18 @@ mod tests {
         assert_eq!(SECTION_1402_MEDICARE_RATE_BASIS_POINTS, 290);
         assert_eq!(SECTION_1402_ADDITIONAL_MEDICARE_RATE_BASIS_POINTS, 90);
         assert_eq!(SECTION_1402_2025_OASDI_WAGE_BASE_DOLLARS, 176_100);
-        assert_eq!(SECTION_1402_ADDITIONAL_MEDICARE_THRESHOLD_SINGLE_DOLLARS, 200_000);
-        assert_eq!(SECTION_1402_ADDITIONAL_MEDICARE_THRESHOLD_MFJ_DOLLARS, 250_000);
-        assert_eq!(SECTION_1402_ADDITIONAL_MEDICARE_THRESHOLD_MFS_DOLLARS, 125_000);
+        assert_eq!(
+            SECTION_1402_ADDITIONAL_MEDICARE_THRESHOLD_SINGLE_DOLLARS,
+            200_000
+        );
+        assert_eq!(
+            SECTION_1402_ADDITIONAL_MEDICARE_THRESHOLD_MFJ_DOLLARS,
+            250_000
+        );
+        assert_eq!(
+            SECTION_1402_ADDITIONAL_MEDICARE_THRESHOLD_MFS_DOLLARS,
+            125_000
+        );
         assert_eq!(SECTION_1402_NET_EARNINGS_MULTIPLIER_BASIS_POINTS, 9_235);
     }
 
@@ -694,6 +788,9 @@ mod tests {
             ..baseline_section_475f_trader()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1402Mode::CompliantSeTaxComputedOnNetEarningsFromSelfEmployment);
+        assert_eq!(
+            result.mode,
+            Section1402Mode::CompliantSeTaxComputedOnNetEarningsFromSelfEmployment
+        );
     }
 }

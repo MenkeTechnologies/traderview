@@ -255,52 +255,72 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    let (per_statement, max_general, max_small_biz, mode_violation, mode_compliant) =
-        match (input.correction_timing, input.penalty_amount_version) {
-            (CorrectionTiming::CorrectedWithin30DaysAfterPrescribedDate, PenaltyAmountVersion::BaseStatutoryAmounts) => (
-                IRC_6722_TIER1_PER_STATEMENT_BASE_DOLLARS,
-                IRC_6722_TIER1_MAX_BASE_DOLLARS,
-                IRC_6722_TIER1_SMALL_BUSINESS_MAX_BASE_DOLLARS,
-                Section6722Mode::ViolationPayerFailedToFurnishButCorrectedWithin30Days,
-                Section6722Mode::CompliantTier1Within30DaysCorrection,
-            ),
-            (CorrectionTiming::CorrectedWithin30DaysAfterPrescribedDate, PenaltyAmountVersion::InflationAdjusted2026UnderRevProc202532) => (
-                IRC_6722_TIER1_PER_STATEMENT_2026_DOLLARS,
-                IRC_6722_TIER1_MAX_BASE_DOLLARS,
-                IRC_6722_TIER1_SMALL_BUSINESS_MAX_BASE_DOLLARS,
-                Section6722Mode::ViolationPayerFailedToFurnishButCorrectedWithin30Days,
-                Section6722Mode::CompliantTier1Within30DaysCorrection,
-            ),
-            (CorrectionTiming::CorrectedAfter30DaysButByAugust1, PenaltyAmountVersion::BaseStatutoryAmounts) => (
-                IRC_6722_TIER2_PER_STATEMENT_BASE_DOLLARS,
-                IRC_6722_TIER2_MAX_BASE_DOLLARS,
-                IRC_6722_TIER2_SMALL_BUSINESS_MAX_BASE_DOLLARS,
-                Section6722Mode::ViolationPayerFailedToFurnishAndCorrectedAfter30DaysButByAugust1,
-                Section6722Mode::CompliantTier2AfterDay30ButByAugust1Correction,
-            ),
-            (CorrectionTiming::CorrectedAfter30DaysButByAugust1, PenaltyAmountVersion::InflationAdjusted2026UnderRevProc202532) => (
-                IRC_6722_TIER2_PER_STATEMENT_2026_DOLLARS,
-                IRC_6722_TIER2_MAX_BASE_DOLLARS,
-                IRC_6722_TIER2_SMALL_BUSINESS_MAX_BASE_DOLLARS,
-                Section6722Mode::ViolationPayerFailedToFurnishAndCorrectedAfter30DaysButByAugust1,
-                Section6722Mode::CompliantTier2AfterDay30ButByAugust1Correction,
-            ),
-            (CorrectionTiming::NotCorrectedByAugust1OrNotCorrected, PenaltyAmountVersion::BaseStatutoryAmounts) => (
-                IRC_6722_TIER3_PER_STATEMENT_BASE_DOLLARS,
-                IRC_6722_TIER3_MAX_BASE_DOLLARS,
-                IRC_6722_TIER3_SMALL_BUSINESS_MAX_BASE_DOLLARS,
-                Section6722Mode::ViolationPayerFailedToFurnishAndDidNotCorrectByAugust1,
-                Section6722Mode::CompliantTier3NotCorrectedByAugust1FullPenalty,
-            ),
-            (CorrectionTiming::NotCorrectedByAugust1OrNotCorrected, PenaltyAmountVersion::InflationAdjusted2026UnderRevProc202532) => (
-                IRC_6722_TIER3_PER_STATEMENT_2026_DOLLARS,
-                IRC_6722_TIER3_MAX_2026_DOLLARS,
-                IRC_6722_TIER3_SMALL_BUSINESS_MAX_2026_DOLLARS,
-                Section6722Mode::ViolationPayerFailedToFurnishAndDidNotCorrectByAugust1,
-                Section6722Mode::CompliantTier3NotCorrectedByAugust1FullPenalty,
-            ),
-            (CorrectionTiming::NoFailureFurnishedOnTime, _) => {
-                return Output {
+    let (per_statement, max_general, max_small_biz, mode_violation, mode_compliant) = match (
+        input.correction_timing,
+        input.penalty_amount_version,
+    ) {
+        (
+            CorrectionTiming::CorrectedWithin30DaysAfterPrescribedDate,
+            PenaltyAmountVersion::BaseStatutoryAmounts,
+        ) => (
+            IRC_6722_TIER1_PER_STATEMENT_BASE_DOLLARS,
+            IRC_6722_TIER1_MAX_BASE_DOLLARS,
+            IRC_6722_TIER1_SMALL_BUSINESS_MAX_BASE_DOLLARS,
+            Section6722Mode::ViolationPayerFailedToFurnishButCorrectedWithin30Days,
+            Section6722Mode::CompliantTier1Within30DaysCorrection,
+        ),
+        (
+            CorrectionTiming::CorrectedWithin30DaysAfterPrescribedDate,
+            PenaltyAmountVersion::InflationAdjusted2026UnderRevProc202532,
+        ) => (
+            IRC_6722_TIER1_PER_STATEMENT_2026_DOLLARS,
+            IRC_6722_TIER1_MAX_BASE_DOLLARS,
+            IRC_6722_TIER1_SMALL_BUSINESS_MAX_BASE_DOLLARS,
+            Section6722Mode::ViolationPayerFailedToFurnishButCorrectedWithin30Days,
+            Section6722Mode::CompliantTier1Within30DaysCorrection,
+        ),
+        (
+            CorrectionTiming::CorrectedAfter30DaysButByAugust1,
+            PenaltyAmountVersion::BaseStatutoryAmounts,
+        ) => (
+            IRC_6722_TIER2_PER_STATEMENT_BASE_DOLLARS,
+            IRC_6722_TIER2_MAX_BASE_DOLLARS,
+            IRC_6722_TIER2_SMALL_BUSINESS_MAX_BASE_DOLLARS,
+            Section6722Mode::ViolationPayerFailedToFurnishAndCorrectedAfter30DaysButByAugust1,
+            Section6722Mode::CompliantTier2AfterDay30ButByAugust1Correction,
+        ),
+        (
+            CorrectionTiming::CorrectedAfter30DaysButByAugust1,
+            PenaltyAmountVersion::InflationAdjusted2026UnderRevProc202532,
+        ) => (
+            IRC_6722_TIER2_PER_STATEMENT_2026_DOLLARS,
+            IRC_6722_TIER2_MAX_BASE_DOLLARS,
+            IRC_6722_TIER2_SMALL_BUSINESS_MAX_BASE_DOLLARS,
+            Section6722Mode::ViolationPayerFailedToFurnishAndCorrectedAfter30DaysButByAugust1,
+            Section6722Mode::CompliantTier2AfterDay30ButByAugust1Correction,
+        ),
+        (
+            CorrectionTiming::NotCorrectedByAugust1OrNotCorrected,
+            PenaltyAmountVersion::BaseStatutoryAmounts,
+        ) => (
+            IRC_6722_TIER3_PER_STATEMENT_BASE_DOLLARS,
+            IRC_6722_TIER3_MAX_BASE_DOLLARS,
+            IRC_6722_TIER3_SMALL_BUSINESS_MAX_BASE_DOLLARS,
+            Section6722Mode::ViolationPayerFailedToFurnishAndDidNotCorrectByAugust1,
+            Section6722Mode::CompliantTier3NotCorrectedByAugust1FullPenalty,
+        ),
+        (
+            CorrectionTiming::NotCorrectedByAugust1OrNotCorrected,
+            PenaltyAmountVersion::InflationAdjusted2026UnderRevProc202532,
+        ) => (
+            IRC_6722_TIER3_PER_STATEMENT_2026_DOLLARS,
+            IRC_6722_TIER3_MAX_2026_DOLLARS,
+            IRC_6722_TIER3_SMALL_BUSINESS_MAX_2026_DOLLARS,
+            Section6722Mode::ViolationPayerFailedToFurnishAndDidNotCorrectByAugust1,
+            Section6722Mode::CompliantTier3NotCorrectedByAugust1FullPenalty,
+        ),
+        (CorrectionTiming::NoFailureFurnishedOnTime, _) => {
+            return Output {
                     mode: Section6722Mode::NotApplicableNoFailureFurnishedOnTime,
                     statutory_basis: "IRC § 6722 — no failure occurred".to_string(),
                     notes: "NOT APPLICABLE: no failure to furnish payee statement; § 6722 penalty does not apply.".to_string(),
@@ -309,14 +329,16 @@ pub fn compute(input: &Input) -> Output {
                     raw_penalty_dollars: 0,
                     capped_penalty_dollars: 0,
                 };
-            }
-        };
+        }
+    };
 
     let raw_penalty_dollars = input
         .number_of_failed_statements
         .saturating_mul(per_statement);
     let cap = match input.filer_size {
-        FilerSize::SmallBusinessAverageGrossReceiptsAtOrBelow5MillionFor3YearLookback => max_small_biz,
+        FilerSize::SmallBusinessAverageGrossReceiptsAtOrBelow5MillionFor3YearLookback => {
+            max_small_biz
+        }
         FilerSize::LargeCorporationOrLargeFilerAboveSmallBusinessThreshold => max_general,
     };
     let capped_penalty_dollars = raw_penalty_dollars.min(cap);
@@ -371,7 +393,8 @@ mod tests {
     fn baseline_tier1_small_biz() -> Input {
         Input {
             correction_timing: CorrectionTiming::CorrectedWithin30DaysAfterPrescribedDate,
-            filer_size: FilerSize::SmallBusinessAverageGrossReceiptsAtOrBelow5MillionFor3YearLookback,
+            filer_size:
+                FilerSize::SmallBusinessAverageGrossReceiptsAtOrBelow5MillionFor3YearLookback,
             penalty_amount_version: PenaltyAmountVersion::BaseStatutoryAmounts,
             number_of_failed_statements: 100,
             intentional_disregard: false,
@@ -390,7 +413,10 @@ mod tests {
             ..baseline_tier1_small_biz()
         };
         let result = check(&input);
-        assert_eq!(result.mode, Section6722Mode::NotApplicableNoFailureFurnishedOnTime);
+        assert_eq!(
+            result.mode,
+            Section6722Mode::NotApplicableNoFailureFurnishedOnTime
+        );
     }
 
     #[test]
@@ -595,14 +621,26 @@ mod tests {
         assert_eq!(IRC_6722_TIER1_PER_STATEMENT_BASE_DOLLARS, 50);
         assert_eq!(IRC_6722_TIER2_PER_STATEMENT_BASE_DOLLARS, 100);
         assert_eq!(IRC_6722_TIER3_PER_STATEMENT_BASE_DOLLARS, 250);
-        assert_eq!(IRC_6722_INTENTIONAL_DISREGARD_PER_STATEMENT_BASE_DOLLARS, 500);
+        assert_eq!(
+            IRC_6722_INTENTIONAL_DISREGARD_PER_STATEMENT_BASE_DOLLARS,
+            500
+        );
         assert_eq!(IRC_6722_INTENTIONAL_DISREGARD_PCT_MOST_BASIS_POINTS, 1_000);
-        assert_eq!(IRC_6722_INTENTIONAL_DISREGARD_PCT_SPECIFIED_BASIS_POINTS, 500);
-        assert_eq!(IRC_6722_INTENTIONAL_DISREGARD_BASIS_POINT_DENOMINATOR, 10_000);
+        assert_eq!(
+            IRC_6722_INTENTIONAL_DISREGARD_PCT_SPECIFIED_BASIS_POINTS,
+            500
+        );
+        assert_eq!(
+            IRC_6722_INTENTIONAL_DISREGARD_BASIS_POINT_DENOMINATOR,
+            10_000
+        );
         assert_eq!(IRC_6722_TIER1_PER_STATEMENT_2026_DOLLARS, 60);
         assert_eq!(IRC_6722_TIER2_PER_STATEMENT_2026_DOLLARS, 130);
         assert_eq!(IRC_6722_TIER3_PER_STATEMENT_2026_DOLLARS, 340);
-        assert_eq!(IRC_6722_INTENTIONAL_DISREGARD_PER_STATEMENT_2026_DOLLARS, 680);
+        assert_eq!(
+            IRC_6722_INTENTIONAL_DISREGARD_PER_STATEMENT_2026_DOLLARS,
+            680
+        );
         assert_eq!(IRC_6722_TIER1_MAX_BASE_DOLLARS, 500_000);
         assert_eq!(IRC_6722_TIER2_MAX_BASE_DOLLARS, 1_500_000);
         assert_eq!(IRC_6722_TIER3_MAX_BASE_DOLLARS, 3_000_000);
@@ -611,7 +649,10 @@ mod tests {
         assert_eq!(IRC_6722_TIER2_SMALL_BUSINESS_MAX_BASE_DOLLARS, 500_000);
         assert_eq!(IRC_6722_TIER3_SMALL_BUSINESS_MAX_BASE_DOLLARS, 1_000_000);
         assert_eq!(IRC_6722_TIER3_SMALL_BUSINESS_MAX_2026_DOLLARS, 1_397_000);
-        assert_eq!(IRC_6722_SMALL_BUSINESS_GROSS_RECEIPTS_THRESHOLD_DOLLARS, 5_000_000);
+        assert_eq!(
+            IRC_6722_SMALL_BUSINESS_GROSS_RECEIPTS_THRESHOLD_DOLLARS,
+            5_000_000
+        );
         assert_eq!(IRC_6722_INTENTIONAL_DISREGARD_NO_MAX, u64::MAX);
     }
 

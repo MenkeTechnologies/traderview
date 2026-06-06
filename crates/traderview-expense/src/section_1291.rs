@@ -199,17 +199,17 @@ pub fn check(input: &Section1291Input) -> Section1291Result {
     let mut failure_reasons: Vec<String> = Vec::new();
 
     let section_1291_applies = matches!(input.election, PFICElection::NoElection)
-        && !matches!(input.scenario, DistributionScenario::NoDistributionOrDisposition);
+        && !matches!(
+            input.scenario,
+            DistributionScenario::NoDistributionOrDisposition
+        );
 
     let excess_distribution_amount_cents = if !section_1291_applies {
         0
     } else if input.first_year_holding {
         input.total_distribution_or_gain_cents
     } else {
-        let threshold = input
-            .average_3_year_distributions_cents
-            .saturating_mul(125)
-            / 100;
+        let threshold = input.average_3_year_distributions_cents.saturating_mul(125) / 100;
         input
             .total_distribution_or_gain_cents
             .saturating_sub(threshold)
@@ -218,10 +218,8 @@ pub fn check(input: &Section1291Input) -> Section1291Result {
     let total_holding_days = input.holding_period_days.max(1) as u64;
     let per_day_allocation = excess_distribution_amount_cents / total_holding_days;
 
-    let current_year_portion =
-        per_day_allocation.saturating_mul(input.days_in_current_year as u64);
-    let pre_pfic_portion =
-        per_day_allocation.saturating_mul(input.pre_pfic_period_days as u64);
+    let current_year_portion = per_day_allocation.saturating_mul(input.days_in_current_year as u64);
+    let pre_pfic_portion = per_day_allocation.saturating_mul(input.pre_pfic_period_days as u64);
     let intermediate_pfic_days = (input.holding_period_days)
         .saturating_sub(input.days_in_current_year)
         .saturating_sub(input.pre_pfic_period_days);
@@ -356,8 +354,10 @@ mod tests {
         i.election = PFICElection::QefElection;
         let r = check(&i);
         assert!(!r.section_1291_applies);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 1291(d)(1)")
-            && f.contains("QEF-elected")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1291(d)(1)") && f.contains("QEF-elected")));
     }
 
     #[test]
@@ -366,8 +366,10 @@ mod tests {
         i.election = PFICElection::MarkToMarketElection;
         let r = check(&i);
         assert!(!r.section_1291_applies);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 1291(f)")
-            && f.contains("§ 1296 mark-to-market")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1291(f)") && f.contains("§ 1296 mark-to-market")));
     }
 
     #[test]
@@ -375,8 +377,10 @@ mod tests {
         let mut i = pfic_baseline_distribution();
         i.election = PFICElection::PurgingElection;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 1291(d)(2)")
-            && f.contains("DEEMED SALE OR DEEMED DIVIDEND")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1291(d)(2)") && f.contains("DEEMED SALE OR DEEMED DIVIDEND")));
     }
 
     #[test]
@@ -409,9 +413,12 @@ mod tests {
         i.total_distribution_or_gain_cents = 100_000_000;
         let r = check(&i);
         assert_eq!(r.excess_distribution_amount_cents, 100_000_000);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 1291(b)(3)(B)")
-            && f.contains("first year")
-            && f.contains("ALL DISTRIBUTIONS")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1291(b)(3)(B)")
+                && f.contains("first year")
+                && f.contains("ALL DISTRIBUTIONS")));
     }
 
     #[test]
@@ -486,11 +493,8 @@ mod tests {
     #[test]
     fn total_tax_sums_three_components() {
         let r = check(&pfic_baseline_distribution());
-        let current_tax = r.current_year_ordinary_inclusion_cents
-            .saturating_mul(3700)
-            / 10_000;
-        let expected_total =
-            current_tax + r.deferred_tax_amount_cents + r.interest_charge_cents;
+        let current_tax = r.current_year_ordinary_inclusion_cents.saturating_mul(3700) / 10_000;
+        let expected_total = current_tax + r.deferred_tax_amount_cents + r.interest_charge_cents;
         assert_eq!(r.total_section_1291_tax_cents, expected_total);
     }
 
@@ -505,7 +509,11 @@ mod tests {
             let mut i = pfic_baseline_distribution();
             i.election = election;
             let r = check(&i);
-            assert_eq!(r.section_1291_applies, exp_applies, "election={:?}", election);
+            assert_eq!(
+                r.section_1291_applies, exp_applies,
+                "election={:?}",
+                election
+            );
         }
     }
 
@@ -519,7 +527,11 @@ mod tests {
             let mut i = pfic_baseline_distribution();
             i.scenario = scenario;
             let r = check(&i);
-            assert_eq!(r.section_1291_applies, exp_applies, "scenario={:?}", scenario);
+            assert_eq!(
+                r.section_1291_applies, exp_applies,
+                "scenario={:?}",
+                scenario
+            );
         }
     }
 
@@ -555,7 +567,9 @@ mod tests {
         assert!(r.citation.contains("§ 1297"));
         assert!(r.citation.contains("§ 1298"));
         assert!(r.citation.contains("§ 6621"));
-        assert!(r.citation.contains("Treas. Reg. § 1.1291-1 through § 1.1291-10"));
+        assert!(r
+            .citation
+            .contains("Treas. Reg. § 1.1291-1 through § 1.1291-10"));
         assert!(r.citation.contains("Form 8621"));
         assert!(r.citation.contains("Tax Reform Act of 1986 § 1235"));
         assert!(r.citation.contains("Pub. L. 99-514"));
@@ -608,8 +622,10 @@ mod tests {
     #[test]
     fn note_pins_subsection_b2bi_under_3_year_lookback() {
         let r = check(&pfic_baseline_distribution());
-        assert!(r.notes.iter().any(|n| n.contains("§ 1291(b)(2)(B)(i)")
-            && n.contains("actual holding period")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1291(b)(2)(B)(i)") && n.contains("actual holding period")));
     }
 
     #[test]
@@ -648,15 +664,19 @@ mod tests {
     #[test]
     fn note_pins_subsection_f_mtm_disables() {
         let r = check(&pfic_baseline_distribution());
-        assert!(r.notes.iter().any(|n| n.contains("§ 1291(f)")
-            && n.contains("§ 1296 mark-to-market")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1291(f)") && n.contains("§ 1296 mark-to-market")));
     }
 
     #[test]
     fn note_pins_subsection_g_988_currency() {
         let r = check(&pfic_baseline_distribution());
-        assert!(r.notes.iter().any(|n| n.contains("§ 1291(g)")
-            && n.contains("§ 988")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1291(g)") && n.contains("§ 988")));
     }
 
     #[test]
@@ -670,10 +690,13 @@ mod tests {
     #[test]
     fn note_pins_1986_tax_reform_origin() {
         let r = check(&pfic_baseline_distribution());
-        assert!(r.notes.iter().any(|n| n.contains("Tax Reform Act of 1986 § 1235")
-            && n.contains("Pub. L. 99-514")
-            && n.contains("October 22, 1986")
-            && n.contains("HIRE Act of 2010 § 521")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Tax Reform Act of 1986 § 1235")
+                && n.contains("Pub. L. 99-514")
+                && n.contains("October 22, 1986")
+                && n.contains("HIRE Act of 2010 § 521")));
     }
 
     #[test]
@@ -689,10 +712,13 @@ mod tests {
     #[test]
     fn note_pins_trader_fact_patterns() {
         let r = check(&pfic_baseline_distribution());
-        assert!(r.notes.iter().any(|n| n.contains("foreign-listed mutual funds")
-            && n.contains("Canadian")
-            && n.contains("foreign hedge fund LP")
-            && n.contains("offshore annuities")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("foreign-listed mutual funds")
+                && n.contains("Canadian")
+                && n.contains("foreign hedge fund LP")
+                && n.contains("offshore annuities")));
     }
 
     #[test]

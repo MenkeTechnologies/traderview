@@ -412,7 +412,8 @@ mod tests {
         Input {
             regime: InvestmentRegime::OriginalTcja2017FrameworkPreDecember31_2026Gain,
             qof_type: QofType::QualifiedOpportunityFundRegular,
-            compliance_aspect: ComplianceAspect::OneHundredEightyDayReinvestmentWindowUnderSection1400Z2A1,
+            compliance_aspect:
+                ComplianceAspect::OneHundredEightyDayReinvestmentWindowUnderSection1400Z2A1,
             days_from_realization_to_reinvestment: 150,
             holding_period_years: 7,
             holding_period_at_fmv_election_years: 10,
@@ -429,13 +430,19 @@ mod tests {
         let mut input = baseline_input();
         input.qof_type = QofType::NotAQualifiedOpportunityFund;
         let output = check(&input);
-        assert_eq!(output.mode, Section1400Z2Mode::NotApplicableNotAQualifiedOpportunityFund);
+        assert_eq!(
+            output.mode,
+            Section1400Z2Mode::NotApplicableNotAQualifiedOpportunityFund
+        );
     }
 
     #[test]
     fn within_one_hundred_eighty_day_window_compliant() {
         let output = check(&baseline_input());
-        assert_eq!(output.mode, Section1400Z2Mode::CompliantInvestmentWithin180DayWindow);
+        assert_eq!(
+            output.mode,
+            Section1400Z2Mode::CompliantInvestmentWithin180DayWindow
+        );
     }
 
     #[test]
@@ -443,7 +450,10 @@ mod tests {
         let mut input = baseline_input();
         input.days_from_realization_to_reinvestment = 180;
         let output = check(&input);
-        assert_eq!(output.mode, Section1400Z2Mode::CompliantInvestmentWithin180DayWindow);
+        assert_eq!(
+            output.mode,
+            Section1400Z2Mode::CompliantInvestmentWithin180DayWindow
+        );
     }
 
     #[test]
@@ -451,7 +461,10 @@ mod tests {
         let mut input = baseline_input();
         input.days_from_realization_to_reinvestment = 181;
         let output = check(&input);
-        assert_eq!(output.mode, Section1400Z2Mode::ViolationFailureToInvestWithin180DayReinvestmentWindow);
+        assert_eq!(
+            output.mode,
+            Section1400Z2Mode::ViolationFailureToInvestWithin180DayReinvestmentWindow
+        );
     }
 
     #[test]
@@ -485,7 +498,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::OriginalTcjaBasisStepUpAtFiveOrSevenYearHold;
         input.holding_period_years = 4;
         let output = check(&input);
-        assert_eq!(output.mode, Section1400Z2Mode::ViolationFailureToHoldForRequiredYearsForStepUp);
+        assert_eq!(
+            output.mode,
+            Section1400Z2Mode::ViolationFailureToHoldForRequiredYearsForStepUp
+        );
         assert_eq!(output.basis_step_up_bps, 0);
     }
 
@@ -550,7 +566,10 @@ mod tests {
         input.regime = InvestmentRegime::ObbbaAmendedRegimePostDecember31_2026Gain;
         input.compliance_aspect = ComplianceAspect::ObbbaRollingFiveYearDeferralPeriod;
         let output = check(&input);
-        assert_eq!(output.mode, Section1400Z2Mode::CompliantObbbaRollingFiveYearDeferralPeriod);
+        assert_eq!(
+            output.mode,
+            Section1400Z2Mode::CompliantObbbaRollingFiveYearDeferralPeriod
+        );
     }
 
     #[test]
@@ -614,7 +633,10 @@ mod tests {
         input.regime = InvestmentRegime::ObbbaAmendedRegimePostDecember31_2026Gain;
         input.compliance_aspect = ComplianceAspect::ObbbaEnhancedReportingRequirements;
         let output = check(&input);
-        assert_eq!(output.mode, Section1400Z2Mode::CompliantObbbaEnhancedReportingFiled);
+        assert_eq!(
+            output.mode,
+            Section1400Z2Mode::CompliantObbbaEnhancedReportingFiled
+        );
     }
 
     #[test]
@@ -655,18 +677,33 @@ mod tests {
         assert_eq!(IRC_1400Z2_OBBBA_REGULAR_OZ_STEP_UP_BPS, 1_000);
         assert_eq!(IRC_1400Z2_OBBBA_RURAL_QROF_STEP_UP_BPS, 3_000);
         assert_eq!(IRC_1400Z2_OBBBA_GAIN_EXCLUSION_HORIZON_YEARS, 30);
-        assert_eq!(IRC_1400Z2_OBBBA_REPORTING_PENALTY_LARGE_FUND_DOLLARS, 50_000);
+        assert_eq!(
+            IRC_1400Z2_OBBBA_REPORTING_PENALTY_LARGE_FUND_DOLLARS,
+            50_000
+        );
         assert_eq!(IRC_1400Z2_OBBBA_NEW_DESIGNATIONS_EFFECTIVE_DATE_YEAR, 2027);
         assert_eq!(IRC_1400Z2_OBBBA_NEW_DESIGNATIONS_EFFECTIVE_DATE_MONTH, 1);
         assert_eq!(IRC_1400Z2_OBBBA_NEW_DESIGNATIONS_EFFECTIVE_DATE_DAY, 1);
-        assert_eq!(IRC_1400Z2_OBBBA_NEW_DESIGNATIONS_WINDOW_START_DATE_YEAR, 2026);
+        assert_eq!(
+            IRC_1400Z2_OBBBA_NEW_DESIGNATIONS_WINDOW_START_DATE_YEAR,
+            2026
+        );
         assert_eq!(IRC_1400Z2_OBBBA_NEW_DESIGNATIONS_WINDOW_START_DATE_MONTH, 7);
         assert_eq!(IRC_1400Z2_OBBBA_NEW_DESIGNATIONS_WINDOW_START_DATE_DAY, 1);
         assert_eq!(IRC_1400Z2_OBBBA_NEW_DESIGNATIONS_WINDOW_DAYS, 90);
         assert_eq!(IRC_1400Z2_OBBBA_QROF_ASSET_INVESTMENT_THRESHOLD_BPS, 9_000);
-        assert_eq!(IRC_1400Z2_OBBBA_RURAL_SUBSTANTIAL_IMPROVEMENT_PCT_BPS, 5_000);
-        assert_eq!(IRC_1400Z2_OBBBA_REGULAR_SUBSTANTIAL_IMPROVEMENT_PCT_BPS, 10_000);
-        assert_eq!(IRC_1400Z2_OBBBA_RURAL_SUBSTANTIAL_IMPROVEMENT_PERIOD_MONTHS, 31);
+        assert_eq!(
+            IRC_1400Z2_OBBBA_RURAL_SUBSTANTIAL_IMPROVEMENT_PCT_BPS,
+            5_000
+        );
+        assert_eq!(
+            IRC_1400Z2_OBBBA_REGULAR_SUBSTANTIAL_IMPROVEMENT_PCT_BPS,
+            10_000
+        );
+        assert_eq!(
+            IRC_1400Z2_OBBBA_RURAL_SUBSTANTIAL_IMPROVEMENT_PERIOD_MONTHS,
+            31
+        );
         assert_eq!(IRC_1400Z2_OBBBA_GOVERNOR_REDESIGNATION_CYCLE_YEARS, 10);
         assert_eq!(IRC_1400Z2_BASIS_POINT_DENOMINATOR, 10_000);
     }

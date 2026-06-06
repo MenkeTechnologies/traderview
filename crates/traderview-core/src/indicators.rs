@@ -394,7 +394,9 @@ pub fn atr(highs: &[f64], lows: &[f64], closes: &[f64], period: usize) -> Vec<Op
         a.max(b).max(c)
     };
     let mut sum = 0.0;
-    for i in 1..=period { sum += tr(i); }
+    for i in 1..=period {
+        sum += tr(i);
+    }
     let p = period as f64;
     let mut prev = sum / p;
     out[period] = Some(prev);
@@ -454,14 +456,17 @@ mod tests {
         // indices 8 and 9 that read across the missing slot, yielding
         // wrong numbers. After the fix, any d[i] whose window contains
         // k[7] must be None.
-        let highs  = vec![10.0, 11.0, 12.0, 13.0, 14.0, 7.0, 7.0, 7.0, 18.0, 19.0];
-        let lows   = vec![ 5.0,  6.0,  7.0,  8.0,  9.0, 7.0, 7.0, 7.0, 13.0, 14.0];
-        let closes = vec![ 7.0,  8.0,  9.0, 10.0, 11.0, 7.0, 7.0, 7.0, 15.0, 16.0];
+        let highs = vec![10.0, 11.0, 12.0, 13.0, 14.0, 7.0, 7.0, 7.0, 18.0, 19.0];
+        let lows = vec![5.0, 6.0, 7.0, 8.0, 9.0, 7.0, 7.0, 7.0, 13.0, 14.0];
+        let closes = vec![7.0, 8.0, 9.0, 10.0, 11.0, 7.0, 7.0, 7.0, 15.0, 16.0];
         let s = stochastic(&highs, &lows, &closes, 3, 3);
         // Only the i=7 window [5,6,7] is fully flat → only k[7] is None.
         assert!(s.k[5].is_some());
         assert!(s.k[6].is_some());
-        assert!(s.k[7].is_none(), "fully-flat window must yield k=None at i=7");
+        assert!(
+            s.k[7].is_none(),
+            "fully-flat window must yield k=None at i=7"
+        );
         assert!(s.k[8].is_some());
         assert!(s.k[9].is_some());
         // d windows containing k[7]: d[7] = [5,6,7], d[8] = [6,7,8], d[9] = [7,8,9].
@@ -489,9 +494,14 @@ mod tests {
         let l = vec![0.0; 15];
         let c = vec![1.0; 15];
         let a = atr(&h, &l, &c, 5);
-        for v in a.iter().take(5) { assert!(v.is_none()); }
+        for v in a.iter().take(5) {
+            assert!(v.is_none());
+        }
         let seed = a[5].expect("seed at period index");
-        assert!((seed - 2.0).abs() < 1e-9, "constant TR of 2.0 must yield ATR=2.0");
+        assert!(
+            (seed - 2.0).abs() < 1e-9,
+            "constant TR of 2.0 must yield ATR=2.0"
+        );
         let tail = a[14].expect("smoothed tail");
         assert!((tail - 2.0).abs() < 1e-9);
     }

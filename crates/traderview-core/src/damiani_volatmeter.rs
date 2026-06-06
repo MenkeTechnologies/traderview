@@ -20,7 +20,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
@@ -54,10 +58,19 @@ pub fn compute(
         slow_period,
         threshold,
     };
-    if fast_period < 2 || slow_period < 2 || fast_period >= slow_period
-        || !threshold.is_finite() || threshold <= 1.0
-        || n < slow_period + 1 { return report; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if fast_period < 2
+        || slow_period < 2
+        || fast_period >= slow_period
+        || !threshold.is_finite()
+        || threshold <= 1.0
+        || n < slow_period + 1
+    {
+        return report;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return report;
     }
     let mut tr = vec![0.0_f64; n];
@@ -84,15 +97,21 @@ pub fn compute(
 }
 
 fn classify(ratio: f64, hi: f64, lo: f64) -> DamianiRegime {
-    if ratio > hi { DamianiRegime::Trending }
-    else if ratio < lo { DamianiRegime::Quiet }
-    else { DamianiRegime::Transition }
+    if ratio > hi {
+        DamianiRegime::Trending
+    } else if ratio < lo {
+        DamianiRegime::Quiet
+    } else {
+        DamianiRegime::Transition
+    }
 }
 
 fn wilder_atr(tr: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = tr.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period + 1 { return out; }
+    if period == 0 || n < period + 1 {
+        return out;
+    }
     let p_f = period as f64;
     let seed: f64 = tr[1..=period].iter().sum::<f64>() / p_f;
     out[period] = Some(seed);
@@ -108,7 +127,13 @@ fn wilder_atr(tr: &[f64], period: usize) -> Vec<Option<f64>> {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {

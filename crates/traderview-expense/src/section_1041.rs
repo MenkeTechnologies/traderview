@@ -167,8 +167,7 @@ pub fn compute(input: &Section1041Input) -> Section1041Result {
     // Step 3: §1041 applies → no gain/loss at transfer, basis carries.
     let transferee_basis = input.transferor_adjusted_basis;
     let eventual_gain = input.sale_price - transferee_basis;
-    let holding_days =
-        (input.sale_date - input.transferor_holding_period_start).num_days();
+    let holding_days = (input.sale_date - input.transferor_holding_period_start).num_days();
     let character = if holding_days > ONE_YEAR_DAYS {
         CapitalCharacter::LongTermCapital
     } else {
@@ -177,9 +176,7 @@ pub fn compute(input: &Section1041Input) -> Section1041Result {
 
     let rule_label = match rule {
         IncidentRule::StillMarried => "current spouses",
-        IncidentRule::WithinOneYearAutomatic => {
-            "within 1 year of cessation — automatic"
-        }
+        IncidentRule::WithinOneYearAutomatic => "within 1 year of cessation — automatic",
         IncidentRule::OneToSixYearsPursuantToInstrument => {
             "1-6 years post-cessation, pursuant to divorce instrument"
         }
@@ -319,7 +316,10 @@ mod tests {
         i.transfer_pursuant_to_divorce_instrument = true;
         let r = compute(&i);
         assert!(r.section_1041_applies);
-        assert_eq!(r.incident_rule, IncidentRule::OneToSixYearsPursuantToInstrument);
+        assert_eq!(
+            r.incident_rule,
+            IncidentRule::OneToSixYearsPursuantToInstrument
+        );
     }
 
     #[test]
@@ -335,7 +335,10 @@ mod tests {
         let r = compute(&i);
         assert_eq!(r.days_from_cessation_to_transfer, Some(2190));
         assert!(r.section_1041_applies);
-        assert_eq!(r.incident_rule, IncidentRule::OneToSixYearsPursuantToInstrument);
+        assert_eq!(
+            r.incident_rule,
+            IncidentRule::OneToSixYearsPursuantToInstrument
+        );
     }
 
     #[test]
@@ -347,7 +350,10 @@ mod tests {
         i.transfer_pursuant_to_divorce_instrument = true;
         let r = compute(&i);
         assert_eq!(r.days_from_cessation_to_transfer, Some(2191));
-        assert_eq!(r.incident_rule, IncidentRule::BeyondSixYearsPursuantToInstrument);
+        assert_eq!(
+            r.incident_rule,
+            IncidentRule::BeyondSixYearsPursuantToInstrument
+        );
         assert!(r.section_1041_applies);
     }
 

@@ -461,8 +461,7 @@ mod tests {
     fn five_year_ratable_allocation_compliant() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::FiveYearRatableAllocationUnderSection47A1;
-        input.allocation_timing_rule =
-            AllocationTimingRule::PostTcja2017FiveYearRatableAllocation;
+        input.allocation_timing_rule = AllocationTimingRule::PostTcja2017FiveYearRatableAllocation;
         input.qualified_rehabilitation_expenditures_dollars = 1_000_000;
         let out = check(&input);
         assert_eq!(
@@ -490,7 +489,8 @@ mod tests {
     #[test]
     fn substantial_rehabilitation_test_met_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SubstantialRehabilitationTestUnderSection47C1AIii;
+        input.compliance_aspect =
+            ComplianceAspect::SubstantialRehabilitationTestUnderSection47C1AIii;
         input.qualified_rehabilitation_expenditures_dollars = 600_000;
         input.adjusted_basis_dollars = 500_000;
         let out = check(&input);
@@ -503,7 +503,8 @@ mod tests {
     #[test]
     fn substantial_rehabilitation_at_dollar_floor_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SubstantialRehabilitationTestUnderSection47C1AIii;
+        input.compliance_aspect =
+            ComplianceAspect::SubstantialRehabilitationTestUnderSection47C1AIii;
         input.qualified_rehabilitation_expenditures_dollars = 5_001;
         input.adjusted_basis_dollars = 0;
         let out = check(&input);
@@ -516,7 +517,8 @@ mod tests {
     #[test]
     fn substantial_rehabilitation_below_5000_floor_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SubstantialRehabilitationTestUnderSection47C1AIii;
+        input.compliance_aspect =
+            ComplianceAspect::SubstantialRehabilitationTestUnderSection47C1AIii;
         input.qualified_rehabilitation_expenditures_dollars = 5_000;
         input.adjusted_basis_dollars = 0;
         let out = check(&input);
@@ -529,7 +531,8 @@ mod tests {
     #[test]
     fn qualified_rehabilitation_expenditures_identified_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::QualifiedRehabilitationExpendituresUnderSection47C2;
+        input.compliance_aspect =
+            ComplianceAspect::QualifiedRehabilitationExpendituresUnderSection47C2;
         let out = check(&input);
         assert_eq!(
             out.mode,
@@ -540,7 +543,8 @@ mod tests {
     #[test]
     fn certified_historic_structure_national_register_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::CertifiedHistoricStructureDefinitionUnderSection47C3;
+        input.compliance_aspect =
+            ComplianceAspect::CertifiedHistoricStructureDefinitionUnderSection47C3;
         input.certified_historic_structure_status =
             CertifiedHistoricStructureStatus::ListedOnNationalRegisterOfHistoricPlaces;
         let out = check(&input);
@@ -553,7 +557,8 @@ mod tests {
     #[test]
     fn certified_historic_structure_district_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::CertifiedHistoricStructureDefinitionUnderSection47C3;
+        input.compliance_aspect =
+            ComplianceAspect::CertifiedHistoricStructureDefinitionUnderSection47C3;
         input.certified_historic_structure_status =
             CertifiedHistoricStructureStatus::LocatedInRegisteredHistoricDistrictAndNpsCertifiedAsContributing;
         let out = check(&input);
@@ -568,7 +573,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::NpsThreePartCertificationProcess;
         let out = check(&input);
-        assert_eq!(out.mode, Section47Mode::CompliantAllThreePartsApprovedByShpoAndNps);
+        assert_eq!(
+            out.mode,
+            Section47Mode::CompliantAllThreePartsApprovedByShpoAndNps
+        );
     }
 
     #[test]
@@ -675,7 +683,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::FormFilingUnderForm3468;
         input.form_3468_filed_correctly = false;
         let out = check(&input);
-        assert_eq!(out.mode, Section47Mode::ViolationForm3468NotFiledOrIncorrect);
+        assert_eq!(
+            out.mode,
+            Section47Mode::ViolationForm3468NotFiledOrIncorrect
+        );
     }
 
     #[test]

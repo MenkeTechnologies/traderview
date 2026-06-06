@@ -96,7 +96,10 @@ mod tests {
     fn invalid_params_return_all_none() {
         let v = vec![100.0; 50];
         for (p, s, l) in [(0, 5, 20), (9, 0, 20), (9, 5, 0), (9, 20, 5)] {
-            assert!(compute(&v, p, s, l).iter().all(|x| x.is_none()), "({p},{s},{l})");
+            assert!(
+                compute(&v, p, s, l).iter().all(|x| x.is_none()),
+                "({p},{s},{l})"
+            );
         }
     }
 

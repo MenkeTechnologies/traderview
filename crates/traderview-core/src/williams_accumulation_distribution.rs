@@ -21,13 +21,22 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 pub fn compute(bars: &[Bar]) -> Vec<Option<f64>> {
     let n = bars.len();
     let mut out = vec![None; n];
-    if n == 0 { return out; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if n == 0 {
+        return out;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return out;
     }
     let mut wad = 0.0_f64;
@@ -39,7 +48,9 @@ pub fn compute(bars: &[Bar]) -> Vec<Option<f64>> {
             bars[i].close - trl
         } else if bars[i].close < bars[i - 1].close {
             -(trh - bars[i].close)
-        } else { 0.0 };
+        } else {
+            0.0
+        };
         wad += delta;
         out[i] = Some(wad);
     }
@@ -50,10 +61,18 @@ pub fn compute(bars: &[Bar]) -> Vec<Option<f64>> {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
-    fn empty_returns_empty() { assert!(compute(&[]).is_empty()); }
+    fn empty_returns_empty() {
+        assert!(compute(&[]).is_empty());
+    }
 
     #[test]
     fn nan_returns_all_none() {
@@ -96,9 +115,9 @@ mod tests {
     fn cumulative_sum_correct_over_multiple_bars() {
         let bars = vec![
             b(101.0, 99.0, 100.0),
-            b(103.0, 99.0, 102.0),    // +3
-            b(101.0, 95.0, 96.0),     // -(102 - 96) = -6 → cum -3
-            b(99.0, 95.0, 98.0),      // up close: trl = min(95, 96) = 95; +(98-95)=3 → cum 0
+            b(103.0, 99.0, 102.0), // +3
+            b(101.0, 95.0, 96.0),  // -(102 - 96) = -6 → cum -3
+            b(99.0, 95.0, 98.0),   // up close: trl = min(95, 96) = 95; +(98-95)=3 → cum 0
         ];
         let r = compute(&bars);
         assert_eq!(r[1].unwrap(), 3.0);
@@ -108,10 +127,12 @@ mod tests {
 
     #[test]
     fn output_length_matches_input() {
-        let bars: Vec<_> = (0..30).map(|i| {
-            let m = 100.0 + (i as f64).sin();
-            b(m + 1.0, m - 1.0, m)
-        }).collect();
+        let bars: Vec<_> = (0..30)
+            .map(|i| {
+                let m = 100.0 + (i as f64).sin();
+                b(m + 1.0, m - 1.0, m)
+            })
+            .collect();
         assert_eq!(compute(&bars).len(), 30);
     }
 }

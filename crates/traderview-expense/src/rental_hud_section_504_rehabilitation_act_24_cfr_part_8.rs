@@ -41,7 +41,8 @@ use serde::{Deserialize, Serialize};
 pub const HUD_SECTION_504_ENACTMENT_YEAR: u32 = 1973;
 pub const HUD_SECTION_504_REGULATION_TITLE: u32 = 24;
 pub const HUD_SECTION_504_REGULATION_PART: u32 = 8;
-pub const HUD_SECTION_504_NEW_CONSTRUCTION_MOBILITY_ACCESSIBILITY_PERCENTAGE_BASIS_POINTS: u64 = 500;
+pub const HUD_SECTION_504_NEW_CONSTRUCTION_MOBILITY_ACCESSIBILITY_PERCENTAGE_BASIS_POINTS: u64 =
+    500;
 pub const HUD_SECTION_504_NEW_CONSTRUCTION_SENSORY_ACCESSIBILITY_PERCENTAGE_BASIS_POINTS: u64 = 200;
 pub const HUD_SECTION_504_LARGE_RECIPIENT_EMPLOYEE_THRESHOLD: u32 = 15;
 pub const HUD_SECTION_504_2010_ADA_STANDARDS_AVAILABLE_AS_ALTERNATIVE_SINCE_YEAR: u32 = 2011;
@@ -202,8 +203,8 @@ pub fn compute(input: &Input) -> Output {
         HUD_SECTION_504_NEW_CONSTRUCTION_SENSORY_ACCESSIBILITY_PERCENTAGE_BASIS_POINTS,
     );
 
-    let is_small_recipient = input.recipient_employee_count
-        < HUD_SECTION_504_LARGE_RECIPIENT_EMPLOYEE_THRESHOLD;
+    let is_small_recipient =
+        input.recipient_employee_count < HUD_SECTION_504_LARGE_RECIPIENT_EMPLOYEE_THRESHOLD;
 
     match input.compliance_aspect {
         ComplianceAspect::NewConstructionAccessibilityThresholdsUnderSection822 => {
@@ -492,7 +493,8 @@ mod tests {
             mobility_accessible_units_count: 5,
             sensory_accessible_units_count: 2,
             accessibility_standard: AccessibilityStandard::UniformFederalAccessibilityStandardsUfas,
-            reasonable_accommodation_status: ReasonableAccommodationStatus::NoAccommodationRequested,
+            reasonable_accommodation_status:
+                ReasonableAccommodationStatus::NoAccommodationRequested,
             recipient_employee_count: 50,
             designated_responsible_employee_present: true,
             self_evaluation_completed: true,
@@ -504,9 +506,13 @@ mod tests {
     #[test]
     fn not_federally_assisted_housing_not_applicable() {
         let mut input = baseline_new_construction_input();
-        input.federally_assisted_status = FederallyAssistedStatus::NotFederallyAssistedHousingExempt;
+        input.federally_assisted_status =
+            FederallyAssistedStatus::NotFederallyAssistedHousingExempt;
         let output = check(&input);
-        assert_eq!(output.mode, HudSection504Mode::NotApplicableNotFederallyAssistedHousing);
+        assert_eq!(
+            output.mode,
+            HudSection504Mode::NotApplicableNotFederallyAssistedHousing
+        );
     }
 
     #[test]
@@ -584,9 +590,9 @@ mod tests {
     #[test]
     fn substantial_alteration_compliant() {
         let mut input = baseline_new_construction_input();
-        input.project_status =
-            ProjectStatus::SubstantialAlterationOrRehabilitationUnderSection823;
-        input.compliance_aspect = ComplianceAspect::SubstantialAlterationAccessibilityUnderSection823;
+        input.project_status = ProjectStatus::SubstantialAlterationOrRehabilitationUnderSection823;
+        input.compliance_aspect =
+            ComplianceAspect::SubstantialAlterationAccessibilityUnderSection823;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -597,9 +603,9 @@ mod tests {
     #[test]
     fn substantial_alteration_below_standards_violation() {
         let mut input = baseline_new_construction_input();
-        input.project_status =
-            ProjectStatus::SubstantialAlterationOrRehabilitationUnderSection823;
-        input.compliance_aspect = ComplianceAspect::SubstantialAlterationAccessibilityUnderSection823;
+        input.project_status = ProjectStatus::SubstantialAlterationOrRehabilitationUnderSection823;
+        input.compliance_aspect =
+            ComplianceAspect::SubstantialAlterationAccessibilityUnderSection823;
         input.mobility_accessible_units_count = 2;
         let output = check(&input);
         assert_eq!(
@@ -640,7 +646,8 @@ mod tests {
     fn reasonable_accommodation_provided_compliant() {
         let mut input = baseline_new_construction_input();
         input.compliance_aspect = ComplianceAspect::ReasonableAccommodationUnderSection820;
-        input.reasonable_accommodation_status = ReasonableAccommodationStatus::AccommodationProvided;
+        input.reasonable_accommodation_status =
+            ReasonableAccommodationStatus::AccommodationProvided;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -739,7 +746,8 @@ mod tests {
     #[test]
     fn notice_of_nondiscrimination_posted_compliant() {
         let mut input = baseline_new_construction_input();
-        input.compliance_aspect = ComplianceAspect::NoticeOfNondiscriminationRequirementUnderSection854;
+        input.compliance_aspect =
+            ComplianceAspect::NoticeOfNondiscriminationRequirementUnderSection854;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -750,7 +758,8 @@ mod tests {
     #[test]
     fn notice_of_nondiscrimination_not_posted_violation() {
         let mut input = baseline_new_construction_input();
-        input.compliance_aspect = ComplianceAspect::NoticeOfNondiscriminationRequirementUnderSection854;
+        input.compliance_aspect =
+            ComplianceAspect::NoticeOfNondiscriminationRequirementUnderSection854;
         input.notice_of_nondiscrimination_posted = false;
         let output = check(&input);
         assert_eq!(

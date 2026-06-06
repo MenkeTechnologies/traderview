@@ -133,12 +133,15 @@ pub fn check(input: &Input) -> Output {
         "MGL c. 186, § 15B (Massachusetts Security Deposit Statute)".to_string(),
         "MGL c. 186, § 15B(1)(b) (one-month-rent maximum)".to_string(),
         "MGL c. 186, § 15B(2)(b) (written receipt 30-day requirement)".to_string(),
-        "MGL c. 186, § 15B(2)(c) (Statement of Condition — 10 days + 12-pt bold notice)".to_string(),
+        "MGL c. 186, § 15B(2)(c) (Statement of Condition — 10 days + 12-pt bold notice)"
+            .to_string(),
         "MGL c. 186, § 15B(3)(a) (separate MA bank account requirement)".to_string(),
         "MGL c. 186, § 15B(3)(b) (5% annual interest or actual lesser)".to_string(),
-        "MGL c. 186, § 15B(4) (30-day return + itemized damages under penalty of perjury)".to_string(),
+        "MGL c. 186, § 15B(4) (30-day return + itemized damages under penalty of perjury)"
+            .to_string(),
         "MGL c. 186, § 15B(7) (triple damages + court costs + attorney fees)".to_string(),
-        "MGL c. 93A (Massachusetts Consumer Protection Act — secondary basis for recovery)".to_string(),
+        "MGL c. 93A (Massachusetts Consumer Protection Act — secondary basis for recovery)"
+            .to_string(),
         "Mass.gov — Massachusetts law about tenants' security deposits".to_string(),
         "MassLegalHelp — Chapter 3 Security Deposits & Last Month's Rent".to_string(),
     ];
@@ -339,10 +342,7 @@ mod tests {
         let mut i = base_compliant();
         i.security_deposit_cents = 300_000;
         let out = check(&i);
-        assert_eq!(
-            out.severity,
-            Severity::ViolationDepositExceedsOneMonthRent
-        );
+        assert_eq!(out.severity, Severity::ViolationDepositExceedsOneMonthRent);
         assert_eq!(out.triple_damages_exposure_cents, 900_000);
     }
 

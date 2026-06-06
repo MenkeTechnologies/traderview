@@ -214,16 +214,11 @@ pub fn check(input: &Section4974Input) -> Section4974Result {
         75
     };
 
-    let original_owner_subject_to_rmd = !matches!(
-        input.plan_type,
-        PlanType::RothIra408a
-    ) && matches!(input.owner_status, OwnerStatus::OriginalOwner)
+    let original_owner_subject_to_rmd = !matches!(input.plan_type, PlanType::RothIra408a)
+        && matches!(input.owner_status, OwnerStatus::OriginalOwner)
         && input.owner_age_at_year_end >= rmd_age;
 
-    let beneficiary_subject_to_rmd = !matches!(
-        input.owner_status,
-        OwnerStatus::OriginalOwner
-    );
+    let beneficiary_subject_to_rmd = !matches!(input.owner_status, OwnerStatus::OriginalOwner);
 
     let rmd_required = original_owner_subject_to_rmd || beneficiary_subject_to_rmd;
 
@@ -231,8 +226,7 @@ pub fn check(input: &Section4974Input) -> Section4974Result {
         .amount_distributed_cents
         .saturating_add(input.qcd_distributed_cents);
 
-    let qcd_satisfies_rmd = input.qcd_distributed_cents >= input.rmd_required_cents
-        && rmd_required;
+    let qcd_satisfies_rmd = input.qcd_distributed_cents >= input.rmd_required_cents && rmd_required;
 
     let shortfall_cents = if rmd_required {
         input
@@ -254,14 +248,11 @@ pub fn check(input: &Section4974Input) -> Section4974Result {
     let excise_tax_cents = if effective_excise_rate_percent == 0 {
         0
     } else {
-        shortfall_cents
-            .saturating_mul(effective_excise_rate_percent as u64)
-            / 100
+        shortfall_cents.saturating_mul(effective_excise_rate_percent as u64) / 100
     };
 
-    let waiver_granted = rmd_required
-        && shortfall_cents > 0
-        && input.waiver_granted_for_reasonable_error;
+    let waiver_granted =
+        rmd_required && shortfall_cents > 0 && input.waiver_granted_for_reasonable_error;
 
     if matches!(input.plan_type, PlanType::RothIra408a)
         && matches!(input.owner_status, OwnerStatus::OriginalOwner)
@@ -271,8 +262,7 @@ pub fn check(input: &Section4974Input) -> Section4974Result {
         );
     }
 
-    if rmd_required && shortfall_cents > 0 && !input.waiver_granted_for_reasonable_error
-    {
+    if rmd_required && shortfall_cents > 0 && !input.waiver_granted_for_reasonable_error {
         failure_reasons.push(format!(
             "26 USC § 4974(a) — RMD SHORTFALL of {} cents triggers {}% excise tax of {} cents on payee; {}",
             shortfall_cents,
@@ -388,8 +378,10 @@ mod tests {
         let r = check(&i);
         assert_eq!(r.effective_excise_rate_percent, 10);
         assert_eq!(r.excise_tax_cents, 800_000);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 4974(e) correction window")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 4974(e) correction window")));
     }
 
     #[test]
@@ -419,9 +411,10 @@ mod tests {
         assert!(r.qcd_satisfies_rmd);
         assert_eq!(r.shortfall_cents, 0);
         assert_eq!(r.excise_tax_cents, 0);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 408(d)(8)")
-            && f.contains("SATISFIES RMD")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 408(d)(8)") && f.contains("SATISFIES RMD")));
     }
 
     #[test]
@@ -441,9 +434,10 @@ mod tests {
         assert!(r.waiver_granted);
         assert_eq!(r.effective_excise_rate_percent, 0);
         assert_eq!(r.excise_tax_cents, 0);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 4974(d)")
-            && f.contains("REASONABLE ERROR")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 4974(d)") && f.contains("REASONABLE ERROR")));
     }
 
     #[test]
@@ -453,9 +447,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.rmd_required);
         assert_eq!(r.excise_tax_cents, 0);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 408A(c)(5)")
-            && f.contains("NOT SUBJECT to lifetime RMDs")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 408A(c)(5)") && f.contains("NOT SUBJECT to lifetime RMDs")));
     }
 
     #[test]
@@ -498,9 +493,10 @@ mod tests {
         i.owner_status = OwnerStatus::SurvivingSpouseBeneficiary;
         let r = check(&i);
         assert!(r.rmd_required);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 401(a)(9)(B)(iv)")
-            && f.contains("SURVIVING SPOUSE")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 401(a)(9)(B)(iv)") && f.contains("SURVIVING SPOUSE")));
     }
 
     #[test]
@@ -509,9 +505,10 @@ mod tests {
         i.owner_status = OwnerStatus::MinorChildBeneficiary;
         let r = check(&i);
         assert!(r.rmd_required);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 401(a)(9)(E)(ii)(II)")
-            && f.contains("MINOR CHILD")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 401(a)(9)(E)(ii)(II)") && f.contains("MINOR CHILD")));
     }
 
     #[test]
@@ -520,9 +517,10 @@ mod tests {
         i.owner_status = OwnerStatus::DisabledOrChronicallyIllBeneficiary;
         let r = check(&i);
         assert!(r.rmd_required);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 401(a)(9)(E)(ii)(III)-(IV)")
-            && f.contains("DISABLED")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 401(a)(9)(E)(ii)(III)-(IV)") && f.contains("DISABLED")));
     }
 
     #[test]
@@ -531,9 +529,9 @@ mod tests {
         i.owner_status = OwnerStatus::LessThanTenYearsYoungerBeneficiary;
         let r = check(&i);
         assert!(r.rmd_required);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 401(a)(9)(E)(ii)(V)")
-            && f.contains("LESS THAN 10 YEARS YOUNGER")));
+        assert!(r.failure_reasons.iter().any(
+            |f| f.contains("§ 401(a)(9)(E)(ii)(V)") && f.contains("LESS THAN 10 YEARS YOUNGER")
+        ));
     }
 
     #[test]
@@ -542,9 +540,10 @@ mod tests {
         i.owner_status = OwnerStatus::OtherDesignatedBeneficiary;
         let r = check(&i);
         assert!(r.rmd_required);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 401(a)(9)(H)")
-            && f.contains("10-YEAR RULE")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 401(a)(9)(H)") && f.contains("10-YEAR RULE")));
     }
 
     #[test]
@@ -629,14 +628,15 @@ mod tests {
         assert!(r.citation.contains("Pub. L. 117-328"));
         assert!(r.citation.contains("Form 5329"));
         assert!(r.citation.contains("Treas. Reg. § 54.4974-2"));
-        assert!(r.citation.contains("Treas. Reg. § 1.401(a)(9)-1 through § 1.401(a)(9)-9"));
+        assert!(r
+            .citation
+            .contains("Treas. Reg. § 1.401(a)(9)-1 through § 1.401(a)(9)-9"));
     }
 
     #[test]
     fn note_pins_subsection_a_excise_tax_rate_history() {
         let r = check(&baseline_owner_75());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 4974(a)")
+        assert!(r.notes.iter().any(|n| n.contains("§ 4974(a)")
             && n.contains("EXCISE TAX")
             && n.contains("SECURE Act 2.0 § 302 REDUCED rate from 50% to 25%")));
     }
@@ -644,27 +644,30 @@ mod tests {
     #[test]
     fn note_pins_subsection_e_correction_window() {
         let r = check(&baseline_owner_75());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 4974(e) CORRECTION WINDOW")
-            && n.contains("ORIGINAL RMD DUE DATE")
-            && n.contains("SECOND TAX YEAR")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 4974(e) CORRECTION WINDOW")
+                && n.contains("ORIGINAL RMD DUE DATE")
+                && n.contains("SECOND TAX YEAR")));
     }
 
     #[test]
     fn note_pins_section_401a9_required_beginning_date_three_eras() {
         let r = check(&baseline_owner_75());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 401(a)(9) Required Beginning Date")
-            && n.contains("(born before 1951)")
-            && n.contains("(born 1951-1959)")
-            && n.contains("(born 1960+)")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 401(a)(9) Required Beginning Date")
+                && n.contains("(born before 1951)")
+                && n.contains("(born 1951-1959)")
+                && n.contains("(born 1960+)")));
     }
 
     #[test]
     fn note_pins_subsection_c_qualified_plans_nine() {
         let r = check(&baseline_owner_75());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 4974(c)")
+        assert!(r.notes.iter().any(|n| n.contains("§ 4974(c)")
             && n.contains("QUALIFIED PLANS")
             && n.contains("§ 401(a)")
             && n.contains("§ 403(b)")
@@ -676,21 +679,22 @@ mod tests {
     #[test]
     fn note_pins_section_401a9b_post_death_six_categories() {
         let r = check(&baseline_owner_75());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 401(a)(9)(B) POST-DEATH")
-            && n.contains("SURVIVING SPOUSE")
-            && n.contains("MINOR CHILD")
-            && n.contains("DISABLED")
-            && n.contains("CHRONICALLY ILL")
-            && n.contains("< 10 YEARS YOUNGER")
-            && n.contains("10-YEAR RULE")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 401(a)(9)(B) POST-DEATH")
+                && n.contains("SURVIVING SPOUSE")
+                && n.contains("MINOR CHILD")
+                && n.contains("DISABLED")
+                && n.contains("CHRONICALLY ILL")
+                && n.contains("< 10 YEARS YOUNGER")
+                && n.contains("10-YEAR RULE")));
     }
 
     #[test]
     fn note_pins_subsection_d_waiver_reasonable_error() {
         let r = check(&baseline_owner_75());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 4974(d) WAIVER")
+        assert!(r.notes.iter().any(|n| n.contains("§ 4974(d) WAIVER")
             && n.contains("REASONABLE ERROR")
             && n.contains("Form 5329")));
     }
@@ -698,8 +702,8 @@ mod tests {
     #[test]
     fn note_pins_qcd_408d8() {
         let r = check(&baseline_owner_75());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 408(d)(8) Qualified Charitable Distribution")
+        assert!(r.notes.iter().any(|n| n
+            .contains("§ 408(d)(8) Qualified Charitable Distribution")
             && n.contains("$108,000")
             && n.contains("ZERO OUT RMD obligation")
             && n.contains("SECURE Act 2.0 § 307")));
@@ -708,47 +712,57 @@ mod tests {
     #[test]
     fn note_pins_secure_2_act_107_age_increase() {
         let r = check(&baseline_owner_75());
-        assert!(r.notes.iter().any(|n|
-            n.contains("SECURE Act 2.0 of 2022 § 107")
-            && n.contains("Pub. L. 117-328")
-            && n.contains("January 1, 2023")
-            && n.contains("January 1, 2033")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("SECURE Act 2.0 of 2022 § 107")
+                && n.contains("Pub. L. 117-328")
+                && n.contains("January 1, 2023")
+                && n.contains("January 1, 2033")));
     }
 
     #[test]
     fn note_pins_secure_2_act_302_rate_reduction() {
         let r = check(&baseline_owner_75());
-        assert!(r.notes.iter().any(|n|
-            n.contains("SECURE Act 2.0 of 2022 § 302")
-            && n.contains("50% to 25%")
-            && n.contains("10% if corrected")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("SECURE Act 2.0 of 2022 § 302")
+                && n.contains("50% to 25%")
+                && n.contains("10% if corrected")));
     }
 
     #[test]
     fn note_pins_form_5329() {
         let r = check(&baseline_owner_75());
-        assert!(r.notes.iter().any(|n| n.contains("Form 5329")
-            && n.contains("Additional Taxes on Qualified Plans")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Form 5329") && n.contains("Additional Taxes on Qualified Plans")));
     }
 
     #[test]
     fn note_pins_trader_fact_patterns() {
         let r = check(&baseline_owner_75());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-critical fact patterns")
-            && n.contains("75-year-old trader with $2M IRA")
-            && n.contains("Roth IRA owner age 80")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-critical fact patterns")
+                && n.contains("75-year-old trader with $2M IRA")
+                && n.contains("Roth IRA owner age 80")));
     }
 
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&baseline_owner_75());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Companion to section_408")
-            && n.contains("section_408a")
-            && n.contains("section_4975")
-            && n.contains("section_72t")
-            && n.contains("section_401a9")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Companion to section_408")
+                && n.contains("section_408a")
+                && n.contains("section_4975")
+                && n.contains("section_72t")
+                && n.contains("section_401a9")));
     }
 
     #[test]

@@ -126,7 +126,10 @@ pub fn compute(input: &CarryoverInput) -> CarryoverResult {
     if r.combined_net_gain_loss >= Decimal::ZERO {
         // Net gain — carryovers fully consumed by absorption above.
         r.note = if r.combined_net_gain_loss > Decimal::ZERO {
-            format!("net gain ${} — all carryovers absorbed", r.combined_net_gain_loss)
+            format!(
+                "net gain ${} — all carryovers absorbed",
+                r.combined_net_gain_loss
+            )
         } else {
             "exact wash — no carryover, no deduction".into()
         };
@@ -310,13 +313,23 @@ mod tests {
         // Year 3: $0 trades → use $3k, carry $1k ST.
         // Year 4: $0 trades → use $1k, fully exhausted.
         let mut chain_st = dec!(10000);
-        for (year, expected_carry) in (2024..).zip([dec!(7000), dec!(4000), dec!(1000), Decimal::ZERO]) {
+        for (year, expected_carry) in
+            (2024..).zip([dec!(7000), dec!(4000), dec!(1000), Decimal::ZERO])
+        {
             let r = compute(&CarryoverInput {
                 st_gains: Decimal::ZERO,
-                st_losses: if year == 2024 { dec!(10000) } else { Decimal::ZERO },
+                st_losses: if year == 2024 {
+                    dec!(10000)
+                } else {
+                    Decimal::ZERO
+                },
                 lt_gains: Decimal::ZERO,
                 lt_losses: Decimal::ZERO,
-                prior_st_carryover: if year == 2024 { Decimal::ZERO } else { chain_st },
+                prior_st_carryover: if year == 2024 {
+                    Decimal::ZERO
+                } else {
+                    chain_st
+                },
                 prior_lt_carryover: Decimal::ZERO,
                 filing_status: FilingStatus::Single,
                 tax_year: year,

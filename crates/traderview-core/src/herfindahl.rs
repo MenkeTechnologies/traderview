@@ -26,22 +26,32 @@ pub struct HhiReport {
 }
 
 pub fn compute(weights: &[f64]) -> Option<HhiReport> {
-    if weights.is_empty() { return None; }
+    if weights.is_empty() {
+        return None;
+    }
     let mut sum_w = 0.0_f64;
     let mut sum_w2 = 0.0_f64;
     let mut max_w = 0.0_f64;
     let mut n = 0_usize;
     for w in weights {
-        if !w.is_finite() { return None; }
-        if *w < 0.0 { return None; }
+        if !w.is_finite() {
+            return None;
+        }
+        if *w < 0.0 {
+            return None;
+        }
         if *w > 0.0 {
             sum_w += w;
             sum_w2 += w * w;
-            if *w > max_w { max_w = *w; }
+            if *w > max_w {
+                max_w = *w;
+            }
             n += 1;
         }
     }
-    if sum_w <= 0.0 { return None; }
+    if sum_w <= 0.0 {
+        return None;
+    }
     // Normalize if not already summing to 1.
     let normalized = if (sum_w - 1.0).abs() > 1e-9 {
         sum_w2 / (sum_w * sum_w)
@@ -115,7 +125,7 @@ mod tests {
         // One 80% position + 4×5%: HHI = 0.64 + 4·0.0025 = 0.65.
         let r = compute(&[0.80, 0.05, 0.05, 0.05, 0.05]).unwrap();
         assert!((r.hhi - 0.65).abs() < 1e-9);
-        assert!(r.effective_n < 2.0);    // very concentrated
+        assert!(r.effective_n < 2.0); // very concentrated
     }
 
     #[test]

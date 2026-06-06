@@ -208,7 +208,10 @@ pub fn check(input: &Input) -> Output {
 
     if matches!(input.opener_generation, OpenerGeneration::None) {
         let mut n = notes;
-        n.push("No automatic garage door opener present — UL 325 framework not applicable.".to_string());
+        n.push(
+            "No automatic garage door opener present — UL 325 framework not applicable."
+                .to_string(),
+        );
         return Output {
             severity: Severity::NotApplicable,
             jurisdiction_specific_actions: actions,
@@ -224,7 +227,10 @@ pub fn check(input: &Input) -> Output {
         actions.push("CPSC recall outstanding for installed opener: 15 U.S.C. § 2068 prohibited acts to continue leasing unit with recalled product; 16 C.F.R. § 1115 substantial-product-hazard reporting may apply; immediate retrofit + tenant notice required; coordinate with CPSC recall remedy program.".to_string());
     }
 
-    if matches!(input.opener_generation, OpenerGeneration::Pre1993NonCompliant) {
+    if matches!(
+        input.opener_generation,
+        OpenerGeneration::Pre1993NonCompliant
+    ) {
         actions.push("PRE-1993 garage door opener still in service: CPSC + manufacturers strongly recommend REPLACEMENT (not repair) because pre-1993 lacks external photoelectric entrapment protection; child-entrapment liability exposure; insurance carriers commonly deny coverage; immediate replacement required.".to_string());
     }
 
@@ -233,9 +239,8 @@ pub fn check(input: &Input) -> Output {
         OpenerGeneration::Era1993To2010FirstGen | OpenerGeneration::Post2010CurrentGen
     );
 
-    let entrapment_failure = post_1993
-        && !input.photoelectric_eye_operable
-        && !input.sensing_edge_operable;
+    let entrapment_failure =
+        post_1993 && !input.photoelectric_eye_operable && !input.sensing_edge_operable;
     if entrapment_failure {
         actions.push("UL 325 external entrapment protection FAILURE: photoelectric eye and sensing edge both inoperable; landlord must restore at least one functional external entrapment-protection device immediately; child-entrapment liability exposure significantly elevated.".to_string());
     }
@@ -252,8 +257,8 @@ pub fn check(input: &Input) -> Output {
         actions.push("California SB 969 (2018) battery-backup requirement violation: opener installed after July 1, 2019 in California must have battery backup for emergency egress during power outages; fire-safety code violation + emergency-egress habitability claim.".to_string());
     }
 
-    let annual_test_overdue = post_1993
-        && input.last_annual_safety_test_months_ago > ANNUAL_TEST_MAX_MONTHS;
+    let annual_test_overdue =
+        post_1993 && input.last_annual_safety_test_months_ago > ANNUAL_TEST_MAX_MONTHS;
     if annual_test_overdue {
         actions.push(format!(
             "Annual safety test overdue: {} months since last 2x4 lumber test exceeds 12-month best-practice interval; conduct test at start of every tenancy + annually thereafter.",
@@ -277,7 +282,10 @@ pub fn check(input: &Input) -> Output {
         Severity::ChildEntrapmentEvent
     } else if input.cpsc_recall_outstanding {
         Severity::CpscRecallEnforcement
-    } else if matches!(input.opener_generation, OpenerGeneration::Pre1993NonCompliant) {
+    } else if matches!(
+        input.opener_generation,
+        OpenerGeneration::Pre1993NonCompliant
+    ) {
         Severity::Pre1993LegacyOpener
     } else if entrapment_failure {
         Severity::EntrapmentProtectionFailure

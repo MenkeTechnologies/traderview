@@ -142,11 +142,7 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
         rule(
             AutomaticSealing,
             Some(60),
-            &[
-                DismissedOrWithdrawn,
-                TenantWonJudgment,
-                SettlementOrConsent,
-            ],
+            &[DismissedOrWithdrawn, TenantWonJudgment, SettlementOrConsent],
             true,
             "Md. Real Prop. § 8-401 (SB 19 of 2024)",
         ),
@@ -165,13 +161,7 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
     // TenantPetitionOnly regime.
     m.insert(
         "WA",
-        rule(
-            TenantPetitionOnly,
-            None,
-            &[],
-            true,
-            "Wash. RCW 59.18.367",
-        ),
+        rule(TenantPetitionOnly, None, &[], true, "Wash. RCW 59.18.367"),
     );
     m.insert(
         "OR",
@@ -219,11 +209,9 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
     // NoStateRule — explicit list of all remaining states + territories
     // currently silent on eviction record sealing at the state level.
     let no_rule_states = [
-        "AL", "AK", "AZ", "AR", "CO", "DE", "FL", "GA", "HI", "ID",
-        "IN", "IA", "KS", "KY", "LA", "ME", "MA", "MI", "MS", "MO",
-        "MT", "NE", "NH", "NM", "NY", "NC", "ND", "OH", "OK", "PA",
-        "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WV", "WI",
-        "WY",
+        "AL", "AK", "AZ", "AR", "CO", "DE", "FL", "GA", "HI", "ID", "IN", "IA", "KS", "KY", "LA",
+        "ME", "MA", "MI", "MS", "MO", "MT", "NE", "NH", "NM", "NY", "NC", "ND", "OH", "OK", "PA",
+        "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WV", "WI", "WY",
     ];
     for code in no_rule_states {
         m.insert(
@@ -285,12 +273,8 @@ pub fn check(input: &EvictionSealingInput) -> EvictionSealingResult {
     };
 
     let (eligible, petition_required) = match rule.regime {
-        SealingRegime::AutomaticSealing => {
-            (outcome_qualifies && window_satisfied, false)
-        }
-        SealingRegime::TenantPetitionOnly => {
-            (input.tenant_petitioned_for_sealing, true)
-        }
+        SealingRegime::AutomaticSealing => (outcome_qualifies && window_satisfied, false),
+        SealingRegime::TenantPetitionOnly => (input.tenant_petitioned_for_sealing, true),
         SealingRegime::PandemicPeriodOnly => (input.pandemic_period_case, false),
         SealingRegime::NoStateRule => (false, false),
     };
@@ -530,7 +514,12 @@ mod tests {
     #[test]
     fn coverage_is_all_50_states_plus_dc() {
         let codes: Vec<&'static str> = RULES.keys().copied().collect();
-        assert_eq!(codes.len(), 51, "expected 50 states + DC, got {}", codes.len());
+        assert_eq!(
+            codes.len(),
+            51,
+            "expected 50 states + DC, got {}",
+            codes.len()
+        );
     }
 
     #[test]

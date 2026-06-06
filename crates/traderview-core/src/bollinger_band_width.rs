@@ -34,11 +34,19 @@ pub fn compute(closes: &[f64], period: usize, k: f64) -> BbwReport {
     let mut bbw = vec![None; n];
     let mut pb = vec![None; n];
     if period < 2 || n < period || !k.is_finite() || k < 0.0 {
-        return BbwReport { middle: mid, upper: up, lower: lo, band_width: bbw, percent_b: pb };
+        return BbwReport {
+            middle: mid,
+            upper: up,
+            lower: lo,
+            band_width: bbw,
+            percent_b: pb,
+        };
     }
     for i in (period - 1)..n {
         let win = &closes[i + 1 - period..=i];
-        if win.iter().any(|x| !x.is_finite()) { continue; }
+        if win.iter().any(|x| !x.is_finite()) {
+            continue;
+        }
         let m: f64 = win.iter().sum::<f64>() / period as f64;
         let var: f64 = win.iter().map(|x| (x - m).powi(2)).sum::<f64>() / period as f64;
         let sd = var.max(0.0).sqrt();
@@ -60,7 +68,13 @@ pub fn compute(closes: &[f64], period: usize, k: f64) -> BbwReport {
             pb[i] = Some(0.5);
         }
     }
-    BbwReport { middle: mid, upper: up, lower: lo, band_width: bbw, percent_b: pb }
+    BbwReport {
+        middle: mid,
+        upper: up,
+        lower: lo,
+        band_width: bbw,
+        percent_b: pb,
+    }
 }
 
 #[cfg(test)]
@@ -144,8 +158,10 @@ mod tests {
         // BBW at the expansion phase should exceed BBW at the flat-phase end.
         let flat_bbw = r.band_width[19].unwrap();
         let expansion_bbw = r.band_width[49].unwrap();
-        assert!(expansion_bbw > flat_bbw,
-            "expansion BBW {expansion_bbw} should exceed flat BBW {flat_bbw}");
+        assert!(
+            expansion_bbw > flat_bbw,
+            "expansion BBW {expansion_bbw} should exceed flat BBW {flat_bbw}"
+        );
     }
 
     #[test]

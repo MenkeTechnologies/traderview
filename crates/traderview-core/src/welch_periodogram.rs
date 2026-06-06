@@ -38,27 +38,37 @@ pub fn compute(
     overlap_fraction: f64,
 ) -> Option<WelchPeriodogramReport> {
     let n = series.len();
-    if n < segment_length || segment_length < 8
-        || !overlap_fraction.is_finite() || !(0.0..1.0).contains(&overlap_fraction) {
+    if n < segment_length
+        || segment_length < 8
+        || !overlap_fraction.is_finite()
+        || !(0.0..1.0).contains(&overlap_fraction)
+    {
         return None;
     }
-    if series.iter().any(|x| !x.is_finite()) { return None; }
+    if series.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let step = ((segment_length as f64) * (1.0 - overlap_fraction)).max(1.0) as usize;
     let n_half = segment_length / 2 + 1;
     let mut psd_sum = vec![0.0_f64; n_half];
     let mut k_count = 0_usize;
     // Hann window with W_n = 0.5 · (1 − cos(2π·n / (L−1))).
-    let window: Vec<f64> = (0..segment_length).map(|n_idx| {
-        0.5 * (1.0 - (2.0 * std::f64::consts::PI * n_idx as f64
-            / (segment_length - 1) as f64).cos())
-    }).collect();
+    let window: Vec<f64> = (0..segment_length)
+        .map(|n_idx| {
+            0.5 * (1.0
+                - (2.0 * std::f64::consts::PI * n_idx as f64 / (segment_length - 1) as f64).cos())
+        })
+        .collect();
     let window_norm: f64 = window.iter().map(|w| w * w).sum::<f64>();
     let mut start = 0_usize;
     while start + segment_length <= n {
         let segment = &series[start..start + segment_length];
         // Windowed segment.
-        let windowed: Vec<f64> = segment.iter().zip(window.iter())
-            .map(|(x, w)| x * w).collect();
+        let windowed: Vec<f64> = segment
+            .iter()
+            .zip(window.iter())
+            .map(|(x, w)| x * w)
+            .collect();
         // Direct DFT magnitude squared, normalized by window energy.
         for (k, slot) in psd_sum.iter_mut().enumerate().take(n_half) {
             let mut re = 0.0_f64;
@@ -74,13 +84,20 @@ pub fn compute(
         k_count += 1;
         start += step;
     }
-    if k_count == 0 { return None; }
+    if k_count == 0 {
+        return None;
+    }
     let psd: Vec<f64> = psd_sum.iter().map(|p| p / k_count as f64).collect();
-    let frequencies: Vec<f64> = (0..n_half).map(|k| k as f64 / segment_length as f64).collect();
+    let frequencies: Vec<f64> = (0..n_half)
+        .map(|k| k as f64 / segment_length as f64)
+        .collect();
     // Dominant freq (skip DC at k=0).
-    let dom_idx = psd[1..].iter().enumerate()
+    let dom_idx = psd[1..]
+        .iter()
+        .enumerate()
         .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
-        .map(|(i, _)| i + 1).unwrap_or(0);
+        .map(|(i, _)| i + 1)
+        .unwrap_or(0);
     let dominant = frequencies[dom_idx];
     Some(WelchPeriodogramReport {
         frequencies,
@@ -101,7 +118,7 @@ mod tests {
     fn invalid_inputs_return_none() {
         let s = vec![0.0_f64; 100];
         assert!(compute(&s, 4, 0.5).is_none());
-        assert!(compute(&s, 200, 0.5).is_none());    // segment > n
+        assert!(compute(&s, 200, 0.5).is_none()); // segment > n
         assert!(compute(&s, 32, 1.0).is_none());
         assert!(compute(&s, 32, -0.1).is_none());
         assert!(compute(&s, 32, f64::NAN).is_none());
@@ -117,9 +134,9 @@ mod tests {
     #[test]
     fn pure_sinusoid_peaks_at_expected_frequency() {
         // Sine wave with period 16 samples → frequency 1/16 = 0.0625 cycles/sample.
-        let s: Vec<f64> = (0..256).map(|n| {
-            (2.0 * std::f64::consts::PI * n as f64 / 16.0).sin()
-        }).collect();
+        let s: Vec<f64> = (0..256)
+            .map(|n| (2.0 * std::f64::consts::PI * n as f64 / 16.0).sin())
+            .collect();
         let r = compute(&s, 64, 0.5).unwrap();
         // Dominant frequency should be near 1/16 = 0.0625.
         assert!((r.dominant_frequency - 0.0625).abs() < 0.02);
@@ -132,9 +149,18 @@ mod tests {
         // still at DC, but other bins are nonzero. Verify DC dominates.
         let s = vec![5.0_f64; 200];
         let r = compute(&s, 64, 0.5).unwrap();
-        let max_non_dc = r.psd.iter().skip(1).cloned().fold(f64::NEG_INFINITY, f64::max);
-        assert!(r.psd[0] > max_non_dc,
-            "DC bin {} should exceed max non-DC {}", r.psd[0], max_non_dc);
+        let max_non_dc = r
+            .psd
+            .iter()
+            .skip(1)
+            .cloned()
+            .fold(f64::NEG_INFINITY, f64::max);
+        assert!(
+            r.psd[0] > max_non_dc,
+            "DC bin {} should exceed max non-DC {}",
+            r.psd[0],
+            max_non_dc
+        );
     }
 
     #[test]
@@ -149,11 +175,14 @@ mod tests {
     #[test]
     fn psd_non_negative() {
         let mut state: u64 = 42;
-        let s: Vec<f64> = (0..256).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 2.0
-        }).collect();
+        let s: Vec<f64> = (0..256)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 2.0
+            })
+            .collect();
         let r = compute(&s, 64, 0.5).unwrap();
         for p in &r.psd {
             assert!(*p >= 0.0);
@@ -182,6 +211,6 @@ mod tests {
         let s: Vec<f64> = (0..200).map(|i| (i as f64 * 0.1).sin()).collect();
         let r = compute(&s, 64, 0.5).unwrap();
         assert_eq!(r.psd.len(), r.frequencies.len());
-        assert_eq!(r.psd.len(), 33);    // L/2 + 1 = 33
+        assert_eq!(r.psd.len(), 33); // L/2 + 1 = 33
     }
 }

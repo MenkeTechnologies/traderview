@@ -105,8 +105,8 @@ pub fn compute(input: &Section104Input) -> Section104Result {
     let emot_nonphys_excluded = input
         .medical_care_for_emotional_distress_dollars
         .min(input.emotional_distress_non_physical_dollars);
-    let emot_nonphys_included = input.emotional_distress_non_physical_dollars
-        - emot_nonphys_excluded;
+    let emot_nonphys_included =
+        input.emotional_distress_non_physical_dollars - emot_nonphys_excluded;
 
     // Punitives: included except the wrongful-death-only-punitives
     // state carveout under § 104(c).
@@ -127,10 +127,8 @@ pub fn compute(input: &Section104Input) -> Section104Result {
         .previously_deducted_medical_with_tax_benefit_dollars
         .min(physical_excluded);
 
-    let total_excluded =
-        physical_excluded + emot_nonphys_excluded + punitive_excluded - recapture;
-    let total_included =
-        emot_nonphys_included + punitive_included + interest_included + recapture;
+    let total_excluded = physical_excluded + emot_nonphys_excluded + punitive_excluded - recapture;
+    let total_included = emot_nonphys_included + punitive_included + interest_included + recapture;
 
     let note = format!(
         "§104(a)(2) damages classification — excluded: ${} physical-injury pillar + ${} emotional-distress (non-physical) medical-care carveout + ${} punitive § 104(c) wrongful-death exception − ${} § 104(a) flush prior-§213 tax benefit recapture = ${} total excluded. Included: ${} non-physical emotional distress + ${} punitive damages + ${} interest = ${} total included.",

@@ -295,13 +295,15 @@ pub fn check(input: &Section4980hInput) -> Section4980hResult {
     let affordability_threshold_2026_percent: u32 = 996;
     let minimum_value_threshold_percent: u32 = 60;
 
-    let combined_fte_count = input.full_time_employees.saturating_add(input.fte_equivalents);
+    let combined_fte_count = input
+        .full_time_employees
+        .saturating_add(input.fte_equivalents);
 
     let seasonal_worker_exception_engaged = combined_fte_count >= 50
         && combined_fte_count.saturating_sub(input.seasonal_workers_120_days_or_fewer) < 50;
 
-    let is_applicable_large_employer = combined_fte_count >= 50
-        && !seasonal_worker_exception_engaged;
+    let is_applicable_large_employer =
+        combined_fte_count >= 50 && !seasonal_worker_exception_engaged;
 
     let section_4980h_a_engaged = is_applicable_large_employer
         && matches!(input.coverage_status, CoverageStatus::NoMecOffered)
@@ -459,8 +461,10 @@ mod tests {
         i.full_time_employees = 45;
         let r = check(&i);
         assert!(!r.is_applicable_large_employer);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("BELOW 50-employee ALE threshold")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("BELOW 50-employee ALE threshold")));
     }
 
     #[test]
@@ -481,9 +485,11 @@ mod tests {
         let r = check(&i);
         assert!(r.seasonal_worker_exception_engaged);
         assert!(!r.is_applicable_large_employer);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 4980H(c)(2)(D) SEASONAL WORKER EXCEPTION")
-            && f.contains("120 days or fewer")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 4980H(c)(2)(D) SEASONAL WORKER EXCEPTION")
+                && f.contains("120 days or fewer")));
     }
 
     #[test]
@@ -497,11 +503,13 @@ mod tests {
     #[test]
     fn section_4980h_a_penalty_message_pinned() {
         let r = check(&ale_no_coverage());
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 4980H(a) 'A PENALTY' ENGAGED")
-            && f.contains("at least 95%")
-            && f.contains("$3,340")
-            && f.contains("(60 - 30)")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 4980H(a) 'A PENALTY' ENGAGED")
+                && f.contains("at least 95%")
+                && f.contains("$3,340")
+                && f.contains("(60 - 30)")));
     }
 
     #[test]
@@ -514,10 +522,12 @@ mod tests {
         assert!(r.section_4980h_b_engaged);
         let expected = (501_000_u64 / 12) * 3 * 12;
         assert_eq!(r.section_4980h_b_annual_penalty_cents, expected);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 4980H(b) 'B PENALTY' ENGAGED")
-            && f.contains("UNAFFORDABLE")
-            && f.contains("9.96%")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 4980H(b) 'B PENALTY' ENGAGED")
+                && f.contains("UNAFFORDABLE")
+                && f.contains("9.96%")));
     }
 
     #[test]
@@ -528,9 +538,11 @@ mod tests {
         i.ft_employees_receiving_ptc = 2;
         let r = check(&i);
         assert!(r.section_4980h_b_engaged);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("MINIMUM VALUE under § 36B(c)(2)(C)(ii)")
-            && f.contains("60% threshold")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("MINIMUM VALUE under § 36B(c)(2)(C)(ii)")
+                && f.contains("60% threshold")));
     }
 
     #[test]
@@ -551,10 +563,12 @@ mod tests {
         let r = check(&i);
         assert!(!r.section_4980h_a_engaged);
         assert!(!r.section_4980h_b_engaged);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("NO full-time employee certified")
-            && f.contains("§ 36B premium tax credit")
-            && f.contains("essential prerequisite")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("NO full-time employee certified")
+                && f.contains("§ 36B premium tax credit")
+                && f.contains("essential prerequisite")));
     }
 
     #[test]
@@ -563,12 +577,14 @@ mod tests {
         i.section_6056_reporting_compliant = false;
         let r = check(&i);
         assert!(!r.section_6056_reporting_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 6056 REPORTING")
-            && f.contains("Form 1094-C")
-            && f.contains("Form 1095-C")
-            && f.contains("January 31")
-            && f.contains("$310 per return")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 6056 REPORTING")
+                && f.contains("Form 1094-C")
+                && f.contains("Form 1095-C")
+                && f.contains("January 31")
+                && f.contains("$310 per return")));
     }
 
     #[test]
@@ -576,8 +592,8 @@ mod tests {
         let mut i = ale_no_coverage();
         i.controlled_group_aggregation = true;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 414(b)/(c)/(m)/(o) CONTROLLED GROUP AGGREGATION")
+        assert!(r.failure_reasons.iter().any(|f| f
+            .contains("§ 414(b)/(c)/(m)/(o) CONTROLLED GROUP AGGREGATION")
             && f.contains("SEPARATELY ASSESSED ESRP")));
     }
 
@@ -687,28 +703,31 @@ mod tests {
     #[test]
     fn note_pins_esrp_pay_or_play_framework() {
         let r = check(&ale_no_coverage());
-        assert!(r.notes.iter().any(|n|
-            n.contains("EMPLOYER SHARED RESPONSIBILITY PAYMENT")
-            && n.contains("Pub. L. 111-148")
-            && n.contains("pay or play")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("EMPLOYER SHARED RESPONSIBILITY PAYMENT")
+                && n.contains("Pub. L. 111-148")
+                && n.contains("pay or play")));
     }
 
     #[test]
     fn note_pins_subsection_c2_ale_definition() {
         let r = check(&ale_no_coverage());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 4980H(c)(2) APPLICABLE LARGE EMPLOYER")
-            && n.contains("50 FULL-TIME EMPLOYEES")
-            && n.contains("30+ hours/week")
-            && n.contains("130/month")
-            && n.contains("§ 414")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 4980H(c)(2) APPLICABLE LARGE EMPLOYER")
+                && n.contains("50 FULL-TIME EMPLOYEES")
+                && n.contains("30+ hours/week")
+                && n.contains("130/month")
+                && n.contains("§ 414")));
     }
 
     #[test]
     fn note_pins_subsection_a_2026_penalty() {
         let r = check(&ale_no_coverage());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 4980H(a) 'A PENALTY'")
+        assert!(r.notes.iter().any(|n| n.contains("§ 4980H(a) 'A PENALTY'")
             && n.contains("$3,340 per FT minus 30")
             && n.contains("$2,000 indexed")
             && n.contains("§ 4980H(c)(5) CPI")));
@@ -717,8 +736,7 @@ mod tests {
     #[test]
     fn note_pins_subsection_b_2026_penalty() {
         let r = check(&ale_no_coverage());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 4980H(b) 'B PENALTY'")
+        assert!(r.notes.iter().any(|n| n.contains("§ 4980H(b) 'B PENALTY'")
             && n.contains("$5,010 per employee receiving PTC")
             && n.contains("$3,000 indexed")));
     }
@@ -726,39 +744,44 @@ mod tests {
     #[test]
     fn note_pins_subsection_c4_affordability() {
         let r = check(&ale_no_coverage());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 4980H(c)(4) AFFORDABILITY")
-            && n.contains("9.96%")
-            && n.contains("9.02% for 2025")
-            && n.contains("three safe harbors")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 4980H(c)(4) AFFORDABILITY")
+                && n.contains("9.96%")
+                && n.contains("9.02% for 2025")
+                && n.contains("three safe harbors")));
     }
 
     #[test]
     fn note_pins_section_36b_minimum_value() {
         let r = check(&ale_no_coverage());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 36B(c)(2)(C)(ii) MINIMUM VALUE")
-            && n.contains("60% of expected healthcare costs")
-            && n.contains("Treas. Reg. § 1.36B-6")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 36B(c)(2)(C)(ii) MINIMUM VALUE")
+                && n.contains("60% of expected healthcare costs")
+                && n.contains("Treas. Reg. § 1.36B-6")));
     }
 
     #[test]
     fn note_pins_subsection_d_mec_inclusions_and_exclusions() {
         let r = check(&ale_no_coverage());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 4980H(d) MINIMUM ESSENTIAL COVERAGE")
-            && n.contains("Medicare")
-            && n.contains("Medicaid")
-            && n.contains("TRICARE")
-            && n.contains("NOT MEC")
-            && n.contains("dental-only")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 4980H(d) MINIMUM ESSENTIAL COVERAGE")
+                && n.contains("Medicare")
+                && n.contains("Medicaid")
+                && n.contains("TRICARE")
+                && n.contains("NOT MEC")
+                && n.contains("dental-only")));
     }
 
     #[test]
     fn note_pins_section_6056_form_1094_1095() {
         let r = check(&ale_no_coverage());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 6056 REPORTING")
+        assert!(r.notes.iter().any(|n| n.contains("§ 6056 REPORTING")
             && n.contains("Form 1094-C")
             && n.contains("Form 1095-C")
             && n.contains("January 31")
@@ -768,8 +791,8 @@ mod tests {
     #[test]
     fn note_pins_controlled_group_aggregation_section_414() {
         let r = check(&ale_no_coverage());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 414(b)/(c)/(m)/(o) CONTROLLED GROUP AGGREGATION")
+        assert!(r.notes.iter().any(|n| n
+            .contains("§ 414(b)/(c)/(m)/(o) CONTROLLED GROUP AGGREGATION")
             && n.contains("parent-subsidiary")
             && n.contains("affiliated service group")
             && n.contains("SEPARATELY ASSESSED ESRP")));
@@ -778,34 +801,40 @@ mod tests {
     #[test]
     fn note_pins_seasonal_worker_120_day_exception() {
         let r = check(&ale_no_coverage());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 4980H(c)(2)(D) SEASONAL WORKER EXCEPTION")
-            && n.contains("120 DAYS OR FEWER")
-            && n.contains("seasonal occupations")
-            && n.contains("agriculture")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 4980H(c)(2)(D) SEASONAL WORKER EXCEPTION")
+                && n.contains("120 DAYS OR FEWER")
+                && n.contains("seasonal occupations")
+                && n.contains("agriculture")));
     }
 
     #[test]
     fn note_pins_trader_fact_patterns_five() {
         let r = check(&ale_no_coverage());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-landlord critical fact patterns")
-            && n.contains("$100,200")
-            && n.contains("12% W-2 contribution")
-            && n.contains("$15,030")
-            && n.contains("controlled group")
-            && n.contains("§ 4980H(c)(2)(D) exception")
-            && n.contains("§ 6722")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-landlord critical fact patterns")
+                && n.contains("$100,200")
+                && n.contains("12% W-2 contribution")
+                && n.contains("$15,030")
+                && n.contains("controlled group")
+                && n.contains("§ 4980H(c)(2)(D) exception")
+                && n.contains("§ 6722")));
     }
 
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&ale_no_coverage());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Companion to section_162m")
-            && n.contains("section_409a")
-            && n.contains("section_415")
-            && n.contains("section_280g")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Companion to section_162m")
+                && n.contains("section_409a")
+                && n.contains("section_415")
+                && n.contains("section_280g")));
     }
 
     #[test]

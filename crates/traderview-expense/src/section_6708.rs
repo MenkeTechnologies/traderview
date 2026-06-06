@@ -327,8 +327,10 @@ mod tests {
         i.reasonable_cause_engaged = true;
         let r = check(&i);
         assert_eq!(r.penalty_cents, 0);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 6708(a)(2)")
-            && f.contains("REASONABLE CAUSE")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 6708(a)(2)") && f.contains("REASONABLE CAUSE")));
     }
 
     #[test]
@@ -339,8 +341,10 @@ mod tests {
         let r = check(&i);
         assert_eq!(r.penalty_cents, 0);
         assert!(r.extension_engaged);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 301.6708-1(c)(3)(ii)")
-            && f.contains("granted extension")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 301.6708-1(c)(3)(ii)") && f.contains("granted extension")));
     }
 
     #[test]
@@ -348,8 +352,10 @@ mod tests {
         let mut i = within_20_days_compliant();
         i.list_prepared_within_30_calendar_days = false;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 301.6112-1")
-            && f.contains("30 CALENDAR DAYS")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 301.6112-1") && f.contains("30 CALENDAR DAYS")));
     }
 
     #[test]
@@ -357,8 +363,10 @@ mod tests {
         let mut i = within_20_days_compliant();
         i.seven_year_retention_satisfied = false;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 6112(b)(2)")
-            && f.contains("7 YEARS")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 6112(b)(2)") && f.contains("7 YEARS")));
     }
 
     #[test]
@@ -366,17 +374,28 @@ mod tests {
         let mut i = within_20_days_compliant();
         i.list_content_complete = false;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 301.6112-1(b)")
-            && f.contains("advisee identifiers")
-            && f.contains("transaction identification")
-            && f.contains("TIN")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 301.6112-1(b)")
+                && f.contains("advisee identifiers")
+                && f.contains("transaction identification")
+                && f.contains("TIN")));
     }
 
     #[test]
     fn list_production_status_truth_table_four_cells() {
         for (status, days, exp_penalty) in [
-            (ListProductionStatus::ProvidedWithinTwentyBusinessDays, 18, 0_u64),
-            (ListProductionStatus::ProvidedAfterTwentyBusinessDays, 30, 10_000_000),
+            (
+                ListProductionStatus::ProvidedWithinTwentyBusinessDays,
+                18,
+                0_u64,
+            ),
+            (
+                ListProductionStatus::ProvidedAfterTwentyBusinessDays,
+                30,
+                10_000_000,
+            ),
             (ListProductionStatus::NotProvided, 50, 30_000_000),
             (ListProductionStatus::ExtensionGrantedByIrs, 100, 0),
         ] {
@@ -384,7 +403,11 @@ mod tests {
             i.list_production_status = status;
             i.business_days_since_irs_request = days;
             let r = check(&i);
-            assert_eq!(r.penalty_cents, exp_penalty, "status={:?} days={}", status, days);
+            assert_eq!(
+                r.penalty_cents, exp_penalty,
+                "status={:?} days={}",
+                status, days
+            );
         }
     }
 
@@ -415,7 +438,9 @@ mod tests {
         assert!(r.citation.contains("§ 6708(a)(1)"));
         assert!(r.citation.contains("§ 6708(a)(2)"));
         assert!(r.citation.contains("§ 6112(a)-(b)"));
-        assert!(r.citation.contains("American Jobs Creation Act of 2004 § 815"));
+        assert!(r
+            .citation
+            .contains("American Jobs Creation Act of 2004 § 815"));
         assert!(r.citation.contains("Pub. L. 108-357"));
         assert!(r.citation.contains("October 22, 2004"));
         assert!(r.citation.contains("26 CFR § 301.6708-1"));
@@ -485,25 +510,33 @@ mod tests {
     #[test]
     fn note_pins_2004_ajca_origin() {
         let r = check(&within_20_days_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("American Jobs Creation Act of 2004 § 815")
-            && n.contains("Pub. L. 108-357")
-            && n.contains("October 22, 2004")
-            && n.contains("KPMG")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("American Jobs Creation Act of 2004 § 815")
+                && n.contains("Pub. L. 108-357")
+                && n.contains("October 22, 2004")
+                && n.contains("KPMG")));
     }
 
     #[test]
     fn note_pins_coordination_with_6707() {
         let r = check(&within_20_days_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("Coordination with § 6707")
-            && n.contains("TWO INDEPENDENT PENALTIES")
-            && n.contains("same material advisor can be hit with both")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Coordination with § 6707")
+                && n.contains("TWO INDEPENDENT PENALTIES")
+                && n.contains("same material advisor can be hit with both")));
     }
 
     #[test]
     fn note_pins_301_6708_1_implementing_regulations() {
         let r = check(&within_20_days_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("26 CFR § 301.6708-1")
-            && n.contains("T.D. 9762")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("26 CFR § 301.6708-1") && n.contains("T.D. 9762")));
     }
 
     #[test]
@@ -518,18 +551,23 @@ mod tests {
     #[test]
     fn note_pins_2025_federal_register_continued_enforcement() {
         let r = check(&within_20_days_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("Federal Register agency-collection activity")
-            && n.contains("March 4, 2025")
-            && n.contains("continued IRS focus")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("Federal Register agency-collection activity")
+                && n.contains("March 4, 2025")
+                && n.contains("continued IRS focus")
+        ));
     }
 
     #[test]
     fn note_pins_listed_transaction_examples() {
         let r = check(&within_20_days_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("Listed transaction examples")
-            && n.contains("Notice 2015-73")
-            && n.contains("Notice 2017-10")
-            && n.contains("Notice 2016-66")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Listed transaction examples")
+                && n.contains("Notice 2015-73")
+                && n.contains("Notice 2017-10")
+                && n.contains("Notice 2016-66")));
     }
 
     #[test]

@@ -39,9 +39,12 @@ pub fn compute(
     params: Garch11,
     forecast_horizon: usize,
 ) -> Option<Garch11Report> {
-    if !params.omega.is_finite() || !params.alpha.is_finite() || !params.beta.is_finite()
+    if !params.omega.is_finite()
+        || !params.alpha.is_finite()
+        || !params.beta.is_finite()
         || params.omega <= 0.0
-        || params.alpha < 0.0 || params.beta < 0.0
+        || params.alpha < 0.0
+        || params.beta < 0.0
         || params.alpha + params.beta >= 1.0
         || log_returns.is_empty()
     {
@@ -89,32 +92,72 @@ mod tests {
     fn nonstationary_params_returns_none() {
         let r = vec![0.01; 100];
         // α + β = 1.0 → unit root → no stationarity.
-        let p = Garch11 { omega: 1e-6, alpha: 0.5, beta: 0.5 };
+        let p = Garch11 {
+            omega: 1e-6,
+            alpha: 0.5,
+            beta: 0.5,
+        };
         assert!(compute(&r, p, 5).is_none());
     }
 
     #[test]
     fn invalid_params_return_none() {
         let r = vec![0.01; 100];
-        assert!(compute(&r, Garch11 { omega: 0.0, alpha: 0.1, beta: 0.85 }, 5).is_none());
-        assert!(compute(&r, Garch11 { omega: 1e-6, alpha: -0.1, beta: 0.85 }, 5).is_none());
-        assert!(compute(&r, Garch11 { omega: f64::NAN, alpha: 0.1, beta: 0.85 }, 5).is_none());
+        assert!(compute(
+            &r,
+            Garch11 {
+                omega: 0.0,
+                alpha: 0.1,
+                beta: 0.85
+            },
+            5
+        )
+        .is_none());
+        assert!(compute(
+            &r,
+            Garch11 {
+                omega: 1e-6,
+                alpha: -0.1,
+                beta: 0.85
+            },
+            5
+        )
+        .is_none());
+        assert!(compute(
+            &r,
+            Garch11 {
+                omega: f64::NAN,
+                alpha: 0.1,
+                beta: 0.85
+            },
+            5
+        )
+        .is_none());
     }
 
     #[test]
     fn empty_returns_none() {
-        let p = Garch11 { omega: 1e-6, alpha: 0.1, beta: 0.85 };
+        let p = Garch11 {
+            omega: 1e-6,
+            alpha: 0.1,
+            beta: 0.85,
+        };
         assert!(compute(&[], p, 5).is_none());
     }
 
     #[test]
     fn flat_zero_returns_decay_to_unconditional() {
         let r = vec![0.0; 1_000];
-        let p = Garch11 { omega: 1e-6, alpha: 0.1, beta: 0.85 };
+        let p = Garch11 {
+            omega: 1e-6,
+            alpha: 0.1,
+            beta: 0.85,
+        };
         let report = compute(&r, p, 10).unwrap();
         // After 1000 quiet bars, conditional vol should approach √(unconditional).
         let last = report.conditional_vol.last().copied().flatten().unwrap();
-        let expected_long_run = (report.unconditional_variance * (1.0 - 0.95_f64.powi(1_000))).sqrt();
+        let expected_long_run =
+            (report.unconditional_variance * (1.0 - 0.95_f64.powi(1_000))).sqrt();
         // Should be tiny (large β decays slowly but ω small).
         assert!(last.is_finite());
         // Long-run check: the asymptote (no shocks) is √(ω / (1−α−β)·(1 − (α+β)^t))
@@ -127,12 +170,19 @@ mod tests {
     #[test]
     fn vol_spike_after_large_return_then_decays() {
         let mut r = vec![0.001; 100];
-        r[50] = 0.10;    // 10% shock
-        let p = Garch11 { omega: 1e-6, alpha: 0.1, beta: 0.85 };
+        r[50] = 0.10; // 10% shock
+        let p = Garch11 {
+            omega: 1e-6,
+            alpha: 0.1,
+            beta: 0.85,
+        };
         let report = compute(&r, p, 0).unwrap();
         let pre_spike = report.conditional_vol[49].unwrap();
         let post_spike = report.conditional_vol[51].unwrap();
-        assert!(post_spike > pre_spike, "spike should raise vol: {pre_spike} → {post_spike}");
+        assert!(
+            post_spike > pre_spike,
+            "spike should raise vol: {pre_spike} → {post_spike}"
+        );
         // Decay: 30 bars later should be lower than just after spike.
         let later = report.conditional_vol[80].unwrap();
         assert!(later < post_spike);
@@ -141,20 +191,32 @@ mod tests {
     #[test]
     fn forecast_converges_toward_unconditional_vol() {
         let r = vec![0.01; 200];
-        let p = Garch11 { omega: 1e-5, alpha: 0.05, beta: 0.90 };
+        let p = Garch11 {
+            omega: 1e-5,
+            alpha: 0.05,
+            beta: 0.90,
+        };
         let report = compute(&r, p, 500).unwrap();
         let target = report.unconditional_variance.sqrt();
         let last_forecast = *report.forecast_vol.last().unwrap();
         // After 500 steps, forecast should be very close to long-run vol.
-        assert!((last_forecast - target).abs() / target < 0.05,
-            "forecast {} should converge to {}", last_forecast, target);
+        assert!(
+            (last_forecast - target).abs() / target < 0.05,
+            "forecast {} should converge to {}",
+            last_forecast,
+            target
+        );
     }
 
     #[test]
     fn nan_return_carries_prior_vol() {
         let mut r = vec![0.001; 50];
         r[25] = f64::NAN;
-        let p = Garch11 { omega: 1e-6, alpha: 0.1, beta: 0.85 };
+        let p = Garch11 {
+            omega: 1e-6,
+            alpha: 0.1,
+            beta: 0.85,
+        };
         let report = compute(&r, p, 0).unwrap();
         // Around NaN, all slots populated; vol on the NaN bar carries forward.
         assert!(report.conditional_vol[24].is_some());

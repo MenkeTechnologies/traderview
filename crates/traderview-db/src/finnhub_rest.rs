@@ -65,7 +65,12 @@ fn client() -> reqwest::Client {
 async fn get_json(path: &str, query: &[(&str, &str)]) -> anyhow::Result<Value> {
     let key = resolve_key().await?;
     let url = format!("{FINNHUB_BASE}{path}");
-    let resp = client().get(&url).query(query).query(&[("token", &key)]).send().await?;
+    let resp = client()
+        .get(&url)
+        .query(query)
+        .query(&[("token", &key)])
+        .send()
+        .await?;
     let status = resp.status();
     if !status.is_success() {
         let body = resp.text().await.unwrap_or_default();
@@ -81,7 +86,10 @@ async fn get_json(path: &str, query: &[(&str, &str)]) -> anyhow::Result<Value> {
                 body.chars().take(300).collect::<String>(),
             );
         }
-        anyhow::bail!("finnhub {path} HTTP {status}: {}", body.chars().take(300).collect::<String>());
+        anyhow::bail!(
+            "finnhub {path} HTTP {status}: {}",
+            body.chars().take(300).collect::<String>()
+        );
     }
     Ok(resp.json().await?)
 }
@@ -114,7 +122,11 @@ pub async fn recommendation(symbol: &str) -> anyhow::Result<Value> {
 pub async fn eps_surprise(symbol: &str) -> anyhow::Result<Value> {
     get_json("/stock/eps-surprise", &[("symbol", symbol)]).await
 }
-pub async fn earnings_calendar(from: &str, to: &str, symbol: Option<&str>) -> anyhow::Result<Value> {
+pub async fn earnings_calendar(
+    from: &str,
+    to: &str,
+    symbol: Option<&str>,
+) -> anyhow::Result<Value> {
     let mut q: Vec<(&str, &str)> = vec![("from", from), ("to", to)];
     if let Some(s) = symbol {
         q.push(("symbol", s));
@@ -125,7 +137,11 @@ pub async fn ipo_calendar(from: &str, to: &str) -> anyhow::Result<Value> {
     get_json("/calendar/ipo", &[("from", from), ("to", to)]).await
 }
 pub async fn company_news(symbol: &str, from: &str, to: &str) -> anyhow::Result<Value> {
-    get_json("/company-news", &[("symbol", symbol), ("from", from), ("to", to)]).await
+    get_json(
+        "/company-news",
+        &[("symbol", symbol), ("from", from), ("to", to)],
+    )
+    .await
 }
 pub async fn general_news(category: &str) -> anyhow::Result<Value> {
     get_json("/news", &[("category", category)]).await
@@ -194,9 +210,18 @@ pub async fn fundamentals_yahoo_shape(symbol: &str) -> anyhow::Result<Value> {
     let prof_v = prof_v?;
     let met_v = met_v?;
     let prof: ProfileResp = serde_json::from_value(prof_v.clone()).unwrap_or(ProfileResp {
-        name: None, ticker: None, exchange: None, country: None, currency: None,
-        industry: None, share_outstanding: None, market_cap_m_usd: None,
-        ipo: None, weburl: None, phone: None, logo: None,
+        name: None,
+        ticker: None,
+        exchange: None,
+        country: None,
+        currency: None,
+        industry: None,
+        share_outstanding: None,
+        market_cap_m_usd: None,
+        ipo: None,
+        weburl: None,
+        phone: None,
+        logo: None,
     });
     let m = met_v.get("metric").cloned().unwrap_or(Value::Null);
     let mf = |k: &str| m.get(k).and_then(|x| x.as_f64());
@@ -297,8 +322,7 @@ pub async fn earnings_yahoo_shape(symbol: &str) -> anyhow::Result<Value> {
         Value::Null
     });
 
-    let history: Vec<EpsItem> =
-        serde_json::from_value(eps_v.clone()).unwrap_or_default();
+    let history: Vec<EpsItem> = serde_json::from_value(eps_v.clone()).unwrap_or_default();
     let yahoo_history: Vec<Value> = history
         .iter()
         .map(|h| {
@@ -475,13 +499,21 @@ pub async fn company_executive(symbol: &str) -> anyhow::Result<Value> {
     get_json("/stock/executive", &[("symbol", symbol)]).await
 }
 pub async fn stock_dividends(symbol: &str, from: &str, to: &str) -> anyhow::Result<Value> {
-    get_json("/stock/dividend", &[("symbol", symbol), ("from", from), ("to", to)]).await
+    get_json(
+        "/stock/dividend",
+        &[("symbol", symbol), ("from", from), ("to", to)],
+    )
+    .await
 }
 pub async fn stock_basic_dividends(symbol: &str) -> anyhow::Result<Value> {
     get_json("/stock/dividend2", &[("symbol", symbol)]).await
 }
 pub async fn stock_splits(symbol: &str, from: &str, to: &str) -> anyhow::Result<Value> {
-    get_json("/stock/split", &[("symbol", symbol), ("from", from), ("to", to)]).await
+    get_json(
+        "/stock/split",
+        &[("symbol", symbol), ("from", from), ("to", to)],
+    )
+    .await
 }
 pub async fn price_target(symbol: &str) -> anyhow::Result<Value> {
     get_json("/stock/price-target", &[("symbol", symbol)]).await
@@ -497,51 +529,106 @@ pub async fn financials(symbol: &str, statement: &str, freq: &str) -> anyhow::Re
     .await
 }
 pub async fn fund_ownership(symbol: &str, limit: i64) -> anyhow::Result<Value> {
-    get_json("/stock/fund-ownership", &[("symbol", symbol), ("limit", &limit.to_string())]).await
+    get_json(
+        "/stock/fund-ownership",
+        &[("symbol", symbol), ("limit", &limit.to_string())],
+    )
+    .await
 }
 pub async fn ownership(symbol: &str, limit: i64) -> anyhow::Result<Value> {
-    get_json("/stock/ownership", &[("symbol", symbol), ("limit", &limit.to_string())]).await
+    get_json(
+        "/stock/ownership",
+        &[("symbol", symbol), ("limit", &limit.to_string())],
+    )
+    .await
 }
 pub async fn company_earnings(symbol: &str, limit: i64) -> anyhow::Result<Value> {
-    get_json("/stock/earnings", &[("symbol", symbol), ("limit", &limit.to_string())]).await
+    get_json(
+        "/stock/earnings",
+        &[("symbol", symbol), ("limit", &limit.to_string())],
+    )
+    .await
 }
 pub async fn revenue_estimate(symbol: &str, freq: &str) -> anyhow::Result<Value> {
-    get_json("/stock/revenue-estimate", &[("symbol", symbol), ("freq", freq)]).await
+    get_json(
+        "/stock/revenue-estimate",
+        &[("symbol", symbol), ("freq", freq)],
+    )
+    .await
 }
 pub async fn ebitda_estimate(symbol: &str, freq: &str) -> anyhow::Result<Value> {
-    get_json("/stock/ebitda-estimate", &[("symbol", symbol), ("freq", freq)]).await
+    get_json(
+        "/stock/ebitda-estimate",
+        &[("symbol", symbol), ("freq", freq)],
+    )
+    .await
 }
 pub async fn ebit_estimate(symbol: &str, freq: &str) -> anyhow::Result<Value> {
-    get_json("/stock/ebit-estimate", &[("symbol", symbol), ("freq", freq)]).await
+    get_json(
+        "/stock/ebit-estimate",
+        &[("symbol", symbol), ("freq", freq)],
+    )
+    .await
 }
 pub async fn eps_estimate(symbol: &str, freq: &str) -> anyhow::Result<Value> {
     get_json("/stock/eps-estimate", &[("symbol", symbol), ("freq", freq)]).await
 }
 pub async fn net_income_estimate(symbol: &str, freq: &str) -> anyhow::Result<Value> {
-    get_json("/stock/net-income-estimate", &[("symbol", symbol), ("freq", freq)]).await
+    get_json(
+        "/stock/net-income-estimate",
+        &[("symbol", symbol), ("freq", freq)],
+    )
+    .await
 }
 pub async fn pretax_income_estimate(symbol: &str, freq: &str) -> anyhow::Result<Value> {
-    get_json("/stock/pretax-income-estimate", &[("symbol", symbol), ("freq", freq)]).await
+    get_json(
+        "/stock/pretax-income-estimate",
+        &[("symbol", symbol), ("freq", freq)],
+    )
+    .await
 }
 pub async fn gross_income_estimate(symbol: &str, freq: &str) -> anyhow::Result<Value> {
-    get_json("/stock/gross-income-estimate", &[("symbol", symbol), ("freq", freq)]).await
+    get_json(
+        "/stock/gross-income-estimate",
+        &[("symbol", symbol), ("freq", freq)],
+    )
+    .await
 }
 pub async fn dps_estimate(symbol: &str, freq: &str) -> anyhow::Result<Value> {
     get_json("/stock/dps-estimate", &[("symbol", symbol), ("freq", freq)]).await
 }
-pub async fn filings(symbol: &str, from: &str, to: &str, form: Option<&str>) -> anyhow::Result<Value> {
+pub async fn filings(
+    symbol: &str,
+    from: &str,
+    to: &str,
+    form: Option<&str>,
+) -> anyhow::Result<Value> {
     let mut q = vec![("symbol", symbol), ("from", from), ("to", to)];
-    if let Some(f) = form { q.push(("form", f)); }
+    if let Some(f) = form {
+        q.push(("form", f));
+    }
     get_json("/stock/filings", &q).await
 }
 pub async fn international_filings(symbol: &str, country: &str) -> anyhow::Result<Value> {
-    get_json("/stock/international-filings", &[("symbol", symbol), ("country", country)]).await
+    get_json(
+        "/stock/international-filings",
+        &[("symbol", symbol), ("country", country)],
+    )
+    .await
 }
 pub async fn sec_sentiment(access_number: &str) -> anyhow::Result<Value> {
-    get_json("/stock/filings-sentiment", &[("accessNumber", access_number)]).await
+    get_json(
+        "/stock/filings-sentiment",
+        &[("accessNumber", access_number)],
+    )
+    .await
 }
 pub async fn similarity_index(symbol: &str, freq: &str) -> anyhow::Result<Value> {
-    get_json("/stock/similarity-index", &[("symbol", symbol), ("freq", freq)]).await
+    get_json(
+        "/stock/similarity-index",
+        &[("symbol", symbol), ("freq", freq)],
+    )
+    .await
 }
 pub async fn transcripts_list(symbol: &str) -> anyhow::Result<Value> {
     get_json("/stock/transcripts/list", &[("symbol", symbol)]).await
@@ -549,23 +636,46 @@ pub async fn transcripts_list(symbol: &str) -> anyhow::Result<Value> {
 pub async fn transcripts(id: &str) -> anyhow::Result<Value> {
     get_json("/stock/transcripts", &[("id", id)]).await
 }
-pub async fn stock_candles(symbol: &str, resolution: &str, from: &str, to: &str) -> anyhow::Result<Value> {
-    get_json("/stock/candle", &[
-        ("symbol", symbol), ("resolution", resolution),
-        ("from", from), ("to", to),
-    ]).await
+pub async fn stock_candles(
+    symbol: &str,
+    resolution: &str,
+    from: &str,
+    to: &str,
+) -> anyhow::Result<Value> {
+    get_json(
+        "/stock/candle",
+        &[
+            ("symbol", symbol),
+            ("resolution", resolution),
+            ("from", from),
+            ("to", to),
+        ],
+    )
+    .await
 }
 pub async fn stock_tick(symbol: &str, date: &str, limit: i64, skip: i64) -> anyhow::Result<Value> {
-    get_json("/stock/tick", &[
-        ("symbol", symbol), ("date", date),
-        ("limit", &limit.to_string()), ("skip", &skip.to_string()),
-    ]).await
+    get_json(
+        "/stock/tick",
+        &[
+            ("symbol", symbol),
+            ("date", date),
+            ("limit", &limit.to_string()),
+            ("skip", &skip.to_string()),
+        ],
+    )
+    .await
 }
 pub async fn stock_nbbo(symbol: &str, date: &str, limit: i64, skip: i64) -> anyhow::Result<Value> {
-    get_json("/stock/bbo", &[
-        ("symbol", symbol), ("date", date),
-        ("limit", &limit.to_string()), ("skip", &skip.to_string()),
-    ]).await
+    get_json(
+        "/stock/bbo",
+        &[
+            ("symbol", symbol),
+            ("date", date),
+            ("limit", &limit.to_string()),
+            ("skip", &skip.to_string()),
+        ],
+    )
+    .await
 }
 pub async fn last_bid_ask(symbol: &str) -> anyhow::Result<Value> {
     get_json("/stock/bidask", &[("symbol", symbol)]).await
@@ -573,28 +683,56 @@ pub async fn last_bid_ask(symbol: &str) -> anyhow::Result<Value> {
 
 // ───── Stock — alternative / regulatory / ESG ─────
 pub async fn insider_transactions(symbol: &str, from: &str, to: &str) -> anyhow::Result<Value> {
-    get_json("/stock/insider-transactions", &[("symbol", symbol), ("from", from), ("to", to)]).await
+    get_json(
+        "/stock/insider-transactions",
+        &[("symbol", symbol), ("from", from), ("to", to)],
+    )
+    .await
 }
 pub async fn insider_sentiment(symbol: &str, from: &str, to: &str) -> anyhow::Result<Value> {
-    get_json("/stock/insider-sentiment", &[("symbol", symbol), ("from", from), ("to", to)]).await
+    get_json(
+        "/stock/insider-sentiment",
+        &[("symbol", symbol), ("from", from), ("to", to)],
+    )
+    .await
 }
 pub async fn lobbying(symbol: &str, from: &str, to: &str) -> anyhow::Result<Value> {
-    get_json("/stock/lobbying", &[("symbol", symbol), ("from", from), ("to", to)]).await
+    get_json(
+        "/stock/lobbying",
+        &[("symbol", symbol), ("from", from), ("to", to)],
+    )
+    .await
 }
 pub async fn usa_spending(symbol: &str, from: &str, to: &str) -> anyhow::Result<Value> {
-    get_json("/stock/usa-spending", &[("symbol", symbol), ("from", from), ("to", to)]).await
+    get_json(
+        "/stock/usa-spending",
+        &[("symbol", symbol), ("from", from), ("to", to)],
+    )
+    .await
 }
 pub async fn visa_application(symbol: &str, from: &str, to: &str) -> anyhow::Result<Value> {
-    get_json("/stock/visa-application", &[("symbol", symbol), ("from", from), ("to", to)]).await
+    get_json(
+        "/stock/visa-application",
+        &[("symbol", symbol), ("from", from), ("to", to)],
+    )
+    .await
 }
 pub async fn uspto_patent(symbol: &str, from: &str, to: &str) -> anyhow::Result<Value> {
-    get_json("/stock/uspto-patent", &[("symbol", symbol), ("from", from), ("to", to)]).await
+    get_json(
+        "/stock/uspto-patent",
+        &[("symbol", symbol), ("from", from), ("to", to)],
+    )
+    .await
 }
 pub async fn supply_chain(symbol: &str) -> anyhow::Result<Value> {
     get_json("/stock/supply-chain", &[("symbol", symbol)]).await
 }
 pub async fn social_sentiment(symbol: &str, from: &str, to: &str) -> anyhow::Result<Value> {
-    get_json("/stock/social-sentiment", &[("symbol", symbol), ("from", from), ("to", to)]).await
+    get_json(
+        "/stock/social-sentiment",
+        &[("symbol", symbol), ("from", from), ("to", to)],
+    )
+    .await
 }
 pub async fn investment_theme(theme: &str) -> anyhow::Result<Value> {
     get_json("/stock/investment-theme", &[("theme", theme)]).await
@@ -606,13 +744,29 @@ pub async fn historical_esg(symbol: &str) -> anyhow::Result<Value> {
     get_json("/stock/historical-esg", &[("symbol", symbol)]).await
 }
 pub async fn historical_market_cap(symbol: &str, from: &str, to: &str) -> anyhow::Result<Value> {
-    get_json("/stock/historical-market-cap", &[("symbol", symbol), ("from", from), ("to", to)]).await
+    get_json(
+        "/stock/historical-market-cap",
+        &[("symbol", symbol), ("from", from), ("to", to)],
+    )
+    .await
 }
-pub async fn historical_employee_count(symbol: &str, from: &str, to: &str) -> anyhow::Result<Value> {
-    get_json("/stock/historical-employee-count", &[("symbol", symbol), ("from", from), ("to", to)]).await
+pub async fn historical_employee_count(
+    symbol: &str,
+    from: &str,
+    to: &str,
+) -> anyhow::Result<Value> {
+    get_json(
+        "/stock/historical-employee-count",
+        &[("symbol", symbol), ("from", from), ("to", to)],
+    )
+    .await
 }
 pub async fn earnings_quality_score(symbol: &str, freq: &str) -> anyhow::Result<Value> {
-    get_json("/stock/earnings-quality-score", &[("symbol", symbol), ("freq", freq)]).await
+    get_json(
+        "/stock/earnings-quality-score",
+        &[("symbol", symbol), ("freq", freq)],
+    )
+    .await
 }
 pub async fn revenue_breakdown(symbol: &str) -> anyhow::Result<Value> {
     get_json("/stock/revenue-breakdown", &[("symbol", symbol)]).await
@@ -624,19 +778,35 @@ pub async fn presentation(symbol: &str) -> anyhow::Result<Value> {
     get_json("/stock/presentation", &[("symbol", symbol)]).await
 }
 pub async fn newsroom(symbol: &str, from: &str, to: &str) -> anyhow::Result<Value> {
-    get_json("/stock/newsroom", &[("symbol", symbol), ("from", from), ("to", to)]).await
+    get_json(
+        "/stock/newsroom",
+        &[("symbol", symbol), ("from", from), ("to", to)],
+    )
+    .await
 }
 pub async fn congressional_trading(symbol: &str, from: &str, to: &str) -> anyhow::Result<Value> {
-    get_json("/stock/congressional-trading", &[("symbol", symbol), ("from", from), ("to", to)]).await
+    get_json(
+        "/stock/congressional-trading",
+        &[("symbol", symbol), ("from", from), ("to", to)],
+    )
+    .await
 }
 pub async fn price_metric(symbol: &str, date: Option<&str>) -> anyhow::Result<Value> {
     let mut q = vec![("symbol", symbol)];
-    if let Some(d) = date { q.push(("date", d)); }
+    if let Some(d) = date {
+        q.push(("date", d));
+    }
     get_json("/stock/price-metric", &q).await
 }
-pub async fn earnings_call_live(from: &str, to: &str, symbol: Option<&str>) -> anyhow::Result<Value> {
+pub async fn earnings_call_live(
+    from: &str,
+    to: &str,
+    symbol: Option<&str>,
+) -> anyhow::Result<Value> {
     let mut q = vec![("from", from), ("to", to)];
-    if let Some(s) = symbol { q.push(("symbol", s)); }
+    if let Some(s) = symbol {
+        q.push(("symbol", s));
+    }
     get_json("/stock/earnings-call-live", &q).await
 }
 
@@ -645,51 +815,104 @@ pub async fn news_sentiment(symbol: &str) -> anyhow::Result<Value> {
     get_json("/news-sentiment", &[("symbol", symbol)]).await
 }
 pub async fn press_releases(symbol: &str, from: &str, to: &str) -> anyhow::Result<Value> {
-    get_json("/press-releases", &[("symbol", symbol), ("from", from), ("to", to)]).await
+    get_json(
+        "/press-releases",
+        &[("symbol", symbol), ("from", from), ("to", to)],
+    )
+    .await
 }
 
 // ───── Scan ─────
 pub async fn pattern_recognition(symbol: &str, resolution: &str) -> anyhow::Result<Value> {
-    get_json("/scan/pattern", &[("symbol", symbol), ("resolution", resolution)]).await
+    get_json(
+        "/scan/pattern",
+        &[("symbol", symbol), ("resolution", resolution)],
+    )
+    .await
 }
 pub async fn support_resistance(symbol: &str, resolution: &str) -> anyhow::Result<Value> {
-    get_json("/scan/support-resistance", &[("symbol", symbol), ("resolution", resolution)]).await
+    get_json(
+        "/scan/support-resistance",
+        &[("symbol", symbol), ("resolution", resolution)],
+    )
+    .await
 }
 pub async fn aggregate_indicator(symbol: &str, resolution: &str) -> anyhow::Result<Value> {
-    get_json("/scan/technical-indicator", &[("symbol", symbol), ("resolution", resolution)]).await
+    get_json(
+        "/scan/technical-indicator",
+        &[("symbol", symbol), ("resolution", resolution)],
+    )
+    .await
 }
 pub async fn technical_indicator(
-    symbol: &str, resolution: &str, from: &str, to: &str, indicator: &str,
+    symbol: &str,
+    resolution: &str,
+    from: &str,
+    to: &str,
+    indicator: &str,
 ) -> anyhow::Result<Value> {
-    get_json("/indicator", &[
-        ("symbol", symbol), ("resolution", resolution),
-        ("from", from), ("to", to), ("indicator", indicator),
-    ]).await
+    get_json(
+        "/indicator",
+        &[
+            ("symbol", symbol),
+            ("resolution", resolution),
+            ("from", from),
+            ("to", to),
+            ("indicator", indicator),
+        ],
+    )
+    .await
 }
 
 // ───── Forex / Crypto ─────
-pub async fn forex_exchanges() -> anyhow::Result<Value> { get_json("/forex/exchange", &[]).await }
+pub async fn forex_exchanges() -> anyhow::Result<Value> {
+    get_json("/forex/exchange", &[]).await
+}
 pub async fn forex_symbols(exchange: &str) -> anyhow::Result<Value> {
     get_json("/forex/symbol", &[("exchange", exchange)]).await
 }
 pub async fn forex_rates(base: &str) -> anyhow::Result<Value> {
     get_json("/forex/rates", &[("base", base)]).await
 }
-pub async fn forex_candles(symbol: &str, resolution: &str, from: &str, to: &str) -> anyhow::Result<Value> {
-    get_json("/forex/candle", &[
-        ("symbol", symbol), ("resolution", resolution),
-        ("from", from), ("to", to),
-    ]).await
+pub async fn forex_candles(
+    symbol: &str,
+    resolution: &str,
+    from: &str,
+    to: &str,
+) -> anyhow::Result<Value> {
+    get_json(
+        "/forex/candle",
+        &[
+            ("symbol", symbol),
+            ("resolution", resolution),
+            ("from", from),
+            ("to", to),
+        ],
+    )
+    .await
 }
-pub async fn crypto_exchanges() -> anyhow::Result<Value> { get_json("/crypto/exchange", &[]).await }
+pub async fn crypto_exchanges() -> anyhow::Result<Value> {
+    get_json("/crypto/exchange", &[]).await
+}
 pub async fn crypto_symbols(exchange: &str) -> anyhow::Result<Value> {
     get_json("/crypto/symbol", &[("exchange", exchange)]).await
 }
-pub async fn crypto_candles(symbol: &str, resolution: &str, from: &str, to: &str) -> anyhow::Result<Value> {
-    get_json("/crypto/candle", &[
-        ("symbol", symbol), ("resolution", resolution),
-        ("from", from), ("to", to),
-    ]).await
+pub async fn crypto_candles(
+    symbol: &str,
+    resolution: &str,
+    from: &str,
+    to: &str,
+) -> anyhow::Result<Value> {
+    get_json(
+        "/crypto/candle",
+        &[
+            ("symbol", symbol),
+            ("resolution", resolution),
+            ("from", from),
+            ("to", to),
+        ],
+    )
+    .await
 }
 pub async fn crypto_profile(symbol: &str) -> anyhow::Result<Value> {
     get_json("/crypto/profile", &[("symbol", symbol)]).await
@@ -708,7 +931,11 @@ pub async fn etf_profile(symbol: &str) -> anyhow::Result<Value> {
     get_json("/etf/profile", &[("symbol", symbol)]).await
 }
 pub async fn etf_holdings(symbol: &str, skip: i64) -> anyhow::Result<Value> {
-    get_json("/etf/holdings", &[("symbol", symbol), ("skip", &skip.to_string())]).await
+    get_json(
+        "/etf/holdings",
+        &[("symbol", symbol), ("skip", &skip.to_string())],
+    )
+    .await
 }
 pub async fn etf_sector(symbol: &str) -> anyhow::Result<Value> {
     get_json("/etf/sector", &[("symbol", symbol)]).await
@@ -725,7 +952,11 @@ pub async fn mutual_fund_profile(symbol: &str) -> anyhow::Result<Value> {
     get_json("/mutual-fund/profile", &[("symbol", symbol)]).await
 }
 pub async fn mutual_fund_holdings(symbol: &str, skip: i64) -> anyhow::Result<Value> {
-    get_json("/mutual-fund/holdings", &[("symbol", symbol), ("skip", &skip.to_string())]).await
+    get_json(
+        "/mutual-fund/holdings",
+        &[("symbol", symbol), ("skip", &skip.to_string())],
+    )
+    .await
 }
 pub async fn mutual_fund_sector(symbol: &str) -> anyhow::Result<Value> {
     get_json("/mutual-fund/sector", &[("symbol", symbol)]).await
@@ -749,21 +980,27 @@ pub async fn bond_yield_curve(code: &str) -> anyhow::Result<Value> {
 }
 
 // ───── Economic / Market ─────
-pub async fn economic_codes() -> anyhow::Result<Value> { get_json("/economic/code", &[]).await }
+pub async fn economic_codes() -> anyhow::Result<Value> {
+    get_json("/economic/code", &[]).await
+}
 pub async fn economic_data(code: &str) -> anyhow::Result<Value> {
     get_json("/economic", &[("code", code)]).await
 }
 pub async fn calendar_economic(from: &str, to: &str) -> anyhow::Result<Value> {
     get_json("/calendar/economic", &[("from", from), ("to", to)]).await
 }
-pub async fn country_list() -> anyhow::Result<Value> { get_json("/country", &[]).await }
+pub async fn country_list() -> anyhow::Result<Value> {
+    get_json("/country", &[]).await
+}
 pub async fn market_status(exchange: &str) -> anyhow::Result<Value> {
     get_json("/stock/market-status", &[("exchange", exchange)]).await
 }
 pub async fn market_holiday(exchange: &str) -> anyhow::Result<Value> {
     get_json("/stock/market-holiday", &[("exchange", exchange)]).await
 }
-pub async fn stock_exchanges() -> anyhow::Result<Value> { get_json("/stock/exchange", &[]).await }
+pub async fn stock_exchanges() -> anyhow::Result<Value> {
+    get_json("/stock/exchange", &[]).await
+}
 pub async fn sector_metrics(region: &str) -> anyhow::Result<Value> {
     get_json("/sector/metrics", &[("region", region)]).await
 }
@@ -787,20 +1024,34 @@ pub async fn institutional_profile(cik: &str) -> anyhow::Result<Value> {
     get_json("/institutional/profile", &[("cik", cik)]).await
 }
 pub async fn institutional_portfolio(cik: &str, from: &str, to: &str) -> anyhow::Result<Value> {
-    get_json("/institutional/portfolio", &[("cik", cik), ("from", from), ("to", to)]).await
+    get_json(
+        "/institutional/portfolio",
+        &[("cik", cik), ("from", from), ("to", to)],
+    )
+    .await
 }
 pub async fn institutional_ownership(symbol: &str, from: &str, to: &str) -> anyhow::Result<Value> {
-    get_json("/institutional/ownership", &[("symbol", symbol), ("from", from), ("to", to)]).await
+    get_json(
+        "/institutional/ownership",
+        &[("symbol", symbol), ("from", from), ("to", to)],
+    )
+    .await
 }
 
 // ───── Miscellaneous / specialty ─────
 pub async fn fda_calendar() -> anyhow::Result<Value> {
     get_json("/fda-advisory-committee-calendar", &[]).await
 }
-pub async fn covid19_us() -> anyhow::Result<Value> { get_json("/covid19/us", &[]).await }
+pub async fn covid19_us() -> anyhow::Result<Value> {
+    get_json("/covid19/us", &[]).await
+}
 pub async fn bank_branch(symbol: &str) -> anyhow::Result<Value> {
     get_json("/bank-branch", &[("symbol", symbol)]).await
 }
 pub async fn airline_price_index(airline: &str, from: &str, to: &str) -> anyhow::Result<Value> {
-    get_json("/airline/price-index", &[("airline", airline), ("from", from), ("to", to)]).await
+    get_json(
+        "/airline/price-index",
+        &[("airline", airline), ("from", from), ("to", to)],
+    )
+    .await
 }

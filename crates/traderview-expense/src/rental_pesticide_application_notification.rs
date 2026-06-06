@@ -185,9 +185,12 @@ pub fn check(
         Jurisdiction::Default => 0,
     };
 
-    let emergency_exception_engaged = matches!(input.context, ApplicationContext::ImmediateHealthThreat);
-    let tenant_oral_agreement_exception_engaged =
-        matches!(input.context, ApplicationContext::TenantRequestedImmediateApplication);
+    let emergency_exception_engaged =
+        matches!(input.context, ApplicationContext::ImmediateHealthThreat);
+    let tenant_oral_agreement_exception_engaged = matches!(
+        input.context,
+        ApplicationContext::TenantRequestedImmediateApplication
+    );
 
     let notice_timing_compliant = if emergency_exception_engaged {
         input.hours_after_application_post_notice <= 1
@@ -219,7 +222,9 @@ pub fn check(
 
     if !notice_timing_compliant {
         match input.jurisdiction {
-            Jurisdiction::California if !emergency_exception_engaged && !tenant_oral_agreement_exception_engaged => {
+            Jurisdiction::California
+                if !emergency_exception_engaged && !tenant_oral_agreement_exception_engaged =>
+            {
                 failure_reasons.push(format!(
                     "Cal. Civ. Code § 1940.8.5(c) — at least 24 HOURS prior to application, landlord or authorized agent SHALL provide notice to tenant via first-class mail / personal delivery / under-door delivery / electronic / posted notice; received {} hours advance notice",
                     input.hours_before_application
@@ -257,7 +262,10 @@ pub fn check(
         }
     }
 
-    if !notice_content_compliant && !emergency_exception_engaged && !tenant_oral_agreement_exception_engaged {
+    if !notice_content_compliant
+        && !emergency_exception_engaged
+        && !tenant_oral_agreement_exception_engaged
+    {
         match input.jurisdiction {
             Jurisdiction::California => {
                 failure_reasons.push(
@@ -337,8 +345,10 @@ mod tests {
         i.hours_before_application = 23;
         let r = check(&i);
         assert!(!r.notice_timing_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 1940.8.5(c)")
-            && f.contains("24 HOURS")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1940.8.5(c)") && f.contains("24 HOURS")));
     }
 
     #[test]
@@ -373,8 +383,10 @@ mod tests {
         let r = check(&i);
         assert!(r.emergency_exception_engaged);
         assert!(!r.notice_timing_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 1940.8.5(d)")
-            && f.contains("ONE HOUR")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1940.8.5(d)") && f.contains("ONE HOUR")));
     }
 
     #[test]
@@ -396,8 +408,10 @@ mod tests {
         i.oral_agreement_includes_brand_name = false;
         let r = check(&i);
         assert!(!r.notice_timing_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 1940.8.5(e)")
-            && f.contains("PESTICIDE PRODUCT BRAND NAME")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1940.8.5(e)") && f.contains("PESTICIDE PRODUCT BRAND NAME")));
     }
 
     #[test]
@@ -417,8 +431,10 @@ mod tests {
         i.hours_before_application = 47;
         let r = check(&i);
         assert!(!r.notice_timing_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("NY ECL 33-1004")
-            && f.contains("48-HOUR")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("NY ECL 33-1004") && f.contains("48-HOUR")));
     }
 
     #[test]
@@ -442,8 +458,10 @@ mod tests {
         i.visual_markers_posted = false;
         let r = check(&i);
         assert!(!r.overall_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("ECL 33-1004")
-            && f.contains("visual notification markers")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("ECL 33-1004") && f.contains("visual notification markers")));
     }
 
     #[test]
@@ -514,7 +532,11 @@ mod tests {
             let mut i = ca_routine_compliant();
             i.jurisdiction = jur;
             let r = check(&i);
-            assert!(r_ca.required_notice_hours < r.required_notice_hours, "jur={:?}", jur);
+            assert!(
+                r_ca.required_notice_hours < r.required_notice_hours,
+                "jur={:?}",
+                jur
+            );
         }
     }
 
@@ -549,7 +571,9 @@ mod tests {
         assert!(r.citation.contains("Cal. Bus. & Prof. Code § 8538"));
         assert!(r.citation.contains("NY ECL § 33-1004 and § 33-1005"));
         assert!(r.citation.contains("Mass. G.L. c. 132B § 6F and § 6I"));
-        assert!(r.citation.contains("Children and Families Protection Act of 2000"));
+        assert!(r
+            .citation
+            .contains("Children and Families Protection Act of 2000"));
         assert!(r.citation.contains("40 CFR Part 170"));
         assert!(r.citation.contains("EPA FIFRA 7 USC § 136"));
     }
@@ -600,8 +624,12 @@ mod tests {
     #[test]
     fn note_pins_ny_2020_amendment_english_spanish() {
         let r = check(&ca_routine_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("ECL 33-1004 2020 amendment")
-            && n.contains("ENGLISH AND SPANISH")));
+        assert!(
+            r.notes
+                .iter()
+                .any(|n| n.contains("ECL 33-1004 2020 amendment")
+                    && n.contains("ENGLISH AND SPANISH"))
+        );
     }
 
     #[test]
@@ -633,9 +661,12 @@ mod tests {
     #[test]
     fn note_pins_ca_spcb_8538_parallel() {
         let r = check(&ca_routine_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("Cal. Bus. & Prof. Code § 8538")
-            && n.contains("structural pest control operators")
-            && n.contains("SPCB")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Cal. Bus. & Prof. Code § 8538")
+                && n.contains("structural pest control operators")
+                && n.contains("SPCB")));
     }
 
     #[test]

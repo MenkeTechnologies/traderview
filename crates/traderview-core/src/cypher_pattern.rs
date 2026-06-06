@@ -16,13 +16,24 @@ pub use crate::gartley_pattern::Pivot;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
-pub enum CypherDirection { #[default] Bullish, Bearish }
+pub enum CypherDirection {
+    #[default]
+    Bullish,
+    Bearish,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct CypherMatch {
     pub direction: CypherDirection,
-    pub x: Pivot, pub a: Pivot, pub b: Pivot, pub c: Pivot, pub d: Pivot,
-    pub ab_ratio: f64, pub bc_ratio: f64, pub cd_to_xc_ratio: f64, pub ad_ratio: f64,
+    pub x: Pivot,
+    pub a: Pivot,
+    pub b: Pivot,
+    pub c: Pivot,
+    pub d: Pivot,
+    pub ab_ratio: f64,
+    pub bc_ratio: f64,
+    pub cd_to_xc_ratio: f64,
+    pub ad_ratio: f64,
 }
 
 pub fn detect(pivots: &[Pivot], tolerance: f64) -> Vec<CypherMatch> {
@@ -32,7 +43,9 @@ pub fn detect(pivots: &[Pivot], tolerance: f64) -> Vec<CypherMatch> {
     }
     for w in pivots.windows(5) {
         let alternating = (1..5).all(|i| w[i].is_high != w[i - 1].is_high);
-        if !alternating { continue; }
+        if !alternating {
+            continue;
+        }
         let (x, a, b, c, d) = (w[0], w[1], w[2], w[3], w[4]);
         let xa = (a.price - x.price).abs();
         let ab = (b.price - a.price).abs();
@@ -40,19 +53,41 @@ pub fn detect(pivots: &[Pivot], tolerance: f64) -> Vec<CypherMatch> {
         let xc = (c.price - x.price).abs();
         let cd = (d.price - c.price).abs();
         let ad = (d.price - a.price).abs();
-        if xa <= 0.0 || ab <= 0.0 || bc <= 0.0 || xc <= 0.0 { continue; }
+        if xa <= 0.0 || ab <= 0.0 || bc <= 0.0 || xc <= 0.0 {
+            continue;
+        }
         let ab_ratio = ab / xa;
         let bc_ratio = bc / ab;
         let cd_to_xc_ratio = cd / xc;
         let ad_ratio = ad / xa;
-        if !(0.382 - tolerance..=0.618 + tolerance).contains(&ab_ratio) { continue; }
-        if !(1.130 - tolerance..=1.414 + tolerance).contains(&bc_ratio) { continue; }
-        if !(1.272 - tolerance..=2.000 + tolerance).contains(&cd_to_xc_ratio) { continue; }
-        if (ad_ratio - 0.786).abs() > tolerance { continue; }
-        let direction = if x.is_high { CypherDirection::Bearish }
-            else { CypherDirection::Bullish };
+        if !(0.382 - tolerance..=0.618 + tolerance).contains(&ab_ratio) {
+            continue;
+        }
+        if !(1.130 - tolerance..=1.414 + tolerance).contains(&bc_ratio) {
+            continue;
+        }
+        if !(1.272 - tolerance..=2.000 + tolerance).contains(&cd_to_xc_ratio) {
+            continue;
+        }
+        if (ad_ratio - 0.786).abs() > tolerance {
+            continue;
+        }
+        let direction = if x.is_high {
+            CypherDirection::Bearish
+        } else {
+            CypherDirection::Bullish
+        };
         out.push(CypherMatch {
-            direction, x, a, b, c, d, ab_ratio, bc_ratio, cd_to_xc_ratio, ad_ratio,
+            direction,
+            x,
+            a,
+            b,
+            c,
+            d,
+            ab_ratio,
+            bc_ratio,
+            cd_to_xc_ratio,
+            ad_ratio,
         });
     }
     out
@@ -63,7 +98,11 @@ mod tests {
     use super::*;
 
     fn p(idx: usize, price: f64, is_high: bool) -> Pivot {
-        Pivot { index: idx, price, is_high }
+        Pivot {
+            index: idx,
+            price,
+            is_high,
+        }
     }
 
     #[test]
@@ -96,8 +135,8 @@ mod tests {
             p(0, 100.0, false),
             p(10, 140.0, true),
             p(20, 120.0, false),
-            p(30, 148.28, true),       // BC = 1.414·AB
-            p(40, 86.87, false),       // CD/XC = 1.272 ✓ but AD/XA = 1.328
+            p(30, 148.28, true), // BC = 1.414·AB
+            p(40, 86.87, false), // CD/XC = 1.272 ✓ but AD/XA = 1.328
         ];
         // This pattern doesn't satisfy AD/XA = 0.786, so detector should reject.
         // We test the rejection path.
@@ -110,7 +149,7 @@ mod tests {
             p(0, 100.0, false),
             p(10, 140.0, true),
             p(20, 120.0, false),
-            p(30, 130.0, true),    // BC = 10, ratio = 0.5 (not 1.13+)
+            p(30, 130.0, true), // BC = 10, ratio = 0.5 (not 1.13+)
             p(40, 108.56, false),
         ];
         assert!(detect(&pivots, 0.05).is_empty());
@@ -121,7 +160,7 @@ mod tests {
         let pivots = vec![
             p(0, 100.0, false),
             p(10, 140.0, true),
-            p(20, 120.0, true),    // not alternating
+            p(20, 120.0, true), // not alternating
             p(30, 148.28, true),
             p(40, 86.87, false),
         ];

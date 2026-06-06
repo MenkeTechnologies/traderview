@@ -383,8 +383,10 @@ mod tests {
             compliance_aspect: ComplianceAspect::SecurityDepositOneMonthCap,
             monthly_rent_cents: 150_000, // $1500
             security_deposit_held_cents: 150_000,
-            criminal_offense_classification: CriminalOffenseClassification::NoCriminalRecordConsidered,
-            eviction_record_classification: EvictionRecordClassification::NoEvictionRecordConsidered,
+            criminal_offense_classification:
+                CriminalOffenseClassification::NoCriminalRecordConsidered,
+            eviction_record_classification:
+                EvictionRecordClassification::NoEvictionRecordConsidered,
             public_assistance_status: PublicAssistanceStatus::PublicAssistanceAcceptedCompliant,
             energy_cost_disclosure_provided: true,
         }

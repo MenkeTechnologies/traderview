@@ -259,8 +259,8 @@ pub fn check(input: &Input) -> Output {
                 return Output {
                     severity,
                     compliant: false,
-                    maximum_permitted_occupants_excluding_dependent_children:
-                        input.number_of_tenants_in_lease,
+                    maximum_permitted_occupants_excluding_dependent_children: input
+                        .number_of_tenants_in_lease,
                     lease_clause_enforceable: true,
                     notes,
                     citations,
@@ -275,8 +275,8 @@ pub fn check(input: &Input) -> Output {
             Output {
                 severity: Severity::CompliantMultiTenantWithinNumericCap,
                 compliant: true,
-                maximum_permitted_occupants_excluding_dependent_children:
-                    input.number_of_tenants_in_lease,
+                maximum_permitted_occupants_excluding_dependent_children: input
+                    .number_of_tenants_in_lease,
                 lease_clause_enforceable: true,
                 notes,
                 citations,

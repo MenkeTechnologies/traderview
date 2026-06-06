@@ -142,39 +142,42 @@ pub fn check(input: &Input) -> CheckResult {
     let breach_engaged = input.landlord_failed_to_deliver_actual_possession
         && input.prior_tenant_holdover_or_squatter_present;
 
-    let tenant_may_cancel_lease =
-        landlord_duty_to_deliver_actual_possession && breach_engaged;
-    let tenant_must_evict_prior_tenant_party =
-        matches!(input.regime, Regime::AmericanRule)
-            && input.prior_tenant_holdover_or_squatter_present;
+    let tenant_may_cancel_lease = landlord_duty_to_deliver_actual_possession && breach_engaged;
+    let tenant_must_evict_prior_tenant_party = matches!(input.regime, Regime::AmericanRule)
+        && input.prior_tenant_holdover_or_squatter_present;
 
-    let urlta_statutory_remedies_available = matches!(input.regime, Regime::UrltaStates)
-        && breach_engaged;
+    let urlta_statutory_remedies_available =
+        matches!(input.regime, Regime::UrltaStates) && breach_engaged;
     let attorney_fees_recoverable = urlta_statutory_remedies_available;
 
-    let (damages_recoverable_from_landlord_cents, damages_calculation_method) =
-        match input.regime {
-            Regime::UrltaStates if breach_engaged => {
-                let three_months_rent = monthly_rent.saturating_mul(URLTA_RENT_MONTHS_FLOOR);
-                let triple_actual = actual_damages.saturating_mul(URLTA_DAMAGES_MULTIPLIER);
-                let damages = three_months_rent.max(triple_actual);
-                (damages, DamagesCalculationMethod::UrltaTripleActualOrThreeMonths)
-            }
-            Regime::EnglishRule if breach_engaged => {
-                // Common-law actual damages with rent abatement for delay period.
-                // Multiply-before-divide preserves precision (avoids 30-cent
-                // truncation loss per month from naive daily-rent calculation).
-                let days = input.days_delayed_possession.max(0);
-                let rent_abatement = monthly_rent.saturating_mul(days) / 30;
-                let damages = actual_damages.saturating_add(rent_abatement);
-                (damages, DamagesCalculationMethod::EnglishRuleActualWithAbatement)
-            }
-            Regime::AmericanRule => {
-                // No damages from landlord; tenant pursues holdover party.
-                (0, DamagesCalculationMethod::NoLandlordDamages)
-            }
-            _ => (0, DamagesCalculationMethod::NoLandlordDamages),
-        };
+    let (damages_recoverable_from_landlord_cents, damages_calculation_method) = match input.regime {
+        Regime::UrltaStates if breach_engaged => {
+            let three_months_rent = monthly_rent.saturating_mul(URLTA_RENT_MONTHS_FLOOR);
+            let triple_actual = actual_damages.saturating_mul(URLTA_DAMAGES_MULTIPLIER);
+            let damages = three_months_rent.max(triple_actual);
+            (
+                damages,
+                DamagesCalculationMethod::UrltaTripleActualOrThreeMonths,
+            )
+        }
+        Regime::EnglishRule if breach_engaged => {
+            // Common-law actual damages with rent abatement for delay period.
+            // Multiply-before-divide preserves precision (avoids 30-cent
+            // truncation loss per month from naive daily-rent calculation).
+            let days = input.days_delayed_possession.max(0);
+            let rent_abatement = monthly_rent.saturating_mul(days) / 30;
+            let damages = actual_damages.saturating_add(rent_abatement);
+            (
+                damages,
+                DamagesCalculationMethod::EnglishRuleActualWithAbatement,
+            )
+        }
+        Regime::AmericanRule => {
+            // No damages from landlord; tenant pursues holdover party.
+            (0, DamagesCalculationMethod::NoLandlordDamages)
+        }
+        _ => (0, DamagesCalculationMethod::NoLandlordDamages),
+    };
 
     // Violations + regime-specific notes.
     match input.regime {
@@ -287,7 +290,7 @@ mod tests {
             regime,
             landlord_failed_to_deliver_actual_possession: true,
             prior_tenant_holdover_or_squatter_present: true,
-            monthly_rent_cents: 200_000, // $2,000/month
+            monthly_rent_cents: 200_000,          // $2,000/month
             tenant_actual_damages_cents: 500_000, // $5,000 actual damages
             days_delayed_possession: 30,
         }
@@ -440,22 +443,33 @@ mod tests {
 
     #[test]
     fn only_urlta_has_statutory_remedies_invariant() {
-        for regime in [Regime::UrltaStates, Regime::EnglishRule, Regime::AmericanRule] {
+        for regime in [
+            Regime::UrltaStates,
+            Regime::EnglishRule,
+            Regime::AmericanRule,
+        ] {
             let r = check(&input(regime));
             let expected = matches!(regime, Regime::UrltaStates);
-            assert_eq!(r.urlta_statutory_remedies_available, expected, "{:?}", regime);
+            assert_eq!(
+                r.urlta_statutory_remedies_available, expected,
+                "{:?}",
+                regime
+            );
             assert_eq!(r.attorney_fees_recoverable, expected, "{:?}", regime);
         }
     }
 
     #[test]
     fn only_american_rule_shifts_burden_to_tenant_invariant() {
-        for regime in [Regime::UrltaStates, Regime::EnglishRule, Regime::AmericanRule] {
+        for regime in [
+            Regime::UrltaStates,
+            Regime::EnglishRule,
+            Regime::AmericanRule,
+        ] {
             let r = check(&input(regime));
             let expected = matches!(regime, Regime::AmericanRule);
             assert_eq!(
-                r.tenant_must_evict_prior_tenant_party,
-                expected,
+                r.tenant_must_evict_prior_tenant_party, expected,
                 "{:?}",
                 regime
             );
@@ -464,12 +478,15 @@ mod tests {
 
     #[test]
     fn american_rule_only_regime_without_duty_invariant() {
-        for regime in [Regime::UrltaStates, Regime::EnglishRule, Regime::AmericanRule] {
+        for regime in [
+            Regime::UrltaStates,
+            Regime::EnglishRule,
+            Regime::AmericanRule,
+        ] {
             let r = check(&input(regime));
             let expected = !matches!(regime, Regime::AmericanRule);
             assert_eq!(
-                r.landlord_duty_to_deliver_actual_possession,
-                expected,
+                r.landlord_duty_to_deliver_actual_possession, expected,
                 "{:?}",
                 regime
             );
@@ -481,11 +498,11 @@ mod tests {
         // Test the URLTA max(3 months rent, 3× actual) calculation.
         let cells = [
             // (monthly_rent, actual_damages, expected_recoverable)
-            (200_000, 100_000, 600_000),    // 3mo $6K vs 3× $3K → $6K
-            (200_000, 500_000, 1_500_000),  // 3mo $6K vs 3× $15K → $15K
-            (200_000, 0, 600_000),          // 3mo floor $6K
-            (0, 500_000, 1_500_000),        // No rent → triple actual
-            (500_000, 0, 1_500_000),        // High rent → $15K floor
+            (200_000, 100_000, 600_000),   // 3mo $6K vs 3× $3K → $6K
+            (200_000, 500_000, 1_500_000), // 3mo $6K vs 3× $15K → $15K
+            (200_000, 0, 600_000),         // 3mo floor $6K
+            (0, 500_000, 1_500_000),       // No rent → triple actual
+            (500_000, 0, 1_500_000),       // High rent → $15K floor
         ];
         for (rent, damages, expected) in cells.iter() {
             let mut b = input(Regime::UrltaStates);
@@ -493,11 +510,9 @@ mod tests {
             b.tenant_actual_damages_cents = *damages;
             let r = check(&b);
             assert_eq!(
-                r.damages_recoverable_from_landlord_cents,
-                *expected,
+                r.damages_recoverable_from_landlord_cents, *expected,
                 "rent={} damages={}",
-                rent,
-                damages
+                rent, damages
             );
         }
     }

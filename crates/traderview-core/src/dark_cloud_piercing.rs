@@ -20,7 +20,12 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub open: f64, pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct DarkCloudPiercingReport {
@@ -34,9 +39,12 @@ pub fn compute(bars: &[Bar]) -> DarkCloudPiercingReport {
         dark_cloud_cover: vec![false; n],
         piercing: vec![false; n],
     };
-    if n < 2 { return report; }
-    if bars.iter().any(|b| !b.open.is_finite() || !b.high.is_finite()
-        || !b.low.is_finite() || !b.close.is_finite()) {
+    if n < 2 {
+        return report;
+    }
+    if bars.iter().any(|b| {
+        !b.open.is_finite() || !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()
+    }) {
         return report;
     }
     for i in 1..n {
@@ -55,10 +63,16 @@ fn is_dark_cloud_cover(b1: Bar, b2: Bar) -> bool {
     // Bar 1: tall bullish (close > open, body ≥ 60% of range).
     let body1 = b1.close - b1.open;
     let range1 = b1.high - b1.low;
-    if range1 <= 0.0 || body1 <= 0.0 || body1 < 0.6 * range1 { return false; }
+    if range1 <= 0.0 || body1 <= 0.0 || body1 < 0.6 * range1 {
+        return false;
+    }
     // Bar 2: opens > b1.high (gap up), bearish close.
-    if b2.open <= b1.high { return false; }
-    if b2.close >= b2.open { return false; }
+    if b2.open <= b1.high {
+        return false;
+    }
+    if b2.close >= b2.open {
+        return false;
+    }
     // Penetrates past midpoint of bar 1 body.
     let mid1 = (b1.open + b1.close) / 2.0;
     b2.close < mid1
@@ -67,9 +81,15 @@ fn is_dark_cloud_cover(b1: Bar, b2: Bar) -> bool {
 fn is_piercing(b1: Bar, b2: Bar) -> bool {
     let body1 = b1.open - b1.close;
     let range1 = b1.high - b1.low;
-    if range1 <= 0.0 || body1 <= 0.0 || body1 < 0.6 * range1 { return false; }
-    if b2.open >= b1.low { return false; }
-    if b2.close <= b2.open { return false; }
+    if range1 <= 0.0 || body1 <= 0.0 || body1 < 0.6 * range1 {
+        return false;
+    }
+    if b2.open >= b1.low {
+        return false;
+    }
+    if b2.close <= b2.open {
+        return false;
+    }
     let mid1 = (b1.open + b1.close) / 2.0;
     b2.close > mid1
 }
@@ -79,7 +99,12 @@ mod tests {
     use super::*;
 
     fn bar(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -128,7 +153,7 @@ mod tests {
     fn no_gap_rejects_dark_cloud() {
         let bars = vec![
             bar(100.0, 110.5, 99.5, 110.0),
-            bar(109.0, 113.0, 102.5, 103.0),    // opens below b1 high
+            bar(109.0, 113.0, 102.5, 103.0), // opens below b1 high
         ];
         let r = compute(&bars);
         assert!(!r.dark_cloud_cover[1]);
@@ -139,7 +164,7 @@ mod tests {
         // Bar 2 closes ABOVE midpoint → engulfing-style move not deep enough.
         let bars = vec![
             bar(100.0, 110.5, 99.5, 110.0),
-            bar(112.0, 113.0, 107.5, 108.0),    // close 108 > mid 105
+            bar(112.0, 113.0, 107.5, 108.0), // close 108 > mid 105
         ];
         let r = compute(&bars);
         assert!(!r.dark_cloud_cover[1]);

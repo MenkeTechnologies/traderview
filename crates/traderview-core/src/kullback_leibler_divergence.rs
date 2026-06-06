@@ -39,12 +39,18 @@ pub struct DivergenceReport {
 }
 
 pub fn compute(p: &[f64], q: &[f64]) -> Option<DivergenceReport> {
-    if p.is_empty() || p.len() != q.len() { return None; }
-    if p.iter().any(|x| !x.is_finite() || *x < 0.0)
-        || q.iter().any(|x| !x.is_finite() || *x < 0.0) { return None; }
+    if p.is_empty() || p.len() != q.len() {
+        return None;
+    }
+    if p.iter().any(|x| !x.is_finite() || *x < 0.0) || q.iter().any(|x| !x.is_finite() || *x < 0.0)
+    {
+        return None;
+    }
     let sum_p: f64 = p.iter().sum();
     let sum_q: f64 = q.iter().sum();
-    if sum_p <= 0.0 || sum_q <= 0.0 { return None; }
+    if sum_p <= 0.0 || sum_q <= 0.0 {
+        return None;
+    }
     let p_norm: Vec<f64> = p.iter().map(|x| x / sum_p).collect();
     let q_norm: Vec<f64> = q.iter().map(|x| x / sum_q).collect();
     let mut kl_pq = 0.0_f64;
@@ -56,14 +62,24 @@ pub fn compute(p: &[f64], q: &[f64]) -> Option<DivergenceReport> {
         let qi = q_norm[i];
         let m = 0.5 * (pi + qi);
         if pi > 0.0 {
-            if qi > 0.0 { kl_pq += pi * (pi / qi).ln(); }
-            else { kl_pq = f64::INFINITY; }
-            if m > 0.0 { js += 0.5 * pi * (pi / m).ln(); }
+            if qi > 0.0 {
+                kl_pq += pi * (pi / qi).ln();
+            } else {
+                kl_pq = f64::INFINITY;
+            }
+            if m > 0.0 {
+                js += 0.5 * pi * (pi / m).ln();
+            }
         }
         if qi > 0.0 {
-            if pi > 0.0 { kl_qp += qi * (qi / pi).ln(); }
-            else { kl_qp = f64::INFINITY; }
-            if m > 0.0 { js += 0.5 * qi * (qi / m).ln(); }
+            if pi > 0.0 {
+                kl_qp += qi * (qi / pi).ln();
+            } else {
+                kl_qp = f64::INFINITY;
+            }
+            if m > 0.0 {
+                js += 0.5 * qi * (qi / m).ln();
+            }
         }
         hel_sq += (pi.sqrt() - qi.sqrt()).powi(2);
     }
@@ -121,8 +137,12 @@ mod tests {
         let p = vec![0.7, 0.3];
         let q = vec![0.5, 0.5];
         let r = compute(&p, &q).unwrap();
-        assert!((r.kl_pq - r.kl_qp).abs() > 1e-6,
-            "KL should be asymmetric: D(P||Q) = {}, D(Q||P) = {}", r.kl_pq, r.kl_qp);
+        assert!(
+            (r.kl_pq - r.kl_qp).abs() > 1e-6,
+            "KL should be asymmetric: D(P||Q) = {}, D(Q||P) = {}",
+            r.kl_pq,
+            r.kl_qp
+        );
     }
 
     #[test]
@@ -131,8 +151,10 @@ mod tests {
         let q = vec![0.5, 0.5];
         let r_pq = compute(&p, &q).unwrap();
         let r_qp = compute(&q, &p).unwrap();
-        assert!((r_pq.jensen_shannon - r_qp.jensen_shannon).abs() < 1e-12,
-            "JS should be symmetric");
+        assert!(
+            (r_pq.jensen_shannon - r_qp.jensen_shannon).abs() < 1e-12,
+            "JS should be symmetric"
+        );
     }
 
     #[test]

@@ -33,8 +33,12 @@ pub struct Report {
 
 pub fn compute(series: &[f64], window: usize) -> Option<Report> {
     let n = series.len();
-    if !(2..=100).contains(&window) || n < 2 * window { return None; }
-    if series.iter().any(|x| !x.is_finite()) { return None; }
+    if !(2..=100).contains(&window) || n < 2 * window {
+        return None;
+    }
+    if series.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let l = window;
     let k = n - l + 1;
     // Build XXᵀ (L × L). XXᵀ[i][j] = Σ_t x_{i+t} · x_{j+t} for t = 0..K.
@@ -53,8 +57,11 @@ pub fn compute(series: &[f64], window: usize) -> Option<Report> {
     let (eigenvalues, u) = jacobi_eigen(&c, 200);
     // Pair (eigenvalue, eigenvector-column).
     let mut order: Vec<usize> = (0..l).collect();
-    order.sort_by(|&a, &b| eigenvalues[b].partial_cmp(&eigenvalues[a])
-        .unwrap_or(std::cmp::Ordering::Equal));
+    order.sort_by(|&a, &b| {
+        eigenvalues[b]
+            .partial_cmp(&eigenvalues[a])
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     let sorted_lambdas: Vec<f64> = order.iter().map(|&i| eigenvalues[i].max(0.0)).collect();
     let singular_values: Vec<f64> = sorted_lambdas.iter().map(|&v| v.sqrt()).collect();
     // For each component, the reconstruction is the rank-1 matrix
@@ -64,26 +71,42 @@ pub fn compute(series: &[f64], window: usize) -> Option<Report> {
     let trend = reconstruct(series, l, k, &u, trend_idx);
     // Noise = original series - sum of all reconstructions kept as
     // trend. For minimal complexity, take the residual after trend.
-    let noise: Vec<f64> = series.iter().zip(trend.iter()).map(|(s, t)| s - t).collect();
-    Some(Report { trend, noise, singular_values })
+    let noise: Vec<f64> = series
+        .iter()
+        .zip(trend.iter())
+        .map(|(s, t)| s - t)
+        .collect();
+    Some(Report {
+        trend,
+        noise,
+        singular_values,
+    })
 }
 
 fn jacobi_eigen(matrix: &[Vec<f64>], max_iter: usize) -> (Vec<f64>, Vec<Vec<f64>>) {
     let n = matrix.len();
     let mut a: Vec<Vec<f64>> = matrix.to_vec();
-    let mut v: Vec<Vec<f64>> = (0..n).map(|i|
-        (0..n).map(|j| if i == j { 1.0 } else { 0.0 }).collect()
-    ).collect();
+    let mut v: Vec<Vec<f64>> = (0..n)
+        .map(|i| (0..n).map(|j| if i == j { 1.0 } else { 0.0 }).collect())
+        .collect();
     for _ in 0..max_iter {
         // Find largest off-diagonal.
-        let mut p = 0; let mut q = 1; let mut max = 0.0_f64;
+        let mut p = 0;
+        let mut q = 1;
+        let mut max = 0.0_f64;
         for i in 0..n {
             for j in i + 1..n {
                 let abs_ij = a[i][j].abs();
-                if abs_ij > max { max = abs_ij; p = i; q = j; }
+                if abs_ij > max {
+                    max = abs_ij;
+                    p = i;
+                    q = j;
+                }
             }
         }
-        if max < 1e-12 { break; }
+        if max < 1e-12 {
+            break;
+        }
         let app = a[p][p];
         let aqq = a[q][q];
         let apq = a[p][q];
@@ -123,13 +146,15 @@ fn reconstruct(series: &[f64], l: usize, k: usize, u: &[Vec<f64>], col: usize) -
     // reconstruction X_i = (Xᵀ u_i) · u_iᵀ is enough; we just need the
     // outer product divided so it sums correctly. Use the projection:
     //   X_i[r][c] = u[r] · (Σ_t u[t] · x_{t+c})
-    let proj: Vec<f64> = (0..k).map(|c| {
-        let mut s = 0.0;
-        for t in 0..l {
-            s += u[t][col] * series[t + c];
-        }
-        s
-    }).collect();
+    let proj: Vec<f64> = (0..k)
+        .map(|c| {
+            let mut s = 0.0;
+            for t in 0..l {
+                s += u[t][col] * series[t + c];
+            }
+            s
+        })
+        .collect();
     let mut out = vec![0.0_f64; n];
     let mut counts = vec![0_usize; n];
     for r in 0..l {
@@ -140,7 +165,9 @@ fn reconstruct(series: &[f64], l: usize, k: usize, u: &[Vec<f64>], col: usize) -
         }
     }
     for i in 0..n {
-        if counts[i] > 0 { out[i] /= counts[i] as f64; }
+        if counts[i] > 0 {
+            out[i] /= counts[i] as f64;
+        }
     }
     out
 }
@@ -154,7 +181,7 @@ mod tests {
         let s = vec![1.0_f64; 50];
         assert!(compute(&s, 1).is_none());
         assert!(compute(&s, 150).is_none());
-        assert!(compute(&s, 30).is_none());      // 2L > N
+        assert!(compute(&s, 30).is_none()); // 2L > N
         let mut s_nan = s.clone();
         s_nan[5] = f64::NAN;
         assert!(compute(&s_nan, 10).is_none());
@@ -166,14 +193,20 @@ mod tests {
         let s: Vec<f64> = (0..100).map(|i| 100.0 + 0.5 * i as f64).collect();
         let r = compute(&s, 20).unwrap();
         // Trend reconstruction should track input closely.
-        let resid: f64 = s.iter().zip(r.trend.iter()).map(|(a, b)| (a - b).powi(2)).sum();
+        let resid: f64 = s
+            .iter()
+            .zip(r.trend.iter())
+            .map(|(a, b)| (a - b).powi(2))
+            .sum();
         let energy: f64 = s.iter().map(|x| x * x).sum();
         assert!(resid / energy < 0.01);
     }
 
     #[test]
     fn singular_values_descending() {
-        let s: Vec<f64> = (0..100).map(|i| (i as f64 * 0.1).sin() + 0.01 * i as f64).collect();
+        let s: Vec<f64> = (0..100)
+            .map(|i| (i as f64 * 0.1).sin() + 0.01 * i as f64)
+            .collect();
         let r = compute(&s, 15).unwrap();
         for w in r.singular_values.windows(2) {
             assert!(w[0] >= w[1] - 1e-9);

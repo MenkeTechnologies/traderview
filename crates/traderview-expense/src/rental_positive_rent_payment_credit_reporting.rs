@@ -198,7 +198,9 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.lease_timing == LeaseTiming::NewLeaseOnOrAfterApril1_2025 && !input.offer_made_at_lease_inception {
+    if input.lease_timing == LeaseTiming::NewLeaseOnOrAfterApril1_2025
+        && !input.offer_made_at_lease_inception
+    {
         return Output {
             mode: PositiveRentReportingMode::ViolationOfferNotMadeAtLeaseInception,
             statutory_basis: "Cal. Civ. Code § 1954.06 — offer required at lease inception for new leases on/after April 1, 2025".to_string(),
@@ -257,7 +259,9 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.tenant_election == TenantElection::TenantElectedAndReportingActive && !input.reporting_to_nationwide_cra {
+    if input.tenant_election == TenantElection::TenantElectedAndReportingActive
+        && !input.reporting_to_nationwide_cra
+    {
         return Output {
             mode: PositiveRentReportingMode::ViolationNoQualifyingNationwideConsumerReportingAgency,
             statutory_basis: "Cal. Civ. Code § 1954.06 — reporting must go to at least one NATIONWIDE consumer reporting agency".to_string(),
@@ -312,7 +316,8 @@ mod tests {
             jurisdiction: Jurisdiction::California,
             unit_count_in_building: 50,
             landlord_owns_multiple_buildings: false,
-            landlord_ownership_structure: LandlordOwnershipStructure::IndividualOrLlcWithoutCorporateMember,
+            landlord_ownership_structure:
+                LandlordOwnershipStructure::IndividualOrLlcWithoutCorporateMember,
             lease_timing: LeaseTiming::NewLeaseOnOrAfterApril1_2025,
             offer_made_at_lease_inception: true,
             offer_made_annually: true,
@@ -331,7 +336,10 @@ mod tests {
             ..baseline_california_compliant_new_lease()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PositiveRentReportingMode::NotApplicableJurisdictionLacksMandate);
+        assert_eq!(
+            result.mode,
+            PositiveRentReportingMode::NotApplicableJurisdictionLacksMandate
+        );
     }
 
     #[test]
@@ -341,7 +349,10 @@ mod tests {
             ..baseline_california_compliant_new_lease()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PositiveRentReportingMode::NotApplicableExemptSmallLandlord);
+        assert_eq!(
+            result.mode,
+            PositiveRentReportingMode::NotApplicableExemptSmallLandlord
+        );
     }
 
     #[test]
@@ -351,7 +362,10 @@ mod tests {
             ..baseline_california_compliant_new_lease()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PositiveRentReportingMode::NotApplicableExemptSmallLandlord);
+        assert_eq!(
+            result.mode,
+            PositiveRentReportingMode::NotApplicableExemptSmallLandlord
+        );
     }
 
     #[test]
@@ -361,7 +375,10 @@ mod tests {
             ..baseline_california_compliant_new_lease()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PositiveRentReportingMode::CompliantTenantElectedAndReportingActive);
+        assert_eq!(
+            result.mode,
+            PositiveRentReportingMode::CompliantTenantElectedAndReportingActive
+        );
     }
 
     #[test]
@@ -373,7 +390,10 @@ mod tests {
             ..baseline_california_compliant_new_lease()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PositiveRentReportingMode::CompliantTenantElectedAndReportingActive);
+        assert_eq!(
+            result.mode,
+            PositiveRentReportingMode::CompliantTenantElectedAndReportingActive
+        );
     }
 
     #[test]
@@ -385,7 +405,10 @@ mod tests {
             ..baseline_california_compliant_new_lease()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PositiveRentReportingMode::CompliantTenantElectedAndReportingActive);
+        assert_eq!(
+            result.mode,
+            PositiveRentReportingMode::CompliantTenantElectedAndReportingActive
+        );
     }
 
     #[test]
@@ -397,7 +420,10 @@ mod tests {
             ..baseline_california_compliant_new_lease()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PositiveRentReportingMode::CompliantTenantElectedAndReportingActive);
+        assert_eq!(
+            result.mode,
+            PositiveRentReportingMode::CompliantTenantElectedAndReportingActive
+        );
     }
 
     #[test]
@@ -405,11 +431,15 @@ mod tests {
         let input = Input {
             unit_count_in_building: 10,
             landlord_owns_multiple_buildings: true,
-            landlord_ownership_structure: LandlordOwnershipStructure::IndividualOrLlcWithoutCorporateMember,
+            landlord_ownership_structure:
+                LandlordOwnershipStructure::IndividualOrLlcWithoutCorporateMember,
             ..baseline_california_compliant_new_lease()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PositiveRentReportingMode::NotApplicableExemptSmallLandlord);
+        assert_eq!(
+            result.mode,
+            PositiveRentReportingMode::NotApplicableExemptSmallLandlord
+        );
     }
 
     #[test]
@@ -419,7 +449,10 @@ mod tests {
             ..baseline_california_compliant_new_lease()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PositiveRentReportingMode::ViolationOfferNotMadeAtLeaseInception);
+        assert_eq!(
+            result.mode,
+            PositiveRentReportingMode::ViolationOfferNotMadeAtLeaseInception
+        );
     }
 
     #[test]
@@ -430,7 +463,10 @@ mod tests {
             ..baseline_california_compliant_new_lease()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PositiveRentReportingMode::ViolationOfferToPreExistingTenantsMissedApril1_2025);
+        assert_eq!(
+            result.mode,
+            PositiveRentReportingMode::ViolationOfferToPreExistingTenantsMissedApril1_2025
+        );
     }
 
     #[test]
@@ -440,7 +476,10 @@ mod tests {
             ..baseline_california_compliant_new_lease()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PositiveRentReportingMode::ViolationAnnualOfferNotProvided);
+        assert_eq!(
+            result.mode,
+            PositiveRentReportingMode::ViolationAnnualOfferNotProvided
+        );
     }
 
     #[test]
@@ -451,7 +490,10 @@ mod tests {
             ..baseline_california_compliant_new_lease()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PositiveRentReportingMode::ViolationFeeChargedWhenLandlordIncursNoActualCost);
+        assert_eq!(
+            result.mode,
+            PositiveRentReportingMode::ViolationFeeChargedWhenLandlordIncursNoActualCost
+        );
     }
 
     #[test]
@@ -462,7 +504,10 @@ mod tests {
             ..baseline_california_compliant_new_lease()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PositiveRentReportingMode::ViolationFeeExceedsLesserOf10DollarsOrActualCost);
+        assert_eq!(
+            result.mode,
+            PositiveRentReportingMode::ViolationFeeExceedsLesserOf10DollarsOrActualCost
+        );
         assert!(result.notes.contains("Excess of $5"));
     }
 
@@ -474,7 +519,10 @@ mod tests {
             ..baseline_california_compliant_new_lease()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PositiveRentReportingMode::ViolationFeeExceedsLesserOf10DollarsOrActualCost);
+        assert_eq!(
+            result.mode,
+            PositiveRentReportingMode::ViolationFeeExceedsLesserOf10DollarsOrActualCost
+        );
     }
 
     #[test]
@@ -485,7 +533,10 @@ mod tests {
             ..baseline_california_compliant_new_lease()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PositiveRentReportingMode::CompliantTenantElectedAndReportingActive);
+        assert_eq!(
+            result.mode,
+            PositiveRentReportingMode::CompliantTenantElectedAndReportingActive
+        );
     }
 
     #[test]
@@ -495,7 +546,10 @@ mod tests {
             ..baseline_california_compliant_new_lease()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PositiveRentReportingMode::CompliantTenantDeclined);
+        assert_eq!(
+            result.mode,
+            PositiveRentReportingMode::CompliantTenantDeclined
+        );
     }
 
     #[test]
@@ -505,7 +559,10 @@ mod tests {
             ..baseline_california_compliant_new_lease()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PositiveRentReportingMode::ViolationTenantElectedButReportingNotActivated);
+        assert_eq!(
+            result.mode,
+            PositiveRentReportingMode::ViolationTenantElectedButReportingNotActivated
+        );
     }
 
     #[test]
@@ -515,7 +572,10 @@ mod tests {
             ..baseline_california_compliant_new_lease()
         };
         let result = check(&input);
-        assert_eq!(result.mode, PositiveRentReportingMode::ViolationNoQualifyingNationwideConsumerReportingAgency);
+        assert_eq!(
+            result.mode,
+            PositiveRentReportingMode::ViolationNoQualifyingNationwideConsumerReportingAgency
+        );
     }
 
     #[test]

@@ -121,10 +121,9 @@ pub fn compute(input: &Section1031FInput) -> Section1031FResult {
 
     // Compute days remaining in the 2-year window from the disposition
     // (or today if no disposition yet — caller is asking about exposure).
-    if let (Some(window_end), Some(disposition)) = (
-        r.two_year_window_end,
-        input.subsequent_disposition_date,
-    ) {
+    if let (Some(window_end), Some(disposition)) =
+        (r.two_year_window_end, input.subsequent_disposition_date)
+    {
         r.days_to_window_end = Some((window_end - disposition).num_days());
         r.window_still_open = disposition < window_end;
     } else if let Some(window_end) = r.two_year_window_end {
@@ -161,7 +160,9 @@ pub fn compute(input: &Section1031FInput) -> Section1031FResult {
         r.note = format!(
             "disposition on {} is AFTER 2-year window ending {} — §1031(f) deferral preserved",
             disposition,
-            r.two_year_window_end.map(|d| d.to_string()).unwrap_or_default()
+            r.two_year_window_end
+                .map(|d| d.to_string())
+                .unwrap_or_default()
         );
         return r;
     }

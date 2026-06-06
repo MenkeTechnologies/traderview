@@ -358,7 +358,10 @@ mod tests {
             0,
             false,
         ));
-        assert_eq!(r.violation, ViolationType::InstallationNotPerformedWhenRequired);
+        assert_eq!(
+            r.violation,
+            ViolationType::InstallationNotPerformedWhenRequired
+        );
         assert!(r.installation_required);
         assert!(r.citation.contains("§ 27-2043.1"));
         assert!(r.note.contains("15-inch"));
@@ -480,7 +483,10 @@ mod tests {
             0,
             false,
         ));
-        assert_eq!(r.violation, ViolationType::InstallationNotPerformedWhenRequired);
+        assert_eq!(
+            r.violation,
+            ViolationType::InstallationNotPerformedWhenRequired
+        );
         assert!(r.installation_required);
         assert!(r.citation.contains("written tenant request"));
     }
@@ -614,18 +620,9 @@ mod tests {
             Regime::for_jurisdiction("NY", "New York"),
             Regime::NewYorkCity
         );
-        assert_eq!(
-            Regime::for_jurisdiction("NY", "NYC"),
-            Regime::NewYorkCity
-        );
-        assert_eq!(
-            Regime::for_jurisdiction("NY", "Buffalo"),
-            Regime::Default
-        );
-        assert_eq!(
-            Regime::for_jurisdiction("NJ", "Newark"),
-            Regime::NewJersey
-        );
+        assert_eq!(Regime::for_jurisdiction("NY", "NYC"), Regime::NewYorkCity);
+        assert_eq!(Regime::for_jurisdiction("NY", "Buffalo"), Regime::Default);
+        assert_eq!(Regime::for_jurisdiction("NJ", "Newark"), Regime::NewJersey);
         assert_eq!(
             Regime::for_jurisdiction("CA", "Los Angeles"),
             Regime::Default
@@ -638,10 +635,7 @@ mod tests {
             Regime::for_jurisdiction("ny", "new york"),
             Regime::NewYorkCity
         );
-        assert_eq!(
-            Regime::for_jurisdiction("nj", "any"),
-            Regime::NewJersey
-        );
+        assert_eq!(Regime::for_jurisdiction("nj", "any"), Regime::NewJersey);
     }
 
     #[test]

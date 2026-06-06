@@ -175,12 +175,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
     // NoStatewideBroadCrimeVictimTermination default — 46 other
     // states + DC.
     let default_states = [
-        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE",
-        "FL", "GA", "HI", "ID", "IN", "IA", "KS", "KY",
-        "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO",
-        "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC",
-        "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD",
-        "TN", "UT", "VT", "VA", "WV", "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "ID", "IN", "IA", "KS",
+        "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM",
+        "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "UT", "VT", "VA", "WV",
+        "WI", "WY",
     ];
     for code in default_states {
         m.insert(
@@ -291,10 +289,8 @@ pub fn check(input: &CrimeVictimTerminationInput) -> CrimeVictimTerminationResul
     let documentation_satisfied =
         !rule.supporting_documentation_required || input.supporting_documentation_provided;
 
-    let may_terminate = category_covered
-        && within_window
-        && notice_satisfied
-        && documentation_satisfied;
+    let may_terminate =
+        category_covered && within_window && notice_satisfied && documentation_satisfied;
 
     // Rent obligation: WA terminates rent at notice; CA / TX / IL
     // tenant remains liable through the notice period or as
@@ -671,7 +667,10 @@ mod tests {
 
     #[test]
     fn wa_only_rent_terminates_at_notice_state() {
-        let count = RULES.iter().filter(|(_, r)| r.rent_obligation_terminates_at_notice).count();
+        let count = RULES
+            .iter()
+            .filter(|(_, r)| r.rent_obligation_terminates_at_notice)
+            .count();
         assert_eq!(count, 1, "only WA terminates rent obligation at notice");
     }
 
@@ -688,7 +687,9 @@ mod tests {
         let mut i = baseline("TX");
         i.victim_category = VictimCategory::HumanTrafficking;
         let r = check(&i);
-        assert!(r.note.contains("victim category not within regime coverage"));
+        assert!(r
+            .note
+            .contains("victim category not within regime coverage"));
     }
 
     // ── Normalization ──────────────────────────────────────────────

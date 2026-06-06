@@ -128,8 +128,8 @@ pub fn check(input: &Input) -> CheckResult {
     }
 
     // Federal Bruen floor — public housing = state action.
-    let federal_2a_floor_applies = matches!(input.housing_type, HousingType::PublicHousing)
-        && input.firearm_possession_lawful;
+    let federal_2a_floor_applies =
+        matches!(input.housing_type, HousingType::PublicHousing) && input.firearm_possession_lawful;
 
     let (statutory_tenant_protection, citation): (bool, &'static str) = match input.regime {
         Regime::Minnesota => (
@@ -180,30 +180,29 @@ pub fn check(input: &Input) -> CheckResult {
         ),
     };
 
-    let landlord_restriction_permissible = if statutory_tenant_protection
-        && input.lease_clause_restricts_firearms
-    {
-        violations.push(format!(
-            "Lease clause restricting lawful firearms possession violates {:?} regime's \
+    let landlord_restriction_permissible =
+        if statutory_tenant_protection && input.lease_clause_restricts_firearms {
+            violations.push(format!(
+                "Lease clause restricting lawful firearms possession violates {:?} regime's \
              statutory tenant protection.",
-            input.regime,
-        ));
-        false
-    } else if federal_2a_floor_applies && input.lease_clause_restricts_firearms {
-        violations.push(
-            "Lease clause restricting lawful firearms possession in PUBLIC HOUSING violates \
+                input.regime,
+            ));
+            false
+        } else if federal_2a_floor_applies && input.lease_clause_restricts_firearms {
+            violations.push(
+                "Lease clause restricting lawful firearms possession in PUBLIC HOUSING violates \
              federal 2A Bruen floor — public housing is state action subject to Second \
              Amendment scrutiny."
-                .to_string(),
-        );
-        false
-    } else if !input.firearm_possession_lawful {
-        // Illegal possession — landlord restriction is always
-        // permissible (and any prohibition is enforceable).
-        true
-    } else {
-        true
-    };
+                    .to_string(),
+            );
+            false
+        } else if !input.firearm_possession_lawful {
+            // Illegal possession — landlord restriction is always
+            // permissible (and any prohibition is enforceable).
+            true
+        } else {
+            true
+        };
 
     // Wisconsin-specific note.
     if matches!(input.regime, Regime::Wisconsin) && !input.tenant_holds_concealed_carry_permit {
@@ -216,9 +215,7 @@ pub fn check(input: &Input) -> CheckResult {
     }
 
     // Public housing federal 2A note.
-    if matches!(input.housing_type, HousingType::PublicHousing)
-        && input.firearm_possession_lawful
-    {
+    if matches!(input.housing_type, HousingType::PublicHousing) && input.firearm_possession_lawful {
         notes.push(
             "Public housing = STATE ACTION; federal 2A Bruen floor (597 U.S. 1 (2022)) applies. \
              Post-Bruen federal courts have struck down public-housing handgun bans (Cortland \
@@ -350,11 +347,10 @@ mod tests {
         i.tenant_holds_concealed_carry_permit = false;
         let r = check(&i);
         assert!(!r.statutory_tenant_protection);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 175.60") && n.contains("does not engage"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 175.60") && n.contains("does not engage")));
     }
 
     #[test]
@@ -410,11 +406,10 @@ mod tests {
         // Default + public housing → federal 2A floor protects.
         assert!(r.federal_2a_floor_applies);
         assert!(!r.landlord_restriction_permissible);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("PUBLIC HOUSING") && v.contains("Bruen"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("PUBLIC HOUSING") && v.contains("Bruen")));
     }
 
     // ── Universal threshold: lawfulness ────────────────────────
@@ -573,22 +568,16 @@ mod tests {
 
     #[test]
     fn citation_pins_authority_per_regime() {
-        assert!(
-            check(&base(Regime::Minnesota))
-                .citation
-                .contains("§ 504B.211")
-        );
-        assert!(
-            check(&base(Regime::Virginia))
-                .citation
-                .contains("§ 55.1-1208(A)(15)")
-        );
-        assert!(
-            check(&base(Regime::Tennessee))
-                .citation
-                .contains("SB0350")
-        );
-        assert!(check(&base(Regime::Wisconsin)).citation.contains("§ 175.60"));
+        assert!(check(&base(Regime::Minnesota))
+            .citation
+            .contains("§ 504B.211"));
+        assert!(check(&base(Regime::Virginia))
+            .citation
+            .contains("§ 55.1-1208(A)(15)"));
+        assert!(check(&base(Regime::Tennessee)).citation.contains("SB0350"));
+        assert!(check(&base(Regime::Wisconsin))
+            .citation
+            .contains("§ 175.60"));
         assert!(check(&base(Regime::NewYork)).citation.contains("Bruen"));
         assert!(check(&base(Regime::Default)).citation.contains("Bruen"));
     }
@@ -605,8 +594,9 @@ mod tests {
         ] {
             let r = check(&base(regime));
             assert!(
-                r.notes.iter().any(|n| n.contains("lease_disclosures")
-                    && n.contains("plain_language_lease")),
+                r.notes
+                    .iter()
+                    .any(|n| n.contains("lease_disclosures") && n.contains("plain_language_lease")),
                 "{:?}: sibling-module note must be present",
                 regime,
             );

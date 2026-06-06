@@ -31,10 +31,14 @@ pub struct DfaReport {
 
 pub fn compute(returns: &[f64], scales: &[usize]) -> Option<DfaReport> {
     let n_orig = returns.len();
-    if n_orig < 20 || scales.is_empty() { return None; }
+    if n_orig < 20 || scales.is_empty() {
+        return None;
+    }
     let r: Vec<f64> = returns.iter().copied().filter(|x| x.is_finite()).collect();
     let n = r.len();
-    if n < 20 { return None; }
+    if n < 20 {
+        return None;
+    }
     let mean: f64 = r.iter().sum::<f64>() / n as f64;
     // Integrated series.
     let mut y = Vec::with_capacity(n);
@@ -45,15 +49,21 @@ pub fn compute(returns: &[f64], scales: &[usize]) -> Option<DfaReport> {
     }
     let mut points: Vec<(f64, f64)> = Vec::new();
     for &scale in scales {
-        if scale < 4 || scale > n / 2 { continue; }
+        if scale < 4 || scale > n / 2 {
+            continue;
+        }
         let n_windows = n / scale;
-        if n_windows == 0 { continue; }
+        if n_windows == 0 {
+            continue;
+        }
         let mut sum_sq_residuals = 0.0_f64;
         let mut window_count = 0_usize;
         for w in 0..n_windows {
             let start = w * scale;
             let end = start + scale;
-            if end > n { continue; }
+            if end > n {
+                continue;
+            }
             let win = &y[start..end];
             // OLS linear fit y_t = a + b·t over the window.
             let s_len = scale as f64;
@@ -62,7 +72,9 @@ pub fn compute(returns: &[f64], scales: &[usize]) -> Option<DfaReport> {
             let sum_tt: f64 = (0..scale).map(|i| (i as f64).powi(2)).sum();
             let sum_ty: f64 = win.iter().enumerate().map(|(i, v)| i as f64 * v).sum();
             let denom = s_len * sum_tt - sum_t * sum_t;
-            if denom.abs() < 1e-18 { continue; }
+            if denom.abs() < 1e-18 {
+                continue;
+            }
             let b = (s_len * sum_ty - sum_t * sum_y) / denom;
             let a = (sum_y - b * sum_t) / s_len;
             for (i, v) in win.iter().enumerate() {
@@ -71,13 +83,17 @@ pub fn compute(returns: &[f64], scales: &[usize]) -> Option<DfaReport> {
             }
             window_count += scale;
         }
-        if window_count == 0 { continue; }
+        if window_count == 0 {
+            continue;
+        }
         let f_n = (sum_sq_residuals / window_count as f64).sqrt();
         if f_n > 0.0 && f_n.is_finite() {
             points.push((scale as f64, f_n));
         }
     }
-    if points.len() < 2 { return None; }
+    if points.len() < 2 {
+        return None;
+    }
     // OLS log-log fit.
     let log_n: Vec<f64> = points.iter().map(|p| p.0.ln()).collect();
     let log_f: Vec<f64> = points.iter().map(|p| p.1.ln()).collect();
@@ -94,14 +110,30 @@ pub fn compute(returns: &[f64], scales: &[usize]) -> Option<DfaReport> {
         den += dx * dx;
         ss_tot += dy * dy;
     }
-    if den <= 0.0 { return None; }
+    if den <= 0.0 {
+        return None;
+    }
     let alpha = num / den;
     let intercept = mean_y - alpha * mean_x;
-    let ss_res: f64 = log_n.iter().zip(log_f.iter())
-        .map(|(x, y)| (y - (alpha * x + intercept)).powi(2)).sum();
-    let r_squared = if ss_tot > 0.0 { 1.0 - ss_res / ss_tot } else { 0.0 };
-    if !alpha.is_finite() { return None; }
-    Some(DfaReport { alpha, log_n, log_f, r_squared })
+    let ss_res: f64 = log_n
+        .iter()
+        .zip(log_f.iter())
+        .map(|(x, y)| (y - (alpha * x + intercept)).powi(2))
+        .sum();
+    let r_squared = if ss_tot > 0.0 {
+        1.0 - ss_res / ss_tot
+    } else {
+        0.0
+    };
+    if !alpha.is_finite() {
+        return None;
+    }
+    Some(DfaReport {
+        alpha,
+        log_n,
+        log_f,
+        r_squared,
+    })
 }
 
 #[cfg(test)]
@@ -111,7 +143,9 @@ mod tests {
     fn lcg_seed(seed: u64) -> impl FnMut() -> f64 {
         let mut state = seed;
         move || {
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             ((state >> 32) as f64 / u32::MAX as f64) - 0.5
         }
     }
@@ -132,8 +166,11 @@ mod tests {
         let r: Vec<f64> = (0..5_000).map(|_| rng()).collect();
         let scales: Vec<usize> = vec![10, 20, 50, 100, 250, 500, 1000];
         let report = compute(&r, &scales).unwrap();
-        assert!((report.alpha - 0.5).abs() < 0.15,
-            "iid noise should give DFA α ≈ 0.5, got {}", report.alpha);
+        assert!(
+            (report.alpha - 0.5).abs() < 0.15,
+            "iid noise should give DFA α ≈ 0.5, got {}",
+            report.alpha
+        );
     }
 
     #[test]
@@ -141,8 +178,11 @@ mod tests {
         let r: Vec<f64> = (0..2_000).map(|i| (i as f64) * 0.001).collect();
         let scales: Vec<usize> = vec![10, 20, 50, 100, 250];
         let report = compute(&r, &scales).unwrap();
-        assert!(report.alpha > 0.5,
-            "trending series should give α > 0.5, got {}", report.alpha);
+        assert!(
+            report.alpha > 0.5,
+            "trending series should give α > 0.5, got {}",
+            report.alpha
+        );
     }
 
     #[test]

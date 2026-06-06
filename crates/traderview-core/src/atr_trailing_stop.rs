@@ -19,7 +19,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AtrTrailingStopReport {
@@ -37,9 +41,13 @@ pub fn compute(bars: &[Bar], period: usize, multiplier: f64) -> AtrTrailingStopR
         period,
         multiplier,
     };
-    if period < 2 || !multiplier.is_finite() || multiplier <= 0.0
-        || n < period + 1 { return report; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if period < 2 || !multiplier.is_finite() || multiplier <= 0.0 || n < period + 1 {
+        return report;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return report;
     }
     let mut tr = vec![0.0_f64; n];
@@ -86,7 +94,13 @@ pub fn compute(bars: &[Bar], period: usize, multiplier: f64) -> AtrTrailingStopR
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {
@@ -117,10 +131,12 @@ mod tests {
 
     #[test]
     fn long_stop_ratchets_up_in_uptrend() {
-        let bars: Vec<_> = (0..50).map(|i| {
-            let m = 100.0 + i as f64;
-            b(m + 0.5, m - 0.5, m)
-        }).collect();
+        let bars: Vec<_> = (0..50)
+            .map(|i| {
+                let m = 100.0 + i as f64;
+                b(m + 0.5, m - 0.5, m)
+            })
+            .collect();
         let r = compute(&bars, 14, 3.0);
         let vals: Vec<f64> = r.long_stop.iter().flatten().copied().collect();
         for w in vals.windows(2) {
@@ -130,10 +146,12 @@ mod tests {
 
     #[test]
     fn short_stop_ratchets_down_in_downtrend() {
-        let bars: Vec<_> = (0..50).map(|i| {
-            let m = 200.0 - i as f64;
-            b(m + 0.5, m - 0.5, m)
-        }).collect();
+        let bars: Vec<_> = (0..50)
+            .map(|i| {
+                let m = 200.0 - i as f64;
+                b(m + 0.5, m - 0.5, m)
+            })
+            .collect();
         let r = compute(&bars, 14, 3.0);
         let vals: Vec<f64> = r.short_stop.iter().flatten().copied().collect();
         for w in vals.windows(2) {

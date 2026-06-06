@@ -334,7 +334,10 @@ mod tests {
         let mut i = base();
         i.is_section_305c_deemed_distribution = true;
         let r = compute(&i);
-        assert_eq!(r.triggered_exception, Section305Exception::DeemedDistribution);
+        assert_eq!(
+            r.triggered_exception,
+            Section305Exception::DeemedDistribution
+        );
         assert!(r.distribution_is_taxable);
     }
 
@@ -369,7 +372,10 @@ mod tests {
         i.distribution_is_disproportionate = true;
         i.is_section_305c_deemed_distribution = true;
         let r = compute(&i);
-        assert_ne!(r.triggered_exception, Section305Exception::DeemedDistribution);
+        assert_ne!(
+            r.triggered_exception,
+            Section305Exception::DeemedDistribution
+        );
     }
 
     // ── §301 dividend treatment when taxable ───────────────────────

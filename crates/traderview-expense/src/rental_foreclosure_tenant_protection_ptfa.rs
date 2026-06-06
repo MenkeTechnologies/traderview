@@ -104,7 +104,10 @@ pub fn check(input: &Input) -> Output {
     ];
 
     if !input.successor_acquired_at_foreclosure {
-        notes.push("Property not acquired by successor at foreclosure sale — PTFA does not apply.".to_string());
+        notes.push(
+            "Property not acquired by successor at foreclosure sale — PTFA does not apply."
+                .to_string(),
+        );
         return Output {
             severity: Severity::NotApplicable,
             bona_fide_tenant: false,
@@ -406,7 +409,10 @@ mod tests {
     #[test]
     fn citations_pin_bank_of_america_v_owens_case_law() {
         let out = check(&base_bona_fide_lease());
-        assert!(out.citations.iter().any(|c| c.contains("Bank of Am., N.A. v. Owens")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("Bank of Am., N.A. v. Owens")));
     }
 
     #[test]

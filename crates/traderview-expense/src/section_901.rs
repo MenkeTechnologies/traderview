@@ -131,7 +131,10 @@ pub fn check(input: &Section901Input) -> Section901Result {
     let mut actions: Vec<String> = Vec::new();
     let mut notes: Vec<String> = Vec::new();
 
-    if matches!(input.classification, CreditabilityClassification::NotCreditableOther) {
+    if matches!(
+        input.classification,
+        CreditabilityClassification::NotCreditableOther
+    ) {
         notes.push(
             "Foreign tax is NOT an income / war profits / excess profits tax under § 901(b) \
              or an in-lieu-of tax under § 903 — non-creditable. Penalty payments, interest, \
@@ -224,7 +227,9 @@ pub fn check(input: &Section901Input) -> Section901Result {
         let disqualified_portion: u64 = (u128::from(input.foreign_tax_paid_cents)
             * u128::from(input.covered_asset_acquisition_us_basis_step_up_cents)
             / u128::from(total)) as u64;
-        let creditable = input.foreign_tax_paid_cents.saturating_sub(disqualified_portion);
+        let creditable = input
+            .foreign_tax_paid_cents
+            .saturating_sub(disqualified_portion);
         actions.push(format!(
             "§ 901(m) Covered Asset Acquisition (CAA) FTC disallowance: foreign taxes \
              attributable to the disqualified portion are NON-CREDITABLE. Disqualified \
@@ -347,7 +352,10 @@ mod tests {
         let mut i = baseline();
         i.classification = CreditabilityClassification::NonCreditableSanctionedCountry;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::NonCreditableSanctionedCountryFull));
+        assert!(matches!(
+            r.severity,
+            Severity::NonCreditableSanctionedCountryFull
+        ));
         assert_eq!(r.creditable_foreign_tax_cents, 0);
         assert!(r.notes.iter().any(|n| n.contains("Iran")));
         assert!(r.notes.iter().any(|n| n.contains("North Korea")));
@@ -371,7 +379,10 @@ mod tests {
         i.dividend_stock_type = DividendStockType::CommonStock;
         i.days_held_in_holding_period_window = 10;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::NonCreditableHoldingPeriodFailed));
+        assert!(matches!(
+            r.severity,
+            Severity::NonCreditableHoldingPeriodFailed
+        ));
         assert_eq!(r.holding_period_required_days, 16);
         assert_eq!(r.holding_period_window_days, 31);
     }
@@ -393,7 +404,10 @@ mod tests {
         i.dividend_stock_type = DividendStockType::PreferredStockLongPeriod;
         i.days_held_in_holding_period_window = 30;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::NonCreditableHoldingPeriodFailed));
+        assert!(matches!(
+            r.severity,
+            Severity::NonCreditableHoldingPeriodFailed
+        ));
         assert_eq!(r.holding_period_required_days, 46);
         assert_eq!(r.holding_period_window_days, 91);
     }
@@ -405,7 +419,10 @@ mod tests {
         i.dividend_stock_type = DividendStockType::PreferredStockShortPeriod;
         i.days_held_in_holding_period_window = 10;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::NonCreditableHoldingPeriodFailed));
+        assert!(matches!(
+            r.severity,
+            Severity::NonCreditableHoldingPeriodFailed
+        ));
         assert_eq!(r.holding_period_required_days, 16);
     }
 
@@ -427,8 +444,14 @@ mod tests {
             r.creditable_foreign_tax_cents,
             1_000_000_00 - expected_disqualified
         );
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Notice 2014-44")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Pub. L. 111-226")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Notice 2014-44")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Pub. L. 111-226")));
     }
 
     #[test]
@@ -503,8 +526,14 @@ mod tests {
     fn action_references_form_1116_and_1118() {
         let i = baseline();
         let r = check(&i);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Form 1116")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Form 1118")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Form 1116")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Form 1118")));
     }
 
     #[test]

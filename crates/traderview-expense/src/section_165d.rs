@@ -102,8 +102,7 @@ pub fn compute(input: &Section165dInput) -> Section165dResult {
     let winnings = input.gambling_winnings_dollars.max(0);
 
     // Apply percentage limitation.
-    let adjusted_losses =
-        ((losses as i128) * (loss_pct_bp as i128) / 10_000) as i64;
+    let adjusted_losses = ((losses as i128) * (loss_pct_bp as i128) / 10_000) as i64;
 
     // §165(d) winnings cap.
     let loss_deduction = adjusted_losses.min(winnings);

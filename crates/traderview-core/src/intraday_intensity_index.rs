@@ -21,7 +21,12 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64, pub volume: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+    pub volume: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct IiiReport {
@@ -35,9 +40,14 @@ pub fn compute(bars: &[Bar]) -> IiiReport {
         per_bar: vec![None; n],
         cumulative: vec![None; n],
     };
-    if n == 0 { return report; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite()
-        || !b.close.is_finite() || !b.volume.is_finite()) { return report; }
+    if n == 0 {
+        return report;
+    }
+    if bars.iter().any(|b| {
+        !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite() || !b.volume.is_finite()
+    }) {
+        return report;
+    }
     let mut cum = 0.0_f64;
     for (i, bar) in bars.iter().enumerate() {
         let range = bar.high - bar.low;
@@ -58,7 +68,12 @@ mod tests {
     use super::*;
 
     fn b(h: f64, l: f64, c: f64, v: f64) -> Bar {
-        Bar { high: h, low: l, close: c, volume: v }
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+            volume: v,
+        }
     }
 
     #[test]
@@ -107,9 +122,9 @@ mod tests {
     #[test]
     fn cumulative_correct_three_bar() {
         let bars = vec![
-            b(110.0, 100.0, 110.0, 1000.0),    // +1000
-            b(110.0, 100.0, 100.0, 1000.0),    // -1000
-            b(110.0, 100.0, 110.0, 2000.0),    // +2000
+            b(110.0, 100.0, 110.0, 1000.0), // +1000
+            b(110.0, 100.0, 100.0, 1000.0), // -1000
+            b(110.0, 100.0, 110.0, 2000.0), // +2000
         ];
         let r = compute(&bars);
         assert!((r.cumulative[0].unwrap() - 1000.0).abs() < 1e-9);

@@ -103,7 +103,8 @@ pub fn compute(input: &Form8606Input) -> Form8606Result {
 
     r.line_11_nontaxable_conversion = (input.conversions_to_roth * ratio).round_dp(2);
     r.line_12_nontaxable_distribution = (input.distributions_this_year * ratio).round_dp(2);
-    r.line_13_total_nontaxable = r.line_11_nontaxable_conversion + r.line_12_nontaxable_distribution;
+    r.line_13_total_nontaxable =
+        r.line_11_nontaxable_conversion + r.line_12_nontaxable_distribution;
 
     r.line_15c_taxable_distribution =
         (input.distributions_this_year - r.line_12_nontaxable_distribution).max(Decimal::ZERO);
@@ -115,24 +116,25 @@ pub fn compute(input: &Form8606Input) -> Form8606Result {
         (r.line_3_total_basis_available - r.line_13_total_nontaxable).max(Decimal::ZERO);
 
     // Annotate the pro-rata damage when relevant.
-    let pretax_balance = (r.line_9_proration_denominator - r.line_3_total_basis_available)
-        .max(Decimal::ZERO);
-    r.note = if input.conversions_to_roth > Decimal::ZERO && pretax_balance > Decimal::ZERO {
-        format!(
+    let pretax_balance =
+        (r.line_9_proration_denominator - r.line_3_total_basis_available).max(Decimal::ZERO);
+    r.note =
+        if input.conversions_to_roth > Decimal::ZERO && pretax_balance > Decimal::ZERO {
+            format!(
             "pro-rata: ${} of ${} conversion taxable (pre-tax balance ${} blends with basis ${})",
             r.line_18_taxable_conversion, input.conversions_to_roth,
             pretax_balance, r.line_3_total_basis_available,
         )
-    } else if input.conversions_to_roth > Decimal::ZERO {
-        "clean backdoor: no pre-tax balance, conversion entirely nontaxable".into()
-    } else if input.distributions_this_year > Decimal::ZERO {
-        format!(
-            "distribution: ${} taxable (basis ${} apportioned)",
-            r.line_15c_taxable_distribution, r.line_3_total_basis_available,
-        )
-    } else {
-        "nondeductible contribution added to basis; no current-year tax event".into()
-    };
+        } else if input.conversions_to_roth > Decimal::ZERO {
+            "clean backdoor: no pre-tax balance, conversion entirely nontaxable".into()
+        } else if input.distributions_this_year > Decimal::ZERO {
+            format!(
+                "distribution: ${} taxable (basis ${} apportioned)",
+                r.line_15c_taxable_distribution, r.line_3_total_basis_available,
+            )
+        } else {
+            "nondeductible contribution added to basis; no current-year tax event".into()
+        };
     r
 }
 

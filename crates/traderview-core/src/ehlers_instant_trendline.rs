@@ -36,8 +36,12 @@ pub fn compute(series: &[f64], period: usize) -> InstantTrendlineReport {
         trigger: vec![None; n],
         period,
     };
-    if period < 3 || n < 3 { return report; }
-    if series.iter().any(|x| !x.is_finite()) { return report; }
+    if period < 3 || n < 3 {
+        return report;
+    }
+    if series.iter().any(|x| !x.is_finite()) {
+        return report;
+    }
     let alpha = 2.0 / (period as f64 + 1.0);
     let a2 = alpha * alpha;
     let c0 = alpha - a2 / 4.0;
@@ -48,15 +52,17 @@ pub fn compute(series: &[f64], period: usize) -> InstantTrendlineReport {
     let mut it = vec![0.0_f64; n];
     // Seed first two bars via simple average of first 3 inputs (Ehlers'
     // recommendation for warmup).
-    let seed = (series[0] + 2.0 * series.get(1).copied().unwrap_or(series[0])
-        + series.get(2).copied().unwrap_or(series[0])) / 4.0;
+    let seed = (series[0]
+        + 2.0 * series.get(1).copied().unwrap_or(series[0])
+        + series.get(2).copied().unwrap_or(series[0]))
+        / 4.0;
     for (i, slot) in it.iter_mut().enumerate().take(2.min(n)) {
         *slot = seed;
         report.itrend[i] = Some(seed);
     }
     for i in 2..n {
-        it[i] = c0 * series[i] + c1 * series[i - 1] - c2 * series[i - 2]
-            + d1 * it[i - 1] - d2 * it[i - 2];
+        it[i] = c0 * series[i] + c1 * series[i - 1] - c2 * series[i - 2] + d1 * it[i - 1]
+            - d2 * it[i - 2];
         report.itrend[i] = Some(it[i]);
     }
     // Trigger = 2·itrend - itrend[i-2] (Ehlers' fast line).
@@ -103,8 +109,10 @@ mod tests {
         // Steady-state ITrend tracks linear input with bounded lag.
         let last = r.itrend[199].unwrap();
         // Allow lag up to half the period.
-        assert!((199.0 - last).abs() < 10.0,
-            "itrend {last} should be within 10 of input 199");
+        assert!(
+            (199.0 - last).abs() < 10.0,
+            "itrend {last} should be within 10 of input 199"
+        );
     }
 
     #[test]
@@ -115,8 +123,10 @@ mod tests {
         let last = 199;
         let it_v = r.itrend[last].unwrap();
         let tr_v = r.trigger[last].unwrap();
-        assert!(tr_v > it_v,
-            "trigger {tr_v} should lead itrend {it_v} in steady uptrend");
+        assert!(
+            tr_v > it_v,
+            "trigger {tr_v} should lead itrend {it_v} in steady uptrend"
+        );
     }
 
     #[test]

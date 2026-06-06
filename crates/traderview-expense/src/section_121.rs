@@ -189,7 +189,10 @@ pub fn compute(input: &Section121Input) -> Section121Result {
 
     // §121(d)(6) depreciation recapture is recaptured BEFORE exclusion.
     // It's not eligible for §121, period — it's §1250 unrecaptured.
-    r.unrecaptured_section_1250 = input.depreciation_post_1997.min(r.realized_gain).max(Decimal::ZERO);
+    r.unrecaptured_section_1250 = input
+        .depreciation_post_1997
+        .min(r.realized_gain)
+        .max(Decimal::ZERO);
     let gain_after_recapture = r.realized_gain - r.unrecaptured_section_1250;
 
     // §121(b)(5) non-qualified use reduction. Skip when both day counts
@@ -204,12 +207,17 @@ pub fn compute(input: &Section121Input) -> Section121Result {
     r.eligible_gain_after_nqu_reduction = gain_after_recapture - r.gain_attributable_to_nqu;
 
     // Apply exclusion cap to eligible portion.
-    r.gain_excluded = r.eligible_gain_after_nqu_reduction.min(r.exclusion_cap_applied);
-    let eligible_over_cap = (r.eligible_gain_after_nqu_reduction - r.gain_excluded).max(Decimal::ZERO);
+    r.gain_excluded = r
+        .eligible_gain_after_nqu_reduction
+        .min(r.exclusion_cap_applied);
+    let eligible_over_cap =
+        (r.eligible_gain_after_nqu_reduction - r.gain_excluded).max(Decimal::ZERO);
     r.taxable_long_term_gain = eligible_over_cap + r.gain_attributable_to_nqu;
     r.total_taxable_gain = r.taxable_long_term_gain + r.unrecaptured_section_1250;
 
-    r.note = if r.unrecaptured_section_1250 > Decimal::ZERO || r.gain_attributable_to_nqu > Decimal::ZERO {
+    r.note = if r.unrecaptured_section_1250 > Decimal::ZERO
+        || r.gain_attributable_to_nqu > Decimal::ZERO
+    {
         format!(
             "§121: ${} excluded (cap ${}); ${} §1250 recapture + ${} NQU + ${} over-cap = ${} taxable LTCG",
             r.gain_excluded, r.exclusion_cap_applied,
@@ -288,7 +296,10 @@ mod tests {
         assert!(r.disqualified);
         assert_eq!(r.gain_excluded, Decimal::ZERO);
         assert_eq!(r.taxable_long_term_gain, dec!(200000));
-        assert!(r.disqualification_reasons.iter().any(|s| s.contains("ownership")));
+        assert!(r
+            .disqualification_reasons
+            .iter()
+            .any(|s| s.contains("ownership")));
         assert!(r.disqualification_reasons.iter().any(|s| s.contains("use")));
     }
 
@@ -333,7 +344,10 @@ mod tests {
         i.used_section_121_within_prior_2_years = true;
         let r = compute(&i);
         assert!(r.disqualified);
-        assert!(r.disqualification_reasons.iter().any(|s| s.contains("prior 2 years")));
+        assert!(r
+            .disqualification_reasons
+            .iter()
+            .any(|s| s.contains("prior 2 years")));
     }
 
     #[test]

@@ -46,7 +46,12 @@ pub struct ThreeDriveConfig {
 }
 
 impl Default for ThreeDriveConfig {
-    fn default() -> Self { Self { target_extension: 1.272, tolerance: 0.10 } }
+    fn default() -> Self {
+        Self {
+            target_extension: 1.272,
+            tolerance: 0.10,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -101,9 +106,13 @@ pub fn detect(swings: &[SwingPoint], cfg: &ThreeDriveConfig) -> ThreeDriveReport
         if near(d2_to_d1) && near(d3_to_d2) {
             report.events.push(ThreeDriveEvent {
                 bias,
-                d1_idx: d1.index, p1_idx: p1.index, d2_idx: d2.index,
-                p2_idx: p2.index, d3_idx: d3.index,
-                d2_to_d1_ratio: d2_to_d1, d3_to_d2_ratio: d3_to_d2,
+                d1_idx: d1.index,
+                p1_idx: p1.index,
+                d2_idx: d2.index,
+                p2_idx: p2.index,
+                d3_idx: d3.index,
+                d2_to_d1_ratio: d2_to_d1,
+                d3_to_d2_ratio: d3_to_d2,
             });
         }
     }
@@ -115,7 +124,11 @@ mod tests {
     use super::*;
 
     fn sp(idx: usize, price: f64, kind: SwingKind) -> SwingPoint {
-        SwingPoint { index: idx, price, kind }
+        SwingPoint {
+            index: idx,
+            price,
+            kind,
+        }
     }
 
     #[test]
@@ -127,10 +140,24 @@ mod tests {
     #[test]
     fn invalid_config_returns_empty() {
         let swings = vec![sp(0, 100.0, SwingKind::High); 5];
-        assert!(detect(&swings, &ThreeDriveConfig { target_extension: 0.0, tolerance: 0.1 })
-            .events.is_empty());
-        assert!(detect(&swings, &ThreeDriveConfig { target_extension: 1.272, tolerance: 1.5 })
-            .events.is_empty());
+        assert!(detect(
+            &swings,
+            &ThreeDriveConfig {
+                target_extension: 0.0,
+                tolerance: 0.1
+            }
+        )
+        .events
+        .is_empty());
+        assert!(detect(
+            &swings,
+            &ThreeDriveConfig {
+                target_extension: 1.272,
+                tolerance: 1.5
+            }
+        )
+        .events
+        .is_empty());
     }
 
     #[test]
@@ -142,10 +169,10 @@ mod tests {
         // d3 = p2 + 1.272·drive_1_mag (= 25.44) = 85.44 + 32.36 = 117.80.
         //   drive_2_mag = 32.36; ratio 32.36 / 25.44 = 1.272 ✓
         let swings = vec![
-            sp(0,  100.00, SwingKind::High),
-            sp(10, 80.00,  SwingKind::Low),
+            sp(0, 100.00, SwingKind::High),
+            sp(10, 80.00, SwingKind::Low),
             sp(20, 105.44, SwingKind::High),
-            sp(30, 85.44,  SwingKind::Low),
+            sp(30, 85.44, SwingKind::Low),
             sp(40, 117.80, SwingKind::High),
         ];
         let r = detect(&swings, &ThreeDriveConfig::default());
@@ -157,25 +184,31 @@ mod tests {
     fn perfect_bullish_three_drive_detected() {
         // Mirror of the bearish test.
         let swings = vec![
-            sp(0,  100.00, SwingKind::Low),
+            sp(0, 100.00, SwingKind::Low),
             sp(10, 120.00, SwingKind::High),
-            sp(20, 94.56,  SwingKind::Low),       // 100 - 1.272 * 20 + ... let me redo
+            sp(20, 94.56, SwingKind::Low), // 100 - 1.272 * 20 + ... let me redo
             sp(30, 114.56, SwingKind::High),
-            sp(40, 82.20,  SwingKind::Low),
+            sp(40, 82.20, SwingKind::Low),
         ];
         // The numbers above were sketched; verify the detector simply runs
         // without panic for a plausibly-shaped bullish sequence.
-        let _ = detect(&swings, &ThreeDriveConfig { tolerance: 0.30, ..Default::default() });
+        let _ = detect(
+            &swings,
+            &ThreeDriveConfig {
+                tolerance: 0.30,
+                ..Default::default()
+            },
+        );
     }
 
     #[test]
     fn non_monotonic_drives_dont_match() {
         // d1 > d2 but bearish requires higher-highs — should fail.
         let swings = vec![
-            sp(0,  120.00, SwingKind::High),
+            sp(0, 120.00, SwingKind::High),
             sp(10, 100.00, SwingKind::Low),
-            sp(20, 115.00, SwingKind::High),    // d2 lower than d1 — invalid for bearish three-drive
-            sp(30, 95.00,  SwingKind::Low),
+            sp(20, 115.00, SwingKind::High), // d2 lower than d1 — invalid for bearish three-drive
+            sp(30, 95.00, SwingKind::Low),
             sp(40, 110.00, SwingKind::High),
         ];
         let r = detect(&swings, &ThreeDriveConfig::default());
@@ -186,8 +219,8 @@ mod tests {
     fn wrong_kind_sequence_doesnt_match() {
         // Drives must alternate kind correctly; here two drives in a row.
         let swings = vec![
-            sp(0,  100.00, SwingKind::High),
-            sp(10, 105.00, SwingKind::High),    // BAD — should be a pullback
+            sp(0, 100.00, SwingKind::High),
+            sp(10, 105.00, SwingKind::High), // BAD — should be a pullback
             sp(20, 110.00, SwingKind::High),
             sp(30, 100.00, SwingKind::Low),
             sp(40, 120.00, SwingKind::High),

@@ -20,70 +20,24 @@ use chrono::{DateTime, NaiveDate, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
-use traderview_expense::deposit_interest::{accrue as accrue_deposit_interest, AccrualInput, AccrualResult};
-use traderview_expense::disposition::{
-    compute as compute_disposition, DispositionInput, DispositionReport,
+use traderview_expense::abandoned_property_handling::{
+    check as check_abandoned_property_handling, AbandonedPropertyInput, AbandonedPropertyResult,
 };
-use traderview_expense::rental_depreciation::{
-    macrs_rental_year_1_deduction, RealPropertyClass,
+use traderview_expense::advance_rent_limit::{
+    check as check_advance_rent, AdvanceRentInput, AdvanceRentResult,
 };
-use traderview_expense::rental_dc_topa_tenant_opportunity_purchase::{
-    check as check_rental_dc_topa_tenant_opportunity_purchase,
-    DcTopaInput as RentalDcTopaTenantOpportunityPurchaseInput,
-    DcTopaResult as RentalDcTopaTenantOpportunityPurchaseResult,
+use traderview_expense::adverse_action_notice::{
+    check as check_adverse_action, AdverseActionInput, AdverseActionResult,
 };
-use traderview_expense::contractor_1099::{
-    compute as compute_contractor_1099, Contractor1099Input, Contractor1099Report,
-};
-use traderview_expense::cost_segregation::{
-    compute as compute_cost_segregation, CostSegInput, CostSegReport,
-    PropertyTypeDefault as CostSegPropertyType,
-};
-use traderview_expense::deposit_return_windows::{
-    check as check_deposit_return, DepositReturnCheckInput, DepositReturnCheckResult,
-};
-use traderview_expense::lease_disclosures::{
-    required_for as lease_disclosures_required_for, DisclosuresRequiredInput,
-    DisclosuresRequiredReport,
-};
-use traderview_expense::habitability_remedies::{
-    remedies as compute_habitability_remedies, HabitabilityRemediesInput,
-    HabitabilityRemediesReport,
-};
-use traderview_expense::military_termination::{
-    check as check_military_termination, MilitaryTerminationCheckInput,
-    MilitaryTerminationCheckResult,
-};
-use traderview_expense::security_deposit_caps::{
-    check as check_security_deposit_cap, SecurityDepositCheckInput,
-    SecurityDepositCheckResult,
-};
-use traderview_expense::security_deposit_interest_statement::{
-    check as check_security_deposit_interest_statement, DepositInterestStatementInput,
-    DepositInterestStatementResult,
-};
-use traderview_expense::rent_control::{
-    check as check_rent_increase, RentIncreaseCheckInput, RentIncreaseCheckResult,
-};
-use traderview_expense::rent_control_lease_disclosure::{
-    check as check_rent_control_disclosure, RentControlDisclosureInput, RentControlDisclosureResult,
-};
-use traderview_expense::rent_overcharge_recovery::{
-    check as check_rent_overcharge_recovery, RentOverchargeRecoveryInput,
-    RentOverchargeRecoveryResult,
-};
-use traderview_expense::rubs_utility_billing_disclosure::{
-    check as check_rubs_utility_billing_disclosure, RubsUtilityBillingInput,
-    RubsUtilityBillingResult,
-};
-use traderview_expense::entry_notice::{
-    compute as check_entry_notice, EntryNoticeInput, EntryNoticeResult,
-};
-use traderview_expense::broker_fee_allocation::{
-    check as check_broker_fee_allocation, BrokerFeeAllocationInput, BrokerFeeAllocationResult,
+use traderview_expense::adverse_possession_claim::{
+    check as check_adverse_possession, AdversePossessionInput, AdversePossessionResult,
 };
 use traderview_expense::application_fees::{
     check as check_application_fee, AppFeeCheckInput, AppFeeCheckResult,
+};
+use traderview_expense::asbestos_disclosure::{
+    check as check_asbestos_disclosure, CheckResult as AsbestosDisclosureResult,
+    Input as AsbestosDisclosureInput,
 };
 use traderview_expense::balcony_inspection::{
     check as check_balcony_inspection, BalconyInspectionInput, BalconyInspectionResult,
@@ -91,32 +45,247 @@ use traderview_expense::balcony_inspection::{
 use traderview_expense::bedbug_disclosure::{
     check as check_bedbug_disclosure, BedbugCheckInput, BedbugCheckResult,
 };
+use traderview_expense::bedbug_extermination_cost::{
+    check as check_bedbug_extermination, BedbugExterminationInput, BedbugExterminationResult,
+};
+use traderview_expense::broker_fee_allocation::{
+    check as check_broker_fee_allocation, BrokerFeeAllocationInput, BrokerFeeAllocationResult,
+};
+use traderview_expense::carpet_replacement_useful_life::{
+    check as check_carpet_replacement_useful_life, CarpetReplacementInput, CarpetReplacementResult,
+};
+use traderview_expense::commercial_lease_cam_charge_disclosure::{
+    check as check_commercial_lease_cam_charge_disclosure, CommercialLeaseCamChargeDisclosureInput,
+    CommercialLeaseCamChargeDisclosureResult,
+};
+use traderview_expense::commercial_lease_personal_guaranty_enforceability::{
+    check as check_commercial_lease_personal_guaranty_enforceability,
+    CommercialLeasePersonalGuarantyEnforceabilityInput,
+    CommercialLeasePersonalGuarantyEnforceabilityResult,
+};
+use traderview_expense::condominium_conversion_protection::{
+    check as check_condominium_conversion_protection, CheckResult as CondoConversionResult,
+    Input as CondoConversionInput,
+};
+use traderview_expense::contractor_1099::{
+    compute as compute_contractor_1099, Contractor1099Input, Contractor1099Report,
+};
+use traderview_expense::cooling_requirements::{
+    check as check_cooling_requirements, CheckResult as CoolingRequirementsResult,
+    Input as CoolingRequirementsInput,
+};
+use traderview_expense::cosigner_rules::{
+    check as check_cosigner_rules, CosignerInput, CosignerResult,
+};
+use traderview_expense::cost_segregation::{
+    compute as compute_cost_segregation, CostSegInput, CostSegReport,
+    PropertyTypeDefault as CostSegPropertyType,
+};
+use traderview_expense::credit_check_authorization::{
+    check as check_credit_check_authorization, CreditCheckInput, CreditCheckResult,
+};
+use traderview_expense::crime_victim_termination::{
+    check as check_crime_victim_termination, CrimeVictimTerminationInput,
+    CrimeVictimTerminationResult,
+};
+use traderview_expense::damage_deduction_itemization::{
+    check as check_damage_deduction_itemization, CheckResult as DamageDeductionResult,
+    Input as DamageDeductionInput,
+};
+use traderview_expense::death_in_unit_disclosure::{
+    check as check_death_in_unit_disclosure, DeathDisclosureInput, DeathDisclosureResult,
+};
+use traderview_expense::demolition_tenant_notice::{
+    check as check_demolition_tenant_notice, DemolitionNoticeInput, DemolitionNoticeResult,
+};
+use traderview_expense::deposit_interest::{
+    accrue as accrue_deposit_interest, AccrualInput, AccrualResult,
+};
+use traderview_expense::deposit_return_windows::{
+    check as check_deposit_return, DepositReturnCheckInput, DepositReturnCheckResult,
+};
+use traderview_expense::detector_requirements::{
+    check as check_detector, DetectorCheckInput, DetectorCheckResult,
+};
+use traderview_expense::disposition::{
+    compute as compute_disposition, DispositionInput, DispositionReport,
+};
+use traderview_expense::dog_breed_restriction_ban::{
+    check as check_dog_breed_restriction_ban, DogBreedRestrictionBanInput,
+    DogBreedRestrictionBanResult,
+};
+use traderview_expense::drug_eviction::{
+    check as check_drug_eviction, DrugEvictionInput, DrugEvictionResult,
+};
+use traderview_expense::duty_to_mitigate_damages::{
+    check as check_duty_to_mitigate_damages, CheckResult as DutyToMitigateResult,
+    Input as DutyToMitigateInput,
+};
 use traderview_expense::dv_survivor_lock_change::{
     check as check_dv_survivor_lock_change, DvLockChangeInput, DvLockChangeResult,
 };
 use traderview_expense::dv_termination::{
     check as check_dv_termination, DvEarlyTerminationInput, DvEarlyTerminationResult,
 };
-use traderview_expense::just_cause_termination_notice_content::{
-    check as check_just_cause_notice_content, JustCauseNoticeContentInput, JustCauseNoticeContentResult,
+use traderview_expense::emotional_support_animal_documentation::{
+    check as check_esa_documentation, CheckResult as EsaDocumentationResult,
+    Input as EsaDocumentationInput,
 };
-use traderview_expense::just_cause_eviction::{
-    check as check_just_cause, JustCauseInput, JustCauseResult,
+use traderview_expense::entry_notice::{
+    compute as check_entry_notice, EntryNoticeInput, EntryNoticeResult,
 };
-use traderview_expense::detector_requirements::{
-    check as check_detector, DetectorCheckInput, DetectorCheckResult,
+use traderview_expense::ev_charger_installation::{
+    check as check_ev_charger, EvChargerInput, EvChargerResult,
+};
+use traderview_expense::eviction_diversion_program::{
+    check as check_eviction_diversion_program, DiversionProgramInput, DiversionProgramResult,
+};
+use traderview_expense::eviction_notices::{
+    check as check_eviction_notice, NoticeCheckInput, NoticeCheckResult,
+};
+use traderview_expense::eviction_record_sealing::{
+    check as check_eviction_sealing, EvictionSealingInput, EvictionSealingResult,
+};
+use traderview_expense::fair_chance_housing::{
+    check as check_fair_chance_housing, FairChanceInput, FairChanceResult,
+};
+use traderview_expense::family_childcare_home_right::{
+    check as check_family_childcare_home_right, FamilyChildcareHomeInput, FamilyChildcareHomeResult,
+};
+use traderview_expense::fha_design_construction::{
+    check as check_fha_design_construction, FhaDesignConstructionInput, FhaDesignConstructionResult,
+};
+use traderview_expense::fire_sprinkler_disclosure::{
+    check as check_fire_sprinkler, FireSprinklerDisclosureInput, FireSprinklerDisclosureResult,
+};
+use traderview_expense::firearms_in_rental_unit::{
+    check as check_firearms_in_rental_unit, CheckResult as FirearmsRentalResult,
+    Input as FirearmsRentalInput,
+};
+use traderview_expense::flag_display_right::{
+    check as check_flag_display_right, CheckResult as FlagDisplayResult, Input as FlagDisplayInput,
+};
+use traderview_expense::flood_disclosure::{
+    check as check_flood_disclosure, FloodDisclosureInput, FloodDisclosureResult,
 };
 use traderview_expense::foreclosure_tenant_rights::{
     check as check_foreclosure_tenant, ForeclosureTenantInput, ForeclosureTenantResult,
 };
+use traderview_expense::habitability_remedies::{
+    remedies as compute_habitability_remedies, HabitabilityRemediesInput,
+    HabitabilityRemediesReport,
+};
 use traderview_expense::heat_requirements::{
     check as check_heat_requirements, HeatCheckInput, HeatCheckResult,
 };
-use traderview_expense::mold_disclosure::{
-    check as check_mold_disclosure, MoldCheckInput, MoldCheckResult,
+use traderview_expense::hoa_fee_tenant_enforcement::{
+    check as check_hoa_fee_tenant_enforcement, HoaFeeTenantEnforcementInput,
+    HoaFeeTenantEnforcementResult,
 };
-use traderview_expense::radon_disclosure::{
-    check as check_radon_disclosure, RadonDisclosureInput, RadonDisclosureResult,
+use traderview_expense::hoa_rental_restriction::{
+    check as check_hoa_rental_restriction, CheckResult as HoaRentalResult, Input as HoaRentalInput,
+};
+use traderview_expense::holdover_tenant_damages::{
+    check as check_holdover_tenant_damages, CheckResult as HoldoverTenantResult,
+    Input as HoldoverTenantInput,
+};
+use traderview_expense::immigration_status_protection::{
+    check as check_immigration_status_protection, ImmigrationProtectionInput,
+    ImmigrationProtectionResult,
+};
+use traderview_expense::just_cause_eviction::{
+    check as check_just_cause, JustCauseInput, JustCauseResult,
+};
+use traderview_expense::just_cause_termination_notice_content::{
+    check as check_just_cause_notice_content, JustCauseNoticeContentInput,
+    JustCauseNoticeContentResult,
+};
+use traderview_expense::landlord_annual_rent_statement::{
+    check as check_landlord_annual_rent_statement, LandlordAnnualRentStatementInput,
+    LandlordAnnualRentStatementResult,
+};
+use traderview_expense::landlord_emergency_entry_notice::{
+    check as check_landlord_emergency_entry_notice, LandlordEmergencyEntryInput,
+    LandlordEmergencyEntryResult,
+};
+use traderview_expense::landlord_foreclosure_status_disclosure::{
+    check as check_landlord_foreclosure_status_disclosure,
+    LandlordForeclosureStatusDisclosureInput, LandlordForeclosureStatusDisclosureResult,
+};
+use traderview_expense::landlord_harassment::{
+    check as check_landlord_harassment, CheckResult as LandlordHarassmentResult,
+    Input as LandlordHarassmentInput,
+};
+use traderview_expense::landlord_identification_disclosure::{
+    check as check_landlord_identification_disclosure, LandlordIdentificationInput,
+    LandlordIdentificationResult,
+};
+use traderview_expense::landlord_lien_prohibition::{
+    check as check_landlord_lien_prohibition, CheckResult as LandlordLienResult,
+    Input as LandlordLienInput,
+};
+use traderview_expense::landlord_master_key_retention::{
+    check as check_landlord_master_key_retention, LandlordMasterKeyRetentionInput,
+    LandlordMasterKeyRetentionResult,
+};
+use traderview_expense::landlord_mid_tenancy_rekeying::{
+    check as check_landlord_mid_tenancy_rekeying, LandlordMidTenancyRekeyingInput,
+    LandlordMidTenancyRekeyingResult,
+};
+use traderview_expense::landlord_negative_credit_reporting::{
+    check as check_landlord_negative_credit_reporting, LandlordNegativeCreditReportingInput,
+    LandlordNegativeCreditReportingResult,
+};
+use traderview_expense::landlord_pest_extermination_timeline::{
+    check as check_landlord_pest_extermination_timeline, LandlordPestExterminationTimelineInput,
+    LandlordPestExterminationTimelineResult,
+};
+use traderview_expense::landlord_possession_delivery::{
+    check as check_landlord_possession_delivery, CheckResult as LandlordPossessionDeliveryResult,
+    Input as LandlordPossessionDeliveryInput,
+};
+use traderview_expense::landlord_post_eviction_tenant_property_storage_disposal::{
+    check as check_landlord_post_eviction_tenant_property_storage_disposal,
+    LandlordPostEvictionTenantPropertyStorageDisposalInput,
+    LandlordPostEvictionTenantPropertyStorageDisposalResult,
+};
+use traderview_expense::landlord_property_sale_notice::{
+    check as check_landlord_property_sale_notice, LandlordPropertySaleNoticeInput,
+    LandlordPropertySaleNoticeResult,
+};
+use traderview_expense::landlord_repair_response_timeframe::{
+    check as check_landlord_repair_response_timeframe, LandlordRepairResponseInput,
+    LandlordRepairResponseResult,
+};
+use traderview_expense::landlord_retaliation_damages::{
+    check as check_landlord_retaliation_damages, CheckResult as LandlordRetaliationDamagesResult,
+    Input as LandlordRetaliationDamagesInput,
+};
+use traderview_expense::landlord_security_device_obligations::{
+    check as check_landlord_security_device_obligations, LandlordSecurityDeviceInput,
+    LandlordSecurityDeviceResult,
+};
+use traderview_expense::landlord_self_help_eviction_prohibition::{
+    check as check_landlord_self_help_eviction_prohibition,
+    SelfHelpEvictionInput as LandlordSelfHelpEvictionInput,
+    SelfHelpEvictionResult as LandlordSelfHelpEvictionResult,
+};
+use traderview_expense::landlord_tenant_recording_consent::{
+    check as check_landlord_tenant_recording_consent, RecordingConsentInput, RecordingConsentResult,
+};
+use traderview_expense::landlord_water_heat_emergency_response::{
+    check as check_landlord_water_heat_emergency_response, LandlordWaterHeatEmergencyResponseInput,
+    LandlordWaterHeatEmergencyResponseResult,
+};
+use traderview_expense::last_month_rent_offset::{
+    check as check_last_month_rent_offset, CheckResult as LastMonthRentOffsetResult,
+    Input as LastMonthRentOffsetInput,
+};
+use traderview_expense::late_fee_caps::{
+    check as check_late_fee, LateFeeCheckInput, LateFeeCheckResult,
+};
+use traderview_expense::late_payment_grace_period::{
+    check as check_grace_period, GracePeriodInput, GracePeriodResult,
 };
 use traderview_expense::lead_disclosure::{
     check as check_lead_disclosure, LeadCheckInput, LeadCheckResult,
@@ -128,23 +297,37 @@ use traderview_expense::lead_in_drinking_water_disclosure::{
 use traderview_expense::lead_renovation_repair_painting::{
     check as check_lead_rrp, RrpInput, RrpResult,
 };
-use traderview_expense::soi_protection::{
-    check as check_soi_protection, SoiCheckInput, SoiCheckResult,
+use traderview_expense::lease_assignment_consent::{
+    check as check_lease_assignment_consent, CheckResult as LeaseAssignmentResult,
+    Input as LeaseAssignmentInput,
 };
-use traderview_expense::squatter_unauthorized_occupant_removal::{
-    check as check_squatter_removal, SquatterRemovalInput, SquatterRemovalResult,
+use traderview_expense::lease_auto_renewal::{
+    check as check_lease_auto_renewal, AutoRenewalInput, AutoRenewalResult,
 };
-use traderview_expense::str_regulation::{
-    check as check_str_regulation, StrComplianceInput, StrComplianceResult,
+use traderview_expense::lease_copy_delivery::{
+    check as check_lease_copy_delivery, LeaseCopyDeliveryInput, LeaseCopyDeliveryResult,
 };
-use traderview_expense::pet_fees::{
-    check as check_pet_fees, PetFeeInput, PetFeeResult,
+use traderview_expense::lease_cure_period::{
+    check as check_lease_cure_period, CheckResult as LeaseCureResult, Input as LeaseCureInput,
 };
-use traderview_expense::non_refundable_cleaning_fees::{
-    check as check_non_refundable_cleaning_fees, CleaningFeeInput, CleaningFeeResult,
+use traderview_expense::lease_disclosures::{
+    required_for as lease_disclosures_required_for, DisclosuresRequiredInput,
+    DisclosuresRequiredReport,
 };
-use traderview_expense::eviction_record_sealing::{
-    check as check_eviction_sealing, EvictionSealingInput, EvictionSealingResult,
+use traderview_expense::lease_early_termination_fee_cap::{
+    check as check_lease_early_termination_fee_cap, LeaseEarlyTerminationFeeInput,
+    LeaseEarlyTerminationFeeResult,
+};
+use traderview_expense::lease_nondisparagement_prohibition::{
+    check as check_lease_nondisparagement_prohibition, CheckResult as LeaseNondisparagementResult,
+    Input as LeaseNondisparagementInput,
+};
+use traderview_expense::lease_renewal_offer_timing::{
+    check as check_lease_renewal_offer_timing, LeaseRenewalOfferTimingInput,
+    LeaseRenewalOfferTimingResult,
+};
+use traderview_expense::lease_succession::{
+    check as check_lease_succession, LeaseSuccessionInput, LeaseSuccessionResult,
 };
 use traderview_expense::lease_termination_catastrophic_damage::{
     check as check_catastrophic_damage, CatastrophicDamageInput, CatastrophicDamageResult,
@@ -152,279 +335,26 @@ use traderview_expense::lease_termination_catastrophic_damage::{
 use traderview_expense::lease_termination_notice::{
     check as check_termination_notice, NoticeInput, NoticeResult,
 };
-use traderview_expense::occupancy_standards::{
-    check as check_occupancy, OccupancyInput, OccupancyResult,
-};
-use traderview_expense::move_in_fee_cap::{
-    check as check_move_in_fee_cap, MoveInFeeCapInput, MoveInFeeCapResult,
-};
-use traderview_expense::move_in_inspection::{
-    check as check_move_in_inspection, InspectionInput, InspectionResult,
-};
-use traderview_expense::mandatory_renters_insurance_provider_choice::{
-    check as check_mandatory_renters_insurance_provider_choice,
-    MandatoryRentersInsuranceInput, MandatoryRentersInsuranceResult,
-};
-use traderview_expense::renters_insurance::{
-    check as check_renters_insurance, RentersInsuranceInput, RentersInsuranceResult,
-};
-use traderview_expense::utility_shutoff::{
-    check as check_utility_shutoff, ShutoffInput, ShutoffResult,
-};
-use traderview_expense::vehicle_towing_from_rental_property::{
-    check as check_vehicle_towing, TowingInput as VehicleTowingInput,
-    TowingResult as VehicleTowingResult,
-};
-use traderview_expense::water_heater_earthquake_strap::{
-    check as check_water_heater_earthquake_strap, WaterHeaterEarthquakeStrapInput,
-    WaterHeaterEarthquakeStrapResult,
-};
-use traderview_expense::adverse_action_notice::{
-    check as check_adverse_action, AdverseActionInput, AdverseActionResult,
-};
-use traderview_expense::adverse_possession_claim::{
-    check as check_adverse_possession, AdversePossessionInput, AdversePossessionResult,
-};
-use traderview_expense::tenant_rent_escrow_withholding::{
-    check as check_tenant_rent_escrow_withholding,
-    TenantRentEscrowWithholdingInput, TenantRentEscrowWithholdingResult,
-};
-use traderview_expense::tenant_rent_judgment_wage_garnishment::{
-    compute as compute_wage_garnishment, GarnishmentInput, GarnishmentResult,
-};
-use traderview_expense::tenant_rent_receipt_requirement::{
-    check as check_tenant_rent_receipt_requirement,
-    TenantRentReceiptRequirementInput, TenantRentReceiptRequirementResult,
-};
-use traderview_expense::tenant_topa::{
-    check as check_tenant_topa, TopaInput, TopaResult,
-};
-use traderview_expense::lease_auto_renewal::{
-    check as check_lease_auto_renewal, AutoRenewalInput, AutoRenewalResult,
-};
 use traderview_expense::lease_translation::{
     check as check_lease_translation, TranslationInput, TranslationResult,
 };
-use traderview_expense::rent_receipts::{
-    check as check_rent_receipts, ReceiptInput, ReceiptResult,
-};
-use traderview_expense::rent_stabilized_mci_iai_passthrough::{
-    check as check_rent_stabilized_mci_iai_passthrough, RentStabilizedPassthroughInput,
-    RentStabilizedPassthroughResult,
-};
-use traderview_expense::repair_and_deduct::{
-    check as check_repair_and_deduct, RepairDeductInput, RepairDeductResult,
-};
-use traderview_expense::cosigner_rules::{
-    check as check_cosigner_rules, CosignerInput, CosignerResult,
-};
-use traderview_expense::mobile_home_park::{
-    check as check_mobile_home_park, MhpInput, MhpResult,
-};
-use traderview_expense::submetering_rules::{
-    check as check_submetering, SubmeteringInput, SubmeteringResult,
-};
-use traderview_expense::smoke_free_housing::{
-    check as check_smoke_free, SmokeFreeInput, SmokeFreeResult,
-};
-use traderview_expense::tenant_data_privacy::{
-    check as check_tenant_privacy, PrivacyInput, PrivacyResult,
-};
-use traderview_expense::tenant_domestic_violence_lease_termination::{
-    check as check_tenant_domestic_violence_lease_termination,
-    TenantDomesticViolenceLeaseTerminationInput,
-    TenantDomesticViolenceLeaseTerminationResult,
-};
-use traderview_expense::tenant_ev_charging_installation_right::{
-    check as check_tenant_ev_charging_installation_right,
-    TenantEvChargingInstallationRightInput, TenantEvChargingInstallationRightResult,
-};
-use traderview_expense::tenant_fire_safety_plan_disclosure::{
-    check as check_tenant_fire_safety_plan_disclosure,
-    TenantFireSafetyPlanDisclosureInput, TenantFireSafetyPlanDisclosureResult,
-};
-use traderview_expense::drug_eviction::{
-    check as check_drug_eviction, DrugEvictionInput, DrugEvictionResult,
-};
-use traderview_expense::quiet_enjoyment::{
-    check as check_quiet_enjoyment, QuietEnjoymentInput, QuietEnjoymentResult,
-};
-use traderview_expense::flood_disclosure::{
-    check as check_flood_disclosure, FloodDisclosureInput, FloodDisclosureResult,
-};
-use traderview_expense::owner_identification::{
-    check as check_owner_identification, OwnerIdentificationInput, OwnerIdentificationResult,
-};
-use traderview_expense::tenant_death_termination::{
-    check as check_tenant_death, TenantDeathInput, TenantDeathResult,
-};
-use traderview_expense::late_payment_grace_period::{
-    check as check_grace_period, GracePeriodInput, GracePeriodResult,
-};
-use traderview_expense::owner_move_in_eviction::{
-    check as check_owner_move_in, OwnerMoveInInput, OwnerMoveInResult,
-};
-use traderview_expense::lease_copy_delivery::{
-    check as check_lease_copy_delivery, LeaseCopyDeliveryInput, LeaseCopyDeliveryResult,
-};
-use traderview_expense::tenant_relocation_assistance::{
-    compute as compute_tenant_relocation_assistance, RelocationInput as TenantRelocationInput,
-    RelocationResult as TenantRelocationResult,
-};
-use traderview_expense::fair_chance_housing::{
-    check as check_fair_chance_housing, FairChanceInput, FairChanceResult,
-};
-use traderview_expense::family_childcare_home_right::{
-    check as check_family_childcare_home_right, FamilyChildcareHomeInput,
-    FamilyChildcareHomeResult,
-};
-use traderview_expense::source_of_income_discrimination::{
-    check as check_source_of_income_discrimination, SourceOfIncomeInput,
-    SourceOfIncomeResult,
-};
-use traderview_expense::fha_design_construction::{
-    check as check_fha_design_construction, FhaDesignConstructionInput,
-    FhaDesignConstructionResult,
-};
-use traderview_expense::meth_contamination_disclosure::{
-    check as check_meth_contamination_disclosure, MethDisclosureInput, MethDisclosureResult,
-};
-use traderview_expense::death_in_unit_disclosure::{
-    check as check_death_in_unit_disclosure, DeathDisclosureInput, DeathDisclosureResult,
-};
-use traderview_expense::dog_breed_restriction_ban::{
-    check as check_dog_breed_restriction_ban, DogBreedRestrictionBanInput,
-    DogBreedRestrictionBanResult,
-};
-use traderview_expense::rent_payment_method::{
-    check as check_rent_payment_method, RentPaymentMethodInput, RentPaymentMethodResult,
-};
-use traderview_expense::window_guard_requirements::{
-    check as check_window_guard_requirements, WindowGuardInput, WindowGuardResult,
-};
-use traderview_expense::rent_increase_notice_period::{
-    check as check_rent_increase_notice_period, RentIncreaseNoticeInput, RentIncreaseNoticeResult,
-};
-use traderview_expense::demolition_tenant_notice::{
-    check as check_demolition_tenant_notice, DemolitionNoticeInput, DemolitionNoticeResult,
-};
-use traderview_expense::eviction_diversion_program::{
-    check as check_eviction_diversion_program, DiversionProgramInput, DiversionProgramResult,
-};
-use traderview_expense::immigration_status_protection::{
-    check as check_immigration_status_protection, ImmigrationProtectionInput,
-    ImmigrationProtectionResult,
-};
-use traderview_expense::prevailing_party_attorney_fees::{
-    check as check_prevailing_party_attorney_fees, PrevailingPartyFeesInput,
-    PrevailingPartyFeesResult,
-};
-use traderview_expense::abandoned_property_handling::{
-    check as check_abandoned_property_handling, AbandonedPropertyInput,
-    AbandonedPropertyResult,
-};
-use traderview_expense::right_to_counsel_eviction::{
-    check as check_right_to_counsel_eviction, RightToCounselInput, RightToCounselResult,
-};
-use traderview_expense::tenant_cannabis_use_protection::{
-    check as check_tenant_cannabis_use_protection, CannabisProtectionInput,
-    CannabisProtectionResult,
-};
-use traderview_expense::tenant_clothesline_drying_right::{
-    check as check_tenant_clothesline_drying_right, TenantClotheslineDryingRightInput,
-    TenantClotheslineDryingRightResult,
-};
-use traderview_expense::snow_removal_responsibility::{
-    check as check_snow_removal_responsibility, SnowRemovalInput, SnowRemovalResult,
-};
-use traderview_expense::soft_story_seismic_retrofit::{
-    check as check_soft_story_seismic_retrofit, SoftStorySeismicRetrofitInput,
-    SoftStorySeismicRetrofitResult,
-};
-use traderview_expense::security_camera_disclosure::{
-    check as check_security_camera_disclosure, SecurityCameraInput, SecurityCameraResult,
-};
-use traderview_expense::carpet_replacement_useful_life::{
-    check as check_carpet_replacement_useful_life, CarpetReplacementInput,
-    CarpetReplacementResult,
-};
-use traderview_expense::pre_move_out_inspection::{
-    check as check_pre_move_out_inspection, PreMoveOutInspectionInput,
-    PreMoveOutInspectionResult,
-};
-use traderview_expense::credit_check_authorization::{
-    check as check_credit_check_authorization, CreditCheckInput, CreditCheckResult,
-};
-use traderview_expense::winter_eviction_protections::{
-    check as check_winter_eviction_protections, WinterEvictionInput, WinterEvictionResult,
-};
-use traderview_expense::landlord_identification_disclosure::{
-    check as check_landlord_identification_disclosure, LandlordIdentificationInput,
-    LandlordIdentificationResult,
-};
-use traderview_expense::reasonable_accommodation_modification::{
-    check as check_reasonable_accommodation_modification,
-    CheckResult as ReasonableAccommodationResult, Input as ReasonableAccommodationInput,
-};
-use traderview_expense::damage_deduction_itemization::{
-    check as check_damage_deduction_itemization, CheckResult as DamageDeductionResult,
-    Input as DamageDeductionInput,
-};
-use traderview_expense::cooling_requirements::{
-    check as check_cooling_requirements, CheckResult as CoolingRequirementsResult,
-    Input as CoolingRequirementsInput,
-};
-use traderview_expense::duty_to_mitigate_damages::{
-    check as check_duty_to_mitigate_damages, CheckResult as DutyToMitigateResult,
-    Input as DutyToMitigateInput,
-};
-use traderview_expense::lease_early_termination_fee_cap::{
-    check as check_lease_early_termination_fee_cap, LeaseEarlyTerminationFeeInput,
-    LeaseEarlyTerminationFeeResult,
-};
-use traderview_expense::pesticide_application_notice::{
-    check as check_pesticide_application_notice, CheckResult as PesticideNoticeResult,
-    Input as PesticideNoticeInput,
-};
-use traderview_expense::condominium_conversion_protection::{
-    check as check_condominium_conversion_protection, CheckResult as CondoConversionResult,
-    Input as CondoConversionInput,
-};
-use traderview_expense::otard_antenna_installation::{
-    check as check_otard_antenna_installation, CheckResult as OtardAntennaResult,
-    Input as OtardAntennaInput,
-};
-use traderview_expense::religious_display_doorpost::{
-    check as check_religious_display_doorpost, CheckResult as ReligiousDisplayResult,
-    Input as ReligiousDisplayInput,
-};
-use traderview_expense::asbestos_disclosure::{
-    check as check_asbestos_disclosure, CheckResult as AsbestosDisclosureResult,
-    Input as AsbestosDisclosureInput,
-};
-use traderview_expense::firearms_in_rental_unit::{
-    check as check_firearms_in_rental_unit, CheckResult as FirearmsRentalResult,
-    Input as FirearmsRentalInput,
+use traderview_expense::lease_waiver_enforceability::{
+    check as check_lease_waiver_enforceability, CheckResult as LeaseWaiverEnforceabilityResult,
+    Input as LeaseWaiverEnforceabilityInput,
 };
 use traderview_expense::lock_change_between_tenancies::{
     check as check_lock_change_between_tenancies, CheckResult as LockChangeResult,
     Input as LockChangeInput,
 };
-use traderview_expense::landlord_lien_prohibition::{
-    check as check_landlord_lien_prohibition, CheckResult as LandlordLienResult,
-    Input as LandlordLienInput,
+use traderview_expense::lockout_penalties::{
+    check as check_lockout_penalty, LockoutPenaltyInput, LockoutPenaltyResult,
 };
-use traderview_expense::military_ordnance_disclosure::{
-    check as check_military_ordnance_disclosure, CheckResult as MilitaryOrdnanceResult,
-    Input as MilitaryOrdnanceInput,
+use traderview_expense::mandatory_renters_insurance_provider_choice::{
+    check as check_mandatory_renters_insurance_provider_choice, MandatoryRentersInsuranceInput,
+    MandatoryRentersInsuranceResult,
 };
-use traderview_expense::sex_offender_database_notice::{
-    check as check_sex_offender_database_notice, CheckResult as SexOffenderNoticeResult,
-    Input as SexOffenderNoticeInput,
-};
-use traderview_expense::short_term_rental_conversion::{
-    check as check_short_term_rental_conversion, ShortTermRentalConversionInput,
-    ShortTermRentalConversionResult,
+use traderview_expense::meth_contamination_disclosure::{
+    check as check_meth_contamination_disclosure, MethDisclosureInput, MethDisclosureResult,
 };
 use traderview_expense::mid_tenancy_ownership_change::{
     check as check_mid_tenancy_ownership_change, CheckResult as MidTenancyOwnershipResult,
@@ -442,173 +372,152 @@ use traderview_expense::mid_tenancy_term_modification::{
     check as check_mid_tenancy_term_modification, ModificationInput as MidTenancyTermModInput,
     ModificationResult as MidTenancyTermModResult,
 };
-use traderview_expense::tenant_solar_installation::{
-    check as check_tenant_solar_installation, CheckResult as TenantSolarResult,
-    Input as TenantSolarInput,
+use traderview_expense::military_ordnance_disclosure::{
+    check as check_military_ordnance_disclosure, CheckResult as MilitaryOrdnanceResult,
+    Input as MilitaryOrdnanceInput,
 };
-use traderview_expense::flag_display_right::{
-    check as check_flag_display_right, CheckResult as FlagDisplayResult,
-    Input as FlagDisplayInput,
+use traderview_expense::military_termination::{
+    check as check_military_termination, MilitaryTerminationCheckInput,
+    MilitaryTerminationCheckResult,
 };
-use traderview_expense::written_lease_requirement::{
-    check as check_written_lease_requirement, CheckResult as WrittenLeaseResult,
-    Input as WrittenLeaseInput,
+use traderview_expense::mobile_home_park::{check as check_mobile_home_park, MhpInput, MhpResult};
+use traderview_expense::mold_disclosure::{
+    check as check_mold_disclosure, MoldCheckInput, MoldCheckResult,
 };
-use traderview_expense::holdover_tenant_damages::{
-    check as check_holdover_tenant_damages, CheckResult as HoldoverTenantResult,
-    Input as HoldoverTenantInput,
+use traderview_expense::move_in_fee_cap::{
+    check as check_move_in_fee_cap, MoveInFeeCapInput, MoveInFeeCapResult,
 };
-use traderview_expense::lease_assignment_consent::{
-    check as check_lease_assignment_consent, CheckResult as LeaseAssignmentResult,
-    Input as LeaseAssignmentInput,
+use traderview_expense::move_in_inspection::{
+    check as check_move_in_inspection, InspectionInput, InspectionResult,
 };
-use traderview_expense::lease_cure_period::{
-    check as check_lease_cure_period, CheckResult as LeaseCureResult,
-    Input as LeaseCureInput,
+use traderview_expense::non_refundable_cleaning_fees::{
+    check as check_non_refundable_cleaning_fees, CleaningFeeInput, CleaningFeeResult,
+};
+use traderview_expense::occupancy_standards::{
+    check as check_occupancy, OccupancyInput, OccupancyResult,
+};
+use traderview_expense::otard_antenna_installation::{
+    check as check_otard_antenna_installation, CheckResult as OtardAntennaResult,
+    Input as OtardAntennaInput,
+};
+use traderview_expense::owner_identification::{
+    check as check_owner_identification, OwnerIdentificationInput, OwnerIdentificationResult,
+};
+use traderview_expense::owner_move_in_eviction::{
+    check as check_owner_move_in, OwnerMoveInInput, OwnerMoveInResult,
+};
+use traderview_expense::pesticide_application_notice::{
+    check as check_pesticide_application_notice, CheckResult as PesticideNoticeResult,
+    Input as PesticideNoticeInput,
+};
+use traderview_expense::pet_fees::{check as check_pet_fees, PetFeeInput, PetFeeResult};
+use traderview_expense::plain_language_lease::{
+    check as check_plain_language, PlainLanguageInput, PlainLanguageResult,
 };
 use traderview_expense::portable_tenant_screening_report::{
     check as check_portable_screening, CheckResult as PortableScreeningResult,
     Input as PortableScreeningInput,
 };
-use traderview_expense::hoa_fee_tenant_enforcement::{
-    check as check_hoa_fee_tenant_enforcement, HoaFeeTenantEnforcementInput,
-    HoaFeeTenantEnforcementResult,
+use traderview_expense::pre_move_out_inspection::{
+    check as check_pre_move_out_inspection, PreMoveOutInspectionInput, PreMoveOutInspectionResult,
 };
-use traderview_expense::hoa_rental_restriction::{
-    check as check_hoa_rental_restriction, CheckResult as HoaRentalResult,
-    Input as HoaRentalInput,
+use traderview_expense::prevailing_party_attorney_fees::{
+    check as check_prevailing_party_attorney_fees, PrevailingPartyFeesInput,
+    PrevailingPartyFeesResult,
+};
+use traderview_expense::quiet_enjoyment::{
+    check as check_quiet_enjoyment, QuietEnjoymentInput, QuietEnjoymentResult,
+};
+use traderview_expense::radon_disclosure::{
+    check as check_radon_disclosure, RadonDisclosureInput, RadonDisclosureResult,
+};
+use traderview_expense::reasonable_accommodation_modification::{
+    check as check_reasonable_accommodation_modification,
+    CheckResult as ReasonableAccommodationResult, Input as ReasonableAccommodationInput,
+};
+use traderview_expense::religious_display_doorpost::{
+    check as check_religious_display_doorpost, CheckResult as ReligiousDisplayResult,
+    Input as ReligiousDisplayInput,
+};
+use traderview_expense::rent_abatement_construction_nuisance::{
+    check as check_rent_abatement_construction_nuisance, RentAbatementConstructionNuisanceInput,
+    RentAbatementConstructionNuisanceResult,
 };
 use traderview_expense::rent_acceleration_enforceability::{
     check as check_rent_acceleration, CheckResult as RentAccelerationResult,
     Input as RentAccelerationInput,
 };
-use traderview_expense::tenant_in_foreclosure_protection::{
-    check as check_tenant_foreclosure_protection,
-    CheckResult as TenantForeclosureResult, Input as TenantForeclosureInput,
-};
-use traderview_expense::tenant_in_unit_appliance_repair_responsibility::{
-    check as check_tenant_in_unit_appliance_repair_responsibility,
-    TenantInUnitApplianceRepairResponsibilityInput,
-    TenantInUnitApplianceRepairResponsibilityResult,
-};
-use traderview_expense::tenant_late_fee_cap::{
-    check as check_tenant_late_fee_cap,
-    TenantLateFeeCapInput, TenantLateFeeCapResult,
-};
-use traderview_expense::tenant_lease_guarantor_disclosure::{
-    check as check_tenant_lease_guarantor_disclosure,
-    TenantLeaseGuarantorDisclosureInput, TenantLeaseGuarantorDisclosureResult,
-};
-use traderview_expense::tenant_estoppel_certificate::{
-    check as check_tenant_estoppel_certificate,
-    TenantEstoppelCertificateInput, TenantEstoppelCertificateResult,
-};
-use traderview_expense::landlord_property_sale_notice::{
-    check as check_landlord_property_sale_notice,
-    LandlordPropertySaleNoticeInput, LandlordPropertySaleNoticeResult,
-};
-use traderview_expense::lease_renewal_offer_timing::{
-    check as check_lease_renewal_offer_timing,
-    LeaseRenewalOfferTimingInput, LeaseRenewalOfferTimingResult,
-};
 use traderview_expense::rent_concession_disclosure::{
-    check as check_rent_concession_disclosure,
-    RentConcessionDisclosureInput, RentConcessionDisclosureResult,
+    check as check_rent_concession_disclosure, RentConcessionDisclosureInput,
+    RentConcessionDisclosureResult,
 };
-use traderview_expense::rent_abatement_construction_nuisance::{
-    check as check_rent_abatement_construction_nuisance,
-    RentAbatementConstructionNuisanceInput, RentAbatementConstructionNuisanceResult,
+use traderview_expense::rent_control::{
+    check as check_rent_increase, RentIncreaseCheckInput, RentIncreaseCheckResult,
 };
-use traderview_expense::landlord_master_key_retention::{
-    check as check_landlord_master_key_retention,
-    LandlordMasterKeyRetentionInput, LandlordMasterKeyRetentionResult,
+use traderview_expense::rent_control_lease_disclosure::{
+    check as check_rent_control_disclosure, RentControlDisclosureInput, RentControlDisclosureResult,
 };
-use traderview_expense::tenant_holdover_security_deposit_setoff::{
-    check as check_tenant_holdover_security_deposit_setoff,
-    TenantHoldoverSecurityDepositSetoffInput, TenantHoldoverSecurityDepositSetoffResult,
+use traderview_expense::rent_credit_reporting::{
+    check as check_rent_credit_reporting, RentCreditReportingInput, RentCreditReportingResult,
 };
-use traderview_expense::rental_video_surveillance_retention::{
-    check as check_rental_video_surveillance_retention,
-    RentalVideoSurveillanceRetentionInput, RentalVideoSurveillanceRetentionResult,
+use traderview_expense::rent_escrow::{
+    check as check_rent_escrow, RentEscrowInput, RentEscrowResult,
 };
-use traderview_expense::landlord_foreclosure_status_disclosure::{
-    check as check_landlord_foreclosure_status_disclosure,
-    LandlordForeclosureStatusDisclosureInput, LandlordForeclosureStatusDisclosureResult,
+use traderview_expense::rent_increase_notice_period::{
+    check as check_rent_increase_notice_period, RentIncreaseNoticeInput, RentIncreaseNoticeResult,
 };
-use traderview_expense::commercial_lease_personal_guaranty_enforceability::{
-    check as check_commercial_lease_personal_guaranty_enforceability,
-    CommercialLeasePersonalGuarantyEnforceabilityInput,
-    CommercialLeasePersonalGuarantyEnforceabilityResult,
+use traderview_expense::rent_overcharge_recovery::{
+    check as check_rent_overcharge_recovery, RentOverchargeRecoveryInput,
+    RentOverchargeRecoveryResult,
 };
-use traderview_expense::commercial_lease_cam_charge_disclosure::{
-    check as check_commercial_lease_cam_charge_disclosure,
-    CommercialLeaseCamChargeDisclosureInput, CommercialLeaseCamChargeDisclosureResult,
+use traderview_expense::rent_payment_method::{
+    check as check_rent_payment_method, RentPaymentMethodInput, RentPaymentMethodResult,
 };
-use traderview_expense::landlord_pest_extermination_timeline::{
-    check as check_landlord_pest_extermination_timeline,
-    LandlordPestExterminationTimelineInput, LandlordPestExterminationTimelineResult,
+use traderview_expense::rent_receipts::{
+    check as check_rent_receipts, ReceiptInput, ReceiptResult,
 };
-use traderview_expense::landlord_water_heat_emergency_response::{
-    check as check_landlord_water_heat_emergency_response,
-    LandlordWaterHeatEmergencyResponseInput, LandlordWaterHeatEmergencyResponseResult,
+use traderview_expense::rent_stabilized_mci_iai_passthrough::{
+    check as check_rent_stabilized_mci_iai_passthrough, RentStabilizedPassthroughInput,
+    RentStabilizedPassthroughResult,
 };
-use traderview_expense::tenant_emotional_distress_damages::{
-    check as check_tenant_emotional_distress_damages,
-    TenantEmotionalDistressDamagesInput, TenantEmotionalDistressDamagesResult,
+use traderview_expense::rental_ada_accessible_parking_compliance::{
+    check as check_rental_ada_accessible_parking_compliance,
+    RentalAdaAccessibleParkingComplianceInput, RentalAdaAccessibleParkingComplianceResult,
 };
-use traderview_expense::landlord_negative_credit_reporting::{
-    check as check_landlord_negative_credit_reporting,
-    LandlordNegativeCreditReportingInput, LandlordNegativeCreditReportingResult,
-};
-use traderview_expense::security_deposit_bank_disclosure::{
-    check as check_security_deposit_bank_disclosure,
-    CheckResult as SecurityDepositBankDisclosureResult,
-    Input as SecurityDepositBankDisclosureInput,
-};
-use traderview_expense::landlord_annual_rent_statement::{
-    check as check_landlord_annual_rent_statement, LandlordAnnualRentStatementInput,
-    LandlordAnnualRentStatementResult,
-};
-use traderview_expense::landlord_emergency_entry_notice::{
-    check as check_landlord_emergency_entry_notice, LandlordEmergencyEntryInput,
-    LandlordEmergencyEntryResult,
-};
-use traderview_expense::landlord_mid_tenancy_rekeying::{
-    check as check_landlord_mid_tenancy_rekeying, LandlordMidTenancyRekeyingInput,
-    LandlordMidTenancyRekeyingResult,
-};
-use traderview_expense::landlord_harassment::{
-    check as check_landlord_harassment, CheckResult as LandlordHarassmentResult,
-    Input as LandlordHarassmentInput,
-};
-use traderview_expense::landlord_possession_delivery::{
-    check as check_landlord_possession_delivery,
-    CheckResult as LandlordPossessionDeliveryResult,
-    Input as LandlordPossessionDeliveryInput,
-};
-use traderview_expense::landlord_post_eviction_tenant_property_storage_disposal::{
-    check as check_landlord_post_eviction_tenant_property_storage_disposal,
-    LandlordPostEvictionTenantPropertyStorageDisposalInput,
-    LandlordPostEvictionTenantPropertyStorageDisposalResult,
-};
-use traderview_expense::rental_asbestos_disclosure::{
-    check as check_rental_asbestos_disclosure,
-    RentalAsbestosDisclosureInput,
-    RentalAsbestosDisclosureResult,
+use traderview_expense::rental_alabama_urlta_ala_code_35_9a::{
+    check as check_rental_alabama_urlta_ala_code_35_9a,
+    AlLandlordTenantInput as RentalAlabamaUrltaAlaCode359aInput,
+    AlLandlordTenantResult as RentalAlabamaUrltaAlaCode359aResult,
 };
 use traderview_expense::rental_application_denial_disclosure::{
-    check as check_rental_application_denial_disclosure,
-    RentalApplicationDenialDisclosureInput, RentalApplicationDenialDisclosureResult,
+    check as check_rental_application_denial_disclosure, RentalApplicationDenialDisclosureInput,
+    RentalApplicationDenialDisclosureResult,
 };
 use traderview_expense::rental_arizona_residential_landlord_tenant_act_ars_33_1301::{
     check as check_rental_arizona_residential_landlord_tenant_act_ars_33_1301,
     RentalArizonaResidentialLandlordTenantActArs33_1301Input,
     RentalArizonaResidentialLandlordTenantActArs33_1301Result,
 };
+use traderview_expense::rental_asbestos_disclosure::{
+    check as check_rental_asbestos_disclosure, RentalAsbestosDisclosureInput,
+    RentalAsbestosDisclosureResult,
+};
+use traderview_expense::rental_attached_garage_carbon_monoxide_disclosure::{
+    check as check_rental_attached_garage_carbon_monoxide_disclosure,
+    RentalAttachedGarageCarbonMonoxideDisclosureInput,
+    RentalAttachedGarageCarbonMonoxideDisclosureResult,
+};
+use traderview_expense::rental_attorney_fee_clause_reciprocity::{
+    check as check_rental_attorney_fee_clause_reciprocity, RentalAttorneyFeeClauseReciprocityInput,
+    RentalAttorneyFeeClauseReciprocityResult,
+};
+use traderview_expense::rental_balcony_inspection_seismic_safety::{
+    check as check_rental_balcony_inspection_seismic_safety,
+    RentalBalconyInspectionSeismicSafetyInput, RentalBalconyInspectionSeismicSafetyResult,
+};
 use traderview_expense::rental_basement_water_intrusion_disclosure::{
     check as check_rental_basement_water_intrusion_disclosure,
-    RentalBasementWaterIntrusionDisclosureInput,
-    RentalBasementWaterIntrusionDisclosureResult,
+    RentalBasementWaterIntrusionDisclosureInput, RentalBasementWaterIntrusionDisclosureResult,
 };
 use traderview_expense::rental_bed_bug_disclosure::{
     check as check_rental_bed_bug_disclosure, RentalBedBugDisclosureInput,
@@ -623,42 +532,17 @@ use traderview_expense::rental_berkeley_rent_stabilization_ordinance_bmc_chapter
     RentalBerkeleyRentStabilizationOrdinanceBmcChapter1376Input,
     RentalBerkeleyRentStabilizationOrdinanceBmcChapter1376Result,
 };
-use traderview_expense::rental_elevator_safety_inspection::{
-    check as check_rental_elevator_safety_inspection,
-    RentalElevatorSafetyInspectionInput, RentalElevatorSafetyInspectionResult,
+use traderview_expense::rental_boiler_inspection_compliance::{
+    check as check_rental_boiler_inspection_compliance, RentalBoilerInspectionComplianceInput,
+    RentalBoilerInspectionComplianceResult,
 };
-use traderview_expense::rental_fire_extinguisher_requirement::{
-    check as check_rental_fire_extinguisher_requirement,
-    RentalFireExtinguisherRequirementInput, RentalFireExtinguisherRequirementResult,
-};
-use traderview_expense::rental_flood_hazard_disclosure::{
-    check as check_rental_flood_hazard_disclosure,
-    FloodHazardDisclosureInput as RentalFloodHazardDisclosureInput,
-    FloodHazardDisclosureResult as RentalFloodHazardDisclosureResult,
-};
-use traderview_expense::rental_florida_hb_1417_state_preemption::{
-    check as check_rental_florida_hb_1417_state_preemption,
-    RentalFloridaHb1417StatePreemptionInput,
-    RentalFloridaHb1417StatePreemptionResult,
-};
-use traderview_expense::rental_florida_chapter_83_part_ii_residential_tenancies::{
-    check as check_rental_florida_chapter_83_part_ii_residential_tenancies,
-    RentalFloridaChapter83PartIIResidentialTenanciesInput,
-    RentalFloridaChapter83PartIIResidentialTenanciesResult,
-};
-use traderview_expense::rental_foreclosure_tenant_protection_ptfa::{
-    check as check_rental_foreclosure_tenant_protection_ptfa,
-    PtfaInput as RentalForeclosureTenantProtectionPtfaInput,
-    PtfaResult as RentalForeclosureTenantProtectionPtfaResult,
-};
-use traderview_expense::rental_carbon_monoxide_detector::{
-    check as check_rental_carbon_monoxide_detector, RentalCarbonMonoxideDetectorInput,
-    RentalCarbonMonoxideDetectorResult,
+use traderview_expense::rental_broadband_mte_rules::{
+    check as check_rental_broadband_mte_rules, RentalBroadbandMteRulesInput,
+    RentalBroadbandMteRulesResult,
 };
 use traderview_expense::rental_california_ab_12_security_deposit_cap::{
     check as check_rental_california_ab_12_security_deposit_cap,
-    RentalCaliforniaAb12SecurityDepositCapInput,
-    RentalCaliforniaAb12SecurityDepositCapResult,
+    RentalCaliforniaAb12SecurityDepositCapInput, RentalCaliforniaAb12SecurityDepositCapResult,
 };
 use traderview_expense::rental_california_ab_2347_unlawful_detainer_response::{
     check as check_rental_california_ab_2347_unlawful_detainer_response,
@@ -669,6 +553,10 @@ use traderview_expense::rental_california_sb_567_no_fault_eviction_amendments::{
     check as check_rental_california_sb_567_no_fault_eviction_amendments,
     RentalCaliforniaSb567NoFaultEvictionAmendmentsInput,
     RentalCaliforniaSb567NoFaultEvictionAmendmentsResult,
+};
+use traderview_expense::rental_carbon_monoxide_detector::{
+    check as check_rental_carbon_monoxide_detector, RentalCarbonMonoxideDetectorInput,
+    RentalCarbonMonoxideDetectorResult,
 };
 use traderview_expense::rental_chimney_fireplace_inspection_disclosure::{
     check as check_rental_chimney_fireplace_inspection_disclosure,
@@ -687,39 +575,99 @@ use traderview_expense::rental_colorado_crs_title_38_article_12_tenants_landlord
 };
 use traderview_expense::rental_colorado_hb_24_1098_just_cause_eviction::{
     check as check_rental_colorado_hb_24_1098_just_cause_eviction,
-    RentalColoradoHb241098JustCauseEvictionInput,
-    RentalColoradoHb241098JustCauseEvictionResult,
+    RentalColoradoHb241098JustCauseEvictionInput, RentalColoradoHb241098JustCauseEvictionResult,
 };
 use traderview_expense::rental_connecticut_fair_rent_commission::{
     check as check_rental_connecticut_fair_rent_commission,
-    RentalConnecticutFairRentCommissionInput,
-    RentalConnecticutFairRentCommissionResult,
+    RentalConnecticutFairRentCommissionInput, RentalConnecticutFairRentCommissionResult,
 };
 use traderview_expense::rental_cook_county_rtlo::{
-    check as check_rental_cook_county_rtlo,
-    RentalCookCountyRtloInput, RentalCookCountyRtloResult,
+    check as check_rental_cook_county_rtlo, RentalCookCountyRtloInput, RentalCookCountyRtloResult,
 };
 use traderview_expense::rental_cooling_tower_inspection_local_law_77::{
     check as check_rental_cooling_tower_inspection_local_law_77,
     CoolingTowerInspectionLocalLaw77Input as RentalCoolingTowerInspectionLocalLaw77Input,
     CoolingTowerInspectionLocalLaw77Result as RentalCoolingTowerInspectionLocalLaw77Result,
 };
-use traderview_expense::rental_broadband_mte_rules::{
-    check as check_rental_broadband_mte_rules, RentalBroadbandMteRulesInput,
-    RentalBroadbandMteRulesResult,
+use traderview_expense::rental_dc_topa_tenant_opportunity_purchase::{
+    check as check_rental_dc_topa_tenant_opportunity_purchase,
+    DcTopaInput as RentalDcTopaTenantOpportunityPurchaseInput,
+    DcTopaResult as RentalDcTopaTenantOpportunityPurchaseResult,
+};
+use traderview_expense::rental_depreciation::{macrs_rental_year_1_deduction, RealPropertyClass};
+use traderview_expense::rental_dog_bite_liability::{
+    check as check_rental_dog_bite_liability, RentalDogBiteLiabilityInput,
+    RentalDogBiteLiabilityResult,
+};
+use traderview_expense::rental_domestic_violence_lock_change_lease_termination::{
+    check as check_rental_domestic_violence_lock_change_lease_termination,
+    RentalDomesticViolenceLockChangeLeaseTerminationInput,
+    RentalDomesticViolenceLockChangeLeaseTerminationResult,
+};
+use traderview_expense::rental_drone_overflight_surveillance_privacy::{
+    check as check_rental_drone_overflight_surveillance_privacy,
+    RentalDroneOverflightSurveillancePrivacyInput, RentalDroneOverflightSurveillancePrivacyResult,
+};
+use traderview_expense::rental_elevator_safety_inspection::{
+    check as check_rental_elevator_safety_inspection, RentalElevatorSafetyInspectionInput,
+    RentalElevatorSafetyInspectionResult,
+};
+use traderview_expense::rental_emergency_action_plan_high_rise::{
+    check as check_rental_emergency_action_plan_high_rise, RentalEmergencyActionPlanHighRiseInput,
+    RentalEmergencyActionPlanHighRiseResult,
 };
 use traderview_expense::rental_energy_benchmarking::{
     check as check_rental_energy_benchmarking, RentalEnergyBenchmarkingInput,
     RentalEnergyBenchmarkingResult,
 };
-use traderview_expense::rental_garage_door_safety_compliance::{
-    check as check_rental_garage_door_safety_compliance,
-    RentalGarageDoorSafetyComplianceInput, RentalGarageDoorSafetyComplianceResult,
+use traderview_expense::rental_ev_charging_accommodation::{
+    check as check_rental_ev_charging_accommodation, RentalEvChargingAccommodationInput,
+    RentalEvChargingAccommodationResult,
 };
-use traderview_expense::rental_georgia_landlord_tenant_act_ocga_44_7::{
-    check as check_rental_georgia_landlord_tenant_act_ocga_44_7,
-    RentalGeorgiaLandlordTenantActOcga44_7Input,
-    RentalGeorgiaLandlordTenantActOcga44_7Result,
+use traderview_expense::rental_eviction_record_sealing_screening::{
+    check as check_rental_eviction_record_sealing_screening,
+    EvictionRecordSealingInput as RentalEvictionRecordSealingScreeningInput,
+    EvictionRecordSealingResult as RentalEvictionRecordSealingScreeningResult,
+};
+use traderview_expense::rental_facade_inspection_fisp_local_law_11::{
+    check as check_rental_facade_inspection_fisp_local_law_11,
+    FacadeInspectionFispInput as RentalFacadeInspectionFispLocalLaw11Input,
+    FacadeInspectionFispResult as RentalFacadeInspectionFispLocalLaw11Result,
+};
+use traderview_expense::rental_fair_housing_amendments_act_of_1988_fhaa::{
+    check as check_rental_fair_housing_amendments_act_of_1988_fhaa,
+    RentalFairHousingAmendmentsActOf1988FhaaInput, RentalFairHousingAmendmentsActOf1988FhaaResult,
+};
+use traderview_expense::rental_fair_housing_reasonable_accommodation::{
+    check as check_rental_fair_housing_reasonable_accommodation,
+    RentalFairHousingReasonableAccommodationInput, RentalFairHousingReasonableAccommodationResult,
+};
+use traderview_expense::rental_fire_extinguisher_requirement::{
+    check as check_rental_fire_extinguisher_requirement, RentalFireExtinguisherRequirementInput,
+    RentalFireExtinguisherRequirementResult,
+};
+use traderview_expense::rental_flood_hazard_disclosure::{
+    check as check_rental_flood_hazard_disclosure,
+    FloodHazardDisclosureInput as RentalFloodHazardDisclosureInput,
+    FloodHazardDisclosureResult as RentalFloodHazardDisclosureResult,
+};
+use traderview_expense::rental_florida_chapter_83_part_ii_residential_tenancies::{
+    check as check_rental_florida_chapter_83_part_ii_residential_tenancies,
+    RentalFloridaChapter83PartIIResidentialTenanciesInput,
+    RentalFloridaChapter83PartIIResidentialTenanciesResult,
+};
+use traderview_expense::rental_florida_hb_1417_state_preemption::{
+    check as check_rental_florida_hb_1417_state_preemption,
+    RentalFloridaHb1417StatePreemptionInput, RentalFloridaHb1417StatePreemptionResult,
+};
+use traderview_expense::rental_foreclosure_tenant_protection_ptfa::{
+    check as check_rental_foreclosure_tenant_protection_ptfa,
+    PtfaInput as RentalForeclosureTenantProtectionPtfaInput,
+    PtfaResult as RentalForeclosureTenantProtectionPtfaResult,
+};
+use traderview_expense::rental_garage_door_safety_compliance::{
+    check as check_rental_garage_door_safety_compliance, RentalGarageDoorSafetyComplianceInput,
+    RentalGarageDoorSafetyComplianceResult,
 };
 use traderview_expense::rental_gas_appliance_ban::{
     check as check_rental_gas_appliance_ban, RentalGasApplianceBanInput,
@@ -730,10 +678,17 @@ use traderview_expense::rental_gas_piping_inspection_local_law_152::{
     GasPipingInspectionLocalLaw152Input as RentalGasPipingInspectionLocalLaw152Input,
     GasPipingInspectionLocalLaw152Result as RentalGasPipingInspectionLocalLaw152Result,
 };
+use traderview_expense::rental_georgia_landlord_tenant_act_ocga_44_7::{
+    check as check_rental_georgia_landlord_tenant_act_ocga_44_7,
+    RentalGeorgiaLandlordTenantActOcga44_7Input, RentalGeorgiaLandlordTenantActOcga44_7Result,
+};
+use traderview_expense::rental_grill_propane_bbq_restriction::{
+    check as check_rental_grill_propane_bbq_restriction, RentalGrillPropaneBbqRestrictionInput,
+    RentalGrillPropaneBbqRestrictionResult,
+};
 use traderview_expense::rental_hardwired_smoke_alarm_responsibility::{
     check as check_rental_hardwired_smoke_alarm_responsibility,
-    RentalHardwiredSmokeAlarmResponsibilityInput,
-    RentalHardwiredSmokeAlarmResponsibilityResult,
+    RentalHardwiredSmokeAlarmResponsibilityInput, RentalHardwiredSmokeAlarmResponsibilityResult,
 };
 use traderview_expense::rental_hawaii_residential_landlord_tenant_code_hrs_521::{
     check as check_rental_hawaii_residential_landlord_tenant_code_hrs_521,
@@ -745,24 +700,44 @@ use traderview_expense::rental_heat_minimum_temperature_season::{
     HeatMinimumTemperatureInput as RentalHeatMinimumTemperatureInput,
     HeatMinimumTemperatureResult as RentalHeatMinimumTemperatureResult,
 };
+use traderview_expense::rental_hoa_disclosure_at_lease::{
+    check as check_rental_hoa_disclosure_at_lease, RentalHoaDisclosureAtLeaseInput,
+    RentalHoaDisclosureAtLeaseResult,
+};
 use traderview_expense::rental_hot_water_temperature::{
     check as check_rental_hot_water_temperature, RentalHotWaterTemperatureInput,
     RentalHotWaterTemperatureResult,
 };
 use traderview_expense::rental_housing_for_older_persons_act_hopa_1995::{
     check as check_rental_housing_for_older_persons_act_hopa_1995,
-    RentalHousingForOlderPersonsActHopa1995Input,
-    RentalHousingForOlderPersonsActHopa1995Result,
+    RentalHousingForOlderPersonsActHopa1995Input, RentalHousingForOlderPersonsActHopa1995Result,
 };
 use traderview_expense::rental_hud_hotma_income_asset_compliance::{
     check as check_rental_hud_hotma_income_asset_compliance,
-    RentalHudHotmaIncomeAssetComplianceInput,
-    RentalHudHotmaIncomeAssetComplianceResult,
+    RentalHudHotmaIncomeAssetComplianceInput, RentalHudHotmaIncomeAssetComplianceResult,
 };
 use traderview_expense::rental_hud_section_504_rehabilitation_act_24_cfr_part_8::{
     check as check_rental_hud_section_504_rehabilitation_act_24_cfr_part_8,
     RentalHudSection504RehabilitationAct24CfrPart8Input,
     RentalHudSection504RehabilitationAct24CfrPart8Result,
+};
+use traderview_expense::rental_illegal_lockout_self_help_eviction::{
+    check as check_rental_illegal_lockout_self_help_eviction,
+    RentalIllegalLockoutSelfHelpEvictionInput, RentalIllegalLockoutSelfHelpEvictionResult,
+};
+use traderview_expense::rental_in_unit_laundry_appliance_provision::{
+    check as check_rental_in_unit_laundry_appliance_provision,
+    RentalInUnitLaundryApplianceProvisionInput, RentalInUnitLaundryApplianceProvisionResult,
+};
+use traderview_expense::rental_indiana_landlord_tenant_law_ic_32_31::{
+    check as check_rental_indiana_landlord_tenant_law_ic_32_31,
+    InLandlordTenantInput as RentalIndianaLandlordTenantLawIc3231Input,
+    InLandlordTenantResult as RentalIndianaLandlordTenantLawIc3231Result,
+};
+use traderview_expense::rental_iowa_urlta_iowa_code_chapter_562a::{
+    check as check_rental_iowa_urlta_iowa_code_chapter_562a,
+    IaLandlordTenantInput as RentalIowaUrltaIowaCodeChapter562aInput,
+    IaLandlordTenantResult as RentalIowaUrltaIowaCodeChapter562aResult,
 };
 use traderview_expense::rental_junk_fee_transparency::{
     check as check_rental_junk_fee_transparency, RentalJunkFeeTransparencyInput,
@@ -773,145 +748,17 @@ use traderview_expense::rental_just_cause_eviction::{
     JustCauseEvictionInput as RentalJustCauseEvictionInput,
     JustCauseEvictionResult as RentalJustCauseEvictionResult,
 };
-use traderview_expense::rental_water_submetering_disclosure::{
-    check as check_rental_water_submetering_disclosure,
-    RentalWaterSubmeteringDisclosureInput, RentalWaterSubmeteringDisclosureResult,
-};
-use traderview_expense::rental_well_water_disclosure::{
-    check as check_rental_well_water_disclosure,
-    RentalWellWaterDisclosureInput, RentalWellWaterDisclosureResult,
-};
-use traderview_expense::rental_window_blind_cord_safety::{
-    check as check_rental_window_blind_cord_safety,
-    RentalWindowBlindCordSafetyInput, RentalWindowBlindCordSafetyResult,
-};
-use traderview_expense::rental_window_guard_installation::{
-    check as check_rental_window_guard_installation,
-    RentalWindowGuardInstallationInput, RentalWindowGuardInstallationResult,
-};
-use traderview_expense::rental_wisconsin_chapter_704_atcp_134::{
-    check as check_rental_wisconsin_chapter_704_atcp_134,
-    WiLandlordTenantInput as RentalWisconsinChapter704Atcp134Input,
-    WiLandlordTenantResult as RentalWisconsinChapter704Atcp134Result,
-};
-use traderview_expense::rental_south_carolina_residential_landlord_tenant_act_sc_code_27_40::{
-    check as check_rental_south_carolina_residential_landlord_tenant_act_sc_code_27_40,
-    ScLandlordTenantInput as RentalSouthCarolinaResidentialLandlordTenantActScCode2740Input,
-    ScLandlordTenantResult as RentalSouthCarolinaResidentialLandlordTenantActScCode2740Result,
-};
 use traderview_expense::rental_kentucky_urlta_krs_chapter_383_subchapter_5::{
     check as check_rental_kentucky_urlta_krs_chapter_383_subchapter_5,
     KyLandlordTenantInput as RentalKentuckyUrltaKrsChapter383Subchapter5Input,
     KyLandlordTenantResult as RentalKentuckyUrltaKrsChapter383Subchapter5Result,
 };
-use traderview_expense::rental_iowa_urlta_iowa_code_chapter_562a::{
-    check as check_rental_iowa_urlta_iowa_code_chapter_562a,
-    IaLandlordTenantInput as RentalIowaUrltaIowaCodeChapter562aInput,
-    IaLandlordTenantResult as RentalIowaUrltaIowaCodeChapter562aResult,
+use traderview_expense::rental_landlord_notice_to_enter::{
+    check as check_rental_landlord_notice_to_enter, RentalLandlordNoticeToEnterInput,
+    RentalLandlordNoticeToEnterResult,
 };
-use traderview_expense::rental_alabama_urlta_ala_code_35_9a::{
-    check as check_rental_alabama_urlta_ala_code_35_9a,
-    AlLandlordTenantInput as RentalAlabamaUrltaAlaCode359aInput,
-    AlLandlordTenantResult as RentalAlabamaUrltaAlaCode359aResult,
-};
-use traderview_expense::rental_nevada_nrs_chapter_118a::{
-    check as check_rental_nevada_nrs_chapter_118a,
-    NvLandlordTenantInput as RentalNevadaNrsChapter118aInput,
-    NvLandlordTenantResult as RentalNevadaNrsChapter118aResult,
-};
-use traderview_expense::rental_vehicle_towing_notice_sign_requirements::{
-    check as check_rental_vehicle_towing_notice_sign_requirements,
-    RentalVehicleTowingNoticeSignRequirementsInput,
-    RentalVehicleTowingNoticeSignRequirementsResult,
-};
-use traderview_expense::rental_vacant_property_registration::{
-    check as check_rental_vacant_property_registration,
-    RentalVacantPropertyRegistrationInput,
-    RentalVacantPropertyRegistrationResult,
-};
-use traderview_expense::rental_vawa_2022_federal_housing_protections::{
-    check as check_rental_vawa_2022_federal_housing_protections,
-    RentalVawa2022FederalHousingProtectionsInput,
-    RentalVawa2022FederalHousingProtectionsResult,
-};
-use traderview_expense::rental_unpermitted_unit_disclosure::{
-    check as check_rental_unpermitted_unit_disclosure,
-    RentalUnpermittedUnitDisclosureInput, RentalUnpermittedUnitDisclosureResult,
-};
-use traderview_expense::rental_sex_offender_registry_notice::{
-    check as check_rental_sex_offender_registry_notice,
-    RentalSexOffenderRegistryNoticeInput, RentalSexOffenderRegistryNoticeResult,
-};
-use traderview_expense::rental_sinkhole_disclosure::{
-    check as check_rental_sinkhole_disclosure, RentalSinkholeDisclosureInput,
-    RentalSinkholeDisclosureResult,
-};
-use traderview_expense::rental_smoke_free_housing_disclosure::{
-    check as check_rental_smoke_free_housing_disclosure,
-    RentalSmokeFreeHousingDisclosureInput, RentalSmokeFreeHousingDisclosureResult,
-};
-use traderview_expense::rental_soft_story_seismic_retrofit::{
-    check as check_rental_soft_story_seismic_retrofit,
-    SoftStorySeismicRetrofitInput as RentalSoftStorySeismicRetrofitInput,
-    SoftStorySeismicRetrofitResult as RentalSoftStorySeismicRetrofitResult,
-};
-use traderview_expense::rental_swimming_pool_drain_safety::{
-    check as check_rental_swimming_pool_drain_safety,
-    RentalSwimmingPoolDrainSafetyInput, RentalSwimmingPoolDrainSafetyResult,
-};
-use traderview_expense::rental_underground_storage_tank_disclosure::{
-    check as check_rental_underground_storage_tank_disclosure,
-    RentalUndergroundStorageTankDisclosureInput,
-    RentalUndergroundStorageTankDisclosureResult,
-};
-use traderview_expense::rental_san_francisco_rent_ordinance_chapter_37::{
-    check as check_rental_san_francisco_rent_ordinance_chapter_37,
-    RentalSanFranciscoRentOrdinanceChapter37Input,
-    RentalSanFranciscoRentOrdinanceChapter37Result,
-};
-use traderview_expense::rental_satellite_dish_installation_right::{
-    check as check_rental_satellite_dish_installation_right,
-    RentalSatelliteDishInstallationRightInput, RentalSatelliteDishInstallationRightResult,
-};
-use traderview_expense::rental_seattle_smc_22_206_160_just_cause_eviction::{
-    check as check_rental_seattle_smc_22_206_160_just_cause_eviction,
-    RentalSeattleSmc22206160JustCauseEvictionInput,
-    RentalSeattleSmc22206160JustCauseEvictionResult,
-};
-use traderview_expense::rental_security_deposit_interest::{
-    check as check_rental_security_deposit_interest,
-    SecurityDepositInterestInput as RentalSecurityDepositInterestInput,
-    SecurityDepositInterestResult as RentalSecurityDepositInterestResult,
-};
-use traderview_expense::rental_septic_system_disclosure::{
-    check as check_rental_septic_system_disclosure,
-    RentalSepticSystemDisclosureInput, RentalSepticSystemDisclosureResult,
-};
-use traderview_expense::rental_sewer_lateral_responsibility::{
-    check as check_rental_sewer_lateral_responsibility,
-    RentalSewerLateralResponsibilityInput, RentalSewerLateralResponsibilityResult,
-};
-use traderview_expense::rental_pesticide_application_notification::{
-    check as check_rental_pesticide_application_notification,
-    RentalPesticideApplicationNotificationInput,
-    RentalPesticideApplicationNotificationResult,
-};
-use traderview_expense::rental_pet_deposit_separate_security::{
-    check as check_rental_pet_deposit_separate_security,
-    RentalPetDepositSeparateSecurityInput, RentalPetDepositSeparateSecurityResult,
-};
-use traderview_expense::rental_pre_foreclosure_tenant_notification::{
-    check as check_rental_pre_foreclosure_tenant_notification,
-    RentalPreForeclosureTenantNotificationInput,
-    RentalPreForeclosureTenantNotificationResult,
-};
-use traderview_expense::rental_propane_tank_lease_disclosure::{
-    check as check_rental_propane_tank_lease_disclosure,
-    RentalPropaneTankLeaseDisclosureInput, RentalPropaneTankLeaseDisclosureResult,
-};
-use traderview_expense::rental_organic_waste_collection_disclosure::{
-    check as check_rental_organic_waste_collection_disclosure,
-    RentalOrganicWasteCollectionDisclosureInput, RentalOrganicWasteCollectionDisclosureResult,
+use traderview_expense::rental_late_fee_cap::{
+    check as check_rental_late_fee_cap, RentalLateFeeCapInput, RentalLateFeeCapResult,
 };
 use traderview_expense::rental_lead_paint_disclosure::{
     check as check_rental_lead_paint_disclosure, LeadPaintDisclosureInput,
@@ -921,133 +768,29 @@ use traderview_expense::rental_lead_pipe_disclosure::{
     check as check_rental_lead_pipe_disclosure, RentalLeadPipeDisclosureInput,
     RentalLeadPipeDisclosureResult,
 };
-use traderview_expense::rental_natural_gas_leak_response::{
-    check as check_rental_natural_gas_leak_response,
-    RentalNaturalGasLeakResponseInput, RentalNaturalGasLeakResponseResult,
+use traderview_expense::rental_local_law_87_energy_audit_retro_commissioning::{
+    check as check_rental_local_law_87_energy_audit_retro_commissioning,
+    LocalLaw87EnergyAuditRetroCommissioningInput as RentalLocalLaw87EnergyAuditRetroCommissioningInput,
+    LocalLaw87EnergyAuditRetroCommissioningResult as RentalLocalLaw87EnergyAuditRetroCommissioningResult,
 };
-use traderview_expense::rental_new_jersey_anti_eviction_act::{
-    check as check_rental_new_jersey_anti_eviction_act,
-    RentalNewJerseyAntiEvictionActInput,
-    RentalNewJerseyAntiEvictionActResult,
-};
-use traderview_expense::rental_new_york_hstpa_2019_chapter_36::{
-    check as check_rental_new_york_hstpa_2019_chapter_36,
-    RentalNewYorkHstpa2019Chapter36Input,
-    RentalNewYorkHstpa2019Chapter36Result,
-};
-use traderview_expense::rental_north_carolina_chapter_42_landlord_tenant::{
-    check as check_rental_north_carolina_chapter_42_landlord_tenant,
-    RentalNorthCarolinaChapter42LandlordTenantInput,
-    RentalNorthCarolinaChapter42LandlordTenantResult,
-};
-use traderview_expense::rental_ny_rent_receipt_late_notice_requirements::{
-    check as check_rental_ny_rent_receipt_late_notice_requirements,
-    NyRentReceiptLateNoticeRequirementsInput as RentalNyRentReceiptLateNoticeRequirementsInput,
-    NyRentReceiptLateNoticeRequirementsResult as RentalNyRentReceiptLateNoticeRequirementsResult,
-};
-use traderview_expense::rental_attorney_fee_clause_reciprocity::{
-    check as check_rental_attorney_fee_clause_reciprocity,
-    RentalAttorneyFeeClauseReciprocityInput,
-    RentalAttorneyFeeClauseReciprocityResult,
-};
-use traderview_expense::rental_ny_rpl_235f_roommate_law::{
-    check as check_rental_ny_rpl_235f_roommate_law,
-    NyRpl235FRoommateLawInput as RentalNyRpl235FRoommateLawInput,
-    NyRpl235FRoommateLawResult as RentalNyRpl235FRoommateLawResult,
-};
-use traderview_expense::rental_oakland_measure_ee_just_cause_omc_8_22::{
-    check as check_rental_oakland_measure_ee_just_cause_omc_8_22,
-    RentalOaklandMeasureEeJustCauseOmc822Input,
-    RentalOaklandMeasureEeJustCauseOmc822Result,
-};
-use traderview_expense::rental_ohio_revised_code_chapter_5321_landlord_tenant_act::{
-    check as check_rental_ohio_revised_code_chapter_5321_landlord_tenant_act,
-    RentalOhioRevisedCodeChapter5321LandlordTenantActInput,
-    RentalOhioRevisedCodeChapter5321LandlordTenantActResult,
-};
-use traderview_expense::rental_oil_tank_replacement_disclosure::{
-    check as check_rental_oil_tank_replacement_disclosure,
-    RentalOilTankReplacementDisclosureInput, RentalOilTankReplacementDisclosureResult,
-};
-use traderview_expense::rental_oregon_residential_landlord_tenant_act_ors_chapter_90::{
-    check as check_rental_oregon_residential_landlord_tenant_act_ors_chapter_90,
-    OrLandlordTenantInput as RentalOregonResidentialLandlordTenantActOrsChapter90Input,
-    OrLandlordTenantResult as RentalOregonResidentialLandlordTenantActOrsChapter90Result,
-};
-use traderview_expense::rental_oregon_sb_608_sb_611_rent_stabilization::{
-    check as check_rental_oregon_sb_608_sb_611_rent_stabilization,
-    RentalOregonSb608Sb611RentStabilizationInput,
-    RentalOregonSb608Sb611RentStabilizationResult,
-};
-use traderview_expense::rental_nyc_childhood_lead_poisoning_prevention_act::{
-    check as check_rental_nyc_childhood_lead_poisoning_prevention_act,
-    NycChildhoodLeadPoisoningPreventionActInput as RentalNycChildhoodLeadPoisoningPreventionActInput,
-    NycChildhoodLeadPoisoningPreventionActResult as RentalNycChildhoodLeadPoisoningPreventionActResult,
-};
-use traderview_expense::rental_nyc_local_law_55_ipm_pest_control::{
-    check as check_rental_nyc_local_law_55_ipm_pest_control,
-    RentalNycLocalLaw55IpmPestControlInput,
-    RentalNycLocalLaw55IpmPestControlResult,
-};
-use traderview_expense::rental_nyc_local_law_18_str_registration::{
-    check as check_rental_nyc_local_law_18_str_registration,
-    RentalNycLocalLaw18StrRegistrationInput,
-    RentalNycLocalLaw18StrRegistrationResult,
-};
-use traderview_expense::rental_nyc_coop_conversion_eviction_protection::{
-    check as check_rental_nyc_coop_conversion_eviction_protection,
-    RentalNycCoopConversionEvictionProtectionInput,
-    RentalNycCoopConversionEvictionProtectionResult,
-};
-use traderview_expense::rental_nyc_scrie_drie_rent_freeze::{
-    check as check_rental_nyc_scrie_drie_rent_freeze,
-    RentalNycScrieDrieRentFreezeInput,
-    RentalNycScrieDrieRentFreezeResult,
-};
-use traderview_expense::rental_nyc_loft_law_article_7c::{
-    check as check_rental_nyc_loft_law_article_7c,
-    NycLoftLawArticle7CInput as RentalNycLoftLawArticle7CInput,
-    NycLoftLawArticle7CResult as RentalNycLoftLawArticle7CResult,
-};
-use traderview_expense::rental_solar_panel_disclosure::{
-    check as check_rental_solar_panel_disclosure,
-    RentalSolarPanelDisclosureInput, RentalSolarPanelDisclosureResult,
-};
-use traderview_expense::rental_storage_unit_lease_disclosure::{
-    check as check_rental_storage_unit_lease_disclosure,
-    RentalStorageUnitLeaseDisclosureInput, RentalStorageUnitLeaseDisclosureResult,
-};
-use traderview_expense::rental_balcony_inspection_seismic_safety::{
-    check as check_rental_balcony_inspection_seismic_safety,
-    RentalBalconyInspectionSeismicSafetyInput, RentalBalconyInspectionSeismicSafetyResult,
-};
-use traderview_expense::rental_short_term_subletting_airbnb_restriction::{
-    check as check_rental_short_term_subletting_airbnb_restriction,
-    RentalShortTermSublettingAirbnbRestrictionInput,
-    RentalShortTermSublettingAirbnbRestrictionResult,
-};
-use traderview_expense::rental_grill_propane_bbq_restriction::{
-    check as check_rental_grill_propane_bbq_restriction,
-    RentalGrillPropaneBbqRestrictionInput, RentalGrillPropaneBbqRestrictionResult,
-};
-use traderview_expense::rental_radiator_steam_heat_safety::{
-    check as check_rental_radiator_steam_heat_safety,
-    RentalRadiatorSteamHeatSafetyInput, RentalRadiatorSteamHeatSafetyResult,
-};
-use traderview_expense::rental_property_tax_pass_through_disclosure::{
-    check as check_rental_property_tax_pass_through_disclosure,
-    RentalPropertyTaxPassThroughDisclosureInput,
-    RentalPropertyTaxPassThroughDisclosureResult,
+use traderview_expense::rental_local_law_88_lighting_upgrades_sub_metering::{
+    check as check_rental_local_law_88_lighting_upgrades_sub_metering,
+    LocalLaw88LightingUpgradesSubMeteringInput as RentalLocalLaw88LightingUpgradesSubMeteringInput,
+    LocalLaw88LightingUpgradesSubMeteringResult as RentalLocalLaw88LightingUpgradesSubMeteringResult,
 };
 use traderview_expense::rental_marijuana_cultivation_restriction::{
     check as check_rental_marijuana_cultivation_restriction,
-    RentalMarijuanaCultivationRestrictionInput,
-    RentalMarijuanaCultivationRestrictionResult,
+    RentalMarijuanaCultivationRestrictionInput, RentalMarijuanaCultivationRestrictionResult,
 };
 use traderview_expense::rental_maryland_landlord_tenant_md_real_property_title_8::{
     check as check_rental_maryland_landlord_tenant_md_real_property_title_8,
     MdLandlordTenantInput as RentalMarylandLandlordTenantMdRealPropertyTitle8Input,
     MdLandlordTenantResult as RentalMarylandLandlordTenantMdRealPropertyTitle8Result,
+};
+use traderview_expense::rental_massachusetts_homes_act_eviction_sealing::{
+    check as check_rental_massachusetts_homes_act_eviction_sealing,
+    RentalMassachusettsHomesActEvictionSealingInput,
+    RentalMassachusettsHomesActEvictionSealingResult,
 };
 use traderview_expense::rental_massachusetts_mgl_chapter_186_239_broader_regime::{
     check as check_rental_massachusetts_mgl_chapter_186_239_broader_regime,
@@ -1063,101 +806,6 @@ use traderview_expense::rental_michigan_landlord_tenant_mcl_554::{
     check as check_rental_michigan_landlord_tenant_mcl_554,
     MiLandlordTenantInput as RentalMichiganLandlordTenantMcl554Input,
     MiLandlordTenantResult as RentalMichiganLandlordTenantMcl554Result,
-};
-use traderview_expense::rental_massachusetts_homes_act_eviction_sealing::{
-    check as check_rental_massachusetts_homes_act_eviction_sealing,
-    RentalMassachusettsHomesActEvictionSealingInput,
-    RentalMassachusettsHomesActEvictionSealingResult,
-};
-use traderview_expense::rental_attached_garage_carbon_monoxide_disclosure::{
-    check as check_rental_attached_garage_carbon_monoxide_disclosure,
-    RentalAttachedGarageCarbonMonoxideDisclosureInput,
-    RentalAttachedGarageCarbonMonoxideDisclosureResult,
-};
-use traderview_expense::rental_pet_breed_restriction_disclosure::{
-    check as check_rental_pet_breed_restriction_disclosure,
-    RentalPetBreedRestrictionDisclosureInput,
-    RentalPetBreedRestrictionDisclosureResult,
-};
-use traderview_expense::rental_emergency_action_plan_high_rise::{
-    check as check_rental_emergency_action_plan_high_rise,
-    RentalEmergencyActionPlanHighRiseInput,
-    RentalEmergencyActionPlanHighRiseResult,
-};
-use traderview_expense::rental_eviction_record_sealing_screening::{
-    check as check_rental_eviction_record_sealing_screening,
-    EvictionRecordSealingInput as RentalEvictionRecordSealingScreeningInput,
-    EvictionRecordSealingResult as RentalEvictionRecordSealingScreeningResult,
-};
-use traderview_expense::rental_illegal_lockout_self_help_eviction::{
-    check as check_rental_illegal_lockout_self_help_eviction,
-    RentalIllegalLockoutSelfHelpEvictionInput,
-    RentalIllegalLockoutSelfHelpEvictionResult,
-};
-use traderview_expense::rental_retaliation_prohibition::{
-    check as check_rental_retaliation_prohibition,
-    RentalRetaliationProhibitionInput,
-    RentalRetaliationProhibitionResult,
-};
-use traderview_expense::rental_landlord_notice_to_enter::{
-    check as check_rental_landlord_notice_to_enter,
-    RentalLandlordNoticeToEnterInput,
-    RentalLandlordNoticeToEnterResult,
-};
-use traderview_expense::rental_security_deposit_return_notice::{
-    check as check_rental_security_deposit_return_notice,
-    RentalSecurityDepositReturnNoticeInput,
-    RentalSecurityDepositReturnNoticeResult,
-};
-use traderview_expense::rental_late_fee_cap::{
-    check as check_rental_late_fee_cap,
-    RentalLateFeeCapInput,
-    RentalLateFeeCapResult,
-};
-use traderview_expense::rental_local_law_87_energy_audit_retro_commissioning::{
-    check as check_rental_local_law_87_energy_audit_retro_commissioning,
-    LocalLaw87EnergyAuditRetroCommissioningInput as RentalLocalLaw87EnergyAuditRetroCommissioningInput,
-    LocalLaw87EnergyAuditRetroCommissioningResult as RentalLocalLaw87EnergyAuditRetroCommissioningResult,
-};
-use traderview_expense::rental_local_law_88_lighting_upgrades_sub_metering::{
-    check as check_rental_local_law_88_lighting_upgrades_sub_metering,
-    LocalLaw88LightingUpgradesSubMeteringInput as RentalLocalLaw88LightingUpgradesSubMeteringInput,
-    LocalLaw88LightingUpgradesSubMeteringResult as RentalLocalLaw88LightingUpgradesSubMeteringResult,
-};
-use traderview_expense::rental_tenant_criminal_background_screening::{
-    check as check_rental_tenant_criminal_background_screening,
-    RentalTenantCriminalBackgroundScreeningInput,
-    RentalTenantCriminalBackgroundScreeningResult,
-};
-use traderview_expense::rental_source_of_income_discrimination::{
-    check as check_rental_source_of_income_discrimination,
-    RentalSourceOfIncomeDiscriminationInput,
-    RentalSourceOfIncomeDiscriminationResult,
-};
-use traderview_expense::rental_tenant_bill_of_rights_handout::{
-    check as check_rental_tenant_bill_of_rights_handout,
-    RentalTenantBillOfRightsHandoutInput,
-    RentalTenantBillOfRightsHandoutResult,
-};
-use traderview_expense::rental_tenant_abandoned_personal_property::{
-    check as check_rental_tenant_abandoned_personal_property,
-    RentalTenantAbandonedPersonalPropertyInput,
-    RentalTenantAbandonedPersonalPropertyResult,
-};
-use traderview_expense::rental_tennessee_urlta_tca_66_28_101::{
-    check as check_rental_tennessee_urlta_tca_66_28_101,
-    RentalTennesseeUrltaTca66_28_101Input,
-    RentalTennesseeUrltaTca66_28_101Result,
-};
-use traderview_expense::rental_texas_hb_2127_state_preemption::{
-    check as check_rental_texas_hb_2127_state_preemption,
-    RentalTexasHb2127StatePreemptionInput,
-    RentalTexasHb2127StatePreemptionResult,
-};
-use traderview_expense::rental_texas_property_code_chapter_92_residential_tenancies::{
-    check as check_rental_texas_property_code_chapter_92_residential_tenancies,
-    RentalTexasPropertyCodeChapter92ResidentialTenanciesInput,
-    RentalTexasPropertyCodeChapter92ResidentialTenanciesResult,
 };
 use traderview_expense::rental_minneapolis_renter_protections_ordinance_2020::{
     check as check_rental_minneapolis_renter_protections_ordinance_2020,
@@ -1175,8 +823,7 @@ use traderview_expense::rental_missouri_landlord_tenant_mo_rev_stat_535_534_441:
     MoLandlordTenantResult as RentalMissouriLandlordTenantMoRevStat535534441Result,
 };
 use traderview_expense::rental_mold_disclosure_remediation::{
-    check as check_rental_mold_disclosure_remediation,
-    RentalMoldDisclosureRemediationInput,
+    check as check_rental_mold_disclosure_remediation, RentalMoldDisclosureRemediationInput,
     RentalMoldDisclosureRemediationResult,
 };
 use traderview_expense::rental_multilingual_lease_translation::{
@@ -1184,30 +831,264 @@ use traderview_expense::rental_multilingual_lease_translation::{
     MultilingualLeaseTranslationInput as RentalMultilingualLeaseTranslationInput,
     MultilingualLeaseTranslationResult as RentalMultilingualLeaseTranslationResult,
 };
-use traderview_expense::rental_fair_housing_reasonable_accommodation::{
-    check as check_rental_fair_housing_reasonable_accommodation,
-    RentalFairHousingReasonableAccommodationInput,
-    RentalFairHousingReasonableAccommodationResult,
+use traderview_expense::rental_natural_gas_leak_response::{
+    check as check_rental_natural_gas_leak_response, RentalNaturalGasLeakResponseInput,
+    RentalNaturalGasLeakResponseResult,
 };
-use traderview_expense::rental_fair_housing_amendments_act_of_1988_fhaa::{
-    check as check_rental_fair_housing_amendments_act_of_1988_fhaa,
-    RentalFairHousingAmendmentsActOf1988FhaaInput,
-    RentalFairHousingAmendmentsActOf1988FhaaResult,
+use traderview_expense::rental_nevada_nrs_chapter_118a::{
+    check as check_rental_nevada_nrs_chapter_118a,
+    NvLandlordTenantInput as RentalNevadaNrsChapter118aInput,
+    NvLandlordTenantResult as RentalNevadaNrsChapter118aResult,
 };
-use traderview_expense::rental_facade_inspection_fisp_local_law_11::{
-    check as check_rental_facade_inspection_fisp_local_law_11,
-    FacadeInspectionFispInput as RentalFacadeInspectionFispLocalLaw11Input,
-    FacadeInspectionFispResult as RentalFacadeInspectionFispLocalLaw11Result,
+use traderview_expense::rental_new_jersey_anti_eviction_act::{
+    check as check_rental_new_jersey_anti_eviction_act, RentalNewJerseyAntiEvictionActInput,
+    RentalNewJerseyAntiEvictionActResult,
 };
-use traderview_expense::rental_boiler_inspection_compliance::{
-    check as check_rental_boiler_inspection_compliance,
-    RentalBoilerInspectionComplianceInput,
-    RentalBoilerInspectionComplianceResult,
+use traderview_expense::rental_new_york_hstpa_2019_chapter_36::{
+    check as check_rental_new_york_hstpa_2019_chapter_36, RentalNewYorkHstpa2019Chapter36Input,
+    RentalNewYorkHstpa2019Chapter36Result,
 };
-use traderview_expense::rental_tree_removal_dangerous_tree_disclosure::{
-    check as check_rental_tree_removal_dangerous_tree_disclosure,
-    RentalTreeRemovalDangerousTreeDisclosureInput,
-    RentalTreeRemovalDangerousTreeDisclosureResult,
+use traderview_expense::rental_north_carolina_chapter_42_landlord_tenant::{
+    check as check_rental_north_carolina_chapter_42_landlord_tenant,
+    RentalNorthCarolinaChapter42LandlordTenantInput,
+    RentalNorthCarolinaChapter42LandlordTenantResult,
+};
+use traderview_expense::rental_ny_rent_receipt_late_notice_requirements::{
+    check as check_rental_ny_rent_receipt_late_notice_requirements,
+    NyRentReceiptLateNoticeRequirementsInput as RentalNyRentReceiptLateNoticeRequirementsInput,
+    NyRentReceiptLateNoticeRequirementsResult as RentalNyRentReceiptLateNoticeRequirementsResult,
+};
+use traderview_expense::rental_ny_rpl_235f_roommate_law::{
+    check as check_rental_ny_rpl_235f_roommate_law,
+    NyRpl235FRoommateLawInput as RentalNyRpl235FRoommateLawInput,
+    NyRpl235FRoommateLawResult as RentalNyRpl235FRoommateLawResult,
+};
+use traderview_expense::rental_nyc_childhood_lead_poisoning_prevention_act::{
+    check as check_rental_nyc_childhood_lead_poisoning_prevention_act,
+    NycChildhoodLeadPoisoningPreventionActInput as RentalNycChildhoodLeadPoisoningPreventionActInput,
+    NycChildhoodLeadPoisoningPreventionActResult as RentalNycChildhoodLeadPoisoningPreventionActResult,
+};
+use traderview_expense::rental_nyc_coop_conversion_eviction_protection::{
+    check as check_rental_nyc_coop_conversion_eviction_protection,
+    RentalNycCoopConversionEvictionProtectionInput,
+    RentalNycCoopConversionEvictionProtectionResult,
+};
+use traderview_expense::rental_nyc_local_law_18_str_registration::{
+    check as check_rental_nyc_local_law_18_str_registration,
+    RentalNycLocalLaw18StrRegistrationInput, RentalNycLocalLaw18StrRegistrationResult,
+};
+use traderview_expense::rental_nyc_local_law_55_ipm_pest_control::{
+    check as check_rental_nyc_local_law_55_ipm_pest_control,
+    RentalNycLocalLaw55IpmPestControlInput, RentalNycLocalLaw55IpmPestControlResult,
+};
+use traderview_expense::rental_nyc_loft_law_article_7c::{
+    check as check_rental_nyc_loft_law_article_7c,
+    NycLoftLawArticle7CInput as RentalNycLoftLawArticle7CInput,
+    NycLoftLawArticle7CResult as RentalNycLoftLawArticle7CResult,
+};
+use traderview_expense::rental_nyc_scrie_drie_rent_freeze::{
+    check as check_rental_nyc_scrie_drie_rent_freeze, RentalNycScrieDrieRentFreezeInput,
+    RentalNycScrieDrieRentFreezeResult,
+};
+use traderview_expense::rental_oakland_measure_ee_just_cause_omc_8_22::{
+    check as check_rental_oakland_measure_ee_just_cause_omc_8_22,
+    RentalOaklandMeasureEeJustCauseOmc822Input, RentalOaklandMeasureEeJustCauseOmc822Result,
+};
+use traderview_expense::rental_ohio_revised_code_chapter_5321_landlord_tenant_act::{
+    check as check_rental_ohio_revised_code_chapter_5321_landlord_tenant_act,
+    RentalOhioRevisedCodeChapter5321LandlordTenantActInput,
+    RentalOhioRevisedCodeChapter5321LandlordTenantActResult,
+};
+use traderview_expense::rental_oil_tank_replacement_disclosure::{
+    check as check_rental_oil_tank_replacement_disclosure, RentalOilTankReplacementDisclosureInput,
+    RentalOilTankReplacementDisclosureResult,
+};
+use traderview_expense::rental_oregon_residential_landlord_tenant_act_ors_chapter_90::{
+    check as check_rental_oregon_residential_landlord_tenant_act_ors_chapter_90,
+    OrLandlordTenantInput as RentalOregonResidentialLandlordTenantActOrsChapter90Input,
+    OrLandlordTenantResult as RentalOregonResidentialLandlordTenantActOrsChapter90Result,
+};
+use traderview_expense::rental_oregon_sb_608_sb_611_rent_stabilization::{
+    check as check_rental_oregon_sb_608_sb_611_rent_stabilization,
+    RentalOregonSb608Sb611RentStabilizationInput, RentalOregonSb608Sb611RentStabilizationResult,
+};
+use traderview_expense::rental_organic_waste_collection_disclosure::{
+    check as check_rental_organic_waste_collection_disclosure,
+    RentalOrganicWasteCollectionDisclosureInput, RentalOrganicWasteCollectionDisclosureResult,
+};
+use traderview_expense::rental_pellet_stove_disclosure::{
+    check as check_rental_pellet_stove_disclosure, RentalPelletStoveDisclosureInput,
+    RentalPelletStoveDisclosureResult,
+};
+use traderview_expense::rental_pennsylvania_landlord_tenant_act_1951_68_ps_250_101::{
+    check as check_rental_pennsylvania_landlord_tenant_act_1951_68_ps_250_101,
+    RentalPennsylvaniaLandlordTenantAct1951_68Ps250_101Input,
+    RentalPennsylvaniaLandlordTenantAct1951_68Ps250_101Result,
+};
+use traderview_expense::rental_pesticide_application_notification::{
+    check as check_rental_pesticide_application_notification,
+    RentalPesticideApplicationNotificationInput, RentalPesticideApplicationNotificationResult,
+};
+use traderview_expense::rental_pet_breed_restriction_disclosure::{
+    check as check_rental_pet_breed_restriction_disclosure,
+    RentalPetBreedRestrictionDisclosureInput, RentalPetBreedRestrictionDisclosureResult,
+};
+use traderview_expense::rental_pet_deposit_separate_security::{
+    check as check_rental_pet_deposit_separate_security, RentalPetDepositSeparateSecurityInput,
+    RentalPetDepositSeparateSecurityResult,
+};
+use traderview_expense::rental_positive_rent_payment_credit_reporting::{
+    check as check_rental_positive_rent_payment_credit_reporting,
+    RentalPositiveRentPaymentCreditReportingInput, RentalPositiveRentPaymentCreditReportingResult,
+};
+use traderview_expense::rental_post_construction_lead_dust_clearance::{
+    check as check_rental_post_construction_lead_dust_clearance,
+    RentalPostConstructionLeadDustClearanceInput, RentalPostConstructionLeadDustClearanceResult,
+};
+use traderview_expense::rental_pre_foreclosure_tenant_notification::{
+    check as check_rental_pre_foreclosure_tenant_notification,
+    RentalPreForeclosureTenantNotificationInput, RentalPreForeclosureTenantNotificationResult,
+};
+use traderview_expense::rental_propane_tank_lease_disclosure::{
+    check as check_rental_propane_tank_lease_disclosure, RentalPropaneTankLeaseDisclosureInput,
+    RentalPropaneTankLeaseDisclosureResult,
+};
+use traderview_expense::rental_property_registration::{
+    check as check_rental_property_registration, RentalPropertyRegistrationInput,
+    RentalPropertyRegistrationResult,
+};
+use traderview_expense::rental_property_tax_pass_through_disclosure::{
+    check as check_rental_property_tax_pass_through_disclosure,
+    RentalPropertyTaxPassThroughDisclosureInput, RentalPropertyTaxPassThroughDisclosureResult,
+};
+use traderview_expense::rental_radiator_steam_heat_safety::{
+    check as check_rental_radiator_steam_heat_safety, RentalRadiatorSteamHeatSafetyInput,
+    RentalRadiatorSteamHeatSafetyResult,
+};
+use traderview_expense::rental_radon_mitigation_disclosure::{
+    check as check_rental_radon_mitigation_disclosure, RentalRadonMitigationDisclosureInput,
+    RentalRadonMitigationDisclosureResult,
+};
+use traderview_expense::rental_rent_control_stabilization::{
+    check as check_rental_rent_control_stabilization, RentalRentControlStabilizationInput,
+    RentalRentControlStabilizationResult,
+};
+use traderview_expense::rental_rent_increase_notice_requirement::{
+    check as check_rental_rent_increase_notice_requirement,
+    RentalRentIncreaseNoticeRequirementInput, RentalRentIncreaseNoticeRequirementResult,
+};
+use traderview_expense::rental_rent_to_own_lease_purchase_disclosures::{
+    check as check_rental_rent_to_own_lease_purchase_disclosures,
+    RentalRentToOwnLeasePurchaseDisclosuresInput, RentalRentToOwnLeasePurchaseDisclosuresResult,
+};
+use traderview_expense::rental_renters_insurance_requirement::{
+    check as check_rental_renters_insurance_requirement, RentalRentersInsuranceRequirementInput,
+    RentalRentersInsuranceRequirementResult,
+};
+use traderview_expense::rental_retaliation_prohibition::{
+    check as check_rental_retaliation_prohibition, RentalRetaliationProhibitionInput,
+    RentalRetaliationProhibitionResult,
+};
+use traderview_expense::rental_san_francisco_rent_ordinance_chapter_37::{
+    check as check_rental_san_francisco_rent_ordinance_chapter_37,
+    RentalSanFranciscoRentOrdinanceChapter37Input, RentalSanFranciscoRentOrdinanceChapter37Result,
+};
+use traderview_expense::rental_satellite_dish_installation_right::{
+    check as check_rental_satellite_dish_installation_right,
+    RentalSatelliteDishInstallationRightInput, RentalSatelliteDishInstallationRightResult,
+};
+use traderview_expense::rental_seattle_smc_22_206_160_just_cause_eviction::{
+    check as check_rental_seattle_smc_22_206_160_just_cause_eviction,
+    RentalSeattleSmc22206160JustCauseEvictionInput,
+    RentalSeattleSmc22206160JustCauseEvictionResult,
+};
+use traderview_expense::rental_security_deposit_interest::{
+    check as check_rental_security_deposit_interest,
+    SecurityDepositInterestInput as RentalSecurityDepositInterestInput,
+    SecurityDepositInterestResult as RentalSecurityDepositInterestResult,
+};
+use traderview_expense::rental_security_deposit_return_notice::{
+    check as check_rental_security_deposit_return_notice, RentalSecurityDepositReturnNoticeInput,
+    RentalSecurityDepositReturnNoticeResult,
+};
+use traderview_expense::rental_septic_system_disclosure::{
+    check as check_rental_septic_system_disclosure, RentalSepticSystemDisclosureInput,
+    RentalSepticSystemDisclosureResult,
+};
+use traderview_expense::rental_sewer_lateral_responsibility::{
+    check as check_rental_sewer_lateral_responsibility, RentalSewerLateralResponsibilityInput,
+    RentalSewerLateralResponsibilityResult,
+};
+use traderview_expense::rental_sex_offender_registry_notice::{
+    check as check_rental_sex_offender_registry_notice, RentalSexOffenderRegistryNoticeInput,
+    RentalSexOffenderRegistryNoticeResult,
+};
+use traderview_expense::rental_short_term_subletting_airbnb_restriction::{
+    check as check_rental_short_term_subletting_airbnb_restriction,
+    RentalShortTermSublettingAirbnbRestrictionInput,
+    RentalShortTermSublettingAirbnbRestrictionResult,
+};
+use traderview_expense::rental_sinkhole_disclosure::{
+    check as check_rental_sinkhole_disclosure, RentalSinkholeDisclosureInput,
+    RentalSinkholeDisclosureResult,
+};
+use traderview_expense::rental_smoke_free_cannabis_restriction::{
+    check as check_rental_smoke_free_cannabis_restriction, RentalSmokeFreeCannabisRestrictionInput,
+    RentalSmokeFreeCannabisRestrictionResult,
+};
+use traderview_expense::rental_smoke_free_housing_disclosure::{
+    check as check_rental_smoke_free_housing_disclosure, RentalSmokeFreeHousingDisclosureInput,
+    RentalSmokeFreeHousingDisclosureResult,
+};
+use traderview_expense::rental_soft_story_seismic_retrofit::{
+    check as check_rental_soft_story_seismic_retrofit,
+    SoftStorySeismicRetrofitInput as RentalSoftStorySeismicRetrofitInput,
+    SoftStorySeismicRetrofitResult as RentalSoftStorySeismicRetrofitResult,
+};
+use traderview_expense::rental_solar_panel_disclosure::{
+    check as check_rental_solar_panel_disclosure, RentalSolarPanelDisclosureInput,
+    RentalSolarPanelDisclosureResult,
+};
+use traderview_expense::rental_source_of_income_discrimination::{
+    check as check_rental_source_of_income_discrimination, RentalSourceOfIncomeDiscriminationInput,
+    RentalSourceOfIncomeDiscriminationResult,
+};
+use traderview_expense::rental_south_carolina_residential_landlord_tenant_act_sc_code_27_40::{
+    check as check_rental_south_carolina_residential_landlord_tenant_act_sc_code_27_40,
+    ScLandlordTenantInput as RentalSouthCarolinaResidentialLandlordTenantActScCode2740Input,
+    ScLandlordTenantResult as RentalSouthCarolinaResidentialLandlordTenantActScCode2740Result,
+};
+use traderview_expense::rental_storage_unit_lease_disclosure::{
+    check as check_rental_storage_unit_lease_disclosure, RentalStorageUnitLeaseDisclosureInput,
+    RentalStorageUnitLeaseDisclosureResult,
+};
+use traderview_expense::rental_swimming_pool_drain_safety::{
+    check as check_rental_swimming_pool_drain_safety, RentalSwimmingPoolDrainSafetyInput,
+    RentalSwimmingPoolDrainSafetyResult,
+};
+use traderview_expense::rental_tenant_abandoned_personal_property::{
+    check as check_rental_tenant_abandoned_personal_property,
+    RentalTenantAbandonedPersonalPropertyInput, RentalTenantAbandonedPersonalPropertyResult,
+};
+use traderview_expense::rental_tenant_bill_of_rights_handout::{
+    check as check_rental_tenant_bill_of_rights_handout, RentalTenantBillOfRightsHandoutInput,
+    RentalTenantBillOfRightsHandoutResult,
+};
+use traderview_expense::rental_tenant_criminal_background_screening::{
+    check as check_rental_tenant_criminal_background_screening,
+    RentalTenantCriminalBackgroundScreeningInput, RentalTenantCriminalBackgroundScreeningResult,
+};
+use traderview_expense::rental_tenant_data_privacy_compliance::{
+    check as check_rental_tenant_data_privacy_compliance, RentalTenantDataPrivacyComplianceInput,
+    RentalTenantDataPrivacyComplianceResult,
+};
+use traderview_expense::rental_tenant_estoppel_certificate::{
+    check as check_rental_tenant_estoppel_certificate, RentalTenantEstoppelCertificateInput,
+    RentalTenantEstoppelCertificateResult,
+};
+use traderview_expense::rental_tenant_relocation_assistance::{
+    check as check_rental_tenant_relocation_assistance, RentalTenantRelocationAssistanceInput,
+    RentalTenantRelocationAssistanceResult,
 };
 use traderview_expense::rental_tenant_rent_escrow_habitability_dispute::{
     check as check_rental_tenant_rent_escrow_habitability_dispute,
@@ -1216,263 +1097,185 @@ use traderview_expense::rental_tenant_rent_escrow_habitability_dispute::{
 };
 use traderview_expense::rental_tenant_right_to_counsel_eviction::{
     check as check_rental_tenant_right_to_counsel_eviction,
-    RentalTenantRightToCounselEvictionInput,
-    RentalTenantRightToCounselEvictionResult,
+    RentalTenantRightToCounselEvictionInput, RentalTenantRightToCounselEvictionResult,
 };
-use traderview_expense::rental_ada_accessible_parking_compliance::{
-    check as check_rental_ada_accessible_parking_compliance,
-    RentalAdaAccessibleParkingComplianceInput,
-    RentalAdaAccessibleParkingComplianceResult,
+use traderview_expense::rental_tennessee_urlta_tca_66_28_101::{
+    check as check_rental_tennessee_urlta_tca_66_28_101, RentalTennesseeUrltaTca66_28_101Input,
+    RentalTennesseeUrltaTca66_28_101Result,
 };
-use traderview_expense::rental_smoke_free_cannabis_restriction::{
-    check as check_rental_smoke_free_cannabis_restriction,
-    RentalSmokeFreeCannabisRestrictionInput,
-    RentalSmokeFreeCannabisRestrictionResult,
+use traderview_expense::rental_texas_hb_2127_state_preemption::{
+    check as check_rental_texas_hb_2127_state_preemption, RentalTexasHb2127StatePreemptionInput,
+    RentalTexasHb2127StatePreemptionResult,
 };
-use traderview_expense::rental_rent_to_own_lease_purchase_disclosures::{
-    check as check_rental_rent_to_own_lease_purchase_disclosures,
-    RentalRentToOwnLeasePurchaseDisclosuresInput,
-    RentalRentToOwnLeasePurchaseDisclosuresResult,
+use traderview_expense::rental_texas_property_code_chapter_92_residential_tenancies::{
+    check as check_rental_texas_property_code_chapter_92_residential_tenancies,
+    RentalTexasPropertyCodeChapter92ResidentialTenanciesInput,
+    RentalTexasPropertyCodeChapter92ResidentialTenanciesResult,
 };
-use traderview_expense::rental_rent_increase_notice_requirement::{
-    check as check_rental_rent_increase_notice_requirement,
-    RentalRentIncreaseNoticeRequirementInput,
-    RentalRentIncreaseNoticeRequirementResult,
+use traderview_expense::rental_tree_removal_dangerous_tree_disclosure::{
+    check as check_rental_tree_removal_dangerous_tree_disclosure,
+    RentalTreeRemovalDangerousTreeDisclosureInput, RentalTreeRemovalDangerousTreeDisclosureResult,
 };
-use traderview_expense::rental_rent_control_stabilization::{
-    check as check_rental_rent_control_stabilization,
-    RentalRentControlStabilizationInput,
-    RentalRentControlStabilizationResult,
+use traderview_expense::rental_underground_storage_tank_disclosure::{
+    check as check_rental_underground_storage_tank_disclosure,
+    RentalUndergroundStorageTankDisclosureInput, RentalUndergroundStorageTankDisclosureResult,
 };
-use traderview_expense::rental_tenant_relocation_assistance::{
-    check as check_rental_tenant_relocation_assistance,
-    RentalTenantRelocationAssistanceInput,
-    RentalTenantRelocationAssistanceResult,
+use traderview_expense::rental_unpermitted_unit_disclosure::{
+    check as check_rental_unpermitted_unit_disclosure, RentalUnpermittedUnitDisclosureInput,
+    RentalUnpermittedUnitDisclosureResult,
 };
-use traderview_expense::rental_tenant_estoppel_certificate::{
-    check as check_rental_tenant_estoppel_certificate,
-    RentalTenantEstoppelCertificateInput,
-    RentalTenantEstoppelCertificateResult,
+use traderview_expense::rental_vacant_property_registration::{
+    check as check_rental_vacant_property_registration, RentalVacantPropertyRegistrationInput,
+    RentalVacantPropertyRegistrationResult,
 };
-use traderview_expense::rental_tenant_data_privacy_compliance::{
-    check as check_rental_tenant_data_privacy_compliance,
-    RentalTenantDataPrivacyComplianceInput,
-    RentalTenantDataPrivacyComplianceResult,
+use traderview_expense::rental_vawa_2022_federal_housing_protections::{
+    check as check_rental_vawa_2022_federal_housing_protections,
+    RentalVawa2022FederalHousingProtectionsInput, RentalVawa2022FederalHousingProtectionsResult,
 };
-use traderview_expense::rental_ev_charging_accommodation::{
-    check as check_rental_ev_charging_accommodation,
-    RentalEvChargingAccommodationInput,
-    RentalEvChargingAccommodationResult,
+use traderview_expense::rental_vehicle_towing_notice_sign_requirements::{
+    check as check_rental_vehicle_towing_notice_sign_requirements,
+    RentalVehicleTowingNoticeSignRequirementsInput,
+    RentalVehicleTowingNoticeSignRequirementsResult,
 };
-use traderview_expense::rental_waste_recycling_collection_mandate::{
-    check as check_rental_waste_recycling_collection_mandate,
-    RentalWasteRecyclingCollectionMandateInput,
-    RentalWasteRecyclingCollectionMandateResult,
+use traderview_expense::rental_video_surveillance_retention::{
+    check as check_rental_video_surveillance_retention, RentalVideoSurveillanceRetentionInput,
+    RentalVideoSurveillanceRetentionResult,
+};
+use traderview_expense::rental_virginia_vrlta_va_code_55_1_1200::{
+    check as check_rental_virginia_vrlta_va_code_55_1_1200,
+    RentalVirginiaVrltaVaCode55_1_1200Input, RentalVirginiaVrltaVaCode55_1_1200Result,
 };
 use traderview_expense::rental_washington_hb_1217_rent_stabilization::{
     check as check_rental_washington_hb_1217_rent_stabilization,
-    RentalWashingtonHb1217RentStabilizationInput,
-    RentalWashingtonHb1217RentStabilizationResult,
+    RentalWashingtonHb1217RentStabilizationInput, RentalWashingtonHb1217RentStabilizationResult,
 };
 use traderview_expense::rental_washington_rlta_rcw_59_18::{
     check as check_rental_washington_rlta_rcw_59_18,
     WaRltaInput as RentalWashingtonRltaRcw5918Input,
     WaRltaResult as RentalWashingtonRltaRcw5918Result,
 };
-use traderview_expense::rental_virginia_vrlta_va_code_55_1_1200::{
-    check as check_rental_virginia_vrlta_va_code_55_1_1200,
-    RentalVirginiaVrltaVaCode55_1_1200Input,
-    RentalVirginiaVrltaVaCode55_1_1200Result,
+use traderview_expense::rental_waste_recycling_collection_mandate::{
+    check as check_rental_waste_recycling_collection_mandate,
+    RentalWasteRecyclingCollectionMandateInput, RentalWasteRecyclingCollectionMandateResult,
 };
-use traderview_expense::rental_domestic_violence_lock_change_lease_termination::{
-    check as check_rental_domestic_violence_lock_change_lease_termination,
-    RentalDomesticViolenceLockChangeLeaseTerminationInput,
-    RentalDomesticViolenceLockChangeLeaseTerminationResult,
+use traderview_expense::rental_water_submetering_disclosure::{
+    check as check_rental_water_submetering_disclosure, RentalWaterSubmeteringDisclosureInput,
+    RentalWaterSubmeteringDisclosureResult,
 };
-use traderview_expense::rental_drone_overflight_surveillance_privacy::{
-    check as check_rental_drone_overflight_surveillance_privacy,
-    RentalDroneOverflightSurveillancePrivacyInput,
-    RentalDroneOverflightSurveillancePrivacyResult,
+use traderview_expense::rental_well_water_disclosure::{
+    check as check_rental_well_water_disclosure, RentalWellWaterDisclosureInput,
+    RentalWellWaterDisclosureResult,
 };
-use traderview_expense::rental_dog_bite_liability::{
-    check as check_rental_dog_bite_liability,
-    RentalDogBiteLiabilityInput,
-    RentalDogBiteLiabilityResult,
+use traderview_expense::rental_window_blind_cord_safety::{
+    check as check_rental_window_blind_cord_safety, RentalWindowBlindCordSafetyInput,
+    RentalWindowBlindCordSafetyResult,
 };
-use traderview_expense::rental_pellet_stove_disclosure::{
-    check as check_rental_pellet_stove_disclosure,
-    RentalPelletStoveDisclosureInput, RentalPelletStoveDisclosureResult,
+use traderview_expense::rental_window_guard_installation::{
+    check as check_rental_window_guard_installation, RentalWindowGuardInstallationInput,
+    RentalWindowGuardInstallationResult,
 };
-use traderview_expense::rental_pennsylvania_landlord_tenant_act_1951_68_ps_250_101::{
-    check as check_rental_pennsylvania_landlord_tenant_act_1951_68_ps_250_101,
-    RentalPennsylvaniaLandlordTenantAct1951_68Ps250_101Input,
-    RentalPennsylvaniaLandlordTenantAct1951_68Ps250_101Result,
+use traderview_expense::rental_wisconsin_chapter_704_atcp_134::{
+    check as check_rental_wisconsin_chapter_704_atcp_134,
+    WiLandlordTenantInput as RentalWisconsinChapter704Atcp134Input,
+    WiLandlordTenantResult as RentalWisconsinChapter704Atcp134Result,
 };
-use traderview_expense::rental_in_unit_laundry_appliance_provision::{
-    check as check_rental_in_unit_laundry_appliance_provision,
-    RentalInUnitLaundryApplianceProvisionInput, RentalInUnitLaundryApplianceProvisionResult,
+use traderview_expense::renters_insurance::{
+    check as check_renters_insurance, RentersInsuranceInput, RentersInsuranceResult,
 };
-use traderview_expense::rental_indiana_landlord_tenant_law_ic_32_31::{
-    check as check_rental_indiana_landlord_tenant_law_ic_32_31,
-    InLandlordTenantInput as RentalIndianaLandlordTenantLawIc3231Input,
-    InLandlordTenantResult as RentalIndianaLandlordTenantLawIc3231Result,
-};
-use traderview_expense::rental_positive_rent_payment_credit_reporting::{
-    check as check_rental_positive_rent_payment_credit_reporting,
-    RentalPositiveRentPaymentCreditReportingInput,
-    RentalPositiveRentPaymentCreditReportingResult,
-};
-use traderview_expense::rental_post_construction_lead_dust_clearance::{
-    check as check_rental_post_construction_lead_dust_clearance,
-    RentalPostConstructionLeadDustClearanceInput, RentalPostConstructionLeadDustClearanceResult,
-};
-use traderview_expense::tenant_voting_address_protection::{
-    check as check_tenant_voting_address_protection,
-    TenantVotingAddressProtectionInput, TenantVotingAddressProtectionResult,
-};
-use traderview_expense::tenant_kitchen_appliance_replacement::{
-    check as check_tenant_kitchen_appliance_replacement,
-    TenantKitchenApplianceReplacementInput, TenantKitchenApplianceReplacementResult,
-};
-use traderview_expense::rental_hoa_disclosure_at_lease::{
-    check as check_rental_hoa_disclosure_at_lease,
-    RentalHoaDisclosureAtLeaseInput, RentalHoaDisclosureAtLeaseResult,
-};
-use traderview_expense::rental_property_registration::{
-    check as check_rental_property_registration, RentalPropertyRegistrationInput,
-    RentalPropertyRegistrationResult,
-};
-use traderview_expense::rental_renters_insurance_requirement::{
-    check as check_rental_renters_insurance_requirement,
-    RentalRentersInsuranceRequirementInput,
-    RentalRentersInsuranceRequirementResult,
-};
-use traderview_expense::rental_radon_mitigation_disclosure::{
-    check as check_rental_radon_mitigation_disclosure,
-    RentalRadonMitigationDisclosureInput, RentalRadonMitigationDisclosureResult,
+use traderview_expense::repair_and_deduct::{
+    check as check_repair_and_deduct, RepairDeductInput, RepairDeductResult,
 };
 use traderview_expense::residential_lease_arbitration_clause::{
     check as check_residential_arbitration, ArbitrationClauseInput, ArbitrationClauseResult,
 };
-use traderview_expense::lease_waiver_enforceability::{
-    check as check_lease_waiver_enforceability,
-    CheckResult as LeaseWaiverEnforceabilityResult,
-    Input as LeaseWaiverEnforceabilityInput,
+use traderview_expense::retaliation_windows::{
+    check as check_retaliation, RetaliationCheckInput, RetaliationCheckResult,
 };
-use traderview_expense::landlord_repair_response_timeframe::{
-    check as check_landlord_repair_response_timeframe, LandlordRepairResponseInput,
-    LandlordRepairResponseResult,
-};
-use traderview_expense::landlord_retaliation_damages::{
-    check as check_landlord_retaliation_damages,
-    CheckResult as LandlordRetaliationDamagesResult,
-    Input as LandlordRetaliationDamagesInput,
-};
-use traderview_expense::landlord_security_device_obligations::{
-    check as check_landlord_security_device_obligations, LandlordSecurityDeviceInput,
-    LandlordSecurityDeviceResult,
-};
-use traderview_expense::landlord_self_help_eviction_prohibition::{
-    check as check_landlord_self_help_eviction_prohibition,
-    SelfHelpEvictionInput as LandlordSelfHelpEvictionInput,
-    SelfHelpEvictionResult as LandlordSelfHelpEvictionResult,
-};
-use traderview_expense::landlord_tenant_recording_consent::{
-    check as check_landlord_tenant_recording_consent, RecordingConsentInput,
-    RecordingConsentResult,
-};
-use traderview_expense::last_month_rent_offset::{
-    check as check_last_month_rent_offset,
-    CheckResult as LastMonthRentOffsetResult,
-    Input as LastMonthRentOffsetInput,
-};
-use traderview_expense::emotional_support_animal_documentation::{
-    check as check_esa_documentation,
-    CheckResult as EsaDocumentationResult,
-    Input as EsaDocumentationInput,
-};
-use traderview_expense::lease_nondisparagement_prohibition::{
-    check as check_lease_nondisparagement_prohibition,
-    CheckResult as LeaseNondisparagementResult,
-    Input as LeaseNondisparagementInput,
-};
-use traderview_expense::tenant_noise_nuisance_enforcement::{
-    check as check_tenant_noise_nuisance_enforcement,
-    TenantNoiseNuisanceEnforcementInput, TenantNoiseNuisanceEnforcementResult,
-};
-use traderview_expense::tenant_organizing::{
-    check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
-};
-use traderview_expense::tenant_positive_rent_reporting::{
-    check as check_tenant_positive_rent_reporting,
-    TenantPositiveRentReportingInput, TenantPositiveRentReportingResult,
-};
-use traderview_expense::tenant_rights_statement_disclosure::{
-    check as check_tenant_rights_statement_disclosure, TenantRightsStatementInput,
-    TenantRightsStatementResult,
-};
-use traderview_expense::tenant_smart_lock_biometric_consent::{
-    check as check_tenant_smart_lock_biometric_consent, TenantSmartLockBiometricInput,
-    TenantSmartLockBiometricResult,
-};
-use traderview_expense::tenant_smart_thermostat_install_right::{
-    check as check_tenant_smart_thermostat_install_right,
-    TenantSmartThermostatInstallRightInput, TenantSmartThermostatInstallRightResult,
-};
-use traderview_expense::tenant_utility_account_designation::{
-    check as check_tenant_utility_account_designation, TenantUtilityAccountInput,
-    TenantUtilityAccountResult,
-};
-use traderview_expense::tenant_window_air_conditioner_install_right::{
-    check as check_tenant_window_air_conditioner_install_right,
-    TenantWindowAirConditionerInstallRightInput,
-    TenantWindowAirConditionerInstallRightResult,
-};
-use traderview_expense::plain_language_lease::{
-    check as check_plain_language, PlainLanguageInput, PlainLanguageResult,
-};
-use traderview_expense::roommate_authorization::{
-    check as check_roommate_authorization, RoommateAuthorizationInput, RoommateAuthorizationResult,
-};
-use traderview_expense::ev_charger_installation::{
-    check as check_ev_charger, EvChargerInput, EvChargerResult,
-};
-use traderview_expense::advance_rent_limit::{
-    check as check_advance_rent, AdvanceRentInput, AdvanceRentResult,
-};
-use traderview_expense::fire_sprinkler_disclosure::{
-    check as check_fire_sprinkler, FireSprinklerDisclosureInput, FireSprinklerDisclosureResult,
-};
-use traderview_expense::bedbug_extermination_cost::{
-    check as check_bedbug_extermination, BedbugExterminationInput, BedbugExterminationResult,
-};
-use traderview_expense::crime_victim_termination::{
-    check as check_crime_victim_termination,
-    CrimeVictimTerminationInput, CrimeVictimTerminationResult,
-};
-use traderview_expense::lease_succession::{
-    check as check_lease_succession, LeaseSuccessionInput, LeaseSuccessionResult,
-};
-use traderview_expense::rent_credit_reporting::{
-    check as check_rent_credit_reporting, RentCreditReportingInput, RentCreditReportingResult,
-};
-use traderview_expense::rent_escrow::{
-    check as check_rent_escrow, RentEscrowInput, RentEscrowResult,
+use traderview_expense::right_to_counsel_eviction::{
+    check as check_right_to_counsel_eviction, RightToCounselInput, RightToCounselResult,
 };
 use traderview_expense::right_to_dry::{
     check as check_right_to_dry, RightToDryInput, RightToDryResult,
 };
-use traderview_expense::sublet_consent::{
-    check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
+use traderview_expense::roommate_authorization::{
+    check as check_roommate_authorization, RoommateAuthorizationInput, RoommateAuthorizationResult,
 };
-use traderview_expense::swimming_pool_safety::{
-    check as check_swimming_pool_safety, SwimmingPoolSafetyInput, SwimmingPoolSafetyResult,
+use traderview_expense::rubs_utility_billing_disclosure::{
+    check as check_rubs_utility_billing_disclosure, RubsUtilityBillingInput,
+    RubsUtilityBillingResult,
+};
+use traderview_expense::schedule_e::{
+    roll_property, roll_report, ExpenseRow, IncomeKind as SeIncomeKind, IncomeRow, MileageRow,
+    PropertyInput, PropertyType as SePropertyType, ScheduleECategory, ScheduleEReport,
+};
+use traderview_expense::section_280a::{
+    compute as compute_section_280a, Section280AInput, Section280AResult,
+};
+use traderview_expense::section_280a_d2::{
+    compute as compute_section_280a_d2, OccupancyPeriod, Section280AD2Report,
+};
+use traderview_expense::section_469::{
+    compute as compute_section_469, Section469Input, Section469Result,
+};
+use traderview_expense::security_camera_disclosure::{
+    check as check_security_camera_disclosure, SecurityCameraInput, SecurityCameraResult,
+};
+use traderview_expense::security_deposit_bank_disclosure::{
+    check as check_security_deposit_bank_disclosure,
+    CheckResult as SecurityDepositBankDisclosureResult,
+    Input as SecurityDepositBankDisclosureInput,
+};
+use traderview_expense::security_deposit_caps::{
+    check as check_security_deposit_cap, SecurityDepositCheckInput, SecurityDepositCheckResult,
+};
+use traderview_expense::security_deposit_interest_statement::{
+    check as check_security_deposit_interest_statement, DepositInterestStatementInput,
+    DepositInterestStatementResult,
 };
 use traderview_expense::senior_disabled_protection::{
     check as check_senior_disabled, SeniorDisabledCheckInput, SeniorDisabledCheckResult,
 };
 use traderview_expense::service_animal::{
     check as check_service_animal, ServiceAnimalCheckInput, ServiceAnimalCheckResult,
+};
+use traderview_expense::sex_offender_database_notice::{
+    check as check_sex_offender_database_notice, CheckResult as SexOffenderNoticeResult,
+    Input as SexOffenderNoticeInput,
+};
+use traderview_expense::short_term_rental_conversion::{
+    check as check_short_term_rental_conversion, ShortTermRentalConversionInput,
+    ShortTermRentalConversionResult,
+};
+use traderview_expense::smoke_free_housing::{
+    check as check_smoke_free, SmokeFreeInput, SmokeFreeResult,
+};
+use traderview_expense::snow_removal_responsibility::{
+    check as check_snow_removal_responsibility, SnowRemovalInput, SnowRemovalResult,
+};
+use traderview_expense::soft_story_seismic_retrofit::{
+    check as check_soft_story_seismic_retrofit, SoftStorySeismicRetrofitInput,
+    SoftStorySeismicRetrofitResult,
+};
+use traderview_expense::soi_protection::{
+    check as check_soi_protection, SoiCheckInput, SoiCheckResult,
+};
+use traderview_expense::source_of_income_discrimination::{
+    check as check_source_of_income_discrimination, SourceOfIncomeInput, SourceOfIncomeResult,
+};
+use traderview_expense::squatter_unauthorized_occupant_removal::{
+    check as check_squatter_removal, SquatterRemovalInput, SquatterRemovalResult,
+};
+use traderview_expense::str_regulation::{
+    check as check_str_regulation, StrComplianceInput, StrComplianceResult,
+};
+use traderview_expense::sublet_consent::{
+    check as check_sublet_consent, SubletConsentInput, SubletConsentResult,
+};
+use traderview_expense::submetering_rules::{
+    check as check_submetering, SubmeteringInput, SubmeteringResult,
+};
+use traderview_expense::swimming_pool_safety::{
+    check as check_swimming_pool_safety, SwimmingPoolSafetyInput, SwimmingPoolSafetyResult,
 };
 use traderview_expense::tenant_abandonment::{
     check as check_tenant_abandonment, TenantAbandonmentInput, TenantAbandonmentResult,
@@ -1486,30 +1289,139 @@ use traderview_expense::tenant_assistance_animal_accommodation::{
     AssistanceAnimalAccommodationInput as TenantAssistanceAnimalAccommodationInput,
     AssistanceAnimalAccommodationResult as TenantAssistanceAnimalAccommodationResult,
 };
-use traderview_expense::lockout_penalties::{
-    check as check_lockout_penalty, LockoutPenaltyInput, LockoutPenaltyResult,
+use traderview_expense::tenant_cannabis_use_protection::{
+    check as check_tenant_cannabis_use_protection, CannabisProtectionInput,
+    CannabisProtectionResult,
 };
-use traderview_expense::retaliation_windows::{
-    check as check_retaliation, RetaliationCheckInput, RetaliationCheckResult,
+use traderview_expense::tenant_clothesline_drying_right::{
+    check as check_tenant_clothesline_drying_right, TenantClotheslineDryingRightInput,
+    TenantClotheslineDryingRightResult,
 };
-use traderview_expense::eviction_notices::{
-    check as check_eviction_notice, NoticeCheckInput, NoticeCheckResult,
+use traderview_expense::tenant_data_privacy::{
+    check as check_tenant_privacy, PrivacyInput, PrivacyResult,
 };
-use traderview_expense::late_fee_caps::{
-    check as check_late_fee, LateFeeCheckInput, LateFeeCheckResult,
+use traderview_expense::tenant_death_termination::{
+    check as check_tenant_death, TenantDeathInput, TenantDeathResult,
 };
-use traderview_expense::section_280a::{
-    compute as compute_section_280a, Section280AInput, Section280AResult,
+use traderview_expense::tenant_domestic_violence_lease_termination::{
+    check as check_tenant_domestic_violence_lease_termination,
+    TenantDomesticViolenceLeaseTerminationInput, TenantDomesticViolenceLeaseTerminationResult,
 };
-use traderview_expense::section_280a_d2::{
-    compute as compute_section_280a_d2, OccupancyPeriod, Section280AD2Report,
+use traderview_expense::tenant_emotional_distress_damages::{
+    check as check_tenant_emotional_distress_damages, TenantEmotionalDistressDamagesInput,
+    TenantEmotionalDistressDamagesResult,
 };
-use traderview_expense::section_469::{
-    compute as compute_section_469, Section469Input, Section469Result,
+use traderview_expense::tenant_estoppel_certificate::{
+    check as check_tenant_estoppel_certificate, TenantEstoppelCertificateInput,
+    TenantEstoppelCertificateResult,
 };
-use traderview_expense::schedule_e::{
-    roll_property, roll_report, ExpenseRow, IncomeKind as SeIncomeKind, IncomeRow, MileageRow,
-    PropertyInput, PropertyType as SePropertyType, ScheduleECategory, ScheduleEReport,
+use traderview_expense::tenant_ev_charging_installation_right::{
+    check as check_tenant_ev_charging_installation_right, TenantEvChargingInstallationRightInput,
+    TenantEvChargingInstallationRightResult,
+};
+use traderview_expense::tenant_fire_safety_plan_disclosure::{
+    check as check_tenant_fire_safety_plan_disclosure, TenantFireSafetyPlanDisclosureInput,
+    TenantFireSafetyPlanDisclosureResult,
+};
+use traderview_expense::tenant_holdover_security_deposit_setoff::{
+    check as check_tenant_holdover_security_deposit_setoff,
+    TenantHoldoverSecurityDepositSetoffInput, TenantHoldoverSecurityDepositSetoffResult,
+};
+use traderview_expense::tenant_in_foreclosure_protection::{
+    check as check_tenant_foreclosure_protection, CheckResult as TenantForeclosureResult,
+    Input as TenantForeclosureInput,
+};
+use traderview_expense::tenant_in_unit_appliance_repair_responsibility::{
+    check as check_tenant_in_unit_appliance_repair_responsibility,
+    TenantInUnitApplianceRepairResponsibilityInput,
+    TenantInUnitApplianceRepairResponsibilityResult,
+};
+use traderview_expense::tenant_kitchen_appliance_replacement::{
+    check as check_tenant_kitchen_appliance_replacement, TenantKitchenApplianceReplacementInput,
+    TenantKitchenApplianceReplacementResult,
+};
+use traderview_expense::tenant_late_fee_cap::{
+    check as check_tenant_late_fee_cap, TenantLateFeeCapInput, TenantLateFeeCapResult,
+};
+use traderview_expense::tenant_lease_guarantor_disclosure::{
+    check as check_tenant_lease_guarantor_disclosure, TenantLeaseGuarantorDisclosureInput,
+    TenantLeaseGuarantorDisclosureResult,
+};
+use traderview_expense::tenant_noise_nuisance_enforcement::{
+    check as check_tenant_noise_nuisance_enforcement, TenantNoiseNuisanceEnforcementInput,
+    TenantNoiseNuisanceEnforcementResult,
+};
+use traderview_expense::tenant_organizing::{
+    check as check_tenant_organizing, TenantOrganizingInput, TenantOrganizingResult,
+};
+use traderview_expense::tenant_positive_rent_reporting::{
+    check as check_tenant_positive_rent_reporting, TenantPositiveRentReportingInput,
+    TenantPositiveRentReportingResult,
+};
+use traderview_expense::tenant_relocation_assistance::{
+    compute as compute_tenant_relocation_assistance, RelocationInput as TenantRelocationInput,
+    RelocationResult as TenantRelocationResult,
+};
+use traderview_expense::tenant_rent_escrow_withholding::{
+    check as check_tenant_rent_escrow_withholding, TenantRentEscrowWithholdingInput,
+    TenantRentEscrowWithholdingResult,
+};
+use traderview_expense::tenant_rent_judgment_wage_garnishment::{
+    compute as compute_wage_garnishment, GarnishmentInput, GarnishmentResult,
+};
+use traderview_expense::tenant_rent_receipt_requirement::{
+    check as check_tenant_rent_receipt_requirement, TenantRentReceiptRequirementInput,
+    TenantRentReceiptRequirementResult,
+};
+use traderview_expense::tenant_rights_statement_disclosure::{
+    check as check_tenant_rights_statement_disclosure, TenantRightsStatementInput,
+    TenantRightsStatementResult,
+};
+use traderview_expense::tenant_smart_lock_biometric_consent::{
+    check as check_tenant_smart_lock_biometric_consent, TenantSmartLockBiometricInput,
+    TenantSmartLockBiometricResult,
+};
+use traderview_expense::tenant_smart_thermostat_install_right::{
+    check as check_tenant_smart_thermostat_install_right, TenantSmartThermostatInstallRightInput,
+    TenantSmartThermostatInstallRightResult,
+};
+use traderview_expense::tenant_solar_installation::{
+    check as check_tenant_solar_installation, CheckResult as TenantSolarResult,
+    Input as TenantSolarInput,
+};
+use traderview_expense::tenant_topa::{check as check_tenant_topa, TopaInput, TopaResult};
+use traderview_expense::tenant_utility_account_designation::{
+    check as check_tenant_utility_account_designation, TenantUtilityAccountInput,
+    TenantUtilityAccountResult,
+};
+use traderview_expense::tenant_voting_address_protection::{
+    check as check_tenant_voting_address_protection, TenantVotingAddressProtectionInput,
+    TenantVotingAddressProtectionResult,
+};
+use traderview_expense::tenant_window_air_conditioner_install_right::{
+    check as check_tenant_window_air_conditioner_install_right,
+    TenantWindowAirConditionerInstallRightInput, TenantWindowAirConditionerInstallRightResult,
+};
+use traderview_expense::utility_shutoff::{
+    check as check_utility_shutoff, ShutoffInput, ShutoffResult,
+};
+use traderview_expense::vehicle_towing_from_rental_property::{
+    check as check_vehicle_towing, TowingInput as VehicleTowingInput,
+    TowingResult as VehicleTowingResult,
+};
+use traderview_expense::water_heater_earthquake_strap::{
+    check as check_water_heater_earthquake_strap, WaterHeaterEarthquakeStrapInput,
+    WaterHeaterEarthquakeStrapResult,
+};
+use traderview_expense::window_guard_requirements::{
+    check as check_window_guard_requirements, WindowGuardInput, WindowGuardResult,
+};
+use traderview_expense::winter_eviction_protections::{
+    check as check_winter_eviction_protections, WinterEvictionInput, WinterEvictionResult,
+};
+use traderview_expense::written_lease_requirement::{
+    check as check_written_lease_requirement, CheckResult as WrittenLeaseResult,
+    Input as WrittenLeaseInput,
 };
 use uuid::Uuid;
 
@@ -1517,23 +1429,23 @@ use uuid::Uuid;
 // Aliased here so the SELECT bindings stay readable and clippy stops
 // flagging `type_complexity`.
 type PropertyRollupRow = (
-    Uuid,           // id
-    String,         // property_type
-    i32,            // fair_rental_days
-    i32,            // personal_use_days
-    Option<Decimal>, // purchase_price
-    Option<Decimal>, // land_value
+    Uuid,              // id
+    String,            // property_type
+    i32,               // fair_rental_days
+    i32,               // personal_use_days
+    Option<Decimal>,   // purchase_price
+    Option<Decimal>,   // land_value
     Option<NaiveDate>, // placed_in_service_at
-    Decimal,        // recovery_period_years
+    Decimal,           // recovery_period_years
 );
 type LeaseRentRollRow = (
-    Uuid,           // lease id
-    String,         // tenant display_name
-    String,         // unit_label
-    Decimal,        // rent_amount
-    i32,            // rent_due_day
-    i32,            // grace_days
-    NaiveDate,      // starts_on
+    Uuid,              // lease id
+    String,            // tenant display_name
+    String,            // unit_label
+    Decimal,           // rent_amount
+    i32,               // rent_due_day
+    i32,               // grace_days
+    NaiveDate,         // starts_on
     Option<NaiveDate>, // ends_on
 );
 
@@ -1541,27 +1453,51 @@ pub fn router() -> Router<AppState> {
     Router::new()
         // properties
         .route("/properties", get(list_properties).post(create_property))
-        .route("/properties/:id", patch(update_property).delete(delete_property))
+        .route(
+            "/properties/:id",
+            patch(update_property).delete(delete_property),
+        )
         // tenants
         .route("/tenants", get(list_tenants).post(create_tenant))
         .route("/tenants/:id", patch(update_tenant).delete(delete_tenant))
         // leases
-        .route("/properties/:property_id/leases", get(list_leases).post(create_lease))
+        .route(
+            "/properties/:property_id/leases",
+            get(list_leases).post(create_lease),
+        )
         .route("/leases/:id", patch(update_lease).delete(delete_lease))
         // income
-        .route("/properties/:property_id/income", get(list_income).post(create_income))
+        .route(
+            "/properties/:property_id/income",
+            get(list_income).post(create_income),
+        )
         .route("/income/:id", delete(delete_income))
         // expenses
-        .route("/properties/:property_id/expenses", get(list_expenses).post(create_expense))
+        .route(
+            "/properties/:property_id/expenses",
+            get(list_expenses).post(create_expense),
+        )
         .route("/expenses/:id", delete(delete_expense))
         // mileage
-        .route("/properties/:property_id/mileage", get(list_mileage).post(create_mileage))
+        .route(
+            "/properties/:property_id/mileage",
+            get(list_mileage).post(create_mileage),
+        )
         .route("/mileage/:id", delete(delete_mileage))
         // maintenance
-        .route("/properties/:property_id/maintenance", get(list_maintenance).post(create_maintenance))
-        .route("/maintenance/:id", patch(update_maintenance).delete(delete_maintenance_row))
+        .route(
+            "/properties/:property_id/maintenance",
+            get(list_maintenance).post(create_maintenance),
+        )
+        .route(
+            "/maintenance/:id",
+            patch(update_maintenance).delete(delete_maintenance_row),
+        )
         // services log (QBI 250-hour tracker)
-        .route("/properties/:property_id/services", get(list_services).post(create_service))
+        .route(
+            "/properties/:property_id/services",
+            get(list_services).post(create_service),
+        )
         .route("/services/:id", delete(delete_service))
         // categories
         .route("/categories", get(list_schedule_e_categories))
@@ -1569,387 +1505,1462 @@ pub fn router() -> Router<AppState> {
         .route("/report/schedule_e", get(schedule_e_report))
         .route("/properties/:property_id/qbi-hours", get(qbi_hours_report))
         .route("/properties/:property_id/rent-roll", get(rent_roll))
-        .route("/properties/:property_id/depreciation", get(property_depreciation))
+        .route(
+            "/properties/:property_id/depreciation",
+            get(property_depreciation),
+        )
         // state-specific security deposit interest accrual
-        .route("/deposit-interest", axum::routing::post(deposit_interest_accrue))
+        .route(
+            "/deposit-interest",
+            axum::routing::post(deposit_interest_accrue),
+        )
         // §469 passive activity loss limitation calculator
         .route("/section-469", axum::routing::post(section_469_compute))
         // disposition: §1250 unrecaptured + §1231 LTCG + §1031 deferral
-        .route("/properties/:property_id/dispose",
-            axum::routing::post(property_disposition))
+        .route(
+            "/properties/:property_id/dispose",
+            axum::routing::post(property_disposition),
+        )
         // §280A vacation home / mixed-use classification
-        .route("/properties/:property_id/section-280a",
-            axum::routing::post(property_section_280a))
+        .route(
+            "/properties/:property_id/section-280a",
+            axum::routing::post(property_section_280a),
+        )
         // §280A(d)(2) related-party rental personal-use classifier
-        .route("/section-280a-d2", axum::routing::post(section_280a_d2_route))
+        .route(
+            "/section-280a-d2",
+            axum::routing::post(section_280a_d2_route),
+        )
         // Cost segregation + §168(k) bonus depreciation accelerator
-        .route("/properties/:property_id/cost-segregation",
-            axum::routing::post(property_cost_segregation))
+        .route(
+            "/properties/:property_id/cost-segregation",
+            axum::routing::post(property_cost_segregation),
+        )
         // State late-fee cap + grace-period compliance check
         .route("/late-fee-check", axum::routing::post(late_fee_check_route))
         // State eviction-notice period lookup
-        .route("/eviction-notice-check", axum::routing::post(eviction_notice_check_route))
-        .route("/entry-notice-check", axum::routing::post(entry_notice_check_route))
-        .route("/retaliation-check", axum::routing::post(retaliation_check_route))
-        .route("/application-fee-check", axum::routing::post(application_fee_check_route))
-        .route("/broker-fee-allocation", axum::routing::post(broker_fee_allocation_route))
-        .route("/lockout-penalty-check", axum::routing::post(lockout_penalty_check_route))
-        .route("/dv-survivor-lock-change", axum::routing::post(dv_survivor_lock_change_route))
-        .route("/dv-termination-check", axum::routing::post(dv_termination_check_route))
-        .route("/just-cause-check", axum::routing::post(just_cause_check_route))
-        .route("/just-cause-termination-notice-content", axum::routing::post(just_cause_termination_notice_content_route))
-        .route("/soi-protection-check", axum::routing::post(soi_protection_check_route))
+        .route(
+            "/eviction-notice-check",
+            axum::routing::post(eviction_notice_check_route),
+        )
+        .route(
+            "/entry-notice-check",
+            axum::routing::post(entry_notice_check_route),
+        )
+        .route(
+            "/retaliation-check",
+            axum::routing::post(retaliation_check_route),
+        )
+        .route(
+            "/application-fee-check",
+            axum::routing::post(application_fee_check_route),
+        )
+        .route(
+            "/broker-fee-allocation",
+            axum::routing::post(broker_fee_allocation_route),
+        )
+        .route(
+            "/lockout-penalty-check",
+            axum::routing::post(lockout_penalty_check_route),
+        )
+        .route(
+            "/dv-survivor-lock-change",
+            axum::routing::post(dv_survivor_lock_change_route),
+        )
+        .route(
+            "/dv-termination-check",
+            axum::routing::post(dv_termination_check_route),
+        )
+        .route(
+            "/just-cause-check",
+            axum::routing::post(just_cause_check_route),
+        )
+        .route(
+            "/just-cause-termination-notice-content",
+            axum::routing::post(just_cause_termination_notice_content_route),
+        )
+        .route(
+            "/soi-protection-check",
+            axum::routing::post(soi_protection_check_route),
+        )
         .route("/detector-check", axum::routing::post(detector_check_route))
-        .route("/lead-disclosure-check", axum::routing::post(lead_disclosure_check_route))
-        .route("/lead-in-drinking-water-disclosure", axum::routing::post(lead_in_drinking_water_disclosure_route))
-        .route("/lead-renovation-repair-painting", axum::routing::post(lead_renovation_repair_painting_route))
-        .route("/foreclosure-tenant-check", axum::routing::post(foreclosure_tenant_check_route))
-        .route("/heat-requirements-check", axum::routing::post(heat_requirements_check_route))
-        .route("/bedbug-disclosure-check", axum::routing::post(bedbug_disclosure_check_route))
-        .route("/balcony-inspection", axum::routing::post(balcony_inspection_route))
-        .route("/mold-disclosure-check", axum::routing::post(mold_disclosure_check_route))
-        .route("/radon-disclosure-check", axum::routing::post(radon_disclosure_check_route))
-        .route("/sublet-consent-check", axum::routing::post(sublet_consent_check_route))
-        .route("/swimming-pool-safety", axum::routing::post(swimming_pool_safety_route))
-        .route("/str-regulation-check", axum::routing::post(str_regulation_check_route))
-        .route("/squatter-unauthorized-occupant-removal", axum::routing::post(squatter_removal_route))
+        .route(
+            "/lead-disclosure-check",
+            axum::routing::post(lead_disclosure_check_route),
+        )
+        .route(
+            "/lead-in-drinking-water-disclosure",
+            axum::routing::post(lead_in_drinking_water_disclosure_route),
+        )
+        .route(
+            "/lead-renovation-repair-painting",
+            axum::routing::post(lead_renovation_repair_painting_route),
+        )
+        .route(
+            "/foreclosure-tenant-check",
+            axum::routing::post(foreclosure_tenant_check_route),
+        )
+        .route(
+            "/heat-requirements-check",
+            axum::routing::post(heat_requirements_check_route),
+        )
+        .route(
+            "/bedbug-disclosure-check",
+            axum::routing::post(bedbug_disclosure_check_route),
+        )
+        .route(
+            "/balcony-inspection",
+            axum::routing::post(balcony_inspection_route),
+        )
+        .route(
+            "/mold-disclosure-check",
+            axum::routing::post(mold_disclosure_check_route),
+        )
+        .route(
+            "/radon-disclosure-check",
+            axum::routing::post(radon_disclosure_check_route),
+        )
+        .route(
+            "/sublet-consent-check",
+            axum::routing::post(sublet_consent_check_route),
+        )
+        .route(
+            "/swimming-pool-safety",
+            axum::routing::post(swimming_pool_safety_route),
+        )
+        .route(
+            "/str-regulation-check",
+            axum::routing::post(str_regulation_check_route),
+        )
+        .route(
+            "/squatter-unauthorized-occupant-removal",
+            axum::routing::post(squatter_removal_route),
+        )
         .route("/pet-fees-check", axum::routing::post(pet_fees_check_route))
-        .route("/non-refundable-cleaning-fees", axum::routing::post(non_refundable_cleaning_fees_route))
-        .route("/eviction-sealing-check", axum::routing::post(eviction_sealing_check_route))
-        .route("/termination-notice-check", axum::routing::post(termination_notice_check_route))
-        .route("/lease-termination-catastrophic-damage", axum::routing::post(lease_termination_catastrophic_damage_route))
-        .route("/occupancy-check", axum::routing::post(occupancy_check_route))
-        .route("/move-in-inspection-check", axum::routing::post(move_in_inspection_check_route))
-        .route("/move-in-fee-cap", axum::routing::post(move_in_fee_cap_route))
-        .route("/mandatory-renters-insurance-provider-choice", axum::routing::post(mandatory_renters_insurance_provider_choice_route))
-        .route("/renters-insurance-check", axum::routing::post(renters_insurance_check_route))
-        .route("/utility-shutoff-check", axum::routing::post(utility_shutoff_check_route))
-        .route("/vehicle-towing-from-rental-property", axum::routing::post(vehicle_towing_from_rental_property_route))
-        .route("/water-heater-earthquake-strap", axum::routing::post(water_heater_earthquake_strap_route))
-        .route("/adverse-action-check", axum::routing::post(adverse_action_check_route))
-        .route("/adverse-possession-claim", axum::routing::post(adverse_possession_claim_route))
+        .route(
+            "/non-refundable-cleaning-fees",
+            axum::routing::post(non_refundable_cleaning_fees_route),
+        )
+        .route(
+            "/eviction-sealing-check",
+            axum::routing::post(eviction_sealing_check_route),
+        )
+        .route(
+            "/termination-notice-check",
+            axum::routing::post(termination_notice_check_route),
+        )
+        .route(
+            "/lease-termination-catastrophic-damage",
+            axum::routing::post(lease_termination_catastrophic_damage_route),
+        )
+        .route(
+            "/occupancy-check",
+            axum::routing::post(occupancy_check_route),
+        )
+        .route(
+            "/move-in-inspection-check",
+            axum::routing::post(move_in_inspection_check_route),
+        )
+        .route(
+            "/move-in-fee-cap",
+            axum::routing::post(move_in_fee_cap_route),
+        )
+        .route(
+            "/mandatory-renters-insurance-provider-choice",
+            axum::routing::post(mandatory_renters_insurance_provider_choice_route),
+        )
+        .route(
+            "/renters-insurance-check",
+            axum::routing::post(renters_insurance_check_route),
+        )
+        .route(
+            "/utility-shutoff-check",
+            axum::routing::post(utility_shutoff_check_route),
+        )
+        .route(
+            "/vehicle-towing-from-rental-property",
+            axum::routing::post(vehicle_towing_from_rental_property_route),
+        )
+        .route(
+            "/water-heater-earthquake-strap",
+            axum::routing::post(water_heater_earthquake_strap_route),
+        )
+        .route(
+            "/adverse-action-check",
+            axum::routing::post(adverse_action_check_route),
+        )
+        .route(
+            "/adverse-possession-claim",
+            axum::routing::post(adverse_possession_claim_route),
+        )
         .route("/topa-check", axum::routing::post(tenant_topa_check_route))
-        .route("/auto-renewal-check", axum::routing::post(lease_auto_renewal_check_route))
-        .route("/lease-translation-check", axum::routing::post(lease_translation_check_route))
-        .route("/rent-receipt-check", axum::routing::post(rent_receipt_check_route))
-        .route("/rent-stabilized-mci-iai-passthrough", axum::routing::post(rent_stabilized_mci_iai_passthrough_route))
-        .route("/repair-deduct-check", axum::routing::post(repair_and_deduct_check_route))
-        .route("/cosigner-check", axum::routing::post(cosigner_rules_check_route))
-        .route("/mobile-home-park-check", axum::routing::post(mobile_home_park_check_route))
-        .route("/submetering-check", axum::routing::post(submetering_check_route))
-        .route("/smoke-free-check", axum::routing::post(smoke_free_check_route))
-        .route("/tenant-privacy-check", axum::routing::post(tenant_privacy_check_route))
-        .route("/tenant-domestic-violence-lease-termination", axum::routing::post(tenant_domestic_violence_lease_termination_route))
-        .route("/tenant-ev-charging-installation-right", axum::routing::post(tenant_ev_charging_installation_right_route))
-        .route("/tenant-fire-safety-plan-disclosure", axum::routing::post(tenant_fire_safety_plan_disclosure_route))
-        .route("/drug-eviction-check", axum::routing::post(drug_eviction_check_route))
-        .route("/quiet-enjoyment-check", axum::routing::post(quiet_enjoyment_check_route))
-        .route("/flood-disclosure-check", axum::routing::post(flood_disclosure_check_route))
-        .route("/owner-identification-check", axum::routing::post(owner_identification_check_route))
-        .route("/tenant-death-termination-check", axum::routing::post(tenant_death_termination_check_route))
-        .route("/late-payment-grace-period-check", axum::routing::post(late_payment_grace_period_check_route))
-        .route("/owner-move-in-eviction-check", axum::routing::post(owner_move_in_eviction_check_route))
-        .route("/lease-copy-delivery-check", axum::routing::post(lease_copy_delivery_check_route))
-        .route("/tenant-noise-nuisance-enforcement", axum::routing::post(tenant_noise_nuisance_enforcement_route))
-        .route("/tenant-organizing-check", axum::routing::post(tenant_organizing_check_route))
-        .route("/tenant-positive-rent-reporting", axum::routing::post(tenant_positive_rent_reporting_route))
-        .route("/tenant-rent-escrow-withholding", axum::routing::post(tenant_rent_escrow_withholding_route))
-        .route("/tenant-rent-judgment-wage-garnishment", axum::routing::post(tenant_rent_judgment_wage_garnishment_route))
-        .route("/tenant-rent-receipt-requirement", axum::routing::post(tenant_rent_receipt_requirement_route))
-        .route("/tenant-relocation-assistance", axum::routing::post(tenant_relocation_assistance_route))
-        .route("/tenant-rights-statement-disclosure", axum::routing::post(tenant_rights_statement_disclosure_route))
-        .route("/tenant-smart-lock-biometric-consent", axum::routing::post(tenant_smart_lock_biometric_consent_route))
-        .route("/tenant-smart-thermostat-install-right", axum::routing::post(tenant_smart_thermostat_install_right_route))
-        .route("/tenant-voting-address-protection", axum::routing::post(tenant_voting_address_protection_route))
-        .route("/tenant-kitchen-appliance-replacement", axum::routing::post(tenant_kitchen_appliance_replacement_route))
-        .route("/tenant-utility-account-designation", axum::routing::post(tenant_utility_account_designation_route))
-        .route("/tenant-window-air-conditioner-install-right", axum::routing::post(tenant_window_air_conditioner_install_right_route))
-        .route("/fair-chance-housing", axum::routing::post(fair_chance_housing_route))
-        .route("/family-childcare-home-right", axum::routing::post(family_childcare_home_right_route))
-        .route("/source-of-income-discrimination", axum::routing::post(source_of_income_discrimination_route))
-        .route("/fha-design-construction", axum::routing::post(fha_design_construction_route))
-        .route("/meth-contamination-disclosure", axum::routing::post(meth_contamination_disclosure_route))
-        .route("/death-in-unit-disclosure", axum::routing::post(death_in_unit_disclosure_route))
-        .route("/dog-breed-restriction-ban", axum::routing::post(dog_breed_restriction_ban_route))
-        .route("/rent-payment-method", axum::routing::post(rent_payment_method_route))
-        .route("/window-guard-requirements", axum::routing::post(window_guard_requirements_route))
-        .route("/rent-increase-notice-period", axum::routing::post(rent_increase_notice_period_route))
-        .route("/demolition-tenant-notice", axum::routing::post(demolition_tenant_notice_route))
-        .route("/eviction-diversion-program", axum::routing::post(eviction_diversion_program_route))
-        .route("/immigration-status-protection", axum::routing::post(immigration_status_protection_route))
-        .route("/prevailing-party-attorney-fees", axum::routing::post(prevailing_party_attorney_fees_route))
-        .route("/abandoned-property-handling", axum::routing::post(abandoned_property_handling_route))
-        .route("/right-to-counsel-eviction", axum::routing::post(right_to_counsel_eviction_route))
-        .route("/tenant-cannabis-use-protection", axum::routing::post(tenant_cannabis_use_protection_route))
-        .route("/tenant-clothesline-drying-right", axum::routing::post(tenant_clothesline_drying_right_route))
-        .route("/snow-removal-responsibility", axum::routing::post(snow_removal_responsibility_route))
-        .route("/soft-story-seismic-retrofit", axum::routing::post(soft_story_seismic_retrofit_route))
-        .route("/security-camera-disclosure", axum::routing::post(security_camera_disclosure_route))
-        .route("/carpet-replacement-useful-life", axum::routing::post(carpet_replacement_useful_life_route))
-        .route("/pre-move-out-inspection", axum::routing::post(pre_move_out_inspection_route))
-        .route("/credit-check-authorization", axum::routing::post(credit_check_authorization_route))
-        .route("/winter-eviction-protections", axum::routing::post(winter_eviction_protections_route))
-        .route("/landlord-identification-disclosure", axum::routing::post(landlord_identification_disclosure_route))
-        .route("/reasonable-accommodation-modification", axum::routing::post(reasonable_accommodation_modification_route))
-        .route("/damage-deduction-itemization", axum::routing::post(damage_deduction_itemization_route))
-        .route("/cooling-requirements", axum::routing::post(cooling_requirements_route))
-        .route("/duty-to-mitigate-damages", axum::routing::post(duty_to_mitigate_damages_route))
-        .route("/lease-early-termination-fee-cap", axum::routing::post(lease_early_termination_fee_cap_route))
-        .route("/pesticide-application-notice", axum::routing::post(pesticide_application_notice_route))
-        .route("/condominium-conversion-protection", axum::routing::post(condominium_conversion_protection_route))
-        .route("/otard-antenna-installation", axum::routing::post(otard_antenna_installation_route))
-        .route("/religious-display-doorpost", axum::routing::post(religious_display_doorpost_route))
-        .route("/asbestos-disclosure", axum::routing::post(asbestos_disclosure_route))
-        .route("/firearms-in-rental-unit", axum::routing::post(firearms_in_rental_unit_route))
-        .route("/lock-change-between-tenancies", axum::routing::post(lock_change_between_tenancies_route))
-        .route("/landlord-lien-prohibition", axum::routing::post(landlord_lien_prohibition_route))
-        .route("/military-ordnance-disclosure", axum::routing::post(military_ordnance_disclosure_route))
-        .route("/sex-offender-database-notice", axum::routing::post(sex_offender_database_notice_route))
-        .route("/short-term-rental-conversion", axum::routing::post(short_term_rental_conversion_route))
-        .route("/mid-tenancy-ownership-change", axum::routing::post(mid_tenancy_ownership_change_route))
-        .route("/mid-tenancy-security-deposit-increase", axum::routing::post(mid_tenancy_security_deposit_increase_route))
-        .route("/mid-tenancy-term-modification", axum::routing::post(mid_tenancy_term_modification_route))
-        .route("/mid-tenancy-temporary-relocation", axum::routing::post(mid_tenancy_temporary_relocation_route))
-        .route("/tenant-solar-installation", axum::routing::post(tenant_solar_installation_route))
-        .route("/flag-display-right", axum::routing::post(flag_display_right_route))
-        .route("/written-lease-requirement", axum::routing::post(written_lease_requirement_route))
-        .route("/holdover-tenant-damages", axum::routing::post(holdover_tenant_damages_route))
-        .route("/lease-assignment-consent", axum::routing::post(lease_assignment_consent_route))
-        .route("/lease-cure-period", axum::routing::post(lease_cure_period_route))
-        .route("/portable-tenant-screening-report", axum::routing::post(portable_tenant_screening_report_route))
-        .route("/hoa-fee-tenant-enforcement", axum::routing::post(hoa_fee_tenant_enforcement_route))
-        .route("/hoa-rental-restriction", axum::routing::post(hoa_rental_restriction_route))
-        .route("/rent-acceleration-enforceability", axum::routing::post(rent_acceleration_enforceability_route))
-        .route("/tenant-in-foreclosure-protection", axum::routing::post(tenant_in_foreclosure_protection_route))
-        .route("/tenant-in-unit-appliance-repair-responsibility", axum::routing::post(tenant_in_unit_appliance_repair_responsibility_route))
-        .route("/tenant-late-fee-cap", axum::routing::post(tenant_late_fee_cap_route))
-        .route("/tenant-lease-guarantor-disclosure", axum::routing::post(tenant_lease_guarantor_disclosure_route))
-        .route("/tenant-estoppel-certificate", axum::routing::post(tenant_estoppel_certificate_route))
-        .route("/landlord-property-sale-notice", axum::routing::post(landlord_property_sale_notice_route))
-        .route("/lease-renewal-offer-timing", axum::routing::post(lease_renewal_offer_timing_route))
-        .route("/rent-concession-disclosure", axum::routing::post(rent_concession_disclosure_route))
-        .route("/rent-abatement-construction-nuisance", axum::routing::post(rent_abatement_construction_nuisance_route))
-        .route("/landlord-master-key-retention", axum::routing::post(landlord_master_key_retention_route))
-        .route("/tenant-holdover-security-deposit-setoff", axum::routing::post(tenant_holdover_security_deposit_setoff_route))
-        .route("/rental-video-surveillance-retention", axum::routing::post(rental_video_surveillance_retention_route))
-        .route("/landlord-foreclosure-status-disclosure", axum::routing::post(landlord_foreclosure_status_disclosure_route))
-        .route("/commercial-lease-personal-guaranty-enforceability", axum::routing::post(commercial_lease_personal_guaranty_enforceability_route))
-        .route("/commercial-lease-cam-charge-disclosure", axum::routing::post(commercial_lease_cam_charge_disclosure_route))
-        .route("/landlord-pest-extermination-timeline", axum::routing::post(landlord_pest_extermination_timeline_route))
-        .route("/landlord-water-heat-emergency-response", axum::routing::post(landlord_water_heat_emergency_response_route))
-        .route("/tenant-emotional-distress-damages", axum::routing::post(tenant_emotional_distress_damages_route))
-        .route("/landlord-negative-credit-reporting", axum::routing::post(landlord_negative_credit_reporting_route))
-        .route("/security-deposit-bank-disclosure", axum::routing::post(security_deposit_bank_disclosure_route))
-        .route("/landlord-annual-rent-statement", axum::routing::post(landlord_annual_rent_statement_route))
-        .route("/landlord-emergency-entry-notice", axum::routing::post(landlord_emergency_entry_notice_route))
-        .route("/landlord-mid-tenancy-rekeying", axum::routing::post(landlord_mid_tenancy_rekeying_route))
-        .route("/landlord-harassment", axum::routing::post(landlord_harassment_route))
-        .route("/landlord-possession-delivery", axum::routing::post(landlord_possession_delivery_route))
-        .route("/landlord-post-eviction-tenant-property-storage-disposal", axum::routing::post(landlord_post_eviction_tenant_property_storage_disposal_route))
-        .route("/lease-waiver-enforceability", axum::routing::post(lease_waiver_enforceability_route))
-        .route("/rental-application-denial-disclosure", axum::routing::post(rental_application_denial_disclosure_route))
-        .route("/rental-arizona-residential-landlord-tenant-act-ars-33-1301", axum::routing::post(rental_arizona_residential_landlord_tenant_act_ars_33_1301_route))
-        .route("/rental-asbestos-disclosure", axum::routing::post(rental_asbestos_disclosure_route))
-        .route("/rental-basement-water-intrusion-disclosure", axum::routing::post(rental_basement_water_intrusion_disclosure_route))
-        .route("/rental-bed-bug-disclosure", axum::routing::post(rental_bed_bug_disclosure_route))
-        .route("/rental-bedroom-egress-window", axum::routing::post(rental_bedroom_egress_window_route))
-        .route("/rental-berkeley-rent-stabilization-ordinance-bmc-chapter-13-76", axum::routing::post(rental_berkeley_rent_stabilization_ordinance_bmc_chapter_13_76_route))
-        .route("/rental-carbon-monoxide-detector", axum::routing::post(rental_carbon_monoxide_detector_route))
-        .route("/rental-california-ab-12-security-deposit-cap", axum::routing::post(rental_california_ab_12_security_deposit_cap_route))
-        .route("/rental-california-ab-2347-unlawful-detainer-response", axum::routing::post(rental_california_ab_2347_unlawful_detainer_response_route))
-        .route("/rental-california-sb-567-no-fault-eviction-amendments", axum::routing::post(rental_california_sb_567_no_fault_eviction_amendments_route))
-        .route("/rental-chimney-fireplace-inspection-disclosure", axum::routing::post(rental_chimney_fireplace_inspection_disclosure_route))
-        .route("/rental-climate-mobilization-act-ll97-emissions", axum::routing::post(rental_climate_mobilization_act_ll97_emissions_route))
-        .route("/rental-colorado-crs-title-38-article-12-tenants-landlords", axum::routing::post(rental_colorado_crs_title_38_article_12_tenants_landlords_route))
-        .route("/rental-colorado-hb-24-1098-just-cause-eviction", axum::routing::post(rental_colorado_hb_24_1098_just_cause_eviction_route))
-        .route("/rental-connecticut-fair-rent-commission", axum::routing::post(rental_connecticut_fair_rent_commission_route))
-        .route("/rental-cook-county-rtlo", axum::routing::post(rental_cook_county_rtlo_route))
-        .route("/rental-cooling-tower-inspection-local-law-77", axum::routing::post(rental_cooling_tower_inspection_local_law_77_route))
-        .route("/rental-elevator-safety-inspection", axum::routing::post(rental_elevator_safety_inspection_route))
-        .route("/rental-fire-extinguisher-requirement", axum::routing::post(rental_fire_extinguisher_requirement_route))
-        .route("/rental-florida-hb-1417-state-preemption", axum::routing::post(rental_florida_hb_1417_state_preemption_route))
-        .route("/rental-florida-chapter-83-part-ii-residential-tenancies", axum::routing::post(rental_florida_chapter_83_part_ii_residential_tenancies_route))
-        .route("/rental-flood-hazard-disclosure", axum::routing::post(rental_flood_hazard_disclosure_route))
-        .route("/rental-foreclosure-tenant-protection-ptfa", axum::routing::post(rental_foreclosure_tenant_protection_ptfa_route))
-        .route("/rental-broadband-mte-rules", axum::routing::post(rental_broadband_mte_rules_route))
-        .route("/rental-energy-benchmarking", axum::routing::post(rental_energy_benchmarking_route))
-        .route("/rental-garage-door-safety-compliance", axum::routing::post(rental_garage_door_safety_compliance_route))
-        .route("/rental-georgia-landlord-tenant-act-ocga-44-7", axum::routing::post(rental_georgia_landlord_tenant_act_ocga_44_7_route))
-        .route("/rental-gas-appliance-ban", axum::routing::post(rental_gas_appliance_ban_route))
-        .route("/rental-gas-piping-inspection-local-law-152", axum::routing::post(rental_gas_piping_inspection_local_law_152_route))
-        .route("/rental-hardwired-smoke-alarm-responsibility", axum::routing::post(rental_hardwired_smoke_alarm_responsibility_route))
-        .route("/rental-hawaii-residential-landlord-tenant-code-hrs-521", axum::routing::post(rental_hawaii_residential_landlord_tenant_code_hrs_521_route))
-        .route("/rental-heat-minimum-temperature-season", axum::routing::post(rental_heat_minimum_temperature_season_route))
-        .route("/rental-hot-water-temperature", axum::routing::post(rental_hot_water_temperature_route))
-        .route("/rental-housing-for-older-persons-act-hopa-1995", axum::routing::post(rental_housing_for_older_persons_act_hopa_1995_route))
-        .route("/rental-hud-hotma-income-asset-compliance", axum::routing::post(rental_hud_hotma_income_asset_compliance_route))
-        .route("/rental-hud-section-504-rehabilitation-act-24-cfr-part-8", axum::routing::post(rental_hud_section_504_rehabilitation_act_24_cfr_part_8_route))
-        .route("/rental-in-unit-laundry-appliance-provision", axum::routing::post(rental_in_unit_laundry_appliance_provision_route))
-        .route("/rental-indiana-landlord-tenant-law-ic-32-31", axum::routing::post(rental_indiana_landlord_tenant_law_ic_32_31_route))
-        .route("/rental-junk-fee-transparency", axum::routing::post(rental_junk_fee_transparency_route))
-        .route("/rental-just-cause-eviction", axum::routing::post(rental_just_cause_eviction_route))
-        .route("/rental-hoa-disclosure-at-lease", axum::routing::post(rental_hoa_disclosure_at_lease_route))
-        .route("/rental-lead-paint-disclosure", axum::routing::post(rental_lead_paint_disclosure_route))
-        .route("/rental-local-law-87-energy-audit-retro-commissioning", axum::routing::post(rental_local_law_87_energy_audit_retro_commissioning_route))
-        .route("/rental-local-law-88-lighting-upgrades-sub-metering", axum::routing::post(rental_local_law_88_lighting_upgrades_sub_metering_route))
-        .route("/rental-lead-pipe-disclosure", axum::routing::post(rental_lead_pipe_disclosure_route))
-        .route("/rental-natural-gas-leak-response", axum::routing::post(rental_natural_gas_leak_response_route))
-        .route("/rental-new-jersey-anti-eviction-act", axum::routing::post(rental_new_jersey_anti_eviction_act_route))
-        .route("/rental-new-york-hstpa-2019-chapter-36", axum::routing::post(rental_new_york_hstpa_2019_chapter_36_route))
-        .route("/rental-north-carolina-chapter-42-landlord-tenant", axum::routing::post(rental_north_carolina_chapter_42_landlord_tenant_route))
-        .route("/rental-ny-rent-receipt-late-notice-requirements", axum::routing::post(rental_ny_rent_receipt_late_notice_requirements_route))
-        .route("/rental-ny-rpl-235f-roommate-law", axum::routing::post(rental_ny_rpl_235f_roommate_law_route))
-        .route("/rental-attorney-fee-clause-reciprocity", axum::routing::post(rental_attorney_fee_clause_reciprocity_route))
-        .route("/rental-nyc-childhood-lead-poisoning-prevention-act", axum::routing::post(rental_nyc_childhood_lead_poisoning_prevention_act_route))
-        .route("/rental-nyc-loft-law-article-7c", axum::routing::post(rental_nyc_loft_law_article_7c_route))
-        .route("/rental-nyc-scrie-drie-rent-freeze", axum::routing::post(rental_nyc_scrie_drie_rent_freeze_route))
-        .route("/rental-nyc-local-law-55-ipm-pest-control", axum::routing::post(rental_nyc_local_law_55_ipm_pest_control_route))
-        .route("/rental-nyc-local-law-18-str-registration", axum::routing::post(rental_nyc_local_law_18_str_registration_route))
-        .route("/rental-nyc-coop-conversion-eviction-protection", axum::routing::post(rental_nyc_coop_conversion_eviction_protection_route))
-        .route("/rental-oakland-measure-ee-just-cause-omc-8-22", axum::routing::post(rental_oakland_measure_ee_just_cause_omc_8_22_route))
-        .route("/rental-ohio-revised-code-chapter-5321-landlord-tenant-act", axum::routing::post(rental_ohio_revised_code_chapter_5321_landlord_tenant_act_route))
-        .route("/rental-oil-tank-replacement-disclosure", axum::routing::post(rental_oil_tank_replacement_disclosure_route))
-        .route("/rental-oregon-residential-landlord-tenant-act-ors-chapter-90", axum::routing::post(rental_oregon_residential_landlord_tenant_act_ors_chapter_90_route))
-        .route("/rental-oregon-sb-608-sb-611-rent-stabilization", axum::routing::post(rental_oregon_sb_608_sb_611_rent_stabilization_route))
-        .route("/rental-organic-waste-collection-disclosure", axum::routing::post(rental_organic_waste_collection_disclosure_route))
-        .route("/rental-pellet-stove-disclosure", axum::routing::post(rental_pellet_stove_disclosure_route))
-        .route("/rental-pennsylvania-landlord-tenant-act-1951-68-ps-250-101", axum::routing::post(rental_pennsylvania_landlord_tenant_act_1951_68_ps_250_101_route))
-        .route("/rental-pesticide-application-notification", axum::routing::post(rental_pesticide_application_notification_route))
-        .route("/rental-pet-deposit-separate-security", axum::routing::post(rental_pet_deposit_separate_security_route))
-        .route("/rental-post-construction-lead-dust-clearance", axum::routing::post(rental_post_construction_lead_dust_clearance_route))
-        .route("/rental-positive-rent-payment-credit-reporting", axum::routing::post(rental_positive_rent_payment_credit_reporting_route))
-        .route("/rental-propane-tank-lease-disclosure", axum::routing::post(rental_propane_tank_lease_disclosure_route))
-        .route("/rental-pre-foreclosure-tenant-notification", axum::routing::post(rental_pre_foreclosure_tenant_notification_route))
-        .route("/rental-property-registration", axum::routing::post(rental_property_registration_route))
-        .route("/rental-radon-mitigation-disclosure", axum::routing::post(rental_radon_mitigation_disclosure_route))
-        .route("/rental-renters-insurance-requirement", axum::routing::post(rental_renters_insurance_requirement_route))
-        .route("/rental-san-francisco-rent-ordinance-chapter-37", axum::routing::post(rental_san_francisco_rent_ordinance_chapter_37_route))
-        .route("/rental-satellite-dish-installation-right", axum::routing::post(rental_satellite_dish_installation_right_route))
-        .route("/rental-seattle-smc-22-206-160-just-cause-eviction", axum::routing::post(rental_seattle_smc_22_206_160_just_cause_eviction_route))
-        .route("/rental-security-deposit-interest", axum::routing::post(rental_security_deposit_interest_route))
-        .route("/rental-septic-system-disclosure", axum::routing::post(rental_septic_system_disclosure_route))
-        .route("/rental-sewer-lateral-responsibility", axum::routing::post(rental_sewer_lateral_responsibility_route))
-        .route("/rental-sex-offender-registry-notice", axum::routing::post(rental_sex_offender_registry_notice_route))
-        .route("/rental-sinkhole-disclosure", axum::routing::post(rental_sinkhole_disclosure_route))
-        .route("/rental-smoke-free-housing-disclosure", axum::routing::post(rental_smoke_free_housing_disclosure_route))
-        .route("/rental-soft-story-seismic-retrofit", axum::routing::post(rental_soft_story_seismic_retrofit_route))
-        .route("/rental-solar-panel-disclosure", axum::routing::post(rental_solar_panel_disclosure_route))
-        .route("/rental-storage-unit-lease-disclosure", axum::routing::post(rental_storage_unit_lease_disclosure_route))
-        .route("/rental-balcony-inspection-seismic-safety", axum::routing::post(rental_balcony_inspection_seismic_safety_route))
-        .route("/rental-short-term-subletting-airbnb-restriction", axum::routing::post(rental_short_term_subletting_airbnb_restriction_route))
-        .route("/rental-grill-propane-bbq-restriction", axum::routing::post(rental_grill_propane_bbq_restriction_route))
-        .route("/rental-radiator-steam-heat-safety", axum::routing::post(rental_radiator_steam_heat_safety_route))
-        .route("/rental-property-tax-pass-through-disclosure", axum::routing::post(rental_property_tax_pass_through_disclosure_route))
-        .route("/rental-marijuana-cultivation-restriction", axum::routing::post(rental_marijuana_cultivation_restriction_route))
-        .route("/rental-maryland-landlord-tenant-md-real-property-title-8", axum::routing::post(rental_maryland_landlord_tenant_md_real_property_title_8_route))
-        .route("/rental-massachusetts-mgl-chapter-186-239-broader-regime", axum::routing::post(rental_massachusetts_mgl_chapter_186_239_broader_regime_route))
-        .route("/rental-massachusetts-security-deposit-statute", axum::routing::post(rental_massachusetts_security_deposit_statute_route))
-        .route("/rental-massachusetts-homes-act-eviction-sealing", axum::routing::post(rental_massachusetts_homes_act_eviction_sealing_route))
-        .route("/rental-michigan-landlord-tenant-mcl-554", axum::routing::post(rental_michigan_landlord_tenant_mcl_554_route))
-        .route("/rental-attached-garage-carbon-monoxide-disclosure", axum::routing::post(rental_attached_garage_carbon_monoxide_disclosure_route))
-        .route("/rental-pet-breed-restriction-disclosure", axum::routing::post(rental_pet_breed_restriction_disclosure_route))
-        .route("/rental-emergency-action-plan-high-rise", axum::routing::post(rental_emergency_action_plan_high_rise_route))
-        .route("/rental-eviction-record-sealing-screening", axum::routing::post(rental_eviction_record_sealing_screening_route))
-        .route("/rental-illegal-lockout-self-help-eviction", axum::routing::post(rental_illegal_lockout_self_help_eviction_route))
-        .route("/rental-retaliation-prohibition", axum::routing::post(rental_retaliation_prohibition_route))
-        .route("/rental-landlord-notice-to-enter", axum::routing::post(rental_landlord_notice_to_enter_route))
-        .route("/rental-security-deposit-return-notice", axum::routing::post(rental_security_deposit_return_notice_route))
-        .route("/rental-late-fee-cap", axum::routing::post(rental_late_fee_cap_route))
-        .route("/rental-tenant-criminal-background-screening", axum::routing::post(rental_tenant_criminal_background_screening_route))
-        .route("/rental-source-of-income-discrimination", axum::routing::post(rental_source_of_income_discrimination_route))
-        .route("/rental-tenant-abandoned-personal-property", axum::routing::post(rental_tenant_abandoned_personal_property_route))
-        .route("/rental-tennessee-urlta-tca-66-28-101", axum::routing::post(rental_tennessee_urlta_tca_66_28_101_route))
-        .route("/rental-texas-hb-2127-state-preemption", axum::routing::post(rental_texas_hb_2127_state_preemption_route))
-        .route("/rental-texas-property-code-chapter-92-residential-tenancies", axum::routing::post(rental_texas_property_code_chapter_92_residential_tenancies_route))
-        .route("/rental-tenant-bill-of-rights-handout", axum::routing::post(rental_tenant_bill_of_rights_handout_route))
-        .route("/rental-minneapolis-renter-protections-ordinance-2020", axum::routing::post(rental_minneapolis_renter_protections_ordinance_2020_route))
-        .route("/rental-minnesota-landlord-tenant-act-minn-stat-504b", axum::routing::post(rental_minnesota_landlord_tenant_act_minn_stat_504b_route))
-        .route("/rental-missouri-landlord-tenant-mo-rev-stat-535-534-441", axum::routing::post(rental_missouri_landlord_tenant_mo_rev_stat_535_534_441_route))
-        .route("/rental-mold-disclosure-remediation", axum::routing::post(rental_mold_disclosure_remediation_route))
-        .route("/rental-multilingual-lease-translation", axum::routing::post(rental_multilingual_lease_translation_route))
-        .route("/rental-fair-housing-reasonable-accommodation", axum::routing::post(rental_fair_housing_reasonable_accommodation_route))
-        .route("/rental-fair-housing-amendments-act-of-1988-fhaa", axum::routing::post(rental_fair_housing_amendments_act_of_1988_fhaa_route))
-        .route("/rental-facade-inspection-fisp-local-law-11", axum::routing::post(rental_facade_inspection_fisp_local_law_11_route))
-        .route("/rental-boiler-inspection-compliance", axum::routing::post(rental_boiler_inspection_compliance_route))
-        .route("/rental-tenant-rent-escrow-habitability-dispute", axum::routing::post(rental_tenant_rent_escrow_habitability_dispute_route))
-        .route("/rental-tree-removal-dangerous-tree-disclosure", axum::routing::post(rental_tree_removal_dangerous_tree_disclosure_route))
-        .route("/rental-tenant-right-to-counsel-eviction", axum::routing::post(rental_tenant_right_to_counsel_eviction_route))
-        .route("/rental-ada-accessible-parking-compliance", axum::routing::post(rental_ada_accessible_parking_compliance_route))
-        .route("/rental-smoke-free-cannabis-restriction", axum::routing::post(rental_smoke_free_cannabis_restriction_route))
-        .route("/rental-rent-control-stabilization", axum::routing::post(rental_rent_control_stabilization_route))
-        .route("/rental-rent-increase-notice-requirement", axum::routing::post(rental_rent_increase_notice_requirement_route))
-        .route("/rental-rent-to-own-lease-purchase-disclosures", axum::routing::post(rental_rent_to_own_lease_purchase_disclosures_route))
-        .route("/rental-tenant-relocation-assistance", axum::routing::post(rental_tenant_relocation_assistance_route))
-        .route("/rental-tenant-data-privacy-compliance", axum::routing::post(rental_tenant_data_privacy_compliance_route))
-        .route("/rental-tenant-estoppel-certificate", axum::routing::post(rental_tenant_estoppel_certificate_route))
-        .route("/rental-ev-charging-accommodation", axum::routing::post(rental_ev_charging_accommodation_route))
-        .route("/rental-waste-recycling-collection-mandate", axum::routing::post(rental_waste_recycling_collection_mandate_route))
-        .route("/rental-washington-hb-1217-rent-stabilization", axum::routing::post(rental_washington_hb_1217_rent_stabilization_route))
-        .route("/rental-washington-rlta-rcw-59-18", axum::routing::post(rental_washington_rlta_rcw_59_18_route))
-        .route("/rental-virginia-vrlta-va-code-55-1-1200", axum::routing::post(rental_virginia_vrlta_va_code_55_1_1200_route))
-        .route("/rental-dc-topa-tenant-opportunity-purchase", axum::routing::post(rental_dc_topa_tenant_opportunity_purchase_route))
-        .route("/rental-dog-bite-liability", axum::routing::post(rental_dog_bite_liability_route))
-        .route("/rental-drone-overflight-surveillance-privacy", axum::routing::post(rental_drone_overflight_surveillance_privacy_route))
-        .route("/rental-domestic-violence-lock-change-lease-termination", axum::routing::post(rental_domestic_violence_lock_change_lease_termination_route))
-        .route("/rental-swimming-pool-drain-safety", axum::routing::post(rental_swimming_pool_drain_safety_route))
-        .route("/rental-underground-storage-tank-disclosure", axum::routing::post(rental_underground_storage_tank_disclosure_route))
-        .route("/rental-unpermitted-unit-disclosure", axum::routing::post(rental_unpermitted_unit_disclosure_route))
-        .route("/rental-vacant-property-registration", axum::routing::post(rental_vacant_property_registration_route))
-        .route("/rental-vawa-2022-federal-housing-protections", axum::routing::post(rental_vawa_2022_federal_housing_protections_route))
-        .route("/rental-vehicle-towing-notice-sign-requirements", axum::routing::post(rental_vehicle_towing_notice_sign_requirements_route))
-        .route("/rental-water-submetering-disclosure", axum::routing::post(rental_water_submetering_disclosure_route))
-        .route("/rental-well-water-disclosure", axum::routing::post(rental_well_water_disclosure_route))
-        .route("/rental-window-blind-cord-safety", axum::routing::post(rental_window_blind_cord_safety_route))
-        .route("/rental-window-guard-installation", axum::routing::post(rental_window_guard_installation_route))
-        .route("/rental-wisconsin-chapter-704-atcp-134", axum::routing::post(rental_wisconsin_chapter_704_atcp_134_route))
-        .route("/rental-south-carolina-residential-landlord-tenant-act-sc-code-27-40", axum::routing::post(rental_south_carolina_residential_landlord_tenant_act_sc_code_27_40_route))
-        .route("/rental-kentucky-urlta-krs-chapter-383-subchapter-5", axum::routing::post(rental_kentucky_urlta_krs_chapter_383_subchapter_5_route))
-        .route("/rental-iowa-urlta-iowa-code-chapter-562a", axum::routing::post(rental_iowa_urlta_iowa_code_chapter_562a_route))
-        .route("/rental-alabama-urlta-ala-code-35-9a", axum::routing::post(rental_alabama_urlta_ala_code_35_9a_route))
-        .route("/rental-nevada-nrs-chapter-118a", axum::routing::post(rental_nevada_nrs_chapter_118a_route))
-        .route("/residential-lease-arbitration-clause", axum::routing::post(residential_lease_arbitration_clause_route))
-        .route("/landlord-repair-response-timeframe", axum::routing::post(landlord_repair_response_timeframe_route))
-        .route("/landlord-retaliation-damages", axum::routing::post(landlord_retaliation_damages_route))
-        .route("/landlord-security-device-obligations", axum::routing::post(landlord_security_device_obligations_route))
-        .route("/landlord-self-help-eviction-prohibition", axum::routing::post(landlord_self_help_eviction_prohibition_route))
-        .route("/landlord-tenant-recording-consent", axum::routing::post(landlord_tenant_recording_consent_route))
-        .route("/last-month-rent-offset", axum::routing::post(last_month_rent_offset_route))
-        .route("/emotional-support-animal-documentation", axum::routing::post(emotional_support_animal_documentation_route))
-        .route("/lease-nondisparagement-prohibition", axum::routing::post(lease_nondisparagement_prohibition_route))
-        .route("/plain-language-lease-check", axum::routing::post(plain_language_lease_check_route))
-        .route("/roommate-authorization-check", axum::routing::post(roommate_authorization_check_route))
-        .route("/ev-charger-installation-check", axum::routing::post(ev_charger_installation_check_route))
-        .route("/advance-rent-limit-check", axum::routing::post(advance_rent_limit_check_route))
-        .route("/fire-sprinkler-disclosure-check", axum::routing::post(fire_sprinkler_disclosure_check_route))
-        .route("/bedbug-extermination-cost-check", axum::routing::post(bedbug_extermination_cost_check_route))
-        .route("/crime-victim-termination-check", axum::routing::post(crime_victim_termination_check_route))
-        .route("/lease-succession-check", axum::routing::post(lease_succession_check_route))
-        .route("/rent-credit-reporting-check", axum::routing::post(rent_credit_reporting_check_route))
-        .route("/rent-escrow-check", axum::routing::post(rent_escrow_check_route))
-        .route("/right-to-dry-check", axum::routing::post(right_to_dry_check_route))
-        .route("/abandonment-check", axum::routing::post(abandonment_check_route))
-        .route("/tenant-accessible-parking", axum::routing::post(tenant_accessible_parking_route))
-        .route("/tenant-assistance-animal-accommodation", axum::routing::post(tenant_assistance_animal_accommodation_route))
-        .route("/service-animal-check", axum::routing::post(service_animal_check_route))
-        .route("/senior-disabled-check", axum::routing::post(senior_disabled_check_route))
+        .route(
+            "/auto-renewal-check",
+            axum::routing::post(lease_auto_renewal_check_route),
+        )
+        .route(
+            "/lease-translation-check",
+            axum::routing::post(lease_translation_check_route),
+        )
+        .route(
+            "/rent-receipt-check",
+            axum::routing::post(rent_receipt_check_route),
+        )
+        .route(
+            "/rent-stabilized-mci-iai-passthrough",
+            axum::routing::post(rent_stabilized_mci_iai_passthrough_route),
+        )
+        .route(
+            "/repair-deduct-check",
+            axum::routing::post(repair_and_deduct_check_route),
+        )
+        .route(
+            "/cosigner-check",
+            axum::routing::post(cosigner_rules_check_route),
+        )
+        .route(
+            "/mobile-home-park-check",
+            axum::routing::post(mobile_home_park_check_route),
+        )
+        .route(
+            "/submetering-check",
+            axum::routing::post(submetering_check_route),
+        )
+        .route(
+            "/smoke-free-check",
+            axum::routing::post(smoke_free_check_route),
+        )
+        .route(
+            "/tenant-privacy-check",
+            axum::routing::post(tenant_privacy_check_route),
+        )
+        .route(
+            "/tenant-domestic-violence-lease-termination",
+            axum::routing::post(tenant_domestic_violence_lease_termination_route),
+        )
+        .route(
+            "/tenant-ev-charging-installation-right",
+            axum::routing::post(tenant_ev_charging_installation_right_route),
+        )
+        .route(
+            "/tenant-fire-safety-plan-disclosure",
+            axum::routing::post(tenant_fire_safety_plan_disclosure_route),
+        )
+        .route(
+            "/drug-eviction-check",
+            axum::routing::post(drug_eviction_check_route),
+        )
+        .route(
+            "/quiet-enjoyment-check",
+            axum::routing::post(quiet_enjoyment_check_route),
+        )
+        .route(
+            "/flood-disclosure-check",
+            axum::routing::post(flood_disclosure_check_route),
+        )
+        .route(
+            "/owner-identification-check",
+            axum::routing::post(owner_identification_check_route),
+        )
+        .route(
+            "/tenant-death-termination-check",
+            axum::routing::post(tenant_death_termination_check_route),
+        )
+        .route(
+            "/late-payment-grace-period-check",
+            axum::routing::post(late_payment_grace_period_check_route),
+        )
+        .route(
+            "/owner-move-in-eviction-check",
+            axum::routing::post(owner_move_in_eviction_check_route),
+        )
+        .route(
+            "/lease-copy-delivery-check",
+            axum::routing::post(lease_copy_delivery_check_route),
+        )
+        .route(
+            "/tenant-noise-nuisance-enforcement",
+            axum::routing::post(tenant_noise_nuisance_enforcement_route),
+        )
+        .route(
+            "/tenant-organizing-check",
+            axum::routing::post(tenant_organizing_check_route),
+        )
+        .route(
+            "/tenant-positive-rent-reporting",
+            axum::routing::post(tenant_positive_rent_reporting_route),
+        )
+        .route(
+            "/tenant-rent-escrow-withholding",
+            axum::routing::post(tenant_rent_escrow_withholding_route),
+        )
+        .route(
+            "/tenant-rent-judgment-wage-garnishment",
+            axum::routing::post(tenant_rent_judgment_wage_garnishment_route),
+        )
+        .route(
+            "/tenant-rent-receipt-requirement",
+            axum::routing::post(tenant_rent_receipt_requirement_route),
+        )
+        .route(
+            "/tenant-relocation-assistance",
+            axum::routing::post(tenant_relocation_assistance_route),
+        )
+        .route(
+            "/tenant-rights-statement-disclosure",
+            axum::routing::post(tenant_rights_statement_disclosure_route),
+        )
+        .route(
+            "/tenant-smart-lock-biometric-consent",
+            axum::routing::post(tenant_smart_lock_biometric_consent_route),
+        )
+        .route(
+            "/tenant-smart-thermostat-install-right",
+            axum::routing::post(tenant_smart_thermostat_install_right_route),
+        )
+        .route(
+            "/tenant-voting-address-protection",
+            axum::routing::post(tenant_voting_address_protection_route),
+        )
+        .route(
+            "/tenant-kitchen-appliance-replacement",
+            axum::routing::post(tenant_kitchen_appliance_replacement_route),
+        )
+        .route(
+            "/tenant-utility-account-designation",
+            axum::routing::post(tenant_utility_account_designation_route),
+        )
+        .route(
+            "/tenant-window-air-conditioner-install-right",
+            axum::routing::post(tenant_window_air_conditioner_install_right_route),
+        )
+        .route(
+            "/fair-chance-housing",
+            axum::routing::post(fair_chance_housing_route),
+        )
+        .route(
+            "/family-childcare-home-right",
+            axum::routing::post(family_childcare_home_right_route),
+        )
+        .route(
+            "/source-of-income-discrimination",
+            axum::routing::post(source_of_income_discrimination_route),
+        )
+        .route(
+            "/fha-design-construction",
+            axum::routing::post(fha_design_construction_route),
+        )
+        .route(
+            "/meth-contamination-disclosure",
+            axum::routing::post(meth_contamination_disclosure_route),
+        )
+        .route(
+            "/death-in-unit-disclosure",
+            axum::routing::post(death_in_unit_disclosure_route),
+        )
+        .route(
+            "/dog-breed-restriction-ban",
+            axum::routing::post(dog_breed_restriction_ban_route),
+        )
+        .route(
+            "/rent-payment-method",
+            axum::routing::post(rent_payment_method_route),
+        )
+        .route(
+            "/window-guard-requirements",
+            axum::routing::post(window_guard_requirements_route),
+        )
+        .route(
+            "/rent-increase-notice-period",
+            axum::routing::post(rent_increase_notice_period_route),
+        )
+        .route(
+            "/demolition-tenant-notice",
+            axum::routing::post(demolition_tenant_notice_route),
+        )
+        .route(
+            "/eviction-diversion-program",
+            axum::routing::post(eviction_diversion_program_route),
+        )
+        .route(
+            "/immigration-status-protection",
+            axum::routing::post(immigration_status_protection_route),
+        )
+        .route(
+            "/prevailing-party-attorney-fees",
+            axum::routing::post(prevailing_party_attorney_fees_route),
+        )
+        .route(
+            "/abandoned-property-handling",
+            axum::routing::post(abandoned_property_handling_route),
+        )
+        .route(
+            "/right-to-counsel-eviction",
+            axum::routing::post(right_to_counsel_eviction_route),
+        )
+        .route(
+            "/tenant-cannabis-use-protection",
+            axum::routing::post(tenant_cannabis_use_protection_route),
+        )
+        .route(
+            "/tenant-clothesline-drying-right",
+            axum::routing::post(tenant_clothesline_drying_right_route),
+        )
+        .route(
+            "/snow-removal-responsibility",
+            axum::routing::post(snow_removal_responsibility_route),
+        )
+        .route(
+            "/soft-story-seismic-retrofit",
+            axum::routing::post(soft_story_seismic_retrofit_route),
+        )
+        .route(
+            "/security-camera-disclosure",
+            axum::routing::post(security_camera_disclosure_route),
+        )
+        .route(
+            "/carpet-replacement-useful-life",
+            axum::routing::post(carpet_replacement_useful_life_route),
+        )
+        .route(
+            "/pre-move-out-inspection",
+            axum::routing::post(pre_move_out_inspection_route),
+        )
+        .route(
+            "/credit-check-authorization",
+            axum::routing::post(credit_check_authorization_route),
+        )
+        .route(
+            "/winter-eviction-protections",
+            axum::routing::post(winter_eviction_protections_route),
+        )
+        .route(
+            "/landlord-identification-disclosure",
+            axum::routing::post(landlord_identification_disclosure_route),
+        )
+        .route(
+            "/reasonable-accommodation-modification",
+            axum::routing::post(reasonable_accommodation_modification_route),
+        )
+        .route(
+            "/damage-deduction-itemization",
+            axum::routing::post(damage_deduction_itemization_route),
+        )
+        .route(
+            "/cooling-requirements",
+            axum::routing::post(cooling_requirements_route),
+        )
+        .route(
+            "/duty-to-mitigate-damages",
+            axum::routing::post(duty_to_mitigate_damages_route),
+        )
+        .route(
+            "/lease-early-termination-fee-cap",
+            axum::routing::post(lease_early_termination_fee_cap_route),
+        )
+        .route(
+            "/pesticide-application-notice",
+            axum::routing::post(pesticide_application_notice_route),
+        )
+        .route(
+            "/condominium-conversion-protection",
+            axum::routing::post(condominium_conversion_protection_route),
+        )
+        .route(
+            "/otard-antenna-installation",
+            axum::routing::post(otard_antenna_installation_route),
+        )
+        .route(
+            "/religious-display-doorpost",
+            axum::routing::post(religious_display_doorpost_route),
+        )
+        .route(
+            "/asbestos-disclosure",
+            axum::routing::post(asbestos_disclosure_route),
+        )
+        .route(
+            "/firearms-in-rental-unit",
+            axum::routing::post(firearms_in_rental_unit_route),
+        )
+        .route(
+            "/lock-change-between-tenancies",
+            axum::routing::post(lock_change_between_tenancies_route),
+        )
+        .route(
+            "/landlord-lien-prohibition",
+            axum::routing::post(landlord_lien_prohibition_route),
+        )
+        .route(
+            "/military-ordnance-disclosure",
+            axum::routing::post(military_ordnance_disclosure_route),
+        )
+        .route(
+            "/sex-offender-database-notice",
+            axum::routing::post(sex_offender_database_notice_route),
+        )
+        .route(
+            "/short-term-rental-conversion",
+            axum::routing::post(short_term_rental_conversion_route),
+        )
+        .route(
+            "/mid-tenancy-ownership-change",
+            axum::routing::post(mid_tenancy_ownership_change_route),
+        )
+        .route(
+            "/mid-tenancy-security-deposit-increase",
+            axum::routing::post(mid_tenancy_security_deposit_increase_route),
+        )
+        .route(
+            "/mid-tenancy-term-modification",
+            axum::routing::post(mid_tenancy_term_modification_route),
+        )
+        .route(
+            "/mid-tenancy-temporary-relocation",
+            axum::routing::post(mid_tenancy_temporary_relocation_route),
+        )
+        .route(
+            "/tenant-solar-installation",
+            axum::routing::post(tenant_solar_installation_route),
+        )
+        .route(
+            "/flag-display-right",
+            axum::routing::post(flag_display_right_route),
+        )
+        .route(
+            "/written-lease-requirement",
+            axum::routing::post(written_lease_requirement_route),
+        )
+        .route(
+            "/holdover-tenant-damages",
+            axum::routing::post(holdover_tenant_damages_route),
+        )
+        .route(
+            "/lease-assignment-consent",
+            axum::routing::post(lease_assignment_consent_route),
+        )
+        .route(
+            "/lease-cure-period",
+            axum::routing::post(lease_cure_period_route),
+        )
+        .route(
+            "/portable-tenant-screening-report",
+            axum::routing::post(portable_tenant_screening_report_route),
+        )
+        .route(
+            "/hoa-fee-tenant-enforcement",
+            axum::routing::post(hoa_fee_tenant_enforcement_route),
+        )
+        .route(
+            "/hoa-rental-restriction",
+            axum::routing::post(hoa_rental_restriction_route),
+        )
+        .route(
+            "/rent-acceleration-enforceability",
+            axum::routing::post(rent_acceleration_enforceability_route),
+        )
+        .route(
+            "/tenant-in-foreclosure-protection",
+            axum::routing::post(tenant_in_foreclosure_protection_route),
+        )
+        .route(
+            "/tenant-in-unit-appliance-repair-responsibility",
+            axum::routing::post(tenant_in_unit_appliance_repair_responsibility_route),
+        )
+        .route(
+            "/tenant-late-fee-cap",
+            axum::routing::post(tenant_late_fee_cap_route),
+        )
+        .route(
+            "/tenant-lease-guarantor-disclosure",
+            axum::routing::post(tenant_lease_guarantor_disclosure_route),
+        )
+        .route(
+            "/tenant-estoppel-certificate",
+            axum::routing::post(tenant_estoppel_certificate_route),
+        )
+        .route(
+            "/landlord-property-sale-notice",
+            axum::routing::post(landlord_property_sale_notice_route),
+        )
+        .route(
+            "/lease-renewal-offer-timing",
+            axum::routing::post(lease_renewal_offer_timing_route),
+        )
+        .route(
+            "/rent-concession-disclosure",
+            axum::routing::post(rent_concession_disclosure_route),
+        )
+        .route(
+            "/rent-abatement-construction-nuisance",
+            axum::routing::post(rent_abatement_construction_nuisance_route),
+        )
+        .route(
+            "/landlord-master-key-retention",
+            axum::routing::post(landlord_master_key_retention_route),
+        )
+        .route(
+            "/tenant-holdover-security-deposit-setoff",
+            axum::routing::post(tenant_holdover_security_deposit_setoff_route),
+        )
+        .route(
+            "/rental-video-surveillance-retention",
+            axum::routing::post(rental_video_surveillance_retention_route),
+        )
+        .route(
+            "/landlord-foreclosure-status-disclosure",
+            axum::routing::post(landlord_foreclosure_status_disclosure_route),
+        )
+        .route(
+            "/commercial-lease-personal-guaranty-enforceability",
+            axum::routing::post(commercial_lease_personal_guaranty_enforceability_route),
+        )
+        .route(
+            "/commercial-lease-cam-charge-disclosure",
+            axum::routing::post(commercial_lease_cam_charge_disclosure_route),
+        )
+        .route(
+            "/landlord-pest-extermination-timeline",
+            axum::routing::post(landlord_pest_extermination_timeline_route),
+        )
+        .route(
+            "/landlord-water-heat-emergency-response",
+            axum::routing::post(landlord_water_heat_emergency_response_route),
+        )
+        .route(
+            "/tenant-emotional-distress-damages",
+            axum::routing::post(tenant_emotional_distress_damages_route),
+        )
+        .route(
+            "/landlord-negative-credit-reporting",
+            axum::routing::post(landlord_negative_credit_reporting_route),
+        )
+        .route(
+            "/security-deposit-bank-disclosure",
+            axum::routing::post(security_deposit_bank_disclosure_route),
+        )
+        .route(
+            "/landlord-annual-rent-statement",
+            axum::routing::post(landlord_annual_rent_statement_route),
+        )
+        .route(
+            "/landlord-emergency-entry-notice",
+            axum::routing::post(landlord_emergency_entry_notice_route),
+        )
+        .route(
+            "/landlord-mid-tenancy-rekeying",
+            axum::routing::post(landlord_mid_tenancy_rekeying_route),
+        )
+        .route(
+            "/landlord-harassment",
+            axum::routing::post(landlord_harassment_route),
+        )
+        .route(
+            "/landlord-possession-delivery",
+            axum::routing::post(landlord_possession_delivery_route),
+        )
+        .route(
+            "/landlord-post-eviction-tenant-property-storage-disposal",
+            axum::routing::post(landlord_post_eviction_tenant_property_storage_disposal_route),
+        )
+        .route(
+            "/lease-waiver-enforceability",
+            axum::routing::post(lease_waiver_enforceability_route),
+        )
+        .route(
+            "/rental-application-denial-disclosure",
+            axum::routing::post(rental_application_denial_disclosure_route),
+        )
+        .route(
+            "/rental-arizona-residential-landlord-tenant-act-ars-33-1301",
+            axum::routing::post(rental_arizona_residential_landlord_tenant_act_ars_33_1301_route),
+        )
+        .route(
+            "/rental-asbestos-disclosure",
+            axum::routing::post(rental_asbestos_disclosure_route),
+        )
+        .route(
+            "/rental-basement-water-intrusion-disclosure",
+            axum::routing::post(rental_basement_water_intrusion_disclosure_route),
+        )
+        .route(
+            "/rental-bed-bug-disclosure",
+            axum::routing::post(rental_bed_bug_disclosure_route),
+        )
+        .route(
+            "/rental-bedroom-egress-window",
+            axum::routing::post(rental_bedroom_egress_window_route),
+        )
+        .route(
+            "/rental-berkeley-rent-stabilization-ordinance-bmc-chapter-13-76",
+            axum::routing::post(
+                rental_berkeley_rent_stabilization_ordinance_bmc_chapter_13_76_route,
+            ),
+        )
+        .route(
+            "/rental-carbon-monoxide-detector",
+            axum::routing::post(rental_carbon_monoxide_detector_route),
+        )
+        .route(
+            "/rental-california-ab-12-security-deposit-cap",
+            axum::routing::post(rental_california_ab_12_security_deposit_cap_route),
+        )
+        .route(
+            "/rental-california-ab-2347-unlawful-detainer-response",
+            axum::routing::post(rental_california_ab_2347_unlawful_detainer_response_route),
+        )
+        .route(
+            "/rental-california-sb-567-no-fault-eviction-amendments",
+            axum::routing::post(rental_california_sb_567_no_fault_eviction_amendments_route),
+        )
+        .route(
+            "/rental-chimney-fireplace-inspection-disclosure",
+            axum::routing::post(rental_chimney_fireplace_inspection_disclosure_route),
+        )
+        .route(
+            "/rental-climate-mobilization-act-ll97-emissions",
+            axum::routing::post(rental_climate_mobilization_act_ll97_emissions_route),
+        )
+        .route(
+            "/rental-colorado-crs-title-38-article-12-tenants-landlords",
+            axum::routing::post(rental_colorado_crs_title_38_article_12_tenants_landlords_route),
+        )
+        .route(
+            "/rental-colorado-hb-24-1098-just-cause-eviction",
+            axum::routing::post(rental_colorado_hb_24_1098_just_cause_eviction_route),
+        )
+        .route(
+            "/rental-connecticut-fair-rent-commission",
+            axum::routing::post(rental_connecticut_fair_rent_commission_route),
+        )
+        .route(
+            "/rental-cook-county-rtlo",
+            axum::routing::post(rental_cook_county_rtlo_route),
+        )
+        .route(
+            "/rental-cooling-tower-inspection-local-law-77",
+            axum::routing::post(rental_cooling_tower_inspection_local_law_77_route),
+        )
+        .route(
+            "/rental-elevator-safety-inspection",
+            axum::routing::post(rental_elevator_safety_inspection_route),
+        )
+        .route(
+            "/rental-fire-extinguisher-requirement",
+            axum::routing::post(rental_fire_extinguisher_requirement_route),
+        )
+        .route(
+            "/rental-florida-hb-1417-state-preemption",
+            axum::routing::post(rental_florida_hb_1417_state_preemption_route),
+        )
+        .route(
+            "/rental-florida-chapter-83-part-ii-residential-tenancies",
+            axum::routing::post(rental_florida_chapter_83_part_ii_residential_tenancies_route),
+        )
+        .route(
+            "/rental-flood-hazard-disclosure",
+            axum::routing::post(rental_flood_hazard_disclosure_route),
+        )
+        .route(
+            "/rental-foreclosure-tenant-protection-ptfa",
+            axum::routing::post(rental_foreclosure_tenant_protection_ptfa_route),
+        )
+        .route(
+            "/rental-broadband-mte-rules",
+            axum::routing::post(rental_broadband_mte_rules_route),
+        )
+        .route(
+            "/rental-energy-benchmarking",
+            axum::routing::post(rental_energy_benchmarking_route),
+        )
+        .route(
+            "/rental-garage-door-safety-compliance",
+            axum::routing::post(rental_garage_door_safety_compliance_route),
+        )
+        .route(
+            "/rental-georgia-landlord-tenant-act-ocga-44-7",
+            axum::routing::post(rental_georgia_landlord_tenant_act_ocga_44_7_route),
+        )
+        .route(
+            "/rental-gas-appliance-ban",
+            axum::routing::post(rental_gas_appliance_ban_route),
+        )
+        .route(
+            "/rental-gas-piping-inspection-local-law-152",
+            axum::routing::post(rental_gas_piping_inspection_local_law_152_route),
+        )
+        .route(
+            "/rental-hardwired-smoke-alarm-responsibility",
+            axum::routing::post(rental_hardwired_smoke_alarm_responsibility_route),
+        )
+        .route(
+            "/rental-hawaii-residential-landlord-tenant-code-hrs-521",
+            axum::routing::post(rental_hawaii_residential_landlord_tenant_code_hrs_521_route),
+        )
+        .route(
+            "/rental-heat-minimum-temperature-season",
+            axum::routing::post(rental_heat_minimum_temperature_season_route),
+        )
+        .route(
+            "/rental-hot-water-temperature",
+            axum::routing::post(rental_hot_water_temperature_route),
+        )
+        .route(
+            "/rental-housing-for-older-persons-act-hopa-1995",
+            axum::routing::post(rental_housing_for_older_persons_act_hopa_1995_route),
+        )
+        .route(
+            "/rental-hud-hotma-income-asset-compliance",
+            axum::routing::post(rental_hud_hotma_income_asset_compliance_route),
+        )
+        .route(
+            "/rental-hud-section-504-rehabilitation-act-24-cfr-part-8",
+            axum::routing::post(rental_hud_section_504_rehabilitation_act_24_cfr_part_8_route),
+        )
+        .route(
+            "/rental-in-unit-laundry-appliance-provision",
+            axum::routing::post(rental_in_unit_laundry_appliance_provision_route),
+        )
+        .route(
+            "/rental-indiana-landlord-tenant-law-ic-32-31",
+            axum::routing::post(rental_indiana_landlord_tenant_law_ic_32_31_route),
+        )
+        .route(
+            "/rental-junk-fee-transparency",
+            axum::routing::post(rental_junk_fee_transparency_route),
+        )
+        .route(
+            "/rental-just-cause-eviction",
+            axum::routing::post(rental_just_cause_eviction_route),
+        )
+        .route(
+            "/rental-hoa-disclosure-at-lease",
+            axum::routing::post(rental_hoa_disclosure_at_lease_route),
+        )
+        .route(
+            "/rental-lead-paint-disclosure",
+            axum::routing::post(rental_lead_paint_disclosure_route),
+        )
+        .route(
+            "/rental-local-law-87-energy-audit-retro-commissioning",
+            axum::routing::post(rental_local_law_87_energy_audit_retro_commissioning_route),
+        )
+        .route(
+            "/rental-local-law-88-lighting-upgrades-sub-metering",
+            axum::routing::post(rental_local_law_88_lighting_upgrades_sub_metering_route),
+        )
+        .route(
+            "/rental-lead-pipe-disclosure",
+            axum::routing::post(rental_lead_pipe_disclosure_route),
+        )
+        .route(
+            "/rental-natural-gas-leak-response",
+            axum::routing::post(rental_natural_gas_leak_response_route),
+        )
+        .route(
+            "/rental-new-jersey-anti-eviction-act",
+            axum::routing::post(rental_new_jersey_anti_eviction_act_route),
+        )
+        .route(
+            "/rental-new-york-hstpa-2019-chapter-36",
+            axum::routing::post(rental_new_york_hstpa_2019_chapter_36_route),
+        )
+        .route(
+            "/rental-north-carolina-chapter-42-landlord-tenant",
+            axum::routing::post(rental_north_carolina_chapter_42_landlord_tenant_route),
+        )
+        .route(
+            "/rental-ny-rent-receipt-late-notice-requirements",
+            axum::routing::post(rental_ny_rent_receipt_late_notice_requirements_route),
+        )
+        .route(
+            "/rental-ny-rpl-235f-roommate-law",
+            axum::routing::post(rental_ny_rpl_235f_roommate_law_route),
+        )
+        .route(
+            "/rental-attorney-fee-clause-reciprocity",
+            axum::routing::post(rental_attorney_fee_clause_reciprocity_route),
+        )
+        .route(
+            "/rental-nyc-childhood-lead-poisoning-prevention-act",
+            axum::routing::post(rental_nyc_childhood_lead_poisoning_prevention_act_route),
+        )
+        .route(
+            "/rental-nyc-loft-law-article-7c",
+            axum::routing::post(rental_nyc_loft_law_article_7c_route),
+        )
+        .route(
+            "/rental-nyc-scrie-drie-rent-freeze",
+            axum::routing::post(rental_nyc_scrie_drie_rent_freeze_route),
+        )
+        .route(
+            "/rental-nyc-local-law-55-ipm-pest-control",
+            axum::routing::post(rental_nyc_local_law_55_ipm_pest_control_route),
+        )
+        .route(
+            "/rental-nyc-local-law-18-str-registration",
+            axum::routing::post(rental_nyc_local_law_18_str_registration_route),
+        )
+        .route(
+            "/rental-nyc-coop-conversion-eviction-protection",
+            axum::routing::post(rental_nyc_coop_conversion_eviction_protection_route),
+        )
+        .route(
+            "/rental-oakland-measure-ee-just-cause-omc-8-22",
+            axum::routing::post(rental_oakland_measure_ee_just_cause_omc_8_22_route),
+        )
+        .route(
+            "/rental-ohio-revised-code-chapter-5321-landlord-tenant-act",
+            axum::routing::post(rental_ohio_revised_code_chapter_5321_landlord_tenant_act_route),
+        )
+        .route(
+            "/rental-oil-tank-replacement-disclosure",
+            axum::routing::post(rental_oil_tank_replacement_disclosure_route),
+        )
+        .route(
+            "/rental-oregon-residential-landlord-tenant-act-ors-chapter-90",
+            axum::routing::post(rental_oregon_residential_landlord_tenant_act_ors_chapter_90_route),
+        )
+        .route(
+            "/rental-oregon-sb-608-sb-611-rent-stabilization",
+            axum::routing::post(rental_oregon_sb_608_sb_611_rent_stabilization_route),
+        )
+        .route(
+            "/rental-organic-waste-collection-disclosure",
+            axum::routing::post(rental_organic_waste_collection_disclosure_route),
+        )
+        .route(
+            "/rental-pellet-stove-disclosure",
+            axum::routing::post(rental_pellet_stove_disclosure_route),
+        )
+        .route(
+            "/rental-pennsylvania-landlord-tenant-act-1951-68-ps-250-101",
+            axum::routing::post(rental_pennsylvania_landlord_tenant_act_1951_68_ps_250_101_route),
+        )
+        .route(
+            "/rental-pesticide-application-notification",
+            axum::routing::post(rental_pesticide_application_notification_route),
+        )
+        .route(
+            "/rental-pet-deposit-separate-security",
+            axum::routing::post(rental_pet_deposit_separate_security_route),
+        )
+        .route(
+            "/rental-post-construction-lead-dust-clearance",
+            axum::routing::post(rental_post_construction_lead_dust_clearance_route),
+        )
+        .route(
+            "/rental-positive-rent-payment-credit-reporting",
+            axum::routing::post(rental_positive_rent_payment_credit_reporting_route),
+        )
+        .route(
+            "/rental-propane-tank-lease-disclosure",
+            axum::routing::post(rental_propane_tank_lease_disclosure_route),
+        )
+        .route(
+            "/rental-pre-foreclosure-tenant-notification",
+            axum::routing::post(rental_pre_foreclosure_tenant_notification_route),
+        )
+        .route(
+            "/rental-property-registration",
+            axum::routing::post(rental_property_registration_route),
+        )
+        .route(
+            "/rental-radon-mitigation-disclosure",
+            axum::routing::post(rental_radon_mitigation_disclosure_route),
+        )
+        .route(
+            "/rental-renters-insurance-requirement",
+            axum::routing::post(rental_renters_insurance_requirement_route),
+        )
+        .route(
+            "/rental-san-francisco-rent-ordinance-chapter-37",
+            axum::routing::post(rental_san_francisco_rent_ordinance_chapter_37_route),
+        )
+        .route(
+            "/rental-satellite-dish-installation-right",
+            axum::routing::post(rental_satellite_dish_installation_right_route),
+        )
+        .route(
+            "/rental-seattle-smc-22-206-160-just-cause-eviction",
+            axum::routing::post(rental_seattle_smc_22_206_160_just_cause_eviction_route),
+        )
+        .route(
+            "/rental-security-deposit-interest",
+            axum::routing::post(rental_security_deposit_interest_route),
+        )
+        .route(
+            "/rental-septic-system-disclosure",
+            axum::routing::post(rental_septic_system_disclosure_route),
+        )
+        .route(
+            "/rental-sewer-lateral-responsibility",
+            axum::routing::post(rental_sewer_lateral_responsibility_route),
+        )
+        .route(
+            "/rental-sex-offender-registry-notice",
+            axum::routing::post(rental_sex_offender_registry_notice_route),
+        )
+        .route(
+            "/rental-sinkhole-disclosure",
+            axum::routing::post(rental_sinkhole_disclosure_route),
+        )
+        .route(
+            "/rental-smoke-free-housing-disclosure",
+            axum::routing::post(rental_smoke_free_housing_disclosure_route),
+        )
+        .route(
+            "/rental-soft-story-seismic-retrofit",
+            axum::routing::post(rental_soft_story_seismic_retrofit_route),
+        )
+        .route(
+            "/rental-solar-panel-disclosure",
+            axum::routing::post(rental_solar_panel_disclosure_route),
+        )
+        .route(
+            "/rental-storage-unit-lease-disclosure",
+            axum::routing::post(rental_storage_unit_lease_disclosure_route),
+        )
+        .route(
+            "/rental-balcony-inspection-seismic-safety",
+            axum::routing::post(rental_balcony_inspection_seismic_safety_route),
+        )
+        .route(
+            "/rental-short-term-subletting-airbnb-restriction",
+            axum::routing::post(rental_short_term_subletting_airbnb_restriction_route),
+        )
+        .route(
+            "/rental-grill-propane-bbq-restriction",
+            axum::routing::post(rental_grill_propane_bbq_restriction_route),
+        )
+        .route(
+            "/rental-radiator-steam-heat-safety",
+            axum::routing::post(rental_radiator_steam_heat_safety_route),
+        )
+        .route(
+            "/rental-property-tax-pass-through-disclosure",
+            axum::routing::post(rental_property_tax_pass_through_disclosure_route),
+        )
+        .route(
+            "/rental-marijuana-cultivation-restriction",
+            axum::routing::post(rental_marijuana_cultivation_restriction_route),
+        )
+        .route(
+            "/rental-maryland-landlord-tenant-md-real-property-title-8",
+            axum::routing::post(rental_maryland_landlord_tenant_md_real_property_title_8_route),
+        )
+        .route(
+            "/rental-massachusetts-mgl-chapter-186-239-broader-regime",
+            axum::routing::post(rental_massachusetts_mgl_chapter_186_239_broader_regime_route),
+        )
+        .route(
+            "/rental-massachusetts-security-deposit-statute",
+            axum::routing::post(rental_massachusetts_security_deposit_statute_route),
+        )
+        .route(
+            "/rental-massachusetts-homes-act-eviction-sealing",
+            axum::routing::post(rental_massachusetts_homes_act_eviction_sealing_route),
+        )
+        .route(
+            "/rental-michigan-landlord-tenant-mcl-554",
+            axum::routing::post(rental_michigan_landlord_tenant_mcl_554_route),
+        )
+        .route(
+            "/rental-attached-garage-carbon-monoxide-disclosure",
+            axum::routing::post(rental_attached_garage_carbon_monoxide_disclosure_route),
+        )
+        .route(
+            "/rental-pet-breed-restriction-disclosure",
+            axum::routing::post(rental_pet_breed_restriction_disclosure_route),
+        )
+        .route(
+            "/rental-emergency-action-plan-high-rise",
+            axum::routing::post(rental_emergency_action_plan_high_rise_route),
+        )
+        .route(
+            "/rental-eviction-record-sealing-screening",
+            axum::routing::post(rental_eviction_record_sealing_screening_route),
+        )
+        .route(
+            "/rental-illegal-lockout-self-help-eviction",
+            axum::routing::post(rental_illegal_lockout_self_help_eviction_route),
+        )
+        .route(
+            "/rental-retaliation-prohibition",
+            axum::routing::post(rental_retaliation_prohibition_route),
+        )
+        .route(
+            "/rental-landlord-notice-to-enter",
+            axum::routing::post(rental_landlord_notice_to_enter_route),
+        )
+        .route(
+            "/rental-security-deposit-return-notice",
+            axum::routing::post(rental_security_deposit_return_notice_route),
+        )
+        .route(
+            "/rental-late-fee-cap",
+            axum::routing::post(rental_late_fee_cap_route),
+        )
+        .route(
+            "/rental-tenant-criminal-background-screening",
+            axum::routing::post(rental_tenant_criminal_background_screening_route),
+        )
+        .route(
+            "/rental-source-of-income-discrimination",
+            axum::routing::post(rental_source_of_income_discrimination_route),
+        )
+        .route(
+            "/rental-tenant-abandoned-personal-property",
+            axum::routing::post(rental_tenant_abandoned_personal_property_route),
+        )
+        .route(
+            "/rental-tennessee-urlta-tca-66-28-101",
+            axum::routing::post(rental_tennessee_urlta_tca_66_28_101_route),
+        )
+        .route(
+            "/rental-texas-hb-2127-state-preemption",
+            axum::routing::post(rental_texas_hb_2127_state_preemption_route),
+        )
+        .route(
+            "/rental-texas-property-code-chapter-92-residential-tenancies",
+            axum::routing::post(rental_texas_property_code_chapter_92_residential_tenancies_route),
+        )
+        .route(
+            "/rental-tenant-bill-of-rights-handout",
+            axum::routing::post(rental_tenant_bill_of_rights_handout_route),
+        )
+        .route(
+            "/rental-minneapolis-renter-protections-ordinance-2020",
+            axum::routing::post(rental_minneapolis_renter_protections_ordinance_2020_route),
+        )
+        .route(
+            "/rental-minnesota-landlord-tenant-act-minn-stat-504b",
+            axum::routing::post(rental_minnesota_landlord_tenant_act_minn_stat_504b_route),
+        )
+        .route(
+            "/rental-missouri-landlord-tenant-mo-rev-stat-535-534-441",
+            axum::routing::post(rental_missouri_landlord_tenant_mo_rev_stat_535_534_441_route),
+        )
+        .route(
+            "/rental-mold-disclosure-remediation",
+            axum::routing::post(rental_mold_disclosure_remediation_route),
+        )
+        .route(
+            "/rental-multilingual-lease-translation",
+            axum::routing::post(rental_multilingual_lease_translation_route),
+        )
+        .route(
+            "/rental-fair-housing-reasonable-accommodation",
+            axum::routing::post(rental_fair_housing_reasonable_accommodation_route),
+        )
+        .route(
+            "/rental-fair-housing-amendments-act-of-1988-fhaa",
+            axum::routing::post(rental_fair_housing_amendments_act_of_1988_fhaa_route),
+        )
+        .route(
+            "/rental-facade-inspection-fisp-local-law-11",
+            axum::routing::post(rental_facade_inspection_fisp_local_law_11_route),
+        )
+        .route(
+            "/rental-boiler-inspection-compliance",
+            axum::routing::post(rental_boiler_inspection_compliance_route),
+        )
+        .route(
+            "/rental-tenant-rent-escrow-habitability-dispute",
+            axum::routing::post(rental_tenant_rent_escrow_habitability_dispute_route),
+        )
+        .route(
+            "/rental-tree-removal-dangerous-tree-disclosure",
+            axum::routing::post(rental_tree_removal_dangerous_tree_disclosure_route),
+        )
+        .route(
+            "/rental-tenant-right-to-counsel-eviction",
+            axum::routing::post(rental_tenant_right_to_counsel_eviction_route),
+        )
+        .route(
+            "/rental-ada-accessible-parking-compliance",
+            axum::routing::post(rental_ada_accessible_parking_compliance_route),
+        )
+        .route(
+            "/rental-smoke-free-cannabis-restriction",
+            axum::routing::post(rental_smoke_free_cannabis_restriction_route),
+        )
+        .route(
+            "/rental-rent-control-stabilization",
+            axum::routing::post(rental_rent_control_stabilization_route),
+        )
+        .route(
+            "/rental-rent-increase-notice-requirement",
+            axum::routing::post(rental_rent_increase_notice_requirement_route),
+        )
+        .route(
+            "/rental-rent-to-own-lease-purchase-disclosures",
+            axum::routing::post(rental_rent_to_own_lease_purchase_disclosures_route),
+        )
+        .route(
+            "/rental-tenant-relocation-assistance",
+            axum::routing::post(rental_tenant_relocation_assistance_route),
+        )
+        .route(
+            "/rental-tenant-data-privacy-compliance",
+            axum::routing::post(rental_tenant_data_privacy_compliance_route),
+        )
+        .route(
+            "/rental-tenant-estoppel-certificate",
+            axum::routing::post(rental_tenant_estoppel_certificate_route),
+        )
+        .route(
+            "/rental-ev-charging-accommodation",
+            axum::routing::post(rental_ev_charging_accommodation_route),
+        )
+        .route(
+            "/rental-waste-recycling-collection-mandate",
+            axum::routing::post(rental_waste_recycling_collection_mandate_route),
+        )
+        .route(
+            "/rental-washington-hb-1217-rent-stabilization",
+            axum::routing::post(rental_washington_hb_1217_rent_stabilization_route),
+        )
+        .route(
+            "/rental-washington-rlta-rcw-59-18",
+            axum::routing::post(rental_washington_rlta_rcw_59_18_route),
+        )
+        .route(
+            "/rental-virginia-vrlta-va-code-55-1-1200",
+            axum::routing::post(rental_virginia_vrlta_va_code_55_1_1200_route),
+        )
+        .route(
+            "/rental-dc-topa-tenant-opportunity-purchase",
+            axum::routing::post(rental_dc_topa_tenant_opportunity_purchase_route),
+        )
+        .route(
+            "/rental-dog-bite-liability",
+            axum::routing::post(rental_dog_bite_liability_route),
+        )
+        .route(
+            "/rental-drone-overflight-surveillance-privacy",
+            axum::routing::post(rental_drone_overflight_surveillance_privacy_route),
+        )
+        .route(
+            "/rental-domestic-violence-lock-change-lease-termination",
+            axum::routing::post(rental_domestic_violence_lock_change_lease_termination_route),
+        )
+        .route(
+            "/rental-swimming-pool-drain-safety",
+            axum::routing::post(rental_swimming_pool_drain_safety_route),
+        )
+        .route(
+            "/rental-underground-storage-tank-disclosure",
+            axum::routing::post(rental_underground_storage_tank_disclosure_route),
+        )
+        .route(
+            "/rental-unpermitted-unit-disclosure",
+            axum::routing::post(rental_unpermitted_unit_disclosure_route),
+        )
+        .route(
+            "/rental-vacant-property-registration",
+            axum::routing::post(rental_vacant_property_registration_route),
+        )
+        .route(
+            "/rental-vawa-2022-federal-housing-protections",
+            axum::routing::post(rental_vawa_2022_federal_housing_protections_route),
+        )
+        .route(
+            "/rental-vehicle-towing-notice-sign-requirements",
+            axum::routing::post(rental_vehicle_towing_notice_sign_requirements_route),
+        )
+        .route(
+            "/rental-water-submetering-disclosure",
+            axum::routing::post(rental_water_submetering_disclosure_route),
+        )
+        .route(
+            "/rental-well-water-disclosure",
+            axum::routing::post(rental_well_water_disclosure_route),
+        )
+        .route(
+            "/rental-window-blind-cord-safety",
+            axum::routing::post(rental_window_blind_cord_safety_route),
+        )
+        .route(
+            "/rental-window-guard-installation",
+            axum::routing::post(rental_window_guard_installation_route),
+        )
+        .route(
+            "/rental-wisconsin-chapter-704-atcp-134",
+            axum::routing::post(rental_wisconsin_chapter_704_atcp_134_route),
+        )
+        .route(
+            "/rental-south-carolina-residential-landlord-tenant-act-sc-code-27-40",
+            axum::routing::post(
+                rental_south_carolina_residential_landlord_tenant_act_sc_code_27_40_route,
+            ),
+        )
+        .route(
+            "/rental-kentucky-urlta-krs-chapter-383-subchapter-5",
+            axum::routing::post(rental_kentucky_urlta_krs_chapter_383_subchapter_5_route),
+        )
+        .route(
+            "/rental-iowa-urlta-iowa-code-chapter-562a",
+            axum::routing::post(rental_iowa_urlta_iowa_code_chapter_562a_route),
+        )
+        .route(
+            "/rental-alabama-urlta-ala-code-35-9a",
+            axum::routing::post(rental_alabama_urlta_ala_code_35_9a_route),
+        )
+        .route(
+            "/rental-nevada-nrs-chapter-118a",
+            axum::routing::post(rental_nevada_nrs_chapter_118a_route),
+        )
+        .route(
+            "/residential-lease-arbitration-clause",
+            axum::routing::post(residential_lease_arbitration_clause_route),
+        )
+        .route(
+            "/landlord-repair-response-timeframe",
+            axum::routing::post(landlord_repair_response_timeframe_route),
+        )
+        .route(
+            "/landlord-retaliation-damages",
+            axum::routing::post(landlord_retaliation_damages_route),
+        )
+        .route(
+            "/landlord-security-device-obligations",
+            axum::routing::post(landlord_security_device_obligations_route),
+        )
+        .route(
+            "/landlord-self-help-eviction-prohibition",
+            axum::routing::post(landlord_self_help_eviction_prohibition_route),
+        )
+        .route(
+            "/landlord-tenant-recording-consent",
+            axum::routing::post(landlord_tenant_recording_consent_route),
+        )
+        .route(
+            "/last-month-rent-offset",
+            axum::routing::post(last_month_rent_offset_route),
+        )
+        .route(
+            "/emotional-support-animal-documentation",
+            axum::routing::post(emotional_support_animal_documentation_route),
+        )
+        .route(
+            "/lease-nondisparagement-prohibition",
+            axum::routing::post(lease_nondisparagement_prohibition_route),
+        )
+        .route(
+            "/plain-language-lease-check",
+            axum::routing::post(plain_language_lease_check_route),
+        )
+        .route(
+            "/roommate-authorization-check",
+            axum::routing::post(roommate_authorization_check_route),
+        )
+        .route(
+            "/ev-charger-installation-check",
+            axum::routing::post(ev_charger_installation_check_route),
+        )
+        .route(
+            "/advance-rent-limit-check",
+            axum::routing::post(advance_rent_limit_check_route),
+        )
+        .route(
+            "/fire-sprinkler-disclosure-check",
+            axum::routing::post(fire_sprinkler_disclosure_check_route),
+        )
+        .route(
+            "/bedbug-extermination-cost-check",
+            axum::routing::post(bedbug_extermination_cost_check_route),
+        )
+        .route(
+            "/crime-victim-termination-check",
+            axum::routing::post(crime_victim_termination_check_route),
+        )
+        .route(
+            "/lease-succession-check",
+            axum::routing::post(lease_succession_check_route),
+        )
+        .route(
+            "/rent-credit-reporting-check",
+            axum::routing::post(rent_credit_reporting_check_route),
+        )
+        .route(
+            "/rent-escrow-check",
+            axum::routing::post(rent_escrow_check_route),
+        )
+        .route(
+            "/right-to-dry-check",
+            axum::routing::post(right_to_dry_check_route),
+        )
+        .route(
+            "/abandonment-check",
+            axum::routing::post(abandonment_check_route),
+        )
+        .route(
+            "/tenant-accessible-parking",
+            axum::routing::post(tenant_accessible_parking_route),
+        )
+        .route(
+            "/tenant-assistance-animal-accommodation",
+            axum::routing::post(tenant_assistance_animal_accommodation_route),
+        )
+        .route(
+            "/service-animal-check",
+            axum::routing::post(service_animal_check_route),
+        )
+        .route(
+            "/senior-disabled-check",
+            axum::routing::post(senior_disabled_check_route),
+        )
         // 1099-NEC contractor $600 threshold tracker
-        .route("/1099-nec-report", axum::routing::post(contractor_1099_route))
+        .route(
+            "/1099-nec-report",
+            axum::routing::post(contractor_1099_route),
+        )
         // State deposit-return window compliance check
-        .route("/deposit-return-check", axum::routing::post(deposit_return_check_route))
+        .route(
+            "/deposit-return-check",
+            axum::routing::post(deposit_return_check_route),
+        )
         // State + federal lease disclosure requirements
-        .route("/lease-disclosures-required", axum::routing::post(lease_disclosures_route))
+        .route(
+            "/lease-disclosures-required",
+            axum::routing::post(lease_disclosures_route),
+        )
         // State rent control / rent-increase compliance check
-        .route("/rent-increase-check", axum::routing::post(rent_increase_check_route))
-        .route("/rent-control-lease-disclosure", axum::routing::post(rent_control_lease_disclosure_route))
-        .route("/rent-overcharge-recovery", axum::routing::post(rent_overcharge_recovery_route))
-        .route("/rubs-utility-billing-disclosure", axum::routing::post(rubs_utility_billing_disclosure_route))
+        .route(
+            "/rent-increase-check",
+            axum::routing::post(rent_increase_check_route),
+        )
+        .route(
+            "/rent-control-lease-disclosure",
+            axum::routing::post(rent_control_lease_disclosure_route),
+        )
+        .route(
+            "/rent-overcharge-recovery",
+            axum::routing::post(rent_overcharge_recovery_route),
+        )
+        .route(
+            "/rubs-utility-billing-disclosure",
+            axum::routing::post(rubs_utility_billing_disclosure_route),
+        )
         // State habitability remedies available to tenants
-        .route("/habitability-remedies", axum::routing::post(habitability_remedies_route))
+        .route(
+            "/habitability-remedies",
+            axum::routing::post(habitability_remedies_route),
+        )
         // State security deposit cap compliance check
-        .route("/security-deposit-cap-check", axum::routing::post(security_deposit_cap_route))
-        .route("/security-deposit-interest-statement", axum::routing::post(security_deposit_interest_statement_route))
+        .route(
+            "/security-deposit-cap-check",
+            axum::routing::post(security_deposit_cap_route),
+        )
+        .route(
+            "/security-deposit-interest-statement",
+            axum::routing::post(security_deposit_interest_statement_route),
+        )
         // Federal SCRA + state military lease termination check
-        .route("/military-termination-check", axum::routing::post(military_termination_route))
+        .route(
+            "/military-termination-check",
+            axum::routing::post(military_termination_route),
+        )
 }
 
 // ---------------------------------------------------------------------------
@@ -1957,12 +2968,11 @@ pub fn router() -> Router<AppState> {
 // ---------------------------------------------------------------------------
 
 async fn ensure_property_owner(s: &AppState, user_id: Uuid, pid: Uuid) -> Result<(), ApiError> {
-    let row: Option<(Uuid,)> = sqlx::query_as(
-        "SELECT user_id FROM rental_properties WHERE id = $1",
-    )
-    .bind(pid)
-    .fetch_optional(&s.pool)
-    .await?;
+    let row: Option<(Uuid,)> =
+        sqlx::query_as("SELECT user_id FROM rental_properties WHERE id = $1")
+            .bind(pid)
+            .fetch_optional(&s.pool)
+            .await?;
     match row {
         Some((owner,)) if owner == user_id => Ok(()),
         Some(_) => Err(ApiError::Forbidden),
@@ -2032,7 +3042,11 @@ fn parse_maint_status(s: &str) -> Result<&'static str, ApiError> {
         "in_progress" => "in_progress",
         "done" => "done",
         "cancelled" => "cancelled",
-        _ => return Err(ApiError::BadRequest(format!("invalid maintenance status: {s}"))),
+        _ => {
+            return Err(ApiError::BadRequest(format!(
+                "invalid maintenance status: {s}"
+            )))
+        }
     })
 }
 
@@ -2042,28 +3056,32 @@ fn parse_maint_priority(s: &str) -> Result<&'static str, ApiError> {
         "normal" => "normal",
         "high" => "high",
         "emergency" => "emergency",
-        _ => return Err(ApiError::BadRequest(format!("invalid maintenance priority: {s}"))),
+        _ => {
+            return Err(ApiError::BadRequest(format!(
+                "invalid maintenance priority: {s}"
+            )))
+        }
     })
 }
 
 fn property_type_enum(s: &str) -> SePropertyType {
     match s {
-        "single_family"       => SePropertyType::SingleFamily,
-        "multi_family"        => SePropertyType::MultiFamily,
+        "single_family" => SePropertyType::SingleFamily,
+        "multi_family" => SePropertyType::MultiFamily,
         "vacation_short_term" => SePropertyType::VacationShortTerm,
-        "commercial"          => SePropertyType::Commercial,
-        "land"                => SePropertyType::Land,
-        "royalties"           => SePropertyType::Royalties,
-        "self_rental"         => SePropertyType::SelfRental,
-        _                     => SePropertyType::Other,
+        "commercial" => SePropertyType::Commercial,
+        "land" => SePropertyType::Land,
+        "royalties" => SePropertyType::Royalties,
+        "self_rental" => SePropertyType::SelfRental,
+        _ => SePropertyType::Other,
     }
 }
 
 fn income_kind_enum(s: &str) -> SeIncomeKind {
     match s {
-        "rent"     => SeIncomeKind::Rent,
-        "royalty"  => SeIncomeKind::Royalty,
-        _          => SeIncomeKind::Other,
+        "rent" => SeIncomeKind::Rent,
+        "royalty" => SeIncomeKind::Royalty,
+        _ => SeIncomeKind::Other,
     }
 }
 
@@ -2187,7 +3205,10 @@ async fn create_property(
     .bind(b.purchase_price)
     .bind(b.land_value)
     .bind(b.placed_in_service_at)
-    .bind(b.recovery_period_years.unwrap_or_else(|| Decimal::from_str("27.5").unwrap()))
+    .bind(
+        b.recovery_period_years
+            .unwrap_or_else(|| Decimal::from_str("27.5").unwrap()),
+    )
     .bind(b.fair_rental_days.unwrap_or(0))
     .bind(b.personal_use_days.unwrap_or(0))
     .bind(b.qjv_election.unwrap_or(false))
@@ -2252,7 +3273,10 @@ async fn update_property(
     .bind(b.purchase_price)
     .bind(b.land_value)
     .bind(b.placed_in_service_at)
-    .bind(b.recovery_period_years.unwrap_or_else(|| Decimal::from_str("27.5").unwrap()))
+    .bind(
+        b.recovery_period_years
+            .unwrap_or_else(|| Decimal::from_str("27.5").unwrap()),
+    )
     .bind(b.fair_rental_days.unwrap_or(0))
     .bind(b.personal_use_days.unwrap_or(0))
     .bind(b.qjv_election.unwrap_or(false))
@@ -2379,7 +3403,9 @@ async fn delete_tenant(
         .execute(&s.pool)
         .await?
         .rows_affected();
-    if n == 0 { return Err(ApiError::NotFound); }
+    if n == 0 {
+        return Err(ApiError::NotFound);
+    }
     Ok(Json(serde_json::json!({"deleted": true})))
 }
 
@@ -2617,8 +3643,11 @@ async fn list_income(
     Query(q): Query<IncomeQuery>,
 ) -> Result<Json<Vec<Income>>, ApiError> {
     ensure_property_owner(&s, u.id, property_id).await?;
-    let from = q.from.unwrap_or(NaiveDate::from_ymd_opt(1970, 1, 1).unwrap());
-    let to = q.to.unwrap_or(NaiveDate::from_ymd_opt(9999, 12, 31).unwrap());
+    let from = q
+        .from
+        .unwrap_or(NaiveDate::from_ymd_opt(1970, 1, 1).unwrap());
+    let to =
+        q.to.unwrap_or(NaiveDate::from_ymd_opt(9999, 12, 31).unwrap());
     let kind = q.kind.unwrap_or_default();
     let rows = sqlx::query_as(&format!(
         "SELECT {INCOME_COLS} FROM rental_income
@@ -2686,7 +3715,9 @@ async fn delete_income(
     .execute(&s.pool)
     .await?
     .rows_affected();
-    if n == 0 { return Err(ApiError::NotFound); }
+    if n == 0 {
+        return Err(ApiError::NotFound);
+    }
     Ok(Json(serde_json::json!({"deleted": true})))
 }
 
@@ -2747,8 +3778,11 @@ async fn list_expenses(
     Query(q): Query<ExpenseQuery>,
 ) -> Result<Json<Vec<Expense>>, ApiError> {
     ensure_property_owner(&s, u.id, property_id).await?;
-    let from = q.from.unwrap_or(NaiveDate::from_ymd_opt(1970, 1, 1).unwrap());
-    let to = q.to.unwrap_or(NaiveDate::from_ymd_opt(9999, 12, 31).unwrap());
+    let from = q
+        .from
+        .unwrap_or(NaiveDate::from_ymd_opt(1970, 1, 1).unwrap());
+    let to =
+        q.to.unwrap_or(NaiveDate::from_ymd_opt(9999, 12, 31).unwrap());
     let cat = q.category.unwrap_or_default();
     let capitalized = q.capitalized; // None = either
     Ok(Json(
@@ -2827,7 +3861,9 @@ async fn delete_expense(
     .execute(&s.pool)
     .await?
     .rows_affected();
-    if n == 0 { return Err(ApiError::NotFound); }
+    if n == 0 {
+        return Err(ApiError::NotFound);
+    }
     Ok(Json(serde_json::json!({"deleted": true})))
 }
 
@@ -2927,7 +3963,9 @@ async fn delete_mileage(
     .execute(&s.pool)
     .await?
     .rows_affected();
-    if n == 0 { return Err(ApiError::NotFound); }
+    if n == 0 {
+        return Err(ApiError::NotFound);
+    }
     Ok(Json(serde_json::json!({"deleted": true})))
 }
 
@@ -3074,7 +4112,9 @@ async fn delete_maintenance_row(
     .execute(&s.pool)
     .await?
     .rows_affected();
-    if n == 0 { return Err(ApiError::NotFound); }
+    if n == 0 {
+        return Err(ApiError::NotFound);
+    }
     Ok(Json(serde_json::json!({"deleted": true})))
 }
 
@@ -3170,7 +4210,9 @@ async fn delete_service(
     .execute(&s.pool)
     .await?
     .rows_affected();
-    if n == 0 { return Err(ApiError::NotFound); }
+    if n == 0 {
+        return Err(ApiError::NotFound);
+    }
     Ok(Json(serde_json::json!({"deleted": true})))
 }
 
@@ -3224,15 +4266,14 @@ async fn schedule_e_report(
     // depreciation (purchase price, land value, placed-in-service date,
     // recovery period). Properties missing any of those just get $0
     // depreciation for the year — the rest of the roll-up still works.
-    let props: Vec<PropertyRollupRow> =
-        sqlx::query_as(
-            "SELECT id, property_type::text, fair_rental_days, personal_use_days,
+    let props: Vec<PropertyRollupRow> = sqlx::query_as(
+        "SELECT id, property_type::text, fair_rental_days, personal_use_days,
                     purchase_price, land_value, placed_in_service_at, recovery_period_years
                FROM rental_properties WHERE user_id = $1 AND status != 'archived'",
-        )
-        .bind(u.id)
-        .fetch_all(&s.pool)
-        .await?;
+    )
+    .bind(u.id)
+    .fetch_all(&s.pool)
+    .await?;
 
     let mut lines = Vec::with_capacity(props.len());
     for (pid, ptype, frd, pud, purchase, land, placed, recovery) in props {
@@ -3248,7 +4289,10 @@ async fn schedule_e_report(
 
         let income: Vec<IncomeRow> = income_rows
             .iter()
-            .map(|(k, a)| IncomeRow { kind: income_kind_enum(k), amount: *a })
+            .map(|(k, a)| IncomeRow {
+                kind: income_kind_enum(k),
+                amount: *a,
+            })
             .collect();
 
         let expense_rows: Vec<(String, Decimal, bool)> = sqlx::query_as(
@@ -3284,7 +4328,10 @@ async fn schedule_e_report(
 
         let mileage: Vec<MileageRow> = mileage_rows
             .iter()
-            .map(|(m, r)| MileageRow { miles: *m, rate_per_mile: *r })
+            .map(|(m, r)| MileageRow {
+                miles: *m,
+                rate_per_mile: *r,
+            })
             .collect();
 
         // Depreciation per IRS Pub 946 Table A-6 (residential, 27.5y) or
@@ -3298,19 +4345,26 @@ async fn schedule_e_report(
                     "39" | "39.0" => Some(RealPropertyClass::Commercial39),
                     "27.5" => Some(RealPropertyClass::Residential27_5),
                     _ if ptype == "commercial" => Some(RealPropertyClass::Commercial39),
-                    _ if matches!(ptype.as_str(),
-                        "single_family" | "multi_family" | "vacation_short_term" | "self_rental")
-                        => Some(RealPropertyClass::Residential27_5),
+                    _ if matches!(
+                        ptype.as_str(),
+                        "single_family" | "multi_family" | "vacation_short_term" | "self_rental"
+                    ) =>
+                    {
+                        Some(RealPropertyClass::Residential27_5)
+                    }
                     _ => None,
                 };
-                class.map(|c| {
-                    macrs_rental_year_1_deduction(
-                        basis, c,
-                        pd.format("%Y").to_string().parse().unwrap_or(q.year),
-                        pd.format("%m").to_string().parse().unwrap_or(1),
-                        q.year,
-                    )
-                }).unwrap_or(Decimal::ZERO)
+                class
+                    .map(|c| {
+                        macrs_rental_year_1_deduction(
+                            basis,
+                            c,
+                            pd.format("%Y").to_string().parse().unwrap_or(q.year),
+                            pd.format("%m").to_string().parse().unwrap_or(1),
+                            q.year,
+                        )
+                    })
+                    .unwrap_or(Decimal::ZERO)
             }
             _ => Decimal::ZERO,
         };
@@ -3352,7 +4406,11 @@ async fn property_depreciation(
 ) -> Result<Json<PropertyDepreciationReport>, ApiError> {
     ensure_property_owner(&s, u.id, property_id).await?;
     let (ptype, purchase, land, placed, recovery): (
-        String, Option<Decimal>, Option<Decimal>, Option<NaiveDate>, Decimal,
+        String,
+        Option<Decimal>,
+        Option<Decimal>,
+        Option<NaiveDate>,
+        Decimal,
     ) = sqlx::query_as(
         "SELECT property_type::text, purchase_price, land_value,
                 placed_in_service_at, recovery_period_years
@@ -3366,9 +4424,13 @@ async fn property_depreciation(
         "39" | "39.0" => Some(RealPropertyClass::Commercial39),
         "27.5" => Some(RealPropertyClass::Residential27_5),
         _ if ptype == "commercial" => Some(RealPropertyClass::Commercial39),
-        _ if matches!(ptype.as_str(),
-            "single_family" | "multi_family" | "vacation_short_term" | "self_rental")
-            => Some(RealPropertyClass::Residential27_5),
+        _ if matches!(
+            ptype.as_str(),
+            "single_family" | "multi_family" | "vacation_short_term" | "self_rental"
+        ) =>
+        {
+            Some(RealPropertyClass::Residential27_5)
+        }
         _ => None,
     };
 
@@ -3376,17 +4438,29 @@ async fn property_depreciation(
         (Some(p), Some(pd), Some(c)) => {
             let basis = (p - land.unwrap_or(Decimal::ZERO)).max(Decimal::ZERO);
             let ded = macrs_rental_year_1_deduction(
-                basis, c,
+                basis,
+                c,
                 pd.format("%Y").to_string().parse().unwrap_or(q.year),
                 pd.format("%m").to_string().parse().unwrap_or(1),
                 q.year,
             );
             (basis, ded, format!("MACRS {:?} class", c))
         }
-        (None, _, _) => (Decimal::ZERO, Decimal::ZERO, "no purchase_price recorded".into()),
-        (_, None, _) => (Decimal::ZERO, Decimal::ZERO, "no placed_in_service_at recorded".into()),
-        (_, _, None) => (Decimal::ZERO, Decimal::ZERO,
-            format!("property_type '{ptype}' is not depreciable real property")),
+        (None, _, _) => (
+            Decimal::ZERO,
+            Decimal::ZERO,
+            "no purchase_price recorded".into(),
+        ),
+        (_, None, _) => (
+            Decimal::ZERO,
+            Decimal::ZERO,
+            "no placed_in_service_at recorded".into(),
+        ),
+        (_, _, None) => (
+            Decimal::ZERO,
+            Decimal::ZERO,
+            format!("property_type '{ptype}' is not depreciable real property"),
+        ),
     };
 
     Ok(Json(PropertyDepreciationReport {
@@ -3425,10 +4499,14 @@ async fn section_469_compute(
     Json(b): Json<Section469Input>,
 ) -> Result<Json<Section469Result>, ApiError> {
     if b.current_year_loss < Decimal::ZERO {
-        return Err(ApiError::BadRequest("current_year_loss must be >= 0 (pass loss as positive)".into()));
+        return Err(ApiError::BadRequest(
+            "current_year_loss must be >= 0 (pass loss as positive)".into(),
+        ));
     }
     if b.prior_year_carryover < Decimal::ZERO {
-        return Err(ApiError::BadRequest("prior_year_carryover must be >= 0".into()));
+        return Err(ApiError::BadRequest(
+            "prior_year_carryover must be >= 0".into(),
+        ));
     }
     Ok(Json(compute_section_469(&b)))
 }
@@ -3541,21 +4619,21 @@ struct CostSegRequest {
 
 fn cost_seg_type_from_property(ptype: &str) -> CostSegPropertyType {
     match ptype {
-        "single_family"       => CostSegPropertyType::SingleFamily,
-        "multi_family"        => CostSegPropertyType::MultiFamily,
+        "single_family" => CostSegPropertyType::SingleFamily,
+        "multi_family" => CostSegPropertyType::MultiFamily,
         "vacation_short_term" => CostSegPropertyType::ShortTermRental,
-        "commercial"          => CostSegPropertyType::Commercial,
-        _                     => CostSegPropertyType::SingleFamily,
+        "commercial" => CostSegPropertyType::Commercial,
+        _ => CostSegPropertyType::SingleFamily,
     }
 }
 
 fn parse_cost_seg_type(s: &str) -> Result<CostSegPropertyType, ApiError> {
     Ok(match s {
-        "single_family"     => CostSegPropertyType::SingleFamily,
-        "multi_family"      => CostSegPropertyType::MultiFamily,
+        "single_family" => CostSegPropertyType::SingleFamily,
+        "multi_family" => CostSegPropertyType::MultiFamily,
         "short_term_rental" => CostSegPropertyType::ShortTermRental,
-        "commercial"        => CostSegPropertyType::Commercial,
-        "restaurant"        => CostSegPropertyType::Restaurant,
+        "commercial" => CostSegPropertyType::Commercial,
+        "restaurant" => CostSegPropertyType::Restaurant,
         _ => return Err(ApiError::BadRequest(format!("invalid cost_seg_type: {s}"))),
     })
 }
@@ -3824,7 +4902,10 @@ async fn non_refundable_cleaning_fees_route(
     _u: AuthUser,
     Json(b): Json<CleaningFeeInput>,
 ) -> Result<Json<CleaningFeeResult>, ApiError> {
-    if b.fee_amount_cents < 0 || b.monthly_rent_cents < 0 || b.ny_existing_security_deposit_cents < 0 {
+    if b.fee_amount_cents < 0
+        || b.monthly_rent_cents < 0
+        || b.ny_existing_security_deposit_cents < 0
+    {
         return Err(ApiError::BadRequest(
             "all dollar inputs must be >= 0".into(),
         ));
@@ -5043,9 +6124,7 @@ async fn tenant_rent_judgment_wage_garnishment_route(
         || b.federal_minimum_wage_cents_per_hour < 0
         || b.state_minimum_wage_cents_per_hour < 0
     {
-        return Err(ApiError::BadRequest(
-            "monetary inputs must be >= 0".into(),
-        ));
+        return Err(ApiError::BadRequest("monetary inputs must be >= 0".into()));
     }
     if b.state_exemption_multiplier_hours > 1_000 {
         return Err(ApiError::BadRequest(
@@ -6042,9 +7121,7 @@ async fn cooling_requirements_route(
             "day_of_year must be in 1..=366".into(),
         ));
     }
-    if b.days_since_written_notice > 100_000
-        || b.days_since_tenant_request_for_install > 100_000
-    {
+    if b.days_since_written_notice > 100_000 || b.days_since_tenant_request_for_install > 100_000 {
         return Err(ApiError::BadRequest(
             "day-since-notice counters look invalid (>100000)".into(),
         ));
@@ -6082,9 +7159,7 @@ async fn duty_to_mitigate_damages_route(
         ));
     }
     if b.days_unit_remained_vacant > 100_000 || b.months_remaining_on_lease > 1_000 {
-        return Err(ApiError::BadRequest(
-            "day-counters look invalid".into(),
-        ));
+        return Err(ApiError::BadRequest("day-counters look invalid".into()));
     }
     Ok(Json(check_duty_to_mitigate_damages(&b)))
 }
@@ -6829,9 +7904,7 @@ async fn lease_cure_period_route(
     Json(b): Json<LeaseCureInput>,
 ) -> Result<Json<LeaseCureResult>, ApiError> {
     if b.days_since_notice_served > 100_000 || b.business_days_since_notice > 100_000 {
-        return Err(ApiError::BadRequest(
-            "day-count inputs out of range".into(),
-        ));
+        return Err(ApiError::BadRequest("day-count inputs out of range".into()));
     }
     Ok(Json(check_lease_cure_period(&b)))
 }
@@ -6863,9 +7936,7 @@ async fn portable_tenant_screening_report_route(
     Json(b): Json<PortableScreeningInput>,
 ) -> Result<Json<PortableScreeningResult>, ApiError> {
     if b.report_age_days > 100_000 {
-        return Err(ApiError::BadRequest(
-            "report_age_days out of range".into(),
-        ));
+        return Err(ApiError::BadRequest("report_age_days out of range".into()));
     }
     Ok(Json(check_portable_screening(&b)))
 }
@@ -6991,9 +8062,7 @@ async fn tenant_in_foreclosure_protection_route(
     _u: AuthUser,
     Json(b): Json<TenantForeclosureInput>,
 ) -> Result<Json<TenantForeclosureResult>, ApiError> {
-    if b.lease_remaining_days > 50 * 365
-        || b.days_since_foreclosure_notice > 100_000
-    {
+    if b.lease_remaining_days > 50 * 365 || b.days_since_foreclosure_notice > 100_000 {
         return Err(ApiError::BadRequest(
             "lease_remaining_days or days_since_foreclosure_notice out of range".into(),
         ));
@@ -7052,7 +8121,9 @@ async fn tenant_in_unit_appliance_repair_responsibility_route(
     _u: AuthUser,
     Json(b): Json<TenantInUnitApplianceRepairResponsibilityInput>,
 ) -> Result<Json<TenantInUnitApplianceRepairResponsibilityResult>, ApiError> {
-    Ok(Json(check_tenant_in_unit_appliance_repair_responsibility(&b)))
+    Ok(Json(check_tenant_in_unit_appliance_repair_responsibility(
+        &b,
+    )))
 }
 
 // ---------------------------------------------------------------------------
@@ -7457,7 +8528,9 @@ async fn commercial_lease_personal_guaranty_enforceability_route(
     _u: AuthUser,
     Json(b): Json<CommercialLeasePersonalGuarantyEnforceabilityInput>,
 ) -> Result<Json<CommercialLeasePersonalGuarantyEnforceabilityResult>, ApiError> {
-    Ok(Json(check_commercial_lease_personal_guaranty_enforceability(&b)))
+    Ok(Json(
+        check_commercial_lease_personal_guaranty_enforceability(&b),
+    ))
 }
 
 // ---------------------------------------------------------------------------
@@ -7682,12 +8755,8 @@ async fn security_deposit_bank_disclosure_route(
     _u: AuthUser,
     Json(b): Json<SecurityDepositBankDisclosureInput>,
 ) -> Result<Json<SecurityDepositBankDisclosureResult>, ApiError> {
-    if b.days_since_deposit_received > 50 * 365
-        || b.days_since_transfer_event > 50 * 365
-    {
-        return Err(ApiError::BadRequest(
-            "day-count inputs out of range".into(),
-        ));
+    if b.days_since_deposit_received > 50 * 365 || b.days_since_transfer_event > 50 * 365 {
+        return Err(ApiError::BadRequest("day-count inputs out of range".into()));
     }
     Ok(Json(check_security_deposit_bank_disclosure(&b)))
 }
@@ -7806,7 +8875,8 @@ async fn landlord_harassment_route(
         || b.tenant_actual_damages_cents > 100_000_000_000
     {
         return Err(ApiError::BadRequest(
-            "violation_count, dwelling_units_affected, or tenant_actual_damages_cents out of range".into(),
+            "violation_count, dwelling_units_affected, or tenant_actual_damages_cents out of range"
+                .into(),
         ));
     }
     Ok(Json(check_landlord_harassment(&b)))
@@ -7841,9 +8911,7 @@ async fn landlord_possession_delivery_route(
         || b.monthly_rent_cents > 100_000_000_000
         || b.tenant_actual_damages_cents > 100_000_000_000
     {
-        return Err(ApiError::BadRequest(
-            "input value out of range".into(),
-        ));
+        return Err(ApiError::BadRequest("input value out of range".into()));
     }
     Ok(Json(check_landlord_possession_delivery(&b)))
 }
@@ -7895,7 +8963,9 @@ async fn landlord_post_eviction_tenant_property_storage_disposal_route(
     _u: AuthUser,
     Json(b): Json<LandlordPostEvictionTenantPropertyStorageDisposalInput>,
 ) -> Result<Json<LandlordPostEvictionTenantPropertyStorageDisposalResult>, ApiError> {
-    Ok(Json(check_landlord_post_eviction_tenant_property_storage_disposal(&b)))
+    Ok(Json(
+        check_landlord_post_eviction_tenant_property_storage_disposal(&b),
+    ))
 }
 
 // ---------------------------------------------------------------------------
@@ -8108,7 +9178,9 @@ async fn rental_california_ab_2347_unlawful_detainer_response_route(
     _u: AuthUser,
     Json(b): Json<RentalCaliforniaAb2347UnlawfulDetainerResponseInput>,
 ) -> Result<Json<RentalCaliforniaAb2347UnlawfulDetainerResponseResult>, ApiError> {
-    Ok(Json(check_rental_california_ab_2347_unlawful_detainer_response(&b)))
+    Ok(Json(
+        check_rental_california_ab_2347_unlawful_detainer_response(&b),
+    ))
 }
 
 // ---------------------------------------------------------------------------
@@ -8174,7 +9246,9 @@ async fn rental_california_sb_567_no_fault_eviction_amendments_route(
     _u: AuthUser,
     Json(b): Json<RentalCaliforniaSb567NoFaultEvictionAmendmentsInput>,
 ) -> Result<Json<RentalCaliforniaSb567NoFaultEvictionAmendmentsResult>, ApiError> {
-    Ok(Json(check_rental_california_sb_567_no_fault_eviction_amendments(&b)))
+    Ok(Json(
+        check_rental_california_sb_567_no_fault_eviction_amendments(&b),
+    ))
 }
 
 async fn rental_carbon_monoxide_detector_route(
@@ -8234,7 +9308,9 @@ async fn rental_chimney_fireplace_inspection_disclosure_route(
     _u: AuthUser,
     Json(b): Json<RentalChimneyFireplaceInspectionDisclosureInput>,
 ) -> Result<Json<RentalChimneyFireplaceInspectionDisclosureResult>, ApiError> {
-    Ok(Json(check_rental_chimney_fireplace_inspection_disclosure(&b)))
+    Ok(Json(check_rental_chimney_fireplace_inspection_disclosure(
+        &b,
+    )))
 }
 
 // ---------------------------------------------------------------------------
@@ -8262,7 +9338,9 @@ async fn rental_climate_mobilization_act_ll97_emissions_route(
     _u: AuthUser,
     Json(b): Json<RentalClimateMobilizationActLl97EmissionsInput>,
 ) -> Result<Json<RentalClimateMobilizationActLl97EmissionsResult>, ApiError> {
-    Ok(Json(check_rental_climate_mobilization_act_ll97_emissions(&b)))
+    Ok(Json(check_rental_climate_mobilization_act_ll97_emissions(
+        &b,
+    )))
 }
 
 // ---------------------------------------------------------------------------
@@ -8309,7 +9387,9 @@ async fn rental_colorado_crs_title_38_article_12_tenants_landlords_route(
     _u: AuthUser,
     Json(b): Json<RentalColoradoCrsTitle38Article12TenantsLandlordsInput>,
 ) -> Result<Json<RentalColoradoCrsTitle38Article12TenantsLandlordsResult>, ApiError> {
-    Ok(Json(check_rental_colorado_crs_title_38_article_12_tenants_landlords(&b)))
+    Ok(Json(
+        check_rental_colorado_crs_title_38_article_12_tenants_landlords(&b),
+    ))
 }
 
 async fn rental_colorado_hb_24_1098_just_cause_eviction_route(
@@ -8317,7 +9397,9 @@ async fn rental_colorado_hb_24_1098_just_cause_eviction_route(
     _u: AuthUser,
     Json(b): Json<RentalColoradoHb241098JustCauseEvictionInput>,
 ) -> Result<Json<RentalColoradoHb241098JustCauseEvictionResult>, ApiError> {
-    Ok(Json(check_rental_colorado_hb_24_1098_just_cause_eviction(&b)))
+    Ok(Json(check_rental_colorado_hb_24_1098_just_cause_eviction(
+        &b,
+    )))
 }
 
 // ---------------------------------------------------------------------------
@@ -8634,7 +9716,9 @@ async fn rental_florida_chapter_83_part_ii_residential_tenancies_route(
     _u: AuthUser,
     Json(b): Json<RentalFloridaChapter83PartIIResidentialTenanciesInput>,
 ) -> Result<Json<RentalFloridaChapter83PartIIResidentialTenanciesResult>, ApiError> {
-    Ok(Json(check_rental_florida_chapter_83_part_ii_residential_tenancies(&b)))
+    Ok(Json(
+        check_rental_florida_chapter_83_part_ii_residential_tenancies(&b),
+    ))
 }
 
 // ---------------------------------------------------------------------------
@@ -8768,7 +9852,9 @@ async fn rental_arizona_residential_landlord_tenant_act_ars_33_1301_route(
     _u: AuthUser,
     Json(b): Json<RentalArizonaResidentialLandlordTenantActArs33_1301Input>,
 ) -> Result<Json<RentalArizonaResidentialLandlordTenantActArs33_1301Result>, ApiError> {
-    Ok(Json(check_rental_arizona_residential_landlord_tenant_act_ars_33_1301(&b)))
+    Ok(Json(
+        check_rental_arizona_residential_landlord_tenant_act_ars_33_1301(&b),
+    ))
 }
 
 // ---------------------------------------------------------------------------
@@ -8957,7 +10043,9 @@ async fn rental_berkeley_rent_stabilization_ordinance_bmc_chapter_13_76_route(
     _u: AuthUser,
     Json(b): Json<RentalBerkeleyRentStabilizationOrdinanceBmcChapter1376Input>,
 ) -> Result<Json<RentalBerkeleyRentStabilizationOrdinanceBmcChapter1376Result>, ApiError> {
-    Ok(Json(check_rental_berkeley_rent_stabilization_ordinance_bmc_chapter_13_76(&b)))
+    Ok(Json(
+        check_rental_berkeley_rent_stabilization_ordinance_bmc_chapter_13_76(&b),
+    ))
 }
 
 // ---------------------------------------------------------------------------
@@ -9204,7 +10292,9 @@ async fn rental_hawaii_residential_landlord_tenant_code_hrs_521_route(
     _u: AuthUser,
     Json(b): Json<RentalHawaiiResidentialLandlordTenantCodeHrs521Input>,
 ) -> Result<Json<RentalHawaiiResidentialLandlordTenantCodeHrs521Result>, ApiError> {
-    Ok(Json(check_rental_hawaii_residential_landlord_tenant_code_hrs_521(&b)))
+    Ok(Json(
+        check_rental_hawaii_residential_landlord_tenant_code_hrs_521(&b),
+    ))
 }
 
 // ---------------------------------------------------------------------------
@@ -9354,7 +10444,9 @@ async fn rental_housing_for_older_persons_act_hopa_1995_route(
     _u: AuthUser,
     Json(b): Json<RentalHousingForOlderPersonsActHopa1995Input>,
 ) -> Result<Json<RentalHousingForOlderPersonsActHopa1995Result>, ApiError> {
-    Ok(Json(check_rental_housing_for_older_persons_act_hopa_1995(&b)))
+    Ok(Json(check_rental_housing_for_older_persons_act_hopa_1995(
+        &b,
+    )))
 }
 
 async fn rental_hud_hotma_income_asset_compliance_route(
@@ -9406,7 +10498,9 @@ async fn rental_hud_section_504_rehabilitation_act_24_cfr_part_8_route(
     _u: AuthUser,
     Json(b): Json<RentalHudSection504RehabilitationAct24CfrPart8Input>,
 ) -> Result<Json<RentalHudSection504RehabilitationAct24CfrPart8Result>, ApiError> {
-    Ok(Json(check_rental_hud_section_504_rehabilitation_act_24_cfr_part_8(&b)))
+    Ok(Json(
+        check_rental_hud_section_504_rehabilitation_act_24_cfr_part_8(&b),
+    ))
 }
 
 // ---------------------------------------------------------------------------
@@ -9686,7 +10780,9 @@ async fn rental_south_carolina_residential_landlord_tenant_act_sc_code_27_40_rou
     _u: AuthUser,
     Json(b): Json<RentalSouthCarolinaResidentialLandlordTenantActScCode2740Input>,
 ) -> Result<Json<RentalSouthCarolinaResidentialLandlordTenantActScCode2740Result>, ApiError> {
-    Ok(Json(check_rental_south_carolina_residential_landlord_tenant_act_sc_code_27_40(&b)))
+    Ok(Json(
+        check_rental_south_carolina_residential_landlord_tenant_act_sc_code_27_40(&b),
+    ))
 }
 
 async fn rental_kentucky_urlta_krs_chapter_383_subchapter_5_route(
@@ -9694,7 +10790,9 @@ async fn rental_kentucky_urlta_krs_chapter_383_subchapter_5_route(
     _u: AuthUser,
     Json(b): Json<RentalKentuckyUrltaKrsChapter383Subchapter5Input>,
 ) -> Result<Json<RentalKentuckyUrltaKrsChapter383Subchapter5Result>, ApiError> {
-    Ok(Json(check_rental_kentucky_urlta_krs_chapter_383_subchapter_5(&b)))
+    Ok(Json(
+        check_rental_kentucky_urlta_krs_chapter_383_subchapter_5(&b),
+    ))
 }
 
 async fn rental_iowa_urlta_iowa_code_chapter_562a_route(
@@ -9862,7 +10960,9 @@ async fn rental_vehicle_towing_notice_sign_requirements_route(
     _u: AuthUser,
     Json(b): Json<RentalVehicleTowingNoticeSignRequirementsInput>,
 ) -> Result<Json<RentalVehicleTowingNoticeSignRequirementsResult>, ApiError> {
-    Ok(Json(check_rental_vehicle_towing_notice_sign_requirements(&b)))
+    Ok(Json(check_rental_vehicle_towing_notice_sign_requirements(
+        &b,
+    )))
 }
 
 // ---------------------------------------------------------------------------
@@ -10236,7 +11336,9 @@ async fn rental_san_francisco_rent_ordinance_chapter_37_route(
     _u: AuthUser,
     Json(b): Json<RentalSanFranciscoRentOrdinanceChapter37Input>,
 ) -> Result<Json<RentalSanFranciscoRentOrdinanceChapter37Result>, ApiError> {
-    Ok(Json(check_rental_san_francisco_rent_ordinance_chapter_37(&b)))
+    Ok(Json(check_rental_san_francisco_rent_ordinance_chapter_37(
+        &b,
+    )))
 }
 
 async fn rental_satellite_dish_installation_right_route(
@@ -10366,7 +11468,9 @@ async fn rental_positive_rent_payment_credit_reporting_route(
     _u: AuthUser,
     Json(b): Json<RentalPositiveRentPaymentCreditReportingInput>,
 ) -> Result<Json<RentalPositiveRentPaymentCreditReportingResult>, ApiError> {
-    Ok(Json(check_rental_positive_rent_payment_credit_reporting(&b)))
+    Ok(Json(check_rental_positive_rent_payment_credit_reporting(
+        &b,
+    )))
 }
 
 async fn rental_pet_deposit_separate_security_route(
@@ -10675,7 +11779,9 @@ async fn rental_north_carolina_chapter_42_landlord_tenant_route(
     _u: AuthUser,
     Json(b): Json<RentalNorthCarolinaChapter42LandlordTenantInput>,
 ) -> Result<Json<RentalNorthCarolinaChapter42LandlordTenantResult>, ApiError> {
-    Ok(Json(check_rental_north_carolina_chapter_42_landlord_tenant(&b)))
+    Ok(Json(
+        check_rental_north_carolina_chapter_42_landlord_tenant(&b),
+    ))
 }
 
 // ---------------------------------------------------------------------------
@@ -10747,7 +11853,9 @@ async fn rental_seattle_smc_22_206_160_just_cause_eviction_route(
     _u: AuthUser,
     Json(b): Json<RentalSeattleSmc22206160JustCauseEvictionInput>,
 ) -> Result<Json<RentalSeattleSmc22206160JustCauseEvictionResult>, ApiError> {
-    Ok(Json(check_rental_seattle_smc_22_206_160_just_cause_eviction(&b)))
+    Ok(Json(
+        check_rental_seattle_smc_22_206_160_just_cause_eviction(&b),
+    ))
 }
 
 // ---------------------------------------------------------------------------
@@ -10774,7 +11882,9 @@ async fn rental_ny_rent_receipt_late_notice_requirements_route(
     _u: AuthUser,
     Json(b): Json<RentalNyRentReceiptLateNoticeRequirementsInput>,
 ) -> Result<Json<RentalNyRentReceiptLateNoticeRequirementsResult>, ApiError> {
-    Ok(Json(check_rental_ny_rent_receipt_late_notice_requirements(&b)))
+    Ok(Json(check_rental_ny_rent_receipt_late_notice_requirements(
+        &b,
+    )))
 }
 
 // ---------------------------------------------------------------------------
@@ -10862,7 +11972,9 @@ async fn rental_nyc_childhood_lead_poisoning_prevention_act_route(
     _u: AuthUser,
     Json(b): Json<RentalNycChildhoodLeadPoisoningPreventionActInput>,
 ) -> Result<Json<RentalNycChildhoodLeadPoisoningPreventionActResult>, ApiError> {
-    Ok(Json(check_rental_nyc_childhood_lead_poisoning_prevention_act(&b)))
+    Ok(Json(
+        check_rental_nyc_childhood_lead_poisoning_prevention_act(&b),
+    ))
 }
 
 // ---------------------------------------------------------------------------
@@ -11037,7 +12149,9 @@ async fn rental_nyc_coop_conversion_eviction_protection_route(
     _u: AuthUser,
     Json(b): Json<RentalNycCoopConversionEvictionProtectionInput>,
 ) -> Result<Json<RentalNycCoopConversionEvictionProtectionResult>, ApiError> {
-    Ok(Json(check_rental_nyc_coop_conversion_eviction_protection(&b)))
+    Ok(Json(check_rental_nyc_coop_conversion_eviction_protection(
+        &b,
+    )))
 }
 
 // ---------------------------------------------------------------------------
@@ -11178,7 +12292,6 @@ async fn landlord_self_help_eviction_prohibition_route(
     Ok(Json(check_landlord_self_help_eviction_prohibition(&b)))
 }
 
-
 // ---------------------------------------------------------------------------
 // landlord_security_device_obligations: Mandatory landlord-provided security
 // devices obligations — when does a residential landlord have an affirmative
@@ -11291,9 +12404,7 @@ async fn last_month_rent_offset_route(
     _u: AuthUser,
     Json(b): Json<LastMonthRentOffsetInput>,
 ) -> Result<Json<LastMonthRentOffsetResult>, ApiError> {
-    if b.monthly_rent_cents < 0
-        || b.monthly_rent_cents > 100_000_000_000
-    {
+    if b.monthly_rent_cents < 0 || b.monthly_rent_cents > 100_000_000_000 {
         return Err(ApiError::BadRequest(
             "monthly_rent_cents out of range".into(),
         ));
@@ -11796,9 +12907,7 @@ async fn heat_requirements_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     if b.measurement_hour > 23 {
-        return Err(ApiError::BadRequest(
-            "measurement_hour must be 0-23".into(),
-        ));
+        return Err(ApiError::BadRequest("measurement_hour must be 0-23".into()));
     }
     Ok(Json(check_heat_requirements(&b)))
 }
@@ -12054,7 +13163,9 @@ async fn application_fee_check_route(
         return Err(ApiError::BadRequest("state_code required".into()));
     }
     if b.monthly_rent_cents < 0 {
-        return Err(ApiError::BadRequest("monthly_rent_cents must be >= 0".into()));
+        return Err(ApiError::BadRequest(
+            "monthly_rent_cents must be >= 0".into(),
+        ));
     }
     if let Some(c) = b.actual_screening_cost_cents {
         if c < 0 {
@@ -12358,21 +13469,22 @@ async fn property_cost_segregation(
     Json(b): Json<CostSegRequest>,
 ) -> Result<Json<CostSegReport>, ApiError> {
     ensure_property_owner(&s, u.id, property_id).await?;
-    let (purchase, land, ptype): (Option<Decimal>, Option<Decimal>, String) =
-        sqlx::query_as(
-            "SELECT purchase_price, land_value, property_type::text
+    let (purchase, land, ptype): (Option<Decimal>, Option<Decimal>, String) = sqlx::query_as(
+        "SELECT purchase_price, land_value, property_type::text
                FROM rental_properties WHERE id = $1",
-        )
-        .bind(property_id)
-        .fetch_one(&s.pool)
-        .await?;
+    )
+    .bind(property_id)
+    .fetch_one(&s.pool)
+    .await?;
 
     let depreciable_basis = match b.depreciable_basis {
         Some(v) => v,
         None => {
-            let p = purchase.ok_or_else(|| ApiError::BadRequest(
-                "no purchase_price on property; pass depreciable_basis explicitly".into()
-            ))?;
+            let p = purchase.ok_or_else(|| {
+                ApiError::BadRequest(
+                    "no purchase_price on property; pass depreciable_basis explicitly".into(),
+                )
+            })?;
             (p - land.unwrap_or(Decimal::ZERO)).max(Decimal::ZERO)
         }
     };
@@ -12383,7 +13495,9 @@ async fn property_cost_segregation(
     };
 
     if depreciable_basis < Decimal::ZERO {
-        return Err(ApiError::BadRequest("depreciable_basis must be >= 0".into()));
+        return Err(ApiError::BadRequest(
+            "depreciable_basis must be >= 0".into(),
+        ));
     }
 
     Ok(Json(compute_cost_segregation(&CostSegInput {
@@ -12411,15 +13525,16 @@ async fn property_disposition(
     let original_cost_basis = match b.original_cost_basis {
         Some(v) => v,
         None => {
-            let (p,): (Option<Decimal>,) = sqlx::query_as(
-                "SELECT purchase_price FROM rental_properties WHERE id = $1",
-            )
-            .bind(property_id)
-            .fetch_one(&s.pool)
-            .await?;
-            p.ok_or_else(|| ApiError::BadRequest(
-                "no purchase_price on property; pass original_cost_basis explicitly".into()
-            ))?
+            let (p,): (Option<Decimal>,) =
+                sqlx::query_as("SELECT purchase_price FROM rental_properties WHERE id = $1")
+                    .bind(property_id)
+                    .fetch_one(&s.pool)
+                    .await?;
+            p.ok_or_else(|| {
+                ApiError::BadRequest(
+                    "no purchase_price on property; pass original_cost_basis explicitly".into(),
+                )
+            })?
         }
     };
     // Fill missing accumulated depreciation from sum of capitalized
@@ -12484,7 +13599,11 @@ async fn qbi_hours_report(
     .await?;
     let logged = total.unwrap_or(Decimal::ZERO);
     let req = Decimal::from(250);
-    let remaining = if logged >= req { Decimal::ZERO } else { req - logged };
+    let remaining = if logged >= req {
+        Decimal::ZERO
+    } else {
+        req - logged
+    };
     Ok(Json(QbiHoursReport {
         year: q.year,
         hours_logged: logged,
@@ -12530,14 +13649,17 @@ async fn rent_roll(
     }
     let start = NaiveDate::from_ymd_opt(q.year, q.month, 1)
         .ok_or_else(|| ApiError::BadRequest("invalid date".into()))?;
-    let (next_y, next_m) = if q.month == 12 { (q.year + 1, 1) } else { (q.year, q.month + 1) };
+    let (next_y, next_m) = if q.month == 12 {
+        (q.year + 1, 1)
+    } else {
+        (q.year, q.month + 1)
+    };
     let end = NaiveDate::from_ymd_opt(next_y, next_m, 1)
         .ok_or_else(|| ApiError::BadRequest("invalid date".into()))?;
 
     // Active leases overlapping the window.
-    let leases: Vec<LeaseRentRollRow> =
-        sqlx::query_as(
-            "SELECT l.id, COALESCE(t.display_name, ''), l.unit_label, l.rent_amount,
+    let leases: Vec<LeaseRentRollRow> = sqlx::query_as(
+        "SELECT l.id, COALESCE(t.display_name, ''), l.unit_label, l.rent_amount,
                     l.rent_due_day, l.grace_days, l.starts_on, l.ends_on
                FROM rental_leases l
                LEFT JOIN rental_tenants t ON t.id = l.tenant_id
@@ -12545,12 +13667,12 @@ async fn rent_roll(
                 AND l.status = 'active'
                 AND l.starts_on < $3
                 AND (l.ends_on IS NULL OR l.ends_on >= $2)",
-        )
-        .bind(property_id)
-        .bind(start)
-        .bind(end)
-        .fetch_all(&s.pool)
-        .await?;
+    )
+    .bind(property_id)
+    .bind(start)
+    .bind(end)
+    .fetch_all(&s.pool)
+    .await?;
 
     let mut rows = Vec::with_capacity(leases.len());
     for (lid, tname, unit, rent, due_day, grace, _starts, _ends) in leases {
@@ -12569,13 +13691,17 @@ async fn rent_roll(
         let expected = rent;
         let balance = expected - collected;
         let today = Utc::now().date_naive();
-        let due_date = NaiveDate::from_ymd_opt(q.year, q.month, due_day.min(28) as u32)
-            .unwrap_or(start);
+        let due_date =
+            NaiveDate::from_ymd_opt(q.year, q.month, due_day.min(28) as u32).unwrap_or(start);
         let late_threshold = due_date + chrono::Duration::days(grace as i64);
         let status = if collected >= expected {
             "paid"
         } else if collected > Decimal::ZERO {
-            if today > late_threshold { "late" } else { "partial" }
+            if today > late_threshold {
+                "late"
+            } else {
+                "partial"
+            }
         } else if today > late_threshold {
             "late"
         } else {
@@ -12669,7 +13795,9 @@ async fn rental_oakland_measure_ee_just_cause_omc_8_22_route(
     _u: AuthUser,
     Json(b): Json<RentalOaklandMeasureEeJustCauseOmc822Input>,
 ) -> Result<Json<RentalOaklandMeasureEeJustCauseOmc822Result>, ApiError> {
-    Ok(Json(check_rental_oakland_measure_ee_just_cause_omc_8_22(&b)))
+    Ok(Json(check_rental_oakland_measure_ee_just_cause_omc_8_22(
+        &b,
+    )))
 }
 
 // ---------------------------------------------------------------------------
@@ -12696,7 +13824,9 @@ async fn rental_ohio_revised_code_chapter_5321_landlord_tenant_act_route(
     _u: AuthUser,
     Json(b): Json<RentalOhioRevisedCodeChapter5321LandlordTenantActInput>,
 ) -> Result<Json<RentalOhioRevisedCodeChapter5321LandlordTenantActResult>, ApiError> {
-    Ok(Json(check_rental_ohio_revised_code_chapter_5321_landlord_tenant_act(&b)))
+    Ok(Json(
+        check_rental_ohio_revised_code_chapter_5321_landlord_tenant_act(&b),
+    ))
 }
 
 async fn rental_oil_tank_replacement_disclosure_route(
@@ -12747,7 +13877,9 @@ async fn rental_oregon_residential_landlord_tenant_act_ors_chapter_90_route(
     _u: AuthUser,
     Json(b): Json<RentalOregonResidentialLandlordTenantActOrsChapter90Input>,
 ) -> Result<Json<RentalOregonResidentialLandlordTenantActOrsChapter90Result>, ApiError> {
-    Ok(Json(check_rental_oregon_residential_landlord_tenant_act_ors_chapter_90(&b)))
+    Ok(Json(
+        check_rental_oregon_residential_landlord_tenant_act_ors_chapter_90(&b),
+    ))
 }
 
 async fn rental_oregon_sb_608_sb_611_rent_stabilization_route(
@@ -12755,7 +13887,9 @@ async fn rental_oregon_sb_608_sb_611_rent_stabilization_route(
     _u: AuthUser,
     Json(b): Json<RentalOregonSb608Sb611RentStabilizationInput>,
 ) -> Result<Json<RentalOregonSb608Sb611RentStabilizationResult>, ApiError> {
-    Ok(Json(check_rental_oregon_sb_608_sb_611_rent_stabilization(&b)))
+    Ok(Json(check_rental_oregon_sb_608_sb_611_rent_stabilization(
+        &b,
+    )))
 }
 
 // ---------------------------------------------------------------------------
@@ -12871,7 +14005,9 @@ async fn rental_pennsylvania_landlord_tenant_act_1951_68_ps_250_101_route(
     _u: AuthUser,
     Json(b): Json<RentalPennsylvaniaLandlordTenantAct1951_68Ps250_101Input>,
 ) -> Result<Json<RentalPennsylvaniaLandlordTenantAct1951_68Ps250_101Result>, ApiError> {
-    Ok(Json(check_rental_pennsylvania_landlord_tenant_act_1951_68_ps_250_101(&b)))
+    Ok(Json(
+        check_rental_pennsylvania_landlord_tenant_act_1951_68_ps_250_101(&b),
+    ))
 }
 
 // ---------------------------------------------------------------------------
@@ -13124,7 +14260,9 @@ async fn rental_short_term_subletting_airbnb_restriction_route(
     _u: AuthUser,
     Json(b): Json<RentalShortTermSublettingAirbnbRestrictionInput>,
 ) -> Result<Json<RentalShortTermSublettingAirbnbRestrictionResult>, ApiError> {
-    Ok(Json(check_rental_short_term_subletting_airbnb_restriction(&b)))
+    Ok(Json(check_rental_short_term_subletting_airbnb_restriction(
+        &b,
+    )))
 }
 
 // ---------------------------------------------------------------------------
@@ -13315,7 +14453,9 @@ async fn rental_maryland_landlord_tenant_md_real_property_title_8_route(
     _u: AuthUser,
     Json(b): Json<RentalMarylandLandlordTenantMdRealPropertyTitle8Input>,
 ) -> Result<Json<RentalMarylandLandlordTenantMdRealPropertyTitle8Result>, ApiError> {
-    Ok(Json(check_rental_maryland_landlord_tenant_md_real_property_title_8(&b)))
+    Ok(Json(
+        check_rental_maryland_landlord_tenant_md_real_property_title_8(&b),
+    ))
 }
 
 async fn rental_massachusetts_mgl_chapter_186_239_broader_regime_route(
@@ -13323,7 +14463,9 @@ async fn rental_massachusetts_mgl_chapter_186_239_broader_regime_route(
     _u: AuthUser,
     Json(b): Json<RentalMassachusettsMglChapter186239BroaderRegimeInput>,
 ) -> Result<Json<RentalMassachusettsMglChapter186239BroaderRegimeResult>, ApiError> {
-    Ok(Json(check_rental_massachusetts_mgl_chapter_186_239_broader_regime(&b)))
+    Ok(Json(
+        check_rental_massachusetts_mgl_chapter_186_239_broader_regime(&b),
+    ))
 }
 
 async fn rental_massachusetts_security_deposit_statute_route(
@@ -13331,7 +14473,9 @@ async fn rental_massachusetts_security_deposit_statute_route(
     _u: AuthUser,
     Json(b): Json<RentalMassachusettsSecurityDepositStatuteInput>,
 ) -> Result<Json<RentalMassachusettsSecurityDepositStatuteResult>, ApiError> {
-    Ok(Json(check_rental_massachusetts_security_deposit_statute(&b)))
+    Ok(Json(check_rental_massachusetts_security_deposit_statute(
+        &b,
+    )))
 }
 
 async fn rental_michigan_landlord_tenant_mcl_554_route(
@@ -13383,7 +14527,9 @@ async fn rental_massachusetts_homes_act_eviction_sealing_route(
     _u: AuthUser,
     Json(b): Json<RentalMassachusettsHomesActEvictionSealingInput>,
 ) -> Result<Json<RentalMassachusettsHomesActEvictionSealingResult>, ApiError> {
-    Ok(Json(check_rental_massachusetts_homes_act_eviction_sealing(&b)))
+    Ok(Json(check_rental_massachusetts_homes_act_eviction_sealing(
+        &b,
+    )))
 }
 
 // ---------------------------------------------------------------------------
@@ -13422,7 +14568,9 @@ async fn rental_attached_garage_carbon_monoxide_disclosure_route(
     _u: AuthUser,
     Json(b): Json<RentalAttachedGarageCarbonMonoxideDisclosureInput>,
 ) -> Result<Json<RentalAttachedGarageCarbonMonoxideDisclosureResult>, ApiError> {
-    Ok(Json(check_rental_attached_garage_carbon_monoxide_disclosure(&b)))
+    Ok(Json(
+        check_rental_attached_garage_carbon_monoxide_disclosure(&b),
+    ))
 }
 
 // ---------------------------------------------------------------------------
@@ -13825,7 +14973,9 @@ async fn rental_local_law_87_energy_audit_retro_commissioning_route(
     _u: AuthUser,
     Json(b): Json<RentalLocalLaw87EnergyAuditRetroCommissioningInput>,
 ) -> Result<Json<RentalLocalLaw87EnergyAuditRetroCommissioningResult>, ApiError> {
-    Ok(Json(check_rental_local_law_87_energy_audit_retro_commissioning(&b)))
+    Ok(Json(
+        check_rental_local_law_87_energy_audit_retro_commissioning(&b),
+    ))
 }
 
 // ---------------------------------------------------------------------------
@@ -13852,7 +15002,9 @@ async fn rental_local_law_88_lighting_upgrades_sub_metering_route(
     _u: AuthUser,
     Json(b): Json<RentalLocalLaw88LightingUpgradesSubMeteringInput>,
 ) -> Result<Json<RentalLocalLaw88LightingUpgradesSubMeteringResult>, ApiError> {
-    Ok(Json(check_rental_local_law_88_lighting_upgrades_sub_metering(&b)))
+    Ok(Json(
+        check_rental_local_law_88_lighting_upgrades_sub_metering(&b),
+    ))
 }
 
 // ── /rental-tenant-criminal-background-screening (iter 539) ─────────────────
@@ -14107,7 +15259,9 @@ async fn rental_texas_property_code_chapter_92_residential_tenancies_route(
     _u: AuthUser,
     Json(b): Json<RentalTexasPropertyCodeChapter92ResidentialTenanciesInput>,
 ) -> Result<Json<RentalTexasPropertyCodeChapter92ResidentialTenanciesResult>, ApiError> {
-    Ok(Json(check_rental_texas_property_code_chapter_92_residential_tenancies(&b)))
+    Ok(Json(
+        check_rental_texas_property_code_chapter_92_residential_tenancies(&b),
+    ))
 }
 
 // ---------------------------------------------------------------------------
@@ -14236,7 +15390,9 @@ async fn rental_minneapolis_renter_protections_ordinance_2020_route(
     _u: AuthUser,
     Json(b): Json<RentalMinneapolisRenterProtectionsOrdinance2020Input>,
 ) -> Result<Json<RentalMinneapolisRenterProtectionsOrdinance2020Result>, ApiError> {
-    Ok(Json(check_rental_minneapolis_renter_protections_ordinance_2020(&b)))
+    Ok(Json(
+        check_rental_minneapolis_renter_protections_ordinance_2020(&b),
+    ))
 }
 
 async fn rental_minnesota_landlord_tenant_act_minn_stat_504b_route(
@@ -14244,7 +15400,9 @@ async fn rental_minnesota_landlord_tenant_act_minn_stat_504b_route(
     _u: AuthUser,
     Json(b): Json<RentalMinnesotaLandlordTenantActMinnStat504bInput>,
 ) -> Result<Json<RentalMinnesotaLandlordTenantActMinnStat504bResult>, ApiError> {
-    Ok(Json(check_rental_minnesota_landlord_tenant_act_minn_stat_504b(&b)))
+    Ok(Json(
+        check_rental_minnesota_landlord_tenant_act_minn_stat_504b(&b),
+    ))
 }
 
 async fn rental_missouri_landlord_tenant_mo_rev_stat_535_534_441_route(
@@ -14252,7 +15410,9 @@ async fn rental_missouri_landlord_tenant_mo_rev_stat_535_534_441_route(
     _u: AuthUser,
     Json(b): Json<RentalMissouriLandlordTenantMoRevStat535534441Input>,
 ) -> Result<Json<RentalMissouriLandlordTenantMoRevStat535534441Result>, ApiError> {
-    Ok(Json(check_rental_missouri_landlord_tenant_mo_rev_stat_535_534_441(&b)))
+    Ok(Json(
+        check_rental_missouri_landlord_tenant_mo_rev_stat_535_534_441(&b),
+    ))
 }
 
 // ---------------------------------------------------------------------------
@@ -14352,7 +15512,9 @@ async fn rental_fair_housing_amendments_act_of_1988_fhaa_route(
     _u: AuthUser,
     Json(b): Json<RentalFairHousingAmendmentsActOf1988FhaaInput>,
 ) -> Result<Json<RentalFairHousingAmendmentsActOf1988FhaaResult>, ApiError> {
-    Ok(Json(check_rental_fair_housing_amendments_act_of_1988_fhaa(&b)))
+    Ok(Json(check_rental_fair_housing_amendments_act_of_1988_fhaa(
+        &b,
+    )))
 }
 
 // ---------------------------------------------------------------------------
@@ -14477,7 +15639,9 @@ async fn rental_tenant_rent_escrow_habitability_dispute_route(
     _u: AuthUser,
     Json(b): Json<RentalTenantRentEscrowHabitabilityDisputeInput>,
 ) -> Result<Json<RentalTenantRentEscrowHabitabilityDisputeResult>, ApiError> {
-    Ok(Json(check_rental_tenant_rent_escrow_habitability_dispute(&b)))
+    Ok(Json(check_rental_tenant_rent_escrow_habitability_dispute(
+        &b,
+    )))
 }
 
 // ---------------------------------------------------------------------------
@@ -14510,7 +15674,9 @@ async fn rental_tree_removal_dangerous_tree_disclosure_route(
     _u: AuthUser,
     Json(b): Json<RentalTreeRemovalDangerousTreeDisclosureInput>,
 ) -> Result<Json<RentalTreeRemovalDangerousTreeDisclosureResult>, ApiError> {
-    Ok(Json(check_rental_tree_removal_dangerous_tree_disclosure(&b)))
+    Ok(Json(check_rental_tree_removal_dangerous_tree_disclosure(
+        &b,
+    )))
 }
 
 // ---------------------------------------------------------------------------
@@ -14729,7 +15895,9 @@ async fn rental_rent_to_own_lease_purchase_disclosures_route(
     _u: AuthUser,
     Json(b): Json<RentalRentToOwnLeasePurchaseDisclosuresInput>,
 ) -> Result<Json<RentalRentToOwnLeasePurchaseDisclosuresResult>, ApiError> {
-    Ok(Json(check_rental_rent_to_own_lease_purchase_disclosures(&b)))
+    Ok(Json(check_rental_rent_to_own_lease_purchase_disclosures(
+        &b,
+    )))
 }
 
 // ── /rental-tenant-relocation-assistance (iter 559) ─────────────────────────
@@ -15159,5 +16327,7 @@ async fn rental_domestic_violence_lock_change_lease_termination_route(
     _u: AuthUser,
     Json(b): Json<RentalDomesticViolenceLockChangeLeaseTerminationInput>,
 ) -> Result<Json<RentalDomesticViolenceLockChangeLeaseTerminationResult>, ApiError> {
-    Ok(Json(check_rental_domestic_violence_lock_change_lease_termination(&b)))
+    Ok(Json(
+        check_rental_domestic_violence_lock_change_lease_termination(&b),
+    ))
 }

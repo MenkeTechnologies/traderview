@@ -37,8 +37,12 @@ pub struct PpTestReport {
 
 pub fn test(series: &[f64], bandwidth_lag: Option<usize>) -> Option<PpTestReport> {
     let n = series.len();
-    if n < 20 { return None; }
-    if series.iter().any(|x| !x.is_finite()) { return None; }
+    if n < 20 {
+        return None;
+    }
+    if series.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     // Step 1: OLS Δy_t = α + β·y_{t-1} + ε_t.
     let n_eff = n - 1;
     let n_f = n_eff as f64;
@@ -55,7 +59,9 @@ pub fn test(series: &[f64], bandwidth_lag: Option<usize>) -> Option<PpTestReport
         sum_xy += x * y;
     }
     let denom = n_f * sum_xx - sum_x * sum_x;
-    if denom.abs() < 1e-18 { return None; }
+    if denom.abs() < 1e-18 {
+        return None;
+    }
     let beta = (n_f * sum_xy - sum_x * sum_y) / denom;
     let alpha = (sum_y - beta * sum_x) / n_f;
     let mut resid = vec![0.0_f64; n_eff];
@@ -67,9 +73,10 @@ pub fn test(series: &[f64], bandwidth_lag: Option<usize>) -> Option<PpTestReport
     let var_beta_ols = sigma2_ols * n_f / denom;
     let se_ols = var_beta_ols.max(0.0).sqrt();
     // Step 2: Newey-West HAC correction on the residual long-run variance.
-    let l = bandwidth_lag.unwrap_or_else(|| {
-        (4.0 * (n_f / 100.0).powf(0.25)).floor() as usize
-    }).max(1).min(n_eff / 2);
+    let l = bandwidth_lag
+        .unwrap_or_else(|| (4.0 * (n_f / 100.0).powf(0.25)).floor() as usize)
+        .max(1)
+        .min(n_eff / 2);
     let gamma_0: f64 = resid.iter().map(|r| r * r).sum::<f64>() / n_f;
     let mut s2 = gamma_0;
     for k in 1..=l {
@@ -77,7 +84,9 @@ pub fn test(series: &[f64], bandwidth_lag: Option<usize>) -> Option<PpTestReport
         let gamma_k: f64 = (k..n_eff).map(|t| resid[t] * resid[t - k]).sum::<f64>() / n_f;
         s2 += 2.0 * w * gamma_k;
     }
-    if s2 <= 0.0 { return None; }
+    if s2 <= 0.0 {
+        return None;
+    }
     // PP-adjusted t-statistic:
     //   Z(t) = (γ_0 / s²)^½ · t_β − ½ · (s² − γ_0) · (n · SE(β̂_OLS)) / (s² · √denom·n/(n·n_f))
     // We use the standard simplified form:
@@ -122,14 +131,18 @@ mod tests {
         let mut state: u64 = 42;
         let mut s = vec![0.0_f64; 500];
         for i in 1..500 {
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let step = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 2.0;
             s[i] = s[i - 1] + step;
         }
         let r = test(&s, None).unwrap();
-        assert!(!r.reject_unit_root_5pct,
-            "RW shouldn't reject unit root, PP = {}", r.pp_statistic);
+        assert!(
+            !r.reject_unit_root_5pct,
+            "RW shouldn't reject unit root, PP = {}",
+            r.pp_statistic
+        );
     }
 
     #[test]
@@ -138,14 +151,18 @@ mod tests {
         let mut state: u64 = 11;
         let mut s = vec![0.0_f64; 500];
         for i in 1..500 {
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let eps = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 2.0;
             s[i] = 0.5 * s[i - 1] + eps;
         }
         let r = test(&s, None).unwrap();
-        assert!(r.reject_unit_root_5pct,
-            "stationary AR(1) should reject, PP = {}", r.pp_statistic);
+        assert!(
+            r.reject_unit_root_5pct,
+            "stationary AR(1) should reject, PP = {}",
+            r.pp_statistic
+        );
     }
 
     #[test]

@@ -113,9 +113,7 @@ pub fn check(input: &RentalPropertyRegistrationInput) -> RentalPropertyRegistrat
     }
 }
 
-fn check_new_jersey(
-    input: &RentalPropertyRegistrationInput,
-) -> RentalPropertyRegistrationResult {
+fn check_new_jersey(input: &RentalPropertyRegistrationInput) -> RentalPropertyRegistrationResult {
     let mut violations: Vec<String> = Vec::new();
     let mut notes: Vec<String> = Vec::new();
 
@@ -169,9 +167,7 @@ fn check_new_jersey(
         ));
     }
 
-    if input.recent_change_to_registration_info
-        && !input.amended_certificate_filed_within_20_days
-    {
+    if input.recent_change_to_registration_info && !input.amended_certificate_filed_within_20_days {
         violations.push(
             "N.J.S.A. § 46:8-28 — amended certificate MUST be filed within 20 DAYS of any change to registration information"
                 .to_string(),
@@ -302,7 +298,10 @@ mod tests {
     #[test]
     fn nj_3_unit_routes_to_dca() {
         let r = check(&nj_3_unit_compliant());
-        assert_eq!(r.filing_agency, FilingAgency::NjDcaBureauOfHousingInspection);
+        assert_eq!(
+            r.filing_agency,
+            FilingAgency::NjDcaBureauOfHousingInspection
+        );
         assert!(r.regime_applies_to_building);
         assert!(r.compliant);
     }
@@ -332,7 +331,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.regime_applies_to_building);
         assert_eq!(r.filing_agency, FilingAgency::NotRequired);
-        assert!(r.notes.iter().any(|n| n.contains("§ 46:8-28.5") && n.contains("owner-occupied 2-family")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 46:8-28.5") && n.contains("owner-occupied 2-family")));
     }
 
     #[test]
@@ -349,7 +351,10 @@ mod tests {
         i.owner_occupied_building = true;
         let r = check(&i);
         assert!(r.regime_applies_to_building);
-        assert_eq!(r.filing_agency, FilingAgency::NjDcaBureauOfHousingInspection);
+        assert_eq!(
+            r.filing_agency,
+            FilingAgency::NjDcaBureauOfHousingInspection
+        );
     }
 
     #[test]
@@ -358,7 +363,10 @@ mod tests {
         i.registration_filed_with_appropriate_agency = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 46:8-28") && v.contains("Bureau of Housing Inspection")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 46:8-28") && v.contains("Bureau of Housing Inspection")));
     }
 
     #[test]
@@ -367,7 +375,10 @@ mod tests {
         i.registration_filed_with_appropriate_agency = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 46:8-28") && v.contains("municipal clerk")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 46:8-28") && v.contains("municipal clerk")));
     }
 
     #[test]
@@ -386,7 +397,10 @@ mod tests {
         i.amended_certificate_filed_within_20_days = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 46:8-28") && v.contains("20 DAYS")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 46:8-28") && v.contains("20 DAYS")));
     }
 
     #[test]
@@ -401,19 +415,28 @@ mod tests {
     #[test]
     fn nj_certificate_contents_note_present() {
         let r = check(&nj_3_unit_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("§ 46:8-28 contents") && n.contains("authorized agent for service")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("§ 46:8-28 contents") && n.contains("authorized agent for service")
+        ));
     }
 
     #[test]
     fn nj_consequences_note_describes_treble_damages_and_eviction_bar() {
         let r = check(&nj_3_unit_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("cannot enforce rent collection") && n.contains("Consumer Fraud Act")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("cannot enforce rent collection")
+                && n.contains("Consumer Fraud Act")));
     }
 
     #[test]
     fn nj_multiple_dwelling_law_note_describes_three_plus() {
         let r = check(&nj_3_unit_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("NJ Hotel and Multiple Dwelling Law") && n.contains("3+ unit")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("NJ Hotel and Multiple Dwelling Law") && n.contains("3+ unit")));
     }
 
     #[test]
@@ -436,13 +459,19 @@ mod tests {
         i.registration_filed_with_appropriate_agency = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 47-2851.03") && v.contains("Basic Business License")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 47-2851.03") && v.contains("Basic Business License")));
     }
 
     #[test]
     fn dc_hayes_equitable_bar_note() {
         let r = check(&dc_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("DC v. Hayes") && n.contains("BARRED from collecting rent")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("DC v. Hayes") && n.contains("BARRED from collecting rent")));
     }
 
     #[test]
@@ -461,7 +490,10 @@ mod tests {
     #[test]
     fn default_municipal_ordinance_examples_note() {
         let r = check(&default_base());
-        assert!(r.notes.iter().any(|n| n.contains("Chicago RLTO") && n.contains("NYC MDL § 325")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Chicago RLTO") && n.contains("NYC MDL § 325")));
     }
 
     #[test]
@@ -469,7 +501,10 @@ mod tests {
         let mut i_3 = nj_3_unit_compliant();
         i_3.building_unit_count = 3;
         let r_3 = check(&i_3);
-        assert_eq!(r_3.filing_agency, FilingAgency::NjDcaBureauOfHousingInspection);
+        assert_eq!(
+            r_3.filing_agency,
+            FilingAgency::NjDcaBureauOfHousingInspection
+        );
 
         let mut i_2 = nj_1_unit_compliant();
         i_2.building_unit_count = 2;
@@ -485,7 +520,11 @@ mod tests {
 
     #[test]
     fn three_regimes_routed_correctly() {
-        for regime in [Regime::NewJersey, Regime::DistrictOfColumbia, Regime::Default] {
+        for regime in [
+            Regime::NewJersey,
+            Regime::DistrictOfColumbia,
+            Regime::Default,
+        ] {
             let mut i = nj_3_unit_compliant();
             i.regime = regime;
             let r = check(&i);

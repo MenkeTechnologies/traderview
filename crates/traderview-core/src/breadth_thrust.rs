@@ -20,7 +20,10 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct DailyBreadth { pub advancing: u64, pub declining: u64 }
+pub struct DailyBreadth {
+    pub advancing: u64,
+    pub declining: u64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct BreadthThrustReport {
@@ -50,15 +53,28 @@ pub fn compute(
         low_threshold,
         high_threshold,
     };
-    if ema_period < 2 || max_window_bars < 2
-        || !low_threshold.is_finite() || !high_threshold.is_finite()
+    if ema_period < 2
+        || max_window_bars < 2
+        || !low_threshold.is_finite()
+        || !high_threshold.is_finite()
         || low_threshold >= high_threshold
-        || !(0.0..=1.0).contains(&low_threshold) || !(0.0..=1.0).contains(&high_threshold)
-        || n < ema_period { return report; }
-    let raw: Vec<f64> = breadth.iter().map(|d| {
-        let denom = d.advancing + d.declining;
-        if denom > 0 { d.advancing as f64 / denom as f64 } else { 0.5 }
-    }).collect();
+        || !(0.0..=1.0).contains(&low_threshold)
+        || !(0.0..=1.0).contains(&high_threshold)
+        || n < ema_period
+    {
+        return report;
+    }
+    let raw: Vec<f64> = breadth
+        .iter()
+        .map(|d| {
+            let denom = d.advancing + d.declining;
+            if denom > 0 {
+                d.advancing as f64 / denom as f64
+            } else {
+                0.5
+            }
+        })
+        .collect();
     for (i, &v) in raw.iter().enumerate() {
         report.ratio[i] = Some(v);
     }
@@ -74,10 +90,16 @@ pub fn compute(
     // Detect thrust: ema_ratio went from < low_threshold to >
     // high_threshold within max_window_bars.
     for i in (ema_period + max_window_bars - 1)..n {
-        let Some(ema_now) = report.ema_ratio[i] else { continue };
-        if ema_now <= high_threshold { continue; }
+        let Some(ema_now) = report.ema_ratio[i] else {
+            continue;
+        };
+        if ema_now <= high_threshold {
+            continue;
+        }
         for back in 1..=max_window_bars {
-            let Some(ema_then) = report.ema_ratio[i - back] else { continue };
+            let Some(ema_then) = report.ema_ratio[i - back] else {
+                continue;
+            };
             if ema_then < low_threshold {
                 report.thrust_triggered[i] = true;
                 break;
@@ -92,7 +114,10 @@ mod tests {
     use super::*;
 
     fn d(adv: u64, dec: u64) -> DailyBreadth {
-        DailyBreadth { advancing: adv, declining: dec }
+        DailyBreadth {
+            advancing: adv,
+            declining: dec,
+        }
     }
 
     #[test]
@@ -100,7 +125,7 @@ mod tests {
         let b = vec![d(50, 50); 100];
         let r = compute(&b, 1, 10, 0.4, 0.615);
         assert!(r.ratio.iter().all(|x| x.is_none()));
-        let r2 = compute(&b, 10, 10, 0.7, 0.5);    // low > high
+        let r2 = compute(&b, 10, 10, 0.7, 0.5); // low > high
         assert!(r2.ratio.iter().all(|x| x.is_none()));
     }
 
@@ -128,11 +153,13 @@ mod tests {
     fn slow_recovery_no_thrust() {
         // Ratio rises slowly over 50 bars → never crosses thresholds
         // within max_window_bars=10 window.
-        let breadth: Vec<_> = (0..80).map(|i| {
-            let adv = (30 + i) as u64;
-            let dec = (70_i64 - i as i64).max(1) as u64;
-            d(adv, dec)
-        }).collect();
+        let breadth: Vec<_> = (0..80)
+            .map(|i| {
+                let adv = (30 + i) as u64;
+                let dec = (70_i64 - i as i64).max(1) as u64;
+                d(adv, dec)
+            })
+            .collect();
         let r = compute(&breadth, 10, 5, 0.4, 0.615);
         // Should not trigger if rise was too slow.
         // (This test is heuristic; we just verify no panic.)

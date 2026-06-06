@@ -22,7 +22,12 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub open: f64, pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct VqiReport {
@@ -38,9 +43,14 @@ pub fn compute(bars: &[Bar], normalization_period: usize) -> VqiReport {
         vqi_normalized: vec![None; n],
         normalization_period,
     };
-    if normalization_period < 2 || n < normalization_period + 1 { return report; }
-    if bars.iter().any(|b| !b.open.is_finite() || !b.high.is_finite()
-        || !b.low.is_finite() || !b.close.is_finite()) { return report; }
+    if normalization_period < 2 || n < normalization_period + 1 {
+        return report;
+    }
+    if bars.iter().any(|b| {
+        !b.open.is_finite() || !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()
+    }) {
+        return report;
+    }
     let mut cum = 0.0_f64;
     report.vqi[0] = Some(cum);
     for i in 1..n {
@@ -69,7 +79,9 @@ pub fn compute(bars: &[Bar], normalization_period: usize) -> VqiReport {
     }
     for (i, v_opt) in report.vqi.iter().enumerate() {
         if let (Some(v), Some(m)) = (v_opt, sma[i]) {
-            if m != 0.0 { report.vqi_normalized[i] = Some(v / m * 100.0); }
+            if m != 0.0 {
+                report.vqi_normalized[i] = Some(v / m * 100.0);
+            }
         }
     }
     report
@@ -80,7 +92,12 @@ mod tests {
     use super::*;
 
     fn bar(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -104,15 +121,19 @@ mod tests {
     fn flat_market_yields_zero_vqi() {
         let bars = vec![bar(100.0, 101.0, 99.0, 100.0); 30];
         let r = compute(&bars, 14);
-        for v in r.vqi.iter().flatten() { assert!(v.abs() < 1e-9); }
+        for v in r.vqi.iter().flatten() {
+            assert!(v.abs() < 1e-9);
+        }
     }
 
     #[test]
     fn rising_closes_yield_positive_vqi() {
-        let bars: Vec<_> = (0..30).map(|i| {
-            let m = 100.0 + i as f64;
-            bar(m - 0.4, m + 0.5, m - 0.5, m + 0.3)
-        }).collect();
+        let bars: Vec<_> = (0..30)
+            .map(|i| {
+                let m = 100.0 + i as f64;
+                bar(m - 0.4, m + 0.5, m - 0.5, m + 0.3)
+            })
+            .collect();
         let r = compute(&bars, 14);
         let last = r.vqi[29].unwrap();
         assert!(last > 0.0);
@@ -120,10 +141,12 @@ mod tests {
 
     #[test]
     fn falling_closes_yield_negative_vqi() {
-        let bars: Vec<_> = (0..30).map(|i| {
-            let m = 200.0 - i as f64;
-            bar(m + 0.4, m + 0.5, m - 0.5, m - 0.3)
-        }).collect();
+        let bars: Vec<_> = (0..30)
+            .map(|i| {
+                let m = 200.0 - i as f64;
+                bar(m + 0.4, m + 0.5, m - 0.5, m - 0.3)
+            })
+            .collect();
         let r = compute(&bars, 14);
         let last = r.vqi[29].unwrap();
         assert!(last < 0.0);
@@ -131,10 +154,12 @@ mod tests {
 
     #[test]
     fn normalized_in_same_sign_as_vqi() {
-        let bars: Vec<_> = (0..30).map(|i| {
-            let m = 100.0 + i as f64;
-            bar(m - 0.4, m + 0.5, m - 0.5, m + 0.3)
-        }).collect();
+        let bars: Vec<_> = (0..30)
+            .map(|i| {
+                let m = 100.0 + i as f64;
+                bar(m - 0.4, m + 0.5, m - 0.5, m + 0.3)
+            })
+            .collect();
         let r = compute(&bars, 14);
         let v = r.vqi[29].unwrap();
         let vn = r.vqi_normalized[29].unwrap();

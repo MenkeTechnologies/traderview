@@ -4,9 +4,8 @@
 //! payments meet one of two safe harbors:
 //!
 //!   1. **Prior-year safe harbor** — pay (in withholding + quarterly
-//!      estimates) at least:
-//!         100% of prior year's tax liability,  OR
-//!         110% if prior-year AGI was > $150,000 (> $75,000 MFS).
+//!      estimates) at least 100% of prior year's tax liability, or
+//!      110% if prior-year AGI was > $150,000 (> $75,000 MFS).
 //!   2. **Current-year safe harbor** — pay at least 90% of the current
 //!      year's actual tax liability.
 //!
@@ -103,7 +102,7 @@ pub fn compute(input: SafeHarborInput) -> SafeHarborResult {
     // Prior-year threshold — 110% kicks in above the per-status AGI line.
     let high_income_threshold = match input.filing_status {
         FilingStatus::Mfs => Decimal::from(75_000),
-        _                 => Decimal::from(150_000),
+        _ => Decimal::from(150_000),
     };
     let prior_year_high_income = input.prior_year_agi > high_income_threshold;
 
@@ -112,12 +111,10 @@ pub fn compute(input: SafeHarborInput) -> SafeHarborResult {
     } else {
         Decimal::ONE
     };
-    let prior_year_safe_amount =
-        (input.prior_year_tax * prior_year_factor).max(Decimal::ZERO);
+    let prior_year_safe_amount = (input.prior_year_tax * prior_year_factor).max(Decimal::ZERO);
 
     let current_year_safe_amount =
-        (input.current_year_projected_tax * "0.90".parse::<Decimal>().unwrap())
-            .max(Decimal::ZERO);
+        (input.current_year_projected_tax * "0.90".parse::<Decimal>().unwrap()).max(Decimal::ZERO);
 
     let annual_floor = prior_year_safe_amount.min(current_year_safe_amount);
     let binding_harbor = if prior_year_safe_amount <= current_year_safe_amount {
@@ -128,8 +125,7 @@ pub fn compute(input: SafeHarborInput) -> SafeHarborResult {
 
     // Quarter clamped to [1, 4].
     let q = input.current_quarter.clamp(1, 4) as i64;
-    let cumulative_target =
-        (annual_floor * Decimal::from(q) / Decimal::from(4)).round_dp(2);
+    let cumulative_target = (annual_floor * Decimal::from(q) / Decimal::from(4)).round_dp(2);
 
     let paid_to_date = input.w2_withholding_ytd + input.estimated_paid_ytd;
     let raw_diff = cumulative_target - paid_to_date;
@@ -156,8 +152,9 @@ pub fn compute(input: SafeHarborInput) -> SafeHarborResult {
 mod tests {
     use super::*;
 
-    fn d(n: i64) -> Decimal { Decimal::from(n) }
-    fn dc(s: &str) -> Decimal { s.parse().unwrap() }
+    fn d(n: i64) -> Decimal {
+        Decimal::from(n)
+    }
 
     fn base_input() -> SafeHarborInput {
         SafeHarborInput {
@@ -204,7 +201,7 @@ mod tests {
         // MFS threshold is half of MFJ → $75,000.
         let inp = SafeHarborInput {
             filing_status: FilingStatus::Mfs,
-            prior_year_agi: d(80_000),   // > $75k MFS threshold
+            prior_year_agi: d(80_000), // > $75k MFS threshold
             prior_year_tax: d(10_000),
             ..base_input()
         };
@@ -218,7 +215,7 @@ mod tests {
     fn current_year_projection_lower_picks_current_year_harbor() {
         // Refund year — current projection is much lower than last year.
         let inp = SafeHarborInput {
-            prior_year_tax: d(20_000),         // last year was big
+            prior_year_tax: d(20_000),            // last year was big
             current_year_projected_tax: d(8_000), // big drop this year
             ..base_input()
         };
@@ -304,9 +301,9 @@ mod tests {
         let mut inp = base_input();
         inp.current_quarter = 0;
         let r0 = compute(inp);
-        assert_eq!(r0.cumulative_target, d(2_500));  // q=1 target
+        assert_eq!(r0.cumulative_target, d(2_500)); // q=1 target
         inp.current_quarter = 99;
         let r99 = compute(inp);
-        assert_eq!(r99.cumulative_target, d(10_000));  // q=4 full annual
+        assert_eq!(r99.cumulative_target, d(10_000)); // q=4 full annual
     }
 }

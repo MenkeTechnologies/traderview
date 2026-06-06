@@ -16,13 +16,23 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+}
 
 pub fn compute(bars: &[Bar], fast: usize, slow: usize) -> Vec<Option<f64>> {
     let n = bars.len();
     let mut out = vec![None; n];
-    if fast < 2 || slow < 2 || fast >= slow || n < slow { return out; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite()) { return out; }
+    if fast < 2 || slow < 2 || fast >= slow || n < slow {
+        return out;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite())
+    {
+        return out;
+    }
     let median: Vec<f64> = bars.iter().map(|b| (b.high + b.low) / 2.0).collect();
     let fast_sma = sma(&median, fast);
     let slow_sma = sma(&median, slow);
@@ -37,7 +47,9 @@ pub fn compute(bars: &[Bar], fast: usize, slow: usize) -> Vec<Option<f64>> {
 fn sma(series: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     let mut sum: f64 = series[..period].iter().sum();
     out[period - 1] = Some(sum / p_f);
@@ -52,13 +64,15 @@ fn sma(series: &[f64], period: usize) -> Vec<Option<f64>> {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64) -> Bar { Bar { high: h, low: l } }
+    fn b(h: f64, l: f64) -> Bar {
+        Bar { high: h, low: l }
+    }
 
     #[test]
     fn invalid_inputs_return_all_none() {
         let bars = vec![b(101.0, 99.0); 50];
         assert!(compute(&bars, 1, 35).iter().all(|x| x.is_none()));
-        assert!(compute(&bars, 35, 5).iter().all(|x| x.is_none()));    // fast > slow
+        assert!(compute(&bars, 35, 5).iter().all(|x| x.is_none())); // fast > slow
         assert!(compute(&bars[..10], 5, 35).iter().all(|x| x.is_none()));
     }
 
@@ -80,10 +94,12 @@ mod tests {
 
     #[test]
     fn strong_uptrend_yields_positive_ewo() {
-        let bars: Vec<_> = (0..80).map(|i| {
-            let m = 100.0 + i as f64;
-            b(m + 0.5, m - 0.5)
-        }).collect();
+        let bars: Vec<_> = (0..80)
+            .map(|i| {
+                let m = 100.0 + i as f64;
+                b(m + 0.5, m - 0.5)
+            })
+            .collect();
         let r = compute(&bars, 5, 35);
         let last = r[79].unwrap();
         // fast SMA leads the trend → above slow SMA.
@@ -92,10 +108,12 @@ mod tests {
 
     #[test]
     fn strong_downtrend_yields_negative_ewo() {
-        let bars: Vec<_> = (0..80).map(|i| {
-            let m = 200.0 - i as f64;
-            b(m + 0.5, m - 0.5)
-        }).collect();
+        let bars: Vec<_> = (0..80)
+            .map(|i| {
+                let m = 200.0 - i as f64;
+                b(m + 0.5, m - 0.5)
+            })
+            .collect();
         let r = compute(&bars, 5, 35);
         assert!(r[79].unwrap() < 0.0);
     }

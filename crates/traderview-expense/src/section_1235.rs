@@ -131,9 +131,7 @@ pub fn compute(input: &Section1235Input) -> Section1235Result {
     // §1235(d) related-party disqualification.
     let related_party_blocked = input.related_party_under_267b_modified;
 
-    let qualifies = holder != HolderPath::NotAHolder
-        && all_substantial
-        && !related_party_blocked;
+    let qualifies = holder != HolderPath::NotAHolder && all_substantial && !related_party_blocked;
 
     let (character, ltcg) = if qualifies {
         (GainCharacter::LongTermCapitalGain, true)
@@ -165,7 +163,10 @@ pub fn compute(input: &Section1235Input) -> Section1235Result {
         if input.field_of_use_limitation_retained {
             limits.push("field-of-use limitation retained");
         }
-        failure_reasons.push(format!("not all substantial rights ({})", limits.join("; ")));
+        failure_reasons.push(format!(
+            "not all substantial rights ({})",
+            limits.join("; ")
+        ));
     }
     if related_party_blocked {
         failure_reasons.push("§1235(d) related-party (267(b) modified 25% threshold)".to_string());

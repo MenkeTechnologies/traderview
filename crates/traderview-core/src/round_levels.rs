@@ -19,7 +19,11 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum LevelWeight { Major, Medium, Minor }
+pub enum LevelWeight {
+    Major,
+    Medium,
+    Minor,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RoundLevel {
@@ -41,7 +45,12 @@ pub struct LevelsConfig {
 }
 
 impl Default for LevelsConfig {
-    fn default() -> Self { Self { window: 50.0, min_weight: LevelWeight::Minor } }
+    fn default() -> Self {
+        Self {
+            window: 50.0,
+            min_weight: LevelWeight::Minor,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -58,8 +67,12 @@ fn classify(price: f64) -> Option<LevelWeight> {
     // Only round-number levels qualify — caller's `detect` walks integer
     // candidates, so a non-integer input means we're not at a level.
     // Largest-divisor checks first so a $1000 price is Major, not Minor.
-    if !price.is_finite() { return None; }
-    if (price - price.round()).abs() > 1e-9 { return None; }
+    if !price.is_finite() {
+        return None;
+    }
+    if (price - price.round()).abs() > 1e-9 {
+        return None;
+    }
     let p = price.round();
     if p % 1000.0 == 0.0 || p % 500.0 == 0.0 || p % 100.0 == 0.0 {
         Some(LevelWeight::Major)
@@ -75,9 +88,9 @@ fn classify(price: f64) -> Option<LevelWeight> {
 /// Weight ordering for the `min_weight` filter.
 fn weight_rank(w: LevelWeight) -> u8 {
     match w {
-        LevelWeight::Major  => 3,
+        LevelWeight::Major => 3,
         LevelWeight::Medium => 2,
-        LevelWeight::Minor  => 1,
+        LevelWeight::Minor => 1,
     }
 }
 
@@ -88,7 +101,9 @@ pub fn detect(current_price: f64, atr: Option<f64>, cfg: &LevelsConfig) -> Level
     let min_rank = weight_rank(cfg.min_weight);
     let lo = (current_price - cfg.window).max(0.0).floor() as i64;
     let hi = (current_price + cfg.window).ceil() as i64;
-    if hi <= lo { return LevelsReport::default(); }
+    if hi <= lo {
+        return LevelsReport::default();
+    }
     // Guard against window-too-wide blow-up.
     if (hi - lo) > 100_000 {
         return LevelsReport::default();
@@ -97,21 +112,44 @@ pub fn detect(current_price: f64, atr: Option<f64>, cfg: &LevelsConfig) -> Level
     for p in lo..=hi {
         let price = p as f64;
         let Some(w) = classify(price) else { continue };
-        if weight_rank(w) < min_rank { continue; }
+        if weight_rank(w) < min_rank {
+            continue;
+        }
         let distance = price - current_price;
-        if distance.abs() > cfg.window { continue; }
+        if distance.abs() > cfg.window {
+            continue;
+        }
         let distance_atrs = atr.filter(|a| *a > 0.0).map(|a| distance / a);
-        levels.push(RoundLevel { price, weight: w, distance, distance_atrs });
+        levels.push(RoundLevel {
+            price,
+            weight: w,
+            distance,
+            distance_atrs,
+        });
     }
-    let nearest_above = levels.iter()
+    let nearest_above = levels
+        .iter()
         .filter(|l| l.distance > 0.0)
-        .min_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap_or(std::cmp::Ordering::Equal))
+        .min_by(|a, b| {
+            a.distance
+                .partial_cmp(&b.distance)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        })
         .cloned();
-    let nearest_below = levels.iter()
+    let nearest_below = levels
+        .iter()
         .filter(|l| l.distance < 0.0)
-        .max_by(|a, b| a.distance.partial_cmp(&b.distance).unwrap_or(std::cmp::Ordering::Equal))
+        .max_by(|a, b| {
+            a.distance
+                .partial_cmp(&b.distance)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        })
         .cloned();
-    LevelsReport { levels, nearest_above, nearest_below }
+    LevelsReport {
+        levels,
+        nearest_above,
+        nearest_below,
+    }
 }
 
 #[cfg(test)]
@@ -121,27 +159,32 @@ mod tests {
     #[test]
     fn classify_recognizes_each_weight_tier() {
         assert_eq!(classify(1000.0), Some(LevelWeight::Major));
-        assert_eq!(classify(500.0),  Some(LevelWeight::Major));
-        assert_eq!(classify(100.0),  Some(LevelWeight::Major));
-        assert_eq!(classify(50.0),   Some(LevelWeight::Medium));
-        assert_eq!(classify(25.0),   Some(LevelWeight::Medium));
-        assert_eq!(classify(10.0),   Some(LevelWeight::Minor));
-        assert_eq!(classify(5.0),    Some(LevelWeight::Minor));
-        assert_eq!(classify(7.0),    Some(LevelWeight::Minor));    // mod 1
-        // Non-integer prices return None.
-        assert_eq!(classify(100.5),  None);
+        assert_eq!(classify(500.0), Some(LevelWeight::Major));
+        assert_eq!(classify(100.0), Some(LevelWeight::Major));
+        assert_eq!(classify(50.0), Some(LevelWeight::Medium));
+        assert_eq!(classify(25.0), Some(LevelWeight::Medium));
+        assert_eq!(classify(10.0), Some(LevelWeight::Minor));
+        assert_eq!(classify(5.0), Some(LevelWeight::Minor));
+        assert_eq!(classify(7.0), Some(LevelWeight::Minor)); // mod 1
+                                                             // Non-integer prices return None.
+        assert_eq!(classify(100.5), None);
     }
 
     #[test]
     fn near_50_emits_levels_above_and_below() {
         // current=48.0, window=5 — should pick up 45 (Minor) and 50 (Medium).
-        let cfg = LevelsConfig { window: 5.0, min_weight: LevelWeight::Minor };
+        let cfg = LevelsConfig {
+            window: 5.0,
+            min_weight: LevelWeight::Minor,
+        };
         let r = detect(48.0, None, &cfg);
         let has_45 = r.levels.iter().any(|l| (l.price - 45.0).abs() < 1e-9);
         let has_50 = r.levels.iter().any(|l| (l.price - 50.0).abs() < 1e-9);
-        assert!(has_45 && has_50,
+        assert!(
+            has_45 && has_50,
             "expected 45 and 50 in window, got {:?}",
-            r.levels.iter().map(|l| l.price).collect::<Vec<_>>());
+            r.levels.iter().map(|l| l.price).collect::<Vec<_>>()
+        );
         // Nearest below should be 47 or 46 (or 45 — any minor).
         assert!(r.nearest_below.is_some());
         assert!(r.nearest_above.is_some());
@@ -149,12 +192,17 @@ mod tests {
 
     #[test]
     fn min_weight_major_filters_out_minor_and_medium() {
-        let cfg = LevelsConfig { window: 100.0, min_weight: LevelWeight::Major };
+        let cfg = LevelsConfig {
+            window: 100.0,
+            min_weight: LevelWeight::Major,
+        };
         let r = detect(125.0, None, &cfg);
         // Only $100 and $200 (no $25/$50/$75 medium, no random integers minor).
         for l in &r.levels {
-            assert!(matches!(l.weight, LevelWeight::Major),
-                "minor/medium leaked through: {l:?}");
+            assert!(
+                matches!(l.weight, LevelWeight::Major),
+                "minor/medium leaked through: {l:?}"
+            );
         }
         // $100 should be present (it's in window).
         assert!(r.levels.iter().any(|l| (l.price - 100.0).abs() < 1e-9));
@@ -162,26 +210,43 @@ mod tests {
 
     #[test]
     fn atr_scaling_populates_distance_atrs() {
-        let cfg = LevelsConfig { window: 5.0, min_weight: LevelWeight::Major };
+        let cfg = LevelsConfig {
+            window: 5.0,
+            min_weight: LevelWeight::Major,
+        };
         let r = detect(101.0, Some(1.0), &cfg);
         // The 100 level is 1.0 away, ATR 1.0 → 1.0 ATR.
-        let l100 = r.levels.iter().find(|l| (l.price - 100.0).abs() < 1e-9).unwrap();
+        let l100 = r
+            .levels
+            .iter()
+            .find(|l| (l.price - 100.0).abs() < 1e-9)
+            .unwrap();
         assert!((l100.distance_atrs.unwrap() - (-1.0)).abs() < 1e-9);
     }
 
     #[test]
     fn invalid_inputs_return_empty() {
-        assert!(detect(-1.0, None, &LevelsConfig::default()).levels.is_empty());
-        assert!(detect(f64::NAN, None, &LevelsConfig::default()).levels.is_empty());
+        assert!(detect(-1.0, None, &LevelsConfig::default())
+            .levels
+            .is_empty());
+        assert!(detect(f64::NAN, None, &LevelsConfig::default())
+            .levels
+            .is_empty());
         // Window zero → empty.
-        let cfg = LevelsConfig { window: 0.0, min_weight: LevelWeight::Minor };
+        let cfg = LevelsConfig {
+            window: 0.0,
+            min_weight: LevelWeight::Minor,
+        };
         assert!(detect(100.0, None, &cfg).levels.is_empty());
     }
 
     #[test]
     fn enormous_window_doesnt_blow_up_memory() {
         // 200_000 integers > 100_000 cap → returns empty rather than allocating.
-        let cfg = LevelsConfig { window: 100_001.0, min_weight: LevelWeight::Minor };
+        let cfg = LevelsConfig {
+            window: 100_001.0,
+            min_weight: LevelWeight::Minor,
+        };
         let r = detect(50_000.0, None, &cfg);
         assert!(r.levels.is_empty(), "huge window must short-circuit");
     }

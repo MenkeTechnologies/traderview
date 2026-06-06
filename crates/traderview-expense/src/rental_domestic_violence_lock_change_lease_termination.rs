@@ -201,7 +201,10 @@ pub fn compute(input: &Input) -> Output {
     }
 
     match (input.jurisdiction, input.scenario) {
-        (DvJurisdiction::California, DvScenarioType::LockChangeRequestRestrainedPersonNotTenant) => {
+        (
+            DvJurisdiction::California,
+            DvScenarioType::LockChangeRequestRestrainedPersonNotTenant,
+        ) => {
             if input.hours_to_landlord_lock_change > DV_LOCK_CHANGE_CA_1941_5_HOURS {
                 if input.tenant_self_changed_locks_after_landlord_failure {
                     return Output {
@@ -277,7 +280,9 @@ pub fn compute(input: &Input) -> Output {
         }
         (DvJurisdiction::Texas, DvScenarioType::LockChangeRequestRestrainedPersonNotTenant)
         | (DvJurisdiction::Texas, DvScenarioType::LockChangeRequestRestrainedPersonIsTenant) => {
-            if input.business_days_to_landlord_lock_change_texas > DV_LOCK_CHANGE_TEXAS_92_016_BUSINESS_DAYS {
+            if input.business_days_to_landlord_lock_change_texas
+                > DV_LOCK_CHANGE_TEXAS_92_016_BUSINESS_DAYS
+            {
                 return Output {
                     mode: DvLockChangeLeaseTerminationMode::ViolationLandlordFailedToChangeLocksWithinStatutoryWindow,
                     statutory_basis: "Texas Property Code § 92.016 — 3 business days exceeded".to_string(),
@@ -299,7 +304,9 @@ pub fn compute(input: &Input) -> Output {
             }
         }
         (DvJurisdiction::California, DvScenarioType::EarlyLeaseTerminationRequest) => {
-            if input.days_between_notice_and_termination_date < DV_LEASE_TERMINATION_CA_1946_7_POST_NOTICE_RENT_DAYS {
+            if input.days_between_notice_and_termination_date
+                < DV_LEASE_TERMINATION_CA_1946_7_POST_NOTICE_RENT_DAYS
+            {
                 return Output {
                     mode: DvLockChangeLeaseTerminationMode::ViolationCa1946_7ImproperNoticeOrTerminationDate,
                     statutory_basis: "Cal. Civ. Code § 1946.7 — 14-day post-notice rent obligation".to_string(),
@@ -345,7 +352,9 @@ pub fn compute(input: &Input) -> Output {
                     citations,
                 };
             }
-            if input.days_between_notice_and_termination_date < DV_LEASE_TERMINATION_TEXAS_92_016_NOTICE_DAYS {
+            if input.days_between_notice_and_termination_date
+                < DV_LEASE_TERMINATION_TEXAS_92_016_NOTICE_DAYS
+            {
                 if !input.texas_lease_contains_required_statutory_rights_language {
                     return Output {
                         mode: DvLockChangeLeaseTerminationMode::ViolationTexasLeaseLackedRequiredStatutoryRightsLanguage,
@@ -386,7 +395,9 @@ pub fn compute(input: &Input) -> Output {
             }
         }
         (DvJurisdiction::NewYork, DvScenarioType::EarlyLeaseTerminationRequest) => {
-            if input.days_between_notice_and_termination_date < DV_LEASE_TERMINATION_NY_RPL_227C_NOTICE_DAYS {
+            if input.days_between_notice_and_termination_date
+                < DV_LEASE_TERMINATION_NY_RPL_227C_NOTICE_DAYS
+            {
                 return Output {
                     mode: DvLockChangeLeaseTerminationMode::ViolationNyRpl227cTerminationDateLessThan30DaysFromNotice,
                     statutory_basis: "NY RPL § 227-c — termination date must be ≥ 30 days from notice".to_string(),
@@ -397,7 +408,9 @@ pub fn compute(input: &Input) -> Output {
                     citations,
                 };
             }
-            if input.days_between_notice_and_proof_provided > DV_LEASE_TERMINATION_NY_RPL_227C_PROOF_DAYS {
+            if input.days_between_notice_and_proof_provided
+                > DV_LEASE_TERMINATION_NY_RPL_227C_PROOF_DAYS
+            {
                 return Output {
                     mode: DvLockChangeLeaseTerminationMode::ViolationCa1946_7ImproperNoticeOrTerminationDate,
                     statutory_basis: "NY RPL § 227-c — 25-day proof window exceeded".to_string(),
@@ -430,7 +443,8 @@ pub fn compute(input: &Input) -> Output {
         _ => Output {
             mode: DvLockChangeLeaseTerminationMode::NotApplicableJurisdictionLacksDvMandate,
             statutory_basis: "Unhandled jurisdiction + scenario combination".to_string(),
-            notes: "Fall-through; no statutory protection identified for this combination.".to_string(),
+            notes: "Fall-through; no statutory protection identified for this combination."
+                .to_string(),
             citations,
         },
     }
@@ -464,7 +478,10 @@ mod tests {
             ..baseline_ca_1941_5_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, DvLockChangeLeaseTerminationMode::NotApplicableNoDvDocumentationProvided);
+        assert_eq!(
+            result.mode,
+            DvLockChangeLeaseTerminationMode::NotApplicableNoDvDocumentationProvided
+        );
     }
 
     #[test]
@@ -524,7 +541,10 @@ mod tests {
             ..baseline_ca_1941_5_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, DvLockChangeLeaseTerminationMode::ViolationLandlordChargedTenantForCa1941_6LockChange);
+        assert_eq!(
+            result.mode,
+            DvLockChangeLeaseTerminationMode::ViolationLandlordChargedTenantForCa1941_6LockChange
+        );
     }
 
     #[test]
@@ -570,7 +590,10 @@ mod tests {
             ..baseline_ca_1941_5_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, DvLockChangeLeaseTerminationMode::ViolationCa1946_7ImproperNoticeOrTerminationDate);
+        assert_eq!(
+            result.mode,
+            DvLockChangeLeaseTerminationMode::ViolationCa1946_7ImproperNoticeOrTerminationDate
+        );
     }
 
     #[test]
@@ -582,7 +605,10 @@ mod tests {
             ..baseline_ca_1941_5_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, DvLockChangeLeaseTerminationMode::CompliantTexas92_016EarlyTerminationWith30DayNotice);
+        assert_eq!(
+            result.mode,
+            DvLockChangeLeaseTerminationMode::CompliantTexas92_016EarlyTerminationWith30DayNotice
+        );
     }
 
     #[test]
@@ -595,7 +621,10 @@ mod tests {
             ..baseline_ca_1941_5_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, DvLockChangeLeaseTerminationMode::CompliantTexas92_016ZeroNoticeAbuserIsCoTenant);
+        assert_eq!(
+            result.mode,
+            DvLockChangeLeaseTerminationMode::CompliantTexas92_016ZeroNoticeAbuserIsCoTenant
+        );
     }
 
     #[test]
@@ -647,7 +676,10 @@ mod tests {
             ..baseline_ca_1941_5_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, DvLockChangeLeaseTerminationMode::ViolationCa1946_7ImproperNoticeOrTerminationDate);
+        assert_eq!(
+            result.mode,
+            DvLockChangeLeaseTerminationMode::ViolationCa1946_7ImproperNoticeOrTerminationDate
+        );
     }
 
     #[test]
@@ -658,7 +690,10 @@ mod tests {
             ..baseline_ca_1941_5_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, DvLockChangeLeaseTerminationMode::CompliantVawaSection8FederalProtectionApplied);
+        assert_eq!(
+            result.mode,
+            DvLockChangeLeaseTerminationMode::CompliantVawaSection8FederalProtectionApplied
+        );
     }
 
     #[test]
@@ -669,7 +704,10 @@ mod tests {
             ..baseline_ca_1941_5_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, DvLockChangeLeaseTerminationMode::NotApplicableJurisdictionLacksDvMandate);
+        assert_eq!(
+            result.mode,
+            DvLockChangeLeaseTerminationMode::NotApplicableJurisdictionLacksDvMandate
+        );
     }
 
     #[test]

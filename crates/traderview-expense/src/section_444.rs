@@ -116,8 +116,8 @@ pub fn compute(input: &Section444Input) -> Section444Result {
         _ => 0,
     };
 
-    let subject_to_280h = matches!(input.entity_type, EntityType::PersonalServiceCorporation)
-        && available;
+    let subject_to_280h =
+        matches!(input.entity_type, EntityType::PersonalServiceCorporation) && available;
 
     let note = if !within_3_months {
         if deferral == 0 {

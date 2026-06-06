@@ -178,8 +178,7 @@ fn check_new_york(input: &FamilyChildcareHomeInput) -> FamilyChildcareHomeResult
     }
 
     FamilyChildcareHomeResult {
-        fcch_operation_permitted: !input.lease_prohibits_fcch
-            && input.fcch_properly_licensed,
+        fcch_operation_permitted: !input.lease_prohibits_fcch && input.fcch_properly_licensed,
         lease_prohibition_void: false,
         required_notice_days: 0,
         notice_satisfied: true,
@@ -354,7 +353,10 @@ mod tests {
     #[test]
     fn ca_note_pins_ab_12_deposit_cap() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("AB 12") && n.contains("§ 1950.5")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("AB 12") && n.contains("§ 1950.5")));
     }
 
     #[test]

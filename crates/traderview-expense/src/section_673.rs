@@ -184,7 +184,8 @@ pub fn compute(input: &Input) -> Output {
     if input.reversionary_interest_type == ReversionaryInterestType::NoReversionaryInterest {
         return Output {
             mode: Section673Mode::NotApplicableNoTrustOrNoReversionaryInterest,
-            statutory_basis: "IRC § 673 inapplicable — no reversionary interest retained by grantor".to_string(),
+            statutory_basis:
+                "IRC § 673 inapplicable — no reversionary interest retained by grantor".to_string(),
             notes: "No reversionary interest retained by grantor; § 673 not triggered.".to_string(),
             citations,
         };

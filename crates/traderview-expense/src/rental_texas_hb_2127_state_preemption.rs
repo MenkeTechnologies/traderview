@@ -207,8 +207,7 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.local_ordinance_category == LocalOrdinanceCategory::SanAntonioTenantBillOfRights
-    {
+    if input.local_ordinance_category == LocalOrdinanceCategory::SanAntonioTenantBillOfRights {
         return Output {
             mode: TexasHb2127Mode::ViolationTenantBillOfRightsOrdinancePreempted,
             statutory_basis: "Texas HB 2127 — San Antonio Tenant Bill of Rights preempted".to_string(),

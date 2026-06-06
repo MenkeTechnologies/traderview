@@ -18,18 +18,22 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
-pub fn compute(
-    bars: &[Bar],
-    mean_period: usize,
-    rank_period: usize,
-) -> Vec<Option<f64>> {
+pub fn compute(bars: &[Bar], mean_period: usize, rank_period: usize) -> Vec<Option<f64>> {
     let n = bars.len();
     let mut out = vec![None; n];
-    if mean_period < 2 || rank_period < 2
-        || n < mean_period + rank_period { return out; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if mean_period < 2 || rank_period < 2 || n < mean_period + rank_period {
+        return out;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return out;
     }
     let medians: Vec<f64> = bars.iter().map(|b| (b.high + b.low) / 2.0).collect();
@@ -44,18 +48,24 @@ pub fn compute(
     let mut ratio = vec![None; n];
     for i in 0..n {
         if let Some(m) = sma_med[i] {
-            if m > 0.0 { ratio[i] = Some(bars[i].close / m); }
+            if m > 0.0 {
+                ratio[i] = Some(bars[i].close / m);
+            }
         }
     }
     // Percent-rank of ratio[i] within ratio[i-rank_period+1..=i].
     for i in (mean_period + rank_period - 2)..n {
         let win = &ratio[i + 1 - rank_period..=i];
-        if win.iter().any(|x| x.is_none()) { continue; }
+        if win.iter().any(|x| x.is_none()) {
+            continue;
+        }
         let vals: Vec<f64> = win.iter().filter_map(|x| *x).collect();
         let cur = vals[vals.len() - 1];
         let mut less_or_eq = 0_usize;
         for v in &vals {
-            if *v <= cur { less_or_eq += 1; }
+            if *v <= cur {
+                less_or_eq += 1;
+            }
         }
         let pct_rank = less_or_eq as f64 / vals.len() as f64 * 100.0;
         out[i] = Some(pct_rank);
@@ -67,7 +77,13 @@ pub fn compute(
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {
@@ -86,13 +102,16 @@ mod tests {
     #[test]
     fn output_in_zero_hundred_range() {
         let mut state: u64 = 42;
-        let bars: Vec<_> = (0..400).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
-            let m = 100.0 + (r - 0.5) * 10.0;
-            b(m + 1.0, m - 1.0, m)
-        }).collect();
+        let bars: Vec<_> = (0..400)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
+                let m = 100.0 + (r - 0.5) * 10.0;
+                b(m + 1.0, m - 1.0, m)
+            })
+            .collect();
         let r = compute(&bars, 5, 252);
         for v in r.iter().flatten() {
             assert!((0.0..=100.0).contains(v));
@@ -106,8 +125,10 @@ mod tests {
         bars.push(b(110.0, 99.0, 110.0));
         let r = compute(&bars, 5, 252);
         let last = r[399].unwrap();
-        assert!(last >= 99.0,
-            "spike above baseline should yield DVO near 100, got {last}");
+        assert!(
+            last >= 99.0,
+            "spike above baseline should yield DVO near 100, got {last}"
+        );
     }
 
     #[test]
@@ -117,8 +138,10 @@ mod tests {
         let r = compute(&bars, 5, 252);
         let last = r[399].unwrap();
         // The latest ratio is the smallest in window → rank near minimum.
-        assert!(last <= 1.0,
-            "spike below baseline should yield DVO near 0, got {last}");
+        assert!(
+            last <= 1.0,
+            "spike below baseline should yield DVO near 0, got {last}"
+        );
     }
 
     #[test]

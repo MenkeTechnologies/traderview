@@ -47,7 +47,11 @@ pub fn compute(bars: &[Bar], period: usize) -> Vec<Option<f64>> {
         // 1.0 (FRAMA follows price exactly, which on a flat series means
         // hold the constant). Earlier code `continue`'d before the
         // seed/recurrence below, leaving the entire series None.
-        let sum = if n1.is_finite() && n2.is_finite() { n1 + n2 } else { 0.0 };
+        let sum = if n1.is_finite() && n2.is_finite() {
+            n1 + n2
+        } else {
+            0.0
+        };
         let alpha = if !n3.is_finite() || n3 <= 0.0 || sum <= 0.0 {
             1.0
         } else {
@@ -57,7 +61,9 @@ pub fn compute(bars: &[Bar], period: usize) -> Vec<Option<f64>> {
         };
         let c = bars[i].close;
         if !c.is_finite() {
-            if let Some(p) = prev { out[i] = Some(p); }
+            if let Some(p) = prev {
+                out[i] = Some(p);
+            }
             continue;
         }
         let new = match prev {
@@ -75,7 +81,9 @@ pub fn compute(bars: &[Bar], period: usize) -> Vec<Option<f64>> {
 fn high(bars: &[Bar]) -> f64 {
     let mut hi = f64::NEG_INFINITY;
     for b in bars {
-        if b.high.is_finite() && b.high > hi { hi = b.high; }
+        if b.high.is_finite() && b.high > hi {
+            hi = b.high;
+        }
     }
     hi
 }
@@ -83,7 +91,9 @@ fn high(bars: &[Bar]) -> f64 {
 fn low(bars: &[Bar]) -> f64 {
     let mut lo = f64::INFINITY;
     for b in bars {
-        if b.low.is_finite() && b.low < lo { lo = b.low; }
+        if b.low.is_finite() && b.low < lo {
+            lo = b.low;
+        }
     }
     lo
 }
@@ -93,7 +103,11 @@ mod tests {
     use super::*;
 
     fn b(h: f64, l: f64, c: f64) -> Bar {
-        Bar { high: h, low: l, close: c }
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -106,7 +120,10 @@ mod tests {
         let v = vec![b(101.0, 99.0, 100.0); 50];
         assert!(compute(&v, 0).iter().all(|x| x.is_none()));
         assert!(compute(&v, 1).iter().all(|x| x.is_none()));
-        assert!(compute(&v, 15).iter().all(|x| x.is_none()), "odd period rejected");
+        assert!(
+            compute(&v, 15).iter().all(|x| x.is_none()),
+            "odd period rejected"
+        );
     }
 
     #[test]
@@ -121,10 +138,12 @@ mod tests {
 
     #[test]
     fn rising_series_frama_tracks() {
-        let v: Vec<Bar> = (1..=80).map(|i| {
-            let c = 100.0 + i as f64;
-            b(c + 0.5, c - 0.5, c)
-        }).collect();
+        let v: Vec<Bar> = (1..=80)
+            .map(|i| {
+                let c = 100.0 + i as f64;
+                b(c + 0.5, c - 0.5, c)
+            })
+            .collect();
         let out = compute(&v, 16);
         let last = out[79].expect("populated");
         // On a clean trend D ≈ 1 → alpha ≈ 1 → FRAMA hugs current close.

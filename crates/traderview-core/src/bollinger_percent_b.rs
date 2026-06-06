@@ -25,7 +25,9 @@ pub fn compute(closes: &[f64], period: usize, n_stdev: f64) -> Vec<Option<f64>> 
     if period < 2 || !n_stdev.is_finite() || n_stdev <= 0.0 || n < period {
         return out;
     }
-    if closes.iter().any(|x| !x.is_finite()) { return out; }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     let p_f = period as f64;
     for (i, slot) in out.iter_mut().enumerate().skip(period - 1) {
         let win = &closes[i + 1 - period..=i];

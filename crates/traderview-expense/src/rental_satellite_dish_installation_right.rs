@@ -192,7 +192,8 @@ pub fn check(
     }
 
     let permissible_restriction = match input.restriction_basis {
-        RestrictionBasis::LegitimateSafetyObjective | RestrictionBasis::HistoricDistrictPreservation => {
+        RestrictionBasis::LegitimateSafetyObjective
+        | RestrictionBasis::HistoricDistrictPreservation => {
             input.restriction_narrowly_tailored && input.landlord_reasonable_factual_basis
         }
         RestrictionBasis::None => true,
@@ -390,8 +391,7 @@ mod tests {
         assert!(r
             .violations
             .iter()
-            .any(|v| v.contains("exclusive-marketing")
-                && v.contains("anti-competitive bundling")));
+            .any(|v| v.contains("exclusive-marketing") && v.contains("anti-competitive bundling")));
     }
 
     #[test]
@@ -517,16 +517,22 @@ mod tests {
     #[test]
     fn note_pins_tenant_enforcement_petition_and_court() {
         let r = check(&dbs_balcony_no_restriction());
-        assert!(r.notes.iter().any(|n| n.contains("Petition for Declaratory Ruling")
-            && n.contains("private action")
-            && n.contains("res judicata")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Petition for Declaratory Ruling")
+                && n.contains("private action")
+                && n.contains("res judicata")));
     }
 
     #[test]
     fn note_pins_statutory_authority_1996_telecom_act() {
         let r = check(&dbs_balcony_no_restriction());
-        assert!(r.notes.iter().any(|n| n.contains("Telecommunications Act of 1996 § 207")
-            && n.contains("47 USC § 303")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Telecommunications Act of 1996 § 207")
+                && n.contains("47 USC § 303")));
     }
 
     #[test]
@@ -576,11 +582,31 @@ mod tests {
     fn restriction_basis_truth_table_five_cells() {
         for (basis, narrow, factual, exp_permissible) in [
             (RestrictionBasis::None, false, false, true),
-            (RestrictionBasis::LegitimateSafetyObjective, true, true, true),
-            (RestrictionBasis::LegitimateSafetyObjective, false, true, false),
-            (RestrictionBasis::HistoricDistrictPreservation, true, true, true),
+            (
+                RestrictionBasis::LegitimateSafetyObjective,
+                true,
+                true,
+                true,
+            ),
+            (
+                RestrictionBasis::LegitimateSafetyObjective,
+                false,
+                true,
+                false,
+            ),
+            (
+                RestrictionBasis::HistoricDistrictPreservation,
+                true,
+                true,
+                true,
+            ),
             (RestrictionBasis::AestheticPreference, true, true, false),
-            (RestrictionBasis::LandlordExclusiveMarketingAgreement, true, true, false),
+            (
+                RestrictionBasis::LandlordExclusiveMarketingAgreement,
+                true,
+                true,
+                false,
+            ),
         ] {
             let mut i = dbs_balcony_no_restriction();
             i.restriction_basis = basis;

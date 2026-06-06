@@ -20,7 +20,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ChandeKrollReport {
@@ -36,10 +40,17 @@ pub fn compute(bars: &[Bar], p: usize, x: f64, q: usize) -> ChandeKrollReport {
     let mut report = ChandeKrollReport {
         long_stop: vec![None; n],
         short_stop: vec![None; n],
-        p, x, q,
+        p,
+        x,
+        q,
     };
-    if p < 2 || q < 2 || !x.is_finite() || x <= 0.0 || n < p + q { return report; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if p < 2 || q < 2 || !x.is_finite() || x <= 0.0 || n < p + q {
+        return report;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return report;
     }
     // True range and Wilder ATR.
@@ -77,11 +88,17 @@ pub fn compute(bars: &[Bar], p: usize, x: f64, q: usize) -> ChandeKrollReport {
         let win_l = &raw_long[i + 1 - q..=i];
         let win_s = &raw_short[i + 1 - q..=i];
         if win_l.iter().all(|x| x.is_some()) {
-            let max_l = win_l.iter().filter_map(|x| *x).fold(f64::NEG_INFINITY, f64::max);
+            let max_l = win_l
+                .iter()
+                .filter_map(|x| *x)
+                .fold(f64::NEG_INFINITY, f64::max);
             report.long_stop[i] = Some(max_l);
         }
         if win_s.iter().all(|x| x.is_some()) {
-            let min_s = win_s.iter().filter_map(|x| *x).fold(f64::INFINITY, f64::min);
+            let min_s = win_s
+                .iter()
+                .filter_map(|x| *x)
+                .fold(f64::INFINITY, f64::min);
             report.short_stop[i] = Some(min_s);
         }
     }
@@ -92,7 +109,13 @@ pub fn compute(bars: &[Bar], p: usize, x: f64, q: usize) -> ChandeKrollReport {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_all_none() {
@@ -126,10 +149,12 @@ mod tests {
 
     #[test]
     fn long_stop_rises_in_uptrend() {
-        let bars: Vec<_> = (0..50).map(|i| {
-            let m = 100.0 + i as f64;
-            b(m + 0.5, m - 0.5, m)
-        }).collect();
+        let bars: Vec<_> = (0..50)
+            .map(|i| {
+                let m = 100.0 + i as f64;
+                b(m + 0.5, m - 0.5, m)
+            })
+            .collect();
         let r = compute(&bars, 10, 1.0, 9);
         // Confirm monotone non-decreasing where both defined.
         let vals: Vec<f64> = r.long_stop.iter().flatten().copied().collect();
@@ -140,10 +165,12 @@ mod tests {
 
     #[test]
     fn short_stop_falls_in_downtrend() {
-        let bars: Vec<_> = (0..50).map(|i| {
-            let m = 200.0 - i as f64;
-            b(m + 0.5, m - 0.5, m)
-        }).collect();
+        let bars: Vec<_> = (0..50)
+            .map(|i| {
+                let m = 200.0 - i as f64;
+                b(m + 0.5, m - 0.5, m)
+            })
+            .collect();
         let r = compute(&bars, 10, 1.0, 9);
         let vals: Vec<f64> = r.short_stop.iter().flatten().copied().collect();
         for w in vals.windows(2) {
@@ -153,10 +180,12 @@ mod tests {
 
     #[test]
     fn higher_x_widens_stop_distance() {
-        let bars: Vec<_> = (0..50).map(|i| {
-            let m = 100.0 + (i as f64 * 0.3).sin() * 5.0;
-            b(m + 0.5, m - 0.5, m)
-        }).collect();
+        let bars: Vec<_> = (0..50)
+            .map(|i| {
+                let m = 100.0 + (i as f64 * 0.3).sin() * 5.0;
+                b(m + 0.5, m - 0.5, m)
+            })
+            .collect();
         let r1 = compute(&bars, 10, 1.0, 9);
         let r2 = compute(&bars, 10, 3.0, 9);
         // Larger x → stops further from price.

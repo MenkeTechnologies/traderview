@@ -40,7 +40,11 @@ mod tests {
             .map(|i| b(100.0 + i as f64, 99.0 + i as f64))
             .collect();
         let out = compute(&bars, 25);
-        assert!(out[39] > 50.0, "uptrend should yield strong + oscillator, got {}", out[39]);
+        assert!(
+            out[39] > 50.0,
+            "uptrend should yield strong + oscillator, got {}",
+            out[39]
+        );
     }
 
     #[test]
@@ -54,10 +58,12 @@ mod tests {
 
     #[test]
     fn range_bounded_minus_100_to_plus_100() {
-        let bars: Vec<aroon::Bar> = (0..200).map(|i| {
-            let mid = 100.0 + (i as f64 * 0.5).sin() * 5.0;
-            b(mid + 1.0, mid - 1.0)
-        }).collect();
+        let bars: Vec<aroon::Bar> = (0..200)
+            .map(|i| {
+                let mid = 100.0 + (i as f64 * 0.5).sin() * 5.0;
+                b(mid + 1.0, mid - 1.0)
+            })
+            .collect();
         let out = compute(&bars, 25);
         for v in &out {
             assert!((-100.0..=100.0).contains(v), "out of [-100,100]: {v}");

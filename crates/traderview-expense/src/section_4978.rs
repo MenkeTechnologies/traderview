@@ -199,7 +199,10 @@ pub fn check(input: &Input) -> Output {
 
     if matches!(input.disposition_type, DispositionType::NoDisposition) {
         let mut n = notes;
-        n.push("No disposition of qualified securities — § 4978 does not apply this taxable year.".to_string());
+        n.push(
+            "No disposition of qualified securities — § 4978 does not apply this taxable year."
+                .to_string(),
+        );
         return Output {
             severity: Severity::NoDisposition,
             excise_tax_cents: 0,
@@ -241,7 +244,9 @@ pub fn check(input: &Input) -> Output {
             | DispositionType::DeathDistribution
             | DispositionType::RetirementDistribution
             | DispositionType::DisabilityDistribution
-            | DispositionType::DivorceDistribution => "§ 4978(c)(1) distribution on separation/death/retirement/disability/divorce",
+            | DispositionType::DivorceDistribution => {
+                "§ 4978(c)(1) distribution on separation/death/retirement/disability/divorce"
+            }
             DispositionType::EmployeeStockPurchase => {
                 "§ 4978(c)(2) distribution in connection with employee stock purchase"
             }
@@ -266,8 +271,8 @@ pub fn check(input: &Input) -> Output {
     }
 
     // Test § 4978(b)(1): share count test
-    let share_count_triggered = input.esop_shares_after_disposition
-        < input.esop_shares_after_initial_acquisition;
+    let share_count_triggered =
+        input.esop_shares_after_disposition < input.esop_shares_after_initial_acquisition;
 
     // Test § 4978(b)(2): 30%-value test (60% for § 664(g))
     let value_threshold_bps = if matches!(
@@ -343,7 +348,7 @@ mod tests {
             disposition_type: DispositionType::OpenMarketSale,
             months_since_acquisition: 12,
             amount_realized_cents: 10_000_000_00, // $10M
-            esop_shares_after_disposition: 500,    // share count dropped
+            esop_shares_after_disposition: 500,   // share count dropped
             esop_shares_after_initial_acquisition: 1000,
             esop_qualified_securities_value_after_disposition_cents: 10_000_000_00, // $10M (50% of $20M)
             total_employer_securities_value_at_disposition_cents: 20_000_000_00,
@@ -537,7 +542,7 @@ mod tests {
     #[test]
     fn both_tests_triggered() {
         let mut i = baseline(); // shares 1000 → 500 + value $10M / $20M = 50%
-        // Drop value below 30% to trigger value test too
+                                // Drop value below 30% to trigger value test too
         i.esop_qualified_securities_value_after_disposition_cents = 4_000_000_00;
         i.total_employer_securities_value_at_disposition_cents = 20_000_000_00;
         let out = check(&i);

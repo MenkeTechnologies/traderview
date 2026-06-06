@@ -27,12 +27,19 @@ pub struct FibonacciExtensionLevels {
     pub ext_423: f64,
 }
 
-pub fn compute(a: f64, b: f64, retracement_base: f64, bullish: bool) -> Option<FibonacciExtensionLevels> {
+pub fn compute(
+    a: f64,
+    b: f64,
+    retracement_base: f64,
+    bullish: bool,
+) -> Option<FibonacciExtensionLevels> {
     if !a.is_finite() || !b.is_finite() || !retracement_base.is_finite() {
         return None;
     }
     let range = (b - a).abs();
-    if range <= 0.0 { return None; }
+    if range <= 0.0 {
+        return None;
+    }
     let sign = if bullish { 1.0 } else { -1.0 };
     Some(FibonacciExtensionLevels {
         ext_127: retracement_base + sign * range * 1.272,
@@ -50,7 +57,7 @@ mod tests {
     #[test]
     fn invalid_inputs_return_none() {
         assert!(compute(f64::NAN, 100.0, 95.0, true).is_none());
-        assert!(compute(100.0, 100.0, 95.0, true).is_none());    // zero range
+        assert!(compute(100.0, 100.0, 95.0, true).is_none()); // zero range
     }
 
     #[test]

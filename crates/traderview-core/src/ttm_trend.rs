@@ -18,27 +18,50 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub open: f64, pub close: f64 }
+pub struct Bar {
+    pub open: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
-pub enum TtmTrendState { #[default] Neutral, TrendUp, TrendDown }
+pub enum TtmTrendState {
+    #[default]
+    Neutral,
+    TrendUp,
+    TrendDown,
+}
 
 pub fn compute(bars: &[Bar], lookback: usize) -> Vec<Option<TtmTrendState>> {
     let n = bars.len();
     let mut out = vec![None; n];
-    if lookback < 1 || n < lookback + 1 { return out; }
-    if bars.iter().any(|b| !b.open.is_finite() || !b.close.is_finite()) { return out; }
+    if lookback < 1 || n < lookback + 1 {
+        return out;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.open.is_finite() || !b.close.is_finite())
+    {
+        return out;
+    }
     for i in lookback..n {
         let win = &bars[i - lookback..i];
-        let mid_max = win.iter().map(|b| (b.open + b.close) / 2.0)
+        let mid_max = win
+            .iter()
+            .map(|b| (b.open + b.close) / 2.0)
             .fold(f64::NEG_INFINITY, f64::max);
-        let mid_min = win.iter().map(|b| (b.open + b.close) / 2.0)
+        let mid_min = win
+            .iter()
+            .map(|b| (b.open + b.close) / 2.0)
             .fold(f64::INFINITY, f64::min);
         let close = bars[i].close;
-        out[i] = Some(if close > mid_max { TtmTrendState::TrendUp }
-            else if close < mid_min { TtmTrendState::TrendDown }
-            else { TtmTrendState::Neutral });
+        out[i] = Some(if close > mid_max {
+            TtmTrendState::TrendUp
+        } else if close < mid_min {
+            TtmTrendState::TrendDown
+        } else {
+            TtmTrendState::Neutral
+        });
     }
     out
 }
@@ -47,7 +70,9 @@ pub fn compute(bars: &[Bar], lookback: usize) -> Vec<Option<TtmTrendState>> {
 mod tests {
     use super::*;
 
-    fn b(o: f64, c: f64) -> Bar { Bar { open: o, close: c } }
+    fn b(o: f64, c: f64) -> Bar {
+        Bar { open: o, close: c }
+    }
 
     #[test]
     fn invalid_inputs_return_all_none() {
@@ -84,12 +109,12 @@ mod tests {
     fn close_inside_window_marks_neutral() {
         // Midpoints spread 99..=103 → window has min=99, max=103.
         let bars = vec![
-            b(98.0, 100.0),    // mid = 99
-            b(99.0, 101.0),    // mid = 100
-            b(100.0, 102.0),   // mid = 101
-            b(101.0, 103.0),   // mid = 102
-            b(102.0, 104.0),   // mid = 103
-            b(101.0, 101.0),   // close 101 strictly between 99 and 103
+            b(98.0, 100.0),  // mid = 99
+            b(99.0, 101.0),  // mid = 100
+            b(100.0, 102.0), // mid = 101
+            b(101.0, 103.0), // mid = 102
+            b(102.0, 104.0), // mid = 103
+            b(101.0, 101.0), // close 101 strictly between 99 and 103
         ];
         let r = compute(&bars, 5);
         assert_eq!(r[5].unwrap(), TtmTrendState::Neutral);

@@ -44,11 +44,19 @@ pub fn compute(
         lookback,
         slack,
     };
-    if bb_period < 2 || lookback < bb_period
-        || !n_stdev.is_finite() || n_stdev <= 0.0
-        || !slack.is_finite() || slack < 0.0
-        || n < lookback { return report; }
-    if closes.iter().any(|x| !x.is_finite()) { return report; }
+    if bb_period < 2
+        || lookback < bb_period
+        || !n_stdev.is_finite()
+        || n_stdev <= 0.0
+        || !slack.is_finite()
+        || slack < 0.0
+        || n < lookback
+    {
+        return report;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return report;
+    }
     let p_f = bb_period as f64;
     for i in (bb_period - 1)..n {
         let win = &closes[i + 1 - bb_period..=i];
@@ -62,7 +70,9 @@ pub fn compute(
     }
     for i in (lookback - 1)..n {
         let win = &report.width_pct[i + 1 - lookback..=i];
-        if win.iter().any(|x| x.is_none()) { continue; }
+        if win.iter().any(|x| x.is_none()) {
+            continue;
+        }
         let min_w = win.iter().filter_map(|x| *x).fold(f64::INFINITY, f64::min);
         let cur = report.width_pct[i].unwrap();
         report.squeeze_on[i] = Some(cur <= min_w * (1.0 + slack));
@@ -81,7 +91,7 @@ mod tests {
         assert!(r.width_pct.iter().all(|x| x.is_none()));
         let r2 = compute(&c, 20, 0.0, 125, 0.05);
         assert!(r2.width_pct.iter().all(|x| x.is_none()));
-        let r3 = compute(&c, 20, 2.0, 10, 0.05);    // lookback < bb_period
+        let r3 = compute(&c, 20, 2.0, 10, 0.05); // lookback < bb_period
         assert!(r3.width_pct.iter().all(|x| x.is_none()));
     }
 
@@ -109,7 +119,8 @@ mod tests {
         let mut state: u64 = 42;
         let mut c = vec![100.0_f64; 130];
         for _ in 0..70 {
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
             c.push(100.0 + (r - 0.5) * 50.0);
@@ -117,8 +128,10 @@ mod tests {
         let r = compute(&c, 20, 2.0, 125, 0.05);
         // At least one post-surge bar should be squeeze OFF.
         let any_off = r.squeeze_on.iter().skip(150).flatten().any(|x| !*x);
-        assert!(any_off,
-            "post-surge bars should report at least one squeeze OFF");
+        assert!(
+            any_off,
+            "post-surge bars should report at least one squeeze OFF"
+        );
     }
 
     #[test]

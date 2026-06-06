@@ -23,7 +23,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AlphaTrendReport {
@@ -41,9 +45,13 @@ pub fn compute(bars: &[Bar], period: usize, multiplier: f64) -> AlphaTrendReport
         period,
         multiplier,
     };
-    if period < 2 || !multiplier.is_finite() || multiplier <= 0.0
-        || n < period + 1 { return report; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if period < 2 || !multiplier.is_finite() || multiplier <= 0.0 || n < period + 1 {
+        return report;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return report;
     }
     let p_f = period as f64;
@@ -67,17 +75,37 @@ pub fn compute(bars: &[Bar], period: usize, multiplier: f64) -> AlphaTrendReport
     let rsi = wilder_rsi(&bars.iter().map(|b| b.close).collect::<Vec<f64>>(), period);
     let mut last: Option<f64> = None;
     for i in 0..n {
-        let (Some(a), Some(r)) = (atr[i], rsi[i]) else { continue };
+        let (Some(a), Some(r)) = (atr[i], rsi[i]) else {
+            continue;
+        };
         let up = bars[i].low - multiplier * a;
         let dn = bars[i].high + multiplier * a;
         let next = match last {
-            None => if r >= 50.0 { up } else { dn },
+            None => {
+                if r >= 50.0 {
+                    up
+                } else {
+                    dn
+                }
+            }
             Some(prev) => {
-                if r >= 50.0 { up.max(prev) } else { dn.min(prev) }
+                if r >= 50.0 {
+                    up.max(prev)
+                } else {
+                    dn.min(prev)
+                }
             }
         };
         let dir = match last {
-            Some(prev) => if next > prev { 1 } else if next < prev { -1 } else { 0 },
+            Some(prev) => {
+                if next > prev {
+                    1
+                } else if next < prev {
+                    -1
+                } else {
+                    0
+                }
+            }
             None => 0,
         };
         report.alpha[i] = Some(next);
@@ -90,13 +118,19 @@ pub fn compute(bars: &[Bar], period: usize, multiplier: f64) -> AlphaTrendReport
 fn wilder_rsi(closes: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = closes.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period + 1 { return out; }
+    if period == 0 || n < period + 1 {
+        return out;
+    }
     let p_f = period as f64;
     let mut sum_g = 0.0_f64;
     let mut sum_l = 0.0_f64;
     for i in 1..=period {
         let d = closes[i] - closes[i - 1];
-        if d > 0.0 { sum_g += d; } else { sum_l -= d; }
+        if d > 0.0 {
+            sum_g += d;
+        } else {
+            sum_l -= d;
+        }
     }
     let mut avg_g = sum_g / p_f;
     let mut avg_l = sum_l / p_f;
@@ -113,8 +147,13 @@ fn wilder_rsi(closes: &[f64], period: usize) -> Vec<Option<f64>> {
 }
 
 fn rsi_of(g: f64, l: f64) -> f64 {
-    if l <= 0.0 { if g <= 0.0 { 50.0 } else { 100.0 } }
-    else {
+    if l <= 0.0 {
+        if g <= 0.0 {
+            50.0
+        } else {
+            100.0
+        }
+    } else {
         let rs = g / l;
         100.0 - 100.0 / (1.0 + rs)
     }
@@ -124,7 +163,13 @@ fn rsi_of(g: f64, l: f64) -> f64 {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {
@@ -145,10 +190,12 @@ mod tests {
 
     #[test]
     fn uptrend_alpha_rises_monotone() {
-        let bars: Vec<_> = (0..60).map(|i| {
-            let m = 100.0 + i as f64;
-            b(m + 0.5, m - 0.5, m)
-        }).collect();
+        let bars: Vec<_> = (0..60)
+            .map(|i| {
+                let m = 100.0 + i as f64;
+                b(m + 0.5, m - 0.5, m)
+            })
+            .collect();
         let r = compute(&bars, 14, 1.0);
         let vals: Vec<f64> = r.alpha.iter().flatten().copied().collect();
         for w in vals.windows(2) {
@@ -158,10 +205,12 @@ mod tests {
 
     #[test]
     fn downtrend_alpha_falls_monotone() {
-        let bars: Vec<_> = (0..60).map(|i| {
-            let m = 200.0 - i as f64;
-            b(m + 0.5, m - 0.5, m)
-        }).collect();
+        let bars: Vec<_> = (0..60)
+            .map(|i| {
+                let m = 200.0 - i as f64;
+                b(m + 0.5, m - 0.5, m)
+            })
+            .collect();
         let r = compute(&bars, 14, 1.0);
         let vals: Vec<f64> = r.alpha.iter().flatten().copied().collect();
         for w in vals.windows(2) {

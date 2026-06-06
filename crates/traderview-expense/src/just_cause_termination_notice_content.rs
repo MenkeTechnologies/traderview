@@ -245,15 +245,13 @@ fn check_oregon(
 ) -> JustCauseNoticeContentResult {
     if !input.specific_cause_stated_in_notice {
         violations.push(
-            "ORS 90.427 (SB 608) — written notice MUST state reason for termination"
-                .to_string(),
+            "ORS 90.427 (SB 608) — written notice MUST state reason for termination".to_string(),
         );
     }
 
     if !input.proper_service {
         violations.push(
-            "ORS 90.155 — notice must be lawfully served per state service methods"
-                .to_string(),
+            "ORS 90.155 — notice must be lawfully served per state service methods".to_string(),
         );
     }
 
@@ -261,10 +259,7 @@ fn check_oregon(
         "ORS 90.427 (SB 608) — tenancies < 1 year permit no-cause termination with 30-day notice; tenancies ≥ 1 year require just-cause"
             .to_string(),
     );
-    notes.push(
-        "OR strict-compliance regime — defective notice is VOIDABLE"
-            .to_string(),
-    );
+    notes.push("OR strict-compliance regime — defective notice is VOIDABLE".to_string());
 
     let voidable = !violations.is_empty();
     JustCauseNoticeContentResult {
@@ -440,7 +435,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.compliant);
         assert!(r.notice_voidable_for_defect);
-        assert!(r.violations.iter().any(|v| v.contains("§ 1946.2(c)") && v.contains("MUST state cause")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1946.2(c)") && v.contains("MUST state cause")));
     }
 
     #[test]
@@ -459,7 +457,10 @@ mod tests {
         i.cure_opportunity_provided = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("3-day cure opportunity")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("3-day cure opportunity")));
     }
 
     #[test]
@@ -478,7 +479,10 @@ mod tests {
         i.no_fault_relocation_assistance_paid = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 1946.2(d)(3)") && v.contains("relocation assistance")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1946.2(d)(3)") && v.contains("relocation assistance")));
     }
 
     #[test]
@@ -496,13 +500,19 @@ mod tests {
         i.proper_service = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("Code Civ. Proc. § 1162")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("Code Civ. Proc. § 1162")));
     }
 
     #[test]
     fn ca_void_consequence_note_always_present() {
         let r = check(&ca_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 1946.2(c)") && n.contains("VOID")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1946.2(c)") && n.contains("VOID")));
     }
 
     #[test]
@@ -517,7 +527,10 @@ mod tests {
         i.specific_facts_and_circumstances_described = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("FACTS AND CIRCUMSTANCES")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("FACTS AND CIRCUMSTANCES")));
     }
 
     #[test]
@@ -527,21 +540,37 @@ mod tests {
         let r_wa = check(&i_wa);
         assert!(!r_wa.compliant);
 
-        for regime in [Regime::California, Regime::Oregon, Regime::NewJersey, Regime::Default] {
+        for regime in [
+            Regime::California,
+            Regime::Oregon,
+            Regime::NewJersey,
+            Regime::Default,
+        ] {
             let mut i = wa_base();
             i.regime = regime;
             i.specific_facts_and_circumstances_described = false;
             i.no_fault_relocation_assistance_paid = true;
             let r = check(&i);
-            let facts_violations: Vec<_> = r.violations.iter().filter(|v| v.contains("FACTS AND CIRCUMSTANCES")).collect();
-            assert!(facts_violations.is_empty(), "regime {:?} should not require FACTS AND CIRCUMSTANCES", regime);
+            let facts_violations: Vec<_> = r
+                .violations
+                .iter()
+                .filter(|v| v.contains("FACTS AND CIRCUMSTANCES"))
+                .collect();
+            assert!(
+                facts_violations.is_empty(),
+                "regime {:?} should not require FACTS AND CIRCUMSTANCES",
+                regime
+            );
         }
     }
 
     #[test]
     fn wa_16_enumerated_categories_note_present() {
         let r = check(&wa_base());
-        assert!(r.notes.iter().any(|n| n.contains("RCW 59.18.650(2)(a)-(p)") && n.contains("16 enumerated")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("RCW 59.18.650(2)(a)-(p)") && n.contains("16 enumerated")));
     }
 
     #[test]
@@ -562,7 +591,10 @@ mod tests {
     #[test]
     fn or_under_one_year_no_cause_path_note() {
         let r = check(&or_base());
-        assert!(r.notes.iter().any(|n| n.contains("SB 608") && n.contains("< 1 year")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("SB 608") && n.contains("< 1 year")));
     }
 
     #[test]
@@ -577,13 +609,19 @@ mod tests {
         i.specific_cause_stated_in_notice = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("2A:18-61.2") && v.contains("§ 2A:18-61.1(a)-(r)")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("2A:18-61.2") && v.contains("§ 2A:18-61.1(a)-(r)")));
     }
 
     #[test]
     fn nj_exact_statutory_ground_match_required_note() {
         let r = check(&nj_base());
-        assert!(r.notes.iter().any(|n| n.contains("statutory ground EXACTLY")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("statutory ground EXACTLY")));
     }
 
     #[test]
@@ -603,7 +641,9 @@ mod tests {
     #[test]
     fn citation_california_pins_subsections_and_service_statute() {
         let r = check(&ca_base());
-        assert!(r.citation.contains("§§ 1946.2(b)(1), 1946.2(b)(2), 1946.2(c), 1946.2(d)(3)"));
+        assert!(r
+            .citation
+            .contains("§§ 1946.2(b)(1), 1946.2(b)(2), 1946.2(c), 1946.2(d)(3)"));
         assert!(r.citation.contains("Code Civ. Proc. § 1162"));
     }
 
@@ -641,19 +681,29 @@ mod tests {
     #[test]
     fn ca_at_fault_grounds_note_lists_14_categories() {
         let r = check(&ca_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 1946.2(b)(1) at-fault grounds: 14 enumerated")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1946.2(b)(1) at-fault grounds: 14 enumerated")));
     }
 
     #[test]
     fn ca_no_fault_grounds_note_lists_categories() {
         let r = check(&ca_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 1946.2(b)(2) no-fault grounds") && n.contains("substantial remodel")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1946.2(b)(2) no-fault grounds")
+                && n.contains("substantial remodel")));
     }
 
     #[test]
     fn nj_anti_eviction_act_lists_18_grounds_note() {
         let r = check(&nj_base());
-        assert!(r.notes.iter().any(|n| n.contains("N.J.S.A. 2A:18-61.1(a)-(r)") && n.contains("18 enumerated")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("N.J.S.A. 2A:18-61.1(a)-(r)") && n.contains("18 enumerated")));
     }
 
     #[test]
@@ -670,7 +720,13 @@ mod tests {
 
     #[test]
     fn five_regimes_routed_correctly() {
-        for regime in [Regime::California, Regime::Washington, Regime::Oregon, Regime::NewJersey, Regime::Default] {
+        for regime in [
+            Regime::California,
+            Regime::Washington,
+            Regime::Oregon,
+            Regime::NewJersey,
+            Regime::Default,
+        ] {
             let mut i = ca_base();
             i.regime = regime;
             i.no_fault_relocation_assistance_paid = true;

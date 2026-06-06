@@ -292,9 +292,7 @@ pub struct TenantEmotionalDistressDamagesResult {
     pub notes: Vec<String>,
 }
 
-pub fn check(
-    input: &TenantEmotionalDistressDamagesInput,
-) -> TenantEmotionalDistressDamagesResult {
+pub fn check(input: &TenantEmotionalDistressDamagesInput) -> TenantEmotionalDistressDamagesResult {
     let mut failure_reasons: Vec<String> = Vec::new();
 
     let iied_elements_satisfied = input.extreme_and_outrageous_conduct
@@ -333,7 +331,10 @@ pub fn check(
 
     let iied_recovery_potential = iied_elements_satisfied
         && (input.documented_manifestations
-            || matches!(input.jurisdiction, Jurisdiction::California | Jurisdiction::NewYork));
+            || matches!(
+                input.jurisdiction,
+                Jurisdiction::California | Jurisdiction::NewYork
+            ));
 
     if !iied_elements_satisfied {
         let mut missing: Vec<String> = Vec::new();
@@ -361,10 +362,7 @@ pub fn check(
             Jurisdiction::California | Jurisdiction::NewYork => "BYSTANDER / ZONE OF DANGER rule — NIED recoverable only if plaintiff (a) in zone of physical danger from defendant's negligent conduct; OR (b) bystander observing physical injury to close relative under Dillon v. Legg, 68 Cal. 2d 728 (1968) factors",
             Jurisdiction::Default => "ZONE OF DANGER rule — NIED recoverable only if plaintiff was in zone of physical danger from defendant's negligent conduct; Restatement (Second) of Torts § 313",
         };
-        failure_reasons.push(format!(
-            "NIED CLAIM FAILS — {}",
-            jurisdiction_rule
-        ));
+        failure_reasons.push(format!("NIED CLAIM FAILS — {}", jurisdiction_rule));
     }
 
     if iied_elements_satisfied {
@@ -374,10 +372,7 @@ pub fn check(
             Jurisdiction::Texas => "Twyman v. Twyman, 855 SW 2d 619 (Tex. 1993) — four-element IIED test satisfied; Tex. Prop. Code § 92.0081 lockout penalty $1,000 + one month's rent + actual damages + attorney's fees in addition to IIED damages",
             Jurisdiction::Default => "Restatement (Second) of Torts § 46 IIED — four-element test satisfied; emotional distress damages recoverable; Restatement (Third) of Torts: Liability for Physical and Emotional Harm § 46 (2012) modernized framework",
         };
-        failure_reasons.push(format!(
-            "IIED CLAIM ESTABLISHED — {}",
-            statute_or_case
-        ));
+        failure_reasons.push(format!("IIED CLAIM ESTABLISHED — {}", statute_or_case));
     }
 
     if punitive_damages_available {
@@ -390,10 +385,7 @@ pub fn check(
             ),
             Jurisdiction::Default => "Restatement (Second) of Torts § 908 — punitive damages for malicious or reckless conduct; due process Campbell ratio analysis applies".to_string(),
         };
-        failure_reasons.push(format!(
-            "PUNITIVE DAMAGES AVAILABLE — {}",
-            standard_and_cap
-        ));
+        failure_reasons.push(format!("PUNITIVE DAMAGES AVAILABLE — {}", standard_and_cap));
 
         if !punitive_damages_compliant_with_due_process {
             failure_reasons.push(format!(
@@ -457,10 +449,12 @@ mod tests {
         let r = check(&iied_satisfied());
         assert!(r.iied_elements_satisfied);
         assert!(r.iied_recovery_potential);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("Hughes v. Pair")
-            && f.contains("Cal. Civ. Code § 1940.2")
-            && f.contains("§ 37.10B")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("Hughes v. Pair")
+                && f.contains("Cal. Civ. Code § 1940.2")
+                && f.contains("§ 37.10B")));
     }
 
     #[test]
@@ -469,9 +463,11 @@ mod tests {
         i.extreme_and_outrageous_conduct = false;
         let r = check(&i);
         assert!(!r.iied_elements_satisfied);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("Restatement (Second) of Torts § 46 IIED")
-            && f.contains("extreme and outrageous")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("Restatement (Second) of Torts § 46 IIED")
+                && f.contains("extreme and outrageous")));
     }
 
     #[test]
@@ -480,8 +476,10 @@ mod tests {
         i.intent_or_recklessness = false;
         let r = check(&i);
         assert!(!r.iied_elements_satisfied);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("intent or recklessness")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("intent or recklessness")));
     }
 
     #[test]
@@ -506,10 +504,12 @@ mod tests {
         i.jurisdiction = Jurisdiction::NewYork;
         let r = check(&i);
         assert!(r.iied_elements_satisfied);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("Howell v. NYP Holdings")
-            && f.contains("§ 235-d")
-            && f.contains("Tenant Anti-Harassment Act")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("Howell v. NYP Holdings")
+                && f.contains("§ 235-d")
+                && f.contains("Tenant Anti-Harassment Act")));
     }
 
     #[test]
@@ -518,9 +518,10 @@ mod tests {
         i.jurisdiction = Jurisdiction::Texas;
         let r = check(&i);
         assert!(r.iied_elements_satisfied);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("Twyman v. Twyman")
-            && f.contains("§ 92.0081")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("Twyman v. Twyman") && f.contains("§ 92.0081")));
     }
 
     #[test]
@@ -530,9 +531,11 @@ mod tests {
         i.documented_manifestations = true;
         let r = check(&i);
         assert!(r.iied_elements_satisfied);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("Restatement (Second) of Torts § 46 IIED")
-            && f.contains("Restatement (Third)")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("Restatement (Second) of Torts § 46 IIED")
+                && f.contains("Restatement (Third)")));
     }
 
     #[test]
@@ -543,9 +546,10 @@ mod tests {
         i.physical_impact_or_injury = false;
         let r = check(&i);
         assert!(!r.nied_recoverable);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("TEXAS IMPACT RULE")
-            && f.contains("Boyles v. Kerr")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("TEXAS IMPACT RULE") && f.contains("Boyles v. Kerr")));
     }
 
     #[test]
@@ -582,19 +586,22 @@ mod tests {
         i.claim_type = ClaimType::Nied;
         let r = check(&i);
         assert!(!r.nied_recoverable);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("BYSTANDER / ZONE OF DANGER")
-            && f.contains("Dillon v. Legg")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("BYSTANDER / ZONE OF DANGER") && f.contains("Dillon v. Legg")));
     }
 
     #[test]
     fn ca_punitive_with_clear_and_convincing_malice() {
         let r = check(&iied_satisfied());
         assert!(r.punitive_damages_available);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("Cal. Civ. Code § 3294")
-            && f.contains("CLEAR AND CONVINCING EVIDENCE")
-            && f.contains("Campbell")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("Cal. Civ. Code § 3294")
+                && f.contains("CLEAR AND CONVINCING EVIDENCE")
+                && f.contains("Campbell")));
     }
 
     #[test]
@@ -612,8 +619,10 @@ mod tests {
         i.clear_and_convincing_malice = false;
         let r = check(&i);
         assert!(r.punitive_damages_available);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("PREPONDERANCE OF EVIDENCE")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("PREPONDERANCE OF EVIDENCE")));
     }
 
     #[test]
@@ -627,9 +636,10 @@ mod tests {
             r.texas_punitive_cap_cents,
             50_000_000_u64.saturating_mul(2).saturating_add(75_000_000)
         );
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("Tex. Civ. Prac. & Rem. Code § 41.008")
-            && f.contains("$750,000")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("Tex. Civ. Prac. & Rem. Code § 41.008") && f.contains("$750,000")));
     }
 
     #[test]
@@ -648,8 +658,7 @@ mod tests {
         i.punitive_damages_cents = 200_000_000;
         let r = check(&i);
         assert!(!r.punitive_damages_compliant_with_due_process);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("Campbell")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("Campbell")
             && f.contains("DUE PROCESS RATIO")
             && f.contains("9×")));
     }
@@ -705,13 +714,19 @@ mod tests {
         assert!(r.citation.contains("Restatement (Second) of Torts § 312"));
         assert!(r.citation.contains("Restatement (Second) of Torts § 313"));
         assert!(r.citation.contains("Restatement (Second) of Torts § 908"));
-        assert!(r.citation.contains("Restatement (Third) of Torts: Liability for Physical and Emotional Harm § 46"));
+        assert!(r.citation.contains(
+            "Restatement (Third) of Torts: Liability for Physical and Emotional Harm § 46"
+        ));
         assert!(r.citation.contains("Hughes v. Pair, 46 Cal. 4th 1035"));
-        assert!(r.citation.contains("Howell v. NYP Holdings, Inc., 21 NY 3d 333"));
+        assert!(r
+            .citation
+            .contains("Howell v. NYP Holdings, Inc., 21 NY 3d 333"));
         assert!(r.citation.contains("Twyman v. Twyman, 855 SW 2d 619"));
         assert!(r.citation.contains("Boyles v. Kerr, 855 SW 2d 593"));
         assert!(r.citation.contains("Dillon v. Legg, 68 Cal. 2d 728"));
-        assert!(r.citation.contains("State Farm Mut. Auto. Ins. Co. v. Campbell, 538 U.S. 408"));
+        assert!(r
+            .citation
+            .contains("State Farm Mut. Auto. Ins. Co. v. Campbell, 538 U.S. 408"));
         assert!(r.citation.contains("Cal. Civ. Code § 1940.2"));
         assert!(r.citation.contains("Cal. Civ. Code § 789.3"));
         assert!(r.citation.contains("Cal. Civ. Code § 3294"));
@@ -727,41 +742,47 @@ mod tests {
     #[test]
     fn note_pins_four_jurisdiction_framework() {
         let r = check(&iied_satisfied());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Four-jurisdiction framework")
-            && n.contains("CALIFORNIA")
-            && n.contains("NEW YORK")
-            && n.contains("TEXAS")
-            && n.contains("DEFAULT")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Four-jurisdiction framework")
+                && n.contains("CALIFORNIA")
+                && n.contains("NEW YORK")
+                && n.contains("TEXAS")
+                && n.contains("DEFAULT")));
     }
 
     #[test]
     fn note_pins_restatement_46_four_elements() {
         let r = check(&iied_satisfied());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Restatement (Second) of Torts § 46 IIED")
-            && n.contains("EXTREME AND OUTRAGEOUS")
-            && n.contains("INTENT OR RECKLESSNESS")
-            && n.contains("CAUSATION")
-            && n.contains("SEVERE EMOTIONAL DISTRESS")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Restatement (Second) of Torts § 46 IIED")
+                && n.contains("EXTREME AND OUTRAGEOUS")
+                && n.contains("INTENT OR RECKLESSNESS")
+                && n.contains("CAUSATION")
+                && n.contains("SEVERE EMOTIONAL DISTRESS")));
     }
 
     #[test]
     fn note_pins_nied_three_approaches() {
         let r = check(&iied_satisfied());
-        assert!(r.notes.iter().any(|n|
-            n.contains("NIED jurisdictional split")
-            && n.contains("IMPACT RULE")
-            && n.contains("ZONE OF DANGER")
-            && n.contains("BYSTANDER")
-            && n.contains("Dillon v. Legg")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("NIED jurisdictional split")
+                && n.contains("IMPACT RULE")
+                && n.contains("ZONE OF DANGER")
+                && n.contains("BYSTANDER")
+                && n.contains("Dillon v. Legg")));
     }
 
     #[test]
     fn note_pins_iied_eight_landlord_conduct_categories() {
         let r = check(&iied_satisfied());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Landlord conduct categories meeting IIED threshold")
+        assert!(r.notes.iter().any(|n| n
+            .contains("Landlord conduct categories meeting IIED threshold")
             && n.contains("SYSTEMATIC HARASSMENT")
             && n.contains("UTILITY SHUTOFF")
             && n.contains("THREATS OF VIOLENCE")
@@ -772,19 +793,21 @@ mod tests {
     #[test]
     fn note_pins_punitive_damages_framework() {
         let r = check(&iied_satisfied());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Punitive damages availability")
-            && n.contains("CLEAR AND CONVINCING")
-            && n.contains("PREPONDERANCE OF EVIDENCE")
-            && n.contains("§ 41.008")
-            && n.contains("§ 908")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Punitive damages availability")
+                && n.contains("CLEAR AND CONVINCING")
+                && n.contains("PREPONDERANCE OF EVIDENCE")
+                && n.contains("§ 41.008")
+                && n.contains("§ 908")));
     }
 
     #[test]
     fn note_pins_campbell_due_process_ratio() {
         let r = check(&iied_satisfied());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Campbell, 538 U.S. 408 (2003) DUE PROCESS RATIO")
+        assert!(r.notes.iter().any(|n| n
+            .contains("Campbell, 538 U.S. 408 (2003) DUE PROCESS RATIO")
             && n.contains("SINGLE-DIGIT RATIO")
             && n.contains("9×")));
     }
@@ -792,8 +815,7 @@ mod tests {
     #[test]
     fn note_pins_ca_section_1940_2_harassment() {
         let r = check(&iied_satisfied());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Cal. Civ. Code § 1940.2")
+        assert!(r.notes.iter().any(|n| n.contains("Cal. Civ. Code § 1940.2")
             && n.contains("$2,000 per violation")
             && n.contains("§ 37.10B")));
     }
@@ -801,8 +823,7 @@ mod tests {
     #[test]
     fn note_pins_ny_combined_statutes() {
         let r = check(&iied_satisfied());
-        assert!(r.notes.iter().any(|n|
-            n.contains("NY RPL § 235-d")
+        assert!(r.notes.iter().any(|n| n.contains("NY RPL § 235-d")
             && n.contains("NYC HMC § 27-2005(d)")
             && n.contains("NYC Tenant Anti-Harassment Act 2018")
             && n.contains("$1,000-$10,000")
@@ -812,8 +833,7 @@ mod tests {
     #[test]
     fn note_pins_texas_impact_rule() {
         let r = check(&iied_satisfied());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Texas IMPACT RULE")
+        assert!(r.notes.iter().any(|n| n.contains("Texas IMPACT RULE")
             && n.contains("Boyles v. Kerr")
             && n.contains("Twyman v. Twyman")));
     }
@@ -821,22 +841,26 @@ mod tests {
     #[test]
     fn note_pins_trader_fact_patterns_five() {
         let r = check(&iied_satisfied());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-landlord critical fact patterns")
-            && n.contains("$500K IIED")
-            && n.contains("§ 234 attorney's fees")
-            && n.contains("§ 92.0081")
-            && n.contains("Campbell")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-landlord critical fact patterns")
+                && n.contains("$500K IIED")
+                && n.contains("§ 234 attorney's fees")
+                && n.contains("§ 92.0081")
+                && n.contains("Campbell")));
     }
 
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&iied_satisfied());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Companion to landlord_harassment")
-            && n.contains("landlord_retaliation_damages")
-            && n.contains("lockout_penalties")
-            && n.contains("landlord_water_heat_emergency_response")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Companion to landlord_harassment")
+                && n.contains("landlord_retaliation_damages")
+                && n.contains("lockout_penalties")
+                && n.contains("landlord_water_heat_emergency_response")));
     }
 
     #[test]
@@ -847,8 +871,8 @@ mod tests {
         i.severe_emotional_distress = false;
         i.causation_established = false;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("Restatement (Second) of Torts § 46 IIED")
+        assert!(r.failure_reasons.iter().any(|f| f
+            .contains("Restatement (Second) of Torts § 46 IIED")
             && f.contains("extreme and outrageous")
             && f.contains("intent or recklessness")
             && f.contains("severe emotional distress")));

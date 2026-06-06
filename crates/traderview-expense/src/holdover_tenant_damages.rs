@@ -134,20 +134,18 @@ pub fn check(input: &Input) -> CheckResult {
         Regime::California | Regime::NewYork | Regime::Default => 1,
     };
 
-    let maximum_recoverable_damages_cents =
-        rent.saturating_mul(multiplier).saturating_mul(holdover_months);
+    let maximum_recoverable_damages_cents = rent
+        .saturating_mul(multiplier)
+        .saturating_mul(holdover_months);
 
-    let month_to_month_tenancy_created = matches!(
-        input.regime,
-        Regime::California | Regime::NewYork
-    ) && input.rent_accepted_post_expiration;
+    let month_to_month_tenancy_created =
+        matches!(input.regime, Regime::California | Regime::NewYork)
+            && input.rent_accepted_post_expiration;
 
     // Regime-specific compliance flags.
     match input.regime {
         Regime::California => {
-            if input.rent_accepted_post_expiration
-                && input.landlord_demanded_possession
-            {
+            if input.rent_accepted_post_expiration && input.landlord_demanded_possession {
                 violations.push(
                     "Cal. Civ. Code § 1945 — landlord accepted rent post-expiration AND \
                      attempted to maintain eviction on original demand; rent acceptance \
@@ -158,9 +156,7 @@ pub fn check(input: &Input) -> CheckResult {
             }
         }
         Regime::NewYork => {
-            if input.rent_accepted_post_expiration
-                && input.landlord_demanded_possession
-            {
+            if input.rent_accepted_post_expiration && input.landlord_demanded_possession {
                 violations.push(
                     "N.Y. Real Prop. Law § 232-c — landlord accepted rent post-expiration \
                      AND attempted to maintain holdover proceeding on original notice; \
@@ -280,13 +276,7 @@ pub fn check(input: &Input) -> CheckResult {
 mod tests {
     use super::*;
 
-    fn input(
-        regime: Regime,
-        rent: i64,
-        days: i64,
-        accepted: bool,
-        demanded: bool,
-    ) -> Input {
+    fn input(regime: Regime, rent: i64, days: i64, accepted: bool, demanded: bool) -> Input {
         Input {
             regime,
             monthly_rent_cents: rent,
@@ -370,8 +360,14 @@ mod tests {
     fn california_rent_accepted_plus_eviction_attempt_violation() {
         let r = check(&input(Regime::California, 200_000, 30, true, true));
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("Cal. Civ. Code § 1945")));
-        assert!(r.violations.iter().any(|v| v.contains("waives the original notice")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("Cal. Civ. Code § 1945")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("waives the original notice")));
     }
 
     // ── New York: § 232-c rent-acceptance conversion ───────────
@@ -394,7 +390,10 @@ mod tests {
     fn new_york_rent_accepted_plus_holdover_proceeding_violation() {
         let r = check(&input(Regime::NewYork, 300_000, 30, true, true));
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("N.Y. Real Prop. Law § 232-c")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("N.Y. Real Prop. Law § 232-c")));
     }
 
     // ── Default common-law: § 14.5 landlord election ───────────
@@ -419,7 +418,11 @@ mod tests {
     fn florida_is_the_only_2x_multiplier_regime_invariant() {
         for regime in [Regime::California, Regime::NewYork, Regime::Default] {
             let r = check(&input(regime, 200_000, 30, false, true));
-            assert_eq!(r.damages_multiplier, 1, "{:?}: must be 1× multiplier", regime);
+            assert_eq!(
+                r.damages_multiplier, 1,
+                "{:?}: must be 1× multiplier",
+                regime
+            );
         }
         let fl = check(&input(Regime::Florida, 200_000, 30, false, true));
         assert_eq!(fl.damages_multiplier, 2);
@@ -484,7 +487,9 @@ mod tests {
         assert!(r.citation.contains("Fla. Stat. § 83.58"));
         assert!(r.citation.contains("Cal. Civ. Code § 1945"));
         assert!(r.citation.contains("N.Y. Real Prop. Law § 232-c"));
-        assert!(r.citation.contains("Restatement (Second) of Property § 14.5"));
+        assert!(r
+            .citation
+            .contains("Restatement (Second) of Property § 14.5"));
         assert!(r.citation.contains("§ 1946")); // California termination
         assert!(r.citation.contains("RPAPL § 711(1)")); // NY summary proceeding
         assert!(r.citation.contains("§ 1161")); // California unlawful detainer
@@ -494,9 +499,11 @@ mod tests {
     fn sibling_distinction_note_present() {
         let r = check(&input(Regime::Florida, 200_000, 30, false, true));
         assert!(
-            r.notes.iter().any(|n| n.contains("STATUTORY-DOUBLE-RENT regimes")
-                && n.contains("RENT-ACCEPTANCE regimes")
-                && n.contains("§ 14.5")),
+            r.notes
+                .iter()
+                .any(|n| n.contains("STATUTORY-DOUBLE-RENT regimes")
+                    && n.contains("RENT-ACCEPTANCE regimes")
+                    && n.contains("§ 14.5")),
             "sibling-module distinction note must be present"
         );
     }

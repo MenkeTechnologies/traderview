@@ -32,11 +32,7 @@ pub struct HawkinsZonesReport {
     pub pct: f64,
 }
 
-pub fn compute(
-    oscillator: &[Option<f64>],
-    period: usize,
-    pct: f64,
-) -> HawkinsZonesReport {
+pub fn compute(oscillator: &[Option<f64>], period: usize, pct: f64) -> HawkinsZonesReport {
     let n = oscillator.len();
     let mut report = HawkinsZonesReport {
         upper_zone: vec![None; n],
@@ -46,15 +42,20 @@ pub fn compute(
         period,
         pct,
     };
-    if period < 2 || !pct.is_finite() || !(50.0..=99.9).contains(&pct)
-        || n < period { return report; }
+    if period < 2 || !pct.is_finite() || !(50.0..=99.9).contains(&pct) || n < period {
+        return report;
+    }
     let upper_q = pct / 100.0;
     let lower_q = 1.0 - upper_q;
     for i in (period - 1)..n {
         let win = &oscillator[i + 1 - period..=i];
-        if win.iter().any(|x| x.is_none()) { continue; }
+        if win.iter().any(|x| x.is_none()) {
+            continue;
+        }
         let mut vals: Vec<f64> = win.iter().filter_map(|x| *x).collect();
-        if vals.iter().any(|v| !v.is_finite()) { continue; }
+        if vals.iter().any(|v| !v.is_finite()) {
+            continue;
+        }
         vals.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
         let upper = quantile(&vals, upper_q);
         let lower = quantile(&vals, lower_q);
@@ -70,8 +71,12 @@ pub fn compute(
 /// Linear-interpolation quantile (Type 7, numpy default).
 fn quantile(sorted: &[f64], q: f64) -> f64 {
     let n = sorted.len();
-    if n == 0 { return f64::NAN; }
-    if n == 1 { return sorted[0]; }
+    if n == 0 {
+        return f64::NAN;
+    }
+    if n == 1 {
+        return sorted[0];
+    }
     let h = q * (n as f64 - 1.0);
     let lo = h.floor() as usize;
     let hi = (lo + 1).min(n - 1);
@@ -88,7 +93,7 @@ mod tests {
         let osc = vec![Some(50.0); 100];
         let r = compute(&osc, 1, 90.0);
         assert!(r.upper_zone.iter().all(|x| x.is_none()));
-        let r2 = compute(&osc, 70, 10.0);    // pct out of range
+        let r2 = compute(&osc, 70, 10.0); // pct out of range
         assert!(r2.upper_zone.iter().all(|x| x.is_none()));
         let r3 = compute(&osc[..10], 70, 90.0);
         assert!(r3.upper_zone.iter().all(|x| x.is_none()));

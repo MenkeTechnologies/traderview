@@ -171,20 +171,20 @@ pub fn check(input: &Section962Input) -> Section962Result {
         10_000 - PRE_OBBBA_FTC_HAIRCUT_BPS
     };
 
-    let section_250_deduction: u64 = if matches!(input.inclusion_type, InclusionType::GiltiOrNctiInclusion) {
-        (u128::from(input.inclusion_amount_cents)
-            * u128::from(input.section_250_deduction_bps)
-            / 10_000) as u64
-    } else {
-        0
-    };
-    let taxable_after_250 = input.inclusion_amount_cents.saturating_sub(section_250_deduction);
-    let gross_us_tax_corporate: u64 = (u128::from(taxable_after_250)
-        * u128::from(input.corporate_rate_bps)
-        / 10_000) as u64;
-    let raw_ftc: u64 = (u128::from(input.allocable_foreign_tax_cents)
-        * u128::from(ftc_rate_bps)
-        / 10_000) as u64;
+    let section_250_deduction: u64 =
+        if matches!(input.inclusion_type, InclusionType::GiltiOrNctiInclusion) {
+            (u128::from(input.inclusion_amount_cents) * u128::from(input.section_250_deduction_bps)
+                / 10_000) as u64
+        } else {
+            0
+        };
+    let taxable_after_250 = input
+        .inclusion_amount_cents
+        .saturating_sub(section_250_deduction);
+    let gross_us_tax_corporate: u64 =
+        (u128::from(taxable_after_250) * u128::from(input.corporate_rate_bps) / 10_000) as u64;
+    let raw_ftc: u64 =
+        (u128::from(input.allocable_foreign_tax_cents) * u128::from(ftc_rate_bps) / 10_000) as u64;
     let actual_ftc = raw_ftc.min(gross_us_tax_corporate);
     let net_us_tax_with_election = gross_us_tax_corporate.saturating_sub(actual_ftc);
 
@@ -192,8 +192,7 @@ pub fn check(input: &Section962Input) -> Section962Result {
         * u128::from(input.individual_marginal_rate_bps)
         / 10_000) as u64;
 
-    let current_year_benefit = hypothetical_us_tax_without
-        .saturating_sub(net_us_tax_with_election);
+    let current_year_benefit = hypothetical_us_tax_without.saturating_sub(net_us_tax_with_election);
 
     let second_layer_taxable = input
         .current_year_actual_distribution_of_962_ep_cents
@@ -202,7 +201,9 @@ pub fn check(input: &Section962Input) -> Section962Result {
         * u128::from(input.qualified_dividend_rate_bps)
         / 10_000) as u64;
 
-    let severity = if !input.election_made_for_year && input.current_year_actual_distribution_of_962_ep_cents == 0 {
+    let severity = if !input.election_made_for_year
+        && input.current_year_actual_distribution_of_962_ep_cents == 0
+    {
         Severity::ElectionNotMadeIndividualRateApplies
     } else if input.current_year_actual_distribution_of_962_ep_cents > 0 {
         if second_layer_taxable > 0 {
@@ -374,7 +375,10 @@ mod tests {
     fn individual_with_election_current_year_benefit() {
         let i = baseline();
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::ElectionMadeCurrentYearBenefit));
+        assert!(matches!(
+            r.severity,
+            Severity::ElectionMadeCurrentYearBenefit
+        ));
         assert!(r.election_made);
         assert!(r.current_year_election_benefit_cents > 0);
     }
@@ -384,7 +388,10 @@ mod tests {
         let mut i = baseline();
         i.election_made_for_year = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::ElectionNotMadeIndividualRateApplies));
+        assert!(matches!(
+            r.severity,
+            Severity::ElectionNotMadeIndividualRateApplies
+        ));
         assert!(!r.election_made);
     }
 
@@ -404,7 +411,10 @@ mod tests {
         i.inclusion_type = InclusionType::SubpartFInclusion;
         let r = check(&i);
         assert_eq!(r.section_250_deduction_amount_cents, 0);
-        assert_eq!(r.taxable_inclusion_after_section_250_cents, i.inclusion_amount_cents);
+        assert_eq!(
+            r.taxable_inclusion_after_section_250_cents,
+            i.inclusion_amount_cents
+        );
     }
 
     #[test]
@@ -515,10 +525,7 @@ mod tests {
             .recommended_actions
             .iter()
             .any(|a| a.contains("Treas. Reg. § 1.245A-5(b)(2)")));
-        assert!(r
-            .recommended_actions
-            .iter()
-            .any(|a| a.contains("§ 962(d)")));
+        assert!(r.recommended_actions.iter().any(|a| a.contains("§ 962(d)")));
     }
 
     #[test]
@@ -529,7 +536,10 @@ mod tests {
             .recommended_actions
             .iter()
             .any(|a| a.contains("Treas. Reg. § 1.962-2(b)(1)")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Form 1040")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Form 1040")));
     }
 
     #[test]
@@ -589,7 +599,10 @@ mod tests {
         let mut i = baseline();
         i.shareholder_type = ShareholderType::EstateOfIndividual;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::ElectionMadeCurrentYearBenefit));
+        assert!(matches!(
+            r.severity,
+            Severity::ElectionMadeCurrentYearBenefit
+        ));
     }
 
     #[test]
@@ -597,7 +610,10 @@ mod tests {
         let mut i = baseline();
         i.shareholder_type = ShareholderType::UsTrust;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::ElectionMadeCurrentYearBenefit));
+        assert!(matches!(
+            r.severity,
+            Severity::ElectionMadeCurrentYearBenefit
+        ));
     }
 
     #[test]

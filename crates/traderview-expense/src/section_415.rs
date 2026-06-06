@@ -273,17 +273,17 @@ pub fn check(input: &Section415Input) -> Section415Result {
     let compensation_limit_401a17: u64 = 36_000_000;
     let db_dollar_limit_cents: u64 = 29_000_000;
 
-    let dc_compensation_limit_cents = input
-        .plan_compensation_cents
-        .min(compensation_limit_401a17);
+    let dc_compensation_limit_cents = input.plan_compensation_cents.min(compensation_limit_401a17);
 
     let dc_applicable_limit_cents = dc_dollar_limit_cents.min(dc_compensation_limit_cents);
 
     let db_compensation_limit_cents = input.average_high_3_year_compensation_cents;
     let db_applicable_limit_cents = db_dollar_limit_cents.min(db_compensation_limit_cents);
 
-    let dc_compliant = !matches!(input.plan_type, PlanType::DefinedContribution | PlanType::Both)
-        || input.dc_annual_addition_cents <= dc_applicable_limit_cents;
+    let dc_compliant = !matches!(
+        input.plan_type,
+        PlanType::DefinedContribution | PlanType::Both
+    ) || input.dc_annual_addition_cents <= dc_applicable_limit_cents;
 
     let db_compliant = !matches!(input.plan_type, PlanType::DefinedBenefit | PlanType::Both)
         || input.db_annual_benefit_cents <= db_applicable_limit_cents;
@@ -416,10 +416,12 @@ mod tests {
         i.dc_annual_addition_cents = 7_500_000;
         let r = check(&i);
         assert!(!r.dc_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 415(c)(1)(A)")
-            && f.contains("$72,000")
-            && f.contains("§ 415(c)(6)")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 415(c)(1)(A)")
+                && f.contains("$72,000")
+                && f.contains("§ 415(c)(6)")));
     }
 
     #[test]
@@ -439,8 +441,7 @@ mod tests {
         let r = check(&i);
         assert_eq!(r.dc_compensation_limit_cents, 36_000_000);
         assert_eq!(r.dc_applicable_limit_cents, 7_200_000);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 401(a)(17)")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 401(a)(17)")
             && f.contains("$360,000")
             && f.contains("DB plan exempt")));
     }
@@ -451,8 +452,8 @@ mod tests {
         i.catch_up_contributions_cents = 800_000;
         let r = check(&i);
         assert!(r.catch_up_disregarded_for_dc);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 414(v) CATCH-UP CONTRIBUTIONS DISREGARDED")
+        assert!(r.failure_reasons.iter().any(|f| f
+            .contains("§ 414(v) CATCH-UP CONTRIBUTIONS DISREGARDED")
             && f.contains("$8,000")
             && f.contains("$11,250")));
     }
@@ -476,9 +477,10 @@ mod tests {
         i.average_high_3_year_compensation_cents = 35_000_000;
         let r = check(&i);
         assert!(!r.db_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 415(b)(1)")
-            && f.contains("$290,000")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 415(b)(1)") && f.contains("$290,000")));
     }
 
     #[test]
@@ -503,8 +505,7 @@ mod tests {
         assert!(r.dc_compliant);
         assert!(r.db_compliant);
         assert!(r.dc_and_db_apply_separately);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 415(f)(2)")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 415(f)(2)")
             && f.contains("APPLY SEPARATELY")
             && f.contains("no combined limit since 2002 TEFRA repeal")));
     }
@@ -515,8 +516,8 @@ mod tests {
         i.controlled_group_aggregation = true;
         let r = check(&i);
         assert!(r.controlled_group_aggregation_applies);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 414(b)/(c)/(m)/(o) CONTROLLED GROUP AGGREGATION")
+        assert!(r.failure_reasons.iter().any(|f| f
+            .contains("§ 414(b)/(c)/(m)/(o) CONTROLLED GROUP AGGREGATION")
             && f.contains("SINGLE EMPLOYER")
             && f.contains("ACROSS ALL related-employer plans")));
     }
@@ -526,11 +527,13 @@ mod tests {
         let mut i = dc_max_2026();
         i.multiple_unrelated_employers = true;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("UNRELATED EMPLOYERS")
-            && f.contains("SEPARATELY at each")
-            && f.contains("§ 402(g)(1) ELECTIVE DEFERRAL LIMIT $24,500 still AGGREGATES")
-            && f.contains("§ 4979")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("UNRELATED EMPLOYERS")
+                && f.contains("SEPARATELY at each")
+                && f.contains("§ 402(g)(1) ELECTIVE DEFERRAL LIMIT $24,500 still AGGREGATES")
+                && f.contains("§ 4979")));
     }
 
     #[test]
@@ -539,8 +542,10 @@ mod tests {
         i.multiple_unrelated_employers = true;
         i.controlled_group_aggregation = true;
         let r = check(&i);
-        assert!(!r.failure_reasons.iter().any(|f|
-            f.contains("UNRELATED EMPLOYERS")));
+        assert!(!r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("UNRELATED EMPLOYERS")));
     }
 
     #[test]
@@ -548,10 +553,12 @@ mod tests {
         let mut i = dc_max_2026();
         i.userra_make_up_contributions = true;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 415(n) USERRA REINSTATEMENT")
-            && f.contains("lesser of (a) 3× period")
-            && f.contains("OR (b) 5 years")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 415(n) USERRA REINSTATEMENT")
+                && f.contains("lesser of (a) 3× period")
+                && f.contains("OR (b) 5 years")));
     }
 
     #[test]
@@ -619,52 +626,59 @@ mod tests {
     #[test]
     fn note_pins_umbrella_statute() {
         let r = check(&dc_max_2026());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 415 — UMBRELLA STATUTE")
-            && n.contains("CEILINGS")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 415 — UMBRELLA STATUTE") && n.contains("CEILINGS")));
     }
 
     #[test]
     fn note_pins_subsection_a_disqualification_cascade() {
         let r = check(&dc_max_2026());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 415(a) STATUTORY PURPOSE")
-            && n.contains("ALL PARTICIPANTS")
-            && n.contains("not just over-limit")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 415(a) STATUTORY PURPOSE")
+                && n.contains("ALL PARTICIPANTS")
+                && n.contains("not just over-limit")));
     }
 
     #[test]
     fn note_pins_subsection_b_db_limit() {
         let r = check(&dc_max_2026());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 415(b) DEFINED BENEFIT")
-            && n.contains("$290,000")
-            && n.contains("§ 415(b)(2) actuarial")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 415(b) DEFINED BENEFIT")
+                && n.contains("$290,000")
+                && n.contains("§ 415(b)(2) actuarial")));
     }
 
     #[test]
     fn note_pins_subsection_c_dc_limit() {
         let r = check(&dc_max_2026());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 415(c) DEFINED CONTRIBUTION")
-            && n.contains("$72,000")
-            && n.contains("§ 415(c)(2) annual addition INCLUDES")
-            && n.contains("EXCLUDES § 414(v)")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 415(c) DEFINED CONTRIBUTION")
+                && n.contains("$72,000")
+                && n.contains("§ 415(c)(2) annual addition INCLUDES")
+                && n.contains("EXCLUDES § 414(v)")));
     }
 
     #[test]
     fn note_pins_subsection_d_cola() {
         let r = check(&dc_max_2026());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 415(d) COST-OF-LIVING ADJUSTMENTS")
-            && n.contains("CPI-U")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 415(d) COST-OF-LIVING ADJUSTMENTS") && n.contains("CPI-U")));
     }
 
     #[test]
     fn note_pins_2026_eight_limits() {
         let r = check(&dc_max_2026());
-        assert!(r.notes.iter().any(|n|
-            n.contains("2026 dollar limits")
+        assert!(r.notes.iter().any(|n| n.contains("2026 dollar limits")
             && n.contains("$290,000")
             && n.contains("$72,000")
             && n.contains("$360,000")
@@ -678,84 +692,99 @@ mod tests {
     #[test]
     fn note_pins_subsection_f_aggregation_rules() {
         let r = check(&dc_max_2026());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 415(f) AGGREGATION RULES")
-            && n.contains("§ 415(f)(2) DC and DB limits applied SEPARATELY")
-            && n.contains("§ 414(b)/(c)/(m)/(o)")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 415(f) AGGREGATION RULES")
+                && n.contains("§ 415(f)(2) DC and DB limits applied SEPARATELY")
+                && n.contains("§ 414(b)/(c)/(m)/(o)")));
     }
 
     #[test]
     fn note_pins_subsection_g_anti_cutback() {
         let r = check(&dc_max_2026());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 415(g) ANTI-CUTBACK RULE")
-            && n.contains("§ 411(d)(6)")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 415(g) ANTI-CUTBACK RULE") && n.contains("§ 411(d)(6)")));
     }
 
     #[test]
     fn note_pins_subsection_k_grandfathered() {
         let r = check(&dc_max_2026());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 415(k) GRANDFATHERED OLD-LIMIT BENEFITS")
-            && n.contains("pre-1976")
-            && n.contains("pre-1982")
-            && n.contains("$90,000")
-            && n.contains("TEFRA")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 415(k) GRANDFATHERED OLD-LIMIT BENEFITS")
+                && n.contains("pre-1976")
+                && n.contains("pre-1982")
+                && n.contains("$90,000")
+                && n.contains("TEFRA")));
     }
 
     #[test]
     fn note_pins_subsection_n_userra() {
         let r = check(&dc_max_2026());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 415(n) USERRA REINSTATEMENT")
-            && n.contains("YEARS OF MILITARY SERVICE")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 415(n) USERRA REINSTATEMENT")
+                && n.contains("YEARS OF MILITARY SERVICE")));
     }
 
     #[test]
     fn note_pins_section_401k_interaction() {
         let r = check(&dc_max_2026());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 415 interaction with § 401(k)")
-            && n.contains("MEGA BACKDOOR ROTH")
-            && n.contains("§ 408A(d)(3)")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 415 interaction with § 401(k)")
+                && n.contains("MEGA BACKDOOR ROTH")
+                && n.contains("§ 408A(d)(3)")));
     }
 
     #[test]
     fn note_pins_section_457b_interaction() {
         let r = check(&dc_max_2026());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 415 interaction with § 457(b)")
-            && n.contains("DOUBLE DEFERRAL")
-            && n.contains("$49,000")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 415 interaction with § 457(b)")
+                && n.contains("DOUBLE DEFERRAL")
+                && n.contains("$49,000")));
     }
 
     #[test]
     fn note_pins_db_dc_dual_participation() {
         let r = check(&dc_max_2026());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 415 interaction with DB+DC dual participation")
+        assert!(r.notes.iter().any(|n| n
+            .contains("§ 415 interaction with DB+DC dual participation")
             && n.contains("no combined limit since 2002 TEFRA repeal")));
     }
 
     #[test]
     fn note_pins_trader_fact_patterns_five() {
         let r = check(&dc_max_2026());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-critical fact patterns")
-            && n.contains("$72,000 § 415(c)")
-            && n.contains("ACROSS plans")
-            && n.contains("$144,000 total")
-            && n.contains("TEFRA repeal")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-critical fact patterns")
+                && n.contains("$72,000 § 415(c)")
+                && n.contains("ACROSS plans")
+                && n.contains("$144,000 total")
+                && n.contains("TEFRA repeal")));
     }
 
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&dc_max_2026());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Companion to section_401k")
-            && n.contains("section_408a")
-            && n.contains("section_457b")
-            && n.contains("section_162m")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Companion to section_401k")
+                && n.contains("section_408a")
+                && n.contains("section_457b")
+                && n.contains("section_162m")));
     }
 
     #[test]

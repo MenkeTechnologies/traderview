@@ -110,8 +110,11 @@ fn scenario_solo_freelancer_schedule_c() {
     assert_eq!(res.taxable_income, dc("25174.09"));
     // Owes everything — no withholding.
     assert_eq!(res.refund_due, Decimal::ZERO);
-    assert!(res.tax_owed > d(9_000) && res.tax_owed < d(10_500),
-        "expected ~$9,800 owed, got {}", res.tax_owed);
+    assert!(
+        res.tax_owed > d(9_000) && res.tax_owed < d(10_500),
+        "expected ~$9,800 owed, got {}",
+        res.tax_owed
+    );
 }
 
 /// Scenario 3: Dual-income MFJ with two kids.
@@ -279,8 +282,10 @@ fn scenario_high_earner_above_ss_cap_and_addl_medicare() {
     // Additional Medicare: (277,050 - 200,000) × 0.009 = 693.45.
     assert_eq!(res.se_tax.additional_medicare_tax, dc("693.45"));
     // QBI flag — non-SSTB high earner triggers manual-review warning.
-    assert!(res.qbi_needs_manual_review,
-        "high earner non-SSTB should flag QBI manual review");
+    assert!(
+        res.qbi_needs_manual_review,
+        "high earner non-SSTB should flag QBI manual review"
+    );
 }
 
 /// Scenario 7: Boundary case — taxable income exactly at standard
@@ -304,24 +309,52 @@ fn scenario_boundary_taxable_income_zero() {
 /// Build a small set of representative TaxReturns for invariant checks.
 fn invariant_cases() -> Vec<TaxReturn> {
     vec![
-        TaxReturn { tax_year: 2025, status: FilingStatus::Single, ..Default::default() },
-        TaxReturn { tax_year: 2025, status: FilingStatus::Mfj, ..Default::default() },
         TaxReturn {
-            tax_year: 2025, status: FilingStatus::Single,
-            w2s: vec![W2 { box_1_wages: d(60_000), box_2_federal_income_tax_withheld: d(7_000), ..Default::default() }],
+            tax_year: 2025,
+            status: FilingStatus::Single,
             ..Default::default()
         },
         TaxReturn {
-            tax_year: 2025, status: FilingStatus::Hoh,
-            schedule_c: ScheduleC { gross_receipts: d(40_000), total_expenses: d(8_000), net_profit: d(32_000) },
+            tax_year: 2025,
+            status: FilingStatus::Mfj,
+            ..Default::default()
+        },
+        TaxReturn {
+            tax_year: 2025,
+            status: FilingStatus::Single,
+            w2s: vec![W2 {
+                box_1_wages: d(60_000),
+                box_2_federal_income_tax_withheld: d(7_000),
+                ..Default::default()
+            }],
+            ..Default::default()
+        },
+        TaxReturn {
+            tax_year: 2025,
+            status: FilingStatus::Hoh,
+            schedule_c: ScheduleC {
+                gross_receipts: d(40_000),
+                total_expenses: d(8_000),
+                net_profit: d(32_000),
+            },
             qualifying_children_under_17: 1,
             ..Default::default()
         },
         TaxReturn {
-            tax_year: 2025, status: FilingStatus::Mfj,
-            w2s: vec![W2 { box_1_wages: d(180_000), box_2_federal_income_tax_withheld: d(28_000), ..Default::default() }],
-            interest_income: d(2_000), ordinary_dividends: d(3_500),
-            schedule_c: ScheduleC { gross_receipts: d(100_000), total_expenses: d(20_000), net_profit: d(80_000) },
+            tax_year: 2025,
+            status: FilingStatus::Mfj,
+            w2s: vec![W2 {
+                box_1_wages: d(180_000),
+                box_2_federal_income_tax_withheld: d(28_000),
+                ..Default::default()
+            }],
+            interest_income: d(2_000),
+            ordinary_dividends: d(3_500),
+            schedule_c: ScheduleC {
+                gross_receipts: d(100_000),
+                total_expenses: d(20_000),
+                net_profit: d(80_000),
+            },
             estimated_tax_payments: d(8_000),
             qualifying_children_under_17: 3,
             ..Default::default()
@@ -339,7 +372,8 @@ fn invariant_refund_and_owed_are_mutually_exclusive() {
         assert!(
             res.refund_due == Decimal::ZERO || res.tax_owed == Decimal::ZERO,
             "refund {} and owed {} can't both be positive",
-            res.refund_due, res.tax_owed,
+            res.refund_due,
+            res.tax_owed,
         );
     }
 }
@@ -352,8 +386,11 @@ fn invariant_no_negative_taxable_income() {
     // never see at the input.
     for r in invariant_cases() {
         let res = compute(&r);
-        assert!(res.taxable_income >= Decimal::ZERO,
-            "taxable_income must be ≥ 0, got {}", res.taxable_income);
+        assert!(
+            res.taxable_income >= Decimal::ZERO,
+            "taxable_income must be ≥ 0, got {}",
+            res.taxable_income
+        );
     }
 }
 
@@ -380,10 +417,17 @@ fn invariant_total_payments_decomposes() {
     //   EITC claim
     for r in invariant_cases() {
         let res = compute(&r);
-        let w2_wh: Decimal = r.w2s.iter().map(|w| w.box_2_federal_income_tax_withheld).sum();
+        let w2_wh: Decimal = r
+            .w2s
+            .iter()
+            .map(|w| w.box_2_federal_income_tax_withheld)
+            .sum();
         let expected = w2_wh + r.estimated_tax_payments + res.ctc.refundable_portion + r.eitc_claim;
-        assert_eq!(res.total_payments, expected,
-            "total_payments mismatch for return: {:?}", r);
+        assert_eq!(
+            res.total_payments, expected,
+            "total_payments mismatch for return: {:?}",
+            r
+        );
     }
 }
 
@@ -393,8 +437,7 @@ fn invariant_agi_never_negative() {
     // deductions exceed total_income, AGI = 0, not a negative.
     for r in invariant_cases() {
         let res = compute(&r);
-        assert!(res.agi >= Decimal::ZERO,
-            "AGI must be ≥ 0, got {}", res.agi);
+        assert!(res.agi >= Decimal::ZERO, "AGI must be ≥ 0, got {}", res.agi);
     }
 }
 
@@ -407,8 +450,12 @@ fn invariant_deduction_label_matches_amount_used() {
     for r in invariant_cases() {
         let res = compute(&r);
         if res.deduction_label == "standard" {
-            assert_eq!(res.deduction_used, standard_deduction(r.status),
-                "standard label must use canonical std deduction for status {:?}", r.status);
+            assert_eq!(
+                res.deduction_used,
+                standard_deduction(r.status),
+                "standard label must use canonical std deduction for status {:?}",
+                r.status
+            );
         }
     }
 }
@@ -532,12 +579,12 @@ fn ctc_refundable_and_eitc_both_increase_total_payments() {
         status: FilingStatus::Mfj,
         w2s: vec![W2 {
             box_1_wages: d(40_000),
-            box_2_federal_income_tax_withheld: d(2_000),  // withholding
+            box_2_federal_income_tax_withheld: d(2_000), // withholding
             ..Default::default()
         }],
-        qualifying_children_under_17: 2,                  // CTC: 2 × $2k = $4k total
-        estimated_tax_payments: d(500),                   // estimated
-        eitc_claim: d(1_800),                             // EITC entered manually
+        qualifying_children_under_17: 2, // CTC: 2 × $2k = $4k total
+        estimated_tax_payments: d(500),  // estimated
+        eitc_claim: d(1_800),            // EITC entered manually
         ..Default::default()
     };
     let res = compute(&r);
@@ -545,8 +592,11 @@ fn ctc_refundable_and_eitc_both_increase_total_payments() {
     assert_eq!(res.ctc.total, d(4_000));
     assert_eq!(res.ctc.refundable_portion, d(3_400));
     // Total payments = 2,000 + 500 + 3,400 + 1,800 = $7,700.
-    assert_eq!(res.total_payments, d(7_700),
-        "all four refundable/withholding components must sum into total_payments");
+    assert_eq!(
+        res.total_payments,
+        d(7_700),
+        "all four refundable/withholding components must sum into total_payments"
+    );
 }
 
 /// EITC increases payments DOLLAR FOR DOLLAR — verify with a delta
@@ -567,10 +617,13 @@ fn eitc_delta_propagates_dollar_for_dollar_to_payments() {
         eitc_claim: d(550),
         ..base.clone()
     };
-    let base_payments    = compute(&base).total_payments;
+    let base_payments = compute(&base).total_payments;
     let with_eitc_payments = compute(&with_eitc).total_payments;
-    assert_eq!(with_eitc_payments - base_payments, d(550),
-        "EITC delta must move total_payments by exactly the EITC amount");
+    assert_eq!(
+        with_eitc_payments - base_payments,
+        d(550),
+        "EITC delta must move total_payments by exactly the EITC amount"
+    );
 }
 
 /// Scenario 9: Head of household freelancer with one kid.
@@ -671,8 +724,11 @@ fn scenario_retiree_qbi_ti_cap_reduces_for_capgains() {
     //   net_capital_gain = 40,000 + 20,000 = 60,000.
     //   TI - net_cap_gain → likely negative → 0. So TI cap = $0.
     //   QBI deduction = min(2,000, 0) = 0.
-    assert_eq!(res.qbi_deduction, Decimal::ZERO,
-        "QBI must be capped at $0 when TI - net_cap_gain ≤ 0");
+    assert_eq!(
+        res.qbi_deduction,
+        Decimal::ZERO,
+        "QBI must be capped at $0 when TI - net_cap_gain ≤ 0"
+    );
 }
 
 /// Scenario 8: Mixed Schedule C + W-2 with SE tax SS-cap interaction.

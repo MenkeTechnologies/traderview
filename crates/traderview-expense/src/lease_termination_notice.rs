@@ -113,7 +113,7 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
             60,
             90,
             30, // ≤ 5% increase — no notice required statewide;
-                // > 5% triggers same 30/60/90 tiers as termination
+            // > 5% triggers same 30/60/90 tiers as termination
             90, // For > 5% increase at 2+ year tenancy
             None,
             "N.Y. RPL § 226-c (HSTPA of 2019)",
@@ -128,9 +128,9 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
             JustCauseAfterTwelveMonths,
             30,
             60,
-            60, // CA caps at 60-day tier
-            30, // ≤ 10% increase
-            90, // > 10% increase
+            60,       // CA caps at 60-day tier
+            30,       // ≤ 10% increase
+            90,       // > 10% increase
             Some(12), // Tenant Protection Act of 2019 (AB 1482)
             "Cal. Civ. Proc. § 1946.1 + Tenant Protection Act 2019 (AB 1482)",
         ),
@@ -248,11 +248,9 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // Bulk default: 30-day standard.
     let default_30 = [
-        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "HI", "ID", "IL",
-        "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MI", "MN", "MS",
-        "MO", "MT", "NE", "NV", "NH", "NM", "NC", "ND", "OH", "OK",
-        "PA", "RI", "SC", "SD", "TN", "UT", "VT", "VA", "WV", "WI",
-        "WY",
+        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA",
+        "ME", "MD", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NM", "NC", "ND", "OH", "OK",
+        "PA", "RI", "SC", "SD", "TN", "UT", "VT", "VA", "WV", "WI", "WY",
     ];
     for code in default_30 {
         m.insert(
@@ -341,8 +339,7 @@ pub fn check(input: &NoticeInput) -> NoticeResult {
         None => false,
     };
 
-    let notice_compliant =
-        input.notice_days_given >= required as i64 && !no_cause_unavail;
+    let notice_compliant = input.notice_days_given >= required as i64 && !no_cause_unavail;
 
     let note = if no_cause_unavail {
         format!(
@@ -381,12 +378,7 @@ pub fn check(input: &NoticeInput) -> NoticeResult {
 mod tests {
     use super::*;
 
-    fn input(
-        state: &str,
-        months: u32,
-        notice: i64,
-        intent: TerminationIntent,
-    ) -> NoticeInput {
+    fn input(state: &str, months: u32, notice: i64, intent: TerminationIntent) -> NoticeInput {
         NoticeInput {
             state_code: state.to_string(),
             tenancy_months: months,
@@ -576,16 +568,14 @@ mod tests {
         // "termination" — landlord doesn't need just cause to increase
         // rent under the model. (Caller may still be subject to
         // rent-cap statute like CA AB 1482 — that's a separate module.)
-        let r = check(
-            &NoticeInput {
-                state_code: "CA".into(),
-                tenancy_months: 18,
-                notice_days_given: 30,
-                intent: TerminationIntent::RentIncrease,
-                has_qualifying_just_cause: false,
-                rent_increase_pct_bp: 500,
-            },
-        );
+        let r = check(&NoticeInput {
+            state_code: "CA".into(),
+            tenancy_months: 18,
+            notice_days_given: 30,
+            intent: TerminationIntent::RentIncrease,
+            has_qualifying_just_cause: false,
+            rent_increase_pct_bp: 500,
+        });
         assert!(!r.no_cause_termination_unavailable);
         assert!(r.notice_compliant);
     }
@@ -595,7 +585,12 @@ mod tests {
     #[test]
     fn coverage_is_all_50_states_plus_dc() {
         let codes: Vec<&'static str> = RULES.keys().copied().collect();
-        assert_eq!(codes.len(), 51, "expected 50 states + DC, got {}", codes.len());
+        assert_eq!(
+            codes.len(),
+            51,
+            "expected 50 states + DC, got {}",
+            codes.len()
+        );
     }
 
     #[test]

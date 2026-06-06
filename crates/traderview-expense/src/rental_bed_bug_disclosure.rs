@@ -280,8 +280,10 @@ fn check_me(input: &RentalBedBugDisclosureInput) -> RentalBedBugDisclosureResult
         );
     }
 
-    let inspection_disclosure_deadline_engaged = input.hours_since_inspection_without_disclosure > 0;
-    if inspection_disclosure_deadline_engaged && input.hours_since_inspection_without_disclosure > 24
+    let inspection_disclosure_deadline_engaged =
+        input.hours_since_inspection_without_disclosure > 0;
+    if inspection_disclosure_deadline_engaged
+        && input.hours_since_inspection_without_disclosure > 24
     {
         violations.push(
             "14 M.R.S. § 6021-A(3) — landlord must disclose inspection results to tenant in writing within 24 hours of inspection completion".to_string(),
@@ -294,7 +296,8 @@ fn check_me(input: &RentalBedBugDisclosureInput) -> RentalBedBugDisclosureResult
 
     if !me_penalty_in_range {
         violations.push(
-            "14 M.R.S. § 6021-A(7) — civil penalty must be between $250 and $1,500 per violation".to_string(),
+            "14 M.R.S. § 6021-A(7) — civil penalty must be between $250 and $1,500 per violation"
+                .to_string(),
         );
     }
 
@@ -376,10 +379,7 @@ mod tests {
         i.bed_bug_educational_content_included = false;
         let r = check(&i);
         assert!(!r.disclosure_compliant);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("10-point type")));
+        assert!(r.violations.iter().any(|v| v.contains("10-point type")));
     }
 
     #[test]
@@ -426,10 +426,7 @@ mod tests {
         i.prior_year_hpd_report_provided = false;
         let r = check(&i);
         assert!(!r.disclosure_compliant);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("prior year")));
+        assert!(r.violations.iter().any(|v| v.contains("prior year")));
     }
 
     #[test]
@@ -661,12 +658,9 @@ mod tests {
     #[test]
     fn note_pins_nyc_december_filing_window() {
         let r = check(&nyc_clean());
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("December 1")
-                && n.contains("December 31")
-                && n.contains("Form RA-89")));
+        assert!(r.notes.iter().any(|n| n.contains("December 1")
+            && n.contains("December 31")
+            && n.contains("Form RA-89")));
     }
 
     #[test]

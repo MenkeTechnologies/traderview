@@ -245,10 +245,7 @@ mod tests {
         i.business_days_from_nftl_filing_to_notice = 6;
         let r = compute(&i);
         assert!(!r.irs_notice_compliant);
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("procedural defect")));
+        assert!(r.notes.iter().any(|n| n.contains("procedural defect")));
     }
 
     #[test]
@@ -265,10 +262,7 @@ mod tests {
         i.days_from_notice_to_cdp_request = 31;
         let r = compute(&i);
         assert!(!r.cdp_hearing_entitlement);
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("equivalent hearing")));
+        assert!(r.notes.iter().any(|n| n.contains("equivalent hearing")));
     }
 
     #[test]
@@ -287,7 +281,9 @@ mod tests {
         assert!(r
             .notes
             .iter()
-            .any(|n| n.contains("§ 6323(j) lien WITHDRAWAL") && n.contains("§ 6325(d) SUBORDINATION") && n.contains("§ 6325(b) DISCHARGE")));
+            .any(|n| n.contains("§ 6323(j) lien WITHDRAWAL")
+                && n.contains("§ 6325(d) SUBORDINATION")
+                && n.contains("§ 6325(b) DISCHARGE")));
     }
 
     #[test]
@@ -342,10 +338,9 @@ mod tests {
     fn underlying_liability_challenge_available_without_prior_opportunity() {
         let r = compute(&base());
         assert!(r.liability_challenge_available_at_cdp);
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("§ 6320(c)") && n.contains("§ 6330(c)(2)(B)") && n.contains("may challenge")));
+        assert!(r.notes.iter().any(|n| n.contains("§ 6320(c)")
+            && n.contains("§ 6330(c)(2)(B)")
+            && n.contains("may challenge")));
     }
 
     #[test]
@@ -412,10 +407,7 @@ mod tests {
     #[test]
     fn five_business_day_window_distinct_from_section_6330_thirty_day() {
         let r = compute(&base());
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("5-business-day")));
+        assert!(r.notes.iter().any(|n| n.contains("5-business-day")));
     }
 
     #[test]
@@ -433,7 +425,10 @@ mod tests {
         i.business_days_from_nftl_filing_to_notice = 30;
         let r = compute(&i);
         assert!(!r.irs_notice_compliant);
-        assert!(r.lien_remains_in_place_during_review, "procedural defect does not lift lien");
+        assert!(
+            r.lien_remains_in_place_during_review,
+            "procedural defect does not lift lien"
+        );
     }
 
     #[test]
@@ -468,18 +463,16 @@ mod tests {
 
     #[test]
     fn lien_in_place_invariant_across_all_paths() {
-        let cases = [
-            (0u32, 0u32),
-            (5u32, 30u32),
-            (6u32, 31u32),
-            (100u32, 100u32),
-        ];
+        let cases = [(0u32, 0u32), (5u32, 30u32), (6u32, 31u32), (100u32, 100u32)];
         for (bd, req_days) in cases {
             let mut i = base();
             i.business_days_from_nftl_filing_to_notice = bd;
             i.days_from_notice_to_cdp_request = req_days;
             let r = compute(&i);
-            assert!(r.lien_remains_in_place_during_review, "lien always remains in place regardless of timing");
+            assert!(
+                r.lien_remains_in_place_during_review,
+                "lien always remains in place regardless of timing"
+            );
         }
     }
 }

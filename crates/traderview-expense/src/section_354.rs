@@ -270,7 +270,10 @@ mod tests {
     fn full_nonrecognition_section_354a1() {
         let i = baseline();
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::FullNonrecognitionUnderSection354a1));
+        assert!(matches!(
+            r.severity,
+            Severity::FullNonrecognitionUnderSection354a1
+        ));
         assert_eq!(r.boot_recognized_cents, 0);
         assert_eq!(r.nonrecognized_gain_cents, 50_000_000_00);
         assert_eq!(r.principal_amount_excess_boot_cents, 0);
@@ -329,7 +332,10 @@ mod tests {
             r.severity,
             Severity::Section354bAdditionalRequirementsNotSatisfied
         ));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("§ 354(b)(1)(A)")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("§ 354(b)(1)(A)")));
     }
 
     #[test]
@@ -342,7 +348,10 @@ mod tests {
             r.severity,
             Severity::Section354bAdditionalRequirementsNotSatisfied
         ));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("§ 354(b)(1)(B)")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("§ 354(b)(1)(B)")));
     }
 
     #[test]
@@ -350,7 +359,10 @@ mod tests {
         let mut i = baseline();
         i.reorganization_type = ReorganizationType::DDivisiveSplitWithSection354b;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::FullNonrecognitionUnderSection354a1));
+        assert!(matches!(
+            r.severity,
+            Severity::FullNonrecognitionUnderSection354a1
+        ));
     }
 
     #[test]
@@ -372,7 +384,10 @@ mod tests {
         let mut i = baseline();
         i.reorganization_type = ReorganizationType::BStockForStock;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::FullNonrecognitionUnderSection354a1));
+        assert!(matches!(
+            r.severity,
+            Severity::FullNonrecognitionUnderSection354a1
+        ));
     }
 
     #[test]
@@ -380,7 +395,10 @@ mod tests {
         let mut i = baseline();
         i.reorganization_type = ReorganizationType::CAssetAcquisitionForVotingStock;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::FullNonrecognitionUnderSection354a1));
+        assert!(matches!(
+            r.severity,
+            Severity::FullNonrecognitionUnderSection354a1
+        ));
     }
 
     #[test]
@@ -388,7 +406,10 @@ mod tests {
         let mut i = baseline();
         i.reorganization_type = ReorganizationType::ERecapitalization;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::FullNonrecognitionUnderSection354a1));
+        assert!(matches!(
+            r.severity,
+            Severity::FullNonrecognitionUnderSection354a1
+        ));
     }
 
     #[test]
@@ -396,7 +417,10 @@ mod tests {
         let mut i = baseline();
         i.reorganization_type = ReorganizationType::FMereChangeIdentityForm;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::FullNonrecognitionUnderSection354a1));
+        assert!(matches!(
+            r.severity,
+            Severity::FullNonrecognitionUnderSection354a1
+        ));
     }
 
     #[test]
@@ -404,15 +428,24 @@ mod tests {
         let mut i = baseline();
         i.reorganization_type = ReorganizationType::GBankruptcyReorg;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::FullNonrecognitionUnderSection354a1));
+        assert!(matches!(
+            r.severity,
+            Severity::FullNonrecognitionUnderSection354a1
+        ));
     }
 
     #[test]
     fn action_references_form_1120_schedule_m_3() {
         let i = baseline();
         let r = check(&i);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Form 1120")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Schedule M-3")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Form 1120")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Schedule M-3")));
     }
 
     #[test]
@@ -453,7 +486,10 @@ mod tests {
         i.principal_amount_securities_received_cents = 0;
         let r = check(&i);
         assert_eq!(r.principal_amount_excess_boot_cents, 0);
-        assert!(matches!(r.severity, Severity::FullNonrecognitionUnderSection354a1));
+        assert!(matches!(
+            r.severity,
+            Severity::FullNonrecognitionUnderSection354a1
+        ));
     }
 
     #[test]
@@ -472,6 +508,9 @@ mod tests {
         i.principal_amount_securities_surrendered_cents = 100_000_000_00;
         let r = check(&i);
         assert_eq!(r.principal_amount_excess_boot_cents, 0);
-        assert!(matches!(r.severity, Severity::FullNonrecognitionUnderSection354a1));
+        assert!(matches!(
+            r.severity,
+            Severity::FullNonrecognitionUnderSection354a1
+        ));
     }
 }

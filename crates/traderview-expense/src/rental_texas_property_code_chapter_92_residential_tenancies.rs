@@ -386,7 +386,8 @@ mod tests {
     fn baseline_input() -> Input {
         Input {
             tenancy_type: TenancyType::ResidentialRentalCoveredByChapter92,
-            compliance_aspect: ComplianceAspect::SecurityDepositReturnThirtyDayDeadlineUnderSection92_103,
+            compliance_aspect:
+                ComplianceAspect::SecurityDepositReturnThirtyDayDeadlineUnderSection92_103,
             monthly_rent_dollars: 2_000,
             security_deposit_dollars: 2_000,
             days_since_tenant_surrendered_for_deposit_return: 30,
@@ -410,13 +411,19 @@ mod tests {
         let mut input = baseline_input();
         input.tenancy_type = TenancyType::HotelMotelOrShortTermTransientLodgingExempt;
         let output = check(&input);
-        assert_eq!(output.mode, TexPropCode92Mode::NotApplicableTenancyExemptFromChapter92);
+        assert_eq!(
+            output.mode,
+            TexPropCode92Mode::NotApplicableTenancyExemptFromChapter92
+        );
     }
 
     #[test]
     fn security_deposit_returned_within_thirty_days_compliant() {
         let output = check(&baseline_input());
-        assert_eq!(output.mode, TexPropCode92Mode::CompliantSecurityDepositReturnedWithinThirtyDays);
+        assert_eq!(
+            output.mode,
+            TexPropCode92Mode::CompliantSecurityDepositReturnedWithinThirtyDays
+        );
     }
 
     #[test]
@@ -424,7 +431,10 @@ mod tests {
         let mut input = baseline_input();
         input.days_since_tenant_surrendered_for_deposit_return = 30;
         let output = check(&input);
-        assert_eq!(output.mode, TexPropCode92Mode::CompliantSecurityDepositReturnedWithinThirtyDays);
+        assert_eq!(
+            output.mode,
+            TexPropCode92Mode::CompliantSecurityDepositReturnedWithinThirtyDays
+        );
     }
 
     #[test]
@@ -438,13 +448,17 @@ mod tests {
             output.mode,
             TexPropCode92Mode::ViolationSecurityDepositReturnedPastThirtyDayDeadline
         );
-        assert_eq!(output.bad_faith_retention_treble_plus_100_dollars, 1_500 * 3 + 100);
+        assert_eq!(
+            output.bad_faith_retention_treble_plus_100_dollars,
+            1_500 * 3 + 100
+        );
     }
 
     #[test]
     fn itemized_deductions_provided_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SecurityDepositItemizedDeductionsUnderSection92_104;
+        input.compliance_aspect =
+            ComplianceAspect::SecurityDepositItemizedDeductionsUnderSection92_104;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -455,7 +469,8 @@ mod tests {
     #[test]
     fn no_itemized_deductions_when_required_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SecurityDepositItemizedDeductionsUnderSection92_104;
+        input.compliance_aspect =
+            ComplianceAspect::SecurityDepositItemizedDeductionsUnderSection92_104;
         input.itemized_deductions_provided_when_required = false;
         input.portion_of_deposit_wrongfully_withheld_dollars = 500;
         let output = check(&input);
@@ -463,7 +478,10 @@ mod tests {
             output.mode,
             TexPropCode92Mode::ViolationSecurityDepositNoItemizedDeductionsWhenRequired
         );
-        assert_eq!(output.bad_faith_retention_treble_plus_100_dollars, 500 * 3 + 100);
+        assert_eq!(
+            output.bad_faith_retention_treble_plus_100_dollars,
+            500 * 3 + 100
+        );
     }
 
     #[test]
@@ -478,7 +496,10 @@ mod tests {
             output.mode,
             TexPropCode92Mode::ViolationSecurityDepositBadFaithRetentionTriggersTrebleDamagesPlus100
         );
-        assert_eq!(output.bad_faith_retention_treble_plus_100_dollars, 1_000 * 3 + 100);
+        assert_eq!(
+            output.bad_faith_retention_treble_plus_100_dollars,
+            1_000 * 3 + 100
+        );
     }
 
     #[test]
@@ -487,13 +508,17 @@ mod tests {
         input.compliance_aspect =
             ComplianceAspect::SecurityDepositBadFaithRetentionTrebleDamagesUnderSection92_109;
         let output = check(&input);
-        assert_eq!(output.mode, TexPropCode92Mode::CompliantSecurityDepositNoBadFaithRetention);
+        assert_eq!(
+            output.mode,
+            TexPropCode92Mode::CompliantSecurityDepositNoBadFaithRetention
+        );
     }
 
     #[test]
     fn landlord_duty_to_repair_health_safety_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordDutyToRepairMaterialHealthSafetyUnderSection92_052;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordDutyToRepairMaterialHealthSafetyUnderSection92_052;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -504,7 +529,8 @@ mod tests {
     #[test]
     fn landlord_failed_to_repair_health_safety_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordDutyToRepairMaterialHealthSafetyUnderSection92_052;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordDutyToRepairMaterialHealthSafetyUnderSection92_052;
         input.landlord_repaired_within_reasonable_time = false;
         let output = check(&input);
         assert_eq!(
@@ -516,7 +542,8 @@ mod tests {
     #[test]
     fn non_material_condition_no_duty_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordDutyToRepairMaterialHealthSafetyUnderSection92_052;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordDutyToRepairMaterialHealthSafetyUnderSection92_052;
         input.condition_materially_affects_physical_health_or_safety = false;
         input.landlord_repaired_within_reasonable_time = false;
         let output = check(&input);
@@ -578,7 +605,8 @@ mod tests {
     #[test]
     fn landlord_repair_within_seven_day_presumption_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordRepairNoticeReasonableTimeUnderSection92_056;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordRepairNoticeReasonableTimeUnderSection92_056;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -589,7 +617,8 @@ mod tests {
     #[test]
     fn landlord_repair_at_exactly_seven_day_boundary_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordRepairNoticeReasonableTimeUnderSection92_056;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordRepairNoticeReasonableTimeUnderSection92_056;
         input.days_since_tenant_repair_notice = 7;
         let output = check(&input);
         assert_eq!(
@@ -601,7 +630,8 @@ mod tests {
     #[test]
     fn landlord_repair_at_eight_days_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordRepairNoticeReasonableTimeUnderSection92_056;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordRepairNoticeReasonableTimeUnderSection92_056;
         input.days_since_tenant_repair_notice = 8;
         input.landlord_repaired_within_reasonable_time = false;
         let output = check(&input);
@@ -614,7 +644,8 @@ mod tests {
     #[test]
     fn smoke_alarm_within_seven_days_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SmokeAlarmInstallationAndSevenDayRepairUnderSection92_156;
+        input.compliance_aspect =
+            ComplianceAspect::SmokeAlarmInstallationAndSevenDayRepairUnderSection92_156;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -625,7 +656,8 @@ mod tests {
     #[test]
     fn smoke_alarm_not_within_seven_days_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SmokeAlarmInstallationAndSevenDayRepairUnderSection92_156;
+        input.compliance_aspect =
+            ComplianceAspect::SmokeAlarmInstallationAndSevenDayRepairUnderSection92_156;
         input.smoke_alarm_installed_and_repaired_within_seven_days = false;
         input.days_since_smoke_alarm_repair_request = 8;
         let output = check(&input);
@@ -638,7 +670,8 @@ mod tests {
     #[test]
     fn retaliation_within_six_months_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::RetaliationProhibitedSixMonthWindowUnderSection92_331;
+        input.compliance_aspect =
+            ComplianceAspect::RetaliationProhibitedSixMonthWindowUnderSection92_331;
         input.protected_tenant_activity_occurred = true;
         input.adverse_action_within_six_months_of_protected_activity = true;
         let output = check(&input);
@@ -655,7 +688,8 @@ mod tests {
     #[test]
     fn no_retaliation_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::RetaliationProhibitedSixMonthWindowUnderSection92_331;
+        input.compliance_aspect =
+            ComplianceAspect::RetaliationProhibitedSixMonthWindowUnderSection92_331;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -668,11 +702,20 @@ mod tests {
         assert_eq!(TX_PROP_CODE_CHAPTER_NUMBER, 92);
         assert_eq!(TX_PROP_CODE_SECURITY_DEPOSIT_RETURN_DEADLINE_DAYS, 30);
         assert_eq!(TX_PROP_CODE_REPAIR_AND_DEDUCT_DOLLAR_FLOOR, 500);
-        assert_eq!(TX_PROP_CODE_REPAIR_NOTICE_REASONABLE_TIME_DAYS_PRESUMPTION, 7);
+        assert_eq!(
+            TX_PROP_CODE_REPAIR_NOTICE_REASONABLE_TIME_DAYS_PRESUMPTION,
+            7
+        );
         assert_eq!(TX_PROP_CODE_SMOKE_ALARM_REPAIR_DEADLINE_DAYS, 7);
         assert_eq!(TX_PROP_CODE_RETALIATION_PRESUMPTION_WINDOW_MONTHS, 6);
-        assert_eq!(TX_PROP_CODE_BAD_FAITH_RETENTION_STATUTORY_FLAT_PENALTY_DOLLARS, 100);
-        assert_eq!(TX_PROP_CODE_BAD_FAITH_RETENTION_TREBLE_DAMAGES_MULTIPLIER, 3);
+        assert_eq!(
+            TX_PROP_CODE_BAD_FAITH_RETENTION_STATUTORY_FLAT_PENALTY_DOLLARS,
+            100
+        );
+        assert_eq!(
+            TX_PROP_CODE_BAD_FAITH_RETENTION_TREBLE_DAMAGES_MULTIPLIER,
+            3
+        );
         assert_eq!(TX_PROP_CODE_RETALIATION_STATUTORY_DAMAGES_DOLLARS, 500);
         assert_eq!(TX_PROP_CODE_BASIS_POINT_DENOMINATOR, 10_000);
     }

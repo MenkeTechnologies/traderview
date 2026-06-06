@@ -183,13 +183,7 @@ mod tests {
     fn full_compliance_80_pct_both_complete_continuous() {
         // 100% owned, complete liquidation, continuous ownership.
         let r = compute(&input(
-            10000,
-            10000,
-            true,
-            true,
-            500_000_00,
-            300_000_00,
-            200_000_00,
+            10000, 10000, true, true, 500_000_00, 300_000_00, 200_000_00,
         ));
         assert!(r.section_332_applies);
         assert_eq!(r.parent_gain_or_loss_recognized_cents, 0);
@@ -202,13 +196,7 @@ mod tests {
     fn at_80_pct_voting_value_boundary_applies() {
         // Exactly 80% voting + 80% value → meets § 332(b)(2).
         let r = compute(&input(
-            8000,
-            8000,
-            true,
-            true,
-            500_000_00,
-            300_000_00,
-            200_000_00,
+            8000, 8000, true, true, 500_000_00, 300_000_00, 200_000_00,
         ));
         assert!(r.section_332_applies);
     }
@@ -216,13 +204,7 @@ mod tests {
     #[test]
     fn at_79_99_pct_voting_below_threshold_fails() {
         let r = compute(&input(
-            7999,
-            8000,
-            true,
-            true,
-            500_000_00,
-            300_000_00,
-            200_000_00,
+            7999, 8000, true, true, 500_000_00, 300_000_00, 200_000_00,
         ));
         assert!(!r.section_332_applies);
         assert!(!r.voting_test_satisfied);
@@ -237,13 +219,7 @@ mod tests {
     #[test]
     fn at_79_99_pct_value_below_threshold_fails() {
         let r = compute(&input(
-            8000,
-            7999,
-            true,
-            true,
-            500_000_00,
-            300_000_00,
-            200_000_00,
+            8000, 7999, true, true, 500_000_00, 300_000_00, 200_000_00,
         ));
         assert!(!r.section_332_applies);
         assert!(!r.value_test_satisfied);
@@ -252,13 +228,7 @@ mod tests {
     #[test]
     fn continuous_ownership_not_maintained_fails() {
         let r = compute(&input(
-            10000,
-            10000,
-            false,
-            true,
-            500_000_00,
-            300_000_00,
-            200_000_00,
+            10000, 10000, false, true, 500_000_00, 300_000_00, 200_000_00,
         ));
         assert!(!r.section_332_applies);
         assert!(!r.continuous_ownership_satisfied);
@@ -267,13 +237,7 @@ mod tests {
     #[test]
     fn incomplete_liquidation_fails() {
         let r = compute(&input(
-            10000,
-            10000,
-            true,
-            false,
-            500_000_00,
-            300_000_00,
-            200_000_00,
+            10000, 10000, true, false, 500_000_00, 300_000_00, 200_000_00,
         ));
         assert!(!r.section_332_applies);
         assert!(!r.complete_liquidation_satisfied);
@@ -284,46 +248,22 @@ mod tests {
         // Test each prong individually fails the whole test.
         // Voting < 80%.
         let r_v = compute(&input(
-            7900,
-            10000,
-            true,
-            true,
-            100_000_00,
-            50_000_00,
-            10_000_00,
+            7900, 10000, true, true, 100_000_00, 50_000_00, 10_000_00,
         ));
         assert!(!r_v.section_332_applies);
         // Value < 80%.
         let r_val = compute(&input(
-            10000,
-            7900,
-            true,
-            true,
-            100_000_00,
-            50_000_00,
-            10_000_00,
+            10000, 7900, true, true, 100_000_00, 50_000_00, 10_000_00,
         ));
         assert!(!r_val.section_332_applies);
         // Not continuous.
         let r_c = compute(&input(
-            10000,
-            10000,
-            false,
-            true,
-            100_000_00,
-            50_000_00,
-            10_000_00,
+            10000, 10000, false, true, 100_000_00, 50_000_00, 10_000_00,
         ));
         assert!(!r_c.section_332_applies);
         // Not complete.
         let r_complete = compute(&input(
-            10000,
-            10000,
-            true,
-            false,
-            100_000_00,
-            50_000_00,
-            10_000_00,
+            10000, 10000, true, false, 100_000_00, 50_000_00, 10_000_00,
         ));
         assert!(!r_complete.section_332_applies);
     }
@@ -381,13 +321,7 @@ mod tests {
     fn parent_loss_when_332_fails_and_fmv_below_stock_basis() {
         // FMV $100K, stock basis $300K → $200K LOSS on stock surrender.
         let r = compute(&input(
-            7000,
-            7000,
-            true,
-            true,
-            100_000_00,
-            50_000_00,
-            300_000_00,
+            7000, 7000, true, true, 100_000_00, 50_000_00, 300_000_00,
         ));
         assert!(!r.section_332_applies);
         assert_eq!(r.parent_gain_or_loss_recognized_cents, -200_000_00);
@@ -396,26 +330,14 @@ mod tests {
     #[test]
     fn citations_pin_correct_authorities() {
         let r_applies = compute(&input(
-            10000,
-            10000,
-            true,
-            true,
-            100_000_00,
-            50_000_00,
-            10_000_00,
+            10000, 10000, true, true, 100_000_00, 50_000_00, 10_000_00,
         ));
         assert!(r_applies.citation.contains("§ 332(a)"));
         assert!(r_applies.citation.contains("§ 337(a)"));
         assert!(r_applies.citation.contains("§ 334(b)"));
 
         let r_fails = compute(&input(
-            7000,
-            7000,
-            true,
-            true,
-            100_000_00,
-            50_000_00,
-            10_000_00,
+            7000, 7000, true, true, 100_000_00, 50_000_00, 10_000_00,
         ));
         assert!(r_fails.citation.contains("§ 331"));
         assert!(r_fails.citation.contains("§ 336"));
@@ -452,7 +374,13 @@ mod tests {
         // (1) Parent no gain; subsidiary no gain.
         // (2) Parent takes $400K carryover basis (NOT $1M FMV).
         let r = compute(&input(
-            10000, 10000, true, true, 1_000_000_00, 400_000_00, 200_000_00,
+            10000,
+            10000,
+            true,
+            true,
+            1_000_000_00,
+            400_000_00,
+            200_000_00,
         ));
         assert_eq!(r.parent_gain_or_loss_recognized_cents, 0);
         assert_eq!(r.subsidiary_gain_or_loss_recognized_cents, 0);
@@ -463,7 +391,13 @@ mod tests {
     fn worked_example_failed_liquidation_recognizes_everything() {
         // Parent owns only 75% — § 332 fails. Same fact pattern.
         let r = compute(&input(
-            7500, 7500, true, true, 1_000_000_00, 400_000_00, 200_000_00,
+            7500,
+            7500,
+            true,
+            true,
+            1_000_000_00,
+            400_000_00,
+            200_000_00,
         ));
         // Parent: $1M FMV − $200K stock basis = $800K gain.
         assert_eq!(r.parent_gain_or_loss_recognized_cents, 800_000_00);

@@ -115,7 +115,10 @@ const FL_THREE_MONTHS_RENT_MULTIPLIER: u64 = 3;
 
 #[must_use]
 pub fn check(input: &Input) -> Output {
-    if matches!(input.lockout_method, LockoutMethod::NoLockoutCourtProcessUsed) {
+    if matches!(
+        input.lockout_method,
+        LockoutMethod::NoLockoutCourtProcessUsed
+    ) {
         return Output {
             severity: Severity::NoLockoutLawfulCourtProcess,
             estimated_landlord_exposure_cents: 0,
@@ -213,8 +216,9 @@ pub fn check(input: &Input) -> Output {
             }
         }
         Jurisdiction::NewYork => {
-            let treble_property =
-                input.tenant_property_damage_cents.saturating_mul(NY_TREBLE_MULTIPLIER);
+            let treble_property = input
+                .tenant_property_damage_cents
+                .saturating_mul(NY_TREBLE_MULTIPLIER);
             let exposure =
                 treble_property.saturating_add(input.alternative_accommodation_cost_cents);
             Output {
@@ -236,8 +240,9 @@ pub fn check(input: &Input) -> Output {
             }
         }
         Jurisdiction::Washington => {
-            let treble_rent =
-                input.monthly_rent_cents.saturating_mul(WA_TREBLE_RENT_MULTIPLIER);
+            let treble_rent = input
+                .monthly_rent_cents
+                .saturating_mul(WA_TREBLE_RENT_MULTIPLIER);
             let exposure = treble_rent.max(input.tenant_property_damage_cents);
             Output {
                 severity: Severity::WashingtonRcw59_18_290TripleMonthlyRentViolation,
@@ -256,8 +261,9 @@ pub fn check(input: &Input) -> Output {
             }
         }
         Jurisdiction::Florida => {
-            let three_months_rent =
-                input.monthly_rent_cents.saturating_mul(FL_THREE_MONTHS_RENT_MULTIPLIER);
+            let three_months_rent = input
+                .monthly_rent_cents
+                .saturating_mul(FL_THREE_MONTHS_RENT_MULTIPLIER);
             let exposure = three_months_rent.max(input.tenant_property_damage_cents);
             Output {
                 severity: Severity::FloridaStat83_67ThreeMonthsRentViolation,
@@ -276,8 +282,7 @@ pub fn check(input: &Input) -> Output {
             }
         }
         Jurisdiction::Illinois => Output {
-            severity:
-                Severity::IllinoisForcibleEntryDetainerCommonLawWrongfulEvictionViolation,
+            severity: Severity::IllinoisForcibleEntryDetainerCommonLawWrongfulEvictionViolation,
             estimated_landlord_exposure_cents: input.tenant_property_damage_cents,
             note: format!(
                 "Illinois Forcible Entry and Detainer Act (735 ILCS 5/9-101 et seq.) requires \
@@ -365,7 +370,10 @@ mod tests {
         let mut input = base();
         input.jurisdiction = Jurisdiction::NewYork;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::NewYorkRpapl853TrebleDamagesViolation);
+        assert_eq!(
+            output.severity,
+            Severity::NewYorkRpapl853TrebleDamagesViolation
+        );
         // $2,000 property × 3 = $6,000 + $5,000 alternative accommodation = $11,000
         assert_eq!(output.estimated_landlord_exposure_cents, 11_000_00);
         assert!(output.note.contains("RPAPL § 853"));
@@ -394,7 +402,10 @@ mod tests {
         input.jurisdiction = Jurisdiction::Texas;
         input.texas_safe_harbor = TexasSafeHarbor::BonaFideRepairsOrEmergency;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::TexasSafeHarborSatisfiedNoViolation);
+        assert_eq!(
+            output.severity,
+            Severity::TexasSafeHarborSatisfiedNoViolation
+        );
         assert_eq!(output.estimated_landlord_exposure_cents, 0);
         assert!(output.note.contains("bona-fide repairs"));
     }
@@ -406,7 +417,10 @@ mod tests {
         input.texas_safe_harbor =
             TexasSafeHarbor::RentDelinquentLockChangeStrictProceduralCompliance;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::TexasSafeHarborSatisfiedNoViolation);
+        assert_eq!(
+            output.severity,
+            Severity::TexasSafeHarborSatisfiedNoViolation
+        );
         assert_eq!(output.estimated_landlord_exposure_cents, 0);
     }
 

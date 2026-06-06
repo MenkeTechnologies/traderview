@@ -31,12 +31,17 @@ pub struct Bar {
 pub fn compute(bars: &[Bar]) -> Vec<Option<f64>> {
     let n = bars.len();
     let mut out = vec![None; n];
-    if n == 0 { return out; }
+    if n == 0 {
+        return out;
+    }
     let mut adl = 0.0_f64;
     for i in 0..n {
         let b = bars[i];
-        if !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()
-            || !b.volume.is_finite() {
+        if !b.high.is_finite()
+            || !b.low.is_finite()
+            || !b.close.is_finite()
+            || !b.volume.is_finite()
+        {
             out[i] = Some(adl);
             continue;
         }
@@ -55,7 +60,12 @@ mod tests {
     use super::*;
 
     fn b(h: f64, l: f64, c: f64, v: f64) -> Bar {
-        Bar { high: h, low: l, close: c, volume: v }
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+            volume: v,
+        }
     }
 
     #[test]
@@ -98,7 +108,7 @@ mod tests {
     fn zero_range_bar_contributes_nothing() {
         let mut bars = vec![b(101.0, 99.0, 101.0, 1000.0); 5];
         // ADL after bar 5 = 5*1000 = 5000.
-        bars.push(b(100.0, 100.0, 100.0, 1000.0));    // doji
+        bars.push(b(100.0, 100.0, 100.0, 1000.0)); // doji
         let out = compute(&bars);
         assert!((out[5].unwrap() - 5_000.0).abs() < 1e-9);
     }
@@ -110,7 +120,7 @@ mod tests {
         let out = compute(&bars);
         let prev = out[2].unwrap();
         let cur = out[3].unwrap();
-        assert_eq!(prev, cur);    // NaN bar should not change ADL.
+        assert_eq!(prev, cur); // NaN bar should not change ADL.
     }
 
     #[test]

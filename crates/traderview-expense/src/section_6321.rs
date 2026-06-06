@@ -299,9 +299,10 @@ mod tests {
     #[test]
     fn note_pins_section_6322_period_of_lien() {
         let r = check(&all_three_elements());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6322")
-            && n.contains("lapse of time")
-            && n.contains("§ 6502")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6322") && n.contains("lapse of time") && n.contains("§ 6502")));
     }
 
     #[test]

@@ -38,7 +38,11 @@ pub struct CotConfig {
 
 impl Default for CotConfig {
     fn default() -> Self {
-        Self { lookback_weeks: 156, extreme_low_pct: 10.0, extreme_high_pct: 90.0 }
+        Self {
+            lookback_weeks: 156,
+            extreme_low_pct: 10.0,
+            extreme_high_pct: 90.0,
+        }
     }
 }
 
@@ -59,10 +63,10 @@ pub struct CotIndex {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Signal {
-    CommercialExtremeLong,    // bullish (smart money buying)
-    CommercialExtremeShort,   // bearish (smart money distributing)
-    LargeSpecExtremeLong,     // crowded long → top warning
-    LargeSpecExtremeShort,    // crowded short → bottom warning
+    CommercialExtremeLong,  // bullish (smart money buying)
+    CommercialExtremeShort, // bearish (smart money distributing)
+    LargeSpecExtremeLong,   // crowded long → top warning
+    LargeSpecExtremeShort,  // crowded short → bottom warning
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -98,12 +102,22 @@ pub fn analyze(entries: &[WeeklyEntry], cfg: &CotConfig) -> CotReport {
     // Signals only at latest bar.
     if n > 0 {
         if let Some(v) = commercial_idx[n - 1] {
-            if v >= cfg.extreme_high_pct { report.signals_at_latest.push(Signal::CommercialExtremeLong); }
-            if v <= cfg.extreme_low_pct  { report.signals_at_latest.push(Signal::CommercialExtremeShort); }
+            if v >= cfg.extreme_high_pct {
+                report.signals_at_latest.push(Signal::CommercialExtremeLong);
+            }
+            if v <= cfg.extreme_low_pct {
+                report
+                    .signals_at_latest
+                    .push(Signal::CommercialExtremeShort);
+            }
         }
         if let Some(v) = large_idx[n - 1] {
-            if v >= cfg.extreme_high_pct { report.signals_at_latest.push(Signal::LargeSpecExtremeLong); }
-            if v <= cfg.extreme_low_pct  { report.signals_at_latest.push(Signal::LargeSpecExtremeShort); }
+            if v >= cfg.extreme_high_pct {
+                report.signals_at_latest.push(Signal::LargeSpecExtremeLong);
+            }
+            if v <= cfg.extreme_low_pct {
+                report.signals_at_latest.push(Signal::LargeSpecExtremeShort);
+            }
         }
     }
     report.net_positions = NetPositions {
@@ -119,8 +133,8 @@ pub fn analyze(entries: &[WeeklyEntry], cfg: &CotConfig) -> CotReport {
     report
 }
 
-/// Rolling percent-rank: at each i, "% of last `period` values that
-/// are strictly less than values[i]" — returns 0..100, None for warmup.
+/// Rolling percent-rank: at each `i`, "% of last `period` values that
+/// are strictly less than `values\[i\]`" — returns 0..100, None for warmup.
 fn rolling_percent_rank(values: &[i64], period: usize) -> Vec<Option<f64>> {
     let n = values.len();
     let mut out = vec![None; n];
@@ -143,9 +157,12 @@ mod tests {
 
     fn e(cl: i64, cs: i64, ll: i64, ls: i64, sl: i64, ss: i64) -> WeeklyEntry {
         WeeklyEntry {
-            commercial_long: cl, commercial_short: cs,
-            large_spec_long: ll, large_spec_short: ls,
-            small_spec_long: sl, small_spec_short: ss,
+            commercial_long: cl,
+            commercial_short: cs,
+            large_spec_long: ll,
+            large_spec_short: ls,
+            small_spec_long: sl,
+            small_spec_short: ss,
         }
     }
 
@@ -159,21 +176,37 @@ mod tests {
     fn invalid_config_returns_default() {
         let entries = vec![e(10_000, 5_000, 5_000, 10_000, 1_000, 500); 200];
         for cfg in [
-            CotConfig { lookback_weeks: 0, ..Default::default() },
-            CotConfig { extreme_low_pct: -1.0, ..Default::default() },
-            CotConfig { extreme_high_pct: 200.0, ..Default::default() },
-            CotConfig { extreme_low_pct: 90.0, extreme_high_pct: 10.0, ..Default::default() },
+            CotConfig {
+                lookback_weeks: 0,
+                ..Default::default()
+            },
+            CotConfig {
+                extreme_low_pct: -1.0,
+                ..Default::default()
+            },
+            CotConfig {
+                extreme_high_pct: 200.0,
+                ..Default::default()
+            },
+            CotConfig {
+                extreme_low_pct: 90.0,
+                extreme_high_pct: 10.0,
+                ..Default::default()
+            },
         ] {
             let r = analyze(&entries, &cfg);
-            assert!(r.index.commercial_index.is_empty(),
-                "config {:?} should return empty", cfg.lookback_weeks);
+            assert!(
+                r.index.commercial_index.is_empty(),
+                "config {:?} should return empty",
+                cfg.lookback_weeks
+            );
         }
     }
 
     #[test]
     fn too_few_weeks_returns_no_signals_but_keeps_nets() {
         let entries = vec![e(10_000, 5_000, 5_000, 10_000, 1_000, 500); 50];
-        let r = analyze(&entries, &CotConfig::default());    // lookback=156
+        let r = analyze(&entries, &CotConfig::default()); // lookback=156
         assert!(r.signals_at_latest.is_empty());
         assert_eq!(r.net_positions.commercial_net.len(), 50);
     }
@@ -181,7 +214,13 @@ mod tests {
     #[test]
     fn net_positions_compute_correctly() {
         let entries = vec![e(15_000, 5_000, 3_000, 8_000, 2_000, 1_500)];
-        let r = analyze(&entries, &CotConfig { lookback_weeks: 1, ..Default::default() });
+        let r = analyze(
+            &entries,
+            &CotConfig {
+                lookback_weeks: 1,
+                ..Default::default()
+            },
+        );
         assert_eq!(r.net_positions.commercial_net[0], 10_000);
         assert_eq!(r.net_positions.large_spec_net[0], -5_000);
         assert_eq!(r.net_positions.small_spec_net[0], 500);
@@ -209,9 +248,15 @@ mod tests {
 
     #[test]
     fn saturating_subtraction_avoids_overflow() {
-        let entries = vec![e(i64::MAX, -1, 0, 0, 0, 0); 1];    // long − (−1) would overflow i64
-        let r = analyze(&entries, &CotConfig { lookback_weeks: 1, ..Default::default() });
-        assert_eq!(r.net_positions.commercial_net[0], i64::MAX);    // saturated
+        let entries = vec![e(i64::MAX, -1, 0, 0, 0, 0); 1]; // long − (−1) would overflow i64
+        let r = analyze(
+            &entries,
+            &CotConfig {
+                lookback_weeks: 1,
+                ..Default::default()
+            },
+        );
+        assert_eq!(r.net_positions.commercial_net[0], i64::MAX); // saturated
     }
 
     #[test]

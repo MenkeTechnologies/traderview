@@ -324,37 +324,41 @@ pub fn check(
 
     let retention_period_compliant = input.retention_days <= recommended_retention_max_days;
 
-    let bipa_statutory_damages_cents: u64 =
-        if matches!(input.jurisdiction, Jurisdiction::Illinois)
-            && input.biometric_system_deployed
-            && !input.bipa_written_consent
-        {
-            let per_violation: u64 = if input.intentional_reckless_violation {
-                500_000
-            } else {
-                100_000
-            };
-            per_violation.saturating_mul(input.tenants_affected as u64)
+    let bipa_statutory_damages_cents: u64 = if matches!(input.jurisdiction, Jurisdiction::Illinois)
+        && input.biometric_system_deployed
+        && !input.bipa_written_consent
+    {
+        let per_violation: u64 = if input.intentional_reckless_violation {
+            500_000
         } else {
-            0
+            100_000
         };
+        per_violation.saturating_mul(input.tenants_affected as u64)
+    } else {
+        0
+    };
 
-    let ccpa_breach_damages_cents: u64 =
-        if matches!(input.jurisdiction, Jurisdiction::California)
-            && input.biometric_system_deployed
-            && !input.ccpa_notice_provided
-        {
-            (75_000_u64).saturating_mul(input.tenants_affected as u64)
-        } else {
-            0
-        };
+    let ccpa_breach_damages_cents: u64 = if matches!(input.jurisdiction, Jurisdiction::California)
+        && input.biometric_system_deployed
+        && !input.ccpa_notice_provided
+    {
+        (75_000_u64).saturating_mul(input.tenants_affected as u64)
+    } else {
+        0
+    };
 
     if !surveillance_location_permitted {
         let prohibition_reason = if input.hidden_camera {
             "HIDDEN CAMERAS UNIVERSALLY PROHIBITED — cameras not disclosed to tenants violate Restatement (Second) of Torts § 652B intrusion upon seclusion; criminal trespass risk; statutory state-specific damages stack"
-        } else if matches!(input.surveillance_location, SurveillanceLocation::HighPrivacyArea) {
+        } else if matches!(
+            input.surveillance_location,
+            SurveillanceLocation::HighPrivacyArea
+        ) {
             "HIGH-PRIVACY-AREA SURVEILLANCE PROHIBITED — restrooms, pool changing areas, tenant-specific storage; universal prohibition based on reasonable expectation of privacy; Restatement § 652B intrusion + statutory state-specific damages"
-        } else if matches!(input.surveillance_location, SurveillanceLocation::UnitInterior) {
+        } else if matches!(
+            input.surveillance_location,
+            SurveillanceLocation::UnitInterior
+        ) {
             "UNIT INTERIOR SURVEILLANCE PROHIBITED — generally requires express tenant consent + legitimate purpose; common-law intrusion-upon-seclusion claim under Restatement § 652B; potential criminal trespass; companion to tenant_emotional_distress_damages iter 453 IIED"
         } else {
             "Surveillance location prohibited"
@@ -397,9 +401,7 @@ pub fn check(
         };
         failure_reasons.push(format!(
             "RETENTION PERIOD EXCEEDS LIMIT — {} days exceeds {}-day cap; {}",
-            input.retention_days,
-            recommended_retention_max_days,
-            retention_rule
+            input.retention_days, recommended_retention_max_days, retention_rule
         ));
     }
 
@@ -488,10 +490,12 @@ mod tests {
         i.surveillance_location = SurveillanceLocation::UnitInterior;
         let r = check(&i);
         assert!(!r.surveillance_location_permitted);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("UNIT INTERIOR SURVEILLANCE PROHIBITED")
-            && f.contains("§ 652B")
-            && f.contains("tenant_emotional_distress_damages iter 453")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("UNIT INTERIOR SURVEILLANCE PROHIBITED")
+                && f.contains("§ 652B")
+                && f.contains("tenant_emotional_distress_damages iter 453")));
     }
 
     #[test]
@@ -500,9 +504,11 @@ mod tests {
         i.surveillance_location = SurveillanceLocation::HighPrivacyArea;
         let r = check(&i);
         assert!(!r.surveillance_location_permitted);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("HIGH-PRIVACY-AREA SURVEILLANCE PROHIBITED")
-            && f.contains("Restatement § 652B")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("HIGH-PRIVACY-AREA SURVEILLANCE PROHIBITED")
+                && f.contains("Restatement § 652B")));
     }
 
     #[test]
@@ -511,8 +517,10 @@ mod tests {
         i.hidden_camera = true;
         let r = check(&i);
         assert!(!r.surveillance_location_permitted);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("HIDDEN CAMERAS UNIVERSALLY PROHIBITED")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("HIDDEN CAMERAS UNIVERSALLY PROHIBITED")));
     }
 
     #[test]
@@ -524,10 +532,12 @@ mod tests {
         let r = check(&i);
         assert!(!r.bipa_consent_compliant);
         assert_eq!(r.bipa_statutory_damages_cents, 100_000 * 50);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("740 ILCS 14/15 BIPA VIOLATION")
-            && f.contains("740 ILCS 14/15(b)")
-            && f.contains("Rosenbach v. Six Flags")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("740 ILCS 14/15 BIPA VIOLATION")
+                && f.contains("740 ILCS 14/15(b)")
+                && f.contains("Rosenbach v. Six Flags")));
     }
 
     #[test]
@@ -551,9 +561,12 @@ mod tests {
         let r = check(&i);
         assert!(!r.ccpa_notice_compliant);
         assert_eq!(r.ccpa_breach_damages_cents, 75_000 * 100);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 1798.100(b) CCPA NOTICE VIOLATION")
-            && f.contains("§ 1798.150")));
+        assert!(
+            r.failure_reasons
+                .iter()
+                .any(|f| f.contains("§ 1798.100(b) CCPA NOTICE VIOLATION")
+                    && f.contains("§ 1798.150"))
+        );
     }
 
     #[test]
@@ -572,8 +585,8 @@ mod tests {
         i.two_party_audio_consent = false;
         let r = check(&i);
         assert!(!r.two_party_audio_consent_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("AUDIO RECORDING TWO-PARTY CONSENT VIOLATION")
+        assert!(r.failure_reasons.iter().any(|f| f
+            .contains("AUDIO RECORDING TWO-PARTY CONSENT VIOLATION")
             && f.contains("18 U.S.C. § 2510")
             && f.contains("Cal. Penal Code § 632")
             && f.contains("720 ILCS 5/14-2")));
@@ -594,10 +607,12 @@ mod tests {
         i.retention_days = 1200;
         let r = check(&i);
         assert!(!r.retention_period_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("RETENTION PERIOD EXCEEDS LIMIT")
-            && f.contains("3 YEARS")
-            && f.contains("740 ILCS 14/15(a)")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("RETENTION PERIOD EXCEEDS LIMIT")
+                && f.contains("3 YEARS")
+                && f.contains("740 ILCS 14/15(a)")));
     }
 
     #[test]
@@ -607,9 +622,10 @@ mod tests {
         i.retention_days = 180;
         let r = check(&i);
         assert!(!r.retention_period_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 1798.105")
-            && f.contains("§ 1798.140")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1798.105") && f.contains("§ 1798.140")));
     }
 
     #[test]
@@ -619,9 +635,10 @@ mod tests {
         i.retention_days = 180;
         let r = check(&i);
         assert!(!r.retention_period_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 503.001")
-            && f.contains("30-90 days")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 503.001") && f.contains("30-90 days")));
     }
 
     #[test]
@@ -631,10 +648,12 @@ mod tests {
         i.sells_biometric_data = true;
         let r = check(&i);
         assert!(!r.bipa_consent_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("PROHIBITED SALE OF BIOMETRIC DATA")
-            && f.contains("740 ILCS 14/15(c)")
-            && f.contains("§ 503.001")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("PROHIBITED SALE OF BIOMETRIC DATA")
+                && f.contains("740 ILCS 14/15(c)")
+                && f.contains("§ 503.001")));
     }
 
     #[test]
@@ -644,9 +663,10 @@ mod tests {
         i.bipa_written_consent = false;
         i.tenants_affected = 50;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("STATUTORY DAMAGES EXPOSURE")
-            && f.contains("Rosenbach")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("STATUTORY DAMAGES EXPOSURE") && f.contains("Rosenbach")));
     }
 
     #[test]
@@ -693,7 +713,9 @@ mod tests {
         assert!(r.citation.contains("740 ILCS 14/15(d)"));
         assert!(r.citation.contains("740 ILCS 14/15(e)"));
         assert!(r.citation.contains("740 ILCS 14/20"));
-        assert!(r.citation.contains("Rosenbach v. Six Flags Entm't Corp., 129 N.E.3d 1197 (Ill. 2019)"));
+        assert!(r
+            .citation
+            .contains("Rosenbach v. Six Flags Entm't Corp., 129 N.E.3d 1197 (Ill. 2019)"));
         assert!(r.citation.contains("Tex. Bus. & Com. Code § 503.001"));
         assert!(r.citation.contains("Texas SB 9 of 2024"));
         assert!(r.citation.contains("Cal. Civ. Code § 1798.100"));
@@ -714,32 +736,35 @@ mod tests {
     #[test]
     fn note_pins_four_jurisdiction_framework() {
         let r = check(&il_compliant_common_area());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Four-jurisdiction framework")
-            && n.contains("ILLINOIS")
-            && n.contains("TEXAS")
-            && n.contains("CALIFORNIA")
-            && n.contains("DEFAULT")
-            && n.contains("Rosenbach")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Four-jurisdiction framework")
+                && n.contains("ILLINOIS")
+                && n.contains("TEXAS")
+                && n.contains("CALIFORNIA")
+                && n.contains("DEFAULT")
+                && n.contains("Rosenbach")));
     }
 
     #[test]
     fn note_pins_illinois_bipa_eight_elements() {
         let r = check(&il_compliant_common_area());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Illinois BIPA (740 ILCS 14/)")
-            && n.contains("WRITTEN CONSENT")
-            && n.contains("3 YEARS")
-            && n.contains("$1,000")
-            && n.contains("$5,000")
-            && n.contains("Rosenbach v. Six Flags")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Illinois BIPA (740 ILCS 14/)")
+                && n.contains("WRITTEN CONSENT")
+                && n.contains("3 YEARS")
+                && n.contains("$1,000")
+                && n.contains("$5,000")
+                && n.contains("Rosenbach v. Six Flags")));
     }
 
     #[test]
     fn note_pins_texas_cubi() {
         let r = check(&il_compliant_common_area());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Texas CUBI")
+        assert!(r.notes.iter().any(|n| n.contains("Texas CUBI")
             && n.contains("§ 503.001")
             && n.contains("$25,000")
             && n.contains("SB 9 of 2024")));
@@ -748,8 +773,7 @@ mod tests {
     #[test]
     fn note_pins_california_ccpa_cpra() {
         let r = check(&il_compliant_common_area());
-        assert!(r.notes.iter().any(|n|
-            n.contains("California CCPA + CPRA")
+        assert!(r.notes.iter().any(|n| n.contains("California CCPA + CPRA")
             && n.contains("§ 1798.140(c)(1)")
             && n.contains("$100-$750")
             && n.contains("§ 1708.5")));
@@ -758,16 +782,18 @@ mod tests {
     #[test]
     fn note_pins_restatement_652b_intrusion() {
         let r = check(&il_compliant_common_area());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Restatement (Second) of Torts § 652B")
-            && n.contains("HIGHLY OFFENSIVE")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Restatement (Second) of Torts § 652B")
+                && n.contains("HIGHLY OFFENSIVE")));
     }
 
     #[test]
     fn note_pins_retention_best_practice_six_elements() {
         let r = check(&il_compliant_common_area());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Video surveillance retention period best-practice framework")
+        assert!(r.notes.iter().any(|n| n
+            .contains("Video surveillance retention period best-practice framework")
             && n.contains("(6 elements)")
             && n.contains("30-90 days")
             && n.contains("BIOMETRIC FACIAL-RECOGNITION")
@@ -777,8 +803,8 @@ mod tests {
     #[test]
     fn note_pins_sensitive_areas_six_categories() {
         let r = check(&il_compliant_common_area());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Sensitive areas where surveillance is PROHIBITED")
+        assert!(r.notes.iter().any(|n| n
+            .contains("Sensitive areas where surveillance is PROHIBITED")
             && n.contains("HIDDEN CAMERAS")
             && n.contains("AUDIO RECORDING")
             && n.contains("18 U.S.C. § 2510")));
@@ -787,21 +813,25 @@ mod tests {
     #[test]
     fn note_pins_trader_fact_patterns_six() {
         let r = check(&il_compliant_common_area());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-landlord critical fact patterns")
-            && n.contains("$250,000 statutory damages")
-            && n.contains("$25,000 per violation")
-            && n.contains("PROHIBITED universally")
-            && n.contains("tenant_emotional_distress_damages iter 453")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-landlord critical fact patterns")
+                && n.contains("$250,000 statutory damages")
+                && n.contains("$25,000 per violation")
+                && n.contains("PROHIBITED universally")
+                && n.contains("tenant_emotional_distress_damages iter 453")));
     }
 
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&il_compliant_common_area());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Companion to security_camera_disclosure")
-            && n.contains("tenant_smart_lock_biometric_consent")
-            && n.contains("landlord_master_key_retention (iter 459")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Companion to security_camera_disclosure")
+                && n.contains("tenant_smart_lock_biometric_consent")
+                && n.contains("landlord_master_key_retention (iter 459")));
     }
 
     #[test]

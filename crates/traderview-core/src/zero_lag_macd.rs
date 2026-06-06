@@ -43,10 +43,17 @@ pub fn compute(
         slow_period,
         signal_period,
     };
-    if fast_period < 2 || slow_period < 2 || signal_period < 2
+    if fast_period < 2
+        || slow_period < 2
+        || signal_period < 2
         || fast_period >= slow_period
-        || n < slow_period + signal_period { return report; }
-    if closes.iter().any(|x| !x.is_finite()) { return report; }
+        || n < slow_period + signal_period
+    {
+        return report;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return report;
+    }
     let fast = zlema(closes, fast_period);
     let slow = zlema(closes, slow_period);
     for i in 0..n {
@@ -66,7 +73,9 @@ pub fn compute(
 fn zlema(series: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let lag = (period - 1) / 2;
     let p_f = period as f64;
     let k = 2.0 / (p_f + 1.0);
@@ -89,19 +98,32 @@ fn zlema(series: &[f64], period: usize) -> Vec<Option<f64>> {
 fn zlema_opt(series: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 { return out; }
+    if period == 0 {
+        return out;
+    }
     // Find first index with at least `period` consecutive Somes.
     let mut seed_end = None;
     let mut count = 0_usize;
     let mut seed_sum = 0.0_f64;
     for (i, v) in series.iter().enumerate() {
         match v {
-            Some(x) => { seed_sum += x; count += 1; }
-            None => { seed_sum = 0.0; count = 0; }
+            Some(x) => {
+                seed_sum += x;
+                count += 1;
+            }
+            None => {
+                seed_sum = 0.0;
+                count = 0;
+            }
         }
-        if count == period { seed_end = Some(i); break; }
+        if count == period {
+            seed_end = Some(i);
+            break;
+        }
     }
-    let Some(end) = seed_end else { return out; };
+    let Some(end) = seed_end else {
+        return out;
+    };
     let p_f = period as f64;
     let k = 2.0 / (p_f + 1.0);
     let lag = (period - 1) / 2;
@@ -147,7 +169,9 @@ mod tests {
     fn flat_market_yields_zero_macd() {
         let c = vec![100.0_f64; 80];
         let r = compute(&c, 12, 26, 9);
-        for v in r.macd.iter().flatten() { assert!(v.abs() < 1e-9); }
+        for v in r.macd.iter().flatten() {
+            assert!(v.abs() < 1e-9);
+        }
     }
 
     #[test]

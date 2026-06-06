@@ -41,23 +41,34 @@ pub struct BlackLittermanReport {
 pub fn solve(inputs: &BlackLittermanInputs) -> Option<BlackLittermanReport> {
     let n = inputs.equilibrium_returns.len();
     let k = inputs.view_returns.len();
-    if n == 0 || inputs.covariance.len() != n
+    if n == 0
+        || inputs.covariance.len() != n
         || inputs.covariance.iter().any(|r| r.len() != n)
         || inputs.equilibrium_returns.iter().any(|v| !v.is_finite())
-        || inputs.covariance.iter().any(|r| r.iter().any(|c| !c.is_finite()))
-        || !inputs.tau.is_finite() || inputs.tau <= 0.0
+        || inputs
+            .covariance
+            .iter()
+            .any(|r| r.iter().any(|c| !c.is_finite()))
+        || !inputs.tau.is_finite()
+        || inputs.tau <= 0.0
     {
         return None;
     }
-    if k > 0 && (
-        inputs.view_loadings.len() != k
+    if k > 0
+        && (inputs.view_loadings.len() != k
             || inputs.view_loadings.iter().any(|r| r.len() != n)
             || inputs.view_confidence.len() != k
             || inputs.view_confidence.iter().any(|r| r.len() != k)
             || inputs.view_returns.iter().any(|v| !v.is_finite())
-            || inputs.view_loadings.iter().any(|r| r.iter().any(|c| !c.is_finite()))
-            || inputs.view_confidence.iter().any(|r| r.iter().any(|c| !c.is_finite()))
-    ) {
+            || inputs
+                .view_loadings
+                .iter()
+                .any(|r| r.iter().any(|c| !c.is_finite()))
+            || inputs
+                .view_confidence
+                .iter()
+                .any(|r| r.iter().any(|c| !c.is_finite())))
+    {
         return None;
     }
     // No views → posterior == prior.
@@ -82,20 +93,30 @@ pub fn solve(inputs: &BlackLittermanInputs) -> Option<BlackLittermanReport> {
     let tau_sigma_inv_pi = matvec(&tau_sigma_inv, &inputs.equilibrium_returns);
     // PᵀΩ⁻¹Q
     let pt_omega_inv_q = matvec(&pt_omega_inv, &inputs.view_returns);
-    let rhs: Vec<f64> = tau_sigma_inv_pi.iter().zip(pt_omega_inv_q.iter())
-        .map(|(a, b)| a + b).collect();
+    let rhs: Vec<f64> = tau_sigma_inv_pi
+        .iter()
+        .zip(pt_omega_inv_q.iter())
+        .map(|(a, b)| a + b)
+        .collect();
     let posterior_returns = matvec(&a_inv, &rhs);
     // Posterior covariance = Σ + A⁻¹
     let posterior_cov = matadd(&inputs.covariance, &a_inv);
-    Some(BlackLittermanReport { posterior_returns, posterior_covariance: posterior_cov })
+    Some(BlackLittermanReport {
+        posterior_returns,
+        posterior_covariance: posterior_cov,
+    })
 }
 
 fn scale(m: &[Vec<f64>], s: f64) -> Vec<Vec<f64>> {
-    m.iter().map(|r| r.iter().map(|x| x * s).collect()).collect()
+    m.iter()
+        .map(|r| r.iter().map(|x| x * s).collect())
+        .collect()
 }
 
 fn transpose(m: &[Vec<f64>]) -> Vec<Vec<f64>> {
-    if m.is_empty() { return Vec::new(); }
+    if m.is_empty() {
+        return Vec::new();
+    }
     let rows = m.len();
     let cols = m[0].len();
     let mut out = vec![vec![0.0; rows]; cols];
@@ -125,18 +146,23 @@ fn matmul(a: &[Vec<f64>], b: &[Vec<f64>]) -> Vec<Vec<f64>> {
 }
 
 fn matvec(m: &[Vec<f64>], v: &[f64]) -> Vec<f64> {
-    m.iter().map(|r| r.iter().zip(v.iter()).map(|(a, b)| a * b).sum()).collect()
+    m.iter()
+        .map(|r| r.iter().zip(v.iter()).map(|(a, b)| a * b).sum())
+        .collect()
 }
 
 fn matadd(a: &[Vec<f64>], b: &[Vec<f64>]) -> Vec<Vec<f64>> {
-    a.iter().zip(b.iter()).map(|(ra, rb)| {
-        ra.iter().zip(rb.iter()).map(|(x, y)| x + y).collect()
-    }).collect()
+    a.iter()
+        .zip(b.iter())
+        .map(|(ra, rb)| ra.iter().zip(rb.iter()).map(|(x, y)| x + y).collect())
+        .collect()
 }
 
 fn invert(m: &[Vec<f64>]) -> Option<Vec<Vec<f64>>> {
     let n = m.len();
-    if n == 0 || m.iter().any(|r| r.len() != n) { return None; }
+    if n == 0 || m.iter().any(|r| r.len() != n) {
+        return None;
+    }
     let mut aug = vec![vec![0.0_f64; 2 * n]; n];
     for i in 0..n {
         for j in 0..n {
@@ -147,18 +173,30 @@ fn invert(m: &[Vec<f64>]) -> Option<Vec<Vec<f64>>> {
     for i in 0..n {
         let mut pivot = i;
         for r in (i + 1)..n {
-            if aug[r][i].abs() > aug[pivot][i].abs() { pivot = r; }
+            if aug[r][i].abs() > aug[pivot][i].abs() {
+                pivot = r;
+            }
         }
-        if aug[pivot][i].abs() < 1e-18 { return None; }
+        if aug[pivot][i].abs() < 1e-18 {
+            return None;
+        }
         aug.swap(i, pivot);
         let div = aug[i][i];
-        for v in aug[i].iter_mut() { *v /= div; }
+        for v in aug[i].iter_mut() {
+            *v /= div;
+        }
         for r in 0..n {
-            if r == i { continue; }
+            if r == i {
+                continue;
+            }
             let f = aug[r][i];
-            if f == 0.0 { continue; }
+            if f == 0.0 {
+                continue;
+            }
             let pivot_row = aug[i].clone();
-            for (j, v) in aug[r].iter_mut().enumerate() { *v -= f * pivot_row[j]; }
+            for (j, v) in aug[r].iter_mut().enumerate() {
+                *v -= f * pivot_row[j];
+            }
         }
     }
     Some(aug.into_iter().map(|r| r[n..].to_vec()).collect())
@@ -170,12 +208,9 @@ mod tests {
 
     fn inputs() -> BlackLittermanInputs {
         BlackLittermanInputs {
-            covariance: vec![
-                vec![0.04, 0.01],
-                vec![0.01, 0.09],
-            ],
+            covariance: vec![vec![0.04, 0.01], vec![0.01, 0.09]],
             equilibrium_returns: vec![0.05, 0.07],
-            view_loadings: vec![vec![1.0, -1.0]],    // view: asset 1 outperforms asset 2 by Q.
+            view_loadings: vec![vec![1.0, -1.0]], // view: asset 1 outperforms asset 2 by Q.
             view_returns: vec![0.02],
             view_confidence: vec![vec![0.001]],
             tau: 0.05,
@@ -201,7 +236,7 @@ mod tests {
         bad.equilibrium_returns = vec![0.05];
         assert!(solve(&bad).is_none());
         let mut bad = inputs();
-        bad.view_loadings = vec![vec![1.0, -1.0, 0.0]];    // wrong dim
+        bad.view_loadings = vec![vec![1.0, -1.0, 0.0]]; // wrong dim
         assert!(solve(&bad).is_none());
     }
 
@@ -224,19 +259,25 @@ mod tests {
         // View was "asset 1 − asset 2 = 0.02". The posterior difference
         // should be close to that.
         let diff = r.posterior_returns[0] - r.posterior_returns[1];
-        assert!((diff - 0.02).abs() < 0.01, "expected ≈ 0.02 diff, got {diff}");
+        assert!(
+            (diff - 0.02).abs() < 0.01,
+            "expected ≈ 0.02 diff, got {diff}"
+        );
     }
 
     #[test]
     fn low_confidence_view_leaves_posterior_close_to_prior() {
         let mut low_conf = inputs();
-        low_conf.view_confidence = vec![vec![1e8]];    // very loose view
+        low_conf.view_confidence = vec![vec![1e8]]; // very loose view
         let r = solve(&low_conf).unwrap();
         let diff0 = (r.posterior_returns[0] - 0.05).abs();
         let diff1 = (r.posterior_returns[1] - 0.07).abs();
-        assert!(diff0 < 0.001 && diff1 < 0.001,
+        assert!(
+            diff0 < 0.001 && diff1 < 0.001,
             "low-conf view should leave posterior ≈ prior: got {} {}",
-            r.posterior_returns[0], r.posterior_returns[1]);
+            r.posterior_returns[0],
+            r.posterior_returns[1]
+        );
     }
 
     #[test]

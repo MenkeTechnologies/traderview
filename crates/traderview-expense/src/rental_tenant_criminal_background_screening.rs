@@ -140,7 +140,10 @@ const HUD_RECOMMENDED_LOOKBACK_DAYS: u32 = 7 * 365;
 pub fn check(input: &Input) -> Output {
     let (misdemeanor_lookback, felony_lookback) = lookback_windows(input.jurisdiction);
 
-    if matches!(input.record_type_considered, RecordTypeConsidered::NoCriminalHistoryIdentified) {
+    if matches!(
+        input.record_type_considered,
+        RecordTypeConsidered::NoCriminalHistoryIdentified
+    ) {
         return Output {
             severity: Severity::NoCriminalHistoryNoSection804OrFchaViolation,
             misdemeanor_lookback_days: misdemeanor_lookback,
@@ -287,9 +290,9 @@ fn lookback_windows(jurisdiction: Jurisdiction) -> (u32, u32) {
         }
         Jurisdiction::California => (CA_LOOKBACK_DAYS, CA_LOOKBACK_DAYS),
         Jurisdiction::NewJersey => (NJ_MISDEMEANOR_LOOKBACK_DAYS, NJ_FELONY_LOOKBACK_DAYS),
-        Jurisdiction::Illinois
-        | Jurisdiction::HudFederalFloor
-        | Jurisdiction::Default => (HUD_RECOMMENDED_LOOKBACK_DAYS, HUD_RECOMMENDED_LOOKBACK_DAYS),
+        Jurisdiction::Illinois | Jurisdiction::HudFederalFloor | Jurisdiction::Default => {
+            (HUD_RECOMMENDED_LOOKBACK_DAYS, HUD_RECOMMENDED_LOOKBACK_DAYS)
+        }
     }
 }
 
@@ -311,10 +314,8 @@ mod tests {
     fn base() -> Input {
         Input {
             jurisdiction: Jurisdiction::NewYorkCityLocalLaw24,
-            screening_stage:
-                ScreeningStage::AfterOtherQualificationsConfirmedConditionalStage,
-            record_type_considered:
-                RecordTypeConsidered::MisdemeanorConvictionWithinLookbackWindow,
+            screening_stage: ScreeningStage::AfterOtherQualificationsConfirmedConditionalStage,
+            record_type_considered: RecordTypeConsidered::MisdemeanorConvictionWithinLookbackWindow,
             individualized_assessment_status:
                 IndividualizedAssessmentStatus::AssessmentPerformedAndDocumented,
             days_since_conviction: 365,
@@ -406,7 +407,10 @@ mod tests {
     fn nyc_misdemeanor_3_year_lookback_window() {
         let input = base();
         let output = check(&input);
-        assert_eq!(output.misdemeanor_lookback_days, NYC_MISDEMEANOR_LOOKBACK_DAYS);
+        assert_eq!(
+            output.misdemeanor_lookback_days,
+            NYC_MISDEMEANOR_LOOKBACK_DAYS
+        );
     }
 
     #[test]
@@ -430,7 +434,10 @@ mod tests {
         let mut input = base();
         input.jurisdiction = Jurisdiction::NewJersey;
         let output = check(&input);
-        assert_eq!(output.misdemeanor_lookback_days, NJ_MISDEMEANOR_LOOKBACK_DAYS);
+        assert_eq!(
+            output.misdemeanor_lookback_days,
+            NJ_MISDEMEANOR_LOOKBACK_DAYS
+        );
     }
 
     #[test]
@@ -496,8 +503,7 @@ mod tests {
     #[test]
     fn felony_within_lookback_window_compliant() {
         let mut input = base();
-        input.record_type_considered =
-            RecordTypeConsidered::FelonyConvictionWithinLookbackWindow;
+        input.record_type_considered = RecordTypeConsidered::FelonyConvictionWithinLookbackWindow;
         input.days_since_conviction = 4 * 365;
         let output = check(&input);
         assert_eq!(
@@ -509,8 +515,7 @@ mod tests {
     #[test]
     fn nyc_felony_at_5_year_boundary_compliant() {
         let mut input = base();
-        input.record_type_considered =
-            RecordTypeConsidered::FelonyConvictionWithinLookbackWindow;
+        input.record_type_considered = RecordTypeConsidered::FelonyConvictionWithinLookbackWindow;
         input.days_since_conviction = 5 * 365;
         let output = check(&input);
         assert_eq!(
@@ -522,8 +527,7 @@ mod tests {
     #[test]
     fn nyc_felony_outside_5_year_window_violation() {
         let mut input = base();
-        input.record_type_considered =
-            RecordTypeConsidered::FelonyConvictionOutsideLookbackWindow;
+        input.record_type_considered = RecordTypeConsidered::FelonyConvictionOutsideLookbackWindow;
         input.days_since_conviction = 6 * 365;
         let output = check(&input);
         assert_eq!(

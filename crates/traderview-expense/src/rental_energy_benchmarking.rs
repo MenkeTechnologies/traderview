@@ -118,14 +118,12 @@ fn check_nyc(input: &RentalEnergyBenchmarkingInput) -> RentalEnergyBenchmarkingR
             .to_string(),
     ];
 
-    let in_scope = input.building_sq_ft > 25_000
-        || input.group_buildings_aggregate_sq_ft > 100_000;
+    let in_scope = input.building_sq_ft > 25_000 || input.group_buildings_aggregate_sq_ft > 100_000;
 
     let mut benchmarking_penalty: i64 = 0;
     if in_scope && !input.benchmarking_report_submitted_on_time {
         let base_penalty: i64 = 50_000;
-        let quarterly_penalty: i64 =
-            (input.quarters_past_deadline as i64).saturating_mul(50_000);
+        let quarterly_penalty: i64 = (input.quarters_past_deadline as i64).saturating_mul(50_000);
         let total = base_penalty.saturating_add(quarterly_penalty);
         let annual_cap: i64 = 200_000;
         benchmarking_penalty = total.min(annual_cap);

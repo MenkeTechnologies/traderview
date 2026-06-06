@@ -135,12 +135,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // NoStateLeaseCopyDeliveryDeadline default — 47 other states + DC.
     let no_state = [
-        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE",
-        "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS",
-        "KY", "LA", "ME", "MD", "MI", "MN", "MS", "MO",
-        "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC",
-        "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD",
-        "TN", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA",
+        "KS", "KY", "LA", "ME", "MD", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM",
+        "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "UT", "VT", "VA", "WA",
+        "WV", "WI", "WY",
     ];
     for code in no_state {
         m.insert(
@@ -204,8 +202,7 @@ pub fn check(input: &LeaseCopyDeliveryInput) -> LeaseCopyDeliveryResult {
         citation: "Unknown state code; no statewide lease-copy-delivery deadline assumed",
     });
 
-    let waiver_void =
-        input.lease_contains_waiver_of_delivery && rule.waiver_prohibited;
+    let waiver_void = input.lease_contains_waiver_of_delivery && rule.waiver_prohibited;
 
     let deadline_passed = if rule.days_are_business_days {
         input.business_days_since_lease_execution > rule.delivery_deadline_days
@@ -237,12 +234,8 @@ pub fn check(input: &LeaseCopyDeliveryInput) -> LeaseCopyDeliveryResult {
         LeaseCopyDeliveryRegime::Massachusetts30DayWith300DollarFine => {
             "Massachusetts 30-day delivery with $300 fine"
         }
-        LeaseCopyDeliveryRegime::Texas3BusinessDayDelivery => {
-            "Texas 3-business-day delivery"
-        }
-        LeaseCopyDeliveryRegime::NoStateLeaseCopyDeliveryDeadline => {
-            "no state-specific deadline"
-        }
+        LeaseCopyDeliveryRegime::Texas3BusinessDayDelivery => "Texas 3-business-day delivery",
+        LeaseCopyDeliveryRegime::NoStateLeaseCopyDeliveryDeadline => "no state-specific deadline",
     };
 
     let note = if matches!(
@@ -270,7 +263,11 @@ pub fn check(input: &LeaseCopyDeliveryInput) -> LeaseCopyDeliveryResult {
             "State applies {} regime; landlord NON-COMPLIANT — copy not delivered within {} {}",
             regime_label,
             rule.delivery_deadline_days,
-            if rule.days_are_business_days { "business days" } else { "days" },
+            if rule.days_are_business_days {
+                "business days"
+            } else {
+                "days"
+            },
         )];
         if fine_available {
             parts.push(format!("${} statutory fine available", fine_amount));
@@ -522,9 +519,7 @@ mod tests {
     fn ca_only_15_day_state() {
         let count = RULES
             .iter()
-            .filter(|(_, r)| {
-                matches!(r.regime, LeaseCopyDeliveryRegime::California15DayDelivery)
-            })
+            .filter(|(_, r)| matches!(r.regime, LeaseCopyDeliveryRegime::California15DayDelivery))
             .count();
         assert_eq!(count, 1);
     }
@@ -547,9 +542,7 @@ mod tests {
     fn tx_only_business_day_state() {
         let count = RULES
             .iter()
-            .filter(|(_, r)| {
-                matches!(r.regime, LeaseCopyDeliveryRegime::Texas3BusinessDayDelivery)
-            })
+            .filter(|(_, r)| matches!(r.regime, LeaseCopyDeliveryRegime::Texas3BusinessDayDelivery))
             .count();
         assert_eq!(count, 1);
     }

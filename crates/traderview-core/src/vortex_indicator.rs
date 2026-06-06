@@ -49,8 +49,13 @@ pub fn compute(bars: &[Bar], period: usize) -> VortexReport {
     for i in 1..n {
         let prev = bars[i - 1];
         let cur = bars[i];
-        if !cur.high.is_finite() || !cur.low.is_finite() || !cur.close.is_finite()
-            || !prev.high.is_finite() || !prev.low.is_finite() || !prev.close.is_finite() {
+        if !cur.high.is_finite()
+            || !cur.low.is_finite()
+            || !cur.close.is_finite()
+            || !prev.high.is_finite()
+            || !prev.low.is_finite()
+            || !prev.close.is_finite()
+        {
             continue;
         }
         pvm[i] = (cur.high - prev.low).abs();
@@ -65,7 +70,9 @@ pub fn compute(bars: &[Bar], period: usize) -> VortexReport {
         let sum_pvm: f64 = pvm[i + 1 - period..=i].iter().sum();
         let sum_nvm: f64 = nvm[i + 1 - period..=i].iter().sum();
         let sum_tr: f64 = tr[i + 1 - period..=i].iter().sum();
-        if sum_tr <= 0.0 { continue; }
+        if sum_tr <= 0.0 {
+            continue;
+        }
         vi_plus[i] = Some(sum_pvm / sum_tr);
         vi_minus[i] = Some(sum_nvm / sum_tr);
     }
@@ -76,7 +83,13 @@ pub fn compute(bars: &[Bar], period: usize) -> VortexReport {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn empty_returns_empty() {
@@ -101,26 +114,36 @@ mod tests {
     #[test]
     fn uptrend_yields_vi_plus_above_vi_minus() {
         // Each bar higher than the last → +VM > −VM consistently.
-        let bars: Vec<_> = (0..40).map(|i| {
-            let mid = 100.0 + i as f64;
-            b(mid + 0.5, mid - 0.5, mid)
-        }).collect();
+        let bars: Vec<_> = (0..40)
+            .map(|i| {
+                let mid = 100.0 + i as f64;
+                b(mid + 0.5, mid - 0.5, mid)
+            })
+            .collect();
         let r = compute(&bars, 14);
         let last_plus = r.vi_plus[39].unwrap();
         let last_minus = r.vi_minus[39].unwrap();
-        assert!(last_plus > last_minus, "uptrend: +VI {last_plus} should exceed -VI {last_minus}");
+        assert!(
+            last_plus > last_minus,
+            "uptrend: +VI {last_plus} should exceed -VI {last_minus}"
+        );
     }
 
     #[test]
     fn downtrend_yields_vi_minus_above_vi_plus() {
-        let bars: Vec<_> = (0..40).map(|i| {
-            let mid = 100.0 - i as f64;
-            b(mid + 0.5, mid - 0.5, mid)
-        }).collect();
+        let bars: Vec<_> = (0..40)
+            .map(|i| {
+                let mid = 100.0 - i as f64;
+                b(mid + 0.5, mid - 0.5, mid)
+            })
+            .collect();
         let r = compute(&bars, 14);
         let last_plus = r.vi_plus[39].unwrap();
         let last_minus = r.vi_minus[39].unwrap();
-        assert!(last_minus > last_plus, "downtrend: -VI {last_minus} should exceed +VI {last_plus}");
+        assert!(
+            last_minus > last_plus,
+            "downtrend: -VI {last_minus} should exceed +VI {last_plus}"
+        );
     }
 
     #[test]
@@ -130,13 +153,23 @@ mod tests {
         let p = r.vi_plus[39].unwrap();
         let m = r.vi_minus[39].unwrap();
         // High-Low overlap on flat data → |high - prev_low| = 2, |low - prev_high| = 2.
-        assert!((p - m).abs() < 1e-9, "flat market: VI+/- should match, got {p} vs {m}");
+        assert!(
+            (p - m).abs() < 1e-9,
+            "flat market: VI+/- should match, got {p} vs {m}"
+        );
     }
 
     #[test]
     fn output_lengths_match_input() {
-        let bars: Vec<_> = (0..30).map(|i| b(101.0 + i as f64 * 0.1,
-            99.0 + i as f64 * 0.1, 100.0 + i as f64 * 0.1)).collect();
+        let bars: Vec<_> = (0..30)
+            .map(|i| {
+                b(
+                    101.0 + i as f64 * 0.1,
+                    99.0 + i as f64 * 0.1,
+                    100.0 + i as f64 * 0.1,
+                )
+            })
+            .collect();
         let r = compute(&bars, 14);
         assert_eq!(r.vi_plus.len(), 30);
         assert_eq!(r.vi_minus.len(), 30);

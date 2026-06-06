@@ -27,7 +27,9 @@ pub struct RsConfig {
 }
 
 impl Default for RsConfig {
-    fn default() -> Self { Self { period: 63 } }    // ~ one quarter of trading days
+    fn default() -> Self {
+        Self { period: 63 }
+    } // ~ one quarter of trading days
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -48,11 +50,7 @@ pub struct RsReport {
     pub benchmark_return_pct: f64,
 }
 
-pub fn analyze(
-    universe: &[SymbolPrices],
-    benchmark: &SymbolPrices,
-    cfg: &RsConfig,
-) -> RsReport {
+pub fn analyze(universe: &[SymbolPrices], benchmark: &SymbolPrices, cfg: &RsConfig) -> RsReport {
     let mut report = RsReport::default();
     if cfg.period == 0 {
         return report;
@@ -67,7 +65,9 @@ pub fn analyze(
     }
     let mut entries = Vec::new();
     for sym in universe {
-        let Some(sym_ret) = period_return(&sym.closes, cfg.period) else { continue };
+        let Some(sym_ret) = period_return(&sym.closes, cfg.period) else {
+            continue;
+        };
         let rs_value = (1.0 + sym_ret) / bench_factor;
         if !rs_value.is_finite() {
             continue;
@@ -77,7 +77,7 @@ pub fn analyze(
             symbol_return_pct: sym_ret * 100.0,
             benchmark_return_pct: bench_ret * 100.0,
             rs_value,
-            rs_rating: 0.0,    // filled in below
+            rs_rating: 0.0, // filled in below
         });
     }
     // Percentile-rank rs_value across the universe.
@@ -98,7 +98,8 @@ pub fn analyze(
             .partial_cmp(&a.rs_rating)
             .unwrap_or(std::cmp::Ordering::Equal)
     });
-    report.leaders = entries.iter()
+    report.leaders = entries
+        .iter()
         .filter(|e| e.rs_rating >= 80.0)
         .map(|e| e.symbol.clone())
         .collect();
@@ -124,7 +125,10 @@ mod tests {
     use super::*;
 
     fn s(sym: &str, closes: Vec<f64>) -> SymbolPrices {
-        SymbolPrices { symbol: sym.into(), closes }
+        SymbolPrices {
+            symbol: sym.into(),
+            closes,
+        }
     }
 
     #[test]
@@ -143,7 +147,7 @@ mod tests {
 
     #[test]
     fn benchmark_too_short_returns_default() {
-        let bench = s("SPY", vec![100.0; 10]);    // < 63 default
+        let bench = s("SPY", vec![100.0; 10]); // < 63 default
         let r = analyze(&[s("A", vec![100.0; 70])], &bench, &RsConfig::default());
         assert!(r.entries.is_empty());
     }
@@ -171,7 +175,7 @@ mod tests {
             }),
         ];
         let r = analyze(&universe, &bench, &RsConfig::default());
-        assert_eq!(r.entries[0].symbol, "HOT");    // sorted desc by rating
+        assert_eq!(r.entries[0].symbol, "HOT"); // sorted desc by rating
         assert!(r.entries[0].rs_value > 1.0);
         assert!(r.entries[1].rs_value < 1.0);
         assert!(r.leaders.contains(&"HOT".to_string()) || r.entries[0].rs_rating < 80.0);
@@ -216,14 +220,22 @@ mod tests {
             v[63] = 110.0;
             v
         });
-        let universe: Vec<SymbolPrices> = (0..10).map(|i| s(&format!("X{i}"), {
-            let mut v = vec![100.0; 64];
-            v[63] = 100.0 + i as f64;
-            v
-        })).collect();
+        let universe: Vec<SymbolPrices> = (0..10)
+            .map(|i| {
+                s(&format!("X{i}"), {
+                    let mut v = vec![100.0; 64];
+                    v[63] = 100.0 + i as f64;
+                    v
+                })
+            })
+            .collect();
         let r = analyze(&universe, &bench, &RsConfig::default());
         for e in &r.entries {
-            assert!((0.0..=100.0).contains(&e.rs_rating), "rs_rating out of range: {}", e.rs_rating);
+            assert!(
+                (0.0..=100.0).contains(&e.rs_rating),
+                "rs_rating out of range: {}",
+                e.rs_rating
+            );
         }
     }
 }

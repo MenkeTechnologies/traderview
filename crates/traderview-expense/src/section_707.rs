@@ -117,16 +117,19 @@ pub type Section707Result = Output;
 pub fn check(input: &Input) -> Output {
     let mut notes: Vec<String> = Vec::new();
     let citations: Vec<String> = vec![
-        "IRC § 707(a) (partner-partnership transactions treated as between non-partners)".to_string(),
+        "IRC § 707(a) (partner-partnership transactions treated as between non-partners)"
+            .to_string(),
         "IRC § 707(a)(2)(A) (payments to partner for services)".to_string(),
         "IRC § 707(a)(2)(B) (disguised sales of property to partnership)".to_string(),
         "IRC § 707(b) (losses disallowed between related partners)".to_string(),
         "IRC § 707(c) (guaranteed payments — ordinary income)".to_string(),
-        "IRC § 1402(a)(13) (limited-partner SECA exclusion; GP for services NOT excluded)".to_string(),
+        "IRC § 1402(a)(13) (limited-partner SECA exclusion; GP for services NOT excluded)"
+            .to_string(),
         "Treas. Reg. § 1.707-3 (disguised sales — general rules)".to_string(),
         "Treas. Reg. § 1.707-3(c)(1) (two-year presumption SALE)".to_string(),
         "Treas. Reg. § 1.707-3(d) (more-than-two-year presumption NOT sale)".to_string(),
-        "Treas. Reg. § 1.707-4 (guaranteed payments + preferred returns + reimbursements)".to_string(),
+        "Treas. Reg. § 1.707-4 (guaranteed payments + preferred returns + reimbursements)"
+            .to_string(),
         "IRC § 162 (partnership ordinary deduction for guaranteed payment)".to_string(),
     ];
 
@@ -149,7 +152,8 @@ pub fn check(input: &Input) -> Output {
                 notes.push("Payment determined with regard to partnership income — fails § 707(c) requirement; treated as distributive share, not guaranteed payment.".to_string());
                 if input.reported_as_guaranteed_payment {
                     return Output {
-                        severity: Severity::ViolationGuaranteedPaymentMisreportedAsDistributiveShare,
+                        severity:
+                            Severity::ViolationGuaranteedPaymentMisreportedAsDistributiveShare,
                         characterization: Characterization::DistributiveShareNotGuaranteedPayment,
                         ordinary_income_to_partner_cents: 0,
                         subject_to_self_employment_tax: false,
@@ -177,7 +181,8 @@ pub fn check(input: &Input) -> Output {
                     input.payment_amount_cents / 100
                 ));
                 return Output {
-                    severity: Severity::GuaranteedPaymentSection707cOrdinaryNoSeTaxLimitedPartnerCapital,
+                    severity:
+                        Severity::GuaranteedPaymentSection707cOrdinaryNoSeTaxLimitedPartnerCapital,
                     characterization: Characterization::OrdinaryIncomeGuaranteedPayment,
                     ordinary_income_to_partner_cents: input.payment_amount_cents,
                     subject_to_self_employment_tax: false,
@@ -276,8 +281,7 @@ pub fn check(input: &Input) -> Output {
             }
             notes.push(format!(
                 "Ownership {}% ≤ § 707(b) {}% threshold — loss allowed.",
-                input.related_party_ownership_percent,
-                RELATED_PARTY_OWNERSHIP_THRESHOLD_PERCENT
+                input.related_party_ownership_percent, RELATED_PARTY_OWNERSHIP_THRESHOLD_PERCENT
             ));
             Output {
                 severity: Severity::LossAllowedNonRelatedPartiesUnder707b,
@@ -348,7 +352,10 @@ mod tests {
             out.severity,
             Severity::GuaranteedPaymentSection707cOrdinaryWithSeTax
         );
-        assert_eq!(out.characterization, Characterization::OrdinaryIncomeGuaranteedPayment);
+        assert_eq!(
+            out.characterization,
+            Characterization::OrdinaryIncomeGuaranteedPayment
+        );
         assert_eq!(out.ordinary_income_to_partner_cents, 10_000_000);
         assert!(out.subject_to_self_employment_tax);
     }
@@ -388,7 +395,10 @@ mod tests {
             out.severity,
             Severity::ViolationGuaranteedPaymentMisreportedAsDistributiveShare
         );
-        assert_eq!(out.characterization, Characterization::DistributiveShareNotGuaranteedPayment);
+        assert_eq!(
+            out.characterization,
+            Characterization::DistributiveShareNotGuaranteedPayment
+        );
     }
 
     #[test]
@@ -512,7 +522,10 @@ mod tests {
             out.severity,
             Severity::ArmsLengthTransactionUnder707aNoRecharacterization
         );
-        assert_eq!(out.characterization, Characterization::NonPartnerCapitalTransactionUnder707a);
+        assert_eq!(
+            out.characterization,
+            Characterization::NonPartnerCapitalTransactionUnder707a
+        );
     }
 
     #[test]
@@ -520,7 +533,10 @@ mod tests {
         let mut i = base_gp();
         i.transaction_kind = TransactionKind::PartnerServicesContingentOnIncome;
         let out = check(&i);
-        assert_eq!(out.characterization, Characterization::DistributiveShareNotGuaranteedPayment);
+        assert_eq!(
+            out.characterization,
+            Characterization::DistributiveShareNotGuaranteedPayment
+        );
     }
 
     #[test]

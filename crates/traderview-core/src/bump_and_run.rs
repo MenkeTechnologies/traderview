@@ -27,11 +27,18 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum PatternKind { BarrTop, BarrBottom }
+pub enum PatternKind {
+    BarrTop,
+    BarrBottom,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BarrCandidate {
@@ -54,24 +61,33 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
-        Self { lead_in_bars: 20, bump_height_multiplier: 2.0 }
+        Self {
+            lead_in_bars: 20,
+            bump_height_multiplier: 2.0,
+        }
     }
 }
 
 pub fn detect(bars: &[Bar], cfg: &Config) -> Vec<BarrCandidate> {
     let n = bars.len();
     let mut out = Vec::new();
-    if cfg.lead_in_bars < 5 || n < cfg.lead_in_bars + 5
-        || cfg.bump_height_multiplier <= 0.0 {
+    if cfg.lead_in_bars < 5 || n < cfg.lead_in_bars + 5 || cfg.bump_height_multiplier <= 0.0 {
         return out;
     }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return out;
     }
     // BARR-top: lead-in uptrend → bump above lead-in line → break back below.
-    if let Some(c) = detect_top(bars, cfg) { out.push(c); }
+    if let Some(c) = detect_top(bars, cfg) {
+        out.push(c);
+    }
     // BARR-bottom (mirror): lead-in downtrend → bump below → break back above.
-    if let Some(c) = detect_bottom(bars, cfg) { out.push(c); }
+    if let Some(c) = detect_bottom(bars, cfg) {
+        out.push(c);
+    }
     out
 }
 
@@ -81,10 +97,14 @@ fn detect_top(bars: &[Bar], cfg: &Config) -> Option<BarrCandidate> {
     let l = cfg.lead_in_bars;
     let lead: Vec<f64> = bars[..l].iter().map(|b| b.close).collect();
     let (slope, intercept) = ols_line(&lead)?;
-    if slope <= 0.0 { return None; }    // lead-in must be uptrend
+    if slope <= 0.0 {
+        return None;
+    } // lead-in must be uptrend
     let lead_range = lead.iter().cloned().fold(f64::NEG_INFINITY, f64::max)
         - lead.iter().cloned().fold(f64::INFINITY, f64::min);
-    if lead_range <= 0.0 { return None; }
+    if lead_range <= 0.0 {
+        return None;
+    }
     // Scan post-lead-in for bump (max distance above lead-in line).
     let mut peak_idx = l;
     let mut peak_dist = f64::NEG_INFINITY;
@@ -97,13 +117,18 @@ fn detect_top(bars: &[Bar], cfg: &Config) -> Option<BarrCandidate> {
         }
     }
     let bump_height_ratio = peak_dist / lead_range;
-    if bump_height_ratio < cfg.bump_height_multiplier { return None; }
+    if bump_height_ratio < cfg.bump_height_multiplier {
+        return None;
+    }
     // Run confirmation: any bar after the bump peak closes below the
     // lead-in line.
     let mut run_idx = None;
     for i in (peak_idx + 1)..n {
         let line = slope * i as f64 + intercept;
-        if bars[i].close < line { run_idx = Some(i); break; }
+        if bars[i].close < line {
+            run_idx = Some(i);
+            break;
+        }
     }
     let run_confirmation_index = run_idx?;
     Some(BarrCandidate {
@@ -125,10 +150,14 @@ fn detect_bottom(bars: &[Bar], cfg: &Config) -> Option<BarrCandidate> {
     let l = cfg.lead_in_bars;
     let lead: Vec<f64> = bars[..l].iter().map(|b| b.close).collect();
     let (slope, intercept) = ols_line(&lead)?;
-    if slope >= 0.0 { return None; }    // lead-in must be downtrend
+    if slope >= 0.0 {
+        return None;
+    } // lead-in must be downtrend
     let lead_range = lead.iter().cloned().fold(f64::NEG_INFINITY, f64::max)
         - lead.iter().cloned().fold(f64::INFINITY, f64::min);
-    if lead_range <= 0.0 { return None; }
+    if lead_range <= 0.0 {
+        return None;
+    }
     let mut trough_idx = l;
     let mut trough_dist = f64::NEG_INFINITY;
     for i in l..n {
@@ -140,11 +169,16 @@ fn detect_bottom(bars: &[Bar], cfg: &Config) -> Option<BarrCandidate> {
         }
     }
     let bump_height_ratio = trough_dist / lead_range;
-    if bump_height_ratio < cfg.bump_height_multiplier { return None; }
+    if bump_height_ratio < cfg.bump_height_multiplier {
+        return None;
+    }
     let mut run_idx = None;
     for i in (trough_idx + 1)..n {
         let line = slope * i as f64 + intercept;
-        if bars[i].close > line { run_idx = Some(i); break; }
+        if bars[i].close > line {
+            run_idx = Some(i);
+            break;
+        }
     }
     let run_confirmation_index = run_idx?;
     Some(BarrCandidate {
@@ -162,7 +196,9 @@ fn detect_bottom(bars: &[Bar], cfg: &Config) -> Option<BarrCandidate> {
 
 fn ols_line(y: &[f64]) -> Option<(f64, f64)> {
     let n = y.len();
-    if n < 2 { return None; }
+    if n < 2 {
+        return None;
+    }
     let n_f = n as f64;
     let x_mean = (n_f - 1.0) / 2.0;
     let y_mean: f64 = y.iter().sum::<f64>() / n_f;
@@ -174,7 +210,9 @@ fn ols_line(y: &[f64]) -> Option<(f64, f64)> {
         sxx += dx * dx;
         sxy += dx * dy;
     }
-    if sxx <= 0.0 { return None; }
+    if sxx <= 0.0 {
+        return None;
+    }
     let slope = sxy / sxx;
     let intercept = y_mean - slope * x_mean;
     Some((slope, intercept))
@@ -184,7 +222,13 @@ fn ols_line(y: &[f64]) -> Option<(f64, f64)> {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn empty_returns_empty() {
@@ -194,9 +238,15 @@ mod tests {
     #[test]
     fn invalid_config_returns_empty() {
         let bars: Vec<_> = (0..50).map(|_| b(101.0, 99.0, 100.0)).collect();
-        let cfg = Config { lead_in_bars: 0, ..Default::default() };
+        let cfg = Config {
+            lead_in_bars: 0,
+            ..Default::default()
+        };
         assert!(detect(&bars, &cfg).is_empty());
-        let cfg2 = Config { bump_height_multiplier: 0.0, ..Default::default() };
+        let cfg2 = Config {
+            bump_height_multiplier: 0.0,
+            ..Default::default()
+        };
         assert!(detect(&bars, &cfg2).is_empty());
     }
 
@@ -221,12 +271,20 @@ mod tests {
             bars.push(b(mid + 1.0, mid - 1.0, mid));
         }
         for i in 0..10 {
-            let mid = 140.0 - i as f64 * 5.0;    // run-down
+            let mid = 140.0 - i as f64 * 5.0; // run-down
             bars.push(b(mid + 1.0, mid - 1.0, mid));
         }
-        let cands = detect(&bars, &Config { lead_in_bars: 20, bump_height_multiplier: 1.5 });
-        assert!(cands.iter().any(|c| c.kind == PatternKind::BarrTop),
-            "expected BARR-top, got {cands:?}");
+        let cands = detect(
+            &bars,
+            &Config {
+                lead_in_bars: 20,
+                bump_height_multiplier: 1.5,
+            },
+        );
+        assert!(
+            cands.iter().any(|c| c.kind == PatternKind::BarrTop),
+            "expected BARR-top, got {cands:?}"
+        );
     }
 
     #[test]
@@ -241,23 +299,39 @@ mod tests {
             bars.push(b(mid + 1.0, mid - 1.0, mid));
         }
         for i in 0..10 {
-            let mid = 60.0 + i as f64 * 5.0;    // run-up
+            let mid = 60.0 + i as f64 * 5.0; // run-up
             bars.push(b(mid + 1.0, mid - 1.0, mid));
         }
-        let cands = detect(&bars, &Config { lead_in_bars: 20, bump_height_multiplier: 1.5 });
-        assert!(cands.iter().any(|c| c.kind == PatternKind::BarrBottom),
-            "expected BARR-bottom, got {cands:?}");
+        let cands = detect(
+            &bars,
+            &Config {
+                lead_in_bars: 20,
+                bump_height_multiplier: 1.5,
+            },
+        );
+        assert!(
+            cands.iter().any(|c| c.kind == PatternKind::BarrBottom),
+            "expected BARR-bottom, got {cands:?}"
+        );
     }
 
     #[test]
     fn no_bump_no_pattern() {
         // Lead-in uptrend with no acceleration → no bump.
-        let bars: Vec<Bar> = (0..50).map(|i| {
-            let mid = 100.0 + i as f64 * 0.5;
-            b(mid + 0.5, mid - 0.5, mid)
-        }).collect();
+        let bars: Vec<Bar> = (0..50)
+            .map(|i| {
+                let mid = 100.0 + i as f64 * 0.5;
+                b(mid + 0.5, mid - 0.5, mid)
+            })
+            .collect();
         let cands = detect(&bars, &Config::default());
-        assert!(cands.iter().filter(|c| c.kind == PatternKind::BarrTop).count() == 0);
+        assert!(
+            cands
+                .iter()
+                .filter(|c| c.kind == PatternKind::BarrTop)
+                .count()
+                == 0
+        );
     }
 
     #[test]
@@ -269,10 +343,22 @@ mod tests {
             bars.push(b(mid + 0.5, mid - 0.5, mid));
         }
         for i in 0..10 {
-            let mid = 110.0 + i as f64 * 5.0;    // keeps rising, no run
+            let mid = 110.0 + i as f64 * 5.0; // keeps rising, no run
             bars.push(b(mid + 1.0, mid - 1.0, mid));
         }
-        let cands = detect(&bars, &Config { lead_in_bars: 20, bump_height_multiplier: 1.5 });
-        assert!(cands.iter().filter(|c| c.kind == PatternKind::BarrTop).count() == 0);
+        let cands = detect(
+            &bars,
+            &Config {
+                lead_in_bars: 20,
+                bump_height_multiplier: 1.5,
+            },
+        );
+        assert!(
+            cands
+                .iter()
+                .filter(|c| c.kind == PatternKind::BarrTop)
+                .count()
+                == 0
+        );
     }
 }

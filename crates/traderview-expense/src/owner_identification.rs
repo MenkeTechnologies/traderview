@@ -172,12 +172,9 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // LocalLawOrCommonLawOnly default — 44 other states + DC.
     let local_law_only = [
-        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE",
-        "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY",
-        "LA", "ME", "MD", "MI", "MN", "MS", "MO", "MT",
-        "NE", "NV", "NH", "NM", "NC", "ND", "OH", "OK",
-        "OR", "PA", "RI", "SC", "SD", "TN", "UT", "VT",
-        "VA", "WA", "WV", "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "GA", "HI", "ID", "IL", "IN", "IA", "KS",
+        "KY", "LA", "ME", "MD", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NM", "NC", "ND",
+        "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
     ];
     for code in local_law_only {
         m.insert(
@@ -281,9 +278,8 @@ pub fn check(input: &OwnerIdentificationInput) -> OwnerIdentificationResult {
             // § 92.202(b): tenant termination right only after second
             // failure to disclose within 7 days following a written
             // demand.
-            let term = input.tenant_made_written_demand
-                && !comp
-                && input.prior_failure_within_7_days;
+            let term =
+                input.tenant_made_written_demand && !comp && input.prior_failure_within_7_days;
             (input.tenant_made_written_demand || !posted_path, comp, term)
         }
         OwnerIdentificationRegime::MultipleDwellingRegistration => {
@@ -310,9 +306,7 @@ pub fn check(input: &OwnerIdentificationInput) -> OwnerIdentificationResult {
             "affirmative pre-lease disclosure"
         }
         OwnerIdentificationRegime::DisclosureUponWrittenDemand => "disclosure-on-written-demand",
-        OwnerIdentificationRegime::MultipleDwellingRegistration => {
-            "multiple-dwelling registration"
-        }
+        OwnerIdentificationRegime::MultipleDwellingRegistration => "multiple-dwelling registration",
         OwnerIdentificationRegime::LocalLawOrCommonLawOnly => "local-law / common-law only",
     };
 
@@ -335,7 +329,9 @@ pub fn check(input: &OwnerIdentificationInput) -> OwnerIdentificationResult {
             parts.push("statutory damages available".to_string());
         }
         if termination_right {
-            parts.push("tenant termination right triggered (TX § 92.202(b) second-failure)".to_string());
+            parts.push(
+                "tenant termination right triggered (TX § 92.202(b) second-failure)".to_string(),
+            );
         }
         format!("{}.", parts.join("; "))
     };

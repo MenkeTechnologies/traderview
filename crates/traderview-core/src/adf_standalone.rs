@@ -20,7 +20,12 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum AdfSignificance { Pct1, Pct5, Pct10, Insignificant }
+pub enum AdfSignificance {
+    Pct1,
+    Pct5,
+    Pct10,
+    Insignificant,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AdfReport {
@@ -34,14 +39,24 @@ pub struct AdfReport {
 
 pub fn test(series: &[f64], lags: usize) -> Option<AdfReport> {
     let n = series.len();
-    if n < 3 * lags + 4 { return None; }
-    if series.iter().any(|x| !x.is_finite()) { return None; }
+    if n < 3 * lags + 4 {
+        return None;
+    }
+    if series.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let mut diffs = vec![0.0_f64; n];
-    for i in 1..n { diffs[i] = series[i] - series[i - 1]; }
+    for i in 1..n {
+        diffs[i] = series[i] - series[i - 1];
+    }
     let start = lags + 1;
-    if n <= start { return None; }
+    if n <= start {
+        return None;
+    }
     let m = n - start;
-    if m < 2 * lags + 2 { return None; }
+    if m < 2 * lags + 2 {
+        return None;
+    }
     let p_cols = 2 + lags;
     let mut x: Vec<Vec<f64>> = (0..p_cols).map(|_| Vec::with_capacity(m)).collect();
     let mut y_vec: Vec<f64> = Vec::with_capacity(m);
@@ -54,15 +69,24 @@ pub fn test(series: &[f64], lags: usize) -> Option<AdfReport> {
         y_vec.push(diffs[i]);
     }
     let (beta, se) = ols_with_se(&x, &y_vec)?;
-    if beta.len() != p_cols || se.len() != p_cols { return None; }
+    if beta.len() != p_cols || se.len() != p_cols {
+        return None;
+    }
     let gamma = beta[1];
     let gamma_se = se[1];
-    if gamma_se <= 0.0 { return None; }
+    if gamma_se <= 0.0 {
+        return None;
+    }
     let t_stat = gamma / gamma_se;
-    let sig = if t_stat < -3.43 { AdfSignificance::Pct1 }
-        else if t_stat < -2.86 { AdfSignificance::Pct5 }
-        else if t_stat < -2.57 { AdfSignificance::Pct10 }
-        else { AdfSignificance::Insignificant };
+    let sig = if t_stat < -3.43 {
+        AdfSignificance::Pct1
+    } else if t_stat < -2.86 {
+        AdfSignificance::Pct5
+    } else if t_stat < -2.57 {
+        AdfSignificance::Pct10
+    } else {
+        AdfSignificance::Insignificant
+    };
     Some(AdfReport {
         t_statistic: t_stat,
         gamma,
@@ -76,7 +100,9 @@ pub fn test(series: &[f64], lags: usize) -> Option<AdfReport> {
 fn ols_with_se(x: &[Vec<f64>], y: &[f64]) -> Option<(Vec<f64>, Vec<f64>)> {
     let p = x.len();
     let n = y.len();
-    if p == 0 || n == 0 || x.iter().any(|c| c.len() != n) { return None; }
+    if p == 0 || n == 0 || x.iter().any(|c| c.len() != n) {
+        return None;
+    }
     let mut xtx = vec![vec![0.0_f64; p]; p];
     let mut xty = vec![0.0_f64; p];
     for i in 0..p {
@@ -96,18 +122,30 @@ fn ols_with_se(x: &[Vec<f64>], y: &[f64]) -> Option<(Vec<f64>, Vec<f64>)> {
     for i in 0..p {
         let mut pivot = i;
         for r in (i + 1)..p {
-            if aug[r][i].abs() > aug[pivot][i].abs() { pivot = r; }
+            if aug[r][i].abs() > aug[pivot][i].abs() {
+                pivot = r;
+            }
         }
-        if aug[pivot][i].abs() < 1e-18 { return None; }
+        if aug[pivot][i].abs() < 1e-18 {
+            return None;
+        }
         aug.swap(i, pivot);
         let div = aug[i][i];
-        for v in aug[i].iter_mut() { *v /= div; }
+        for v in aug[i].iter_mut() {
+            *v /= div;
+        }
         for r in 0..p {
-            if r == i { continue; }
+            if r == i {
+                continue;
+            }
             let f = aug[r][i];
-            if f == 0.0 { continue; }
+            if f == 0.0 {
+                continue;
+            }
             let pivot_row = aug[i].clone();
-            for (j, v) in aug[r].iter_mut().enumerate() { *v -= f * pivot_row[j]; }
+            for (j, v) in aug[r].iter_mut().enumerate() {
+                *v -= f * pivot_row[j];
+            }
         }
     }
     let beta: Vec<f64> = (0..p).map(|i| aug[i][2 * p]).collect();
@@ -150,15 +188,18 @@ mod tests {
         let n = 500;
         let mut s = vec![0.0_f64; n];
         for i in 1..n {
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let u = (state >> 32) as f64 / u32::MAX as f64 - 0.5;
             s[i] = s[i - 1] + u;
         }
         let r = test(&s, 1).unwrap();
         // ADF on random walk: t typically in [-1, 0], rarely below -2.86.
-        assert!(matches!(r.significance,
-            AdfSignificance::Insignificant | AdfSignificance::Pct10));
+        assert!(matches!(
+            r.significance,
+            AdfSignificance::Insignificant | AdfSignificance::Pct10
+        ));
     }
 
     #[test]
@@ -168,14 +209,18 @@ mod tests {
         let n = 500;
         let mut s = vec![0.0_f64; n];
         for i in 1..n {
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let u = (state >> 32) as f64 / u32::MAX as f64 - 0.5;
             s[i] = 0.3 * s[i - 1] + u;
         }
         let r = test(&s, 2).unwrap();
-        assert!(r.t_statistic < -2.86, "expected significant rejection, got t={}",
-            r.t_statistic);
+        assert!(
+            r.t_statistic < -2.86,
+            "expected significant rejection, got t={}",
+            r.t_statistic
+        );
         assert!(!matches!(r.significance, AdfSignificance::Insignificant));
     }
 
@@ -194,7 +239,8 @@ mod tests {
         let mut s = vec![0.0_f64; n];
         let mut state: u64 = 7;
         for i in 1..n {
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let u = (state >> 32) as f64 / u32::MAX as f64 - 0.5;
             s[i] = 0.5 * s[i - 1] + u;

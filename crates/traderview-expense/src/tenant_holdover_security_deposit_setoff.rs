@@ -277,8 +277,8 @@ pub fn check(
         Jurisdiction::Texas | Jurisdiction::Massachusetts => 30,
     };
 
-    let itemization_timely = input.days_since_vacate <= itemization_window_days
-        && input.itemized_statement_provided;
+    let itemization_timely =
+        input.days_since_vacate <= itemization_window_days && input.itemized_statement_provided;
 
     let category_universally_permitted = matches!(
         input.deduction_category,
@@ -305,19 +305,20 @@ pub fn check(
             | DeductionCategory::LiquidatedDamagesUnconscionable
     );
 
-    let deduction_permitted = (category_universally_permitted
-        || category_conditionally_permitted)
+    let deduction_permitted = (category_universally_permitted || category_conditionally_permitted)
         && !category_universally_prohibited
         && itemization_timely;
 
     let remaining_deposit_cents = if deduction_permitted {
-        input.security_deposit_cents.saturating_sub(input.deduction_amount_cents)
+        input
+            .security_deposit_cents
+            .saturating_sub(input.deduction_amount_cents)
     } else {
         input.security_deposit_cents
     };
 
-    let penalty_multiplier_engaged = !deduction_permitted
-        && (input.bad_faith_retention || !itemization_timely);
+    let penalty_multiplier_engaged =
+        !deduction_permitted && (input.bad_faith_retention || !itemization_timely);
 
     let penalty_amount_cents = if penalty_multiplier_engaged {
         match input.jurisdiction {
@@ -355,8 +356,10 @@ pub fn check(
         failure_reasons.push(prohibition.to_string());
     }
 
-    if matches!(input.deduction_category, DeductionCategory::EvictionAttorneyFees)
-        && !input.landlord_prevailed_in_eviction
+    if matches!(
+        input.deduction_category,
+        DeductionCategory::EvictionAttorneyFees
+    ) && !input.landlord_prevailed_in_eviction
     {
         failure_reasons.push(
             "EVICTION ATTORNEY FEES NOT PERMITTED — landlord did not prevail in eviction action; deduction requires (1) lease authorization; (2) statute permission; (3) landlord prevailed; absent any element = bad-faith retention".to_string(),
@@ -365,7 +368,9 @@ pub fn check(
 
     if matches!(
         input.deduction_category,
-        DeductionCategory::DoubleRentDamages | DeductionCategory::EvictionAttorneyFees | DeductionCategory::LiquidatedDamagesUnconscionable
+        DeductionCategory::DoubleRentDamages
+            | DeductionCategory::EvictionAttorneyFees
+            | DeductionCategory::LiquidatedDamagesUnconscionable
     ) && !input.lease_authorizes_deduction
     {
         failure_reasons.push(
@@ -382,8 +387,7 @@ pub fn check(
         };
         failure_reasons.push(format!(
             "PENALTY MULTIPLIER ENGAGED — {} cents penalty exposure; {}",
-            penalty_amount_cents,
-            penalty_label
+            penalty_amount_cents, penalty_label
         ));
     }
 
@@ -466,9 +470,10 @@ mod tests {
         i.days_since_vacate = 25;
         let r = check(&i);
         assert!(!r.itemization_timely);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 1950.5(g)(1)")
-            && f.contains("21-day window")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1950.5(g)(1)") && f.contains("21-day window")));
     }
 
     #[test]
@@ -488,9 +493,10 @@ mod tests {
         i.days_since_vacate = 15;
         let r = check(&i);
         assert!(!r.itemization_timely);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 7-108(1-a)(e)")
-            && f.contains("FORFEITS")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 7-108(1-a)(e)") && f.contains("FORFEITS")));
     }
 
     #[test]
@@ -535,8 +541,10 @@ mod tests {
         i.deduction_category = DeductionCategory::NormalWearAndTear;
         let r = check(&i);
         assert!(!r.deduction_permitted);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("NORMAL WEAR AND TEAR universally excluded")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("NORMAL WEAR AND TEAR universally excluded")));
     }
 
     #[test]
@@ -545,9 +553,10 @@ mod tests {
         i.deduction_category = DeductionCategory::PreExistingConditions;
         let r = check(&i);
         assert!(!r.deduction_permitted);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("PRE-EXISTING CONDITIONS")
-            && f.contains("less wear and tear")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("PRE-EXISTING CONDITIONS") && f.contains("less wear and tear")));
     }
 
     #[test]
@@ -556,10 +565,12 @@ mod tests {
         i.deduction_category = DeductionCategory::LiquidatedDamagesUnconscionable;
         let r = check(&i);
         assert!(!r.deduction_permitted);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("LIQUIDATED DAMAGES PROVISIONS")
-            && f.contains("§ 1670.5")
-            && f.contains("§ 5-321")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("LIQUIDATED DAMAGES PROVISIONS")
+                && f.contains("§ 1670.5")
+                && f.contains("§ 5-321")));
     }
 
     #[test]
@@ -580,9 +591,11 @@ mod tests {
         i.landlord_prevailed_in_eviction = false;
         let r = check(&i);
         assert!(!r.deduction_permitted);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("EVICTION ATTORNEY FEES NOT PERMITTED")
-            && f.contains("did not prevail")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("EVICTION ATTORNEY FEES NOT PERMITTED")
+                && f.contains("did not prevail")));
     }
 
     #[test]
@@ -592,9 +605,10 @@ mod tests {
         i.lease_authorizes_deduction = false;
         let r = check(&i);
         assert!(!r.deduction_permitted);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("LEASE DOES NOT AUTHORIZE")
-            && f.contains("§ 1670.5")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("LEASE DOES NOT AUTHORIZE") && f.contains("§ 1670.5")));
     }
 
     #[test]
@@ -633,9 +647,10 @@ mod tests {
         let r = check(&i);
         assert!(r.penalty_multiplier_engaged);
         assert_eq!(r.penalty_amount_cents, 500_000);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 1950.5(l)")
-            && f.contains("2× DEPOSIT PUNITIVE")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1950.5(l)") && f.contains("2× DEPOSIT PUNITIVE")));
     }
 
     #[test]
@@ -648,9 +663,10 @@ mod tests {
         let r = check(&i);
         assert!(r.penalty_multiplier_engaged);
         assert_eq!(r.penalty_amount_cents, 500_000);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 7-108(1-a)(g)")
-            && f.contains("FORFEITS retention right")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 7-108(1-a)(g)") && f.contains("FORFEITS retention right")));
     }
 
     #[test]
@@ -664,8 +680,7 @@ mod tests {
         assert!(r.penalty_multiplier_engaged);
         let expected = 10_000_u64 + 250_000 * 3;
         assert_eq!(r.penalty_amount_cents, expected);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 92.109(a)")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 92.109(a)")
             && f.contains("$100")
             && f.contains("3× WRONGFULLY WITHHELD")));
     }
@@ -680,9 +695,10 @@ mod tests {
         let r = check(&i);
         assert!(r.penalty_multiplier_engaged);
         assert_eq!(r.penalty_amount_cents, 750_000);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 15B(7)")
-            && f.contains("TRIPLE DAMAGES")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 15B(7)") && f.contains("TRIPLE DAMAGES")));
     }
 
     #[test]
@@ -765,50 +781,58 @@ mod tests {
     #[test]
     fn note_pins_four_jurisdiction_framework() {
         let r = check(&ca_holdover_rent_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Four-jurisdiction framework")
-            && n.contains("CALIFORNIA")
-            && n.contains("NEW YORK")
-            && n.contains("TEXAS")
-            && n.contains("MASSACHUSETTS")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Four-jurisdiction framework")
+                && n.contains("CALIFORNIA")
+                && n.contains("NEW YORK")
+                && n.contains("TEXAS")
+                && n.contains("MASSACHUSETTS")));
     }
 
     #[test]
     fn note_pins_seven_permitted_categories() {
         let r = check(&ca_holdover_rent_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("7 permitted application categories")
-            && n.contains("UNPAID HOLDOVER RENT")
-            && n.contains("DOUBLE RENT DAMAGES")
-            && n.contains("MOVING AND STORAGE")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("7 permitted application categories")
+                && n.contains("UNPAID HOLDOVER RENT")
+                && n.contains("DOUBLE RENT DAMAGES")
+                && n.contains("MOVING AND STORAGE")));
     }
 
     #[test]
     fn note_pins_prohibited_deductions() {
         let r = check(&ca_holdover_rent_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("NOT permitted deductions")
-            && n.contains("NORMAL WEAR AND TEAR universally excluded")
-            && n.contains("PRE-EXISTING CONDITIONS")
-            && n.contains("LIQUIDATED-DAMAGES")
-            && n.contains("re-renting delays")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("NOT permitted deductions")
+                && n.contains("NORMAL WEAR AND TEAR universally excluded")
+                && n.contains("PRE-EXISTING CONDITIONS")
+                && n.contains("LIQUIDATED-DAMAGES")
+                && n.contains("re-renting delays")));
     }
 
     #[test]
     fn note_pins_itemization_window_comparison() {
         let r = check(&ca_holdover_rent_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Itemization + refund window comparison")
-            && n.contains("21 days")
-            && n.contains("14 days")
-            && n.contains("30 days")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Itemization + refund window comparison")
+                && n.contains("21 days")
+                && n.contains("14 days")
+                && n.contains("30 days")));
     }
 
     #[test]
     fn note_pins_penalty_multiplier_comparison() {
         let r = check(&ca_holdover_rent_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Bad-faith / willful retention penalty multipliers")
+        assert!(r.notes.iter().any(|n| n
+            .contains("Bad-faith / willful retention penalty multipliers")
             && n.contains("2× DEPOSIT punitive")
             && n.contains("$100 + 3× WRONGFULLY WITHHELD")
             && n.contains("TRIPLE damages + interest")));
@@ -817,8 +841,8 @@ mod tests {
     #[test]
     fn note_pins_ca_section_1950_5_e_four_categories() {
         let r = check(&ca_holdover_rent_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("California § 1950.5(e) permitted deductions four categories")
+        assert!(r.notes.iter().any(|n| n
+            .contains("California § 1950.5(e) permitted deductions four categories")
             && n.contains("holdover rent if lease provides")
             && n.contains("normal wear and tear")
             && n.contains("cleaning")
@@ -828,8 +852,8 @@ mod tests {
     #[test]
     fn note_pins_ny_section_7_108_1a_g_four_categories() {
         let r = check(&ca_holdover_rent_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("New York § 7-108(1-a)(g) permitted deductions four categories")
+        assert!(r.notes.iter().any(|n| n
+            .contains("New York § 7-108(1-a)(g) permitted deductions four categories")
             && n.contains("utility charges")
             && n.contains("moving and storage")
             && n.contains("LATE-ITEMIZATION FORFEITURE")));
@@ -838,18 +862,20 @@ mod tests {
     #[test]
     fn note_pins_tx_section_92_104_framework() {
         let r = check(&ca_holdover_rent_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Texas § 92.104 deductions framework")
-            && n.contains("§ 92.104(c) excludes rent itemization")
-            && n.contains("§ 92.109(a) BAD-FAITH RETENTION")
-            && n.contains("$100 + 3× WRONGFULLY WITHHELD")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Texas § 92.104 deductions framework")
+                && n.contains("§ 92.104(c) excludes rent itemization")
+                && n.contains("§ 92.109(a) BAD-FAITH RETENTION")
+                && n.contains("$100 + 3× WRONGFULLY WITHHELD")));
     }
 
     #[test]
     fn note_pins_ma_section_15b_four_categories_triple() {
         let r = check(&ca_holdover_rent_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Massachusetts § 15B(4) four permitted deductions")
+        assert!(r.notes.iter().any(|n| n
+            .contains("Massachusetts § 15B(4) four permitted deductions")
             && n.contains("reasonable cleaning")
             && n.contains("§ 15B(7) TRIPLE DAMAGES + interest")));
     }
@@ -857,22 +883,26 @@ mod tests {
     #[test]
     fn note_pins_trader_fact_patterns_five() {
         let r = check(&ca_holdover_rent_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-landlord critical fact patterns")
-            && n.contains("§ 1950.5(e)(1) PROVIDED lease authorized")
-            && n.contains("FORFEIT entire retention right")
-            && n.contains("§ 92.109(a)")
-            && n.contains("$7,200")
-            && n.contains("attorney fees")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-landlord critical fact patterns")
+                && n.contains("§ 1950.5(e)(1) PROVIDED lease authorized")
+                && n.contains("FORFEIT entire retention right")
+                && n.contains("§ 92.109(a)")
+                && n.contains("$7,200")
+                && n.contains("attorney fees")));
     }
 
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&ca_holdover_rent_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Companion to holdover_tenant_damages")
-            && n.contains("damage_deduction_itemization")
-            && n.contains("landlord_property_sale_notice (iter 437")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Companion to holdover_tenant_damages")
+                && n.contains("damage_deduction_itemization")
+                && n.contains("landlord_property_sale_notice (iter 437")));
     }
 
     #[test]

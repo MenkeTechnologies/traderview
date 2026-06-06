@@ -65,9 +65,11 @@ static PG: Lazy<Mutex<PgGuard>> = Lazy::new(|| {
         }
     });
     let database_url = pg.settings().url("traderview");
-    let pool = RT.block_on(traderview_db::connect_external(&database_url))
+    let pool = RT
+        .block_on(traderview_db::connect_external(&database_url))
         .expect("connect to test db");
-    RT.block_on(traderview_db::migrate(&pool)).expect("run migrations");
+    RT.block_on(traderview_db::migrate(&pool))
+        .expect("run migrations");
     Mutex::new(PgGuard { _pg: pg, pool })
 });
 
@@ -147,14 +149,15 @@ fn imports_create_then_list_returns_inserted_row() {
         let user = fresh_user().await;
         let account = fresh_account(user).await;
         let sha = format!("sha-{}", Uuid::new_v4());
-        let imp = traderview_db::imports::create(
-            &pool(), account, "webull", "fills.csv", &sha, 42,
-        ).await.expect("create import");
+        let imp = traderview_db::imports::create(&pool(), account, "webull", "fills.csv", &sha, 42)
+            .await
+            .expect("create import");
         assert_eq!(imp.account_id, account);
         assert_eq!(imp.row_count, 42);
         assert_eq!(imp.source, "webull");
 
-        let list = traderview_db::imports::list(&pool(), account).await
+        let list = traderview_db::imports::list(&pool(), account)
+            .await
             .expect("list imports");
         assert!(list.iter().any(|i| i.sha256 == sha));
     });
@@ -166,14 +169,14 @@ fn imports_create_is_idempotent_on_sha_conflict() {
         let user = fresh_user().await;
         let account = fresh_account(user).await;
         let sha = format!("sha-{}", Uuid::new_v4());
-        let a = traderview_db::imports::create(
-            &pool(), account, "webull", "first.csv", &sha, 10,
-        ).await.expect("first insert");
+        let a = traderview_db::imports::create(&pool(), account, "webull", "first.csv", &sha, 10)
+            .await
+            .expect("first insert");
         // Second create with the SAME sha but different filename:
         // ON CONFLICT UPDATE bumps the filename. Same id is returned.
-        let b = traderview_db::imports::create(
-            &pool(), account, "webull", "second.csv", &sha, 99,
-        ).await.expect("second insert");
+        let b = traderview_db::imports::create(&pool(), account, "webull", "second.csv", &sha, 99)
+            .await
+            .expect("second insert");
         assert_eq!(a.id, b.id);
         assert_eq!(b.filename, "second.csv");
     });
@@ -189,11 +192,20 @@ fn hotkeys_upsert_then_list_returns_inserted() {
         let user = fresh_user().await;
         let payload = serde_json::json!({"target": "trade-entry"});
         let h = traderview_db::hotkeys::upsert(
-            &pool(), user, "submit-trade", "cmd+enter", "trade.submit", &payload,
-        ).await.expect("upsert hotkey");
+            &pool(),
+            user,
+            "submit-trade",
+            "cmd+enter",
+            "trade.submit",
+            &payload,
+        )
+        .await
+        .expect("upsert hotkey");
         assert_eq!(h.user_id, user);
         assert_eq!(h.combo, "cmd+enter");
-        let list = traderview_db::hotkeys::list(&pool(), user).await.expect("list");
+        let list = traderview_db::hotkeys::list(&pool(), user)
+            .await
+            .expect("list");
         assert!(list.iter().any(|x| x.id == h.id));
     });
 }
@@ -204,12 +216,14 @@ fn hotkeys_upsert_replaces_on_combo_conflict() {
         let user = fresh_user().await;
         let payload = serde_json::json!({});
         let combo = format!("ctrl+{}", Uuid::new_v4());
-        let a = traderview_db::hotkeys::upsert(
-            &pool(), user, "name-a", &combo, "action-a", &payload,
-        ).await.expect("first upsert");
-        let b = traderview_db::hotkeys::upsert(
-            &pool(), user, "name-b", &combo, "action-b", &payload,
-        ).await.expect("second upsert");
+        let a =
+            traderview_db::hotkeys::upsert(&pool(), user, "name-a", &combo, "action-a", &payload)
+                .await
+                .expect("first upsert");
+        let b =
+            traderview_db::hotkeys::upsert(&pool(), user, "name-b", &combo, "action-b", &payload)
+                .await
+                .expect("second upsert");
         assert_eq!(a.id, b.id, "same combo + user must dedupe to same row");
         assert_eq!(b.name, "name-b");
         assert_eq!(b.action, "action-b");
@@ -221,15 +235,22 @@ fn hotkeys_delete_removes_row() {
     run(async {
         let user = fresh_user().await;
         let h = traderview_db::hotkeys::upsert(
-            &pool(), user, "del-me",
+            &pool(),
+            user,
+            "del-me",
             &format!("alt+{}", Uuid::new_v4()),
-            "noop", &serde_json::json!({}),
-        ).await.expect("create");
-        let ok = traderview_db::hotkeys::delete(&pool(), user, h.id).await
+            "noop",
+            &serde_json::json!({}),
+        )
+        .await
+        .expect("create");
+        let ok = traderview_db::hotkeys::delete(&pool(), user, h.id)
+            .await
             .expect("delete");
         assert!(ok);
         // Second delete returns false (already gone).
-        let ok2 = traderview_db::hotkeys::delete(&pool(), user, h.id).await
+        let ok2 = traderview_db::hotkeys::delete(&pool(), user, h.id)
+            .await
             .expect("re-delete");
         assert!(!ok2);
     });
@@ -243,30 +264,38 @@ fn hotkeys_delete_removes_row() {
 fn watchlists_full_lifecycle() {
     run(async {
         let user = fresh_user().await;
-        let wl = traderview_db::watchlists::create(&pool(), user, "tech").await
+        let wl = traderview_db::watchlists::create(&pool(), user, "tech")
+            .await
             .expect("create watchlist");
         assert_eq!(wl.name, "tech");
 
-        traderview_db::watchlists::add_symbol(&pool(), wl.id, "AAPL").await
+        traderview_db::watchlists::add_symbol(&pool(), wl.id, "AAPL")
+            .await
             .expect("add aapl");
-        traderview_db::watchlists::add_symbol(&pool(), wl.id, "MSFT").await
+        traderview_db::watchlists::add_symbol(&pool(), wl.id, "MSFT")
+            .await
             .expect("add msft");
-        let syms = traderview_db::watchlists::symbols(&pool(), wl.id).await
+        let syms = traderview_db::watchlists::symbols(&pool(), wl.id)
+            .await
             .expect("list symbols");
         assert!(syms.contains(&"AAPL".to_string()));
         assert!(syms.contains(&"MSFT".to_string()));
 
-        traderview_db::watchlists::remove_symbol(&pool(), wl.id, "AAPL").await
+        traderview_db::watchlists::remove_symbol(&pool(), wl.id, "AAPL")
+            .await
             .expect("remove aapl");
-        let after = traderview_db::watchlists::symbols(&pool(), wl.id).await
+        let after = traderview_db::watchlists::symbols(&pool(), wl.id)
+            .await
             .expect("re-list");
         assert!(!after.contains(&"AAPL".to_string()));
 
-        let renamed = traderview_db::watchlists::rename(&pool(), user, wl.id, "growth").await
+        let renamed = traderview_db::watchlists::rename(&pool(), user, wl.id, "growth")
+            .await
             .expect("rename");
         assert!(renamed);
 
-        let deleted = traderview_db::watchlists::delete(&pool(), user, wl.id).await
+        let deleted = traderview_db::watchlists::delete(&pool(), user, wl.id)
+            .await
             .expect("delete");
         assert!(deleted);
     });
@@ -276,9 +305,11 @@ fn watchlists_full_lifecycle() {
 fn watchlists_ensure_default_is_idempotent() {
     run(async {
         let user = fresh_user().await;
-        let a = traderview_db::watchlists::ensure_default(&pool(), user).await
+        let a = traderview_db::watchlists::ensure_default(&pool(), user)
+            .await
             .expect("first ensure");
-        let b = traderview_db::watchlists::ensure_default(&pool(), user).await
+        let b = traderview_db::watchlists::ensure_default(&pool(), user)
+            .await
             .expect("second ensure");
         assert_eq!(a.id, b.id);
     });
@@ -289,12 +320,15 @@ fn watchlists_ensure_owner_distinguishes_owner_from_outsider() {
     run(async {
         let alice = fresh_user().await;
         let bob = fresh_user().await;
-        let wl = traderview_db::watchlists::create(&pool(), alice, "alice-wl").await
+        let wl = traderview_db::watchlists::create(&pool(), alice, "alice-wl")
+            .await
             .expect("create");
-        let alice_owns = traderview_db::watchlists::ensure_owner(&pool(), alice, wl.id).await
+        let alice_owns = traderview_db::watchlists::ensure_owner(&pool(), alice, wl.id)
+            .await
             .expect("ensure_owner alice");
         assert!(alice_owns);
-        let bob_owns = traderview_db::watchlists::ensure_owner(&pool(), bob, wl.id).await
+        let bob_owns = traderview_db::watchlists::ensure_owner(&pool(), bob, wl.id)
+            .await
             .expect("ensure_owner bob");
         assert!(!bob_owns, "bob is not the owner of alice's watchlist");
     });
@@ -304,7 +338,10 @@ fn watchlists_ensure_owner_distinguishes_owner_from_outsider() {
 // chart_drawings
 // ──────────────────────────────────────────────────────────────────────
 
-fn make_drawing(kind: &str, points: serde_json::Value) -> traderview_db::chart_drawings::DrawingInput {
+fn make_drawing(
+    kind: &str,
+    points: serde_json::Value,
+) -> traderview_db::chart_drawings::DrawingInput {
     traderview_db::chart_drawings::DrawingInput {
         kind: kind.into(),
         points,
@@ -319,15 +356,24 @@ fn chart_drawings_create_list_delete() {
         let user = fresh_user().await;
         let symbol = "AAPL";
         let d = traderview_db::chart_drawings::create(
-            &pool(), user, symbol,
-            &make_drawing("trendline", serde_json::json!([{"x":0,"y":100},{"x":10,"y":150}])),
-        ).await.expect("create drawing");
+            &pool(),
+            user,
+            symbol,
+            &make_drawing(
+                "trendline",
+                serde_json::json!([{"x":0,"y":100},{"x":10,"y":150}]),
+            ),
+        )
+        .await
+        .expect("create drawing");
 
-        let listed = traderview_db::chart_drawings::list_for_symbol(&pool(), user, symbol).await
+        let listed = traderview_db::chart_drawings::list_for_symbol(&pool(), user, symbol)
+            .await
             .expect("list");
         assert!(listed.iter().any(|x| x.id == d.id));
 
-        let ok = traderview_db::chart_drawings::delete(&pool(), user, d.id).await
+        let ok = traderview_db::chart_drawings::delete(&pool(), user, d.id)
+            .await
             .expect("delete");
         assert!(ok);
     });
@@ -338,9 +384,12 @@ fn chart_drawings_create_rejects_unknown_kind() {
     run(async {
         let user = fresh_user().await;
         let res = traderview_db::chart_drawings::create(
-            &pool(), user, "AAPL",
+            &pool(),
+            user,
+            "AAPL",
             &make_drawing("nonsense-kind", serde_json::json!([])),
-        ).await;
+        )
+        .await;
         assert!(res.is_err(), "unknown drawing kind must be rejected");
     });
 }
@@ -350,24 +399,38 @@ fn chart_drawings_delete_all_for_symbol_clears_only_that_symbol() {
     run(async {
         let user = fresh_user().await;
         traderview_db::chart_drawings::create(
-            &pool(), user, "AAPL",
+            &pool(),
+            user,
+            "AAPL",
             &make_drawing("trendline", serde_json::json!([])),
-        ).await.expect("aapl");
+        )
+        .await
+        .expect("aapl");
         traderview_db::chart_drawings::create(
-            &pool(), user, "MSFT",
+            &pool(),
+            user,
+            "MSFT",
             &make_drawing("trendline", serde_json::json!([])),
-        ).await.expect("msft");
+        )
+        .await
+        .expect("msft");
 
-        let removed = traderview_db::chart_drawings::delete_all_for_symbol(&pool(), user, "AAPL").await
+        let removed = traderview_db::chart_drawings::delete_all_for_symbol(&pool(), user, "AAPL")
+            .await
             .expect("delete aapl");
         assert!(removed > 0);
 
-        let aapl_after = traderview_db::chart_drawings::list_for_symbol(&pool(), user, "AAPL").await
+        let aapl_after = traderview_db::chart_drawings::list_for_symbol(&pool(), user, "AAPL")
+            .await
             .expect("list aapl");
-        let msft_after = traderview_db::chart_drawings::list_for_symbol(&pool(), user, "MSFT").await
+        let msft_after = traderview_db::chart_drawings::list_for_symbol(&pool(), user, "MSFT")
+            .await
             .expect("list msft");
         assert!(aapl_after.is_empty());
-        assert!(!msft_after.is_empty(), "MSFT drawings must survive AAPL purge");
+        assert!(
+            !msft_after.is_empty(),
+            "MSFT drawings must survive AAPL purge"
+        );
     });
 }
 
@@ -375,8 +438,14 @@ fn chart_drawings_delete_all_for_symbol_clears_only_that_symbol() {
 // dashboards
 // ──────────────────────────────────────────────────────────────────────
 
-fn make_dashboard(name: &str, layout: Option<serde_json::Value>) -> traderview_db::dashboards::DashboardInput {
-    traderview_db::dashboards::DashboardInput { name: name.into(), layout }
+fn make_dashboard(
+    name: &str,
+    layout: Option<serde_json::Value>,
+) -> traderview_db::dashboards::DashboardInput {
+    traderview_db::dashboards::DashboardInput {
+        name: name.into(),
+        layout,
+    }
 }
 
 #[test]
@@ -384,23 +453,41 @@ fn dashboards_create_get_update_delete() {
     run(async {
         let user = fresh_user().await;
         let d = traderview_db::dashboards::create(
-            &pool(), user, &make_dashboard("main", Some(serde_json::json!({"widgets": []}))),
-        ).await.expect("create");
+            &pool(),
+            user,
+            &make_dashboard("main", Some(serde_json::json!({"widgets": []}))),
+        )
+        .await
+        .expect("create");
 
-        let got = traderview_db::dashboards::get(&pool(), user, d.id).await
-            .expect("get").expect("present");
+        let got = traderview_db::dashboards::get(&pool(), user, d.id)
+            .await
+            .expect("get")
+            .expect("present");
         assert_eq!(got.id, d.id);
         assert_eq!(got.name, "main");
 
         let updated = traderview_db::dashboards::update(
-            &pool(), user, d.id,
-            &make_dashboard("renamed", Some(serde_json::json!({"widgets": [{"type": "pnl"}]}))),
-        ).await.expect("update").expect("row");
+            &pool(),
+            user,
+            d.id,
+            &make_dashboard(
+                "renamed",
+                Some(serde_json::json!({"widgets": [{"type": "pnl"}]})),
+            ),
+        )
+        .await
+        .expect("update")
+        .expect("row");
         assert_eq!(updated.name, "renamed");
 
-        let ok = traderview_db::dashboards::delete(&pool(), user, d.id).await.expect("delete");
+        let ok = traderview_db::dashboards::delete(&pool(), user, d.id)
+            .await
+            .expect("delete");
         assert!(ok);
-        let gone = traderview_db::dashboards::get(&pool(), user, d.id).await.expect("get post-delete");
+        let gone = traderview_db::dashboards::get(&pool(), user, d.id)
+            .await
+            .expect("get post-delete");
         assert!(gone.is_none());
     });
 }
@@ -410,10 +497,12 @@ fn dashboards_get_returns_none_for_other_users_dashboard() {
     run(async {
         let alice = fresh_user().await;
         let bob = fresh_user().await;
-        let d = traderview_db::dashboards::create(
-            &pool(), alice, &make_dashboard("alice-dash", None),
-        ).await.expect("create");
-        let bob_view = traderview_db::dashboards::get(&pool(), bob, d.id).await
+        let d =
+            traderview_db::dashboards::create(&pool(), alice, &make_dashboard("alice-dash", None))
+                .await
+                .expect("create");
+        let bob_view = traderview_db::dashboards::get(&pool(), bob, d.id)
+            .await
             .expect("get");
         assert!(bob_view.is_none(), "bob must not see alice's dashboard");
     });
@@ -442,10 +531,13 @@ fn make_goal(name: &str, days_ahead: i64) -> traderview_db::goals::GoalInput {
 fn goals_create_then_list_returns_inserted() {
     run(async {
         let user = fresh_user().await;
-        let g = traderview_db::goals::create(&pool(), user, &make_goal("$1k month", 30)).await
+        let g = traderview_db::goals::create(&pool(), user, &make_goal("$1k month", 30))
+            .await
             .expect("create goal");
         assert_eq!(g.user_id, user);
-        let list = traderview_db::goals::list(&pool(), user).await.expect("list");
+        let list = traderview_db::goals::list(&pool(), user)
+            .await
+            .expect("list");
         assert!(list.iter().any(|x| x.id == g.id));
     });
 }
@@ -455,9 +547,12 @@ fn goals_get_isolates_per_user() {
     run(async {
         let alice = fresh_user().await;
         let bob = fresh_user().await;
-        let g = traderview_db::goals::create(&pool(), alice, &make_goal("alice goal", 7)).await
+        let g = traderview_db::goals::create(&pool(), alice, &make_goal("alice goal", 7))
+            .await
             .expect("create");
-        let bob_view = traderview_db::goals::get(&pool(), bob, g.id).await.expect("get");
+        let bob_view = traderview_db::goals::get(&pool(), bob, g.id)
+            .await
+            .expect("get");
         assert!(bob_view.is_none());
     });
 }
@@ -466,11 +561,16 @@ fn goals_get_isolates_per_user() {
 fn goals_delete_removes_row() {
     run(async {
         let user = fresh_user().await;
-        let g = traderview_db::goals::create(&pool(), user, &make_goal("to-be-deleted", 1)).await
+        let g = traderview_db::goals::create(&pool(), user, &make_goal("to-be-deleted", 1))
+            .await
             .expect("create");
-        let ok = traderview_db::goals::delete(&pool(), user, g.id).await.expect("delete");
+        let ok = traderview_db::goals::delete(&pool(), user, g.id)
+            .await
+            .expect("delete");
         assert!(ok);
-        let gone = traderview_db::goals::get(&pool(), user, g.id).await.expect("get");
+        let gone = traderview_db::goals::get(&pool(), user, g.id)
+            .await
+            .expect("get");
         assert!(gone.is_none());
     });
 }
@@ -513,12 +613,13 @@ fn trade_reviews_stats_for_empty_account_returns_zero_counts() {
     run(async {
         let user = fresh_user().await;
         let account = fresh_account(user).await;
-        let stats = traderview_db::trade_reviews::stats(&pool(), user, account).await
+        let stats = traderview_db::trade_reviews::stats(&pool(), user, account)
+            .await
             .expect("stats");
         // With no reviews: counts should be sane defaults (0/none).
         // The exact struct depends on impl; this asserts the call
         // succeeds with no rows in either table.
-        let _ = stats;       // smoke: any successful response is acceptable
+        let _ = stats; // smoke: any successful response is acceptable
     });
 }
 
@@ -526,7 +627,8 @@ fn trade_reviews_stats_for_empty_account_returns_zero_counts() {
 fn trade_reviews_list_returns_empty_for_fresh_user() {
     run(async {
         let user = fresh_user().await;
-        let list = traderview_db::trade_reviews::list(&pool(), user, 50).await
+        let list = traderview_db::trade_reviews::list(&pool(), user, 50)
+            .await
             .expect("list");
         assert!(list.is_empty(), "no reviews for a brand-new user");
     });
@@ -540,9 +642,11 @@ fn trade_reviews_list_returns_empty_for_fresh_user() {
 fn paper_ensure_default_then_list_includes_account() {
     run(async {
         let user = fresh_user().await;
-        let acct = traderview_db::paper::ensure_default(&pool(), user).await
+        let acct = traderview_db::paper::ensure_default(&pool(), user)
+            .await
             .expect("ensure default paper account");
-        let list = traderview_db::paper::list_accounts(&pool(), user).await
+        let list = traderview_db::paper::list_accounts(&pool(), user)
+            .await
             .expect("list paper accounts");
         assert!(list.iter().any(|a| a.id == acct.id));
     });
@@ -552,9 +656,11 @@ fn paper_ensure_default_then_list_includes_account() {
 fn paper_ensure_default_is_idempotent() {
     run(async {
         let user = fresh_user().await;
-        let a = traderview_db::paper::ensure_default(&pool(), user).await
+        let a = traderview_db::paper::ensure_default(&pool(), user)
+            .await
             .expect("first");
-        let b = traderview_db::paper::ensure_default(&pool(), user).await
+        let b = traderview_db::paper::ensure_default(&pool(), user)
+            .await
             .expect("second");
         assert_eq!(a.id, b.id);
     });

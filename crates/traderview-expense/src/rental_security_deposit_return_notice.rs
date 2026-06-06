@@ -309,15 +309,15 @@ fn compute_full_forfeiture_exposure(input: &Input) -> u64 {
                 .deductions_amount_claimed_cents
                 .saturating_mul(TX_BAD_FAITH_MULTIPLIER),
         ),
-        Jurisdiction::Massachusetts => {
-            input.deposit_held_cents.saturating_mul(MA_BAD_FAITH_MULTIPLIER)
-        }
-        Jurisdiction::California => {
-            input.deposit_held_cents.saturating_mul(CA_BAD_FAITH_MULTIPLIER)
-        }
-        Jurisdiction::NewYork => {
-            input.deposit_held_cents.saturating_mul(NY_BAD_FAITH_MULTIPLIER)
-        }
+        Jurisdiction::Massachusetts => input
+            .deposit_held_cents
+            .saturating_mul(MA_BAD_FAITH_MULTIPLIER),
+        Jurisdiction::California => input
+            .deposit_held_cents
+            .saturating_mul(CA_BAD_FAITH_MULTIPLIER),
+        Jurisdiction::NewYork => input
+            .deposit_held_cents
+            .saturating_mul(NY_BAD_FAITH_MULTIPLIER),
         Jurisdiction::IllinoisChicagoRlto => input
             .deposit_held_cents
             .saturating_mul(IL_CHICAGO_BAD_FAITH_MULTIPLIER),
@@ -356,7 +356,10 @@ mod tests {
         let mut input = base_ca();
         input.days_after_move_out_deposit_returned = 22;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::BadFaithRetentionDoubleOrTripleDamages);
+        assert_eq!(
+            output.severity,
+            Severity::BadFaithRetentionDoubleOrTripleDamages
+        );
         // 2 × $3,000 = $6,000
         assert_eq!(output.estimated_landlord_exposure_cents, 6_000_00);
         assert!(output.note.contains("§ 1950.5(l)"));
@@ -373,8 +376,7 @@ mod tests {
     #[test]
     fn california_no_deductions_full_return_compliant() {
         let mut input = base_ca();
-        input.deductions_claimed_status =
-            DeductionsClaimedStatus::NoDeductionsClaimedFullReturnDue;
+        input.deductions_claimed_status = DeductionsClaimedStatus::NoDeductionsClaimedFullReturnDue;
         let output = check(&input);
         assert_eq!(output.severity, Severity::CompliantNoDeductionsFullReturn);
     }
@@ -436,8 +438,7 @@ mod tests {
     fn florida_no_deductions_15_day_deadline() {
         let mut input = base_ca();
         input.jurisdiction = Jurisdiction::Florida;
-        input.deductions_claimed_status =
-            DeductionsClaimedStatus::NoDeductionsClaimedFullReturnDue;
+        input.deductions_claimed_status = DeductionsClaimedStatus::NoDeductionsClaimedFullReturnDue;
         let output = check(&input);
         assert_eq!(output.statutory_deadline_days, 15);
     }
@@ -521,7 +522,10 @@ mod tests {
         let mut input = base_ca();
         input.bad_faith_alleged = true;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::BadFaithRetentionDoubleOrTripleDamages);
+        assert_eq!(
+            output.severity,
+            Severity::BadFaithRetentionDoubleOrTripleDamages
+        );
         // CA: 2 × $3,000 = $6,000
         assert_eq!(output.estimated_landlord_exposure_cents, 6_000_00);
     }

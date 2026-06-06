@@ -32,14 +32,14 @@ pub struct QuantileRegressionReport {
     pub n_observations: usize,
 }
 
-pub fn fit(
-    x: &[f64],
-    y: &[f64],
-    tau: f64,
-) -> Option<QuantileRegressionReport> {
+pub fn fit(x: &[f64], y: &[f64], tau: f64) -> Option<QuantileRegressionReport> {
     let n = x.len();
-    if n < 10 || y.len() != n { return None; }
-    if !tau.is_finite() || !(0.001..=0.999).contains(&tau) { return None; }
+    if n < 10 || y.len() != n {
+        return None;
+    }
+    if !tau.is_finite() || !(0.001..=0.999).contains(&tau) {
+        return None;
+    }
     if x.iter().any(|v| !v.is_finite()) || y.iter().any(|v| !v.is_finite()) {
         return None;
     }
@@ -53,7 +53,9 @@ pub fn fit(
         sxx += (x[i] - x_mean).powi(2);
         sxy += (x[i] - x_mean) * (y[i] - y_mean);
     }
-    if sxx <= 0.0 { return None; }
+    if sxx <= 0.0 {
+        return None;
+    }
     let mut beta = sxy / sxx;
     let mut alpha = y_mean - beta * x_mean;
     // IRLS: w_i = (τ − 𝟙{r < 0}) / |r| (clipped to avoid singularity).
@@ -79,21 +81,29 @@ pub fn fit(
             sum_wxy += w * x[i] * y[i];
         }
         let det = sum_w * sum_wxx - sum_wx * sum_wx;
-        if det.abs() < 1e-18 { break; }
+        if det.abs() < 1e-18 {
+            break;
+        }
         beta = (sum_w * sum_wxy - sum_wx * sum_wy) / det;
         alpha = (sum_wy - beta * sum_wx) / sum_w;
         // Objective: Σ ρ_τ(r).
-        let obj: f64 = (0..n).map(|i| {
-            let r = y[i] - alpha - beta * x[i];
-            r * (tau - if r < 0.0 { 1.0 } else { 0.0 })
-        }).sum();
-        if (last_obj - obj).abs() < 1e-9 { break; }
+        let obj: f64 = (0..n)
+            .map(|i| {
+                let r = y[i] - alpha - beta * x[i];
+                r * (tau - if r < 0.0 { 1.0 } else { 0.0 })
+            })
+            .sum();
+        if (last_obj - obj).abs() < 1e-9 {
+            break;
+        }
         last_obj = obj;
     }
-    let obj_final: f64 = (0..n).map(|i| {
-        let r = y[i] - alpha - beta * x[i];
-        r * (tau - if r < 0.0 { 1.0 } else { 0.0 })
-    }).sum();
+    let obj_final: f64 = (0..n)
+        .map(|i| {
+            let r = y[i] - alpha - beta * x[i];
+            r * (tau - if r < 0.0 { 1.0 } else { 0.0 })
+        })
+        .sum();
     Some(QuantileRegressionReport {
         alpha,
         beta,
@@ -110,15 +120,19 @@ mod tests {
 
     fn box_muller(n: usize, seed: u64) -> Vec<f64> {
         let mut state = seed;
-        (0..n).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u2 = (state >> 32) as f64 / u32::MAX as f64;
-            (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
-        }).collect()
+        (0..n)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u2 = (state >> 32) as f64 / u32::MAX as f64;
+                (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
+            })
+            .collect()
     }
 
     #[test]
@@ -157,10 +171,17 @@ mod tests {
         // With symmetric noise, median ≈ OLS slope.
         let x: Vec<f64> = (0..200).map(|i| i as f64).collect();
         let noise = box_muller(200, 42);
-        let y: Vec<f64> = x.iter().zip(noise.iter()).map(|(xi, n)| 2.0 * xi + n).collect();
+        let y: Vec<f64> = x
+            .iter()
+            .zip(noise.iter())
+            .map(|(xi, n)| 2.0 * xi + n)
+            .collect();
         let r = fit(&x, &y, 0.5).unwrap();
-        assert!((r.beta - 2.0).abs() < 0.10,
-            "median: β should be ≈ 2.0, got {}", r.beta);
+        assert!(
+            (r.beta - 2.0).abs() < 0.10,
+            "median: β should be ≈ 2.0, got {}",
+            r.beta
+        );
     }
 
     #[test]

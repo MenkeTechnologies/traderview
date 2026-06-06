@@ -71,8 +71,10 @@ mod tests {
         let down: Vec<f64> = (1..=40).map(|i| 200.0 - i as f64).collect();
         let cg_up = compute(&up, 10)[39].expect("populated");
         let cg_down = compute(&down, 10)[39].expect("populated");
-        assert!(cg_up.signum() == -cg_down.signum() || cg_up.abs() < 1e-3 || cg_down.abs() < 1e-3,
-            "CG should have opposite signs for up vs down trends, got {cg_up} / {cg_down}");
+        assert!(
+            cg_up.signum() == -cg_down.signum() || cg_up.abs() < 1e-3 || cg_down.abs() < 1e-3,
+            "CG should have opposite signs for up vs down trends, got {cg_up} / {cg_down}"
+        );
     }
 
     #[test]
@@ -80,7 +82,9 @@ mod tests {
         // All-zero window → denominator 0 → None.
         let v = vec![0.0; 20];
         let out = compute(&v, 5);
-        for v in &out { assert!(v.is_none()); }
+        for v in &out {
+            assert!(v.is_none());
+        }
     }
 
     #[test]

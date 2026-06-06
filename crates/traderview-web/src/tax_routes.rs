@@ -14,8 +14,14 @@ use uuid::Uuid;
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/estimated-payments", get(list_payments).post(create_payment))
-        .route("/estimated-payments/:id", patch(update_payment).delete(delete_payment))
+        .route(
+            "/estimated-payments",
+            get(list_payments).post(create_payment),
+        )
+        .route(
+            "/estimated-payments/:id",
+            patch(update_payment).delete(delete_payment),
+        )
         .route("/categories/:id/kind", patch(set_category_kind))
         .route("/purchases", get(list_purchases))
         .route("/monthly-totals", get(monthly_totals))
@@ -68,20 +74,24 @@ async fn top_merchants(
 
     // Pull the year's done receipts + items. Items live in the JSONB
     // column; we walk in Rust so canonicalization rules apply.
-    let rows: Vec<(Uuid, Option<String>, Option<NaiveDate>, Option<serde_json::Value>)> =
-        sqlx::query_as(
-            "SELECT id, ocr_merchant, ocr_date, ocr_extracted
+    let rows: Vec<(
+        Uuid,
+        Option<String>,
+        Option<NaiveDate>,
+        Option<serde_json::Value>,
+    )> = sqlx::query_as(
+        "SELECT id, ocr_merchant, ocr_date, ocr_extracted
                FROM receipts
               WHERE user_id = $1
                 AND ocr_status = 'done'::ocr_status_t
                 AND ocr_merchant IS NOT NULL
                 AND ocr_extracted IS NOT NULL
                 AND EXTRACT(YEAR FROM ocr_date) = $2",
-        )
-        .bind(user.id)
-        .bind(year)
-        .fetch_all(&s.pool)
-        .await?;
+    )
+    .bind(user.id)
+    .bind(year)
+    .fetch_all(&s.pool)
+    .await?;
 
     let aliases = crate::merchant::load_aliases(&s.pool, user.id)
         .await
@@ -101,7 +111,9 @@ async fn top_merchants(
     let mut by_canon: HashMap<String, Acc> = HashMap::new();
 
     for (receipt_id, merchant_raw, date, extracted) in rows {
-        let Some(merchant_raw) = merchant_raw else { continue };
+        let Some(merchant_raw) = merchant_raw else {
+            continue;
+        };
         let Some(extracted) = extracted else { continue };
         let canonical = crate::merchant::canonicalize(&merchant_raw, &aliases);
         if canonical.is_empty() {
@@ -130,14 +142,20 @@ async fn top_merchants(
         }
 
         for item in items {
-            let total_str = item.get("line_total").and_then(|v| v.as_str()).unwrap_or("");
+            let total_str = item
+                .get("line_total")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
             let line = total_str.parse::<Decimal>().unwrap_or(Decimal::ZERO);
             entry.total += line;
             entry.item_count += 1;
-            let bucket = item.get("tax_bucket").and_then(|v| v.as_str()).unwrap_or("");
+            let bucket = item
+                .get("tax_bucket")
+                .and_then(|v| v.as_str())
+                .unwrap_or("");
             match bucket {
                 "business" => entry.business += line,
-                "rental"   => entry.rental += line,
+                "rental" => entry.rental += line,
                 "personal" => entry.personal += line,
                 _ => { /* unclassified — counted in total only */ }
             }
@@ -160,7 +178,7 @@ async fn top_merchants(
         .collect();
 
     // Sort by total spend descending, keep top-N.
-    out.sort_by(|a, b| b.total.cmp(&a.total));
+    out.sort_by_key(|c| std::cmp::Reverse(c.total));
     out.truncate(limit);
 
     Ok(Json(out))
@@ -302,14 +320,12 @@ async fn delete_payment(
     user: AuthUser,
     Path(id): Path<Uuid>,
 ) -> Result<axum::http::StatusCode, ApiError> {
-    let n = sqlx::query(
-        "DELETE FROM estimated_tax_payments WHERE id = $1 AND user_id = $2",
-    )
-    .bind(id)
-    .bind(user.id)
-    .execute(&s.pool)
-    .await?
-    .rows_affected();
+    let n = sqlx::query("DELETE FROM estimated_tax_payments WHERE id = $1 AND user_id = $2")
+        .bind(id)
+        .bind(user.id)
+        .execute(&s.pool)
+        .await?
+        .rows_affected();
     if n == 0 {
         return Err(ApiError::NotFound);
     }
@@ -337,20 +353,29 @@ struct KindBody {
 
 #[derive(Deserialize)]
 struct PurchasesQ {
-    #[serde(default)] from: Option<NaiveDate>,
-    #[serde(default)] to: Option<NaiveDate>,
-    #[serde(default)] category: Option<String>,
-    #[serde(default)] tax_bucket: Option<String>,
-    #[serde(default)] min_total: Option<Decimal>,
-    #[serde(default)] max_total: Option<Decimal>,
-    #[serde(default)] search: Option<String>,
-    #[serde(default)] offset: Option<i64>,
-    #[serde(default)] limit: Option<i64>,
+    #[serde(default)]
+    from: Option<NaiveDate>,
+    #[serde(default)]
+    to: Option<NaiveDate>,
+    #[serde(default)]
+    category: Option<String>,
+    #[serde(default)]
+    tax_bucket: Option<String>,
+    #[serde(default)]
+    min_total: Option<Decimal>,
+    #[serde(default)]
+    max_total: Option<Decimal>,
+    #[serde(default)]
+    search: Option<String>,
+    #[serde(default)]
+    offset: Option<i64>,
+    #[serde(default)]
+    limit: Option<i64>,
 }
 
 #[derive(Serialize, sqlx::FromRow)]
 struct PurchaseRow {
-    source: String,                 // "receipt_item" | "transaction"
+    source: String, // "receipt_item" | "transaction"
     date: Option<NaiveDate>,
     name: String,
     qty: Option<Decimal>,
@@ -561,7 +586,9 @@ async fn monthly_totals(
     user: AuthUser,
     axum::extract::Query(q): axum::extract::Query<YearQ>,
 ) -> Result<Json<Vec<MonthlyRow>>, ApiError> {
-    let year = q.year.unwrap_or_else(|| chrono::Utc::now().date_naive().year() as i32);
+    let year = q
+        .year
+        .unwrap_or_else(|| chrono::Utc::now().date_naive().year());
     // Generate the 12-row series first (so months with zero spend
     // still show as bars), then LEFT JOIN the aggregated JSONB sums.
     let rows: Vec<MonthlyRow> = sqlx::query_as(
@@ -634,7 +661,7 @@ async fn yoy_trend(
     axum::extract::Query(q): axum::extract::Query<YoyQ>,
 ) -> Result<Json<Vec<YearRow>>, ApiError> {
     let n = q.years.unwrap_or(5).clamp(1, 10) as i32;
-    let current_year = chrono::Utc::now().date_naive().year() as i32;
+    let current_year = chrono::Utc::now().date_naive().year();
     let from_year = current_year - n + 1;
     let rows: Vec<YearRow> = sqlx::query_as(
         r#"

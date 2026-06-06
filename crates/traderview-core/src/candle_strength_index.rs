@@ -22,20 +22,35 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub open: f64, pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 pub fn compute(bars: &[Bar], period: usize) -> Vec<Option<f64>> {
     let n = bars.len();
     let mut out = vec![None; n];
-    if period < 2 || n < period { return out; }
-    if bars.iter().any(|b| !b.open.is_finite() || !b.high.is_finite()
-        || !b.low.is_finite() || !b.close.is_finite()) {
+    if period < 2 || n < period {
         return out;
     }
-    let raw: Vec<f64> = bars.iter().map(|b| {
-        let r = b.high - b.low;
-        if r > 0.0 { (b.close - b.open) / r } else { 0.0 }
-    }).collect();
+    if bars.iter().any(|b| {
+        !b.open.is_finite() || !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()
+    }) {
+        return out;
+    }
+    let raw: Vec<f64> = bars
+        .iter()
+        .map(|b| {
+            let r = b.high - b.low;
+            if r > 0.0 {
+                (b.close - b.open) / r
+            } else {
+                0.0
+            }
+        })
+        .collect();
     let p_f = period as f64;
     let k = 2.0 / (p_f + 1.0);
     let seed: f64 = raw[..period].iter().sum::<f64>() / p_f;
@@ -53,7 +68,12 @@ mod tests {
     use super::*;
 
     fn bar(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -100,10 +120,15 @@ mod tests {
 
     #[test]
     fn alternating_bars_average_to_zero() {
-        let bars: Vec<_> = (0_usize..30).map(|i| {
-            if i.is_multiple_of(2) { bar(100.0, 110.0, 100.0, 110.0) }
-            else { bar(110.0, 110.0, 100.0, 100.0) }
-        }).collect();
+        let bars: Vec<_> = (0_usize..30)
+            .map(|i| {
+                if i.is_multiple_of(2) {
+                    bar(100.0, 110.0, 100.0, 110.0)
+                } else {
+                    bar(110.0, 110.0, 100.0, 100.0)
+                }
+            })
+            .collect();
         let r = compute(&bars, 14);
         // After EMA settles, alternating ±1 averages near 0 (but EMA
         // weighting may bias slightly toward last value).
@@ -114,17 +139,19 @@ mod tests {
     #[test]
     fn output_in_unit_signed_range() {
         let mut state: u64 = 42;
-        let bars: Vec<_> = (0..200).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
-            let m = 100.0 + (r - 0.5) * 4.0;
-            bar(m, m + 1.0, m - 1.0, m + (r - 0.5) * 0.5)
-        }).collect();
+        let bars: Vec<_> = (0..200)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
+                let m = 100.0 + (r - 0.5) * 4.0;
+                bar(m, m + 1.0, m - 1.0, m + (r - 0.5) * 0.5)
+            })
+            .collect();
         let r = compute(&bars, 14);
         for v in r.iter().flatten() {
-            assert!((-1.0..=1.0).contains(v),
-                "CSI out of [-1, 1]: {v}");
+            assert!((-1.0..=1.0).contains(v), "CSI out of [-1, 1]: {v}");
         }
     }
 

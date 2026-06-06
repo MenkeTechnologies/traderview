@@ -33,10 +33,18 @@ pub struct Report {
 
 pub fn compute(cov: &[Vec<f64>], max_iter: u32) -> Option<Report> {
     let n = cov.len();
-    if n < 2 || max_iter == 0 { return None; }
-    if cov.iter().any(|row| row.len() != n) { return None; }
-    if cov.iter().any(|row| row.iter().any(|v| !v.is_finite())) { return None; }
-    if (0..n).any(|i| cov[i][i] <= 0.0) { return None; }
+    if n < 2 || max_iter == 0 {
+        return None;
+    }
+    if cov.iter().any(|row| row.len() != n) {
+        return None;
+    }
+    if cov.iter().any(|row| row.iter().any(|v| !v.is_finite())) {
+        return None;
+    }
+    if (0..n).any(|i| cov[i][i] <= 0.0) {
+        return None;
+    }
     // Initialize: inverse-volatility weights.
     let inv_vol: Vec<f64> = (0..n).map(|i| 1.0 / cov[i][i].sqrt()).collect();
     let denom_init: f64 = inv_vol.iter().sum();
@@ -49,28 +57,43 @@ pub fn compute(cov: &[Vec<f64>], max_iter: u32) -> Option<Report> {
         iters += 1;
         let sigma_w = matvec(cov, &w);
         let var: f64 = w.iter().zip(sigma_w.iter()).map(|(a, b)| a * b).sum();
-        if var <= 1e-18 { break; }
+        if var <= 1e-18 {
+            break;
+        }
         let total_rc: f64 = w.iter().zip(sigma_w.iter()).map(|(a, b)| a * b).sum();
-        let rc: Vec<f64> = w.iter().zip(sigma_w.iter())
-            .map(|(a, b)| (a * b) / total_rc).collect();
+        let rc: Vec<f64> = w
+            .iter()
+            .zip(sigma_w.iter())
+            .map(|(a, b)| (a * b) / total_rc)
+            .collect();
         // Convergence check: max relative deviation < 0.5%.
-        let max_dev = rc.iter().map(|x| (x - target_share).abs() / target_share)
+        let max_dev = rc
+            .iter()
+            .map(|x| (x - target_share).abs() / target_share)
             .fold(0.0_f64, f64::max);
-        if max_dev < 5e-3 { converged = true; break; }
+        if max_dev < 5e-3 {
+            converged = true;
+            break;
+        }
         // Update.
         for i in 0..n {
             let ratio = (target_share / rc[i].max(1e-18)).powf(alpha);
             w[i] *= ratio;
         }
         let sum: f64 = w.iter().sum();
-        for wi in w.iter_mut() { *wi /= sum; }
+        for wi in w.iter_mut() {
+            *wi /= sum;
+        }
     }
     let sigma_w = matvec(cov, &w);
     let variance: f64 = w.iter().zip(sigma_w.iter()).map(|(a, b)| a * b).sum();
     let stdev = variance.max(0.0).sqrt();
     let total_rc: f64 = w.iter().zip(sigma_w.iter()).map(|(a, b)| a * b).sum();
-    let rc: Vec<f64> = w.iter().zip(sigma_w.iter())
-        .map(|(a, b)| (a * b) / total_rc.max(1e-18)).collect();
+    let rc: Vec<f64> = w
+        .iter()
+        .zip(sigma_w.iter())
+        .map(|(a, b)| (a * b) / total_rc.max(1e-18))
+        .collect();
     Some(Report {
         weights: w,
         risk_contributions: rc,
@@ -83,11 +106,15 @@ pub fn compute(cov: &[Vec<f64>], max_iter: u32) -> Option<Report> {
 
 fn matvec(m: &[Vec<f64>], v: &[f64]) -> Vec<f64> {
     let n = m.len();
-    (0..n).map(|i| {
-        let mut s = 0.0;
-        for j in 0..n { s += m[i][j] * v[j]; }
-        s
-    }).collect()
+    (0..n)
+        .map(|i| {
+            let mut s = 0.0;
+            for j in 0..n {
+                s += m[i][j] * v[j];
+            }
+            s
+        })
+        .collect()
 }
 
 #[cfg(test)]
@@ -97,7 +124,9 @@ mod tests {
     fn diag(d: &[f64]) -> Vec<Vec<f64>> {
         let n = d.len();
         let mut m = vec![vec![0.0_f64; n]; n];
-        for (i, &v) in d.iter().enumerate() { m[i][i] = v; }
+        for (i, &v) in d.iter().enumerate() {
+            m[i][i] = v;
+        }
         m
     }
 
@@ -159,9 +188,7 @@ mod tests {
 
     #[test]
     fn portfolio_variance_finite_and_non_negative() {
-        let m = vec![
-            vec![0.04, 0.01], vec![0.01, 0.09],
-        ];
+        let m = vec![vec![0.04, 0.01], vec![0.01, 0.09]];
         let r = compute(&m, 500).unwrap();
         assert!(r.portfolio_variance >= 0.0);
         assert!(r.portfolio_variance.is_finite());

@@ -182,9 +182,7 @@ pub struct TenantPositiveRentReportingResult {
     pub notes: Vec<String>,
 }
 
-pub fn check(
-    input: &TenantPositiveRentReportingInput,
-) -> TenantPositiveRentReportingResult {
+pub fn check(input: &TenantPositiveRentReportingInput) -> TenantPositiveRentReportingResult {
     let mut failure_reasons: Vec<String> = Vec::new();
 
     let post_april_2025 = input.determination_year > 2025
@@ -197,28 +195,27 @@ pub fn check(
 
     let offer_obligation_triggered = match input.jurisdiction {
         Jurisdiction::California => {
-            post_april_2025
-                && (input.dwelling_unit_count >= 16 || ca_15_unit_carveout_engaged)
+            post_april_2025 && (input.dwelling_unit_count >= 16 || ca_15_unit_carveout_engaged)
         }
         Jurisdiction::Colorado => input.determination_year >= 2023,
-        Jurisdiction::Washington => input.determination_year >= 2024
-            && input.dwelling_unit_count >= 5,
+        Jurisdiction::Washington => {
+            input.determination_year >= 2024 && input.dwelling_unit_count >= 5
+        }
         Jurisdiction::Default => false,
     };
 
-    let offer_compliant = !offer_obligation_triggered
-        || (input.offer_made_at_lease && input.offered_annually);
+    let offer_compliant =
+        !offer_obligation_triggered || (input.offer_made_at_lease && input.offered_annually);
 
     let cap_cents = 1_000_u64;
     let fee_cap = cap_cents.min(input.actual_monthly_cost_cents);
-    let fee_cap_compliant = !input.tenant_elected_reporting
-        || input.monthly_fee_charged_cents <= fee_cap;
+    let fee_cap_compliant =
+        !input.tenant_elected_reporting || input.monthly_fee_charged_cents <= fee_cap;
 
     let positive_only_compliant =
         !input.tenant_elected_reporting || input.reports_only_positive_payments;
 
-    let stop_reporting_eligible =
-        input.tenant_elected_reporting && input.days_fee_unpaid >= 30;
+    let stop_reporting_eligible = input.tenant_elected_reporting && input.days_fee_unpaid >= 30;
 
     let tenant_protections_compliant =
         !input.terminated_for_fee_nonpayment && !input.deducted_fee_from_security_deposit;
@@ -405,8 +402,10 @@ mod tests {
         i.offered_annually = false;
         let r = check(&i);
         assert!(!r.offer_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 1954.07")
-            && f.contains("AT LEAST ONCE ANNUALLY")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1954.07") && f.contains("AT LEAST ONCE ANNUALLY")));
     }
 
     #[test]
@@ -465,8 +464,10 @@ mod tests {
         i.terminated_for_fee_nonpayment = true;
         let r = check(&i);
         assert!(!r.tenant_protections_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 1954.07")
-            && f.contains("SHALL NOT BE CAUSE FOR TERMINATION")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1954.07") && f.contains("SHALL NOT BE CAUSE FOR TERMINATION")));
     }
 
     #[test]
@@ -640,22 +641,30 @@ mod tests {
     #[test]
     fn note_pins_colorado_hb_23_1099() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("Colorado HB 23-1099")
-            && n.contains("Section 8")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Colorado HB 23-1099") && n.contains("Section 8")));
     }
 
     #[test]
     fn note_pins_washington_sb_5495() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("Washington SB 5495 of 2024")
-            && n.contains("5+ units")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Washington SB 5495 of 2024") && n.contains("5+ units")));
     }
 
     #[test]
     fn note_pins_hud_pilot_2023_2025() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("HUD Tenant Credit Reporting Pilot")
-            && n.contains("FY 2023-2025")));
+        assert!(
+            r.notes
+                .iter()
+                .any(|n| n.contains("HUD Tenant Credit Reporting Pilot")
+                    && n.contains("FY 2023-2025"))
+        );
     }
 
     #[test]
@@ -670,8 +679,11 @@ mod tests {
     #[test]
     fn note_pins_optional_election() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("Tenant election is OPTIONAL")
-            && n.contains("OFFER MANDATE not a REPORT MANDATE")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Tenant election is OPTIONAL")
+                && n.contains("OFFER MANDATE not a REPORT MANDATE")));
     }
 
     #[test]

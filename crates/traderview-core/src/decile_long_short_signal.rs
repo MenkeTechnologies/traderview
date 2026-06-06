@@ -49,17 +49,23 @@ pub struct DecileLongShortReport {
     pub n_names_total: usize,
 }
 
-pub fn build(
-    names: &[NameRecord],
-    n_buckets: usize,
-) -> Option<DecileLongShortReport> {
-    if names.len() < n_buckets * 2 || n_buckets < 2 { return None; }
-    if names.iter().any(|n| !n.signal.is_finite() || !n.realized_return.is_finite()) {
+pub fn build(names: &[NameRecord], n_buckets: usize) -> Option<DecileLongShortReport> {
+    if names.len() < n_buckets * 2 || n_buckets < 2 {
+        return None;
+    }
+    if names
+        .iter()
+        .any(|n| !n.signal.is_finite() || !n.realized_return.is_finite())
+    {
         return None;
     }
     // Sort ascending by signal.
     let mut sorted = names.to_vec();
-    sorted.sort_by(|a, b| a.signal.partial_cmp(&b.signal).unwrap_or(std::cmp::Ordering::Equal));
+    sorted.sort_by(|a, b| {
+        a.signal
+            .partial_cmp(&b.signal)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     let n = sorted.len();
     let mut bucket_stats = Vec::with_capacity(n_buckets);
     // Bucket k: indices [k·n/K, (k+1)·n/K).
@@ -98,36 +104,41 @@ mod tests {
     use super::*;
 
     fn r(sym: &str, sig: f64, ret: f64) -> NameRecord {
-        NameRecord { symbol: sym.into(), signal: sig, realized_return: ret }
+        NameRecord {
+            symbol: sym.into(),
+            signal: sig,
+            realized_return: ret,
+        }
     }
 
     #[test]
     fn too_few_names_returns_none() {
-        let names: Vec<_> = (0..5).map(|i| r(&format!("S{i}"), i as f64, 0.01)).collect();
+        let names: Vec<_> = (0..5)
+            .map(|i| r(&format!("S{i}"), i as f64, 0.01))
+            .collect();
         assert!(build(&names, 10).is_none());
     }
 
     #[test]
     fn nan_input_returns_none() {
-        let names = vec![
-            r("A", f64::NAN, 0.01),
-            r("B", 2.0, 0.02),
-        ];
+        let names = vec![r("A", f64::NAN, 0.01), r("B", 2.0, 0.02)];
         assert!(build(&names, 2).is_none());
     }
 
     #[test]
     fn invalid_n_buckets_returns_none() {
-        let names: Vec<_> = (0..20).map(|i| r(&format!("S{i}"), i as f64, 0.01)).collect();
+        let names: Vec<_> = (0..20)
+            .map(|i| r(&format!("S{i}"), i as f64, 0.01))
+            .collect();
         assert!(build(&names, 1).is_none());
     }
 
     #[test]
     fn perfect_signal_yields_positive_ls() {
         // signal_i = realized_i → top bucket has highest forward returns.
-        let names: Vec<_> = (1..=50).map(|i| {
-            r(&format!("S{i:02}"), i as f64, i as f64 / 100.0)
-        }).collect();
+        let names: Vec<_> = (1..=50)
+            .map(|i| r(&format!("S{i:02}"), i as f64, i as f64 / 100.0))
+            .collect();
         let result = build(&names, 5).unwrap();
         assert!(result.long_minus_short_return > 0.0);
         assert!(result.top_bucket_return > result.bottom_bucket_return);
@@ -136,16 +147,18 @@ mod tests {
     #[test]
     fn anti_signal_yields_negative_ls() {
         // signal_i = -realized_i → top bucket is the worst-return names.
-        let names: Vec<_> = (1..=50).map(|i| {
-            r(&format!("S{i:02}"), i as f64, (50 - i) as f64 / 100.0)
-        }).collect();
+        let names: Vec<_> = (1..=50)
+            .map(|i| r(&format!("S{i:02}"), i as f64, (50 - i) as f64 / 100.0))
+            .collect();
         let result = build(&names, 5).unwrap();
         assert!(result.long_minus_short_return < 0.0);
     }
 
     #[test]
     fn buckets_sized_evenly_when_divisible() {
-        let names: Vec<_> = (1..=50).map(|i| r(&format!("S{i:02}"), i as f64, 0.01)).collect();
+        let names: Vec<_> = (1..=50)
+            .map(|i| r(&format!("S{i:02}"), i as f64, 0.01))
+            .collect();
         let result = build(&names, 5).unwrap();
         for b in &result.bucket_stats {
             assert_eq!(b.n_names, 10);
@@ -155,7 +168,9 @@ mod tests {
     #[test]
     fn bucket_mean_signal_monotone() {
         // Sorted by signal → bucket k has higher mean than bucket k-1.
-        let names: Vec<_> = (1..=100).map(|i| r(&format!("S{i:03}"), i as f64, 0.01)).collect();
+        let names: Vec<_> = (1..=100)
+            .map(|i| r(&format!("S{i:03}"), i as f64, 0.01))
+            .collect();
         let result = build(&names, 10).unwrap();
         for w in result.bucket_stats.windows(2) {
             assert!(w[1].mean_signal > w[0].mean_signal);
@@ -164,7 +179,9 @@ mod tests {
 
     #[test]
     fn bucket_symbols_populated() {
-        let names: Vec<_> = (1..=20).map(|i| r(&format!("S{i:02}"), i as f64, 0.01)).collect();
+        let names: Vec<_> = (1..=20)
+            .map(|i| r(&format!("S{i:02}"), i as f64, 0.01))
+            .collect();
         let result = build(&names, 5).unwrap();
         for b in &result.bucket_stats {
             assert_eq!(b.symbols.len(), b.n_names);
@@ -173,7 +190,9 @@ mod tests {
 
     #[test]
     fn report_metadata_correct() {
-        let names: Vec<_> = (1..=50).map(|i| r(&format!("S{i:02}"), i as f64, 0.01)).collect();
+        let names: Vec<_> = (1..=50)
+            .map(|i| r(&format!("S{i:02}"), i as f64, 0.01))
+            .collect();
         let result = build(&names, 5).unwrap();
         assert_eq!(result.n_buckets, 5);
         assert_eq!(result.n_names_total, 50);

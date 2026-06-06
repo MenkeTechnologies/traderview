@@ -22,7 +22,9 @@ pub fn compute(prices: &[f64], volumes: &[f64], period: usize) -> Vec<Option<f64
     for (i, (p, v)) in prices.iter().zip(volumes.iter()).enumerate() {
         if !p.is_finite() || !v.is_finite() || *v < 0.0 {
             // Carry prior value.
-            if let Some(prev_v) = prev { out[i] = Some(prev_v); }
+            if let Some(prev_v) = prev {
+                out[i] = Some(prev_v);
+            }
             continue;
         }
         // Base form: EMA on price; per-bar volume weighting lives in
@@ -54,10 +56,14 @@ pub fn compute_volume_weighted(prices: &[f64], volumes: &[f64], period: usize) -
     let mut max_vol = 0.0_f64;
     for (i, (p, v)) in prices.iter().zip(volumes.iter()).enumerate() {
         if !p.is_finite() || !v.is_finite() || *v < 0.0 {
-            if let Some(prev_v) = prev { out[i] = Some(prev_v); }
+            if let Some(prev_v) = prev {
+                out[i] = Some(prev_v);
+            }
             continue;
         }
-        if *v > max_vol { max_vol = *v; }
+        if *v > max_vol {
+            max_vol = *v;
+        }
         let v_norm = if max_vol > 0.0 { v / max_vol } else { 0.0 };
         let effective_alpha = alpha * v_norm;
         let new = match prev {
@@ -140,7 +146,9 @@ mod tests {
         // from baseline at bar 20.
         let delta_std = (vwema_std[20].unwrap() - 100.0).abs();
         let delta_vw = (vwema_vw[20].unwrap() - 100.0).abs();
-        assert!(delta_vw < delta_std,
-            "vol-weighted EMA should react less to low-vol spike: std={delta_std} vw={delta_vw}");
+        assert!(
+            delta_vw < delta_std,
+            "vol-weighted EMA should react less to low-vol spike: std={delta_std} vw={delta_vw}"
+        );
     }
 }

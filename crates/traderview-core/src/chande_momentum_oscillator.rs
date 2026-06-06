@@ -23,17 +23,29 @@
 pub fn compute(closes: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = closes.len();
     let mut out = vec![None; n];
-    if period < 2 || n < period + 1 { return out; }
-    if closes.iter().any(|x| !x.is_finite()) { return out; }
+    if period < 2 || n < period + 1 {
+        return out;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     for (i, slot) in out.iter_mut().enumerate().skip(period) {
         let mut sou = 0.0_f64;
         let mut sod = 0.0_f64;
         for k in (i - period + 1)..=i {
             let d = closes[k] - closes[k - 1];
-            if d > 0.0 { sou += d; } else { sod -= d; }
+            if d > 0.0 {
+                sou += d;
+            } else {
+                sod -= d;
+            }
         }
         let denom = sou + sod;
-        *slot = if denom > 0.0 { Some(100.0 * (sou - sod) / denom) } else { Some(0.0) };
+        *slot = if denom > 0.0 {
+            Some(100.0 * (sou - sod) / denom)
+        } else {
+            Some(0.0)
+        };
     }
     out
 }
@@ -66,7 +78,10 @@ mod tests {
         let closes: Vec<f64> = (0..50).map(|i| 100.0 + i as f64).collect();
         let out = compute(&closes, 14);
         let v = out[49].unwrap();
-        assert!((v - 100.0).abs() < 1e-9, "uptrend: CMO should be 100, got {v}");
+        assert!(
+            (v - 100.0).abs() < 1e-9,
+            "uptrend: CMO should be 100, got {v}"
+        );
     }
 
     #[test]
@@ -74,7 +89,10 @@ mod tests {
         let closes: Vec<f64> = (0..50).map(|i| 200.0 - i as f64).collect();
         let out = compute(&closes, 14);
         let v = out[49].unwrap();
-        assert!((v + 100.0).abs() < 1e-9, "downtrend: CMO should be -100, got {v}");
+        assert!(
+            (v + 100.0).abs() < 1e-9,
+            "downtrend: CMO should be -100, got {v}"
+        );
     }
 
     #[test]
@@ -97,11 +115,14 @@ mod tests {
     #[test]
     fn cmo_bounded_in_minus_100_to_100() {
         let mut state: u64 = 7;
-        let closes: Vec<f64> = (0..200).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            100.0 + ((state >> 32) as f64 / u32::MAX as f64) * 10.0 - 5.0
-        }).collect();
+        let closes: Vec<f64> = (0..200)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                100.0 + ((state >> 32) as f64 / u32::MAX as f64) * 10.0 - 5.0
+            })
+            .collect();
         let out = compute(&closes, 14);
         for v in out.iter().flatten() {
             assert!((-100.0..=100.0).contains(v));

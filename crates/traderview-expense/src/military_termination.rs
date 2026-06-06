@@ -92,9 +92,8 @@ pub struct StateExtension {
 }
 
 fn state_extensions() -> &'static [StateExtension] {
-    static R: once_cell::sync::Lazy<Vec<StateExtension>> =
-        once_cell::sync::Lazy::new(|| {
-            vec![
+    static R: once_cell::sync::Lazy<Vec<StateExtension>> = once_cell::sync::Lazy::new(|| {
+        vec![
                 StateExtension {
                     state: "CA",
                     spouse_termination_right: true,
@@ -228,7 +227,7 @@ fn state_extensions() -> &'static [StateExtension] {
                     },
                 },
             ]
-        });
+    });
     &R
 }
 
@@ -275,8 +274,7 @@ pub fn check(input: &MilitaryTerminationCheckInput) -> MilitaryTerminationCheckR
             | QualifyingEvent::DeploymentNinetyDaysOrMore
             | QualifyingEvent::ActiveDutyAfterLeaseSigning
     );
-    let federal_role_qualifies =
-        matches!(input.tenant_role, TenantRole::Servicemember);
+    let federal_role_qualifies = matches!(input.tenant_role, TenantRole::Servicemember);
 
     r.federal_scra_applies = federal_qualifies && federal_role_qualifies;
 

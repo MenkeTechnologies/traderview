@@ -402,7 +402,10 @@ mod tests {
         let mut i = baseline();
         i.plan_established_through_business = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::PlanNotEstablishedThroughBusiness));
+        assert!(matches!(
+            r.severity,
+            Severity::PlanNotEstablishedThroughBusiness
+        ));
         assert!(r.notes.iter().any(|n| n.contains("Notice 2008-1")));
         assert!(r.notes.iter().any(|n| n.contains("Rev. Proc. 79-46")));
     }
@@ -413,7 +416,10 @@ mod tests {
         i.business_structure = BusinessStructure::SCorporationShareholderOver2Pct;
         i.s_corp_premiums_in_w2_box_1 = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::PlanNotEstablishedThroughBusiness));
+        assert!(matches!(
+            r.severity,
+            Severity::PlanNotEstablishedThroughBusiness
+        ));
         assert!(r.notes.iter().any(|n| n.contains("Form W-2c")));
         assert!(r.notes.iter().any(|n| n.contains("§ 3121(a)(2)(B)")));
     }
@@ -432,7 +438,10 @@ mod tests {
         let mut i = baseline();
         i.double_coverage_eligible_months = 12;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::DoubleCoverageDisallowedForMonth));
+        assert!(matches!(
+            r.severity,
+            Severity::DoubleCoverageDisallowedForMonth
+        ));
         assert_eq!(r.allowed_deduction_cents, 0);
         assert_eq!(r.disallowed_amount_cents, i.annual_premium_cents);
     }
@@ -453,7 +462,10 @@ mod tests {
         i.annual_premium_cents = 50_000_00;
         i.earned_income_from_business_cents = 30_000_00;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::DeductionLimitedByEarnedIncome));
+        assert!(matches!(
+            r.severity,
+            Severity::DeductionLimitedByEarnedIncome
+        ));
         assert_eq!(r.allowed_deduction_cents, 30_000_00);
         assert_eq!(r.disallowed_amount_cents, 20_000_00);
     }
@@ -480,8 +492,14 @@ mod tests {
         i.premium_type = PremiumType::MedicarePartABCD;
         let r = check(&i);
         assert!(matches!(r.severity, Severity::DeductionAllowedFullPremium));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Chief Counsel Advice 201228037")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Medicare Parts A, B, C, D")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Chief Counsel Advice 201228037")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Medicare Parts A, B, C, D")));
     }
 
     #[test]
@@ -489,16 +507,28 @@ mod tests {
         let mut i = baseline();
         i.premium_type = PremiumType::QualifiedLongTermCare;
         let r = check(&i);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("§ 7702B(b)")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("§ 213(d)(10)")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("§ 7702B(b)")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("§ 213(d)(10)")));
     }
 
     #[test]
     fn form_7206_referenced_in_action() {
         let i = baseline();
         let r = check(&i);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Form 7206")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Schedule 1 line 17")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Form 7206")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Schedule 1 line 17")));
     }
 
     #[test]
@@ -555,7 +585,10 @@ mod tests {
         i.annual_premium_cents = 30_000_00;
         i.earned_income_from_business_cents = 20_000_00;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::DeductionLimitedByEarnedIncome));
+        assert!(matches!(
+            r.severity,
+            Severity::DeductionLimitedByEarnedIncome
+        ));
         assert_eq!(r.allowed_deduction_cents, 20_000_00);
         assert_eq!(r.disallowed_amount_cents, 10_000_00);
     }
@@ -583,7 +616,10 @@ mod tests {
         let mut i = baseline();
         i.double_coverage_eligible_months = 20;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::DoubleCoverageDisallowedForMonth));
+        assert!(matches!(
+            r.severity,
+            Severity::DoubleCoverageDisallowedForMonth
+        ));
         assert_eq!(r.allowed_deduction_cents, 0);
     }
 }

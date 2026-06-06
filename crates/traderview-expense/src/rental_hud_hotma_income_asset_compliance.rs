@@ -184,12 +184,10 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if matches!(
-        input.hud_program,
-        HudProgram::MultifamilySection202Or811
-    ) && (input.current_date_year < HOTMA_MULTIFAMILY_FINAL_COMPLIANCE_DEADLINE_YEAR
-        || (input.current_date_year == HOTMA_MULTIFAMILY_FINAL_COMPLIANCE_DEADLINE_YEAR
-            && input.current_date_month < HOTMA_MULTIFAMILY_FINAL_COMPLIANCE_DEADLINE_MONTH))
+    if matches!(input.hud_program, HudProgram::MultifamilySection202Or811)
+        && (input.current_date_year < HOTMA_MULTIFAMILY_FINAL_COMPLIANCE_DEADLINE_YEAR
+            || (input.current_date_year == HOTMA_MULTIFAMILY_FINAL_COMPLIANCE_DEADLINE_YEAR
+                && input.current_date_month < HOTMA_MULTIFAMILY_FINAL_COMPLIANCE_DEADLINE_MONTH))
     {
         return Output {
             mode: HotmaMode::NotApplicableMultifamilyComplianceDeadlineNotYetEffective,
@@ -361,7 +359,10 @@ mod tests {
             ..baseline_compliant_section_8_voucher()
         };
         let result = check(&input);
-        assert_eq!(result.mode, HotmaMode::NotApplicableAssetLimitExceptionApplies);
+        assert_eq!(
+            result.mode,
+            HotmaMode::NotApplicableAssetLimitExceptionApplies
+        );
     }
 
     #[test]
@@ -371,7 +372,10 @@ mod tests {
             ..baseline_compliant_section_8_voucher()
         };
         let result = check(&input);
-        assert_eq!(result.mode, HotmaMode::NotApplicableAssetLimitExceptionApplies);
+        assert_eq!(
+            result.mode,
+            HotmaMode::NotApplicableAssetLimitExceptionApplies
+        );
     }
 
     #[test]
@@ -401,7 +405,8 @@ mod tests {
     fn assets_at_50001_triggers_imputed_return_compliant() {
         let input = Input {
             net_household_assets_dollars: 50_001,
-            imputed_return_applied: ImputedReturnApplied::GreaterOfActualOrPassbookRateAppliedCorrectly,
+            imputed_return_applied:
+                ImputedReturnApplied::GreaterOfActualOrPassbookRateAppliedCorrectly,
             ..baseline_compliant_section_8_voucher()
         };
         let result = check(&input);
@@ -429,7 +434,8 @@ mod tests {
     fn assets_at_exactly_100k_compliant() {
         let input = Input {
             net_household_assets_dollars: 100_000,
-            imputed_return_applied: ImputedReturnApplied::GreaterOfActualOrPassbookRateAppliedCorrectly,
+            imputed_return_applied:
+                ImputedReturnApplied::GreaterOfActualOrPassbookRateAppliedCorrectly,
             ..baseline_compliant_section_8_voucher()
         };
         let result = check(&input);
@@ -443,7 +449,8 @@ mod tests {
     fn assets_at_100001_section_104_violation() {
         let input = Input {
             net_household_assets_dollars: 100_001,
-            imputed_return_applied: ImputedReturnApplied::GreaterOfActualOrPassbookRateAppliedCorrectly,
+            imputed_return_applied:
+                ImputedReturnApplied::GreaterOfActualOrPassbookRateAppliedCorrectly,
             ..baseline_compliant_section_8_voucher()
         };
         let result = check(&input);

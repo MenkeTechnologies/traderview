@@ -182,13 +182,14 @@ pub fn check(input: &Section56aInput) -> Section56aResult {
     let avg_3y_afsi: i64 = (i128::from(input.afsi_prior_year_1_cents)
         + i128::from(input.afsi_prior_year_2_cents)
         + i128::from(input.afsi_prior_year_3_cents))
-        .div_euclid(3) as i64;
+    .div_euclid(3) as i64;
 
     let is_us_member_fpmg = matches!(input.entity_type, EntityType::UsMemberForeignParentedGroup);
 
     let is_applicable: bool;
     if is_us_member_fpmg {
-        let fpmg_meets_1b = input.fpmg_total_afsi_cents > APPLICABLE_CORPORATION_AFSI_THRESHOLD_CENTS;
+        let fpmg_meets_1b =
+            input.fpmg_total_afsi_cents > APPLICABLE_CORPORATION_AFSI_THRESHOLD_CENTS;
         let us_member_meets_100m = avg_3y_afsi >= FPMG_US_MEMBER_AFSI_THRESHOLD_CENTS;
         is_applicable = fpmg_meets_1b && us_member_meets_100m;
         if fpmg_meets_1b && !us_member_meets_100m {
@@ -246,8 +247,7 @@ pub fn check(input: &Section56aInput) -> Section56aResult {
     let afsi_after_nol = input.current_year_afsi_cents.saturating_sub(nol_used);
 
     let tentative_min_tax: u64 = if afsi_after_nol > 0 {
-        let gross_min_tax: u128 =
-            (afsi_after_nol as u128) * u128::from(CAMT_RATE_BPS) / 10_000;
+        let gross_min_tax: u128 = (afsi_after_nol as u128) * u128::from(CAMT_RATE_BPS) / 10_000;
         (gross_min_tax.saturating_sub(u128::from(input.camt_ftc_cents))) as u64
     } else {
         0
@@ -314,7 +314,8 @@ pub fn check(input: &Section56aInput) -> Section56aResult {
         camt_owed_cents: camt_owed,
         camt_credit_carryforward_to_future_year_cents: camt_owed,
         recommended_actions: actions,
-        citation: "26 U.S.C. § 55(b)(2); § 56A(a)-(d); § 59(k)(1)-(2); Notice 2023-7; Notice 2025-46",
+        citation:
+            "26 U.S.C. § 55(b)(2); § 56A(a)-(d); § 59(k)(1)-(2); Notice 2023-7; Notice 2025-46",
         notes,
     }
 }
@@ -454,7 +455,10 @@ mod tests {
         i.afsi_prior_year_3_cents = 5_000_000_000;
         i.fpmg_total_afsi_cents = 500_000_000_000;
         let r = check(&i);
-        assert!(matches!(r.severity, CamtSeverity::FpmgBelow100MUsAfsiSafeHarbor));
+        assert!(matches!(
+            r.severity,
+            CamtSeverity::FpmgBelow100MUsAfsiSafeHarbor
+        ));
         assert!(!r.is_applicable_corporation);
     }
 
@@ -479,7 +483,10 @@ mod tests {
         i.afsi_prior_year_3_cents = 20_000_000_000;
         i.fpmg_total_afsi_cents = 50_000_000_000;
         let r = check(&i);
-        assert!(matches!(r.severity, CamtSeverity::BelowApplicableCorporationThreshold));
+        assert!(matches!(
+            r.severity,
+            CamtSeverity::BelowApplicableCorporationThreshold
+        ));
     }
 
     #[test]
@@ -488,7 +495,10 @@ mod tests {
         i.current_year_afsi_cents = 200_000_000_000;
         i.regular_corporate_tax_cents = 21_000_000_000;
         let r = check(&i);
-        assert!(matches!(r.severity, CamtSeverity::ApplicableCorporationCamtOwed));
+        assert!(matches!(
+            r.severity,
+            CamtSeverity::ApplicableCorporationCamtOwed
+        ));
         let expected_tentative = 200_000_000_000u64 * 15 / 100;
         assert_eq!(r.tentative_minimum_tax_cents, expected_tentative);
         assert_eq!(r.camt_owed_cents, expected_tentative - 21_000_000_000);
@@ -500,7 +510,10 @@ mod tests {
         i.current_year_afsi_cents = 200_000_000_000;
         i.regular_corporate_tax_cents = 50_000_000_000;
         let r = check(&i);
-        assert!(matches!(r.severity, CamtSeverity::ApplicableCorporationCamtNotOwed));
+        assert!(matches!(
+            r.severity,
+            CamtSeverity::ApplicableCorporationCamtNotOwed
+        ));
         assert_eq!(r.camt_owed_cents, 0);
     }
 
@@ -537,8 +550,14 @@ mod tests {
     fn action_includes_form_4626_filing() {
         let i = baseline();
         let r = check(&i);
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Form 4626")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Form 1120")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Form 4626")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Form 1120")));
     }
 
     #[test]
@@ -589,7 +608,10 @@ mod tests {
         i.current_year_afsi_cents = 5_000_000_000_000;
         i.regular_corporate_tax_cents = 100_000_000_000;
         let r = check(&i);
-        assert!(matches!(r.severity, CamtSeverity::ApplicableCorporationCamtOwed));
+        assert!(matches!(
+            r.severity,
+            CamtSeverity::ApplicableCorporationCamtOwed
+        ));
         let tentative = 5_000_000_000_000u64 * 15 / 100;
         assert_eq!(r.camt_owed_cents, tentative - 100_000_000_000);
     }

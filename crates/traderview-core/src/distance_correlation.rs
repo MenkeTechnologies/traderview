@@ -36,7 +36,9 @@ pub struct DistanceCorrelationReport {
 
 pub fn compute(x: &[f64], y: &[f64]) -> Option<DistanceCorrelationReport> {
     let n = x.len();
-    if n < 5 || y.len() != n { return None; }
+    if n < 5 || y.len() != n {
+        return None;
+    }
     if x.iter().any(|v| !v.is_finite()) || y.iter().any(|v| !v.is_finite()) {
         return None;
     }
@@ -52,14 +54,14 @@ pub fn compute(x: &[f64], y: &[f64]) -> Option<DistanceCorrelationReport> {
     // Row, column, grand means.
     let n_f = n as f64;
     let a_row: Vec<f64> = a.iter().map(|r| r.iter().sum::<f64>() / n_f).collect();
-    let a_col: Vec<f64> = (0..n).map(|j| {
-        (0..n).map(|i| a[i][j]).sum::<f64>() / n_f
-    }).collect();
+    let a_col: Vec<f64> = (0..n)
+        .map(|j| (0..n).map(|i| a[i][j]).sum::<f64>() / n_f)
+        .collect();
     let a_grand: f64 = a.iter().flatten().sum::<f64>() / (n_f * n_f);
     let b_row: Vec<f64> = b.iter().map(|r| r.iter().sum::<f64>() / n_f).collect();
-    let b_col: Vec<f64> = (0..n).map(|j| {
-        (0..n).map(|i| b[i][j]).sum::<f64>() / n_f
-    }).collect();
+    let b_col: Vec<f64> = (0..n)
+        .map(|j| (0..n).map(|i| b[i][j]).sum::<f64>() / n_f)
+        .collect();
     let b_grand: f64 = b.iter().flatten().sum::<f64>() / (n_f * n_f);
     let mut cov_sq = 0.0_f64;
     let mut var_x_sq = 0.0_f64;
@@ -81,7 +83,11 @@ pub fn compute(x: &[f64], y: &[f64]) -> Option<DistanceCorrelationReport> {
     let dvar_x = var_x_sq.max(0.0).sqrt();
     let dvar_y = var_y_sq.max(0.0).sqrt();
     let dcor_denom = (dvar_x * dvar_y).sqrt();
-    let dcor = if dcor_denom > 0.0 { (dcov / dcor_denom).clamp(0.0, 1.0) } else { 0.0 };
+    let dcor = if dcor_denom > 0.0 {
+        (dcov / dcor_denom).clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
     Some(DistanceCorrelationReport {
         distance_correlation: dcor,
         distance_covariance: dcov,
@@ -97,15 +103,19 @@ mod tests {
 
     fn box_muller(n: usize, seed: u64) -> Vec<f64> {
         let mut state = seed;
-        (0..n).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u2 = (state >> 32) as f64 / u32::MAX as f64;
-            (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
-        }).collect()
+        (0..n)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u2 = (state >> 32) as f64 / u32::MAX as f64;
+                (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
+            })
+            .collect()
     }
 
     #[test]
@@ -116,8 +126,7 @@ mod tests {
 
     #[test]
     fn nan_returns_none() {
-        assert!(compute(&[1.0, f64::NAN, 2.0, 3.0, 4.0],
-            &[1.0, 2.0, 3.0, 4.0, 5.0]).is_none());
+        assert!(compute(&[1.0, f64::NAN, 2.0, 3.0, 4.0], &[1.0, 2.0, 3.0, 4.0, 5.0]).is_none());
     }
 
     #[test]
@@ -125,8 +134,11 @@ mod tests {
         let x: Vec<f64> = (1..=50).map(|i| i as f64).collect();
         let y: Vec<f64> = x.iter().map(|xi| 2.0 * xi + 1.0).collect();
         let r = compute(&x, &y).unwrap();
-        assert!((r.distance_correlation - 1.0).abs() < 1e-6,
-            "linear: dCor should be 1.0, got {}", r.distance_correlation);
+        assert!(
+            (r.distance_correlation - 1.0).abs() < 1e-6,
+            "linear: dCor should be 1.0, got {}",
+            r.distance_correlation
+        );
     }
 
     #[test]
@@ -137,15 +149,23 @@ mod tests {
         let x: Vec<f64> = (-25..=25).map(|i| i as f64).collect();
         let y: Vec<f64> = x.iter().map(|xi| xi * xi).collect();
         let r = compute(&x, &y).unwrap();
-        assert!(r.distance_correlation > 0.3,
-            "y = x² should have meaningful dCor, got {}", r.distance_correlation);
+        assert!(
+            r.distance_correlation > 0.3,
+            "y = x² should have meaningful dCor, got {}",
+            r.distance_correlation
+        );
         // Sanity check: Pearson is ~0 for this case.
         let mean_x: f64 = x.iter().sum::<f64>() / x.len() as f64;
         let mean_y: f64 = y.iter().sum::<f64>() / y.len() as f64;
-        let pearson_num: f64 = x.iter().zip(y.iter())
-            .map(|(xi, yi)| (xi - mean_x) * (yi - mean_y)).sum();
-        assert!(pearson_num.abs() < 1.0,
-            "Pearson should be ~0 by symmetry, got {pearson_num}");
+        let pearson_num: f64 = x
+            .iter()
+            .zip(y.iter())
+            .map(|(xi, yi)| (xi - mean_x) * (yi - mean_y))
+            .sum();
+        assert!(
+            pearson_num.abs() < 1.0,
+            "Pearson should be ~0 by symmetry, got {pearson_num}"
+        );
     }
 
     #[test]
@@ -153,8 +173,11 @@ mod tests {
         let x = box_muller(200, 42);
         let y = box_muller(200, 13);
         let r = compute(&x, &y).unwrap();
-        assert!(r.distance_correlation < 0.20,
-            "independent samples: dCor should be small, got {}", r.distance_correlation);
+        assert!(
+            r.distance_correlation < 0.20,
+            "independent samples: dCor should be small, got {}",
+            r.distance_correlation
+        );
     }
 
     #[test]

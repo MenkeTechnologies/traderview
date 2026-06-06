@@ -151,8 +151,8 @@ pub fn check(input: &Input) -> Output {
     ) && !input.disclosure_includes_net_metering_allocation;
 
     if net_meter_misallocation {
-        let monthly_credit = u64::from(input.estimated_monthly_generation_kwh)
-            * ESTIMATED_RETAIL_KWH_RATE_CENTS;
+        let monthly_credit =
+            u64::from(input.estimated_monthly_generation_kwh) * ESTIMATED_RETAIL_KWH_RATE_CENTS;
         credit_misallocation_cents = monthly_credit.saturating_mul(12);
         severity = Severity::NetMeteringCreditMisallocation;
         actions.push(format!(
@@ -203,9 +203,7 @@ pub fn check(input: &Input) -> Output {
              MUST NOT dispose of broken panels in normal trash."
                 .to_string(),
         );
-    } else if is_third_party_financed
-        && !input.roof_warranty_active_with_installer_endorsement
-    {
+    } else if is_third_party_financed && !input.roof_warranty_active_with_installer_endorsement {
         severity = Severity::RoofWarrantyVoidRisk;
         actions.push(format!(
             "Solar mount penetrations through roof voided installer-warranty endorsement; \
@@ -347,7 +345,9 @@ pub fn check(input: &Input) -> Output {
         annual_rent_at_risk_cents: annual_rent_at_risk,
         estimated_net_metering_credit_to_misallocated_party_cents: credit_misallocation_cents,
         citation: match input.jurisdiction {
-            Jurisdiction::California => "Cal. Civ. Code § 1102.6c + § 1947.13 + § 2827 PUC + SB 1340",
+            Jurisdiction::California => {
+                "Cal. Civ. Code § 1102.6c + § 1947.13 + § 2827 PUC + SB 1340"
+            }
             Jurisdiction::Massachusetts => "220 CMR 18.00 + M.G.L. ch. 164 § 138-140 + SMART",
             Jurisdiction::NewJersey => "N.J.S.A. 48:3-87.13 + N.J.A.C. 14:4-9.1 + SuSI",
             Jurisdiction::Arizona => "A.A.C. R14-2-1801 + A.R.S. § 33-1310 + HB 2675",
@@ -392,7 +392,10 @@ mod tests {
         let r = check(&i);
         assert!(matches!(r.severity, Severity::NotApplicable));
         assert_eq!(r.citation, "n/a");
-        assert!(r.notes.iter().any(|n| n.contains("tenant_solar_installation")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("tenant_solar_installation")));
     }
 
     #[test]
@@ -409,11 +412,16 @@ mod tests {
         i.net_metering_credit = NetMeteringCreditBeneficiary::LandlordOnly;
         i.disclosure_includes_net_metering_allocation = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::NetMeteringCreditMisallocation));
-        let expected: u64 = u64::from(i.estimated_monthly_generation_kwh)
-            * ESTIMATED_RETAIL_KWH_RATE_CENTS
-            * 12;
-        assert_eq!(r.estimated_net_metering_credit_to_misallocated_party_cents, expected);
+        assert!(matches!(
+            r.severity,
+            Severity::NetMeteringCreditMisallocation
+        ));
+        let expected: u64 =
+            u64::from(i.estimated_monthly_generation_kwh) * ESTIMATED_RETAIL_KWH_RATE_CENTS * 12;
+        assert_eq!(
+            r.estimated_net_metering_credit_to_misallocated_party_cents,
+            expected
+        );
     }
 
     #[test]
@@ -432,7 +440,10 @@ mod tests {
         i.monthly_lease_or_ppa_payment_cents = 150_00;
         i.disclosure_includes_pass_through_charge = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::DisclosureRequiredAtLeaseSigning));
+        assert!(matches!(
+            r.severity,
+            Severity::DisclosureRequiredAtLeaseSigning
+        ));
         assert!(r
             .recommended_actions
             .iter()
@@ -460,7 +471,10 @@ mod tests {
         i.financing_structure = SolarFinancingStructure::SolarLeaseFixedMonthly;
         i.monthly_lease_or_ppa_payment_cents = 175_00;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::PpaAccelerationTenantExposure));
+        assert!(matches!(
+            r.severity,
+            Severity::PpaAccelerationTenantExposure
+        ));
         assert!(r
             .recommended_actions
             .iter()
@@ -474,7 +488,10 @@ mod tests {
         i.monthly_lease_or_ppa_payment_cents = 0;
         i.tenant_aware_of_panel_damage_universal_waste_rule = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::UniversalWasteDisposalRiskOnPanelDamage));
+        assert!(matches!(
+            r.severity,
+            Severity::UniversalWasteDisposalRiskOnPanelDamage
+        ));
         assert!(r
             .recommended_actions
             .iter()
@@ -509,7 +526,10 @@ mod tests {
         let i = baseline();
         let r = check(&i);
         assert!(r.notes.iter().any(|n| n.contains("April 15, 2023")));
-        assert!(r.notes.iter().any(|n| n.contains("Cal. Civ. Code § 1102.6c")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Cal. Civ. Code § 1102.6c")));
         assert!(r.citation.contains("SB 1340"));
     }
 
@@ -583,7 +603,10 @@ mod tests {
     fn coordination_note_references_tenant_solar_install_and_oil_tank() {
         let i = baseline();
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("tenant_solar_installation")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("tenant_solar_installation")));
         assert!(r
             .notes
             .iter()
@@ -609,7 +632,9 @@ mod tests {
             i.jurisdiction = j;
             let r = check(&i);
             assert!(
-                r.notes.iter().any(|n| n.contains("tenant_solar_installation")),
+                r.notes
+                    .iter()
+                    .any(|n| n.contains("tenant_solar_installation")),
                 "coordination missing for {j:?}"
             );
         }
@@ -652,7 +677,10 @@ mod tests {
         i.disclosure_includes_net_metering_allocation = false;
         i.estimated_monthly_generation_kwh = u32::MAX;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::NetMeteringCreditMisallocation));
+        assert!(matches!(
+            r.severity,
+            Severity::NetMeteringCreditMisallocation
+        ));
     }
 
     #[test]
@@ -685,13 +713,41 @@ mod tests {
 
     #[test]
     fn citation_branch_for_each_jurisdiction() {
-        let ca = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::California; i });
-        let ma = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Massachusetts; i });
-        let nj = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::NewJersey; i });
-        let az = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Arizona; i });
-        let hi = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Hawaii; i });
-        let ny = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::NewYork; i });
-        let de = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Default; i });
+        let ca = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::California;
+            i
+        });
+        let ma = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Massachusetts;
+            i
+        });
+        let nj = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::NewJersey;
+            i
+        });
+        let az = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Arizona;
+            i
+        });
+        let hi = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Hawaii;
+            i
+        });
+        let ny = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::NewYork;
+            i
+        });
+        let de = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Default;
+            i
+        });
         assert!(ca.citation.contains("Cal. Civ. Code"));
         assert!(ma.citation.contains("SMART"));
         assert!(nj.citation.contains("SuSI"));

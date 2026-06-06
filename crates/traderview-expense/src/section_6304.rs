@@ -201,8 +201,7 @@ pub fn check(input: &Section6304Input) -> Section6304Result {
         );
     }
 
-    let harassment_violation =
-        !matches!(input.harassment_conduct, HarassmentConduct::None);
+    let harassment_violation = !matches!(input.harassment_conduct, HarassmentConduct::None);
 
     if harassment_violation {
         match input.harassment_conduct {
@@ -226,8 +225,7 @@ pub fn check(input: &Section6304Input) -> Section6304Result {
         }
     }
 
-    let section_a_violation =
-        time_violation || represented_bypass_violation || workplace_violation;
+    let section_a_violation = time_violation || represented_bypass_violation || workplace_violation;
     let section_b_violation = harassment_violation;
     let any_violation = section_a_violation || section_b_violation;
 
@@ -323,8 +321,10 @@ mod tests {
         i.time_of_day = TimeOfDay::KnownInconvenient;
         let r = check(&i);
         assert!(r.time_violation);
-        assert!(r.violation_reasons.iter().any(|v| v.contains("§ 6304(a)(1)")
-            && v.contains("8 a.m. to 9 p.m.")));
+        assert!(r
+            .violation_reasons
+            .iter()
+            .any(|v| v.contains("§ 6304(a)(1)") && v.contains("8 a.m. to 9 p.m.")));
     }
 
     #[test]
@@ -343,8 +343,10 @@ mod tests {
         i.taxpayer_represented = true;
         let r = check(&i);
         assert!(r.represented_taxpayer_bypass_violation);
-        assert!(r.violation_reasons.iter().any(|v| v.contains("§ 6304(a)(2)")
-            && v.contains("§ 7521")));
+        assert!(r
+            .violation_reasons
+            .iter()
+            .any(|v| v.contains("§ 6304(a)(2)") && v.contains("§ 7521")));
     }
 
     #[test]
@@ -372,8 +374,10 @@ mod tests {
         i.employer_prohibits_workplace_contact = true;
         let r = check(&i);
         assert!(r.workplace_contact_violation);
-        assert!(r.violation_reasons.iter().any(|v| v.contains("§ 6304(a)(3)")
-            && v.contains("place of employment")));
+        assert!(r
+            .violation_reasons
+            .iter()
+            .any(|v| v.contains("§ 6304(a)(3)") && v.contains("place of employment")));
     }
 
     #[test]
@@ -392,7 +396,10 @@ mod tests {
         let r = check(&i);
         assert!(r.harassment_violation);
         assert!(r.section_b_violation);
-        assert!(r.violation_reasons.iter().any(|v| v.contains("§ 6304(b)(1)")));
+        assert!(r
+            .violation_reasons
+            .iter()
+            .any(|v| v.contains("§ 6304(b)(1)")));
     }
 
     #[test]
@@ -401,7 +408,10 @@ mod tests {
         i.harassment_conduct = HarassmentConduct::ObsceneOrProfaneLanguage;
         let r = check(&i);
         assert!(r.harassment_violation);
-        assert!(r.violation_reasons.iter().any(|v| v.contains("§ 6304(b)(2)")));
+        assert!(r
+            .violation_reasons
+            .iter()
+            .any(|v| v.contains("§ 6304(b)(2)")));
     }
 
     #[test]
@@ -410,7 +420,10 @@ mod tests {
         i.harassment_conduct = HarassmentConduct::RepeatedPhoneRinging;
         let r = check(&i);
         assert!(r.harassment_violation);
-        assert!(r.violation_reasons.iter().any(|v| v.contains("§ 6304(b)(3)")));
+        assert!(r
+            .violation_reasons
+            .iter()
+            .any(|v| v.contains("§ 6304(b)(3)")));
     }
 
     #[test]
@@ -419,8 +432,10 @@ mod tests {
         i.harassment_conduct = HarassmentConduct::AnonymousCallsNoIdentity;
         let r = check(&i);
         assert!(r.harassment_violation);
-        assert!(r.violation_reasons.iter().any(|v| v.contains("§ 6304(b)(4)")
-            && v.contains("FDCPA § 804")));
+        assert!(r
+            .violation_reasons
+            .iter()
+            .any(|v| v.contains("§ 6304(b)(4)") && v.contains("FDCPA § 804")));
     }
 
     #[test]
@@ -479,24 +494,28 @@ mod tests {
     #[test]
     fn note_pins_8am_9pm_window() {
         let r = check(&clean_base());
-        assert!(r.notes.iter().any(|n| n.contains("8 a.m. to 9 p.m.")
-            && n.contains("§ 6304(a)(1)")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("8 a.m. to 9 p.m.") && n.contains("§ 6304(a)(1)")));
     }
 
     #[test]
     fn note_pins_rra_98_fdcpa_origin() {
         let r = check(&clean_base());
-        assert!(r.notes.iter().any(|n| n.contains("RRA 98 § 3466")
-            && n.contains("FDCPA")
-            && n.contains("§ 1692")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("RRA 98 § 3466") && n.contains("FDCPA") && n.contains("§ 1692")));
     }
 
     #[test]
     fn note_pins_damages_cap_tiers() {
         let r = check(&clean_base());
-        assert!(r.notes.iter().any(|n| n.contains("$1,000,000")
-            && n.contains("$100,000")
-            && n.contains("§ 7433")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("$1,000,000") && n.contains("$100,000") && n.contains("§ 7433")));
     }
 
     #[test]
@@ -536,12 +555,10 @@ mod tests {
         let r_negligence = check(&i_n);
 
         assert!(
-            r_reckless.section_7433_damages_cap_cents
-                > r_negligence.section_7433_damages_cap_cents
+            r_reckless.section_7433_damages_cap_cents > r_negligence.section_7433_damages_cap_cents
         );
         assert_eq!(
-            r_reckless.section_7433_damages_cap_cents
-                / r_negligence.section_7433_damages_cap_cents,
+            r_reckless.section_7433_damages_cap_cents / r_negligence.section_7433_damages_cap_cents,
             10
         );
     }

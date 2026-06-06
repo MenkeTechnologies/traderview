@@ -21,11 +21,15 @@ pub struct CholeskyReport {
     pub sqrt_determinant: f64,
 }
 
-#[allow(clippy::needless_range_loop)]    // matrix iteration uses both i,j indices for symmetric access
+#[allow(clippy::needless_range_loop)] // matrix iteration uses both i,j indices for symmetric access
 pub fn decompose(a: &[Vec<f64>]) -> Option<CholeskyReport> {
     let n = a.len();
-    if n == 0 || a.iter().any(|row| row.len() != n) { return None; }
-    if a.iter().any(|row| row.iter().any(|c| !c.is_finite())) { return None; }
+    if n == 0 || a.iter().any(|row| row.len() != n) {
+        return None;
+    }
+    if a.iter().any(|row| row.iter().any(|c| !c.is_finite())) {
+        return None;
+    }
     // Verify symmetry (within float tolerance).
     for i in 0..n {
         for j in (i + 1)..n {
@@ -44,25 +48,34 @@ pub fn decompose(a: &[Vec<f64>]) -> Option<CholeskyReport> {
             if i == j {
                 let diag = a[i][i] - sum;
                 if diag <= 0.0 || !diag.is_finite() {
-                    return None;    // not positive-definite
+                    return None; // not positive-definite
                 }
                 l[i][j] = diag.sqrt();
             } else {
-                if l[j][j].abs() < 1e-18 { return None; }
+                if l[j][j].abs() < 1e-18 {
+                    return None;
+                }
                 l[i][j] = (a[i][j] - sum) / l[j][j];
             }
         }
     }
     let sqrt_det: f64 = (0..n).map(|i| l[i][i]).product();
-    Some(CholeskyReport { l, sqrt_determinant: sqrt_det })
+    Some(CholeskyReport {
+        l,
+        sqrt_determinant: sqrt_det,
+    })
 }
 
 /// Multiply L · z to produce correlated draws from uncorrelated z.
-#[allow(clippy::needless_range_loop)]    // matrix product needs both indices for triangle iteration
+#[allow(clippy::needless_range_loop)] // matrix product needs both indices for triangle iteration
 pub fn multiply(l: &[Vec<f64>], z: &[f64]) -> Option<Vec<f64>> {
     let n = l.len();
-    if z.len() != n { return None; }
-    if l.iter().any(|row| row.len() != n) { return None; }
+    if z.len() != n {
+        return None;
+    }
+    if l.iter().any(|row| row.len() != n) {
+        return None;
+    }
     let mut out = vec![0.0_f64; n];
     for i in 0..n {
         for j in 0..=i {
@@ -124,10 +137,7 @@ mod tests {
 
     #[test]
     fn diagonal_yields_sqrt_diagonal() {
-        let a = vec![
-            vec![4.0, 0.0],
-            vec![0.0, 9.0],
-        ];
+        let a = vec![vec![4.0, 0.0], vec![0.0, 9.0]];
         let r = decompose(&a).unwrap();
         assert!((r.l[0][0] - 2.0).abs() < 1e-12);
         assert!((r.l[1][1] - 3.0).abs() < 1e-12);
@@ -135,7 +145,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::needless_range_loop)]    // matrix-equality check needs both indices
+    #[allow(clippy::needless_range_loop)] // matrix-equality check needs both indices
     fn ll_t_equals_a() {
         let a = vec![
             vec![4.0, 12.0, -16.0],
@@ -149,18 +159,18 @@ mod tests {
                 for k in 0..3 {
                     s += r.l[i][k] * r.l[j][k];
                 }
-                assert!((s - a[i][j]).abs() < 1e-9,
-                    "L·Lᵀ mismatch at ({i},{j}): got {s} expected {}", a[i][j]);
+                assert!(
+                    (s - a[i][j]).abs() < 1e-9,
+                    "L·Lᵀ mismatch at ({i},{j}): got {s} expected {}",
+                    a[i][j]
+                );
             }
         }
     }
 
     #[test]
     fn upper_triangle_is_zero() {
-        let a = vec![
-            vec![4.0, 2.0],
-            vec![2.0, 5.0],
-        ];
+        let a = vec![vec![4.0, 2.0], vec![2.0, 5.0]];
         let r = decompose(&a).unwrap();
         assert_eq!(r.l[0][1], 0.0);
     }
@@ -168,10 +178,7 @@ mod tests {
     #[test]
     fn multiply_with_correlated_draws() {
         // 2-asset covariance σ² = (4, 9), ρ = 0.5.
-        let a = vec![
-            vec![4.0, 3.0],
-            vec![3.0, 9.0],
-        ];
+        let a = vec![vec![4.0, 3.0], vec![3.0, 9.0]];
         let r = decompose(&a).unwrap();
         let z = vec![1.0, 1.0];
         let out = multiply(&r.l, &z).unwrap();

@@ -28,12 +28,16 @@ pub fn compute(x: &[f64], y: &[f64]) -> Option<RankCorrReport> {
         return None;
     }
     // Filter to finite pairs.
-    let clean: Vec<(f64, f64)> = x.iter().zip(y.iter())
+    let clean: Vec<(f64, f64)> = x
+        .iter()
+        .zip(y.iter())
         .filter(|(a, b)| a.is_finite() && b.is_finite())
         .map(|(a, b)| (*a, *b))
         .collect();
     let m = clean.len();
-    if m < 3 { return None; }
+    if m < 3 {
+        return None;
+    }
     // Spearman ρ via Pearson on ranks (average-tied ranks).
     let xs: Vec<f64> = clean.iter().map(|p| p.0).collect();
     let ys: Vec<f64> = clean.iter().map(|p| p.1).collect();
@@ -48,15 +52,23 @@ pub fn compute(x: &[f64], y: &[f64]) -> Option<RankCorrReport> {
         for j in (i + 1)..m {
             let dx = clean[i].0 - clean[j].0;
             let dy = clean[i].1 - clean[j].1;
-            if dx == 0.0 || dy == 0.0 { tied += 1; continue; }
-            if dx.signum() == dy.signum() { conc += 1; }
-            else { disc += 1; }
+            if dx == 0.0 || dy == 0.0 {
+                tied += 1;
+                continue;
+            }
+            if dx.signum() == dy.signum() {
+                conc += 1;
+            } else {
+                disc += 1;
+            }
         }
     }
     let total_pairs = m * (m - 1) / 2;
     let tau = if total_pairs > 0 {
         (conc as f64 - disc as f64) / total_pairs as f64
-    } else { 0.0 };
+    } else {
+        0.0
+    };
     Some(RankCorrReport {
         spearman_rho: spearman,
         kendall_tau: tau,
@@ -90,7 +102,9 @@ fn average_ranks(values: &[f64]) -> Vec<f64> {
 
 fn pearson(a: &[f64], b: &[f64]) -> Option<f64> {
     let n = a.len();
-    if n != b.len() || n < 2 { return None; }
+    if n != b.len() || n < 2 {
+        return None;
+    }
     let n_f = n as f64;
     let mean_a = a.iter().sum::<f64>() / n_f;
     let mean_b = b.iter().sum::<f64>() / n_f;
@@ -104,9 +118,15 @@ fn pearson(a: &[f64], b: &[f64]) -> Option<f64> {
         sxx += dx * dx;
         syy += dy * dy;
     }
-    if sxx <= 0.0 || syy <= 0.0 { return None; }
+    if sxx <= 0.0 || syy <= 0.0 {
+        return None;
+    }
     let r = sxy / (sxx * syy).sqrt();
-    if r.is_finite() { Some(r.clamp(-1.0, 1.0)) } else { None }
+    if r.is_finite() {
+        Some(r.clamp(-1.0, 1.0))
+    } else {
+        None
+    }
 }
 
 #[cfg(test)]
@@ -167,14 +187,21 @@ mod tests {
         let mut x = Vec::with_capacity(200);
         let mut y = Vec::with_capacity(200);
         for _ in 0..200 {
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             x.push((state >> 32) as f64 / u32::MAX as f64);
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             y.push((state >> 32) as f64 / u32::MAX as f64);
         }
         let r = compute(&x, &y).unwrap();
-        assert!(r.spearman_rho.abs() < 0.2,
-            "spearman of independent series should be small, got {}", r.spearman_rho);
+        assert!(
+            r.spearman_rho.abs() < 0.2,
+            "spearman of independent series should be small, got {}",
+            r.spearman_rho
+        );
         assert!(r.kendall_tau.abs() < 0.2);
     }
 

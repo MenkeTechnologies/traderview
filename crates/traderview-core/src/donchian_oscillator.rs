@@ -16,13 +16,22 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 pub fn compute(bars: &[Bar], period: usize) -> Vec<Option<f64>> {
     let n = bars.len();
     let mut out = vec![None; n];
-    if period < 2 || n < period { return out; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if period < 2 || n < period {
+        return out;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return out;
     }
     for (i, slot) in out.iter_mut().enumerate().skip(period - 1) {
@@ -44,7 +53,13 @@ pub fn compute(bars: &[Bar], period: usize) -> Vec<Option<f64>> {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {
@@ -65,7 +80,9 @@ mod tests {
         let bars = vec![b(101.0, 99.0, 100.0); 30];
         let r = compute(&bars, 20);
         // hh=101, ll=99, range=2, mid=100, close=100 → DO = 0.
-        for v in r.iter().skip(19).flatten() { assert!(v.abs() < 1e-9); }
+        for v in r.iter().skip(19).flatten() {
+            assert!(v.abs() < 1e-9);
+        }
     }
 
     #[test]

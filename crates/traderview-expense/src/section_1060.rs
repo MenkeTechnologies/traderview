@@ -22,7 +22,7 @@
 //! definitions cross-referenced to **Treas. Reg. § 1.338-6**.
 //!
 //! Web research (verified 2026-06-03):
-//! - **Enactment**: § 1060 added by **Section 641 of the Tax Reform Act of 1986 (Public Law 99-514)**; subsequently amended by the Omnibus Budget Reconciliation Act of 1990 (Public Law 101-508) and the Revenue Reconciliation Act of 1993 (Public Law 103-66) ([Norton Rose Fulbright — Section 1060 and Purchase Price Allocations (December 2021)](https://www.projectfinance.law/publications/2021/december/section-1060-and-purchase-price-allocations); [Mondaq — Purchase Price Allocation Rules: Sections 1060, 338, And 197](https://www.mondaq.com/unitedstates/corporate-tax/24405/purchase-price-allocation-rules-sections-1060-338-and-197); [Cornell LII — 26 CFR § 1.1060-1 Special allocation rules for certain asset acquisitions](https://www.law.cornell.edu/cfr/text/26/1.1060-1); [IRS — Instructions for Form 8594 (Rev. November 2021)](https://www.irs.gov/pub/irs-pdf/i8594.pdf); [IRS — Instructions for Form 8594 (11/2021)](https://www.irs.gov/instructions/i8594); [LegalClarity — Form 8594 Classifications: The Seven Asset Classes](https://legalclarity.org/form-8594-classifications-the-seven-asset-classes/); [Henson Efron — Sellers and Buyers: Competing Interests](https://hensonefron.com/sellers-buyers-competing-interests/); [Mihama Acquisitions — Section 1060 Asset Allocation Whitepaper](https://mihamainc.com/mihama_section1060_whitepaper.html); [Stradley — Allocations of Purchase Price: A Zero-Sum Game?](https://www.stradley.com/business-vantage-point-blog/allocations-of-purchase-price-a-zero-sum-game); [LedgerFi — IRS Form 8594 Instructions: Guide for Business Acquisitions [2025]](https://www.ledgerfi.co/resources/form-8594-asset-acquisition-guide-2025); [LegalClarity — How to Complete IRS Form 8594 for Asset Allocation](https://legalclarity.org/how-to-complete-irs-form-8594-for-asset-allocation/); [MarketClutch — Understanding Section 1060: Special Allocation Rules](https://marketclutch.com/understanding-section-1060-special-allocation-rules-for-certain-asset-acquisitions/); [TFX — Guide to Form 8594 and Purchase Price Allocation (PPA)](https://tfx.tax/articles/tax-tips/form-8564-purchase-price-allocation)).
+//! - **Enactment**: § 1060 added by **Section 641 of the Tax Reform Act of 1986 (Public Law 99-514)**; subsequently amended by the Omnibus Budget Reconciliation Act of 1990 (Public Law 101-508) and the Revenue Reconciliation Act of 1993 (Public Law 103-66) ([Norton Rose Fulbright — Section 1060 and Purchase Price Allocations (December 2021)](https://www.projectfinance.law/publications/2021/december/section-1060-and-purchase-price-allocations); [Mondaq — Purchase Price Allocation Rules: Sections 1060, 338, And 197](https://www.mondaq.com/unitedstates/corporate-tax/24405/purchase-price-allocation-rules-sections-1060-338-and-197); [Cornell LII — 26 CFR § 1.1060-1 Special allocation rules for certain asset acquisitions](https://www.law.cornell.edu/cfr/text/26/1.1060-1); [IRS — Instructions for Form 8594 (Rev. November 2021)](https://www.irs.gov/pub/irs-pdf/i8594.pdf); [IRS — Instructions for Form 8594 (11/2021)](https://www.irs.gov/instructions/i8594); [LegalClarity — Form 8594 Classifications: The Seven Asset Classes](https://legalclarity.org/form-8594-classifications-the-seven-asset-classes/); [Henson Efron — Sellers and Buyers: Competing Interests](https://hensonefron.com/sellers-buyers-competing-interests/); [Mihama Acquisitions — Section 1060 Asset Allocation Whitepaper](https://mihamainc.com/mihama_section1060_whitepaper.html); [Stradley — Allocations of Purchase Price: A Zero-Sum Game?](https://www.stradley.com/business-vantage-point-blog/allocations-of-purchase-price-a-zero-sum-game); [LedgerFi — IRS Form 8594 Instructions: Guide for Business Acquisitions 2025](https://www.ledgerfi.co/resources/form-8594-asset-acquisition-guide-2025); [LegalClarity — How to Complete IRS Form 8594 for Asset Allocation](https://legalclarity.org/how-to-complete-irs-form-8594-for-asset-allocation/); [MarketClutch — Understanding Section 1060: Special Allocation Rules](https://marketclutch.com/understanding-section-1060-special-allocation-rules-for-certain-asset-acquisitions/); [TFX — Guide to Form 8594 and Purchase Price Allocation (PPA)](https://tfx.tax/articles/tax-tips/form-8564-purchase-price-allocation)).
 //! - **Applicable Asset Acquisition Definition (§ 1060(c))**: any transfer of a **GROUP OF ASSETS THAT CONSTITUTES A TRADE OR BUSINESS** in the hands of either the seller or buyer where the basis of the assets in the hands of the purchaser is determined wholly by reference to the consideration paid. **Goodwill or going concern value must attach (or could attach)** to such assets.
 //! - **Residual Method Cross-Reference**: § 1060(a) requires allocation in the same manner as § 338(b)(5) — the residual method allocates consideration sequentially from Class I to Class VII, with each class receiving allocation up to fair market value before moving to the next class. Any remaining consideration after satisfying Classes I-VI flows to **Class VII (goodwill and going concern value)** as the residual.
 //! - **Seven Asset Classes (Treas. Reg. § 1.338-6(b) / § 1.1060-1(c))**:
@@ -293,10 +293,12 @@ mod tests {
 
     fn baseline_input() -> Input {
         Input {
-            transaction_status: TransactionStatus::ApplicableAssetAcquisitionGoodwillOrGoingConcernAttaches,
+            transaction_status:
+                TransactionStatus::ApplicableAssetAcquisitionGoodwillOrGoingConcernAttaches,
             compliance_aspect: ComplianceAspect::Form8594FilingByBothParties,
             filing_compliance_status: FilingComplianceStatus::BothBuyerAndSellerFiledForm8594,
-            allocation_method_status: AllocationMethodStatus::ResidualMethodAppliedClassIThroughVIISequentially,
+            allocation_method_status:
+                AllocationMethodStatus::ResidualMethodAppliedClassIThroughVIISequentially,
             consistency_status: ConsistencyStatus::BuyerAndSellerAllocationConsistent,
             fair_market_value_at_each_class_level_respected: true,
             fair_market_value_overstated_in_lower_class: false,
@@ -307,7 +309,8 @@ mod tests {
     #[test]
     fn no_goodwill_or_going_concern_not_applicable() {
         let mut input = baseline_input();
-        input.transaction_status = TransactionStatus::NonApplicableTransactionNoGoodwillNoGoingConcern;
+        input.transaction_status =
+            TransactionStatus::NonApplicableTransactionNoGoodwillNoGoingConcern;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -320,7 +323,10 @@ mod tests {
         let mut input = baseline_input();
         input.transaction_status = TransactionStatus::StockSaleNotAssetSaleNotSubjectToSection1060;
         let output = check(&input);
-        assert_eq!(output.mode, Section1060Mode::NotApplicableStockSaleNotSubjectToSection1060);
+        assert_eq!(
+            output.mode,
+            Section1060Mode::NotApplicableStockSaleNotSubjectToSection1060
+        );
     }
 
     #[test]
@@ -337,7 +343,10 @@ mod tests {
     #[test]
     fn both_parties_filed_form_8594_compliant() {
         let output = check(&baseline_input());
-        assert_eq!(output.mode, Section1060Mode::CompliantBothBuyerAndSellerFiledForm8594);
+        assert_eq!(
+            output.mode,
+            Section1060Mode::CompliantBothBuyerAndSellerFiledForm8594
+        );
     }
 
     #[test]
@@ -345,7 +354,10 @@ mod tests {
         let mut input = baseline_input();
         input.filing_compliance_status = FilingComplianceStatus::NeitherBuyerNorSellerFiledForm8594;
         let output = check(&input);
-        assert_eq!(output.mode, Section1060Mode::ViolationFailureToFileForm8594ByBothParties);
+        assert_eq!(
+            output.mode,
+            Section1060Mode::ViolationFailureToFileForm8594ByBothParties
+        );
     }
 
     #[test]
@@ -353,7 +365,10 @@ mod tests {
         let mut input = baseline_input();
         input.filing_compliance_status = FilingComplianceStatus::OnlyBuyerFiledForm8594;
         let output = check(&input);
-        assert_eq!(output.mode, Section1060Mode::ViolationOnlyOnePartyFiledForm8594);
+        assert_eq!(
+            output.mode,
+            Section1060Mode::ViolationOnlyOnePartyFiledForm8594
+        );
     }
 
     #[test]
@@ -361,7 +376,10 @@ mod tests {
         let mut input = baseline_input();
         input.filing_compliance_status = FilingComplianceStatus::OnlySellerFiledForm8594;
         let output = check(&input);
-        assert_eq!(output.mode, Section1060Mode::ViolationOnlyOnePartyFiledForm8594);
+        assert_eq!(
+            output.mode,
+            Section1060Mode::ViolationOnlyOnePartyFiledForm8594
+        );
     }
 
     #[test]
@@ -382,7 +400,10 @@ mod tests {
         input.allocation_method_status =
             AllocationMethodStatus::NonResidualMethodAppliedFlatPercentageOrOther;
         let output = check(&input);
-        assert_eq!(output.mode, Section1060Mode::ViolationNonResidualMethodApplied);
+        assert_eq!(
+            output.mode,
+            Section1060Mode::ViolationNonResidualMethodApplied
+        );
     }
 
     #[test]
@@ -401,7 +422,8 @@ mod tests {
     #[test]
     fn buyer_seller_allocation_consistent_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::BuyerSellerAllocationConsistencyUnderSection1060B;
+        input.compliance_aspect =
+            ComplianceAspect::BuyerSellerAllocationConsistencyUnderSection1060B;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -412,8 +434,10 @@ mod tests {
     #[test]
     fn buyer_seller_allocation_materially_inconsistent_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::BuyerSellerAllocationConsistencyUnderSection1060B;
-        input.consistency_status = ConsistencyStatus::BuyerAndSellerAllocationMateriallyInconsistent;
+        input.compliance_aspect =
+            ComplianceAspect::BuyerSellerAllocationConsistencyUnderSection1060B;
+        input.consistency_status =
+            ConsistencyStatus::BuyerAndSellerAllocationMateriallyInconsistent;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -426,7 +450,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::FairMarketValueAtEachClassLevel;
         let output = check(&input);
-        assert_eq!(output.mode, Section1060Mode::CompliantFairMarketValueRespectedAtEachClassLevel);
+        assert_eq!(
+            output.mode,
+            Section1060Mode::CompliantFairMarketValueRespectedAtEachClassLevel
+        );
     }
 
     #[test]
@@ -435,7 +462,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::FairMarketValueAtEachClassLevel;
         input.fair_market_value_overstated_in_lower_class = true;
         let output = check(&input);
-        assert_eq!(output.mode, Section1060Mode::ViolationFairMarketValueOverstatedInLowerClass);
+        assert_eq!(
+            output.mode,
+            Section1060Mode::ViolationFairMarketValueOverstatedInLowerClass
+        );
     }
 
     #[test]
@@ -444,7 +474,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::FairMarketValueAtEachClassLevel;
         input.fair_market_value_understated_in_lower_class = true;
         let output = check(&input);
-        assert_eq!(output.mode, Section1060Mode::ViolationFairMarketValueUnderstatedInLowerClass);
+        assert_eq!(
+            output.mode,
+            Section1060Mode::ViolationFairMarketValueUnderstatedInLowerClass
+        );
     }
 
     #[test]
@@ -452,7 +485,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::ApplicableAssetAcquisitionDetermination;
         let output = check(&input);
-        assert_eq!(output.mode, Section1060Mode::CompliantBothBuyerAndSellerFiledForm8594);
+        assert_eq!(
+            output.mode,
+            Section1060Mode::CompliantBothBuyerAndSellerFiledForm8594
+        );
     }
 
     #[test]

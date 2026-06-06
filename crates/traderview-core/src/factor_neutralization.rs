@@ -52,10 +52,14 @@ pub fn neutralize(
 ) -> Option<FactorNeutralizationReport> {
     let n = inputs.len();
     let k = factor_names.len();
-    if n < k + 2 || k == 0 { return None; }
-    if inputs.iter().any(|i| i.factor_exposures.len() != k
-        || !i.raw_signal.is_finite()
-        || i.factor_exposures.iter().any(|x| !x.is_finite())) {
+    if n < k + 2 || k == 0 {
+        return None;
+    }
+    if inputs.iter().any(|i| {
+        i.factor_exposures.len() != k
+            || !i.raw_signal.is_finite()
+            || i.factor_exposures.iter().any(|x| !x.is_finite())
+    }) {
         return None;
     }
     let p = k + 1;
@@ -71,7 +75,9 @@ pub fn neutralize(
         sum_y_sq += y * y;
         for j in 0..p {
             xty[j] += row[j] * y;
-            for kk in 0..p { xtx[j][kk] += row[j] * row[kk]; }
+            for kk in 0..p {
+                xtx[j][kk] += row[j] * row[kk];
+            }
         }
     }
     let coef = solve_linear(&xtx, &xty)?;
@@ -106,27 +112,43 @@ pub fn neutralize(
 
 fn solve_linear(m: &[Vec<f64>], y: &[f64]) -> Option<Vec<f64>> {
     let n = m.len();
-    if n == 0 || y.len() != n { return None; }
+    if n == 0 || y.len() != n {
+        return None;
+    }
     let mut aug = vec![vec![0.0_f64; n + 1]; n];
     for (i, row) in aug.iter_mut().enumerate() {
-        for (j, slot) in row.iter_mut().enumerate().take(n) { *slot = m[i][j]; }
+        for (j, slot) in row.iter_mut().enumerate().take(n) {
+            *slot = m[i][j];
+        }
         row[n] = y[i];
     }
     for i in 0..n {
         let mut pivot = i;
         for r in (i + 1)..n {
-            if aug[r][i].abs() > aug[pivot][i].abs() { pivot = r; }
+            if aug[r][i].abs() > aug[pivot][i].abs() {
+                pivot = r;
+            }
         }
-        if aug[pivot][i].abs() < 1e-18 { return None; }
+        if aug[pivot][i].abs() < 1e-18 {
+            return None;
+        }
         aug.swap(i, pivot);
         let div = aug[i][i];
-        for v in aug[i].iter_mut() { *v /= div; }
+        for v in aug[i].iter_mut() {
+            *v /= div;
+        }
         for r in 0..n {
-            if r == i { continue; }
+            if r == i {
+                continue;
+            }
             let f = aug[r][i];
-            if f == 0.0 { continue; }
+            if f == 0.0 {
+                continue;
+            }
             let pivot_row = aug[i].clone();
-            for (j, v) in aug[r].iter_mut().enumerate() { *v -= f * pivot_row[j]; }
+            for (j, v) in aug[r].iter_mut().enumerate() {
+                *v -= f * pivot_row[j];
+            }
         }
     }
     Some((0..n).map(|i| aug[i][n]).collect())
@@ -137,7 +159,11 @@ mod tests {
     use super::*;
 
     fn n(sym: &str, sig: f64, fac: Vec<f64>) -> NameInputs {
-        NameInputs { symbol: sym.into(), raw_signal: sig, factor_exposures: fac }
+        NameInputs {
+            symbol: sym.into(),
+            raw_signal: sig,
+            factor_exposures: fac,
+        }
     }
 
     #[test]
@@ -148,7 +174,9 @@ mod tests {
 
     #[test]
     fn no_factors_returns_none() {
-        let inputs: Vec<_> = (0..10).map(|i| n(&format!("S{i}"), i as f64, vec![])).collect();
+        let inputs: Vec<_> = (0..10)
+            .map(|i| n(&format!("S{i}"), i as f64, vec![]))
+            .collect();
         assert!(neutralize(&[], &inputs).is_none());
     }
 
@@ -173,13 +201,17 @@ mod tests {
     #[test]
     fn signal_fully_explained_by_factor_yields_zero_neutralized() {
         // signal_i = 2 · f_i → factor regression removes everything.
-        let inputs: Vec<_> = (1..=20).map(|i| {
-            n(&format!("S{i}"), 2.0 * i as f64, vec![i as f64])
-        }).collect();
+        let inputs: Vec<_> = (1..=20)
+            .map(|i| n(&format!("S{i}"), 2.0 * i as f64, vec![i as f64]))
+            .collect();
         let r = neutralize(&["beta".into()], &inputs).unwrap();
         for name in &r.names {
-            assert!(name.neutralized_signal.abs() < 1e-9,
-                "{}: neutralized should be 0, got {}", name.symbol, name.neutralized_signal);
+            assert!(
+                name.neutralized_signal.abs() < 1e-9,
+                "{}: neutralized should be 0, got {}",
+                name.symbol,
+                name.neutralized_signal
+            );
         }
         assert!((r.r_squared - 1.0).abs() < 1e-9);
     }
@@ -201,12 +233,14 @@ mod tests {
     #[test]
     fn factor_loadings_match_known_coefficients() {
         // signal = 0.5 + 1.5·f1 − 0.7·f2
-        let inputs: Vec<_> = (0..30).map(|i| {
-            let f1 = i as f64 / 10.0;
-            let f2 = (i as f64 / 5.0).sin();
-            let sig = 0.5 + 1.5 * f1 - 0.7 * f2;
-            n(&format!("S{i}"), sig, vec![f1, f2])
-        }).collect();
+        let inputs: Vec<_> = (0..30)
+            .map(|i| {
+                let f1 = i as f64 / 10.0;
+                let f2 = (i as f64 / 5.0).sin();
+                let sig = 0.5 + 1.5 * f1 - 0.7 * f2;
+                n(&format!("S{i}"), sig, vec![f1, f2])
+            })
+            .collect();
         let r = neutralize(&["f1".into(), "f2".into()], &inputs).unwrap();
         assert!((r.alpha_intercept - 0.5).abs() < 1e-6);
         assert!((r.factor_loadings[0] - 1.5).abs() < 1e-6);
@@ -215,20 +249,23 @@ mod tests {
 
     #[test]
     fn neutralized_sum_to_zero() {
-        let inputs: Vec<_> = (0..20).map(|i| {
-            n(&format!("S{i}"), (i as f64).sin(), vec![i as f64])
-        }).collect();
+        let inputs: Vec<_> = (0..20)
+            .map(|i| n(&format!("S{i}"), (i as f64).sin(), vec![i as f64]))
+            .collect();
         let r = neutralize(&["beta".into()], &inputs).unwrap();
         let sum: f64 = r.names.iter().map(|n| n.neutralized_signal).sum();
-        assert!(sum.abs() < 1e-9,
-            "with intercept, residuals sum to 0, got {}", sum);
+        assert!(
+            sum.abs() < 1e-9,
+            "with intercept, residuals sum to 0, got {}",
+            sum
+        );
     }
 
     #[test]
     fn n_names_reported() {
-        let inputs: Vec<_> = (0..15).map(|i| {
-            n(&format!("S{i}"), i as f64, vec![(i as f64).sin()])
-        }).collect();
+        let inputs: Vec<_> = (0..15)
+            .map(|i| n(&format!("S{i}"), i as f64, vec![(i as f64).sin()]))
+            .collect();
         let r = neutralize(&["beta".into()], &inputs).unwrap();
         assert_eq!(r.n_names, 15);
     }

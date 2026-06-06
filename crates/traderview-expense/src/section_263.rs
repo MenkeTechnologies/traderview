@@ -142,15 +142,18 @@ pub fn check(input: &Input) -> Output {
         "Treas. Reg. § 1.263(a)-1 (general rule for capital expenditures)".to_string(),
         "Treas. Reg. § 1.263(a)-1(f) (de minimis safe harbor)".to_string(),
         "Treas. Reg. § 1.263(a)-2 (acquisition or production of tangible property)".to_string(),
-        "Treas. Reg. § 1.263(a)-3 (amounts paid to improve tangible property — BAR test)".to_string(),
+        "Treas. Reg. § 1.263(a)-3 (amounts paid to improve tangible property — BAR test)"
+            .to_string(),
         "Treas. Reg. § 1.263(a)-3(h) (small taxpayer safe harbor)".to_string(),
         "Treas. Reg. § 1.263(a)-3(i) (routine maintenance safe harbor)".to_string(),
         "Treas. Reg. § 1.263(a)-3(j) (betterment)".to_string(),
         "Treas. Reg. § 1.263(a)-3(k) (restoration)".to_string(),
         "Treas. Reg. § 1.263(a)-3(l) (adaptation)".to_string(),
         "T.D. 9636 (2013) — final Tangible Property Regulations".to_string(),
-        "Notice 2015-82 (de minimis safe harbor threshold increase to $2,500 eff. 2016)".to_string(),
-        "IRC § 162 (ordinary and necessary business expense — current deduction for non-capital)".to_string(),
+        "Notice 2015-82 (de minimis safe harbor threshold increase to $2,500 eff. 2016)"
+            .to_string(),
+        "IRC § 162 (ordinary and necessary business expense — current deduction for non-capital)"
+            .to_string(),
         "IRC § 168 (MACRS — depreciation of capitalized amounts)".to_string(),
     ];
 
@@ -215,7 +218,8 @@ pub fn check(input: &Input) -> Output {
             <= SMALL_TAXPAYER_BUILDING_UNADJUSTED_BASIS_THRESHOLD_CENTS
     {
         let two_percent_basis = input.building_unadjusted_basis_cents / 50;
-        let safe_harbor_limit = two_percent_basis.min(SMALL_TAXPAYER_SAFE_HARBOR_DOLLAR_LIMIT_CENTS);
+        let safe_harbor_limit =
+            two_percent_basis.min(SMALL_TAXPAYER_SAFE_HARBOR_DOLLAR_LIMIT_CENTS);
         if input.aggregate_annual_repairs_improvements_on_building_cents <= safe_harbor_limit {
             notes.push(format!(
                 "§ 1.263(a)-3(h) small taxpayer safe harbor: aggregate ${} ≤ lesser of 2% of basis (${}) or ${} dollar limit; current deduction allowed.",
@@ -422,10 +426,7 @@ mod tests {
         i.has_applicable_financial_statement = true;
         i.de_minimis_safe_harbor_claimed = true;
         let out = check(&i);
-        assert_eq!(
-            out.severity,
-            Severity::CompliantDeMinimisSafeHarborAfs5000
-        );
+        assert_eq!(out.severity, Severity::CompliantDeMinimisSafeHarborAfs5000);
         assert_eq!(out.safe_harbor_applied, SafeHarborApplied::DeMinimisAfs5000);
     }
 

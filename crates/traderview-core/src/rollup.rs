@@ -170,8 +170,8 @@ fn rollup_one_group(
                             open_side: TradeSide::Short,
                             closing_exec: e,
                             closing_fee_per_unit: fee_per_unit,
-                        closing_commission_per_unit: commission_per_unit,
-                        close_model,
+                            closing_commission_per_unit: commission_per_unit,
+                            close_model,
                             current_holder: &mut current_short,
                             out,
                             method,
@@ -187,10 +187,12 @@ fn rollup_one_group(
                     if current_long.is_none() {
                         current_long = Some(TradeBuilder::new(e, TradeSide::Long));
                     }
-                    current_long
-                        .as_mut()
-                        .unwrap()
-                        .observe_open(e, remaining, fee_per_unit, commission_per_unit);
+                    current_long.as_mut().unwrap().observe_open(
+                        e,
+                        remaining,
+                        fee_per_unit,
+                        commission_per_unit,
+                    );
                     long_lots.push_back(lot);
                 }
             }
@@ -203,8 +205,8 @@ fn rollup_one_group(
                             open_side: TradeSide::Long,
                             closing_exec: e,
                             closing_fee_per_unit: fee_per_unit,
-                        closing_commission_per_unit: commission_per_unit,
-                        close_model,
+                            closing_commission_per_unit: commission_per_unit,
+                            close_model,
                             current_holder: &mut current_long,
                             out,
                             method,
@@ -220,10 +222,12 @@ fn rollup_one_group(
                     if current_short.is_none() {
                         current_short = Some(TradeBuilder::new(e, TradeSide::Short));
                     }
-                    current_short
-                        .as_mut()
-                        .unwrap()
-                        .observe_open(e, remaining, fee_per_unit, commission_per_unit);
+                    current_short.as_mut().unwrap().observe_open(
+                        e,
+                        remaining,
+                        fee_per_unit,
+                        commission_per_unit,
+                    );
                     short_lots.push_back(lot);
                 }
             }
@@ -237,8 +241,8 @@ fn rollup_one_group(
                             open_side: TradeSide::Long,
                             closing_exec: e,
                             closing_fee_per_unit: fee_per_unit,
-                        closing_commission_per_unit: commission_per_unit,
-                        close_model,
+                            closing_commission_per_unit: commission_per_unit,
+                            close_model,
                             current_holder: &mut current_long,
                             out,
                             method,
@@ -255,10 +259,12 @@ fn rollup_one_group(
                     if current_short.is_none() {
                         current_short = Some(TradeBuilder::new(e, TradeSide::Short));
                     }
-                    current_short
-                        .as_mut()
-                        .unwrap()
-                        .observe_open(e, remaining, fee_per_unit, commission_per_unit);
+                    current_short.as_mut().unwrap().observe_open(
+                        e,
+                        remaining,
+                        fee_per_unit,
+                        commission_per_unit,
+                    );
                     short_lots.push_back(lot);
                 }
             }
@@ -271,8 +277,8 @@ fn rollup_one_group(
                             open_side: TradeSide::Short,
                             closing_exec: e,
                             closing_fee_per_unit: fee_per_unit,
-                        closing_commission_per_unit: commission_per_unit,
-                        close_model,
+                            closing_commission_per_unit: commission_per_unit,
+                            close_model,
                             current_holder: &mut current_short,
                             out,
                             method,
@@ -288,10 +294,12 @@ fn rollup_one_group(
                     if current_long.is_none() {
                         current_long = Some(TradeBuilder::new(e, TradeSide::Long));
                     }
-                    current_long
-                        .as_mut()
-                        .unwrap()
-                        .observe_open(e, remaining, fee_per_unit, commission_per_unit);
+                    current_long.as_mut().unwrap().observe_open(
+                        e,
+                        remaining,
+                        fee_per_unit,
+                        commission_per_unit,
+                    );
                     long_lots.push_back(lot);
                 }
             }
@@ -504,11 +512,7 @@ impl TradeBuilder {
     /// from `seed_exec` (the close exec that just finalized the prior
     /// trade) — that's the wall-clock when this carry-over became its
     /// own logical trade.
-    fn from_inventory(
-        seed_exec: &Execution,
-        side: TradeSide,
-        lots: &VecDeque<OpenLot>,
-    ) -> Self {
+    fn from_inventory(seed_exec: &Execution, side: TradeSide, lots: &VecDeque<OpenLot>) -> Self {
         let mut qty_total = Decimal::ZERO;
         let mut notional_in = Decimal::ZERO;
         for lot in lots {
@@ -805,10 +809,10 @@ mod tests {
         // entry price of the closed shares, NOT the per-share inflation
         // of notional_in / qty_closed when notional_in covers full inventory.
         let execs = vec![
-            exec("FOO", Side::Buy, 100, 50_00, 0, 1_000),   // 100 @ $50.00
-            exec("FOO", Side::Sell, 30, 60_00, 0, 2_000),   // close 30 @ $60.00
-            exec("FOO", Side::Buy, 50, 70_00, 0, 3_000),    // new open to break the run
-            exec("FOO", Side::Sell, 120, 65_00, 0, 4_000),  // close remaining
+            exec("FOO", Side::Buy, 100, 50_00, 0, 1_000), // 100 @ $50.00
+            exec("FOO", Side::Sell, 30, 60_00, 0, 2_000), // close 30 @ $60.00
+            exec("FOO", Side::Buy, 50, 70_00, 0, 3_000),  // new open to break the run
+            exec("FOO", Side::Sell, 120, 65_00, 0, 4_000), // close remaining
         ];
         let trades = rollup_with(&execs, LotMethod::Fifo, CloseModel::PerCloseExec).unwrap();
         // The first closed trade should show entry_avg = $50.00 (the actual
@@ -822,9 +826,9 @@ mod tests {
     fn close_then_open_then_close_yields_two_trades() {
         let execs = vec![
             exec("FOO", Side::Buy, 100, 200, 0, 1_000),
-            exec("FOO", Side::Sell, 50, 210, 0, 2_000),  // close 1
-            exec("FOO", Side::Buy, 30, 220, 0, 3_000),   // NEW open — breaks the run
-            exec("FOO", Side::Sell, 80, 225, 0, 4_000),  // close 2 (after new open)
+            exec("FOO", Side::Sell, 50, 210, 0, 2_000), // close 1
+            exec("FOO", Side::Buy, 30, 220, 0, 3_000),  // NEW open — breaks the run
+            exec("FOO", Side::Sell, 80, 225, 0, 4_000), // close 2 (after new open)
         ];
         let trades = rollup_with(&execs, LotMethod::Fifo, CloseModel::PerCloseExec).unwrap();
         assert_eq!(trades.len(), 2, "intervening buy splits trades");
@@ -836,13 +840,13 @@ mod tests {
         // identical aggregate gross P&L — the choice of model only changes
         // how the per-share P&L is *grouped* into trades, not its total.
         let execs = vec![
-            exec("SPHL", Side::Buy, 117, 845, 0, 1_000),    // @8.45
-            exec("SPHL", Side::Buy, 116, 856, 0, 2_000),    // @8.56
-            exec("SPHL", Side::Buy, 112, 878, 0, 3_000),    // @8.78
-            exec("SPHL", Side::Buy, 105, 914, 0, 4_000),    // @9.14
-            exec("SPHL", Side::Buy, 103, 966, 0, 5_000),    // @9.66
-            exec("SPHL", Side::Sell, 353, 959, 0, 6_000),   // partial close (carries 200)
-            exec("SPHL", Side::Sell, 200, 962, 0, 7_000),   // final close
+            exec("SPHL", Side::Buy, 117, 845, 0, 1_000),  // @8.45
+            exec("SPHL", Side::Buy, 116, 856, 0, 2_000),  // @8.56
+            exec("SPHL", Side::Buy, 112, 878, 0, 3_000),  // @8.78
+            exec("SPHL", Side::Buy, 105, 914, 0, 4_000),  // @9.14
+            exec("SPHL", Side::Buy, 103, 966, 0, 5_000),  // @9.66
+            exec("SPHL", Side::Sell, 353, 959, 0, 6_000), // partial close (carries 200)
+            exec("SPHL", Side::Sell, 200, 962, 0, 7_000), // final close
         ];
         let flat = rollup_with(&execs, LotMethod::Fifo, CloseModel::FlatOnly).unwrap();
         let per_close = rollup_with(&execs, LotMethod::Fifo, CloseModel::PerCloseExec).unwrap();

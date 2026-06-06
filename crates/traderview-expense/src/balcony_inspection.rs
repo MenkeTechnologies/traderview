@@ -112,8 +112,7 @@ fn check_sb721(input: &BalconyInspectionInput) -> BalconyInspectionResult {
             .to_string(),
     ];
 
-    let inspection_required =
-        input.unit_count >= 3 && input.has_eee_above_6_feet;
+    let inspection_required = input.unit_count >= 3 && input.has_eee_above_6_feet;
 
     let qualified = matches!(
         input.inspector_qualification,
@@ -154,8 +153,7 @@ fn check_sb721(input: &BalconyInspectionInput) -> BalconyInspectionResult {
         first_inspection_deadline: "January 1, 2026",
         recurring_cycle_years: 6,
         qualified_inspector: qualified,
-        repair_deadline_engaged: inspection_required
-            && input.days_since_repair_finding > 0,
+        repair_deadline_engaged: inspection_required && input.days_since_repair_finding > 0,
         violations,
         citation: "Cal. Health & Safety Code § 17973 (SB 721); AB 2579 (2023)",
         notes,
@@ -336,10 +334,7 @@ mod tests {
         i.minimum_15_percent_sampled = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("15%")));
+        assert!(r.violations.iter().any(|v| v.contains("15%")));
     }
 
     #[test]
@@ -385,8 +380,7 @@ mod tests {
     #[test]
     fn sb721_civil_engineer_qualifies() {
         let mut i = sb721_compliant();
-        i.inspector_qualification =
-            InspectorQualification::LicensedCivilOrStructuralEngineer;
+        i.inspector_qualification = InspectorQualification::LicensedCivilOrStructuralEngineer;
         let r = check(&i);
         assert!(r.qualified_inspector);
         assert!(r.compliant);
@@ -433,8 +427,7 @@ mod tests {
     #[test]
     fn sb326_civil_engineer_qualifies() {
         let mut i = sb326_compliant();
-        i.inspector_qualification =
-            InspectorQualification::LicensedCivilOrStructuralEngineer;
+        i.inspector_qualification = InspectorQualification::LicensedCivilOrStructuralEngineer;
         let r = check(&i);
         assert!(r.qualified_inspector);
         assert!(r.compliant);
@@ -455,10 +448,7 @@ mod tests {
         i.inspection_completed_by_deadline = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("January 1, 2025")));
+        assert!(r.violations.iter().any(|v| v.contains("January 1, 2025")));
     }
 
     #[test]
@@ -521,7 +511,10 @@ mod tests {
     fn inspector_qualification_truth_table_sb721() {
         for (q, exp_qualified) in [
             (InspectorQualification::LicensedArchitect, true),
-            (InspectorQualification::LicensedCivilOrStructuralEngineer, true),
+            (
+                InspectorQualification::LicensedCivilOrStructuralEngineer,
+                true,
+            ),
             (InspectorQualification::ContractorAbc5WithExperience, true),
             (InspectorQualification::CertifiedBuildingInspector, true),
             (InspectorQualification::LocalGovernmentEmployee, false),
@@ -539,7 +532,10 @@ mod tests {
     fn inspector_qualification_truth_table_sb326() {
         for (q, exp_qualified) in [
             (InspectorQualification::LicensedArchitect, true),
-            (InspectorQualification::LicensedCivilOrStructuralEngineer, true),
+            (
+                InspectorQualification::LicensedCivilOrStructuralEngineer,
+                true,
+            ),
             (InspectorQualification::ContractorAbc5WithExperience, false),
             (InspectorQualification::CertifiedBuildingInspector, false),
             (InspectorQualification::LocalGovernmentEmployee, false),

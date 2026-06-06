@@ -153,19 +153,22 @@ pub fn check(input: &Section7522Input) -> Section7522Result {
 
     if input.any_liability_component_included && !input.additional_amounts_identified {
         failure_reasons.push(
-            "26 USC § 7522(a) — notice must IDENTIFY THE AMOUNTS (if any) of additional amounts".to_string(),
+            "26 USC § 7522(a) — notice must IDENTIFY THE AMOUNTS (if any) of additional amounts"
+                .to_string(),
         );
     }
 
     if input.any_liability_component_included && !input.additions_to_tax_identified {
         failure_reasons.push(
-            "26 USC § 7522(a) — notice must IDENTIFY THE AMOUNTS (if any) of additions to the tax".to_string(),
+            "26 USC § 7522(a) — notice must IDENTIFY THE AMOUNTS (if any) of additions to the tax"
+                .to_string(),
         );
     }
 
     if input.any_liability_component_included && !input.assessable_penalties_identified {
         failure_reasons.push(
-            "26 USC § 7522(a) — notice must IDENTIFY THE AMOUNTS (if any) of assessable penalties".to_string(),
+            "26 USC § 7522(a) — notice must IDENTIFY THE AMOUNTS (if any) of assessable penalties"
+                .to_string(),
         );
     }
 
@@ -289,10 +292,7 @@ mod tests {
         i.tax_amount_identified = false;
         let r = check(&i);
         assert!(!r.fully_compliant);
-        assert!(r
-            .failure_reasons
-            .iter()
-            .any(|f| f.contains("tax due")));
+        assert!(r.failure_reasons.iter().any(|f| f.contains("tax due")));
     }
 
     #[test]
@@ -301,10 +301,7 @@ mod tests {
         i.interest_amount_identified = false;
         let r = check(&i);
         assert!(!r.fully_compliant);
-        assert!(r
-            .failure_reasons
-            .iter()
-            .any(|f| f.contains("interest")));
+        assert!(r.failure_reasons.iter().any(|f| f.contains("interest")));
     }
 
     #[test]
@@ -441,10 +438,13 @@ mod tests {
     #[test]
     fn note_pins_tbor_1_origin() {
         let r = check(&fully_compliant_base());
-        assert!(r.notes.iter().any(|n| n.contains("Taxpayer Bill of Rights of 1988")
-            && n.contains("TBOR 1")
-            && n.contains("§ 6233")
-            && n.contains("IRS Publication 1")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Taxpayer Bill of Rights of 1988")
+                && n.contains("TBOR 1")
+                && n.contains("§ 6233")
+                && n.contains("IRS Publication 1")));
     }
 
     #[test]

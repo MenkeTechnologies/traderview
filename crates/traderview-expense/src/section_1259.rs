@@ -199,8 +199,7 @@ pub fn compute(input: &Section1259Input) -> Section1259Result {
     } else {
         Character::ShortTermCapitalGain
     };
-    r.new_basis_after_constructive_sale =
-        input.long_position_basis + r.gain_recognized;
+    r.new_basis_after_constructive_sale = input.long_position_basis + r.gain_recognized;
     r.new_holding_period_start = Some(input.hedge_entry_date);
 
     r.note = format!(

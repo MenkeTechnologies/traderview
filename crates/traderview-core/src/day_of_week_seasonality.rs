@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct DailyClose {
-    pub day_of_week: u8,    // 1=Mon, 5=Fri
+    pub day_of_week: u8, // 1=Mon, 5=Fri
     pub close: f64,
 }
 
@@ -35,9 +35,13 @@ pub struct DayOfWeekSeasonalityReport {
 }
 
 pub fn compute(closes: &[DailyClose]) -> Option<DayOfWeekSeasonalityReport> {
-    if closes.len() < 2 { return None; }
-    if closes.iter().any(|c| !c.close.is_finite() || c.close <= 0.0
-        || !(1..=7).contains(&c.day_of_week)) {
+    if closes.len() < 2 {
+        return None;
+    }
+    if closes
+        .iter()
+        .any(|c| !c.close.is_finite() || c.close <= 0.0 || !(1..=7).contains(&c.day_of_week))
+    {
         return None;
     }
     let mut returns_per_dow: Vec<Vec<f64>> = vec![Vec::new(); 8];
@@ -56,7 +60,8 @@ pub fn compute(closes: &[DailyClose]) -> Option<DayOfWeekSeasonalityReport> {
         let returns = &returns_per_dow[dow as usize];
         if returns.is_empty() {
             report.by_weekday.push(WeekdayStats {
-                day_of_week: dow, ..Default::default()
+                day_of_week: dow,
+                ..Default::default()
             });
             continue;
         }
@@ -81,7 +86,10 @@ mod tests {
     use super::*;
 
     fn d(dow: u8, close: f64) -> DailyClose {
-        DailyClose { day_of_week: dow, close }
+        DailyClose {
+            day_of_week: dow,
+            close,
+        }
     }
 
     #[test]
@@ -109,9 +117,21 @@ mod tests {
         // Each week starts Friday at 100, then Monday drops to 99
         // (return = ln(99/100) negative).
         let closes = vec![
-            d(5, 100.0), d(1, 99.0), d(2, 100.0), d(3, 100.0), d(4, 100.0),
-            d(5, 100.0), d(1, 99.0), d(2, 100.0), d(3, 100.0), d(4, 100.0),
-            d(5, 100.0), d(1, 99.0), d(2, 100.0), d(3, 100.0), d(4, 100.0),
+            d(5, 100.0),
+            d(1, 99.0),
+            d(2, 100.0),
+            d(3, 100.0),
+            d(4, 100.0),
+            d(5, 100.0),
+            d(1, 99.0),
+            d(2, 100.0),
+            d(3, 100.0),
+            d(4, 100.0),
+            d(5, 100.0),
+            d(1, 99.0),
+            d(2, 100.0),
+            d(3, 100.0),
+            d(4, 100.0),
         ];
         let r = compute(&closes).unwrap();
         let mon = r.by_weekday.iter().find(|s| s.day_of_week == 1).unwrap();

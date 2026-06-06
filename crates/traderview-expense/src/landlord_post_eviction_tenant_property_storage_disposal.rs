@@ -188,7 +188,9 @@ pub fn check(input: &Input) -> Output {
 
     if input.property_returned_to_tenant {
         let mut n = notes;
-        n.push("Property returned to tenant — disposal pathway not engaged; compliant.".to_string());
+        n.push(
+            "Property returned to tenant — disposal pathway not engaged; compliant.".to_string(),
+        );
         return Output {
             severity: Severity::Compliant,
             jurisdiction_specific_actions: actions,

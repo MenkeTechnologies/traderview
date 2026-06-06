@@ -24,7 +24,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum OptionKind { Call, Put }
+pub enum OptionKind {
+    Call,
+    Put,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Butterfly {
@@ -32,7 +35,7 @@ pub struct Butterfly {
     pub lower_wing_strike: f64,
     pub body_strike: f64,
     pub upper_wing_strike: f64,
-    pub net_debit_per_contract: f64,    // positive number (debit paid)
+    pub net_debit_per_contract: f64, // positive number (debit paid)
     pub contracts: i64,
     pub multiplier: f64,
 }
@@ -63,18 +66,15 @@ pub fn analyze(b: &Butterfly) -> Option<ButterflyReport> {
     let lower_w = b.body_strike - b.lower_wing_strike;
     let upper_w = b.upper_wing_strike - b.body_strike;
     if (lower_w - upper_w).abs() > 1e-9 {
-        return None;    // not symmetric → broken-wing, not this module
+        return None; // not symmetric → broken-wing, not this module
     }
-    if b.net_debit_per_contract < 0.0
-        || b.multiplier <= 0.0
-        || b.contracts == 0
-    {
+    if b.net_debit_per_contract < 0.0 || b.multiplier <= 0.0 || b.contracts == 0 {
         return None;
     }
     let wing_width = lower_w;
     let max_profit_per = wing_width - b.net_debit_per_contract;
     if max_profit_per < 0.0 {
-        return None;    // debit exceeds wing width → mispriced
+        return None; // debit exceeds wing width → mispriced
     }
     let scale = b.contracts.unsigned_abs() as f64 * b.multiplier;
     let sign = b.contracts.signum() as f64;
@@ -104,7 +104,7 @@ pub fn pnl_at_expiration(b: &Butterfly, spot: f64) -> Option<f64> {
     }
     let leg = |k: f64| match b.kind {
         OptionKind::Call => (spot - k).max(0.0),
-        OptionKind::Put  => (k - spot).max(0.0),
+        OptionKind::Put => (k - spot).max(0.0),
     };
     let per = leg(b.lower_wing_strike) - 2.0 * leg(b.body_strike) + leg(b.upper_wing_strike)
         - b.net_debit_per_contract;
@@ -132,7 +132,7 @@ mod tests {
     #[test]
     fn asymmetric_wings_rejected() {
         let mut bad = bf();
-        bad.upper_wing_strike = 110.0;    // wings 5/10 — asymmetric
+        bad.upper_wing_strike = 110.0; // wings 5/10 — asymmetric
         assert!(analyze(&bad).is_none());
     }
 
@@ -153,7 +153,7 @@ mod tests {
     #[test]
     fn debit_exceeding_wing_width_rejected() {
         let mut bad = bf();
-        bad.net_debit_per_contract = 10.0;    // > wing_width = 5
+        bad.net_debit_per_contract = 10.0; // > wing_width = 5
         assert!(analyze(&bad).is_none());
     }
 
@@ -209,7 +209,7 @@ mod tests {
         let mut put = bf();
         put.kind = OptionKind::Put;
         let p_call = pnl_at_expiration(&bf(), 100.0).unwrap();
-        let p_put  = pnl_at_expiration(&put, 100.0).unwrap();
+        let p_put = pnl_at_expiration(&put, 100.0).unwrap();
         assert!((p_call - p_put).abs() < 1e-9);
     }
 

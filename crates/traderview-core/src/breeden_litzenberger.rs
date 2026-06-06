@@ -59,15 +59,22 @@ pub fn extract(
 ) -> Option<BreedenLitzenbergerReport> {
     if call_strip.len() < 5
         || !risk_free_rate.is_finite()
-        || !time_to_expiry_years.is_finite() || time_to_expiry_years <= 0.0 {
+        || !time_to_expiry_years.is_finite()
+        || time_to_expiry_years <= 0.0
+    {
         return None;
     }
-    if call_strip.iter().any(|s| !s.strike.is_finite() || s.strike <= 0.0
-        || !s.call_price.is_finite() || s.call_price < 0.0) {
+    if call_strip.iter().any(|s| {
+        !s.strike.is_finite() || s.strike <= 0.0 || !s.call_price.is_finite() || s.call_price < 0.0
+    }) {
         return None;
     }
     let mut sorted = call_strip.to_vec();
-    sorted.sort_by(|a, b| a.strike.partial_cmp(&b.strike).unwrap_or(std::cmp::Ordering::Equal));
+    sorted.sort_by(|a, b| {
+        a.strike
+            .partial_cmp(&b.strike)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     let n = sorted.len();
     let discount = (risk_free_rate * time_to_expiry_years).exp();
     // Second-derivative density at each interior strike.
@@ -76,7 +83,9 @@ pub fn extract(
     for i in 1..(n - 1) {
         let h_l = sorted[i].strike - sorted[i - 1].strike;
         let h_r = sorted[i + 1].strike - sorted[i].strike;
-        if h_l <= 0.0 || h_r <= 0.0 { continue; }
+        if h_l <= 0.0 || h_r <= 0.0 {
+            continue;
+        }
         let avg_h = 0.5 * (h_l + h_r);
         // Central second difference scaled to uniform spacing:
         let d2 = (sorted[i + 1].call_price - 2.0 * sorted[i].call_price + sorted[i - 1].call_price)
@@ -87,14 +96,18 @@ pub fn extract(
             raw_strikes.push(sorted[i].strike);
         }
     }
-    if density.len() < 3 { return None; }
+    if density.len() < 3 {
+        return None;
+    }
     // Trapezoidal integrate to normalize.
     let mut integral = 0.0_f64;
     for i in 0..(density.len() - 1) {
         let dk = raw_strikes[i + 1] - raw_strikes[i];
         integral += 0.5 * (density[i] + density[i + 1]) * dk;
     }
-    if integral <= 0.0 { return None; }
+    if integral <= 0.0 {
+        return None;
+    }
     let normalized: Vec<f64> = density.iter().map(|f| f / integral).collect();
     // Moments via trapezoidal integration on normalized density.
     let mut mean = 0.0_f64;
@@ -123,9 +136,19 @@ pub fn extract(
         m4 += 0.5 * (f4_l + f4_r) * dk;
     }
     let skew = if vol > 0.0 { m3 / vol.powi(3) } else { 0.0 };
-    let excess_kurt = if var > 0.0 { m4 / (var * var) - 3.0 } else { 0.0 };
-    let per_strike: Vec<StrikeDensity> = raw_strikes.iter().zip(normalized.iter())
-        .map(|(k, d)| StrikeDensity { strike: *k, density: *d }).collect();
+    let excess_kurt = if var > 0.0 {
+        m4 / (var * var) - 3.0
+    } else {
+        0.0
+    };
+    let per_strike: Vec<StrikeDensity> = raw_strikes
+        .iter()
+        .zip(normalized.iter())
+        .map(|(k, d)| StrikeDensity {
+            strike: *k,
+            density: *d,
+        })
+        .collect();
     Some(BreedenLitzenbergerReport {
         per_strike_density: per_strike,
         implied_mean: mean,
@@ -141,13 +164,20 @@ pub fn extract(
 mod tests {
     use super::*;
 
-    fn k(strike: f64, call: f64) -> StrikeCall { StrikeCall { strike, call_price: call } }
+    fn k(strike: f64, call: f64) -> StrikeCall {
+        StrikeCall {
+            strike,
+            call_price: call,
+        }
+    }
 
     /// Constructs a synthetic Black-Scholes call price at strike K for
     /// a forward of `fwd`, vol σ, and time T. Used for test fixtures.
     fn bs_call(fwd: f64, strike: f64, vol: f64, t: f64) -> f64 {
         let sigma_sqrt_t = vol * t.sqrt();
-        if sigma_sqrt_t <= 0.0 { return (fwd - strike).max(0.0); }
+        if sigma_sqrt_t <= 0.0 {
+            return (fwd - strike).max(0.0);
+        }
         let d1 = ((fwd / strike).ln() + 0.5 * sigma_sqrt_t * sigma_sqrt_t) / sigma_sqrt_t;
         let d2 = d1 - sigma_sqrt_t;
         fwd * norm_cdf(d1) - strike * norm_cdf(d2)
@@ -160,8 +190,12 @@ mod tests {
         let sign = if x < 0.0 { -1.0 } else { 1.0 };
         let x = x.abs();
         let t = 1.0 / (1.0 + 0.327_591_1 * x);
-        let y = 1.0 - (((((1.061_405_429 * t - 1.453_152_027) * t)
-            + 1.421_413_741) * t - 0.284_496_736) * t + 0.254_829_592) * t * (-x * x).exp();
+        let y = 1.0
+            - (((((1.061_405_429 * t - 1.453_152_027) * t) + 1.421_413_741) * t - 0.284_496_736)
+                * t
+                + 0.254_829_592)
+                * t
+                * (-x * x).exp();
         sign * y
     }
 
@@ -177,7 +211,11 @@ mod tests {
         assert!(extract(&s, 0.0, 0.0).is_none());
         assert!(extract(&s, f64::NAN, 0.5).is_none());
         let bad_strike = vec![
-            k(0.0, 1.0), k(100.0, 3.0), k(110.0, 1.0), k(120.0, 0.5), k(130.0, 0.1),
+            k(0.0, 1.0),
+            k(100.0, 3.0),
+            k(110.0, 1.0),
+            k(120.0, 0.5),
+            k(130.0, 0.1),
         ];
         assert!(extract(&bad_strike, 0.05, 0.5).is_none());
     }
@@ -188,15 +226,21 @@ mod tests {
         let fwd = 100.0_f64;
         let vol = 0.20_f64;
         let t = 0.5_f64;
-        let strikes: Vec<StrikeCall> = (60..=140).step_by(2)
+        let strikes: Vec<StrikeCall> = (60..=140)
+            .step_by(2)
             .map(|kf| {
                 let strike = kf as f64;
                 k(strike, bs_call(fwd, strike, vol, t))
-            }).collect();
+            })
+            .collect();
         let r = extract(&strikes, 0.0, t).unwrap();
         // Implied mean should be ≈ forward.
-        assert!((r.implied_mean - fwd).abs() < 2.0,
-            "mean = {}, expected ≈ {}", r.implied_mean, fwd);
+        assert!(
+            (r.implied_mean - fwd).abs() < 2.0,
+            "mean = {}, expected ≈ {}",
+            r.implied_mean,
+            fwd
+        );
     }
 
     #[test]
@@ -206,17 +250,23 @@ mod tests {
         let fwd = 100.0_f64;
         let vol = 0.20_f64;
         let t = 0.5_f64;
-        let strikes: Vec<StrikeCall> = (60..=140).step_by(2)
+        let strikes: Vec<StrikeCall> = (60..=140)
+            .step_by(2)
             .map(|kf| {
                 let strike = kf as f64;
                 k(strike, bs_call(fwd, strike, vol, t))
-            }).collect();
+            })
+            .collect();
         let r = extract(&strikes, 0.0, t).unwrap();
         let expected_var = fwd * fwd * ((vol * vol * t).exp() - 1.0);
         let rel = (r.implied_variance - expected_var).abs() / expected_var;
-        assert!(rel < 0.30,
+        assert!(
+            rel < 0.30,
             "variance = {}, expected ≈ {}, rel diff {:.2}",
-            r.implied_variance, expected_var, rel);
+            r.implied_variance,
+            expected_var,
+            rel
+        );
     }
 
     #[test]
@@ -224,17 +274,19 @@ mod tests {
         let fwd = 100.0_f64;
         let vol = 0.20_f64;
         let t = 0.5_f64;
-        let strikes: Vec<StrikeCall> = (60..=140).step_by(2)
+        let strikes: Vec<StrikeCall> = (60..=140)
+            .step_by(2)
             .map(|kf| {
                 let strike = kf as f64;
                 k(strike, bs_call(fwd, strike, vol, t))
-            }).collect();
+            })
+            .collect();
         let r = extract(&strikes, 0.0, t).unwrap();
         let mut integral = 0.0_f64;
         for i in 0..(r.per_strike_density.len() - 1) {
             let dk = r.per_strike_density[i + 1].strike - r.per_strike_density[i].strike;
-            integral += 0.5 * (r.per_strike_density[i].density
-                + r.per_strike_density[i + 1].density) * dk;
+            integral +=
+                0.5 * (r.per_strike_density[i].density + r.per_strike_density[i + 1].density) * dk;
         }
         assert!((integral - 1.0).abs() < 1e-9);
     }
@@ -244,15 +296,20 @@ mod tests {
         let fwd = 100.0_f64;
         let vol = 0.10_f64;
         let t = 0.5_f64;
-        let strikes: Vec<StrikeCall> = (60..=140).step_by(2)
+        let strikes: Vec<StrikeCall> = (60..=140)
+            .step_by(2)
             .map(|kf| {
                 let strike = kf as f64;
                 k(strike, bs_call(fwd, strike, vol, t))
-            }).collect();
+            })
+            .collect();
         let r = extract(&strikes, 0.0, t).unwrap();
         // Lognormal skew is small at low vol.
-        assert!(r.implied_skewness.abs() < 0.5,
-            "low-vol lognormal: skew {} should be small", r.implied_skewness);
+        assert!(
+            r.implied_skewness.abs() < 0.5,
+            "low-vol lognormal: skew {} should be small",
+            r.implied_skewness
+        );
     }
 
     #[test]
@@ -260,11 +317,13 @@ mod tests {
         let fwd = 100.0_f64;
         let vol = 0.20_f64;
         let t = 0.5_f64;
-        let strikes: Vec<StrikeCall> = (80..=120).step_by(2)
+        let strikes: Vec<StrikeCall> = (80..=120)
+            .step_by(2)
             .map(|kf| {
                 let strike = kf as f64;
                 k(strike, bs_call(fwd, strike, vol, t))
-            }).collect();
+            })
+            .collect();
         let n_input = strikes.len();
         let r = extract(&strikes, 0.0, t).unwrap();
         // 2 boundary strikes dropped → interior count.

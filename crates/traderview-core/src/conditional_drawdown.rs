@@ -27,9 +27,7 @@ pub struct CdarReport {
 }
 
 pub fn compute(equity_curve: &[f64], alpha: f64) -> Option<CdarReport> {
-    if equity_curve.len() < 2
-        || !alpha.is_finite()
-        || !(0.0..1.0).contains(&alpha) || alpha == 0.0
+    if equity_curve.len() < 2 || !alpha.is_finite() || !(0.0..1.0).contains(&alpha) || alpha == 0.0
     {
         return None;
     }
@@ -37,13 +35,23 @@ pub fn compute(equity_curve: &[f64], alpha: f64) -> Option<CdarReport> {
     let mut peak = f64::NEG_INFINITY;
     let mut any_valid = false;
     for v in equity_curve {
-        if !v.is_finite() { continue; }
+        if !v.is_finite() {
+            continue;
+        }
         any_valid = true;
-        if *v > peak { peak = *v; }
-        let dd = if peak > 0.0 { (peak - v).max(0.0) / peak } else { 0.0 };
+        if *v > peak {
+            peak = *v;
+        }
+        let dd = if peak > 0.0 {
+            (peak - v).max(0.0) / peak
+        } else {
+            0.0
+        };
         dds.push(dd);
     }
-    if !any_valid || dds.is_empty() { return None; }
+    if !any_valid || dds.is_empty() {
+        return None;
+    }
     let n = dds.len();
     let max_dd = dds.iter().copied().fold(0.0_f64, f64::max);
     let avg_dd = dds.iter().sum::<f64>() / n as f64;
@@ -89,8 +97,12 @@ mod tests {
         // CDaR averages the WORST k observations; max_drawdown is the
         // single worst → CDaR ≤ max_drawdown always.
         let mut curve = vec![100.0_f64];
-        for _ in 0..30 { curve.push(curve.last().unwrap() * 0.99); }
-        for _ in 0..30 { curve.push(curve.last().unwrap() * 1.005); }
+        for _ in 0..30 {
+            curve.push(curve.last().unwrap() * 0.99);
+        }
+        for _ in 0..30 {
+            curve.push(curve.last().unwrap() * 1.005);
+        }
         let r = compute(&curve, 0.05).unwrap();
         assert!(r.conditional_drawdown_at_risk <= r.max_drawdown + 1e-12);
     }
@@ -99,8 +111,12 @@ mod tests {
     fn cdar_ge_average_drawdown() {
         // Averaging the worst-k is ≥ averaging all.
         let mut curve = vec![100.0_f64];
-        for _ in 0..30 { curve.push(curve.last().unwrap() * 0.99); }
-        for _ in 0..30 { curve.push(curve.last().unwrap() * 1.005); }
+        for _ in 0..30 {
+            curve.push(curve.last().unwrap() * 0.99);
+        }
+        for _ in 0..30 {
+            curve.push(curve.last().unwrap() * 1.005);
+        }
         let r = compute(&curve, 0.10).unwrap();
         assert!(r.conditional_drawdown_at_risk >= r.average_drawdown - 1e-12);
     }

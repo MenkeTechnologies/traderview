@@ -20,7 +20,10 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
@@ -48,8 +51,15 @@ pub fn compute(bars: &[Bar], period: usize) -> ElderThermometerReport {
         regime: vec![None; n],
         period,
     };
-    if period < 2 || n < period + 1 { return report; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite()) { return report; }
+    if period < 2 || n < period + 1 {
+        return report;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite())
+    {
+        return report;
+    }
     for i in 1..n {
         let up = (bars[i].high - bars[i - 1].high).abs();
         let dn = (bars[i - 1].low - bars[i].low).abs();
@@ -79,17 +89,24 @@ pub fn compute(bars: &[Bar], period: usize) -> ElderThermometerReport {
 }
 
 fn classify(temp: f64, avg: f64) -> ThermometerRegime {
-    if temp < 0.5 * avg { ThermometerRegime::Quiet }
-    else if temp < avg { ThermometerRegime::Normal }
-    else if temp < 1.5 * avg { ThermometerRegime::Hot }
-    else { ThermometerRegime::Eruption }
+    if temp < 0.5 * avg {
+        ThermometerRegime::Quiet
+    } else if temp < avg {
+        ThermometerRegime::Normal
+    } else if temp < 1.5 * avg {
+        ThermometerRegime::Hot
+    } else {
+        ThermometerRegime::Eruption
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64) -> Bar { Bar { high: h, low: l } }
+    fn b(h: f64, l: f64) -> Bar {
+        Bar { high: h, low: l }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {
@@ -112,8 +129,12 @@ mod tests {
     fn flat_market_yields_zero_temp() {
         let bars = vec![b(101.0, 99.0); 50];
         let r = compute(&bars, 14);
-        for v in r.temperature.iter().flatten() { assert!(v.abs() < 1e-9); }
-        for v in r.average.iter().flatten() { assert!(v.abs() < 1e-9); }
+        for v in r.temperature.iter().flatten() {
+            assert!(v.abs() < 1e-9);
+        }
+        for v in r.average.iter().flatten() {
+            assert!(v.abs() < 1e-9);
+        }
     }
 
     #[test]

@@ -47,13 +47,18 @@ pub fn scan(bars: &[Bar]) -> PatternReport {
         bearish_indices: Vec::new(),
     };
     for (i, b) in bars.iter().enumerate() {
-        if !b.open.is_finite() || !b.high.is_finite() || !b.low.is_finite()
-            || !b.close.is_finite() || b.high < b.low
+        if !b.open.is_finite()
+            || !b.high.is_finite()
+            || !b.low.is_finite()
+            || !b.close.is_finite()
+            || b.high < b.low
         {
             continue;
         }
         let range = b.high - b.low;
-        if range <= 0.0 { continue; }
+        if range <= 0.0 {
+            continue;
+        }
         let body = (b.close - b.open).abs();
         let upper_wick = b.high - b.close.max(b.open);
         let lower_wick = b.close.min(b.open) - b.low;
@@ -73,8 +78,10 @@ pub fn scan(bars: &[Bar]) -> PatternReport {
         // Engulfing + inside-bar both need a prior bar.
         if i > 0 {
             let prev = bars[i - 1];
-            if prev.open.is_finite() && prev.high.is_finite()
-                && prev.low.is_finite() && prev.close.is_finite()
+            if prev.open.is_finite()
+                && prev.high.is_finite()
+                && prev.low.is_finite()
+                && prev.close.is_finite()
                 && prev.high >= prev.low
             {
                 let prev_body_lo = prev.open.min(prev.close);
@@ -87,13 +94,15 @@ pub fn scan(bars: &[Bar]) -> PatternReport {
                 let curr_red = b.close < b.open;
                 // Bullish engulfing: prev red, current green, current body
                 // fully covers prev body.
-                if prev_red && curr_green
+                if prev_red
+                    && curr_green
                     && curr_body_lo <= prev_body_lo
                     && curr_body_hi >= prev_body_hi
                 {
                     flags.bullish_engulfing = true;
                 }
-                if prev_green && curr_red
+                if prev_green
+                    && curr_red
                     && curr_body_lo <= prev_body_lo
                     && curr_body_hi >= prev_body_hi
                 {
@@ -121,7 +130,12 @@ mod tests {
     use super::*;
 
     fn b(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -154,10 +168,7 @@ mod tests {
     #[test]
     fn bullish_engulfing_detected() {
         // Prev red: O=110, C=100. Current green: O=99, C=112. Engulfs.
-        let r = scan(&[
-            b(110.0, 112.0, 99.0, 100.0),
-            b(99.0, 115.0, 98.0, 112.0),
-        ]);
+        let r = scan(&[b(110.0, 112.0, 99.0, 100.0), b(99.0, 115.0, 98.0, 112.0)]);
         assert!(r.per_bar[1].bullish_engulfing);
         assert!(r.bullish_indices.contains(&1));
     }
@@ -165,8 +176,8 @@ mod tests {
     #[test]
     fn bearish_engulfing_detected() {
         let r = scan(&[
-            b(100.0, 112.0, 99.0, 110.0),     // prev green
-            b(112.0, 115.0, 98.0, 99.0),      // current red engulfs body 100..110
+            b(100.0, 112.0, 99.0, 110.0), // prev green
+            b(112.0, 115.0, 98.0, 99.0),  // current red engulfs body 100..110
         ]);
         assert!(r.per_bar[1].bearish_engulfing);
         assert!(r.bearish_indices.contains(&1));
@@ -174,10 +185,7 @@ mod tests {
 
     #[test]
     fn inside_bar_detected_when_range_inside_prior() {
-        let r = scan(&[
-            b(100.0, 110.0, 90.0, 105.0),
-            b(102.0, 108.0, 95.0, 104.0),
-        ]);
+        let r = scan(&[b(100.0, 110.0, 90.0, 105.0), b(102.0, 108.0, 95.0, 104.0)]);
         assert!(r.per_bar[1].inside_bar);
     }
 
@@ -188,7 +196,7 @@ mod tests {
         let r = scan(&bars);
         // No panic, output length matches.
         assert_eq!(r.per_bar.len(), 5);
-        assert!(!r.per_bar[2].doji);    // NaN bar has no flags
+        assert!(!r.per_bar[2].doji); // NaN bar has no flags
     }
 
     #[test]

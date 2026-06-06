@@ -318,8 +318,7 @@ fn check_new_jersey(
     let termination = match input.damage_extent {
         DamageExtent::TotallyDestroyed => {
             notes.push(
-                "N.J.S.A. 46:8-6 — destruction-of-premises termination; lease ends"
-                    .to_string(),
+                "N.J.S.A. 46:8-6 — destruction-of-premises termination; lease ends".to_string(),
             );
             true
         }
@@ -339,16 +338,16 @@ fn check_new_jersey(
         }
     };
 
-    notes.push(
-        "§ 46:8-8 — fault attribution defeats termination right"
-            .to_string(),
-    );
+    notes.push("§ 46:8-8 — fault attribution defeats termination right".to_string());
 
     CatastrophicDamageResult {
         termination_permitted: termination,
         pro_rata_rent_refund: termination,
         deposit_return_required: termination,
-        partial_rent_abatement_available: !matches!(input.damage_extent, DamageExtent::TotallyDestroyed),
+        partial_rent_abatement_available: !matches!(
+            input.damage_extent,
+            DamageExtent::TotallyDestroyed
+        ),
         citation: citation_for(Regime::NewJersey),
         notes: notes.clone(),
     }
@@ -367,7 +366,10 @@ fn check_default(
         termination_permitted: termination,
         pro_rata_rent_refund: termination,
         deposit_return_required: termination,
-        partial_rent_abatement_available: !matches!(input.damage_extent, DamageExtent::TotallyDestroyed),
+        partial_rent_abatement_available: !matches!(
+            input.damage_extent,
+            DamageExtent::TotallyDestroyed
+        ),
         citation: citation_for(Regime::Default),
         notes: notes.clone(),
     }
@@ -405,7 +407,10 @@ mod tests {
         assert!(r.pro_rata_rent_refund);
         assert!(r.deposit_return_required);
         assert!(r.notes.iter().any(|n| n.contains("§ 1933(4)")));
-        assert!(r.notes.iter().any(|n| n.contains("AUTOMATICALLY terminates")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("AUTOMATICALLY terminates")));
     }
 
     #[test]
@@ -437,7 +442,10 @@ mod tests {
     #[test]
     fn ca_21_day_deposit_refund_note_always_present() {
         let r = check(&base(Regime::California, DamageExtent::TotallyDestroyed));
-        assert!(r.notes.iter().any(|n| n.contains("§ 1950.5(g)") && n.contains("21 days")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1950.5(g)") && n.contains("21 days")));
     }
 
     #[test]
@@ -445,7 +453,10 @@ mod tests {
         let r = check(&base(Regime::Texas, DamageExtent::TotallyDestroyed));
         assert!(r.termination_permitted);
         assert!(r.notes.iter().any(|n| n.contains("§ 92.054(b)")));
-        assert!(r.notes.iter().any(|n| n.contains("§ 92.052(b)") && n.contains("insurance proceeds")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 92.052(b)") && n.contains("insurance proceeds")));
     }
 
     #[test]
@@ -532,7 +543,10 @@ mod tests {
     fn nj_partial_destruction_choice_terminate_or_proportional_rent() {
         let r = check(&base(Regime::NewJersey, DamageExtent::GreaterPart));
         assert!(r.termination_permitted);
-        assert!(r.notes.iter().any(|n| n.contains("46:8-7") && n.contains("PROPORTIONALLY REDUCED")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("46:8-7") && n.contains("PROPORTIONALLY REDUCED")));
     }
 
     #[test]
@@ -546,7 +560,10 @@ mod tests {
     fn default_total_destruction_terminates_under_impossibility() {
         let r = check(&base(Regime::Default, DamageExtent::TotallyDestroyed));
         assert!(r.termination_permitted);
-        assert!(r.notes.iter().any(|n| n.contains("Restatement (Second) of Contracts § 261")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Restatement (Second) of Contracts § 261")));
     }
 
     #[test]
@@ -558,11 +575,21 @@ mod tests {
 
     #[test]
     fn tenant_fault_blocks_termination_all_regimes() {
-        for regime in [Regime::California, Regime::Texas, Regime::NewYork, Regime::NewJersey, Regime::Default] {
+        for regime in [
+            Regime::California,
+            Regime::Texas,
+            Regime::NewYork,
+            Regime::NewJersey,
+            Regime::Default,
+        ] {
             let mut i = base(regime, DamageExtent::TotallyDestroyed);
             i.tenant_fault = true;
             let r = check(&i);
-            assert!(!r.termination_permitted, "regime {:?} should block termination on tenant fault", regime);
+            assert!(
+                !r.termination_permitted,
+                "regime {:?} should block termination on tenant fault",
+                regime
+            );
             assert!(r.notes.iter().any(|n| n.contains("tenant fault defeats")));
         }
     }
@@ -598,7 +625,9 @@ mod tests {
     #[test]
     fn citation_default_pins_restatement() {
         let r = check(&base(Regime::Default, DamageExtent::TotallyDestroyed));
-        assert!(r.citation.contains("Restatement (Second) of Contracts § 261"));
+        assert!(r
+            .citation
+            .contains("Restatement (Second) of Contracts § 261"));
     }
 
     #[test]
@@ -607,11 +636,20 @@ mod tests {
         i.written_notice_given = false;
         let r_tx = check(&i);
         assert!(!r_tx.termination_permitted);
-        for regime in [Regime::California, Regime::NewYork, Regime::NewJersey, Regime::Default] {
+        for regime in [
+            Regime::California,
+            Regime::NewYork,
+            Regime::NewJersey,
+            Regime::Default,
+        ] {
             let mut i2 = base(regime, DamageExtent::TotallyDestroyed);
             i2.written_notice_given = false;
             let r = check(&i2);
-            assert!(r.termination_permitted, "regime {:?} does not require written notice formally", regime);
+            assert!(
+                r.termination_permitted,
+                "regime {:?} does not require written notice formally",
+                regime
+            );
         }
     }
 

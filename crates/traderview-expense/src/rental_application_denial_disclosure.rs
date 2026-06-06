@@ -113,7 +113,9 @@ pub struct RentalApplicationDenialDisclosureResult {
     pub notes: Vec<String>,
 }
 
-pub fn check(input: &RentalApplicationDenialDisclosureInput) -> RentalApplicationDenialDisclosureResult {
+pub fn check(
+    input: &RentalApplicationDenialDisclosureInput,
+) -> RentalApplicationDenialDisclosureResult {
     match input.regime {
         Regime::California => check_ca(input),
         Regime::NewJersey => check_nj(input),
@@ -133,10 +135,7 @@ fn check_ca(
             .to_string(),
     ];
 
-    let credit_basis = matches!(
-        input.denial_basis,
-        DenialBasis::CreditScoreOrHistory
-    );
+    let credit_basis = matches!(input.denial_basis, DenialBasis::CreditScoreOrHistory);
 
     if credit_basis && !input.written_notice_provided {
         violations.push(
@@ -172,10 +171,7 @@ fn check_nj(
             .to_string(),
     ];
 
-    let criminal_basis = matches!(
-        input.denial_basis,
-        DenialBasis::CriminalBackground
-    );
+    let criminal_basis = matches!(input.denial_basis, DenialBasis::CriminalBackground);
 
     if criminal_basis && !input.pre_fee_criminal_history_disclosure {
         violations.push(
@@ -223,10 +219,7 @@ fn check_nyc(
             .to_string(),
     ];
 
-    let criminal_basis = matches!(
-        input.denial_basis,
-        DenialBasis::CriminalBackground
-    );
+    let criminal_basis = matches!(input.denial_basis, DenialBasis::CriminalBackground);
 
     if criminal_basis && !input.individualized_assessment_conducted {
         violations.push(
@@ -242,7 +235,8 @@ fn check_nyc(
 
     if !input.written_notice_provided || !input.specific_reason_disclosed {
         violations.push(
-            "NYC Local Law 24 of 2023 — written notice with specific reason for denial required".to_string(),
+            "NYC Local Law 24 of 2023 — written notice with specific reason for denial required"
+                .to_string(),
         );
     }
 
@@ -268,10 +262,7 @@ fn check_default(
             .to_string(),
     ];
 
-    let credit_basis = matches!(
-        input.denial_basis,
-        DenialBasis::CreditScoreOrHistory
-    );
+    let credit_basis = matches!(input.denial_basis, DenialBasis::CreditScoreOrHistory);
 
     if credit_basis && !input.cra_contact_info_provided {
         violations.push(
@@ -404,10 +395,7 @@ mod tests {
         i.rehabilitation_evidence_right_disclosed = false;
         let r = check(&i);
         assert!(!r.disclosure_compliant);
-        assert!(r
-            .violations
-            .iter()
-            .any(|v| v.contains("rehabilitation")));
+        assert!(r.violations.iter().any(|v| v.contains("rehabilitation")));
     }
 
     #[test]

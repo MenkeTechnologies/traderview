@@ -361,7 +361,10 @@ mod tests {
             ..baseline_noncorporate_foreign_partner_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1446Mode::NotApplicableNoForeignPartnerOrNoEcti);
+        assert_eq!(
+            result.mode,
+            Section1446Mode::NotApplicableNoForeignPartnerOrNoEcti
+        );
     }
 
     #[test]
@@ -371,13 +374,19 @@ mod tests {
             ..baseline_noncorporate_foreign_partner_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1446Mode::NotApplicableNoForeignPartnerOrNoEcti);
+        assert_eq!(
+            result.mode,
+            Section1446Mode::NotApplicableNoForeignPartnerOrNoEcti
+        );
     }
 
     #[test]
     fn noncorporate_foreign_37_pct_compliant() {
         let result = compute(&baseline_noncorporate_foreign_partner_compliant());
-        assert_eq!(result.mode, Section1446Mode::CompliantQuarterlyInstallmentsPaidAndForm8804Filed);
+        assert_eq!(
+            result.mode,
+            Section1446Mode::CompliantQuarterlyInstallmentsPaidAndForm8804Filed
+        );
         assert_eq!(result.required_withholding_dollars, 370_000);
         assert_eq!(result.applicable_rate_basis_points, 3_700);
     }
@@ -390,7 +399,10 @@ mod tests {
             ..baseline_noncorporate_foreign_partner_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1446Mode::CompliantQuarterlyInstallmentsPaidAndForm8804Filed);
+        assert_eq!(
+            result.mode,
+            Section1446Mode::CompliantQuarterlyInstallmentsPaidAndForm8804Filed
+        );
         assert_eq!(result.required_withholding_dollars, 210_000);
         assert_eq!(result.applicable_rate_basis_points, 2_100);
     }
@@ -438,7 +450,10 @@ mod tests {
             ..baseline_noncorporate_foreign_partner_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1446Mode::ViolationPartnershipFailedToWithholdFromForeignPartner);
+        assert_eq!(
+            result.mode,
+            Section1446Mode::ViolationPartnershipFailedToWithholdFromForeignPartner
+        );
         assert_eq!(result.required_withholding_dollars, 370_000);
     }
 
@@ -449,7 +464,10 @@ mod tests {
             ..baseline_noncorporate_foreign_partner_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1446Mode::ViolationWithheldAtIncorrectRate);
+        assert_eq!(
+            result.mode,
+            Section1446Mode::ViolationWithheldAtIncorrectRate
+        );
         assert!(result.notes.contains("Shortfall = $270000"));
     }
 
@@ -460,7 +478,10 @@ mod tests {
             ..baseline_noncorporate_foreign_partner_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1446Mode::ViolationQuarterlyInstallmentMissed);
+        assert_eq!(
+            result.mode,
+            Section1446Mode::ViolationQuarterlyInstallmentMissed
+        );
         assert!(result.notes.contains("2 of 4"));
     }
 
@@ -471,7 +492,10 @@ mod tests {
             ..baseline_noncorporate_foreign_partner_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1446Mode::ViolationForm8804NotFiledAtAnnualDeadline);
+        assert_eq!(
+            result.mode,
+            Section1446Mode::ViolationForm8804NotFiledAtAnnualDeadline
+        );
     }
 
     #[test]
@@ -481,7 +505,10 @@ mod tests {
             ..baseline_noncorporate_foreign_partner_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1446Mode::ViolationForm8805NotIssuedToForeignPartner);
+        assert_eq!(
+            result.mode,
+            Section1446Mode::ViolationForm8805NotIssuedToForeignPartner
+        );
     }
 
     #[test]
@@ -492,7 +519,10 @@ mod tests {
             ..baseline_noncorporate_foreign_partner_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1446Mode::CompliantPartnerLevelCertificateFiledForm8804C);
+        assert_eq!(
+            result.mode,
+            Section1446Mode::CompliantPartnerLevelCertificateFiledForm8804C
+        );
         assert_eq!(result.required_withholding_dollars, 50_000);
     }
 
@@ -505,7 +535,10 @@ mod tests {
             ..baseline_noncorporate_foreign_partner_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1446Mode::CompliantSection1446fTenPercentTransferWithholdingApplied);
+        assert_eq!(
+            result.mode,
+            Section1446Mode::CompliantSection1446fTenPercentTransferWithholdingApplied
+        );
         assert_eq!(result.required_withholding_dollars, 200_000);
         assert_eq!(result.applicable_rate_basis_points, 1_000);
     }
@@ -519,7 +552,10 @@ mod tests {
             ..baseline_noncorporate_foreign_partner_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1446Mode::ViolationSection1446fTransferWithholdingFailed);
+        assert_eq!(
+            result.mode,
+            Section1446Mode::ViolationSection1446fTransferWithholdingFailed
+        );
         assert!(result.notes.contains("shortfall $150000"));
     }
 

@@ -106,15 +106,18 @@ pub type Section741Result = Output;
 pub fn check(input: &Input) -> Output {
     let mut notes: Vec<String> = Vec::new();
     let citations: Vec<String> = vec![
-        "IRC § 741 (recognition and character of gain or loss on partnership-interest sale)".to_string(),
+        "IRC § 741 (recognition and character of gain or loss on partnership-interest sale)"
+            .to_string(),
         "IRC § 705 (outside basis determination)".to_string(),
-        "IRC § 751(a) (ordinary character carve-out for unrealized receivables + inventory items)".to_string(),
+        "IRC § 751(a) (ordinary character carve-out for unrealized receivables + inventory items)"
+            .to_string(),
         "IRC § 751(c) (unrealized receivables definition)".to_string(),
         "IRC § 751(d) (inventory items definition)".to_string(),
         "IRC § 752(d) (liability relief treated as deemed distribution on sale)".to_string(),
         "IRC § 1223 (holding period determination)".to_string(),
         "IRC § 1(h) (long-term capital gain preferred rates: 0/15/20%)".to_string(),
-        "IRC § 706(c)(2) (partnership year closes for transferor on entire-interest sale)".to_string(),
+        "IRC § 706(c)(2) (partnership year closes for transferor on entire-interest sale)"
+            .to_string(),
         "Treas. Reg. § 1.741-1 (recognition and character)".to_string(),
         "Treas. Reg. § 1.752-1 (treatment of partnership liabilities)".to_string(),
     ];
@@ -122,7 +125,8 @@ pub fn check(input: &Input) -> Output {
     let amount_realized_partner_reported = input
         .cash_received_cents
         .saturating_add(input.fmv_of_property_received_cents);
-    let amount_realized_full = amount_realized_partner_reported.saturating_add(input.liability_relief_cents);
+    let amount_realized_full =
+        amount_realized_partner_reported.saturating_add(input.liability_relief_cents);
 
     if input.liability_relief_cents > 0 && !input.taxpayer_included_liability_relief {
         notes.push(format!(
@@ -143,8 +147,8 @@ pub fn check(input: &Input) -> Output {
         };
     }
 
-    let total_gain_loss: i128 = (amount_realized_full as i128)
-        - (input.transferor_outside_basis_cents as i128);
+    let total_gain_loss: i128 =
+        (amount_realized_full as i128) - (input.transferor_outside_basis_cents as i128);
 
     let hot_assets_present = input.section_751_amount_realized_portion_cents > 0
         || input.section_751_basis_portion_cents > 0;
@@ -220,7 +224,9 @@ pub fn check(input: &Input) -> Output {
         ));
         Severity::ShortTermCapitalLossPureNoHotAssets
     } else {
-        notes.push("§ 741 sale produced no gain or loss (amount realized = outside basis).".to_string());
+        notes.push(
+            "§ 741 sale produced no gain or loss (amount realized = outside basis).".to_string(),
+        );
         Severity::NotApplicable
     };
 

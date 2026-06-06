@@ -118,8 +118,7 @@ pub fn check(input: &Section7429Input) -> Section7429Result {
         20
     };
 
-    let court_determination_window =
-        input.days_since_proceeding_commenced <= max_court_window;
+    let court_determination_window = input.days_since_proceeding_commenced <= max_court_window;
 
     match input.review_stage {
         ReviewStage::Administrative => {
@@ -131,8 +130,8 @@ pub fn check(input: &Section7429Input) -> Section7429Result {
             }
         }
         ReviewStage::Judicial => {
-            let judicial_path_available = input.irs_determination_notified
-                || input.days_since_administrative_request >= 16;
+            let judicial_path_available =
+                input.irs_determination_notified || input.days_since_administrative_request >= 16;
 
             if !judicial_path_available {
                 failure_reasons.push(format!(

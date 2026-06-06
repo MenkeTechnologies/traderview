@@ -114,7 +114,8 @@ pub fn compute(input: &Section871MInput) -> Section871MResult {
     let mut r = Section871MResult::default();
 
     if !input.non_us_person {
-        r.reasons.push("recipient is a US person — §871(m) does not apply".into());
+        r.reasons
+            .push("recipient is a US person — §871(m) does not apply".into());
         r.net_dividend_equivalent_to_recipient = input.dividend_equivalent_amount;
         r.note = "§871(m) inapplicable: US recipient".into();
         return r;
@@ -122,8 +123,7 @@ pub fn compute(input: &Section871MInput) -> Section871MResult {
 
     if !input.underlying_pays_dividends {
         r.reasons.push(
-            "underlying does not pay dividends — no dividend equivalent to withhold on"
-                .into(),
+            "underlying does not pay dividends — no dividend equivalent to withhold on".into(),
         );
         r.net_dividend_equivalent_to_recipient = input.dividend_equivalent_amount;
         r.note = "§871(m) inapplicable: non-dividend-paying underlying".into();
@@ -131,7 +131,8 @@ pub fn compute(input: &Section871MInput) -> Section871MResult {
     }
 
     if input.dividend_equivalent_amount <= Decimal::ZERO {
-        r.reasons.push("no dividend equivalent paid this period".into());
+        r.reasons
+            .push("no dividend equivalent paid this period".into());
         r.net_dividend_equivalent_to_recipient = input.dividend_equivalent_amount;
         return r;
     }
@@ -151,7 +152,11 @@ pub fn compute(input: &Section871MInput) -> Section871MResult {
         r.subject_to_871m = false;
         r.reasons.push(format!(
             "{} contract delta {} < {} threshold — not a SELI under §871(m)",
-            if short_term { "short-term" } else { "long-term" },
+            if short_term {
+                "short-term"
+            } else {
+                "long-term"
+            },
             delta,
             threshold
         ));
@@ -167,11 +172,11 @@ pub fn compute(input: &Section871MInput) -> Section871MResult {
 
     // SELI status established. Apply withholding rate.
     r.subject_to_871m = true;
-    r.applicable_rate = input.treaty_rate_override
+    r.applicable_rate = input
+        .treaty_rate_override
         .map(|t| t.clamp(Decimal::ZERO, Decimal::ONE))
         .unwrap_or_else(statutory_rate);
-    r.withholding_amount =
-        (input.dividend_equivalent_amount * r.applicable_rate).round_dp(2);
+    r.withholding_amount = (input.dividend_equivalent_amount * r.applicable_rate).round_dp(2);
     r.net_dividend_equivalent_to_recipient =
         input.dividend_equivalent_amount - r.withholding_amount;
 

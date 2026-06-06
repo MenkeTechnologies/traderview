@@ -14,7 +14,7 @@
 //! Erie, Bethlehem.
 //!
 //! Web research (verified 2026-06-03):
-//! - **Enactment**: Pennsylvania Landlord-Tenant Act of 1951 enacted as **Act 20 of April 6, 1951, P.L. 69** ([Pennsylvania Legislature — The Landlord and Tenant Act of 1951 PDF](https://www.legis.state.pa.us/wu01/li/li/us/pdf/1951/0/0020..pdf); [City of Reading — Landlord-Tenant Act PDF (as amended through July 6, 1995)](https://www.readingpa.gov/images/pdfs/Landlord-TenantAct.pdf); [Bucks County — Pennsylvania Landlord/Tenant Act PDF](https://www.buckscounty.gov/DocumentCenter/View/1605/Landlord-Tenant-Act-PDF?bidId=); [FindLaw — Pennsylvania Statutes Title 68 P.S. Real and Personal Property § 250.501](https://codes.findlaw.com/pa/title-68-ps-real-and-personal-property/pa-st-sect-68-250-501/); [Pennsylvania Bulletin](https://www.pacodeandbulletin.gov/Display/pabull?file=/secure/pabulletin/data/vol51/51-44/1793.html); [246 Pa. Code Chapter 500 Actions for Recovery of Possession of Real Property](https://www.pacodeandbulletin.gov/Display/pacode?file=/secure/pacode/data/246/chapter500/chap500toc.html&d=reduce); [Landlord Studio — Pennsylvania Landlord Tenant Laws](https://www.landlordstudio.com/landlord-tenant-laws/pennsylvania-landlord-tenant-laws); [LandlordTenantLaw.com — Pennsylvania Landlord Tenant Law and Act in Plain English](https://www.landlord-tenant-law.com/pennsylvania-landlord-tenant-law.html); [Hemlane — Pennsylvania Landlord-Tenant Law Explained](https://www.hemlane.com/resources/pennsylvania-tenant-landlord-law/); [Nolo — Overview of Landlord-Tenant Laws in Pennsylvania](https://www.nolo.com/legal-encyclopedia/overview-landlord-tenant-laws-pennsylvania.html); [American Landlord — Pennsylvania Landlord-Tenant Laws](https://americanlandlord.com/landlord-tenant-laws-by-state/pennsylvania-landlord-tenant-laws/); [PayRent — A Guide to Pennsylvania Landlord Tenant Laws Updated 2023](https://www.payrent.com/articles/pennsylvania-landlord-tenant-laws/); [Innago — Pennsylvania Landlord Tenant Laws [2026]](https://innago.com/pennsylvania-landlord-tenant-laws/); [Prince Law — A Pennsylvania Tenant's Right to Recover a Security Deposit](https://blog.princelaw.com/2017/09/13/a-pennsylvania-tenants-right-to-recover-a-security-deposit/); [Stoner Law Offices — What Are Pennsylvania's Tenant Security Deposit Laws?](https://stoner-law.com/blog/what-are-pennsylvanias-tenant-security-deposit-laws/); [Apartments.com — Pennsylvania Rental Laws](https://www.apartments.com/rental-manager/resources/state-laws?state=Pennsylvania)).
+//! - **Enactment**: Pennsylvania Landlord-Tenant Act of 1951 enacted as **Act 20 of April 6, 1951, P.L. 69** ([Pennsylvania Legislature — The Landlord and Tenant Act of 1951 PDF](https://www.legis.state.pa.us/wu01/li/li/us/pdf/1951/0/0020..pdf); [City of Reading — Landlord-Tenant Act PDF (as amended through July 6, 1995)](https://www.readingpa.gov/images/pdfs/Landlord-TenantAct.pdf); [Bucks County — Pennsylvania Landlord/Tenant Act PDF](https://www.buckscounty.gov/DocumentCenter/View/1605/Landlord-Tenant-Act-PDF?bidId=); [FindLaw — Pennsylvania Statutes Title 68 P.S. Real and Personal Property § 250.501](https://codes.findlaw.com/pa/title-68-ps-real-and-personal-property/pa-st-sect-68-250-501/); [Pennsylvania Bulletin](https://www.pacodeandbulletin.gov/Display/pabull?file=/secure/pabulletin/data/vol51/51-44/1793.html); [246 Pa. Code Chapter 500 Actions for Recovery of Possession of Real Property](https://www.pacodeandbulletin.gov/Display/pacode?file=/secure/pacode/data/246/chapter500/chap500toc.html&d=reduce); [Landlord Studio — Pennsylvania Landlord Tenant Laws](https://www.landlordstudio.com/landlord-tenant-laws/pennsylvania-landlord-tenant-laws); [LandlordTenantLaw.com — Pennsylvania Landlord Tenant Law and Act in Plain English](https://www.landlord-tenant-law.com/pennsylvania-landlord-tenant-law.html); [Hemlane — Pennsylvania Landlord-Tenant Law Explained](https://www.hemlane.com/resources/pennsylvania-tenant-landlord-law/); [Nolo — Overview of Landlord-Tenant Laws in Pennsylvania](https://www.nolo.com/legal-encyclopedia/overview-landlord-tenant-laws-pennsylvania.html); [American Landlord — Pennsylvania Landlord-Tenant Laws](https://americanlandlord.com/landlord-tenant-laws-by-state/pennsylvania-landlord-tenant-laws/); [PayRent — A Guide to Pennsylvania Landlord Tenant Laws Updated 2023](https://www.payrent.com/articles/pennsylvania-landlord-tenant-laws/); [Innago — Pennsylvania Landlord Tenant Laws 2026](https://innago.com/pennsylvania-landlord-tenant-laws/); [Prince Law — A Pennsylvania Tenant's Right to Recover a Security Deposit](https://blog.princelaw.com/2017/09/13/a-pennsylvania-tenants-right-to-recover-a-security-deposit/); [Stoner Law Offices — What Are Pennsylvania's Tenant Security Deposit Laws?](https://stoner-law.com/blog/what-are-pennsylvanias-tenant-security-deposit-laws/); [Apartments.com — Pennsylvania Rental Laws](https://www.apartments.com/rental-manager/resources/state-laws?state=Pennsylvania)).
 //! - **Codification**: 68 Pennsylvania Statutes (P.S.) §§ 250.101 through 250.602 (Title 68 Real and Personal Property).
 //! - **§ 250.501(b) Notice to Quit / Eviction Notice**: **10-DAY NOTICE for nonpayment of rent**; **15-DAY NOTICE for month-to-month tenancy termination OR fixed-term tenancy under 1 year**; **30-DAY NOTICE for fixed-term tenancy of 1 year or more**.
 //! - **§ 250.511a Security Deposit Cap — First Year**: landlord may NOT require security deposit greater than **TWO MONTHS' RENT** during first year of lease.
@@ -371,7 +371,8 @@ mod tests {
     fn baseline_input() -> Input {
         Input {
             tenancy_type: TenancyType::ResidentialRentalCoveredByPaLandlordTenantAct,
-            compliance_aspect: ComplianceAspect::SecurityDepositCapFirstYearTwoMonthsRentUnderSection250_511A,
+            compliance_aspect:
+                ComplianceAspect::SecurityDepositCapFirstYearTwoMonthsRentUnderSection250_511A,
             lease_year_status: LeaseYearStatus::FirstYearOfLease,
             tenancy_term_length: TenancyTermLength::MonthToMonth,
             monthly_rent_dollars: 1_500,
@@ -502,15 +503,20 @@ mod tests {
     #[test]
     fn ten_day_pay_or_quit_notice_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::NonpaymentTenDayPayOrQuitNoticeUnderSection250_501;
+        input.compliance_aspect =
+            ComplianceAspect::NonpaymentTenDayPayOrQuitNoticeUnderSection250_501;
         let output = check(&input);
-        assert_eq!(output.mode, PaLandlordTenantActMode::CompliantTenDayPayOrQuitNoticeProvided);
+        assert_eq!(
+            output.mode,
+            PaLandlordTenantActMode::CompliantTenDayPayOrQuitNoticeProvided
+        );
     }
 
     #[test]
     fn pay_or_quit_notice_under_ten_days_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::NonpaymentTenDayPayOrQuitNoticeUnderSection250_501;
+        input.compliance_aspect =
+            ComplianceAspect::NonpaymentTenDayPayOrQuitNoticeUnderSection250_501;
         input.pay_or_quit_notice_days_given = 7;
         let output = check(&input);
         assert_eq!(
@@ -522,7 +528,8 @@ mod tests {
     #[test]
     fn termination_notice_month_to_month_fifteen_days_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::TerminationNoticeBasedOnTenancyTermLengthUnderSection250_501B;
+        input.compliance_aspect =
+            ComplianceAspect::TerminationNoticeBasedOnTenancyTermLengthUnderSection250_501B;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -533,7 +540,8 @@ mod tests {
     #[test]
     fn termination_notice_fixed_term_one_year_or_more_at_thirty_days_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::TerminationNoticeBasedOnTenancyTermLengthUnderSection250_501B;
+        input.compliance_aspect =
+            ComplianceAspect::TerminationNoticeBasedOnTenancyTermLengthUnderSection250_501B;
         input.tenancy_term_length = TenancyTermLength::FixedTermOneYearOrMore;
         input.termination_notice_days_given = 30;
         let output = check(&input);
@@ -546,7 +554,8 @@ mod tests {
     #[test]
     fn termination_notice_fixed_term_one_year_or_more_at_twenty_nine_days_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::TerminationNoticeBasedOnTenancyTermLengthUnderSection250_501B;
+        input.compliance_aspect =
+            ComplianceAspect::TerminationNoticeBasedOnTenancyTermLengthUnderSection250_501B;
         input.tenancy_term_length = TenancyTermLength::FixedTermOneYearOrMore;
         input.termination_notice_days_given = 29;
         let output = check(&input);
@@ -582,7 +591,8 @@ mod tests {
     #[test]
     fn premises_fit_for_habitation_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::UnfitPremisesRentWithholdingRemedyUnderSection250_205;
+        input.compliance_aspect =
+            ComplianceAspect::UnfitPremisesRentWithholdingRemedyUnderSection250_205;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -593,7 +603,8 @@ mod tests {
     #[test]
     fn premises_unfit_for_habitation_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::UnfitPremisesRentWithholdingRemedyUnderSection250_205;
+        input.compliance_aspect =
+            ComplianceAspect::UnfitPremisesRentWithholdingRemedyUnderSection250_205;
         input.premises_unfit_for_human_habitation = true;
         let output = check(&input);
         assert_eq!(
@@ -605,7 +616,8 @@ mod tests {
     #[test]
     fn property_manager_holds_broker_license_or_owner_exempt_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::RealEstateLicensureRequirementForPropertyManagers;
+        input.compliance_aspect =
+            ComplianceAspect::RealEstateLicensureRequirementForPropertyManagers;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -616,7 +628,8 @@ mod tests {
     #[test]
     fn property_manager_lacks_broker_license_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::RealEstateLicensureRequirementForPropertyManagers;
+        input.compliance_aspect =
+            ComplianceAspect::RealEstateLicensureRequirementForPropertyManagers;
         input.property_manager_holds_real_estate_broker_license_or_is_owner_exempt = false;
         let output = check(&input);
         assert_eq!(

@@ -26,7 +26,10 @@ pub struct OhlcBar {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub enum ReversalKind { Bullish, Bearish }
+pub enum ReversalKind {
+    Bullish,
+    Bearish,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct ReversalEvent {
@@ -45,16 +48,18 @@ pub struct ReversalReport {
 
 pub fn detect(bars: &[OhlcBar]) -> ReversalReport {
     let n = bars.len();
-    if n < 3 { return ReversalReport::default(); }
+    if n < 3 {
+        return ReversalReport::default();
+    }
     let mut events = Vec::new();
     for i in 2..n {
         let b1 = bars[i - 2];
         let b2 = bars[i - 1];
         let b3 = bars[i];
         let b1_down = b1.close < b1.open;
-        let b1_up   = b1.close > b1.open;
+        let b1_up = b1.close > b1.open;
         let b3_down = b3.close < b3.open;
-        let b3_up   = b3.close > b3.open;
+        let b3_up = b3.close > b3.open;
         // Middle bar must be "small" — body ≤ 50% of bar-1's body.
         let b1_body = (b1.close - b1.open).abs();
         let b2_body = (b2.close - b2.open).abs();
@@ -62,13 +67,17 @@ pub fn detect(bars: &[OhlcBar]) -> ReversalReport {
 
         if b1_down && b3_up && middle_small && b3.close > b1.high {
             events.push(ReversalEvent {
-                bar_index: i, kind: ReversalKind::Bullish,
-                bar1_open: b1.open, bar3_close: b3.close,
+                bar_index: i,
+                kind: ReversalKind::Bullish,
+                bar1_open: b1.open,
+                bar3_close: b3.close,
             });
         } else if b1_up && b3_down && middle_small && b3.close < b1.low {
             events.push(ReversalEvent {
-                bar_index: i, kind: ReversalKind::Bearish,
-                bar1_open: b1.open, bar3_close: b3.close,
+                bar_index: i,
+                kind: ReversalKind::Bearish,
+                bar1_open: b1.open,
+                bar3_close: b3.close,
             });
         }
     }
@@ -80,7 +89,14 @@ pub fn detect(bars: &[OhlcBar]) -> ReversalReport {
 mod tests {
     use super::*;
 
-    fn b(o: f64, h: f64, l: f64, c: f64) -> OhlcBar { OhlcBar { open: o, high: h, low: l, close: c } }
+    fn b(o: f64, h: f64, l: f64, c: f64) -> OhlcBar {
+        OhlcBar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn empty_or_short_returns_no_events() {
@@ -93,9 +109,9 @@ mod tests {
         // Bar 1: big down (open 105, close 100). Bar 2: small doji at 99.
         // Bar 3: big up closing at 106 — above bar 1's high of 105.5.
         let bars = vec![
-            b(105.0, 105.5, 99.8, 100.0),    // big down body 5
-            b(99.8, 100.2, 99.0, 99.2),      // small body 0.6
-            b(99.2, 106.5, 99.0, 106.0),     // big up, closes above 105.5
+            b(105.0, 105.5, 99.8, 100.0), // big down body 5
+            b(99.8, 100.2, 99.0, 99.2),   // small body 0.6
+            b(99.2, 106.5, 99.0, 106.0),  // big up, closes above 105.5
         ];
         let r = detect(&bars);
         assert_eq!(r.events.len(), 1);
@@ -108,8 +124,8 @@ mod tests {
         // Bar 1: big up. Bar 2: small. Bar 3: big down below bar 1's low.
         let bars = vec![
             b(100.0, 105.5, 99.8, 105.0),
-            b(105.0, 105.5, 104.5, 104.8),    // body 0.2
-            b(104.8, 105.0, 99.0, 99.5),       // closes below bar1.low 99.8
+            b(105.0, 105.5, 104.5, 104.8), // body 0.2
+            b(104.8, 105.0, 99.0, 99.5),   // closes below bar1.low 99.8
         ];
         let r = detect(&bars);
         assert_eq!(r.events.len(), 1);
@@ -120,8 +136,8 @@ mod tests {
     fn middle_bar_too_large_disqualifies() {
         // Middle body 3.0 vs bar-1 body 5.0 → 0.6 > 0.5 threshold → no pattern.
         let bars = vec![
-            b(105.0, 105.5, 99.8, 100.0),    // body 5
-            b(100.0, 104.0, 99.0, 103.0),    // body 3 — too big
+            b(105.0, 105.5, 99.8, 100.0), // body 5
+            b(100.0, 104.0, 99.0, 103.0), // body 3 — too big
             b(103.0, 107.0, 102.0, 106.0),
         ];
         let r = detect(&bars);
@@ -137,7 +153,10 @@ mod tests {
             b(99.2, 105.0, 99.0, 105.0),
         ];
         let r = detect(&bars);
-        assert!(r.events.is_empty(), "close must be strictly above bar1's high");
+        assert!(
+            r.events.is_empty(),
+            "close must be strictly above bar1's high"
+        );
     }
 
     #[test]
@@ -145,7 +164,7 @@ mod tests {
         // Doji = body 0 ≤ 50% of bar1 body. Should still qualify.
         let bars = vec![
             b(105.0, 105.5, 99.8, 100.0),
-            b(99.5, 100.0, 99.0, 99.5),    // doji (open == close)
+            b(99.5, 100.0, 99.0, 99.5), // doji (open == close)
             b(99.5, 107.0, 99.0, 106.5),
         ];
         let r = detect(&bars);

@@ -164,7 +164,9 @@ pub fn compute(input: &Input) -> Output {
         "Form 8288-B — Application for Withholding Certificate to reduce or eliminate withholding".to_string(),
     ];
 
-    if input.transferor_status == TransferorStatus::UsPerson || input.non_foreign_affidavit_furnished {
+    if input.transferor_status == TransferorStatus::UsPerson
+        || input.non_foreign_affidavit_furnished
+    {
         return Output {
             mode: Section1445Mode::NotApplicableUsTransferor,
             required_withholding_dollars: 0,
@@ -195,13 +197,17 @@ pub fn compute(input: &Input) -> Output {
             required_withholding_dollars: 0,
             applicable_rate_basis_points: 0,
             statutory_basis: "§ 1445(b)(5) — domestically controlled REIT exception".to_string(),
-            notes: "No § 1445 withholding: domestically controlled REIT/RIC interest disposition.".to_string(),
+            notes: "No § 1445 withholding: domestically controlled REIT/RIC interest disposition."
+                .to_string(),
             citations,
         };
     }
 
     if input.buyer_residence_intent == BuyerResidenceIntent::BuyerResidenceAffidavitFraudulent {
-        let required = apply_rate(input.amount_realized_dollars, FIRPTA_FULL_WITHHOLDING_BASIS_POINTS);
+        let required = apply_rate(
+            input.amount_realized_dollars,
+            FIRPTA_FULL_WITHHOLDING_BASIS_POINTS,
+        );
         return Output {
             mode: Section1445Mode::ViolationBuyerResidenceAffidavitFraudulent,
             required_withholding_dollars: required,
@@ -380,7 +386,10 @@ mod tests {
             ..baseline_foreign_seller_full_rate()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1445Mode::NotApplicablePubliclyTradedStock);
+        assert_eq!(
+            result.mode,
+            Section1445Mode::NotApplicablePubliclyTradedStock
+        );
     }
 
     #[test]
@@ -390,7 +399,10 @@ mod tests {
             ..baseline_foreign_seller_full_rate()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1445Mode::NotApplicableDomesticallyControlledReit);
+        assert_eq!(
+            result.mode,
+            Section1445Mode::NotApplicableDomesticallyControlledReit
+        );
     }
 
     #[test]
@@ -402,7 +414,10 @@ mod tests {
             ..baseline_foreign_seller_full_rate()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1445Mode::CompliantZeroRateBuyerResidenceUnder300k);
+        assert_eq!(
+            result.mode,
+            Section1445Mode::CompliantZeroRateBuyerResidenceUnder300k
+        );
         assert_eq!(result.required_withholding_dollars, 0);
         assert_eq!(result.applicable_rate_basis_points, 0);
     }
@@ -416,7 +431,10 @@ mod tests {
             ..baseline_foreign_seller_full_rate()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1445Mode::CompliantZeroRateBuyerResidenceUnder300k);
+        assert_eq!(
+            result.mode,
+            Section1445Mode::CompliantZeroRateBuyerResidenceUnder300k
+        );
     }
 
     #[test]
@@ -428,7 +446,10 @@ mod tests {
             ..baseline_foreign_seller_full_rate()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1445Mode::CompliantReducedRateBuyerResidence300kTo1m);
+        assert_eq!(
+            result.mode,
+            Section1445Mode::CompliantReducedRateBuyerResidence300kTo1m
+        );
         assert_eq!(result.required_withholding_dollars, 50_000);
         assert_eq!(result.applicable_rate_basis_points, 1_000);
     }
@@ -442,7 +463,10 @@ mod tests {
             ..baseline_foreign_seller_full_rate()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1445Mode::CompliantReducedRateBuyerResidence300kTo1m);
+        assert_eq!(
+            result.mode,
+            Section1445Mode::CompliantReducedRateBuyerResidence300kTo1m
+        );
     }
 
     #[test]
@@ -454,7 +478,10 @@ mod tests {
             ..baseline_foreign_seller_full_rate()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1445Mode::CompliantFullRateWithholdingApplied);
+        assert_eq!(
+            result.mode,
+            Section1445Mode::CompliantFullRateWithholdingApplied
+        );
         assert_eq!(result.required_withholding_dollars, 225_000);
         assert_eq!(result.applicable_rate_basis_points, 1_500);
     }
@@ -462,7 +489,10 @@ mod tests {
     #[test]
     fn default_15_pct_full_rate_compliant() {
         let result = compute(&baseline_foreign_seller_full_rate());
-        assert_eq!(result.mode, Section1445Mode::CompliantFullRateWithholdingApplied);
+        assert_eq!(
+            result.mode,
+            Section1445Mode::CompliantFullRateWithholdingApplied
+        );
         assert_eq!(result.required_withholding_dollars, 300_000);
     }
 
@@ -473,7 +503,10 @@ mod tests {
             ..baseline_foreign_seller_full_rate()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1445Mode::ViolationBuyerFailedToWithholdFromForeignTransferor);
+        assert_eq!(
+            result.mode,
+            Section1445Mode::ViolationBuyerFailedToWithholdFromForeignTransferor
+        );
         assert_eq!(result.required_withholding_dollars, 300_000);
     }
 
@@ -484,7 +517,10 @@ mod tests {
             ..baseline_foreign_seller_full_rate()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1445Mode::ViolationBuyerWithheldLessThanStatutoryRate);
+        assert_eq!(
+            result.mode,
+            Section1445Mode::ViolationBuyerWithheldLessThanStatutoryRate
+        );
         assert_eq!(result.required_withholding_dollars, 300_000);
         assert!(result.notes.contains("Shortfall $200000"));
     }
@@ -498,7 +534,10 @@ mod tests {
             ..baseline_foreign_seller_full_rate()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1445Mode::ViolationBuyerResidenceAffidavitFraudulent);
+        assert_eq!(
+            result.mode,
+            Section1445Mode::ViolationBuyerResidenceAffidavitFraudulent
+        );
         assert_eq!(result.required_withholding_dollars, 37_500);
         assert_eq!(result.applicable_rate_basis_points, 1_500);
     }
@@ -510,7 +549,10 @@ mod tests {
             ..baseline_foreign_seller_full_rate()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1445Mode::ViolationForm8288NotFiledWithin20Days);
+        assert_eq!(
+            result.mode,
+            Section1445Mode::ViolationForm8288NotFiledWithin20Days
+        );
     }
 
     #[test]
@@ -521,7 +563,10 @@ mod tests {
             ..baseline_foreign_seller_full_rate()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1445Mode::CompliantIrsWithholdingCertificateZeroRate);
+        assert_eq!(
+            result.mode,
+            Section1445Mode::CompliantIrsWithholdingCertificateZeroRate
+        );
         assert_eq!(result.required_withholding_dollars, 0);
     }
 
@@ -533,7 +578,10 @@ mod tests {
             ..baseline_foreign_seller_full_rate()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1445Mode::CompliantIrsWithholdingCertificateReducedRate);
+        assert_eq!(
+            result.mode,
+            Section1445Mode::CompliantIrsWithholdingCertificateReducedRate
+        );
         assert_eq!(result.required_withholding_dollars, 50_000);
     }
 

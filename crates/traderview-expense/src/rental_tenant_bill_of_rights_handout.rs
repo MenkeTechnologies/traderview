@@ -206,7 +206,8 @@ pub fn compute(input: &Input) -> Output {
 
     match input.jurisdiction {
         HandoutJurisdiction::MichiganTruthInRenting => {
-            if input.michigan_notice_font_status == MichiganNoticeFontStatus::NoticeMissingEntirely {
+            if input.michigan_notice_font_status == MichiganNoticeFontStatus::NoticeMissingEntirely
+            {
                 return Output {
                     mode: TenantBillOfRightsHandoutMode::ViolationMichiganStatutoryNoticeMissing,
                     statutory_basis: "MCL § 554.633 — required Truth in Renting notice missing from lease".to_string(),
@@ -214,7 +215,9 @@ pub fn compute(input: &Input) -> Output {
                     citations,
                 };
             }
-            if input.michigan_notice_font_status == MichiganNoticeFontStatus::NoticeTooSmallBelow12Point {
+            if input.michigan_notice_font_status
+                == MichiganNoticeFontStatus::NoticeTooSmallBelow12Point
+            {
                 return Output {
                     mode: TenantBillOfRightsHandoutMode::ViolationMichiganStatutoryNoticeFontTooSmall,
                     statutory_basis: "MCL § 554.633 — notice must be at least 12-point type or 1/8 inch legible print".to_string(),
@@ -235,7 +238,8 @@ pub fn compute(input: &Input) -> Output {
                     citations,
                 };
             }
-            if !input.security_deposit_location_disclosed || !input.owner_manager_identity_disclosed {
+            if !input.security_deposit_location_disclosed || !input.owner_manager_identity_disclosed
+            {
                 return Output {
                     mode: TenantBillOfRightsHandoutMode::ViolationSecurityDepositLocationOrOwnerManagerIdentityMissing,
                     statutory_basis: "Michigan required disclosures: security deposit location + owner/manager identity".to_string(),
@@ -269,7 +273,9 @@ pub fn compute(input: &Input) -> Output {
             }
             Output {
                 mode: TenantBillOfRightsHandoutMode::CompliantNewJerseyTruthInRentingDistributed,
-                statutory_basis: "N.J. Stat. § 46:8-43 to § 46:8-50 — Truth-in-Renting booklet distributed".to_string(),
+                statutory_basis:
+                    "N.J. Stat. § 46:8-43 to § 46:8-50 — Truth-in-Renting booklet distributed"
+                        .to_string(),
                 notes: format!(
                     "COMPLIANT: New Jersey Truth-in-Renting booklet distributed per {:?} status.",
                     input.new_jersey_distribution_status
@@ -327,7 +333,8 @@ pub fn compute(input: &Input) -> Output {
             }
         }
         HandoutJurisdiction::FloridaStatute83_49 => {
-            if input.florida_deposit_location_days_to_disclosure > FLORIDA_83_49_DEPOSIT_DISCLOSURE_DAYS
+            if input.florida_deposit_location_days_to_disclosure
+                > FLORIDA_83_49_DEPOSIT_DISCLOSURE_DAYS
                 || !input.security_deposit_location_disclosed
             {
                 return Output {
@@ -342,7 +349,8 @@ pub fn compute(input: &Input) -> Output {
             }
             Output {
                 mode: TenantBillOfRightsHandoutMode::CompliantFloridaDepositLocationDisclosed,
-                statutory_basis: "Fla. Stat. § 83.49 deposit location disclosure satisfied".to_string(),
+                statutory_basis: "Fla. Stat. § 83.49 deposit location disclosure satisfied"
+                    .to_string(),
                 notes: format!(
                     "COMPLIANT: Florida deposit location disclosed within {} days (≤ 30).",
                     input.florida_deposit_location_days_to_disclosure
@@ -369,7 +377,8 @@ mod tests {
             environmental_hazard_known_to_landlord: false,
             environmental_hazard_disclosed: false,
             utility_billing_arrangements_disclosed: true,
-            michigan_notice_font_status: MichiganNoticeFontStatus::NoticeAtLeast12PointTypeOrLegiblePrintWithLettersAt1_8Inch,
+            michigan_notice_font_status:
+                MichiganNoticeFontStatus::NoticeAtLeast12PointTypeOrLegiblePrintWithLettersAt1_8Inch,
             michigan_domestic_abuse_notice_included: true,
             new_jersey_distribution_status: NewJerseyDistributionStatus::DistributedAtLeaseSigning,
             dc_handout_status: DcHandoutStatus::DcTenantBillOfRightsProvidedWithLease,
@@ -385,7 +394,10 @@ mod tests {
             ..baseline_michigan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantBillOfRightsHandoutMode::NotApplicableNoLeaseExecuted);
+        assert_eq!(
+            result.mode,
+            TenantBillOfRightsHandoutMode::NotApplicableNoLeaseExecuted
+        );
     }
 
     #[test]
@@ -395,13 +407,19 @@ mod tests {
             ..baseline_michigan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantBillOfRightsHandoutMode::NotApplicableJurisdictionLacksMandate);
+        assert_eq!(
+            result.mode,
+            TenantBillOfRightsHandoutMode::NotApplicableJurisdictionLacksMandate
+        );
     }
 
     #[test]
     fn michigan_compliant() {
         let result = check(&baseline_michigan_compliant());
-        assert_eq!(result.mode, TenantBillOfRightsHandoutMode::CompliantMichiganStatutoryNoticeAndDisclosuresIncluded);
+        assert_eq!(
+            result.mode,
+            TenantBillOfRightsHandoutMode::CompliantMichiganStatutoryNoticeAndDisclosuresIncluded
+        );
     }
 
     #[test]
@@ -411,7 +429,10 @@ mod tests {
             ..baseline_michigan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantBillOfRightsHandoutMode::ViolationMichiganStatutoryNoticeMissing);
+        assert_eq!(
+            result.mode,
+            TenantBillOfRightsHandoutMode::ViolationMichiganStatutoryNoticeMissing
+        );
     }
 
     #[test]
@@ -421,7 +442,10 @@ mod tests {
             ..baseline_michigan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantBillOfRightsHandoutMode::ViolationMichiganStatutoryNoticeFontTooSmall);
+        assert_eq!(
+            result.mode,
+            TenantBillOfRightsHandoutMode::ViolationMichiganStatutoryNoticeFontTooSmall
+        );
     }
 
     #[test]
@@ -431,7 +455,10 @@ mod tests {
             ..baseline_michigan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantBillOfRightsHandoutMode::ViolationMichiganDomesticAbuseNoticeMissing);
+        assert_eq!(
+            result.mode,
+            TenantBillOfRightsHandoutMode::ViolationMichiganDomesticAbuseNoticeMissing
+        );
     }
 
     #[test]
@@ -451,7 +478,10 @@ mod tests {
             ..baseline_michigan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantBillOfRightsHandoutMode::ViolationUtilityBillingArrangementsNotDisclosed);
+        assert_eq!(
+            result.mode,
+            TenantBillOfRightsHandoutMode::ViolationUtilityBillingArrangementsNotDisclosed
+        );
     }
 
     #[test]
@@ -462,7 +492,10 @@ mod tests {
             ..baseline_michigan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantBillOfRightsHandoutMode::ViolationLeadBasedPaintTitleXFederalDisclosureMissing);
+        assert_eq!(
+            result.mode,
+            TenantBillOfRightsHandoutMode::ViolationLeadBasedPaintTitleXFederalDisclosureMissing
+        );
     }
 
     #[test]
@@ -473,7 +506,10 @@ mod tests {
             ..baseline_michigan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantBillOfRightsHandoutMode::ViolationEnvironmentalHazardKnownButNotDisclosed);
+        assert_eq!(
+            result.mode,
+            TenantBillOfRightsHandoutMode::ViolationEnvironmentalHazardKnownButNotDisclosed
+        );
     }
 
     #[test]
@@ -483,7 +519,10 @@ mod tests {
             ..baseline_michigan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantBillOfRightsHandoutMode::CompliantNewJerseyTruthInRentingDistributed);
+        assert_eq!(
+            result.mode,
+            TenantBillOfRightsHandoutMode::CompliantNewJerseyTruthInRentingDistributed
+        );
     }
 
     #[test]
@@ -494,7 +533,10 @@ mod tests {
             ..baseline_michigan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantBillOfRightsHandoutMode::ViolationNewJerseyTruthInRentingNotDistributed);
+        assert_eq!(
+            result.mode,
+            TenantBillOfRightsHandoutMode::ViolationNewJerseyTruthInRentingNotDistributed
+        );
     }
 
     #[test]
@@ -504,7 +546,10 @@ mod tests {
             ..baseline_michigan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantBillOfRightsHandoutMode::CompliantDcTenantBillOfRightsProvided);
+        assert_eq!(
+            result.mode,
+            TenantBillOfRightsHandoutMode::CompliantDcTenantBillOfRightsProvided
+        );
     }
 
     #[test]
@@ -515,7 +560,10 @@ mod tests {
             ..baseline_michigan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantBillOfRightsHandoutMode::ViolationDcTenantBillOfRightsNotProvided);
+        assert_eq!(
+            result.mode,
+            TenantBillOfRightsHandoutMode::ViolationDcTenantBillOfRightsNotProvided
+        );
     }
 
     #[test]
@@ -526,7 +574,10 @@ mod tests {
             ..baseline_michigan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantBillOfRightsHandoutMode::CompliantCaliforniaOwnerIdentityDisclosed);
+        assert_eq!(
+            result.mode,
+            TenantBillOfRightsHandoutMode::CompliantCaliforniaOwnerIdentityDisclosed
+        );
     }
 
     #[test]
@@ -537,7 +588,10 @@ mod tests {
             ..baseline_michigan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantBillOfRightsHandoutMode::ViolationCaliforniaOwnerIdentityNotDisclosedWithin15Days);
+        assert_eq!(
+            result.mode,
+            TenantBillOfRightsHandoutMode::ViolationCaliforniaOwnerIdentityNotDisclosedWithin15Days
+        );
     }
 
     #[test]
@@ -548,7 +602,10 @@ mod tests {
             ..baseline_michigan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantBillOfRightsHandoutMode::CompliantFloridaDepositLocationDisclosed);
+        assert_eq!(
+            result.mode,
+            TenantBillOfRightsHandoutMode::CompliantFloridaDepositLocationDisclosed
+        );
     }
 
     #[test]
@@ -559,7 +616,10 @@ mod tests {
             ..baseline_michigan_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, TenantBillOfRightsHandoutMode::ViolationFloridaDepositLocationNotDisclosedWithin30Days);
+        assert_eq!(
+            result.mode,
+            TenantBillOfRightsHandoutMode::ViolationFloridaDepositLocationNotDisclosedWithin30Days
+        );
     }
 
     #[test]

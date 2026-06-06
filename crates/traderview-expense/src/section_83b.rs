@@ -188,8 +188,7 @@ pub fn compute(input: &Section83bInput) -> Section83bResult {
 
     // Step 3: Non-forfeiture paths.
     let (rule, ordinary, hp_start, basis) = if election_timely {
-        let grant_ordinary =
-            (input.fmv_at_grant - input.amount_paid_at_grant).max(Decimal::ZERO);
+        let grant_ordinary = (input.fmv_at_grant - input.amount_paid_at_grant).max(Decimal::ZERO);
         (
             Section83bRule::ElectionTimelyValid,
             grant_ordinary,
@@ -198,8 +197,7 @@ pub fn compute(input: &Section83bInput) -> Section83bResult {
         )
     } else if input.election_filed_date.is_some() {
         // Late election — invalid; revert to §83(a).
-        let vest_ordinary =
-            (input.fmv_at_vesting - input.amount_paid_at_grant).max(Decimal::ZERO);
+        let vest_ordinary = (input.fmv_at_vesting - input.amount_paid_at_grant).max(Decimal::ZERO);
         (
             Section83bRule::ElectionLateInvalid,
             vest_ordinary,
@@ -207,8 +205,7 @@ pub fn compute(input: &Section83bInput) -> Section83bResult {
             input.fmv_at_vesting,
         )
     } else {
-        let vest_ordinary =
-            (input.fmv_at_vesting - input.amount_paid_at_grant).max(Decimal::ZERO);
+        let vest_ordinary = (input.fmv_at_vesting - input.amount_paid_at_grant).max(Decimal::ZERO);
         (
             Section83bRule::NoElection,
             vest_ordinary,
@@ -229,11 +226,7 @@ pub fn compute(input: &Section83bInput) -> Section83bResult {
             };
             (gain, character, Some(days))
         }
-        _ => (
-            Decimal::ZERO,
-            CapitalGainCharacter::NotYetSold,
-            None,
-        ),
+        _ => (Decimal::ZERO, CapitalGainCharacter::NotYetSold, None),
     };
 
     // Step 5: Election savings — comparison vs §83(a) baseline.
@@ -295,7 +288,7 @@ mod tests {
             grant_date: d(2026, 1, 1),
             vesting_date: d(2030, 1, 1), // 4-year vesting
             election_filed_date: Some(d(2026, 1, 15)),
-            fmv_at_grant: dec!(0.01),    // founder grant
+            fmv_at_grant: dec!(0.01), // founder grant
             amount_paid_at_grant: dec!(0.01),
             fmv_at_vesting: dec!(10),
             sale_date: Some(d(2031, 6, 1)),
@@ -378,7 +371,10 @@ mod tests {
         // Holding period from 2026-01-01 to 2031-06-01 = ~5 years → LTCG.
         let r = compute(&base());
         assert_eq!(r.capital_gain_at_sale, dec!(49.99));
-        assert_eq!(r.capital_gain_character, CapitalGainCharacter::LongTermCapital);
+        assert_eq!(
+            r.capital_gain_character,
+            CapitalGainCharacter::LongTermCapital
+        );
         assert!(r.holding_period_days.unwrap() > ONE_YEAR_DAYS);
     }
 
@@ -393,7 +389,10 @@ mod tests {
         let r = compute(&i);
         assert_eq!(r.ordinary_income, dec!(9.99));
         assert_eq!(r.capital_gain_at_sale, dec!(40));
-        assert_eq!(r.capital_gain_character, CapitalGainCharacter::LongTermCapital);
+        assert_eq!(
+            r.capital_gain_character,
+            CapitalGainCharacter::LongTermCapital
+        );
     }
 
     #[test]
@@ -403,7 +402,10 @@ mod tests {
         i.sale_date = Some(d(2026, 7, 1));
         i.sale_price_per_share = Some(dec!(5));
         let r = compute(&i);
-        assert_eq!(r.capital_gain_character, CapitalGainCharacter::ShortTermCapital);
+        assert_eq!(
+            r.capital_gain_character,
+            CapitalGainCharacter::ShortTermCapital
+        );
     }
 
     #[test]
@@ -414,7 +416,10 @@ mod tests {
         i.sale_price_per_share = Some(dec!(5));
         let r = compute(&i);
         assert_eq!(r.holding_period_days, Some(366));
-        assert_eq!(r.capital_gain_character, CapitalGainCharacter::LongTermCapital);
+        assert_eq!(
+            r.capital_gain_character,
+            CapitalGainCharacter::LongTermCapital
+        );
     }
 
     #[test]
@@ -425,7 +430,10 @@ mod tests {
         i.election_filed_date = None;
         let r = compute(&i);
         assert_eq!(r.holding_period_start, d(2030, 1, 1));
-        assert_eq!(r.capital_gain_character, CapitalGainCharacter::LongTermCapital);
+        assert_eq!(
+            r.capital_gain_character,
+            CapitalGainCharacter::LongTermCapital
+        );
     }
 
     #[test]
@@ -435,7 +443,10 @@ mod tests {
         i.election_filed_date = None;
         i.sale_date = Some(d(2030, 7, 1));
         let r = compute(&i);
-        assert_eq!(r.capital_gain_character, CapitalGainCharacter::ShortTermCapital);
+        assert_eq!(
+            r.capital_gain_character,
+            CapitalGainCharacter::ShortTermCapital
+        );
     }
 
     #[test]

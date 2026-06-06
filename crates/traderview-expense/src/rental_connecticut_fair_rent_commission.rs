@@ -304,7 +304,10 @@ mod tests {
             ..baseline_compliant_25k_municipality()
         };
         let result = check(&input);
-        assert_eq!(result.mode, ConnecticutFairRentMode::NotApplicableNotInConnecticut);
+        assert_eq!(
+            result.mode,
+            ConnecticutFairRentMode::NotApplicableNotInConnecticut
+        );
     }
 
     #[test]
@@ -314,13 +317,17 @@ mod tests {
             ..baseline_compliant_25k_municipality()
         };
         let result = check(&input);
-        assert_eq!(result.mode, ConnecticutFairRentMode::NotApplicableSeasonalBasisExempt);
+        assert_eq!(
+            result.mode,
+            ConnecticutFairRentMode::NotApplicableSeasonalBasisExempt
+        );
     }
 
     #[test]
     fn smaller_municipality_no_commission_not_applicable() {
         let input = Input {
-            municipality_classification: MunicipalityClassification::SmallerMunicipalityWithoutCommission,
+            municipality_classification:
+                MunicipalityClassification::SmallerMunicipalityWithoutCommission,
             commission_status: CommissionStatus::OrdinanceNotApplicableNoMandate,
             ..baseline_compliant_25k_municipality()
         };
@@ -469,7 +476,10 @@ mod tests {
         assert_eq!(CT_PA_22_30_ORDINANCE_DEADLINE_YEAR, 2023);
         assert_eq!(CT_PA_22_30_ORDINANCE_DEADLINE_MONTH, 7);
         assert_eq!(CT_PA_22_30_ORDINANCE_DEADLINE_DAY, 1);
-        assert_eq!(CT_FAIR_RENT_COMMISSION_MUNICIPAL_POPULATION_THRESHOLD, 25_000);
+        assert_eq!(
+            CT_FAIR_RENT_COMMISSION_MUNICIPAL_POPULATION_THRESHOLD,
+            25_000
+        );
         assert_eq!(CT_FAIR_RENT_COMMISSION_DOH_NOTIFICATION_DAYS, 30);
         assert_eq!(CT_SEASONAL_BASIS_MAX_DAYS_PER_YEAR, 120);
         assert_eq!(CT_EXCESSIVE_RENT_FACTORS_COUNT, 13);

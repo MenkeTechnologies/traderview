@@ -194,8 +194,12 @@ pub fn compute(input: &Input) -> Output {
                 distribution_deduction_dollars: 0,
                 tier_1_allowed_dollars: 0,
                 tier_2_allowed_dollars: 0,
-                statutory_basis: "Subpart E grantor trust passthrough; no § 661 deduction at trust level".to_string(),
-                notes: "Grantor trust passthrough; all income flows to grantor; § 661 inapplicable.".to_string(),
+                statutory_basis:
+                    "Subpart E grantor trust passthrough; no § 661 deduction at trust level"
+                        .to_string(),
+                notes:
+                    "Grantor trust passthrough; all income flows to grantor; § 661 inapplicable."
+                        .to_string(),
                 citations,
             };
         }
@@ -226,7 +230,9 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.distribution_scenario == DistributionScenario::CapitalGainsAllocatedToCorpusSection663a2 {
+    if input.distribution_scenario
+        == DistributionScenario::CapitalGainsAllocatedToCorpusSection663a2
+    {
         return Output {
             mode: Section661Mode::CompliantSection663a2CapitalGainsCorpusExcluded,
             distribution_deduction_dollars: 0,
@@ -294,7 +300,9 @@ pub fn compute(input: &Input) -> Output {
     }
 
     if dni_after_charitable < total_distributions {
-        let allowed_tier_1 = input.tier_1_mandatory_distributions_dollars.min(dni_after_charitable);
+        let allowed_tier_1 = input
+            .tier_1_mandatory_distributions_dollars
+            .min(dni_after_charitable);
         let allowed_tier_2 = dni_after_charitable.saturating_sub(allowed_tier_1);
         return Output {
             mode: Section661Mode::ViolationDistributionDeductionExceedsDniCeiling,
@@ -419,7 +427,10 @@ mod tests {
             ..baseline_complex_trust_tier_1_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section661Mode::NotApplicableSimpleTrustUseSection651Instead);
+        assert_eq!(
+            result.mode,
+            Section661Mode::NotApplicableSimpleTrustUseSection651Instead
+        );
     }
 
     #[test]
@@ -429,7 +440,10 @@ mod tests {
             ..baseline_complex_trust_tier_1_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section661Mode::NotApplicableGrantorTrustPassThrough);
+        assert_eq!(
+            result.mode,
+            Section661Mode::NotApplicableGrantorTrustPassThrough
+        );
     }
 
     #[test]
@@ -445,7 +459,10 @@ mod tests {
     #[test]
     fn tier_1_mandatory_within_dni_compliant() {
         let result = compute(&baseline_complex_trust_tier_1_compliant());
-        assert_eq!(result.mode, Section661Mode::CompliantTier1MandatoryDistributionsWithinDni);
+        assert_eq!(
+            result.mode,
+            Section661Mode::CompliantTier1MandatoryDistributionsWithinDni
+        );
         assert_eq!(result.distribution_deduction_dollars, 60_000);
         assert_eq!(result.tier_1_allowed_dollars, 60_000);
     }
@@ -459,7 +476,10 @@ mod tests {
             ..baseline_complex_trust_tier_1_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section661Mode::CompliantTier2DiscretionaryDistributionsWithinDni);
+        assert_eq!(
+            result.mode,
+            Section661Mode::CompliantTier2DiscretionaryDistributionsWithinDni
+        );
         assert_eq!(result.distribution_deduction_dollars, 70_000);
     }
 
@@ -472,7 +492,10 @@ mod tests {
             ..baseline_complex_trust_tier_1_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section661Mode::ViolationDistributionDeductionExceedsDniCeiling);
+        assert_eq!(
+            result.mode,
+            Section661Mode::ViolationDistributionDeductionExceedsDniCeiling
+        );
         assert_eq!(result.distribution_deduction_dollars, 100_000);
         assert_eq!(result.tier_1_allowed_dollars, 60_000);
         assert_eq!(result.tier_2_allowed_dollars, 40_000);
@@ -487,7 +510,10 @@ mod tests {
             ..baseline_complex_trust_tier_1_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section661Mode::CompliantSeparateShareRuleAppliedTreasReg1_663C);
+        assert_eq!(
+            result.mode,
+            Section661Mode::CompliantSeparateShareRuleAppliedTreasReg1_663C
+        );
     }
 
     #[test]
@@ -499,7 +525,10 @@ mod tests {
             ..baseline_complex_trust_tier_1_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section661Mode::ViolationSeparateShareRuleNotAppliedDespiteMultipleBeneficiaries);
+        assert_eq!(
+            result.mode,
+            Section661Mode::ViolationSeparateShareRuleNotAppliedDespiteMultipleBeneficiaries
+        );
     }
 
     #[test]
@@ -510,7 +539,10 @@ mod tests {
             ..baseline_complex_trust_tier_1_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section661Mode::Compliant65DayRuleElectionMadeSection663b);
+        assert_eq!(
+            result.mode,
+            Section661Mode::Compliant65DayRuleElectionMadeSection663b
+        );
     }
 
     #[test]
@@ -523,7 +555,10 @@ mod tests {
             ..baseline_complex_trust_tier_1_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section661Mode::Compliant65DayRuleElectionMadeSection663b);
+        assert_eq!(
+            result.mode,
+            Section661Mode::Compliant65DayRuleElectionMadeSection663b
+        );
     }
 
     #[test]
@@ -536,7 +571,10 @@ mod tests {
             ..baseline_complex_trust_tier_1_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section661Mode::Violation65DayRuleElectionDistributionAfter65Days);
+        assert_eq!(
+            result.mode,
+            Section661Mode::Violation65DayRuleElectionDistributionAfter65Days
+        );
     }
 
     #[test]
@@ -546,7 +584,10 @@ mod tests {
             ..baseline_complex_trust_tier_1_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section661Mode::CompliantSection663a1SpecificBequestExcluded);
+        assert_eq!(
+            result.mode,
+            Section661Mode::CompliantSection663a1SpecificBequestExcluded
+        );
     }
 
     #[test]
@@ -556,7 +597,10 @@ mod tests {
             ..baseline_complex_trust_tier_1_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section661Mode::CompliantSection663a2CapitalGainsCorpusExcluded);
+        assert_eq!(
+            result.mode,
+            Section661Mode::CompliantSection663a2CapitalGainsCorpusExcluded
+        );
     }
 
     #[test]
@@ -567,7 +611,10 @@ mod tests {
             ..baseline_complex_trust_tier_1_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section661Mode::ViolationCharacterNotProportionatelyAllocated);
+        assert_eq!(
+            result.mode,
+            Section661Mode::ViolationCharacterNotProportionatelyAllocated
+        );
     }
 
     #[test]
@@ -580,7 +627,10 @@ mod tests {
             ..baseline_complex_trust_tier_1_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section661Mode::ViolationTier1Tier2PriorityIgnored);
+        assert_eq!(
+            result.mode,
+            Section661Mode::ViolationTier1Tier2PriorityIgnored
+        );
     }
 
     #[test]
@@ -591,7 +641,10 @@ mod tests {
             ..baseline_complex_trust_tier_1_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section661Mode::ViolationDistributionDeductionExceedsDniCeiling);
+        assert_eq!(
+            result.mode,
+            Section661Mode::ViolationDistributionDeductionExceedsDniCeiling
+        );
         assert_eq!(result.distribution_deduction_dollars, 60_000);
     }
 
@@ -602,7 +655,10 @@ mod tests {
             ..baseline_complex_trust_tier_1_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section661Mode::CompliantTier1MandatoryDistributionsWithinDni);
+        assert_eq!(
+            result.mode,
+            Section661Mode::CompliantTier1MandatoryDistributionsWithinDni
+        );
     }
 
     #[test]
@@ -612,7 +668,10 @@ mod tests {
             ..baseline_complex_trust_tier_1_compliant()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section661Mode::CompliantTier1MandatoryDistributionsWithinDni);
+        assert_eq!(
+            result.mode,
+            Section661Mode::CompliantTier1MandatoryDistributionsWithinDni
+        );
     }
 
     #[test]

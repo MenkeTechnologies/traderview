@@ -175,11 +175,14 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    let minimum_adjustment_from_percentage = u128::from(input.estimated_income_tax_liability_dollars)
-        .saturating_mul(u128::from(IRC_6425_MINIMUM_ADJUSTMENT_PERCENTAGE_BASIS_POINTS))
-        .checked_div(u128::from(IRC_6425_BASIS_POINT_DENOMINATOR))
-        .unwrap_or(0)
-        .min(u128::from(u64::MAX)) as u64;
+    let minimum_adjustment_from_percentage =
+        u128::from(input.estimated_income_tax_liability_dollars)
+            .saturating_mul(u128::from(
+                IRC_6425_MINIMUM_ADJUSTMENT_PERCENTAGE_BASIS_POINTS,
+            ))
+            .checked_div(u128::from(IRC_6425_BASIS_POINT_DENOMINATOR))
+            .unwrap_or(0)
+            .min(u128::from(u64::MAX)) as u64;
 
     match input.compliance_aspect {
         ComplianceAspect::QuickRefundEligibilityAndProcedureCheck => match input.application_status {
@@ -346,7 +349,8 @@ mod tests {
     fn baseline_input() -> Input {
         Input {
             corporation_type: CorporationType::CCorporationEligibleForSection6425,
-            application_status: ApplicationStatus::Form4466ApplicationFiledWithinDeadlineAndBeforeReturn,
+            application_status:
+                ApplicationStatus::Form4466ApplicationFiledWithinDeadlineAndBeforeReturn,
             compliance_aspect: ComplianceAspect::QuickRefundEligibilityAndProcedureCheck,
             estimated_tax_paid_dollars: 1_000_000,
             estimated_income_tax_liability_dollars: 800_000,
@@ -373,7 +377,10 @@ mod tests {
         input.estimated_tax_paid_dollars = 800_000;
         input.estimated_income_tax_liability_dollars = 800_000;
         let output = check(&input);
-        assert_eq!(output.mode, Section6425Mode::NotApplicableNoOverpaymentOfEstimatedTax);
+        assert_eq!(
+            output.mode,
+            Section6425Mode::NotApplicableNoOverpaymentOfEstimatedTax
+        );
     }
 
     #[test]
@@ -384,13 +391,17 @@ mod tests {
             Section6425Mode::CompliantQuickRefundApplicationFiledTimelyOnForm4466
         );
         // 10 % of $800,000 = $80,000
-        assert_eq!(output.statutory_minimum_adjustment_percentage_dollars, 80_000);
+        assert_eq!(
+            output.statutory_minimum_adjustment_percentage_dollars,
+            80_000
+        );
     }
 
     #[test]
     fn form_4466_filed_after_15th_day_of_4th_month_violation() {
         let mut input = baseline_input();
-        input.application_status = ApplicationStatus::Form4466ApplicationFiledAfter15thDayOf4thMonth;
+        input.application_status =
+            ApplicationStatus::Form4466ApplicationFiledAfter15thDayOf4thMonth;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -403,7 +414,10 @@ mod tests {
         let mut input = baseline_input();
         input.application_status = ApplicationStatus::Form4466ApplicationFiledAfterTaxReturnFiled;
         let output = check(&input);
-        assert_eq!(output.mode, Section6425Mode::ViolationApplicationFiledAfterTaxReturn);
+        assert_eq!(
+            output.mode,
+            Section6425Mode::ViolationApplicationFiledAfterTaxReturn
+        );
     }
 
     #[test]
@@ -451,7 +465,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::IrsProcessingWindowCheck;
         let output = check(&input);
-        assert_eq!(output.mode, Section6425Mode::CompliantIrsProcessedWithin45Days);
+        assert_eq!(
+            output.mode,
+            Section6425Mode::CompliantIrsProcessedWithin45Days
+        );
     }
 
     #[test]
@@ -460,7 +477,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::IrsProcessingWindowCheck;
         input.irs_processing_days = 45;
         let output = check(&input);
-        assert_eq!(output.mode, Section6425Mode::CompliantIrsProcessedWithin45Days);
+        assert_eq!(
+            output.mode,
+            Section6425Mode::CompliantIrsProcessedWithin45Days
+        );
     }
 
     #[test]
@@ -469,13 +489,17 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::IrsProcessingWindowCheck;
         input.irs_processing_days = 60;
         let output = check(&input);
-        assert_eq!(output.mode, Section6425Mode::ViolationIrsProcessingExceeded45Days);
+        assert_eq!(
+            output.mode,
+            Section6425Mode::ViolationIrsProcessingExceeded45Days
+        );
     }
 
     #[test]
     fn excessive_quick_refund_section_6655h_interest_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::ExcessiveAdjustmentInterestChargeUnderSection6655H;
+        input.compliance_aspect =
+            ComplianceAspect::ExcessiveAdjustmentInterestChargeUnderSection6655H;
         input.excessive_adjustment_status =
             ExcessiveAdjustmentStatus::QuickRefundExcessiveSection6655HInterestApplies;
         input.days_excessive_period_for_section_6655h = 90;
@@ -485,13 +509,17 @@ mod tests {
             Section6425Mode::ViolationExcessiveQuickRefundSection6655HInterestChargeApplies
         );
         // $200,000 × 800 bps × 90 days / (10,000 × 365) ≈ $3,945
-        assert_eq!(output.estimated_section_6655h_interest_charge_dollars, 3_945);
+        assert_eq!(
+            output.estimated_section_6655h_interest_charge_dollars,
+            3_945
+        );
     }
 
     #[test]
     fn not_excessive_quick_refund_no_section_6655h_interest_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::ExcessiveAdjustmentInterestChargeUnderSection6655H;
+        input.compliance_aspect =
+            ComplianceAspect::ExcessiveAdjustmentInterestChargeUnderSection6655H;
         input.excessive_adjustment_status =
             ExcessiveAdjustmentStatus::QuickRefundNotExcessiveNoSection6655HInterest;
         let output = check(&input);
@@ -535,7 +563,8 @@ mod tests {
     #[test]
     fn saturating_overflow_defense() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::ExcessiveAdjustmentInterestChargeUnderSection6655H;
+        input.compliance_aspect =
+            ComplianceAspect::ExcessiveAdjustmentInterestChargeUnderSection6655H;
         input.excessive_adjustment_status =
             ExcessiveAdjustmentStatus::QuickRefundExcessiveSection6655HInterestApplies;
         input.adjustment_amount_dollars = u64::MAX;

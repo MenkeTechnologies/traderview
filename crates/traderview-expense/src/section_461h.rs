@@ -134,7 +134,8 @@ pub fn check(input: &Input) -> Output {
         "IRC § 461(h)(2)(A)(ii) (property provided to taxpayer)".to_string(),
         "IRC § 461(h)(2)(A)(iii) (use of property)".to_string(),
         "IRC § 461(h)(2)(B) (services or property provided by taxpayer)".to_string(),
-        "IRC § 461(h)(2)(C) (workers comp, tort, breach, violation of law — payment liability)".to_string(),
+        "IRC § 461(h)(2)(C) (workers comp, tort, breach, violation of law — payment liability)"
+            .to_string(),
         "IRC § 461(h)(2)(D) (other liabilities — regulatory determination)".to_string(),
         "IRC § 461(h)(3) (recurring item exception — 8.5 month rule)".to_string(),
         "IRC § 461(h)(4) (reserves for estimated expenses prohibited)".to_string(),
@@ -487,9 +488,18 @@ mod tests {
     fn citations_pin_461h_subsections() {
         let out = check(&base_services_to_taxpayer());
         assert!(out.citations.iter().any(|c| c.contains("§ 461(h)(1)")));
-        assert!(out.citations.iter().any(|c| c.contains("§ 461(h)(2)(A)(i)")));
-        assert!(out.citations.iter().any(|c| c.contains("§ 461(h)(2)(A)(ii)")));
-        assert!(out.citations.iter().any(|c| c.contains("§ 461(h)(2)(A)(iii)")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("§ 461(h)(2)(A)(i)")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("§ 461(h)(2)(A)(ii)")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("§ 461(h)(2)(A)(iii)")));
         assert!(out.citations.iter().any(|c| c.contains("§ 461(h)(2)(B)")));
         assert!(out.citations.iter().any(|c| c.contains("§ 461(h)(2)(C)")));
         assert!(out.citations.iter().any(|c| c.contains("§ 461(h)(2)(D)")));
@@ -504,7 +514,10 @@ mod tests {
         assert!(out.citations.iter().any(|c| c.contains("§ 1.461-1(a)(2)")));
         assert!(out.citations.iter().any(|c| c.contains("§ 1.461-4")));
         assert!(out.citations.iter().any(|c| c.contains("§ 1.461-5")));
-        assert!(out.citations.iter().any(|c| c.contains("Deficit Reduction Act of 1984")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("Deficit Reduction Act of 1984")));
     }
 
     #[test]

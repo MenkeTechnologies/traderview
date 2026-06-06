@@ -148,9 +148,9 @@ pub enum Jurisdiction {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum EpaRadonZone {
-    Zone1HighRisk,    // > 4 pCi/L predicted average
+    Zone1HighRisk,     // > 4 pCi/L predicted average
     Zone2ModerateRisk, // 2-4 pCi/L predicted average
-    Zone3LowRisk,     // < 2 pCi/L predicted average
+    Zone3LowRisk,      // < 2 pCi/L predicted average
     Unknown,
 }
 
@@ -267,8 +267,7 @@ pub fn check(input: &Input) -> Output {
 
     let severity = if input.tenant_lung_cancer_claim_reported {
         Severity::LungCancerClaim
-    } else if input.landlord_elected_to_mitigate && !input.aarst_nrpp_certified_contractor_engaged
-    {
+    } else if input.landlord_elected_to_mitigate && !input.aarst_nrpp_certified_contractor_engaged {
         Severity::UncertifiedContractorEngaged
     } else if elevated_tenant_test && !input.landlord_elected_to_mitigate {
         Severity::MitigationDeclinedTenantTerminationRight
@@ -356,7 +355,10 @@ mod tests {
         i.tenant_test_result_pci_per_liter_tenths = 55; // 5.5 pCi/L
         i.landlord_elected_to_mitigate = false;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::MitigationDeclinedTenantTerminationRight);
+        assert_eq!(
+            out.severity,
+            Severity::MitigationDeclinedTenantTerminationRight
+        );
         let joined = out.jurisdiction_specific_actions.join(" ");
         assert!(joined.contains("765 ILCS 90 grants tenant LEASE TERMINATION right"));
         assert!(joined.contains("90-day window"));

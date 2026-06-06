@@ -422,7 +422,10 @@ mod tests {
             ..baseline_compliant_post_effective_date()
         };
         let result = check(&input);
-        assert_eq!(result.mode, MassachusettsHomesActMode::NotApplicableNoEvictionCase);
+        assert_eq!(
+            result.mode,
+            MassachusettsHomesActMode::NotApplicableNoEvictionCase
+        );
     }
 
     #[test]
@@ -594,7 +597,10 @@ mod tests {
         assert_eq!(MA_AFFORDABLE_HOMES_ACT_SIGNED_DATE_YEAR, 2024);
         assert_eq!(MA_AFFORDABLE_HOMES_ACT_SIGNED_DATE_MONTH, 8);
         assert_eq!(MA_AFFORDABLE_HOMES_ACT_SIGNED_DATE_DAY, 6);
-        assert_eq!(MA_AFFORDABLE_HOMES_ACT_AUTHORIZATION_DOLLARS_BILLIONS, 5_160_000_000);
+        assert_eq!(
+            MA_AFFORDABLE_HOMES_ACT_AUTHORIZATION_DOLLARS_BILLIONS,
+            5_160_000_000
+        );
         assert_eq!(MA_AFFORDABLE_HOMES_ACT_POLICY_INITIATIVES_COUNT, 50);
         assert_eq!(MA_HOMES_ACT_EVICTION_SEALING_EFFECTIVE_DATE_YEAR, 2025);
         assert_eq!(MA_HOMES_ACT_EVICTION_SEALING_EFFECTIVE_DATE_MONTH, 5);

@@ -225,7 +225,10 @@ pub fn check(input: &Input) -> Output {
     ];
 
     // Eligibility checks
-    if !matches!(input.corporation_type, CorporationType::DomesticCCorporation) {
+    if !matches!(
+        input.corporation_type,
+        CorporationType::DomesticCCorporation
+    ) {
         let mut n = notes;
         n.push(format!(
             "Corporation type {:?} not eligible for § 1042 — § 1042(b)(4) requires DOMESTIC C CORPORATION. S corporations must convert before § 1042 sale.",
@@ -324,9 +327,7 @@ pub fn check(input: &Input) -> Output {
     }
 
     // Compute deferral
-    let deferred_gain = input
-        .long_term_capital_gain_cents
-        .min(input.qrp_cost_cents);
+    let deferred_gain = input.long_term_capital_gain_cents.min(input.qrp_cost_cents);
     let recognized_gain = input
         .long_term_capital_gain_cents
         .saturating_sub(deferred_gain);
@@ -374,8 +375,8 @@ mod tests {
             securities_readily_tradable_on_established_market: false,
             qrp_type: QrpType::DomesticOperatingCorpCommonStock,
             qrp_purchase_within_15_month_window: true,
-            sale_proceeds_cents: 10_000_000_00,    // $10M
-            qrp_cost_cents: 10_000_000_00,         // full reinvestment
+            sale_proceeds_cents: 10_000_000_00,         // $10M
+            qrp_cost_cents: 10_000_000_00,              // full reinvestment
             long_term_capital_gain_cents: 8_000_000_00, // $8M gain
         }
     }
@@ -590,7 +591,7 @@ mod tests {
     fn partial_reinvestment_partial_deferral() {
         let mut i = baseline();
         i.qrp_cost_cents = 5_000_000_00; // only $5M reinvested
-        // $8M gain capped at $5M deferral; $3M recognized
+                                         // $8M gain capped at $5M deferral; $3M recognized
         let out = check(&i);
         assert_eq!(out.severity, Severity::PartialDeferral);
         assert_eq!(out.deferred_gain_cents, 5_000_000_00);
@@ -815,8 +816,8 @@ mod tests {
             securities_readily_tradable_on_established_market: false,
             qrp_type: QrpType::DomesticOperatingCorpCommonStock,
             qrp_purchase_within_15_month_window: true,
-            sale_proceeds_cents: 50_000_000_00, // $50M
-            qrp_cost_cents: 50_000_000_00,      // full reinvest
+            sale_proceeds_cents: 50_000_000_00,          // $50M
+            qrp_cost_cents: 50_000_000_00,               // full reinvest
             long_term_capital_gain_cents: 40_000_000_00, // $40M gain
         };
         let out = check(&i);

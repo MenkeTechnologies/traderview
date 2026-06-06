@@ -410,10 +410,7 @@ mod tests {
 
     #[test]
     fn state_routing_ca_wa_default() {
-        assert_eq!(
-            Regime::for_state("CA"),
-            Regime::CaliforniaCivCode1717
-        );
+        assert_eq!(Regime::for_state("CA"), Regime::CaliforniaCivCode1717);
         assert_eq!(Regime::for_state("WA"), Regime::WashingtonRcw484330);
         assert_eq!(Regime::for_state("TX"), Regime::Default);
         assert_eq!(Regime::for_state("NY"), Regime::Default);
@@ -421,14 +418,8 @@ mod tests {
 
     #[test]
     fn state_routing_case_insensitive() {
-        assert_eq!(
-            Regime::for_state("ca"),
-            Regime::CaliforniaCivCode1717
-        );
-        assert_eq!(
-            Regime::for_state("Wa"),
-            Regime::WashingtonRcw484330
-        );
+        assert_eq!(Regime::for_state("ca"), Regime::CaliforniaCivCode1717);
+        assert_eq!(Regime::for_state("Wa"), Regime::WashingtonRcw484330);
     }
 
     #[test]

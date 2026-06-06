@@ -231,10 +231,7 @@ mod tests {
         assert_eq!(r.first_year_immediate_deduction_cents, 500_000);
         assert_eq!(r.amortization_pool_cents, 500_000);
         assert_eq!(r.monthly_amortization_cents, 500_000 / 180);
-        assert_eq!(
-            r.first_year_amortization_cents,
-            (500_000 / 180) * 12
-        );
+        assert_eq!(r.first_year_amortization_cents, (500_000 / 180) * 12);
         assert_eq!(r.phase_out_reduction_cents, 0);
     }
 
@@ -268,10 +265,7 @@ mod tests {
         assert_eq!(r.first_year_immediate_deduction_cents, 0);
         assert_eq!(r.amortization_pool_cents, 5500_000);
         assert_eq!(r.phase_out_reduction_cents, 500_000);
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("fully phased out")));
+        assert!(r.notes.iter().any(|n| n.contains("fully phased out")));
     }
 
     #[test]
@@ -449,9 +443,6 @@ mod tests {
     #[test]
     fn phase_out_engagement_note_appears_when_above_50k_below_55k() {
         let r = compute(&input(52_500, 12));
-        assert!(r
-            .notes
-            .iter()
-            .any(|n| n.contains("phase-out engaged")));
+        assert!(r.notes.iter().any(|n| n.contains("phase-out engaged")));
     }
 }

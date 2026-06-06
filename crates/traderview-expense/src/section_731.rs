@@ -148,8 +148,7 @@ pub fn compute(input: &Section731Input) -> Section731Result {
     };
 
     // § 731(a)(1) gain — money exceeds partner's outside basis.
-    let gain_recognized_cents =
-        (distribution_treated_as_money_cents - outside_basis).max(0);
+    let gain_recognized_cents = (distribution_treated_as_money_cents - outside_basis).max(0);
 
     // § 731(a)(2) loss — liquidating only + no other property received.
     let liquidating = matches!(input.distribution_type, DistributionType::Liquidating);
@@ -440,15 +439,16 @@ mod tests {
     #[test]
     fn partnership_level_no_recognition_always() {
         // Multiple scenarios — partnership never recognizes gain/loss.
-        let scenarios = [
-            DistributionType::Current,
-            DistributionType::Liquidating,
-        ];
+        let scenarios = [DistributionType::Current, DistributionType::Liquidating];
         for distribution_type in scenarios.iter() {
             let mut b = input(*distribution_type);
             b.money_distributed_cents = 50_000_000; // huge distribution
             let r = compute(&b);
-            assert!(!r.partnership_level_gain_or_loss_recognized, "{:?}", distribution_type);
+            assert!(
+                !r.partnership_level_gain_or_loss_recognized,
+                "{:?}",
+                distribution_type
+            );
         }
     }
 
@@ -489,8 +489,7 @@ mod tests {
             b.other_property_received = other_property;
             let r = compute(&b);
             assert_eq!(
-                r.loss_recognition_eligible,
-                !other_property,
+                r.loss_recognition_eligible, !other_property,
                 "other_property={}",
                 other_property
             );
@@ -504,7 +503,11 @@ mod tests {
             b.marketable_securities_fmv_distributed_cents = 5_000_000;
             b.section_731c_exception_engaged = exception;
             let r = compute(&b);
-            assert_eq!(r.section_731c_treated_as_money, !exception, "exception={}", exception);
+            assert_eq!(
+                r.section_731c_treated_as_money, !exception,
+                "exception={}",
+                exception
+            );
         }
     }
 
@@ -512,18 +515,26 @@ mod tests {
     fn current_distribution_truth_table() {
         // 4-cell sweep: money × outside_basis combinations.
         let cells = [
-            (5_000_000, 10_000_000, 0, 0),       // money $50K < basis $100K → no gain/loss
+            (5_000_000, 10_000_000, 0, 0), // money $50K < basis $100K → no gain/loss
             (15_000_000, 10_000_000, 5_000_000, 0), // money $150K > basis $100K → $50K gain
-            (10_000_000, 10_000_000, 0, 0),      // money = basis → 0
-            (0, 10_000_000, 0, 0),                // no distribution → 0
+            (10_000_000, 10_000_000, 0, 0), // money = basis → 0
+            (0, 10_000_000, 0, 0),         // no distribution → 0
         ];
         for (money, basis, expected_gain, expected_loss) in cells.iter() {
             let mut b = input(DistributionType::Current);
             b.money_distributed_cents = *money;
             b.partner_outside_basis_cents = *basis;
             let r = compute(&b);
-            assert_eq!(r.gain_recognized_cents, *expected_gain, "money={} basis={}", money, basis);
-            assert_eq!(r.loss_recognized_cents, *expected_loss, "money={} basis={}", money, basis);
+            assert_eq!(
+                r.gain_recognized_cents, *expected_gain,
+                "money={} basis={}",
+                money, basis
+            );
+            assert_eq!(
+                r.loss_recognized_cents, *expected_loss,
+                "money={} basis={}",
+                money, basis
+            );
         }
     }
 
@@ -601,8 +612,8 @@ mod tests {
     #[test]
     fn extreme_amounts_no_overflow() {
         let mut b = input(DistributionType::Current);
-        b.partner_outside_basis_cents = 1_000_000_000;     // $10M
-        b.money_distributed_cents = 100_000_000_000;        // $1B
+        b.partner_outside_basis_cents = 1_000_000_000; // $10M
+        b.money_distributed_cents = 100_000_000_000; // $1B
         let r = compute(&b);
         // $1B - $10M = $990M gain.
         assert_eq!(r.gain_recognized_cents, 99_000_000_000);

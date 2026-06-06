@@ -127,7 +127,10 @@ const TD_9959_EFFECTIVE_DATE: &str = "TD 9959 (Jan 4 2022)";
 
 #[must_use]
 pub fn check(input: &Input) -> Output {
-    if matches!(input.levy_class, LevyClass::NetBasisIncomeTaxSection901Branch) {
+    if matches!(
+        input.levy_class,
+        LevyClass::NetBasisIncomeTaxSection901Branch
+    ) {
         return Output {
             severity: Severity::NotApplicable,
             creditable_amount_cents: 0,
@@ -139,7 +142,10 @@ pub fn check(input: &Input) -> Output {
         };
     }
 
-    if matches!(input.soak_up_status, SoakUpStatus::LiabilityConditionedOnUsFtcSoakUpNonCreditable) {
+    if matches!(
+        input.soak_up_status,
+        SoakUpStatus::LiabilityConditionedOnUsFtcSoakUpNonCreditable
+    ) {
         return Output {
             severity: Severity::NonCreditableSoakUpTaxRule,
             creditable_amount_cents: 0,
@@ -302,7 +308,8 @@ mod tests {
     #[test]
     fn no_generally_imposed_income_tax_fails_substitution() {
         let mut input = base();
-        input.substitution_status = SubstitutionStatus::NoGenerallyImposedIncomeTaxFailsSubstitution;
+        input.substitution_status =
+            SubstitutionStatus::NoGenerallyImposedIncomeTaxFailsSubstitution;
         let output = check(&input);
         assert_eq!(output.severity, Severity::NonCreditableFailsSubstitution);
         assert!(output.note.contains("no generally-imposed income tax"));
@@ -424,7 +431,9 @@ mod tests {
         input.year_regime = YearRegime::PostCalendar2025AttributionRequiredFully;
         input.attribution_status = AttributionStatus::GenerallyImposedTaxFailsAttribution;
         let output = check(&input);
-        assert!(output.note.contains("gross-basis withholding tax on services"));
+        assert!(output
+            .note
+            .contains("gross-basis withholding tax on services"));
     }
 
     #[test]
@@ -462,7 +471,9 @@ mod tests {
         let mut input = base();
         input.substitution_status = SubstitutionStatus::AdditiveLevyFailsSubstitution;
         let output = check(&input);
-        assert!(output.note.contains("§ 164(a)(3) deduction in lieu of credit"));
+        assert!(output
+            .note
+            .contains("§ 164(a)(3) deduction in lieu of credit"));
     }
 
     #[test]

@@ -300,9 +300,7 @@ pub fn check(input: &Section457aInput) -> Section457aResult {
         let additional_tax_20pct: u64 = (u128::from(input.deferred_amount_cents)
             * u128::from(SECTION_457A_ADDITIONAL_TAX_BPS)
             / 10_000) as u64;
-        let interest_rate_bps = input
-            .afr_bps
-            .saturating_add(SECTION_457A_AFR_PLUS_BPS);
+        let interest_rate_bps = input.afr_bps.saturating_add(SECTION_457A_AFR_PLUS_BPS);
         let interest_cents: u64 = (u128::from(input.deferred_amount_cents)
             * u128::from(interest_rate_bps)
             * u128::from(years_of_interest)
@@ -405,7 +403,10 @@ mod tests {
         let mut i = baseline();
         i.entity_type = EntityType::DomesticCCorporation;
         let r = check(&i);
-        assert!(matches!(r.severity, DeferralSeverity::NotANonqualifiedEntity));
+        assert!(matches!(
+            r.severity,
+            DeferralSeverity::NotANonqualifiedEntity
+        ));
         assert!(!r.is_nonqualified_entity);
         assert_eq!(r.section_457a_20pct_additional_tax_cents, 0);
         assert!(r.notes.iter().any(|n| n.contains("§ 409A")));
@@ -416,7 +417,10 @@ mod tests {
         let mut i = baseline();
         i.entity_type = EntityType::DomesticSCorporation;
         let r = check(&i);
-        assert!(matches!(r.severity, DeferralSeverity::NotANonqualifiedEntity));
+        assert!(matches!(
+            r.severity,
+            DeferralSeverity::NotANonqualifiedEntity
+        ));
     }
 
     #[test]
@@ -424,7 +428,10 @@ mod tests {
         let mut i = baseline();
         i.entity_type = EntityType::ForeignCorpComprehensiveForeignTax;
         let r = check(&i);
-        assert!(matches!(r.severity, DeferralSeverity::NotANonqualifiedEntity));
+        assert!(matches!(
+            r.severity,
+            DeferralSeverity::NotANonqualifiedEntity
+        ));
         assert!(!r.is_nonqualified_entity);
     }
 
@@ -433,7 +440,10 @@ mod tests {
         let mut i = baseline();
         i.entity_type = EntityType::ForeignCorpEffectivelyConnectedUSTrade;
         let r = check(&i);
-        assert!(matches!(r.severity, DeferralSeverity::NotANonqualifiedEntity));
+        assert!(matches!(
+            r.severity,
+            DeferralSeverity::NotANonqualifiedEntity
+        ));
     }
 
     #[test]
@@ -441,7 +451,10 @@ mod tests {
         let mut i = baseline();
         i.entity_type = EntityType::PartnershipMostlyTaxableUSPartners;
         let r = check(&i);
-        assert!(matches!(r.severity, DeferralSeverity::NotANonqualifiedEntity));
+        assert!(matches!(
+            r.severity,
+            DeferralSeverity::NotANonqualifiedEntity
+        ));
     }
 
     #[test]
@@ -468,7 +481,10 @@ mod tests {
         let mut i = baseline();
         i.deferral_type = DeferralType::Section409aExemptStockOption;
         let r = check(&i);
-        assert!(matches!(r.severity, DeferralSeverity::StockRightExemptUnder409a));
+        assert!(matches!(
+            r.severity,
+            DeferralSeverity::StockRightExemptUnder409a
+        ));
         assert_eq!(r.income_inclusion_amount_cents, 0);
         assert!(r.notes.iter().any(|n| n.contains("Notice 2009-8 Q&A 2")));
         assert!(r.notes.iter().any(|n| n.contains("Rev. Rul. 2014-18")));
@@ -479,7 +495,10 @@ mod tests {
         let mut i = baseline();
         i.deferral_type = DeferralType::Section409aExemptStockSettledSar;
         let r = check(&i);
-        assert!(matches!(r.severity, DeferralSeverity::StockRightExemptUnder409a));
+        assert!(matches!(
+            r.severity,
+            DeferralSeverity::StockRightExemptUnder409a
+        ));
     }
 
     #[test]
@@ -524,7 +543,10 @@ mod tests {
         let mut i = baseline();
         i.substantial_risk_of_forfeiture_present = true;
         let r = check(&i);
-        assert!(matches!(r.severity, DeferralSeverity::SrofPresentDeferralAllowed));
+        assert!(matches!(
+            r.severity,
+            DeferralSeverity::SrofPresentDeferralAllowed
+        ));
         assert_eq!(r.income_inclusion_amount_cents, 0);
         assert!(r
             .notes
@@ -559,9 +581,8 @@ mod tests {
             r.severity,
             DeferralSeverity::AmountNotDeterminablePending20PctPlusInterest
         ));
-        let expected_20pct = i.deferred_amount_cents
-            * u64::from(SECTION_457A_ADDITIONAL_TAX_BPS)
-            / 10_000;
+        let expected_20pct =
+            i.deferred_amount_cents * u64::from(SECTION_457A_ADDITIONAL_TAX_BPS) / 10_000;
         assert_eq!(r.section_457a_20pct_additional_tax_cents, expected_20pct);
         let years = 3u64;
         let expected_interest = i.deferred_amount_cents
@@ -742,4 +763,3 @@ mod tests {
             .any(|a| a.contains("restructuring deferral to determinable form")));
     }
 }
-

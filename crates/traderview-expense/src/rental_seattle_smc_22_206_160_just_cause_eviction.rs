@@ -547,7 +547,8 @@ mod tests {
             just_cause_asserted: JustCauseAsserted::NonPaymentOfRentAfter14DayNotice,
             prior_pay_or_vacate_notices_last_12_months: 0,
             prior_comply_or_vacate_notices_last_12_months: 0,
-            owner_move_in_occupancy_status: OwnerMoveInOccupancyStatus::NotApplicableToThisJustCause,
+            owner_move_in_occupancy_status:
+                OwnerMoveInOccupancyStatus::NotApplicableToThisJustCause,
             trao_license_status: TraoLicenseStatus::NotApplicableToThisJustCause,
             notice_days_provided: 0,
             monthly_rent_cents: 250_000,
@@ -559,7 +560,10 @@ mod tests {
         let mut input = baseline_input();
         input.property_jurisdiction = PropertyJurisdiction::OutsideSeattleCityLimits;
         let output = check(&input);
-        assert_eq!(output.mode, SeattleJceoMode::NotApplicablePropertyOutsideSeattle);
+        assert_eq!(
+            output.mode,
+            SeattleJceoMode::NotApplicablePropertyOutsideSeattle
+        );
         assert_eq!(output.owner_move_in_violation_damages_cents, 0);
     }
 
@@ -568,7 +572,10 @@ mod tests {
         let mut input = baseline_input();
         input.unit_type = UnitType::TransientLodgingHotelMotelExempt;
         let output = check(&input);
-        assert_eq!(output.mode, SeattleJceoMode::NotApplicableTransientLodgingExempt);
+        assert_eq!(
+            output.mode,
+            SeattleJceoMode::NotApplicableTransientLodgingExempt
+        );
     }
 
     #[test]
@@ -576,7 +583,10 @@ mod tests {
         let mut input = baseline_input();
         input.unit_type = UnitType::EducationalInstitutionHousingExempt;
         let output = check(&input);
-        assert_eq!(output.mode, SeattleJceoMode::NotApplicableEducationalInstitutionHousingExempt);
+        assert_eq!(
+            output.mode,
+            SeattleJceoMode::NotApplicableEducationalInstitutionHousingExempt
+        );
     }
 
     #[test]
@@ -584,7 +594,10 @@ mod tests {
         let mut input = baseline_input();
         input.unit_type = UnitType::LiveAboardVesselExempt;
         let output = check(&input);
-        assert_eq!(output.mode, SeattleJceoMode::NotApplicableLiveAboardVesselExempt);
+        assert_eq!(
+            output.mode,
+            SeattleJceoMode::NotApplicableLiveAboardVesselExempt
+        );
     }
 
     #[test]
@@ -855,11 +868,20 @@ mod tests {
         assert_eq!(SEATTLE_JCEO_TERMINATION_NOTICE_DAYS_RULE_VIOLATIONS, 20);
         assert_eq!(SEATTLE_JCEO_OWNER_MOVE_IN_NOTICE_DAYS_REQUIRED, 90);
         assert_eq!(SEATTLE_JCEO_SINGLE_FAMILY_SALE_NOTICE_DAYS_REQUIRED, 90);
-        assert_eq!(SEATTLE_JCEO_CONDOMINIUM_CONVERSION_NOTICE_DAYS_REQUIRED, 120);
+        assert_eq!(
+            SEATTLE_JCEO_CONDOMINIUM_CONVERSION_NOTICE_DAYS_REQUIRED,
+            120
+        );
         assert_eq!(SEATTLE_JCEO_OWNER_MOVE_IN_OCCUPANCY_DAYS_REQUIRED, 60);
-        assert_eq!(SEATTLE_JCEO_OWNER_MOVE_IN_OCCUPANCY_DEADLINE_DAYS_AFTER_VACATE, 90);
+        assert_eq!(
+            SEATTLE_JCEO_OWNER_MOVE_IN_OCCUPANCY_DEADLINE_DAYS_AFTER_VACATE,
+            90
+        );
         assert_eq!(SEATTLE_JCEO_OWNER_MOVE_IN_VIOLATION_DAMAGES_DOLLARS, 2_000);
-        assert_eq!(SEATTLE_JCEO_SINGLE_FAMILY_SALE_VIOLATION_DAMAGES_DOLLARS, 2_000);
+        assert_eq!(
+            SEATTLE_JCEO_SINGLE_FAMILY_SALE_VIOLATION_DAMAGES_DOLLARS,
+            2_000
+        );
         assert_eq!(SEATTLE_JCEO_LOOKBACK_MONTHS_NOTICE_COUNTING, 12);
     }
 

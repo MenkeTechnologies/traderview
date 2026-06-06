@@ -39,15 +39,20 @@ pub struct KpssReport {
 
 pub fn test(series: &[f64], truncation_lag: Option<usize>) -> Option<KpssReport> {
     let n = series.len();
-    if n < 20 { return None; }
-    if series.iter().any(|x| !x.is_finite()) { return None; }
+    if n < 20 {
+        return None;
+    }
+    if series.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let n_f = n as f64;
     let mean: f64 = series.iter().sum::<f64>() / n_f;
     let e: Vec<f64> = series.iter().map(|x| x - mean).collect();
     // Default truncation lag: floor(4 · (n/100)^(1/4)) per Kwiatkowski-Schmidt-Shin.
-    let l = truncation_lag.unwrap_or_else(|| {
-        (4.0 * (n_f / 100.0).powf(0.25)).floor() as usize
-    }).max(1).min(n / 2);
+    let l = truncation_lag
+        .unwrap_or_else(|| (4.0 * (n_f / 100.0).powf(0.25)).floor() as usize)
+        .max(1)
+        .min(n / 2);
     let gamma0: f64 = e.iter().map(|x| x * x).sum::<f64>() / n_f;
     let mut s2 = gamma0;
     for s in 1..=l {
@@ -55,7 +60,9 @@ pub fn test(series: &[f64], truncation_lag: Option<usize>) -> Option<KpssReport>
         let gamma_s: f64 = (s..n).map(|t| e[t] * e[t - s]).sum::<f64>() / n_f;
         s2 += 2.0 * w * gamma_s;
     }
-    if s2 <= 0.0 { return None; }
+    if s2 <= 0.0 {
+        return None;
+    }
     let mut cum = 0.0_f64;
     let mut sum_sq = 0.0_f64;
     for et in &e {
@@ -98,14 +105,20 @@ mod tests {
     #[test]
     fn iid_noise_does_not_reject_stationarity() {
         let mut state: u64 = 42;
-        let s: Vec<f64> = (0..500).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 2.0
-        }).collect();
+        let s: Vec<f64> = (0..500)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 2.0
+            })
+            .collect();
         let r = test(&s, None).unwrap();
-        assert!(!r.reject_at_5pct,
-            "iid noise shouldn't reject KPSS (stationary), stat = {}", r.kpss_statistic);
+        assert!(
+            !r.reject_at_5pct,
+            "iid noise shouldn't reject KPSS (stationary), stat = {}",
+            r.kpss_statistic
+        );
     }
 
     #[test]
@@ -114,24 +127,31 @@ mod tests {
         let mut state: u64 = 11;
         let mut s = vec![0.0_f64; 500];
         for i in 1..500 {
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let step = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 2.0;
             s[i] = s[i - 1] + step;
         }
         let r = test(&s, None).unwrap();
-        assert!(r.reject_at_5pct,
-            "random walk should reject stationarity, stat = {}", r.kpss_statistic);
+        assert!(
+            r.reject_at_5pct,
+            "random walk should reject stationarity, stat = {}",
+            r.kpss_statistic
+        );
     }
 
     #[test]
     fn custom_truncation_lag_used() {
         let mut state: u64 = 99;
-        let s: Vec<f64> = (0..100).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            (state >> 32) as f64 / u32::MAX as f64 - 0.5
-        }).collect();
+        let s: Vec<f64> = (0..100)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                (state >> 32) as f64 / u32::MAX as f64 - 0.5
+            })
+            .collect();
         let r = test(&s, Some(7)).unwrap();
         assert_eq!(r.truncation_lag, 7);
     }

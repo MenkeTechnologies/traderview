@@ -204,10 +204,7 @@ pub fn check(
 ) -> LandlordForeclosureStatusDisclosureResult {
     let mut failure_reasons: Vec<String> = Vec::new();
 
-    let ca_section_2924_8_notice_compliant = match (
-        input.jurisdiction,
-        input.stage,
-    ) {
+    let ca_section_2924_8_notice_compliant = match (input.jurisdiction, input.stage) {
         (Jurisdiction::California, ForeclosureStage::NoticeOfTrusteeSaleOrSummons)
         | (
             Jurisdiction::California,
@@ -231,8 +228,8 @@ pub fn check(
         _ => true,
     };
 
-    let prospective_tenant_disclosure_compliant = !input.new_lease_during_default_period
-        || input.prospective_tenant_disclosed_to;
+    let prospective_tenant_disclosure_compliant =
+        !input.new_lease_during_default_period || input.prospective_tenant_disclosed_to;
 
     let punitive_damages_available = matches!(input.jurisdiction, Jurisdiction::California)
         && !ca_section_2924_8_notice_compliant
@@ -331,8 +328,7 @@ mod tests {
         i.business_days_since_trigger = 10;
         let r = check(&i);
         assert!(!r.ca_section_2924_8_notice_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 2924.8")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 2924.8")
             && f.contains("5 BUSINESS DAYS")
             && f.contains("10 days since trigger")));
     }
@@ -360,8 +356,7 @@ mod tests {
         i.knowing_or_intentional_violation = true;
         let r = check(&i);
         assert!(r.punitive_damages_available);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 2924.8(d)")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 2924.8(d)")
             && f.contains("KNOWING OR INTENTIONAL")
             && f.contains("PUNITIVE DAMAGES")));
     }
@@ -395,8 +390,7 @@ mod tests {
         i.ny_rpapl_1305_notice_sent = true;
         let r = check(&i);
         assert!(!r.ny_rpapl_1305_notice_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("RPAPL § 1305")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("RPAPL § 1305")
             && f.contains("10 BUSINESS DAYS")
             && f.contains("15 days since trigger")));
     }
@@ -430,9 +424,10 @@ mod tests {
         i.successor_gave_ptfa_90_day_notice = false;
         let r = check(&i);
         assert!(!r.federal_ptfa_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("12 USC § 5220")
-            && f.contains("90 DAYS' NOTICE")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("12 USC § 5220") && f.contains("90 DAYS' NOTICE")));
     }
 
     #[test]
@@ -450,10 +445,12 @@ mod tests {
         let mut i = ca_compliant();
         i.ptfa_bona_fide_tenant = true;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("12 USC § 5220(b) BONA FIDE TENANT")
-            && f.contains("ARM'S-LENGTH")
-            && f.contains("NOT SUBSTANTIALLY LESS")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("12 USC § 5220(b) BONA FIDE TENANT")
+                && f.contains("ARM'S-LENGTH")
+                && f.contains("NOT SUBSTANTIALLY LESS")));
     }
 
     #[test]
@@ -472,9 +469,11 @@ mod tests {
         i.prospective_tenant_disclosed_to = false;
         let r = check(&i);
         assert!(!r.prospective_tenant_disclosure_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("Restatement (Second) of Torts § 551")
-            && f.contains("FRAUDULENT MISREPRESENTATION")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("Restatement (Second) of Torts § 551")
+                && f.contains("FRAUDULENT MISREPRESENTATION")));
     }
 
     #[test]
@@ -530,11 +529,15 @@ mod tests {
     fn citation_pins_all_authorities() {
         let r = check(&ca_compliant());
         assert!(r.citation.contains("Cal. Civ. Code § 2924.8"));
-        assert!(r.citation.contains("Cal. Civ. Code § 2924.85 (REPEALED January 1, 2018"));
+        assert!(r
+            .citation
+            .contains("Cal. Civ. Code § 2924.85 (REPEALED January 1, 2018"));
         assert!(r.citation.contains("NY RPAPL § 1305"));
         assert!(r.citation.contains("NY RPAPL § 1306"));
         assert!(r.citation.contains("12 USC § 5220"));
-        assert!(r.citation.contains("Protecting Tenants at Foreclosure Act of 2009"));
+        assert!(r
+            .citation
+            .contains("Protecting Tenants at Foreclosure Act of 2009"));
         assert!(r.citation.contains("Pub. L. 115-174 § 304"));
         assert!(r.citation.contains("12 USC § 5220(b)"));
         assert!(r.citation.contains("Restatement (Second) of Torts § 551"));
@@ -543,20 +546,21 @@ mod tests {
     #[test]
     fn note_pins_four_jurisdiction_framework() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Four-jurisdiction framework")
-            && n.contains("CALIFORNIA")
-            && n.contains("§ 2924.85 REPEALED")
-            && n.contains("NEW YORK")
-            && n.contains("FEDERAL")
-            && n.contains("DEFAULT")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Four-jurisdiction framework")
+                && n.contains("CALIFORNIA")
+                && n.contains("§ 2924.85 REPEALED")
+                && n.contains("NEW YORK")
+                && n.contains("FEDERAL")
+                && n.contains("DEFAULT")));
     }
 
     #[test]
     fn note_pins_ca_2924_8_four_elements() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Cal. Civ. Code § 2924.8")
+        assert!(r.notes.iter().any(|n| n.contains("Cal. Civ. Code § 2924.8")
             && n.contains("5 BUSINESS DAYS")
             && n.contains("§ 2924.8(d)")
             && n.contains("KNOWING OR INTENTIONAL")));
@@ -565,8 +569,7 @@ mod tests {
     #[test]
     fn note_pins_ny_rpapl_1305_four_elements() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("NY RPAPL § 1305")
+        assert!(r.notes.iter().any(|n| n.contains("NY RPAPL § 1305")
             && n.contains("10 BUSINESS DAYS")
             && n.contains("LONGER")
             && n.contains("RPAPL § 1306")));
@@ -575,8 +578,7 @@ mod tests {
     #[test]
     fn note_pins_federal_ptfa() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("12 USC § 5220")
+        assert!(r.notes.iter().any(|n| n.contains("12 USC § 5220")
             && n.contains("Protecting Tenants at Foreclosure Act")
             && n.contains("90 DAYS' NOTICE")
             && n.contains("Pub. L. 115-174 § 304")
@@ -586,25 +588,29 @@ mod tests {
     #[test]
     fn note_pins_bona_fide_tenant_three_elements() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("BONA FIDE TENANT three-element test")
-            && n.contains("ARM'S-LENGTH")
-            && n.contains("NOT SUBSTANTIALLY LESS than fair market rent")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("BONA FIDE TENANT three-element test")
+                && n.contains("ARM'S-LENGTH")
+                && n.contains("NOT SUBSTANTIALLY LESS than fair market rent")));
     }
 
     #[test]
     fn note_pins_restatement_second_torts_551() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Restatement (Second) of Torts § 551")
-            && n.contains("duty to disclose")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Restatement (Second) of Torts § 551")
+                && n.contains("duty to disclose")));
     }
 
     #[test]
     fn note_pins_ca_2924_85_repeal_historical() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Cal. Civ. Code § 2924.85 (REPEALED January 1, 2018")
+        assert!(r.notes.iter().any(|n| n
+            .contains("Cal. Civ. Code § 2924.85 (REPEALED January 1, 2018")
             && n.contains("voided lease at tenant's election")
             && n.contains("legacy leases")));
     }
@@ -612,20 +618,24 @@ mod tests {
     #[test]
     fn note_pins_trader_fact_patterns_five() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-landlord critical fact patterns")
-            && n.contains("§ 2924.8(d)")
-            && n.contains("RPAPL § 1305")
-            && n.contains("12 USC § 5220(b)")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-landlord critical fact patterns")
+                && n.contains("§ 2924.8(d)")
+                && n.contains("RPAPL § 1305")
+                && n.contains("12 USC § 5220(b)")));
     }
 
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&ca_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Companion to foreclosure_tenant_rights")
-            && n.contains("landlord_property_sale_notice")
-            && n.contains("tenant_estoppel_certificate")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Companion to foreclosure_tenant_rights")
+                && n.contains("landlord_property_sale_notice")
+                && n.contains("tenant_estoppel_certificate")));
     }
 
     #[test]

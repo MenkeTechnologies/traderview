@@ -122,11 +122,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // ContractGovernsPrivateMarket — all other states + DC.
     let contract_states = [
-        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "FL", "GA",
-        "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
-        "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NM",
-        "NY", "NC", "ND", "OH", "OK", "PA", "RI", "SC", "SD", "TN",
-        "TX", "UT", "VT", "VA", "WV", "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA",
+        "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NM",
+        "NY", "NC", "ND", "OH", "OK", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WV",
+        "WI", "WY",
     ];
     for code in contract_states {
         m.insert(
@@ -184,8 +183,8 @@ pub fn check(input: &DrugEvictionInput) -> DrugEvictionResult {
     // Federal One-Strike: any drug-related activity by covered person
     // authorizes eviction, regardless of tenant knowledge (Rucker
     // strict liability).
-    let federal_authorizes = federal_applies
-        && !matches!(input.drug_activity, DrugActivityType::None);
+    let federal_authorizes =
+        federal_applies && !matches!(input.drug_activity, DrugActivityType::None);
 
     let strict_liability = federal_authorizes
         && matches!(
@@ -376,7 +375,10 @@ mod tests {
             PropertyType::PrivateMarketRental,
             DrugActivityType::TenantOnPremises,
         ));
-        assert_eq!(r.state_regime, StateJustCauseRegime::StateJustCauseListsCriminalActivity);
+        assert_eq!(
+            r.state_regime,
+            StateJustCauseRegime::StateJustCauseListsCriminalActivity
+        );
         assert!(r.state_just_cause_authorizes_eviction);
         assert!(r.eviction_authorized);
         assert!(!r.federal_floor_applies);
@@ -421,7 +423,10 @@ mod tests {
             PropertyType::PrivateMarketRental,
             DrugActivityType::TenantOnPremises,
         ));
-        assert_eq!(r.state_regime, StateJustCauseRegime::ContractGovernsPrivateMarket);
+        assert_eq!(
+            r.state_regime,
+            StateJustCauseRegime::ContractGovernsPrivateMarket
+        );
         // Eviction still authorized under lease.
         assert!(r.eviction_authorized);
         assert!(!r.state_just_cause_authorizes_eviction);
@@ -434,7 +439,10 @@ mod tests {
             PropertyType::PrivateMarketRental,
             DrugActivityType::TenantOnPremises,
         ));
-        assert_eq!(r.state_regime, StateJustCauseRegime::ContractGovernsPrivateMarket);
+        assert_eq!(
+            r.state_regime,
+            StateJustCauseRegime::ContractGovernsPrivateMarket
+        );
     }
 
     // No drug activity.
@@ -455,7 +463,12 @@ mod tests {
     #[test]
     fn coverage_is_all_50_states_plus_dc() {
         let codes: Vec<&'static str> = RULES.keys().copied().collect();
-        assert_eq!(codes.len(), 51, "expected 50 states + DC, got {}", codes.len());
+        assert_eq!(
+            codes.len(),
+            51,
+            "expected 50 states + DC, got {}",
+            codes.len()
+        );
     }
 
     #[test]
@@ -478,13 +491,24 @@ mod tests {
 
     #[test]
     fn unknown_state_falls_back_to_contract() {
-        let r = check(&input("XX", PropertyType::PrivateMarketRental, DrugActivityType::TenantOnPremises));
-        assert_eq!(r.state_regime, StateJustCauseRegime::ContractGovernsPrivateMarket);
+        let r = check(&input(
+            "XX",
+            PropertyType::PrivateMarketRental,
+            DrugActivityType::TenantOnPremises,
+        ));
+        assert_eq!(
+            r.state_regime,
+            StateJustCauseRegime::ContractGovernsPrivateMarket
+        );
     }
 
     #[test]
     fn lowercase_state_code_normalizes() {
-        let r = check(&input("ca", PropertyType::PrivateMarketRental, DrugActivityType::TenantOnPremises));
+        let r = check(&input(
+            "ca",
+            PropertyType::PrivateMarketRental,
+            DrugActivityType::TenantOnPremises,
+        ));
         assert!(r.state_just_cause_authorizes_eviction);
     }
 
@@ -492,7 +516,11 @@ mod tests {
 
     #[test]
     fn rucker_strict_liability_mentioned_in_pha_note() {
-        let mut i = input("TX", PropertyType::PublicHousingPha, DrugActivityType::HouseholdMemberOnPremises);
+        let mut i = input(
+            "TX",
+            PropertyType::PublicHousingPha,
+            DrugActivityType::HouseholdMemberOnPremises,
+        );
         i.tenant_aware_of_household_or_guest_activity = false;
         let r = check(&i);
         assert!(r.note.contains("Rucker"));

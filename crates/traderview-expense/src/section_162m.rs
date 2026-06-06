@@ -231,24 +231,23 @@ pub fn check(input: &Section162mInput) -> Section162mResult {
 
     let one_million_cap_cents: u64 = 100_000_000;
 
-    let grandfather_exception_applies = input.pre_tcja_grandfathered_contract
-        && input.qualified_performance_based_pre_tcja;
+    let grandfather_exception_applies =
+        input.pre_tcja_grandfathered_contract && input.qualified_performance_based_pre_tcja;
 
-    let (deductible_compensation_cents, non_deductible_compensation_cents) =
-        if !is_covered_employee
-            || grandfather_exception_applies
-            || input.total_remuneration_cents <= one_million_cap_cents
-        {
-            (input.total_remuneration_cents, 0)
-        } else {
-            (
-                one_million_cap_cents,
-                input.total_remuneration_cents - one_million_cap_cents,
-            )
-        };
+    let (deductible_compensation_cents, non_deductible_compensation_cents) = if !is_covered_employee
+        || grandfather_exception_applies
+        || input.total_remuneration_cents <= one_million_cap_cents
+    {
+        (input.total_remuneration_cents, 0)
+    } else {
+        (
+            one_million_cap_cents,
+            input.total_remuneration_cents - one_million_cap_cents,
+        )
+    };
 
-    let dual_regime_disallowance = input.also_section_280g_excess_parachute
-        && non_deductible_compensation_cents > 0;
+    let dual_regime_disallowance =
+        input.also_section_280g_excess_parachute && non_deductible_compensation_cents > 0;
 
     if !is_publicly_held_corporation {
         failure_reasons.push(
@@ -274,7 +273,10 @@ pub fn check(input: &Section162mInput) -> Section162mResult {
         );
     }
 
-    if is_covered_employee && !grandfather_exception_applies && non_deductible_compensation_cents > 0 {
+    if is_covered_employee
+        && !grandfather_exception_applies
+        && non_deductible_compensation_cents > 0
+    {
         failure_reasons.push(format!(
             "26 USC § 162(m)(1) — applicable employee remuneration {} cents EXCEEDS $1,000,000 ({} cents) cap; ${} cents NON-DEDUCTIBLE to employer; covered employee remains entitled to full pre-tax compensation",
             input.total_remuneration_cents,
@@ -290,10 +292,7 @@ pub fn check(input: &Section162mInput) -> Section162mResult {
             CoveredEmployeeType::ArpaFive => "ARPA FIVE (Pub. L. 117-2 § 9708 effective taxable years beginning after December 31, 2026) — among next 5 most highly compensated employees (NOT necessarily officers); retested ANNUALLY (no permanent status)",
             CoveredEmployeeType::NotCovered => "(none)",
         };
-        failure_reasons.push(format!(
-            "Covered employee category: {}",
-            cet_label
-        ));
+        failure_reasons.push(format!("Covered employee category: {}", cet_label));
     }
 
     if dual_regime_disallowance {
@@ -388,9 +387,10 @@ mod tests {
         assert!(!r.is_publicly_held_corporation);
         assert!(!r.is_covered_employee);
         assert_eq!(r.deductible_compensation_cents, 800_000_000);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 162(m)(2)")
-            && f.contains("NOT a publicly held")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 162(m)(2)") && f.contains("NOT a publicly held")));
     }
 
     #[test]
@@ -409,8 +409,10 @@ mod tests {
         let r = check(&i);
         assert!(r.is_covered_employee);
         assert_eq!(r.non_deductible_compensation_cents, 700_000_000);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 162(m)(3)(A) CFO")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 162(m)(3)(A) CFO")));
     }
 
     #[test]
@@ -419,8 +421,10 @@ mod tests {
         i.covered_employee_type = CoveredEmployeeType::TopThreeOfficer;
         let r = check(&i);
         assert!(r.is_covered_employee);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("top 3 most highly compensated officer")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("top 3 most highly compensated officer")));
     }
 
     #[test]
@@ -429,10 +433,12 @@ mod tests {
         i.covered_employee_type = CoveredEmployeeType::FormerCoveredEmployee;
         let r = check(&i);
         assert!(r.is_covered_employee);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 162(m)(3)(C) ONCE-COVERED-ALWAYS-COVERED")
-            && f.contains("survives departure and death")
-            && f.contains("§ 13601")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 162(m)(3)(C) ONCE-COVERED-ALWAYS-COVERED")
+                && f.contains("survives departure and death")
+                && f.contains("§ 13601")));
     }
 
     #[test]
@@ -443,8 +449,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.is_covered_employee);
         assert!(!r.arpa_expansion_applies);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("ARPA FIVE covered status NOT YET EFFECTIVE")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("ARPA FIVE covered status NOT YET EFFECTIVE")));
     }
 
     #[test]
@@ -455,9 +463,11 @@ mod tests {
         let r = check(&i);
         assert!(r.is_covered_employee);
         assert!(r.arpa_expansion_applies);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("ARPA FIVE (Pub. L. 117-2 § 9708")
-            && f.contains("retested ANNUALLY")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("ARPA FIVE (Pub. L. 117-2 § 9708")
+                && f.contains("retested ANNUALLY")));
     }
 
     #[test]
@@ -466,11 +476,13 @@ mod tests {
         i.taxable_year = 2028;
         let r = check(&i);
         assert!(r.arpa_expansion_applies);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("AMERICAN RESCUE PLAN ACT OF 2021")
-            && f.contains("§ 9708")
-            && f.contains("DECEMBER 31, 2026")
-            && f.contains("ARPA FIVE")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("AMERICAN RESCUE PLAN ACT OF 2021")
+                && f.contains("§ 9708")
+                && f.contains("DECEMBER 31, 2026")
+                && f.contains("ARPA FIVE")));
     }
 
     #[test]
@@ -482,10 +494,12 @@ mod tests {
         assert!(r.grandfather_exception_applies);
         assert_eq!(r.deductible_compensation_cents, 800_000_000);
         assert_eq!(r.non_deductible_compensation_cents, 0);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("PRE-TCJA TRANSITION RULE")
-            && f.contains("NOVEMBER 2, 2017")
-            && f.contains("§ 162(m)(4)(C)")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("PRE-TCJA TRANSITION RULE")
+                && f.contains("NOVEMBER 2, 2017")
+                && f.contains("§ 162(m)(4)(C)")));
     }
 
     #[test]
@@ -504,10 +518,12 @@ mod tests {
         i.also_section_280g_excess_parachute = true;
         let r = check(&i);
         assert!(r.dual_regime_disallowance);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("DUAL-REGIME DISALLOWANCE")
-            && f.contains("§ 280G")
-            && f.contains("§ 4999")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("DUAL-REGIME DISALLOWANCE")
+                && f.contains("§ 280G")
+                && f.contains("§ 4999")));
     }
 
     #[test]
@@ -524,13 +540,21 @@ mod tests {
             i_2026.covered_employee_type = cet;
             i_2026.taxable_year = 2026;
             let r_2026 = check(&i_2026);
-            assert_eq!(r_2026.is_covered_employee, expect_covered_in_2026, "cet={:?} year=2026", cet);
+            assert_eq!(
+                r_2026.is_covered_employee, expect_covered_in_2026,
+                "cet={:?} year=2026",
+                cet
+            );
 
             let mut i_2027 = ceo_8m_comp();
             i_2027.covered_employee_type = cet;
             i_2027.taxable_year = 2027;
             let r_2027 = check(&i_2027);
-            assert_eq!(r_2027.is_covered_employee, expect_covered_in_2027, "cet={:?} year=2027", cet);
+            assert_eq!(
+                r_2027.is_covered_employee, expect_covered_in_2027,
+                "cet={:?} year=2027",
+                cet
+            );
         }
     }
 
@@ -579,8 +603,7 @@ mod tests {
     #[test]
     fn note_pins_subsection_1_deduction_denial() {
         let r = check(&ceo_8m_comp());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 162(m)(1)")
+        assert!(r.notes.iter().any(|n| n.contains("§ 162(m)(1)")
             && n.contains("$1,000,000")
             && n.contains("§ 280G")
             && n.contains("§ 280E")));
@@ -589,51 +612,57 @@ mod tests {
     #[test]
     fn note_pins_subsection_2_publicly_held() {
         let r = check(&ceo_8m_comp());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 162(m)(2) PUBLICLY HELD CORPORATION")
-            && n.contains("§ 12 of Securities Exchange Act")
-            && n.contains("§ 15(d)")
-            && n.contains("foreign private issuers")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 162(m)(2) PUBLICLY HELD CORPORATION")
+                && n.contains("§ 12 of Securities Exchange Act")
+                && n.contains("§ 15(d)")
+                && n.contains("foreign private issuers")));
     }
 
     #[test]
     fn note_pins_subsection_3_covered_employee() {
         let r = check(&ceo_8m_comp());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 162(m)(3) COVERED EMPLOYEE")
-            && n.contains("CEO")
-            && n.contains("CFO")
-            && n.contains("top 3")
-            && n.contains("ONCE-COVERED-ALWAYS-COVERED")
-            && n.contains("ARPA FIVE")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 162(m)(3) COVERED EMPLOYEE")
+                && n.contains("CEO")
+                && n.contains("CFO")
+                && n.contains("top 3")
+                && n.contains("ONCE-COVERED-ALWAYS-COVERED")
+                && n.contains("ARPA FIVE")));
     }
 
     #[test]
     fn note_pins_once_covered_always_covered_tcja() {
         let r = check(&ceo_8m_comp());
-        assert!(r.notes.iter().any(|n|
-            n.contains("ONCE-COVERED-ALWAYS-COVERED rule")
-            && n.contains("§ 13601")
-            && n.contains("DEPARTURE FROM EMPLOYER")
-            && n.contains("DEATH")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("ONCE-COVERED-ALWAYS-COVERED rule")
+                && n.contains("§ 13601")
+                && n.contains("DEPARTURE FROM EMPLOYER")
+                && n.contains("DEATH")));
     }
 
     #[test]
     fn note_pins_subsection_4_applicable_remuneration() {
         let r = check(&ceo_8m_comp());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 162(m)(4) APPLICABLE EMPLOYEE REMUNERATION")
-            && n.contains("equity compensation")
-            && n.contains("deferred compensation")
-            && n.contains("severance")
-            && n.contains("post-termination")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("§ 162(m)(4) APPLICABLE EMPLOYEE REMUNERATION")
+                && n.contains("equity compensation")
+                && n.contains("deferred compensation")
+                && n.contains("severance")
+                && n.contains("post-termination")
+        ));
     }
 
     #[test]
     fn note_pins_tcja_2017_five_changes() {
         let r = check(&ceo_8m_comp());
-        assert!(r.notes.iter().any(|n|
-            n.contains("TCJA 2017")
+        assert!(r.notes.iter().any(|n| n.contains("TCJA 2017")
             && n.contains("§ 13601")
             && n.contains("ELIMINATED performance-based")
             && n.contains("ELIMINATED commission")
@@ -644,8 +673,7 @@ mod tests {
     #[test]
     fn note_pins_arpa_2021_five_features() {
         let r = check(&ceo_8m_comp());
-        assert!(r.notes.iter().any(|n|
-            n.contains("ARPA 2021")
+        assert!(r.notes.iter().any(|n| n.contains("ARPA 2021")
             && n.contains("§ 9708")
             && n.contains("DECEMBER 31, 2026")
             && n.contains("ARPA FIVE")
@@ -656,8 +684,7 @@ mod tests {
     #[test]
     fn note_pins_section_280g_interaction() {
         let r = check(&ceo_8m_comp());
-        assert!(r.notes.iter().any(|n|
-            n.contains("interaction with § 280G")
+        assert!(r.notes.iter().any(|n| n.contains("interaction with § 280G")
             && n.contains("$1M annual cap")
             && n.contains("3× base amount")
             && n.contains("§ 4999 20%")
@@ -667,19 +694,20 @@ mod tests {
     #[test]
     fn note_pins_trader_fact_patterns_five() {
         let r = check(&ceo_8m_comp());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-critical fact patterns")
-            && n.contains("$8M")
-            && n.contains("once-always")
-            && n.contains("ARPA FIVE")
-            && n.contains("dual regime")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-critical fact patterns")
+                && n.contains("$8M")
+                && n.contains("once-always")
+                && n.contains("ARPA FIVE")
+                && n.contains("dual regime")));
     }
 
     #[test]
     fn note_pins_authority_guidance() {
         let r = check(&ceo_8m_comp());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Treas. Reg. § 1.162-27")
+        assert!(r.notes.iter().any(|n| n.contains("Treas. Reg. § 1.162-27")
             && n.contains("Treas. Reg. § 1.162-33")
             && n.contains("IRS Pub. 6014")
             && n.contains("Notice 2018-68")));
@@ -688,8 +716,7 @@ mod tests {
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&ceo_8m_comp());
-        assert!(r.notes.iter().any(|n|
-            n.contains("section_280g")
+        assert!(r.notes.iter().any(|n| n.contains("section_280g")
             && n.contains("section_409a")
             && n.contains("section_422")
             && n.contains("section_423")

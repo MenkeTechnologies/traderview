@@ -202,8 +202,7 @@ pub fn check(input: &Input) -> Output {
         if input.rent_regulated_unit_percent <= ARTICLE_321_RENT_REGULATED_THRESHOLD_PERCENT {
             notes.push(format!(
                 "Article 321 claimed but rent-regulated units {}% ≤ {}% threshold — not eligible.",
-                input.rent_regulated_unit_percent,
-                ARTICLE_321_RENT_REGULATED_THRESHOLD_PERCENT
+                input.rent_regulated_unit_percent, ARTICLE_321_RENT_REGULATED_THRESHOLD_PERCENT
             ));
             return Output {
                 severity: Severity::ViolationArticle321ClaimedButRentRegulatedThresholdNotMet,
@@ -233,9 +232,8 @@ pub fn check(input: &Input) -> Output {
     }
 
     let intensity_x_100 = compute_intensity_limit(input.occupancy_group, input.current_year);
-    let allowance_kg = (input.gross_floor_area_sqft as u64)
-        .saturating_mul(intensity_x_100 as u64)
-        / 100;
+    let allowance_kg =
+        (input.gross_floor_area_sqft as u64).saturating_mul(intensity_x_100 as u64) / 100;
 
     if input.annual_emissions_kg_co2e <= allowance_kg {
         notes.push(format!(
@@ -472,7 +470,10 @@ mod tests {
     #[test]
     fn citations_pin_ll97_admin_code_28_320_subsections() {
         let out = check(&base_r2_2026());
-        assert!(out.citations.iter().any(|c| c.contains("Local Law 97 of 2019")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("Local Law 97 of 2019")));
         assert!(out.citations.iter().any(|c| c.contains("§ 28-320.6")));
         assert!(out.citations.iter().any(|c| c.contains("§ 28-320.7")));
         assert!(out.citations.iter().any(|c| c.contains("§ 28-320.8")));

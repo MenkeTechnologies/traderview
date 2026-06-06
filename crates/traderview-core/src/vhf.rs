@@ -24,8 +24,12 @@ pub fn compute(closes: &[f64], period: usize) -> Vec<Option<f64>> {
         let mut lo = f64::INFINITY;
         for &c in window {
             if c.is_finite() {
-                if c > hi { hi = c; }
-                if c < lo { lo = c; }
+                if c > hi {
+                    hi = c;
+                }
+                if c < lo {
+                    lo = c;
+                }
             }
         }
         if !hi.is_finite() || !lo.is_finite() {
@@ -35,7 +39,9 @@ pub fn compute(closes: &[f64], period: usize) -> Vec<Option<f64>> {
         let mut travel = 0.0_f64;
         // Travel = sum of |delta_t| over the window (use prior bar in series).
         for j in (i + 1 - period)..=i {
-            if j == 0 { continue; }
+            if j == 0 {
+                continue;
+            }
             let d = (closes[j] - closes[j - 1]).abs();
             if d.is_finite() {
                 travel += d;
@@ -75,14 +81,18 @@ mod tests {
         let v: Vec<f64> = (0..50).map(|i| 100.0 + i as f64).collect();
         let out = compute(&v, 28);
         let last = out[49].expect("populated");
-        assert!(last > 0.95 && last <= 1.0,
-            "trend VHF should approach but not exceed 1, got {last}");
+        assert!(
+            last > 0.95 && last <= 1.0,
+            "trend VHF should approach but not exceed 1, got {last}"
+        );
     }
 
     #[test]
     fn full_oscillation_vhf_low() {
         // Alternating up/down with same range — displacement small, travel high.
-        let v: Vec<f64> = (0..50).map(|i| if i % 2 == 0 { 100.0 } else { 101.0 }).collect();
+        let v: Vec<f64> = (0..50)
+            .map(|i| if i % 2 == 0 { 100.0 } else { 101.0 })
+            .collect();
         let out = compute(&v, 28);
         let last = out[49].expect("populated");
         assert!(last < 0.1, "chop VHF should be near 0, got {last}");
@@ -100,7 +110,9 @@ mod tests {
 
     #[test]
     fn output_in_range_0_1() {
-        let v: Vec<f64> = (0..200).map(|i| 100.0 + (i as f64 * 0.4).sin() * 5.0).collect();
+        let v: Vec<f64> = (0..200)
+            .map(|i| 100.0 + (i as f64 * 0.4).sin() * 5.0)
+            .collect();
         let out = compute(&v, 28);
         for x in out.iter().flatten() {
             assert!((0.0..=1.0 + 1e-9).contains(x), "VHF out of [0,1]: {x}");

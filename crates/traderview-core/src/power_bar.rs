@@ -18,7 +18,12 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub open: f64, pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PowerBarReport {
@@ -40,22 +45,29 @@ pub fn compute(
         body_threshold,
         close_at_extreme_threshold,
     };
-    if !body_threshold.is_finite() || !(0.0..=1.0).contains(&body_threshold)
+    if !body_threshold.is_finite()
+        || !(0.0..=1.0).contains(&body_threshold)
         || !close_at_extreme_threshold.is_finite()
-        || !(0.0..=1.0).contains(&close_at_extreme_threshold) {
+        || !(0.0..=1.0).contains(&close_at_extreme_threshold)
+    {
         return report;
     }
-    if bars.iter().any(|b| !b.open.is_finite() || !b.high.is_finite()
-        || !b.low.is_finite() || !b.close.is_finite()) {
+    if bars.iter().any(|b| {
+        !b.open.is_finite() || !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()
+    }) {
         return report;
     }
     for (i, bar) in bars.iter().enumerate() {
         let range = bar.high - bar.low;
-        if range <= 0.0 { continue; }
+        if range <= 0.0 {
+            continue;
+        }
         let body = (bar.close - bar.open).abs();
         let body_pct = body / range;
         let close_pct = (bar.close - bar.low) / range;
-        if body_pct < body_threshold { continue; }
+        if body_pct < body_threshold {
+            continue;
+        }
         if bar.close > bar.open && close_pct >= close_at_extreme_threshold {
             report.bullish[i] = true;
         }
@@ -71,7 +83,12 @@ mod tests {
     use super::*;
 
     fn bar(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]

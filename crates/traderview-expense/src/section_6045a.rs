@@ -155,7 +155,10 @@ pub fn check(input: &Section6045AInput) -> Section6045AResult {
 
     // § 6045A(d) digital-asset-to-non-broker-account return path.
     let digital_asset_return_required = matches!(input.security_type, SecurityType::DigitalAsset)
-        && matches!(input.transfer_direction, TransferDirection::BrokerToNonBrokerAccount)
+        && matches!(
+            input.transfer_direction,
+            TransferDirection::BrokerToNonBrokerAccount
+        )
         && !input.receiving_party_known_as_broker;
 
     if digital_asset_return_required {
@@ -187,9 +190,7 @@ pub fn check(input: &Section6045AInput) -> Section6045AResult {
 
     // Statement content — basis + acquisition date required for
     // covered securities.
-    if matches!(input.security_type, SecurityType::CoveredSecurity)
-        && input.statement_furnished
-    {
+    if matches!(input.security_type, SecurityType::CoveredSecurity) && input.statement_furnished {
         if !input.statement_includes_basis {
             violations.push(
                 "Treas. Reg. § 1.6045A-1 — transfer statement for covered security must include \
@@ -251,10 +252,7 @@ pub fn check(input: &Section6045AInput) -> Section6045AResult {
 mod tests {
     use super::*;
 
-    fn base(
-        security: SecurityType,
-        direction: TransferDirection,
-    ) -> Section6045AInput {
+    fn base(security: SecurityType, direction: TransferDirection) -> Section6045AInput {
         Section6045AInput {
             security_type: security,
             transfer_direction: direction,
@@ -305,11 +303,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.compliant);
         assert!(r.deadline_passed);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("§ 6045A(c)") && v.contains("16 days"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 6045A(c)") && v.contains("16 days")));
     }
 
     #[test]
@@ -321,11 +318,10 @@ mod tests {
         i.statement_furnished = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("§ 6045A(a)") && v.contains("did not furnish"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 6045A(a)") && v.contains("did not furnish")));
     }
 
     // ── Statement content requirements (Treas. Reg. § 1.6045A-1) ─
@@ -339,11 +335,10 @@ mod tests {
         i.statement_includes_basis = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("§ 1.6045A-1") && v.contains("adjusted basis"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1.6045A-1") && v.contains("adjusted basis")));
     }
 
     #[test]
@@ -355,11 +350,10 @@ mod tests {
         i.statement_includes_acquisition_date = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("§ 1.6045A-1") && v.contains("acquisition date"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1.6045A-1") && v.contains("acquisition date")));
     }
 
     #[test]
@@ -371,13 +365,10 @@ mod tests {
         i.statement_includes_wash_sale_flag = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(
-            r.violations
-                .iter()
-                .any(|v| v.contains("§ 1.6045A-1")
-                    && v.contains("wash-sale")
-                    && v.contains("§ 1091"))
-        );
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1.6045A-1") && v.contains("wash-sale") && v.contains("§ 1091")));
     }
 
     // ── Non-covered security — outside § 6045A scope ────────────
@@ -397,10 +388,7 @@ mod tests {
     fn non_covered_security_late_furnish_still_compliant() {
         // Even with no statement and 100 days elapsed, non-covered
         // is outside § 6045A scope.
-        let mut i = base(
-            SecurityType::NonCovered,
-            TransferDirection::BrokerToBroker,
-        );
+        let mut i = base(SecurityType::NonCovered, TransferDirection::BrokerToBroker);
         i.statement_furnished = false;
         i.days_since_transfer = 100;
         let r = check(&i);
@@ -420,11 +408,10 @@ mod tests {
         assert!(r.digital_asset_return_required);
         assert!(r.citation.contains("§ 6045A(d)"));
         assert!(r.citation.contains("Pub. L. 117-58"));
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 6045A(d)") && n.contains("2025-12-31"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6045A(d)") && n.contains("2025-12-31")));
     }
 
     #[test]
@@ -468,7 +455,13 @@ mod tests {
 
     #[test]
     fn day_14_compliant_day_16_violation_boundary() {
-        for (days, expected_passed) in [(0_u32, false), (14, false), (15, false), (16, true), (30, true)] {
+        for (days, expected_passed) in [
+            (0_u32, false),
+            (14, false),
+            (15, false),
+            (16, true),
+            (30, true),
+        ] {
             let mut i = base(
                 SecurityType::CoveredSecurity,
                 TransferDirection::BrokerToBroker,
@@ -487,10 +480,7 @@ mod tests {
 
     #[test]
     fn only_covered_or_digital_asset_requires_statement_invariant() {
-        for security in [
-            SecurityType::CoveredSecurity,
-            SecurityType::DigitalAsset,
-        ] {
+        for security in [SecurityType::CoveredSecurity, SecurityType::DigitalAsset] {
             let r = check(&base(security, TransferDirection::BrokerToBroker));
             assert!(
                 r.statement_required,
@@ -593,19 +583,15 @@ mod tests {
         let r = check(&digital);
         // Digital-asset transfers don't fail § 1.6045A-1 covered-
         // security content checks.
-        assert!(
-            !r.violations
-                .iter()
-                .any(|v| v.contains("§ 1.6045A-1") && v.contains("adjusted basis"))
-        );
+        assert!(!r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1.6045A-1") && v.contains("adjusted basis")));
     }
 
     #[test]
     fn sibling_module_note_present_across_all_security_types() {
-        for security in [
-            SecurityType::CoveredSecurity,
-            SecurityType::DigitalAsset,
-        ] {
+        for security in [SecurityType::CoveredSecurity, SecurityType::DigitalAsset] {
             let r = check(&base(security, TransferDirection::BrokerToBroker));
             assert!(
                 r.notes.iter().any(|n| n.contains("section_6045")

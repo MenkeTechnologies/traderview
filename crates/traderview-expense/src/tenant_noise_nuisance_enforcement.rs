@@ -142,9 +142,7 @@ pub struct TenantNoiseNuisanceEnforcementResult {
     pub notes: Vec<String>,
 }
 
-pub fn check(
-    input: &TenantNoiseNuisanceEnforcementInput,
-) -> TenantNoiseNuisanceEnforcementResult {
+pub fn check(input: &TenantNoiseNuisanceEnforcementInput) -> TenantNoiseNuisanceEnforcementResult {
     let mut failure_reasons: Vec<String> = Vec::new();
 
     let db_above_ambient = input.measured_db.saturating_sub(input.ambient_db);
@@ -154,8 +152,8 @@ pub fn check(
             let quiet = input.hour_of_day >= 22 || input.hour_of_day < 7;
             let threshold = if quiet { 7 } else { 10 };
             let db_violation = db_above_ambient >= threshold;
-            let apartment_violation = input.amplified_noise
-                && input.audible_in_adjacent_unit_windows_closed;
+            let apartment_violation =
+                input.amplified_noise && input.audible_in_adjacent_unit_windows_closed;
             let violation = db_violation || apartment_violation;
 
             if db_violation {
@@ -179,8 +177,8 @@ pub fn check(
             } else {
                 input.hour_of_day >= 22 || input.hour_of_day < 8
             };
-            let amplified_violation = input.amplified_noise
-                && (input.hour_of_day >= 21 || input.hour_of_day < 8);
+            let amplified_violation =
+                input.amplified_noise && (input.hour_of_day >= 21 || input.hour_of_day < 8);
             let presumptive_violation = input.plainly_audible_75_feet;
             let violation = quiet && (amplified_violation || presumptive_violation);
 
@@ -365,8 +363,10 @@ mod tests {
         i.plainly_audible_75_feet = true;
         let r = check(&i);
         assert!(r.noise_violation_exists);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 8-32")
-            && f.contains("PLAINLY AUDIBLE 75 FEET")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 8-32") && f.contains("PLAINLY AUDIBLE 75 FEET")));
     }
 
     #[test]
@@ -448,8 +448,11 @@ mod tests {
         i.days_since_complaint_without_action = 20;
         let r = check(&i);
         assert!(r.landlord_liability_engaged);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("LANDLORD DUTY TO ABATE")
-            && f.contains("FAILED to take reasonable abatement")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("LANDLORD DUTY TO ABATE")
+                && f.contains("FAILED to take reasonable abatement")));
     }
 
     #[test]
@@ -501,8 +504,10 @@ mod tests {
         chi.plainly_audible_75_feet = true;
         chi.hour_of_day = 23;
         let r_chi = check(&chi);
-        assert!(r_chi.failure_reasons.iter().any(|f| f.contains("§ 8-32")
-            && f.contains("PLAINLY AUDIBLE 75 FEET")));
+        assert!(r_chi
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 8-32") && f.contains("PLAINLY AUDIBLE 75 FEET")));
 
         for jur in [
             Jurisdiction::California,
@@ -526,14 +531,20 @@ mod tests {
     fn citation_pins_all_authorities() {
         let r = check(&nyc_baseline());
         assert!(r.citation.contains("Cal. Civ. Code § 1941.4"));
-        assert!(r.citation.contains("Andrews v. Mobile Aire Estates, 125 Cal. App. 4th 578 (2005)"));
+        assert!(r
+            .citation
+            .contains("Andrews v. Mobile Aire Estates, 125 Cal. App. 4th 578 (2005)"));
         assert!(r.citation.contains("NYC Admin. Code § 24-218"));
         assert!(r.citation.contains("NYC Noise Code"));
         assert!(r.citation.contains("N.Y. Real Prop. Law § 235-b"));
-        assert!(r.citation.contains("Park West Management Corp. v. Mitchell, 47 N.Y.2d 316 (1979)"));
+        assert!(r
+            .citation
+            .contains("Park West Management Corp. v. Mitchell, 47 N.Y.2d 316 (1979)"));
         assert!(r.citation.contains("Chicago Municipal Code § 8-32"));
         assert!(r.citation.contains("Mass. G.L. c. 186 § 14"));
-        assert!(r.citation.contains("Berman & Sons v. Jefferson, 379 Mass. 196 (1979)"));
+        assert!(r
+            .citation
+            .contains("Berman & Sons v. Jefferson, 379 Mass. 196 (1979)"));
     }
 
     #[test]
@@ -558,9 +569,12 @@ mod tests {
     #[test]
     fn note_pins_nyc_apartment_to_apartment_amplified() {
         let r = check(&nyc_baseline());
-        assert!(r.notes.iter().any(|n| n.contains("§ 24-218 (apartment-to-apartment)")
-            && n.contains("AMPLIFIED SOUND")
-            && n.contains("VIOLATION AT ANY HOUR")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 24-218 (apartment-to-apartment)")
+                && n.contains("AMPLIFIED SOUND")
+                && n.contains("VIOLATION AT ANY HOUR")));
     }
 
     #[test]
@@ -585,8 +599,11 @@ mod tests {
     #[test]
     fn note_pins_chicago_enforcement() {
         let r = check(&nyc_baseline());
-        assert!(r.notes.iter().any(|n| n.contains("Chicago Police Department")
-            && n.contains("Department of Buildings")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Chicago Police Department")
+                && n.contains("Department of Buildings")));
     }
 
     #[test]
@@ -621,20 +638,26 @@ mod tests {
     #[test]
     fn note_pins_trader_landlord_most_common_grievances() {
         let r = check(&nyc_baseline());
-        assert!(r.notes.iter().any(|n| n.contains("Trader-landlord critical")
-            && n.contains("most common multifamily grievances")
-            && n.contains("QUIET ENJOYMENT")
-            && n.contains("DUTY TO ABATE")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-landlord critical")
+                && n.contains("most common multifamily grievances")
+                && n.contains("QUIET ENJOYMENT")
+                && n.contains("DUTY TO ABATE")));
     }
 
     #[test]
     fn note_pins_cross_jurisdictional_architecture() {
         let r = check(&nyc_baseline());
-        assert!(r.notes.iter().any(|n| n.contains("Cross-jurisdictional architecture")
-            && n.contains("IMPLIED COVENANT")
-            && n.contains("DECIBEL + AMBIENT-DELTA")
-            && n.contains("75-FOOT-AUDIBLE")
-            && n.contains("CRIMINAL + TREBLE DAMAGES")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Cross-jurisdictional architecture")
+                && n.contains("IMPLIED COVENANT")
+                && n.contains("DECIBEL + AMBIENT-DELTA")
+                && n.contains("75-FOOT-AUDIBLE")
+                && n.contains("CRIMINAL + TREBLE DAMAGES")));
     }
 
     #[test]

@@ -29,11 +29,7 @@ pub struct NyseTickReport {
     pub ext_threshold: f64,
 }
 
-pub fn compute(
-    tick: &[f64],
-    ema_period: usize,
-    ext_threshold: f64,
-) -> NyseTickReport {
+pub fn compute(tick: &[f64], ema_period: usize, ext_threshold: f64) -> NyseTickReport {
     let n = tick.len();
     let mut report = NyseTickReport {
         smoothed: vec![None; n],
@@ -43,9 +39,12 @@ pub fn compute(
         ema_period,
         ext_threshold,
     };
-    if ema_period < 2 || !ext_threshold.is_finite() || ext_threshold <= 0.0
-        || n < ema_period { return report; }
-    if tick.iter().any(|x| !x.is_finite()) { return report; }
+    if ema_period < 2 || !ext_threshold.is_finite() || ext_threshold <= 0.0 || n < ema_period {
+        return report;
+    }
+    if tick.iter().any(|x| !x.is_finite()) {
+        return report;
+    }
     let p_f = ema_period as f64;
     let k = 2.0 / (p_f + 1.0);
     let seed: f64 = tick[..ema_period].iter().sum::<f64>() / p_f;
@@ -56,16 +55,28 @@ pub fn compute(
         report.smoothed[i] = Some(cur);
     }
     for (i, &v) in tick.iter().enumerate() {
-        if v > ext_threshold { report.extreme_high[i] = true; }
-        if v < -ext_threshold { report.extreme_low[i] = true; }
+        if v > ext_threshold {
+            report.extreme_high[i] = true;
+        }
+        if v < -ext_threshold {
+            report.extreme_low[i] = true;
+        }
     }
     let mut run = 0_i32;
     for (i, sm) in report.smoothed.iter().enumerate() {
         if let Some(v) = sm {
             run = if *v > 0.0 {
-                if run > 0 { run + 1 } else { 1 }
+                if run > 0 {
+                    run + 1
+                } else {
+                    1
+                }
             } else if *v < 0.0 {
-                if run < 0 { run - 1 } else { -1 }
+                if run < 0 {
+                    run - 1
+                } else {
+                    -1
+                }
             } else {
                 0
             };

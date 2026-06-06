@@ -123,7 +123,8 @@ pub type HeatMinimumTemperatureResult = Output;
 pub fn check(input: &Input) -> Output {
     let mut notes: Vec<String> = Vec::new();
     let citations: Vec<String> = vec![
-        "NYC Admin Code § 27-2029 (Article 8 of Chapter 2 of Title 27, Heat and Hot Water)".to_string(),
+        "NYC Admin Code § 27-2029 (Article 8 of Chapter 2 of Title 27, Heat and Hot Water)"
+            .to_string(),
         "Chicago Municipal Code § 13-196-410 + § 5-12-110".to_string(),
         "105 CMR 410.201 (MA State Sanitary Code Chapter II)".to_string(),
         "Section PM-602 of the Philadelphia Property Maintenance Code".to_string(),
@@ -242,17 +243,14 @@ fn is_in_heat_season(j: Jurisdiction, month: u32) -> bool {
         Jurisdiction::NycAdminCode2702029 => month >= 10 || month <= 5,
         Jurisdiction::ChicagoMc13196410 => month >= 10 || month <= 5,
         Jurisdiction::BostonMaSanitaryCode410201 => month >= 10 || month <= 5,
-        Jurisdiction::PhiladelphiaPm602 => (10..=12).contains(&month) || (1..=4).contains(&month) || month == 5 || month == 9,
+        Jurisdiction::PhiladelphiaPm602 => {
+            (10..=12).contains(&month) || (1..=4).contains(&month) || month == 5 || month == 9
+        }
         Jurisdiction::Default => false,
     }
 }
 
-fn compute_required_minimum(
-    j: Jurisdiction,
-    hour: u32,
-    outdoor_f: i32,
-    month: u32,
-) -> (bool, i32) {
+fn compute_required_minimum(j: Jurisdiction, hour: u32, outdoor_f: i32, month: u32) -> (bool, i32) {
     match j {
         Jurisdiction::NycAdminCode2702029 => {
             let is_daytime = (NYC_DAY_START_HOUR..NYC_DAY_END_HOUR).contains(&hour);
@@ -314,7 +312,10 @@ mod tests {
     #[test]
     fn nyc_day_70f_indoor_meets_68_minimum() {
         let out = check(&base_nyc_day());
-        assert_eq!(out.severity, Severity::TemperatureCompliantMeetsLocalMinimum);
+        assert_eq!(
+            out.severity,
+            Severity::TemperatureCompliantMeetsLocalMinimum
+        );
         assert_eq!(out.required_minimum_temp_f, 68);
         assert!(out.is_daytime_window);
     }
@@ -324,7 +325,10 @@ mod tests {
         let mut i = base_nyc_day();
         i.indoor_temperature_f = 65;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::TemperatureViolationBelowDaytimeMinimum);
+        assert_eq!(
+            out.severity,
+            Severity::TemperatureViolationBelowDaytimeMinimum
+        );
         assert!(!out.current_temp_meets_minimum);
     }
 
@@ -334,7 +338,10 @@ mod tests {
         i.outdoor_temperature_f = 60;
         i.indoor_temperature_f = 65;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::TemperatureCompliantMeetsLocalMinimum);
+        assert_eq!(
+            out.severity,
+            Severity::TemperatureCompliantMeetsLocalMinimum
+        );
         assert_eq!(out.required_minimum_temp_f, 0);
     }
 
@@ -344,7 +351,10 @@ mod tests {
         i.current_hour = 23;
         i.indoor_temperature_f = 60;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::TemperatureViolationBelowNighttimeMinimum);
+        assert_eq!(
+            out.severity,
+            Severity::TemperatureViolationBelowNighttimeMinimum
+        );
         assert_eq!(out.required_minimum_temp_f, 62);
         assert!(!out.is_daytime_window);
     }
@@ -356,7 +366,10 @@ mod tests {
         i.outdoor_temperature_f = 70;
         i.indoor_temperature_f = 60;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::TemperatureViolationBelowNighttimeMinimum);
+        assert_eq!(
+            out.severity,
+            Severity::TemperatureViolationBelowNighttimeMinimum
+        );
     }
 
     #[test]
@@ -375,7 +388,10 @@ mod tests {
         i.current_hour = 9;
         i.indoor_temperature_f = 67;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::TemperatureViolationBelowDaytimeMinimum);
+        assert_eq!(
+            out.severity,
+            Severity::TemperatureViolationBelowDaytimeMinimum
+        );
         assert_eq!(out.required_minimum_temp_f, 68);
     }
 
@@ -386,7 +402,10 @@ mod tests {
         i.current_hour = 2;
         i.indoor_temperature_f = 65;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::TemperatureViolationBelowNighttimeMinimum);
+        assert_eq!(
+            out.severity,
+            Severity::TemperatureViolationBelowNighttimeMinimum
+        );
         assert_eq!(out.required_minimum_temp_f, 66);
     }
 
@@ -397,7 +416,10 @@ mod tests {
         i.current_hour = 8;
         i.indoor_temperature_f = 67;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::TemperatureViolationBelowDaytimeMinimum);
+        assert_eq!(
+            out.severity,
+            Severity::TemperatureViolationBelowDaytimeMinimum
+        );
     }
 
     #[test]
@@ -407,7 +429,10 @@ mod tests {
         i.current_hour = 3;
         i.indoor_temperature_f = 63;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::TemperatureViolationBelowNighttimeMinimum);
+        assert_eq!(
+            out.severity,
+            Severity::TemperatureViolationBelowNighttimeMinimum
+        );
         assert_eq!(out.required_minimum_temp_f, 64);
     }
 
@@ -418,7 +443,10 @@ mod tests {
         i.current_hour = 3;
         i.indoor_temperature_f = 65;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::TemperatureViolationBelowDaytimeMinimum);
+        assert_eq!(
+            out.severity,
+            Severity::TemperatureViolationBelowDaytimeMinimum
+        );
         assert_eq!(out.required_minimum_temp_f, 68);
     }
 
@@ -430,7 +458,10 @@ mod tests {
         i.outdoor_temperature_f = 35;
         i.indoor_temperature_f = 65;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::TemperatureViolationBelowDaytimeMinimum);
+        assert_eq!(
+            out.severity,
+            Severity::TemperatureViolationBelowDaytimeMinimum
+        );
     }
 
     #[test]
@@ -441,7 +472,10 @@ mod tests {
         i.outdoor_temperature_f = 60;
         i.indoor_temperature_f = 65;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::TemperatureCompliantMeetsLocalMinimum);
+        assert_eq!(
+            out.severity,
+            Severity::TemperatureCompliantMeetsLocalMinimum
+        );
     }
 
     #[test]
@@ -449,7 +483,10 @@ mod tests {
         let mut i = base_nyc_day();
         i.using_space_heater_as_primary = true;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::ViolationProhibitedSpaceHeaterPrimarySource);
+        assert_eq!(
+            out.severity,
+            Severity::ViolationProhibitedSpaceHeaterPrimarySource
+        );
     }
 
     #[test]
@@ -457,7 +494,10 @@ mod tests {
         let mut i = base_nyc_day();
         i.jurisdiction = Jurisdiction::Default;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::DefaultJurisdictionNoStatutoryHeatRegime);
+        assert_eq!(
+            out.severity,
+            Severity::DefaultJurisdictionNoStatutoryHeatRegime
+        );
     }
 
     #[test]
@@ -525,6 +565,9 @@ mod tests {
         let mut i = base_nyc_day();
         i.indoor_temperature_f = -10;
         let out = check(&i);
-        assert_eq!(out.severity, Severity::TemperatureViolationBelowDaytimeMinimum);
+        assert_eq!(
+            out.severity,
+            Severity::TemperatureViolationBelowDaytimeMinimum
+        );
     }
 }

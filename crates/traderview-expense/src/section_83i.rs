@@ -154,8 +154,7 @@ pub fn compute(input: &Section83iInput) -> Section83iResult {
     };
 
     // FICA always due at vesting, regardless of §83(i) deferral.
-    let fica = input.fmv_at_vesting_for_fica
-        * Decimal::from(input.fica_combined_rate_bp)
+    let fica = input.fmv_at_vesting_for_fica * Decimal::from(input.fica_combined_rate_bp)
         / Decimal::from(10_000);
 
     let (income_tax_deferred, recognition_year) = if eligible && timely {

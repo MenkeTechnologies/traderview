@@ -42,12 +42,17 @@ pub fn compute(
     kernel: KernelKind,
 ) -> Option<RealizedKernelReport> {
     let n = returns.len();
-    if n < 30 { return None; }
-    if returns.iter().any(|x| !x.is_finite()) { return None; }
+    if n < 30 {
+        return None;
+    }
+    if returns.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let n_f = n as f64;
-    let h = bandwidth.unwrap_or_else(|| {
-        (0.3 * n_f.powf(2.0 / 3.0)).floor() as usize
-    }).max(1).min(n - 1);
+    let h = bandwidth
+        .unwrap_or_else(|| (0.3 * n_f.powf(2.0 / 3.0)).floor() as usize)
+        .max(1)
+        .min(n - 1);
     let gamma_0: f64 = returns.iter().map(|r| r * r).sum();
     let mut rk = gamma_0;
     for lag in 1..=h {
@@ -77,13 +82,17 @@ fn parzen_weight(x: f64) -> f64 {
         1.0 - 6.0 * x * x + 6.0 * x.abs().powi(3)
     } else if x <= 1.0 {
         2.0 * (1.0 - x.abs()).powi(3)
-    } else { 0.0 }
+    } else {
+        0.0
+    }
 }
 
 fn tukey_weight(x: f64) -> f64 {
     if x.abs() < 1.0 {
         0.5 * (1.0 + (std::f64::consts::PI * x).cos())
-    } else { 0.0 }
+    } else {
+        0.0
+    }
 }
 
 #[cfg(test)]
@@ -92,15 +101,19 @@ mod tests {
 
     fn box_muller(n: usize, seed: u64, scale: f64) -> Vec<f64> {
         let mut state = seed;
-        (0..n).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u2 = (state >> 32) as f64 / u32::MAX as f64;
-            scale * (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
-        }).collect()
+        (0..n)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u2 = (state >> 32) as f64 / u32::MAX as f64;
+                scale * (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
+            })
+            .collect()
     }
 
     #[test]
@@ -123,8 +136,13 @@ mod tests {
         let result = compute(&r, Some(10), KernelKind::Bartlett).unwrap();
         let rv: f64 = r.iter().map(|x| x * x).sum();
         let rel_diff = (result.realized_kernel - rv).abs() / rv;
-        assert!(rel_diff < 0.5, "RK = {} vs RV = {}, rel diff {:.2}",
-            result.realized_kernel, rv, rel_diff);
+        assert!(
+            rel_diff < 0.5,
+            "RK = {} vs RV = {}, rel diff {:.2}",
+            result.realized_kernel,
+            rv,
+            rel_diff
+        );
     }
 
     #[test]
@@ -161,10 +179,14 @@ mod tests {
         let r = box_muller(500, 42, 0.01);
         let bartlett = compute(&r, Some(10), KernelKind::Bartlett).unwrap();
         let parzen = compute(&r, Some(10), KernelKind::Parzen).unwrap();
-        let rel = (bartlett.realized_kernel - parzen.realized_kernel).abs()
-            / bartlett.realized_kernel;
-        assert!(rel < 0.5, "kernels disagree too much: {} vs {}",
-            bartlett.realized_kernel, parzen.realized_kernel);
+        let rel =
+            (bartlett.realized_kernel - parzen.realized_kernel).abs() / bartlett.realized_kernel;
+        assert!(
+            rel < 0.5,
+            "kernels disagree too much: {} vs {}",
+            bartlett.realized_kernel,
+            parzen.realized_kernel
+        );
     }
 
     #[test]

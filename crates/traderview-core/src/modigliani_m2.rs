@@ -32,11 +32,7 @@ pub struct M2Report {
     pub m2_alpha: f64,
 }
 
-pub fn compute(
-    portfolio: &[f64],
-    benchmark: &[f64],
-    risk_free_rate: f64,
-) -> Option<M2Report> {
+pub fn compute(portfolio: &[f64], benchmark: &[f64], risk_free_rate: f64) -> Option<M2Report> {
     if portfolio.len() < 2 || benchmark.len() < 2 || !risk_free_rate.is_finite() {
         return None;
     }
@@ -44,7 +40,9 @@ pub fn compute(
     let (rb_mean, rb_var) = mean_var(benchmark)?;
     let rp_sd = rp_var.max(0.0).sqrt();
     let rb_sd = rb_var.max(0.0).sqrt();
-    if rp_sd <= 0.0 { return None; }
+    if rp_sd <= 0.0 {
+        return None;
+    }
     let sharpe = (rp_mean - risk_free_rate) / rp_sd;
     let m2 = risk_free_rate + sharpe * rb_sd;
     Some(M2Report {
@@ -60,14 +58,19 @@ pub fn compute(
 }
 
 fn mean_var(xs: &[f64]) -> Option<(f64, f64)> {
-    if xs.iter().any(|x| !x.is_finite()) { return None; }
+    if xs.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     // Reject truly flat input: float round-off can yield a tiny nonzero
     // variance from identical values, which then poisons Sharpe.
-    let (mn, mx) = xs.iter().fold(
-        (f64::INFINITY, f64::NEG_INFINITY),
-        |(a, b), x| (a.min(*x), b.max(*x)),
-    );
-    if mx - mn <= 0.0 { return None; }
+    let (mn, mx) = xs
+        .iter()
+        .fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), x| {
+            (a.min(*x), b.max(*x))
+        });
+    if mx - mn <= 0.0 {
+        return None;
+    }
     let n = xs.len() as f64;
     let mean: f64 = xs.iter().sum::<f64>() / n;
     let var: f64 = xs.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / (n - 1.0).max(1.0);
@@ -117,9 +120,12 @@ mod tests {
         let high_vol = vec![0.05, -0.04, 0.06, -0.05, 0.04, -0.03];
         let r_low = compute(&low_vol, &bench, 0.0).unwrap();
         let r_high = compute(&high_vol, &bench, 0.0).unwrap();
-        assert!(r_low.m2_return > r_high.m2_return,
+        assert!(
+            r_low.m2_return > r_high.m2_return,
             "low-vol M² ({}) should exceed high-vol M² ({})",
-            r_low.m2_return, r_high.m2_return);
+            r_low.m2_return,
+            r_high.m2_return
+        );
     }
 
     #[test]

@@ -36,14 +36,16 @@ pub struct SurvivalCurveReport {
     pub expected_default_time: f64,
 }
 
-pub fn build_curve(
-    segments: &[HazardSegment],
-    query_times: &[f64],
-) -> Option<SurvivalCurveReport> {
-    if segments.is_empty() || query_times.is_empty() { return None; }
-    if segments.iter().any(|s| !s.end_time_years.is_finite() || s.end_time_years <= 0.0
-        || !s.hazard_rate.is_finite() || s.hazard_rate < 0.0)
-    {
+pub fn build_curve(segments: &[HazardSegment], query_times: &[f64]) -> Option<SurvivalCurveReport> {
+    if segments.is_empty() || query_times.is_empty() {
+        return None;
+    }
+    if segments.iter().any(|s| {
+        !s.end_time_years.is_finite()
+            || s.end_time_years <= 0.0
+            || !s.hazard_rate.is_finite()
+            || s.hazard_rate < 0.0
+    }) {
         return None;
     }
     if query_times.iter().any(|t| !t.is_finite() || *t < 0.0) {
@@ -51,14 +53,21 @@ pub fn build_curve(
     }
     // Sort segments by end_time.
     let mut sorted: Vec<HazardSegment> = segments.to_vec();
-    sorted.sort_by(|a, b| a.end_time_years.partial_cmp(&b.end_time_years)
-        .unwrap_or(std::cmp::Ordering::Equal));
+    sorted.sort_by(|a, b| {
+        a.end_time_years
+            .partial_cmp(&b.end_time_years)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     // Strictly increasing end times.
     for w in sorted.windows(2) {
-        if w[1].end_time_years <= w[0].end_time_years { return None; }
+        if w[1].end_time_years <= w[0].end_time_years {
+            return None;
+        }
     }
     let cumulative_hazard_at = |t: f64| -> f64 {
-        if t <= 0.0 { return 0.0; }
+        if t <= 0.0 {
+            return 0.0;
+        }
         let mut prev_t = 0.0_f64;
         let mut h = 0.0_f64;
         for seg in &sorted {
@@ -66,7 +75,9 @@ pub fn build_curve(
             if cur_t > prev_t {
                 h += seg.hazard_rate * (cur_t - prev_t);
             }
-            if t <= seg.end_time_years { return h; }
+            if t <= seg.end_time_years {
+                return h;
+            }
             prev_t = seg.end_time_years;
         }
         // Past the last segment: extrapolate flat with the last hazard.
@@ -76,22 +87,28 @@ pub fn build_curve(
         }
         h
     };
-    let points: Vec<SurvivalPoint> = query_times.iter().map(|&t| {
-        let h = cumulative_hazard_at(t);
-        let s = (-h).exp();
-        SurvivalPoint {
-            time_years: t,
-            cumulative_hazard: h,
-            survival_probability: s,
-            default_probability: (1.0 - s).max(0.0),
-        }
-    }).collect();
+    let points: Vec<SurvivalPoint> = query_times
+        .iter()
+        .map(|&t| {
+            let h = cumulative_hazard_at(t);
+            let s = (-h).exp();
+            SurvivalPoint {
+                time_years: t,
+                cumulative_hazard: h,
+                survival_probability: s,
+                default_probability: (1.0 - s).max(0.0),
+            }
+        })
+        .collect();
     // Expected default time = ∫_0^∞ S(t) dt (mean residual life). Approximate
     // by trapezoidal integration over the query grid (assuming sorted, finite).
     let expected_default_time = {
         let mut sorted_pts = points.clone();
-        sorted_pts.sort_by(|a, b| a.time_years.partial_cmp(&b.time_years)
-            .unwrap_or(std::cmp::Ordering::Equal));
+        sorted_pts.sort_by(|a, b| {
+            a.time_years
+                .partial_cmp(&b.time_years)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
         let mut area = 0.0_f64;
         for w in sorted_pts.windows(2) {
             let dt = w[1].time_years - w[0].time_years;
@@ -99,7 +116,10 @@ pub fn build_curve(
         }
         area
     };
-    Some(SurvivalCurveReport { points, expected_default_time })
+    Some(SurvivalCurveReport {
+        points,
+        expected_default_time,
+    })
 }
 
 #[cfg(test)]
@@ -107,7 +127,10 @@ mod tests {
     use super::*;
 
     fn h(t: f64, lam: f64) -> HazardSegment {
-        HazardSegment { end_time_years: t, hazard_rate: lam }
+        HazardSegment {
+            end_time_years: t,
+            hazard_rate: lam,
+        }
     }
 
     #[test]
@@ -150,7 +173,9 @@ mod tests {
     fn default_probability_complements_survival() {
         let segs = vec![h(5.0, 0.05)];
         let r = build_curve(&segs, &[3.0]).unwrap();
-        assert!((r.points[0].survival_probability + r.points[0].default_probability - 1.0).abs() < 1e-9);
+        assert!(
+            (r.points[0].survival_probability + r.points[0].default_probability - 1.0).abs() < 1e-9
+        );
     }
 
     #[test]

@@ -180,8 +180,8 @@ pub fn check(input: &Input) -> Output {
         let days_late_penalty = u64::from(input.days_past_cycle_deadline)
             .saturating_mul(NYC_CLASS_C_VIOLATION_DAILY_PENALTY_CENTS)
             .min(NYC_LL152_NO_INSPECTION_PENALTY_CENTS.saturating_mul(10));
-        let estimated_penalty = NYC_LL152_NO_INSPECTION_PENALTY_CENTS
-            .saturating_add(days_late_penalty);
+        let estimated_penalty =
+            NYC_LL152_NO_INSPECTION_PENALTY_CENTS.saturating_add(days_late_penalty);
         return Output {
             severity: Severity::InspectionMissedDeadlineDobCivilPenaltyExposure,
             inspection_cycle_years: cycle_years,
@@ -391,8 +391,7 @@ mod tests {
     #[test]
     fn nyc_unaddressed_corrections_escalated_enforcement() {
         let mut input = base_nyc();
-        input.inspection_status =
-            InspectionStatus::CorrectionsFromPriorInspectionNotAddressed;
+        input.inspection_status = InspectionStatus::CorrectionsFromPriorInspectionNotAddressed;
         let output = check(&input);
         assert_eq!(
             output.severity,
@@ -410,7 +409,10 @@ mod tests {
         input.days_after_inspection_report_filed = 75;
         let output = check(&input);
         // 75 < 60 + 30 = 90 → within cure window
-        assert_eq!(output.severity, Severity::LateFilingWithinThirtyDayCureWindow);
+        assert_eq!(
+            output.severity,
+            Severity::LateFilingWithinThirtyDayCureWindow
+        );
         assert_eq!(output.estimated_civil_penalty_cents, 1_000_00);
     }
 

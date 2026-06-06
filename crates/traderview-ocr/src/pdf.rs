@@ -40,8 +40,11 @@ mod tests {
     #[test]
     fn empty_bytes_returns_pdf_error() {
         let r = extract_text(b"");
-        assert!(matches!(r, Err(OcrError::Pdf(_))),
-            "empty input should produce Pdf decode error, got: {:?}", r);
+        assert!(
+            matches!(r, Err(OcrError::Pdf(_))),
+            "empty input should produce Pdf decode error, got: {:?}",
+            r
+        );
     }
 
     /// Garbage bytes (not even close to PDF) — Pdf error.
@@ -79,13 +82,15 @@ mod tests {
         let resources_id = doc.add_object(dictionary! {
             "Font" => dictionary! { "F1" => font_id },
         });
-        let content = Content { operations: vec![
-            Operation::new("BT", vec![]),
-            Operation::new("Tf", vec!["F1".into(), 12.into()]),
-            Operation::new("Td", vec![100.into(), 700.into()]),
-            Operation::new("Tj", vec![Object::string_literal("Hello PDF World")]),
-            Operation::new("ET", vec![]),
-        ] };
+        let content = Content {
+            operations: vec![
+                Operation::new("BT", vec![]),
+                Operation::new("Tf", vec!["F1".into(), 12.into()]),
+                Operation::new("Td", vec![100.into(), 700.into()]),
+                Operation::new("Tj", vec![Object::string_literal("Hello PDF World")]),
+                Operation::new("ET", vec![]),
+            ],
+        };
         let content_id = doc.add_object(Stream::new(dictionary! {}, content.encode().unwrap()));
         let page_id = doc.add_object(dictionary! {
             "Type" => "Page",
@@ -109,8 +114,11 @@ mod tests {
         doc.save_to(&mut bytes).expect("save minimal pdf");
 
         let text = extract_text(&bytes).expect("extract should succeed");
-        assert!(text.contains("Hello PDF World"),
-            "extracted text must contain the embedded string, got: {:?}", text);
+        assert!(
+            text.contains("Hello PDF World"),
+            "extracted text must contain the embedded string, got: {:?}",
+            text
+        );
     }
 
     /// A valid PDF with NO text content (just an empty page) returns
@@ -143,7 +151,10 @@ mod tests {
 
         let text = extract_text(&bytes).expect("extract should succeed");
         // Empty or just a newline — caller treats either as NeedsImage.
-        assert!(text.trim().is_empty(),
-            "empty page should produce empty text, got: {:?}", text);
+        assert!(
+            text.trim().is_empty(),
+            "empty page should produce empty text, got: {:?}",
+            text
+        );
     }
 }

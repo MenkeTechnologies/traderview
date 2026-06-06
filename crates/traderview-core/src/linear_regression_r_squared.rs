@@ -18,15 +18,23 @@
 pub fn compute(closes: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = closes.len();
     let mut out = vec![None; n];
-    if period < 3 || n < period { return out; }
-    if closes.iter().any(|x| !x.is_finite()) { return out; }
+    if period < 3 || n < period {
+        return out;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     let p_f = period as f64;
     let x_mean = (p_f - 1.0) / 2.0;
-    let x_var: f64 = (0..period).map(|i| {
-        let dx = i as f64 - x_mean;
-        dx * dx
-    }).sum();
-    if x_var <= 0.0 { return out; }
+    let x_var: f64 = (0..period)
+        .map(|i| {
+            let dx = i as f64 - x_mean;
+            dx * dx
+        })
+        .sum();
+    if x_var <= 0.0 {
+        return out;
+    }
     for (i, slot) in out.iter_mut().enumerate().skip(period - 1) {
         let win = &closes[i + 1 - period..=i];
         let y_mean: f64 = win.iter().sum::<f64>() / p_f;
@@ -90,16 +98,18 @@ mod tests {
     #[test]
     fn noisy_data_yields_lower_r_squared() {
         let mut state: u64 = 42;
-        let c: Vec<f64> = (0..200).map(|i| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
-            100.0 + i as f64 * 0.1 + (r - 0.5) * 20.0
-        }).collect();
+        let c: Vec<f64> = (0..200)
+            .map(|i| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let r = (state >> 32) as u32 as f64 / u32::MAX as f64;
+                100.0 + i as f64 * 0.1 + (r - 0.5) * 20.0
+            })
+            .collect();
         let r = compute(&c, 20);
         let any_below_high = r.iter().flatten().any(|v| *v < 0.5);
-        assert!(any_below_high,
-            "noisy data should produce some R² < 0.5");
+        assert!(any_below_high, "noisy data should produce some R² < 0.5");
     }
 
     #[test]

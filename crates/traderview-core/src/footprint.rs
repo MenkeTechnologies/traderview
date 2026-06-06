@@ -61,7 +61,10 @@ pub struct FootprintReport {
 /// levels — e.g. 0.01 for stocks, 0.25 for ES futures.
 pub fn build(ticks: &[BarTick], tick_size: f64) -> FootprintReport {
     if tick_size <= 0.0 || ticks.is_empty() {
-        return FootprintReport { bars: vec![], tick_size };
+        return FootprintReport {
+            bars: vec![],
+            tick_size,
+        };
     }
     // Bin into bar → (price_bin → (bid_vol, ask_vol, total_vol)).
     let mut by_bar: BTreeMap<u32, BTreeMap<u64, (f64, f64)>> = BTreeMap::new();
@@ -70,11 +73,11 @@ pub fn build(ticks: &[BarTick], tick_size: f64) -> FootprintReport {
         let bar = by_bar.entry(t.bar_id).or_default();
         let cell = bar.entry(quantize(t.price)).or_insert((0.0, 0.0));
         match t.classified.side {
-            Side::Buy        => cell.1 += t.classified.volume,
-            Side::Sell       => cell.0 += t.classified.volume,
+            Side::Buy => cell.1 += t.classified.volume,
+            Side::Sell => cell.0 += t.classified.volume,
             // Uncertain ticks split 50/50 between bid and ask so the total
             // volume stays correct but the delta doesn't lie about direction.
-            Side::Uncertain  => {
+            Side::Uncertain => {
                 cell.0 += t.classified.volume * 0.5;
                 cell.1 += t.classified.volume * 0.5;
             }
@@ -91,10 +94,24 @@ pub fn build(ticks: &[BarTick], tick_size: f64) -> FootprintReport {
             let delta = ask - bid;
             total_vol += vol;
             total_delta += delta;
-            if vol > poc_volume { poc_volume = vol; poc_price = price; }
-            cells.push(FootprintCell { price, bid_volume: bid, ask_volume: ask, delta });
+            if vol > poc_volume {
+                poc_volume = vol;
+                poc_price = price;
+            }
+            cells.push(FootprintCell {
+                price,
+                bid_volume: bid,
+                ask_volume: ask,
+                delta,
+            });
         }
-        bars.push(FootprintBar { bar_id, cells, total_volume: total_vol, total_delta, poc_price });
+        bars.push(FootprintBar {
+            bar_id,
+            cells,
+            total_volume: total_vol,
+            total_delta,
+            poc_price,
+        });
     }
     FootprintReport { bars, tick_size }
 }
@@ -104,7 +121,11 @@ mod tests {
     use super::*;
 
     fn tick(bar_id: u32, price: f64, volume: f64, side: Side) -> BarTick {
-        BarTick { bar_id, price, classified: ClassifiedTick { volume, side } }
+        BarTick {
+            bar_id,
+            price,
+            classified: ClassifiedTick { volume, side },
+        }
     }
 
     #[test]
@@ -141,8 +162,12 @@ mod tests {
     fn poc_is_the_highest_volume_price_level() {
         // 1 tick @ 99.99, 5 ticks @ 100.00, 2 ticks @ 100.01 → POC = 100.00.
         let mut ticks = vec![tick(0, 99.99, 1.0, Side::Buy)];
-        for _ in 0..5 { ticks.push(tick(0, 100.00, 1.0, Side::Sell)); }
-        for _ in 0..2 { ticks.push(tick(0, 100.01, 1.0, Side::Buy));  }
+        for _ in 0..5 {
+            ticks.push(tick(0, 100.00, 1.0, Side::Sell));
+        }
+        for _ in 0..2 {
+            ticks.push(tick(0, 100.01, 1.0, Side::Buy));
+        }
         let r = build(&ticks, 0.01);
         assert!((r.bars[0].poc_price - 100.00).abs() < 1e-9);
     }

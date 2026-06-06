@@ -49,9 +49,12 @@ pub struct EarningsSurpriseReport {
 }
 
 pub fn compute(report: EarningsReport) -> Option<EarningsSurpriseReport> {
-    if !report.actual_eps.is_finite() || !report.consensus_eps.is_finite()
-        || !report.actual_revenue.is_finite() || !report.consensus_revenue.is_finite()
-        || !report.recent_revision_count.is_finite() {
+    if !report.actual_eps.is_finite()
+        || !report.consensus_eps.is_finite()
+        || !report.actual_revenue.is_finite()
+        || !report.consensus_revenue.is_finite()
+        || !report.recent_revision_count.is_finite()
+    {
         return None;
     }
     let eps_surprise = if report.consensus_eps.abs() > 0.0 {
@@ -77,11 +80,17 @@ pub fn compute(report: EarningsReport) -> Option<EarningsSurpriseReport> {
 }
 
 fn classify(score: f64) -> SurpriseClass {
-    if score >= 10.0 { SurpriseClass::StrongPositive }
-    else if score >= 2.0 { SurpriseClass::Positive }
-    else if score > -2.0 { SurpriseClass::Inline }
-    else if score > -10.0 { SurpriseClass::Negative }
-    else { SurpriseClass::StrongNegative }
+    if score >= 10.0 {
+        SurpriseClass::StrongPositive
+    } else if score >= 2.0 {
+        SurpriseClass::Positive
+    } else if score > -2.0 {
+        SurpriseClass::Inline
+    } else if score > -10.0 {
+        SurpriseClass::Negative
+    } else {
+        SurpriseClass::StrongNegative
+    }
 }
 
 #[cfg(test)]
@@ -90,8 +99,10 @@ mod tests {
 
     fn r(eps: f64, ceps: f64, rev: f64, crev: f64, rc: f64) -> EarningsReport {
         EarningsReport {
-            actual_eps: eps, consensus_eps: ceps,
-            actual_revenue: rev, consensus_revenue: crev,
+            actual_eps: eps,
+            consensus_eps: ceps,
+            actual_revenue: rev,
+            consensus_revenue: crev,
             recent_revision_count: rc,
         }
     }
@@ -122,8 +133,10 @@ mod tests {
     #[test]
     fn miss_classified_negative() {
         let rep = compute(r(0.5, 1.0, 90.0, 100.0, -2.0)).unwrap();
-        assert!(matches!(rep.classification,
-            SurpriseClass::Negative | SurpriseClass::StrongNegative));
+        assert!(matches!(
+            rep.classification,
+            SurpriseClass::Negative | SurpriseClass::StrongNegative
+        ));
     }
 
     #[test]

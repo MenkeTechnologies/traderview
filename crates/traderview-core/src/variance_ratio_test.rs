@@ -38,19 +38,28 @@ pub struct VarianceRatioReport {
 
 pub fn test(returns: &[f64], k: usize) -> Option<VarianceRatioReport> {
     let n = returns.len();
-    if k < 2 || n < k + 4 { return None; }
-    if returns.iter().any(|x| !x.is_finite()) { return None; }
+    if k < 2 || n < k + 4 {
+        return None;
+    }
+    if returns.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     // Reject truly flat input: float roundoff can produce tiny sample
     // variance even when all values are identical.
-    let (mn, mx) = returns.iter().fold(
-        (f64::INFINITY, f64::NEG_INFINITY),
-        |(a, b), x| (a.min(*x), b.max(*x)),
-    );
-    if mx - mn <= 0.0 { return None; }
+    let (mn, mx) = returns
+        .iter()
+        .fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), x| {
+            (a.min(*x), b.max(*x))
+        });
+    if mx - mn <= 0.0 {
+        return None;
+    }
     let n_f = n as f64;
     let mu: f64 = returns.iter().sum::<f64>() / n_f;
     let var_1: f64 = returns.iter().map(|x| (x - mu).powi(2)).sum::<f64>() / (n_f - 1.0);
-    if var_1 <= 0.0 { return None; }
+    if var_1 <= 0.0 {
+        return None;
+    }
     // k-period overlapping returns: r^k_t = Σ_{i=0..k-1} r_{t-i}.
     let mut sum_sq = 0.0_f64;
     let mut count = 0_usize;
@@ -62,7 +71,11 @@ pub fn test(returns: &[f64], k: usize) -> Option<VarianceRatioReport> {
     let var_k = sum_sq / count as f64;
     let vr = var_k / (k as f64 * var_1);
     // Heteroskedasticity-robust φ(k).
-    let denom_sq: f64 = returns.iter().map(|x| (x - mu).powi(2)).sum::<f64>().powi(2);
+    let denom_sq: f64 = returns
+        .iter()
+        .map(|x| (x - mu).powi(2))
+        .sum::<f64>()
+        .powi(2);
     let mut phi = 0.0_f64;
     for j in 1..k {
         let w = (2.0 * (k - j) as f64 / k as f64).powi(2);
@@ -73,7 +86,9 @@ pub fn test(returns: &[f64], k: usize) -> Option<VarianceRatioReport> {
         let delta = n_f * num / denom_sq;
         phi += w * delta;
     }
-    if phi <= 0.0 { return None; }
+    if phi <= 0.0 {
+        return None;
+    }
     let z = (vr - 1.0) / phi.sqrt();
     let p_two = 2.0 * (1.0 - standard_normal_cdf(z.abs())).clamp(0.0, 1.0);
     Some(VarianceRatioReport {
@@ -94,8 +109,11 @@ fn erf(x: f64) -> f64 {
     let sign = if x < 0.0 { -1.0 } else { 1.0 };
     let x = x.abs();
     let t = 1.0 / (1.0 + 0.327_591_1 * x);
-    let y = 1.0 - (((((1.061_405_429 * t - 1.453_152_027) * t)
-        + 1.421_413_741) * t - 0.284_496_736) * t + 0.254_829_592) * t * (-x * x).exp();
+    let y = 1.0
+        - (((((1.061_405_429 * t - 1.453_152_027) * t) + 1.421_413_741) * t - 0.284_496_736) * t
+            + 0.254_829_592)
+            * t
+            * (-x * x).exp();
     sign * y
 }
 
@@ -105,15 +123,19 @@ mod tests {
 
     fn box_muller(n: usize, seed: u64) -> Vec<f64> {
         let mut state = seed;
-        (0..n).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u2 = (state >> 32) as f64 / u32::MAX as f64;
-            (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
-        }).collect()
+        (0..n)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u2 = (state >> 32) as f64 / u32::MAX as f64;
+                (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
+            })
+            .collect()
     }
 
     #[test]
@@ -140,10 +162,16 @@ mod tests {
         let r = box_muller(2000, 42);
         let result = test(&r, 4).unwrap();
         // VR(k) should be close to 1.
-        assert!((result.variance_ratio - 1.0).abs() < 0.20,
-            "RW VR = {}, expected near 1", result.variance_ratio);
-        assert!(!result.reject_at_5pct,
-            "shouldn't reject RW, z = {}", result.z_statistic_robust);
+        assert!(
+            (result.variance_ratio - 1.0).abs() < 0.20,
+            "RW VR = {}, expected near 1",
+            result.variance_ratio
+        );
+        assert!(
+            !result.reject_at_5pct,
+            "shouldn't reject RW, z = {}",
+            result.z_statistic_robust
+        );
     }
 
     #[test]
@@ -153,14 +181,18 @@ mod tests {
         let phi = 0.4_f64;
         let mut r = vec![0.0_f64; 1000];
         for i in 1..1000 {
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let eps = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 2.0;
             r[i] = phi * r[i - 1] + eps;
         }
         let result = test(&r, 4).unwrap();
-        assert!(result.variance_ratio > 1.0,
-            "AR(1) with positive φ should have VR > 1, got {}", result.variance_ratio);
+        assert!(
+            result.variance_ratio > 1.0,
+            "AR(1) with positive φ should have VR > 1, got {}",
+            result.variance_ratio
+        );
     }
 
     #[test]
@@ -169,14 +201,18 @@ mod tests {
         let phi = -0.4_f64;
         let mut r = vec![0.0_f64; 1000];
         for i in 1..1000 {
-            state = state.wrapping_mul(6364136223846793005)
+            state = state
+                .wrapping_mul(6364136223846793005)
                 .wrapping_add(1442695040888963407);
             let eps = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 2.0;
             r[i] = phi * r[i - 1] + eps;
         }
         let result = test(&r, 4).unwrap();
-        assert!(result.variance_ratio < 1.0,
-            "AR(1) with negative φ should have VR < 1, got {}", result.variance_ratio);
+        assert!(
+            result.variance_ratio < 1.0,
+            "AR(1) with negative φ should have VR < 1, got {}",
+            result.variance_ratio
+        );
     }
 
     #[test]

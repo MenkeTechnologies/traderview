@@ -142,7 +142,8 @@ pub fn check(input: &TenantRentReceiptRequirementInput) -> TenantRentReceiptRequ
     let (receipt_obligation_triggered, timing_compliant, content_compliant, retention_compliant) =
         match input.jurisdiction {
             Jurisdiction::NewYork => {
-                let non_personal_check = !matches!(input.payment_method, PaymentMethod::PersonalCheck);
+                let non_personal_check =
+                    !matches!(input.payment_method, PaymentMethod::PersonalCheck);
                 let obligation_triggered = non_personal_check
                     || (matches!(input.payment_method, PaymentMethod::PersonalCheck)
                         && input.tenant_requested_receipt);
@@ -170,9 +171,7 @@ pub fn check(input: &TenantRentReceiptRequirementInput) -> TenantRentReceiptRequ
                         input.days_since_payment
                     ));
                 }
-                if obligation_triggered
-                    && input.receipt_provided
-                    && !input.receipt_content_complete
+                if obligation_triggered && input.receipt_provided && !input.receipt_content_complete
                 {
                     failure_reasons.push(
                         "N.Y. Real Prop. Law § 235-e — required receipt content: (1) PAYMENT DATE; (2) AMOUNT; (3) PERIOD for which rent was paid; (4) APARTMENT NUMBER; (5) SIGNATURE of person receiving payment; (6) TITLE of person receiving payment".to_string(),
@@ -200,7 +199,10 @@ pub fn check(input: &TenantRentReceiptRequirementInput) -> TenantRentReceiptRequ
                         "Cal. Civ. Code § 1499 — upon TENANT REQUEST, landlord MUST provide a SIGNED AND DATED receipt; applies to all payment methods".to_string(),
                     );
                 }
-                if obligation_triggered && input.receipt_provided && !input.receipt_at_time_of_payment {
+                if obligation_triggered
+                    && input.receipt_provided
+                    && !input.receipt_at_time_of_payment
+                {
                     failure_reasons.push(
                         "Cal. Civ. Code § 1499 — receipt must be provided AT TIME OF PAYMENT (not year-end / not in lump sum at tax time)".to_string(),
                     );
@@ -227,8 +229,7 @@ pub fn check(input: &TenantRentReceiptRequirementInput) -> TenantRentReceiptRequ
             }
             Jurisdiction::Washington => {
                 let cash_payment = matches!(input.payment_method, PaymentMethod::Cash);
-                let obligation_triggered =
-                    cash_payment || input.tenant_requested_receipt;
+                let obligation_triggered = cash_payment || input.tenant_requested_receipt;
                 let timing = !obligation_triggered || input.receipt_provided;
                 let content = !obligation_triggered
                     || !input.receipt_provided
@@ -249,8 +250,8 @@ pub fn check(input: &TenantRentReceiptRequirementInput) -> TenantRentReceiptRequ
             Jurisdiction::Default => (false, true, true, true),
         };
 
-    let receipt_compliant =
-        !receipt_obligation_triggered || (timing_compliant && content_compliant && retention_compliant);
+    let receipt_compliant = !receipt_obligation_triggered
+        || (timing_compliant && content_compliant && retention_compliant);
 
     let notes: Vec<String> = vec![
         "N.Y. Real Prop. Law § 235-e — landlord must provide written receipt when rent paid by CASH OR MONEY ORDER OR CASHIER'S CHECK OR ANY FORM OTHER THAN tenant's personal check; in-person cash/money order = IMMEDIATE receipt; non-in-person = within 15 DAYS".to_string(),
@@ -309,8 +310,10 @@ mod tests {
         i.receipt_provided = false;
         let r = check(&i);
         assert!(!r.receipt_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 235-e")
-            && f.contains("IMMEDIATE WRITTEN RECEIPT")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 235-e") && f.contains("IMMEDIATE WRITTEN RECEIPT")));
     }
 
     #[test]
@@ -331,8 +334,10 @@ mod tests {
         i.days_since_payment = 20;
         let r = check(&i);
         assert!(!r.timing_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 235-e")
-            && f.contains("15 DAYS")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 235-e") && f.contains("15 DAYS")));
     }
 
     #[test]
@@ -394,8 +399,10 @@ mod tests {
         i.three_year_record_retention_maintained = false;
         let r = check(&i);
         assert!(!r.retention_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 235-e")
-            && f.contains("3 YEARS")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 235-e") && f.contains("3 YEARS")));
     }
 
     #[test]
@@ -424,8 +431,10 @@ mod tests {
         i.receipt_provided = false;
         let r = check(&i);
         assert!(!r.receipt_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 1499")
-            && f.contains("SIGNED AND DATED")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1499") && f.contains("SIGNED AND DATED")));
     }
 
     #[test]
@@ -468,8 +477,12 @@ mod tests {
         i.receipt_provided = false;
         let r = check(&i);
         assert!(!r.receipt_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("c. 186 § 15B")
-            && f.contains("LAST MONTH'S RENT at commencement")));
+        assert!(
+            r.failure_reasons
+                .iter()
+                .any(|f| f.contains("c. 186 § 15B")
+                    && f.contains("LAST MONTH'S RENT at commencement"))
+        );
     }
 
     #[test]
@@ -489,8 +502,10 @@ mod tests {
         i.receipt_provided = false;
         let r = check(&i);
         assert!(!r.receipt_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 59.18.063")
-            && f.contains("CASH")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 59.18.063") && f.contains("CASH")));
     }
 
     #[test]
@@ -583,27 +598,34 @@ mod tests {
     #[test]
     fn note_pins_ny_six_content_elements() {
         let r = check(&ny_cash_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("§ 235-e content requirements")
-            && n.contains("PAYMENT DATE")
-            && n.contains("AMOUNT")
-            && n.contains("PERIOD")
-            && n.contains("APARTMENT NUMBER")
-            && n.contains("SIGNATURE")
-            && n.contains("TITLE")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 235-e content requirements")
+                && n.contains("PAYMENT DATE")
+                && n.contains("AMOUNT")
+                && n.contains("PERIOD")
+                && n.contains("APARTMENT NUMBER")
+                && n.contains("SIGNATURE")
+                && n.contains("TITLE")));
     }
 
     #[test]
     fn note_pins_ny_personal_check_recurring() {
         let r = check(&ny_cash_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("§ 235-e PERSONAL CHECK")
-            && n.contains("EVERY MONTH thereafter")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 235-e PERSONAL CHECK") && n.contains("EVERY MONTH thereafter")));
     }
 
     #[test]
     fn note_pins_ny_3_year_retention() {
         let r = check(&ny_cash_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("§ 235-e RECORD RETENTION")
-            && n.contains("3 YEARS")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 235-e RECORD RETENTION") && n.contains("3 YEARS")));
     }
 
     #[test]
@@ -643,19 +665,25 @@ mod tests {
     #[test]
     fn note_pins_trader_landlord_modern_payment_methods() {
         let r = check(&ny_cash_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("Trader-landlord critical")
-            && n.contains("3-year NY")
-            && n.contains("Zelle, Venmo, ACH")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-landlord critical")
+                && n.contains("3-year NY")
+                && n.contains("Zelle, Venmo, ACH")));
     }
 
     #[test]
     fn note_pins_cross_jurisdictional_architecture() {
         let r = check(&ny_cash_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("Cross-jurisdictional architecture")
-            && n.contains("METHOD-TRIGGERED MANDATE")
-            && n.contains("REQUEST-TRIGGERED MANDATE")
-            && n.contains("LIMITED LAST-MONTH-ONLY MANDATE")
-            && n.contains("CASH-TRIGGERED")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Cross-jurisdictional architecture")
+                && n.contains("METHOD-TRIGGERED MANDATE")
+                && n.contains("REQUEST-TRIGGERED MANDATE")
+                && n.contains("LIMITED LAST-MONTH-ONLY MANDATE")
+                && n.contains("CASH-TRIGGERED")));
     }
 
     #[test]

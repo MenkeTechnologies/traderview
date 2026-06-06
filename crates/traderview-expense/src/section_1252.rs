@@ -301,7 +301,10 @@ mod tests {
             ..baseline_post_175_under_5_years()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1252Mode::NotApplicableHoldingPeriodOver10Years);
+        assert_eq!(
+            result.mode,
+            Section1252Mode::NotApplicableHoldingPeriodOver10Years
+        );
     }
 
     #[test]
@@ -311,7 +314,10 @@ mod tests {
             ..baseline_post_175_under_5_years()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1252Mode::NotApplicableNoSection175DeductionsAllowed);
+        assert_eq!(
+            result.mode,
+            Section1252Mode::NotApplicableNoSection175DeductionsAllowed
+        );
     }
 
     #[test]
@@ -327,7 +333,10 @@ mod tests {
     #[test]
     fn under_5_years_100_pct_compliant_full_recapture() {
         let result = compute(&baseline_post_175_under_5_years());
-        assert_eq!(result.mode, Section1252Mode::CompliantSection175DeductionsLessThanGainResidualCapital);
+        assert_eq!(
+            result.mode,
+            Section1252Mode::CompliantSection175DeductionsLessThanGainResidualCapital
+        );
         assert_eq!(result.applicable_percentage_basis_points, 10_000);
         assert_eq!(result.ordinary_income_recharacterized_dollars, 400_000);
         assert_eq!(result.remaining_capital_or_1231_gain_dollars, 600_000);
@@ -386,7 +395,10 @@ mod tests {
             ..baseline_post_175_under_5_years()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1252Mode::CompliantGainRecharacterizedAsOrdinaryFullSlidingScale);
+        assert_eq!(
+            result.mode,
+            Section1252Mode::CompliantGainRecharacterizedAsOrdinaryFullSlidingScale
+        );
         assert_eq!(result.ordinary_income_recharacterized_dollars, 1_000_000);
         assert_eq!(result.remaining_capital_or_1231_gain_dollars, 0);
     }
@@ -398,7 +410,10 @@ mod tests {
             ..baseline_post_175_under_5_years()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1252Mode::ViolationGainReportedAsCapitalDespiteSection1252);
+        assert_eq!(
+            result.mode,
+            Section1252Mode::ViolationGainReportedAsCapitalDespiteSection1252
+        );
     }
 
     #[test]
@@ -408,7 +423,10 @@ mod tests {
             ..baseline_post_175_under_5_years()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1252Mode::ViolationGainReportedAsCapitalDespiteSection1252);
+        assert_eq!(
+            result.mode,
+            Section1252Mode::ViolationGainReportedAsCapitalDespiteSection1252
+        );
     }
 
     #[test]
@@ -418,7 +436,10 @@ mod tests {
             ..baseline_post_175_under_5_years()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1252Mode::ViolationApplicableSlidingScalePercentageMisapplied);
+        assert_eq!(
+            result.mode,
+            Section1252Mode::ViolationApplicableSlidingScalePercentageMisapplied
+        );
     }
 
     #[test]

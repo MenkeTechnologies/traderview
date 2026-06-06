@@ -65,7 +65,9 @@ pub fn scan_universe_filtered(
     let mut scanned = 0usize;
     for (symbol, bars) in universe {
         scanned += 1;
-        let Some(mut hit) = stats_for(symbol, bars) else { continue };
+        let Some(mut hit) = stats_for(symbol, bars) else {
+            continue;
+        };
         // Apply every preset and collect labels for those that match.
         let matched: Vec<&'static str> = presets
             .iter()
@@ -133,7 +135,7 @@ mod tests {
     fn gapping_symbol_matches_premarket_gappers_preset() {
         let bars = vec![
             bar(100, 100, 95, 100, 1_000_000, 1),
-            bar(106, 110, 105, 108, 1_000_000, 2),    // 6% gap up
+            bar(106, 110, 105, 108, 1_000_000, 2), // 6% gap up
         ];
         let universe = vec![("GAP".to_string(), bars)];
         let r = scan_universe(&universe);
@@ -151,16 +153,13 @@ mod tests {
             bar(100, 101, 99, 100, 1_000_000, 2),
             bar(100, 101, 99, 100, 1_000_000, 3),
             bar(100, 101, 99, 100, 1_000_000, 4),
-            bar(106, 110, 105, 108, 3_000_000, 5),    // gap + volume + up
+            bar(106, 110, 105, 108, 3_000_000, 5), // gap + volume + up
         ];
         let b_bars = vec![
             bar(100, 100, 95, 100, 1_000_000, 1),
-            bar(100, 102, 99, 101, 1_000_000, 2),     // tiny up day
+            bar(100, 102, 99, 101, 1_000_000, 2), // tiny up day
         ];
-        let universe = vec![
-            ("SYM_A".to_string(), a_bars),
-            ("SYM_B".to_string(), b_bars),
-        ];
+        let universe = vec![("SYM_A".to_string(), a_bars), ("SYM_B".to_string(), b_bars)];
         let r = scan_universe(&universe);
         assert!(!r.hits.is_empty());
         // SYM_A's matched count should be >= SYM_B's; A should be first.
@@ -184,8 +183,14 @@ mod tests {
     #[test]
     fn total_symbols_scanned_counts_every_input_even_drops() {
         let universe = vec![
-            ("TOO_SHORT".to_string(), vec![bar(100, 100, 95, 100, 1000, 1)]),
-            ("ALSO_SHORT".to_string(), vec![bar(100, 100, 95, 100, 1000, 1)]),
+            (
+                "TOO_SHORT".to_string(),
+                vec![bar(100, 100, 95, 100, 1000, 1)],
+            ),
+            (
+                "ALSO_SHORT".to_string(),
+                vec![bar(100, 100, 95, 100, 1000, 1)],
+            ),
         ];
         let r = scan_universe(&universe);
         assert_eq!(r.total_symbols_scanned, 2);

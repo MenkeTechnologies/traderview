@@ -29,7 +29,9 @@ pub struct Bar {
 pub fn compute(bars: &[Bar]) -> Vec<Option<f64>> {
     let n = bars.len();
     let mut out = vec![None; n];
-    if n == 0 { return out; }
+    if n == 0 {
+        return out;
+    }
     let mut obv = 0.0_f64;
     out[0] = Some(0.0);
     for i in 1..n {
@@ -39,8 +41,11 @@ pub fn compute(bars: &[Bar]) -> Vec<Option<f64>> {
             out[i] = Some(obv);
             continue;
         }
-        if cur.close > prev.close { obv += cur.volume; }
-        else if cur.close < prev.close { obv -= cur.volume; }
+        if cur.close > prev.close {
+            obv += cur.volume;
+        } else if cur.close < prev.close {
+            obv -= cur.volume;
+        }
         out[i] = Some(obv);
     }
     out
@@ -50,7 +55,12 @@ pub fn compute(bars: &[Bar]) -> Vec<Option<f64>> {
 mod tests {
     use super::*;
 
-    fn b(c: f64, v: f64) -> Bar { Bar { close: c, volume: v } }
+    fn b(c: f64, v: f64) -> Bar {
+        Bar {
+            close: c,
+            volume: v,
+        }
+    }
 
     #[test]
     fn empty_returns_empty() {
@@ -94,10 +104,10 @@ mod tests {
     fn alternating_closes_cancel_with_equal_volume() {
         let bars = vec![
             b(100.0, 1000.0),
-            b(101.0, 1000.0),    // +1000
-            b(100.0, 1000.0),    // -1000
-            b(101.0, 1000.0),    // +1000
-            b(100.0, 1000.0),    // -1000
+            b(101.0, 1000.0), // +1000
+            b(100.0, 1000.0), // -1000
+            b(101.0, 1000.0), // +1000
+            b(100.0, 1000.0), // -1000
         ];
         let out = compute(&bars);
         assert_eq!(out[4].unwrap(), 0.0);
@@ -108,7 +118,7 @@ mod tests {
         let bars = vec![b(100.0, 1000.0), b(101.0, 1000.0), b(f64::NAN, 1000.0)];
         let out = compute(&bars);
         assert_eq!(out[1].unwrap(), 1000.0);
-        assert_eq!(out[2].unwrap(), 1000.0);    // NaN bar leaves OBV unchanged
+        assert_eq!(out[2].unwrap(), 1000.0); // NaN bar leaves OBV unchanged
     }
 
     #[test]

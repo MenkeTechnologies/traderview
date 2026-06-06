@@ -335,11 +335,10 @@ mod tests {
         assert!(r.de_minimis_applies);
         assert_eq!(r.statutory_market_discount_cents, 0);
         assert!(!r.is_market_discount_bond);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1278(a)(2)(C)") && n.contains("ZERO"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1278(a)(2)(C)") && n.contains("ZERO")));
     }
 
     #[test]
@@ -398,11 +397,10 @@ mod tests {
         let r = compute(&input(BondType::OID, 100_000, 85_000, 80_000, 5, false));
         assert_eq!(r.redemption_basis_for_calc_cents, 85_000);
         assert_eq!(r.raw_market_discount_cents, 5_000);
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1278(a)(2)(B)") && n.contains("revised issue price"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1278(a)(2)(B)") && n.contains("revised issue price")));
     }
 
     #[test]
@@ -483,16 +481,14 @@ mod tests {
         assert!(r.citation.contains("§ 1278(b)(1)"));
         assert!(r.citation.contains("§ 1278(b)(3)"));
         assert!(r.citation.contains("switched OFF"));
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1278(b)(1)") && n.contains("ACTIVE"))
-        );
-        assert!(
-            r.notes
-                .iter()
-                .any(|n| n.contains("§ 1278(b)(3)") && n.contains("IRREVOCABLE"))
-        );
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1278(b)(1)") && n.contains("ACTIVE")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1278(b)(3)") && n.contains("IRREVOCABLE")));
     }
 
     #[test]
@@ -536,7 +532,14 @@ mod tests {
     #[test]
     fn only_oid_uses_revised_issue_price_invariant() {
         // For Standard: redemption basis = face. For OID: revised.
-        let std = compute(&input(BondType::Standard, 100_000, 85_000, 80_000, 5, false));
+        let std = compute(&input(
+            BondType::Standard,
+            100_000,
+            85_000,
+            80_000,
+            5,
+            false,
+        ));
         let oid = compute(&input(BondType::OID, 100_000, 85_000, 80_000, 5, false));
         assert_eq!(std.redemption_basis_for_calc_cents, 100_000);
         assert_eq!(oid.redemption_basis_for_calc_cents, 85_000);

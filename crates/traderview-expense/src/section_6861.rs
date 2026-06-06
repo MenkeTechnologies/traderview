@@ -184,8 +184,8 @@ pub fn check(input: &Section6861Input) -> Section6861Result {
     }
 
     let review_request_timely = input.days_from_statement_to_review_request <= 30;
-    let judicial_review_timely = !input.judicial_review_filed
-        || input.days_from_trigger_to_judicial_review <= 90;
+    let judicial_review_timely =
+        !input.judicial_review_filed || input.days_from_trigger_to_judicial_review <= 90;
 
     if input.judicial_review_filed && !judicial_review_timely {
         failure_reasons.push(
@@ -481,8 +481,10 @@ mod tests {
     #[test]
     fn note_pins_section_g_abatement() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6861(g)")
-            && n.contains("ABATED")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6861(g)") && n.contains("ABATED")));
     }
 
     #[test]
@@ -496,15 +498,19 @@ mod tests {
     #[test]
     fn note_pins_7429_a1B_5_day_written_statement() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 7429(a)(1)(B)")
-            && n.contains("5 days")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7429(a)(1)(B)") && n.contains("5 days")));
     }
 
     #[test]
     fn note_pins_7429_a2_30_day_administrative_review() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 7429(a)(2)")
-            && n.contains("30 days")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7429(a)(2)") && n.contains("30 days")));
     }
 
     #[test]

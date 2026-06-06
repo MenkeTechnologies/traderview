@@ -28,24 +28,29 @@ pub fn compute(
 ) -> Option<SavitzkyGolayReport> {
     let n = series.len();
     // Window must be odd and at least 3; poly order must be < window.
-    if n < window || window < 3 || window.is_multiple_of(2_usize)
-        || polynomial_order >= window {
+    if n < window || window < 3 || window.is_multiple_of(2_usize) || polynomial_order >= window {
         return None;
     }
-    if series.iter().any(|x| !x.is_finite()) { return None; }
+    if series.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     // Standard Savitzky-Golay coefficients for cubic (order 3) smoothing.
     let coefs: Vec<f64> = match (window, polynomial_order) {
         (5, 3) => vec![-3.0, 12.0, 17.0, 12.0, -3.0],
         (7, 3) => vec![-2.0, 3.0, 6.0, 7.0, 6.0, 3.0, -2.0],
         (9, 3) => vec![-21.0, 14.0, 39.0, 54.0, 59.0, 54.0, 39.0, 14.0, -21.0],
-        (11, 3) => vec![-36.0, 9.0, 44.0, 69.0, 84.0, 89.0, 84.0, 69.0, 44.0, 9.0, -36.0],
+        (11, 3) => vec![
+            -36.0, 9.0, 44.0, 69.0, 84.0, 89.0, 84.0, 69.0, 44.0, 9.0, -36.0,
+        ],
         // Quadratic (order 2) shares cubic coefficients for symmetric smoothing.
         (5, 2) | (5, 1) => vec![-3.0, 12.0, 17.0, 12.0, -3.0],
         (7, 2) | (7, 1) => vec![-2.0, 3.0, 6.0, 7.0, 6.0, 3.0, -2.0],
         _ => return None,
     };
     let norm: f64 = coefs.iter().sum();
-    if norm <= 0.0 { return None; }
+    if norm <= 0.0 {
+        return None;
+    }
     let half = window / 2;
     let mut out = vec![None; n];
     for i in half..(n - half) {
@@ -70,8 +75,8 @@ mod tests {
     fn invalid_window_returns_none() {
         let s = vec![1.0_f64; 20];
         assert!(compute(&s, 2, 1).is_none());
-        assert!(compute(&s, 4, 1).is_none());    // even window
-        assert!(compute(&s, 5, 10).is_none());   // poly order >= window
+        assert!(compute(&s, 4, 1).is_none()); // even window
+        assert!(compute(&s, 5, 10).is_none()); // poly order >= window
     }
 
     #[test]
@@ -104,8 +109,12 @@ mod tests {
         // Interior points should match the linear trend.
         for (i, v) in r.smoothed.iter().enumerate().skip(3).take(24) {
             if let Some(vv) = v {
-                assert!((vv - s[i]).abs() < 1e-9,
-                    "at i={i}: smoothed {} vs input {}", vv, s[i]);
+                assert!(
+                    (vv - s[i]).abs() < 1e-9,
+                    "at i={i}: smoothed {} vs input {}",
+                    vv,
+                    s[i]
+                );
             }
         }
     }
@@ -113,11 +122,14 @@ mod tests {
     #[test]
     fn noisy_signal_smoothed_within_input_range() {
         let mut state: u64 = 42;
-        let s: Vec<f64> = (0..200).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            100.0 + ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 10.0
-        }).collect();
+        let s: Vec<f64> = (0..200)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                100.0 + ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 10.0
+            })
+            .collect();
         let r = compute(&s, 11, 3).unwrap();
         let in_min = s.iter().cloned().fold(f64::INFINITY, f64::min);
         let in_max = s.iter().cloned().fold(f64::NEG_INFINITY, f64::max);

@@ -370,7 +370,10 @@ mod tests {
         assert!(out.citations.iter().any(|c| c.contains("§ 1.446-1")));
         assert!(out.citations.iter().any(|c| c.contains("§ 1.446-1(a)(2)")));
         assert!(out.citations.iter().any(|c| c.contains("Form 3115")));
-        assert!(out.citations.iter().any(|c| c.contains("Rev. Proc. 2024-23")));
+        assert!(out
+            .citations
+            .iter()
+            .any(|c| c.contains("Rev. Proc. 2024-23")));
     }
 
     #[test]

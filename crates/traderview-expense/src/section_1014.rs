@@ -337,7 +337,10 @@ mod tests {
         i.fmv_at_alternate_valuation_date = Some(dec!(75_000));
         let r = compute(&i);
         assert_eq!(r.heirs_basis, dec!(75_000));
-        assert_eq!(r.rule_applied, Section1014Rule::AlternateValuationDateStepUp);
+        assert_eq!(
+            r.rule_applied,
+            Section1014Rule::AlternateValuationDateStepUp
+        );
         assert_eq!(r.valuation_used, ValuationUsed::AlternateValuationDate);
         assert!(!r.alternate_valuation_election_invalid_fallback);
     }

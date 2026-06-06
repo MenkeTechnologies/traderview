@@ -178,7 +178,8 @@ pub fn check(input: &Input) -> Output {
              non-refundable registration fee. Booking platforms PROHIBITED from processing \
              transactions for unregistered units per LL18 enforcement framework. STR listings \
              in NYC plunged > 90% post-effective date.",
-            NYC_LL18_EFFECTIVE_DATE, NYC_REGISTRATION_FEE_CENTS / 100
+            NYC_LL18_EFFECTIVE_DATE,
+            NYC_REGISTRATION_FEE_CENTS / 100
         ));
     } else if (matches!(input.jurisdiction, Jurisdiction::NewYorkCity)
         || matches!(input.jurisdiction, Jurisdiction::LosAngeles)
@@ -257,7 +258,8 @@ pub fn check(input: &Input) -> Output {
                  Booking platforms (Airbnb, VRBO, Booking.com) PROHIBITED from processing \
                  transactions for unregistered units; listings plunged greater than 90% \
                  post-effective date per Brick Underground tracking.",
-                NYC_LL18_EFFECTIVE_DATE, NYC_REGISTRATION_FEE_CENTS / 100
+                NYC_LL18_EFFECTIVE_DATE,
+                NYC_REGISTRATION_FEE_CENTS / 100
             ));
         }
         Jurisdiction::LosAngeles => {
@@ -332,9 +334,7 @@ pub fn check(input: &Input) -> Output {
         Severity::PrimaryResidenceRequirementViolated
         | Severity::MunicipalStrRegistrationMissing
         | Severity::AnnualNightCapExceeded
-        | Severity::RoomOccupancyExciseTaxNotCollected => {
-            input.annual_rent_cents.saturating_div(2)
-        }
+        | Severity::RoomOccupancyExciseTaxNotCollected => input.annual_rent_cents.saturating_div(2),
         _ => 0,
     };
 
@@ -403,7 +403,10 @@ mod tests {
         i.str_status = StrStatus::OperatingWithoutLandlordConsent;
         i.lease_term = LeaseTerm::ExplicitNoSublettingAirbnbClause;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::LeaseBreachUnauthorizedSublet));
+        assert!(matches!(
+            r.severity,
+            Severity::LeaseBreachUnauthorizedSublet
+        ));
         assert_eq!(r.annual_rent_at_risk_cents, i.annual_rent_cents);
         assert_eq!(
             r.estimated_str_revenue_disgorgement_cents,
@@ -416,7 +419,10 @@ mod tests {
         let mut i = baseline();
         i.municipal_registration_obtained = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::MunicipalStrRegistrationMissing));
+        assert!(matches!(
+            r.severity,
+            Severity::MunicipalStrRegistrationMissing
+        ));
         assert!(r.recommended_actions.iter().any(|a| a.contains("LL18")));
         assert_eq!(r.registration_fee_cents, NYC_REGISTRATION_FEE_CENTS);
     }
@@ -426,7 +432,10 @@ mod tests {
         let mut i = baseline();
         i.host_primary_residence_at_least_183_days = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::PrimaryResidenceRequirementViolated));
+        assert!(matches!(
+            r.severity,
+            Severity::PrimaryResidenceRequirementViolated
+        ));
         assert!(r.recommended_actions.iter().any(|a| a.contains("183")));
     }
 
@@ -482,10 +491,19 @@ mod tests {
         i.jurisdiction = Jurisdiction::Boston;
         i.room_occupancy_excise_tax_collected_and_remitted = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::RoomOccupancyExciseTaxNotCollected));
+        assert!(matches!(
+            r.severity,
+            Severity::RoomOccupancyExciseTaxNotCollected
+        ));
         assert!(r.recommended_actions.iter().any(|a| a.contains("5.7%")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Mass. Gen. Laws ch. 64G")));
-        assert!(r.recommended_actions.iter().any(|a| a.contains("Form ST-7")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Mass. Gen. Laws ch. 64G")));
+        assert!(r
+            .recommended_actions
+            .iter()
+            .any(|a| a.contains("Form ST-7")));
     }
 
     #[test]
@@ -523,7 +541,10 @@ mod tests {
         i.jurisdiction = Jurisdiction::Boston;
         let r = check(&i);
         assert!(r.notes.iter().any(|n| n.contains("Boston Ord. § 9-14")));
-        assert!(r.notes.iter().any(|n| n.contains("Mass. Gen. Laws ch. 64G")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Mass. Gen. Laws ch. 64G")));
         assert!(r.notes.iter().any(|n| n.contains("Cape Cod")));
         assert!(r.notes.iter().any(|n| n.contains("2.75%")));
     }
@@ -533,15 +554,24 @@ mod tests {
         let mut i = baseline();
         i.jurisdiction = Jurisdiction::Default;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("transient occupancy tax")));
-        assert!(r.notes.iter().any(|n| n.contains("Common-law lease assignment")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("transient occupancy tax")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Common-law lease assignment")));
     }
 
     #[test]
     fn coordination_note_references_siblings() {
         let i = baseline();
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("rental_lease_guarantor_disclosure")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("rental_lease_guarantor_disclosure")));
         assert!(r
             .notes
             .iter()
@@ -614,11 +644,31 @@ mod tests {
 
     #[test]
     fn citation_branch_for_each_jurisdiction() {
-        let nyc = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::NewYorkCity; i });
-        let la = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::LosAngeles; i });
-        let sf = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::SanFrancisco; i });
-        let bos = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Boston; i });
-        let de = check(&{ let mut i = baseline(); i.jurisdiction = Jurisdiction::Default; i });
+        let nyc = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::NewYorkCity;
+            i
+        });
+        let la = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::LosAngeles;
+            i
+        });
+        let sf = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::SanFrancisco;
+            i
+        });
+        let bos = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Boston;
+            i
+        });
+        let de = check(&{
+            let mut i = baseline();
+            i.jurisdiction = Jurisdiction::Default;
+            i
+        });
         assert!(nyc.citation.contains("LL18"));
         assert!(la.citation.contains("LAMC"));
         assert!(sf.citation.contains("Ch. 41A"));
@@ -633,7 +683,10 @@ mod tests {
         i.lease_term = LeaseTerm::ExplicitNoSublettingAirbnbClause;
         i.municipal_registration_obtained = false;
         let r = check(&i);
-        assert!(matches!(r.severity, Severity::LeaseBreachUnauthorizedSublet));
+        assert!(matches!(
+            r.severity,
+            Severity::LeaseBreachUnauthorizedSublet
+        ));
     }
 
     #[test]

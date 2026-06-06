@@ -20,10 +20,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct VasicekParams {
-    pub kappa: f64,    // mean-reversion speed
-    pub theta: f64,    // long-run mean rate
-    pub sigma: f64,    // volatility of short rate
-    pub r0: f64,       // current short rate
+    pub kappa: f64, // mean-reversion speed
+    pub theta: f64, // long-run mean rate
+    pub sigma: f64, // volatility of short rate
+    pub r0: f64,    // current short rate
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
@@ -35,11 +35,14 @@ pub struct VasicekZcb {
 }
 
 pub fn zero_coupon_bond(params: &VasicekParams, tenor: f64) -> Option<VasicekZcb> {
-    if !params.kappa.is_finite() || params.kappa <= 0.0
+    if !params.kappa.is_finite()
+        || params.kappa <= 0.0
         || !params.theta.is_finite()
-        || !params.sigma.is_finite() || params.sigma < 0.0
+        || !params.sigma.is_finite()
+        || params.sigma < 0.0
         || !params.r0.is_finite()
-        || !tenor.is_finite() || tenor <= 0.0
+        || !tenor.is_finite()
+        || tenor <= 0.0
     {
         return None;
     }
@@ -49,18 +52,27 @@ pub fn zero_coupon_bond(params: &VasicekParams, tenor: f64) -> Option<VasicekZcb
     let r0 = params.r0;
     let b = (1.0 - (-k * tenor).exp()) / k;
     let sigma2 = sigma * sigma;
-    let a = (b - tenor) * (k * k * theta - sigma2 / 2.0) / (k * k)
-        - sigma2 * b * b / (4.0 * k);
+    let a = (b - tenor) * (k * k * theta - sigma2 / 2.0) / (k * k) - sigma2 * b * b / (4.0 * k);
     let price = (a - b * r0).exp();
-    if !price.is_finite() || price <= 0.0 { return None; }
+    if !price.is_finite() || price <= 0.0 {
+        return None;
+    }
     let zero_rate = -price.ln() / tenor;
-    Some(VasicekZcb { bond_price: price, zero_rate, a_factor: a, b_factor: b })
+    Some(VasicekZcb {
+        bond_price: price,
+        zero_rate,
+        a_factor: a,
+        b_factor: b,
+    })
 }
 
 /// Generate a full zero-curve over a vector of tenors. Skips tenors
 /// that fail validation (returns None at those positions).
 pub fn zero_curve(params: &VasicekParams, tenors: &[f64]) -> Vec<Option<VasicekZcb>> {
-    tenors.iter().map(|t| zero_coupon_bond(params, *t)).collect()
+    tenors
+        .iter()
+        .map(|t| zero_coupon_bond(params, *t))
+        .collect()
 }
 
 #[cfg(test)]
@@ -68,7 +80,12 @@ mod tests {
     use super::*;
 
     fn p(k: f64, theta: f64, sigma: f64, r0: f64) -> VasicekParams {
-        VasicekParams { kappa: k, theta, sigma, r0 }
+        VasicekParams {
+            kappa: k,
+            theta,
+            sigma,
+            r0,
+        }
     }
 
     #[test]
@@ -122,8 +139,12 @@ mod tests {
 
     #[test]
     fn b_factor_increases_with_tenor() {
-        let b1 = zero_coupon_bond(&p(0.5, 0.04, 0.01, 0.03), 1.0).unwrap().b_factor;
-        let b5 = zero_coupon_bond(&p(0.5, 0.04, 0.01, 0.03), 5.0).unwrap().b_factor;
+        let b1 = zero_coupon_bond(&p(0.5, 0.04, 0.01, 0.03), 1.0)
+            .unwrap()
+            .b_factor;
+        let b5 = zero_coupon_bond(&p(0.5, 0.04, 0.01, 0.03), 5.0)
+            .unwrap()
+            .b_factor;
         assert!(b5 > b1);
     }
 

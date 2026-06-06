@@ -112,9 +112,15 @@ pub fn check(input: &DepositInterestStatementInput) -> DepositInterestStatementR
     let mut damages_multiplier = 1;
 
     match input.regime {
-        Regime::Massachusetts => check_massachusetts(input, &mut violations, &mut notes, &mut damages_multiplier),
-        Regime::NewJersey => check_new_jersey(input, &mut violations, &mut notes, &mut damages_multiplier),
-        Regime::Chicago => check_chicago(input, &mut violations, &mut notes, &mut damages_multiplier),
+        Regime::Massachusetts => {
+            check_massachusetts(input, &mut violations, &mut notes, &mut damages_multiplier)
+        }
+        Regime::NewJersey => {
+            check_new_jersey(input, &mut violations, &mut notes, &mut damages_multiplier)
+        }
+        Regime::Chicago => {
+            check_chicago(input, &mut violations, &mut notes, &mut damages_multiplier)
+        }
         Regime::NewYork => check_new_york(input, &mut violations, &mut notes),
         Regime::Default => check_default(input, &mut notes),
     }
@@ -138,12 +144,14 @@ fn check_massachusetts(
         }
         if !input.statement_includes_account_number {
             violations.push(
-                "Mass. G.L. c. 186 § 15B(2)(c)(ii) — annual statement must include account number".to_string(),
+                "Mass. G.L. c. 186 § 15B(2)(c)(ii) — annual statement must include account number"
+                    .to_string(),
             );
         }
         if !input.statement_includes_deposit_amount {
             violations.push(
-                "Mass. G.L. c. 186 § 15B(2)(c)(ii) — annual statement must include deposit amount".to_string(),
+                "Mass. G.L. c. 186 § 15B(2)(c)(ii) — annual statement must include deposit amount"
+                    .to_string(),
             );
         }
         if !input.statement_includes_interest_amount {
@@ -197,19 +205,16 @@ fn check_new_jersey(
         );
     } else {
         if !input.statement_includes_deposit_amount {
-            violations.push(
-                "N.J.S.A. 46:8-19(c) — statement must include deposit amount".to_string(),
-            );
+            violations
+                .push("N.J.S.A. 46:8-19(c) — statement must include deposit amount".to_string());
         }
         if !input.statement_includes_interest_amount {
-            violations.push(
-                "N.J.S.A. 46:8-19(c) — statement must include interest amount".to_string(),
-            );
+            violations
+                .push("N.J.S.A. 46:8-19(c) — statement must include interest amount".to_string());
         }
         if !input.statement_provided_within_timeframe {
-            violations.push(
-                "N.J.S.A. 46:8-19(c) — statement must be provided annually".to_string(),
-            );
+            violations
+                .push("N.J.S.A. 46:8-19(c) — statement must be provided annually".to_string());
         }
     }
 
@@ -220,7 +225,8 @@ fn check_new_jersey(
     if !violations.is_empty() && input.willful_violation {
         *damages_multiplier = 2;
         notes.push(
-            "N.J.S.A. 46:8-21.1 — willful failure triggers DOUBLE damages plus attorney fees".to_string(),
+            "N.J.S.A. 46:8-21.1 — willful failure triggers DOUBLE damages plus attorney fees"
+                .to_string(),
         );
     }
 
@@ -256,7 +262,8 @@ fn check_chicago(
         }
         if !input.statement_explains_interest_calculation {
             violations.push(
-                "Chicago RLTO § 5-12-080(c) — statement must explain how interest was calculated".to_string(),
+                "Chicago RLTO § 5-12-080(c) — statement must explain how interest was calculated"
+                    .to_string(),
             );
         }
         if !input.statement_provided_within_timeframe {
@@ -413,7 +420,10 @@ mod tests {
         i.annual_statement_provided = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 15B(2)(c)(ii)") && v.contains("annual statement")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 15B(2)(c)(ii)") && v.contains("annual statement")));
     }
 
     #[test]
@@ -431,7 +441,10 @@ mod tests {
         i.statement_includes_bank_name_address = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("bank name AND address")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("bank name AND address")));
     }
 
     #[test]
@@ -456,7 +469,10 @@ mod tests {
         i.statement_provided_within_timeframe = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("AT END of each year")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("AT END of each year")));
     }
 
     #[test]
@@ -465,7 +481,10 @@ mod tests {
         i.ma_interest_payment_or_deduction_option_provided = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 15B(2)(c)") && v.contains("PAY the interest")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 15B(2)(c)") && v.contains("PAY the interest")));
     }
 
     #[test]
@@ -475,13 +494,19 @@ mod tests {
         i.willful_violation = true;
         let r = check(&i);
         assert_eq!(r.damages_multiplier, 3);
-        assert!(r.notes.iter().any(|n| n.contains("§ 15B(7)") && n.contains("TRIPLE damages")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 15B(7)") && n.contains("TRIPLE damages")));
     }
 
     #[test]
     fn ma_5_percent_rate_note_always_present() {
         let r = check(&ma_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 15B(2)(b)") && n.contains("5%")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 15B(2)(b)") && n.contains("5%")));
     }
 
     #[test]
@@ -496,7 +521,10 @@ mod tests {
         i.annual_statement_provided = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("46:8-19(c)") && v.contains("annual")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("46:8-19(c)") && v.contains("annual")));
     }
 
     #[test]
@@ -506,13 +534,19 @@ mod tests {
         i.willful_violation = true;
         let r = check(&i);
         assert_eq!(r.damages_multiplier, 2);
-        assert!(r.notes.iter().any(|n| n.contains("46:8-21.1") && n.contains("DOUBLE damages")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("46:8-21.1") && n.contains("DOUBLE damages")));
     }
 
     #[test]
     fn nj_1_percent_admin_cost_note_present() {
         let r = check(&nj_base());
-        assert!(r.notes.iter().any(|n| n.contains("1% of interest as administrative cost")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("1% of interest as administrative cost")));
     }
 
     #[test]
@@ -527,7 +561,10 @@ mod tests {
         i.statement_explains_interest_calculation = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("how interest was calculated")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("how interest was calculated")));
     }
 
     #[test]
@@ -546,20 +583,29 @@ mod tests {
         i.willful_violation = true;
         let r = check(&i);
         assert_eq!(r.damages_multiplier, 2);
-        assert!(r.notes.iter().any(|n| n.contains("§ 5-12-080(f)") && n.contains("DOUBLE")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 5-12-080(f)") && n.contains("DOUBLE")));
     }
 
     #[test]
     fn ny_trust_fund_note_always_present() {
         let r = check(&ny_base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 7-103") && n.contains("TRUST FUND")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 7-103") && n.contains("TRUST FUND")));
     }
 
     #[test]
     fn ny_no_annual_statement_requirement_compliant_with_initial_disclosure() {
         let r = check(&ny_base());
         assert!(r.compliant);
-        assert!(r.notes.iter().any(|n| n.contains("no statutory ANNUAL statement requirement")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("no statutory ANNUAL statement requirement")));
     }
 
     #[test]
@@ -568,7 +614,10 @@ mod tests {
         i.statement_includes_bank_name_address = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 7-103(2)") && v.contains("6+ unit")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 7-103(2)") && v.contains("6+ unit")));
     }
 
     #[test]
@@ -598,13 +647,26 @@ mod tests {
         let r_ma = check(&i_ma);
         assert!(!r_ma.compliant);
 
-        for regime in [Regime::NewJersey, Regime::Chicago, Regime::NewYork, Regime::Default] {
+        for regime in [
+            Regime::NewJersey,
+            Regime::Chicago,
+            Regime::NewYork,
+            Regime::Default,
+        ] {
             let mut i = ma_base();
             i.regime = regime;
             i.statement_includes_account_number = false;
             let r = check(&i);
-            let account_violations: Vec<_> = r.violations.iter().filter(|v| v.contains("account number")).collect();
-            assert!(account_violations.is_empty(), "regime {:?} does not require account number disclosure", regime);
+            let account_violations: Vec<_> = r
+                .violations
+                .iter()
+                .filter(|v| v.contains("account number"))
+                .collect();
+            assert!(
+                account_violations.is_empty(),
+                "regime {:?} does not require account number disclosure",
+                regime
+            );
         }
     }
 
@@ -615,7 +677,12 @@ mod tests {
         let r_chicago = check(&i_chicago);
         assert!(!r_chicago.compliant);
 
-        for regime in [Regime::Massachusetts, Regime::NewJersey, Regime::NewYork, Regime::Default] {
+        for regime in [
+            Regime::Massachusetts,
+            Regime::NewJersey,
+            Regime::NewYork,
+            Regime::Default,
+        ] {
             let mut i = chicago_base();
             i.regime = regime;
             i.statement_explains_interest_calculation = false;
@@ -623,8 +690,16 @@ mod tests {
             i.statement_includes_account_number = true;
             i.ma_interest_payment_or_deduction_option_provided = true;
             let r = check(&i);
-            let calc_violations: Vec<_> = r.violations.iter().filter(|v| v.contains("how interest was calculated")).collect();
-            assert!(calc_violations.is_empty(), "regime {:?} does not require calculation explanation", regime);
+            let calc_violations: Vec<_> = r
+                .violations
+                .iter()
+                .filter(|v| v.contains("how interest was calculated"))
+                .collect();
+            assert!(
+                calc_violations.is_empty(),
+                "regime {:?} does not require calculation explanation",
+                regime
+            );
         }
     }
 
@@ -645,7 +720,11 @@ mod tests {
             i.statement_explains_interest_calculation = true;
             i.ma_interest_payment_or_deduction_option_provided = true;
             let r = check(&i);
-            assert_eq!(r.damages_multiplier, expected_multiplier, "regime {:?}", regime);
+            assert_eq!(
+                r.damages_multiplier, expected_multiplier,
+                "regime {:?}",
+                regime
+            );
         }
     }
 

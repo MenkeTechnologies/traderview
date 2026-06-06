@@ -28,8 +28,12 @@ pub struct Report {
 pub fn compute(a: &[f64], b: &[f64], band_radius: usize) -> Option<Report> {
     let n = a.len();
     let m = b.len();
-    if n == 0 || m == 0 { return None; }
-    if a.iter().chain(b.iter()).any(|x| !x.is_finite()) { return None; }
+    if n == 0 || m == 0 {
+        return None;
+    }
+    if a.iter().chain(b.iter()).any(|x| !x.is_finite()) {
+        return None;
+    }
     let r = band_radius.max(n.abs_diff(m));
     let inf = f64::INFINITY;
     let mut d = vec![vec![inf; m]; n];
@@ -43,15 +47,23 @@ pub fn compute(a: &[f64], b: &[f64], band_radius: usize) -> Option<Report> {
                 0.0
             } else {
                 let mut m1 = inf;
-                if i > 0 { m1 = m1.min(d[i - 1][j]); }
-                if j > 0 { m1 = m1.min(d[i][j - 1]); }
-                if i > 0 && j > 0 { m1 = m1.min(d[i - 1][j - 1]); }
+                if i > 0 {
+                    m1 = m1.min(d[i - 1][j]);
+                }
+                if j > 0 {
+                    m1 = m1.min(d[i][j - 1]);
+                }
+                if i > 0 && j > 0 {
+                    m1 = m1.min(d[i - 1][j - 1]);
+                }
                 m1
             };
             d[i][j] = cost + prev;
         }
     }
-    if !d[n - 1][m - 1].is_finite() { return None; }
+    if !d[n - 1][m - 1].is_finite() {
+        return None;
+    }
     let distance = d[n - 1][m - 1];
     // Backtrack.
     let mut path = Vec::new();
@@ -63,7 +75,8 @@ pub fn compute(a: &[f64], b: &[f64], band_radius: usize) -> Option<Report> {
         let left = if j > 0 { d[i][j - 1] } else { inf };
         let diag = if i > 0 && j > 0 { d[i - 1][j - 1] } else { inf };
         if diag <= up && diag <= left {
-            i -= 1; j -= 1;
+            i -= 1;
+            j -= 1;
         } else if up <= left {
             i -= 1;
         } else {

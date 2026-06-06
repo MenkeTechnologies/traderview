@@ -135,8 +135,7 @@ pub fn compute(input: &DispositionInput) -> DispositionReport {
         .min(r.realized_gain)
         .max(Decimal::ZERO);
     r.section_1231_ltcg_gain = r.realized_gain - r.section_1250_unrecaptured_gain;
-    r.max_section_1250_tax_estimate =
-        r.section_1250_unrecaptured_gain * max_section_1250_rate();
+    r.max_section_1250_tax_estimate = r.section_1250_unrecaptured_gain * max_section_1250_rate();
 
     match &input.like_kind_exchange {
         None => {
@@ -162,8 +161,8 @@ pub fn compute(input: &DispositionInput) -> DispositionReport {
             let boot_paid = (ex.replacement_property_value
                 - (r.amount_realized - ex.boot_received))
                 .max(Decimal::ZERO);
-            r.replacement_basis = r.adjusted_basis + boot_paid - ex.boot_received
-                + r.gain_recognized_this_year;
+            r.replacement_basis =
+                r.adjusted_basis + boot_paid - ex.boot_received + r.gain_recognized_this_year;
 
             r.note = format!(
                 "§1031 exchange: ${} deferred, ${} recognized as boot, replacement basis ${}",
@@ -356,8 +355,10 @@ mod tests {
     #[test]
     fn max_section_1250_tax_estimate_is_25_pct_of_unrecaptured() {
         let r = compute(&base_sale());
-        assert_eq!(r.max_section_1250_tax_estimate,
-                   r.section_1250_unrecaptured_gain * dec!(0.25));
+        assert_eq!(
+            r.max_section_1250_tax_estimate,
+            r.section_1250_unrecaptured_gain * dec!(0.25)
+        );
     }
 
     #[test]

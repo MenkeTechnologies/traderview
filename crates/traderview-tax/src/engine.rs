@@ -73,7 +73,9 @@ pub struct Itemized {
 impl Itemized {
     pub fn total(&self) -> Decimal {
         self.medical_over_7_5_pct_agi
-            + self.state_and_local_taxes_capped_at_10k.min(Decimal::from(10_000))
+            + self
+                .state_and_local_taxes_capped_at_10k
+                .min(Decimal::from(10_000))
             + self.mortgage_interest
             + self.charitable_gifts
             + self.casualty_losses
@@ -123,7 +125,7 @@ pub struct TaxResult {
     pub adjustments_total: Decimal,
     pub agi: Decimal,
     pub deduction_used: Decimal,
-    pub deduction_label: String,   // "standard" | "itemized"
+    pub deduction_label: String, // "standard" | "itemized"
     pub qbi_deduction: Decimal,
     pub qbi_needs_manual_review: bool,
     pub taxable_income: Decimal,
@@ -144,7 +146,11 @@ pub fn compute(r: &TaxReturn) -> TaxResult {
     let w2_wages: Decimal = r.w2s.iter().map(|w| w.box_1_wages).sum();
     let w2_ss_wages: Decimal = r.w2s.iter().map(|w| w.box_3_ss_wages).sum();
     let w2_medicare_wages: Decimal = r.w2s.iter().map(|w| w.box_5_medicare_wages).sum();
-    let w2_fed_withheld: Decimal = r.w2s.iter().map(|w| w.box_2_federal_income_tax_withheld).sum();
+    let w2_fed_withheld: Decimal = r
+        .w2s
+        .iter()
+        .map(|w| w.box_2_federal_income_tax_withheld)
+        .sum();
 
     result.total_income = w2_wages
         + r.interest_income
@@ -155,7 +161,12 @@ pub fn compute(r: &TaxReturn) -> TaxResult {
         + r.other_income;
 
     // ── 2) Adjustments → AGI ───────────────────────────────────────────
-    let se = se_tax::compute(r.schedule_c.net_profit, w2_ss_wages, w2_medicare_wages, r.status);
+    let se = se_tax::compute(
+        r.schedule_c.net_profit,
+        w2_ss_wages,
+        w2_medicare_wages,
+        r.status,
+    );
     result.se_tax = se;
 
     result.adjustments_total = se.above_line_deduction
@@ -194,8 +205,8 @@ pub fn compute(r: &TaxReturn) -> TaxResult {
 
     // ── 5) Taxable income → bracket tax ────────────────────────────────
     result.taxable_income = (ti_before_qbi - result.qbi_deduction).max(Decimal::ZERO);
-    result.ordinary_tax = brackets::ordinary_income_tax(result.taxable_income, r.status)
-        .round_dp(2);
+    result.ordinary_tax =
+        brackets::ordinary_income_tax(result.taxable_income, r.status).round_dp(2);
 
     // ── 6) Credits ─────────────────────────────────────────────────────
     let ctc = credits::child_tax_credit(credits::CtcInput {
@@ -212,10 +223,8 @@ pub fn compute(r: &TaxReturn) -> TaxResult {
     result.additional_medicare = se.additional_medicare_tax;
 
     // ── 7) Payments + withholding ─────────────────────────────────────
-    result.total_payments = w2_fed_withheld
-        + r.estimated_tax_payments
-        + ctc.refundable_portion
-        + r.eitc_claim;
+    result.total_payments =
+        w2_fed_withheld + r.estimated_tax_payments + ctc.refundable_portion + r.eitc_claim;
 
     // ── 8) Refund vs owed ──────────────────────────────────────────────
     if result.total_payments >= result.tax_after_credits {
@@ -263,8 +272,11 @@ mod itemized_tests {
             state_and_local_taxes_capped_at_10k: Decimal::from(10_001),
             ..Itemized::default()
         };
-        assert_eq!(i.total(), Decimal::from(10_000),
-            "$10,001 SALT must cap at $10,000 (TCJA § 164(b)(6))");
+        assert_eq!(
+            i.total(),
+            Decimal::from(10_000),
+            "$10,001 SALT must cap at $10,000 (TCJA § 164(b)(6))"
+        );
     }
 
     /// Big SALT entry — cap still binds, doesn't pass through.
@@ -304,7 +316,11 @@ mod tests {
     use super::*;
 
     fn empty(status: FilingStatus) -> TaxReturn {
-        TaxReturn { tax_year: 2025, status, ..Default::default() }
+        TaxReturn {
+            tax_year: 2025,
+            status,
+            ..Default::default()
+        }
     }
 
     #[test]

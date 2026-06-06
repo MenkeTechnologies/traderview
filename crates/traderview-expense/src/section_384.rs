@@ -113,13 +113,16 @@ const COMMON_CONTROL_EXCEPTION_THRESHOLD_PERCENT: u32 = 50;
 
 #[must_use]
 pub fn check(input: &Input) -> Output {
-    if matches!(input.acquisition_type, AcquisitionType::NoQualifyingAcquisition) {
+    if matches!(
+        input.acquisition_type,
+        AcquisitionType::NoQualifyingAcquisition
+    ) {
         return Output {
             severity: Severity::NoQualifyingAcquisitionSection384Inapplicable,
             disallowed_offset_cents: 0,
-            allowed_offset_cents: input.preacquisition_loss_carryover_cents.min(
-                input.recognized_built_in_gain_cents,
-            ),
+            allowed_offset_cents: input
+                .preacquisition_loss_carryover_cents
+                .min(input.recognized_built_in_gain_cents),
             note: format!(
                 "§ 384 inapplicable: no qualifying acquisition. § 384 requires either \
                  stock-acquisition control (§ 1504(a)(2) {CONTROL_THRESHOLD_PERCENT}% vote AND \
@@ -137,9 +140,9 @@ pub fn check(input: &Input) -> Output {
         return Output {
             severity: Severity::CommonControlExceptionAppliesSection384bThreeNoDisallowance,
             disallowed_offset_cents: 0,
-            allowed_offset_cents: input.preacquisition_loss_carryover_cents.min(
-                input.recognized_built_in_gain_cents,
-            ),
+            allowed_offset_cents: input
+                .preacquisition_loss_carryover_cents
+                .min(input.recognized_built_in_gain_cents),
             note: format!(
                 "§ 384(b)(3) common-control exception applies. Loss corp and gain corp were \
                  members of the same controlled group (more than \
@@ -158,9 +161,9 @@ pub fn check(input: &Input) -> Output {
         return Output {
             severity: Severity::BuiltInGainRecognizedAfterFiveYearWindowNoDisallowance,
             disallowed_offset_cents: 0,
-            allowed_offset_cents: input.preacquisition_loss_carryover_cents.min(
-                input.recognized_built_in_gain_cents,
-            ),
+            allowed_offset_cents: input
+                .preacquisition_loss_carryover_cents
+                .min(input.recognized_built_in_gain_cents),
             note: format!(
                 "Built-in gain recognized AFTER the {RECOGNITION_PERIOD_YEARS}-year § 384 \
                  recognition period. § 384 does NOT apply to gain recognized outside the \
@@ -285,7 +288,10 @@ mod tests {
         let mut input = base();
         input.preacquisition_loss_carryover_cents = 0;
         let output = check(&input);
-        assert_eq!(output.severity, Severity::NoPreacquisitionLossNoDisallowance);
+        assert_eq!(
+            output.severity,
+            Severity::NoPreacquisitionLossNoDisallowance
+        );
         assert_eq!(output.disallowed_offset_cents, 0);
     }
 

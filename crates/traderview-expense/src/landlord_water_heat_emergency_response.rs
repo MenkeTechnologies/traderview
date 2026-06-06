@@ -291,8 +291,8 @@ pub fn check(
 
     let habitability_warranty_breached = !response_timely;
 
-    let nyc_24_7_contact_required = matches!(input.jurisdiction, Jurisdiction::NewYorkCity)
-        && input.apartments_affected >= 2;
+    let nyc_24_7_contact_required =
+        matches!(input.jurisdiction, Jurisdiction::NewYorkCity) && input.apartments_affected >= 2;
 
     let nyc_24_7_contact_compliant = !nyc_24_7_contact_required || input.nyc_24_7_emergency_contact;
 
@@ -303,11 +303,12 @@ pub fn check(
         NycHpdViolationClass::NoViolation => 0,
     };
 
-    let nyc_daily_civil_penalty_total_cents = if matches!(input.jurisdiction, Jurisdiction::NewYorkCity) {
-        nyc_daily_civil_penalty_max_cents.saturating_mul(input.apartments_affected as u64)
-    } else {
-        0
-    };
+    let nyc_daily_civil_penalty_total_cents =
+        if matches!(input.jurisdiction, Jurisdiction::NewYorkCity) {
+            nyc_daily_civil_penalty_max_cents.saturating_mul(input.apartments_affected as u64)
+        } else {
+            0
+        };
 
     if !response_timely {
         let tier_label = match input.emergency_tier {
@@ -333,8 +334,10 @@ pub fn check(
         );
     }
 
-    if !matches!(input.nyc_hpd_violation_class, NycHpdViolationClass::NoViolation)
-        && matches!(input.jurisdiction, Jurisdiction::NewYorkCity)
+    if !matches!(
+        input.nyc_hpd_violation_class,
+        NycHpdViolationClass::NoViolation
+    ) && matches!(input.jurisdiction, Jurisdiction::NewYorkCity)
     {
         let class_label = match input.nyc_hpd_violation_class {
             NycHpdViolationClass::ClassA => "CLASS A (non-hazardous) — 90-day correction window; no daily civil penalty",
@@ -381,9 +384,8 @@ pub fn check(
     }
 
     if habitability_warranty_breached {
-        tenant_remedies_available.push(
-            "RENT WITHHOLDING under implied warranty of habitability".to_string(),
-        );
+        tenant_remedies_available
+            .push("RENT WITHHOLDING under implied warranty of habitability".to_string());
         tenant_remedies_available.push(
             "REPAIR AND DEDUCT — CA Cal. Civ. Code § 1942 up to ONE MONTH'S RENT; URLTA § 4.103 up to greater of $300 or 1/2 month rent".to_string(),
         );
@@ -468,10 +470,12 @@ mod tests {
         let r = check(&i);
         assert!(!r.response_timely);
         assert!(r.habitability_warranty_breached);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("NYC HMC § 27-2029")
-            && f.contains("TIER 1 IMMEDIATE EMERGENCY")
-            && f.contains("48 hours elapsed")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("NYC HMC § 27-2029")
+                && f.contains("TIER 1 IMMEDIATE EMERGENCY")
+                && f.contains("48 hours elapsed")));
     }
 
     #[test]
@@ -519,9 +523,10 @@ mod tests {
         i.nyc_24_7_emergency_contact = false;
         let r = check(&i);
         assert!(!r.nyc_24_7_contact_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("24/7 EMERGENCY CONTACT")
-            && f.contains("Class B violation")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("24/7 EMERGENCY CONTACT") && f.contains("Class B violation")));
     }
 
     #[test]
@@ -531,8 +536,7 @@ mod tests {
         let r = check(&i);
         assert_eq!(r.nyc_daily_civil_penalty_max_cents, 50_000);
         assert_eq!(r.nyc_daily_civil_penalty_total_cents, 50_000 * 12);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("CLASS C")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("CLASS C")
             && f.contains("$250-$500 daily")
             && f.contains("§ 27-2115")));
     }
@@ -557,11 +561,13 @@ mod tests {
     #[test]
     fn nyc_heat_season_disclosure() {
         let r = check(&nyc_tier1_timely());
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("HEAT SEASON October 1 - May 31")
-            && f.contains("68°F")
-            && f.contains("62°F")
-            && f.contains("120°F")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("HEAT SEASON October 1 - May 31")
+                && f.contains("68°F")
+                && f.contains("62°F")
+                && f.contains("120°F")));
     }
 
     #[test]
@@ -571,10 +577,12 @@ mod tests {
         i.hours_since_tenant_report = 48;
         i.ca_repair_and_deduct_invoked = true;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 1942 REPAIR-AND-DEDUCT INVOKED")
-            && f.contains("ONE MONTH'S RENT")
-            && f.contains("twice in any 12-month")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1942 REPAIR-AND-DEDUCT INVOKED")
+                && f.contains("ONE MONTH'S RENT")
+                && f.contains("twice in any 12-month")));
     }
 
     #[test]
@@ -584,11 +592,13 @@ mod tests {
         i.hours_since_tenant_report = 48;
         i.tx_lease_termination_invoked = true;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 92.056 TENANT REMEDIES INVOKED")
-            && f.contains("ONE MONTH'S RENT")
-            && f.contains("$500 CIVIL PENALTY")
-            && f.contains("attorney's fees")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 92.056 TENANT REMEDIES INVOKED")
+                && f.contains("ONE MONTH'S RENT")
+                && f.contains("$500 CIVIL PENALTY")
+                && f.contains("attorney's fees")));
     }
 
     #[test]
@@ -597,11 +607,13 @@ mod tests {
         i.hours_since_tenant_report = 48;
         i.constructive_eviction_invoked = true;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("CONSTRUCTIVE EVICTION INVOKED")
-            && f.contains("Park West")
-            && f.contains("Green v. Superior Court")
-            && f.contains("Hemingway")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("CONSTRUCTIVE EVICTION INVOKED")
+                && f.contains("Park West")
+                && f.contains("Green v. Superior Court")
+                && f.contains("Hemingway")));
     }
 
     #[test]
@@ -609,24 +621,33 @@ mod tests {
         let mut i = nyc_tier1_timely();
         i.hours_since_tenant_report = 48;
         let r = check(&i);
-        assert!(r.tenant_remedies_available.iter().any(|t|
-            t.contains("RENT WITHHOLDING")));
-        assert!(r.tenant_remedies_available.iter().any(|t|
-            t.contains("REPAIR AND DEDUCT")
-            && t.contains("ONE MONTH'S RENT")));
-        assert!(r.tenant_remedies_available.iter().any(|t|
-            t.contains("CONSTRUCTIVE EVICTION")));
-        assert!(r.tenant_remedies_available.iter().any(|t|
-            t.contains("TEXAS § 92.056")));
+        assert!(r
+            .tenant_remedies_available
+            .iter()
+            .any(|t| t.contains("RENT WITHHOLDING")));
+        assert!(r
+            .tenant_remedies_available
+            .iter()
+            .any(|t| t.contains("REPAIR AND DEDUCT") && t.contains("ONE MONTH'S RENT")));
+        assert!(r
+            .tenant_remedies_available
+            .iter()
+            .any(|t| t.contains("CONSTRUCTIVE EVICTION")));
+        assert!(r
+            .tenant_remedies_available
+            .iter()
+            .any(|t| t.contains("TEXAS § 92.056")));
     }
 
     #[test]
     fn nyc_unlocks_hpd_hotline_remedy() {
         let r = check(&nyc_tier1_timely());
-        assert!(r.tenant_remedies_available.iter().any(|t|
-            t.contains("NYC HPD HEAT-SEASON HOTLINE 311")
-            && t.contains("HPDONLINE.NYC.GOV")
-            && t.contains("HMC § 27-2115")));
+        assert!(r
+            .tenant_remedies_available
+            .iter()
+            .any(|t| t.contains("NYC HPD HEAT-SEASON HOTLINE 311")
+                && t.contains("HPDONLINE.NYC.GOV")
+                && t.contains("HMC § 27-2115")));
     }
 
     #[test]
@@ -678,7 +699,9 @@ mod tests {
         assert!(r.citation.contains("Tex. Prop. Code § 92.056"));
         assert!(r.citation.contains("URLTA § 2.104"));
         assert!(r.citation.contains("URLTA § 4.103"));
-        assert!(r.citation.contains("Restatement (Second) of Property: Landlord and Tenant § 5.4"));
+        assert!(r
+            .citation
+            .contains("Restatement (Second) of Property: Landlord and Tenant § 5.4"));
         assert!(r.citation.contains("Park West Mgmt. Corp. v. Mitchell"));
         assert!(r.citation.contains("Green v. Superior Court"));
         assert!(r.citation.contains("Boston Housing Auth. v. Hemingway"));
@@ -687,105 +710,124 @@ mod tests {
     #[test]
     fn note_pins_four_jurisdiction_framework() {
         let r = check(&nyc_tier1_timely());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Four-jurisdiction framework")
-            && n.contains("NEW YORK CITY")
-            && n.contains("CALIFORNIA")
-            && n.contains("TEXAS")
-            && n.contains("DEFAULT")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Four-jurisdiction framework")
+                && n.contains("NEW YORK CITY")
+                && n.contains("CALIFORNIA")
+                && n.contains("TEXAS")
+                && n.contains("DEFAULT")));
     }
 
     #[test]
     fn note_pins_three_emergency_tiers() {
         let r = check(&nyc_tier1_timely());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Emergency severity categories")
-            && n.contains("TIER 1 IMMEDIATE EMERGENCY")
-            && n.contains("TIER 2 URGENT")
-            && n.contains("TIER 3 STANDARD")
-            && n.contains("structural collapse")
-            && n.contains("vulnerable tenants")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Emergency severity categories")
+                && n.contains("TIER 1 IMMEDIATE EMERGENCY")
+                && n.contains("TIER 2 URGENT")
+                && n.contains("TIER 3 STANDARD")
+                && n.contains("structural collapse")
+                && n.contains("vulnerable tenants")));
     }
 
     #[test]
     fn note_pins_nyc_heat_season_temperatures() {
         let r = check(&nyc_tier1_timely());
-        assert!(r.notes.iter().any(|n|
-            n.contains("NYC HMC § 27-2029 HEAT SEASON")
-            && n.contains("October 1 - May 31")
-            && n.contains("68°F minimum daytime")
-            && n.contains("62°F minimum nighttime")
-            && n.contains("120°F minimum")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("NYC HMC § 27-2029 HEAT SEASON")
+                && n.contains("October 1 - May 31")
+                && n.contains("68°F minimum daytime")
+                && n.contains("62°F minimum nighttime")
+                && n.contains("120°F minimum")));
     }
 
     #[test]
     fn note_pins_nyc_hpd_violation_classes() {
         let r = check(&nyc_tier1_timely());
-        assert!(r.notes.iter().any(|n|
-            n.contains("NYC HPD violation classes")
-            && n.contains("CLASS C")
-            && n.contains("$250-$500")
-            && n.contains("immediately hazardous")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("NYC HPD violation classes")
+                && n.contains("CLASS C")
+                && n.contains("$250-$500")
+                && n.contains("immediately hazardous")));
     }
 
     #[test]
     fn note_pins_nyc_24_7_emergency_contact() {
         let r = check(&nyc_tier1_timely());
-        assert!(r.notes.iter().any(|n|
-            n.contains("NYC 24/7 EMERGENCY CONTACT REQUIREMENT")
-            && n.contains("2+ apartments")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("NYC 24/7 EMERGENCY CONTACT REQUIREMENT")
+                && n.contains("2+ apartments")));
     }
 
     #[test]
     fn note_pins_ca_section_1942_repair_and_deduct_five_elements() {
         let r = check(&nyc_tier1_timely());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Cal. Civ. Code § 1942 REPAIR-AND-DEDUCT")
-            && n.contains("ONE MONTH'S RENT")
-            && n.contains("twice in any 12-month period")
-            && n.contains("tenant caused condition")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Cal. Civ. Code § 1942 REPAIR-AND-DEDUCT")
+                && n.contains("ONE MONTH'S RENT")
+                && n.contains("twice in any 12-month period")
+                && n.contains("tenant caused condition")));
     }
 
     #[test]
     fn note_pins_tx_section_92_056_five_elements() {
         let r = check(&nyc_tier1_timely());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Tex. Prop. Code § 92.056 TENANT REMEDIES")
-            && n.contains("7-day waiting period")
-            && n.contains("TERMINATE LEASE")
-            && n.contains("$500 CIVIL PENALTY")
-            && n.contains("attorney's fees")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Tex. Prop. Code § 92.056 TENANT REMEDIES")
+                && n.contains("7-day waiting period")
+                && n.contains("TERMINATE LEASE")
+                && n.contains("$500 CIVIL PENALTY")
+                && n.contains("attorney's fees")));
     }
 
     #[test]
     fn note_pins_habitability_remedies_with_case_law() {
         let r = check(&nyc_tier1_timely());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Tenant remedies under habitability warranty")
-            && n.contains("Park West Mgmt. Corp. v. Mitchell")
-            && n.contains("Green v. Superior Court")
-            && n.contains("Boston Housing Auth. v. Hemingway")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("Tenant remedies under habitability warranty")
+                && n.contains("Park West Mgmt. Corp. v. Mitchell")
+                && n.contains("Green v. Superior Court")
+                && n.contains("Boston Housing Auth. v. Hemingway")
+        ));
     }
 
     #[test]
     fn note_pins_trader_fact_patterns_five() {
         let r = check(&nyc_tier1_timely());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-landlord critical fact patterns")
-            && n.contains("12-unit building loses heat")
-            && n.contains("burst pipe")
-            && n.contains("sewage backup")
-            && n.contains("URLTA jurisdiction")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-landlord critical fact patterns")
+                && n.contains("12-unit building loses heat")
+                && n.contains("burst pipe")
+                && n.contains("sewage backup")
+                && n.contains("URLTA jurisdiction")));
     }
 
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&nyc_tier1_timely());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Companion to habitability_remedies")
-            && n.contains("landlord_pest_extermination_timeline")
-            && n.contains("detector_requirements")
-            && n.contains("heat_requirements")
-            && n.contains("rental_basement_water_intrusion_disclosure")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Companion to habitability_remedies")
+                && n.contains("landlord_pest_extermination_timeline")
+                && n.contains("detector_requirements")
+                && n.contains("heat_requirements")
+                && n.contains("rental_basement_water_intrusion_disclosure")));
     }
 }

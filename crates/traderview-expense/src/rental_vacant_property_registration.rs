@@ -125,15 +125,23 @@ pub fn check(input: &Input) -> Output {
     compute(input)
 }
 
-fn required_initial_fee_for(jurisdiction: VacantRegistrationJurisdiction, role: RegistrationActorRole) -> u64 {
+fn required_initial_fee_for(
+    jurisdiction: VacantRegistrationJurisdiction,
+    role: RegistrationActorRole,
+) -> u64 {
     match (jurisdiction, role) {
-        (VacantRegistrationJurisdiction::ChicagoMunicipalCode, RegistrationActorRole::OwnerOfRecord)
-        | (VacantRegistrationJurisdiction::ChicagoMunicipalCode, RegistrationActorRole::PropertyManagerOnOwnerBehalf) => {
-            CHICAGO_13_12_125_OWNER_FEE_DOLLARS
-        }
-        (VacantRegistrationJurisdiction::ChicagoMunicipalCode, RegistrationActorRole::MortgageeAfterForeclosureOrDefault) => {
-            CHICAGO_13_12_126_MORTGAGEE_INITIAL_FEE_DOLLARS
-        }
+        (
+            VacantRegistrationJurisdiction::ChicagoMunicipalCode,
+            RegistrationActorRole::OwnerOfRecord,
+        )
+        | (
+            VacantRegistrationJurisdiction::ChicagoMunicipalCode,
+            RegistrationActorRole::PropertyManagerOnOwnerBehalf,
+        ) => CHICAGO_13_12_125_OWNER_FEE_DOLLARS,
+        (
+            VacantRegistrationJurisdiction::ChicagoMunicipalCode,
+            RegistrationActorRole::MortgageeAfterForeclosureOrDefault,
+        ) => CHICAGO_13_12_126_MORTGAGEE_INITIAL_FEE_DOLLARS,
         _ => CHICAGO_13_12_125_OWNER_FEE_DOLLARS,
     }
 }
@@ -154,7 +162,8 @@ pub fn compute(input: &Input) -> Output {
             mode: VacantPropertyRegistrationMode::NotApplicableUnitNotVacant,
             required_fee_dollars: 0,
             statutory_basis: "Property not vacant".to_string(),
-            notes: "Property is occupied; vacant-property registration ordinance inapplicable.".to_string(),
+            notes: "Property is occupied; vacant-property registration ordinance inapplicable."
+                .to_string(),
             citations,
         };
     }
@@ -172,7 +181,9 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.jurisdiction == VacantRegistrationJurisdiction::OtherJurisdictionWithoutVacantRegistration {
+    if input.jurisdiction
+        == VacantRegistrationJurisdiction::OtherJurisdictionWithoutVacantRegistration
+    {
         return Output {
             mode: VacantPropertyRegistrationMode::NotApplicableJurisdictionLacksMandate,
             required_fee_dollars: 0,
@@ -253,7 +264,8 @@ pub fn compute(input: &Input) -> Output {
     }
 
     if !input.local_agent_designated_for_service
-        && input.jurisdiction != VacantRegistrationJurisdiction::OtherJurisdictionWithoutVacantRegistration
+        && input.jurisdiction
+            != VacantRegistrationJurisdiction::OtherJurisdictionWithoutVacantRegistration
     {
         return Output {
             mode: VacantPropertyRegistrationMode::ViolationLocalAgentNotDesignated,
@@ -361,7 +373,10 @@ mod tests {
             ..baseline_chicago_owner_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VacantPropertyRegistrationMode::NotApplicableUnitNotVacant);
+        assert_eq!(
+            result.mode,
+            VacantPropertyRegistrationMode::NotApplicableUnitNotVacant
+        );
     }
 
     #[test]
@@ -371,7 +386,10 @@ mod tests {
             ..baseline_chicago_owner_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VacantPropertyRegistrationMode::NotApplicableLessThan30DaysVacant);
+        assert_eq!(
+            result.mode,
+            VacantPropertyRegistrationMode::NotApplicableLessThan30DaysVacant
+        );
     }
 
     #[test]
@@ -381,23 +399,33 @@ mod tests {
             ..baseline_chicago_owner_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VacantPropertyRegistrationMode::CompliantOwnerRegisteredWithin30DaysAndFeePaid);
+        assert_eq!(
+            result.mode,
+            VacantPropertyRegistrationMode::CompliantOwnerRegisteredWithin30DaysAndFeePaid
+        );
     }
 
     #[test]
     fn other_jurisdiction_not_applicable() {
         let input = Input {
-            jurisdiction: VacantRegistrationJurisdiction::OtherJurisdictionWithoutVacantRegistration,
+            jurisdiction:
+                VacantRegistrationJurisdiction::OtherJurisdictionWithoutVacantRegistration,
             ..baseline_chicago_owner_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VacantPropertyRegistrationMode::NotApplicableJurisdictionLacksMandate);
+        assert_eq!(
+            result.mode,
+            VacantPropertyRegistrationMode::NotApplicableJurisdictionLacksMandate
+        );
     }
 
     #[test]
     fn chicago_owner_30_day_compliant() {
         let result = check(&baseline_chicago_owner_compliant());
-        assert_eq!(result.mode, VacantPropertyRegistrationMode::CompliantOwnerRegisteredWithin30DaysAndFeePaid);
+        assert_eq!(
+            result.mode,
+            VacantPropertyRegistrationMode::CompliantOwnerRegisteredWithin30DaysAndFeePaid
+        );
         assert_eq!(result.required_fee_dollars, 300);
     }
 
@@ -408,7 +436,10 @@ mod tests {
             ..baseline_chicago_owner_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VacantPropertyRegistrationMode::ViolationOwnerFailedToRegisterWithin30Days);
+        assert_eq!(
+            result.mode,
+            VacantPropertyRegistrationMode::ViolationOwnerFailedToRegisterWithin30Days
+        );
     }
 
     #[test]
@@ -420,7 +451,10 @@ mod tests {
             ..baseline_chicago_owner_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VacantPropertyRegistrationMode::ViolationDoubleFeeAppliedForCityIdentifiedNonCompliance);
+        assert_eq!(
+            result.mode,
+            VacantPropertyRegistrationMode::ViolationDoubleFeeAppliedForCityIdentifiedNonCompliance
+        );
         assert_eq!(result.required_fee_dollars, 600);
     }
 
@@ -432,7 +466,10 @@ mod tests {
             ..baseline_chicago_owner_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VacantPropertyRegistrationMode::CompliantMortgageeRegisteredAfterForeclosure);
+        assert_eq!(
+            result.mode,
+            VacantPropertyRegistrationMode::CompliantMortgageeRegisteredAfterForeclosure
+        );
         assert_eq!(result.required_fee_dollars, 700);
     }
 
@@ -445,7 +482,10 @@ mod tests {
             ..baseline_chicago_owner_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VacantPropertyRegistrationMode::ViolationMortgageeFailedToRegisterAfterForeclosure);
+        assert_eq!(
+            result.mode,
+            VacantPropertyRegistrationMode::ViolationMortgageeFailedToRegisterAfterForeclosure
+        );
     }
 
     #[test]
@@ -455,7 +495,10 @@ mod tests {
             ..baseline_chicago_owner_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VacantPropertyRegistrationMode::ViolationOwnerFailedToRegisterWithin30Days);
+        assert_eq!(
+            result.mode,
+            VacantPropertyRegistrationMode::ViolationOwnerFailedToRegisterWithin30Days
+        );
         assert_eq!(result.required_fee_dollars, 300);
     }
 
@@ -466,7 +509,10 @@ mod tests {
             ..baseline_chicago_owner_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VacantPropertyRegistrationMode::ViolationLocalAgentNotDesignated);
+        assert_eq!(
+            result.mode,
+            VacantPropertyRegistrationMode::ViolationLocalAgentNotDesignated
+        );
     }
 
     #[test]
@@ -477,7 +523,10 @@ mod tests {
             ..baseline_chicago_owner_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VacantPropertyRegistrationMode::ViolationRenewalNotFiledEverySixMonths);
+        assert_eq!(
+            result.mode,
+            VacantPropertyRegistrationMode::ViolationRenewalNotFiledEverySixMonths
+        );
     }
 
     #[test]
@@ -488,7 +537,10 @@ mod tests {
             ..baseline_chicago_owner_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VacantPropertyRegistrationMode::CompliantRenewalFilingTimely);
+        assert_eq!(
+            result.mode,
+            VacantPropertyRegistrationMode::CompliantRenewalFilingTimely
+        );
     }
 
     #[test]
@@ -498,7 +550,10 @@ mod tests {
             ..baseline_chicago_owner_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VacantPropertyRegistrationMode::ViolationCodeEnforcementLienAccruedFromNonRegistration);
+        assert_eq!(
+            result.mode,
+            VacantPropertyRegistrationMode::ViolationCodeEnforcementLienAccruedFromNonRegistration
+        );
     }
 
     #[test]
@@ -508,7 +563,10 @@ mod tests {
             ..baseline_chicago_owner_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VacantPropertyRegistrationMode::CompliantOwnerRegisteredWithin30DaysAndFeePaid);
+        assert_eq!(
+            result.mode,
+            VacantPropertyRegistrationMode::CompliantOwnerRegisteredWithin30DaysAndFeePaid
+        );
     }
 
     #[test]
@@ -519,7 +577,10 @@ mod tests {
             ..baseline_chicago_owner_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, VacantPropertyRegistrationMode::ViolationOwnerFailedToRegisterWithin30Days);
+        assert_eq!(
+            result.mode,
+            VacantPropertyRegistrationMode::ViolationOwnerFailedToRegisterWithin30Days
+        );
     }
 
     #[test]
@@ -534,7 +595,10 @@ mod tests {
                 ..baseline_chicago_owner_compliant()
             };
             let result = check(&input);
-            assert_eq!(result.mode, VacantPropertyRegistrationMode::CompliantOwnerRegisteredWithin30DaysAndFeePaid);
+            assert_eq!(
+                result.mode,
+                VacantPropertyRegistrationMode::CompliantOwnerRegisteredWithin30DaysAndFeePaid
+            );
         }
     }
 

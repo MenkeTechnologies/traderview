@@ -169,13 +169,13 @@ pub fn compute(input: &Section752Input) -> Section752Result {
     let partner_outside_basis_after_cents = if deemed_contribution_cents > 0 {
         outside_basis_before.saturating_add(deemed_contribution_cents)
     } else {
-        outside_basis_before.saturating_sub(deemed_distribution_cents).max(0)
+        outside_basis_before
+            .saturating_sub(deemed_distribution_cents)
+            .max(0)
     };
 
     // Nonrecourse three-tier total.
-    let nonrecourse_three_tier_total_cents = tier1
-        .saturating_add(tier2)
-        .saturating_add(tier3);
+    let nonrecourse_three_tier_total_cents = tier1.saturating_add(tier2).saturating_add(tier3);
 
     let recourse_allocation_engaged = input.bears_economic_risk_of_loss;
     let deemed_distribution_triggered_section_731_gain = section_731_gain_recognized_cents > 0;
@@ -187,9 +187,7 @@ pub fn compute(input: &Section752Input) -> Section752Result {
              from sale or exchange of partnership interest under § 741 (typically \
              capital gain). Trader-critical: refinancing or assumption events can \
              trigger this gain without any actual cash distribution.",
-            deemed_distribution_cents,
-            outside_basis_before,
-            section_731_gain_recognized_cents,
+            deemed_distribution_cents, outside_basis_before, section_731_gain_recognized_cents,
         ));
     }
 
@@ -250,10 +248,7 @@ pub fn compute(input: &Section752Input) -> Section752Result {
              loss assumed). Tier 1 (§ 1.704-2 minimum gain): {} cents. Tier 2 (§ 704(c) \
              hypothetical-disposition gain): {} cents. Tier 3 (excess nonrecourse — \
              profit share): {} cents. Total nonrecourse allocation: {} cents.",
-            tier1,
-            tier2,
-            tier3,
-            nonrecourse_three_tier_total_cents,
+            tier1, tier2, tier3, nonrecourse_three_tier_total_cents,
         ));
     }
 
@@ -360,8 +355,8 @@ mod tests {
     #[test]
     fn liability_decrease_exceeds_basis_triggers_731_gain() {
         let mut b = input();
-        b.partner_outside_basis_before_cents = 5_000_000;     // $50K basis
-        b.partner_share_liabilities_after_cents = 0;          // -$100K (full payoff)
+        b.partner_outside_basis_before_cents = 5_000_000; // $50K basis
+        b.partner_share_liabilities_after_cents = 0; // -$100K (full payoff)
         let r = compute(&b);
         assert_eq!(r.deemed_distribution_cents, 10_000_000);
         // Distribution $100K > basis $50K → $50K gain.
@@ -375,8 +370,8 @@ mod tests {
     #[test]
     fn liability_decrease_exactly_equals_basis_no_gain() {
         let mut b = input();
-        b.partner_outside_basis_before_cents = 10_000_000;    // $100K
-        b.partner_share_liabilities_after_cents = 0;          // -$100K
+        b.partner_outside_basis_before_cents = 10_000_000; // $100K
+        b.partner_share_liabilities_after_cents = 0; // -$100K
         let r = compute(&b);
         assert_eq!(r.section_731_gain_recognized_cents, 0);
         assert_eq!(r.partner_outside_basis_after_cents, 0);
@@ -435,7 +430,10 @@ mod tests {
     fn nonrecourse_allocation_when_no_erol() {
         let r = compute(&input());
         assert!(!r.recourse_allocation_engaged);
-        assert!(r.notes.iter().any(|n| n.contains("NONRECOURSE 3-TIER ALLOCATION")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("NONRECOURSE 3-TIER ALLOCATION")));
     }
 
     // ── § 1.752-1 netting rule ───────────────────────────────
@@ -454,10 +452,10 @@ mod tests {
     fn liability_change_directly_translates_to_basis_change_invariant() {
         // 4-cell sweep: liability change × basis change should equal liability change.
         let cells = [
-            (10_000_000, 15_000_000, 5_000_000),     // +$50K liability → +$50K basis
-            (15_000_000, 10_000_000, -5_000_000),    // -$50K liability → -$50K basis
-            (10_000_000, 10_000_000, 0),              // no change
-            (5_000_000, 20_000_000, 15_000_000),     // +$150K liability → +$150K basis
+            (10_000_000, 15_000_000, 5_000_000), // +$50K liability → +$50K basis
+            (15_000_000, 10_000_000, -5_000_000), // -$50K liability → -$50K basis
+            (10_000_000, 10_000_000, 0),         // no change
+            (5_000_000, 20_000_000, 15_000_000), // +$150K liability → +$150K basis
         ];
         for (before, after, expected_change) in cells.iter() {
             let mut b = input();
@@ -466,7 +464,11 @@ mod tests {
             b.partner_outside_basis_before_cents = 50_000_000; // huge basis to avoid § 731 gain
             let r = compute(&b);
             let basis_change = r.partner_outside_basis_after_cents - 50_000_000;
-            assert_eq!(basis_change, *expected_change, "before={} after={}", before, after);
+            assert_eq!(
+                basis_change, *expected_change,
+                "before={} after={}",
+                before, after
+            );
         }
     }
 
@@ -474,7 +476,11 @@ mod tests {
     fn deemed_contribution_and_distribution_mutually_exclusive_invariant() {
         // For any liability change, only one of contribution or
         // distribution is positive.
-        let cells = [(5_000_000, 15_000_000), (15_000_000, 5_000_000), (10_000_000, 10_000_000)];
+        let cells = [
+            (5_000_000, 15_000_000),
+            (15_000_000, 5_000_000),
+            (10_000_000, 10_000_000),
+        ];
         for (before, after) in cells.iter() {
             let mut b = input();
             b.partner_share_liabilities_before_cents = *before;
@@ -493,10 +499,10 @@ mod tests {
     fn section_731_gain_only_when_distribution_exceeds_basis_invariant() {
         // 4-cell sweep over basis × distribution.
         let cells = [
-            (20_000_000, 5_000_000, 0),     // basis $200K > $50K dist → no gain
-            (5_000_000, 5_000_000, 0),      // exact match → no gain
-            (3_000_000, 5_000_000, 2_000_000),  // basis $30K, dist $50K → $20K gain
-            (0, 10_000_000, 10_000_000),    // zero basis → full distribution = gain
+            (20_000_000, 5_000_000, 0),        // basis $200K > $50K dist → no gain
+            (5_000_000, 5_000_000, 0),         // exact match → no gain
+            (3_000_000, 5_000_000, 2_000_000), // basis $30K, dist $50K → $20K gain
+            (0, 10_000_000, 10_000_000),       // zero basis → full distribution = gain
         ];
         for (basis, decrease, expected_gain) in cells.iter() {
             let mut b = input();
@@ -505,11 +511,9 @@ mod tests {
             b.partner_share_liabilities_after_cents = 0;
             let r = compute(&b);
             assert_eq!(
-                r.section_731_gain_recognized_cents,
-                *expected_gain,
+                r.section_731_gain_recognized_cents, *expected_gain,
                 "basis={} decrease={}",
-                basis,
-                decrease
+                basis, decrease
             );
         }
     }
@@ -530,12 +534,9 @@ mod tests {
             b.tier3_excess_nonrecourse_share_cents = *t3;
             let r = compute(&b);
             assert_eq!(
-                r.nonrecourse_three_tier_total_cents,
-                *expected_total,
+                r.nonrecourse_three_tier_total_cents, *expected_total,
                 "t1={} t2={} t3={}",
-                t1,
-                t2,
-                t3
+                t1, t2, t3
             );
         }
     }

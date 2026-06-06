@@ -26,15 +26,25 @@ pub struct VarReport {
 
 pub fn estimate(series: &[Vec<f64>], lags: usize) -> Option<VarReport> {
     let t = series.len();
-    if t < lags + 4 || lags == 0 { return None; }
+    if t < lags + 4 || lags == 0 {
+        return None;
+    }
     let k = series[0].len();
-    if k == 0 { return None; }
-    if series.iter().any(|row| row.len() != k) { return None; }
-    if series.iter().any(|row| row.iter().any(|v| !v.is_finite())) { return None; }
+    if k == 0 {
+        return None;
+    }
+    if series.iter().any(|row| row.len() != k) {
+        return None;
+    }
+    if series.iter().any(|row| row.iter().any(|v| !v.is_finite())) {
+        return None;
+    }
     // Number of regressors per equation: 1 (intercept) + k · p
     let p_regressors = 1 + k * lags;
-    let m = t - lags;    // effective observations after lag-truncation
-    if m < p_regressors + 1 { return None; }
+    let m = t - lags; // effective observations after lag-truncation
+    if m < p_regressors + 1 {
+        return None;
+    }
     // Build the design matrix X (m × p_regressors) — shared across all equations.
     let mut x = vec![vec![0.0_f64; p_regressors]; m];
     for (i, row) in x.iter_mut().enumerate() {
@@ -74,7 +84,8 @@ pub fn estimate(series: &[Vec<f64>], lags: usize) -> Option<VarReport> {
             col += 1;
         }
     }
-    let one_step_forecast: Vec<f64> = coefficients.iter()
+    let one_step_forecast: Vec<f64> = coefficients
+        .iter()
         .map(|beta| (0..p_regressors).map(|j| beta[j] * forecast_x[j]).sum())
         .collect();
     Some(VarReport {
@@ -90,7 +101,9 @@ pub fn estimate(series: &[Vec<f64>], lags: usize) -> Option<VarReport> {
 fn ols(x: &[Vec<f64>], y: &[f64]) -> Option<Vec<f64>> {
     let p = x.first().map(|r| r.len()).unwrap_or(0);
     let n = y.len();
-    if p == 0 || n == 0 || x.iter().any(|c| c.len() != p) { return None; }
+    if p == 0 || n == 0 || x.iter().any(|c| c.len() != p) {
+        return None;
+    }
     let mut xtx = vec![vec![0.0_f64; p]; p];
     let mut xty = vec![0.0_f64; p];
     for i in 0..p {
@@ -101,24 +114,38 @@ fn ols(x: &[Vec<f64>], y: &[f64]) -> Option<Vec<f64>> {
     }
     let mut aug = vec![vec![0.0_f64; p + 1]; p];
     for i in 0..p {
-        for j in 0..p { aug[i][j] = xtx[i][j]; }
+        for j in 0..p {
+            aug[i][j] = xtx[i][j];
+        }
         aug[i][p] = xty[i];
     }
     for i in 0..p {
         let mut pivot = i;
         for r in (i + 1)..p {
-            if aug[r][i].abs() > aug[pivot][i].abs() { pivot = r; }
+            if aug[r][i].abs() > aug[pivot][i].abs() {
+                pivot = r;
+            }
         }
-        if aug[pivot][i].abs() < 1e-18 { return None; }
+        if aug[pivot][i].abs() < 1e-18 {
+            return None;
+        }
         aug.swap(i, pivot);
         let div = aug[i][i];
-        for v in aug[i].iter_mut() { *v /= div; }
+        for v in aug[i].iter_mut() {
+            *v /= div;
+        }
         for r in 0..p {
-            if r == i { continue; }
+            if r == i {
+                continue;
+            }
             let f = aug[r][i];
-            if f == 0.0 { continue; }
+            if f == 0.0 {
+                continue;
+            }
             let pivot_row = aug[i].clone();
-            for (j, v) in aug[r].iter_mut().enumerate() { *v -= f * pivot_row[j]; }
+            for (j, v) in aug[r].iter_mut().enumerate() {
+                *v -= f * pivot_row[j];
+            }
         }
     }
     Some((0..p).map(|i| aug[i][p]).collect())
@@ -166,12 +193,16 @@ mod tests {
         let mut state: u64 = 42;
         let mut y = vec![vec![0.0_f64, 0.0]; n];
         for t in 1..n {
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             let e1 = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.02;
-            state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            state = state
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             let e2 = ((state >> 32) as f64 / u32::MAX as f64 - 0.5) * 0.02;
-            y[t][0] = 0.1 + 0.6 * y[t-1][0] + 0.2 * y[t-1][1] + e1;
-            y[t][1] = -0.05 + 0.1 * y[t-1][0] + 0.5 * y[t-1][1] + e2;
+            y[t][0] = 0.1 + 0.6 * y[t - 1][0] + 0.2 * y[t - 1][1] + e1;
+            y[t][1] = -0.05 + 0.1 * y[t - 1][0] + 0.5 * y[t - 1][1] + e2;
         }
         let r = estimate(&y, 1).unwrap();
         assert_eq!(r.n_variables, 2);
@@ -190,9 +221,15 @@ mod tests {
     #[test]
     fn forecast_dimension_matches_n_variables() {
         let n = 100;
-        let s: Vec<Vec<f64>> = (0..n).map(|i| {
-            vec![(i as f64 * 0.1).sin(), (i as f64 * 0.13).cos(), (i as f64 * 0.07).sin()]
-        }).collect();
+        let s: Vec<Vec<f64>> = (0..n)
+            .map(|i| {
+                vec![
+                    (i as f64 * 0.1).sin(),
+                    (i as f64 * 0.13).cos(),
+                    (i as f64 * 0.07).sin(),
+                ]
+            })
+            .collect();
         let r = estimate(&s, 2).unwrap();
         assert_eq!(r.one_step_forecast.len(), 3);
         assert_eq!(r.coefficients.len(), 3);
@@ -202,9 +239,9 @@ mod tests {
     #[test]
     fn residual_variance_nonnegative() {
         let n = 100;
-        let s: Vec<Vec<f64>> = (0..n).map(|i| {
-            vec![(i as f64 * 0.1).sin(), (i as f64 * 0.13).cos()]
-        }).collect();
+        let s: Vec<Vec<f64>> = (0..n)
+            .map(|i| vec![(i as f64 * 0.1).sin(), (i as f64 * 0.13).cos()])
+            .collect();
         let r = estimate(&s, 1).unwrap();
         for v in &r.residual_variance {
             assert!(*v >= 0.0);

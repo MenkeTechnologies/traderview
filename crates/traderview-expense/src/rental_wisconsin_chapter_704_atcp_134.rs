@@ -353,8 +353,7 @@ mod tests {
             eviction_notice_type: EvictionNoticeType::FirstViolationFiveDayCureNotice,
             withholding_reason_status:
                 WithholdingReasonStatus::WithheldForDamageWasteNeglectOrUnpaidRent,
-            check_in_sheet_status:
-                CheckInSheetStatus::CheckInSheetProvidedAndSevenDayNoticeWritten,
+            check_in_sheet_status: CheckInSheetStatus::CheckInSheetProvidedAndSevenDayNoticeWritten,
             compliance_aspect: ComplianceAspect::NonWaivableHabitabilityUnderSection70407,
             eviction_notice_days_given: 5,
             periodic_tenancy_termination_notice_days_given: 28,
@@ -456,8 +455,7 @@ mod tests {
     fn thirty_day_lease_notice_boundary_compliant() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::EvictionNoticeUnderSection70417;
-        input.eviction_notice_type =
-            EvictionNoticeType::LeaseLongerThanOneYearThirtyDayNotice;
+        input.eviction_notice_type = EvictionNoticeType::LeaseLongerThanOneYearThirtyDayNotice;
         input.eviction_notice_days_given = 30;
         let out = check(&input);
         assert_eq!(
@@ -470,8 +468,7 @@ mod tests {
     fn twenty_nine_day_lease_notice_violation() {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::EvictionNoticeUnderSection70417;
-        input.eviction_notice_type =
-            EvictionNoticeType::LeaseLongerThanOneYearThirtyDayNotice;
+        input.eviction_notice_type = EvictionNoticeType::LeaseLongerThanOneYearThirtyDayNotice;
         input.eviction_notice_days_given = 29;
         let out = check(&input);
         assert_eq!(

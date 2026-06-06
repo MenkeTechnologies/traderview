@@ -32,24 +32,28 @@ pub fn compute(series: &[f64], order: usize) -> Option<PermutationEntropyReport>
     if !(2..=8).contains(&order) || n < order + 1 {
         return None;
     }
-    if series.iter().any(|x| !x.is_finite()) { return None; }
+    if series.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     // Count ordinal patterns.
-    let mut counts: std::collections::HashMap<Vec<usize>, usize> =
-        std::collections::HashMap::new();
+    let mut counts: std::collections::HashMap<Vec<usize>, usize> = std::collections::HashMap::new();
     let mut n_windows = 0_usize;
     for start in 0..=(n - order) {
         let window = &series[start..start + order];
         // Get ordinal pattern (indices sorted by value).
-        let mut indexed: Vec<(usize, f64)> = window.iter().enumerate()
-            .map(|(i, v)| (i, *v)).collect();
+        let mut indexed: Vec<(usize, f64)> =
+            window.iter().enumerate().map(|(i, v)| (i, *v)).collect();
         indexed.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
         let pattern: Vec<usize> = indexed.iter().map(|(i, _)| *i).collect();
         *counts.entry(pattern).or_insert(0) += 1;
         n_windows += 1;
     }
-    if n_windows == 0 { return None; }
+    if n_windows == 0 {
+        return None;
+    }
     let n_f = n_windows as f64;
-    let pe: f64 = counts.values()
+    let pe: f64 = counts
+        .values()
         .map(|&c| {
             let p = c as f64 / n_f;
             -p * p.ln()
@@ -58,7 +62,11 @@ pub fn compute(series: &[f64], order: usize) -> Option<PermutationEntropyReport>
     // Normalize by log(m!).
     let m_fact: u64 = (1..=order as u64).product();
     let max_entropy = (m_fact as f64).ln();
-    let normalized = if max_entropy > 0.0 { pe / max_entropy } else { 0.0 };
+    let normalized = if max_entropy > 0.0 {
+        pe / max_entropy
+    } else {
+        0.0
+    };
     Some(PermutationEntropyReport {
         permutation_entropy: pe,
         normalized_entropy: normalized,
@@ -105,16 +113,21 @@ mod tests {
     #[test]
     fn random_series_yields_high_normalized_entropy() {
         let mut state: u64 = 42;
-        let s: Vec<f64> = (0..1_000).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            (state >> 32) as f64 / u32::MAX as f64
-        }).collect();
+        let s: Vec<f64> = (0..1_000)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                (state >> 32) as f64 / u32::MAX as f64
+            })
+            .collect();
         let r = compute(&s, 4).unwrap();
         // Should hit all 24 patterns with roughly uniform probability.
-        assert!(r.normalized_entropy > 0.9,
+        assert!(
+            r.normalized_entropy > 0.9,
             "random series should give normalized PE > 0.9, got {}",
-            r.normalized_entropy);
+            r.normalized_entropy
+        );
     }
 
     #[test]
@@ -122,11 +135,14 @@ mod tests {
         // PE depends only on rank order — multiplying by a positive
         // constant or adding doesn't change it.
         let mut state: u64 = 99;
-        let s: Vec<f64> = (0..500).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            (state >> 32) as f64 / u32::MAX as f64
-        }).collect();
+        let s: Vec<f64> = (0..500)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                (state >> 32) as f64 / u32::MAX as f64
+            })
+            .collect();
         let scaled: Vec<f64> = s.iter().map(|x| 5.0 * x + 100.0).collect();
         let r1 = compute(&s, 3).unwrap();
         let r2 = compute(&scaled, 3).unwrap();
@@ -143,11 +159,14 @@ mod tests {
     #[test]
     fn higher_order_yields_more_possible_patterns() {
         let mut state: u64 = 7;
-        let s: Vec<f64> = (0..500).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            (state >> 32) as f64 / u32::MAX as f64
-        }).collect();
+        let s: Vec<f64> = (0..500)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                (state >> 32) as f64 / u32::MAX as f64
+            })
+            .collect();
         let r3 = compute(&s, 3).unwrap();
         let r5 = compute(&s, 5).unwrap();
         assert!(r5.n_patterns >= r3.n_patterns);

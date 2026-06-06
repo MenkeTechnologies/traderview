@@ -178,7 +178,8 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.voting_power_owned_basis_points < SECTION_1248_TEN_PERCENT_VOTING_THRESHOLD_BASIS_POINTS
+    if input.voting_power_owned_basis_points
+        < SECTION_1248_TEN_PERCENT_VOTING_THRESHOLD_BASIS_POINTS
         && !input.voting_power_held_during_5_year_lookback
     {
         return Output {
@@ -259,7 +260,9 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.shareholder_type == ShareholderType::IndividualUsShareholder && input.taxpayer_claimed_section_245a_drd {
+    if input.shareholder_type == ShareholderType::IndividualUsShareholder
+        && input.taxpayer_claimed_section_245a_drd
+    {
         return Output {
             mode: Section1248Mode::ViolationIndividualClaimedSection245aDrdImproperly,
             deemed_dividend_amount_dollars: input.allocable_section_1248_ep_dollars.min(input.gain_recognized_on_sale_dollars),
@@ -280,7 +283,9 @@ pub fn compute(input: &Input) -> Output {
         .gain_recognized_on_sale_dollars
         .saturating_sub(deemed_dividend);
 
-    if input.ep_category == EpCategory::LowerTierCfcEp && input.allocable_lower_tier_cfc_ep_dollars == 0 {
+    if input.ep_category == EpCategory::LowerTierCfcEp
+        && input.allocable_lower_tier_cfc_ep_dollars == 0
+    {
         return Output {
             mode: Section1248Mode::ViolationLowerTierCfcEpOmittedFromDeemedDividend,
             deemed_dividend_amount_dollars: input.allocable_section_1248_ep_dollars.min(input.gain_recognized_on_sale_dollars),
@@ -294,7 +299,8 @@ pub fn compute(input: &Input) -> Output {
     }
 
     if input.taxpayer_reported_full_gain_as_capital
-        && (input.allocable_section_1248_ep_dollars > 0 || input.allocable_lower_tier_cfc_ep_dollars > 0)
+        && (input.allocable_section_1248_ep_dollars > 0
+            || input.allocable_lower_tier_cfc_ep_dollars > 0)
     {
         return Output {
             mode: Section1248Mode::ViolationGainReportedAsCapitalDespiteSection1248,
@@ -323,7 +329,9 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.ep_category == EpCategory::LowerTierCfcEp && input.allocable_lower_tier_cfc_ep_dollars > 0 {
+    if input.ep_category == EpCategory::LowerTierCfcEp
+        && input.allocable_lower_tier_cfc_ep_dollars > 0
+    {
         return Output {
             mode: Section1248Mode::CompliantLowerTierCfcEpIncluded,
             deemed_dividend_amount_dollars: deemed_dividend,
@@ -386,7 +394,10 @@ mod tests {
             ..baseline_individual_cfc_sale()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1248Mode::NotApplicableShareholderUnderTenPercent);
+        assert_eq!(
+            result.mode,
+            Section1248Mode::NotApplicableShareholderUnderTenPercent
+        );
     }
 
     #[test]
@@ -397,7 +408,10 @@ mod tests {
             ..baseline_individual_cfc_sale()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1248Mode::NotApplicableShareholderUnderTenPercent);
+        assert_eq!(
+            result.mode,
+            Section1248Mode::NotApplicableShareholderUnderTenPercent
+        );
     }
 
     #[test]
@@ -407,7 +421,10 @@ mod tests {
             ..baseline_individual_cfc_sale()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1248Mode::CompliantIndividualDeemedDividendWithSection1248bLimitation);
+        assert_eq!(
+            result.mode,
+            Section1248Mode::CompliantIndividualDeemedDividendWithSection1248bLimitation
+        );
     }
 
     #[test]
@@ -417,13 +434,19 @@ mod tests {
             ..baseline_individual_cfc_sale()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1248Mode::NotApplicableSharesNotHeldDuringCfcPeriod);
+        assert_eq!(
+            result.mode,
+            Section1248Mode::NotApplicableSharesNotHeldDuringCfcPeriod
+        );
     }
 
     #[test]
     fn individual_compliant_with_1248b_limitation() {
         let result = compute(&baseline_individual_cfc_sale());
-        assert_eq!(result.mode, Section1248Mode::CompliantIndividualDeemedDividendWithSection1248bLimitation);
+        assert_eq!(
+            result.mode,
+            Section1248Mode::CompliantIndividualDeemedDividendWithSection1248bLimitation
+        );
         assert_eq!(result.deemed_dividend_amount_dollars, 4_000_000);
         assert_eq!(result.remaining_capital_gain_dollars, 6_000_000);
     }
@@ -435,7 +458,10 @@ mod tests {
             ..baseline_individual_cfc_sale()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1248Mode::CompliantExclusionForPtiPreviouslyTaxed);
+        assert_eq!(
+            result.mode,
+            Section1248Mode::CompliantExclusionForPtiPreviouslyTaxed
+        );
         assert_eq!(result.deemed_dividend_amount_dollars, 0);
     }
 
@@ -446,7 +472,10 @@ mod tests {
             ..baseline_individual_cfc_sale()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1248Mode::CompliantExclusionForEciEffectivelyConnected);
+        assert_eq!(
+            result.mode,
+            Section1248Mode::CompliantExclusionForEciEffectivelyConnected
+        );
     }
 
     #[test]
@@ -466,7 +495,10 @@ mod tests {
             ..baseline_individual_cfc_sale()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1248Mode::NotApplicableUsCorporateSellerSection245aFullDrd);
+        assert_eq!(
+            result.mode,
+            Section1248Mode::NotApplicableUsCorporateSellerSection245aFullDrd
+        );
     }
 
     #[test]
@@ -477,7 +509,10 @@ mod tests {
             ..baseline_individual_cfc_sale()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1248Mode::ViolationIndividualClaimedSection245aDrdImproperly);
+        assert_eq!(
+            result.mode,
+            Section1248Mode::ViolationIndividualClaimedSection245aDrdImproperly
+        );
     }
 
     #[test]
@@ -489,7 +524,10 @@ mod tests {
             ..baseline_individual_cfc_sale()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1248Mode::CompliantLowerTierCfcEpIncluded);
+        assert_eq!(
+            result.mode,
+            Section1248Mode::CompliantLowerTierCfcEpIncluded
+        );
         assert_eq!(result.deemed_dividend_amount_dollars, 5_000_000);
     }
 
@@ -502,7 +540,10 @@ mod tests {
             ..baseline_individual_cfc_sale()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1248Mode::ViolationLowerTierCfcEpOmittedFromDeemedDividend);
+        assert_eq!(
+            result.mode,
+            Section1248Mode::ViolationLowerTierCfcEpOmittedFromDeemedDividend
+        );
     }
 
     #[test]
@@ -513,7 +554,10 @@ mod tests {
             ..baseline_individual_cfc_sale()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1248Mode::ViolationGainReportedAsCapitalDespiteSection1248);
+        assert_eq!(
+            result.mode,
+            Section1248Mode::ViolationGainReportedAsCapitalDespiteSection1248
+        );
     }
 
     #[test]
@@ -536,7 +580,10 @@ mod tests {
             ..baseline_individual_cfc_sale()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1248Mode::CompliantDeemedDividendRecharacterizedFullEpExcess);
+        assert_eq!(
+            result.mode,
+            Section1248Mode::CompliantDeemedDividendRecharacterizedFullEpExcess
+        );
     }
 
     #[test]
@@ -547,7 +594,10 @@ mod tests {
             ..baseline_individual_cfc_sale()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1248Mode::CompliantIndividualDeemedDividendWithSection1248bLimitation);
+        assert_eq!(
+            result.mode,
+            Section1248Mode::CompliantIndividualDeemedDividendWithSection1248bLimitation
+        );
     }
 
     #[test]
@@ -570,10 +620,16 @@ mod tests {
 
     #[test]
     fn constant_pin_thresholds_and_dates() {
-        assert_eq!(SECTION_1248_TEN_PERCENT_VOTING_THRESHOLD_BASIS_POINTS, 1_000);
+        assert_eq!(
+            SECTION_1248_TEN_PERCENT_VOTING_THRESHOLD_BASIS_POINTS,
+            1_000
+        );
         assert_eq!(SECTION_1248_BASIS_POINT_DENOMINATOR, 10_000);
         assert_eq!(SECTION_1248_FIVE_YEAR_LOOKBACK_YEARS, 5);
-        assert_eq!(SECTION_1248_LOWER_TIER_CFC_OWNERSHIP_THRESHOLD_BASIS_POINTS, 5_000);
+        assert_eq!(
+            SECTION_1248_LOWER_TIER_CFC_OWNERSHIP_THRESHOLD_BASIS_POINTS,
+            5_000
+        );
         assert_eq!(SECTION_1248_PRE_1963_CUTOFF_YEAR, 1963);
         assert_eq!(SECTION_1248_ORIGINAL_ENACTMENT_YEAR, 1962);
         assert_eq!(SECTION_245A_PARTICIPATION_EXEMPTION_TCJA_YEAR, 2017);
@@ -588,6 +644,9 @@ mod tests {
             ..baseline_individual_cfc_sale()
         };
         let result = compute(&input);
-        assert_eq!(result.mode, Section1248Mode::CompliantDeemedDividendRecharacterizedFullEpExcess);
+        assert_eq!(
+            result.mode,
+            Section1248Mode::CompliantDeemedDividendRecharacterizedFullEpExcess
+        );
     }
 }

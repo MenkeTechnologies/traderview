@@ -149,7 +149,8 @@ pub fn check(input: &Section6203Input) -> Section6203Result {
 
     if record_exists && !input.taxpayer_identified {
         failure_reasons.push(
-            "26 CFR § 301.6203-1 — summary record must provide IDENTIFICATION OF THE TAXPAYER".to_string(),
+            "26 CFR § 301.6203-1 — summary record must provide IDENTIFICATION OF THE TAXPAYER"
+                .to_string(),
         );
     }
 
@@ -167,13 +168,15 @@ pub fn check(input: &Section6203Input) -> Section6203Result {
 
     if record_exists && input.taxable_period_applicable && !input.taxable_period_identified {
         failure_reasons.push(
-            "26 CFR § 301.6203-1 — summary record must identify TAXABLE PERIOD (where applicable)".to_string(),
+            "26 CFR § 301.6203-1 — summary record must identify TAXABLE PERIOD (where applicable)"
+                .to_string(),
         );
     }
 
     if record_exists && !input.amount_specified {
         failure_reasons.push(
-            "26 CFR § 301.6203-1 — summary record must specify AMOUNT OF THE ASSESSMENT".to_string(),
+            "26 CFR § 301.6203-1 — summary record must specify AMOUNT OF THE ASSESSMENT"
+                .to_string(),
         );
     }
 
@@ -203,9 +206,7 @@ pub fn check(input: &Section6203Input) -> Section6203Result {
         }
     }
 
-    let assessment_valid = record_exists
-        && input.officer_signed
-        && all_four_elements;
+    let assessment_valid = record_exists && input.officer_signed && all_four_elements;
 
     let lien_and_levy_predicate = assessment_valid;
 
@@ -412,12 +413,9 @@ mod tests {
         i.taxpayer_copy_document = TaxpayerCopyDocument::Form23cCopy;
         let r = check(&i);
         assert!(!r.taxpayer_copy_request_satisfied);
-        assert!(r
-            .failure_reasons
-            .iter()
-            .any(|f| f.contains("Form 23-C")
-                && f.contains("NOT released")
-                && f.contains("Rev. Rul. 2007-21")));
+        assert!(r.failure_reasons.iter().any(|f| f.contains("Form 23-C")
+            && f.contains("NOT released")
+            && f.contains("Rev. Rul. 2007-21")));
     }
 
     #[test]
@@ -470,8 +468,10 @@ mod tests {
     #[test]
     fn note_pins_form_23c_not_released() {
         let r = check(&valid_base());
-        assert!(r.notes.iter().any(|n| n.contains("Form 23-C")
-            && n.contains("NOT released")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Form 23-C") && n.contains("NOT released")));
     }
 
     #[test]

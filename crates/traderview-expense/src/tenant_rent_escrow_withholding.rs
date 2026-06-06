@@ -339,8 +339,10 @@ mod tests {
         i.repair_cost_cents = 400_000;
         let r = check(&i);
         assert!(!r.repair_cost_within_cap);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 1942(a)")
-            && f.contains("ONE MONTH'S RENT")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1942(a)") && f.contains("ONE MONTH'S RENT")));
     }
 
     #[test]
@@ -349,9 +351,10 @@ mod tests {
         i.repair_and_deduct_count_12_months = 2;
         let r = check(&i);
         assert!(!r.annual_limit_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 1942(a)")
-            && f.contains("TWICE")
-            && f.contains("12-MONTH")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1942(a)") && f.contains("TWICE") && f.contains("12-MONTH")));
     }
 
     #[test]
@@ -360,8 +363,10 @@ mod tests {
         i.days_since_landlord_notice = 29;
         let r = check(&i);
         assert!(!r.repair_and_deduct_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 1942(b)")
-            && f.contains("30-DAY")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1942(b)") && f.contains("30-DAY")));
     }
 
     #[test]
@@ -370,9 +375,10 @@ mod tests {
         i.tenant_action = TenantAction::RentWithholding;
         i.days_since_governmental_notice = 35;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 1942.4")
-            && f.contains("35 DAYS")
-            && f.contains("$100-$5,000")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1942.4") && f.contains("35 DAYS") && f.contains("$100-$5,000")));
     }
 
     #[test]
@@ -390,8 +396,12 @@ mod tests {
         i.jurisdiction = Jurisdiction::NewYork;
         let r = check(&i);
         assert!(r.tenant_remedy_available);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 235-b")
-            && f.contains("Park West Management Corp. v. Mitchell")));
+        assert!(
+            r.failure_reasons
+                .iter()
+                .any(|f| f.contains("§ 235-b")
+                    && f.contains("Park West Management Corp. v. Mitchell"))
+        );
     }
 
     #[test]
@@ -399,8 +409,10 @@ mod tests {
         let mut i = ca_repair_compliant();
         i.jurisdiction = Jurisdiction::NewYork;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 235-b(2)")
-            && f.contains("WAIVER VOID")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 235-b(2)") && f.contains("WAIVER VOID")));
     }
 
     #[test]
@@ -412,8 +424,10 @@ mod tests {
         i.rent_paid_into_escrow = true;
         let r = check(&i);
         assert!(!r.rent_withholding_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("c. 239 § 8A")
-            && f.contains("LOCAL BOARD OF HEALTH")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("c. 239 § 8A") && f.contains("LOCAL BOARD OF HEALTH")));
     }
 
     #[test]
@@ -425,8 +439,10 @@ mod tests {
         i.rent_paid_into_escrow = false;
         let r = check(&i);
         assert!(!r.rent_withholding_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("c. 239 § 8A")
-            && f.contains("PAID INTO ESCROW")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("c. 239 § 8A") && f.contains("PAID INTO ESCROW")));
     }
 
     #[test]
@@ -461,8 +477,10 @@ mod tests {
         i.days_since_landlord_notice = 14;
         let r = check(&i);
         assert!(!r.repair_cost_within_cap);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 5-12-110")
-            && f.contains("ONE-HALF MONTH'S RENT OR $500")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 5-12-110") && f.contains("ONE-HALF MONTH'S RENT OR $500")));
     }
 
     #[test]
@@ -485,8 +503,10 @@ mod tests {
         i.repair_cost_cents = 50_000;
         let r = check(&i);
         assert!(!r.repair_and_deduct_compliant);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 5-12-110")
-            && f.contains("14-DAY")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 5-12-110") && f.contains("14-DAY")));
     }
 
     #[test]
@@ -495,9 +515,12 @@ mod tests {
         i.jurisdiction = Jurisdiction::Pennsylvania;
         let r = check(&i);
         assert!(r.tenant_remedy_available);
-        assert!(r.failure_reasons.iter().any(|f| f.contains("Pugh v. Holmes")
-            && f.contains("486 Pa. 272 (1979)")
-            && f.contains("COMMON-LAW IMPLIED warranty")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("Pugh v. Holmes")
+                && f.contains("486 Pa. 272 (1979)")
+                && f.contains("COMMON-LAW IMPLIED warranty")));
     }
 
     #[test]
@@ -531,7 +554,10 @@ mod tests {
         let mut ny = ca_repair_compliant();
         ny.jurisdiction = Jurisdiction::NewYork;
         let r_ny = check(&ny);
-        assert!(r_ny.failure_reasons.iter().any(|f| f.contains("WAIVER VOID")));
+        assert!(r_ny
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("WAIVER VOID")));
 
         for jur in [
             Jurisdiction::California,
@@ -557,7 +583,9 @@ mod tests {
         assert!(r.citation.contains("Cal. Civ. Code § 1942 and § 1942.4"));
         assert!(r.citation.contains("Cal. Health & Safety Code § 17920.3"));
         assert!(r.citation.contains("N.Y. Real Prop. Law § 235-b"));
-        assert!(r.citation.contains("Park West Management Corp. v. Mitchell"));
+        assert!(r
+            .citation
+            .contains("Park West Management Corp. v. Mitchell"));
         assert!(r.citation.contains("47 N.Y.2d 316 (1979)"));
         assert!(r.citation.contains("N.Y. RPAPL § 711"));
         assert!(r.citation.contains("Mass. G.L. c. 239 § 8A"));
@@ -605,8 +633,10 @@ mod tests {
     #[test]
     fn note_pins_ny_235b_waiver_void() {
         let r = check(&ca_repair_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("§ 235-b(2)")
-            && n.contains("WAIVER VOID")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 235-b(2)") && n.contains("WAIVER VOID")));
     }
 
     #[test]
@@ -655,21 +685,27 @@ mod tests {
     #[test]
     fn note_pins_trader_landlord_powerful_tenant_defenses() {
         let r = check(&ca_repair_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("Trader-landlord critical")
-            && n.contains("most powerful tenant defenses")
-            && n.contains("REDUCE OR WITHHOLD RENT")
-            && n.contains("VOID as contrary to public policy")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-landlord critical")
+                && n.contains("most powerful tenant defenses")
+                && n.contains("REDUCE OR WITHHOLD RENT")
+                && n.contains("VOID as contrary to public policy")));
     }
 
     #[test]
     fn note_pins_cross_jurisdictional_architecture() {
         let r = check(&ca_repair_compliant());
-        assert!(r.notes.iter().any(|n| n.contains("Cross-jurisdictional architecture")
-            && n.contains("REPAIR-AND-DEDUCT + § 1942.4 STATUTORY DAMAGES")
-            && n.contains("IMPLIED WARRANTY + WAIVER VOID")
-            && n.contains("RENT WITHHOLDING + ESCROW")
-            && n.contains("14-DAY CURE")
-            && n.contains("PUGH v. HOLMES")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Cross-jurisdictional architecture")
+                && n.contains("REPAIR-AND-DEDUCT + § 1942.4 STATUTORY DAMAGES")
+                && n.contains("IMPLIED WARRANTY + WAIVER VOID")
+                && n.contains("RENT WITHHOLDING + ESCROW")
+                && n.contains("14-DAY CURE")
+                && n.contains("PUGH v. HOLMES")));
     }
 
     #[test]

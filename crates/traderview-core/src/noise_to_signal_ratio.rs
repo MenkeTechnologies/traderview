@@ -38,8 +38,12 @@ pub struct NoiseToSignalReport {
 
 pub fn compute(returns: &[f64]) -> Option<NoiseToSignalReport> {
     let n = returns.len();
-    if n < 30 { return None; }
-    if returns.iter().any(|x| !x.is_finite()) { return None; }
+    if n < 30 {
+        return None;
+    }
+    if returns.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let gamma_0: f64 = returns.iter().map(|r| r * r).sum();
     let gamma_1: f64 = (1..n).map(|t| returns[t] * returns[t - 1]).sum();
     let noise_var = (-gamma_1).max(0.0);
@@ -72,15 +76,19 @@ mod tests {
 
     fn box_muller(n: usize, seed: u64, scale: f64) -> Vec<f64> {
         let mut state = seed;
-        (0..n).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u2 = (state >> 32) as f64 / u32::MAX as f64;
-            scale * (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
-        }).collect()
+        (0..n)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u2 = (state >> 32) as f64 / u32::MAX as f64;
+                scale * (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
+            })
+            .collect()
     }
 
     #[test]
@@ -100,8 +108,11 @@ mod tests {
         // Pure signal: NSR should be ~0 (γ_1 ≈ 0).
         let r = box_muller(2000, 42, 0.01);
         let result = compute(&r).unwrap();
-        assert!(result.noise_to_signal < 0.05,
-            "clean signal NSR should be small, got {}", result.noise_to_signal);
+        assert!(
+            result.noise_to_signal < 0.05,
+            "clean signal NSR should be small, got {}",
+            result.noise_to_signal
+        );
     }
 
     #[test]
@@ -110,20 +121,30 @@ mod tests {
         let mut state: u64 = 0xCAFE_BABE_DEAD_BEEF;
         let n = 2000_usize;
         let true_returns = box_muller(n, 42, 0.01);
-        let noise: Vec<f64> = (0..=n).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u2 = (state >> 32) as f64 / u32::MAX as f64;
-            0.005 * (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
-        }).collect();
-        let observed: Vec<f64> = true_returns.iter().enumerate()
-            .map(|(i, r)| r + noise[i + 1] - noise[i]).collect();
+        let noise: Vec<f64> = (0..=n)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u2 = (state >> 32) as f64 / u32::MAX as f64;
+                0.005 * (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
+            })
+            .collect();
+        let observed: Vec<f64> = true_returns
+            .iter()
+            .enumerate()
+            .map(|(i, r)| r + noise[i + 1] - noise[i])
+            .collect();
         let result = compute(&observed).unwrap();
-        assert!(result.noise_to_signal > 0.05,
-            "noisy signal NSR should be elevated, got {}", result.noise_to_signal);
+        assert!(
+            result.noise_to_signal > 0.05,
+            "noisy signal NSR should be elevated, got {}",
+            result.noise_to_signal
+        );
     }
 
     #[test]
@@ -132,17 +153,24 @@ mod tests {
         let mut state: u64 = 0xCAFE_BABE_DEAD_BEEF;
         let n = 2000_usize;
         let true_returns = box_muller(n, 42, 0.01);
-        let noise: Vec<f64> = (0..=n).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u2 = (state >> 32) as f64 / u32::MAX as f64;
-            0.005 * (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
-        }).collect();
-        let observed: Vec<f64> = true_returns.iter().enumerate()
-            .map(|(i, r)| r + noise[i + 1] - noise[i]).collect();
+        let noise: Vec<f64> = (0..=n)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u2 = (state >> 32) as f64 / u32::MAX as f64;
+                0.005 * (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
+            })
+            .collect();
+        let observed: Vec<f64> = true_returns
+            .iter()
+            .enumerate()
+            .map(|(i, r)| r + noise[i + 1] - noise[i])
+            .collect();
         let result = compute(&observed).unwrap();
         assert!(result.gamma_1 < 0.0);
     }

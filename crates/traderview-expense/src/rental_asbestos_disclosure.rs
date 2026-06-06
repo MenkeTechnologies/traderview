@@ -164,7 +164,8 @@ pub fn compute(input: &Input) -> Output {
 
     if matches!(
         input.owner_asbestos_knowledge,
-        OwnerAsbestosKnowledge::SurveyConductedNoAsbestos | OwnerAsbestosKnowledge::NoSurveyNoActualKnowledge
+        OwnerAsbestosKnowledge::SurveyConductedNoAsbestos
+            | OwnerAsbestosKnowledge::NoSurveyNoActualKnowledge
     ) {
         return Output {
             mode: AsbestosDisclosureMode::NotApplicableNoAsbestosKnownToOwner,
@@ -280,7 +281,10 @@ mod tests {
             ..baseline_california_connelly_act_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, AsbestosDisclosureMode::NotApplicableBuildingConstructedAfter1981);
+        assert_eq!(
+            result.mode,
+            AsbestosDisclosureMode::NotApplicableBuildingConstructedAfter1981
+        );
     }
 
     #[test]
@@ -290,7 +294,10 @@ mod tests {
             ..baseline_california_connelly_act_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, AsbestosDisclosureMode::NotApplicableNoAsbestosKnownToOwner);
+        assert_eq!(
+            result.mode,
+            AsbestosDisclosureMode::NotApplicableNoAsbestosKnownToOwner
+        );
     }
 
     #[test]
@@ -300,7 +307,10 @@ mod tests {
             ..baseline_california_connelly_act_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, AsbestosDisclosureMode::NotApplicableNoAsbestosKnownToOwner);
+        assert_eq!(
+            result.mode,
+            AsbestosDisclosureMode::NotApplicableNoAsbestosKnownToOwner
+        );
     }
 
     #[test]
@@ -310,7 +320,10 @@ mod tests {
             ..baseline_california_connelly_act_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, AsbestosDisclosureMode::NotApplicableConnellyActUnderEmployeeThreshold);
+        assert_eq!(
+            result.mode,
+            AsbestosDisclosureMode::NotApplicableConnellyActUnderEmployeeThreshold
+        );
     }
 
     #[test]
@@ -320,13 +333,19 @@ mod tests {
             ..baseline_california_connelly_act_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, AsbestosDisclosureMode::CompliantCaliforniaConnellyActFullNoticeProvided);
+        assert_eq!(
+            result.mode,
+            AsbestosDisclosureMode::CompliantCaliforniaConnellyActFullNoticeProvided
+        );
     }
 
     #[test]
     fn california_connelly_act_baseline_compliant() {
         let result = check(&baseline_california_connelly_act_compliant());
-        assert_eq!(result.mode, AsbestosDisclosureMode::CompliantCaliforniaConnellyActFullNoticeProvided);
+        assert_eq!(
+            result.mode,
+            AsbestosDisclosureMode::CompliantCaliforniaConnellyActFullNoticeProvided
+        );
     }
 
     #[test]
@@ -336,7 +355,10 @@ mod tests {
             ..baseline_california_connelly_act_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, AsbestosDisclosureMode::ViolationCaliforniaConnellyActNoticeNotProvidedToOccupants);
+        assert_eq!(
+            result.mode,
+            AsbestosDisclosureMode::ViolationCaliforniaConnellyActNoticeNotProvidedToOccupants
+        );
     }
 
     #[test]
@@ -377,7 +399,10 @@ mod tests {
             ..baseline_california_connelly_act_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, AsbestosDisclosureMode::ViolationOshaWorkerProtectionViolatedDuringRenovation);
+        assert_eq!(
+            result.mode,
+            AsbestosDisclosureMode::ViolationOshaWorkerProtectionViolatedDuringRenovation
+        );
     }
 
     #[test]
@@ -388,7 +413,10 @@ mod tests {
             ..baseline_california_connelly_act_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, AsbestosDisclosureMode::CompliantCommonLawDutyDisclosureToTenant);
+        assert_eq!(
+            result.mode,
+            AsbestosDisclosureMode::CompliantCommonLawDutyDisclosureToTenant
+        );
     }
 
     #[test]
@@ -399,7 +427,10 @@ mod tests {
             ..baseline_california_connelly_act_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, AsbestosDisclosureMode::ViolationLandlordKnownAsbestosNotDisclosedCommonLaw);
+        assert_eq!(
+            result.mode,
+            AsbestosDisclosureMode::ViolationLandlordKnownAsbestosNotDisclosedCommonLaw
+        );
     }
 
     #[test]
@@ -410,7 +441,10 @@ mod tests {
             ..baseline_california_connelly_act_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, AsbestosDisclosureMode::CompliantCommonLawDutyDisclosureToTenant);
+        assert_eq!(
+            result.mode,
+            AsbestosDisclosureMode::CompliantCommonLawDutyDisclosureToTenant
+        );
     }
 
     #[test]
@@ -421,7 +455,10 @@ mod tests {
             ..baseline_california_connelly_act_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, AsbestosDisclosureMode::ViolationLandlordKnownAsbestosNotDisclosedCommonLaw);
+        assert_eq!(
+            result.mode,
+            AsbestosDisclosureMode::ViolationLandlordKnownAsbestosNotDisclosedCommonLaw
+        );
     }
 
     #[test]
@@ -432,7 +469,10 @@ mod tests {
             ..baseline_california_connelly_act_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, AsbestosDisclosureMode::CompliantCommonLawDutyDisclosureToTenant);
+        assert_eq!(
+            result.mode,
+            AsbestosDisclosureMode::CompliantCommonLawDutyDisclosureToTenant
+        );
     }
 
     #[test]

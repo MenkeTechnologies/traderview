@@ -194,8 +194,10 @@ pub fn compute(input: &Input) -> Output {
     if input.property_classification == PropertyClassification::PropertyOutsideNewJersey {
         return Output {
             mode: NjAntiEvictionMode::NotApplicablePropertyOutsideNewJersey,
-            statutory_basis: "Property outside New Jersey; N.J.S.A. 2A:18-61.1 inapplicable".to_string(),
-            notes: "Property outside New Jersey; New Jersey Anti-Eviction Act inapplicable.".to_string(),
+            statutory_basis: "Property outside New Jersey; N.J.S.A. 2A:18-61.1 inapplicable"
+                .to_string(),
+            notes: "Property outside New Jersey; New Jersey Anti-Eviction Act inapplicable."
+                .to_string(),
             citations,
         };
     }
@@ -377,7 +379,10 @@ fn require_at_least_one_month(
         return Output {
             mode: compliant_mode,
             statutory_basis: statutory_basis.to_string(),
-            notes: format!("COMPLIANT: ground asserted with at least 1-month notice to quit; {}.", statutory_basis),
+            notes: format!(
+                "COMPLIANT: ground asserted with at least 1-month notice to quit; {}.",
+                statutory_basis
+            ),
             citations,
         };
     }
@@ -442,7 +447,10 @@ mod tests {
             ..baseline_compliant_nonpayment()
         };
         let result = check(&input);
-        assert_eq!(result.mode, NjAntiEvictionMode::NotApplicablePropertyOutsideNewJersey);
+        assert_eq!(
+            result.mode,
+            NjAntiEvictionMode::NotApplicablePropertyOutsideNewJersey
+        );
     }
 
     #[test]

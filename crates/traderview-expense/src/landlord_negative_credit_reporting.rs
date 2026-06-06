@@ -292,8 +292,8 @@ pub fn check(
 
     let furnisher_accuracy_compliant = !input.reporting_to_cra || !input.information_inaccurate;
 
-    let investigation_duty_compliant = !input.tenant_disputed_through_cra
-        || input.investigation_conducted_within_30_days;
+    let investigation_duty_compliant =
+        !input.tenant_disputed_through_cra || input.investigation_conducted_within_30_days;
 
     let seven_year_aging_compliant = !input.reporting_to_cra || input.years_since_delinquency <= 7;
 
@@ -301,8 +301,8 @@ pub fn check(
         || (input.fdcpa_validation_notice_provided
             && (!input.tenant_disputed_in_writing_30_days || input.debt_verified_after_dispute));
 
-    let ny_tenant_blacklist_violation = matches!(input.jurisdiction, Jurisdiction::NewYork)
-        && input.ny_tenant_blacklist_reporting;
+    let ny_tenant_blacklist_violation =
+        matches!(input.jurisdiction, Jurisdiction::NewYork) && input.ny_tenant_blacklist_reporting;
 
     let ct_30_day_notice_compliant = !matches!(input.jurisdiction, Jurisdiction::Connecticut)
         || input.ct_30_day_pre_reporting_notice_given;
@@ -445,9 +445,11 @@ mod tests {
         i.information_inaccurate = true;
         let r = check(&i);
         assert!(!r.furnisher_accuracy_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 1681s-2(a) FURNISHER ACCURACY VIOLATION")
-            && f.contains("notify all CRAs")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1681s-2(a) FURNISHER ACCURACY VIOLATION")
+                && f.contains("notify all CRAs")));
     }
 
     #[test]
@@ -457,10 +459,12 @@ mod tests {
         i.investigation_conducted_within_30_days = false;
         let r = check(&i);
         assert!(!r.investigation_duty_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 1681s-2(b) INVESTIGATION DUTY VIOLATION")
-            && f.contains("MANDATORY AND NON-DISCRETIONARY")
-            && f.contains("§ 1681s-2(b)(1)(E)")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1681s-2(b) INVESTIGATION DUTY VIOLATION")
+                && f.contains("MANDATORY AND NON-DISCRETIONARY")
+                && f.contains("§ 1681s-2(b)(1)(E)")));
     }
 
     #[test]
@@ -477,10 +481,12 @@ mod tests {
         i.years_since_delinquency = 8;
         let r = check(&i);
         assert!(!r.seven_year_aging_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 1681c(a)(4) 7-YEAR LIMITATION EXCEEDED")
-            && f.contains("8 years")
-            && f.contains("DATE OF DELINQUENCY")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1681c(a)(4) 7-YEAR LIMITATION EXCEEDED")
+                && f.contains("8 years")
+                && f.contains("DATE OF DELINQUENCY")));
     }
 
     #[test]
@@ -490,8 +496,8 @@ mod tests {
         i.fdcpa_validation_notice_provided = false;
         let r = check(&i);
         assert!(!r.fdcpa_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 1692g(a) FDCPA VALIDATION NOTICE VIOLATION")
+        assert!(r.failure_reasons.iter().any(|f| f
+            .contains("§ 1692g(a) FDCPA VALIDATION NOTICE VIOLATION")
             && f.contains("5-day validation")
             && f.contains("Regulation F")));
     }
@@ -505,9 +511,12 @@ mod tests {
         i.debt_verified_after_dispute = false;
         let r = check(&i);
         assert!(!r.fdcpa_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 1692g(b) FDCPA VERIFICATION VIOLATION")
-            && f.contains("VERIFY")));
+        assert!(
+            r.failure_reasons
+                .iter()
+                .any(|f| f.contains("§ 1692g(b) FDCPA VERIFICATION VIOLATION")
+                    && f.contains("VERIFY"))
+        );
     }
 
     #[test]
@@ -517,8 +526,7 @@ mod tests {
         i.ny_tenant_blacklist_reporting = true;
         let r = check(&i);
         assert!(r.ny_tenant_blacklist_violation);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("NY HSTPA 2019")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("NY HSTPA 2019")
             && f.contains("§ 227-f")
             && f.contains("$500-$1,000 PER VIOLATION")));
     }
@@ -539,9 +547,10 @@ mod tests {
         i.ct_30_day_pre_reporting_notice_given = false;
         let r = check(&i);
         assert!(!r.ct_30_day_notice_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 47a-71")
-            && f.contains("30-DAY PRE-REPORTING NOTICE")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 47a-71") && f.contains("30-DAY PRE-REPORTING NOTICE")));
     }
 
     #[test]
@@ -568,10 +577,12 @@ mod tests {
         i.sealed_eviction_record_reported = true;
         let r = check(&i);
         assert!(r.sealed_eviction_violation);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("SEALED EVICTION RECORD VIOLATION")
-            && f.contains("Oregon SB 970")
-            && f.contains("Washington RCW 59.18.367")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("SEALED EVICTION RECORD VIOLATION")
+                && f.contains("Oregon SB 970")
+                && f.contains("Washington RCW 59.18.367")));
     }
 
     #[test]
@@ -581,10 +592,12 @@ mod tests {
         i.willful_violation = true;
         let r = check(&i);
         assert!(r.punitive_damages_available);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 1681n WILLFUL NONCOMPLIANCE")
-            && f.contains("Safeco Ins. Co. v. Burr")
-            && f.contains("$100-$1,000")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1681n WILLFUL NONCOMPLIANCE")
+                && f.contains("Safeco Ins. Co. v. Burr")
+                && f.contains("$100-$1,000")));
     }
 
     #[test]
@@ -691,8 +704,7 @@ mod tests {
     #[test]
     fn note_pins_federal_fcra_framework() {
         let r = check(&baseline_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Federal FCRA framework")
+        assert!(r.notes.iter().any(|n| n.contains("Federal FCRA framework")
             && n.contains("§ 1681s-2(a)")
             && n.contains("§ 1681s-2(b)")
             && n.contains("§ 1681n willful civil liability")
@@ -702,16 +714,17 @@ mod tests {
     #[test]
     fn note_pins_subsection_s2_a_accuracy() {
         let r = check(&baseline_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 1681s-2(a) furnisher accuracy")
-            && n.contains("90 days")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1681s-2(a) furnisher accuracy") && n.contains("90 days")));
     }
 
     #[test]
     fn note_pins_subsection_s2_b_five_element_investigation() {
         let r = check(&baseline_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 1681s-2(b) investigation duty 5-element framework")
+        assert!(r.notes.iter().any(|n| n
+            .contains("§ 1681s-2(b) investigation duty 5-element framework")
             && n.contains("4th Circuit")
             && n.contains("not verifiable")));
     }
@@ -719,58 +732,67 @@ mod tests {
     #[test]
     fn note_pins_subsection_c_seven_year_limitation() {
         let r = check(&baseline_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 1681c 7-YEAR STATUTE OF LIMITATIONS")
-            && n.contains("10 YEARS")
-            && n.contains("DATE OF DELINQUENCY")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1681c 7-YEAR STATUTE OF LIMITATIONS")
+                && n.contains("10 YEARS")
+                && n.contains("DATE OF DELINQUENCY")));
     }
 
     #[test]
     fn note_pins_section_1681n_willful_safeco() {
         let r = check(&baseline_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 1681n willful noncompliance")
-            && n.contains("PUNITIVE")
-            && n.contains("Safeco Ins. Co. v. Burr, 551 U.S. 47 (2007)")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1681n willful noncompliance")
+                && n.contains("PUNITIVE")
+                && n.contains("Safeco Ins. Co. v. Burr, 551 U.S. 47 (2007)")));
     }
 
     #[test]
     fn note_pins_section_1681o_negligent() {
         let r = check(&baseline_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("§ 1681o negligent noncompliance")
-            && n.contains("NO statutory damages NO punitive damages")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 1681o negligent noncompliance")
+                && n.contains("NO statutory damages NO punitive damages")));
     }
 
     #[test]
     fn note_pins_fdcpa_six_element_framework() {
         let r = check(&baseline_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("FDCPA § 1692 interaction")
-            && n.contains("§ 1692e")
-            && n.contains("§ 1692f")
-            && n.contains("§ 1692g(a)")
-            && n.contains("§ 1692g(b)")
-            && n.contains("Regulation F")
-            && n.contains("§ 1692k")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("FDCPA § 1692 interaction")
+                && n.contains("§ 1692e")
+                && n.contains("§ 1692f")
+                && n.contains("§ 1692g(a)")
+                && n.contains("§ 1692g(b)")
+                && n.contains("Regulation F")
+                && n.contains("§ 1692k")));
     }
 
     #[test]
     fn note_pins_tenant_screening_cra_subset() {
         let r = check(&baseline_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Tenant-screening CRA subset")
-            && n.contains("CoreLogic SafeRent")
-            && n.contains("TransUnion SmartMove")
-            && n.contains("RentBureau")
-            && n.contains("Just Cause laws")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Tenant-screening CRA subset")
+                && n.contains("CoreLogic SafeRent")
+                && n.contains("TransUnion SmartMove")
+                && n.contains("RentBureau")
+                && n.contains("Just Cause laws")));
     }
 
     #[test]
     fn note_pins_state_law_overlay_four_jurisdictions() {
         let r = check(&baseline_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("State law overlay")
+        assert!(r.notes.iter().any(|n| n.contains("State law overlay")
             && n.contains("NY GBL § 380")
             && n.contains("NY RPL § 227-f")
             && n.contains("Cal. Civ. Code § 1785")
@@ -783,22 +805,26 @@ mod tests {
     #[test]
     fn note_pins_trader_fact_patterns_five() {
         let r = check(&baseline_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-landlord critical fact patterns")
-            && n.contains("$5K unpaid rent")
-            && n.contains("8 years after")
-            && n.contains("NY RPL § 227-f")
-            && n.contains("SEALED EVICTION")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-landlord critical fact patterns")
+                && n.contains("$5K unpaid rent")
+                && n.contains("8 years after")
+                && n.contains("NY RPL § 227-f")
+                && n.contains("SEALED EVICTION")));
     }
 
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&baseline_compliant());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Companion to rent_credit_reporting")
-            && n.contains("AB 2747")
-            && n.contains("adverse_action_notice")
-            && n.contains("tenant_rent_judgment_wage_garnishment")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Companion to rent_credit_reporting")
+                && n.contains("AB 2747")
+                && n.contains("adverse_action_notice")
+                && n.contains("tenant_rent_judgment_wage_garnishment")));
     }
 
     #[test]

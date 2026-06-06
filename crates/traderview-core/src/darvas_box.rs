@@ -21,7 +21,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DarvasBoxEvent {
@@ -40,7 +44,10 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
-        Self { lookback: 20, confirmation_bars: 3 }
+        Self {
+            lookback: 20,
+            confirmation_bars: 3,
+        }
     }
 }
 
@@ -48,11 +55,16 @@ impl Default for Config {
 pub fn detect(bars: &[Bar], cfg: &Config) -> Vec<DarvasBoxEvent> {
     let n = bars.len();
     let mut out = Vec::new();
-    if cfg.lookback < 2 || cfg.confirmation_bars == 0
-        || n < cfg.lookback + cfg.confirmation_bars + 1 {
+    if cfg.lookback < 2
+        || cfg.confirmation_bars == 0
+        || n < cfg.lookback + cfg.confirmation_bars + 1
+    {
         return out;
     }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return out;
     }
     let mut last_confirmed_top: Option<f64> = None;
@@ -78,7 +90,8 @@ pub fn detect(bars: &[Bar], cfg: &Config) -> Vec<DarvasBoxEvent> {
             continue;
         }
         let box_bottom: f64 = (i..=i + cfg.confirmation_bars)
-            .map(|j| bars[j].low).fold(f64::INFINITY, f64::min);
+            .map(|j| bars[j].low)
+            .fold(f64::INFINITY, f64::min);
         let confirm_idx = i + cfg.confirmation_bars;
         // De-duplicate consecutive confirmations of the same top.
         if let Some(prev) = last_confirmed_top {
@@ -115,7 +128,13 @@ pub fn detect(bars: &[Bar], cfg: &Config) -> Vec<DarvasBoxEvent> {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn empty_returns_empty() {
@@ -125,7 +144,10 @@ mod tests {
     #[test]
     fn invalid_config_returns_empty() {
         let bars = vec![b(101.0, 99.0, 100.0); 50];
-        let cfg = Config { lookback: 0, ..Default::default() };
+        let cfg = Config {
+            lookback: 0,
+            ..Default::default()
+        };
         assert!(detect(&bars, &cfg).is_empty());
     }
 
@@ -147,12 +169,18 @@ mod tests {
         // 19 flat bars, then bar 19 = clear pivot high at 105, then 3
         // confirmation bars below pivot, then breakout closes above 105.
         let mut bars: Vec<Bar> = (0..19).map(|_| b(101.0, 99.0, 100.0)).collect();
-        bars.push(b(105.0, 100.0, 102.0));    // pivot high at index 19
+        bars.push(b(105.0, 100.0, 102.0)); // pivot high at index 19
         for _ in 0..3 {
-            bars.push(b(101.0, 99.0, 100.0));    // confirmation
+            bars.push(b(101.0, 99.0, 100.0)); // confirmation
         }
-        bars.push(b(110.0, 100.0, 108.0));    // breakout: close > 105
-        let events = detect(&bars, &Config { lookback: 20, confirmation_bars: 3 });
+        bars.push(b(110.0, 100.0, 108.0)); // breakout: close > 105
+        let events = detect(
+            &bars,
+            &Config {
+                lookback: 20,
+                confirmation_bars: 3,
+            },
+        );
         assert!(!events.is_empty(), "expected at least one box");
         let breakout = events.iter().find(|e| e.breakout_index.is_some());
         assert!(breakout.is_some(), "no breakout event found in {events:?}");
@@ -163,12 +191,19 @@ mod tests {
     #[test]
     fn higher_high_in_confirmation_invalidates_box() {
         // Pivot high at bar 19, but bar 20 makes a higher high → no box.
-        let mut bars: Vec<Bar> = (0..20).map(|i| b(101.0 + i as f64 * 0.01,
-            99.0, 100.0)).collect();
-        bars.push(b(150.0, 99.0, 100.0));    // immediately higher → invalidates
+        let mut bars: Vec<Bar> = (0..20)
+            .map(|i| b(101.0 + i as f64 * 0.01, 99.0, 100.0))
+            .collect();
+        bars.push(b(150.0, 99.0, 100.0)); // immediately higher → invalidates
         bars.push(b(150.0, 99.0, 100.0));
         bars.push(b(150.0, 99.0, 100.0));
-        let events = detect(&bars, &Config { lookback: 20, confirmation_bars: 3 });
+        let events = detect(
+            &bars,
+            &Config {
+                lookback: 20,
+                confirmation_bars: 3,
+            },
+        );
         // First pivot at index 19 will not confirm because bar 20 > pivot.
         // But the higher highs at 20-22 will form new pivots that might.
         // We just verify the very first box (pivot=index 19) isn't recorded.
@@ -183,18 +218,33 @@ mod tests {
         // Confirmation: 3 bars, last one dips to 95.
         bars.push(b(100.5, 99.5, 100.0));
         bars.push(b(100.5, 99.5, 100.0));
-        bars.push(b(100.5, 95.0, 100.0));    // low spike
-        bars.push(b(102.0, 99.0, 102.0));    // breakout
-        let events = detect(&bars, &Config { lookback: 20, confirmation_bars: 3 });
+        bars.push(b(100.5, 95.0, 100.0)); // low spike
+        bars.push(b(102.0, 99.0, 102.0)); // breakout
+        let events = detect(
+            &bars,
+            &Config {
+                lookback: 20,
+                confirmation_bars: 3,
+            },
+        );
         if let Some(e) = events.first() {
-            assert!((e.box_bottom - 95.0).abs() < 1e-9,
-                "box bottom should be the 95 low, got {}", e.box_bottom);
+            assert!(
+                (e.box_bottom - 95.0).abs() < 1e-9,
+                "box bottom should be the 95 low, got {}",
+                e.box_bottom
+            );
         }
     }
 
     #[test]
     fn output_does_not_panic_on_minimal_input() {
         let bars = vec![b(101.0, 99.0, 100.0); 25];
-        let _ = detect(&bars, &Config { lookback: 20, confirmation_bars: 3 });
+        let _ = detect(
+            &bars,
+            &Config {
+                lookback: 20,
+                confirmation_bars: 3,
+            },
+        );
     }
 }

@@ -38,8 +38,15 @@ pub fn compute(pivots: &[Pivot], z_period: usize) -> SwingStrengthReport {
         swings: Vec::new(),
         z_period,
     };
-    if pivots.len() < 2 || z_period < 3 { return report; }
-    if pivots.iter().any(|p| !p.price.is_finite() || p.price <= 0.0) { return report; }
+    if pivots.len() < 2 || z_period < 3 {
+        return report;
+    }
+    if pivots
+        .iter()
+        .any(|p| !p.price.is_finite() || p.price <= 0.0)
+    {
+        return report;
+    }
     let mut ratios: Vec<f64> = Vec::new();
     let mut magnitudes = Vec::new();
     for w in pivots.windows(2) {
@@ -49,8 +56,12 @@ pub fn compute(pivots: &[Pivot], z_period: usize) -> SwingStrengthReport {
     for (i, &mag) in magnitudes.iter().enumerate() {
         let ratio = if i > 0 && magnitudes[i - 1] > 0.0 {
             Some(mag / magnitudes[i - 1])
-        } else { None };
-        if let Some(r) = ratio { ratios.push(r); }
+        } else {
+            None
+        };
+        if let Some(r) = ratio {
+            ratios.push(r);
+        }
         let zscore = if ratios.len() >= z_period {
             let win = &ratios[ratios.len() - z_period..];
             let p_f = z_period as f64;
@@ -59,10 +70,14 @@ pub fn compute(pivots: &[Pivot], z_period: usize) -> SwingStrengthReport {
             let std = var.max(0.0).sqrt();
             if std > 0.0 {
                 Some((ratio.unwrap() - mean) / std)
-            } else { Some(0.0) }
-        } else { None };
+            } else {
+                Some(0.0)
+            }
+        } else {
+            None
+        };
         report.swings.push(SwingStrength {
-            pivot_index: i + 1,    // pivot at index i+1 is the "current swing" endpoint
+            pivot_index: i + 1, // pivot at index i+1 is the "current swing" endpoint
             magnitude: mag,
             ratio_vs_prior: ratio,
             zscore,
@@ -76,7 +91,11 @@ mod tests {
     use super::*;
 
     fn p(idx: usize, price: f64, is_high: bool) -> Pivot {
-        Pivot { index: idx, price, is_high }
+        Pivot {
+            index: idx,
+            price,
+            is_high,
+        }
     }
 
     #[test]
@@ -109,9 +128,9 @@ mod tests {
     fn equal_swings_yield_unit_ratio() {
         let pivots = vec![
             p(0, 100.0, true),
-            p(10, 90.0, false),    // mag 10
-            p(20, 100.0, true),    // mag 10
-            p(30, 90.0, false),    // mag 10
+            p(10, 90.0, false), // mag 10
+            p(20, 100.0, true), // mag 10
+            p(30, 90.0, false), // mag 10
         ];
         let r = compute(&pivots, 10);
         assert_eq!(r.swings.len(), 3);
@@ -124,9 +143,9 @@ mod tests {
     fn expanding_swings_yield_greater_than_one_ratios() {
         let pivots = vec![
             p(0, 100.0, true),
-            p(10, 95.0, false),    // mag 5
-            p(20, 105.0, true),    // mag 10 (ratio 2.0)
-            p(30, 90.0, false),    // mag 15 (ratio 1.5)
+            p(10, 95.0, false), // mag 5
+            p(20, 105.0, true), // mag 10 (ratio 2.0)
+            p(30, 90.0, false), // mag 15 (ratio 1.5)
         ];
         let r = compute(&pivots, 10);
         assert!(r.swings[1].ratio_vs_prior.unwrap() > 1.0);

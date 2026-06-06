@@ -55,26 +55,41 @@ pub fn analyze(
     notional: f64,
     existing_spread_bps: Option<f64>,
 ) -> Option<CdsReport> {
-    if knots.is_empty() || coupons.is_empty()
-        || !recovery_rate.is_finite() || !(0.0..1.0).contains(&recovery_rate)
-        || !notional.is_finite() || notional == 0.0
+    if knots.is_empty()
+        || coupons.is_empty()
+        || !recovery_rate.is_finite()
+        || !(0.0..1.0).contains(&recovery_rate)
+        || !notional.is_finite()
+        || notional == 0.0
     {
         return None;
     }
-    if knots.iter().any(|k| !k.time_years.is_finite() || k.time_years <= 0.0
-        || !k.discount_factor.is_finite() || k.discount_factor <= 0.0 || k.discount_factor > 1.0 + 1e-9
-        || !k.hazard_rate.is_finite() || k.hazard_rate < 0.0)
-    {
+    if knots.iter().any(|k| {
+        !k.time_years.is_finite()
+            || k.time_years <= 0.0
+            || !k.discount_factor.is_finite()
+            || k.discount_factor <= 0.0
+            || k.discount_factor > 1.0 + 1e-9
+            || !k.hazard_rate.is_finite()
+            || k.hazard_rate < 0.0
+    }) {
         return None;
     }
-    if coupons.iter().any(|c| !c.time_years.is_finite() || c.time_years <= 0.0
-        || !c.accrual.is_finite() || c.accrual <= 0.0)
-    {
+    if coupons.iter().any(|c| {
+        !c.time_years.is_finite()
+            || c.time_years <= 0.0
+            || !c.accrual.is_finite()
+            || c.accrual <= 0.0
+    }) {
         return None;
     }
     // Interpolate hazard λ(t) and discount P(0,t) piecewise-linearly.
     let mut sorted: Vec<CurvePoint> = knots.to_vec();
-    sorted.sort_by(|a, b| a.time_years.partial_cmp(&b.time_years).unwrap_or(std::cmp::Ordering::Equal));
+    sorted.sort_by(|a, b| {
+        a.time_years
+            .partial_cmp(&b.time_years)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
     // Build the survival probability path S(t) = exp(-Λ(0,t)).
     // For each coupon period we accumulate Λ via cumulative integral over
     // sorted hazard knots.
@@ -83,28 +98,38 @@ pub fn analyze(
     let mut prev_t = 0.0_f64;
     let mut prev_survival = 1.0_f64;
     for c in coupons {
-        if c.time_years <= prev_t { continue; }
+        if c.time_years <= prev_t {
+            continue;
+        }
         let lambda_to_t = integrate_hazard(&sorted, prev_t, c.time_years);
         let survival_to_t = (-cumulative_hazard(&sorted, c.time_years)).exp();
-        if !survival_to_t.is_finite() { return None; }
+        if !survival_to_t.is_finite() {
+            return None;
+        }
         let prob_default_in_period = (prev_survival - survival_to_t).max(0.0);
         // Discount to the midpoint of the period for protection leg.
         let mid_t = 0.5 * (prev_t + c.time_years);
         let df_mid = discount_at(&sorted, mid_t);
         let df_end = discount_at(&sorted, c.time_years);
-        if !df_mid.is_finite() || !df_end.is_finite() { return None; }
+        if !df_mid.is_finite() || !df_end.is_finite() {
+            return None;
+        }
         prot_leg_pv += (1.0 - recovery_rate) * df_mid * prob_default_in_period;
         prem_leg_pv01 += c.accrual * df_end * survival_to_t * 0.0001;
         prev_t = c.time_years;
         prev_survival = survival_to_t;
         let _ = lambda_to_t;
     }
-    if prem_leg_pv01 <= 0.0 { return None; }
+    if prem_leg_pv01 <= 0.0 {
+        return None;
+    }
     let par_spread_bps = prot_leg_pv / prem_leg_pv01;
     // PV of an EXISTING swap entered at running_spread S₀ is:
     //   (par − S₀) · prem_pv01 · notional  [for protection BUYER]
     let pv_existing = if let Some(s0) = existing_spread_bps {
-        if !s0.is_finite() { return None; }
+        if !s0.is_finite() {
+            return None;
+        }
         (par_spread_bps - s0) * prem_leg_pv01 * notional
     } else {
         0.0
@@ -125,17 +150,23 @@ fn integrate_hazard(curve: &[CurvePoint], t0: f64, t1: f64) -> f64 {
 }
 
 fn cumulative_hazard(curve: &[CurvePoint], t: f64) -> f64 {
-    if t <= 0.0 { return 0.0; }
+    if t <= 0.0 {
+        return 0.0;
+    }
     let mut prev_t = 0.0_f64;
     let mut prev_lambda = curve.first().map(|k| k.hazard_rate).unwrap_or(0.0);
     let mut sum = 0.0_f64;
     for k in curve {
         let cur_t = k.time_years.min(t);
-        if cur_t <= prev_t { continue; }
+        if cur_t <= prev_t {
+            continue;
+        }
         sum += 0.5 * (prev_lambda + k.hazard_rate) * (cur_t - prev_t);
         prev_t = cur_t;
         prev_lambda = k.hazard_rate;
-        if k.time_years >= t { return sum; }
+        if k.time_years >= t {
+            return sum;
+        }
     }
     // Extrapolate beyond last knot with flat hazard.
     if t > prev_t {
@@ -145,9 +176,15 @@ fn cumulative_hazard(curve: &[CurvePoint], t: f64) -> f64 {
 }
 
 fn interp_hazard(curve: &[CurvePoint], t: f64) -> f64 {
-    if curve.is_empty() { return 0.0; }
-    if t <= curve[0].time_years { return curve[0].hazard_rate; }
-    if t >= curve.last().unwrap().time_years { return curve.last().unwrap().hazard_rate; }
+    if curve.is_empty() {
+        return 0.0;
+    }
+    if t <= curve[0].time_years {
+        return curve[0].hazard_rate;
+    }
+    if t >= curve.last().unwrap().time_years {
+        return curve.last().unwrap().hazard_rate;
+    }
     for w in curve.windows(2) {
         if t >= w[0].time_years && t <= w[1].time_years {
             let frac = (t - w[0].time_years) / (w[1].time_years - w[0].time_years);
@@ -158,8 +195,12 @@ fn interp_hazard(curve: &[CurvePoint], t: f64) -> f64 {
 }
 
 fn discount_at(curve: &[CurvePoint], t: f64) -> f64 {
-    if curve.is_empty() { return 1.0; }
-    if t <= 0.0 { return 1.0; }
+    if curve.is_empty() {
+        return 1.0;
+    }
+    if t <= 0.0 {
+        return 1.0;
+    }
     // Linear interp on log-DF (equivalently flat forward rate).
     if t <= curve[0].time_years {
         let r = -curve[0].discount_factor.ln() / curve[0].time_years;
@@ -186,10 +227,17 @@ mod tests {
     use super::*;
 
     fn k(t: f64, df: f64, lam: f64) -> CurvePoint {
-        CurvePoint { time_years: t, discount_factor: df, hazard_rate: lam }
+        CurvePoint {
+            time_years: t,
+            discount_factor: df,
+            hazard_rate: lam,
+        }
     }
     fn c(t: f64, acc: f64) -> CouponDate {
-        CouponDate { time_years: t, accrual: acc }
+        CouponDate {
+            time_years: t,
+            accrual: acc,
+        }
     }
 
     #[test]
@@ -212,8 +260,11 @@ mod tests {
         let knots = vec![k(5.0, 0.95, 0.01)];
         let coupons: Vec<CouponDate> = (1..=20).map(|i| c(i as f64 * 0.25, 0.25)).collect();
         let r = analyze(&knots, &coupons, 0.40, 1_000_000.0, None).unwrap();
-        assert!((r.par_spread_bps - 60.0).abs() < 15.0,
-            "expected ~60bps, got {}", r.par_spread_bps);
+        assert!(
+            (r.par_spread_bps - 60.0).abs() < 15.0,
+            "expected ~60bps, got {}",
+            r.par_spread_bps
+        );
     }
 
     #[test]
@@ -237,7 +288,9 @@ mod tests {
     fn existing_position_pv_zero_at_par() {
         let knots = vec![k(5.0, 0.95, 0.01)];
         let coupons: Vec<CouponDate> = (1..=20).map(|i| c(i as f64 * 0.25, 0.25)).collect();
-        let par = analyze(&knots, &coupons, 0.40, 1_000_000.0, None).unwrap().par_spread_bps;
+        let par = analyze(&knots, &coupons, 0.40, 1_000_000.0, None)
+            .unwrap()
+            .par_spread_bps;
         let r = analyze(&knots, &coupons, 0.40, 1_000_000.0, Some(par)).unwrap();
         assert!(r.fair_pv_existing.abs() < 1.0);
     }
@@ -259,7 +312,7 @@ mod tests {
         let short: Vec<CouponDate> = (1..=4).map(|i| c(i as f64 * 0.25, 0.25)).collect();
         let long: Vec<CouponDate> = (1..=40).map(|i| c(i as f64 * 0.25, 0.25)).collect();
         let r_short = analyze(&knots, &short, 0.40, 1_000_000.0, None).unwrap();
-        let r_long  = analyze(&knots, &long, 0.40, 1_000_000.0, None).unwrap();
+        let r_long = analyze(&knots, &long, 0.40, 1_000_000.0, None).unwrap();
         assert!(r_long.premium_leg_pv01 > r_short.premium_leg_pv01);
     }
 }

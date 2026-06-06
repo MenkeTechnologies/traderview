@@ -123,7 +123,8 @@ pub fn check(input: &Input) -> Output {
         .saturating_sub(input.partnership_aggregate_fmv_cents);
     let partnership_prong_met =
         partnership_built_in_loss > SUBSTANTIAL_BUILT_IN_LOSS_PARTNERSHIP_THRESHOLD_CENTS;
-    let transferee_prong_met = input.transfer_year > TCJA_2017_AMENDMENT_TRANSFEREE_PRONG_EFFECTIVE_AFTER_YEAR
+    let transferee_prong_met = input.transfer_year
+        > TCJA_2017_AMENDMENT_TRANSFEREE_PRONG_EFFECTIVE_AFTER_YEAR
         && input.transferee_allocable_loss_if_assets_sold_at_fmv_cents
             > SUBSTANTIAL_BUILT_IN_LOSS_TRANSFEREE_THRESHOLD_CENTS;
     let substantial_built_in_loss = partnership_prong_met || transferee_prong_met;
@@ -197,7 +198,10 @@ pub fn check(input: &Input) -> Output {
         ));
         Severity::Section754ElectionNegativeStepDownInsideBasisDecrease
     } else {
-        notes.push("§ 754 election in effect but no net adjustment (outside basis = inside-basis share).".to_string());
+        notes.push(
+            "§ 754 election in effect but no net adjustment (outside basis = inside-basis share)."
+                .to_string(),
+        );
         Severity::Section754ElectionNoNetAdjustment
     };
 
@@ -378,17 +382,26 @@ mod tests {
 
     #[test]
     fn constant_pin_partnership_prong_250k_threshold() {
-        assert_eq!(SUBSTANTIAL_BUILT_IN_LOSS_PARTNERSHIP_THRESHOLD_CENTS, 25_000_000);
+        assert_eq!(
+            SUBSTANTIAL_BUILT_IN_LOSS_PARTNERSHIP_THRESHOLD_CENTS,
+            25_000_000
+        );
     }
 
     #[test]
     fn constant_pin_transferee_prong_250k_threshold() {
-        assert_eq!(SUBSTANTIAL_BUILT_IN_LOSS_TRANSFEREE_THRESHOLD_CENTS, 25_000_000);
+        assert_eq!(
+            SUBSTANTIAL_BUILT_IN_LOSS_TRANSFEREE_THRESHOLD_CENTS,
+            25_000_000
+        );
     }
 
     #[test]
     fn constant_pin_tcja_2017_effective_year_cutoff() {
-        assert_eq!(TCJA_2017_AMENDMENT_TRANSFEREE_PRONG_EFFECTIVE_AFTER_YEAR, 2017);
+        assert_eq!(
+            TCJA_2017_AMENDMENT_TRANSFEREE_PRONG_EFFECTIVE_AFTER_YEAR,
+            2017
+        );
     }
 
     #[test]
@@ -416,8 +429,7 @@ mod tests {
     }
 
     #[test]
-    fn
-    death_with_754_step_down_still_records_negative_adjustment() {
+    fn death_with_754_step_down_still_records_negative_adjustment() {
         let mut i = base_754_sale();
         i.transfer_event = TransferEvent::DeathOfPartner;
         i.transferee_outside_basis_cents = 5_000_000;

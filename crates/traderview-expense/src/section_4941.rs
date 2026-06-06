@@ -239,7 +239,10 @@ pub fn check(input: &Input) -> Output {
         "Companion: section_4958 (iter 466), section_4960 (iter 464), section_4973 (iter 442), section_4974 (iter 436), section_4975 (iter 434), section_4980 (iter 460).".to_string(),
     ];
 
-    if !matches!(input.organization_status, OrganizationStatus::PrivateFoundation) {
+    if !matches!(
+        input.organization_status,
+        OrganizationStatus::PrivateFoundation
+    ) {
         let mut n = notes;
         n.push(
             "Organization is not a private foundation — § 4941 does not apply. Public charities use § 4958 intermediate sanctions instead."
@@ -301,8 +304,8 @@ pub fn check(input: &Input) -> Output {
         0
     };
 
-    let corrected = input.corrected_within_taxable_period
-        && input.correction_complete_amount_cents >= amount;
+    let corrected =
+        input.corrected_within_taxable_period && input.correction_complete_amount_cents >= amount;
 
     let tier2_dp = if corrected {
         0
@@ -336,7 +339,10 @@ pub fn check(input: &Input) -> Output {
 
     let mut n = notes;
     if tier2_dp == 0 {
-        n.push("Tier-2 200% DP tax avoided: act corrected within taxable period per § 4941(e)(4).".to_string());
+        n.push(
+            "Tier-2 200% DP tax avoided: act corrected within taxable period per § 4941(e)(4)."
+                .to_string(),
+        );
     }
     if input.manager_knowing_willful_participant {
         n.push(format!(
@@ -440,7 +446,7 @@ mod tests {
         let mut i = baseline();
         i.manager_knowing_willful_participant = true;
         i.amount_involved_cents = 1_000_000_00; // $1M
-        // 5% × $1M = $50K, capped at $20K
+                                                // 5% × $1M = $50K, capped at $20K
         let out = check(&i);
         assert_eq!(out.tier1_manager_tax_cents, 20_000_00);
     }

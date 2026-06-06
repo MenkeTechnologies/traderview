@@ -432,7 +432,10 @@ mod tests {
         };
         let out = check(&input);
         assert_eq!(out.severity, Severity::Compliant);
-        assert_eq!(out.per_employee[0].non_medical_remuneration_cents, 500_000_00);
+        assert_eq!(
+            out.per_employee[0].non_medical_remuneration_cents,
+            500_000_00
+        );
         assert_eq!(out.total_excise_tax_cents, 0);
     }
 
@@ -455,7 +458,10 @@ mod tests {
         };
         let out = check(&input);
         assert_eq!(out.severity, Severity::ExciseTaxOwed);
-        assert_eq!(out.per_employee[0].non_medical_remuneration_cents, 2_000_000_00);
+        assert_eq!(
+            out.per_employee[0].non_medical_remuneration_cents,
+            2_000_000_00
+        );
         assert_eq!(out.per_employee[0].remuneration_excess_cents, 1_000_000_00);
         assert_eq!(out.total_excise_tax_cents, 210_000_00);
     }
@@ -840,7 +846,15 @@ mod tests {
         let input = Input {
             organization_type: OrganizationType::Section501aExempt,
             tax_year_regime: TaxYearRegime::PreObbba,
-            employees: vec![emp("Dr-Admin", 2_000_000_00, 1_000_000_00, 0, true, true, 0)],
+            employees: vec![emp(
+                "Dr-Admin",
+                2_000_000_00,
+                1_000_000_00,
+                0,
+                true,
+                true,
+                0,
+            )],
         };
         let out = check(&input);
         assert_eq!(out.per_employee[0].remuneration_excess_cents, 1_000_000_00);

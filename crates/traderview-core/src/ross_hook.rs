@@ -21,7 +21,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct RossHookReport {
@@ -37,8 +41,13 @@ pub fn compute(bars: &[Bar], trend_lookback: usize) -> RossHookReport {
         short_trigger: vec![false; n],
         trend_lookback,
     };
-    if trend_lookback < 5 || n < trend_lookback + 2 { return report; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if trend_lookback < 5 || n < trend_lookback + 2 {
+        return report;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return report;
     }
     for i in (trend_lookback + 1)..n {
@@ -70,7 +79,13 @@ pub fn compute(bars: &[Bar], trend_lookback: usize) -> RossHookReport {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {
@@ -107,8 +122,8 @@ mod tests {
             b(103.0, 101.0, 102.0),
             b(104.0, 102.0, 103.0),
             b(105.0, 103.0, 104.0),
-            b(104.5, 102.5, 103.5),    // hook — lower high
-            b(105.5, 103.0, 105.0),    // trigger — breaks above 104.5
+            b(104.5, 102.5, 103.5), // hook — lower high
+            b(105.5, 103.0, 105.0), // trigger — breaks above 104.5
         ];
         let r = compute(&bars, 5);
         assert!(r.long_trigger[6]);
@@ -122,8 +137,8 @@ mod tests {
             b(99.0, 97.0, 98.0),
             b(98.0, 96.0, 97.0),
             b(97.0, 95.0, 96.0),
-            b(97.5, 95.5, 96.5),       // higher low — hook
-            b(97.0, 94.0, 94.5),       // trigger — breaks below 95.5
+            b(97.5, 95.5, 96.5), // higher low — hook
+            b(97.0, 94.0, 94.5), // trigger — breaks below 95.5
         ];
         let r = compute(&bars, 5);
         assert!(r.short_trigger[6]);
@@ -132,9 +147,9 @@ mod tests {
     #[test]
     fn no_hook_no_signal() {
         // Continuous uptrend → no pullback bar to form the hook.
-        let bars: Vec<_> = (0..30).map(|i| {
-            b(101.0 + i as f64, 99.0 + i as f64, 100.0 + i as f64)
-        }).collect();
+        let bars: Vec<_> = (0..30)
+            .map(|i| b(101.0 + i as f64, 99.0 + i as f64, 100.0 + i as f64))
+            .collect();
         let r = compute(&bars, 5);
         // Every bar makes higher high — no hook.
         assert!(!r.long_trigger.iter().any(|x| *x));

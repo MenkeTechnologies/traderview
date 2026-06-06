@@ -174,14 +174,11 @@ pub fn check(input: &Input) -> CheckResult {
 
     let non_disparagement_clause_void =
         input.non_disparagement_clause_present && !exception_engaged;
-    let penalty_clause_void =
-        input.penalty_or_fee_for_review_clause_present && !exception_engaged;
-    let ip_transfer_clause_void =
-        input.ip_transfer_clause_present && !exception_engaged;
+    let penalty_clause_void = input.penalty_or_fee_for_review_clause_present && !exception_engaged;
+    let ip_transfer_clause_void = input.ip_transfer_clause_present && !exception_engaged;
 
-    let any_void_clause = non_disparagement_clause_void
-        || penalty_clause_void
-        || ip_transfer_clause_void;
+    let any_void_clause =
+        non_disparagement_clause_void || penalty_clause_void || ip_transfer_clause_void;
 
     let offering_lease_unlawful = any_void_clause;
     let ftc_enforcement_available = any_void_clause;
@@ -236,7 +233,9 @@ pub fn check(input: &Input) -> CheckResult {
     {
         let mut engaged_exceptions: Vec<&str> = Vec::new();
         if input.exception_legally_actionable_content {
-            engaged_exceptions.push("§ 45b(c)(1) legally actionable content (defamation, harassment, knowingly false)");
+            engaged_exceptions.push(
+                "§ 45b(c)(1) legally actionable content (defamation, harassment, knowingly false)",
+            );
         }
         if input.exception_trade_secret_or_personal_info {
             engaged_exceptions.push("§ 45b(c)(2) trade secret / personal information");
@@ -535,7 +534,11 @@ mod tests {
             let void_count = (r.non_disparagement_clause_void as usize)
                 + (r.penalty_clause_void as usize)
                 + (r.ip_transfer_clause_void as usize);
-            assert_eq!(void_count, *expected_void_count, "nd={} pen={} ip={}", nd, pen, ip);
+            assert_eq!(
+                void_count, *expected_void_count,
+                "nd={} pen={} ip={}",
+                nd, pen, ip
+            );
         }
     }
 
@@ -553,18 +556,12 @@ mod tests {
                         b.exception_medical_record_content = medical;
                         b.exception_unlawful_content = unlawful;
                         let r = check(&b);
-                        let any_exception = legally_actionable
-                            || trade_secret
-                            || medical
-                            || unlawful;
+                        let any_exception =
+                            legally_actionable || trade_secret || medical || unlawful;
                         assert_eq!(
-                            r.exception_engaged,
-                            any_exception,
+                            r.exception_engaged, any_exception,
                             "exceptions: la={} ts={} med={} unl={}",
-                            legally_actionable,
-                            trade_secret,
-                            medical,
-                            unlawful
+                            legally_actionable, trade_secret, medical, unlawful
                         );
                     }
                 }
@@ -595,10 +592,12 @@ mod tests {
     fn sibling_distinction_note_present() {
         let r = check(&input());
         assert!(
-            r.notes.iter().any(|n| n.contains("lease_waiver_enforceability")
-                && n.contains("landlord_retaliation_damages")
-                && n.contains("landlord_harassment")
-                && n.contains("federal FLOOR")),
+            r.notes
+                .iter()
+                .any(|n| n.contains("lease_waiver_enforceability")
+                    && n.contains("landlord_retaliation_damages")
+                    && n.contains("landlord_harassment")
+                    && n.contains("federal FLOOR")),
             "sibling distinction note must reference related modules + federal-floor concept"
         );
     }

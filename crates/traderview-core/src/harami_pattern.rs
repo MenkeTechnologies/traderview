@@ -16,7 +16,12 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub open: f64, pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct HaramiReport {
@@ -30,9 +35,12 @@ pub fn compute(bars: &[Bar]) -> HaramiReport {
         bullish: vec![false; n],
         bearish: vec![false; n],
     };
-    if n < 2 { return report; }
-    if bars.iter().any(|b| !b.open.is_finite() || !b.high.is_finite()
-        || !b.low.is_finite() || !b.close.is_finite()) {
+    if n < 2 {
+        return report;
+    }
+    if bars.iter().any(|b| {
+        !b.open.is_finite() || !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()
+    }) {
         return report;
     }
     for i in 1..n {
@@ -41,20 +49,30 @@ pub fn compute(bars: &[Bar]) -> HaramiReport {
         let prev_body = (prev.close - prev.open).abs();
         let cur_body = (cur.close - cur.open).abs();
         let prev_range = prev.high - prev.low;
-        if prev_body <= 0.0 || prev_range <= 0.0 { continue; }
+        if prev_body <= 0.0 || prev_range <= 0.0 {
+            continue;
+        }
         // Prior bar must be tall (body ≥ 60% of range) and current
         // bar's body must fit inside it.
-        if prev_body < 0.6 * prev_range { continue; }
+        if prev_body < 0.6 * prev_range {
+            continue;
+        }
         let prev_body_high = prev.open.max(prev.close);
         let prev_body_low = prev.open.min(prev.close);
         let cur_body_high = cur.open.max(cur.close);
         let cur_body_low = cur.open.min(cur.close);
-        if cur_body_high > prev_body_high || cur_body_low < prev_body_low { continue; }
-        if cur_body <= 0.0 { continue; }
+        if cur_body_high > prev_body_high || cur_body_low < prev_body_low {
+            continue;
+        }
+        if cur_body <= 0.0 {
+            continue;
+        }
         // Opposite color.
         let prev_bullish = prev.close > prev.open;
         let cur_bullish = cur.close > cur.open;
-        if prev_bullish == cur_bullish { continue; }
+        if prev_bullish == cur_bullish {
+            continue;
+        }
         if cur_bullish {
             report.bullish[i] = true;
         } else {
@@ -69,7 +87,12 @@ mod tests {
     use super::*;
 
     fn bar(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -82,8 +105,10 @@ mod tests {
 
     #[test]
     fn nan_returns_empty() {
-        let bars = vec![bar(100.0, 101.0, 99.0, 100.0),
-                        bar(f64::NAN, 101.0, 99.0, 100.0)];
+        let bars = vec![
+            bar(100.0, 101.0, 99.0, 100.0),
+            bar(f64::NAN, 101.0, 99.0, 100.0),
+        ];
         let r = compute(&bars);
         assert!(!r.bullish.iter().any(|x| *x));
         assert!(!r.bearish.iter().any(|x| *x));

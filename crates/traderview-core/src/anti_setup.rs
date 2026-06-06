@@ -24,7 +24,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AntiReport {
@@ -49,10 +53,20 @@ pub fn compute(
         stoch_k: vec![None; n],
         stoch_d: vec![None; n],
     };
-    if stoch_period < 2 || d_period < 2 || trend_short < 2 || trend_long < 2
-        || trend_short >= trend_long || lookback < 2
-        || n < trend_long.max(stoch_period + d_period + lookback) { return report; }
-    if bars.iter().any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()) {
+    if stoch_period < 2
+        || d_period < 2
+        || trend_short < 2
+        || trend_long < 2
+        || trend_short >= trend_long
+        || lookback < 2
+        || n < trend_long.max(stoch_period + d_period + lookback)
+    {
+        return report;
+    }
+    if bars
+        .iter()
+        .any(|b| !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite())
+    {
         return report;
     }
     // Raw %K.
@@ -62,7 +76,11 @@ pub fn compute(
         let hh = win.iter().fold(f64::NEG_INFINITY, |a, b| a.max(b.high));
         let ll = win.iter().fold(f64::INFINITY, |a, b| a.min(b.low));
         let range = hh - ll;
-        *slot = Some(if range > 0.0 { (bars[i].close - ll) / range * 100.0 } else { 50.0 });
+        *slot = Some(if range > 0.0 {
+            (bars[i].close - ll) / range * 100.0
+        } else {
+            50.0
+        });
     }
     let d_line = sma_opt(&raw_k, d_period);
     report.stoch_k = raw_k.clone();
@@ -72,25 +90,32 @@ pub fn compute(
     let sma_s = sma(&closes, trend_short);
     let sma_l = sma(&closes, trend_long);
     for i in 1..n {
-        let (Some(kt), Some(dt), Some(dt_prev), Some(kt_prev), Some(ss), Some(sl)) =
-            (raw_k[i], d_line[i], d_line[i - 1], raw_k[i - 1],
-             sma_s[i], sma_l[i]) else { continue };
+        let (Some(kt), Some(dt), Some(dt_prev), Some(kt_prev), Some(ss), Some(sl)) = (
+            raw_k[i],
+            d_line[i],
+            d_line[i - 1],
+            raw_k[i - 1],
+            sma_s[i],
+            sma_l[i],
+        ) else {
+            continue;
+        };
         let trend = ss - sl;
         // Need d_t to have made a peak/trough in the last `lookback` bars.
         let lo_idx = i.saturating_sub(lookback);
         let win_d = &d_line[lo_idx..=i];
-        if win_d.iter().any(|x| x.is_none()) { continue; }
+        if win_d.iter().any(|x| x.is_none()) {
+            continue;
+        }
         let vals: Vec<f64> = win_d.iter().filter_map(|x| *x).collect();
         let win_max = vals.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
         let win_min = vals.iter().cloned().fold(f64::INFINITY, f64::min);
         // Bullish: trend up, d had peak ≥ 75 in window, current d > 50,
         // and k just crossed back ABOVE d.
-        if trend > 0.0 && win_max >= 75.0 && dt > 50.0
-            && kt_prev <= dt_prev && kt > dt {
+        if trend > 0.0 && win_max >= 75.0 && dt > 50.0 && kt_prev <= dt_prev && kt > dt {
             report.long_signal[i] = true;
         }
-        if trend < 0.0 && win_min <= 25.0 && dt < 50.0
-            && kt_prev >= dt_prev && kt < dt {
+        if trend < 0.0 && win_min <= 25.0 && dt < 50.0 && kt_prev >= dt_prev && kt < dt {
             report.short_signal[i] = true;
         }
     }
@@ -100,7 +125,9 @@ pub fn compute(
 fn sma(series: &[f64], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     let mut sum: f64 = series[..period].iter().sum();
     out[period - 1] = Some(sum / p_f);
@@ -114,11 +141,15 @@ fn sma(series: &[f64], period: usize) -> Vec<Option<f64>> {
 fn sma_opt(series: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
     let n = series.len();
     let mut out = vec![None; n];
-    if period == 0 || n < period { return out; }
+    if period == 0 || n < period {
+        return out;
+    }
     let p_f = period as f64;
     for i in (period - 1)..n {
         let win = &series[i + 1 - period..=i];
-        if win.iter().any(|x| x.is_none()) { continue; }
+        if win.iter().any(|x| x.is_none()) {
+            continue;
+        }
         let s: f64 = win.iter().filter_map(|x| *x).sum();
         out[i] = Some(s / p_f);
     }
@@ -129,14 +160,20 @@ fn sma_opt(series: &[Option<f64>], period: usize) -> Vec<Option<f64>> {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn invalid_inputs_return_empty() {
         let bars = vec![b(101.0, 99.0, 100.0); 100];
         let r = compute(&bars, 1, 3, 20, 50, 5);
         assert!(!r.long_signal.iter().any(|x| *x));
-        let r2 = compute(&bars, 14, 3, 50, 20, 5);    // short > long
+        let r2 = compute(&bars, 14, 3, 50, 20, 5); // short > long
         assert!(!r2.long_signal.iter().any(|x| *x));
     }
 
@@ -159,10 +196,12 @@ mod tests {
 
     #[test]
     fn stoch_k_in_zero_hundred_range() {
-        let bars: Vec<_> = (0..200).map(|i| {
-            let m = 100.0 + (i as f64 * 0.2).sin() * 5.0;
-            b(m + 1.0, m - 1.0, m)
-        }).collect();
+        let bars: Vec<_> = (0..200)
+            .map(|i| {
+                let m = 100.0 + (i as f64 * 0.2).sin() * 5.0;
+                b(m + 1.0, m - 1.0, m)
+            })
+            .collect();
         let r = compute(&bars, 14, 3, 20, 50, 5);
         for v in r.stoch_k.iter().flatten() {
             assert!((0.0..=100.0).contains(v));

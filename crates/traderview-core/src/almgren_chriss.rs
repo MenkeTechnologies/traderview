@@ -54,13 +54,19 @@ pub struct AlmgrenChrissReport {
 }
 
 pub fn solve(p: &AlmgrenChrissParams) -> Option<AlmgrenChrissReport> {
-    if !p.total_shares.is_finite() || p.total_shares == 0.0
-        || !p.horizon_seconds.is_finite() || p.horizon_seconds <= 0.0
+    if !p.total_shares.is_finite()
+        || p.total_shares == 0.0
+        || !p.horizon_seconds.is_finite()
+        || p.horizon_seconds <= 0.0
         || p.n_intervals == 0
-        || !p.eta.is_finite() || p.eta <= 0.0
-        || !p.gamma.is_finite() || p.gamma < 0.0
-        || !p.lambda.is_finite() || p.lambda < 0.0
-        || !p.sigma.is_finite() || p.sigma < 0.0
+        || !p.eta.is_finite()
+        || p.eta <= 0.0
+        || !p.gamma.is_finite()
+        || p.gamma < 0.0
+        || !p.lambda.is_finite()
+        || p.lambda < 0.0
+        || !p.sigma.is_finite()
+        || p.sigma < 0.0
     {
         return None;
     }
@@ -108,7 +114,9 @@ pub fn solve(p: &AlmgrenChrissParams) -> Option<AlmgrenChrissReport> {
     let temporary: f64 = schedule.iter().map(|v| v * v).sum::<f64>() * p.eta / tau;
     let expected_impact_cost = permanent + temporary;
     // Variance of execution P&L = σ² · Σ τ · x_k² (k=1..n, post-trade).
-    let risk_variance: f64 = inventory.iter().skip(1)
+    let risk_variance: f64 = inventory
+        .iter()
+        .skip(1)
         .map(|x| p.sigma * p.sigma * tau * x * x)
         .sum();
     Some(AlmgrenChrissReport {
@@ -132,26 +140,31 @@ mod tests {
         // band (κ ≈ 0.6 → sinh(κT) ≈ 0.64).
         AlmgrenChrissParams {
             total_shares: 1_000_000.0,
-            horizon_seconds: 1.0,         // normalized: 1 day = 1 unit
+            horizon_seconds: 1.0, // normalized: 1 day = 1 unit
             n_intervals: 30,
             eta: 2.5e-6,
             gamma: 2.5e-7,
             lambda: 1e-6,
-            sigma: 0.95,                  // dollar-vol per √day
+            sigma: 0.95, // dollar-vol per √day
         }
     }
 
     #[test]
     fn invalid_inputs_return_none() {
-        let mut bad = p(); bad.total_shares = 0.0;
+        let mut bad = p();
+        bad.total_shares = 0.0;
         assert!(solve(&bad).is_none());
-        let mut bad = p(); bad.horizon_seconds = 0.0;
+        let mut bad = p();
+        bad.horizon_seconds = 0.0;
         assert!(solve(&bad).is_none());
-        let mut bad = p(); bad.n_intervals = 0;
+        let mut bad = p();
+        bad.n_intervals = 0;
         assert!(solve(&bad).is_none());
-        let mut bad = p(); bad.eta = 0.0;
+        let mut bad = p();
+        bad.eta = 0.0;
         assert!(solve(&bad).is_none());
-        let mut bad = p(); bad.eta = f64::NAN;
+        let mut bad = p();
+        bad.eta = f64::NAN;
         assert!(solve(&bad).is_none());
     }
 
@@ -177,8 +190,10 @@ mod tests {
         let r = solve(&params).unwrap();
         let target = 1_000_000.0 / params.n_intervals as f64;
         for v in &r.trade_schedule {
-            assert!((v - target).abs() < 1e-3,
-                "expected uniform slice = {target}, got {v}");
+            assert!(
+                (v - target).abs() < 1e-3,
+                "expected uniform slice = {target}, got {v}"
+            );
         }
     }
 
@@ -194,8 +209,10 @@ mod tests {
         // First-slice fraction should be larger for high-λ.
         let frac_low = r_low.trade_schedule[0] / 1_000_000.0;
         let frac_high = r_high.trade_schedule[0] / 1_000_000.0;
-        assert!(frac_high > frac_low,
-            "high-λ should front-load: low={frac_low} high={frac_high}");
+        assert!(
+            frac_high > frac_low,
+            "high-λ should front-load: low={frac_low} high={frac_high}"
+        );
     }
 
     #[test]

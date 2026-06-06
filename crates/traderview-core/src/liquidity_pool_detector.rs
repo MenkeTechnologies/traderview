@@ -30,25 +30,30 @@ pub struct LiquidityPool {
     pub is_resistance: bool,
 }
 
-pub fn detect(
-    pivots: &[Pivot],
-    tolerance_pct: f64,
-    min_count: usize,
-) -> Vec<LiquidityPool> {
+pub fn detect(pivots: &[Pivot], tolerance_pct: f64, min_count: usize) -> Vec<LiquidityPool> {
     let mut out = Vec::new();
-    if pivots.len() < 2 || !tolerance_pct.is_finite() || tolerance_pct <= 0.0
-        || min_count < 2 { return out; }
+    if pivots.len() < 2 || !tolerance_pct.is_finite() || tolerance_pct <= 0.0 || min_count < 2 {
+        return out;
+    }
     let lookback = pivots.len() as f64;
     let tol_factor = tolerance_pct / 100.0;
     // For each pivot, count how many OTHER same-polarity pivots lie within band.
     for (i, p) in pivots.iter().enumerate() {
-        if p.price <= 0.0 { continue; }
+        if p.price <= 0.0 {
+            continue;
+        }
         let band = p.price * tol_factor;
         let mut cnt = 0_usize;
         for (j, q) in pivots.iter().enumerate() {
-            if i == j { continue; }
-            if q.is_high != p.is_high { continue; }
-            if (q.price - p.price).abs() <= band { cnt += 1; }
+            if i == j {
+                continue;
+            }
+            if q.is_high != p.is_high {
+                continue;
+            }
+            if (q.price - p.price).abs() <= band {
+                cnt += 1;
+            }
         }
         if cnt + 1 >= min_count {
             out.push(LiquidityPool {
@@ -67,7 +72,11 @@ mod tests {
     use super::*;
 
     fn p(idx: usize, price: f64, is_high: bool) -> Pivot {
-        Pivot { index: idx, price, is_high }
+        Pivot {
+            index: idx,
+            price,
+            is_high,
+        }
     }
 
     #[test]
@@ -127,13 +136,16 @@ mod tests {
         // Tolerance 0.1% rejects pivots > 0.1% apart.
         let pivots = vec![
             p(0, 100.0, true),
-            p(10, 100.5, true),    // 0.5% away → excluded
-            p(20, 100.05, true),   // 0.05% away → included
+            p(10, 100.5, true),  // 0.5% away → excluded
+            p(20, 100.05, true), // 0.05% away → included
             p(30, 100.08, true),
         ];
         let pools = detect(&pivots, 0.1, 2);
         // The 100.5 pivot only finds itself → not a pool. Others cluster.
-        let p_around_100 = pools.iter().filter(|pool| (pool.price - 100.0).abs() < 0.1).count();
+        let p_around_100 = pools
+            .iter()
+            .filter(|pool| (pool.price - 100.0).abs() < 0.1)
+            .count();
         assert!(p_around_100 >= 1);
     }
 }

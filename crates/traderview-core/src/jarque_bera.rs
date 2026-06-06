@@ -36,15 +36,21 @@ pub struct JarqueBeraReport {
 }
 
 pub fn test(sample: &[f64]) -> Option<JarqueBeraReport> {
-    if sample.len() < 8 { return None; }
-    if sample.iter().any(|x| !x.is_finite()) { return None; }
+    if sample.len() < 8 {
+        return None;
+    }
+    if sample.iter().any(|x| !x.is_finite()) {
+        return None;
+    }
     let n = sample.len();
     let n_f = n as f64;
     let mean: f64 = sample.iter().sum::<f64>() / n_f;
     let m2: f64 = sample.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / n_f;
     let m3: f64 = sample.iter().map(|x| (x - mean).powi(3)).sum::<f64>() / n_f;
     let m4: f64 = sample.iter().map(|x| (x - mean).powi(4)).sum::<f64>() / n_f;
-    if m2 <= 0.0 { return None; }
+    if m2 <= 0.0 {
+        return None;
+    }
     let sd = m2.sqrt();
     let skewness = m3 / sd.powi(3);
     let kurt = m4 / m2.powi(2);
@@ -68,15 +74,19 @@ mod tests {
 
     fn box_muller(n: usize, seed: u64) -> Vec<f64> {
         let mut state = seed;
-        (0..n).map(|_| {
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u2 = (state >> 32) as f64 / u32::MAX as f64;
-            (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
-        }).collect()
+        (0..n)
+            .map(|_| {
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u2 = (state >> 32) as f64 / u32::MAX as f64;
+                (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
+            })
+            .collect()
     }
 
     #[test]
@@ -99,8 +109,11 @@ mod tests {
         let s = box_muller(5000, 42);
         let r = test(&s).unwrap();
         // Under H0 with n=5000, we should rarely reject at 1%.
-        assert!(!r.reject_at_1pct,
-            "Gaussian sample shouldn't reject at 1%, JB={}, p={}", r.statistic, r.p_value);
+        assert!(
+            !r.reject_at_1pct,
+            "Gaussian sample shouldn't reject at 1%, JB={}, p={}",
+            r.statistic, r.p_value
+        );
     }
 
     #[test]
@@ -109,8 +122,11 @@ mod tests {
         let z = box_muller(2000, 7);
         let s: Vec<f64> = z.iter().map(|x| -(x * x)).collect();
         let r = test(&s).unwrap();
-        assert!(r.reject_at_1pct,
-            "skewed sample should reject at 1%, JB={}, skew={}", r.statistic, r.skewness);
+        assert!(
+            r.reject_at_1pct,
+            "skewed sample should reject at 1%, JB={}, skew={}",
+            r.statistic, r.skewness
+        );
         assert!(r.skewness < 0.0);
     }
 
@@ -120,24 +136,36 @@ mod tests {
         // N(0,1) + 10% N(0,25). Produces clear excess kurtosis without
         // the undefined-moment pitfalls of t(3).
         let mut state: u64 = 1234567;
-        let s: Vec<f64> = (0..3000).map(|_| {
-            let u = {
-                state = state.wrapping_mul(6364136223846793005)
+        let s: Vec<f64> = (0..3000)
+            .map(|_| {
+                let u = {
+                    state = state
+                        .wrapping_mul(6364136223846793005)
+                        .wrapping_add(1442695040888963407);
+                    (state >> 32) as f64 / u32::MAX as f64
+                };
+                state = state
+                    .wrapping_mul(6364136223846793005)
                     .wrapping_add(1442695040888963407);
-                (state >> 32) as f64 / u32::MAX as f64
-            };
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
-            state = state.wrapping_mul(6364136223846793005)
-                .wrapping_add(1442695040888963407);
-            let u2 = (state >> 32) as f64 / u32::MAX as f64;
-            let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
-            if u < 0.1 { z * 5.0 } else { z }
-        }).collect();
+                let u1 = ((state >> 32) as f64 / u32::MAX as f64).max(1e-12);
+                state = state
+                    .wrapping_mul(6364136223846793005)
+                    .wrapping_add(1442695040888963407);
+                let u2 = (state >> 32) as f64 / u32::MAX as f64;
+                let z = (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos();
+                if u < 0.1 {
+                    z * 5.0
+                } else {
+                    z
+                }
+            })
+            .collect();
         let r = test(&s).unwrap();
-        assert!(r.reject_at_1pct,
-            "mixture should reject normality, JB={}, kurt={}", r.statistic, r.excess_kurtosis);
+        assert!(
+            r.reject_at_1pct,
+            "mixture should reject normality, JB={}, kurt={}",
+            r.statistic, r.excess_kurtosis
+        );
         assert!(r.excess_kurtosis > 1.0);
     }
 

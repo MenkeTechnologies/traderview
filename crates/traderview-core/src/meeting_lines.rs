@@ -18,7 +18,12 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub open: f64, pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub open: f64,
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MeetingLinesReport {
@@ -34,9 +39,12 @@ pub fn compute(bars: &[Bar], tolerance_pct: f64) -> MeetingLinesReport {
         bearish: vec![false; n],
         tolerance_pct,
     };
-    if n < 2 || !tolerance_pct.is_finite() || tolerance_pct <= 0.0 { return report; }
-    if bars.iter().any(|b| !b.open.is_finite() || !b.high.is_finite()
-        || !b.low.is_finite() || !b.close.is_finite()) {
+    if n < 2 || !tolerance_pct.is_finite() || tolerance_pct <= 0.0 {
+        return report;
+    }
+    if bars.iter().any(|b| {
+        !b.open.is_finite() || !b.high.is_finite() || !b.low.is_finite() || !b.close.is_finite()
+    }) {
         return report;
     }
     let tol_factor = tolerance_pct / 100.0;
@@ -45,23 +53,21 @@ pub fn compute(bars: &[Bar], tolerance_pct: f64) -> MeetingLinesReport {
         let cur = bars[i];
         let body1 = (prev.close - prev.open).abs();
         let range1 = prev.high - prev.low;
-        if range1 <= 0.0 || body1 < 0.6 * range1 { continue; }
+        if range1 <= 0.0 || body1 < 0.6 * range1 {
+            continue;
+        }
         let tol = prev.close.abs() * tol_factor;
         let matching_close = (cur.close - prev.close).abs() <= tol;
         // Bullish: bar 1 bearish, bar 2 bullish opens below bar 1 close,
         // closes back at bar 1 close.
-        if prev.close < prev.open
-            && cur.close > cur.open
-            && cur.open < prev.close
-            && matching_close {
+        if prev.close < prev.open && cur.close > cur.open && cur.open < prev.close && matching_close
+        {
             report.bullish[i] = true;
         }
         // Bearish: bar 1 bullish, bar 2 bearish opens above bar 1 close,
         // closes back at bar 1 close.
-        if prev.close > prev.open
-            && cur.close < cur.open
-            && cur.open > prev.close
-            && matching_close {
+        if prev.close > prev.open && cur.close < cur.open && cur.open > prev.close && matching_close
+        {
             report.bearish[i] = true;
         }
     }
@@ -73,7 +79,12 @@ mod tests {
     use super::*;
 
     fn bar(o: f64, h: f64, l: f64, c: f64) -> Bar {
-        Bar { open: o, high: h, low: l, close: c }
+        Bar {
+            open: o,
+            high: h,
+            low: l,
+            close: c,
+        }
     }
 
     #[test]
@@ -84,8 +95,10 @@ mod tests {
 
     #[test]
     fn nan_returns_empty() {
-        let bars = vec![bar(100.0, 101.0, 99.0, 100.0),
-                        bar(f64::NAN, 101.0, 99.0, 100.0)];
+        let bars = vec![
+            bar(100.0, 101.0, 99.0, 100.0),
+            bar(f64::NAN, 101.0, 99.0, 100.0),
+        ];
         let r = compute(&bars, 0.3);
         assert!(!r.bullish.iter().any(|x| *x));
     }
@@ -116,7 +129,7 @@ mod tests {
     fn close_too_far_rejects() {
         let bars = vec![
             bar(110.0, 110.5, 99.5, 100.0),
-            bar(95.0, 105.0, 94.5, 104.0),    // close 104, 4% off
+            bar(95.0, 105.0, 94.5, 104.0), // close 104, 4% off
         ];
         let r = compute(&bars, 0.3);
         assert!(!r.bullish[1]);
@@ -125,10 +138,7 @@ mod tests {
     #[test]
     fn small_bar1_body_rejects() {
         // Bar 1 body too small (doji-ish).
-        let bars = vec![
-            bar(100.0, 101.0, 99.0, 99.8),
-            bar(95.0, 100.0, 94.5, 99.7),
-        ];
+        let bars = vec![bar(100.0, 101.0, 99.0, 99.8), bar(95.0, 100.0, 94.5, 99.7)];
         let r = compute(&bars, 0.3);
         assert!(!r.bullish[1]);
     }

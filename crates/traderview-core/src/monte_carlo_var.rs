@@ -35,15 +35,22 @@ pub fn simulate(
     seed: u64,
 ) -> Option<MonteCarloVarReport> {
     let n = weights.len();
-    if n == 0 || mean_returns.len() != n || cholesky_lower.len() != n
+    if n == 0
+        || mean_returns.len() != n
+        || cholesky_lower.len() != n
         || cholesky_lower.iter().any(|r| r.len() != n)
         || n_simulations < 100
-        || !confidence.is_finite() || !(0.5..1.0).contains(&confidence) {
+        || !confidence.is_finite()
+        || !(0.5..1.0).contains(&confidence)
+    {
         return None;
     }
     if weights.iter().any(|x| !x.is_finite())
         || mean_returns.iter().any(|x| !x.is_finite())
-        || cholesky_lower.iter().any(|r| r.iter().any(|x| !x.is_finite())) {
+        || cholesky_lower
+            .iter()
+            .any(|r| r.iter().any(|x| !x.is_finite()))
+    {
         return None;
     }
     let mut state = seed;
@@ -51,7 +58,9 @@ pub fn simulate(
     let mut z = vec![0.0_f64; n];
     let mut r = vec![0.0_f64; n];
     for _ in 0..n_simulations {
-        for slot in z.iter_mut() { *slot = standard_normal(&mut state); }
+        for slot in z.iter_mut() {
+            *slot = standard_normal(&mut state);
+        }
         for i in 0..n {
             let mut acc = mean_returns[i];
             for (j, zj) in z.iter().enumerate().take(i + 1) {
@@ -72,7 +81,10 @@ pub fn simulate(
     let es_sum: f64 = sorted[..tail_size].iter().sum();
     let es = -es_sum / tail_size as f64;
     let mean_pnl: f64 = pnl_samples.iter().sum::<f64>() / n_simulations as f64;
-    let var_pnl: f64 = pnl_samples.iter().map(|p| (p - mean_pnl).powi(2)).sum::<f64>()
+    let var_pnl: f64 = pnl_samples
+        .iter()
+        .map(|p| (p - mean_pnl).powi(2))
+        .sum::<f64>()
         / (n_simulations - 1) as f64;
     Some(MonteCarloVarReport {
         var_at_confidence: var,
@@ -86,10 +98,12 @@ pub fn simulate(
 
 fn standard_normal(state: &mut u64) -> f64 {
     // Polar Box-Muller using a single uniform pair per call.
-    *state = state.wrapping_mul(6364136223846793005)
+    *state = state
+        .wrapping_mul(6364136223846793005)
         .wrapping_add(1442695040888963407);
     let u1 = ((*state >> 32) as f64 / u32::MAX as f64).max(1e-12);
-    *state = state.wrapping_mul(6364136223846793005)
+    *state = state
+        .wrapping_mul(6364136223846793005)
         .wrapping_add(1442695040888963407);
     let u2 = (*state >> 32) as f64 / u32::MAX as f64;
     (-2.0 * u1.ln()).sqrt() * (2.0 * std::f64::consts::PI * u2).cos()
@@ -118,8 +132,11 @@ mod tests {
         let l = vec![vec![0.10]];
         let r = simulate(&w, &m, &l, 0.95, 10_000, 42).unwrap();
         // VaR_95 = z_0.95 · σ ≈ 1.645 · 0.10 = 0.164.
-        assert!((r.var_at_confidence - 0.164).abs() < 0.03,
-            "VaR ≈ 0.164, got {}", r.var_at_confidence);
+        assert!(
+            (r.var_at_confidence - 0.164).abs() < 0.03,
+            "VaR ≈ 0.164, got {}",
+            r.var_at_confidence
+        );
     }
 
     #[test]
@@ -136,10 +153,14 @@ mod tests {
     fn es_exceeds_var() {
         let w = vec![0.5, 0.5];
         let m = vec![0.0, 0.0];
-        let l = vec![vec![0.10, 0.0], vec![0.05, 0.087]];    // ρ ≈ 0.5
+        let l = vec![vec![0.10, 0.0], vec![0.05, 0.087]]; // ρ ≈ 0.5
         let r = simulate(&w, &m, &l, 0.95, 5_000, 42).unwrap();
-        assert!(r.expected_shortfall_at_confidence >= r.var_at_confidence,
-            "ES {} should ≥ VaR {}", r.expected_shortfall_at_confidence, r.var_at_confidence);
+        assert!(
+            r.expected_shortfall_at_confidence >= r.var_at_confidence,
+            "ES {} should ≥ VaR {}",
+            r.expected_shortfall_at_confidence,
+            r.var_at_confidence
+        );
     }
 
     #[test]

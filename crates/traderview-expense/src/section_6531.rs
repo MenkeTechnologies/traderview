@@ -130,8 +130,7 @@ pub fn check(input: &Section6531Input) -> Section6531Result {
     let mut notes: Vec<String> = Vec::new();
 
     notes.push(
-        "§ 6531 general rule — 3-year SOL for all criminal prosecutions under Title 26"
-            .to_string(),
+        "§ 6531 general rule — 3-year SOL for all criminal prosecutions under Title 26".to_string(),
     );
 
     let base_six_year = matches!(
@@ -165,17 +164,25 @@ pub fn check(input: &Section6531Input) -> Section6531Result {
             CriminalTaxOffense::Section7202TrustFundFailure => "§ 7202 trust fund failure",
             CriminalTaxOffense::Section7203FailureToFileOrPay => "§ 7203 failure to file or pay",
             CriminalTaxOffense::Section7203FailureToKeepRecords => "§ 7203 failure to keep records",
-            CriminalTaxOffense::Section7203FailureToSupplyInformation => "§ 7203 failure to supply information",
-            CriminalTaxOffense::Section7205FalseWithholdingExemption => "§ 7205 false withholding exemption",
+            CriminalTaxOffense::Section7203FailureToSupplyInformation =>
+                "§ 7203 failure to supply information",
+            CriminalTaxOffense::Section7205FalseWithholdingExemption =>
+                "§ 7205 false withholding exemption",
             CriminalTaxOffense::Section7206_1FilingFalseReturn => "§ 7206(1) filing false return",
-            CriminalTaxOffense::Section7206_2AidAssistFalseReturn => "§ 7206(2) aiding false return",
-            CriminalTaxOffense::Section7206_3FraudulentBondsPermitsEntries => "§ 7206(3) fraudulent bonds",
+            CriminalTaxOffense::Section7206_2AidAssistFalseReturn =>
+                "§ 7206(2) aiding false return",
+            CriminalTaxOffense::Section7206_3FraudulentBondsPermitsEntries =>
+                "§ 7206(3) fraudulent bonds",
             CriminalTaxOffense::Section7206_4ConcealmentRemoval => "§ 7206(4) concealment/removal",
-            CriminalTaxOffense::Section7206_5CompromisesClosingAgreements => "§ 7206(5) compromises",
-            CriminalTaxOffense::Section7207FraudulentReturnsStatements => "§ 7207 fraudulent returns/statements",
+            CriminalTaxOffense::Section7206_5CompromisesClosingAgreements =>
+                "§ 7206(5) compromises",
+            CriminalTaxOffense::Section7207FraudulentReturnsStatements =>
+                "§ 7207 fraudulent returns/statements",
             CriminalTaxOffense::Section7212aObstructionGeneral => "§ 7212(a) obstruction (general)",
-            CriminalTaxOffense::Section7212bRescueOfSeizedProperty => "§ 7212(b) rescue of seized property",
-            CriminalTaxOffense::Section7214UnlawfulActsRevenueOfficers => "§ 7214 unlawful acts of revenue officers",
+            CriminalTaxOffense::Section7212bRescueOfSeizedProperty =>
+                "§ 7212(b) rescue of seized property",
+            CriminalTaxOffense::Section7214UnlawfulActsRevenueOfficers =>
+                "§ 7214 unlawful acts of revenue officers",
             CriminalTaxOffense::KleinConspiracy18Usc371 => "18 U.S.C. § 371 Klein conspiracy",
             CriminalTaxOffense::OtherTitle26Offense => "other Title 26 offense",
         },
@@ -219,8 +226,7 @@ pub fn check(input: &Section6531Input) -> Section6531Result {
         }
     }
 
-    let sol_satisfied = absence_tolling
-        || input.years_since_offense_commission < applicable_sol;
+    let sol_satisfied = absence_tolling || input.years_since_offense_commission < applicable_sol;
 
     notes.push(format!(
         "{} years since offense commission; {} SOL applicable; prosecution {}",
@@ -291,20 +297,29 @@ mod tests {
 
     #[test]
     fn section_7203_failure_to_keep_records_3_year_sol() {
-        let r = check(&base(CriminalTaxOffense::Section7203FailureToKeepRecords, 2));
+        let r = check(&base(
+            CriminalTaxOffense::Section7203FailureToKeepRecords,
+            2,
+        ));
         assert_eq!(r.applicable_sol_years, 3);
         assert!(!r.six_year_exception_engaged);
     }
 
     #[test]
     fn section_7203_failure_to_supply_information_3_year_sol() {
-        let r = check(&base(CriminalTaxOffense::Section7203FailureToSupplyInformation, 2));
+        let r = check(&base(
+            CriminalTaxOffense::Section7203FailureToSupplyInformation,
+            2,
+        ));
         assert_eq!(r.applicable_sol_years, 3);
     }
 
     #[test]
     fn section_7205_3_year_sol() {
-        let r = check(&base(CriminalTaxOffense::Section7205FalseWithholdingExemption, 2));
+        let r = check(&base(
+            CriminalTaxOffense::Section7205FalseWithholdingExemption,
+            2,
+        ));
         assert_eq!(r.applicable_sol_years, 3);
     }
 
@@ -316,7 +331,10 @@ mod tests {
 
     #[test]
     fn section_7206_2_aiding_6_year_sol() {
-        let r = check(&base(CriminalTaxOffense::Section7206_2AidAssistFalseReturn, 5));
+        let r = check(&base(
+            CriminalTaxOffense::Section7206_2AidAssistFalseReturn,
+            5,
+        ));
         assert_eq!(r.applicable_sol_years, 6);
     }
 
@@ -334,7 +352,10 @@ mod tests {
 
     #[test]
     fn section_7207_6_year_sol() {
-        let r = check(&base(CriminalTaxOffense::Section7207FraudulentReturnsStatements, 5));
+        let r = check(&base(
+            CriminalTaxOffense::Section7207FraudulentReturnsStatements,
+            5,
+        ));
         assert_eq!(r.applicable_sol_years, 6);
     }
 
@@ -346,7 +367,10 @@ mod tests {
 
     #[test]
     fn section_7212b_rescue_property_6_year_sol() {
-        let r = check(&base(CriminalTaxOffense::Section7212bRescueOfSeizedProperty, 5));
+        let r = check(&base(
+            CriminalTaxOffense::Section7212bRescueOfSeizedProperty,
+            5,
+        ));
         assert_eq!(r.applicable_sol_years, 6);
     }
 
@@ -369,7 +393,10 @@ mod tests {
         let r = check(&i);
         assert_eq!(r.applicable_sol_years, 3);
         assert!(r.section_6531_4_carveout_engaged);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6531(4) carveout") && n.contains("Form 1065") && n.contains("Form 990") && n.contains("Form 1120-S")));
+        assert!(r.notes.iter().any(|n| n.contains("§ 6531(4) carveout")
+            && n.contains("Form 1065")
+            && n.contains("Form 990")
+            && n.contains("Form 1120-S")));
     }
 
     #[test]
@@ -393,13 +420,19 @@ mod tests {
 
     #[test]
     fn sol_satisfied_within_3_years_for_3_year_offense() {
-        let r = check(&base(CriminalTaxOffense::Section7205FalseWithholdingExemption, 2));
+        let r = check(&base(
+            CriminalTaxOffense::Section7205FalseWithholdingExemption,
+            2,
+        ));
         assert!(r.sol_satisfied);
     }
 
     #[test]
     fn sol_expired_after_3_years_for_3_year_offense() {
-        let r = check(&base(CriminalTaxOffense::Section7205FalseWithholdingExemption, 3));
+        let r = check(&base(
+            CriminalTaxOffense::Section7205FalseWithholdingExemption,
+            3,
+        ));
         assert!(!r.sol_satisfied);
     }
 
@@ -457,25 +490,34 @@ mod tests {
     #[test]
     fn general_3_year_rule_note_present() {
         let r = check(&base(CriminalTaxOffense::OtherTitle26Offense, 2));
-        assert!(r.notes.iter().any(|n| n.contains("§ 6531 general rule") && n.contains("3-year SOL")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6531 general rule") && n.contains("3-year SOL")));
     }
 
     #[test]
     fn six_year_exception_note_lists_enumerated_offenses() {
         let r = check(&base(CriminalTaxOffense::Section7201TaxEvasion, 5));
-        assert!(r.notes.iter().any(|n| n.contains("§ 6531(2)") && n.contains("§ 7201") && n.contains("§ 7203 failure-to-file/pay")));
+        assert!(r.notes.iter().any(|n| n.contains("§ 6531(2)")
+            && n.contains("§ 7201")
+            && n.contains("§ 7203 failure-to-file/pay")));
     }
 
     #[test]
     fn toussie_continuing_offense_note_present() {
         let r = check(&base(CriminalTaxOffense::Section7201TaxEvasion, 5));
-        assert!(r.notes.iter().any(|n| n.contains("Toussie v. United States, 397 U.S. 112 (1970)") && n.contains("LAST affirmative act")));
+        assert!(r.notes.iter().any(|n| n
+            .contains("Toussie v. United States, 397 U.S. 112 (1970)")
+            && n.contains("LAST affirmative act")));
     }
 
     #[test]
     fn doj_manual_irm_note_present() {
         let r = check(&base(CriminalTaxOffense::Section7201TaxEvasion, 5));
-        assert!(r.notes.iter().any(|n| n.contains("DOJ Criminal Tax Manual") && n.contains("IRM 25.6.2.1") && n.contains("JURISDICTIONAL")));
+        assert!(r.notes.iter().any(|n| n.contains("DOJ Criminal Tax Manual")
+            && n.contains("IRM 25.6.2.1")
+            && n.contains("JURISDICTIONAL")));
     }
 
     #[test]
@@ -529,7 +571,10 @@ mod tests {
 
     #[test]
     fn sol_boundary_at_exactly_3_years_expired() {
-        let r = check(&base(CriminalTaxOffense::Section7205FalseWithholdingExemption, 3));
+        let r = check(&base(
+            CriminalTaxOffense::Section7205FalseWithholdingExemption,
+            3,
+        ));
         assert!(!r.sol_satisfied);
     }
 
@@ -544,7 +589,10 @@ mod tests {
         let mut i = base(CriminalTaxOffense::Section7201TaxEvasion, 5);
         i.defendant_outside_us_or_fugitive = true;
         let r = check(&i);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6531 final paragraph") && n.contains("TOLLS")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6531 final paragraph") && n.contains("TOLLS")));
     }
 
     #[test]

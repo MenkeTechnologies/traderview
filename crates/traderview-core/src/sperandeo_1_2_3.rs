@@ -29,7 +29,11 @@ pub use crate::gartley_pattern::Pivot;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
-pub enum SperandoeDirection { #[default] Bullish, Bearish }
+pub enum SperandoeDirection {
+    #[default]
+    Bullish,
+    Bearish,
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct SperandoMatch {
@@ -47,22 +51,30 @@ pub fn detect(
     max_confirmation_lookahead: usize,
 ) -> Vec<SperandoMatch> {
     let mut out = Vec::new();
-    if pivots.len() < 3 || closes.is_empty()
-        || max_confirmation_lookahead < 1 { return out; }
-    if closes.iter().any(|x| !x.is_finite()) { return out; }
+    if pivots.len() < 3 || closes.is_empty() || max_confirmation_lookahead < 1 {
+        return out;
+    }
+    if closes.iter().any(|x| !x.is_finite()) {
+        return out;
+    }
     for w in pivots.windows(3) {
         let (p1, p2, p3) = (w[0], w[1], w[2]);
         // Bullish 1-2-3: p1 low, p2 high, p3 low.
-        if !p1.is_high && p2.is_high && !p3.is_high
-            && p3.price > p1.price && p2.price > p1.price
-        {
+        if !p1.is_high && p2.is_high && !p3.is_high && p3.price > p1.price && p2.price > p1.price {
             let conf_end = (p3.index + max_confirmation_lookahead).min(closes.len() - 1);
             let start = p3.index + 1;
-            for (k, &close) in closes.iter().enumerate().skip(start).take(conf_end + 1 - start) {
+            for (k, &close) in closes
+                .iter()
+                .enumerate()
+                .skip(start)
+                .take(conf_end + 1 - start)
+            {
                 if close > p2.price {
                     out.push(SperandoMatch {
                         direction: SperandoeDirection::Bullish,
-                        p1, p2, p3,
+                        p1,
+                        p2,
+                        p3,
                         confirmation_bar: k,
                     });
                     break;
@@ -70,16 +82,21 @@ pub fn detect(
             }
         }
         // Bearish 1-2-3: p1 high, p2 low, p3 high.
-        if p1.is_high && !p2.is_high && p3.is_high
-            && p3.price < p1.price && p2.price < p1.price
-        {
+        if p1.is_high && !p2.is_high && p3.is_high && p3.price < p1.price && p2.price < p1.price {
             let conf_end = (p3.index + max_confirmation_lookahead).min(closes.len() - 1);
             let start = p3.index + 1;
-            for (k, &close) in closes.iter().enumerate().skip(start).take(conf_end + 1 - start) {
+            for (k, &close) in closes
+                .iter()
+                .enumerate()
+                .skip(start)
+                .take(conf_end + 1 - start)
+            {
                 if close < p2.price {
                     out.push(SperandoMatch {
                         direction: SperandoeDirection::Bearish,
-                        p1, p2, p3,
+                        p1,
+                        p2,
+                        p3,
                         confirmation_bar: k,
                     });
                     break;
@@ -95,7 +112,11 @@ mod tests {
     use super::*;
 
     fn p(idx: usize, price: f64, is_high: bool) -> Pivot {
-        Pivot { index: idx, price, is_high }
+        Pivot {
+            index: idx,
+            price,
+            is_high,
+        }
     }
 
     #[test]
@@ -116,12 +137,12 @@ mod tests {
     #[test]
     fn bullish_1_2_3_confirmed() {
         let pivots = vec![
-            p(0, 100.0, false),    // low at 100
-            p(10, 110.0, true),    // high at 110
-            p(20, 105.0, false),   // higher low at 105
+            p(0, 100.0, false),  // low at 100
+            p(10, 110.0, true),  // high at 110
+            p(20, 105.0, false), // higher low at 105
         ];
         let mut closes = vec![107.0_f64; 30];
-        closes[25] = 112.0;        // close above p2 high (110) → confirm
+        closes[25] = 112.0; // close above p2 high (110) → confirm
         let matches = detect(&pivots, &closes, 10);
         assert_eq!(matches.len(), 1);
         assert_eq!(matches[0].direction, SperandoeDirection::Bullish);
@@ -130,11 +151,7 @@ mod tests {
 
     #[test]
     fn bearish_1_2_3_confirmed() {
-        let pivots = vec![
-            p(0, 110.0, true),
-            p(10, 100.0, false),
-            p(20, 105.0, true),
-        ];
+        let pivots = vec![p(0, 110.0, true), p(10, 100.0, false), p(20, 105.0, true)];
         let mut closes = vec![103.0_f64; 30];
         closes[25] = 98.0;
         let matches = detect(&pivots, &closes, 10);
@@ -144,11 +161,7 @@ mod tests {
 
     #[test]
     fn no_confirmation_within_window_no_match() {
-        let pivots = vec![
-            p(0, 100.0, false),
-            p(10, 110.0, true),
-            p(20, 105.0, false),
-        ];
+        let pivots = vec![p(0, 100.0, false), p(10, 110.0, true), p(20, 105.0, false)];
         let closes = vec![107.0_f64; 30];
         let matches = detect(&pivots, &closes, 5);
         assert!(matches.is_empty());
@@ -159,7 +172,7 @@ mod tests {
         let pivots = vec![
             p(0, 100.0, false),
             p(10, 110.0, true),
-            p(20, 95.0, false),    // lower low → not bullish
+            p(20, 95.0, false), // lower low → not bullish
         ];
         let closes = vec![112.0_f64; 30];
         let matches = detect(&pivots, &closes, 10);

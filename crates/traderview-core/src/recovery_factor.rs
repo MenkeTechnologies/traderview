@@ -23,30 +23,43 @@ pub struct RecoveryFactorReport {
     pub max_drawdown_pct: f64,
 }
 
-pub fn compute(
-    equity: &[f64],
-    periods_per_year: f64,
-) -> Option<RecoveryFactorReport> {
+pub fn compute(equity: &[f64], periods_per_year: f64) -> Option<RecoveryFactorReport> {
     let n = equity.len();
     if n < 2 || !periods_per_year.is_finite() || periods_per_year <= 0.0 {
         return None;
     }
-    if equity.iter().any(|x| !x.is_finite() || *x <= 0.0) { return None; }
+    if equity.iter().any(|x| !x.is_finite() || *x <= 0.0) {
+        return None;
+    }
     let start = equity[0];
     let end = *equity.last().unwrap();
     let total_return = end / start - 1.0;
     let years = (n - 1) as f64 / periods_per_year;
-    if years <= 0.0 { return None; }
+    if years <= 0.0 {
+        return None;
+    }
     let ann_return = (1.0 + total_return).powf(1.0 / years) - 1.0;
     let mut hwm = start;
     let mut max_dd = 0.0_f64;
     for &v in &equity[1..] {
-        if v > hwm { hwm = v; }
+        if v > hwm {
+            hwm = v;
+        }
         let dd = (hwm - v) / hwm;
-        if dd > max_dd { max_dd = dd; }
+        if dd > max_dd {
+            max_dd = dd;
+        }
     }
-    let recovery = if max_dd > 0.0 { total_return / max_dd } else { f64::INFINITY };
-    let mar = if max_dd > 0.0 { ann_return / max_dd } else { f64::INFINITY };
+    let recovery = if max_dd > 0.0 {
+        total_return / max_dd
+    } else {
+        f64::INFINITY
+    };
+    let mar = if max_dd > 0.0 {
+        ann_return / max_dd
+    } else {
+        f64::INFINITY
+    };
     Some(RecoveryFactorReport {
         recovery_factor: recovery,
         mar_ratio: mar,

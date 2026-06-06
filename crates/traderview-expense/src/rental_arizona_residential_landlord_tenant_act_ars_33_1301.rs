@@ -175,7 +175,8 @@ pub fn compute(input: &Input) -> Output {
         ComplianceAspect::SecurityDepositCapOneAndOneHalfMonthsRentUnderArs33_1321 => {
             let cap = (u128::from(input.monthly_rent_dollars)
                 * u128::from(AZ_RLTA_SECURITY_DEPOSIT_CAP_NUMERATOR_TENTHS_OF_MONTHS_RENT)
-                / u128::from(AZ_RLTA_SECURITY_DEPOSIT_CAP_DENOMINATOR_TENTHS)) as u64;
+                / u128::from(AZ_RLTA_SECURITY_DEPOSIT_CAP_DENOMINATOR_TENTHS))
+                as u64;
             if input.security_deposit_plus_prepaid_rent_dollars <= cap {
                 Output {
                     mode: ArltaMode::CompliantSecurityDepositAtOrBelowOneAndOneHalfMonthsRentCap,
@@ -339,7 +340,8 @@ pub fn compute(input: &Input) -> Output {
             }
         }
         ComplianceAspect::TenantTerminationFourteenDayNoticeUnderArs33_1361 => {
-            if input.tenant_termination_notice_days_given >= AZ_RLTA_TENANT_TERMINATION_NOTICE_DAYS {
+            if input.tenant_termination_notice_days_given >= AZ_RLTA_TENANT_TERMINATION_NOTICE_DAYS
+            {
                 Output {
                     mode: ArltaMode::CompliantTenantTerminationFourteenDayNoticeProvided,
                     statutory_basis: "A.R.S. § 33-1361 — tenant termination 14-day notice provided".to_string(),
@@ -367,7 +369,8 @@ mod tests {
     fn baseline_input() -> Input {
         Input {
             tenancy_type: TenancyType::ResidentialRentalCoveredByArlta,
-            compliance_aspect: ComplianceAspect::SecurityDepositCapOneAndOneHalfMonthsRentUnderArs33_1321,
+            compliance_aspect:
+                ComplianceAspect::SecurityDepositCapOneAndOneHalfMonthsRentUnderArs33_1321,
             material_breach_category: MaterialBreachCategory::MaterialNoncomplianceGeneralBreach,
             monthly_rent_dollars: 2_000,
             security_deposit_plus_prepaid_rent_dollars: 3_000,
@@ -416,7 +419,8 @@ mod tests {
     #[test]
     fn deposit_return_within_fourteen_business_days_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SecurityDepositReturnFourteenBusinessDayDeadlineUnderArs33_1321;
+        input.compliance_aspect =
+            ComplianceAspect::SecurityDepositReturnFourteenBusinessDayDeadlineUnderArs33_1321;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -427,7 +431,8 @@ mod tests {
     #[test]
     fn deposit_return_at_exactly_fourteen_business_day_boundary_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SecurityDepositReturnFourteenBusinessDayDeadlineUnderArs33_1321;
+        input.compliance_aspect =
+            ComplianceAspect::SecurityDepositReturnFourteenBusinessDayDeadlineUnderArs33_1321;
         input.business_days_since_tenant_demanded_deposit_return = 14;
         let output = check(&input);
         assert_eq!(
@@ -439,7 +444,8 @@ mod tests {
     #[test]
     fn deposit_return_at_fifteen_business_days_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::SecurityDepositReturnFourteenBusinessDayDeadlineUnderArs33_1321;
+        input.compliance_aspect =
+            ComplianceAspect::SecurityDepositReturnFourteenBusinessDayDeadlineUnderArs33_1321;
         input.business_days_since_tenant_demanded_deposit_return = 15;
         input.deposit_returned_with_itemized_statement_within_window = false;
         let output = check(&input);
@@ -452,7 +458,8 @@ mod tests {
     #[test]
     fn landlord_obligations_met_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordObligationToMaintainPremisesUnderArs33_1324;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordObligationToMaintainPremisesUnderArs33_1324;
         let output = check(&input);
         assert_eq!(output.mode, ArltaMode::CompliantLandlordObligationsMet);
     }
@@ -460,7 +467,8 @@ mod tests {
     #[test]
     fn landlord_obligations_breached_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordObligationToMaintainPremisesUnderArs33_1324;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordObligationToMaintainPremisesUnderArs33_1324;
         input.landlord_obligations_under_section_33_1324_met = false;
         let output = check(&input);
         assert_eq!(output.mode, ArltaMode::ViolationLandlordObligationsBreached);
@@ -469,25 +477,34 @@ mod tests {
     #[test]
     fn landlord_entry_at_forty_eight_hours_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordEntryFortyEightHourNoticeUnderArs33_1343;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordEntryFortyEightHourNoticeUnderArs33_1343;
         let output = check(&input);
-        assert_eq!(output.mode, ArltaMode::CompliantLandlordEntryFortyEightHourNoticeOrEmergency);
+        assert_eq!(
+            output.mode,
+            ArltaMode::CompliantLandlordEntryFortyEightHourNoticeOrEmergency
+        );
     }
 
     #[test]
     fn landlord_entry_emergency_exception_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordEntryFortyEightHourNoticeUnderArs33_1343;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordEntryFortyEightHourNoticeUnderArs33_1343;
         input.landlord_entry_notice_hours_given = 0;
         input.entry_was_emergency_or_court_order = true;
         let output = check(&input);
-        assert_eq!(output.mode, ArltaMode::CompliantLandlordEntryFortyEightHourNoticeOrEmergency);
+        assert_eq!(
+            output.mode,
+            ArltaMode::CompliantLandlordEntryFortyEightHourNoticeOrEmergency
+        );
     }
 
     #[test]
     fn landlord_entry_under_forty_eight_hours_and_not_emergency_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::LandlordEntryFortyEightHourNoticeUnderArs33_1343;
+        input.compliance_aspect =
+            ComplianceAspect::LandlordEntryFortyEightHourNoticeUnderArs33_1343;
         input.landlord_entry_notice_hours_given = 24;
         let output = check(&input);
         assert_eq!(
@@ -501,7 +518,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::FiveDayPayOrQuitNoticeUnderArs33_1368B;
         let output = check(&input);
-        assert_eq!(output.mode, ArltaMode::CompliantFiveDayPayOrQuitNoticeProvided);
+        assert_eq!(
+            output.mode,
+            ArltaMode::CompliantFiveDayPayOrQuitNoticeProvided
+        );
     }
 
     #[test]
@@ -510,13 +530,17 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::FiveDayPayOrQuitNoticeUnderArs33_1368B;
         input.pay_or_quit_notice_days_given = 4;
         let output = check(&input);
-        assert_eq!(output.mode, ArltaMode::ViolationPayOrQuitNoticePeriodShorterThanFiveDays);
+        assert_eq!(
+            output.mode,
+            ArltaMode::ViolationPayOrQuitNoticePeriodShorterThanFiveDays
+        );
     }
 
     #[test]
     fn ten_day_cure_notice_for_general_material_noncompliance_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::TenDayCureOrFiveDayHealthSafetyCureNoticeUnderArs33_1368A;
+        input.compliance_aspect =
+            ComplianceAspect::TenDayCureOrFiveDayHealthSafetyCureNoticeUnderArs33_1368A;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -527,8 +551,10 @@ mod tests {
     #[test]
     fn five_day_cure_notice_for_health_safety_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::TenDayCureOrFiveDayHealthSafetyCureNoticeUnderArs33_1368A;
-        input.material_breach_category = MaterialBreachCategory::MaterialNoncomplianceHealthAndSafetyBreach;
+        input.compliance_aspect =
+            ComplianceAspect::TenDayCureOrFiveDayHealthSafetyCureNoticeUnderArs33_1368A;
+        input.material_breach_category =
+            MaterialBreachCategory::MaterialNoncomplianceHealthAndSafetyBreach;
         input.cure_notice_days_given = 5;
         let output = check(&input);
         assert_eq!(
@@ -540,26 +566,36 @@ mod tests {
     #[test]
     fn cure_notice_under_ten_days_for_general_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::TenDayCureOrFiveDayHealthSafetyCureNoticeUnderArs33_1368A;
+        input.compliance_aspect =
+            ComplianceAspect::TenDayCureOrFiveDayHealthSafetyCureNoticeUnderArs33_1368A;
         input.cure_notice_days_given = 7;
         let output = check(&input);
-        assert_eq!(output.mode, ArltaMode::ViolationCureNoticePeriodShorterThanStatutoryMinimum);
+        assert_eq!(
+            output.mode,
+            ArltaMode::ViolationCureNoticePeriodShorterThanStatutoryMinimum
+        );
     }
 
     #[test]
     fn cure_notice_under_five_days_for_health_safety_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::TenDayCureOrFiveDayHealthSafetyCureNoticeUnderArs33_1368A;
-        input.material_breach_category = MaterialBreachCategory::MaterialNoncomplianceHealthAndSafetyBreach;
+        input.compliance_aspect =
+            ComplianceAspect::TenDayCureOrFiveDayHealthSafetyCureNoticeUnderArs33_1368A;
+        input.material_breach_category =
+            MaterialBreachCategory::MaterialNoncomplianceHealthAndSafetyBreach;
         input.cure_notice_days_given = 3;
         let output = check(&input);
-        assert_eq!(output.mode, ArltaMode::ViolationCureNoticePeriodShorterThanStatutoryMinimum);
+        assert_eq!(
+            output.mode,
+            ArltaMode::ViolationCureNoticePeriodShorterThanStatutoryMinimum
+        );
     }
 
     #[test]
     fn retaliation_within_six_months_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::RetaliationProhibitedSixMonthPresumptionUnderArs33_1376_1377;
+        input.compliance_aspect =
+            ComplianceAspect::RetaliationProhibitedSixMonthPresumptionUnderArs33_1376_1377;
         input.protected_activity_within_six_months = true;
         input.adverse_action_taken = true;
         let output = check(&input);
@@ -572,7 +608,8 @@ mod tests {
     #[test]
     fn no_retaliation_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::RetaliationProhibitedSixMonthPresumptionUnderArs33_1376_1377;
+        input.compliance_aspect =
+            ComplianceAspect::RetaliationProhibitedSixMonthPresumptionUnderArs33_1376_1377;
         let output = check(&input);
         assert_eq!(
             output.mode,
@@ -583,36 +620,49 @@ mod tests {
     #[test]
     fn unlawful_ouster_triggers_two_months_rent_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::UnlawfulOusterTwoMonthsDamagesRemedyUnderArs33_1370;
+        input.compliance_aspect =
+            ComplianceAspect::UnlawfulOusterTwoMonthsDamagesRemedyUnderArs33_1370;
         input.unlawful_ouster_occurred = true;
         let output = check(&input);
         assert_eq!(
             output.mode,
             ArltaMode::ViolationUnlawfulOusterTriggersTwoMonthsRentOrActualDamages
         );
-        assert_eq!(output.two_months_rent_unlawful_ouster_damages_dollars, 4_000);
+        assert_eq!(
+            output.two_months_rent_unlawful_ouster_damages_dollars,
+            4_000
+        );
     }
 
     #[test]
     fn no_unlawful_ouster_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::UnlawfulOusterTwoMonthsDamagesRemedyUnderArs33_1370;
+        input.compliance_aspect =
+            ComplianceAspect::UnlawfulOusterTwoMonthsDamagesRemedyUnderArs33_1370;
         let output = check(&input);
-        assert_eq!(output.mode, ArltaMode::CompliantNoUnlawfulOusterTenantInPossession);
+        assert_eq!(
+            output.mode,
+            ArltaMode::CompliantNoUnlawfulOusterTenantInPossession
+        );
     }
 
     #[test]
     fn tenant_termination_fourteen_day_notice_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::TenantTerminationFourteenDayNoticeUnderArs33_1361;
+        input.compliance_aspect =
+            ComplianceAspect::TenantTerminationFourteenDayNoticeUnderArs33_1361;
         let output = check(&input);
-        assert_eq!(output.mode, ArltaMode::CompliantTenantTerminationFourteenDayNoticeProvided);
+        assert_eq!(
+            output.mode,
+            ArltaMode::CompliantTenantTerminationFourteenDayNoticeProvided
+        );
     }
 
     #[test]
     fn tenant_termination_under_fourteen_days_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::TenantTerminationFourteenDayNoticeUnderArs33_1361;
+        input.compliance_aspect =
+            ComplianceAspect::TenantTerminationFourteenDayNoticeUnderArs33_1361;
         input.tenant_termination_notice_days_given = 13;
         let output = check(&input);
         assert_eq!(
@@ -626,7 +676,10 @@ mod tests {
         assert_eq!(AZ_RLTA_TITLE_NUMBER, 33);
         assert_eq!(AZ_RLTA_CHAPTER_NUMBER, 10);
         assert_eq!(AZ_RLTA_ENACTMENT_YEAR, 1973);
-        assert_eq!(AZ_RLTA_SECURITY_DEPOSIT_CAP_NUMERATOR_TENTHS_OF_MONTHS_RENT, 15);
+        assert_eq!(
+            AZ_RLTA_SECURITY_DEPOSIT_CAP_NUMERATOR_TENTHS_OF_MONTHS_RENT,
+            15
+        );
         assert_eq!(AZ_RLTA_SECURITY_DEPOSIT_CAP_DENOMINATOR_TENTHS, 10);
         assert_eq!(AZ_RLTA_SECURITY_DEPOSIT_RETURN_DEADLINE_BUSINESS_DAYS, 14);
         assert_eq!(AZ_RLTA_LANDLORD_ENTRY_NOTICE_HOURS, 48);
@@ -671,7 +724,8 @@ mod tests {
     #[test]
     fn unlawful_ouster_damages_saturating_overflow_defense() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::UnlawfulOusterTwoMonthsDamagesRemedyUnderArs33_1370;
+        input.compliance_aspect =
+            ComplianceAspect::UnlawfulOusterTwoMonthsDamagesRemedyUnderArs33_1370;
         input.unlawful_ouster_occurred = true;
         input.monthly_rent_dollars = u64::MAX;
         let output = check(&input);
@@ -679,6 +733,9 @@ mod tests {
             output.mode,
             ArltaMode::ViolationUnlawfulOusterTriggersTwoMonthsRentOrActualDamages
         );
-        assert_eq!(output.two_months_rent_unlawful_ouster_damages_dollars, u64::MAX);
+        assert_eq!(
+            output.two_months_rent_unlawful_ouster_damages_dollars,
+            u64::MAX
+        );
     }
 }

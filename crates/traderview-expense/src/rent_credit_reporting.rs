@@ -103,13 +103,10 @@ pub static RULES: Lazy<HashMap<&'static str, StateRule>> = Lazy::new(|| {
 
     // NoStateRentReportingRequirement default — 49 other states + DC.
     let no_state = [
-        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE",
-        "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS",
-        "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS",
-        "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY",
-        "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
-        "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV",
-        "WI", "WY",
+        "AL", "AK", "AZ", "AR", "CO", "CT", "DC", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA",
+        "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+        "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT",
+        "VA", "WA", "WV", "WI", "WY",
     ];
     for code in no_state {
         m.insert(
@@ -203,8 +200,7 @@ pub fn check(input: &RentCreditReportingInput) -> RentCreditReportingResult {
     } else {
         0
     };
-    let fee_compliant = !requirement_applies
-        || input.monthly_fee_charged_dollars <= max_fee;
+    let fee_compliant = !requirement_applies || input.monthly_fee_charged_dollars <= max_fee;
 
     let landlord_compliant = !requirement_applies || (notice_satisfied && fee_compliant);
 
@@ -217,7 +213,11 @@ pub fn check(input: &RentCreditReportingInput) -> RentCreditReportingResult {
         }
     };
 
-    let note = if !in_effect && !matches!(rule.regime, RentCreditReportingRegime::NoStateRentReportingRequirement) {
+    let note = if !in_effect
+        && !matches!(
+            rule.regime,
+            RentCreditReportingRegime::NoStateRentReportingRequirement
+        ) {
         format!(
             "State applies {} regime; statute not yet in effect on analysis date {}.",
             regime_label, input.analysis_date,

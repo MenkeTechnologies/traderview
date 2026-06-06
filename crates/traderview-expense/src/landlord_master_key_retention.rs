@@ -274,26 +274,25 @@ pub struct LandlordMasterKeyRetentionResult {
     pub notes: Vec<String>,
 }
 
-pub fn check(
-    input: &LandlordMasterKeyRetentionInput,
-) -> LandlordMasterKeyRetentionResult {
+pub fn check(input: &LandlordMasterKeyRetentionInput) -> LandlordMasterKeyRetentionResult {
     let mut failure_reasons: Vec<String> = Vec::new();
 
     let entry_authorized = match input.entry_purpose {
-        EntryPurpose::Emergency
-        | EntryPurpose::CourtOrder
-        | EntryPurpose::TenantAbandonment => true,
+        EntryPurpose::Emergency | EntryPurpose::CourtOrder | EntryPurpose::TenantAbandonment => {
+            true
+        }
         EntryPurpose::NecessaryRepair
         | EntryPurpose::ShowUnit
         | EntryPurpose::WaterConservation => {
             input.twenty_four_hour_written_notice && input.entry_during_normal_business_hours
         }
-        EntryPurpose::RoutineInspectionWithoutNotice
-        | EntryPurpose::UnauthorizedNonEmergency => false,
+        EntryPurpose::RoutineInspectionWithoutNotice | EntryPurpose::UnauthorizedNonEmergency => {
+            false
+        }
     };
 
-    let ca_section_1954_compliant = !matches!(input.jurisdiction, Jurisdiction::California)
-        || entry_authorized;
+    let ca_section_1954_compliant =
+        !matches!(input.jurisdiction, Jurisdiction::California) || entry_authorized;
 
     let tx_section_92_156_compliant = !matches!(input.jurisdiction, Jurisdiction::Texas)
         || (input.tx_rekeyed_within_7_days && input.tx_landlord_paid_master_key_expense);
@@ -339,14 +338,16 @@ pub fn check(
             Jurisdiction::NewYork => "NY RPL § 235-d landlord harassment plus NYC Tenant Anti-Harassment Act 2018 $1,000-$10,000 civil penalty per violation",
             Jurisdiction::Massachusetts => "Mass. Gen. Laws c. 186 § 15F — UNAUTHORIZED ENTRY exposes landlord to TRIPLE DAMAGES plus attorney fees plus injunctive relief",
         };
-        failure_reasons.push(format!(
-            "{}: {}",
-            category, statute
-        ));
+        failure_reasons.push(format!("{}: {}", category, statute));
     }
 
     if matches!(input.jurisdiction, Jurisdiction::California)
-        && matches!(input.entry_purpose, EntryPurpose::NecessaryRepair | EntryPurpose::ShowUnit | EntryPurpose::WaterConservation)
+        && matches!(
+            input.entry_purpose,
+            EntryPurpose::NecessaryRepair
+                | EntryPurpose::ShowUnit
+                | EntryPurpose::WaterConservation
+        )
         && !input.twenty_four_hour_written_notice
     {
         failure_reasons.push(
@@ -376,7 +377,9 @@ pub fn check(
         }
     }
 
-    if matches!(input.jurisdiction, Jurisdiction::NewYork) && ny_unauthorized_entry_civil_penalty_cents > 0 {
+    if matches!(input.jurisdiction, Jurisdiction::NewYork)
+        && ny_unauthorized_entry_civil_penalty_cents > 0
+    {
         failure_reasons.push(format!(
             "NY RPL § 235-d + NYC Tenant Anti-Harassment Act 2018 — {} unauthorized entries × $1,000 (minimum per-violation civil penalty) = {} cents minimum; up to $10,000 per violation at $1,000,000 maximum civil penalty",
             input.unauthorized_entry_count,
@@ -468,9 +471,10 @@ mod tests {
         i.twenty_four_hour_written_notice = false;
         let r = check(&i);
         assert!(!r.entry_authorized);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 1954(d)(1)")
-            && f.contains("24-hour written notice")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1954(d)(1)") && f.contains("24-hour written notice")));
     }
 
     #[test]
@@ -479,9 +483,10 @@ mod tests {
         i.entry_during_normal_business_hours = false;
         let r = check(&i);
         assert!(!r.entry_authorized);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 1954(d)(2)")
-            && f.contains("NORMAL BUSINESS HOURS")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 1954(d)(2)") && f.contains("NORMAL BUSINESS HOURS")));
     }
 
     #[test]
@@ -490,9 +495,10 @@ mod tests {
         i.entry_purpose = EntryPurpose::RoutineInspectionWithoutNotice;
         let r = check(&i);
         assert!(!r.entry_authorized);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("Cal. Civ. Code § 1954(c)")
-            && f.contains("$2,000 per incident")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("Cal. Civ. Code § 1954(c)") && f.contains("$2,000 per incident")));
     }
 
     #[test]
@@ -530,9 +536,10 @@ mod tests {
         i.tx_landlord_paid_master_key_expense = true;
         let r = check(&i);
         assert!(!r.tx_section_92_156_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 92.156(a)")
-            && f.contains("7th day")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("§ 92.156(a)") && f.contains("7th day")));
     }
 
     #[test]
@@ -543,8 +550,7 @@ mod tests {
         i.tx_landlord_paid_master_key_expense = false;
         let r = check(&i);
         assert!(!r.tx_section_92_156_compliant);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("§ 92.156(b)")
+        assert!(r.failure_reasons.iter().any(|f| f.contains("§ 92.156(b)")
             && f.contains("PAID BY LANDLORD")
             && f.contains("§ 92.157")));
     }
@@ -556,10 +562,12 @@ mod tests {
         i.unauthorized_entry_count = 5;
         let r = check(&i);
         assert_eq!(r.ny_unauthorized_entry_civil_penalty_cents, 500_000);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("NY RPL § 235-d")
-            && f.contains("NYC Tenant Anti-Harassment Act 2018")
-            && f.contains("$10,000 per violation")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("NY RPL § 235-d")
+                && f.contains("NYC Tenant Anti-Harassment Act 2018")
+                && f.contains("$10,000 per violation")));
     }
 
     #[test]
@@ -570,9 +578,10 @@ mod tests {
         i.unauthorized_entry_count = 1;
         let r = check(&i);
         assert!(r.ma_unauthorized_entry_triple_damages_engaged);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("c. 186 § 15F TRIPLE DAMAGES")
-            && f.contains("c. 186 § 14")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("c. 186 § 15F TRIPLE DAMAGES") && f.contains("c. 186 § 14")));
     }
 
     #[test]
@@ -596,9 +605,10 @@ mod tests {
         let mut i = ca_compliant_repair();
         i.written_lease_disclosure = false;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("BEST-PRACTICE GAP")
-            && f.contains("written lease disclosure")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("BEST-PRACTICE GAP") && f.contains("written lease disclosure")));
     }
 
     #[test]
@@ -606,9 +616,10 @@ mod tests {
         let mut i = ca_compliant_repair();
         i.key_issuance_log_maintained = false;
         let r = check(&i);
-        assert!(r.failure_reasons.iter().any(|f|
-            f.contains("BEST-PRACTICE GAP")
-            && f.contains("key-issuance log")));
+        assert!(r
+            .failure_reasons
+            .iter()
+            .any(|f| f.contains("BEST-PRACTICE GAP") && f.contains("key-issuance log")));
     }
 
     #[test]
@@ -690,27 +701,31 @@ mod tests {
         assert!(r.citation.contains("Mass. Gen. Laws c. 186 § 15B"));
         assert!(r.citation.contains("Mass. Gen. Laws c. 186 § 15F"));
         assert!(r.citation.contains("105 CMR 410.480"));
-        assert!(r.citation.contains("Boston Housing Auth. v. Hemingway, 363 Mass. 184 (1973)"));
+        assert!(r
+            .citation
+            .contains("Boston Housing Auth. v. Hemingway, 363 Mass. 184 (1973)"));
         assert!(r.citation.contains("HSTPA of 2019"));
     }
 
     #[test]
     fn note_pins_four_jurisdiction_framework() {
         let r = check(&ca_compliant_repair());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Four-jurisdiction framework")
-            && n.contains("CALIFORNIA")
-            && n.contains("TEXAS")
-            && n.contains("NEW YORK")
-            && n.contains("MASSACHUSETTS")
-            && n.contains("TRIPLE DAMAGES")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Four-jurisdiction framework")
+                && n.contains("CALIFORNIA")
+                && n.contains("TEXAS")
+                && n.contains("NEW YORK")
+                && n.contains("MASSACHUSETTS")
+                && n.contains("TRIPLE DAMAGES")));
     }
 
     #[test]
     fn note_pins_ca_six_entry_categories() {
         let r = check(&ca_compliant_repair());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Cal. Civ. Code § 1954 permitted entry categories (6)")
+        assert!(r.notes.iter().any(|n| n
+            .contains("Cal. Civ. Code § 1954 permitted entry categories (6)")
             && n.contains("EMERGENCY")
             && n.contains("show unit")
             && n.contains("court order")
@@ -720,28 +735,32 @@ mod tests {
     #[test]
     fn note_pins_ca_notice_requirements_five_elements() {
         let r = check(&ca_compliant_repair());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Cal. Civ. Code § 1954 NOTICE REQUIREMENTS")
-            && n.contains("PURPOSE of entry")
-            && n.contains("NORMAL BUSINESS HOURS")
-            && n.contains("$2,000 per incident")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Cal. Civ. Code § 1954 NOTICE REQUIREMENTS")
+                && n.contains("PURPOSE of entry")
+                && n.contains("NORMAL BUSINESS HOURS")
+                && n.contains("$2,000 per incident")));
     }
 
     #[test]
     fn note_pins_tx_section_92_156_four_elements() {
         let r = check(&ca_compliant_repair());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Texas § 92.156 REKEY REQUIREMENTS")
-            && n.contains("7th day after tenant turnover")
-            && n.contains("MUST be paid by landlord")
-            && n.contains("§ 92.157 tenant request")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Texas § 92.156 REKEY REQUIREMENTS")
+                && n.contains("7th day after tenant turnover")
+                && n.contains("MUST be paid by landlord")
+                && n.contains("§ 92.157 tenant request")));
     }
 
     #[test]
     fn note_pins_nyc_mdl_51_53_four_elements() {
         let r = check(&ca_compliant_repair());
-        assert!(r.notes.iter().any(|n|
-            n.contains("NYC Multiple Dwelling Law § 51 + § 53 KEY MANAGEMENT")
+        assert!(r.notes.iter().any(|n| n
+            .contains("NYC Multiple Dwelling Law § 51 + § 53 KEY MANAGEMENT")
             && n.contains("front door key")
             && n.contains("apartment door key")
             && n.contains("mailbox key")
@@ -751,8 +770,8 @@ mod tests {
     #[test]
     fn note_pins_ma_section_15b_15f_three_elements() {
         let r = check(&ca_compliant_repair());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Mass. Gen. Laws c. 186 § 15B + § 15F KEY REQUIREMENTS")
+        assert!(r.notes.iter().any(|n| n
+            .contains("Mass. Gen. Laws c. 186 § 15B + § 15F KEY REQUIREMENTS")
             && n.contains("provide keys at lease start")
             && n.contains("UNAUTHORIZED ENTRY")
             && n.contains("TRIPLE DAMAGES")
@@ -762,33 +781,38 @@ mod tests {
     #[test]
     fn note_pins_master_key_best_practice_six_elements() {
         let r = check(&ca_compliant_repair());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Master-key system best-practice elements (6)")
-            && n.contains("WRITTEN LEASE DISCLOSURE")
-            && n.contains("LOG of every key issuance")
-            && n.contains("CONTROLLED ACCESS protocols")
-            && n.contains("PROHIBITION on landlord personal use")));
+        assert!(r.notes.iter().any(
+            |n| n.contains("Master-key system best-practice elements (6)")
+                && n.contains("WRITTEN LEASE DISCLOSURE")
+                && n.contains("LOG of every key issuance")
+                && n.contains("CONTROLLED ACCESS protocols")
+                && n.contains("PROHIBITION on landlord personal use")
+        ));
     }
 
     #[test]
     fn note_pins_trader_fact_patterns_five() {
         let r = check(&ca_compliant_repair());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Trader-landlord critical fact patterns")
-            && n.contains("§ 1954 violation")
-            && n.contains("§ 92.156 violation")
-            && n.contains("§ 235-d landlord harassment")
-            && n.contains("c. 186 § 15F UNAUTHORIZED ENTRY TRIPLE DAMAGES")
-            && n.contains("best-practice mitigation")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Trader-landlord critical fact patterns")
+                && n.contains("§ 1954 violation")
+                && n.contains("§ 92.156 violation")
+                && n.contains("§ 235-d landlord harassment")
+                && n.contains("c. 186 § 15F UNAUTHORIZED ENTRY TRIPLE DAMAGES")
+                && n.contains("best-practice mitigation")));
     }
 
     #[test]
     fn note_pins_companion_modules() {
         let r = check(&ca_compliant_repair());
-        assert!(r.notes.iter().any(|n|
-            n.contains("Companion to entry_notice")
-            && n.contains("landlord_mid_tenancy_rekeying")
-            && n.contains("tenant_emotional_distress_damages")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Companion to entry_notice")
+                && n.contains("landlord_mid_tenancy_rekeying")
+                && n.contains("tenant_emotional_distress_damages")));
     }
 
     #[test]

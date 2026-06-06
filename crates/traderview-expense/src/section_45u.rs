@@ -429,7 +429,10 @@ mod tests {
         input.compliance_aspect =
             ComplianceAspect::QualifiedNuclearPowerFacilityEligibilityUnderSection45UC;
         let out = check(&input);
-        assert_eq!(out.mode, Section45uMode::CompliantQualifiedNuclearPowerFacility);
+        assert_eq!(
+            out.mode,
+            Section45uMode::CompliantQualifiedNuclearPowerFacility
+        );
     }
 
     #[test]
@@ -438,7 +441,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::BaseCreditRateUnderSection45UA;
         input.kwh_produced_and_sold = 1_000_000_000;
         let out = check(&input);
-        assert_eq!(out.mode, Section45uMode::CompliantBaseCreditRateAt03CentsPerKwh);
+        assert_eq!(
+            out.mode,
+            Section45uMode::CompliantBaseCreditRateAt03CentsPerKwh
+        );
         assert_eq!(out.credit_amount_dollars_x100, 300_000_000);
     }
 
@@ -449,7 +455,10 @@ mod tests {
         input.pwa_status = PwaStatus::SatisfiesPwaRequirements;
         input.kwh_produced_and_sold = 1_000_000_000;
         let out = check(&input);
-        assert_eq!(out.mode, Section45uMode::CompliantPwaBumpedCreditRateAt15CentsPerKwh);
+        assert_eq!(
+            out.mode,
+            Section45uMode::CompliantPwaBumpedCreditRateAt15CentsPerKwh
+        );
         assert_eq!(out.credit_amount_dollars_x100, 1_500_000_000);
     }
 
@@ -545,7 +554,10 @@ mod tests {
         input.sale_to_unrelated_person_status =
             SaleToUnrelatedPersonStatus::SelfConsumedOrSoldToRelatedParty;
         let out = check(&input);
-        assert_eq!(out.mode, Section45uMode::NotApplicableSelfConsumedOrSoldToRelatedParty);
+        assert_eq!(
+            out.mode,
+            Section45uMode::NotApplicableSelfConsumedOrSoldToRelatedParty
+        );
     }
 
     #[test]
@@ -554,7 +566,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::EffectivePeriod2024To2032UnderSection45UD;
         input.tax_year_status = TaxYearStatus::TaxYearBetween2024And2032Inclusive;
         let out = check(&input);
-        assert_eq!(out.mode, Section45uMode::CompliantEffectivePeriodBetween2024And2032);
+        assert_eq!(
+            out.mode,
+            Section45uMode::CompliantEffectivePeriodBetween2024And2032
+        );
     }
 
     #[test]
@@ -572,7 +587,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::EffectivePeriod2024To2032UnderSection45UD;
         input.tax_year_status = TaxYearStatus::TaxYearOnOrAfterJanuary1_2033;
         let out = check(&input);
-        assert_eq!(out.mode, Section45uMode::NotApplicableTaxYearOnOrAfterJanuary1_2033);
+        assert_eq!(
+            out.mode,
+            Section45uMode::NotApplicableTaxYearOnOrAfterJanuary1_2033
+        );
     }
 
     #[test]
@@ -580,7 +598,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::EligibilityForSection6417DirectPay;
         let out = check(&input);
-        assert_eq!(out.mode, Section45uMode::CompliantEligibleForSection6417DirectPay);
+        assert_eq!(
+            out.mode,
+            Section45uMode::CompliantEligibleForSection6417DirectPay
+        );
     }
 
     #[test]
@@ -600,7 +621,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::BaseCreditRateUnderSection45UA;
         input.kwh_produced_and_sold = u64::MAX;
         let out = check(&input);
-        assert_eq!(out.mode, Section45uMode::CompliantBaseCreditRateAt03CentsPerKwh);
+        assert_eq!(
+            out.mode,
+            Section45uMode::CompliantBaseCreditRateAt03CentsPerKwh
+        );
         assert!(out.credit_amount_dollars_x100 > 0);
     }
 

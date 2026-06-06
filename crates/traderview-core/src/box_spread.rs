@@ -51,13 +51,22 @@ pub fn compute(
     market_risk_free_rate: f64,
     arbitrage_threshold_bps: f64,
 ) -> Option<BoxSpreadReport> {
-    if !strike_low.is_finite() || !strike_high.is_finite()
+    if !strike_low.is_finite()
+        || !strike_high.is_finite()
         || strike_high <= strike_low
-        || ![call_low_price, call_high_price, put_low_price, put_high_price]
-            .iter().all(|p| p.is_finite() && *p >= 0.0)
-        || !time_to_expiry_years.is_finite() || time_to_expiry_years <= 0.0
+        || ![
+            call_low_price,
+            call_high_price,
+            put_low_price,
+            put_high_price,
+        ]
+        .iter()
+        .all(|p| p.is_finite() && *p >= 0.0)
+        || !time_to_expiry_years.is_finite()
+        || time_to_expiry_years <= 0.0
         || !market_risk_free_rate.is_finite()
-        || !arbitrage_threshold_bps.is_finite() || arbitrage_threshold_bps < 0.0
+        || !arbitrage_threshold_bps.is_finite()
+        || arbitrage_threshold_bps < 0.0
     {
         return None;
     }
@@ -152,8 +161,18 @@ mod tests {
     fn arbitrage_threshold_respected() {
         // Build a box at exactly market rate, then put threshold high.
         let fair_premium = 10.0_f64 * (-0.05_f64 * 0.25).exp();
-        let r = compute(100.0, 110.0, 8.0, 2.0, 2.0,
-            fair_premium - 8.0 + 2.0 + 2.0, 0.25, 0.05, 1000.0).unwrap();
+        let r = compute(
+            100.0,
+            110.0,
+            8.0,
+            2.0,
+            2.0,
+            fair_premium - 8.0 + 2.0 + 2.0,
+            0.25,
+            0.05,
+            1000.0,
+        )
+        .unwrap();
         assert!(!r.is_arbitrage_opportunity);
     }
 

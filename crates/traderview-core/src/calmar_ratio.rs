@@ -42,13 +42,21 @@ pub fn compute(equity: &[f64], years: f64) -> CalmarReport {
     let mut peak = equity[0];
     let mut max_dd_pct = 0.0_f64;
     for &v in equity {
-        if v > peak { peak = v; }
+        if v > peak {
+            peak = v;
+        }
         if peak > 0.0 {
             let dd_pct = (peak - v) / peak * 100.0;
-            if dd_pct > max_dd_pct { max_dd_pct = dd_pct; }
+            if dd_pct > max_dd_pct {
+                max_dd_pct = dd_pct;
+            }
         }
     }
-    let calmar = if max_dd_pct > 0.0 { annualized / max_dd_pct } else { 0.0 };
+    let calmar = if max_dd_pct > 0.0 {
+        annualized / max_dd_pct
+    } else {
+        0.0
+    };
     let note = if max_dd_pct == 0.0 {
         "no drawdown seen — Calmar undefined, set to 0".into()
     } else {
@@ -57,7 +65,8 @@ pub fn compute(equity: &[f64], years: f64) -> CalmarReport {
     CalmarReport {
         annualized_return_pct: annualized,
         max_drawdown_pct: max_dd_pct,
-        calmar_ratio: calmar, note,
+        calmar_ratio: calmar,
+        note,
     }
 }
 
@@ -110,8 +119,11 @@ mod tests {
     fn losing_strategy_returns_negative_calmar() {
         // 100 → 50 → 80. Annualized return < 0, max DD 50%.
         let r = compute(&[100.0, 50.0, 80.0], 1.0);
-        assert!(r.calmar_ratio < 0.0,
-            "losing strategy with drawdown should have negative Calmar, got {}", r.calmar_ratio);
+        assert!(
+            r.calmar_ratio < 0.0,
+            "losing strategy with drawdown should have negative Calmar, got {}",
+            r.calmar_ratio
+        );
         assert!((r.max_drawdown_pct - 50.0).abs() < 1e-9);
     }
 

@@ -146,7 +146,8 @@ pub fn compute(input: &Input) -> Output {
         "IRS Publication 1212 (12/2025) — Guide to Original Issue Discount (OID) Instruments".to_string(),
     ];
 
-    if input.obligation_classification == ObligationClassification::TaxableObligationOutsideSection1288Scope
+    if input.obligation_classification
+        == ObligationClassification::TaxableObligationOutsideSection1288Scope
     {
         return Output {
             mode: Section1288Mode::NotApplicableNotATaxExemptObligation,
@@ -290,7 +291,10 @@ mod tests {
         input.obligation_classification =
             ObligationClassification::TaxableObligationOutsideSection1288Scope;
         let output = check(&input);
-        assert_eq!(output.mode, Section1288Mode::NotApplicableNotATaxExemptObligation);
+        assert_eq!(
+            output.mode,
+            Section1288Mode::NotApplicableNotATaxExemptObligation
+        );
         assert!(output.de_minimis_rule_applies_to_obligation);
     }
 
@@ -371,7 +375,10 @@ mod tests {
         input.de_minimis_rule_application_status =
             DeMinimisRuleApplicationStatus::DeMinimisRuleProperlyExcludedFromTaxExemptObligationAccrual;
         let output = check(&input);
-        assert_eq!(output.mode, Section1288Mode::CompliantNoDeMinimisOidUnderSection1288B1);
+        assert_eq!(
+            output.mode,
+            Section1288Mode::CompliantNoDeMinimisOidUnderSection1288B1
+        );
     }
 
     #[test]
@@ -390,7 +397,8 @@ mod tests {
     #[test]
     fn adjusted_federal_rate_adjustment_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::AdjustedFederalRateAdjustmentForTaxExemptionBenefit;
+        input.compliance_aspect =
+            ComplianceAspect::AdjustedFederalRateAdjustmentForTaxExemptionBenefit;
         let output = check(&input);
         assert_eq!(
             output.mode,

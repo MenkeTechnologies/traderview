@@ -203,7 +203,8 @@ fn check_vawa(
         retaliation_violation: input.landlord_retaliated,
         void_clauses_engaged: input.lease_contains_void_clauses,
         violations,
-        citation: "34 USC § 12491 (VAWA Reauthorization Act of 2022); 24 CFR § 5.2005; Form HUD-91066",
+        citation:
+            "34 USC § 12491 (VAWA Reauthorization Act of 2022); 24 CFR § 5.2005; Form HUD-91066",
         notes,
     }
 }
@@ -221,9 +222,8 @@ fn check_ca(
     ];
 
     if input.victim_status && !input.written_notice_provided {
-        violations.push(
-            "Cal. Civ. Code § 1946.7 — written notice of termination required".to_string(),
-        );
+        violations
+            .push("Cal. Civ. Code § 1946.7 — written notice of termination required".to_string());
     }
 
     let notice_compliant = input.days_between_notice_and_moveout >= 14;
@@ -246,11 +246,11 @@ fn check_ca(
         );
     }
 
-    let lookback_compliant =
-        !doc_acceptable || input.days_since_documentation_issued <= 180;
+    let lookback_compliant = !doc_acceptable || input.days_since_documentation_issued <= 180;
     if input.victim_status && doc_acceptable && !lookback_compliant {
         violations.push(
-            "Cal. Civ. Code § 1946.7 — documentation must be issued within prior 180 days".to_string(),
+            "Cal. Civ. Code § 1946.7 — documentation must be issued within prior 180 days"
+                .to_string(),
         );
     }
 
@@ -294,9 +294,8 @@ fn check_il(
     ];
 
     if input.victim_status && !input.written_notice_provided {
-        violations.push(
-            "765 ILCS 750/15(a)(1) — written notice of termination required".to_string(),
-        );
+        violations
+            .push("765 ILCS 750/15(a)(1) — written notice of termination required".to_string());
     }
 
     let doc_acceptable = matches!(
@@ -350,9 +349,7 @@ fn check_wa(
     ];
 
     if input.victim_status && !input.written_notice_provided {
-        violations.push(
-            "RCW 59.18.575 — written notice to landlord required".to_string(),
-        );
+        violations.push("RCW 59.18.575 — written notice to landlord required".to_string());
     }
 
     let within_90_days = input.days_since_dv_incident <= 90;
@@ -454,8 +451,10 @@ mod tests {
         i.written_notice_provided = false;
         let r = check(&i);
         assert!(!r.termination_request_compliant);
-        assert!(r.violations.iter().any(|v| v.contains("§ 1946.7")
-            && v.contains("written notice")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 1946.7") && v.contains("written notice")));
     }
 
     #[test]
@@ -515,8 +514,10 @@ mod tests {
         i.documentation_type = DocumentationType::None;
         let r = check(&i);
         assert!(!r.documentation_compliant);
-        assert!(r.violations.iter().any(|v| v.contains("restraining/protective order")
-            && v.contains("police report")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("restraining/protective order") && v.contains("police report")));
     }
 
     #[test]
@@ -606,8 +607,10 @@ mod tests {
         i.lease_contains_void_clauses = true;
         let r = check(&i);
         assert!(r.void_clauses_engaged);
-        assert!(r.violations.iter().any(|v| v.contains("VOID")
-            && v.contains("police calls")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("VOID") && v.contains("police calls")));
     }
 
     #[test]

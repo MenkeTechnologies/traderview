@@ -142,12 +142,12 @@ fn check_texas(input: &LandlordMidTenancyRekeyingInput) -> LandlordMidTenancyRek
 
     let landlord_pays = matches!(
         input.rekey_reason,
-        RekeyReason::LandlordMasterKeyChange
-            | RekeyReason::LandlordSecurityUpgrade
+        RekeyReason::LandlordMasterKeyChange | RekeyReason::LandlordSecurityUpgrade
     );
     let tenant_pays = !landlord_pays;
 
-    if rekeying_engaged && input.hours_since_tenant_request > required_window
+    if rekeying_engaged
+        && input.hours_since_tenant_request > required_window
         && !input.rekeying_completed_within_window
     {
         violations.push(format!(
@@ -179,9 +179,7 @@ fn check_texas(input: &LandlordMidTenancyRekeyingInput) -> LandlordMidTenancyRek
     }
 }
 
-fn check_california(
-    input: &LandlordMidTenancyRekeyingInput,
-) -> LandlordMidTenancyRekeyingResult {
+fn check_california(input: &LandlordMidTenancyRekeyingInput) -> LandlordMidTenancyRekeyingResult {
     let mut violations: Vec<String> = Vec::new();
     let notes: Vec<String> = vec![
         "Cal. Civ. Code §§ 1954 + 1941.3 — limited mid-tenancy rekeying framework; entry rules under § 1954 apply when landlord enters to rekey; § 1941.3(b) security devices must be maintained in working order at landlord's expense"
@@ -201,7 +199,8 @@ fn check_california(
     );
     let tenant_pays = !landlord_pays;
 
-    if rekeying_engaged && input.hours_since_tenant_request > required_window
+    if rekeying_engaged
+        && input.hours_since_tenant_request > required_window
         && !input.rekeying_completed_within_window
     {
         violations.push(format!(
@@ -224,9 +223,7 @@ fn check_california(
     }
 }
 
-fn check_default(
-    input: &LandlordMidTenancyRekeyingInput,
-) -> LandlordMidTenancyRekeyingResult {
+fn check_default(input: &LandlordMidTenancyRekeyingInput) -> LandlordMidTenancyRekeyingResult {
     let notes: Vec<String> = vec![
         "default rule — common-law quiet enjoyment covenant imposes reasonable-time obligation on landlord to rekey at tenant's request when reasonable security concern exists"
             .to_string(),
@@ -236,8 +233,7 @@ fn check_default(
 
     let landlord_pays = matches!(
         input.rekey_reason,
-        RekeyReason::LandlordMasterKeyChange
-            | RekeyReason::LandlordSecurityUpgrade
+        RekeyReason::LandlordMasterKeyChange | RekeyReason::LandlordSecurityUpgrade
     );
     let tenant_pays = !landlord_pays;
 
@@ -321,7 +317,10 @@ mod tests {
         let r = check(&i);
         assert!(!r.compliant);
         assert!(r.tx_remedies_engaged);
-        assert!(r.violations.iter().any(|v| v.contains("§ 92.156") && v.contains("7-day") && v.contains("200")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 92.156") && v.contains("7-day") && v.contains("200")));
     }
 
     #[test]
@@ -348,7 +347,10 @@ mod tests {
         i.new_keys_provided_to_tenant = false;
         let r = check(&i);
         assert!(!r.compliant);
-        assert!(r.violations.iter().any(|v| v.contains("MUST provide new keys")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("MUST provide new keys")));
     }
 
     #[test]
@@ -366,13 +368,17 @@ mod tests {
     #[test]
     fn tx_remedies_note_describes_one_month_rent_and_500() {
         let r = check(&tx_compliant_tenant_request());
-        assert!(r.notes.iter().any(|n| n.contains("§§ 92.164 + 92.165") && n.contains("$500 civil penalty") && n.contains("ONE MONTH")));
+        assert!(r.notes.iter().any(|n| n.contains("§§ 92.164 + 92.165")
+            && n.contains("$500 civil penalty")
+            && n.contains("ONE MONTH")));
     }
 
     #[test]
     fn tx_citation_pins_subchapter_d_sections() {
         let r = check(&tx_compliant_tenant_request());
-        assert!(r.citation.contains("§§ 92.156, 92.157, 92.158, 92.164, 92.165"));
+        assert!(r
+            .citation
+            .contains("§§ 92.156, 92.157, 92.158, 92.164, 92.165"));
     }
 
     #[test]

@@ -209,7 +209,9 @@ pub fn compute(input: &Input) -> Output {
         AcquisitionDateStatus::AcquiredOnOrAfterJanuary1_2023AndBeforeOctober1_2025Eligible => {}
     }
 
-    if input.vehicle_eligibility_status == VehicleEligibilityStatus::NotPreviouslyOwnedCleanVehicleNotEligible {
+    if input.vehicle_eligibility_status
+        == VehicleEligibilityStatus::NotPreviouslyOwnedCleanVehicleNotEligible
+    {
         return Output {
             mode: Section25EMode::NotApplicableNotPreviouslyOwnedCleanVehicle,
             statutory_basis: "IRC § 25E(c)(2) — vehicle must qualify as previously-owned clean vehicle under statutory definitions".to_string(),
@@ -313,8 +315,10 @@ pub fn compute(input: &Input) -> Output {
             if input.purchased_from_licensed_dealer {
                 Output {
                     mode: Section25EMode::CompliantPurchasedFromLicensedDealer,
-                    statutory_basis: "IRC § 25E(c)(1) — vehicle purchased from licensed dealer".to_string(),
-                    notes: "COMPLIANT: vehicle purchased from licensed dealer under § 25E(c)(1).".to_string(),
+                    statutory_basis: "IRC § 25E(c)(1) — vehicle purchased from licensed dealer"
+                        .to_string(),
+                    notes: "COMPLIANT: vehicle purchased from licensed dealer under § 25E(c)(1)."
+                        .to_string(),
                     citations,
                     credit_amount_dollars: 0,
                 }
@@ -351,7 +355,9 @@ pub fn compute(input: &Input) -> Output {
             let threshold = match input.filing_status {
                 FilingStatus::SingleOrMarriedFilingSeparately => IRC_25E_AGI_LIMIT_SINGLE_DOLLARS,
                 FilingStatus::HeadOfHousehold => IRC_25E_AGI_LIMIT_HOH_DOLLARS,
-                FilingStatus::MarriedFilingJointlyOrSurvivingSpouse => IRC_25E_AGI_LIMIT_MFJ_DOLLARS,
+                FilingStatus::MarriedFilingJointlyOrSurvivingSpouse => {
+                    IRC_25E_AGI_LIMIT_MFJ_DOLLARS
+                }
             };
             if input.modified_agi_lesser_of_current_or_prior_year_dollars <= threshold {
                 Output {
@@ -422,7 +428,8 @@ mod tests {
                 AcquisitionDateStatus::AcquiredOnOrAfterJanuary1_2023AndBeforeOctober1_2025Eligible,
             vehicle_eligibility_status:
                 VehicleEligibilityStatus::PreviouslyOwnedCleanVehicleMeetingAllStatutoryRequirements,
-            compliance_aspect: ComplianceAspect::CreditAmountLesserOf4000Or30PctSalePriceUnderSection25EA,
+            compliance_aspect:
+                ComplianceAspect::CreditAmountLesserOf4000Or30PctSalePriceUnderSection25EA,
             filing_status: FilingStatus::SingleOrMarriedFilingSeparately,
             sale_price_dollars: 20_000,
             model_year_age_years: 3,
@@ -465,7 +472,10 @@ mod tests {
         input.vehicle_eligibility_status =
             VehicleEligibilityStatus::NotPreviouslyOwnedCleanVehicleNotEligible;
         let output = check(&input);
-        assert_eq!(output.mode, Section25EMode::NotApplicableNotPreviouslyOwnedCleanVehicle);
+        assert_eq!(
+            output.mode,
+            Section25EMode::NotApplicableNotPreviouslyOwnedCleanVehicle
+        );
     }
 
     #[test]
@@ -473,7 +483,10 @@ mod tests {
         let mut input = baseline_input();
         input.sale_price_dollars = 20_000;
         let output = check(&input);
-        assert_eq!(output.mode, Section25EMode::CompliantFullCreditAtLesserOf4000Or30PctSalePrice);
+        assert_eq!(
+            output.mode,
+            Section25EMode::CompliantFullCreditAtLesserOf4000Or30PctSalePrice
+        );
         assert_eq!(output.credit_amount_dollars, 4_000);
     }
 
@@ -482,7 +495,10 @@ mod tests {
         let mut input = baseline_input();
         input.sale_price_dollars = 10_000;
         let output = check(&input);
-        assert_eq!(output.mode, Section25EMode::CompliantFullCreditAtLesserOf4000Or30PctSalePrice);
+        assert_eq!(
+            output.mode,
+            Section25EMode::CompliantFullCreditAtLesserOf4000Or30PctSalePrice
+        );
         assert_eq!(output.credit_amount_dollars, 3_000);
     }
 
@@ -492,7 +508,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::SalePriceAtOrBelow25000UnderSection25EC1;
         input.sale_price_dollars = 25_000;
         let output = check(&input);
-        assert_eq!(output.mode, Section25EMode::CompliantSalePriceAtOrBelow25000);
+        assert_eq!(
+            output.mode,
+            Section25EMode::CompliantSalePriceAtOrBelow25000
+        );
     }
 
     #[test]
@@ -507,19 +526,27 @@ mod tests {
     #[test]
     fn model_year_at_2_years_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::VehicleModelYearAtLeast2YearsOlderUnderSection25EC1;
+        input.compliance_aspect =
+            ComplianceAspect::VehicleModelYearAtLeast2YearsOlderUnderSection25EC1;
         input.model_year_age_years = 2;
         let output = check(&input);
-        assert_eq!(output.mode, Section25EMode::CompliantVehicleModelYearAtLeast2YearsOlder);
+        assert_eq!(
+            output.mode,
+            Section25EMode::CompliantVehicleModelYearAtLeast2YearsOlder
+        );
     }
 
     #[test]
     fn model_year_at_1_year_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::VehicleModelYearAtLeast2YearsOlderUnderSection25EC1;
+        input.compliance_aspect =
+            ComplianceAspect::VehicleModelYearAtLeast2YearsOlderUnderSection25EC1;
         input.model_year_age_years = 1;
         let output = check(&input);
-        assert_eq!(output.mode, Section25EMode::ViolationVehicleModelYearLessThan2YearsOld);
+        assert_eq!(
+            output.mode,
+            Section25EMode::ViolationVehicleModelYearLessThan2YearsOld
+        );
     }
 
     #[test]
@@ -528,7 +555,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::BatteryCapacityAtOrAbove7KwhUnderSection25EC1;
         input.battery_capacity_kwh = 7;
         let output = check(&input);
-        assert_eq!(output.mode, Section25EMode::CompliantBatteryCapacityAtOrAbove7Kwh);
+        assert_eq!(
+            output.mode,
+            Section25EMode::CompliantBatteryCapacityAtOrAbove7Kwh
+        );
     }
 
     #[test]
@@ -537,7 +567,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::BatteryCapacityAtOrAbove7KwhUnderSection25EC1;
         input.battery_capacity_kwh = 6;
         let output = check(&input);
-        assert_eq!(output.mode, Section25EMode::ViolationBatteryCapacityBelow7Kwh);
+        assert_eq!(
+            output.mode,
+            Section25EMode::ViolationBatteryCapacityBelow7Kwh
+        );
     }
 
     #[test]
@@ -563,7 +596,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::PurchasedFromLicensedDealerUnderSection25EC1;
         let output = check(&input);
-        assert_eq!(output.mode, Section25EMode::CompliantPurchasedFromLicensedDealer);
+        assert_eq!(
+            output.mode,
+            Section25EMode::CompliantPurchasedFromLicensedDealer
+        );
     }
 
     #[test]
@@ -572,24 +608,35 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::PurchasedFromLicensedDealerUnderSection25EC1;
         input.purchased_from_licensed_dealer = false;
         let output = check(&input);
-        assert_eq!(output.mode, Section25EMode::ViolationNotPurchasedFromLicensedDealer);
+        assert_eq!(
+            output.mode,
+            Section25EMode::ViolationNotPurchasedFromLicensedDealer
+        );
     }
 
     #[test]
     fn first_transfer_since_august_16_2022_compliant() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::FirstTransferSinceAugust16_2022UnderSection25EC1;
+        input.compliance_aspect =
+            ComplianceAspect::FirstTransferSinceAugust16_2022UnderSection25EC1;
         let output = check(&input);
-        assert_eq!(output.mode, Section25EMode::CompliantFirstTransferSinceAugust16_2022);
+        assert_eq!(
+            output.mode,
+            Section25EMode::CompliantFirstTransferSinceAugust16_2022
+        );
     }
 
     #[test]
     fn not_first_transfer_since_august_16_2022_violation() {
         let mut input = baseline_input();
-        input.compliance_aspect = ComplianceAspect::FirstTransferSinceAugust16_2022UnderSection25EC1;
+        input.compliance_aspect =
+            ComplianceAspect::FirstTransferSinceAugust16_2022UnderSection25EC1;
         input.first_transfer_since_august_16_2022 = false;
         let output = check(&input);
-        assert_eq!(output.mode, Section25EMode::ViolationNotFirstTransferSinceAugust16_2022);
+        assert_eq!(
+            output.mode,
+            Section25EMode::ViolationNotFirstTransferSinceAugust16_2022
+        );
     }
 
     #[test]
@@ -598,7 +645,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::AgiBelowFilingStatusThresholdUnderSection25EB;
         input.modified_agi_lesser_of_current_or_prior_year_dollars = 75_000;
         let output = check(&input);
-        assert_eq!(output.mode, Section25EMode::CompliantAgiBelowFilingStatusThreshold);
+        assert_eq!(
+            output.mode,
+            Section25EMode::CompliantAgiBelowFilingStatusThreshold
+        );
     }
 
     #[test]
@@ -607,7 +657,10 @@ mod tests {
         input.compliance_aspect = ComplianceAspect::AgiBelowFilingStatusThresholdUnderSection25EB;
         input.modified_agi_lesser_of_current_or_prior_year_dollars = 75_001;
         let output = check(&input);
-        assert_eq!(output.mode, Section25EMode::ViolationAgiExceedsFilingStatusThreshold);
+        assert_eq!(
+            output.mode,
+            Section25EMode::ViolationAgiExceedsFilingStatusThreshold
+        );
     }
 
     #[test]
@@ -617,7 +670,10 @@ mod tests {
         input.filing_status = FilingStatus::MarriedFilingJointlyOrSurvivingSpouse;
         input.modified_agi_lesser_of_current_or_prior_year_dollars = 150_000;
         let output = check(&input);
-        assert_eq!(output.mode, Section25EMode::CompliantAgiBelowFilingStatusThreshold);
+        assert_eq!(
+            output.mode,
+            Section25EMode::CompliantAgiBelowFilingStatusThreshold
+        );
     }
 
     #[test]
@@ -627,7 +683,10 @@ mod tests {
         input.filing_status = FilingStatus::HeadOfHousehold;
         input.modified_agi_lesser_of_current_or_prior_year_dollars = 112_500;
         let output = check(&input);
-        assert_eq!(output.mode, Section25EMode::CompliantAgiBelowFilingStatusThreshold);
+        assert_eq!(
+            output.mode,
+            Section25EMode::CompliantAgiBelowFilingStatusThreshold
+        );
     }
 
     #[test]
@@ -635,7 +694,10 @@ mod tests {
         let mut input = baseline_input();
         input.compliance_aspect = ComplianceAspect::OncePerThreeYearsLimitUnderSection25EC2C;
         let output = check(&input);
-        assert_eq!(output.mode, Section25EMode::CompliantOncePerThreeYearsLimitRespected);
+        assert_eq!(
+            output.mode,
+            Section25EMode::CompliantOncePerThreeYearsLimitRespected
+        );
     }
 
     #[test]

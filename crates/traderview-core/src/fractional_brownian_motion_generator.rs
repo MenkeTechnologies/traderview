@@ -21,9 +21,15 @@
 //! `rescaled_range_analysis`.
 
 pub fn compute(hurst: f64, sigma0: f64, levels: u32, seed: u64) -> Option<Vec<f64>> {
-    if !hurst.is_finite() || !sigma0.is_finite() { return None; }
-    if !(0.01..=0.99).contains(&hurst) || sigma0 <= 0.0 { return None; }
-    if levels == 0 || levels > 18 { return None; }
+    if !hurst.is_finite() || !sigma0.is_finite() {
+        return None;
+    }
+    if !(0.01..=0.99).contains(&hurst) || sigma0 <= 0.0 {
+        return None;
+    }
+    if levels == 0 || levels > 18 {
+        return None;
+    }
     let n = (1_usize << levels) + 1;
     let mut state = if seed == 0 { 0x9E3779B97F4A7C15 } else { seed };
     let mut x = vec![0.0_f64; n];
@@ -34,7 +40,9 @@ pub fn compute(hurst: f64, sigma0: f64, levels: u32, seed: u64) -> Option<Vec<f6
     let mut step = n - 1;
     for _ in 0..levels {
         let half = step / 2;
-        if half == 0 { break; }
+        if half == 0 {
+            break;
+        }
         let mut i = half;
         while i < n - 1 {
             let avg = 0.5 * (x[i - half] + x[i + half]);
@@ -42,13 +50,15 @@ pub fn compute(hurst: f64, sigma0: f64, levels: u32, seed: u64) -> Option<Vec<f6
             i += step;
         }
         step = half;
-        sigma_k *= (-hurst).exp2();        // multiply by 2^(-H)
+        sigma_k *= (-hurst).exp2(); // multiply by 2^(-H)
     }
     Some(x)
 }
 
 fn next_u64(state: &mut u64) -> u64 {
-    *state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+    *state = state
+        .wrapping_mul(6364136223846793005)
+        .wrapping_add(1442695040888963407);
     *state
 }
 
@@ -61,7 +71,9 @@ fn next_uniform(state: &mut u64) -> f64 {
 fn next_normal(state: &mut u64) -> f64 {
     let mut u1 = next_uniform(state);
     let u2 = next_uniform(state);
-    if u1 < 1e-300 { u1 = 1e-300; }
+    if u1 < 1e-300 {
+        u1 = 1e-300;
+    }
     (-2.0 * u1.ln()).sqrt() * (std::f64::consts::TAU * u2).cos()
 }
 

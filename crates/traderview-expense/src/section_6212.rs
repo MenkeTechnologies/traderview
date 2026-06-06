@@ -178,8 +178,7 @@ pub fn check(input: &Section6212Input) -> Section6212Result {
     }
 
     let snod_valid = violations.is_empty();
-    let petition_window_open =
-        snod_valid && input.days_since_snod_mailing < petition_deadline_days;
+    let petition_window_open = snod_valid && input.days_since_snod_mailing < petition_deadline_days;
     let assessment_barred = snod_valid && petition_window_open;
 
     let rescission_authorized = input.rescinded_with_written_taxpayer_consent;
@@ -196,17 +195,15 @@ pub fn check(input: &Section6212Input) -> Section6212Result {
         );
     }
 
-    notes.push(
-        format!(
-            "§ 6213(a) — petition deadline is {} days from SNOD mailing ({})",
-            petition_deadline_days,
-            if input.taxpayer_address_outside_us {
-                "150-day window applies because taxpayer's address is outside the United States"
-            } else {
-                "default 90-day window"
-            }
-        ),
-    );
+    notes.push(format!(
+        "§ 6213(a) — petition deadline is {} days from SNOD mailing ({})",
+        petition_deadline_days,
+        if input.taxpayer_address_outside_us {
+            "150-day window applies because taxpayer's address is outside the United States"
+        } else {
+            "default 90-day window"
+        }
+    ));
 
     notes.push(
         "§ 6213(a) — during petition window and while Tax Court petition pending, IRS is BARRED from assessment (restraint on assessment)"
@@ -292,7 +289,9 @@ mod tests {
         i.taxpayer_address_outside_us = true;
         let r = check(&i);
         assert_eq!(r.petition_deadline_days, 150);
-        assert!(r.notes.iter().any(|n| n.contains("150-day window applies because taxpayer's address is outside the United States")));
+        assert!(r.notes.iter().any(|n| n.contains(
+            "150-day window applies because taxpayer's address is outside the United States"
+        )));
     }
 
     #[test]
@@ -301,7 +300,10 @@ mod tests {
         i.snod_mailed = false;
         let r = check(&i);
         assert!(!r.snod_valid);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6212(a)") && n.contains("no SNOD has been mailed")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6212(a)") && n.contains("no SNOD has been mailed")));
     }
 
     #[test]
@@ -310,7 +312,9 @@ mod tests {
         i.mailed_to_last_known_address = false;
         let r = check(&i);
         assert!(!r.snod_valid);
-        assert!(r.violations.iter().any(|v| v.contains("§ 6212(b)") && v.contains("LAST KNOWN ADDRESS") && v.contains("INVALID")));
+        assert!(r.violations.iter().any(|v| v.contains("§ 6212(b)")
+            && v.contains("LAST KNOWN ADDRESS")
+            && v.contains("INVALID")));
     }
 
     #[test]
@@ -319,7 +323,10 @@ mod tests {
         i.delivery_method = DeliveryMethod::OtherUnauthorized;
         let r = check(&i);
         assert!(!r.snod_valid);
-        assert!(r.violations.iter().any(|v| v.contains("§ 6212(a)") && v.contains("CERTIFIED or REGISTERED")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 6212(a)") && v.contains("CERTIFIED or REGISTERED")));
     }
 
     #[test]
@@ -336,7 +343,10 @@ mod tests {
         i.multiple_snods_for_same_year = true;
         let r = check(&i);
         assert!(!r.snod_valid);
-        assert!(r.violations.iter().any(|v| v.contains("§ 6212(c)") && v.contains("ONE SNOD per taxable year")));
+        assert!(r
+            .violations
+            .iter()
+            .any(|v| v.contains("§ 6212(c)") && v.contains("ONE SNOD per taxable year")));
     }
 
     #[test]
@@ -346,7 +356,10 @@ mod tests {
         i.multiple_snod_exception_applies = true;
         let r = check(&i);
         assert!(r.snod_valid);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6212(c) exception") && n.contains("§ 6861 jeopardy")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6212(c) exception") && n.contains("§ 6861 jeopardy")));
     }
 
     #[test]
@@ -417,7 +430,10 @@ mod tests {
         i.rescinded_with_written_taxpayer_consent = true;
         let r = check(&i);
         assert!(r.rescission_authorized);
-        assert!(r.notes.iter().any(|n| n.contains("§ 6212(d)") && n.contains("WRITTEN consent")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6212(d)") && n.contains("WRITTEN consent")));
     }
 
     #[test]
@@ -429,7 +445,10 @@ mod tests {
     #[test]
     fn hopkins_reliance_note_when_last_day_statement_present() {
         let r = check(&base());
-        assert!(r.notes.iter().any(|n| n.contains("Hopkins v. Commissioner")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("Hopkins v. Commissioner")));
     }
 
     #[test]
@@ -437,13 +456,18 @@ mod tests {
         let mut i = base();
         i.snod_includes_last_day_statement = false;
         let r = check(&i);
-        assert!(!r.notes.iter().any(|n| n.contains("Hopkins v. Commissioner")));
+        assert!(!r
+            .notes
+            .iter()
+            .any(|n| n.contains("Hopkins v. Commissioner")));
     }
 
     #[test]
     fn citation_pins_all_subsections() {
         let r = check(&base());
-        assert!(r.citation.contains("§§ 6212(a), 6212(b), 6212(c), 6212(d), 6213(a)"));
+        assert!(r
+            .citation
+            .contains("§§ 6212(a), 6212(b), 6212(c), 6212(d), 6213(a)"));
     }
 
     #[test]
@@ -458,13 +482,19 @@ mod tests {
     #[test]
     fn restraint_on_assessment_note_present_when_window_open() {
         let r = check(&base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6213(a)") && n.contains("BARRED from assessment")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6213(a)") && n.contains("BARRED from assessment")));
     }
 
     #[test]
     fn petition_deadline_note_describes_days() {
         let r = check(&base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6213(a)") && n.contains("90 days from SNOD")));
+        assert!(r
+            .notes
+            .iter()
+            .any(|n| n.contains("§ 6213(a)") && n.contains("90 days from SNOD")));
     }
 
     #[test]
@@ -500,7 +530,9 @@ mod tests {
     #[test]
     fn last_known_address_note_when_satisfied() {
         let r = check(&base());
-        assert!(r.notes.iter().any(|n| n.contains("§ 6212(b)") && n.contains("Treas. Reg. § 301.6212-2") && n.contains("last known address")));
+        assert!(r.notes.iter().any(|n| n.contains("§ 6212(b)")
+            && n.contains("Treas. Reg. § 301.6212-2")
+            && n.contains("last known address")));
     }
 
     #[test]

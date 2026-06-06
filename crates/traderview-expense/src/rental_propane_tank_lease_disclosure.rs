@@ -257,7 +257,8 @@ pub fn check(input: &Input) -> Output {
         actions.push("NFPA 58 underground tank: cathodic protection REQUIRED to prevent corrosion-induced leak; install and test sacrificial-anode or impressed-current system.".to_string());
     }
 
-    let inspection_overdue = input.last_supplier_inspection_months_ago > ANNUAL_INSPECTION_MAX_MONTHS;
+    let inspection_overdue =
+        input.last_supplier_inspection_months_ago > ANNUAL_INSPECTION_MAX_MONTHS;
     if inspection_overdue {
         actions.push(format!(
             "Supplier inspection overdue: {} months exceeds 12-month NFPA 58 maintenance interval; schedule supplier or independent gas-fitter inspection.",
@@ -265,11 +266,10 @@ pub fn check(input: &Input) -> Output {
         ));
     }
 
-    let leased_disclosure_missing = matches!(
-        input.tank_ownership,
-        TankOwnership::LeasedFromSupplier
-    ) && (!input.supplier_identity_disclosed_in_lease
-        || !input.supplier_lease_terms_disclosed);
+    let leased_disclosure_missing =
+        matches!(input.tank_ownership, TankOwnership::LeasedFromSupplier)
+            && (!input.supplier_identity_disclosed_in_lease
+                || !input.supplier_lease_terms_disclosed);
     if leased_disclosure_missing {
         actions.push("Leased-tank disclosure missing: lease must identify propane supplier + disclose lease terms including supplier-switch restrictions + tank removal/relocation fees ($500-$1500 typical); essential for tenant fuel-cost transparency and switching feasibility.".to_string());
     }

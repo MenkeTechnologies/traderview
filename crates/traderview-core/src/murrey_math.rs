@@ -24,7 +24,11 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
-pub struct Bar { pub high: f64, pub low: f64, pub close: f64 }
+pub struct Bar {
+    pub high: f64,
+    pub low: f64,
+    pub close: f64,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct MurreyLevels {
@@ -43,15 +47,23 @@ pub fn compute(bars: &[Bar], lookback_bars: usize) -> Option<MurreyLevels> {
     let mut hi = f64::NEG_INFINITY;
     let mut lo = f64::INFINITY;
     for b in bars.iter().rev().take(window) {
-        if !b.high.is_finite() || !b.low.is_finite() { continue; }
-        if b.high > hi { hi = b.high; }
-        if b.low < lo { lo = b.low; }
+        if !b.high.is_finite() || !b.low.is_finite() {
+            continue;
+        }
+        if b.high > hi {
+            hi = b.high;
+        }
+        if b.low < lo {
+            lo = b.low;
+        }
     }
     if !hi.is_finite() || !lo.is_finite() || hi <= lo {
         return None;
     }
     let current_price = bars[n - 1].close;
-    if !current_price.is_finite() { return None; }
+    if !current_price.is_finite() {
+        return None;
+    }
     // Choose a Murrey "base" — the power-of-2 fraction whose octave
     // comfortably contains [lo, hi]. We pick base such that
     //   (hi − lo) ≤ base · 8/8.
@@ -59,9 +71,13 @@ pub fn compute(bars: &[Bar], lookback_bars: usize) -> Option<MurreyLevels> {
     // Equivalently, base = pow2_ceil(range). Then bottom of octave is
     // floor(lo / base) · base.
     let range = hi - lo;
-    if range <= 0.0 { return None; }
+    if range <= 0.0 {
+        return None;
+    }
     let base = next_power_of_two(range);
-    if base <= 0.0 || !base.is_finite() { return None; }
+    if base <= 0.0 || !base.is_finite() {
+        return None;
+    }
     let octave_bottom = (lo / base).floor() * base;
     let mut levels = Vec::with_capacity(13);
     for k in -2..=10 {
@@ -88,7 +104,9 @@ pub fn compute(bars: &[Bar], lookback_bars: usize) -> Option<MurreyLevels> {
 }
 
 fn next_power_of_two(x: f64) -> f64 {
-    if !x.is_finite() || x <= 0.0 { return f64::NAN; }
+    if !x.is_finite() || x <= 0.0 {
+        return f64::NAN;
+    }
     // 2^ceil(log2(x))
     let p = x.log2().ceil();
     2.0_f64.powf(p)
@@ -98,7 +116,13 @@ fn next_power_of_two(x: f64) -> f64 {
 mod tests {
     use super::*;
 
-    fn b(h: f64, l: f64, c: f64) -> Bar { Bar { high: h, low: l, close: c } }
+    fn b(h: f64, l: f64, c: f64) -> Bar {
+        Bar {
+            high: h,
+            low: l,
+            close: c,
+        }
+    }
 
     #[test]
     fn empty_returns_none() {

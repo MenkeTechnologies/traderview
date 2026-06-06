@@ -39,9 +39,15 @@ pub struct Report {
 
 pub fn compute(cov: &[Vec<f64>], num_observations: usize) -> Option<Report> {
     let n = cov.len();
-    if n < 2 || num_observations < n { return None; }
-    if cov.iter().any(|row| row.len() != n) { return None; }
-    if cov.iter().any(|row| row.iter().any(|v| !v.is_finite())) { return None; }
+    if n < 2 || num_observations < n {
+        return None;
+    }
+    if cov.iter().any(|row| row.len() != n) {
+        return None;
+    }
+    if cov.iter().any(|row| row.iter().any(|v| !v.is_finite())) {
+        return None;
+    }
     let (eigenvalues, u) = jacobi_eigen(cov, 200);
     // First pass: estimate σ² from trace.
     let trace: f64 = eigenvalues.iter().map(|v| v.max(0.0)).sum();
@@ -51,10 +57,14 @@ pub fn compute(cov: &[Vec<f64>], num_observations: usize) -> Option<Report> {
     // One refinement pass: σ² = avg of bulk eigenvalues.
     for _ in 0..2 {
         let lambda_max = sigma_sq * one_plus_sqrt_q * one_plus_sqrt_q;
-        let bulk: Vec<f64> = eigenvalues.iter()
+        let bulk: Vec<f64> = eigenvalues
+            .iter()
             .filter(|&&v| v <= lambda_max && v >= 0.0)
-            .copied().collect();
-        if bulk.is_empty() { break; }
+            .copied()
+            .collect();
+        if bulk.is_empty() {
+            break;
+        }
         sigma_sq = bulk.iter().sum::<f64>() / bulk.len() as f64;
     }
     let lambda_max = sigma_sq * one_plus_sqrt_q * one_plus_sqrt_q;
@@ -76,7 +86,9 @@ pub fn compute(cov: &[Vec<f64>], num_observations: usize) -> Option<Report> {
     };
     // Build cleaned eigenvalues, then reconstruct.
     let mut lambda_clean = eigenvalues.clone();
-    for &i in &bulk_indices { lambda_clean[i] = bulk_avg; }
+    for &i in &bulk_indices {
+        lambda_clean[i] = bulk_avg;
+    }
     // Σ_clean[i][j] = Σ_k u[i][k] · λ_clean[k] · u[j][k]
     let mut cleaned = vec![vec![0.0_f64; n]; n];
     for i in 0..n {
@@ -90,8 +102,7 @@ pub fn compute(cov: &[Vec<f64>], num_observations: usize) -> Option<Report> {
         }
     }
     // Sort signal eigenvalues descending for reporting.
-    signal_eigenvalues.sort_by(|a, b| b.partial_cmp(a)
-        .unwrap_or(std::cmp::Ordering::Equal));
+    signal_eigenvalues.sort_by(|a, b| b.partial_cmp(a).unwrap_or(std::cmp::Ordering::Equal));
     Some(Report {
         cleaned_covariance: cleaned,
         signal_count: signal_eigenvalues.len(),
@@ -105,18 +116,26 @@ pub fn compute(cov: &[Vec<f64>], num_observations: usize) -> Option<Report> {
 fn jacobi_eigen(matrix: &[Vec<f64>], max_iter: usize) -> (Vec<f64>, Vec<Vec<f64>>) {
     let n = matrix.len();
     let mut a: Vec<Vec<f64>> = matrix.to_vec();
-    let mut v: Vec<Vec<f64>> = (0..n).map(|i|
-        (0..n).map(|j| if i == j { 1.0 } else { 0.0 }).collect()
-    ).collect();
+    let mut v: Vec<Vec<f64>> = (0..n)
+        .map(|i| (0..n).map(|j| if i == j { 1.0 } else { 0.0 }).collect())
+        .collect();
     for _ in 0..max_iter {
-        let mut p = 0; let mut q = 1; let mut max = 0.0_f64;
+        let mut p = 0;
+        let mut q = 1;
+        let mut max = 0.0_f64;
         for i in 0..n {
             for j in i + 1..n {
                 let abs_ij = a[i][j].abs();
-                if abs_ij > max { max = abs_ij; p = i; q = j; }
+                if abs_ij > max {
+                    max = abs_ij;
+                    p = i;
+                    q = j;
+                }
             }
         }
-        if max < 1e-12 { break; }
+        if max < 1e-12 {
+            break;
+        }
         let app = a[p][p];
         let aqq = a[q][q];
         let apq = a[p][q];
@@ -159,7 +178,7 @@ mod tests {
         assert!(compute(&[], 100).is_none());
         let single = vec![vec![1.0_f64]];
         assert!(compute(&single, 100).is_none());
-        assert!(compute(&m, 1).is_none());      // T < N
+        assert!(compute(&m, 1).is_none()); // T < N
         let bad = vec![vec![1.0_f64, 0.0], vec![0.0]];
         assert!(compute(&bad, 100).is_none());
         let mut nan = m.clone();
@@ -171,7 +190,9 @@ mod tests {
     fn identity_cleans_to_identity() {
         let n = 5;
         let mut m = vec![vec![0.0_f64; n]; n];
-        for i in 0..n { m[i][i] = 1.0; }
+        for i in 0..n {
+            m[i][i] = 1.0;
+        }
         let r = compute(&m, 500).unwrap();
         // All eigenvalues equal 1 — all in bulk, replaced by avg=1.
         for i in 0..n {

@@ -35,11 +35,19 @@ pub struct Report {
 
 pub fn compute(curves: &[Vec<f64>], top_k: usize) -> Option<Report> {
     let t = curves.len();
-    if t < 5 { return None; }
+    if t < 5 {
+        return None;
+    }
     let n = curves[0].len();
-    if n < 2 || top_k == 0 || top_k > n { return None; }
-    if curves.iter().any(|row| row.len() != n) { return None; }
-    if curves.iter().any(|row| row.iter().any(|v| !v.is_finite())) { return None; }
+    if n < 2 || top_k == 0 || top_k > n {
+        return None;
+    }
+    if curves.iter().any(|row| row.len() != n) {
+        return None;
+    }
+    if curves.iter().any(|row| row.iter().any(|v| !v.is_finite())) {
+        return None;
+    }
     // Build yield-change matrix: ΔY_{t,k} = curves[t+1][k] - curves[t][k].
     let m = t - 1;
     let mut dy = vec![vec![0.0_f64; n]; m];
@@ -71,9 +79,16 @@ pub fn compute(curves: &[Vec<f64>], top_k: usize) -> Option<Report> {
     let (eigenvalues, u) = jacobi_eigen(&cov, 200);
     // Sort by descending eigenvalue.
     let mut order: Vec<usize> = (0..n).collect();
-    order.sort_by(|&a, &b| eigenvalues[b].partial_cmp(&eigenvalues[a])
-        .unwrap_or(std::cmp::Ordering::Equal));
-    let total: f64 = eigenvalues.iter().map(|v| v.max(0.0)).sum::<f64>().max(1e-18);
+    order.sort_by(|&a, &b| {
+        eigenvalues[b]
+            .partial_cmp(&eigenvalues[a])
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+    let total: f64 = eigenvalues
+        .iter()
+        .map(|v| v.max(0.0))
+        .sum::<f64>()
+        .max(1e-18);
     let mut loadings = Vec::with_capacity(top_k);
     let mut variance_explained = Vec::with_capacity(top_k);
     let mut cumulative_variance = Vec::with_capacity(top_k);
@@ -100,18 +115,26 @@ pub fn compute(curves: &[Vec<f64>], top_k: usize) -> Option<Report> {
 fn jacobi_eigen(matrix: &[Vec<f64>], max_iter: usize) -> (Vec<f64>, Vec<Vec<f64>>) {
     let n = matrix.len();
     let mut a: Vec<Vec<f64>> = matrix.to_vec();
-    let mut v: Vec<Vec<f64>> = (0..n).map(|i|
-        (0..n).map(|j| if i == j { 1.0 } else { 0.0 }).collect()
-    ).collect();
+    let mut v: Vec<Vec<f64>> = (0..n)
+        .map(|i| (0..n).map(|j| if i == j { 1.0 } else { 0.0 }).collect())
+        .collect();
     for _ in 0..max_iter {
-        let mut p = 0; let mut q = 1; let mut max = 0.0_f64;
+        let mut p = 0;
+        let mut q = 1;
+        let mut max = 0.0_f64;
         for i in 0..n {
             for j in i + 1..n {
                 let abs_ij = a[i][j].abs();
-                if abs_ij > max { max = abs_ij; p = i; q = j; }
+                if abs_ij > max {
+                    max = abs_ij;
+                    p = i;
+                    q = j;
+                }
             }
         }
-        if max < 1e-12 { break; }
+        if max < 1e-12 {
+            break;
+        }
         let app = a[p][p];
         let aqq = a[q][q];
         let apq = a[p][q];
@@ -152,7 +175,7 @@ mod tests {
     fn invalid_inputs_return_none() {
         let c = vec![vec![1.0, 2.0]; 10];
         assert!(compute(&c, 0).is_none());
-        assert!(compute(&c, 5).is_none());        // top_k > n
+        assert!(compute(&c, 5).is_none()); // top_k > n
         let short = vec![vec![1.0, 2.0]; 3];
         assert!(compute(&short, 1).is_none());
         let bad_shape = vec![vec![1.0, 2.0], vec![1.0]];

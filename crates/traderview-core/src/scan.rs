@@ -125,1289 +125,1289 @@ pub enum Preset {
     Breakout,         // close above 20-day high
     OversoldBounce,   // close > yesterday close AND yesterday was -5% or worse
     // === Batch added presets ===
-    GapAndGo,         // gap up >= 3% AND close above open AND closed near HOD (+volume)
-    GapAndFade,       // gap up >= 3% BUT close < open (fade) AND closed near LOD
-    InsideDayLow,     // close <= day_low + 0.5% — could break down tomorrow
-    InsideDayHigh,    // close near HOD AND barely off prev close (coiling at extreme)
-    RangeContractionDay, // tight range vs avg: day_pct + gap_pct both near zero, rel_vol low
-    DistributionDay,  // close down >= 2% on rel_volume >= 1.5x
-    AccumulationDay,  // close up >= 2% on rel_volume >= 1.5x
-    NearYearHighLowVol, // within 1% of 52w high BUT rel_volume < 1 (no real buying interest)
-    InsideDaySqueeze,   // tight day + low volume + close not near either extreme (compression)
-    LowVolSqueeze,      // very quiet bar: rel_volume < 0.5 AND |day_pct| < 1
-    CoilingSqueeze,     // change near zero (|change_pct| < 1) AND quiet volume (< 0.7×) AND narrow gap
-    MidRangeSqueeze,    // far from both 52w extremes (year_high_pct < -10 AND year_low_pct > 10) AND quiet day
-    BracketSqueeze,     // very tight day_pct (<0.5) AND narrow distance to HOD/LOD (<0.5) — coiled spring
-    DojiSqueeze,        // change_pct near zero AND tight day AND no gap — perfect equilibrium bar
-    GapFillSqueeze,     // gap opened ≥1% AND day_pct collapsed (<0.5) AND quiet volume — failed continuation
-    EndOfRangeSqueeze,  // close hugging mid of intraday range (HOD≈LOD distance) AND tight day_pct
+    GapAndGo,              // gap up >= 3% AND close above open AND closed near HOD (+volume)
+    GapAndFade,            // gap up >= 3% BUT close < open (fade) AND closed near LOD
+    InsideDayLow,          // close <= day_low + 0.5% — could break down tomorrow
+    InsideDayHigh,         // close near HOD AND barely off prev close (coiling at extreme)
+    RangeContractionDay,   // tight range vs avg: day_pct + gap_pct both near zero, rel_vol low
+    DistributionDay,       // close down >= 2% on rel_volume >= 1.5x
+    AccumulationDay,       // close up >= 2% on rel_volume >= 1.5x
+    NearYearHighLowVol,    // within 1% of 52w high BUT rel_volume < 1 (no real buying interest)
+    InsideDaySqueeze,      // tight day + low volume + close not near either extreme (compression)
+    LowVolSqueeze,         // very quiet bar: rel_volume < 0.5 AND |day_pct| < 1
+    CoilingSqueeze, // change near zero (|change_pct| < 1) AND quiet volume (< 0.7×) AND narrow gap
+    MidRangeSqueeze, // far from both 52w extremes (year_high_pct < -10 AND year_low_pct > 10) AND quiet day
+    BracketSqueeze, // very tight day_pct (<0.5) AND narrow distance to HOD/LOD (<0.5) — coiled spring
+    DojiSqueeze,    // change_pct near zero AND tight day AND no gap — perfect equilibrium bar
+    GapFillSqueeze, // gap opened ≥1% AND day_pct collapsed (<0.5) AND quiet volume — failed continuation
+    EndOfRangeSqueeze, // close hugging mid of intraday range (HOD≈LOD distance) AND tight day_pct
     PreBreakoutSqueeze, // near 52w high (year_high_pct ≥ -3) AND very tight day_pct AND low rel_volume
-    PreBreakdownSqueeze,// near 52w low (year_low_pct ≤ 3) AND very tight day_pct AND low rel_volume
-    SymmetricSqueeze,   // identical HOD/LOD distances AND change near zero AND gap near zero AND quiet
-    OpenCloseSqueeze,   // |day_pct| < 0.3 (close near open) AND quiet vol — open/close almost equal
-    TightHodSqueeze,    // pressed to HOD (<0.3%) but change < 1% AND quiet vol — wound spring at high
-    TightLodSqueeze,    // pressed to LOD (<0.3%) but change > -1% AND quiet vol — wound spring at low
+    PreBreakdownSqueeze, // near 52w low (year_low_pct ≤ 3) AND very tight day_pct AND low rel_volume
+    SymmetricSqueeze, // identical HOD/LOD distances AND change near zero AND gap near zero AND quiet
+    OpenCloseSqueeze, // |day_pct| < 0.3 (close near open) AND quiet vol — open/close almost equal
+    TightHodSqueeze,  // pressed to HOD (<0.3%) but change < 1% AND quiet vol — wound spring at high
+    TightLodSqueeze,  // pressed to LOD (<0.3%) but change > -1% AND quiet vol — wound spring at low
     NoGapNoChangeSqueeze, // gap≈0 + change≈0 + tight day + quiet vol — overnight + intraday total stall
-    QuietTickSqueeze,    // rel_volume < 0.3 AND day_pct.abs() < 0.5 — extreme apathy bar
+    QuietTickSqueeze,     // rel_volume < 0.3 AND day_pct.abs() < 0.5 — extreme apathy bar
     NarrowGapPostMomentum, // |gap|<0.3 after |change|>=3 prior — post-trend rest day (proxy: gap & change opposite signs near zero)
     DistantExtremesSqueeze, // far from BOTH 52w high AND 52w low (>=20% each side) AND quiet
-    BalancedDriftSqueeze,   // tiny gap + slow drift (|change|<0.5) + close mid-day + quiet
-    PennyMoveSqueeze,       // |change| < 0.05 (sub-tick close) — frozen tape
-    DryUpSqueeze,           // rel_volume < 0.4 AND |change| < 1.5 AND |gap| < 0.5 — supply/demand exhaustion
-    UpperRangeSqueeze,      // close in upper third (lod_dist > 2× hod_dist) AND tight day AND quiet
-    LowerRangeSqueeze,      // close in lower third (hod_dist > 2× lod_dist) AND tight day AND quiet
-    GapReversalSqueeze,     // gap and change opposite signs AND |day_pct| < 0.5 AND quiet — fade trapped
-    Pct52wMidSqueeze,       // year_high_pct between -15 and -5 AND year_low_pct between 5 and 15 AND tight day — true mid-range coiling
-    DeepDiscountSqueeze,    // year_high_pct ≤ -30 AND |day_pct| < 1 AND quiet — basing far below highs
-    FlatRangeQuietSqueeze,  // |day_pct| < 0.2 AND |gap| < 0.2 AND |change| < 0.5 AND rel_volume < 0.5 — total stall
-    NearAthQuietSqueeze,    // ≤ -1% from 52w high AND rel_volume < 0.6 AND |day_pct| < 1 — quiet at the top
-    NearAtlQuietSqueeze,    // ≤ 1% from 52w low  AND rel_volume < 0.6 AND |day_pct| < 1 — quiet at the bottom
-    SilentBreakoutSetup,    // hod_dist < 0.5 AND day_pct < 0.5 AND rel_volume < 0.7 AND year_high_pct >= -5 — quiet edge of multi-month resistance
-    SilentBreakdownSetup,   // lod_dist < 0.5 AND day_pct < 0.5 AND rel_volume < 0.7 AND year_low_pct <= 5  — quiet edge of multi-month support
+    BalancedDriftSqueeze,  // tiny gap + slow drift (|change|<0.5) + close mid-day + quiet
+    PennyMoveSqueeze,      // |change| < 0.05 (sub-tick close) — frozen tape
+    DryUpSqueeze, // rel_volume < 0.4 AND |change| < 1.5 AND |gap| < 0.5 — supply/demand exhaustion
+    UpperRangeSqueeze, // close in upper third (lod_dist > 2× hod_dist) AND tight day AND quiet
+    LowerRangeSqueeze, // close in lower third (hod_dist > 2× lod_dist) AND tight day AND quiet
+    GapReversalSqueeze, // gap and change opposite signs AND |day_pct| < 0.5 AND quiet — fade trapped
+    Pct52wMidSqueeze, // year_high_pct between -15 and -5 AND year_low_pct between 5 and 15 AND tight day — true mid-range coiling
+    DeepDiscountSqueeze, // year_high_pct ≤ -30 AND |day_pct| < 1 AND quiet — basing far below highs
+    FlatRangeQuietSqueeze, // |day_pct| < 0.2 AND |gap| < 0.2 AND |change| < 0.5 AND rel_volume < 0.5 — total stall
+    NearAthQuietSqueeze, // ≤ -1% from 52w high AND rel_volume < 0.6 AND |day_pct| < 1 — quiet at the top
+    NearAtlQuietSqueeze, // ≤ 1% from 52w low  AND rel_volume < 0.6 AND |day_pct| < 1 — quiet at the bottom
+    SilentBreakoutSetup, // hod_dist < 0.5 AND day_pct < 0.5 AND rel_volume < 0.7 AND year_high_pct >= -5 — quiet edge of multi-month resistance
+    SilentBreakdownSetup, // lod_dist < 0.5 AND day_pct < 0.5 AND rel_volume < 0.7 AND year_low_pct <= 5  — quiet edge of multi-month support
     GapDownNoFollowSqueeze, // gap_pct <= -1 AND change_pct >= -0.5 AND day_pct.abs() < 0.5 — gap down failing to extend
-    GapUpNoFollowSqueeze,   // gap_pct >=  1 AND change_pct <=  0.5 AND day_pct.abs() < 0.5 — gap up failing to extend
-    UnchVolDryUpSqueeze,    // |change| < 0.1 AND rel_volume < 0.5 — unchanged on dried-up volume
-    NarrowAfterTrendSqueeze,// |day_pct| < 0.5 AND |change| >= 5 — narrow day after a big prior move
-    DeadCenterSqueeze,      // hod_dist AND lod_dist within 0.4 of each other AND |change| < 0.3 AND rel_vol < 0.7
-    AnchorDriftSqueeze,     // |day_pct| < 1 AND |change| < 1 AND |gap| < 1 AND rel_volume < 0.8 — generic light-day setup
-    PostGapFillSqueeze,     // gap and change opposite signs AND |change| < |gap| / 2 AND day_pct.abs() < 0.5 — gap getting filled then stalling
-    PostSpikeQuietSqueeze,  // |change_pct| > 2 AND day_pct.abs() < 0.3 AND rel_volume < 0.6 — quiet day after a spike
-    HighSqueezeBracket,     // tight HOD distance (<1) AND tight LOD distance (<1) AND year_high_pct >= -3 — both ends near top
-    LowSqueezeBracket,      // tight HOD distance (<1) AND tight LOD distance (<1) AND year_low_pct <= 3  — both ends near bottom
+    GapUpNoFollowSqueeze, // gap_pct >=  1 AND change_pct <=  0.5 AND day_pct.abs() < 0.5 — gap up failing to extend
+    UnchVolDryUpSqueeze,  // |change| < 0.1 AND rel_volume < 0.5 — unchanged on dried-up volume
+    NarrowAfterTrendSqueeze, // |day_pct| < 0.5 AND |change| >= 5 — narrow day after a big prior move
+    DeadCenterSqueeze, // hod_dist AND lod_dist within 0.4 of each other AND |change| < 0.3 AND rel_vol < 0.7
+    AnchorDriftSqueeze, // |day_pct| < 1 AND |change| < 1 AND |gap| < 1 AND rel_volume < 0.8 — generic light-day setup
+    PostGapFillSqueeze, // gap and change opposite signs AND |change| < |gap| / 2 AND day_pct.abs() < 0.5 — gap getting filled then stalling
+    PostSpikeQuietSqueeze, // |change_pct| > 2 AND day_pct.abs() < 0.3 AND rel_volume < 0.6 — quiet day after a spike
+    HighSqueezeBracket, // tight HOD distance (<1) AND tight LOD distance (<1) AND year_high_pct >= -3 — both ends near top
+    LowSqueezeBracket, // tight HOD distance (<1) AND tight LOD distance (<1) AND year_low_pct <= 3  — both ends near bottom
     HighRelVolStallSqueeze, // rel_volume >= 1.5 AND |change_pct| < 0.3 AND |day_pct| < 0.5 — busy volume but no price move
-    SlightLeanLongSqueeze,  // change_pct between 0.2 and 1 AND rel_vol < 0.8 AND day_pct.abs() < 0.6 — quiet drift higher
+    SlightLeanLongSqueeze, // change_pct between 0.2 and 1 AND rel_vol < 0.8 AND day_pct.abs() < 0.6 — quiet drift higher
     SlightLeanShortSqueeze, // change_pct between -1 and -0.2 AND rel_vol < 0.8 AND day_pct.abs() < 0.6 — quiet drift lower
     GapWithChangeMatchSqueeze, // gap and change SAME sign small magnitude (<0.5) + tight day + quiet — small gap held flat
     SlackBetweenExtremesSqueeze, // hod_dist + lod_dist > 4 (close mid of a wide-ish range) AND |change| < 0.5 — wide range but no decision
-    PivotPinSqueeze,             // day_pct.abs() < 0.3 AND hod_dist.abs() < 1 AND lod_dist.abs() < 1 — close pinned to open with tight extremes
-    EvenSidesSqueeze,            // gap and change opposite sign AND each |x| < 1 AND tight day AND quiet — overnight + intraday cancel out
-    InsideQuarterDaySqueeze,     // day_pct.abs() < 0.25 AND change_pct.abs() < 1 AND rel_volume < 0.8 — barely-moving inside bar
-    EvenVolumeQuietSqueeze,      // rel_volume between 0.9 and 1.1 AND |day_pct| < 0.3 AND |change_pct| < 0.5 — average vol but no move
-    TightCoilHighSqueeze,        // year_high_pct >= -2 AND day_pct.abs() < 0.5 AND |change_pct| < 0.8 AND hod_dist.abs() < 1 — coiled near all-time/52w high
-    TightCoilLowSqueeze,         // year_low_pct <= 2 AND day_pct.abs() < 0.5 AND |change_pct| < 0.8 AND lod_dist.abs() < 1 — coiled near 52w low
-    EvenWidthSqueeze,            // hod_dist between 1 and 2 AND lod_dist between 1 and 2 AND |change_pct| < 0.5 AND rel_volume < 0.9 — evenly distributed range
-    SmallGapNoFollowSqueeze,     // |gap_pct| between 0.3 and 0.8 AND |change_pct| < 0.3 AND quiet — small gap that fades to flat
-    HoldingHighsSqueeze,         // change_pct >= 0 AND change_pct < 1 AND hod_dist.abs() < 0.5 AND rel_volume < 1.2 AND year_high_pct >= -5 — closing at HOD without explosion
-    HoldingLowsSqueeze,          // change_pct <= 0 AND change_pct > -1 AND lod_dist.abs() < 0.5 AND rel_volume < 1.2 AND year_low_pct <= 5 — closing at LOD without panic
-    StableMidSqueeze,            // 30% < (1 - year_high_pct.abs() / (year_high_pct.abs() + year_low_pct.abs())) < 70% — true 30-70 from top, tight day
-    LeanGapMatchSqueeze,         // gap & change same sign + each between 0.5 and 1.5 + tight day + quiet — modest opening gap held
-    LongShadowQuietSqueeze,      // (hod_dist.abs() + lod_dist.abs()) > 6 AND day_pct.abs() < 1 AND rel_volume < 0.9 — long-shadow doji on quiet vol
-    ChangeNoDayPctSqueeze,       // |change_pct| >= 1 AND |day_pct| < 0.2 AND quiet — overnight move with no intraday follow-through
-    DayPctNoChangeSqueeze,       // |day_pct| >= 1 AND |change_pct| < 0.2 AND quiet — intraday wiggle but closes near prior close
-    HotDryUpSqueeze,             // year_high_pct >= -1 AND rel_volume < 0.5 AND |day_pct| < 0.5 — at 52w high with dried up volume
-    ColdDryUpSqueeze,            // year_low_pct <= 1 AND rel_volume < 0.5 AND |day_pct| < 0.5 — at 52w low with dried up volume
-    HighVolGapFadeSqueeze,       // |gap| >= 1 AND change_pct opposite to gap AND |day_pct| < 0.5 AND rel_volume >= 1.2 — high-vol gap reversal
-    NearZeroChangeQuietSqueeze,  // |change_pct| < 0.5 AND |gap_pct| < 0.5 AND |day_pct| < 1 AND rel_volume < 0.7 — chop-and-rest quiet bar
-    SilentInsideSqueeze,         // day_pct.abs() < 0.4 AND change_pct.abs() < 0.4 AND gap_pct.abs() < 0.4 AND rel_volume < 0.7 — true tri-quiet inside bar
-    HighVolNoMoveSqueeze,        // rel_volume >= 2 AND |change_pct| < 0.5 AND |day_pct| < 0.7 — heavy distribution-without-move bar
-    ChangeButLodNearbySqueeze,   // change_pct >= 1 AND lod_dist.abs() < 1 — up day but close is back near LOD (failed)
-    ChangeButHodNearbySqueeze,   // change_pct <= -1 AND hod_dist.abs() < 1 — down day but close is back near HOD (bullish reversal)
-    GapAndCloseAtHodSqueeze,     // gap >= 0.5 AND hod_dist.abs() < 0.5 AND day_pct >= 0 — gap up + close at HOD (consolidation high)
-    GapAndCloseAtLodSqueeze,     // gap <= -0.5 AND lod_dist.abs() < 0.5 AND day_pct <= 0 — gap down + close at LOD (consolidation low)
-    LongInsideQuietSqueeze,      // hod_dist + lod_dist between 2 and 4 AND day_pct.abs() < 0.5 AND rel_volume < 0.8 — wider-than-tight inside bar
-    TripleZeroSqueeze,           // gap_pct.abs() < 0.1 AND change_pct.abs() < 0.1 AND day_pct.abs() < 0.1 — gap, change, AND day all near zero
+    PivotPinSqueeze, // day_pct.abs() < 0.3 AND hod_dist.abs() < 1 AND lod_dist.abs() < 1 — close pinned to open with tight extremes
+    EvenSidesSqueeze, // gap and change opposite sign AND each |x| < 1 AND tight day AND quiet — overnight + intraday cancel out
+    InsideQuarterDaySqueeze, // day_pct.abs() < 0.25 AND change_pct.abs() < 1 AND rel_volume < 0.8 — barely-moving inside bar
+    EvenVolumeQuietSqueeze, // rel_volume between 0.9 and 1.1 AND |day_pct| < 0.3 AND |change_pct| < 0.5 — average vol but no move
+    TightCoilHighSqueeze, // year_high_pct >= -2 AND day_pct.abs() < 0.5 AND |change_pct| < 0.8 AND hod_dist.abs() < 1 — coiled near all-time/52w high
+    TightCoilLowSqueeze, // year_low_pct <= 2 AND day_pct.abs() < 0.5 AND |change_pct| < 0.8 AND lod_dist.abs() < 1 — coiled near 52w low
+    EvenWidthSqueeze, // hod_dist between 1 and 2 AND lod_dist between 1 and 2 AND |change_pct| < 0.5 AND rel_volume < 0.9 — evenly distributed range
+    SmallGapNoFollowSqueeze, // |gap_pct| between 0.3 and 0.8 AND |change_pct| < 0.3 AND quiet — small gap that fades to flat
+    HoldingHighsSqueeze, // change_pct >= 0 AND change_pct < 1 AND hod_dist.abs() < 0.5 AND rel_volume < 1.2 AND year_high_pct >= -5 — closing at HOD without explosion
+    HoldingLowsSqueeze, // change_pct <= 0 AND change_pct > -1 AND lod_dist.abs() < 0.5 AND rel_volume < 1.2 AND year_low_pct <= 5 — closing at LOD without panic
+    StableMidSqueeze, // 30% < (1 - year_high_pct.abs() / (year_high_pct.abs() + year_low_pct.abs())) < 70% — true 30-70 from top, tight day
+    LeanGapMatchSqueeze, // gap & change same sign + each between 0.5 and 1.5 + tight day + quiet — modest opening gap held
+    LongShadowQuietSqueeze, // (hod_dist.abs() + lod_dist.abs()) > 6 AND day_pct.abs() < 1 AND rel_volume < 0.9 — long-shadow doji on quiet vol
+    ChangeNoDayPctSqueeze, // |change_pct| >= 1 AND |day_pct| < 0.2 AND quiet — overnight move with no intraday follow-through
+    DayPctNoChangeSqueeze, // |day_pct| >= 1 AND |change_pct| < 0.2 AND quiet — intraday wiggle but closes near prior close
+    HotDryUpSqueeze, // year_high_pct >= -1 AND rel_volume < 0.5 AND |day_pct| < 0.5 — at 52w high with dried up volume
+    ColdDryUpSqueeze, // year_low_pct <= 1 AND rel_volume < 0.5 AND |day_pct| < 0.5 — at 52w low with dried up volume
+    HighVolGapFadeSqueeze, // |gap| >= 1 AND change_pct opposite to gap AND |day_pct| < 0.5 AND rel_volume >= 1.2 — high-vol gap reversal
+    NearZeroChangeQuietSqueeze, // |change_pct| < 0.5 AND |gap_pct| < 0.5 AND |day_pct| < 1 AND rel_volume < 0.7 — chop-and-rest quiet bar
+    SilentInsideSqueeze, // day_pct.abs() < 0.4 AND change_pct.abs() < 0.4 AND gap_pct.abs() < 0.4 AND rel_volume < 0.7 — true tri-quiet inside bar
+    HighVolNoMoveSqueeze, // rel_volume >= 2 AND |change_pct| < 0.5 AND |day_pct| < 0.7 — heavy distribution-without-move bar
+    ChangeButLodNearbySqueeze, // change_pct >= 1 AND lod_dist.abs() < 1 — up day but close is back near LOD (failed)
+    ChangeButHodNearbySqueeze, // change_pct <= -1 AND hod_dist.abs() < 1 — down day but close is back near HOD (bullish reversal)
+    GapAndCloseAtHodSqueeze, // gap >= 0.5 AND hod_dist.abs() < 0.5 AND day_pct >= 0 — gap up + close at HOD (consolidation high)
+    GapAndCloseAtLodSqueeze, // gap <= -0.5 AND lod_dist.abs() < 0.5 AND day_pct <= 0 — gap down + close at LOD (consolidation low)
+    LongInsideQuietSqueeze, // hod_dist + lod_dist between 2 and 4 AND day_pct.abs() < 0.5 AND rel_volume < 0.8 — wider-than-tight inside bar
+    TripleZeroSqueeze, // gap_pct.abs() < 0.1 AND change_pct.abs() < 0.1 AND day_pct.abs() < 0.1 — gap, change, AND day all near zero
     Pct52wQuarterFromHighSqueeze, // year_high_pct between -25 and -15 AND day_pct.abs() < 0.7 AND rel_volume < 0.9 — quarter-from-high resting
-    Pct52wQuarterFromLowSqueeze,  // year_low_pct between 15 and 25 AND day_pct.abs() < 0.7 AND rel_volume < 0.9 — quarter-from-low resting
-    NoExtremeAndQuietSqueeze,    // year_high_pct <= -5 AND year_low_pct >= 5 AND rel_volume < 0.7 AND |day_pct| < 0.8 — away from extremes + quiet
+    Pct52wQuarterFromLowSqueeze, // year_low_pct between 15 and 25 AND day_pct.abs() < 0.7 AND rel_volume < 0.9 — quarter-from-low resting
+    NoExtremeAndQuietSqueeze, // year_high_pct <= -5 AND year_low_pct >= 5 AND rel_volume < 0.7 AND |day_pct| < 0.8 — away from extremes + quiet
     SmallChangeNarrowGapSqueeze, // change_pct between 0.5 and 1 AND |gap_pct| < 0.3 AND |day_pct| < 0.5 AND rel_volume < 0.9 — modest move + tight day + quiet
-    BigRangeNoCommitSqueeze,     // hod_dist + lod_dist > 6 AND change_pct.abs() < 0.5 AND rel_volume < 1.5 — wide range, no commit (battle bar)
-    EvenSwingSqueeze,            // hod_dist.abs() between 1 and 3 AND lod_dist.abs() between 1 and 3 AND day_pct.abs() < 1 — small balanced swing
-    NoMoveAtMidSqueeze,          // |change_pct| < 0.2 AND hod_dist.abs() > 1 AND lod_dist.abs() > 1 — close pinned mid with both extremes far
-    BarelyMovingHighSqueeze,     // year_high_pct >= -8 AND |day_pct| < 0.3 AND change_pct.abs() < 0.5 AND rel_volume < 0.9 — near top quiet drift
-    BarelyMovingLowSqueeze,      // year_low_pct <= 8 AND |day_pct| < 0.3 AND change_pct.abs() < 0.5 AND rel_volume < 0.9 — near bottom quiet drift
-    MicroRangeSqueeze,           // hod_dist.abs() < 0.2 AND lod_dist.abs() < 0.2 — close pinned to BOTH HOD and LOD (zero range)
-    LowVolGapHoldSqueeze,        // |gap_pct| >= 0.5 AND |change_pct| < |gap_pct| / 4 AND rel_volume < 0.8 — gap holds with quiet volume
-    HighVolGapHoldSqueeze,       // |gap_pct| >= 0.5 AND |change_pct| < |gap_pct| / 4 AND rel_volume >= 1.5 — gap holds with high volume (institutional accumulation)
-    UpsideAttemptedSqueeze,      // hod_dist.abs() >= 1 AND lod_dist.abs() < 0.5 AND change_pct < 0 — tried up, settled at lows (bear control)
-    DownsideAttemptedSqueeze,    // lod_dist.abs() >= 1 AND hod_dist.abs() < 0.5 AND change_pct > 0 — tried down, settled at highs (bull control)
-    TightGapSmallChangeSqueeze,  // |gap_pct| < 0.2 AND change_pct between -2 and 2 AND day_pct.abs() < 0.5 — slow drift with no overnight surprise
-    Pct52wMidWideRangeSqueeze,   // year_high_pct between -10 and -5 AND year_low_pct between 5 and 10 AND (hod_dist+lod_dist)>3 — at exact 52w mid with wide intraday
-    InsideAndCoiledSqueeze,      // day_pct.abs() < 0.6 AND hod_dist.abs() < 0.6 AND lod_dist.abs() < 0.6 AND rel_volume < 0.8 — all 3 constraints tight + quiet
-    Pct52wHighBreathSqueeze,     // year_high_pct >= -1 AND day_pct.abs() < 0.4 AND |change_pct| < 0.4 — taking a breath right at 52w high
-    Pct52wLowBreathSqueeze,      // year_low_pct <= 1 AND day_pct.abs() < 0.4 AND |change_pct| < 0.4 — taking a breath right at 52w low
-    GapAroundCloseSqueeze,       // |gap_pct| < 0.4 AND change_pct.abs() < 0.4 AND day_pct.abs() < 1.5 AND rel_volume < 1.0 — slow drift with gap & change both small
-    TightCloseSplitSqueeze,      // hod_dist between 0.5 and 1.5 AND lod_dist between 0.5 and 1.5 AND day_pct.abs() < 0.5 — close exactly middle of small range
-    HiVolNoExtremeSqueeze,       // rel_volume >= 2 AND hod_dist > 1 AND lod_dist > 1 AND change_pct.abs() < 1 — heavy vol but no breakout (rotation)
-    TinyMoveWithGapSqueeze,      // |gap_pct| between 0.5 and 1.5 AND |change_pct| < 0.5 AND day_pct.abs() < 0.5 — gap held but no further move
-    LowVolatilityGreenSqueeze,   // change_pct > 0 AND change_pct < 1 AND day_pct.abs() < 0.5 AND rel_volume < 0.5 — quiet up day with dry volume
-    LowVolatilityRedSqueeze,     // change_pct < 0 AND change_pct > -1 AND day_pct.abs() < 0.5 AND rel_volume < 0.5 — quiet down day with dry volume
-    GapAlignsChangeSqueeze,      // gap_pct.signum() == change_pct.signum() AND (|gap| + |change|) < 1.5 AND day_pct.abs() < 0.5 — small aligned move
-    UnaffectedGapSqueeze,        // |gap_pct| >= 0.3 AND |gap_pct| <= 1 AND day_pct.abs() < 0.3 AND |change_pct - gap_pct| < 0.3 — gap simply transferred without intraday motion
-    StackedClosesSqueeze,        // hod_dist.abs() < 0.5 AND lod_dist.abs() < 0.5 AND |day_pct| < 0.5 AND |change_pct| < 1 — close, HOD, LOD, open all stacked
-    PullbackToMidSqueeze,        // change_pct between -2 and -0.5 AND hod_dist.abs() > 1.5 AND year_high_pct >= -10 — orderly pullback from highs
-    BounceFromMidSqueeze,        // change_pct between 0.5 and 2 AND lod_dist.abs() > 1.5 AND year_low_pct <= 10 — orderly bounce from lows
-    NarrowGapHotCloseSqueeze,    // |gap_pct| < 0.2 AND year_high_pct >= -2 AND day_pct.abs() < 0.5 — no-gap close at 52w high
-    NarrowGapColdCloseSqueeze,   // |gap_pct| < 0.2 AND year_low_pct <= 2 AND day_pct.abs() < 0.5 — no-gap close at 52w low
-    AbsorptionUpSqueeze,         // change_pct 0.5-2 AND rel_volume >= 2 AND day_pct.abs() < 1 — heavy buying absorbed without breakout
-    AbsorptionDownSqueeze,       // change_pct -2 to -0.5 AND rel_volume >= 2 AND day_pct.abs() < 1 — heavy selling absorbed without breakdown
-    StallAtMidSqueeze,           // year_high_pct -40 to -60 (mid of 52w range) AND |change_pct| < 0.5 AND rel_volume < 0.8 — deep mid-range stall
-    NoCloseDecisionSqueeze,      // hod_dist & lod_dist 0.4-0.6 AND day_pct.abs() < 0.3 — close exactly equidistant from extremes
-    GapInsideRangeSqueeze,       // |gap_pct| < 0.5 AND hod_dist.abs() < 1 AND lod_dist.abs() < 1 AND rel_volume < 0.8 — small gap fully contained inside narrow range
-    SubpointMoveSqueeze,         // |change_pct| < 0.05 AND |day_pct| < 0.05 — essentially zero net move
-    NoVolNoMoveSqueeze,          // rel_volume < 0.3 AND change_pct.abs() < 0.3 AND day_pct.abs() < 0.3 — both vol and price asleep
-    VolWithoutChangeSqueeze,     // rel_volume >= 1.5 AND change_pct.abs() < 0.2 AND day_pct.abs() < 0.5 — vol arrives but price doesn't move
-    TickInsideOpenSqueeze,       // |day_pct| < 0.15 AND |change_pct| < 0.5 AND |gap_pct| < 0.3 — closing within a tick of open
-    Pct52wExactHalfSqueeze,      // year_high_pct -55 to -45 AND year_low_pct 45 to 55 AND |change_pct| < 0.5 — sitting at exact 52w midpoint
-    UnchangedOnVolumeSqueeze,    // |change_pct| < 0.1 AND rel_volume >= 1 — totally unchanged on at-or-above-average volume
-    WideHodNarrowLodSqueeze,     // hod_dist.abs() >= 2 AND lod_dist.abs() < 0.5 AND change_pct < 0 — high failed, close pinned to low
-    NarrowHodWideLodSqueeze,     // hod_dist.abs() < 0.5 AND lod_dist.abs() >= 2 AND change_pct > 0 — low failed, close pinned to high
-    PerfectBalanceSqueeze,       // |hod_dist - lod_dist| < 0.1 AND |change_pct| < 0.3 — mathematically balanced bar
-    LowVolHotZoneSqueeze,        // year_high_pct >= -5 AND rel_volume < 0.4 — at 52w high zone with very low vol (institutions absent)
-    LowVolColdZoneSqueeze,       // year_low_pct <= 5 AND rel_volume < 0.4 — at 52w low zone with very low vol (no panic, no buying)
-    DriftHigherSqueeze,          // change_pct > 0 AND change_pct < 2 AND day_pct > 0 AND day_pct < 1 AND rel_volume < 0.9 — slow grinding-up day
-    DriftLowerSqueeze,           // change_pct < 0 AND change_pct > -2 AND day_pct < 0 AND day_pct > -1 AND rel_volume < 0.9 — slow grinding-down day
-    ExtremeQuietSqueeze,         // rel_volume < 0.2 AND change_pct.abs() < 0.5 AND day_pct.abs() < 0.5 AND gap_pct.abs() < 0.2 — extreme quiet on all axes
-    PinnedToOpenSqueeze,         // day_pct.abs() < 0.05 AND hod_dist.abs() < 1 AND lod_dist.abs() < 1 — close ≈ open + narrow range
-    BigGapSmallDaySqueeze,       // |gap_pct| >= 2 AND day_pct.abs() < 0.5 AND |change_pct| < 0.5 — big overnight gap fully absorbed
-    PostCrashSqueeze,            // change_pct <= -3 AND day_pct.abs() < 0.5 AND rel_volume < 1 — quiet stabilization after a crash
-    PostSpikeStabilizeSqueeze,   // change_pct >= 3 AND day_pct.abs() < 0.5 AND rel_volume < 1 — quiet stabilization after a spike
-    TightWithSmallGapSqueeze,    // |gap_pct| < 0.5 AND |change_pct| between 0.3 and 0.8 AND |day_pct| < 0.4 — modest move on small gap, tight day
+    BigRangeNoCommitSqueeze, // hod_dist + lod_dist > 6 AND change_pct.abs() < 0.5 AND rel_volume < 1.5 — wide range, no commit (battle bar)
+    EvenSwingSqueeze, // hod_dist.abs() between 1 and 3 AND lod_dist.abs() between 1 and 3 AND day_pct.abs() < 1 — small balanced swing
+    NoMoveAtMidSqueeze, // |change_pct| < 0.2 AND hod_dist.abs() > 1 AND lod_dist.abs() > 1 — close pinned mid with both extremes far
+    BarelyMovingHighSqueeze, // year_high_pct >= -8 AND |day_pct| < 0.3 AND change_pct.abs() < 0.5 AND rel_volume < 0.9 — near top quiet drift
+    BarelyMovingLowSqueeze, // year_low_pct <= 8 AND |day_pct| < 0.3 AND change_pct.abs() < 0.5 AND rel_volume < 0.9 — near bottom quiet drift
+    MicroRangeSqueeze, // hod_dist.abs() < 0.2 AND lod_dist.abs() < 0.2 — close pinned to BOTH HOD and LOD (zero range)
+    LowVolGapHoldSqueeze, // |gap_pct| >= 0.5 AND |change_pct| < |gap_pct| / 4 AND rel_volume < 0.8 — gap holds with quiet volume
+    HighVolGapHoldSqueeze, // |gap_pct| >= 0.5 AND |change_pct| < |gap_pct| / 4 AND rel_volume >= 1.5 — gap holds with high volume (institutional accumulation)
+    UpsideAttemptedSqueeze, // hod_dist.abs() >= 1 AND lod_dist.abs() < 0.5 AND change_pct < 0 — tried up, settled at lows (bear control)
+    DownsideAttemptedSqueeze, // lod_dist.abs() >= 1 AND hod_dist.abs() < 0.5 AND change_pct > 0 — tried down, settled at highs (bull control)
+    TightGapSmallChangeSqueeze, // |gap_pct| < 0.2 AND change_pct between -2 and 2 AND day_pct.abs() < 0.5 — slow drift with no overnight surprise
+    Pct52wMidWideRangeSqueeze, // year_high_pct between -10 and -5 AND year_low_pct between 5 and 10 AND (hod_dist+lod_dist)>3 — at exact 52w mid with wide intraday
+    InsideAndCoiledSqueeze, // day_pct.abs() < 0.6 AND hod_dist.abs() < 0.6 AND lod_dist.abs() < 0.6 AND rel_volume < 0.8 — all 3 constraints tight + quiet
+    Pct52wHighBreathSqueeze, // year_high_pct >= -1 AND day_pct.abs() < 0.4 AND |change_pct| < 0.4 — taking a breath right at 52w high
+    Pct52wLowBreathSqueeze, // year_low_pct <= 1 AND day_pct.abs() < 0.4 AND |change_pct| < 0.4 — taking a breath right at 52w low
+    GapAroundCloseSqueeze, // |gap_pct| < 0.4 AND change_pct.abs() < 0.4 AND day_pct.abs() < 1.5 AND rel_volume < 1.0 — slow drift with gap & change both small
+    TightCloseSplitSqueeze, // hod_dist between 0.5 and 1.5 AND lod_dist between 0.5 and 1.5 AND day_pct.abs() < 0.5 — close exactly middle of small range
+    HiVolNoExtremeSqueeze, // rel_volume >= 2 AND hod_dist > 1 AND lod_dist > 1 AND change_pct.abs() < 1 — heavy vol but no breakout (rotation)
+    TinyMoveWithGapSqueeze, // |gap_pct| between 0.5 and 1.5 AND |change_pct| < 0.5 AND day_pct.abs() < 0.5 — gap held but no further move
+    LowVolatilityGreenSqueeze, // change_pct > 0 AND change_pct < 1 AND day_pct.abs() < 0.5 AND rel_volume < 0.5 — quiet up day with dry volume
+    LowVolatilityRedSqueeze, // change_pct < 0 AND change_pct > -1 AND day_pct.abs() < 0.5 AND rel_volume < 0.5 — quiet down day with dry volume
+    GapAlignsChangeSqueeze, // gap_pct.signum() == change_pct.signum() AND (|gap| + |change|) < 1.5 AND day_pct.abs() < 0.5 — small aligned move
+    UnaffectedGapSqueeze, // |gap_pct| >= 0.3 AND |gap_pct| <= 1 AND day_pct.abs() < 0.3 AND |change_pct - gap_pct| < 0.3 — gap simply transferred without intraday motion
+    StackedClosesSqueeze, // hod_dist.abs() < 0.5 AND lod_dist.abs() < 0.5 AND |day_pct| < 0.5 AND |change_pct| < 1 — close, HOD, LOD, open all stacked
+    PullbackToMidSqueeze, // change_pct between -2 and -0.5 AND hod_dist.abs() > 1.5 AND year_high_pct >= -10 — orderly pullback from highs
+    BounceFromMidSqueeze, // change_pct between 0.5 and 2 AND lod_dist.abs() > 1.5 AND year_low_pct <= 10 — orderly bounce from lows
+    NarrowGapHotCloseSqueeze, // |gap_pct| < 0.2 AND year_high_pct >= -2 AND day_pct.abs() < 0.5 — no-gap close at 52w high
+    NarrowGapColdCloseSqueeze, // |gap_pct| < 0.2 AND year_low_pct <= 2 AND day_pct.abs() < 0.5 — no-gap close at 52w low
+    AbsorptionUpSqueeze, // change_pct 0.5-2 AND rel_volume >= 2 AND day_pct.abs() < 1 — heavy buying absorbed without breakout
+    AbsorptionDownSqueeze, // change_pct -2 to -0.5 AND rel_volume >= 2 AND day_pct.abs() < 1 — heavy selling absorbed without breakdown
+    StallAtMidSqueeze, // year_high_pct -40 to -60 (mid of 52w range) AND |change_pct| < 0.5 AND rel_volume < 0.8 — deep mid-range stall
+    NoCloseDecisionSqueeze, // hod_dist & lod_dist 0.4-0.6 AND day_pct.abs() < 0.3 — close exactly equidistant from extremes
+    GapInsideRangeSqueeze, // |gap_pct| < 0.5 AND hod_dist.abs() < 1 AND lod_dist.abs() < 1 AND rel_volume < 0.8 — small gap fully contained inside narrow range
+    SubpointMoveSqueeze,   // |change_pct| < 0.05 AND |day_pct| < 0.05 — essentially zero net move
+    NoVolNoMoveSqueeze, // rel_volume < 0.3 AND change_pct.abs() < 0.3 AND day_pct.abs() < 0.3 — both vol and price asleep
+    VolWithoutChangeSqueeze, // rel_volume >= 1.5 AND change_pct.abs() < 0.2 AND day_pct.abs() < 0.5 — vol arrives but price doesn't move
+    TickInsideOpenSqueeze, // |day_pct| < 0.15 AND |change_pct| < 0.5 AND |gap_pct| < 0.3 — closing within a tick of open
+    Pct52wExactHalfSqueeze, // year_high_pct -55 to -45 AND year_low_pct 45 to 55 AND |change_pct| < 0.5 — sitting at exact 52w midpoint
+    UnchangedOnVolumeSqueeze, // |change_pct| < 0.1 AND rel_volume >= 1 — totally unchanged on at-or-above-average volume
+    WideHodNarrowLodSqueeze, // hod_dist.abs() >= 2 AND lod_dist.abs() < 0.5 AND change_pct < 0 — high failed, close pinned to low
+    NarrowHodWideLodSqueeze, // hod_dist.abs() < 0.5 AND lod_dist.abs() >= 2 AND change_pct > 0 — low failed, close pinned to high
+    PerfectBalanceSqueeze, // |hod_dist - lod_dist| < 0.1 AND |change_pct| < 0.3 — mathematically balanced bar
+    LowVolHotZoneSqueeze, // year_high_pct >= -5 AND rel_volume < 0.4 — at 52w high zone with very low vol (institutions absent)
+    LowVolColdZoneSqueeze, // year_low_pct <= 5 AND rel_volume < 0.4 — at 52w low zone with very low vol (no panic, no buying)
+    DriftHigherSqueeze, // change_pct > 0 AND change_pct < 2 AND day_pct > 0 AND day_pct < 1 AND rel_volume < 0.9 — slow grinding-up day
+    DriftLowerSqueeze, // change_pct < 0 AND change_pct > -2 AND day_pct < 0 AND day_pct > -1 AND rel_volume < 0.9 — slow grinding-down day
+    ExtremeQuietSqueeze, // rel_volume < 0.2 AND change_pct.abs() < 0.5 AND day_pct.abs() < 0.5 AND gap_pct.abs() < 0.2 — extreme quiet on all axes
+    PinnedToOpenSqueeze, // day_pct.abs() < 0.05 AND hod_dist.abs() < 1 AND lod_dist.abs() < 1 — close ≈ open + narrow range
+    BigGapSmallDaySqueeze, // |gap_pct| >= 2 AND day_pct.abs() < 0.5 AND |change_pct| < 0.5 — big overnight gap fully absorbed
+    PostCrashSqueeze, // change_pct <= -3 AND day_pct.abs() < 0.5 AND rel_volume < 1 — quiet stabilization after a crash
+    PostSpikeStabilizeSqueeze, // change_pct >= 3 AND day_pct.abs() < 0.5 AND rel_volume < 1 — quiet stabilization after a spike
+    TightWithSmallGapSqueeze, // |gap_pct| < 0.5 AND |change_pct| between 0.3 and 0.8 AND |day_pct| < 0.4 — modest move on small gap, tight day
     BigVolWithTinyChangeSqueeze, // rel_volume >= 3 AND change_pct.abs() < 0.1 — heavy volume but virtually zero change
-    QuietExpansionSqueeze,       // hod_dist + lod_dist 2-4 AND change_pct.abs() < 0.2 AND rel_volume < 0.7 — modest range, no net move, quiet
-    InsideBarHighSqueeze,        // hod_dist.abs() < 1.5 AND lod_dist.abs() < 1.5 AND year_high_pct >= -2 — narrow inside bar at 52w high
-    InsideBarLowSqueeze,         // hod_dist.abs() < 1.5 AND lod_dist.abs() < 1.5 AND year_low_pct <= 2 — narrow inside bar at 52w low
-    FlatGapInsideRangeSqueeze,   // gap_pct.abs() < 0.1 AND hod_dist + lod_dist < 2 — no gap and very narrow intraday range
-    Pct52wEdgeDryUp,             // (year_high_pct >= -2 OR year_low_pct <= 2) AND rel_volume < 0.3 — at 52w extreme with extremely dried-up volume
-    NarrowCenterSqueeze,         // hod_dist between 0.5 and 1 AND lod_dist between 0.5 and 1 AND day_pct.abs() < 0.5 — close centered in a slim range
-    LopsidedQuietSqueeze,        // hod_dist.abs() < 0.5 OR lod_dist.abs() < 0.5 (close pinned to one side) AND rel_volume < 0.5 AND |day_pct| < 0.5 — extreme-pin with quiet vol
-    SilentLeaderSqueeze,         // year_high_pct >= -3 AND year_low_pct >= 50 AND |day_pct| < 0.5 — leader at top of 52w range, taking a quiet day
-    SilentLaggardSqueeze,        // year_low_pct <= 3 AND year_high_pct <= -50 AND |day_pct| < 0.5 — laggard at bottom of 52w range, taking a quiet day
-    NearVwapQuietSqueeze,        // |day_pct| < 0.3 AND |change_pct| < 0.3 AND rel_volume < 0.8 — close near VWAP-ish (open) on quiet vol
-    BarelyMovingMidSqueeze,      // year_high_pct -50 to -30 AND |day_pct| < 0.3 AND rel_volume < 0.8 — quiet stall in middle of 52w range
-    Pct52wThirdFromHighSqueeze,  // year_high_pct -33 to -20 AND |day_pct| < 0.5 AND rel_volume < 0.9 — one-third off 52w high
-    Pct52wThirdFromLowSqueeze,   // year_low_pct 20 to 33 AND |day_pct| < 0.5 AND rel_volume < 0.9 — one-third off 52w low
-    HighRangeNoChangeSqueeze,    // hod_dist + lod_dist > 5 AND |change_pct| < 0.5 AND rel_volume >= 1 — wide range, zero net change on average volume
-    LowRangeNoChangeSqueeze,     // hod_dist + lod_dist < 1 AND |change_pct| < 0.5 — very tight range with no net change
-    LowVolumeUpDaySqueeze,       // change_pct 1-3 AND rel_volume < 0.5 — modest up day on dry volume (no participation)
-    LowVolumeDownDaySqueeze,     // change_pct -3 to -1 AND rel_volume < 0.5 — modest down day on dry volume (no panic)
-    HighVolumeUpDayNoExtreme,    // change_pct 1-2 AND rel_volume >= 2 AND hod_dist.abs() > 0.5 — up day on heavy volume but didn't push HOD
-    HighVolumeDownDayNoExtreme,  // change_pct -2 to -1 AND rel_volume >= 2 AND lod_dist.abs() > 0.5 — down day on heavy volume but didn't push LOD
-    GapUpFadeToFlat,             // gap_pct > 2 AND change_pct.abs() < 0.5 — gapped up overnight but unchanged on the day (full fade)
-    GapDownReclaimToFlat,        // gap_pct < -2 AND change_pct.abs() < 0.5 — gapped down overnight but unchanged on the day (full reclaim)
-    GapUpHeldGreen,              // gap_pct > 2 AND change_pct > gap_pct AND rel_volume >= 1 — gap held + extended on participation (continuation squeeze)
-    GapDownHeldRed,              // gap_pct < -2 AND change_pct < gap_pct AND rel_volume >= 1 — gap-down extended lower on participation (continuation squeeze)
-    GapUpHalfFade,               // gap_pct > 2 AND change_pct between 0 and gap_pct*0.5 — gap-up faded to half its overnight move
-    GapDownHalfReclaim,          // gap_pct < -2 AND change_pct between gap_pct*0.5 and 0 — gap-down reclaimed half its overnight move
-    GapAndGoXl,                  // gap_pct > 3 AND change_pct > 5 AND rel_volume >= 2 — extra-large gap-and-go (strong gap + strong day + heavy vol)
-    GapAndCrashXl,               // gap_pct < -3 AND change_pct < -5 AND rel_volume >= 2 — extra-large gap-and-crash (strong gap-down + strong red day + heavy vol)
-    GapUpButDayRed,              // gap_pct > 1 AND change_pct < -1 — gapped up overnight but day closed red (failed open)
-    GapDownButDayGreen,          // gap_pct < -1 AND change_pct > 1 — gapped down overnight but day closed green (reversal)
-    GapUpFlushOnVolume,          // gap_pct > 2 AND change_pct < -2 AND rel_volume >= 2 — failed open with heavy participation (distribution)
-    GapDownReversalOnVolume,     // gap_pct < -2 AND change_pct > 2 AND rel_volume >= 2 — gap-down reversal with heavy participation (accumulation)
-    Pct52wTopDecileHotVol,       // year_high_pct > -10 AND rel_volume >= 2 — within 10% of 52w high on heavy volume (breakout candidate)
-    Pct52wBottomDecileHotVol,    // year_low_pct < 10 AND rel_volume >= 2 — within 10% of 52w low on heavy volume (capitulation candidate)
-    Pct52wTopDecileDryVol,       // year_high_pct > -10 AND rel_volume < 0.5 — within 10% of 52w high but dry volume (no demand at the highs)
-    Pct52wBottomDecileDryVol,    // year_low_pct < 10 AND rel_volume < 0.5 — within 10% of 52w low but dry volume (no panic at the lows)
-    NewHighGreenDay,             // year_high_pct >= 0 AND change_pct >= 1 — printed a new 52w high and closed green (continuation)
-    NewLowRedDay,                // year_low_pct <= 0 AND change_pct <= -1 — printed a new 52w low and closed red (continuation)
-    NewHighRedDay,               // year_high_pct >= 0 AND change_pct <= -1 — printed a new 52w high then reversed red (failed breakout)
-    NewLowGreenDay,              // year_low_pct <= 0 AND change_pct >= 1 — printed a new 52w low then reversed green (failed breakdown)
-    NewHighOnHotVol,             // year_high_pct >= 0 AND rel_volume >= 3 — new 52w high on >=3× volume (institutional accumulation)
-    NewLowOnHotVol,              // year_low_pct <= 0 AND rel_volume >= 3 — new 52w low on >=3× volume (institutional distribution)
-    QuietNearTheTop,             // year_high_pct > -3 AND hod_dist + lod_dist < 1.5 AND rel_volume < 1 — very tight range near 52w high on light vol (coiled spring up)
-    QuietNearTheBottom,          // year_low_pct < 3 AND hod_dist + lod_dist < 1.5 AND rel_volume < 1 — very tight range near 52w low on light vol (coiled spring down)
-    NoisyNearTheTop,             // year_high_pct > -3 AND hod_dist + lod_dist > 4 AND rel_volume >= 2 — wide range near 52w high on heavy vol (battle for the top)
-    NoisyNearTheBottom,          // year_low_pct < 3 AND hod_dist + lod_dist > 4 AND rel_volume >= 2 — wide range near 52w low on heavy vol (battle for the bottom)
-    MidRangeChopHotVol,          // hod_dist between 1-3 AND lod_dist between 1-3 AND rel_volume >= 2 — equidistant mid-range on heavy vol (indecision squeeze)
-    MidRangeChopDryVol,          // hod_dist between 1-3 AND lod_dist between 1-3 AND rel_volume < 0.5 — equidistant mid-range on dry vol (range-bound digestion)
-    CloseNearHodNoBreakout,      // hod_dist.abs() < 0.5 AND change_pct < 1 — closed within 0.5% of HOD but change_pct < 1 (failed thrust)
-    CloseNearLodNoBreakdown,     // lod_dist.abs() < 0.5 AND change_pct > -1 — closed within 0.5% of LOD but change_pct > -1 (failed flush)
-    CloseNearHodStrongDay,       // hod_dist.abs() < 0.5 AND change_pct > 3 — closed at HOD AND day up >3% (full-send breakout)
-    CloseNearLodWeakDay,         // lod_dist.abs() < 0.5 AND change_pct < -3 — closed at LOD AND day down >3% (full-send breakdown)
-    InsideRangeNoVolume,         // hod_dist + lod_dist < 2 AND rel_volume < 0.5 — tight inside range on dry vol (NR7-style squeeze)
-    OutsideRangeOnVolume,        // hod_dist + lod_dist > 6 AND rel_volume >= 2 — wide outside range on heavy vol (volatility expansion)
-    UpDayLowerHigh,              // change_pct > 1 AND hod_dist.abs() > 1 AND lod_dist.abs() < 1 — green day but failed to make HOD (capped advance)
-    DownDayHigherLow,            // change_pct < -1 AND lod_dist.abs() > 1 AND hod_dist.abs() < 1 — red day but failed to make LOD (cushioned decline)
-    StrongDayBalancedRange,      // change_pct > 3 AND hod_dist.abs() < 1 AND lod_dist.abs() < 1 — strong day with both ends touched (impulsive breakout)
-    WeakDayBalancedRange,        // change_pct < -3 AND hod_dist.abs() < 1 AND lod_dist.abs() < 1 — weak day with both ends touched (impulsive breakdown)
-    ChannelRideUp,               // change_pct > 1 AND day_pct > 0 AND hod_dist.abs() < 0.5 AND lod_dist.abs() > 3 — close at HOD with LOD far away (one-side day up)
-    ChannelRideDown,             // change_pct < -1 AND day_pct < 0 AND lod_dist.abs() < 0.5 AND hod_dist.abs() > 3 — close at LOD with HOD far away (one-side day down)
-    PullbackInUptrend,           // year_high_pct > -15 AND change_pct between -3 and 0 AND rel_volume < 1 — minor pullback in uptrend on light vol (textbook continuation buy zone)
-    BounceInDowntrend,           // year_low_pct < 15 AND change_pct between 0 and 3 AND rel_volume < 1 — minor bounce in downtrend on light vol (textbook continuation short zone)
-    DeepPullbackInUptrend,       // year_high_pct > -25 AND change_pct between -10 and -3 AND rel_volume >= 2 — deep pullback in uptrend on heavy vol (capitulation entry zone)
-    DeepBounceInDowntrend,       // year_low_pct < 25 AND change_pct between 3 and 10 AND rel_volume >= 2 — deep bounce in downtrend on heavy vol (rip-and-reject entry zone)
-    TightAboveMidStrong,         // hod_dist.abs() + lod_dist.abs() < 1.5 AND day_pct > 0 AND change_pct > 0.5 — tight range above mid (coiled spring; bullish bias)
-    TightBelowMidWeak,           // hod_dist.abs() + lod_dist.abs() < 1.5 AND day_pct < 0 AND change_pct < -0.5 — tight range below mid (coiled spring; bearish bias)
-    HotVolNoMoveAtHigh,          // year_high_pct > -5 AND change_pct.abs() < 0.5 AND rel_volume >= 2 — heavy churn at 52w high with no net move (distribution candidate)
-    HotVolNoMoveAtLow,           // year_low_pct < 5 AND change_pct.abs() < 0.5 AND rel_volume >= 2 — heavy churn at 52w low with no net move (accumulation candidate)
-    BigUpGapInsideDay,           // gap_pct > 3 AND hod_dist.abs() < 0.5 AND lod_dist.abs() < 0.5 AND change_pct between 1 and 3 — big gap-up but contained inside-day (consolidation after thrust)
-    BigDownGapInsideDay,         // gap_pct < -3 AND hod_dist.abs() < 0.5 AND lod_dist.abs() < 0.5 AND change_pct between -3 and -1 — big gap-down but contained inside-day (consolidation after thrust)
-    SteadyUpDryVol,              // change_pct between 0.5 and 2 AND day_pct > 0 AND rel_volume < 0.7 — steady-up day on light volume (low-conviction drift up)
-    SteadyDownDryVol,            // change_pct between -2 and -0.5 AND day_pct < 0 AND rel_volume < 0.7 — steady-down day on light volume (low-conviction drift down)
-    ImpulsiveUpHotVol,           // change_pct between 2 and 5 AND day_pct > 0 AND rel_volume >= 1.5 — impulsive up day on heavy vol (initiative buying)
-    ImpulsiveDownHotVol,         // change_pct between -5 and -2 AND day_pct < 0 AND rel_volume >= 1.5 — impulsive down day on heavy vol (initiative selling)
-    ParabolicUp,                 // change_pct > 10 AND rel_volume >= 3 AND hod_dist.abs() < 0.5 — parabolic up: >10% on >=3× vol closing at HOD (capitulation buy / blow-off candidate)
-    ParabolicDown,               // change_pct < -10 AND rel_volume >= 3 AND lod_dist.abs() < 0.5 — parabolic down: <-10% on >=3× vol closing at LOD (capitulation sell / panic candidate)
-    BlowOffTop,                  // change_pct > 5 AND rel_volume >= 5 AND year_high_pct > -2 — extreme volume + extreme move at the highs (climactic top candidate)
-    SellingClimaxBottom,         // change_pct < -5 AND rel_volume >= 5 AND year_low_pct < 2 — extreme volume + extreme move at the lows (selling climax candidate)
-    UpDayGapOnlyMove,            // change_pct between 1 and 3 AND change_pct.sub(gap_pct).abs() < 0.3 AND rel_volume < 1 — entire change came from overnight gap; flat day after (gap-and-fade indecision)
-    DownDayGapOnlyMove,          // change_pct between -3 and -1 AND change_pct.sub(gap_pct).abs() < 0.3 AND rel_volume < 1 — entire decline came from overnight gap-down; flat day after
-    IntradayOnlyGreenDay,        // change_pct > 1 AND gap_pct.abs() < 0.3 AND rel_volume >= 1 — flat open, intraday all-the-work green day (initiative buying continuation)
-    IntradayOnlyRedDay,          // change_pct < -1 AND gap_pct.abs() < 0.3 AND rel_volume >= 1 — flat open, intraday all-the-work red day (initiative selling continuation)
-    ReversalUpFromOpen,          // gap_pct < -1 AND change_pct > 0 AND rel_volume >= 1.5 AND hod_dist.abs() < 0.5 — gap-down reversed and closed at HOD on heavy vol (powerful reclaim)
-    ReversalDownFromOpen,        // gap_pct > 1 AND change_pct < 0 AND rel_volume >= 1.5 AND lod_dist.abs() < 0.5 — gap-up reversed and closed at LOD on heavy vol (powerful failure)
-    TrendDayUp,                  // change_pct > 2 AND day_pct > 1 AND rel_volume >= 1.2 AND hod_dist.abs() < 0.5 AND lod_dist.abs() > 2 — trend-day-up: opened low, closed near HOD on heavy vol
-    TrendDayDown,                // change_pct < -2 AND day_pct < -1 AND rel_volume >= 1.2 AND lod_dist.abs() < 0.5 AND hod_dist.abs() > 2 — trend-day-down: opened high, closed near LOD on heavy vol
-    DoubleBottomCandidate,       // year_low_pct < 5 AND hod_dist.abs() > 1 AND lod_dist.abs() < 0.5 AND change_pct > 0 — touched 52w-low zone but closed higher (double-bottom candidate)
-    DoubleTopCandidate,          // year_high_pct > -5 AND lod_dist.abs() > 1 AND hod_dist.abs() < 0.5 AND change_pct < 0 — touched 52w-high zone but closed lower (double-top candidate)
-    Pct52wMidZone,               // year_high_pct < -40 AND year_high_pct > -60 AND year_low_pct > 40 AND year_low_pct < 60 — mid-zone of 52w range (no extreme positioning; chop bias)
+    QuietExpansionSqueeze, // hod_dist + lod_dist 2-4 AND change_pct.abs() < 0.2 AND rel_volume < 0.7 — modest range, no net move, quiet
+    InsideBarHighSqueeze, // hod_dist.abs() < 1.5 AND lod_dist.abs() < 1.5 AND year_high_pct >= -2 — narrow inside bar at 52w high
+    InsideBarLowSqueeze, // hod_dist.abs() < 1.5 AND lod_dist.abs() < 1.5 AND year_low_pct <= 2 — narrow inside bar at 52w low
+    FlatGapInsideRangeSqueeze, // gap_pct.abs() < 0.1 AND hod_dist + lod_dist < 2 — no gap and very narrow intraday range
+    Pct52wEdgeDryUp, // (year_high_pct >= -2 OR year_low_pct <= 2) AND rel_volume < 0.3 — at 52w extreme with extremely dried-up volume
+    NarrowCenterSqueeze, // hod_dist between 0.5 and 1 AND lod_dist between 0.5 and 1 AND day_pct.abs() < 0.5 — close centered in a slim range
+    LopsidedQuietSqueeze, // hod_dist.abs() < 0.5 OR lod_dist.abs() < 0.5 (close pinned to one side) AND rel_volume < 0.5 AND |day_pct| < 0.5 — extreme-pin with quiet vol
+    SilentLeaderSqueeze, // year_high_pct >= -3 AND year_low_pct >= 50 AND |day_pct| < 0.5 — leader at top of 52w range, taking a quiet day
+    SilentLaggardSqueeze, // year_low_pct <= 3 AND year_high_pct <= -50 AND |day_pct| < 0.5 — laggard at bottom of 52w range, taking a quiet day
+    NearVwapQuietSqueeze, // |day_pct| < 0.3 AND |change_pct| < 0.3 AND rel_volume < 0.8 — close near VWAP-ish (open) on quiet vol
+    BarelyMovingMidSqueeze, // year_high_pct -50 to -30 AND |day_pct| < 0.3 AND rel_volume < 0.8 — quiet stall in middle of 52w range
+    Pct52wThirdFromHighSqueeze, // year_high_pct -33 to -20 AND |day_pct| < 0.5 AND rel_volume < 0.9 — one-third off 52w high
+    Pct52wThirdFromLowSqueeze, // year_low_pct 20 to 33 AND |day_pct| < 0.5 AND rel_volume < 0.9 — one-third off 52w low
+    HighRangeNoChangeSqueeze, // hod_dist + lod_dist > 5 AND |change_pct| < 0.5 AND rel_volume >= 1 — wide range, zero net change on average volume
+    LowRangeNoChangeSqueeze, // hod_dist + lod_dist < 1 AND |change_pct| < 0.5 — very tight range with no net change
+    LowVolumeUpDaySqueeze, // change_pct 1-3 AND rel_volume < 0.5 — modest up day on dry volume (no participation)
+    LowVolumeDownDaySqueeze, // change_pct -3 to -1 AND rel_volume < 0.5 — modest down day on dry volume (no panic)
+    HighVolumeUpDayNoExtreme, // change_pct 1-2 AND rel_volume >= 2 AND hod_dist.abs() > 0.5 — up day on heavy volume but didn't push HOD
+    HighVolumeDownDayNoExtreme, // change_pct -2 to -1 AND rel_volume >= 2 AND lod_dist.abs() > 0.5 — down day on heavy volume but didn't push LOD
+    GapUpFadeToFlat, // gap_pct > 2 AND change_pct.abs() < 0.5 — gapped up overnight but unchanged on the day (full fade)
+    GapDownReclaimToFlat, // gap_pct < -2 AND change_pct.abs() < 0.5 — gapped down overnight but unchanged on the day (full reclaim)
+    GapUpHeldGreen, // gap_pct > 2 AND change_pct > gap_pct AND rel_volume >= 1 — gap held + extended on participation (continuation squeeze)
+    GapDownHeldRed, // gap_pct < -2 AND change_pct < gap_pct AND rel_volume >= 1 — gap-down extended lower on participation (continuation squeeze)
+    GapUpHalfFade, // gap_pct > 2 AND change_pct between 0 and gap_pct*0.5 — gap-up faded to half its overnight move
+    GapDownHalfReclaim, // gap_pct < -2 AND change_pct between gap_pct*0.5 and 0 — gap-down reclaimed half its overnight move
+    GapAndGoXl, // gap_pct > 3 AND change_pct > 5 AND rel_volume >= 2 — extra-large gap-and-go (strong gap + strong day + heavy vol)
+    GapAndCrashXl, // gap_pct < -3 AND change_pct < -5 AND rel_volume >= 2 — extra-large gap-and-crash (strong gap-down + strong red day + heavy vol)
+    GapUpButDayRed, // gap_pct > 1 AND change_pct < -1 — gapped up overnight but day closed red (failed open)
+    GapDownButDayGreen, // gap_pct < -1 AND change_pct > 1 — gapped down overnight but day closed green (reversal)
+    GapUpFlushOnVolume, // gap_pct > 2 AND change_pct < -2 AND rel_volume >= 2 — failed open with heavy participation (distribution)
+    GapDownReversalOnVolume, // gap_pct < -2 AND change_pct > 2 AND rel_volume >= 2 — gap-down reversal with heavy participation (accumulation)
+    Pct52wTopDecileHotVol, // year_high_pct > -10 AND rel_volume >= 2 — within 10% of 52w high on heavy volume (breakout candidate)
+    Pct52wBottomDecileHotVol, // year_low_pct < 10 AND rel_volume >= 2 — within 10% of 52w low on heavy volume (capitulation candidate)
+    Pct52wTopDecileDryVol, // year_high_pct > -10 AND rel_volume < 0.5 — within 10% of 52w high but dry volume (no demand at the highs)
+    Pct52wBottomDecileDryVol, // year_low_pct < 10 AND rel_volume < 0.5 — within 10% of 52w low but dry volume (no panic at the lows)
+    NewHighGreenDay, // year_high_pct >= 0 AND change_pct >= 1 — printed a new 52w high and closed green (continuation)
+    NewLowRedDay, // year_low_pct <= 0 AND change_pct <= -1 — printed a new 52w low and closed red (continuation)
+    NewHighRedDay, // year_high_pct >= 0 AND change_pct <= -1 — printed a new 52w high then reversed red (failed breakout)
+    NewLowGreenDay, // year_low_pct <= 0 AND change_pct >= 1 — printed a new 52w low then reversed green (failed breakdown)
+    NewHighOnHotVol, // year_high_pct >= 0 AND rel_volume >= 3 — new 52w high on >=3× volume (institutional accumulation)
+    NewLowOnHotVol, // year_low_pct <= 0 AND rel_volume >= 3 — new 52w low on >=3× volume (institutional distribution)
+    QuietNearTheTop, // year_high_pct > -3 AND hod_dist + lod_dist < 1.5 AND rel_volume < 1 — very tight range near 52w high on light vol (coiled spring up)
+    QuietNearTheBottom, // year_low_pct < 3 AND hod_dist + lod_dist < 1.5 AND rel_volume < 1 — very tight range near 52w low on light vol (coiled spring down)
+    NoisyNearTheTop, // year_high_pct > -3 AND hod_dist + lod_dist > 4 AND rel_volume >= 2 — wide range near 52w high on heavy vol (battle for the top)
+    NoisyNearTheBottom, // year_low_pct < 3 AND hod_dist + lod_dist > 4 AND rel_volume >= 2 — wide range near 52w low on heavy vol (battle for the bottom)
+    MidRangeChopHotVol, // hod_dist between 1-3 AND lod_dist between 1-3 AND rel_volume >= 2 — equidistant mid-range on heavy vol (indecision squeeze)
+    MidRangeChopDryVol, // hod_dist between 1-3 AND lod_dist between 1-3 AND rel_volume < 0.5 — equidistant mid-range on dry vol (range-bound digestion)
+    CloseNearHodNoBreakout, // hod_dist.abs() < 0.5 AND change_pct < 1 — closed within 0.5% of HOD but change_pct < 1 (failed thrust)
+    CloseNearLodNoBreakdown, // lod_dist.abs() < 0.5 AND change_pct > -1 — closed within 0.5% of LOD but change_pct > -1 (failed flush)
+    CloseNearHodStrongDay, // hod_dist.abs() < 0.5 AND change_pct > 3 — closed at HOD AND day up >3% (full-send breakout)
+    CloseNearLodWeakDay, // lod_dist.abs() < 0.5 AND change_pct < -3 — closed at LOD AND day down >3% (full-send breakdown)
+    InsideRangeNoVolume, // hod_dist + lod_dist < 2 AND rel_volume < 0.5 — tight inside range on dry vol (NR7-style squeeze)
+    OutsideRangeOnVolume, // hod_dist + lod_dist > 6 AND rel_volume >= 2 — wide outside range on heavy vol (volatility expansion)
+    UpDayLowerHigh, // change_pct > 1 AND hod_dist.abs() > 1 AND lod_dist.abs() < 1 — green day but failed to make HOD (capped advance)
+    DownDayHigherLow, // change_pct < -1 AND lod_dist.abs() > 1 AND hod_dist.abs() < 1 — red day but failed to make LOD (cushioned decline)
+    StrongDayBalancedRange, // change_pct > 3 AND hod_dist.abs() < 1 AND lod_dist.abs() < 1 — strong day with both ends touched (impulsive breakout)
+    WeakDayBalancedRange, // change_pct < -3 AND hod_dist.abs() < 1 AND lod_dist.abs() < 1 — weak day with both ends touched (impulsive breakdown)
+    ChannelRideUp, // change_pct > 1 AND day_pct > 0 AND hod_dist.abs() < 0.5 AND lod_dist.abs() > 3 — close at HOD with LOD far away (one-side day up)
+    ChannelRideDown, // change_pct < -1 AND day_pct < 0 AND lod_dist.abs() < 0.5 AND hod_dist.abs() > 3 — close at LOD with HOD far away (one-side day down)
+    PullbackInUptrend, // year_high_pct > -15 AND change_pct between -3 and 0 AND rel_volume < 1 — minor pullback in uptrend on light vol (textbook continuation buy zone)
+    BounceInDowntrend, // year_low_pct < 15 AND change_pct between 0 and 3 AND rel_volume < 1 — minor bounce in downtrend on light vol (textbook continuation short zone)
+    DeepPullbackInUptrend, // year_high_pct > -25 AND change_pct between -10 and -3 AND rel_volume >= 2 — deep pullback in uptrend on heavy vol (capitulation entry zone)
+    DeepBounceInDowntrend, // year_low_pct < 25 AND change_pct between 3 and 10 AND rel_volume >= 2 — deep bounce in downtrend on heavy vol (rip-and-reject entry zone)
+    TightAboveMidStrong, // hod_dist.abs() + lod_dist.abs() < 1.5 AND day_pct > 0 AND change_pct > 0.5 — tight range above mid (coiled spring; bullish bias)
+    TightBelowMidWeak, // hod_dist.abs() + lod_dist.abs() < 1.5 AND day_pct < 0 AND change_pct < -0.5 — tight range below mid (coiled spring; bearish bias)
+    HotVolNoMoveAtHigh, // year_high_pct > -5 AND change_pct.abs() < 0.5 AND rel_volume >= 2 — heavy churn at 52w high with no net move (distribution candidate)
+    HotVolNoMoveAtLow, // year_low_pct < 5 AND change_pct.abs() < 0.5 AND rel_volume >= 2 — heavy churn at 52w low with no net move (accumulation candidate)
+    BigUpGapInsideDay, // gap_pct > 3 AND hod_dist.abs() < 0.5 AND lod_dist.abs() < 0.5 AND change_pct between 1 and 3 — big gap-up but contained inside-day (consolidation after thrust)
+    BigDownGapInsideDay, // gap_pct < -3 AND hod_dist.abs() < 0.5 AND lod_dist.abs() < 0.5 AND change_pct between -3 and -1 — big gap-down but contained inside-day (consolidation after thrust)
+    SteadyUpDryVol, // change_pct between 0.5 and 2 AND day_pct > 0 AND rel_volume < 0.7 — steady-up day on light volume (low-conviction drift up)
+    SteadyDownDryVol, // change_pct between -2 and -0.5 AND day_pct < 0 AND rel_volume < 0.7 — steady-down day on light volume (low-conviction drift down)
+    ImpulsiveUpHotVol, // change_pct between 2 and 5 AND day_pct > 0 AND rel_volume >= 1.5 — impulsive up day on heavy vol (initiative buying)
+    ImpulsiveDownHotVol, // change_pct between -5 and -2 AND day_pct < 0 AND rel_volume >= 1.5 — impulsive down day on heavy vol (initiative selling)
+    ParabolicUp, // change_pct > 10 AND rel_volume >= 3 AND hod_dist.abs() < 0.5 — parabolic up: >10% on >=3× vol closing at HOD (capitulation buy / blow-off candidate)
+    ParabolicDown, // change_pct < -10 AND rel_volume >= 3 AND lod_dist.abs() < 0.5 — parabolic down: <-10% on >=3× vol closing at LOD (capitulation sell / panic candidate)
+    BlowOffTop, // change_pct > 5 AND rel_volume >= 5 AND year_high_pct > -2 — extreme volume + extreme move at the highs (climactic top candidate)
+    SellingClimaxBottom, // change_pct < -5 AND rel_volume >= 5 AND year_low_pct < 2 — extreme volume + extreme move at the lows (selling climax candidate)
+    UpDayGapOnlyMove, // change_pct between 1 and 3 AND change_pct.sub(gap_pct).abs() < 0.3 AND rel_volume < 1 — entire change came from overnight gap; flat day after (gap-and-fade indecision)
+    DownDayGapOnlyMove, // change_pct between -3 and -1 AND change_pct.sub(gap_pct).abs() < 0.3 AND rel_volume < 1 — entire decline came from overnight gap-down; flat day after
+    IntradayOnlyGreenDay, // change_pct > 1 AND gap_pct.abs() < 0.3 AND rel_volume >= 1 — flat open, intraday all-the-work green day (initiative buying continuation)
+    IntradayOnlyRedDay, // change_pct < -1 AND gap_pct.abs() < 0.3 AND rel_volume >= 1 — flat open, intraday all-the-work red day (initiative selling continuation)
+    ReversalUpFromOpen, // gap_pct < -1 AND change_pct > 0 AND rel_volume >= 1.5 AND hod_dist.abs() < 0.5 — gap-down reversed and closed at HOD on heavy vol (powerful reclaim)
+    ReversalDownFromOpen, // gap_pct > 1 AND change_pct < 0 AND rel_volume >= 1.5 AND lod_dist.abs() < 0.5 — gap-up reversed and closed at LOD on heavy vol (powerful failure)
+    TrendDayUp, // change_pct > 2 AND day_pct > 1 AND rel_volume >= 1.2 AND hod_dist.abs() < 0.5 AND lod_dist.abs() > 2 — trend-day-up: opened low, closed near HOD on heavy vol
+    TrendDayDown, // change_pct < -2 AND day_pct < -1 AND rel_volume >= 1.2 AND lod_dist.abs() < 0.5 AND hod_dist.abs() > 2 — trend-day-down: opened high, closed near LOD on heavy vol
+    DoubleBottomCandidate, // year_low_pct < 5 AND hod_dist.abs() > 1 AND lod_dist.abs() < 0.5 AND change_pct > 0 — touched 52w-low zone but closed higher (double-bottom candidate)
+    DoubleTopCandidate, // year_high_pct > -5 AND lod_dist.abs() > 1 AND hod_dist.abs() < 0.5 AND change_pct < 0 — touched 52w-high zone but closed lower (double-top candidate)
+    Pct52wMidZone, // year_high_pct < -40 AND year_high_pct > -60 AND year_low_pct > 40 AND year_low_pct < 60 — mid-zone of 52w range (no extreme positioning; chop bias)
     Pct52wRangeBreakoutTriggered, // year_high_pct >= 0 AND change_pct > 2 AND rel_volume >= 2 — broke above 52w high range on heavy vol (range-breakout trigger)
     Pct52wRangeBreakdownTriggered, // year_low_pct <= 0 AND change_pct < -2 AND rel_volume >= 2 — broke below 52w low range on heavy vol (range-breakdown trigger)
-    Pct52wTightCoil,             // year_high_pct between -10 and -5 AND year_low_pct between 5 and 10 AND hod_dist + lod_dist < 2 — coiled mid-high zone on tight range (decision-zone setup)
-    SymmetricTriangle,           // hod_dist + lod_dist < 3 AND change_pct.abs() < 0.5 AND rel_volume between 0.7 and 1.3 — balanced tight range with average vol (symmetric triangle wait)
-    NarrowingRangeOnFlat,        // hod_dist between 0.5 and 2 AND lod_dist between 0.5 and 2 AND change_pct.abs() < 0.3 — both wicks small, no net move (narrowing-range setup)
-    GapTooFarBigPullback,        // gap_pct > 4 AND change_pct < gap_pct - 3 — gapped up but pulled back >3% from the gap (over-extended fade)
-    GapTooFarBigBounce,          // gap_pct < -4 AND change_pct > gap_pct + 3 — gapped down but bounced >3% off the gap (over-extended bounce)
-    ChainBreakoutLevel,          // hod_dist.abs() < 0.3 AND lod_dist.abs() > 2 AND change_pct > 1 — close at HOD with broad day-range; breakout above prior level
-    ChainBreakdownLevel,         // lod_dist.abs() < 0.3 AND hod_dist.abs() > 2 AND change_pct < -1 — close at LOD with broad day-range; breakdown below prior level
-    Pct52wRangePosTop,           // year_high_pct > -20 AND year_low_pct > 30 — position in top half of 52w range (bullish positioning)
-    Pct52wRangePosBottom,        // year_high_pct < -50 AND year_low_pct < 30 — position in bottom half of 52w range (bearish positioning)
-    HighRangeHighVolStrong,      // hod_dist + lod_dist > 4 AND change_pct > 3 AND rel_volume >= 1.5 — wide-range strong up day on heavy vol (initiative buying day)
-    HighRangeHighVolWeak,        // hod_dist + lod_dist > 4 AND change_pct < -3 AND rel_volume >= 1.5 — wide-range weak day on heavy vol (initiative selling day)
-    LowRangeLowVolNeutral,       // hod_dist + lod_dist < 1.5 AND change_pct.abs() < 0.5 AND rel_volume < 0.7 — quiet, tight, flat day (balance / observation day)
-    AvgRangeAvgVolNeutral,       // hod_dist + lod_dist between 2 and 4 AND change_pct.abs() < 0.5 AND rel_volume between 0.8 and 1.2 — average range/vol with no net move (no-edge day)
-    FailedBreakoutHighReclaim,   // year_high_pct > -1 AND hod_dist.abs() > 1 AND change_pct < -1 AND rel_volume >= 1.5 — touched/exceeded 52w high then closed -1% lower on heavy vol (failed breakout)
-    FailedBreakdownLowReclaim,   // year_low_pct < 1 AND lod_dist.abs() > 1 AND change_pct > 1 AND rel_volume >= 1.5 — touched/exceeded 52w low then closed +1% higher on heavy vol (failed breakdown)
-    HotVolHotGap,                // gap_pct.abs() > 2 AND rel_volume >= 2 — heavy-volume gap day (institutional positioning before open)
-    DryVolDryGap,                // gap_pct.abs() < 0.5 AND rel_volume < 0.5 — flat gap on dry volume (no overnight positioning; no day participation)
-    OuterEdgePushUp,             // year_high_pct > -10 AND change_pct > 5 AND rel_volume >= 2 — strong push into the top decile on heavy vol (continuation buyers)
-    OuterEdgePushDown,           // year_low_pct < 10 AND change_pct < -5 AND rel_volume >= 2 — strong push into the bottom decile on heavy vol (continuation sellers)
-    MiddleZoneUpDrift,           // year_high_pct between -50 and -20 AND year_low_pct between 20 and 50 AND change_pct > 0.5 AND rel_volume < 1 — mid-zone drift up on light vol (no-conviction continuation up)
-    MiddleZoneDownDrift,         // year_high_pct between -50 and -20 AND year_low_pct between 20 and 50 AND change_pct < -0.5 AND rel_volume < 1 — mid-zone drift down on light vol (no-conviction continuation down)
+    Pct52wTightCoil, // year_high_pct between -10 and -5 AND year_low_pct between 5 and 10 AND hod_dist + lod_dist < 2 — coiled mid-high zone on tight range (decision-zone setup)
+    SymmetricTriangle, // hod_dist + lod_dist < 3 AND change_pct.abs() < 0.5 AND rel_volume between 0.7 and 1.3 — balanced tight range with average vol (symmetric triangle wait)
+    NarrowingRangeOnFlat, // hod_dist between 0.5 and 2 AND lod_dist between 0.5 and 2 AND change_pct.abs() < 0.3 — both wicks small, no net move (narrowing-range setup)
+    GapTooFarBigPullback, // gap_pct > 4 AND change_pct < gap_pct - 3 — gapped up but pulled back >3% from the gap (over-extended fade)
+    GapTooFarBigBounce, // gap_pct < -4 AND change_pct > gap_pct + 3 — gapped down but bounced >3% off the gap (over-extended bounce)
+    ChainBreakoutLevel, // hod_dist.abs() < 0.3 AND lod_dist.abs() > 2 AND change_pct > 1 — close at HOD with broad day-range; breakout above prior level
+    ChainBreakdownLevel, // lod_dist.abs() < 0.3 AND hod_dist.abs() > 2 AND change_pct < -1 — close at LOD with broad day-range; breakdown below prior level
+    Pct52wRangePosTop, // year_high_pct > -20 AND year_low_pct > 30 — position in top half of 52w range (bullish positioning)
+    Pct52wRangePosBottom, // year_high_pct < -50 AND year_low_pct < 30 — position in bottom half of 52w range (bearish positioning)
+    HighRangeHighVolStrong, // hod_dist + lod_dist > 4 AND change_pct > 3 AND rel_volume >= 1.5 — wide-range strong up day on heavy vol (initiative buying day)
+    HighRangeHighVolWeak, // hod_dist + lod_dist > 4 AND change_pct < -3 AND rel_volume >= 1.5 — wide-range weak day on heavy vol (initiative selling day)
+    LowRangeLowVolNeutral, // hod_dist + lod_dist < 1.5 AND change_pct.abs() < 0.5 AND rel_volume < 0.7 — quiet, tight, flat day (balance / observation day)
+    AvgRangeAvgVolNeutral, // hod_dist + lod_dist between 2 and 4 AND change_pct.abs() < 0.5 AND rel_volume between 0.8 and 1.2 — average range/vol with no net move (no-edge day)
+    FailedBreakoutHighReclaim, // year_high_pct > -1 AND hod_dist.abs() > 1 AND change_pct < -1 AND rel_volume >= 1.5 — touched/exceeded 52w high then closed -1% lower on heavy vol (failed breakout)
+    FailedBreakdownLowReclaim, // year_low_pct < 1 AND lod_dist.abs() > 1 AND change_pct > 1 AND rel_volume >= 1.5 — touched/exceeded 52w low then closed +1% higher on heavy vol (failed breakdown)
+    HotVolHotGap, // gap_pct.abs() > 2 AND rel_volume >= 2 — heavy-volume gap day (institutional positioning before open)
+    DryVolDryGap, // gap_pct.abs() < 0.5 AND rel_volume < 0.5 — flat gap on dry volume (no overnight positioning; no day participation)
+    OuterEdgePushUp, // year_high_pct > -10 AND change_pct > 5 AND rel_volume >= 2 — strong push into the top decile on heavy vol (continuation buyers)
+    OuterEdgePushDown, // year_low_pct < 10 AND change_pct < -5 AND rel_volume >= 2 — strong push into the bottom decile on heavy vol (continuation sellers)
+    MiddleZoneUpDrift, // year_high_pct between -50 and -20 AND year_low_pct between 20 and 50 AND change_pct > 0.5 AND rel_volume < 1 — mid-zone drift up on light vol (no-conviction continuation up)
+    MiddleZoneDownDrift, // year_high_pct between -50 and -20 AND year_low_pct between 20 and 50 AND change_pct < -0.5 AND rel_volume < 1 — mid-zone drift down on light vol (no-conviction continuation down)
     MiddleZoneHotVolBreakoutHigh, // year_high_pct between -50 and -20 AND change_pct > 2 AND rel_volume >= 2 — mid-zone breakout up on heavy vol (range-exit conviction)
     MiddleZoneHotVolBreakoutLow, // year_low_pct between 20 and 50 AND change_pct < -2 AND rel_volume >= 2 — mid-zone breakdown on heavy vol (range-exit conviction)
-    GapUpSmallButHotVol,         // gap_pct between 0.5 and 1.5 AND rel_volume >= 2 — small overnight gap-up on heavy vol (early-positioning signal)
-    GapDownSmallButHotVol,       // gap_pct between -1.5 and -0.5 AND rel_volume >= 2 — small overnight gap-down on heavy vol (early-positioning signal)
-    GapUpMediumNeutral,          // gap_pct between 1.5 and 3 AND change_pct between -0.5 and 0.5 AND rel_volume < 1 — medium gap-up but flat day on light vol (gap-and-stall)
-    GapDownMediumNeutral,        // gap_pct between -3 and -1.5 AND change_pct between -0.5 and 0.5 AND rel_volume < 1 — medium gap-down but flat day on light vol (gap-and-stall)
-    HodReclaimAfterFlush,        // change_pct > 0 AND hod_dist.abs() < 0.5 AND lod_dist.abs() > 2 AND rel_volume >= 1.5 — closed at HOD after touching deep LOD on heavy vol (V-bottom intraday)
-    LodFailAfterPush,            // change_pct < 0 AND lod_dist.abs() < 0.5 AND hod_dist.abs() > 2 AND rel_volume >= 1.5 — closed at LOD after touching distant HOD on heavy vol (failed-push intraday)
-    HodReclaimFromFlatGap,       // gap_pct.abs() < 0.5 AND hod_dist.abs() < 0.5 AND change_pct > 1 — flat open then closed at HOD with positive change (organic up-day climb)
-    LodFailFromFlatGap,          // gap_pct.abs() < 0.5 AND lod_dist.abs() < 0.5 AND change_pct < -1 — flat open then closed at LOD with negative change (organic down-day slide)
-    Pct52wTopBoundaryReject,     // year_high_pct between -1 and 0 AND change_pct < -0.5 — touched 52w high boundary but closed lower (rejection from top boundary)
-    Pct52wBottomBoundaryReject,  // year_low_pct between 0 and 1 AND change_pct > 0.5 — touched 52w low boundary but closed higher (rejection from bottom boundary)
-    Pct52wTopBoundaryAccept,     // year_high_pct between -1 and 0 AND change_pct > 0.5 — touched 52w high boundary and closed higher (acceptance above prior high)
-    Pct52wBottomBoundaryAccept,  // year_low_pct between 0 and 1 AND change_pct < -0.5 — touched 52w low boundary and closed lower (acceptance below prior low)
-    UpFromBottomSpring,          // year_low_pct < 10 AND change_pct > 5 AND rel_volume >= 2 — strong rally up from the 52w lows on heavy vol (spring reversal)
-    DownFromTopUpthrust,         // year_high_pct > -10 AND change_pct < -5 AND rel_volume >= 2 — strong sell-off from the 52w highs on heavy vol (upthrust reversal)
-    UpThrustBarReject,           // hod_dist.abs() > 3 AND lod_dist.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 2 — wick high then closed near LOD on heavy vol (textbook upthrust bar)
-    DownThrustBarReject,         // lod_dist.abs() > 3 AND hod_dist.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 2 — wick low then closed near HOD on heavy vol (textbook spring bar)
-    ExhaustionTopWideRange,      // year_high_pct > -5 AND hod_dist.abs() > 5 AND lod_dist.abs() < 0.5 AND change_pct > 5 AND rel_volume >= 3 — extreme range close-at-HOD into prior high (exhaustion top candidate)
-    ExhaustionBottomWideRange,   // year_low_pct < 5 AND lod_dist.abs() > 5 AND hod_dist.abs() < 0.5 AND change_pct < -5 AND rel_volume >= 3 — extreme range close-at-LOD into prior low (exhaustion bottom candidate)
-    UpTrendDayWideRange,         // hod_dist.abs() < 0.3 AND lod_dist.abs() > 5 AND change_pct > 3 AND rel_volume >= 2 — strong trend up with wide range; close at HOD on heavy vol (continuation buyers)
-    DownTrendDayWideRange,       // lod_dist.abs() < 0.3 AND hod_dist.abs() > 5 AND change_pct < -3 AND rel_volume >= 2 — strong trend down with wide range; close at LOD on heavy vol (continuation sellers)
-    SilentSpringNear52wLow,      // year_low_pct < 5 AND change_pct.abs() < 0.5 AND rel_volume < 0.5 AND hod_dist + lod_dist < 1.5 — flat tight bar at 52w low on dry vol (silent spring waiting)
-    SilentUpThrustNear52wHigh,   // year_high_pct > -5 AND change_pct.abs() < 0.5 AND rel_volume < 0.5 AND hod_dist + lod_dist < 1.5 — flat tight bar at 52w high on dry vol (silent upthrust waiting)
-    GapStrongDayOpenPivot,       // gap_pct >= 1 AND gap_pct <= 3 AND change_pct > 4 AND rel_volume >= 2 — small-to-medium gap + strong day on heavy vol (gap held + accelerated)
-    GapWeakDayOpenPivot,         // gap_pct <= -1 AND gap_pct >= -3 AND change_pct < -4 AND rel_volume >= 2 — small-to-medium gap-down + weak day on heavy vol (gap held + accelerated)
-    ConvictionBreakoutCombo,     // year_high_pct >= 0 AND hod_dist.abs() < 0.5 AND change_pct > 3 AND rel_volume >= 2.5 — 52w-high broken + closed at HOD + strong day + heavy vol (highest-conviction breakout)
-    ConvictionBreakdownCombo,    // year_low_pct <= 0 AND lod_dist.abs() < 0.5 AND change_pct < -3 AND rel_volume >= 2.5 — 52w-low broken + closed at LOD + weak day + heavy vol (highest-conviction breakdown)
-    PullbackInsideTrendUp,       // year_high_pct between -20 and -5 AND change_pct between -1 and -0.2 AND rel_volume >= 0.7 AND rel_volume <= 1.3 — small pullback inside an uptrend with avg vol (orderly continuation entry)
-    PullbackInsideTrendDown,     // year_low_pct between 5 and 20 AND change_pct between 0.2 and 1 AND rel_volume >= 0.7 AND rel_volume <= 1.3 — small bounce inside a downtrend with avg vol (orderly continuation entry)
+    GapUpSmallButHotVol, // gap_pct between 0.5 and 1.5 AND rel_volume >= 2 — small overnight gap-up on heavy vol (early-positioning signal)
+    GapDownSmallButHotVol, // gap_pct between -1.5 and -0.5 AND rel_volume >= 2 — small overnight gap-down on heavy vol (early-positioning signal)
+    GapUpMediumNeutral, // gap_pct between 1.5 and 3 AND change_pct between -0.5 and 0.5 AND rel_volume < 1 — medium gap-up but flat day on light vol (gap-and-stall)
+    GapDownMediumNeutral, // gap_pct between -3 and -1.5 AND change_pct between -0.5 and 0.5 AND rel_volume < 1 — medium gap-down but flat day on light vol (gap-and-stall)
+    HodReclaimAfterFlush, // change_pct > 0 AND hod_dist.abs() < 0.5 AND lod_dist.abs() > 2 AND rel_volume >= 1.5 — closed at HOD after touching deep LOD on heavy vol (V-bottom intraday)
+    LodFailAfterPush, // change_pct < 0 AND lod_dist.abs() < 0.5 AND hod_dist.abs() > 2 AND rel_volume >= 1.5 — closed at LOD after touching distant HOD on heavy vol (failed-push intraday)
+    HodReclaimFromFlatGap, // gap_pct.abs() < 0.5 AND hod_dist.abs() < 0.5 AND change_pct > 1 — flat open then closed at HOD with positive change (organic up-day climb)
+    LodFailFromFlatGap, // gap_pct.abs() < 0.5 AND lod_dist.abs() < 0.5 AND change_pct < -1 — flat open then closed at LOD with negative change (organic down-day slide)
+    Pct52wTopBoundaryReject, // year_high_pct between -1 and 0 AND change_pct < -0.5 — touched 52w high boundary but closed lower (rejection from top boundary)
+    Pct52wBottomBoundaryReject, // year_low_pct between 0 and 1 AND change_pct > 0.5 — touched 52w low boundary but closed higher (rejection from bottom boundary)
+    Pct52wTopBoundaryAccept, // year_high_pct between -1 and 0 AND change_pct > 0.5 — touched 52w high boundary and closed higher (acceptance above prior high)
+    Pct52wBottomBoundaryAccept, // year_low_pct between 0 and 1 AND change_pct < -0.5 — touched 52w low boundary and closed lower (acceptance below prior low)
+    UpFromBottomSpring, // year_low_pct < 10 AND change_pct > 5 AND rel_volume >= 2 — strong rally up from the 52w lows on heavy vol (spring reversal)
+    DownFromTopUpthrust, // year_high_pct > -10 AND change_pct < -5 AND rel_volume >= 2 — strong sell-off from the 52w highs on heavy vol (upthrust reversal)
+    UpThrustBarReject, // hod_dist.abs() > 3 AND lod_dist.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 2 — wick high then closed near LOD on heavy vol (textbook upthrust bar)
+    DownThrustBarReject, // lod_dist.abs() > 3 AND hod_dist.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 2 — wick low then closed near HOD on heavy vol (textbook spring bar)
+    ExhaustionTopWideRange, // year_high_pct > -5 AND hod_dist.abs() > 5 AND lod_dist.abs() < 0.5 AND change_pct > 5 AND rel_volume >= 3 — extreme range close-at-HOD into prior high (exhaustion top candidate)
+    ExhaustionBottomWideRange, // year_low_pct < 5 AND lod_dist.abs() > 5 AND hod_dist.abs() < 0.5 AND change_pct < -5 AND rel_volume >= 3 — extreme range close-at-LOD into prior low (exhaustion bottom candidate)
+    UpTrendDayWideRange, // hod_dist.abs() < 0.3 AND lod_dist.abs() > 5 AND change_pct > 3 AND rel_volume >= 2 — strong trend up with wide range; close at HOD on heavy vol (continuation buyers)
+    DownTrendDayWideRange, // lod_dist.abs() < 0.3 AND hod_dist.abs() > 5 AND change_pct < -3 AND rel_volume >= 2 — strong trend down with wide range; close at LOD on heavy vol (continuation sellers)
+    SilentSpringNear52wLow, // year_low_pct < 5 AND change_pct.abs() < 0.5 AND rel_volume < 0.5 AND hod_dist + lod_dist < 1.5 — flat tight bar at 52w low on dry vol (silent spring waiting)
+    SilentUpThrustNear52wHigh, // year_high_pct > -5 AND change_pct.abs() < 0.5 AND rel_volume < 0.5 AND hod_dist + lod_dist < 1.5 — flat tight bar at 52w high on dry vol (silent upthrust waiting)
+    GapStrongDayOpenPivot, // gap_pct >= 1 AND gap_pct <= 3 AND change_pct > 4 AND rel_volume >= 2 — small-to-medium gap + strong day on heavy vol (gap held + accelerated)
+    GapWeakDayOpenPivot, // gap_pct <= -1 AND gap_pct >= -3 AND change_pct < -4 AND rel_volume >= 2 — small-to-medium gap-down + weak day on heavy vol (gap held + accelerated)
+    ConvictionBreakoutCombo, // year_high_pct >= 0 AND hod_dist.abs() < 0.5 AND change_pct > 3 AND rel_volume >= 2.5 — 52w-high broken + closed at HOD + strong day + heavy vol (highest-conviction breakout)
+    ConvictionBreakdownCombo, // year_low_pct <= 0 AND lod_dist.abs() < 0.5 AND change_pct < -3 AND rel_volume >= 2.5 — 52w-low broken + closed at LOD + weak day + heavy vol (highest-conviction breakdown)
+    PullbackInsideTrendUp, // year_high_pct between -20 and -5 AND change_pct between -1 and -0.2 AND rel_volume >= 0.7 AND rel_volume <= 1.3 — small pullback inside an uptrend with avg vol (orderly continuation entry)
+    PullbackInsideTrendDown, // year_low_pct between 5 and 20 AND change_pct between 0.2 and 1 AND rel_volume >= 0.7 AND rel_volume <= 1.3 — small bounce inside a downtrend with avg vol (orderly continuation entry)
     RangeContractionSqueezeHigh, // year_high_pct > -5 AND hod_dist + lod_dist < 1 AND rel_volume < 0.5 AND change_pct.abs() < 0.3 — extreme range contraction at 52w high (mega-squeeze coil)
-    RangeContractionSqueezeLow,  // year_low_pct < 5 AND hod_dist + lod_dist < 1 AND rel_volume < 0.5 AND change_pct.abs() < 0.3 — extreme range contraction at 52w low (mega-squeeze coil)
-    RangeExpansionAtTopOnVol,    // year_high_pct > -5 AND hod_dist + lod_dist > 6 AND rel_volume >= 2 AND change_pct.abs() < 0.5 — wide-range churn at 52w high with no net move on heavy vol (distribution at top)
+    RangeContractionSqueezeLow, // year_low_pct < 5 AND hod_dist + lod_dist < 1 AND rel_volume < 0.5 AND change_pct.abs() < 0.3 — extreme range contraction at 52w low (mega-squeeze coil)
+    RangeExpansionAtTopOnVol, // year_high_pct > -5 AND hod_dist + lod_dist > 6 AND rel_volume >= 2 AND change_pct.abs() < 0.5 — wide-range churn at 52w high with no net move on heavy vol (distribution at top)
     RangeExpansionAtBottomOnVol, // year_low_pct < 5 AND hod_dist + lod_dist > 6 AND rel_volume >= 2 AND change_pct.abs() < 0.5 — wide-range churn at 52w low with no net move on heavy vol (accumulation at bottom)
-    GapInsideRangeBalanced,      // gap_pct.abs() < 1 AND hod_dist + lod_dist < 2 AND change_pct.abs() < 0.5 — flat gap + tight range + flat day (multi-day balance candidate)
-    GapInsideRangeImpulse,       // gap_pct.abs() < 1 AND hod_dist + lod_dist > 4 AND change_pct.abs() > 2 AND rel_volume >= 1.5 — flat gap but wide impulsive day on heavy vol (intraday breakout from balance)
-    OneWickCloseAtMid,           // hod_dist.abs() > 2 AND lod_dist.abs() < 0.5 AND change_pct.abs() < 0.5 — long upper wick but closed near LOD flat (rejection from upper extreme)
-    OneWickCloseAtMidDown,       // lod_dist.abs() > 2 AND hod_dist.abs() < 0.5 AND change_pct.abs() < 0.5 — long lower wick but closed near HOD flat (rejection from lower extreme)
-    UpperWickGreenDayConfirm,    // hod_dist.abs() > 2 AND lod_dist.abs() < 0.5 AND change_pct > 1 — long upper wick + closed green day (failed reversal; trend continuation)
-    LowerWickRedDayConfirm,      // lod_dist.abs() > 2 AND hod_dist.abs() < 0.5 AND change_pct < -1 — long lower wick + closed red day (failed reversal; trend continuation)
-    InsideBarTightAtMid,         // hod_dist + lod_dist < 1 AND change_pct.abs() < 0.2 AND rel_volume < 0.8 — extremely tight inside bar at mid (NR4 / NR7 silent compression)
-    OutsideBarVolumeBoth,        // hod_dist.abs() > 3 AND lod_dist.abs() > 3 AND rel_volume >= 2 AND change_pct.abs() < 0.5 — outside-bar both extremes touched on heavy vol with no net move (battle for direction)
-    LeadingUpDayLightVol,        // change_pct > 2 AND rel_volume < 0.7 AND hod_dist.abs() < 0.5 — strong up close on light volume (leadership without participation; suspect quality)
-    LeadingDownDayLightVol,      // change_pct < -2 AND rel_volume < 0.7 AND lod_dist.abs() < 0.5 — strong down close on light volume (leadership without participation; suspect quality)
-    SmallChangeOnVolNearHigh,    // year_high_pct > -3 AND change_pct.abs() between 0.5 and 1.5 AND rel_volume >= 1.5 — modest move at 52w high on above-avg vol (top consolidation / distribution prep)
-    SmallChangeOnVolNearLow,     // year_low_pct < 3 AND change_pct.abs() between 0.5 and 1.5 AND rel_volume >= 1.5 — modest move at 52w low on above-avg vol (bottom consolidation / accumulation prep)
-    BigGapBigVolBigDay,          // gap_pct.abs() > 3 AND change_pct.abs() > 5 AND rel_volume >= 3 — extreme gap + extreme day + extreme vol (all-in conviction trade)
-    BigGapNoFollowThrough,       // gap_pct.abs() > 3 AND change_pct.abs() < 1 AND rel_volume < 1 — extreme gap + flat day + dry vol (failed positioning; no follow-through)
-    ConfluenceLongSetup,         // gap_pct between -0.5 and 0.5 AND year_low_pct between 5 and 15 AND change_pct between 0.5 and 1.5 AND rel_volume >= 1.2 — flat-open + above 52w low + minor green move + above-avg vol (confluence long setup)
-    ConfluenceShortSetup,        // gap_pct between -0.5 and 0.5 AND year_high_pct between -15 and -5 AND change_pct between -1.5 and -0.5 AND rel_volume >= 1.2 — flat-open + below 52w high + minor red move + above-avg vol (confluence short setup)
-    NoExtremeDay,                // year_high_pct < -10 AND year_high_pct > -40 AND year_low_pct > 10 AND year_low_pct < 40 AND change_pct.abs() < 0.5 — middle-of-range flat day (no extreme positioning; no edge)
-    AcceleratingUpTrend,         // change_pct > 1 AND day_pct > 0 AND year_high_pct > -5 AND rel_volume > 1 — pushing harder + at 52w high + above-avg vol (accelerating uptrend)
-    AcceleratingDownTrend,       // change_pct < -1 AND day_pct < 0 AND year_low_pct < 5 AND rel_volume > 1 — pushing harder + at 52w low + above-avg vol (accelerating downtrend)
-    DivergencePushFromTop,       // year_high_pct > -3 AND change_pct < -1 AND rel_volume < 0.8 — touched 52w high but closed red on light vol (divergence reject from top)
-    DivergencePushFromBottom,    // year_low_pct < 3 AND change_pct > 1 AND rel_volume < 0.8 — touched 52w low but closed green on light vol (divergence reject from bottom)
-    PriceFlatVolHotAboveMid,     // hod_dist + lod_dist < 2 AND day_pct > 0 AND rel_volume >= 1.5 AND change_pct.abs() < 0.3 — flat price + above-mid + heavy vol (silent accumulation distribution)
-    PriceFlatVolHotBelowMid,     // hod_dist + lod_dist < 2 AND day_pct < 0 AND rel_volume >= 1.5 AND change_pct.abs() < 0.3 — flat price + below-mid + heavy vol (silent distribution)
-    SmallChangeOnVolMid,         // year_high_pct between -50 and -20 AND year_low_pct between 20 and 50 AND change_pct.abs() between 0.5 and 1.5 AND rel_volume >= 1.5 — modest move at mid range on heavy vol (mid-range positioning shift)
-    HotRollingVolGap,            // gap_pct.abs() > 1.5 AND change_pct.abs() > 1.5 AND rel_volume >= 2 — material gap + day move + heavy vol (institutional positioning + execution)
-    SilentDriftGap,              // gap_pct.abs() > 1 AND change_pct.abs() < 0.3 AND rel_volume < 0.7 — material gap but flat day on dry vol (silent overnight repositioning; no daytime conviction)
-    UpDayOnDryVolNear52wHigh,    // year_high_pct > -10 AND change_pct > 1 AND rel_volume < 0.7 — push near 52w high on dry vol (suspect breakout candidate)
-    DownDayOnDryVolNear52wLow,   // year_low_pct < 10 AND change_pct < -1 AND rel_volume < 0.7 — push near 52w low on dry vol (suspect breakdown candidate)
-    UpDayOnHotVolNear52wHigh,    // year_high_pct > -10 AND change_pct > 1 AND rel_volume >= 2 — push near 52w high on heavy vol (high-quality breakout candidate)
-    DownDayOnHotVolNear52wLow,   // year_low_pct < 10 AND change_pct < -1 AND rel_volume >= 2 — push near 52w low on heavy vol (high-quality breakdown candidate)
-    NarrowDayDryVolMid,          // hod_dist + lod_dist < 1.5 AND change_pct.abs() < 0.3 AND rel_volume < 0.5 AND year_high_pct between -30 and -15 AND year_low_pct between 15 and 30 — silent narrow day in mid-zone (coiled rest day)
-    WideDayHotVolMid,            // hod_dist + lod_dist > 5 AND rel_volume >= 2 AND year_high_pct between -30 and -15 AND year_low_pct between 15 and 30 — wide-range churn in mid-zone on heavy vol (rotation breakout candidate)
-    HotVolAtMidNoMove,           // year_high_pct between -50 and -20 AND year_low_pct between 20 and 50 AND change_pct.abs() < 0.3 AND rel_volume >= 1.5 — heavy vol at mid range with no net move (silent positioning shift)
-    DryVolAtMidNoMove,           // year_high_pct between -50 and -20 AND year_low_pct between 20 and 50 AND change_pct.abs() < 0.3 AND rel_volume < 0.5 — dry vol at mid range with no net move (true equilibrium)
-    BigChangeTinyRangeUp,        // change_pct > 2 AND hod_dist + lod_dist < 1 AND rel_volume >= 1.5 — strong up close on tight range (all-the-way trend bar; impressive efficiency)
-    BigChangeTinyRangeDown,      // change_pct < -2 AND hod_dist + lod_dist < 1 AND rel_volume >= 1.5 — strong down close on tight range (all-the-way trend bar; impressive efficiency)
-    TinyChangeWideRangeOnVol,    // hod_dist + lod_dist > 5 AND change_pct.abs() < 0.5 AND rel_volume >= 2 — wide-range no-net-move on heavy vol (battle bar; reversal candidate)
+    GapInsideRangeBalanced, // gap_pct.abs() < 1 AND hod_dist + lod_dist < 2 AND change_pct.abs() < 0.5 — flat gap + tight range + flat day (multi-day balance candidate)
+    GapInsideRangeImpulse, // gap_pct.abs() < 1 AND hod_dist + lod_dist > 4 AND change_pct.abs() > 2 AND rel_volume >= 1.5 — flat gap but wide impulsive day on heavy vol (intraday breakout from balance)
+    OneWickCloseAtMid, // hod_dist.abs() > 2 AND lod_dist.abs() < 0.5 AND change_pct.abs() < 0.5 — long upper wick but closed near LOD flat (rejection from upper extreme)
+    OneWickCloseAtMidDown, // lod_dist.abs() > 2 AND hod_dist.abs() < 0.5 AND change_pct.abs() < 0.5 — long lower wick but closed near HOD flat (rejection from lower extreme)
+    UpperWickGreenDayConfirm, // hod_dist.abs() > 2 AND lod_dist.abs() < 0.5 AND change_pct > 1 — long upper wick + closed green day (failed reversal; trend continuation)
+    LowerWickRedDayConfirm, // lod_dist.abs() > 2 AND hod_dist.abs() < 0.5 AND change_pct < -1 — long lower wick + closed red day (failed reversal; trend continuation)
+    InsideBarTightAtMid, // hod_dist + lod_dist < 1 AND change_pct.abs() < 0.2 AND rel_volume < 0.8 — extremely tight inside bar at mid (NR4 / NR7 silent compression)
+    OutsideBarVolumeBoth, // hod_dist.abs() > 3 AND lod_dist.abs() > 3 AND rel_volume >= 2 AND change_pct.abs() < 0.5 — outside-bar both extremes touched on heavy vol with no net move (battle for direction)
+    LeadingUpDayLightVol, // change_pct > 2 AND rel_volume < 0.7 AND hod_dist.abs() < 0.5 — strong up close on light volume (leadership without participation; suspect quality)
+    LeadingDownDayLightVol, // change_pct < -2 AND rel_volume < 0.7 AND lod_dist.abs() < 0.5 — strong down close on light volume (leadership without participation; suspect quality)
+    SmallChangeOnVolNearHigh, // year_high_pct > -3 AND change_pct.abs() between 0.5 and 1.5 AND rel_volume >= 1.5 — modest move at 52w high on above-avg vol (top consolidation / distribution prep)
+    SmallChangeOnVolNearLow, // year_low_pct < 3 AND change_pct.abs() between 0.5 and 1.5 AND rel_volume >= 1.5 — modest move at 52w low on above-avg vol (bottom consolidation / accumulation prep)
+    BigGapBigVolBigDay, // gap_pct.abs() > 3 AND change_pct.abs() > 5 AND rel_volume >= 3 — extreme gap + extreme day + extreme vol (all-in conviction trade)
+    BigGapNoFollowThrough, // gap_pct.abs() > 3 AND change_pct.abs() < 1 AND rel_volume < 1 — extreme gap + flat day + dry vol (failed positioning; no follow-through)
+    ConfluenceLongSetup, // gap_pct between -0.5 and 0.5 AND year_low_pct between 5 and 15 AND change_pct between 0.5 and 1.5 AND rel_volume >= 1.2 — flat-open + above 52w low + minor green move + above-avg vol (confluence long setup)
+    ConfluenceShortSetup, // gap_pct between -0.5 and 0.5 AND year_high_pct between -15 and -5 AND change_pct between -1.5 and -0.5 AND rel_volume >= 1.2 — flat-open + below 52w high + minor red move + above-avg vol (confluence short setup)
+    NoExtremeDay, // year_high_pct < -10 AND year_high_pct > -40 AND year_low_pct > 10 AND year_low_pct < 40 AND change_pct.abs() < 0.5 — middle-of-range flat day (no extreme positioning; no edge)
+    AcceleratingUpTrend, // change_pct > 1 AND day_pct > 0 AND year_high_pct > -5 AND rel_volume > 1 — pushing harder + at 52w high + above-avg vol (accelerating uptrend)
+    AcceleratingDownTrend, // change_pct < -1 AND day_pct < 0 AND year_low_pct < 5 AND rel_volume > 1 — pushing harder + at 52w low + above-avg vol (accelerating downtrend)
+    DivergencePushFromTop, // year_high_pct > -3 AND change_pct < -1 AND rel_volume < 0.8 — touched 52w high but closed red on light vol (divergence reject from top)
+    DivergencePushFromBottom, // year_low_pct < 3 AND change_pct > 1 AND rel_volume < 0.8 — touched 52w low but closed green on light vol (divergence reject from bottom)
+    PriceFlatVolHotAboveMid, // hod_dist + lod_dist < 2 AND day_pct > 0 AND rel_volume >= 1.5 AND change_pct.abs() < 0.3 — flat price + above-mid + heavy vol (silent accumulation distribution)
+    PriceFlatVolHotBelowMid, // hod_dist + lod_dist < 2 AND day_pct < 0 AND rel_volume >= 1.5 AND change_pct.abs() < 0.3 — flat price + below-mid + heavy vol (silent distribution)
+    SmallChangeOnVolMid, // year_high_pct between -50 and -20 AND year_low_pct between 20 and 50 AND change_pct.abs() between 0.5 and 1.5 AND rel_volume >= 1.5 — modest move at mid range on heavy vol (mid-range positioning shift)
+    HotRollingVolGap, // gap_pct.abs() > 1.5 AND change_pct.abs() > 1.5 AND rel_volume >= 2 — material gap + day move + heavy vol (institutional positioning + execution)
+    SilentDriftGap, // gap_pct.abs() > 1 AND change_pct.abs() < 0.3 AND rel_volume < 0.7 — material gap but flat day on dry vol (silent overnight repositioning; no daytime conviction)
+    UpDayOnDryVolNear52wHigh, // year_high_pct > -10 AND change_pct > 1 AND rel_volume < 0.7 — push near 52w high on dry vol (suspect breakout candidate)
+    DownDayOnDryVolNear52wLow, // year_low_pct < 10 AND change_pct < -1 AND rel_volume < 0.7 — push near 52w low on dry vol (suspect breakdown candidate)
+    UpDayOnHotVolNear52wHigh, // year_high_pct > -10 AND change_pct > 1 AND rel_volume >= 2 — push near 52w high on heavy vol (high-quality breakout candidate)
+    DownDayOnHotVolNear52wLow, // year_low_pct < 10 AND change_pct < -1 AND rel_volume >= 2 — push near 52w low on heavy vol (high-quality breakdown candidate)
+    NarrowDayDryVolMid, // hod_dist + lod_dist < 1.5 AND change_pct.abs() < 0.3 AND rel_volume < 0.5 AND year_high_pct between -30 and -15 AND year_low_pct between 15 and 30 — silent narrow day in mid-zone (coiled rest day)
+    WideDayHotVolMid, // hod_dist + lod_dist > 5 AND rel_volume >= 2 AND year_high_pct between -30 and -15 AND year_low_pct between 15 and 30 — wide-range churn in mid-zone on heavy vol (rotation breakout candidate)
+    HotVolAtMidNoMove, // year_high_pct between -50 and -20 AND year_low_pct between 20 and 50 AND change_pct.abs() < 0.3 AND rel_volume >= 1.5 — heavy vol at mid range with no net move (silent positioning shift)
+    DryVolAtMidNoMove, // year_high_pct between -50 and -20 AND year_low_pct between 20 and 50 AND change_pct.abs() < 0.3 AND rel_volume < 0.5 — dry vol at mid range with no net move (true equilibrium)
+    BigChangeTinyRangeUp, // change_pct > 2 AND hod_dist + lod_dist < 1 AND rel_volume >= 1.5 — strong up close on tight range (all-the-way trend bar; impressive efficiency)
+    BigChangeTinyRangeDown, // change_pct < -2 AND hod_dist + lod_dist < 1 AND rel_volume >= 1.5 — strong down close on tight range (all-the-way trend bar; impressive efficiency)
+    TinyChangeWideRangeOnVol, // hod_dist + lod_dist > 5 AND change_pct.abs() < 0.5 AND rel_volume >= 2 — wide-range no-net-move on heavy vol (battle bar; reversal candidate)
     TinyChangeWideRangeOnDryVol, // hod_dist + lod_dist > 5 AND change_pct.abs() < 0.5 AND rel_volume < 0.7 — wide-range no-net-move on light vol (failed setup; both sides absent)
-    LargeGapModerateMoveHotVol,  // gap_pct.abs() > 3 AND change_pct.abs() between 1.5 and 3 AND rel_volume >= 2 — large gap + moderate day on heavy vol (institutional execution post-gap)
-    SmallGapBigMoveHotVol,       // gap_pct.abs() < 0.5 AND change_pct.abs() > 3 AND rel_volume >= 2 — flat gap + big day on heavy vol (intraday-driven trend; no overnight positioning)
-    NoVolTrendUp,                // change_pct > 1 AND day_pct > 0 AND rel_volume < 0.4 AND hod_dist.abs() < 0.5 — up close on extreme dry vol (trend without participation; vacuum risk)
-    NoVolTrendDown,              // change_pct < -1 AND day_pct < 0 AND rel_volume < 0.4 AND lod_dist.abs() < 0.5 — down close on extreme dry vol (trend without participation; vacuum risk)
-    ChurnAtTopDryVol,            // year_high_pct > -3 AND change_pct.abs() < 0.3 AND rel_volume < 0.6 — pinned near 52w high on dry vol (consolidation at highs; bullish setup)
-    ChurnAtBottomDryVol,         // year_low_pct < 3 AND change_pct.abs() < 0.3 AND rel_volume < 0.6 — pinned near 52w low on dry vol (consolidation at lows; potential capitulation done)
-    HugeGapFlatChange,           // gap_pct.abs() > 5 AND change_pct.abs() < 0.5 AND rel_volume < 1 — huge overnight gap but flat close on avg vol (frozen open; gap-fill candidate)
-    NoGapHugeChange,             // gap_pct.abs() < 0.3 AND change_pct.abs() > 5 AND rel_volume >= 1.5 — no overnight gap but huge intraday change on hot vol (intraday-only catalyst)
-    ExtremeVolFlatGapFlatDay,    // rel_volume >= 3 AND gap_pct.abs() < 0.3 AND change_pct.abs() < 1 — extreme vol with flat gap and small move (heavy churn no direction; potential trap)
-    IlliquidBigGapFlatDay,       // rel_volume < 0.4 AND gap_pct.abs() > 3 AND change_pct.abs() < 1 — big gap on dry vol with flat day (illiquid gap; gap-fill risk)
-    OrganicUpDayCloseAtHod,      // gap_pct.abs() < 0.5 AND hod_dist.abs() < 0.3 AND day_pct > 2 AND rel_volume between 0.7 and 1.3 — flat open + close at HOD + strong day on avg vol (organic up-day; no overnight noise)
-    OrganicDownDayCloseAtLod,    // gap_pct.abs() < 0.5 AND lod_dist.abs() < 0.3 AND day_pct < -2 AND rel_volume between 0.7 and 1.3 — flat open + close at LOD + weak day on avg vol (organic down-day)
-    StrongDayDryVolUp,           // change_pct > 3 AND day_pct > 2 AND rel_volume < 0.5 — strong up day on dry vol (no participation; suspect-quality rally)
-    StrongDayDryVolDown,         // change_pct < -3 AND day_pct < -2 AND rel_volume < 0.5 — strong down day on dry vol (no participation; suspect-quality flush)
-    TightCoilAtMidRange,         // hod_dist 0.5-1.5 AND lod_dist 0.5-1.5 AND change_pct.abs() < 0.5 AND rel_volume < 0.7 — tight coil at center of intraday range on dry vol (pre-breakout setup)
-    WideOutsideRangeDryVol,      // hod_dist + lod_dist > 6 AND rel_volume < 0.6 — wide outside range on dry vol (one-sided liquidation; no follow-through)
-    GapHeldAndExtendedUp,        // gap_pct > 1 AND day_pct > 1 AND rel_volume >= 1.5 — gap up + held + extended intraday on vol (continuation buyers)
-    GapHeldAndExtendedDown,      // gap_pct < -1 AND day_pct < -1 AND rel_volume >= 1.5 — gap down + held + extended intraday on vol (continuation sellers)
-    Pct52wHighBreakoutCloseAtHod,  // year_high_pct > 0 AND day_pct > 1 AND hod_dist.abs() < 0.5 AND rel_volume >= 2 — broke above 52w high + close at HOD + hot vol (textbook breakout)
-    Pct52wLowBreakdownCloseAtLod,  // year_low_pct < 0 AND day_pct < -1 AND lod_dist.abs() < 0.5 AND rel_volume >= 2 — broke below 52w low + close at LOD + hot vol (textbook breakdown)
-    Pct52wMidHotVolFlat,           // year_high_pct between -55 and -35 AND year_low_pct between 35 and 55 AND change_pct.abs() < 1 AND rel_volume >= 2 — middle of 52w range with hot vol but flat change (decision-point churn)
-    Pct52wMidDryVolFlat,           // year_high_pct between -55 and -35 AND year_low_pct between 35 and 55 AND change_pct.abs() < 1 AND rel_volume < 0.5 — middle of 52w range with dry vol (forgotten consolidation)
-    VolSpikeNoTrend,               // rel_volume >= 5 AND change_pct.abs() < 0.5 — massive 5×+ vol spike with no net change (climax/exhaustion candidate; true churn)
-    VolSpikeOnTrend,               // rel_volume >= 5 AND change_pct.abs() > 3 — massive 5×+ vol spike with big change (institutional execution; trend day)
-    TightCoilAtHighDryVol,         // hod_dist.abs() < 0.3 AND lod_dist.abs() < 1 AND change_pct.abs() < 0.5 AND rel_volume < 0.7 AND year_high_pct > -5 — closed at HOD on tight range + dry vol + near 52w high (coil at highs)
-    TightCoilAtLowDryVol,          // lod_dist.abs() < 0.3 AND hod_dist.abs() < 1 AND change_pct.abs() < 0.5 AND rel_volume < 0.7 AND year_low_pct < 5 — closed at LOD on tight range + dry vol + near 52w low (coil at lows)
-    OrderlyTrendAtHighs,           // change_pct > 0 AND day_pct > 0 AND year_high_pct > -1 AND rel_volume between 0.7 and 1.5 — at 52w high with green intraday + green day on normal vol (orderly trend at highs)
-    OrderlyTrendAtLows,            // change_pct < 0 AND day_pct < 0 AND year_low_pct < 1 AND rel_volume between 0.7 and 1.5 — at 52w low with red intraday + red day on normal vol (orderly downtrend at lows)
-    HotVolMidRangeChurn,           // rel_volume >= 3 AND hod_dist.abs() > 0.5 AND lod_dist.abs() > 0.5 — hot vol but close not at HOD or LOD (mid-range churn; no commitment)
-    DryVolAtExtremeClose,          // rel_volume < 0.4 AND (hod_dist.abs() < 0.3 OR lod_dist.abs() < 0.3) — dry vol but close at one extreme (unconfirmed extreme; thin tape edge)
-    DayChangeMismatch,             // change_pct * day_pct < 0 AND change_pct.abs() > 1 AND day_pct.abs() > 1 — change_pct and day_pct opposite signs both >1 (full intraday reversal vs overnight)
-    DayChangeAlignedBig,           // change_pct * day_pct > 0 AND change_pct.abs() > 3 AND day_pct.abs() > 3 AND rel_volume >= 1.5 — change_pct and day_pct same-sign big on hot vol (full trend day)
-    HugeRangeHotVol,               // hod_dist + lod_dist > 8 AND rel_volume >= 3 — massive intraday range on hot vol (volatility expansion; chaos)
-    HugeRangeDryVol,               // hod_dist + lod_dist > 8 AND rel_volume < 0.5 — massive intraday range on dry vol (illiquid swing; one-sided liquidation)
-    Pct52wLowHotVolUp,             // year_low_pct < 10 AND change_pct > 3 AND rel_volume >= 2 — near 52w low + big up move + hot vol (basing-to-up; bounce / accumulation candidate)
-    Pct52wHighHotVolDown,          // year_high_pct > -10 AND change_pct < -3 AND rel_volume >= 2 — near 52w high + big down move + hot vol (distribution / topping candidate)
-    GapHeldNoExtension,            // gap_pct.abs() > 1 AND day_pct.abs() < 0.3 AND rel_volume between 0.7 and 1.5 — gap (up or down) + close ≈ open + avg vol (held the gap, no extension)
-    GapPartialFade,                // gap_pct.abs() > 2 AND change_pct * gap_pct > 0 AND change_pct.abs() < gap_pct.abs()/2 AND rel_volume >= 1.2 — gap kept direction but faded > half its move (partial fade)
-    YearHighIntradayWeak,          // year_high_pct > -1 AND day_pct < -1 AND rel_volume >= 1.5 — at 52w high but intraday weak (close < open) on hot vol (rejection from high; failed continuation)
-    YearLowIntradayStrong,         // year_low_pct < 1 AND day_pct > 1 AND rel_volume >= 1.5 — at 52w low but intraday strong (close > open) on hot vol (reclaim from low; failed continuation down)
-    WeakHandsAtHighs,              // year_high_pct > -2 AND change_pct < -0.5 AND day_pct < -0.3 AND rel_volume between 1 and 2 — at 52w high but red day on slightly elevated vol (early weakness; weak hands)
-    StrongHandsAtLows,              // year_low_pct < 2 AND change_pct > 0.5 AND day_pct > 0.3 AND rel_volume between 1 and 2 — at 52w low but green day on slightly elevated vol (early strength; strong hands)
-    NarrowRangeHotVolSqueeze,       // hod_dist + lod_dist < 1 AND rel_volume >= 3 — narrow range + extreme vol (heavy absorption inside tight range; coiling under pressure)
-    WideRangeDryVolDrift,           // hod_dist + lod_dist > 4 AND rel_volume < 0.5 AND change_pct.abs() < 1 — wide range + dry vol + flat change (low-participation swing; hidden fade)
-    LeadershipTrendDay,             // year_high_pct > -5 AND change_pct > 2 AND day_pct > 1 AND hod_dist.abs() < 1 AND rel_volume >= 1.5 — near 52w high + big up + green intraday + close near HOD on vol (leadership trend day)
-    WorstActorFlushDay,             // year_low_pct < 5 AND change_pct < -2 AND day_pct < -1 AND lod_dist.abs() < 1 AND rel_volume >= 1.5 — near 52w low + big down + red intraday + close near LOD on vol (worst-actor flush)
-    GapUpAtYearLow,                 // gap_pct > 2 AND year_low_pct < 5 AND rel_volume >= 1.5 — gap up while still near 52w low on vol (oversold squeeze; mean-reversion buy candidate)
-    GapDownAtYearHigh,              // gap_pct < -2 AND year_high_pct > -5 AND rel_volume >= 1.5 — gap down while still near 52w high on vol (sudden distribution; risk-off topping candidate)
-    BigUpMidRangeClose,             // change_pct > 3 AND hod_dist.abs() > 1.5 AND lod_dist.abs() > 1.5 AND rel_volume >= 1.5 — big up move but close mid-range on vol (failed to hold extremes; topping action)
-    BigDownMidRangeClose,           // change_pct < -3 AND hod_dist.abs() > 1.5 AND lod_dist.abs() > 1.5 AND rel_volume >= 1.5 — big down move but close mid-range on vol (failed flush; basing action)
-    HodCloseHotVolFlat,             // hod_dist.abs() < 0.5 AND rel_volume >= 2 AND change_pct.abs() < 0.5 — close at HOD on hot vol but flat change (absorption at highs; climax buy candidate)
-    LodCloseHotVolFlat,             // lod_dist.abs() < 0.5 AND rel_volume >= 2 AND change_pct.abs() < 0.5 — close at LOD on hot vol but flat change (absorption at lows; climax sell candidate)
-    RisingWedgeCoil,                // hod_dist + lod_dist < 2 AND change_pct > 0 AND day_pct > 0 AND rel_volume < 0.8 — narrow range + green change + green intraday + dry vol (rising wedge consolidation)
-    FallingWedgeCoil,               // hod_dist + lod_dist < 2 AND change_pct < 0 AND day_pct < 0 AND rel_volume < 0.8 — narrow range + red change + red intraday + dry vol (falling wedge consolidation)
-    BigGapAndExtend,                // gap_pct.abs() > 3 AND change_pct * gap_pct > 0 AND change_pct.abs() > gap_pct.abs() AND rel_volume >= 1.5 — big gap + intraday extends beyond gap on vol (gap-and-extend)
-    BigGapAndReverse,               // gap_pct.abs() > 3 AND change_pct * gap_pct < 0 AND change_pct.abs() > gap_pct.abs() AND rel_volume >= 1.5 — big gap + intraday reverses + close past prior close on vol (full gap fade and reverse)
-    EfficientMoverHotVol,           // rel_volume >= 1.5 AND change_pct.abs() >= rel_volume * 1.5 — change-per-vol elevated (efficient mover; clean trend day)
-    InefficientChurnHotVol,         // rel_volume >= 2 AND change_pct.abs() < rel_volume * 0.3 — hot vol but tiny change relative to vol (inefficient churn; failed trend or absorption)
-    GapUpAtMidRange,                // gap_pct > 1 AND year_high_pct between -50 and -20 AND year_low_pct between 20 and 50 AND rel_volume >= 1.5 — gap up while in middle of 52w range on vol (breakout from consolidation)
-    GapDownAtMidRange,              // gap_pct < -1 AND year_high_pct between -50 and -20 AND year_low_pct between 20 and 50 AND rel_volume >= 1.5 — gap down while in middle of 52w range on vol (breakdown from consolidation)
-    BattleBarHotVol,                // hod_dist + lod_dist > 3 AND change_pct.abs() < 0.3 AND rel_volume >= 2.5 — wide intraday range + flat change + hot vol (battle bar with extreme participation)
-    IlliquidSwingDryVol,            // hod_dist + lod_dist > 3 AND change_pct.abs() < 0.3 AND rel_volume < 0.5 — wide intraday range + flat change + dry vol (illiquid swing both directions)
-    GapDownIntradayReclaimUp,       // gap_pct < -1 AND hod_dist.abs() < 0.5 AND change_pct > 0.5 — gap down + close at HOD + close above prior (full intraday reclaim + extension)
-    GapUpIntradayRejectDown,        // gap_pct > 1 AND lod_dist.abs() < 0.5 AND change_pct < -0.5 — gap up + close at LOD + close below prior (full intraday rejection)
-    HotVolModerateChangeFlatDay,    // rel_volume >= 2 AND change_pct.abs() between 1 and 2 AND day_pct.abs() < 0.5 — hot vol + moderate change + flat intraday (gap-driven move, no continuation)
-    DryVolModerateChangeFlatDay,    // rel_volume < 0.6 AND change_pct.abs() between 1 and 2 AND day_pct.abs() < 0.5 — dry vol + moderate change + flat intraday (sleepy gap-held move)
-    WideRangeAtYearHigh,            // hod_dist + lod_dist > 5 AND year_high_pct > -5 AND rel_volume >= 1.5 — wide intraday range while at 52w high on vol (volatility at the top; potential top)
-    WideRangeAtYearLow,             // hod_dist + lod_dist > 5 AND year_low_pct < 5 AND rel_volume >= 1.5 — wide intraday range while at 52w low on vol (volatility at the bottom; potential bottom)
-    HotVolGapHeldAndExtended,       // rel_volume >= 2 AND gap_pct.abs() > 2 AND change_pct * gap_pct > 0 AND change_pct.abs() >= gap_pct.abs() * 0.8 — hot vol + big gap + held + ≥80% extension (institutional gap-hold-and-go)
-    HotVolGapFadedDeep,             // rel_volume >= 2 AND gap_pct.abs() > 2 AND change_pct * gap_pct < 0 AND change_pct.abs() >= gap_pct.abs() * 0.5 — hot vol + big gap + reversed ≥50% of gap (institutional gap-fade with conviction)
-    TightRangeAtYearHigh,           // hod_dist + lod_dist < 1 AND year_high_pct > -3 AND rel_volume between 0.7 and 1.3 — tight range at 52w high on normal vol (consolidation at the top; bullish base)
-    TightRangeAtYearLow,            // hod_dist + lod_dist < 1 AND year_low_pct < 3 AND rel_volume between 0.7 and 1.3 — tight range at 52w low on normal vol (basing at the bottom; potential reversal)
-    BalancedMidWickHotVol,          // hod_dist between 0.3 and 1.5 AND lod_dist between 0.3 and 1.5 AND rel_volume >= 1.5 — balanced wicks in middle on hot vol (mid-range churn with participation)
-    BalancedMidWickDryVol,          // hod_dist between 0.3 and 1.5 AND lod_dist between 0.3 and 1.5 AND rel_volume < 0.6 — balanced wicks in middle on dry vol (sleepy mid-range)
-    GapUpHodCloseControlled,        // gap_pct > 0.5 AND hod_dist.abs() < 0.5 AND change_pct > 0 AND rel_volume between 0.7 and 1.5 — gap up + close at HOD + green close + normal vol (gap-and-hold; controlled trend)
-    GapDownLodCloseControlled,      // gap_pct < -0.5 AND lod_dist.abs() < 0.5 AND change_pct < 0 AND rel_volume between 0.7 and 1.5 — gap down + close at LOD + red close + normal vol (gap-and-hold; controlled decline)
-    AllGreenTightDay,               // change_pct > 0 AND day_pct > 0 AND gap_pct > 0 AND hod_dist + lod_dist < 2 — all green directions + tight range (strong-hands tight up day)
-    AllRedTightDay,                 // change_pct < 0 AND day_pct < 0 AND gap_pct < 0 AND hod_dist + lod_dist < 2 — all red directions + tight range (strong-sellers tight down day)
-    MicroRangeAtYearHigh,           // hod_dist.abs() < 0.3 AND lod_dist.abs() < 0.3 AND year_high_pct > -3 — micro range at 52w high (zero-range pin at top; topping or pre-breakout)
-    MicroRangeAtYearLow,            // hod_dist.abs() < 0.3 AND lod_dist.abs() < 0.3 AND year_low_pct < 3 — micro range at 52w low (zero-range pin at bottom; basing or pre-breakdown)
-    ConsolidationBreakUp,           // hod_dist + lod_dist > 3 AND year_high_pct between -20 and -5 AND change_pct > 1 AND rel_volume >= 2 — wide range + mid-upper 52w + green + hot vol (consolidation breaking up)
-    ConsolidationBreakDown,         // hod_dist + lod_dist > 3 AND year_low_pct between 5 and 20 AND change_pct < -1 AND rel_volume >= 2 — wide range + mid-lower 52w + red + hot vol (consolidation breaking down)
-    HotVolGapHeldFlatChange,        // rel_volume >= 2 AND gap_pct.abs() > 1 AND change_pct.abs() < 0.5 — hot vol + gap + flat change (gap held + heavy participation absorbing both sides)
-    DryVolGapHeldFlatChange,        // rel_volume < 0.5 AND gap_pct.abs() > 1 AND change_pct.abs() < 0.5 — dry vol + gap + flat change (gap held + no participation; thin tape)
-    AllDirectionsAlignedHotVolUp,   // rel_volume >= 3 AND change_pct > 0 AND day_pct > 0 AND gap_pct > 0 — extreme vol + all up directions (full directional bull bar; conviction long)
+    LargeGapModerateMoveHotVol, // gap_pct.abs() > 3 AND change_pct.abs() between 1.5 and 3 AND rel_volume >= 2 — large gap + moderate day on heavy vol (institutional execution post-gap)
+    SmallGapBigMoveHotVol, // gap_pct.abs() < 0.5 AND change_pct.abs() > 3 AND rel_volume >= 2 — flat gap + big day on heavy vol (intraday-driven trend; no overnight positioning)
+    NoVolTrendUp, // change_pct > 1 AND day_pct > 0 AND rel_volume < 0.4 AND hod_dist.abs() < 0.5 — up close on extreme dry vol (trend without participation; vacuum risk)
+    NoVolTrendDown, // change_pct < -1 AND day_pct < 0 AND rel_volume < 0.4 AND lod_dist.abs() < 0.5 — down close on extreme dry vol (trend without participation; vacuum risk)
+    ChurnAtTopDryVol, // year_high_pct > -3 AND change_pct.abs() < 0.3 AND rel_volume < 0.6 — pinned near 52w high on dry vol (consolidation at highs; bullish setup)
+    ChurnAtBottomDryVol, // year_low_pct < 3 AND change_pct.abs() < 0.3 AND rel_volume < 0.6 — pinned near 52w low on dry vol (consolidation at lows; potential capitulation done)
+    HugeGapFlatChange, // gap_pct.abs() > 5 AND change_pct.abs() < 0.5 AND rel_volume < 1 — huge overnight gap but flat close on avg vol (frozen open; gap-fill candidate)
+    NoGapHugeChange, // gap_pct.abs() < 0.3 AND change_pct.abs() > 5 AND rel_volume >= 1.5 — no overnight gap but huge intraday change on hot vol (intraday-only catalyst)
+    ExtremeVolFlatGapFlatDay, // rel_volume >= 3 AND gap_pct.abs() < 0.3 AND change_pct.abs() < 1 — extreme vol with flat gap and small move (heavy churn no direction; potential trap)
+    IlliquidBigGapFlatDay, // rel_volume < 0.4 AND gap_pct.abs() > 3 AND change_pct.abs() < 1 — big gap on dry vol with flat day (illiquid gap; gap-fill risk)
+    OrganicUpDayCloseAtHod, // gap_pct.abs() < 0.5 AND hod_dist.abs() < 0.3 AND day_pct > 2 AND rel_volume between 0.7 and 1.3 — flat open + close at HOD + strong day on avg vol (organic up-day; no overnight noise)
+    OrganicDownDayCloseAtLod, // gap_pct.abs() < 0.5 AND lod_dist.abs() < 0.3 AND day_pct < -2 AND rel_volume between 0.7 and 1.3 — flat open + close at LOD + weak day on avg vol (organic down-day)
+    StrongDayDryVolUp, // change_pct > 3 AND day_pct > 2 AND rel_volume < 0.5 — strong up day on dry vol (no participation; suspect-quality rally)
+    StrongDayDryVolDown, // change_pct < -3 AND day_pct < -2 AND rel_volume < 0.5 — strong down day on dry vol (no participation; suspect-quality flush)
+    TightCoilAtMidRange, // hod_dist 0.5-1.5 AND lod_dist 0.5-1.5 AND change_pct.abs() < 0.5 AND rel_volume < 0.7 — tight coil at center of intraday range on dry vol (pre-breakout setup)
+    WideOutsideRangeDryVol, // hod_dist + lod_dist > 6 AND rel_volume < 0.6 — wide outside range on dry vol (one-sided liquidation; no follow-through)
+    GapHeldAndExtendedUp, // gap_pct > 1 AND day_pct > 1 AND rel_volume >= 1.5 — gap up + held + extended intraday on vol (continuation buyers)
+    GapHeldAndExtendedDown, // gap_pct < -1 AND day_pct < -1 AND rel_volume >= 1.5 — gap down + held + extended intraday on vol (continuation sellers)
+    Pct52wHighBreakoutCloseAtHod, // year_high_pct > 0 AND day_pct > 1 AND hod_dist.abs() < 0.5 AND rel_volume >= 2 — broke above 52w high + close at HOD + hot vol (textbook breakout)
+    Pct52wLowBreakdownCloseAtLod, // year_low_pct < 0 AND day_pct < -1 AND lod_dist.abs() < 0.5 AND rel_volume >= 2 — broke below 52w low + close at LOD + hot vol (textbook breakdown)
+    Pct52wMidHotVolFlat, // year_high_pct between -55 and -35 AND year_low_pct between 35 and 55 AND change_pct.abs() < 1 AND rel_volume >= 2 — middle of 52w range with hot vol but flat change (decision-point churn)
+    Pct52wMidDryVolFlat, // year_high_pct between -55 and -35 AND year_low_pct between 35 and 55 AND change_pct.abs() < 1 AND rel_volume < 0.5 — middle of 52w range with dry vol (forgotten consolidation)
+    VolSpikeNoTrend, // rel_volume >= 5 AND change_pct.abs() < 0.5 — massive 5×+ vol spike with no net change (climax/exhaustion candidate; true churn)
+    VolSpikeOnTrend, // rel_volume >= 5 AND change_pct.abs() > 3 — massive 5×+ vol spike with big change (institutional execution; trend day)
+    TightCoilAtHighDryVol, // hod_dist.abs() < 0.3 AND lod_dist.abs() < 1 AND change_pct.abs() < 0.5 AND rel_volume < 0.7 AND year_high_pct > -5 — closed at HOD on tight range + dry vol + near 52w high (coil at highs)
+    TightCoilAtLowDryVol, // lod_dist.abs() < 0.3 AND hod_dist.abs() < 1 AND change_pct.abs() < 0.5 AND rel_volume < 0.7 AND year_low_pct < 5 — closed at LOD on tight range + dry vol + near 52w low (coil at lows)
+    OrderlyTrendAtHighs, // change_pct > 0 AND day_pct > 0 AND year_high_pct > -1 AND rel_volume between 0.7 and 1.5 — at 52w high with green intraday + green day on normal vol (orderly trend at highs)
+    OrderlyTrendAtLows, // change_pct < 0 AND day_pct < 0 AND year_low_pct < 1 AND rel_volume between 0.7 and 1.5 — at 52w low with red intraday + red day on normal vol (orderly downtrend at lows)
+    HotVolMidRangeChurn, // rel_volume >= 3 AND hod_dist.abs() > 0.5 AND lod_dist.abs() > 0.5 — hot vol but close not at HOD or LOD (mid-range churn; no commitment)
+    DryVolAtExtremeClose, // rel_volume < 0.4 AND (hod_dist.abs() < 0.3 OR lod_dist.abs() < 0.3) — dry vol but close at one extreme (unconfirmed extreme; thin tape edge)
+    DayChangeMismatch, // change_pct * day_pct < 0 AND change_pct.abs() > 1 AND day_pct.abs() > 1 — change_pct and day_pct opposite signs both >1 (full intraday reversal vs overnight)
+    DayChangeAlignedBig, // change_pct * day_pct > 0 AND change_pct.abs() > 3 AND day_pct.abs() > 3 AND rel_volume >= 1.5 — change_pct and day_pct same-sign big on hot vol (full trend day)
+    HugeRangeHotVol, // hod_dist + lod_dist > 8 AND rel_volume >= 3 — massive intraday range on hot vol (volatility expansion; chaos)
+    HugeRangeDryVol, // hod_dist + lod_dist > 8 AND rel_volume < 0.5 — massive intraday range on dry vol (illiquid swing; one-sided liquidation)
+    Pct52wLowHotVolUp, // year_low_pct < 10 AND change_pct > 3 AND rel_volume >= 2 — near 52w low + big up move + hot vol (basing-to-up; bounce / accumulation candidate)
+    Pct52wHighHotVolDown, // year_high_pct > -10 AND change_pct < -3 AND rel_volume >= 2 — near 52w high + big down move + hot vol (distribution / topping candidate)
+    GapHeldNoExtension, // gap_pct.abs() > 1 AND day_pct.abs() < 0.3 AND rel_volume between 0.7 and 1.5 — gap (up or down) + close ≈ open + avg vol (held the gap, no extension)
+    GapPartialFade, // gap_pct.abs() > 2 AND change_pct * gap_pct > 0 AND change_pct.abs() < gap_pct.abs()/2 AND rel_volume >= 1.2 — gap kept direction but faded > half its move (partial fade)
+    YearHighIntradayWeak, // year_high_pct > -1 AND day_pct < -1 AND rel_volume >= 1.5 — at 52w high but intraday weak (close < open) on hot vol (rejection from high; failed continuation)
+    YearLowIntradayStrong, // year_low_pct < 1 AND day_pct > 1 AND rel_volume >= 1.5 — at 52w low but intraday strong (close > open) on hot vol (reclaim from low; failed continuation down)
+    WeakHandsAtHighs, // year_high_pct > -2 AND change_pct < -0.5 AND day_pct < -0.3 AND rel_volume between 1 and 2 — at 52w high but red day on slightly elevated vol (early weakness; weak hands)
+    StrongHandsAtLows, // year_low_pct < 2 AND change_pct > 0.5 AND day_pct > 0.3 AND rel_volume between 1 and 2 — at 52w low but green day on slightly elevated vol (early strength; strong hands)
+    NarrowRangeHotVolSqueeze, // hod_dist + lod_dist < 1 AND rel_volume >= 3 — narrow range + extreme vol (heavy absorption inside tight range; coiling under pressure)
+    WideRangeDryVolDrift, // hod_dist + lod_dist > 4 AND rel_volume < 0.5 AND change_pct.abs() < 1 — wide range + dry vol + flat change (low-participation swing; hidden fade)
+    LeadershipTrendDay, // year_high_pct > -5 AND change_pct > 2 AND day_pct > 1 AND hod_dist.abs() < 1 AND rel_volume >= 1.5 — near 52w high + big up + green intraday + close near HOD on vol (leadership trend day)
+    WorstActorFlushDay, // year_low_pct < 5 AND change_pct < -2 AND day_pct < -1 AND lod_dist.abs() < 1 AND rel_volume >= 1.5 — near 52w low + big down + red intraday + close near LOD on vol (worst-actor flush)
+    GapUpAtYearLow, // gap_pct > 2 AND year_low_pct < 5 AND rel_volume >= 1.5 — gap up while still near 52w low on vol (oversold squeeze; mean-reversion buy candidate)
+    GapDownAtYearHigh, // gap_pct < -2 AND year_high_pct > -5 AND rel_volume >= 1.5 — gap down while still near 52w high on vol (sudden distribution; risk-off topping candidate)
+    BigUpMidRangeClose, // change_pct > 3 AND hod_dist.abs() > 1.5 AND lod_dist.abs() > 1.5 AND rel_volume >= 1.5 — big up move but close mid-range on vol (failed to hold extremes; topping action)
+    BigDownMidRangeClose, // change_pct < -3 AND hod_dist.abs() > 1.5 AND lod_dist.abs() > 1.5 AND rel_volume >= 1.5 — big down move but close mid-range on vol (failed flush; basing action)
+    HodCloseHotVolFlat, // hod_dist.abs() < 0.5 AND rel_volume >= 2 AND change_pct.abs() < 0.5 — close at HOD on hot vol but flat change (absorption at highs; climax buy candidate)
+    LodCloseHotVolFlat, // lod_dist.abs() < 0.5 AND rel_volume >= 2 AND change_pct.abs() < 0.5 — close at LOD on hot vol but flat change (absorption at lows; climax sell candidate)
+    RisingWedgeCoil, // hod_dist + lod_dist < 2 AND change_pct > 0 AND day_pct > 0 AND rel_volume < 0.8 — narrow range + green change + green intraday + dry vol (rising wedge consolidation)
+    FallingWedgeCoil, // hod_dist + lod_dist < 2 AND change_pct < 0 AND day_pct < 0 AND rel_volume < 0.8 — narrow range + red change + red intraday + dry vol (falling wedge consolidation)
+    BigGapAndExtend, // gap_pct.abs() > 3 AND change_pct * gap_pct > 0 AND change_pct.abs() > gap_pct.abs() AND rel_volume >= 1.5 — big gap + intraday extends beyond gap on vol (gap-and-extend)
+    BigGapAndReverse, // gap_pct.abs() > 3 AND change_pct * gap_pct < 0 AND change_pct.abs() > gap_pct.abs() AND rel_volume >= 1.5 — big gap + intraday reverses + close past prior close on vol (full gap fade and reverse)
+    EfficientMoverHotVol, // rel_volume >= 1.5 AND change_pct.abs() >= rel_volume * 1.5 — change-per-vol elevated (efficient mover; clean trend day)
+    InefficientChurnHotVol, // rel_volume >= 2 AND change_pct.abs() < rel_volume * 0.3 — hot vol but tiny change relative to vol (inefficient churn; failed trend or absorption)
+    GapUpAtMidRange, // gap_pct > 1 AND year_high_pct between -50 and -20 AND year_low_pct between 20 and 50 AND rel_volume >= 1.5 — gap up while in middle of 52w range on vol (breakout from consolidation)
+    GapDownAtMidRange, // gap_pct < -1 AND year_high_pct between -50 and -20 AND year_low_pct between 20 and 50 AND rel_volume >= 1.5 — gap down while in middle of 52w range on vol (breakdown from consolidation)
+    BattleBarHotVol, // hod_dist + lod_dist > 3 AND change_pct.abs() < 0.3 AND rel_volume >= 2.5 — wide intraday range + flat change + hot vol (battle bar with extreme participation)
+    IlliquidSwingDryVol, // hod_dist + lod_dist > 3 AND change_pct.abs() < 0.3 AND rel_volume < 0.5 — wide intraday range + flat change + dry vol (illiquid swing both directions)
+    GapDownIntradayReclaimUp, // gap_pct < -1 AND hod_dist.abs() < 0.5 AND change_pct > 0.5 — gap down + close at HOD + close above prior (full intraday reclaim + extension)
+    GapUpIntradayRejectDown, // gap_pct > 1 AND lod_dist.abs() < 0.5 AND change_pct < -0.5 — gap up + close at LOD + close below prior (full intraday rejection)
+    HotVolModerateChangeFlatDay, // rel_volume >= 2 AND change_pct.abs() between 1 and 2 AND day_pct.abs() < 0.5 — hot vol + moderate change + flat intraday (gap-driven move, no continuation)
+    DryVolModerateChangeFlatDay, // rel_volume < 0.6 AND change_pct.abs() between 1 and 2 AND day_pct.abs() < 0.5 — dry vol + moderate change + flat intraday (sleepy gap-held move)
+    WideRangeAtYearHigh, // hod_dist + lod_dist > 5 AND year_high_pct > -5 AND rel_volume >= 1.5 — wide intraday range while at 52w high on vol (volatility at the top; potential top)
+    WideRangeAtYearLow, // hod_dist + lod_dist > 5 AND year_low_pct < 5 AND rel_volume >= 1.5 — wide intraday range while at 52w low on vol (volatility at the bottom; potential bottom)
+    HotVolGapHeldAndExtended, // rel_volume >= 2 AND gap_pct.abs() > 2 AND change_pct * gap_pct > 0 AND change_pct.abs() >= gap_pct.abs() * 0.8 — hot vol + big gap + held + ≥80% extension (institutional gap-hold-and-go)
+    HotVolGapFadedDeep, // rel_volume >= 2 AND gap_pct.abs() > 2 AND change_pct * gap_pct < 0 AND change_pct.abs() >= gap_pct.abs() * 0.5 — hot vol + big gap + reversed ≥50% of gap (institutional gap-fade with conviction)
+    TightRangeAtYearHigh, // hod_dist + lod_dist < 1 AND year_high_pct > -3 AND rel_volume between 0.7 and 1.3 — tight range at 52w high on normal vol (consolidation at the top; bullish base)
+    TightRangeAtYearLow, // hod_dist + lod_dist < 1 AND year_low_pct < 3 AND rel_volume between 0.7 and 1.3 — tight range at 52w low on normal vol (basing at the bottom; potential reversal)
+    BalancedMidWickHotVol, // hod_dist between 0.3 and 1.5 AND lod_dist between 0.3 and 1.5 AND rel_volume >= 1.5 — balanced wicks in middle on hot vol (mid-range churn with participation)
+    BalancedMidWickDryVol, // hod_dist between 0.3 and 1.5 AND lod_dist between 0.3 and 1.5 AND rel_volume < 0.6 — balanced wicks in middle on dry vol (sleepy mid-range)
+    GapUpHodCloseControlled, // gap_pct > 0.5 AND hod_dist.abs() < 0.5 AND change_pct > 0 AND rel_volume between 0.7 and 1.5 — gap up + close at HOD + green close + normal vol (gap-and-hold; controlled trend)
+    GapDownLodCloseControlled, // gap_pct < -0.5 AND lod_dist.abs() < 0.5 AND change_pct < 0 AND rel_volume between 0.7 and 1.5 — gap down + close at LOD + red close + normal vol (gap-and-hold; controlled decline)
+    AllGreenTightDay, // change_pct > 0 AND day_pct > 0 AND gap_pct > 0 AND hod_dist + lod_dist < 2 — all green directions + tight range (strong-hands tight up day)
+    AllRedTightDay, // change_pct < 0 AND day_pct < 0 AND gap_pct < 0 AND hod_dist + lod_dist < 2 — all red directions + tight range (strong-sellers tight down day)
+    MicroRangeAtYearHigh, // hod_dist.abs() < 0.3 AND lod_dist.abs() < 0.3 AND year_high_pct > -3 — micro range at 52w high (zero-range pin at top; topping or pre-breakout)
+    MicroRangeAtYearLow, // hod_dist.abs() < 0.3 AND lod_dist.abs() < 0.3 AND year_low_pct < 3 — micro range at 52w low (zero-range pin at bottom; basing or pre-breakdown)
+    ConsolidationBreakUp, // hod_dist + lod_dist > 3 AND year_high_pct between -20 and -5 AND change_pct > 1 AND rel_volume >= 2 — wide range + mid-upper 52w + green + hot vol (consolidation breaking up)
+    ConsolidationBreakDown, // hod_dist + lod_dist > 3 AND year_low_pct between 5 and 20 AND change_pct < -1 AND rel_volume >= 2 — wide range + mid-lower 52w + red + hot vol (consolidation breaking down)
+    HotVolGapHeldFlatChange, // rel_volume >= 2 AND gap_pct.abs() > 1 AND change_pct.abs() < 0.5 — hot vol + gap + flat change (gap held + heavy participation absorbing both sides)
+    DryVolGapHeldFlatChange, // rel_volume < 0.5 AND gap_pct.abs() > 1 AND change_pct.abs() < 0.5 — dry vol + gap + flat change (gap held + no participation; thin tape)
+    AllDirectionsAlignedHotVolUp, // rel_volume >= 3 AND change_pct > 0 AND day_pct > 0 AND gap_pct > 0 — extreme vol + all up directions (full directional bull bar; conviction long)
     AllDirectionsAlignedHotVolDown, // rel_volume >= 3 AND change_pct < 0 AND day_pct < 0 AND gap_pct < 0 — extreme vol + all down directions (full directional bear bar; conviction short)
-    IntradayRecoveryFromGapDown,    // year_high_pct between -30 and -10 AND day_pct > 1 AND gap_pct < -0.5 AND rel_volume >= 1.5 — mid-range from top + green intraday + gap-down + hot vol (intraday recovery from gap-down)
-    IntradayRejectionFromGapUp,     // year_low_pct between 10 and 30 AND day_pct < -1 AND gap_pct > 0.5 AND rel_volume >= 1.5 — mid-range from bottom + red intraday + gap-up + hot vol (intraday rejection from gap-up)
-    Pct52wMidUpperHotVolDown,       // year_high_pct between -30 and -10 AND change_pct < -3 AND rel_volume >= 2 — mid-upper 52w + big down + hot vol (correction in uptrend)
-    Pct52wMidLowerHotVolUp,         // year_low_pct between 10 and 30 AND change_pct > 3 AND rel_volume >= 2 — mid-lower 52w + big up + hot vol (rally in downtrend)
-    OrderlyMidRangeRally,           // year_high_pct between -25 and -15 AND year_low_pct between 15 and 25 AND change_pct > 1 AND rel_volume between 0.8 and 1.5 — symmetrically mid + up move + normal vol (orderly rally in middle)
-    OrderlyMidRangePullback,        // year_high_pct between -25 and -15 AND year_low_pct between 15 and 25 AND change_pct < -1 AND rel_volume between 0.8 and 1.5 — symmetrically mid + down move + normal vol (orderly pullback in middle)
-    StrongBreakoutDay,              // year_high_pct > -5 AND gap_pct > 2 AND change_pct > 2 AND rel_volume >= 2 — near 52w high + gap up + green close + hot vol (strong breakout day)
-    StrongBreakdownDay,             // year_low_pct < 5 AND gap_pct < -2 AND change_pct < -2 AND rel_volume >= 2 — near 52w low + gap down + red close + hot vol (strong breakdown day)
-    VolSpikeBigGapBigChange,        // rel_volume >= 3 AND gap_pct.abs() > 3 AND change_pct.abs() > 3 — extreme vol + big gap + big change (institutional gap-on-news)
-    VolSpikeTinyGapBigChange,       // rel_volume >= 3 AND gap_pct.abs() < 0.3 AND change_pct.abs() > 3 — extreme vol + flat gap + big change (mid-session catalyst; intraday-only news)
-    StrongCloseAtHodHotVol,         // hod_dist.abs() < 0.3 AND day_pct > 1 AND rel_volume >= 2 — close at HOD + green intraday + hot vol (strong close; buyers in control)
-    WeakCloseAtLodHotVol,           // lod_dist.abs() < 0.3 AND day_pct < -1 AND rel_volume >= 2 — close at LOD + red intraday + hot vol (weak close; sellers in control)
-    Pct52wHighDryVolFlat,           // year_high_pct > -3 AND rel_volume < 0.5 AND change_pct.abs() < 0.5 — near 52w high on dry vol with no move (forgotten leadership; consolidation at highs)
-    Pct52wLowDryVolFlat,            // year_low_pct < 3 AND rel_volume < 0.5 AND change_pct.abs() < 0.5 — near 52w low on dry vol with no move (forgotten weakness; basing at lows)
+    IntradayRecoveryFromGapDown, // year_high_pct between -30 and -10 AND day_pct > 1 AND gap_pct < -0.5 AND rel_volume >= 1.5 — mid-range from top + green intraday + gap-down + hot vol (intraday recovery from gap-down)
+    IntradayRejectionFromGapUp, // year_low_pct between 10 and 30 AND day_pct < -1 AND gap_pct > 0.5 AND rel_volume >= 1.5 — mid-range from bottom + red intraday + gap-up + hot vol (intraday rejection from gap-up)
+    Pct52wMidUpperHotVolDown, // year_high_pct between -30 and -10 AND change_pct < -3 AND rel_volume >= 2 — mid-upper 52w + big down + hot vol (correction in uptrend)
+    Pct52wMidLowerHotVolUp, // year_low_pct between 10 and 30 AND change_pct > 3 AND rel_volume >= 2 — mid-lower 52w + big up + hot vol (rally in downtrend)
+    OrderlyMidRangeRally, // year_high_pct between -25 and -15 AND year_low_pct between 15 and 25 AND change_pct > 1 AND rel_volume between 0.8 and 1.5 — symmetrically mid + up move + normal vol (orderly rally in middle)
+    OrderlyMidRangePullback, // year_high_pct between -25 and -15 AND year_low_pct between 15 and 25 AND change_pct < -1 AND rel_volume between 0.8 and 1.5 — symmetrically mid + down move + normal vol (orderly pullback in middle)
+    StrongBreakoutDay, // year_high_pct > -5 AND gap_pct > 2 AND change_pct > 2 AND rel_volume >= 2 — near 52w high + gap up + green close + hot vol (strong breakout day)
+    StrongBreakdownDay, // year_low_pct < 5 AND gap_pct < -2 AND change_pct < -2 AND rel_volume >= 2 — near 52w low + gap down + red close + hot vol (strong breakdown day)
+    VolSpikeBigGapBigChange, // rel_volume >= 3 AND gap_pct.abs() > 3 AND change_pct.abs() > 3 — extreme vol + big gap + big change (institutional gap-on-news)
+    VolSpikeTinyGapBigChange, // rel_volume >= 3 AND gap_pct.abs() < 0.3 AND change_pct.abs() > 3 — extreme vol + flat gap + big change (mid-session catalyst; intraday-only news)
+    StrongCloseAtHodHotVol, // hod_dist.abs() < 0.3 AND day_pct > 1 AND rel_volume >= 2 — close at HOD + green intraday + hot vol (strong close; buyers in control)
+    WeakCloseAtLodHotVol, // lod_dist.abs() < 0.3 AND day_pct < -1 AND rel_volume >= 2 — close at LOD + red intraday + hot vol (weak close; sellers in control)
+    Pct52wHighDryVolFlat, // year_high_pct > -3 AND rel_volume < 0.5 AND change_pct.abs() < 0.5 — near 52w high on dry vol with no move (forgotten leadership; consolidation at highs)
+    Pct52wLowDryVolFlat, // year_low_pct < 3 AND rel_volume < 0.5 AND change_pct.abs() < 0.5 — near 52w low on dry vol with no move (forgotten weakness; basing at lows)
     OvernightReversalRepositioning, // change_pct * gap_pct < 0 AND change_pct.abs() > 0.5 AND gap_pct.abs() > 0.5 AND day_pct.abs() < 0.5 — gap and change opposite + flat intraday (overnight repositioning; reversal of overnight bias)
-    OrganicIntradayTrendDay,        // gap_pct.abs() < 0.3 AND change_pct.abs() > 2 AND day_pct.abs() > 1 AND rel_volume between 0.7 and 1.3 — no gap + significant change + clear intraday on normal vol (organic intraday trend day)
-    TightRangeFlatDayHotVol,        // hod_dist + lod_dist < 1 AND day_pct.abs() < 0.2 AND rel_volume >= 2 — tight range + flat intraday + hot vol (extreme absorption coil)
-    TightRangeFlatDayDryVol,        // hod_dist + lod_dist < 1 AND day_pct.abs() < 0.2 AND rel_volume < 0.5 — tight range + flat intraday + dry vol (deep sleep; no participation)
-    HodHotVolMicroRange,            // hod_dist_pct.abs() < 0.2 AND 0.5 <= lod_dist_pct.abs() <= 2 AND rel_volume >= 2 — close pinned at HOD with wider intraday range on hot vol (controlled mark-up)
-    LodHotVolMicroRange,            // lod_dist_pct.abs() < 0.2 AND 0.5 <= hod_dist_pct.abs() <= 2 AND rel_volume >= 2 — close pinned at LOD with wider intraday range on hot vol (controlled mark-down)
-    GapAndGoStrongClose,            // gap_pct > 1 AND change_pct > gap_pct AND hod_dist_pct.abs() < 0.5 — gap up + extended past gap + closing at HOD (gap-and-go follow-through)
-    GapAndFadeWeakClose,            // gap_pct > 1 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 — gap up + reversed below flat + closing at LOD (gap fade / failed breakout)
-    InsideDayDryVolCoiled,          // hod_dist + lod_dist < 1.5 AND day_pct.abs() < 0.5 AND rel_volume < 0.7 AND gap_pct.abs() < 0.3 — narrow range + flat + dry vol + no gap (inside-day coil; pre-expansion drift)
-    OutsideDayHotVolExpansion,      // hod_dist + lod_dist > 4 AND change_pct.abs() > 2 AND rel_volume >= 1.8 — wide range + significant move + hot vol (outside-day expansion / volatility breakout)
-    MidRangeDryVolNoConviction,     // 1 <= hod_dist <= 3 AND 1 <= lod_dist <= 3 AND day_pct.abs() < 0.5 AND rel_volume < 0.7 — closed mid-range + flat day + dry vol (indecision; no conviction either way)
-    LowOfYearHotVolPanic,           // year_low_pct < 1 AND rel_volume >= 2 AND change_pct < -2 — close near 52w low + hot vol + red day (capitulation panic candle)
-    HighOfYearHotVolEuphoria,       // year_high_pct < 1 AND rel_volume >= 2 AND change_pct > 2 — close near 52w high + hot vol + green day (euphoric breakout candle)
-    WideRangeFlatCloseHeavyChurn,   // hod_dist + lod_dist > 4 AND day_pct.abs() < 0.5 AND rel_volume >= 1.8 — wide intraday range + flat close + hot vol (heavy churning; both sides absorbing)
-    RangeExpansionDryVol,           // hod_dist + lod_dist > 3 AND rel_volume < 0.7 — wide intraday range on dry volume (thin-liquidity swing; algorithmic or illiquid; small participants creating wide range)
-    YearHighGapDownHotVol,          // year_high_pct < 5 AND gap_pct < -2 AND rel_volume >= 1.5 — near 52w high but gapping down on hot vol (distribution from top; topping pattern signal)
-    YearLowGapUpHotVol,             // year_low_pct < 5 AND gap_pct > 2 AND rel_volume >= 1.5 — near 52w low but gapping up on hot vol (relief gap; reversal off bottom signal)
-    IntradayFakeoutTopReject,       // hod_dist_pct.abs() > 2 AND day_pct < -0.5 AND rel_volume >= 1.5 — significant pullback from HOD + red day + hot vol (intraday failed breakout; top rejection)
-    IntradayFakeoutBottomReject,    // lod_dist_pct.abs() > 2 AND day_pct > 0.5 AND rel_volume >= 1.5 — significant bounce from LOD + green day + hot vol (intraday failed breakdown; bottom rejection)
-    RangeContractionAfterMove,      // hod_dist + lod_dist < 0.8 AND day_pct.abs() < 0.3 AND change_pct.abs() > 1 AND rel_volume between 0.8 and 1.3 — narrow range + flat close + meaningful change + normal vol (continuation pause / range contraction after move)
-    RelativeStrengthBuild,          // change_pct > 1.5 AND rel_volume between 1.0 and 1.5 AND gap_pct.abs() < 0.5 — meaningful gain + slightly elevated vol + no big gap (organic relative-strength build; no catalyst-driven gap)
-    RelativeWeaknessBuild,          // change_pct < -1.5 AND rel_volume between 1.0 and 1.5 AND gap_pct.abs() < 0.5 — meaningful drop + slightly elevated vol + no big gap (organic relative-weakness build; no catalyst-driven gap)
-    HighVolAbsorbingChange,         // rel_volume >= 2 AND hod_dist + lod_dist < 1.5 AND change_pct.abs() > 1 — hot vol + tight intraday range + meaningful change (volume absorbing in tight range; strong directional pressure being absorbed for likely follow-through)
-    LowVolWideRangeAccumulator,     // rel_volume < 0.5 AND hod_dist + lod_dist > 2 AND change_pct.abs() > 1 — dry vol + wider intraday range + meaningful change (low-participation but wide spread; accumulator working orders quietly)
-    BullishEngulfingHotVol,         // gap_pct < -0.5 AND change_pct > 1.5 AND day_pct > 1 AND rel_volume >= 1.5 — gap down + reversed strong + closed positive intraday + hot vol (bullish engulfing with volume confirmation)
-    BearishEngulfingHotVol,         // gap_pct > 0.5 AND change_pct < -1.5 AND day_pct < -1 AND rel_volume >= 1.5 — gap up + reversed weak + closed negative intraday + hot vol (bearish engulfing with volume confirmation)
-    DoubleBottomRetest,             // year_low_pct < 3 AND rel_volume >= 1.2 AND change_pct >= 0 AND day_pct >= 0 — near 52w low + decent vol + non-negative day (potential double-bottom retest forming)
-    DoubleTopRetest,                // year_high_pct < 3 AND rel_volume >= 1.2 AND change_pct <= 0 AND day_pct <= 0 — near 52w high + decent vol + non-positive day (potential double-top retest forming)
-    LiquiditySweepBothSides,        // hod_dist + lod_dist > 3 AND hod_dist > 1 AND lod_dist > 1 AND day_pct.abs() < 0.3 AND rel_volume >= 1.5 — both extremes visited + flat close + hot vol (raid-both-sides liquidity sweep before closing flat)
-    SteadyGrinderNoVolPickup,       // change_pct between 0.5 and 2 AND rel_volume between 0.8 and 1.0 AND day_pct between 0.3 and 1.5 AND gap_pct.abs() < 0.2 — small steady gain + below-average vol + steady intraday + no gap (low-vol grinder; quiet uptrend continuation)
-    SteadyDeclinerNoVolPickup,      // change_pct between -2 and -0.5 AND rel_volume between 0.8 and 1.0 AND day_pct between -1.5 and -0.3 AND gap_pct.abs() < 0.2 — small steady decline + below-average vol + steady intraday + no gap (low-vol decliner; quiet downtrend continuation)
-    HighVolStallNearHighOfYear,     // year_high_pct < 2 AND rel_volume >= 2 AND day_pct.abs() < 0.5 — near 52w high + hot vol + flat day (high-vol stall at the top; supply meeting demand at resistance)
-    HighVolStallNearLowOfYear,      // year_low_pct < 2 AND rel_volume >= 2 AND day_pct.abs() < 0.5 — near 52w low + hot vol + flat day (high-vol stall at the bottom; demand meeting supply at floor)
-    OutlierSessionBigMoveBigVol,    // change_pct.abs() > 3 AND rel_volume >= 3 AND hod_dist + lod_dist > 2.5 — really big move + really hot vol + wide range (outlier session; momentum/news/squeeze event)
-    EodParabolicAccelerationUp,     // change_pct > 2 AND day_pct > change_pct * 0.7 AND hod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — most of move happened intraday + closing at HOD + hot vol (EOD parabolic acceleration up; possible MOC short-covering finale)
-    EodParabolicAccelerationDown,   // change_pct < -2 AND day_pct < change_pct * 0.7 AND lod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — most of move happened intraday + closing at LOD + hot vol (EOD parabolic acceleration down; possible MOC long-liquidation finale)
-    FullSpectrumDayUp,              // change_pct > 1 AND day_pct > 0 AND hod_dist_pct.abs() < 0.5 AND lod_dist_pct.abs() > 1 AND rel_volume >= 1.2 — closed at HOD + visited LOD intraday + green + decent vol (volatile session that traded full range and went up)
-    FullSpectrumDayDown,            // change_pct < -1 AND day_pct < 0 AND lod_dist_pct.abs() < 0.5 AND hod_dist_pct.abs() > 1 AND rel_volume >= 1.2 — closed at LOD + visited HOD intraday + red + decent vol (volatile session that traded full range and went down)
-    GreenStreakAccumulator,         // change_pct > 0.5 AND day_pct > 0 AND rel_volume >= 1.2 AND gap_pct >= 0 — modest gain + green intraday + decent vol + non-negative gap (steady accumulation day; multi-day green-streak candidate)
-    RedStreakDistributor,           // change_pct < -0.5 AND day_pct < 0 AND rel_volume >= 1.2 AND gap_pct <= 0 — modest loss + red intraday + decent vol + non-positive gap (steady distribution day; multi-day red-streak candidate)
-    GapDownReclaim,                 // gap_pct < -1 AND change_pct >= 0 AND day_pct > -gap_pct * 0.8 — gap down + reclaimed positive + intraday recovered most of gap (full intraday rotation; gap-down reclaim)
-    GapUpFailReclaimed,             // gap_pct > 1 AND change_pct <= 0 AND day_pct < -gap_pct * 0.8 — gap up + faded negative + intraday gave up most of gap (full intraday rotation; gap-up fail)
-    MidYearRangeConsolidation,      // year_low_pct > 20 AND year_high_pct > 20 AND change_pct.abs() < 0.5 AND rel_volume < 1 — clearly mid-52w range + flat + sub-avg vol (consolidation; nowhere on the chart)
+    OrganicIntradayTrendDay, // gap_pct.abs() < 0.3 AND change_pct.abs() > 2 AND day_pct.abs() > 1 AND rel_volume between 0.7 and 1.3 — no gap + significant change + clear intraday on normal vol (organic intraday trend day)
+    TightRangeFlatDayHotVol, // hod_dist + lod_dist < 1 AND day_pct.abs() < 0.2 AND rel_volume >= 2 — tight range + flat intraday + hot vol (extreme absorption coil)
+    TightRangeFlatDayDryVol, // hod_dist + lod_dist < 1 AND day_pct.abs() < 0.2 AND rel_volume < 0.5 — tight range + flat intraday + dry vol (deep sleep; no participation)
+    HodHotVolMicroRange, // hod_dist_pct.abs() < 0.2 AND 0.5 <= lod_dist_pct.abs() <= 2 AND rel_volume >= 2 — close pinned at HOD with wider intraday range on hot vol (controlled mark-up)
+    LodHotVolMicroRange, // lod_dist_pct.abs() < 0.2 AND 0.5 <= hod_dist_pct.abs() <= 2 AND rel_volume >= 2 — close pinned at LOD with wider intraday range on hot vol (controlled mark-down)
+    GapAndGoStrongClose, // gap_pct > 1 AND change_pct > gap_pct AND hod_dist_pct.abs() < 0.5 — gap up + extended past gap + closing at HOD (gap-and-go follow-through)
+    GapAndFadeWeakClose, // gap_pct > 1 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 — gap up + reversed below flat + closing at LOD (gap fade / failed breakout)
+    InsideDayDryVolCoiled, // hod_dist + lod_dist < 1.5 AND day_pct.abs() < 0.5 AND rel_volume < 0.7 AND gap_pct.abs() < 0.3 — narrow range + flat + dry vol + no gap (inside-day coil; pre-expansion drift)
+    OutsideDayHotVolExpansion, // hod_dist + lod_dist > 4 AND change_pct.abs() > 2 AND rel_volume >= 1.8 — wide range + significant move + hot vol (outside-day expansion / volatility breakout)
+    MidRangeDryVolNoConviction, // 1 <= hod_dist <= 3 AND 1 <= lod_dist <= 3 AND day_pct.abs() < 0.5 AND rel_volume < 0.7 — closed mid-range + flat day + dry vol (indecision; no conviction either way)
+    LowOfYearHotVolPanic, // year_low_pct < 1 AND rel_volume >= 2 AND change_pct < -2 — close near 52w low + hot vol + red day (capitulation panic candle)
+    HighOfYearHotVolEuphoria, // year_high_pct < 1 AND rel_volume >= 2 AND change_pct > 2 — close near 52w high + hot vol + green day (euphoric breakout candle)
+    WideRangeFlatCloseHeavyChurn, // hod_dist + lod_dist > 4 AND day_pct.abs() < 0.5 AND rel_volume >= 1.8 — wide intraday range + flat close + hot vol (heavy churning; both sides absorbing)
+    RangeExpansionDryVol, // hod_dist + lod_dist > 3 AND rel_volume < 0.7 — wide intraday range on dry volume (thin-liquidity swing; algorithmic or illiquid; small participants creating wide range)
+    YearHighGapDownHotVol, // year_high_pct < 5 AND gap_pct < -2 AND rel_volume >= 1.5 — near 52w high but gapping down on hot vol (distribution from top; topping pattern signal)
+    YearLowGapUpHotVol, // year_low_pct < 5 AND gap_pct > 2 AND rel_volume >= 1.5 — near 52w low but gapping up on hot vol (relief gap; reversal off bottom signal)
+    IntradayFakeoutTopReject, // hod_dist_pct.abs() > 2 AND day_pct < -0.5 AND rel_volume >= 1.5 — significant pullback from HOD + red day + hot vol (intraday failed breakout; top rejection)
+    IntradayFakeoutBottomReject, // lod_dist_pct.abs() > 2 AND day_pct > 0.5 AND rel_volume >= 1.5 — significant bounce from LOD + green day + hot vol (intraday failed breakdown; bottom rejection)
+    RangeContractionAfterMove, // hod_dist + lod_dist < 0.8 AND day_pct.abs() < 0.3 AND change_pct.abs() > 1 AND rel_volume between 0.8 and 1.3 — narrow range + flat close + meaningful change + normal vol (continuation pause / range contraction after move)
+    RelativeStrengthBuild, // change_pct > 1.5 AND rel_volume between 1.0 and 1.5 AND gap_pct.abs() < 0.5 — meaningful gain + slightly elevated vol + no big gap (organic relative-strength build; no catalyst-driven gap)
+    RelativeWeaknessBuild, // change_pct < -1.5 AND rel_volume between 1.0 and 1.5 AND gap_pct.abs() < 0.5 — meaningful drop + slightly elevated vol + no big gap (organic relative-weakness build; no catalyst-driven gap)
+    HighVolAbsorbingChange, // rel_volume >= 2 AND hod_dist + lod_dist < 1.5 AND change_pct.abs() > 1 — hot vol + tight intraday range + meaningful change (volume absorbing in tight range; strong directional pressure being absorbed for likely follow-through)
+    LowVolWideRangeAccumulator, // rel_volume < 0.5 AND hod_dist + lod_dist > 2 AND change_pct.abs() > 1 — dry vol + wider intraday range + meaningful change (low-participation but wide spread; accumulator working orders quietly)
+    BullishEngulfingHotVol, // gap_pct < -0.5 AND change_pct > 1.5 AND day_pct > 1 AND rel_volume >= 1.5 — gap down + reversed strong + closed positive intraday + hot vol (bullish engulfing with volume confirmation)
+    BearishEngulfingHotVol, // gap_pct > 0.5 AND change_pct < -1.5 AND day_pct < -1 AND rel_volume >= 1.5 — gap up + reversed weak + closed negative intraday + hot vol (bearish engulfing with volume confirmation)
+    DoubleBottomRetest, // year_low_pct < 3 AND rel_volume >= 1.2 AND change_pct >= 0 AND day_pct >= 0 — near 52w low + decent vol + non-negative day (potential double-bottom retest forming)
+    DoubleTopRetest, // year_high_pct < 3 AND rel_volume >= 1.2 AND change_pct <= 0 AND day_pct <= 0 — near 52w high + decent vol + non-positive day (potential double-top retest forming)
+    LiquiditySweepBothSides, // hod_dist + lod_dist > 3 AND hod_dist > 1 AND lod_dist > 1 AND day_pct.abs() < 0.3 AND rel_volume >= 1.5 — both extremes visited + flat close + hot vol (raid-both-sides liquidity sweep before closing flat)
+    SteadyGrinderNoVolPickup, // change_pct between 0.5 and 2 AND rel_volume between 0.8 and 1.0 AND day_pct between 0.3 and 1.5 AND gap_pct.abs() < 0.2 — small steady gain + below-average vol + steady intraday + no gap (low-vol grinder; quiet uptrend continuation)
+    SteadyDeclinerNoVolPickup, // change_pct between -2 and -0.5 AND rel_volume between 0.8 and 1.0 AND day_pct between -1.5 and -0.3 AND gap_pct.abs() < 0.2 — small steady decline + below-average vol + steady intraday + no gap (low-vol decliner; quiet downtrend continuation)
+    HighVolStallNearHighOfYear, // year_high_pct < 2 AND rel_volume >= 2 AND day_pct.abs() < 0.5 — near 52w high + hot vol + flat day (high-vol stall at the top; supply meeting demand at resistance)
+    HighVolStallNearLowOfYear, // year_low_pct < 2 AND rel_volume >= 2 AND day_pct.abs() < 0.5 — near 52w low + hot vol + flat day (high-vol stall at the bottom; demand meeting supply at floor)
+    OutlierSessionBigMoveBigVol, // change_pct.abs() > 3 AND rel_volume >= 3 AND hod_dist + lod_dist > 2.5 — really big move + really hot vol + wide range (outlier session; momentum/news/squeeze event)
+    EodParabolicAccelerationUp, // change_pct > 2 AND day_pct > change_pct * 0.7 AND hod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — most of move happened intraday + closing at HOD + hot vol (EOD parabolic acceleration up; possible MOC short-covering finale)
+    EodParabolicAccelerationDown, // change_pct < -2 AND day_pct < change_pct * 0.7 AND lod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — most of move happened intraday + closing at LOD + hot vol (EOD parabolic acceleration down; possible MOC long-liquidation finale)
+    FullSpectrumDayUp, // change_pct > 1 AND day_pct > 0 AND hod_dist_pct.abs() < 0.5 AND lod_dist_pct.abs() > 1 AND rel_volume >= 1.2 — closed at HOD + visited LOD intraday + green + decent vol (volatile session that traded full range and went up)
+    FullSpectrumDayDown, // change_pct < -1 AND day_pct < 0 AND lod_dist_pct.abs() < 0.5 AND hod_dist_pct.abs() > 1 AND rel_volume >= 1.2 — closed at LOD + visited HOD intraday + red + decent vol (volatile session that traded full range and went down)
+    GreenStreakAccumulator, // change_pct > 0.5 AND day_pct > 0 AND rel_volume >= 1.2 AND gap_pct >= 0 — modest gain + green intraday + decent vol + non-negative gap (steady accumulation day; multi-day green-streak candidate)
+    RedStreakDistributor, // change_pct < -0.5 AND day_pct < 0 AND rel_volume >= 1.2 AND gap_pct <= 0 — modest loss + red intraday + decent vol + non-positive gap (steady distribution day; multi-day red-streak candidate)
+    GapDownReclaim, // gap_pct < -1 AND change_pct >= 0 AND day_pct > -gap_pct * 0.8 — gap down + reclaimed positive + intraday recovered most of gap (full intraday rotation; gap-down reclaim)
+    GapUpFailReclaimed, // gap_pct > 1 AND change_pct <= 0 AND day_pct < -gap_pct * 0.8 — gap up + faded negative + intraday gave up most of gap (full intraday rotation; gap-up fail)
+    MidYearRangeConsolidation, // year_low_pct > 20 AND year_high_pct > 20 AND change_pct.abs() < 0.5 AND rel_volume < 1 — clearly mid-52w range + flat + sub-avg vol (consolidation; nowhere on the chart)
     AtYearExtremeVolatilityExpansion, // (year_high_pct < 3 OR year_low_pct < 3) AND hod_dist + lod_dist > 3 AND rel_volume >= 1.5 — at either 52w extreme + wide range + decent vol (at-extreme volatility expansion; testing structural level)
-    BreakoutFromMidLevels,          // year_high_pct < 10 AND year_low_pct >= 20 AND change_pct > 1 AND rel_volume >= 1.5 — within 10% of 52w high coming from mid-range + decent move + hot vol (breakout candidate from mid-range to upper-zone)
-    BreakdownFromMidLevels,         // year_low_pct < 10 AND year_high_pct >= 20 AND change_pct < -1 AND rel_volume >= 1.5 — within 10% of 52w low coming from mid-range + decent drop + hot vol (breakdown candidate from mid-range to lower-zone)
-    IntradayStrongerThanGap,        // gap_pct.abs() < 1 AND day_pct.abs() > 1.5 AND change_pct.abs() > 1 AND rel_volume >= 1.2 — small gap + big intraday + decent change + decent vol (intraday energy > overnight; all action during regular session)
-    OvernightStrongerThanIntraday,  // gap_pct.abs() > 1.5 AND day_pct.abs() < 0.5 AND change_pct.abs() > 1 — big gap + flat intraday + decent change (overnight dominated; market accepted gap without intraday expansion)
-    EfficientMoveLowEffort,         // change_pct.abs() > 1 AND rel_volume < 0.7 AND hod_dist + lod_dist < 1.5 — meaningful change + dry vol + narrow range (efficient move; few prints needed; sleeper trade)
-    SignalVsNoiseChurn,             // change_pct.abs() < 0.2 AND rel_volume >= 2 AND hod_dist + lod_dist > 2 — tiny net change + hot vol + wide range visited (signal-vs-noise: lots of activity, no net move; pure noise day)
-    GreenCloseRedIntraday,          // change_pct > 0 AND day_pct < 0 AND rel_volume >= 1.5 — green close vs prior + red intraday + hot vol (gap held positive despite intraday erosion; close-of-day mark-up)
-    RedCloseGreenIntraday,          // change_pct < 0 AND day_pct > 0 AND rel_volume >= 1.5 — red close vs prior + green intraday + hot vol (gap held negative despite intraday recovery; close-of-day mark-down)
-    FullConvictionUpDay,            // gap_pct > 0 AND change_pct > 1 AND day_pct > 0.5 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 — every directional signal aligned up + HOD close + hot vol (full-conviction up day; institutional commitment across session)
-    FullConvictionDownDay,          // gap_pct < 0 AND change_pct < -1 AND day_pct < -0.5 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 — every directional signal aligned down + LOD close + hot vol (full-conviction down day; institutional commitment across session)
-    YearLowProximityRallyAttempt,   // year_low_pct < 5 AND gap_pct >= 0 AND day_pct > 1 AND change_pct > 0.5 AND rel_volume >= 1 — close near 52w low but rallied intraday with green close + decent vol (rally attempt off the lows; potential trend reversal seedling)
-    YearHighProximityFailAttempt,   // year_high_pct < 5 AND gap_pct <= 0 AND day_pct < -1 AND change_pct < -0.5 AND rel_volume >= 1 — close near 52w high but faded intraday with red close + decent vol (failed move at high; potential top forming)
-    OpenGapFilledNetFlat,           // gap_pct.abs() > 1.5 AND change_pct.abs() < 0.5 — significant gap opened the day but ended near flat (full gap absorption / round-trip; market rejected the overnight move)
+    BreakoutFromMidLevels, // year_high_pct < 10 AND year_low_pct >= 20 AND change_pct > 1 AND rel_volume >= 1.5 — within 10% of 52w high coming from mid-range + decent move + hot vol (breakout candidate from mid-range to upper-zone)
+    BreakdownFromMidLevels, // year_low_pct < 10 AND year_high_pct >= 20 AND change_pct < -1 AND rel_volume >= 1.5 — within 10% of 52w low coming from mid-range + decent drop + hot vol (breakdown candidate from mid-range to lower-zone)
+    IntradayStrongerThanGap, // gap_pct.abs() < 1 AND day_pct.abs() > 1.5 AND change_pct.abs() > 1 AND rel_volume >= 1.2 — small gap + big intraday + decent change + decent vol (intraday energy > overnight; all action during regular session)
+    OvernightStrongerThanIntraday, // gap_pct.abs() > 1.5 AND day_pct.abs() < 0.5 AND change_pct.abs() > 1 — big gap + flat intraday + decent change (overnight dominated; market accepted gap without intraday expansion)
+    EfficientMoveLowEffort, // change_pct.abs() > 1 AND rel_volume < 0.7 AND hod_dist + lod_dist < 1.5 — meaningful change + dry vol + narrow range (efficient move; few prints needed; sleeper trade)
+    SignalVsNoiseChurn, // change_pct.abs() < 0.2 AND rel_volume >= 2 AND hod_dist + lod_dist > 2 — tiny net change + hot vol + wide range visited (signal-vs-noise: lots of activity, no net move; pure noise day)
+    GreenCloseRedIntraday, // change_pct > 0 AND day_pct < 0 AND rel_volume >= 1.5 — green close vs prior + red intraday + hot vol (gap held positive despite intraday erosion; close-of-day mark-up)
+    RedCloseGreenIntraday, // change_pct < 0 AND day_pct > 0 AND rel_volume >= 1.5 — red close vs prior + green intraday + hot vol (gap held negative despite intraday recovery; close-of-day mark-down)
+    FullConvictionUpDay, // gap_pct > 0 AND change_pct > 1 AND day_pct > 0.5 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 — every directional signal aligned up + HOD close + hot vol (full-conviction up day; institutional commitment across session)
+    FullConvictionDownDay, // gap_pct < 0 AND change_pct < -1 AND day_pct < -0.5 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 — every directional signal aligned down + LOD close + hot vol (full-conviction down day; institutional commitment across session)
+    YearLowProximityRallyAttempt, // year_low_pct < 5 AND gap_pct >= 0 AND day_pct > 1 AND change_pct > 0.5 AND rel_volume >= 1 — close near 52w low but rallied intraday with green close + decent vol (rally attempt off the lows; potential trend reversal seedling)
+    YearHighProximityFailAttempt, // year_high_pct < 5 AND gap_pct <= 0 AND day_pct < -1 AND change_pct < -0.5 AND rel_volume >= 1 — close near 52w high but faded intraday with red close + decent vol (failed move at high; potential top forming)
+    OpenGapFilledNetFlat, // gap_pct.abs() > 1.5 AND change_pct.abs() < 0.5 — significant gap opened the day but ended near flat (full gap absorption / round-trip; market rejected the overnight move)
     CompressedRangeVolatileSession, // year_high_pct < 15 AND year_low_pct < 25 AND hod_dist + lod_dist > 3 AND rel_volume >= 1.5 — small 52w range with volatile session (structurally compressed asset moving today; multi-month coil breaking out intraday)
-    OrderlyNewHighContinuation,     // year_high_pct < 1 AND change_pct between 0.5 and 1.5 AND rel_volume >= 1 — fresh 52w high with moderate (not parabolic) move + decent vol (orderly breakout; quality trend continuation)
-    OrderlyNewLowContinuation,      // year_low_pct < 1 AND change_pct between -1.5 and -0.5 AND rel_volume >= 1 — fresh 52w low with moderate (not crash) drop + decent vol (orderly breakdown; quality downtrend continuation)
-    DryVolGapUpFade,                // gap_pct > 1 AND change_pct < 0 AND rel_volume < 0.7 — gap up + faded to red + dry vol (gap-up fade without participation; orderly absorption of overnight optimism)
-    DryVolGapDownReclaim,           // gap_pct < -1 AND change_pct > 0 AND rel_volume < 0.7 — gap down + recovered to green + dry vol (gap-down reclaim without panic vol; orderly absorption of overnight pessimism)
-    InstitutionalChurnDay,          // rel_volume >= 3 AND change_pct.abs() < 0.3 — very hot vol + flat net change (3x avg vol with no directional outcome; institutional rebalance / churn day)
-    ExtremeTailEvent,               // rel_volume >= 3 AND change_pct.abs() > 5 — very hot vol + huge change (extreme tail event; major news / earnings / squeeze)
-    Year52HighRetestStrongClose,    // year_high_pct < 5 AND change_pct > 0 AND hod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — near 52w high + green close at HOD + hot vol (retest of 52w high with strong close confirming the level)
-    Year52LowRetestWeakClose,       // year_low_pct < 5 AND change_pct < 0 AND lod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — near 52w low + red close at LOD + hot vol (retest of 52w low with weak close confirming the level)
-    DivergentGapVsIntraday,         // gap_pct * day_pct < 0 AND gap_pct.abs() > 0.5 AND day_pct.abs() > 0.5 — gap and intraday point opposite directions, both meaningful (clear overnight-vs-intraday divergence; market disagreed with the gap)
+    OrderlyNewHighContinuation, // year_high_pct < 1 AND change_pct between 0.5 and 1.5 AND rel_volume >= 1 — fresh 52w high with moderate (not parabolic) move + decent vol (orderly breakout; quality trend continuation)
+    OrderlyNewLowContinuation, // year_low_pct < 1 AND change_pct between -1.5 and -0.5 AND rel_volume >= 1 — fresh 52w low with moderate (not crash) drop + decent vol (orderly breakdown; quality downtrend continuation)
+    DryVolGapUpFade, // gap_pct > 1 AND change_pct < 0 AND rel_volume < 0.7 — gap up + faded to red + dry vol (gap-up fade without participation; orderly absorption of overnight optimism)
+    DryVolGapDownReclaim, // gap_pct < -1 AND change_pct > 0 AND rel_volume < 0.7 — gap down + recovered to green + dry vol (gap-down reclaim without panic vol; orderly absorption of overnight pessimism)
+    InstitutionalChurnDay, // rel_volume >= 3 AND change_pct.abs() < 0.3 — very hot vol + flat net change (3x avg vol with no directional outcome; institutional rebalance / churn day)
+    ExtremeTailEvent, // rel_volume >= 3 AND change_pct.abs() > 5 — very hot vol + huge change (extreme tail event; major news / earnings / squeeze)
+    Year52HighRetestStrongClose, // year_high_pct < 5 AND change_pct > 0 AND hod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — near 52w high + green close at HOD + hot vol (retest of 52w high with strong close confirming the level)
+    Year52LowRetestWeakClose, // year_low_pct < 5 AND change_pct < 0 AND lod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — near 52w low + red close at LOD + hot vol (retest of 52w low with weak close confirming the level)
+    DivergentGapVsIntraday, // gap_pct * day_pct < 0 AND gap_pct.abs() > 0.5 AND day_pct.abs() > 0.5 — gap and intraday point opposite directions, both meaningful (clear overnight-vs-intraday divergence; market disagreed with the gap)
     CongruentGapAndIntradaySameDir, // gap_pct * day_pct > 0 AND gap_pct.abs() > 0.5 AND day_pct.abs() > 0.5 — gap and intraday same-direction, both meaningful (gap extended by intraday; same-direction follow-through)
-    DeepMidRangeQuietSiesta,        // year_high_pct > 30 AND year_low_pct > 30 AND rel_volume < 0.5 AND change_pct.abs() < 0.5 — deeply mid-52w-range + very quiet vol + flat change (structurally calm asset siesta; total disinterest)
-    DeepMidRangeActiveOutlier,      // year_high_pct > 30 AND year_low_pct > 30 AND rel_volume >= 2 AND change_pct.abs() > 1 — deeply mid-52w-range + hot vol + meaningful change (mid-range action; out-of-character active day; potential trend genesis)
+    DeepMidRangeQuietSiesta, // year_high_pct > 30 AND year_low_pct > 30 AND rel_volume < 0.5 AND change_pct.abs() < 0.5 — deeply mid-52w-range + very quiet vol + flat change (structurally calm asset siesta; total disinterest)
+    DeepMidRangeActiveOutlier, // year_high_pct > 30 AND year_low_pct > 30 AND rel_volume >= 2 AND change_pct.abs() > 1 — deeply mid-52w-range + hot vol + meaningful change (mid-range action; out-of-character active day; potential trend genesis)
     IntradayDirectionExceedsChange, // day_pct * change_pct > 0 AND day_pct.abs() > change_pct.abs() * 1.5 AND change_pct.abs() > 0.5 — same direction but intraday dominates by 1.5x (intraday late-session continuation outweighs gap)
     ChangeExceedsIntradayMagnitude, // change_pct.abs() > day_pct.abs() * 2 AND change_pct.abs() > 1 — change dominated by overnight component (gap-dominant move; intraday small relative to total)
-    JustOffYearLowBouncingUp,       // year_low_pct between 5 and 15 AND change_pct > 1 AND rel_volume >= 1.5 — slightly off 52w lows + green move + hot vol (early bounce off lows; momentum picking up before fully reclaiming)
-    JustOffYearHighFadingDown,      // year_high_pct between 5 and 15 AND change_pct < -1 AND rel_volume >= 1.5 — slightly off 52w highs + red move + hot vol (early fade from highs; distribution starting before fully breaking)
-    OverextendedHighPullbackHealthy,// year_high_pct < 3 AND hod_dist_pct.abs() > 1.5 AND day_pct < -0.5 AND change_pct >= 0 — at 52w high + pulled back from HOD + red intraday + still positive day (healthy pullback retrace while in trend)
-    OverextendedLowBounceHealthy,   // year_low_pct < 3 AND lod_dist_pct.abs() > 1.5 AND day_pct > 0.5 AND change_pct <= 0 — at 52w low + bounced from LOD + green intraday + still negative day (healthy bounce retrace while in downtrend)
-    CleanTrendDayUp,                // change_pct > 0 AND day_pct > 0 AND gap_pct > 0 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1 — every signal positive + close near HOD + decent vol (clean trend day up; everything aligned without extremity)
-    CleanTrendDayDown,              // change_pct < 0 AND day_pct < 0 AND gap_pct < 0 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1 — every signal negative + close near LOD + decent vol (clean trend day down; everything aligned without extremity)
-    ClimaxRedBouncedFromLod,        // change_pct < -3 AND day_pct > 1 AND rel_volume >= 2 AND lod_dist_pct.abs() > 1.5 — big red overall + significant green intraday + hot vol + bounced from LOD (climax low; capitulation followed by intraday bounce)
-    ClimaxGreenFadedFromHod,        // change_pct > 3 AND day_pct < -1 AND rel_volume >= 2 AND hod_dist_pct.abs() > 1.5 — big green overall + significant red intraday + hot vol + pulled from HOD (climax high; euphoria followed by intraday fade)
-    WideRangeChopMixedVol,          // hod_dist + lod_dist > 3 AND change_pct.abs() < 0.5 AND rel_volume between 0.7 and 1.5 — wide range + small change + normal vol (range exploration without conviction; vol-of-vol; mixed signal)
+    JustOffYearLowBouncingUp, // year_low_pct between 5 and 15 AND change_pct > 1 AND rel_volume >= 1.5 — slightly off 52w lows + green move + hot vol (early bounce off lows; momentum picking up before fully reclaiming)
+    JustOffYearHighFadingDown, // year_high_pct between 5 and 15 AND change_pct < -1 AND rel_volume >= 1.5 — slightly off 52w highs + red move + hot vol (early fade from highs; distribution starting before fully breaking)
+    OverextendedHighPullbackHealthy, // year_high_pct < 3 AND hod_dist_pct.abs() > 1.5 AND day_pct < -0.5 AND change_pct >= 0 — at 52w high + pulled back from HOD + red intraday + still positive day (healthy pullback retrace while in trend)
+    OverextendedLowBounceHealthy, // year_low_pct < 3 AND lod_dist_pct.abs() > 1.5 AND day_pct > 0.5 AND change_pct <= 0 — at 52w low + bounced from LOD + green intraday + still negative day (healthy bounce retrace while in downtrend)
+    CleanTrendDayUp, // change_pct > 0 AND day_pct > 0 AND gap_pct > 0 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1 — every signal positive + close near HOD + decent vol (clean trend day up; everything aligned without extremity)
+    CleanTrendDayDown, // change_pct < 0 AND day_pct < 0 AND gap_pct < 0 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1 — every signal negative + close near LOD + decent vol (clean trend day down; everything aligned without extremity)
+    ClimaxRedBouncedFromLod, // change_pct < -3 AND day_pct > 1 AND rel_volume >= 2 AND lod_dist_pct.abs() > 1.5 — big red overall + significant green intraday + hot vol + bounced from LOD (climax low; capitulation followed by intraday bounce)
+    ClimaxGreenFadedFromHod, // change_pct > 3 AND day_pct < -1 AND rel_volume >= 2 AND hod_dist_pct.abs() > 1.5 — big green overall + significant red intraday + hot vol + pulled from HOD (climax high; euphoria followed by intraday fade)
+    WideRangeChopMixedVol, // hod_dist + lod_dist > 3 AND change_pct.abs() < 0.5 AND rel_volume between 0.7 and 1.5 — wide range + small change + normal vol (range exploration without conviction; vol-of-vol; mixed signal)
     NarrowRangeBigChangeNoIntraday, // hod_dist + lod_dist < 1 AND change_pct.abs() > 1.5 AND day_pct.abs() < 0.3 — narrow range + big change + flat intraday (all change happened overnight; no intraday move; pure gap day)
-    EveryAxisExtreme,               // gap_pct.abs() > 1 AND day_pct.abs() > 1 AND change_pct.abs() > 2 AND rel_volume >= 2 AND hod_dist + lod_dist > 2 — every measurable signal axis extreme simultaneously (multi-axis breakout; outlier across the full feature space)
-    EveryAxisFlat,                  // gap_pct.abs() < 0.2 AND day_pct.abs() < 0.2 AND change_pct.abs() < 0.2 AND rel_volume < 0.7 AND hod_dist + lod_dist < 1 — every measurable signal axis tiny simultaneously (silent day; total absence of activity across the full feature space)
-    Year52HighRejectedToLod,        // year_high_pct < 5 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 AND change_pct < 0 — close at LOD even though near 52w high + hot vol + red day (sharp rejection at the highs; topping signal)
-    Year52LowReclaimedToHod,        // year_low_pct < 5 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 AND change_pct > 0 — close at HOD even though near 52w low + hot vol + green day (sharp reclaim from the lows; bottoming signal)
-    HighVolNoGapModerateChange,     // gap_pct.abs() < 0.3 AND rel_volume >= 2 AND change_pct.abs() < 1 — hot vol + no gap + modest change (institutional accumulation/distribution without overnight catalyst; quiet-price big-flow day)
-    LowVolWithLargeGap,             // gap_pct.abs() > 2 AND rel_volume < 0.7 AND change_pct.abs() > 1 — big gap + dry vol + meaningful change (gap held quietly; minimal participation needed to absorb the overnight move)
-    GapErasedByIntradayFlat,        // gap_pct.abs() > 1 AND change_pct.abs() < 0.3 AND gap_pct * day_pct < 0 — gap + opposite-direction intraday + flat close (intraday completely erased the gap; full counter-move absorption)
-    BothSidesTaggedFlatBalance,     // hod_dist_pct.abs() > 1 AND lod_dist_pct.abs() > 1 AND change_pct.abs() < 0.3 AND rel_volume >= 1.2 — both extremes well-distant from close + flat change + decent vol (range-bound balance; close mid-range after exploring both sides)
-    OutsideDayWideBalanceHotVol,    // hod_dist + lod_dist > 5 AND change_pct.abs() < 0.3 AND rel_volume >= 1.5 — really wide range + flat change + hot vol (outside-day balance; both extremes visited then closed flat on heavy participation)
-    InsideDayBigChangeBigVol,       // hod_dist + lod_dist < 1.5 AND change_pct.abs() > 2 AND rel_volume >= 2 — narrow range + big change + hot vol (inside-day big move; gap-driven change but with massive participation at flat-after-gap level)
-    LongCandleUpTrendDay,           // change_pct > 2 AND day_pct > 1 AND hod_dist + lod_dist > 2 AND rel_volume >= 1.5 AND hod_dist_pct.abs() < 0.5 — big green day + significant intraday + wide range + hot vol + HOD close (long candle up; broad trend day with HOD finish)
-    LongCandleDownTrendDay,         // change_pct < -2 AND day_pct < -1 AND hod_dist + lod_dist > 2 AND rel_volume >= 1.5 AND lod_dist_pct.abs() < 0.5 — big red day + significant intraday + wide range + hot vol + LOD close (long candle down; broad trend day with LOD finish)
+    EveryAxisExtreme, // gap_pct.abs() > 1 AND day_pct.abs() > 1 AND change_pct.abs() > 2 AND rel_volume >= 2 AND hod_dist + lod_dist > 2 — every measurable signal axis extreme simultaneously (multi-axis breakout; outlier across the full feature space)
+    EveryAxisFlat, // gap_pct.abs() < 0.2 AND day_pct.abs() < 0.2 AND change_pct.abs() < 0.2 AND rel_volume < 0.7 AND hod_dist + lod_dist < 1 — every measurable signal axis tiny simultaneously (silent day; total absence of activity across the full feature space)
+    Year52HighRejectedToLod, // year_high_pct < 5 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 AND change_pct < 0 — close at LOD even though near 52w high + hot vol + red day (sharp rejection at the highs; topping signal)
+    Year52LowReclaimedToHod, // year_low_pct < 5 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 AND change_pct > 0 — close at HOD even though near 52w low + hot vol + green day (sharp reclaim from the lows; bottoming signal)
+    HighVolNoGapModerateChange, // gap_pct.abs() < 0.3 AND rel_volume >= 2 AND change_pct.abs() < 1 — hot vol + no gap + modest change (institutional accumulation/distribution without overnight catalyst; quiet-price big-flow day)
+    LowVolWithLargeGap, // gap_pct.abs() > 2 AND rel_volume < 0.7 AND change_pct.abs() > 1 — big gap + dry vol + meaningful change (gap held quietly; minimal participation needed to absorb the overnight move)
+    GapErasedByIntradayFlat, // gap_pct.abs() > 1 AND change_pct.abs() < 0.3 AND gap_pct * day_pct < 0 — gap + opposite-direction intraday + flat close (intraday completely erased the gap; full counter-move absorption)
+    BothSidesTaggedFlatBalance, // hod_dist_pct.abs() > 1 AND lod_dist_pct.abs() > 1 AND change_pct.abs() < 0.3 AND rel_volume >= 1.2 — both extremes well-distant from close + flat change + decent vol (range-bound balance; close mid-range after exploring both sides)
+    OutsideDayWideBalanceHotVol, // hod_dist + lod_dist > 5 AND change_pct.abs() < 0.3 AND rel_volume >= 1.5 — really wide range + flat change + hot vol (outside-day balance; both extremes visited then closed flat on heavy participation)
+    InsideDayBigChangeBigVol, // hod_dist + lod_dist < 1.5 AND change_pct.abs() > 2 AND rel_volume >= 2 — narrow range + big change + hot vol (inside-day big move; gap-driven change but with massive participation at flat-after-gap level)
+    LongCandleUpTrendDay, // change_pct > 2 AND day_pct > 1 AND hod_dist + lod_dist > 2 AND rel_volume >= 1.5 AND hod_dist_pct.abs() < 0.5 — big green day + significant intraday + wide range + hot vol + HOD close (long candle up; broad trend day with HOD finish)
+    LongCandleDownTrendDay, // change_pct < -2 AND day_pct < -1 AND hod_dist + lod_dist > 2 AND rel_volume >= 1.5 AND lod_dist_pct.abs() < 0.5 — big red day + significant intraday + wide range + hot vol + LOD close (long candle down; broad trend day with LOD finish)
     Year52HighWithRangeContraction, // year_high_pct < 3 AND hod_dist + lod_dist < 1 AND change_pct.abs() < 0.5 — at 52w high + tight range + flat change (structural pause at the highs; coiling at top before next leg)
-    Year52LowWithRangeContraction,  // year_low_pct < 3 AND hod_dist + lod_dist < 1 AND change_pct.abs() < 0.5 — at 52w low + tight range + flat change (structural pause at the lows; coiling at bottom before next leg)
-    GapAndIntradayHarmonic,         // gap_pct.abs() between 0.5 and 2 AND day_pct.abs() between 0.5 and 2 AND (gap_pct.abs() - day_pct.abs()).abs() < 0.3 AND rel_volume >= 1 — gap and intraday similar magnitude + decent vol (harmonic day; balanced overnight and intraday contributions)
-    MicroDayEarlyShakeout,          // change_pct.abs() < 0.5 AND hod_dist + lod_dist > 2 AND day_pct.abs() < 0.3 AND rel_volume >= 1.5 — small change + wide intraday + flat day + hot vol (early shakeout day; explored both extremes early but settled flat with hot vol)
-    GreenDaySubOptimalClose,        // change_pct > 1 AND hod_dist_pct.abs() > 2 AND rel_volume >= 1 — green day but closed significantly off HOD + decent vol (high-conviction green with sub-optimal close; pullback from peak before close)
-    RedDaySubOptimalClose,          // change_pct < -1 AND lod_dist_pct.abs() > 2 AND rel_volume >= 1 — red day but closed significantly off LOD + decent vol (high-conviction red with sub-optimal close; bounce from trough before close)
-    WideRangeNoVolFlat,             // hod_dist + lod_dist > 3 AND rel_volume < 0.7 AND change_pct.abs() < 0.5 — wide intraday range + dry vol + flat change (fake-liquidity range exploration; few prints across wide spread; possible spoof / wash)
-    NarrowRangeMeaningfulChange,    // hod_dist + lod_dist < 1.5 AND change_pct.abs() > 1 — narrow intraday range + meaningful change (one-print day; price moved without exploring; mostly gap-driven without intraday discovery)
-    Year52HighGapDownReclaimed,     // year_high_pct < 5 AND gap_pct < -0.5 AND change_pct >= 0 AND rel_volume >= 1 — at 52w high + gap down + reclaimed positive + decent vol (resilience at the highs; gap-down absorbed by intraday strength)
-    Year52LowGapUpFaded,            // year_low_pct < 5 AND gap_pct > 0.5 AND change_pct <= 0 AND rel_volume >= 1 — at 52w low + gap up + faded negative + decent vol (relief gap rejected at the lows; continuation lower)
-    IntradayMatchesChange,          // gap_pct.abs() < 0.2 AND change_pct.abs() > 1 AND (change_pct - day_pct).abs() < 0.3 — no gap + meaningful change + intraday matches change (entire move came from regular session; no overnight component)
-    IntradayOpposesChange,          // change_pct.abs() > 1 AND day_pct * change_pct < 0 AND day_pct.abs() > 0.5 — meaningful change + opposite-sign intraday + meaningful intraday (gap dominated; intraday reversed but couldn't overpower gap)
-    SymmetricMidRangeBalance,       // (hod_dist - lod_dist).abs() < 0.2 AND hod_dist + lod_dist > 1 AND change_pct.abs() < 0.3 — close exactly mid-range + meaningful range visited + flat change (geometric symmetry; perfect balance day)
-    AsymmetricExtremeBias,          // (hod_dist - lod_dist).abs() > 2 AND hod_dist + lod_dist > 3 — close strongly biased to one extreme + wide range visited (one-sided range; close clearly favored one side of the day's exploration)
+    Year52LowWithRangeContraction, // year_low_pct < 3 AND hod_dist + lod_dist < 1 AND change_pct.abs() < 0.5 — at 52w low + tight range + flat change (structural pause at the lows; coiling at bottom before next leg)
+    GapAndIntradayHarmonic, // gap_pct.abs() between 0.5 and 2 AND day_pct.abs() between 0.5 and 2 AND (gap_pct.abs() - day_pct.abs()).abs() < 0.3 AND rel_volume >= 1 — gap and intraday similar magnitude + decent vol (harmonic day; balanced overnight and intraday contributions)
+    MicroDayEarlyShakeout, // change_pct.abs() < 0.5 AND hod_dist + lod_dist > 2 AND day_pct.abs() < 0.3 AND rel_volume >= 1.5 — small change + wide intraday + flat day + hot vol (early shakeout day; explored both extremes early but settled flat with hot vol)
+    GreenDaySubOptimalClose, // change_pct > 1 AND hod_dist_pct.abs() > 2 AND rel_volume >= 1 — green day but closed significantly off HOD + decent vol (high-conviction green with sub-optimal close; pullback from peak before close)
+    RedDaySubOptimalClose, // change_pct < -1 AND lod_dist_pct.abs() > 2 AND rel_volume >= 1 — red day but closed significantly off LOD + decent vol (high-conviction red with sub-optimal close; bounce from trough before close)
+    WideRangeNoVolFlat, // hod_dist + lod_dist > 3 AND rel_volume < 0.7 AND change_pct.abs() < 0.5 — wide intraday range + dry vol + flat change (fake-liquidity range exploration; few prints across wide spread; possible spoof / wash)
+    NarrowRangeMeaningfulChange, // hod_dist + lod_dist < 1.5 AND change_pct.abs() > 1 — narrow intraday range + meaningful change (one-print day; price moved without exploring; mostly gap-driven without intraday discovery)
+    Year52HighGapDownReclaimed, // year_high_pct < 5 AND gap_pct < -0.5 AND change_pct >= 0 AND rel_volume >= 1 — at 52w high + gap down + reclaimed positive + decent vol (resilience at the highs; gap-down absorbed by intraday strength)
+    Year52LowGapUpFaded, // year_low_pct < 5 AND gap_pct > 0.5 AND change_pct <= 0 AND rel_volume >= 1 — at 52w low + gap up + faded negative + decent vol (relief gap rejected at the lows; continuation lower)
+    IntradayMatchesChange, // gap_pct.abs() < 0.2 AND change_pct.abs() > 1 AND (change_pct - day_pct).abs() < 0.3 — no gap + meaningful change + intraday matches change (entire move came from regular session; no overnight component)
+    IntradayOpposesChange, // change_pct.abs() > 1 AND day_pct * change_pct < 0 AND day_pct.abs() > 0.5 — meaningful change + opposite-sign intraday + meaningful intraday (gap dominated; intraday reversed but couldn't overpower gap)
+    SymmetricMidRangeBalance, // (hod_dist - lod_dist).abs() < 0.2 AND hod_dist + lod_dist > 1 AND change_pct.abs() < 0.3 — close exactly mid-range + meaningful range visited + flat change (geometric symmetry; perfect balance day)
+    AsymmetricExtremeBias, // (hod_dist - lod_dist).abs() > 2 AND hod_dist + lod_dist > 3 — close strongly biased to one extreme + wide range visited (one-sided range; close clearly favored one side of the day's exploration)
     YearLowExplosiveSqueezeIgnition, // year_low_pct < 3 AND change_pct > 5 AND rel_volume >= 3 — at 52w low + huge gain + extreme vol (squeeze ignition from 52w low; potential reversal of a multi-month downtrend)
-    YearHighSharpDistribution,       // year_high_pct < 3 AND change_pct < -5 AND rel_volume >= 3 — at 52w high + huge drop + extreme vol (sharp distribution from the highs; potential trend break)
-    LargeChangeOnNormalVol,          // change_pct.abs() > 3 AND rel_volume between 0.7 and 1.3 AND hod_dist + lod_dist > 2 — big change + normal vol + wide range (quality move without extreme participation; orderly directional day)
-    MassiveIntradayWithoutGap,       // gap_pct.abs() < 0.1 AND day_pct.abs() > 3 AND rel_volume >= 2 — basically no gap + massive intraday + hot vol (huge intraday move with zero overnight bias; pure intraday discovery)
-    MidYearBothSidesTagged,          // year_high_pct > 10 AND year_low_pct > 10 AND hod_dist_pct.abs() > 1 AND lod_dist_pct.abs() > 1 AND rel_volume >= 1 — well within 52w + both extremes visited + decent vol (mid-range double-test day; structurally undecided)
-    ExtremeSilentRange,              // (year_high_pct < 5 OR year_low_pct < 5) AND hod_dist + lod_dist < 0.8 AND rel_volume < 1 — at 52w extreme + very tight range + dry vol (silence at extreme; pre-reversal exhaustion signal)
-    MultiAxisDryDay,                 // change_pct.abs() < 0.5 AND rel_volume < 0.7 AND hod_dist + lod_dist < 1.5 AND gap_pct.abs() < 0.3 — flat change + dry vol + narrow range + small gap (quiet day across multiple axes; near-silent maintenance)
-    BigGapBigVolBigChange,           // gap_pct.abs() > 2 AND rel_volume >= 2 AND change_pct.abs() > 2 — big gap + big vol + big change (catalyst day; news-driven gap with sustained intraday activity)
-    GapDownClosedNearHODHotVol,      // gap_pct < -1 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — gapped down + finished green + closing tick near HOD + hot vol (V-shape reclaim closing on the highs; strong end-of-day demand)
-    GapUpClosedNearLODHotVol,        // gap_pct > 1 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — gapped up + closed red + closing tick near LOD + hot vol (full fade with finish weakness on the lows; sellers stay in control into close)
-    Year52HighGapUpHotVolBigChange,  // year_high_pct < 1 AND gap_pct > 1 AND rel_volume >= 2 AND change_pct > 1 — within 1% of 52w high + gap up + hot vol + finished up (near-high breakout attempt with sustained demand at multi-year highs)
-    Year52LowGapDownHotVolBigDrop,   // year_low_pct < 1 AND gap_pct < -1 AND rel_volume >= 2 AND change_pct < -1 — within 1% of 52w low + gap down + hot vol + finished down (breakdown capitulation day at multi-year lows)
-    WideRangeFlatCloseHotVol,        // hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND change_pct.abs() < 0.5 AND rel_volume >= 2 — wide intraday range + flat close + hot vol (tug-of-war battle with heavy participation; bulls and bears trade aggressively, neither wins)
-    BigGapNarrowIntradayHotVol,      // gap_pct.abs() > 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — huge gap + tight intraday range + hot vol (gap holds; no follow-through movement either direction; participants accept the new gap level on volume)
-    Year52HighDryVolNarrowRange,     // year_high_pct < 2 AND rel_volume < 0.7 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND change_pct.abs() < 0.3 — near 52w high + dry vol + narrow range + flat (silent compression at multi-year highs; coiled spring before next leg or rejection)
-    Year52LowDryVolNarrowRange,      // year_low_pct < 2 AND rel_volume < 0.7 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND change_pct.abs() < 0.3 — near 52w low + dry vol + narrow range + flat (silent compression at multi-year lows; capitulation exhaustion or coiled bounce setup)
-    CompressedYearRangeFlatDay,      // year_high_pct < 5 AND year_low_pct < 5 AND change_pct.abs() < 0.5 AND rel_volume < 1 — within 5% of BOTH 52w extremes simultaneously (compressed 52w range) + flat + dry vol (structurally narrow asset having yet another silent day; maximum coil at the regime level)
-    CompressedYearRangeRegimeBreak,  // year_high_pct < 5 AND year_low_pct < 5 AND change_pct.abs() > 2 AND rel_volume >= 1.5 — within 5% of BOTH 52w extremes (compressed regime) BUT big change + hot vol (sudden break of a long-compressed 52w sideways range; regime-level breakout/breakdown candidate)
-    IntradayClimaxTopFade,           // hod_dist_pct.abs() > 4 AND lod_dist_pct.abs() < 0.5 AND change_pct < 0 AND rel_volume >= 2 — far from HOD + closed at LOD + finished red + hot vol (intraday climax-top fade: pumped early then sold all day to finish red at the lows on volume)
-    IntradayClimaxBottomReclaim,     // lod_dist_pct.abs() > 4 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 AND rel_volume >= 2 — far from LOD + closed at HOD + finished green + hot vol (intraday climax-bottom reclaim: panicked early then bid up all day to finish green at the highs on volume)
-    BigChangeDryVolWideRange,        // change_pct.abs() > 3 AND rel_volume < 0.7 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 3 — big change + dry vol + wide intraday range (low-conviction trend day with thin tape; volatile but uncrowded; potentially manipulated or fake breakout)
-    BigChangeDryVolFromGap,          // change_pct.abs() > 3 AND rel_volume < 0.7 AND gap_pct.abs() > 2 — big change + dry vol + significant gap (overnight repricing held with minimal intraday participation; pure pre-market re-rating absorbed without daytime confirmation)
-    ExtremeVolGapDownReversal,       // rel_volume >= 5 AND gap_pct < -3 AND change_pct > 0 — extreme vol (5×+) + gap down >3 + finished green (extreme institutional reversal of overnight gap-down; max-conviction reclaim)
-    ExtremeVolGapUpReversal,         // rel_volume >= 5 AND gap_pct > 3 AND change_pct < 0 — extreme vol (5×+) + gap up >3 + finished red (extreme institutional reversal of overnight gap-up; max-conviction distribution)
-    AtYearHighRangeExpansionDryVol,  // year_high_pct < 1 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume < 0.7 — within 1% of 52w high + wide intraday range + dry vol (no-volume rally at all-time highs; distribution warning; wide range without participation = supply meeting thin demand)
-    AtYearLowRangeExpansionDryVol,   // year_low_pct < 1 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume < 0.7 — within 1% of 52w low + wide intraday range + dry vol (no-volume capitulation at multi-year lows; thin-tape bounces without conviction; unlikely to stick)
-    IntradayBigDayGapAgainstHotVol,  // day_pct.abs() > 3 AND gap_pct * day_pct < 0 AND gap_pct.abs() > 1 AND rel_volume >= 2 — big intraday move + gap-against-day-direction + hot vol (institutional gap-against-trend reversal day; open faded, then reversed and ran hard against the gap on volume)
-    IntradayBigDayGapWithHotVol,     // day_pct.abs() > 3 AND gap_pct * day_pct > 0 AND gap_pct.abs() > 1 AND rel_volume >= 2 — big intraday move + gap-with-day-direction + hot vol (textbook gap-and-go continuation: open kept running same direction as the gap on heavy participation)
-    OvernightDriftDryVol,            // gap_pct.abs() > 2 AND day_pct.abs() < 0.3 AND rel_volume < 0.5 — significant gap + flat intraday + very dry vol (overnight news repriced and nobody traded during the day; max-silence post-news; news absorbed instantly)
-    HotVolHugeGapTinyDay,            // rel_volume >= 3 AND gap_pct.abs() > 2 AND day_pct.abs() < 0.3 — hot vol (3×+) + big gap + nearly flat intraday (heavy volume but no intraday movement; institutional repositioning at the new gap level; massive churn at one price)
-    Year52LowGapUpHeldHotVol,        // year_low_pct < 5 AND gap_pct > 1 AND change_pct > 2 AND rel_volume >= 2 — at 52w low + gap up + finished up >2 + hot vol (relief gap HELD and extended on volume; reversal candidate at the floor; opposite of Year52LowGapUpFaded)
-    Year52HighGapDownHeldHotVol,     // year_high_pct < 5 AND gap_pct < -1 AND change_pct < -2 AND rel_volume >= 2 — at 52w high + gap down + finished down <-2 + hot vol (rejection gap HELD and extended; distribution at the highs; opposite of Year52HighGapDownReclaimed)
+    YearHighSharpDistribution, // year_high_pct < 3 AND change_pct < -5 AND rel_volume >= 3 — at 52w high + huge drop + extreme vol (sharp distribution from the highs; potential trend break)
+    LargeChangeOnNormalVol, // change_pct.abs() > 3 AND rel_volume between 0.7 and 1.3 AND hod_dist + lod_dist > 2 — big change + normal vol + wide range (quality move without extreme participation; orderly directional day)
+    MassiveIntradayWithoutGap, // gap_pct.abs() < 0.1 AND day_pct.abs() > 3 AND rel_volume >= 2 — basically no gap + massive intraday + hot vol (huge intraday move with zero overnight bias; pure intraday discovery)
+    MidYearBothSidesTagged, // year_high_pct > 10 AND year_low_pct > 10 AND hod_dist_pct.abs() > 1 AND lod_dist_pct.abs() > 1 AND rel_volume >= 1 — well within 52w + both extremes visited + decent vol (mid-range double-test day; structurally undecided)
+    ExtremeSilentRange, // (year_high_pct < 5 OR year_low_pct < 5) AND hod_dist + lod_dist < 0.8 AND rel_volume < 1 — at 52w extreme + very tight range + dry vol (silence at extreme; pre-reversal exhaustion signal)
+    MultiAxisDryDay, // change_pct.abs() < 0.5 AND rel_volume < 0.7 AND hod_dist + lod_dist < 1.5 AND gap_pct.abs() < 0.3 — flat change + dry vol + narrow range + small gap (quiet day across multiple axes; near-silent maintenance)
+    BigGapBigVolBigChange, // gap_pct.abs() > 2 AND rel_volume >= 2 AND change_pct.abs() > 2 — big gap + big vol + big change (catalyst day; news-driven gap with sustained intraday activity)
+    GapDownClosedNearHODHotVol, // gap_pct < -1 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — gapped down + finished green + closing tick near HOD + hot vol (V-shape reclaim closing on the highs; strong end-of-day demand)
+    GapUpClosedNearLODHotVol, // gap_pct > 1 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — gapped up + closed red + closing tick near LOD + hot vol (full fade with finish weakness on the lows; sellers stay in control into close)
+    Year52HighGapUpHotVolBigChange, // year_high_pct < 1 AND gap_pct > 1 AND rel_volume >= 2 AND change_pct > 1 — within 1% of 52w high + gap up + hot vol + finished up (near-high breakout attempt with sustained demand at multi-year highs)
+    Year52LowGapDownHotVolBigDrop, // year_low_pct < 1 AND gap_pct < -1 AND rel_volume >= 2 AND change_pct < -1 — within 1% of 52w low + gap down + hot vol + finished down (breakdown capitulation day at multi-year lows)
+    WideRangeFlatCloseHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND change_pct.abs() < 0.5 AND rel_volume >= 2 — wide intraday range + flat close + hot vol (tug-of-war battle with heavy participation; bulls and bears trade aggressively, neither wins)
+    BigGapNarrowIntradayHotVol, // gap_pct.abs() > 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — huge gap + tight intraday range + hot vol (gap holds; no follow-through movement either direction; participants accept the new gap level on volume)
+    Year52HighDryVolNarrowRange, // year_high_pct < 2 AND rel_volume < 0.7 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND change_pct.abs() < 0.3 — near 52w high + dry vol + narrow range + flat (silent compression at multi-year highs; coiled spring before next leg or rejection)
+    Year52LowDryVolNarrowRange, // year_low_pct < 2 AND rel_volume < 0.7 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND change_pct.abs() < 0.3 — near 52w low + dry vol + narrow range + flat (silent compression at multi-year lows; capitulation exhaustion or coiled bounce setup)
+    CompressedYearRangeFlatDay, // year_high_pct < 5 AND year_low_pct < 5 AND change_pct.abs() < 0.5 AND rel_volume < 1 — within 5% of BOTH 52w extremes simultaneously (compressed 52w range) + flat + dry vol (structurally narrow asset having yet another silent day; maximum coil at the regime level)
+    CompressedYearRangeRegimeBreak, // year_high_pct < 5 AND year_low_pct < 5 AND change_pct.abs() > 2 AND rel_volume >= 1.5 — within 5% of BOTH 52w extremes (compressed regime) BUT big change + hot vol (sudden break of a long-compressed 52w sideways range; regime-level breakout/breakdown candidate)
+    IntradayClimaxTopFade, // hod_dist_pct.abs() > 4 AND lod_dist_pct.abs() < 0.5 AND change_pct < 0 AND rel_volume >= 2 — far from HOD + closed at LOD + finished red + hot vol (intraday climax-top fade: pumped early then sold all day to finish red at the lows on volume)
+    IntradayClimaxBottomReclaim, // lod_dist_pct.abs() > 4 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 AND rel_volume >= 2 — far from LOD + closed at HOD + finished green + hot vol (intraday climax-bottom reclaim: panicked early then bid up all day to finish green at the highs on volume)
+    BigChangeDryVolWideRange, // change_pct.abs() > 3 AND rel_volume < 0.7 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 3 — big change + dry vol + wide intraday range (low-conviction trend day with thin tape; volatile but uncrowded; potentially manipulated or fake breakout)
+    BigChangeDryVolFromGap, // change_pct.abs() > 3 AND rel_volume < 0.7 AND gap_pct.abs() > 2 — big change + dry vol + significant gap (overnight repricing held with minimal intraday participation; pure pre-market re-rating absorbed without daytime confirmation)
+    ExtremeVolGapDownReversal, // rel_volume >= 5 AND gap_pct < -3 AND change_pct > 0 — extreme vol (5×+) + gap down >3 + finished green (extreme institutional reversal of overnight gap-down; max-conviction reclaim)
+    ExtremeVolGapUpReversal, // rel_volume >= 5 AND gap_pct > 3 AND change_pct < 0 — extreme vol (5×+) + gap up >3 + finished red (extreme institutional reversal of overnight gap-up; max-conviction distribution)
+    AtYearHighRangeExpansionDryVol, // year_high_pct < 1 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume < 0.7 — within 1% of 52w high + wide intraday range + dry vol (no-volume rally at all-time highs; distribution warning; wide range without participation = supply meeting thin demand)
+    AtYearLowRangeExpansionDryVol, // year_low_pct < 1 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume < 0.7 — within 1% of 52w low + wide intraday range + dry vol (no-volume capitulation at multi-year lows; thin-tape bounces without conviction; unlikely to stick)
+    IntradayBigDayGapAgainstHotVol, // day_pct.abs() > 3 AND gap_pct * day_pct < 0 AND gap_pct.abs() > 1 AND rel_volume >= 2 — big intraday move + gap-against-day-direction + hot vol (institutional gap-against-trend reversal day; open faded, then reversed and ran hard against the gap on volume)
+    IntradayBigDayGapWithHotVol, // day_pct.abs() > 3 AND gap_pct * day_pct > 0 AND gap_pct.abs() > 1 AND rel_volume >= 2 — big intraday move + gap-with-day-direction + hot vol (textbook gap-and-go continuation: open kept running same direction as the gap on heavy participation)
+    OvernightDriftDryVol, // gap_pct.abs() > 2 AND day_pct.abs() < 0.3 AND rel_volume < 0.5 — significant gap + flat intraday + very dry vol (overnight news repriced and nobody traded during the day; max-silence post-news; news absorbed instantly)
+    HotVolHugeGapTinyDay, // rel_volume >= 3 AND gap_pct.abs() > 2 AND day_pct.abs() < 0.3 — hot vol (3×+) + big gap + nearly flat intraday (heavy volume but no intraday movement; institutional repositioning at the new gap level; massive churn at one price)
+    Year52LowGapUpHeldHotVol, // year_low_pct < 5 AND gap_pct > 1 AND change_pct > 2 AND rel_volume >= 2 — at 52w low + gap up + finished up >2 + hot vol (relief gap HELD and extended on volume; reversal candidate at the floor; opposite of Year52LowGapUpFaded)
+    Year52HighGapDownHeldHotVol, // year_high_pct < 5 AND gap_pct < -1 AND change_pct < -2 AND rel_volume >= 2 — at 52w high + gap down + finished down <-2 + hot vol (rejection gap HELD and extended; distribution at the highs; opposite of Year52HighGapDownReclaimed)
     HotVolSmallChangeSmallGapWideRange, // rel_volume >= 2 AND change_pct.abs() < 0.5 AND gap_pct.abs() < 0.3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 1.5 — hot vol + tiny change + tiny gap + moderate range (heavy participation that visited both sides + flat finish + no overnight bias; pure intraday redistribution without directional resolution)
-    HotVolFlatCloseBigGap,           // change_pct.abs() < 0.5 AND gap_pct.abs() > 2 AND rel_volume >= 2 — flat finish + big gap + hot vol (intraday fully absorbed the gap on heavy participation; full round-trip on volume; market rejected the overnight move with confirmation)
-    OrganicMicroGainNormalVol,       // change_pct between 0.3 and 1 AND day_pct > 0.2 AND rel_volume between 0.9 and 1.2 AND gap_pct.abs() < 0.2 — modest gain (0.3-1%) + green intraday + normal vol + no gap (silent drift up; pure organic accumulation under the radar; ideal for long-term adds without alerting)
-    OrganicMicroDropNormalVol,       // change_pct between -1 and -0.3 AND day_pct < -0.2 AND rel_volume between 0.9 and 1.2 AND gap_pct.abs() < 0.2 — modest drop (-1 to -0.3%) + red intraday + normal vol + no gap (silent drift down; pure organic distribution under the radar)
+    HotVolFlatCloseBigGap, // change_pct.abs() < 0.5 AND gap_pct.abs() > 2 AND rel_volume >= 2 — flat finish + big gap + hot vol (intraday fully absorbed the gap on heavy participation; full round-trip on volume; market rejected the overnight move with confirmation)
+    OrganicMicroGainNormalVol, // change_pct between 0.3 and 1 AND day_pct > 0.2 AND rel_volume between 0.9 and 1.2 AND gap_pct.abs() < 0.2 — modest gain (0.3-1%) + green intraday + normal vol + no gap (silent drift up; pure organic accumulation under the radar; ideal for long-term adds without alerting)
+    OrganicMicroDropNormalVol, // change_pct between -1 and -0.3 AND day_pct < -0.2 AND rel_volume between 0.9 and 1.2 AND gap_pct.abs() < 0.2 — modest drop (-1 to -0.3%) + red intraday + normal vol + no gap (silent drift down; pure organic distribution under the radar)
     IntradayRangeWiderThanGapHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > gap_pct.abs() * 2 AND gap_pct.abs() > 1 AND rel_volume >= 2 — intraday range > 2× the gap + meaningful gap + hot vol (intraday discovery dominates the gap; market traded a much wider range than overnight expected on volume)
     GapWiderThanIntradayRangeHotVol, // gap_pct.abs() > hod_dist_pct.abs() + lod_dist_pct.abs() AND gap_pct.abs() > 1.5 AND rel_volume >= 2 — gap > entire intraday range + significant gap + hot vol (gap dominates the day's move; intraday only consolidated in a narrow band near the new level on volume)
-    BigGreenLowVolWeakClose,         // change_pct > 3 AND rel_volume < 1 AND hod_dist_pct.abs() > 1 — meaningful gain + dry vol + close not near HOD (fake-breakout warning; up-move on weak participation closing off the highs; reversion candidate)
-    BigRedLowVolWeakClose,           // change_pct < -3 AND rel_volume < 1 AND lod_dist_pct.abs() > 1 — meaningful drop + dry vol + close not near LOD (fake-breakdown warning; down-move on weak participation closing off the lows; reversion candidate)
-    GappingNearYearLowExtremeVol,    // year_low_pct < 5 AND gap_pct.abs() > 2 AND rel_volume >= 4 — near 52w low + significant gap + extreme vol (4×+) (high-intensity event at the floor; earnings/news catalyst at multi-year lows; max-event-driven reversal or capitulation candidate)
-    GappingNearYearHighExtremeVol,   // year_high_pct < 5 AND gap_pct.abs() > 2 AND rel_volume >= 4 — near 52w high + significant gap + extreme vol (4×+) (high-intensity event at the highs; catalyst at the top; max-event-driven blow-off or distribution candidate)
-    BothSidesTaggedDryVolFlat,       // hod_dist_pct.abs() > 1 AND lod_dist_pct.abs() > 1 AND change_pct.abs() < 0.3 AND rel_volume < 0.7 — both extremes well-distant from close + flat change + dry vol (thin-tape both-side raid that closed flat; algorithmic stop-hunt at low participation; possible spoof/wash on illiquid name)
-    BothSidesTaggedBigChangeHotVol,  // hod_dist_pct.abs() > 1 AND lod_dist_pct.abs() > 1 AND change_pct.abs() > 2 AND rel_volume >= 2 — both extremes well-distant + big change + hot vol (full-range exploration ending decisively on volume; trend day that swept both sides first before resolving)
-    ModerateGreenGapDownReversal,    // gap_pct < -1 AND change_pct between 1 and 2 AND rel_volume between 1 and 1.5 — gap down + moderate green finish (1-2%) + slightly elevated vol (moderate-conviction gap reversal; institutional buying without panic; conservative reclaim)
-    ModerateRedGapUpFade,            // gap_pct > 1 AND change_pct between -2 and -1 AND rel_volume between 1 and 1.5 — gap up + moderate red finish (-1 to -2%) + slightly elevated vol (moderate-conviction gap fade; institutional selling without panic; conservative rejection)
+    BigGreenLowVolWeakClose, // change_pct > 3 AND rel_volume < 1 AND hod_dist_pct.abs() > 1 — meaningful gain + dry vol + close not near HOD (fake-breakout warning; up-move on weak participation closing off the highs; reversion candidate)
+    BigRedLowVolWeakClose, // change_pct < -3 AND rel_volume < 1 AND lod_dist_pct.abs() > 1 — meaningful drop + dry vol + close not near LOD (fake-breakdown warning; down-move on weak participation closing off the lows; reversion candidate)
+    GappingNearYearLowExtremeVol, // year_low_pct < 5 AND gap_pct.abs() > 2 AND rel_volume >= 4 — near 52w low + significant gap + extreme vol (4×+) (high-intensity event at the floor; earnings/news catalyst at multi-year lows; max-event-driven reversal or capitulation candidate)
+    GappingNearYearHighExtremeVol, // year_high_pct < 5 AND gap_pct.abs() > 2 AND rel_volume >= 4 — near 52w high + significant gap + extreme vol (4×+) (high-intensity event at the highs; catalyst at the top; max-event-driven blow-off or distribution candidate)
+    BothSidesTaggedDryVolFlat, // hod_dist_pct.abs() > 1 AND lod_dist_pct.abs() > 1 AND change_pct.abs() < 0.3 AND rel_volume < 0.7 — both extremes well-distant from close + flat change + dry vol (thin-tape both-side raid that closed flat; algorithmic stop-hunt at low participation; possible spoof/wash on illiquid name)
+    BothSidesTaggedBigChangeHotVol, // hod_dist_pct.abs() > 1 AND lod_dist_pct.abs() > 1 AND change_pct.abs() > 2 AND rel_volume >= 2 — both extremes well-distant + big change + hot vol (full-range exploration ending decisively on volume; trend day that swept both sides first before resolving)
+    ModerateGreenGapDownReversal, // gap_pct < -1 AND change_pct between 1 and 2 AND rel_volume between 1 and 1.5 — gap down + moderate green finish (1-2%) + slightly elevated vol (moderate-conviction gap reversal; institutional buying without panic; conservative reclaim)
+    ModerateRedGapUpFade, // gap_pct > 1 AND change_pct between -2 and -1 AND rel_volume between 1 and 1.5 — gap up + moderate red finish (-1 to -2%) + slightly elevated vol (moderate-conviction gap fade; institutional selling without panic; conservative rejection)
     GapAndIntradayBothBigSameDirHotVol, // gap_pct.abs() > 2 AND day_pct.abs() > 2 AND gap_pct * day_pct > 0 AND rel_volume >= 1.5 — significant gap + significant intraday + same-direction + hot vol (gap-and-intraday-extend; both halves of the day pushed the same way on volume; conviction continuation)
     GapAndIntradayBothBigOpposingHotVol, // gap_pct.abs() > 2 AND day_pct.abs() > 2 AND gap_pct * day_pct < 0 AND rel_volume >= 1.5 — significant gap + significant intraday + opposite-direction + hot vol (gap rejected and reversed by significant intraday; full counter-move on volume)
-    CountertrendBounceInDowntrend,   // change_pct > 2 AND year_high_pct > 20 AND year_low_pct < 10 AND rel_volume >= 2 — big green day + ≥20% below 52w high + within 10% of 52w low + hot vol (countertrend bounce in long-running downtrend; strong-hands buying near the floor)
-    CountertrendFadeInUptrend,       // change_pct < -2 AND year_low_pct > 20 AND year_high_pct < 10 AND rel_volume >= 2 — big red day + ≥20% above 52w low + within 10% of 52w high + hot vol (countertrend fade in long-running uptrend; profit-taking near the ceiling)
-    BigGreenNarrowRangeHotVol,       // change_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 2 — big green + tight intraday range + hot vol (gap-and-hold up; no intraday giveback; max-strength continuation candidate; entire move from gap held all day)
-    BigRedNarrowRangeHotVol,         // change_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 2 — big red + tight intraday range + hot vol (gap-and-hold down; no intraday recovery; max-weakness continuation candidate; entire move from gap held all day)
-    OneSidedRangeCloseAtHODGreen,    // hod_dist_pct.abs() < 0.5 AND lod_dist_pct.abs() > 2 AND change_pct > 1 AND rel_volume >= 1.5 — close at HOD + LOD >2% away + green + decent vol (one-sided up-day exploration; sellers shown low side but couldn't hold; trend day finished on the highs)
-    OneSidedRangeCloseAtLODRed,      // lod_dist_pct.abs() < 0.5 AND hod_dist_pct.abs() > 2 AND change_pct < -1 AND rel_volume >= 1.5 — close at LOD + HOD >2% away + red + decent vol (one-sided down-day exploration; buyers shown high side but couldn't hold; trend day finished on the lows)
-    BullishOutsideDayHotVol,         // change_pct > 1 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND change_pct * day_pct > 0 AND rel_volume >= 2 — green close + wide range + same-direction intraday + hot vol (bullish outside day with conviction; large-range exploration ending up on volume; institutional accumulation through range expansion)
-    BearishOutsideDayHotVol,         // change_pct < -1 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND change_pct * day_pct > 0 AND rel_volume >= 2 — red close + wide range + same-direction intraday + hot vol (bearish outside day with conviction; large-range exploration ending down on volume; institutional distribution through range expansion)
-    BelowAvgVolBigChangeGreen,       // change_pct > 2 AND rel_volume >= 0.5 AND rel_volume < 0.9 AND gap_pct.abs() < 0.5 — big green + below-avg vol (50-90%) + no gap (efficient organic up move on quiet tape; small participants chasing without catalyst; low-effort momentum)
-    BelowAvgVolBigChangeRed,         // change_pct < -2 AND rel_volume >= 0.5 AND rel_volume < 0.9 AND gap_pct.abs() < 0.5 — big red + below-avg vol (50-90%) + no gap (efficient organic down move on quiet tape; small participants distributing without catalyst; low-effort weakness)
-    MidRangeFullExpansionHotVol,     // year_high_pct > 15 AND year_low_pct > 15 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume >= 2 — structurally mid-52w + wide intraday range + hot vol (undecided asset having a high-vol expansion day; potential trend genesis from balance; range break candidate)
-    MidRangeCompressionDryVol,       // year_high_pct > 15 AND year_low_pct > 15 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 0.8 AND rel_volume < 0.5 — structurally mid-52w + tight intraday + dry vol (undecided + intraday compression + nobody trading; classic dormancy day; pre-event coil)
+    CountertrendBounceInDowntrend, // change_pct > 2 AND year_high_pct > 20 AND year_low_pct < 10 AND rel_volume >= 2 — big green day + ≥20% below 52w high + within 10% of 52w low + hot vol (countertrend bounce in long-running downtrend; strong-hands buying near the floor)
+    CountertrendFadeInUptrend, // change_pct < -2 AND year_low_pct > 20 AND year_high_pct < 10 AND rel_volume >= 2 — big red day + ≥20% above 52w low + within 10% of 52w high + hot vol (countertrend fade in long-running uptrend; profit-taking near the ceiling)
+    BigGreenNarrowRangeHotVol, // change_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 2 — big green + tight intraday range + hot vol (gap-and-hold up; no intraday giveback; max-strength continuation candidate; entire move from gap held all day)
+    BigRedNarrowRangeHotVol, // change_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 2 — big red + tight intraday range + hot vol (gap-and-hold down; no intraday recovery; max-weakness continuation candidate; entire move from gap held all day)
+    OneSidedRangeCloseAtHODGreen, // hod_dist_pct.abs() < 0.5 AND lod_dist_pct.abs() > 2 AND change_pct > 1 AND rel_volume >= 1.5 — close at HOD + LOD >2% away + green + decent vol (one-sided up-day exploration; sellers shown low side but couldn't hold; trend day finished on the highs)
+    OneSidedRangeCloseAtLODRed, // lod_dist_pct.abs() < 0.5 AND hod_dist_pct.abs() > 2 AND change_pct < -1 AND rel_volume >= 1.5 — close at LOD + HOD >2% away + red + decent vol (one-sided down-day exploration; buyers shown high side but couldn't hold; trend day finished on the lows)
+    BullishOutsideDayHotVol, // change_pct > 1 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND change_pct * day_pct > 0 AND rel_volume >= 2 — green close + wide range + same-direction intraday + hot vol (bullish outside day with conviction; large-range exploration ending up on volume; institutional accumulation through range expansion)
+    BearishOutsideDayHotVol, // change_pct < -1 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND change_pct * day_pct > 0 AND rel_volume >= 2 — red close + wide range + same-direction intraday + hot vol (bearish outside day with conviction; large-range exploration ending down on volume; institutional distribution through range expansion)
+    BelowAvgVolBigChangeGreen, // change_pct > 2 AND rel_volume >= 0.5 AND rel_volume < 0.9 AND gap_pct.abs() < 0.5 — big green + below-avg vol (50-90%) + no gap (efficient organic up move on quiet tape; small participants chasing without catalyst; low-effort momentum)
+    BelowAvgVolBigChangeRed, // change_pct < -2 AND rel_volume >= 0.5 AND rel_volume < 0.9 AND gap_pct.abs() < 0.5 — big red + below-avg vol (50-90%) + no gap (efficient organic down move on quiet tape; small participants distributing without catalyst; low-effort weakness)
+    MidRangeFullExpansionHotVol, // year_high_pct > 15 AND year_low_pct > 15 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume >= 2 — structurally mid-52w + wide intraday range + hot vol (undecided asset having a high-vol expansion day; potential trend genesis from balance; range break candidate)
+    MidRangeCompressionDryVol, // year_high_pct > 15 AND year_low_pct > 15 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 0.8 AND rel_volume < 0.5 — structurally mid-52w + tight intraday + dry vol (undecided + intraday compression + nobody trading; classic dormancy day; pre-event coil)
     OpeningRangeHoldCloseAtHODGreen, // gap_pct.abs() < 0.3 AND hod_dist_pct.abs() < 0.2 AND day_pct > 1 AND rel_volume between 1 and 2 — flat open + close exactly at HOD + green intraday >1% + normal-elevated vol (clean intraday discovery to highs with no overnight bias; pure organic trend day up)
-    OpeningRangeHoldCloseAtLODRed,   // gap_pct.abs() < 0.3 AND lod_dist_pct.abs() < 0.2 AND day_pct < -1 AND rel_volume between 1 and 2 — flat open + close exactly at LOD + red intraday >1% + normal-elevated vol (clean intraday discovery to lows with no overnight bias; pure organic trend day down)
-    WindowDressingMarkUp,            // change_pct.abs() < 0.3 AND change_pct > 0 AND hod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — tiny green + close near HOD + hot vol (mark-the-close behavior; possible window-dressing at quarter/month end; deliberate end-of-day mark-up on volume)
-    WindowDressingMarkDown,          // change_pct.abs() < 0.3 AND change_pct < 0 AND lod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — tiny red + close near LOD + hot vol (mark-down behavior; possible reverse window-dressing; deliberate end-of-day mark-down on volume)
+    OpeningRangeHoldCloseAtLODRed, // gap_pct.abs() < 0.3 AND lod_dist_pct.abs() < 0.2 AND day_pct < -1 AND rel_volume between 1 and 2 — flat open + close exactly at LOD + red intraday >1% + normal-elevated vol (clean intraday discovery to lows with no overnight bias; pure organic trend day down)
+    WindowDressingMarkUp, // change_pct.abs() < 0.3 AND change_pct > 0 AND hod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — tiny green + close near HOD + hot vol (mark-the-close behavior; possible window-dressing at quarter/month end; deliberate end-of-day mark-up on volume)
+    WindowDressingMarkDown, // change_pct.abs() < 0.3 AND change_pct < 0 AND lod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — tiny red + close near LOD + hot vol (mark-down behavior; possible reverse window-dressing; deliberate end-of-day mark-down on volume)
     Year52HighSustainedStrengthHotVol, // year_high_pct < 5 AND day_pct > 1 AND change_pct > 1 AND rel_volume >= 2 — near 52w high + green intraday + green close + hot vol (sustained strength confirmation at the highs; intraday-and-daily both confirm; high-conviction breakout candidate)
-    Year52LowSustainedWeaknessHotVol,  // year_low_pct < 5 AND day_pct < -1 AND change_pct < -1 AND rel_volume >= 2 — near 52w low + red intraday + red close + hot vol (sustained weakness confirmation at the lows; intraday-and-daily both confirm; high-conviction breakdown candidate)
-    BigGreenWithModestGapDecentVol,    // change_pct > 3 AND gap_pct between 0.5 and 1.5 AND rel_volume >= 1.5 — meaningful gain >3 + modest gap (0.5-1.5%) + decent vol (gap-assisted rally; overnight bias kicked off the day but intraday extended substantially on volume)
-    BigRedWithModestGapDownDecentVol,  // change_pct < -3 AND gap_pct between -1.5 and -0.5 AND rel_volume >= 1.5 — meaningful drop <-3 + modest gap down (-0.5 to -1.5%) + decent vol (gap-assisted decline; overnight bias kicked off the day but intraday extended substantially on volume)
-    CompoundConfirmedBigGreen,         // change_pct > 3 AND day_pct > 1 AND gap_pct > 0.5 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — big green close + green intraday + positive gap + close near HOD + decent vol (every signal aligned bullish; full conviction up day; max-confirmation long candidate)
-    CompoundConfirmedBigRed,           // change_pct < -3 AND day_pct < -1 AND gap_pct < -0.5 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — big red close + red intraday + negative gap + close near LOD + decent vol (every signal aligned bearish; full conviction down day; max-confirmation short candidate)
-    FollowThroughGreen,                // change_pct in [1, 3] AND day_pct in [0.5, 2] AND gap_pct in [-0.5, 0.5] AND hod_dist_pct.abs() < 0.5 AND rel_volume in [1.2, 2] — modest green + green intraday + small gap + close near HOD + above-avg vol (clean follow-through up day; no catalyst spike, just steady accumulation with intraday confirmation)
-    FollowThroughRed,                  // change_pct in [-3, -1] AND day_pct in [-2, -0.5] AND gap_pct in [-0.5, 0.5] AND lod_dist_pct.abs() < 0.5 AND rel_volume in [1.2, 2] — modest red + red intraday + small gap + close near LOD + above-avg vol (clean follow-through down day; no catalyst spike, just steady distribution with intraday confirmation)
-    Year52HighGapDownStrongCloseHotVol,  // year_high_pct < 3 AND gap_pct < -0.5 AND change_pct > 1 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — near 52w high + gap down + green close + close near HOD + decent vol (resilience day at the highs; gap rejected, recovered and closed strong; bullish continuation candidate)
-    Year52LowGapUpWeakCloseHotVol,       // year_low_pct < 3 AND gap_pct > 0.5 AND change_pct < -1 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — near 52w low + gap up + red close + close near LOD + decent vol (rejection day at the lows; relief gap faded, sold all day to close weak; bearish continuation candidate)
-    FlatOpenTrendUpModerate,             // gap_pct.abs() < 0.3 AND change_pct in [1, 3] AND day_pct > 1 AND change_pct * day_pct > 0 AND rel_volume in [1, 2] — flat open + moderate green (1-3%) + green intraday + same-sign + normal-elevated vol (no overnight bias + clean intraday trend up; mid-magnitude organic move; conviction without spike)
-    FlatOpenTrendDownModerate,           // gap_pct.abs() < 0.3 AND change_pct in [-3, -1] AND day_pct < -1 AND change_pct * day_pct > 0 AND rel_volume in [1, 2] — flat open + moderate red + red intraday + same-sign + normal-elevated vol (no overnight bias + clean intraday trend down; mid-magnitude organic move; conviction without spike)
-    MidRangeRecoveryRallyHotVol,         // year_high_pct > 10 AND year_low_pct > 10 AND change_pct > 3 AND rel_volume >= 2 — recovered well off 52w lows + still below highs + big green + hot vol (sustained recovery rally in mid-52w; not at either extreme; mid-range bullish move with conviction)
-    MidRangeSelloffHotVol,               // year_high_pct > 10 AND year_low_pct > 10 AND change_pct < -3 AND rel_volume >= 2 — sold off well from 52w highs + still above lows + big red + hot vol (sustained selloff in mid-52w; not at either extreme; mid-range bearish move with conviction)
-    IntermediateGreenStrongClose,        // change_pct in [3, 7] AND rel_volume in [1.5, 3] AND hod_dist_pct.abs() < 1 — meaningful green (3-7%) + decent vol (1.5-3×) + close near HOD (intermediate gain on intermediate vol with strong finish; sweet spot between organic and parabolic; momentum without exhaustion)
-    IntermediateRedWeakClose,            // change_pct in [-7, -3] AND rel_volume in [1.5, 3] AND lod_dist_pct.abs() < 1 — meaningful red (-3 to -7%) + decent vol (1.5-3×) + close near LOD (intermediate drop with weak finish; sweet spot between organic and crash; weakness without panic)
-    MaxVolatilityEventHotVol,            // gap_pct.abs() > 2 AND change_pct.abs() > 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume >= 2 — big gap + big change + wide intraday range + hot vol (max-volatility event day; gap caught attention, intraday explored wide range, hot vol confirmed; catalyst-driven volatility expansion)
-    MaxRangeFakeOutDryVol,               // gap_pct.abs() > 2 AND change_pct.abs() > 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume < 1 — big gap + big change + wide intraday range + DRY vol (max-range fake-out; wide intraday with thin tape suggests stop-runs without true conviction; algorithmic noise on illiquid name)
-    BigGreenIntradayOnlyHotVol,          // change_pct > 3 AND gap_pct.abs() < 0.5 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume >= 2 — big green close + flat open + wide intraday + hot vol (intraday-only rally; no overnight bias; pure intraday discovery to new highs; all of the day's gain from intraday participation)
-    BigRedIntradayOnlyHotVol,            // change_pct < -3 AND gap_pct.abs() < 0.5 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume >= 2 — big red close + flat open + wide intraday + hot vol (intraday-only decline; no overnight bias; pure intraday discovery to new lows; all of the day's loss from intraday participation)
-    BrokeAbove52wHighHotVol,             // year_high_pct > 0 AND change_pct > 1 AND rel_volume >= 2 — closed ABOVE prior 52w high + green + hot vol (true new-high breakout with volume confirmation; institutional initiation at a multi-year extreme)
-    BrokeBelow52wLowHotVol,              // year_low_pct < 0 AND change_pct < -1 AND rel_volume >= 2 — closed BELOW prior 52w low + red + hot vol (true new-low breakdown with volume confirmation; institutional capitulation at a multi-year extreme)
-    ChangeIntradayDisagreeBothTagged,    // change_pct * day_pct < 0 AND hod_dist_pct.abs() > 1 AND lod_dist_pct.abs() > 1 AND rel_volume >= 1.5 — change/day signs disagree + both extremes visited + decent vol (full schizophrenic day; gap dominates close direction but intraday went opposite and explored both sides; institutional repositioning vs retail)
-    ChangeIntradayDisagreeFlatRange,     // change_pct * day_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — change/day signs disagree + tight intraday + decent vol (gap-vs-intraday sign disagreement but intraday compressed; overnight news held even as intraday tried to fade in narrow range)
-    BigGapHugeVolHalfFade,               // gap_pct.abs() > 2 AND rel_volume >= 3 AND change_pct.abs() < gap_pct.abs() * 0.5 — big gap + extreme vol (3×+) + change < half the gap (gap absorbed substantially even on extreme volume; institutional offloading at gap level; >50% gap fade with conviction)
-    BigGapHugeVolFullExtension,          // gap_pct.abs() > 2 AND rel_volume >= 3 AND change_pct.abs() > gap_pct.abs() * 1.5 — big gap + extreme vol (3×+) + change > 1.5× the gap (gap extended substantially on extreme volume; institutional commitment beyond the gap; momentum continuation on max participation)
-    GapWithChangeWideRangeHotVol,        // change_pct * gap_pct > 0 AND gap_pct.abs() > 1 AND change_pct.abs() > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 3 AND rel_volume >= 2 — gap and change same-sign + meaningful gap + bigger change + wide range + hot vol (gap extended through wide intraday exploration in same direction on volume; max-conviction trend day with both halves contributing)
-    GapAgainstChangeWideRangeHotVol,     // change_pct * gap_pct < 0 AND gap_pct.abs() > 1 AND change_pct.abs() > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 3 AND rel_volume >= 2 — gap and change opposite-sign + meaningful gap + bigger change + wide range + hot vol (intraday more than reversed the gap with wide range and hot vol; full institutional reversal with extreme volatility)
-    HotVolNoChangeNoGapTightRange,       // rel_volume >= 2 AND change_pct.abs() < 0.5 AND gap_pct.abs() < 0.3 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 — hot vol + flat change + flat gap + tight intraday (heavy participation but absolutely no movement; classic absorption pattern — institutional accumulation/distribution disguised as nothing)
-    ColdVolBigChangeWideRange,           // rel_volume < 0.5 AND change_pct.abs() > 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 3 — very dry vol + big change + wide range (max-thin-tape exception; nobody traded but price moved a lot through wide range — algorithmic noise / illiquid stop-runs)
-    MicroPinTinyRangeHotVol,             // hod_dist_pct.abs() < 0.1 AND lod_dist_pct.abs() < 0.1 AND rel_volume >= 2 — close pinned at exactly HOD AND LOD (effectively zero intraday range) + hot vol (extreme pin; heavy participation at a single price; possible OPEX pin or institutional volume crossed at one tick)
-    MicroPinTinyRangeDryVol,             // hod_dist_pct.abs() < 0.1 AND lod_dist_pct.abs() < 0.1 AND rel_volume < 0.5 — close pinned at exactly HOD AND LOD + DRY vol (dead day; nothing happened at all; market truly absent; possibly halted or extremely illiquid)
-    FullRange52wAtHighSide,              // year_high_pct < 2 AND year_low_pct > 50 AND rel_volume >= 1.5 — within 2% of 52w high + >50% above 52w low + decent vol (stock has doubled+ from 52w low and is at the highs; max-uptrend + at decision point for breakout/exhaustion)
-    FullRange52wAtLowSide,               // year_low_pct < 2 AND year_high_pct > 50 AND rel_volume >= 1.5 — within 2% of 52w low + >50% below 52w high + decent vol (stock has dropped 50%+ from 52w high and is at the lows; max-downtrend + at decision point for capitulation/reversal)
-    PullbackAndRallyAtYearHigh,          // change_pct in [0.5, 1.5] AND day_pct > 0.5 AND gap_pct in [-0.5, 0] AND year_high_pct < 5 AND rel_volume in [1, 1.8] — moderate green (0.5-1.5%) + green intraday + small red gap + within 5% of 52w high + decent vol (textbook pullback-and-rally setup near the highs; gap-down bought intraday)
-    DeadCatBounceAtYearLow,              // change_pct in [-1.5, -0.5] AND day_pct < -0.5 AND gap_pct in [0, 0.5] AND year_low_pct < 5 AND rel_volume in [1, 1.8] — moderate red + red intraday + small green gap + within 5% of 52w low + decent vol (textbook dead-cat-bounce setup near the lows; gap-up sold intraday)
-    GapDownIntradayReversalCloseAtHOD,   // gap_pct < -0.5 AND day_pct > 0.5 AND hod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — gap down + intraday went up + close near HOD + decent vol (textbook reversal-up day; gap-down was bought, rallied through the day to close at the highs; strong bullish reversal candidate)
-    GapUpIntradayReversalCloseAtLOD,     // gap_pct > 0.5 AND day_pct < -0.5 AND lod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — gap up + intraday went down + close near LOD + decent vol (textbook reversal-down day; gap-up was sold, declined through the day to close at the lows; strong bearish reversal candidate)
-    BigGreenMidYearSweetSpot,            // change_pct > 3 AND year_high_pct in [5, 20] AND year_low_pct > 15 AND rel_volume >= 1.5 — big green + 5-20% below 52w high + well above 52w low + decent vol (sweet-spot up move: high-momentum stock pushing higher from mid-range; room to run before resistance)
-    BigRedMidYearSweetSpot,              // change_pct < -3 AND year_low_pct in [5, 20] AND year_high_pct > 15 AND rel_volume >= 1.5 — big red + 5-20% above 52w low + well below 52w high + decent vol (sweet-spot down move: high-momentum drop from mid-range; room to fall before support)
-    TripleZeroHotVol,                    // gap_pct.abs() < 0.1 AND change_pct.abs() < 0.1 AND day_pct.abs() < 0.1 AND rel_volume >= 2 — gap + change + day ALL near zero + hot vol (massive participation produced literally zero movement on all three axes; max-absorption pattern; institutional cross at one price)
-    TripleZeroDryVol,                    // gap_pct.abs() < 0.1 AND change_pct.abs() < 0.1 AND day_pct.abs() < 0.1 AND rel_volume < 0.5 — gap + change + day ALL near zero + dry vol (universal dormancy; market completely absent on all axes; near-dead-tape day; possibly halted or unattended)
-    ExtremeGapModerateMoveHotVol,        // gap_pct.abs() > 5 AND change_pct.abs() in [2, 5] AND rel_volume >= 2 — huge gap (>5%) + moderate retained change (2-5%) + hot vol (extreme gap retained most but not all of itself on volume; partial-fill move with conviction at a new level)
-    ExtremeGapBigContinuationHotVol,     // gap_pct.abs() > 5 AND change_pct.abs() > gap_pct.abs() AND rel_volume >= 2 — extreme gap + change EXCEEDS gap + hot vol (extreme gap that EXTENDED on volume; max-momentum continuation; >100% gap extension)
-    BigGreenBigGapDryVol,                // change_pct > 5 AND gap_pct > 3 AND rel_volume < 0.8 — big green + big gap up + below-avg vol (huge gap-up that held without participation; suspect rally; possibly fake breakout or stealth squeeze in thin tape)
-    BigRedBigGapDownDryVol,              // change_pct < -5 AND gap_pct < -3 AND rel_volume < 0.8 — big red + big gap down + below-avg vol (huge gap-down that held without participation; suspect breakdown; possibly forced-selling in thin tape or low-conviction capitulation)
-    SmoothBigGreenNormalVol,             // change_pct > 3 AND rel_volume in [1, 1.5] AND hod_dist_pct.abs() < 0.5 AND gap_pct.abs() < 0.5 — big green + normal vol (1-1.5×) + close at HOD + no gap (orderly trend day; not parabolic, but conviction; sweet-spot entry signal)
-    SmoothBigRedNormalVol,               // change_pct < -3 AND rel_volume in [1, 1.5] AND lod_dist_pct.abs() < 0.5 AND gap_pct.abs() < 0.5 — big red + normal vol + close at LOD + no gap (orderly down day; not panic, but conviction; sweet-spot entry for shorts)
-    BigDayPctFlatChangeHotVol,           // day_pct.abs() > 2 AND change_pct.abs() < 0.5 AND rel_volume >= 1.5 — big intraday move + flat close + decent vol (gap absorbed all intraday move on volume; full round-trip with participation; gap-and-fade pattern)
-    BigDayPctBigChangeAlignedHotVol,     // day_pct.abs() > 2 AND change_pct.abs() > 4 AND change_pct * day_pct > 0 AND rel_volume >= 1.5 — big intraday + big change + same sign + decent vol (max-aligned trend day; both gap and intraday push same way through big move on volume)
-    Year52HighBigDayDryVol,              // year_high_pct < 2 AND day_pct > 2 AND rel_volume < 0.7 — near 52w high + big green intraday + dry vol (no-volume push to new highs intraday; distribution suspicion / fake breakout / thin-tape rally)
-    Year52LowBigDayDryVol,               // year_low_pct < 2 AND day_pct < -2 AND rel_volume < 0.7 — near 52w low + big red intraday + dry vol (no-volume push to new lows intraday; capitulation without conviction / thin-tape breakdown)
-    MidMagnitudeGreenMidWickHotVol,      // change_pct in [1, 3] AND hod_dist_pct.abs() in [0.5, 2] AND lod_dist_pct.abs() in [0.5, 2] AND rel_volume >= 1.5 — moderate green + mid-range close + decent vol (moderate-conviction up day with mid-wick finish; less extreme than BigUpMidRangeClose; consolidation candidate)
-    MidMagnitudeRedMidWickHotVol,        // change_pct in [-3, -1] AND hod_dist_pct.abs() in [0.5, 2] AND lod_dist_pct.abs() in [0.5, 2] AND rel_volume >= 1.5 — moderate red + mid-range close + decent vol (moderate-conviction down day with mid-wick finish; less extreme than BigDownMidRangeClose; basing candidate)
-    HotVolHugeRangeBigChange,            // rel_volume >= 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND change_pct.abs() > 4 — extreme vol (3×+) + extreme range (>6%) + big change (>4%) (catalyst day with massive participation, wide exploration, and big finish; max-volatility resolution)
-    HotVolHugeRangeFlatClose,            // rel_volume >= 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND change_pct.abs() < 0.5 — extreme vol + extreme range + flat close (max-absorption pattern at scale: huge intraday exploration but no net result; institutional indecision day)
-    Year52HighDistributionChurn,         // year_high_pct < 2 AND change_pct.abs() < 0.3 AND rel_volume >= 2 — near 52w high + flat close + hot vol (distribution at the highs; heavy churn without movement; institutional offloading at the top)
-    Year52LowAccumulationChurn,          // year_low_pct < 2 AND change_pct.abs() < 0.3 AND rel_volume >= 2 — near 52w low + flat close + hot vol (accumulation at the lows; heavy churn without movement; institutional bottom-fishing at the floor)
-    Year52HighBigGreenBreakoutHotVol,    // year_high_pct < 0 AND change_pct > 4 AND rel_volume >= 2 — breakout to new 52w high + big green + hot vol (decisive breakout from year resistance with institutional sponsorship; trend-following long signal)
-    Year52LowBigRedBreakdownHotVol,      // year_low_pct < 0 AND change_pct < -4 AND rel_volume >= 2 — breakdown to new 52w low + big red + hot vol (decisive breakdown from year support with institutional sponsorship; trend-following short signal)
-    GapUpFailBigRedHotVol,               // gap_pct > 3 AND change_pct < -2 AND rel_volume >= 2 — gap up but closed red + hot vol (failed gap up; trapped longs; reversal short signal)
-    GapDownReclaimBigGreenHotVol,        // gap_pct < -3 AND change_pct > 2 AND rel_volume >= 2 — gap down but closed green + hot vol (reclaimed gap down; trapped shorts; reversal long signal)
-    InsideRangeHotVolCoil,               // hod_dist_pct.abs() < 1 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — tight intraday range + hot vol (inside-range coil with absorption; pre-breakout compression with elevated participation)
-    OutsideRangeFlatCloseHotVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND change_pct.abs() < 0.5 AND rel_volume >= 1.5 — wide intraday range + flat close + hot vol (outside-range whip; high participation but no commitment; institutional indecision with wide whipsaw)
-    CloseAtHodTinyLodHotVol,             // hod_dist_pct.abs() < 0.3 AND lod_dist_pct > 4 AND rel_volume >= 1.5 — closed pinned to HOD + LOD far below + hot vol (full intraday range claim; momentum buy ramp into the close with elevated participation)
-    CloseAtLodTinyHodHotVol,             // lod_dist_pct.abs() < 0.3 AND hod_dist_pct < -4 AND rel_volume >= 1.5 — closed pinned to LOD + HOD far above + hot vol (full intraday range collapse; momentum sell ramp into the close with elevated participation)
-    BigGreenCloseAtHodHotVol,            // change_pct > 3 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 — big green + closed pinned to HOD + hot vol (strong trend day closing on the highs with institutional sponsorship; trend-following long signal)
-    BigRedCloseAtLodHotVol,              // change_pct < -3 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 — big red + closed pinned to LOD + hot vol (strong trend day closing on the lows with institutional sponsorship; trend-following short signal)
-    GapAndGoBigGreenCloseAtHod,          // gap_pct > 2 AND change_pct > gap_pct AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — gapped up + continued higher + closed at HOD + hot vol (gap-and-go continuation; momentum sustained through the close)
-    GapAndDropBigRedCloseAtLod,          // gap_pct < -2 AND change_pct < gap_pct AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — gapped down + continued lower + closed at LOD + hot vol (gap-and-drop continuation; selling sustained through the close)
-    GapUpFillReverseHotVol,              // gap_pct > 3 AND change_pct < 0 AND change_pct > -gap_pct AND rel_volume >= 1.5 — gap up + closed below open but above prior close + hot vol (gap fill in progress; partial reversion to mean with elevated participation)
-    GapDownFillReverseHotVol,            // gap_pct < -3 AND change_pct > 0 AND change_pct < -gap_pct AND rel_volume >= 1.5 — gap down + closed above open but below prior close + hot vol (gap fill in progress; partial reversion to mean with elevated participation)
-    Year52HighSqueezeShort,              // year_high_pct < 0 AND change_pct > 5 AND rel_volume >= 3 — new 52w high + big green + extreme vol (short squeeze at the highs; trapped shorts forced to cover into resistance breakout)
-    Year52LowCapitulation,               // year_low_pct < 0 AND change_pct < -5 AND rel_volume >= 3 — new 52w low + big red + extreme vol (capitulation at the lows; forced selling at floor; trapped longs flushed)
-    DragonflyDojiHotVol,                 // change_pct.abs() < 0.3 AND lod_dist_pct > 4 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — flat close + LOD far below + close near HOD + hot vol (dragonfly doji recovery; intraday plunge fully reclaimed by close with elevated participation)
-    GravestoneDojiHotVol,                // change_pct.abs() < 0.3 AND hod_dist_pct < -4 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — flat close + HOD far above + close near LOD + hot vol (gravestone doji rejection; intraday rip fully sold by close with elevated participation)
-    HammerReversalHotVol,                // change_pct > 1 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — green close + LOD far below + close near HOD + hot vol (hammer reversal; intraday plunge reclaimed + green finish; reversal long signal with elevated participation)
-    ShootingStarReversalHotVol,          // change_pct < -1 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — red close + HOD far above + close near LOD + hot vol (shooting star reversal; intraday rip sold + red finish; reversal short signal with elevated participation)
-    MarubozuGreenHotVol,                 // change_pct > 3 AND hod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — big green + closed at HOD + no overnight gap + hot vol (green marubozu; full intraday trend day with no gap aid; max-conviction long built entirely during regular hours)
-    MarubozuRedHotVol,                   // change_pct < -3 AND lod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — big red + closed at LOD + no overnight gap + hot vol (red marubozu; full intraday trend day with no gap aid; max-conviction short built entirely during regular hours)
-    Year52HighParabolicExtreme,          // year_high_pct < 0 AND change_pct > 10 AND rel_volume >= 5 — new 52w high + parabolic green + extreme vol (parabolic blow-off at new highs; exhaustion-vol squeeze; either continuation rocket or terminal top)
-    Year52LowParabolicExtreme,           // year_low_pct < 0 AND change_pct < -10 AND rel_volume >= 5 — new 52w low + parabolic red + extreme vol (panic capitulation at new lows; exhaustion-vol flush; either continuation or terminal bottom)
-    HotVolNoChangeTightRange,            // rel_volume >= 3 AND change_pct.abs() < 0.5 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 2 AND gap_pct.abs() < 0.5 — hot vol + tight intraday range + flat close + no gap (extreme absorption coil; institutional accumulation / distribution with no price expansion; pre-breakout compression at scale)
-    DryVolBigMoveNoFollow,               // rel_volume < 0.5 AND change_pct.abs() > 4 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 3 — dry vol + big move + tight close range (low-participation thrust; illiquidity-driven move without follow-through; fade candidate)
-    BigGapBigContinuationBigRange,       // gap_pct.abs() > 4 AND change_pct.abs() > 2 * gap_pct.abs() AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND rel_volume >= 2 — big gap + 2x-gap continuation + wide range + hot vol (gap-and-rip extension; momentum doubled the overnight thrust during regular hours; conviction trend day with full range expansion)
-    BigGapFullReversalBigRange,          // gap_pct.abs() > 4 AND change_pct.abs() > 2 AND gap_pct * change_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND rel_volume >= 2 — big gap + sign-flipped intraday move + wide range + hot vol (full gap reversal; opposite-side dominance after the gap; trapped gap traders flushed both ways during the session)
-    TinyGapBigMoveTightWicks,            // gap_pct.abs() < 0.5 AND change_pct.abs() > 4 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 3 AND rel_volume >= 2 — no gap + big intraday move + tight wicks + hot vol (clean trend day off the open with no gap aid and minimal noise; pure directional conviction built entirely intraday)
-    BigGapTinyMoveTightWicks,            // gap_pct.abs() > 4 AND change_pct.abs() < 1 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 3 AND rel_volume >= 2 — big gap + flat intraday + tight wicks + hot vol (overnight gap held with intraday consolidation; market accepted the gap with no participation rotation; pre-extension coil)
-    HotVolBigGreenWideRangeYearLow,      // change_pct > 5 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND year_low_pct < 2 AND rel_volume >= 2 — big green + wide range + near 52w low + hot vol (bottom-fishing thrust; capitulation reversal off the floor with elevated participation; potential bear-trap reversal)
-    HotVolBigRedWideRangeYearHigh,       // change_pct < -5 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND year_high_pct < 2 AND rel_volume >= 2 — big red + wide range + near 52w high + hot vol (distribution flush; rejection reversal off the ceiling with elevated participation; potential bull-trap reversal)
-    HotVolBigGreenWideRangeYearHigh,     // change_pct > 5 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND year_high_pct < 2 AND rel_volume >= 2 — big green + wide range + near 52w high + hot vol (breakout extension off the ceiling with elevated participation; trend acceleration into new highs with full range expansion)
-    HotVolBigRedWideRangeYearLow,        // change_pct < -5 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND year_low_pct < 2 AND rel_volume >= 2 — big red + wide range + near 52w low + hot vol (breakdown extension off the floor with elevated participation; trend acceleration into new lows with full range expansion)
-    RangeContractionHotVolBigGap,        // hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume >= 2 AND gap_pct.abs() > 3 — tight intraday range + flat close + hot vol + big overnight gap (gap absorbed into intraday coil; market accepted the gap with elevated participation but no further expansion; trapped gap traders compressing into a spring)
-    RangeExpansionHotVolBigIntraday,     // hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND day_pct.abs() > 3 AND rel_volume >= 2 AND gap_pct.abs() < 1 — wide intraday range + big intraday move from open + hot vol + no overnight gap (full intraday range expansion off the open with no gap aid; pure intraday breakout day driven by regular-hours conviction)
-    GapPlusDriveBullHotVol,              // gap_pct > 1 AND day_pct > 3 AND change_pct > 4 AND rel_volume >= 1.5 — gap up + big intraday drive up + hot vol (two-leg bullish conviction: overnight gap held + extended further during regular hours; gap-and-extend trend day)
-    GapPlusDriveBearHotVol,              // gap_pct < -1 AND day_pct < -3 AND change_pct < -4 AND rel_volume >= 1.5 — gap down + big intraday drive down + hot vol (two-leg bearish conviction: overnight gap held + extended further during regular hours; gap-and-extend trend day)
-    GapFadeBullDayPctOpposite,           // gap_pct < -2 AND day_pct > 3 AND change_pct > 0 AND rel_volume >= 1.5 — gap down + closed up from open + net green + hot vol (full gap-down fade reversal: opened lower, recovered intraday and closed above prior close; trapped overnight shorts squeezed during regular hours)
-    GapFadeBearDayPctOpposite,           // gap_pct > 2 AND day_pct < -3 AND change_pct < 0 AND rel_volume >= 1.5 — gap up + closed down from open + net red + hot vol (full gap-up fade rejection: opened higher, sold off intraday and closed below prior close; trapped overnight longs flushed during regular hours)
-    DayPctBigGreenChangeFlat,            // day_pct > 4 AND change_pct.abs() < 0.5 AND gap_pct < -3 AND rel_volume >= 1.5 — big intraday drive up + flat net close + big overnight gap down + hot vol (full gap-down recovery: opened way below prior close, rallied hard intraday and finished flat for the session; intraday short-cover squeeze fully unwound the overnight drop)
-    DayPctBigRedChangeFlat,              // day_pct < -4 AND change_pct.abs() < 0.5 AND gap_pct > 3 AND rel_volume >= 1.5 — big intraday drive down + flat net close + big overnight gap up + hot vol (full gap-up rejection: opened way above prior close, sold off intraday and finished flat for the session; intraday long-liquidation fully unwound the overnight pop)
-    Year52HighBreakoutOpenDriveHotVol,   // year_high_pct < 0 AND day_pct > 3 AND change_pct > 4 AND gap_pct.abs() < 1 AND rel_volume >= 2 — new 52w high + big intraday drive from open + no overnight gap + hot vol (intraday breakout to new 52w high built entirely in regular hours with no overnight aid; pure conviction breakout day)
-    Year52LowBreakdownOpenDriveHotVol,   // year_low_pct < 0 AND day_pct < -3 AND change_pct < -4 AND gap_pct.abs() < 1 AND rel_volume >= 2 — new 52w low + big intraday drive from open + no overnight gap + hot vol (intraday breakdown to new 52w low built entirely in regular hours with no overnight aid; pure conviction breakdown day)
-    Year52HighGapAndGoExtremeVol,        // year_high_pct < 0 AND gap_pct > 3 AND day_pct > 2 AND change_pct > 5 AND rel_volume >= 3 — new 52w high + big gap up + intraday continuation + extreme vol (gap-and-go breakout at new highs with overnight gap held and extended during regular hours; max-conviction trend acceleration)
-    Year52LowGapAndDropExtremeVol,       // year_low_pct < 0 AND gap_pct < -3 AND day_pct < -2 AND change_pct < -5 AND rel_volume >= 3 — new 52w low + big gap down + intraday continuation + extreme vol (gap-and-drop breakdown at new lows with overnight gap held and extended during regular hours; max-conviction trend acceleration)
-    Year52HighFailedBreakoutFade,        // year_high_pct >= 0 AND year_high_pct < 3 AND gap_pct > 1 AND day_pct < -1 AND change_pct < 0 AND rel_volume >= 2 — close just below 52w high + gap up + intraday sold from open + red close + hot vol (failed breakout at the highs: ran into resistance, gap rejected and faded all session; trapped breakout buyers flushed during the session)
-    Year52LowFailedBreakdownReclaim,     // year_low_pct >= 0 AND year_low_pct < 3 AND gap_pct < -1 AND day_pct > 1 AND change_pct > 0 AND rel_volume >= 2 — close just above 52w low + gap down + intraday recovered from open + green close + hot vol (failed breakdown at the lows: bounced off support, gap reclaimed and rallied all session; trapped breakdown shorts squeezed during the session)
-    Year52HighRangeCompressionLowVol,    // year_high_pct >= 0 AND year_high_pct < 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume < 0.7 — close just below 52w high + tight intraday range + flat close + dry vol (low-vol compression just below resistance; no participation rotation; pre-breakout coil at the ceiling)
-    Year52LowRangeCompressionLowVol,     // year_low_pct >= 0 AND year_low_pct < 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume < 0.7 — close just above 52w low + tight intraday range + flat close + dry vol (low-vol compression just above support; no participation rotation; pre-breakdown coil at the floor)
-    DistantFromYearHighDryVolCoil,       // year_high_pct >= 30 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume < 0.6 — far below 52w high + tight intraday range + flat close + extremely dry vol (deep-discount basing; no participation; potential turnaround setup after extended pullback)
-    DistantFromYearLowDryVolCoil,        // year_low_pct >= 30 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume < 0.6 — far above 52w low + tight intraday range + flat close + extremely dry vol (deep-premium basing; no participation; potential exhaustion setup after extended uptrend)
-    DistantFromYearHighBigGreenHotVol,   // year_high_pct >= 20 AND change_pct > 5 AND rel_volume >= 2 — far below 52w high + big green + hot vol (snap-back rally from deep discount; mean-reversion thrust with elevated participation toward the prior peak)
-    DistantFromYearLowBigRedHotVol,      // year_low_pct >= 20 AND change_pct < -5 AND rel_volume >= 2 — far above 52w low + big red + hot vol (snap-back decline from deep premium; mean-reversion drop with elevated participation toward the prior trough)
-    MidRangeChurnHotVolBigDayPct,        // hod_dist_pct.abs().min(lod_dist_pct.abs()) >= 1.5 AND hod_dist_pct.abs().max(lod_dist_pct.abs()) <= 5 AND day_pct.abs() > 3 AND rel_volume >= 2 — close near mid of intraday range + big intraday move + hot vol (mid-range churn with intraday displacement; net move but no follow-through to either extreme; failed-trend day with continued participation)
-    MidRangeChurnHotVolFlatDayPct,       // hod_dist_pct.abs().min(lod_dist_pct.abs()) >= 1.5 AND hod_dist_pct.abs().max(lod_dist_pct.abs()) <= 5 AND day_pct.abs() < 0.5 AND rel_volume >= 2 — close near mid of intraday range + flat intraday move + hot vol (max-indecision day at scale; full range with no net direction and elevated participation; institutional indecision with rotation)
-    Year52HighRetestPullbackDryVol,      // year_high_pct >= 3 AND year_high_pct < 10 AND change_pct < -1 AND change_pct > -3 AND rel_volume < 0.8 — pulled back 3-10 % from 52w high + small red + dry vol (low-conviction pullback toward retest of recent highs; potential continuation setup with shallow consolidation)
-    Year52LowRetestBounceDryVol,         // year_low_pct >= 3 AND year_low_pct < 10 AND change_pct > 1 AND change_pct < 3 AND rel_volume < 0.8 — bounced 3-10 % off 52w low + small green + dry vol (low-conviction bounce toward retest of recent lows; potential continuation setup with shallow rebound)
-    Year52HighRetestPullbackHotVol,      // year_high_pct >= 3 AND year_high_pct < 10 AND change_pct < -2 AND change_pct > -5 AND rel_volume >= 2 — pulled back 3-10 % from 52w high + meaningful red + hot vol (high-conviction pullback toward retest of recent highs; institutional profit-taking with elevated participation; potential continuation setup)
-    Year52LowRetestBounceHotVol,         // year_low_pct >= 3 AND year_low_pct < 10 AND change_pct > 2 AND change_pct < 5 AND rel_volume >= 2 — bounced 3-10 % off 52w low + meaningful green + hot vol (high-conviction bounce toward retest of recent lows; institutional bottom-fishing with elevated participation; potential continuation setup)
-    HotVolBigChangeDayPctOpposite,       // change_pct.abs() > 3 AND day_pct * change_pct < 0 AND day_pct.abs() > 1 AND rel_volume >= 2 — big net move + intraday move in opposite direction + hot vol (intraday reversal fading the prior-close direction: gap dominated the net change, but regular hours pushed back the other way with elevated participation)
-    HotVolBigChangeDayPctAligned,        // change_pct.abs() > 3 AND day_pct.abs() > 3 AND day_pct * change_pct > 0 AND rel_volume >= 2 — big net move + intraday move aligned with same direction + hot vol (full-conviction directional day: both overnight + regular hours pushed the same direction with elevated participation; two-leg trend confirmation)
-    Year52HighBreakoutHotVolNoExtreme,   // year_high_pct < 0 AND change_pct > 1.5 AND change_pct < 4 AND rel_volume >= 1.5 AND rel_volume < 3 — new 52w high + modest green + moderate hot vol (controlled-conviction breakout to new highs; institutional accumulation without exhaustion; sustainable trend continuation candidate)
-    Year52LowBreakdownHotVolNoExtreme,   // year_low_pct < 0 AND change_pct < -1.5 AND change_pct > -4 AND rel_volume >= 1.5 AND rel_volume < 3 — new 52w low + modest red + moderate hot vol (controlled-conviction breakdown to new lows; institutional distribution without panic; sustainable trend continuation candidate)
-    BigGreenTopWickRejectHotVol,         // change_pct > 1 AND hod_dist_pct < -2 AND rel_volume >= 1.5 — green close + HOD far above (long upper wick) + hot vol (upper-wick rejection on a green day: rally faded into the close but still finished green; supply tested with elevated participation; potential follow-through hesitation)
-    BigRedBottomWickRejectHotVol,        // change_pct < -1 AND lod_dist_pct > 2 AND rel_volume >= 1.5 — red close + LOD far below (long lower wick) + hot vol (lower-wick rejection on a red day: sell-off bounced into the close but still finished red; demand tested with elevated participation; potential follow-through hesitation)
-    DryVolGreenCloseAtHodTinyRange,      // change_pct > 0.5 AND hod_dist_pct.abs() < 0.5 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 2 AND rel_volume < 0.7 — small green + closed at HOD + tight intraday range + dry vol (low-conviction grind-up day; small directional drift with no participation; weak-hands trend continuation candidate)
-    DryVolRedCloseAtLodTinyRange,        // change_pct < -0.5 AND lod_dist_pct.abs() < 0.5 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 2 AND rel_volume < 0.7 — small red + closed at LOD + tight intraday range + dry vol (low-conviction grind-down day; small directional drift with no participation; weak-hands trend continuation candidate)
-    Year52HighGapDownDryVolReclaim,      // year_high_pct < 3 AND year_high_pct >= -2 AND gap_pct < -1.5 AND change_pct > 0 AND rel_volume < 0.8 — near 52w high + opened with gap down + recovered to positive close + dry vol (gap reclaimed back into the breakout zone on light vol; weak-hands shaken out without participation flush; bullish continuation setup at the highs)
-    Year52LowGapUpDryVolReject,          // year_low_pct < 3 AND year_low_pct >= -2 AND gap_pct > 1.5 AND change_pct < 0 AND rel_volume < 0.8 — near 52w low + opened with gap up + sold back into red close + dry vol (gap rejected back into the breakdown zone on light vol; weak-hands trapped without participation flush; bearish continuation setup at the lows)
-    Year52HighInsideDayHotVol,           // year_high_pct < 3 AND year_high_pct >= -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume >= 1.5 — near 52w high + tight intraday range + flat close + hot vol (inside-day coil at the breakout zone with absorption; institutional accumulation just below resistance; high-probability breakout setup)
-    Year52LowInsideDayHotVol,            // year_low_pct < 3 AND year_low_pct >= -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume >= 1.5 — near 52w low + tight intraday range + flat close + hot vol (inside-day coil at the breakdown zone with absorption; institutional distribution just above support; high-probability breakdown setup)
-    Year52HighOutsideDayHotVol,          // year_high_pct < 3 AND year_high_pct >= -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume >= 2 — near 52w high + wide intraday range + hot vol (outside-day rotation at the breakout zone; both supply and demand active just below resistance; volatility expansion preceding directional resolution)
-    Year52LowOutsideDayHotVol,           // year_low_pct < 3 AND year_low_pct >= -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume >= 2 — near 52w low + wide intraday range + hot vol (outside-day rotation at the breakdown zone; both supply and demand active just above support; volatility expansion preceding directional resolution)
-    YearHighGapDownHotVolRecovery,       // year_high_pct < 0 AND gap_pct < -2 AND day_pct > 3 AND change_pct > 1 AND rel_volume >= 2 — new 52w high prior + gap down opening + huge intraday recovery + green close + hot vol (failed gap-down at the highs: shorts overpressed overnight, intraday short-squeeze fully reclaimed and pushed back into trend with elevated participation)
-    YearLowGapUpHotVolRejection,         // year_low_pct < 0 AND gap_pct > 2 AND day_pct < -3 AND change_pct < -1 AND rel_volume >= 2 — new 52w low prior + gap up opening + huge intraday rejection + red close + hot vol (failed gap-up at the lows: longs overpressed overnight, intraday long-liquidation fully unwound and pushed back into trend with elevated participation)
-    Year52HighReclaimAfterFlush,         // year_high_pct < 0 AND lod_dist_pct > 4 AND hod_dist_pct.abs() < 1 AND change_pct > 1 AND rel_volume >= 1.5 — new 52w high + LOD far below + close near HOD + green close + hot vol (intraday flush below the breakout level reclaimed back to highs by close; trapped breakdown shorts squeezed; conviction continuation candidate)
-    Year52LowReclaimAfterPop,            // year_low_pct < 0 AND hod_dist_pct < -4 AND lod_dist_pct.abs() < 1 AND change_pct < -1 AND rel_volume >= 1.5 — new 52w low + HOD far above + close near LOD + red close + hot vol (intraday pop above the breakdown level rejected back to lows by close; trapped breakout longs flushed; conviction continuation candidate)
-    BigDayPctSmallChangeHotVol,          // day_pct.abs() > 3 AND change_pct.abs() < 0.5 AND rel_volume >= 2 — big intraday move + flat net close + hot vol (full intraday reversal of overnight position: regular hours fully unwound any prior-close drift with elevated participation; rotation day with no net commitment)
-    SmallDayPctBigChangeHotVol,          // day_pct.abs() < 0.5 AND change_pct.abs() > 3 AND rel_volume >= 2 — flat intraday move + big net close + hot vol (overnight gap held intact through regular hours: the entire daily move was the gap, intraday flat acceptance with elevated participation; gap-acceptance day)
-    Year52HighRangeExpansionHotVol,      // year_high_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND change_pct > 2 AND rel_volume >= 2 — new 52w high + wide intraday range + green close + hot vol (volatility-expansion breakout at new highs: wide-range trend day after the breakout level; institutional follow-through with elevated participation)
-    Year52LowRangeExpansionHotVol,       // year_low_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND change_pct < -2 AND rel_volume >= 2 — new 52w low + wide intraday range + red close + hot vol (volatility-expansion breakdown at new lows: wide-range trend day after the breakdown level; institutional follow-through with elevated participation)
-    Year52HighRangeContractionHotVol,    // year_high_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct > 0 AND change_pct < 1 AND rel_volume >= 2 — new 52w high + tight intraday range + small green close + hot vol (post-breakout absorption coil at new highs: tight digestion with elevated participation; pre-extension consolidation)
-    Year52LowRangeContractionHotVol,     // year_low_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct < 0 AND change_pct > -1 AND rel_volume >= 2 — new 52w low + tight intraday range + small red close + hot vol (post-breakdown absorption coil at new lows: tight digestion with elevated participation; pre-continuation consolidation)
-    Year52HighBreakoutDryVolPullback,    // year_high_pct >= 0 AND year_high_pct < 2 AND change_pct < -0.5 AND change_pct > -2 AND rel_volume < 0.8 — just below 52w high + small red pullback + dry vol (low-vol pullback to retest the prior breakout level; weak-hands shaken out without participation; reclaim setup)
-    Year52LowBreakdownDryVolBounce,      // year_low_pct >= 0 AND year_low_pct < 2 AND change_pct > 0.5 AND change_pct < 2 AND rel_volume < 0.8 — just above 52w low + small green bounce + dry vol (low-vol bounce to retest the prior breakdown level; weak-hands shaken out without participation; rejection setup)
-    BigGapBigCounterMoveBigRangeHotVol,  // gap_pct.abs() > 3 AND day_pct * gap_pct < 0 AND day_pct.abs() > 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND rel_volume >= 2 — big gap + big opposite intraday move + wide range + hot vol (gap-and-fight reversal: significant overnight gap fully battled by the intraday session; two-sided rotation day with extended range and elevated participation; trapped gap traders flushed)
+    Year52LowSustainedWeaknessHotVol, // year_low_pct < 5 AND day_pct < -1 AND change_pct < -1 AND rel_volume >= 2 — near 52w low + red intraday + red close + hot vol (sustained weakness confirmation at the lows; intraday-and-daily both confirm; high-conviction breakdown candidate)
+    BigGreenWithModestGapDecentVol, // change_pct > 3 AND gap_pct between 0.5 and 1.5 AND rel_volume >= 1.5 — meaningful gain >3 + modest gap (0.5-1.5%) + decent vol (gap-assisted rally; overnight bias kicked off the day but intraday extended substantially on volume)
+    BigRedWithModestGapDownDecentVol, // change_pct < -3 AND gap_pct between -1.5 and -0.5 AND rel_volume >= 1.5 — meaningful drop <-3 + modest gap down (-0.5 to -1.5%) + decent vol (gap-assisted decline; overnight bias kicked off the day but intraday extended substantially on volume)
+    CompoundConfirmedBigGreen, // change_pct > 3 AND day_pct > 1 AND gap_pct > 0.5 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — big green close + green intraday + positive gap + close near HOD + decent vol (every signal aligned bullish; full conviction up day; max-confirmation long candidate)
+    CompoundConfirmedBigRed, // change_pct < -3 AND day_pct < -1 AND gap_pct < -0.5 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — big red close + red intraday + negative gap + close near LOD + decent vol (every signal aligned bearish; full conviction down day; max-confirmation short candidate)
+    FollowThroughGreen, // change_pct in [1, 3] AND day_pct in [0.5, 2] AND gap_pct in [-0.5, 0.5] AND hod_dist_pct.abs() < 0.5 AND rel_volume in [1.2, 2] — modest green + green intraday + small gap + close near HOD + above-avg vol (clean follow-through up day; no catalyst spike, just steady accumulation with intraday confirmation)
+    FollowThroughRed, // change_pct in [-3, -1] AND day_pct in [-2, -0.5] AND gap_pct in [-0.5, 0.5] AND lod_dist_pct.abs() < 0.5 AND rel_volume in [1.2, 2] — modest red + red intraday + small gap + close near LOD + above-avg vol (clean follow-through down day; no catalyst spike, just steady distribution with intraday confirmation)
+    Year52HighGapDownStrongCloseHotVol, // year_high_pct < 3 AND gap_pct < -0.5 AND change_pct > 1 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — near 52w high + gap down + green close + close near HOD + decent vol (resilience day at the highs; gap rejected, recovered and closed strong; bullish continuation candidate)
+    Year52LowGapUpWeakCloseHotVol, // year_low_pct < 3 AND gap_pct > 0.5 AND change_pct < -1 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — near 52w low + gap up + red close + close near LOD + decent vol (rejection day at the lows; relief gap faded, sold all day to close weak; bearish continuation candidate)
+    FlatOpenTrendUpModerate, // gap_pct.abs() < 0.3 AND change_pct in [1, 3] AND day_pct > 1 AND change_pct * day_pct > 0 AND rel_volume in [1, 2] — flat open + moderate green (1-3%) + green intraday + same-sign + normal-elevated vol (no overnight bias + clean intraday trend up; mid-magnitude organic move; conviction without spike)
+    FlatOpenTrendDownModerate, // gap_pct.abs() < 0.3 AND change_pct in [-3, -1] AND day_pct < -1 AND change_pct * day_pct > 0 AND rel_volume in [1, 2] — flat open + moderate red + red intraday + same-sign + normal-elevated vol (no overnight bias + clean intraday trend down; mid-magnitude organic move; conviction without spike)
+    MidRangeRecoveryRallyHotVol, // year_high_pct > 10 AND year_low_pct > 10 AND change_pct > 3 AND rel_volume >= 2 — recovered well off 52w lows + still below highs + big green + hot vol (sustained recovery rally in mid-52w; not at either extreme; mid-range bullish move with conviction)
+    MidRangeSelloffHotVol, // year_high_pct > 10 AND year_low_pct > 10 AND change_pct < -3 AND rel_volume >= 2 — sold off well from 52w highs + still above lows + big red + hot vol (sustained selloff in mid-52w; not at either extreme; mid-range bearish move with conviction)
+    IntermediateGreenStrongClose, // change_pct in [3, 7] AND rel_volume in [1.5, 3] AND hod_dist_pct.abs() < 1 — meaningful green (3-7%) + decent vol (1.5-3×) + close near HOD (intermediate gain on intermediate vol with strong finish; sweet spot between organic and parabolic; momentum without exhaustion)
+    IntermediateRedWeakClose, // change_pct in [-7, -3] AND rel_volume in [1.5, 3] AND lod_dist_pct.abs() < 1 — meaningful red (-3 to -7%) + decent vol (1.5-3×) + close near LOD (intermediate drop with weak finish; sweet spot between organic and crash; weakness without panic)
+    MaxVolatilityEventHotVol, // gap_pct.abs() > 2 AND change_pct.abs() > 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume >= 2 — big gap + big change + wide intraday range + hot vol (max-volatility event day; gap caught attention, intraday explored wide range, hot vol confirmed; catalyst-driven volatility expansion)
+    MaxRangeFakeOutDryVol, // gap_pct.abs() > 2 AND change_pct.abs() > 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume < 1 — big gap + big change + wide intraday range + DRY vol (max-range fake-out; wide intraday with thin tape suggests stop-runs without true conviction; algorithmic noise on illiquid name)
+    BigGreenIntradayOnlyHotVol, // change_pct > 3 AND gap_pct.abs() < 0.5 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume >= 2 — big green close + flat open + wide intraday + hot vol (intraday-only rally; no overnight bias; pure intraday discovery to new highs; all of the day's gain from intraday participation)
+    BigRedIntradayOnlyHotVol, // change_pct < -3 AND gap_pct.abs() < 0.5 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume >= 2 — big red close + flat open + wide intraday + hot vol (intraday-only decline; no overnight bias; pure intraday discovery to new lows; all of the day's loss from intraday participation)
+    BrokeAbove52wHighHotVol, // year_high_pct > 0 AND change_pct > 1 AND rel_volume >= 2 — closed ABOVE prior 52w high + green + hot vol (true new-high breakout with volume confirmation; institutional initiation at a multi-year extreme)
+    BrokeBelow52wLowHotVol, // year_low_pct < 0 AND change_pct < -1 AND rel_volume >= 2 — closed BELOW prior 52w low + red + hot vol (true new-low breakdown with volume confirmation; institutional capitulation at a multi-year extreme)
+    ChangeIntradayDisagreeBothTagged, // change_pct * day_pct < 0 AND hod_dist_pct.abs() > 1 AND lod_dist_pct.abs() > 1 AND rel_volume >= 1.5 — change/day signs disagree + both extremes visited + decent vol (full schizophrenic day; gap dominates close direction but intraday went opposite and explored both sides; institutional repositioning vs retail)
+    ChangeIntradayDisagreeFlatRange, // change_pct * day_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — change/day signs disagree + tight intraday + decent vol (gap-vs-intraday sign disagreement but intraday compressed; overnight news held even as intraday tried to fade in narrow range)
+    BigGapHugeVolHalfFade, // gap_pct.abs() > 2 AND rel_volume >= 3 AND change_pct.abs() < gap_pct.abs() * 0.5 — big gap + extreme vol (3×+) + change < half the gap (gap absorbed substantially even on extreme volume; institutional offloading at gap level; >50% gap fade with conviction)
+    BigGapHugeVolFullExtension, // gap_pct.abs() > 2 AND rel_volume >= 3 AND change_pct.abs() > gap_pct.abs() * 1.5 — big gap + extreme vol (3×+) + change > 1.5× the gap (gap extended substantially on extreme volume; institutional commitment beyond the gap; momentum continuation on max participation)
+    GapWithChangeWideRangeHotVol, // change_pct * gap_pct > 0 AND gap_pct.abs() > 1 AND change_pct.abs() > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 3 AND rel_volume >= 2 — gap and change same-sign + meaningful gap + bigger change + wide range + hot vol (gap extended through wide intraday exploration in same direction on volume; max-conviction trend day with both halves contributing)
+    GapAgainstChangeWideRangeHotVol, // change_pct * gap_pct < 0 AND gap_pct.abs() > 1 AND change_pct.abs() > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 3 AND rel_volume >= 2 — gap and change opposite-sign + meaningful gap + bigger change + wide range + hot vol (intraday more than reversed the gap with wide range and hot vol; full institutional reversal with extreme volatility)
+    HotVolNoChangeNoGapTightRange, // rel_volume >= 2 AND change_pct.abs() < 0.5 AND gap_pct.abs() < 0.3 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 — hot vol + flat change + flat gap + tight intraday (heavy participation but absolutely no movement; classic absorption pattern — institutional accumulation/distribution disguised as nothing)
+    ColdVolBigChangeWideRange, // rel_volume < 0.5 AND change_pct.abs() > 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 3 — very dry vol + big change + wide range (max-thin-tape exception; nobody traded but price moved a lot through wide range — algorithmic noise / illiquid stop-runs)
+    MicroPinTinyRangeHotVol, // hod_dist_pct.abs() < 0.1 AND lod_dist_pct.abs() < 0.1 AND rel_volume >= 2 — close pinned at exactly HOD AND LOD (effectively zero intraday range) + hot vol (extreme pin; heavy participation at a single price; possible OPEX pin or institutional volume crossed at one tick)
+    MicroPinTinyRangeDryVol, // hod_dist_pct.abs() < 0.1 AND lod_dist_pct.abs() < 0.1 AND rel_volume < 0.5 — close pinned at exactly HOD AND LOD + DRY vol (dead day; nothing happened at all; market truly absent; possibly halted or extremely illiquid)
+    FullRange52wAtHighSide, // year_high_pct < 2 AND year_low_pct > 50 AND rel_volume >= 1.5 — within 2% of 52w high + >50% above 52w low + decent vol (stock has doubled+ from 52w low and is at the highs; max-uptrend + at decision point for breakout/exhaustion)
+    FullRange52wAtLowSide, // year_low_pct < 2 AND year_high_pct > 50 AND rel_volume >= 1.5 — within 2% of 52w low + >50% below 52w high + decent vol (stock has dropped 50%+ from 52w high and is at the lows; max-downtrend + at decision point for capitulation/reversal)
+    PullbackAndRallyAtYearHigh, // change_pct in [0.5, 1.5] AND day_pct > 0.5 AND gap_pct in [-0.5, 0] AND year_high_pct < 5 AND rel_volume in [1, 1.8] — moderate green (0.5-1.5%) + green intraday + small red gap + within 5% of 52w high + decent vol (textbook pullback-and-rally setup near the highs; gap-down bought intraday)
+    DeadCatBounceAtYearLow, // change_pct in [-1.5, -0.5] AND day_pct < -0.5 AND gap_pct in [0, 0.5] AND year_low_pct < 5 AND rel_volume in [1, 1.8] — moderate red + red intraday + small green gap + within 5% of 52w low + decent vol (textbook dead-cat-bounce setup near the lows; gap-up sold intraday)
+    GapDownIntradayReversalCloseAtHOD, // gap_pct < -0.5 AND day_pct > 0.5 AND hod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — gap down + intraday went up + close near HOD + decent vol (textbook reversal-up day; gap-down was bought, rallied through the day to close at the highs; strong bullish reversal candidate)
+    GapUpIntradayReversalCloseAtLOD, // gap_pct > 0.5 AND day_pct < -0.5 AND lod_dist_pct.abs() < 0.3 AND rel_volume >= 1.5 — gap up + intraday went down + close near LOD + decent vol (textbook reversal-down day; gap-up was sold, declined through the day to close at the lows; strong bearish reversal candidate)
+    BigGreenMidYearSweetSpot, // change_pct > 3 AND year_high_pct in [5, 20] AND year_low_pct > 15 AND rel_volume >= 1.5 — big green + 5-20% below 52w high + well above 52w low + decent vol (sweet-spot up move: high-momentum stock pushing higher from mid-range; room to run before resistance)
+    BigRedMidYearSweetSpot, // change_pct < -3 AND year_low_pct in [5, 20] AND year_high_pct > 15 AND rel_volume >= 1.5 — big red + 5-20% above 52w low + well below 52w high + decent vol (sweet-spot down move: high-momentum drop from mid-range; room to fall before support)
+    TripleZeroHotVol, // gap_pct.abs() < 0.1 AND change_pct.abs() < 0.1 AND day_pct.abs() < 0.1 AND rel_volume >= 2 — gap + change + day ALL near zero + hot vol (massive participation produced literally zero movement on all three axes; max-absorption pattern; institutional cross at one price)
+    TripleZeroDryVol, // gap_pct.abs() < 0.1 AND change_pct.abs() < 0.1 AND day_pct.abs() < 0.1 AND rel_volume < 0.5 — gap + change + day ALL near zero + dry vol (universal dormancy; market completely absent on all axes; near-dead-tape day; possibly halted or unattended)
+    ExtremeGapModerateMoveHotVol, // gap_pct.abs() > 5 AND change_pct.abs() in [2, 5] AND rel_volume >= 2 — huge gap (>5%) + moderate retained change (2-5%) + hot vol (extreme gap retained most but not all of itself on volume; partial-fill move with conviction at a new level)
+    ExtremeGapBigContinuationHotVol, // gap_pct.abs() > 5 AND change_pct.abs() > gap_pct.abs() AND rel_volume >= 2 — extreme gap + change EXCEEDS gap + hot vol (extreme gap that EXTENDED on volume; max-momentum continuation; >100% gap extension)
+    BigGreenBigGapDryVol, // change_pct > 5 AND gap_pct > 3 AND rel_volume < 0.8 — big green + big gap up + below-avg vol (huge gap-up that held without participation; suspect rally; possibly fake breakout or stealth squeeze in thin tape)
+    BigRedBigGapDownDryVol, // change_pct < -5 AND gap_pct < -3 AND rel_volume < 0.8 — big red + big gap down + below-avg vol (huge gap-down that held without participation; suspect breakdown; possibly forced-selling in thin tape or low-conviction capitulation)
+    SmoothBigGreenNormalVol, // change_pct > 3 AND rel_volume in [1, 1.5] AND hod_dist_pct.abs() < 0.5 AND gap_pct.abs() < 0.5 — big green + normal vol (1-1.5×) + close at HOD + no gap (orderly trend day; not parabolic, but conviction; sweet-spot entry signal)
+    SmoothBigRedNormalVol, // change_pct < -3 AND rel_volume in [1, 1.5] AND lod_dist_pct.abs() < 0.5 AND gap_pct.abs() < 0.5 — big red + normal vol + close at LOD + no gap (orderly down day; not panic, but conviction; sweet-spot entry for shorts)
+    BigDayPctFlatChangeHotVol, // day_pct.abs() > 2 AND change_pct.abs() < 0.5 AND rel_volume >= 1.5 — big intraday move + flat close + decent vol (gap absorbed all intraday move on volume; full round-trip with participation; gap-and-fade pattern)
+    BigDayPctBigChangeAlignedHotVol, // day_pct.abs() > 2 AND change_pct.abs() > 4 AND change_pct * day_pct > 0 AND rel_volume >= 1.5 — big intraday + big change + same sign + decent vol (max-aligned trend day; both gap and intraday push same way through big move on volume)
+    Year52HighBigDayDryVol, // year_high_pct < 2 AND day_pct > 2 AND rel_volume < 0.7 — near 52w high + big green intraday + dry vol (no-volume push to new highs intraday; distribution suspicion / fake breakout / thin-tape rally)
+    Year52LowBigDayDryVol, // year_low_pct < 2 AND day_pct < -2 AND rel_volume < 0.7 — near 52w low + big red intraday + dry vol (no-volume push to new lows intraday; capitulation without conviction / thin-tape breakdown)
+    MidMagnitudeGreenMidWickHotVol, // change_pct in [1, 3] AND hod_dist_pct.abs() in [0.5, 2] AND lod_dist_pct.abs() in [0.5, 2] AND rel_volume >= 1.5 — moderate green + mid-range close + decent vol (moderate-conviction up day with mid-wick finish; less extreme than BigUpMidRangeClose; consolidation candidate)
+    MidMagnitudeRedMidWickHotVol, // change_pct in [-3, -1] AND hod_dist_pct.abs() in [0.5, 2] AND lod_dist_pct.abs() in [0.5, 2] AND rel_volume >= 1.5 — moderate red + mid-range close + decent vol (moderate-conviction down day with mid-wick finish; less extreme than BigDownMidRangeClose; basing candidate)
+    HotVolHugeRangeBigChange, // rel_volume >= 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND change_pct.abs() > 4 — extreme vol (3×+) + extreme range (>6%) + big change (>4%) (catalyst day with massive participation, wide exploration, and big finish; max-volatility resolution)
+    HotVolHugeRangeFlatClose, // rel_volume >= 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND change_pct.abs() < 0.5 — extreme vol + extreme range + flat close (max-absorption pattern at scale: huge intraday exploration but no net result; institutional indecision day)
+    Year52HighDistributionChurn, // year_high_pct < 2 AND change_pct.abs() < 0.3 AND rel_volume >= 2 — near 52w high + flat close + hot vol (distribution at the highs; heavy churn without movement; institutional offloading at the top)
+    Year52LowAccumulationChurn, // year_low_pct < 2 AND change_pct.abs() < 0.3 AND rel_volume >= 2 — near 52w low + flat close + hot vol (accumulation at the lows; heavy churn without movement; institutional bottom-fishing at the floor)
+    Year52HighBigGreenBreakoutHotVol, // year_high_pct < 0 AND change_pct > 4 AND rel_volume >= 2 — breakout to new 52w high + big green + hot vol (decisive breakout from year resistance with institutional sponsorship; trend-following long signal)
+    Year52LowBigRedBreakdownHotVol, // year_low_pct < 0 AND change_pct < -4 AND rel_volume >= 2 — breakdown to new 52w low + big red + hot vol (decisive breakdown from year support with institutional sponsorship; trend-following short signal)
+    GapUpFailBigRedHotVol, // gap_pct > 3 AND change_pct < -2 AND rel_volume >= 2 — gap up but closed red + hot vol (failed gap up; trapped longs; reversal short signal)
+    GapDownReclaimBigGreenHotVol, // gap_pct < -3 AND change_pct > 2 AND rel_volume >= 2 — gap down but closed green + hot vol (reclaimed gap down; trapped shorts; reversal long signal)
+    InsideRangeHotVolCoil, // hod_dist_pct.abs() < 1 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — tight intraday range + hot vol (inside-range coil with absorption; pre-breakout compression with elevated participation)
+    OutsideRangeFlatCloseHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND change_pct.abs() < 0.5 AND rel_volume >= 1.5 — wide intraday range + flat close + hot vol (outside-range whip; high participation but no commitment; institutional indecision with wide whipsaw)
+    CloseAtHodTinyLodHotVol, // hod_dist_pct.abs() < 0.3 AND lod_dist_pct > 4 AND rel_volume >= 1.5 — closed pinned to HOD + LOD far below + hot vol (full intraday range claim; momentum buy ramp into the close with elevated participation)
+    CloseAtLodTinyHodHotVol, // lod_dist_pct.abs() < 0.3 AND hod_dist_pct < -4 AND rel_volume >= 1.5 — closed pinned to LOD + HOD far above + hot vol (full intraday range collapse; momentum sell ramp into the close with elevated participation)
+    BigGreenCloseAtHodHotVol, // change_pct > 3 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 — big green + closed pinned to HOD + hot vol (strong trend day closing on the highs with institutional sponsorship; trend-following long signal)
+    BigRedCloseAtLodHotVol, // change_pct < -3 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 — big red + closed pinned to LOD + hot vol (strong trend day closing on the lows with institutional sponsorship; trend-following short signal)
+    GapAndGoBigGreenCloseAtHod, // gap_pct > 2 AND change_pct > gap_pct AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — gapped up + continued higher + closed at HOD + hot vol (gap-and-go continuation; momentum sustained through the close)
+    GapAndDropBigRedCloseAtLod, // gap_pct < -2 AND change_pct < gap_pct AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — gapped down + continued lower + closed at LOD + hot vol (gap-and-drop continuation; selling sustained through the close)
+    GapUpFillReverseHotVol, // gap_pct > 3 AND change_pct < 0 AND change_pct > -gap_pct AND rel_volume >= 1.5 — gap up + closed below open but above prior close + hot vol (gap fill in progress; partial reversion to mean with elevated participation)
+    GapDownFillReverseHotVol, // gap_pct < -3 AND change_pct > 0 AND change_pct < -gap_pct AND rel_volume >= 1.5 — gap down + closed above open but below prior close + hot vol (gap fill in progress; partial reversion to mean with elevated participation)
+    Year52HighSqueezeShort, // year_high_pct < 0 AND change_pct > 5 AND rel_volume >= 3 — new 52w high + big green + extreme vol (short squeeze at the highs; trapped shorts forced to cover into resistance breakout)
+    Year52LowCapitulation, // year_low_pct < 0 AND change_pct < -5 AND rel_volume >= 3 — new 52w low + big red + extreme vol (capitulation at the lows; forced selling at floor; trapped longs flushed)
+    DragonflyDojiHotVol, // change_pct.abs() < 0.3 AND lod_dist_pct > 4 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — flat close + LOD far below + close near HOD + hot vol (dragonfly doji recovery; intraday plunge fully reclaimed by close with elevated participation)
+    GravestoneDojiHotVol, // change_pct.abs() < 0.3 AND hod_dist_pct < -4 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — flat close + HOD far above + close near LOD + hot vol (gravestone doji rejection; intraday rip fully sold by close with elevated participation)
+    HammerReversalHotVol, // change_pct > 1 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — green close + LOD far below + close near HOD + hot vol (hammer reversal; intraday plunge reclaimed + green finish; reversal long signal with elevated participation)
+    ShootingStarReversalHotVol, // change_pct < -1 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — red close + HOD far above + close near LOD + hot vol (shooting star reversal; intraday rip sold + red finish; reversal short signal with elevated participation)
+    MarubozuGreenHotVol, // change_pct > 3 AND hod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — big green + closed at HOD + no overnight gap + hot vol (green marubozu; full intraday trend day with no gap aid; max-conviction long built entirely during regular hours)
+    MarubozuRedHotVol, // change_pct < -3 AND lod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — big red + closed at LOD + no overnight gap + hot vol (red marubozu; full intraday trend day with no gap aid; max-conviction short built entirely during regular hours)
+    Year52HighParabolicExtreme, // year_high_pct < 0 AND change_pct > 10 AND rel_volume >= 5 — new 52w high + parabolic green + extreme vol (parabolic blow-off at new highs; exhaustion-vol squeeze; either continuation rocket or terminal top)
+    Year52LowParabolicExtreme, // year_low_pct < 0 AND change_pct < -10 AND rel_volume >= 5 — new 52w low + parabolic red + extreme vol (panic capitulation at new lows; exhaustion-vol flush; either continuation or terminal bottom)
+    HotVolNoChangeTightRange, // rel_volume >= 3 AND change_pct.abs() < 0.5 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 2 AND gap_pct.abs() < 0.5 — hot vol + tight intraday range + flat close + no gap (extreme absorption coil; institutional accumulation / distribution with no price expansion; pre-breakout compression at scale)
+    DryVolBigMoveNoFollow, // rel_volume < 0.5 AND change_pct.abs() > 4 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 3 — dry vol + big move + tight close range (low-participation thrust; illiquidity-driven move without follow-through; fade candidate)
+    BigGapBigContinuationBigRange, // gap_pct.abs() > 4 AND change_pct.abs() > 2 * gap_pct.abs() AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND rel_volume >= 2 — big gap + 2x-gap continuation + wide range + hot vol (gap-and-rip extension; momentum doubled the overnight thrust during regular hours; conviction trend day with full range expansion)
+    BigGapFullReversalBigRange, // gap_pct.abs() > 4 AND change_pct.abs() > 2 AND gap_pct * change_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND rel_volume >= 2 — big gap + sign-flipped intraday move + wide range + hot vol (full gap reversal; opposite-side dominance after the gap; trapped gap traders flushed both ways during the session)
+    TinyGapBigMoveTightWicks, // gap_pct.abs() < 0.5 AND change_pct.abs() > 4 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 3 AND rel_volume >= 2 — no gap + big intraday move + tight wicks + hot vol (clean trend day off the open with no gap aid and minimal noise; pure directional conviction built entirely intraday)
+    BigGapTinyMoveTightWicks, // gap_pct.abs() > 4 AND change_pct.abs() < 1 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 3 AND rel_volume >= 2 — big gap + flat intraday + tight wicks + hot vol (overnight gap held with intraday consolidation; market accepted the gap with no participation rotation; pre-extension coil)
+    HotVolBigGreenWideRangeYearLow, // change_pct > 5 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND year_low_pct < 2 AND rel_volume >= 2 — big green + wide range + near 52w low + hot vol (bottom-fishing thrust; capitulation reversal off the floor with elevated participation; potential bear-trap reversal)
+    HotVolBigRedWideRangeYearHigh, // change_pct < -5 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND year_high_pct < 2 AND rel_volume >= 2 — big red + wide range + near 52w high + hot vol (distribution flush; rejection reversal off the ceiling with elevated participation; potential bull-trap reversal)
+    HotVolBigGreenWideRangeYearHigh, // change_pct > 5 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND year_high_pct < 2 AND rel_volume >= 2 — big green + wide range + near 52w high + hot vol (breakout extension off the ceiling with elevated participation; trend acceleration into new highs with full range expansion)
+    HotVolBigRedWideRangeYearLow, // change_pct < -5 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 6 AND year_low_pct < 2 AND rel_volume >= 2 — big red + wide range + near 52w low + hot vol (breakdown extension off the floor with elevated participation; trend acceleration into new lows with full range expansion)
+    RangeContractionHotVolBigGap, // hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume >= 2 AND gap_pct.abs() > 3 — tight intraday range + flat close + hot vol + big overnight gap (gap absorbed into intraday coil; market accepted the gap with elevated participation but no further expansion; trapped gap traders compressing into a spring)
+    RangeExpansionHotVolBigIntraday, // hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND day_pct.abs() > 3 AND rel_volume >= 2 AND gap_pct.abs() < 1 — wide intraday range + big intraday move from open + hot vol + no overnight gap (full intraday range expansion off the open with no gap aid; pure intraday breakout day driven by regular-hours conviction)
+    GapPlusDriveBullHotVol, // gap_pct > 1 AND day_pct > 3 AND change_pct > 4 AND rel_volume >= 1.5 — gap up + big intraday drive up + hot vol (two-leg bullish conviction: overnight gap held + extended further during regular hours; gap-and-extend trend day)
+    GapPlusDriveBearHotVol, // gap_pct < -1 AND day_pct < -3 AND change_pct < -4 AND rel_volume >= 1.5 — gap down + big intraday drive down + hot vol (two-leg bearish conviction: overnight gap held + extended further during regular hours; gap-and-extend trend day)
+    GapFadeBullDayPctOpposite, // gap_pct < -2 AND day_pct > 3 AND change_pct > 0 AND rel_volume >= 1.5 — gap down + closed up from open + net green + hot vol (full gap-down fade reversal: opened lower, recovered intraday and closed above prior close; trapped overnight shorts squeezed during regular hours)
+    GapFadeBearDayPctOpposite, // gap_pct > 2 AND day_pct < -3 AND change_pct < 0 AND rel_volume >= 1.5 — gap up + closed down from open + net red + hot vol (full gap-up fade rejection: opened higher, sold off intraday and closed below prior close; trapped overnight longs flushed during regular hours)
+    DayPctBigGreenChangeFlat, // day_pct > 4 AND change_pct.abs() < 0.5 AND gap_pct < -3 AND rel_volume >= 1.5 — big intraday drive up + flat net close + big overnight gap down + hot vol (full gap-down recovery: opened way below prior close, rallied hard intraday and finished flat for the session; intraday short-cover squeeze fully unwound the overnight drop)
+    DayPctBigRedChangeFlat, // day_pct < -4 AND change_pct.abs() < 0.5 AND gap_pct > 3 AND rel_volume >= 1.5 — big intraday drive down + flat net close + big overnight gap up + hot vol (full gap-up rejection: opened way above prior close, sold off intraday and finished flat for the session; intraday long-liquidation fully unwound the overnight pop)
+    Year52HighBreakoutOpenDriveHotVol, // year_high_pct < 0 AND day_pct > 3 AND change_pct > 4 AND gap_pct.abs() < 1 AND rel_volume >= 2 — new 52w high + big intraday drive from open + no overnight gap + hot vol (intraday breakout to new 52w high built entirely in regular hours with no overnight aid; pure conviction breakout day)
+    Year52LowBreakdownOpenDriveHotVol, // year_low_pct < 0 AND day_pct < -3 AND change_pct < -4 AND gap_pct.abs() < 1 AND rel_volume >= 2 — new 52w low + big intraday drive from open + no overnight gap + hot vol (intraday breakdown to new 52w low built entirely in regular hours with no overnight aid; pure conviction breakdown day)
+    Year52HighGapAndGoExtremeVol, // year_high_pct < 0 AND gap_pct > 3 AND day_pct > 2 AND change_pct > 5 AND rel_volume >= 3 — new 52w high + big gap up + intraday continuation + extreme vol (gap-and-go breakout at new highs with overnight gap held and extended during regular hours; max-conviction trend acceleration)
+    Year52LowGapAndDropExtremeVol, // year_low_pct < 0 AND gap_pct < -3 AND day_pct < -2 AND change_pct < -5 AND rel_volume >= 3 — new 52w low + big gap down + intraday continuation + extreme vol (gap-and-drop breakdown at new lows with overnight gap held and extended during regular hours; max-conviction trend acceleration)
+    Year52HighFailedBreakoutFade, // year_high_pct >= 0 AND year_high_pct < 3 AND gap_pct > 1 AND day_pct < -1 AND change_pct < 0 AND rel_volume >= 2 — close just below 52w high + gap up + intraday sold from open + red close + hot vol (failed breakout at the highs: ran into resistance, gap rejected and faded all session; trapped breakout buyers flushed during the session)
+    Year52LowFailedBreakdownReclaim, // year_low_pct >= 0 AND year_low_pct < 3 AND gap_pct < -1 AND day_pct > 1 AND change_pct > 0 AND rel_volume >= 2 — close just above 52w low + gap down + intraday recovered from open + green close + hot vol (failed breakdown at the lows: bounced off support, gap reclaimed and rallied all session; trapped breakdown shorts squeezed during the session)
+    Year52HighRangeCompressionLowVol, // year_high_pct >= 0 AND year_high_pct < 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume < 0.7 — close just below 52w high + tight intraday range + flat close + dry vol (low-vol compression just below resistance; no participation rotation; pre-breakout coil at the ceiling)
+    Year52LowRangeCompressionLowVol, // year_low_pct >= 0 AND year_low_pct < 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume < 0.7 — close just above 52w low + tight intraday range + flat close + dry vol (low-vol compression just above support; no participation rotation; pre-breakdown coil at the floor)
+    DistantFromYearHighDryVolCoil, // year_high_pct >= 30 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume < 0.6 — far below 52w high + tight intraday range + flat close + extremely dry vol (deep-discount basing; no participation; potential turnaround setup after extended pullback)
+    DistantFromYearLowDryVolCoil, // year_low_pct >= 30 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume < 0.6 — far above 52w low + tight intraday range + flat close + extremely dry vol (deep-premium basing; no participation; potential exhaustion setup after extended uptrend)
+    DistantFromYearHighBigGreenHotVol, // year_high_pct >= 20 AND change_pct > 5 AND rel_volume >= 2 — far below 52w high + big green + hot vol (snap-back rally from deep discount; mean-reversion thrust with elevated participation toward the prior peak)
+    DistantFromYearLowBigRedHotVol, // year_low_pct >= 20 AND change_pct < -5 AND rel_volume >= 2 — far above 52w low + big red + hot vol (snap-back decline from deep premium; mean-reversion drop with elevated participation toward the prior trough)
+    MidRangeChurnHotVolBigDayPct, // hod_dist_pct.abs().min(lod_dist_pct.abs()) >= 1.5 AND hod_dist_pct.abs().max(lod_dist_pct.abs()) <= 5 AND day_pct.abs() > 3 AND rel_volume >= 2 — close near mid of intraday range + big intraday move + hot vol (mid-range churn with intraday displacement; net move but no follow-through to either extreme; failed-trend day with continued participation)
+    MidRangeChurnHotVolFlatDayPct, // hod_dist_pct.abs().min(lod_dist_pct.abs()) >= 1.5 AND hod_dist_pct.abs().max(lod_dist_pct.abs()) <= 5 AND day_pct.abs() < 0.5 AND rel_volume >= 2 — close near mid of intraday range + flat intraday move + hot vol (max-indecision day at scale; full range with no net direction and elevated participation; institutional indecision with rotation)
+    Year52HighRetestPullbackDryVol, // year_high_pct >= 3 AND year_high_pct < 10 AND change_pct < -1 AND change_pct > -3 AND rel_volume < 0.8 — pulled back 3-10 % from 52w high + small red + dry vol (low-conviction pullback toward retest of recent highs; potential continuation setup with shallow consolidation)
+    Year52LowRetestBounceDryVol, // year_low_pct >= 3 AND year_low_pct < 10 AND change_pct > 1 AND change_pct < 3 AND rel_volume < 0.8 — bounced 3-10 % off 52w low + small green + dry vol (low-conviction bounce toward retest of recent lows; potential continuation setup with shallow rebound)
+    Year52HighRetestPullbackHotVol, // year_high_pct >= 3 AND year_high_pct < 10 AND change_pct < -2 AND change_pct > -5 AND rel_volume >= 2 — pulled back 3-10 % from 52w high + meaningful red + hot vol (high-conviction pullback toward retest of recent highs; institutional profit-taking with elevated participation; potential continuation setup)
+    Year52LowRetestBounceHotVol, // year_low_pct >= 3 AND year_low_pct < 10 AND change_pct > 2 AND change_pct < 5 AND rel_volume >= 2 — bounced 3-10 % off 52w low + meaningful green + hot vol (high-conviction bounce toward retest of recent lows; institutional bottom-fishing with elevated participation; potential continuation setup)
+    HotVolBigChangeDayPctOpposite, // change_pct.abs() > 3 AND day_pct * change_pct < 0 AND day_pct.abs() > 1 AND rel_volume >= 2 — big net move + intraday move in opposite direction + hot vol (intraday reversal fading the prior-close direction: gap dominated the net change, but regular hours pushed back the other way with elevated participation)
+    HotVolBigChangeDayPctAligned, // change_pct.abs() > 3 AND day_pct.abs() > 3 AND day_pct * change_pct > 0 AND rel_volume >= 2 — big net move + intraday move aligned with same direction + hot vol (full-conviction directional day: both overnight + regular hours pushed the same direction with elevated participation; two-leg trend confirmation)
+    Year52HighBreakoutHotVolNoExtreme, // year_high_pct < 0 AND change_pct > 1.5 AND change_pct < 4 AND rel_volume >= 1.5 AND rel_volume < 3 — new 52w high + modest green + moderate hot vol (controlled-conviction breakout to new highs; institutional accumulation without exhaustion; sustainable trend continuation candidate)
+    Year52LowBreakdownHotVolNoExtreme, // year_low_pct < 0 AND change_pct < -1.5 AND change_pct > -4 AND rel_volume >= 1.5 AND rel_volume < 3 — new 52w low + modest red + moderate hot vol (controlled-conviction breakdown to new lows; institutional distribution without panic; sustainable trend continuation candidate)
+    BigGreenTopWickRejectHotVol, // change_pct > 1 AND hod_dist_pct < -2 AND rel_volume >= 1.5 — green close + HOD far above (long upper wick) + hot vol (upper-wick rejection on a green day: rally faded into the close but still finished green; supply tested with elevated participation; potential follow-through hesitation)
+    BigRedBottomWickRejectHotVol, // change_pct < -1 AND lod_dist_pct > 2 AND rel_volume >= 1.5 — red close + LOD far below (long lower wick) + hot vol (lower-wick rejection on a red day: sell-off bounced into the close but still finished red; demand tested with elevated participation; potential follow-through hesitation)
+    DryVolGreenCloseAtHodTinyRange, // change_pct > 0.5 AND hod_dist_pct.abs() < 0.5 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 2 AND rel_volume < 0.7 — small green + closed at HOD + tight intraday range + dry vol (low-conviction grind-up day; small directional drift with no participation; weak-hands trend continuation candidate)
+    DryVolRedCloseAtLodTinyRange, // change_pct < -0.5 AND lod_dist_pct.abs() < 0.5 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 2 AND rel_volume < 0.7 — small red + closed at LOD + tight intraday range + dry vol (low-conviction grind-down day; small directional drift with no participation; weak-hands trend continuation candidate)
+    Year52HighGapDownDryVolReclaim, // year_high_pct < 3 AND year_high_pct >= -2 AND gap_pct < -1.5 AND change_pct > 0 AND rel_volume < 0.8 — near 52w high + opened with gap down + recovered to positive close + dry vol (gap reclaimed back into the breakout zone on light vol; weak-hands shaken out without participation flush; bullish continuation setup at the highs)
+    Year52LowGapUpDryVolReject, // year_low_pct < 3 AND year_low_pct >= -2 AND gap_pct > 1.5 AND change_pct < 0 AND rel_volume < 0.8 — near 52w low + opened with gap up + sold back into red close + dry vol (gap rejected back into the breakdown zone on light vol; weak-hands trapped without participation flush; bearish continuation setup at the lows)
+    Year52HighInsideDayHotVol, // year_high_pct < 3 AND year_high_pct >= -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume >= 1.5 — near 52w high + tight intraday range + flat close + hot vol (inside-day coil at the breakout zone with absorption; institutional accumulation just below resistance; high-probability breakout setup)
+    Year52LowInsideDayHotVol, // year_low_pct < 3 AND year_low_pct >= -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume >= 1.5 — near 52w low + tight intraday range + flat close + hot vol (inside-day coil at the breakdown zone with absorption; institutional distribution just above support; high-probability breakdown setup)
+    Year52HighOutsideDayHotVol, // year_high_pct < 3 AND year_high_pct >= -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume >= 2 — near 52w high + wide intraday range + hot vol (outside-day rotation at the breakout zone; both supply and demand active just below resistance; volatility expansion preceding directional resolution)
+    Year52LowOutsideDayHotVol, // year_low_pct < 3 AND year_low_pct >= -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume >= 2 — near 52w low + wide intraday range + hot vol (outside-day rotation at the breakdown zone; both supply and demand active just above support; volatility expansion preceding directional resolution)
+    YearHighGapDownHotVolRecovery, // year_high_pct < 0 AND gap_pct < -2 AND day_pct > 3 AND change_pct > 1 AND rel_volume >= 2 — new 52w high prior + gap down opening + huge intraday recovery + green close + hot vol (failed gap-down at the highs: shorts overpressed overnight, intraday short-squeeze fully reclaimed and pushed back into trend with elevated participation)
+    YearLowGapUpHotVolRejection, // year_low_pct < 0 AND gap_pct > 2 AND day_pct < -3 AND change_pct < -1 AND rel_volume >= 2 — new 52w low prior + gap up opening + huge intraday rejection + red close + hot vol (failed gap-up at the lows: longs overpressed overnight, intraday long-liquidation fully unwound and pushed back into trend with elevated participation)
+    Year52HighReclaimAfterFlush, // year_high_pct < 0 AND lod_dist_pct > 4 AND hod_dist_pct.abs() < 1 AND change_pct > 1 AND rel_volume >= 1.5 — new 52w high + LOD far below + close near HOD + green close + hot vol (intraday flush below the breakout level reclaimed back to highs by close; trapped breakdown shorts squeezed; conviction continuation candidate)
+    Year52LowReclaimAfterPop, // year_low_pct < 0 AND hod_dist_pct < -4 AND lod_dist_pct.abs() < 1 AND change_pct < -1 AND rel_volume >= 1.5 — new 52w low + HOD far above + close near LOD + red close + hot vol (intraday pop above the breakdown level rejected back to lows by close; trapped breakout longs flushed; conviction continuation candidate)
+    BigDayPctSmallChangeHotVol, // day_pct.abs() > 3 AND change_pct.abs() < 0.5 AND rel_volume >= 2 — big intraday move + flat net close + hot vol (full intraday reversal of overnight position: regular hours fully unwound any prior-close drift with elevated participation; rotation day with no net commitment)
+    SmallDayPctBigChangeHotVol, // day_pct.abs() < 0.5 AND change_pct.abs() > 3 AND rel_volume >= 2 — flat intraday move + big net close + hot vol (overnight gap held intact through regular hours: the entire daily move was the gap, intraday flat acceptance with elevated participation; gap-acceptance day)
+    Year52HighRangeExpansionHotVol, // year_high_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND change_pct > 2 AND rel_volume >= 2 — new 52w high + wide intraday range + green close + hot vol (volatility-expansion breakout at new highs: wide-range trend day after the breakout level; institutional follow-through with elevated participation)
+    Year52LowRangeExpansionHotVol, // year_low_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND change_pct < -2 AND rel_volume >= 2 — new 52w low + wide intraday range + red close + hot vol (volatility-expansion breakdown at new lows: wide-range trend day after the breakdown level; institutional follow-through with elevated participation)
+    Year52HighRangeContractionHotVol, // year_high_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct > 0 AND change_pct < 1 AND rel_volume >= 2 — new 52w high + tight intraday range + small green close + hot vol (post-breakout absorption coil at new highs: tight digestion with elevated participation; pre-extension consolidation)
+    Year52LowRangeContractionHotVol, // year_low_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct < 0 AND change_pct > -1 AND rel_volume >= 2 — new 52w low + tight intraday range + small red close + hot vol (post-breakdown absorption coil at new lows: tight digestion with elevated participation; pre-continuation consolidation)
+    Year52HighBreakoutDryVolPullback, // year_high_pct >= 0 AND year_high_pct < 2 AND change_pct < -0.5 AND change_pct > -2 AND rel_volume < 0.8 — just below 52w high + small red pullback + dry vol (low-vol pullback to retest the prior breakout level; weak-hands shaken out without participation; reclaim setup)
+    Year52LowBreakdownDryVolBounce, // year_low_pct >= 0 AND year_low_pct < 2 AND change_pct > 0.5 AND change_pct < 2 AND rel_volume < 0.8 — just above 52w low + small green bounce + dry vol (low-vol bounce to retest the prior breakdown level; weak-hands shaken out without participation; rejection setup)
+    BigGapBigCounterMoveBigRangeHotVol, // gap_pct.abs() > 3 AND day_pct * gap_pct < 0 AND day_pct.abs() > 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND rel_volume >= 2 — big gap + big opposite intraday move + wide range + hot vol (gap-and-fight reversal: significant overnight gap fully battled by the intraday session; two-sided rotation day with extended range and elevated participation; trapped gap traders flushed)
     BigGapBigContinuationBigDayPctHotVol, // gap_pct.abs() > 3 AND day_pct * gap_pct > 0 AND day_pct.abs() > 3 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND rel_volume >= 2 — big gap + big same-direction intraday + wide range + hot vol (gap-and-go acceleration: overnight gap held + extended further intraday with wide range; two-leg directional conviction with full range expansion)
-    NoGapBigChangeBigDayPctHotVol,       // gap_pct.abs() < 0.5 AND change_pct.abs() > 4 AND day_pct.abs() > 4 AND rel_volume >= 2 — no overnight gap + big net move + big intraday move + hot vol (intraday-only conviction trend day: entire move built during regular hours with no overnight aid + matching intraday displacement; pure regular-hours directional thrust)
-    MidYearHighBigGreenHotVol,           // year_high_pct >= 5 AND year_high_pct < 20 AND change_pct > 3 AND rel_volume >= 2 — middle-of-year-range + big green + hot vol (mid-range bullish thrust well above the floor but well below the ceiling; institutional momentum without breakout-fatigue or basing context)
-    MidYearHighBigRedHotVol,             // year_high_pct >= 5 AND year_high_pct < 20 AND change_pct < -3 AND rel_volume >= 2 — middle-of-year-range + big red + hot vol (mid-range bearish thrust well below the ceiling but well above the floor; institutional distribution without breakdown-fatigue or topping context)
-    MidYearLowBigRedHotVol,              // year_low_pct >= 5 AND year_low_pct < 20 AND change_pct < -3 AND rel_volume >= 2 — middle-of-year-range from low + big red + hot vol (rejection thrust well off the floor but still well below the ceiling; institutional distribution in the rebuild zone)
-    MidYearLowBigGreenHotVol,            // year_low_pct >= 5 AND year_low_pct < 20 AND change_pct > 3 AND rel_volume >= 2 — middle-of-year-range from low + big green + hot vol (continuation thrust off the floor with institutional accumulation in the rebuild zone; recovery momentum without near-extreme volatility)
-    Year52HighFullRangeDryVol,           // year_high_pct < 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume < 0.8 — at 52w high + wide intraday range + dry vol (low-participation outside-day rotation at the highs; supply tested without conviction; failed exhaustion-vol setup)
-    Year52LowFullRangeDryVol,            // year_low_pct < 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume < 0.8 — at 52w low + wide intraday range + dry vol (low-participation outside-day rotation at the lows; demand tested without conviction; failed capitulation-vol setup)
-    BigChangeBigRangeDryVol,             // change_pct.abs() > 4 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND rel_volume < 0.7 — big net move + wide intraday range + dry vol (no-participation thrust + wide range; illiquidity-driven volatility expansion without institutional commitment; fade candidate at scale)
-    ExtremeVolFlatDay,                   // rel_volume >= 5 AND change_pct.abs() < 0.5 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 2 — extreme vol + flat net + tight range (stealth absorption at scale: extreme participation with no price expansion; institutional accumulation or distribution masked as a quiet day)
-    ExtremeVolBigChangeClimax,           // rel_volume >= 5 AND change_pct.abs() > 5 — extreme vol + big net move (climax-style print: extreme participation + extreme directional commitment; potential trend continuation or terminal exhaustion depending on follow-through)
+    NoGapBigChangeBigDayPctHotVol, // gap_pct.abs() < 0.5 AND change_pct.abs() > 4 AND day_pct.abs() > 4 AND rel_volume >= 2 — no overnight gap + big net move + big intraday move + hot vol (intraday-only conviction trend day: entire move built during regular hours with no overnight aid + matching intraday displacement; pure regular-hours directional thrust)
+    MidYearHighBigGreenHotVol, // year_high_pct >= 5 AND year_high_pct < 20 AND change_pct > 3 AND rel_volume >= 2 — middle-of-year-range + big green + hot vol (mid-range bullish thrust well above the floor but well below the ceiling; institutional momentum without breakout-fatigue or basing context)
+    MidYearHighBigRedHotVol, // year_high_pct >= 5 AND year_high_pct < 20 AND change_pct < -3 AND rel_volume >= 2 — middle-of-year-range + big red + hot vol (mid-range bearish thrust well below the ceiling but well above the floor; institutional distribution without breakdown-fatigue or topping context)
+    MidYearLowBigRedHotVol, // year_low_pct >= 5 AND year_low_pct < 20 AND change_pct < -3 AND rel_volume >= 2 — middle-of-year-range from low + big red + hot vol (rejection thrust well off the floor but still well below the ceiling; institutional distribution in the rebuild zone)
+    MidYearLowBigGreenHotVol, // year_low_pct >= 5 AND year_low_pct < 20 AND change_pct > 3 AND rel_volume >= 2 — middle-of-year-range from low + big green + hot vol (continuation thrust off the floor with institutional accumulation in the rebuild zone; recovery momentum without near-extreme volatility)
+    Year52HighFullRangeDryVol, // year_high_pct < 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume < 0.8 — at 52w high + wide intraday range + dry vol (low-participation outside-day rotation at the highs; supply tested without conviction; failed exhaustion-vol setup)
+    Year52LowFullRangeDryVol, // year_low_pct < 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 4 AND rel_volume < 0.8 — at 52w low + wide intraday range + dry vol (low-participation outside-day rotation at the lows; demand tested without conviction; failed capitulation-vol setup)
+    BigChangeBigRangeDryVol, // change_pct.abs() > 4 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND rel_volume < 0.7 — big net move + wide intraday range + dry vol (no-participation thrust + wide range; illiquidity-driven volatility expansion without institutional commitment; fade candidate at scale)
+    ExtremeVolFlatDay, // rel_volume >= 5 AND change_pct.abs() < 0.5 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 2 — extreme vol + flat net + tight range (stealth absorption at scale: extreme participation with no price expansion; institutional accumulation or distribution masked as a quiet day)
+    ExtremeVolBigChangeClimax, // rel_volume >= 5 AND change_pct.abs() > 5 — extreme vol + big net move (climax-style print: extreme participation + extreme directional commitment; potential trend continuation or terminal exhaustion depending on follow-through)
     ExtremeGapBigContinuationExtremeVol, // gap_pct.abs() > 5 AND change_pct.abs() > 8 AND gap_pct * change_pct > 0 AND rel_volume >= 5 — extreme gap + same-direction extreme continuation + extreme vol (gap-and-go acceleration at extreme scale: overnight thrust extended further during regular hours with climax-level participation; max-conviction trend day)
-    ExtremeGapFullReversalExtremeVol,    // gap_pct.abs() > 5 AND gap_pct * change_pct < 0 AND change_pct.abs() > 3 AND rel_volume >= 5 — extreme gap + sign-flipped net close + extreme vol (extreme-gap fade: overnight thrust fully reversed by the intraday session with climax-level participation; trapped gap traders flushed at scale)
-    ApathyAtYearHigh,                    // year_high_pct < 2 AND rel_volume < 0.3 AND change_pct.abs() < 0.3 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 — at 52w high + extreme dry vol + flat close + tight range (total apathy at the breakout zone; neither buyers nor sellers committed; coiled-spring pre-breakout setup with no participation flush yet)
-    ApathyAtYearLow,                     // year_low_pct < 2 AND rel_volume < 0.3 AND change_pct.abs() < 0.3 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 — at 52w low + extreme dry vol + flat close + tight range (total apathy at the breakdown zone; neither buyers nor sellers committed; coiled-spring pre-breakdown setup with no participation flush yet)
-    StealthAtYear52High,                 // year_high_pct < 2 AND change_pct.abs() < 0.5 AND rel_volume >= 5 — at 52w high + flat close + extreme vol (stealth distribution at the breakout zone: extreme participation with no net price expansion; institutional offloading masked as quiet acceptance)
-    StealthAtYear52Low,                  // year_low_pct < 2 AND change_pct.abs() < 0.5 AND rel_volume >= 5 — at 52w low + flat close + extreme vol (stealth accumulation at the breakdown zone: extreme participation with no net price expansion; institutional bottom-fishing masked as quiet acceptance)
-    ExtremeVolCloseAtHod,                // rel_volume >= 5 AND hod_dist_pct.abs() < 0.5 — extreme vol + close pinned to HOD (max-conviction bullish close at any price level: extreme participation finishing on the highs; institutional ramp into the close)
-    ExtremeVolCloseAtLod,                // rel_volume >= 5 AND lod_dist_pct.abs() < 0.5 — extreme vol + close pinned to LOD (max-conviction bearish close at any price level: extreme participation finishing on the lows; institutional dump into the close)
-    ExtremeRangeExtremeVol,              // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 5 — extreme intraday range + extreme vol (extreme two-sided rotation: institutional fight day with wide whipsaw range and climax-level participation; max-volatility regime print)
-    ExtremeRangeDryVol,                  // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume < 0.5 — extreme intraday range + dry vol (thin-liquidity whipsaw: extreme range expansion with no institutional sponsorship; gappy market-maker void or low-volume rip; fade with caution)
-    BigGreenUpperRangeHotVol,            // change_pct > 2 AND lod_dist_pct > 2 * hod_dist_pct.abs() AND rel_volume >= 2 — big green + close clearly in upper portion of intraday range + hot vol (bullish strength close in the top half of the intraday range without requiring close pinned to HOD; demand-side dominance with elevated participation)
-    BigRedLowerRangeHotVol,              // change_pct < -2 AND hod_dist_pct.abs() > 2 * lod_dist_pct AND rel_volume >= 2 — big red + close clearly in lower portion of intraday range + hot vol (bearish weakness close in the bottom half of the intraday range without requiring close pinned to LOD; supply-side dominance with elevated participation)
-    BigBreakoutAboveYearHigh,            // year_high_pct < -3 AND change_pct > 1 AND rel_volume >= 1.5 — close more than 3% above the prior 52w high + green + hot vol (deep breakout extension: not just a fresh peak but materially above it; price-discovery expansion with elevated participation)
-    BigBreakdownBelowYearLow,            // year_low_pct < -3 AND change_pct < -1 AND rel_volume >= 1.5 — close more than 3% below the prior 52w low + red + hot vol (deep breakdown extension: not just a fresh trough but materially below it; price-discovery contraction with elevated participation)
-    DeepPullbackBigGreenHotVol,          // year_high_pct >= 10 AND year_high_pct < 30 AND change_pct > 2 AND rel_volume >= 2 — 10-30 % below 52w high + big green + hot vol (recovery thrust from deep-pullback zone with institutional accumulation; pre-retest momentum candidate)
-    DeepPullbackBigRedHotVol,            // year_high_pct >= 10 AND year_high_pct < 30 AND change_pct < -2 AND rel_volume >= 2 — 10-30 % below 52w high + big red + hot vol (continuation thrust deeper into pullback zone with institutional distribution; trend-break confirmation candidate)
-    DeepBounceBigGreenHotVol,            // year_low_pct >= 10 AND year_low_pct < 30 AND change_pct > 2 AND rel_volume >= 2 — 10-30 % above 52w low + big green + hot vol (continuation thrust away from the floor with institutional accumulation; recovery momentum well off the trough)
-    DeepBounceBigRedHotVol,              // year_low_pct >= 10 AND year_low_pct < 30 AND change_pct < -2 AND rel_volume >= 2 — 10-30 % above 52w low + big red + hot vol (retracement thrust back toward the floor with institutional distribution; bounce-failure confirmation candidate)
-    BigGapDownReclaimedToHodHotVol,      // gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 — gapped down + close pinned to HOD + hot vol (full intraday recovery from the gap-down open to the session high; trapped overnight shorts squeezed all the way to the highs with elevated participation)
-    BigGapUpRejectedToLodHotVol,         // gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 — gapped up + close pinned to LOD + hot vol (full intraday rejection from the gap-up open to the session low; trapped overnight longs flushed all the way to the lows with elevated participation)
-    TenXVolMicroChange,                  // rel_volume >= 10 AND change_pct.abs() < 0.3 — 10x average vol + microchange close (rare absorption-at-scale print: extreme participation with virtually no net price movement; large institutional position-build or unwind masked as a quiet day)
-    TenXVolNoGapBigIntradayMove,         // rel_volume >= 10 AND gap_pct.abs() < 0.3 AND change_pct.abs() > 3 — 10x average vol + no overnight gap + big intraday move (pure regular-hours extreme thrust: no overnight aid, climax-level participation, all directional commitment built during the session)
-    MicroVolBigChange,                   // rel_volume < 0.1 AND change_pct.abs() > 3 — 10 % of average vol + big net move (dead-stock surprise: illiquidity-driven extreme move with virtually no participation; thin market-maker quote rip or holiday/holiday-eve thin-tape print)
-    MicroVolFlatDay,                     // rel_volume < 0.1 AND change_pct.abs() < 0.3 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 — 10 % of average vol + flat close + tight range (total dead stock: no participation and no price movement; delisting candidate or fully forgotten name)
-    ConfirmedBreakoutAboveYearHigh,      // year_high_pct >= -3 AND year_high_pct < -1 AND change_pct > 1 AND rel_volume >= 1.5 — 1-3 % above prior 52w high + green + hot vol (solid confirmed breakout: clearly past resistance but not yet parabolic; trend-establishment zone for new highs)
-    ConfirmedBreakdownBelowYearLow,      // year_low_pct >= -3 AND year_low_pct < -1 AND change_pct < -1 AND rel_volume >= 1.5 — 1-3 % below prior 52w low + red + hot vol (solid confirmed breakdown: clearly past support but not yet panicked; trend-establishment zone for new lows)
-    UpperWickFlatCloseHotVol,            // hod_dist_pct < -3 AND change_pct.abs() < 1 AND gap_pct.abs() < 1 AND rel_volume >= 1.5 — long upper wick + flat net close + no overnight gap + hot vol (pure supply test: intraday rally rejected back to roughly the open with elevated participation; neither bull nor bear net but ceiling tested)
-    LowerWickFlatCloseHotVol,            // lod_dist_pct > 3 AND change_pct.abs() < 1 AND gap_pct.abs() < 1 AND rel_volume >= 1.5 — long lower wick + flat net close + no overnight gap + hot vol (pure demand test: intraday sell-off bounced back to roughly the open with elevated participation; neither bull nor bear net but floor tested)
-    PartialGapUpHoldHotVol,              // gap_pct > 2 AND day_pct < -0.5 AND change_pct > 0 AND rel_volume >= 1.5 — gap up + intraday sold from open + still closed green + hot vol (partial gap-up fade: overnight thrust partially eroded intraday but the gap held the prior close; tested but not flushed)
-    PartialGapDownHoldHotVol,            // gap_pct < -2 AND day_pct > 0.5 AND change_pct < 0 AND rel_volume >= 1.5 — gap down + intraday recovered from open + still closed red + hot vol (partial gap-down fade: overnight thrust partially recovered intraday but the gap held below the prior close; tested but not reclaimed)
-    BreakoutZoneRangeExpansionHotVol,    // year_high_pct >= -3 AND year_high_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND rel_volume >= 2 — fresh 52w breakout zone + wide intraday range + hot vol (volatility expansion right at the breakout level: institutional fight day occurring as new high is being established with elevated participation)
-    BreakdownZoneRangeExpansionHotVol,   // year_low_pct >= -3 AND year_low_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND rel_volume >= 2 — fresh 52w breakdown zone + wide intraday range + hot vol (volatility expansion right at the breakdown level: institutional fight day occurring as new low is being established with elevated participation)
-    Year52HighFreshConsolidationDryVol,  // year_high_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume < 0.8 — close above prior 52w high + tight intraday range + flat close + dry vol (quiet acceptance of the new high: post-breakout consolidation without participation flush; move stalled but did not reverse)
-    Year52LowFreshConsolidationDryVol,   // year_low_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume < 0.8 — close below prior 52w low + tight intraday range + flat close + dry vol (quiet acceptance of the new low: post-breakdown consolidation without participation flush; move stalled but did not reverse)
-    ModerateGapBullContinuationHotVol,   // gap_pct >= 1 AND gap_pct <= 2 AND change_pct > 2 AND rel_volume >= 2 — moderate gap up + bull continuation + hot vol (modest gap held + extended further during regular hours; the in-between gap regime not large enough for blow-off but big enough for directional commitment with elevated participation)
-    ModerateGapBearContinuationHotVol,   // gap_pct >= -2 AND gap_pct <= -1 AND change_pct < -2 AND rel_volume >= 2 — moderate gap down + bear continuation + hot vol (modest gap held + extended further during regular hours; the in-between gap regime not large enough for panic but big enough for directional commitment with elevated participation)
-    ModerateGapBullContinuationDryVol,   // gap_pct >= 1 AND gap_pct <= 2 AND change_pct > 2 AND rel_volume < 0.8 — moderate gap up + bull continuation + dry vol (modest gap extended on no participation; suspect rally without institutional sponsorship; fade-prone setup despite positive net move)
-    ModerateGapBearContinuationDryVol,   // gap_pct >= -2 AND gap_pct <= -1 AND change_pct < -2 AND rel_volume < 0.8 — moderate gap down + bear continuation + dry vol (modest gap extended on no participation; suspect decline without institutional sponsorship; fade-prone setup despite negative net move)
-    ModerateGapBullFadeHotVol,           // gap_pct >= 1 AND gap_pct <= 2 AND change_pct < -1 AND rel_volume >= 2 — moderate gap up + closed red + hot vol (moderate-gap fade reversal: gap up was sold throughout the session below prior close; trapped overnight longs flushed with elevated participation; reversal-short signal)
-    ModerateGapBearReclaimHotVol,        // gap_pct >= -2 AND gap_pct <= -1 AND change_pct > 1 AND rel_volume >= 2 — moderate gap down + closed green + hot vol (moderate-gap reclaim reversal: gap down was bought throughout the session above prior close; trapped overnight shorts squeezed with elevated participation; reversal-long signal)
-    ConfirmedBreakoutFadeHotVol,         // year_high_pct >= -3 AND year_high_pct < -1 AND change_pct < -0.5 AND rel_volume >= 1.5 — 1-3 % above prior 52w high + red + hot vol (confirmed-breakout pullback: was clearly past resistance, now dropping back into the breakout zone with elevated participation; failed-breakout risk signal)
-    ConfirmedBreakdownReclaimHotVol,     // year_low_pct >= -3 AND year_low_pct < -1 AND change_pct > 0.5 AND rel_volume >= 1.5 — 1-3 % below prior 52w low + green + hot vol (confirmed-breakdown bounce: was clearly past support, now rallying back into the breakdown zone with elevated participation; failed-breakdown risk signal)
-    IntradayBullDriveAtYear52High,       // year_high_pct < 2 AND day_pct > 3 AND rel_volume >= 2 — at 52w high + big intraday drive up + hot vol (intraday-led bullish thrust at the breakout zone regardless of overnight context; regular-hours momentum confirmation right at resistance)
-    IntradayBearDriveAtYear52Low,        // year_low_pct < 2 AND day_pct < -3 AND rel_volume >= 2 — at 52w low + big intraday drive down + hot vol (intraday-led bearish thrust at the breakdown zone regardless of overnight context; regular-hours momentum confirmation right at support)
-    IntradayBearDriveAtYear52High,       // year_high_pct < 2 AND day_pct < -3 AND rel_volume >= 2 — at 52w high + big intraday drive DOWN + hot vol (intraday-led bearish rejection at the breakout zone: selling pressure through regular hours pushed the price back from the highs with elevated participation; failed-breakout candidate)
-    IntradayBullDriveAtYear52Low,        // year_low_pct < 2 AND day_pct > 3 AND rel_volume >= 2 — at 52w low + big intraday drive UP + hot vol (intraday-led bullish recovery at the breakdown zone: buying pressure through regular hours lifted the price off the lows with elevated participation; failed-breakdown candidate)
-    IntradayBullDriveBelowYearHigh,      // year_high_pct >= 0 AND year_high_pct < 5 AND day_pct > 3 AND rel_volume >= 2 — within 5% below 52w high + big intraday drive up + hot vol (pre-breakout intraday surge: approaching resistance with regular-hours momentum and elevated participation; breakout-setup candidate)
-    IntradayBearDriveAboveYearLow,       // year_low_pct >= 0 AND year_low_pct < 5 AND day_pct < -3 AND rel_volume >= 2 — within 5% above 52w low + big intraday drive down + hot vol (pre-breakdown intraday plunge: approaching support with regular-hours momentum and elevated participation; breakdown-setup candidate)
-    HammerAtYear52Low,                   // year_low_pct < 2 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — at 52w low + long lower wick + close near HOD + green close + hot vol (classic hammer reversal at the breakdown floor: intraday plunge reclaimed with green finish and elevated participation; high-probability bottom-fishing signal)
-    ShootingStarAtYear52High,            // year_high_pct < 2 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — at 52w high + long upper wick + close near LOD + red close + hot vol (classic shooting star reversal at the breakout ceiling: intraday rip sold with red finish and elevated participation; high-probability topping signal)
-    MarubozuGreenAtYear52High,           // year_high_pct < 2 AND change_pct > 3 AND hod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — at 52w high + green marubozu + no overnight gap + hot vol (full intraday breakout trend day at the breakout zone: regular-hours conviction climbed from the open to the high with no gap aid; max-conviction breakout day)
-    MarubozuRedAtYear52Low,              // year_low_pct < 2 AND change_pct < -3 AND lod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — at 52w low + red marubozu + no overnight gap + hot vol (full intraday breakdown trend day at the breakdown zone: regular-hours conviction fell from the open to the low with no gap aid; max-conviction breakdown day)
-    DragonflyDojiAtYear52Low,            // year_low_pct < 2 AND change_pct.abs() < 0.3 AND lod_dist_pct > 4 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — at 52w low + flat close + LOD far below + close near HOD + hot vol (classic dragonfly doji at the breakdown floor: intraday plunge fully reclaimed by the close with elevated participation; high-probability bottom-fishing signal at the year low)
-    GravestoneDojiAtYear52High,          // year_high_pct < 2 AND change_pct.abs() < 0.3 AND hod_dist_pct < -4 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — at 52w high + flat close + HOD far above + close near LOD + hot vol (classic gravestone doji at the breakout ceiling: intraday rip fully sold by the close with elevated participation; high-probability topping signal at the year high)
-    HammerAtMidYearLowRange,             // year_low_pct >= 5 AND year_low_pct < 20 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — mid-range from low (5-20% above 52w low) + long lower wick + close near HOD + green close + hot vol (hammer reversal in the recovery zone: intraday plunge reclaimed with green finish above the floor; mid-cycle bottom-fishing signal)
-    ShootingStarAtMidYearHighRange,      // year_high_pct >= 5 AND year_high_pct < 20 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — mid-range from high (5-20% below 52w high) + long upper wick + close near LOD + red close + hot vol (shooting star reversal in the topping zone: intraday rip sold with red finish below the ceiling; mid-cycle topping signal)
-    HammerAtDeepPullback,                // year_high_pct >= 10 AND year_high_pct < 30 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — deep pullback zone (10-30% below 52w high) + long lower wick + close near HOD + green close + hot vol (hammer reversal deep into the pullback: intraday plunge reclaimed in the rebuild zone; counter-trend bounce candidate)
-    ShootingStarAtDeepBounce,            // year_low_pct >= 10 AND year_low_pct < 30 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — deep bounce zone (10-30% above 52w low) + long upper wick + close near LOD + red close + hot vol (shooting star reversal deep into the bounce: intraday rip sold in the rebuild zone; counter-trend rejection candidate)
-    DragonflyDojiAtMidYearLow,           // year_low_pct >= 5 AND year_low_pct < 20 AND change_pct.abs() < 0.3 AND lod_dist_pct > 4 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — mid-range from low (5-20% above 52w low) + flat close + LOD far below + close near HOD + hot vol (dragonfly doji reversal in the recovery zone: intraday plunge fully reclaimed by close in the mid-range; demand-test signal away from the floor)
-    GravestoneDojiAtMidYearHigh,         // year_high_pct >= 5 AND year_high_pct < 20 AND change_pct.abs() < 0.3 AND hod_dist_pct < -4 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — mid-range from high (5-20% below 52w high) + flat close + HOD far above + close near LOD + hot vol (gravestone doji reversal in the topping zone: intraday rip fully sold by close in the mid-range; supply-test signal away from the ceiling)
-    DragonflyDojiAtDeepPullback,         // year_high_pct >= 10 AND year_high_pct < 30 AND change_pct.abs() < 0.3 AND lod_dist_pct > 4 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — deep pullback zone (10-30% below 52w high) + flat close + LOD far below + close near HOD + hot vol (dragonfly doji reversal deep into the pullback: intraday plunge reclaimed in the rebuild zone with flat close; counter-trend demand-test signal)
-    GravestoneDojiAtDeepBounce,          // year_low_pct >= 10 AND year_low_pct < 30 AND change_pct.abs() < 0.3 AND hod_dist_pct < -4 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — deep bounce zone (10-30% above 52w low) + flat close + HOD far above + close near LOD + hot vol (gravestone doji reversal deep into the bounce: intraday rip sold in the rebuild zone with flat close; counter-trend supply-test signal)
-    MarubozuGreenAtMidYearHigh,          // year_high_pct >= 5 AND year_high_pct < 20 AND change_pct > 3 AND hod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — mid-range from high (5-20% below 52w high) + green marubozu + no overnight gap + hot vol (full intraday recovery trend day in the pullback zone: regular-hours conviction lifted from the open to the high with no gap aid; max-conviction mid-cycle bounce day)
-    MarubozuRedAtMidYearLow,             // year_low_pct >= 5 AND year_low_pct < 20 AND change_pct < -3 AND lod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — mid-range from low (5-20% above 52w low) + red marubozu + no overnight gap + hot vol (full intraday retracement trend day in the bounce zone: regular-hours conviction fell from the open to the low with no gap aid; max-conviction mid-cycle rejection day)
-    MarubozuGreenAtDeepPullback,         // year_high_pct >= 10 AND year_high_pct < 30 AND change_pct > 3 AND hod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — deep pullback zone (10-30% below 52w high) + green marubozu + no overnight gap + hot vol (full intraday recovery trend day deep in the pullback: regular-hours conviction lifted from the open to the high with no gap aid; max-conviction counter-trend bounce thrust)
-    MarubozuRedAtDeepBounce,             // year_low_pct >= 10 AND year_low_pct < 30 AND change_pct < -3 AND lod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — deep bounce zone (10-30% above 52w low) + red marubozu + no overnight gap + hot vol (full intraday retracement trend day deep in the bounce: regular-hours conviction fell from the open to the low with no gap aid; max-conviction counter-trend rejection thrust)
-    HammerAtDeepDiscount,                // year_high_pct >= 30 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — deep discount zone (>=30% below 52w high) + long lower wick + close near HOD + green close + hot vol (hammer reversal at the deep-discount floor: intraday plunge reclaimed in a beaten-down name with elevated participation; turnaround candidate after extended decline)
-    ShootingStarAtDeepPremium,           // year_low_pct >= 30 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — deep premium zone (>=30% above 52w low) + long upper wick + close near LOD + red close + hot vol (shooting star reversal at the deep-premium ceiling: intraday rip sold in a runaway name with elevated participation; exhaustion candidate after extended advance)
-    DragonflyDojiAtDeepDiscount,         // year_high_pct >= 30 AND change_pct.abs() < 0.3 AND lod_dist_pct > 4 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — deep discount zone (>=30% below 52w high) + flat close + LOD far below + close near HOD + hot vol (dragonfly doji reversal in the deep-discount floor: intraday plunge fully reclaimed by close in a beaten-down name with elevated participation; turnaround demand-test signal)
-    GravestoneDojiAtDeepPremium,         // year_low_pct >= 30 AND change_pct.abs() < 0.3 AND hod_dist_pct < -4 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — deep premium zone (>=30% above 52w low) + flat close + HOD far above + close near LOD + hot vol (gravestone doji reversal in the deep-premium ceiling: intraday rip fully sold by close in a runaway name with elevated participation; exhaustion supply-test signal)
-    MarubozuGreenAtDeepDiscount,         // year_high_pct >= 30 AND change_pct > 3 AND hod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — deep discount zone (>=30% below 52w high) + green marubozu + no overnight gap + hot vol (full intraday recovery trend day in a beaten-down name: regular-hours conviction lifted from open to high with no gap aid; max-conviction turnaround thrust after extended decline)
-    MarubozuRedAtDeepPremium,            // year_low_pct >= 30 AND change_pct < -3 AND lod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — deep premium zone (>=30% above 52w low) + red marubozu + no overnight gap + hot vol (full intraday rejection trend day in a runaway name: regular-hours conviction fell from open to low with no gap aid; max-conviction exhaustion thrust after extended advance)
-    HammerAtYear52High,                  // year_high_pct < 2 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — at 52w high + long lower wick + close near HOD + green close + hot vol (buying pressure tested but reclaimed at the breakout ceiling: intraday plunge bought back to the highs; continuation-of-trend resilience signal at the top)
-    ShootingStarAtYear52Low,             // year_low_pct < 2 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — at 52w low + long upper wick + close near LOD + red close + hot vol (selling pressure persists at the breakdown floor: intraday rip sold back to the lows; continuation-of-trend weakness signal at the bottom)
-    HammerAtMidYearHighRange,            // year_high_pct >= 5 AND year_high_pct < 20 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — mid-range from high (5-20% below 52w high) + long lower wick + close near HOD + green close + hot vol (buying pressure tested but reclaimed in the pullback zone: intraday plunge bought back toward the prior peak; bull-continuation hammer signaling pullback exhaustion)
-    ShootingStarAtMidYearLowRange,       // year_low_pct >= 5 AND year_low_pct < 20 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — mid-range from low (5-20% above 52w low) + long upper wick + close near LOD + red close + hot vol (selling pressure tested in the bounce zone: intraday rip sold back toward the prior trough; bear-continuation shooting star signaling bounce exhaustion)
-    HammerAtDeepBounceContinuation,      // year_low_pct >= 10 AND year_low_pct < 30 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — deep bounce zone (10-30% above 52w low) + long lower wick + close near HOD + green close + hot vol (bull-continuation hammer in the rebuild zone: intraday plunge reclaimed without retesting the floor; recovery momentum confirmation deep into the bounce)
+    ExtremeGapFullReversalExtremeVol, // gap_pct.abs() > 5 AND gap_pct * change_pct < 0 AND change_pct.abs() > 3 AND rel_volume >= 5 — extreme gap + sign-flipped net close + extreme vol (extreme-gap fade: overnight thrust fully reversed by the intraday session with climax-level participation; trapped gap traders flushed at scale)
+    ApathyAtYearHigh, // year_high_pct < 2 AND rel_volume < 0.3 AND change_pct.abs() < 0.3 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 — at 52w high + extreme dry vol + flat close + tight range (total apathy at the breakout zone; neither buyers nor sellers committed; coiled-spring pre-breakout setup with no participation flush yet)
+    ApathyAtYearLow, // year_low_pct < 2 AND rel_volume < 0.3 AND change_pct.abs() < 0.3 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 — at 52w low + extreme dry vol + flat close + tight range (total apathy at the breakdown zone; neither buyers nor sellers committed; coiled-spring pre-breakdown setup with no participation flush yet)
+    StealthAtYear52High, // year_high_pct < 2 AND change_pct.abs() < 0.5 AND rel_volume >= 5 — at 52w high + flat close + extreme vol (stealth distribution at the breakout zone: extreme participation with no net price expansion; institutional offloading masked as quiet acceptance)
+    StealthAtYear52Low, // year_low_pct < 2 AND change_pct.abs() < 0.5 AND rel_volume >= 5 — at 52w low + flat close + extreme vol (stealth accumulation at the breakdown zone: extreme participation with no net price expansion; institutional bottom-fishing masked as quiet acceptance)
+    ExtremeVolCloseAtHod, // rel_volume >= 5 AND hod_dist_pct.abs() < 0.5 — extreme vol + close pinned to HOD (max-conviction bullish close at any price level: extreme participation finishing on the highs; institutional ramp into the close)
+    ExtremeVolCloseAtLod, // rel_volume >= 5 AND lod_dist_pct.abs() < 0.5 — extreme vol + close pinned to LOD (max-conviction bearish close at any price level: extreme participation finishing on the lows; institutional dump into the close)
+    ExtremeRangeExtremeVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 5 — extreme intraday range + extreme vol (extreme two-sided rotation: institutional fight day with wide whipsaw range and climax-level participation; max-volatility regime print)
+    ExtremeRangeDryVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume < 0.5 — extreme intraday range + dry vol (thin-liquidity whipsaw: extreme range expansion with no institutional sponsorship; gappy market-maker void or low-volume rip; fade with caution)
+    BigGreenUpperRangeHotVol, // change_pct > 2 AND lod_dist_pct > 2 * hod_dist_pct.abs() AND rel_volume >= 2 — big green + close clearly in upper portion of intraday range + hot vol (bullish strength close in the top half of the intraday range without requiring close pinned to HOD; demand-side dominance with elevated participation)
+    BigRedLowerRangeHotVol, // change_pct < -2 AND hod_dist_pct.abs() > 2 * lod_dist_pct AND rel_volume >= 2 — big red + close clearly in lower portion of intraday range + hot vol (bearish weakness close in the bottom half of the intraday range without requiring close pinned to LOD; supply-side dominance with elevated participation)
+    BigBreakoutAboveYearHigh, // year_high_pct < -3 AND change_pct > 1 AND rel_volume >= 1.5 — close more than 3% above the prior 52w high + green + hot vol (deep breakout extension: not just a fresh peak but materially above it; price-discovery expansion with elevated participation)
+    BigBreakdownBelowYearLow, // year_low_pct < -3 AND change_pct < -1 AND rel_volume >= 1.5 — close more than 3% below the prior 52w low + red + hot vol (deep breakdown extension: not just a fresh trough but materially below it; price-discovery contraction with elevated participation)
+    DeepPullbackBigGreenHotVol, // year_high_pct >= 10 AND year_high_pct < 30 AND change_pct > 2 AND rel_volume >= 2 — 10-30 % below 52w high + big green + hot vol (recovery thrust from deep-pullback zone with institutional accumulation; pre-retest momentum candidate)
+    DeepPullbackBigRedHotVol, // year_high_pct >= 10 AND year_high_pct < 30 AND change_pct < -2 AND rel_volume >= 2 — 10-30 % below 52w high + big red + hot vol (continuation thrust deeper into pullback zone with institutional distribution; trend-break confirmation candidate)
+    DeepBounceBigGreenHotVol, // year_low_pct >= 10 AND year_low_pct < 30 AND change_pct > 2 AND rel_volume >= 2 — 10-30 % above 52w low + big green + hot vol (continuation thrust away from the floor with institutional accumulation; recovery momentum well off the trough)
+    DeepBounceBigRedHotVol, // year_low_pct >= 10 AND year_low_pct < 30 AND change_pct < -2 AND rel_volume >= 2 — 10-30 % above 52w low + big red + hot vol (retracement thrust back toward the floor with institutional distribution; bounce-failure confirmation candidate)
+    BigGapDownReclaimedToHodHotVol, // gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 — gapped down + close pinned to HOD + hot vol (full intraday recovery from the gap-down open to the session high; trapped overnight shorts squeezed all the way to the highs with elevated participation)
+    BigGapUpRejectedToLodHotVol, // gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 — gapped up + close pinned to LOD + hot vol (full intraday rejection from the gap-up open to the session low; trapped overnight longs flushed all the way to the lows with elevated participation)
+    TenXVolMicroChange, // rel_volume >= 10 AND change_pct.abs() < 0.3 — 10x average vol + microchange close (rare absorption-at-scale print: extreme participation with virtually no net price movement; large institutional position-build or unwind masked as a quiet day)
+    TenXVolNoGapBigIntradayMove, // rel_volume >= 10 AND gap_pct.abs() < 0.3 AND change_pct.abs() > 3 — 10x average vol + no overnight gap + big intraday move (pure regular-hours extreme thrust: no overnight aid, climax-level participation, all directional commitment built during the session)
+    MicroVolBigChange, // rel_volume < 0.1 AND change_pct.abs() > 3 — 10 % of average vol + big net move (dead-stock surprise: illiquidity-driven extreme move with virtually no participation; thin market-maker quote rip or holiday/holiday-eve thin-tape print)
+    MicroVolFlatDay, // rel_volume < 0.1 AND change_pct.abs() < 0.3 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 — 10 % of average vol + flat close + tight range (total dead stock: no participation and no price movement; delisting candidate or fully forgotten name)
+    ConfirmedBreakoutAboveYearHigh, // year_high_pct >= -3 AND year_high_pct < -1 AND change_pct > 1 AND rel_volume >= 1.5 — 1-3 % above prior 52w high + green + hot vol (solid confirmed breakout: clearly past resistance but not yet parabolic; trend-establishment zone for new highs)
+    ConfirmedBreakdownBelowYearLow, // year_low_pct >= -3 AND year_low_pct < -1 AND change_pct < -1 AND rel_volume >= 1.5 — 1-3 % below prior 52w low + red + hot vol (solid confirmed breakdown: clearly past support but not yet panicked; trend-establishment zone for new lows)
+    UpperWickFlatCloseHotVol, // hod_dist_pct < -3 AND change_pct.abs() < 1 AND gap_pct.abs() < 1 AND rel_volume >= 1.5 — long upper wick + flat net close + no overnight gap + hot vol (pure supply test: intraday rally rejected back to roughly the open with elevated participation; neither bull nor bear net but ceiling tested)
+    LowerWickFlatCloseHotVol, // lod_dist_pct > 3 AND change_pct.abs() < 1 AND gap_pct.abs() < 1 AND rel_volume >= 1.5 — long lower wick + flat net close + no overnight gap + hot vol (pure demand test: intraday sell-off bounced back to roughly the open with elevated participation; neither bull nor bear net but floor tested)
+    PartialGapUpHoldHotVol, // gap_pct > 2 AND day_pct < -0.5 AND change_pct > 0 AND rel_volume >= 1.5 — gap up + intraday sold from open + still closed green + hot vol (partial gap-up fade: overnight thrust partially eroded intraday but the gap held the prior close; tested but not flushed)
+    PartialGapDownHoldHotVol, // gap_pct < -2 AND day_pct > 0.5 AND change_pct < 0 AND rel_volume >= 1.5 — gap down + intraday recovered from open + still closed red + hot vol (partial gap-down fade: overnight thrust partially recovered intraday but the gap held below the prior close; tested but not reclaimed)
+    BreakoutZoneRangeExpansionHotVol, // year_high_pct >= -3 AND year_high_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND rel_volume >= 2 — fresh 52w breakout zone + wide intraday range + hot vol (volatility expansion right at the breakout level: institutional fight day occurring as new high is being established with elevated participation)
+    BreakdownZoneRangeExpansionHotVol, // year_low_pct >= -3 AND year_low_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND rel_volume >= 2 — fresh 52w breakdown zone + wide intraday range + hot vol (volatility expansion right at the breakdown level: institutional fight day occurring as new low is being established with elevated participation)
+    Year52HighFreshConsolidationDryVol, // year_high_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume < 0.8 — close above prior 52w high + tight intraday range + flat close + dry vol (quiet acceptance of the new high: post-breakout consolidation without participation flush; move stalled but did not reverse)
+    Year52LowFreshConsolidationDryVol, // year_low_pct < 0 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume < 0.8 — close below prior 52w low + tight intraday range + flat close + dry vol (quiet acceptance of the new low: post-breakdown consolidation without participation flush; move stalled but did not reverse)
+    ModerateGapBullContinuationHotVol, // gap_pct >= 1 AND gap_pct <= 2 AND change_pct > 2 AND rel_volume >= 2 — moderate gap up + bull continuation + hot vol (modest gap held + extended further during regular hours; the in-between gap regime not large enough for blow-off but big enough for directional commitment with elevated participation)
+    ModerateGapBearContinuationHotVol, // gap_pct >= -2 AND gap_pct <= -1 AND change_pct < -2 AND rel_volume >= 2 — moderate gap down + bear continuation + hot vol (modest gap held + extended further during regular hours; the in-between gap regime not large enough for panic but big enough for directional commitment with elevated participation)
+    ModerateGapBullContinuationDryVol, // gap_pct >= 1 AND gap_pct <= 2 AND change_pct > 2 AND rel_volume < 0.8 — moderate gap up + bull continuation + dry vol (modest gap extended on no participation; suspect rally without institutional sponsorship; fade-prone setup despite positive net move)
+    ModerateGapBearContinuationDryVol, // gap_pct >= -2 AND gap_pct <= -1 AND change_pct < -2 AND rel_volume < 0.8 — moderate gap down + bear continuation + dry vol (modest gap extended on no participation; suspect decline without institutional sponsorship; fade-prone setup despite negative net move)
+    ModerateGapBullFadeHotVol, // gap_pct >= 1 AND gap_pct <= 2 AND change_pct < -1 AND rel_volume >= 2 — moderate gap up + closed red + hot vol (moderate-gap fade reversal: gap up was sold throughout the session below prior close; trapped overnight longs flushed with elevated participation; reversal-short signal)
+    ModerateGapBearReclaimHotVol, // gap_pct >= -2 AND gap_pct <= -1 AND change_pct > 1 AND rel_volume >= 2 — moderate gap down + closed green + hot vol (moderate-gap reclaim reversal: gap down was bought throughout the session above prior close; trapped overnight shorts squeezed with elevated participation; reversal-long signal)
+    ConfirmedBreakoutFadeHotVol, // year_high_pct >= -3 AND year_high_pct < -1 AND change_pct < -0.5 AND rel_volume >= 1.5 — 1-3 % above prior 52w high + red + hot vol (confirmed-breakout pullback: was clearly past resistance, now dropping back into the breakout zone with elevated participation; failed-breakout risk signal)
+    ConfirmedBreakdownReclaimHotVol, // year_low_pct >= -3 AND year_low_pct < -1 AND change_pct > 0.5 AND rel_volume >= 1.5 — 1-3 % below prior 52w low + green + hot vol (confirmed-breakdown bounce: was clearly past support, now rallying back into the breakdown zone with elevated participation; failed-breakdown risk signal)
+    IntradayBullDriveAtYear52High, // year_high_pct < 2 AND day_pct > 3 AND rel_volume >= 2 — at 52w high + big intraday drive up + hot vol (intraday-led bullish thrust at the breakout zone regardless of overnight context; regular-hours momentum confirmation right at resistance)
+    IntradayBearDriveAtYear52Low, // year_low_pct < 2 AND day_pct < -3 AND rel_volume >= 2 — at 52w low + big intraday drive down + hot vol (intraday-led bearish thrust at the breakdown zone regardless of overnight context; regular-hours momentum confirmation right at support)
+    IntradayBearDriveAtYear52High, // year_high_pct < 2 AND day_pct < -3 AND rel_volume >= 2 — at 52w high + big intraday drive DOWN + hot vol (intraday-led bearish rejection at the breakout zone: selling pressure through regular hours pushed the price back from the highs with elevated participation; failed-breakout candidate)
+    IntradayBullDriveAtYear52Low, // year_low_pct < 2 AND day_pct > 3 AND rel_volume >= 2 — at 52w low + big intraday drive UP + hot vol (intraday-led bullish recovery at the breakdown zone: buying pressure through regular hours lifted the price off the lows with elevated participation; failed-breakdown candidate)
+    IntradayBullDriveBelowYearHigh, // year_high_pct >= 0 AND year_high_pct < 5 AND day_pct > 3 AND rel_volume >= 2 — within 5% below 52w high + big intraday drive up + hot vol (pre-breakout intraday surge: approaching resistance with regular-hours momentum and elevated participation; breakout-setup candidate)
+    IntradayBearDriveAboveYearLow, // year_low_pct >= 0 AND year_low_pct < 5 AND day_pct < -3 AND rel_volume >= 2 — within 5% above 52w low + big intraday drive down + hot vol (pre-breakdown intraday plunge: approaching support with regular-hours momentum and elevated participation; breakdown-setup candidate)
+    HammerAtYear52Low, // year_low_pct < 2 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — at 52w low + long lower wick + close near HOD + green close + hot vol (classic hammer reversal at the breakdown floor: intraday plunge reclaimed with green finish and elevated participation; high-probability bottom-fishing signal)
+    ShootingStarAtYear52High, // year_high_pct < 2 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — at 52w high + long upper wick + close near LOD + red close + hot vol (classic shooting star reversal at the breakout ceiling: intraday rip sold with red finish and elevated participation; high-probability topping signal)
+    MarubozuGreenAtYear52High, // year_high_pct < 2 AND change_pct > 3 AND hod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — at 52w high + green marubozu + no overnight gap + hot vol (full intraday breakout trend day at the breakout zone: regular-hours conviction climbed from the open to the high with no gap aid; max-conviction breakout day)
+    MarubozuRedAtYear52Low, // year_low_pct < 2 AND change_pct < -3 AND lod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — at 52w low + red marubozu + no overnight gap + hot vol (full intraday breakdown trend day at the breakdown zone: regular-hours conviction fell from the open to the low with no gap aid; max-conviction breakdown day)
+    DragonflyDojiAtYear52Low, // year_low_pct < 2 AND change_pct.abs() < 0.3 AND lod_dist_pct > 4 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — at 52w low + flat close + LOD far below + close near HOD + hot vol (classic dragonfly doji at the breakdown floor: intraday plunge fully reclaimed by the close with elevated participation; high-probability bottom-fishing signal at the year low)
+    GravestoneDojiAtYear52High, // year_high_pct < 2 AND change_pct.abs() < 0.3 AND hod_dist_pct < -4 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — at 52w high + flat close + HOD far above + close near LOD + hot vol (classic gravestone doji at the breakout ceiling: intraday rip fully sold by the close with elevated participation; high-probability topping signal at the year high)
+    HammerAtMidYearLowRange, // year_low_pct >= 5 AND year_low_pct < 20 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — mid-range from low (5-20% above 52w low) + long lower wick + close near HOD + green close + hot vol (hammer reversal in the recovery zone: intraday plunge reclaimed with green finish above the floor; mid-cycle bottom-fishing signal)
+    ShootingStarAtMidYearHighRange, // year_high_pct >= 5 AND year_high_pct < 20 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — mid-range from high (5-20% below 52w high) + long upper wick + close near LOD + red close + hot vol (shooting star reversal in the topping zone: intraday rip sold with red finish below the ceiling; mid-cycle topping signal)
+    HammerAtDeepPullback, // year_high_pct >= 10 AND year_high_pct < 30 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — deep pullback zone (10-30% below 52w high) + long lower wick + close near HOD + green close + hot vol (hammer reversal deep into the pullback: intraday plunge reclaimed in the rebuild zone; counter-trend bounce candidate)
+    ShootingStarAtDeepBounce, // year_low_pct >= 10 AND year_low_pct < 30 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — deep bounce zone (10-30% above 52w low) + long upper wick + close near LOD + red close + hot vol (shooting star reversal deep into the bounce: intraday rip sold in the rebuild zone; counter-trend rejection candidate)
+    DragonflyDojiAtMidYearLow, // year_low_pct >= 5 AND year_low_pct < 20 AND change_pct.abs() < 0.3 AND lod_dist_pct > 4 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — mid-range from low (5-20% above 52w low) + flat close + LOD far below + close near HOD + hot vol (dragonfly doji reversal in the recovery zone: intraday plunge fully reclaimed by close in the mid-range; demand-test signal away from the floor)
+    GravestoneDojiAtMidYearHigh, // year_high_pct >= 5 AND year_high_pct < 20 AND change_pct.abs() < 0.3 AND hod_dist_pct < -4 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — mid-range from high (5-20% below 52w high) + flat close + HOD far above + close near LOD + hot vol (gravestone doji reversal in the topping zone: intraday rip fully sold by close in the mid-range; supply-test signal away from the ceiling)
+    DragonflyDojiAtDeepPullback, // year_high_pct >= 10 AND year_high_pct < 30 AND change_pct.abs() < 0.3 AND lod_dist_pct > 4 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — deep pullback zone (10-30% below 52w high) + flat close + LOD far below + close near HOD + hot vol (dragonfly doji reversal deep into the pullback: intraday plunge reclaimed in the rebuild zone with flat close; counter-trend demand-test signal)
+    GravestoneDojiAtDeepBounce, // year_low_pct >= 10 AND year_low_pct < 30 AND change_pct.abs() < 0.3 AND hod_dist_pct < -4 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — deep bounce zone (10-30% above 52w low) + flat close + HOD far above + close near LOD + hot vol (gravestone doji reversal deep into the bounce: intraday rip sold in the rebuild zone with flat close; counter-trend supply-test signal)
+    MarubozuGreenAtMidYearHigh, // year_high_pct >= 5 AND year_high_pct < 20 AND change_pct > 3 AND hod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — mid-range from high (5-20% below 52w high) + green marubozu + no overnight gap + hot vol (full intraday recovery trend day in the pullback zone: regular-hours conviction lifted from the open to the high with no gap aid; max-conviction mid-cycle bounce day)
+    MarubozuRedAtMidYearLow, // year_low_pct >= 5 AND year_low_pct < 20 AND change_pct < -3 AND lod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — mid-range from low (5-20% above 52w low) + red marubozu + no overnight gap + hot vol (full intraday retracement trend day in the bounce zone: regular-hours conviction fell from the open to the low with no gap aid; max-conviction mid-cycle rejection day)
+    MarubozuGreenAtDeepPullback, // year_high_pct >= 10 AND year_high_pct < 30 AND change_pct > 3 AND hod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — deep pullback zone (10-30% below 52w high) + green marubozu + no overnight gap + hot vol (full intraday recovery trend day deep in the pullback: regular-hours conviction lifted from the open to the high with no gap aid; max-conviction counter-trend bounce thrust)
+    MarubozuRedAtDeepBounce, // year_low_pct >= 10 AND year_low_pct < 30 AND change_pct < -3 AND lod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — deep bounce zone (10-30% above 52w low) + red marubozu + no overnight gap + hot vol (full intraday retracement trend day deep in the bounce: regular-hours conviction fell from the open to the low with no gap aid; max-conviction counter-trend rejection thrust)
+    HammerAtDeepDiscount, // year_high_pct >= 30 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — deep discount zone (>=30% below 52w high) + long lower wick + close near HOD + green close + hot vol (hammer reversal at the deep-discount floor: intraday plunge reclaimed in a beaten-down name with elevated participation; turnaround candidate after extended decline)
+    ShootingStarAtDeepPremium, // year_low_pct >= 30 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — deep premium zone (>=30% above 52w low) + long upper wick + close near LOD + red close + hot vol (shooting star reversal at the deep-premium ceiling: intraday rip sold in a runaway name with elevated participation; exhaustion candidate after extended advance)
+    DragonflyDojiAtDeepDiscount, // year_high_pct >= 30 AND change_pct.abs() < 0.3 AND lod_dist_pct > 4 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — deep discount zone (>=30% below 52w high) + flat close + LOD far below + close near HOD + hot vol (dragonfly doji reversal in the deep-discount floor: intraday plunge fully reclaimed by close in a beaten-down name with elevated participation; turnaround demand-test signal)
+    GravestoneDojiAtDeepPremium, // year_low_pct >= 30 AND change_pct.abs() < 0.3 AND hod_dist_pct < -4 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — deep premium zone (>=30% above 52w low) + flat close + HOD far above + close near LOD + hot vol (gravestone doji reversal in the deep-premium ceiling: intraday rip fully sold by close in a runaway name with elevated participation; exhaustion supply-test signal)
+    MarubozuGreenAtDeepDiscount, // year_high_pct >= 30 AND change_pct > 3 AND hod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — deep discount zone (>=30% below 52w high) + green marubozu + no overnight gap + hot vol (full intraday recovery trend day in a beaten-down name: regular-hours conviction lifted from open to high with no gap aid; max-conviction turnaround thrust after extended decline)
+    MarubozuRedAtDeepPremium, // year_low_pct >= 30 AND change_pct < -3 AND lod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — deep premium zone (>=30% above 52w low) + red marubozu + no overnight gap + hot vol (full intraday rejection trend day in a runaway name: regular-hours conviction fell from open to low with no gap aid; max-conviction exhaustion thrust after extended advance)
+    HammerAtYear52High, // year_high_pct < 2 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — at 52w high + long lower wick + close near HOD + green close + hot vol (buying pressure tested but reclaimed at the breakout ceiling: intraday plunge bought back to the highs; continuation-of-trend resilience signal at the top)
+    ShootingStarAtYear52Low, // year_low_pct < 2 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — at 52w low + long upper wick + close near LOD + red close + hot vol (selling pressure persists at the breakdown floor: intraday rip sold back to the lows; continuation-of-trend weakness signal at the bottom)
+    HammerAtMidYearHighRange, // year_high_pct >= 5 AND year_high_pct < 20 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — mid-range from high (5-20% below 52w high) + long lower wick + close near HOD + green close + hot vol (buying pressure tested but reclaimed in the pullback zone: intraday plunge bought back toward the prior peak; bull-continuation hammer signaling pullback exhaustion)
+    ShootingStarAtMidYearLowRange, // year_low_pct >= 5 AND year_low_pct < 20 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — mid-range from low (5-20% above 52w low) + long upper wick + close near LOD + red close + hot vol (selling pressure tested in the bounce zone: intraday rip sold back toward the prior trough; bear-continuation shooting star signaling bounce exhaustion)
+    HammerAtDeepBounceContinuation, // year_low_pct >= 10 AND year_low_pct < 30 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — deep bounce zone (10-30% above 52w low) + long lower wick + close near HOD + green close + hot vol (bull-continuation hammer in the rebuild zone: intraday plunge reclaimed without retesting the floor; recovery momentum confirmation deep into the bounce)
     ShootingStarAtDeepPullbackContinuation, // year_high_pct >= 10 AND year_high_pct < 30 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — deep pullback zone (10-30% below 52w high) + long upper wick + close near LOD + red close + hot vol (bear-continuation shooting star in the pullback zone: intraday rip sold without retesting the ceiling; decline momentum confirmation deep into the pullback)
-    HammerAtDeepPremiumContinuation,     // year_low_pct >= 30 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — deep premium zone (>=30% above 52w low) + long lower wick + close near HOD + green close + hot vol (bull-continuation hammer in a runaway name: intraday plunge reclaimed deep in the extended advance; trend-resilience signal far from the floor)
+    HammerAtDeepPremiumContinuation, // year_low_pct >= 30 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — deep premium zone (>=30% above 52w low) + long lower wick + close near HOD + green close + hot vol (bull-continuation hammer in a runaway name: intraday plunge reclaimed deep in the extended advance; trend-resilience signal far from the floor)
     ShootingStarAtDeepDiscountContinuation, // year_high_pct >= 30 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — deep discount zone (>=30% below 52w high) + long upper wick + close near LOD + red close + hot vol (bear-continuation shooting star in a beaten-down name: intraday rip sold deep in the extended decline; trend-weakness signal far from the ceiling)
-    BothLongWicksHotVol,                 // hod_dist_pct.abs() > 2 AND lod_dist_pct > 2 AND rel_volume >= 2 — long upper wick + long lower wick + hot vol (two-sided exploration day with elevated participation: both supply and demand tested at extremes; high-rotation indecision day with full intraday whipsaw range)
-    BothShortWicksTinyChangeHotVol,      // hod_dist_pct.abs() < 0.5 AND lod_dist_pct < 0.5 AND change_pct.abs() < 0.3 AND rel_volume >= 2 — short upper wick + short lower wick + flat close + hot vol (compressed-cylinder day: close pinned with no wick exploration on either side; pre-breakout coil with elevated absorption at a specific price)
-    HammerAtConfirmedBreakdown,          // year_low_pct >= -3 AND year_low_pct < -1 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — 1-3% below prior 52w low + long lower wick + close near HOD + green close + hot vol (failed-breakdown hammer: confirmed breakdown level retested intraday then reclaimed back above prior support; potential failed-breakdown reversal signal)
-    ShootingStarAtConfirmedBreakout,     // year_high_pct >= -3 AND year_high_pct < -1 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — 1-3% above prior 52w high + long upper wick + close near LOD + red close + hot vol (failed-breakout shooting star: confirmed breakout level retested intraday then rejected back below prior resistance; potential failed-breakout reversal signal)
-    DragonflyDojiAtConfirmedBreakdown,   // year_low_pct >= -3 AND year_low_pct < -1 AND change_pct.abs() < 0.3 AND lod_dist_pct > 4 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — 1-3% below prior 52w low + flat close + LOD far below + close near HOD + hot vol (dragonfly doji at confirmed breakdown: intraday plunge fully reclaimed by close with flat finish above prior support; failed-breakdown demand-test signal)
-    GravestoneDojiAtConfirmedBreakout,   // year_high_pct >= -3 AND year_high_pct < -1 AND change_pct.abs() < 0.3 AND hod_dist_pct < -4 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — 1-3% above prior 52w high + flat close + HOD far above + close near LOD + hot vol (gravestone doji at confirmed breakout: intraday rip fully sold by close with flat finish below prior resistance; failed-breakout supply-test signal)
-    MarubozuGreenAtConfirmedBreakout,    // year_high_pct >= -3 AND year_high_pct < -1 AND change_pct > 3 AND hod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — 1-3% above prior 52w high + green marubozu + no overnight gap + hot vol (full intraday extension trend day after confirmed breakout: regular-hours conviction lifted from open to high with no gap aid; max-conviction follow-through above resistance)
-    MarubozuRedAtConfirmedBreakdown,     // year_low_pct >= -3 AND year_low_pct < -1 AND change_pct < -3 AND lod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — 1-3% below prior 52w low + red marubozu + no overnight gap + hot vol (full intraday extension trend day after confirmed breakdown: regular-hours conviction fell from open to low with no gap aid; max-conviction follow-through below support)
-    MarubozuRedAtConfirmedBreakout,      // year_high_pct >= -3 AND year_high_pct < -1 AND change_pct < -3 AND lod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — 1-3% above prior 52w high + red marubozu + no overnight gap + hot vol (full intraday rejection trend day after confirmed breakout: regular-hours conviction fell from open to low with no gap aid; max-conviction failed-breakout fade returning below resistance)
-    MarubozuGreenAtConfirmedBreakdown,   // year_low_pct >= -3 AND year_low_pct < -1 AND change_pct > 3 AND hod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — 1-3% below prior 52w low + green marubozu + no overnight gap + hot vol (full intraday recovery trend day after confirmed breakdown: regular-hours conviction lifted from open to high with no gap aid; max-conviction failed-breakdown reclaim above support)
-    TripleAlignedBullBigConvictionDay,   // gap_pct > 1.5 AND change_pct > 3 AND day_pct > 1.5 AND rel_volume >= 2 — gap up + big net move + big intraday up + hot vol (triple-aligned bullish conviction: overnight, regular hours, and net all moved meaningfully in the same direction with elevated participation; full-stack directional commitment day)
-    TripleAlignedBearBigConvictionDay,   // gap_pct < -1.5 AND change_pct < -3 AND day_pct < -1.5 AND rel_volume >= 2 — gap down + big net move + big intraday down + hot vol (triple-aligned bearish conviction: overnight, regular hours, and net all moved meaningfully in the same direction with elevated participation; full-stack directional commitment day)
+    BothLongWicksHotVol, // hod_dist_pct.abs() > 2 AND lod_dist_pct > 2 AND rel_volume >= 2 — long upper wick + long lower wick + hot vol (two-sided exploration day with elevated participation: both supply and demand tested at extremes; high-rotation indecision day with full intraday whipsaw range)
+    BothShortWicksTinyChangeHotVol, // hod_dist_pct.abs() < 0.5 AND lod_dist_pct < 0.5 AND change_pct.abs() < 0.3 AND rel_volume >= 2 — short upper wick + short lower wick + flat close + hot vol (compressed-cylinder day: close pinned with no wick exploration on either side; pre-breakout coil with elevated absorption at a specific price)
+    HammerAtConfirmedBreakdown, // year_low_pct >= -3 AND year_low_pct < -1 AND lod_dist_pct > 3 AND hod_dist_pct.abs() < 1 AND change_pct > 0 AND rel_volume >= 1.5 — 1-3% below prior 52w low + long lower wick + close near HOD + green close + hot vol (failed-breakdown hammer: confirmed breakdown level retested intraday then reclaimed back above prior support; potential failed-breakdown reversal signal)
+    ShootingStarAtConfirmedBreakout, // year_high_pct >= -3 AND year_high_pct < -1 AND hod_dist_pct < -3 AND lod_dist_pct.abs() < 1 AND change_pct < 0 AND rel_volume >= 1.5 — 1-3% above prior 52w high + long upper wick + close near LOD + red close + hot vol (failed-breakout shooting star: confirmed breakout level retested intraday then rejected back below prior resistance; potential failed-breakout reversal signal)
+    DragonflyDojiAtConfirmedBreakdown, // year_low_pct >= -3 AND year_low_pct < -1 AND change_pct.abs() < 0.3 AND lod_dist_pct > 4 AND hod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — 1-3% below prior 52w low + flat close + LOD far below + close near HOD + hot vol (dragonfly doji at confirmed breakdown: intraday plunge fully reclaimed by close with flat finish above prior support; failed-breakdown demand-test signal)
+    GravestoneDojiAtConfirmedBreakout, // year_high_pct >= -3 AND year_high_pct < -1 AND change_pct.abs() < 0.3 AND hod_dist_pct < -4 AND lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — 1-3% above prior 52w high + flat close + HOD far above + close near LOD + hot vol (gravestone doji at confirmed breakout: intraday rip fully sold by close with flat finish below prior resistance; failed-breakout supply-test signal)
+    MarubozuGreenAtConfirmedBreakout, // year_high_pct >= -3 AND year_high_pct < -1 AND change_pct > 3 AND hod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — 1-3% above prior 52w high + green marubozu + no overnight gap + hot vol (full intraday extension trend day after confirmed breakout: regular-hours conviction lifted from open to high with no gap aid; max-conviction follow-through above resistance)
+    MarubozuRedAtConfirmedBreakdown, // year_low_pct >= -3 AND year_low_pct < -1 AND change_pct < -3 AND lod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — 1-3% below prior 52w low + red marubozu + no overnight gap + hot vol (full intraday extension trend day after confirmed breakdown: regular-hours conviction fell from open to low with no gap aid; max-conviction follow-through below support)
+    MarubozuRedAtConfirmedBreakout, // year_high_pct >= -3 AND year_high_pct < -1 AND change_pct < -3 AND lod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — 1-3% above prior 52w high + red marubozu + no overnight gap + hot vol (full intraday rejection trend day after confirmed breakout: regular-hours conviction fell from open to low with no gap aid; max-conviction failed-breakout fade returning below resistance)
+    MarubozuGreenAtConfirmedBreakdown, // year_low_pct >= -3 AND year_low_pct < -1 AND change_pct > 3 AND hod_dist_pct.abs() < 0.3 AND gap_pct.abs() < 1 AND rel_volume >= 2 — 1-3% below prior 52w low + green marubozu + no overnight gap + hot vol (full intraday recovery trend day after confirmed breakdown: regular-hours conviction lifted from open to high with no gap aid; max-conviction failed-breakdown reclaim above support)
+    TripleAlignedBullBigConvictionDay, // gap_pct > 1.5 AND change_pct > 3 AND day_pct > 1.5 AND rel_volume >= 2 — gap up + big net move + big intraday up + hot vol (triple-aligned bullish conviction: overnight, regular hours, and net all moved meaningfully in the same direction with elevated participation; full-stack directional commitment day)
+    TripleAlignedBearBigConvictionDay, // gap_pct < -1.5 AND change_pct < -3 AND day_pct < -1.5 AND rel_volume >= 2 — gap down + big net move + big intraday down + hot vol (triple-aligned bearish conviction: overnight, regular hours, and net all moved meaningfully in the same direction with elevated participation; full-stack directional commitment day)
     DistantFromYearHighRangeContractionHotVol, // year_high_pct >= 20 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume >= 2 — far below 52w high (>=20%) + tight intraday range + flat close + hot vol (stealth absorption in the pullback territory: tight digestion with elevated participation deep below the prior peak; pre-reversal coil with institutional positioning)
-    DistantFromYearLowRangeContractionHotVol,  // year_low_pct >= 20 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume >= 2 — far above 52w low (>=20%) + tight intraday range + flat close + hot vol (stealth absorption in the advance territory: tight digestion with elevated participation deep above the prior trough; pre-reversal coil with institutional positioning)
-    DistantFromYearHighRangeExpansionHotVol,   // year_high_pct >= 20 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND rel_volume >= 2 — far below 52w high (>=20%) + wide intraday range + hot vol (volatility expansion deep in the pullback territory: institutional fight day occurring well below the prior peak with elevated participation; regime-shift candidate after extended decline)
-    DistantFromYearLowRangeExpansionHotVol,    // year_low_pct >= 20 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND rel_volume >= 2 — far above 52w low (>=20%) + wide intraday range + hot vol (volatility expansion deep in the advance territory: institutional fight day occurring well above the prior trough with elevated participation; regime-shift candidate after extended advance)
-    CloseAtHodMidYearLowHotVol,                // year_low_pct >= 5 AND year_low_pct < 20 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — mid-range from low (5-20%) + close pinned to HOD + green close + hot vol (closing-strength signal in the recovery zone: bull conviction ramped into the close without requiring a long lower-wick reclaim; demand-led mid-cycle continuation)
-    CloseAtLodMidYearHighHotVol,               // year_high_pct >= 5 AND year_high_pct < 20 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — mid-range from high (5-20%) + close pinned to LOD + red close + hot vol (closing-weakness signal in the pullback zone: bear conviction dumped into the close without requiring a long upper-wick rejection; supply-led mid-cycle continuation)
-    CloseAtHodDeepBelowYearHighHotVol,         // year_high_pct >= 20 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — far below 52w high (>=20%) + close pinned to HOD + green close + hot vol (closing-strength signal deep in the pullback zone: bull conviction ramped into the close well below the prior peak; early-reversal candidate after extended decline without requiring wick-rejection context)
-    CloseAtLodDeepAboveYearLowHotVol,          // year_low_pct >= 20 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — far above 52w low (>=20%) + close pinned to LOD + red close + hot vol (closing-weakness signal deep in the advance zone: bear conviction dumped into the close well above the prior trough; early-reversal candidate after extended advance without requiring wick-rejection context)
-    CloseAtHodNearYearHighHotVol,              // year_high_pct < 2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — at/near 52w high (<2%) + close pinned to HOD + green close + hot vol (freshest possible breakout signal: closing at the high of day at the high of the year on elevated participation; momentum-continuation with no overhead supply)
-    CloseAtLodNearYearLowHotVol,               // year_low_pct < 2 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — at/near 52w low (<2%) + close pinned to LOD + red close + hot vol (freshest possible breakdown signal: closing at the low of day at the low of the year on elevated participation; momentum-continuation with no underlying support)
-    CloseAtHodJustOffYearHighHotVol,           // year_high_pct >= 2 AND year_high_pct < 5 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — just off 52w high (2-5%) + close pinned to HOD + green close + hot vol (re-assertion of breakout momentum after a shallow pullback: closing strength in the immediate post-extreme zone signals continuation candidate with minimal overhead resistance)
-    CloseAtLodJustOffYearLowHotVol,            // year_low_pct >= 2 AND year_low_pct < 5 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — just off 52w low (2-5%) + close pinned to LOD + red close + hot vol (re-assertion of breakdown momentum after a shallow bounce: closing weakness in the immediate post-extreme zone signals continuation candidate with minimal underlying support)
-    CloseAtHodConfirmedAboveYearHighHotVol,    // year_high_pct >= -3 AND year_high_pct <= -1 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — already 1-3% past 52w high + close pinned to HOD + green close + hot vol (confirmed-breakout closing strength: price has cleared the prior peak and continues to close at the day's high; momentum-continuation with breakout already validated)
-    CloseAtLodConfirmedBelowYearLowHotVol,     // year_low_pct >= -3 AND year_low_pct <= -1 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — already 1-3% past 52w low + close pinned to LOD + red close + hot vol (confirmed-breakdown closing weakness: price has cleared the prior trough and continues to close at the day's low; momentum-continuation with breakdown already validated)
-    MidpointCloseNearYearHighHotVol,           // year_high_pct < 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — at/near 52w high (<2%) + close in mid-range between HOD and LOD + hot vol (stall at the 52w extreme: neither bulls nor bears closed in control at the high of the year on elevated participation; potential indecision-reversal candidate after extended advance)
-    MidpointCloseNearYearLowHotVol,            // year_low_pct < 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — at/near 52w low (<2%) + close in mid-range between HOD and LOD + hot vol (stall at the 52w extreme: neither bulls nor bears closed in control at the low of the year on elevated participation; potential indecision-reversal candidate after extended decline)
+    DistantFromYearLowRangeContractionHotVol, // year_low_pct >= 20 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1.5 AND change_pct.abs() < 0.5 AND rel_volume >= 2 — far above 52w low (>=20%) + tight intraday range + flat close + hot vol (stealth absorption in the advance territory: tight digestion with elevated participation deep above the prior trough; pre-reversal coil with institutional positioning)
+    DistantFromYearHighRangeExpansionHotVol, // year_high_pct >= 20 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND rel_volume >= 2 — far below 52w high (>=20%) + wide intraday range + hot vol (volatility expansion deep in the pullback territory: institutional fight day occurring well below the prior peak with elevated participation; regime-shift candidate after extended decline)
+    DistantFromYearLowRangeExpansionHotVol, // year_low_pct >= 20 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 AND rel_volume >= 2 — far above 52w low (>=20%) + wide intraday range + hot vol (volatility expansion deep in the advance territory: institutional fight day occurring well above the prior trough with elevated participation; regime-shift candidate after extended advance)
+    CloseAtHodMidYearLowHotVol, // year_low_pct >= 5 AND year_low_pct < 20 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — mid-range from low (5-20%) + close pinned to HOD + green close + hot vol (closing-strength signal in the recovery zone: bull conviction ramped into the close without requiring a long lower-wick reclaim; demand-led mid-cycle continuation)
+    CloseAtLodMidYearHighHotVol, // year_high_pct >= 5 AND year_high_pct < 20 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — mid-range from high (5-20%) + close pinned to LOD + red close + hot vol (closing-weakness signal in the pullback zone: bear conviction dumped into the close without requiring a long upper-wick rejection; supply-led mid-cycle continuation)
+    CloseAtHodDeepBelowYearHighHotVol, // year_high_pct >= 20 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — far below 52w high (>=20%) + close pinned to HOD + green close + hot vol (closing-strength signal deep in the pullback zone: bull conviction ramped into the close well below the prior peak; early-reversal candidate after extended decline without requiring wick-rejection context)
+    CloseAtLodDeepAboveYearLowHotVol, // year_low_pct >= 20 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — far above 52w low (>=20%) + close pinned to LOD + red close + hot vol (closing-weakness signal deep in the advance zone: bear conviction dumped into the close well above the prior trough; early-reversal candidate after extended advance without requiring wick-rejection context)
+    CloseAtHodNearYearHighHotVol, // year_high_pct < 2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — at/near 52w high (<2%) + close pinned to HOD + green close + hot vol (freshest possible breakout signal: closing at the high of day at the high of the year on elevated participation; momentum-continuation with no overhead supply)
+    CloseAtLodNearYearLowHotVol, // year_low_pct < 2 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — at/near 52w low (<2%) + close pinned to LOD + red close + hot vol (freshest possible breakdown signal: closing at the low of day at the low of the year on elevated participation; momentum-continuation with no underlying support)
+    CloseAtHodJustOffYearHighHotVol, // year_high_pct >= 2 AND year_high_pct < 5 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — just off 52w high (2-5%) + close pinned to HOD + green close + hot vol (re-assertion of breakout momentum after a shallow pullback: closing strength in the immediate post-extreme zone signals continuation candidate with minimal overhead resistance)
+    CloseAtLodJustOffYearLowHotVol, // year_low_pct >= 2 AND year_low_pct < 5 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — just off 52w low (2-5%) + close pinned to LOD + red close + hot vol (re-assertion of breakdown momentum after a shallow bounce: closing weakness in the immediate post-extreme zone signals continuation candidate with minimal underlying support)
+    CloseAtHodConfirmedAboveYearHighHotVol, // year_high_pct >= -3 AND year_high_pct <= -1 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — already 1-3% past 52w high + close pinned to HOD + green close + hot vol (confirmed-breakout closing strength: price has cleared the prior peak and continues to close at the day's high; momentum-continuation with breakout already validated)
+    CloseAtLodConfirmedBelowYearLowHotVol, // year_low_pct >= -3 AND year_low_pct <= -1 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — already 1-3% past 52w low + close pinned to LOD + red close + hot vol (confirmed-breakdown closing weakness: price has cleared the prior trough and continues to close at the day's low; momentum-continuation with breakdown already validated)
+    MidpointCloseNearYearHighHotVol, // year_high_pct < 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — at/near 52w high (<2%) + close in mid-range between HOD and LOD + hot vol (stall at the 52w extreme: neither bulls nor bears closed in control at the high of the year on elevated participation; potential indecision-reversal candidate after extended advance)
+    MidpointCloseNearYearLowHotVol, // year_low_pct < 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — at/near 52w low (<2%) + close in mid-range between HOD and LOD + hot vol (stall at the 52w extreme: neither bulls nor bears closed in control at the low of the year on elevated participation; potential indecision-reversal candidate after extended decline)
     MidpointCloseConfirmedAboveYearHighHotVol, // year_high_pct >= -3 AND year_high_pct <= -1 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — already 1-3% past 52w high + midpoint close between HOD and LOD + hot vol (stall in the confirmed-breakout zone: price has cleared the prior peak but failed to push higher into the close on elevated participation; potential failed-breakout warning)
-    MidpointCloseConfirmedBelowYearLowHotVol,  // year_low_pct >= -3 AND year_low_pct <= -1 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — already 1-3% past 52w low + midpoint close between HOD and LOD + hot vol (stall in the confirmed-breakdown zone: price has cleared the prior trough but failed to push lower into the close on elevated participation; potential failed-breakdown warning)
-    MidpointCloseDeepBelowYearHighHotVol,      // year_high_pct >= 20 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — far below 52w high (>=20%) + midpoint close between HOD and LOD + hot vol (stall deep in the pullback zone: neither bulls nor bears closed in control well below the prior peak after extended decline on elevated participation; potential trend-exhaustion candidate)
-    MidpointCloseDeepAboveYearLowHotVol,       // year_low_pct >= 20 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — far above 52w low (>=20%) + midpoint close between HOD and LOD + hot vol (stall deep in the advance zone: neither bulls nor bears closed in control well above the prior trough after extended advance on elevated participation; potential trend-exhaustion candidate)
-    MidpointCloseMidYearHighHotVol,            // year_high_pct >= 5 AND year_high_pct < 20 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — mid-range from high (5-20%) + midpoint close between HOD and LOD + hot vol (context-free intraday indecision in the mid-cycle pullback zone: neither bulls nor bears closed in control in the proper consolidation range on elevated participation; standoff in the middle of the year-range)
-    MidpointCloseMidYearLowHotVol,             // year_low_pct >= 5 AND year_low_pct < 20 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — mid-range from low (5-20%) + midpoint close between HOD and LOD + hot vol (context-free intraday indecision in the mid-cycle recovery zone: neither bulls nor bears closed in control in the proper consolidation range on elevated participation; standoff in the middle of the year-range)
-    MidpointCloseJustOffYearHighHotVol,        // year_high_pct >= 2 AND year_high_pct < 5 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — just off 52w high (2-5%) + midpoint close between HOD and LOD + hot vol (post-tag intraday indecision: neither bulls nor bears closed in control immediately after fresh pullback from the 52w high on elevated participation; standoff in the post-extreme zone)
-    MidpointCloseJustOffYearLowHotVol,         // year_low_pct >= 2 AND year_low_pct < 5 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — just off 52w low (2-5%) + midpoint close between HOD and LOD + hot vol (post-tag intraday indecision: neither bulls nor bears closed in control immediately after fresh bounce from the 52w low on elevated participation; standoff in the post-extreme zone)
-    GapUpCloseAtHodHotVol,                     // gap_pct > 2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — gap up (>2%) + close pinned to HOD + green close + hot vol (strongest possible bullish gap: gap up held without fade and price closed at the day's high on elevated participation; sustained buying through the bell with no profit-taking)
-    GapDownCloseAtLodHotVol,                   // gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — gap down (<-2%) + close pinned to LOD + red close + hot vol (strongest possible bearish gap: gap down held without bounce and price closed at the day's low on elevated participation; sustained selling through the bell with no dip-buying)
-    GapUpCloseAtLodHotVol,                     // gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND change_pct < 0 AND rel_volume >= 1.5 — gap up (>2%) faded completely to LOD + red close + hot vol (bull-trap reversal: sellers absorbed the entire gap and pushed below the open on elevated participation; classic gap-and-reverse failed-breakout pattern)
-    GapDownCloseAtHodHotVol,                   // gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 AND rel_volume >= 1.5 — gap down (<-2%) absorbed completely to HOD + green close + hot vol (bear-trap reversal: buyers absorbed the entire gap and pushed above the open on elevated participation; classic gap-and-reverse failed-breakdown pattern)
-    GapUpMidpointCloseHotVol,                  // gap_pct > 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — gap up (>2%) + midpoint close between HOD and LOD + hot vol (inconclusive gap-up follow-through: gap held but neither extended to a HOD close nor failed to a LOD close on elevated participation; standoff inside the gap day with no directional resolution)
-    GapDownMidpointCloseHotVol,                // gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — gap down (<-2%) + midpoint close between HOD and LOD + hot vol (inconclusive gap-down follow-through: gap held but neither extended to a LOD close nor absorbed to a HOD close on elevated participation; standoff inside the gap day with no directional resolution)
-    BigGapUpCloseAtHodHotVol,                  // gap_pct > 5 AND hod_dist_pct.abs() < 0.5 AND change_pct > 3 AND rel_volume >= 2 — large gap up (>5%) + close pinned to HOD + big green close + hot vol (institutional-conviction gap-up with no profit-taking: large gap held all session and closed at the day's high on doubled participation; earnings-reaction / news-driven sustained buying through the bell)
-    BigGapDownCloseAtLodHotVol,                // gap_pct < -5 AND lod_dist_pct.abs() < 0.5 AND change_pct < -3 AND rel_volume >= 2 — large gap down (<-5%) + close pinned to LOD + big red close + hot vol (institutional-conviction gap-down with no dip-buying: large gap held all session and closed at the day's low on doubled participation; earnings-disappointment / news-driven sustained selling through the bell)
-    BigGapUpCloseAtLodHotVol,                  // gap_pct > 5 AND lod_dist_pct.abs() < 0.5 AND change_pct < 0 AND rel_volume >= 2 — large gap up (>5%) completely faded to LOD + red close + hot vol (institutional bull-trap reversal: dramatic earnings-reaction gap fully absorbed and pushed below the open on doubled participation; high-conviction failed-breakout signal rare enough to mark a regime-shift candidate)
-    BigGapDownCloseAtHodHotVol,                // gap_pct < -5 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 AND rel_volume >= 2 — large gap down (<-5%) completely absorbed to HOD + green close + hot vol (institutional bear-trap reversal: dramatic capitulation gap fully absorbed and pushed above the open on doubled participation; high-conviction failed-breakdown signal rare enough to mark a regime-shift candidate)
-    BigGapUpMidpointCloseHotVol,               // gap_pct > 5 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 2 — large gap up (>5%) + midpoint close between HOD and LOD + hot vol (inconclusive institutional reaction: large gap held but neither extended to a HOD close nor failed to a LOD close on doubled participation; high-stakes standoff after an earnings/news gap with no directional resolution)
-    BigGapDownMidpointCloseHotVol,             // gap_pct < -5 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 2 — large gap down (<-5%) + midpoint close between HOD and LOD + hot vol (inconclusive institutional capitulation: large gap held but neither extended to a LOD close nor absorbed to a HOD close on doubled participation; high-stakes standoff after an earnings/news gap with no directional resolution)
-    GapUpCloseAtHodNearYearHighHotVol,         // gap_pct > 2 AND hod_dist_pct.abs() < 0.5 AND year_high_pct < 2 AND change_pct > 1 AND rel_volume >= 1.5 — gap up (>2%) + close pinned to HOD + at/near 52w high (<2%) + green close + hot vol (maximum-conviction breakout day: gap up at the 52w high held all session and closed at the day's high on elevated participation; rarest multi-axis aligned bullish signal with no overhead supply)
-    GapDownCloseAtLodNearYearLowHotVol,        // gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND year_low_pct < 2 AND change_pct < -1 AND rel_volume >= 1.5 — gap down (<-2%) + close pinned to LOD + at/near 52w low (<2%) + red close + hot vol (maximum-conviction breakdown day: gap down at the 52w low held all session and closed at the day's low on elevated participation; rarest multi-axis aligned bearish signal with no underlying support)
-    GapUpCloseAtHodDeepBelowYearHighHotVol,    // gap_pct > 2 AND hod_dist_pct.abs() < 0.5 AND year_high_pct >= 20 AND change_pct > 1 AND rel_volume >= 1.5 — gap up (>2%) + close pinned to HOD + far below 52w high (>=20%) + green close + hot vol (high-conviction recovery from extended pullback: gap up well below the prior peak held all session and closed at the day's high on elevated participation; trend-change reversal candidate after extended decline)
-    GapDownCloseAtLodDeepAboveYearLowHotVol,   // gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND year_low_pct >= 20 AND change_pct < -1 AND rel_volume >= 1.5 — gap down (<-2%) + close pinned to LOD + far above 52w low (>=20%) + red close + hot vol (high-conviction rejection of extended advance: gap down well above the prior trough held all session and closed at the day's low on elevated participation; trend-change reversal candidate after extended advance)
+    MidpointCloseConfirmedBelowYearLowHotVol, // year_low_pct >= -3 AND year_low_pct <= -1 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — already 1-3% past 52w low + midpoint close between HOD and LOD + hot vol (stall in the confirmed-breakdown zone: price has cleared the prior trough but failed to push lower into the close on elevated participation; potential failed-breakdown warning)
+    MidpointCloseDeepBelowYearHighHotVol, // year_high_pct >= 20 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — far below 52w high (>=20%) + midpoint close between HOD and LOD + hot vol (stall deep in the pullback zone: neither bulls nor bears closed in control well below the prior peak after extended decline on elevated participation; potential trend-exhaustion candidate)
+    MidpointCloseDeepAboveYearLowHotVol, // year_low_pct >= 20 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — far above 52w low (>=20%) + midpoint close between HOD and LOD + hot vol (stall deep in the advance zone: neither bulls nor bears closed in control well above the prior trough after extended advance on elevated participation; potential trend-exhaustion candidate)
+    MidpointCloseMidYearHighHotVol, // year_high_pct >= 5 AND year_high_pct < 20 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — mid-range from high (5-20%) + midpoint close between HOD and LOD + hot vol (context-free intraday indecision in the mid-cycle pullback zone: neither bulls nor bears closed in control in the proper consolidation range on elevated participation; standoff in the middle of the year-range)
+    MidpointCloseMidYearLowHotVol, // year_low_pct >= 5 AND year_low_pct < 20 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — mid-range from low (5-20%) + midpoint close between HOD and LOD + hot vol (context-free intraday indecision in the mid-cycle recovery zone: neither bulls nor bears closed in control in the proper consolidation range on elevated participation; standoff in the middle of the year-range)
+    MidpointCloseJustOffYearHighHotVol, // year_high_pct >= 2 AND year_high_pct < 5 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — just off 52w high (2-5%) + midpoint close between HOD and LOD + hot vol (post-tag intraday indecision: neither bulls nor bears closed in control immediately after fresh pullback from the 52w high on elevated participation; standoff in the post-extreme zone)
+    MidpointCloseJustOffYearLowHotVol, // year_low_pct >= 2 AND year_low_pct < 5 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — just off 52w low (2-5%) + midpoint close between HOD and LOD + hot vol (post-tag intraday indecision: neither bulls nor bears closed in control immediately after fresh bounce from the 52w low on elevated participation; standoff in the post-extreme zone)
+    GapUpCloseAtHodHotVol, // gap_pct > 2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — gap up (>2%) + close pinned to HOD + green close + hot vol (strongest possible bullish gap: gap up held without fade and price closed at the day's high on elevated participation; sustained buying through the bell with no profit-taking)
+    GapDownCloseAtLodHotVol, // gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — gap down (<-2%) + close pinned to LOD + red close + hot vol (strongest possible bearish gap: gap down held without bounce and price closed at the day's low on elevated participation; sustained selling through the bell with no dip-buying)
+    GapUpCloseAtLodHotVol, // gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND change_pct < 0 AND rel_volume >= 1.5 — gap up (>2%) faded completely to LOD + red close + hot vol (bull-trap reversal: sellers absorbed the entire gap and pushed below the open on elevated participation; classic gap-and-reverse failed-breakout pattern)
+    GapDownCloseAtHodHotVol, // gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 AND rel_volume >= 1.5 — gap down (<-2%) absorbed completely to HOD + green close + hot vol (bear-trap reversal: buyers absorbed the entire gap and pushed above the open on elevated participation; classic gap-and-reverse failed-breakdown pattern)
+    GapUpMidpointCloseHotVol, // gap_pct > 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — gap up (>2%) + midpoint close between HOD and LOD + hot vol (inconclusive gap-up follow-through: gap held but neither extended to a HOD close nor failed to a LOD close on elevated participation; standoff inside the gap day with no directional resolution)
+    GapDownMidpointCloseHotVol, // gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — gap down (<-2%) + midpoint close between HOD and LOD + hot vol (inconclusive gap-down follow-through: gap held but neither extended to a LOD close nor absorbed to a HOD close on elevated participation; standoff inside the gap day with no directional resolution)
+    BigGapUpCloseAtHodHotVol, // gap_pct > 5 AND hod_dist_pct.abs() < 0.5 AND change_pct > 3 AND rel_volume >= 2 — large gap up (>5%) + close pinned to HOD + big green close + hot vol (institutional-conviction gap-up with no profit-taking: large gap held all session and closed at the day's high on doubled participation; earnings-reaction / news-driven sustained buying through the bell)
+    BigGapDownCloseAtLodHotVol, // gap_pct < -5 AND lod_dist_pct.abs() < 0.5 AND change_pct < -3 AND rel_volume >= 2 — large gap down (<-5%) + close pinned to LOD + big red close + hot vol (institutional-conviction gap-down with no dip-buying: large gap held all session and closed at the day's low on doubled participation; earnings-disappointment / news-driven sustained selling through the bell)
+    BigGapUpCloseAtLodHotVol, // gap_pct > 5 AND lod_dist_pct.abs() < 0.5 AND change_pct < 0 AND rel_volume >= 2 — large gap up (>5%) completely faded to LOD + red close + hot vol (institutional bull-trap reversal: dramatic earnings-reaction gap fully absorbed and pushed below the open on doubled participation; high-conviction failed-breakout signal rare enough to mark a regime-shift candidate)
+    BigGapDownCloseAtHodHotVol, // gap_pct < -5 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 AND rel_volume >= 2 — large gap down (<-5%) completely absorbed to HOD + green close + hot vol (institutional bear-trap reversal: dramatic capitulation gap fully absorbed and pushed above the open on doubled participation; high-conviction failed-breakdown signal rare enough to mark a regime-shift candidate)
+    BigGapUpMidpointCloseHotVol, // gap_pct > 5 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 2 — large gap up (>5%) + midpoint close between HOD and LOD + hot vol (inconclusive institutional reaction: large gap held but neither extended to a HOD close nor failed to a LOD close on doubled participation; high-stakes standoff after an earnings/news gap with no directional resolution)
+    BigGapDownMidpointCloseHotVol, // gap_pct < -5 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 2 — large gap down (<-5%) + midpoint close between HOD and LOD + hot vol (inconclusive institutional capitulation: large gap held but neither extended to a LOD close nor absorbed to a HOD close on doubled participation; high-stakes standoff after an earnings/news gap with no directional resolution)
+    GapUpCloseAtHodNearYearHighHotVol, // gap_pct > 2 AND hod_dist_pct.abs() < 0.5 AND year_high_pct < 2 AND change_pct > 1 AND rel_volume >= 1.5 — gap up (>2%) + close pinned to HOD + at/near 52w high (<2%) + green close + hot vol (maximum-conviction breakout day: gap up at the 52w high held all session and closed at the day's high on elevated participation; rarest multi-axis aligned bullish signal with no overhead supply)
+    GapDownCloseAtLodNearYearLowHotVol, // gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND year_low_pct < 2 AND change_pct < -1 AND rel_volume >= 1.5 — gap down (<-2%) + close pinned to LOD + at/near 52w low (<2%) + red close + hot vol (maximum-conviction breakdown day: gap down at the 52w low held all session and closed at the day's low on elevated participation; rarest multi-axis aligned bearish signal with no underlying support)
+    GapUpCloseAtHodDeepBelowYearHighHotVol, // gap_pct > 2 AND hod_dist_pct.abs() < 0.5 AND year_high_pct >= 20 AND change_pct > 1 AND rel_volume >= 1.5 — gap up (>2%) + close pinned to HOD + far below 52w high (>=20%) + green close + hot vol (high-conviction recovery from extended pullback: gap up well below the prior peak held all session and closed at the day's high on elevated participation; trend-change reversal candidate after extended decline)
+    GapDownCloseAtLodDeepAboveYearLowHotVol, // gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND year_low_pct >= 20 AND change_pct < -1 AND rel_volume >= 1.5 — gap down (<-2%) + close pinned to LOD + far above 52w low (>=20%) + red close + hot vol (high-conviction rejection of extended advance: gap down well above the prior trough held all session and closed at the day's low on elevated participation; trend-change reversal candidate after extended advance)
     GapUpCloseAtHodConfirmedAboveYearHighHotVol, // gap_pct > 2 AND hod_dist_pct.abs() < 0.5 AND year_high_pct >= -3 AND year_high_pct <= -1 AND change_pct > 1 AND rel_volume >= 1.5 — gap up (>2%) + close pinned to HOD + already 1-3% past 52w high + green close + hot vol (confirmed-breakout day-trade signal: gap up continues breakout that was already validated and closed at the day's high on elevated participation; aligned-axis momentum extension above the prior peak)
     GapDownCloseAtLodConfirmedBelowYearLowHotVol, // gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND year_low_pct >= -3 AND year_low_pct <= -1 AND change_pct < -1 AND rel_volume >= 1.5 — gap down (<-2%) + close pinned to LOD + already 1-3% past 52w low + red close + hot vol (confirmed-breakdown day-trade signal: gap down continues breakdown that was already validated and closed at the day's low on elevated participation; aligned-axis momentum extension below the prior trough)
-    GapUpCloseAtHodJustOffYearHighHotVol,      // gap_pct > 2 AND hod_dist_pct.abs() < 0.5 AND year_high_pct >= 2 AND year_high_pct < 5 AND change_pct > 1 AND rel_volume >= 1.5 — gap up (>2%) + close pinned to HOD + just off 52w high (2-5%) + green close + hot vol (post-pullback re-assertion of breakout momentum: gap up after shallow pullback held all session and closed at the day's high on elevated participation; aligned-axis continuation candidate immediately back toward the prior peak)
-    GapDownCloseAtLodJustOffYearLowHotVol,     // gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND year_low_pct >= 2 AND year_low_pct < 5 AND change_pct < -1 AND rel_volume >= 1.5 — gap down (<-2%) + close pinned to LOD + just off 52w low (2-5%) + red close + hot vol (post-bounce re-assertion of breakdown momentum: gap down after shallow bounce held all session and closed at the day's low on elevated participation; aligned-axis continuation candidate immediately back toward the prior trough)
-    GapUpCloseAtHodMidYearHighHotVol,          // gap_pct > 2 AND hod_dist_pct.abs() < 0.5 AND year_high_pct >= 5 AND year_high_pct < 20 AND change_pct > 1 AND rel_volume >= 1.5 — gap up (>2%) + close pinned to HOD + mid-range from high (5-20%) + green close + hot vol (mid-cycle recovery momentum: gap up well into the consolidation zone held all session and closed at the day's high on elevated participation; aligned-axis push back toward the prior peak from a proper pullback)
-    GapDownCloseAtLodMidYearLowHotVol,         // gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND year_low_pct >= 5 AND year_low_pct < 20 AND change_pct < -1 AND rel_volume >= 1.5 — gap down (<-2%) + close pinned to LOD + mid-range from low (5-20%) + red close + hot vol (mid-cycle reversal momentum: gap down well into the consolidation zone held all session and closed at the day's low on elevated participation; aligned-axis push back toward the prior trough from a proper recovery)
-    GapUpCloseAtLodNearYearHighHotVol,         // gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND year_high_pct < 2 AND change_pct < 0 AND rel_volume >= 1.5 — gap up (>2%) faded completely to LOD + at/near 52w high (<2%) + red close + hot vol (distribution-top signal at the 52w high: gap up attempt at the year peak completely absorbed and pushed below the open on elevated participation; high-conviction failed-breakout at the worst possible location for bulls)
-    GapDownCloseAtHodNearYearLowHotVol,        // gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND year_low_pct < 2 AND change_pct > 0 AND rel_volume >= 1.5 — gap down (<-2%) absorbed completely to HOD + at/near 52w low (<2%) + green close + hot vol (accumulation-bottom signal at the 52w low: gap down attempt at the year trough completely absorbed and pushed above the open on elevated participation; high-conviction failed-breakdown at the worst possible location for bears)
-    GapUpCloseAtLodConfirmedAboveYearHighHotVol,  // gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND year_high_pct >= -3 AND year_high_pct <= -1 AND change_pct < 0 AND rel_volume >= 1.5 — gap up (>2%) faded completely to LOD + confirmed-breakout zone (1-3% past 52w high) + red close + hot vol (post-breakout distribution signal: gap up in the already-confirmed breakout zone completely reversed and closed at the day's low on elevated participation; failed-extension warning that breakout buyers are getting trapped above the prior peak)
+    GapUpCloseAtHodJustOffYearHighHotVol, // gap_pct > 2 AND hod_dist_pct.abs() < 0.5 AND year_high_pct >= 2 AND year_high_pct < 5 AND change_pct > 1 AND rel_volume >= 1.5 — gap up (>2%) + close pinned to HOD + just off 52w high (2-5%) + green close + hot vol (post-pullback re-assertion of breakout momentum: gap up after shallow pullback held all session and closed at the day's high on elevated participation; aligned-axis continuation candidate immediately back toward the prior peak)
+    GapDownCloseAtLodJustOffYearLowHotVol, // gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND year_low_pct >= 2 AND year_low_pct < 5 AND change_pct < -1 AND rel_volume >= 1.5 — gap down (<-2%) + close pinned to LOD + just off 52w low (2-5%) + red close + hot vol (post-bounce re-assertion of breakdown momentum: gap down after shallow bounce held all session and closed at the day's low on elevated participation; aligned-axis continuation candidate immediately back toward the prior trough)
+    GapUpCloseAtHodMidYearHighHotVol, // gap_pct > 2 AND hod_dist_pct.abs() < 0.5 AND year_high_pct >= 5 AND year_high_pct < 20 AND change_pct > 1 AND rel_volume >= 1.5 — gap up (>2%) + close pinned to HOD + mid-range from high (5-20%) + green close + hot vol (mid-cycle recovery momentum: gap up well into the consolidation zone held all session and closed at the day's high on elevated participation; aligned-axis push back toward the prior peak from a proper pullback)
+    GapDownCloseAtLodMidYearLowHotVol, // gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND year_low_pct >= 5 AND year_low_pct < 20 AND change_pct < -1 AND rel_volume >= 1.5 — gap down (<-2%) + close pinned to LOD + mid-range from low (5-20%) + red close + hot vol (mid-cycle reversal momentum: gap down well into the consolidation zone held all session and closed at the day's low on elevated participation; aligned-axis push back toward the prior trough from a proper recovery)
+    GapUpCloseAtLodNearYearHighHotVol, // gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND year_high_pct < 2 AND change_pct < 0 AND rel_volume >= 1.5 — gap up (>2%) faded completely to LOD + at/near 52w high (<2%) + red close + hot vol (distribution-top signal at the 52w high: gap up attempt at the year peak completely absorbed and pushed below the open on elevated participation; high-conviction failed-breakout at the worst possible location for bulls)
+    GapDownCloseAtHodNearYearLowHotVol, // gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND year_low_pct < 2 AND change_pct > 0 AND rel_volume >= 1.5 — gap down (<-2%) absorbed completely to HOD + at/near 52w low (<2%) + green close + hot vol (accumulation-bottom signal at the 52w low: gap down attempt at the year trough completely absorbed and pushed above the open on elevated participation; high-conviction failed-breakdown at the worst possible location for bears)
+    GapUpCloseAtLodConfirmedAboveYearHighHotVol, // gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND year_high_pct >= -3 AND year_high_pct <= -1 AND change_pct < 0 AND rel_volume >= 1.5 — gap up (>2%) faded completely to LOD + confirmed-breakout zone (1-3% past 52w high) + red close + hot vol (post-breakout distribution signal: gap up in the already-confirmed breakout zone completely reversed and closed at the day's low on elevated participation; failed-extension warning that breakout buyers are getting trapped above the prior peak)
     GapDownCloseAtHodConfirmedBelowYearLowHotVol, // gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND year_low_pct >= -3 AND year_low_pct <= -1 AND change_pct > 0 AND rel_volume >= 1.5 — gap down (<-2%) absorbed completely to HOD + confirmed-breakdown zone (1-3% past 52w low) + green close + hot vol (post-breakdown accumulation signal: gap down in the already-confirmed breakdown zone completely reversed and closed at the day's high on elevated participation; failed-extension warning that breakdown sellers are getting trapped below the prior trough)
-    GapUpCloseAtLodDeepBelowYearHighHotVol,    // gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND year_high_pct >= 20 AND change_pct < 0 AND rel_volume >= 1.5 — gap up (>2%) faded completely to LOD + far below 52w high (>=20%) + red close + hot vol (failed dead-cat bounce signal: gap up deep in the pullback territory completely reversed and closed at the day's low on elevated participation; bear-market continuation candidate with sellers in control well below the prior peak)
-    GapDownCloseAtHodDeepAboveYearLowHotVol,   // gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND year_low_pct >= 20 AND change_pct > 0 AND rel_volume >= 1.5 — gap down (<-2%) absorbed completely to HOD + far above 52w low (>=20%) + green close + hot vol (failed shake-out signal: gap down deep in the advance territory completely reversed and closed at the day's high on elevated participation; bull-market continuation candidate with buyers in control well above the prior trough)
-    GapUpCloseAtLodJustOffYearHighHotVol,      // gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND year_high_pct >= 2 AND year_high_pct < 5 AND change_pct < 0 AND rel_volume >= 1.5 — gap up (>2%) faded completely to LOD + just off 52w high (2-5%) + red close + hot vol (failed recovery attempt: gap up immediately after shallow pullback from the year peak completely reversed and closed at the day's low on elevated participation; second leg lower starting candidate)
-    GapDownCloseAtHodJustOffYearLowHotVol,     // gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND year_low_pct >= 2 AND year_low_pct < 5 AND change_pct > 0 AND rel_volume >= 1.5 — gap down (<-2%) absorbed completely to HOD + just off 52w low (2-5%) + green close + hot vol (failed rejection attempt: gap down immediately after shallow bounce from the year trough completely reversed and closed at the day's high on elevated participation; second leg higher starting candidate)
-    GapUpCloseAtLodMidYearHighHotVol,          // gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND year_high_pct >= 5 AND year_high_pct < 20 AND change_pct < 0 AND rel_volume >= 1.5 — gap up (>2%) faded completely to LOD + mid-range from high (5-20%) + red close + hot vol (failed mid-cycle bounce: gap up in the proper consolidation zone completely reversed and closed at the day's low on elevated participation; continuation of mid-cycle pullback with sellers in control)
-    GapDownCloseAtHodMidYearLowHotVol,         // gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND year_low_pct >= 5 AND year_low_pct < 20 AND change_pct > 0 AND rel_volume >= 1.5 — gap down (<-2%) absorbed completely to HOD + mid-range from low (5-20%) + green close + hot vol (failed mid-cycle pullback: gap down in the proper consolidation zone completely reversed and closed at the day's high on elevated participation; continuation of mid-cycle recovery with buyers in control)
-    GapUpMidpointCloseNearYearHighHotVol,      // gap_pct > 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct < 2 AND rel_volume >= 1.5 — gap up (>2%) + midpoint close between HOD and LOD + at/near 52w high (<2%) + hot vol (inconclusive breakout-day reaction: gap up at the year peak held but neither extended nor failed into the close on elevated participation; standoff at the 52w high with the next breakout still undecided)
-    GapDownMidpointCloseNearYearLowHotVol,     // gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct < 2 AND rel_volume >= 1.5 — gap down (<-2%) + midpoint close between HOD and LOD + at/near 52w low (<2%) + hot vol (inconclusive breakdown-day reaction: gap down at the year trough held but neither extended nor absorbed into the close on elevated participation; standoff at the 52w low with the next breakdown still undecided)
-    GapUpMidpointCloseConfirmedAboveYearHighHotVol,  // gap_pct > 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= -3 AND year_high_pct <= -1 AND rel_volume >= 1.5 — gap up (>2%) + midpoint close between HOD and LOD + confirmed-breakout zone (1-3% past 52w high) + hot vol (uncertain follow-through after validated breakout: gap up in the already-cleared zone held but neither extended nor failed into the close on elevated participation; post-breakout stall warning that the extension is losing conviction)
+    GapUpCloseAtLodDeepBelowYearHighHotVol, // gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND year_high_pct >= 20 AND change_pct < 0 AND rel_volume >= 1.5 — gap up (>2%) faded completely to LOD + far below 52w high (>=20%) + red close + hot vol (failed dead-cat bounce signal: gap up deep in the pullback territory completely reversed and closed at the day's low on elevated participation; bear-market continuation candidate with sellers in control well below the prior peak)
+    GapDownCloseAtHodDeepAboveYearLowHotVol, // gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND year_low_pct >= 20 AND change_pct > 0 AND rel_volume >= 1.5 — gap down (<-2%) absorbed completely to HOD + far above 52w low (>=20%) + green close + hot vol (failed shake-out signal: gap down deep in the advance territory completely reversed and closed at the day's high on elevated participation; bull-market continuation candidate with buyers in control well above the prior trough)
+    GapUpCloseAtLodJustOffYearHighHotVol, // gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND year_high_pct >= 2 AND year_high_pct < 5 AND change_pct < 0 AND rel_volume >= 1.5 — gap up (>2%) faded completely to LOD + just off 52w high (2-5%) + red close + hot vol (failed recovery attempt: gap up immediately after shallow pullback from the year peak completely reversed and closed at the day's low on elevated participation; second leg lower starting candidate)
+    GapDownCloseAtHodJustOffYearLowHotVol, // gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND year_low_pct >= 2 AND year_low_pct < 5 AND change_pct > 0 AND rel_volume >= 1.5 — gap down (<-2%) absorbed completely to HOD + just off 52w low (2-5%) + green close + hot vol (failed rejection attempt: gap down immediately after shallow bounce from the year trough completely reversed and closed at the day's high on elevated participation; second leg higher starting candidate)
+    GapUpCloseAtLodMidYearHighHotVol, // gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND year_high_pct >= 5 AND year_high_pct < 20 AND change_pct < 0 AND rel_volume >= 1.5 — gap up (>2%) faded completely to LOD + mid-range from high (5-20%) + red close + hot vol (failed mid-cycle bounce: gap up in the proper consolidation zone completely reversed and closed at the day's low on elevated participation; continuation of mid-cycle pullback with sellers in control)
+    GapDownCloseAtHodMidYearLowHotVol, // gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND year_low_pct >= 5 AND year_low_pct < 20 AND change_pct > 0 AND rel_volume >= 1.5 — gap down (<-2%) absorbed completely to HOD + mid-range from low (5-20%) + green close + hot vol (failed mid-cycle pullback: gap down in the proper consolidation zone completely reversed and closed at the day's high on elevated participation; continuation of mid-cycle recovery with buyers in control)
+    GapUpMidpointCloseNearYearHighHotVol, // gap_pct > 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct < 2 AND rel_volume >= 1.5 — gap up (>2%) + midpoint close between HOD and LOD + at/near 52w high (<2%) + hot vol (inconclusive breakout-day reaction: gap up at the year peak held but neither extended nor failed into the close on elevated participation; standoff at the 52w high with the next breakout still undecided)
+    GapDownMidpointCloseNearYearLowHotVol, // gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct < 2 AND rel_volume >= 1.5 — gap down (<-2%) + midpoint close between HOD and LOD + at/near 52w low (<2%) + hot vol (inconclusive breakdown-day reaction: gap down at the year trough held but neither extended nor absorbed into the close on elevated participation; standoff at the 52w low with the next breakdown still undecided)
+    GapUpMidpointCloseConfirmedAboveYearHighHotVol, // gap_pct > 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= -3 AND year_high_pct <= -1 AND rel_volume >= 1.5 — gap up (>2%) + midpoint close between HOD and LOD + confirmed-breakout zone (1-3% past 52w high) + hot vol (uncertain follow-through after validated breakout: gap up in the already-cleared zone held but neither extended nor failed into the close on elevated participation; post-breakout stall warning that the extension is losing conviction)
     GapDownMidpointCloseConfirmedBelowYearLowHotVol, // gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= -3 AND year_low_pct <= -1 AND rel_volume >= 1.5 — gap down (<-2%) + midpoint close between HOD and LOD + confirmed-breakdown zone (1-3% past 52w low) + hot vol (uncertain follow-through after validated breakdown: gap down in the already-cleared zone held but neither extended nor absorbed into the close on elevated participation; post-breakdown stall warning that the extension is losing conviction)
     GapUpMidpointCloseDeepBelowYearHighHotVol, // gap_pct > 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= 20 AND rel_volume >= 1.5 — gap up (>2%) + midpoint close between HOD and LOD + far below 52w high (>=20%) + hot vol (inconclusive bounce attempt deep in pullback territory: gap up well below the prior peak held but neither extended to a HOD close nor failed to a LOD close on elevated participation; standoff after extended decline with no directional commitment from the bounce)
-    GapDownMidpointCloseDeepAboveYearLowHotVol,// gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 20 AND rel_volume >= 1.5 — gap down (<-2%) + midpoint close between HOD and LOD + far above 52w low (>=20%) + hot vol (inconclusive pullback attempt deep in advance territory: gap down well above the prior trough held but neither extended to a LOD close nor absorbed to a HOD close on elevated participation; standoff after extended advance with no directional commitment from the pullback)
-    GapUpMidpointCloseMidYearHighHotVol,       // gap_pct > 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= 5 AND year_high_pct < 20 AND rel_volume >= 1.5 — gap up (>2%) + midpoint close between HOD and LOD + mid-range from high (5-20%) + hot vol (inconclusive bounce in mid-cycle pullback: gap up in the proper consolidation zone held but neither extended to a HOD close nor failed to a LOD close on elevated participation; standoff at mid-range with no directional commitment toward the prior peak)
-    GapDownMidpointCloseMidYearLowHotVol,      // gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 5 AND year_low_pct < 20 AND rel_volume >= 1.5 — gap down (<-2%) + midpoint close between HOD and LOD + mid-range from low (5-20%) + hot vol (inconclusive pullback in mid-cycle recovery: gap down in the proper consolidation zone held but neither extended to a LOD close nor absorbed to a HOD close on elevated participation; standoff at mid-range with no directional commitment back toward the prior trough)
-    GapUpMidpointCloseJustOffYearHighHotVol,   // gap_pct > 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= 2 AND year_high_pct < 5 AND rel_volume >= 1.5 — gap up (>2%) + midpoint close between HOD and LOD + just off 52w high (2-5%) + hot vol (inconclusive bounce just off the year peak: gap up in the post-extreme zone held but neither extended to a HOD close nor failed to a LOD close on elevated participation; standoff in the immediate post-tag zone with the recovery still undecided)
-    GapDownMidpointCloseJustOffYearLowHotVol,  // gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 2 AND year_low_pct < 5 AND rel_volume >= 1.5 — gap down (<-2%) + midpoint close between HOD and LOD + just off 52w low (2-5%) + hot vol (inconclusive pullback just off the year trough: gap down in the post-extreme zone held but neither extended to a LOD close nor absorbed to a HOD close on elevated participation; standoff in the immediate post-tag zone with the rejection still undecided)
-    HotVolFlatCloseNearYearHighHotVol,         // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct < 2 — flat close (|change|<0.5) + hot vol (>=2) + at/near 52w high (<2%) (institutional churn at the 52w high: doubled participation with no net price impact at the year peak; potential distribution-into-strength signal where smart money exchanges hands without moving the tape)
-    HotVolFlatCloseNearYearLowHotVol,          // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct < 2 — flat close (|change|<0.5) + hot vol (>=2) + at/near 52w low (<2%) (institutional churn at the 52w low: doubled participation with no net price impact at the year trough; potential accumulation-into-weakness signal where smart money exchanges hands without moving the tape)
+    GapDownMidpointCloseDeepAboveYearLowHotVol, // gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 20 AND rel_volume >= 1.5 — gap down (<-2%) + midpoint close between HOD and LOD + far above 52w low (>=20%) + hot vol (inconclusive pullback attempt deep in advance territory: gap down well above the prior trough held but neither extended to a LOD close nor absorbed to a HOD close on elevated participation; standoff after extended advance with no directional commitment from the pullback)
+    GapUpMidpointCloseMidYearHighHotVol, // gap_pct > 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= 5 AND year_high_pct < 20 AND rel_volume >= 1.5 — gap up (>2%) + midpoint close between HOD and LOD + mid-range from high (5-20%) + hot vol (inconclusive bounce in mid-cycle pullback: gap up in the proper consolidation zone held but neither extended to a HOD close nor failed to a LOD close on elevated participation; standoff at mid-range with no directional commitment toward the prior peak)
+    GapDownMidpointCloseMidYearLowHotVol, // gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 5 AND year_low_pct < 20 AND rel_volume >= 1.5 — gap down (<-2%) + midpoint close between HOD and LOD + mid-range from low (5-20%) + hot vol (inconclusive pullback in mid-cycle recovery: gap down in the proper consolidation zone held but neither extended to a LOD close nor absorbed to a HOD close on elevated participation; standoff at mid-range with no directional commitment back toward the prior trough)
+    GapUpMidpointCloseJustOffYearHighHotVol, // gap_pct > 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= 2 AND year_high_pct < 5 AND rel_volume >= 1.5 — gap up (>2%) + midpoint close between HOD and LOD + just off 52w high (2-5%) + hot vol (inconclusive bounce just off the year peak: gap up in the post-extreme zone held but neither extended to a HOD close nor failed to a LOD close on elevated participation; standoff in the immediate post-tag zone with the recovery still undecided)
+    GapDownMidpointCloseJustOffYearLowHotVol, // gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 2 AND year_low_pct < 5 AND rel_volume >= 1.5 — gap down (<-2%) + midpoint close between HOD and LOD + just off 52w low (2-5%) + hot vol (inconclusive pullback just off the year trough: gap down in the post-extreme zone held but neither extended to a LOD close nor absorbed to a HOD close on elevated participation; standoff in the immediate post-tag zone with the rejection still undecided)
+    HotVolFlatCloseNearYearHighHotVol, // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct < 2 — flat close (|change|<0.5) + hot vol (>=2) + at/near 52w high (<2%) (institutional churn at the 52w high: doubled participation with no net price impact at the year peak; potential distribution-into-strength signal where smart money exchanges hands without moving the tape)
+    HotVolFlatCloseNearYearLowHotVol, // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct < 2 — flat close (|change|<0.5) + hot vol (>=2) + at/near 52w low (<2%) (institutional churn at the 52w low: doubled participation with no net price impact at the year trough; potential accumulation-into-weakness signal where smart money exchanges hands without moving the tape)
     HotVolFlatCloseConfirmedAboveYearHighHotVol, // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= -3 AND year_high_pct <= -1 — flat close + hot vol + confirmed-breakout zone (1-3% past 52w high) (stealth distribution in the confirmed-breakout zone: doubled participation with no net price impact above the prior peak; institutions handling supply at the validated breakout level without giving back the move)
-    HotVolFlatCloseConfirmedBelowYearLowHotVol,  // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= -3 AND year_low_pct <= -1 — flat close + hot vol + confirmed-breakdown zone (1-3% past 52w low) (stealth accumulation in the confirmed-breakdown zone: doubled participation with no net price impact below the prior trough; institutions handling demand at the validated breakdown level without giving back the move)
-    HotVolFlatCloseDeepBelowYearHighHotVol,    // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= 20 — flat close + hot vol + far below 52w high (>=20%) (stealth accumulation deep in pullback territory: doubled participation with no net price impact well below the prior peak; potential base-building signal where smart money builds position during depressed-tape conditions)
-    HotVolFlatCloseDeepAboveYearLowHotVol,     // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= 20 — flat close + hot vol + far above 52w low (>=20%) (stealth distribution deep in advance territory: doubled participation with no net price impact well above the prior trough; potential topping signal where smart money exits position during euphoric-tape conditions)
-    HotVolFlatCloseMidYearHighHotVol,          // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= 5 AND year_high_pct < 20 — flat close + hot vol + mid-range from high (5-20%) (Wyckoff-style stealth accumulation zone in mid-cycle pullback: doubled participation with no net price impact in the proper consolidation range; textbook accumulation phase where institutions absorb supply at fair value below the prior peak)
-    HotVolFlatCloseMidYearLowHotVol,           // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= 5 AND year_low_pct < 20 — flat close + hot vol + mid-range from low (5-20%) (Wyckoff-style stealth distribution zone in mid-cycle recovery: doubled participation with no net price impact in the proper consolidation range; textbook distribution phase where institutions release supply at fair value above the prior trough)
-    HotVolFlatCloseJustOffYearHighHotVol,      // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= 2 AND year_high_pct < 5 — flat close + hot vol + just off 52w high (2-5%) (post-tag stealth absorption: doubled participation with no net price impact immediately after fresh pullback from the 52w high; institutions exchange hands in the post-extreme zone while price digests the recent peak)
-    HotVolFlatCloseJustOffYearLowHotVol,       // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= 2 AND year_low_pct < 5 — flat close + hot vol + just off 52w low (2-5%) (post-tag stealth release: doubled participation with no net price impact immediately after fresh bounce from the 52w low; institutions exchange hands in the post-extreme zone while price digests the recent trough)
-    DryVolBigUpNearYearHighHotVol,             // change_pct > 3 AND rel_volume < 0.5 AND year_high_pct < 2 — big up move (>3%) + dry vol (<0.5) + at/near 52w high (<2%) (thin-tape breakout: large gains push price to new highs but participation is below average; air-pocket move with little resistance, fragile if vol returns)
-    DryVolBigDownNearYearLowHotVol,            // change_pct < -3 AND rel_volume < 0.5 AND year_low_pct < 2 — big down move (<-3%) + dry vol (<0.5) + at/near 52w low (<2%) (thin-tape breakdown: large losses push price to new lows but participation is below average; air-pocket move with little support, fragile if vol returns)
-    DryVolBigUpConfirmedAboveYearHighHotVol,   // change_pct > 3 AND rel_volume < 0.5 AND year_high_pct >= -3 AND year_high_pct <= -1 — big up move (>3%) + dry vol (<0.5) + confirmed-breakout zone (1-3% past 52w high) (thin-tape extension after validated breakout: momentum continues on below-average participation past the prior peak; volume-unconfirmed extension prone to mean-reversion)
-    DryVolBigDownConfirmedBelowYearLowHotVol,  // change_pct < -3 AND rel_volume < 0.5 AND year_low_pct >= -3 AND year_low_pct <= -1 — big down move (<-3%) + dry vol (<0.5) + confirmed-breakdown zone (1-3% past 52w low) (thin-tape extension after validated breakdown: momentum continues on below-average participation past the prior trough; volume-unconfirmed extension prone to mean-reversion)
-    DryVolBigUpDeepBelowYearHighHotVol,        // change_pct > 3 AND rel_volume < 0.5 AND year_high_pct >= 20 — big up move (>3%) + dry vol (<0.5) + far below 52w high (>=20%) (unconvincing recovery rally: large gains deep in the pullback territory on below-average participation; sympathy/short-cover bounce lacking institutional buy-in, fragile if vol returns)
-    DryVolBigDownDeepAboveYearLowHotVol,       // change_pct < -3 AND rel_volume < 0.5 AND year_low_pct >= 20 — big down move (<-3%) + dry vol (<0.5) + far above 52w low (>=20%) (unconvincing pullback: large losses deep in the advance territory on below-average participation; sympathy/long-unwind dip lacking institutional sell-in, fragile if vol returns)
-    DryVolBigUpMidYearHighHotVol,              // change_pct > 3 AND rel_volume < 0.5 AND year_high_pct >= 5 AND year_high_pct < 20 — big up move (>3%) + dry vol (<0.5) + mid-range from high (5-20%) (low-quality bounce in mid-cycle pullback: large gains in the proper consolidation zone on below-average participation; sympathy move lacking institutional follow-through, prone to fade)
-    DryVolBigDownMidYearLowHotVol,             // change_pct < -3 AND rel_volume < 0.5 AND year_low_pct >= 5 AND year_low_pct < 20 — big down move (<-3%) + dry vol (<0.5) + mid-range from low (5-20%) (low-quality pullback in mid-cycle recovery: large losses in the proper consolidation zone on below-average participation; sympathy move lacking institutional follow-through, prone to bounce)
-    DryVolBigUpJustOffYearHighHotVol,          // change_pct > 3 AND rel_volume < 0.5 AND year_high_pct >= 2 AND year_high_pct < 5 — big up move (>3%) + dry vol (<0.5) + just off 52w high (2-5%) (thin-tape recovery from shallow pullback: large gains in the immediate post-extreme zone on below-average participation; quick post-tag bounce without institutional buy-in, fragile re-test candidate)
-    DryVolBigDownJustOffYearLowHotVol,         // change_pct < -3 AND rel_volume < 0.5 AND year_low_pct >= 2 AND year_low_pct < 5 — big down move (<-3%) + dry vol (<0.5) + just off 52w low (2-5%) (thin-tape rejection from shallow bounce: large losses in the immediate post-extreme zone on below-average participation; quick post-tag dip without institutional sell-in, fragile re-test candidate)
-    UltraDeepBelowYearHighHotVol,              // year_high_pct >= 50 AND rel_volume >= 1.5 — ultra-deep distance from 52w high (>=50%) + hot vol (deep-value / distressed-equity territory: price has lost half or more of its 52w peak with elevated participation; either turnaround candidate or bankruptcy-watch depending on fundamentals)
-    UltraDeepAboveYearLowHotVol,               // year_low_pct >= 50 AND rel_volume >= 1.5 — ultra-deep distance from 52w low (>=50%) + hot vol (multibagger territory: price has doubled or more off its 52w trough with elevated participation; momentum-leader candidate riding a multi-month trend with sustained institutional interest)
-    UltraDeepBelowYearHighCloseAtHodHotVol,    // year_high_pct >= 50 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — distressed stock (>=50% below 52w high) + close pinned to HOD + green close + hot vol (turnaround momentum signal: distressed equity closes at the day's high on elevated participation; rare bullish-conviction tape in beaten-down territory worth a reversal-trade screen)
-    UltraDeepAboveYearLowCloseAtLodHotVol,     // year_low_pct >= 50 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — multibagger (>=50% above 52w low) + close pinned to LOD + red close + hot vol (topping signal: extended-trend leader closes at the day's low on elevated participation; rare bearish-conviction tape in stretched territory worth a top-fade trade screen)
-    UltraDeepBelowYearHighGapUpHotVol,         // year_high_pct >= 50 AND gap_pct > 2 AND rel_volume >= 1.5 — distressed stock (>=50% below 52w high) + gap up (>2%) + hot vol (catalyst-driven turn candidate: beaten-down equity gaps up on news/earnings with elevated participation; potential institutional re-rating event worth a turnaround-trade screen)
-    UltraDeepAboveYearLowGapDownHotVol,        // year_low_pct >= 50 AND gap_pct < -2 AND rel_volume >= 1.5 — multibagger (>=50% above 52w low) + gap down (<-2%) + hot vol (catalyst-driven top candidate: extended-trend leader gaps down on news/earnings with elevated participation; potential institutional de-rating event worth a top-fade trade screen)
-    UltraDeepBelowYearHighGapUpFadedHotVol,    // year_high_pct >= 50 AND gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND change_pct < 0 AND rel_volume >= 1.5 — distressed stock (>=50% below 52w high) + gap up (>2%) faded completely to LOD + red close + hot vol (failed turnaround catalyst: beaten-down equity attempts a catalyst-driven gap but sellers absorb the entire move on elevated participation; turnaround-thesis rejection that confirms downtrend control)
+    HotVolFlatCloseConfirmedBelowYearLowHotVol, // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= -3 AND year_low_pct <= -1 — flat close + hot vol + confirmed-breakdown zone (1-3% past 52w low) (stealth accumulation in the confirmed-breakdown zone: doubled participation with no net price impact below the prior trough; institutions handling demand at the validated breakdown level without giving back the move)
+    HotVolFlatCloseDeepBelowYearHighHotVol, // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= 20 — flat close + hot vol + far below 52w high (>=20%) (stealth accumulation deep in pullback territory: doubled participation with no net price impact well below the prior peak; potential base-building signal where smart money builds position during depressed-tape conditions)
+    HotVolFlatCloseDeepAboveYearLowHotVol, // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= 20 — flat close + hot vol + far above 52w low (>=20%) (stealth distribution deep in advance territory: doubled participation with no net price impact well above the prior trough; potential topping signal where smart money exits position during euphoric-tape conditions)
+    HotVolFlatCloseMidYearHighHotVol, // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= 5 AND year_high_pct < 20 — flat close + hot vol + mid-range from high (5-20%) (Wyckoff-style stealth accumulation zone in mid-cycle pullback: doubled participation with no net price impact in the proper consolidation range; textbook accumulation phase where institutions absorb supply at fair value below the prior peak)
+    HotVolFlatCloseMidYearLowHotVol, // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= 5 AND year_low_pct < 20 — flat close + hot vol + mid-range from low (5-20%) (Wyckoff-style stealth distribution zone in mid-cycle recovery: doubled participation with no net price impact in the proper consolidation range; textbook distribution phase where institutions release supply at fair value above the prior trough)
+    HotVolFlatCloseJustOffYearHighHotVol, // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= 2 AND year_high_pct < 5 — flat close + hot vol + just off 52w high (2-5%) (post-tag stealth absorption: doubled participation with no net price impact immediately after fresh pullback from the 52w high; institutions exchange hands in the post-extreme zone while price digests the recent peak)
+    HotVolFlatCloseJustOffYearLowHotVol, // change_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= 2 AND year_low_pct < 5 — flat close + hot vol + just off 52w low (2-5%) (post-tag stealth release: doubled participation with no net price impact immediately after fresh bounce from the 52w low; institutions exchange hands in the post-extreme zone while price digests the recent trough)
+    DryVolBigUpNearYearHighHotVol, // change_pct > 3 AND rel_volume < 0.5 AND year_high_pct < 2 — big up move (>3%) + dry vol (<0.5) + at/near 52w high (<2%) (thin-tape breakout: large gains push price to new highs but participation is below average; air-pocket move with little resistance, fragile if vol returns)
+    DryVolBigDownNearYearLowHotVol, // change_pct < -3 AND rel_volume < 0.5 AND year_low_pct < 2 — big down move (<-3%) + dry vol (<0.5) + at/near 52w low (<2%) (thin-tape breakdown: large losses push price to new lows but participation is below average; air-pocket move with little support, fragile if vol returns)
+    DryVolBigUpConfirmedAboveYearHighHotVol, // change_pct > 3 AND rel_volume < 0.5 AND year_high_pct >= -3 AND year_high_pct <= -1 — big up move (>3%) + dry vol (<0.5) + confirmed-breakout zone (1-3% past 52w high) (thin-tape extension after validated breakout: momentum continues on below-average participation past the prior peak; volume-unconfirmed extension prone to mean-reversion)
+    DryVolBigDownConfirmedBelowYearLowHotVol, // change_pct < -3 AND rel_volume < 0.5 AND year_low_pct >= -3 AND year_low_pct <= -1 — big down move (<-3%) + dry vol (<0.5) + confirmed-breakdown zone (1-3% past 52w low) (thin-tape extension after validated breakdown: momentum continues on below-average participation past the prior trough; volume-unconfirmed extension prone to mean-reversion)
+    DryVolBigUpDeepBelowYearHighHotVol, // change_pct > 3 AND rel_volume < 0.5 AND year_high_pct >= 20 — big up move (>3%) + dry vol (<0.5) + far below 52w high (>=20%) (unconvincing recovery rally: large gains deep in the pullback territory on below-average participation; sympathy/short-cover bounce lacking institutional buy-in, fragile if vol returns)
+    DryVolBigDownDeepAboveYearLowHotVol, // change_pct < -3 AND rel_volume < 0.5 AND year_low_pct >= 20 — big down move (<-3%) + dry vol (<0.5) + far above 52w low (>=20%) (unconvincing pullback: large losses deep in the advance territory on below-average participation; sympathy/long-unwind dip lacking institutional sell-in, fragile if vol returns)
+    DryVolBigUpMidYearHighHotVol, // change_pct > 3 AND rel_volume < 0.5 AND year_high_pct >= 5 AND year_high_pct < 20 — big up move (>3%) + dry vol (<0.5) + mid-range from high (5-20%) (low-quality bounce in mid-cycle pullback: large gains in the proper consolidation zone on below-average participation; sympathy move lacking institutional follow-through, prone to fade)
+    DryVolBigDownMidYearLowHotVol, // change_pct < -3 AND rel_volume < 0.5 AND year_low_pct >= 5 AND year_low_pct < 20 — big down move (<-3%) + dry vol (<0.5) + mid-range from low (5-20%) (low-quality pullback in mid-cycle recovery: large losses in the proper consolidation zone on below-average participation; sympathy move lacking institutional follow-through, prone to bounce)
+    DryVolBigUpJustOffYearHighHotVol, // change_pct > 3 AND rel_volume < 0.5 AND year_high_pct >= 2 AND year_high_pct < 5 — big up move (>3%) + dry vol (<0.5) + just off 52w high (2-5%) (thin-tape recovery from shallow pullback: large gains in the immediate post-extreme zone on below-average participation; quick post-tag bounce without institutional buy-in, fragile re-test candidate)
+    DryVolBigDownJustOffYearLowHotVol, // change_pct < -3 AND rel_volume < 0.5 AND year_low_pct >= 2 AND year_low_pct < 5 — big down move (<-3%) + dry vol (<0.5) + just off 52w low (2-5%) (thin-tape rejection from shallow bounce: large losses in the immediate post-extreme zone on below-average participation; quick post-tag dip without institutional sell-in, fragile re-test candidate)
+    UltraDeepBelowYearHighHotVol, // year_high_pct >= 50 AND rel_volume >= 1.5 — ultra-deep distance from 52w high (>=50%) + hot vol (deep-value / distressed-equity territory: price has lost half or more of its 52w peak with elevated participation; either turnaround candidate or bankruptcy-watch depending on fundamentals)
+    UltraDeepAboveYearLowHotVol, // year_low_pct >= 50 AND rel_volume >= 1.5 — ultra-deep distance from 52w low (>=50%) + hot vol (multibagger territory: price has doubled or more off its 52w trough with elevated participation; momentum-leader candidate riding a multi-month trend with sustained institutional interest)
+    UltraDeepBelowYearHighCloseAtHodHotVol, // year_high_pct >= 50 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — distressed stock (>=50% below 52w high) + close pinned to HOD + green close + hot vol (turnaround momentum signal: distressed equity closes at the day's high on elevated participation; rare bullish-conviction tape in beaten-down territory worth a reversal-trade screen)
+    UltraDeepAboveYearLowCloseAtLodHotVol, // year_low_pct >= 50 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — multibagger (>=50% above 52w low) + close pinned to LOD + red close + hot vol (topping signal: extended-trend leader closes at the day's low on elevated participation; rare bearish-conviction tape in stretched territory worth a top-fade trade screen)
+    UltraDeepBelowYearHighGapUpHotVol, // year_high_pct >= 50 AND gap_pct > 2 AND rel_volume >= 1.5 — distressed stock (>=50% below 52w high) + gap up (>2%) + hot vol (catalyst-driven turn candidate: beaten-down equity gaps up on news/earnings with elevated participation; potential institutional re-rating event worth a turnaround-trade screen)
+    UltraDeepAboveYearLowGapDownHotVol, // year_low_pct >= 50 AND gap_pct < -2 AND rel_volume >= 1.5 — multibagger (>=50% above 52w low) + gap down (<-2%) + hot vol (catalyst-driven top candidate: extended-trend leader gaps down on news/earnings with elevated participation; potential institutional de-rating event worth a top-fade trade screen)
+    UltraDeepBelowYearHighGapUpFadedHotVol, // year_high_pct >= 50 AND gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND change_pct < 0 AND rel_volume >= 1.5 — distressed stock (>=50% below 52w high) + gap up (>2%) faded completely to LOD + red close + hot vol (failed turnaround catalyst: beaten-down equity attempts a catalyst-driven gap but sellers absorb the entire move on elevated participation; turnaround-thesis rejection that confirms downtrend control)
     UltraDeepAboveYearLowGapDownAbsorbedHotVol, // year_low_pct >= 50 AND gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 AND rel_volume >= 1.5 — multibagger (>=50% above 52w low) + gap down (<-2%) absorbed completely to HOD + green close + hot vol (failed topping catalyst: extended-trend leader attempts a catalyst-driven gap down but buyers absorb the entire move on elevated participation; top-fade thesis rejection that confirms uptrend control)
-    UltraDeepBelowYearHighGapUpHeldHotVol,     // year_high_pct >= 50 AND gap_pct > 2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — distressed stock (>=50% below 52w high) + gap up (>2%) held all session + close pinned to HOD + green close + hot vol (validated turnaround day: beaten-down equity gaps up on catalyst, holds the entire gap, and closes at the day's high on elevated participation; institutional re-rating event with no profit-taking = highest-conviction turnaround signal in distressed territory)
-    UltraDeepAboveYearLowGapDownHeldHotVol,    // year_low_pct >= 50 AND gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — multibagger (>=50% above 52w low) + gap down (<-2%) held all session + close pinned to LOD + red close + hot vol (validated topping day: extended-trend leader gaps down on catalyst, holds the entire gap, and closes at the day's low on elevated participation; institutional de-rating event with no dip-buying = highest-conviction topping signal in stretched territory)
+    UltraDeepBelowYearHighGapUpHeldHotVol, // year_high_pct >= 50 AND gap_pct > 2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — distressed stock (>=50% below 52w high) + gap up (>2%) held all session + close pinned to HOD + green close + hot vol (validated turnaround day: beaten-down equity gaps up on catalyst, holds the entire gap, and closes at the day's high on elevated participation; institutional re-rating event with no profit-taking = highest-conviction turnaround signal in distressed territory)
+    UltraDeepAboveYearLowGapDownHeldHotVol, // year_low_pct >= 50 AND gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — multibagger (>=50% above 52w low) + gap down (<-2%) held all session + close pinned to LOD + red close + hot vol (validated topping day: extended-trend leader gaps down on catalyst, holds the entire gap, and closes at the day's low on elevated participation; institutional de-rating event with no dip-buying = highest-conviction topping signal in stretched territory)
     UltraDeepBelowYearHighGapUpMidpointHotVol, // year_high_pct >= 50 AND gap_pct > 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — distressed stock (>=50% below 52w high) + gap up (>2%) + midpoint close between HOD and LOD + hot vol (uncertain turnaround follow-through: beaten-down equity gaps up on catalyst but neither holds the gap to a HOD close nor fully fades to a LOD close on elevated participation; ambiguous re-rating event requiring confirmation)
-    UltraDeepAboveYearLowGapDownMidpointHotVol,// year_low_pct >= 50 AND gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — multibagger (>=50% above 52w low) + gap down (<-2%) + midpoint close between HOD and LOD + hot vol (uncertain topping follow-through: extended-trend leader gaps down on catalyst but neither holds the gap to a LOD close nor fully absorbs to a HOD close on elevated participation; ambiguous de-rating event requiring confirmation)
-    UltraDeepBelowYearHighHammerHotVol,        // year_high_pct >= 50 AND lod_dist_pct.abs() > 3 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 AND rel_volume >= 1.5 — distressed stock (>=50% below 52w high) + long lower wick (>3%) + close pinned to HOD + green close + hot vol (capitulation-reversal hammer in distressed territory: beaten-down equity probed lower then reclaimed the entire move to close at the day's high on elevated participation; classic capitulation-day pattern at deep distress worth a bounce-trade screen)
-    UltraDeepAboveYearLowShootingStarHotVol,   // year_low_pct >= 50 AND hod_dist_pct.abs() > 3 AND lod_dist_pct.abs() < 0.5 AND change_pct < 0 AND rel_volume >= 1.5 — multibagger (>=50% above 52w low) + long upper wick (>3%) + close pinned to LOD + red close + hot vol (exhaustion-reversal shooting star in multibagger territory: extended-trend leader probed higher then gave back the entire move to close at the day's low on elevated participation; classic exhaustion-day pattern at extended advance worth a top-fade trade screen)
-    UltraDeepBelowYearHighShootingStarHotVol,  // year_high_pct >= 50 AND hod_dist_pct.abs() > 3 AND lod_dist_pct.abs() < 0.5 AND change_pct < 0 AND rel_volume >= 1.5 — distressed stock (>=50% below 52w high) + long upper wick (>3%) + close pinned to LOD + red close + hot vol (failed-bounce shooting star in distressed territory: beaten-down equity probed higher intraday then sellers reclaimed entire move to close at the day's low on elevated participation; bear-trend continuation candidate confirming downtrend control)
-    UltraDeepAboveYearLowHammerHotVol,         // year_low_pct >= 50 AND lod_dist_pct.abs() > 3 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 AND rel_volume >= 1.5 — multibagger (>=50% above 52w low) + long lower wick (>3%) + close pinned to HOD + green close + hot vol (trend-continuation hammer in multibagger territory: extended-trend leader probed lower intraday then buyers reclaimed entire move to close at the day's high on elevated participation; bull-trend continuation candidate confirming uptrend control)
-    WideYearRangeHotVol,                       // year_high_pct >= 20 AND year_low_pct >= 20 AND rel_volume >= 1.5 — wide annual range (both year_*_pct >=20%) + hot vol (high-beta volatile-equity territory: stock has traveled significant distance from both prior peak and prior trough indicating large 52w range; volatility-screen candidate for momentum and mean-reversion strategies)
-    NarrowYearRangeHotVol,                     // year_high_pct < 5 AND year_low_pct < 5 AND rel_volume >= 1.5 — narrow annual range (both year_*_pct <5%) + hot vol (compressed range-bound territory: stock has stayed within ~10% band over 52w with elevated current participation; tightest possible coil at annual scale, breakout-candidate worth watching for direction commitment)
-    NarrowYearRangeCloseAtHodHotVol,           // year_high_pct < 5 AND year_low_pct < 5 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — narrow annual range + close pinned to HOD + green close + hot vol (annual-coil breakout candidate: compressed range-bound stock attempts directional commitment higher, closes at the day's high with hot vol; highest-conviction breakout-from-coil signal at the annual scale)
-    NarrowYearRangeCloseAtLodHotVol,           // year_high_pct < 5 AND year_low_pct < 5 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — narrow annual range + close pinned to LOD + red close + hot vol (annual-coil breakdown candidate: compressed range-bound stock attempts directional commitment lower, closes at the day's low with hot vol; highest-conviction breakdown-from-coil signal at the annual scale)
-    NarrowYearRangeGapUpHotVol,                // year_high_pct < 5 AND year_low_pct < 5 AND gap_pct > 2 AND rel_volume >= 1.5 — narrow annual range + gap up (>2%) + hot vol (catalyst-driven attempt to break the annual coil higher: compressed range-bound stock gaps up on news/earnings with elevated participation; first sign of directional commitment after 52w of tight range)
-    NarrowYearRangeGapDownHotVol,              // year_high_pct < 5 AND year_low_pct < 5 AND gap_pct < -2 AND rel_volume >= 1.5 — narrow annual range + gap down (<-2%) + hot vol (catalyst-driven attempt to break the annual coil lower: compressed range-bound stock gaps down on news/earnings with elevated participation; first sign of directional commitment after 52w of tight range)
-    NarrowYearRangeBigUpHotVol,                // year_high_pct < 5 AND year_low_pct < 5 AND change_pct > 3 AND rel_volume >= 2 — narrow annual range + big up move (>3%) + hot vol (>=2) (intraday-led coil release higher: compressed range-bound stock prints first volatility expansion in 52w with doubled participation; regime-shift candidate from tight range to trending higher)
-    NarrowYearRangeBigDownHotVol,              // year_high_pct < 5 AND year_low_pct < 5 AND change_pct < -3 AND rel_volume >= 2 — narrow annual range + big down move (<-3%) + hot vol (>=2) (intraday-led coil release lower: compressed range-bound stock prints first volatility expansion in 52w with doubled participation; regime-shift candidate from tight range to trending lower)
-    WideYearRangeCloseAtHodHotVol,             // year_high_pct >= 20 AND year_low_pct >= 20 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — wide annual range + close pinned to HOD + green close + hot vol (strong-conviction tape in high-beta name: volatile stock with large 52w range closes at the day's high on elevated participation; momentum-continuation signal where intraday strength aligns with the wider price-action regime)
-    WideYearRangeCloseAtLodHotVol,             // year_high_pct >= 20 AND year_low_pct >= 20 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — wide annual range + close pinned to LOD + red close + hot vol (strong-conviction tape in high-beta name: volatile stock with large 52w range closes at the day's low on elevated participation; momentum-continuation signal where intraday weakness aligns with the wider price-action regime)
-    WideYearRangeGapUpHotVol,                  // year_high_pct >= 20 AND year_low_pct >= 20 AND gap_pct > 2 AND rel_volume >= 1.5 — wide annual range + gap up (>2%) + hot vol (catalyst-event in high-beta name: volatile stock with large 52w range gaps up on news/earnings with elevated participation; mean-reversion-from-gap candidate or trend-continuation depending on intraday follow-through)
-    WideYearRangeGapDownHotVol,                // year_high_pct >= 20 AND year_low_pct >= 20 AND gap_pct < -2 AND rel_volume >= 1.5 — wide annual range + gap down (<-2%) + hot vol (catalyst-event in high-beta name: volatile stock with large 52w range gaps down on news/earnings with elevated participation; mean-reversion-from-gap candidate or trend-continuation depending on intraday follow-through)
-    AsymmetricRangeNearLowFarHighHotVol,       // year_high_pct >= 20 AND year_low_pct < 5 AND rel_volume >= 1.5 — near 52w low (<5%) + far below 52w high (>=20%) + hot vol (persistent-downtrend stock testing the low again with elevated participation; either capitulation-bottom candidate or breakdown to fresh lows depending on price-action resolution at the support level)
-    AsymmetricRangeNearHighFarLowHotVol,       // year_high_pct < 5 AND year_low_pct >= 20 AND rel_volume >= 1.5 — near 52w high (<5%) + far above 52w low (>=20%) + hot vol (persistent-uptrend stock testing the high again with elevated participation; either breakout-to-fresh-highs candidate or distribution-top depending on price-action resolution at the resistance level)
+    UltraDeepAboveYearLowGapDownMidpointHotVol, // year_low_pct >= 50 AND gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 1.5 — multibagger (>=50% above 52w low) + gap down (<-2%) + midpoint close between HOD and LOD + hot vol (uncertain topping follow-through: extended-trend leader gaps down on catalyst but neither holds the gap to a LOD close nor fully absorbs to a HOD close on elevated participation; ambiguous de-rating event requiring confirmation)
+    UltraDeepBelowYearHighHammerHotVol, // year_high_pct >= 50 AND lod_dist_pct.abs() > 3 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 AND rel_volume >= 1.5 — distressed stock (>=50% below 52w high) + long lower wick (>3%) + close pinned to HOD + green close + hot vol (capitulation-reversal hammer in distressed territory: beaten-down equity probed lower then reclaimed the entire move to close at the day's high on elevated participation; classic capitulation-day pattern at deep distress worth a bounce-trade screen)
+    UltraDeepAboveYearLowShootingStarHotVol, // year_low_pct >= 50 AND hod_dist_pct.abs() > 3 AND lod_dist_pct.abs() < 0.5 AND change_pct < 0 AND rel_volume >= 1.5 — multibagger (>=50% above 52w low) + long upper wick (>3%) + close pinned to LOD + red close + hot vol (exhaustion-reversal shooting star in multibagger territory: extended-trend leader probed higher then gave back the entire move to close at the day's low on elevated participation; classic exhaustion-day pattern at extended advance worth a top-fade trade screen)
+    UltraDeepBelowYearHighShootingStarHotVol, // year_high_pct >= 50 AND hod_dist_pct.abs() > 3 AND lod_dist_pct.abs() < 0.5 AND change_pct < 0 AND rel_volume >= 1.5 — distressed stock (>=50% below 52w high) + long upper wick (>3%) + close pinned to LOD + red close + hot vol (failed-bounce shooting star in distressed territory: beaten-down equity probed higher intraday then sellers reclaimed entire move to close at the day's low on elevated participation; bear-trend continuation candidate confirming downtrend control)
+    UltraDeepAboveYearLowHammerHotVol, // year_low_pct >= 50 AND lod_dist_pct.abs() > 3 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 AND rel_volume >= 1.5 — multibagger (>=50% above 52w low) + long lower wick (>3%) + close pinned to HOD + green close + hot vol (trend-continuation hammer in multibagger territory: extended-trend leader probed lower intraday then buyers reclaimed entire move to close at the day's high on elevated participation; bull-trend continuation candidate confirming uptrend control)
+    WideYearRangeHotVol, // year_high_pct >= 20 AND year_low_pct >= 20 AND rel_volume >= 1.5 — wide annual range (both year_*_pct >=20%) + hot vol (high-beta volatile-equity territory: stock has traveled significant distance from both prior peak and prior trough indicating large 52w range; volatility-screen candidate for momentum and mean-reversion strategies)
+    NarrowYearRangeHotVol, // year_high_pct < 5 AND year_low_pct < 5 AND rel_volume >= 1.5 — narrow annual range (both year_*_pct <5%) + hot vol (compressed range-bound territory: stock has stayed within ~10% band over 52w with elevated current participation; tightest possible coil at annual scale, breakout-candidate worth watching for direction commitment)
+    NarrowYearRangeCloseAtHodHotVol, // year_high_pct < 5 AND year_low_pct < 5 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — narrow annual range + close pinned to HOD + green close + hot vol (annual-coil breakout candidate: compressed range-bound stock attempts directional commitment higher, closes at the day's high with hot vol; highest-conviction breakout-from-coil signal at the annual scale)
+    NarrowYearRangeCloseAtLodHotVol, // year_high_pct < 5 AND year_low_pct < 5 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — narrow annual range + close pinned to LOD + red close + hot vol (annual-coil breakdown candidate: compressed range-bound stock attempts directional commitment lower, closes at the day's low with hot vol; highest-conviction breakdown-from-coil signal at the annual scale)
+    NarrowYearRangeGapUpHotVol, // year_high_pct < 5 AND year_low_pct < 5 AND gap_pct > 2 AND rel_volume >= 1.5 — narrow annual range + gap up (>2%) + hot vol (catalyst-driven attempt to break the annual coil higher: compressed range-bound stock gaps up on news/earnings with elevated participation; first sign of directional commitment after 52w of tight range)
+    NarrowYearRangeGapDownHotVol, // year_high_pct < 5 AND year_low_pct < 5 AND gap_pct < -2 AND rel_volume >= 1.5 — narrow annual range + gap down (<-2%) + hot vol (catalyst-driven attempt to break the annual coil lower: compressed range-bound stock gaps down on news/earnings with elevated participation; first sign of directional commitment after 52w of tight range)
+    NarrowYearRangeBigUpHotVol, // year_high_pct < 5 AND year_low_pct < 5 AND change_pct > 3 AND rel_volume >= 2 — narrow annual range + big up move (>3%) + hot vol (>=2) (intraday-led coil release higher: compressed range-bound stock prints first volatility expansion in 52w with doubled participation; regime-shift candidate from tight range to trending higher)
+    NarrowYearRangeBigDownHotVol, // year_high_pct < 5 AND year_low_pct < 5 AND change_pct < -3 AND rel_volume >= 2 — narrow annual range + big down move (<-3%) + hot vol (>=2) (intraday-led coil release lower: compressed range-bound stock prints first volatility expansion in 52w with doubled participation; regime-shift candidate from tight range to trending lower)
+    WideYearRangeCloseAtHodHotVol, // year_high_pct >= 20 AND year_low_pct >= 20 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — wide annual range + close pinned to HOD + green close + hot vol (strong-conviction tape in high-beta name: volatile stock with large 52w range closes at the day's high on elevated participation; momentum-continuation signal where intraday strength aligns with the wider price-action regime)
+    WideYearRangeCloseAtLodHotVol, // year_high_pct >= 20 AND year_low_pct >= 20 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — wide annual range + close pinned to LOD + red close + hot vol (strong-conviction tape in high-beta name: volatile stock with large 52w range closes at the day's low on elevated participation; momentum-continuation signal where intraday weakness aligns with the wider price-action regime)
+    WideYearRangeGapUpHotVol, // year_high_pct >= 20 AND year_low_pct >= 20 AND gap_pct > 2 AND rel_volume >= 1.5 — wide annual range + gap up (>2%) + hot vol (catalyst-event in high-beta name: volatile stock with large 52w range gaps up on news/earnings with elevated participation; mean-reversion-from-gap candidate or trend-continuation depending on intraday follow-through)
+    WideYearRangeGapDownHotVol, // year_high_pct >= 20 AND year_low_pct >= 20 AND gap_pct < -2 AND rel_volume >= 1.5 — wide annual range + gap down (<-2%) + hot vol (catalyst-event in high-beta name: volatile stock with large 52w range gaps down on news/earnings with elevated participation; mean-reversion-from-gap candidate or trend-continuation depending on intraday follow-through)
+    AsymmetricRangeNearLowFarHighHotVol, // year_high_pct >= 20 AND year_low_pct < 5 AND rel_volume >= 1.5 — near 52w low (<5%) + far below 52w high (>=20%) + hot vol (persistent-downtrend stock testing the low again with elevated participation; either capitulation-bottom candidate or breakdown to fresh lows depending on price-action resolution at the support level)
+    AsymmetricRangeNearHighFarLowHotVol, // year_high_pct < 5 AND year_low_pct >= 20 AND rel_volume >= 1.5 — near 52w high (<5%) + far above 52w low (>=20%) + hot vol (persistent-uptrend stock testing the high again with elevated participation; either breakout-to-fresh-highs candidate or distribution-top depending on price-action resolution at the resistance level)
     AsymmetricRangeNearLowFarHighCloseAtLodHotVol, // year_high_pct >= 20 AND year_low_pct < 5 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — persistent-downtrend stock (near low + far below high) + close pinned to LOD + red close + hot vol (breakdown-confirmation day: downtrend stock fails the support test at the 52w low and closes at the day's low on elevated participation; fresh-low extension confirmed by intraday weakness)
     AsymmetricRangeNearHighFarLowCloseAtHodHotVol, // year_high_pct < 5 AND year_low_pct >= 20 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — persistent-uptrend stock (near high + far above low) + close pinned to HOD + green close + hot vol (breakout-confirmation day: uptrend stock clears the resistance test at the 52w high and closes at the day's high on elevated participation; fresh-high extension confirmed by intraday strength)
     AsymmetricRangeNearLowFarHighCloseAtHodHotVol, // year_high_pct >= 20 AND year_low_pct < 5 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 AND rel_volume >= 1.5 — persistent-downtrend stock (near low + far below high) + close pinned to HOD + green close + hot vol (capitulation-reversal candidate: downtrend stock defends the support test at the 52w low and closes at the day's high on elevated participation; potential bottom-formation signal worth a bounce-trade screen)
     AsymmetricRangeNearHighFarLowCloseAtLodHotVol, // year_high_pct < 5 AND year_low_pct >= 20 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 AND rel_volume >= 1.5 — persistent-uptrend stock (near high + far above low) + close pinned to LOD + red close + hot vol (distribution-top candidate: uptrend stock rejects the resistance test at the 52w high and closes at the day's low on elevated participation; potential top-formation signal worth a top-fade trade screen)
-    AsymmetricRangeNearLowFarHighGapUpHotVol,  // year_high_pct >= 20 AND year_low_pct < 5 AND gap_pct > 2 AND rel_volume >= 1.5 — persistent-downtrend stock (near low + far below high) + gap up (>2%) + hot vol (relief-rally catalyst at the 52w low: downtrend stock attempts catalyst-driven turn off the year trough with elevated participation; potential turnaround-thesis signal worth a bounce-trade screen)
-    AsymmetricRangeNearHighFarLowGapDownHotVol,// year_high_pct < 5 AND year_low_pct >= 20 AND gap_pct < -2 AND rel_volume >= 1.5 — persistent-uptrend stock (near high + far above low) + gap down (<-2%) + hot vol (pullback-catalyst at the 52w high: uptrend stock attempts catalyst-driven reversal off the year peak with elevated participation; potential top-warning signal worth a top-fade trade screen)
-    AsymmetricRangeNearLowFarHighGapDownHotVol,// year_high_pct >= 20 AND year_low_pct < 5 AND gap_pct < -2 AND rel_volume >= 1.5 — persistent-downtrend stock (near low + far below high) + gap down (<-2%) + hot vol (catalyst-driven breakdown to fresh lows: downtrend stock attempts catalyst-confirmed continuation through the 52w support level with elevated participation; trend-extension signal worth a breakdown-trade screen)
-    AsymmetricRangeNearHighFarLowGapUpHotVol,  // year_high_pct < 5 AND year_low_pct >= 20 AND gap_pct > 2 AND rel_volume >= 1.5 — persistent-uptrend stock (near high + far above low) + gap up (>2%) + hot vol (catalyst-driven breakout to fresh highs: uptrend stock attempts catalyst-confirmed continuation through the 52w resistance level with elevated participation; trend-extension signal worth a breakout-trade screen)
-    GapUpFlatDayHotVol,                        // gap_pct > 2 AND day_pct.abs() < 0.5 AND rel_volume >= 1.5 — gap up (>2%) + flat-day bar (|day_pct|<0.5%) + hot vol (gap-and-hold institutional signal: overnight gap up held through the regular session without intraday giveback or further follow-through; supports the gap without re-test, suggesting buyer accumulation at the gap level)
-    GapDownFlatDayHotVol,                      // gap_pct < -2 AND day_pct.abs() < 0.5 AND rel_volume >= 1.5 — gap down (<-2%) + flat-day bar (|day_pct|<0.5%) + hot vol (gap-and-hold institutional signal: overnight gap down held through the regular session without intraday recovery or further deterioration; supports the gap without re-test, suggesting seller distribution at the gap level)
-    GapUpBigDayHotVol,                         // gap_pct > 2 AND day_pct > 2 AND rel_volume >= 1.5 — gap up (>2%) + big intraday up (>2%) + hot vol (double-momentum day: overnight gap up followed by intraday continuation higher with elevated participation; gap+intraday both aligned green = aggregate change_pct >4% from prior close with sustained buy pressure across both regular and after-hours sessions)
-    GapDownBigDayHotVol,                       // gap_pct < -2 AND day_pct < -2 AND rel_volume >= 1.5 — gap down (<-2%) + big intraday down (<-2%) + hot vol (double-momentum day: overnight gap down followed by intraday continuation lower with elevated participation; gap+intraday both aligned red = aggregate change_pct <-4% from prior close with sustained sell pressure across both regular and after-hours sessions)
-    GapUpBigDayDownHotVol,                     // gap_pct > 2 AND day_pct < -2 AND rel_volume >= 1.5 — gap up (>2%) + big intraday down (<-2%) + hot vol (gap-fade pressure: overnight gap up met with intraday selling that erodes the gap by 2%+; counter-trend intraday pressure on a positive gap that may or may not flip the close to red depending on gap size; suggests active sellers stepping in at the gap level)
-    GapDownBigDayUpHotVol,                     // gap_pct < -2 AND day_pct > 2 AND rel_volume >= 1.5 — gap down (<-2%) + big intraday up (>2%) + hot vol (gap-absorb pressure: overnight gap down met with intraday buying that reclaims the gap by 2%+; counter-trend intraday pressure on a negative gap that may or may not flip the close to green depending on gap size; suggests active buyers stepping in at the gap level)
-    SmallGapBigDayUpHotVol,                    // gap_pct.abs() < 0.5 AND day_pct > 3 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday up (>3%) + hot vol (clean intraday-led rally: open is essentially flat to prior close, then regular session prints a sustained buy-driven move higher; intraday momentum signal isolated from overnight repricing or after-hours catalyst noise)
-    SmallGapBigDayDownHotVol,                  // gap_pct.abs() < 0.5 AND day_pct < -3 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday down (<-3%) + hot vol (clean intraday-led decline: open is essentially flat to prior close, then regular session prints a sustained sell-driven move lower; intraday momentum signal isolated from overnight repricing or after-hours catalyst noise)
-    SmallGapBigDayUpNearYearHighHotVol,        // gap_pct.abs() < 0.5 AND day_pct > 3 AND year_high_pct < 2 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday up (>3%) + at/near 52w high (<2%) + hot vol (pure intraday-driven breakout to 52w high: open is essentially flat to prior close then regular session prints a sustained buy-driven move to the year peak; cleanest possible breakout signal with no overnight gap contribution muddying the cause)
-    SmallGapBigDayDownNearYearLowHotVol,       // gap_pct.abs() < 0.5 AND day_pct < -3 AND year_low_pct < 2 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday down (<-3%) + at/near 52w low (<2%) + hot vol (pure intraday-driven breakdown to 52w low: open is essentially flat to prior close then regular session prints a sustained sell-driven move to the year trough; cleanest possible breakdown signal with no overnight gap contribution muddying the cause)
-    SmallGapBigDayUpConfirmedAboveYearHighHotVol,  // gap_pct.abs() < 0.5 AND day_pct > 3 AND year_high_pct >= -3 AND year_high_pct <= -1 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday up (>3%) + confirmed-breakout zone (1-3% past 52w high) + hot vol (pure intraday extension past validated breakout: regular session prints a sustained buy-driven move further past the already-cleared peak with no overnight repricing component; high-conviction intraday extension confirming breakout follow-through)
+    AsymmetricRangeNearLowFarHighGapUpHotVol, // year_high_pct >= 20 AND year_low_pct < 5 AND gap_pct > 2 AND rel_volume >= 1.5 — persistent-downtrend stock (near low + far below high) + gap up (>2%) + hot vol (relief-rally catalyst at the 52w low: downtrend stock attempts catalyst-driven turn off the year trough with elevated participation; potential turnaround-thesis signal worth a bounce-trade screen)
+    AsymmetricRangeNearHighFarLowGapDownHotVol, // year_high_pct < 5 AND year_low_pct >= 20 AND gap_pct < -2 AND rel_volume >= 1.5 — persistent-uptrend stock (near high + far above low) + gap down (<-2%) + hot vol (pullback-catalyst at the 52w high: uptrend stock attempts catalyst-driven reversal off the year peak with elevated participation; potential top-warning signal worth a top-fade trade screen)
+    AsymmetricRangeNearLowFarHighGapDownHotVol, // year_high_pct >= 20 AND year_low_pct < 5 AND gap_pct < -2 AND rel_volume >= 1.5 — persistent-downtrend stock (near low + far below high) + gap down (<-2%) + hot vol (catalyst-driven breakdown to fresh lows: downtrend stock attempts catalyst-confirmed continuation through the 52w support level with elevated participation; trend-extension signal worth a breakdown-trade screen)
+    AsymmetricRangeNearHighFarLowGapUpHotVol, // year_high_pct < 5 AND year_low_pct >= 20 AND gap_pct > 2 AND rel_volume >= 1.5 — persistent-uptrend stock (near high + far above low) + gap up (>2%) + hot vol (catalyst-driven breakout to fresh highs: uptrend stock attempts catalyst-confirmed continuation through the 52w resistance level with elevated participation; trend-extension signal worth a breakout-trade screen)
+    GapUpFlatDayHotVol, // gap_pct > 2 AND day_pct.abs() < 0.5 AND rel_volume >= 1.5 — gap up (>2%) + flat-day bar (|day_pct|<0.5%) + hot vol (gap-and-hold institutional signal: overnight gap up held through the regular session without intraday giveback or further follow-through; supports the gap without re-test, suggesting buyer accumulation at the gap level)
+    GapDownFlatDayHotVol, // gap_pct < -2 AND day_pct.abs() < 0.5 AND rel_volume >= 1.5 — gap down (<-2%) + flat-day bar (|day_pct|<0.5%) + hot vol (gap-and-hold institutional signal: overnight gap down held through the regular session without intraday recovery or further deterioration; supports the gap without re-test, suggesting seller distribution at the gap level)
+    GapUpBigDayHotVol, // gap_pct > 2 AND day_pct > 2 AND rel_volume >= 1.5 — gap up (>2%) + big intraday up (>2%) + hot vol (double-momentum day: overnight gap up followed by intraday continuation higher with elevated participation; gap+intraday both aligned green = aggregate change_pct >4% from prior close with sustained buy pressure across both regular and after-hours sessions)
+    GapDownBigDayHotVol, // gap_pct < -2 AND day_pct < -2 AND rel_volume >= 1.5 — gap down (<-2%) + big intraday down (<-2%) + hot vol (double-momentum day: overnight gap down followed by intraday continuation lower with elevated participation; gap+intraday both aligned red = aggregate change_pct <-4% from prior close with sustained sell pressure across both regular and after-hours sessions)
+    GapUpBigDayDownHotVol, // gap_pct > 2 AND day_pct < -2 AND rel_volume >= 1.5 — gap up (>2%) + big intraday down (<-2%) + hot vol (gap-fade pressure: overnight gap up met with intraday selling that erodes the gap by 2%+; counter-trend intraday pressure on a positive gap that may or may not flip the close to red depending on gap size; suggests active sellers stepping in at the gap level)
+    GapDownBigDayUpHotVol, // gap_pct < -2 AND day_pct > 2 AND rel_volume >= 1.5 — gap down (<-2%) + big intraday up (>2%) + hot vol (gap-absorb pressure: overnight gap down met with intraday buying that reclaims the gap by 2%+; counter-trend intraday pressure on a negative gap that may or may not flip the close to green depending on gap size; suggests active buyers stepping in at the gap level)
+    SmallGapBigDayUpHotVol, // gap_pct.abs() < 0.5 AND day_pct > 3 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday up (>3%) + hot vol (clean intraday-led rally: open is essentially flat to prior close, then regular session prints a sustained buy-driven move higher; intraday momentum signal isolated from overnight repricing or after-hours catalyst noise)
+    SmallGapBigDayDownHotVol, // gap_pct.abs() < 0.5 AND day_pct < -3 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday down (<-3%) + hot vol (clean intraday-led decline: open is essentially flat to prior close, then regular session prints a sustained sell-driven move lower; intraday momentum signal isolated from overnight repricing or after-hours catalyst noise)
+    SmallGapBigDayUpNearYearHighHotVol, // gap_pct.abs() < 0.5 AND day_pct > 3 AND year_high_pct < 2 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday up (>3%) + at/near 52w high (<2%) + hot vol (pure intraday-driven breakout to 52w high: open is essentially flat to prior close then regular session prints a sustained buy-driven move to the year peak; cleanest possible breakout signal with no overnight gap contribution muddying the cause)
+    SmallGapBigDayDownNearYearLowHotVol, // gap_pct.abs() < 0.5 AND day_pct < -3 AND year_low_pct < 2 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday down (<-3%) + at/near 52w low (<2%) + hot vol (pure intraday-driven breakdown to 52w low: open is essentially flat to prior close then regular session prints a sustained sell-driven move to the year trough; cleanest possible breakdown signal with no overnight gap contribution muddying the cause)
+    SmallGapBigDayUpConfirmedAboveYearHighHotVol, // gap_pct.abs() < 0.5 AND day_pct > 3 AND year_high_pct >= -3 AND year_high_pct <= -1 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday up (>3%) + confirmed-breakout zone (1-3% past 52w high) + hot vol (pure intraday extension past validated breakout: regular session prints a sustained buy-driven move further past the already-cleared peak with no overnight repricing component; high-conviction intraday extension confirming breakout follow-through)
     SmallGapBigDayDownConfirmedBelowYearLowHotVol, // gap_pct.abs() < 0.5 AND day_pct < -3 AND year_low_pct >= -3 AND year_low_pct <= -1 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday down (<-3%) + confirmed-breakdown zone (1-3% past 52w low) + hot vol (pure intraday extension past validated breakdown: regular session prints a sustained sell-driven move further past the already-cleared trough with no overnight repricing component; high-conviction intraday extension confirming breakdown follow-through)
-    SmallGapBigDayUpDeepBelowYearHighHotVol,   // gap_pct.abs() < 0.5 AND day_pct > 3 AND year_high_pct >= 20 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday up (>3%) + far below 52w high (>=20%) + hot vol (pure intraday recovery rally from depressed level: open is essentially flat to prior close then regular session prints a sustained buy-driven move deep in pullback territory; institutional-bid activation signal that contrasts with overnight catalyst noise)
-    SmallGapBigDayDownDeepAboveYearLowHotVol,  // gap_pct.abs() < 0.5 AND day_pct < -3 AND year_low_pct >= 20 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday down (<-3%) + far above 52w low (>=20%) + hot vol (pure intraday rejection from elevated level: open is essentially flat to prior close then regular session prints a sustained sell-driven move deep in advance territory; institutional-offer activation signal that contrasts with overnight catalyst noise)
-    SmallGapBigDayUpMidYearHighHotVol,         // gap_pct.abs() < 0.5 AND day_pct > 3 AND year_high_pct >= 5 AND year_high_pct < 20 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday up (>3%) + mid-range from high (5-20%) + hot vol (pure intraday rally in mid-cycle pullback zone: open is essentially flat to prior close then regular session prints a sustained buy-driven move in the proper consolidation range; pure-intraday push back toward the prior peak without overnight catalyst contribution)
-    SmallGapBigDayDownMidYearLowHotVol,        // gap_pct.abs() < 0.5 AND day_pct < -3 AND year_low_pct >= 5 AND year_low_pct < 20 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday down (<-3%) + mid-range from low (5-20%) + hot vol (pure intraday rejection in mid-cycle recovery zone: open is essentially flat to prior close then regular session prints a sustained sell-driven move in the proper consolidation range; pure-intraday push back toward the prior trough without overnight catalyst contribution)
-    SmallGapBigDayUpJustOffYearHighHotVol,     // gap_pct.abs() < 0.5 AND day_pct > 3 AND year_high_pct >= 2 AND year_high_pct < 5 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday up (>3%) + just off 52w high (2-5%) + hot vol (pure intraday recovery from shallow pullback: open is essentially flat to prior close then regular session prints a sustained buy-driven move back toward the recent peak; pure-intraday post-tag re-test attempt without overnight catalyst contribution)
-    SmallGapBigDayDownJustOffYearLowHotVol,    // gap_pct.abs() < 0.5 AND day_pct < -3 AND year_low_pct >= 2 AND year_low_pct < 5 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday down (<-3%) + just off 52w low (2-5%) + hot vol (pure intraday rejection from shallow bounce: open is essentially flat to prior close then regular session prints a sustained sell-driven move back toward the recent trough; pure-intraday post-tag re-test attempt without overnight catalyst contribution)
-    BigUpDayCloseAtHodHotVol,                  // day_pct > 3 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — big intraday up (>3%) + close pinned to HOD + hot vol (strongest possible intraday rally pattern: regular session prints a sustained buy-driven move from open to close with no end-of-day fade; isolates intraday-only conviction without conflating gap contribution; ideal for measuring real-session bull pressure)
-    BigDownDayCloseAtLodHotVol,                // day_pct < -3 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — big intraday down (<-3%) + close pinned to LOD + hot vol (strongest possible intraday selloff pattern: regular session prints a sustained sell-driven move from open to close with no end-of-day bounce; isolates intraday-only conviction without conflating gap contribution; ideal for measuring real-session bear pressure)
-    BigUpDayDoubledVolHotVol,                  // day_pct > 3 AND rel_volume >= 2 — big intraday up (>3%) + doubled vol (>=2) (institutional intraday accumulation signal: regular session prints a sustained buy-driven move on doubled participation regardless of gap and close-position context; pure-intraday volume-conviction filter that ignores overnight repricing noise)
-    BigDownDayDoubledVolHotVol,                // day_pct < -3 AND rel_volume >= 2 — big intraday down (<-3%) + doubled vol (>=2) (institutional intraday distribution signal: regular session prints a sustained sell-driven move on doubled participation regardless of gap and close-position context; pure-intraday volume-conviction filter that ignores overnight repricing noise)
-    BigUpDayDoubledVolNearYearHighHotVol,      // day_pct > 3 AND rel_volume >= 2 AND year_high_pct < 2 — big intraday up (>3%) + doubled vol (>=2) + at/near 52w high (<2%) (institutional intraday accumulation at the year peak: regular session prints a sustained buy-driven move on doubled participation while price prints fresh highs; gap-agnostic conviction filter for breakout participation)
-    BigDownDayDoubledVolNearYearLowHotVol,     // day_pct < -3 AND rel_volume >= 2 AND year_low_pct < 2 — big intraday down (<-3%) + doubled vol (>=2) + at/near 52w low (<2%) (institutional intraday distribution at the year trough: regular session prints a sustained sell-driven move on doubled participation while price prints fresh lows; gap-agnostic conviction filter for breakdown participation)
-    BigUpDayDoubledVolConfirmedAboveYearHighHotVol,  // day_pct > 3 AND rel_volume >= 2 AND year_high_pct >= -3 AND year_high_pct <= -1 — big intraday up (>3%) + doubled vol (>=2) + confirmed-breakout zone (1-3% past 52w high) (institutional intraday accumulation in the validated-breakout zone: regular session prints a sustained buy-driven move on doubled participation while price extends past the prior peak; gap-agnostic conviction filter for breakout follow-through)
+    SmallGapBigDayUpDeepBelowYearHighHotVol, // gap_pct.abs() < 0.5 AND day_pct > 3 AND year_high_pct >= 20 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday up (>3%) + far below 52w high (>=20%) + hot vol (pure intraday recovery rally from depressed level: open is essentially flat to prior close then regular session prints a sustained buy-driven move deep in pullback territory; institutional-bid activation signal that contrasts with overnight catalyst noise)
+    SmallGapBigDayDownDeepAboveYearLowHotVol, // gap_pct.abs() < 0.5 AND day_pct < -3 AND year_low_pct >= 20 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday down (<-3%) + far above 52w low (>=20%) + hot vol (pure intraday rejection from elevated level: open is essentially flat to prior close then regular session prints a sustained sell-driven move deep in advance territory; institutional-offer activation signal that contrasts with overnight catalyst noise)
+    SmallGapBigDayUpMidYearHighHotVol, // gap_pct.abs() < 0.5 AND day_pct > 3 AND year_high_pct >= 5 AND year_high_pct < 20 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday up (>3%) + mid-range from high (5-20%) + hot vol (pure intraday rally in mid-cycle pullback zone: open is essentially flat to prior close then regular session prints a sustained buy-driven move in the proper consolidation range; pure-intraday push back toward the prior peak without overnight catalyst contribution)
+    SmallGapBigDayDownMidYearLowHotVol, // gap_pct.abs() < 0.5 AND day_pct < -3 AND year_low_pct >= 5 AND year_low_pct < 20 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday down (<-3%) + mid-range from low (5-20%) + hot vol (pure intraday rejection in mid-cycle recovery zone: open is essentially flat to prior close then regular session prints a sustained sell-driven move in the proper consolidation range; pure-intraday push back toward the prior trough without overnight catalyst contribution)
+    SmallGapBigDayUpJustOffYearHighHotVol, // gap_pct.abs() < 0.5 AND day_pct > 3 AND year_high_pct >= 2 AND year_high_pct < 5 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday up (>3%) + just off 52w high (2-5%) + hot vol (pure intraday recovery from shallow pullback: open is essentially flat to prior close then regular session prints a sustained buy-driven move back toward the recent peak; pure-intraday post-tag re-test attempt without overnight catalyst contribution)
+    SmallGapBigDayDownJustOffYearLowHotVol, // gap_pct.abs() < 0.5 AND day_pct < -3 AND year_low_pct >= 2 AND year_low_pct < 5 AND rel_volume >= 1.5 — small gap (|gap|<0.5%) + big intraday down (<-3%) + just off 52w low (2-5%) + hot vol (pure intraday rejection from shallow bounce: open is essentially flat to prior close then regular session prints a sustained sell-driven move back toward the recent trough; pure-intraday post-tag re-test attempt without overnight catalyst contribution)
+    BigUpDayCloseAtHodHotVol, // day_pct > 3 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — big intraday up (>3%) + close pinned to HOD + hot vol (strongest possible intraday rally pattern: regular session prints a sustained buy-driven move from open to close with no end-of-day fade; isolates intraday-only conviction without conflating gap contribution; ideal for measuring real-session bull pressure)
+    BigDownDayCloseAtLodHotVol, // day_pct < -3 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 1.5 — big intraday down (<-3%) + close pinned to LOD + hot vol (strongest possible intraday selloff pattern: regular session prints a sustained sell-driven move from open to close with no end-of-day bounce; isolates intraday-only conviction without conflating gap contribution; ideal for measuring real-session bear pressure)
+    BigUpDayDoubledVolHotVol, // day_pct > 3 AND rel_volume >= 2 — big intraday up (>3%) + doubled vol (>=2) (institutional intraday accumulation signal: regular session prints a sustained buy-driven move on doubled participation regardless of gap and close-position context; pure-intraday volume-conviction filter that ignores overnight repricing noise)
+    BigDownDayDoubledVolHotVol, // day_pct < -3 AND rel_volume >= 2 — big intraday down (<-3%) + doubled vol (>=2) (institutional intraday distribution signal: regular session prints a sustained sell-driven move on doubled participation regardless of gap and close-position context; pure-intraday volume-conviction filter that ignores overnight repricing noise)
+    BigUpDayDoubledVolNearYearHighHotVol, // day_pct > 3 AND rel_volume >= 2 AND year_high_pct < 2 — big intraday up (>3%) + doubled vol (>=2) + at/near 52w high (<2%) (institutional intraday accumulation at the year peak: regular session prints a sustained buy-driven move on doubled participation while price prints fresh highs; gap-agnostic conviction filter for breakout participation)
+    BigDownDayDoubledVolNearYearLowHotVol, // day_pct < -3 AND rel_volume >= 2 AND year_low_pct < 2 — big intraday down (<-3%) + doubled vol (>=2) + at/near 52w low (<2%) (institutional intraday distribution at the year trough: regular session prints a sustained sell-driven move on doubled participation while price prints fresh lows; gap-agnostic conviction filter for breakdown participation)
+    BigUpDayDoubledVolConfirmedAboveYearHighHotVol, // day_pct > 3 AND rel_volume >= 2 AND year_high_pct >= -3 AND year_high_pct <= -1 — big intraday up (>3%) + doubled vol (>=2) + confirmed-breakout zone (1-3% past 52w high) (institutional intraday accumulation in the validated-breakout zone: regular session prints a sustained buy-driven move on doubled participation while price extends past the prior peak; gap-agnostic conviction filter for breakout follow-through)
     BigDownDayDoubledVolConfirmedBelowYearLowHotVol, // day_pct < -3 AND rel_volume >= 2 AND year_low_pct >= -3 AND year_low_pct <= -1 — big intraday down (<-3%) + doubled vol (>=2) + confirmed-breakdown zone (1-3% past 52w low) (institutional intraday distribution in the validated-breakdown zone: regular session prints a sustained sell-driven move on doubled participation while price extends past the prior trough; gap-agnostic conviction filter for breakdown follow-through)
     BigUpDayDoubledVolDeepBelowYearHighHotVol, // day_pct > 3 AND rel_volume >= 2 AND year_high_pct >= 20 — big intraday up (>3%) + doubled vol (>=2) + far below 52w high (>=20%) (institutional intraday accumulation deep in pullback territory: regular session prints a sustained buy-driven move on doubled participation while price remains well below the prior peak; conviction-recovery-rally signal worth a turnaround-screen)
-    BigDownDayDoubledVolDeepAboveYearLowHotVol,// day_pct < -3 AND rel_volume >= 2 AND year_low_pct >= 20 — big intraday down (<-3%) + doubled vol (>=2) + far above 52w low (>=20%) (institutional intraday distribution deep in advance territory: regular session prints a sustained sell-driven move on doubled participation while price remains well above the prior trough; conviction-rejection signal worth a top-fade-screen)
-    BigUpDayDoubledVolMidYearHighHotVol,       // day_pct > 3 AND rel_volume >= 2 AND year_high_pct >= 5 AND year_high_pct < 20 — big intraday up (>3%) + doubled vol (>=2) + mid-range from high (5-20%) (institutional intraday accumulation in mid-cycle pullback zone: regular session prints a sustained buy-driven move on doubled participation in the proper consolidation range below the prior peak; conviction-mid-cycle-rally signal worth a swing-screen)
-    BigDownDayDoubledVolMidYearLowHotVol,      // day_pct < -3 AND rel_volume >= 2 AND year_low_pct >= 5 AND year_low_pct < 20 — big intraday down (<-3%) + doubled vol (>=2) + mid-range from low (5-20%) (institutional intraday distribution in mid-cycle recovery zone: regular session prints a sustained sell-driven move on doubled participation in the proper consolidation range above the prior trough; conviction-mid-cycle-rejection signal worth a swing-screen)
-    BigUpDayDoubledVolJustOffYearHighHotVol,   // day_pct > 3 AND rel_volume >= 2 AND year_high_pct >= 2 AND year_high_pct < 5 — big intraday up (>3%) + doubled vol (>=2) + just off 52w high (2-5%) (institutional intraday accumulation just off the year peak: regular session prints a sustained buy-driven move on doubled participation immediately after a shallow pullback from the 52w high; conviction-post-tag-recovery signal worth a re-test-screen)
-    BigDownDayDoubledVolJustOffYearLowHotVol,  // day_pct < -3 AND rel_volume >= 2 AND year_low_pct >= 2 AND year_low_pct < 5 — big intraday down (<-3%) + doubled vol (>=2) + just off 52w low (2-5%) (institutional intraday distribution just off the year trough: regular session prints a sustained sell-driven move on doubled participation immediately after a shallow bounce from the 52w low; conviction-post-tag-rejection signal worth a re-test-screen)
-    QuintupledVolUpHotVol,                     // rel_volume >= 5 AND change_pct > 3 — quintupled vol (>=5) + big up move (>3%) (extreme participation event with bull-direction: vol is 5x its average and price prints a significant up move; rare news/earnings/catalyst day at the highest possible conviction tier, typically a once-per-quarter occurrence per name)
-    QuintupledVolDownHotVol,                   // rel_volume >= 5 AND change_pct < -3 — quintupled vol (>=5) + big down move (<-3%) (extreme participation event with bear-direction: vol is 5x its average and price prints a significant down move; rare news/earnings/catalyst day at the highest possible conviction tier, typically a once-per-quarter occurrence per name)
-    QuintupledVolUpNearYearHighHotVol,         // rel_volume >= 5 AND change_pct > 3 AND year_high_pct < 2 — quintupled vol (>=5) + big up move (>3%) + at/near 52w high (<2%) (once-per-quarter breakout event at the year peak: vol is 5x its average, price prints a significant up move and reaches the 52w high simultaneously; highest-conviction breakout-at-extreme signal worth a tier-1 alert)
-    QuintupledVolDownNearYearLowHotVol,        // rel_volume >= 5 AND change_pct < -3 AND year_low_pct < 2 — quintupled vol (>=5) + big down move (<-3%) + at/near 52w low (<2%) (once-per-quarter breakdown event at the year trough: vol is 5x its average, price prints a significant down move and reaches the 52w low simultaneously; highest-conviction breakdown-at-extreme signal worth a tier-1 alert)
-    QuintupledVolUpDeepBelowYearHighHotVol,    // rel_volume >= 5 AND change_pct > 3 AND year_high_pct >= 20 — quintupled vol (>=5) + big up move (>3%) + far below 52w high (>=20%) (extreme catalyst recovery from deep pullback: vol is 5x average and price prints a significant up move while still well below the prior peak; turnaround-catalyst at the highest possible tier worth a regime-change alert)
-    QuintupledVolDownDeepAboveYearLowHotVol,   // rel_volume >= 5 AND change_pct < -3 AND year_low_pct >= 20 — quintupled vol (>=5) + big down move (<-3%) + far above 52w low (>=20%) (extreme catalyst rejection from deep advance: vol is 5x average and price prints a significant down move while still well above the prior trough; top-fade catalyst at the highest possible tier worth a regime-change alert)
-    QuintupledVolUpConfirmedAboveYearHighHotVol,  // rel_volume >= 5 AND change_pct > 3 AND year_high_pct >= -3 AND year_high_pct <= -1 — quintupled vol (>=5) + big up move (>3%) + confirmed-breakout zone (1-3% past 52w high) (extreme catalyst extending validated breakout: vol is 5x average and price prints a significant up move while extending further past the prior peak; trend-extension at the highest possible tier worth a follow-through alert)
+    BigDownDayDoubledVolDeepAboveYearLowHotVol, // day_pct < -3 AND rel_volume >= 2 AND year_low_pct >= 20 — big intraday down (<-3%) + doubled vol (>=2) + far above 52w low (>=20%) (institutional intraday distribution deep in advance territory: regular session prints a sustained sell-driven move on doubled participation while price remains well above the prior trough; conviction-rejection signal worth a top-fade-screen)
+    BigUpDayDoubledVolMidYearHighHotVol, // day_pct > 3 AND rel_volume >= 2 AND year_high_pct >= 5 AND year_high_pct < 20 — big intraday up (>3%) + doubled vol (>=2) + mid-range from high (5-20%) (institutional intraday accumulation in mid-cycle pullback zone: regular session prints a sustained buy-driven move on doubled participation in the proper consolidation range below the prior peak; conviction-mid-cycle-rally signal worth a swing-screen)
+    BigDownDayDoubledVolMidYearLowHotVol, // day_pct < -3 AND rel_volume >= 2 AND year_low_pct >= 5 AND year_low_pct < 20 — big intraday down (<-3%) + doubled vol (>=2) + mid-range from low (5-20%) (institutional intraday distribution in mid-cycle recovery zone: regular session prints a sustained sell-driven move on doubled participation in the proper consolidation range above the prior trough; conviction-mid-cycle-rejection signal worth a swing-screen)
+    BigUpDayDoubledVolJustOffYearHighHotVol, // day_pct > 3 AND rel_volume >= 2 AND year_high_pct >= 2 AND year_high_pct < 5 — big intraday up (>3%) + doubled vol (>=2) + just off 52w high (2-5%) (institutional intraday accumulation just off the year peak: regular session prints a sustained buy-driven move on doubled participation immediately after a shallow pullback from the 52w high; conviction-post-tag-recovery signal worth a re-test-screen)
+    BigDownDayDoubledVolJustOffYearLowHotVol, // day_pct < -3 AND rel_volume >= 2 AND year_low_pct >= 2 AND year_low_pct < 5 — big intraday down (<-3%) + doubled vol (>=2) + just off 52w low (2-5%) (institutional intraday distribution just off the year trough: regular session prints a sustained sell-driven move on doubled participation immediately after a shallow bounce from the 52w low; conviction-post-tag-rejection signal worth a re-test-screen)
+    QuintupledVolUpHotVol, // rel_volume >= 5 AND change_pct > 3 — quintupled vol (>=5) + big up move (>3%) (extreme participation event with bull-direction: vol is 5x its average and price prints a significant up move; rare news/earnings/catalyst day at the highest possible conviction tier, typically a once-per-quarter occurrence per name)
+    QuintupledVolDownHotVol, // rel_volume >= 5 AND change_pct < -3 — quintupled vol (>=5) + big down move (<-3%) (extreme participation event with bear-direction: vol is 5x its average and price prints a significant down move; rare news/earnings/catalyst day at the highest possible conviction tier, typically a once-per-quarter occurrence per name)
+    QuintupledVolUpNearYearHighHotVol, // rel_volume >= 5 AND change_pct > 3 AND year_high_pct < 2 — quintupled vol (>=5) + big up move (>3%) + at/near 52w high (<2%) (once-per-quarter breakout event at the year peak: vol is 5x its average, price prints a significant up move and reaches the 52w high simultaneously; highest-conviction breakout-at-extreme signal worth a tier-1 alert)
+    QuintupledVolDownNearYearLowHotVol, // rel_volume >= 5 AND change_pct < -3 AND year_low_pct < 2 — quintupled vol (>=5) + big down move (<-3%) + at/near 52w low (<2%) (once-per-quarter breakdown event at the year trough: vol is 5x its average, price prints a significant down move and reaches the 52w low simultaneously; highest-conviction breakdown-at-extreme signal worth a tier-1 alert)
+    QuintupledVolUpDeepBelowYearHighHotVol, // rel_volume >= 5 AND change_pct > 3 AND year_high_pct >= 20 — quintupled vol (>=5) + big up move (>3%) + far below 52w high (>=20%) (extreme catalyst recovery from deep pullback: vol is 5x average and price prints a significant up move while still well below the prior peak; turnaround-catalyst at the highest possible tier worth a regime-change alert)
+    QuintupledVolDownDeepAboveYearLowHotVol, // rel_volume >= 5 AND change_pct < -3 AND year_low_pct >= 20 — quintupled vol (>=5) + big down move (<-3%) + far above 52w low (>=20%) (extreme catalyst rejection from deep advance: vol is 5x average and price prints a significant down move while still well above the prior trough; top-fade catalyst at the highest possible tier worth a regime-change alert)
+    QuintupledVolUpConfirmedAboveYearHighHotVol, // rel_volume >= 5 AND change_pct > 3 AND year_high_pct >= -3 AND year_high_pct <= -1 — quintupled vol (>=5) + big up move (>3%) + confirmed-breakout zone (1-3% past 52w high) (extreme catalyst extending validated breakout: vol is 5x average and price prints a significant up move while extending further past the prior peak; trend-extension at the highest possible tier worth a follow-through alert)
     QuintupledVolDownConfirmedBelowYearLowHotVol, // rel_volume >= 5 AND change_pct < -3 AND year_low_pct >= -3 AND year_low_pct <= -1 — quintupled vol (>=5) + big down move (<-3%) + confirmed-breakdown zone (1-3% past 52w low) (extreme catalyst extending validated breakdown: vol is 5x average and price prints a significant down move while extending further past the prior trough; trend-extension at the highest possible tier worth a follow-through alert)
-    QuintupledVolUpMidYearHighHotVol,          // rel_volume >= 5 AND change_pct > 3 AND year_high_pct >= 5 AND year_high_pct < 20 — quintupled vol (>=5) + big up move (>3%) + mid-range from high (5-20%) (extreme catalyst rally in mid-cycle pullback zone: vol is 5x average and price prints a significant up move in the proper consolidation range below the prior peak; tier-1 conviction-recovery signal worth a swing-screen)
-    QuintupledVolDownMidYearLowHotVol,         // rel_volume >= 5 AND change_pct < -3 AND year_low_pct >= 5 AND year_low_pct < 20 — quintupled vol (>=5) + big down move (<-3%) + mid-range from low (5-20%) (extreme catalyst rejection in mid-cycle recovery zone: vol is 5x average and price prints a significant down move in the proper consolidation range above the prior trough; tier-1 conviction-rejection signal worth a swing-screen)
-    QuintupledVolUpJustOffYearHighHotVol,      // rel_volume >= 5 AND change_pct > 3 AND year_high_pct >= 2 AND year_high_pct < 5 — quintupled vol (>=5) + big up move (>3%) + just off 52w high (2-5%) (extreme catalyst rally just off the year peak: vol is 5x average and price prints a significant up move immediately after a shallow pullback from the 52w high; tier-1 post-tag-recovery catalyst worth a re-test-screen)
-    QuintupledVolDownJustOffYearLowHotVol,     // rel_volume >= 5 AND change_pct < -3 AND year_low_pct >= 2 AND year_low_pct < 5 — quintupled vol (>=5) + big down move (<-3%) + just off 52w low (2-5%) (extreme catalyst rejection just off the year trough: vol is 5x average and price prints a significant down move immediately after a shallow bounce from the 52w low; tier-1 post-tag-rejection catalyst worth a re-test-screen)
-    QuintupledVolCloseAtHodHotVol,             // rel_volume >= 5 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 — quintupled vol (>=5) + close pinned to HOD + green close + hot vol (tier-1 institutional rally with no end-of-day fade: vol is 5x average and close pins to the day's high with positive change; rarest possible bull-conviction close at the highest participation tier)
-    QuintupledVolCloseAtLodHotVol,             // rel_volume >= 5 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 — quintupled vol (>=5) + close pinned to LOD + red close + hot vol (tier-1 institutional selloff with no end-of-day bounce: vol is 5x average and close pins to the day's low with negative change; rarest possible bear-conviction close at the highest participation tier)
-    QuintupledVolGapUpHotVol,                  // rel_volume >= 5 AND gap_pct > 2 — quintupled vol (>=5) + gap up (>2%) (tier-1 catalyst gap-up: vol is 5x average and overnight repricing pushes the open more than 2% above prior close; rare news/earnings/sector-rotation event with full session participation confirming the bull-direction catalyst)
-    QuintupledVolGapDownHotVol,                // rel_volume >= 5 AND gap_pct < -2 — quintupled vol (>=5) + gap down (<-2%) (tier-1 catalyst gap-down: vol is 5x average and overnight repricing pushes the open more than 2% below prior close; rare news/earnings/sector-rotation event with full session participation confirming the bear-direction catalyst)
-    QuintupledVolGapUpCloseAtHodHotVol,        // rel_volume >= 5 AND gap_pct > 2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 — quintupled vol (>=5) + gap up (>2%) + close pinned to HOD + green close (highest-conviction catalyst gap-up that holds: vol is 5x average, overnight gap up holds without fade and price closes at the day's high; rarest possible validated bull-catalyst event across all sessions)
-    QuintupledVolGapDownCloseAtLodHotVol,      // rel_volume >= 5 AND gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 — quintupled vol (>=5) + gap down (<-2%) + close pinned to LOD + red close (highest-conviction catalyst gap-down that holds: vol is 5x average, overnight gap down holds without bounce and price closes at the day's low; rarest possible validated bear-catalyst event across all sessions)
-    QuintupledVolGapUpCloseAtLodHotVol,        // rel_volume >= 5 AND gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND change_pct < 0 — quintupled vol (>=5) + gap up (>2%) faded completely to LOD + red close (highest-conviction failed catalyst at tier-1: vol is 5x average, overnight gap up fails completely and price closes at the day's low; rarest possible failed-bull-catalyst event, capital-S-shift regime-rejection signal)
-    QuintupledVolGapDownCloseAtHodHotVol,      // rel_volume >= 5 AND gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 — quintupled vol (>=5) + gap down (<-2%) absorbed completely to HOD + green close (highest-conviction failed catalyst at tier-1: vol is 5x average, overnight gap down absorbed completely and price closes at the day's high; rarest possible failed-bear-catalyst event, capital-S-shift regime-acceptance signal)
-    QuintupledVolGapUpMidpointHotVol,          // rel_volume >= 5 AND gap_pct > 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 — quintupled vol (>=5) + gap up (>2%) + midpoint close (tier-1 catalyst gap-up with inconclusive intraday follow-through: vol is 5x average, overnight gap up holds but regular session neither extends nor fails decisively; high-stakes standoff after catalyst event with unresolved direction)
-    QuintupledVolGapDownMidpointHotVol,        // rel_volume >= 5 AND gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 — quintupled vol (>=5) + gap down (<-2%) + midpoint close (tier-1 catalyst gap-down with inconclusive intraday follow-through: vol is 5x average, overnight gap down holds but regular session neither extends nor absorbs decisively; high-stakes standoff after catalyst event with unresolved direction)
-    BigIntradayRangeHotVol,                    // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 — wide intraday range (>8% high-low spread) + hot vol (volatility expansion day: regular session prints a much wider than normal trading range with elevated participation; high-volatility regime worth a directional-bias-screen at the close and an overnight-gap-screen the next morning)
-    TightIntradayRangeHotVol,                  // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — tight intraday range (<1% high-low spread) + hot vol (intraday compression with elevated participation: regular session prints a much narrower than normal trading range despite hot vol; institutional positioning event where heavy hands trade without moving the tape; breakout-candidate worth a watch-list-add)
-    BigIntradayRangeNearYearHighHotVol,        // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct < 2 — wide intraday range (>8%) + hot vol + at/near 52w high (<2%) (volatility-expansion battle at the year peak: regular session prints a wide trading range right at the 52w high with elevated participation; bulls and bears fighting hard at the key resistance with no decisive winner from range alone)
-    BigIntradayRangeNearYearLowHotVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct < 2 — wide intraday range (>8%) + hot vol + at/near 52w low (<2%) (volatility-expansion battle at the year trough: regular session prints a wide trading range right at the 52w low with elevated participation; bulls and bears fighting hard at the key support with no decisive winner from range alone)
-    BigIntradayRangeConfirmedAboveYearHighHotVol,  // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct >= -3 AND year_high_pct <= -1 — wide intraday range (>8%) + hot vol + confirmed-breakout zone (1-3% past 52w high) (volatility-expansion battle in the validated-breakout zone: regular session prints a wide trading range right after price cleared the prior peak with elevated participation; post-breakout consolidation fight where bulls defend the breakout and bears test it)
-    BigIntradayRangeConfirmedBelowYearLowHotVol,   // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct >= -3 AND year_low_pct <= -1 — wide intraday range (>8%) + hot vol + confirmed-breakdown zone (1-3% past 52w low) (volatility-expansion battle in the validated-breakdown zone: regular session prints a wide trading range right after price cleared the prior trough with elevated participation; post-breakdown consolidation fight where bears defend the breakdown and bulls test it)
-    BigIntradayRangeDeepBelowYearHighHotVol,   // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct >= 20 — wide intraday range (>8%) + hot vol + far below 52w high (>=20%) (volatility-expansion battle deep in pullback territory: regular session prints a wide trading range well below the prior peak with elevated participation; capitulation-or-recovery decision fight where extended decline meets institutional pushback)
-    BigIntradayRangeDeepAboveYearLowHotVol,    // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct >= 20 — wide intraday range (>8%) + hot vol + far above 52w low (>=20%) (volatility-expansion battle deep in advance territory: regular session prints a wide trading range well above the prior trough with elevated participation; top-or-continuation decision fight where extended advance meets institutional pushback)
-    BigIntradayRangeMidYearHighHotVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct >= 5 AND year_high_pct < 20 — wide intraday range (>8%) + hot vol + mid-range from high (5-20%) (volatility-expansion battle in mid-cycle pullback zone: regular session prints a wide trading range in the proper consolidation range below the prior peak with elevated participation; mid-cycle indecision-resolution fight requiring close-position confirmation)
-    BigIntradayRangeMidYearLowHotVol,          // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct >= 5 AND year_low_pct < 20 — wide intraday range (>8%) + hot vol + mid-range from low (5-20%) (volatility-expansion battle in mid-cycle recovery zone: regular session prints a wide trading range in the proper consolidation range above the prior trough with elevated participation; mid-cycle indecision-resolution fight requiring close-position confirmation)
-    BigIntradayRangeJustOffYearHighHotVol,     // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct >= 2 AND year_high_pct < 5 — wide intraday range (>8%) + hot vol + just off 52w high (2-5%) (volatility-expansion battle just off the year peak: regular session prints a wide trading range immediately after a shallow pullback from the 52w high with elevated participation; post-tag re-test fight where bulls attempt the high again and bears defend it)
-    BigIntradayRangeJustOffYearLowHotVol,      // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct >= 2 AND year_low_pct < 5 — wide intraday range (>8%) + hot vol + just off 52w low (2-5%) (volatility-expansion battle just off the year trough: regular session prints a wide trading range immediately after a shallow bounce from the 52w low with elevated participation; post-tag re-test fight where bears attempt the low again and bulls defend it)
-    TightIntradayRangeNearYearHighHotVol,      // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct < 2 — tight intraday range (<1%) + hot vol + at/near 52w high (<2%) (institutional compression at the year peak: regular session prints a tight trading range right at the 52w high with elevated participation; coiled-spring breakout setup where heavy hands position without moving the tape and the next directional break carries weight)
-    TightIntradayRangeNearYearLowHotVol,       // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct < 2 — tight intraday range (<1%) + hot vol + at/near 52w low (<2%) (institutional compression at the year trough: regular session prints a tight trading range right at the 52w low with elevated participation; coiled-spring breakdown-or-bottom setup where heavy hands position without moving the tape and the next directional break carries weight)
-    TightIntradayRangeConfirmedAboveYearHighHotVol,  // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct >= -3 AND year_high_pct <= -1 — tight intraday range (<1%) + hot vol + confirmed-breakout zone (1-3% past 52w high) (institutional digestion of validated breakout: regular session prints a tight trading range immediately after price cleared the prior peak with elevated participation; post-breakout consolidation where bulls absorb and digest the breakout before the next leg)
-    TightIntradayRangeConfirmedBelowYearLowHotVol,   // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct >= -3 AND year_low_pct <= -1 — tight intraday range (<1%) + hot vol + confirmed-breakdown zone (1-3% past 52w low) (institutional digestion of validated breakdown: regular session prints a tight trading range immediately after price cleared the prior trough with elevated participation; post-breakdown consolidation where bears absorb and digest the breakdown before the next leg)
+    QuintupledVolUpMidYearHighHotVol, // rel_volume >= 5 AND change_pct > 3 AND year_high_pct >= 5 AND year_high_pct < 20 — quintupled vol (>=5) + big up move (>3%) + mid-range from high (5-20%) (extreme catalyst rally in mid-cycle pullback zone: vol is 5x average and price prints a significant up move in the proper consolidation range below the prior peak; tier-1 conviction-recovery signal worth a swing-screen)
+    QuintupledVolDownMidYearLowHotVol, // rel_volume >= 5 AND change_pct < -3 AND year_low_pct >= 5 AND year_low_pct < 20 — quintupled vol (>=5) + big down move (<-3%) + mid-range from low (5-20%) (extreme catalyst rejection in mid-cycle recovery zone: vol is 5x average and price prints a significant down move in the proper consolidation range above the prior trough; tier-1 conviction-rejection signal worth a swing-screen)
+    QuintupledVolUpJustOffYearHighHotVol, // rel_volume >= 5 AND change_pct > 3 AND year_high_pct >= 2 AND year_high_pct < 5 — quintupled vol (>=5) + big up move (>3%) + just off 52w high (2-5%) (extreme catalyst rally just off the year peak: vol is 5x average and price prints a significant up move immediately after a shallow pullback from the 52w high; tier-1 post-tag-recovery catalyst worth a re-test-screen)
+    QuintupledVolDownJustOffYearLowHotVol, // rel_volume >= 5 AND change_pct < -3 AND year_low_pct >= 2 AND year_low_pct < 5 — quintupled vol (>=5) + big down move (<-3%) + just off 52w low (2-5%) (extreme catalyst rejection just off the year trough: vol is 5x average and price prints a significant down move immediately after a shallow bounce from the 52w low; tier-1 post-tag-rejection catalyst worth a re-test-screen)
+    QuintupledVolCloseAtHodHotVol, // rel_volume >= 5 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 — quintupled vol (>=5) + close pinned to HOD + green close + hot vol (tier-1 institutional rally with no end-of-day fade: vol is 5x average and close pins to the day's high with positive change; rarest possible bull-conviction close at the highest participation tier)
+    QuintupledVolCloseAtLodHotVol, // rel_volume >= 5 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 — quintupled vol (>=5) + close pinned to LOD + red close + hot vol (tier-1 institutional selloff with no end-of-day bounce: vol is 5x average and close pins to the day's low with negative change; rarest possible bear-conviction close at the highest participation tier)
+    QuintupledVolGapUpHotVol, // rel_volume >= 5 AND gap_pct > 2 — quintupled vol (>=5) + gap up (>2%) (tier-1 catalyst gap-up: vol is 5x average and overnight repricing pushes the open more than 2% above prior close; rare news/earnings/sector-rotation event with full session participation confirming the bull-direction catalyst)
+    QuintupledVolGapDownHotVol, // rel_volume >= 5 AND gap_pct < -2 — quintupled vol (>=5) + gap down (<-2%) (tier-1 catalyst gap-down: vol is 5x average and overnight repricing pushes the open more than 2% below prior close; rare news/earnings/sector-rotation event with full session participation confirming the bear-direction catalyst)
+    QuintupledVolGapUpCloseAtHodHotVol, // rel_volume >= 5 AND gap_pct > 2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 — quintupled vol (>=5) + gap up (>2%) + close pinned to HOD + green close (highest-conviction catalyst gap-up that holds: vol is 5x average, overnight gap up holds without fade and price closes at the day's high; rarest possible validated bull-catalyst event across all sessions)
+    QuintupledVolGapDownCloseAtLodHotVol, // rel_volume >= 5 AND gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 — quintupled vol (>=5) + gap down (<-2%) + close pinned to LOD + red close (highest-conviction catalyst gap-down that holds: vol is 5x average, overnight gap down holds without bounce and price closes at the day's low; rarest possible validated bear-catalyst event across all sessions)
+    QuintupledVolGapUpCloseAtLodHotVol, // rel_volume >= 5 AND gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND change_pct < 0 — quintupled vol (>=5) + gap up (>2%) faded completely to LOD + red close (highest-conviction failed catalyst at tier-1: vol is 5x average, overnight gap up fails completely and price closes at the day's low; rarest possible failed-bull-catalyst event, capital-S-shift regime-rejection signal)
+    QuintupledVolGapDownCloseAtHodHotVol, // rel_volume >= 5 AND gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 — quintupled vol (>=5) + gap down (<-2%) absorbed completely to HOD + green close (highest-conviction failed catalyst at tier-1: vol is 5x average, overnight gap down absorbed completely and price closes at the day's high; rarest possible failed-bear-catalyst event, capital-S-shift regime-acceptance signal)
+    QuintupledVolGapUpMidpointHotVol, // rel_volume >= 5 AND gap_pct > 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 — quintupled vol (>=5) + gap up (>2%) + midpoint close (tier-1 catalyst gap-up with inconclusive intraday follow-through: vol is 5x average, overnight gap up holds but regular session neither extends nor fails decisively; high-stakes standoff after catalyst event with unresolved direction)
+    QuintupledVolGapDownMidpointHotVol, // rel_volume >= 5 AND gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 — quintupled vol (>=5) + gap down (<-2%) + midpoint close (tier-1 catalyst gap-down with inconclusive intraday follow-through: vol is 5x average, overnight gap down holds but regular session neither extends nor absorbs decisively; high-stakes standoff after catalyst event with unresolved direction)
+    BigIntradayRangeHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 — wide intraday range (>8% high-low spread) + hot vol (volatility expansion day: regular session prints a much wider than normal trading range with elevated participation; high-volatility regime worth a directional-bias-screen at the close and an overnight-gap-screen the next morning)
+    TightIntradayRangeHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — tight intraday range (<1% high-low spread) + hot vol (intraday compression with elevated participation: regular session prints a much narrower than normal trading range despite hot vol; institutional positioning event where heavy hands trade without moving the tape; breakout-candidate worth a watch-list-add)
+    BigIntradayRangeNearYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct < 2 — wide intraday range (>8%) + hot vol + at/near 52w high (<2%) (volatility-expansion battle at the year peak: regular session prints a wide trading range right at the 52w high with elevated participation; bulls and bears fighting hard at the key resistance with no decisive winner from range alone)
+    BigIntradayRangeNearYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct < 2 — wide intraday range (>8%) + hot vol + at/near 52w low (<2%) (volatility-expansion battle at the year trough: regular session prints a wide trading range right at the 52w low with elevated participation; bulls and bears fighting hard at the key support with no decisive winner from range alone)
+    BigIntradayRangeConfirmedAboveYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct >= -3 AND year_high_pct <= -1 — wide intraday range (>8%) + hot vol + confirmed-breakout zone (1-3% past 52w high) (volatility-expansion battle in the validated-breakout zone: regular session prints a wide trading range right after price cleared the prior peak with elevated participation; post-breakout consolidation fight where bulls defend the breakout and bears test it)
+    BigIntradayRangeConfirmedBelowYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct >= -3 AND year_low_pct <= -1 — wide intraday range (>8%) + hot vol + confirmed-breakdown zone (1-3% past 52w low) (volatility-expansion battle in the validated-breakdown zone: regular session prints a wide trading range right after price cleared the prior trough with elevated participation; post-breakdown consolidation fight where bears defend the breakdown and bulls test it)
+    BigIntradayRangeDeepBelowYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct >= 20 — wide intraday range (>8%) + hot vol + far below 52w high (>=20%) (volatility-expansion battle deep in pullback territory: regular session prints a wide trading range well below the prior peak with elevated participation; capitulation-or-recovery decision fight where extended decline meets institutional pushback)
+    BigIntradayRangeDeepAboveYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct >= 20 — wide intraday range (>8%) + hot vol + far above 52w low (>=20%) (volatility-expansion battle deep in advance territory: regular session prints a wide trading range well above the prior trough with elevated participation; top-or-continuation decision fight where extended advance meets institutional pushback)
+    BigIntradayRangeMidYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct >= 5 AND year_high_pct < 20 — wide intraday range (>8%) + hot vol + mid-range from high (5-20%) (volatility-expansion battle in mid-cycle pullback zone: regular session prints a wide trading range in the proper consolidation range below the prior peak with elevated participation; mid-cycle indecision-resolution fight requiring close-position confirmation)
+    BigIntradayRangeMidYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct >= 5 AND year_low_pct < 20 — wide intraday range (>8%) + hot vol + mid-range from low (5-20%) (volatility-expansion battle in mid-cycle recovery zone: regular session prints a wide trading range in the proper consolidation range above the prior trough with elevated participation; mid-cycle indecision-resolution fight requiring close-position confirmation)
+    BigIntradayRangeJustOffYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct >= 2 AND year_high_pct < 5 — wide intraday range (>8%) + hot vol + just off 52w high (2-5%) (volatility-expansion battle just off the year peak: regular session prints a wide trading range immediately after a shallow pullback from the 52w high with elevated participation; post-tag re-test fight where bulls attempt the high again and bears defend it)
+    BigIntradayRangeJustOffYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct >= 2 AND year_low_pct < 5 — wide intraday range (>8%) + hot vol + just off 52w low (2-5%) (volatility-expansion battle just off the year trough: regular session prints a wide trading range immediately after a shallow bounce from the 52w low with elevated participation; post-tag re-test fight where bears attempt the low again and bulls defend it)
+    TightIntradayRangeNearYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct < 2 — tight intraday range (<1%) + hot vol + at/near 52w high (<2%) (institutional compression at the year peak: regular session prints a tight trading range right at the 52w high with elevated participation; coiled-spring breakout setup where heavy hands position without moving the tape and the next directional break carries weight)
+    TightIntradayRangeNearYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct < 2 — tight intraday range (<1%) + hot vol + at/near 52w low (<2%) (institutional compression at the year trough: regular session prints a tight trading range right at the 52w low with elevated participation; coiled-spring breakdown-or-bottom setup where heavy hands position without moving the tape and the next directional break carries weight)
+    TightIntradayRangeConfirmedAboveYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct >= -3 AND year_high_pct <= -1 — tight intraday range (<1%) + hot vol + confirmed-breakout zone (1-3% past 52w high) (institutional digestion of validated breakout: regular session prints a tight trading range immediately after price cleared the prior peak with elevated participation; post-breakout consolidation where bulls absorb and digest the breakout before the next leg)
+    TightIntradayRangeConfirmedBelowYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct >= -3 AND year_low_pct <= -1 — tight intraday range (<1%) + hot vol + confirmed-breakdown zone (1-3% past 52w low) (institutional digestion of validated breakdown: regular session prints a tight trading range immediately after price cleared the prior trough with elevated participation; post-breakdown consolidation where bears absorb and digest the breakdown before the next leg)
     TightIntradayRangeDeepBelowYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct >= 20 — tight intraday range (<1%) + hot vol + far below 52w high (>=20%) (institutional accumulation deep in pullback territory: regular session prints a tight trading range well below the prior peak with elevated participation; basing-pattern signal where smart money builds position quietly in depressed-tape conditions)
-    TightIntradayRangeDeepAboveYearLowHotVol,  // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct >= 20 — tight intraday range (<1%) + hot vol + far above 52w low (>=20%) (institutional distribution deep in advance territory: regular session prints a tight trading range well above the prior trough with elevated participation; topping-pattern signal where smart money exits position quietly in euphoric-tape conditions)
-    TightIntradayRangeMidYearHighHotVol,       // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct >= 5 AND year_high_pct < 20 — tight intraday range (<1%) + hot vol + mid-range from high (5-20%) (institutional pause in mid-cycle pullback zone: regular session prints a tight trading range in the proper consolidation range below the prior peak with elevated participation; mid-cycle accumulation/pause where smart money positions before the next directional move)
-    TightIntradayRangeMidYearLowHotVol,        // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct >= 5 AND year_low_pct < 20 — tight intraday range (<1%) + hot vol + mid-range from low (5-20%) (institutional pause in mid-cycle recovery zone: regular session prints a tight trading range in the proper consolidation range above the prior trough with elevated participation; mid-cycle distribution/pause where smart money positions before the next directional move)
-    TightIntradayRangeJustOffYearHighHotVol,   // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct >= 2 AND year_high_pct < 5 — tight intraday range (<1%) + hot vol + just off 52w high (2-5%) (institutional positioning just off the year peak: regular session prints a tight trading range immediately after a shallow pullback from the 52w high with elevated participation; post-tag pause where heavy hands re-position quietly before attempting the high again)
-    TightIntradayRangeJustOffYearLowHotVol,    // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct >= 2 AND year_low_pct < 5 — tight intraday range (<1%) + hot vol + just off 52w low (2-5%) (institutional positioning just off the year trough: regular session prints a tight trading range immediately after a shallow bounce from the 52w low with elevated participation; post-tag pause where heavy hands re-position quietly before testing the low again)
-    GapUpTightRangeHotVol,                     // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — gap up (>2%) + tight intraday range (<1%) + hot vol (gap-and-park institutional signal: overnight gap up but regular session prints a very tight intraday range with no follow-through or fade; price pins at the gap level with heavy participation, suggesting strong absorption at the new price)
-    GapDownTightRangeHotVol,                   // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — gap down (<-2%) + tight intraday range (<1%) + hot vol (gap-and-park institutional signal: overnight gap down but regular session prints a very tight intraday range with no follow-through or recovery; price pins at the gap level with heavy participation, suggesting strong absorption at the new price)
-    GapUpWideRangeHotVol,                      // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 — gap up (>2%) + wide intraday range (>8%) + hot vol (gap-then-volatility-expansion catalyst signal: overnight gap up followed by a wide trading range with elevated participation; two-way fight intraday after the catalyst with bulls and bears trading aggressively in the gap zone; close-position resolves direction)
-    GapDownWideRangeHotVol,                    // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 — gap down (<-2%) + wide intraday range (>8%) + hot vol (gap-then-volatility-expansion catalyst signal: overnight gap down followed by a wide trading range with elevated participation; two-way fight intraday after the catalyst with bears and bulls trading aggressively in the gap zone; close-position resolves direction)
-    GapUpWideRangeNearYearHighHotVol,          // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct < 2 — gap up (>2%) + wide intraday range (>8%) + hot vol + at/near 52w high (<2%) (gap-and-fight at the year peak: overnight gap up followed by a wide trading range at the 52w high with elevated participation; high-stakes breakout-day battle where catalyst meets prior peak resistance; close-position resolves whether the breakout sticks)
-    GapDownWideRangeNearYearLowHotVol,         // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct < 2 — gap down (<-2%) + wide intraday range (>8%) + hot vol + at/near 52w low (<2%) (gap-and-fight at the year trough: overnight gap down followed by a wide trading range at the 52w low with elevated participation; high-stakes breakdown-day battle where catalyst meets prior trough support; close-position resolves whether the breakdown sticks)
-    GapUpWideRangeConfirmedAboveYearHighHotVol,// gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct >= -3 AND year_high_pct <= -1 — gap up (>2%) + wide intraday range (>8%) + hot vol + confirmed-breakout zone (1-3% past 52w high) (gap-and-fight in the validated-breakout zone: overnight gap up followed by a wide trading range right after price cleared the prior peak with elevated participation; post-breakout extension battle where bulls defend the breakout and bears test it)
-    GapDownWideRangeConfirmedBelowYearLowHotVol,// gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct >= -3 AND year_low_pct <= -1 — gap down (<-2%) + wide intraday range (>8%) + hot vol + confirmed-breakdown zone (1-3% past 52w low) (gap-and-fight in the validated-breakdown zone: overnight gap down followed by a wide trading range right after price cleared the prior trough with elevated participation; post-breakdown extension battle where bears defend the breakdown and bulls test it)
-    GapUpWideRangeDeepBelowYearHighHotVol,     // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct >= 20 — gap up (>2%) + wide intraday range (>8%) + hot vol + far below 52w high (>=20%) (gap-and-fight deep in pullback territory: overnight gap up followed by a wide trading range well below the prior peak with elevated participation; recovery-attempt-vs-rejection battle where catalyst tries to reverse the extended decline)
-    GapDownWideRangeDeepAboveYearLowHotVol,    // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct >= 20 — gap down (<-2%) + wide intraday range (>8%) + hot vol + far above 52w low (>=20%) (gap-and-fight deep in advance territory: overnight gap down followed by a wide trading range well above the prior trough with elevated participation; top-attempt-vs-rebound battle where catalyst tries to reverse the extended advance)
-    GapUpWideRangeMidYearHighHotVol,           // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct >= 5 AND year_high_pct < 20 — gap up (>2%) + wide intraday range (>8%) + hot vol + mid-range from high (5-20%) (gap-and-fight in mid-cycle pullback zone: overnight gap up followed by a wide trading range in the proper consolidation range below the prior peak with elevated participation; mid-cycle consolidation-fight where catalyst meets resistance from prior consolidation supply)
-    GapDownWideRangeMidYearLowHotVol,          // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct >= 5 AND year_low_pct < 20 — gap down (<-2%) + wide intraday range (>8%) + hot vol + mid-range from low (5-20%) (gap-and-fight in mid-cycle recovery zone: overnight gap down followed by a wide trading range in the proper consolidation range above the prior trough with elevated participation; mid-cycle consolidation-fight where catalyst meets support from prior consolidation demand)
-    GapUpWideRangeJustOffYearHighHotVol,       // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct >= 2 AND year_high_pct < 5 — gap up (>2%) + wide intraday range (>8%) + hot vol + just off 52w high (2-5%) (gap-and-fight just off the year peak: overnight gap up followed by a wide trading range immediately after a shallow pullback from the 52w high with elevated participation; post-tag re-test battle where catalyst tries to push price back to fresh highs)
-    GapDownWideRangeJustOffYearLowHotVol,      // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct >= 2 AND year_low_pct < 5 — gap down (<-2%) + wide intraday range (>8%) + hot vol + just off 52w low (2-5%) (gap-and-fight just off the year trough: overnight gap down followed by a wide trading range immediately after a shallow bounce from the 52w low with elevated participation; post-tag re-test battle where catalyst tries to push price back to fresh lows)
-    GapUpTightRangeNearYearHighHotVol,         // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct < 2 — gap up (>2%) + tight intraday range (<1%) + hot vol + at/near 52w high (<2%) (institutional absorption at the fresh-high gap: overnight gap up positions price at the 52w high then regular session prints a tight trading range with heavy participation; gap-and-park acceptance signal where bulls hold the new level without any pullback or further chase)
-    GapDownTightRangeNearYearLowHotVol,        // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct < 2 — gap down (<-2%) + tight intraday range (<1%) + hot vol + at/near 52w low (<2%) (institutional absorption at the fresh-low gap: overnight gap down positions price at the 52w low then regular session prints a tight trading range with heavy participation; gap-and-park acceptance signal where bears hold the new level without any bounce or further pressure)
-    GapUpTightRangeConfirmedAboveYearHighHotVol,   // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct >= -3 AND year_high_pct <= -1 — gap up (>2%) + tight intraday range (<1%) + hot vol + confirmed-breakout zone (1-3% past 52w high) (institutional absorption past the validated breakout: overnight gap up extends past the prior peak then regular session prints a tight trading range with heavy participation; gap-and-park acceptance signal where bulls hold the post-breakout level without any pullback)
-    GapDownTightRangeConfirmedBelowYearLowHotVol,  // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct >= -3 AND year_low_pct <= -1 — gap down (<-2%) + tight intraday range (<1%) + hot vol + confirmed-breakdown zone (1-3% past 52w low) (institutional absorption past the validated breakdown: overnight gap down extends past the prior trough then regular session prints a tight trading range with heavy participation; gap-and-park acceptance signal where bears hold the post-breakdown level without any bounce)
-    GapUpTightRangeDeepBelowYearHighHotVol,    // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct >= 20 — gap up (>2%) + tight intraday range (<1%) + hot vol + far below 52w high (>=20%) (institutional accumulation at depressed-level catalyst: overnight gap up positions price deep in pullback territory then regular session prints a tight trading range with heavy participation; gap-and-park signal at the bottom-fishing zone where smart money quietly absorbs without chasing further)
-    GapDownTightRangeDeepAboveYearLowHotVol,   // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct >= 20 — gap down (<-2%) + tight intraday range (<1%) + hot vol + far above 52w low (>=20%) (institutional distribution at elevated-level catalyst: overnight gap down positions price deep in advance territory then regular session prints a tight trading range with heavy participation; gap-and-park signal at the top-fishing zone where smart money quietly exits without selling further)
-    GapUpTightRangeMidYearHighHotVol,          // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct >= 5 AND year_high_pct < 20 — gap up (>2%) + tight intraday range (<1%) + hot vol + mid-range from high (5-20%) (institutional absorption in mid-cycle pullback zone: overnight gap up positions price in the proper consolidation range below the prior peak then regular session prints a tight trading range with heavy participation; gap-and-park signal at mid-cycle where smart money quietly accumulates without breakout chase)
-    GapDownTightRangeMidYearLowHotVol,         // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct >= 5 AND year_low_pct < 20 — gap down (<-2%) + tight intraday range (<1%) + hot vol + mid-range from low (5-20%) (institutional absorption in mid-cycle recovery zone: overnight gap down positions price in the proper consolidation range above the prior trough then regular session prints a tight trading range with heavy participation; gap-and-park signal at mid-cycle where smart money quietly distributes without breakdown follow-through)
-    GapUpTightRangeJustOffYearHighHotVol,      // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct >= 2 AND year_high_pct < 5 — gap up (>2%) + tight intraday range (<1%) + hot vol + just off 52w high (2-5%) (institutional absorption just off the year peak: overnight gap up positions price immediately after a shallow pullback from the 52w high then regular session prints a tight trading range with heavy participation; gap-and-park signal at the post-tag re-test where smart money positions before another high attempt)
-    GapDownTightRangeJustOffYearLowHotVol,     // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct >= 2 AND year_low_pct < 5 — gap down (<-2%) + tight intraday range (<1%) + hot vol + just off 52w low (2-5%) (institutional absorption just off the year trough: overnight gap down positions price immediately after a shallow bounce from the 52w low then regular session prints a tight trading range with heavy participation; gap-and-park signal at the post-tag re-test where smart money positions before another low attempt)
-    DecupledVolUpHotVol,                       // rel_volume >= 10 AND change_pct > 3 — decupled vol (>=10) + big up move (>3%) (unprecedented bull-direction event: vol is 10x its average and price prints a significant up move; once-per-year occurrence per name, typically a major news event like takeover, FDA approval, or massive earnings beat at the tier-0 highest-conviction tier)
-    DecupledVolDownHotVol,                     // rel_volume >= 10 AND change_pct < -3 — decupled vol (>=10) + big down move (<-3%) (unprecedented bear-direction event: vol is 10x its average and price prints a significant down move; once-per-year occurrence per name, typically a major news event like fraud disclosure, lawsuit, or massive earnings miss at the tier-0 highest-conviction tier)
-    DecupledVolUpNearYearHighHotVol,           // rel_volume >= 10 AND change_pct > 3 AND year_high_pct < 2 — decupled vol (>=10) + big up move (>3%) + at/near 52w high (<2%) (absolute-rarest breakout-day signal: vol is 10x average, price prints a significant up move and simultaneously reaches the 52w high; tier-0 once-per-year + breakout-at-extreme = portfolio-changing event)
-    DecupledVolDownNearYearLowHotVol,          // rel_volume >= 10 AND change_pct < -3 AND year_low_pct < 2 — decupled vol (>=10) + big down move (<-3%) + at/near 52w low (<2%) (absolute-rarest breakdown-day signal: vol is 10x average, price prints a significant down move and simultaneously reaches the 52w low; tier-0 once-per-year + breakdown-at-extreme = portfolio-changing event)
-    DecupledVolUpDeepBelowYearHighHotVol,      // rel_volume >= 10 AND change_pct > 3 AND year_high_pct >= 20 — decupled vol (>=10) + big up move (>3%) + far below 52w high (>=20%) (unprecedented turnaround signal from depressed level: vol is 10x average and price prints a significant up move while still well below the prior peak; tier-0 once-per-year regime-change catalyst worth a portfolio-wide thesis review)
-    DecupledVolDownDeepAboveYearLowHotVol,     // rel_volume >= 10 AND change_pct < -3 AND year_low_pct >= 20 — decupled vol (>=10) + big down move (<-3%) + far above 52w low (>=20%) (unprecedented top signal from elevated level: vol is 10x average and price prints a significant down move while still well above the prior trough; tier-0 once-per-year regime-change catalyst worth a portfolio-wide thesis review)
+    TightIntradayRangeDeepAboveYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct >= 20 — tight intraday range (<1%) + hot vol + far above 52w low (>=20%) (institutional distribution deep in advance territory: regular session prints a tight trading range well above the prior trough with elevated participation; topping-pattern signal where smart money exits position quietly in euphoric-tape conditions)
+    TightIntradayRangeMidYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct >= 5 AND year_high_pct < 20 — tight intraday range (<1%) + hot vol + mid-range from high (5-20%) (institutional pause in mid-cycle pullback zone: regular session prints a tight trading range in the proper consolidation range below the prior peak with elevated participation; mid-cycle accumulation/pause where smart money positions before the next directional move)
+    TightIntradayRangeMidYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct >= 5 AND year_low_pct < 20 — tight intraday range (<1%) + hot vol + mid-range from low (5-20%) (institutional pause in mid-cycle recovery zone: regular session prints a tight trading range in the proper consolidation range above the prior trough with elevated participation; mid-cycle distribution/pause where smart money positions before the next directional move)
+    TightIntradayRangeJustOffYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct >= 2 AND year_high_pct < 5 — tight intraday range (<1%) + hot vol + just off 52w high (2-5%) (institutional positioning just off the year peak: regular session prints a tight trading range immediately after a shallow pullback from the 52w high with elevated participation; post-tag pause where heavy hands re-position quietly before attempting the high again)
+    TightIntradayRangeJustOffYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct >= 2 AND year_low_pct < 5 — tight intraday range (<1%) + hot vol + just off 52w low (2-5%) (institutional positioning just off the year trough: regular session prints a tight trading range immediately after a shallow bounce from the 52w low with elevated participation; post-tag pause where heavy hands re-position quietly before testing the low again)
+    GapUpTightRangeHotVol, // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — gap up (>2%) + tight intraday range (<1%) + hot vol (gap-and-park institutional signal: overnight gap up but regular session prints a very tight intraday range with no follow-through or fade; price pins at the gap level with heavy participation, suggesting strong absorption at the new price)
+    GapDownTightRangeHotVol, // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 — gap down (<-2%) + tight intraday range (<1%) + hot vol (gap-and-park institutional signal: overnight gap down but regular session prints a very tight intraday range with no follow-through or recovery; price pins at the gap level with heavy participation, suggesting strong absorption at the new price)
+    GapUpWideRangeHotVol, // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 — gap up (>2%) + wide intraday range (>8%) + hot vol (gap-then-volatility-expansion catalyst signal: overnight gap up followed by a wide trading range with elevated participation; two-way fight intraday after the catalyst with bulls and bears trading aggressively in the gap zone; close-position resolves direction)
+    GapDownWideRangeHotVol, // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 — gap down (<-2%) + wide intraday range (>8%) + hot vol (gap-then-volatility-expansion catalyst signal: overnight gap down followed by a wide trading range with elevated participation; two-way fight intraday after the catalyst with bears and bulls trading aggressively in the gap zone; close-position resolves direction)
+    GapUpWideRangeNearYearHighHotVol, // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct < 2 — gap up (>2%) + wide intraday range (>8%) + hot vol + at/near 52w high (<2%) (gap-and-fight at the year peak: overnight gap up followed by a wide trading range at the 52w high with elevated participation; high-stakes breakout-day battle where catalyst meets prior peak resistance; close-position resolves whether the breakout sticks)
+    GapDownWideRangeNearYearLowHotVol, // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct < 2 — gap down (<-2%) + wide intraday range (>8%) + hot vol + at/near 52w low (<2%) (gap-and-fight at the year trough: overnight gap down followed by a wide trading range at the 52w low with elevated participation; high-stakes breakdown-day battle where catalyst meets prior trough support; close-position resolves whether the breakdown sticks)
+    GapUpWideRangeConfirmedAboveYearHighHotVol, // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct >= -3 AND year_high_pct <= -1 — gap up (>2%) + wide intraday range (>8%) + hot vol + confirmed-breakout zone (1-3% past 52w high) (gap-and-fight in the validated-breakout zone: overnight gap up followed by a wide trading range right after price cleared the prior peak with elevated participation; post-breakout extension battle where bulls defend the breakout and bears test it)
+    GapDownWideRangeConfirmedBelowYearLowHotVol, // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct >= -3 AND year_low_pct <= -1 — gap down (<-2%) + wide intraday range (>8%) + hot vol + confirmed-breakdown zone (1-3% past 52w low) (gap-and-fight in the validated-breakdown zone: overnight gap down followed by a wide trading range right after price cleared the prior trough with elevated participation; post-breakdown extension battle where bears defend the breakdown and bulls test it)
+    GapUpWideRangeDeepBelowYearHighHotVol, // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct >= 20 — gap up (>2%) + wide intraday range (>8%) + hot vol + far below 52w high (>=20%) (gap-and-fight deep in pullback territory: overnight gap up followed by a wide trading range well below the prior peak with elevated participation; recovery-attempt-vs-rejection battle where catalyst tries to reverse the extended decline)
+    GapDownWideRangeDeepAboveYearLowHotVol, // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct >= 20 — gap down (<-2%) + wide intraday range (>8%) + hot vol + far above 52w low (>=20%) (gap-and-fight deep in advance territory: overnight gap down followed by a wide trading range well above the prior trough with elevated participation; top-attempt-vs-rebound battle where catalyst tries to reverse the extended advance)
+    GapUpWideRangeMidYearHighHotVol, // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct >= 5 AND year_high_pct < 20 — gap up (>2%) + wide intraday range (>8%) + hot vol + mid-range from high (5-20%) (gap-and-fight in mid-cycle pullback zone: overnight gap up followed by a wide trading range in the proper consolidation range below the prior peak with elevated participation; mid-cycle consolidation-fight where catalyst meets resistance from prior consolidation supply)
+    GapDownWideRangeMidYearLowHotVol, // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct >= 5 AND year_low_pct < 20 — gap down (<-2%) + wide intraday range (>8%) + hot vol + mid-range from low (5-20%) (gap-and-fight in mid-cycle recovery zone: overnight gap down followed by a wide trading range in the proper consolidation range above the prior trough with elevated participation; mid-cycle consolidation-fight where catalyst meets support from prior consolidation demand)
+    GapUpWideRangeJustOffYearHighHotVol, // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_high_pct >= 2 AND year_high_pct < 5 — gap up (>2%) + wide intraday range (>8%) + hot vol + just off 52w high (2-5%) (gap-and-fight just off the year peak: overnight gap up followed by a wide trading range immediately after a shallow pullback from the 52w high with elevated participation; post-tag re-test battle where catalyst tries to push price back to fresh highs)
+    GapDownWideRangeJustOffYearLowHotVol, // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 8 AND rel_volume >= 1.5 AND year_low_pct >= 2 AND year_low_pct < 5 — gap down (<-2%) + wide intraday range (>8%) + hot vol + just off 52w low (2-5%) (gap-and-fight just off the year trough: overnight gap down followed by a wide trading range immediately after a shallow bounce from the 52w low with elevated participation; post-tag re-test battle where catalyst tries to push price back to fresh lows)
+    GapUpTightRangeNearYearHighHotVol, // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct < 2 — gap up (>2%) + tight intraday range (<1%) + hot vol + at/near 52w high (<2%) (institutional absorption at the fresh-high gap: overnight gap up positions price at the 52w high then regular session prints a tight trading range with heavy participation; gap-and-park acceptance signal where bulls hold the new level without any pullback or further chase)
+    GapDownTightRangeNearYearLowHotVol, // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct < 2 — gap down (<-2%) + tight intraday range (<1%) + hot vol + at/near 52w low (<2%) (institutional absorption at the fresh-low gap: overnight gap down positions price at the 52w low then regular session prints a tight trading range with heavy participation; gap-and-park acceptance signal where bears hold the new level without any bounce or further pressure)
+    GapUpTightRangeConfirmedAboveYearHighHotVol, // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct >= -3 AND year_high_pct <= -1 — gap up (>2%) + tight intraday range (<1%) + hot vol + confirmed-breakout zone (1-3% past 52w high) (institutional absorption past the validated breakout: overnight gap up extends past the prior peak then regular session prints a tight trading range with heavy participation; gap-and-park acceptance signal where bulls hold the post-breakout level without any pullback)
+    GapDownTightRangeConfirmedBelowYearLowHotVol, // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct >= -3 AND year_low_pct <= -1 — gap down (<-2%) + tight intraday range (<1%) + hot vol + confirmed-breakdown zone (1-3% past 52w low) (institutional absorption past the validated breakdown: overnight gap down extends past the prior trough then regular session prints a tight trading range with heavy participation; gap-and-park acceptance signal where bears hold the post-breakdown level without any bounce)
+    GapUpTightRangeDeepBelowYearHighHotVol, // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct >= 20 — gap up (>2%) + tight intraday range (<1%) + hot vol + far below 52w high (>=20%) (institutional accumulation at depressed-level catalyst: overnight gap up positions price deep in pullback territory then regular session prints a tight trading range with heavy participation; gap-and-park signal at the bottom-fishing zone where smart money quietly absorbs without chasing further)
+    GapDownTightRangeDeepAboveYearLowHotVol, // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct >= 20 — gap down (<-2%) + tight intraday range (<1%) + hot vol + far above 52w low (>=20%) (institutional distribution at elevated-level catalyst: overnight gap down positions price deep in advance territory then regular session prints a tight trading range with heavy participation; gap-and-park signal at the top-fishing zone where smart money quietly exits without selling further)
+    GapUpTightRangeMidYearHighHotVol, // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct >= 5 AND year_high_pct < 20 — gap up (>2%) + tight intraday range (<1%) + hot vol + mid-range from high (5-20%) (institutional absorption in mid-cycle pullback zone: overnight gap up positions price in the proper consolidation range below the prior peak then regular session prints a tight trading range with heavy participation; gap-and-park signal at mid-cycle where smart money quietly accumulates without breakout chase)
+    GapDownTightRangeMidYearLowHotVol, // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct >= 5 AND year_low_pct < 20 — gap down (<-2%) + tight intraday range (<1%) + hot vol + mid-range from low (5-20%) (institutional absorption in mid-cycle recovery zone: overnight gap down positions price in the proper consolidation range above the prior trough then regular session prints a tight trading range with heavy participation; gap-and-park signal at mid-cycle where smart money quietly distributes without breakdown follow-through)
+    GapUpTightRangeJustOffYearHighHotVol, // gap_pct > 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_high_pct >= 2 AND year_high_pct < 5 — gap up (>2%) + tight intraday range (<1%) + hot vol + just off 52w high (2-5%) (institutional absorption just off the year peak: overnight gap up positions price immediately after a shallow pullback from the 52w high then regular session prints a tight trading range with heavy participation; gap-and-park signal at the post-tag re-test where smart money positions before another high attempt)
+    GapDownTightRangeJustOffYearLowHotVol, // gap_pct < -2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 1 AND rel_volume >= 1.5 AND year_low_pct >= 2 AND year_low_pct < 5 — gap down (<-2%) + tight intraday range (<1%) + hot vol + just off 52w low (2-5%) (institutional absorption just off the year trough: overnight gap down positions price immediately after a shallow bounce from the 52w low then regular session prints a tight trading range with heavy participation; gap-and-park signal at the post-tag re-test where smart money positions before another low attempt)
+    DecupledVolUpHotVol, // rel_volume >= 10 AND change_pct > 3 — decupled vol (>=10) + big up move (>3%) (unprecedented bull-direction event: vol is 10x its average and price prints a significant up move; once-per-year occurrence per name, typically a major news event like takeover, FDA approval, or massive earnings beat at the tier-0 highest-conviction tier)
+    DecupledVolDownHotVol, // rel_volume >= 10 AND change_pct < -3 — decupled vol (>=10) + big down move (<-3%) (unprecedented bear-direction event: vol is 10x its average and price prints a significant down move; once-per-year occurrence per name, typically a major news event like fraud disclosure, lawsuit, or massive earnings miss at the tier-0 highest-conviction tier)
+    DecupledVolUpNearYearHighHotVol, // rel_volume >= 10 AND change_pct > 3 AND year_high_pct < 2 — decupled vol (>=10) + big up move (>3%) + at/near 52w high (<2%) (absolute-rarest breakout-day signal: vol is 10x average, price prints a significant up move and simultaneously reaches the 52w high; tier-0 once-per-year + breakout-at-extreme = portfolio-changing event)
+    DecupledVolDownNearYearLowHotVol, // rel_volume >= 10 AND change_pct < -3 AND year_low_pct < 2 — decupled vol (>=10) + big down move (<-3%) + at/near 52w low (<2%) (absolute-rarest breakdown-day signal: vol is 10x average, price prints a significant down move and simultaneously reaches the 52w low; tier-0 once-per-year + breakdown-at-extreme = portfolio-changing event)
+    DecupledVolUpDeepBelowYearHighHotVol, // rel_volume >= 10 AND change_pct > 3 AND year_high_pct >= 20 — decupled vol (>=10) + big up move (>3%) + far below 52w high (>=20%) (unprecedented turnaround signal from depressed level: vol is 10x average and price prints a significant up move while still well below the prior peak; tier-0 once-per-year regime-change catalyst worth a portfolio-wide thesis review)
+    DecupledVolDownDeepAboveYearLowHotVol, // rel_volume >= 10 AND change_pct < -3 AND year_low_pct >= 20 — decupled vol (>=10) + big down move (<-3%) + far above 52w low (>=20%) (unprecedented top signal from elevated level: vol is 10x average and price prints a significant down move while still well above the prior trough; tier-0 once-per-year regime-change catalyst worth a portfolio-wide thesis review)
     DecupledVolUpConfirmedAboveYearHighHotVol, // rel_volume >= 10 AND change_pct > 3 AND year_high_pct >= -3 AND year_high_pct <= -1 — decupled vol (>=10) + big up move (>3%) + confirmed-breakout zone (1-3% past 52w high) (unprecedented extension past validated breakout: vol is 10x average and price prints a significant up move while extending further past the prior peak; tier-0 once-per-year follow-through catalyst with maximum trend-confirmation strength)
-    DecupledVolDownConfirmedBelowYearLowHotVol,// rel_volume >= 10 AND change_pct < -3 AND year_low_pct >= -3 AND year_low_pct <= -1 — decupled vol (>=10) + big down move (<-3%) + confirmed-breakdown zone (1-3% past 52w low) (unprecedented extension past validated breakdown: vol is 10x average and price prints a significant down move while extending further past the prior trough; tier-0 once-per-year follow-through catalyst with maximum trend-confirmation strength)
-    DecupledVolUpMidYearHighHotVol,            // rel_volume >= 10 AND change_pct > 3 AND year_high_pct >= 5 AND year_high_pct < 20 — decupled vol (>=10) + big up move (>3%) + mid-range from high (5-20%) (unprecedented catalyst in mid-cycle pullback zone: vol is 10x average and price prints a significant up move in the proper consolidation range below the prior peak; tier-0 once-per-year catalyst at mid-cycle = potential trend-reversal trigger with portfolio-wide implications)
-    DecupledVolDownMidYearLowHotVol,           // rel_volume >= 10 AND change_pct < -3 AND year_low_pct >= 5 AND year_low_pct < 20 — decupled vol (>=10) + big down move (<-3%) + mid-range from low (5-20%) (unprecedented catalyst in mid-cycle recovery zone: vol is 10x average and price prints a significant down move in the proper consolidation range above the prior trough; tier-0 once-per-year catalyst at mid-cycle = potential trend-reversal trigger with portfolio-wide implications)
-    DecupledVolUpJustOffYearHighHotVol,        // rel_volume >= 10 AND change_pct > 3 AND year_high_pct >= 2 AND year_high_pct < 5 — decupled vol (>=10) + big up move (>3%) + just off 52w high (2-5%) (unprecedented catalyst just off the year peak: vol is 10x average and price prints a significant up move immediately after a shallow pullback from the 52w high; tier-0 once-per-year catalyst at post-tag zone = decisive break-or-fail event for the breakout thesis)
-    DecupledVolDownJustOffYearLowHotVol,       // rel_volume >= 10 AND change_pct < -3 AND year_low_pct >= 2 AND year_low_pct < 5 — decupled vol (>=10) + big down move (<-3%) + just off 52w low (2-5%) (unprecedented catalyst just off the year trough: vol is 10x average and price prints a significant down move immediately after a shallow bounce from the 52w low; tier-0 once-per-year catalyst at post-tag zone = decisive break-or-fail event for the breakdown thesis)
-    DecupledVolCloseAtHodHotVol,               // rel_volume >= 10 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 — decupled vol (>=10) + close pinned to HOD + green close (tier-0 institutional rally with no end-of-day fade: vol is 10x average and close pins to the day's high with positive change; rarest possible bull-conviction close across the entire participation-tier framework, once-per-year-per-name event with full close-strength)
-    DecupledVolCloseAtLodHotVol,               // rel_volume >= 10 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 — decupled vol (>=10) + close pinned to LOD + red close (tier-0 institutional selloff with no end-of-day bounce: vol is 10x average and close pins to the day's low with negative change; rarest possible bear-conviction close across the entire participation-tier framework, once-per-year-per-name event with full close-weakness)
-    DecupledVolGapUpCloseAtHodHotVol,          // rel_volume >= 10 AND gap_pct > 2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 — decupled vol (>=10) + gap up (>2%) + close pinned to HOD + green close (most decisive validated catalyst possible: vol is 10x average, overnight gap up holds all session and closes at the day's high; absolute-rarest bull-validation event spanning overnight + regular sessions at the tier-0 participation tier)
-    DecupledVolGapDownCloseAtLodHotVol,        // rel_volume >= 10 AND gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 — decupled vol (>=10) + gap down (<-2%) + close pinned to LOD + red close (most decisive validated catalyst possible: vol is 10x average, overnight gap down holds all session and closes at the day's low; absolute-rarest bear-validation event spanning overnight + regular sessions at the tier-0 participation tier)
-    DecupledVolGapUpCloseAtLodHotVol,          // rel_volume >= 10 AND gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND change_pct < 0 — decupled vol (>=10) + gap up (>2%) faded completely to LOD + red close (most decisive failed catalyst possible: vol is 10x average, overnight gap up fully reverses and closes at the day's low; absolute-rarest failed-bull-catalyst event spanning overnight + regular sessions at the tier-0 participation tier, indicating extreme overnight optimism met overwhelming sellers)
-    DecupledVolGapDownCloseAtHodHotVol,        // rel_volume >= 10 AND gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 — decupled vol (>=10) + gap down (<-2%) absorbed completely to HOD + green close (most decisive failed catalyst possible: vol is 10x average, overnight gap down fully reverses and closes at the day's high; absolute-rarest failed-bear-catalyst event spanning overnight + regular sessions at the tier-0 participation tier, indicating extreme overnight pessimism met overwhelming buyers)
-    DecupledVolGapUpMidpointHotVol,            // rel_volume >= 10 AND gap_pct > 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 — decupled vol (>=10) + gap up (>2%) + midpoint close (unprecedented standoff after gap-up catalyst: vol is 10x average, overnight gap up holds but regular session prints inconclusive midpoint close; absolute-rarest unresolved-bull-catalyst event at the tier-0 participation tier — requires next-session confirmation)
-    DecupledVolGapDownMidpointHotVol,          // rel_volume >= 10 AND gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 — decupled vol (>=10) + gap down (<-2%) + midpoint close (unprecedented standoff after gap-down catalyst: vol is 10x average, overnight gap down holds but regular session prints inconclusive midpoint close; absolute-rarest unresolved-bear-catalyst event at the tier-0 participation tier — requires next-session confirmation)
-    TripleConfluenceHighHotVol,                // hod_dist_pct.abs() < 0.5 AND year_high_pct < 0.5 AND change_pct > 1 AND rel_volume >= 2 — close pinned to HOD + close pinned to 52w high + green close + doubled vol (triple-confluence new-high day: close coincides with day's high AND year's high simultaneously with positive change and doubled participation; clearest possible bull-break signal with three orthogonal axes all aligned to maximum strength)
-    TripleConfluenceLowHotVol,                 // lod_dist_pct.abs() < 0.5 AND year_low_pct < 0.5 AND change_pct < -1 AND rel_volume >= 2 — close pinned to LOD + close pinned to 52w low + red close + doubled vol (triple-confluence new-low day: close coincides with day's low AND year's low simultaneously with negative change and doubled participation; clearest possible bear-break signal with three orthogonal axes all aligned to maximum weakness)
-    QuadConfluenceHighHotVol,                  // hod_dist_pct.abs() < 0.5 AND year_high_pct < 0.5 AND change_pct > 1 AND rel_volume >= 2 AND gap_pct > 1 — gap up + close pinned to HOD + close pinned to 52w high + green close + doubled vol (quad-confluence new-high day: overnight gap, intraday close at day's high, fresh 52w high, doubled participation all aligned bull-direction; four orthogonal axes confirming break, rare maximum-conviction signal)
-    QuadConfluenceLowHotVol,                   // lod_dist_pct.abs() < 0.5 AND year_low_pct < 0.5 AND change_pct < -1 AND rel_volume >= 2 AND gap_pct < -1 — gap down + close pinned to LOD + close pinned to 52w low + red close + doubled vol (quad-confluence new-low day: overnight gap, intraday close at day's low, fresh 52w low, doubled participation all aligned bear-direction; four orthogonal axes confirming break, rare maximum-conviction signal)
-    PentaConfluenceHighHotVol,                 // hod_dist_pct.abs() < 0.5 AND year_high_pct < 0.5 AND change_pct > 1 AND rel_volume >= 5 AND gap_pct > 1 — gap up + close pinned to HOD + close pinned to 52w high + green close + quintupled vol (penta-confluence new-high day: overnight gap, intraday close at day's high, fresh 52w high, quintupled participation all aligned bull-direction; five orthogonal axes confirming break at the tier-1 vol level, near-once-per-year highest-conviction event)
-    PentaConfluenceLowHotVol,                  // lod_dist_pct.abs() < 0.5 AND year_low_pct < 0.5 AND change_pct < -1 AND rel_volume >= 5 AND gap_pct < -1 — gap down + close pinned to LOD + close pinned to 52w low + red close + quintupled vol (penta-confluence new-low day: overnight gap, intraday close at day's low, fresh 52w low, quintupled participation all aligned bear-direction; five orthogonal axes confirming break at the tier-1 vol level, near-once-per-year highest-conviction event)
-    HexaConfluenceHighHotVol,                  // hod_dist_pct.abs() < 0.5 AND year_high_pct < 0.5 AND change_pct > 1 AND rel_volume >= 5 AND gap_pct > 1 AND day_pct > 1 — gap up + intraday up + close pinned to HOD + close pinned to 52w high + green close + quintupled vol (hexa-confluence new-high day: overnight gap aligned with intraday rally, intraday close at day's high, fresh 52w high, quintupled participation all aligned bull-direction; six orthogonal axes confirming break with both overnight and intraday contributing to the move at tier-1 vol level)
-    HexaConfluenceLowHotVol,                   // lod_dist_pct.abs() < 0.5 AND year_low_pct < 0.5 AND change_pct < -1 AND rel_volume >= 5 AND gap_pct < -1 AND day_pct < -1 — gap down + intraday down + close pinned to LOD + close pinned to 52w low + red close + quintupled vol (hexa-confluence new-low day: overnight gap aligned with intraday selloff, intraday close at day's low, fresh 52w low, quintupled participation all aligned bear-direction; six orthogonal axes confirming break with both overnight and intraday contributing to the move at tier-1 vol level)
-    BreakoutPocketHighHotVol,                  // hod_dist_pct.abs() < 0.5 AND year_high_pct < 0.5 AND change_pct > 1 AND rel_volume >= 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 2 — close at year high + close at day high + green close + doubled vol + tight intraday range (<2%) (controlled breakout in a tight pocket: fresh 52w high with no wild whipsaws, just steady upward grind with doubled participation; cleanest possible breakout structure with no fake-out warning)
-    BreakdownPocketLowHotVol,                  // lod_dist_pct.abs() < 0.5 AND year_low_pct < 0.5 AND change_pct < -1 AND rel_volume >= 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 2 — close at year low + close at day low + red close + doubled vol + tight intraday range (<2%) (controlled breakdown in a tight pocket: fresh 52w low with no wild whipsaws, just steady downward grind with doubled participation; cleanest possible breakdown structure with no fake-out warning)
-    BreakoutChaosHighHotVol,                   // hod_dist_pct.abs() < 0.5 AND year_high_pct < 0.5 AND change_pct > 1 AND rel_volume >= 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 — close at year high + close at day high + green close + doubled vol + wide intraday range (>5%) (chaotic breakout: fresh 52w high after wild two-way whipsaw action with doubled participation; bulls won the fight but the wide range warns of two-way conviction and potential next-day fade)
-    BreakdownChaosLowHotVol,                   // lod_dist_pct.abs() < 0.5 AND year_low_pct < 0.5 AND change_pct < -1 AND rel_volume >= 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 — close at year low + close at day low + red close + doubled vol + wide intraday range (>5%) (chaotic breakdown: fresh 52w low after wild two-way whipsaw action with doubled participation; bears won the fight but the wide range warns of two-way conviction and potential next-day bounce)
-    CloseInUpperThirdHotVol,                   // hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 1.5 — close in upper third of day's range (close 2x closer to HOD than to LOD but not pinned at HOD) + hot vol (bullish bias without HOD pin: close is in the top third of the intraday range with elevated participation; soft bull-strength signal showing closing preference for higher prices without the rigid HOD-pinning constraint)
-    CloseInLowerThirdHotVol,                   // lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 1.5 — close in lower third of day's range (close 2x closer to LOD than to HOD but not pinned at LOD) + hot vol (bearish bias without LOD pin: close is in the bottom third of the intraday range with elevated participation; soft bear-weakness signal showing closing preference for lower prices without the rigid LOD-pinning constraint)
-    CloseInUpperThirdNearYearHighHotVol,       // hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND year_high_pct < 2 AND rel_volume >= 1.5 — close in upper third + at/near 52w high (<2%) + hot vol (bullish tilt at the year peak without HOD pin: close is in the top third of intraday range while price is at 52w high; soft pre-breakout bias signal showing buyers maintain control at resistance but haven't pushed through to a fresh peak yet)
-    CloseInLowerThirdNearYearLowHotVol,        // lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND year_low_pct < 2 AND rel_volume >= 1.5 — close in lower third + at/near 52w low (<2%) + hot vol (bearish tilt at the year trough without LOD pin: close is in the bottom third of intraday range while price is at 52w low; soft pre-breakdown bias signal showing sellers maintain control at support but haven't pushed through to a fresh trough yet)
+    DecupledVolDownConfirmedBelowYearLowHotVol, // rel_volume >= 10 AND change_pct < -3 AND year_low_pct >= -3 AND year_low_pct <= -1 — decupled vol (>=10) + big down move (<-3%) + confirmed-breakdown zone (1-3% past 52w low) (unprecedented extension past validated breakdown: vol is 10x average and price prints a significant down move while extending further past the prior trough; tier-0 once-per-year follow-through catalyst with maximum trend-confirmation strength)
+    DecupledVolUpMidYearHighHotVol, // rel_volume >= 10 AND change_pct > 3 AND year_high_pct >= 5 AND year_high_pct < 20 — decupled vol (>=10) + big up move (>3%) + mid-range from high (5-20%) (unprecedented catalyst in mid-cycle pullback zone: vol is 10x average and price prints a significant up move in the proper consolidation range below the prior peak; tier-0 once-per-year catalyst at mid-cycle = potential trend-reversal trigger with portfolio-wide implications)
+    DecupledVolDownMidYearLowHotVol, // rel_volume >= 10 AND change_pct < -3 AND year_low_pct >= 5 AND year_low_pct < 20 — decupled vol (>=10) + big down move (<-3%) + mid-range from low (5-20%) (unprecedented catalyst in mid-cycle recovery zone: vol is 10x average and price prints a significant down move in the proper consolidation range above the prior trough; tier-0 once-per-year catalyst at mid-cycle = potential trend-reversal trigger with portfolio-wide implications)
+    DecupledVolUpJustOffYearHighHotVol, // rel_volume >= 10 AND change_pct > 3 AND year_high_pct >= 2 AND year_high_pct < 5 — decupled vol (>=10) + big up move (>3%) + just off 52w high (2-5%) (unprecedented catalyst just off the year peak: vol is 10x average and price prints a significant up move immediately after a shallow pullback from the 52w high; tier-0 once-per-year catalyst at post-tag zone = decisive break-or-fail event for the breakout thesis)
+    DecupledVolDownJustOffYearLowHotVol, // rel_volume >= 10 AND change_pct < -3 AND year_low_pct >= 2 AND year_low_pct < 5 — decupled vol (>=10) + big down move (<-3%) + just off 52w low (2-5%) (unprecedented catalyst just off the year trough: vol is 10x average and price prints a significant down move immediately after a shallow bounce from the 52w low; tier-0 once-per-year catalyst at post-tag zone = decisive break-or-fail event for the breakdown thesis)
+    DecupledVolCloseAtHodHotVol, // rel_volume >= 10 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 — decupled vol (>=10) + close pinned to HOD + green close (tier-0 institutional rally with no end-of-day fade: vol is 10x average and close pins to the day's high with positive change; rarest possible bull-conviction close across the entire participation-tier framework, once-per-year-per-name event with full close-strength)
+    DecupledVolCloseAtLodHotVol, // rel_volume >= 10 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 — decupled vol (>=10) + close pinned to LOD + red close (tier-0 institutional selloff with no end-of-day bounce: vol is 10x average and close pins to the day's low with negative change; rarest possible bear-conviction close across the entire participation-tier framework, once-per-year-per-name event with full close-weakness)
+    DecupledVolGapUpCloseAtHodHotVol, // rel_volume >= 10 AND gap_pct > 2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 1 — decupled vol (>=10) + gap up (>2%) + close pinned to HOD + green close (most decisive validated catalyst possible: vol is 10x average, overnight gap up holds all session and closes at the day's high; absolute-rarest bull-validation event spanning overnight + regular sessions at the tier-0 participation tier)
+    DecupledVolGapDownCloseAtLodHotVol, // rel_volume >= 10 AND gap_pct < -2 AND lod_dist_pct.abs() < 0.5 AND change_pct < -1 — decupled vol (>=10) + gap down (<-2%) + close pinned to LOD + red close (most decisive validated catalyst possible: vol is 10x average, overnight gap down holds all session and closes at the day's low; absolute-rarest bear-validation event spanning overnight + regular sessions at the tier-0 participation tier)
+    DecupledVolGapUpCloseAtLodHotVol, // rel_volume >= 10 AND gap_pct > 2 AND lod_dist_pct.abs() < 0.5 AND change_pct < 0 — decupled vol (>=10) + gap up (>2%) faded completely to LOD + red close (most decisive failed catalyst possible: vol is 10x average, overnight gap up fully reverses and closes at the day's low; absolute-rarest failed-bull-catalyst event spanning overnight + regular sessions at the tier-0 participation tier, indicating extreme overnight optimism met overwhelming sellers)
+    DecupledVolGapDownCloseAtHodHotVol, // rel_volume >= 10 AND gap_pct < -2 AND hod_dist_pct.abs() < 0.5 AND change_pct > 0 — decupled vol (>=10) + gap down (<-2%) absorbed completely to HOD + green close (most decisive failed catalyst possible: vol is 10x average, overnight gap down fully reverses and closes at the day's high; absolute-rarest failed-bear-catalyst event spanning overnight + regular sessions at the tier-0 participation tier, indicating extreme overnight pessimism met overwhelming buyers)
+    DecupledVolGapUpMidpointHotVol, // rel_volume >= 10 AND gap_pct > 2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 — decupled vol (>=10) + gap up (>2%) + midpoint close (unprecedented standoff after gap-up catalyst: vol is 10x average, overnight gap up holds but regular session prints inconclusive midpoint close; absolute-rarest unresolved-bull-catalyst event at the tier-0 participation tier — requires next-session confirmation)
+    DecupledVolGapDownMidpointHotVol, // rel_volume >= 10 AND gap_pct < -2 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 — decupled vol (>=10) + gap down (<-2%) + midpoint close (unprecedented standoff after gap-down catalyst: vol is 10x average, overnight gap down holds but regular session prints inconclusive midpoint close; absolute-rarest unresolved-bear-catalyst event at the tier-0 participation tier — requires next-session confirmation)
+    TripleConfluenceHighHotVol, // hod_dist_pct.abs() < 0.5 AND year_high_pct < 0.5 AND change_pct > 1 AND rel_volume >= 2 — close pinned to HOD + close pinned to 52w high + green close + doubled vol (triple-confluence new-high day: close coincides with day's high AND year's high simultaneously with positive change and doubled participation; clearest possible bull-break signal with three orthogonal axes all aligned to maximum strength)
+    TripleConfluenceLowHotVol, // lod_dist_pct.abs() < 0.5 AND year_low_pct < 0.5 AND change_pct < -1 AND rel_volume >= 2 — close pinned to LOD + close pinned to 52w low + red close + doubled vol (triple-confluence new-low day: close coincides with day's low AND year's low simultaneously with negative change and doubled participation; clearest possible bear-break signal with three orthogonal axes all aligned to maximum weakness)
+    QuadConfluenceHighHotVol, // hod_dist_pct.abs() < 0.5 AND year_high_pct < 0.5 AND change_pct > 1 AND rel_volume >= 2 AND gap_pct > 1 — gap up + close pinned to HOD + close pinned to 52w high + green close + doubled vol (quad-confluence new-high day: overnight gap, intraday close at day's high, fresh 52w high, doubled participation all aligned bull-direction; four orthogonal axes confirming break, rare maximum-conviction signal)
+    QuadConfluenceLowHotVol, // lod_dist_pct.abs() < 0.5 AND year_low_pct < 0.5 AND change_pct < -1 AND rel_volume >= 2 AND gap_pct < -1 — gap down + close pinned to LOD + close pinned to 52w low + red close + doubled vol (quad-confluence new-low day: overnight gap, intraday close at day's low, fresh 52w low, doubled participation all aligned bear-direction; four orthogonal axes confirming break, rare maximum-conviction signal)
+    PentaConfluenceHighHotVol, // hod_dist_pct.abs() < 0.5 AND year_high_pct < 0.5 AND change_pct > 1 AND rel_volume >= 5 AND gap_pct > 1 — gap up + close pinned to HOD + close pinned to 52w high + green close + quintupled vol (penta-confluence new-high day: overnight gap, intraday close at day's high, fresh 52w high, quintupled participation all aligned bull-direction; five orthogonal axes confirming break at the tier-1 vol level, near-once-per-year highest-conviction event)
+    PentaConfluenceLowHotVol, // lod_dist_pct.abs() < 0.5 AND year_low_pct < 0.5 AND change_pct < -1 AND rel_volume >= 5 AND gap_pct < -1 — gap down + close pinned to LOD + close pinned to 52w low + red close + quintupled vol (penta-confluence new-low day: overnight gap, intraday close at day's low, fresh 52w low, quintupled participation all aligned bear-direction; five orthogonal axes confirming break at the tier-1 vol level, near-once-per-year highest-conviction event)
+    HexaConfluenceHighHotVol, // hod_dist_pct.abs() < 0.5 AND year_high_pct < 0.5 AND change_pct > 1 AND rel_volume >= 5 AND gap_pct > 1 AND day_pct > 1 — gap up + intraday up + close pinned to HOD + close pinned to 52w high + green close + quintupled vol (hexa-confluence new-high day: overnight gap aligned with intraday rally, intraday close at day's high, fresh 52w high, quintupled participation all aligned bull-direction; six orthogonal axes confirming break with both overnight and intraday contributing to the move at tier-1 vol level)
+    HexaConfluenceLowHotVol, // lod_dist_pct.abs() < 0.5 AND year_low_pct < 0.5 AND change_pct < -1 AND rel_volume >= 5 AND gap_pct < -1 AND day_pct < -1 — gap down + intraday down + close pinned to LOD + close pinned to 52w low + red close + quintupled vol (hexa-confluence new-low day: overnight gap aligned with intraday selloff, intraday close at day's low, fresh 52w low, quintupled participation all aligned bear-direction; six orthogonal axes confirming break with both overnight and intraday contributing to the move at tier-1 vol level)
+    BreakoutPocketHighHotVol, // hod_dist_pct.abs() < 0.5 AND year_high_pct < 0.5 AND change_pct > 1 AND rel_volume >= 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 2 — close at year high + close at day high + green close + doubled vol + tight intraday range (<2%) (controlled breakout in a tight pocket: fresh 52w high with no wild whipsaws, just steady upward grind with doubled participation; cleanest possible breakout structure with no fake-out warning)
+    BreakdownPocketLowHotVol, // lod_dist_pct.abs() < 0.5 AND year_low_pct < 0.5 AND change_pct < -1 AND rel_volume >= 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() < 2 — close at year low + close at day low + red close + doubled vol + tight intraday range (<2%) (controlled breakdown in a tight pocket: fresh 52w low with no wild whipsaws, just steady downward grind with doubled participation; cleanest possible breakdown structure with no fake-out warning)
+    BreakoutChaosHighHotVol, // hod_dist_pct.abs() < 0.5 AND year_high_pct < 0.5 AND change_pct > 1 AND rel_volume >= 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 — close at year high + close at day high + green close + doubled vol + wide intraday range (>5%) (chaotic breakout: fresh 52w high after wild two-way whipsaw action with doubled participation; bulls won the fight but the wide range warns of two-way conviction and potential next-day fade)
+    BreakdownChaosLowHotVol, // lod_dist_pct.abs() < 0.5 AND year_low_pct < 0.5 AND change_pct < -1 AND rel_volume >= 2 AND hod_dist_pct.abs() + lod_dist_pct.abs() > 5 — close at year low + close at day low + red close + doubled vol + wide intraday range (>5%) (chaotic breakdown: fresh 52w low after wild two-way whipsaw action with doubled participation; bears won the fight but the wide range warns of two-way conviction and potential next-day bounce)
+    CloseInUpperThirdHotVol, // hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 1.5 — close in upper third of day's range (close 2x closer to HOD than to LOD but not pinned at HOD) + hot vol (bullish bias without HOD pin: close is in the top third of the intraday range with elevated participation; soft bull-strength signal showing closing preference for higher prices without the rigid HOD-pinning constraint)
+    CloseInLowerThirdHotVol, // lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 1.5 — close in lower third of day's range (close 2x closer to LOD than to HOD but not pinned at LOD) + hot vol (bearish bias without LOD pin: close is in the bottom third of the intraday range with elevated participation; soft bear-weakness signal showing closing preference for lower prices without the rigid LOD-pinning constraint)
+    CloseInUpperThirdNearYearHighHotVol, // hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND year_high_pct < 2 AND rel_volume >= 1.5 — close in upper third + at/near 52w high (<2%) + hot vol (bullish tilt at the year peak without HOD pin: close is in the top third of intraday range while price is at 52w high; soft pre-breakout bias signal showing buyers maintain control at resistance but haven't pushed through to a fresh peak yet)
+    CloseInLowerThirdNearYearLowHotVol, // lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND year_low_pct < 2 AND rel_volume >= 1.5 — close in lower third + at/near 52w low (<2%) + hot vol (bearish tilt at the year trough without LOD pin: close is in the bottom third of intraday range while price is at 52w low; soft pre-breakdown bias signal showing sellers maintain control at support but haven't pushed through to a fresh trough yet)
     CloseInUpperThirdConfirmedAboveYearHighHotVol, // hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND year_high_pct >= -3 AND year_high_pct <= -1 AND rel_volume >= 1.5 — close in upper third + confirmed-breakout zone (1-3% past 52w high) + hot vol (sustained bullish tilt past validated breakout: close in top third of intraday range while price extends past prior peak; soft trend-extension bias where buyers maintain control after breakout without rigid HOD pin)
-    CloseInLowerThirdConfirmedBelowYearLowHotVol,  // lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND year_low_pct >= -3 AND year_low_pct <= -1 AND rel_volume >= 1.5 — close in lower third + confirmed-breakdown zone (1-3% past 52w low) + hot vol (sustained bearish tilt past validated breakdown: close in bottom third of intraday range while price extends past prior trough; soft trend-extension bias where sellers maintain control after breakdown without rigid LOD pin)
-    CloseInUpperThirdDeepBelowYearHighHotVol,  // hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND year_high_pct >= 20 AND rel_volume >= 1.5 — close in upper third + far below 52w high (>=20%) + hot vol (soft recovery-bias tilt deep in pullback territory: close in top third of intraday range while price remains well below the prior peak; early-recovery signal where buyers start gaining control after extended decline but without rigid HOD pin)
-    CloseInLowerThirdDeepAboveYearLowHotVol,   // lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND year_low_pct >= 20 AND rel_volume >= 1.5 — close in lower third + far above 52w low (>=20%) + hot vol (soft rejection-bias tilt deep in advance territory: close in bottom third of intraday range while price remains well above the prior trough; early-rejection signal where sellers start gaining control after extended advance but without rigid LOD pin)
-    CloseInUpperThirdMidYearHighHotVol,        // hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND year_high_pct >= 5 AND year_high_pct < 20 AND rel_volume >= 1.5 — close in upper third + mid-range from high (5-20%) + hot vol (soft bullish tilt in mid-cycle pullback zone: close in top third of intraday range while price is in proper consolidation below the prior peak; mid-cycle accumulation-bias signal where buyers gain modest control during the consolidation phase)
-    CloseInLowerThirdMidYearLowHotVol,         // lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND year_low_pct >= 5 AND year_low_pct < 20 AND rel_volume >= 1.5 — close in lower third + mid-range from low (5-20%) + hot vol (soft bearish tilt in mid-cycle recovery zone: close in bottom third of intraday range while price is in proper consolidation above the prior trough; mid-cycle distribution-bias signal where sellers gain modest control during the consolidation phase)
-    CloseInUpperThirdJustOffYearHighHotVol,    // hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND year_high_pct >= 2 AND year_high_pct < 5 AND rel_volume >= 1.5 — close in upper third + just off 52w high (2-5%) + hot vol (soft bullish tilt just off the year peak: close in top third of intraday range immediately after a shallow pullback from the 52w high; post-tag re-test bias signal where buyers maintain control as price probes the breakout level without rigid HOD pin)
-    CloseInLowerThirdJustOffYearLowHotVol,     // lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND year_low_pct >= 2 AND year_low_pct < 5 AND rel_volume >= 1.5 — close in lower third + just off 52w low (2-5%) + hot vol (soft bearish tilt just off the year trough: close in bottom third of intraday range immediately after a shallow bounce from the 52w low; post-tag re-test bias signal where sellers maintain control as price probes the breakdown level without rigid LOD pin)
-    BullRecoveryWickHotVol,                    // lod_dist_pct.abs() > 3 AND change_pct > 0 AND hod_dist_pct.abs() > 1 AND rel_volume >= 1.5 — long lower wick (>3%) + green close (positive change) + close not pinned to HOD (>1% off the day's high) + hot vol (partial bull-recovery wick: price probed substantially lower then recovered to a green close but didn't reach the day's high; weaker-than-hammer signal showing bull-recovery in progress but not complete)
-    BearRejectionWickHotVol,                   // hod_dist_pct.abs() > 3 AND change_pct < 0 AND lod_dist_pct.abs() > 1 AND rel_volume >= 1.5 — long upper wick (>3%) + red close (negative change) + close not pinned to LOD (>1% off the day's low) + hot vol (partial bear-rejection wick: price probed substantially higher then rejected to a red close but didn't reach the day's low; weaker-than-shooting-star signal showing bear-rejection in progress but not complete)
-    BullRecoveryWickNearYearLowHotVol,         // lod_dist_pct.abs() > 3 AND change_pct > 0 AND hod_dist_pct.abs() > 1 AND year_low_pct < 2 AND rel_volume >= 1.5 — long lower wick + green close + not pinned to HOD + at/near 52w low (<2%) + hot vol (partial bull-recovery wick at the year trough: price probed lower at 52w low then recovered green but didn't pin to HOD; potential bottom-formation signal in early-recovery stage where buyers are gaining traction but haven't yet established full control)
-    BearRejectionWickNearYearHighHotVol,       // hod_dist_pct.abs() > 3 AND change_pct < 0 AND lod_dist_pct.abs() > 1 AND year_high_pct < 2 AND rel_volume >= 1.5 — long upper wick + red close + not pinned to LOD + at/near 52w high (<2%) + hot vol (partial bear-rejection wick at the year peak: price probed higher at 52w high then rejected red but didn't pin to LOD; potential top-formation signal in early-rejection stage where sellers are gaining traction but haven't yet established full control)
-    BullRecoveryWickDeepBelowYearHighHotVol,   // lod_dist_pct.abs() > 3 AND change_pct > 0 AND hod_dist_pct.abs() > 1 AND year_high_pct >= 20 AND rel_volume >= 1.5 — long lower wick + green close + not pinned to HOD + far below 52w high (>=20%) + hot vol (partial bull-recovery wick deep in pullback: price probed lower well below the prior peak then recovered green but didn't pin to HOD; turnaround-forming signal in extended-decline territory where buyers begin to absorb without full conviction)
-    BearRejectionWickDeepAboveYearLowHotVol,   // hod_dist_pct.abs() > 3 AND change_pct < 0 AND lod_dist_pct.abs() > 1 AND year_low_pct >= 20 AND rel_volume >= 1.5 — long upper wick + red close + not pinned to LOD + far above 52w low (>=20%) + hot vol (partial bear-rejection wick deep in advance: price probed higher well above the prior trough then rejected red but didn't pin to LOD; top-forming signal in extended-advance territory where sellers begin to distribute without full conviction)
-    BullRecoveryWickMidYearHighHotVol,         // lod_dist_pct.abs() > 3 AND change_pct > 0 AND hod_dist_pct.abs() > 1 AND year_high_pct >= 5 AND year_high_pct < 20 AND rel_volume >= 1.5 — long lower wick + green close + not pinned to HOD + mid-range from high (5-20%) + hot vol (partial bull-recovery wick in mid-cycle pullback: price probed lower in the proper consolidation zone then recovered green but didn't pin to HOD; mid-cycle accumulation signal where buyers begin to absorb in the consolidation phase without full conviction)
-    BearRejectionWickMidYearLowHotVol,         // hod_dist_pct.abs() > 3 AND change_pct < 0 AND lod_dist_pct.abs() > 1 AND year_low_pct >= 5 AND year_low_pct < 20 AND rel_volume >= 1.5 — long upper wick + red close + not pinned to LOD + mid-range from low (5-20%) + hot vol (partial bear-rejection wick in mid-cycle recovery: price probed higher in the proper consolidation zone then rejected red but didn't pin to LOD; mid-cycle distribution signal where sellers begin to distribute in the consolidation phase without full conviction)
-    BullRecoveryWickJustOffYearLowHotVol,      // lod_dist_pct.abs() > 3 AND change_pct > 0 AND hod_dist_pct.abs() > 1 AND year_low_pct >= 2 AND year_low_pct < 5 AND rel_volume >= 1.5 — long lower wick + green close + not pinned to HOD + just off 52w low (2-5%) + hot vol (partial bull-recovery wick just off the year trough: price probed lower immediately after a shallow bounce from the 52w low then recovered green but didn't pin to HOD; post-tag bottom-stabilization signal where buyers absorb on the re-test but without full conviction)
-    BearRejectionWickJustOffYearHighHotVol,    // hod_dist_pct.abs() > 3 AND change_pct < 0 AND lod_dist_pct.abs() > 1 AND year_high_pct >= 2 AND year_high_pct < 5 AND rel_volume >= 1.5 — long upper wick + red close + not pinned to LOD + just off 52w high (2-5%) + hot vol (partial bear-rejection wick just off the year peak: price probed higher immediately after a shallow pullback from the 52w high then rejected red but didn't pin to LOD; post-tag top-stabilization signal where sellers distribute on the re-test but without full conviction)
+    CloseInLowerThirdConfirmedBelowYearLowHotVol, // lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND year_low_pct >= -3 AND year_low_pct <= -1 AND rel_volume >= 1.5 — close in lower third + confirmed-breakdown zone (1-3% past 52w low) + hot vol (sustained bearish tilt past validated breakdown: close in bottom third of intraday range while price extends past prior trough; soft trend-extension bias where sellers maintain control after breakdown without rigid LOD pin)
+    CloseInUpperThirdDeepBelowYearHighHotVol, // hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND year_high_pct >= 20 AND rel_volume >= 1.5 — close in upper third + far below 52w high (>=20%) + hot vol (soft recovery-bias tilt deep in pullback territory: close in top third of intraday range while price remains well below the prior peak; early-recovery signal where buyers start gaining control after extended decline but without rigid HOD pin)
+    CloseInLowerThirdDeepAboveYearLowHotVol, // lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND year_low_pct >= 20 AND rel_volume >= 1.5 — close in lower third + far above 52w low (>=20%) + hot vol (soft rejection-bias tilt deep in advance territory: close in bottom third of intraday range while price remains well above the prior trough; early-rejection signal where sellers start gaining control after extended advance but without rigid LOD pin)
+    CloseInUpperThirdMidYearHighHotVol, // hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND year_high_pct >= 5 AND year_high_pct < 20 AND rel_volume >= 1.5 — close in upper third + mid-range from high (5-20%) + hot vol (soft bullish tilt in mid-cycle pullback zone: close in top third of intraday range while price is in proper consolidation below the prior peak; mid-cycle accumulation-bias signal where buyers gain modest control during the consolidation phase)
+    CloseInLowerThirdMidYearLowHotVol, // lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND year_low_pct >= 5 AND year_low_pct < 20 AND rel_volume >= 1.5 — close in lower third + mid-range from low (5-20%) + hot vol (soft bearish tilt in mid-cycle recovery zone: close in bottom third of intraday range while price is in proper consolidation above the prior trough; mid-cycle distribution-bias signal where sellers gain modest control during the consolidation phase)
+    CloseInUpperThirdJustOffYearHighHotVol, // hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND year_high_pct >= 2 AND year_high_pct < 5 AND rel_volume >= 1.5 — close in upper third + just off 52w high (2-5%) + hot vol (soft bullish tilt just off the year peak: close in top third of intraday range immediately after a shallow pullback from the 52w high; post-tag re-test bias signal where buyers maintain control as price probes the breakout level without rigid HOD pin)
+    CloseInLowerThirdJustOffYearLowHotVol, // lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND year_low_pct >= 2 AND year_low_pct < 5 AND rel_volume >= 1.5 — close in lower third + just off 52w low (2-5%) + hot vol (soft bearish tilt just off the year trough: close in bottom third of intraday range immediately after a shallow bounce from the 52w low; post-tag re-test bias signal where sellers maintain control as price probes the breakdown level without rigid LOD pin)
+    BullRecoveryWickHotVol, // lod_dist_pct.abs() > 3 AND change_pct > 0 AND hod_dist_pct.abs() > 1 AND rel_volume >= 1.5 — long lower wick (>3%) + green close (positive change) + close not pinned to HOD (>1% off the day's high) + hot vol (partial bull-recovery wick: price probed substantially lower then recovered to a green close but didn't reach the day's high; weaker-than-hammer signal showing bull-recovery in progress but not complete)
+    BearRejectionWickHotVol, // hod_dist_pct.abs() > 3 AND change_pct < 0 AND lod_dist_pct.abs() > 1 AND rel_volume >= 1.5 — long upper wick (>3%) + red close (negative change) + close not pinned to LOD (>1% off the day's low) + hot vol (partial bear-rejection wick: price probed substantially higher then rejected to a red close but didn't reach the day's low; weaker-than-shooting-star signal showing bear-rejection in progress but not complete)
+    BullRecoveryWickNearYearLowHotVol, // lod_dist_pct.abs() > 3 AND change_pct > 0 AND hod_dist_pct.abs() > 1 AND year_low_pct < 2 AND rel_volume >= 1.5 — long lower wick + green close + not pinned to HOD + at/near 52w low (<2%) + hot vol (partial bull-recovery wick at the year trough: price probed lower at 52w low then recovered green but didn't pin to HOD; potential bottom-formation signal in early-recovery stage where buyers are gaining traction but haven't yet established full control)
+    BearRejectionWickNearYearHighHotVol, // hod_dist_pct.abs() > 3 AND change_pct < 0 AND lod_dist_pct.abs() > 1 AND year_high_pct < 2 AND rel_volume >= 1.5 — long upper wick + red close + not pinned to LOD + at/near 52w high (<2%) + hot vol (partial bear-rejection wick at the year peak: price probed higher at 52w high then rejected red but didn't pin to LOD; potential top-formation signal in early-rejection stage where sellers are gaining traction but haven't yet established full control)
+    BullRecoveryWickDeepBelowYearHighHotVol, // lod_dist_pct.abs() > 3 AND change_pct > 0 AND hod_dist_pct.abs() > 1 AND year_high_pct >= 20 AND rel_volume >= 1.5 — long lower wick + green close + not pinned to HOD + far below 52w high (>=20%) + hot vol (partial bull-recovery wick deep in pullback: price probed lower well below the prior peak then recovered green but didn't pin to HOD; turnaround-forming signal in extended-decline territory where buyers begin to absorb without full conviction)
+    BearRejectionWickDeepAboveYearLowHotVol, // hod_dist_pct.abs() > 3 AND change_pct < 0 AND lod_dist_pct.abs() > 1 AND year_low_pct >= 20 AND rel_volume >= 1.5 — long upper wick + red close + not pinned to LOD + far above 52w low (>=20%) + hot vol (partial bear-rejection wick deep in advance: price probed higher well above the prior trough then rejected red but didn't pin to LOD; top-forming signal in extended-advance territory where sellers begin to distribute without full conviction)
+    BullRecoveryWickMidYearHighHotVol, // lod_dist_pct.abs() > 3 AND change_pct > 0 AND hod_dist_pct.abs() > 1 AND year_high_pct >= 5 AND year_high_pct < 20 AND rel_volume >= 1.5 — long lower wick + green close + not pinned to HOD + mid-range from high (5-20%) + hot vol (partial bull-recovery wick in mid-cycle pullback: price probed lower in the proper consolidation zone then recovered green but didn't pin to HOD; mid-cycle accumulation signal where buyers begin to absorb in the consolidation phase without full conviction)
+    BearRejectionWickMidYearLowHotVol, // hod_dist_pct.abs() > 3 AND change_pct < 0 AND lod_dist_pct.abs() > 1 AND year_low_pct >= 5 AND year_low_pct < 20 AND rel_volume >= 1.5 — long upper wick + red close + not pinned to LOD + mid-range from low (5-20%) + hot vol (partial bear-rejection wick in mid-cycle recovery: price probed higher in the proper consolidation zone then rejected red but didn't pin to LOD; mid-cycle distribution signal where sellers begin to distribute in the consolidation phase without full conviction)
+    BullRecoveryWickJustOffYearLowHotVol, // lod_dist_pct.abs() > 3 AND change_pct > 0 AND hod_dist_pct.abs() > 1 AND year_low_pct >= 2 AND year_low_pct < 5 AND rel_volume >= 1.5 — long lower wick + green close + not pinned to HOD + just off 52w low (2-5%) + hot vol (partial bull-recovery wick just off the year trough: price probed lower immediately after a shallow bounce from the 52w low then recovered green but didn't pin to HOD; post-tag bottom-stabilization signal where buyers absorb on the re-test but without full conviction)
+    BearRejectionWickJustOffYearHighHotVol, // hod_dist_pct.abs() > 3 AND change_pct < 0 AND lod_dist_pct.abs() > 1 AND year_high_pct >= 2 AND year_high_pct < 5 AND rel_volume >= 1.5 — long upper wick + red close + not pinned to LOD + just off 52w high (2-5%) + hot vol (partial bear-rejection wick just off the year peak: price probed higher immediately after a shallow pullback from the 52w high then rejected red but didn't pin to LOD; post-tag top-stabilization signal where sellers distribute on the re-test but without full conviction)
     BullRecoveryWickConfirmedBelowYearLowHotVol, // lod_dist_pct.abs() > 3 AND change_pct > 0 AND hod_dist_pct.abs() > 1 AND year_low_pct >= -3 AND year_low_pct <= -1 AND rel_volume >= 1.5 — long lower wick + green close + not pinned to HOD + confirmed-breakdown zone (1-3% past 52w low) + hot vol (partial bull-recovery wick in confirmed-breakdown zone: price probed lower past the prior trough then recovered green but didn't pin to HOD; bear-trap candidate signal where the breakdown is being challenged by buyers without full conviction)
     BearRejectionWickConfirmedAboveYearHighHotVol, // hod_dist_pct.abs() > 3 AND change_pct < 0 AND lod_dist_pct.abs() > 1 AND year_high_pct >= -3 AND year_high_pct <= -1 AND rel_volume >= 1.5 — long upper wick + red close + not pinned to LOD + confirmed-breakout zone (1-3% past 52w high) + hot vol (partial bull-trap candidate signal where the breakout is being challenged by sellers without full conviction)
-    MegaRangeUpHotVol,                         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 2 — mega intraday range (>10% high-low spread) + green close + doubled vol (once-per-month-rare volatility event with bull-direction outcome: extreme intraday range with both sides actively trading but bulls won the close; high-energy day worth marking as a key reference point in the chart)
-    MegaRangeDownHotVol,                       // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 2 — mega intraday range (>10% high-low spread) + red close + doubled vol (once-per-month-rare volatility event with bear-direction outcome: extreme intraday range with both sides actively trading but bears won the close; high-energy day worth marking as a key reference point in the chart)
-    MegaRangeUpNearYearHighHotVol,             // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 2 AND year_high_pct < 2 — mega intraday range (>10%) + green close + doubled vol + at/near 52w high (<2%) (volcanic breakout day: extreme intraday range with bull-direction outcome occurring at the 52w high; rare regime-defining event marking a fresh peak with maximum-energy directional commitment)
-    MegaRangeDownNearYearLowHotVol,            // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 2 AND year_low_pct < 2 — mega intraday range (>10%) + red close + doubled vol + at/near 52w low (<2%) (volcanic breakdown day: extreme intraday range with bear-direction outcome occurring at the 52w low; rare regime-defining event marking a fresh trough with maximum-energy directional commitment)
-    MegaRangeUpDeepBelowYearHighHotVol,        // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 2 AND year_high_pct >= 20 — mega intraday range (>10%) + green close + doubled vol + far below 52w high (>=20%) (V-bottom signal: extreme intraday range with bull-direction outcome deep in pullback territory; rare reversal day where buyers absorbed massive selling and reversed it — historically a marker for major lows in extended declines)
-    MegaRangeDownDeepAboveYearLowHotVol,       // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 2 AND year_low_pct >= 20 — mega intraday range (>10%) + red close + doubled vol + far above 52w low (>=20%) (waterfall-top signal: extreme intraday range with bear-direction outcome deep in advance territory; rare reversal day where sellers overcame massive buying and reversed it — historically a marker for major highs in extended advances)
-    MegaRangeUpConfirmedAboveYearHighHotVol,   // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 2 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + green close + doubled vol + confirmed-breakout zone (1-3% past 52w high) (volcanic extension past validated breakout: extreme intraday range with bull-direction outcome extending past the already-cleared prior peak; rare maximum-conviction follow-through day confirming trend acceleration)
-    MegaRangeDownConfirmedBelowYearLowHotVol,  // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 2 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + red close + doubled vol + confirmed-breakdown zone (1-3% past 52w low) (volcanic extension past validated breakdown: extreme intraday range with bear-direction outcome extending past the already-cleared prior trough; rare maximum-conviction follow-through day confirming trend acceleration)
-    MegaRangeUpMidYearHighHotVol,              // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 2 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + green close + doubled vol + mid-range from high (5-20%) (mid-cycle volcanic rally: extreme intraday range with bull-direction outcome in the proper consolidation zone; rare wide-range advance from mid-cycle pullback bottom, swing-trade marker for trend resumption)
-    MegaRangeDownMidYearLowHotVol,             // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 2 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + red close + doubled vol + mid-range from low (5-20%) (mid-cycle volcanic decline: extreme intraday range with bear-direction outcome in the proper consolidation zone; rare wide-range decline from mid-cycle recovery top, swing-trade marker for trend resumption)
-    MegaRangeUpJustOffYearHighHotVol,          // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 2 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + green close + doubled vol + just off 52w high (2-5%) (post-tag volcanic recovery: extreme intraday range with bull-direction outcome immediately after a shallow pullback from the 52w high; rare wide-range push back toward the breakout level with maximum-energy commitment to re-test the prior peak)
-    MegaRangeDownJustOffYearLowHotVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 2 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + red close + doubled vol + just off 52w low (2-5%) (post-tag volcanic rejection: extreme intraday range with bear-direction outcome immediately after a shallow bounce from the 52w low; rare wide-range push back toward the breakdown level with maximum-energy commitment to re-test the prior trough)
-    MegaRangeFlatDayGapUpHotVol,               // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND day_pct.abs() < 0.5 AND gap_pct > 0 AND rel_volume >= 2 — mega intraday range (>10%) + flat intraday bar (|day_pct|<0.5%) + gap-up day + doubled vol (extreme two-way fight after gap up: vol doubled, overnight gap up but regular session prints a >10% range that ends right where it opened; massive whipsaw indecision day where neither side won despite full participation)
-    MegaRangeFlatDayGapDownHotVol,             // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND day_pct.abs() < 0.5 AND gap_pct < 0 AND rel_volume >= 2 — mega intraday range (>10%) + flat intraday bar (|day_pct|<0.5%) + gap-down day + doubled vol (extreme two-way fight after gap down: vol doubled, overnight gap down but regular session prints a >10% range that ends right where it opened; massive whipsaw indecision day where neither side won despite full participation)
-    MegaRangeUpperThirdHotVol,                 // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 — mega intraday range (>10%) + close in upper third of range (not pinned to HOD) + doubled vol (wide-range partial bull day: extreme intraday volatility with close 2x closer to HOD than to LOD but not rigid; partial bull-control after intense two-way action where buyers held the upper hand without fully dominating)
-    MegaRangeLowerThirdHotVol,                 // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 2 — mega intraday range (>10%) + close in lower third of range (not pinned to LOD) + doubled vol (wide-range partial bear day: extreme intraday volatility with close 2x closer to LOD than to HOD but not rigid; partial bear-control after intense two-way action where sellers held the upper hand without fully dominating)
-    MegaRangeMidpointCloseNearYearHighHotVol,  // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct < 2 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + at/near 52w high (<2%) + doubled vol (wide-range standoff at the year peak: extreme intraday volatility ends with balanced midpoint close right at the 52w high; failed-break-or-resume indecision day at maximum significance — next-day directional resolution carries the wider trend)
-    MegaRangeMidpointCloseNearYearLowHotVol,   // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct < 2 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + at/near 52w low (<2%) + doubled vol (wide-range standoff at the year trough: extreme intraday volatility ends with balanced midpoint close right at the 52w low; failed-break-or-resume indecision day at maximum significance — next-day directional resolution carries the wider trend)
+    MegaRangeUpHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 2 — mega intraday range (>10% high-low spread) + green close + doubled vol (once-per-month-rare volatility event with bull-direction outcome: extreme intraday range with both sides actively trading but bulls won the close; high-energy day worth marking as a key reference point in the chart)
+    MegaRangeDownHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 2 — mega intraday range (>10% high-low spread) + red close + doubled vol (once-per-month-rare volatility event with bear-direction outcome: extreme intraday range with both sides actively trading but bears won the close; high-energy day worth marking as a key reference point in the chart)
+    MegaRangeUpNearYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 2 AND year_high_pct < 2 — mega intraday range (>10%) + green close + doubled vol + at/near 52w high (<2%) (volcanic breakout day: extreme intraday range with bull-direction outcome occurring at the 52w high; rare regime-defining event marking a fresh peak with maximum-energy directional commitment)
+    MegaRangeDownNearYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 2 AND year_low_pct < 2 — mega intraday range (>10%) + red close + doubled vol + at/near 52w low (<2%) (volcanic breakdown day: extreme intraday range with bear-direction outcome occurring at the 52w low; rare regime-defining event marking a fresh trough with maximum-energy directional commitment)
+    MegaRangeUpDeepBelowYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 2 AND year_high_pct >= 20 — mega intraday range (>10%) + green close + doubled vol + far below 52w high (>=20%) (V-bottom signal: extreme intraday range with bull-direction outcome deep in pullback territory; rare reversal day where buyers absorbed massive selling and reversed it — historically a marker for major lows in extended declines)
+    MegaRangeDownDeepAboveYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 2 AND year_low_pct >= 20 — mega intraday range (>10%) + red close + doubled vol + far above 52w low (>=20%) (waterfall-top signal: extreme intraday range with bear-direction outcome deep in advance territory; rare reversal day where sellers overcame massive buying and reversed it — historically a marker for major highs in extended advances)
+    MegaRangeUpConfirmedAboveYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 2 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + green close + doubled vol + confirmed-breakout zone (1-3% past 52w high) (volcanic extension past validated breakout: extreme intraday range with bull-direction outcome extending past the already-cleared prior peak; rare maximum-conviction follow-through day confirming trend acceleration)
+    MegaRangeDownConfirmedBelowYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 2 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + red close + doubled vol + confirmed-breakdown zone (1-3% past 52w low) (volcanic extension past validated breakdown: extreme intraday range with bear-direction outcome extending past the already-cleared prior trough; rare maximum-conviction follow-through day confirming trend acceleration)
+    MegaRangeUpMidYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 2 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + green close + doubled vol + mid-range from high (5-20%) (mid-cycle volcanic rally: extreme intraday range with bull-direction outcome in the proper consolidation zone; rare wide-range advance from mid-cycle pullback bottom, swing-trade marker for trend resumption)
+    MegaRangeDownMidYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 2 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + red close + doubled vol + mid-range from low (5-20%) (mid-cycle volcanic decline: extreme intraday range with bear-direction outcome in the proper consolidation zone; rare wide-range decline from mid-cycle recovery top, swing-trade marker for trend resumption)
+    MegaRangeUpJustOffYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 2 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + green close + doubled vol + just off 52w high (2-5%) (post-tag volcanic recovery: extreme intraday range with bull-direction outcome immediately after a shallow pullback from the 52w high; rare wide-range push back toward the breakout level with maximum-energy commitment to re-test the prior peak)
+    MegaRangeDownJustOffYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 2 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + red close + doubled vol + just off 52w low (2-5%) (post-tag volcanic rejection: extreme intraday range with bear-direction outcome immediately after a shallow bounce from the 52w low; rare wide-range push back toward the breakdown level with maximum-energy commitment to re-test the prior trough)
+    MegaRangeFlatDayGapUpHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND day_pct.abs() < 0.5 AND gap_pct > 0 AND rel_volume >= 2 — mega intraday range (>10%) + flat intraday bar (|day_pct|<0.5%) + gap-up day + doubled vol (extreme two-way fight after gap up: vol doubled, overnight gap up but regular session prints a >10% range that ends right where it opened; massive whipsaw indecision day where neither side won despite full participation)
+    MegaRangeFlatDayGapDownHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND day_pct.abs() < 0.5 AND gap_pct < 0 AND rel_volume >= 2 — mega intraday range (>10%) + flat intraday bar (|day_pct|<0.5%) + gap-down day + doubled vol (extreme two-way fight after gap down: vol doubled, overnight gap down but regular session prints a >10% range that ends right where it opened; massive whipsaw indecision day where neither side won despite full participation)
+    MegaRangeUpperThirdHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 — mega intraday range (>10%) + close in upper third of range (not pinned to HOD) + doubled vol (wide-range partial bull day: extreme intraday volatility with close 2x closer to HOD than to LOD but not rigid; partial bull-control after intense two-way action where buyers held the upper hand without fully dominating)
+    MegaRangeLowerThirdHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 2 — mega intraday range (>10%) + close in lower third of range (not pinned to LOD) + doubled vol (wide-range partial bear day: extreme intraday volatility with close 2x closer to LOD than to HOD but not rigid; partial bear-control after intense two-way action where sellers held the upper hand without fully dominating)
+    MegaRangeMidpointCloseNearYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct < 2 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + at/near 52w high (<2%) + doubled vol (wide-range standoff at the year peak: extreme intraday volatility ends with balanced midpoint close right at the 52w high; failed-break-or-resume indecision day at maximum significance — next-day directional resolution carries the wider trend)
+    MegaRangeMidpointCloseNearYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct < 2 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + at/near 52w low (<2%) + doubled vol (wide-range standoff at the year trough: extreme intraday volatility ends with balanced midpoint close right at the 52w low; failed-break-or-resume indecision day at maximum significance — next-day directional resolution carries the wider trend)
     MegaRangeMidpointCloseConfirmedAboveYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= -3 AND year_high_pct <= -1 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + confirmed-breakout zone (1-3% past 52w high) + doubled vol (post-breakout wide-range standoff: extreme intraday volatility past the prior peak ends in balanced midpoint close; breakout being tested with maximum-energy two-way fight, next-day resolves whether the breakout sticks or fails)
-    MegaRangeMidpointCloseConfirmedBelowYearLowHotVol,  // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= -3 AND year_low_pct <= -1 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + confirmed-breakdown zone (1-3% past 52w low) + doubled vol (post-breakdown wide-range standoff: extreme intraday volatility past the prior trough ends in balanced midpoint close; breakdown being tested with maximum-energy two-way fight, next-day resolves whether the breakdown sticks or fails)
-    MegaRangeMidpointCloseDeepBelowYearHighHotVol,      // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= 20 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + far below 52w high (>=20%) + doubled vol (capitulation indecision deep in pullback: extreme two-way intraday battle well below the prior peak ends with balanced midpoint close; potential turning-point standoff in extended-decline territory where bulls and bears each landed a blow)
-    MegaRangeMidpointCloseDeepAboveYearLowHotVol,       // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 20 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + far above 52w low (>=20%) + doubled vol (exhaustion indecision deep in advance: extreme two-way intraday battle well above the prior trough ends with balanced midpoint close; potential turning-point standoff in extended-advance territory where bulls and bears each landed a blow)
-    MegaRangeMidpointCloseMidYearHighHotVol,            // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= 5 AND year_high_pct < 20 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + mid-range from high (5-20%) + doubled vol (mid-cycle wide-range indecision: extreme two-way intraday battle in the proper consolidation zone below the prior peak ends with balanced midpoint close; mid-cycle pause-or-pivot standoff in pullback territory)
-    MegaRangeMidpointCloseMidYearLowHotVol,             // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 5 AND year_low_pct < 20 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + mid-range from low (5-20%) + doubled vol (mid-cycle wide-range indecision: extreme two-way intraday battle in the proper consolidation zone above the prior trough ends with balanced midpoint close; mid-cycle pause-or-pivot standoff in recovery territory)
-    MegaRangeMidpointCloseJustOffYearHighHotVol,        // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= 2 AND year_high_pct < 5 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + just off 52w high (2-5%) + doubled vol (post-tag wide-range standoff: extreme two-way intraday battle immediately after a shallow pullback from the 52w high ends with balanced midpoint close; post-tag re-test indecision day with maximum-energy two-way commitment)
-    MegaRangeMidpointCloseJustOffYearLowHotVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 2 AND year_low_pct < 5 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + just off 52w low (2-5%) + doubled vol (post-tag wide-range standoff: extreme two-way intraday battle immediately after a shallow bounce from the 52w low ends with balanced midpoint close; post-tag re-test indecision day with maximum-energy two-way commitment)
-    MegaRangeMidpointCloseAtYearHighDecupledVol,        // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct < 2 AND rel_volume >= 10 — mega intraday range (>10%) + midpoint close + at 52w high (<2%) + decupled vol (climactic peak-day wide-range standoff: extreme two-way intraday battle at the 52w peak with 10x volume ends with balanced midpoint close; institutional-scale exhaustion-or-continuation showdown at the absolute high-water mark)
-    MegaRangeMidpointCloseAtYearLowDecupledVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct < 2 AND rel_volume >= 10 — mega intraday range (>10%) + midpoint close + at 52w low (<2%) + decupled vol (climactic trough-day wide-range standoff: extreme two-way intraday battle at the 52w trough with 10x volume ends with balanced midpoint close; institutional-scale capitulation-or-reversal showdown at the absolute low-water mark)
+    MegaRangeMidpointCloseConfirmedBelowYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= -3 AND year_low_pct <= -1 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + confirmed-breakdown zone (1-3% past 52w low) + doubled vol (post-breakdown wide-range standoff: extreme intraday volatility past the prior trough ends in balanced midpoint close; breakdown being tested with maximum-energy two-way fight, next-day resolves whether the breakdown sticks or fails)
+    MegaRangeMidpointCloseDeepBelowYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= 20 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + far below 52w high (>=20%) + doubled vol (capitulation indecision deep in pullback: extreme two-way intraday battle well below the prior peak ends with balanced midpoint close; potential turning-point standoff in extended-decline territory where bulls and bears each landed a blow)
+    MegaRangeMidpointCloseDeepAboveYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 20 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + far above 52w low (>=20%) + doubled vol (exhaustion indecision deep in advance: extreme two-way intraday battle well above the prior trough ends with balanced midpoint close; potential turning-point standoff in extended-advance territory where bulls and bears each landed a blow)
+    MegaRangeMidpointCloseMidYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= 5 AND year_high_pct < 20 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + mid-range from high (5-20%) + doubled vol (mid-cycle wide-range indecision: extreme two-way intraday battle in the proper consolidation zone below the prior peak ends with balanced midpoint close; mid-cycle pause-or-pivot standoff in pullback territory)
+    MegaRangeMidpointCloseMidYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 5 AND year_low_pct < 20 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + mid-range from low (5-20%) + doubled vol (mid-cycle wide-range indecision: extreme two-way intraday battle in the proper consolidation zone above the prior trough ends with balanced midpoint close; mid-cycle pause-or-pivot standoff in recovery territory)
+    MegaRangeMidpointCloseJustOffYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= 2 AND year_high_pct < 5 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + just off 52w high (2-5%) + doubled vol (post-tag wide-range standoff: extreme two-way intraday battle immediately after a shallow pullback from the 52w high ends with balanced midpoint close; post-tag re-test indecision day with maximum-energy two-way commitment)
+    MegaRangeMidpointCloseJustOffYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 2 AND year_low_pct < 5 AND rel_volume >= 2 — mega intraday range (>10%) + midpoint close + just off 52w low (2-5%) + doubled vol (post-tag wide-range standoff: extreme two-way intraday battle immediately after a shallow bounce from the 52w low ends with balanced midpoint close; post-tag re-test indecision day with maximum-energy two-way commitment)
+    MegaRangeMidpointCloseAtYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct < 2 AND rel_volume >= 10 — mega intraday range (>10%) + midpoint close + at 52w high (<2%) + decupled vol (climactic peak-day wide-range standoff: extreme two-way intraday battle at the 52w peak with 10x volume ends with balanced midpoint close; institutional-scale exhaustion-or-continuation showdown at the absolute high-water mark)
+    MegaRangeMidpointCloseAtYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct < 2 AND rel_volume >= 10 — mega intraday range (>10%) + midpoint close + at 52w low (<2%) + decupled vol (climactic trough-day wide-range standoff: extreme two-way intraday battle at the 52w trough with 10x volume ends with balanced midpoint close; institutional-scale capitulation-or-reversal showdown at the absolute low-water mark)
     MegaRangeMidpointCloseConfirmedAboveYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= -3 AND year_high_pct <= -1 AND rel_volume >= 10 — mega intraday range (>10%) + midpoint close + confirmed-breakout zone (1-3% past 52w high) + decupled vol (post-breakout wide-range standoff: extreme two-way intraday battle just past the validated breakout level with 10x volume ends with balanced midpoint close; institutional-scale follow-through-or-fade showdown in the confirmed expansion zone)
-    MegaRangeMidpointCloseConfirmedBelowYearLowDecupledVol,  // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= -3 AND year_low_pct <= -1 AND rel_volume >= 10 — mega intraday range (>10%) + midpoint close + confirmed-breakdown zone (1-3% past 52w low) + decupled vol (post-breakdown wide-range standoff: extreme two-way intraday battle just past the validated breakdown level with 10x volume ends with balanced midpoint close; institutional-scale follow-through-or-fade showdown in the confirmed contraction zone)
-    MegaRangeMidpointCloseDeepBelowYearHighDecupledVol,      // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= 20 AND rel_volume >= 10 — mega intraday range (>10%) + midpoint close + deep below 52w high (≥20%) + decupled vol (exhaustion-zone wide-range standoff: extreme two-way intraday battle deep below the prior peak with 10x volume ends with balanced midpoint close; institutional-scale capitulation-or-reversal turning-point indecision in deep-pullback territory)
-    MegaRangeMidpointCloseDeepAboveYearLowDecupledVol,       // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 20 AND rel_volume >= 10 — mega intraday range (>10%) + midpoint close + deep above 52w low (≥20%) + decupled vol (exhaustion-zone wide-range standoff: extreme two-way intraday battle deep above the prior trough with 10x volume ends with balanced midpoint close; institutional-scale euphoria-or-pullback turning-point indecision in deep-recovery territory)
-    MegaRangeMidpointCloseMidYearHighDecupledVol,            // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= 5 AND year_high_pct < 20 AND rel_volume >= 10 — mega intraday range (>10%) + midpoint close + mid-range from high (5-20%) + decupled vol (mid-cycle wide-range standoff: extreme two-way intraday battle in the proper consolidation zone below the prior peak with 10x volume ends with balanced midpoint close; institutional-scale pause-or-pivot showdown in mid-cycle pullback territory)
-    MegaRangeMidpointCloseMidYearLowDecupledVol,             // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 5 AND year_low_pct < 20 AND rel_volume >= 10 — mega intraday range (>10%) + midpoint close + mid-range from low (5-20%) + decupled vol (mid-cycle wide-range standoff: extreme two-way intraday battle in the proper consolidation zone above the prior trough with 10x volume ends with balanced midpoint close; institutional-scale pause-or-pivot showdown in mid-cycle recovery territory)
-    MegaRangeMidpointCloseJustOffYearHighDecupledVol,        // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= 2 AND year_high_pct < 5 AND rel_volume >= 10 — mega intraday range (>10%) + midpoint close + just off 52w high (2-5%) + decupled vol (post-tag wide-range standoff: extreme two-way intraday battle immediately after a shallow pullback from the 52w high with 10x volume ends with balanced midpoint close; institutional-scale re-test indecision day with maximum-energy two-way commitment in the post-tag retracement zone)
-    MegaRangeMidpointCloseJustOffYearLowDecupledVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 2 AND year_low_pct < 5 AND rel_volume >= 10 — mega intraday range (>10%) + midpoint close + just off 52w low (2-5%) + decupled vol (post-tag wide-range standoff: extreme two-way intraday battle immediately after a shallow bounce from the 52w low with 10x volume ends with balanced midpoint close; institutional-scale re-test indecision day with maximum-energy two-way commitment in the post-tag bounce zone)
-    MegaRangeUpNearYearHighDecupledVol,                      // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 10 AND year_high_pct < 2 — mega intraday range (>10%) + green close + decupled vol + at/near 52w high (<2%) (institutional-scale volcanic breakout day: extreme intraday range with bull-direction outcome at the 52w high with 10x volume; once-per-year regime-defining peak event marking a fresh high with maximum-conviction institutional commitment)
-    MegaRangeDownNearYearLowDecupledVol,                     // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 10 AND year_low_pct < 2 — mega intraday range (>10%) + red close + decupled vol + at/near 52w low (<2%) (institutional-scale volcanic breakdown day: extreme intraday range with bear-direction outcome at the 52w low with 10x volume; once-per-year regime-defining trough event marking a fresh low with maximum-conviction institutional commitment)
-    MegaRangeUpConfirmedAboveYearHighDecupledVol,            // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 10 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + green close + decupled vol + confirmed-breakout zone (1-3% past 52w high) (institutional-scale volcanic extension past validated breakout: extreme intraday range with bull-direction outcome extending past the already-cleared prior peak with 10x volume; once-per-year maximum-conviction follow-through day confirming institutional trend acceleration)
-    MegaRangeDownConfirmedBelowYearLowDecupledVol,           // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 10 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + red close + decupled vol + confirmed-breakdown zone (1-3% past 52w low) (institutional-scale volcanic extension past validated breakdown: extreme intraday range with bear-direction outcome extending past the already-cleared prior trough with 10x volume; once-per-year maximum-conviction follow-through day confirming institutional trend acceleration)
-    MegaRangeUpDeepBelowYearHighDecupledVol,                 // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 10 AND year_high_pct >= 20 — mega intraday range (>10%) + green close + decupled vol + far below 52w high (≥20%) (institutional-scale V-bottom signal: extreme intraday range with bull-direction outcome deep in pullback territory with 10x volume; once-per-year reversal day where institutional buyers absorbed massive selling and reversed it — historically a marker for major lows in extended declines with maximum-conviction commitment)
-    MegaRangeDownDeepAboveYearLowDecupledVol,                // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 10 AND year_low_pct >= 20 — mega intraday range (>10%) + red close + decupled vol + far above 52w low (≥20%) (institutional-scale waterfall-top signal: extreme intraday range with bear-direction outcome deep in advance territory with 10x volume; once-per-year reversal day where institutional sellers overcame massive buying and reversed it — historically a marker for major highs in extended advances with maximum-conviction commitment)
-    MegaRangeUpMidYearHighDecupledVol,                       // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 10 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + green close + decupled vol + mid-range from high (5-20%) (institutional-scale mid-cycle volcanic rally: extreme intraday range with bull-direction outcome in the proper consolidation zone with 10x volume; once-per-year wide-range advance from mid-cycle pullback bottom, maximum-conviction swing-trade marker for institutional trend resumption)
-    MegaRangeDownMidYearLowDecupledVol,                      // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 10 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + red close + decupled vol + mid-range from low (5-20%) (institutional-scale mid-cycle volcanic decline: extreme intraday range with bear-direction outcome in the proper consolidation zone with 10x volume; once-per-year wide-range decline from mid-cycle recovery top, maximum-conviction swing-trade marker for institutional trend resumption)
-    MegaRangeUpJustOffYearHighDecupledVol,                   // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 10 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + green close + decupled vol + just off 52w high (2-5%) (institutional-scale post-tag volcanic recovery: extreme intraday range with bull-direction outcome immediately after a shallow pullback from the 52w high with 10x volume; once-per-year wide-range push back toward the breakout level with maximum-conviction institutional commitment to re-test the prior peak)
-    MegaRangeDownJustOffYearLowDecupledVol,                  // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 10 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + red close + decupled vol + just off 52w low (2-5%) (institutional-scale post-tag volcanic rejection: extreme intraday range with bear-direction outcome immediately after a shallow bounce from the 52w low with 10x volume; once-per-year wide-range push back toward the breakdown level with maximum-conviction institutional commitment to re-test the prior trough)
-    MegaRangeUpperThirdNearYearHighDecupledVol,              // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_high_pct < 2 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + decupled vol + at/near 52w high (<2%) (institutional-scale partial-bull breakout day: extreme intraday range with close 2x closer to HOD than LOD at the 52w peak with 10x volume; once-per-year regime-defining event marking partial bull-control at the high-water mark without rigid HOD pinning)
-    MegaRangeUpperThirdNearYearLowDecupledVol,               // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_low_pct < 2 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + decupled vol + at/near 52w low (<2%) (institutional-scale partial-bull bottoming-bounce day: extreme intraday range with close 2x closer to HOD than LOD at the 52w trough with 10x volume; once-per-year regime-defining event marking partial bull-control at the low-water mark, classic capitulation-bottom marker without rigid HOD pinning)
-    MegaRangeUpperThirdConfirmedAboveYearHighDecupledVol,    // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + decupled vol + confirmed-breakout zone (1-3% past 52w high) (institutional-scale partial-bull follow-through extension: extreme intraday range with close 2x closer to HOD than LOD just past validated breakout level with 10x volume; once-per-year maximum-conviction continuation marker confirming institutional trend acceleration without rigid HOD pinning)
-    MegaRangeUpperThirdConfirmedBelowYearLowDecupledVol,     // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + decupled vol + confirmed-breakdown zone (1-3% past 52w low) (institutional-scale failed-breakdown trap signal: extreme intraday range with close 2x closer to HOD than LOD just past validated breakdown level with 10x volume; once-per-year bull-reclaim reversal day where institutional buyers immediately reasserted control after the break — classic bear-trap marker at the breakdown extension)
-    MegaRangeUpperThirdDeepBelowYearHighDecupledVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_high_pct >= 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + decupled vol + far below 52w high (≥20%) (institutional-scale partial-bull V-bottom signal: extreme intraday range with close 2x closer to HOD than LOD deep in pullback territory with 10x volume; once-per-year reversal day where institutional buyers seized partial control after absorbing massive selling — historically a marker for major lows in extended declines with maximum-conviction commitment but without rigid HOD pinning)
-    MegaRangeUpperThirdDeepAboveYearLowDecupledVol,          // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_low_pct >= 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + decupled vol + far above 52w low (≥20%) (institutional-scale partial-bull deep-recovery euphoria signal: extreme intraday range with close 2x closer to HOD than LOD deep in advance territory with 10x volume; once-per-year continuation day where institutional buyers maintained partial control deep in extended advance — uptrend-resumption marker in late-stage rally with maximum-conviction commitment without rigid HOD pinning)
-    MegaRangeUpperThirdMidYearHighDecupledVol,               // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + decupled vol + mid-range from high (5-20%) (institutional-scale mid-cycle partial-bull pullback-recovery: extreme intraday range with close 2x closer to HOD than LOD in proper consolidation zone below the prior peak with 10x volume; once-per-year swing-trade marker for institutional trend-resumption from mid-cycle pullback bottom without rigid HOD pinning)
-    MegaRangeUpperThirdMidYearLowDecupledVol,                // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + decupled vol + mid-range from low (5-20%) (institutional-scale mid-cycle partial-bull recovery-continuation: extreme intraday range with close 2x closer to HOD than LOD in proper consolidation zone above the prior trough with 10x volume; once-per-year swing-trade marker for institutional recovery-acceleration from mid-cycle recovery base without rigid HOD pinning)
-    MegaRangeUpperThirdJustOffYearHighDecupledVol,           // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + decupled vol + just off 52w high (2-5%) (institutional-scale post-tag partial-bull retracement-recovery: extreme intraday range with close 2x closer to HOD than LOD immediately after a shallow pullback from the 52w high with 10x volume; once-per-year re-test marker with maximum-conviction institutional commitment to reclaim the breakout level without rigid HOD pinning)
-    MegaRangeUpperThirdJustOffYearLowDecupledVol,            // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + decupled vol + just off 52w low (2-5%) (institutional-scale post-tag partial-bull bounce-continuation: extreme intraday range with close 2x closer to HOD than LOD immediately after a shallow bounce from the 52w low with 10x volume; once-per-year re-test marker confirming the bottom hold with maximum-conviction institutional bull commitment without rigid HOD pinning)
-    MegaRangeLowerThirdNearYearHighDecupledVol,              // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_high_pct < 2 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + decupled vol + at/near 52w high (<2%) (institutional-scale partial-bear failed-breakout distribution day: extreme intraday range with close 2x closer to LOD than HOD at the 52w peak with 10x volume; once-per-year regime-defining event marking partial bear-control at the high-water mark — classic bull-trap distribution marker where sellers seized control at the peak without rigid LOD pinning)
-    MegaRangeLowerThirdNearYearLowDecupledVol,               // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_low_pct < 2 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + decupled vol + at/near 52w low (<2%) (institutional-scale partial-bear breakdown-continuation day: extreme intraday range with close 2x closer to LOD than HOD at the 52w trough with 10x volume; once-per-year regime-defining event marking partial bear-control at the low-water mark — capitulation-extension marker where sellers maintained control at the trough without rigid LOD pinning)
-    MegaRangeLowerThirdConfirmedAboveYearHighDecupledVol,    // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + decupled vol + confirmed-breakout zone (1-3% past 52w high) (institutional-scale failed-confirmed-breakout reversal: extreme intraday range with close 2x closer to LOD than HOD just past validated breakout level with 10x volume; once-per-year bear-reclaim reversal day where institutional sellers immediately reasserted control after the breakout — classic bull-trap marker at the breakout extension where the breakout failed under heavy institutional selling)
-    MegaRangeLowerThirdConfirmedBelowYearLowDecupledVol,     // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + decupled vol + confirmed-breakdown zone (1-3% past 52w low) (institutional-scale partial-bear breakdown follow-through extension: extreme intraday range with close 2x closer to LOD than HOD just past validated breakdown level with 10x volume; once-per-year maximum-conviction continuation marker confirming institutional trend deceleration without rigid LOD pinning)
-    MegaRangeLowerThirdDeepBelowYearHighDecupledVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_high_pct >= 20 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + decupled vol + far below 52w high (≥20%) (institutional-scale partial-bear deep-pullback capitulation-continuation: extreme intraday range with close 2x closer to LOD than HOD deep in pullback territory with 10x volume; once-per-year capitulation day where institutional sellers maintained partial control deep in extended decline — bear-trend acceleration marker in late-stage selloff without rigid LOD pinning)
-    MegaRangeLowerThirdDeepAboveYearLowDecupledVol,          // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_low_pct >= 20 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + decupled vol + far above 52w low (≥20%) (institutional-scale partial-bear waterfall-top reversal: extreme intraday range with close 2x closer to LOD than HOD deep in advance territory with 10x volume; once-per-year reversal day where institutional sellers seized partial control after absorbing massive buying — historically a marker for major highs in extended advances with maximum-conviction commitment but without rigid LOD pinning)
-    MegaRangeLowerThirdMidYearHighDecupledVol,               // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + decupled vol + mid-range from high (5-20%) (institutional-scale mid-cycle partial-bear pullback-continuation: extreme intraday range with close 2x closer to LOD than HOD in proper consolidation zone below the prior peak with 10x volume; once-per-year swing-trade marker for institutional distribution-acceleration from mid-cycle pullback top without rigid LOD pinning)
-    MegaRangeLowerThirdMidYearLowDecupledVol,                // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + decupled vol + mid-range from low (5-20%) (institutional-scale mid-cycle partial-bear recovery-rejection: extreme intraday range with close 2x closer to LOD than HOD in proper consolidation zone above the prior trough with 10x volume; once-per-year swing-trade marker for institutional recovery-failure from mid-cycle bounce top without rigid LOD pinning)
-    MegaRangeLowerThirdJustOffYearHighDecupledVol,           // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + decupled vol + just off 52w high (2-5%) (institutional-scale post-tag partial-bear retracement-continuation: extreme intraday range with close 2x closer to LOD than HOD immediately after a shallow pullback from the 52w high with 10x volume; once-per-year re-test marker with maximum-conviction institutional bear commitment confirming the rejection from the breakout level without rigid LOD pinning)
-    MegaRangeLowerThirdJustOffYearLowDecupledVol,            // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + decupled vol + just off 52w low (2-5%) (institutional-scale post-tag partial-bear bounce-rejection: extreme intraday range with close 2x closer to LOD than HOD immediately after a shallow bounce from the 52w low with 10x volume; once-per-year re-test marker confirming failed-bounce rejection back toward the breakdown level with maximum-conviction institutional bear commitment without rigid LOD pinning)
-    MegaRangeTrendDayUpNearYearHighDecupledVol,              // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_high_pct < 2 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + decupled vol + at/near 52w high (<2%) (institutional-scale trend-day-up volcanic breakout: extreme intraday range with bull-direction outcome closing rigidly pinned to HOD at the 52w peak with 10x volume; once-per-year maximum-domination peak event — full institutional bull control from open to close marking a fresh high without any meaningful intraday retrace)
-    MegaRangeTrendDayUpNearYearLowDecupledVol,               // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_low_pct < 2 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + decupled vol + at/near 52w low (<2%) (institutional-scale trend-day-up V-bottom capitulation-reversal: extreme intraday range with bull-direction outcome closing rigidly pinned to HOD at the 52w trough with 10x volume; once-per-year maximum-domination capitulation-bottom event — full institutional bull reversal from open to close marking the absolute low-water mark with HOD-pinned conviction)
-    MegaRangeTrendDayUpConfirmedAboveYearHighDecupledVol,    // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + decupled vol + confirmed-breakout zone (1-3% past 52w high) (institutional-scale trend-day-up follow-through extension: extreme intraday range with HOD-pinned close just past the validated breakout level with 10x volume; once-per-year maximum-domination continuation event — full institutional bull control extending past the cleared prior peak, the strongest possible follow-through signature)
-    MegaRangeTrendDayUpConfirmedBelowYearLowDecupledVol,     // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + decupled vol + confirmed-breakdown zone (1-3% past 52w low) (institutional-scale trend-day-up failed-breakdown bull-reclaim reversal: extreme intraday range with HOD-pinned close just past the validated breakdown level with 10x volume; once-per-year maximum-conviction bear-trap reversal event — full institutional bull reversal from open to close after the breakdown failed, the strongest possible bear-trap signature)
-    MegaRangeTrendDayUpDeepBelowYearHighDecupledVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_high_pct >= 20 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + decupled vol + far below 52w high (≥20%) (institutional-scale trend-day-up maximum-conviction V-bottom reversal: extreme intraday range with HOD-pinned close deep in pullback territory with 10x volume; once-per-year reversal day where institutional buyers completely absorbed massive selling and held the high to close — historically the strongest possible major-low marker in extended declines with full HOD-pinned domination)
-    MegaRangeTrendDayUpDeepAboveYearLowDecupledVol,          // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_low_pct >= 20 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + decupled vol + far above 52w low (≥20%) (institutional-scale trend-day-up late-stage advance momentum-continuation: extreme intraday range with HOD-pinned close deep in advance territory with 10x volume; once-per-year continuation day where institutional buyers maintained full control from open to close deep in extended advance — momentum-acceleration marker in late-stage rally with maximum HOD-pinned conviction)
-    MegaRangeTrendDayUpMidYearHighDecupledVol,               // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + decupled vol + mid-range from high (5-20%) (institutional-scale trend-day-up mid-cycle pullback-recovery: extreme intraday range with HOD-pinned close in proper consolidation zone below the prior peak with 10x volume; once-per-year swing-trade marker — strongest possible mid-cycle trend-resumption signature from pullback bottom with full HOD-pinned institutional conviction)
-    MegaRangeTrendDayUpMidYearLowDecupledVol,                // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + decupled vol + mid-range from low (5-20%) (institutional-scale trend-day-up mid-cycle recovery-continuation: extreme intraday range with HOD-pinned close in proper consolidation zone above the prior trough with 10x volume; once-per-year swing-trade marker — strongest possible mid-cycle recovery-acceleration signature from bounce base with full HOD-pinned institutional conviction)
-    MegaRangeTrendDayUpJustOffYearHighDecupledVol,           // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + decupled vol + just off 52w high (2-5%) (institutional-scale trend-day-up post-tag breakout-reclaim: extreme intraday range with HOD-pinned close immediately after a shallow pullback from the 52w high with 10x volume; once-per-year re-test reclaim event — strongest possible re-test reclaim signature of the prior peak with full HOD-pinned institutional conviction restoring the breakout level)
-    MegaRangeTrendDayUpJustOffYearLowDecupledVol,            // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + decupled vol + just off 52w low (2-5%) (institutional-scale trend-day-up post-tag bottom-hold: extreme intraday range with HOD-pinned close immediately after a shallow bounce from the 52w low with 10x volume; once-per-year re-test bottom-confirmation event — strongest possible re-test bottom-hold signature confirming the prior trough has decisively held with full HOD-pinned institutional bull conviction)
-    MegaRangeTrendDayDownNearYearHighDecupledVol,            // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_high_pct < 2 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + decupled vol + at/near 52w high (<2%) (institutional-scale trend-day-down failed-peak distribution: extreme intraday range with bear-direction outcome closing rigidly pinned to LOD at the 52w peak with 10x volume; once-per-year maximum-domination peak-failure event — full institutional bear control from open to close marking a failed-peak reversal with LOD-pinned conviction, the strongest possible distribution-day signature)
-    MegaRangeTrendDayDownNearYearLowDecupledVol,             // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_low_pct < 2 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + decupled vol + at/near 52w low (<2%) (institutional-scale trend-day-down volcanic breakdown: extreme intraday range with bear-direction outcome closing rigidly pinned to LOD at the 52w trough with 10x volume; once-per-year maximum-domination trough event — full institutional bear control from open to close marking a fresh low with LOD-pinned conviction, the strongest possible volcanic-breakdown signature)
-    MegaRangeTrendDayDownConfirmedAboveYearHighDecupledVol,  // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + decupled vol + confirmed-breakout zone (1-3% past 52w high) (institutional-scale trend-day-down failed-confirmed-breakout reversal: extreme intraday range with LOD-pinned close just past the validated breakout level with 10x volume; once-per-year full bear-reclaim event — full institutional bear reversal from open to close after the breakout failed, the strongest possible bull-trap signature with LOD-pinned conviction)
-    MegaRangeTrendDayDownConfirmedBelowYearLowDecupledVol,   // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + decupled vol + confirmed-breakdown zone (1-3% past 52w low) (institutional-scale trend-day-down confirmed-breakdown follow-through extension: extreme intraday range with LOD-pinned close just past the validated breakdown level with 10x volume; once-per-year maximum-domination continuation event — full institutional bear control extending past the cleared prior trough, the strongest possible bear-follow-through signature)
-    MegaRangeTrendDayDownDeepBelowYearHighDecupledVol,       // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_high_pct >= 20 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + decupled vol + far below 52w high (≥20%) (institutional-scale trend-day-down deep-pullback capitulation extension: extreme intraday range with LOD-pinned close deep in pullback territory with 10x volume; once-per-year maximum-conviction capitulation event — full institutional bear control from open to close deep in extended decline, the strongest possible bear-trend acceleration signature in late-stage selloff with LOD-pinned domination)
-    MegaRangeTrendDayDownDeepAboveYearLowDecupledVol,        // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_low_pct >= 20 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + decupled vol + far above 52w low (≥20%) (institutional-scale trend-day-down waterfall-top full reversal: extreme intraday range with LOD-pinned close deep in advance territory with 10x volume; once-per-year maximum-conviction reversal event — full institutional bear reversal from open to close after absorbing massive buying — historically the strongest possible major-high marker in extended advances with LOD-pinned domination)
-    MegaRangeTrendDayDownMidYearHighDecupledVol,             // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + decupled vol + mid-range from high (5-20%) (institutional-scale trend-day-down mid-cycle pullback-continuation: extreme intraday range with LOD-pinned close in proper consolidation zone below the prior peak with 10x volume; once-per-year swing-trade marker — strongest possible mid-cycle distribution-acceleration signature from pullback top with full LOD-pinned institutional bear conviction)
-    MegaRangeTrendDayDownMidYearLowDecupledVol,              // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + decupled vol + mid-range from low (5-20%) (institutional-scale trend-day-down mid-cycle recovery-rejection: extreme intraday range with LOD-pinned close in proper consolidation zone above the prior trough with 10x volume; once-per-year swing-trade marker — strongest possible mid-cycle recovery-failure signature from bounce top with full LOD-pinned institutional bear conviction)
-    MegaRangeTrendDayDownJustOffYearHighDecupledVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + decupled vol + just off 52w high (2-5%) (institutional-scale trend-day-down post-tag breakdown-rejection: extreme intraday range with LOD-pinned close immediately after a shallow pullback from the 52w high with 10x volume; once-per-year re-test rejection event — strongest possible re-test rejection signature confirming the prior peak has failed with full LOD-pinned institutional bear conviction pushing back toward the breakdown level)
-    MegaRangeTrendDayDownJustOffYearLowDecupledVol,          // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + decupled vol + just off 52w low (2-5%) (institutional-scale trend-day-down post-tag bottom-failure: extreme intraday range with LOD-pinned close immediately after a shallow bounce from the 52w low with 10x volume; once-per-year re-test breakdown event — strongest possible re-test breakdown signature confirming the prior trough has failed with full LOD-pinned institutional bear conviction pushing back toward the breakdown level)
-    MegaRangeTrendDayUpNearYearHighHotVol,                   // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct < 2 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + doubled vol + at/near 52w high (<2%) (mid-tier trend-day-up volcanic breakout: extreme intraday range with bull-direction outcome closing rigidly pinned to HOD at the 52w peak with doubled volume; once-per-month maximum-domination peak event — full bull control from open to close marking a fresh high without any meaningful intraday retrace)
-    MegaRangeTrendDayUpNearYearLowHotVol,                    // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct < 2 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + doubled vol + at/near 52w low (<2%) (mid-tier trend-day-up V-bottom capitulation-reversal: extreme intraday range with bull-direction outcome closing rigidly pinned to HOD at the 52w trough with doubled volume; once-per-month maximum-domination capitulation-bottom event — full bull reversal from open to close marking the absolute low-water mark with HOD-pinned conviction)
-    MegaRangeTrendDayUpConfirmedAboveYearHighHotVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + doubled vol + confirmed-breakout zone (1-3% past 52w high) (mid-tier trend-day-up follow-through extension: extreme intraday range with HOD-pinned close just past the validated breakout level with doubled volume; once-per-month maximum-domination continuation event — full bull control extending past the cleared prior peak, mid-tier follow-through signature)
-    MegaRangeTrendDayUpConfirmedBelowYearLowHotVol,          // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + doubled vol + confirmed-breakdown zone (1-3% past 52w low) (mid-tier trend-day-up failed-breakdown bull-reclaim reversal: extreme intraday range with HOD-pinned close just past the validated breakdown level with doubled volume; once-per-month maximum-conviction bear-trap reversal event — full bull reversal from open to close after the breakdown failed, mid-tier bear-trap signature)
-    MegaRangeTrendDayUpDeepBelowYearHighHotVol,              // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= 20 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + doubled vol + far below 52w high (≥20%) (mid-tier trend-day-up V-bottom reversal: extreme intraday range with HOD-pinned close deep in pullback territory with doubled volume; once-per-month reversal day where buyers completely absorbed massive selling and held the high to close — mid-tier major-low marker in extended declines with HOD-pinned domination)
-    MegaRangeTrendDayUpDeepAboveYearLowHotVol,               // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= 20 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + doubled vol + far above 52w low (≥20%) (mid-tier trend-day-up late-stage advance momentum-continuation: extreme intraday range with HOD-pinned close deep in advance territory with doubled volume; once-per-month continuation day where buyers maintained full control from open to close deep in extended advance — mid-tier momentum-acceleration marker in late-stage rally with HOD-pinned conviction)
-    MegaRangeTrendDayUpMidYearHighHotVol,                    // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + doubled vol + mid-range from high (5-20%) (mid-tier trend-day-up mid-cycle pullback-recovery: extreme intraday range with HOD-pinned close in proper consolidation zone below the prior peak with doubled volume; once-per-month swing-trade marker — mid-tier trend-resumption signature from pullback bottom with HOD-pinned conviction)
-    MegaRangeTrendDayUpMidYearLowHotVol,                     // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + doubled vol + mid-range from low (5-20%) (mid-tier trend-day-up mid-cycle recovery-continuation: extreme intraday range with HOD-pinned close in proper consolidation zone above the prior trough with doubled volume; once-per-month swing-trade marker — mid-tier recovery-acceleration signature from bounce base with HOD-pinned conviction)
-    MegaRangeTrendDayUpJustOffYearHighHotVol,                // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + doubled vol + just off 52w high (2-5%) (mid-tier trend-day-up post-tag breakout-reclaim: extreme intraday range with HOD-pinned close immediately after a shallow pullback from the 52w high with doubled volume; once-per-month re-test reclaim event — mid-tier re-test reclaim signature of the prior peak with HOD-pinned conviction restoring the breakout level)
-    MegaRangeTrendDayUpJustOffYearLowHotVol,                 // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + doubled vol + just off 52w low (2-5%) (mid-tier trend-day-up post-tag bottom-hold: extreme intraday range with HOD-pinned close immediately after a shallow bounce from the 52w low with doubled volume; once-per-month re-test bottom-confirmation event — mid-tier re-test bottom-hold signature confirming the prior trough has held with HOD-pinned bull conviction)
-    MegaRangeTrendDayDownNearYearHighHotVol,                 // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct < 2 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + doubled vol + at/near 52w high (<2%) (mid-tier trend-day-down failed-peak distribution: extreme intraday range with bear-direction outcome closing rigidly pinned to LOD at the 52w peak with doubled volume; once-per-month maximum-domination peak-failure event — full bear control from open to close marking a failed-peak reversal with LOD-pinned conviction, mid-tier distribution-day signature)
-    MegaRangeTrendDayDownNearYearLowHotVol,                  // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct < 2 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + doubled vol + at/near 52w low (<2%) (mid-tier trend-day-down volcanic breakdown: extreme intraday range with bear-direction outcome closing rigidly pinned to LOD at the 52w trough with doubled volume; once-per-month maximum-domination trough event — full bear control from open to close marking a fresh low with LOD-pinned conviction, mid-tier volcanic-breakdown signature)
-    MegaRangeTrendDayDownConfirmedAboveYearHighHotVol,       // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + doubled vol + confirmed-breakout zone (1-3% past 52w high) (mid-tier trend-day-down failed-confirmed-breakout reversal: extreme intraday range with LOD-pinned close just past the validated breakout level with doubled volume; once-per-month full bear-reclaim event — full bear reversal from open to close after the breakout failed, mid-tier bull-trap signature with LOD-pinned conviction)
-    MegaRangeTrendDayDownConfirmedBelowYearLowHotVol,        // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + doubled vol + confirmed-breakdown zone (1-3% past 52w low) (mid-tier trend-day-down confirmed-breakdown follow-through extension: extreme intraday range with LOD-pinned close just past the validated breakdown level with doubled volume; once-per-month maximum-domination continuation event — full bear control extending past the cleared prior trough, mid-tier bear-follow-through signature)
-    MegaRangeTrendDayDownDeepBelowYearHighHotVol,            // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= 20 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + doubled vol + far below 52w high (≥20%) (mid-tier trend-day-down deep-pullback capitulation extension: extreme intraday range with LOD-pinned close deep in pullback territory with doubled volume; once-per-month maximum-conviction capitulation event — full bear control from open to close deep in extended decline, mid-tier bear-trend acceleration signature in late-stage selloff with LOD-pinned domination)
-    MegaRangeTrendDayDownDeepAboveYearLowHotVol,             // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= 20 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + doubled vol + far above 52w low (≥20%) (mid-tier trend-day-down waterfall-top full reversal: extreme intraday range with LOD-pinned close deep in advance territory with doubled volume; once-per-month maximum-conviction reversal event — full bear reversal from open to close after absorbing massive buying — mid-tier major-high marker in extended advances with LOD-pinned domination)
-    MegaRangeTrendDayDownMidYearHighHotVol,                  // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + doubled vol + mid-range from high (5-20%) (mid-tier trend-day-down mid-cycle pullback-continuation: extreme intraday range with LOD-pinned close in proper consolidation zone below the prior peak with doubled volume; once-per-month swing-trade marker — mid-tier distribution-acceleration signature from pullback top with LOD-pinned bear conviction)
-    MegaRangeTrendDayDownMidYearLowHotVol,                   // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + doubled vol + mid-range from low (5-20%) (mid-tier trend-day-down mid-cycle recovery-rejection: extreme intraday range with LOD-pinned close in proper consolidation zone above the prior trough with doubled volume; once-per-month swing-trade marker — mid-tier recovery-failure signature from bounce top with LOD-pinned bear conviction)
-    MegaRangeTrendDayDownJustOffYearHighHotVol,              // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + doubled vol + just off 52w high (2-5%) (mid-tier trend-day-down post-tag breakdown-rejection: extreme intraday range with LOD-pinned close immediately after a shallow pullback from the 52w high with doubled volume; once-per-month re-test rejection event — mid-tier re-test rejection signature confirming the prior peak has failed with LOD-pinned bear conviction pushing back toward the breakdown level)
-    MegaRangeTrendDayDownJustOffYearLowHotVol,               // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + doubled vol + just off 52w low (2-5%) (mid-tier trend-day-down post-tag bottom-failure: extreme intraday range with LOD-pinned close immediately after a shallow bounce from the 52w low with doubled volume; once-per-month re-test breakdown event — mid-tier re-test breakdown signature confirming the prior trough has failed with LOD-pinned bear conviction pushing back toward the breakdown level)
-    MegaRangeUpperThirdNearYearHighHotVol,                   // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_high_pct < 2 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + doubled vol + at/near 52w high (<2%) (mid-tier partial-bull breakout day: extreme intraday range with close 2x closer to HOD than LOD at the 52w peak with doubled volume; once-per-month regime-defining event marking partial bull-control at the high-water mark without rigid HOD pinning)
-    MegaRangeUpperThirdNearYearLowHotVol,                    // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_low_pct < 2 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + doubled vol + at/near 52w low (<2%) (mid-tier partial-bull bottoming-bounce day: extreme intraday range with close 2x closer to HOD than LOD at the 52w trough with doubled volume; once-per-month regime-defining event marking partial bull-control at the low-water mark, mid-tier capitulation-bottom marker without rigid HOD pinning)
-    MegaRangeUpperThirdConfirmedAboveYearHighHotVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + doubled vol + confirmed-breakout zone (1-3% past 52w high) (mid-tier partial-bull follow-through extension: extreme intraday range with close 2x closer to HOD than LOD just past validated breakout level with doubled volume; once-per-month continuation marker confirming mid-tier trend acceleration without rigid HOD pinning)
-    MegaRangeUpperThirdConfirmedBelowYearLowHotVol,          // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + doubled vol + confirmed-breakdown zone (1-3% past 52w low) (mid-tier failed-breakdown trap signal: extreme intraday range with close 2x closer to HOD than LOD just past validated breakdown level with doubled volume; once-per-month bull-reclaim reversal day where buyers immediately reasserted control after the break — mid-tier bear-trap marker at the breakdown extension)
-    MegaRangeUpperThirdDeepBelowYearHighHotVol,              // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_high_pct >= 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + doubled vol + far below 52w high (≥20%) (mid-tier partial-bull V-bottom signal: extreme intraday range with close 2x closer to HOD than LOD deep in pullback territory with doubled volume; once-per-month reversal day where buyers seized partial control after absorbing massive selling — mid-tier major-low marker in extended declines without rigid HOD pinning)
-    MegaRangeUpperThirdDeepAboveYearLowHotVol,               // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_low_pct >= 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + doubled vol + far above 52w low (≥20%) (mid-tier partial-bull deep-recovery euphoria signal: extreme intraday range with close 2x closer to HOD than LOD deep in advance territory with doubled volume; once-per-month continuation day where buyers maintained partial control deep in extended advance — mid-tier uptrend-resumption marker in late-stage rally without rigid HOD pinning)
-    MegaRangeUpperThirdMidYearHighHotVol,                    // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + doubled vol + mid-range from high (5-20%) (mid-tier mid-cycle partial-bull pullback-recovery: extreme intraday range with close 2x closer to HOD than LOD in proper consolidation zone below the prior peak with doubled volume; once-per-month swing-trade marker for trend-resumption from mid-cycle pullback bottom without rigid HOD pinning)
-    MegaRangeUpperThirdMidYearLowHotVol,                     // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + doubled vol + mid-range from low (5-20%) (mid-tier mid-cycle partial-bull recovery-continuation: extreme intraday range with close 2x closer to HOD than LOD in proper consolidation zone above the prior trough with doubled volume; once-per-month swing-trade marker for recovery-acceleration from mid-cycle recovery base without rigid HOD pinning)
-    MegaRangeUpperThirdJustOffYearHighHotVol,                // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + doubled vol + just off 52w high (2-5%) (mid-tier post-tag partial-bull retracement-recovery: extreme intraday range with close 2x closer to HOD than LOD immediately after a shallow pullback from the 52w high with doubled volume; once-per-month re-test marker confirming partial-bull commitment to reclaim the breakout level without rigid HOD pinning)
-    MegaRangeUpperThirdJustOffYearLowHotVol,                 // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + doubled vol + just off 52w low (2-5%) (mid-tier post-tag partial-bull bounce-continuation: extreme intraday range with close 2x closer to HOD than LOD immediately after a shallow bounce from the 52w low with doubled volume; once-per-month re-test marker confirming the bottom hold with partial-bull commitment without rigid HOD pinning)
-    MegaRangeLowerThirdNearYearHighHotVol,                   // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_high_pct < 2 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + doubled vol + at/near 52w high (<2%) (mid-tier partial-bear failed-breakout distribution day: extreme intraday range with close 2x closer to LOD than HOD at the 52w peak with doubled volume; once-per-month regime-defining event marking partial bear-control at the high-water mark — bull-trap distribution marker without rigid LOD pinning)
-    MegaRangeLowerThirdNearYearLowHotVol,                    // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_low_pct < 2 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + doubled vol + at/near 52w low (<2%) (mid-tier partial-bear breakdown-continuation day: extreme intraday range with close 2x closer to LOD than HOD at the 52w trough with doubled volume; once-per-month regime-defining event marking partial bear-control at the low-water mark — capitulation-extension marker without rigid LOD pinning)
-    MegaRangeLowerThirdConfirmedAboveYearHighHotVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + doubled vol + confirmed-breakout zone (1-3% past 52w high) (mid-tier failed-confirmed-breakout reversal: extreme intraday range with close 2x closer to LOD than HOD just past validated breakout level with doubled volume; once-per-month bear-reclaim reversal day where sellers reasserted control after the breakout — mid-tier bull-trap marker at the breakout extension)
-    MegaRangeLowerThirdConfirmedBelowYearLowHotVol,          // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + doubled vol + confirmed-breakdown zone (1-3% past 52w low) (mid-tier partial-bear breakdown follow-through extension: extreme intraday range with close 2x closer to LOD than HOD just past validated breakdown level with doubled volume; once-per-month continuation marker confirming mid-tier trend deceleration without rigid LOD pinning)
-    MegaRangeLowerThirdDeepBelowYearHighHotVol,              // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_high_pct >= 20 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + doubled vol + far below 52w high (≥20%) (mid-tier partial-bear deep-pullback capitulation-continuation: extreme intraday range with close 2x closer to LOD than HOD deep in pullback territory with doubled volume; once-per-month capitulation day where sellers maintained partial control deep in extended decline — mid-tier bear-trend acceleration marker in late-stage selloff without rigid LOD pinning)
-    MegaRangeLowerThirdDeepAboveYearLowHotVol,               // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_low_pct >= 20 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + doubled vol + far above 52w low (≥20%) (mid-tier partial-bear waterfall-top reversal: extreme intraday range with close 2x closer to LOD than HOD deep in advance territory with doubled volume; once-per-month reversal day where sellers seized partial control after absorbing massive buying — mid-tier major-high marker in extended advances without rigid LOD pinning)
-    MegaRangeLowerThirdMidYearHighHotVol,                    // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + doubled vol + mid-range from high (5-20%) (mid-tier mid-cycle partial-bear pullback-continuation: extreme intraday range with close 2x closer to LOD than HOD in proper consolidation zone below the prior peak with doubled volume; once-per-month swing-trade marker for distribution-acceleration from mid-cycle pullback top without rigid LOD pinning)
-    MegaRangeLowerThirdMidYearLowHotVol,                     // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + doubled vol + mid-range from low (5-20%) (mid-tier mid-cycle partial-bear recovery-rejection: extreme intraday range with close 2x closer to LOD than HOD in proper consolidation zone above the prior trough with doubled volume; once-per-month swing-trade marker for recovery-failure from mid-cycle bounce top without rigid LOD pinning)
-    MegaRangeLowerThirdJustOffYearHighHotVol,                // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + doubled vol + just off 52w high (2-5%) (mid-tier post-tag partial-bear retracement-continuation: extreme intraday range with close 2x closer to LOD than HOD immediately after a shallow pullback from the 52w high with doubled volume; once-per-month re-test marker confirming rejection from the breakout level with partial-bear commitment without rigid LOD pinning)
-    MegaRangeLowerThirdJustOffYearLowHotVol,                 // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + doubled vol + just off 52w low (2-5%) (mid-tier post-tag partial-bear bounce-rejection: extreme intraday range with close 2x closer to LOD than HOD immediately after a shallow bounce from the 52w low with doubled volume; once-per-month re-test marker confirming failed-bounce rejection back toward the breakdown level with partial-bear commitment without rigid LOD pinning)
-    MegaRangeMidpointCloseAtYearHighHotVol,                  // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 2 AND year_high_pct < 2 — mega intraday range (>10%) + midpoint close + doubled vol + at 52w high (<2%) (mid-tier peak-day wide-range standoff: extreme two-way intraday battle at the 52w peak with doubled volume ends with balanced midpoint close; once-per-month exhaustion-or-continuation showdown at the absolute high-water mark)
-    MegaRangeMidpointCloseAtYearLowHotVol,                   // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 2 AND year_low_pct < 2 — mega intraday range (>10%) + midpoint close + doubled vol + at 52w low (<2%) (mid-tier trough-day wide-range standoff: extreme two-way intraday battle at the 52w trough with doubled volume ends with balanced midpoint close; once-per-month capitulation-or-reversal showdown at the absolute low-water mark)
-    MegaRangeUpNearYearHighQuintupledVol,                    // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 5 AND year_high_pct < 2 — mega intraday range (>10%) + green close + quintupled vol + at/near 52w high (<2%) (institutional-tier volcanic breakout day: extreme intraday range with bull-direction outcome at the 52w high with 5x volume; quarterly-rare regime-defining peak event marking a fresh high with strong institutional commitment)
-    MegaRangeDownNearYearLowQuintupledVol,                   // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 5 AND year_low_pct < 2 — mega intraday range (>10%) + red close + quintupled vol + at/near 52w low (<2%) (institutional-tier volcanic breakdown day: extreme intraday range with bear-direction outcome at the 52w low with 5x volume; quarterly-rare regime-defining trough event marking a fresh low with strong institutional commitment)
-    MegaRangeUpConfirmedAboveYearHighQuintupledVol,          // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 5 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + green close + quintupled vol + confirmed-breakout zone (1-3% past 52w high) (institutional-tier volcanic extension past validated breakout: extreme intraday range with bull-direction outcome extending past the already-cleared prior peak with 5x volume; quarterly-rare follow-through day confirming institutional trend acceleration)
-    MegaRangeDownConfirmedBelowYearLowQuintupledVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 5 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + red close + quintupled vol + confirmed-breakdown zone (1-3% past 52w low) (institutional-tier volcanic extension past validated breakdown: extreme intraday range with bear-direction outcome extending past the already-cleared prior trough with 5x volume; quarterly-rare follow-through day confirming institutional trend acceleration)
-    MegaRangeUpDeepBelowYearHighQuintupledVol,               // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 5 AND year_high_pct >= 20 — mega intraday range (>10%) + green close + quintupled vol + far below 52w high (≥20%) (institutional-tier V-bottom signal: extreme intraday range with bull-direction outcome deep in pullback territory with 5x volume; quarterly-rare reversal day where institutional buyers absorbed massive selling and reversed it — historically a marker for major lows in extended declines)
-    MegaRangeDownDeepAboveYearLowQuintupledVol,              // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 5 AND year_low_pct >= 20 — mega intraday range (>10%) + red close + quintupled vol + far above 52w low (≥20%) (institutional-tier waterfall-top signal: extreme intraday range with bear-direction outcome deep in advance territory with 5x volume; quarterly-rare reversal day where institutional sellers overcame massive buying and reversed it — historically a marker for major highs in extended advances)
-    MegaRangeUpMidYearHighQuintupledVol,                     // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 5 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + green close + quintupled vol + mid-range from high (5-20%) (institutional-tier mid-cycle volcanic rally: extreme intraday range with bull-direction outcome in the proper consolidation zone with 5x volume; quarterly-rare wide-range advance from mid-cycle pullback bottom, institutional swing-trade marker for trend resumption)
-    MegaRangeDownMidYearLowQuintupledVol,                    // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 5 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + red close + quintupled vol + mid-range from low (5-20%) (institutional-tier mid-cycle volcanic decline: extreme intraday range with bear-direction outcome in the proper consolidation zone with 5x volume; quarterly-rare wide-range decline from mid-cycle recovery top, institutional swing-trade marker for trend resumption)
-    MegaRangeUpJustOffYearHighQuintupledVol,                 // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 5 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + green close + quintupled vol + just off 52w high (2-5%) (institutional-tier post-tag volcanic recovery: extreme intraday range with bull-direction outcome immediately after a shallow pullback from the 52w high with 5x volume; quarterly-rare wide-range push back toward the breakout level with strong institutional commitment to re-test the prior peak)
-    MegaRangeDownJustOffYearLowQuintupledVol,                // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 5 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + red close + quintupled vol + just off 52w low (2-5%) (institutional-tier post-tag volcanic rejection: extreme intraday range with bear-direction outcome immediately after a shallow bounce from the 52w low with 5x volume; quarterly-rare wide-range push back toward the breakdown level with strong institutional commitment to re-test the prior trough)
-    MegaRangeMidpointCloseNearYearHighQuintupledVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_high_pct < 2 — mega intraday range (>10%) + midpoint close + quintupled vol + at/near 52w high (<2%) (institutional-tier peak-day wide-range standoff: extreme two-way intraday battle at the 52w peak with 5x volume ends with balanced midpoint close; quarterly-rare exhaustion-or-continuation showdown at the absolute high-water mark with strong institutional commitment on both sides)
-    MegaRangeMidpointCloseNearYearLowQuintupledVol,          // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_low_pct < 2 — mega intraday range (>10%) + midpoint close + quintupled vol + at/near 52w low (<2%) (institutional-tier trough-day wide-range standoff: extreme two-way intraday battle at the 52w trough with 5x volume ends with balanced midpoint close; quarterly-rare capitulation-or-reversal showdown at the absolute low-water mark with strong institutional commitment on both sides)
+    MegaRangeMidpointCloseConfirmedBelowYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= -3 AND year_low_pct <= -1 AND rel_volume >= 10 — mega intraday range (>10%) + midpoint close + confirmed-breakdown zone (1-3% past 52w low) + decupled vol (post-breakdown wide-range standoff: extreme two-way intraday battle just past the validated breakdown level with 10x volume ends with balanced midpoint close; institutional-scale follow-through-or-fade showdown in the confirmed contraction zone)
+    MegaRangeMidpointCloseDeepBelowYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= 20 AND rel_volume >= 10 — mega intraday range (>10%) + midpoint close + deep below 52w high (≥20%) + decupled vol (exhaustion-zone wide-range standoff: extreme two-way intraday battle deep below the prior peak with 10x volume ends with balanced midpoint close; institutional-scale capitulation-or-reversal turning-point indecision in deep-pullback territory)
+    MegaRangeMidpointCloseDeepAboveYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 20 AND rel_volume >= 10 — mega intraday range (>10%) + midpoint close + deep above 52w low (≥20%) + decupled vol (exhaustion-zone wide-range standoff: extreme two-way intraday battle deep above the prior trough with 10x volume ends with balanced midpoint close; institutional-scale euphoria-or-pullback turning-point indecision in deep-recovery territory)
+    MegaRangeMidpointCloseMidYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= 5 AND year_high_pct < 20 AND rel_volume >= 10 — mega intraday range (>10%) + midpoint close + mid-range from high (5-20%) + decupled vol (mid-cycle wide-range standoff: extreme two-way intraday battle in the proper consolidation zone below the prior peak with 10x volume ends with balanced midpoint close; institutional-scale pause-or-pivot showdown in mid-cycle pullback territory)
+    MegaRangeMidpointCloseMidYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 5 AND year_low_pct < 20 AND rel_volume >= 10 — mega intraday range (>10%) + midpoint close + mid-range from low (5-20%) + decupled vol (mid-cycle wide-range standoff: extreme two-way intraday battle in the proper consolidation zone above the prior trough with 10x volume ends with balanced midpoint close; institutional-scale pause-or-pivot showdown in mid-cycle recovery territory)
+    MegaRangeMidpointCloseJustOffYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_high_pct >= 2 AND year_high_pct < 5 AND rel_volume >= 10 — mega intraday range (>10%) + midpoint close + just off 52w high (2-5%) + decupled vol (post-tag wide-range standoff: extreme two-way intraday battle immediately after a shallow pullback from the 52w high with 10x volume ends with balanced midpoint close; institutional-scale re-test indecision day with maximum-energy two-way commitment in the post-tag retracement zone)
+    MegaRangeMidpointCloseJustOffYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND year_low_pct >= 2 AND year_low_pct < 5 AND rel_volume >= 10 — mega intraday range (>10%) + midpoint close + just off 52w low (2-5%) + decupled vol (post-tag wide-range standoff: extreme two-way intraday battle immediately after a shallow bounce from the 52w low with 10x volume ends with balanced midpoint close; institutional-scale re-test indecision day with maximum-energy two-way commitment in the post-tag bounce zone)
+    MegaRangeUpNearYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 10 AND year_high_pct < 2 — mega intraday range (>10%) + green close + decupled vol + at/near 52w high (<2%) (institutional-scale volcanic breakout day: extreme intraday range with bull-direction outcome at the 52w high with 10x volume; once-per-year regime-defining peak event marking a fresh high with maximum-conviction institutional commitment)
+    MegaRangeDownNearYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 10 AND year_low_pct < 2 — mega intraday range (>10%) + red close + decupled vol + at/near 52w low (<2%) (institutional-scale volcanic breakdown day: extreme intraday range with bear-direction outcome at the 52w low with 10x volume; once-per-year regime-defining trough event marking a fresh low with maximum-conviction institutional commitment)
+    MegaRangeUpConfirmedAboveYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 10 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + green close + decupled vol + confirmed-breakout zone (1-3% past 52w high) (institutional-scale volcanic extension past validated breakout: extreme intraday range with bull-direction outcome extending past the already-cleared prior peak with 10x volume; once-per-year maximum-conviction follow-through day confirming institutional trend acceleration)
+    MegaRangeDownConfirmedBelowYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 10 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + red close + decupled vol + confirmed-breakdown zone (1-3% past 52w low) (institutional-scale volcanic extension past validated breakdown: extreme intraday range with bear-direction outcome extending past the already-cleared prior trough with 10x volume; once-per-year maximum-conviction follow-through day confirming institutional trend acceleration)
+    MegaRangeUpDeepBelowYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 10 AND year_high_pct >= 20 — mega intraday range (>10%) + green close + decupled vol + far below 52w high (≥20%) (institutional-scale V-bottom signal: extreme intraday range with bull-direction outcome deep in pullback territory with 10x volume; once-per-year reversal day where institutional buyers absorbed massive selling and reversed it — historically a marker for major lows in extended declines with maximum-conviction commitment)
+    MegaRangeDownDeepAboveYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 10 AND year_low_pct >= 20 — mega intraday range (>10%) + red close + decupled vol + far above 52w low (≥20%) (institutional-scale waterfall-top signal: extreme intraday range with bear-direction outcome deep in advance territory with 10x volume; once-per-year reversal day where institutional sellers overcame massive buying and reversed it — historically a marker for major highs in extended advances with maximum-conviction commitment)
+    MegaRangeUpMidYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 10 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + green close + decupled vol + mid-range from high (5-20%) (institutional-scale mid-cycle volcanic rally: extreme intraday range with bull-direction outcome in the proper consolidation zone with 10x volume; once-per-year wide-range advance from mid-cycle pullback bottom, maximum-conviction swing-trade marker for institutional trend resumption)
+    MegaRangeDownMidYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 10 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + red close + decupled vol + mid-range from low (5-20%) (institutional-scale mid-cycle volcanic decline: extreme intraday range with bear-direction outcome in the proper consolidation zone with 10x volume; once-per-year wide-range decline from mid-cycle recovery top, maximum-conviction swing-trade marker for institutional trend resumption)
+    MegaRangeUpJustOffYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 10 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + green close + decupled vol + just off 52w high (2-5%) (institutional-scale post-tag volcanic recovery: extreme intraday range with bull-direction outcome immediately after a shallow pullback from the 52w high with 10x volume; once-per-year wide-range push back toward the breakout level with maximum-conviction institutional commitment to re-test the prior peak)
+    MegaRangeDownJustOffYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 10 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + red close + decupled vol + just off 52w low (2-5%) (institutional-scale post-tag volcanic rejection: extreme intraday range with bear-direction outcome immediately after a shallow bounce from the 52w low with 10x volume; once-per-year wide-range push back toward the breakdown level with maximum-conviction institutional commitment to re-test the prior trough)
+    MegaRangeUpperThirdNearYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_high_pct < 2 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + decupled vol + at/near 52w high (<2%) (institutional-scale partial-bull breakout day: extreme intraday range with close 2x closer to HOD than LOD at the 52w peak with 10x volume; once-per-year regime-defining event marking partial bull-control at the high-water mark without rigid HOD pinning)
+    MegaRangeUpperThirdNearYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_low_pct < 2 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + decupled vol + at/near 52w low (<2%) (institutional-scale partial-bull bottoming-bounce day: extreme intraday range with close 2x closer to HOD than LOD at the 52w trough with 10x volume; once-per-year regime-defining event marking partial bull-control at the low-water mark, classic capitulation-bottom marker without rigid HOD pinning)
+    MegaRangeUpperThirdConfirmedAboveYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + decupled vol + confirmed-breakout zone (1-3% past 52w high) (institutional-scale partial-bull follow-through extension: extreme intraday range with close 2x closer to HOD than LOD just past validated breakout level with 10x volume; once-per-year maximum-conviction continuation marker confirming institutional trend acceleration without rigid HOD pinning)
+    MegaRangeUpperThirdConfirmedBelowYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + decupled vol + confirmed-breakdown zone (1-3% past 52w low) (institutional-scale failed-breakdown trap signal: extreme intraday range with close 2x closer to HOD than LOD just past validated breakdown level with 10x volume; once-per-year bull-reclaim reversal day where institutional buyers immediately reasserted control after the break — classic bear-trap marker at the breakdown extension)
+    MegaRangeUpperThirdDeepBelowYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_high_pct >= 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + decupled vol + far below 52w high (≥20%) (institutional-scale partial-bull V-bottom signal: extreme intraday range with close 2x closer to HOD than LOD deep in pullback territory with 10x volume; once-per-year reversal day where institutional buyers seized partial control after absorbing massive selling — historically a marker for major lows in extended declines with maximum-conviction commitment but without rigid HOD pinning)
+    MegaRangeUpperThirdDeepAboveYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_low_pct >= 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + decupled vol + far above 52w low (≥20%) (institutional-scale partial-bull deep-recovery euphoria signal: extreme intraday range with close 2x closer to HOD than LOD deep in advance territory with 10x volume; once-per-year continuation day where institutional buyers maintained partial control deep in extended advance — uptrend-resumption marker in late-stage rally with maximum-conviction commitment without rigid HOD pinning)
+    MegaRangeUpperThirdMidYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + decupled vol + mid-range from high (5-20%) (institutional-scale mid-cycle partial-bull pullback-recovery: extreme intraday range with close 2x closer to HOD than LOD in proper consolidation zone below the prior peak with 10x volume; once-per-year swing-trade marker for institutional trend-resumption from mid-cycle pullback bottom without rigid HOD pinning)
+    MegaRangeUpperThirdMidYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + decupled vol + mid-range from low (5-20%) (institutional-scale mid-cycle partial-bull recovery-continuation: extreme intraday range with close 2x closer to HOD than LOD in proper consolidation zone above the prior trough with 10x volume; once-per-year swing-trade marker for institutional recovery-acceleration from mid-cycle recovery base without rigid HOD pinning)
+    MegaRangeUpperThirdJustOffYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + decupled vol + just off 52w high (2-5%) (institutional-scale post-tag partial-bull retracement-recovery: extreme intraday range with close 2x closer to HOD than LOD immediately after a shallow pullback from the 52w high with 10x volume; once-per-year re-test marker with maximum-conviction institutional commitment to reclaim the breakout level without rigid HOD pinning)
+    MegaRangeUpperThirdJustOffYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + decupled vol + just off 52w low (2-5%) (institutional-scale post-tag partial-bull bounce-continuation: extreme intraday range with close 2x closer to HOD than LOD immediately after a shallow bounce from the 52w low with 10x volume; once-per-year re-test marker confirming the bottom hold with maximum-conviction institutional bull commitment without rigid HOD pinning)
+    MegaRangeLowerThirdNearYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_high_pct < 2 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + decupled vol + at/near 52w high (<2%) (institutional-scale partial-bear failed-breakout distribution day: extreme intraday range with close 2x closer to LOD than HOD at the 52w peak with 10x volume; once-per-year regime-defining event marking partial bear-control at the high-water mark — classic bull-trap distribution marker where sellers seized control at the peak without rigid LOD pinning)
+    MegaRangeLowerThirdNearYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_low_pct < 2 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + decupled vol + at/near 52w low (<2%) (institutional-scale partial-bear breakdown-continuation day: extreme intraday range with close 2x closer to LOD than HOD at the 52w trough with 10x volume; once-per-year regime-defining event marking partial bear-control at the low-water mark — capitulation-extension marker where sellers maintained control at the trough without rigid LOD pinning)
+    MegaRangeLowerThirdConfirmedAboveYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + decupled vol + confirmed-breakout zone (1-3% past 52w high) (institutional-scale failed-confirmed-breakout reversal: extreme intraday range with close 2x closer to LOD than HOD just past validated breakout level with 10x volume; once-per-year bear-reclaim reversal day where institutional sellers immediately reasserted control after the breakout — classic bull-trap marker at the breakout extension where the breakout failed under heavy institutional selling)
+    MegaRangeLowerThirdConfirmedBelowYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + decupled vol + confirmed-breakdown zone (1-3% past 52w low) (institutional-scale partial-bear breakdown follow-through extension: extreme intraday range with close 2x closer to LOD than HOD just past validated breakdown level with 10x volume; once-per-year maximum-conviction continuation marker confirming institutional trend deceleration without rigid LOD pinning)
+    MegaRangeLowerThirdDeepBelowYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_high_pct >= 20 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + decupled vol + far below 52w high (≥20%) (institutional-scale partial-bear deep-pullback capitulation-continuation: extreme intraday range with close 2x closer to LOD than HOD deep in pullback territory with 10x volume; once-per-year capitulation day where institutional sellers maintained partial control deep in extended decline — bear-trend acceleration marker in late-stage selloff without rigid LOD pinning)
+    MegaRangeLowerThirdDeepAboveYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_low_pct >= 20 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + decupled vol + far above 52w low (≥20%) (institutional-scale partial-bear waterfall-top reversal: extreme intraday range with close 2x closer to LOD than HOD deep in advance territory with 10x volume; once-per-year reversal day where institutional sellers seized partial control after absorbing massive buying — historically a marker for major highs in extended advances with maximum-conviction commitment but without rigid LOD pinning)
+    MegaRangeLowerThirdMidYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + decupled vol + mid-range from high (5-20%) (institutional-scale mid-cycle partial-bear pullback-continuation: extreme intraday range with close 2x closer to LOD than HOD in proper consolidation zone below the prior peak with 10x volume; once-per-year swing-trade marker for institutional distribution-acceleration from mid-cycle pullback top without rigid LOD pinning)
+    MegaRangeLowerThirdMidYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + decupled vol + mid-range from low (5-20%) (institutional-scale mid-cycle partial-bear recovery-rejection: extreme intraday range with close 2x closer to LOD than HOD in proper consolidation zone above the prior trough with 10x volume; once-per-year swing-trade marker for institutional recovery-failure from mid-cycle bounce top without rigid LOD pinning)
+    MegaRangeLowerThirdJustOffYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + decupled vol + just off 52w high (2-5%) (institutional-scale post-tag partial-bear retracement-continuation: extreme intraday range with close 2x closer to LOD than HOD immediately after a shallow pullback from the 52w high with 10x volume; once-per-year re-test marker with maximum-conviction institutional bear commitment confirming the rejection from the breakout level without rigid LOD pinning)
+    MegaRangeLowerThirdJustOffYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 10 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + decupled vol + just off 52w low (2-5%) (institutional-scale post-tag partial-bear bounce-rejection: extreme intraday range with close 2x closer to LOD than HOD immediately after a shallow bounce from the 52w low with 10x volume; once-per-year re-test marker confirming failed-bounce rejection back toward the breakdown level with maximum-conviction institutional bear commitment without rigid LOD pinning)
+    MegaRangeTrendDayUpNearYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_high_pct < 2 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + decupled vol + at/near 52w high (<2%) (institutional-scale trend-day-up volcanic breakout: extreme intraday range with bull-direction outcome closing rigidly pinned to HOD at the 52w peak with 10x volume; once-per-year maximum-domination peak event — full institutional bull control from open to close marking a fresh high without any meaningful intraday retrace)
+    MegaRangeTrendDayUpNearYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_low_pct < 2 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + decupled vol + at/near 52w low (<2%) (institutional-scale trend-day-up V-bottom capitulation-reversal: extreme intraday range with bull-direction outcome closing rigidly pinned to HOD at the 52w trough with 10x volume; once-per-year maximum-domination capitulation-bottom event — full institutional bull reversal from open to close marking the absolute low-water mark with HOD-pinned conviction)
+    MegaRangeTrendDayUpConfirmedAboveYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + decupled vol + confirmed-breakout zone (1-3% past 52w high) (institutional-scale trend-day-up follow-through extension: extreme intraday range with HOD-pinned close just past the validated breakout level with 10x volume; once-per-year maximum-domination continuation event — full institutional bull control extending past the cleared prior peak, the strongest possible follow-through signature)
+    MegaRangeTrendDayUpConfirmedBelowYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + decupled vol + confirmed-breakdown zone (1-3% past 52w low) (institutional-scale trend-day-up failed-breakdown bull-reclaim reversal: extreme intraday range with HOD-pinned close just past the validated breakdown level with 10x volume; once-per-year maximum-conviction bear-trap reversal event — full institutional bull reversal from open to close after the breakdown failed, the strongest possible bear-trap signature)
+    MegaRangeTrendDayUpDeepBelowYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_high_pct >= 20 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + decupled vol + far below 52w high (≥20%) (institutional-scale trend-day-up maximum-conviction V-bottom reversal: extreme intraday range with HOD-pinned close deep in pullback territory with 10x volume; once-per-year reversal day where institutional buyers completely absorbed massive selling and held the high to close — historically the strongest possible major-low marker in extended declines with full HOD-pinned domination)
+    MegaRangeTrendDayUpDeepAboveYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_low_pct >= 20 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + decupled vol + far above 52w low (≥20%) (institutional-scale trend-day-up late-stage advance momentum-continuation: extreme intraday range with HOD-pinned close deep in advance territory with 10x volume; once-per-year continuation day where institutional buyers maintained full control from open to close deep in extended advance — momentum-acceleration marker in late-stage rally with maximum HOD-pinned conviction)
+    MegaRangeTrendDayUpMidYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + decupled vol + mid-range from high (5-20%) (institutional-scale trend-day-up mid-cycle pullback-recovery: extreme intraday range with HOD-pinned close in proper consolidation zone below the prior peak with 10x volume; once-per-year swing-trade marker — strongest possible mid-cycle trend-resumption signature from pullback bottom with full HOD-pinned institutional conviction)
+    MegaRangeTrendDayUpMidYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + decupled vol + mid-range from low (5-20%) (institutional-scale trend-day-up mid-cycle recovery-continuation: extreme intraday range with HOD-pinned close in proper consolidation zone above the prior trough with 10x volume; once-per-year swing-trade marker — strongest possible mid-cycle recovery-acceleration signature from bounce base with full HOD-pinned institutional conviction)
+    MegaRangeTrendDayUpJustOffYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + decupled vol + just off 52w high (2-5%) (institutional-scale trend-day-up post-tag breakout-reclaim: extreme intraday range with HOD-pinned close immediately after a shallow pullback from the 52w high with 10x volume; once-per-year re-test reclaim event — strongest possible re-test reclaim signature of the prior peak with full HOD-pinned institutional conviction restoring the breakout level)
+    MegaRangeTrendDayUpJustOffYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + decupled vol + just off 52w low (2-5%) (institutional-scale trend-day-up post-tag bottom-hold: extreme intraday range with HOD-pinned close immediately after a shallow bounce from the 52w low with 10x volume; once-per-year re-test bottom-confirmation event — strongest possible re-test bottom-hold signature confirming the prior trough has decisively held with full HOD-pinned institutional bull conviction)
+    MegaRangeTrendDayDownNearYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_high_pct < 2 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + decupled vol + at/near 52w high (<2%) (institutional-scale trend-day-down failed-peak distribution: extreme intraday range with bear-direction outcome closing rigidly pinned to LOD at the 52w peak with 10x volume; once-per-year maximum-domination peak-failure event — full institutional bear control from open to close marking a failed-peak reversal with LOD-pinned conviction, the strongest possible distribution-day signature)
+    MegaRangeTrendDayDownNearYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_low_pct < 2 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + decupled vol + at/near 52w low (<2%) (institutional-scale trend-day-down volcanic breakdown: extreme intraday range with bear-direction outcome closing rigidly pinned to LOD at the 52w trough with 10x volume; once-per-year maximum-domination trough event — full institutional bear control from open to close marking a fresh low with LOD-pinned conviction, the strongest possible volcanic-breakdown signature)
+    MegaRangeTrendDayDownConfirmedAboveYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + decupled vol + confirmed-breakout zone (1-3% past 52w high) (institutional-scale trend-day-down failed-confirmed-breakout reversal: extreme intraday range with LOD-pinned close just past the validated breakout level with 10x volume; once-per-year full bear-reclaim event — full institutional bear reversal from open to close after the breakout failed, the strongest possible bull-trap signature with LOD-pinned conviction)
+    MegaRangeTrendDayDownConfirmedBelowYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + decupled vol + confirmed-breakdown zone (1-3% past 52w low) (institutional-scale trend-day-down confirmed-breakdown follow-through extension: extreme intraday range with LOD-pinned close just past the validated breakdown level with 10x volume; once-per-year maximum-domination continuation event — full institutional bear control extending past the cleared prior trough, the strongest possible bear-follow-through signature)
+    MegaRangeTrendDayDownDeepBelowYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_high_pct >= 20 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + decupled vol + far below 52w high (≥20%) (institutional-scale trend-day-down deep-pullback capitulation extension: extreme intraday range with LOD-pinned close deep in pullback territory with 10x volume; once-per-year maximum-conviction capitulation event — full institutional bear control from open to close deep in extended decline, the strongest possible bear-trend acceleration signature in late-stage selloff with LOD-pinned domination)
+    MegaRangeTrendDayDownDeepAboveYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_low_pct >= 20 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + decupled vol + far above 52w low (≥20%) (institutional-scale trend-day-down waterfall-top full reversal: extreme intraday range with LOD-pinned close deep in advance territory with 10x volume; once-per-year maximum-conviction reversal event — full institutional bear reversal from open to close after absorbing massive buying — historically the strongest possible major-high marker in extended advances with LOD-pinned domination)
+    MegaRangeTrendDayDownMidYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + decupled vol + mid-range from high (5-20%) (institutional-scale trend-day-down mid-cycle pullback-continuation: extreme intraday range with LOD-pinned close in proper consolidation zone below the prior peak with 10x volume; once-per-year swing-trade marker — strongest possible mid-cycle distribution-acceleration signature from pullback top with full LOD-pinned institutional bear conviction)
+    MegaRangeTrendDayDownMidYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + decupled vol + mid-range from low (5-20%) (institutional-scale trend-day-down mid-cycle recovery-rejection: extreme intraday range with LOD-pinned close in proper consolidation zone above the prior trough with 10x volume; once-per-year swing-trade marker — strongest possible mid-cycle recovery-failure signature from bounce top with full LOD-pinned institutional bear conviction)
+    MegaRangeTrendDayDownJustOffYearHighDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + decupled vol + just off 52w high (2-5%) (institutional-scale trend-day-down post-tag breakdown-rejection: extreme intraday range with LOD-pinned close immediately after a shallow pullback from the 52w high with 10x volume; once-per-year re-test rejection event — strongest possible re-test rejection signature confirming the prior peak has failed with full LOD-pinned institutional bear conviction pushing back toward the breakdown level)
+    MegaRangeTrendDayDownJustOffYearLowDecupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 10 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + decupled vol + just off 52w low (2-5%) (institutional-scale trend-day-down post-tag bottom-failure: extreme intraday range with LOD-pinned close immediately after a shallow bounce from the 52w low with 10x volume; once-per-year re-test breakdown event — strongest possible re-test breakdown signature confirming the prior trough has failed with full LOD-pinned institutional bear conviction pushing back toward the breakdown level)
+    MegaRangeTrendDayUpNearYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct < 2 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + doubled vol + at/near 52w high (<2%) (mid-tier trend-day-up volcanic breakout: extreme intraday range with bull-direction outcome closing rigidly pinned to HOD at the 52w peak with doubled volume; once-per-month maximum-domination peak event — full bull control from open to close marking a fresh high without any meaningful intraday retrace)
+    MegaRangeTrendDayUpNearYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct < 2 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + doubled vol + at/near 52w low (<2%) (mid-tier trend-day-up V-bottom capitulation-reversal: extreme intraday range with bull-direction outcome closing rigidly pinned to HOD at the 52w trough with doubled volume; once-per-month maximum-domination capitulation-bottom event — full bull reversal from open to close marking the absolute low-water mark with HOD-pinned conviction)
+    MegaRangeTrendDayUpConfirmedAboveYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + doubled vol + confirmed-breakout zone (1-3% past 52w high) (mid-tier trend-day-up follow-through extension: extreme intraday range with HOD-pinned close just past the validated breakout level with doubled volume; once-per-month maximum-domination continuation event — full bull control extending past the cleared prior peak, mid-tier follow-through signature)
+    MegaRangeTrendDayUpConfirmedBelowYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + doubled vol + confirmed-breakdown zone (1-3% past 52w low) (mid-tier trend-day-up failed-breakdown bull-reclaim reversal: extreme intraday range with HOD-pinned close just past the validated breakdown level with doubled volume; once-per-month maximum-conviction bear-trap reversal event — full bull reversal from open to close after the breakdown failed, mid-tier bear-trap signature)
+    MegaRangeTrendDayUpDeepBelowYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= 20 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + doubled vol + far below 52w high (≥20%) (mid-tier trend-day-up V-bottom reversal: extreme intraday range with HOD-pinned close deep in pullback territory with doubled volume; once-per-month reversal day where buyers completely absorbed massive selling and held the high to close — mid-tier major-low marker in extended declines with HOD-pinned domination)
+    MegaRangeTrendDayUpDeepAboveYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= 20 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + doubled vol + far above 52w low (≥20%) (mid-tier trend-day-up late-stage advance momentum-continuation: extreme intraday range with HOD-pinned close deep in advance territory with doubled volume; once-per-month continuation day where buyers maintained full control from open to close deep in extended advance — mid-tier momentum-acceleration marker in late-stage rally with HOD-pinned conviction)
+    MegaRangeTrendDayUpMidYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + doubled vol + mid-range from high (5-20%) (mid-tier trend-day-up mid-cycle pullback-recovery: extreme intraday range with HOD-pinned close in proper consolidation zone below the prior peak with doubled volume; once-per-month swing-trade marker — mid-tier trend-resumption signature from pullback bottom with HOD-pinned conviction)
+    MegaRangeTrendDayUpMidYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + doubled vol + mid-range from low (5-20%) (mid-tier trend-day-up mid-cycle recovery-continuation: extreme intraday range with HOD-pinned close in proper consolidation zone above the prior trough with doubled volume; once-per-month swing-trade marker — mid-tier recovery-acceleration signature from bounce base with HOD-pinned conviction)
+    MegaRangeTrendDayUpJustOffYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + doubled vol + just off 52w high (2-5%) (mid-tier trend-day-up post-tag breakout-reclaim: extreme intraday range with HOD-pinned close immediately after a shallow pullback from the 52w high with doubled volume; once-per-month re-test reclaim event — mid-tier re-test reclaim signature of the prior peak with HOD-pinned conviction restoring the breakout level)
+    MegaRangeTrendDayUpJustOffYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND hod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + close pinned to HOD (<0.5%) + green close + doubled vol + just off 52w low (2-5%) (mid-tier trend-day-up post-tag bottom-hold: extreme intraday range with HOD-pinned close immediately after a shallow bounce from the 52w low with doubled volume; once-per-month re-test bottom-confirmation event — mid-tier re-test bottom-hold signature confirming the prior trough has held with HOD-pinned bull conviction)
+    MegaRangeTrendDayDownNearYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct < 2 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + doubled vol + at/near 52w high (<2%) (mid-tier trend-day-down failed-peak distribution: extreme intraday range with bear-direction outcome closing rigidly pinned to LOD at the 52w peak with doubled volume; once-per-month maximum-domination peak-failure event — full bear control from open to close marking a failed-peak reversal with LOD-pinned conviction, mid-tier distribution-day signature)
+    MegaRangeTrendDayDownNearYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct < 2 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + doubled vol + at/near 52w low (<2%) (mid-tier trend-day-down volcanic breakdown: extreme intraday range with bear-direction outcome closing rigidly pinned to LOD at the 52w trough with doubled volume; once-per-month maximum-domination trough event — full bear control from open to close marking a fresh low with LOD-pinned conviction, mid-tier volcanic-breakdown signature)
+    MegaRangeTrendDayDownConfirmedAboveYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + doubled vol + confirmed-breakout zone (1-3% past 52w high) (mid-tier trend-day-down failed-confirmed-breakout reversal: extreme intraday range with LOD-pinned close just past the validated breakout level with doubled volume; once-per-month full bear-reclaim event — full bear reversal from open to close after the breakout failed, mid-tier bull-trap signature with LOD-pinned conviction)
+    MegaRangeTrendDayDownConfirmedBelowYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + doubled vol + confirmed-breakdown zone (1-3% past 52w low) (mid-tier trend-day-down confirmed-breakdown follow-through extension: extreme intraday range with LOD-pinned close just past the validated breakdown level with doubled volume; once-per-month maximum-domination continuation event — full bear control extending past the cleared prior trough, mid-tier bear-follow-through signature)
+    MegaRangeTrendDayDownDeepBelowYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= 20 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + doubled vol + far below 52w high (≥20%) (mid-tier trend-day-down deep-pullback capitulation extension: extreme intraday range with LOD-pinned close deep in pullback territory with doubled volume; once-per-month maximum-conviction capitulation event — full bear control from open to close deep in extended decline, mid-tier bear-trend acceleration signature in late-stage selloff with LOD-pinned domination)
+    MegaRangeTrendDayDownDeepAboveYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= 20 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + doubled vol + far above 52w low (≥20%) (mid-tier trend-day-down waterfall-top full reversal: extreme intraday range with LOD-pinned close deep in advance territory with doubled volume; once-per-month maximum-conviction reversal event — full bear reversal from open to close after absorbing massive buying — mid-tier major-high marker in extended advances with LOD-pinned domination)
+    MegaRangeTrendDayDownMidYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + doubled vol + mid-range from high (5-20%) (mid-tier trend-day-down mid-cycle pullback-continuation: extreme intraday range with LOD-pinned close in proper consolidation zone below the prior peak with doubled volume; once-per-month swing-trade marker — mid-tier distribution-acceleration signature from pullback top with LOD-pinned bear conviction)
+    MegaRangeTrendDayDownMidYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + doubled vol + mid-range from low (5-20%) (mid-tier trend-day-down mid-cycle recovery-rejection: extreme intraday range with LOD-pinned close in proper consolidation zone above the prior trough with doubled volume; once-per-month swing-trade marker — mid-tier recovery-failure signature from bounce top with LOD-pinned bear conviction)
+    MegaRangeTrendDayDownJustOffYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + doubled vol + just off 52w high (2-5%) (mid-tier trend-day-down post-tag breakdown-rejection: extreme intraday range with LOD-pinned close immediately after a shallow pullback from the 52w high with doubled volume; once-per-month re-test rejection event — mid-tier re-test rejection signature confirming the prior peak has failed with LOD-pinned bear conviction pushing back toward the breakdown level)
+    MegaRangeTrendDayDownJustOffYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND lod_dist_pct.abs() < 0.5 AND rel_volume >= 2 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + close pinned to LOD (<0.5%) + red close + doubled vol + just off 52w low (2-5%) (mid-tier trend-day-down post-tag bottom-failure: extreme intraday range with LOD-pinned close immediately after a shallow bounce from the 52w low with doubled volume; once-per-month re-test breakdown event — mid-tier re-test breakdown signature confirming the prior trough has failed with LOD-pinned bear conviction pushing back toward the breakdown level)
+    MegaRangeUpperThirdNearYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_high_pct < 2 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + doubled vol + at/near 52w high (<2%) (mid-tier partial-bull breakout day: extreme intraday range with close 2x closer to HOD than LOD at the 52w peak with doubled volume; once-per-month regime-defining event marking partial bull-control at the high-water mark without rigid HOD pinning)
+    MegaRangeUpperThirdNearYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_low_pct < 2 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + doubled vol + at/near 52w low (<2%) (mid-tier partial-bull bottoming-bounce day: extreme intraday range with close 2x closer to HOD than LOD at the 52w trough with doubled volume; once-per-month regime-defining event marking partial bull-control at the low-water mark, mid-tier capitulation-bottom marker without rigid HOD pinning)
+    MegaRangeUpperThirdConfirmedAboveYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + doubled vol + confirmed-breakout zone (1-3% past 52w high) (mid-tier partial-bull follow-through extension: extreme intraday range with close 2x closer to HOD than LOD just past validated breakout level with doubled volume; once-per-month continuation marker confirming mid-tier trend acceleration without rigid HOD pinning)
+    MegaRangeUpperThirdConfirmedBelowYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + doubled vol + confirmed-breakdown zone (1-3% past 52w low) (mid-tier failed-breakdown trap signal: extreme intraday range with close 2x closer to HOD than LOD just past validated breakdown level with doubled volume; once-per-month bull-reclaim reversal day where buyers immediately reasserted control after the break — mid-tier bear-trap marker at the breakdown extension)
+    MegaRangeUpperThirdDeepBelowYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_high_pct >= 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + doubled vol + far below 52w high (≥20%) (mid-tier partial-bull V-bottom signal: extreme intraday range with close 2x closer to HOD than LOD deep in pullback territory with doubled volume; once-per-month reversal day where buyers seized partial control after absorbing massive selling — mid-tier major-low marker in extended declines without rigid HOD pinning)
+    MegaRangeUpperThirdDeepAboveYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_low_pct >= 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + doubled vol + far above 52w low (≥20%) (mid-tier partial-bull deep-recovery euphoria signal: extreme intraday range with close 2x closer to HOD than LOD deep in advance territory with doubled volume; once-per-month continuation day where buyers maintained partial control deep in extended advance — mid-tier uptrend-resumption marker in late-stage rally without rigid HOD pinning)
+    MegaRangeUpperThirdMidYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + doubled vol + mid-range from high (5-20%) (mid-tier mid-cycle partial-bull pullback-recovery: extreme intraday range with close 2x closer to HOD than LOD in proper consolidation zone below the prior peak with doubled volume; once-per-month swing-trade marker for trend-resumption from mid-cycle pullback bottom without rigid HOD pinning)
+    MegaRangeUpperThirdMidYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + doubled vol + mid-range from low (5-20%) (mid-tier mid-cycle partial-bull recovery-continuation: extreme intraday range with close 2x closer to HOD than LOD in proper consolidation zone above the prior trough with doubled volume; once-per-month swing-trade marker for recovery-acceleration from mid-cycle recovery base without rigid HOD pinning)
+    MegaRangeUpperThirdJustOffYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + doubled vol + just off 52w high (2-5%) (mid-tier post-tag partial-bull retracement-recovery: extreme intraday range with close 2x closer to HOD than LOD immediately after a shallow pullback from the 52w high with doubled volume; once-per-month re-test marker confirming partial-bull commitment to reclaim the breakout level without rigid HOD pinning)
+    MegaRangeUpperThirdJustOffYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + doubled vol + just off 52w low (2-5%) (mid-tier post-tag partial-bull bounce-continuation: extreme intraday range with close 2x closer to HOD than LOD immediately after a shallow bounce from the 52w low with doubled volume; once-per-month re-test marker confirming the bottom hold with partial-bull commitment without rigid HOD pinning)
+    MegaRangeLowerThirdNearYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_high_pct < 2 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + doubled vol + at/near 52w high (<2%) (mid-tier partial-bear failed-breakout distribution day: extreme intraday range with close 2x closer to LOD than HOD at the 52w peak with doubled volume; once-per-month regime-defining event marking partial bear-control at the high-water mark — bull-trap distribution marker without rigid LOD pinning)
+    MegaRangeLowerThirdNearYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_low_pct < 2 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + doubled vol + at/near 52w low (<2%) (mid-tier partial-bear breakdown-continuation day: extreme intraday range with close 2x closer to LOD than HOD at the 52w trough with doubled volume; once-per-month regime-defining event marking partial bear-control at the low-water mark — capitulation-extension marker without rigid LOD pinning)
+    MegaRangeLowerThirdConfirmedAboveYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + doubled vol + confirmed-breakout zone (1-3% past 52w high) (mid-tier failed-confirmed-breakout reversal: extreme intraday range with close 2x closer to LOD than HOD just past validated breakout level with doubled volume; once-per-month bear-reclaim reversal day where sellers reasserted control after the breakout — mid-tier bull-trap marker at the breakout extension)
+    MegaRangeLowerThirdConfirmedBelowYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + doubled vol + confirmed-breakdown zone (1-3% past 52w low) (mid-tier partial-bear breakdown follow-through extension: extreme intraday range with close 2x closer to LOD than HOD just past validated breakdown level with doubled volume; once-per-month continuation marker confirming mid-tier trend deceleration without rigid LOD pinning)
+    MegaRangeLowerThirdDeepBelowYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_high_pct >= 20 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + doubled vol + far below 52w high (≥20%) (mid-tier partial-bear deep-pullback capitulation-continuation: extreme intraday range with close 2x closer to LOD than HOD deep in pullback territory with doubled volume; once-per-month capitulation day where sellers maintained partial control deep in extended decline — mid-tier bear-trend acceleration marker in late-stage selloff without rigid LOD pinning)
+    MegaRangeLowerThirdDeepAboveYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_low_pct >= 20 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + doubled vol + far above 52w low (≥20%) (mid-tier partial-bear waterfall-top reversal: extreme intraday range with close 2x closer to LOD than HOD deep in advance territory with doubled volume; once-per-month reversal day where sellers seized partial control after absorbing massive buying — mid-tier major-high marker in extended advances without rigid LOD pinning)
+    MegaRangeLowerThirdMidYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + doubled vol + mid-range from high (5-20%) (mid-tier mid-cycle partial-bear pullback-continuation: extreme intraday range with close 2x closer to LOD than HOD in proper consolidation zone below the prior peak with doubled volume; once-per-month swing-trade marker for distribution-acceleration from mid-cycle pullback top without rigid LOD pinning)
+    MegaRangeLowerThirdMidYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + doubled vol + mid-range from low (5-20%) (mid-tier mid-cycle partial-bear recovery-rejection: extreme intraday range with close 2x closer to LOD than HOD in proper consolidation zone above the prior trough with doubled volume; once-per-month swing-trade marker for recovery-failure from mid-cycle bounce top without rigid LOD pinning)
+    MegaRangeLowerThirdJustOffYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + doubled vol + just off 52w high (2-5%) (mid-tier post-tag partial-bear retracement-continuation: extreme intraday range with close 2x closer to LOD than HOD immediately after a shallow pullback from the 52w high with doubled volume; once-per-month re-test marker confirming rejection from the breakout level with partial-bear commitment without rigid LOD pinning)
+    MegaRangeLowerThirdJustOffYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 2 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + doubled vol + just off 52w low (2-5%) (mid-tier post-tag partial-bear bounce-rejection: extreme intraday range with close 2x closer to LOD than HOD immediately after a shallow bounce from the 52w low with doubled volume; once-per-month re-test marker confirming failed-bounce rejection back toward the breakdown level with partial-bear commitment without rigid LOD pinning)
+    MegaRangeMidpointCloseAtYearHighHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 2 AND year_high_pct < 2 — mega intraday range (>10%) + midpoint close + doubled vol + at 52w high (<2%) (mid-tier peak-day wide-range standoff: extreme two-way intraday battle at the 52w peak with doubled volume ends with balanced midpoint close; once-per-month exhaustion-or-continuation showdown at the absolute high-water mark)
+    MegaRangeMidpointCloseAtYearLowHotVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 2 AND year_low_pct < 2 — mega intraday range (>10%) + midpoint close + doubled vol + at 52w low (<2%) (mid-tier trough-day wide-range standoff: extreme two-way intraday battle at the 52w trough with doubled volume ends with balanced midpoint close; once-per-month capitulation-or-reversal showdown at the absolute low-water mark)
+    MegaRangeUpNearYearHighQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 5 AND year_high_pct < 2 — mega intraday range (>10%) + green close + quintupled vol + at/near 52w high (<2%) (institutional-tier volcanic breakout day: extreme intraday range with bull-direction outcome at the 52w high with 5x volume; quarterly-rare regime-defining peak event marking a fresh high with strong institutional commitment)
+    MegaRangeDownNearYearLowQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 5 AND year_low_pct < 2 — mega intraday range (>10%) + red close + quintupled vol + at/near 52w low (<2%) (institutional-tier volcanic breakdown day: extreme intraday range with bear-direction outcome at the 52w low with 5x volume; quarterly-rare regime-defining trough event marking a fresh low with strong institutional commitment)
+    MegaRangeUpConfirmedAboveYearHighQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 5 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + green close + quintupled vol + confirmed-breakout zone (1-3% past 52w high) (institutional-tier volcanic extension past validated breakout: extreme intraday range with bull-direction outcome extending past the already-cleared prior peak with 5x volume; quarterly-rare follow-through day confirming institutional trend acceleration)
+    MegaRangeDownConfirmedBelowYearLowQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 5 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + red close + quintupled vol + confirmed-breakdown zone (1-3% past 52w low) (institutional-tier volcanic extension past validated breakdown: extreme intraday range with bear-direction outcome extending past the already-cleared prior trough with 5x volume; quarterly-rare follow-through day confirming institutional trend acceleration)
+    MegaRangeUpDeepBelowYearHighQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 5 AND year_high_pct >= 20 — mega intraday range (>10%) + green close + quintupled vol + far below 52w high (≥20%) (institutional-tier V-bottom signal: extreme intraday range with bull-direction outcome deep in pullback territory with 5x volume; quarterly-rare reversal day where institutional buyers absorbed massive selling and reversed it — historically a marker for major lows in extended declines)
+    MegaRangeDownDeepAboveYearLowQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 5 AND year_low_pct >= 20 — mega intraday range (>10%) + red close + quintupled vol + far above 52w low (≥20%) (institutional-tier waterfall-top signal: extreme intraday range with bear-direction outcome deep in advance territory with 5x volume; quarterly-rare reversal day where institutional sellers overcame massive buying and reversed it — historically a marker for major highs in extended advances)
+    MegaRangeUpMidYearHighQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 5 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + green close + quintupled vol + mid-range from high (5-20%) (institutional-tier mid-cycle volcanic rally: extreme intraday range with bull-direction outcome in the proper consolidation zone with 5x volume; quarterly-rare wide-range advance from mid-cycle pullback bottom, institutional swing-trade marker for trend resumption)
+    MegaRangeDownMidYearLowQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 5 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + red close + quintupled vol + mid-range from low (5-20%) (institutional-tier mid-cycle volcanic decline: extreme intraday range with bear-direction outcome in the proper consolidation zone with 5x volume; quarterly-rare wide-range decline from mid-cycle recovery top, institutional swing-trade marker for trend resumption)
+    MegaRangeUpJustOffYearHighQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct > 0 AND rel_volume >= 5 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + green close + quintupled vol + just off 52w high (2-5%) (institutional-tier post-tag volcanic recovery: extreme intraday range with bull-direction outcome immediately after a shallow pullback from the 52w high with 5x volume; quarterly-rare wide-range push back toward the breakout level with strong institutional commitment to re-test the prior peak)
+    MegaRangeDownJustOffYearLowQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND change_pct < 0 AND rel_volume >= 5 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + red close + quintupled vol + just off 52w low (2-5%) (institutional-tier post-tag volcanic rejection: extreme intraday range with bear-direction outcome immediately after a shallow bounce from the 52w low with 5x volume; quarterly-rare wide-range push back toward the breakdown level with strong institutional commitment to re-test the prior trough)
+    MegaRangeMidpointCloseNearYearHighQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_high_pct < 2 — mega intraday range (>10%) + midpoint close + quintupled vol + at/near 52w high (<2%) (institutional-tier peak-day wide-range standoff: extreme two-way intraday battle at the 52w peak with 5x volume ends with balanced midpoint close; quarterly-rare exhaustion-or-continuation showdown at the absolute high-water mark with strong institutional commitment on both sides)
+    MegaRangeMidpointCloseNearYearLowQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_low_pct < 2 — mega intraday range (>10%) + midpoint close + quintupled vol + at/near 52w low (<2%) (institutional-tier trough-day wide-range standoff: extreme two-way intraday battle at the 52w trough with 5x volume ends with balanced midpoint close; quarterly-rare capitulation-or-reversal showdown at the absolute low-water mark with strong institutional commitment on both sides)
     MegaRangeMidpointCloseConfirmedAboveYearHighQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + midpoint close + quintupled vol + confirmed-breakout zone (1-3% past 52w high) (institutional-tier post-breakout wide-range standoff: extreme two-way intraday battle just past the validated breakout level with 5x volume ends with balanced midpoint close; quarterly-rare follow-through-or-fade showdown in the confirmed expansion zone with strong institutional commitment)
-    MegaRangeMidpointCloseConfirmedBelowYearLowQuintupledVol,  // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + midpoint close + quintupled vol + confirmed-breakdown zone (1-3% past 52w low) (institutional-tier post-breakdown wide-range standoff: extreme two-way intraday battle just past the validated breakdown level with 5x volume ends with balanced midpoint close; quarterly-rare follow-through-or-fade showdown in the confirmed contraction zone with strong institutional commitment)
-    MegaRangeMidpointCloseDeepBelowYearHighQuintupledVol,      // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_high_pct >= 20 — mega intraday range (>10%) + midpoint close + quintupled vol + far below 52w high (≥20%) (institutional-tier exhaustion-zone wide-range standoff: extreme two-way intraday battle deep below the prior peak with 5x volume ends with balanced midpoint close; quarterly-rare capitulation-or-reversal turning-point indecision in deep-pullback territory with strong institutional commitment)
-    MegaRangeMidpointCloseDeepAboveYearLowQuintupledVol,       // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_low_pct >= 20 — mega intraday range (>10%) + midpoint close + quintupled vol + far above 52w low (≥20%) (institutional-tier deep-recovery wide-range standoff: extreme two-way intraday battle deep above the prior trough with 5x volume ends with balanced midpoint close; quarterly-rare euphoria-or-pullback turning-point indecision in deep-recovery territory with strong institutional commitment)
-    MegaRangeMidpointCloseMidYearHighQuintupledVol,            // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + midpoint close + quintupled vol + mid-range from high (5-20%) (institutional-tier mid-cycle wide-range standoff: extreme two-way intraday battle in the proper consolidation zone below the prior peak with 5x volume ends with balanced midpoint close; quarterly-rare pause-or-pivot showdown in mid-cycle pullback territory with strong institutional commitment)
-    MegaRangeMidpointCloseMidYearLowQuintupledVol,             // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + midpoint close + quintupled vol + mid-range from low (5-20%) (institutional-tier mid-cycle wide-range standoff: extreme two-way intraday battle in the proper consolidation zone above the prior trough with 5x volume ends with balanced midpoint close; quarterly-rare pause-or-pivot showdown in mid-cycle recovery territory with strong institutional commitment)
-    MegaRangeMidpointCloseJustOffYearHighQuintupledVol,        // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + midpoint close + quintupled vol + just off 52w high (2-5%) (institutional-tier post-tag wide-range standoff: extreme two-way intraday battle immediately after a shallow pullback from the 52w high with 5x volume ends with balanced midpoint close; quarterly-rare re-test indecision day with strong institutional commitment in the post-tag retracement zone)
-    MegaRangeMidpointCloseJustOffYearLowQuintupledVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + midpoint close + quintupled vol + just off 52w low (2-5%) (institutional-tier post-tag wide-range standoff: extreme two-way intraday battle immediately after a shallow bounce from the 52w low with 5x volume ends with balanced midpoint close; quarterly-rare re-test indecision day with strong institutional commitment in the post-tag bounce zone)
-    MegaRangeUpperThirdNearYearHighQuintupledVol,              // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_high_pct < 2 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + quintupled vol + at/near 52w high (<2%) (institutional-tier partial-bull breakout day: extreme intraday range with close 2x closer to HOD than LOD at the 52w peak with 5x volume; quarterly-rare regime-defining event marking partial bull-control at the high-water mark with strong institutional commitment but without rigid HOD pinning)
-    MegaRangeUpperThirdNearYearLowQuintupledVol,               // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_low_pct < 2 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + quintupled vol + at/near 52w low (<2%) (institutional-tier partial-bull bottoming-bounce day: extreme intraday range with close 2x closer to HOD than LOD at the 52w trough with 5x volume; quarterly-rare regime-defining event marking partial bull-control at the low-water mark — capitulation-bottom marker with strong institutional commitment but without rigid HOD pinning)
-    MegaRangeUpperThirdConfirmedAboveYearHighQuintupledVol,    // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + quintupled vol + confirmed-breakout zone (1-3% past 52w high) (institutional-tier partial-bull follow-through extension: extreme intraday range with close 2x closer to HOD than LOD just past validated breakout level with 5x volume; quarterly-rare continuation marker confirming institutional trend acceleration without rigid HOD pinning)
-    MegaRangeUpperThirdConfirmedBelowYearLowQuintupledVol,     // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + quintupled vol + confirmed-breakdown zone (1-3% past 52w low) (institutional-tier failed-breakdown trap signal: extreme intraday range with close 2x closer to HOD than LOD just past validated breakdown level with 5x volume; quarterly-rare bull-reclaim reversal day where institutional buyers immediately reasserted control after the break — bear-trap marker at the breakdown extension)
-    MegaRangeUpperThirdDeepBelowYearHighQuintupledVol,         // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_high_pct >= 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + quintupled vol + far below 52w high (≥20%) (institutional-tier partial-bull V-bottom signal: extreme intraday range with close 2x closer to HOD than LOD deep in pullback territory with 5x volume; quarterly-rare reversal day where institutional buyers seized partial control after absorbing massive selling — major-low marker in extended declines without rigid HOD pinning)
-    MegaRangeUpperThirdDeepAboveYearLowQuintupledVol,          // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_low_pct >= 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + quintupled vol + far above 52w low (≥20%) (institutional-tier partial-bull deep-recovery euphoria signal: extreme intraday range with close 2x closer to HOD than LOD deep in advance territory with 5x volume; quarterly-rare continuation day where institutional buyers maintained partial control deep in extended advance — uptrend-resumption marker in late-stage rally without rigid HOD pinning)
-    MegaRangeUpperThirdMidYearHighQuintupledVol,               // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + quintupled vol + mid-range from high (5-20%) (institutional-tier mid-cycle partial-bull pullback-recovery: extreme intraday range with close 2x closer to HOD than LOD in proper consolidation zone below the prior peak with 5x volume; quarterly-rare swing-trade marker for trend-resumption from mid-cycle pullback bottom without rigid HOD pinning)
-    MegaRangeUpperThirdMidYearLowQuintupledVol,                // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + quintupled vol + mid-range from low (5-20%) (institutional-tier mid-cycle partial-bull recovery-continuation: extreme intraday range with close 2x closer to HOD than LOD in proper consolidation zone above the prior trough with 5x volume; quarterly-rare swing-trade marker for recovery-acceleration from mid-cycle recovery base without rigid HOD pinning)
-    MegaRangeUpperThirdJustOffYearHighQuintupledVol,           // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + quintupled vol + just off 52w high (2-5%) (institutional-tier post-tag partial-bull retracement-recovery: extreme intraday range with close 2x closer to HOD than LOD immediately after a shallow pullback from the 52w high with 5x volume; quarterly-rare re-test marker confirming partial-bull commitment to reclaim the breakout level without rigid HOD pinning)
-    MegaRangeUpperThirdJustOffYearLowQuintupledVol,            // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + quintupled vol + just off 52w low (2-5%) (institutional-tier post-tag partial-bull bounce-continuation: extreme intraday range with close 2x closer to HOD than LOD immediately after a shallow bounce from the 52w low with 5x volume; quarterly-rare re-test marker confirming the bottom hold with partial-bull commitment without rigid HOD pinning)
-    MegaRangeLowerThirdNearYearHighQuintupledVol,              // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_high_pct < 2 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + quintupled vol + at/near 52w high (<2%) (institutional-tier partial-bear failed-breakout distribution day: extreme intraday range with close 2x closer to LOD than HOD at the 52w peak with 5x volume; quarterly-rare regime-defining event marking partial bear-control at the high-water mark — bull-trap distribution marker with strong institutional commitment but without rigid LOD pinning)
-    MegaRangeLowerThirdNearYearLowQuintupledVol,               // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_low_pct < 2 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + quintupled vol + at/near 52w low (<2%) (institutional-tier partial-bear breakdown-continuation day: extreme intraday range with close 2x closer to LOD than HOD at the 52w trough with 5x volume; quarterly-rare regime-defining event marking partial bear-control at the low-water mark — capitulation-extension marker with strong institutional commitment but without rigid LOD pinning)
-    MegaRangeLowerThirdConfirmedAboveYearHighQuintupledVol,    // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + quintupled vol + confirmed-breakout zone (1-3% past 52w high) (institutional-tier failed-confirmed-breakout reversal: extreme intraday range with close 2x closer to LOD than HOD just past validated breakout level with 5x volume; quarterly-rare bear-reclaim reversal day where institutional sellers reasserted control after the breakout — bull-trap marker at the breakout extension)
-    MegaRangeLowerThirdConfirmedBelowYearLowQuintupledVol,     // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + quintupled vol + confirmed-breakdown zone (1-3% past 52w low) (institutional-tier partial-bear breakdown follow-through extension: extreme intraday range with close 2x closer to LOD than HOD just past validated breakdown level with 5x volume; quarterly-rare continuation marker confirming institutional trend deceleration without rigid LOD pinning)
+    MegaRangeMidpointCloseConfirmedBelowYearLowQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + midpoint close + quintupled vol + confirmed-breakdown zone (1-3% past 52w low) (institutional-tier post-breakdown wide-range standoff: extreme two-way intraday battle just past the validated breakdown level with 5x volume ends with balanced midpoint close; quarterly-rare follow-through-or-fade showdown in the confirmed contraction zone with strong institutional commitment)
+    MegaRangeMidpointCloseDeepBelowYearHighQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_high_pct >= 20 — mega intraday range (>10%) + midpoint close + quintupled vol + far below 52w high (≥20%) (institutional-tier exhaustion-zone wide-range standoff: extreme two-way intraday battle deep below the prior peak with 5x volume ends with balanced midpoint close; quarterly-rare capitulation-or-reversal turning-point indecision in deep-pullback territory with strong institutional commitment)
+    MegaRangeMidpointCloseDeepAboveYearLowQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_low_pct >= 20 — mega intraday range (>10%) + midpoint close + quintupled vol + far above 52w low (≥20%) (institutional-tier deep-recovery wide-range standoff: extreme two-way intraday battle deep above the prior trough with 5x volume ends with balanced midpoint close; quarterly-rare euphoria-or-pullback turning-point indecision in deep-recovery territory with strong institutional commitment)
+    MegaRangeMidpointCloseMidYearHighQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + midpoint close + quintupled vol + mid-range from high (5-20%) (institutional-tier mid-cycle wide-range standoff: extreme two-way intraday battle in the proper consolidation zone below the prior peak with 5x volume ends with balanced midpoint close; quarterly-rare pause-or-pivot showdown in mid-cycle pullback territory with strong institutional commitment)
+    MegaRangeMidpointCloseMidYearLowQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + midpoint close + quintupled vol + mid-range from low (5-20%) (institutional-tier mid-cycle wide-range standoff: extreme two-way intraday battle in the proper consolidation zone above the prior trough with 5x volume ends with balanced midpoint close; quarterly-rare pause-or-pivot showdown in mid-cycle recovery territory with strong institutional commitment)
+    MegaRangeMidpointCloseJustOffYearHighQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + midpoint close + quintupled vol + just off 52w high (2-5%) (institutional-tier post-tag wide-range standoff: extreme two-way intraday battle immediately after a shallow pullback from the 52w high with 5x volume ends with balanced midpoint close; quarterly-rare re-test indecision day with strong institutional commitment in the post-tag retracement zone)
+    MegaRangeMidpointCloseJustOffYearLowQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() > 0.5 AND lod_dist_pct.abs() > 0.5 AND (hod_dist_pct.abs() - lod_dist_pct.abs()).abs() < 0.5 AND rel_volume >= 5 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + midpoint close + quintupled vol + just off 52w low (2-5%) (institutional-tier post-tag wide-range standoff: extreme two-way intraday battle immediately after a shallow bounce from the 52w low with 5x volume ends with balanced midpoint close; quarterly-rare re-test indecision day with strong institutional commitment in the post-tag bounce zone)
+    MegaRangeUpperThirdNearYearHighQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_high_pct < 2 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + quintupled vol + at/near 52w high (<2%) (institutional-tier partial-bull breakout day: extreme intraday range with close 2x closer to HOD than LOD at the 52w peak with 5x volume; quarterly-rare regime-defining event marking partial bull-control at the high-water mark with strong institutional commitment but without rigid HOD pinning)
+    MegaRangeUpperThirdNearYearLowQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_low_pct < 2 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + quintupled vol + at/near 52w low (<2%) (institutional-tier partial-bull bottoming-bounce day: extreme intraday range with close 2x closer to HOD than LOD at the 52w trough with 5x volume; quarterly-rare regime-defining event marking partial bull-control at the low-water mark — capitulation-bottom marker with strong institutional commitment but without rigid HOD pinning)
+    MegaRangeUpperThirdConfirmedAboveYearHighQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + quintupled vol + confirmed-breakout zone (1-3% past 52w high) (institutional-tier partial-bull follow-through extension: extreme intraday range with close 2x closer to HOD than LOD just past validated breakout level with 5x volume; quarterly-rare continuation marker confirming institutional trend acceleration without rigid HOD pinning)
+    MegaRangeUpperThirdConfirmedBelowYearLowQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + quintupled vol + confirmed-breakdown zone (1-3% past 52w low) (institutional-tier failed-breakdown trap signal: extreme intraday range with close 2x closer to HOD than LOD just past validated breakdown level with 5x volume; quarterly-rare bull-reclaim reversal day where institutional buyers immediately reasserted control after the break — bear-trap marker at the breakdown extension)
+    MegaRangeUpperThirdDeepBelowYearHighQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_high_pct >= 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + quintupled vol + far below 52w high (≥20%) (institutional-tier partial-bull V-bottom signal: extreme intraday range with close 2x closer to HOD than LOD deep in pullback territory with 5x volume; quarterly-rare reversal day where institutional buyers seized partial control after absorbing massive selling — major-low marker in extended declines without rigid HOD pinning)
+    MegaRangeUpperThirdDeepAboveYearLowQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_low_pct >= 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + quintupled vol + far above 52w low (≥20%) (institutional-tier partial-bull deep-recovery euphoria signal: extreme intraday range with close 2x closer to HOD than LOD deep in advance territory with 5x volume; quarterly-rare continuation day where institutional buyers maintained partial control deep in extended advance — uptrend-resumption marker in late-stage rally without rigid HOD pinning)
+    MegaRangeUpperThirdMidYearHighQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_high_pct >= 5 AND year_high_pct < 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + quintupled vol + mid-range from high (5-20%) (institutional-tier mid-cycle partial-bull pullback-recovery: extreme intraday range with close 2x closer to HOD than LOD in proper consolidation zone below the prior peak with 5x volume; quarterly-rare swing-trade marker for trend-resumption from mid-cycle pullback bottom without rigid HOD pinning)
+    MegaRangeUpperThirdMidYearLowQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_low_pct >= 5 AND year_low_pct < 20 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + quintupled vol + mid-range from low (5-20%) (institutional-tier mid-cycle partial-bull recovery-continuation: extreme intraday range with close 2x closer to HOD than LOD in proper consolidation zone above the prior trough with 5x volume; quarterly-rare swing-trade marker for recovery-acceleration from mid-cycle recovery base without rigid HOD pinning)
+    MegaRangeUpperThirdJustOffYearHighQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_high_pct >= 2 AND year_high_pct < 5 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + quintupled vol + just off 52w high (2-5%) (institutional-tier post-tag partial-bull retracement-recovery: extreme intraday range with close 2x closer to HOD than LOD immediately after a shallow pullback from the 52w high with 5x volume; quarterly-rare re-test marker confirming partial-bull commitment to reclaim the breakout level without rigid HOD pinning)
+    MegaRangeUpperThirdJustOffYearLowQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND hod_dist_pct.abs() * 2 < lod_dist_pct.abs() AND hod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_low_pct >= 2 AND year_low_pct < 5 — mega intraday range (>10%) + upper-third close (not pinned to HOD) + quintupled vol + just off 52w low (2-5%) (institutional-tier post-tag partial-bull bounce-continuation: extreme intraday range with close 2x closer to HOD than LOD immediately after a shallow bounce from the 52w low with 5x volume; quarterly-rare re-test marker confirming the bottom hold with partial-bull commitment without rigid HOD pinning)
+    MegaRangeLowerThirdNearYearHighQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_high_pct < 2 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + quintupled vol + at/near 52w high (<2%) (institutional-tier partial-bear failed-breakout distribution day: extreme intraday range with close 2x closer to LOD than HOD at the 52w peak with 5x volume; quarterly-rare regime-defining event marking partial bear-control at the high-water mark — bull-trap distribution marker with strong institutional commitment but without rigid LOD pinning)
+    MegaRangeLowerThirdNearYearLowQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_low_pct < 2 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + quintupled vol + at/near 52w low (<2%) (institutional-tier partial-bear breakdown-continuation day: extreme intraday range with close 2x closer to LOD than HOD at the 52w trough with 5x volume; quarterly-rare regime-defining event marking partial bear-control at the low-water mark — capitulation-extension marker with strong institutional commitment but without rigid LOD pinning)
+    MegaRangeLowerThirdConfirmedAboveYearHighQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_high_pct >= -3 AND year_high_pct <= -1 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + quintupled vol + confirmed-breakout zone (1-3% past 52w high) (institutional-tier failed-confirmed-breakout reversal: extreme intraday range with close 2x closer to LOD than HOD just past validated breakout level with 5x volume; quarterly-rare bear-reclaim reversal day where institutional sellers reasserted control after the breakout — bull-trap marker at the breakout extension)
+    MegaRangeLowerThirdConfirmedBelowYearLowQuintupledVol, // hod_dist_pct.abs() + lod_dist_pct.abs() > 10 AND lod_dist_pct.abs() * 2 < hod_dist_pct.abs() AND lod_dist_pct.abs() > 0.3 AND rel_volume >= 5 AND year_low_pct >= -3 AND year_low_pct <= -1 — mega intraday range (>10%) + lower-third close (not pinned to LOD) + quintupled vol + confirmed-breakdown zone (1-3% past 52w low) (institutional-tier partial-bear breakdown follow-through extension: extreme intraday range with close 2x closer to LOD than HOD just past validated breakdown level with 5x volume; quarterly-rare continuation marker confirming institutional trend deceleration without rigid LOD pinning)
 }
 
 pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
@@ -1429,14 +1429,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
         }
         Preset::GapAndFade => {
-            hit.gap_pct >= 3.0
-                && hit.day_pct < 0.0
-                && hit.lod_dist_pct.abs() <= 1.0
+            hit.gap_pct >= 3.0 && hit.day_pct < 0.0 && hit.lod_dist_pct.abs() <= 1.0
         }
         Preset::InsideDayLow => hit.lod_dist_pct.abs() <= 0.5,
-        Preset::InsideDayHigh => {
-            hit.hod_dist_pct.abs() <= 0.5 && hit.change_pct.abs() <= 1.0
-        }
+        Preset::InsideDayHigh => hit.hod_dist_pct.abs() <= 0.5 && hit.change_pct.abs() <= 1.0,
         Preset::RangeContractionDay => {
             hit.day_pct.abs() <= 0.5 && hit.gap_pct.abs() <= 0.5 && hit.rel_volume <= 0.7
         }
@@ -1460,19 +1456,13 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct.abs() <= 1.0
         }
         Preset::BracketSqueeze => {
-            hit.day_pct.abs() < 0.5
-                && hit.hod_dist_pct.abs() < 0.5
-                && hit.lod_dist_pct.abs() < 0.5
+            hit.day_pct.abs() < 0.5 && hit.hod_dist_pct.abs() < 0.5 && hit.lod_dist_pct.abs() < 0.5
         }
         Preset::DojiSqueeze => {
-            hit.change_pct.abs() < 0.2
-                && hit.day_pct.abs() < 0.5
-                && hit.gap_pct.abs() < 0.3
+            hit.change_pct.abs() < 0.2 && hit.day_pct.abs() < 0.5 && hit.gap_pct.abs() < 0.3
         }
         Preset::GapFillSqueeze => {
-            hit.gap_pct.abs() >= 1.0
-                && hit.day_pct.abs() < 0.5
-                && hit.rel_volume <= 0.8
+            hit.gap_pct.abs() >= 1.0 && hit.day_pct.abs() < 0.5 && hit.rel_volume <= 0.8
         }
         Preset::EndOfRangeSqueeze => {
             hit.day_pct.abs() < 1.0
@@ -1481,14 +1471,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 1.5
         }
         Preset::PreBreakoutSqueeze => {
-            hit.year_high_pct >= -3.0
-                && hit.day_pct.abs() < 0.5
-                && hit.rel_volume < 0.8
+            hit.year_high_pct >= -3.0 && hit.day_pct.abs() < 0.5 && hit.rel_volume < 0.8
         }
         Preset::PreBreakdownSqueeze => {
-            hit.year_low_pct <= 3.0
-                && hit.day_pct.abs() < 0.5
-                && hit.rel_volume < 0.8
+            hit.year_low_pct <= 3.0 && hit.day_pct.abs() < 0.5 && hit.rel_volume < 0.8
         }
         Preset::SymmetricSqueeze => {
             (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.2
@@ -1496,18 +1482,12 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct.abs() < 0.3
                 && hit.rel_volume < 0.8
         }
-        Preset::OpenCloseSqueeze => {
-            hit.day_pct.abs() < 0.3 && hit.rel_volume < 0.8
-        }
+        Preset::OpenCloseSqueeze => hit.day_pct.abs() < 0.3 && hit.rel_volume < 0.8,
         Preset::TightHodSqueeze => {
-            hit.hod_dist_pct.abs() < 0.3
-                && hit.change_pct.abs() < 1.0
-                && hit.rel_volume < 0.8
+            hit.hod_dist_pct.abs() < 0.3 && hit.change_pct.abs() < 1.0 && hit.rel_volume < 0.8
         }
         Preset::TightLodSqueeze => {
-            hit.lod_dist_pct.abs() < 0.3
-                && hit.change_pct.abs() < 1.0
-                && hit.rel_volume < 0.8
+            hit.lod_dist_pct.abs() < 0.3 && hit.change_pct.abs() < 1.0 && hit.rel_volume < 0.8
         }
         Preset::NoGapNoChangeSqueeze => {
             hit.gap_pct.abs() < 0.2
@@ -1515,9 +1495,7 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct.abs() < 0.5
                 && hit.rel_volume < 0.8
         }
-        Preset::QuietTickSqueeze => {
-            hit.rel_volume < 0.3 && hit.day_pct.abs() < 0.5
-        }
+        Preset::QuietTickSqueeze => hit.rel_volume < 0.3 && hit.day_pct.abs() < 0.5,
         Preset::NarrowGapPostMomentum => {
             hit.gap_pct.abs() < 0.3
                 && hit.change_pct.abs() >= 3.0
@@ -1537,13 +1515,9 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 1.5
                 && hit.rel_volume < 0.9
         }
-        Preset::PennyMoveSqueeze => {
-            hit.change_pct.abs() < 0.05
-        }
+        Preset::PennyMoveSqueeze => hit.change_pct.abs() < 0.05,
         Preset::DryUpSqueeze => {
-            hit.rel_volume < 0.4
-                && hit.change_pct.abs() < 1.5
-                && hit.gap_pct.abs() < 0.5
+            hit.rel_volume < 0.4 && hit.change_pct.abs() < 1.5 && hit.gap_pct.abs() < 0.5
         }
         Preset::UpperRangeSqueeze => {
             hit.lod_dist_pct.abs() > 2.0 * hit.hod_dist_pct.abs()
@@ -1572,9 +1546,7 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.9
         }
         Preset::DeepDiscountSqueeze => {
-            hit.year_high_pct <= -30.0
-                && hit.day_pct.abs() < 1.0
-                && hit.rel_volume < 0.9
+            hit.year_high_pct <= -30.0 && hit.day_pct.abs() < 1.0 && hit.rel_volume < 0.9
         }
         Preset::FlatRangeQuietSqueeze => {
             hit.day_pct.abs() < 0.2
@@ -1583,14 +1555,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.5
         }
         Preset::NearAthQuietSqueeze => {
-            hit.year_high_pct >= -1.0
-                && hit.rel_volume < 0.6
-                && hit.day_pct.abs() < 1.0
+            hit.year_high_pct >= -1.0 && hit.rel_volume < 0.6 && hit.day_pct.abs() < 1.0
         }
         Preset::NearAtlQuietSqueeze => {
-            hit.year_low_pct <= 1.0
-                && hit.rel_volume < 0.6
-                && hit.day_pct.abs() < 1.0
+            hit.year_low_pct <= 1.0 && hit.rel_volume < 0.6 && hit.day_pct.abs() < 1.0
         }
         Preset::SilentBreakoutSetup => {
             hit.hod_dist_pct.abs() < 0.5
@@ -1605,21 +1573,13 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct <= 5.0
         }
         Preset::GapDownNoFollowSqueeze => {
-            hit.gap_pct <= -1.0
-                && hit.change_pct >= -0.5
-                && hit.day_pct.abs() < 0.5
+            hit.gap_pct <= -1.0 && hit.change_pct >= -0.5 && hit.day_pct.abs() < 0.5
         }
         Preset::GapUpNoFollowSqueeze => {
-            hit.gap_pct >= 1.0
-                && hit.change_pct <= 0.5
-                && hit.day_pct.abs() < 0.5
+            hit.gap_pct >= 1.0 && hit.change_pct <= 0.5 && hit.day_pct.abs() < 0.5
         }
-        Preset::UnchVolDryUpSqueeze => {
-            hit.change_pct.abs() < 0.1 && hit.rel_volume < 0.5
-        }
-        Preset::NarrowAfterTrendSqueeze => {
-            hit.day_pct.abs() < 0.5 && hit.change_pct.abs() >= 5.0
-        }
+        Preset::UnchVolDryUpSqueeze => hit.change_pct.abs() < 0.1 && hit.rel_volume < 0.5,
+        Preset::NarrowAfterTrendSqueeze => hit.day_pct.abs() < 0.5 && hit.change_pct.abs() >= 5.0,
         Preset::DeadCenterSqueeze => {
             (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.4
                 && hit.change_pct.abs() < 0.3
@@ -1638,9 +1598,7 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct.abs() < 0.5
         }
         Preset::PostSpikeQuietSqueeze => {
-            hit.change_pct.abs() > 2.0
-                && hit.day_pct.abs() < 0.3
-                && hit.rel_volume < 0.6
+            hit.change_pct.abs() > 2.0 && hit.day_pct.abs() < 0.3 && hit.rel_volume < 0.6
         }
         Preset::HighSqueezeBracket => {
             hit.hod_dist_pct.abs() < 1.0
@@ -1648,14 +1606,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_high_pct >= -3.0
         }
         Preset::LowSqueezeBracket => {
-            hit.hod_dist_pct.abs() < 1.0
-                && hit.lod_dist_pct.abs() < 1.0
-                && hit.year_low_pct <= 3.0
+            hit.hod_dist_pct.abs() < 1.0 && hit.lod_dist_pct.abs() < 1.0 && hit.year_low_pct <= 3.0
         }
         Preset::HighRelVolStallSqueeze => {
-            hit.rel_volume >= 1.5
-                && hit.change_pct.abs() < 0.3
-                && hit.day_pct.abs() < 0.5
+            hit.rel_volume >= 1.5 && hit.change_pct.abs() < 0.3 && hit.day_pct.abs() < 0.5
         }
         Preset::SlightLeanLongSqueeze => {
             hit.change_pct >= 0.2
@@ -1677,13 +1631,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.8
         }
         Preset::SlackBetweenExtremesSqueeze => {
-            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 4.0
-                && hit.change_pct.abs() < 0.5
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 4.0 && hit.change_pct.abs() < 0.5
         }
         Preset::PivotPinSqueeze => {
-            hit.day_pct.abs() < 0.3
-                && hit.hod_dist_pct.abs() < 1.0
-                && hit.lod_dist_pct.abs() < 1.0
+            hit.day_pct.abs() < 0.3 && hit.hod_dist_pct.abs() < 1.0 && hit.lod_dist_pct.abs() < 1.0
         }
         Preset::EvenSidesSqueeze => {
             hit.gap_pct.signum() != hit.change_pct.signum()
@@ -1693,9 +1644,7 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.8
         }
         Preset::InsideQuarterDaySqueeze => {
-            hit.day_pct.abs() < 0.25
-                && hit.change_pct.abs() < 1.0
-                && hit.rel_volume < 0.8
+            hit.day_pct.abs() < 0.25 && hit.change_pct.abs() < 1.0 && hit.rel_volume < 0.8
         }
         Preset::EvenVolumeQuietSqueeze => {
             hit.rel_volume >= 0.9
@@ -1747,11 +1696,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
             let denom = hit.year_high_pct.abs() + hit.year_low_pct.abs();
             let mid_frac = if denom > 1e-9 {
                 1.0 - hit.year_high_pct.abs() / denom
-            } else { 0.5 };
-            mid_frac > 0.30
-                && mid_frac < 0.70
-                && hit.day_pct.abs() < 0.5
-                && hit.rel_volume < 0.9
+            } else {
+                0.5
+            };
+            mid_frac > 0.30 && mid_frac < 0.70 && hit.day_pct.abs() < 0.5 && hit.rel_volume < 0.9
         }
         Preset::LeanGapMatchSqueeze => {
             hit.gap_pct.signum() == hit.change_pct.signum()
@@ -1768,24 +1716,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.9
         }
         Preset::ChangeNoDayPctSqueeze => {
-            hit.change_pct.abs() >= 1.0
-                && hit.day_pct.abs() < 0.2
-                && hit.rel_volume < 1.0
+            hit.change_pct.abs() >= 1.0 && hit.day_pct.abs() < 0.2 && hit.rel_volume < 1.0
         }
         Preset::DayPctNoChangeSqueeze => {
-            hit.day_pct.abs() >= 1.0
-                && hit.change_pct.abs() < 0.2
-                && hit.rel_volume < 1.0
+            hit.day_pct.abs() >= 1.0 && hit.change_pct.abs() < 0.2 && hit.rel_volume < 1.0
         }
         Preset::HotDryUpSqueeze => {
-            hit.year_high_pct >= -1.0
-                && hit.rel_volume < 0.5
-                && hit.day_pct.abs() < 0.5
+            hit.year_high_pct >= -1.0 && hit.rel_volume < 0.5 && hit.day_pct.abs() < 0.5
         }
         Preset::ColdDryUpSqueeze => {
-            hit.year_low_pct <= 1.0
-                && hit.rel_volume < 0.5
-                && hit.day_pct.abs() < 0.5
+            hit.year_low_pct <= 1.0 && hit.rel_volume < 0.5 && hit.day_pct.abs() < 0.5
         }
         Preset::HighVolGapFadeSqueeze => {
             hit.gap_pct.abs() >= 1.0
@@ -1806,37 +1746,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.7
         }
         Preset::HighVolNoMoveSqueeze => {
-            hit.rel_volume >= 2.0
-                && hit.change_pct.abs() < 0.5
-                && hit.day_pct.abs() < 0.7
+            hit.rel_volume >= 2.0 && hit.change_pct.abs() < 0.5 && hit.day_pct.abs() < 0.7
         }
-        Preset::ChangeButLodNearbySqueeze => {
-            hit.change_pct >= 1.0 && hit.lod_dist_pct.abs() < 1.0
-        }
-        Preset::ChangeButHodNearbySqueeze => {
-            hit.change_pct <= -1.0 && hit.hod_dist_pct.abs() < 1.0
-        }
+        Preset::ChangeButLodNearbySqueeze => hit.change_pct >= 1.0 && hit.lod_dist_pct.abs() < 1.0,
+        Preset::ChangeButHodNearbySqueeze => hit.change_pct <= -1.0 && hit.hod_dist_pct.abs() < 1.0,
         Preset::GapAndCloseAtHodSqueeze => {
-            hit.gap_pct >= 0.5
-                && hit.hod_dist_pct.abs() < 0.5
-                && hit.day_pct >= 0.0
+            hit.gap_pct >= 0.5 && hit.hod_dist_pct.abs() < 0.5 && hit.day_pct >= 0.0
         }
         Preset::GapAndCloseAtLodSqueeze => {
-            hit.gap_pct <= -0.5
-                && hit.lod_dist_pct.abs() < 0.5
-                && hit.day_pct <= 0.0
+            hit.gap_pct <= -0.5 && hit.lod_dist_pct.abs() < 0.5 && hit.day_pct <= 0.0
         }
         Preset::LongInsideQuietSqueeze => {
             let span = hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs();
-            span >= 2.0
-                && span <= 4.0
-                && hit.day_pct.abs() < 0.5
-                && hit.rel_volume < 0.8
+            span >= 2.0 && span <= 4.0 && hit.day_pct.abs() < 0.5 && hit.rel_volume < 0.8
         }
         Preset::TripleZeroSqueeze => {
-            hit.gap_pct.abs() < 0.1
-                && hit.change_pct.abs() < 0.1
-                && hit.day_pct.abs() < 0.1
+            hit.gap_pct.abs() < 0.1 && hit.change_pct.abs() < 0.1 && hit.day_pct.abs() < 0.1
         }
         Preset::Pct52wQuarterFromHighSqueeze => {
             hit.year_high_pct >= -25.0
@@ -1892,9 +1817,7 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.5
                 && hit.rel_volume < 0.9
         }
-        Preset::MicroRangeSqueeze => {
-            hit.hod_dist_pct.abs() < 0.2 && hit.lod_dist_pct.abs() < 0.2
-        }
+        Preset::MicroRangeSqueeze => hit.hod_dist_pct.abs() < 0.2 && hit.lod_dist_pct.abs() < 0.2,
         Preset::LowVolGapHoldSqueeze => {
             hit.gap_pct.abs() >= 0.5
                 && hit.change_pct.abs() < hit.gap_pct.abs() / 4.0
@@ -1906,14 +1829,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
         }
         Preset::UpsideAttemptedSqueeze => {
-            hit.hod_dist_pct.abs() >= 1.0
-                && hit.lod_dist_pct.abs() < 0.5
-                && hit.change_pct < 0.0
+            hit.hod_dist_pct.abs() >= 1.0 && hit.lod_dist_pct.abs() < 0.5 && hit.change_pct < 0.0
         }
         Preset::DownsideAttemptedSqueeze => {
-            hit.lod_dist_pct.abs() >= 1.0
-                && hit.hod_dist_pct.abs() < 0.5
-                && hit.change_pct > 0.0
+            hit.lod_dist_pct.abs() >= 1.0 && hit.hod_dist_pct.abs() < 0.5 && hit.change_pct > 0.0
         }
         Preset::TightGapSmallChangeSqueeze => {
             hit.gap_pct.abs() < 0.2
@@ -1935,14 +1854,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.8
         }
         Preset::Pct52wHighBreathSqueeze => {
-            hit.year_high_pct >= -1.0
-                && hit.day_pct.abs() < 0.4
-                && hit.change_pct.abs() < 0.4
+            hit.year_high_pct >= -1.0 && hit.day_pct.abs() < 0.4 && hit.change_pct.abs() < 0.4
         }
         Preset::Pct52wLowBreathSqueeze => {
-            hit.year_low_pct <= 1.0
-                && hit.day_pct.abs() < 0.4
-                && hit.change_pct.abs() < 0.4
+            hit.year_low_pct <= 1.0 && hit.day_pct.abs() < 0.4 && hit.change_pct.abs() < 0.4
         }
         Preset::GapAroundCloseSqueeze => {
             hit.gap_pct.abs() < 0.4
@@ -2011,14 +1926,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct <= 10.0
         }
         Preset::NarrowGapHotCloseSqueeze => {
-            hit.gap_pct.abs() < 0.2
-                && hit.year_high_pct >= -2.0
-                && hit.day_pct.abs() < 0.5
+            hit.gap_pct.abs() < 0.2 && hit.year_high_pct >= -2.0 && hit.day_pct.abs() < 0.5
         }
         Preset::NarrowGapColdCloseSqueeze => {
-            hit.gap_pct.abs() < 0.2
-                && hit.year_low_pct <= 2.0
-                && hit.day_pct.abs() < 0.5
+            hit.gap_pct.abs() < 0.2 && hit.year_low_pct <= 2.0 && hit.day_pct.abs() < 0.5
         }
         Preset::AbsorptionUpSqueeze => {
             hit.change_pct >= 0.5
@@ -2051,23 +1962,15 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 1.0
                 && hit.rel_volume < 0.8
         }
-        Preset::SubpointMoveSqueeze => {
-            hit.change_pct.abs() < 0.05 && hit.day_pct.abs() < 0.05
-        }
+        Preset::SubpointMoveSqueeze => hit.change_pct.abs() < 0.05 && hit.day_pct.abs() < 0.05,
         Preset::NoVolNoMoveSqueeze => {
-            hit.rel_volume < 0.3
-                && hit.change_pct.abs() < 0.3
-                && hit.day_pct.abs() < 0.3
+            hit.rel_volume < 0.3 && hit.change_pct.abs() < 0.3 && hit.day_pct.abs() < 0.3
         }
         Preset::VolWithoutChangeSqueeze => {
-            hit.rel_volume >= 1.5
-                && hit.change_pct.abs() < 0.2
-                && hit.day_pct.abs() < 0.5
+            hit.rel_volume >= 1.5 && hit.change_pct.abs() < 0.2 && hit.day_pct.abs() < 0.5
         }
         Preset::TickInsideOpenSqueeze => {
-            hit.day_pct.abs() < 0.15
-                && hit.change_pct.abs() < 0.5
-                && hit.gap_pct.abs() < 0.3
+            hit.day_pct.abs() < 0.15 && hit.change_pct.abs() < 0.5 && hit.gap_pct.abs() < 0.3
         }
         Preset::Pct52wExactHalfSqueeze => {
             hit.year_high_pct <= -45.0
@@ -2076,29 +1979,19 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct <= 55.0
                 && hit.change_pct.abs() < 0.5
         }
-        Preset::UnchangedOnVolumeSqueeze => {
-            hit.change_pct.abs() < 0.1 && hit.rel_volume >= 1.0
-        }
+        Preset::UnchangedOnVolumeSqueeze => hit.change_pct.abs() < 0.1 && hit.rel_volume >= 1.0,
         Preset::WideHodNarrowLodSqueeze => {
-            hit.hod_dist_pct.abs() >= 2.0
-                && hit.lod_dist_pct.abs() < 0.5
-                && hit.change_pct < 0.0
+            hit.hod_dist_pct.abs() >= 2.0 && hit.lod_dist_pct.abs() < 0.5 && hit.change_pct < 0.0
         }
         Preset::NarrowHodWideLodSqueeze => {
-            hit.hod_dist_pct.abs() < 0.5
-                && hit.lod_dist_pct.abs() >= 2.0
-                && hit.change_pct > 0.0
+            hit.hod_dist_pct.abs() < 0.5 && hit.lod_dist_pct.abs() >= 2.0 && hit.change_pct > 0.0
         }
         Preset::PerfectBalanceSqueeze => {
             (hit.hod_dist_pct.abs() - hit.lod_dist_pct.abs()).abs() < 0.1
                 && hit.change_pct.abs() < 0.3
         }
-        Preset::LowVolHotZoneSqueeze => {
-            hit.year_high_pct >= -5.0 && hit.rel_volume < 0.4
-        }
-        Preset::LowVolColdZoneSqueeze => {
-            hit.year_low_pct <= 5.0 && hit.rel_volume < 0.4
-        }
+        Preset::LowVolHotZoneSqueeze => hit.year_high_pct >= -5.0 && hit.rel_volume < 0.4,
+        Preset::LowVolColdZoneSqueeze => hit.year_low_pct <= 5.0 && hit.rel_volume < 0.4,
         Preset::DriftHigherSqueeze => {
             hit.change_pct > 0.0
                 && hit.change_pct < 2.0
@@ -2120,24 +2013,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct.abs() < 0.2
         }
         Preset::PinnedToOpenSqueeze => {
-            hit.day_pct.abs() < 0.05
-                && hit.hod_dist_pct.abs() < 1.0
-                && hit.lod_dist_pct.abs() < 1.0
+            hit.day_pct.abs() < 0.05 && hit.hod_dist_pct.abs() < 1.0 && hit.lod_dist_pct.abs() < 1.0
         }
         Preset::BigGapSmallDaySqueeze => {
-            hit.gap_pct.abs() >= 2.0
-                && hit.day_pct.abs() < 0.5
-                && hit.change_pct.abs() < 0.5
+            hit.gap_pct.abs() >= 2.0 && hit.day_pct.abs() < 0.5 && hit.change_pct.abs() < 0.5
         }
         Preset::PostCrashSqueeze => {
-            hit.change_pct <= -3.0
-                && hit.day_pct.abs() < 0.5
-                && hit.rel_volume < 1.0
+            hit.change_pct <= -3.0 && hit.day_pct.abs() < 0.5 && hit.rel_volume < 1.0
         }
         Preset::PostSpikeStabilizeSqueeze => {
-            hit.change_pct >= 3.0
-                && hit.day_pct.abs() < 0.5
-                && hit.rel_volume < 1.0
+            hit.change_pct >= 3.0 && hit.day_pct.abs() < 0.5 && hit.rel_volume < 1.0
         }
         Preset::TightWithSmallGapSqueeze => {
             hit.gap_pct.abs() < 0.5
@@ -2145,15 +2030,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() <= 0.8
                 && hit.day_pct.abs() < 0.4
         }
-        Preset::BigVolWithTinyChangeSqueeze => {
-            hit.rel_volume >= 3.0 && hit.change_pct.abs() < 0.1
-        }
+        Preset::BigVolWithTinyChangeSqueeze => hit.rel_volume >= 3.0 && hit.change_pct.abs() < 0.1,
         Preset::QuietExpansionSqueeze => {
             let span = hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs();
-            span >= 2.0
-                && span <= 4.0
-                && hit.change_pct.abs() < 0.2
-                && hit.rel_volume < 0.7
+            span >= 2.0 && span <= 4.0 && hit.change_pct.abs() < 0.2 && hit.rel_volume < 0.7
         }
         Preset::InsideBarHighSqueeze => {
             hit.hod_dist_pct.abs() < 1.5
@@ -2161,17 +2041,13 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_high_pct >= -2.0
         }
         Preset::InsideBarLowSqueeze => {
-            hit.hod_dist_pct.abs() < 1.5
-                && hit.lod_dist_pct.abs() < 1.5
-                && hit.year_low_pct <= 2.0
+            hit.hod_dist_pct.abs() < 1.5 && hit.lod_dist_pct.abs() < 1.5 && hit.year_low_pct <= 2.0
         }
         Preset::FlatGapInsideRangeSqueeze => {
-            hit.gap_pct.abs() < 0.1
-                && (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) < 2.0
+            hit.gap_pct.abs() < 0.1 && (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) < 2.0
         }
         Preset::Pct52wEdgeDryUp => {
-            (hit.year_high_pct >= -2.0 || hit.year_low_pct <= 2.0)
-                && hit.rel_volume < 0.3
+            (hit.year_high_pct >= -2.0 || hit.year_low_pct <= 2.0) && hit.rel_volume < 0.3
         }
         Preset::NarrowCenterSqueeze => {
             hit.hod_dist_pct.abs() >= 0.5
@@ -2186,19 +2062,13 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.day_pct.abs() < 0.5
         }
         Preset::SilentLeaderSqueeze => {
-            hit.year_high_pct >= -3.0
-                && hit.year_low_pct >= 50.0
-                && hit.day_pct.abs() < 0.5
+            hit.year_high_pct >= -3.0 && hit.year_low_pct >= 50.0 && hit.day_pct.abs() < 0.5
         }
         Preset::SilentLaggardSqueeze => {
-            hit.year_low_pct <= 3.0
-                && hit.year_high_pct <= -50.0
-                && hit.day_pct.abs() < 0.5
+            hit.year_low_pct <= 3.0 && hit.year_high_pct <= -50.0 && hit.day_pct.abs() < 0.5
         }
         Preset::NearVwapQuietSqueeze => {
-            hit.day_pct.abs() < 0.3
-                && hit.change_pct.abs() < 0.3
-                && hit.rel_volume < 0.8
+            hit.day_pct.abs() < 0.3 && hit.change_pct.abs() < 0.3 && hit.rel_volume < 0.8
         }
         Preset::BarelyMovingMidSqueeze => {
             hit.year_high_pct >= -50.0
@@ -2224,18 +2094,13 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.0
         }
         Preset::LowRangeNoChangeSqueeze => {
-            (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) < 1.0
-                && hit.change_pct.abs() < 0.5
+            (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) < 1.0 && hit.change_pct.abs() < 0.5
         }
         Preset::LowVolumeUpDaySqueeze => {
-            hit.change_pct > 1.0
-                && hit.change_pct < 3.0
-                && hit.rel_volume < 0.5
+            hit.change_pct > 1.0 && hit.change_pct < 3.0 && hit.rel_volume < 0.5
         }
         Preset::LowVolumeDownDaySqueeze => {
-            hit.change_pct < -1.0
-                && hit.change_pct > -3.0
-                && hit.rel_volume < 0.5
+            hit.change_pct < -1.0 && hit.change_pct > -3.0 && hit.rel_volume < 0.5
         }
         Preset::HighVolumeUpDayNoExtreme => {
             hit.change_pct >= 1.0
@@ -2249,90 +2114,42 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
                 && hit.lod_dist_pct.abs() > 0.5
         }
-        Preset::GapUpFadeToFlat => {
-            hit.gap_pct > 2.0
-                && hit.change_pct.abs() < 0.5
-        }
-        Preset::GapDownReclaimToFlat => {
-            hit.gap_pct < -2.0
-                && hit.change_pct.abs() < 0.5
-        }
+        Preset::GapUpFadeToFlat => hit.gap_pct > 2.0 && hit.change_pct.abs() < 0.5,
+        Preset::GapDownReclaimToFlat => hit.gap_pct < -2.0 && hit.change_pct.abs() < 0.5,
         Preset::GapUpHeldGreen => {
-            hit.gap_pct > 2.0
-                && hit.change_pct > hit.gap_pct
-                && hit.rel_volume >= 1.0
+            hit.gap_pct > 2.0 && hit.change_pct > hit.gap_pct && hit.rel_volume >= 1.0
         }
         Preset::GapDownHeldRed => {
-            hit.gap_pct < -2.0
-                && hit.change_pct < hit.gap_pct
-                && hit.rel_volume >= 1.0
+            hit.gap_pct < -2.0 && hit.change_pct < hit.gap_pct && hit.rel_volume >= 1.0
         }
         Preset::GapUpHalfFade => {
-            hit.gap_pct > 2.0
-                && hit.change_pct > 0.0
-                && hit.change_pct < hit.gap_pct * 0.5
+            hit.gap_pct > 2.0 && hit.change_pct > 0.0 && hit.change_pct < hit.gap_pct * 0.5
         }
         Preset::GapDownHalfReclaim => {
-            hit.gap_pct < -2.0
-                && hit.change_pct < 0.0
-                && hit.change_pct > hit.gap_pct * 0.5
+            hit.gap_pct < -2.0 && hit.change_pct < 0.0 && hit.change_pct > hit.gap_pct * 0.5
         }
-        Preset::GapAndGoXl => {
-            hit.gap_pct > 3.0
-                && hit.change_pct > 5.0
-                && hit.rel_volume >= 2.0
-        }
+        Preset::GapAndGoXl => hit.gap_pct > 3.0 && hit.change_pct > 5.0 && hit.rel_volume >= 2.0,
         Preset::GapAndCrashXl => {
-            hit.gap_pct < -3.0
-                && hit.change_pct < -5.0
-                && hit.rel_volume >= 2.0
+            hit.gap_pct < -3.0 && hit.change_pct < -5.0 && hit.rel_volume >= 2.0
         }
-        Preset::GapUpButDayRed => {
-            hit.gap_pct > 1.0 && hit.change_pct < -1.0
-        }
-        Preset::GapDownButDayGreen => {
-            hit.gap_pct < -1.0 && hit.change_pct > 1.0
-        }
+        Preset::GapUpButDayRed => hit.gap_pct > 1.0 && hit.change_pct < -1.0,
+        Preset::GapDownButDayGreen => hit.gap_pct < -1.0 && hit.change_pct > 1.0,
         Preset::GapUpFlushOnVolume => {
-            hit.gap_pct > 2.0
-                && hit.change_pct < -2.0
-                && hit.rel_volume >= 2.0
+            hit.gap_pct > 2.0 && hit.change_pct < -2.0 && hit.rel_volume >= 2.0
         }
         Preset::GapDownReversalOnVolume => {
-            hit.gap_pct < -2.0
-                && hit.change_pct > 2.0
-                && hit.rel_volume >= 2.0
+            hit.gap_pct < -2.0 && hit.change_pct > 2.0 && hit.rel_volume >= 2.0
         }
-        Preset::Pct52wTopDecileHotVol => {
-            hit.year_high_pct > -10.0 && hit.rel_volume >= 2.0
-        }
-        Preset::Pct52wBottomDecileHotVol => {
-            hit.year_low_pct < 10.0 && hit.rel_volume >= 2.0
-        }
-        Preset::Pct52wTopDecileDryVol => {
-            hit.year_high_pct > -10.0 && hit.rel_volume < 0.5
-        }
-        Preset::Pct52wBottomDecileDryVol => {
-            hit.year_low_pct < 10.0 && hit.rel_volume < 0.5
-        }
-        Preset::NewHighGreenDay => {
-            hit.year_high_pct >= 0.0 && hit.change_pct >= 1.0
-        }
-        Preset::NewLowRedDay => {
-            hit.year_low_pct <= 0.0 && hit.change_pct <= -1.0
-        }
-        Preset::NewHighRedDay => {
-            hit.year_high_pct >= 0.0 && hit.change_pct <= -1.0
-        }
-        Preset::NewLowGreenDay => {
-            hit.year_low_pct <= 0.0 && hit.change_pct >= 1.0
-        }
-        Preset::NewHighOnHotVol => {
-            hit.year_high_pct >= 0.0 && hit.rel_volume >= 3.0
-        }
-        Preset::NewLowOnHotVol => {
-            hit.year_low_pct <= 0.0 && hit.rel_volume >= 3.0
-        }
+        Preset::Pct52wTopDecileHotVol => hit.year_high_pct > -10.0 && hit.rel_volume >= 2.0,
+        Preset::Pct52wBottomDecileHotVol => hit.year_low_pct < 10.0 && hit.rel_volume >= 2.0,
+        Preset::Pct52wTopDecileDryVol => hit.year_high_pct > -10.0 && hit.rel_volume < 0.5,
+        Preset::Pct52wBottomDecileDryVol => hit.year_low_pct < 10.0 && hit.rel_volume < 0.5,
+        Preset::NewHighGreenDay => hit.year_high_pct >= 0.0 && hit.change_pct >= 1.0,
+        Preset::NewLowRedDay => hit.year_low_pct <= 0.0 && hit.change_pct <= -1.0,
+        Preset::NewHighRedDay => hit.year_high_pct >= 0.0 && hit.change_pct <= -1.0,
+        Preset::NewLowGreenDay => hit.year_low_pct <= 0.0 && hit.change_pct >= 1.0,
+        Preset::NewHighOnHotVol => hit.year_high_pct >= 0.0 && hit.rel_volume >= 3.0,
+        Preset::NewLowOnHotVol => hit.year_low_pct <= 0.0 && hit.rel_volume >= 3.0,
         Preset::QuietNearTheTop => {
             hit.year_high_pct > -3.0
                 && (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) < 1.5
@@ -2356,56 +2173,34 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::MidRangeChopHotVol => {
             let h = hit.hod_dist_pct.abs();
             let l = hit.lod_dist_pct.abs();
-            h >= 1.0 && h <= 3.0
-                && l >= 1.0 && l <= 3.0
-                && hit.rel_volume >= 2.0
+            h >= 1.0 && h <= 3.0 && l >= 1.0 && l <= 3.0 && hit.rel_volume >= 2.0
         }
         Preset::MidRangeChopDryVol => {
             let h = hit.hod_dist_pct.abs();
             let l = hit.lod_dist_pct.abs();
-            h >= 1.0 && h <= 3.0
-                && l >= 1.0 && l <= 3.0
-                && hit.rel_volume < 0.5
+            h >= 1.0 && h <= 3.0 && l >= 1.0 && l <= 3.0 && hit.rel_volume < 0.5
         }
-        Preset::CloseNearHodNoBreakout => {
-            hit.hod_dist_pct.abs() < 0.5 && hit.change_pct < 1.0
-        }
-        Preset::CloseNearLodNoBreakdown => {
-            hit.lod_dist_pct.abs() < 0.5 && hit.change_pct > -1.0
-        }
-        Preset::CloseNearHodStrongDay => {
-            hit.hod_dist_pct.abs() < 0.5 && hit.change_pct > 3.0
-        }
-        Preset::CloseNearLodWeakDay => {
-            hit.lod_dist_pct.abs() < 0.5 && hit.change_pct < -3.0
-        }
+        Preset::CloseNearHodNoBreakout => hit.hod_dist_pct.abs() < 0.5 && hit.change_pct < 1.0,
+        Preset::CloseNearLodNoBreakdown => hit.lod_dist_pct.abs() < 0.5 && hit.change_pct > -1.0,
+        Preset::CloseNearHodStrongDay => hit.hod_dist_pct.abs() < 0.5 && hit.change_pct > 3.0,
+        Preset::CloseNearLodWeakDay => hit.lod_dist_pct.abs() < 0.5 && hit.change_pct < -3.0,
         Preset::InsideRangeNoVolume => {
-            (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) < 2.0
-                && hit.rel_volume < 0.5
+            (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) < 2.0 && hit.rel_volume < 0.5
         }
         Preset::OutsideRangeOnVolume => {
-            (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) > 6.0
-                && hit.rel_volume >= 2.0
+            (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) > 6.0 && hit.rel_volume >= 2.0
         }
         Preset::UpDayLowerHigh => {
-            hit.change_pct > 1.0
-                && hit.hod_dist_pct.abs() > 1.0
-                && hit.lod_dist_pct.abs() < 1.0
+            hit.change_pct > 1.0 && hit.hod_dist_pct.abs() > 1.0 && hit.lod_dist_pct.abs() < 1.0
         }
         Preset::DownDayHigherLow => {
-            hit.change_pct < -1.0
-                && hit.lod_dist_pct.abs() > 1.0
-                && hit.hod_dist_pct.abs() < 1.0
+            hit.change_pct < -1.0 && hit.lod_dist_pct.abs() > 1.0 && hit.hod_dist_pct.abs() < 1.0
         }
         Preset::StrongDayBalancedRange => {
-            hit.change_pct > 3.0
-                && hit.hod_dist_pct.abs() < 1.0
-                && hit.lod_dist_pct.abs() < 1.0
+            hit.change_pct > 3.0 && hit.hod_dist_pct.abs() < 1.0 && hit.lod_dist_pct.abs() < 1.0
         }
         Preset::WeakDayBalancedRange => {
-            hit.change_pct < -3.0
-                && hit.hod_dist_pct.abs() < 1.0
-                && hit.lod_dist_pct.abs() < 1.0
+            hit.change_pct < -3.0 && hit.hod_dist_pct.abs() < 1.0 && hit.lod_dist_pct.abs() < 1.0
         }
         Preset::ChannelRideUp => {
             hit.change_pct > 1.0
@@ -2454,14 +2249,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -0.5
         }
         Preset::HotVolNoMoveAtHigh => {
-            hit.year_high_pct > -5.0
-                && hit.change_pct.abs() < 0.5
-                && hit.rel_volume >= 2.0
+            hit.year_high_pct > -5.0 && hit.change_pct.abs() < 0.5 && hit.rel_volume >= 2.0
         }
         Preset::HotVolNoMoveAtLow => {
-            hit.year_low_pct < 5.0
-                && hit.change_pct.abs() < 0.5
-                && hit.rel_volume >= 2.0
+            hit.year_low_pct < 5.0 && hit.change_pct.abs() < 0.5 && hit.rel_volume >= 2.0
         }
         Preset::BigUpGapInsideDay => {
             hit.gap_pct > 3.0
@@ -2502,24 +2293,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
         }
         Preset::ParabolicUp => {
-            hit.change_pct > 10.0
-                && hit.rel_volume >= 3.0
-                && hit.hod_dist_pct.abs() < 0.5
+            hit.change_pct > 10.0 && hit.rel_volume >= 3.0 && hit.hod_dist_pct.abs() < 0.5
         }
         Preset::ParabolicDown => {
-            hit.change_pct < -10.0
-                && hit.rel_volume >= 3.0
-                && hit.lod_dist_pct.abs() < 0.5
+            hit.change_pct < -10.0 && hit.rel_volume >= 3.0 && hit.lod_dist_pct.abs() < 0.5
         }
         Preset::BlowOffTop => {
-            hit.change_pct > 5.0
-                && hit.rel_volume >= 5.0
-                && hit.year_high_pct > -2.0
+            hit.change_pct > 5.0 && hit.rel_volume >= 5.0 && hit.year_high_pct > -2.0
         }
         Preset::SellingClimaxBottom => {
-            hit.change_pct < -5.0
-                && hit.rel_volume >= 5.0
-                && hit.year_low_pct < 2.0
+            hit.change_pct < -5.0 && hit.rel_volume >= 5.0 && hit.year_low_pct < 2.0
         }
         Preset::UpDayGapOnlyMove => {
             hit.change_pct >= 1.0
@@ -2534,14 +2317,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 1.0
         }
         Preset::IntradayOnlyGreenDay => {
-            hit.change_pct > 1.0
-                && hit.gap_pct.abs() < 0.3
-                && hit.rel_volume >= 1.0
+            hit.change_pct > 1.0 && hit.gap_pct.abs() < 0.3 && hit.rel_volume >= 1.0
         }
         Preset::IntradayOnlyRedDay => {
-            hit.change_pct < -1.0
-                && hit.gap_pct.abs() < 0.3
-                && hit.rel_volume >= 1.0
+            hit.change_pct < -1.0 && hit.gap_pct.abs() < 0.3 && hit.rel_volume >= 1.0
         }
         Preset::ReversalUpFromOpen => {
             hit.gap_pct < -1.0
@@ -2588,14 +2367,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct < 60.0
         }
         Preset::Pct52wRangeBreakoutTriggered => {
-            hit.year_high_pct >= 0.0
-                && hit.change_pct > 2.0
-                && hit.rel_volume >= 2.0
+            hit.year_high_pct >= 0.0 && hit.change_pct > 2.0 && hit.rel_volume >= 2.0
         }
         Preset::Pct52wRangeBreakdownTriggered => {
-            hit.year_low_pct <= 0.0
-                && hit.change_pct < -2.0
-                && hit.rel_volume >= 2.0
+            hit.year_low_pct <= 0.0 && hit.change_pct < -2.0 && hit.rel_volume >= 2.0
         }
         Preset::Pct52wTightCoil => {
             hit.year_high_pct >= -10.0
@@ -2613,34 +2388,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::NarrowingRangeOnFlat => {
             let h = hit.hod_dist_pct.abs();
             let l = hit.lod_dist_pct.abs();
-            h >= 0.5 && h <= 2.0
-                && l >= 0.5 && l <= 2.0
-                && hit.change_pct.abs() < 0.3
+            h >= 0.5 && h <= 2.0 && l >= 0.5 && l <= 2.0 && hit.change_pct.abs() < 0.3
         }
-        Preset::GapTooFarBigPullback => {
-            hit.gap_pct > 4.0
-                && hit.change_pct < hit.gap_pct - 3.0
-        }
-        Preset::GapTooFarBigBounce => {
-            hit.gap_pct < -4.0
-                && hit.change_pct > hit.gap_pct + 3.0
-        }
+        Preset::GapTooFarBigPullback => hit.gap_pct > 4.0 && hit.change_pct < hit.gap_pct - 3.0,
+        Preset::GapTooFarBigBounce => hit.gap_pct < -4.0 && hit.change_pct > hit.gap_pct + 3.0,
         Preset::ChainBreakoutLevel => {
-            hit.hod_dist_pct.abs() < 0.3
-                && hit.lod_dist_pct.abs() > 2.0
-                && hit.change_pct > 1.0
+            hit.hod_dist_pct.abs() < 0.3 && hit.lod_dist_pct.abs() > 2.0 && hit.change_pct > 1.0
         }
         Preset::ChainBreakdownLevel => {
-            hit.lod_dist_pct.abs() < 0.3
-                && hit.hod_dist_pct.abs() > 2.0
-                && hit.change_pct < -1.0
+            hit.lod_dist_pct.abs() < 0.3 && hit.hod_dist_pct.abs() > 2.0 && hit.change_pct < -1.0
         }
-        Preset::Pct52wRangePosTop => {
-            hit.year_high_pct > -20.0 && hit.year_low_pct > 30.0
-        }
-        Preset::Pct52wRangePosBottom => {
-            hit.year_high_pct < -50.0 && hit.year_low_pct < 30.0
-        }
+        Preset::Pct52wRangePosTop => hit.year_high_pct > -20.0 && hit.year_low_pct > 30.0,
+        Preset::Pct52wRangePosBottom => hit.year_high_pct < -50.0 && hit.year_low_pct < 30.0,
         Preset::HighRangeHighVolStrong => {
             (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) > 4.0
                 && hit.change_pct > 3.0
@@ -2658,9 +2417,11 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         }
         Preset::AvgRangeAvgVolNeutral => {
             let r = hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs();
-            r >= 2.0 && r <= 4.0
+            r >= 2.0
+                && r <= 4.0
                 && hit.change_pct.abs() < 0.5
-                && hit.rel_volume >= 0.8 && hit.rel_volume <= 1.2
+                && hit.rel_volume >= 0.8
+                && hit.rel_volume <= 1.2
         }
         Preset::FailedBreakoutHighReclaim => {
             hit.year_high_pct > -1.0
@@ -2674,21 +2435,13 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct > 1.0
                 && hit.rel_volume >= 1.5
         }
-        Preset::HotVolHotGap => {
-            hit.gap_pct.abs() > 2.0 && hit.rel_volume >= 2.0
-        }
-        Preset::DryVolDryGap => {
-            hit.gap_pct.abs() < 0.5 && hit.rel_volume < 0.5
-        }
+        Preset::HotVolHotGap => hit.gap_pct.abs() > 2.0 && hit.rel_volume >= 2.0,
+        Preset::DryVolDryGap => hit.gap_pct.abs() < 0.5 && hit.rel_volume < 0.5,
         Preset::OuterEdgePushUp => {
-            hit.year_high_pct > -10.0
-                && hit.change_pct > 5.0
-                && hit.rel_volume >= 2.0
+            hit.year_high_pct > -10.0 && hit.change_pct > 5.0 && hit.rel_volume >= 2.0
         }
         Preset::OuterEdgePushDown => {
-            hit.year_low_pct < 10.0
-                && hit.change_pct < -5.0
-                && hit.rel_volume >= 2.0
+            hit.year_low_pct < 10.0 && hit.change_pct < -5.0 && hit.rel_volume >= 2.0
         }
         Preset::MiddleZoneUpDrift => {
             hit.year_high_pct >= -50.0
@@ -2719,20 +2472,20 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
         }
         Preset::GapUpSmallButHotVol => {
-            hit.gap_pct >= 0.5 && hit.gap_pct <= 1.5
-                && hit.rel_volume >= 2.0
+            hit.gap_pct >= 0.5 && hit.gap_pct <= 1.5 && hit.rel_volume >= 2.0
         }
         Preset::GapDownSmallButHotVol => {
-            hit.gap_pct <= -0.5 && hit.gap_pct >= -1.5
-                && hit.rel_volume >= 2.0
+            hit.gap_pct <= -0.5 && hit.gap_pct >= -1.5 && hit.rel_volume >= 2.0
         }
         Preset::GapUpMediumNeutral => {
-            hit.gap_pct >= 1.5 && hit.gap_pct <= 3.0
+            hit.gap_pct >= 1.5
+                && hit.gap_pct <= 3.0
                 && hit.change_pct.abs() < 0.5
                 && hit.rel_volume < 1.0
         }
         Preset::GapDownMediumNeutral => {
-            hit.gap_pct <= -1.5 && hit.gap_pct >= -3.0
+            hit.gap_pct <= -1.5
+                && hit.gap_pct >= -3.0
                 && hit.change_pct.abs() < 0.5
                 && hit.rel_volume < 1.0
         }
@@ -2749,44 +2502,28 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
         }
         Preset::HodReclaimFromFlatGap => {
-            hit.gap_pct.abs() < 0.5
-                && hit.hod_dist_pct.abs() < 0.5
-                && hit.change_pct > 1.0
+            hit.gap_pct.abs() < 0.5 && hit.hod_dist_pct.abs() < 0.5 && hit.change_pct > 1.0
         }
         Preset::LodFailFromFlatGap => {
-            hit.gap_pct.abs() < 0.5
-                && hit.lod_dist_pct.abs() < 0.5
-                && hit.change_pct < -1.0
+            hit.gap_pct.abs() < 0.5 && hit.lod_dist_pct.abs() < 0.5 && hit.change_pct < -1.0
         }
         Preset::Pct52wTopBoundaryReject => {
-            hit.year_high_pct >= -1.0
-                && hit.year_high_pct <= 0.0
-                && hit.change_pct < -0.5
+            hit.year_high_pct >= -1.0 && hit.year_high_pct <= 0.0 && hit.change_pct < -0.5
         }
         Preset::Pct52wBottomBoundaryReject => {
-            hit.year_low_pct >= 0.0
-                && hit.year_low_pct <= 1.0
-                && hit.change_pct > 0.5
+            hit.year_low_pct >= 0.0 && hit.year_low_pct <= 1.0 && hit.change_pct > 0.5
         }
         Preset::Pct52wTopBoundaryAccept => {
-            hit.year_high_pct >= -1.0
-                && hit.year_high_pct <= 0.0
-                && hit.change_pct > 0.5
+            hit.year_high_pct >= -1.0 && hit.year_high_pct <= 0.0 && hit.change_pct > 0.5
         }
         Preset::Pct52wBottomBoundaryAccept => {
-            hit.year_low_pct >= 0.0
-                && hit.year_low_pct <= 1.0
-                && hit.change_pct < -0.5
+            hit.year_low_pct >= 0.0 && hit.year_low_pct <= 1.0 && hit.change_pct < -0.5
         }
         Preset::UpFromBottomSpring => {
-            hit.year_low_pct < 10.0
-                && hit.change_pct > 5.0
-                && hit.rel_volume >= 2.0
+            hit.year_low_pct < 10.0 && hit.change_pct > 5.0 && hit.rel_volume >= 2.0
         }
         Preset::DownFromTopUpthrust => {
-            hit.year_high_pct > -10.0
-                && hit.change_pct < -5.0
-                && hit.rel_volume >= 2.0
+            hit.year_high_pct > -10.0 && hit.change_pct < -5.0 && hit.rel_volume >= 2.0
         }
         Preset::UpThrustBarReject => {
             hit.hod_dist_pct.abs() > 3.0
@@ -2839,12 +2576,14 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) < 1.5
         }
         Preset::GapStrongDayOpenPivot => {
-            hit.gap_pct >= 1.0 && hit.gap_pct <= 3.0
+            hit.gap_pct >= 1.0
+                && hit.gap_pct <= 3.0
                 && hit.change_pct > 4.0
                 && hit.rel_volume >= 2.0
         }
         Preset::GapWeakDayOpenPivot => {
-            hit.gap_pct <= -1.0 && hit.gap_pct >= -3.0
+            hit.gap_pct <= -1.0
+                && hit.gap_pct >= -3.0
                 && hit.change_pct < -4.0
                 && hit.rel_volume >= 2.0
         }
@@ -2922,14 +2661,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.5
         }
         Preset::UpperWickGreenDayConfirm => {
-            hit.hod_dist_pct.abs() > 2.0
-                && hit.lod_dist_pct.abs() < 0.5
-                && hit.change_pct > 1.0
+            hit.hod_dist_pct.abs() > 2.0 && hit.lod_dist_pct.abs() < 0.5 && hit.change_pct > 1.0
         }
         Preset::LowerWickRedDayConfirm => {
-            hit.lod_dist_pct.abs() > 2.0
-                && hit.hod_dist_pct.abs() < 0.5
-                && hit.change_pct < -1.0
+            hit.lod_dist_pct.abs() > 2.0 && hit.hod_dist_pct.abs() < 0.5 && hit.change_pct < -1.0
         }
         Preset::InsideBarTightAtMid => {
             (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) < 1.0
@@ -2943,14 +2678,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.5
         }
         Preset::LeadingUpDayLightVol => {
-            hit.change_pct > 2.0
-                && hit.rel_volume < 0.7
-                && hit.hod_dist_pct.abs() < 0.5
+            hit.change_pct > 2.0 && hit.rel_volume < 0.7 && hit.hod_dist_pct.abs() < 0.5
         }
         Preset::LeadingDownDayLightVol => {
-            hit.change_pct < -2.0
-                && hit.rel_volume < 0.7
-                && hit.lod_dist_pct.abs() < 0.5
+            hit.change_pct < -2.0 && hit.rel_volume < 0.7 && hit.lod_dist_pct.abs() < 0.5
         }
         Preset::SmallChangeOnVolNearHigh => {
             hit.year_high_pct > -3.0
@@ -2965,14 +2696,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
         }
         Preset::BigGapBigVolBigDay => {
-            hit.gap_pct.abs() > 3.0
-                && hit.change_pct.abs() > 5.0
-                && hit.rel_volume >= 3.0
+            hit.gap_pct.abs() > 3.0 && hit.change_pct.abs() > 5.0 && hit.rel_volume >= 3.0
         }
         Preset::BigGapNoFollowThrough => {
-            hit.gap_pct.abs() > 3.0
-                && hit.change_pct.abs() < 1.0
-                && hit.rel_volume < 1.0
+            hit.gap_pct.abs() > 3.0 && hit.change_pct.abs() < 1.0 && hit.rel_volume < 1.0
         }
         Preset::ConfluenceLongSetup => {
             hit.gap_pct.abs() < 0.5
@@ -3010,14 +2737,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume > 1.0
         }
         Preset::DivergencePushFromTop => {
-            hit.year_high_pct > -3.0
-                && hit.change_pct < -1.0
-                && hit.rel_volume < 0.8
+            hit.year_high_pct > -3.0 && hit.change_pct < -1.0 && hit.rel_volume < 0.8
         }
         Preset::DivergencePushFromBottom => {
-            hit.year_low_pct < 3.0
-                && hit.change_pct > 1.0
-                && hit.rel_volume < 0.8
+            hit.year_low_pct < 3.0 && hit.change_pct > 1.0 && hit.rel_volume < 0.8
         }
         Preset::PriceFlatVolHotAboveMid => {
             (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) < 2.0
@@ -3041,34 +2764,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
         }
         Preset::HotRollingVolGap => {
-            hit.gap_pct.abs() > 1.5
-                && hit.change_pct.abs() > 1.5
-                && hit.rel_volume >= 2.0
+            hit.gap_pct.abs() > 1.5 && hit.change_pct.abs() > 1.5 && hit.rel_volume >= 2.0
         }
         Preset::SilentDriftGap => {
-            hit.gap_pct.abs() > 1.0
-                && hit.change_pct.abs() < 0.3
-                && hit.rel_volume < 0.7
+            hit.gap_pct.abs() > 1.0 && hit.change_pct.abs() < 0.3 && hit.rel_volume < 0.7
         }
         Preset::UpDayOnDryVolNear52wHigh => {
-            hit.year_high_pct > -10.0
-                && hit.change_pct > 1.0
-                && hit.rel_volume < 0.7
+            hit.year_high_pct > -10.0 && hit.change_pct > 1.0 && hit.rel_volume < 0.7
         }
         Preset::DownDayOnDryVolNear52wLow => {
-            hit.year_low_pct < 10.0
-                && hit.change_pct < -1.0
-                && hit.rel_volume < 0.7
+            hit.year_low_pct < 10.0 && hit.change_pct < -1.0 && hit.rel_volume < 0.7
         }
         Preset::UpDayOnHotVolNear52wHigh => {
-            hit.year_high_pct > -10.0
-                && hit.change_pct > 1.0
-                && hit.rel_volume >= 2.0
+            hit.year_high_pct > -10.0 && hit.change_pct > 1.0 && hit.rel_volume >= 2.0
         }
         Preset::DownDayOnHotVolNear52wLow => {
-            hit.year_low_pct < 10.0
-                && hit.change_pct < -1.0
-                && hit.rel_volume >= 2.0
+            hit.year_low_pct < 10.0 && hit.change_pct < -1.0 && hit.rel_volume >= 2.0
         }
         Preset::NarrowDayDryVolMid => {
             (hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs()) < 1.5
@@ -3130,9 +2841,7 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
         }
         Preset::SmallGapBigMoveHotVol => {
-            hit.gap_pct.abs() < 0.5
-                && hit.change_pct.abs() > 3.0
-                && hit.rel_volume >= 2.0
+            hit.gap_pct.abs() < 0.5 && hit.change_pct.abs() > 3.0 && hit.rel_volume >= 2.0
         }
         Preset::NoVolTrendUp => {
             hit.change_pct > 1.0
@@ -3147,34 +2856,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.lod_dist_pct.abs() < 0.5
         }
         Preset::ChurnAtTopDryVol => {
-            hit.year_high_pct > -3.0
-                && hit.change_pct.abs() < 0.3
-                && hit.rel_volume < 0.6
+            hit.year_high_pct > -3.0 && hit.change_pct.abs() < 0.3 && hit.rel_volume < 0.6
         }
         Preset::ChurnAtBottomDryVol => {
-            hit.year_low_pct < 3.0
-                && hit.change_pct.abs() < 0.3
-                && hit.rel_volume < 0.6
+            hit.year_low_pct < 3.0 && hit.change_pct.abs() < 0.3 && hit.rel_volume < 0.6
         }
         Preset::HugeGapFlatChange => {
-            hit.gap_pct.abs() > 5.0
-                && hit.change_pct.abs() < 0.5
-                && hit.rel_volume < 1.0
+            hit.gap_pct.abs() > 5.0 && hit.change_pct.abs() < 0.5 && hit.rel_volume < 1.0
         }
         Preset::NoGapHugeChange => {
-            hit.gap_pct.abs() < 0.3
-                && hit.change_pct.abs() > 5.0
-                && hit.rel_volume >= 1.5
+            hit.gap_pct.abs() < 0.3 && hit.change_pct.abs() > 5.0 && hit.rel_volume >= 1.5
         }
         Preset::ExtremeVolFlatGapFlatDay => {
-            hit.rel_volume >= 3.0
-                && hit.gap_pct.abs() < 0.3
-                && hit.change_pct.abs() < 1.0
+            hit.rel_volume >= 3.0 && hit.gap_pct.abs() < 0.3 && hit.change_pct.abs() < 1.0
         }
         Preset::IlliquidBigGapFlatDay => {
-            hit.rel_volume < 0.4
-                && hit.gap_pct.abs() > 3.0
-                && hit.change_pct.abs() < 1.0
+            hit.rel_volume < 0.4 && hit.gap_pct.abs() > 3.0 && hit.change_pct.abs() < 1.0
         }
         Preset::OrganicUpDayCloseAtHod => {
             hit.gap_pct.abs() < 0.5
@@ -3191,14 +2888,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume <= 1.3
         }
         Preset::StrongDayDryVolUp => {
-            hit.change_pct > 3.0
-                && hit.day_pct > 2.0
-                && hit.rel_volume < 0.5
+            hit.change_pct > 3.0 && hit.day_pct > 2.0 && hit.rel_volume < 0.5
         }
         Preset::StrongDayDryVolDown => {
-            hit.change_pct < -3.0
-                && hit.day_pct < -2.0
-                && hit.rel_volume < 0.5
+            hit.change_pct < -3.0 && hit.day_pct < -2.0 && hit.rel_volume < 0.5
         }
         Preset::TightCoilAtMidRange => {
             hit.hod_dist_pct.abs() >= 0.5
@@ -3209,18 +2902,13 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.7
         }
         Preset::WideOutsideRangeDryVol => {
-            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 6.0
-                && hit.rel_volume < 0.6
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 6.0 && hit.rel_volume < 0.6
         }
         Preset::GapHeldAndExtendedUp => {
-            hit.gap_pct > 1.0
-                && hit.day_pct > 1.0
-                && hit.rel_volume >= 1.5
+            hit.gap_pct > 1.0 && hit.day_pct > 1.0 && hit.rel_volume >= 1.5
         }
         Preset::GapHeldAndExtendedDown => {
-            hit.gap_pct < -1.0
-                && hit.day_pct < -1.0
-                && hit.rel_volume >= 1.5
+            hit.gap_pct < -1.0 && hit.day_pct < -1.0 && hit.rel_volume >= 1.5
         }
         Preset::Pct52wHighBreakoutCloseAtHod => {
             hit.year_high_pct > 0.0
@@ -3250,14 +2938,8 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 1.0
                 && hit.rel_volume < 0.5
         }
-        Preset::VolSpikeNoTrend => {
-            hit.rel_volume >= 5.0
-                && hit.change_pct.abs() < 0.5
-        }
-        Preset::VolSpikeOnTrend => {
-            hit.rel_volume >= 5.0
-                && hit.change_pct.abs() > 3.0
-        }
+        Preset::VolSpikeNoTrend => hit.rel_volume >= 5.0 && hit.change_pct.abs() < 0.5,
+        Preset::VolSpikeOnTrend => hit.rel_volume >= 5.0 && hit.change_pct.abs() > 3.0,
         Preset::TightCoilAtHighDryVol => {
             hit.hod_dist_pct.abs() < 0.3
                 && hit.lod_dist_pct.abs() < 1.0
@@ -3287,13 +2969,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume <= 1.5
         }
         Preset::HotVolMidRangeChurn => {
-            hit.rel_volume >= 3.0
-                && hit.hod_dist_pct.abs() > 0.5
-                && hit.lod_dist_pct.abs() > 0.5
+            hit.rel_volume >= 3.0 && hit.hod_dist_pct.abs() > 0.5 && hit.lod_dist_pct.abs() > 0.5
         }
         Preset::DryVolAtExtremeClose => {
-            hit.rel_volume < 0.4
-                && (hit.hod_dist_pct.abs() < 0.3 || hit.lod_dist_pct.abs() < 0.3)
+            hit.rel_volume < 0.4 && (hit.hod_dist_pct.abs() < 0.3 || hit.lod_dist_pct.abs() < 0.3)
         }
         Preset::DayChangeMismatch => {
             hit.change_pct * hit.day_pct < 0.0
@@ -3307,22 +2986,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
         }
         Preset::HugeRangeHotVol => {
-            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 8.0
-                && hit.rel_volume >= 3.0
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 8.0 && hit.rel_volume >= 3.0
         }
         Preset::HugeRangeDryVol => {
-            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 8.0
-                && hit.rel_volume < 0.5
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 8.0 && hit.rel_volume < 0.5
         }
         Preset::Pct52wLowHotVolUp => {
-            hit.year_low_pct < 10.0
-                && hit.change_pct > 3.0
-                && hit.rel_volume >= 2.0
+            hit.year_low_pct < 10.0 && hit.change_pct > 3.0 && hit.rel_volume >= 2.0
         }
         Preset::Pct52wHighHotVolDown => {
-            hit.year_high_pct > -10.0
-                && hit.change_pct < -3.0
-                && hit.rel_volume >= 2.0
+            hit.year_high_pct > -10.0 && hit.change_pct < -3.0 && hit.rel_volume >= 2.0
         }
         Preset::GapHeldNoExtension => {
             hit.gap_pct.abs() > 1.0
@@ -3337,14 +3010,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.2
         }
         Preset::YearHighIntradayWeak => {
-            hit.year_high_pct > -1.0
-                && hit.day_pct < -1.0
-                && hit.rel_volume >= 1.5
+            hit.year_high_pct > -1.0 && hit.day_pct < -1.0 && hit.rel_volume >= 1.5
         }
         Preset::YearLowIntradayStrong => {
-            hit.year_low_pct < 1.0
-                && hit.day_pct > 1.0
-                && hit.rel_volume >= 1.5
+            hit.year_low_pct < 1.0 && hit.day_pct > 1.0 && hit.rel_volume >= 1.5
         }
         Preset::WeakHandsAtHighs => {
             hit.year_high_pct > -2.0
@@ -3361,8 +3030,7 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume <= 2.0
         }
         Preset::NarrowRangeHotVolSqueeze => {
-            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0
-                && hit.rel_volume >= 3.0
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.0 && hit.rel_volume >= 3.0
         }
         Preset::WideRangeDryVolDrift => {
             hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 4.0
@@ -3384,14 +3052,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
         }
         Preset::GapUpAtYearLow => {
-            hit.gap_pct > 2.0
-                && hit.year_low_pct < 5.0
-                && hit.rel_volume >= 1.5
+            hit.gap_pct > 2.0 && hit.year_low_pct < 5.0 && hit.rel_volume >= 1.5
         }
         Preset::GapDownAtYearHigh => {
-            hit.gap_pct < -2.0
-                && hit.year_high_pct > -5.0
-                && hit.rel_volume >= 1.5
+            hit.gap_pct < -2.0 && hit.year_high_pct > -5.0 && hit.rel_volume >= 1.5
         }
         Preset::BigUpMidRangeClose => {
             hit.change_pct > 3.0
@@ -3406,14 +3070,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
         }
         Preset::HodCloseHotVolFlat => {
-            hit.hod_dist_pct.abs() < 0.5
-                && hit.rel_volume >= 2.0
-                && hit.change_pct.abs() < 0.5
+            hit.hod_dist_pct.abs() < 0.5 && hit.rel_volume >= 2.0 && hit.change_pct.abs() < 0.5
         }
         Preset::LodCloseHotVolFlat => {
-            hit.lod_dist_pct.abs() < 0.5
-                && hit.rel_volume >= 2.0
-                && hit.change_pct.abs() < 0.5
+            hit.lod_dist_pct.abs() < 0.5 && hit.rel_volume >= 2.0 && hit.change_pct.abs() < 0.5
         }
         Preset::RisingWedgeCoil => {
             hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 2.0
@@ -3440,12 +3100,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
         }
         Preset::EfficientMoverHotVol => {
-            hit.rel_volume >= 1.5
-                && hit.change_pct.abs() >= hit.rel_volume * 1.5
+            hit.rel_volume >= 1.5 && hit.change_pct.abs() >= hit.rel_volume * 1.5
         }
         Preset::InefficientChurnHotVol => {
-            hit.rel_volume >= 2.0
-                && hit.change_pct.abs() < hit.rel_volume * 0.3
+            hit.rel_volume >= 2.0 && hit.change_pct.abs() < hit.rel_volume * 0.3
         }
         Preset::GapUpAtMidRange => {
             hit.gap_pct > 1.0
@@ -3474,14 +3132,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.5
         }
         Preset::GapDownIntradayReclaimUp => {
-            hit.gap_pct < -1.0
-                && hit.hod_dist_pct.abs() < 0.5
-                && hit.change_pct > 0.5
+            hit.gap_pct < -1.0 && hit.hod_dist_pct.abs() < 0.5 && hit.change_pct > 0.5
         }
         Preset::GapUpIntradayRejectDown => {
-            hit.gap_pct > 1.0
-                && hit.lod_dist_pct.abs() < 0.5
-                && hit.change_pct < -0.5
+            hit.gap_pct > 1.0 && hit.lod_dist_pct.abs() < 0.5 && hit.change_pct < -0.5
         }
         Preset::HotVolModerateChangeFlatDay => {
             hit.rel_volume >= 2.0
@@ -3570,14 +3224,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 2.0
         }
         Preset::MicroRangeAtYearHigh => {
-            hit.hod_dist_pct.abs() < 0.3
-                && hit.lod_dist_pct.abs() < 0.3
-                && hit.year_high_pct > -3.0
+            hit.hod_dist_pct.abs() < 0.3 && hit.lod_dist_pct.abs() < 0.3 && hit.year_high_pct > -3.0
         }
         Preset::MicroRangeAtYearLow => {
-            hit.hod_dist_pct.abs() < 0.3
-                && hit.lod_dist_pct.abs() < 0.3
-                && hit.year_low_pct < 3.0
+            hit.hod_dist_pct.abs() < 0.3 && hit.lod_dist_pct.abs() < 0.3 && hit.year_low_pct < 3.0
         }
         Preset::ConsolidationBreakUp => {
             hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 3.0
@@ -3594,26 +3244,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
         }
         Preset::HotVolGapHeldFlatChange => {
-            hit.rel_volume >= 2.0
-                && hit.gap_pct.abs() > 1.0
-                && hit.change_pct.abs() < 0.5
+            hit.rel_volume >= 2.0 && hit.gap_pct.abs() > 1.0 && hit.change_pct.abs() < 0.5
         }
         Preset::DryVolGapHeldFlatChange => {
-            hit.rel_volume < 0.5
-                && hit.gap_pct.abs() > 1.0
-                && hit.change_pct.abs() < 0.5
+            hit.rel_volume < 0.5 && hit.gap_pct.abs() > 1.0 && hit.change_pct.abs() < 0.5
         }
         Preset::AllDirectionsAlignedHotVolUp => {
-            hit.rel_volume >= 3.0
-                && hit.change_pct > 0.0
-                && hit.day_pct > 0.0
-                && hit.gap_pct > 0.0
+            hit.rel_volume >= 3.0 && hit.change_pct > 0.0 && hit.day_pct > 0.0 && hit.gap_pct > 0.0
         }
         Preset::AllDirectionsAlignedHotVolDown => {
-            hit.rel_volume >= 3.0
-                && hit.change_pct < 0.0
-                && hit.day_pct < 0.0
-                && hit.gap_pct < 0.0
+            hit.rel_volume >= 3.0 && hit.change_pct < 0.0 && hit.day_pct < 0.0 && hit.gap_pct < 0.0
         }
         Preset::IntradayRecoveryFromGapDown => {
             hit.year_high_pct >= -30.0
@@ -3672,34 +3312,22 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
         }
         Preset::VolSpikeBigGapBigChange => {
-            hit.rel_volume >= 3.0
-                && hit.gap_pct.abs() > 3.0
-                && hit.change_pct.abs() > 3.0
+            hit.rel_volume >= 3.0 && hit.gap_pct.abs() > 3.0 && hit.change_pct.abs() > 3.0
         }
         Preset::VolSpikeTinyGapBigChange => {
-            hit.rel_volume >= 3.0
-                && hit.gap_pct.abs() < 0.3
-                && hit.change_pct.abs() > 3.0
+            hit.rel_volume >= 3.0 && hit.gap_pct.abs() < 0.3 && hit.change_pct.abs() > 3.0
         }
         Preset::StrongCloseAtHodHotVol => {
-            hit.hod_dist_pct.abs() < 0.3
-                && hit.day_pct > 1.0
-                && hit.rel_volume >= 2.0
+            hit.hod_dist_pct.abs() < 0.3 && hit.day_pct > 1.0 && hit.rel_volume >= 2.0
         }
         Preset::WeakCloseAtLodHotVol => {
-            hit.lod_dist_pct.abs() < 0.3
-                && hit.day_pct < -1.0
-                && hit.rel_volume >= 2.0
+            hit.lod_dist_pct.abs() < 0.3 && hit.day_pct < -1.0 && hit.rel_volume >= 2.0
         }
         Preset::Pct52wHighDryVolFlat => {
-            hit.year_high_pct > -3.0
-                && hit.rel_volume < 0.5
-                && hit.change_pct.abs() < 0.5
+            hit.year_high_pct > -3.0 && hit.rel_volume < 0.5 && hit.change_pct.abs() < 0.5
         }
         Preset::Pct52wLowDryVolFlat => {
-            hit.year_low_pct < 3.0
-                && hit.rel_volume < 0.5
-                && hit.change_pct.abs() < 0.5
+            hit.year_low_pct < 3.0 && hit.rel_volume < 0.5 && hit.change_pct.abs() < 0.5
         }
         Preset::OvernightReversalRepositioning => {
             hit.change_pct * hit.gap_pct < 0.0
@@ -3737,14 +3365,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
         }
         Preset::GapAndGoStrongClose => {
-            hit.gap_pct > 1.0
-                && hit.change_pct > hit.gap_pct
-                && hit.hod_dist_pct.abs() < 0.5
+            hit.gap_pct > 1.0 && hit.change_pct > hit.gap_pct && hit.hod_dist_pct.abs() < 0.5
         }
         Preset::GapAndFadeWeakClose => {
-            hit.gap_pct > 1.0
-                && hit.change_pct < 0.0
-                && hit.lod_dist_pct.abs() < 0.5
+            hit.gap_pct > 1.0 && hit.change_pct < 0.0 && hit.lod_dist_pct.abs() < 0.5
         }
         Preset::InsideDayDryVolCoiled => {
             hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.5
@@ -3766,14 +3390,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.7
         }
         Preset::LowOfYearHotVolPanic => {
-            hit.year_low_pct < 1.0
-                && hit.rel_volume >= 2.0
-                && hit.change_pct < -2.0
+            hit.year_low_pct < 1.0 && hit.rel_volume >= 2.0 && hit.change_pct < -2.0
         }
         Preset::HighOfYearHotVolEuphoria => {
-            hit.year_high_pct < 1.0
-                && hit.rel_volume >= 2.0
-                && hit.change_pct > 2.0
+            hit.year_high_pct < 1.0 && hit.rel_volume >= 2.0 && hit.change_pct > 2.0
         }
         Preset::WideRangeFlatCloseHeavyChurn => {
             hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 4.0
@@ -3781,28 +3401,19 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.8
         }
         Preset::RangeExpansionDryVol => {
-            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 3.0
-                && hit.rel_volume < 0.7
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 3.0 && hit.rel_volume < 0.7
         }
         Preset::YearHighGapDownHotVol => {
-            hit.year_high_pct < 5.0
-                && hit.gap_pct < -2.0
-                && hit.rel_volume >= 1.5
+            hit.year_high_pct < 5.0 && hit.gap_pct < -2.0 && hit.rel_volume >= 1.5
         }
         Preset::YearLowGapUpHotVol => {
-            hit.year_low_pct < 5.0
-                && hit.gap_pct > 2.0
-                && hit.rel_volume >= 1.5
+            hit.year_low_pct < 5.0 && hit.gap_pct > 2.0 && hit.rel_volume >= 1.5
         }
         Preset::IntradayFakeoutTopReject => {
-            hit.hod_dist_pct.abs() > 2.0
-                && hit.day_pct < -0.5
-                && hit.rel_volume >= 1.5
+            hit.hod_dist_pct.abs() > 2.0 && hit.day_pct < -0.5 && hit.rel_volume >= 1.5
         }
         Preset::IntradayFakeoutBottomReject => {
-            hit.lod_dist_pct.abs() > 2.0
-                && hit.day_pct > 0.5
-                && hit.rel_volume >= 1.5
+            hit.lod_dist_pct.abs() > 2.0 && hit.day_pct > 0.5 && hit.rel_volume >= 1.5
         }
         Preset::RangeContractionAfterMove => {
             hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 0.8
@@ -3834,10 +3445,7 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() > 1.0
         }
         Preset::BullishEngulfingHotVol => {
-            hit.gap_pct < -0.5
-                && hit.change_pct > 1.5
-                && hit.day_pct > 1.0
-                && hit.rel_volume >= 1.5
+            hit.gap_pct < -0.5 && hit.change_pct > 1.5 && hit.day_pct > 1.0 && hit.rel_volume >= 1.5
         }
         Preset::BearishEngulfingHotVol => {
             hit.gap_pct > 0.5
@@ -3883,14 +3491,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct.abs() < 0.2
         }
         Preset::HighVolStallNearHighOfYear => {
-            hit.year_high_pct < 2.0
-                && hit.rel_volume >= 2.0
-                && hit.day_pct.abs() < 0.5
+            hit.year_high_pct < 2.0 && hit.rel_volume >= 2.0 && hit.day_pct.abs() < 0.5
         }
         Preset::HighVolStallNearLowOfYear => {
-            hit.year_low_pct < 2.0
-                && hit.rel_volume >= 2.0
-                && hit.day_pct.abs() < 0.5
+            hit.year_low_pct < 2.0 && hit.rel_volume >= 2.0 && hit.day_pct.abs() < 0.5
         }
         Preset::OutlierSessionBigMoveBigVol => {
             hit.change_pct.abs() > 3.0
@@ -3924,10 +3528,7 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.2
         }
         Preset::GreenStreakAccumulator => {
-            hit.change_pct > 0.5
-                && hit.day_pct > 0.0
-                && hit.rel_volume >= 1.2
-                && hit.gap_pct >= 0.0
+            hit.change_pct > 0.5 && hit.day_pct > 0.0 && hit.rel_volume >= 1.2 && hit.gap_pct >= 0.0
         }
         Preset::RedStreakDistributor => {
             hit.change_pct < -0.5
@@ -3936,14 +3537,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct <= 0.0
         }
         Preset::GapDownReclaim => {
-            hit.gap_pct < -1.0
-                && hit.change_pct >= 0.0
-                && hit.day_pct > -hit.gap_pct * 0.8
+            hit.gap_pct < -1.0 && hit.change_pct >= 0.0 && hit.day_pct > -hit.gap_pct * 0.8
         }
         Preset::GapUpFailReclaimed => {
-            hit.gap_pct > 1.0
-                && hit.change_pct <= 0.0
-                && hit.day_pct < -hit.gap_pct * 0.8
+            hit.gap_pct > 1.0 && hit.change_pct <= 0.0 && hit.day_pct < -hit.gap_pct * 0.8
         }
         Preset::MidYearRangeConsolidation => {
             hit.year_low_pct > 20.0
@@ -3975,9 +3572,7 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.2
         }
         Preset::OvernightStrongerThanIntraday => {
-            hit.gap_pct.abs() > 1.5
-                && hit.day_pct.abs() < 0.5
-                && hit.change_pct.abs() > 1.0
+            hit.gap_pct.abs() > 1.5 && hit.day_pct.abs() < 0.5 && hit.change_pct.abs() > 1.0
         }
         Preset::EfficientMoveLowEffort => {
             hit.change_pct.abs() > 1.0
@@ -3990,14 +3585,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 2.0
         }
         Preset::GreenCloseRedIntraday => {
-            hit.change_pct > 0.0
-                && hit.day_pct < 0.0
-                && hit.rel_volume >= 1.5
+            hit.change_pct > 0.0 && hit.day_pct < 0.0 && hit.rel_volume >= 1.5
         }
         Preset::RedCloseGreenIntraday => {
-            hit.change_pct < 0.0
-                && hit.day_pct > 0.0
-                && hit.rel_volume >= 1.5
+            hit.change_pct < 0.0 && hit.day_pct > 0.0 && hit.rel_volume >= 1.5
         }
         Preset::FullConvictionUpDay => {
             hit.gap_pct > 0.0
@@ -4027,10 +3618,7 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct < -0.5
                 && hit.rel_volume >= 1.0
         }
-        Preset::OpenGapFilledNetFlat => {
-            hit.gap_pct.abs() > 1.5
-                && hit.change_pct.abs() < 0.5
-        }
+        Preset::OpenGapFilledNetFlat => hit.gap_pct.abs() > 1.5 && hit.change_pct.abs() < 0.5,
         Preset::CompressedRangeVolatileSession => {
             hit.year_high_pct < 15.0
                 && hit.year_low_pct < 25.0
@@ -4050,23 +3638,13 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.0
         }
         Preset::DryVolGapUpFade => {
-            hit.gap_pct > 1.0
-                && hit.change_pct < 0.0
-                && hit.rel_volume < 0.7
+            hit.gap_pct > 1.0 && hit.change_pct < 0.0 && hit.rel_volume < 0.7
         }
         Preset::DryVolGapDownReclaim => {
-            hit.gap_pct < -1.0
-                && hit.change_pct > 0.0
-                && hit.rel_volume < 0.7
+            hit.gap_pct < -1.0 && hit.change_pct > 0.0 && hit.rel_volume < 0.7
         }
-        Preset::InstitutionalChurnDay => {
-            hit.rel_volume >= 3.0
-                && hit.change_pct.abs() < 0.3
-        }
-        Preset::ExtremeTailEvent => {
-            hit.rel_volume >= 3.0
-                && hit.change_pct.abs() > 5.0
-        }
+        Preset::InstitutionalChurnDay => hit.rel_volume >= 3.0 && hit.change_pct.abs() < 0.3,
+        Preset::ExtremeTailEvent => hit.rel_volume >= 3.0 && hit.change_pct.abs() > 5.0,
         Preset::Year52HighRetestStrongClose => {
             hit.year_high_pct < 5.0
                 && hit.change_pct > 0.0
@@ -4080,14 +3658,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
         }
         Preset::DivergentGapVsIntraday => {
-            hit.gap_pct * hit.day_pct < 0.0
-                && hit.gap_pct.abs() > 0.5
-                && hit.day_pct.abs() > 0.5
+            hit.gap_pct * hit.day_pct < 0.0 && hit.gap_pct.abs() > 0.5 && hit.day_pct.abs() > 0.5
         }
         Preset::CongruentGapAndIntradaySameDir => {
-            hit.gap_pct * hit.day_pct > 0.0
-                && hit.gap_pct.abs() > 0.5
-                && hit.day_pct.abs() > 0.5
+            hit.gap_pct * hit.day_pct > 0.0 && hit.gap_pct.abs() > 0.5 && hit.day_pct.abs() > 0.5
         }
         Preset::DeepMidRangeQuietSiesta => {
             hit.year_high_pct > 30.0
@@ -4107,8 +3681,7 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() > 0.5
         }
         Preset::ChangeExceedsIntradayMagnitude => {
-            hit.change_pct.abs() > hit.day_pct.abs() * 2.0
-                && hit.change_pct.abs() > 1.0
+            hit.change_pct.abs() > hit.day_pct.abs() * 2.0 && hit.change_pct.abs() > 1.0
         }
         Preset::JustOffYearLowBouncingUp => {
             hit.year_low_pct >= 5.0
@@ -4198,19 +3771,13 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct > 0.0
         }
         Preset::HighVolNoGapModerateChange => {
-            hit.gap_pct.abs() < 0.3
-                && hit.rel_volume >= 2.0
-                && hit.change_pct.abs() < 1.0
+            hit.gap_pct.abs() < 0.3 && hit.rel_volume >= 2.0 && hit.change_pct.abs() < 1.0
         }
         Preset::LowVolWithLargeGap => {
-            hit.gap_pct.abs() > 2.0
-                && hit.rel_volume < 0.7
-                && hit.change_pct.abs() > 1.0
+            hit.gap_pct.abs() > 2.0 && hit.rel_volume < 0.7 && hit.change_pct.abs() > 1.0
         }
         Preset::GapErasedByIntradayFlat => {
-            hit.gap_pct.abs() > 1.0
-                && hit.change_pct.abs() < 0.3
-                && hit.gap_pct * hit.day_pct < 0.0
+            hit.gap_pct.abs() > 1.0 && hit.change_pct.abs() < 0.3 && hit.gap_pct * hit.day_pct < 0.0
         }
         Preset::BothSidesTaggedFlatBalance => {
             hit.hod_dist_pct.abs() > 1.0
@@ -4267,14 +3834,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
         }
         Preset::GreenDaySubOptimalClose => {
-            hit.change_pct > 1.0
-                && hit.hod_dist_pct.abs() > 2.0
-                && hit.rel_volume >= 1.0
+            hit.change_pct > 1.0 && hit.hod_dist_pct.abs() > 2.0 && hit.rel_volume >= 1.0
         }
         Preset::RedDaySubOptimalClose => {
-            hit.change_pct < -1.0
-                && hit.lod_dist_pct.abs() > 2.0
-                && hit.rel_volume >= 1.0
+            hit.change_pct < -1.0 && hit.lod_dist_pct.abs() > 2.0 && hit.rel_volume >= 1.0
         }
         Preset::WideRangeNoVolFlat => {
             hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 3.0
@@ -4282,8 +3845,7 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.5
         }
         Preset::NarrowRangeMeaningfulChange => {
-            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.5
-                && hit.change_pct.abs() > 1.0
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.5 && hit.change_pct.abs() > 1.0
         }
         Preset::Year52HighGapDownReclaimed => {
             hit.year_high_pct < 5.0
@@ -4317,14 +3879,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 3.0
         }
         Preset::YearLowExplosiveSqueezeIgnition => {
-            hit.year_low_pct < 3.0
-                && hit.change_pct > 5.0
-                && hit.rel_volume >= 3.0
+            hit.year_low_pct < 3.0 && hit.change_pct > 5.0 && hit.rel_volume >= 3.0
         }
         Preset::YearHighSharpDistribution => {
-            hit.year_high_pct < 3.0
-                && hit.change_pct < -5.0
-                && hit.rel_volume >= 3.0
+            hit.year_high_pct < 3.0 && hit.change_pct < -5.0 && hit.rel_volume >= 3.0
         }
         Preset::LargeChangeOnNormalVol => {
             hit.change_pct.abs() > 3.0
@@ -4333,9 +3891,7 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 2.0
         }
         Preset::MassiveIntradayWithoutGap => {
-            hit.gap_pct.abs() < 0.1
-                && hit.day_pct.abs() > 3.0
-                && hit.rel_volume >= 2.0
+            hit.gap_pct.abs() < 0.1 && hit.day_pct.abs() > 3.0 && hit.rel_volume >= 2.0
         }
         Preset::MidYearBothSidesTagged => {
             hit.year_high_pct > 10.0
@@ -4356,9 +3912,7 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct.abs() < 0.3
         }
         Preset::BigGapBigVolBigChange => {
-            hit.gap_pct.abs() > 2.0
-                && hit.rel_volume >= 2.0
-                && hit.change_pct.abs() > 2.0
+            hit.gap_pct.abs() > 2.0 && hit.rel_volume >= 2.0 && hit.change_pct.abs() > 2.0
         }
         Preset::GapDownClosedNearHODHotVol => {
             hit.gap_pct < -1.0
@@ -4436,19 +3990,13 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 3.0
         }
         Preset::BigChangeDryVolFromGap => {
-            hit.change_pct.abs() > 3.0
-                && hit.rel_volume < 0.7
-                && hit.gap_pct.abs() > 2.0
+            hit.change_pct.abs() > 3.0 && hit.rel_volume < 0.7 && hit.gap_pct.abs() > 2.0
         }
         Preset::ExtremeVolGapDownReversal => {
-            hit.rel_volume >= 5.0
-                && hit.gap_pct < -3.0
-                && hit.change_pct > 0.0
+            hit.rel_volume >= 5.0 && hit.gap_pct < -3.0 && hit.change_pct > 0.0
         }
         Preset::ExtremeVolGapUpReversal => {
-            hit.rel_volume >= 5.0
-                && hit.gap_pct > 3.0
-                && hit.change_pct < 0.0
+            hit.rel_volume >= 5.0 && hit.gap_pct > 3.0 && hit.change_pct < 0.0
         }
         Preset::AtYearHighRangeExpansionDryVol => {
             hit.year_high_pct < 1.0
@@ -4473,14 +4021,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
         }
         Preset::OvernightDriftDryVol => {
-            hit.gap_pct.abs() > 2.0
-                && hit.day_pct.abs() < 0.3
-                && hit.rel_volume < 0.5
+            hit.gap_pct.abs() > 2.0 && hit.day_pct.abs() < 0.3 && hit.rel_volume < 0.5
         }
         Preset::HotVolHugeGapTinyDay => {
-            hit.rel_volume >= 3.0
-                && hit.gap_pct.abs() > 2.0
-                && hit.day_pct.abs() < 0.3
+            hit.rel_volume >= 3.0 && hit.gap_pct.abs() > 2.0 && hit.day_pct.abs() < 0.3
         }
         Preset::Year52LowGapUpHeldHotVol => {
             hit.year_low_pct < 5.0
@@ -4501,9 +4045,7 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 1.5
         }
         Preset::HotVolFlatCloseBigGap => {
-            hit.change_pct.abs() < 0.5
-                && hit.gap_pct.abs() > 2.0
-                && hit.rel_volume >= 2.0
+            hit.change_pct.abs() < 0.5 && hit.gap_pct.abs() > 2.0 && hit.rel_volume >= 2.0
         }
         Preset::OrganicMicroGainNormalVol => {
             hit.change_pct >= 0.3
@@ -4532,24 +4074,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
         }
         Preset::BigGreenLowVolWeakClose => {
-            hit.change_pct > 3.0
-                && hit.rel_volume < 1.0
-                && hit.hod_dist_pct.abs() > 1.0
+            hit.change_pct > 3.0 && hit.rel_volume < 1.0 && hit.hod_dist_pct.abs() > 1.0
         }
         Preset::BigRedLowVolWeakClose => {
-            hit.change_pct < -3.0
-                && hit.rel_volume < 1.0
-                && hit.lod_dist_pct.abs() > 1.0
+            hit.change_pct < -3.0 && hit.rel_volume < 1.0 && hit.lod_dist_pct.abs() > 1.0
         }
         Preset::GappingNearYearLowExtremeVol => {
-            hit.year_low_pct < 5.0
-                && hit.gap_pct.abs() > 2.0
-                && hit.rel_volume >= 4.0
+            hit.year_low_pct < 5.0 && hit.gap_pct.abs() > 2.0 && hit.rel_volume >= 4.0
         }
         Preset::GappingNearYearHighExtremeVol => {
-            hit.year_high_pct < 5.0
-                && hit.gap_pct.abs() > 2.0
-                && hit.rel_volume >= 4.0
+            hit.year_high_pct < 5.0 && hit.gap_pct.abs() > 2.0 && hit.rel_volume >= 4.0
         }
         Preset::BothSidesTaggedDryVolFlat => {
             hit.hod_dist_pct.abs() > 1.0
@@ -4828,14 +4362,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
         }
         Preset::BrokeAbove52wHighHotVol => {
-            hit.year_high_pct > 0.0
-                && hit.change_pct > 1.0
-                && hit.rel_volume >= 2.0
+            hit.year_high_pct > 0.0 && hit.change_pct > 1.0 && hit.rel_volume >= 2.0
         }
         Preset::BrokeBelow52wLowHotVol => {
-            hit.year_low_pct < 0.0
-                && hit.change_pct < -1.0
-                && hit.rel_volume >= 2.0
+            hit.year_low_pct < 0.0 && hit.change_pct < -1.0 && hit.rel_volume >= 2.0
         }
         Preset::ChangeIntradayDisagreeBothTagged => {
             hit.change_pct * hit.day_pct < 0.0
@@ -4884,24 +4414,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 3.0
         }
         Preset::MicroPinTinyRangeHotVol => {
-            hit.hod_dist_pct.abs() < 0.1
-                && hit.lod_dist_pct.abs() < 0.1
-                && hit.rel_volume >= 2.0
+            hit.hod_dist_pct.abs() < 0.1 && hit.lod_dist_pct.abs() < 0.1 && hit.rel_volume >= 2.0
         }
         Preset::MicroPinTinyRangeDryVol => {
-            hit.hod_dist_pct.abs() < 0.1
-                && hit.lod_dist_pct.abs() < 0.1
-                && hit.rel_volume < 0.5
+            hit.hod_dist_pct.abs() < 0.1 && hit.lod_dist_pct.abs() < 0.1 && hit.rel_volume < 0.5
         }
         Preset::FullRange52wAtHighSide => {
-            hit.year_high_pct < 2.0
-                && hit.year_low_pct > 50.0
-                && hit.rel_volume >= 1.5
+            hit.year_high_pct < 2.0 && hit.year_low_pct > 50.0 && hit.rel_volume >= 1.5
         }
         Preset::FullRange52wAtLowSide => {
-            hit.year_low_pct < 2.0
-                && hit.year_high_pct > 50.0
-                && hit.rel_volume >= 1.5
+            hit.year_low_pct < 2.0 && hit.year_high_pct > 50.0 && hit.rel_volume >= 1.5
         }
         Preset::PullbackAndRallyAtYearHigh => {
             hit.change_pct >= 0.5
@@ -4973,14 +4495,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
         }
         Preset::BigGreenBigGapDryVol => {
-            hit.change_pct > 5.0
-                && hit.gap_pct > 3.0
-                && hit.rel_volume < 0.8
+            hit.change_pct > 5.0 && hit.gap_pct > 3.0 && hit.rel_volume < 0.8
         }
         Preset::BigRedBigGapDownDryVol => {
-            hit.change_pct < -5.0
-                && hit.gap_pct < -3.0
-                && hit.rel_volume < 0.8
+            hit.change_pct < -5.0 && hit.gap_pct < -3.0 && hit.rel_volume < 0.8
         }
         Preset::SmoothBigGreenNormalVol => {
             hit.change_pct > 3.0
@@ -4997,9 +4515,7 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct.abs() < 0.5
         }
         Preset::BigDayPctFlatChangeHotVol => {
-            hit.day_pct.abs() > 2.0
-                && hit.change_pct.abs() < 0.5
-                && hit.rel_volume >= 1.5
+            hit.day_pct.abs() > 2.0 && hit.change_pct.abs() < 0.5 && hit.rel_volume >= 1.5
         }
         Preset::BigDayPctBigChangeAlignedHotVol => {
             hit.day_pct.abs() > 2.0
@@ -5008,14 +4524,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
         }
         Preset::Year52HighBigDayDryVol => {
-            hit.year_high_pct < 2.0
-                && hit.day_pct > 2.0
-                && hit.rel_volume < 0.7
+            hit.year_high_pct < 2.0 && hit.day_pct > 2.0 && hit.rel_volume < 0.7
         }
         Preset::Year52LowBigDayDryVol => {
-            hit.year_low_pct < 2.0
-                && hit.day_pct < -2.0
-                && hit.rel_volume < 0.7
+            hit.year_low_pct < 2.0 && hit.day_pct < -2.0 && hit.rel_volume < 0.7
         }
         Preset::MidMagnitudeGreenMidWickHotVol => {
             hit.change_pct >= 1.0
@@ -5046,39 +4558,25 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.5
         }
         Preset::Year52HighDistributionChurn => {
-            hit.year_high_pct < 2.0
-                && hit.change_pct.abs() < 0.3
-                && hit.rel_volume >= 2.0
+            hit.year_high_pct < 2.0 && hit.change_pct.abs() < 0.3 && hit.rel_volume >= 2.0
         }
         Preset::Year52LowAccumulationChurn => {
-            hit.year_low_pct < 2.0
-                && hit.change_pct.abs() < 0.3
-                && hit.rel_volume >= 2.0
+            hit.year_low_pct < 2.0 && hit.change_pct.abs() < 0.3 && hit.rel_volume >= 2.0
         }
         Preset::Year52HighBigGreenBreakoutHotVol => {
-            hit.year_high_pct < 0.0
-                && hit.change_pct > 4.0
-                && hit.rel_volume >= 2.0
+            hit.year_high_pct < 0.0 && hit.change_pct > 4.0 && hit.rel_volume >= 2.0
         }
         Preset::Year52LowBigRedBreakdownHotVol => {
-            hit.year_low_pct < 0.0
-                && hit.change_pct < -4.0
-                && hit.rel_volume >= 2.0
+            hit.year_low_pct < 0.0 && hit.change_pct < -4.0 && hit.rel_volume >= 2.0
         }
         Preset::GapUpFailBigRedHotVol => {
-            hit.gap_pct > 3.0
-                && hit.change_pct < -2.0
-                && hit.rel_volume >= 2.0
+            hit.gap_pct > 3.0 && hit.change_pct < -2.0 && hit.rel_volume >= 2.0
         }
         Preset::GapDownReclaimBigGreenHotVol => {
-            hit.gap_pct < -3.0
-                && hit.change_pct > 2.0
-                && hit.rel_volume >= 2.0
+            hit.gap_pct < -3.0 && hit.change_pct > 2.0 && hit.rel_volume >= 2.0
         }
         Preset::InsideRangeHotVolCoil => {
-            hit.hod_dist_pct.abs() < 1.0
-                && hit.lod_dist_pct.abs() < 1.0
-                && hit.rel_volume >= 1.5
+            hit.hod_dist_pct.abs() < 1.0 && hit.lod_dist_pct.abs() < 1.0 && hit.rel_volume >= 1.5
         }
         Preset::OutsideRangeFlatCloseHotVol => {
             hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 5.0
@@ -5086,24 +4584,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
         }
         Preset::CloseAtHodTinyLodHotVol => {
-            hit.hod_dist_pct.abs() < 0.3
-                && hit.lod_dist_pct > 4.0
-                && hit.rel_volume >= 1.5
+            hit.hod_dist_pct.abs() < 0.3 && hit.lod_dist_pct > 4.0 && hit.rel_volume >= 1.5
         }
         Preset::CloseAtLodTinyHodHotVol => {
-            hit.lod_dist_pct.abs() < 0.3
-                && hit.hod_dist_pct < -4.0
-                && hit.rel_volume >= 1.5
+            hit.lod_dist_pct.abs() < 0.3 && hit.hod_dist_pct < -4.0 && hit.rel_volume >= 1.5
         }
         Preset::BigGreenCloseAtHodHotVol => {
-            hit.change_pct > 3.0
-                && hit.hod_dist_pct.abs() < 0.5
-                && hit.rel_volume >= 2.0
+            hit.change_pct > 3.0 && hit.hod_dist_pct.abs() < 0.5 && hit.rel_volume >= 2.0
         }
         Preset::BigRedCloseAtLodHotVol => {
-            hit.change_pct < -3.0
-                && hit.lod_dist_pct.abs() < 0.5
-                && hit.rel_volume >= 2.0
+            hit.change_pct < -3.0 && hit.lod_dist_pct.abs() < 0.5 && hit.rel_volume >= 2.0
         }
         Preset::GapAndGoBigGreenCloseAtHod => {
             hit.gap_pct > 2.0
@@ -5130,14 +4620,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
         }
         Preset::Year52HighSqueezeShort => {
-            hit.year_high_pct < 0.0
-                && hit.change_pct > 5.0
-                && hit.rel_volume >= 3.0
+            hit.year_high_pct < 0.0 && hit.change_pct > 5.0 && hit.rel_volume >= 3.0
         }
         Preset::Year52LowCapitulation => {
-            hit.year_low_pct < 0.0
-                && hit.change_pct < -5.0
-                && hit.rel_volume >= 3.0
+            hit.year_low_pct < 0.0 && hit.change_pct < -5.0 && hit.rel_volume >= 3.0
         }
         Preset::DragonflyDojiHotVol => {
             hit.change_pct.abs() < 0.3
@@ -5176,14 +4662,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
         }
         Preset::Year52HighParabolicExtreme => {
-            hit.year_high_pct < 0.0
-                && hit.change_pct > 10.0
-                && hit.rel_volume >= 5.0
+            hit.year_high_pct < 0.0 && hit.change_pct > 10.0 && hit.rel_volume >= 5.0
         }
         Preset::Year52LowParabolicExtreme => {
-            hit.year_low_pct < 0.0
-                && hit.change_pct < -10.0
-                && hit.rel_volume >= 5.0
+            hit.year_low_pct < 0.0 && hit.change_pct < -10.0 && hit.rel_volume >= 5.0
         }
         Preset::HotVolNoChangeTightRange => {
             hit.rel_volume >= 3.0
@@ -5258,10 +4740,7 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.gap_pct.abs() < 1.0
         }
         Preset::GapPlusDriveBullHotVol => {
-            hit.gap_pct > 1.0
-                && hit.day_pct > 3.0
-                && hit.change_pct > 4.0
-                && hit.rel_volume >= 1.5
+            hit.gap_pct > 1.0 && hit.day_pct > 3.0 && hit.change_pct > 4.0 && hit.rel_volume >= 1.5
         }
         Preset::GapPlusDriveBearHotVol => {
             hit.gap_pct < -1.0
@@ -5270,16 +4749,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
         }
         Preset::GapFadeBullDayPctOpposite => {
-            hit.gap_pct < -2.0
-                && hit.day_pct > 3.0
-                && hit.change_pct > 0.0
-                && hit.rel_volume >= 1.5
+            hit.gap_pct < -2.0 && hit.day_pct > 3.0 && hit.change_pct > 0.0 && hit.rel_volume >= 1.5
         }
         Preset::GapFadeBearDayPctOpposite => {
-            hit.gap_pct > 2.0
-                && hit.day_pct < -3.0
-                && hit.change_pct < 0.0
-                && hit.rel_volume >= 1.5
+            hit.gap_pct > 2.0 && hit.day_pct < -3.0 && hit.change_pct < 0.0 && hit.rel_volume >= 1.5
         }
         Preset::DayPctBigGreenChangeFlat => {
             hit.day_pct > 4.0
@@ -5364,14 +4837,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 0.6
         }
         Preset::DistantFromYearHighBigGreenHotVol => {
-            hit.year_high_pct >= 20.0
-                && hit.change_pct > 5.0
-                && hit.rel_volume >= 2.0
+            hit.year_high_pct >= 20.0 && hit.change_pct > 5.0 && hit.rel_volume >= 2.0
         }
         Preset::DistantFromYearLowBigRedHotVol => {
-            hit.year_low_pct >= 20.0
-                && hit.change_pct < -5.0
-                && hit.rel_volume >= 2.0
+            hit.year_low_pct >= 20.0 && hit.change_pct < -5.0 && hit.rel_volume >= 2.0
         }
         Preset::MidRangeChurnHotVolBigDayPct => {
             hit.hod_dist_pct.abs().min(hit.lod_dist_pct.abs()) >= 1.5
@@ -5440,14 +4909,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume < 3.0
         }
         Preset::BigGreenTopWickRejectHotVol => {
-            hit.change_pct > 1.0
-                && hit.hod_dist_pct < -2.0
-                && hit.rel_volume >= 1.5
+            hit.change_pct > 1.0 && hit.hod_dist_pct < -2.0 && hit.rel_volume >= 1.5
         }
         Preset::BigRedBottomWickRejectHotVol => {
-            hit.change_pct < -1.0
-                && hit.lod_dist_pct > 2.0
-                && hit.rel_volume >= 1.5
+            hit.change_pct < -1.0 && hit.lod_dist_pct > 2.0 && hit.rel_volume >= 1.5
         }
         Preset::DryVolGreenCloseAtHodTinyRange => {
             hit.change_pct > 0.5
@@ -5530,14 +4995,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
         }
         Preset::BigDayPctSmallChangeHotVol => {
-            hit.day_pct.abs() > 3.0
-                && hit.change_pct.abs() < 0.5
-                && hit.rel_volume >= 2.0
+            hit.day_pct.abs() > 3.0 && hit.change_pct.abs() < 0.5 && hit.rel_volume >= 2.0
         }
         Preset::SmallDayPctBigChangeHotVol => {
-            hit.day_pct.abs() < 0.5
-                && hit.change_pct.abs() > 3.0
-                && hit.rel_volume >= 2.0
+            hit.day_pct.abs() < 0.5 && hit.change_pct.abs() > 3.0 && hit.rel_volume >= 2.0
         }
         Preset::Year52HighRangeExpansionHotVol => {
             hit.year_high_pct < 0.0
@@ -5643,10 +5104,7 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.change_pct.abs() < 0.5
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 2.0
         }
-        Preset::ExtremeVolBigChangeClimax => {
-            hit.rel_volume >= 5.0
-                && hit.change_pct.abs() > 5.0
-        }
+        Preset::ExtremeVolBigChangeClimax => hit.rel_volume >= 5.0 && hit.change_pct.abs() > 5.0,
         Preset::ExtremeGapBigContinuationExtremeVol => {
             hit.gap_pct.abs() > 5.0
                 && hit.change_pct.abs() > 8.0
@@ -5672,30 +5130,18 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() < 1.5
         }
         Preset::StealthAtYear52High => {
-            hit.year_high_pct < 2.0
-                && hit.change_pct.abs() < 0.5
-                && hit.rel_volume >= 5.0
+            hit.year_high_pct < 2.0 && hit.change_pct.abs() < 0.5 && hit.rel_volume >= 5.0
         }
         Preset::StealthAtYear52Low => {
-            hit.year_low_pct < 2.0
-                && hit.change_pct.abs() < 0.5
-                && hit.rel_volume >= 5.0
+            hit.year_low_pct < 2.0 && hit.change_pct.abs() < 0.5 && hit.rel_volume >= 5.0
         }
-        Preset::ExtremeVolCloseAtHod => {
-            hit.rel_volume >= 5.0
-                && hit.hod_dist_pct.abs() < 0.5
-        }
-        Preset::ExtremeVolCloseAtLod => {
-            hit.rel_volume >= 5.0
-                && hit.lod_dist_pct.abs() < 0.5
-        }
+        Preset::ExtremeVolCloseAtHod => hit.rel_volume >= 5.0 && hit.hod_dist_pct.abs() < 0.5,
+        Preset::ExtremeVolCloseAtLod => hit.rel_volume >= 5.0 && hit.lod_dist_pct.abs() < 0.5,
         Preset::ExtremeRangeExtremeVol => {
-            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 8.0
-                && hit.rel_volume >= 5.0
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 8.0 && hit.rel_volume >= 5.0
         }
         Preset::ExtremeRangeDryVol => {
-            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 8.0
-                && hit.rel_volume < 0.5
+            hit.hod_dist_pct.abs() + hit.lod_dist_pct.abs() > 8.0 && hit.rel_volume < 0.5
         }
         Preset::BigGreenUpperRangeHotVol => {
             hit.change_pct > 2.0
@@ -5708,14 +5154,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
         }
         Preset::BigBreakoutAboveYearHigh => {
-            hit.year_high_pct < -3.0
-                && hit.change_pct > 1.0
-                && hit.rel_volume >= 1.5
+            hit.year_high_pct < -3.0 && hit.change_pct > 1.0 && hit.rel_volume >= 1.5
         }
         Preset::BigBreakdownBelowYearLow => {
-            hit.year_low_pct < -3.0
-                && hit.change_pct < -1.0
-                && hit.rel_volume >= 1.5
+            hit.year_low_pct < -3.0 && hit.change_pct < -1.0 && hit.rel_volume >= 1.5
         }
         Preset::DeepPullbackBigGreenHotVol => {
             hit.year_high_pct >= 10.0
@@ -5742,28 +5184,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
         }
         Preset::BigGapDownReclaimedToHodHotVol => {
-            hit.gap_pct < -2.0
-                && hit.hod_dist_pct.abs() < 0.5
-                && hit.rel_volume >= 2.0
+            hit.gap_pct < -2.0 && hit.hod_dist_pct.abs() < 0.5 && hit.rel_volume >= 2.0
         }
         Preset::BigGapUpRejectedToLodHotVol => {
-            hit.gap_pct > 2.0
-                && hit.lod_dist_pct.abs() < 0.5
-                && hit.rel_volume >= 2.0
+            hit.gap_pct > 2.0 && hit.lod_dist_pct.abs() < 0.5 && hit.rel_volume >= 2.0
         }
-        Preset::TenXVolMicroChange => {
-            hit.rel_volume >= 10.0
-                && hit.change_pct.abs() < 0.3
-        }
+        Preset::TenXVolMicroChange => hit.rel_volume >= 10.0 && hit.change_pct.abs() < 0.3,
         Preset::TenXVolNoGapBigIntradayMove => {
-            hit.rel_volume >= 10.0
-                && hit.gap_pct.abs() < 0.3
-                && hit.change_pct.abs() > 3.0
+            hit.rel_volume >= 10.0 && hit.gap_pct.abs() < 0.3 && hit.change_pct.abs() > 3.0
         }
-        Preset::MicroVolBigChange => {
-            hit.rel_volume < 0.1
-                && hit.change_pct.abs() > 3.0
-        }
+        Preset::MicroVolBigChange => hit.rel_volume < 0.1 && hit.change_pct.abs() > 3.0,
         Preset::MicroVolFlatDay => {
             hit.rel_volume < 0.1
                 && hit.change_pct.abs() < 0.3
@@ -5794,16 +5224,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
         }
         Preset::PartialGapUpHoldHotVol => {
-            hit.gap_pct > 2.0
-                && hit.day_pct < -0.5
-                && hit.change_pct > 0.0
-                && hit.rel_volume >= 1.5
+            hit.gap_pct > 2.0 && hit.day_pct < -0.5 && hit.change_pct > 0.0 && hit.rel_volume >= 1.5
         }
         Preset::PartialGapDownHoldHotVol => {
-            hit.gap_pct < -2.0
-                && hit.day_pct > 0.5
-                && hit.change_pct < 0.0
-                && hit.rel_volume >= 1.5
+            hit.gap_pct < -2.0 && hit.day_pct > 0.5 && hit.change_pct < 0.0 && hit.rel_volume >= 1.5
         }
         Preset::BreakoutZoneRangeExpansionHotVol => {
             hit.year_high_pct >= -3.0
@@ -5842,10 +5266,7 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
         }
         Preset::ModerateGapBullContinuationDryVol => {
-            hit.gap_pct >= 1.0
-                && hit.gap_pct <= 2.0
-                && hit.change_pct > 2.0
-                && hit.rel_volume < 0.8
+            hit.gap_pct >= 1.0 && hit.gap_pct <= 2.0 && hit.change_pct > 2.0 && hit.rel_volume < 0.8
         }
         Preset::ModerateGapBearContinuationDryVol => {
             hit.gap_pct >= -2.0
@@ -5878,24 +5299,16 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
         }
         Preset::IntradayBullDriveAtYear52High => {
-            hit.year_high_pct < 2.0
-                && hit.day_pct > 3.0
-                && hit.rel_volume >= 2.0
+            hit.year_high_pct < 2.0 && hit.day_pct > 3.0 && hit.rel_volume >= 2.0
         }
         Preset::IntradayBearDriveAtYear52Low => {
-            hit.year_low_pct < 2.0
-                && hit.day_pct < -3.0
-                && hit.rel_volume >= 2.0
+            hit.year_low_pct < 2.0 && hit.day_pct < -3.0 && hit.rel_volume >= 2.0
         }
         Preset::IntradayBearDriveAtYear52High => {
-            hit.year_high_pct < 2.0
-                && hit.day_pct < -3.0
-                && hit.rel_volume >= 2.0
+            hit.year_high_pct < 2.0 && hit.day_pct < -3.0 && hit.rel_volume >= 2.0
         }
         Preset::IntradayBullDriveAtYear52Low => {
-            hit.year_low_pct < 2.0
-                && hit.day_pct > 3.0
-                && hit.rel_volume >= 2.0
+            hit.year_low_pct < 2.0 && hit.day_pct > 3.0 && hit.rel_volume >= 2.0
         }
         Preset::IntradayBullDriveBelowYearHigh => {
             hit.year_high_pct >= 0.0
@@ -6150,9 +5563,7 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
         }
         Preset::BothLongWicksHotVol => {
-            hit.hod_dist_pct.abs() > 2.0
-                && hit.lod_dist_pct > 2.0
-                && hit.rel_volume >= 2.0
+            hit.hod_dist_pct.abs() > 2.0 && hit.lod_dist_pct > 2.0 && hit.rel_volume >= 2.0
         }
         Preset::BothShortWicksTinyChangeHotVol => {
             hit.hod_dist_pct.abs() < 0.5
@@ -6225,10 +5636,7 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 2.0
         }
         Preset::TripleAlignedBullBigConvictionDay => {
-            hit.gap_pct > 1.5
-                && hit.change_pct > 3.0
-                && hit.day_pct > 1.5
-                && hit.rel_volume >= 2.0
+            hit.gap_pct > 1.5 && hit.change_pct > 3.0 && hit.day_pct > 1.5 && hit.rel_volume >= 2.0
         }
         Preset::TripleAlignedBearBigConvictionDay => {
             hit.gap_pct < -1.5
@@ -6715,14 +6123,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
         }
         Preset::HotVolFlatCloseNearYearHighHotVol => {
-            hit.change_pct.abs() < 0.5
-                && hit.rel_volume >= 2.0
-                && hit.year_high_pct < 2.0
+            hit.change_pct.abs() < 0.5 && hit.rel_volume >= 2.0 && hit.year_high_pct < 2.0
         }
         Preset::HotVolFlatCloseNearYearLowHotVol => {
-            hit.change_pct.abs() < 0.5
-                && hit.rel_volume >= 2.0
-                && hit.year_low_pct < 2.0
+            hit.change_pct.abs() < 0.5 && hit.rel_volume >= 2.0 && hit.year_low_pct < 2.0
         }
         Preset::HotVolFlatCloseConfirmedAboveYearHighHotVol => {
             hit.change_pct.abs() < 0.5
@@ -6737,14 +6141,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct <= -1.0
         }
         Preset::HotVolFlatCloseDeepBelowYearHighHotVol => {
-            hit.change_pct.abs() < 0.5
-                && hit.rel_volume >= 2.0
-                && hit.year_high_pct >= 20.0
+            hit.change_pct.abs() < 0.5 && hit.rel_volume >= 2.0 && hit.year_high_pct >= 20.0
         }
         Preset::HotVolFlatCloseDeepAboveYearLowHotVol => {
-            hit.change_pct.abs() < 0.5
-                && hit.rel_volume >= 2.0
-                && hit.year_low_pct >= 20.0
+            hit.change_pct.abs() < 0.5 && hit.rel_volume >= 2.0 && hit.year_low_pct >= 20.0
         }
         Preset::HotVolFlatCloseMidYearHighHotVol => {
             hit.change_pct.abs() < 0.5
@@ -6771,14 +6171,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct < 5.0
         }
         Preset::DryVolBigUpNearYearHighHotVol => {
-            hit.change_pct > 3.0
-                && hit.rel_volume < 0.5
-                && hit.year_high_pct < 2.0
+            hit.change_pct > 3.0 && hit.rel_volume < 0.5 && hit.year_high_pct < 2.0
         }
         Preset::DryVolBigDownNearYearLowHotVol => {
-            hit.change_pct < -3.0
-                && hit.rel_volume < 0.5
-                && hit.year_low_pct < 2.0
+            hit.change_pct < -3.0 && hit.rel_volume < 0.5 && hit.year_low_pct < 2.0
         }
         Preset::DryVolBigUpConfirmedAboveYearHighHotVol => {
             hit.change_pct > 3.0
@@ -6793,14 +6189,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct <= -1.0
         }
         Preset::DryVolBigUpDeepBelowYearHighHotVol => {
-            hit.change_pct > 3.0
-                && hit.rel_volume < 0.5
-                && hit.year_high_pct >= 20.0
+            hit.change_pct > 3.0 && hit.rel_volume < 0.5 && hit.year_high_pct >= 20.0
         }
         Preset::DryVolBigDownDeepAboveYearLowHotVol => {
-            hit.change_pct < -3.0
-                && hit.rel_volume < 0.5
-                && hit.year_low_pct >= 20.0
+            hit.change_pct < -3.0 && hit.rel_volume < 0.5 && hit.year_low_pct >= 20.0
         }
         Preset::DryVolBigUpMidYearHighHotVol => {
             hit.change_pct > 3.0
@@ -6826,12 +6218,8 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct >= 2.0
                 && hit.year_low_pct < 5.0
         }
-        Preset::UltraDeepBelowYearHighHotVol => {
-            hit.year_high_pct >= 50.0 && hit.rel_volume >= 1.5
-        }
-        Preset::UltraDeepAboveYearLowHotVol => {
-            hit.year_low_pct >= 50.0 && hit.rel_volume >= 1.5
-        }
+        Preset::UltraDeepBelowYearHighHotVol => hit.year_high_pct >= 50.0 && hit.rel_volume >= 1.5,
+        Preset::UltraDeepAboveYearLowHotVol => hit.year_low_pct >= 50.0 && hit.rel_volume >= 1.5,
         Preset::UltraDeepBelowYearHighCloseAtHodHotVol => {
             hit.year_high_pct >= 50.0
                 && hit.hod_dist_pct.abs() < 0.5
@@ -6845,14 +6233,10 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.rel_volume >= 1.5
         }
         Preset::UltraDeepBelowYearHighGapUpHotVol => {
-            hit.year_high_pct >= 50.0
-                && hit.gap_pct > 2.0
-                && hit.rel_volume >= 1.5
+            hit.year_high_pct >= 50.0 && hit.gap_pct > 2.0 && hit.rel_volume >= 1.5
         }
         Preset::UltraDeepAboveYearLowGapDownHotVol => {
-            hit.year_low_pct >= 50.0
-                && hit.gap_pct < -2.0
-                && hit.rel_volume >= 1.5
+            hit.year_low_pct >= 50.0 && hit.gap_pct < -2.0 && hit.rel_volume >= 1.5
         }
         Preset::UltraDeepBelowYearHighGapUpFadedHotVol => {
             hit.year_high_pct >= 50.0
@@ -7150,12 +6534,8 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::BigDownDayCloseAtLodHotVol => {
             hit.day_pct < -3.0 && hit.lod_dist_pct.abs() < 0.5 && hit.rel_volume >= 1.5
         }
-        Preset::BigUpDayDoubledVolHotVol => {
-            hit.day_pct > 3.0 && hit.rel_volume >= 2.0
-        }
-        Preset::BigDownDayDoubledVolHotVol => {
-            hit.day_pct < -3.0 && hit.rel_volume >= 2.0
-        }
+        Preset::BigUpDayDoubledVolHotVol => hit.day_pct > 3.0 && hit.rel_volume >= 2.0,
+        Preset::BigDownDayDoubledVolHotVol => hit.day_pct < -3.0 && hit.rel_volume >= 2.0,
         Preset::BigUpDayDoubledVolNearYearHighHotVol => {
             hit.day_pct > 3.0 && hit.rel_volume >= 2.0 && hit.year_high_pct < 2.0
         }
@@ -7204,12 +6584,8 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct >= 2.0
                 && hit.year_low_pct < 5.0
         }
-        Preset::QuintupledVolUpHotVol => {
-            hit.rel_volume >= 5.0 && hit.change_pct > 3.0
-        }
-        Preset::QuintupledVolDownHotVol => {
-            hit.rel_volume >= 5.0 && hit.change_pct < -3.0
-        }
+        Preset::QuintupledVolUpHotVol => hit.rel_volume >= 5.0 && hit.change_pct > 3.0,
+        Preset::QuintupledVolDownHotVol => hit.rel_volume >= 5.0 && hit.change_pct < -3.0,
         Preset::QuintupledVolUpNearYearHighHotVol => {
             hit.rel_volume >= 5.0 && hit.change_pct > 3.0 && hit.year_high_pct < 2.0
         }
@@ -7264,12 +6640,8 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
         Preset::QuintupledVolCloseAtLodHotVol => {
             hit.rel_volume >= 5.0 && hit.lod_dist_pct.abs() < 0.5 && hit.change_pct < -1.0
         }
-        Preset::QuintupledVolGapUpHotVol => {
-            hit.rel_volume >= 5.0 && hit.gap_pct > 2.0
-        }
-        Preset::QuintupledVolGapDownHotVol => {
-            hit.rel_volume >= 5.0 && hit.gap_pct < -2.0
-        }
+        Preset::QuintupledVolGapUpHotVol => hit.rel_volume >= 5.0 && hit.gap_pct > 2.0,
+        Preset::QuintupledVolGapDownHotVol => hit.rel_volume >= 5.0 && hit.gap_pct < -2.0,
         Preset::QuintupledVolGapUpCloseAtHodHotVol => {
             hit.rel_volume >= 5.0
                 && hit.gap_pct > 2.0
@@ -7578,12 +6950,8 @@ pub fn matches(hit: &ScanHit, preset: Preset) -> bool {
                 && hit.year_low_pct >= 2.0
                 && hit.year_low_pct < 5.0
         }
-        Preset::DecupledVolUpHotVol => {
-            hit.rel_volume >= 10.0 && hit.change_pct > 3.0
-        }
-        Preset::DecupledVolDownHotVol => {
-            hit.rel_volume >= 10.0 && hit.change_pct < -3.0
-        }
+        Preset::DecupledVolUpHotVol => hit.rel_volume >= 10.0 && hit.change_pct > 3.0,
+        Preset::DecupledVolDownHotVol => hit.rel_volume >= 10.0 && hit.change_pct < -3.0,
         Preset::DecupledVolUpNearYearHighHotVol => {
             hit.rel_volume >= 10.0 && hit.change_pct > 3.0 && hit.year_high_pct < 2.0
         }
@@ -10481,16 +9849,21 @@ mod tests {
         // Closes near day's high (108 vs HOD 108).
         // Need rel_volume >= 1.5 — build a 5-bar baseline at 1M then today at 2M.
         let bars = vec![
-            bar(100, 101, 99,  100, 1_000_000, 1),
-            bar(100, 101, 99,  100, 1_000_000, 2),
-            bar(100, 101, 99,  100, 1_000_000, 3),
-            bar(100, 101, 99,  100, 1_000_000, 4),
+            bar(100, 101, 99, 100, 1_000_000, 1),
+            bar(100, 101, 99, 100, 1_000_000, 2),
+            bar(100, 101, 99, 100, 1_000_000, 3),
+            bar(100, 101, 99, 100, 1_000_000, 4),
             bar(105, 108, 104, 108, 2_000_000, 5),
         ];
         let hit = stats_for("X", &bars).unwrap();
-        assert!(matches(&hit, Preset::GapAndGo),
+        assert!(
+            matches(&hit, Preset::GapAndGo),
             "gap={} day_pct={} hod_dist={} rel_vol={}",
-            hit.gap_pct, hit.day_pct, hit.hod_dist_pct, hit.rel_volume);
+            hit.gap_pct,
+            hit.day_pct,
+            hit.hod_dist_pct,
+            hit.rel_volume
+        );
     }
 
     #[test]
@@ -10500,7 +9873,7 @@ mod tests {
             bar(100, 101, 99, 100, 1_000_000, 2),
             bar(100, 101, 99, 100, 1_000_000, 3),
             bar(100, 101, 99, 100, 1_000_000, 4),
-            bar(100, 100, 95,  97, 2_000_000, 5),    // close -3%, vol 2x avg
+            bar(100, 100, 95, 97, 2_000_000, 5), // close -3%, vol 2x avg
         ];
         let hit = stats_for("X", &bars).unwrap();
         assert!(matches(&hit, Preset::DistributionDay));
@@ -10526,12 +9899,16 @@ mod tests {
             bar(100, 105, 95, 100, 2_000_000, 2),
             bar(100, 105, 95, 100, 2_000_000, 3),
             bar(100, 105, 95, 100, 2_000_000, 4),
-            bar(100, 100, 100, 100, 1_000_000, 5),    // doji-like, half avg vol
+            bar(100, 100, 100, 100, 1_000_000, 5), // doji-like, half avg vol
         ];
         let hit = stats_for("X", &bars).unwrap();
-        assert!(matches(&hit, Preset::RangeContractionDay),
+        assert!(
+            matches(&hit, Preset::RangeContractionDay),
             "day_pct={} gap_pct={} rel_vol={}",
-            hit.day_pct, hit.gap_pct, hit.rel_volume);
+            hit.day_pct,
+            hit.gap_pct,
+            hit.rel_volume
+        );
     }
 
     #[test]

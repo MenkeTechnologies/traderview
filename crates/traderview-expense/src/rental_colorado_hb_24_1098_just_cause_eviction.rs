@@ -194,7 +194,8 @@ pub fn compute(input: &Input) -> Output {
         };
     }
 
-    if input.property_exemption_status == PropertyExemptionStatus::ExemptOwnerOccupiedUnitsLessOrEqual4
+    if input.property_exemption_status
+        == PropertyExemptionStatus::ExemptOwnerOccupiedUnitsLessOrEqual4
     {
         return Output {
             mode: ColoradoHb241098Mode::NotApplicableOwnerOccupied4OrFewerUnitsExempt,
@@ -285,9 +286,9 @@ pub fn compute(input: &Input) -> Output {
     );
 
     let required_relocation_cents = if has_vulnerable_resident {
-        input
-            .monthly_rent_cents
-            .saturating_mul(u64::from(CO_HB_24_1098_VULNERABLE_RESIDENT_RELOCATION_MONTHS_RENT))
+        input.monthly_rent_cents.saturating_mul(u64::from(
+            CO_HB_24_1098_VULNERABLE_RESIDENT_RELOCATION_MONTHS_RENT,
+        ))
     } else {
         input
             .monthly_rent_cents
@@ -370,7 +371,10 @@ mod tests {
             ..baseline_no_fault_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, ColoradoHb241098Mode::NotApplicablePropertyOutsideColorado);
+        assert_eq!(
+            result.mode,
+            ColoradoHb241098Mode::NotApplicablePropertyOutsideColorado
+        );
     }
 
     #[test]
@@ -380,13 +384,17 @@ mod tests {
             ..baseline_no_fault_compliant()
         };
         let result = check(&input);
-        assert_eq!(result.mode, ColoradoHb241098Mode::NotApplicableShortTermRentalExempt);
+        assert_eq!(
+            result.mode,
+            ColoradoHb241098Mode::NotApplicableShortTermRentalExempt
+        );
     }
 
     #[test]
     fn owner_occupied_4_or_fewer_exempt() {
         let input = Input {
-            property_exemption_status: PropertyExemptionStatus::ExemptOwnerOccupiedUnitsLessOrEqual4,
+            property_exemption_status:
+                PropertyExemptionStatus::ExemptOwnerOccupiedUnitsLessOrEqual4,
             ..baseline_no_fault_compliant()
         };
         let result = check(&input);
