@@ -221,8 +221,9 @@ fn scenario_mfs_ctc_at_phaseout_edge() {
 /// We mainly want to verify:
 ///   1. QBI = 0 (no SE).
 ///   2. Std deduction applies.
-///   3. Tax computed over taxable income (engine does NOT separate
-///      LTCG into preferential brackets in v1 — TODO documented).
+///   3. QDCGTW preferential rates apply — all $30k of TI is LTCG +
+///      qualified divs, and the entire stack sits in the 0% LTCG band
+///      (Single 0% top = $48,350 for 2025).
 #[test]
 fn scenario_retiree_interest_dividends_ltcg() {
     let r = TaxReturn {
@@ -242,15 +243,18 @@ fn scenario_retiree_interest_dividends_ltcg() {
     assert_eq!(res.deduction_used, d(15_000));
     assert_eq!(res.qbi_deduction, Decimal::ZERO);
     assert_eq!(res.taxable_income, d(30_000));
-    // No SE tax.
     assert_eq!(res.se_tax.total, Decimal::ZERO);
-    // Tax = brackets only. Engine does NOT yet apply LTCG-preferential rate.
-    // Pinned to confirm current behavior — when LTCG-bracket support
-    // lands, this number drops and the test gets updated.
-    let expected = dc("1192.5")  // 11,925 @ 10%
-        + dc("2169")             // 18,075 @ 12% (30,000-11,925)
-        ;
-    assert_eq!(res.ordinary_tax, expected);
+    // QDCGTW: PREF = $15k qdivs + $20k LTCG = $35k, capped at TI $30k.
+    // ORD = $30k - $30k = $0. Pref stack [0, 30k] sits below the
+    // Single 0% top of $48,350 → all $30k taxed at 0%.
+    // Total income tax = $0.
+    assert_eq!(res.ordinary_tax, Decimal::ZERO);
+    let cg = res
+        .capital_gains
+        .expect("QDCGTW must run when pref income > 0");
+    assert_eq!(cg.preferential_income, d(30_000));
+    assert_eq!(cg.amount_at_0_pct, d(30_000));
+    assert_eq!(cg.preferential_tax, Decimal::ZERO);
 }
 
 /// Scenario 6: High earner crossing both the SSTB threshold AND the

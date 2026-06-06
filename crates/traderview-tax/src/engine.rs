@@ -130,10 +130,15 @@ pub struct TaxResult {
     pub qbi_needs_manual_review: bool,
     pub taxable_income: Decimal,
     pub ordinary_tax: Decimal,
+    /// QDCGTW breakdown when preferential income is present; `None`
+    /// when LTCG and qualified dividends are both zero.
+    pub capital_gains: Option<crate::capital_gains::QdcgtwResult>,
     pub se_tax: se_tax::SeResult,
     pub additional_medicare: Decimal,
     pub ctc: credits::CtcResult,
     pub tax_after_credits: Decimal,
+    /// Net investment income tax (IRC § 1411, 3.8%).
+    pub niit: crate::niit::NiitResult,
     pub total_payments: Decimal,
     pub refund_due: Decimal,
     pub tax_owed: Decimal,
@@ -204,9 +209,29 @@ pub fn compute(r: &TaxReturn) -> TaxResult {
     result.qbi_needs_manual_review = qbi_result.needs_manual_review;
 
     // ── 5) Taxable income → bracket tax ────────────────────────────────
+    // Routes through the Qualified Dividends and Capital Gain Tax
+    // Worksheet (IRC § 1(h) — preferential 0/15/20% rates) when the
+    // taxpayer has LTCG or qualified dividends; otherwise straight
+    // bracket tax. `ordinary_tax` always reflects the *total* income
+    // tax bill (ordinary + preferential), matching Form 1040 line 16.
     result.taxable_income = (ti_before_qbi - result.qbi_deduction).max(Decimal::ZERO);
-    result.ordinary_tax =
-        brackets::ordinary_income_tax(result.taxable_income, r.status).round_dp(2);
+    if crate::capital_gains::has_preferential_income(
+        r.qualified_dividends,
+        r.net_long_term_capital_gain,
+    ) {
+        let cg = crate::capital_gains::compute(crate::capital_gains::QdcgtwInput {
+            taxable_income: result.taxable_income,
+            net_long_term_capital_gain: r.net_long_term_capital_gain,
+            qualified_dividends: r.qualified_dividends,
+            status: r.status,
+        });
+        result.ordinary_tax = cg.total_tax;
+        result.capital_gains = Some(cg);
+    } else {
+        result.ordinary_tax =
+            brackets::ordinary_income_tax(result.taxable_income, r.status).round_dp(2);
+        result.capital_gains = None;
+    }
 
     // ── 6) Credits ─────────────────────────────────────────────────────
     let ctc = credits::child_tax_credit(credits::CtcInput {
@@ -219,7 +244,26 @@ pub fn compute(r: &TaxReturn) -> TaxResult {
     // CTC + ODC offset ordinary tax (non-refundable). The refundable
     // portion of CTC (Additional Child Tax Credit) goes into payments.
     let nonref_credit = (ctc.total - ctc.refundable_portion).min(result.ordinary_tax);
-    result.tax_after_credits = (result.ordinary_tax - nonref_credit + se.total).max(Decimal::ZERO);
+
+    // ── 6.5) NIIT (IRC § 1411) — 3.8% surtax on the lesser of NII or
+    // (MAGI - statutory threshold). Self-employment income is NOT NII
+    // (it's subject to SE tax instead). Rental on Schedule E counts as
+    // NII when passive (the default for most users; material-participation
+    // is rare and not modeled in v1).
+    let nii = (r.interest_income
+        + r.ordinary_dividends
+        + r.net_long_term_capital_gain
+        + r.schedule_e.net_income)
+        .max(Decimal::ZERO);
+    let niit = crate::niit::compute(crate::niit::NiitInput {
+        net_investment_income: nii,
+        magi: result.agi, // MAGI ≈ AGI absent foreign-earned-income exclusion
+        status: r.status,
+    });
+    result.niit = niit;
+
+    result.tax_after_credits =
+        (result.ordinary_tax - nonref_credit + se.total + niit.tax).max(Decimal::ZERO);
     result.additional_medicare = se.additional_medicare_tax;
 
     // ── 7) Payments + withholding ─────────────────────────────────────

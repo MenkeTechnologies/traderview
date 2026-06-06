@@ -17,13 +17,17 @@
 //!   * [`what_if`] — scenario delta engine for refund/owed planning.
 
 pub mod brackets;
+pub mod capital_gains;
 pub mod credits;
 pub mod engine;
+pub mod niit;
 pub mod qbi;
 pub mod safe_harbor;
 pub mod se_tax;
 pub mod what_if;
 
+pub use capital_gains::{compute as compute_qdcgtw, QdcgtwInput, QdcgtwResult};
 pub use engine::{compute, FilingStatus, TaxResult, TaxReturn};
+pub use niit::{compute as compute_niit, NiitInput, NiitResult};
 pub use safe_harbor::{compute as compute_safe_harbor, SafeHarborInput, SafeHarborResult};
 pub use what_if::{compute_what_if, Scenario, WhatIfResult};

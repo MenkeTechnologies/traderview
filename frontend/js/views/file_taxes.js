@@ -528,7 +528,14 @@ function renderReview(pane, mount, tok) {
             ${review(t('view.taxwiz.review.qbi'), fmtMoney(+r.qbi_deduction || 0))}
             ${review(t('view.taxwiz.live.taxable'), fmtMoney(+r.taxable_income || 0))}
             ${review(t('view.taxwiz.review.ordinary_tax'), fmtMoney(+r.ordinary_tax || 0))}
+            ${r.capital_gains
+                ? review(t('view.taxwiz.review.ltcg_pref'),
+                    `${fmtMoney(+r.capital_gains.preferential_income || 0)} → ${fmtMoney(+r.capital_gains.preferential_tax || 0)}`)
+                : ''}
             ${review(t('view.taxwiz.review.se_tax'), fmtMoney(+(r.se_tax || {}).total || 0))}
+            ${+((r.niit || {}).tax || 0) > 0
+                ? review(t('view.taxwiz.review.niit'), fmtMoney(+r.niit.tax))
+                : ''}
             ${review(t('view.taxwiz.review.ctc'), fmtMoney(+(r.ctc || {}).total || 0))}
             ${review(t('view.taxwiz.review.after_credits'), fmtMoney(+r.tax_after_credits || 0))}
             ${review(t('view.taxwiz.review.payments'), fmtMoney(+r.total_payments || 0))}
