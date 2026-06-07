@@ -215,6 +215,31 @@ main#app {
 .view-title input[type=date] { display: inline-block; width: auto; margin-left: 12px; }
 .view-title a { font-size: 10px; margin-left: 12px; }
 
+/* ---- research-view title: inline editable symbol form ---------------- */
+.view-title.rs-title {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.rs-title .rs-title-prefix { color: var(--cyan); }
+.rs-sym-form {
+    display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;
+}
+.rs-sym-form #rs-sym-input {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px; letter-spacing: 3px;
+    color: var(--cyan); background: transparent;
+    border: 1px solid var(--border); border-radius: 2px;
+    padding: 4px 8px; min-width: 160px; max-width: 320px;
+    text-shadow: 0 0 6px var(--cyan-glow);
+}
+.rs-sym-form #rs-sym-input:focus {
+    outline: none; border-color: var(--cyan);
+    box-shadow: 0 0 0 1px var(--cyan-glow);
+}
+.rs-sym-form .rs-sym-go,
+.rs-sym-form .rs-sym-clear {
+    font-size: 10px; letter-spacing: 2px; padding: 4px 10px;
+}
+
 /* ---- stat cards ----------------------------------------------------- */
 .cards {
     display: grid;

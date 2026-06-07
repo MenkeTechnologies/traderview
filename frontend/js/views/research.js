@@ -26,8 +26,21 @@ export async function renderResearch(mount, _state, sym) {
     }
     sym = sym.toUpperCase();
     mount.innerHTML = `
-        <h1 class="view-title">// ${esc(sym)}
-            <a class="link small" href="#research">← search another</a>
+        <h1 class="view-title rs-title">
+            <span class="rs-title-prefix">//</span>
+            <form id="rs-sym-form" class="rs-sym-form" autocomplete="off">
+                <input id="rs-sym-input" name="symbol" type="text"
+                       value="${esc(sym)}"
+                       data-i18n-placeholder="view.research.placeholder.symbol"
+                       placeholder="symbol — AAPL, NVDA, ^GSPC, BTC-USD"
+                       spellcheck="false" autocapitalize="characters"
+                       style="text-transform:uppercase">
+                <button type="submit" class="btn btn-secondary rs-sym-go"
+                        data-i18n="view.research.btn.research">Research</button>
+                <button type="button" id="rs-sym-clear" class="btn btn-secondary rs-sym-clear"
+                        data-i18n="view.research.btn.search_another"
+                        data-i18n-title="view.research.btn.search_another">← search another</button>
+            </form>
         </h1>
         <div id="rs-quote" class="cards"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="view.research.loading_quote">loading quote…</div></div></div>
         <div class="chart-panel">
@@ -85,6 +98,29 @@ export async function renderResearch(mount, _state, sym) {
             </div>
         </div>
     `;
+
+    // Inline symbol form — submit to navigate, clear to wipe + focus.
+    const symForm  = mount.querySelector('#rs-sym-form');
+    const symInput = mount.querySelector('#rs-sym-input');
+    const symClear = mount.querySelector('#rs-sym-clear');
+    if (symForm && symInput) {
+        symForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const next = (symInput.value || '').trim().toUpperCase();
+            if (next && next !== sym) {
+                window.location.hash = `research/${encodeURIComponent(next)}`;
+            } else if (!next) {
+                symInput.focus();
+            }
+        });
+    }
+    if (symClear && symInput) {
+        symClear.addEventListener('click', (e) => {
+            e.preventDefault();
+            symInput.value = '';
+            symInput.focus();
+        });
+    }
 
     // Kick off everything in parallel.
     const q = api.quote(sym).catch(() => null);
