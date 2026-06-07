@@ -22,14 +22,14 @@ export async function renderCryptoMarkets(mount, _appState) {
                 <h2 data-i18n="view.crypto_markets.h2.exchanges">Exchanges</h2>
                 <div id="cm-exchanges"></div>
             </div>
-            <div class="chart-panel">
+            <div class="chart-panel" style="grid-column:1/-1">
                 <h2 data-i18n="view.crypto_markets.h2.symbols">Symbols on exchange</h2>
                 <div class="inline-form">
                     <label><span data-i18n="view.crypto_markets.label.exchange">Exchange</span>
                         <input type="text" id="cm-exchange-input" value="${esc(state.exchange)}"></label>
                     <button id="cm-load-symbols" class="primary" type="button" data-i18n="view.crypto_markets.btn.load">Load</button>
                 </div>
-                <div id="cm-symbols" style="margin-top:10px"></div>
+                <div id="cm-symbols" class="cm-symbols-scroll" style="margin-top:10px"></div>
             </div>
             <div class="chart-panel" style="grid-column:1/-1">
                 <h2 data-i18n="view.crypto_markets.h2.profile">Coin profile</h2>

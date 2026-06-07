@@ -215,6 +215,17 @@ main#app {
 .view-title input[type=date] { display: inline-block; width: auto; margin-left: 12px; }
 .view-title a { font-size: 10px; margin-left: 12px; }
 
+/* ---- crypto-markets: bound the symbols table so it doesn't outgrow
+       the panel border ----------------------------------------------- */
+.cm-symbols-scroll {
+    max-height: 70vh;
+    overflow-y: auto;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    padding: 4px;
+}
+.cm-symbols-scroll table { width: 100%; }
+
 /* ---- research-view title: inline editable symbol form ---------------- */
 .view-title.rs-title {
     display: flex; align-items: center; gap: 10px; flex-wrap: wrap;

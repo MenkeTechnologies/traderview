@@ -145,13 +145,12 @@ export function barChart(el, labels, values, opts = {}) {
     const barsPath = (u) => {
         const ctx = u.ctx;
         ctx.save();
-        // Cap bar width so a single-element dataset doesn't render a giant
-        // slab that covers the X axis (e.g. Year/Month/Day's "Trade
-        // Distribution By Year" with one year of data was rendering a
-        // 70%-wide bar that hid the axis labels).
+        // Bar width: 70% of the per-point slot, capped absolutely at 64px so
+        // a 4-bar dataset on a wide panel doesn't render 200px-wide slabs.
+        // The min(2) keeps very-dense datasets visible.
         const bw = Math.min(
             Math.max(2, (u.bbox.width / xs.length) * 0.7),
-            Math.max(24, u.bbox.width * 0.12),
+            64,
         );
         const yZero = u.valToPos(0, 'y', true);
         for (let i = 0; i < xs.length; i++) {
@@ -197,6 +196,11 @@ export function barChart(el, labels, values, opts = {}) {
         ],
         axes: [{
             stroke: '#aab',
+            // Pin ticks to integer indices so the categorical labels don't
+            // duplicate (without this uPlot emits 0, 0.5, 1, 1.5, ... and
+            // every tick rounds to the same label as its neighbour).
+            splits: () => xs,
+            incrs: [1],
             values: (_, ticks) => ticks.map(t => labels[Math.round(t)] || ''),
             rotate: -45,
             size: 60,
