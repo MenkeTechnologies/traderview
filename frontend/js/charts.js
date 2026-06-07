@@ -136,15 +136,9 @@ export function ohlcChart(el, bars, marks = [], opts = {}) {
 export function barChart(el, labels, values, opts = {}) {
     el.innerHTML = '';
     if (!window.uPlot) { el.textContent = t('chart.error.uplot_missing_short'); return; }
-    // Mirror the working dashboard dailyVolumeChart pattern: 0-indexed xs,
-    // no explicit splits/incrs (uPlot auto-fits ticks to the index range),
-    // and the x-axis `values` callback looks up labels by Math.round(v).
-    // The previous 1-indexed + splits + incrs pattern caused bars to bunch
-    // on the wrong side and the y-axis labels to overlap the x-tick column,
-    // hiding them entirely on the Treasury yield curve.
     const xs = labels.map((_, i) => i);
     const vs = values.map(Number);
-    const w = el.clientWidth || 800;
+    const n = xs.length;
     const h = opts.height || 240;
     const barColor = opts.color || '#00e5ff';
 
@@ -153,10 +147,10 @@ export function barChart(el, labels, values, opts = {}) {
         ctx.save();
         const bw = Math.max(
             2,
-            Math.min((u.bbox.width / xs.length) * 0.7, u.bbox.width * 0.06),
+            Math.min((u.bbox.width / Math.max(1, n)) * 0.6, u.bbox.width * 0.18),
         );
         const yZero = u.valToPos(0, 'y', true);
-        for (let i = 0; i < xs.length; i++) {
+        for (let i = 0; i < n; i++) {
             const x = u.valToPos(xs[i], 'x', true);
             const y = u.valToPos(vs[i], 'y', true);
             ctx.fillStyle = vs[i] >= 0 ? barColor : '#ff3860';
@@ -166,7 +160,12 @@ export function barChart(el, labels, values, opts = {}) {
         return null;
     };
 
-    const yKind = opts.yKind || 'money';
+    // yKind: 'plain' (default) for VIX/yield/pct — small decimals as-is,
+    // big numbers abbreviated to K/M, no currency prefix. 'money' adds the
+    // $ for P&L charts. 'count' is the same as 'plain' but always integer.
+    // The previous 'money' default was prefixing $ onto VIX index values
+    // and treasury yield percentages — wrong for every current caller.
+    const yKind = opts.yKind || 'plain';
     const fmtY = (v) => {
         if (v == null || !Number.isFinite(v)) return '';
         const a = Math.abs(v);
@@ -174,29 +173,48 @@ export function barChart(el, labels, values, opts = {}) {
         const prefix = yKind === 'money' ? '$' : '';
         if (a >= 1e6) return `${sign}${prefix}${(a / 1e6).toFixed(a >= 1e7 ? 0 : 1)}M`;
         if (a >= 1e3) return `${sign}${prefix}${(a / 1e3).toFixed(a >= 1e4 ? 0 : 1)}K`;
+        if (yKind === 'plain') {
+            if (a >= 100) return `${sign}${prefix}${a.toFixed(0)}`;
+            if (a >= 10)  return `${sign}${prefix}${a.toFixed(1)}`;
+            return `${sign}${prefix}${a.toFixed(2)}`;
+        }
         return `${sign}${prefix}${a.toFixed(0)}`;
     };
 
-    new window.uPlot({
+    let plot = null;
+    const measure = () => el.clientWidth || el.getBoundingClientRect().width || 800;
+    const buildPlot = (w) => new window.uPlot({
         title: opts.title || '',
-        width: w,
+        width: Math.max(120, Math.floor(w)),
         height: h,
-        scales: { x: { time: false }, y: {} },
+        // Inset the first/last bars by half a slot on each side so they
+        // don't hug the panel edges. Without an explicit range, uPlot's
+        // auto-fit puts bar 0 at the left edge and bar n-1 at the right
+        // edge — on the 4-point VIX/Treasury curves this read as bars
+        // jammed against the panel walls.
+        scales: {
+            x: { time: false, range: () => [-0.5, Math.max(0.5, n - 0.5)] },
+            y: {},
+        },
         series: [
             {
                 label: t('chart.series.idx'),
                 value: (_u, raw) => labels[Math.round(Number(raw))] || '—',
             },
-            { label: opts.seriesLabel || t('chart.series.value'), stroke: 'transparent', paths: barsPath },
+            {
+                label: opts.seriesLabel || t('chart.series.value'),
+                stroke: 'transparent',
+                paths: barsPath,
+                points: { show: false },
+            },
         ],
         axes: [{
             stroke: '#aab',
             size: 60,
             rotate: -45,
-            // Pin ticks to the 0-indexed integer positions so sparse series
-            // (e.g. 7-point VIX tenor curve) don't get half-step splits that
-            // round to duplicate labels. Auto-tick is fine for 30-day daily
-            // volume but produces 0.5/1.5/2.5 splits for short series.
+            // Pin ticks at every 0-indexed integer position. With sparse
+            // series (4-point VIX/Treasury) uPlot's auto-tick picks
+            // 0.5-step increments that all round to duplicate labels.
             splits: () => xs,
             incrs: [1],
             values: (_u, ticks) => ticks.map(v => labels[Math.round(v)] || ''),
@@ -205,5 +223,24 @@ export function barChart(el, labels, values, opts = {}) {
             size: 64,
             values: (_u, ticks) => ticks.map(fmtY),
         }],
+        legend: { show: false },
     }, [xs, vs], el);
+
+    // Defer one rAF tick so the panel has its final width before measuring.
+    // Reading clientWidth on a freshly-injected child of a flex/grid panel
+    // returned 0 in release WebKit, dropping the chart to the 800 fallback
+    // and pushing rotated x-axis labels off-canvas — the bug visible in
+    // the VIX/Treasury screenshot.
+    requestAnimationFrame(() => { plot = buildPlot(measure()); });
+
+    if (typeof ResizeObserver !== 'undefined') {
+        const ro = new ResizeObserver(() => {
+            if (!plot) return;
+            const w = measure();
+            if (Math.abs(plot.width - w) < 2) return;
+            plot.destroy();
+            plot = buildPlot(w);
+        });
+        ro.observe(el);
+    }
 }
