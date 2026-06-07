@@ -136,7 +136,9 @@ export function ohlcChart(el, bars, marks = [], opts = {}) {
 export function barChart(el, labels, values, opts = {}) {
     el.innerHTML = '';
     if (!window.uPlot) { el.textContent = t('chart.error.uplot_missing_short'); return; }
-    const xs = labels.map((_, i) => i);
+    // 1-indexed positions so a half-slot range pad ([0.5, n+0.5]) keeps the
+    // first/last bars off the chart border without clipping any tick labels.
+    const xs = labels.map((_, i) => i + 1);
     const vs = values.map(Number);
     const w = el.clientWidth || 800;
     const h = opts.height || 240;
@@ -188,17 +190,17 @@ export function barChart(el, labels, values, opts = {}) {
         // legend was showing "1969-12-31 7:00pm" (epoch 0) on the Year /
         // Month / Day bar charts. Forcing time:false makes the legend
         // value formatter below take over.
-        // Pad the x-scale by half a slot on each side so the first and last
-        // bars don't sit visually glued to the chart border (default uPlot
-        // range = [0, n-1] which puts bar #0 at x=0 hugging the left axis).
+        // Half-slot pad: bars are at 1..n, scale visible range [0.5, n+0.5]
+        // so first bar sits at 1/(n+1) of width instead of glued to the
+        // left axis, last bar mirrored on the right.
         scales: {
-            x: { time: false, range: () => [-0.5, xs.length - 0.5] },
+            x: { time: false, range: () => [0.5, xs.length + 0.5] },
             y: {},
         },
         series: [
             {
                 label: t('chart.series.idx'),
-                value: (_u, raw) => labels[Math.round(Number(raw))] || '—',
+                value: (_u, raw) => labels[Math.round(Number(raw)) - 1] || '—',
             },
             { label: opts.seriesLabel || t('chart.series.value'), stroke: 'transparent', paths: barsPath },
         ],
@@ -208,8 +210,7 @@ export function barChart(el, labels, values, opts = {}) {
             // duplicate (without this uPlot emits 0, 0.5, 1, 1.5, ... and
             // every tick rounds to the same label as its neighbour).
             splits: () => xs,
-            incrs: [1],
-            values: (_, ticks) => ticks.map(t => labels[Math.round(t)] || ''),
+            values: (_, ticks) => ticks.map(t => labels[Math.round(t) - 1] || ''),
             rotate: -45,
             size: 60,
         }, {
