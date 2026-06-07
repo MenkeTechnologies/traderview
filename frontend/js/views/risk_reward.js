@@ -175,7 +175,7 @@ function renderDollarsChart(report) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.risk_reward.chart.bucket') },
             { label: t('view.risk_reward.chart.risk_d'),
@@ -193,6 +193,8 @@ function renderDollarsChart(report) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 56 },
         ],
@@ -229,7 +231,7 @@ function renderLevelsChart() {
     void prices;
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.risk_reward.chart.level') },
             { label: t('view.risk_reward.chart.stop'),
@@ -247,6 +249,8 @@ function renderLevelsChart() {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 56 },
         ],

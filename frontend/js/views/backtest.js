@@ -173,7 +173,7 @@ function renderHoldChart(trades) {
     const xs = ys.map((_, i) => i + 1);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.backtest.chart.trade_idx') },
             { label: t('view.backtest.chart.bars_held'),
@@ -199,7 +199,7 @@ function renderTradePnlChart(trades) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.backtest.chart.trade_idx') },
             { label: t('view.backtest.chart.pnl_pct'),

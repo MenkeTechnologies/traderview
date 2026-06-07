@@ -143,7 +143,7 @@ function renderChart(bars, report) {
     const el = document.getElementById('tbr-chart');
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 280,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.bar_num') },
             { label: t('chart.series.close'), stroke: '#00e5ff', width: 1.2,
@@ -174,7 +174,7 @@ function renderDeltaChart(report) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.three_bar_reversal.chart.event_idx') },
             { label: t('view.three_bar_reversal.chart.delta'),
@@ -185,6 +185,8 @@ function renderDeltaChart(report) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 50 },
         ],

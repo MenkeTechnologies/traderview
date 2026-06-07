@@ -162,7 +162,7 @@ function renderChart(bars, vwap, fillPrice) {
     const fillYs = xs.map(() => fillPrice);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 280,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.bar_num') },
             { label: t('chart.series.typical'), stroke: '#00e5ff', width: 1.0,
@@ -192,7 +192,7 @@ function renderVolChart(bars) {
     const xs = ys.map((_, i) => i + 1);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.vwap_slippage.chart.bar_idx') },
             { label: t('view.vwap_slippage.chart.volume'),

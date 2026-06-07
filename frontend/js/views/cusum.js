@@ -187,7 +187,7 @@ function renderChart(series, report) {
     const { up, dn } = eventMarkers(report.events, series.length);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 280,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.bar_num') },
             { label: t('chart.series.series'), stroke: '#00e5ff', width: 1.2,
@@ -231,7 +231,7 @@ function renderStateChart(series) {
     const dnBand = xs.map(() => -trig);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('chart.series.bar_num') },
             { label: t('view.cusum.series.g_pos'),

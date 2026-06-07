@@ -200,7 +200,7 @@ function renderExpiryChart(report) {
     const win = xs.map(() => state.roll_window_days);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.futures_roll.chart.contract_idx') },
             { label: t('view.futures_roll.chart.days'),
@@ -215,6 +215,8 @@ function renderExpiryChart(report) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 50 },
         ],
@@ -244,7 +246,7 @@ function renderUrgencyChart(report) {
     const xs = labels.map((_, i) => i + 1);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.futures_roll.chart.urgency_idx') },
             { label: t('view.futures_roll.chart.position_count'),
@@ -253,6 +255,8 @@ function renderUrgencyChart(report) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 50 },
         ],

@@ -246,7 +246,7 @@ function renderEnergyChart(components) {
     const xs = labels.map((_, i) => i + 1);
     new window.uPlot({
         title: '', width: el.clientWidth || 800, height: 200,
-        scales: { x: {}, y: { range: [0, 100] } },
+        scales: { x: { time: false,}, y: { range: [0, 100] } },
         series: [
             { label: t('view.signal_decomposition.chart.component_idx') },
             { label: t('view.signal_decomposition.chart.energy_pct'),
@@ -255,6 +255,8 @@ function renderEnergyChart(components) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 50,
               values: (_u, splits) => splits.map(v => v.toFixed(1) + '%') },
@@ -269,7 +271,7 @@ function drawMini(elId, ys, stroke) {
     const xs = ys.map((_, i) => i);
     new window.uPlot({
         title: '', width: el.clientWidth || 800, height: 80,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.idx') },
             { label: t('chart.series.value'), stroke, width: 1.5,

@@ -165,7 +165,7 @@ function renderChart(series) {
     const xs = series.map((_, i) => i);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 320,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('chart.series.bar') },
             { label: t('chart.series.amihud'),
@@ -199,7 +199,7 @@ function renderDvolChart() {
     const meanLine = xs.map(() => mean);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('chart.series.bar') },
             { label: t('view.amihud.chart.dvol'),

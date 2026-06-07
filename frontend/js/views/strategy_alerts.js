@@ -185,7 +185,7 @@ function renderLastFiredChart(rules) {
     const old    = rows.map(r => r.days >= 1 ? r.days : null);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false }, y: { auto: true } },
         series: [
             { label: t('view.strategy_alerts.chart.rule') },
             { label: t('view.strategy_alerts.chart.fired_today'),
@@ -197,6 +197,8 @@ function renderLastFiredChart(rules) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
@@ -229,7 +231,7 @@ function renderTruthChart(rules) {
     const unevY  = [null, null, tNull];
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false }, y: { auto: true } },
         series: [
             { label: t('view.strategy_alerts.chart.bucket') },
             { label: t('view.strategy_alerts.chart.truth_true'),
@@ -244,6 +246,8 @@ function renderTruthChart(rules) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
@@ -267,7 +271,7 @@ function renderFiresChart(rules) {
     const disabled = rows.map(r => !r.enabled ? Number(r.fire_count) : null);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false }, y: { auto: true } },
         series: [
             { label: t('view.strategy_alerts.chart.rule') },
             { label: t('view.strategy_alerts.chart.enabled'),
@@ -279,6 +283,8 @@ function renderFiresChart(rules) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],

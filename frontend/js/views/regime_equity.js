@@ -156,7 +156,7 @@ function renderChart(equity, report) {
     const fit = fitLine(equity, report);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 300,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.bar_num') },
             { label: t('chart.series.equity'), stroke: '#00e5ff', width: 1.5,
@@ -187,7 +187,7 @@ function renderResidualChart(equity, report) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('chart.series.bar_num') },
             { label: t('view.regime_equity.chart.residual'),

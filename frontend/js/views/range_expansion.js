@@ -177,7 +177,7 @@ function renderChart(bars, atr, report) {
     const el = document.getElementById('re-chart');
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 300,
-        scales: { x: {}, y: {}, y_atr: {} },
+        scales: { x: { time: false,}, y: {}, y_atr: {} },
         series: [
             { label: t('chart.series.bar_num') },
             { label: t('chart.series.close'), stroke: '#00e5ff', width: 1.2,
@@ -215,7 +215,7 @@ function renderRangeAtrChart(bars, atr) {
     const expansion = xs.map(() => Number(state.config.min_expansion_atrs));
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('chart.series.bar_num') },
             { label: t('view.range_expansion.chart.range_over_atr'),

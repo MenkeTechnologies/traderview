@@ -188,7 +188,7 @@ function renderDistribution(trades) {
     const el = document.getElementById('mi-dist-chart');
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.bucket') },
             { label: t('chart.series.trade_count'), stroke: '#00e5ff', width: 1.5,
@@ -224,7 +224,7 @@ function renderScatterChart(trades, spikeBps) {
     const thresh = xs.map(() => Number(spikeBps) || 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 240,
-        scales: { x: { auto: true }, y: { auto: true } },
+        scales: { x: { time: false, auto: true }, y: { auto: true } },
         series: [
             { label: t('view.market_impact.chart.pct_adv') },
             { label: t('view.market_impact.chart.slippage'),

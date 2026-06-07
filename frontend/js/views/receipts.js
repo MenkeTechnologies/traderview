@@ -16,6 +16,10 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { tConfirm, tPrompt } from '../dialog.js';
 import { openReceiptMatchModal } from './expenses.js';
+import {
+    mountBusinessSelector,
+    onChange as onBusinessChange,
+} from '../business_context.js';
 
 // View-local state. Survives re-renders but resets on route change.
 const STATE = {
@@ -43,7 +47,10 @@ export async function renderReceipts(mount, _state) {
     STATE.selected = new Set();
 
     mount.innerHTML = `
-        <h1 class="view-title"><span data-i18n="view.receipts.h1.title">// RECEIPTS</span></h1>
+        <div class="receipts-title-row">
+            <h1 class="view-title"><span data-i18n="view.receipts.h1.title">// RECEIPTS</span></h1>
+            <span id="receipts-biz-selector"></span>
+        </div>
         <p class="muted small" data-i18n="view.receipts.hint.intro">Every receipt you've uploaded — filterable, paginated, bulk-actionable. Click any row to edit. Use the bulk bar at the top to auto-attach matched candidates across the whole library.</p>
 
         <div class="receipts-filterbar">
@@ -213,6 +220,12 @@ export async function renderReceipts(mount, _state) {
     // the current page filters' date window. Backend ignores other
     // filters for the CSV (rollup is bucket+category, not row-level).
     refreshCsvHref(mount);
+
+    // Business selector — reloads the receipts table when switched.
+    const rcptBizHost = mount.querySelector('#receipts-biz-selector');
+    if (rcptBizHost) mountBusinessSelector(rcptBizHost);
+    const unsubRcptBiz = onBusinessChange(() => loadAndRender(mount, tok));
+    mount.__rcptUnsubBiz = unsubRcptBiz;
 
     await loadAndRender(mount, tok);
 }

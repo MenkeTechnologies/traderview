@@ -173,7 +173,7 @@ function renderChart(bars, stops) {
     const triggers = triggerMarkers(stops, bars);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 320,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.bar_num') },
             { label: t('chart.series.close'), stroke: '#00e5ff', width: 1.2,
@@ -201,7 +201,7 @@ function renderAtrChart(bars, atr) {
     const mult = atrSeries.map(v => v == null ? null : v * state.config.atr_multiplier);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('chart.series.bar_num') },
             { label: t('view.chandelier_stop.series.atr'),

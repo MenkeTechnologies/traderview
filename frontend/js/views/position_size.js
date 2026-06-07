@@ -197,7 +197,7 @@ function renderNotionalChart(r) {
     const xs = labels.map((_, i) => i + 1);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.position_size.chart.method_idx') },
             { label: t('view.position_size.chart.notional'),
@@ -209,6 +209,8 @@ function renderNotionalChart(r) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 60 },
         ],
@@ -235,7 +237,7 @@ function renderMethodChart(r) {
     const xs = labels.map((_, i) => i + 1);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.position_size.chart.method_idx') },
             { label: t('view.position_size.chart.shares'),
@@ -247,6 +249,8 @@ function renderMethodChart(r) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 60 },
         ],

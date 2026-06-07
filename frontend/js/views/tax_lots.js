@@ -164,7 +164,7 @@ function renderCumRealizedChart(realized) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.tax_lots.chart.event_idx') },
             { label: t('view.tax_lots.chart.cum_gain_loss'),
@@ -194,7 +194,7 @@ function renderRealizedChart(realized) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.tax_lots.chart.event_idx') },
             { label: t('view.tax_lots.chart.gain_loss'),

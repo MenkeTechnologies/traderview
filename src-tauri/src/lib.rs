@@ -38,7 +38,43 @@ fn get_log_path() -> String {
     log_file_path().display().to_string()
 }
 
+/// Read the tail of the log file — up to the last `max_bytes` (default
+/// 64 KiB). Returns the raw text so the frontend can render it in a
+/// monospaced viewer; line-splitting and filtering happen client-side
+/// so this command stays cheap and untyped.
+#[tauri::command]
+fn read_log_tail(max_bytes: Option<u64>) -> Result<String, String> {
+    use std::io::{Read, Seek, SeekFrom};
+    let cap = max_bytes.unwrap_or(64 * 1024);
+    let path = log_file_path();
+    let mut f = std::fs::File::open(&path).map_err(|e| format!("open log: {e}"))?;
+    let len = f.metadata().map_err(|e| format!("stat log: {e}"))?.len();
+    let start = len.saturating_sub(cap);
+    f.seek(SeekFrom::Start(start))
+        .map_err(|e| format!("seek log: {e}"))?;
+    let mut buf = Vec::with_capacity(cap as usize);
+    f.read_to_end(&mut buf)
+        .map_err(|e| format!("read log: {e}"))?;
+    // If we sliced mid-character, drop the leading partial line so the
+    // viewer doesn't render garbage on the first row.
+    let s = String::from_utf8_lossy(&buf).into_owned();
+    if start > 0 {
+        if let Some(nl) = s.find('\n') {
+            return Ok(s[nl + 1..].to_string());
+        }
+    }
+    Ok(s)
+}
+
 pub fn run() {
+    // Install a default rustls crypto provider for the whole process.
+    // Without this, every TLS handshake (live-ticks WS to Alpaca /
+    // Polygon / Finnhub, Yahoo bars fetcher, Finnhub REST) panics with
+    // "Could not automatically determine the process-level
+    // CryptoProvider" on rustls 0.23. Idempotent — second call
+    // returns Err which we drop.
+    let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
+
     // ---- file logging + panic hook ----------------------------------
     let log_dir_path = log_dir();
     let _ = std::fs::create_dir_all(&log_dir_path);
@@ -204,7 +240,11 @@ pub fn run() {
                 }
             }
         })
-        .invoke_handler(tauri::generate_handler![get_api_config, get_log_path])
+        .invoke_handler(tauri::generate_handler![
+            get_api_config,
+            get_log_path,
+            read_log_tail
+        ])
         .run(tauri::generate_context!());
 
     if let Err(e) = result {
@@ -255,6 +295,55 @@ async fn bring_up_backend(
             tracing::info!("no finnhub key configured; set one in Settings → Data Sources");
         }
         Err(e) => tracing::warn!(error = %e, "failed to load finnhub key from DB"),
+    }
+    // Warm Polygon's key too — when present, the live tape prefers
+    // Polygon's SIP feed (CTA/UTP) over Finnhub's aggregate.
+    match traderview_db::data_source_keys::any_polygon_key(&embedded.pool).await {
+        Ok(Some(k)) => {
+            traderview_db::live_ticks::global().set_polygon_key(k).await;
+            tracing::info!("loaded polygon key from DB; live tape will use SIP feed");
+        }
+        Ok(None) => {
+            tracing::info!("no polygon key configured; live tape falls back to finnhub");
+        }
+        Err(e) => tracing::warn!(error = %e, "failed to load polygon key from DB"),
+    }
+    // Warm Alpaca — middle provider in the priority chain.
+    match traderview_db::data_source_keys::any_alpaca_creds(&embedded.pool).await {
+        Ok(Some((id, secret, use_sip))) => {
+            let store = traderview_db::live_ticks::global();
+            store.set_alpaca_creds(id, secret).await;
+            store.set_alpaca_use_sip(use_sip);
+            tracing::info!(
+                use_sip,
+                "loaded alpaca creds; live tape uses {} feed",
+                if use_sip { "SIP" } else { "IEX" }
+            );
+        }
+        Ok(None) => tracing::info!("no alpaca creds configured"),
+        Err(e) => tracing::warn!(error = %e, "failed to load alpaca creds from DB"),
+    }
+    // Boot-time push of the watchlist union into the live-tick
+    // subscription set. Without this the WS workers stay idle until
+    // the user mutates a watchlist or the candidates/scanner loop
+    // fires — neither happens at startup, so existing BTCUSD /
+    // AAPL / etc. rows would never stream until manually re-added.
+    {
+        let store = traderview_db::live_ticks::global();
+        if store.has_any_provider().await {
+            match traderview_db::watchlists::all_distinct_symbols(&embedded.pool).await {
+                Ok(symbols) if !symbols.is_empty() => {
+                    let n = symbols.len();
+                    if let Err(e) = store.set_symbols(symbols).await {
+                        tracing::warn!(error = %e, "boot watchlist push failed");
+                    } else {
+                        tracing::info!(n, "boot pushed watchlist symbols to live_ticks");
+                    }
+                }
+                Ok(_) => tracing::info!("boot: no watchlist symbols to push"),
+                Err(e) => tracing::warn!(error = %e, "boot watchlist scan failed"),
+            }
+        }
     }
 
     // Background pollers — best-effort, return value ignored.

@@ -149,7 +149,7 @@ function renderPfChart(stats) {
     const one   = xs.map(() => 1);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.setups_by_setup.chart.setup') },
             { label: t('view.setups_by_setup.chart.pf_good'),
@@ -164,6 +164,8 @@ function renderPfChart(stats) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
@@ -188,7 +190,7 @@ function renderWlrChart(stats) {
     const losses = rows.map(s => Number(s.losses));
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.setups_by_setup.chart.setup') },
             { label: t('view.setups_by_setup.chart.wins'),
@@ -200,6 +202,8 @@ function renderWlrChart(stats) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
@@ -224,7 +228,7 @@ function renderAvgRChart(stats) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.setups_by_setup.chart.setup') },
             { label: t('view.setups_by_setup.chart.avgr_pos'),
@@ -239,6 +243,8 @@ function renderAvgRChart(stats) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
@@ -312,7 +318,7 @@ function renderNetPnlChart(stats) {
     const zero  = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.setups_by_setup.chart.setup') },
             { label: t('view.setups_by_setup.chart.win'),
@@ -327,6 +333,8 @@ function renderNetPnlChart(stats) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 56 },
         ],

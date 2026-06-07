@@ -226,7 +226,7 @@ function renderSpreadChart() {
     const impact = enriched.map(o => Number.isFinite(o.price_impact) ? o.price_impact : null);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.eff_spread.chart.obs_idx') },
             { label: t('view.eff_spread.chart.effective'),
@@ -266,7 +266,7 @@ function renderRatioChart() {
     const one = xs.map(() => 1);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.eff_spread.chart.obs_idx') },
             { label: t('view.eff_spread.chart.eff_quoted_ratio'),

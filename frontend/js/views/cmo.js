@@ -194,7 +194,7 @@ function renderDistChart(cmo) {
     if (distChart) { try { distChart.destroy(); } catch {} distChart = null; }
     distChart = new window.uPlot({
         width: el.clientWidth || 800, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.cmo.chart.bucket_idx') },
             { label: t('view.cmo.chart.bar_count'),
@@ -203,6 +203,8 @@ function renderDistChart(cmo) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 50 },
         ],

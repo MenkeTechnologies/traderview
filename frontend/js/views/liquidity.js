@@ -147,7 +147,7 @@ function renderAdvPnlChart(report) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: { auto: true }, y: { auto: true } },
+        scales: { x: { time: false, auto: true }, y: { auto: true } },
         series: [
             { label: t('view.liquidity.chart.pct_adv') },
             { label: t('view.liquidity.chart.pnl'),
@@ -178,7 +178,7 @@ function renderBucketAvgPnlChart(report) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.liquidity.chart.bucket_idx') },
             { label: t('view.liquidity.chart.avg_pnl'),
@@ -189,6 +189,8 @@ function renderBucketAvgPnlChart(report) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 60 },
         ],

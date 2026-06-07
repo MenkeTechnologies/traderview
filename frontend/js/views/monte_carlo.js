@@ -190,7 +190,7 @@ function renderChart(stats) {
         const xs = stats.path.map((_, i) => i);
         new window.uPlot({
             title: '', width: el.clientWidth || 800, height: 340,
-            scales: { x: {}, y: {} },
+            scales: { x: { time: false,}, y: {} },
             series: [
                 { label: t('chart.series.sample') },
                 { label: t('chart.series.value'), stroke: '#00e5ff', width: 1.5,
@@ -211,7 +211,7 @@ function renderChart(stats) {
     }
     new window.uPlot({
         title: '', width: el.clientWidth || 800, height: 340,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.terminal_price') },
             { label: t('chart.series.density_normal_'), stroke: '#00e5ff', width: 2,

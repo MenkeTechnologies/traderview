@@ -32,6 +32,10 @@ struct Args {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // Same fix as the desktop bin — install a process-wide rustls
+    // crypto provider before any TLS handshake fires.
+    let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
+
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env()
@@ -73,6 +77,34 @@ async fn main() -> anyhow::Result<()> {
             tracing::info!("no finnhub key configured; set one in Settings → Data Sources");
         }
         Err(e) => tracing::warn!(error = %e, "failed to load finnhub key from DB"),
+    }
+    // Warm Polygon too — when its key is configured, the live tape
+    // prefers Polygon's SIP feed (CTA/UTP) over Finnhub's aggregate.
+    match traderview_db::data_source_keys::any_polygon_key(&pool).await {
+        Ok(Some(k)) => {
+            traderview_db::live_ticks::global().set_polygon_key(k).await;
+            tracing::info!("loaded polygon key from DB; live tape will use SIP feed");
+        }
+        Ok(None) => {
+            tracing::info!("no polygon key configured; live tape falls back to finnhub");
+        }
+        Err(e) => tracing::warn!(error = %e, "failed to load polygon key from DB"),
+    }
+    // Warm Alpaca — middle provider in the priority chain (Polygon →
+    // Alpaca → Finnhub).
+    match traderview_db::data_source_keys::any_alpaca_creds(&pool).await {
+        Ok(Some((id, secret, use_sip))) => {
+            let store = traderview_db::live_ticks::global();
+            store.set_alpaca_creds(id, secret).await;
+            store.set_alpaca_use_sip(use_sip);
+            tracing::info!(
+                use_sip,
+                "loaded alpaca creds; live tape uses {} feed",
+                if use_sip { "SIP" } else { "IEX" }
+            );
+        }
+        Ok(None) => tracing::info!("no alpaca creds configured"),
+        Err(e) => tracing::warn!(error = %e, "failed to load alpaca creds from DB"),
     }
 
     // Hand the pool to the live-tick store so the 10s tape aggregator can

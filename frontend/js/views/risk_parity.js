@@ -144,7 +144,7 @@ function renderVolChart() {
     const ys = rows.map(a => Number(a.vol) * 100);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.risk_parity.chart.symbol') },
             { label: t('view.risk_parity.chart.vol_pct'),
@@ -153,6 +153,8 @@ function renderVolChart() {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
@@ -178,7 +180,7 @@ function renderWeightsChart(report) {
     const ewY = rows.map(a => Number(eqByVid.get(a.symbol) || 0) * 100);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.risk_parity.chart.symbol') },
             { label: t('view.risk_parity.chart.rp_pct'),
@@ -190,6 +192,8 @@ function renderWeightsChart(report) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],

@@ -114,7 +114,7 @@ function renderTopChart(rows, mount) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.crypto.chart.coin_idx') },
             { label: t('view.crypto.chart.change_24h'),
@@ -126,6 +126,8 @@ function renderTopChart(rows, mount) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 50 },
         ],
@@ -148,7 +150,7 @@ function renderAthChart(rows, mount) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.crypto.chart.coin_idx') },
             { label: t('view.crypto.chart.from_ath'),
@@ -159,6 +161,8 @@ function renderAthChart(rows, mount) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 50 },
         ],

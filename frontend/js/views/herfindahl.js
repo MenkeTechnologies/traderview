@@ -180,7 +180,7 @@ function renderChart(report) {
     const contribScaled = indexed.map(p => p.norm * p.norm * 10_000);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 340,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('chart.series.rank') },
             { label: t('chart.series.weight_'),     stroke: '#00e5ff', width: 1.5, points: { show: true, size: 5 } },
@@ -225,7 +225,7 @@ function renderLorenzChart() {
     const eq = xs.map(x => x);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 260,
-        scales: { x: { range: [0, 1] }, y: { range: [0, 1] } },
+        scales: { x: { time: false, range: [0, 1] }, y: { range: [0, 1] } },
         series: [
             { label: t('view.hhi.chart.rank_frac') },
             { label: t('view.hhi.chart.cumulative'),

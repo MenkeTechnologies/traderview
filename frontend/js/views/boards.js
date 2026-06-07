@@ -147,7 +147,7 @@ function renderRecencyChart(boards) {
     const old    = rows.map(r => r.days >= 7 ? r.days : null);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false }, y: { auto: true } },
         series: [
             { label: t('view.boards.chart.board') },
             { label: t('view.boards.chart.recent'),
@@ -159,6 +159,8 @@ function renderRecencyChart(boards) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
@@ -183,7 +185,7 @@ function renderWidgetsChart(boards) {
     const ys = rows.map(r => r.n);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false }, y: { auto: true } },
         series: [
             { label: t('view.boards.chart.board') },
             { label: t('view.boards.chart.widgets'),
@@ -192,6 +194,8 @@ function renderWidgetsChart(boards) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],

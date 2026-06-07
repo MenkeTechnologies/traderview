@@ -144,7 +144,7 @@ function renderPercentileChart(r) {
     const start = xs.map(() => Number(r.starting_equity));
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.equity_forecast.chart.trade_idx') },
             { label: t('view.equity_forecast.chart.p5'),
@@ -184,7 +184,7 @@ function renderUncertaintyChart(r) {
     });
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.equity_forecast.chart.trade_idx') },
             { label: t('view.equity_forecast.chart.band_width_ratio'),

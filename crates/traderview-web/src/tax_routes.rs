@@ -48,6 +48,8 @@ struct TopMerchantsParams {
     /// Cap. Default 20; max 200.
     #[serde(default)]
     limit: Option<u32>,
+    #[serde(default)]
+    business_id: Option<uuid::Uuid>,
 }
 
 #[derive(Serialize)]
@@ -86,10 +88,12 @@ async fn top_merchants(
                 AND ocr_status = 'done'::ocr_status_t
                 AND ocr_merchant IS NOT NULL
                 AND ocr_extracted IS NOT NULL
-                AND EXTRACT(YEAR FROM ocr_date) = $2",
+                AND EXTRACT(YEAR FROM ocr_date) = $2
+                AND ($3::uuid IS NULL OR business_id = $3::uuid)",
     )
     .bind(user.id)
     .bind(year)
+    .bind(params.business_id)
     .fetch_all(&s.pool)
     .await?;
 
@@ -644,6 +648,7 @@ async fn monthly_totals(
 #[derive(Deserialize)]
 struct YoyQ {
     years: Option<u8>,
+    business_id: Option<uuid::Uuid>,
 }
 
 #[derive(Serialize, sqlx::FromRow)]
@@ -681,6 +686,7 @@ async fn yoy_trend(
               AND r.ocr_status = 'done'::ocr_status_t
               AND r.ocr_date IS NOT NULL
               AND EXTRACT(YEAR FROM r.ocr_date)::int BETWEEN $2 AND $3
+              AND ($4::uuid IS NULL OR r.business_id = $4::uuid)
         ),
         agg AS (
             SELECT year,
@@ -704,6 +710,7 @@ async fn yoy_trend(
     .bind(user.id)
     .bind(from_year)
     .bind(current_year)
+    .bind(q.business_id)
     .fetch_all(&s.pool)
     .await?;
     Ok(Json(rows))

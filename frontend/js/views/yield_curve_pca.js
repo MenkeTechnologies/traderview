@@ -181,7 +181,7 @@ function renderLoadingsChart(tenors, res) {
     }
     new window.uPlot({
         title: '', width: el.clientWidth || 800, height: 340,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series,
         axes: [
             { stroke: '#aab',
@@ -202,7 +202,7 @@ function renderVarianceChart(res) {
     const cumYs = res.cumulative_variance;
     new window.uPlot({
         title: '', width: el.clientWidth || 800, height: 240,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.factor_idx') },
             { label: t('chart.series.perfactor'), stroke: '#00e5ff', width: 2,

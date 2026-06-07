@@ -210,7 +210,7 @@ function renderQtyChart(execs) {
     const sells = valid.map(e => (e.side === 'sell' || e.side === 'short') ? Number(e.qty) : null);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.new_trade.chart.exec_idx') },
             { label: t('view.new_trade.chart.buy_qty'),
@@ -241,7 +241,7 @@ function renderExecChart(execs) {
     const sells = valid.map(e => (e.side === 'sell' || e.side === 'short') ? Number(e.price) : null);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.new_trade.chart.exec_idx') },
             { label: t('view.new_trade.chart.buy'),

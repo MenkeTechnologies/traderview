@@ -224,7 +224,7 @@ function renderChart(bars, cand) {
 
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 300,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series,
         axes: [{ stroke: '#aab', size: 28 }, { stroke: '#aab', size: 50 }],
         legend: { show: true },
@@ -261,7 +261,7 @@ function renderProfileChart(bars, cand) {
     const symmetryAxis = xs.map(() => 0.5);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: { range: [0, 1] }, y: { range: [-0.05, 1.05] } },
+        scales: { x: { time: false, range: [0, 1] }, y: { range: [-0.05, 1.05] } },
         series: [
             { label: t('view.cup_and_handle.chart.position') },
             { label: t('view.cup_and_handle.chart.norm_close'),

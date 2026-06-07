@@ -146,6 +146,10 @@ pub struct Account {
     pub id: Uuid,
     pub user_id: Uuid,
     pub broker: String,
+    /// FK into the normalized `brokers` table — populated by migration
+    /// 0049 from the free-text `broker` column. The UI uses this to filter
+    /// the account strip by the active broker.
+    pub broker_id: Option<Uuid>,
     pub name: String,
     pub base_currency: String,
     pub created_at: DateTime<Utc>,

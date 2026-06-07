@@ -243,7 +243,7 @@ function renderRealizedChart(report) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.cost_basis.chart.lot_idx') },
             { label: t('view.cost_basis.chart.realized'),
@@ -255,6 +255,8 @@ function renderRealizedChart(report) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 60 },
         ],
@@ -279,7 +281,7 @@ function renderMethodChart() {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.cost_basis.chart.method_idx') },
             { label: t('view.cost_basis.chart.realized_total'),
@@ -290,6 +292,8 @@ function renderMethodChart() {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 60 },
         ],

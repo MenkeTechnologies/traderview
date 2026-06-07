@@ -28,6 +28,20 @@ export const fmtMoney = (n) => {
     return v < 0 ? `-$${abs}` : `$${abs}`;
 };
 
+// USD-formatter with compact suffixes ($1.2K / $3.4M) — better than
+// fmtMoney for dashboard headers where space is tight. NaN/non-finite
+// renders as em-dash. Used by expense_dashboard, expense_calendar,
+// expenses (Tax Dashboard).
+export const fmtUsd = (n) => {
+    const x = Number(n);
+    if (!Number.isFinite(x)) return '—';
+    const sign = x < 0 ? '-' : '';
+    const abs = Math.abs(x);
+    if (abs >= 1e6) return `${sign}$${(abs / 1e6).toFixed(1)}M`;
+    if (abs >= 1e3) return `${sign}$${(abs / 1e3).toFixed(1)}K`;
+    return `${sign}$${abs.toFixed(2)}`;
+};
+
 export const pnlClass = (n) => {
     const v = Number(n);
     if (!Number.isFinite(v)) return 'flat';   // missing data → neutral, not 'neg'

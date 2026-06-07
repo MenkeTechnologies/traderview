@@ -198,7 +198,7 @@ function renderSummaryChart(report) {
     const capY   = [null, null, cap];
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.tax_loss_harvest.chart.bucket') },
             { label: t('view.tax_loss_harvest.chart.total_loss'),
@@ -213,6 +213,8 @@ function renderSummaryChart(report) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 56 },
         ],
@@ -235,7 +237,7 @@ function renderQtyChart(report) {
     const ys = rows.map(c => Number(c.qty));
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.tax_loss_harvest.chart.symbol') },
             { label: t('view.tax_loss_harvest.chart.qty'),
@@ -244,6 +246,8 @@ function renderQtyChart(report) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
@@ -267,7 +271,7 @@ function renderLossesChart(report) {
     const safe = rows.map(c => !c.wash_sale_risk ? Number(c.unrealized_loss) : null);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.tax_loss_harvest.chart.symbol') },
             { label: t('view.tax_loss_harvest.chart.wash'),
@@ -279,6 +283,8 @@ function renderLossesChart(report) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 56 },
         ],

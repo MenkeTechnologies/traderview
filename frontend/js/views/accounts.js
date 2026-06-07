@@ -4,34 +4,30 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
 import { tConfirm } from '../dialog.js';
 import { showToast } from '../toast.js';
+import { currencyOptions } from '../_currencies.js';
 
 export async function renderAccounts(mount, _state, onChange) {
     const tok = currentViewToken();
-    const accounts = await api.accounts();
+    // Pull accounts + the live brokers list in parallel — the broker
+    // dropdown is now sourced from the user's brokers table (so custom
+    // "Other" brokers from the wizard show up here too), not a hardcoded
+    // import-parser list.
+    const [accounts, brokers] = await Promise.all([api.accounts(), api.brokersList().catch(() => [])]);
     if (!viewIsCurrent(tok)) return;
+    const brokerOpts = brokers.length
+        ? brokers.map(b => `<option value="${esc(b.slug)}">${esc(b.display_name)}</option>`).join('')
+        : `<option value="manual" data-i18n="view.accounts.opt.manual_other">Manual / Other</option>`;
     mount.innerHTML = `
         <h1 data-i18n="view.accounts.h1.accounts" class="view-title">// ACCOUNTS</h1>
         <div class="chart-panel">
             <h2 data-i18n="view.accounts.h2.add_account">Add account</h2>
             <form id="acct-form" class="inline-form">
                 <select name="broker" data-tip="view.accounts.tip.broker">
-                    <option data-i18n="view.accounts.opt.webull" value="webull">Webull</option>
-                    <option data-i18n="view.accounts.opt.interactive_brokers_flex" value="ibkr">Interactive Brokers (Flex)</option>
-                    <option data-i18n="view.accounts.opt.td_ameritrade" value="tdameritrade">TD Ameritrade</option>
-                    <option data-i18n="view.accounts.opt.schwab" value="schwab">Schwab</option>
-                    <option data-i18n="view.accounts.opt.tradestation" value="tradestation">TradeStation</option>
-                    <option data-i18n="view.accounts.opt.lightspeed" value="lightspeed">Lightspeed</option>
-                    <option data-i18n="view.accounts.opt.das_trader" value="das">DAS Trader</option>
-                    <option data-i18n="view.accounts.opt.thinkorswim" value="tos">ThinkOrSwim</option>
-                    <option data-i18n="view.accounts.opt.e_trade" value="etrade">E*TRADE</option>
-                    <option data-i18n="view.accounts.opt.fidelity" value="fidelity">Fidelity</option>
-                    <option data-i18n="view.accounts.opt.tradezero" value="tradezero">TradeZero</option>
-                    <option data-i18n="view.accounts.opt.robinhood" value="robinhood">Robinhood</option>
-                    <option data-i18n="view.accounts.opt.manual_other" value="manual">Manual / Other</option>
+                    ${brokerOpts}
                 </select>
                 <input name="name" placeholder="account name (e.g. Margin)" data-i18n-placeholder="view.accounts.placeholder.name"
                        data-tip="view.accounts.tip.name" data-shortcut="accounts_focus_name" required>
-                <input name="base_currency" placeholder="USD" value="USD" data-tip="view.accounts.tip.base_currency">
+                <select name="base_currency" data-tip="view.accounts.tip.base_currency">${currencyOptions('USD')}</select>
                 <button data-i18n="view.accounts.btn.create" data-tip="view.accounts.tip.create" class="primary" type="submit">Create</button>
             </form>
         </div>
@@ -43,8 +39,9 @@ export async function renderAccounts(mount, _state, onChange) {
                 <td>${esc(a.base_currency)}</td>
                 <td>${fmtDateTime(a.created_at)}</td>
                 <td>
+                    <button class="link" data-edit="${a.id}" data-i18n="view.accounts.btn.edit" style="margin-right:8px">edit</button>
                     <button class="link" data-rebuild="${a.id}" data-i18n="view.accounts.btn.rebuild" style="margin-right:8px">rebuild trades</button>
-                    <button data-i18n="view.accounts.btn.delete" class="link" data-del="${a.id}">delete</button>
+                    <button data-i18n="view.accounts.btn.delete" class="link danger" data-del="${a.id}">delete</button>
                 </td></tr>
             `).join('') || `<tr><td colspan="5" class="muted">${esc(t('view.accounts.empty'))}</td></tr>`}
             </tbody>
@@ -77,6 +74,16 @@ export async function renderAccounts(mount, _state, onChange) {
             showToast(t('toast.error.api', { err: err.message }), { level: 'error' });
         }
     });
+    mount.querySelectorAll('[data-edit]').forEach(b =>
+        b.addEventListener('click', async () => {
+            const acct = accounts.find(a => a.id === b.dataset.edit);
+            if (!acct) return;
+            await openAccountEdit(acct, brokers, async () => {
+                if (!viewIsCurrent(tok)) return;
+                if (onChange) onChange();
+                renderAccounts(mount, _state, onChange);
+            });
+        }));
     mount.querySelectorAll('[data-del]').forEach(b =>
         b.addEventListener('click', async () => {
             if (!await tConfirm('view.accounts.confirm.delete', {}, { level: 'danger' })) return;
@@ -107,9 +114,82 @@ export async function renderAccounts(mount, _state, onChange) {
         }));
 }
 
+async function openAccountEdit(acct, brokers, onSaved) {
+    const root = document.getElementById('tv-dialog-root') || (() => {
+        const r = document.createElement('div'); r.id = 'tv-dialog-root';
+        document.body.appendChild(r); return r;
+    })();
+    const brokerOpts = brokers
+        .map(b => `<option value="${esc(b.slug)}" ${b.slug === acct.broker ? 'selected' : ''}>${esc(b.display_name)}</option>`)
+        .join('') || `<option value="manual">Manual / Other</option>`;
+    root.innerHTML = `<div class="tv-dialog-overlay" role="dialog" aria-modal="true">
+        <div class="tv-dialog-card tv-dialog-info tv-wiz-card">
+            <div class="tv-dialog-title" data-i18n="view.accounts.edit_title">Edit account</div>
+            <div class="tv-wiz-form">
+                <div class="tv-wiz-row">
+                    <label class="tv-wiz-label" data-i18n="wiz.acct.broker">Broker</label>
+                    <select id="ea-broker" class="tv-dialog-input">${brokerOpts}</select>
+                </div>
+                <div class="tv-wiz-row">
+                    <label class="tv-wiz-label" data-i18n="wiz.acct.name">Account name</label>
+                    <input id="ea-name" class="tv-dialog-input" value="${esc(acct.name)}">
+                </div>
+                <div class="tv-wiz-row">
+                    <label class="tv-wiz-label" data-i18n="wiz.acct.base_currency">Base currency</label>
+                    <select id="ea-ccy" class="tv-dialog-input">${currencyOptions(acct.base_currency)}</select>
+                </div>
+            </div>
+            <div class="tv-dialog-actions">
+                <button class="tv-dialog-btn tv-dialog-cancel" data-i18n="dialog.btn.cancel">Cancel</button>
+                <button class="tv-dialog-btn tv-dialog-confirm" data-i18n="view.brokers_manage.save">Save</button>
+            </div>
+        </div></div>`;
+    const ov = root.querySelector('.tv-dialog-overlay');
+    const close = () => { root.innerHTML = ''; };
+    root.querySelector('.tv-dialog-cancel').addEventListener('click', close);
+    ov.addEventListener('click', (e) => { if (e.target === ov) close(); });
+    root.querySelector('.tv-dialog-confirm').addEventListener('click', async () => {
+        try {
+            await api.patchAccount(acct.id, {
+                broker: root.querySelector('#ea-broker').value,
+                name:   root.querySelector('#ea-name').value.trim() || acct.name,
+                base_currency: root.querySelector('#ea-ccy').value || acct.base_currency,
+            });
+            showToast(t('view.accounts.toast.saved', { name: acct.name }), { level: 'success' });
+            close();
+            await onSaved?.();
+        } catch (e) {
+            showToast(t('toast.error.api', { err: e.message || String(e) }), { level: 'error' });
+        }
+    });
+    setTimeout(() => root.querySelector('#ea-name')?.focus(), 30);
+}
+
+// Render a horizontal category bar chart as plain DOM. uPlot was the
+// previous tool here, but it defaults to a time-scale x-axis — N=2
+// integer x-values rendered with split labels mod-mapped to the
+// category list ("webull webull webull ...") and the cursor tooltip
+// showed `1969-12-31` (Unix epoch 1 + tz offset). For 2 brokers / 1
+// currency it's also pure overkill.
+function renderCategoryBars(el, pairs, color) {
+    const max = pairs.reduce((m, [, n]) => Math.max(m, n), 0) || 1;
+    el.innerHTML = `<ul class="acct-bars">${
+        pairs.map(([label, n]) => {
+            const pct = Math.round((n / max) * 100);
+            return `<li>
+                <span class="acct-bars-label">${esc(label)}</span>
+                <span class="acct-bars-track">
+                    <span class="acct-bars-fill" style="width:${pct}%;background:${color}"></span>
+                </span>
+                <span class="acct-bars-count">${esc(String(n))}</span>
+            </li>`;
+        }).join('')
+    }</ul>`;
+}
+
 function renderCurrencyChart(accounts) {
     const el = document.getElementById('acct-ccy-chart');
-    if (!el || !window.uPlot) return;
+    if (!el) return;
     el.innerHTML = '';
     if (!accounts || !accounts.length) {
         el.innerHTML = `<div class="muted" data-i18n="view.accounts.empty_ccy_chart">${esc(t('view.accounts.empty_ccy_chart'))}</div>`;
@@ -121,30 +201,12 @@ function renderCurrencyChart(accounts) {
         counts.set(key, (counts.get(key) || 0) + 1);
     }
     const pairs = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
-    const labels = pairs.map(([k]) => k);
-    const ys = pairs.map(([, n]) => n);
-    const xs = labels.map((_, i) => i + 1);
-    new window.uPlot({
-        title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
-        series: [
-            { label: t('view.accounts.chart.ccy_idx') },
-            { label: t('view.accounts.chart.count'),
-              stroke: '#7af0a8', width: 0,
-              points: { show: true, size: 12, fill: '#7af0a8', stroke: '#7af0a8' } },
-        ],
-        axes: [
-            { stroke: '#aab', size: 28,
-              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
-            { stroke: '#aab', size: 40 },
-        ],
-        legend: { show: true },
-    }, [xs, ys], el);
+    renderCategoryBars(el, pairs, '#7af0a8');
 }
 
 function renderBrokerChart(accounts) {
     const el = document.getElementById('acct-chart');
-    if (!el || !window.uPlot) return;
+    if (!el) return;
     el.innerHTML = '';
     if (!accounts || !accounts.length) {
         el.innerHTML = `<div class="muted" data-i18n="view.accounts.empty_chart">${esc(t('view.accounts.empty_chart'))}</div>`;
@@ -156,23 +218,6 @@ function renderBrokerChart(accounts) {
         counts.set(key, (counts.get(key) || 0) + 1);
     }
     const pairs = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
-    const labels = pairs.map(([k]) => k);
-    const ys = pairs.map(([, n]) => n);
-    const xs = labels.map((_, i) => i + 1);
-    new window.uPlot({
-        title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
-        series: [
-            { label: t('view.accounts.chart.broker_idx') },
-            { label: t('view.accounts.chart.count'),
-              stroke: '#00e5ff', width: 0,
-              points: { show: true, size: 12, fill: '#00e5ff', stroke: '#00e5ff' } },
-        ],
-        axes: [
-            { stroke: '#aab', size: 28,
-              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
-            { stroke: '#aab', size: 40 },
-        ],
-        legend: { show: true },
-    }, [xs, ys], el);
+    renderCategoryBars(el, pairs, '#00e5ff');
 }
+

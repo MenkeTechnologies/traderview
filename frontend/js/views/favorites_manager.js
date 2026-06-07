@@ -261,7 +261,7 @@ function renderBookmarksTimelineChart() {
     const ys = rows.map((_, i) => i + 1);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.favorites.chart.bookmark_idx') },
             { label: t('view.favorites.chart.cumulative'),
@@ -292,7 +292,7 @@ function renderInventoryChart() {
     const ys = [favCount, bmCount];
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.favorites.chart.kind') },
             { label: t('view.favorites.chart.count'),
@@ -301,6 +301,8 @@ function renderInventoryChart() {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],

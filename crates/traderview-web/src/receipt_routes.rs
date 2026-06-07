@@ -1760,6 +1760,8 @@ struct ByMerchantParams {
     #[serde(default)]
     default_only: Option<u8>,
     #[serde(default)]
+    business_id: Option<Uuid>,
+    #[serde(default)]
     min_items: Option<u32>,
 }
 
@@ -1837,6 +1839,9 @@ async fn receipts_by_merchant(
         let mut counted_this_receipt = false;
 
         for item in items {
+            if !item_in_business(item, params.business_id) {
+                continue;
+            }
             // default_only: skip items the user has already triaged.
             if default_only {
                 let cat = item.get("category").and_then(|v| v.as_str()).unwrap_or("");
@@ -1932,6 +1937,8 @@ struct SearchParams {
     q: String,
     #[serde(default)]
     limit: Option<u32>,
+    #[serde(default)]
+    business_id: Option<Uuid>,
 }
 
 #[derive(Serialize)]
@@ -1981,12 +1988,14 @@ async fn receipts_search(
            FROM receipts
           WHERE user_id = $1
             AND ocr_text_tsv @@ plainto_tsquery('english', $2)
+            AND ($4::uuid IS NULL OR business_id = $4::uuid)
           ORDER BY rank DESC
           LIMIT $3",
     )
     .bind(user.id)
     .bind(&q)
     .bind(limit)
+    .bind(params.business_id)
     .fetch_all(&s.pool)
     .await?;
 
@@ -2026,6 +2035,8 @@ struct DuplicatesParams {
     /// rounding drift between an itemized photo and a Square tab.
     #[serde(default)]
     total_tolerance: Option<f32>,
+    #[serde(default)]
+    business_id: Option<Uuid>,
 }
 
 #[derive(Serialize)]
@@ -2068,9 +2079,11 @@ async fn receipts_duplicates(
             AND ocr_status = 'done'::ocr_status_t
             AND ocr_total IS NOT NULL
             AND ocr_merchant IS NOT NULL
-            AND ocr_date IS NOT NULL",
+            AND ocr_date IS NOT NULL
+            AND ($2::uuid IS NULL OR business_id = $2::uuid)",
     )
     .bind(user.id)
+    .bind(params.business_id)
     .fetch_all(&s.pool)
     .await?;
 
@@ -2204,6 +2217,7 @@ struct RecurringParams {
     cadence_days: Option<u32>,
     /// Tolerance (± days) around `cadence_days`. Default 5.
     tolerance_days: Option<u32>,
+    business_id: Option<Uuid>,
 }
 
 #[derive(Serialize)]
@@ -2239,9 +2253,11 @@ async fn receipts_recurring(
             AND ocr_status = 'done'::ocr_status_t
             AND ocr_merchant IS NOT NULL
             AND ocr_date IS NOT NULL
-            AND ocr_total IS NOT NULL",
+            AND ocr_total IS NOT NULL
+            AND ($2::uuid IS NULL OR business_id = $2::uuid)",
     )
     .bind(user.id)
+    .bind(params.business_id)
     .fetch_all(&s.pool)
     .await?;
 
@@ -2349,6 +2365,10 @@ struct BulkPatchItemsBody {
     tax_bucket: Option<String>,
     #[serde(default, deserialize_with = "deserialize_optional_uuid")]
     rental_property_id: Option<Option<Uuid>>,
+    /// Assign every item across the requested receipts to this
+    /// business entity. Pass `null` (explicit) to clear.
+    #[serde(default, deserialize_with = "deserialize_optional_uuid")]
+    business_id: Option<Option<Uuid>>,
 }
 
 async fn bulk_patch_items(
@@ -2364,7 +2384,11 @@ async fn bulk_patch_items(
             "ids exceeds 500 — split into multiple requests".into(),
         ));
     }
-    if body.category.is_none() && body.tax_bucket.is_none() && body.rental_property_id.is_none() {
+    if body.category.is_none()
+        && body.tax_bucket.is_none()
+        && body.rental_property_id.is_none()
+        && body.business_id.is_none()
+    {
         return Err(ApiError::BadRequest("no fields to update".into()));
     }
     if let Some(b) = body.tax_bucket.as_deref() {
@@ -2417,6 +2441,30 @@ async fn bulk_patch_items(
                 }
                 changed = true;
             }
+            if let Some(biz) = body.business_id.as_ref() {
+                match biz {
+                    Some(uuid) => {
+                        obj.insert(
+                            "business_id".into(),
+                            serde_json::Value::String(uuid.to_string()),
+                        );
+                    }
+                    None => {
+                        obj.insert("business_id".into(), serde_json::Value::Null);
+                    }
+                }
+                changed = true;
+            }
+        }
+        // Also set the receipt-level business_id when the patch provides
+        // one — gives us the indexed column for fast filtering.
+        if let Some(biz) = body.business_id.as_ref() {
+            sqlx::query("UPDATE receipts SET business_id = $2 WHERE id = $1 AND user_id = $3")
+                .bind(rid)
+                .bind(*biz)
+                .bind(user.id)
+                .execute(&s.pool)
+                .await?;
         }
         if changed {
             sqlx::query("UPDATE receipts SET ocr_extracted = $2 WHERE id = $1")
@@ -2438,6 +2486,8 @@ struct RollupQ {
     from: Option<NaiveDate>,
     /// Inclusive ISO date.
     to: Option<NaiveDate>,
+    /// Optional business filter — see BundleQ for semantics.
+    business_id: Option<Uuid>,
 }
 
 #[derive(Serialize)]
@@ -2592,6 +2642,9 @@ async fn tax_rollup(
         }
         receipts_counted += 1;
         for it in items {
+            if !item_in_business(it, q.business_id) {
+                continue;
+            }
             let cat = it
                 .get("category")
                 .and_then(|v| v.as_str())
@@ -2710,6 +2763,65 @@ async fn tax_rollup(
 #[derive(Deserialize)]
 struct BundleQ {
     year: Option<i32>,
+    /// Filter to a specific business entity. `None` = aggregated across
+    /// all businesses + personal. Item-level filter: items in the
+    /// receipt's JSONB are included only when their `business_id`
+    /// matches; receipt-level fields (ocr_total) fall through unchanged
+    /// when no items have an explicit business_id assignment.
+    business_id: Option<Uuid>,
+}
+
+/// Shared query parameter shape for endpoints that take only the
+/// business filter (no date window). Used by month-calendar etc.
+#[derive(Deserialize)]
+struct BusinessFilterQ {
+    business_id: Option<Uuid>,
+}
+
+/// Returns the receipt's effective total under a business filter.
+/// When no filter is active, returns `ocr_total` unchanged. When
+/// filtering, sums only items matching `wanted_business`. Items
+/// without explicit business_id are treated as "personal/none".
+fn receipt_total_filtered(
+    total: Option<Decimal>,
+    extracted: &Option<serde_json::Value>,
+    wanted_business: Option<Uuid>,
+) -> Decimal {
+    match wanted_business {
+        None => total.unwrap_or(Decimal::ZERO),
+        Some(_) => extracted
+            .as_ref()
+            .and_then(|ext| ext.get("items"))
+            .and_then(|v| v.as_array())
+            .map(|items| {
+                items
+                    .iter()
+                    .filter(|it| item_in_business(it, wanted_business))
+                    .map(|it| {
+                        it.get("total")
+                            .and_then(|v| v.as_str())
+                            .and_then(|s| s.parse::<Decimal>().ok())
+                            .unwrap_or(Decimal::ZERO)
+                    })
+                    .sum()
+            })
+            .unwrap_or(Decimal::ZERO),
+    }
+}
+
+/// Returns true when this item belongs to `wanted_business` (or no
+/// filter is active). Used by every analytics endpoint that walks
+/// `ocr_extracted.items[]`.
+fn item_in_business(it: &serde_json::Value, wanted_business: Option<Uuid>) -> bool {
+    match wanted_business {
+        None => true,
+        Some(wanted) => it
+            .get("business_id")
+            .and_then(|v| v.as_str())
+            .and_then(|s| Uuid::parse_str(s).ok())
+            .map(|id| id == wanted)
+            .unwrap_or(false),
+    }
 }
 
 #[derive(Serialize)]
@@ -2829,59 +2941,82 @@ async fn expense_dashboard_bundle(
     let mut smallest = Decimal::MAX;
 
     for (date, merchant, total, extracted, created) in &rows {
-        // Receipt-level daily/dow/month/quarter/amount aggregations.
-        if let Some(t) = total {
-            let entry = daily_total.entry(*date).or_insert((Decimal::ZERO, 0));
-            entry.0 += *t;
-            entry.1 += 1;
-
-            let dow = date.weekday().num_days_from_sunday() as usize;
-            by_dow[dow].0 += *t;
-            by_dow[dow].1 += 1;
-            if dow == 0 || dow == 6 {
-                weekend_total.0 += *t;
-                weekend_total.1 += 1;
-            } else {
-                weekday_total.0 += *t;
-                weekday_total.1 += 1;
-            }
-
-            let mi = (date.month0()) as usize;
-            by_month[mi].0 += *t;
-            by_month[mi].1 += 1;
-            by_quarter[(mi / 3).min(3)].0 += *t;
-            by_quarter[(mi / 3).min(3)].1 += 1;
-
-            let bucket = amount_bucket(*t);
-            by_amount_bucket[bucket].0 += *t;
-            by_amount_bucket[bucket].1 += 1;
-
-            if *t > biggest {
-                biggest = *t;
-            }
-            if *t < smallest {
-                smallest = *t;
-            }
-
-            // Hour-of-day from created_at (proxy when receipt didn't carry
-            // its own time stamp — better than nothing).
-            if let Some(c) = created {
-                let h = c.hour() as usize;
-                by_hour[h].0 += *t;
-                by_hour[h].1 += 1;
-            }
+        // When a business_id filter is active, recompute the receipt's
+        // effective total from filtered items only — `ocr_total` is one
+        // number per receipt and would over-count when the receipt
+        // mixes business + personal items.
+        let receipt_total: Decimal = if q.business_id.is_some() {
+            extracted
+                .as_ref()
+                .and_then(|ext| ext.get("items"))
+                .and_then(|v| v.as_array())
+                .map(|items| {
+                    items
+                        .iter()
+                        .filter(|it| item_in_business(it, q.business_id))
+                        .map(|it| {
+                            it.get("total")
+                                .and_then(|v| v.as_str())
+                                .and_then(|s| s.parse::<Decimal>().ok())
+                                .unwrap_or(Decimal::ZERO)
+                        })
+                        .sum::<Decimal>()
+                })
+                .unwrap_or(Decimal::ZERO)
+        } else {
+            total.unwrap_or(Decimal::ZERO)
+        };
+        // Skip receipts with zero effective total under the filter so
+        // they don't pollute "biggest/smallest" with $0 entries.
+        if q.business_id.is_some() && receipt_total <= Decimal::ZERO {
+            continue;
         }
 
-        // Merchant aggregation.
+        let entry = daily_total.entry(*date).or_insert((Decimal::ZERO, 0));
+        entry.0 += receipt_total;
+        entry.1 += 1;
+
+        let dow = date.weekday().num_days_from_sunday() as usize;
+        by_dow[dow].0 += receipt_total;
+        by_dow[dow].1 += 1;
+        if dow == 0 || dow == 6 {
+            weekend_total.0 += receipt_total;
+            weekend_total.1 += 1;
+        } else {
+            weekday_total.0 += receipt_total;
+            weekday_total.1 += 1;
+        }
+
+        let mi = (date.month0()) as usize;
+        by_month[mi].0 += receipt_total;
+        by_month[mi].1 += 1;
+        by_quarter[(mi / 3).min(3)].0 += receipt_total;
+        by_quarter[(mi / 3).min(3)].1 += 1;
+
+        let bucket = amount_bucket(receipt_total);
+        by_amount_bucket[bucket].0 += receipt_total;
+        by_amount_bucket[bucket].1 += 1;
+
+        if receipt_total > biggest {
+            biggest = receipt_total;
+        }
+        if receipt_total < smallest {
+            smallest = receipt_total;
+        }
+
+        if let Some(c) = created {
+            let h = c.hour() as usize;
+            by_hour[h].0 += receipt_total;
+            by_hour[h].1 += 1;
+        }
+
         if let Some(m) = merchant {
             let canonical = crate::merchant::canonicalize(m, &aliases);
             if !canonical.is_empty() {
                 let entry = top_merchant_total
                     .entry(canonical)
                     .or_insert((Decimal::ZERO, 0));
-                if let Some(t) = total {
-                    entry.0 += *t;
-                }
+                entry.0 += receipt_total;
                 entry.1 += 1;
             }
         }
@@ -2892,6 +3027,9 @@ async fn expense_dashboard_bundle(
             continue;
         };
         for it in items {
+            if !item_in_business(it, q.business_id) {
+                continue;
+            }
             item_count += 1;
             let cat = it
                 .get("category")
@@ -2930,7 +3068,14 @@ async fn expense_dashboard_bundle(
     }
 
     let total = schedule_c + schedule_e + personal + unclassified;
-    let receipt_count = rows.len() as u32;
+    // When filtered to a business, count only receipts that had ≥1
+    // matching item (and therefore appeared in daily_total). Otherwise
+    // the receipt count is the raw row count.
+    let receipt_count = if q.business_id.is_some() {
+        daily_total.values().map(|(_, c)| *c).sum::<u32>()
+    } else {
+        rows.len() as u32
+    };
     let avg_ticket = if receipt_count > 0 {
         (total / Decimal::from(receipt_count)).round_dp(2)
     } else {
@@ -3125,6 +3270,7 @@ fn amount_bucket(t: Decimal) -> usize {
 #[derive(Deserialize)]
 struct CalendarQ {
     year: Option<i32>,
+    business_id: Option<Uuid>,
 }
 
 #[derive(Serialize)]
@@ -3157,6 +3303,7 @@ async fn receipts_month_calendar(
     State(s): State<AppState>,
     user: AuthUser,
     Path((year, month)): Path<(i32, u32)>,
+    axum::extract::Query(q): axum::extract::Query<BusinessFilterQ>,
 ) -> Result<Json<Vec<MonthCalendarDay>>, ApiError> {
     if !(1..=12).contains(&month) {
         return Err(ApiError::BadRequest(format!(
@@ -3200,16 +3347,55 @@ async fn receipts_month_calendar(
     let mut by_day: HashMap<NaiveDate, DayAcc> = HashMap::new();
 
     for (day, total, extracted) in rows {
+        // Under a business filter, only include receipts that have ≥1
+        // matching item. Skip everything else so the calendar shows a
+        // truly per-business view.
+        let matched = if let Some(ext) = &extracted {
+            if let Some(items) = ext.get("items").and_then(|v| v.as_array()) {
+                items.iter().any(|it| item_in_business(it, q.business_id))
+            } else {
+                q.business_id.is_none()
+            }
+        } else {
+            q.business_id.is_none()
+        };
+        if !matched {
+            continue;
+        }
         let acc = by_day.entry(day).or_default();
         acc.count += 1;
-        if let Some(t) = total {
-            acc.total += t;
-        }
+        // Under a filter, recompute the day's total from matching items
+        // only — `ocr_total` would over-count when receipts mix buckets.
+        let receipt_total: Decimal = if q.business_id.is_some() {
+            extracted
+                .as_ref()
+                .and_then(|ext| ext.get("items"))
+                .and_then(|v| v.as_array())
+                .map(|items| {
+                    items
+                        .iter()
+                        .filter(|it| item_in_business(it, q.business_id))
+                        .map(|it| {
+                            it.get("total")
+                                .and_then(|v| v.as_str())
+                                .and_then(|s| s.parse::<Decimal>().ok())
+                                .unwrap_or(Decimal::ZERO)
+                        })
+                        .sum()
+                })
+                .unwrap_or(Decimal::ZERO)
+        } else {
+            total.unwrap_or(Decimal::ZERO)
+        };
+        acc.total += receipt_total;
         // Bucket-split per item; falls back to receipt total → personal
         // if the OCR didn't extract structured items.
         if let Some(ext) = extracted {
             if let Some(items) = ext.get("items").and_then(|v| v.as_array()) {
                 for it in items {
+                    if !item_in_business(it, q.business_id) {
+                        continue;
+                    }
                     let bucket = it
                         .get("tax_bucket")
                         .and_then(|v| v.as_str())
@@ -3285,26 +3471,53 @@ async fn spend_calendar(
         .ok_or_else(|| ApiError::BadRequest(format!("year {year} out of NaiveDate range")))?;
     let to = NaiveDate::from_ymd_opt(year, 12, 31).unwrap();
 
-    let rows: Vec<(NaiveDate, Decimal, i64)> = sqlx::query_as(
-        "SELECT ocr_date::date AS day,
-                COALESCE(SUM(ocr_total), 0)::numeric AS total,
-                COUNT(*) AS cnt
-           FROM receipts
-          WHERE user_id = $1
-            AND ocr_status = 'done'::ocr_status_t
-            AND ocr_total IS NOT NULL
-            AND ocr_date IS NOT NULL
-            AND ocr_date BETWEEN $2 AND $3
-          GROUP BY ocr_date::date",
-    )
-    .bind(user.id)
-    .bind(from)
-    .bind(to)
-    .fetch_all(&s.pool)
-    .await?;
-
-    let by_day: std::collections::HashMap<NaiveDate, (Decimal, i64)> =
-        rows.into_iter().map(|(d, t, c)| (d, (t, c))).collect();
+    // When filtering by business we need to read items, not just
+    // ocr_total — pull per-receipt rows and re-aggregate in Rust.
+    let by_day: std::collections::HashMap<NaiveDate, (Decimal, i64)> = if q.business_id.is_some() {
+        let rows: Vec<(NaiveDate, Option<Decimal>, Option<serde_json::Value>)> = sqlx::query_as(
+            "SELECT ocr_date::date, ocr_total, ocr_extracted
+               FROM receipts
+              WHERE user_id = $1
+                AND ocr_status = 'done'::ocr_status_t
+                AND ocr_date IS NOT NULL
+                AND ocr_date BETWEEN $2 AND $3",
+        )
+        .bind(user.id)
+        .bind(from)
+        .bind(to)
+        .fetch_all(&s.pool)
+        .await?;
+        let mut m: std::collections::HashMap<NaiveDate, (Decimal, i64)> = Default::default();
+        for (day, total, extracted) in rows {
+            let eff = receipt_total_filtered(total, &extracted, q.business_id);
+            if eff <= Decimal::ZERO {
+                continue;
+            }
+            let entry = m.entry(day).or_insert((Decimal::ZERO, 0));
+            entry.0 += eff;
+            entry.1 += 1;
+        }
+        m
+    } else {
+        let rows: Vec<(NaiveDate, Decimal, i64)> = sqlx::query_as(
+            "SELECT ocr_date::date AS day,
+                    COALESCE(SUM(ocr_total), 0)::numeric AS total,
+                    COUNT(*) AS cnt
+               FROM receipts
+              WHERE user_id = $1
+                AND ocr_status = 'done'::ocr_status_t
+                AND ocr_total IS NOT NULL
+                AND ocr_date IS NOT NULL
+                AND ocr_date BETWEEN $2 AND $3
+              GROUP BY ocr_date::date",
+        )
+        .bind(user.id)
+        .bind(from)
+        .bind(to)
+        .fetch_all(&s.pool)
+        .await?;
+        rows.into_iter().map(|(d, t, c)| (d, (t, c))).collect()
+    };
 
     let days_in_year = if to.signed_duration_since(from).num_days() == 365 {
         366
@@ -3329,6 +3542,7 @@ async fn spend_calendar(
 struct WindowQ {
     from: Option<NaiveDate>,
     to: Option<NaiveDate>,
+    business_id: Option<Uuid>,
 }
 
 #[derive(Serialize)]
@@ -3353,12 +3567,11 @@ async fn receipts_dow(
         .unwrap_or_else(|| NaiveDate::from_ymd_opt(year, 1, 1).unwrap());
     let to = q.to.unwrap_or(now);
 
-    let rows: Vec<(NaiveDate, Decimal)> = sqlx::query_as(
-        "SELECT ocr_date::date, ocr_total
+    let rows: Vec<(NaiveDate, Option<Decimal>, Option<serde_json::Value>)> = sqlx::query_as(
+        "SELECT ocr_date::date, ocr_total, ocr_extracted
            FROM receipts
           WHERE user_id = $1
             AND ocr_status = 'done'::ocr_status_t
-            AND ocr_total IS NOT NULL
             AND ocr_date IS NOT NULL
             AND ocr_date BETWEEN $2 AND $3",
     )
@@ -3377,10 +3590,14 @@ async fn receipts_dow(
         (Decimal::ZERO, 0),
         (Decimal::ZERO, 0),
     ];
-    for (day, total) in rows {
+    for (day, total, extracted) in rows {
+        let eff = receipt_total_filtered(total, &extracted, q.business_id);
+        if eff <= Decimal::ZERO {
+            continue;
+        }
         // Sunday = 0 via num_days_from_sunday for parity with JS Date.getDay().
         let weekday = day.weekday().num_days_from_sunday() as usize;
-        bucket[weekday].0 += total;
+        bucket[weekday].0 += eff;
         bucket[weekday].1 += 1;
     }
     let out: Vec<DayOfWeekBucket> = (0..7)
@@ -3414,25 +3631,48 @@ async fn receipts_cumulative(
         .unwrap_or_else(|| NaiveDate::from_ymd_opt(year, 1, 1).unwrap());
     let to = q.to.unwrap_or(now);
 
-    let rows: Vec<(NaiveDate, Decimal)> = sqlx::query_as(
-        "SELECT ocr_date::date AS day,
-                COALESCE(SUM(ocr_total), 0)::numeric
-           FROM receipts
-          WHERE user_id = $1
-            AND ocr_status = 'done'::ocr_status_t
-            AND ocr_total IS NOT NULL
-            AND ocr_date IS NOT NULL
-            AND ocr_date BETWEEN $2 AND $3
-          GROUP BY ocr_date::date
-          ORDER BY day",
-    )
-    .bind(user.id)
-    .bind(from)
-    .bind(to)
-    .fetch_all(&s.pool)
-    .await?;
-
-    let by_day: std::collections::HashMap<NaiveDate, Decimal> = rows.into_iter().collect();
+    let by_day: std::collections::HashMap<NaiveDate, Decimal> = if q.business_id.is_some() {
+        let rows: Vec<(NaiveDate, Option<Decimal>, Option<serde_json::Value>)> = sqlx::query_as(
+            "SELECT ocr_date::date, ocr_total, ocr_extracted
+               FROM receipts
+              WHERE user_id = $1
+                AND ocr_status = 'done'::ocr_status_t
+                AND ocr_date IS NOT NULL
+                AND ocr_date BETWEEN $2 AND $3",
+        )
+        .bind(user.id)
+        .bind(from)
+        .bind(to)
+        .fetch_all(&s.pool)
+        .await?;
+        let mut m: std::collections::HashMap<NaiveDate, Decimal> = Default::default();
+        for (day, total, extracted) in rows {
+            let eff = receipt_total_filtered(total, &extracted, q.business_id);
+            if eff > Decimal::ZERO {
+                *m.entry(day).or_insert(Decimal::ZERO) += eff;
+            }
+        }
+        m
+    } else {
+        let rows: Vec<(NaiveDate, Decimal)> = sqlx::query_as(
+            "SELECT ocr_date::date AS day,
+                    COALESCE(SUM(ocr_total), 0)::numeric
+               FROM receipts
+              WHERE user_id = $1
+                AND ocr_status = 'done'::ocr_status_t
+                AND ocr_total IS NOT NULL
+                AND ocr_date IS NOT NULL
+                AND ocr_date BETWEEN $2 AND $3
+              GROUP BY ocr_date::date
+              ORDER BY day",
+        )
+        .bind(user.id)
+        .bind(from)
+        .bind(to)
+        .fetch_all(&s.pool)
+        .await?;
+        rows.into_iter().collect()
+    };
     let mut out: Vec<CumulativePoint> = Vec::new();
     let mut acc = Decimal::ZERO;
     let mut d = from;
@@ -3454,6 +3694,7 @@ async fn receipts_cumulative(
 #[derive(Deserialize)]
 struct YearQ {
     year: Option<i32>,
+    business_id: Option<Uuid>,
 }
 
 #[derive(Serialize)]
@@ -3474,12 +3715,11 @@ async fn receipts_yoy_monthly(
         .ok_or_else(|| ApiError::BadRequest(format!("year {prior_year} out of NaiveDate range")))?;
     let to = NaiveDate::from_ymd_opt(year, 12, 31).unwrap();
 
-    let rows: Vec<(NaiveDate, Decimal)> = sqlx::query_as(
-        "SELECT ocr_date::date AS day, COALESCE(ocr_total, 0)::numeric
+    let rows: Vec<(NaiveDate, Option<Decimal>, Option<serde_json::Value>)> = sqlx::query_as(
+        "SELECT ocr_date::date, ocr_total, ocr_extracted
            FROM receipts
           WHERE user_id = $1
             AND ocr_status = 'done'::ocr_status_t
-            AND ocr_total IS NOT NULL
             AND ocr_date IS NOT NULL
             AND ocr_date BETWEEN $2 AND $3",
     )
@@ -3491,12 +3731,16 @@ async fn receipts_yoy_monthly(
 
     let mut current = [Decimal::ZERO; 12];
     let mut prior = [Decimal::ZERO; 12];
-    for (day, total) in rows {
+    for (day, total, extracted) in rows {
+        let eff = receipt_total_filtered(total, &extracted, q.business_id);
+        if eff <= Decimal::ZERO {
+            continue;
+        }
         let idx = day.month0() as usize;
         if day.year() == year {
-            current[idx] += total;
+            current[idx] += eff;
         } else if day.year() == prior_year {
-            prior[idx] += total;
+            prior[idx] += eff;
         }
     }
     Ok(Json(
@@ -3523,6 +3767,7 @@ struct AgingBucket {
 async fn receipts_aging(
     State(s): State<AppState>,
     user: AuthUser,
+    axum::extract::Query(q): axum::extract::Query<BusinessFilterQ>,
 ) -> Result<Json<Vec<AgingBucket>>, ApiError> {
     let now = Utc::now().date_naive();
 
@@ -3545,18 +3790,34 @@ async fn receipts_aging(
 
     let mut buckets: [(u32, Decimal); 4] = Default::default();
     for (day, total, extracted) in rows {
+        // If filtering to a business, skip receipts that have no
+        // items belonging to that business — they can't be its backlog.
+        if let Some(_b) = q.business_id {
+            let in_biz = extracted
+                .as_ref()
+                .and_then(|ext| ext.get("items"))
+                .and_then(|v| v.as_array())
+                .map(|items| items.iter().any(|it| item_in_business(it, q.business_id)))
+                .unwrap_or(false);
+            if !in_biz {
+                continue;
+            }
+        }
         // Treat the receipt as "needs attention" if extracted is null or
         // any item lacks a category.
-        let needs = match extracted {
+        let needs = match &extracted {
             None => true,
             Some(ext) => match ext.get("items").and_then(|v| v.as_array()) {
                 None => true,
-                Some(items) => items.iter().any(|it| {
-                    it.get("category")
-                        .and_then(|v| v.as_str())
-                        .map(|s| s.trim().is_empty() || s == "uncategorized")
-                        .unwrap_or(true)
-                }),
+                Some(items) => items
+                    .iter()
+                    .filter(|it| item_in_business(it, q.business_id))
+                    .any(|it| {
+                        it.get("category")
+                            .and_then(|v| v.as_str())
+                            .map(|s| s.trim().is_empty() || s == "uncategorized")
+                            .unwrap_or(true)
+                    }),
             },
         };
         if !needs {
@@ -3653,6 +3914,9 @@ async fn receipts_by_property(
             continue;
         };
         for it in items {
+            if !item_in_business(it, q.business_id) {
+                continue;
+            }
             let bucket = it.get("tax_bucket").and_then(|v| v.as_str()).unwrap_or("");
             if bucket != "rental" {
                 continue;
@@ -3721,6 +3985,7 @@ struct Anomaly {
 async fn receipts_anomalies(
     State(s): State<AppState>,
     user: AuthUser,
+    axum::extract::Query(q): axum::extract::Query<BusinessFilterQ>,
 ) -> Result<Json<Vec<Anomaly>>, ApiError> {
     let now = Utc::now().date_naive();
     let this_month_start = NaiveDate::from_ymd_opt(now.year(), now.month(), 1).unwrap_or(now);
@@ -3739,17 +4004,34 @@ async fn receipts_anomalies(
     )
     .unwrap_or(last_month_start);
 
-    let rows: Vec<(Option<String>, Option<Decimal>, NaiveDate)> = sqlx::query_as(
-        "SELECT ocr_merchant, ocr_total, ocr_date::date
+    let raw_rows: Vec<(
+        Option<String>,
+        Option<Decimal>,
+        NaiveDate,
+        Option<serde_json::Value>,
+    )> = sqlx::query_as(
+        "SELECT ocr_merchant, ocr_total, ocr_date::date, ocr_extracted
            FROM receipts
           WHERE user_id = $1
             AND ocr_status = 'done'::ocr_status_t
-            AND ocr_date IS NOT NULL
-            AND ocr_total IS NOT NULL",
+            AND ocr_date IS NOT NULL",
     )
     .bind(user.id)
     .fetch_all(&s.pool)
     .await?;
+    // Project to (merchant, effective-total, date) after applying the
+    // business filter.
+    let rows: Vec<(Option<String>, Option<Decimal>, NaiveDate)> = raw_rows
+        .into_iter()
+        .filter_map(|(m, t, d, ext)| {
+            let eff = receipt_total_filtered(t, &ext, q.business_id);
+            if q.business_id.is_some() && eff <= Decimal::ZERO {
+                None
+            } else {
+                Some((m, Some(eff), d))
+            }
+        })
+        .collect();
 
     let aliases = crate::merchant::load_aliases(&s.pool, user.id)
         .await
@@ -3915,6 +4197,9 @@ async fn receipts_category_distribution(
             continue;
         };
         for it in items {
+            if !item_in_business(it, q.business_id) {
+                continue;
+            }
             let cat = it
                 .get("category")
                 .and_then(|v| v.as_str())
@@ -4089,6 +4374,7 @@ async fn tax_rollup_pdf(
     let rollup_query = RollupQ {
         from: q.from,
         to: q.to,
+        business_id: None,
     };
     let Json(rollup) =
         tax_rollup(State(s.clone()), user, axum::extract::Query(rollup_query)).await?;

@@ -205,7 +205,7 @@ function renderChart(features, report) {
     }
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 340,
-        scales: { x: { range: [0, 1440] }, y: {} },
+        scales: { x: { time: false, range: [0, 1440] }, y: {} },
         series: seriesDefs,
         axes: [
             { stroke: '#aab', size: 28,
@@ -256,7 +256,7 @@ function renderPerfChart(report) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true }, y_pct: { range: [0, 100] } },
+        scales: { x: { time: false,}, y: { auto: true }, y_pct: { range: [0, 100] } },
         series: [
             { label: t('view.clusters_trade_features.chart.cluster_idx') },
             { label: t('view.clusters_trade_features.chart.mean_r'),
@@ -270,6 +270,8 @@ function renderPerfChart(report) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 60 },
             { stroke: '#7af0a8', size: 50, scale: 'y_pct', side: 1 },

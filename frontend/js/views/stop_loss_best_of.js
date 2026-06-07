@@ -132,7 +132,7 @@ function renderWinChart(results, candidates) {
     const ys = rows.map(r => Number(r.winning_trades));
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.stop_loss_best_of.chart.candidate') },
             { label: t('view.stop_loss_best_of.chart.wins'),
@@ -141,6 +141,8 @@ function renderWinChart(results, candidates) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
@@ -166,7 +168,7 @@ function renderStopChart(results, candidates) {
     const ys = rows.map(r => Number(r.stopped_out_count));
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.stop_loss_best_of.chart.candidate') },
             { label: t('view.stop_loss_best_of.chart.stopped'),
@@ -175,6 +177,8 @@ function renderStopChart(results, candidates) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
@@ -228,7 +232,7 @@ function renderTotalChart(results, candidates) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.stop_loss_best_of.chart.candidate') },
             { label: t('view.stop_loss_best_of.chart.win'),
@@ -243,6 +247,8 @@ function renderTotalChart(results, candidates) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 56 },
         ],

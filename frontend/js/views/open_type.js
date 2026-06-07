@@ -166,7 +166,7 @@ function renderChart(p) {
 
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 280,
-        scales: { x: {}, y: { range: [min, max] } },
+        scales: { x: { time: false,}, y: { range: [min, max] } },
         series: [
             { label: t('chart.series.t') },
             { label: t('view.open_type.series.prior_high'), stroke: '#ffd84a', width: 1.5, points: { show: false } },
@@ -208,7 +208,7 @@ function renderDistanceChart(p) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.open_type.chart.reference') },
             { label: t('view.open_type.chart.distance'),
@@ -219,6 +219,8 @@ function renderDistanceChart(p) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 60 },
         ],

@@ -1,6 +1,6 @@
 use crate::auth::AuthUser;
 use crate::error::ApiError;
-use crate::routes::helpers::ensure_account_owner;
+use crate::routes::helpers::{ensure_account_owner, ensure_broker_owner};
 use crate::state::AppState;
 use axum::extract::{Query, State};
 use axum::routing::get;
@@ -17,6 +17,7 @@ pub fn router() -> Router<AppState> {
     Router::new()
         .route("/reports/overview", get(overview))
         .route("/reports/by-symbol", get(by_symbol))
+        .route("/reports/by-broker", get(by_broker))
         .route("/reports/by-side", get(by_side))
         .route("/reports/by-asset-class", get(by_asset_class))
         .route("/reports/by-day-of-week", get(by_dow))
@@ -49,7 +50,13 @@ pub fn router() -> Router<AppState> {
 
 #[derive(Deserialize)]
 struct RQ {
-    account_id: Uuid,
+    #[serde(default, deserialize_with = "empty_uuid_as_none")]
+    account_id: Option<Uuid>,
+    /// Filter by broker (all accounts of one broker). Mutually
+    /// exclusive with `account_id` — when both are set, account_id
+    /// wins and broker_id is ignored.
+    #[serde(default)]
+    broker_id: Option<Uuid>,
     #[serde(default)]
     starting_cash: Option<Decimal>,
     /// Optional rolling-window filter (in days). When set, only trades whose
@@ -77,6 +84,22 @@ struct RQ {
     tag_id: Option<Uuid>,
 }
 
+/// Treats an empty `account_id=` query string as `None`. Without this,
+/// the frontend's `accountId=''` (the "all accounts" sentinel) would
+/// deserialize as a UUID-parse error and fail every request.
+fn empty_uuid_as_none<'de, D>(de: D) -> Result<Option<Uuid>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    let v: Option<String> = Option::deserialize(de)?;
+    match v.as_deref().map(str::trim) {
+        None | Some("") => Ok(None),
+        Some(s) => Uuid::parse_str(s)
+            .map(Some)
+            .map_err(serde::de::Error::custom),
+    }
+}
+
 fn parse_side(s: &str) -> Option<TradeSide> {
     match s.to_ascii_lowercase().as_str() {
         "long" => Some(TradeSide::Long),
@@ -96,7 +119,12 @@ fn parse_asset(s: &str) -> Option<AssetClass> {
 }
 
 async fn load(s: &AppState, user_id: Uuid, q: &RQ) -> Result<Vec<Trade>, ApiError> {
-    ensure_account_owner(s, user_id, q.account_id).await?;
+    if let Some(aid) = q.account_id {
+        ensure_account_owner(s, user_id, aid).await?;
+    }
+    if let Some(bid) = q.broker_id {
+        ensure_broker_owner(s, user_id, bid).await?;
+    }
     let f = TradeFilter {
         symbol: q.symbol.clone().filter(|x| !x.is_empty()),
         side: q.side.as_deref().and_then(parse_side),
@@ -107,9 +135,10 @@ async fn load(s: &AppState, user_id: Uuid, q: &RQ) -> Result<Vec<Trade>, ApiErro
         limit: Some(100_000),
         ..Default::default()
     };
-    let mut trades = traderview_db::trades::list_for_account(&s.pool, q.account_id, &f)
-        .await
-        .map_err(ApiError::Internal)?;
+    let mut trades =
+        traderview_db::trades::list_for_scope(&s.pool, user_id, q.account_id, q.broker_id, &f)
+            .await
+            .map_err(ApiError::Internal)?;
     if let Some(d) = q.days {
         if d > 0 {
             let cutoff = chrono::Utc::now() - chrono::Duration::days(d);
@@ -157,6 +186,74 @@ async fn by_symbol(
     Query(q): Query<RQ>,
 ) -> Result<Json<Vec<stats::Bucket>>, ApiError> {
     Ok(Json(stats::by_symbol(&load(&s, user.id, &q).await?)))
+}
+
+/// Per-broker P&L breakdown. Returns `Vec<{broker_id, label,
+/// trade_count, net_pnl, win_count, loss_count}>` for the dashboard's
+/// `by_broker` widget. Filters by the same RQ as other breakdowns so
+/// the user can scope by symbol/side/etc. AND see the per-broker split.
+#[derive(serde::Serialize)]
+struct BrokerBucket {
+    broker_id: Option<Uuid>,
+    label: String,
+    trade_count: u32,
+    net_pnl: Decimal,
+    win_count: u32,
+    loss_count: u32,
+}
+async fn by_broker(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Query(q): Query<RQ>,
+) -> Result<Json<Vec<BrokerBucket>>, ApiError> {
+    // Reuse the existing load helper to honor every filter, then join
+    // each trade back to its broker via the accounts table.
+    let trades = load(&s, user.id, &q).await?;
+    if trades.is_empty() {
+        return Ok(Json(Vec::new()));
+    }
+    let account_ids: Vec<Uuid> = trades.iter().map(|t| t.account_id).collect();
+    let rows: Vec<(Uuid, Option<Uuid>, Option<String>)> = sqlx::query_as(
+        "SELECT a.id, a.broker_id, b.display_name
+           FROM accounts a
+           LEFT JOIN brokers b ON b.id = a.broker_id
+          WHERE a.id = ANY($1)",
+    )
+    .bind(&account_ids)
+    .fetch_all(&s.pool)
+    .await?;
+    use std::collections::HashMap;
+    let acct_to_broker: HashMap<Uuid, (Option<Uuid>, Option<String>)> = rows
+        .into_iter()
+        .map(|(aid, bid, name)| (aid, (bid, name)))
+        .collect();
+
+    let mut by: HashMap<Option<Uuid>, BrokerBucket> = HashMap::new();
+    for t in &trades {
+        let (bid, label) = acct_to_broker
+            .get(&t.account_id)
+            .map(|(bid, name)| (*bid, name.clone().unwrap_or_else(|| "Unassigned".into())))
+            .unwrap_or((None, "Unassigned".into()));
+        let entry = by.entry(bid).or_insert(BrokerBucket {
+            broker_id: bid,
+            label,
+            trade_count: 0,
+            net_pnl: Decimal::ZERO,
+            win_count: 0,
+            loss_count: 0,
+        });
+        entry.trade_count += 1;
+        let pnl = t.net_pnl.unwrap_or(Decimal::ZERO);
+        entry.net_pnl += pnl;
+        if pnl > Decimal::ZERO {
+            entry.win_count += 1;
+        } else if pnl < Decimal::ZERO {
+            entry.loss_count += 1;
+        }
+    }
+    let mut out: Vec<BrokerBucket> = by.into_values().collect();
+    out.sort_by_key(|b| std::cmp::Reverse(b.net_pnl));
+    Ok(Json(out))
 }
 async fn by_side(
     State(s): State<AppState>,
@@ -475,7 +572,10 @@ async fn risk_report(
 
 #[derive(Deserialize)]
 struct LiquidityQ {
-    account_id: Uuid,
+    #[serde(default, deserialize_with = "empty_uuid_as_none")]
+    account_id: Option<Uuid>,
+    #[serde(default)]
+    broker_id: Option<Uuid>,
     /// Optional `symbol1:1000000,symbol2:500000` ADV overrides.
     #[serde(default)]
     adv: Option<String>,
@@ -491,14 +591,20 @@ async fn liquidity_report(
     user: AuthUser,
     Query(q): Query<LiquidityQ>,
 ) -> Result<Json<LiquidityResponse>, ApiError> {
-    ensure_account_owner(&s, user.id, q.account_id).await?;
+    if let Some(aid) = q.account_id {
+        ensure_account_owner(&s, user.id, aid).await?;
+    }
+    if let Some(bid) = q.broker_id {
+        ensure_broker_owner(&s, user.id, bid).await?;
+    }
     let f = TradeFilter {
         limit: Some(100_000),
         ..Default::default()
     };
-    let trades = traderview_db::trades::list_for_account(&s.pool, q.account_id, &f)
-        .await
-        .map_err(ApiError::Internal)?;
+    let trades =
+        traderview_db::trades::list_for_scope(&s.pool, user.id, q.account_id, q.broker_id, &f)
+            .await
+            .map_err(ApiError::Internal)?;
     let mut adv: HashMap<String, Decimal> = HashMap::new();
     if let Some(s) = q.adv {
         for part in s.split(',') {

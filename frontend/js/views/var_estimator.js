@@ -227,7 +227,7 @@ function renderRollingVolChart(returns) {
     const meanRef = xs.map(() => sigma);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.var_estimator.chart.day_idx') },
             { label: t('view.var_estimator.chart.roll_vol'),
@@ -276,7 +276,7 @@ function renderHistogram(returns, positionValue, hist, gauss) {
     }
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 320,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.loss_') },
             { label: t('chart.series.count'),     stroke: '#888', width: 1.5,

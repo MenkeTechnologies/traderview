@@ -172,7 +172,7 @@ function renderChart(series) {
     const ys = series.map(v => v == null ? null : v);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 300,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.bar') },
             { label: 'λ', stroke: '#00e5ff', width: 1.5, points: { show: false } },
@@ -208,7 +208,7 @@ function renderScatterChart(series) {
     const fitYs = xs.map(x => slope * x);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 260,
-        scales: { x: { range: [minV, maxV] }, y: { auto: true } },
+        scales: { x: { time: false, range: [minV, maxV] }, y: { auto: true } },
         series: [
             { label: t('view.kyles_lambda.chart.signed_volume') },
             { label: t('view.kyles_lambda.chart.price_change'),

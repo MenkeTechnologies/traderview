@@ -162,7 +162,7 @@ function renderChart(bars) {
     const closes = bars.map(b => b.close);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 340,
-        scales: { x: {}, y: {}, y2: { auto: true } },
+        scales: { x: { time: false,}, y: {}, y2: { auto: true } },
         series: [
             { label: t('chart.series.bar') },
             { label: t('chart.series.imbalance'), stroke: '#ffd84a', width: 1.5, points: { show: true, size: 5 } },
@@ -195,7 +195,7 @@ function renderCumChart(bars) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('chart.series.bar') },
             { label: t('view.imb_bar.chart.cum_imb'),

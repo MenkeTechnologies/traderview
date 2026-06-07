@@ -170,7 +170,7 @@ function renderChart(bars) {
     const lows = bars.map(b => b.low);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 340,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.bar') },
             { label: t('chart.series.close'), stroke: '#00e5ff', width: 1.5, points: { show: true, size: 4 } },
@@ -201,7 +201,7 @@ function renderDensityChart(bars) {
     const mean = xs.map(() => meanTicks);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('chart.series.bar') },
             { label: t('view.dollar_bar.chart.tick_count'),

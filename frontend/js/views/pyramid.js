@@ -218,7 +218,7 @@ function renderChart(report) {
     const triggerYs = (report.states || []).map(s => decToNum(s.trigger_price));
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 260,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.state_') },
             { label: t('chart.series.avg_cost'),    stroke: '#00e5ff', width: 1.5,
@@ -244,7 +244,7 @@ function renderTotalQtyChart(report) {
     const ys = states.map(s => decToNum(s.total_qty));
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('chart.series.state_') },
             { label: t('view.pyramid.chart.total_qty'),

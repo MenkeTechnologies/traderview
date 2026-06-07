@@ -184,7 +184,7 @@ function renderStageChart() {
     const failY = stages.map(s => s.pass ? null : 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 160,
-        scales: { x: {}, y: { range: () => [-0.3, 1.3] } },
+        scales: { x: { time: false,}, y: { range: () => [-0.3, 1.3] } },
         series: [
             { label: t('view.triple_screen.chart.screen') },
             { label: t('view.triple_screen.chart.pass'),
@@ -196,6 +196,8 @@ function renderStageChart() {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40,
               values: (_u, splits) => splits.map(v => v === 1 ? 'pass' : v === 0 ? 'fail' : '') },
@@ -221,7 +223,7 @@ function renderOscChart() {
     const obY  = xs.map(() => ob);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.triple_screen.chart.idx') },
             { label: t('view.triple_screen.chart.osc'),

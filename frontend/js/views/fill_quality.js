@@ -94,7 +94,7 @@ function renderHourChart(byHour) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.fill_quality.chart.hour') },
             { label: t('view.fill_quality.chart.slip_bps'),
@@ -106,6 +106,8 @@ function renderHourChart(byHour) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 50 },
         ],
@@ -130,7 +132,7 @@ function renderSymbolChart(bySymbol) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.fill_quality.chart.symbol') },
             { label: t('view.fill_quality.chart.slip_bps'),
@@ -141,6 +143,8 @@ function renderSymbolChart(bySymbol) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 50 },
         ],

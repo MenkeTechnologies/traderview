@@ -191,7 +191,7 @@ function renderTrajectory(r) {
     const elInv = document.getElementById('ac-chart-inv');
     new window.uPlot({
         title: '', width: elInv.clientWidth || 600, height: 260,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.t_seconds') },
             { label: t('chart.series.inventory_x_k'), stroke: '#00e5ff', width: 1.5,
@@ -204,7 +204,7 @@ function renderTrajectory(r) {
     const elSch = document.getElementById('ac-chart-sched');
     new window.uPlot({
         title: '', width: elSch.clientWidth || 600, height: 240,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.t_seconds') },
             { label: t('chart.series.slice_v_k'), stroke: '#ff9f1a', width: 1.2,
@@ -226,7 +226,7 @@ function renderFrontier(points, currentLambda) {
     const youYs = costs.map((_, i) => i === youIdx ? costs[i] : null);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 280,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.variance') },
             { label: t('chart.series.expected_cost_'), stroke: '#a06bff', width: 1.5,

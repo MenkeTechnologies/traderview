@@ -13,6 +13,10 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { openReceiptMatchModal } from './expenses.js';
 import { initDragReorder } from '../drag_reorder.js';
+import {
+    mountBusinessSelector,
+    onChange as onBusinessChange,
+} from '../business_context.js';
 
 const STATE = {
     filters: {
@@ -50,7 +54,10 @@ export async function renderPurchases(mount, _state) {
     }
 
     mount.innerHTML = `
-        <h1 class="view-title"><span data-i18n="view.purchases.h1.title">// PURCHASES</span></h1>
+        <div class="receipts-title-row">
+            <h1 class="view-title"><span data-i18n="view.purchases.h1.title">// PURCHASES</span></h1>
+            <span id="purchases-biz-selector"></span>
+        </div>
         <p class="muted small" data-i18n="view.purchases.hint.intro">Every receipt line item and every imported transaction that doesn't have a receipt — one row per purchase, year-to-date. Click a row's receipt or transaction badge to drill back.</p>
 
         <div class="purchases-filterbar">
@@ -193,6 +200,12 @@ export async function renderPurchases(mount, _state) {
         STATE.page = 0;
         loadAndRender(mount, tok);
     });
+
+    // Business selector — reload purchases when switched.
+    const pBizHost = mount.querySelector('#purchases-biz-selector');
+    if (pBizHost) mountBusinessSelector(pBizHost);
+    const unsubPBiz = onBusinessChange(() => loadAndRender(mount, tok));
+    mount.__purchasesUnsubBiz = unsubPBiz;
     await loadAndRender(mount, tok);
 }
 

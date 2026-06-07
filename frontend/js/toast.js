@@ -55,6 +55,40 @@ function onToastEvent(e) {
     showToast(msg, { duration: d.duration, level: d.level, extraClass: d.extraClass });
 }
 
+// Persistent history of every toast the user has ever seen this session
+// (and beyond — we mirror to localStorage so a refresh doesn't lose the
+// log). Exposed via getToastHistory() / subscribeToastHistory() so the
+// #toast-history view can render + live-update.
+const HISTORY_KEY = 'tv_toast_history_v1';
+const HISTORY_MAX = 500;
+const _historySubs = new Set();
+let _history = (() => {
+    try {
+        const raw = localStorage.getItem(HISTORY_KEY);
+        if (!raw) return [];
+        const arr = JSON.parse(raw);
+        return Array.isArray(arr) ? arr.slice(-HISTORY_MAX) : [];
+    } catch { return []; }
+})();
+function pushHistory(entry) {
+    _history.push(entry);
+    if (_history.length > HISTORY_MAX) _history.splice(0, _history.length - HISTORY_MAX);
+    try { localStorage.setItem(HISTORY_KEY, JSON.stringify(_history)); } catch {}
+    for (const fn of _historySubs) {
+        try { fn(entry); } catch (e) { console.warn('toast history sub threw', e); }
+    }
+}
+export function getToastHistory() { return _history.slice(); }
+export function clearToastHistory() {
+    _history = [];
+    try { localStorage.removeItem(HISTORY_KEY); } catch {}
+    for (const fn of _historySubs) { try { fn(null); } catch {} }
+}
+export function subscribeToastHistory(fn) {
+    _historySubs.add(fn);
+    return () => _historySubs.delete(fn);
+}
+
 export function showToast(message, opts) {
     if (typeof window === 'undefined' || typeof document === 'undefined') return null;
     const err = validateOptions(opts);
@@ -64,6 +98,15 @@ export function showToast(message, opts) {
     const root = document.getElementById('tv-toast-root');
     if (!root) return null;
     const key = coalesceKey(message, norm.level);
+    // Record every toast in the rolling history BEFORE coalescing —
+    // even repeated messages are useful in the audit log so users can
+    // see how often something fired.
+    pushHistory({
+        ts: Date.now(),
+        message: String(message),
+        level: norm.level,
+        view: (typeof location !== 'undefined' ? (location.hash || '').replace(/^#/, '') : ''),
+    });
     // Coalesce: if same toast already up, just reset its timer.
     if (_liveByKey.has(key)) {
         const existing = _liveByKey.get(key);

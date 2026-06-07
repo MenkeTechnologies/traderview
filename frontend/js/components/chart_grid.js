@@ -109,7 +109,8 @@ export function createChartGrid(container, opts = {}) {
     container.innerHTML = `
         <div class="chart-grid-bar">
             <label class="chart-grid-sym">${esc(t('component.grid.symbol'))}
-                <input id="cg-sym" value="${esc(initialSymbol)}" autocomplete="off"
+                <input id="cg-sym" name="symbol" data-symbol-input value="${esc(initialSymbol)}"
+                       autocomplete="off"
                        style="text-transform:uppercase;min-width:140px"></label>
             <button type="button" class="primary" id="cg-load">${esc(t('component.grid.load'))}</button>
             <span class="chart-grid-spacer"></span>

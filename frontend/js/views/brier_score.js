@@ -171,7 +171,7 @@ function renderChart() {
     const ident = xs.slice();
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 340,
-        scales: { x: { range: [0, 1] }, y: { range: [0, 1] } },
+        scales: { x: { time: false, range: [0, 1] }, y: { range: [0, 1] } },
         series: [
             { label: t('chart.series.predicted') },
             { label: t('chart.series.observed'),    stroke: '#00e5ff', width: 1.5, points: { show: true, size: 6 } },
@@ -202,7 +202,7 @@ function renderHistChart() {
     const xs = bins.map((_, i) => i + 1);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.brier.chart.bin_idx') },
             { label: t('view.brier.chart.count'),
@@ -211,6 +211,8 @@ function renderHistChart() {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 50 },
         ],

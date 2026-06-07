@@ -11,6 +11,10 @@ import { t } from '../i18n.js';
 import { esc, fmtMoney } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
+import {
+    mountBusinessSelector,
+    onChange as onBusinessChange,
+} from '../business_context.js';
 
 const SECTIONS = [
     { id: 'personal',    titleKey: 'view.taxwiz.section.personal' },
@@ -35,6 +39,7 @@ export async function renderTaxWizard(mount) {
     const tok = currentViewToken();
 
     // Resolve hash params: #file-taxes?year=2025 / ?section=income
+    let hashHasSec = false;
     try {
         const hash = location.hash.replace(/^#/, '');
         const q = hash.includes('?') ? hash.slice(hash.indexOf('?') + 1) : '';
@@ -45,8 +50,17 @@ export async function renderTaxWizard(mount) {
         // `&sect` would be HTML-entity-decoded as `§` by Tauri WebKit
         // on hash reads, producing `§ion=...` and breaking the router.
         const sec = params.get('sec') || params.get('section');
-        if (sec && SECTIONS.some(s => s.id === sec)) STATE.section = sec;
+        if (sec && SECTIONS.some(s => s.id === sec)) {
+            STATE.section = sec;
+            hashHasSec = true;
+        }
     } catch (_) {}
+    // `loadAndRender` may otherwise pull `r.status` from the server and
+    // overwrite STATE.section back to the section the user last
+    // *saved* — clobbering the navigation the user just performed.
+    // When the hash carries an explicit `sec=`, the user's intent
+    // wins.
+    STATE.hashHasSec = hashHasSec;
 
     mount.innerHTML = `
         <div class="tw-shell" data-context-scope="tax-wiz-section">
@@ -56,6 +70,7 @@ export async function renderTaxWizard(mount) {
                         ${yearOptions(STATE.year)}
                     </select>
                 </h2>
+                <span id="tw-business-selector"></span>
                 <span class="muted small">${esc(t('view.taxwiz.subtitle'))}</span>
                 <button type="button" id="tw-autopop" class="btn btn-secondary btn-compact">
                     ${esc(t('view.taxwiz.action.autopopulate'))}
@@ -76,6 +91,13 @@ export async function renderTaxWizard(mount) {
     });
     mount.querySelector('#tw-autopop').addEventListener('click', () => autopop(mount, tok));
 
+    // Per-business tax wizard — selecting a different business reloads
+    // the wizard so its Schedule C section sees the matching receipts.
+    const bizHost = mount.querySelector('#tw-business-selector');
+    if (bizHost) mountBusinessSelector(bizHost);
+    const unsubBiz = onBusinessChange(() => loadAndRender(mount, tok));
+    mount.__taxwizUnsubBiz = unsubBiz;
+
     await loadAndRender(mount, tok);
 }
 
@@ -92,7 +114,12 @@ async function loadAndRender(mount, tok) {
         if (!viewIsCurrent(tok)) return;
         STATE.draft = r.draft;
         STATE.result = r.result;
-        if (r.status && SECTIONS.some(s => s.id === r.status)) STATE.section = r.status;
+        // Only seed STATE.section from server-side `status` when the
+        // URL has no explicit `sec=` — otherwise the user's rail
+        // click would get overwritten by their last-saved checkpoint.
+        if (!STATE.hashHasSec && r.status && SECTIONS.some(s => s.id === r.status)) {
+            STATE.section = r.status;
+        }
     } catch (e) {
         const pane = mount.querySelector('#tw-pane');
         if (pane) pane.innerHTML = `<div class="err">${esc(t('view.taxwiz.err.load', { err: e.message }))}</div>`;

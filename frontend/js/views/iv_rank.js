@@ -151,7 +151,7 @@ function renderChart(history, r) {
     const curYs  = xs.map(() => r.current_iv);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 280,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.day_') },
             { label: t('chart.series.iv'),       stroke: '#00e5ff', width: 1.2,
@@ -194,7 +194,7 @@ function renderVolOfVolChart(history) {
     const med = xs.map(() => median);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('chart.series.day_') },
             { label: t('view.iv_rank.chart.stddev'),

@@ -28,7 +28,45 @@ use tokio_tungstenite::tungstenite::Message as WsMessage;
 use traderview_core::{BarInterval, PriceBar};
 
 pub const FINNHUB_WS: &str = "wss://ws.finnhub.io";
+/// Polygon real-time SIP-tape WebSocket. Requires a Stocks Starter+ key
+/// to authenticate; Advanced tier unlocks the full consolidated CTA/UTP
+/// trade feed. Use `wss://delayed.polygon.io/stocks` if the user opts
+/// for the free 15-min-delayed tier.
+pub const POLYGON_WS: &str = "wss://socket.polygon.io/stocks";
+/// Alpaca market-data WS — choose SIP vs IEX-only per user preference.
+/// SIP needs Algo Trader+; IEX-only works on the free Algo Trader Free
+/// tier and is the default fallback when `alpaca_use_sip_feed` is off.
+pub const ALPACA_WS_SIP: &str = "wss://stream.data.alpaca.markets/v2/sip";
+pub const ALPACA_WS_IEX: &str = "wss://stream.data.alpaca.markets/v2/iex";
+/// Alpaca crypto WS — same auth/subscribe protocol as the equities feed
+/// but a separate endpoint. Trades 24/7 so it's the canonical
+/// weekend-debug stream when US equities are closed.
+pub const ALPACA_WS_CRYPTO: &str = "wss://stream.data.alpaca.markets/v1beta3/crypto/us";
+/// Crypto symbol whitelist — anything ending in `USD` whose prefix is
+/// in this set is routed to the crypto WS instead of the equities WS.
+/// Liberal; false-positives are harmless (Alpaca returns "symbol not
+/// found" for unknown crypto codes and the WS keeps running).
+const CRYPTO_PREFIXES: &[&str] = &[
+    "BTC", "ETH", "LTC", "BCH", "DOGE", "SOL", "AVAX", "MATIC", "ADA", "DOT", "XRP", "LINK",
+    "UNI", "SHIB", "AAVE", "ALGO", "ATOM", "BAT", "COMP", "CRV", "GRT", "MKR", "PAXG", "SUSHI",
+    "TRX", "XLM", "XTZ", "YFI", "ZRX",
+];
+
+fn is_crypto_symbol(sym: &str) -> bool {
+    let upper = sym.to_uppercase();
+    if !upper.ends_with("USD") {
+        return false;
+    }
+    let prefix = &upper[..upper.len() - 3];
+    CRYPTO_PREFIXES.iter().any(|p| *p == prefix)
+}
 const MAX_SYMS_PER_CONN: usize = 25;
+/// Polygon's WS can fan a single connection across thousands of
+/// symbols; cap at 500 per worker for memory + reconnect granularity.
+const POLYGON_MAX_SYMS_PER_CONN: usize = 500;
+/// Alpaca per-connection cap. Same memory + recovery rationale as
+/// Polygon — 500 keeps reconnect storms bounded.
+const ALPACA_MAX_SYMS_PER_CONN: usize = 500;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Trade {
@@ -128,7 +166,20 @@ struct TapeBucket {
 pub struct LiveTickStore {
     state: Arc<DashMap<String, SymbolState>>,
     tx: broadcast::Sender<SymbolState>,
+    /// Finnhub WS key — the legacy default provider.
     api_key: Arc<tokio::sync::RwLock<Option<String>>>,
+    /// Polygon.io WS key. When present, the store prefers Polygon over
+    /// Finnhub for live trades (SIP tape vs Finnhub aggregate). Falls
+    /// through to Finnhub when absent or when Polygon WS fails to
+    /// authenticate.
+    polygon_key: Arc<tokio::sync::RwLock<Option<String>>>,
+    /// Alpaca market-data WS credentials. Used as the middle provider
+    /// in the priority chain (Polygon → Alpaca → Finnhub). When
+    /// `alpaca_use_sip_feed` is true the worker connects to the SIP
+    /// endpoint (Algo Trader+ required); otherwise the IEX-only feed
+    /// (works on the free tier).
+    alpaca_creds: Arc<tokio::sync::RwLock<Option<(String, String)>>>,
+    alpaca_use_sip: Arc<AtomicBool>,
     subs: Arc<tokio::sync::Mutex<Vec<String>>>,
     // Per-symbol open 10s OHLC bucket. Closed buckets are flushed to
     // `price_bars` (interval='10s', source='finnhub-tape') so the
@@ -152,11 +203,53 @@ impl LiveTickStore {
             state: Arc::new(DashMap::new()),
             tx,
             api_key: Arc::new(tokio::sync::RwLock::new(None)),
+            polygon_key: Arc::new(tokio::sync::RwLock::new(None)),
+            alpaca_creds: Arc::new(tokio::sync::RwLock::new(None)),
+            alpaca_use_sip: Arc::new(AtomicBool::new(false)),
             subs: Arc::new(tokio::sync::Mutex::new(Vec::new())),
             buckets: Arc::new(DashMap::new()),
             pool: Arc::new(tokio::sync::RwLock::new(None)),
             sweeper_spawned: Arc::new(AtomicBool::new(false)),
         }
+    }
+
+    /// Wire the Polygon WS key. Mirrors `set_api_key` so settings-page
+    /// POSTs can update the provider without a restart. When this key
+    /// is present, `restart_workers` switches the live tape to Polygon.
+    pub async fn set_polygon_key(&self, key: impl Into<String>) {
+        *self.polygon_key.write().await = Some(key.into());
+    }
+
+    pub async fn has_polygon_key(&self) -> bool {
+        self.polygon_key.read().await.is_some()
+    }
+
+    /// Wire the Alpaca market-data credentials. The SIP-vs-IEX choice
+    /// is governed by `set_alpaca_use_sip` — flipping that does NOT
+    /// restart workers automatically, callers (settings POST handler)
+    /// trigger `restart_workers()` themselves once both setters land.
+    pub async fn set_alpaca_creds(
+        &self,
+        key_id: impl Into<String>,
+        secret: impl Into<String>,
+    ) {
+        *self.alpaca_creds.write().await = Some((key_id.into(), secret.into()));
+    }
+
+    pub fn set_alpaca_use_sip(&self, on: bool) {
+        self.alpaca_use_sip.store(on, Ordering::Release);
+    }
+
+    pub async fn has_alpaca_creds(&self) -> bool {
+        self.alpaca_creds.read().await.is_some()
+    }
+
+    /// True when any provider key is configured. Callers that ungate
+    /// `set_symbols` (the candidates / squeeze reconcile loops) should
+    /// check this instead of `has_key()` — `has_key()` is Finnhub-only
+    /// and gates the WS spawn behind the legacy provider only.
+    pub async fn has_any_provider(&self) -> bool {
+        self.has_key().await || self.has_polygon_key().await || self.has_alpaca_creds().await
     }
 
     /// Wire the DB pool used by the 10s tape aggregator. Idempotent — may
@@ -234,18 +327,89 @@ impl LiveTickStore {
                 .or_insert_with(|| SymbolState::new(s, None));
         }
 
-        // Cancel and respawn worker tasks.
-        let key = self.api_key.read().await.clone();
-        let Some(key) = key else {
-            tracing::warn!("FINNHUB_API_KEY not set; live ticks disabled");
+        self.spawn_workers(deduped).await
+    }
+
+    /// Force a re-spawn of the WS worker(s) without changing the
+    /// subscription set. Called from the settings-page POST after a
+    /// key change so the live tape switches providers (Finnhub →
+    /// Polygon, or vice versa) without a process restart.
+    pub async fn restart_workers(&self) -> anyhow::Result<()> {
+        let symbols = self.subs.lock().await.clone();
+        if symbols.is_empty() {
+            return Ok(());
+        }
+        self.spawn_workers(symbols).await
+    }
+
+    /// Spawn the WS worker tasks for the given symbol list. Provider
+    /// priority — cheapest-real-time-SIP first:
+    ///   1. Alpaca (Algo Trader+ ~$99/mo with SIP toggle, else IEX-only
+    ///      on the free tier) — the default real-time path.
+    ///   2. Polygon (~$199/mo Advanced) — full CTA/UTP, switch up here
+    ///      when Alpaca's symbol coverage / latency isn't enough.
+    ///   3. Finnhub (aggregate, free 60 calls/min) — last-resort fallback.
+    /// Skips entirely when no provider key is configured.
+    async fn spawn_workers(&self, symbols: Vec<String>) -> anyhow::Result<()> {
+        // 1. Alpaca — cheapest real-time SIP at $99/mo (Algo Trader+).
+        //    IEX-only fallback on the free Algo Trader tier when
+        //    `alpaca_use_sip_feed` is off. Crypto-shaped symbols
+        //    (BTCUSD, ETHUSD, ...) are routed to the crypto WS so
+        //    weekend / after-hours testing works without waiting for
+        //    US equity market open.
+        if let Some((id, secret)) = self.alpaca_creds.read().await.clone() {
+            let use_sip = self.alpaca_use_sip.load(Ordering::Acquire);
+            let (crypto, stocks): (Vec<String>, Vec<String>) = symbols
+                .into_iter()
+                .partition(|s| is_crypto_symbol(s));
+            for chunk in stocks
+                .chunks(ALPACA_MAX_SYMS_PER_CONN)
+                .map(|c| c.to_vec())
+            {
+                let store = self.clone();
+                let id = id.clone();
+                let secret = secret.clone();
+                tokio::spawn(async move {
+                    store.run_alpaca_worker(id, secret, use_sip, chunk).await;
+                });
+            }
+            for chunk in crypto
+                .chunks(ALPACA_MAX_SYMS_PER_CONN)
+                .map(|c| c.to_vec())
+            {
+                let store = self.clone();
+                let id = id.clone();
+                let secret = secret.clone();
+                tokio::spawn(async move {
+                    store.run_alpaca_crypto_worker(id, secret, chunk).await;
+                });
+            }
+            return Ok(());
+        }
+        // 2. Polygon — full CTA/UTP SIP tape, used when Alpaca isn't
+        //    configured (or its coverage / latency isn't enough).
+        if let Some(key) = self.polygon_key.read().await.clone() {
+            for chunk in symbols
+                .chunks(POLYGON_MAX_SYMS_PER_CONN)
+                .map(|c| c.to_vec())
+            {
+                let store = self.clone();
+                let key = key.clone();
+                tokio::spawn(async move {
+                    store.run_polygon_worker(key, chunk).await;
+                });
+            }
+            return Ok(());
+        }
+        // 3. Finnhub — aggregate fallback.
+        let finnhub_key = self.api_key.read().await.clone();
+        let Some(key) = finnhub_key else {
+            tracing::warn!(
+                "no live-tick provider key (polygon / alpaca / finnhub) set; live ticks disabled"
+            );
             return Ok(());
         };
-        // Restart all workers — simplest path; chunk into pages.
-        let chunks: Vec<Vec<String>> = deduped
-            .chunks(MAX_SYMS_PER_CONN)
-            .map(|c| c.to_vec())
-            .collect();
-        for chunk in chunks {
+        for chunk in symbols.chunks(MAX_SYMS_PER_CONN).map(|c| c.to_vec()) {
             let store = self.clone();
             let key = key.clone();
             tokio::spawn(async move {
@@ -396,6 +560,321 @@ impl LiveTickStore {
         if let Err(e) = crate::prices::upsert(&pool, std::slice::from_ref(&bar)).await {
             tracing::warn!(error = %e, symbol, bucket = b.start_sec, "tape 10s persist failed");
         }
+    }
+
+    /// Alpaca market-data WS worker. Same Trade-observe + feed_bucket
+    /// pipeline as the other providers; the only differences are URL
+    /// (SIP vs IEX) and the auth + subscribe protocol shape.
+    /// Protocol:
+    ///   1. Connect to `/v2/sip` (Algo Trader+) or `/v2/iex` (free).
+    ///   2. `{action:"auth", key:<id>, secret:<secret>}` — wait for
+    ///      `[{T:"success", msg:"authenticated"}]`.
+    ///   3. `{action:"subscribe", trades:["AAPL","MSFT",...]}`.
+    ///   4. Receive `[{T:"t", S, p, s, t, ...}, ...]` arrays. `T:"t"`
+    ///      = trade event; ignore `q` (quote) / `b` (bar) / `subscription`
+    ///      acks.
+    async fn run_alpaca_worker(
+        self,
+        key_id: String,
+        secret: String,
+        use_sip: bool,
+        symbols: Vec<String>,
+    ) {
+        loop {
+            match self
+                .run_alpaca_once(&key_id, &secret, use_sip, &symbols)
+                .await
+            {
+                Ok(()) => tracing::info!("alpaca WS exited cleanly; reconnecting in 2s"),
+                Err(e) => tracing::warn!(?e, "alpaca WS error; reconnecting in 5s"),
+            }
+            tokio::time::sleep(Duration::from_secs(3)).await;
+        }
+    }
+
+    async fn run_alpaca_once(
+        &self,
+        key_id: &str,
+        secret: &str,
+        use_sip: bool,
+        symbols: &[String],
+    ) -> anyhow::Result<()> {
+        let url = if use_sip { ALPACA_WS_SIP } else { ALPACA_WS_IEX };
+        let (ws, _) = tokio_tungstenite::connect_async(url).await?;
+        let (mut tx, mut rx) = ws.split();
+        // 1. Auth.
+        let auth = serde_json::json!({
+            "action": "auth",
+            "key": key_id,
+            "secret": secret,
+        })
+        .to_string();
+        tx.send(WsMessage::Text(auth)).await?;
+        // 2. Subscribe to trades. Alpaca takes a JSON array of symbols
+        //    in one frame — pass them all at once.
+        if !symbols.is_empty() {
+            let sub = serde_json::json!({
+                "action": "subscribe",
+                "trades": symbols,
+            })
+            .to_string();
+            tx.send(WsMessage::Text(sub)).await?;
+        }
+        // 3. Read loop. Frames are arrays of events.
+        while let Some(msg) = rx.next().await {
+            match msg? {
+                WsMessage::Text(t) => {
+                    let arr: serde_json::Value = match serde_json::from_str(&t) {
+                        Ok(v) => v,
+                        Err(_) => continue,
+                    };
+                    let Some(events) = arr.as_array() else { continue };
+                    for ev in events {
+                        let kind = ev.get("T").and_then(|v| v.as_str()).unwrap_or("");
+                        if kind == "error" {
+                            tracing::warn!(
+                                msg = ?ev.get("msg"),
+                                code = ?ev.get("code"),
+                                "alpaca WS error frame"
+                            );
+                            continue;
+                        }
+                        if kind != "t" {
+                            // success / subscription / quote / bar — ignore
+                            // (we only consume trades for the tape).
+                            continue;
+                        }
+                        let sym = ev.get("S").and_then(|v| v.as_str()).unwrap_or_default();
+                        let price = ev.get("p").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                        let size = ev.get("s").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                        // Alpaca returns `t` as RFC3339 timestamp string.
+                        let ts_ms = ev
+                            .get("t")
+                            .and_then(|v| v.as_str())
+                            .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
+                            .map(|dt| dt.timestamp_millis())
+                            .unwrap_or(0);
+                        if sym.is_empty() || price <= 0.0 || ts_ms <= 0 {
+                            continue;
+                        }
+                        let trade = Trade {
+                            symbol: sym.to_string(),
+                            price,
+                            volume: size,
+                            ts_ms,
+                        };
+                        if let Some(mut state) = self.state.get_mut(&trade.symbol) {
+                            state.observe(&trade);
+                            let snap = state.clone();
+                            drop(state);
+                            let _ = self.tx.send(snap);
+                        }
+                        self.feed_bucket(&trade);
+                    }
+                }
+                WsMessage::Ping(p) => {
+                    tx.send(WsMessage::Pong(p)).await.ok();
+                }
+                WsMessage::Close(_) => break,
+                _ => {}
+            }
+        }
+        Ok(())
+    }
+
+    /// Alpaca crypto WS worker. Trades 24/7 so this is the canonical
+    /// weekend / after-hours debug path — subscribe to `BTCUSD` to
+    /// confirm the wire-up while US equities are closed. Auth +
+    /// subscribe frames mirror the equities worker; the only delta is
+    /// the endpoint URL.
+    async fn run_alpaca_crypto_worker(
+        self,
+        key_id: String,
+        secret: String,
+        symbols: Vec<String>,
+    ) {
+        loop {
+            match self
+                .run_alpaca_crypto_once(&key_id, &secret, &symbols)
+                .await
+            {
+                Ok(()) => tracing::info!("alpaca crypto WS exited cleanly; reconnecting in 2s"),
+                Err(e) => tracing::warn!(?e, "alpaca crypto WS error; reconnecting in 5s"),
+            }
+            tokio::time::sleep(Duration::from_secs(3)).await;
+        }
+    }
+
+    async fn run_alpaca_crypto_once(
+        &self,
+        key_id: &str,
+        secret: &str,
+        symbols: &[String],
+    ) -> anyhow::Result<()> {
+        let (ws, _) = tokio_tungstenite::connect_async(ALPACA_WS_CRYPTO).await?;
+        let (mut tx, mut rx) = ws.split();
+        let auth = serde_json::json!({
+            "action": "auth",
+            "key": key_id,
+            "secret": secret,
+        })
+        .to_string();
+        tx.send(WsMessage::Text(auth)).await?;
+        if !symbols.is_empty() {
+            let sub = serde_json::json!({
+                "action": "subscribe",
+                "trades": symbols,
+            })
+            .to_string();
+            tx.send(WsMessage::Text(sub)).await?;
+        }
+        while let Some(msg) = rx.next().await {
+            match msg? {
+                WsMessage::Text(t) => {
+                    let arr: serde_json::Value = match serde_json::from_str(&t) {
+                        Ok(v) => v,
+                        Err(_) => continue,
+                    };
+                    let Some(events) = arr.as_array() else { continue };
+                    for ev in events {
+                        let kind = ev.get("T").and_then(|v| v.as_str()).unwrap_or("");
+                        if kind == "error" {
+                            tracing::warn!(
+                                msg = ?ev.get("msg"),
+                                code = ?ev.get("code"),
+                                "alpaca crypto WS error frame"
+                            );
+                            continue;
+                        }
+                        if kind != "t" {
+                            continue;
+                        }
+                        let sym = ev.get("S").and_then(|v| v.as_str()).unwrap_or_default();
+                        let price = ev.get("p").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                        let size = ev.get("s").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                        let ts_ms = ev
+                            .get("t")
+                            .and_then(|v| v.as_str())
+                            .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
+                            .map(|dt| dt.timestamp_millis())
+                            .unwrap_or(0);
+                        if sym.is_empty() || price <= 0.0 || ts_ms <= 0 {
+                            continue;
+                        }
+                        let trade = Trade {
+                            symbol: sym.to_string(),
+                            price,
+                            volume: size,
+                            ts_ms,
+                        };
+                        if let Some(mut state) = self.state.get_mut(&trade.symbol) {
+                            state.observe(&trade);
+                            let snap = state.clone();
+                            drop(state);
+                            let _ = self.tx.send(snap);
+                        }
+                        self.feed_bucket(&trade);
+                    }
+                }
+                WsMessage::Ping(p) => {
+                    tx.send(WsMessage::Pong(p)).await.ok();
+                }
+                WsMessage::Close(_) => break,
+                _ => {}
+            }
+        }
+        Ok(())
+    }
+
+    /// Polygon WS worker. Reuses the same Trade-observe + feed_bucket
+    /// pipeline as the Finnhub worker so every downstream consumer
+    /// (live scanner, tape, 10s aggregator) keeps working untouched.
+    /// Protocol:
+    ///   1. Connect to `wss://socket.polygon.io/stocks`
+    ///   2. `{action:"auth", params:"<api_key>"}` — wait for status=auth_success
+    ///   3. `{action:"subscribe", params:"T.AAPL,T.MSFT,..."}` (T. = trades)
+    ///   4. Receive `[{ev:"T", sym, p, s, t, ...}, ...]` arrays
+    async fn run_polygon_worker(self, api_key: String, symbols: Vec<String>) {
+        loop {
+            match self.run_polygon_once(&api_key, &symbols).await {
+                Ok(()) => tracing::info!("polygon WS exited cleanly; reconnecting in 2s"),
+                Err(e) => tracing::warn!(?e, "polygon WS error; reconnecting in 5s"),
+            }
+            tokio::time::sleep(Duration::from_secs(3)).await;
+        }
+    }
+
+    async fn run_polygon_once(&self, api_key: &str, symbols: &[String]) -> anyhow::Result<()> {
+        let (ws, _) = tokio_tungstenite::connect_async(POLYGON_WS).await?;
+        let (mut tx, mut rx) = ws.split();
+        // 1. Authenticate.
+        let auth = serde_json::json!({ "action": "auth", "params": api_key }).to_string();
+        tx.send(WsMessage::Text(auth)).await?;
+        // 2. Subscribe to trades for each symbol. Polygon supports
+        //    `T.AAPL,T.MSFT,...` in one frame — batch for efficiency.
+        let params = symbols
+            .iter()
+            .map(|s| format!("T.{s}"))
+            .collect::<Vec<_>>()
+            .join(",");
+        if !params.is_empty() {
+            let sub = serde_json::json!({ "action": "subscribe", "params": params }).to_string();
+            tx.send(WsMessage::Text(sub)).await?;
+        }
+        // 3. Read loop. Polygon ships arrays of events:
+        //    [{"ev":"status","status":"connected"}], [{"ev":"T",...}, ...]
+        while let Some(msg) = rx.next().await {
+            match msg? {
+                WsMessage::Text(t) => {
+                    let arr: serde_json::Value = match serde_json::from_str(&t) {
+                        Ok(v) => v,
+                        Err(_) => continue,
+                    };
+                    let Some(events) = arr.as_array() else { continue };
+                    for ev in events {
+                        if ev.get("ev").and_then(|v| v.as_str()) != Some("T") {
+                            // Could be a status, auth, or error frame;
+                            // log auth failures so the user sees them.
+                            if let Some(status) = ev.get("status").and_then(|v| v.as_str()) {
+                                if status == "auth_failed" {
+                                    tracing::warn!(
+                                        msg = ?ev.get("message"),
+                                        "polygon WS auth failed — falling back to finnhub on next restart"
+                                    );
+                                }
+                            }
+                            continue;
+                        }
+                        let sym = ev.get("sym").and_then(|v| v.as_str()).unwrap_or_default();
+                        let price = ev.get("p").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                        let size = ev.get("s").and_then(|v| v.as_f64()).unwrap_or(0.0);
+                        let ts = ev.get("t").and_then(|v| v.as_i64()).unwrap_or(0);
+                        if sym.is_empty() || price <= 0.0 || ts <= 0 {
+                            continue;
+                        }
+                        let trade = Trade {
+                            symbol: sym.to_string(),
+                            price,
+                            volume: size,
+                            ts_ms: ts,
+                        };
+                        if let Some(mut state) = self.state.get_mut(&trade.symbol) {
+                            state.observe(&trade);
+                            let snap = state.clone();
+                            drop(state);
+                            let _ = self.tx.send(snap);
+                        }
+                        self.feed_bucket(&trade);
+                    }
+                }
+                WsMessage::Ping(p) => {
+                    tx.send(WsMessage::Pong(p)).await.ok();
+                }
+                WsMessage::Close(_) => break,
+                _ => {}
+            }
+        }
+        Ok(())
     }
 
     async fn run_once(&self, api_key: &str, symbols: &[String]) -> anyhow::Result<()> {

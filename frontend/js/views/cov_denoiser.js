@@ -179,7 +179,7 @@ function renderEigenChart(originalCov, res) {
 
     new window.uPlot({
         title: '', width: el.clientWidth || 800, height: 280,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.rank') },
             { label: t('chart.series.cleaned_sorted_desc'), stroke: '#ff9f1a', width: 2,
@@ -213,7 +213,7 @@ function renderCumChart(originalCov, res) {
     const ref80 = xs.map(() => 80);
     new window.uPlot({
         title: '', width: el.clientWidth || 800, height: 200,
-        scales: { x: {}, y: { range: [0, 100] } },
+        scales: { x: { time: false,}, y: { range: [0, 100] } },
         series: [
             { label: t('chart.series.rank') },
             { label: t('view.cov_denoiser.chart.cum_variance'),

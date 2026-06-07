@@ -110,7 +110,7 @@ function renderWinRateChart(stats) {
     const fifty = xs.map(() => 50);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { range: [0, 100] } },
+        scales: { x: { time: false,}, y: { range: [0, 100] } },
         series: [
             { label: t('view.mood_analytics.chart.mood') },
             { label: t('view.mood_analytics.chart.win_rate'),
@@ -121,6 +121,8 @@ function renderWinRateChart(stats) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40,
               values: (_u, splits) => splits.map(v => v.toFixed(0) + '%') },
@@ -145,7 +147,7 @@ function renderMoodScatter(pairs) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: { auto: false, range: [-2.5, 2.5] }, y: { auto: true } },
+        scales: { x: { time: false, auto: false, range: [-2.5, 2.5] }, y: { auto: true } },
         series: [
             { label: t('view.mood_analytics.chart.mood') },
             { label: t('view.mood_analytics.chart.pnl'),

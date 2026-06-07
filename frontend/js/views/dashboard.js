@@ -32,7 +32,7 @@ export async function loadAnalyticsBundle(accountId, interval, failedFetches = [
     };
     const [summary, equity, cal, dow, hold, hour, dd, byPrice, daily, tags,
            byMonth, bySymbol, byDurationCoarse, byRBucket, byOpeningGap,
-           byInstrumentVolume, byMovement, openTrades, layout] = await Promise.all([
+           byInstrumentVolume, byMovement, byBroker, openTrades, layout] = await Promise.all([
         api.summary(accountId, interval),
         api.equity(accountId, undefined, interval),
         api.calendar(accountId, interval),
@@ -50,12 +50,13 @@ export async function loadAnalyticsBundle(accountId, interval, failedFetches = [
         api.byOpeningGap(accountId, interval).catch(swallow('byOpeningGap', [])),
         api.byInstrumentVolume(accountId, interval).catch(swallow('byInstrumentVolume', [])),
         api.byMovement(accountId, interval).catch(swallow('byMovement', [])),
+        api.byBroker(accountId, interval).catch(swallow('byBroker', [])),
         api.trades(accountId, { status: 'open', limit: 100 }).catch(swallow('openTrades', [])),
         loadLayout(),
     ]);
     const data = { equity, summary, dow, hold, hour, byPrice, dd, daily, tags, cal,
                    byMonth, bySymbol, byDurationCoarse, byRBucket, byOpeningGap,
-                   byInstrumentVolume, byMovement, openTrades };
+                   byInstrumentVolume, byMovement, byBroker, openTrades };
     return { data, layout };
 }
 
@@ -401,7 +402,7 @@ function drawdownChart(elId, equity) {
         const labels = equity.map(p => shortDay(p.day));
         new window.uPlot({
             title: '', width: el.clientWidth || 600, height: 260,
-            scales: { x: {}, y: { auto: true } },
+            scales: { x: { time: false,}, y: { auto: true } },
             series: [
                 { label: 'day' },
                 { label: 'drawdown', stroke: '#ff3860', width: 2,
@@ -475,7 +476,7 @@ function dailyVolumeChart(elId, daily) {
         };
         new window.uPlot({
             title: '', width: el.clientWidth || 600, height: 260,
-            scales: { x: {}, y: {} },
+            scales: { x: { time: false,}, y: {} },
             series: [
                 { label: 'day' },
                 { label: 'volume', stroke: 'transparent', paths: barsPath },
@@ -509,7 +510,7 @@ function lineChart(elId, daily, valueKey, color) {
         const labels = daily.map(d => shortDay(d.day));
         new window.uPlot({
             title: '', width: el.clientWidth || 600, height: 260,
-            scales: { x: {}, y: { auto: true } },
+            scales: { x: { time: false,}, y: { auto: true } },
             series: [
                 { label: 'day' },
                 { label: valueKey, stroke: color, width: 2 },
@@ -628,6 +629,13 @@ const WIDGETS = [
         html: (d) => perfByBucketsWidget(d.byMonth, { preserveOrder: true }) },
     { id: 'perf_symbol', titleKey: 'view.dashboard.tv.perf_symbol',
         html: (d) => perfByBucketsWidget(d.bySymbol, { limit: 10 }) },
+    // Per-broker P&L breakdown — the brokers-side analog of perf_symbol.
+    // Mapped to the {key, net_pnl} shape perfByBucketsWidget expects.
+    { id: 'perf_broker', titleKey: 'view.dashboard.tv.perf_broker',
+        html: (d) => perfByBucketsWidget(
+            (d.byBroker || []).map(b => ({ key: b.label, net_pnl: b.net_pnl })),
+            { limit: 10, preserveOrder: true },
+        ) },
     { id: 'total_trades', titleKey: 'view.dashboard.tv.total_trades',
         html: (d) => heroStat(d.summary.trade_count, 'hero-num-cyan') },
     { id: 'avg_daily_volume', titleKey: 'view.dashboard.tv.avg_daily_volume',
@@ -682,6 +690,260 @@ const WIDGETS = [
             } catch (_) {
                 el.innerHTML = `<div class="muted small">${esc(t('view.dashboard.tv.budget_widget.start'))}</div>
                     <a href="#budget" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.budget_widget.open'))}</a>`;
+            }
+        } },
+    // Trades — recent trades list with a link to the full table.
+    { id: 'recent_trades', titleKey: 'view.dashboard.tv.recent_trades',
+        html: () => `<div id="dash-recent-trades" class="dash-manage-list"><div class="muted small">${esc(t('common.loading'))}</div></div>`,
+        mount: async () => {
+            const el = document.getElementById('dash-recent-trades');
+            if (!el) return;
+            try {
+                // GET /trades requires an account_id (axum query reject is
+                // hard 400 if missing). Read the currently-active account
+                // from the global app state — if none picked yet, surface
+                // the prompt instead of failing the fetch.
+                const { state } = await import('../app.js');
+                const accountId = state?.accountId;
+                if (!accountId) {
+                    el.innerHTML = `<div class="muted small">${esc(t('view.dashboard.tv.recent_trades_no_account'))}</div>
+                        <a href="#accounts" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.recent_trades_pick_account'))}</a>`;
+                    return;
+                }
+                const trades = await api.trades(accountId, { limit: 8 });
+                if (!trades || !trades.length) {
+                    el.innerHTML = `<div class="muted small">${esc(t('view.dashboard.tv.recent_trades_empty'))}</div>
+                        <a href="#trades" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.recent_trades_open'))}</a>`;
+                    return;
+                }
+                el.innerHTML = `<ul class="dash-manage-rows">${
+                    trades.slice(0, 6).map(tr => {
+                        const pnl = +(tr.net_pnl || 0);
+                        const cls = pnl > 0 ? 'tw-refund' : pnl < 0 ? 'tw-owed' : 'muted';
+                        return `<li>
+                            <span class="dash-manage-spacer"></span>
+                            <strong>${esc(tr.symbol || '—')}</strong>
+                            <span class="${cls} small">${esc(fmtMoney(pnl))}</span>
+                        </li>`;
+                    }).join('')
+                }</ul>
+                    <div class="dash-manage-meta muted small">${esc(t('view.dashboard.tv.recent_trades_count', { n: trades.length }))}</div>
+                    <a href="#trades" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.recent_trades_open'))}</a>`;
+            } catch (e) {
+                el.innerHTML = `<div class="muted small">${esc(t('view.dashboard.tv.recent_trades_failed', { err: e.message || String(e) }))}</div>
+                    <a href="#trades" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.recent_trades_open'))}</a>`;
+            }
+        } },
+    // Expense dashboard summary tile.
+    { id: 'expense_dashboard_card', titleKey: 'view.dashboard.tv.expense_dashboard',
+        html: () => `<div id="dash-expense-dashboard" class="dash-manage-list"><div class="muted small">${esc(t('common.loading'))}</div></div>`,
+        mount: async () => {
+            const el = document.getElementById('dash-expense-dashboard');
+            if (!el) return;
+            try {
+                const year = new Date().getFullYear();
+                const bundle = await api.expenseDashboardBundle(year, null);
+                const total = +(bundle?.totals?.total || bundle?.totals?.gross || 0);
+                el.innerHTML = `<div class="dash-tax-amount">${esc(fmtMoney(total))}</div>
+                    <div class="dash-manage-meta muted small">${esc(t('view.dashboard.tv.expense_dashboard_window', { year }))}</div>
+                    <a href="#expense-dashboard" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.expense_dashboard_open'))}</a>`;
+            } catch (e) {
+                el.innerHTML = `<div class="muted small">${esc(t('view.dashboard.tv.expense_dashboard_failed', { err: e.message || String(e) }))}</div>
+                    <a href="#expense-dashboard" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.expense_dashboard_open'))}</a>`;
+            }
+        } },
+    // Expense calendar — current-month total + opener.
+    { id: 'expense_calendar_card', titleKey: 'view.dashboard.tv.expense_calendar',
+        html: () => `<div id="dash-expense-calendar" class="dash-manage-list"><div class="muted small">${esc(t('common.loading'))}</div></div>`,
+        mount: async () => {
+            const el = document.getElementById('dash-expense-calendar');
+            if (!el) return;
+            try {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = now.getMonth() + 1;
+                const cal = await api.receiptsMonthCalendar(year, month, null);
+                const sum = Array.isArray(cal?.days)
+                    ? cal.days.reduce((acc, d) => acc + (+d.total || 0), 0)
+                    : 0;
+                el.innerHTML = `<div class="dash-tax-amount">${esc(fmtMoney(sum))}</div>
+                    <div class="dash-manage-meta muted small">${esc(t('view.dashboard.tv.expense_calendar_window', { year, month }))}</div>
+                    <a href="#expense-calendar" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.expense_calendar_open'))}</a>`;
+            } catch (e) {
+                el.innerHTML = `<div class="muted small">${esc(t('view.dashboard.tv.expense_calendar_failed', { err: e.message || String(e) }))}</div>
+                    <a href="#expense-calendar" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.expense_calendar_open'))}</a>`;
+            }
+        } },
+    // Categorize queue size — sum of receipts pending item-level
+    // category assignment.
+    { id: 'categorize_card', titleKey: 'view.dashboard.tv.categorize',
+        html: () => `<div id="dash-categorize" class="dash-manage-list"><div class="muted small">${esc(t('common.loading'))}</div></div>`,
+        mount: async () => {
+            const el = document.getElementById('dash-categorize');
+            if (!el) return;
+            try {
+                // The categorize page groups receipts by merchant — show the
+                // group count as the headline so the user sees roughly how
+                // much triage work is queued.
+                const groups = await api.receiptsByMerchant({ uncategorized_only: true, limit: 1 }).catch(() => null);
+                const count = Array.isArray(groups?.merchants)
+                    ? groups.merchants.length
+                    : (groups?.total || 0);
+                el.innerHTML = `<div class="dash-tax-amount">${esc(String(count))}</div>
+                    <div class="dash-manage-meta muted small">${esc(t('view.dashboard.tv.categorize_label'))}</div>
+                    <a href="#categorize" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.categorize_open'))}</a>`;
+            } catch (e) {
+                el.innerHTML = `<div class="muted small">${esc(t('view.dashboard.tv.categorize_failed', { err: e.message || String(e) }))}</div>
+                    <a href="#categorize" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.categorize_open'))}</a>`;
+            }
+        } },
+    // Note templates — count + link.
+    { id: 'note_templates_card', titleKey: 'view.dashboard.tv.note_templates',
+        html: () => `<div id="dash-note-templates" class="dash-manage-list"><div class="muted small">${esc(t('common.loading'))}</div></div>`,
+        mount: async () => {
+            const el = document.getElementById('dash-note-templates');
+            if (!el) return;
+            try {
+                const tmpls = await api.noteTemplates().catch(() => []);
+                el.innerHTML = `<div class="dash-tax-amount">${esc(String((tmpls || []).length))}</div>
+                    <div class="dash-manage-meta muted small">${esc(t('view.dashboard.tv.note_templates_label'))}</div>
+                    <a href="#note-templates" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.note_templates_open'))}</a>`;
+            } catch (e) {
+                el.innerHTML = `<div class="muted small">${esc(t('view.dashboard.tv.note_templates_failed', { err: e.message || String(e) }))}</div>
+                    <a href="#note-templates" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.note_templates_open'))}</a>`;
+            }
+        } },
+    // Side-by-side broker comparison (net P&L, win rate, profit factor,
+    // expectancy) condensed into a sparkline-style tile. Full view at
+    // `#broker-compare`.
+    { id: 'broker_compare_card', titleKey: 'view.dashboard.tv.broker_compare',
+        html: () => `<div id="dash-broker-compare" class="dash-manage-list"><div class="muted small">${esc(t('common.loading'))}</div></div>`,
+        mount: async () => {
+            const el = document.getElementById('dash-broker-compare');
+            if (!el) return;
+            try {
+                const brokers = await api.brokersList();
+                if (!brokers.length) {
+                    el.innerHTML = `<div class="muted small">${esc(t('view.dashboard.tv.broker_compare_empty'))}</div>
+                        <a href="#broker-compare" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.broker_compare_open'))}</a>`;
+                    return;
+                }
+                const summaries = await Promise.all(
+                    brokers.slice(0, 6).map(b =>
+                        api.summaryRaw({ days: 90, broker_id: b.id }).catch(() => null)),
+                );
+                const rows = brokers.slice(0, 6).map((b, i) => {
+                    const s = summaries[i];
+                    const pnl = +(s?.net_pnl || 0);
+                    const cls = pnl > 0 ? 'tw-refund' : pnl < 0 ? 'tw-owed' : 'muted';
+                    return `<li>
+                        ${b.is_default ? '<span class="brk-default">★</span>' : '<span class="dash-manage-spacer"></span>'}
+                        <strong>${esc(b.display_name)}</strong>
+                        <span class="${cls} small">${esc(fmtMoney(pnl))}</span>
+                    </li>`;
+                }).join('');
+                el.innerHTML = `<ul class="dash-manage-rows">${rows}</ul>
+                    <div class="dash-manage-meta muted small">${esc(t('view.dashboard.tv.broker_compare_window'))}</div>
+                    <a href="#broker-compare" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.broker_compare_open'))}</a>`;
+            } catch (e) {
+                el.innerHTML = `<div class="muted small">${esc(t('view.dashboard.tv.broker_compare_failed', { err: e.message || String(e) }))}</div>
+                    <a href="#broker-compare" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.broker_compare_open'))}</a>`;
+            }
+        } },
+    // Side-by-side business comparison (expense totals).
+    { id: 'business_compare_card', titleKey: 'view.dashboard.tv.business_compare',
+        html: () => `<div id="dash-business-compare" class="dash-manage-list"><div class="muted small">${esc(t('common.loading'))}</div></div>`,
+        mount: async () => {
+            const el = document.getElementById('dash-business-compare');
+            if (!el) return;
+            try {
+                const businesses = await api.businessesList();
+                if (!businesses.length) {
+                    el.innerHTML = `<div class="muted small">${esc(t('view.dashboard.tv.business_compare_empty'))}</div>
+                        <a href="#business-compare" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.business_compare_open'))}</a>`;
+                    return;
+                }
+                const year = new Date().getFullYear();
+                const bundles = await Promise.all(
+                    businesses.slice(0, 6).map(b =>
+                        api.expenseDashboardBundle(year, b.id).catch(() => null)),
+                );
+                const rows = businesses.slice(0, 6).map((b, i) => {
+                    const total = +(bundles[i]?.totals?.gross || bundles[i]?.totals?.total || 0);
+                    return `<li>
+                        ${b.is_default ? '<span class="brk-default">★</span>' : '<span class="dash-manage-spacer"></span>'}
+                        <strong>${esc(b.name)}</strong>
+                        <span class="muted small">${esc(fmtMoney(total))}</span>
+                    </li>`;
+                }).join('');
+                el.innerHTML = `<ul class="dash-manage-rows">${rows}</ul>
+                    <div class="dash-manage-meta muted small">${esc(t('view.dashboard.tv.business_compare_window', { year }))}</div>
+                    <a href="#business-compare" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.business_compare_open'))}</a>`;
+            } catch (e) {
+                el.innerHTML = `<div class="muted small">${esc(t('view.dashboard.tv.business_compare_failed', { err: e.message || String(e) }))}</div>
+                    <a href="#business-compare" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.business_compare_open'))}</a>`;
+            }
+        } },
+    // Brokers — list + quick actions. Mirrors the budget/tax tile
+    // pattern: self-fetching tile that doubles as a dashboard widget
+    // AND as the full-page management view at `#brokers`.
+    { id: 'manage_brokers', titleKey: 'view.dashboard.tv.manage_brokers',
+        html: () => `<div id="dash-manage-brokers" class="dash-manage-list"><div class="muted small">${esc(t('common.loading'))}</div></div>`,
+        mount: async () => {
+            const el = document.getElementById('dash-manage-brokers');
+            if (!el) return;
+            try {
+                const rows = await api.brokersList();
+                if (!rows.length) {
+                    el.innerHTML = `<div class="muted small">${esc(t('view.dashboard.tv.manage_brokers_empty'))}</div>
+                        <a href="#brokers" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.manage_brokers_open'))}</a>`;
+                    return;
+                }
+                el.innerHTML = `
+                    <ul class="dash-manage-rows">
+                        ${rows.slice(0, 6).map(b => `
+                            <li>
+                                ${b.is_default ? '<span class="brk-default">★</span>' : '<span class="dash-manage-spacer"></span>'}
+                                <strong>${esc(b.display_name)}</strong>
+                                <code class="muted small">${esc(b.slug)}</code>
+                            </li>`).join('')}
+                    </ul>
+                    <div class="dash-manage-meta muted small">${esc(t('view.dashboard.tv.manage_brokers_count', { n: rows.length }))}</div>
+                    <a href="#brokers" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.manage_brokers_open'))}</a>
+                `;
+            } catch (e) {
+                el.innerHTML = `<div class="muted small">${esc(t('view.dashboard.tv.manage_brokers_failed', { err: e.message || String(e) }))}</div>
+                    <a href="#brokers" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.manage_brokers_open'))}</a>`;
+            }
+        } },
+    // Businesses — Schedule C entities list + quick actions.
+    { id: 'manage_businesses', titleKey: 'view.dashboard.tv.manage_businesses',
+        html: () => `<div id="dash-manage-businesses" class="dash-manage-list"><div class="muted small">${esc(t('common.loading'))}</div></div>`,
+        mount: async () => {
+            const el = document.getElementById('dash-manage-businesses');
+            if (!el) return;
+            try {
+                const rows = await api.businessesList();
+                if (!rows.length) {
+                    el.innerHTML = `<div class="muted small">${esc(t('view.dashboard.tv.manage_businesses_empty'))}</div>
+                        <a href="#businesses" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.manage_businesses_open'))}</a>`;
+                    return;
+                }
+                el.innerHTML = `
+                    <ul class="dash-manage-rows">
+                        ${rows.slice(0, 6).map(b => `
+                            <li>
+                                ${b.is_default ? '<span class="brk-default">★</span>' : '<span class="dash-manage-spacer"></span>'}
+                                <strong>${esc(b.name)}</strong>
+                                <code class="muted small">${esc(b.entity_type || 'sole_prop')}</code>
+                            </li>`).join('')}
+                    </ul>
+                    <div class="dash-manage-meta muted small">${esc(t('view.dashboard.tv.manage_businesses_count', { n: rows.length }))}</div>
+                    <a href="#businesses" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.manage_businesses_open'))}</a>
+                `;
+            } catch (e) {
+                el.innerHTML = `<div class="muted small">${esc(t('view.dashboard.tv.manage_businesses_failed', { err: e.message || String(e) }))}</div>
+                    <a href="#businesses" class="btn btn-secondary btn-compact">${esc(t('view.dashboard.tv.manage_businesses_open'))}</a>`;
             }
         } },
     // Tax wizard status. Self-fetching — doesn't read from `d`.
@@ -798,23 +1060,61 @@ function attachLayoutHandlers(mount, layout, _data, persistFn) {
 }
 
 let cachedSettings = null;
+// Per-broker layout key — the server-side `dashboard_layout` setting
+// remains the default/aggregated. A localStorage override stores
+// per-broker tweaks so each broker can have a different widget order.
+function brokerLayoutKey() {
+    try {
+        const bid = globalThis.__tvActiveBroker?.();
+        return bid ? `dashboard_layout_broker_${bid}` : null;
+    } catch { return null; }
+}
+/**
+ * Merge any widget ID present in DEFAULT_LAYOUT but missing from
+ * `saved`. New widgets (manage_brokers, manage_businesses,
+ * broker_compare, business_compare, etc.) ship enabled by default —
+ * users with a saved layout from before the addition would otherwise
+ * never see them without manually opening the "+ Add widget" picker.
+ */
+function mergeMissingDefaults(saved) {
+    const have = new Set(saved);
+    const additions = DEFAULT_LAYOUT.filter(id => !have.has(id));
+    return additions.length ? [...saved, ...additions] : saved;
+}
+
 async function loadLayout() {
+    const bkey = brokerLayoutKey();
+    if (bkey) {
+        try {
+            const raw = localStorage.getItem(bkey);
+            if (raw) {
+                const arr = JSON.parse(raw);
+                if (Array.isArray(arr)) {
+                    const known = arr.filter((id) => WIDGETS_BY_ID.has(id));
+                    if (known.length) return mergeMissingDefaults(known);
+                }
+            }
+        } catch {}
+    }
     try {
         cachedSettings = await api.settings();
         const stored = cachedSettings?.dashboard_layout;
         if (stored && Array.isArray(stored.order)) {
             // Drop unknown IDs (e.g. widgets removed between versions).
             const known = stored.order.filter(id => WIDGETS_BY_ID.has(id));
-            return known.length ? known : DEFAULT_LAYOUT.slice();
+            return known.length ? mergeMissingDefaults(known) : DEFAULT_LAYOUT.slice();
         }
     } catch (_) { /* fall through to default */ }
     return DEFAULT_LAYOUT.slice();
 }
 async function saveLayout(order) {
-    // If we never managed to load settings (first-render race, transient
-    // network blip), pull them fresh now so the user's drag/delete isn't
-    // silently dropped. saveLayout used to early-return here and the drop
-    // appeared to do nothing.
+    // Per-broker overrides stay in localStorage; the aggregated layout
+    // is persisted server-side.
+    const bkey = brokerLayoutKey();
+    if (bkey) {
+        try { localStorage.setItem(bkey, JSON.stringify(order)); } catch {}
+        return;
+    }
     if (!cachedSettings) {
         try { cachedSettings = await api.settings(); }
         catch (e) { console.warn('layout save: fetch settings failed', e); return; }

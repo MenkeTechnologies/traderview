@@ -164,7 +164,7 @@ function renderChart() {
     const diffsPct = enriched.map(r => r.diff * 100);   // signed pct points
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 340,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('chart.series.rank') },
             { label: t('chart.series.w_pp'), stroke: '#00e5ff', width: 1.5, points: { show: true, size: 5 } },
@@ -198,7 +198,7 @@ function renderWeightsChart() {
     const bench = enriched.map(r => r.benchmark_weight * 100);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('chart.series.rank') },
             { label: t('view.act_share.chart.port_w'),

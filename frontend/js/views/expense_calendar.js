@@ -11,6 +11,11 @@ import { fmtUsd } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
+import {
+    mountBusinessSelector,
+    onChange as onBusinessChange,
+    activeBusinessId,
+} from '../business_context.js';
 
 const DOW_SHORT = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 const MONTH_NAMES = ['January','February','March','April','May','June',
@@ -48,6 +53,7 @@ export async function renderExpenseCalendar(mount) {
                     <span data-i18n="view.exp_calendar.title">// EXPENSE CALENDAR</span>
                 </h1>
                 <div class="excal-controls">
+                    <span id="excal-biz-selector"></span>
                     <button type="button" id="excal-prev" class="btn btn-secondary btn-compact" aria-label="prev month">‹</button>
                     <select id="excal-month">${monthOpts}</select>
                     <select id="excal-year">${yearOpts}</select>
@@ -93,7 +99,7 @@ export async function renderExpenseCalendar(mount) {
 
     async function load() {
         let days = [];
-        try { days = await api.receiptsMonthCalendar(year, month); }
+        try { days = await api.receiptsMonthCalendar(year, month, activeBusinessId()); }
         catch (e) {
             if (!viewIsCurrent(tok)) return;
             mount.querySelector('#excal-body').innerHTML =
@@ -240,5 +246,10 @@ export async function renderExpenseCalendar(mount) {
     }
 
     drawShell();
+    // Mount business selector + re-load month when user switches.
+    const bizHost = mount.querySelector('#excal-biz-selector');
+    if (bizHost) mountBusinessSelector(bizHost);
+    const unsubBiz = onBusinessChange(() => load());
+    mount.__excalUnsubBiz = unsubBiz;
     await load();
 }

@@ -114,7 +114,7 @@ function renderChangeChart(contracts) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.premarket.chart.contract_idx') },
             { label: t('view.premarket.chart.change_pct'),
@@ -126,6 +126,8 @@ function renderChangeChart(contracts) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 50 },
         ],
@@ -149,7 +151,7 @@ function renderAtrChart(contracts) {
     const one = xs.map(() => 1);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.premarket.chart.contract_idx') },
             { label: t('view.premarket.chart.atr_multiple'),
@@ -160,6 +162,8 @@ function renderAtrChart(contracts) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 50,
               values: (_u, splits) => splits.map(v => v.toFixed(1) + '×') },

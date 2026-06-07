@@ -14,8 +14,12 @@ import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
 import { tConfirm, tPrompt } from '../dialog.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
-import { applyBarWidths } from '../util.js';
+import { applyBarWidths, fmtUsd } from '../util.js';
 import { initDragReorder } from '../drag_reorder.js';
+import {
+    mountBusinessSelector,
+    onChange as onBusinessChange,
+} from '../business_context.js';
 
 const state = {
     accounts: [],
@@ -49,7 +53,7 @@ function renderMonthChart() {
     const xs = months.map((_, i) => i + 1);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false }, y: { auto: true } },
         series: [
             { label: t('view.expenses.chart.month') },
             { label: t('view.expenses.chart.monthly_spend'),
@@ -92,7 +96,7 @@ function renderCategoryChart() {
     const ys = rows.map(r => r.v);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false }, y: { auto: true } },
         series: [
             { label: t('view.expenses.chart.category') },
             { label: t('view.expenses.chart.total_spend'),
@@ -101,6 +105,8 @@ function renderCategoryChart() {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 56 },
         ],
@@ -161,6 +167,7 @@ function drawShell(mount) {
     <div class="tax-dashboard-header">
         <h1 class="view-title"><span data-i18n="view.expenses.h1.tax_dashboard">// TAX DASHBOARD</span></h1>
         <div class="tax-period-bar">
+            <span id="tax-biz-selector"></span>
             <label>${esc(t('view.expenses.tax.year'))}
                 <select id="tax-year">${yearOpts}</select></label>
             <div class="tax-period-pills" role="tablist">
@@ -474,6 +481,12 @@ function drawShell(mount) {
     });
     refreshDash();
 
+    // Business selector + onChange → re-render dashboard when filtered.
+    const taxBizHost = mount.querySelector('#tax-biz-selector');
+    if (taxBizHost) mountBusinessSelector(taxBizHost);
+    const unsubTaxBiz = onBusinessChange(() => refreshDash());
+    mount.__taxUnsubBiz = unsubTaxBiz;
+
     // Receipts page → open-row navigates here with `?receipt=<id>`
     // appended after the hash. Pick that up + auto-open the matcher.
     const m = (location.hash || '').match(/[?&]receipt=([0-9a-f-]{36})/i);
@@ -520,15 +533,6 @@ function currentTaxRange() {
         default:
             return { from: yearStart, to: isCurrentYear ? todayIso : yearEnd };
     }
-}
-function fmtUsd(n) {
-    const x = Number(n);
-    if (!Number.isFinite(x)) return '—';
-    const sign = x < 0 ? '-' : '';
-    const abs = Math.abs(x);
-    if (abs >= 1e6) return `${sign}$${(abs / 1e6).toFixed(1)}M`;
-    if (abs >= 1e3) return `${sign}$${(abs / 1e3).toFixed(1)}K`;
-    return `${sign}$${abs.toFixed(2)}`;
 }
 async function renderTaxDashboard(mount) {
     const grid = mount.querySelector('#tax-stat-grid');

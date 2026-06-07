@@ -239,7 +239,7 @@ function renderRollChart() {
     const globalLine = xs.map(() => globalSd);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.arch_lm.chart.bar_idx') },
             { label: t('view.arch_lm.chart.roll_sd'),
@@ -269,7 +269,7 @@ function renderSqChart() {
     const xs = sqResiduals.map((_, i) => i + 1);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.arch_lm.chart.bar_idx') },
             { label: t('view.arch_lm.chart.sq_residual'),

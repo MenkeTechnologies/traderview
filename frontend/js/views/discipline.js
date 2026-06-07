@@ -102,7 +102,7 @@ function renderDisciplineChart(r) {
     const threshold = xs.map(() => 80);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: false, range: [0, 100] } },
+        scales: { x: { time: false,}, y: { auto: false, range: [0, 100] } },
         series: [
             { label: t('view.discipline.chart.window_idx') },
             { label: t('view.discipline.chart.pct'),
@@ -114,6 +114,8 @@ function renderDisciplineChart(r) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
@@ -142,7 +144,7 @@ function renderRuleChart(r) {
     const threshold = xs.map(() => 80);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: false, range: [0, 100] } },
+        scales: { x: { time: false,}, y: { auto: false, range: [0, 100] } },
         series: [
             { label: t('view.discipline.chart.rule_idx') },
             { label: t('view.discipline.chart.pass_rate'),
@@ -153,6 +155,8 @@ function renderRuleChart(r) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],

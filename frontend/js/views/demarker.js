@@ -155,7 +155,7 @@ function renderChart(values) {
     const el = document.getElementById('dm-chart');
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 280,
-        scales: { x: {}, y: { range: [0, 1] } },
+        scales: { x: { time: false,}, y: { range: [0, 1] } },
         series: [
             { label: t('chart.series.bar_num') },
             { label: t('chart.series.demarker'), stroke: '#00e5ff', width: 1.5,
@@ -191,7 +191,7 @@ function renderRegimeChart(values) {
     const xs = labels.map((_, i) => i + 1);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.demarker.chart.regime_idx') },
             { label: t('view.demarker.chart.bar_count'),
@@ -200,6 +200,8 @@ function renderRegimeChart(values) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 50 },
         ],

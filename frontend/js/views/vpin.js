@@ -185,7 +185,7 @@ function renderVpinChart(report) {
     const el = document.getElementById('vp-chart-vpin');
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 260,
-        scales: { x: {}, y: { range: [0, 1] } },
+        scales: { x: { time: false,}, y: { range: [0, 1] } },
         series: [
             { label: t('view.vpin.series.bucket_num') },
             { label: t('chart.series.vpin'), stroke: '#00e5ff', width: 1.5,
@@ -206,7 +206,7 @@ function renderVolChart(report) {
     const el = document.getElementById('vp-chart-vol');
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 240,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.bucket_') },
             { label: t('chart.series.buy'),  stroke: '#00e5ff', width: 1.0, fill: '#00e5ff66',

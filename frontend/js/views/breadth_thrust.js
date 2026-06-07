@@ -200,7 +200,7 @@ function renderChart(report) {
     const markers = report.thrust_triggered.map(v => v ? peak : null);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 340,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('chart.series.bar') },
             { label: t('chart.series.ratio'),    stroke: '#aab',     width: 1.0, dash: [2, 2], points: { show: false } },
@@ -234,7 +234,7 @@ function renderCumChart() {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('chart.series.bar') },
             { label: t('view.breadth.chart.ad_cum'),

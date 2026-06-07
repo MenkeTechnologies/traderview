@@ -112,6 +112,7 @@ async fn add_symbol(
     traderview_db::watchlists::add_symbol(&s.pool, id, &body.symbol)
         .await
         .map_err(ApiError::Internal)?;
+    push_watchlist_subs_to_live_ticks(&s.pool).await;
     Ok(Json(true))
 }
 
@@ -121,11 +122,34 @@ async fn remove_symbol(
     Path((id, symbol)): Path<(Uuid, String)>,
 ) -> Result<Json<bool>, ApiError> {
     ensure_owner(&s, user.id, id).await?;
-    Ok(Json(
-        traderview_db::watchlists::remove_symbol(&s.pool, id, &symbol)
-            .await
-            .map_err(ApiError::Internal)?,
-    ))
+    let removed = traderview_db::watchlists::remove_symbol(&s.pool, id, &symbol)
+        .await
+        .map_err(ApiError::Internal)?;
+    push_watchlist_subs_to_live_ticks(&s.pool).await;
+    Ok(Json(removed))
+}
+
+/// Push the union of every user's watchlist symbols into the live-tick
+/// subscription set. Best-effort — failures get logged but don't fail
+/// the user's HTTP request. Called after every watchlist mutation so
+/// the WS workers stay in sync without the candidates/scanner loop.
+async fn push_watchlist_subs_to_live_ticks(pool: &sqlx::PgPool) {
+    let live = traderview_db::live_ticks::global();
+    if !live.has_any_provider().await {
+        // No WS provider configured yet — set_symbols would be a no-op,
+        // skip the DB round-trip.
+        return;
+    }
+    let symbols = match traderview_db::watchlists::all_distinct_symbols(pool).await {
+        Ok(s) => s,
+        Err(e) => {
+            tracing::warn!(error = %e, "all_distinct_symbols failed; live ticks may lag");
+            return;
+        }
+    };
+    if let Err(e) = live.set_symbols(symbols).await {
+        tracing::warn!(error = %e, "set_symbols from watchlist mutation failed");
+    }
 }
 
 #[derive(Serialize)]

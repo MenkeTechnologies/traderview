@@ -248,7 +248,7 @@ function renderSeriesChart() {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.block_boot.chart.obs_idx') },
             { label: t('view.block_boot.chart.value'),
@@ -288,7 +288,7 @@ function renderCumChart() {
     }
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.block_boot.chart.obs_idx') },
             { label: t('view.block_boot.chart.cum'),

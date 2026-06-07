@@ -15,6 +15,11 @@ import { t } from '../i18n.js';
 import { esc, fmtMoney } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
+import {
+    mountBusinessSelector,
+    onChange as onBusinessChange,
+    listBusinesses,
+} from '../business_context.js';
 
 const STATE = {
     defaultOnly: true,
@@ -30,6 +35,7 @@ export async function renderCategorize(mount) {
         <p class="muted small" data-i18n="view.categorize.subtitle">${esc(t('view.categorize.subtitle'))}</p>
 
         <div class="cz-toolbar">
+            <span id="cz-biz-selector"></span>
             <label class="cz-toggle">
                 <input type="checkbox" id="cz-default-only" ${STATE.defaultOnly ? 'checked' : ''}>
                 <span>${esc(t('view.categorize.toggle.default_only'))}</span>
@@ -54,6 +60,14 @@ export async function renderCategorize(mount) {
         try { STATE.categories = await api.expenseCategories(); }
         catch (_) { STATE.categories = []; }
     }
+
+    // Business selector — reload categorize list when switched. Also
+    // pre-fetch the businesses for the per-row picker.
+    const czBizHost = mount.querySelector('#cz-biz-selector');
+    if (czBizHost) mountBusinessSelector(czBizHost);
+    void listBusinesses();
+    const unsubCzBiz = onBusinessChange(() => loadAndRender(mount, tok));
+    mount.__czUnsubBiz = unsubCzBiz;
 
     await loadAndRender(mount, tok);
 }
@@ -93,6 +107,14 @@ async function loadAndRender(mount, tok) {
     const catOptions = STATE.categories
         .map(c => `<option value="${esc(c.code)}">${esc(c.label || c.code)}</option>`)
         .join('');
+    // Fetch businesses once (cached); resolve before building rows so
+    // each row knows the available options.
+    const businesses = await listBusinesses();
+    const bizOptions = [
+        `<option value="">${esc(t('view.categorize.opt.no_change_biz'))}</option>`,
+        `<option value="__null__">${esc(t('view.categorize.opt.clear_biz'))}</option>`,
+        ...businesses.map(b => `<option value="${esc(b.id)}">${esc(b.name)}</option>`),
+    ].join('');
 
     list.innerHTML = STATE.groups.map((g, i) => {
         const picked = STATE.selections.get(g.canonical_merchant) || g.learned_category || '';
@@ -112,6 +134,9 @@ async function loadAndRender(mount, tok) {
                 <select class="cz-cat" data-i="${i}">
                     <option value="">${esc(t('view.categorize.opt.no_change'))}</option>
                     ${catOptions}
+                </select>
+                <select class="cz-biz" data-i="${i}" title="${esc(t('view.categorize.opt.assign_biz'))}">
+                    ${bizOptions}
                 </select>
                 <button type="button" class="btn btn-secondary btn-compact cz-apply" data-i="${i}">
                     ${esc(t('view.categorize.action.apply'))}
@@ -149,17 +174,20 @@ async function applyGroup(mount, tok, i) {
     if (!g) return;
     const sel = mount.querySelector(`select.cz-cat[data-i="${i}"]`);
     const cat = sel ? sel.value : '';
-    if (!cat) {
+    const bizSel = mount.querySelector(`select.cz-biz[data-i="${i}"]`);
+    const bizVal = bizSel ? bizSel.value : '';
+    if (!cat && !bizVal) {
         showToast(t('view.categorize.err.pick_category'), { level: 'warn' });
         return;
     }
     const btn = mount.querySelector(`button.cz-apply[data-i="${i}"]`);
     if (btn) btn.disabled = true;
     try {
-        const r = await api.bulkPatchReceiptItems({
-            ids: g.receipt_ids,
-            category: cat,
-        });
+        const patch = { ids: g.receipt_ids };
+        if (cat) patch.category = cat;
+        if (bizVal === '__null__') patch.business_id = null;
+        else if (bizVal) patch.business_id = bizVal;
+        const r = await api.bulkPatchReceiptItems(patch);
         if (!viewIsCurrent(tok)) return;
         showToast(t('view.categorize.toast.applied', {
             merchant: g.canonical_merchant,

@@ -175,7 +175,7 @@ function renderChart(bars, r) {
     }
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 340,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.bar_num') },
             { label: t('chart.series.close'), stroke: '#00e5ff', width: 1.5,
@@ -204,7 +204,7 @@ function renderDistanceChart(r) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.murrey_math.chart.level') },
             { label: t('view.murrey_math.chart.distance'),
@@ -215,6 +215,8 @@ function renderDistanceChart(r) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 60 },
         ],

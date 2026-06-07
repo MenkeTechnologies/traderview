@@ -58,7 +58,7 @@ function renderCreatedChart(mine, pub) {
     const pubCum  = xs.map(i => i <= pubRows.length  ? i : null);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.shares.chart.share_idx') },
             { label: t('view.shares.chart.mine'),
@@ -92,7 +92,7 @@ function renderViewsChart(mine, pub) {
     const pubY  = rows.map(r => r.mine ? null : r.v);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.shares.chart.slug_idx') },
             { label: t('view.shares.chart.mine'),
@@ -104,6 +104,8 @@ function renderViewsChart(mine, pub) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],

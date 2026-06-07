@@ -15,8 +15,17 @@ import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { initDragReorder, resetDragReorder } from '../drag_reorder.js';
 import { showToast } from '../toast.js';
+import {
+    mountBusinessSelector,
+    onChange as onBusinessChange,
+    activeBusinessId,
+} from '../business_context.js';
 
-const LAYOUT_KEY = 'expense_dashboard_layout_v1';
+const LAYOUT_BASE_KEY = 'expense_dashboard_layout_v1';
+function layoutKey() {
+    const bid = activeBusinessId();
+    return bid ? `${LAYOUT_BASE_KEY}_${bid}` : LAYOUT_BASE_KEY;
+}
 const YEAR_KEY = 'expense_dashboard_year';
 
 function esc(s) {
@@ -361,7 +370,7 @@ async function mountYoyMonthly(year) {
     if (!el || !window.uPlot) return;
     el.innerHTML = '';
     let rows = [];
-    try { rows = await api.receiptsYoyMonthly(year); } catch { rows = []; }
+    try { rows = await api.receiptsYoyMonthly(year, activeBusinessId()); } catch { rows = []; }
     if (!rows.length) {
         el.innerHTML = `<p class="muted small">${esc(t('view.expenses.tax.chart.empty'))}</p>`;
         return;
@@ -390,7 +399,7 @@ async function mountAging() {
     const el = document.getElementById('expd-aging');
     if (!el) return;
     let rows = [];
-    try { rows = await api.receiptsAging(); } catch { rows = []; }
+    try { rows = await api.receiptsAging(activeBusinessId()); } catch { rows = []; }
     const colors = { '0-7d': '#50ff80', '8-30d': '#ffd84a', '31-90d': '#ff7a3d', '90+d': '#ff3860' };
     const totalCount = rows.reduce((s, r) => s + (r.count || 0), 0);
     if (totalCount === 0) {
@@ -418,7 +427,7 @@ async function mountPerProperty(year) {
     const el = document.getElementById('expd-property');
     if (!el) return;
     let rows = [];
-    try { rows = await api.receiptsByProperty(year); } catch { rows = []; }
+    try { rows = await api.receiptsByProperty(year, activeBusinessId()); } catch { rows = []; }
     if (!rows.length) {
         el.innerHTML = `<p class="muted small">${esc(t('view.exp_dash.widget.property_empty'))}</p>`;
         return;
@@ -457,7 +466,7 @@ async function mountAnomalies() {
     const el = document.getElementById('expd-anomalies');
     if (!el) return;
     let rows = [];
-    try { rows = await api.receiptsAnomalies(); } catch { rows = []; }
+    try { rows = await api.receiptsAnomalies(activeBusinessId()); } catch { rows = []; }
     if (!rows.length) {
         el.innerHTML = `<p class="muted small">${esc(t('view.exp_dash.widget.anomalies_clean'))}</p>`;
         return;
@@ -513,7 +522,7 @@ async function mountBoxPlot(year) {
     const canvas = document.getElementById('expd-boxplot');
     if (!canvas) return;
     let rows = [];
-    try { rows = await api.receiptsCategoryDistribution(year); } catch { rows = []; }
+    try { rows = await api.receiptsCategoryDistribution(year, activeBusinessId()); } catch { rows = []; }
     const ctx = canvas.getContext('2d');
     const W = canvas.width, H = canvas.height;
     ctx.clearRect(0, 0, W, H);
@@ -909,7 +918,7 @@ function drawCalendar(days) {
 
 function loadLayout() {
     try {
-        const raw = localStorage.getItem(LAYOUT_KEY);
+        const raw = localStorage.getItem(layoutKey());
         if (!raw) return DEFAULT_LAYOUT.slice();
         const arr = JSON.parse(raw);
         if (!Array.isArray(arr)) return DEFAULT_LAYOUT.slice();
@@ -923,7 +932,7 @@ function loadLayout() {
 }
 
 function persistLayout(order) {
-    try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(order)); } catch {}
+    try { localStorage.setItem(layoutKey(), JSON.stringify(order)); } catch {}
 }
 
 function getYear() {
@@ -944,7 +953,7 @@ export async function renderExpenseDashboard(mount) {
 
     let data;
     try {
-        data = await api.expenseDashboardBundle(year);
+        data = await api.expenseDashboardBundle(year, activeBusinessId());
     } catch (e) {
         if (!viewIsCurrent(tok)) return;
         mount.innerHTML = `<p class="boot">${esc(t('view.exp_dash.load_failed', { err: e.message }))}</p>`;
@@ -963,6 +972,7 @@ export async function renderExpenseDashboard(mount) {
                 <span data-i18n="view.exp_dash.title">// BUSINESS EXPENSE DASHBOARD</span>
             </h1>
             <div class="expd-controls">
+                <span id="expd-biz-selector"></span>
                 <label>${esc(t('view.exp_dash.year'))}
                     <select id="expd-year">${yearOpts}</select></label>
                 <button type="button" id="expd-reset-layout" class="btn btn-secondary btn-compact">
@@ -974,6 +984,13 @@ export async function renderExpenseDashboard(mount) {
             ${renderLayoutPanels(layout, data)}
         </div>
     `;
+
+    // Business selector — populates async, re-renders the dashboard
+    // whenever the user picks a different business.
+    const selHost = mount.querySelector('#expd-biz-selector');
+    if (selHost) mountBusinessSelector(selHost);
+    const unsubBiz = onBusinessChange(() => renderExpenseDashboard(mount));
+    mount.__expdUnsubBiz = unsubBiz;
 
     // Mount-phase pass for widgets that need post-DOM init (uPlot etc.)
     requestAnimationFrame(() => {

@@ -178,7 +178,7 @@ function renderChart(bars, closeStops, chandStops) {
     const chandTrigs = triggerMarkers(chandStops, bars);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 320,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.bar_num') },
             { label: t('chart.series.close'),          stroke: '#00e5ff', width: 1.5, points: { show: false } },
@@ -219,7 +219,7 @@ function renderSpreadChart(bars, closeStops, chandStops) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.vol_stop_close.chart.bar_idx') },
             { label: t('view.vol_stop_close.chart.spread'),

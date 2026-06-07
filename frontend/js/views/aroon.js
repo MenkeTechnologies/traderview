@@ -169,7 +169,7 @@ function renderChart(report) {
     const xs = report.aroon_up.map((_, i) => i);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 340,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('view.aroon.series.bar') },
             { label: t('view.aroon.series.aroon_up'),    stroke: '#00e5ff', width: 1.5, points: { show: false } },
@@ -199,7 +199,7 @@ function renderStrengthChart(report) {
     const strong = xs.map(() => 50);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { range: [0, 100] } },
+        scales: { x: { time: false,}, y: { range: [0, 100] } },
         series: [
             { label: t('view.aroon.series.bar') },
             { label: t('view.aroon.chart.strength'),

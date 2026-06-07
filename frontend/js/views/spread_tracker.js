@@ -148,7 +148,7 @@ function renderCharts(samples, _report) {
     const elBps = document.getElementById('st-chart');
     new window.uPlot({
         title: '', width: elBps.clientWidth || 600, height: 280,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.sample_num') },
             { label: t('chart.series.spread_bps'), stroke: '#00e5ff', width: 1.2,
@@ -167,7 +167,7 @@ function renderCharts(samples, _report) {
     const elMid = document.getElementById('st-mid-chart');
     new window.uPlot({
         title: '', width: elMid.clientWidth || 600, height: 200,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.sample_num') },
             { label: t('chart.series.mid'), stroke: '#a06bff', width: 1.2,

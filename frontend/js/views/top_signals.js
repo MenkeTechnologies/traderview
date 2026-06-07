@@ -111,7 +111,7 @@ function renderSignalsChart(buys, sells) {
     const sellY = rows.map((h, i) => i < bRows.length ? null : Number(h.signal_count));
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.top_signals.chart.symbol') },
             { label: t('view.top_signals.chart.buy_signals'),
@@ -123,6 +123,8 @@ function renderSignalsChart(buys, sells) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
@@ -149,7 +151,7 @@ function renderRsiChart(buys, sells) {
     const os    = xs.map(() => 30);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { range: () => [0, 100] } },
+        scales: { x: { time: false,}, y: { range: () => [0, 100] } },
         series: [
             { label: t('view.top_signals.chart.symbol') },
             { label: t('view.top_signals.chart.buy_rsi'),
@@ -167,6 +169,8 @@ function renderRsiChart(buys, sells) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
@@ -194,7 +198,7 @@ function renderScoreChart(buys, sells) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.top_signals.chart.symbol') },
             { label: t('view.top_signals.chart.buy'),
@@ -209,6 +213,8 @@ function renderScoreChart(buys, sells) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],

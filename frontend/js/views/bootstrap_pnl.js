@@ -246,7 +246,7 @@ function renderEquityChart() {
     const fill = final >= 0 ? 'rgba(58,217,107,0.12)' : 'rgba(255,56,96,0.12)';
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 240,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.boot_pnl.chart.trade_idx') },
             { label: t('view.boot_pnl.chart.equity'),
@@ -280,7 +280,7 @@ function renderSortedChart() {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.boot_pnl.chart.rank') },
             { label: t('view.boot_pnl.chart.win'),

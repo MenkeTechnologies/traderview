@@ -78,6 +78,7 @@ mod sentiment;
 mod settings;
 mod shares;
 mod short_interest;
+mod symbols_catalog;
 mod squeeze_scanner;
 mod strategy_alerts;
 mod tags;
@@ -100,6 +101,8 @@ pub fn api_router() -> Router<AppState> {
         .nest("/tax", crate::tax_routes::router())
         .nest("/tax-filing", crate::tax_filing_routes::router())
         .nest("/budget", crate::budget_routes::router())
+        .nest("/businesses", crate::business_routes::router())
+        .nest("/brokers", crate::broker_routes::router())
         .nest("/rental", crate::rental_routes::router())
         .nest("/risk-gate", crate::risk_gate_routes::router())
         .merge(auth::router())
@@ -126,6 +129,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(settings::router())
         .merge(plans::router())
         .merge(search::router())
+        .merge(symbols_catalog::router())
         .merge(note_templates::router())
         .merge(markets::router())
         .merge(watchlists::router())
@@ -217,6 +221,22 @@ mod helpers {
     ) -> Result<(), ApiError> {
         let row: Option<(Uuid,)> = sqlx::query_as("SELECT user_id FROM accounts WHERE id = $1")
             .bind(account_id)
+            .fetch_optional(&s.pool)
+            .await?;
+        match row {
+            Some((owner,)) if owner == user_id => Ok(()),
+            Some(_) => Err(ApiError::Forbidden),
+            None => Err(ApiError::NotFound),
+        }
+    }
+
+    pub async fn ensure_broker_owner(
+        s: &AppState,
+        user_id: Uuid,
+        broker_id: Uuid,
+    ) -> Result<(), ApiError> {
+        let row: Option<(Uuid,)> = sqlx::query_as("SELECT user_id FROM brokers WHERE id = $1")
+            .bind(broker_id)
             .fetch_optional(&s.pool)
             .await?;
         match row {

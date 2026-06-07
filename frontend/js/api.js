@@ -126,10 +126,19 @@ const qs = (obj) => {
  * (legacy 30/60/90 toggle) or a filter object. Returns a plain object
  * ready to feed into qs().
  */
+// Lazy import to avoid a circular dep — broker_context imports api.js
+// for `brokersList`. The active broker is read from a global symbol the
+// broker_context module installs at module-eval time.
+function activeBrokerIdSync() {
+    try { return globalThis.__tvActiveBroker?.() || null; } catch { return null; }
+}
+
 const rq = (account_id, f) => {
-    if (f == null) return { account_id };
-    if (typeof f === 'number') return { account_id, days: f };
-    return { account_id, ...f };
+    const broker_id = activeBrokerIdSync();
+    const base = broker_id ? { account_id, broker_id } : { account_id };
+    if (f == null) return base;
+    if (typeof f === 'number') return { ...base, days: f };
+    return { ...base, ...f };
 };
 
 export class ApiError extends Error {
@@ -149,6 +158,8 @@ export const api = {
     accounts: () => request('/accounts'),
     createAccount: (broker, name, base_currency = 'USD') =>
         request('/accounts', { method: 'POST', body: JSON.stringify({ broker, name, base_currency }) }),
+    patchAccount: (id, body) =>
+        request(`/accounts/${id}`, { method: 'PATCH', body: JSON.stringify(body) }),
     deleteAccount: (id) => request(`/accounts/${id}`, { method: 'DELETE' }),
 
     // trades
@@ -233,6 +244,7 @@ export const api = {
     // the new global filter bar on /reports.
     overview: (account_id, f) => request(`/reports/overview${qs(rq(account_id, f))}`),
     bySymbol: (account_id, f) => request(`/reports/by-symbol${qs(rq(account_id, f))}`),
+    byBroker: (account_id, f) => request(`/reports/by-broker${qs(rq(account_id, f))}`),
     bySide: (account_id, f) => request(`/reports/by-side${qs(rq(account_id, f))}`),
     byAssetClass: (account_id, f) => request(`/reports/by-asset-class${qs(rq(account_id, f))}`),
     byDow: (account_id, f) => request(`/reports/by-day-of-week${qs(rq(account_id, f))}`),
@@ -263,6 +275,10 @@ export const api = {
     advanced: (account_id, starting_cash, f) =>
         request(`/reports/advanced${qs({ ...rq(account_id, f), starting_cash })}`),
     summary: (account_id, f) => request(`/stats/summary${qs(rq(account_id, f))}`),
+    // Skips the global broker filter — callers (e.g., broker-compare)
+    // supply broker_id / account_id explicitly and want the server to
+    // respect THAT, not whichever broker the topbar selector points at.
+    summaryRaw: (params = {}) => request(`/stats/summary${qs(params)}`),
     equity: (account_id, starting_cash, f) =>
         request(`/stats/equity${qs({ ...rq(account_id, f), starting_cash })}`),
 
@@ -403,32 +419,84 @@ export const api = {
     }),
     receiptsRecurring: (params = {}) => {
         const s = qs(params);
-        return request(`/receipts/recurring${s ? '?' + s : ''}`);
+        return request(`/expense/receipts/recurring${s ? '?' + s : ''}`);
     },
     receiptsSpendCalendar: (year) => {
         const s = year ? `?year=${year}` : '';
-        return request(`/receipts/spend-calendar${s}`);
+        return request(`/expense/receipts/spend-calendar${s}`);
     },
     receiptsDow: (params = {}) => {
         const s = qs(params);
-        return request(`/receipts/dow${s ? '?' + s : ''}`);
+        return request(`/expense/receipts/dow${s ? '?' + s : ''}`);
     },
     receiptsCumulative: (params = {}) => {
         const s = qs(params);
-        return request(`/receipts/cumulative${s ? '?' + s : ''}`);
+        return request(`/expense/receipts/cumulative${s ? '?' + s : ''}`);
     },
-    expenseDashboardBundle: (year) => {
-        const s = year ? `?year=${year}` : '';
-        return request(`/receipts/dashboard-bundle${s}`);
+    expenseDashboardBundle: (year, businessId) => {
+        const parts = [];
+        if (year) parts.push(`year=${year}`);
+        if (businessId) parts.push(`business_id=${encodeURIComponent(businessId)}`);
+        return request(`/expense/receipts/dashboard-bundle${parts.length ? '?' + parts.join('&') : ''}`);
     },
-    receiptsMonthCalendar: (year, month) =>
-        request(`/receipts/calendar/${year}/${month}`),
-    receiptsYoyMonthly: (year) => request(`/receipts/yoy-monthly${year ? `?year=${year}` : ''}`),
-    receiptsAging: () => request('/receipts/aging'),
-    receiptsByProperty: (year) => request(`/receipts/by-property${year ? `?year=${year}` : ''}`),
-    receiptsAnomalies: () => request('/receipts/anomalies'),
-    receiptsCategoryDistribution: (year) =>
-        request(`/receipts/category-distribution${year ? `?year=${year}` : ''}`),
+    receiptsMonthCalendar: (year, month, businessId) => {
+        const q = businessId ? `?business_id=${encodeURIComponent(businessId)}` : '';
+        return request(`/expense/receipts/calendar/${year}/${month}${q}`);
+    },
+    receiptsYoyMonthly: (year, businessId) => {
+        const parts = [];
+        if (year) parts.push(`year=${year}`);
+        if (businessId) parts.push(`business_id=${encodeURIComponent(businessId)}`);
+        return request(`/expense/receipts/yoy-monthly${parts.length ? '?' + parts.join('&') : ''}`);
+    },
+    receiptsAging: (businessId) => {
+        const q = businessId ? `?business_id=${encodeURIComponent(businessId)}` : '';
+        return request(`/expense/receipts/aging${q}`);
+    },
+    receiptsByProperty: (year, businessId) => {
+        const parts = [];
+        if (year) parts.push(`year=${year}`);
+        if (businessId) parts.push(`business_id=${encodeURIComponent(businessId)}`);
+        return request(`/expense/receipts/by-property${parts.length ? '?' + parts.join('&') : ''}`);
+    },
+    receiptsAnomalies: (businessId) => {
+        const q = businessId ? `?business_id=${encodeURIComponent(businessId)}` : '';
+        return request(`/expense/receipts/anomalies${q}`);
+    },
+    receiptsCategoryDistribution: (year, businessId) => {
+        const parts = [];
+        if (year) parts.push(`year=${year}`);
+        if (businessId) parts.push(`business_id=${encodeURIComponent(businessId)}`);
+        return request(`/expense/receipts/category-distribution${parts.length ? '?' + parts.join('&') : ''}`);
+    },
+    // Multi-business CRUD
+    businessesList: () => request('/businesses/'),
+    businessCreate: (body) => request('/businesses/', {
+        method: 'POST', body: JSON.stringify(body),
+    }),
+    businessPatch: (id, body) => request(`/businesses/${encodeURIComponent(id)}`, {
+        method: 'PATCH', body: JSON.stringify(body),
+    }),
+    businessDelete: (id) => request(`/businesses/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+    }),
+    businessSetDefault: (id) => request(`/businesses/${encodeURIComponent(id)}/set-default`, {
+        method: 'PATCH', body: '{}',
+    }),
+    // Multi-broker CRUD
+    brokersList: () => request('/brokers/'),
+    brokerCreate: (body) => request('/brokers/', {
+        method: 'POST', body: JSON.stringify(body),
+    }),
+    brokerPatch: (id, body) => request(`/brokers/${encodeURIComponent(id)}`, {
+        method: 'PATCH', body: JSON.stringify(body),
+    }),
+    brokerDelete: (id) => request(`/brokers/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+    }),
+    brokerSetDefault: (id) => request(`/brokers/${encodeURIComponent(id)}/set-default`, {
+        method: 'PATCH', body: '{}',
+    }),
 
     // --- budgeting ------------------------------------------------------
     listBudgets: () => request('/budget/'),
@@ -1062,6 +1130,13 @@ export const api = {
 
     // Discovery / specialty
     finnhubSymbolLookup:        (q) => request(`/finnhub/search${qs({ q })}`),
+    // Global symbol catalog — every listed ticker (US by default).
+    // Used by the global autocomplete datalist; backend seeds from
+    // Finnhub on first call when the table is empty.
+    symbolsList: (seedIfEmpty = true) =>
+        request(`/symbols/list${qs({ seed_if_empty: seedIfEmpty })}`),
+    symbolsSeed: (exchange = 'US') =>
+        request(`/symbols/seed${qs({ exchange })}`, { method: 'POST' }),
     finnhubStockSymbols:        (exchange = 'US') => request(`/finnhub/stock-symbols${qs({ exchange })}`),
     finnhubSymbolChange:        (from, to) => request(`/finnhub/symbol-change${qs({ from, to })}`),
     finnhubIsinChange:          (from, to) => request(`/finnhub/isin-change${qs({ from, to })}`),
@@ -1155,6 +1230,45 @@ export const api = {
     indBbSqueeze:     (sym, q) => request(`/bars/${encodeURIComponent(sym)}/bb-squeeze${qs(q)}`),
     indRsiDivergence: (sym, q) => request(`/bars/${encodeURIComponent(sym)}/rsi-divergence${qs(q)}`),
     indTrendChannel:  (sym, q) => request(`/bars/${encodeURIComponent(sym)}/trend-channel${qs(q)}`),
+    indAroonOscillator: (sym, q) => request(`/bars/${encodeURIComponent(sym)}/aroon-oscillator${qs(q)}`),
+    indBbSqueezeMomentum: (sym, q) => request(`/bars/${encodeURIComponent(sym)}/squeeze-momentum${qs(q)}`),
+    indCenterOfGravity: (sym, q) => request(`/bars/${encodeURIComponent(sym)}/center-of-gravity${qs(q)}`),
+    indChaikinMoneyFlow: (sym, q) => request(`/bars/${encodeURIComponent(sym)}/chaikin-money-flow${qs(q)}`),
+    indCmo:           (sym, q) => request(`/bars/${encodeURIComponent(sym)}/cmo${qs(q)}`),
+    indConnorsRsi:    (sym, q) => request(`/bars/${encodeURIComponent(sym)}/connors-rsi${qs(q)}`),
+    indDema:          (sym, q) => request(`/bars/${encodeURIComponent(sym)}/dema${qs(q)}`),
+    indDemarker:      (sym, q) => request(`/bars/${encodeURIComponent(sym)}/demarker${qs(q)}`),
+    indEaseOfMovement: (sym, q) => request(`/bars/${encodeURIComponent(sym)}/ease-of-movement${qs(q)}`),
+    indEhlersDecycler: (sym, q) => request(`/bars/${encodeURIComponent(sym)}/ehlers-decycler${qs(q)}`),
+    indElderForce:    (sym, q) => request(`/bars/${encodeURIComponent(sym)}/elder-force${qs(q)}`),
+    indElderRay:      (sym, q) => request(`/bars/${encodeURIComponent(sym)}/elder-ray${qs(q)}`),
+    indFisherTransform: (sym, q) => request(`/bars/${encodeURIComponent(sym)}/fisher-transform${qs(q)}`),
+    indFractals:      (sym, q) => request(`/bars/${encodeURIComponent(sym)}/fractals${qs(q)}`),
+    indFrama:         (sym, q) => request(`/bars/${encodeURIComponent(sym)}/frama${qs(q)}`),
+    indKama:          (sym, q) => request(`/bars/${encodeURIComponent(sym)}/kama${qs(q)}`),
+    indKlingerOscillator: (sym, q) => request(`/bars/${encodeURIComponent(sym)}/klinger-oscillator${qs(q)}`),
+    indMcGinleyDynamic: (sym, q) => request(`/bars/${encodeURIComponent(sym)}/mcginley-dynamic${qs(q)}`),
+    indNvi:           (sym, q) => request(`/bars/${encodeURIComponent(sym)}/nvi${qs(q)}`),
+    indPpo:           (sym, q) => request(`/bars/${encodeURIComponent(sym)}/ppo${qs(q)}`),
+    indPvi:           (sym, q) => request(`/bars/${encodeURIComponent(sym)}/pvi${qs(q)}`),
+    indPvt:           (sym, q) => request(`/bars/${encodeURIComponent(sym)}/pvt${qs(q)}`),
+    indQqe:           (sym, q) => request(`/bars/${encodeURIComponent(sym)}/qqe${qs(q)}`),
+    indRelativeVolume: (sym, q) => request(`/bars/${encodeURIComponent(sym)}/relative-volume${qs(q)}`),
+    indRvi:           (sym, q) => request(`/bars/${encodeURIComponent(sym)}/rvi${qs(q)}`),
+    indStochRsi:      (sym, q) => request(`/bars/${encodeURIComponent(sym)}/stoch-rsi${qs(q)}`),
+    indSuperSmoother: (sym, q) => request(`/bars/${encodeURIComponent(sym)}/super-smoother${qs(q)}`),
+    indSwingIndex:    (sym, q) => request(`/bars/${encodeURIComponent(sym)}/swing-index${qs(q)}`),
+    indTema:          (sym, q) => request(`/bars/${encodeURIComponent(sym)}/tema${qs(q)}`),
+    indTsi:           (sym, q) => request(`/bars/${encodeURIComponent(sym)}/tsi${qs(q)}`),
+    indUltimateOscillator: (sym, q) => request(`/bars/${encodeURIComponent(sym)}/ultimate-oscillator${qs(q)}`),
+    indVhf:           (sym, q) => request(`/bars/${encodeURIComponent(sym)}/vhf${qs(q)}`),
+    indVidya:         (sym, q) => request(`/bars/${encodeURIComponent(sym)}/vidya${qs(q)}`),
+    indZigzag:        (sym, q) => request(`/bars/${encodeURIComponent(sym)}/zigzag${qs(q)}`),
+    indZlema:         (sym, q) => request(`/bars/${encodeURIComponent(sym)}/zlema${qs(q)}`),
+    // Composite / chart-overlay primitives — share the same `/bars/`
+    // namespace but live in `charts.rs` rather than `chart_indicators.rs`.
+    indIchimoku:      (sym, q) => request(`/bars/${encodeURIComponent(sym)}/ichimoku${qs(q)}`),
+    indSupertrend:    (sym, q) => request(`/bars/${encodeURIComponent(sym)}/supertrend${qs(q)}`),
 
     // ============================================================
     // Options analytics (chain-derived)

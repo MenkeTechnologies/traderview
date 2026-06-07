@@ -128,7 +128,7 @@ function renderCumPnlChart(eq) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.risk.chart.day') },
             { label: t('view.risk.chart.cum_pnl'),
@@ -138,6 +138,8 @@ function renderCumPnlChart(eq) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 56 },
         ],
@@ -164,7 +166,7 @@ function renderDailyPnlChart(eq, goal, maxLoss) {
     const lossY = xs.map(() => maxLoss > 0 ? -maxLoss : null);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.risk.chart.day') },
             { label: t('view.risk.chart.win'),
@@ -182,6 +184,8 @@ function renderDailyPnlChart(eq, goal, maxLoss) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 56 },
         ],

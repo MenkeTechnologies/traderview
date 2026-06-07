@@ -155,7 +155,7 @@ function renderChart(bars, points) {
     const { jaw, teeth, lips } = shiftLines(points, totalBars);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 320,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.bar_num') },
             { label: t('chart.series.median'), stroke: '#00e5ff', width: 0.8,
@@ -189,7 +189,7 @@ function renderMouthChart(bars, points) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('chart.series.bar_num') },
             { label: t('view.alligator.chart.mouth_width'),

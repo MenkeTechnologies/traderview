@@ -225,7 +225,7 @@ function renderMeanChart() {
     }
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series,
         axes: [
             { stroke: '#aab', size: 28,
@@ -268,7 +268,7 @@ function renderChart(report) {
     }
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 260,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series,
         axes: [
             { stroke: '#aab', size: 28,

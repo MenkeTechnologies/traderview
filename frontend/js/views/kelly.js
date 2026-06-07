@@ -256,7 +256,7 @@ function renderDynamicChart(points) {
     const zero = points.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 320,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('view.kelly.series.trade') },
             { label: t('view.kelly.series.kelly'),       stroke: '#00e5ff', width: 1.5, points: { show: false } },
@@ -289,7 +289,7 @@ function renderCumPnlChart() {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.kelly.series.trade') },
             { label: t('view.kelly.chart.cum_pnl'),

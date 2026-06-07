@@ -168,7 +168,7 @@ function renderChart(bars, report) {
     const trendBand = new Array(bars.length).fill(38.2);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 360,
-        scales: { x: {}, y: {}, y_ci: { range: [0, 100] } },
+        scales: { x: { time: false,}, y: {}, y_ci: { range: [0, 100] } },
         series: [
             { label: t('chart.series.bar_num') },
             { label: t('chart.series.close'),         stroke: '#00e5ff', width: 1.5, points: { show: false } },
@@ -207,7 +207,7 @@ function renderRegimeChart(report) {
     const xs = labels.map((_, i) => i + 1);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.choppiness.chart.regime_idx') },
             { label: t('view.choppiness.chart.bar_count'),
@@ -216,6 +216,8 @@ function renderRegimeChart(report) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 50 },
         ],

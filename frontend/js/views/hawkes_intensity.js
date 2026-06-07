@@ -194,7 +194,7 @@ function renderChart(report) {
     const marker = xs.map(x => evSet.has(x) ? peak : null);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 320,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('chart.series.t') },
             { label: 'λ(t)',  stroke: '#00e5ff', width: 1.5, points: { show: false } },
@@ -222,7 +222,7 @@ function renderInterArrivalChart() {
     const expected = Number.isFinite(mu) && mu > 0 ? xs.map(() => 1 / mu) : xs.map(() => null);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('chart.series.idx') },
             { label: t('view.hawkes.series.gap'),

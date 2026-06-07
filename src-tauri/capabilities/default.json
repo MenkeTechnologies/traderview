@@ -11,6 +11,7 @@
     "core:webview:allow-create-webview-window",
     "allow-get-api-config",
     "allow-get-log-path",
+    "allow-read-log-tail",
     "shell:allow-open",
     "dialog:default",
     "dialog:allow-open",

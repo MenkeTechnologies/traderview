@@ -205,7 +205,7 @@ function renderChart(report) {
     const ys = indexed.map(r => r.pct);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 320,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.rank') },
             { label: t('chart.series._contrib'), stroke: '#00e5ff', width: 1.5, points: { show: true, size: 5 } },
@@ -245,7 +245,7 @@ function renderWeightVsContribChart(report) {
     const ref = xs.map(x => x);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 240,
-        scales: { x: { range: [0, xMax * 1.05] }, y: { range: [0, xMax * 1.05] } },
+        scales: { x: { time: false, range: [0, xMax * 1.05] }, y: { range: [0, xMax * 1.05] } },
         series: [
             { label: t('view.mvar.chart.weight_pct') },
             { label: t('view.mvar.chart.var_pct'),

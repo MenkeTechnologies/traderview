@@ -193,7 +193,7 @@ function renderExcursionChart() {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.stop_loss_backtest.chart.trade') },
             { label: t('view.stop_loss_backtest.chart.mae_neg'),
@@ -235,7 +235,7 @@ function renderRealizedChart() {
     const zero  = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.stop_loss_backtest.chart.trade') },
             { label: t('view.stop_loss_backtest.chart.win'),

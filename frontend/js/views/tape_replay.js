@@ -307,7 +307,7 @@ function renderRangeChart(data) {
     const ys = bars.map(b => Number(b.high) - Number(b.low));
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false }, y: { auto: true } },
         series: [
             { label: t('view.tape_replay.chart.bar') },
             { label: t('view.tape_replay.chart.range'),
@@ -333,7 +333,7 @@ function renderVolChart(data) {
     const downY = bars.map(b => Number(b.close) <  Number(b.open) ? Number(b.volume) : null);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false }, y: { auto: true } },
         series: [
             { label: t('view.tape_replay.chart.bar') },
             { label: t('view.tape_replay.chart.up_vol'),

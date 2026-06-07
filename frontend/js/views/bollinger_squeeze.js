@@ -198,7 +198,7 @@ function renderChart(report) {
     const markers = report.width_pct.map((w, i) => report.squeeze_on[i] === true ? w : null);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 340,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('chart.series.bar') },
             { label: t('chart.series.width_'), stroke: '#00e5ff', width: 1.5, points: { show: false } },
@@ -227,7 +227,7 @@ function renderCloseChart(report) {
     const squeezeMark = state.closes.map((c, i) => report.squeeze_on[i] === true ? c : null);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('chart.series.bar') },
             { label: t('view.bbsq.series.close'),

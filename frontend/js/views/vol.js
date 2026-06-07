@@ -124,7 +124,7 @@ function renderYieldsValueChart(y) {
     const ys = rows.map(p => Number(p.yield_pct));
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.vol.chart.tenor') },
             { label: t('view.vol.chart.yield_pct'),
@@ -133,6 +133,8 @@ function renderYieldsValueChart(y) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
@@ -156,7 +158,7 @@ function renderYieldsBpChart(y) {
     const zero  = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.vol.chart.tenor') },
             { label: t('view.vol.chart.up_bp'),  stroke: '#7af0a8', width: 0,
@@ -168,6 +170,8 @@ function renderYieldsBpChart(y) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],

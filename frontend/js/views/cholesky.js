@@ -210,7 +210,7 @@ function renderDiagChart(report) {
     const xs = diag.map((_, i) => i + 1);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.chol.chart.row_idx') },
             { label: t('view.chol.chart.diag'),
@@ -246,7 +246,7 @@ function renderCouplingChart(report) {
     const xs = coupling.map((_, i) => i + 1);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.chol.chart.row_idx') },
             { label: t('view.chol.chart.coupling'),

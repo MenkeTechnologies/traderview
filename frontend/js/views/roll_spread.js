@@ -176,7 +176,7 @@ function renderChart(series) {
     const ys = series.map(v => v == null ? null : v);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 300,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.bar') },
             { label: t('chart.series.spread'), stroke: '#00e5ff', width: 1.5, points: { show: false } },
@@ -214,7 +214,7 @@ function renderHistChart(series) {
     const xs = centers.map((_, i) => i + 1);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.roll.chart.bucket_idx') },
             { label: t('view.roll.chart.count'),

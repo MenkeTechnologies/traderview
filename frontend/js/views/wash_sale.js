@@ -169,7 +169,7 @@ function renderDaysChart(hits) {
     const zero   = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { range: () => [-32, 32] } },
+        scales: { x: { time: false,}, y: { range: () => [-32, 32] } },
         series: [
             { label: t('view.wash_sale.chart.symbol') },
             { label: t('view.wash_sale.chart.before'),
@@ -184,6 +184,8 @@ function renderDaysChart(hits) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
@@ -217,7 +219,7 @@ function renderHitsChart(hits) {
     });
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.wash_sale.chart.symbol') },
             { label: t('view.wash_sale.chart.heavy'),
@@ -229,6 +231,8 @@ function renderHitsChart(hits) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 56 },
         ],

@@ -37,7 +37,7 @@ function renderExcursionChart(trade) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false }, y: { auto: true } },
         series: [
             { label: t('view.trade_detail.chart.bucket') },
             { label: t('view.trade_detail.chart.mae'),
@@ -55,6 +55,8 @@ function renderExcursionChart(trade) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 56 },
         ],
@@ -78,7 +80,7 @@ function renderExecChart(executions) {
     const sellY = rows.map(e => (e.side === 'sell' || e.side === 'short') ? Number(e.price) : null);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false }, y: { auto: true } },
         series: [
             { label: t('view.trade_detail.chart.exec_idx') },
             { label: t('view.trade_detail.chart.buy'),

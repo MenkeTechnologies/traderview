@@ -3,7 +3,7 @@ use crate::error::ApiError;
 use crate::routes::helpers::ensure_account_owner;
 use crate::state::AppState;
 use axum::extract::{Path, State};
-use axum::routing::{delete, get, post};
+use axum::routing::{get, patch, post};
 use axum::{Json, Router};
 use serde::{Deserialize, Serialize};
 use traderview_core::Account;
@@ -12,7 +12,7 @@ use uuid::Uuid;
 pub fn router() -> Router<AppState> {
     Router::new()
         .route("/accounts", get(list).post(create))
-        .route("/accounts/:id", delete(delete_one))
+        .route("/accounts/:id", patch(patch_account).delete(delete_one))
         .route("/accounts/:id/rebuild-trades", post(rebuild_trades))
 }
 
@@ -72,6 +72,39 @@ async fn create(
         .await
         .map_err(ApiError::Internal)?,
     ))
+}
+
+#[derive(Deserialize)]
+struct PatchBody {
+    #[serde(default)]
+    broker: Option<String>,
+    #[serde(default)]
+    name: Option<String>,
+    #[serde(default)]
+    base_currency: Option<String>,
+}
+
+async fn patch_account(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<Uuid>,
+    Json(body): Json<PatchBody>,
+) -> Result<Json<Account>, ApiError> {
+    ensure_account_owner(&s, user.id, id).await?;
+    match traderview_db::accounts::update(
+        &s.pool,
+        user.id,
+        id,
+        body.broker.as_deref(),
+        body.name.as_deref(),
+        body.base_currency.as_deref(),
+    )
+    .await
+    .map_err(ApiError::Internal)?
+    {
+        Some(a) => Ok(Json(a)),
+        None => Err(ApiError::NotFound),
+    }
 }
 
 async fn delete_one(

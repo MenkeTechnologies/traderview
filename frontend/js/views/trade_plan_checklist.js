@@ -192,7 +192,7 @@ function renderRrChart(report) {
     const maxR = xs.map(() => Number(state.config.max_risk_pct_per_trade) * 100);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 160,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.trade_plan_checklist.chart.bucket') },
             { label: t('view.trade_plan_checklist.chart.r_mult'),
@@ -210,6 +210,8 @@ function renderRrChart(report) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
@@ -232,7 +234,7 @@ function renderGatesChart(report) {
     const failY = rows.map(g => g.passed ? null : 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { range: () => [-0.3, 1.3] } },
+        scales: { x: { time: false,}, y: { range: () => [-0.3, 1.3] } },
         series: [
             { label: t('view.trade_plan_checklist.chart.gate') },
             { label: t('view.trade_plan_checklist.chart.pass'),
@@ -244,6 +246,8 @@ function renderGatesChart(report) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40,
               values: (_u, splits) => splits.map(v => v === 1 ? 'pass' : v === 0 ? 'fail' : '') },

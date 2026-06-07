@@ -316,7 +316,7 @@ function renderQtChart(r) {
     const ys = qs.map(q => Number(q.estimated_payment));
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.tax_workshop.chart.quarter') },
             { label: t('view.tax_workshop.chart.payment'),
@@ -325,6 +325,8 @@ function renderQtChart(r) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 56 },
         ],
@@ -349,7 +351,7 @@ function renderSubsChart(subs) {
     const ys = rows.map(s => Number(s.projected_annual_cost));
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.tax_workshop.chart.merchant') },
             { label: t('view.tax_workshop.chart.annual_cost'),
@@ -358,6 +360,8 @@ function renderSubsChart(subs) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 56 },
         ],

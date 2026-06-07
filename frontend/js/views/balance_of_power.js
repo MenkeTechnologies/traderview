@@ -171,7 +171,7 @@ function renderChart(report) {
     const xs = report.raw_bop.map((_, i) => i);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 340,
-        scales: { x: {}, y: { range: [-1.1, 1.1] } },
+        scales: { x: { time: false,}, y: { range: [-1.1, 1.1] } },
         series: [
             { label: t('chart.series.bar') },
             { label: t('chart.series.raw'),      stroke: '#aab',     width: 1.0, dash: [2, 2], points: { show: false } },
@@ -205,7 +205,7 @@ function renderCumChart(report) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('chart.series.bar') },
             { label: t('view.bop.chart.cum_bop'),

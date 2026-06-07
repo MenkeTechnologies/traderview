@@ -145,7 +145,7 @@ function renderDistChart(report) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.round_levels.chart.level_px') },
             { label: t('view.round_levels.chart.above_cur'),
@@ -160,6 +160,8 @@ function renderDistChart(report) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 56 },
         ],
@@ -221,7 +223,7 @@ function renderLevelsChart(report) {
     const cur    = xs.map(() => Number(state.current_price));
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.round_levels.chart.idx') },
             { label: t('view.round_levels.chart.major'),

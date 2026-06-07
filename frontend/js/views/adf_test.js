@@ -164,7 +164,7 @@ function renderChart() {
     const diffs = state.series.map((v, i) => i === 0 ? null : v - state.series[i - 1]);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 320,
-        scales: { x: {}, y: {}, y2: { auto: true } },
+        scales: { x: { time: false,}, y: {}, y2: { auto: true } },
         series: [
             { label: t('chart.series.t') },
             { label: t('chart.series.y'),  stroke: '#00e5ff', width: 1.5, points: { show: false } },
@@ -201,7 +201,7 @@ function renderRollChart() {
     const meanLine = xs.map(() => mean);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('chart.series.t') },
             { label: t('chart.series.y'),  stroke: '#00e5ff', width: 1.0, points: { show: false } },

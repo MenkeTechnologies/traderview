@@ -70,6 +70,17 @@ function renderStatus(el, s) {
         el.innerHTML = `<p class="muted" data-i18n="view.market_status.empty.status">No status data.</p>`;
         return;
     }
+    // Backend returns `{available: false, reason: ...}` when the
+    // configured Finnhub plan can't reach this exchange. Render a
+    // clean "not on this plan" message instead of treating it as
+    // closed-with-blank-fields.
+    if (s.available === false) {
+        const reasonKey = s.reason === 'premium-required'
+            ? 'view.market_status.unavailable.premium'
+            : 'view.market_status.unavailable.upstream';
+        el.innerHTML = `<p class="muted">${esc(t(reasonKey, { exchange: s.exchange || '' }))}</p>`;
+        return;
+    }
     const isOpen = s.isOpen === true;
     const cls = isOpen ? 'pos' : 'neg';
     const label = isOpen
@@ -104,6 +115,16 @@ function renderStatus(el, s) {
 
 function renderHolidays(el, h) {
     if (!el) return;
+    // Backend returns `{available:false}` on plan-restricted exchanges —
+    // render the same "not on this plan" hint as the status panel so the
+    // user gets one consistent message per exchange.
+    if (h && h.available === false) {
+        const reasonKey = h.reason === 'premium-required'
+            ? 'view.market_status.unavailable.premium'
+            : 'view.market_status.unavailable.upstream';
+        el.innerHTML = `<p class="muted">${esc(t(reasonKey, { exchange: h.exchange || '' }))}</p>`;
+        return;
+    }
     const rows = h?.data || (Array.isArray(h) ? h : []);
     if (!rows.length) {
         el.innerHTML = `<p class="muted" data-i18n="view.market_status.empty.holidays">No upcoming holidays.</p>`;

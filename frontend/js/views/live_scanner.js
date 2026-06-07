@@ -191,7 +191,7 @@ function renderVolumeChart(all) {
     const xs = labels.map((_, i) => i + 1);
     const plot = new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.live_scanner.chart.symbol_idx') },
             { label: t('view.live_scanner.chart.day_volume'),
@@ -200,6 +200,8 @@ function renderVolumeChart(all) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 60 },
         ],
@@ -233,7 +235,7 @@ function renderUniverseChart(all) {
     const zero = xs.map(() => 0);
     const plot = new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.live_scanner.chart.symbol_idx') },
             { label: t('view.live_scanner.chart.change_pct'),
@@ -245,6 +247,8 @@ function renderUniverseChart(all) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 50 },
         ],

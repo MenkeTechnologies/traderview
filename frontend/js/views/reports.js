@@ -719,7 +719,7 @@ function renderComparePair(el, aRows, bRows) {
     };
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 240,
-        scales: { x: {}, y: { auto: true, range: [-max * 1.1, max * 1.1] } },
+        scales: { x: { time: false,}, y: { auto: true, range: [-max * 1.1, max * 1.1] } },
         series: [
             { label: 'idx' },
             { label: 'A',  stroke: 'transparent', paths: drawPair },
@@ -836,7 +836,7 @@ function renderAdvanced(body, adv) {
         };
         new window.uPlot({
             title: '', width: sc.clientWidth || 800, height: 320,
-            scales: { x: {}, y: { auto: true } },
+            scales: { x: { time: false,}, y: { auto: true } },
             series: [
                 { label: 'idx' },
                 { label: 'P&L', stroke: 'transparent', paths: drawDots },
@@ -1030,7 +1030,7 @@ function renderRCumChart(bins) {
     const ys = rows.map(b => { running += Number(b.count); return running; });
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.reports.chart.bin') },
             { label: t('view.reports.chart.cum_count'),
@@ -1039,6 +1039,8 @@ function renderRCumChart(bins) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
@@ -1059,7 +1061,7 @@ function renderRBinsChart(bins) {
     const xs = labels.map((_, i) => i + 1);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.reports.chart.bin_idx') },
             { label: t('view.reports.chart.count'),
@@ -1068,6 +1070,8 @@ function renderRBinsChart(bins) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
@@ -1344,7 +1348,7 @@ function renderWinLossPair(el, split, valKey) {
     };
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 240,
-        scales: { x: {}, y: { auto: true, range: [-max * 1.1, max * 1.1] } },
+        scales: { x: { time: false,}, y: { auto: true, range: [-max * 1.1, max * 1.1] } },
         series: [
             { label: 'idx' },
             { label: 'win days',  stroke: 'transparent', paths: drawPair },

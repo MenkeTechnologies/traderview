@@ -29,6 +29,7 @@ sqlx = { workspace = true }
 uuid = { workspace = true }
 chrono = { workspace = true }
 rust_decimal = { workspace = true }
+rustls = { workspace = true }
 
 axum = { workspace = true }
 tower = { workspace = true }
@@ -50,6 +51,7 @@ bytes = { workspace = true }
 sha2 = { workspace = true }
 regex = { workspace = true }
 futures-util = { workspace = true }
+tokio-tungstenite = { workspace = true }
 reqwest = { workspace = true }
 printpdf = { workspace = true }
 

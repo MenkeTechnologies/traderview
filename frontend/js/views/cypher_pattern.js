@@ -163,7 +163,7 @@ function renderChart(pivots, matches) {
     });
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 320,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.pivot_index') },
             { label: t('chart.series.pivots'), stroke: '#00e5ff', width: 1.5,
@@ -190,7 +190,7 @@ function renderQualityChart(matches) {
     const labels = matches.map((m, i) => `${i + 1}·${m.direction === 'bullish' ? '↑' : '↓'}`);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.cypher_pattern.chart.match_idx') },
             { label: t('view.cypher_pattern.chart.quality'),
@@ -199,6 +199,8 @@ function renderQualityChart(matches) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 50 },
         ],

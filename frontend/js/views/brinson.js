@@ -170,7 +170,7 @@ function renderChart(report) {
     const inters = rows.map(r => r.interaction_effect * 10_000);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 340,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.rank') },
             { label: t('chart.series.alloc_bps'),  stroke: '#00e5ff', width: 1.5, points: { show: true, size: 5 } },
@@ -207,7 +207,7 @@ function renderCumChart(report) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.rank') },
             { label: t('view.brinson.chart.cum_bps'),

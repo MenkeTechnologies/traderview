@@ -140,7 +140,7 @@ function renderDeviationChart(s) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.fear_greed.chart.component_idx') },
             { label: t('view.fear_greed.chart.deviation'),
@@ -151,7 +151,14 @@ function renderDeviationChart(s) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
-              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+              // Force one tick per data point. Without `splits`,
+              // uPlot picks fractional increments and Math.round
+              // snaps several adjacent splits onto the same label
+              // index — producing the "labelA labelA labelA labelB
+              // labelB ..." overlap seen across categorical charts.
+              splits: () => xs,
+              incrs: [1],
+              values: (_u, sp) => sp.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 50 },
         ],
         legend: { show: true },
@@ -174,7 +181,7 @@ function renderComponentChart(s) {
     const overall = xs.map(() => Number(s.score));
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: false, range: [0, 100] } },
+        scales: { x: { time: false,}, y: { auto: false, range: [0, 100] } },
         series: [
             { label: t('view.fear_greed.chart.component_idx') },
             { label: t('view.fear_greed.chart.score'),
@@ -189,7 +196,9 @@ function renderComponentChart(s) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
-              values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
+              splits: () => xs,
+              incrs: [1],
+              values: (_u, sp) => sp.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
         legend: { show: true },

@@ -99,7 +99,7 @@ function renderMacdChart(hits) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.screener.chart.symbol_idx') },
             { label: t('view.screener.chart.macd_up'),
@@ -114,6 +114,8 @@ function renderMacdChart(hits) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 56 },
         ],
@@ -138,7 +140,7 @@ function renderRsiChart(hits) {
     const os = xs.map(() => 30);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { range: () => [0, 100] } },
+        scales: { x: { time: false,}, y: { range: () => [0, 100] } },
         series: [
             { label: t('view.screener.chart.symbol_idx') },
             { label: t('view.screener.chart.rsi'),
@@ -153,6 +155,8 @@ function renderRsiChart(hits) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
@@ -176,7 +180,7 @@ function renderScoreChart(hits) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.screener.chart.symbol_idx') },
             { label: t('view.screener.chart.score'),
@@ -188,6 +192,8 @@ function renderScoreChart(hits) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],

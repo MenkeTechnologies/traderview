@@ -1,0 +1,6 @@
+"$schema" = "schemas/schema.json"
+
+[[permission]]
+identifier = "allow-read-log-tail"
+description = "Enables the read_log_tail command so the in-app Log Viewer can stream the backend log file."
+commands.allow = ["read_log_tail"]

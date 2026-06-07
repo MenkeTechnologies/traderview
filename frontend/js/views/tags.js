@@ -76,7 +76,7 @@ function renderTagsColorChart(tags) {
     const xs = labels.map((_, i) => i + 1);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.tags.chart.color') },
             { label: t('view.tags.chart.count'),
@@ -85,6 +85,8 @@ function renderTagsColorChart(tags) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
@@ -106,7 +108,7 @@ function renderTagsChart(tags) {
     const ys = rows.map(tag => String(tag.name).length);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.tags.chart.tag') },
             { label: t('view.tags.chart.len'),
@@ -115,6 +117,8 @@ function renderTagsChart(tags) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],

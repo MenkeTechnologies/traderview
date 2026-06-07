@@ -21,6 +21,29 @@ pub fn router() -> Router<AppState> {
         .route("/trades/merge", post(merge))
         .route("/trades/bulk", post(bulk))
         .route("/trades/close-expired-options", post(close_expired_options))
+        .route("/trades/distinct-symbols", get(distinct_symbols))
+}
+
+/// Every distinct symbol the user has ever traded, across every
+/// account they own. Drives the global symbol-autocomplete datalist —
+/// the user gets prefix-match completion on tickers they've actually
+/// touched, instead of being forced to remember exact spelling.
+async fn distinct_symbols(
+    State(s): State<crate::state::AppState>,
+    user: crate::auth::AuthUser,
+) -> Result<axum::Json<Vec<String>>, crate::error::ApiError> {
+    let rows: Vec<(String,)> = sqlx::query_as(
+        "SELECT DISTINCT t.symbol
+           FROM trades t
+           JOIN accounts a ON a.id = t.account_id
+          WHERE a.user_id = $1 AND t.symbol IS NOT NULL AND t.symbol <> ''
+          ORDER BY t.symbol ASC",
+    )
+    .bind(user.id)
+    .fetch_all(&s.pool)
+    .await
+    .map_err(|e| crate::error::ApiError::Internal(e.into()))?;
+    Ok(axum::Json(rows.into_iter().map(|(s,)| s).collect()))
 }
 
 #[derive(Deserialize)]

@@ -167,7 +167,7 @@ function renderZScoreLineChart(zSeries) {
     const lower = xs.map(() => -2);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.pairs.chart.sample_idx') },
             { label: t('view.pairs.chart.z'),
@@ -198,7 +198,7 @@ function renderSpreadChart(series) {
     const meanY = xs.map(() => mean);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.pairs.chart.bar') },
             { label: t('view.pairs.chart.spread'),

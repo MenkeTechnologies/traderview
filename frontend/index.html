@@ -58,10 +58,22 @@
                     <button class="tab-more-item" data-view="budget"         data-tip="nav.tip.budget"     data-shortcut="nav_budget"     data-i18n="nav.budget">Budget</button>
                     <button class="tab-more-item" data-view="expense-dashboard" data-tip="nav.tip.expense_dashboard" data-i18n="nav.expense_dashboard">Expense Dashboard</button>
                     <button class="tab-more-item" data-view="expense-calendar"  data-tip="nav.tip.expense_calendar"  data-i18n="nav.expense_calendar">Expense Calendar</button>
+                    <button class="tab-more-item" data-view="business-compare"  data-tip="nav.tip.business_compare"  data-i18n="nav.business_compare">Compare Businesses</button>
+                    <button class="tab-more-item" data-view="broker-compare"    data-tip="nav.tip.broker_compare"    data-i18n="nav.broker_compare">Compare Brokers</button>
+                    <button class="tab-more-item" data-view="brokers"           data-tip="nav.tip.brokers"           data-i18n="nav.brokers">Manage Brokers</button>
+                    <button class="tab-more-item" data-view="businesses"        data-tip="nav.tip.businesses"        data-i18n="nav.businesses">Manage Businesses</button>
+                    <button class="tab-more-item" data-view="toast-history"     data-tip="nav.tip.toast_history"     data-i18n="nav.toast_history">Toast History</button>
+                    <button class="tab-more-item" data-view="log-viewer"        data-tip="nav.tip.log_viewer"        data-i18n="nav.log_viewer">Log Viewer</button>
                 </div>
             </div>
             <button class="tab" data-view="settings"     data-tip="nav.tip.settings"   data-shortcut="open_settings"   data-i18n-aria-label="nav.aria.settings">⚙️</button>
         </nav>
+        <!-- Trade context: broker → account.
+             Broker comes first because account selection cascades from
+             the active broker filter. Both share `.account-select`
+             styling so the trio (broker, account, settings) lines up
+             vertically in the topbar's flex row. -->
+        <div class="broker-strip" id="broker-strip"></div>
         <div class="account-strip" id="account-strip"></div>
         <button id="topPalette" class="btn btn-secondary" type="button"
                 data-tip="topbar.tip.palette"

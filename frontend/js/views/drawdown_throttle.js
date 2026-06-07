@@ -197,7 +197,7 @@ function renderChart(equity, tiers, report) {
     const activeTier_ = activeTier(tiers, report.drawdown_pct);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 300,
-        scales: { x: {}, y: {}, y_dd: { range: [-0.5, 0] } },
+        scales: { x: { time: false,}, y: {}, y_dd: { range: [-0.5, 0] } },
         series: [
             { label: t('chart.series.bar_num') },
             { label: t('chart.series.equity'), stroke: '#00e5ff', width: 1.5,
@@ -244,7 +244,7 @@ function renderLadderChart(tiers, report) {
     const youHere = xs.map(x => Math.abs(x - currentDd) <= step / 2 ? Number(report.active_multiplier) : null);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: { auto: true }, y: { range: [0, 1.2] } },
+        scales: { x: { time: false, auto: true }, y: { range: [0, 1.2] } },
         series: [
             { label: t('view.drawdown_throttle.chart.dd_axis') },
             { label: t('view.drawdown_throttle.chart.multiplier'),

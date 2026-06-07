@@ -336,7 +336,7 @@ function renderSoundChart(events) {
     const ys = rows.map(r => r[1]);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 160,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false }, y: { auto: true } },
         series: [
             { label: tr('view.alert_rules.chart.sound') },
             { label: tr('view.alert_rules.chart.count'),
@@ -345,6 +345,8 @@ function renderSoundChart(events) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
@@ -371,7 +373,7 @@ function renderEventsChart(events) {
     const ys = rows.map(r => r.v);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false }, y: { auto: true } },
         series: [
             { label: tr('view.alert_rules.chart.rule') },
             { label: tr('view.alert_rules.chart.count'),
@@ -380,6 +382,8 @@ function renderEventsChart(events) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],

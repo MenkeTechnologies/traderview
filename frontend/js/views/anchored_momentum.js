@@ -175,7 +175,7 @@ function renderChart(series) {
     const anchor_marker = series.map((_, i) => i === state.anchor ? 0 : null);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 340,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('chart.series.bar') },
             { label: t('chart.series.momentum_'), stroke: '#00e5ff', width: 1.5, points: { show: false } },
@@ -207,7 +207,7 @@ function renderCloseChart() {
     const anchorMark = closes.map((_, i) => i === state.anchor ? anchorPrice : null);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('chart.series.bar') },
             { label: t('view.anch_mom.chart.close'),

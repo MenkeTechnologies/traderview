@@ -177,7 +177,7 @@ function renderChart(lines) {
     const { xs, ys } = linesToPolyline(lines);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 340,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.line') },
             { label: t('chart.series.kagi'), stroke: '#00e5ff', width: 1.5, points: { show: false } },
@@ -204,7 +204,7 @@ function renderMovesChart(lines) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('chart.series.line') },
             { label: t('view.kagi.chart.signed_move'),

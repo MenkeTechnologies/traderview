@@ -1051,11 +1051,23 @@ async fn earnings_call_live(
         },
         7,
     );
-    Ok(Json(
-        fh::earnings_call_live(&from, &to, q.symbol.as_deref())
-            .await
-            .map_err(map_fh_err)?,
-    ))
+    // Plan-restricted on Finnhub free tier — fall back to a clean
+    // `{available:false}` envelope instead of propagating 403/500
+    // which makes the global toast handler spam errors every reload.
+    // Same pattern as market_status / market_holiday.
+    match fh::earnings_call_live(&from, &to, q.symbol.as_deref()).await {
+        Ok(v) => Ok(Json(v)),
+        Err(e) => Ok(Json(serde_json::json!({
+            "available": false,
+            "data": [],
+            "earningsCalls": [],
+            "reason": if fh::is_premium_required(&e) {
+                "premium-required"
+            } else {
+                "upstream-error"
+            },
+        }))),
+    }
 }
 async fn general_news(
     State(_s): State<AppState>,
@@ -1327,7 +1339,24 @@ async fn market_status(
     } else {
         q.exchange
     };
-    Ok(Json(fh::market_status(&ex).await.map_err(map_fh_err)?))
+    // Finnhub returns 500 (or 403 on plan-restricted exchanges) for any
+    // non-US market when the configured key is on a tier that doesn't
+    // include them. Swallow those errors here and return a clean
+    // `{available: false}` envelope — that way the market-status view
+    // renders "not available on this plan" instead of spraying 500-
+    // toasts every time the user opens it.
+    match fh::market_status(&ex).await {
+        Ok(v) => Ok(Json(v)),
+        Err(e) => Ok(Json(serde_json::json!({
+            "exchange": ex,
+            "available": false,
+            "reason": if fh::is_premium_required(&e) {
+                "premium-required"
+            } else {
+                "upstream-error"
+            },
+        }))),
+    }
 }
 async fn market_holiday(
     State(_s): State<AppState>,
@@ -1339,7 +1368,22 @@ async fn market_holiday(
     } else {
         q.exchange
     };
-    Ok(Json(fh::market_holiday(&ex).await.map_err(map_fh_err)?))
+    // Same graceful-degrade story as `market_status` — the holiday
+    // endpoint is plan-restricted on most non-US exchanges and 500'd
+    // out of the page before this catch.
+    match fh::market_holiday(&ex).await {
+        Ok(v) => Ok(Json(v)),
+        Err(e) => Ok(Json(serde_json::json!({
+            "exchange": ex,
+            "available": false,
+            "data": [],
+            "reason": if fh::is_premium_required(&e) {
+                "premium-required"
+            } else {
+                "upstream-error"
+            },
+        }))),
+    }
 }
 async fn stock_exchanges(
     State(_s): State<AppState>,

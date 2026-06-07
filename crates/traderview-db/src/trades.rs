@@ -152,6 +152,106 @@ pub async fn list_for_account(
     Ok(rows.into_iter().map(Into::into).collect())
 }
 
+/// Generalized trade lookup scoped by user. Use this when the caller
+/// wants to filter by broker (all accounts of one broker) or aggregate
+/// across all of a user's accounts — the original `list_for_account`
+/// only supports the single-account case.
+///
+/// At least one of `user_id`, `account_id`, or `broker_id` must yield a
+/// scope; if `account_id` is set it wins. Otherwise we filter by
+/// `accounts.user_id = $user_id` and optionally `accounts.broker_id =
+/// $broker_id` via a join.
+pub async fn list_for_scope(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Option<Uuid>,
+    broker_id: Option<Uuid>,
+    f: &TradeFilter,
+) -> anyhow::Result<Vec<Trade>> {
+    if let Some(aid) = account_id {
+        return list_for_account(pool, aid, f).await;
+    }
+    let mut q = sqlx::QueryBuilder::new(
+        "SELECT t.id, t.account_id, t.symbol, t.side::text, t.status::text, t.opened_at, t.closed_at,
+                t.qty, t.entry_avg, t.exit_avg, t.gross_pnl, t.fees, t.commissions, t.net_pnl,
+                t.asset_class::text, t.option_type::text, t.strike, t.expiration, t.multiplier,
+                t.tick_size, t.tick_value, t.base_ccy, t.quote_ccy, t.pip_size,
+                t.stop_loss, t.risk_amount, t.initial_target, t.mfe, t.mae, t.best_exit_pnl, t.exit_efficiency
+           FROM trades t
+           JOIN accounts a ON a.id = t.account_id
+          WHERE a.user_id = ",
+    );
+    q.push_bind(user_id);
+    if let Some(bid) = broker_id {
+        q.push(" AND a.broker_id = ").push_bind(bid);
+    }
+    if let Some(sym) = &f.symbol {
+        q.push(" AND t.symbol = ").push_bind(sym.clone());
+    }
+    if let Some(status) = f.status {
+        let s = match status {
+            TradeStatus::Open => "open",
+            TradeStatus::Closed => "closed",
+        };
+        q.push(" AND t.status = ")
+            .push_bind(s)
+            .push("::trade_status_t");
+    }
+    if let Some(side) = f.side {
+        let s = match side {
+            TradeSide::Long => "long",
+            TradeSide::Short => "short",
+        };
+        q.push(" AND t.side = ").push_bind(s).push("::trade_side_t");
+    }
+    if let Some(ac) = f.asset_class {
+        let s = ac_to_pg(ac);
+        q.push(" AND t.asset_class = ")
+            .push_bind(s)
+            .push("::asset_class_t");
+    }
+    if let Some(d) = f.date_from {
+        q.push(" AND t.opened_at >= ")
+            .push_bind(d.and_hms_opt(0, 0, 0).unwrap().and_utc());
+    }
+    if let Some(d) = f.date_to {
+        q.push(" AND t.opened_at < ").push_bind(
+            d.succ_opt()
+                .unwrap_or(d)
+                .and_hms_opt(0, 0, 0)
+                .unwrap()
+                .and_utc(),
+        );
+    }
+    if let Some(p) = f.min_pnl {
+        q.push(" AND t.net_pnl >= ").push_bind(p);
+    }
+    if let Some(p) = f.max_pnl {
+        q.push(" AND t.net_pnl <= ").push_bind(p);
+    }
+    if let Some(qty) = f.min_qty {
+        q.push(" AND t.qty >= ").push_bind(qty);
+    }
+    if let Some(qty) = f.max_qty {
+        q.push(" AND t.qty <= ").push_bind(qty);
+    }
+    if let Some(tag) = f.tag_id {
+        q.push(" AND t.id IN (SELECT trade_id FROM trade_tags WHERE tag_id = ")
+            .push_bind(tag)
+            .push(")");
+    }
+    q.push(" ORDER BY t.opened_at DESC");
+    if let Some(l) = f.limit {
+        q.push(" LIMIT ").push_bind(l);
+    }
+    if let Some(o) = f.offset {
+        q.push(" OFFSET ").push_bind(o);
+    }
+
+    let rows: Vec<TradeRow> = q.build_query_as().fetch_all(pool).await?;
+    Ok(rows.into_iter().map(Into::into).collect())
+}
+
 pub async fn get(pool: &PgPool, trade_id: Uuid) -> anyhow::Result<Option<Trade>> {
     let row: Option<TradeRow> = sqlx::query_as(
         "SELECT id, account_id, symbol, side::text, status::text, opened_at, closed_at,

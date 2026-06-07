@@ -3,6 +3,7 @@ import { esc, fmtDateTime } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
+import { currencyOptions } from '../_currencies.js';
 
 function renderInventoryChart(templates, filters) {
     const el = document.getElementById('set-chart');
@@ -28,7 +29,7 @@ function renderInventoryChart(templates, filters) {
     const xs = labels.map((_, i) => i + 1);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false }, y: { auto: true } },
         series: [
             { label: t('view.settings.chart.kind') },
             { label: t('view.settings.chart.count'),
@@ -37,6 +38,8 @@ function renderInventoryChart(templates, filters) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
@@ -67,7 +70,7 @@ function renderTemplateAgeChart(templates) {
     const xs = labels.map((_, i) => i + 1);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false }, y: { auto: true } },
         series: [
             { label: t('view.settings.chart.tpl_idx') },
             { label: t('view.settings.chart.age_days'),
@@ -76,6 +79,8 @@ function renderTemplateAgeChart(templates) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 50,
               values: (_u, splits) => splits.map(v => v.toFixed(0) + 'd') },
@@ -116,7 +121,7 @@ export async function renderSettings(mount, state) {
                     </select>
                 </label>
                 <label><span data-i18n="view.settings.label.base_currency">Base currency</span>
-                    <input name="base_currency" value="${esc(s.base_currency)}"></label>
+                    <select name="base_currency">${currencyOptions(s.base_currency)}</select></label>
                 <label><span data-i18n="view.settings.label.timezone">Timezone</span>
                     <input name="timezone" value="${esc(s.timezone)}"></label>
                 <label><span data-i18n="view.settings.label.theme">Theme</span>
@@ -178,6 +183,30 @@ export async function renderSettings(mount, state) {
                 <label style="flex-direction:row;align-items:center;gap:6px">
                     <input type="checkbox" name="alpaca_paper" ${ds.alpaca_paper ? 'checked' : ''}>
                     <span data-i18n="view.settings.label.alpaca_paper">Alpaca paper-trading mode</span>
+                </label>
+                <hr style="flex:1 1 100%;border:0;border-top:1px solid var(--border);margin:6px 0">
+                <p data-i18n="view.settings.hint.sip_sources" class="muted small" style="flex:1 1 100%">
+                    SIP (consolidated tape) feeds — CTA + UTP for stocks, OPRA for options.
+                    Required for real-time scalping; free IEX-only / Finnhub paths are sufficient
+                    for charting + delayed quotes.
+                </p>
+                <label><span data-i18n="view.settings.label.polygon_api_key">Polygon.io API key</span>
+                    <input type="password" name="polygon_api_key" autocomplete="off"
+                           value="${esc(ds.polygon_api_key || '')}"
+                           placeholder="polygon.io key — Advanced tier for full SIP tape"
+                           data-i18n-placeholder="view.settings.placeholder.polygon_api_key"
+                           style="min-width:280px">
+                </label>
+                <label><span data-i18n="view.settings.label.databento_api_key">Databento API key</span>
+                    <input type="password" name="databento_api_key" autocomplete="off"
+                           value="${esc(ds.databento_api_key || '')}"
+                           placeholder="databento.com key — direct CTA / UTP / OPRA feeds"
+                           data-i18n-placeholder="view.settings.placeholder.databento_api_key"
+                           style="min-width:280px">
+                </label>
+                <label style="flex-direction:row;align-items:center;gap:6px">
+                    <input type="checkbox" name="alpaca_use_sip_feed" ${ds.alpaca_use_sip_feed ? 'checked' : ''}>
+                    <span data-i18n="view.settings.label.alpaca_use_sip_feed">Use Alpaca SIP feed (Live tier required)</span>
                 </label>
                 <button data-i18n="view.settings.btn.save_data_sources" class="primary" type="submit">Save data sources</button>
             </form>
@@ -274,10 +303,13 @@ export async function renderSettings(mount, state) {
         const fd = new FormData(e.target);
         try {
             await api.updateDataSources({
-                finnhub_api_key:   fd.get('finnhub_api_key')   ?? null,
-                alpaca_key_id:     fd.get('alpaca_key_id')     ?? null,
-                alpaca_secret_key: fd.get('alpaca_secret_key') ?? null,
-                alpaca_paper:      !!fd.get('alpaca_paper'),
+                finnhub_api_key:     fd.get('finnhub_api_key')   ?? null,
+                alpaca_key_id:       fd.get('alpaca_key_id')     ?? null,
+                alpaca_secret_key:   fd.get('alpaca_secret_key') ?? null,
+                alpaca_paper:        !!fd.get('alpaca_paper'),
+                polygon_api_key:     fd.get('polygon_api_key')   ?? null,
+                databento_api_key:   fd.get('databento_api_key') ?? null,
+                alpaca_use_sip_feed: !!fd.get('alpaca_use_sip_feed'),
             });
             showToast(t('view.settings.toast.data_sources_saved'), { level: 'success' });
             if (!viewIsCurrent(tok)) return;

@@ -183,7 +183,7 @@ function renderChart(report) {
     const assetSorted = idx.map(i => asset[i]);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 340,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('view.beta.series.bench_pct') },
             { label: t('view.beta.series.asset_pct'), stroke: '#00e5ff', width: 0, points: { show: true, size: 4 } },
@@ -219,7 +219,7 @@ function renderResidChart(report) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('chart.series.i') },
             { label: t('view.beta.series.resid_pct'),

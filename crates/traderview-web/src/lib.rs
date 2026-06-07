@@ -9,7 +9,9 @@
 //! `is_local = true` user instead of demanding credentials.
 
 pub mod auth;
+pub mod broker_routes;
 pub mod budget_routes;
+pub mod business_routes;
 pub mod error;
 pub mod expense_routes;
 pub mod log_mw;
@@ -29,14 +31,24 @@ pub use error::ApiError;
 pub use state::{AppMode, AppState};
 
 use axum::Router;
+use tower::Layer;
+use tower::ServiceBuilder;
 use tower_http::cors::CorsLayer;
+use tower_http::normalize_path::NormalizePathLayer;
 
 pub fn router(state: AppState) -> Router {
-    Router::new()
+    let inner = Router::new()
         .nest("/api", routes::api_router())
         .with_state(state)
         // Custom middleware logs every request + body-sniffs 4xx/5xx so the
         // log file tells us WHY a widget broke, not just "request failed".
         .layer(axum::middleware::from_fn(log_mw::request_response_logger))
-        .layer(CorsLayer::permissive())
+        .layer(CorsLayer::permissive());
+    // Wrap (not `.layer()`) NormalizePathLayer so `/api/brokers/` and
+    // `/api/brokers` both reach the inner `.route("/", ...)` handler.
+    // Inside a `nest("/brokers", inner)`, axum only matches `/brokers`
+    // (no trailing slash) against the inner `/` route — the trailing
+    // slash form 404s without this normalizer.
+    let normalized = NormalizePathLayer::trim_trailing_slash().layer(inner);
+    Router::new().fallback_service(ServiceBuilder::new().service(normalized))
 }

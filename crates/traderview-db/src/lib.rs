@@ -67,6 +67,7 @@ pub mod shares;
 pub mod short_interest;
 pub mod squeeze_detector;
 pub mod strategy_alerts;
+pub mod symbols;
 pub mod tags;
 pub mod tape_replay;
 pub mod tax_lots;

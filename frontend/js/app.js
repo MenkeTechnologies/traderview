@@ -600,6 +600,8 @@ import { installShortcuts, setScope } from './shortcuts.js';
 import { installCommandPalette } from './command_palette.js';
 import { installToasts } from './toast.js';
 import { installDialog } from './dialog.js';
+import { installNoSpellcheck } from './_no_spellcheck.js';
+import { installSymbolAutocomplete } from './_symbol_autocomplete.js';
 import { installContextMenu, registerContextItems } from './context_menu.js';
 import { SYMBOL_ITEMS, SYMBOL_AWARE_SCOPES, ALL_SCOPED_ITEMS } from './_context_menu.js';
 import { installTooltips, upgradeTooltips, autoApplyTooltips } from './tooltip.js';
@@ -659,6 +661,12 @@ import { installHotkeyEngine } from './hotkey_engine.js';
 import { renderExpensesView } from './views/expenses.js';
 import { renderExpenseDashboard } from './views/expense_dashboard.js';
 import { renderExpenseCalendar } from './views/expense_calendar.js';
+import { renderBusinessCompare } from './views/business_compare.js';
+import { renderBrokerCompare } from './views/broker_compare.js';
+import { renderBrokersManage } from './views/brokers_manage.js';
+import { renderBusinessesManage } from './views/businesses_manage.js';
+import { renderToastHistory } from './views/toast_history.js';
+import { renderLogViewer } from './views/log_viewer.js';
 import { renderReceipts } from './views/receipts.js';
 import { renderPurchases } from './views/purchases.js';
 import { renderCategorize } from './views/categorize.js';
@@ -691,6 +699,19 @@ export async function mountApp({ cfg, me, accounts }) {
         userStrip.textContent = me.is_local ? t('app.user.local') : (me.email || me.display_name || '');
     }
     renderAccountStrip();
+    // Mount broker selector + thread changes through dispatch so every
+    // trade view re-renders against the new broker filter.
+    try {
+        const brokerCtx = await import('./broker_context.js');
+        const host = document.getElementById('broker-strip');
+        if (host) await brokerCtx.mountBrokerSelector(host);
+        // When broker changes, the visible accounts change too — re-render
+        // the account strip BEFORE dispatching so the dashboard widget
+        // fetch goes out against the freshly-picked account.
+        brokerCtx.onChange(() => { renderAccountStrip(); dispatch(); });
+    } catch (e) {
+        console.warn('broker selector mount failed', e);
+    }
     await dispatch();
     hideAuthScreen();
     startAlertEngine();
@@ -802,61 +823,235 @@ async function loadAccounts() {
 function renderAccountStrip() {
     const strip = document.getElementById('account-strip');
     if (!strip) return;
-    if (state.accounts.length === 0) {
-        strip.innerHTML = `<span class="muted">${esc(t('app.account_strip.no_account'))}</span>`;
-        return;
+    // Filter by the active broker — every account lives under exactly one
+    // broker (accounts.broker_id FK), so when a broker is picked we only
+    // surface that broker's accounts. "All brokers" shows everything.
+    let brokerId = null;
+    try { brokerId = globalThis.__tvActiveBroker?.() || null; } catch {}
+    const visible = brokerId
+        ? state.accounts.filter(a => a.broker_id === brokerId)
+        : state.accounts;
+    // Re-seed accountId if the previously-selected account isn't in the
+    // filtered set anymore — happens when the user switches broker.
+    if (state.accountId && !visible.some(a => a.id === state.accountId)) {
+        state.accountId = visible.length ? visible[0].id : '';
     }
-    const options = state.accounts.map(a => `
-        <option value="${a.id}" ${a.id === state.accountId ? 'selected' : ''}>${a.broker} · ${a.name}</option>
-    `).join('');
-    strip.innerHTML = `<select id="account-select" class="account-select">${options}</select>`;
+    const newOpt = `<option value="__new__">${esc(t('app.account_strip.add_new'))}…</option>`;
+    if (visible.length === 0) {
+        // Empty state — still expose the "+ New account" path so users can
+        // create one without leaving the page.
+        strip.innerHTML = `<select id="account-select" class="account-select">
+            <option disabled selected>${esc(t(state.accounts.length === 0
+                ? 'app.account_strip.no_account'
+                : 'app.account_strip.no_account_for_broker'))}</option>
+            ${newOpt}
+        </select>`;
+    } else {
+        const options = visible.map(a => `
+            <option value="${a.id}" ${a.id === state.accountId ? 'selected' : ''}>${a.broker} · ${a.name}</option>
+        `).join('');
+        strip.innerHTML = `<select id="account-select" class="account-select">${options}${newOpt}</select>`;
+    }
     const sel = strip.querySelector('#account-select');
-    if (sel) sel.addEventListener('change', (e) => {
+    if (sel) sel.addEventListener('change', async (e) => {
+        if (e.target.value === '__new__') {
+            // Reset the visible selection so cancelling the wizard doesn't
+            // leave the dropdown stuck on "+ New account".
+            sel.value = state.accountId || '';
+            try {
+                const w = await import('./setup_wizard.js');
+                // Default the wizard's broker pick to the currently-active
+                // broker so the new account lands under it without an
+                // extra click.
+                let defaultSlug = null;
+                if (brokerId) {
+                    const ctx = await import('./broker_context.js');
+                    const list = await ctx.listBrokers();
+                    defaultSlug = list.find(b => b.id === brokerId)?.slug || null;
+                }
+                const created = await w.openSetupWizard({ kind: 'account', defaultBrokerSlug: defaultSlug });
+                if (created) {
+                    await loadAccounts();
+                    state.accountId = created.id;
+                    renderAccountStrip();
+                    dispatch();
+                }
+            } catch (err) {
+                console.warn('account wizard failed', err);
+            }
+            return;
+        }
         state.accountId = e.target.value;
         dispatch();
     });
 }
 
+// Tabs that always live in the primary strip — `+ New Trade` is the
+// primary CTA, `⚙️ Settings` is the always-on escape hatch.
+const PINNED_PRIMARY_VIEWS = new Set(['new-trade', 'settings']);
+
+// Hard cap on how many redistributable tabs are allowed in the primary
+// strip. Without this, ultrawide screens pull everything out of MORE
+// and the topbar feels like a wall of buttons. Adjust to taste —
+// this is the "max tabs that feel calm" number.
+const MAX_PRIMARY_TABS = 10;
+
+function getRedistributableItems() {
+    const nav = document.getElementById('primary-nav');
+    const moreMenu = document.getElementById('nav-more-menu');
+    if (!nav || !moreMenu) return [];
+    return [
+        ...nav.querySelectorAll(':scope > [data-view]'),
+        ...moreMenu.querySelectorAll(':scope > [data-view]'),
+    ].filter((el) => !PINNED_PRIMARY_VIEWS.has(el.dataset.view));
+}
+
+/**
+ * Fit as many tabs as the viewport will hold into the primary strip,
+ * push the rest into the MORE menu. Runs on boot + window resize +
+ * drag-reorder.
+ *
+ * Width math: the previous attempt used `broker-strip.left` as the
+ * upstream boundary, but `.tabs` has `flex: 1 1 auto` — adding items
+ * to nav grows .tabs and slides broker-strip rightward, so the
+ * boundary moved WITH the content and the algorithm never found an
+ * overflow point. This version sums every NON-`.tabs` topbar child's
+ * `offsetWidth` (those are stable, set by their content) and
+ * subtracts from the topbar's total inner width to get a fixed cap.
+ */
+function recomputeTabOverflow() {
+    const nav = document.getElementById('primary-nav');
+    const topbar = document.querySelector('.topbar');
+    const moreMenu = document.getElementById('nav-more-menu');
+    const moreWrap = document.querySelector('.tab-more-wrap');
+    const moreBtn = document.getElementById('nav-more-btn');
+    if (!nav || !topbar || !moreMenu || !moreWrap || !moreBtn) return;
+
+    const items = getRedistributableItems();
+    if (items.length === 0) { moreWrap.style.display = 'none'; return; }
+
+    // 1. Park every redistributable item in the primary nav so each
+    // has a stable `.tab` layout for measurement.
+    for (const item of items) {
+        if (item.classList.contains('tab-more-item')) {
+            item.classList.remove('tab-more-item');
+            item.classList.add('tab');
+        }
+        if (item.parentNode !== nav || item.nextSibling !== moreWrap) {
+            nav.insertBefore(item, moreWrap);
+        }
+    }
+    moreWrap.style.display = '';
+
+    // 2. Sum every non-`.tabs` topbar child's intrinsic width. Those
+    // are set by content (broker label, account select, locale code,
+    // ⌘K, ?, theme/crt/neon, ws status, ticker, user strip, brand,
+    // version) and don't depend on how many tabs are in nav.
+    const TOPBAR_GAP = 12;
+    const TOPBAR_PADDING = 14 * 2;
+    let othersWidth = 0;
+    let othersCount = 0;
+    for (const child of topbar.children) {
+        if (child === nav) continue;
+        if (child.offsetParent === null) continue; // display:none — skip
+        othersWidth += child.offsetWidth;
+        othersCount += 1;
+    }
+    const tabsBudget = topbar.clientWidth
+        - TOPBAR_PADDING
+        - othersWidth
+        - (othersCount * TOPBAR_GAP);
+
+    // 3. Reserve room inside .tabs for the always-on bits: MORE wrap
+    // and ⚙️ Settings. Both sit at the end of nav.
+    const moreWidth = moreBtn.offsetWidth || 80;
+    const settingsBtn = nav.querySelector('[data-view="settings"]');
+    const settingsWidth = settingsBtn ? settingsBtn.offsetWidth : 32;
+    const NAV_GAP = 2;
+    const itemsAvailable = tabsBudget - moreWidth - settingsWidth - (NAV_GAP * 3) - 4;
+
+    // 4. Walk items, accumulate intrinsic widths, stop at first
+    // overflow. Cap by MAX_PRIMARY_TABS so wide viewports stay calm.
+    let cumWidth = 0;
+    let splitIdx = items.length;
+    for (let i = 0; i < items.length; i++) {
+        if (i >= MAX_PRIMARY_TABS) { splitIdx = i; break; }
+        const w = items[i].offsetWidth + NAV_GAP;
+        if (cumWidth + w > itemsAvailable) { splitIdx = i; break; }
+        cumWidth += w;
+    }
+
+    // 5. Move the overflow into MORE.
+    for (let i = splitIdx; i < items.length; i++) {
+        const item = items[i];
+        item.classList.remove('tab');
+        item.classList.add('tab-more-item');
+        moreMenu.appendChild(item);
+    }
+
+    moreWrap.style.display = splitIdx >= items.length ? 'none' : '';
+}
+
+let _overflowRaf = 0;
+function scheduleTabOverflowRecompute() {
+    if (_overflowRaf) return;
+    _overflowRaf = requestAnimationFrame(() => {
+        _overflowRaf = 0;
+        recomputeTabOverflow();
+    });
+}
+
 function bindTabs() {
-    document.querySelectorAll('.tab').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            // The "More ▾" button is a `.tab` for styling parity but
-            // its click should toggle the dropdown, not navigate.
-            if (btn.classList.contains('tab-more')) {
+    // Topbar-wide delegation. Per-element handlers broke after
+    // recomputeTabOverflow() because items shuttled between primary
+    // nav and MORE menu kept their original (out-of-context) listener:
+    // a `.tab-more-item` promoted to primary would still try to close
+    // a menu that was never open; a `.tab` demoted to MORE would
+    // navigate but not close the menu. Delegation on the topbar
+    // resolves both — the handler reads class + container at click
+    // time, not at bind time.
+    const topbar = document.querySelector('.topbar');
+    if (topbar) {
+        topbar.addEventListener('click', (e) => {
+            // 1) MORE button toggles the dropdown.
+            const moreBtn = e.target.closest('.tab-more');
+            if (moreBtn && topbar.contains(moreBtn)) {
                 e.stopPropagation();
                 const menu = document.getElementById('nav-more-menu');
                 if (!menu) return;
                 const open = menu.classList.toggle('hidden');
-                btn.setAttribute('aria-expanded', String(!open));
-                // Menu is `position: fixed` to escape the topbar's
-                // `overflow-x: auto` clip. Compute viewport-relative
-                // coordinates from the More button's bounding rect on
-                // every open so window-resize between opens doesn't
-                // strand the menu.
+                moreBtn.setAttribute('aria-expanded', String(!open));
+                // Menu is `position: fixed`; anchor by LEFT (not right) so
+                // drag-reorder can put MORE anywhere without stranding the
+                // dropdown at the far right of the viewport. Cap inside
+                // the viewport with a scrollable max-height.
                 if (!open) {
-                    const r = btn.getBoundingClientRect();
+                    const r = moreBtn.getBoundingClientRect();
+                    const MIN_W = 220;
+                    const left = Math.min(r.left, window.innerWidth - MIN_W - 8);
+                    const maxH = Math.max(120, window.innerHeight - r.bottom - 24);
+                    menu.style.left = `${Math.max(8, left)}px`;
+                    menu.style.right = 'auto';
                     menu.style.top = `${r.bottom + 4}px`;
-                    menu.style.right = `${Math.max(0, window.innerWidth - r.right)}px`;
+                    menu.style.maxHeight = `${maxH}px`;
+                    menu.style.overflowY = 'auto';
                 }
                 return;
             }
-            if (!btn.dataset.view) return;
-            window.location.hash = btn.dataset.view;
-            closeNavDrawer();
-        });
-    });
-    // Dropdown items navigate + close the menu.
-    document.querySelectorAll('.tab-more-item').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (btn.dataset.view) window.location.hash = btn.dataset.view;
+            // 2) Any [data-view] target navigates and (if it was inside
+            // the MORE menu) closes the menu.
+            const item = e.target.closest('[data-view]');
+            if (!item || !topbar.contains(item)) return;
+            window.location.hash = item.dataset.view;
             const menu = document.getElementById('nav-more-menu');
-            const trigger = document.getElementById('nav-more-btn');
-            if (menu) menu.classList.add('hidden');
-            if (trigger) trigger.setAttribute('aria-expanded', 'false');
+            if (menu && !menu.classList.contains('hidden')) {
+                menu.classList.add('hidden');
+                const trigger = document.getElementById('nav-more-btn');
+                if (trigger) trigger.setAttribute('aria-expanded', 'false');
+            }
             closeNavDrawer();
         });
-    });
+    }
     // Outside click closes the menu.
     document.addEventListener('click', (e) => {
         const menu = document.getElementById('nav-more-menu');
@@ -886,23 +1081,35 @@ function bindTabs() {
                 direction: 'horizontal',
                 getKey: (el) => el.dataset.view || el.textContent.trim(),
                 toastKey: 'toast.reordered_tabs',
+                onReorder: scheduleTabOverflowRecompute,
             });
             // More-dropdown items: same draggability so users can pin
-            // their favorites to the top of the menu. Persists per user.
+            // their favorites to the top of the menu. Key bumped to _v2
+            // so the older saved order (which predates business-compare /
+            // broker-compare) doesn't strand the new entries off-screen.
             const moreMenu = document.getElementById('nav-more-menu');
             if (moreMenu) {
-                initDragReorder(moreMenu, '.tab-more-item', 'nav_more_menu_order', {
+                initDragReorder(moreMenu, '.tab-more-item', 'nav_more_menu_order_v2', {
                     direction: 'vertical',
                     getKey: (el) => el.dataset.view || el.textContent.trim(),
                     toastKey: 'toast.reordered_more_menu',
+                    onReorder: scheduleTabOverflowRecompute,
                 });
             }
         }).catch(() => { /* drag_reorder optional — not fatal */ });
     }
+
+    // Pack the primary strip up to MAX_PRIMARY_TABS or the viewport's
+    // capacity (whichever is smaller); rest goes to MORE. Runs once
+    // after layout settles + on every resize.
+    window.addEventListener('resize', scheduleTabOverflowRecompute);
+    requestAnimationFrame(() => requestAnimationFrame(recomputeTabOverflow));
     installCommandPalette();
     installToasts();
     installDialog();
     installContextMenu();
+    installNoSpellcheck();
+    installSymbolAutocomplete();
     // Register a per-scope item for the launcher recents block so users can
     // wipe their navigation history without leaving the page.
     registerContextItems('launcher-recents', [
@@ -2545,6 +2752,12 @@ export async function dispatch() {
             case 'expenses':       await renderExpensesView(mount); break;
             case 'expense-dashboard': await renderExpenseDashboard(mount); break;
             case 'expense-calendar':  await renderExpenseCalendar(mount); break;
+            case 'business-compare':  await renderBusinessCompare(mount); break;
+            case 'broker-compare':    await renderBrokerCompare(mount); break;
+            case 'brokers':           await renderBrokersManage(mount); break;
+            case 'businesses':        await renderBusinessesManage(mount); break;
+            case 'toast-history':     await renderToastHistory(mount); break;
+            case 'log-viewer':        await renderLogViewer(mount); break;
             case 'receipts':       await renderReceipts(mount, state); break;
             case 'purchases':      await renderPurchases(mount, state); break;
             case 'categorize':     await renderCategorize(mount, state); break;
@@ -2997,6 +3210,11 @@ export async function dispatch() {
 // of these inside a tile. Only includes views that don't need URL
 // params (rest[]) past the global symbol, since tile-context has none.
 export const viewRenderers = {
+    // Markets / accounts / expenses — top-level tiles that work
+    // standalone inside a custom dashboard.
+    'crypto-markets':      (m, s) => renderCryptoMarkets(m, s),
+    'expenses':            (m) => renderExpensesView(m),
+    'webull':              (m, s) => renderWebull(m, s),
     // Pattern / indicator detectors.
     'ha-reversal':         (m, s) => renderHaReversal(m, s),
     'three-bar-reversal':  (m, s) => renderThreeBarReversal(m, s),

@@ -148,7 +148,7 @@ function renderSymbolSentimentChart(items) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false }, y: { auto: true } },
         series: [
             { label: t('view.news.chart.symbol_idx') },
             { label: t('view.news.chart.avg_sentiment'),
@@ -159,6 +159,8 @@ function renderSymbolSentimentChart(items) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
@@ -180,7 +182,7 @@ function renderSentimentChart(items) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false }, y: { auto: true } },
         series: [
             { label: t('view.news.chart.item_idx') },
             { label: t('view.news.chart.sentiment'),

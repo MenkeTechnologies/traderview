@@ -397,7 +397,7 @@ function renderFiresChart(stats) {
     const xs = labels.map((_, i) => i + 1);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.risk_gate.chart.rule_idx') },
             { label: t('view.risk_gate.chart.blocks'),
@@ -409,6 +409,8 @@ function renderFiresChart(stats) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
@@ -434,7 +436,7 @@ function renderBlockRatioChart(stats) {
     const half = xs.map(() => 50);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { range: [0, 100] } },
+        scales: { x: { time: false,}, y: { range: [0, 100] } },
         series: [
             { label: t('view.risk_gate.chart.rule_idx') },
             { label: t('view.risk_gate.chart.block_ratio'),
@@ -445,6 +447,8 @@ function renderBlockRatioChart(stats) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40,
               values: (_u, splits) => splits.map(v => v.toFixed(0) + '%') },

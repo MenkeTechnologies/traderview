@@ -228,7 +228,12 @@ pub fn spawn_aggregator(store: CandidateStore) {
             let symbols: Vec<String> = snap.iter().take(n).map(|c| c.symbol.clone()).collect();
             if !symbols.is_empty() {
                 let live = live_ticks::global();
-                if live.has_key().await {
+                // Was `has_key()` — Finnhub-only — which gated the WS
+                // spawn behind the legacy provider and dropped Alpaca /
+                // Polygon traffic on the floor even when their keys
+                // were saved. `has_any_provider` ungates whenever any
+                // of the three providers is wired up.
+                if live.has_any_provider().await {
                     if let Err(e) = live.set_symbols(symbols.clone()).await {
                         tracing::warn!(error = %e, "live_ticks set_symbols failed");
                     } else {

@@ -172,7 +172,7 @@ function renderAvgChart(r) {
     const zero = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: false, range: [-1, 1] } },
+        scales: { x: { time: false,}, y: { auto: false, range: [-1, 1] } },
         series: [
             { label: t('view.corr_matrix.chart.symbol_idx') },
             { label: t('view.corr_matrix.chart.avg_rho'),
@@ -183,6 +183,8 @@ function renderAvgChart(r) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 50 },
         ],
@@ -206,7 +208,7 @@ function renderDistributionChart(r) {
     const lo = xs.map(() => -0.3);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: false, range: [-1, 1] } },
+        scales: { x: { time: false,}, y: { auto: false, range: [-1, 1] } },
         series: [
             { label: t('view.corr_matrix.chart.pair_idx') },
             { label: t('view.corr_matrix.chart.rho'),

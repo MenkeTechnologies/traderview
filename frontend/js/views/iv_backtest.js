@@ -156,7 +156,7 @@ function renderHistogram(realized, impliedPct) {
     const impliedX = xs.map(c => c);  // identity; we'll overlay a separate vertical via second series
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 280,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.realized_') },
             { label: t('chart.series.count'), stroke: '#00e5ff', width: 1.5,
@@ -179,7 +179,7 @@ function renderPnlSeries(realized, impliedPct) {
     const el = document.getElementById('ib-pnl-chart');
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.event_') },
             { label: t('chart.series.long_pl_1'), stroke: '#39ff14', width: 1.2,

@@ -174,7 +174,7 @@ function renderCommodityChart(commodities) {
     const zero  = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 180,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.world_map.chart.commodity') },
             { label: t('view.world_map.chart.up'),
@@ -189,6 +189,8 @@ function renderCommodityChart(commodities) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
@@ -213,7 +215,7 @@ function renderChangeChart(indices) {
     const zero  = xs.map(() => 0);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.world_map.chart.index') },
             { label: t('view.world_map.chart.up'),
@@ -228,6 +230,8 @@ function renderChangeChart(indices) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],

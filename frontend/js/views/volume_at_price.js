@@ -182,7 +182,7 @@ function renderChart(report) {
     });
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 420,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.bin') },
             { label: t('chart.series.vol'),     stroke: '#00e5ff', width: 1.5, points: { show: false } },
@@ -220,7 +220,7 @@ function renderCumChart(report) {
     const half = xs.map(() => 50);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { range: [0, 100] } },
+        scales: { x: { time: false,}, y: { range: [0, 100] } },
         series: [
             { label: t('view.vap.chart.price') },
             { label: t('view.vap.chart.cum_pct'),

@@ -161,7 +161,7 @@ function renderWeightsChart(report) {
     const xs = labels.map((_, i) => i + 1);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.rp_solver.chart.asset_idx') },
             { label: t('view.rp_solver.chart.rp_weight'),
@@ -173,6 +173,8 @@ function renderWeightsChart(report) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
@@ -196,7 +198,7 @@ function renderRcChart(report) {
     const xs = labels.map((_, i) => i + 1);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.rp_solver.chart.asset_idx') },
             { label: t('view.rp_solver.chart.rc_pct'),
@@ -208,6 +210,8 @@ function renderRcChart(report) {
         ],
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40,
               values: (_u, splits) => splits.map(v => v.toFixed(1) + '%') },

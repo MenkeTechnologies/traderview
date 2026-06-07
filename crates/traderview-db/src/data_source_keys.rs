@@ -32,6 +32,18 @@ pub struct DataSourceKeysDto {
     /// When true, talk to the paper-trading API base URL instead of live.
     #[serde(default = "default_true")]
     pub alpaca_paper: bool,
+    /// Polygon.io API key — Advanced tier provides full consolidated
+    /// SIP tape (CTA + UTP). Lower tiers fall back to delayed / IEX-only.
+    #[serde(default)]
+    pub polygon_api_key: Option<String>,
+    /// Databento API key — direct CTA / UTP / OPRA SIP feeds. Paid
+    /// per-gigabyte; preferred for ultra-low-latency tape replay.
+    #[serde(default)]
+    pub databento_api_key: Option<String>,
+    /// Per-user opt-in for Alpaca's SIP feed (Live tier with SIP costs
+    /// more than the default IEX-only feed; some plans support both).
+    #[serde(default)]
+    pub alpaca_use_sip_feed: bool,
 }
 
 fn default_true() -> bool {
@@ -44,6 +56,9 @@ struct Row {
     alpaca_key_id: Option<String>,
     alpaca_secret_key: Option<String>,
     alpaca_paper: bool,
+    polygon_api_key: Option<String>,
+    databento_api_key: Option<String>,
+    alpaca_use_sip_feed: bool,
 }
 
 fn mask(v: Option<String>) -> Option<String> {
@@ -59,7 +74,8 @@ pub async fn get(pool: &PgPool, user_id: Uuid) -> anyhow::Result<DataSourceKeysD
         .execute(pool)
         .await?;
     let row: Row = sqlx::query_as(
-        "SELECT finnhub_api_key, alpaca_key_id, alpaca_secret_key, alpaca_paper
+        "SELECT finnhub_api_key, alpaca_key_id, alpaca_secret_key, alpaca_paper,
+                polygon_api_key, databento_api_key, alpaca_use_sip_feed
            FROM user_settings
           WHERE user_id = $1",
     )
@@ -72,6 +88,9 @@ pub async fn get(pool: &PgPool, user_id: Uuid) -> anyhow::Result<DataSourceKeysD
         alpaca_key_id: mask(row.alpaca_key_id),
         alpaca_secret_key: mask(row.alpaca_secret_key),
         alpaca_paper: row.alpaca_paper,
+        polygon_api_key: mask(row.polygon_api_key),
+        databento_api_key: mask(row.databento_api_key),
+        alpaca_use_sip_feed: row.alpaca_use_sip_feed,
     })
 }
 
@@ -89,16 +108,23 @@ pub async fn set(pool: &PgPool, user_id: Uuid, dto: &DataSourceKeysDto) -> anyho
         matches!(dto.alpaca_key_id.as_deref(), Some(k) if k != MASK && !k.is_empty());
     let alpaca_secret_supplied =
         matches!(dto.alpaca_secret_key.as_deref(), Some(k) if k != MASK && !k.is_empty());
+    let polygon_supplied =
+        matches!(dto.polygon_api_key.as_deref(), Some(k) if k != MASK && !k.is_empty());
+    let databento_supplied =
+        matches!(dto.databento_api_key.as_deref(), Some(k) if k != MASK && !k.is_empty());
 
     // Build a coalescing UPDATE so the caller can change a subset of fields
     // without re-supplying the others.
     sqlx::query(
         "UPDATE user_settings SET
-             finnhub_api_key   = COALESCE($2, finnhub_api_key),
-             alpaca_key_id     = COALESCE($3, alpaca_key_id),
-             alpaca_secret_key = COALESCE($4, alpaca_secret_key),
-             alpaca_paper      = $5,
-             updated_at        = now()
+             finnhub_api_key     = COALESCE($2, finnhub_api_key),
+             alpaca_key_id       = COALESCE($3, alpaca_key_id),
+             alpaca_secret_key   = COALESCE($4, alpaca_secret_key),
+             alpaca_paper        = $5,
+             polygon_api_key     = COALESCE($6, polygon_api_key),
+             databento_api_key   = COALESCE($7, databento_api_key),
+             alpaca_use_sip_feed = $8,
+             updated_at          = now()
            WHERE user_id = $1",
     )
     .bind(user_id)
@@ -118,9 +144,111 @@ pub async fn set(pool: &PgPool, user_id: Uuid, dto: &DataSourceKeysDto) -> anyho
         None
     })
     .bind(dto.alpaca_paper)
+    .bind(if polygon_supplied {
+        dto.polygon_api_key.as_deref()
+    } else {
+        None
+    })
+    .bind(if databento_supplied {
+        dto.databento_api_key.as_deref()
+    } else {
+        None
+    })
+    .bind(dto.alpaca_use_sip_feed)
     .execute(pool)
     .await?;
     Ok(())
+}
+
+/// Plaintext Polygon key for backend callers — env-var fallback for
+/// headless. Symmetric with [`finnhub_key_plain`].
+pub async fn polygon_key_plain(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Option<String>> {
+    let row: Option<(Option<String>,)> =
+        sqlx::query_as("SELECT polygon_api_key FROM user_settings WHERE user_id = $1")
+            .bind(user_id)
+            .fetch_optional(pool)
+            .await?;
+    if let Some((Some(k),)) = row {
+        if !k.is_empty() {
+            return Ok(Some(k));
+        }
+    }
+    Ok(std::env::var("POLYGON_API_KEY")
+        .ok()
+        .filter(|s| !s.is_empty()))
+}
+
+/// Plaintext Databento key for backend callers.
+pub async fn databento_key_plain(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Option<String>> {
+    let row: Option<(Option<String>,)> =
+        sqlx::query_as("SELECT databento_api_key FROM user_settings WHERE user_id = $1")
+            .bind(user_id)
+            .fetch_optional(pool)
+            .await?;
+    if let Some((Some(k),)) = row {
+        if !k.is_empty() {
+            return Ok(Some(k));
+        }
+    }
+    Ok(std::env::var("DATABENTO_API_KEY")
+        .ok()
+        .filter(|s| !s.is_empty()))
+}
+
+/// Boot-time scoop for any user's saved Alpaca creds + SIP toggle.
+/// `(key_id, secret, use_sip_feed)`. Newest write wins. Env-var
+/// fallback (`ALPACA_KEY_ID`, `ALPACA_SECRET_KEY`, `ALPACA_USE_SIP`)
+/// for headless / CI deployments.
+pub async fn any_alpaca_creds(pool: &PgPool) -> anyhow::Result<Option<(String, String, bool)>> {
+    let row: Option<(Option<String>, Option<String>, bool)> = sqlx::query_as(
+        "SELECT alpaca_key_id, alpaca_secret_key, alpaca_use_sip_feed
+           FROM user_settings
+          WHERE alpaca_key_id IS NOT NULL AND alpaca_key_id <> ''
+            AND alpaca_secret_key IS NOT NULL AND alpaca_secret_key <> ''
+          ORDER BY updated_at DESC
+          LIMIT 1",
+    )
+    .fetch_optional(pool)
+    .await?;
+    if let Some((Some(id), Some(sec), use_sip)) = row {
+        if !id.is_empty() && !sec.is_empty() {
+            return Ok(Some((id, sec, use_sip)));
+        }
+    }
+    let id = std::env::var("ALPACA_KEY_ID")
+        .ok()
+        .filter(|s| !s.is_empty());
+    let sec = std::env::var("ALPACA_SECRET_KEY")
+        .ok()
+        .filter(|s| !s.is_empty());
+    let use_sip = std::env::var("ALPACA_USE_SIP")
+        .ok()
+        .map(|s| matches!(s.as_str(), "1" | "true" | "yes"))
+        .unwrap_or(false);
+    if let (Some(id), Some(sec)) = (id, sec) {
+        return Ok(Some((id, sec, use_sip)));
+    }
+    Ok(None)
+}
+
+/// Boot-time scoop for the Polygon SIP key. Mirrors [`any_finnhub_key`].
+pub async fn any_polygon_key(pool: &PgPool) -> anyhow::Result<Option<String>> {
+    let row: Option<(Option<String>,)> = sqlx::query_as(
+        "SELECT polygon_api_key FROM user_settings
+           WHERE polygon_api_key IS NOT NULL AND polygon_api_key <> ''
+           ORDER BY updated_at DESC
+           LIMIT 1",
+    )
+    .fetch_optional(pool)
+    .await?;
+    if let Some((Some(k),)) = row {
+        if !k.is_empty() {
+            return Ok(Some(k));
+        }
+    }
+    Ok(std::env::var("POLYGON_API_KEY")
+        .ok()
+        .filter(|s| !s.is_empty()))
 }
 
 /// Pick any user's saved Finnhub key (newest write wins). Used at server

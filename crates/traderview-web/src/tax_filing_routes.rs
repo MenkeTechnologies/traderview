@@ -60,36 +60,37 @@ pub fn router() -> Router<AppState> {
 
 /// Load (or lazily create) the draft `tax_returns` row for `(user, year)`.
 /// Lazy creation keeps the wizard's first-time-open path a single read.
+///
+/// The previous implementation was SELECT-then-INSERT, which raced
+/// under the wizard's parallel boot fetches: two requests for the
+/// same `(user, year)` both saw no row, both INSERTed, one won the
+/// unique constraint and the other 500'd. Single-statement upsert
+/// with a no-op `DO UPDATE` so `RETURNING` fires on both the inserted
+/// path AND the already-exists path, giving us the canonical row in
+/// one round trip regardless of who races.
 async fn load_or_create(
     s: &AppState,
     user_id: Uuid,
     year: i32,
 ) -> Result<(Uuid, TaxReturn), ApiError> {
-    let row: Option<(Uuid, serde_json::Value)> =
-        sqlx::query_as("SELECT id, data FROM tax_returns WHERE user_id = $1 AND tax_year = $2")
-            .bind(user_id)
-            .bind(year)
-            .fetch_optional(&s.pool)
-            .await?;
-
-    if let Some((id, data)) = row {
-        let draft = serde_json::from_value::<TaxReturn>(data).unwrap_or_default();
-        return Ok((id, draft));
-    }
-
     let draft = TaxReturn {
         tax_year: year,
         ..Default::default()
     };
     let payload = serde_json::to_value(&draft).unwrap();
-    let id: Uuid = sqlx::query_scalar(
-        "INSERT INTO tax_returns (user_id, tax_year, data) VALUES ($1, $2, $3) RETURNING id",
+    let (id, data): (Uuid, serde_json::Value) = sqlx::query_as(
+        "INSERT INTO tax_returns (user_id, tax_year, data)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (user_id, tax_year) DO UPDATE
+            SET tax_year = EXCLUDED.tax_year
+         RETURNING id, data",
     )
     .bind(user_id)
     .bind(year)
     .bind(&payload)
     .fetch_one(&s.pool)
     .await?;
+    let draft = serde_json::from_value::<TaxReturn>(data).unwrap_or(draft);
     Ok((id, draft))
 }
 

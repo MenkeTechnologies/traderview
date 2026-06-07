@@ -172,7 +172,7 @@ function renderChart(bars, report) {
     const el = document.getElementById('ha-chart');
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 280,
-        scales: { x: {}, y: {} },
+        scales: { x: { time: false,}, y: {} },
         series: [
             { label: t('chart.series.bar_num') },
             { label: t('chart.series.raw_close'), stroke: '#a06bff', width: 1.0,
@@ -209,7 +209,7 @@ function renderBodyChart(bars) {
     const threshold = xs.map(() => Number(state.config.min_body_ratio));
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { range: [0, 1.05] } },
+        scales: { x: { time: false,}, y: { range: [0, 1.05] } },
         series: [
             { label: t('chart.series.bar_num') },
             { label: t('view.ha_reversal.chart.body_ratio'),

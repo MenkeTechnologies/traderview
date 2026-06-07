@@ -176,7 +176,7 @@ function renderChart(series) {
     const imb = series.map(r => r ? r.quote_imbalance : null);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 320,
-        scales: { x: {}, y: {}, y2: { auto: true } },
+        scales: { x: { time: false,}, y: {}, y2: { auto: true } },
         series: [
             { label: t('chart.series.idx') },
             { label: t('view.weighted_midprice.series.dev'),       stroke: '#00e5ff', width: 1.5, points: { show: true, size: 4 } },
@@ -208,7 +208,7 @@ function renderSpreadChart(series) {
     const ys = valid.map(p => p.bps);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series: [
             { label: t('view.wmp.chart.snapshot_idx') },
             { label: t('view.wmp.chart.relative_spread_bps'),

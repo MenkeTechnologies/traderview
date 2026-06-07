@@ -170,7 +170,7 @@ function renderAgeDistChart(report) {
     const warnLine = xs.map(x => Math.abs(x - warn) < (span / bins / 2) ? peak : null);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: { auto: true }, y: { auto: true } },
+        scales: { x: { time: false, auto: true }, y: { auto: true } },
         series: [
             { label: t('view.order_staleness.chart.age_bin') },
             { label: t('view.order_staleness.chart.count'),
@@ -215,10 +215,12 @@ function renderTierChart(report) {
     });
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: {}, y: { auto: true } },
+        scales: { x: { time: false,}, y: { auto: true } },
         series,
         axes: [
             { stroke: '#aab', size: 28,
+              splits: () => xs,
+              incrs: [1],
               values: (_u, splits) => splits.map(v => labels[Math.round(v) - 1] || '') },
             { stroke: '#aab', size: 40 },
         ],
