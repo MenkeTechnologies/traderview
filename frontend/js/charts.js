@@ -136,9 +136,13 @@ export function ohlcChart(el, bars, marks = [], opts = {}) {
 export function barChart(el, labels, values, opts = {}) {
     el.innerHTML = '';
     if (!window.uPlot) { el.textContent = t('chart.error.uplot_missing_short'); return; }
-    // 1-indexed positions so a half-slot range pad ([0.5, n+0.5]) keeps the
-    // first/last bars off the chart border without clipping any tick labels.
-    const xs = labels.map((_, i) => i + 1);
+    // Mirror the working dashboard dailyVolumeChart pattern: 0-indexed xs,
+    // no explicit splits/incrs (uPlot auto-fits ticks to the index range),
+    // and the x-axis `values` callback looks up labels by Math.round(v).
+    // The previous 1-indexed + splits + incrs pattern caused bars to bunch
+    // on the wrong side and the y-axis labels to overlap the x-tick column,
+    // hiding them entirely on the Treasury yield curve.
+    const xs = labels.map((_, i) => i);
     const vs = values.map(Number);
     const w = el.clientWidth || 800;
     const h = opts.height || 240;
@@ -147,11 +151,6 @@ export function barChart(el, labels, values, opts = {}) {
     const barsPath = (u) => {
         const ctx = u.ctx;
         ctx.save();
-        // Bar width: 70% of the per-point slot. Capped at 6% of the
-        // plot area so a single-point dataset doesn't render a giant
-        // slab. Cap is expressed in canvas pixels (same units as
-        // u.bbox.width), so it scales correctly on retina displays
-        // — an absolute pixel cap was producing 30px-CSS skinny bars.
         const bw = Math.max(
             2,
             Math.min((u.bbox.width / xs.length) * 0.7, u.bbox.width * 0.06),
@@ -167,9 +166,6 @@ export function barChart(el, labels, values, opts = {}) {
         return null;
     };
 
-    // Y-axis formatter. Caller picks 'money' (default: -$30,000 → "-$30K") or
-    // 'count' (1700 → "1.7K", no $ prefix). Keeps negative signs visible
-    // when uPlot's default y-axis size would otherwise crop them.
     const yKind = opts.yKind || 'money';
     const fmtY = (v) => {
         if (v == null || !Number.isFinite(v)) return '';
@@ -185,34 +181,29 @@ export function barChart(el, labels, values, opts = {}) {
         title: opts.title || '',
         width: w,
         height: h,
-        // x.time:false — categorical (index) axis, NOT a time axis. uPlot's
-        // default treats the x series as a Unix timestamp, which is why the
-        // legend was showing "1969-12-31 7:00pm" (epoch 0) on the Year /
-        // Month / Day bar charts. Forcing time:false makes the legend
-        // value formatter below take over.
         scales: { x: { time: false }, y: {} },
         series: [
             {
                 label: t('chart.series.idx'),
-                value: (_u, raw) => labels[Math.round(Number(raw)) - 1] || '—',
+                value: (_u, raw) => labels[Math.round(Number(raw))] || '—',
             },
             { label: opts.seriesLabel || t('chart.series.value'), stroke: 'transparent', paths: barsPath },
         ],
         axes: [{
             stroke: '#aab',
-            // Pin ticks to integer indices so the categorical labels don't
-            // duplicate (without this uPlot emits 0, 0.5, 1, 1.5, ... and
-            // every tick rounds to the same label as its neighbour).
-            // Mirrors the working pattern in views/accounts_overview.js.
+            size: 60,
+            rotate: -45,
+            // Pin ticks to the 0-indexed integer positions so sparse series
+            // (e.g. 7-point VIX tenor curve) don't get half-step splits that
+            // round to duplicate labels. Auto-tick is fine for 30-day daily
+            // volume but produces 0.5/1.5/2.5 splits for short series.
             splits: () => xs,
             incrs: [1],
-            values: (_, ticks) => ticks.map(t => labels[Math.round(t) - 1] || ''),
-            rotate: -45,
-            size: 60,
+            values: (_u, ticks) => ticks.map(v => labels[Math.round(v)] || ''),
         }, {
             stroke: '#aab',
             size: 64,
-            values: (_, ticks) => ticks.map(fmtY),
+            values: (_u, ticks) => ticks.map(fmtY),
         }],
     }, [xs, vs], el);
 }
