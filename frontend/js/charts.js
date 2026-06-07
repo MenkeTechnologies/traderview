@@ -212,11 +212,16 @@ export function barChart(el, labels, values, opts = {}) {
             stroke: '#aab',
             size: 60,
             rotate: -45,
-            // Pin ticks at every 0-indexed integer position. With sparse
-            // series (4-point VIX/Treasury) uPlot's auto-tick picks
-            // 0.5-step increments that all round to duplicate labels.
-            splits: () => xs,
-            incrs: [1],
+            // Force a wide minSpace so uPlot's auto-tick can't produce more
+            // than `n` ticks across the panel width. Combined with an
+            // explicit splits callback that returns one tick per data
+            // point, this pins one label per bar without leaning on
+            // `incrs: [1]` — which previously interacted with the
+            // explicit `scales.x.range` and made uPlot silently drop
+            // the entire x-axis label render.
+            space: 40,
+            splits: (_u, _ai, sMin, sMax) =>
+                xs.filter(v => v >= Math.floor(sMin) && v <= Math.ceil(sMax)),
             values: (_u, ticks) => ticks.map(v => labels[Math.round(v)] || ''),
         }, {
             stroke: '#aab',
