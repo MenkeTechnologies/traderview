@@ -405,6 +405,30 @@ export const api = {
         const s = qs(params);
         return request(`/receipts/recurring${s ? '?' + s : ''}`);
     },
+    receiptsSpendCalendar: (year) => {
+        const s = year ? `?year=${year}` : '';
+        return request(`/receipts/spend-calendar${s}`);
+    },
+    receiptsDow: (params = {}) => {
+        const s = qs(params);
+        return request(`/receipts/dow${s ? '?' + s : ''}`);
+    },
+    receiptsCumulative: (params = {}) => {
+        const s = qs(params);
+        return request(`/receipts/cumulative${s ? '?' + s : ''}`);
+    },
+    expenseDashboardBundle: (year) => {
+        const s = year ? `?year=${year}` : '';
+        return request(`/receipts/dashboard-bundle${s}`);
+    },
+    receiptsMonthCalendar: (year, month) =>
+        request(`/receipts/calendar/${year}/${month}`),
+    receiptsYoyMonthly: (year) => request(`/receipts/yoy-monthly${year ? `?year=${year}` : ''}`),
+    receiptsAging: () => request('/receipts/aging'),
+    receiptsByProperty: (year) => request(`/receipts/by-property${year ? `?year=${year}` : ''}`),
+    receiptsAnomalies: () => request('/receipts/anomalies'),
+    receiptsCategoryDistribution: (year) =>
+        request(`/receipts/category-distribution${year ? `?year=${year}` : ''}`),
 
     // --- budgeting ------------------------------------------------------
     listBudgets: () => request('/budget/'),

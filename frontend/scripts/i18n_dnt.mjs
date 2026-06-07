@@ -75,8 +75,12 @@ const KEY_PATTERNS = [
  * sentinel. Returns `{ masked, back }` where `back` maps each sentinel
  * back to the original term — feed `back` to the caller's restore step.
  *
- * Sentinels deliberately use a different prefix from `{token}`-style
- * interpolation placeholders (`__TVI…__`) so the two systems compose.
+ * Sentinels use `{xpn0}` curly-brace syntax (same family as `{token}`
+ * interpolation placeholders) because LibreTranslate's Argos tokenizer
+ * preserves curly-brace content verbatim. The earlier `__PN0__` style
+ * was being mangled to `  PN0  ` (underscores collapsed to spaces),
+ * which broke restoration. Lowercase `xpn` differentiates from any
+ * existing `{TOKEN}` interpolation in the source string.
  */
 export function maskProperNouns(value) {
     if (!NOUN_RE || typeof value !== 'string' || value.length === 0) {
@@ -85,7 +89,7 @@ export function maskProperNouns(value) {
     const back = new Map();
     let next = 0;
     const masked = value.replace(NOUN_RE, (m) => {
-        const sentinel = `__PN${next++}__`;
+        const sentinel = `{xpn${next++}}`;
         back.set(sentinel, m);
         return sentinel;
     });

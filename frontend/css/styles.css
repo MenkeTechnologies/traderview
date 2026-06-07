@@ -2279,6 +2279,229 @@ table.rs-table tr { cursor: default; }
 }
 .tax-chart-mount { width: 100%; min-height: 200px; }
 .tax-chart-card canvas { display: block; }
+.tax-calendar-legend {
+    display: flex; align-items: center; gap: 6px;
+    margin-top: 6px; font-size: 10px; color: var(--text-dim);
+}
+.tax-cal-swatch {
+    display: inline-block; width: 12px; height: 12px; border-radius: 2px;
+}
+.tax-cal-swatch.s0 { background: #16202c; }
+.tax-cal-swatch.s1 { background: #0d3a4d; }
+.tax-cal-swatch.s2 { background: #0d556e; }
+.tax-cal-swatch.s3 { background: #108a9f; }
+.tax-cal-swatch.s4 { background: #36c8d4; }
+.tax-calendar-hover {
+    margin-left: auto; font-family: var(--font-mono, monospace);
+    color: var(--text-bright, #e0f0ff); font-size: 11px;
+}
+
+/* ---- business-expense dashboard ----------------------------------- */
+.expd-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; margin-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+}
+.expd-controls { display: flex; gap: 12px; align-items: center; }
+.expd-controls label { display: inline-flex; gap: 6px; align-items: center; }
+.expd-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px; padding: 0 12px 32px;
+}
+.expd-span-2 { grid-column: span 2; }
+@media (max-width: 900px) {
+    .expd-span-2 { grid-column: 1; }
+    .expd-grid { grid-template-columns: 1fr; }
+}
+.expd-split { padding: 14px; }
+.expd-split-row {
+    display: flex; justify-content: space-between; padding: 4px 0;
+    font-size: 12px;
+}
+.expd-split-bar {
+    display: flex; height: 14px; margin-top: 10px;
+    border-radius: 3px; overflow: hidden;
+}
+.expd-split-bar-wd { background: #36c8d4; }
+.expd-split-bar-we { background: #ff7a3d; }
+
+/* ---- expense calendar (Tradervue-style monthly grid) ---------------- */
+.excal-header {
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+}
+.excal-controls { display: flex; gap: 8px; align-items: center; }
+.excal-legend {
+    display: flex; gap: 14px; font-size: 11px; color: var(--text-dim);
+    flex-wrap: wrap;
+}
+.excal-swatch {
+    display: inline-block; width: 12px; height: 12px;
+    border-radius: 2px; margin-right: 4px; vertical-align: -2px;
+}
+.excal-biz  { background: rgba(80, 255, 128, 0.35); }
+.excal-rent { background: rgba(54, 200, 212, 0.35); }
+.excal-pers { background: rgba(255, 216, 74, 0.35); }
+.excal-unc  { background: rgba(255, 122, 61, 0.35); }
+
+.excal-monthly-strip {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    padding: 12px 16px;
+}
+.excal-monthly-cell {
+    padding: 10px 12px; border: 1px solid var(--border); border-radius: 3px;
+}
+.excal-monthly-label {
+    font-size: 10px; color: var(--text-dim);
+    text-transform: uppercase; letter-spacing: 0.06em;
+}
+.excal-monthly-value { font-size: 18px; font-weight: 700; }
+
+.excal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr) 0.75fr;
+    gap: 4px; padding: 12px 16px 32px;
+}
+.excal-dow {
+    font-size: 10px; color: var(--text-dim); text-align: center;
+    text-transform: uppercase; padding: 4px 0;
+}
+.excal-day {
+    min-height: 76px; padding: 6px;
+    border: 1px solid var(--border); border-radius: 3px;
+    background: var(--bg-secondary); cursor: pointer;
+    display: flex; flex-direction: column; gap: 2px;
+    transition: transform 0.05s ease, box-shadow 0.05s ease;
+}
+.excal-day:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}
+.excal-day:focus { outline: 2px solid #36c8d4; outline-offset: -2px; }
+.excal-empty { background: transparent; border-style: dashed; cursor: default; }
+.excal-empty:hover { transform: none; box-shadow: none; }
+.excal-day-num { font-weight: 700; font-size: 12px; }
+.excal-day-total { font-family: var(--font-mono, monospace); font-size: 13px; }
+.excal-day-count { font-size: 10px; color: var(--text-dim); }
+
+.excal-bucket-business      { background: rgba(80, 255, 128, 0.10); border-color: rgba(80, 255, 128, 0.45); }
+.excal-bucket-rental        { background: rgba(54, 200, 212, 0.10); border-color: rgba(54, 200, 212, 0.45); }
+.excal-bucket-personal      { background: rgba(255, 216, 74, 0.10); border-color: rgba(255, 216, 74, 0.40); }
+.excal-bucket-unclassified  { background: rgba(255, 122, 61, 0.10); border-color: rgba(255, 122, 61, 0.40); }
+.excal-bucket-none          { background: var(--bg-secondary); }
+.excal-today-cell { outline: 2px solid #36c8d4; outline-offset: -2px; }
+
+.excal-mini-bar {
+    display: flex; height: 4px; margin-top: auto;
+    border-radius: 2px; overflow: hidden;
+}
+.excal-bar-biz  { background: #50ff80; }
+.excal-bar-rent { background: #36c8d4; }
+.excal-bar-pers { background: #ffd84a; }
+.excal-bar-unc  { background: #ff7a3d; }
+
+.excal-week-total {
+    padding: 6px; border: 1px dashed var(--border); border-radius: 3px;
+    display: flex; flex-direction: column; gap: 2px;
+    background: var(--bg-secondary);
+}
+.excal-week-label {
+    font-size: 10px; color: var(--text-dim); text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* ---- expense-dashboard phase-2 widgets -------------------------------- */
+.expd-subs-strip {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    margin-bottom: 12px;
+}
+.expd-subs-strip > div {
+    padding: 8px 12px; background: var(--bg-secondary); border-radius: 3px;
+    display: flex; flex-direction: column;
+}
+.expd-subs-strip span { font-size: 10px; color: var(--text-dim); text-transform: uppercase; }
+.expd-subs-strip strong { font-size: 16px; }
+.expd-aging-strip {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+}
+.expd-aging-cell {
+    padding: 8px 10px; background: var(--bg-secondary); border-radius: 3px;
+}
+.expd-aging-bucket {
+    font-size: 10px; color: var(--text-dim); text-transform: uppercase;
+}
+.expd-aging-count { font-size: 22px; font-weight: 700; }
+.expd-property-list {
+    display: flex; flex-direction: column; gap: 14px;
+}
+.expd-property-row { padding: 8px 10px; background: var(--bg-secondary); border-radius: 3px; }
+.expd-property-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 6px;
+}
+.expd-property-bar {
+    height: 4px; background: #36c8d4; border-radius: 2px; margin: 4px 0 8px;
+}
+.expd-property-cats {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 4px 14px; font-size: 12px;
+}
+.expd-property-cat {
+    display: flex; justify-content: space-between;
+    color: var(--text-dim);
+}
+.expd-property-cat strong { color: var(--text-bright, #e0f0ff); }
+.expd-anomalies-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+}
+.expd-anomaly-card {
+    display: flex; gap: 10px; padding: 10px;
+    background: var(--bg-secondary); border-radius: 3px;
+    border-left: 3px solid #36c8d4;
+}
+.expd-anomaly-subscription_jump { border-left-color: #ff7a3d; }
+.expd-anomaly-new_merchant { border-left-color: #50ff80; }
+.expd-anomaly-outlier_receipt { border-left-color: #ff3860; }
+.expd-anomaly-icon {
+    font-size: 18px; line-height: 1; color: var(--text-dim);
+}
+.expd-anomaly-body { flex: 1; min-width: 0; }
+.expd-anomaly-label {
+    font-size: 12px; color: var(--text-bright, #e0f0ff);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.expd-anomaly-value { font-size: 14px; }
+.expd-planner {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px;
+}
+.expd-planner-card {
+    padding: 12px; background: var(--bg-secondary); border-radius: 3px;
+    display: flex; flex-direction: column; gap: 8px;
+}
+.expd-planner-card h3 {
+    font-size: 12px; margin: 0; color: var(--text-bright, #e0f0ff);
+    text-transform: uppercase; letter-spacing: 0.04em;
+}
+.expd-planner-card label {
+    display: flex; flex-direction: column; gap: 2px;
+    font-size: 11px; color: var(--text-dim);
+}
+.expd-planner-card input { padding: 4px 8px; }
+.expd-planner-out {
+    display: flex; flex-direction: column; gap: 2px;
+    padding-top: 8px; border-top: 1px solid var(--border);
+}
+.expd-planner-out > div {
+    display: flex; justify-content: space-between;
+    font-size: 12px;
+}
+.expd-planner-out span { color: var(--text-dim); }
+@media (max-width: 900px) {
+    .excal-grid { font-size: 10px; }
+    .excal-day { min-height: 60px; padding: 4px; }
+}
 @media (max-width: 900px) {
     .tax-chart-grid { grid-template-columns: 1fr; }
 }

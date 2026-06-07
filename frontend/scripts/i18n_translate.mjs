@@ -20,7 +20,7 @@
 //   node scripts/i18n_translate.mjs --dry-run                    # count only, no HTTP
 //
 // `{tok}`-style interpolation placeholders are protected by swapping
-// them to opaque ASCII sentinels (`__TVI0__`, `__TVI1__`, …) before
+// them to curly-brace sentinels (`{xtvi0}`, `{xtvi1}`, …) that LT
 // translation and restored after. A translation that drops the
 // sentinel is rejected (caller keeps the EN value).
 
@@ -119,7 +119,7 @@ function protect(value) {
     let next = 0;
     let masked = value.replace(TOKEN_RE, (m) => {
         if (map.has(m)) return map.get(m);
-        const sentinel = `__TVI${next++}__`;
+        const sentinel = `{xtvi${next++}}`;
         map.set(m, sentinel);
         back.set(sentinel, m);
         return sentinel;

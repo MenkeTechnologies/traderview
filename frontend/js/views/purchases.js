@@ -12,6 +12,7 @@ import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
 import { openReceiptMatchModal } from './expenses.js';
+import { initDragReorder } from '../drag_reorder.js';
 
 const STATE = {
     filters: {
@@ -153,6 +154,16 @@ export async function renderPurchases(mount, _state) {
             fb.querySelector('#pf-apply').click();
         });
     });
+    // Drag-reorder the period pills — persisted per-user so favorite
+    // periods (YTD, current quarter) drift left over time.
+    const pillRow = fb.querySelector('.pf-period-pills');
+    if (pillRow) {
+        initDragReorder(pillRow, 'button[data-period]', 'pf_period_pill_order', {
+            direction: 'horizontal',
+            getKey: (el) => el.dataset.period,
+            toastKey: 'toast.reordered_pills',
+        });
+    }
 
     fb.querySelector('#pf-apply').addEventListener('click', () => {
         STATE.filters.from      = fb.querySelector('#pf-from').value;

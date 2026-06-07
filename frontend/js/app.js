@@ -657,6 +657,8 @@ import { startAlertEngine, requestNotifPermission } from './alert_engine.js';
 import { startWs, on as onWsEvent } from './ws.js';
 import { installHotkeyEngine } from './hotkey_engine.js';
 import { renderExpensesView } from './views/expenses.js';
+import { renderExpenseDashboard } from './views/expense_dashboard.js';
+import { renderExpenseCalendar } from './views/expense_calendar.js';
 import { renderReceipts } from './views/receipts.js';
 import { renderPurchases } from './views/purchases.js';
 import { renderCategorize } from './views/categorize.js';
@@ -883,8 +885,18 @@ function bindTabs() {
             initDragReorder(nav, '.tab:not(.tab-more)', 'primary_nav_order_v2', {
                 direction: 'horizontal',
                 getKey: (el) => el.dataset.view || el.textContent.trim(),
-                toastMessage: 'Nav reordered',
+                toastKey: 'toast.reordered_tabs',
             });
+            // More-dropdown items: same draggability so users can pin
+            // their favorites to the top of the menu. Persists per user.
+            const moreMenu = document.getElementById('nav-more-menu');
+            if (moreMenu) {
+                initDragReorder(moreMenu, '.tab-more-item', 'nav_more_menu_order', {
+                    direction: 'vertical',
+                    getKey: (el) => el.dataset.view || el.textContent.trim(),
+                    toastKey: 'toast.reordered_more_menu',
+                });
+            }
         }).catch(() => { /* drag_reorder optional — not fatal */ });
     }
     installCommandPalette();
@@ -2531,6 +2543,8 @@ export async function dispatch() {
             case 'walk-forward':   await renderWalkForward(mount, state); break;
             case 'tax-lots':       await renderTaxLots(mount, state); break;
             case 'expenses':       await renderExpensesView(mount); break;
+            case 'expense-dashboard': await renderExpenseDashboard(mount); break;
+            case 'expense-calendar':  await renderExpenseCalendar(mount); break;
             case 'receipts':       await renderReceipts(mount, state); break;
             case 'purchases':      await renderPurchases(mount, state); break;
             case 'categorize':     await renderCategorize(mount, state); break;

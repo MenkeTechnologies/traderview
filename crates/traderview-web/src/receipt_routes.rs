@@ -22,7 +22,7 @@ use axum::http::{header, StatusCode};
 use axum::response::Response;
 use axum::routing::{get, post};
 use axum::{Json, Router};
-use chrono::{DateTime, Datelike, NaiveDate, Utc};
+use chrono::{DateTime, Datelike, NaiveDate, Timelike, Utc};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -59,6 +59,19 @@ pub fn router() -> Router<AppState> {
         .route("/search", get(receipts_search))
         .route("/duplicates", get(receipts_duplicates))
         .route("/recurring", get(receipts_recurring))
+        .route("/spend-calendar", get(spend_calendar))
+        .route("/calendar/:year/:month", get(receipts_month_calendar))
+        .route("/dashboard-bundle", get(expense_dashboard_bundle))
+        .route("/dow", get(receipts_dow))
+        .route("/cumulative", get(receipts_cumulative))
+        .route("/yoy-monthly", get(receipts_yoy_monthly))
+        .route("/aging", get(receipts_aging))
+        .route("/by-property", get(receipts_by_property))
+        .route("/anomalies", get(receipts_anomalies))
+        .route(
+            "/category-distribution",
+            get(receipts_category_distribution),
+        )
         .route("/tax-rollup.csv", get(tax_rollup_csv))
         .route("/tax-rollup.pdf", get(tax_rollup_pdf))
         .route("/ocr-models/status", get(ocr_models_status))
@@ -2685,6 +2698,1260 @@ async fn tax_rollup(
         personal: flatten(personal, false, false),
         unclassified: flatten(unclassified, false, false),
     }))
+}
+
+// ── Expense-dashboard bundle ──────────────────────────────────────────────
+//
+// Single endpoint that returns every slice the business-expense dashboard
+// needs: KPI strip, time-series for the charts, leaderboards, distributions.
+// Mirrors the architecture of `dashboard.js::loadAnalyticsBundle` on the
+// trading side — one round-trip → all panels render from local data.
+
+#[derive(Deserialize)]
+struct BundleQ {
+    year: Option<i32>,
+}
+
+#[derive(Serialize)]
+struct ExpenseKpis {
+    total: Decimal,
+    schedule_c: Decimal,
+    schedule_e: Decimal,
+    personal: Decimal,
+    unclassified: Decimal,
+    receipt_count: u32,
+    item_count: u32,
+    avg_ticket: Decimal,
+    avg_daily: Decimal,
+    biz_pct: f64,
+    deductible_pct: f64,
+    burn_rate_monthly: Decimal,
+    biggest_receipt: Decimal,
+    smallest_receipt: Decimal,
+    longest_zero_streak_days: u32,
+    longest_consec_spending_days: u32,
+}
+
+#[derive(Serialize)]
+struct LabeledTotal {
+    label: String,
+    total: Decimal,
+    count: u32,
+}
+
+#[derive(Serialize, Clone)]
+struct DailyPoint {
+    day: NaiveDate,
+    total: Decimal,
+    count: u32,
+    cumulative: Decimal,
+}
+
+#[derive(Serialize)]
+struct ExpenseBundle {
+    year: i32,
+    from: NaiveDate,
+    to: NaiveDate,
+    kpis: ExpenseKpis,
+    daily: Vec<DailyPoint>,
+    calendar: Vec<DailyPoint>,
+    by_dow: Vec<LabeledTotal>,
+    by_hour: Vec<LabeledTotal>,
+    by_month: Vec<LabeledTotal>,
+    by_quarter: Vec<LabeledTotal>,
+    by_amount_bucket: Vec<LabeledTotal>,
+    by_category: Vec<LabeledTotal>,
+    by_tax_bucket: Vec<LabeledTotal>,
+    top_merchants_by_total: Vec<LabeledTotal>,
+    top_merchants_by_count: Vec<LabeledTotal>,
+    weekday_vs_weekend: Vec<LabeledTotal>,
+    uncategorized_count: u32,
+    uncategorized_total: Decimal,
+}
+
+/// Single bundle endpoint feeding the expense dashboard. One DB round-trip
+/// for the year's receipts + items; every slice computed in Rust.
+async fn expense_dashboard_bundle(
+    State(s): State<AppState>,
+    user: AuthUser,
+    axum::extract::Query(q): axum::extract::Query<BundleQ>,
+) -> Result<Json<ExpenseBundle>, ApiError> {
+    let now = Utc::now().date_naive();
+    let year = q.year.unwrap_or(now.year());
+    let from = NaiveDate::from_ymd_opt(year, 1, 1)
+        .ok_or_else(|| ApiError::BadRequest(format!("year {year} out of NaiveDate range")))?;
+    let to = NaiveDate::from_ymd_opt(year, 12, 31).unwrap();
+
+    let rows: Vec<(
+        NaiveDate,
+        Option<String>,
+        Option<Decimal>,
+        Option<serde_json::Value>,
+        Option<DateTime<Utc>>,
+    )> = sqlx::query_as(
+        "SELECT ocr_date::date, ocr_merchant, ocr_total, ocr_extracted, created_at
+           FROM receipts
+          WHERE user_id = $1
+            AND ocr_status = 'done'::ocr_status_t
+            AND ocr_date IS NOT NULL
+            AND ocr_date BETWEEN $2 AND $3",
+    )
+    .bind(user.id)
+    .bind(from)
+    .bind(to)
+    .fetch_all(&s.pool)
+    .await?;
+
+    let aliases = crate::merchant::load_aliases(&s.pool, user.id)
+        .await
+        .unwrap_or_default();
+
+    use std::collections::HashMap;
+    let mut daily_total: HashMap<NaiveDate, (Decimal, u32)> = HashMap::new();
+    let mut by_dow: [(Decimal, u32); 7] = Default::default();
+    let mut by_hour: [(Decimal, u32); 24] = std::array::from_fn(|_| (Decimal::ZERO, 0));
+    let mut by_month: [(Decimal, u32); 12] = Default::default();
+    let mut by_quarter: [(Decimal, u32); 4] = Default::default();
+    let mut by_amount_bucket: [(Decimal, u32); 7] = Default::default();
+    let mut by_category: HashMap<String, (Decimal, u32)> = HashMap::new();
+    let mut by_tax_bucket: HashMap<String, (Decimal, u32)> = HashMap::new();
+    let mut top_merchant_total: HashMap<String, (Decimal, u32)> = HashMap::new();
+    let mut weekday_total = (Decimal::ZERO, 0u32);
+    let mut weekend_total = (Decimal::ZERO, 0u32);
+    let mut schedule_c = Decimal::ZERO;
+    let mut schedule_e = Decimal::ZERO;
+    let mut personal = Decimal::ZERO;
+    let mut unclassified = Decimal::ZERO;
+    let mut uncategorized_count: u32 = 0;
+    let mut uncategorized_total = Decimal::ZERO;
+    let mut item_count: u32 = 0;
+    let mut biggest = Decimal::ZERO;
+    let mut smallest = Decimal::MAX;
+
+    for (date, merchant, total, extracted, created) in &rows {
+        // Receipt-level daily/dow/month/quarter/amount aggregations.
+        if let Some(t) = total {
+            let entry = daily_total.entry(*date).or_insert((Decimal::ZERO, 0));
+            entry.0 += *t;
+            entry.1 += 1;
+
+            let dow = date.weekday().num_days_from_sunday() as usize;
+            by_dow[dow].0 += *t;
+            by_dow[dow].1 += 1;
+            if dow == 0 || dow == 6 {
+                weekend_total.0 += *t;
+                weekend_total.1 += 1;
+            } else {
+                weekday_total.0 += *t;
+                weekday_total.1 += 1;
+            }
+
+            let mi = (date.month0()) as usize;
+            by_month[mi].0 += *t;
+            by_month[mi].1 += 1;
+            by_quarter[(mi / 3).min(3)].0 += *t;
+            by_quarter[(mi / 3).min(3)].1 += 1;
+
+            let bucket = amount_bucket(*t);
+            by_amount_bucket[bucket].0 += *t;
+            by_amount_bucket[bucket].1 += 1;
+
+            if *t > biggest {
+                biggest = *t;
+            }
+            if *t < smallest {
+                smallest = *t;
+            }
+
+            // Hour-of-day from created_at (proxy when receipt didn't carry
+            // its own time stamp — better than nothing).
+            if let Some(c) = created {
+                let h = c.hour() as usize;
+                by_hour[h].0 += *t;
+                by_hour[h].1 += 1;
+            }
+        }
+
+        // Merchant aggregation.
+        if let Some(m) = merchant {
+            let canonical = crate::merchant::canonicalize(m, &aliases);
+            if !canonical.is_empty() {
+                let entry = top_merchant_total
+                    .entry(canonical)
+                    .or_insert((Decimal::ZERO, 0));
+                if let Some(t) = total {
+                    entry.0 += *t;
+                }
+                entry.1 += 1;
+            }
+        }
+
+        // Item-level aggregation for category/tax-bucket charts.
+        let Some(ext) = extracted else { continue };
+        let Some(items) = ext.get("items").and_then(|v| v.as_array()) else {
+            continue;
+        };
+        for it in items {
+            item_count += 1;
+            let cat = it
+                .get("category")
+                .and_then(|v| v.as_str())
+                .unwrap_or("uncategorized")
+                .to_string();
+            let bucket = it
+                .get("tax_bucket")
+                .and_then(|v| v.as_str())
+                .unwrap_or("personal")
+                .to_string();
+            let amount = it
+                .get("total")
+                .and_then(|v| v.as_str())
+                .and_then(|s| s.parse::<Decimal>().ok())
+                .unwrap_or(Decimal::ZERO);
+            let cat_entry = by_category.entry(cat).or_insert((Decimal::ZERO, 0));
+            cat_entry.0 += amount;
+            cat_entry.1 += 1;
+            let bucket_entry = by_tax_bucket
+                .entry(bucket.clone())
+                .or_insert((Decimal::ZERO, 0));
+            bucket_entry.0 += amount;
+            bucket_entry.1 += 1;
+            match bucket.as_str() {
+                "business" => schedule_c += amount,
+                "rental" => schedule_e += amount,
+                "personal" => personal += amount,
+                _ => {
+                    unclassified += amount;
+                    uncategorized_total += amount;
+                    uncategorized_count += 1;
+                }
+            }
+        }
+    }
+
+    let total = schedule_c + schedule_e + personal + unclassified;
+    let receipt_count = rows.len() as u32;
+    let avg_ticket = if receipt_count > 0 {
+        (total / Decimal::from(receipt_count)).round_dp(2)
+    } else {
+        Decimal::ZERO
+    };
+    let day_of_year = (now - from).num_days().max(1);
+    let avg_daily = (total / Decimal::from(day_of_year)).round_dp(2);
+    let burn_rate_monthly = (avg_daily * Decimal::from(30)).round_dp(2);
+    let biz_pct = if total > Decimal::ZERO {
+        (schedule_c + schedule_e) / total
+    } else {
+        Decimal::ZERO
+    }
+    .try_into()
+    .unwrap_or(0.0);
+    let deductible_pct = biz_pct * 100.0;
+    if smallest == Decimal::MAX {
+        smallest = Decimal::ZERO;
+    }
+
+    // Streaks: longest run of consecutive days with $0 receipts, longest run with >$0.
+    let mut longest_zero = 0u32;
+    let mut longest_active = 0u32;
+    let mut cur_zero = 0u32;
+    let mut cur_active = 0u32;
+    let mut d = from;
+    while d <= to.min(now) {
+        if daily_total.contains_key(&d) {
+            cur_active += 1;
+            cur_zero = 0;
+            longest_active = longest_active.max(cur_active);
+        } else {
+            cur_zero += 1;
+            cur_active = 0;
+            longest_zero = longest_zero.max(cur_zero);
+        }
+        d = d.succ_opt().unwrap();
+    }
+
+    // Daily series with running cumulative.
+    let mut daily: Vec<DailyPoint> = Vec::new();
+    let mut acc = Decimal::ZERO;
+    let mut d = from;
+    while d <= to {
+        let (day_total, day_count) = daily_total.get(&d).cloned().unwrap_or_default();
+        acc += day_total;
+        daily.push(DailyPoint {
+            day: d,
+            total: day_total,
+            count: day_count,
+            cumulative: acc,
+        });
+        d = d.succ_opt().unwrap();
+    }
+
+    // Compact slices for tiny charts.
+    fn label_arr(arr: &[(Decimal, u32)], labels: &[&str]) -> Vec<LabeledTotal> {
+        arr.iter()
+            .zip(labels.iter())
+            .map(|((tot, cnt), l)| LabeledTotal {
+                label: l.to_string(),
+                total: *tot,
+                count: *cnt,
+            })
+            .collect()
+    }
+
+    let dow_labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    let hour_labels: Vec<String> = (0..24).map(|h| format!("{h:02}")).collect();
+    let hour_label_refs: Vec<&str> = hour_labels.iter().map(|s| s.as_str()).collect();
+    let month_labels = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ];
+    let quarter_labels = ["Q1", "Q2", "Q3", "Q4"];
+    let amount_labels = [
+        "$0-10", "$10-25", "$25-50", "$50-100", "$100-250", "$250-1k", "$1k+",
+    ];
+
+    let mut by_category_v: Vec<LabeledTotal> = by_category
+        .into_iter()
+        .map(|(label, (total, count))| LabeledTotal {
+            label,
+            total,
+            count,
+        })
+        .collect();
+    by_category_v.sort_by_key(|m| std::cmp::Reverse(m.total));
+    by_category_v.truncate(15);
+
+    let mut by_tax_bucket_v: Vec<LabeledTotal> = by_tax_bucket
+        .into_iter()
+        .map(|(label, (total, count))| LabeledTotal {
+            label,
+            total,
+            count,
+        })
+        .collect();
+    by_tax_bucket_v.sort_by_key(|m| std::cmp::Reverse(m.total));
+
+    let mut by_total_v: Vec<LabeledTotal> = top_merchant_total
+        .iter()
+        .map(|(label, (total, count))| LabeledTotal {
+            label: label.clone(),
+            total: *total,
+            count: *count,
+        })
+        .collect();
+    by_total_v.sort_by_key(|m| std::cmp::Reverse(m.total));
+    by_total_v.truncate(20);
+
+    let mut by_count_v: Vec<LabeledTotal> = top_merchant_total
+        .into_iter()
+        .map(|(label, (total, count))| LabeledTotal {
+            label,
+            total,
+            count,
+        })
+        .collect();
+    by_count_v.sort_by_key(|m| std::cmp::Reverse(m.count));
+    by_count_v.truncate(20);
+
+    let weekday_v = vec![
+        LabeledTotal {
+            label: "weekday".into(),
+            total: weekday_total.0,
+            count: weekday_total.1,
+        },
+        LabeledTotal {
+            label: "weekend".into(),
+            total: weekend_total.0,
+            count: weekend_total.1,
+        },
+    ];
+
+    Ok(Json(ExpenseBundle {
+        year,
+        from,
+        to,
+        kpis: ExpenseKpis {
+            total,
+            schedule_c,
+            schedule_e,
+            personal,
+            unclassified,
+            receipt_count,
+            item_count,
+            avg_ticket,
+            avg_daily,
+            biz_pct,
+            deductible_pct,
+            burn_rate_monthly,
+            biggest_receipt: biggest,
+            smallest_receipt: smallest,
+            longest_zero_streak_days: longest_zero,
+            longest_consec_spending_days: longest_active,
+        },
+        daily: daily.clone(),
+        calendar: daily,
+        by_dow: label_arr(&by_dow, &dow_labels),
+        by_hour: label_arr(&by_hour, &hour_label_refs),
+        by_month: label_arr(&by_month, &month_labels),
+        by_quarter: label_arr(&by_quarter, &quarter_labels),
+        by_amount_bucket: label_arr(&by_amount_bucket, &amount_labels),
+        by_category: by_category_v,
+        by_tax_bucket: by_tax_bucket_v,
+        top_merchants_by_total: by_total_v,
+        top_merchants_by_count: by_count_v,
+        weekday_vs_weekend: weekday_v,
+        uncategorized_count,
+        uncategorized_total,
+    }))
+}
+
+fn amount_bucket(t: Decimal) -> usize {
+    let t_f64: f64 = t.try_into().unwrap_or(0.0);
+    match t_f64 {
+        v if v < 10.0 => 0,
+        v if v < 25.0 => 1,
+        v if v < 50.0 => 2,
+        v if v < 100.0 => 3,
+        v if v < 250.0 => 4,
+        v if v < 1000.0 => 5,
+        _ => 6,
+    }
+}
+
+// --- analytics: calendar heatmap, top merchants, day-of-week, cumulative ---
+//
+// Visualization-friendly aggregations of the receipt history. Each one
+// is a single SQL pull + Rust roll-up — small, fast, and cache-friendly.
+
+#[derive(Deserialize)]
+struct CalendarQ {
+    year: Option<i32>,
+}
+
+#[derive(Serialize)]
+struct CalendarDay {
+    day: NaiveDate,
+    total: Decimal,
+    count: u32,
+}
+
+/// Per-day spend totals for the requested year — drives a GitHub-style
+/// Tradervue-style monthly calendar grid. Per-day rollup includes the
+/// total spend AND the tax-bucket split (business / rental / personal /
+/// unclassified), so cells can be color-coded by their dominant bucket
+/// — green for biz-deductible days, red for personal-only days, etc.
+#[derive(Serialize)]
+struct MonthCalendarDay {
+    day: NaiveDate,
+    total: Decimal,
+    count: u32,
+    business: Decimal,
+    rental: Decimal,
+    personal: Decimal,
+    unclassified: Decimal,
+    /// "business" | "rental" | "personal" | "unclassified" | "none" — the
+    /// dominant tax bucket by dollar share. Drives the cell tint.
+    dominant_bucket: &'static str,
+}
+
+async fn receipts_month_calendar(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path((year, month)): Path<(i32, u32)>,
+) -> Result<Json<Vec<MonthCalendarDay>>, ApiError> {
+    if !(1..=12).contains(&month) {
+        return Err(ApiError::BadRequest(format!(
+            "month {month} out of range 1..=12"
+        )));
+    }
+    let from = NaiveDate::from_ymd_opt(year, month, 1)
+        .ok_or_else(|| ApiError::BadRequest(format!("invalid year/month {year}/{month}")))?;
+    let to = if month == 12 {
+        NaiveDate::from_ymd_opt(year + 1, 1, 1).unwrap()
+    } else {
+        NaiveDate::from_ymd_opt(year, month + 1, 1).unwrap()
+    }
+    .pred_opt()
+    .unwrap();
+
+    let rows: Vec<(NaiveDate, Option<Decimal>, Option<serde_json::Value>)> = sqlx::query_as(
+        "SELECT ocr_date::date, ocr_total, ocr_extracted
+           FROM receipts
+          WHERE user_id = $1
+            AND ocr_status = 'done'::ocr_status_t
+            AND ocr_date IS NOT NULL
+            AND ocr_date BETWEEN $2 AND $3",
+    )
+    .bind(user.id)
+    .bind(from)
+    .bind(to)
+    .fetch_all(&s.pool)
+    .await?;
+
+    use std::collections::HashMap;
+    #[derive(Default)]
+    struct DayAcc {
+        total: Decimal,
+        count: u32,
+        business: Decimal,
+        rental: Decimal,
+        personal: Decimal,
+        unclassified: Decimal,
+    }
+    let mut by_day: HashMap<NaiveDate, DayAcc> = HashMap::new();
+
+    for (day, total, extracted) in rows {
+        let acc = by_day.entry(day).or_default();
+        acc.count += 1;
+        if let Some(t) = total {
+            acc.total += t;
+        }
+        // Bucket-split per item; falls back to receipt total → personal
+        // if the OCR didn't extract structured items.
+        if let Some(ext) = extracted {
+            if let Some(items) = ext.get("items").and_then(|v| v.as_array()) {
+                for it in items {
+                    let bucket = it
+                        .get("tax_bucket")
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("personal");
+                    let amount = it
+                        .get("total")
+                        .and_then(|v| v.as_str())
+                        .and_then(|s| s.parse::<Decimal>().ok())
+                        .unwrap_or(Decimal::ZERO);
+                    match bucket {
+                        "business" => acc.business += amount,
+                        "rental" => acc.rental += amount,
+                        "personal" => acc.personal += amount,
+                        _ => acc.unclassified += amount,
+                    }
+                }
+            } else if let Some(t) = total {
+                acc.personal += t;
+            }
+        } else if let Some(t) = total {
+            acc.personal += t;
+        }
+    }
+
+    let days_in_month = to.day();
+    let mut out: Vec<MonthCalendarDay> = Vec::with_capacity(days_in_month as usize);
+    for d in 1..=days_in_month {
+        let day = NaiveDate::from_ymd_opt(year, month, d).unwrap();
+        let acc = by_day.remove(&day).unwrap_or_default();
+        // Dominant bucket = whichever has the largest dollar share. Ties
+        // resolve by declared priority (business > rental > personal > unc).
+        let dominant: &'static str = if acc.business > acc.rental
+            && acc.business > acc.personal
+            && acc.business > acc.unclassified
+            && acc.business > Decimal::ZERO
+        {
+            "business"
+        } else if acc.rental > acc.personal
+            && acc.rental > acc.unclassified
+            && acc.rental > Decimal::ZERO
+        {
+            "rental"
+        } else if acc.personal > acc.unclassified && acc.personal > Decimal::ZERO {
+            "personal"
+        } else if acc.unclassified > Decimal::ZERO {
+            "unclassified"
+        } else {
+            "none"
+        };
+        out.push(MonthCalendarDay {
+            day,
+            total: acc.total,
+            count: acc.count,
+            business: acc.business,
+            rental: acc.rental,
+            personal: acc.personal,
+            unclassified: acc.unclassified,
+            dominant_bucket: dominant,
+        });
+    }
+    Ok(Json(out))
+}
+
+/// year-grid heatmap on the frontend. Includes days with zero spend so
+/// the frontend can render an empty cell rather than guessing.
+async fn spend_calendar(
+    State(s): State<AppState>,
+    user: AuthUser,
+    axum::extract::Query(q): axum::extract::Query<CalendarQ>,
+) -> Result<Json<Vec<CalendarDay>>, ApiError> {
+    let year = q.year.unwrap_or_else(|| Utc::now().date_naive().year());
+    let from = NaiveDate::from_ymd_opt(year, 1, 1)
+        .ok_or_else(|| ApiError::BadRequest(format!("year {year} out of NaiveDate range")))?;
+    let to = NaiveDate::from_ymd_opt(year, 12, 31).unwrap();
+
+    let rows: Vec<(NaiveDate, Decimal, i64)> = sqlx::query_as(
+        "SELECT ocr_date::date AS day,
+                COALESCE(SUM(ocr_total), 0)::numeric AS total,
+                COUNT(*) AS cnt
+           FROM receipts
+          WHERE user_id = $1
+            AND ocr_status = 'done'::ocr_status_t
+            AND ocr_total IS NOT NULL
+            AND ocr_date IS NOT NULL
+            AND ocr_date BETWEEN $2 AND $3
+          GROUP BY ocr_date::date",
+    )
+    .bind(user.id)
+    .bind(from)
+    .bind(to)
+    .fetch_all(&s.pool)
+    .await?;
+
+    let by_day: std::collections::HashMap<NaiveDate, (Decimal, i64)> =
+        rows.into_iter().map(|(d, t, c)| (d, (t, c))).collect();
+
+    let days_in_year = if to.signed_duration_since(from).num_days() == 365 {
+        366
+    } else {
+        365
+    };
+    let mut out = Vec::with_capacity(days_in_year);
+    let mut d = from;
+    while d <= to {
+        let (total, count) = by_day.get(&d).cloned().unwrap_or_default();
+        out.push(CalendarDay {
+            day: d,
+            total,
+            count: count as u32,
+        });
+        d = d.succ_opt().unwrap();
+    }
+    Ok(Json(out))
+}
+
+#[derive(Deserialize)]
+struct WindowQ {
+    from: Option<NaiveDate>,
+    to: Option<NaiveDate>,
+}
+
+#[derive(Serialize)]
+struct DayOfWeekBucket {
+    /// 0 = Sunday, 6 = Saturday (ISO 8601 calendar).
+    weekday: u8,
+    total: Decimal,
+    count: u32,
+}
+
+/// Day-of-week spend distribution. Surfaces patterns like "groceries
+/// every Sunday" or "biz meals concentrated Tue/Wed/Thu".
+async fn receipts_dow(
+    State(s): State<AppState>,
+    user: AuthUser,
+    axum::extract::Query(q): axum::extract::Query<WindowQ>,
+) -> Result<Json<Vec<DayOfWeekBucket>>, ApiError> {
+    let now = Utc::now().date_naive();
+    let year = now.year();
+    let from = q
+        .from
+        .unwrap_or_else(|| NaiveDate::from_ymd_opt(year, 1, 1).unwrap());
+    let to = q.to.unwrap_or(now);
+
+    let rows: Vec<(NaiveDate, Decimal)> = sqlx::query_as(
+        "SELECT ocr_date::date, ocr_total
+           FROM receipts
+          WHERE user_id = $1
+            AND ocr_status = 'done'::ocr_status_t
+            AND ocr_total IS NOT NULL
+            AND ocr_date IS NOT NULL
+            AND ocr_date BETWEEN $2 AND $3",
+    )
+    .bind(user.id)
+    .bind(from)
+    .bind(to)
+    .fetch_all(&s.pool)
+    .await?;
+
+    let mut bucket: [(Decimal, u32); 7] = [
+        (Decimal::ZERO, 0),
+        (Decimal::ZERO, 0),
+        (Decimal::ZERO, 0),
+        (Decimal::ZERO, 0),
+        (Decimal::ZERO, 0),
+        (Decimal::ZERO, 0),
+        (Decimal::ZERO, 0),
+    ];
+    for (day, total) in rows {
+        // Sunday = 0 via num_days_from_sunday for parity with JS Date.getDay().
+        let weekday = day.weekday().num_days_from_sunday() as usize;
+        bucket[weekday].0 += total;
+        bucket[weekday].1 += 1;
+    }
+    let out: Vec<DayOfWeekBucket> = (0..7)
+        .map(|i| DayOfWeekBucket {
+            weekday: i as u8,
+            total: bucket[i].0,
+            count: bucket[i].1,
+        })
+        .collect();
+    Ok(Json(out))
+}
+
+#[derive(Serialize)]
+struct CumulativePoint {
+    day: NaiveDate,
+    cumulative: Decimal,
+}
+
+/// Cumulative-spend curve over the requested window — the expense
+/// analog of the trading equity curve. Always returns one point per
+/// day so the frontend chart axis is contiguous.
+async fn receipts_cumulative(
+    State(s): State<AppState>,
+    user: AuthUser,
+    axum::extract::Query(q): axum::extract::Query<WindowQ>,
+) -> Result<Json<Vec<CumulativePoint>>, ApiError> {
+    let now = Utc::now().date_naive();
+    let year = now.year();
+    let from = q
+        .from
+        .unwrap_or_else(|| NaiveDate::from_ymd_opt(year, 1, 1).unwrap());
+    let to = q.to.unwrap_or(now);
+
+    let rows: Vec<(NaiveDate, Decimal)> = sqlx::query_as(
+        "SELECT ocr_date::date AS day,
+                COALESCE(SUM(ocr_total), 0)::numeric
+           FROM receipts
+          WHERE user_id = $1
+            AND ocr_status = 'done'::ocr_status_t
+            AND ocr_total IS NOT NULL
+            AND ocr_date IS NOT NULL
+            AND ocr_date BETWEEN $2 AND $3
+          GROUP BY ocr_date::date
+          ORDER BY day",
+    )
+    .bind(user.id)
+    .bind(from)
+    .bind(to)
+    .fetch_all(&s.pool)
+    .await?;
+
+    let by_day: std::collections::HashMap<NaiveDate, Decimal> = rows.into_iter().collect();
+    let mut out: Vec<CumulativePoint> = Vec::new();
+    let mut acc = Decimal::ZERO;
+    let mut d = from;
+    while d <= to {
+        if let Some(t) = by_day.get(&d) {
+            acc += t;
+        }
+        out.push(CumulativePoint {
+            day: d,
+            cumulative: acc,
+        });
+        d = d.succ_opt().unwrap();
+    }
+    Ok(Json(out))
+}
+
+// ── YoY same-month overlay ────────────────────────────────────────────────
+
+#[derive(Deserialize)]
+struct YearQ {
+    year: Option<i32>,
+}
+
+#[derive(Serialize)]
+struct YoyMonthlyRow {
+    month: u32,
+    current: Decimal,
+    prior: Decimal,
+}
+
+async fn receipts_yoy_monthly(
+    State(s): State<AppState>,
+    user: AuthUser,
+    axum::extract::Query(q): axum::extract::Query<YearQ>,
+) -> Result<Json<Vec<YoyMonthlyRow>>, ApiError> {
+    let year = q.year.unwrap_or_else(|| Utc::now().date_naive().year());
+    let prior_year = year - 1;
+    let from = NaiveDate::from_ymd_opt(prior_year, 1, 1)
+        .ok_or_else(|| ApiError::BadRequest(format!("year {prior_year} out of NaiveDate range")))?;
+    let to = NaiveDate::from_ymd_opt(year, 12, 31).unwrap();
+
+    let rows: Vec<(NaiveDate, Decimal)> = sqlx::query_as(
+        "SELECT ocr_date::date AS day, COALESCE(ocr_total, 0)::numeric
+           FROM receipts
+          WHERE user_id = $1
+            AND ocr_status = 'done'::ocr_status_t
+            AND ocr_total IS NOT NULL
+            AND ocr_date IS NOT NULL
+            AND ocr_date BETWEEN $2 AND $3",
+    )
+    .bind(user.id)
+    .bind(from)
+    .bind(to)
+    .fetch_all(&s.pool)
+    .await?;
+
+    let mut current = [Decimal::ZERO; 12];
+    let mut prior = [Decimal::ZERO; 12];
+    for (day, total) in rows {
+        let idx = day.month0() as usize;
+        if day.year() == year {
+            current[idx] += total;
+        } else if day.year() == prior_year {
+            prior[idx] += total;
+        }
+    }
+    Ok(Json(
+        (0..12)
+            .map(|i| YoyMonthlyRow {
+                month: (i + 1) as u32,
+                current: current[i],
+                prior: prior[i],
+            })
+            .collect(),
+    ))
+}
+
+// ── Receipt aging (uncategorized backlog) ─────────────────────────────────
+
+#[derive(Serialize)]
+struct AgingBucket {
+    /// "0-7d" | "8-30d" | "31-90d" | "90+d"
+    bucket: &'static str,
+    count: u32,
+    total: Decimal,
+}
+
+async fn receipts_aging(
+    State(s): State<AppState>,
+    user: AuthUser,
+) -> Result<Json<Vec<AgingBucket>>, ApiError> {
+    let now = Utc::now().date_naive();
+
+    // Pull uncategorized OR unclassified items, joining receipt-level
+    // total when needed. "Uncategorized" = ocr_extracted is null OR every
+    // item has tax_bucket = 'personal'/unset. For simplicity here we use
+    // receipts where any item has tax_bucket not in (business, rental,
+    // personal) — items with category unset OR tax_bucket null. We bin
+    // by age of the receipt's ocr_date.
+    let rows: Vec<(NaiveDate, Option<Decimal>, Option<serde_json::Value>)> = sqlx::query_as(
+        "SELECT ocr_date::date, ocr_total, ocr_extracted
+           FROM receipts
+          WHERE user_id = $1
+            AND ocr_status = 'done'::ocr_status_t
+            AND ocr_date IS NOT NULL",
+    )
+    .bind(user.id)
+    .fetch_all(&s.pool)
+    .await?;
+
+    let mut buckets: [(u32, Decimal); 4] = Default::default();
+    for (day, total, extracted) in rows {
+        // Treat the receipt as "needs attention" if extracted is null or
+        // any item lacks a category.
+        let needs = match extracted {
+            None => true,
+            Some(ext) => match ext.get("items").and_then(|v| v.as_array()) {
+                None => true,
+                Some(items) => items.iter().any(|it| {
+                    it.get("category")
+                        .and_then(|v| v.as_str())
+                        .map(|s| s.trim().is_empty() || s == "uncategorized")
+                        .unwrap_or(true)
+                }),
+            },
+        };
+        if !needs {
+            continue;
+        }
+        let age_days = (now - day).num_days();
+        let idx = if age_days <= 7 {
+            0
+        } else if age_days <= 30 {
+            1
+        } else if age_days <= 90 {
+            2
+        } else {
+            3
+        };
+        buckets[idx].0 += 1;
+        if let Some(t) = total {
+            buckets[idx].1 += t;
+        }
+    }
+    let labels = ["0-7d", "8-30d", "31-90d", "90+d"];
+    Ok(Json(
+        (0..4)
+            .map(|i| AgingBucket {
+                bucket: labels[i],
+                count: buckets[i].0,
+                total: buckets[i].1,
+            })
+            .collect(),
+    ))
+}
+
+// ── Per-property Schedule E rollup ────────────────────────────────────────
+
+#[derive(Serialize)]
+struct PropertyCategoryRow {
+    category: String,
+    total: Decimal,
+}
+
+#[derive(Serialize)]
+struct PropertyRow {
+    property_id: Option<Uuid>,
+    property_name: Option<String>,
+    total: Decimal,
+    item_count: u32,
+    top_categories: Vec<PropertyCategoryRow>,
+}
+
+async fn receipts_by_property(
+    State(s): State<AppState>,
+    user: AuthUser,
+    axum::extract::Query(q): axum::extract::Query<YearQ>,
+) -> Result<Json<Vec<PropertyRow>>, ApiError> {
+    let now = Utc::now().date_naive();
+    let year = q.year.unwrap_or(now.year());
+    let from = NaiveDate::from_ymd_opt(year, 1, 1)
+        .ok_or_else(|| ApiError::BadRequest(format!("year {year} out of NaiveDate range")))?;
+    let to = NaiveDate::from_ymd_opt(year, 12, 31).unwrap();
+
+    let rows: Vec<(Option<serde_json::Value>,)> = sqlx::query_as(
+        "SELECT ocr_extracted
+           FROM receipts
+          WHERE user_id = $1
+            AND ocr_status = 'done'::ocr_status_t
+            AND ocr_extracted IS NOT NULL
+            AND ocr_date IS NOT NULL
+            AND ocr_date BETWEEN $2 AND $3",
+    )
+    .bind(user.id)
+    .bind(from)
+    .bind(to)
+    .fetch_all(&s.pool)
+    .await?;
+
+    let props: Vec<(Uuid, String)> =
+        sqlx::query_as("SELECT id, nickname FROM rental_properties WHERE user_id = $1")
+            .bind(user.id)
+            .fetch_all(&s.pool)
+            .await
+            .unwrap_or_default();
+    let prop_name: std::collections::HashMap<Uuid, String> = props.into_iter().collect();
+
+    use std::collections::BTreeMap;
+    // (property_id) → (total, count, category→total)
+    let mut by_prop: std::collections::HashMap<
+        Option<Uuid>,
+        (Decimal, u32, BTreeMap<String, Decimal>),
+    > = std::collections::HashMap::new();
+
+    for (extracted,) in rows {
+        let Some(ext) = extracted else { continue };
+        let Some(items) = ext.get("items").and_then(|v| v.as_array()) else {
+            continue;
+        };
+        for it in items {
+            let bucket = it.get("tax_bucket").and_then(|v| v.as_str()).unwrap_or("");
+            if bucket != "rental" {
+                continue;
+            }
+            let amount = it
+                .get("total")
+                .and_then(|v| v.as_str())
+                .and_then(|s| s.parse::<Decimal>().ok())
+                .unwrap_or(Decimal::ZERO);
+            let category = it
+                .get("category")
+                .and_then(|v| v.as_str())
+                .unwrap_or("uncategorized")
+                .to_string();
+            let property_id = it
+                .get("rental_property_id")
+                .and_then(|v| v.as_str())
+                .and_then(|s| Uuid::parse_str(s).ok());
+            let entry = by_prop
+                .entry(property_id)
+                .or_insert_with(|| (Decimal::ZERO, 0, BTreeMap::new()));
+            entry.0 += amount;
+            entry.1 += 1;
+            *entry.2.entry(category).or_insert(Decimal::ZERO) += amount;
+        }
+    }
+    let mut out: Vec<PropertyRow> = by_prop
+        .into_iter()
+        .map(|(pid, (total, count, cats))| {
+            let mut cat_v: Vec<PropertyCategoryRow> = cats
+                .into_iter()
+                .map(|(category, total)| PropertyCategoryRow { category, total })
+                .collect();
+            cat_v.sort_by_key(|c| std::cmp::Reverse(c.total));
+            cat_v.truncate(5);
+            PropertyRow {
+                property_id: pid,
+                property_name: pid.and_then(|id| prop_name.get(&id).cloned()),
+                total,
+                item_count: count,
+                top_categories: cat_v,
+            }
+        })
+        .collect();
+    out.sort_by_key(|p| std::cmp::Reverse(p.total));
+    Ok(Json(out))
+}
+
+// ── Anomalies (MoM merchant deltas + first-time merchants + outliers) ─────
+
+#[derive(Serialize)]
+struct Anomaly {
+    /// "subscription_jump" | "new_merchant" | "outlier_receipt"
+    kind: &'static str,
+    /// Short human-readable label for the card.
+    label: String,
+    /// Quantitative payload (current month total, % change, receipt
+    /// amount, etc.) — the frontend formats per `kind`.
+    value: Decimal,
+    /// Secondary value (prior month total, sigma multiple, etc.).
+    secondary: Decimal,
+    /// First-seen date (`new_merchant`) or receipt date (`outlier_receipt`).
+    when: Option<NaiveDate>,
+}
+
+async fn receipts_anomalies(
+    State(s): State<AppState>,
+    user: AuthUser,
+) -> Result<Json<Vec<Anomaly>>, ApiError> {
+    let now = Utc::now().date_naive();
+    let this_month_start = NaiveDate::from_ymd_opt(now.year(), now.month(), 1).unwrap_or(now);
+    let last_month_end = this_month_start.pred_opt().unwrap_or(now);
+    let last_month_start =
+        NaiveDate::from_ymd_opt(last_month_end.year(), last_month_end.month(), 1)
+            .unwrap_or(last_month_end);
+    let four_months_ago = NaiveDate::from_ymd_opt(
+        if last_month_start.month() <= 3 {
+            last_month_start.year() - 1
+        } else {
+            last_month_start.year()
+        },
+        ((last_month_start.month() + 8) % 12) + 1,
+        1,
+    )
+    .unwrap_or(last_month_start);
+
+    let rows: Vec<(Option<String>, Option<Decimal>, NaiveDate)> = sqlx::query_as(
+        "SELECT ocr_merchant, ocr_total, ocr_date::date
+           FROM receipts
+          WHERE user_id = $1
+            AND ocr_status = 'done'::ocr_status_t
+            AND ocr_date IS NOT NULL
+            AND ocr_total IS NOT NULL",
+    )
+    .bind(user.id)
+    .fetch_all(&s.pool)
+    .await?;
+
+    let aliases = crate::merchant::load_aliases(&s.pool, user.id)
+        .await
+        .unwrap_or_default();
+
+    use std::collections::HashMap;
+    let mut this_month: HashMap<String, Decimal> = HashMap::new();
+    let mut last_month: HashMap<String, Decimal> = HashMap::new();
+    let mut first_seen: HashMap<String, NaiveDate> = HashMap::new();
+    let mut all_amounts: Vec<(Decimal, NaiveDate)> = Vec::new();
+
+    for (m, total, day) in &rows {
+        let Some(m) = m else { continue };
+        let canonical = crate::merchant::canonicalize(m, &aliases);
+        if canonical.is_empty() {
+            continue;
+        }
+        first_seen
+            .entry(canonical.clone())
+            .and_modify(|d| {
+                if *day < *d {
+                    *d = *day;
+                }
+            })
+            .or_insert(*day);
+
+        if *day >= this_month_start {
+            if let Some(t) = total {
+                *this_month.entry(canonical.clone()).or_insert(Decimal::ZERO) += *t;
+            }
+        } else if *day >= last_month_start && *day <= last_month_end {
+            if let Some(t) = total {
+                *last_month.entry(canonical.clone()).or_insert(Decimal::ZERO) += *t;
+            }
+        }
+        if let Some(t) = total {
+            all_amounts.push((*t, *day));
+        }
+    }
+
+    let mut anomalies: Vec<Anomaly> = Vec::new();
+
+    // 1) Subscription jumps: MoM ≥ +30% AND ≥ $20 absolute change.
+    for (canonical, current) in &this_month {
+        let Some(prior) = last_month.get(canonical) else {
+            continue;
+        };
+        if *prior <= Decimal::ZERO {
+            continue;
+        }
+        let delta = *current - *prior;
+        if delta < Decimal::from(20) {
+            continue;
+        }
+        let pct = (delta / *prior * Decimal::from(100)).round_dp(1);
+        if pct < Decimal::from(30) {
+            continue;
+        }
+        anomalies.push(Anomaly {
+            kind: "subscription_jump",
+            label: canonical.clone(),
+            value: *current,
+            secondary: pct,
+            when: None,
+        });
+    }
+
+    // 2) First-time merchants this month.
+    for (canonical, fs) in &first_seen {
+        if *fs >= this_month_start {
+            let total = this_month.get(canonical).cloned().unwrap_or(Decimal::ZERO);
+            if total > Decimal::from(10) {
+                anomalies.push(Anomaly {
+                    kind: "new_merchant",
+                    label: canonical.clone(),
+                    value: total,
+                    secondary: Decimal::ZERO,
+                    when: Some(*fs),
+                });
+            }
+        }
+    }
+
+    // 3) Outlier receipts: > μ + 3σ across the trailing-4-month window.
+    let trailing: Vec<f64> = all_amounts
+        .iter()
+        .filter(|(_, day)| *day >= four_months_ago)
+        .map(|(t, _)| (*t).try_into().unwrap_or(0.0))
+        .collect();
+    if trailing.len() >= 30 {
+        let n = trailing.len() as f64;
+        let mean = trailing.iter().sum::<f64>() / n;
+        let var = trailing.iter().map(|v| (v - mean).powi(2)).sum::<f64>() / n;
+        let stddev = var.sqrt();
+        let threshold = mean + 3.0 * stddev;
+        for (t, day) in &all_amounts {
+            let amount: f64 = (*t).try_into().unwrap_or(0.0);
+            if amount > threshold && *day >= four_months_ago {
+                let sigma = if stddev > 0.0 {
+                    ((amount - mean) / stddev).round() as i64
+                } else {
+                    0
+                };
+                anomalies.push(Anomaly {
+                    kind: "outlier_receipt",
+                    label: format!("{:.0}σ", sigma),
+                    value: *t,
+                    secondary: Decimal::from(sigma),
+                    when: Some(*day),
+                });
+            }
+        }
+    }
+    anomalies.sort_by_key(|a| std::cmp::Reverse(a.value));
+    anomalies.truncate(40);
+    Ok(Json(anomalies))
+}
+
+// ── Category distribution (box plot stats per category) ───────────────────
+
+#[derive(Serialize)]
+struct CategoryDist {
+    category: String,
+    min: Decimal,
+    q1: Decimal,
+    median: Decimal,
+    q3: Decimal,
+    max: Decimal,
+    count: u32,
+}
+
+async fn receipts_category_distribution(
+    State(s): State<AppState>,
+    user: AuthUser,
+    axum::extract::Query(q): axum::extract::Query<YearQ>,
+) -> Result<Json<Vec<CategoryDist>>, ApiError> {
+    let now = Utc::now().date_naive();
+    let year = q.year.unwrap_or(now.year());
+    let from = NaiveDate::from_ymd_opt(year, 1, 1)
+        .ok_or_else(|| ApiError::BadRequest(format!("year {year} out of NaiveDate range")))?;
+    let to = NaiveDate::from_ymd_opt(year, 12, 31).unwrap();
+
+    let rows: Vec<(Option<serde_json::Value>,)> = sqlx::query_as(
+        "SELECT ocr_extracted
+           FROM receipts
+          WHERE user_id = $1
+            AND ocr_status = 'done'::ocr_status_t
+            AND ocr_extracted IS NOT NULL
+            AND ocr_date IS NOT NULL
+            AND ocr_date BETWEEN $2 AND $3",
+    )
+    .bind(user.id)
+    .bind(from)
+    .bind(to)
+    .fetch_all(&s.pool)
+    .await?;
+
+    use std::collections::HashMap;
+    let mut by_cat: HashMap<String, Vec<Decimal>> = HashMap::new();
+    for (extracted,) in rows {
+        let Some(ext) = extracted else { continue };
+        let Some(items) = ext.get("items").and_then(|v| v.as_array()) else {
+            continue;
+        };
+        for it in items {
+            let cat = it
+                .get("category")
+                .and_then(|v| v.as_str())
+                .unwrap_or("uncategorized")
+                .to_string();
+            let amount = it
+                .get("total")
+                .and_then(|v| v.as_str())
+                .and_then(|s| s.parse::<Decimal>().ok())
+                .unwrap_or(Decimal::ZERO);
+            by_cat.entry(cat).or_default().push(amount);
+        }
+    }
+    let mut out: Vec<CategoryDist> = by_cat
+        .into_iter()
+        .filter(|(_, v)| v.len() >= 5) // require ≥ 5 data points for stable quartiles
+        .map(|(category, mut vals)| {
+            vals.sort();
+            let n = vals.len();
+            let pct = |p: f64| {
+                let idx = ((n - 1) as f64 * p).round() as usize;
+                vals[idx]
+            };
+            CategoryDist {
+                category,
+                min: vals[0],
+                q1: pct(0.25),
+                median: pct(0.50),
+                q3: pct(0.75),
+                max: vals[n - 1],
+                count: n as u32,
+            }
+        })
+        .collect();
+    out.sort_by_key(|c| std::cmp::Reverse(c.median));
+    out.truncate(15);
+    Ok(Json(out))
 }
 
 /// CSV export of the same rollup the JSON endpoint returns, in a flat

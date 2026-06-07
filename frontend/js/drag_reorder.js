@@ -18,6 +18,7 @@
 //   });
 
 import { showToast } from './toast.js';
+import { t } from './i18n.js';
 
 // Single shared drag state — only one drag at a time.
 let _drag = null;
@@ -151,9 +152,16 @@ document.addEventListener('mouseup', () => {
         if (typeof d.onReorder === 'function') {
             try { d.onReorder(newKeys); } catch (err) { console.warn('drag onReorder threw', err); }
         }
-        if (d.toastMessage) {
-            try { showToast(d.toastMessage, { level: 'success' }); } catch (_) {}
+        // Resolve a toast either from a literal `toastMessage` or a
+        // localized `toastKey` (audio-haxor parity). Default fallback —
+        // EVERY drag/drop reorder emits some confirmation so the user
+        // always sees the change persisted.
+        let msg = d.toastMessage || null;
+        if (!msg && d.toastKey) {
+            try { msg = t(d.toastKey); } catch (_) { msg = d.toastKey; }
         }
+        if (!msg) msg = t('toast.reordered');
+        try { showToast(msg, { level: 'success' }); } catch (_) {}
     }
     _drag = null;
 });

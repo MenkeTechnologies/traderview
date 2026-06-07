@@ -15,6 +15,7 @@ import { showToast } from '../toast.js';
 import { tConfirm, tPrompt } from '../dialog.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { applyBarWidths } from '../util.js';
+import { initDragReorder } from '../drag_reorder.js';
 
 const state = {
     accounts: [],
@@ -243,6 +244,32 @@ function drawShell(mount) {
         <div id="tax-top-merchants" class="tax-top-merchants-mount"></div>
     </div>
 
+    <div class="tax-chart-card tax-chart-card-wide" id="tax-calendar-card">
+        <div class="tax-chart-label">${esc(t('view.expenses.tax.chart.calendar'))}</div>
+        <canvas id="tax-calendar" width="980" height="160"></canvas>
+        <div class="tax-calendar-legend">
+            <span>${esc(t('view.expenses.tax.chart.calendar_less'))}</span>
+            <span class="tax-cal-swatch s0"></span>
+            <span class="tax-cal-swatch s1"></span>
+            <span class="tax-cal-swatch s2"></span>
+            <span class="tax-cal-swatch s3"></span>
+            <span class="tax-cal-swatch s4"></span>
+            <span>${esc(t('view.expenses.tax.chart.calendar_more'))}</span>
+            <span class="tax-calendar-hover" id="tax-calendar-hover"></span>
+        </div>
+    </div>
+
+    <div class="tax-chart-grid">
+        <div class="tax-chart-card">
+            <div class="tax-chart-label">${esc(t('view.expenses.tax.chart.cumulative'))}</div>
+            <div id="tax-cumulative-chart" class="tax-chart-mount"></div>
+        </div>
+        <div class="tax-chart-card">
+            <div class="tax-chart-label">${esc(t('view.expenses.tax.chart.dow'))}</div>
+            <canvas id="tax-dow" width="380" height="200"></canvas>
+        </div>
+    </div>
+
     <details class="tax-schedule-detail" id="tax-c-details">
         <summary>${esc(t('view.expenses.tax.schedule_c_breakdown'))}</summary>
         <div id="tax-c-table"></div>
@@ -364,6 +391,24 @@ function drawShell(mount) {
             refreshDash();
         });
     });
+    // Drag-reorder the period pills + the upload-source tabs. Order is
+    // persisted per user so YTD/Q1/Q2/Q3/Q4/Full can be ordered to taste.
+    const pillRow = mount.querySelector('.tax-period-pills');
+    if (pillRow) {
+        initDragReorder(pillRow, 'button[data-period]', 'tax_period_pill_order', {
+            direction: 'horizontal',
+            getKey: (el) => el.dataset.period,
+            toastKey: 'toast.reordered_pills',
+        });
+    }
+    const upTabs = mount.querySelector('.upload-tabs');
+    if (upTabs) {
+        initDragReorder(upTabs, '.upload-tab', 'upload_tab_order', {
+            direction: 'horizontal',
+            getKey: (el) => el.dataset.uptab || el.textContent.trim().slice(0, 16),
+            toastKey: 'toast.reordered_upload_tabs',
+        });
+    }
     const csvBtn = mount.querySelector('#tax-export-csv');
     if (csvBtn) {
         csvBtn.addEventListener('click', () => {
@@ -536,6 +581,10 @@ async function renderTaxDashboard(mount) {
             <div class="tax-stat-value">${esc(fmtUsd(netTaxable))}</div>
             <div class="muted small">${esc(t('view.expenses.tax.stat.income_minus_deduct'))}</div>
         </div>
+        ${renderKpiAvgDaily(scheduleC + scheduleE + personal)}
+        ${renderKpiDeductiblePct(deductible, scheduleC + scheduleE + personal)}
+        ${renderKpiBurnRate(scheduleC + scheduleE + personal)}
+        ${renderKpiUncategorized(unclass, rollup ? rollup.items_counted : 0)}
     `;
 
     // Schedule C / E breakdown tables under <details>.
@@ -580,6 +629,10 @@ async function renderTaxDashboard(mount) {
     renderCategoryPie(mount, rollup?.business?.categories || []);
     void renderYoyTrendChart(mount);
     void renderTopMerchants(mount, dashYear);
+    // Analytics chart suite — calendar heatmap, cumulative spend, day-of-week.
+    void renderSpendCalendar(mount, dashYear);
+    void renderCumulativeChart(mount, dashYear);
+    void renderDowChart(mount, dashYear);
 
     // Source cards — counts.
     const recC = mount.querySelector('#tax-source-receipts');
@@ -926,6 +979,223 @@ async function renderYoyTrendChart(mount) {
         ],
         legend: { show: true },
     }, [xs, biz, rent, pers], el);
+}
+
+// ── KPI cards ports from trade dashboard: average daily, % deductible,
+//   30-day burn-rate trailing average, uncategorized backlog. Each
+//   returns a static HTML snippet inlined into the stat grid.
+function renderKpiAvgDaily(totalSpend) {
+    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+    const avg = dayOfYear > 0 ? totalSpend / dayOfYear : 0;
+    return `<div class="tax-stat tax-stat-avg-daily">
+        <div class="tax-stat-label">${esc(t('view.expenses.tax.stat.avg_daily'))}</div>
+        <div class="tax-stat-value">${esc(fmtUsd(avg))}</div>
+        <div class="muted small">${esc(t('view.expenses.tax.stat.ytd_pace'))}</div>
+    </div>`;
+}
+function renderKpiDeductiblePct(deductible, totalSpend) {
+    const pct = totalSpend > 0 ? (deductible / totalSpend) * 100 : 0;
+    const cls = pct >= 70 ? 'tw-refund' : pct >= 40 ? '' : 'tw-owed';
+    return `<div class="tax-stat tax-stat-deductible">
+        <div class="tax-stat-label">${esc(t('view.expenses.tax.stat.deductible_pct'))}</div>
+        <div class="tax-stat-value ${cls}">${pct.toFixed(1)}%</div>
+        <div class="muted small">${esc(t('view.expenses.tax.stat.biz_plus_rental'))}</div>
+    </div>`;
+}
+function renderKpiBurnRate(totalSpend) {
+    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+    const monthlyBurn = dayOfYear > 0 ? (totalSpend / dayOfYear) * 30 : 0;
+    return `<div class="tax-stat tax-stat-burn">
+        <div class="tax-stat-label">${esc(t('view.expenses.tax.stat.burn_rate'))}</div>
+        <div class="tax-stat-value">${esc(fmtUsd(monthlyBurn))}</div>
+        <div class="muted small">${esc(t('view.expenses.tax.stat.month_pace'))}</div>
+    </div>`;
+}
+function renderKpiUncategorized(unclassTotal, totalItems) {
+    const cls = unclassTotal > 0 ? 'tw-owed' : 'tw-refund';
+    return `<div class="tax-stat tax-stat-uncat">
+        <div class="tax-stat-label">${esc(t('view.expenses.tax.stat.uncategorized'))}</div>
+        <div class="tax-stat-value ${cls}">${esc(fmtUsd(unclassTotal))}</div>
+        <div class="muted small">${totalItems} ${esc(t('view.expenses.tax.stat.items'))}</div>
+    </div>`;
+}
+
+// ── Calendar heatmap: GitHub-style year grid of daily spend. Each
+//   column is one week (Sunday top → Saturday bottom), shaded by the
+//   day's total. 5 buckets: 0, then quartiles of the year's spend
+//   distribution. Hover surfaces the exact value via the legend strip.
+async function renderSpendCalendar(mount, year) {
+    const canvas = mount.querySelector('#tax-calendar');
+    const hover = mount.querySelector('#tax-calendar-hover');
+    if (!canvas) return;
+    let days = [];
+    try { days = await api.receiptsSpendCalendar(year); } catch { days = []; }
+
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+    if (!days.length) {
+        ctx.fillStyle = '#7a8ba8';
+        ctx.font = '11px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(t('view.expenses.tax.chart.empty'), W / 2, H / 2);
+        return;
+    }
+    // Bucket thresholds from positive days only.
+    const positives = days.filter(d => +d.total > 0).map(d => +d.total).sort((a, b) => a - b);
+    const q = (p) => positives[Math.floor(positives.length * p)] || 0;
+    const t1 = q(0.25), t2 = q(0.50), t3 = q(0.75), t4 = q(0.93);
+    const bucketOf = (v) => {
+        if (v <= 0) return 0;
+        if (v <= t1) return 1;
+        if (v <= t2) return 2;
+        if (v <= t3) return 3;
+        if (v <= t4) return 4;
+        return 5;
+    };
+    // 5-step heat palette (terminal-cyan family for app theme).
+    const COL = ['#16202c', '#0d3a4d', '#0d556e', '#108a9f', '#36c8d4', '#7af0ff'];
+
+    // Layout: 53 weeks × 7 days. Leave 28px top for month labels.
+    const TOP = 28;
+    const cell = Math.floor(Math.min((W - 30) / 53, (H - TOP) / 7));
+    const pad = Math.max(1, Math.floor(cell * 0.12));
+    const cells = []; // {x, y, w, day, value}
+    const firstDay = new Date(days[0].day + 'T00:00:00');
+    const firstColOffset = firstDay.getDay(); // 0 = Sun
+
+    let prevMonth = -1;
+    ctx.font = '10px monospace';
+    ctx.fillStyle = '#7a8ba8';
+    ctx.textAlign = 'left';
+
+    for (let i = 0; i < days.length; i++) {
+        const d = days[i];
+        const dt = new Date(d.day + 'T00:00:00');
+        const dayOfWeek = dt.getDay(); // Sun=0 … Sat=6
+        const col = Math.floor((i + firstColOffset) / 7);
+        const x = 24 + col * cell;
+        const y = TOP + dayOfWeek * cell;
+        // Month label at first column where month changes.
+        const m = dt.getMonth();
+        if (m !== prevMonth && dayOfWeek <= 2) {
+            ctx.fillStyle = '#7a8ba8';
+            ctx.fillText(['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m], x, TOP - 12);
+            prevMonth = m;
+        }
+        const b = bucketOf(+d.total);
+        ctx.fillStyle = COL[b];
+        ctx.fillRect(x + pad, y + pad, cell - pad * 2, cell - pad * 2);
+        cells.push({ x, y, w: cell, h: cell, day: d.day, total: +d.total, count: d.count });
+    }
+    // Hover handler: convert mouse to cell, show in legend.
+    canvas.onmousemove = (ev) => {
+        const rect = canvas.getBoundingClientRect();
+        const mx = ev.clientX - rect.left, my = ev.clientY - rect.top;
+        for (const c of cells) {
+            if (mx >= c.x && mx < c.x + c.w && my >= c.y && my < c.y + c.h) {
+                if (hover) hover.textContent = `${c.day} · ${fmtUsd(c.total)} (${c.count})`;
+                canvas.style.cursor = 'pointer';
+                return;
+            }
+        }
+        if (hover) hover.textContent = '';
+        canvas.style.cursor = '';
+    };
+    canvas.onmouseleave = () => { if (hover) hover.textContent = ''; };
+}
+
+// ── Cumulative spend curve via uPlot — the expense analog of an
+//   equity curve. One line, year-to-date pace, useful for spotting
+//   the month where burn accelerated.
+async function renderCumulativeChart(mount, year) {
+    const el = mount.querySelector('#tax-cumulative-chart');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    let rows = [];
+    try {
+        const from = `${year}-01-01`;
+        const to = `${year}-12-31`;
+        rows = await api.receiptsCumulative({ from, to });
+    } catch { rows = []; }
+    if (!rows.length) {
+        el.innerHTML = `<p class="muted small">${esc(t('view.expenses.tax.chart.empty'))}</p>`;
+        return;
+    }
+    const xs = rows.map(r => Math.floor(new Date(r.day + 'T00:00:00').getTime() / 1000));
+    const ys = rows.map(r => Number(r.cumulative) || 0);
+    new uPlot({
+        width: el.clientWidth || 480,
+        height: 200,
+        scales: { x: { time: true }, y: { auto: true } },
+        series: [
+            {},
+            { label: t('view.expenses.tax.chart.cumulative'), stroke: '#36c8d4', width: 2,
+              fill: 'rgba(54,200,212,0.15)' },
+        ],
+        axes: [
+            { stroke: '#aab' },
+            { stroke: '#aab', size: 64,
+              values: (_u, splits) => splits.map(v => fmtUsd(v)) },
+        ],
+    }, [xs, ys], el);
+}
+
+// ── Day-of-week bar chart — surfaces "groceries every Sunday" vs
+//   "business meals weekday-loaded" patterns. Bars are total $; label
+//   includes per-DOW receipt count for context.
+async function renderDowChart(mount, year) {
+    const canvas = mount.querySelector('#tax-dow');
+    if (!canvas) return;
+    let rows = [];
+    try {
+        const from = `${year}-01-01`;
+        const to = `${year}-12-31`;
+        rows = await api.receiptsDow({ from, to });
+    } catch { rows = []; }
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+    if (!rows.length) {
+        ctx.fillStyle = '#7a8ba8';
+        ctx.font = '11px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(t('view.expenses.tax.chart.empty'), W / 2, H / 2);
+        return;
+    }
+    // Order Mon-Sun (locale-agnostic readability) by shifting Sun.
+    const order = [1, 2, 3, 4, 5, 6, 0];
+    const labels = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const totals = order.map(i => Number(rows[i]?.total) || 0);
+    const counts = order.map(i => rows[i]?.count || 0);
+    const max = totals.reduce((m, v) => Math.max(m, v), 0) || 1;
+    const padL = 50, padR = 14, padT = 14, padB = 30;
+    const plotW = W - padL - padR;
+    const plotH = H - padT - padB;
+    const barW = Math.floor(plotW / labels.length) - 8;
+    ctx.font = '10px monospace';
+    ctx.fillStyle = '#7a8ba8';
+    ctx.textAlign = 'right';
+    // Y-axis labels at 0 / max/2 / max.
+    [0, 0.5, 1].forEach((p) => {
+        const v = max * p;
+        const y = padT + plotH * (1 - p);
+        ctx.fillStyle = '#33424f';
+        ctx.fillRect(padL, y, plotW, 1);
+        ctx.fillStyle = '#7a8ba8';
+        ctx.fillText(fmtUsd(v), padL - 6, y + 3);
+    });
+    ctx.textAlign = 'center';
+    for (let i = 0; i < labels.length; i++) {
+        const x = padL + i * (barW + 8) + 4;
+        const h = Math.round((totals[i] / max) * plotH);
+        ctx.fillStyle = '#36c8d4';
+        ctx.fillRect(x, padT + plotH - h, barW, h);
+        ctx.fillStyle = '#aab';
+        ctx.fillText(labels[i], x + barW / 2, H - 14);
+        ctx.fillStyle = '#7a8ba8';
+        ctx.fillText(String(counts[i]), x + barW / 2, H - 2);
+    }
 }
 
 // Top merchants by spend for the year — horizontal table with a bar
