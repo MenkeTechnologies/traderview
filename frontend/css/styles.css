@@ -92,6 +92,8 @@ body.popout-mode #app { padding-top: 0 }
     white-space: nowrap;
     overflow: visible;
     display: inline-block;
+    min-width: 56px;            /* fits "v0.0.0" so layout doesn't shift */
+    text-align: center;
     transition: color 120ms ease, border-color 120ms ease;
 }
 .tv-version:hover { color: var(--cyan); border-color: var(--cyan); }

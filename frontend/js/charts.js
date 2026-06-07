@@ -145,12 +145,14 @@ export function barChart(el, labels, values, opts = {}) {
     const barsPath = (u) => {
         const ctx = u.ctx;
         ctx.save();
-        // Bar width: 70% of the per-point slot, capped absolutely at 64px so
-        // a 4-bar dataset on a wide panel doesn't render 200px-wide slabs.
-        // The min(2) keeps very-dense datasets visible.
-        const bw = Math.min(
-            Math.max(2, (u.bbox.width / xs.length) * 0.7),
-            64,
+        // Bar width: 70% of the per-point slot. Capped at 6% of the
+        // plot area so a single-point dataset doesn't render a giant
+        // slab. Cap is expressed in canvas pixels (same units as
+        // u.bbox.width), so it scales correctly on retina displays
+        // — an absolute pixel cap was producing 30px-CSS skinny bars.
+        const bw = Math.max(
+            2,
+            Math.min((u.bbox.width / xs.length) * 0.7, u.bbox.width * 0.06),
         );
         const yZero = u.valToPos(0, 'y', true);
         for (let i = 0; i < xs.length; i++) {
@@ -186,7 +188,13 @@ export function barChart(el, labels, values, opts = {}) {
         // legend was showing "1969-12-31 7:00pm" (epoch 0) on the Year /
         // Month / Day bar charts. Forcing time:false makes the legend
         // value formatter below take over.
-        scales: { x: { time: false }, y: {} },
+        // Pad the x-scale by half a slot on each side so the first and last
+        // bars don't sit visually glued to the chart border (default uPlot
+        // range = [0, n-1] which puts bar #0 at x=0 hugging the left axis).
+        scales: {
+            x: { time: false, range: () => [-0.5, xs.length - 0.5] },
+            y: {},
+        },
         series: [
             {
                 label: t('chart.series.idx'),

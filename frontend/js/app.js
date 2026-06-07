@@ -782,16 +782,25 @@ async function boot() {
         }
         return;
     }
-    // The HTML literal in #tv-version is the source of truth at boot —
-    // /config refreshes it ONLY on success with a populated `version`
-    // field. That way a 401 / missing field / stale binary never wipes
-    // the chip to blank or "v?".
+    // Version chip — dynamic, never hardcoded in HTML. Try the backend
+    // first (returns CARGO_PKG_VERSION via /api/config); if that fails
+    // or omits version, fall back to the bundled frontend's package.json.
+    // Either path always wins over a stale literal in index.html.
     const verEl = document.getElementById('tv-version');
+    const setVersion = (v) => {
+        if (verEl && v) verEl.textContent = `v${v}`;
+    };
     try {
         const cfg = await api.config();
         state.mode = cfg.mode;
-        if (verEl && cfg.version) verEl.textContent = `v${cfg.version}`;
-    } catch (_) { /* keep HTML literal */ }
+        if (cfg.version) setVersion(cfg.version);
+    } catch (_) { /* fall through to package.json */ }
+    if (verEl && !verEl.textContent) {
+        try {
+            const pkg = await fetch('./package.json', { cache: 'no-store' }).then(r => r.json());
+            setVersion(pkg.version);
+        } catch (_) { /* leave chip empty rather than show a stale literal */ }
+    }
     try {
         const me = await api.me();
         const accounts = await api.accounts();
