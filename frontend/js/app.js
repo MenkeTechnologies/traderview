@@ -787,19 +787,20 @@ async function boot() {
     // or omits version, fall back to the bundled frontend's package.json.
     // Either path always wins over a stale literal in index.html.
     const verEl = document.getElementById('tv-version');
+    let versionSet = false;
     const setVersion = (v) => {
-        if (verEl && v) verEl.textContent = `v${v}`;
+        if (verEl && v) { verEl.textContent = `v${v}`; versionSet = true; }
     };
     try {
         const cfg = await api.config();
         state.mode = cfg.mode;
         if (cfg.version) setVersion(cfg.version);
     } catch (_) { /* fall through to package.json */ }
-    if (verEl && !verEl.textContent) {
+    if (verEl && !versionSet) {
         try {
             const pkg = await fetch('./package.json', { cache: 'no-store' }).then(r => r.json());
             setVersion(pkg.version);
-        } catch (_) { /* leave chip empty rather than show a stale literal */ }
+        } catch (_) { /* chip stays at the v0.0.0 placeholder */ }
     }
     try {
         const me = await api.me();

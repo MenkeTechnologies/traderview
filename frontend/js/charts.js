@@ -190,13 +190,7 @@ export function barChart(el, labels, values, opts = {}) {
         // legend was showing "1969-12-31 7:00pm" (epoch 0) on the Year /
         // Month / Day bar charts. Forcing time:false makes the legend
         // value formatter below take over.
-        // Half-slot pad: bars are at 1..n, scale visible range [0.5, n+0.5]
-        // so first bar sits at 1/(n+1) of width instead of glued to the
-        // left axis, last bar mirrored on the right.
-        scales: {
-            x: { time: false, range: () => [0.5, xs.length + 0.5] },
-            y: {},
-        },
+        scales: { x: { time: false }, y: {} },
         series: [
             {
                 label: t('chart.series.idx'),
@@ -209,7 +203,9 @@ export function barChart(el, labels, values, opts = {}) {
             // Pin ticks to integer indices so the categorical labels don't
             // duplicate (without this uPlot emits 0, 0.5, 1, 1.5, ... and
             // every tick rounds to the same label as its neighbour).
+            // Mirrors the working pattern in views/accounts_overview.js.
             splits: () => xs,
+            incrs: [1],
             values: (_, ticks) => ticks.map(t => labels[Math.round(t) - 1] || ''),
             rotate: -45,
             size: 60,
