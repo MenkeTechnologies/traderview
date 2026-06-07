@@ -9,7 +9,7 @@ export async function renderHeatmap(mount) {
     mount.innerHTML = `
         <h1 data-i18n="view.heatmap.h1.market_heatmap" class="view-title">// MARKET HEATMAP</h1>
         <p data-i18n="view.heatmap.hint.150_s_p_500_names_grouped_by_gics_sector_colored_b" class="muted small">~150 S&P 500 names grouped by GICS sector, colored by today's % change. Your watchlist symbols add to a "Watchlist" pseudo-sector.</p>
-        <div id="hm"><span data-i18n="common.loading">loading…</span></div>
+        <div id="hm"><span class="tv-spinner-inline" role="status" aria-label="loading"></span></div>
         <div class="chart-panel">
             <h2 data-i18n="view.heatmap.h2.sector_chart">Avg sector change %</h2>
             <div id="hm-chart" style="width:100%;height:240px"></div>

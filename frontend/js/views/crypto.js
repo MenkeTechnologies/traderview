@@ -20,10 +20,10 @@ export async function renderCrypto(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
         <h1 data-i18n="view.crypto.h1.crypto" class="view-title">// CRYPTO</h1>
-        <div id="c-glob" class="cards"><span data-i18n="common.loading">loading…</span></div>
+        <div id="c-glob" class="cards"><span class="tv-spinner-inline" role="status" aria-label="loading"></span></div>
         <div class="chart-panel">
             <h2 data-i18n="view.crypto.h2.top_100_by_market_cap">Top-100 by market cap</h2>
-            <div id="c-table"><span data-i18n="common.loading">loading…</span></div>
+            <div id="c-table"><span class="tv-spinner-inline" role="status" aria-label="loading"></span></div>
         </div>
         <div class="chart-panel">
             <h2 data-i18n="view.crypto.h2.top10_chart">Top-10 24h % change</h2>
@@ -35,7 +35,7 @@ export async function renderCrypto(mount) {
         </div>
         <div class="chart-panel">
             <h2 data-i18n="view.crypto.h2.bitcoin_on_chain">Bitcoin on-chain</h2>
-            <div id="c-onchain" class="cards"><span data-i18n="common.loading">loading…</span></div>
+            <div id="c-onchain" class="cards"><span class="tv-spinner-inline" role="status" aria-label="loading"></span></div>
         </div>
     `;
     try {

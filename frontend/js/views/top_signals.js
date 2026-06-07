@@ -29,11 +29,11 @@ export async function renderTopSignals(mount) {
         <div class="panel-grid">
             <div class="chart-panel">
                 <h2 data-i18n="view.top_signals.h2.top_buy_signals">Top BUY signals</h2>
-                <div id="buys"><span data-i18n="common.loading">loading…</span></div>
+                <div id="buys"><span class="tv-spinner-inline" role="status" aria-label="loading"></span></div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.top_signals.h2.top_sell_signals">Top SELL signals</h2>
-                <div id="sells"><span data-i18n="common.loading">loading…</span></div>
+                <div id="sells"><span class="tv-spinner-inline" role="status" aria-label="loading"></span></div>
             </div>
         </div>
 

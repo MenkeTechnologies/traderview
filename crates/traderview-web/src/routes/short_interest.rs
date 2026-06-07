@@ -7,7 +7,7 @@ use axum::{Json, Router};
 use serde::Deserialize;
 use std::collections::BTreeSet;
 use traderview_db::short_interest::{
-    finra_daily, ranked_universe, yahoo_short_stats, FinraDay, ShortStats,
+    finnhub_short_stats, finra_daily, ranked_universe, FinraDay, ShortStats,
 };
 use uuid::Uuid;
 
@@ -23,9 +23,26 @@ async fn symbol(
     _u: AuthUser,
     Path(sym): Path<String>,
 ) -> Result<Json<ShortStats>, ApiError> {
-    Ok(Json(
-        yahoo_short_stats(&sym).await.map_err(ApiError::Internal)?,
-    ))
+    // Finnhub backend — Yahoo's `quoteSummary` was crumb-locked and
+    // 401'ing since late 2023, so we route everything through
+    // Finnhub's `/stock/short-interest` + `/stock/metric` pair. The
+    // fallback envelope (all-None) covers tier restrictions and
+    // network issues without 500'ing.
+    let stats = finnhub_short_stats(&sym).await.unwrap_or_else(|e| {
+        tracing::warn!(symbol = %sym, error = %e, "finnhub short_stats failed; returning empty");
+        ShortStats {
+            symbol: sym.to_uppercase(),
+            shares_short: None,
+            shares_short_prior: None,
+            short_ratio: None,
+            short_pct_float: None,
+            short_pct_outstanding: None,
+            float: None,
+            change_pct: None,
+            fetched_at: chrono::Utc::now(),
+        }
+    });
+    Ok(Json(stats))
 }
 
 #[derive(Deserialize)]

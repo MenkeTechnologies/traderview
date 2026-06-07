@@ -48,6 +48,7 @@ pub fn router() -> Router<AppState> {
         .route("/symbols/:symbol/financials", get(financials))
         .route("/symbols/:symbol/metric", get(metric))
         .route("/symbols/:symbol/finnhub-quote", get(finnhub_quote))
+        .route("/symbols/:symbol/short-interest", get(short_interest_history))
         .route("/symbols/:symbol/finnhub-news", get(per_symbol_news))
         .route("/symbols/:symbol/news-sentiment", get(news_sentiment))
         .route("/symbols/:symbol/press-releases", get(press_releases))
@@ -363,7 +364,21 @@ async fn upgrades(
     _u: AuthUser,
     Path(s): Path<String>,
 ) -> Result<Json<Value>, ApiError> {
-    Ok(Json(fh::upgrade_downgrade(&s).await.map_err(map_fh_err)?))
+    // Plan-restricted on Finnhub's free tier — same graceful-degrade
+    // envelope as market_status / earnings_call_live so the global
+    // toast handler doesn't spam errors on the research view.
+    match fh::upgrade_downgrade(&s).await {
+        Ok(v) => Ok(Json(v)),
+        Err(e) => Ok(Json(serde_json::json!({
+            "available": false,
+            "data": [],
+            "reason": if fh::is_premium_required(&e) {
+                "premium-required"
+            } else {
+                "upstream-error"
+            },
+        }))),
+    }
 }
 async fn financials_reported(
     State(_s): State<AppState>,
@@ -396,6 +411,22 @@ async fn metric(
     Path(s): Path<String>,
 ) -> Result<Json<Value>, ApiError> {
     Ok(Json(fh::metric_all(&s).await.map_err(map_fh_err)?))
+}
+async fn short_interest_history(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Path(s): Path<String>,
+    Query(q): Query<FromTo>,
+) -> Result<Json<Value>, ApiError> {
+    // Default window: 4 months — covers ~8 settlement releases (exchanges
+    // publish 2x/month) so the time series chart has enough points to
+    // show a trend.
+    let (from, to) = from_to_default(q, 120);
+    Ok(Json(
+        fh::stock_short_interest(&s, &from, &to)
+            .await
+            .map_err(map_fh_err)?,
+    ))
 }
 async fn finnhub_quote(
     State(_s): State<AppState>,

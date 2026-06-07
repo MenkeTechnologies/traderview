@@ -34,6 +34,9 @@ pub struct ShortStats {
     pub fetched_at: DateTime<Utc>,
 }
 
+/// Yahoo-backed short stats — kept for legacy callers but the
+/// `quoteSummary` endpoint requires a "crumb" since late 2023 and
+/// 401s without one. Prefer [`finnhub_short_stats`] for new code.
 pub async fn yahoo_short_stats(symbol: &str) -> anyhow::Result<ShortStats> {
     let v = crate::market_data::quote_summary(symbol, &["defaultKeyStatistics"]).await?;
     let ks = &v["defaultKeyStatistics"];
@@ -53,6 +56,58 @@ pub async fn yahoo_short_stats(symbol: &str) -> anyhow::Result<ShortStats> {
         short_pct_float: raw("shortPercentOfFloat"),
         short_pct_outstanding: raw("sharesPercentSharesOut"),
         float: raw("floatShares"),
+        change_pct: change,
+        fetched_at: Utc::now(),
+    })
+}
+
+/// Finnhub-backed short stats — replaces the broken Yahoo path.
+/// Sources two endpoints (free tier on Finnhub):
+///   * `/stock/short-interest`  → latest + month-prior `shortInterest`
+///   * `/stock/metric?metric=all` → shortRatio, shortPercentOfFloat,
+///     sharesPercentSharesOut, sharesShort, float
+/// Fields that aren't available on the user's tier stay `None`; the
+/// frontend renders "—" for missing values.
+pub async fn finnhub_short_stats(symbol: &str) -> anyhow::Result<ShortStats> {
+    let today = Utc::now().date_naive();
+    let from = today - chrono::Duration::days(120);
+    let raw_si = crate::finnhub_rest::stock_short_interest(
+        symbol,
+        &from.format("%Y-%m-%d").to_string(),
+        &today.format("%Y-%m-%d").to_string(),
+    )
+    .await
+    .ok();
+    // Time series — newest first per Finnhub docs.
+    let (cur, prior) = match raw_si.as_ref().and_then(|v| v.get("data")).and_then(|v| v.as_array()) {
+        Some(arr) if !arr.is_empty() => {
+            let cur = arr.first().and_then(|e| e.get("shortInterest")).and_then(|x| x.as_f64());
+            let prior = arr
+                .get(1)
+                .and_then(|e| e.get("shortInterest"))
+                .and_then(|x| x.as_f64());
+            (cur, prior)
+        }
+        _ => (None, None),
+    };
+    // /stock/metric returns nested `{metric: {...}, series: {...}}`.
+    let metrics = crate::finnhub_rest::metric_all(symbol).await.ok();
+    let m = metrics.as_ref().and_then(|v| v.get("metric"));
+    let mf = |k: &str| m.and_then(|m| m.get(k)).and_then(|v| v.as_f64());
+    let change = match (cur, prior) {
+        (Some(c), Some(p)) if p > 0.0 => Some((c - p) / p * 100.0),
+        _ => None,
+    };
+    Ok(ShortStats {
+        symbol: symbol.to_uppercase(),
+        shares_short: cur.or_else(|| mf("sharesShort")),
+        shares_short_prior: prior,
+        short_ratio: mf("shortRatio"),
+        // Finnhub's `shortInterestSharesPercentage` is 0-100; normalize
+        // to 0-1 to match the Yahoo shape downstream consumers expect.
+        short_pct_float: mf("shortInterestSharesPercentage").map(|p| p / 100.0),
+        short_pct_outstanding: mf("sharesPercentSharesOut").map(|p| p / 100.0),
+        float: mf("shareFloat"),
         change_pct: change,
         fetched_at: Utc::now(),
     })

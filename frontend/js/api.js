@@ -790,6 +790,11 @@ export const api = {
     shortSymbol: (sym) => request(`/short/symbol/${encodeURIComponent(sym)}`),
     shortFinra:  (sym, days = 30) => request(`/short/finra/${encodeURIComponent(sym)}${qs({ days })}`),
     shortRanked: (watchlist_id = null) => request(`/short/ranked${qs({ watchlist_id })}`),
+    // Finnhub /stock/short-interest — semimonthly settlement series.
+    // Use this alongside `shortFinra` (daily Reg SHO volume) for the
+    // long-tail + short-tail view of shorting activity.
+    finnhubShortInterest: (sym, from, to) =>
+        request(`/symbols/${encodeURIComponent(sym)}/short-interest${qs({ from, to })}`),
 
     // Dark pool / off-exchange volume
     darkpoolSymbol: (sym, days = 30) => request(`/darkpool/symbol/${encodeURIComponent(sym)}${qs({ days })}`),
@@ -1002,8 +1007,19 @@ export const api = {
     // data-source provider keys (Finnhub, Alpaca, …). Persisted in user_settings.
     // GET returns secrets masked as "***"; POST treats "***" / empty as "leave alone".
     dataSources: () => request('/data-sources'),
+    /// Returns the unmasked secrets so the Settings UI can show them
+    /// on demand when the user clicks the reveal toggle next to a
+    /// password field. Same auth as `dataSources()`.
+    dataSourcesReveal: () => request('/data-sources/reveal'),
     updateDataSources: (body) =>
         request('/data-sources', { method: 'POST', body: JSON.stringify(body) }),
+    // Verify Alpaca creds without saving. Opens a WS, auths, returns
+    // `{ok, feed, detail}` where `detail` is the raw Alpaca frame so
+    // failures surface their own diagnostic.
+    testAlpaca: (body) =>
+        request('/data-sources/test-alpaca', { method: 'POST', body: JSON.stringify(body || {}) }),
+    testFinnhub: (body) =>
+        request('/data-sources/test-finnhub', { method: 'POST', body: JSON.stringify(body || {}) }),
 
     // Live squeeze scanner — candidate aggregator + rolling-window detector.
     // /ws/squeeze emits {type:'snapshot',events:[…]} on connect, then

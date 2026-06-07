@@ -37,51 +37,51 @@ export async function renderResearch(mount, _state, sym) {
         <div class="panel-grid">
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.signals_score">Signals + Score</h2>
-                <div id="rs-signals"><span data-i18n="common.loading">loading…</span></div>
+                <div id="rs-signals"><span class="tv-spinner-inline" role="status" aria-label="loading"></span></div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.indicators">Indicators</h2>
-                <div id="rs-indicators"><span data-i18n="common.loading">loading…</span></div>
+                <div id="rs-indicators"><span class="tv-spinner-inline" role="status" aria-label="loading"></span></div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.pivots_classic">Pivots (classic)</h2>
-                <div id="rs-pivots"><span data-i18n="common.loading">loading…</span></div>
+                <div id="rs-pivots"><span class="tv-spinner-inline" role="status" aria-label="loading"></span></div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.latest_news">Latest News</h2>
-                <div id="rs-news"><span data-i18n="common.loading">loading…</span></div>
+                <div id="rs-news"><span class="tv-spinner-inline" role="status" aria-label="loading"></span></div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.analyst_recommendations">Analyst Recommendations</h2>
-                <div id="rs-recs"><span data-i18n="common.loading">loading…</span></div>
+                <div id="rs-recs"><span class="tv-spinner-inline" role="status" aria-label="loading"></span></div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.fundamentals">Fundamentals</h2>
-                <div id="rs-fund"><span data-i18n="common.loading">loading…</span></div>
+                <div id="rs-fund"><span class="tv-spinner-inline" role="status" aria-label="loading"></span></div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.earnings">Earnings</h2>
-                <div id="rs-earn"><span data-i18n="common.loading">loading…</span></div>
+                <div id="rs-earn"><span class="tv-spinner-inline" role="status" aria-label="loading"></span></div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.insider_activity">Insider Activity</h2>
-                <div id="rs-ins"><span data-i18n="common.loading">loading…</span></div>
+                <div id="rs-ins"><span class="tv-spinner-inline" role="status" aria-label="loading"></span></div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.holders">Holders</h2>
-                <div id="rs-hold"><span data-i18n="common.loading">loading…</span></div>
+                <div id="rs-hold"><span class="tv-spinner-inline" role="status" aria-label="loading"></span></div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.profile">Company Profile</h2>
-                <div id="rs-profile"><span data-i18n="common.loading">loading…</span></div>
+                <div id="rs-profile"><span class="tv-spinner-inline" role="status" aria-label="loading"></span></div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.peers">Peers / Sympathy</h2>
-                <div id="rs-peers"><span data-i18n="common.loading">loading…</span></div>
+                <div id="rs-peers"><span class="tv-spinner-inline" role="status" aria-label="loading"></span></div>
             </div>
             <div class="chart-panel">
                 <h2 data-i18n="view.research.h2.upgrades">Analyst Upgrades / Downgrades</h2>
-                <div id="rs-upgrades"><span data-i18n="common.loading">loading…</span></div>
+                <div id="rs-upgrades"><span class="tv-spinner-inline" role="status" aria-label="loading"></span></div>
             </div>
         </div>
     `;

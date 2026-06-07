@@ -162,20 +162,20 @@ export async function renderSettings(mount, state) {
             </p>
             <form id="data-sources-form" class="inline-form">
                 <label><span data-i18n="view.settings.label.finnhub_api_key">Finnhub API key</span>
-                    <input type="password" name="finnhub_api_key" autocomplete="off"
+                    <input type="password" name="finnhub_api_key" autocomplete="off" data-secret-field
                            value="${esc(ds.finnhub_api_key || '')}"
                            placeholder="finnhub.io key — used by REST + WS live ticks"
                            data-i18n-placeholder="view.settings.placeholder.finnhub_api_key"
                            style="min-width:280px">
                 </label>
                 <label><span data-i18n="view.settings.label.alpaca_key_id">Alpaca key ID</span>
-                    <input type="text" name="alpaca_key_id" autocomplete="off"
+                    <input type="text" name="alpaca_key_id" autocomplete="off" data-secret-field
                            value="${esc(ds.alpaca_key_id || '')}"
                            placeholder="APCA-API-KEY-ID"
                            data-i18n-placeholder="view.settings.placeholder.alpaca_key_id">
                 </label>
                 <label><span data-i18n="view.settings.label.alpaca_secret_key">Alpaca secret</span>
-                    <input type="password" name="alpaca_secret_key" autocomplete="off"
+                    <input type="password" name="alpaca_secret_key" autocomplete="off" data-secret-field
                            value="${esc(ds.alpaca_secret_key || '')}"
                            placeholder="APCA-API-SECRET-KEY"
                            data-i18n-placeholder="view.settings.placeholder.alpaca_secret_key">
@@ -191,14 +191,14 @@ export async function renderSettings(mount, state) {
                     for charting + delayed quotes.
                 </p>
                 <label><span data-i18n="view.settings.label.polygon_api_key">Polygon.io API key</span>
-                    <input type="password" name="polygon_api_key" autocomplete="off"
+                    <input type="password" name="polygon_api_key" autocomplete="off" data-secret-field
                            value="${esc(ds.polygon_api_key || '')}"
                            placeholder="polygon.io key — Advanced tier for full SIP tape"
                            data-i18n-placeholder="view.settings.placeholder.polygon_api_key"
                            style="min-width:280px">
                 </label>
                 <label><span data-i18n="view.settings.label.databento_api_key">Databento API key</span>
-                    <input type="password" name="databento_api_key" autocomplete="off"
+                    <input type="password" name="databento_api_key" autocomplete="off" data-secret-field
                            value="${esc(ds.databento_api_key || '')}"
                            placeholder="databento.com key — direct CTA / UTP / OPRA feeds"
                            data-i18n-placeholder="view.settings.placeholder.databento_api_key"
@@ -209,6 +209,9 @@ export async function renderSettings(mount, state) {
                     <span data-i18n="view.settings.label.alpaca_use_sip_feed">Use Alpaca SIP feed (Live tier required)</span>
                 </label>
                 <button data-i18n="view.settings.btn.save_data_sources" class="primary" type="submit">Save data sources</button>
+                <button data-i18n="view.settings.btn.test_finnhub" class="btn btn-secondary" type="button" id="ds-test-finnhub">Test Finnhub</button>
+                <button data-i18n="view.settings.btn.test_alpaca" class="btn btn-secondary" type="button" id="ds-test-alpaca">Test Alpaca</button>
+                <span id="ds-test-out" class="muted small" style="margin-left:8px"></span>
             </form>
         </div>
 
@@ -298,6 +301,58 @@ export async function renderSettings(mount, state) {
         renderSettings(mount, state);
     });
 
+    // Attach a reveal toggle (👁 ↔ 🙈) to every secret field. Click
+    // once: fetch the unmasked value and switch the input to type
+    // "text" so the user can read it. Click again: re-mask and revert
+    // to the masked placeholder so the next page reload is clean.
+    // Caches the unmasked DTO on the mount so toggling multiple
+    // fields doesn't refetch.
+    let _revealCache = null;
+    const fetchUnmasked = async () => {
+        if (_revealCache) return _revealCache;
+        _revealCache = await api.dataSourcesReveal();
+        return _revealCache;
+    };
+    mount.querySelectorAll('input[data-secret-field]').forEach((input) => {
+        const wrap = input.parentElement;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn-reveal';
+        btn.textContent = '👁';
+        btn.title = t('view.settings.reveal_secret');
+        btn.style.marginLeft = '4px';
+        const wasPassword = input.type === 'password';
+        let revealed = false;
+        btn.addEventListener('click', async () => {
+            if (revealed) {
+                // Re-mask: revert to password type and restore placeholder.
+                if (wasPassword) input.type = 'password';
+                input.value = '***';
+                revealed = false;
+                btn.textContent = '👁';
+                return;
+            }
+            btn.disabled = true;
+            try {
+                const dto = await fetchUnmasked();
+                const v = dto[input.name];
+                if (v == null || v === '') {
+                    showToast(t('view.settings.reveal_empty', { field: input.name }), { level: 'info' });
+                    return;
+                }
+                input.type = 'text';
+                input.value = v;
+                revealed = true;
+                btn.textContent = '🙈';
+            } catch (err) {
+                showToast(t('view.settings.reveal_failed', { err: err.message || err }), { level: 'error' });
+            } finally {
+                btn.disabled = false;
+            }
+        });
+        wrap.appendChild(btn);
+    });
+
     mount.querySelector('#data-sources-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
@@ -316,6 +371,89 @@ export async function renderSettings(mount, state) {
             renderSettings(mount, state);
         } catch (err) {
             showToast(t('view.settings.toast.data_sources_save_failed', { msg: err.message || err }), { level: 'error' });
+        }
+    });
+
+    // Test Finnhub — REST probe (no WS) against the quote endpoint.
+    // Falls back to stored key when the field still shows `***`.
+    mount.querySelector('#ds-test-finnhub').addEventListener('click', async () => {
+        const form = mount.querySelector('#data-sources-form');
+        const out = mount.querySelector('#ds-test-out');
+        const btn = mount.querySelector('#ds-test-finnhub');
+        const mask = '***';
+        const fd = new FormData(form);
+        const liveValue = (k) => {
+            const v = String(fd.get(k) || '').trim();
+            return (!v || v === mask) ? null : v;
+        };
+        btn.disabled = true;
+        out.textContent = t('view.settings.test_finnhub.connecting');
+        out.style.color = '';
+        try {
+            const r = await api.testFinnhub({
+                api_key: liveValue('finnhub_api_key'),
+            });
+            if (r.ok) {
+                out.textContent = t('view.settings.test_finnhub.ok');
+                out.style.color = '#39ff14';
+                showToast(t('view.settings.test_finnhub.toast_ok'), { level: 'success' });
+            } else {
+                const msg = r.detail?.msg || JSON.stringify(r.detail || {});
+                out.textContent = t('view.settings.test_finnhub.fail', { msg });
+                out.style.color = '#ff5a5a';
+                showToast(t('view.settings.test_finnhub.toast_fail', { msg }), { level: 'error' });
+            }
+        } catch (err) {
+            const msg = err?.message || String(err);
+            out.textContent = t('view.settings.test_finnhub.fail', { msg });
+            out.style.color = '#ff5a5a';
+            showToast(t('view.settings.test_finnhub.toast_fail', { msg }), { level: 'error' });
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    // Test Alpaca — opens a WS via the backend with the CURRENT form
+    // values (lets the user verify a fresh key without saving first).
+    // Sends `key_id: null` / `secret: null` if the field still holds
+    // the masked "***" placeholder, so the backend falls back to the
+    // stored creds.
+    mount.querySelector('#ds-test-alpaca').addEventListener('click', async () => {
+        const form = mount.querySelector('#data-sources-form');
+        const out = mount.querySelector('#ds-test-out');
+        const btn = mount.querySelector('#ds-test-alpaca');
+        const mask = '***';
+        const fd = new FormData(form);
+        const liveValue = (k) => {
+            const v = String(fd.get(k) || '').trim();
+            return (!v || v === mask) ? null : v;
+        };
+        btn.disabled = true;
+        out.textContent = t('view.settings.test_alpaca.connecting');
+        out.style.color = '';
+        try {
+            const r = await api.testAlpaca({
+                key_id:  liveValue('alpaca_key_id'),
+                secret:  liveValue('alpaca_secret_key'),
+                use_sip: !!fd.get('alpaca_use_sip_feed'),
+            });
+            if (r.ok) {
+                out.textContent = t('view.settings.test_alpaca.ok', { feed: r.feed.toUpperCase() });
+                out.style.color = '#39ff14';
+                showToast(t('view.settings.test_alpaca.toast_ok', { feed: r.feed.toUpperCase() }), { level: 'success' });
+            } else {
+                const msg = r.detail?.msg || JSON.stringify(r.detail || {});
+                out.textContent = t('view.settings.test_alpaca.fail', { msg });
+                out.style.color = '#ff5a5a';
+                showToast(t('view.settings.test_alpaca.toast_fail', { msg }), { level: 'error' });
+            }
+        } catch (err) {
+            const msg = err?.message || String(err);
+            out.textContent = t('view.settings.test_alpaca.fail', { msg });
+            out.style.color = '#ff5a5a';
+            showToast(t('view.settings.test_alpaca.toast_fail', { msg }), { level: 'error' });
+        } finally {
+            btn.disabled = false;
         }
     });
 

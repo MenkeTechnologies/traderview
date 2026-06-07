@@ -2523,6 +2523,20 @@ ul.acct-bars li {
 .acct-bars-fill { display: block; height: 100%; }
 .acct-bars-count { text-align: right; color: var(--cyan); font-weight: bold; }
 
+/* ---- Reveal-secret toggle in Settings → Data Sources -------------- */
+.btn-reveal {
+    background: var(--bg-secondary, #0a0d12);
+    color: var(--cyan, #00e5ff);
+    border: 1px solid var(--border, #1f2a36);
+    border-radius: 3px;
+    padding: 3px 6px;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+}
+.btn-reveal:hover { background: var(--bg-hover, #0f1822); border-color: var(--cyan, #00e5ff); }
+.btn-reveal:disabled { opacity: 0.5; cursor: not-allowed; }
+
 /* ---- Log Viewer ---------------------------------------------------- */
 .log-viewer-bar {
     display: flex; align-items: center; gap: 8px;

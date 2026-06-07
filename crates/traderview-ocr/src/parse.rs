@@ -124,6 +124,29 @@ fn extract_merchant(text: &str) -> Option<String> {
     let url = URL_RE.get_or_init(|| Regex::new(r"(?i)(https?://|www\.)").unwrap());
     let phone = PHONE_RE.get_or_init(|| Regex::new(r"\d{3}[-.\s]\d{3}[-.\s]\d{4}").unwrap());
 
+    // Brand recognition — when a logo is rendered as an image (Home
+    // Depot, Lowe's, TSC, Tractor Supply), Vision/Tesseract skip the
+    // brand name entirely. Match against secondary signals (marketing
+    // taglines, dotcom URLs, trademark suffixes) and short-circuit to
+    // the canonical chain name. Order matters — most specific first.
+    let lc = text.to_lowercase();
+    let brands: &[(&str, &str)] = &[
+        ("tractorsupply.com",         "Tractor Supply Co"),
+        ("tractor\nsupply",           "Tractor Supply Co"),
+        ("more saving",               "The Home Depot"),
+        ("more doing",                "The Home Depot"),
+        ("homedepot.com",             "The Home Depot"),
+        ("lowes.com",                 "Lowe's"),
+        ("lowe's home centers",       "Lowe's"),
+        ("ruralking.com",             "Rural King"),
+        ("menards",                   "Menards"),
+    ];
+    for (cue, name) in brands {
+        if lc.contains(cue) {
+            return Some((*name).to_string());
+        }
+    }
+
     for line in text.lines() {
         let t = line.trim();
         if t.is_empty() {
@@ -143,7 +166,10 @@ fn extract_merchant(text: &str) -> Option<String> {
         if t.chars().filter(|c| c.is_alphabetic()).count() < 2 {
             continue;
         }
-        return Some(t.to_string());
+        // Strip stray bracket noise the OCR emits on logo edges (e.g.
+        // Lowe's logo gets read as "[LOWE'S"). Keep the rest verbatim.
+        let cleaned = t.trim_matches(|c: char| c == '[' || c == ']' || c == '|' || c == '*').to_string();
+        return Some(cleaned);
     }
     None
 }
@@ -189,9 +215,20 @@ fn extract_total(text: &str) -> Option<Decimal> {
         .unwrap()
     });
 
+    // Lines that frequently follow a "TOTAL" label but encode
+    // something else (CARD BALANCE on Home Depot, INVOICE ... TOTAL
+    // on Lowe's, TERMINAL: ... time on Lowe's). Used to stop the
+    // multi-line fallback from skipping forward into payment / time
+    // chunks.
+    static STOP_TAGS: OnceLock<Regex> = OnceLock::new();
+    let stop_tags = STOP_TAGS.get_or_init(|| {
+        Regex::new(r"(?i)\b(card\s*balance|terminal|invoice|cashier|store|register|ticket|loyalty|authcode|authorization|reference)\b").unwrap()
+    });
+
+    let lines: Vec<&str> = text.lines().collect();
     let mut best_score = i32::MIN;
     let mut best_value: Option<Decimal> = None;
-    for line in text.lines() {
+    for (i, line) in lines.iter().enumerate() {
         // Item-count lines like "TOTAL NUMBER OF ITEMS = 15" have a
         // small int with no `.dd` cents and would never match `amt` —
         // but `reject_tag` removes them defensively regardless.
@@ -213,6 +250,30 @@ fn extract_total(text: &str) -> Option<Decimal> {
         for cap in amt.captures_iter(line) {
             if let Some(d) = parse_money(&cap[1]) {
                 line_value = Some(d);
+            }
+        }
+        // Multi-line fallback: y-sorted OCR splits "TOTAL" and the
+        // amount across rows ("TOTAL\n$791.17"). Walk forward until
+        // we either find an amount or hit a stop-tag line.
+        if line_value.is_none() {
+            for j in 1..=2 {
+                let Some(next) = lines.get(i + j) else { break };
+                if next.trim().is_empty() {
+                    continue;
+                }
+                if stop_tags.is_match(next) || reject_tag.is_match(next) {
+                    break;
+                }
+                let mut next_amt: Option<Decimal> = None;
+                for cap in amt.captures_iter(next) {
+                    if let Some(d) = parse_money(&cap[1]) {
+                        next_amt = Some(d);
+                    }
+                }
+                if let Some(d) = next_amt {
+                    line_value = Some(d);
+                    break;
+                }
             }
         }
         let Some(d) = line_value else { continue };
@@ -284,6 +345,40 @@ fn extract_date(text: &str) -> Option<NaiveDate> {
         .unwrap()
     });
 
+    // y-sorted OCR splits "POLICY EXPIRES ON" and the date onto
+    // separate rows. Pre-tag every line with a "carry-over" reject
+    // flag if the previous 1-2 lines mention return-policy keywords,
+    // so the date on its own row inherits the reject penalty.
+    let all_lines: Vec<&str> = text.lines().collect();
+    let carry_reject: Vec<bool> = all_lines
+        .iter()
+        .enumerate()
+        .map(|(i, _)| {
+            let lo = i.saturating_sub(2);
+            all_lines[lo..i].iter().any(|l| reject_tag.is_match(l))
+        })
+        .collect();
+    // Same idea for sale-tag boost (e.g. "Date:" alone on a row with
+    // the date on the next row in TSC's "Date: 10/4/20" — but Apple
+    // Vision merges those, so this is belt-and-suspenders).
+    let carry_sale: Vec<bool> = all_lines
+        .iter()
+        .enumerate()
+        .map(|(i, _)| {
+            let lo = i.saturating_sub(2);
+            all_lines[lo..i].iter().any(|l| sale_tag.is_match(l))
+        })
+        .collect();
+    // A line that holds a time-of-day next to the date is almost
+    // certainly the sale-stamp ("09/10/19 03:37 PM").
+    static HAS_TIME_RE: OnceLock<Regex> = OnceLock::new();
+    let has_time_re = HAS_TIME_RE.get_or_init(|| {
+        Regex::new(r"(?i)\b\d{1,2}:\d{2}(?::\d{2})?\s*(?:am|pm)?\b").unwrap()
+    });
+    let line_index = |needle: &str| -> Option<usize> {
+        all_lines.iter().position(|l| *l == needle)
+    };
+
     let today = Utc::now().date_naive();
     let five_years_ago = today - Duration::days(5 * 365);
     let one_month_ahead = today + Duration::days(30);
@@ -302,6 +397,22 @@ fn extract_date(text: &str) -> Option<NaiveDate> {
         }
         if sale_tag.is_match(line) {
             score += 2;
+        }
+        // y-sorted carry-over: an OCR row holding ONLY the date
+        // inherits the previous row's policy/sale context.
+        let idx = line_index(line);
+        if let Some(i) = idx {
+            if carry_reject[i] && !sale_tag.is_match(line) {
+                score -= 3;
+            }
+            if carry_sale[i] && !reject_tag.is_match(line) {
+                score += 1;
+            }
+        }
+        // Sale-stamp boost: date and time on the same line is the
+        // canonical receipt footer stamp.
+        if has_time_re.is_match(line) {
+            score += 3;
         }
         // Recency: past but recent = real sale; far future = rebate/expiry.
         if date <= today && date >= five_years_ago {
@@ -474,35 +585,72 @@ fn extract_subtotal(text: &str) -> Option<Decimal> {
 
 fn extract_tax(text: &str) -> Option<Decimal> {
     // Match "Tax", "Sales Tax", "TAX STATE OF MI 6%", "GST", "HST", "VAT".
+    // Also matches "Tex" / "Tx" — common Apple Vision mis-reads on
+    // small low-contrast italic POS fonts (seen on the TSC sample).
     // Skip "TAX EXEMPT" / "TAX FREE" lines that have no dollar value
     // (the amount regex below requires `.dd` so they naturally drop out).
-    extract_amount_for_tag(text, r"(?i)\b(tax|sales\s*tax|tax\s*state|gst|hst|vat)\b")
+    extract_amount_for_tag(
+        text,
+        r"(?i)\b(tax|tex|sales\s*tax|tax\s*state|gst|hst|vat)\b",
+    )
 }
 
 // Shared helper: return the last `.dd` amount on the LAST line that
-// matches `tag_pattern`. Used for subtotal + tax.
+// matches `tag_pattern`, FALLING THROUGH to the next 1-2 lines when the
+// tag line itself has no amount (Home Depot / Tractor Supply print
+// "SUBTOTAL" on one line and "741.14" on the next because of the
+// right-aligned column layout that OCR-line-by-y collapses into
+// label-then-amount pairs).
 fn extract_amount_for_tag(text: &str, tag_pattern: &str) -> Option<Decimal> {
     let amt = AMOUNT_RE
         .get_or_init(|| Regex::new(r"\$?\s?(\d{1,3}(?:,\d{3})*\.\d{2}|\d+\.\d{2})").unwrap());
     let tag = Regex::new(tag_pattern).unwrap();
+    let lines: Vec<&str> = text.lines().collect();
     let mut last: Option<Decimal> = None;
-    for line in text.lines() {
+    for (i, line) in lines.iter().enumerate() {
         if !tag.is_match(line) {
             continue;
         }
-        // Avoid the "TOTAL SALE" line matching "tax" sub-strings if any.
-        // Also skip explicit reject phrases.
         let lc = line.to_lowercase();
         if lc.contains("tax exempt") || lc.contains("tax free") {
             continue;
         }
-        let mut line_value: Option<Decimal> = None;
+        // First try the SAME line — chain receipts that print
+        // "TAX STATE OF MI 6%   5.17" have label + amount inline.
+        let mut found: Option<Decimal> = None;
         for cap in amt.captures_iter(line) {
             if let Some(d) = parse_money(&cap[1]) {
-                line_value = Some(d);
+                found = Some(d);
             }
         }
-        if let Some(d) = line_value {
+        // Fall through to the next 1-2 lines for the y-sorted-OCR
+        // case where the column-aligned amount lives on its own row.
+        // Reject pure-int "13:14:57"-style timestamps via the amt
+        // regex which requires `.dd`.
+        if found.is_none() {
+            for j in 1..=2 {
+                let Some(next) = lines.get(i + j) else { break };
+                if next.trim().is_empty() {
+                    continue;
+                }
+                // Stop if the next line is itself a different label
+                // ("TAX" → next is "TOTAL" → don't poach).
+                if tag.is_match(next) {
+                    break;
+                }
+                let mut next_amt: Option<Decimal> = None;
+                for cap in amt.captures_iter(next) {
+                    if let Some(d) = parse_money(&cap[1]) {
+                        next_amt = Some(d);
+                    }
+                }
+                if let Some(d) = next_amt {
+                    found = Some(d);
+                    break;
+                }
+            }
+        }
+        if let Some(d) = found {
             last = Some(d);
         }
     }
@@ -512,20 +660,56 @@ fn extract_amount_for_tag(text: &str, tag_pattern: &str) -> Option<Decimal> {
 // --- address -------------------------------------------------------------
 
 fn extract_address(text: &str) -> Option<String> {
-    // Walk consecutive lines; when one looks like a street and the next
-    // looks like "City, ST 12345", join them. Falls back to the street
-    // alone if no city/state line follows within 2 lines.
     static CITY_STATE_ZIP_RE: OnceLock<Regex> = OnceLock::new();
     let csz = CITY_STATE_ZIP_RE.get_or_init(|| {
         // "Ann Arbor, MI 48103" / "San Francisco CA 94102" / "12345-6789"
         Regex::new(r"(?i)\b[A-Za-z][A-Za-z .'\-]+,?\s+[A-Z]{2}\s+\d{5}(?:-\d{4})?\b").unwrap()
     });
+    // y-sorted OCR splits the street ("150 MARKET") and the street-
+    // type word + city/state/zip ("DRIVE ELYRIA OH 44035") onto
+    // separate rows because Vision sorts by horizontal text-bbox y.
+    // First pass: scan for a CSZ line, then look BACK 1-2 lines for
+    // a number-prefixed street fragment. Both fragments together =
+    // the full address.
+    static STARTS_WITH_NUM_RE: OnceLock<Regex> = OnceLock::new();
+    let num_prefix = STARTS_WITH_NUM_RE
+        .get_or_init(|| Regex::new(r"^\s*\d{1,6}\s+\S").unwrap());
     let lines: Vec<&str> = text.lines().map(|l| l.trim()).collect();
+    for (i, line) in lines.iter().enumerate() {
+        if !csz.is_match(line) {
+            continue;
+        }
+        // Walk backward up to 3 lines looking for a number-prefixed
+        // street candidate.
+        let lo = i.saturating_sub(3);
+        for j in (lo..i).rev() {
+            let prev = lines[j];
+            if prev.is_empty() {
+                continue;
+            }
+            if num_prefix.is_match(prev) && !prev.contains('$') {
+                return Some(format!("{}, {}", prev, line));
+            }
+        }
+        // CSZ line might already contain the street word (e.g.
+        // "DRIVE ELYRIA OH 44035"). Try to find the street number
+        // anywhere earlier on the same address block (back 5 lines).
+        let lo = i.saturating_sub(5);
+        for j in (lo..i).rev() {
+            let prev = lines[j];
+            if num_prefix.is_match(prev) {
+                return Some(format!("{}, {}", prev, line));
+            }
+        }
+        // Last resort — return the CSZ line alone.
+        return Some(line.to_string());
+    }
+    // Fallback to the original behavior: look for an obvious street
+    // line and try to join it with a CSZ line within 2 rows.
     for (i, line) in lines.iter().enumerate() {
         if !looks_like_address(line) {
             continue;
         }
-        // Check the next two non-empty lines for a city/state/zip.
         let end = (i + 4).min(lines.len());
         for next in &lines[(i + 1)..end] {
             let next = *next;
@@ -535,8 +719,6 @@ fn extract_address(text: &str) -> Option<String> {
             if csz.is_match(next) {
                 return Some(format!("{}, {}", line, next));
             }
-            // Stop early if we hit a clearly-non-address line (e.g.,
-            // "KEEP YOUR RECEIPT").
             if next.chars().any(|c| c == '$') {
                 break;
             }
@@ -1775,5 +1957,65 @@ AZ    :               FUNABLES MIXED BERRY                                Be
         assert_eq!(strip_line_decorations("STRAWBERRY MILK"), "STRAWBERRY MILK",);
         // Pure decoration → empty.
         assert_eq!(strip_line_decorations("= = = ---"), "");
+    }
+}
+
+// Real-world receipt fixtures (Vision OCR output captured from
+// photos of physical receipts). These tests pin the post-OCR
+// structuring layer — header brand recognition, multi-line
+// label-then-amount column collapse, return-policy date rejection,
+// "Tex"/"Tax" alias — against actual receipts the parser used to
+// mis-handle. See `tests/fixtures/*.ocr.txt`.
+#[cfg(test)]
+mod real_receipt_fixtures {
+    use super::*;
+    fn load(name: &str) -> String {
+        let path = format!(
+            "{}/tests/fixtures/{}.ocr.txt",
+            env!("CARGO_MANIFEST_DIR"),
+            name
+        );
+        std::fs::read_to_string(path).expect("fixture missing")
+    }
+
+    #[test]
+    fn home_depot_2019() {
+        let r = crate::parse::structure(&load("hd"), 1.0);
+        assert_eq!(r.merchant.as_deref(), Some("The Home Depot"));
+        assert_eq!(r.date, Some(NaiveDate::from_ymd_opt(2019, 9, 10).unwrap()));
+        assert_eq!(r.subtotal, Some(Decimal::new(74114, 2))); // 741.14
+        assert_eq!(r.tax, Some(Decimal::new(5003, 2))); // 50.03
+        assert_eq!(r.total, Some(Decimal::new(79117, 2))); // 791.17
+        let addr = r.address.unwrap();
+        assert!(addr.contains("ELYRIA"), "address missing city: {addr}");
+    }
+
+    #[test]
+    fn lowes_2021() {
+        let r = crate::parse::structure(&load("lowes"), 1.0);
+        assert_eq!(r.merchant.as_deref(), Some("Lowe's"));
+        assert_eq!(r.date, Some(NaiveDate::from_ymd_opt(2021, 7, 9).unwrap()));
+        assert_eq!(r.subtotal, Some(Decimal::new(299, 2))); // 2.99
+        assert_eq!(r.tax, Some(Decimal::new(25, 2))); // 0.25
+        assert_eq!(r.total, Some(Decimal::new(324, 2))); // 3.24
+        let addr = r.address.unwrap();
+        assert!(addr.contains("AUSTIN"), "address missing city: {addr}");
+    }
+
+    #[test]
+    fn tractor_supply_2020() {
+        let r = crate::parse::structure(&load("tsc"), 1.0);
+        assert_eq!(r.merchant.as_deref(), Some("Tractor Supply Co"));
+        assert_eq!(r.date, Some(NaiveDate::from_ymd_opt(2020, 10, 4).unwrap()));
+        // OCR mis-reads `34.46` as `34.45` on this fixture — parser
+        // surfaces what OCR returned, so pin to the OCR'd value.
+        assert_eq!(r.subtotal, Some(Decimal::new(3445, 2)));
+        assert_eq!(r.tax, Some(Decimal::new(207, 2))); // 2.07 (via "Tex"→"Tax" alias)
+        assert_eq!(r.total, Some(Decimal::new(3653, 2))); // 36.53
+        let addr = r.address.unwrap();
+        assert!(
+            addr.to_uppercase().contains("KY 41008"),
+            "address missing CSZ: {addr}"
+        );
     }
 }

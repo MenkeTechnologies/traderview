@@ -180,6 +180,15 @@ pub struct LiveTickStore {
     /// (works on the free tier).
     alpaca_creds: Arc<tokio::sync::RwLock<Option<(String, String)>>>,
     alpaca_use_sip: Arc<AtomicBool>,
+    /// Last observed Alpaca-WS auth result, populated by the worker
+    /// when it sees the first auth-response frame. The test endpoint
+    /// reads from this so it doesn't have to open a SECOND WS (Alpaca
+    /// enforces 1 connection per account+feed, so a second attempt
+    /// always fails with "connection limit exceeded" while the live
+    /// worker holds the slot).
+    /// `(success: bool, feed: "iex"|"sip"|"crypto", millis since UNIX
+    /// epoch when observed)`.
+    alpaca_last_auth: Arc<tokio::sync::RwLock<Option<(bool, String, i64)>>>,
     subs: Arc<tokio::sync::Mutex<Vec<String>>>,
     // Per-symbol open 10s OHLC bucket. Closed buckets are flushed to
     // `price_bars` (interval='10s', source='finnhub-tape') so the
@@ -206,6 +215,7 @@ impl LiveTickStore {
             polygon_key: Arc::new(tokio::sync::RwLock::new(None)),
             alpaca_creds: Arc::new(tokio::sync::RwLock::new(None)),
             alpaca_use_sip: Arc::new(AtomicBool::new(false)),
+            alpaca_last_auth: Arc::new(tokio::sync::RwLock::new(None)),
             subs: Arc::new(tokio::sync::Mutex::new(Vec::new())),
             buckets: Arc::new(DashMap::new()),
             pool: Arc::new(tokio::sync::RwLock::new(None)),
@@ -242,6 +252,26 @@ impl LiveTickStore {
 
     pub async fn has_alpaca_creds(&self) -> bool {
         self.alpaca_creds.read().await.is_some()
+    }
+
+    /// Snapshot of the most recent Alpaca WS auth result observed by
+    /// any running worker. Used by the "Test Alpaca" Settings button
+    /// so it can confirm creds without opening a second WS (which
+    /// Alpaca rejects with "connection limit exceeded"). Returns
+    /// `(success, feed, age_ms)` where `age_ms` is how long ago we
+    /// last saw the auth response.
+    pub async fn alpaca_last_auth(&self) -> Option<(bool, String, i64)> {
+        let now = chrono::Utc::now().timestamp_millis();
+        self.alpaca_last_auth
+            .read()
+            .await
+            .clone()
+            .map(|(ok, feed, ts)| (ok, feed, now - ts))
+    }
+
+    pub(crate) async fn record_alpaca_auth(&self, ok: bool, feed: &str) {
+        *self.alpaca_last_auth.write().await =
+            Some((ok, feed.to_string(), chrono::Utc::now().timestamp_millis()));
     }
 
     /// True when any provider key is configured. Callers that ungate
@@ -629,6 +659,7 @@ impl LiveTickStore {
                         Err(_) => continue,
                     };
                     let Some(events) = arr.as_array() else { continue };
+                    let feed_name = if use_sip { "sip" } else { "iex" };
                     for ev in events {
                         let kind = ev.get("T").and_then(|v| v.as_str()).unwrap_or("");
                         if kind == "error" {
@@ -637,6 +668,38 @@ impl LiveTickStore {
                                 code = ?ev.get("code"),
                                 "alpaca WS error frame"
                             );
+                            // Only record auth failure for the codes
+                            // Alpaca actually uses to signal bad creds /
+                            // missing entitlement:
+                            //   401 = not authenticated
+                            //   402 = auth failed (wrong key/secret)
+                            //   410 = forbidden (no entitlement for feed)
+                            // Other 4xx codes (405 symbol limit, 406
+                            // connection limit, 407 slow client, etc.)
+                            // are operational issues, NOT auth failures —
+                            // recording them as such made the Settings
+                            // "Test Alpaca" button report false-negative
+                            // when a stale prior process held the
+                            // connection slot.
+                            if let Some(code) = ev.get("code").and_then(|v| v.as_i64()) {
+                                if matches!(code, 401 | 402 | 410) {
+                                    self.record_alpaca_auth(false, feed_name).await;
+                                } else if code == 406 {
+                                    // Connection-limit-exceeded actually
+                                    // proves the credentials work — Alpaca
+                                    // would only reject this if a prior
+                                    // session with the SAME creds had
+                                    // already authenticated.
+                                    self.record_alpaca_auth(true, feed_name).await;
+                                }
+                            }
+                            continue;
+                        }
+                        if kind == "success"
+                            && ev.get("msg").and_then(|v| v.as_str())
+                                == Some("authenticated")
+                        {
+                            self.record_alpaca_auth(true, feed_name).await;
                             continue;
                         }
                         if kind != "t" {
@@ -744,6 +807,25 @@ impl LiveTickStore {
                                 code = ?ev.get("code"),
                                 "alpaca crypto WS error frame"
                             );
+                            // Same code-class filter as the equities
+                            // worker — only true auth failures (401 /
+                            // 402 / 410) poison the cache. 406 implies
+                            // creds work (some other connection holds
+                            // the slot).
+                            if let Some(code) = ev.get("code").and_then(|v| v.as_i64()) {
+                                if matches!(code, 401 | 402 | 410) {
+                                    self.record_alpaca_auth(false, "crypto").await;
+                                } else if code == 406 {
+                                    self.record_alpaca_auth(true, "crypto").await;
+                                }
+                            }
+                            continue;
+                        }
+                        if kind == "success"
+                            && ev.get("msg").and_then(|v| v.as_str())
+                                == Some("authenticated")
+                        {
+                            self.record_alpaca_auth(true, "crypto").await;
                             continue;
                         }
                         if kind != "t" {

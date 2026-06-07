@@ -116,6 +116,21 @@ pub async fn profile2(symbol: &str) -> anyhow::Result<Value> {
 pub async fn metric_all(symbol: &str) -> anyhow::Result<Value> {
     get_json("/stock/metric", &[("symbol", symbol), ("metric", "all")]).await
 }
+/// Time series of short-interest snapshots between two settlement
+/// dates. Free-tier endpoint per Finnhub's docs / announcements.
+/// Returns `{ symbol, data: [{ settlementDate, shortInterest }, ...] }`
+/// — newest record first.
+pub async fn stock_short_interest(
+    symbol: &str,
+    from: &str,
+    to: &str,
+) -> anyhow::Result<Value> {
+    get_json(
+        "/stock/short-interest",
+        &[("symbol", symbol), ("from", from), ("to", to)],
+    )
+    .await
+}
 pub async fn recommendation(symbol: &str) -> anyhow::Result<Value> {
     get_json("/stock/recommendation", &[("symbol", symbol)]).await
 }

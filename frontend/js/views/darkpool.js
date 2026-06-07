@@ -175,7 +175,7 @@ async function renderSymbol(mount, sym) {
         <h1 class="view-title">// DARK POOL · ${esc(sym)}
             <a class="link small" href="#darkpool">← back</a>
         </h1>
-        <div id="dp-cards" class="cards"><span data-i18n="common.loading">loading…</span></div>
+        <div id="dp-cards" class="cards"><span class="tv-spinner-inline" role="status" aria-label="loading"></span></div>
         <div class="chart-panel"><h2 data-i18n="view.darkpool.h2.off_exchange_share">Off-exchange share %</h2><div id="dp-pct"></div></div>
         <div class="chart-panel"><h2 data-i18n="view.darkpool.h2.off_exchange_volume_shares">Off-exchange volume (shares)</h2><div id="dp-vol"></div></div>
         <div class="chart-panel"><h2 data-i18n="view.darkpool.h2.daily_breakdown">Daily breakdown</h2><div id="dp-table"></div></div>

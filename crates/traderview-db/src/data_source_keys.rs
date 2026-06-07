@@ -65,6 +65,35 @@ fn mask(v: Option<String>) -> Option<String> {
     v.map(|_| MASK.into())
 }
 
+/// Load the per-user data-source credentials WITHOUT masking. Used by
+/// the Settings → Data Sources "reveal" button so the user can read
+/// their own keys back. Single-user desktop app — no privilege check
+/// beyond the standard `AuthUser` extractor on the route.
+pub async fn get_unmasked(pool: &PgPool, user_id: Uuid) -> anyhow::Result<DataSourceKeysDto> {
+    sqlx::query("INSERT INTO user_settings (user_id) VALUES ($1) ON CONFLICT DO NOTHING")
+        .bind(user_id)
+        .execute(pool)
+        .await?;
+    let row: Row = sqlx::query_as(
+        "SELECT finnhub_api_key, alpaca_key_id, alpaca_secret_key, alpaca_paper,
+                polygon_api_key, databento_api_key, alpaca_use_sip_feed
+           FROM user_settings
+          WHERE user_id = $1",
+    )
+    .bind(user_id)
+    .fetch_one(pool)
+    .await?;
+    Ok(DataSourceKeysDto {
+        finnhub_api_key: row.finnhub_api_key,
+        alpaca_key_id: row.alpaca_key_id,
+        alpaca_secret_key: row.alpaca_secret_key,
+        alpaca_paper: row.alpaca_paper,
+        polygon_api_key: row.polygon_api_key,
+        databento_api_key: row.databento_api_key,
+        alpaca_use_sip_feed: row.alpaca_use_sip_feed,
+    })
+}
+
 /// Load the per-user data-source credentials with secret fields masked.
 pub async fn get(pool: &PgPool, user_id: Uuid) -> anyhow::Result<DataSourceKeysDto> {
     // Make sure a user_settings row exists; settings::get does this lazily

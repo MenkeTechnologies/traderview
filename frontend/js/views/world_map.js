@@ -97,7 +97,7 @@ export async function renderWorldMarkets(mount) {
         <div class="markets-panel">
             <div class="markets-header">
                 <h2 data-i18n="view.world_map.h2.world_markets">// WORLD MARKETS</h2>
-                <span class="market-status" id="market-status"><span data-i18n="common.loading">loading…</span></span>
+                <span class="market-status" id="market-status"><span class="tv-spinner-inline" role="status" aria-label="loading"></span></span>
             </div>
             <div class="world-map-wrap" id="world-map-wrap">
                 ${renderSvg([], '')}
