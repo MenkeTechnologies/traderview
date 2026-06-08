@@ -39422,5 +39422,6 @@
   "view.algo.doc.when_to_use": "Når du skal bruke:",
   "view.algo.hint.stdout_multi": "En rute per strategi + en global brannhose. Hver rute holder sin egen 200-linje buffer.",
   "view.algo.hint.no_algo_accounts": "Ingen kontoer på algo-støttede meglere. Støttet i dag: Alpaca. Gå til Innstillinger → Kontoer og legg til en Alpaca-konto, eller velg en strategi som bruker intern sim.",
-  "view.algo.hint.execution_safety": "Begge papirmodusene er null-risiko: i app sim fyller til sist kjent pris; Alpaca sandkasse er deres offisielle papirmiljø. Live trades bruker ekte penger og krever fullført 30-dagers papirlås."
+  "view.algo.hint.execution_safety": "Begge papirmodusene er null-risiko: i app sim fyller til sist kjent pris; Alpaca sandkasse er deres offisielle papirmiljø. Live trades bruker ekte penger og krever fullført 30-dagers papirlås.",
+  "view.algo.hint.broker_status": "Tilpasser status: alpaca wired; tradier stillased (nesten); ibkr / td / velsmakende trade stillased - strategi sparer og kjører, men bestillinger returnere integrasjon avhengig til per-broker adapter skip."
 }

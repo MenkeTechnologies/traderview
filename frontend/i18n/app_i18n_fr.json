@@ -39411,5 +39411,6 @@
   "view.algo.doc.when_to_use": "Quand utiliser:",
   "view.algo.hint.stdout_multi": "Une vitre par stratégie + un feu d'artifice global. Chaque panneau conserve son propre tampon de 200 lignes.",
   "view.algo.hint.no_algo_accounts": "Pas de comptes sur les courtiers soutenus par l'algo. Soutenu aujourd'hui : Alpaca. Allez dans Paramètres → Comptes et ajoutez un compte Alpaca, ou choisissez une stratégie qui utilise internal sim.",
-  "view.algo.hint.execution_safety": "Les deux modes de papier sont à risque zéro: in-app smills au dernier prix connu; Alpaca sandbox est leur environnement officiel de papier. Les métiers en direct utilisent de l'argent réel et nécessitent un papier-bloc de 30 jours."
+  "view.algo.hint.execution_safety": "Les deux modes de papier sont à risque zéro: in-app smills au dernier prix connu; Alpaca sandbox est leur environnement officiel de papier. Les métiers en direct utilisent de l'argent réel et nécessitent un papier-bloc de 30 jours.",
+  "view.algo.hint.broker_status": "Statut de l'adaptateur: alpaca câblé; tradier échafaudé (suivant); ibkr / td / savoureuse trade échafaudé — la stratégie sauve et fonctionne, mais commande retourne intégration en attente jusqu'à ce que l'adaptateur par courtier expédie."
 }

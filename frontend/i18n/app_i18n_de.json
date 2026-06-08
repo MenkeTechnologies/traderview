@@ -39419,5 +39419,6 @@
   "view.algo.doc.when_to_use": "Wann zu verwenden:",
   "view.algo.hint.stdout_multi": "Ein Bereich pro Strategie + ein globaler Firehose. Jede Scheibe behält ihren eigenen 200-Zeilen-Puffer.",
   "view.algo.hint.no_algo_accounts": "Keine Konten auf algo-unterstützten Brokern. Unterstützt heute: Alpaka. Gehen Sie zu Einstellungen → Konten und fügen Sie ein Alpaka-Konto hinzu, oder wählen Sie eine Strategie, die internal sim verwendet.",
-  "view.algo.hint.execution_safety": "Beide Papiermodi sind Null-Risiko: In-App-Sim füllt zum letzten bekannten Preis; Alpaka Sandbox ist ihre offizielle Papierumgebung. Live-Trades verwenden echtes Geld und erfordern eine 30-tägige Papiersperre."
+  "view.algo.hint.execution_safety": "Beide Papiermodi sind Null-Risiko: In-App-Sim füllt zum letzten bekannten Preis; Alpaka Sandbox ist ihre offizielle Papierumgebung. Live-Trades verwenden echtes Geld und erfordern eine 30-tägige Papiersperre.",
+  "view.algo.hint.broker_status": "Adapterstatus: alpaca wired; tradier scaffolded (next); ibkr / td / tastytrade scaffolded — Strategie speichert und läuft, aber Aufträge geben integration ausstehend zurück, bis der Per-Broker-Adapter ausgeliefert wird."
 }

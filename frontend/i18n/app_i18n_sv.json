@@ -39420,5 +39420,6 @@
   "view.algo.doc.when_to_use": "När du ska använda:",
   "view.algo.hint.stdout_multi": "En ruta per strategi + en global brandhos. Varje ruta håller sin egen 200-line buffert.",
   "view.algo.hint.no_algo_accounts": "Inga konton på algo-stödda mäklare. Stöd idag: Alpaca. Gå till Inställningar → Konton och lägg till ett Alpaca-konto eller välj en strategi som använder interna sim.",
-  "view.algo.hint.execution_safety": "Båda papperslägena är nollrisk: in-app sim fyller till sist kända pris; Alpaca sandbox är deras officiella pappersmiljö. Levande affärer använder riktiga pengar och kräver slutförd 30-dagars papperslås."
+  "view.algo.hint.execution_safety": "Båda papperslägena är nollrisk: in-app sim fyller till sist kända pris; Alpaca sandbox är deras officiella pappersmiljö. Levande affärer använder riktiga pengar och kräver slutförd 30-dagars papperslås.",
+  "view.algo.hint.broker_status": "Adapter status: alpaca trådbunden; tradier ställningar (nästa); ibkr / td / tastytrade ställningar - strategi sparar och körs, men order returnerar integration pending tills per-mäklare adapter fartyg."
 }

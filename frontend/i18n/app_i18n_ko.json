@@ -39407,5 +39407,6 @@
   "view.algo.doc.when_to_use": "사용시:",
   "view.algo.hint.stdout_multi": "전략 당 하나의 팬 + 글로벌 firehose. 각 pane는 그것의 자신의 200 선 완충기를 지킵니다.",
   "view.algo.hint.no_algo_accounts": "지원 브로커에 계정이 없습니다. 오늘 지원: Alpaca. 설정 → 계정으로 이동하고 Alpaca 계정을 추가하거나 internal sim을 사용하는 전략을 선택하십시오.",
-  "view.algo.hint.execution_safety": "두 개의 종이 모드는 0-risk입니다 : 마지막 알려진 가격에 인앱 sim 채우기; Alpaca sandbox는 공식 용지 환경입니다. 실시간 거래는 실제 돈을 사용하며 30일 종이 잠금을 완료해야 합니다."
+  "view.algo.hint.execution_safety": "두 개의 종이 모드는 0-risk입니다 : 마지막 알려진 가격에 인앱 sim 채우기; Alpaca sandbox는 공식 용지 환경입니다. 실시간 거래는 실제 돈을 사용하며 30일 종이 잠금을 완료해야 합니다.",
+  "view.algo.hint.broker_status": "어댑터 상태: alpaca 유선; tradier 비계 (다음); ibkr / td / delicioustrade 비계 - 전략 저장 및 실행, 하지만 주문 반환 integration pending 때까지 per-broker 어댑터 배."
 }

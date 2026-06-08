@@ -39379,5 +39379,6 @@
   "view.algo.hint.stdout_multi": "Un geam pe strategie + un firehose global. Fiecare geam îşi păstrează tamponul de 200 de linii.",
   "view.algo.hint.no_algo_accounts": "Nu există conturi pe brokeri algo-suportate. Susţinut astăzi: Alpaca. Du-te la Setări → Conturi și adaugă un cont Alpaca, sau alege o strategie care utilizează intern sim.",
   "view.algo.opt.broker_live": "LIVE ",
-  "view.algo.hint.execution_safety": "Ambele moduri de hârtie sunt zero-risc: în-app sim umple la ultimul preț cunoscut; Alpaca sandbox este mediul lor oficial de hârtie. Schimburile live folosesc bani reali şi necesită 30 de zile de închidere."
+  "view.algo.hint.execution_safety": "Ambele moduri de hârtie sunt zero-risc: în-app sim umple la ultimul preț cunoscut; Alpaca sandbox este mediul lor oficial de hârtie. Schimburile live folosesc bani reali şi necesită 30 de zile de închidere.",
+  "view.algo.hint.broker_status": "Starea adaptorului: fir de alpaca; schelă de tramvai (următoarea); ibkr / td / schelat degustat / strategie salvează și rulează, dar comenzile se întorc integrare pending până la navele adaptor per-broker."
 }

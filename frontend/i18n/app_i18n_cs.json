@@ -39418,5 +39418,6 @@
   "view.algo.doc.when_to_use": "Kdy k použití:",
   "view.algo.hint.stdout_multi": "Jedna tabule na strategii + globální požární hadice. Každá tabule má svůj vlastní 200- line buffer.",
   "view.algo.hint.no_algo_accounts": "Žádné účty na algopodporovaných makléřů. Podporováno dnes: Alpaca. Přejděte na Nastavení → Účty a přidejte účet Alpaca, nebo vyberte strategii, která používá interní _ sim.",
-  "view.algo.hint.execution_safety": "Oba druhy papíru jsou nula-riziko: in- app sim vyplní za poslední známou cenu; Alpaca pískoviště je jejich oficiální papírové prostředí. Živé obchody využívají skutečné peníze a vyžadují vyplněný 30denní papírový zámek."
+  "view.algo.hint.execution_safety": "Oba druhy papíru jsou nula-riziko: in- app sim vyplní za poslední známou cenu; Alpaca pískoviště je jejich oficiální papírové prostředí. Živé obchody využívají skutečné peníze a vyžadují vyplněný 30denní papírový zámek.",
+  "view.algo.hint.broker_status": "Status adaptéru: alpaca drát; tradier lešení (další); ibkr / td / tastytrade lešení - strategie šetří a běží, ale objednávky vrátí integrace _ do doby, než per- broker adaptér lodě."
 }

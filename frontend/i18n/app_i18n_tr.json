@@ -39414,5 +39414,6 @@
   "view.algo.doc.when_to_use": "Ne zaman kullanılır:",
   "view.algo.hint.stdout_multi": "Stratejide bir pane + küresel bir yangınhose. Her pane kendi 200-line tamponunu tutar.",
   "view.algo.hint.no_algo_accounts": "Algo-supported brokerler hakkında hiçbir hesap yok. Bugün Desteklendi: Alpaca. Ayarlara gidin → Hesaplar ve bir Alpaca hesabı ekleyin veya iç sim kullanan bir strateji seçin.",
-  "view.algo.hint.execution_safety": "Her iki kağıt modları sıfır risktir: son bilinen fiyatta sim dolgular; Alpaca sandbox resmi kağıt ortamıdır. Canlı ticaretler gerçek para kullanıyor ve 30 günlük kağıt kilidi tamamlamalı."
+  "view.algo.hint.execution_safety": "Her iki kağıt modları sıfır risktir: son bilinen fiyatta sim dolgular; Alpaca sandbox resmi kağıt ortamıdır. Canlı ticaretler gerçek para kullanıyor ve 30 günlük kağıt kilidi tamamlamalı.",
+  "view.algo.hint.broker_status": "Adaptasyon durumu: alpaka teld; tradier scaffolded (sonunda); ibkr / td / lezzetli ticaret şüphelisi — strateji kurtarılır ve çalışır, ancak siparişler geri entegrasyon pending until the per-broker adaptörüne kadar."
 }

@@ -39418,5 +39418,6 @@
   "view.algo.doc.when_to_use": "Kapan akan digunakan:",
   "view.algo.hint.stdout_multi": "Satu panel per strategi + sebuah firehose global. Setiap panel menyimpan buffer 200 baris sendiri.",
   "view.algo.hint.no_algo_accounts": "Tak ada akun pada broker yang didukung algo-. Didukung hari ini, Alpaca. Pergi ke Pengaturan Akuntansi dan tambahkan akun Alpaca, atau pilih strategi yang menggunakan internal _ sim.",
-  "view.algo.hint.execution_safety": "Kedua mode kertas adalah zero- risiko: in- app sim mengisi pada harga terakhir yang diketahui; Alpaca sandbox adalah lingkungan kertas resmi mereka. Perdagangan langsung menggunakan uang riil dan membutuhkan selesai kertas 30 hari - kunci."
+  "view.algo.hint.execution_safety": "Kedua mode kertas adalah zero- risiko: in- app sim mengisi pada harga terakhir yang diketahui; Alpaca sandbox adalah lingkungan kertas resmi mereka. Perdagangan langsung menggunakan uang riil dan membutuhkan selesai kertas 30 hari - kunci.",
+  "view.algo.hint.broker_status": "Status adapter: alpaca kabel; tradier scaffolded (next); icbkr / td / tastytrade scaffolded - strategi menyimpan dan berjalan, tetapi perintah kembali integrasi _ tertunda sampai kapal adaptor per- pialang."
 }

@@ -39417,5 +39417,6 @@
   "view.algo.doc.when_to_use": "Wanneer te gebruiken:",
   "view.algo.hint.stdout_multi": "Eén ruit per strategie + een wereldwijde brandslang. Elk paneel heeft zijn eigen 200-lijn buffer.",
   "view.algo.hint.no_algo_accounts": "Geen rekeningen over algo-ondersteunde makelaars. Vandaag ondersteund: Alpaca. Ga naar Instellingen → Accounts en voeg een Alpaca-account toe, of kies een strategie die intern sim gebruikt.",
-  "view.algo.hint.execution_safety": "Beide papieren modi zijn nulrisico: in-app sim vult op laatste bekende prijs; Alpaca sandbox is hun officiële papieren omgeving. Live trades gebruiken echt geld en vereisen voltooid 30 dagen papier-lock."
+  "view.algo.hint.execution_safety": "Beide papieren modi zijn nulrisico: in-app sim vult op laatste bekende prijs; Alpaca sandbox is hun officiële papieren omgeving. Live trades gebruiken echt geld en vereisen voltooid 30 dagen papier-lock.",
+  "view.algo.hint.broker_status": "Adapterstatus: alpaca bedraad; Tradier steigers (volgende); ibkr / td / smakelijktrade steigers strategie bespaart en loopt, maar orders terug integratie uitgaven tot de per-broker adapter schepen."
 }

@@ -39412,5 +39412,6 @@
   "view.algo.doc.when_to_use": "Mikor kell használni:",
   "view.algo.hint.stdout_multi": "Stratégiánként egy tábla + egy globális tűzoltó tömlő. Minden pane megtartja a saját 200 soros pufferét.",
   "view.algo.hint.no_algo_accounts": "Nincs könyvelés az algo- támogatott brókerekről. Támogatott ma, Alpaca. Ugrás a Beállítások → Fiók és adjunk hozzá egy Alpaca fiók, vagy válasszon egy stratégiát, amely a belső _ sim.",
-  "view.algo.hint.execution_safety": "Mindkét papír mód nulla-kockázat: in-app szimm kitöltések utolsó ismert áron; Alpaca sandbox a hivatalos papír környezet. Az élő kereskedelem valódi pénzt használ, és 30 napos papírzárolást igényel."
+  "view.algo.hint.execution_safety": "Mindkét papír mód nulla-kockázat: in-app szimm kitöltések utolsó ismert áron; Alpaca sandbox a hivatalos papír környezet. Az élő kereskedelem valódi pénzt használ, és 30 napos papírzárolást igényel.",
+  "view.algo.hint.broker_status": "Adapter státusz: alpaka vezetékes; tradicionális állványzat (következő); ibkr / td / tastytrade cafflolded - stratégia megtakarítás és fut, de megrendelések visszatérnek integráció _ függőben, amíg a perbróker adapter hajók."
 }

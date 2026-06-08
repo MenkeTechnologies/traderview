@@ -39154,5 +39154,20 @@
   "view.broker_compare.kpi.trade_count": "Commercio",
   "view.broker_compare.kpi.avg_hold": "Avg",
   "view.broker_compare.kpi.max_consec_losses": "Max Consec. perdite",
-  "view.dashboard.tv.perf_broker": "Prestazioni da broker"
+  "view.dashboard.tv.perf_broker": "Prestazioni da broker",
+  "view.algo.h2.docs": "Strategia",
+  "view.algo.hint.docs": "— regole complete per tutte le 13 strategie",
+  "view.algo.doc.entry": "Regole di entrata",
+  "view.algo.doc.exit": "Regole di uscita",
+  "view.algo.doc.params": "Parametri",
+  "view.algo.doc.scope_note": "Nota:",
+  "view.algo.doc.when_to_use": "Quando usare:",
+  "view.algo.hint.stdout_multi": "Un pannello per strategia + un focolare globale. Ogni pannello mantiene il proprio buffer da 200 linee.",
+  "view.algo.hint.no_algo_accounts": "Nessun account su broker algo-supportati. Supportato oggi: Alpaca. Vai a Impostazioni → Account e aggiungi un account Alpaca, o scegli una strategia che utilizza internal sim.",
+  "view.algo.opt.strat_connors_rsi2": "Connors RSI-2 + 200 SMA (mean-rev classic)",
+  "view.algo.opt.strat_order_block_sweep": "Blocco d'ordine + Liquidity Sweep (SMC)",
+  "view.algo.opt.strat_pead": "PEAD (post-earnings drift)",
+  "view.algo.opt.strat_pairs": "Coppie Trading (spread z-score)",
+  "view.algo.hint.execution_safety": "In-app sim riempie al prezzo ultimo conosciuto (zero-risk). La carta Broker utilizza la sandbox del broker. Live commercia denaro reale e richiede il deposito di carta di 30 giorni per scadere.",
+  "view.algo.hint.broker_status": "Stato dell'adattatore: alpaca cablato; tradier impalcato (next); ibkr / td / gustosotrade impalcato — strategia salva e corre, ma ordini di ritorno integrazione in attesa fino alle navi adattatore per-broker."
 }

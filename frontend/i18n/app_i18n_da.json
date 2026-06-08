@@ -39421,5 +39421,6 @@
   "view.algo.doc.when_to_use": "Hvornår skal du bruge:",
   "view.algo.hint.stdout_multi": "En rude pr. strategi + en global brandslange. Hver rude har sin egen 200-line buffer.",
   "view.algo.hint.no_algo_accounts": "Ingen konti på algostøttede mæglere. Støttet i dag: Alpaca. Gå til Indstillinger → Konti og tilføje en Alpaca-konto, eller vælg en strategi, der bruger intern _ sim.",
-  "view.algo.hint.execution_safety": "Begge papirmodes er zero-risiko: in-app sim fylder til sidst kendt pris; Alpaca sandkasse er deres officielle papir miljø. Levende handler bruger rigtige penge og kræver afsluttet 30-dages papirlås."
+  "view.algo.hint.execution_safety": "Begge papirmodes er zero-risiko: in-app sim fylder til sidst kendt pris; Alpaca sandkasse er deres officielle papir miljø. Levende handler bruger rigtige penge og kræver afsluttet 30-dages papirlås.",
+  "view.algo.hint.broker_status": "Adapter status: alpaca kappet; traditionelle stilladser (næste); ibkr / td / tastytrade stilladser - strategi sparer og kører, men ordrer vende tilbage integration _ venter indtil per- mægler adapter skibe."
 }

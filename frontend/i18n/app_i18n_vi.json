@@ -39380,5 +39380,6 @@
   "view.algo.doc.when_to_use": "Khi nào cần dùng:",
   "view.algo.hint.stdout_multi": "Một ô mỗi chiến lược + một hỏa hoạn toàn cầu. Mỗi ô có một bộ đệm 200 đường.",
   "view.algo.hint.no_algo_accounts": "Không có tài khoản về nhà môi giới hỗ trợ Algo. Được ủng hộ hôm nay: Alpaca. Tới thiết lập tài khoản  vội và thêm một tài khoản Alpaca, hoặc chọn một chiến lược dùng nội bộ sim.",
-  "view.algo.hint.execution_safety": "Cả hai chế độ giấy là không có rủi ro: mô phỏng nhập giá cuối cùng được biết đến; Alpaca cátbox là môi trường giấy chính thức của họ. Thương mại sống sử dụng tiền thực và yêu cầu hoàn thành 30 ngày khóa giấy."
+  "view.algo.hint.execution_safety": "Cả hai chế độ giấy là không có rủi ro: mô phỏng nhập giá cuối cùng được biết đến; Alpaca cátbox là môi trường giấy chính thức của họ. Thương mại sống sử dụng tiền thực và yêu cầu hoàn thành 30 ngày khóa giấy.",
+  "view.algo.hint.broker_status": "Trạng thái thích nghi: alpaca được nối dây; dàn giáo xe điện (xext); ibkr / td / gd / byttrade agrate — chiến lược tiết kiệm và chạy, nhưng mệnh lệnh trở về tích hợp  lại cho đến khi tàu thích nghi trên máy bay."
 }
