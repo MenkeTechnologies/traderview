@@ -512,6 +512,107 @@ fn engine_trips_on_consecutive_losses_cap() {
     });
 }
 
+/// Daily-loss cap — sum(algo_runs.pnl_realized) for runs since UTC
+/// midnight, when ≤ −cap, auto-pauses the strategy and surfaces
+/// EngineError::DailyLossCap. Seeds two losing runs this morning
+/// with combined P&L of -$650 against a $500 cap.
+#[test]
+fn engine_trips_on_daily_loss_cap() {
+    run(async {
+        let pool = pool();
+        let user = fresh_user_in(&pool).await;
+        let account_id = fresh_account_in(&pool, user).await;
+        let strategy = algo::create_strategy(
+            &pool,
+            user,
+            AlgoStrategyInput {
+                name: format!("daily-loss-cap-{}", Uuid::new_v4()),
+                enabled: true,
+                timeframe: "min1".into(),
+                universe_mode: "watchlist".into(),
+                watchlist_id: None,
+                autoscan_top_n: 25,
+                side_mode: "long".into(),
+                strategy_type: "momentum".into(),
+                account_id: Some(account_id),
+                entry_rules: serde_json::json!({}),
+                exit_rules: serde_json::json!({}),
+                sizing: serde_json::json!({"risk_pct_per_trade": 0.01, "max_pos_pct": 0.20}),
+                risk_gates: serde_json::json!({
+                    "max_concurrent_positions": 5,
+                    "max_daily_loss_usd": 500.0
+                }),
+                broker_mode: "internal_sim".into(),
+            },
+        )
+        .await
+        .expect("create");
+        let new_run = algo::start_run(&pool, strategy.id).await.expect("run");
+
+        // Seed two losing runs that started AFTER UTC midnight today.
+        // The runner sums them; together they're below the −$500 cap.
+        for (label, hours_back, pnl) in
+            [("morning-1", "6", "-300.00"), ("morning-2", "3", "-350.00")]
+        {
+            sqlx::query(
+                "INSERT INTO algo_runs
+                   (strategy_id, started_at, stopped_at, stopped_reason, pnl_realized)
+                 VALUES ($1,
+                         date_trunc('day', now() AT TIME ZONE 'UTC') + ($2 || ' hours')::interval,
+                         date_trunc('day', now() AT TIME ZONE 'UTC') + ($3 || ' hours')::interval,
+                         'user', $4::numeric)",
+            )
+            .bind(strategy.id)
+            .bind(hours_back)
+            .bind(format!("{}.5", hours_back))
+            .bind(pnl)
+            .execute(&pool)
+            .await
+            .unwrap_or_else(|e| panic!("seed run {label}: {e}"));
+        }
+
+        let bars = fresh_long_window("AAPL");
+        let sink = InMemorySink::default();
+        let mut hit = false;
+        for end in 30..=bars.len() {
+            match process_bar_window(
+                &pool,
+                &sink,
+                &strategy,
+                new_run.id,
+                &bars[..end],
+                100_000.0,
+                0,
+                None,
+            )
+            .await
+            {
+                Err(EngineError::DailyLossCap { .. }) => {
+                    hit = true;
+                    break;
+                }
+                Ok(_) => {}
+                Err(other) => panic!("unexpected error: {other:?}"),
+            }
+        }
+        assert!(hit, "daily loss cap should trip");
+
+        // Kill switch must auto-engage with a descriptive reason that
+        // mentions the breach.
+        let after = algo::get_strategy(&pool, user, strategy.id)
+            .await
+            .expect("get")
+            .expect("present");
+        assert!(after.kill_switch, "kill_switch must engage");
+        assert!(!after.enabled, "enabled must flip to false");
+        assert!(
+            after.kill_reason.as_deref().unwrap_or("").contains("daily loss"),
+            "kill_reason should mention 'daily loss', got {:?}",
+            after.kill_reason
+        );
+    });
+}
+
 /// Stress: a sink that errors out — engine must still persist the order
 /// row with status=rejected and a recorded error, then propagate.
 #[test]

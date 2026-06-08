@@ -545,17 +545,219 @@ mod tests {
         assert_eq!(res.summary.exits_by_stop, 0);
     }
 
+    /// Mock strategy that fires ONE entry on the bar matching
+    /// `entry_index` with caller-specified stop + take-profit prices,
+    /// then never fires again. Lets us pin the backtester's intra-bar
+    /// SL/TP resolution without hunting for the right synthetic
+    /// indicator window. evaluate_exit always returns None so exits
+    /// are driven purely by SL/TP/EOD.
+    struct MockSingleEntry {
+        entry_index: usize,
+        side: Side,
+        entry_price: f64,
+        stop_price: f64,
+        take_profit_price: f64,
+    }
+
+    impl crate::algo_strategies::Strategy for MockSingleEntry {
+        fn kind(&self) -> crate::algo_strategies::StrategyKind {
+            crate::algo_strategies::StrategyKind::Momentum
+        }
+        fn min_bars(&self) -> usize {
+            1
+        }
+        fn evaluate_entry(
+            &self,
+            bars: &[PriceBar],
+            _side_mode: SideMode,
+        ) -> Option<crate::algo_strategies::EntrySignal> {
+            if bars.len() != self.entry_index + 1 {
+                return None;
+            }
+            let stop_distance = (self.entry_price - self.stop_price).abs();
+            Some(crate::algo_strategies::EntrySignal {
+                side: self.side,
+                entry_price: self.entry_price,
+                stop_distance,
+                trigger_index: bars.len() - 1,
+                stop_price: self.stop_price,
+                take_profit_price: self.take_profit_price,
+                kind: "mock",
+                diagnostic: serde_json::json!({}),
+            })
+        }
+        fn evaluate_exit(
+            &self,
+            _bars: &[PriceBar],
+            _side: Side,
+            _anchor_high: f64,
+            _anchor_low: f64,
+        ) -> Option<crate::algo_strategies::ExitSignal> {
+            None
+        }
+    }
+
+    /// Build a bars window where bars 0..N are flat, then `trigger_index`
+    /// sets the entry price, then `post_bars` follow with the caller's
+    /// chosen high/low/close to drive the SL/TP/EOD resolver.
+    fn scripted_window(trigger_index: usize, post_bars: &[(f64, f64, f64)]) -> Vec<PriceBar> {
+        let mut bars = Vec::new();
+        for i in 0..=trigger_index {
+            bars.push(bar(
+                1_700_000_000 + i as i64 * 60,
+                "100.00",
+                "100.10",
+                "99.90",
+                "100.00",
+                1_000_000,
+            ));
+        }
+        for (j, (h, l, c)) in post_bars.iter().enumerate() {
+            bars.push(bar(
+                1_700_000_000 + (trigger_index + 1 + j) as i64 * 60,
+                &format!("{c:.2}"),
+                &format!("{h:.2}"),
+                &format!("{l:.2}"),
+                &format!("{c:.2}"),
+                1_000_000,
+            ));
+        }
+        bars
+    }
+
+    #[test]
+    fn stop_loss_hits_when_bar_low_pierces_stop() {
+        let strat = MockSingleEntry {
+            entry_index: 2,
+            side: Side::Buy,
+            entry_price: 100.0,
+            stop_price: 95.0,
+            take_profit_price: 110.0,
+        };
+        // Bar 3 = entry-fill bar (open=100). Bar 4 drops, low=94 < stop=95.
+        let bars = scripted_window(2, &[(100.5, 99.5, 100.0), (96.0, 94.0, 95.5)]);
+        let res = run(&bars, &strat, &Sizing::default(), BacktestConfig::default());
+        assert_eq!(res.summary.trades, 1);
+        let trade = &res.trades[0];
+        assert_eq!(trade.exit_reason, ExitReason::StopLoss);
+        assert!(
+            (trade.exit_price - 95.0).abs() < 1e-6,
+            "stop fills AT stop_price, got {}",
+            trade.exit_price
+        );
+        assert!(trade.pnl < 0.0, "stop hit must produce a loss");
+    }
+
+    #[test]
+    fn take_profit_hits_when_bar_high_pierces_target() {
+        let strat = MockSingleEntry {
+            entry_index: 2,
+            side: Side::Buy,
+            entry_price: 100.0,
+            stop_price: 95.0,
+            take_profit_price: 110.0,
+        };
+        let bars = scripted_window(2, &[(100.5, 99.5, 100.0), (112.0, 99.8, 111.0)]);
+        let res = run(&bars, &strat, &Sizing::default(), BacktestConfig::default());
+        assert_eq!(res.summary.trades, 1);
+        let trade = &res.trades[0];
+        assert_eq!(trade.exit_reason, ExitReason::TakeProfit);
+        assert!(
+            (trade.exit_price - 110.0).abs() < 1e-6,
+            "TP fills AT take_profit_price, got {}",
+            trade.exit_price
+        );
+        assert!(trade.pnl > 0.0);
+    }
+
+    #[test]
+    fn pessimistic_resolution_picks_stop_when_both_hit() {
+        // A bar whose RANGE covers both SL=95 and TP=110 — pessimistic
+        // rule says SL wins.
+        let strat = MockSingleEntry {
+            entry_index: 2,
+            side: Side::Buy,
+            entry_price: 100.0,
+            stop_price: 95.0,
+            take_profit_price: 110.0,
+        };
+        let bars = scripted_window(2, &[(100.5, 99.5, 100.0), (112.0, 94.0, 100.0)]);
+        let res = run(&bars, &strat, &Sizing::default(), BacktestConfig::default());
+        assert_eq!(res.summary.trades, 1);
+        let trade = &res.trades[0];
+        assert_eq!(
+            trade.exit_reason,
+            ExitReason::StopLoss,
+            "both-hit must pick stop (pessimistic)"
+        );
+        assert!(trade.pnl < 0.0);
+    }
+
+    #[test]
+    fn short_side_stop_loss_above_entry() {
+        let strat = MockSingleEntry {
+            entry_index: 2,
+            side: Side::Sell,
+            entry_price: 100.0,
+            stop_price: 105.0,
+            take_profit_price: 90.0,
+        };
+        // Bar 4 rallies — high=106 pierces stop=105.
+        let bars = scripted_window(2, &[(100.5, 99.5, 100.0), (106.0, 99.8, 105.5)]);
+        let res = run(&bars, &strat, &Sizing::default(), BacktestConfig::default());
+        assert_eq!(res.summary.trades, 1);
+        let trade = &res.trades[0];
+        assert_eq!(trade.exit_reason, ExitReason::StopLoss);
+        assert_eq!(trade.side, Side::Sell);
+        assert!(trade.pnl < 0.0);
+    }
+
+    #[test]
+    fn short_side_take_profit_below_entry() {
+        let strat = MockSingleEntry {
+            entry_index: 2,
+            side: Side::Sell,
+            entry_price: 100.0,
+            stop_price: 105.0,
+            take_profit_price: 90.0,
+        };
+        // Bar 4 drops — low=89 pierces TP=90.
+        let bars = scripted_window(2, &[(100.5, 99.5, 100.0), (100.5, 89.0, 91.0)]);
+        let res = run(&bars, &strat, &Sizing::default(), BacktestConfig::default());
+        assert_eq!(res.summary.trades, 1);
+        let trade = &res.trades[0];
+        assert_eq!(trade.exit_reason, ExitReason::TakeProfit);
+        assert_eq!(trade.side, Side::Sell);
+        assert!(trade.pnl > 0.0);
+    }
+
+    #[test]
+    fn open_position_closed_at_eod_with_last_close() {
+        // Neither SL nor TP hits — position must close at the last
+        // bar's close with ExitReason::EndOfData.
+        let strat = MockSingleEntry {
+            entry_index: 2,
+            side: Side::Buy,
+            entry_price: 100.0,
+            stop_price: 95.0,
+            take_profit_price: 110.0,
+        };
+        let bars = scripted_window(2, &[(100.5, 99.5, 100.0), (101.5, 99.0, 101.0)]);
+        let res = run(&bars, &strat, &Sizing::default(), BacktestConfig::default());
+        assert_eq!(res.summary.trades, 1);
+        let trade = &res.trades[0];
+        assert_eq!(trade.exit_reason, ExitReason::EndOfData);
+        assert!(
+            (trade.exit_price - 101.0).abs() < 1e-6,
+            "EOD exit at last close, got {}",
+            trade.exit_price
+        );
+    }
+
     #[test]
     fn stop_and_tp_resolved_pessimistically() {
-        // If a bar's range covers BOTH stop and TP, exit must be the
-        // stop-loss (worst case). Quick path: build a tiny synthetic
-        // by hand-feeding a fake open position via a 1-bar strategy
-        // that fires immediately. Easier path: use supertrend on a
-        // window that produces one trade, then verify the resolver in
-        // isolation (single-purpose unit on the matcher would be nice
-        // but the bar.high/low logic is inline). Skip — covered by the
-        // first test which exercises the full flow.
-        // Instead, verify the summary counters tally:
+        // Original counter-tally check — every trade has exactly one
+        // exit reason, so the histogram sums to trade count.
         let strat = from_kind("supertrend", &serde_json::json!({})).expect("strat");
         let bars = uptrend_window();
         let res = run(

@@ -364,4 +364,113 @@ mod tests {
             assert!(entry.entry_rules.get("atr_period").is_some());
         }
     }
+
+    #[test]
+    fn unknown_strategy_kind_surfaces_build_error() {
+        let bars = uptrend_window();
+        let mut grid = serde_json::Map::new();
+        grid.insert("anything".into(), serde_json::json!([1, 2]));
+        let res = run(
+            &bars,
+            "this_strategy_does_not_exist",
+            &serde_json::json!({}),
+            &grid,
+            &Sizing::default(),
+            BacktestConfig::default(),
+            OptimizeMetric::Sharpe,
+            5,
+        );
+        match res {
+            Err(OptimizeError::StrategyBuild(msg)) => {
+                assert!(
+                    msg.contains("this_strategy_does_not_exist"),
+                    "error should name the bad kind, got: {msg}"
+                );
+            }
+            other => panic!("expected StrategyBuild, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn metric_score_uses_correct_summary_field() {
+        // Build a synthetic AlgoBtResult and verify every metric pulls
+        // from the right summary field. No backtester run needed.
+        use crate::algo_backtest::{AlgoBtResult, AlgoBtSummary};
+        let summary = AlgoBtSummary {
+            trades: 10,
+            wins: 6,
+            losses: 4,
+            win_rate: 0.6,
+            avg_win: 50.0,
+            avg_loss: -25.0,
+            avg_r: 1.5,
+            profit_factor: 3.0,
+            total_return_pct: 25.0,
+            max_drawdown_pct: 8.0,
+            final_equity: 125_000.0,
+            sharpe: 1.7,
+            bars_in_market_pct: 30.0,
+            exits_by_stop: 4,
+            exits_by_tp: 5,
+            exits_by_signal: 1,
+            exits_by_eod: 0,
+        };
+        let result = AlgoBtResult {
+            strategy_kind: "synthetic",
+            trades: vec![],
+            equity: vec![],
+            summary,
+        };
+        assert!((OptimizeMetric::Sharpe.score(&result) - 1.7).abs() < 1e-9);
+        assert!((OptimizeMetric::TotalReturn.score(&result) - 25.0).abs() < 1e-9);
+        assert!((OptimizeMetric::ProfitFactor.score(&result) - 3.0).abs() < 1e-9);
+        assert!((OptimizeMetric::AvgR.score(&result) - 1.5).abs() < 1e-9);
+        // ReturnMinusDd = 25 − 8 = 17.
+        assert!((OptimizeMetric::ReturnMinusDd.score(&result) - 17.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn profit_factor_infinity_handled() {
+        // pf=inf occurs when there are wins and no losses. score() must
+        // coerce to 0.0 so the sort doesn't get poisoned by NaN/inf.
+        use crate::algo_backtest::{AlgoBtResult, AlgoBtSummary};
+        let mut summary = AlgoBtSummary {
+            trades: 5,
+            wins: 5,
+            losses: 0,
+            win_rate: 1.0,
+            avg_win: 50.0,
+            avg_loss: 0.0,
+            avg_r: 2.0,
+            profit_factor: f64::INFINITY,
+            total_return_pct: 30.0,
+            max_drawdown_pct: 0.0,
+            final_equity: 130_000.0,
+            sharpe: 2.5,
+            bars_in_market_pct: 15.0,
+            exits_by_stop: 0,
+            exits_by_tp: 5,
+            exits_by_signal: 0,
+            exits_by_eod: 0,
+        };
+        let r = AlgoBtResult {
+            strategy_kind: "synthetic",
+            trades: vec![],
+            equity: vec![],
+            summary: summary.clone(),
+        };
+        let s = OptimizeMetric::ProfitFactor.score(&r);
+        assert!(s.is_finite(), "pf=inf must coerce, got {s}");
+        assert_eq!(s, 0.0);
+
+        // pf=0 (no wins, has losses) returns 0.0 cleanly too.
+        summary.profit_factor = 0.0;
+        let r2 = AlgoBtResult {
+            strategy_kind: "synthetic",
+            trades: vec![],
+            equity: vec![],
+            summary,
+        };
+        assert_eq!(OptimizeMetric::ProfitFactor.score(&r2), 0.0);
+    }
 }
