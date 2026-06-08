@@ -212,11 +212,36 @@ async fn symbol_universe(pool: &PgPool, s: &AlgoStrategy) -> Result<Vec<String>,
             let Some(watchlist_id) = s.watchlist_id else {
                 return Ok(Vec::new());
             };
-            crate::watchlists::symbols(pool, watchlist_id).await
+            let syms = crate::watchlists::symbols(pool, watchlist_id).await?;
+            // Same side-effect as autoscan — make sure the live-tick
+            // worker is streaming this strategy's watchlist symbols.
+            // The boot-time push covers the union of ALL user
+            // watchlists, but if the user added symbols after boot the
+            // worker wouldn't pick them up until the next set_symbols
+            // call elsewhere. Explicit ensure here closes that gap.
+            let store = crate::live_ticks::global();
+            if store.has_any_provider().await {
+                if let Err(e) = store.ensure_subscribed(syms.clone()).await {
+                    tracing::warn!(error = %e, "ensure_subscribed for watchlist symbols");
+                }
+            }
+            Ok(syms)
         }
         "autoscan" => {
             let n = s.autoscan_top_n.max(1) as i64;
-            autoscan_topn(pool, n, parse_timeframe(&s.timeframe)).await
+            let picks = autoscan_topn(pool, n, parse_timeframe(&s.timeframe)).await?;
+            // Side-effect: make sure the live-tick worker is streaming
+            // every autoscan pick. Without this, autoscan picks from the
+            // historical cache but the WS only ever subscribed to the
+            // user's watchlist union — so SPY/MSFT/etc. never get fresh
+            // 1m bars, and the strategy sits in `no_bars` forever.
+            let store = crate::live_ticks::global();
+            if store.has_any_provider().await {
+                if let Err(e) = store.ensure_subscribed(picks.clone()).await {
+                    tracing::warn!(error = %e, "ensure_subscribed for autoscan picks");
+                }
+            }
+            Ok(picks)
         }
         _ => Ok(Vec::new()),
     }
@@ -260,43 +285,54 @@ pub async fn pead_eligible_symbols(
 /// strategies that want "whatever's hot today". The intraday tick
 /// worker keeps `price_bars` fresh, so this query reflects truly
 /// real-time activity rather than yesterday's close.
-/// Top-N symbols by recent volume, scoped to the strategy's bar
-/// timeframe. Picks symbols that actually have bars AT THE RESOLUTION
-/// the strategy will query, so the runner never produces a universe
-/// of symbols the engine can't analyse.
+/// Curated liquid universe — the 50 highest-volume US equities + ETFs
+/// that trade continuously during regular hours. Used as the autoscan
+/// pool so the strategy actually has tradeable symbols regardless of
+/// whether the user has a watchlist. The user's stated intent:
+/// "I want algo trading on whatever has momentum" — so this list is
+/// the candidate set, and the algo's evaluate_entry picks the
+/// momentum winners from inside it.
 ///
-/// Mapping (strategy timeframe → cache window we query):
-///   sec10 → 10s bars in the last 30 min
-///   min1  → 1m bars in the last 4 hours
-///   _     → 1d bars in the last 5 days (catch-all for higher TFs)
+/// Picked for: max liquidity (tight spreads, deep order books → low
+/// slippage on bracket fills), broad sector coverage (single-name
+/// tech + financials + industrials + healthcare + popular sector
+/// ETFs), and 24/5 crypto exposure via the spot ETFs.
+const AUTOSCAN_LIQUID_UNIVERSE: &[&str] = &[
+    // Mega-cap tech
+    "AAPL", "MSFT", "NVDA", "GOOGL", "META", "AMZN", "TSLA", "AMD", "AVGO", "ORCL",
+    "CRM", "ADBE", "CSCO", "INTC", "QCOM",
+    // Mega-cap non-tech
+    "BRK.B", "JPM", "V", "MA", "UNH", "JNJ", "WMT", "PG", "HD", "LLY",
+    "XOM", "CVX",
+    // Index + sector ETFs
+    "SPY", "QQQ", "IWM", "DIA", "VOO", "VTI", "XLK", "XLF", "XLE", "XLV",
+    "XLU", "XLY", "XLI", "XLP", "XLB", "ARKK", "SMH", "SOXL", "TQQQ", "TLT",
+    // Crypto exposure via spot ETFs (24/5 — fills the after-hours gap)
+    "IBIT", "FBTC", "ETHA",
+    // High-vol movers
+    "PLTR", "COIN", "GME",
+];
+
+/// Pull top-N from `AUTOSCAN_LIQUID_UNIVERSE`. The list is small enough
+/// (~50) that ordering it by anything would be cosmetic — we just take
+/// the first N. Caller wires the result to live_ticks so all picks
+/// start streaming; after the first minute the strategy has 1m bars
+/// for every one of them.
 ///
-/// Empty Vec means there's no cached data for this resolution — the
-/// runner converts that into ONE actionable SKIP rather than 25 per-
-/// symbol noise lines.
+/// `interval` is accepted but currently unused at this layer — kept
+/// in the signature so a future "pick from already-streaming-bars"
+/// optimisation can drop in without callers changing.
 pub async fn autoscan_topn(
-    pool: &PgPool,
+    _pool: &PgPool,
     top_n: i64,
-    interval: BarInterval,
+    _interval: BarInterval,
 ) -> Result<Vec<String>, anyhow::Error> {
-    let (interval_lit, window) = match interval {
-        BarInterval::S10 => ("10s", "30 minutes"),
-        BarInterval::M1 => ("1m", "4 hours"),
-        _ => ("1d", "5 days"),
-    };
-    let query = format!(
-        "SELECT symbol
-           FROM price_bars
-          WHERE interval = '{interval_lit}'::bar_interval_t
-            AND bar_time >= now() - INTERVAL '{window}'
-          GROUP BY symbol
-          ORDER BY SUM(volume) DESC
-          LIMIT $1"
-    );
-    let rows: Vec<(String,)> = sqlx::query_as(&query)
-        .bind(top_n)
-        .fetch_all(pool)
-        .await?;
-    Ok(rows.into_iter().map(|(s,)| s).collect())
+    let cap = top_n.max(1) as usize;
+    Ok(AUTOSCAN_LIQUID_UNIVERSE
+        .iter()
+        .take(cap)
+        .map(|s| (*s).to_string())
+        .collect())
 }
 
 async fn drive_strategy(
@@ -410,7 +446,7 @@ async fn drive_strategy(
         let head: Vec<_> = no_bars.iter().take(5).cloned().collect();
         let reason = if no_bars.len() > head.len() {
             format!(
-                "no_bars ({}/{} of universe): {} … and {} more — symbols have no recent {} bars (live tick worker not writing this resolution)",
+                "no_bars ({}/{} of universe): {} … and {} more — first {} window after autoscan; symbols were just subscribed to live tick worker, bars will fill in over the next minute or two",
                 no_bars.len(),
                 no_bars.len() + driven,
                 head.join(", "),
@@ -419,7 +455,7 @@ async fn drive_strategy(
             )
         } else {
             format!(
-                "no_bars ({}/{} of universe): {} — symbols have no recent {} bars (live tick worker not writing this resolution)",
+                "no_bars ({}/{} of universe): {} — first {} window after autoscan; symbols were just subscribed to live tick worker, bars will fill in over the next minute or two",
                 no_bars.len(),
                 no_bars.len() + driven,
                 head.join(", "),

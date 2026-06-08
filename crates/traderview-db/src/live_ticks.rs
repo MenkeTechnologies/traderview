@@ -371,6 +371,35 @@ impl LiveTickStore {
         self.state.iter().map(|e| e.value().clone()).collect()
     }
 
+    /// Union extra symbols into the existing subscription set without
+    /// dropping any current watchlist subscriptions. Workers restart
+    /// only when the set actually changes. Used by the algo runner so
+    /// autoscan picks start streaming alongside the user's watchlist
+    /// — otherwise autoscan picks SPY/MSFT/etc. but only watchlist
+    /// symbols are getting WS frames, and the strategy never sees
+    /// real-time 1m bars for them.
+    pub async fn ensure_subscribed(&self, symbols: Vec<String>) -> anyhow::Result<()> {
+        if symbols.is_empty() {
+            return Ok(());
+        }
+        let mut current = self.subs.lock().await;
+        let mut union: Vec<String> = current.clone();
+        union.extend(symbols);
+        union.sort();
+        union.dedup();
+        if *current == union {
+            return Ok(());
+        }
+        *current = union.clone();
+        drop(current);
+        for s in &union {
+            self.state
+                .entry(s.clone())
+                .or_insert_with(|| SymbolState::new(s, None));
+        }
+        self.spawn_workers(union).await
+    }
+
     /// Replace the subscription set. Restarts the WS connections if needed.
     pub async fn set_symbols(&self, symbols: Vec<String>) -> anyhow::Result<()> {
         let mut deduped: Vec<String> = symbols.into_iter().collect();
