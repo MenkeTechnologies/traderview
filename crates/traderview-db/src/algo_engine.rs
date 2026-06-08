@@ -237,14 +237,15 @@ impl EngineConfig {
 }
 
 /// Realized P&L for `strategy_id` since 00:00 UTC today, summed across
-/// every `trades` row whose `closed_at` falls in the window. Positive
-/// when winning, negative when losing.
+/// every `algo_runs` row whose `started_at` falls in the window. Each
+/// run carries its own `pnl_realized` ticker that the engine updates
+/// as fills land. Positive when winning, negative when losing.
 async fn today_realized_pnl(pool: &PgPool, strategy_id: Uuid) -> Result<Decimal, EngineError> {
     let row: Option<(Option<Decimal>,)> = sqlx::query_as(
-        "SELECT COALESCE(SUM(realized_pnl), 0)::numeric
-           FROM trades
+        "SELECT COALESCE(SUM(pnl_realized), 0)::numeric
+           FROM algo_runs
           WHERE strategy_id = $1
-            AND closed_at >= date_trunc('day', now() AT TIME ZONE 'UTC')",
+            AND started_at >= date_trunc('day', now() AT TIME ZONE 'UTC')",
     )
     .bind(strategy_id)
     .fetch_optional(pool)
@@ -253,14 +254,15 @@ async fn today_realized_pnl(pool: &PgPool, strategy_id: Uuid) -> Result<Decimal,
     Ok(row.and_then(|(v,)| v).unwrap_or_else(Decimal::zero))
 }
 
-/// Count of consecutive losing trades at the tail of the strategy's
-/// trade history. Stops counting at the first win (or breakeven trade
-/// with realized_pnl >= 0).
+/// Count of consecutive losing runs at the tail of the strategy's run
+/// history. Walks `algo_runs` newest-first; stops at the first run
+/// with pnl_realized >= 0. Only counts stopped runs (in-flight runs
+/// have no settled P&L yet).
 async fn consecutive_losses(pool: &PgPool, strategy_id: Uuid) -> Result<i64, EngineError> {
     let rows: Vec<(Decimal,)> = sqlx::query_as(
-        "SELECT realized_pnl FROM trades
-          WHERE strategy_id = $1 AND closed_at IS NOT NULL
-          ORDER BY closed_at DESC
+        "SELECT pnl_realized FROM algo_runs
+          WHERE strategy_id = $1 AND stopped_at IS NOT NULL
+          ORDER BY stopped_at DESC
           LIMIT 50",
     )
     .bind(strategy_id)
@@ -280,11 +282,13 @@ async fn consecutive_losses(pool: &PgPool, strategy_id: Uuid) -> Result<i64, Eng
 
 /// Auto-pause the strategy after a risk-gate breach. Sets enabled=FALSE
 /// AND kill_switch=TRUE with a descriptive reason so the UI can render
-/// the trip. Audit row is appended for the kill switch the same way a
-/// manual trip writes one.
+/// the trip. Audit row records the strategy's owning user as the actor
+/// (the engine acts on the user's behalf when a configured gate fires,
+/// same as a manual trip).
 async fn trip_kill_switch(
     pool: &PgPool,
     strategy_id: Uuid,
+    user_id: Uuid,
     reason: &str,
 ) -> Result<(), EngineError> {
     sqlx::query(
@@ -302,9 +306,10 @@ async fn trip_kill_switch(
     .map_err(|e| EngineError::Broker(format!("trip_kill: {e}")))?;
     sqlx::query(
         "INSERT INTO algo_kill_switch_audit (strategy_id, actor_user_id, action, reason)
-         VALUES ($1, NULL, 'engaged', $2)",
+         VALUES ($1, $2, 'engaged', $3)",
     )
     .bind(strategy_id)
+    .bind(user_id)
     .bind(reason)
     .execute(pool)
     .await
@@ -350,7 +355,7 @@ pub async fn process_bar_window(
             let reason = format!(
                 "auto-paused: daily loss cap ${cap} breached (today P&L: ${pnl})"
             );
-            trip_kill_switch(pool, strategy.id, &reason).await?;
+            trip_kill_switch(pool, strategy.id, strategy.user_id, &reason).await?;
             return Err(EngineError::DailyLossCap { cap, pnl });
         }
     }
@@ -361,7 +366,7 @@ pub async fn process_bar_window(
             let reason = format!(
                 "auto-paused: {streak} consecutive losses (cap {cap})"
             );
-            trip_kill_switch(pool, strategy.id, &reason).await?;
+            trip_kill_switch(pool, strategy.id, strategy.user_id, &reason).await?;
             return Err(EngineError::ConsecutiveLossesCap { cap, streak });
         }
     }
@@ -599,7 +604,7 @@ pub async fn process_bar_window_multi(
             let reason = format!(
                 "auto-paused: daily loss cap ${cap} breached (today P&L: ${pnl})"
             );
-            trip_kill_switch(pool, strategy.id, &reason).await?;
+            trip_kill_switch(pool, strategy.id, strategy.user_id, &reason).await?;
             return Err(EngineError::DailyLossCap { cap, pnl });
         }
     }
@@ -609,7 +614,7 @@ pub async fn process_bar_window_multi(
             let reason = format!(
                 "auto-paused: {streak} consecutive losses (cap {cap})"
             );
-            trip_kill_switch(pool, strategy.id, &reason).await?;
+            trip_kill_switch(pool, strategy.id, strategy.user_id, &reason).await?;
             return Err(EngineError::ConsecutiveLossesCap { cap, streak });
         }
     }

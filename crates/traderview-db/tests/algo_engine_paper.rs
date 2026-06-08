@@ -439,22 +439,22 @@ fn engine_trips_on_consecutive_losses_cap() {
         .expect("create");
         let run = algo::start_run(&pool, strategy.id).await.expect("run");
 
-        // Seed 3 losing trades for this strategy directly via SQL so we
-        // don't depend on the engine's roll-up running first.
-        for _ in 0..3 {
+        // Seed 3 losing runs for this strategy directly via SQL so the
+        // consecutive_losses walk has something to count without
+        // depending on the engine's fill roll-up running first.
+        for i in 0..3 {
             sqlx::query(
-                "INSERT INTO trades
-                   (user_id, account_id, symbol, side, qty, entry_price, exit_price,
-                    realized_pnl, opened_at, closed_at, strategy_id)
-                 VALUES ($1, $2, 'AAPL', 'long', 1, 100, 99, -1.00,
-                         now() - interval '1 hour', now() - interval '30 minutes', $3)",
+                "INSERT INTO algo_runs
+                   (strategy_id, started_at, stopped_at, stopped_reason, pnl_realized)
+                 VALUES ($1, now() - ($2 || ' hours')::interval,
+                         now() - ($3 || ' hours')::interval, 'user', -50.00)",
             )
-            .bind(user)
-            .bind(account_id)
             .bind(strategy.id)
+            .bind((10 - i).to_string())
+            .bind((9 - i).to_string())
             .execute(&pool)
             .await
-            .expect("seed trade");
+            .expect("seed run");
         }
 
         let bars = fresh_long_window("AAPL");
