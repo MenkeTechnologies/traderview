@@ -36,6 +36,51 @@ function flashRow(mount, strategyId) {
     setTimeout(() => { tr.style.backgroundColor = ''; }, 600);
 }
 
+// Bounded ring buffer for live stdout — keeps the last N events so a
+// long-running session doesn't grow the DOM unbounded. 500 events at
+// ~80 chars each ≈ 40KB of text, well inside what a <pre> renders fast.
+const STDOUT_MAX_LINES = 500;
+const stdoutBuffer = [];
+let stdoutNameMap = new Map(); // strategy_id → display name (filled on refresh)
+
+function fmtStdoutTs(d = new Date()) {
+    return d.toISOString().slice(11, 23); // HH:MM:SS.mmm
+}
+
+function appendStdout(mount, line) {
+    stdoutBuffer.push(line);
+    if (stdoutBuffer.length > STDOUT_MAX_LINES) stdoutBuffer.shift();
+    renderStdout(mount);
+}
+
+function renderStdout(mount) {
+    const pre = mount.querySelector('#algo-stdout');
+    if (!pre) return;
+    const filterEl = mount.querySelector('#algo-stdout-filter');
+    const autoEl = mount.querySelector('#algo-autoscroll');
+    const filter = (filterEl?.value || '').trim().toLowerCase();
+    const lines = filter
+        ? stdoutBuffer.filter(l => l.toLowerCase().includes(filter))
+        : stdoutBuffer;
+    pre.textContent = lines.join('\n');
+    if (autoEl?.checked) pre.scrollTop = pre.scrollHeight;
+}
+
+function strategyLabel(id) {
+    const name = stdoutNameMap.get(id);
+    return name ? `${name} (${id.slice(0, 8)})` : id.slice(0, 8);
+}
+
+function logSignal(mount, msg) {
+    appendStdout(mount, `${fmtStdoutTs()} [${strategyLabel(msg.strategy_id)}] SIGNAL ${msg.side.toUpperCase()} ${msg.symbol} @ ${Number(msg.entry_price).toFixed(2)} (${msg.kind})`);
+}
+function logOrder(mount, msg) {
+    appendStdout(mount, `${fmtStdoutTs()} [${strategyLabel(msg.strategy_id)}] ORDER ${msg.side.toUpperCase()} ${msg.symbol} qty=${msg.qty} broker=${msg.broker_order_id.slice(0, 12)}`);
+}
+function logFill(mount, msg) {
+    appendStdout(mount, `${fmtStdoutTs()} [${strategyLabel(msg.strategy_id)}] FILL ${msg.symbol} qty=${msg.qty} @ ${Number(msg.price).toFixed(4)}`);
+}
+
 function fmtDateTime(iso) {
     if (!iso) return '—';
     try { return new Date(iso).toLocaleString(); } catch (_) { return iso; }
@@ -116,6 +161,22 @@ export async function renderAlgo(mount) {
             </table>
         </div>
 
+        <div class="chart-panel" id="algo-stdout-panel">
+            <div class="row" style="justify-content:space-between;align-items:center">
+                <h2 data-i18n="view.algo.h2.stdout">Live stdout</h2>
+                <div class="row" style="gap:8px">
+                    <label class="row small" style="gap:4px;align-items:center">
+                        <input type="checkbox" id="algo-autoscroll" checked>
+                        <span data-i18n="view.algo.label.autoscroll">auto-scroll</span>
+                    </label>
+                    <input type="text" id="algo-stdout-filter" placeholder="filter by strategy id…"
+                           data-i18n-placeholder="view.algo.placeholder.stdout_filter" style="min-width:200px">
+                    <button id="algo-stdout-clear" class="link" data-i18n="view.algo.btn.clear">clear</button>
+                </div>
+            </div>
+            <pre id="algo-stdout" class="algo-stdout"></pre>
+        </div>
+
         <div id="algo-runs" class="chart-panel" style="display:none">
             <h2 data-i18n="view.algo.h2.runs">Recent runs</h2>
             <table class="trades" id="algo-runs-table">
@@ -156,20 +217,34 @@ export async function renderAlgo(mount) {
     `;
 
     mount.querySelector('#algo-new').addEventListener('click', () => openStrategyModal(mount));
+    mount.querySelector('#algo-stdout-clear').addEventListener('click', () => {
+        stdoutBuffer.length = 0;
+        renderStdout(mount);
+    });
+    mount.querySelector('#algo-stdout-filter').addEventListener('input', () => renderStdout(mount));
     await refreshStrategies(mount);
+    renderStdout(mount);
 
     // Tear down any prior subscriptions (view re-mount on tab switch)
     // before wiring fresh ones — duplicates would multiply the refresh
-    // calls per event.
+    // calls per event AND duplicate stdout lines.
     wsUnsubs.forEach(unsub => { try { unsub(); } catch (_) {} });
     wsUnsubs = [];
-    const flashAndRefresh = (msg) => {
+    wsUnsubs.push(onWsEvent('algo_signal_fired', (msg) => {
         flashRow(mount, msg.strategy_id);
+        logSignal(mount, msg);
         scheduleRefresh(mount);
-    };
-    wsUnsubs.push(onWsEvent('algo_signal_fired', flashAndRefresh));
-    wsUnsubs.push(onWsEvent('algo_order_submitted', flashAndRefresh));
-    wsUnsubs.push(onWsEvent('algo_fill_received', flashAndRefresh));
+    }));
+    wsUnsubs.push(onWsEvent('algo_order_submitted', (msg) => {
+        flashRow(mount, msg.strategy_id);
+        logOrder(mount, msg);
+        scheduleRefresh(mount);
+    }));
+    wsUnsubs.push(onWsEvent('algo_fill_received', (msg) => {
+        flashRow(mount, msg.strategy_id);
+        logFill(mount, msg);
+        scheduleRefresh(mount);
+    }));
 }
 
 async function refreshStrategies(mount) {
@@ -181,6 +256,9 @@ async function refreshStrategies(mount) {
         table.innerHTML = `<tr><td colspan="7" class="muted">${esc(t('view.algo.load_error'))}: ${esc(e.message || e)}</td></tr>`;
         return;
     }
+    // Keep the strategy_id → name map in sync so stdout shows readable
+    // labels instead of bare UUID prefixes.
+    stdoutNameMap = new Map(strategies.map(s => [s.id, s.name]));
     if (!strategies.length) {
         table.innerHTML = `<tr><td colspan="8" class="muted">${esc(t('view.algo.empty'))}</td></tr>`;
         return;

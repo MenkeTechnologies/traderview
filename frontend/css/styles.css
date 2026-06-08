@@ -305,6 +305,21 @@ body:not(.no-neon-glow) .chart-panel {
     padding-bottom: 6px; border-bottom: 1px solid var(--border);
 }
 
+/* Live algo trades/stdout log — fixed-height scrolling pre. The pre
+   gets autoscrolled on every event by the renderer; min/max height keeps
+   the panel from growing unbounded as events stream in. */
+.algo-stdout {
+    background: var(--bg-deep, #050810);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px; line-height: 1.5;
+    margin: 0;
+    padding: 8px 10px;
+    min-height: 180px; max-height: 420px;
+    overflow-y: auto; white-space: pre-wrap;
+}
+
 .panel-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
