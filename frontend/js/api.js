@@ -959,6 +959,11 @@ export const api = {
     listAlgoOrders: (runId, limit = 100) =>
         request(`/algo/runs/${runId}/orders?limit=${limit}`),
     listAlgoFills: (orderId) => request(`/algo/orders/${orderId}/fills`),
+    backtestAlgoStrategy: (id, body) =>
+        request(`/algo/strategies/${id}/backtest`, {
+            method: 'POST',
+            body: JSON.stringify(body || {}),
+        }),
 
     // Correlation matrix (pairwise Pearson on cached daily-bar log-returns)
     corrWatchlist: (wid, days = 90) =>

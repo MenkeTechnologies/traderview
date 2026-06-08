@@ -13396,6 +13396,7 @@
   "view.settings.test_schwab.fail": "Schwab failed: {{msg}}",
   "view.settings.test_schwab.toast_ok": "Schwab OK",
   "view.settings.test_schwab.toast_fail": "Schwab test failed: {{msg}}",
+  "view.algo.btn.backtest": "backtest",
   "view.market_status.status.open": "OPEN",
   "view.market_status.status.closed": "CLOSED",
   "view.market_status.card.status": "Status",

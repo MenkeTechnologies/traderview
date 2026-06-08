@@ -33,6 +33,7 @@ pub fn router() -> Router<AppState> {
         .route("/algo/strategies/:id/stop", post(stop_run))
         .route("/algo/runs/:id/orders", get(list_orders))
         .route("/algo/orders/:id/fills", get(list_fills))
+        .route("/algo/strategies/:id/backtest", post(post_backtest))
 }
 
 // ─── strategy CRUD ──────────────────────────────────────────────────────────
@@ -420,4 +421,107 @@ async fn list_fills(
             .await
             .map_err(ApiError::Internal)?,
     ))
+}
+
+#[derive(Debug, Deserialize)]
+struct BacktestBody {
+    /// Symbol to replay. Defaults to "SPY" so a quick `Backtest` button
+    /// without input still produces useful output for a watchlist-based
+    /// strategy whose entry_rules don't pin a symbol.
+    #[serde(default = "default_bt_symbol")]
+    symbol: String,
+    /// Bar interval — same enum used by the prices repo.
+    /// Accepted: "min1" | "min5" | "min15" | "min30" | "hour1" | "day1".
+    #[serde(default = "default_bt_interval")]
+    interval: String,
+    /// Days back from `now()` to backtest. Wins over (from, to) when both set.
+    #[serde(default = "default_bt_days_back")]
+    days_back: i64,
+    #[serde(default)]
+    from: Option<chrono::DateTime<chrono::Utc>>,
+    #[serde(default)]
+    to: Option<chrono::DateTime<chrono::Utc>>,
+    #[serde(default)]
+    initial_equity: Option<f64>,
+    #[serde(default)]
+    fee_per_trade: Option<f64>,
+    #[serde(default)]
+    slippage_bps: Option<f64>,
+}
+
+fn default_bt_symbol() -> String { "SPY".into() }
+fn default_bt_interval() -> String { "5m".into() }
+fn default_bt_days_back() -> i64 { 60 }
+
+/// Accept the algo-strategy timeframe labels ("min1" / "min5") AND the
+/// BarInterval serde renames ("1m" / "5m") so either the strategy's own
+/// timeframe field OR a user-typed interval works.
+fn normalize_interval(s: &str) -> String {
+    match s {
+        "min1" => "1m".into(),
+        "min5" => "5m".into(),
+        "min15" => "15m".into(),
+        "min30" => "15m".into(), // closest cached interval
+        "hour1" => "1h".into(),
+        "day1" => "1d".into(),
+        other => other.to_string(),
+    }
+}
+
+/// POST /algo/strategies/:id/backtest — pulls historical bars from the
+/// prices cache (Yahoo fetch on miss) and replays the strategy through
+/// `traderview_core::algo_backtest::run`. Returns trades, equity curve,
+/// and summary stats as JSON.
+async fn post_backtest(
+    State(s): State<AppState>,
+    u: AuthUser,
+    Path(id): Path<Uuid>,
+    Json(body): Json<BacktestBody>,
+) -> Result<Json<traderview_core::algo_backtest::AlgoBtResult>, ApiError> {
+    let strategy = traderview_db::algo::get_strategy(&s.pool, u.id, id)
+        .await
+        .map_err(ApiError::Internal)?
+        .ok_or_else(|| ApiError::BadRequest("strategy not found".into()))?;
+    // BarInterval has serde rename labels (10s, 1m, 5m, 15m, 1h, 1d, 1w)
+    // but no FromStr; deserialize through a JSON value so callers can use
+    // either the rename label or the variant name ("M5", "min5", etc.).
+    let interval: traderview_core::BarInterval = serde_json::from_value(
+        serde_json::Value::String(normalize_interval(&body.interval)),
+    )
+    .map_err(|e| ApiError::BadRequest(format!("interval: {e}")))?;
+    let to = body.to.unwrap_or_else(chrono::Utc::now);
+    let from = body
+        .from
+        .unwrap_or_else(|| to - chrono::Duration::days(body.days_back));
+    let bars = traderview_db::prices::get_bars(&s.pool, &body.symbol, interval, from, to)
+        .await
+        .map_err(ApiError::Internal)?;
+    if bars.len() < 30 {
+        return Err(ApiError::BadRequest(format!(
+            "only {} bars available for {} {:?} between {from} and {to} — need >=30",
+            bars.len(),
+            body.symbol,
+            body.interval
+        )));
+    }
+    let strat = traderview_core::algo_strategies::from_kind(
+        &strategy.strategy_type,
+        &strategy.entry_rules,
+    )
+    .map_err(|e| ApiError::BadRequest(format!("strategy_type: {e}")))?;
+    let sizing: traderview_core::algo_strategies::Sizing =
+        serde_json::from_value(strategy.sizing.clone()).unwrap_or_default();
+    let side_mode = match strategy.side_mode.as_str() {
+        "short" => traderview_core::algo_strategies::SideMode::Short,
+        "both" => traderview_core::algo_strategies::SideMode::Both,
+        _ => traderview_core::algo_strategies::SideMode::Long,
+    };
+    let cfg = traderview_core::algo_backtest::BacktestConfig {
+        initial_equity: body.initial_equity.unwrap_or(100_000.0),
+        fee_per_trade: body.fee_per_trade.unwrap_or(1.0),
+        slippage_bps: body.slippage_bps.unwrap_or(5.0),
+        side_mode,
+    };
+    let result = traderview_core::algo_backtest::run(&bars, strat.as_ref(), &sizing, cfg);
+    Ok(Json(result))
 }

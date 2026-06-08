@@ -741,6 +741,7 @@ async function refreshStrategies(mount) {
                 <button class="link" data-act="runs" data-i18n="view.algo.btn.runs">runs</button>
                 <button class="link" data-act="start" data-i18n="view.algo.btn.start">start</button>
                 <button class="link" data-act="stop" data-i18n="view.algo.btn.stop">stop</button>
+                <button class="link" data-act="backtest" data-i18n="view.algo.btn.backtest">backtest</button>
                 <button class="link" data-act="kill" data-i18n="view.algo.btn.kill">${s.kill_switch ? 'release' : 'kill'}</button>
                 <button class="link" data-act="edit" data-i18n="view.algo.btn.edit">edit</button>
                 <button class="link" data-act="del" data-i18n="view.algo.btn.delete">delete</button>
@@ -757,6 +758,7 @@ async function refreshStrategies(mount) {
             if (act === 'runs') return showRuns(mount, s);
             if (act === 'start') return startRun(mount, s);
             if (act === 'stop') return stopRun(mount, s);
+            if (act === 'backtest') return openBacktestModal(mount, s);
             if (act === 'kill') return toggleKill(mount, s);
             if (act === 'edit') return openStrategyModal(mount, s);
             if (act === 'del') return deleteStrategy(mount, s);
@@ -807,6 +809,124 @@ async function toggleKill(mount, s) {
         }
     }
     await refreshStrategies(mount);
+}
+
+function fmtUsd(n) {
+    if (!Number.isFinite(n)) return '—';
+    return (n < 0 ? '−$' : '$') + Math.abs(n).toLocaleString(undefined, { maximumFractionDigits: 2 });
+}
+
+function fmtPct(n) {
+    if (!Number.isFinite(n)) return '—';
+    return n.toFixed(2) + '%';
+}
+
+async function openBacktestModal(mount, s) {
+    const symbol = (s.entry_rules && s.entry_rules.symbol_a) || s.entry_rules?.symbol || 'SPY';
+    const interval = s.timeframe || '5m';
+    const wrap = document.createElement('div');
+    wrap.className = 'modal';
+    wrap.innerHTML = `
+        <div class="modal-inner" style="max-width:920px">
+            <h2>Backtest: ${esc(s.name)}</h2>
+            <p class="muted small">Replays this strategy through cached historical bars using the same Sizing config the live engine would. Fills land at the next bar's open + slippage; SL/TP intra-bar resolution is pessimistic (SL wins ties).</p>
+            <form id="bt-form" class="algo-form">
+                <label>Symbol
+                    <input name="symbol" value="${esc(symbol)}" required>
+                </label>
+                <label>Interval
+                    <select name="interval">
+                        <option value="1m" ${interval === '1m' || interval === 'min1' ? 'selected' : ''}>1m</option>
+                        <option value="5m" ${interval === '5m' || interval === 'min5' ? 'selected' : ''}>5m</option>
+                        <option value="15m" ${interval === '15m' || interval === 'min15' ? 'selected' : ''}>15m</option>
+                        <option value="1h" ${interval === '1h' || interval === 'hour1' ? 'selected' : ''}>1h</option>
+                        <option value="1d" ${interval === '1d' || interval === 'day1' ? 'selected' : ''}>1d</option>
+                    </select>
+                </label>
+                <label>Days back
+                    <input name="days_back" type="number" value="60" min="5" max="730" step="1">
+                </label>
+                <label>Initial equity
+                    <input name="initial_equity" type="number" value="100000" min="100" step="100">
+                </label>
+                <label>Fee / trade
+                    <input name="fee_per_trade" type="number" value="1" min="0" step="0.1">
+                </label>
+                <label>Slippage (bps)
+                    <input name="slippage_bps" type="number" value="5" min="0" step="0.5">
+                </label>
+                <div class="row" style="gap:8px;margin-top:8px">
+                    <button type="submit" class="primary">Run backtest</button>
+                    <button type="button" id="bt-close">Close</button>
+                </div>
+            </form>
+            <div id="bt-results" style="margin-top:12px"></div>
+        </div>`;
+    document.body.appendChild(wrap);
+    const close = () => wrap.remove();
+    wrap.querySelector('#bt-close').addEventListener('click', close);
+    wrap.addEventListener('click', e => { if (e.target === wrap) close(); });
+
+    wrap.querySelector('#bt-form').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const fd = new FormData(ev.target);
+        const body = {
+            symbol: fd.get('symbol'),
+            interval: fd.get('interval'),
+            days_back: Number(fd.get('days_back')),
+            initial_equity: Number(fd.get('initial_equity')),
+            fee_per_trade: Number(fd.get('fee_per_trade')),
+            slippage_bps: Number(fd.get('slippage_bps')),
+        };
+        const out = wrap.querySelector('#bt-results');
+        out.innerHTML = '<p class="muted">Running backtest …</p>';
+        try {
+            const r = await api.backtestAlgoStrategy(s.id, body);
+            renderBacktestResult(out, r);
+        } catch (e) {
+            out.innerHTML = `<p class="error">Backtest failed: ${esc(e.message || String(e))}</p>`;
+        }
+    });
+}
+
+function renderBacktestResult(host, r) {
+    const sm = r.summary;
+    const finalRow = (() => {
+        if (!r.equity || !r.equity.length) return '—';
+        return fmtUsd(sm.final_equity);
+    })();
+    const trades = r.trades.slice(-30).reverse();
+    host.innerHTML = `
+        <div class="row" style="gap:24px;flex-wrap:wrap;margin-bottom:12px">
+            <div><strong>Trades:</strong> ${sm.trades}</div>
+            <div><strong>Win rate:</strong> ${fmtPct(sm.win_rate * 100)}</div>
+            <div><strong>Profit factor:</strong> ${Number.isFinite(sm.profit_factor) ? sm.profit_factor.toFixed(2) : '∞'}</div>
+            <div><strong>Total return:</strong> ${fmtPct(sm.total_return_pct)}</div>
+            <div><strong>Max DD:</strong> ${fmtPct(sm.max_drawdown_pct)}</div>
+            <div><strong>Avg R:</strong> ${sm.avg_r.toFixed(2)}</div>
+            <div><strong>Sharpe (bar):</strong> ${sm.sharpe.toFixed(3)}</div>
+            <div><strong>Final equity:</strong> ${finalRow}</div>
+            <div><strong>Exits:</strong> SL ${sm.exits_by_stop} / TP ${sm.exits_by_tp} / Sig ${sm.exits_by_signal} / EOD ${sm.exits_by_eod}</div>
+        </div>
+        <details ${trades.length ? 'open' : ''}>
+            <summary>Last ${trades.length} trades</summary>
+            <table class="trades" style="margin-top:8px">
+                <thead><tr><th>Entry</th><th>Side</th><th>Qty</th><th>Entry $</th><th>Exit $</th><th>PnL</th><th>R</th><th>Bars</th><th>Reason</th></tr></thead>
+                <tbody>${trades.map(t => `
+                    <tr>
+                        <td>${esc(t.entry_time.replace('T', ' ').slice(0, 16))}</td>
+                        <td>${t.side === 'Buy' ? 'long' : 'short'}</td>
+                        <td>${t.qty}</td>
+                        <td>${t.entry_price.toFixed(2)}</td>
+                        <td>${t.exit_price.toFixed(2)}</td>
+                        <td style="color:${t.pnl >= 0 ? '#39ff14' : '#ff5a5a'}">${fmtUsd(t.pnl)}</td>
+                        <td>${t.r_multiple.toFixed(2)}</td>
+                        <td>${t.bars_held}</td>
+                        <td>${esc(t.exit_reason)}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+        </details>`;
 }
 
 async function deleteStrategy(mount, s) {
