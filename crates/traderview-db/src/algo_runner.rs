@@ -63,7 +63,15 @@ pub async fn tick(pool: &PgPool, now: DateTime<Utc>, event_sink: Option<&EventSi
                     "no_watchlist_id — pick a watchlist on the strategy".to_string()
                 }
                 "watchlist" => format!("watchlist {} has no symbols", s.watchlist_id.unwrap()),
-                "autoscan" => "autoscan returned 0 symbols".to_string(),
+                "autoscan" => {
+                    // The cascade in `autoscan_topn` already checked
+                    // 10s → 1m → 1d. Empty here means price_bars has
+                    // nothing for ANY interval, which almost always
+                    // means the live-tick worker isn't writing —
+                    // surface the actionable cause instead of the
+                    // bare "0 symbols" symptom.
+                    "autoscan empty: price_bars has no recent rows (live_ticks worker not writing — check Settings → Data sources for a configured Finnhub/Alpaca/Polygon key, and confirm watchlist symbols are valid equities)".to_string()
+                }
                 other => format!("unknown universe_mode={other}"),
             };
             tracing::info!(strategy = %s.id, name = %s.name, reason = %reason, "algo_runner skip");
@@ -251,20 +259,45 @@ pub async fn pead_eligible_symbols(
 /// strategies that want "whatever's hot today". The intraday tick
 /// worker keeps `price_bars` fresh, so this query reflects truly
 /// real-time activity rather than yesterday's close.
+/// Top-N symbols by recent volume. Cascades through bar resolutions
+/// so the algo runner stays alive even when the live-ticks worker
+/// isn't writing 10s buckets (e.g. crypto-WS auth errors, no API key,
+/// market closed yet the user still wants to backfill on cached
+/// daily data):
+///
+///   1. 10s bars in the last 30 min — preferred, real-time path.
+///   2. 1m bars in the last 4 hours.
+///   3. 1d bars in the last 5 trading days (closed-market / stale-feed
+///      fallback so an autoscan strategy still gets a universe and
+///      the runner emits BarEvaluated heartbeats instead of skipping).
+///
+/// Returns the first non-empty result. An empty Vec means the user
+/// has no cached price data at all — the runner converts that into
+/// a clearly-actionable SKIP so the user sees the cause.
 pub async fn autoscan_topn(pool: &PgPool, top_n: i64) -> Result<Vec<String>, anyhow::Error> {
-    let rows: Vec<(String,)> = sqlx::query_as(
-        "SELECT symbol
-           FROM price_bars
-          WHERE interval = '10s'::bar_interval_t
-            AND bar_time >= now() - INTERVAL '30 minutes'
-          GROUP BY symbol
-          ORDER BY SUM(volume) DESC
-          LIMIT $1",
-    )
-    .bind(top_n)
-    .fetch_all(pool)
-    .await?;
-    Ok(rows.into_iter().map(|(s,)| s).collect())
+    for (interval_lit, window) in [
+        ("10s", "30 minutes"),
+        ("1m", "4 hours"),
+        ("1d", "5 days"),
+    ] {
+        let query = format!(
+            "SELECT symbol
+               FROM price_bars
+              WHERE interval = '{interval_lit}'::bar_interval_t
+                AND bar_time >= now() - INTERVAL '{window}'
+              GROUP BY symbol
+              ORDER BY SUM(volume) DESC
+              LIMIT $1"
+        );
+        let rows: Vec<(String,)> = sqlx::query_as(&query)
+            .bind(top_n)
+            .fetch_all(pool)
+            .await?;
+        if !rows.is_empty() {
+            return Ok(rows.into_iter().map(|(s,)| s).collect());
+        }
+    }
+    Ok(Vec::new())
 }
 
 async fn drive_strategy(

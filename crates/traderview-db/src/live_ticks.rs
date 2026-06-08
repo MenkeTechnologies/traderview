@@ -54,11 +54,48 @@ const CRYPTO_PREFIXES: &[&str] = &[
 
 fn is_crypto_symbol(sym: &str) -> bool {
     let upper = sym.to_uppercase();
+    // BARE ticker (no quote currency) like "BTC" / "ETH" / "SOL" —
+    // user-entered shorthand. Route to crypto WS as <ticker>/USD.
+    if !upper.ends_with("USD") && CRYPTO_PREFIXES.contains(&upper.as_str()) {
+        return true;
+    }
     if !upper.ends_with("USD") {
         return false;
     }
     let prefix = &upper[..upper.len() - 3];
     CRYPTO_PREFIXES.contains(&prefix)
+}
+
+/// Convert a user-entered crypto symbol to the Alpaca v1beta3 crypto
+/// WebSocket's required `BASE/QUOTE` format. Subscribing with the
+/// wrong format triggers a server-side rejection ("invalid syntax",
+/// code 400) and zero trades flow.
+///
+///   "BTC"     → "BTC/USD"
+///   "BTCUSD"  → "BTC/USD"
+///   "ETH/USD" → "ETH/USD"   (already normalised)
+fn to_alpaca_crypto_symbol(sym: &str) -> String {
+    let upper = sym.to_uppercase();
+    if upper.contains('/') {
+        return upper;
+    }
+    if upper.ends_with("USD") && upper.len() > 3 {
+        let base = &upper[..upper.len() - 3];
+        return format!("{base}/USD");
+    }
+    format!("{upper}/USD")
+}
+
+/// Inverse of `to_alpaca_crypto_symbol` — used on the receive side.
+/// Alpaca trade events arrive tagged `S=BTC/USD` but the in-memory
+/// `state` DashMap is keyed by the user's original input (`BTC` /
+/// `BTCUSD`). Strip the slash so the lookup succeeds.
+///
+///   "BTC/USD" → "BTCUSD"
+///   "ETH/USD" → "ETHUSD"
+///   "BTCUSD"  → "BTCUSD"  (already de-normalised)
+fn from_alpaca_crypto_symbol(sym: &str) -> String {
+    sym.replace('/', "")
 }
 const MAX_SYMS_PER_CONN: usize = 25;
 /// Polygon's WS can fan a single connection across thousands of
@@ -773,10 +810,16 @@ impl LiveTickStore {
         })
         .to_string();
         tx.send(WsMessage::Text(auth)).await?;
-        if !symbols.is_empty() {
+        // Alpaca's v1beta3 crypto WS rejects non-`BASE/QUOTE` formats
+        // ("invalid syntax", code 400). Normalize every symbol before
+        // subscribing so user shorthand ("BTC", "BTCUSD") and already-
+        // normalized values ("ETH/USD") all reach the wire as the
+        // server-expected `BASE/QUOTE` form.
+        let normalized: Vec<String> = symbols.iter().map(|s| to_alpaca_crypto_symbol(s)).collect();
+        if !normalized.is_empty() {
             let sub = serde_json::json!({
                 "action": "subscribe",
-                "trades": symbols,
+                "trades": normalized,
             })
             .to_string();
             tx.send(WsMessage::Text(sub)).await?;
@@ -834,13 +877,20 @@ impl LiveTickStore {
                         if sym.is_empty() || price <= 0.0 || ts_ms <= 0 {
                             continue;
                         }
+                        // Alpaca tags the event with "BTC/USD"; the in-
+                        // memory state map is keyed by user input
+                        // ("BTCUSD" / "BTC"). Strip the slash so the
+                        // lookup succeeds. If the user added both
+                        // "BTC" and "BTCUSD" we just hit the "BTCUSD"
+                        // entry — close enough.
+                        let key = from_alpaca_crypto_symbol(sym);
                         let trade = Trade {
-                            symbol: sym.to_string(),
+                            symbol: key.clone(),
                             price,
                             volume: size,
                             ts_ms,
                         };
-                        if let Some(mut state) = self.state.get_mut(&trade.symbol) {
+                        if let Some(mut state) = self.state.get_mut(&key) {
                             state.observe(&trade);
                             let snap = state.clone();
                             drop(state);
@@ -1021,4 +1071,63 @@ struct RawTrade {
 pub fn global() -> LiveTickStore {
     static STORE: once_cell::sync::OnceCell<LiveTickStore> = once_cell::sync::OnceCell::new();
     STORE.get_or_init(LiveTickStore::new).clone()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn crypto_classifier_recognises_bare_tickers() {
+        assert!(is_crypto_symbol("BTC"), "bare BTC should route to crypto");
+        assert!(is_crypto_symbol("ETH"), "bare ETH should route to crypto");
+        assert!(is_crypto_symbol("BTCUSD"));
+        assert!(is_crypto_symbol("ETHUSD"));
+        assert!(!is_crypto_symbol("AAPL"));
+        assert!(!is_crypto_symbol("SPY"));
+        // FOOUSD: USD-ending but unknown prefix → equity (not crypto).
+        assert!(!is_crypto_symbol("FOOUSD"));
+    }
+
+    #[test]
+    fn to_alpaca_crypto_symbol_normalises_all_input_shapes() {
+        assert_eq!(to_alpaca_crypto_symbol("BTC"), "BTC/USD");
+        assert_eq!(to_alpaca_crypto_symbol("btc"), "BTC/USD");
+        assert_eq!(to_alpaca_crypto_symbol("BTCUSD"), "BTC/USD");
+        assert_eq!(to_alpaca_crypto_symbol("ETHUSD"), "ETH/USD");
+        // Already normalised — pass through (uppercased).
+        assert_eq!(to_alpaca_crypto_symbol("ETH/USD"), "ETH/USD");
+        assert_eq!(to_alpaca_crypto_symbol("eth/usd"), "ETH/USD");
+        // 3-letter ticker that isn't USD — treat as bare crypto.
+        assert_eq!(to_alpaca_crypto_symbol("SOL"), "SOL/USD");
+    }
+
+    #[test]
+    fn from_alpaca_crypto_symbol_strips_slash() {
+        assert_eq!(from_alpaca_crypto_symbol("BTC/USD"), "BTCUSD");
+        assert_eq!(from_alpaca_crypto_symbol("ETH/USD"), "ETHUSD");
+        // Already de-slashed — round-trips cleanly.
+        assert_eq!(from_alpaca_crypto_symbol("BTCUSD"), "BTCUSD");
+    }
+
+    #[test]
+    fn normalize_round_trip_is_idempotent() {
+        // user input → Alpaca subscribe → server echoes → state key
+        // must match what the user typed (or a stable canonical).
+        for input in ["BTC", "BTCUSD", "ETH/USD", "eth", "DOGE"] {
+            let alpaca = to_alpaca_crypto_symbol(input);
+            assert!(alpaca.contains('/'), "Alpaca form must have slash: {alpaca}");
+            let back = from_alpaca_crypto_symbol(&alpaca);
+            assert!(!back.contains('/'), "state key must have NO slash: {back}");
+            // Round-trip preserves the BASE+USD body.
+            let normalised_input = if input.contains('/') {
+                input.to_uppercase().replace('/', "")
+            } else if input.to_uppercase().ends_with("USD") {
+                input.to_uppercase()
+            } else {
+                format!("{}USD", input.to_uppercase())
+            };
+            assert_eq!(back, normalised_input);
+        }
+    }
 }
