@@ -15,6 +15,7 @@ use serde::{Deserialize, Serialize};
 
 pub mod mean_reversion;
 pub mod momentum;
+pub mod orb;
 pub mod types;
 
 pub use types::*;
@@ -85,8 +86,9 @@ pub fn from_kind(
     match kind {
         "momentum" => Ok(Box::new(momentum::Momentum::from_json(entry_rules))),
         "mean_reversion" => Ok(Box::new(mean_reversion::MeanReversion::from_json(entry_rules))),
-        // Slots populated in commits 7–9.
-        "orb" | "donchian_trend" | "bb_squeeze" => {
+        "orb" => Ok(Box::new(orb::Orb::from_json(entry_rules))),
+        // Slots populated in commits 8–9.
+        "donchian_trend" | "bb_squeeze" => {
             Err(FactoryError::NotImplemented(kind.to_string()))
         }
         other => Err(FactoryError::Unknown(other.to_string())),
