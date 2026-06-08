@@ -378,6 +378,7 @@ pub mod chooser_option;
 pub mod conditional_drawdown;
 pub mod effective_spread;
 pub mod momentum_12_1;
+pub mod momentum_strategy;
 pub mod pain_index;
 pub mod risk_adjusted_ratios;
 pub mod weighted_midprice;
