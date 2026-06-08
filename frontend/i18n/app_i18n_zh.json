@@ -39389,5 +39389,15 @@
   "view.algo.hint.stdout_multi": "每个战略一个面板+一个全球火花。 每个窗格都有自己的200线缓冲器.",
   "view.algo.hint.no_algo_accounts": "没有他人支持的经纪人的账户 。 今天得到支持:阿尔帕卡. 转到设置 – 账户并添加一个 Alpaca 账户, 或者选择使用内部  sim 的策略 .",
   "view.algo.hint.execution_safety": "两种纸币模式都是零风险: in-app sim以最后已知的价格填充;Alpaca沙盒是他们的官方纸币环境. 现场交易使用真钱,需要完成30天的纸锁.",
-  "view.algo.hint.broker_status": "适配器状态:alpaca有线; tradeer有脚手架(下一步); ibkr / td / 美味贸易的脚手架——策略保存和运行,但命令返回集成 等待到每个经纪人适配器的船舶."
+  "view.algo.hint.broker_status": "适配器状态:alpaca有线; tradeer有脚手架(下一步); ibkr / td / 美味贸易的脚手架——策略保存和运行,但命令返回集成 等待到每个经纪人适配器的船舶.",
+  "view.settings.hint.tradier": "Tradier 经纪证书 – 当 algo 策略的账户在 Tradier 上时需要. Sandbox = sandbox.tradier.com (paper); off = api.tradier.com (live).",
+  "view.settings.label.tradier_access_token": "Tradier 访问符",
+  "view.settings.label.tradier_account_id": "Tradier 账号",
+  "view.settings.label.tradier_sandbox": "使用 Tradier 沙盒( 建议)",
+  "view.settings.placeholder.tradier_access_token": "Tradier 手持者令牌(Settings – API Access on tradier.com) 互联网档案馆的存檔,存档日期2013-09-02",
+  "view.settings.placeholder.tradier_account_id": "帐号来自Tradier仪表板(例如6YA0001)",
+  "view.settings.btn.test_tradier": "测试Tradier",
+  "view.settings.test_tradier.connecting": "探测Tradier/平衡..",
+  "view.settings.test_tradier.ok": "Tradier {env} 证书有效",
+  "view.settings.test_tradier.toast_ok": "Tradier {env} {\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\> 还好"
 }

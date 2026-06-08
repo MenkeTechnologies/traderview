@@ -39419,5 +39419,17 @@
   "view.algo.hint.stdout_multi": "Jedna tabule na strategii + globální požární hadice. Každá tabule má svůj vlastní 200- line buffer.",
   "view.algo.hint.no_algo_accounts": "Žádné účty na algopodporovaných makléřů. Podporováno dnes: Alpaca. Přejděte na Nastavení → Účty a přidejte účet Alpaca, nebo vyberte strategii, která používá interní _ sim.",
   "view.algo.hint.execution_safety": "Oba druhy papíru jsou nula-riziko: in- app sim vyplní za poslední známou cenu; Alpaca pískoviště je jejich oficiální papírové prostředí. Živé obchody využívají skutečné peníze a vyžadují vyplněný 30denní papírový zámek.",
-  "view.algo.hint.broker_status": "Status adaptéru: alpaca drát; tradier lešení (další); ibkr / td / tastytrade lešení - strategie šetří a běží, ale objednávky vrátí integrace _ do doby, než per- broker adaptér lodě."
+  "view.algo.hint.broker_status": "Status adaptéru: alpaca drát; tradier lešení (další); ibkr / td / tastytrade lešení - strategie šetří a běží, ale objednávky vrátí integrace _ do doby, než per- broker adaptér lodě.",
+  "view.settings.hint.tradier": "Tradier brokerage pověření - požadované, když je účet strategie algo na Tradier. Sandbox = sandbox.tradier.com (papír); off = api.tradier.com (live).",
+  "view.settings.label.tradier_access_token": "Tradier access token",
+  "view.settings.label.tradier_account_id": "Tradier ID účtu",
+  "view.settings.label.tradier_sandbox": "Použít Tradier pískoviště (doporučeno)",
+  "view.settings.placeholder.tradier_access_token": "Tradier Nosič token (Nastavení → API přístup na tradier.com)",
+  "view.settings.placeholder.tradier_account_id": "Číslo účtu z přístrojové desky Tradier (např. 6YA00001)",
+  "view.settings.btn.test_tradier": "Test Tradier",
+  "view.settings.test_tradier.connecting": "Probing Tradier / balances..",
+  "view.settings.test_tradier.ok": "Tradier {env} pověření platné",
+  "view.settings.test_tradier.fail": "Tradier selhalo: {msg}",
+  "view.settings.test_tradier.toast_ok": "Tradier {env}} Dobře",
+  "view.settings.test_tradier.toast_fail": "Tradier test selhal: {msg}"
 }

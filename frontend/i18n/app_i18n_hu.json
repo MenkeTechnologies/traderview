@@ -39413,5 +39413,17 @@
   "view.algo.hint.stdout_multi": "Stratégiánként egy tábla + egy globális tűzoltó tömlő. Minden pane megtartja a saját 200 soros pufferét.",
   "view.algo.hint.no_algo_accounts": "Nincs könyvelés az algo- támogatott brókerekről. Támogatott ma, Alpaca. Ugrás a Beállítások → Fiók és adjunk hozzá egy Alpaca fiók, vagy válasszon egy stratégiát, amely a belső _ sim.",
   "view.algo.hint.execution_safety": "Mindkét papír mód nulla-kockázat: in-app szimm kitöltések utolsó ismert áron; Alpaca sandbox a hivatalos papír környezet. Az élő kereskedelem valódi pénzt használ, és 30 napos papírzárolást igényel.",
-  "view.algo.hint.broker_status": "Adapter státusz: alpaka vezetékes; tradicionális állványzat (következő); ibkr / td / tastytrade cafflolded - stratégia megtakarítás és fut, de megrendelések visszatérnek integráció _ függőben, amíg a perbróker adapter hajók."
+  "view.algo.hint.broker_status": "Adapter státusz: alpaka vezetékes; tradicionális állványzat (következő); ibkr / td / tastytrade cafflolded - stratégia megtakarítás és fut, de megrendelések visszatérnek integráció _ függőben, amíg a perbróker adapter hajók.",
+  "view.settings.hint.tradier": "Tradier brokerage certificate - required when an algo strategy 's account is on Tradier. Sandbox = sandbox.tradier.com (paper); off = api.tradier.com (live).",
+  "view.settings.label.tradier_access_token": "Tradier hozzáférés token",
+  "view.settings.label.tradier_account_id": "Tradier számlaazonosító",
+  "view.settings.label.tradier_sandbox": "Tradier homokdoboz használata (ajánlott)",
+  "view.settings.placeholder.tradier_access_token": "Tradier Bearer token (Beállítások → API Access on tradier.com)",
+  "view.settings.placeholder.tradier_account_id": "Számlaszám: Tradier műszerfal (pl. 6YA00001)",
+  "view.settings.btn.test_tradier": "Vizsgálat Tradier",
+  "view.settings.test_tradier.connecting": "Probing Tradier / egyenlegek..",
+  "view.settings.test_tradier.ok": "Tradier {{env}} érvényes",
+  "view.settings.test_tradier.fail": "Tradier nem sikerült: {{msg}",
+  "view.settings.test_tradier.toast_ok": "Tradier {{env}} Oké",
+  "view.settings.test_tradier.toast_fail": "Tradier teszt sikertelen: {{msg}"
 }

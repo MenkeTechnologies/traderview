@@ -39418,5 +39418,17 @@
   "view.algo.hint.stdout_multi": "Eén ruit per strategie + een wereldwijde brandslang. Elk paneel heeft zijn eigen 200-lijn buffer.",
   "view.algo.hint.no_algo_accounts": "Geen rekeningen over algo-ondersteunde makelaars. Vandaag ondersteund: Alpaca. Ga naar Instellingen → Accounts en voeg een Alpaca-account toe, of kies een strategie die intern sim gebruikt.",
   "view.algo.hint.execution_safety": "Beide papieren modi zijn nulrisico: in-app sim vult op laatste bekende prijs; Alpaca sandbox is hun officiële papieren omgeving. Live trades gebruiken echt geld en vereisen voltooid 30 dagen papier-lock.",
-  "view.algo.hint.broker_status": "Adapterstatus: alpaca bedraad; Tradier steigers (volgende); ibkr / td / smakelijktrade steigers strategie bespaart en loopt, maar orders terug integratie uitgaven tot de per-broker adapter schepen."
+  "view.algo.hint.broker_status": "Adapterstatus: alpaca bedraad; Tradier steigers (volgende); ibkr / td / smakelijktrade steigers strategie bespaart en loopt, maar orders terug integratie uitgaven tot de per-broker adapter schepen.",
+  "view.settings.hint.tradier": "Tradier inwisselen van referenties vereist wanneer het account van een algostrategie op Tradier staat. Sandbox = sandbox.tradier.com (paper); off = api.tradier.com (live).",
+  "view.settings.label.tradier_access_token": "Tradier toegangs token",
+  "view.settings.label.tradier_account_id": "Tradier rekening-ID",
+  "view.settings.label.tradier_sandbox": "Gebruik Tradier zandbak (aanbevolen)",
+  "view.settings.placeholder.tradier_access_token": "Tradier Bearer token (Instellingen → API Toegang op tradier.com)",
+  "view.settings.placeholder.tradier_account_id": "Accountnummer van Tradier dashboard (bijv. 6YA00001)",
+  "view.settings.btn.test_tradier": "Test Tradier",
+  "view.settings.test_tradier.connecting": "Probing Tradier /balances ..",
+  "view.settings.test_tradier.ok": "Tradier {{env}} referenties geldig",
+  "view.settings.test_tradier.fail": "Tradier mislukt: {{msg}",
+  "view.settings.test_tradier.toast_ok": "Tradier {{env} OK",
+  "view.settings.test_tradier.toast_fail": "Tradier test mislukt: {{msg}"
 }

@@ -39416,5 +39416,16 @@
   "view.algo.hint.stdout_multi": "Jedna szyba na strategię + globalny wąż strażacki. Każda tafla utrzymuje swój własny bufor 200 linii.",
   "view.algo.hint.no_algo_accounts": "Brak kont brokerów wspomaganych algo. Obsługiwane dzisiaj: Alpaca. Przejdź do Ustawienia → Konta i dodaj konto Alpaca, lub wybierz strategię, która wykorzystuje wewnętrzny _ sim.",
   "view.algo.hint.execution_safety": "Oba tryby papieru są zerowe ryzyko: w -app sim wypełnia w ostatniej znanej cenie; Alpaca piaskownica jest ich oficjalne środowisko papieru. Żywe transakcje wykorzystują prawdziwe pieniądze i wymagają ukończone 30- dniowy papierowy zamek.",
-  "view.algo.hint.broker_status": "Status adaptera: alpaca przewodowy; tradier scaffolded (następny); ibkr / td / tastytrade scaffolded - strategia oszczędza i działa, ale zamówienia zwracają integrację _ oczekując aż do statku adaptera perbroker."
+  "view.algo.hint.broker_status": "Status adaptera: alpaca przewodowy; tradier scaffolded (następny); ibkr / td / tastytrade scaffolded - strategia oszczędza i działa, ale zamówienia zwracają integrację _ oczekując aż do statku adaptera perbroker.",
+  "view.settings.hint.tradier": "Tradier referencje maklerskie - wymagane, gdy konto strategii algo znajduje się na Tradier. Sandbox = sandbox.tradier.com (papier); off = api.tradier.com (na żywo).",
+  "view.settings.label.tradier_access_token": "Tradier token dostępu",
+  "view.settings.label.tradier_account_id": "ID konta Tradier",
+  "view.settings.label.tradier_sandbox": "Użyj Tradier piaskownicy (zalecane)",
+  "view.settings.placeholder.tradier_account_id": "Numer konta w desce rozdzielczej Tradier (np. 6YA00001)",
+  "view.settings.btn.test_tradier": "Test Tradier",
+  "view.settings.test_tradier.connecting": "Próba Tradier / bilans..",
+  "view.settings.test_tradier.ok": "Tradier {{env}} referencje ważne",
+  "view.settings.test_tradier.fail": "Tradier niepowodzenie: {{msg}}",
+  "view.settings.test_tradier.toast_ok": "Tradier {{env} OK",
+  "view.settings.test_tradier.toast_fail": "test Tradier nie powiódł się: {{msg}}"
 }

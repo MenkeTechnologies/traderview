@@ -39414,5 +39414,16 @@
   "view.algo.hint.stdout_multi": "戦略ごとの1つのペイン+全体的な消火。 各ペインは独自の200ラインバッファを保持します.",
   "view.algo.hint.no_algo_accounts": "アルゴサポートブローカーのアカウントはありません。 対応日: Alpaca [設定] → [アカウント] に移動し、Alpaca アカウントを追加したり、内部 sim を使用する戦略を選択します.",
   "view.algo.hint.execution_safety": "紙モードはゼロリスクです。アプリ内シムは、既定の価格で満たします。 Alpaca sandboxは、公式の紙環境です。 ライブ取引は実際のお金を使用しており、30日間の紙ロックが必要です.",
-  "view.algo.hint.broker_status": "アダプターの状態: alpaca ワイヤーで縛られる; tradier の足場(次); ibkr/td/ delicioustrade の足場 — 戦略は保存し、動かします、しかし注文は per-broker のアダプターの船まで戻ります."
+  "view.algo.hint.broker_status": "アダプターの状態: alpaca ワイヤーで縛られる; tradier の足場(次); ibkr/td/ delicioustrade の足場 — 戦略は保存し、動かします、しかし注文は per-broker のアダプターの船まで戻ります.",
+  "view.settings.hint.tradier": "Tradier の仲介資格 — algo の戦略のアカウントが Tradier にあるときに必須です。 Sandbox = sandbox.tradier.com (paper); off = api.tradier.com (live).",
+  "view.settings.label.tradier_access_token": "Tradierアクセストークン",
+  "view.settings.label.tradier_account_id": "TradierアカウントID",
+  "view.settings.label.tradier_sandbox": "Tradierサンドボックスを使用する(推奨)",
+  "view.settings.placeholder.tradier_access_token": "Tradier ベアラートークン (tradier.com の設定 → API アクセス)",
+  "view.settings.placeholder.tradier_account_id": "Tradierダッシュボードからアカウント番号(例:6YA00001)",
+  "view.settings.btn.test_tradier": "テスト Tradier",
+  "view.settings.test_tradier.connecting": "Tradier /balances ...をプロービング",
+  "view.settings.test_tradier.ok": "Tradier {{env}} 有効な資格情報",
+  "view.settings.test_tradier.fail": "Tradier が失敗しました: {{msg}}",
+  "view.settings.test_tradier.toast_fail": "Tradier テスト失敗: {{msg}}"
 }

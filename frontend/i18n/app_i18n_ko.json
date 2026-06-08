@@ -39408,5 +39408,16 @@
   "view.algo.hint.stdout_multi": "전략 당 하나의 팬 + 글로벌 firehose. 각 pane는 그것의 자신의 200 선 완충기를 지킵니다.",
   "view.algo.hint.no_algo_accounts": "지원 브로커에 계정이 없습니다. 오늘 지원: Alpaca. 설정 → 계정으로 이동하고 Alpaca 계정을 추가하거나 internal sim을 사용하는 전략을 선택하십시오.",
   "view.algo.hint.execution_safety": "두 개의 종이 모드는 0-risk입니다 : 마지막 알려진 가격에 인앱 sim 채우기; Alpaca sandbox는 공식 용지 환경입니다. 실시간 거래는 실제 돈을 사용하며 30일 종이 잠금을 완료해야 합니다.",
-  "view.algo.hint.broker_status": "어댑터 상태: alpaca 유선; tradier 비계 (다음); ibkr / td / delicioustrade 비계 - 전략 저장 및 실행, 하지만 주문 반환 integration pending 때까지 per-broker 어댑터 배."
+  "view.algo.hint.broker_status": "어댑터 상태: alpaca 유선; tradier 비계 (다음); ibkr / td / delicioustrade 비계 - 전략 저장 및 실행, 하지만 주문 반환 integration pending 때까지 per-broker 어댑터 배.",
+  "view.settings.hint.tradier": "Tradier 중개인 자격 증명 - algo 전략의 계정이 Tradier에있을 때 필요합니다. Sandbox = sandbox.tradier.com (paper); off = api.tradier.com (live).",
+  "view.settings.label.tradier_access_token": "Tradier 액세스 토큰",
+  "view.settings.label.tradier_account_id": "Tradier 계정 ID",
+  "view.settings.label.tradier_sandbox": "Tradier sandbox 사용 (추천)",
+  "view.settings.placeholder.tradier_access_token": "Tradier Bearer 토큰 (Tuttings → tradier.com에 API 액세스)",
+  "view.settings.placeholder.tradier_account_id": "Tradier 대시보드의 계정 번호 (예 : 6YA00001)",
+  "view.settings.btn.test_tradier": "테스트 Tradier",
+  "view.settings.test_tradier.connecting": "프로빙 Tradier /밸런스 ..",
+  "view.settings.test_tradier.ok": "Tradier {{env}} 자격 증명",
+  "view.settings.test_tradier.fail": "Tradier 실패: {{msg}}",
+  "view.settings.test_tradier.toast_fail": "Tradier 테스트 실패: {{msg}}"
 }

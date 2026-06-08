@@ -39421,5 +39421,16 @@
   "view.algo.hint.stdout_multi": "En ruta per strategi + en global brandhos. Varje ruta håller sin egen 200-line buffert.",
   "view.algo.hint.no_algo_accounts": "Inga konton på algo-stödda mäklare. Stöd idag: Alpaca. Gå till Inställningar → Konton och lägg till ett Alpaca-konto eller välj en strategi som använder interna sim.",
   "view.algo.hint.execution_safety": "Båda papperslägena är nollrisk: in-app sim fyller till sist kända pris; Alpaca sandbox är deras officiella pappersmiljö. Levande affärer använder riktiga pengar och kräver slutförd 30-dagars papperslås.",
-  "view.algo.hint.broker_status": "Adapter status: alpaca trådbunden; tradier ställningar (nästa); ibkr / td / tastytrade ställningar - strategi sparar och körs, men order returnerar integration pending tills per-mäklare adapter fartyg."
+  "view.algo.hint.broker_status": "Adapter status: alpaca trådbunden; tradier ställningar (nästa); ibkr / td / tastytrade ställningar - strategi sparar och körs, men order returnerar integration pending tills per-mäklare adapter fartyg.",
+  "view.settings.hint.tradier": "Tradier mäklaruppgifter - krävs när en algostrategi konto är på Tradier. Sandbox = sandbox.tradier.com (papper); off = api.tradier.com (live).",
+  "view.settings.label.tradier_access_token": "Tradier tillgång token",
+  "view.settings.label.tradier_account_id": "Tradier konto ID",
+  "view.settings.label.tradier_sandbox": "Använd Tradier sandbox (rekommenderad)",
+  "view.settings.placeholder.tradier_account_id": "Kontonummer från Tradier dashboard (t.ex. 6YA00001)",
+  "view.settings.btn.test_tradier": "Test Tradier",
+  "view.settings.test_tradier.connecting": "Probing Tradier /balanser ..",
+  "view.settings.test_tradier.ok": "Tradier {{env}} credentials valid",
+  "view.settings.test_tradier.fail": "Tradier misslyckades: {{msg}}",
+  "view.settings.test_tradier.toast_ok": "Tradier {{env}} OK",
+  "view.settings.test_tradier.toast_fail": "Tradier test misslyckades: {{msg}}"
 }

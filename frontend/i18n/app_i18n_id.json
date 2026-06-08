@@ -39419,5 +39419,16 @@
   "view.algo.hint.stdout_multi": "Satu panel per strategi + sebuah firehose global. Setiap panel menyimpan buffer 200 baris sendiri.",
   "view.algo.hint.no_algo_accounts": "Tak ada akun pada broker yang didukung algo-. Didukung hari ini, Alpaca. Pergi ke Pengaturan Akuntansi dan tambahkan akun Alpaca, atau pilih strategi yang menggunakan internal _ sim.",
   "view.algo.hint.execution_safety": "Kedua mode kertas adalah zero- risiko: in- app sim mengisi pada harga terakhir yang diketahui; Alpaca sandbox adalah lingkungan kertas resmi mereka. Perdagangan langsung menggunakan uang riil dan membutuhkan selesai kertas 30 hari - kunci.",
-  "view.algo.hint.broker_status": "Status adapter: alpaca kabel; tradier scaffolded (next); icbkr / td / tastytrade scaffolded - strategi menyimpan dan berjalan, tetapi perintah kembali integrasi _ tertunda sampai kapal adaptor per- pialang."
+  "view.algo.hint.broker_status": "Status adapter: alpaca kabel; tradier scaffolded (next); icbkr / td / tastytrade scaffolded - strategi menyimpan dan berjalan, tetapi perintah kembali integrasi _ tertunda sampai kapal adaptor per- pialang.",
+  "view.settings.hint.tradier": "Tradier mandat brokerage - dibutuhkan ketika akun strategi algo ada di Tradier. Sandbox = sandbox.tradier.com; off = api.tradier.com (hidup).",
+  "view.settings.label.tradier_access_token": "token akses Tradier",
+  "view.settings.label.tradier_account_id": "ID akun Tradier",
+  "view.settings.label.tradier_sandbox": "Gunakan Tradier kotak pasir (disarankan)",
+  "view.settings.placeholder.tradier_account_id": "Nomor akun dari dashboard Tradier (mis. 6ya00001)",
+  "view.settings.btn.test_tradier": "Uji Tradier",
+  "view.settings.test_tradier.connecting": "Menyelidiki Tradier / saldo..",
+  "view.settings.test_tradier.ok": "Tradier {{{env}} kredensial valid",
+  "view.settings.test_tradier.fail": "Tradier gagal: {{{msg}}}",
+  "view.settings.test_tradier.toast_ok": "Tradier {{{env}}}} OK",
+  "view.settings.test_tradier.toast_fail": "Tradier tes gagal: {{{msg}}}"
 }

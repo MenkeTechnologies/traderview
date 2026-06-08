@@ -39380,5 +39380,15 @@
   "view.algo.hint.no_algo_accounts": "Nu există conturi pe brokeri algo-suportate. Susţinut astăzi: Alpaca. Du-te la Setări → Conturi și adaugă un cont Alpaca, sau alege o strategie care utilizează intern sim.",
   "view.algo.opt.broker_live": "LIVE ",
   "view.algo.hint.execution_safety": "Ambele moduri de hârtie sunt zero-risc: în-app sim umple la ultimul preț cunoscut; Alpaca sandbox este mediul lor oficial de hârtie. Schimburile live folosesc bani reali şi necesită 30 de zile de închidere.",
-  "view.algo.hint.broker_status": "Starea adaptorului: fir de alpaca; schelă de tramvai (următoarea); ibkr / td / schelat degustat / strategie salvează și rulează, dar comenzile se întorc integrare pending până la navele adaptor per-broker."
+  "view.algo.hint.broker_status": "Starea adaptorului: fir de alpaca; schelă de tramvai (următoarea); ibkr / td / schelat degustat / strategie salvează și rulează, dar comenzile se întorc integrare pending până la navele adaptor per-broker.",
+  "view.settings.hint.tradier": "Tradier acreditarea de brokeraj necesare atunci când contul unei strategii algo este pe Tradier. Sandbox = sandbox.tradier.com (hârtie); off = api.tradier.com (live).",
+  "view.settings.label.tradier_sandbox": "Utilizare Tradier cutie de nisip (recomandată)",
+  "view.settings.placeholder.tradier_access_token": "Tradier Token portar (Setări → API Access on tradier.com)",
+  "view.settings.placeholder.tradier_account_id": "Numărul contului din tabloul de bord Tradier (de exemplu, 6YA00001)",
+  "view.settings.btn.test_tradier": "Test Tradier",
+  "view.settings.test_tradier.connecting": "Probing Tradier /balanse ..",
+  "view.settings.test_tradier.ok": "Tradier {env} ] acreditări valabile",
+  "view.settings.test_tradier.fail": "Tradier a eșuat: {msg}",
+  "view.settings.test_tradier.toast_ok": "Tradier {env} Bine",
+  "view.settings.test_tradier.toast_fail": "testul Tradier a eşuat: {msg}"
 }

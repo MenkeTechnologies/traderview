@@ -39423,5 +39423,17 @@
   "view.algo.hint.stdout_multi": "En rute per strategi + en global brannhose. Hver rute holder sin egen 200-linje buffer.",
   "view.algo.hint.no_algo_accounts": "Ingen kontoer på algo-støttede meglere. Støttet i dag: Alpaca. Gå til Innstillinger → Kontoer og legg til en Alpaca-konto, eller velg en strategi som bruker intern sim.",
   "view.algo.hint.execution_safety": "Begge papirmodusene er null-risiko: i app sim fyller til sist kjent pris; Alpaca sandkasse er deres offisielle papirmiljø. Live trades bruker ekte penger og krever fullført 30-dagers papirlås.",
-  "view.algo.hint.broker_status": "Tilpasser status: alpaca wired; tradier stillased (nesten); ibkr / td / velsmakende trade stillased - strategi sparer og kjører, men bestillinger returnere integrasjon avhengig til per-broker adapter skip."
+  "view.algo.hint.broker_status": "Tilpasser status: alpaca wired; tradier stillased (nesten); ibkr / td / velsmakende trade stillased - strategi sparer og kjører, men bestillinger returnere integrasjon avhengig til per-broker adapter skip.",
+  "view.settings.hint.tradier": "Tradier bruddinformasjon — kreves når en algo strategis konto er på Tradier. Sandbox = sandbox.tradier.com (papir); off = api.tradier.com (live).",
+  "view.settings.label.tradier_access_token": "Tradier tilgangstoken",
+  "view.settings.label.tradier_account_id": "Tradier-konto-ID",
+  "view.settings.label.tradier_sandbox": "Bruk Tradier sandkasse (anbefalt)",
+  "view.settings.placeholder.tradier_access_token": "Tradier Bearer token (Innstillinger → API-tilgang på tradier.com)",
+  "view.settings.placeholder.tradier_account_id": "Kontonummer fra Tradier dashboard (f.eks. 6YA00001)",
+  "view.settings.btn.test_tradier": "Test Tradier",
+  "view.settings.test_tradier.connecting": "Probing Tradier / balanser ..",
+  "view.settings.test_tradier.ok": "Tradier {{env}}",
+  "view.settings.test_tradier.fail": "Tradier mislyktes: {{msg}}",
+  "view.settings.test_tradier.toast_ok": "Tradier {{env}} OK",
+  "view.settings.test_tradier.toast_fail": "Tradier testen mislyktes: {{msg}}"
 }

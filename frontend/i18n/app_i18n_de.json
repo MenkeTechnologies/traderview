@@ -39420,5 +39420,15 @@
   "view.algo.hint.stdout_multi": "Ein Bereich pro Strategie + ein globaler Firehose. Jede Scheibe behält ihren eigenen 200-Zeilen-Puffer.",
   "view.algo.hint.no_algo_accounts": "Keine Konten auf algo-unterstützten Brokern. Unterstützt heute: Alpaka. Gehen Sie zu Einstellungen → Konten und fügen Sie ein Alpaka-Konto hinzu, oder wählen Sie eine Strategie, die internal sim verwendet.",
   "view.algo.hint.execution_safety": "Beide Papiermodi sind Null-Risiko: In-App-Sim füllt zum letzten bekannten Preis; Alpaka Sandbox ist ihre offizielle Papierumgebung. Live-Trades verwenden echtes Geld und erfordern eine 30-tägige Papiersperre.",
-  "view.algo.hint.broker_status": "Adapterstatus: alpaca wired; tradier scaffolded (next); ibkr / td / tastytrade scaffolded — Strategie speichert und läuft, aber Aufträge geben integration ausstehend zurück, bis der Per-Broker-Adapter ausgeliefert wird."
+  "view.algo.hint.broker_status": "Adapterstatus: alpaca wired; tradier scaffolded (next); ibkr / td / tastytrade scaffolded — Strategie speichert und läuft, aber Aufträge geben integration ausstehend zurück, bis der Per-Broker-Adapter ausgeliefert wird.",
+  "view.settings.hint.tradier": "Tradier Brokerage-Anmeldeinformationen - erforderlich, wenn das Konto einer Algo-Strategie auf Tradier ist.",
+  "view.settings.label.tradier_access_token": "Tradier zugriffs-token",
+  "view.settings.label.tradier_sandbox": "Verwenden Tradier sandbox (empfohlen)",
+  "view.settings.placeholder.tradier_access_token": "Tradier Bearer-Token (Einstellungen → API Access auf tradier.com)",
+  "view.settings.btn.test_tradier": "Test Tradier",
+  "view.settings.test_tradier.connecting": "Sondieren Tradier / Waagen ..",
+  "view.settings.test_tradier.ok": "Tradier {{env}}",
+  "view.settings.test_tradier.fail": "Tradier fehlgeschlagen: {{msg}}",
+  "view.settings.test_tradier.toast_ok": "Tradier {{env}} OK",
+  "view.settings.test_tradier.toast_fail": "Tradier test fehlgeschlagen: {{msg}}"
 }

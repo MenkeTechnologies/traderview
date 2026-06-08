@@ -39412,5 +39412,17 @@
   "view.algo.hint.stdout_multi": "Une vitre par stratégie + un feu d'artifice global. Chaque panneau conserve son propre tampon de 200 lignes.",
   "view.algo.hint.no_algo_accounts": "Pas de comptes sur les courtiers soutenus par l'algo. Soutenu aujourd'hui : Alpaca. Allez dans Paramètres → Comptes et ajoutez un compte Alpaca, ou choisissez une stratégie qui utilise internal sim.",
   "view.algo.hint.execution_safety": "Les deux modes de papier sont à risque zéro: in-app smills au dernier prix connu; Alpaca sandbox est leur environnement officiel de papier. Les métiers en direct utilisent de l'argent réel et nécessitent un papier-bloc de 30 jours.",
-  "view.algo.hint.broker_status": "Statut de l'adaptateur: alpaca câblé; tradier échafaudé (suivant); ibkr / td / savoureuse trade échafaudé — la stratégie sauve et fonctionne, mais commande retourne intégration en attente jusqu'à ce que l'adaptateur par courtier expédie."
+  "view.algo.hint.broker_status": "Statut de l'adaptateur: alpaca câblé; tradier échafaudé (suivant); ibkr / td / savoureuse trade échafaudé — la stratégie sauve et fonctionne, mais commande retourne intégration en attente jusqu'à ce que l'adaptateur par courtier expédie.",
+  "view.settings.hint.tradier": "Tradier identifiants de courtage — requis lorsque le compte d'une stratégie d'algo est sur Tradier. Sandbox = sandbox.tradier.com (papier); off = api.tradier.com (en direct).",
+  "view.settings.label.tradier_access_token": "Tradier jeton d'accès",
+  "view.settings.label.tradier_account_id": "ID de compte Tradier",
+  "view.settings.label.tradier_sandbox": "Utiliser le bac à sable Tradier (recommandé)",
+  "view.settings.placeholder.tradier_access_token": "Tradier Jeton porteur (Settings → API Access sur tradier.com)",
+  "view.settings.placeholder.tradier_account_id": "Numéro de compte du tableau de bord Tradier (par exemple 6YA00001)",
+  "view.settings.btn.test_tradier": "Essai Tradier",
+  "view.settings.test_tradier.connecting": "Probation Tradier /soldes ..",
+  "view.settings.test_tradier.ok": "Tradier {{env}} identifiants valides",
+  "view.settings.test_tradier.fail": "Tradier a échoué : {{msg}}",
+  "view.settings.test_tradier.toast_ok": "C'est le cas de Tradier {{env}} Très bien",
+  "view.settings.test_tradier.toast_fail": "le test Tradier a échoué : {{msg}}"
 }

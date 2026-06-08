@@ -39414,5 +39414,17 @@
   "view.algo.hint.stdout_multi": "Yksi paneeli strategiaa kohti + globaali paloletku. Kullakin ruudulla on oma 200-riviinen puskuri.",
   "view.algo.hint.no_algo_accounts": "Ei tilejä algo-tukimeklareille. Tuettu tänään: Alpaca. Siirry Asetukset → Tilit ja lisää Alpaca-tili tai valitse strategia, joka käyttää sisäistä sim.",
   "view.algo.hint.execution_safety": "Molemmat paperitilat ovat nollariski: in-app sim täyttää viimein tunnettuun hintaan; Alpaca hiekkalaatikko on virallinen paperiympäristö. Live kaupat käyttävät oikeaa rahaa ja vaativat valmiiksi 30 päivän paperilukko.",
-  "view.algo.hint.broker_status": "Adapter status: alpaca langallinen; tradier telineet (seuraava); ibkr / td / mastytrade telineet strategia säästää ja toimii, mutta tila palauttaa integrointi käyttö kunnes per-broker adapteri aluksia."
+  "view.algo.hint.broker_status": "Adapter status: alpaca langallinen; tradier telineet (seuraava); ibkr / td / mastytrade telineet strategia säästää ja toimii, mutta tila palauttaa integrointi käyttö kunnes per-broker adapteri aluksia.",
+  "view.settings.hint.tradier": "Tradier välitystiedot ... vaaditaan, kun algostrategian tili on Tradier. Sandbox = hiekkalaatikko.tradier.com (paperi); off = api.tradier.com (live).",
+  "view.settings.label.tradier_access_token": "Tradier",
+  "view.settings.label.tradier_account_id": "Tradier-tilin tunnus",
+  "view.settings.label.tradier_sandbox": "Käytä Tradier hiekkalaatikkoa (suositeltu)",
+  "view.settings.placeholder.tradier_access_token": "Tradier Bearer polete (Asetukset → API Access on tradier.com)",
+  "view.settings.placeholder.tradier_account_id": "Tilinumero Tradier kojelaudalta (esim. 6YA00001)",
+  "view.settings.btn.test_tradier": "Testi Tradier",
+  "view.settings.test_tradier.connecting": "Tutkitaan Tradier /saldot ..",
+  "view.settings.test_tradier.ok": "Tradier {{env}} voimassa",
+  "view.settings.test_tradier.fail": "Tradier epäonnistui: {msg}",
+  "view.settings.test_tradier.toast_ok": "Tradier {env} Selvä",
+  "view.settings.test_tradier.toast_fail": "Tradier-testi epäonnistui: {msg}"
 }

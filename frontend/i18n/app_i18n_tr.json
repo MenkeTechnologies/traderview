@@ -39415,5 +39415,16 @@
   "view.algo.hint.stdout_multi": "Stratejide bir pane + küresel bir yangınhose. Her pane kendi 200-line tamponunu tutar.",
   "view.algo.hint.no_algo_accounts": "Algo-supported brokerler hakkında hiçbir hesap yok. Bugün Desteklendi: Alpaca. Ayarlara gidin → Hesaplar ve bir Alpaca hesabı ekleyin veya iç sim kullanan bir strateji seçin.",
   "view.algo.hint.execution_safety": "Her iki kağıt modları sıfır risktir: son bilinen fiyatta sim dolgular; Alpaca sandbox resmi kağıt ortamıdır. Canlı ticaretler gerçek para kullanıyor ve 30 günlük kağıt kilidi tamamlamalı.",
-  "view.algo.hint.broker_status": "Adaptasyon durumu: alpaka teld; tradier scaffolded (sonunda); ibkr / td / lezzetli ticaret şüphelisi — strateji kurtarılır ve çalışır, ancak siparişler geri entegrasyon pending until the per-broker adaptörüne kadar."
+  "view.algo.hint.broker_status": "Adaptasyon durumu: alpaka teld; tradier scaffolded (sonunda); ibkr / td / lezzetli ticaret şüphelisi — strateji kurtarılır ve çalışır, ancak siparişler geri entegrasyon pending until the per-broker adaptörüne kadar.",
+  "view.settings.label.tradier_access_token": "Tradier erişim token",
+  "view.settings.label.tradier_account_id": "Tradier hesabı ID",
+  "view.settings.label.tradier_sandbox": "Use Tradier sandbox (recommended)",
+  "view.settings.placeholder.tradier_access_token": "Tradier Bearer token (Bölümler → API Access on tradier.com)",
+  "view.settings.placeholder.tradier_account_id": "Tradier pano (e.g. 6YA00001)",
+  "view.settings.btn.test_tradier": "Test Tradier",
+  "view.settings.test_tradier.connecting": "Probing Tradier /balances ..",
+  "view.settings.test_tradier.ok": "Tradier {{env}} bilgileri geçerli",
+  "view.settings.test_tradier.fail": "Tradier başarısız oldu: {{msg}}",
+  "view.settings.test_tradier.toast_ok": "Tradier {{env}} Tamam Tamam tamam",
+  "view.settings.test_tradier.toast_fail": "Tradier test başarısız oldu: {{msg}}"
 }

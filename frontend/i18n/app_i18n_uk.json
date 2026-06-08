@@ -39418,5 +39418,17 @@
   "view.algo.hint.stdout_multi": "Одна пане для стратегії + глобальна пожежа. Кожен пане зберігає свій 200-лінійний буфер.",
   "view.algo.hint.no_algo_accounts": "Немає рахунків на алгопідтримувані брокери. Підтримуваний сьогодні: Alpaca. Перейти на налаштування → Облікові записи і додати обліковий запис Alpaca або вибрати стратегію, яка використовує внутрішній sim.",
   "view.algo.hint.execution_safety": "Обидва паперові режими є нульовою рисою: в додатку sim заповнюється останніми відомими цінами; Alpaca sandbox є їх офіційним паперовим середовищем. Живі угоди використовують реальні гроші і вимагають завершено 30-денне паперове блокування.",
-  "view.algo.hint.broker_status": "Статус адаптера: альпака дротова; традирний розсічений (next); ibkr / td / смачний трафальдований — стратегія економить і працює, але замовлення повертає інтеграцію закінчення до виброкерних суден."
+  "view.algo.hint.broker_status": "Статус адаптера: альпака дротова; традирний розсічений (next); ibkr / td / смачний трафальдований — стратегія економить і працює, але замовлення повертає інтеграцію закінчення до виброкерних суден.",
+  "view.settings.hint.tradier": "Tradier облікові дані брокера — потрібно, коли обліковий запис алго-стратегії знаходиться на Tradier. Sandbox = sandbox.tradier.com (paper); off = api.tradier.com (live).",
+  "view.settings.label.tradier_access_token": "Tradier доступ до token",
+  "view.settings.label.tradier_account_id": "Tradier ідентифікатор облікового запису",
+  "view.settings.label.tradier_sandbox": "Використовуйте Tradier пісочниця (рекомендовані)",
+  "view.settings.placeholder.tradier_access_token": "Tradier Випадковий токен (Налаштування → Доступ до API на tradier.com)",
+  "view.settings.placeholder.tradier_account_id": "Номер рахунку від Tradier dashboard (наприклад, 6YA00001)",
+  "view.settings.btn.test_tradier": "Тест Tradier",
+  "view.settings.test_tradier.connecting": "Пробування Tradier /баланси ..",
+  "view.settings.test_tradier.ok": "Tradier {{env}} цілі дійсні",
+  "view.settings.test_tradier.fail": "Tradier не вдалося: {{msg}}",
+  "view.settings.test_tradier.toast_ok": "Tradier {{env}} Зареєструватися",
+  "view.settings.test_tradier.toast_fail": "Tradier перевірити не вдалося: {{msg}}"
 }

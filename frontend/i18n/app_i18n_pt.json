@@ -39418,5 +39418,17 @@
   "view.algo.hint.stdout_multi": "Um painel por estratégia + uma fogueira global. Cada painel mantém o seu próprio tampão de 200 linhas.",
   "view.algo.hint.no_algo_accounts": "Não há contas em corretores de algo. Apoiado hoje: Alpaca. Acesse Configurações → Contas e adicione uma conta Alpaca, ou escolha uma estratégia que use interna sim.",
   "view.algo.hint.execution_safety": "Ambos os modos de papel são zero-risco: preenchimentos sim in-app ao último preço conhecido; Alpaca sandbox é o seu ambiente de papel oficial. Comércios ao vivo usam dinheiro real e exigem 30 dias de fechamento de papel.",
-  "view.algo.hint.broker_status": "Status do adaptador: alpaca com fio; tradier scaffolded (próximo); ibkr / td / saturatedtrade scaffolded — estratégia salva e corre, mas ordens retornam integration pending até os navios adaptadores por corretor."
+  "view.algo.hint.broker_status": "Status do adaptador: alpaca com fio; tradier scaffolded (próximo); ibkr / td / saturatedtrade scaffolded — estratégia salva e corre, mas ordens retornam integration pending até os navios adaptadores por corretor.",
+  "view.settings.hint.tradier": "Tradier credenciais de corretagem — necessárias quando a conta de uma estratégia algo está em Tradier. Sandbox = sandbox.tradier.com (papel); off = api.tradier.com (live).",
+  "view.settings.label.tradier_access_token": "Tradier token de acesso",
+  "view.settings.label.tradier_account_id": "Tradier ID da conta",
+  "view.settings.label.tradier_sandbox": "Utilizar a caixa de areia Tradier (recomendada)",
+  "view.settings.placeholder.tradier_access_token": "Tradier Token do portador (Configurações → Acesso API em tradier.com)",
+  "view.settings.placeholder.tradier_account_id": "Número da conta do painel Tradier (por exemplo, 6YA00001)",
+  "view.settings.btn.test_tradier": "Teste Tradier",
+  "view.settings.test_tradier.connecting": "Sondagem Tradier /balanços ..",
+  "view.settings.test_tradier.ok": "Tradier {{env}} credenciais válidas",
+  "view.settings.test_tradier.fail": "Tradier falhou: {{msg}}",
+  "view.settings.test_tradier.toast_ok": "Tradier {{env} Está bem",
+  "view.settings.test_tradier.toast_fail": "o teste Tradier falhou: {{msg}}"
 }
