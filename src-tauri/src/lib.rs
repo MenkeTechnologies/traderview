@@ -1,10 +1,12 @@
 //! Tauri v2 desktop shell.
 //!
 //! Crash-resilient version:
-//!   * Every launch writes a rolling log to `~/Library/Logs/TraderView/desktop.log.YYYY-MM-DD`
-//!     on macOS (Linux/Windows fall back to platform-appropriate paths).
+//!   * Every launch writes a single log file at
+//!     `~/Library/Application Support/com.menketechnologies.traderview/traderview.log`
+//!     on macOS (Linux/Windows fall back to platform-appropriate paths
+//!     using the same bundle identifier).
 //!   * A panic hook captures the message + location + backtrace into
-//!     `~/Library/Logs/TraderView/panic.log` before the process aborts.
+//!     `panic.log` in the same directory before the process aborts.
 //!   * Backend bring-up (embedded Postgres → migrations → axum) runs in a
 //!     worker thread; the main thread waits on a channel that carries either
 //!     an `ApiConfig` (success) or a String error (failure). On error, we
@@ -399,24 +401,31 @@ fn load_or_create_secret(path: &std::path::Path) -> anyhow::Result<Vec<u8>> {
 // Logging + panic infrastructure
 // ===========================================================================
 
+/// Bundle identifier — kept in sync with `tauri.conf.json::identifier`.
+/// Logs, PG data, JWT secret, and Tauri-managed state all live under
+/// the directory keyed by this string so the entire app's on-disk
+/// footprint is one tree under the platform's app-data root.
+const APP_BUNDLE_ID: &str = "com.menketechnologies.traderview";
+
 fn log_dir() -> PathBuf {
-    // Single canonical directory:
-    //   macOS   : ~/Library/Application Support/traderview/
-    //   Linux   : ~/.local/share/traderview/
-    //   Windows : %APPDATA%/traderview/
+    // Single canonical directory — same root the embedded Postgres,
+    // jwt-secret, and Tauri window-state file already use:
+    //   macOS   : ~/Library/Application Support/com.menketechnologies.traderview/
+    //   Linux   : ~/.local/share/com.menketechnologies.traderview/
+    //   Windows : %APPDATA%/com.menketechnologies.traderview/
     #[cfg(target_os = "macos")]
     {
         if let Some(home) = dirs::home_dir() {
             return home
                 .join("Library")
                 .join("Application Support")
-                .join("traderview");
+                .join(APP_BUNDLE_ID);
         }
     }
     if let Some(base) = dirs::data_local_dir() {
-        return base.join("traderview");
+        return base.join(APP_BUNDLE_ID);
     }
-    std::env::temp_dir().join("traderview")
+    std::env::temp_dir().join(APP_BUNDLE_ID)
 }
 
 fn log_file_path() -> PathBuf {
@@ -471,24 +480,25 @@ mod tests {
     // ── log_dir / log_file_path: platform-aware path resolution ───────────
 
     #[test]
-    fn log_dir_ends_in_traderview_segment() {
+    fn log_dir_ends_in_bundle_id_segment() {
         // Every supported platform branch composes a path ending in
-        // "traderview" — the panic hook and rolling appender both rely on
-        // this for predictable on-disk layout.
+        // the bundle identifier — the panic hook and rolling appender
+        // both rely on this for predictable on-disk layout, and it
+        // matches where the embedded PG / jwt-secret already live.
         let p = log_dir();
         assert_eq!(
             p.file_name().and_then(|s| s.to_str()),
-            Some("traderview"),
-            "log_dir should end in 'traderview', got: {}",
+            Some(APP_BUNDLE_ID),
+            "log_dir should end in '{APP_BUNDLE_ID}', got: {}",
             p.display()
         );
     }
 
     #[test]
     fn log_file_path_appends_log_filename() {
-        // The Tauri shell writes ~/Library/Application Support/traderview/traderview.log
-        // (macOS) or platform-equivalent. The filename is documented in the
-        // module header — pin it.
+        // The Tauri shell writes
+        // ~/Library/Application Support/com.menketechnologies.traderview/traderview.log
+        // (macOS) or platform-equivalent. Filename pinned in the module header.
         let p = log_file_path();
         assert_eq!(
             p.file_name().and_then(|s| s.to_str()),
@@ -507,9 +517,10 @@ mod tests {
         // it to ~/Library/Logs without updating both code AND docs, this trips.
         let p = log_dir();
         let s = p.to_string_lossy();
+        let expected = format!("Library/Application Support/{APP_BUNDLE_ID}");
         assert!(
-            s.contains("Library/Application Support/traderview"),
-            "expected Library/Application Support/traderview in path, got: {s}"
+            s.contains(&expected),
+            "expected {expected} in path, got: {s}"
         );
     }
 

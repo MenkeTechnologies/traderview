@@ -20,7 +20,7 @@
 use crate::algo::{self, AlgoFillInsert, AlgoOrderInsert, AlgoStrategy};
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
-use rust_decimal::prelude::FromPrimitive;
+use rust_decimal::prelude::{FromPrimitive, Zero};
 use serde_json::Value as Json;
 use sqlx::PgPool;
 use std::sync::Arc;
@@ -109,6 +109,12 @@ pub enum EngineError {
     PaperLocked(chrono::DateTime<chrono::Utc>),
     #[error("sizing produced 0 shares")]
     ZeroQty,
+    #[error("daily loss cap ${cap} breached (today P&L: ${pnl}); strategy auto-paused")]
+    DailyLossCap { cap: Decimal, pnl: Decimal },
+    #[error("consecutive losses cap ({cap}) breached (streak: {streak}); strategy auto-paused")]
+    ConsecutiveLossesCap { cap: i64, streak: i64 },
+    #[error("position size ${notional} exceeds cap ${cap}; order rejected")]
+    PositionSizeCap { notional: Decimal, cap: Decimal },
     #[error("broker: {0}")]
     Broker(String),
     #[error("db: {0}")]
@@ -165,11 +171,29 @@ impl BrokerSink for InMemorySink {
 /// The strategy itself is built lazily via the factory in
 /// `algo_strategies::from_kind` — different `strategy_type` columns produce
 /// different `Box<dyn Strategy>` impls.
+///
+/// `risk_gates` JSON shape (all optional; absent = unlimited):
+/// ```json
+/// {
+///   "max_concurrent_positions": 5,
+///   "max_daily_loss_usd": 500.0,
+///   "max_consecutive_losses": 4,
+///   "max_position_size_usd": 10000.0
+/// }
+/// ```
 #[derive(Debug, Clone)]
 pub struct EngineConfig {
     pub sizing: Sizing,
     pub side_mode: SideMode,
     pub max_concurrent_positions: i64,
+    /// Pause the strategy when today's realized loss (since 00:00 UTC)
+    /// hits this dollar amount. Stored as positive USD (the breach
+    /// condition is `realized_pnl <= -max_daily_loss`).
+    pub max_daily_loss_usd: Option<Decimal>,
+    /// Pause when this many consecutive losing trades have closed.
+    pub max_consecutive_losses: Option<i64>,
+    /// Reject orders whose entry-price × qty exceeds this notional cap.
+    pub max_position_size_usd: Option<Decimal>,
 }
 
 impl EngineConfig {
@@ -186,8 +210,106 @@ impl EngineConfig {
             .get("max_concurrent_positions")
             .and_then(|v| v.as_i64())
             .unwrap_or(5);
-        Self { sizing, side_mode, max_concurrent_positions }
+        let f64_to_dec = |v: &serde_json::Value| -> Option<Decimal> {
+            v.as_f64()
+                .and_then(|f| Decimal::try_from(f).ok())
+                .filter(|d| *d > Decimal::zero())
+        };
+        let max_daily_loss_usd = s.risk_gates.get("max_daily_loss_usd").and_then(f64_to_dec);
+        let max_consecutive_losses = s
+            .risk_gates
+            .get("max_consecutive_losses")
+            .and_then(|v| v.as_i64())
+            .filter(|n| *n > 0);
+        let max_position_size_usd = s
+            .risk_gates
+            .get("max_position_size_usd")
+            .and_then(f64_to_dec);
+        Self {
+            sizing,
+            side_mode,
+            max_concurrent_positions,
+            max_daily_loss_usd,
+            max_consecutive_losses,
+            max_position_size_usd,
+        }
     }
+}
+
+/// Realized P&L for `strategy_id` since 00:00 UTC today, summed across
+/// every `trades` row whose `closed_at` falls in the window. Positive
+/// when winning, negative when losing.
+async fn today_realized_pnl(pool: &PgPool, strategy_id: Uuid) -> Result<Decimal, EngineError> {
+    let row: Option<(Option<Decimal>,)> = sqlx::query_as(
+        "SELECT COALESCE(SUM(realized_pnl), 0)::numeric
+           FROM trades
+          WHERE strategy_id = $1
+            AND closed_at >= date_trunc('day', now() AT TIME ZONE 'UTC')",
+    )
+    .bind(strategy_id)
+    .fetch_optional(pool)
+    .await
+    .map_err(|e| EngineError::Broker(format!("today_pnl: {e}")))?;
+    Ok(row.and_then(|(v,)| v).unwrap_or_else(Decimal::zero))
+}
+
+/// Count of consecutive losing trades at the tail of the strategy's
+/// trade history. Stops counting at the first win (or breakeven trade
+/// with realized_pnl >= 0).
+async fn consecutive_losses(pool: &PgPool, strategy_id: Uuid) -> Result<i64, EngineError> {
+    let rows: Vec<(Decimal,)> = sqlx::query_as(
+        "SELECT realized_pnl FROM trades
+          WHERE strategy_id = $1 AND closed_at IS NOT NULL
+          ORDER BY closed_at DESC
+          LIMIT 50",
+    )
+    .bind(strategy_id)
+    .fetch_all(pool)
+    .await
+    .map_err(|e| EngineError::Broker(format!("consec_losses: {e}")))?;
+    let mut streak = 0i64;
+    for (pnl,) in rows {
+        if pnl < Decimal::zero() {
+            streak += 1;
+        } else {
+            break;
+        }
+    }
+    Ok(streak)
+}
+
+/// Auto-pause the strategy after a risk-gate breach. Sets enabled=FALSE
+/// AND kill_switch=TRUE with a descriptive reason so the UI can render
+/// the trip. Audit row is appended for the kill switch the same way a
+/// manual trip writes one.
+async fn trip_kill_switch(
+    pool: &PgPool,
+    strategy_id: Uuid,
+    reason: &str,
+) -> Result<(), EngineError> {
+    sqlx::query(
+        "UPDATE algo_strategies
+            SET enabled = FALSE,
+                kill_switch = TRUE,
+                kill_reason = $2,
+                last_kill_at = now()
+          WHERE id = $1",
+    )
+    .bind(strategy_id)
+    .bind(reason)
+    .execute(pool)
+    .await
+    .map_err(|e| EngineError::Broker(format!("trip_kill: {e}")))?;
+    sqlx::query(
+        "INSERT INTO algo_kill_switch_audit (strategy_id, actor_user_id, action, reason)
+         VALUES ($1, NULL, 'engaged', $2)",
+    )
+    .bind(strategy_id)
+    .bind(reason)
+    .execute(pool)
+    .await
+    .map_err(|e| EngineError::Broker(format!("trip_audit: {e}")))?;
+    Ok(())
 }
 
 /// One-shot evaluator: feed it a bar window for `symbol`, the caller's
@@ -219,6 +341,31 @@ pub async fn process_bar_window(
         return Err(EngineError::PositionCap(open_positions));
     }
 
+    // Risk gate: daily loss cap. Auto-pauses the strategy on breach so
+    // the next bar processed for the same strategy will short-circuit
+    // at the `kill_switch` check above.
+    if let Some(cap) = cfg.max_daily_loss_usd {
+        let pnl = today_realized_pnl(pool, strategy.id).await?;
+        if pnl <= -cap {
+            let reason = format!(
+                "auto-paused: daily loss cap ${cap} breached (today P&L: ${pnl})"
+            );
+            trip_kill_switch(pool, strategy.id, &reason).await?;
+            return Err(EngineError::DailyLossCap { cap, pnl });
+        }
+    }
+    // Risk gate: consecutive-losses streak.
+    if let Some(cap) = cfg.max_consecutive_losses {
+        let streak = consecutive_losses(pool, strategy.id).await?;
+        if streak >= cap {
+            let reason = format!(
+                "auto-paused: {streak} consecutive losses (cap {cap})"
+            );
+            trip_kill_switch(pool, strategy.id, &reason).await?;
+            return Err(EngineError::ConsecutiveLossesCap { cap, streak });
+        }
+    }
+
     let strat = algo_strategies::from_kind(&strategy.strategy_type, &strategy.entry_rules)
         .map_err(|e| EngineError::Broker(e.to_string()))?;
 
@@ -235,6 +382,18 @@ pub async fn process_bar_window(
     );
     if qty == 0 {
         return Err(EngineError::ZeroQty);
+    }
+
+    // Risk gate: position-size notional cap. Hard reject — we don't
+    // shrink the position because qty came from the sizing function
+    // that already factored equity + per-trade risk; shrinking it
+    // silently would violate the user's risk-per-trade contract.
+    if let Some(cap) = cfg.max_position_size_usd {
+        let entry_price = Decimal::try_from(sig.entry_price).unwrap_or_else(|_| Decimal::zero());
+        let notional = entry_price * Decimal::from(qty);
+        if notional > cap {
+            return Err(EngineError::PositionSizeCap { notional, cap });
+        }
     }
 
     algo::increment_run_counter(pool, run_id, algo::RunCounter::SignalsEmitted, 1)
@@ -433,6 +592,27 @@ pub async fn process_bar_window_multi(
     if open_positions >= cfg.max_concurrent_positions {
         return Err(EngineError::PositionCap(open_positions));
     }
+    // Same risk gates as the single-symbol path (commit 48).
+    if let Some(cap) = cfg.max_daily_loss_usd {
+        let pnl = today_realized_pnl(pool, strategy.id).await?;
+        if pnl <= -cap {
+            let reason = format!(
+                "auto-paused: daily loss cap ${cap} breached (today P&L: ${pnl})"
+            );
+            trip_kill_switch(pool, strategy.id, &reason).await?;
+            return Err(EngineError::DailyLossCap { cap, pnl });
+        }
+    }
+    if let Some(cap) = cfg.max_consecutive_losses {
+        let streak = consecutive_losses(pool, strategy.id).await?;
+        if streak >= cap {
+            let reason = format!(
+                "auto-paused: {streak} consecutive losses (cap {cap})"
+            );
+            trip_kill_switch(pool, strategy.id, &reason).await?;
+            return Err(EngineError::ConsecutiveLossesCap { cap, streak });
+        }
+    }
     let strat = algo_strategies::from_kind(&strategy.strategy_type, &strategy.entry_rules)
         .map_err(|e| EngineError::Broker(e.to_string()))?;
     let primary_symbol = strat
@@ -445,6 +625,13 @@ pub async fn process_bar_window_multi(
     let qty = algo_strategies::size_shares(equity, sig.entry_price, sig.stop_distance, &cfg.sizing);
     if qty == 0 {
         return Err(EngineError::ZeroQty);
+    }
+    if let Some(cap) = cfg.max_position_size_usd {
+        let entry_price = Decimal::try_from(sig.entry_price).unwrap_or_else(|_| Decimal::zero());
+        let notional = entry_price * Decimal::from(qty);
+        if notional > cap {
+            return Err(EngineError::PositionSizeCap { notional, cap });
+        }
     }
     algo::increment_run_counter(pool, run_id, algo::RunCounter::SignalsEmitted, 1)
         .await

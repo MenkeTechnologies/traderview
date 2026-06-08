@@ -342,6 +342,148 @@ fn engine_refuses_alpaca_live_inside_paper_lock_window() {
     });
 }
 
+/// Position-size cap — strategy whose entry-price × qty would exceed
+/// max_position_size_usd must be rejected with the matching error and
+/// no order persisted (engine returns BEFORE the broker call).
+#[test]
+fn engine_refuses_when_position_size_cap_breached() {
+    run(async {
+        let pool = pool();
+        let user = fresh_user_in(&pool).await;
+        let account_id = fresh_account_in(&pool, user).await;
+        // Tiny cap: $100. A normal momentum signal at ~$100/share with
+        // even 1 share notional would breach. Risk-pct sizing produces
+        // multiple shares so the breach is certain.
+        let strategy = algo::create_strategy(
+            &pool,
+            user,
+            AlgoStrategyInput {
+                name: format!("size-cap-{}", Uuid::new_v4()),
+                enabled: true,
+                timeframe: "min1".into(),
+                universe_mode: "watchlist".into(),
+                watchlist_id: None,
+                autoscan_top_n: 25,
+                side_mode: "long".into(),
+                strategy_type: "momentum".into(),
+                account_id: Some(account_id),
+                entry_rules: serde_json::json!({}),
+                exit_rules: serde_json::json!({}),
+                sizing: serde_json::json!({"risk_pct_per_trade": 0.01, "max_pos_pct": 0.20}),
+                risk_gates: serde_json::json!({
+                    "max_concurrent_positions": 5,
+                    "max_position_size_usd": 100.0
+                }),
+                broker_mode: "internal_sim".into(),
+            },
+        )
+        .await
+        .expect("create");
+        let run = algo::start_run(&pool, strategy.id).await.expect("run");
+        let bars = fresh_long_window("AAPL");
+        let sink = InMemorySink::default();
+
+        // Run forward; the signal that lands MUST be cap-rejected (or
+        // never fire — both acceptable since `fresh_long_window`
+        // produces a single trigger bar).
+        let mut hit_cap = false;
+        for end in 30..=bars.len() {
+            match process_bar_window(&pool, &sink, &strategy, run.id, &bars[..end], 100_000.0, 0, None)
+                .await
+            {
+                Err(EngineError::PositionSizeCap { .. }) => {
+                    hit_cap = true;
+                    break;
+                }
+                Ok(_) => {}
+                Err(other) => panic!("unexpected error: {other:?}"),
+            }
+        }
+        assert!(hit_cap, "position size cap should have rejected the order");
+        assert!(sink.submitted.lock().unwrap().is_empty());
+    });
+}
+
+/// Consecutive-losses cap — seed N losing trades, then any new entry
+/// signal must trip the kill switch and return ConsecutiveLossesCap.
+#[test]
+fn engine_trips_on_consecutive_losses_cap() {
+    run(async {
+        let pool = pool();
+        let user = fresh_user_in(&pool).await;
+        let account_id = fresh_account_in(&pool, user).await;
+        let strategy = algo::create_strategy(
+            &pool,
+            user,
+            AlgoStrategyInput {
+                name: format!("losses-cap-{}", Uuid::new_v4()),
+                enabled: true,
+                timeframe: "min1".into(),
+                universe_mode: "watchlist".into(),
+                watchlist_id: None,
+                autoscan_top_n: 25,
+                side_mode: "long".into(),
+                strategy_type: "momentum".into(),
+                account_id: Some(account_id),
+                entry_rules: serde_json::json!({}),
+                exit_rules: serde_json::json!({}),
+                sizing: serde_json::json!({"risk_pct_per_trade": 0.01, "max_pos_pct": 0.20}),
+                risk_gates: serde_json::json!({
+                    "max_concurrent_positions": 5,
+                    "max_consecutive_losses": 3
+                }),
+                broker_mode: "internal_sim".into(),
+            },
+        )
+        .await
+        .expect("create");
+        let run = algo::start_run(&pool, strategy.id).await.expect("run");
+
+        // Seed 3 losing trades for this strategy directly via SQL so we
+        // don't depend on the engine's roll-up running first.
+        for _ in 0..3 {
+            sqlx::query(
+                "INSERT INTO trades
+                   (user_id, account_id, symbol, side, qty, entry_price, exit_price,
+                    realized_pnl, opened_at, closed_at, strategy_id)
+                 VALUES ($1, $2, 'AAPL', 'long', 1, 100, 99, -1.00,
+                         now() - interval '1 hour', now() - interval '30 minutes', $3)",
+            )
+            .bind(user)
+            .bind(account_id)
+            .bind(strategy.id)
+            .execute(&pool)
+            .await
+            .expect("seed trade");
+        }
+
+        let bars = fresh_long_window("AAPL");
+        let sink = InMemorySink::default();
+        let mut hit = false;
+        for end in 30..=bars.len() {
+            match process_bar_window(&pool, &sink, &strategy, run.id, &bars[..end], 100_000.0, 0, None)
+                .await
+            {
+                Err(EngineError::ConsecutiveLossesCap { cap: 3, streak: 3 }) => {
+                    hit = true;
+                    break;
+                }
+                Ok(_) => {}
+                Err(other) => panic!("unexpected error: {other:?}"),
+            }
+        }
+        assert!(hit, "consecutive losses cap should trip");
+
+        // And the strategy must now be paused (kill_switch engaged).
+        let after = algo::get_strategy(&pool, user, strategy.id)
+            .await
+            .expect("get")
+            .expect("present");
+        assert!(after.kill_switch, "kill_switch must auto-engage on cap breach");
+        assert!(!after.enabled, "enabled must flip to false");
+    });
+}
+
 /// Stress: a sink that errors out — engine must still persist the order
 /// row with status=rejected and a recorded error, then propagate.
 #[test]
