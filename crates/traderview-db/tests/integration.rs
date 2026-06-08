@@ -665,3 +665,222 @@ fn paper_ensure_default_is_idempotent() {
         assert_eq!(a.id, b.id);
     });
 }
+
+// ──────────────────────────────────────────────────────────────────────
+// algo trading (commit 1 — schema + CRUD)
+// ──────────────────────────────────────────────────────────────────────
+
+#[test]
+fn algo_strategy_create_defaults_paper_lock_30d_kill_off() {
+    run(async {
+        let user = fresh_user().await;
+        let s = traderview_db::algo::create_strategy(
+            &pool(),
+            user,
+            traderview_db::algo::AlgoStrategyInput {
+                name: "mom-aapl".into(),
+                enabled: false,
+                timeframe: "min1".into(),
+                universe_mode: "watchlist".into(),
+                watchlist_id: None,
+                autoscan_top_n: 25,
+                side_mode: "long".into(),
+                entry_rules: serde_json::json!({}),
+                exit_rules: serde_json::json!({}),
+                sizing: serde_json::json!({"risk_pct_per_trade": 0.01}),
+                risk_gates: serde_json::json!({}),
+                broker_mode: "internal_sim".into(),
+            },
+        )
+        .await
+        .expect("create strategy");
+        assert_eq!(s.broker_mode, "internal_sim");
+        assert!(!s.kill_switch);
+        // Paper-locked at least 29 days out — guards against accidental
+        // live trades on day-1 strategies.
+        let now = chrono::Utc::now();
+        let days = (s.paper_locked_until - now).num_days();
+        assert!(days >= 29 && days <= 31, "paper_locked_until ~30 days, got {days}");
+    });
+}
+
+#[test]
+fn algo_kill_switch_toggles_and_audits() {
+    run(async {
+        let user = fresh_user().await;
+        let s = traderview_db::algo::create_strategy(
+            &pool(),
+            user,
+            traderview_db::algo::AlgoStrategyInput {
+                name: "kill-test".into(),
+                enabled: true,
+                timeframe: "sec10".into(),
+                universe_mode: "autoscan".into(),
+                watchlist_id: None,
+                autoscan_top_n: 10,
+                side_mode: "both".into(),
+                entry_rules: serde_json::json!({}),
+                exit_rules: serde_json::json!({}),
+                sizing: serde_json::json!({}),
+                risk_gates: serde_json::json!({}),
+                broker_mode: "internal_sim".into(),
+            },
+        )
+        .await
+        .expect("create");
+
+        let engaged = traderview_db::algo::set_kill_switch(
+            &pool(), user, s.id, true, Some("manual halt".into()),
+        )
+        .await
+        .expect("engage")
+        .expect("strategy present");
+        assert!(engaged.kill_switch);
+        assert_eq!(engaged.kill_reason.as_deref(), Some("manual halt"));
+
+        // Re-engaging is a no-op (returns current row, no extra audit).
+        let again = traderview_db::algo::set_kill_switch(&pool(), user, s.id, true, None)
+            .await
+            .expect("re-engage")
+            .expect("present");
+        assert!(again.kill_switch);
+
+        let released = traderview_db::algo::set_kill_switch(&pool(), user, s.id, false, None)
+            .await
+            .expect("release")
+            .expect("present");
+        assert!(!released.kill_switch);
+
+        let hist = traderview_db::algo::kill_switch_history(&pool(), s.id, 10)
+            .await
+            .expect("history");
+        // Two audit rows: one engaged + one released. The no-op middle
+        // call must NOT have produced a third.
+        assert_eq!(hist.len(), 2, "only edge transitions audited");
+        assert_eq!(hist[0].action, "released");
+        assert_eq!(hist[1].action, "engaged");
+    });
+}
+
+#[test]
+fn algo_run_one_open_per_strategy_invariant() {
+    run(async {
+        let user = fresh_user().await;
+        let s = traderview_db::algo::create_strategy(
+            &pool(),
+            user,
+            traderview_db::algo::AlgoStrategyInput {
+                name: "one-open".into(),
+                enabled: true,
+                timeframe: "min1".into(),
+                universe_mode: "watchlist".into(),
+                watchlist_id: None,
+                autoscan_top_n: 25,
+                side_mode: "long".into(),
+                entry_rules: serde_json::json!({}),
+                exit_rules: serde_json::json!({}),
+                sizing: serde_json::json!({}),
+                risk_gates: serde_json::json!({}),
+                broker_mode: "internal_sim".into(),
+            },
+        )
+        .await
+        .expect("create");
+        let r1 = traderview_db::algo::start_run(&pool(), s.id).await.expect("r1");
+        // Second open run for the same strategy must be rejected by the
+        // partial unique index.
+        let r2 = traderview_db::algo::start_run(&pool(), s.id).await;
+        assert!(r2.is_err(), "second open run should violate unique index");
+        // After stopping r1, a new run can start cleanly.
+        traderview_db::algo::stop_run(&pool(), r1.id, "user", None, None)
+            .await
+            .expect("stop r1");
+        traderview_db::algo::start_run(&pool(), s.id).await.expect("r3");
+    });
+}
+
+#[test]
+fn algo_order_fill_round_trip() {
+    run(async {
+        use rust_decimal::Decimal;
+        use std::str::FromStr;
+        let user = fresh_user().await;
+        let s = traderview_db::algo::create_strategy(
+            &pool(),
+            user,
+            traderview_db::algo::AlgoStrategyInput {
+                name: "fill-test".into(),
+                enabled: true,
+                timeframe: "min1".into(),
+                universe_mode: "watchlist".into(),
+                watchlist_id: None,
+                autoscan_top_n: 25,
+                side_mode: "long".into(),
+                entry_rules: serde_json::json!({}),
+                exit_rules: serde_json::json!({}),
+                sizing: serde_json::json!({}),
+                risk_gates: serde_json::json!({}),
+                broker_mode: "internal_sim".into(),
+            },
+        )
+        .await
+        .expect("create");
+        let run = traderview_db::algo::start_run(&pool(), s.id).await.expect("run");
+
+        let coid = Uuid::new_v4();
+        let order = traderview_db::algo::insert_order(
+            &pool(),
+            run.id,
+            s.id,
+            traderview_db::algo::AlgoOrderInsert {
+                client_order_id: coid,
+                symbol: "AAPL".into(),
+                side: "buy".into(),
+                order_type: "market".into(),
+                order_class: "simple".into(),
+                qty: Decimal::from_str("10").unwrap(),
+                limit_price: None,
+                stop_price: None,
+                raw_request: Some(serde_json::json!({"src": "test"})),
+            },
+        )
+        .await
+        .expect("insert order");
+        assert_eq!(order.status, "pending_submit");
+
+        traderview_db::algo::mark_order_submitted(
+            &pool(),
+            order.id,
+            Some("alpaca-fake-1".into()),
+            "accepted",
+            Some(serde_json::json!({"id": "alpaca-fake-1"})),
+            None,
+        )
+        .await
+        .expect("mark submitted");
+
+        let _ = traderview_db::algo::insert_fill(
+            &pool(),
+            traderview_db::algo::AlgoFillInsert {
+                order_id: order.id,
+                broker_fill_id: Some("fill-1".into()),
+                fill_qty: Decimal::from_str("10").unwrap(),
+                fill_price: Decimal::from_str("180.50").unwrap(),
+                commission: Decimal::ZERO,
+                raw: None,
+            },
+        )
+        .await
+        .expect("insert fill");
+
+        let fills = traderview_db::algo::list_fills(&pool(), order.id).await.expect("list");
+        assert_eq!(fills.len(), 1);
+        assert_eq!(fills[0].fill_value, Decimal::from_str("1805.00").unwrap());
+
+        let upd = traderview_db::algo::update_order_status(&pool(), coid, "filled")
+            .await
+            .expect("update by coid")
+            .expect("present");
+        assert_eq!(upd.status, "filled");
+    });
+}
