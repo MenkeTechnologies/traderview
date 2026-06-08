@@ -313,8 +313,8 @@ function openStrategyModal(mount, existing = null) {
         return `<option value="${k.value}" ${sel} data-i18n="${k.label_key}">${esc(k.label)}</option>`;
     }).join('');
     host.innerHTML = `
-        <div class="modal-backdrop">
-            <div class="modal">
+        <div class="modal">
+            <div class="modal-inner">
                 <h2 data-i18n="view.algo.h2.${existing ? 'edit_strategy' : 'new_strategy'}">${existing ? 'Edit' : 'New'} strategy</h2>
                 <form id="algo-form" class="inline-form" style="flex-direction:column;gap:8px;min-width:420px">
                     <label><span data-i18n="view.algo.label.name">Name</span>
