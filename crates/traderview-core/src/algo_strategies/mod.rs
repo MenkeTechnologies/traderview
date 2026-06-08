@@ -14,6 +14,7 @@ use crate::models::PriceBar;
 use serde::{Deserialize, Serialize};
 
 pub mod bb_squeeze;
+pub mod connors_rsi2;
 pub mod donchian_trend;
 pub mod heikin_ashi_trend;
 pub mod mean_reversion;
@@ -54,6 +55,10 @@ pub enum StrategyKind {
     VwapScalp,
     Supertrend,
     HeikinAshiTrend,
+    ConnorsRsi2,
+    OrderBlockSweep,
+    Pead,
+    Pairs,
 }
 
 impl StrategyKind {
@@ -68,6 +73,10 @@ impl StrategyKind {
             Self::VwapScalp => "vwap_scalp",
             Self::Supertrend => "supertrend",
             Self::HeikinAshiTrend => "heikin_ashi_trend",
+            Self::ConnorsRsi2 => "connors_rsi2",
+            Self::OrderBlockSweep => "order_block_sweep",
+            Self::Pead => "pead",
+            Self::Pairs => "pairs",
         }
     }
 
@@ -82,6 +91,10 @@ impl StrategyKind {
             Self::VwapScalp,
             Self::Supertrend,
             Self::HeikinAshiTrend,
+            Self::ConnorsRsi2,
+            Self::OrderBlockSweep,
+            Self::Pead,
+            Self::Pairs,
         ]
     }
 }
@@ -111,6 +124,11 @@ pub fn from_kind(
         "vwap_scalp" => Ok(Box::new(vwap_scalp::VwapScalp::from_json(entry_rules))),
         "supertrend" => Ok(Box::new(supertrend::Supertrend::from_json(entry_rules))),
         "heikin_ashi_trend" => Ok(Box::new(heikin_ashi_trend::HeikinAshiTrend::from_json(entry_rules))),
+        "connors_rsi2" => Ok(Box::new(connors_rsi2::ConnorsRsi2::from_json(entry_rules))),
+        // Slots populated in commits 26-28.
+        "order_block_sweep" | "pead" | "pairs" => {
+            Err(FactoryError::NotImplemented(kind.to_string()))
+        }
         other => Err(FactoryError::Unknown(other.to_string())),
     }
 }
