@@ -673,7 +673,7 @@ export async function renderAlgo(mount) {
         <details class="chart-panel" id="algo-tape-panel" open>
             <summary><h2 style="display:inline" data-i18n="view.algo.h2.tape">Raw tape — live trades off the Alpaca WS</h2></summary>
             <p class="muted small" data-i18n="view.algo.hint.tape">
-                Every trade frame the live-tick worker parses off the WS. Per-symbol coalesce of 250ms so a chatty pair doesn't flood the pane.
+                Every trade frame the live-tick worker parses off the WS — no throttle, no coalesce.
                 Empty pane = the WS isn't producing trades for any subscribed symbol right now.
             </p>
             <div class="row" style="gap:8px;margin-bottom:6px">
@@ -681,7 +681,8 @@ export async function renderAlgo(mount) {
                 <label style="white-space:nowrap"><input type="checkbox" id="algo-tape-autoscroll" checked> autoscroll</label>
                 <button class="link" id="algo-tape-clear" data-i18n="view.algo.btn.clear">clear</button>
             </div>
-            <pre id="algo-tape" class="algo-stdout" style="max-height:280px;overflow:auto"></pre>
+            <div id="algo-tape-stats" class="muted small" style="font-family:monospace">0 trades / 0s = 0.00/sec   top: (waiting for first tick)</div>
+            <pre id="algo-tape" class="algo-stdout" style="max-height:340px;overflow:auto"></pre>
         </details>
 
         <div id="algo-runs" class="chart-panel" style="display:none">
@@ -770,34 +771,68 @@ export async function renderAlgo(mount) {
         clearBtn.addEventListener('click', () => {
             const pane = mount.querySelector('#algo-tape');
             if (pane) pane.textContent = '';
-            tapeLastEmit.clear();
+            tapeStats.total = 0;
+            tapeStats.perSymbol.clear();
+            tapeStats.windowStart = performance.now();
+            const statsEl = mount.querySelector('#algo-tape-stats');
+            if (statsEl) {
+                statsEl.textContent = '0 trades / 0s = 0.00/sec   top: (waiting for first tick)';
+                statsEl.__lastTick = 0;
+            }
         });
     }
 }
 
-// Raw tape pane — coalesce per (symbol) at 250ms so a chatty pair
-// (BTC/USD doing 100 trades/sec at peak) doesn't drown other symbols.
-const tapeLastEmit = new Map();
-const TAPE_MAX_LINES = 500;
+// Raw tape pane. NO coalesce — every trade frame off the WS lands
+// here verbatim so the user can see ingest rate honestly. Earlier
+// 250ms per-symbol throttle made a thin tape look even thinner and
+// triggered "this must be fake" suspicion. If the user wants to
+// quiet a chatty pair, that's what the filter input is for.
+//
+// Per-symbol + global counters surface the true ingest rate in the
+// pane's header so the user can compare "n trades/sec arrived" vs
+// "what's rendered" and confirm nothing is being hidden.
+const tapeStats = {
+    total: 0,
+    perSymbol: new Map(), // symbol → count
+    windowStart: 0,       // performance.now() at the most recent reset
+};
+const TAPE_MAX_LINES = 2000;
 function logTape(mount, msg) {
-    const last = tapeLastEmit.get(msg.symbol) || 0;
-    const now = performance.now();
-    if (now - last < 250) return;
-    tapeLastEmit.set(msg.symbol, now);
+    tapeStats.total += 1;
+    tapeStats.perSymbol.set(msg.symbol, (tapeStats.perSymbol.get(msg.symbol) || 0) + 1);
     const pane = mount.querySelector('#algo-tape');
     if (!pane) return;
     const filter = (mount.querySelector('#algo-tape-filter')?.value || '').trim().toLowerCase();
-    if (filter && !msg.symbol.toLowerCase().includes(filter)) return;
     const ts = new Date(msg.ts_ms).toISOString().slice(11, 23);
-    const line = `${ts}  ${msg.symbol.padEnd(10)} @ ${Number(msg.price).toFixed(4).padStart(14)}  vol=${Number(msg.volume).toFixed(4)}`;
-    pane.textContent += (pane.textContent ? '\n' : '') + line;
-    // Trim to last TAPE_MAX_LINES
-    const lines = pane.textContent.split('\n');
-    if (lines.length > TAPE_MAX_LINES) {
-        pane.textContent = lines.slice(-TAPE_MAX_LINES).join('\n');
+    if (!filter || msg.symbol.toLowerCase().includes(filter)) {
+        const line = `${ts}  ${msg.symbol.padEnd(10)} @ ${Number(msg.price).toFixed(4).padStart(14)}  vol=${Number(msg.volume).toFixed(6)}`;
+        pane.textContent += (pane.textContent ? '\n' : '') + line;
+        const lines = pane.textContent.split('\n');
+        if (lines.length > TAPE_MAX_LINES) {
+            pane.textContent = lines.slice(-TAPE_MAX_LINES).join('\n');
+        }
+        const autoscroll = mount.querySelector('#algo-tape-autoscroll');
+        if (autoscroll?.checked !== false) pane.scrollTop = pane.scrollHeight;
     }
-    const autoscroll = mount.querySelector('#algo-tape-autoscroll');
-    if (autoscroll?.checked !== false) pane.scrollTop = pane.scrollHeight;
+    // Refresh the stats header at most 4x/sec — keeps the DOM update
+    // cost negligible even when a chatty pair spikes through.
+    const statsEl = mount.querySelector('#algo-tape-stats');
+    if (statsEl) {
+        const now = performance.now();
+        if (now - (statsEl.__lastTick || 0) > 250) {
+            statsEl.__lastTick = now;
+            if (!tapeStats.windowStart) tapeStats.windowStart = now;
+            const seconds = Math.max(1, (now - tapeStats.windowStart) / 1000);
+            const rate = (tapeStats.total / seconds).toFixed(2);
+            const top = [...tapeStats.perSymbol.entries()]
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5)
+                .map(([s, n]) => `${s}=${n}`)
+                .join('  ');
+            statsEl.textContent = `${tapeStats.total} trades / ${seconds.toFixed(0)}s = ${rate}/sec   top: ${top}`;
+        }
+    }
 }
 
 async function refreshStrategies(mount) {

@@ -262,6 +262,12 @@ pub struct LiveTickStore {
     // account slot, ALL of them failed with `connection limit
     // exceeded` (code 406), and ZERO trades flowed.
     workers: Arc<tokio::sync::Mutex<Vec<tokio::task::JoinHandle<()>>>>,
+    /// Per-symbol trade counter for the rolling rate log. Reset every
+    /// 60s when the rate is dumped to the desktop log. Lets the user
+    /// confirm the ingest rate seen on the tape pane matches what
+    /// the worker actually parsed off the WS.
+    tape_counters: Arc<DashMap<String, u64>>,
+    tape_window_start_ms: Arc<std::sync::atomic::AtomicI64>,
 }
 
 impl LiveTickStore {
@@ -282,7 +288,66 @@ impl LiveTickStore {
             pool: Arc::new(tokio::sync::RwLock::new(None)),
             sweeper_spawned: Arc::new(AtomicBool::new(false)),
             workers: Arc::new(tokio::sync::Mutex::new(Vec::new())),
+            tape_counters: Arc::new(DashMap::new()),
+            tape_window_start_ms: Arc::new(std::sync::atomic::AtomicI64::new(0)),
         }
+    }
+
+    /// Per-symbol ingest counter — increments on every parsed Trade
+    /// (called from `feed_bucket`). Every ~60 seconds we dump a
+    /// per-symbol breakdown to the log so the user can compare the
+    /// frontend tape pane's "N/sec" header against what the worker
+    /// actually observed at the WS layer.
+    fn observe_for_rate_log(&self, t: &Trade) {
+        *self.tape_counters.entry(t.symbol.clone()).or_insert(0) += 1;
+        let now_ms = chrono::Utc::now().timestamp_millis();
+        let started = self
+            .tape_window_start_ms
+            .load(std::sync::atomic::Ordering::Acquire);
+        if started == 0 {
+            self.tape_window_start_ms
+                .store(now_ms, std::sync::atomic::Ordering::Release);
+            return;
+        }
+        if now_ms - started < 60_000 {
+            return;
+        }
+        // Window elapsed — log + reset.
+        if self
+            .tape_window_start_ms
+            .compare_exchange(
+                started,
+                now_ms,
+                std::sync::atomic::Ordering::AcqRel,
+                std::sync::atomic::Ordering::Acquire,
+            )
+            .is_err()
+        {
+            // Another thread is doing the dump — let it.
+            return;
+        }
+        let mut total: u64 = 0;
+        let mut per: Vec<(String, u64)> = Vec::new();
+        for entry in self.tape_counters.iter() {
+            per.push((entry.key().clone(), *entry.value()));
+            total += *entry.value();
+        }
+        per.sort_by(|a, b| b.1.cmp(&a.1));
+        let top = per
+            .iter()
+            .take(10)
+            .map(|(s, n)| format!("{s}={n}"))
+            .collect::<Vec<_>>()
+            .join(" ");
+        let secs = (now_ms - started) as f64 / 1000.0;
+        tracing::info!(
+            total_trades = total,
+            rate = format!("{:.2}/sec", total as f64 / secs),
+            window_secs = secs,
+            top10 = %top,
+            "live_ticks: 60s tape ingest summary"
+        );
+        self.tape_counters.clear();
     }
 
     /// Wire the Polygon WS key. Mirrors `set_api_key` so settings-page
@@ -611,6 +676,11 @@ impl LiveTickStore {
         // downstream bucket close takes a moment to persist. No
         // backpressure — the send is non-blocking and lossy on lag.
         let _ = self.tape_tx.send(t.clone());
+        // Per-symbol ingest counter, logged every 60s. The user sees
+        // the same number on the frontend tape pane header — if they
+        // diverge by more than the broadcast-lag drop count, we know
+        // the renderer (not the ingest) is the bottleneck.
+        self.observe_for_rate_log(t);
         let bucket_start = (t.ts_ms / 1000 / TAPE_BUCKET_SECS) * TAPE_BUCKET_SECS;
         let mut closed: Option<(String, TapeBucket)> = None;
         {

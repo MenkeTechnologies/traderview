@@ -390,6 +390,31 @@ async fn bring_up_backend(
     traderview_db::live_ticks::global()
         .set_pool(embedded.pool.clone())
         .await;
+    // Always-on reference feed — top liquid names per asset class.
+    // Forces both the crypto AND equity WS workers to spawn at boot
+    // so the user's tape pane shows both streams without having to
+    // create a strategy for each. Equity slot stays silent outside
+    // RTH (9:30-16:00 ET) on the IEX free tier — that's an Alpaca
+    // limitation, not a bug in the tape.
+    const TAPE_AUDIT_FEED: &[&str] = &[
+        // Crypto (24/7)
+        "BTC/USD", "ETH/USD", "SOL/USD", "DOGE/USD", "AVAX/USD",
+        // Equity mega caps (RTH only on IEX)
+        "SPY", "QQQ", "AAPL", "MSFT", "NVDA", "TSLA",
+    ];
+    {
+        let store = traderview_db::live_ticks::global();
+        if store.has_any_provider().await {
+            let syms: Vec<String> = TAPE_AUDIT_FEED.iter().map(|s| (*s).to_string()).collect();
+            let n = syms.len();
+            if let Err(e) = store.ensure_subscribed(syms).await {
+                tracing::warn!(error = %e, "boot audit-feed subscribe failed");
+            } else {
+                tracing::info!(n, "boot subscribed audit feed (crypto + equity)");
+            }
+        }
+    }
+
     // Boot-time push of the watchlist union into the live-tick
     // subscription set. Without this the WS workers stay idle until
     // the user mutates a watchlist or the candidates/scanner loop
