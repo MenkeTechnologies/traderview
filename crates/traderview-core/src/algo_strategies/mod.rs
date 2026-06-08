@@ -18,6 +18,7 @@ pub mod donchian_trend;
 pub mod mean_reversion;
 pub mod momentum;
 pub mod orb;
+pub mod supertrend;
 pub mod ttm_squeeze;
 pub mod types;
 pub mod vwap_scalp;
@@ -107,7 +108,8 @@ pub fn from_kind(
         "bb_squeeze" => Ok(Box::new(bb_squeeze::BbSqueeze::from_json(entry_rules))),
         "ttm_squeeze" => Ok(Box::new(ttm_squeeze::TtmSqueeze::from_json(entry_rules))),
         "vwap_scalp" => Ok(Box::new(vwap_scalp::VwapScalp::from_json(entry_rules))),
-        "supertrend" | "heikin_ashi_trend" => {
+        "supertrend" => Ok(Box::new(supertrend::Supertrend::from_json(entry_rules))),
+        "heikin_ashi_trend" => {
             Err(FactoryError::NotImplemented(kind.to_string()))
         }
         other => Err(FactoryError::Unknown(other.to_string())),
