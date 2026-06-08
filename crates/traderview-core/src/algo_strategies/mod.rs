@@ -18,6 +18,7 @@ pub mod donchian_trend;
 pub mod mean_reversion;
 pub mod momentum;
 pub mod orb;
+pub mod ttm_squeeze;
 pub mod types;
 
 pub use types::*;
@@ -46,6 +47,10 @@ pub enum StrategyKind {
     Orb,
     DonchianTrend,
     BbSqueeze,
+    TtmSqueeze,
+    VwapScalp,
+    Supertrend,
+    HeikinAshiTrend,
 }
 
 impl StrategyKind {
@@ -56,6 +61,10 @@ impl StrategyKind {
             Self::Orb => "orb",
             Self::DonchianTrend => "donchian_trend",
             Self::BbSqueeze => "bb_squeeze",
+            Self::TtmSqueeze => "ttm_squeeze",
+            Self::VwapScalp => "vwap_scalp",
+            Self::Supertrend => "supertrend",
+            Self::HeikinAshiTrend => "heikin_ashi_trend",
         }
     }
 
@@ -66,6 +75,10 @@ impl StrategyKind {
             Self::Orb,
             Self::DonchianTrend,
             Self::BbSqueeze,
+            Self::TtmSqueeze,
+            Self::VwapScalp,
+            Self::Supertrend,
+            Self::HeikinAshiTrend,
         ]
     }
 }
@@ -91,6 +104,10 @@ pub fn from_kind(
         "orb" => Ok(Box::new(orb::Orb::from_json(entry_rules))),
         "donchian_trend" => Ok(Box::new(donchian_trend::DonchianTrend::from_json(entry_rules))),
         "bb_squeeze" => Ok(Box::new(bb_squeeze::BbSqueeze::from_json(entry_rules))),
+        "ttm_squeeze" => Ok(Box::new(ttm_squeeze::TtmSqueeze::from_json(entry_rules))),
+        "vwap_scalp" | "supertrend" | "heikin_ashi_trend" => {
+            Err(FactoryError::NotImplemented(kind.to_string()))
+        }
         other => Err(FactoryError::Unknown(other.to_string())),
     }
 }
