@@ -17,7 +17,8 @@ use std::str::FromStr;
 use std::sync::Arc;
 use std::sync::Mutex as StdMutex;
 use traderview_db::schwab_trading::{
-    Duration_, Instruction, OrderType, PlaceOrder, SchwabError, SchwabTrading, Session, Tokens,
+    Duration_, Instruction, OrderType, PlaceBracket, PlaceOrder, SchwabError, SchwabTrading,
+    Session, Tokens,
 };
 use wiremock::matchers::{body_json_string, header, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -278,4 +279,104 @@ async fn buying_power_403_mapped() {
     };
     let err = client.place_order(&req).await.unwrap_err();
     assert!(matches!(err, SchwabError::InsufficientBuyingPower), "got {err:?}");
+}
+
+#[tokio::test]
+async fn bracket_buy_sends_trigger_with_oco_children() {
+    let (server, client) = server_with_tokens("acc-1", "ref-1").await;
+    Mock::given(method("POST"))
+        .and(path("/trader/v1/accounts/ACCT-HASH-1/orders"))
+        .and(body_json_string(serde_json::to_string(&serde_json::json!({
+            "orderType": "MARKET",
+            "session": "NORMAL",
+            "duration": "DAY",
+            "orderStrategyType": "TRIGGER",
+            "orderLegCollection": [{
+                "instruction": "BUY",
+                "quantity": 10.0,
+                "instrument": { "symbol": "AAPL", "assetType": "EQUITY" },
+                "comment": "algo-bracket"
+            }],
+            "childOrderStrategies": [{
+                "orderStrategyType": "OCO",
+                "childOrderStrategies": [
+                    {
+                        "orderType": "LIMIT",
+                        "session": "NORMAL",
+                        "duration": "DAY",
+                        "orderStrategyType": "SINGLE",
+                        "price": 200.0,
+                        "orderLegCollection": [{
+                            "instruction": "SELL",
+                            "quantity": 10.0,
+                            "instrument": { "symbol": "AAPL", "assetType": "EQUITY" }
+                        }]
+                    },
+                    {
+                        "orderType": "STOP",
+                        "session": "NORMAL",
+                        "duration": "DAY",
+                        "orderStrategyType": "SINGLE",
+                        "stopPrice": 180.0,
+                        "orderLegCollection": [{
+                            "instruction": "SELL",
+                            "quantity": 10.0,
+                            "instrument": { "symbol": "AAPL", "assetType": "EQUITY" }
+                        }]
+                    }
+                ]
+            }]
+        })).unwrap()))
+        .respond_with(
+            ResponseTemplate::new(201).insert_header("Location", "/orders/ACCT-HASH-1/BRK-1"),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+    let req = PlaceBracket {
+        symbol: "AAPL".into(),
+        instruction: Instruction::Buy,
+        order_type: OrderType::Market,
+        quantity: dec("10"),
+        duration: Duration_::Day,
+        session: Session::Normal,
+        entry_price: None,
+        take_profit_price: dec("200"),
+        stop_loss_price: dec("180"),
+        comment: Some("algo-bracket".into()),
+    };
+    let resp = client.place_bracket(&req).await.expect("bracket ok");
+    assert_eq!(resp.order_id.as_deref(), Some("BRK-1"));
+}
+
+#[tokio::test]
+async fn bracket_short_uses_buy_to_cover_exit() {
+    let (server, client) = server_with_tokens("acc-1", "ref-1").await;
+    // Pin only the exit-leg instruction shape — full envelope match in
+    // the BUY test above. Here we just confirm the SELL_SHORT entry
+    // produces BUY_TO_COVER exits, not SELL.
+    Mock::given(method("POST"))
+        .and(path("/trader/v1/accounts/ACCT-HASH-1/orders"))
+        .and(wiremock::matchers::body_string_contains("\"instruction\":\"SELL_SHORT\""))
+        .and(wiremock::matchers::body_string_contains("\"instruction\":\"BUY_TO_COVER\""))
+        .respond_with(
+            ResponseTemplate::new(201).insert_header("Location", "/orders/ACCT-HASH-1/BRK-2"),
+        )
+        .expect(1)
+        .mount(&server)
+        .await;
+    let req = PlaceBracket {
+        symbol: "TSLA".into(),
+        instruction: Instruction::SellShort,
+        order_type: OrderType::Market,
+        quantity: dec("5"),
+        duration: Duration_::Day,
+        session: Session::Normal,
+        entry_price: None,
+        take_profit_price: dec("180"),
+        stop_loss_price: dec("220"),
+        comment: None,
+    };
+    let resp = client.place_bracket(&req).await.expect("short bracket ok");
+    assert_eq!(resp.order_id.as_deref(), Some("BRK-2"));
 }

@@ -20,7 +20,8 @@ use crate::ibkr_trading::{
 };
 use crate::schwab_trading::{
     Duration_ as SchwabDuration, Instruction as SchwabInstruction, OrderType as SchwabOrderType,
-    PlaceOrder as SchwabPlaceOrder, SchwabTrading, Session as SchwabSession,
+    PlaceBracket as SchwabPlaceBracket, PlaceOrder as SchwabPlaceOrder, SchwabTrading,
+    Session as SchwabSession,
 };
 use crate::tastytrade_trading::{
     EquityAction, PlaceEquityOrder as TastyEquityOrder, TastytradeEnv, TastytradeTrading,
@@ -299,20 +300,41 @@ impl BrokerSink for SchwabSink {
                 traderview_core::algo_strategies::Side::Buy => SchwabInstruction::Buy,
                 traderview_core::algo_strategies::Side::Sell => SchwabInstruction::SellShort,
             };
-            let req = SchwabPlaceOrder {
-                symbol: intent.symbol.clone(),
-                instruction,
-                order_type: SchwabOrderType::Market,
-                quantity: intent.qty,
-                duration: SchwabDuration::Day,
-                session: SchwabSession::Normal,
-                price: None,
-                comment: Some(intent.client_order_id.to_string()),
+            let has_bracket =
+                intent.take_profit_price > Decimal::zero() && intent.stop_price > Decimal::zero();
+            let resp = if has_bracket {
+                let req = SchwabPlaceBracket {
+                    symbol: intent.symbol.clone(),
+                    instruction,
+                    order_type: SchwabOrderType::Market,
+                    quantity: intent.qty,
+                    duration: SchwabDuration::Day,
+                    session: SchwabSession::Normal,
+                    entry_price: None,
+                    take_profit_price: intent.take_profit_price,
+                    stop_loss_price: intent.stop_price,
+                    comment: Some(intent.client_order_id.to_string()),
+                };
+                client
+                    .place_bracket(&req)
+                    .await
+                    .map_err(|e| EngineError::Broker(format!("schwab bracket: {e}")))?
+            } else {
+                let req = SchwabPlaceOrder {
+                    symbol: intent.symbol.clone(),
+                    instruction,
+                    order_type: SchwabOrderType::Market,
+                    quantity: intent.qty,
+                    duration: SchwabDuration::Day,
+                    session: SchwabSession::Normal,
+                    price: None,
+                    comment: Some(intent.client_order_id.to_string()),
+                };
+                client
+                    .place_order(&req)
+                    .await
+                    .map_err(|e| EngineError::Broker(format!("schwab: {e}")))?
             };
-            let resp = client
-                .place_order(&req)
-                .await
-                .map_err(|e| EngineError::Broker(format!("schwab: {e}")))?;
             Ok(SubmittedOrder {
                 broker_order_id: resp
                     .order_id
@@ -321,7 +343,8 @@ impl BrokerSink for SchwabSink {
                 status: resp.status.unwrap_or_else(|| "submitted".into()),
                 raw_response: None,
                 // Schwab fills land via the trader-streaming WebSocket
-                // (separate pump module, follow-up commit).
+                // (separate pump module — fills arrive after this
+                // returns).
                 immediate_fill: None,
             })
         })

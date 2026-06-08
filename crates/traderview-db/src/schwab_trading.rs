@@ -281,6 +281,27 @@ impl SchwabTrading {
         }
     }
 
+    /// POST /trader/v1/accounts/{accountHash}/orders — native bracket
+    /// order (entry + OCO exit). Schwab models this as a TRIGGER
+    /// parent whose childOrderStrategies carries an OCO pair (the TP
+    /// limit and the SL stop). One round trip; the broker manages the
+    /// child OCO atomically.
+    ///
+    /// Auto-refresh on 401 mirrors `place_order` — one retry after a
+    /// fresh access token, then surface AuthFailed.
+    pub async fn place_bracket(&self, req: &PlaceBracket) -> Result<PlaceOrderResponse, SchwabError> {
+        let url = format!("{}/accounts/{}/orders", self.trader_base, self.account_hash);
+        let body = req.to_json();
+        let first = self.send_post(&url, &body).await;
+        match first {
+            Err(SchwabError::AuthFailed) => {
+                self.refresh_access_token().await?;
+                self.send_post(&url, &body).await
+            }
+            other => other,
+        }
+    }
+
     /// DELETE /trader/v1/accounts/{accountHash}/orders/{orderId}.
     pub async fn cancel_order(&self, order_id: &str) -> Result<(), SchwabError> {
         let url = format!(
@@ -386,6 +407,94 @@ impl PlaceOrder {
             o["orderLegCollection"][0]["comment"] = c.clone().into();
         }
         o
+    }
+}
+
+/// Native bracket order: entry leg + OCO exit pair (TP limit + SL stop).
+/// `entry` is the parent placement; `take_profit_price` and
+/// `stop_loss_price` define the OCO children that fire after the
+/// parent fills. The exit instruction is derived from the entry's
+/// instruction: BUY entry → SELL exits; SELL_SHORT entry →
+/// BUY_TO_COVER exits.
+#[derive(Debug, Clone)]
+pub struct PlaceBracket {
+    pub symbol: String,
+    pub instruction: Instruction,
+    pub order_type: OrderType,
+    pub quantity: Decimal,
+    pub duration: Duration_,
+    pub session: Session,
+    /// Required for LIMIT / STOP_LIMIT entry; ignored for MARKET.
+    pub entry_price: Option<Decimal>,
+    pub take_profit_price: Decimal,
+    pub stop_loss_price: Decimal,
+    pub comment: Option<String>,
+}
+
+impl PlaceBracket {
+    fn to_json(&self) -> serde_json::Value {
+        let qty: f64 = self.quantity.to_string().parse().unwrap_or(0.0);
+        let exit_instruction = match self.instruction {
+            Instruction::Buy => "SELL",
+            Instruction::SellShort => "BUY_TO_COVER",
+            // Defensive: if a caller passes a flat SELL/BUY_TO_COVER as
+            // the entry side, mirror it. Real algo strategies always
+            // open with BUY or SELL_SHORT so these branches are dead
+            // code in practice.
+            Instruction::Sell => "BUY",
+            Instruction::BuyToCover => "SELL",
+        };
+        let tp: f64 = self.take_profit_price.to_string().parse().unwrap_or(0.0);
+        let sl: f64 = self.stop_loss_price.to_string().parse().unwrap_or(0.0);
+
+        let mut parent = serde_json::json!({
+            "orderType": self.order_type.as_str(),
+            "session": self.session.as_str(),
+            "duration": self.duration.as_str(),
+            "orderStrategyType": "TRIGGER",
+            "orderLegCollection": [{
+                "instruction": self.instruction.as_str(),
+                "quantity": qty,
+                "instrument": { "symbol": self.symbol, "assetType": "EQUITY" }
+            }],
+            "childOrderStrategies": [{
+                "orderStrategyType": "OCO",
+                "childOrderStrategies": [
+                    {
+                        "orderType": "LIMIT",
+                        "session": self.session.as_str(),
+                        "duration": self.duration.as_str(),
+                        "orderStrategyType": "SINGLE",
+                        "price": tp,
+                        "orderLegCollection": [{
+                            "instruction": exit_instruction,
+                            "quantity": qty,
+                            "instrument": { "symbol": self.symbol, "assetType": "EQUITY" }
+                        }]
+                    },
+                    {
+                        "orderType": "STOP",
+                        "session": self.session.as_str(),
+                        "duration": self.duration.as_str(),
+                        "orderStrategyType": "SINGLE",
+                        "stopPrice": sl,
+                        "orderLegCollection": [{
+                            "instruction": exit_instruction,
+                            "quantity": qty,
+                            "instrument": { "symbol": self.symbol, "assetType": "EQUITY" }
+                        }]
+                    }
+                ]
+            }]
+        });
+        if let Some(p) = self.entry_price {
+            let pf: f64 = p.to_string().parse().unwrap_or(0.0);
+            parent["price"] = pf.into();
+        }
+        if let Some(c) = &self.comment {
+            parent["orderLegCollection"][0]["comment"] = c.clone().into();
+        }
+        parent
     }
 }
 
