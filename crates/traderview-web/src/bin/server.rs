@@ -281,6 +281,15 @@ async fn main() -> anyhow::Result<()> {
             }
         });
     }
+    // Algo runner — drives every enabled, kill-switch-off strategy on
+    // each bar boundary. Reads from price_bars (already populated by the
+    // live_ticks worker) so no extra market-data infra is needed here.
+    // Commit 19 adds the WS event emitter + symbol-universe resolver.
+    {
+        let pool = state.pool.clone();
+        tokio::spawn(traderview_db::algo_runner::run_loop(pool));
+    }
+
     let api = router(state);
 
     let static_service = ServeDir::new(&args.static_dir).append_index_html_on_directories(true);

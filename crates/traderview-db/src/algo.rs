@@ -194,6 +194,22 @@ pub async fn list_strategies(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Vec
     .await?)
 }
 
+/// Every enabled strategy in the system whose kill_switch is OFF.
+/// Used by the algo runner background task to drive bar ticks. Sorts
+/// by timeframe so 10s strategies fire first within a tick (they have
+/// the tightest latency budget).
+pub async fn list_active_strategies(pool: &PgPool) -> anyhow::Result<Vec<AlgoStrategy>> {
+    Ok(sqlx::query_as::<_, AlgoStrategy>(
+        "SELECT * FROM algo_strategies
+          WHERE enabled = TRUE AND kill_switch = FALSE
+          ORDER BY
+            CASE timeframe WHEN 'sec10' THEN 0 ELSE 1 END,
+            created_at",
+    )
+    .fetch_all(pool)
+    .await?)
+}
+
 pub async fn get_strategy(
     pool: &PgPool,
     user_id: Uuid,
