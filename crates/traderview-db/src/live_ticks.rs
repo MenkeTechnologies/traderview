@@ -910,7 +910,13 @@ impl LiveTickStore {
         secret: &str,
         symbols: &[String],
     ) -> anyhow::Result<()> {
+        tracing::info!(
+            symbols = symbols.len(),
+            url = ALPACA_WS_CRYPTO,
+            "alpaca crypto WS connecting"
+        );
         let (ws, _) = tokio_tungstenite::connect_async(ALPACA_WS_CRYPTO).await?;
+        tracing::info!("alpaca crypto WS connected; auth in flight");
         let (mut tx, mut rx) = ws.split();
         let auth = serde_json::json!({
             "action": "auth",
@@ -969,6 +975,19 @@ impl LiveTickStore {
                             && ev.get("msg").and_then(|v| v.as_str()) == Some("authenticated")
                         {
                             self.record_alpaca_auth(true, "crypto").await;
+                            tracing::info!("alpaca WS authenticated feed=crypto");
+                            continue;
+                        }
+                        if kind == "subscription" {
+                            let trades_n = ev
+                                .get("trades")
+                                .and_then(|v| v.as_array())
+                                .map(|a| a.len())
+                                .unwrap_or(0);
+                            tracing::info!(
+                                trades = trades_n,
+                                "alpaca WS subscribed feed=crypto"
+                            );
                             continue;
                         }
                         if kind != "t" {
