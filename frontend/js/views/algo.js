@@ -355,7 +355,7 @@ function openStrategyModal(mount, existing = null) {
                         </select>
                     </label>
                     <label><span data-i18n="view.algo.label.risk_pct">Risk per trade (fraction of equity)</span>
-                        <input type="number" name="risk_pct_per_trade" step="0.001" min="0.0001" max="0.10" value="${Number(s.sizing?.risk_pct_per_trade ?? 0.01)}">
+                        <input type="number" name="risk_pct_per_trade" step="0.001" min="0.001" max="0.10" value="${Number(s.sizing?.risk_pct_per_trade ?? 0.01)}">
                     </label>
                     <label><span data-i18n="view.algo.label.max_pos_pct">Max position % of equity</span>
                         <input type="number" name="max_pos_pct" step="0.01" min="0.01" max="1.0" value="${Number(s.sizing?.max_pos_pct ?? 0.20)}">
