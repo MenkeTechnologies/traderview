@@ -85,6 +85,17 @@ pub enum Event {
         symbol: String,
         bars: u64,
     },
+    /// Algo runner: per-tick heartbeat — proves the engine is alive
+    /// even on M1 strategies that only formally evaluate once a
+    /// minute.
+    AlgoHeartbeat {
+        strategy_id: String,
+        universe_size: u64,
+        subscribed_live: u64,
+        bars_processed: i64,
+        signals_emitted: i64,
+        seconds_to_next_eval: i64,
+    },
 }
 
 #[derive(Clone)]

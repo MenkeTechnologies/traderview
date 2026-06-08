@@ -240,6 +240,14 @@ pub struct LiveTickStore {
     // we must NOT leak a fresh sweeper task per call. CAS to true on
     // first spawn; subsequent calls observe `true` and skip.
     sweeper_spawned: Arc<AtomicBool>,
+    // Handles of every currently-running WS worker so a fresh
+    // spawn_workers call (e.g. after the algo runner calls
+    // ensure_subscribed) can ABORT the old workers before starting
+    // new ones. Without this, every subscription change duplicated
+    // the connection — both old + new fought for the single Alpaca
+    // account slot, ALL of them failed with `connection limit
+    // exceeded` (code 406), and ZERO trades flowed.
+    workers: Arc<tokio::sync::Mutex<Vec<tokio::task::JoinHandle<()>>>>,
 }
 
 impl LiveTickStore {
@@ -257,6 +265,7 @@ impl LiveTickStore {
             buckets: Arc::new(DashMap::new()),
             pool: Arc::new(tokio::sync::RwLock::new(None)),
             sweeper_spawned: Arc::new(AtomicBool::new(false)),
+            workers: Arc::new(tokio::sync::Mutex::new(Vec::new())),
         }
     }
 
@@ -371,6 +380,13 @@ impl LiveTickStore {
         self.state.iter().map(|e| e.value().clone()).collect()
     }
 
+    /// How many symbols are currently in the live subscription set.
+    /// Used by the algo runner's heartbeat event so the user can see
+    /// "live=27 symbols streaming" without having to query elsewhere.
+    pub async fn subs_len(&self) -> usize {
+        self.subs.lock().await.len()
+    }
+
     /// Union extra symbols into the existing subscription set without
     /// dropping any current watchlist subscriptions. Workers restart
     /// only when the set actually changes. Used by the algo runner so
@@ -444,6 +460,25 @@ impl LiveTickStore {
     ///
     /// Skips entirely when no provider key is configured.
     async fn spawn_workers(&self, symbols: Vec<String>) -> anyhow::Result<()> {
+        // BEFORE spawning anything new, abort every worker spawned by a
+        // prior call. Alpaca enforces ONE connection per account+feed
+        // (IEX, SIP, crypto) — if the boot-time crypto worker is still
+        // alive when the algo runner's first ensure_subscribed fires a
+        // second crypto worker, the new one gets "connection limit
+        // exceeded" (code 406) and ZERO trades flow on either. Same
+        // problem on Polygon and Finnhub at their own rate-limit
+        // boundaries.
+        {
+            let mut handles = self.workers.lock().await;
+            let n = handles.len();
+            for h in handles.drain(..) {
+                h.abort();
+            }
+            if n > 0 {
+                tracing::info!(aborted = n, "live_ticks: stopped prior WS workers");
+            }
+        }
+
         // 1. Alpaca — cheapest real-time SIP at $99/mo (Algo Trader+).
         //    IEX-only fallback on the free Algo Trader tier when
         //    `alpaca_use_sip_feed` is off. Crypto-shaped symbols
@@ -454,37 +489,54 @@ impl LiveTickStore {
             let use_sip = self.alpaca_use_sip.load(Ordering::Acquire);
             let (crypto, stocks): (Vec<String>, Vec<String>) =
                 symbols.into_iter().partition(|s| is_crypto_symbol(s));
+            let mut new_handles = Vec::new();
             for chunk in stocks.chunks(ALPACA_MAX_SYMS_PER_CONN).map(|c| c.to_vec()) {
                 let store = self.clone();
                 let id = id.clone();
                 let secret = secret.clone();
-                tokio::spawn(async move {
+                let n = chunk.len();
+                tracing::info!(
+                    feed = if use_sip { "sip" } else { "iex" },
+                    symbols = n,
+                    "live_ticks: spawning alpaca equity worker",
+                );
+                let h = tokio::spawn(async move {
                     store.run_alpaca_worker(id, secret, use_sip, chunk).await;
                 });
+                new_handles.push(h);
             }
             for chunk in crypto.chunks(ALPACA_MAX_SYMS_PER_CONN).map(|c| c.to_vec()) {
                 let store = self.clone();
                 let id = id.clone();
                 let secret = secret.clone();
-                tokio::spawn(async move {
+                let n = chunk.len();
+                tracing::info!(symbols = n, "live_ticks: spawning alpaca crypto worker");
+                let h = tokio::spawn(async move {
                     store.run_alpaca_crypto_worker(id, secret, chunk).await;
                 });
+                new_handles.push(h);
             }
+            *self.workers.lock().await = new_handles;
             return Ok(());
         }
         // 2. Polygon — full CTA/UTP SIP tape, used when Alpaca isn't
         //    configured (or its coverage / latency isn't enough).
         if let Some(key) = self.polygon_key.read().await.clone() {
+            let mut new_handles = Vec::new();
             for chunk in symbols
                 .chunks(POLYGON_MAX_SYMS_PER_CONN)
                 .map(|c| c.to_vec())
             {
                 let store = self.clone();
                 let key = key.clone();
-                tokio::spawn(async move {
+                let n = chunk.len();
+                tracing::info!(symbols = n, "live_ticks: spawning polygon worker");
+                let h = tokio::spawn(async move {
                     store.run_polygon_worker(key, chunk).await;
                 });
+                new_handles.push(h);
             }
+            *self.workers.lock().await = new_handles;
             return Ok(());
         }
         // 3. Finnhub — aggregate fallback.
@@ -495,13 +547,18 @@ impl LiveTickStore {
             );
             return Ok(());
         };
+        let mut new_handles = Vec::new();
         for chunk in symbols.chunks(MAX_SYMS_PER_CONN).map(|c| c.to_vec()) {
             let store = self.clone();
             let key = key.clone();
-            tokio::spawn(async move {
+            let n = chunk.len();
+            tracing::info!(symbols = n, "live_ticks: spawning finnhub worker");
+            let h = tokio::spawn(async move {
                 store.run_worker(key, chunk).await;
             });
+            new_handles.push(h);
         }
+        *self.workers.lock().await = new_handles;
         Ok(())
     }
 
@@ -761,11 +818,25 @@ impl LiveTickStore {
                             && ev.get("msg").and_then(|v| v.as_str()) == Some("authenticated")
                         {
                             self.record_alpaca_auth(true, feed_name).await;
+                            tracing::info!(feed = %feed_name, "alpaca WS authenticated");
+                            continue;
+                        }
+                        if kind == "subscription" {
+                            let trades_n = ev
+                                .get("trades")
+                                .and_then(|v| v.as_array())
+                                .map(|a| a.len())
+                                .unwrap_or(0);
+                            tracing::info!(
+                                feed = %feed_name,
+                                trades = trades_n,
+                                "alpaca WS subscribed",
+                            );
                             continue;
                         }
                         if kind != "t" {
-                            // success / subscription / quote / bar — ignore
-                            // (we only consume trades for the tape).
+                            // quote / bar / other — ignore (we only consume
+                            // trades for the tape).
                             continue;
                         }
                         let sym = ev.get("S").and_then(|v| v.as_str()).unwrap_or_default();

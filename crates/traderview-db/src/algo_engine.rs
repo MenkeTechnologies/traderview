@@ -104,6 +104,18 @@ pub enum EngineEvent {
         symbol: String,
         bars: usize,
     },
+    /// Per-tick heartbeat — fires every 10s from the runner regardless
+    /// of timeframe boundary. Lets the user see "engine is alive,
+    /// here's what's loaded" without having to wait for the next M1
+    /// boundary to surface a real evaluation.
+    Heartbeat {
+        strategy_id: Uuid,
+        universe_size: usize,
+        subscribed_live: usize,
+        bars_processed: i64,
+        signals_emitted: i64,
+        seconds_to_next_eval: i64,
+    },
 }
 
 pub type EventSink = std::sync::Arc<dyn Fn(EngineEvent) + Send + Sync>;

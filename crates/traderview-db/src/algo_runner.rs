@@ -44,9 +44,32 @@ pub async fn tick(pool: &PgPool, now: DateTime<Utc>, event_sink: Option<&EventSi
     let mut processed = 0usize;
     for s in &strategies {
         let interval = parse_timeframe(&s.timeframe);
+        let at_boundary = is_boundary(now, interval);
+        // Per-tick heartbeat — fires every 10s, even on M1 strategies
+        // that only formally evaluate once a minute. Lets the user see
+        // the engine is alive and what the runner knows right now
+        // without waiting 60s between status updates.
+        if let Some(sink) = event_sink {
+            let live_subs = crate::live_ticks::global().subs_len().await;
+            let next = next_boundary(now, interval);
+            let secs = (next - now).num_seconds().max(0);
+            let open_run = algo::get_open_run(pool, s.id).await.ok().flatten();
+            let (bars_processed, signals_emitted) = open_run
+                .as_ref()
+                .map(|r| (r.bars_processed, r.signals_emitted))
+                .unwrap_or((0, 0));
+            sink(EngineEvent::Heartbeat {
+                strategy_id: s.id,
+                universe_size: 0, // populated below after universe is resolved on boundary ticks
+                subscribed_live: live_subs,
+                bars_processed,
+                signals_emitted,
+                seconds_to_next_eval: secs,
+            });
+        }
         // Only drive the strategy on a bar boundary FOR ITS OWN TIMEFRAME —
         // a 1m strategy ignores the 10s ticks the loop also fires on.
-        if !is_boundary(now, interval) {
+        if !at_boundary {
             continue;
         }
         let symbols = match symbol_universe(pool, s).await {

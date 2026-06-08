@@ -131,6 +131,21 @@ impl AppState {
                     symbol,
                     bars: bars as u64,
                 },
+                E::Heartbeat {
+                    strategy_id,
+                    universe_size,
+                    subscribed_live,
+                    bars_processed,
+                    signals_emitted,
+                    seconds_to_next_eval,
+                } => crate::realtime::Event::AlgoHeartbeat {
+                    strategy_id: strategy_id.to_string(),
+                    universe_size: universe_size as u64,
+                    subscribed_live: subscribed_live as u64,
+                    bars_processed,
+                    signals_emitted,
+                    seconds_to_next_eval,
+                },
             };
             hub.publish(evt);
         })

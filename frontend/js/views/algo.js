@@ -116,6 +116,14 @@ function logBarEvaluated(mount, msg) {
     appendStdout(mount, msg.strategy_id,
         `${fmtStdoutTs()} [${strategyLabel(msg.strategy_id)}] EVAL ${msg.symbol} bars=${msg.bars} (no signal)`);
 }
+function logHeartbeat(mount, msg) {
+    // Fires every 10s from the runner. Confirms the engine is alive
+    // and shows what it knows right now — live-tick subs, bars
+    // processed lifetime, signals emitted lifetime, time to the
+    // next bar boundary eval.
+    appendStdout(mount, msg.strategy_id,
+        `${fmtStdoutTs()} [${strategyLabel(msg.strategy_id)}] HB live=${msg.subscribed_live} bars=${msg.bars_processed} sigs=${msg.signals_emitted} next_eval_in=${msg.seconds_to_next_eval}s`);
+}
 
 function renderStdoutPanes(mount, strategies) {
     const host = mount.querySelector('#algo-stdout-panes');
@@ -736,6 +744,9 @@ export async function renderAlgo(mount) {
     }));
     wsUnsubs.push(onWsEvent('algo_bar_evaluated', (msg) => {
         logBarEvaluated(mount, msg);
+    }));
+    wsUnsubs.push(onWsEvent('algo_heartbeat', (msg) => {
+        logHeartbeat(mount, msg);
     }));
 }
 
