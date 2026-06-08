@@ -285,54 +285,84 @@ pub async fn pead_eligible_symbols(
 /// strategies that want "whatever's hot today". The intraday tick
 /// worker keeps `price_bars` fresh, so this query reflects truly
 /// real-time activity rather than yesterday's close.
-/// Curated liquid universe — the 50 highest-volume US equities + ETFs
-/// that trade continuously during regular hours. Used as the autoscan
-/// pool so the strategy actually has tradeable symbols regardless of
-/// whether the user has a watchlist. The user's stated intent:
-/// "I want algo trading on whatever has momentum" — so this list is
-/// the candidate set, and the algo's evaluate_entry picks the
-/// momentum winners from inside it.
-///
-/// Picked for: max liquidity (tight spreads, deep order books → low
-/// slippage on bracket fills), broad sector coverage (single-name
-/// tech + financials + industrials + healthcare + popular sector
-/// ETFs), and 24/5 crypto exposure via the spot ETFs.
-const AUTOSCAN_LIQUID_UNIVERSE: &[&str] = &[
-    // Mega-cap tech
-    "AAPL", "MSFT", "NVDA", "GOOGL", "META", "AMZN", "TSLA", "AMD", "AVGO", "ORCL",
-    "CRM", "ADBE", "CSCO", "INTC", "QCOM",
-    // Mega-cap non-tech
-    "BRK.B", "JPM", "V", "MA", "UNH", "JNJ", "WMT", "PG", "HD", "LLY",
-    "XOM", "CVX",
-    // Index + sector ETFs
-    "SPY", "QQQ", "IWM", "DIA", "VOO", "VTI", "XLK", "XLF", "XLE", "XLV",
-    "XLU", "XLY", "XLI", "XLP", "XLB", "ARKK", "SMH", "SOXL", "TQQQ", "TLT",
-    // Crypto exposure via spot ETFs (24/5 — fills the after-hours gap)
-    "IBIT", "FBTC", "ETHA",
-    // High-vol movers
-    "PLTR", "COIN", "GME",
+/// Seed list — guaranteed-tradeable mega-caps used when the symbols
+/// catalog is empty (fresh install before the Finnhub seed runs) or
+/// when no historical volume data exists yet (first-ever boot before
+/// any user fetched price history). Real autoscan goes through the
+/// `symbols` table — 24k+ US equities ranked by historical volume.
+const AUTOSCAN_SEED: &[&str] = &[
+    "AAPL", "MSFT", "NVDA", "GOOGL", "META", "AMZN", "TSLA", "AMD", "SPY", "QQQ",
 ];
 
-/// Pull top-N from `AUTOSCAN_LIQUID_UNIVERSE`. The list is small enough
-/// (~50) that ordering it by anything would be cosmetic — we just take
-/// the first N. Caller wires the result to live_ticks so all picks
-/// start streaming; after the first minute the strategy has 1m bars
-/// for every one of them.
+/// Autoscan universe — pulls top-N most liquid US equities + ETFs from
+/// the `symbols` catalog (24k+ rows seeded by Finnhub), ranked by
+/// historical traded volume so the mega-caps surface first. The
+/// caller then wires every pick to the live tick worker so they
+/// start streaming and the strategy can evaluate live bars within
+/// a minute.
 ///
-/// `interval` is accepted but currently unused at this layer — kept
-/// in the signature so a future "pick from already-streaming-bars"
-/// optimisation can drop in without callers changing.
+/// Ranking:
+///   1. LEFT JOIN `symbols` to `price_bars` on max-volume any interval.
+///   2. ORDER BY volume DESC NULLS LAST, then `length(symbol)` ASC so
+///      brand-new tickers without history fall to a stable order
+///      (shorter symbols are usually older + more liquid; this is a
+///      tiebreaker, not the primary sort).
+///   3. Filter to Common Stock + ETP types so warrants / rights /
+///      preference shares / GDRs don't pollute the candidate set.
+///
+/// Provider-side cap awareness:
+///   * Alpaca IEX free tier: 30 symbols per connection (the live
+///     tick worker chunks into 500-symbol workers, so multiple
+///     connections work for SIP; with IEX you'll hit the cap fast).
+///   * Polygon Stocks Starter+: thousands.
+///   * Finnhub free: 25 symbols per connection, multiple connections.
+///   The runner doesn't enforce the cap — pick whatever top_n the
+///   strategy asks for and let the provider negotiate. Excess picks
+///   may stay "no bars" until a slot frees up.
+///
+/// `interval` is accepted but currently unused — kept in the
+/// signature so a future "pick only symbols already streaming the
+/// strategy's resolution" optimisation can drop in without callers
+/// changing.
 pub async fn autoscan_topn(
-    _pool: &PgPool,
+    pool: &PgPool,
     top_n: i64,
     _interval: BarInterval,
 ) -> Result<Vec<String>, anyhow::Error> {
-    let cap = top_n.max(1) as usize;
-    Ok(AUTOSCAN_LIQUID_UNIVERSE
-        .iter()
-        .take(cap)
-        .map(|s| (*s).to_string())
-        .collect())
+    let cap = top_n.max(1);
+    // Query the catalog — symbols with the most historical volume
+    // come first. The MAX() aggregate scoops the largest single bar
+    // (a proxy for "this thing actually trades") rather than SUM()
+    // which over-weights symbols with the most historical bars.
+    let rows: Vec<(String,)> = sqlx::query_as(
+        "SELECT s.symbol
+           FROM symbols s
+           LEFT JOIN (
+             SELECT symbol, MAX(volume) AS max_vol
+               FROM price_bars
+              GROUP BY symbol
+           ) pb ON pb.symbol = s.symbol
+          WHERE s.exchange = 'US'
+            AND s.asset_class = 'stock'
+            AND (s.type IS NULL OR s.type IN ('Common Stock', 'ETP'))
+          ORDER BY pb.max_vol DESC NULLS LAST, length(s.symbol) ASC, s.symbol ASC
+          LIMIT $1",
+    )
+    .bind(cap)
+    .fetch_all(pool)
+    .await?;
+    let mut picks: Vec<String> = rows.into_iter().map(|(s,)| s).collect();
+    // Catalog empty (fresh install, Finnhub seed hasn't run) — fall
+    // back to the hardcoded mega-cap seed so the user always gets
+    // SOMETHING tradeable.
+    if picks.is_empty() {
+        picks = AUTOSCAN_SEED
+            .iter()
+            .take(cap as usize)
+            .map(|s| (*s).to_string())
+            .collect();
+    }
+    Ok(picks)
 }
 
 async fn drive_strategy(
@@ -513,6 +543,43 @@ async fn fetch_recent_bars(
     interval: BarInterval,
     limit: i64,
 ) -> Result<Vec<PriceBar>, anyhow::Error> {
+    // First try the requested interval directly — that's the fast path
+    // when Yahoo / Polygon already cached bars for this resolution.
+    let direct = read_bars_at(pool, symbol, interval, limit).await?;
+    if !direct.is_empty() {
+        return Ok(direct);
+    }
+    // Live-streamed symbols only have 10s buckets (live_ticks::feed_bucket
+    // is the only writer outside the Yahoo / Polygon fetchers). When the
+    // strategy asks for 1m / 5m / 15m / 1h and the cache is empty for
+    // that resolution, aggregate from 10s on the fly so the strategy
+    // can evaluate as soon as ~60 seconds of streaming has happened.
+    // For 10s callers there's nothing to roll up — return the empty
+    // result. For 1d/1w the gap is too large; same — return empty.
+    let factor: usize = match interval {
+        BarInterval::M1 => 6,
+        BarInterval::M5 => 30,
+        BarInterval::M15 => 90,
+        BarInterval::H1 => 360,
+        _ => return Ok(Vec::new()),
+    };
+    // Pull enough 10s rows to cover the requested 1m / etc. window.
+    let s10_rows =
+        read_bars_at(pool, symbol, BarInterval::S10, limit * factor as i64).await?;
+    if s10_rows.is_empty() {
+        return Ok(Vec::new());
+    }
+    Ok(rollup_s10(s10_rows, interval, factor))
+}
+
+/// Single-resolution read used by both the fast path and the rollup
+/// fallback. No reverse / mapping logic duplicated.
+async fn read_bars_at(
+    pool: &PgPool,
+    symbol: &str,
+    interval: BarInterval,
+    limit: i64,
+) -> Result<Vec<PriceBar>, anyhow::Error> {
     type Row = (
         String,
         String,
@@ -524,8 +591,6 @@ async fn fetch_recent_bars(
         Decimal,
         String,
     );
-    // Pull the most recent `limit` bars, then return them in chronological
-    // order so the strategy sees them oldest-to-newest like every other caller.
     let mut rows: Vec<Row> = sqlx::query_as(
         "SELECT symbol, interval::text, bar_time, open, high, low, close, volume, source
            FROM price_bars
@@ -555,6 +620,53 @@ async fn fetch_recent_bars(
             },
         )
         .collect())
+}
+
+/// Aggregate N consecutive 10s bars into one bar at `target` interval.
+/// Group by floor(bar_time_secs / target_secs) so the resulting bars
+/// align to clean wall-clock boundaries (00:00, 00:01, …) the same
+/// way Yahoo / Polygon would have written them. Open = first bar's
+/// open, close = last bar's close, high/low = max/min across group,
+/// volume = sum.
+fn rollup_s10(
+    s10_bars: Vec<PriceBar>,
+    target: BarInterval,
+    factor: usize,
+) -> Vec<PriceBar> {
+    use std::collections::BTreeMap;
+    let target_secs = target.seconds();
+    let mut buckets: BTreeMap<i64, Vec<PriceBar>> = BTreeMap::new();
+    for b in s10_bars {
+        let key = (b.bar_time.timestamp() / target_secs) * target_secs;
+        buckets.entry(key).or_default().push(b);
+    }
+    // Drop the last (potentially-incomplete) bucket if it has fewer than
+    // `factor` constituents — the strategy expects closed bars only.
+    let mut out: Vec<PriceBar> = Vec::with_capacity(buckets.len());
+    let last_key = buckets.keys().next_back().copied();
+    for (key, group) in buckets {
+        if last_key == Some(key) && group.len() < factor {
+            continue;
+        }
+        let first = group.first().expect("non-empty group");
+        let last = group.last().expect("non-empty group");
+        let high = group.iter().map(|b| b.high).max().unwrap_or(first.high);
+        let low = group.iter().map(|b| b.low).min().unwrap_or(first.low);
+        let volume = group.iter().map(|b| b.volume).sum();
+        out.push(PriceBar {
+            symbol: first.symbol.clone(),
+            interval: target,
+            bar_time: chrono::DateTime::<Utc>::from_timestamp(key, 0)
+                .unwrap_or(first.bar_time),
+            open: first.open,
+            high,
+            low,
+            close: last.close,
+            volume,
+            source: "rollup_s10".into(),
+        });
+    }
+    out
 }
 
 fn parse_interval(s: &str) -> BarInterval {
@@ -613,5 +725,65 @@ mod tests {
         assert!(matches!(parse_timeframe("sec10"), BarInterval::S10));
         assert!(matches!(parse_timeframe("min1"), BarInterval::M1));
         assert!(matches!(parse_timeframe("garbage"), BarInterval::M1));
+    }
+
+    fn s10_bar(secs: i64, o: &str, h: &str, l: &str, c: &str, v: u64) -> PriceBar {
+        use std::str::FromStr;
+        PriceBar {
+            symbol: "TEST".into(),
+            interval: BarInterval::S10,
+            bar_time: Utc.timestamp_opt(secs, 0).unwrap(),
+            open: Decimal::from_str(o).unwrap(),
+            high: Decimal::from_str(h).unwrap(),
+            low: Decimal::from_str(l).unwrap(),
+            close: Decimal::from_str(c).unwrap(),
+            volume: Decimal::from(v),
+            source: "test".into(),
+        }
+    }
+
+    #[test]
+    fn rollup_s10_to_m1_uses_first_open_last_close_max_high_min_low_sum_volume() {
+        // 6 ten-second bars covering one full minute [60, 120).
+        let bars = vec![
+            s10_bar(60, "100", "101", "99",  "100.5", 100),
+            s10_bar(70, "100.5", "102", "100.2", "101.7", 200),
+            s10_bar(80, "101.7", "103.5", "101", "103.0", 150),
+            s10_bar(90, "103.0", "104", "102.0", "102.5", 300),
+            s10_bar(100,"102.5", "102.8", "101.0", "101.2", 50),
+            s10_bar(110,"101.2", "103.0", "100.8", "102.0", 250),
+        ];
+        let m1 = rollup_s10(bars, BarInterval::M1, 6);
+        assert_eq!(m1.len(), 1, "complete bucket should produce one M1");
+        let b = &m1[0];
+        assert_eq!(b.bar_time.timestamp(), 60, "aligns to floor(t/60)*60");
+        assert_eq!(b.interval, BarInterval::M1);
+        assert_eq!(b.open.to_string(), "100");
+        assert_eq!(b.close.to_string(), "102.0");
+        assert_eq!(b.high.to_string(), "104");
+        assert_eq!(b.low.to_string(), "99");
+        assert_eq!(b.volume.to_string(), "1050");
+        assert_eq!(b.source, "rollup_s10");
+    }
+
+    #[test]
+    fn rollup_drops_incomplete_trailing_bucket() {
+        // 6 complete bars for [60, 120) + 2 partial bars for [120, 180).
+        let bars = vec![
+            s10_bar(60, "100", "100", "100", "100", 10),
+            s10_bar(70, "100", "100", "100", "100", 10),
+            s10_bar(80, "100", "100", "100", "100", 10),
+            s10_bar(90, "100", "100", "100", "100", 10),
+            s10_bar(100,"100", "100", "100", "100", 10),
+            s10_bar(110,"100", "100", "100", "100", 10),
+            s10_bar(120,"101", "101", "101", "101", 10), // partial
+            s10_bar(130,"101", "101", "101", "101", 10), // partial
+        ];
+        let m1 = rollup_s10(bars, BarInterval::M1, 6);
+        // Only the complete first bucket survives — partial trailing
+        // bucket is dropped so the strategy doesn't see a half-formed
+        // bar in its window.
+        assert_eq!(m1.len(), 1);
+        assert_eq!(m1[0].bar_time.timestamp(), 60);
     }
 }
