@@ -20,6 +20,7 @@ pub mod heikin_ashi_trend;
 pub mod mean_reversion;
 pub mod momentum;
 pub mod orb;
+pub mod order_block_sweep;
 pub mod supertrend;
 pub mod ttm_squeeze;
 pub mod types;
@@ -125,8 +126,9 @@ pub fn from_kind(
         "supertrend" => Ok(Box::new(supertrend::Supertrend::from_json(entry_rules))),
         "heikin_ashi_trend" => Ok(Box::new(heikin_ashi_trend::HeikinAshiTrend::from_json(entry_rules))),
         "connors_rsi2" => Ok(Box::new(connors_rsi2::ConnorsRsi2::from_json(entry_rules))),
-        // Slots populated in commits 26-28.
-        "order_block_sweep" | "pead" | "pairs" => {
+        "order_block_sweep" => Ok(Box::new(order_block_sweep::OrderBlockSweep::from_json(entry_rules))),
+        // Slots populated in commits 27-28.
+        "pead" | "pairs" => {
             Err(FactoryError::NotImplemented(kind.to_string()))
         }
         other => Err(FactoryError::Unknown(other.to_string())),
