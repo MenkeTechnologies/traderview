@@ -17,6 +17,9 @@ pub mod bb_squeeze;
 pub mod connors_rsi2;
 pub mod donchian_trend;
 pub mod heikin_ashi_trend;
+pub mod ichimoku_cloud;
+pub mod keltner_breakout;
+pub mod ma_cross_adx;
 pub mod mean_reversion;
 pub mod momentum;
 pub mod orb;
@@ -82,6 +85,9 @@ pub enum StrategyKind {
     OrderBlockSweep,
     Pead,
     Pairs,
+    MaCrossAdx,
+    KeltnerBreakout,
+    IchimokuCloud,
 }
 
 impl StrategyKind {
@@ -100,6 +106,9 @@ impl StrategyKind {
             Self::OrderBlockSweep => "order_block_sweep",
             Self::Pead => "pead",
             Self::Pairs => "pairs",
+            Self::MaCrossAdx => "ma_cross_adx",
+            Self::KeltnerBreakout => "keltner_breakout",
+            Self::IchimokuCloud => "ichimoku_cloud",
         }
     }
 
@@ -118,6 +127,9 @@ impl StrategyKind {
             Self::OrderBlockSweep,
             Self::Pead,
             Self::Pairs,
+            Self::MaCrossAdx,
+            Self::KeltnerBreakout,
+            Self::IchimokuCloud,
         ]
     }
 }
@@ -151,6 +163,9 @@ pub fn from_kind(
         "order_block_sweep" => Ok(Box::new(order_block_sweep::OrderBlockSweep::from_json(entry_rules))),
         "pead" => Ok(Box::new(pead::Pead::from_json(entry_rules))),
         "pairs" => Ok(Box::new(pairs::Pairs::from_json(entry_rules))),
+        "ma_cross_adx" => Ok(Box::new(ma_cross_adx::MaCrossAdx::from_json(entry_rules))),
+        "keltner_breakout" => Ok(Box::new(keltner_breakout::KeltnerBreakout::from_json(entry_rules))),
+        "ichimoku_cloud" => Ok(Box::new(ichimoku_cloud::IchimokuCloud::from_json(entry_rules))),
         other => Err(FactoryError::Unknown(other.to_string())),
     }
 }

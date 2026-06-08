@@ -180,6 +180,9 @@ const STRATEGY_KINDS = [
     { value: 'order_block_sweep', label_key: 'view.algo.opt.strat_order_block_sweep', label: 'Order Block + Liquidity Sweep (SMC)' },
     { value: 'pead',              label_key: 'view.algo.opt.strat_pead',              label: 'PEAD (post-earnings drift)' },
     { value: 'pairs',             label_key: 'view.algo.opt.strat_pairs',             label: 'Pairs Trading (spread z-score)' },
+    { value: 'ma_cross_adx',      label_key: 'view.algo.opt.strat_ma_cross_adx',      label: 'MA Cross + ADX filter (EMA cross gated on trend strength)' },
+    { value: 'keltner_breakout',  label_key: 'view.algo.opt.strat_keltner_breakout',  label: 'Keltner Channel Breakout (EMA ± ATR band)' },
+    { value: 'ichimoku_cloud',    label_key: 'view.algo.opt.strat_ichimoku_cloud',    label: 'Ichimoku Cloud (TK cross + cloud break + Chikou clear)' },
 ];
 
 // Rich per-strategy documentation rendered in the modal docs panel
@@ -471,6 +474,77 @@ const STRATEGY_DOCS = {
         ],
         scope_note: 'True pairs is a simultaneous dual-leg position; this engine emits ONE order per signal, so the strategy fires on the underperforming leg only. For dollar-neutral pairs run two coupled strategies (one long-only on A, one short-only on B) tied to a shared account.',
         when_to_use: 'Closely correlated names (KO/PEP, GLD/SLV, sector ETFs). Set hedge_ratio = 1.0 unless you\'ve done explicit cointegration regression.',
+    },
+    ma_cross_adx: {
+        title: 'MA Cross + ADX filter',
+        family: 'Trend-following · long or short · gated on trend strength',
+        entry: [
+            'Compute EMA(fast_period) and EMA(slow_period) over closes',
+            'Compute ADX(adx_period) + ±DI',
+            'Long: fast EMA crosses above slow EMA AND ADX ≥ adx_min AND +DI > −DI',
+            'Short: fast EMA crosses below slow EMA AND ADX ≥ adx_min AND −DI > +DI',
+        ],
+        exit: [
+            'ADX drops below adx_trend_lost → exit (trend has weakened)',
+            'Opposite-direction EMA crossover',
+            'ATR-multiple stop / take-profit (atr_stop_mult / atr_take_profit_mult)',
+        ],
+        params: [
+            ['fast_period', 9, 'Fast EMA window'],
+            ['slow_period', 21, 'Slow EMA window'],
+            ['adx_period', 14, 'ADX/DI window'],
+            ['adx_min', 25, 'Minimum ADX to allow entry (25 = canonical "trending" threshold)'],
+            ['adx_trend_lost', 18, 'Force exit when ADX falls below this'],
+            ['atr_period', 14, 'ATR window for stop/target sizing'],
+            ['atr_stop_mult', 1.5, 'Stop distance in ATRs'],
+            ['atr_take_profit_mult', 3.0, 'Target distance in ATRs'],
+        ],
+        scope_note: 'The ADX gate is the entire point — naked MA crosses get chopped to death in sideways markets. ADX ≥ 25 ensures the directional component is genuinely in force.',
+        when_to_use: 'Multi-bar trends. Strong daily/hourly trends in liquid names. Useless intraday in tight ranges.',
+    },
+    keltner_breakout: {
+        title: 'Keltner Channel Breakout',
+        family: 'Volatility breakout · long or short',
+        entry: [
+            'upper = EMA(period) + multiplier × ATR(atr_period)',
+            'lower = EMA(period) − multiplier × ATR(atr_period)',
+            'Long: prior close ≤ upper AND current close > upper (fresh breakout)',
+            'Short: prior close ≥ lower AND current close < lower',
+        ],
+        exit: [
+            'Close back through the EMA midline (channel break failed)',
+            'Touch of the opposite band',
+        ],
+        params: [
+            ['period', 20, 'EMA window'],
+            ['atr_period', 20, 'ATR window'],
+            ['multiplier', 1.5, 'Band width in ATR multiples'],
+            ['take_profit_mult', 2.0, 'Target = multiplier × channel half-width × this'],
+        ],
+        scope_note: 'Channel half-width = multiplier × ATR. Wider channels = stronger breakouts but bigger initial risk. Stop sits at the EMA midline.',
+        when_to_use: 'Range-then-breakout setups. Pairs well with squeeze detectors as a confirmation gate.',
+    },
+    ichimoku_cloud: {
+        title: 'Ichimoku Cloud (Kinkō Hyō)',
+        family: 'Trend + momentum + structure · long or short · 5-line confluence',
+        entry: [
+            'Compute Tenkan (9), Kijun (26), Senkou A/B (displaced 26 forward), Chikou (close shifted 26 back)',
+            'Long: close > cloud AND TK bullish cross AND Chikou clear of prior price AND Senkou A > Senkou B (green cloud)',
+            'Short: mirror all four conditions',
+        ],
+        exit: [
+            'Close crosses back through Kijun (baseline broken)',
+            'Opposite-direction TK cross',
+        ],
+        params: [
+            ['tenkan_period', 9, 'Conversion line period'],
+            ['kijun_period', 26, 'Base line period'],
+            ['senkou_b_period', 52, 'Leading span B period'],
+            ['displacement', 26, 'Senkou/Chikou shift (rarely changed)'],
+            ['take_profit_cloud_mult', 2.0, 'Target distance as cloud-thickness multiple'],
+        ],
+        scope_note: 'Requires 4 conditions in confluence — far fewer false positives than naive moving-average crossovers but you wait longer between trades. Stop is at the Kijun line; target scales with cloud thickness so quiet markets get small targets and volatile markets get large ones.',
+        when_to_use: 'Daily / 4H charts on liquid names. Don\'t expect intraday signals on slow stocks — the 52-bar Senkou B requires a meaningful window.',
     },
 };
 
