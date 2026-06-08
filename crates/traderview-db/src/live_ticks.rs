@@ -95,14 +95,14 @@ fn to_alpaca_crypto_symbol(sym: &str) -> String {
     format!("{upper}/USD")
 }
 
-/// Inverse of `to_alpaca_crypto_symbol` — used on the receive side.
-/// Alpaca trade events arrive tagged `S=BTC/USD` but the in-memory
-/// `state` DashMap is keyed by the user's original input (`BTC` /
-/// `BTCUSD`). Strip the slash so the lookup succeeds.
-///
-///   "BTC/USD" → "BTCUSD"
-///   "ETH/USD" → "ETHUSD"
-///   "BTCUSD"  → "BTCUSD"  (already de-normalised)
+/// Inverse of `to_alpaca_crypto_symbol`. Currently unused on the
+/// receive path — we key state + 10s buckets + price_bars by the
+/// canonical `BTC/USD` form so the algo runner's autoscan picks and
+/// `fetch_recent_bars` queries round-trip cleanly. Kept here for the
+/// reverse-mapping use case (settings UI showing a "user typed
+/// BTCUSD → we subscribe BTC/USD" hint) + the existing tests pin
+/// its behaviour.
+#[allow(dead_code)]
 fn from_alpaca_crypto_symbol(sym: &str) -> String {
     sym.replace('/', "")
 }
@@ -1005,13 +1005,15 @@ impl LiveTickStore {
                         if sym.is_empty() || price <= 0.0 || ts_ms <= 0 {
                             continue;
                         }
-                        // Alpaca tags the event with "BTC/USD"; the in-
-                        // memory state map is keyed by user input
-                        // ("BTCUSD" / "BTC"). Strip the slash so the
-                        // lookup succeeds. If the user added both
-                        // "BTC" and "BTCUSD" we just hit the "BTCUSD"
-                        // entry — close enough.
-                        let key = from_alpaca_crypto_symbol(sym);
+                        // Use the Alpaca-canonical "BTC/USD" symbol AS
+                        // the key — autoscan picks pass that form
+                        // through ensure_subscribed → state map →
+                        // price_bars, and the algo runner's
+                        // fetch_recent_bars queries the same form.
+                        // Denormalizing here (strip the slash) used to
+                        // mis-key 10s buckets under "BTCUSD" while the
+                        // runner queried "BTC/USD" → no bars found.
+                        let key = sym.to_string();
                         let trade = Trade {
                             symbol: key.clone(),
                             price,
