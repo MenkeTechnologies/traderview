@@ -65,6 +65,35 @@ pub async fn tick(
             tracing::debug!(strategy = %s.id, "no symbols in universe");
             continue;
         }
+        // PEAD layer: narrow the universe to symbols with a recent
+        // positive earnings surprise. Without this filter PEAD would
+        // fire on any uptrending stock (the technical confirm in the
+        // strategy module isn't enough on its own).
+        let symbols = if s.strategy_type == "pead" {
+            let min_surprise = s
+                .entry_rules
+                .get("min_surprise_pct")
+                .and_then(|v| v.as_f64())
+                .unwrap_or(5.0) as f32;
+            let max_days = s
+                .entry_rules
+                .get("max_days_since_earnings")
+                .and_then(|v| v.as_i64())
+                .unwrap_or(5) as i32;
+            match pead_eligible_symbols(pool, &symbols, min_surprise, max_days).await {
+                Ok(filtered) if !filtered.is_empty() => filtered,
+                Ok(_) => {
+                    tracing::debug!(strategy = %s.id, "no symbols with recent positive surprise");
+                    continue;
+                }
+                Err(e) => {
+                    tracing::warn!(strategy = %s.id, error = %e, "pead_eligible_symbols failed");
+                    continue;
+                }
+            }
+        } else {
+            symbols
+        };
         match drive_strategy(pool, &sink, s, interval, &symbols, event_sink).await {
             Ok(n) => processed += n,
             Err(e) => tracing::warn!(strategy = %s.id, error = %e, "drive_strategy failed"),
@@ -133,6 +162,38 @@ async fn symbol_universe(
         }
         _ => Ok(Vec::new()),
     }
+}
+
+/// For strategy_type='pead' the universe is further filtered to
+/// symbols whose most recent `earnings_cal` event posted a positive
+/// surprise above `min_surprise_pct` within the last
+/// `max_days_since_earnings` days. The published PEAD anomaly only
+/// holds in this narrow post-announcement window; without the gate
+/// the strategy would fire on every "stock making new highs above
+/// SMA" which is just a momentum re-implementation.
+pub async fn pead_eligible_symbols(
+    pool: &PgPool,
+    symbols: &[String],
+    min_surprise_pct: f32,
+    max_days_since: i32,
+) -> Result<Vec<String>, anyhow::Error> {
+    if symbols.is_empty() {
+        return Ok(Vec::new());
+    }
+    let rows: Vec<(String,)> = sqlx::query_as(
+        "SELECT DISTINCT symbol FROM earnings_events
+          WHERE symbol = ANY($1)
+            AND surprise_pct IS NOT NULL
+            AND surprise_pct >= $2
+            AND earnings_date >= current_date - $3::int
+          ORDER BY symbol",
+    )
+    .bind(symbols)
+    .bind(min_surprise_pct)
+    .bind(max_days_since)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows.into_iter().map(|(s,)| s).collect())
 }
 
 /// Top-N symbols by traded volume in the last 30 minutes of 10s bars
