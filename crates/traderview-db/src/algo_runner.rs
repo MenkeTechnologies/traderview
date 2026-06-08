@@ -735,7 +735,7 @@ async fn read_bars_at(
 fn rollup_s10(
     s10_bars: Vec<PriceBar>,
     target: BarInterval,
-    factor: usize,
+    _factor: usize,
 ) -> Vec<PriceBar> {
     use std::collections::BTreeMap;
     let target_secs = target.seconds();
@@ -744,12 +744,20 @@ fn rollup_s10(
         let key = (b.bar_time.timestamp() / target_secs) * target_secs;
         buckets.entry(key).or_default().push(b);
     }
-    // Drop the last (potentially-incomplete) bucket if it has fewer than
-    // `factor` constituents — the strategy expects closed bars only.
+    // Drop the last bucket only if its target window is STILL IN PROGRESS
+    // (i.e. wall-clock time hasn't crossed `key + target_secs`). Earlier
+    // logic dropped any bucket with fewer than `factor` constituents,
+    // which was wrong for sparse markets: a thinly-traded symbol
+    // legitimately produces 3 ten-second bars per minute (because the
+    // other 3 windows had zero trades), and the resulting M1 bar's
+    // OHLCV is still mathematically correct — we just have gaps that
+    // had no volume. Dropping those mathematically-valid bars left
+    // crypto strategies in `no_bars` forever during quiet sessions.
+    let now_sec = chrono::Utc::now().timestamp();
     let mut out: Vec<PriceBar> = Vec::with_capacity(buckets.len());
-    let last_key = buckets.keys().next_back().copied();
     for (key, group) in buckets {
-        if last_key == Some(key) && group.len() < factor {
+        // Window not yet closed → still accumulating, skip.
+        if now_sec < key + target_secs {
             continue;
         }
         let first = group.first().expect("non-empty group");
@@ -894,23 +902,24 @@ mod tests {
     }
 
     #[test]
-    fn rollup_drops_incomplete_trailing_bucket() {
-        // 6 complete bars for [60, 120) + 2 partial bars for [120, 180).
+    fn rollup_keeps_closed_buckets_even_when_sparse() {
+        // Synthetic timestamps far in the past so both [60,120) and
+        // [120,180) windows are LONG closed by wall-clock time. The
+        // rollup must NOT drop sparse buckets — a thinly-traded
+        // symbol with 3 ten-second bars per minute still produces a
+        // mathematically-correct M1 OHLCV. Earlier behaviour required
+        // 6 constituents per bucket and dropped every sparse window,
+        // leaving crypto strategies in no_bars forever overnight.
         let bars = vec![
-            s10_bar(60, "100", "100", "100", "100", 10),
-            s10_bar(70, "100", "100", "100", "100", 10),
-            s10_bar(80, "100", "100", "100", "100", 10),
-            s10_bar(90, "100", "100", "100", "100", 10),
-            s10_bar(100,"100", "100", "100", "100", 10),
-            s10_bar(110,"100", "100", "100", "100", 10),
-            s10_bar(120,"101", "101", "101", "101", 10), // partial
-            s10_bar(130,"101", "101", "101", "101", 10), // partial
+            s10_bar(60,  "100",  "100", "100", "100", 10),
+            s10_bar(80,  "100",  "100", "100", "100", 10),
+            s10_bar(100, "100",  "100", "100", "100", 10),
+            s10_bar(120, "101",  "101", "101", "101", 10),
+            s10_bar(140, "101",  "101", "101", "101", 10),
         ];
         let m1 = rollup_s10(bars, BarInterval::M1, 6);
-        // Only the complete first bucket survives — partial trailing
-        // bucket is dropped so the strategy doesn't see a half-formed
-        // bar in its window.
-        assert_eq!(m1.len(), 1);
+        assert_eq!(m1.len(), 2, "BOTH closed buckets survive");
         assert_eq!(m1[0].bar_time.timestamp(), 60);
+        assert_eq!(m1[1].bar_time.timestamp(), 120);
     }
 }
