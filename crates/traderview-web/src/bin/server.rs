@@ -348,6 +348,21 @@ async fn main() -> anyhow::Result<()> {
                 Err(e) => tracing::warn!(error = %e, "tastytrade::spawn_pumps_for_active_strategies failed"),
             }
         });
+
+        let sw_pool = state.pool.clone();
+        let sw_sink = sink.clone();
+        let sw_registry = state.alpaca_pumps.clone();
+        tokio::spawn(async move {
+            match traderview_db::schwab_pump::spawn_pumps_for_active_strategies(
+                sw_pool, Some(sw_sink), sw_registry,
+            )
+            .await
+            {
+                Ok(0) => tracing::info!("no schwab-bound algo strategies; pumps idle"),
+                Ok(n) => tracing::info!(pumps = n, "schwab account streamer pumps spawned"),
+                Err(e) => tracing::warn!(error = %e, "schwab::spawn_pumps_for_active_strategies failed"),
+            }
+        });
     }
 
     let api = router(state);

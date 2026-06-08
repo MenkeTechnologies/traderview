@@ -302,6 +302,35 @@ impl SchwabTrading {
         }
     }
 
+    /// Read the current access token from the shared Tokens lock —
+    /// needed by the streamer pump to assemble the WS LOGIN payload.
+    pub async fn current_access_token_public(&self) -> String {
+        self.current_access_token().await
+    }
+
+    /// GET /trader/v1/userPreference — returns streamerInfo (WS URL,
+    /// client correl id, customer id) used by the streaming pump.
+    pub async fn get_user_preference(&self) -> Result<String, SchwabError> {
+        let url = format!("{}/userPreference", self.trader_base);
+        let token = self.current_access_token().await;
+        let resp = self
+            .http
+            .get(&url)
+            .bearer_auth(&token)
+            .header("Accept", "application/json")
+            .send()
+            .await?;
+        let status = resp.status();
+        let body = resp.text().await?;
+        if status.is_success() {
+            return Ok(body);
+        }
+        match status.as_u16() {
+            401 => Err(SchwabError::AuthFailed),
+            _ => Err(SchwabError::Http { status: status.as_u16(), body }),
+        }
+    }
+
     /// GET /trader/v1/accounts/{accountHash} — balances + positions.
     pub async fn get_account(&self) -> Result<AccountSummary, SchwabError> {
         let url = format!("{}/accounts/{}", self.trader_base, self.account_hash);
