@@ -82,11 +82,10 @@ pub async fn symbols(pool: &PgPool, watchlist_id: Uuid) -> anyhow::Result<Vec<St
 /// Used by the live-tick bridge so subscribed symbols flow into the
 /// WS aggregator without going through the candidates/scanner path.
 pub async fn all_distinct_symbols(pool: &PgPool) -> anyhow::Result<Vec<String>> {
-    let rows: Vec<(String,)> = sqlx::query_as(
-        "SELECT DISTINCT symbol FROM watchlist_symbols ORDER BY symbol",
-    )
-    .fetch_all(pool)
-    .await?;
+    let rows: Vec<(String,)> =
+        sqlx::query_as("SELECT DISTINCT symbol FROM watchlist_symbols ORDER BY symbol")
+            .fetch_all(pool)
+            .await?;
     Ok(rows.into_iter().map(|(s,)| s).collect())
 }
 

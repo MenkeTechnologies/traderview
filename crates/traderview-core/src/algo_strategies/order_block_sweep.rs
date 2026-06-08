@@ -54,10 +54,14 @@ impl Default for Rules {
 }
 
 #[derive(Debug, Clone)]
-pub struct OrderBlockSweep { pub rules: Rules }
+pub struct OrderBlockSweep {
+    pub rules: Rules,
+}
 
 impl OrderBlockSweep {
-    pub fn new(rules: Rules) -> Self { Self { rules } }
+    pub fn new(rules: Rules) -> Self {
+        Self { rules }
+    }
     pub fn from_json(entry_rules: &serde_json::Value) -> Self {
         let rules = serde_json::from_value::<Rules>(entry_rules.clone()).unwrap_or_default();
         Self { rules }
@@ -99,7 +103,9 @@ fn swing_bars(bars: &[PriceBar]) -> Vec<swing_points::Bar> {
 }
 
 impl Strategy for OrderBlockSweep {
-    fn kind(&self) -> StrategyKind { StrategyKind::OrderBlockSweep }
+    fn kind(&self) -> StrategyKind {
+        StrategyKind::OrderBlockSweep
+    }
 
     fn min_bars(&self) -> usize {
         self.rules.lookback.max(self.rules.atr_period + 1) + 5
@@ -133,7 +139,9 @@ impl Strategy for OrderBlockSweep {
         let close_now = closes[i];
         let open_now = bars[i].open.to_string().parse::<f64>().unwrap_or(close_now);
         let atr_now = atr_f[i];
-        if atr_now <= 0.0 { return None; }
+        if atr_now <= 0.0 {
+            return None;
+        }
         let recent_start = i.saturating_sub(self.rules.lookback);
 
         // Long path: bullish OB + low-side sweep.
@@ -150,7 +158,8 @@ impl Strategy for OrderBlockSweep {
                 .rev()
                 .find(|g| g.side == GrabSide::Low && g.confirm_bar >= recent_start);
             if let (Some(bull_ob), Some(_)) = (recent_bull_ob, recent_low_sweep) {
-                let in_zone = bars[i].low.to_string().parse::<f64>().unwrap_or(close_now) <= bull_ob.zone_high
+                let in_zone = bars[i].low.to_string().parse::<f64>().unwrap_or(close_now)
+                    <= bull_ob.zone_high
                     && close_now >= bull_ob.zone_low;
                 let bullish_close = close_now > open_now;
                 if in_zone && bullish_close {
@@ -202,8 +211,7 @@ impl Strategy for OrderBlockSweep {
                         stop_distance,
                         trigger_index: i,
                         stop_price: stop,
-                        take_profit_price: (close_now
-                            - self.rules.atr_take_profit_mult * atr_now)
+                        take_profit_price: (close_now - self.rules.atr_take_profit_mult * atr_now)
                             .max(0.01),
                         kind: "order_block_sweep",
                         diagnostic: serde_json::json!({
@@ -291,7 +299,16 @@ mod tests {
     fn entry_blocked_on_flat_market_no_ob_no_sweep() {
         let strat = OrderBlockSweep::new(Rules::default());
         let bars: Vec<PriceBar> = (0..50)
-            .map(|i| bar(1_700_000_000 + i * 60, "100.00", "100.05", "99.95", "100.00", 1_000_000))
+            .map(|i| {
+                bar(
+                    1_700_000_000 + i * 60,
+                    "100.00",
+                    "100.05",
+                    "99.95",
+                    "100.00",
+                    1_000_000,
+                )
+            })
             .collect();
         for end in strat.min_bars()..=bars.len() {
             assert!(
@@ -314,7 +331,16 @@ mod tests {
         let strat = OrderBlockSweep::new(Rules::default());
         // Any window — SideMode::Long must not produce a Sell signal.
         let bars: Vec<PriceBar> = (0..50)
-            .map(|i| bar(1_700_000_000 + i * 60, "100.00", "100.05", "99.95", "100.00", 1_000_000))
+            .map(|i| {
+                bar(
+                    1_700_000_000 + i * 60,
+                    "100.00",
+                    "100.05",
+                    "99.95",
+                    "100.00",
+                    1_000_000,
+                )
+            })
             .collect();
         for end in strat.min_bars()..=bars.len() {
             if let Some(sig) = strat.evaluate_entry(&bars[..end], SideMode::Long) {

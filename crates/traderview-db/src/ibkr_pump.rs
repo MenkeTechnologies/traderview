@@ -4,7 +4,7 @@
 //! Protocol (verified against interactivebrokers.github.io/cpwebapi
 //! /websockets, 2026-06):
 //!   1. Tickle /tickle to refresh session before connect.
-//!   2. WS connect to wss://<gateway-host>/v1/api/ws  (the gateway's
+//!   2. WS connect to `wss://<gateway-host>/v1/api/ws`  (the gateway's
 //!      WS endpoint mirrors the REST base — the dispatcher hands us
 //!      the configured base URL and we swap https→wss).
 //!   3. Send `s<topic>` text frames to subscribe. We send:
@@ -36,6 +36,12 @@ use std::time::Duration;
 use tokio_tungstenite::tungstenite::Message as WsMessage;
 use uuid::Uuid;
 
+// `tungstenite::Error` and `reqwest::Error` are both large variants
+// that make PumpError ~136 bytes. The pump is an internal-only
+// module — errors only propagate up the reconnect loop and never
+// cross a public boundary or end up in tight stack-frame paths —
+// so we accept the size penalty rather than boxing every variant.
+#[allow(clippy::result_large_err)]
 #[derive(Debug, thiserror::Error)]
 enum PumpError {
     #[error("auth failed")]
@@ -81,6 +87,11 @@ pub async fn run_pump(
     }
 }
 
+// PumpError carries a large reqwest::Error / tungstenite::Error
+// inline. The pump never crosses a public boundary or returns up
+// tight stack frames, so we accept the size penalty rather than
+// boxing every variant + breaking the `?` ergonomics throughout.
+#[allow(clippy::result_large_err)]
 async fn run_session_once(
     pool: &PgPool,
     rest_base: &str,
@@ -102,8 +113,13 @@ async fn run_session_once(
     let status = resp.status();
     let _ = resp.text().await?;
     if !status.is_success() {
-        if status.as_u16() == 401 { return Err(PumpError::AuthFailed); }
-        return Err(PumpError::Http { status: status.as_u16(), body: "tickle".into() });
+        if status.as_u16() == 401 {
+            return Err(PumpError::AuthFailed);
+        }
+        return Err(PumpError::Http {
+            status: status.as_u16(),
+            body: "tickle".into(),
+        });
     }
 
     // Step 2 — WS connect. Swap https→wss / http→ws and append /ws.
@@ -145,6 +161,7 @@ async fn run_session_once(
     Ok(())
 }
 
+#[allow(clippy::result_large_err)]
 fn derive_ws_url(rest_base: &str) -> Result<String, PumpError> {
     // rest_base looks like "https://localhost:5000/v1/api". Swap the
     // scheme and append "/ws" — IBKR's gateway exposes the WS on the
@@ -154,7 +171,9 @@ fn derive_ws_url(rest_base: &str) -> Result<String, PumpError> {
     } else if let Some(r) = rest_base.strip_prefix("http://") {
         ("ws", r)
     } else {
-        return Err(PumpError::Config(format!("unrecognised IBKR base URL: {rest_base}")));
+        return Err(PumpError::Config(format!(
+            "unrecognised IBKR base URL: {rest_base}"
+        )));
     };
     Ok(format!("{scheme}://{rest}/ws"))
 }
@@ -175,7 +194,9 @@ pub async fn handle_event_frame(
     if topic != "str" {
         return Ok(());
     }
-    let Some(items) = v.get("args").and_then(|x| x.as_array()) else { return Ok(()); };
+    let Some(items) = v.get("args").and_then(|x| x.as_array()) else {
+        return Ok(());
+    };
     for ev in items {
         handle_one_trade(pool, ev, event_sink).await.ok();
     }
@@ -201,26 +222,25 @@ async fn handle_one_trade(
         .and_then(|x| x.as_str())
         .and_then(|s| Uuid::from_str(s).ok());
 
-    let row: Option<(Uuid, Uuid, Uuid, String, String, Decimal, Uuid)> =
-        if let Some(coid) = coid {
-            sqlx::query_as(
-                "SELECT id, run_id, strategy_id, symbol, side, qty, client_order_id
+    let row: Option<(Uuid, Uuid, Uuid, String, String, Decimal, Uuid)> = if let Some(coid) = coid {
+        sqlx::query_as(
+            "SELECT id, run_id, strategy_id, symbol, side, qty, client_order_id
                    FROM algo_orders WHERE client_order_id = $1",
-            )
-            .bind(coid)
-            .fetch_optional(pool)
-            .await?
-        } else if let Some(boid) = broker_order_id.as_deref() {
-            sqlx::query_as(
-                "SELECT id, run_id, strategy_id, symbol, side, qty, client_order_id
+        )
+        .bind(coid)
+        .fetch_optional(pool)
+        .await?
+    } else if let Some(boid) = broker_order_id.as_deref() {
+        sqlx::query_as(
+            "SELECT id, run_id, strategy_id, symbol, side, qty, client_order_id
                    FROM algo_orders WHERE broker_order_id = $1",
-            )
-            .bind(boid)
-            .fetch_optional(pool)
-            .await?
-        } else {
-            None
-        };
+        )
+        .bind(boid)
+        .fetch_optional(pool)
+        .await?
+    } else {
+        None
+    };
 
     let Some((order_id, run_id, strategy_id, symbol, side, qty, client_order_id)) = row else {
         tracing::debug!(?broker_order_id, ?coid, "ibkr trade for unknown order");
@@ -228,7 +248,9 @@ async fn handle_one_trade(
     };
 
     let strategy = crate::algo::get_strategy_by_id(pool, strategy_id).await?;
-    let Some(strategy) = strategy else { return Ok(()); };
+    let Some(strategy) = strategy else {
+        return Ok(());
+    };
 
     let f64_to_dec = |x: &serde_json::Value| -> Option<Decimal> {
         x.as_f64().and_then(|f| Decimal::try_from(f).ok())
@@ -236,12 +258,20 @@ async fn handle_one_trade(
     let fill_price = ev
         .get("price")
         .and_then(f64_to_dec)
-        .or_else(|| ev.get("price").and_then(|x| x.as_str()).and_then(|s| Decimal::from_str(s).ok()))
+        .or_else(|| {
+            ev.get("price")
+                .and_then(|x| x.as_str())
+                .and_then(|s| Decimal::from_str(s).ok())
+        })
         .unwrap_or_else(Decimal::zero);
     let fill_qty = ev
         .get("size")
         .and_then(f64_to_dec)
-        .or_else(|| ev.get("size").and_then(|x| x.as_str()).and_then(|s| Decimal::from_str(s).ok()))
+        .or_else(|| {
+            ev.get("size")
+                .and_then(|x| x.as_str())
+                .and_then(|s| Decimal::from_str(s).ok())
+        })
         .unwrap_or(qty);
     let broker_fill_id = ev
         .get("execution_id")

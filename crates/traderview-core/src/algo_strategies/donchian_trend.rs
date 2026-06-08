@@ -45,10 +45,14 @@ impl Default for Rules {
 }
 
 #[derive(Debug, Clone)]
-pub struct DonchianTrend { pub rules: Rules }
+pub struct DonchianTrend {
+    pub rules: Rules,
+}
 
 impl DonchianTrend {
-    pub fn new(rules: Rules) -> Self { Self { rules } }
+    pub fn new(rules: Rules) -> Self {
+        Self { rules }
+    }
     pub fn from_json(entry_rules: &serde_json::Value) -> Self {
         let rules = serde_json::from_value::<Rules>(entry_rules.clone()).unwrap_or_default();
         Self { rules }
@@ -67,10 +71,13 @@ fn donchian_bars(bars: &[PriceBar]) -> Vec<donchian::Bar> {
 }
 
 impl Strategy for DonchianTrend {
-    fn kind(&self) -> StrategyKind { StrategyKind::DonchianTrend }
+    fn kind(&self) -> StrategyKind {
+        StrategyKind::DonchianTrend
+    }
 
     fn min_bars(&self) -> usize {
-        self.rules.entry_period
+        self.rules
+            .entry_period
             .max(self.rules.adx_period * 2 + 1)
             .max(self.rules.atr_period + 1)
             + 1
@@ -90,9 +97,13 @@ impl Strategy for DonchianTrend {
         let i = bars.len() - 1;
         let close_now = closes[i];
         let atr_now = atr.get(i).copied().flatten()?;
-        if atr_now <= 0.0 { return None; }
+        if atr_now <= 0.0 {
+            return None;
+        }
         let adx_now = adx.adx.get(i).copied().flatten()?;
-        if adx_now < self.rules.adx_min { return None; }
+        if adx_now < self.rules.adx_min {
+            return None;
+        }
         let point = donch.get(i)?;
         // The Donchian compute returns DonchianPoint::default() (zeros)
         // for bars before the period is reached — filter those out.
@@ -100,10 +111,10 @@ impl Strategy for DonchianTrend {
             return None;
         }
 
-        let want_long = matches!(side_mode, SideMode::Long | SideMode::Both)
-            && point.upper_breakout;
-        let want_short = matches!(side_mode, SideMode::Short | SideMode::Both)
-            && point.lower_breakout;
+        let want_long =
+            matches!(side_mode, SideMode::Long | SideMode::Both) && point.upper_breakout;
+        let want_short =
+            matches!(side_mode, SideMode::Short | SideMode::Both) && point.lower_breakout;
 
         if want_long {
             let stop = close_now - self.rules.atr_stop_mult * atr_now;

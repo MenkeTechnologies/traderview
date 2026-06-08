@@ -105,7 +105,10 @@ impl IbkrTrading {
                 Err(IbkrError::InsufficientBuyingPower)
             }
             400 | 422 => Err(IbkrError::InvalidRequest(body)),
-            _ => Err(IbkrError::Http { status: status.as_u16(), body }),
+            _ => Err(IbkrError::Http {
+                status: status.as_u16(),
+                body,
+            }),
         }
     }
 
@@ -113,11 +116,11 @@ impl IbkrTrading {
     /// Body: {"orders": [{conid, side, orderType, quantity, tif, price?}]}
     /// IBKR responses for order placement frequently come back as an
     /// array of `{order_id, local_order_id, order_status, ...}`.
-    pub async fn place_order(&self, req: &PlaceOrder) -> Result<Vec<PlaceOrderResponse>, IbkrError> {
-        let url = format!(
-            "{}/iserver/account/{}/orders",
-            self.base, self.account_id
-        );
+    pub async fn place_order(
+        &self,
+        req: &PlaceOrder,
+    ) -> Result<Vec<PlaceOrderResponse>, IbkrError> {
+        let url = format!("{}/iserver/account/{}/orders", self.base, self.account_id);
         let body = serde_json::json!({ "orders": [req.to_json()] });
         let resp = self.auth(self.http.post(&url)).json(&body).send().await?;
         Self::handle_status(resp).await
@@ -135,10 +138,7 @@ impl IbkrTrading {
         &self,
         req: &PlaceBracket,
     ) -> Result<Vec<PlaceOrderResponse>, IbkrError> {
-        let url = format!(
-            "{}/iserver/account/{}/orders",
-            self.base, self.account_id
-        );
+        let url = format!("{}/iserver/account/{}/orders", self.base, self.account_id);
         let body = serde_json::json!({ "orders": req.to_orders_json() });
         let resp = self.auth(self.http.post(&url)).json(&body).send().await?;
         Self::handle_status(resp).await
@@ -158,26 +158,23 @@ impl IbkrTrading {
         match status.as_u16() {
             401 => Err(IbkrError::AuthFailed),
             400 | 422 => Err(IbkrError::InvalidRequest(body)),
-            _ => Err(IbkrError::Http { status: status.as_u16(), body }),
+            _ => Err(IbkrError::Http {
+                status: status.as_u16(),
+                body,
+            }),
         }
     }
 
     /// GET /portfolio/{accountId}/summary — equity, cash, buying power.
     pub async fn get_summary(&self) -> Result<PortfolioSummary, IbkrError> {
-        let url = format!(
-            "{}/portfolio/{}/summary",
-            self.base, self.account_id
-        );
+        let url = format!("{}/portfolio/{}/summary", self.base, self.account_id);
         let resp = self.auth(self.http.get(&url)).send().await?;
         Self::handle_status(resp).await
     }
 
     /// GET /portfolio/{accountId}/positions/0 — first page of positions.
     pub async fn get_positions(&self) -> Result<Vec<Position>, IbkrError> {
-        let url = format!(
-            "{}/portfolio/{}/positions/0",
-            self.base, self.account_id
-        );
+        let url = format!("{}/portfolio/{}/positions/0", self.base, self.account_id);
         let resp = self.auth(self.http.get(&url)).send().await?;
         Self::handle_status(resp).await
     }
@@ -199,10 +196,13 @@ impl IbkrTrading {
         let pick = hits
             .iter()
             .find(|h| {
-                h.description.as_deref().map(|s| {
-                    let s = s.to_ascii_uppercase();
-                    s.contains("NYSE") || s.contains("NASDAQ") || s.contains("ARCA")
-                }).unwrap_or(false)
+                h.description
+                    .as_deref()
+                    .map(|s| {
+                        let s = s.to_ascii_uppercase();
+                        s.contains("NYSE") || s.contains("NASDAQ") || s.contains("ARCA")
+                    })
+                    .unwrap_or(false)
             })
             .or_else(|| hits.first())
             .ok_or_else(|| IbkrError::InvalidRequest(format!("no contract found for {symbol}")))?;
@@ -312,10 +312,20 @@ impl PlaceOrder {
         o.insert("conid".into(), self.conid.into());
         o.insert("side".into(), self.side.as_str().into());
         o.insert("orderType".into(), self.order_type.as_str().into());
-        o.insert("quantity".into(), self.quantity.to_string().parse::<f64>().unwrap_or(0.0).into());
+        o.insert(
+            "quantity".into(),
+            self.quantity
+                .to_string()
+                .parse::<f64>()
+                .unwrap_or(0.0)
+                .into(),
+        );
         o.insert("tif".into(), self.tif.as_str().into());
         if let Some(p) = self.price {
-            o.insert("price".into(), p.to_string().parse::<f64>().unwrap_or(0.0).into());
+            o.insert(
+                "price".into(),
+                p.to_string().parse::<f64>().unwrap_or(0.0).into(),
+            );
         }
         if let Some(t) = &self.client_order_id {
             o.insert("cOID".into(), t.clone().into());

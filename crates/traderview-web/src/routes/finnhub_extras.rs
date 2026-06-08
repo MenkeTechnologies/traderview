@@ -48,7 +48,10 @@ pub fn router() -> Router<AppState> {
         .route("/symbols/:symbol/financials", get(financials))
         .route("/symbols/:symbol/metric", get(metric))
         .route("/symbols/:symbol/finnhub-quote", get(finnhub_quote))
-        .route("/symbols/:symbol/short-interest", get(short_interest_history))
+        .route(
+            "/symbols/:symbol/short-interest",
+            get(short_interest_history),
+        )
         .route("/symbols/:symbol/finnhub-news", get(per_symbol_news))
         .route("/symbols/:symbol/news-sentiment", get(news_sentiment))
         .route("/symbols/:symbol/press-releases", get(press_releases))

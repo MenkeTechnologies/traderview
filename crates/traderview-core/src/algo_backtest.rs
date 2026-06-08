@@ -321,7 +321,11 @@ fn push_point(
     if dd_pct > *max_dd {
         *max_dd = dd_pct;
     }
-    points.push(AlgoBtPoint { time, equity, drawdown_pct: dd_pct });
+    points.push(AlgoBtPoint {
+        time,
+        equity,
+        drawdown_pct: dd_pct,
+    });
 }
 
 fn summarize(
@@ -333,7 +337,11 @@ fn summarize(
     n_bars: usize,
     bars_in_market: usize,
 ) -> AlgoBtSummary {
-    let wins: Vec<f64> = trades.iter().filter(|t| t.pnl > 0.0).map(|t| t.pnl).collect();
+    let wins: Vec<f64> = trades
+        .iter()
+        .filter(|t| t.pnl > 0.0)
+        .map(|t| t.pnl)
+        .collect();
     let losses: Vec<f64> = trades
         .iter()
         .filter(|t| t.pnl < 0.0)
@@ -380,15 +388,31 @@ fn summarize(
         let mean = returns.iter().sum::<f64>() / returns.len() as f64;
         let var = returns.iter().map(|r| (r - mean).powi(2)).sum::<f64>() / returns.len() as f64;
         let std = var.sqrt();
-        if std > 0.0 { mean / std } else { 0.0 }
+        if std > 0.0 {
+            mean / std
+        } else {
+            0.0
+        }
     } else {
         0.0
     };
 
-    let exits_by_stop = trades.iter().filter(|t| t.exit_reason == ExitReason::StopLoss).count();
-    let exits_by_tp = trades.iter().filter(|t| t.exit_reason == ExitReason::TakeProfit).count();
-    let exits_by_signal = trades.iter().filter(|t| t.exit_reason == ExitReason::StrategySignal).count();
-    let exits_by_eod = trades.iter().filter(|t| t.exit_reason == ExitReason::EndOfData).count();
+    let exits_by_stop = trades
+        .iter()
+        .filter(|t| t.exit_reason == ExitReason::StopLoss)
+        .count();
+    let exits_by_tp = trades
+        .iter()
+        .filter(|t| t.exit_reason == ExitReason::TakeProfit)
+        .count();
+    let exits_by_signal = trades
+        .iter()
+        .filter(|t| t.exit_reason == ExitReason::StrategySignal)
+        .count();
+    let exits_by_eod = trades
+        .iter()
+        .filter(|t| t.exit_reason == ExitReason::EndOfData)
+        .count();
 
     AlgoBtSummary {
         trades: trades.len(),

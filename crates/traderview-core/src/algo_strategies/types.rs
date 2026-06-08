@@ -12,16 +12,13 @@ pub enum Side {
     Sell,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum SideMode {
+    #[default]
     Long,
     Short,
     Both,
-}
-
-impl Default for SideMode {
-    fn default() -> Self { Self::Long }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -32,7 +29,10 @@ pub struct Sizing {
 
 impl Default for Sizing {
     fn default() -> Self {
-        Self { risk_pct_per_trade: 0.01, max_pos_pct: 0.20 }
+        Self {
+            risk_pct_per_trade: 0.01,
+            max_pos_pct: 0.20,
+        }
     }
 }
 
@@ -65,12 +65,7 @@ pub struct ExitSignal {
 /// Risk-first share sizing. `stop_distance` is per-share dollars at risk
 /// (e.g. `atr * stop_mult` for momentum, or `(entry - vwap).abs() * k` for
 /// VWAP scalp). Result is capped by `max_pos_pct * equity / entry`.
-pub fn size_shares(
-    equity: f64,
-    entry_price: f64,
-    stop_distance: f64,
-    sizing: &Sizing,
-) -> u64 {
+pub fn size_shares(equity: f64, entry_price: f64, stop_distance: f64, sizing: &Sizing) -> u64 {
     if entry_price <= 0.0 || stop_distance <= 0.0 || equity <= 0.0 {
         return 0;
     }
@@ -92,7 +87,10 @@ mod tests {
             100_000.0,
             100.0,
             2.0,
-            &Sizing { risk_pct_per_trade: 0.01, max_pos_pct: 0.20 },
+            &Sizing {
+                risk_pct_per_trade: 0.01,
+                max_pos_pct: 0.20,
+            },
         );
         assert_eq!(qty, 200);
     }

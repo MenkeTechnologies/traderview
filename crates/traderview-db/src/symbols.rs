@@ -71,26 +71,14 @@ pub async fn seed_from_finnhub(pool: &PgPool, exchange: &str) -> anyhow::Result<
             .get("displaySymbol")
             .and_then(|v| v.as_str())
             .map(str::to_string);
-        let ty = row
-            .get("type")
-            .and_then(|v| v.as_str())
-            .map(str::to_string);
+        let ty = row.get("type").and_then(|v| v.as_str()).map(str::to_string);
         let cur = row
             .get("currency")
             .and_then(|v| v.as_str())
             .map(str::to_string);
-        let mic = row
-            .get("mic")
-            .and_then(|v| v.as_str())
-            .map(str::to_string);
-        let figi = row
-            .get("figi")
-            .and_then(|v| v.as_str())
-            .map(str::to_string);
-        let isin = row
-            .get("isin")
-            .and_then(|v| v.as_str())
-            .map(str::to_string);
+        let mic = row.get("mic").and_then(|v| v.as_str()).map(str::to_string);
+        let figi = row.get("figi").and_then(|v| v.as_str()).map(str::to_string);
+        let isin = row.get("isin").and_then(|v| v.as_str()).map(str::to_string);
         let scf = row
             .get("shareClassFIGI")
             .and_then(|v| v.as_str())

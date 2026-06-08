@@ -1,8 +1,8 @@
 //! Supertrend Cross — Olivier Seban's ATR-banded trend reversal.
 //!
 //! Entry fires the bar the Supertrend trend flag flips:
-//!   long entry  on trend[i-1] == -1 → trend[i] == 1
-//!   short entry on trend[i-1] ==  1 → trend[i] == -1
+//!   long entry  on `trend[i-1]` == -1 → `trend[i]` == 1
+//!   short entry on `trend[i-1]` ==  1 → `trend[i]` == -1
 //!
 //! Exit: opposite flip OR the supertrend value itself (acts as a trailing
 //! stop — every bar a long is open, super_trend = the lower band).
@@ -36,10 +36,14 @@ impl Default for Rules {
 }
 
 #[derive(Debug, Clone)]
-pub struct Supertrend { pub rules: Rules }
+pub struct Supertrend {
+    pub rules: Rules,
+}
 
 impl Supertrend {
-    pub fn new(rules: Rules) -> Self { Self { rules } }
+    pub fn new(rules: Rules) -> Self {
+        Self { rules }
+    }
     pub fn from_json(entry_rules: &serde_json::Value) -> Self {
         let rules = serde_json::from_value::<Rules>(entry_rules.clone()).unwrap_or_default();
         Self { rules }
@@ -68,9 +72,13 @@ fn atr_f64_vec(bars: &[PriceBar], period: usize) -> Vec<f64> {
 }
 
 impl Strategy for Supertrend {
-    fn kind(&self) -> StrategyKind { StrategyKind::Supertrend }
+    fn kind(&self) -> StrategyKind {
+        StrategyKind::Supertrend
+    }
 
-    fn min_bars(&self) -> usize { self.rules.atr_period + 3 }
+    fn min_bars(&self) -> usize {
+        self.rules.atr_period + 3
+    }
 
     fn evaluate_entry(&self, bars: &[PriceBar], side_mode: SideMode) -> Option<EntrySignal> {
         if bars.len() < self.min_bars() {
@@ -83,12 +91,16 @@ impl Strategy for Supertrend {
 
         let trend_now = report.get(i)?.trend;
         let trend_prev = report.get(prev)?.trend;
-        if trend_now == 0 || trend_prev == 0 { return None; }
+        if trend_now == 0 || trend_prev == 0 {
+            return None;
+        }
         let close_now = bars[i].close;
         let close_f = close_now_f64(close_now);
         let st_value = report.get(i)?.super_trend;
         let atr_now = atr_v[i];
-        if atr_now <= 0.0 { return None; }
+        if atr_now <= 0.0 {
+            return None;
+        }
 
         let want_long = matches!(side_mode, SideMode::Long | SideMode::Both)
             && trend_prev == -1
@@ -260,8 +272,16 @@ mod tests {
         let bars = down_then_up_window();
         let sig = first_long(&bars, &strat).expect("trend flip must fire long");
         assert_eq!(sig.side, Side::Buy);
-        let prev = sig.diagnostic.get("trend_prev").and_then(|v| v.as_i64()).unwrap();
-        let now = sig.diagnostic.get("trend_now").and_then(|v| v.as_i64()).unwrap();
+        let prev = sig
+            .diagnostic
+            .get("trend_prev")
+            .and_then(|v| v.as_i64())
+            .unwrap();
+        let now = sig
+            .diagnostic
+            .get("trend_now")
+            .and_then(|v| v.as_i64())
+            .unwrap();
         assert_eq!(prev, -1);
         assert_eq!(now, 1);
     }

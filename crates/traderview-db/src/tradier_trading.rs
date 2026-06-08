@@ -89,7 +89,11 @@ impl TradierTrading {
     }
 
     /// Test-only constructor — wiremock injects a mock base URL.
-    pub fn with_base(base: impl Into<String>, token: impl Into<String>, account_id: impl Into<String>) -> Self {
+    pub fn with_base(
+        base: impl Into<String>,
+        token: impl Into<String>,
+        account_id: impl Into<String>,
+    ) -> Self {
         Self {
             http: reqwest::Client::builder()
                 .timeout(Duration::from_secs(5))
@@ -120,7 +124,10 @@ impl TradierTrading {
                 Err(TradierError::InsufficientBuyingPower)
             }
             400 | 422 => Err(TradierError::InvalidRequest(body)),
-            _ => Err(TradierError::Http { status: status.as_u16(), body }),
+            _ => Err(TradierError::Http {
+                status: status.as_u16(),
+                body,
+            }),
         }
     }
 
@@ -172,7 +179,10 @@ impl TradierTrading {
         match status.as_u16() {
             401 => Err(TradierError::AuthFailed),
             422 | 400 => Err(TradierError::InvalidRequest(body)),
-            _ => Err(TradierError::Http { status: status.as_u16(), body }),
+            _ => Err(TradierError::Http {
+                status: status.as_u16(),
+                body,
+            }),
         }
     }
 

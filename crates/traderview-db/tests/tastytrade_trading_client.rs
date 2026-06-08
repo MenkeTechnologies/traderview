@@ -57,20 +57,23 @@ async fn place_equity_limit_includes_price_and_price_effect() {
     // instrument-type). One drift in field naming and they 422.
     Mock::given(method("POST"))
         .and(path("/accounts/5WX12345/orders"))
-        .and(body_json_string(serde_json::to_string(&serde_json::json!({
-            "order-type": "Limit",
-            "time-in-force": "Day",
-            "price": "180.50",
-            "price-effect": "Debit",
-            "legs": [
-                {
-                    "symbol": "MSFT",
-                    "instrument-type": "Equity",
-                    "action": "Buy to Open",
-                    "quantity": "5"
-                }
-            ]
-        })).unwrap()))
+        .and(body_json_string(
+            serde_json::to_string(&serde_json::json!({
+                "order-type": "Limit",
+                "time-in-force": "Day",
+                "price": "180.50",
+                "price-effect": "Debit",
+                "legs": [
+                    {
+                        "symbol": "MSFT",
+                        "instrument-type": "Equity",
+                        "action": "Buy to Open",
+                        "quantity": "5"
+                    }
+                ]
+            }))
+            .unwrap(),
+        ))
         .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
             "data": {"order": {"id": 1, "status": "Routed"}}
         })))
@@ -99,7 +102,10 @@ async fn place_401_maps_to_auth_failed() {
         .mount(&server)
         .await;
     let req = PlaceEquityOrder::market("AAPL", EquityAction::BuyToOpen, dec("1"));
-    let err = client.place_equity_order(&req).await.expect_err("must error");
+    let err = client
+        .place_equity_order(&req)
+        .await
+        .expect_err("must error");
     assert!(matches!(err, TastytradeError::AuthFailed), "got {err:?}");
 }
 
@@ -108,13 +114,17 @@ async fn place_403_with_buying_power_maps_to_insufficient_buying_power() {
     let (server, client) = server_with_token().await;
     Mock::given(method("POST"))
         .and(path("/accounts/5WX12345/orders"))
-        .respond_with(ResponseTemplate::new(403).set_body_string(
-            "{\"error\": \"Insufficient buying power for this order\"}",
-        ))
+        .respond_with(
+            ResponseTemplate::new(403)
+                .set_body_string("{\"error\": \"Insufficient buying power for this order\"}"),
+        )
         .mount(&server)
         .await;
     let req = PlaceEquityOrder::market("AAPL", EquityAction::BuyToOpen, dec("99999999"));
-    let err = client.place_equity_order(&req).await.expect_err("must error");
+    let err = client
+        .place_equity_order(&req)
+        .await
+        .expect_err("must error");
     assert!(
         matches!(err, TastytradeError::InsufficientBuyingPower),
         "got {err:?}"
@@ -132,7 +142,10 @@ async fn place_422_maps_to_invalid_request() {
         .mount(&server)
         .await;
     let req = PlaceEquityOrder::market("AAPL", EquityAction::BuyToOpen, dec("0"));
-    let err = client.place_equity_order(&req).await.expect_err("must error");
+    let err = client
+        .place_equity_order(&req)
+        .await
+        .expect_err("must error");
     match err {
         TastytradeError::InvalidRequest(body) => {
             assert!(body.contains("must be positive"), "body={body}");

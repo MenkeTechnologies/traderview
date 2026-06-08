@@ -703,7 +703,10 @@ fn algo_strategy_create_defaults_paper_lock_30d_kill_off() {
         // live trades on day-1 strategies.
         let now = chrono::Utc::now();
         let days = (s.paper_locked_until - now).num_days();
-        assert!(days >= 29 && days <= 31, "paper_locked_until ~30 days, got {days}");
+        assert!(
+            days >= 29 && days <= 31,
+            "paper_locked_until ~30 days, got {days}"
+        );
     });
 }
 
@@ -736,7 +739,11 @@ fn algo_kill_switch_toggles_and_audits() {
         .expect("create");
 
         let engaged = traderview_db::algo::set_kill_switch(
-            &pool(), user, s.id, true, Some("manual halt".into()),
+            &pool(),
+            user,
+            s.id,
+            true,
+            Some("manual halt".into()),
         )
         .await
         .expect("engage")
@@ -795,7 +802,9 @@ fn algo_run_one_open_per_strategy_invariant() {
         )
         .await
         .expect("create");
-        let r1 = traderview_db::algo::start_run(&pool(), s.id).await.expect("r1");
+        let r1 = traderview_db::algo::start_run(&pool(), s.id)
+            .await
+            .expect("r1");
         // Second open run for the same strategy must be rejected by the
         // partial unique index.
         let r2 = traderview_db::algo::start_run(&pool(), s.id).await;
@@ -804,7 +813,9 @@ fn algo_run_one_open_per_strategy_invariant() {
         traderview_db::algo::stop_run(&pool(), r1.id, "user", None, None)
             .await
             .expect("stop r1");
-        traderview_db::algo::start_run(&pool(), s.id).await.expect("r3");
+        traderview_db::algo::start_run(&pool(), s.id)
+            .await
+            .expect("r3");
     });
 }
 
@@ -837,7 +848,9 @@ fn algo_order_fill_round_trip() {
         )
         .await
         .expect("create");
-        let run = traderview_db::algo::start_run(&pool(), s.id).await.expect("run");
+        let run = traderview_db::algo::start_run(&pool(), s.id)
+            .await
+            .expect("run");
 
         let coid = Uuid::new_v4();
         let order = traderview_db::algo::insert_order(
@@ -885,7 +898,9 @@ fn algo_order_fill_round_trip() {
         .await
         .expect("insert fill");
 
-        let fills = traderview_db::algo::list_fills(&pool(), order.id).await.expect("list");
+        let fills = traderview_db::algo::list_fills(&pool(), order.id)
+            .await
+            .expect("list");
         assert_eq!(fills.len(), 1);
         assert_eq!(fills[0].fill_value, Decimal::from_str("1805.00").unwrap());
 

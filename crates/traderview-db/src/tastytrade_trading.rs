@@ -69,7 +69,11 @@ pub enum TastytradeError {
 #[derive(Debug, Clone)]
 pub enum Auth {
     SessionToken(String),
-    UserPass { login: String, password: String, remember_me: bool },
+    UserPass {
+        login: String,
+        password: String,
+        remember_me: bool,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -86,11 +90,7 @@ pub struct TastytradeTrading {
 }
 
 impl TastytradeTrading {
-    pub fn new(
-        env: TastytradeEnv,
-        auth: Auth,
-        account_number: impl Into<String>,
-    ) -> Self {
+    pub fn new(env: TastytradeEnv, auth: Auth, account_number: impl Into<String>) -> Self {
         let initial_token = if let Auth::SessionToken(ref t) = auth {
             Some(t.clone())
         } else {
@@ -140,9 +140,11 @@ impl TastytradeTrading {
         }
         let (login, password, remember_me) = match &self.auth {
             Auth::SessionToken(_) => unreachable!("token already populated above"),
-            Auth::UserPass { login, password, remember_me } => {
-                (login.clone(), password.clone(), *remember_me)
-            }
+            Auth::UserPass {
+                login,
+                password,
+                remember_me,
+            } => (login.clone(), password.clone(), *remember_me),
         };
         let body = serde_json::json!({
             "login": login,
@@ -194,7 +196,10 @@ impl TastytradeTrading {
                 Err(TastytradeError::InsufficientBuyingPower)
             }
             400 | 422 => Err(TastytradeError::InvalidRequest(body)),
-            _ => Err(TastytradeError::Http { status: status.as_u16(), body }),
+            _ => Err(TastytradeError::Http {
+                status: status.as_u16(),
+                body,
+            }),
         }
     }
 
@@ -203,10 +208,7 @@ impl TastytradeTrading {
         req: &PlaceEquityOrder,
     ) -> Result<PlaceOrderResponse, TastytradeError> {
         let token = self.ensure_token().await?;
-        let url = format!(
-            "{}/accounts/{}/orders",
-            self.base, self.account_number
-        );
+        let url = format!("{}/accounts/{}/orders", self.base, self.account_number);
         let resp = self
             .auth_header(self.http.post(&url), &token)
             .json(&req.to_json())
@@ -223,7 +225,10 @@ impl TastytradeTrading {
             "{}/accounts/{}/orders/{order_id}",
             self.base, self.account_number
         );
-        let resp = self.auth_header(self.http.delete(&url), &token).send().await?;
+        let resp = self
+            .auth_header(self.http.delete(&url), &token)
+            .send()
+            .await?;
         let status = resp.status();
         let body = resp.text().await?;
         if status.is_success() {
@@ -232,16 +237,16 @@ impl TastytradeTrading {
         match status.as_u16() {
             401 => Err(TastytradeError::AuthFailed),
             422 | 400 => Err(TastytradeError::InvalidRequest(body)),
-            _ => Err(TastytradeError::Http { status: status.as_u16(), body }),
+            _ => Err(TastytradeError::Http {
+                status: status.as_u16(),
+                body,
+            }),
         }
     }
 
     pub async fn get_balances(&self) -> Result<BalancesResponse, TastytradeError> {
         let token = self.ensure_token().await?;
-        let url = format!(
-            "{}/accounts/{}/balances",
-            self.base, self.account_number
-        );
+        let url = format!("{}/accounts/{}/balances", self.base, self.account_number);
         let resp = self.auth_header(self.http.get(&url), &token).send().await?;
         Self::handle_status(resp).await
     }

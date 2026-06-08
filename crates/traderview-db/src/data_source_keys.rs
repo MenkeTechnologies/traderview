@@ -351,29 +351,105 @@ pub async fn set(pool: &PgPool, user_id: Uuid, dto: &DataSourceKeysDto) -> anyho
            WHERE user_id = $1",
     )
     .bind(user_id)
-    .bind(if finnhub_supplied { dto.finnhub_api_key.as_deref() } else { None })
-    .bind(if alpaca_id_supplied { dto.alpaca_key_id.as_deref() } else { None })
-    .bind(if alpaca_secret_supplied { dto.alpaca_secret_key.as_deref() } else { None })
+    .bind(if finnhub_supplied {
+        dto.finnhub_api_key.as_deref()
+    } else {
+        None
+    })
+    .bind(if alpaca_id_supplied {
+        dto.alpaca_key_id.as_deref()
+    } else {
+        None
+    })
+    .bind(if alpaca_secret_supplied {
+        dto.alpaca_secret_key.as_deref()
+    } else {
+        None
+    })
     .bind(dto.alpaca_paper)
-    .bind(if polygon_supplied { dto.polygon_api_key.as_deref() } else { None })
-    .bind(if databento_supplied { dto.databento_api_key.as_deref() } else { None })
+    .bind(if polygon_supplied {
+        dto.polygon_api_key.as_deref()
+    } else {
+        None
+    })
+    .bind(if databento_supplied {
+        dto.databento_api_key.as_deref()
+    } else {
+        None
+    })
     .bind(dto.alpaca_use_sip_feed)
-    .bind(if tradier_token_supplied { dto.tradier_access_token.as_deref() } else { None })
-    .bind(if tradier_acct_supplied { dto.tradier_account_id.as_deref() } else { None })
+    .bind(if tradier_token_supplied {
+        dto.tradier_access_token.as_deref()
+    } else {
+        None
+    })
+    .bind(if tradier_acct_supplied {
+        dto.tradier_account_id.as_deref()
+    } else {
+        None
+    })
     .bind(dto.tradier_sandbox)
-    .bind(if tt_login_supplied { dto.tastytrade_login.as_deref() } else { None })
-    .bind(if tt_password_supplied { dto.tastytrade_password.as_deref() } else { None })
-    .bind(if tt_token_supplied { dto.tastytrade_session_token.as_deref() } else { None })
-    .bind(if tt_acct_supplied { dto.tastytrade_account_number.as_deref() } else { None })
+    .bind(if tt_login_supplied {
+        dto.tastytrade_login.as_deref()
+    } else {
+        None
+    })
+    .bind(if tt_password_supplied {
+        dto.tastytrade_password.as_deref()
+    } else {
+        None
+    })
+    .bind(if tt_token_supplied {
+        dto.tastytrade_session_token.as_deref()
+    } else {
+        None
+    })
+    .bind(if tt_acct_supplied {
+        dto.tastytrade_account_number.as_deref()
+    } else {
+        None
+    })
     .bind(dto.tastytrade_sandbox)
-    .bind(if ibkr_acct_supplied { dto.ibkr_account_id.as_deref() } else { None })
-    .bind(if ibkr_base_supplied { dto.ibkr_base_url.as_deref() } else { None })
-    .bind(if ibkr_token_supplied { dto.ibkr_bearer_token.as_deref() } else { None })
-    .bind(if sw_client_id_supplied { dto.schwab_client_id.as_deref() } else { None })
-    .bind(if sw_client_secret_supplied { dto.schwab_client_secret.as_deref() } else { None })
-    .bind(if sw_access_supplied { dto.schwab_access_token.as_deref() } else { None })
-    .bind(if sw_refresh_supplied { dto.schwab_refresh_token.as_deref() } else { None })
-    .bind(if sw_acct_supplied { dto.schwab_account_hash.as_deref() } else { None })
+    .bind(if ibkr_acct_supplied {
+        dto.ibkr_account_id.as_deref()
+    } else {
+        None
+    })
+    .bind(if ibkr_base_supplied {
+        dto.ibkr_base_url.as_deref()
+    } else {
+        None
+    })
+    .bind(if ibkr_token_supplied {
+        dto.ibkr_bearer_token.as_deref()
+    } else {
+        None
+    })
+    .bind(if sw_client_id_supplied {
+        dto.schwab_client_id.as_deref()
+    } else {
+        None
+    })
+    .bind(if sw_client_secret_supplied {
+        dto.schwab_client_secret.as_deref()
+    } else {
+        None
+    })
+    .bind(if sw_access_supplied {
+        dto.schwab_access_token.as_deref()
+    } else {
+        None
+    })
+    .bind(if sw_refresh_supplied {
+        dto.schwab_refresh_token.as_deref()
+    } else {
+        None
+    })
+    .bind(if sw_acct_supplied {
+        dto.schwab_account_hash.as_deref()
+    } else {
+        None
+    })
     .execute(pool)
     .await?;
     Ok(())
@@ -393,14 +469,16 @@ pub async fn ibkr_creds(
     .bind(user_id)
     .fetch_optional(pool)
     .await?;
-    let Some((account, base, token)) = row else { return Ok(None); };
+    let Some((account, base, token)) = row else {
+        return Ok(None);
+    };
     let account = match account {
         Some(a) if !a.is_empty() => a,
         _ => return Ok(None),
     };
-    let base = base.filter(|s| !s.is_empty()).unwrap_or_else(|| {
-        crate::ibkr_trading::DEFAULT_LOCAL_BASE.to_string()
-    });
+    let base = base
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| crate::ibkr_trading::DEFAULT_LOCAL_BASE.to_string());
     Ok(Some((account, base, token.filter(|t| !t.is_empty()))))
 }
 
@@ -425,16 +503,36 @@ pub async fn schwab_creds(
     .bind(user_id)
     .fetch_optional(pool)
     .await?;
-    let Some((cid, csec, atok, rtok, acct)) = row else { return Ok(None); };
-    let cid = match cid { Some(v) if !v.is_empty() => v, _ => return Ok(None) };
-    let csec = match csec { Some(v) if !v.is_empty() => v, _ => return Ok(None) };
-    let atok = match atok { Some(v) if !v.is_empty() => v, _ => return Ok(None) };
-    let rtok = match rtok { Some(v) if !v.is_empty() => v, _ => return Ok(None) };
-    let acct = match acct { Some(v) if !v.is_empty() => v, _ => return Ok(None) };
+    let Some((cid, csec, atok, rtok, acct)) = row else {
+        return Ok(None);
+    };
+    let cid = match cid {
+        Some(v) if !v.is_empty() => v,
+        _ => return Ok(None),
+    };
+    let csec = match csec {
+        Some(v) if !v.is_empty() => v,
+        _ => return Ok(None),
+    };
+    let atok = match atok {
+        Some(v) if !v.is_empty() => v,
+        _ => return Ok(None),
+    };
+    let rtok = match rtok {
+        Some(v) if !v.is_empty() => v,
+        _ => return Ok(None),
+    };
+    let acct = match acct {
+        Some(v) if !v.is_empty() => v,
+        _ => return Ok(None),
+    };
     Ok(Some((
         cid,
         csec,
-        crate::schwab_trading::Tokens { access_token: atok, refresh_token: rtok },
+        crate::schwab_trading::Tokens {
+            access_token: atok,
+            refresh_token: rtok,
+        },
         acct,
     )))
 }
@@ -470,15 +568,20 @@ pub async fn tastytrade_creds(
     pool: &PgPool,
     user_id: Uuid,
 ) -> anyhow::Result<Option<(String, bool, crate::tastytrade_trading::Auth)>> {
-    let row: Option<(Option<String>, Option<String>, Option<String>, Option<String>, bool)> =
-        sqlx::query_as(
-            "SELECT tastytrade_login, tastytrade_password, tastytrade_session_token,
+    let row: Option<(
+        Option<String>,
+        Option<String>,
+        Option<String>,
+        Option<String>,
+        bool,
+    )> = sqlx::query_as(
+        "SELECT tastytrade_login, tastytrade_password, tastytrade_session_token,
                     tastytrade_account_number, tastytrade_sandbox
                FROM user_settings WHERE user_id = $1",
-        )
-        .bind(user_id)
-        .fetch_optional(pool)
-        .await?;
+    )
+    .bind(user_id)
+    .fetch_optional(pool)
+    .await?;
     let Some((login, password, token, account_number, sandbox)) = row else {
         return Ok(None);
     };

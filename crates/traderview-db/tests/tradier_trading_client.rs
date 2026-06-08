@@ -119,7 +119,10 @@ async fn place_401_maps_to_auth_failed() {
         .mount(&server)
         .await;
     let req = PlaceEquityOrder::market("AAPL", EquitySide::Buy, dec("1"));
-    let err = client.place_equity_order(&req).await.expect_err("must error");
+    let err = client
+        .place_equity_order(&req)
+        .await
+        .expect_err("must error");
     assert!(matches!(err, TradierError::AuthFailed), "got {err:?}");
 }
 
@@ -128,13 +131,17 @@ async fn place_403_with_buying_power_maps_to_insufficient_buying_power() {
     let (server, client) = server_with_creds().await;
     Mock::given(method("POST"))
         .and(path("/accounts/ACCT-1/orders"))
-        .respond_with(ResponseTemplate::new(403).set_body_string(
-            "{\"error\": \"Insufficient buying power for this order\"}",
-        ))
+        .respond_with(
+            ResponseTemplate::new(403)
+                .set_body_string("{\"error\": \"Insufficient buying power for this order\"}"),
+        )
         .mount(&server)
         .await;
     let req = PlaceEquityOrder::market("AAPL", EquitySide::Buy, dec("1000000"));
-    let err = client.place_equity_order(&req).await.expect_err("must error");
+    let err = client
+        .place_equity_order(&req)
+        .await
+        .expect_err("must error");
     assert!(
         matches!(err, TradierError::InsufficientBuyingPower),
         "got {err:?}"
@@ -152,7 +159,10 @@ async fn place_400_maps_to_invalid_request() {
         .mount(&server)
         .await;
     let req = PlaceEquityOrder::market("AAPL", EquitySide::Buy, dec("0"));
-    let err = client.place_equity_order(&req).await.expect_err("must error");
+    let err = client
+        .place_equity_order(&req)
+        .await
+        .expect_err("must error");
     match err {
         TradierError::InvalidRequest(body) => {
             assert!(body.contains("greater than zero"), "body={body}");

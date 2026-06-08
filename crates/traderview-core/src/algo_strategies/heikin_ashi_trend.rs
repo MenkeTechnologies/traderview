@@ -39,10 +39,14 @@ impl Default for Rules {
 }
 
 #[derive(Debug, Clone)]
-pub struct HeikinAshiTrend { pub rules: Rules }
+pub struct HeikinAshiTrend {
+    pub rules: Rules,
+}
 
 impl HeikinAshiTrend {
-    pub fn new(rules: Rules) -> Self { Self { rules } }
+    pub fn new(rules: Rules) -> Self {
+        Self { rules }
+    }
     pub fn from_json(entry_rules: &serde_json::Value) -> Self {
         let rules = serde_json::from_value::<Rules>(entry_rules.clone()).unwrap_or_default();
         Self { rules }
@@ -62,7 +66,9 @@ fn ha_bars(bars: &[PriceBar]) -> Vec<heikin_ashi::Bar> {
 }
 
 impl Strategy for HeikinAshiTrend {
-    fn kind(&self) -> StrategyKind { StrategyKind::HeikinAshiTrend }
+    fn kind(&self) -> StrategyKind {
+        StrategyKind::HeikinAshiTrend
+    }
 
     fn min_bars(&self) -> usize {
         self.rules.ema_slow.max(self.rules.atr_period + 1) + self.rules.green_run
@@ -82,16 +88,17 @@ impl Strategy for HeikinAshiTrend {
         let i = bars.len() - 1;
         let close_now = closes[i];
         let atr_now = atr.get(i).copied().flatten()?;
-        if atr_now <= 0.0 { return None; }
+        if atr_now <= 0.0 {
+            return None;
+        }
         let ema_now = ema.get(i).copied().flatten()?;
 
         let last_n = &ha[i + 1 - self.rules.green_run..=i];
         let all_bull = last_n.iter().all(|h| h.is_bull());
         let all_bear = last_n.iter().all(|h| h.is_bear());
 
-        let want_long = matches!(side_mode, SideMode::Long | SideMode::Both)
-            && all_bull
-            && close_now > ema_now;
+        let want_long =
+            matches!(side_mode, SideMode::Long | SideMode::Both) && all_bull && close_now > ema_now;
         let want_short = matches!(side_mode, SideMode::Short | SideMode::Both)
             && all_bear
             && close_now < ema_now;
@@ -122,7 +129,8 @@ impl Strategy for HeikinAshiTrend {
                 stop_distance,
                 trigger_index: i,
                 stop_price: stop,
-                take_profit_price: (close_now - self.rules.atr_take_profit_mult * atr_now).max(0.01),
+                take_profit_price: (close_now - self.rules.atr_take_profit_mult * atr_now)
+                    .max(0.01),
                 kind: "heikin_ashi_trend",
                 diagnostic: serde_json::json!({
                     "ha_run_len": self.rules.green_run,
@@ -275,7 +283,11 @@ mod tests {
         let bars = ha_uptrend_window();
         let sig = first_long(&bars, &strat).expect("HA green run must fire long");
         assert_eq!(sig.side, Side::Buy);
-        let ema = sig.diagnostic.get("ema_slow").and_then(|v| v.as_f64()).unwrap();
+        let ema = sig
+            .diagnostic
+            .get("ema_slow")
+            .and_then(|v| v.as_f64())
+            .unwrap();
         assert!(sig.entry_price > ema, "close must be above EMA on entry");
     }
 
@@ -285,7 +297,11 @@ mod tests {
         // Alternating up/down bars — never 3 green HA candles in a row.
         let bars: Vec<PriceBar> = (0..60)
             .map(|i| {
-                let (o, c): (f64, f64) = if i % 2 == 0 { (100.0, 99.5) } else { (99.5, 100.0) };
+                let (o, c): (f64, f64) = if i % 2 == 0 {
+                    (100.0, 99.5)
+                } else {
+                    (99.5, 100.0)
+                };
                 bar(
                     1_700_000_000 + i * 60,
                     &format!("{o:.2}"),

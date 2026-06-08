@@ -127,8 +127,12 @@ async fn main() -> anyhow::Result<()> {
 
 async fn resolve_creds(pg_url: Option<&str>) -> anyhow::Result<(String, String, bool)> {
     if let (Some(k), Some(s)) = (
-        std::env::var("ALPACA_KEY_ID").ok().filter(|s| !s.is_empty()),
-        std::env::var("ALPACA_SECRET_KEY").ok().filter(|s| !s.is_empty()),
+        std::env::var("ALPACA_KEY_ID")
+            .ok()
+            .filter(|s| !s.is_empty()),
+        std::env::var("ALPACA_SECRET_KEY")
+            .ok()
+            .filter(|s| !s.is_empty()),
     ) {
         let paper = std::env::var("ALPACA_PAPER")
             .ok()

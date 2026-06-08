@@ -45,10 +45,14 @@ impl Default for Rules {
 }
 
 #[derive(Debug, Clone)]
-pub struct ConnorsRsi2 { pub rules: Rules }
+pub struct ConnorsRsi2 {
+    pub rules: Rules,
+}
 
 impl ConnorsRsi2 {
-    pub fn new(rules: Rules) -> Self { Self { rules } }
+    pub fn new(rules: Rules) -> Self {
+        Self { rules }
+    }
     pub fn from_json(entry_rules: &serde_json::Value) -> Self {
         let rules = serde_json::from_value::<Rules>(entry_rules.clone()).unwrap_or_default();
         Self { rules }
@@ -56,7 +60,9 @@ impl ConnorsRsi2 {
 }
 
 impl Strategy for ConnorsRsi2 {
-    fn kind(&self) -> StrategyKind { StrategyKind::ConnorsRsi2 }
+    fn kind(&self) -> StrategyKind {
+        StrategyKind::ConnorsRsi2
+    }
 
     fn min_bars(&self) -> usize {
         self.rules.sma_trend.max(self.rules.atr_period + 1) + 2
@@ -84,7 +90,9 @@ impl Strategy for ConnorsRsi2 {
         let sma_now = sma200.get(i).copied().flatten()?;
         let rsi_now = rsi.get(i).copied().flatten()?;
         let atr_now = atr.get(i).copied().flatten()?;
-        if atr_now <= 0.0 { return None; }
+        if atr_now <= 0.0 {
+            return None;
+        }
 
         let above_trend = close_now > sma_now;
         let oversold = rsi_now < self.rules.rsi_oversold;
@@ -242,9 +250,18 @@ mod tests {
         let bars = pullback_above_trend_window();
         let sig = first_long(&bars, &strat).expect("pullback above 200SMA must fire");
         assert_eq!(sig.side, Side::Buy);
-        let sma = sig.diagnostic.get("sma_trend").and_then(|v| v.as_f64()).unwrap();
+        let sma = sig
+            .diagnostic
+            .get("sma_trend")
+            .and_then(|v| v.as_f64())
+            .unwrap();
         let rsi = sig.diagnostic.get("rsi").and_then(|v| v.as_f64()).unwrap();
-        assert!(sig.entry_price > sma, "close {} > SMA200 {}", sig.entry_price, sma);
+        assert!(
+            sig.entry_price > sma,
+            "close {} > SMA200 {}",
+            sig.entry_price,
+            sma
+        );
         assert!(rsi < 5.0, "RSI(2) {rsi} must be below 5");
     }
 
@@ -277,7 +294,9 @@ mod tests {
         // Under SideMode::Short the strategy must return None — long-only edge.
         for end in strat.min_bars()..=bars.len() {
             assert!(
-                strat.evaluate_entry(&bars[..end], SideMode::Short).is_none(),
+                strat
+                    .evaluate_entry(&bars[..end], SideMode::Short)
+                    .is_none(),
                 "long-only strategy must not fire under SideMode::Short"
             );
         }

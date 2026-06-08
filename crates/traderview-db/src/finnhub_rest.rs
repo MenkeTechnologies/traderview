@@ -120,11 +120,7 @@ pub async fn metric_all(symbol: &str) -> anyhow::Result<Value> {
 /// dates. Free-tier endpoint per Finnhub's docs / announcements.
 /// Returns `{ symbol, data: [{ settlementDate, shortInterest }, ...] }`
 /// — newest record first.
-pub async fn stock_short_interest(
-    symbol: &str,
-    from: &str,
-    to: &str,
-) -> anyhow::Result<Value> {
+pub async fn stock_short_interest(symbol: &str, from: &str, to: &str) -> anyhow::Result<Value> {
     get_json(
         "/stock/short-interest",
         &[("symbol", symbol), ("from", from), ("to", to)],

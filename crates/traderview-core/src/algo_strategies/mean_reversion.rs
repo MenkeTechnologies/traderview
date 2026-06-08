@@ -59,10 +59,11 @@ pub struct MeanReversion {
 }
 
 impl MeanReversion {
-    pub fn new(rules: Rules) -> Self { Self { rules } }
+    pub fn new(rules: Rules) -> Self {
+        Self { rules }
+    }
     pub fn from_json(entry_rules: &serde_json::Value) -> Self {
-        let rules = serde_json::from_value::<Rules>(entry_rules.clone())
-            .unwrap_or_default();
+        let rules = serde_json::from_value::<Rules>(entry_rules.clone()).unwrap_or_default();
         Self { rules }
     }
 }
@@ -90,10 +91,13 @@ fn f64_dec(d: rust_decimal::Decimal) -> f64 {
 }
 
 impl Strategy for MeanReversion {
-    fn kind(&self) -> StrategyKind { StrategyKind::MeanReversion }
+    fn kind(&self) -> StrategyKind {
+        StrategyKind::MeanReversion
+    }
 
     fn min_bars(&self) -> usize {
-        self.rules.crsi_rank_period
+        self.rules
+            .crsi_rank_period
             .max(self.rules.rsi_period + 2)
             .max(self.rules.atr_period + 1)
             + 1
@@ -145,7 +149,8 @@ impl Strategy for MeanReversion {
         let want_short = matches!(side_mode, SideMode::Short | SideMode::Both)
             && crsi_now > self.rules.crsi_overbought
             && close_now > (vwap_now + self.rules.vwap_z_min * sigma);
-        let _ = prev; let _ = rsi_now;
+        let _ = prev;
+        let _ = rsi_now;
 
         if want_long {
             let stop = close_now - self.rules.atr_stop_mult * atr_now;
@@ -344,9 +349,16 @@ mod tests {
         let sig = first_long(&bars, &strat)
             .expect("oversold + below-VWAP setup must produce mean-reversion entry");
         assert_eq!(sig.side, Side::Buy);
-        assert!(sig.entry_price < sig.take_profit_price, "TP at VWAP > entry");
+        assert!(
+            sig.entry_price < sig.take_profit_price,
+            "TP at VWAP > entry"
+        );
         let crsi = sig.diagnostic.get("crsi").and_then(|v| v.as_f64()).unwrap();
-        let vwap_z = sig.diagnostic.get("vwap_z").and_then(|v| v.as_f64()).unwrap();
+        let vwap_z = sig
+            .diagnostic
+            .get("vwap_z")
+            .and_then(|v| v.as_f64())
+            .unwrap();
         assert!(crsi < 10.0, "CRSI {crsi} < 10");
         assert!(vwap_z < -2.0, "vwap_z {vwap_z} < -2");
     }
@@ -356,7 +368,16 @@ mod tests {
         let strat = MeanReversion::new(Rules::default());
         // 130 bars of pure flat — CRSI sits mid-range, no VWAP deviation.
         let bars: Vec<PriceBar> = (0..130)
-            .map(|i| bar(1_700_000_000 + i * 60, "100.00", "100.10", "99.90", "100.00", 1_000_000))
+            .map(|i| {
+                bar(
+                    1_700_000_000 + i * 60,
+                    "100.00",
+                    "100.10",
+                    "99.90",
+                    "100.00",
+                    1_000_000,
+                )
+            })
             .collect();
         assert!(first_long(&bars, &strat).is_none());
     }
@@ -367,7 +388,9 @@ mod tests {
         let bars = oversold_window();
         for end in strat.min_bars()..=bars.len() {
             assert!(
-                strat.evaluate_entry(&bars[..end], SideMode::Short).is_none(),
+                strat
+                    .evaluate_entry(&bars[..end], SideMode::Short)
+                    .is_none(),
                 "long-side oversold must never fire under SideMode::Short"
             );
         }

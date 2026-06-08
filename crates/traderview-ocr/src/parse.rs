@@ -131,15 +131,15 @@ fn extract_merchant(text: &str) -> Option<String> {
     // the canonical chain name. Order matters — most specific first.
     let lc = text.to_lowercase();
     let brands: &[(&str, &str)] = &[
-        ("tractorsupply.com",         "Tractor Supply Co"),
-        ("tractor\nsupply",           "Tractor Supply Co"),
-        ("more saving",               "The Home Depot"),
-        ("more doing",                "The Home Depot"),
-        ("homedepot.com",             "The Home Depot"),
-        ("lowes.com",                 "Lowe's"),
-        ("lowe's home centers",       "Lowe's"),
-        ("ruralking.com",             "Rural King"),
-        ("menards",                   "Menards"),
+        ("tractorsupply.com", "Tractor Supply Co"),
+        ("tractor\nsupply", "Tractor Supply Co"),
+        ("more saving", "The Home Depot"),
+        ("more doing", "The Home Depot"),
+        ("homedepot.com", "The Home Depot"),
+        ("lowes.com", "Lowe's"),
+        ("lowe's home centers", "Lowe's"),
+        ("ruralking.com", "Rural King"),
+        ("menards", "Menards"),
     ];
     for (cue, name) in brands {
         if lc.contains(cue) {
@@ -168,7 +168,9 @@ fn extract_merchant(text: &str) -> Option<String> {
         }
         // Strip stray bracket noise the OCR emits on logo edges (e.g.
         // Lowe's logo gets read as "[LOWE'S"). Keep the rest verbatim.
-        let cleaned = t.trim_matches(|c: char| c == '[' || c == ']' || c == '|' || c == '*').to_string();
+        let cleaned = t
+            .trim_matches(|c: char| c == '[' || c == ']' || c == '|' || c == '*')
+            .to_string();
         return Some(cleaned);
     }
     None
@@ -372,12 +374,10 @@ fn extract_date(text: &str) -> Option<NaiveDate> {
     // A line that holds a time-of-day next to the date is almost
     // certainly the sale-stamp ("09/10/19 03:37 PM").
     static HAS_TIME_RE: OnceLock<Regex> = OnceLock::new();
-    let has_time_re = HAS_TIME_RE.get_or_init(|| {
-        Regex::new(r"(?i)\b\d{1,2}:\d{2}(?::\d{2})?\s*(?:am|pm)?\b").unwrap()
-    });
-    let line_index = |needle: &str| -> Option<usize> {
-        all_lines.iter().position(|l| *l == needle)
-    };
+    let has_time_re = HAS_TIME_RE
+        .get_or_init(|| Regex::new(r"(?i)\b\d{1,2}:\d{2}(?::\d{2})?\s*(?:am|pm)?\b").unwrap());
+    let line_index =
+        |needle: &str| -> Option<usize> { all_lines.iter().position(|l| *l == needle) };
 
     let today = Utc::now().date_naive();
     let five_years_ago = today - Duration::days(5 * 365);
@@ -672,8 +672,7 @@ fn extract_address(text: &str) -> Option<String> {
     // a number-prefixed street fragment. Both fragments together =
     // the full address.
     static STARTS_WITH_NUM_RE: OnceLock<Regex> = OnceLock::new();
-    let num_prefix = STARTS_WITH_NUM_RE
-        .get_or_init(|| Regex::new(r"^\s*\d{1,6}\s+\S").unwrap());
+    let num_prefix = STARTS_WITH_NUM_RE.get_or_init(|| Regex::new(r"^\s*\d{1,6}\s+\S").unwrap());
     let lines: Vec<&str> = text.lines().map(|l| l.trim()).collect();
     for (i, line) in lines.iter().enumerate() {
         if !csz.is_match(line) {

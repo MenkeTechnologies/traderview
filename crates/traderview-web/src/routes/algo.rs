@@ -22,7 +22,10 @@ use uuid::Uuid;
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/algo/strategies", get(list_strategies).post(create_strategy))
+        .route(
+            "/algo/strategies",
+            get(list_strategies).post(create_strategy),
+        )
         .route(
             "/algo/strategies/:id",
             put(update_strategy).delete(delete_strategy),
@@ -37,7 +40,10 @@ pub fn router() -> Router<AppState> {
         .route("/algo/strategies/:id/metrics", get(get_metrics))
         .route("/algo/strategies/:id/optimize", post(post_optimize))
         .route("/algo/strategies/:id/backtests", get(list_backtest_history))
-        .route("/algo/backtests/:id", axum::routing::delete(delete_backtest_row))
+        .route(
+            "/algo/backtests/:id",
+            axum::routing::delete(delete_backtest_row),
+        )
 }
 
 // ─── strategy CRUD ──────────────────────────────────────────────────────────
@@ -54,9 +60,19 @@ async fn list_strategies(
 }
 
 const VALID_STRATEGY_TYPES: &[&str] = &[
-    "momentum", "mean_reversion", "orb", "donchian_trend", "bb_squeeze",
-    "ttm_squeeze", "vwap_scalp", "supertrend", "heikin_ashi_trend",
-    "connors_rsi2", "order_block_sweep", "pead", "pairs",
+    "momentum",
+    "mean_reversion",
+    "orb",
+    "donchian_trend",
+    "bb_squeeze",
+    "ttm_squeeze",
+    "vwap_scalp",
+    "supertrend",
+    "heikin_ashi_trend",
+    "connors_rsi2",
+    "order_block_sweep",
+    "pead",
+    "pairs",
 ];
 
 async fn user_owns_account(
@@ -88,7 +104,13 @@ async fn user_owns_account(
 /// status — picking one of them creates a working strategy row that
 /// just can't fire orders until the adapter is real.
 const ALGO_SUPPORTED_BROKERS: &[&str] = &[
-    "alpaca", "tradier", "ibkr", "td", "tdameritrade", "schwab", "tastytrade",
+    "alpaca",
+    "tradier",
+    "ibkr",
+    "td",
+    "tdameritrade",
+    "schwab",
+    "tastytrade",
 ];
 
 /// `internal_sim` is broker-agnostic; `paper` and `live` route via the
@@ -153,7 +175,9 @@ async fn create_strategy(
             "account_id required — pick a broker account before saving (Settings → Accounts to add one)".into(),
         ))?;
     if !user_owns_account(&s.pool, u.id, account_id).await? {
-        return Err(ApiError::BadRequest("account_id does not belong to you".into()));
+        return Err(ApiError::BadRequest(
+            "account_id does not belong to you".into(),
+        ));
     }
     validate_account_for_algo(&s.pool, account_id, &body.broker_mode).await?;
     // Engine code enforces paper_locked_until at submit-time, but the
@@ -235,7 +259,9 @@ async fn update_strategy(
         .account_id
         .ok_or_else(|| ApiError::BadRequest("account_id required".into()))?;
     if !user_owns_account(&s.pool, u.id, account_id).await? {
-        return Err(ApiError::BadRequest("account_id does not belong to you".into()));
+        return Err(ApiError::BadRequest(
+            "account_id does not belong to you".into(),
+        ));
     }
     validate_account_for_algo(&s.pool, account_id, &body.broker_mode).await?;
     // Allow broker_mode='live' on update only if existing paper_locked_until
@@ -317,7 +343,9 @@ struct StopRunBody {
     reason: String,
 }
 
-fn default_stop_reason() -> String { "user".into() }
+fn default_stop_reason() -> String {
+    "user".into()
+}
 
 async fn start_run(
     State(s): State<AppState>,
@@ -382,7 +410,9 @@ struct ListRunsQuery {
     limit: i64,
 }
 
-fn default_limit() -> i64 { 25 }
+fn default_limit() -> i64 {
+    25
+}
 
 async fn list_runs(
     State(s): State<AppState>,
@@ -453,9 +483,15 @@ struct BacktestBody {
     slippage_bps: Option<f64>,
 }
 
-fn default_bt_symbol() -> String { "SPY".into() }
-fn default_bt_interval() -> String { "5m".into() }
-fn default_bt_days_back() -> i64 { 60 }
+fn default_bt_symbol() -> String {
+    "SPY".into()
+}
+fn default_bt_interval() -> String {
+    "5m".into()
+}
+fn default_bt_days_back() -> i64 {
+    60
+}
 
 /// Accept the algo-strategy timeframe labels ("min1" / "min5") AND the
 /// BarInterval serde renames ("1m" / "5m") so either the strategy's own
@@ -489,9 +525,9 @@ async fn post_backtest(
     // BarInterval has serde rename labels (10s, 1m, 5m, 15m, 1h, 1d, 1w)
     // but no FromStr; deserialize through a JSON value so callers can use
     // either the rename label or the variant name ("M5", "min5", etc.).
-    let interval: traderview_core::BarInterval = serde_json::from_value(
-        serde_json::Value::String(normalize_interval(&body.interval)),
-    )
+    let interval: traderview_core::BarInterval = serde_json::from_value(serde_json::Value::String(
+        normalize_interval(&body.interval),
+    ))
     .map_err(|e| ApiError::BadRequest(format!("interval: {e}")))?;
     let to = body.to.unwrap_or_else(chrono::Utc::now);
     let from = body
@@ -508,11 +544,9 @@ async fn post_backtest(
             body.interval
         )));
     }
-    let strat = traderview_core::algo_strategies::from_kind(
-        &strategy.strategy_type,
-        &strategy.entry_rules,
-    )
-    .map_err(|e| ApiError::BadRequest(format!("strategy_type: {e}")))?;
+    let strat =
+        traderview_core::algo_strategies::from_kind(&strategy.strategy_type, &strategy.entry_rules)
+            .map_err(|e| ApiError::BadRequest(format!("strategy_type: {e}")))?;
     let sizing: traderview_core::algo_strategies::Sizing =
         serde_json::from_value(strategy.sizing.clone()).unwrap_or_default();
     let side_mode = match strategy.side_mode.as_str() {
@@ -630,7 +664,9 @@ fn default_metric() -> traderview_core::algo_optimize::OptimizeMetric {
     traderview_core::algo_optimize::OptimizeMetric::Sharpe
 }
 
-fn default_top_n() -> usize { 10 }
+fn default_top_n() -> usize {
+    10
+}
 
 /// POST /algo/strategies/:id/optimize — runs the parameter optimizer
 /// against the strategy's saved kind + sizing + side_mode. Returns
@@ -645,9 +681,9 @@ async fn post_optimize(
         .await
         .map_err(ApiError::Internal)?
         .ok_or_else(|| ApiError::BadRequest("strategy not found".into()))?;
-    let interval: traderview_core::BarInterval = serde_json::from_value(
-        serde_json::Value::String(normalize_interval(&body.interval)),
-    )
+    let interval: traderview_core::BarInterval = serde_json::from_value(serde_json::Value::String(
+        normalize_interval(&body.interval),
+    ))
     .map_err(|e| ApiError::BadRequest(format!("interval: {e}")))?;
     let to = body.to.unwrap_or_else(chrono::Utc::now);
     let from = body

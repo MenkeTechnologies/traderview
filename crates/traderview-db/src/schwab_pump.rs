@@ -2,18 +2,18 @@
 //!
 //! Protocol (verified against developer.schwab.com 2026-06):
 //!   1. GET /trader/v1/userPreference  →  carries `streamerInfo[0]`:
-//!      { streamerSocketUrl, schwabClientCorrelId, schwabClientChannel,
-//!        schwabClientFunctionId, schwabClientCustomerId }
+//!      `{ streamerSocketUrl, schwabClientCorrelId, schwabClientChannel,
+//!      schwabClientFunctionId, schwabClientCustomerId }`
 //!   2. WS connect to `streamerSocketUrl`.
 //!   3. Send LOGIN command:
-//!      {"requests":[{"service":"ADMIN","command":"LOGIN","SchwabClientCustomerId":"…",
-//!        "SchwabClientCorrelId":"…","parameters":{
-//!         "Authorization":"<access_token>","SchwabClientChannel":"…",
-//!         "SchwabClientFunctionId":"…" }}]}
+//!      `{"requests":[{"service":"ADMIN","command":"LOGIN","SchwabClientCustomerId":"…",
+//!      "SchwabClientCorrelId":"…","parameters":{
+//!      "Authorization":"<access_token>","SchwabClientChannel":"…",
+//!      "SchwabClientFunctionId":"…" }}]}`
 //!   4. Subscribe to ACCT_ACTIVITY for fill events.
 //!   5. Server streams `{"data":[{"service":"ACCT_ACTIVITY","content":[{
-//!         "seq":…,"key":<accountKey>,
-//!         "1":<subscriptionKey>,"2":<MESSAGE_TYPE>,"3":<MESSAGE_DATA xml>
+//!      "seq":…,"key":<accountKey>,
+//!      "1":<subscriptionKey>,"2":<MESSAGE_TYPE>,"3":<MESSAGE_DATA xml>
 //!      }]}]}`. MESSAGE_TYPE `OrderFill` / `ExecutionRouted` etc. carry
 //!      an XML MESSAGE_DATA payload — we extract OrderID + price + qty
 //!      via a lightweight scan (no XML dep).
@@ -73,17 +73,16 @@ impl From<SchwabError> for PumpError {
             SchwabError::Transport(t) => Self::Transport(t),
             SchwabError::Http { status, body } => Self::Http { status, body },
             SchwabError::Decode(d) => Self::Decode(d),
-            other => Self::Http { status: 0, body: other.to_string() },
+            other => Self::Http {
+                status: 0,
+                body: other.to_string(),
+            },
         }
     }
 }
 
 /// Reconnect loop. Spawn-and-forget.
-pub async fn run_pump(
-    pool: PgPool,
-    schwab: SchwabTrading,
-    event_sink: Option<EventSink>,
-) {
+pub async fn run_pump(pool: PgPool, schwab: SchwabTrading, event_sink: Option<EventSink>) {
     let mut backoff = Duration::from_secs(1);
     const MAX_BACKOFF: Duration = Duration::from_secs(60);
     loop {
@@ -139,7 +138,8 @@ async fn run_session_once(
                 "SchwabClientFunctionId": info.schwab_client_function_id,
             }
         }]
-    }).to_string();
+    })
+    .to_string();
     tx.send(WsMessage::Text(login)).await?;
 
     // SUBS ACCT_ACTIVITY (request_id="2")
@@ -152,7 +152,8 @@ async fn run_session_once(
             "SchwabClientCorrelId": info.schwab_client_correl_id,
             "parameters": { "keys": "default", "fields": "0,1,2,3" }
         }]
-    }).to_string();
+    })
+    .to_string();
     tx.send(WsMessage::Text(sub)).await?;
 
     loop {
@@ -213,13 +214,17 @@ pub async fn handle_event_frame(
         Err(_) => return Ok(()), // skip heartbeats / pings
     };
     // Real fill data lives in `data[].content[]` with service=ACCT_ACTIVITY.
-    let Some(data) = v.get("data").and_then(|x| x.as_array()) else { return Ok(()); };
+    let Some(data) = v.get("data").and_then(|x| x.as_array()) else {
+        return Ok(());
+    };
     for stream in data {
         let svc = stream.get("service").and_then(|x| x.as_str()).unwrap_or("");
         if svc != "ACCT_ACTIVITY" {
             continue;
         }
-        let Some(items) = stream.get("content").and_then(|x| x.as_array()) else { continue };
+        let Some(items) = stream.get("content").and_then(|x| x.as_array()) else {
+            continue;
+        };
         for ev in items {
             handle_one_acct_activity(pool, ev, event_sink).await.ok();
         }
@@ -271,7 +276,9 @@ async fn handle_one_acct_activity(
     };
 
     let strategy = crate::algo::get_strategy_by_id(pool, strategy_id).await?;
-    let Some(strategy) = strategy else { return Ok(()); };
+    let Some(strategy) = strategy else {
+        return Ok(());
+    };
 
     let fill_price = scan_decimal_after(xml, "<ExecutionPrice>")
         .or_else(|| scan_decimal_after(xml, "<Price>"))
@@ -281,8 +288,8 @@ async fn handle_one_acct_activity(
         .or_else(|| scan_decimal_after(xml, "<FilledQuantity>"))
         .or_else(|| scan_decimal_after(xml, "<Quantity>"))
         .unwrap_or(qty);
-    let broker_fill_id = scan_text_after(xml, "<OrderKey>")
-        .or_else(|| scan_text_after(xml, "<OrderID>"));
+    let broker_fill_id =
+        scan_text_after(xml, "<OrderKey>").or_else(|| scan_text_after(xml, "<OrderID>"));
 
     let intent = crate::algo_engine::OrderIntent {
         strategy_id,
@@ -321,7 +328,11 @@ fn scan_text_after(xml: &str, open_tag: &str) -> Option<String> {
     let rest = &xml[start..];
     let end = rest.find("</")?;
     let value = rest[..end].trim();
-    if value.is_empty() { None } else { Some(value.to_string()) }
+    if value.is_empty() {
+        None
+    } else {
+        Some(value.to_string())
+    }
 }
 
 fn scan_decimal_after(xml: &str, open_tag: &str) -> Option<Decimal> {
@@ -333,7 +344,9 @@ fn scan_for_uuid(xml: &str) -> Option<Uuid> {
     // UUIDv4 string scan — 36-char window with the expected hyphen
     // positions. Avoids a regex dep.
     let bytes = xml.as_bytes();
-    if bytes.len() < 36 { return None; }
+    if bytes.len() < 36 {
+        return None;
+    }
     'outer: for start in 0..=bytes.len() - 36 {
         let chunk = &xml[start..start + 36];
         if chunk.as_bytes()[8] != b'-'
@@ -345,10 +358,16 @@ fn scan_for_uuid(xml: &str) -> Option<Uuid> {
         }
         for (i, c) in chunk.bytes().enumerate() {
             let is_hyphen = i == 8 || i == 13 || i == 18 || i == 23;
-            if is_hyphen { continue; }
-            if !c.is_ascii_hexdigit() { continue 'outer; }
+            if is_hyphen {
+                continue;
+            }
+            if !c.is_ascii_hexdigit() {
+                continue 'outer;
+            }
         }
-        if let Ok(u) = Uuid::from_str(chunk) { return Some(u); }
+        if let Ok(u) = Uuid::from_str(chunk) {
+            return Some(u);
+        }
     }
     None
 }
@@ -390,12 +409,13 @@ pub async fn spawn_pumps_for_active_strategies(
             std::sync::Arc::new(move |new_tokens: Tokens| {
                 let pool = persist_pool.clone();
                 tokio::spawn(async move {
-                    let _ = crate::data_source_keys::save_schwab_tokens(&pool, user_id, &new_tokens).await;
+                    let _ =
+                        crate::data_source_keys::save_schwab_tokens(&pool, user_id, &new_tokens)
+                            .await;
                 });
             });
-        let client =
-            SchwabTrading::new(client_id, client_secret, tokens, account_hash)
-                .on_token_refresh(persist);
+        let client = SchwabTrading::new(client_id, client_secret, tokens, account_hash)
+            .on_token_refresh(persist);
         tokio::spawn(run_pump(pool_clone, client, sink_clone));
         spawned += 1;
     }
@@ -420,7 +440,9 @@ async fn is_schwab_account(pool: &PgPool, account_id: Uuid) -> bool {
 #[cfg(test)]
 mod scanner_tests {
     use super::*;
-    fn dec(s: &str) -> Decimal { Decimal::from_str(s).unwrap() }
+    fn dec(s: &str) -> Decimal {
+        Decimal::from_str(s).unwrap()
+    }
 
     #[test]
     fn uuid_extracted_from_xml() {
@@ -442,14 +464,23 @@ mod scanner_tests {
     fn execution_price_extracted() {
         let xml = "<OrderFillMessage><ExecutionPrice>187.55</ExecutionPrice>\
             <ExecutionQuantity>100</ExecutionQuantity></OrderFillMessage>";
-        assert_eq!(scan_decimal_after(xml, "<ExecutionPrice>"), Some(dec("187.55")));
-        assert_eq!(scan_decimal_after(xml, "<ExecutionQuantity>"), Some(dec("100")));
+        assert_eq!(
+            scan_decimal_after(xml, "<ExecutionPrice>"),
+            Some(dec("187.55"))
+        );
+        assert_eq!(
+            scan_decimal_after(xml, "<ExecutionQuantity>"),
+            Some(dec("100"))
+        );
     }
 
     #[test]
     fn order_key_extracted() {
         let xml = "<OrderFillMessage><OrderKey>SCHWAB-9988776</OrderKey></OrderFillMessage>";
-        assert_eq!(scan_text_after(xml, "<OrderKey>"), Some("SCHWAB-9988776".into()));
+        assert_eq!(
+            scan_text_after(xml, "<OrderKey>"),
+            Some("SCHWAB-9988776".into())
+        );
     }
 
     #[test]

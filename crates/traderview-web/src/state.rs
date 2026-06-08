@@ -72,35 +72,49 @@ impl AppState {
                 traderview_core::algo_strategies::Side::Sell => "sell",
             };
             let evt = match ev {
-                E::SignalFired { strategy_id, run_id, symbol, side, entry_price, kind } => {
-                    crate::realtime::Event::AlgoSignalFired {
-                        strategy_id: strategy_id.to_string(),
-                        run_id: run_id.to_string(),
-                        symbol,
-                        side: side_str(side),
-                        entry_price: entry_price.to_f64().unwrap_or(0.0),
-                        kind,
-                    }
-                }
-                E::OrderSubmitted { strategy_id, order_id, symbol, side, qty, broker_order_id } => {
-                    crate::realtime::Event::AlgoOrderSubmitted {
-                        strategy_id: strategy_id.to_string(),
-                        order_id: order_id.to_string(),
-                        symbol,
-                        side: side_str(side).into(),
-                        qty: qty.to_f64().unwrap_or(0.0),
-                        broker_order_id,
-                    }
-                }
-                E::FillReceived { strategy_id, order_id, symbol, qty, price } => {
-                    crate::realtime::Event::AlgoFillReceived {
-                        strategy_id: strategy_id.to_string(),
-                        order_id: order_id.to_string(),
-                        symbol,
-                        qty: qty.to_f64().unwrap_or(0.0),
-                        price: price.to_f64().unwrap_or(0.0),
-                    }
-                }
+                E::SignalFired {
+                    strategy_id,
+                    run_id,
+                    symbol,
+                    side,
+                    entry_price,
+                    kind,
+                } => crate::realtime::Event::AlgoSignalFired {
+                    strategy_id: strategy_id.to_string(),
+                    run_id: run_id.to_string(),
+                    symbol,
+                    side: side_str(side),
+                    entry_price: entry_price.to_f64().unwrap_or(0.0),
+                    kind,
+                },
+                E::OrderSubmitted {
+                    strategy_id,
+                    order_id,
+                    symbol,
+                    side,
+                    qty,
+                    broker_order_id,
+                } => crate::realtime::Event::AlgoOrderSubmitted {
+                    strategy_id: strategy_id.to_string(),
+                    order_id: order_id.to_string(),
+                    symbol,
+                    side: side_str(side).into(),
+                    qty: qty.to_f64().unwrap_or(0.0),
+                    broker_order_id,
+                },
+                E::FillReceived {
+                    strategy_id,
+                    order_id,
+                    symbol,
+                    qty,
+                    price,
+                } => crate::realtime::Event::AlgoFillReceived {
+                    strategy_id: strategy_id.to_string(),
+                    order_id: order_id.to_string(),
+                    symbol,
+                    qty: qty.to_f64().unwrap_or(0.0),
+                    price: price.to_f64().unwrap_or(0.0),
+                },
             };
             hub.publish(evt);
         })

@@ -19,8 +19,8 @@
 
 use crate::algo::{self, AlgoFillInsert, AlgoOrderInsert, AlgoStrategy};
 use chrono::{DateTime, Utc};
-use rust_decimal::Decimal;
 use rust_decimal::prelude::{FromPrimitive, Zero};
+use rust_decimal::Decimal;
 use serde_json::Value as Json;
 use sqlx::PgPool;
 use std::sync::Arc;
@@ -130,7 +130,9 @@ pub trait BrokerSink: Send + Sync {
     fn submit_bracket(
         &self,
         intent: OrderIntent,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>>;
+    ) -> std::pin::Pin<
+        Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>,
+    >;
 }
 
 /// Captures every submitted order. Used by tests + by the route layer
@@ -144,8 +146,9 @@ impl BrokerSink for InMemorySink {
     fn submit_bracket(
         &self,
         intent: OrderIntent,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>>
-    {
+    ) -> std::pin::Pin<
+        Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>,
+    > {
         let submitted = self.submitted.clone();
         Box::pin(async move {
             let id = intent.client_order_id.to_string();
@@ -319,15 +322,14 @@ async fn trip_kill_switch(
     // AFTER the DB updates so a webhook failure can't roll back the
     // kill-switch engagement. Best-effort: errors are swallowed inside
     // `fan_out_all` (it updates last_status on each webhook row).
-    let strategy_name = sqlx::query_scalar::<_, String>(
-        "SELECT name FROM algo_strategies WHERE id = $1",
-    )
-    .bind(strategy_id)
-    .fetch_optional(pool)
-    .await
-    .ok()
-    .flatten()
-    .unwrap_or_else(|| "<unknown>".into());
+    let strategy_name =
+        sqlx::query_scalar::<_, String>("SELECT name FROM algo_strategies WHERE id = $1")
+            .bind(strategy_id)
+            .fetch_optional(pool)
+            .await
+            .ok()
+            .flatten()
+            .unwrap_or_else(|| "<unknown>".into());
     let payload = crate::webhooks::AlertPayload {
         title: format!("Algo strategy auto-paused: {strategy_name}"),
         message: reason.to_string(),
@@ -355,11 +357,11 @@ pub async fn process_bar_window(
     event_sink: Option<&EventSink>,
 ) -> Result<Option<Uuid>, EngineError> {
     if strategy.kill_switch {
-        return Err(EngineError::KillSwitch { reason: strategy.kill_reason.clone() });
+        return Err(EngineError::KillSwitch {
+            reason: strategy.kill_reason.clone(),
+        });
     }
-    if strategy.broker_mode == "live"
-        && chrono::Utc::now() <= strategy.paper_locked_until
-    {
+    if strategy.broker_mode == "live" && chrono::Utc::now() <= strategy.paper_locked_until {
         return Err(EngineError::PaperLocked(strategy.paper_locked_until));
     }
 
@@ -375,9 +377,7 @@ pub async fn process_bar_window(
     if let Some(cap) = cfg.max_daily_loss_usd {
         let pnl = today_realized_pnl(pool, strategy.id).await?;
         if pnl <= -cap {
-            let reason = format!(
-                "auto-paused: daily loss cap ${cap} breached (today P&L: ${pnl})"
-            );
+            let reason = format!("auto-paused: daily loss cap ${cap} breached (today P&L: ${pnl})");
             trip_kill_switch(pool, strategy.id, strategy.user_id, &reason).await?;
             return Err(EngineError::DailyLossCap { cap, pnl });
         }
@@ -386,9 +386,7 @@ pub async fn process_bar_window(
     if let Some(cap) = cfg.max_consecutive_losses {
         let streak = consecutive_losses(pool, strategy.id).await?;
         if streak >= cap {
-            let reason = format!(
-                "auto-paused: {streak} consecutive losses (cap {cap})"
-            );
+            let reason = format!("auto-paused: {streak} consecutive losses (cap {cap})");
             trip_kill_switch(pool, strategy.id, strategy.user_id, &reason).await?;
             return Err(EngineError::ConsecutiveLossesCap { cap, streak });
         }
@@ -405,9 +403,7 @@ pub async fn process_bar_window(
     let Some(sig) = strat.evaluate_entry(bars, cfg.side_mode) else {
         return Ok(None);
     };
-    let qty = algo_strategies::size_shares(
-        equity, sig.entry_price, sig.stop_distance, &cfg.sizing,
-    );
+    let qty = algo_strategies::size_shares(equity, sig.entry_price, sig.stop_distance, &cfg.sizing);
     if qty == 0 {
         return Err(EngineError::ZeroQty);
     }
@@ -428,10 +424,7 @@ pub async fn process_bar_window(
         .await
         .ok();
 
-    let symbol = bars
-        .last()
-        .map(|b| b.symbol.clone())
-        .unwrap_or_default();
+    let symbol = bars.last().map(|b| b.symbol.clone()).unwrap_or_default();
     let intent = build_intent(strategy, run_id, &symbol, &sig, qty);
     if let Some(emit) = event_sink {
         emit(EngineEvent::SignalFired {
@@ -614,7 +607,9 @@ pub async fn process_bar_window_multi(
     event_sink: Option<&EventSink>,
 ) -> Result<Option<Uuid>, EngineError> {
     if strategy.kill_switch {
-        return Err(EngineError::KillSwitch { reason: strategy.kill_reason.clone() });
+        return Err(EngineError::KillSwitch {
+            reason: strategy.kill_reason.clone(),
+        });
     }
     let cfg = EngineConfig::from_strategy(strategy);
     if open_positions >= cfg.max_concurrent_positions {
@@ -624,9 +619,7 @@ pub async fn process_bar_window_multi(
     if let Some(cap) = cfg.max_daily_loss_usd {
         let pnl = today_realized_pnl(pool, strategy.id).await?;
         if pnl <= -cap {
-            let reason = format!(
-                "auto-paused: daily loss cap ${cap} breached (today P&L: ${pnl})"
-            );
+            let reason = format!("auto-paused: daily loss cap ${cap} breached (today P&L: ${pnl})");
             trip_kill_switch(pool, strategy.id, strategy.user_id, &reason).await?;
             return Err(EngineError::DailyLossCap { cap, pnl });
         }
@@ -634,9 +627,7 @@ pub async fn process_bar_window_multi(
     if let Some(cap) = cfg.max_consecutive_losses {
         let streak = consecutive_losses(pool, strategy.id).await?;
         if streak >= cap {
-            let reason = format!(
-                "auto-paused: {streak} consecutive losses (cap {cap})"
-            );
+            let reason = format!("auto-paused: {streak} consecutive losses (cap {cap})");
             trip_kill_switch(pool, strategy.id, strategy.user_id, &reason).await?;
             return Err(EngineError::ConsecutiveLossesCap { cap, streak });
         }
@@ -696,8 +687,12 @@ pub async fn process_bar_window_multi(
     match sink.submit_bracket(intent.clone()).await {
         Ok(resp) => {
             algo::mark_order_submitted(
-                pool, inserted.id, Some(resp.broker_order_id.clone()),
-                &resp.status, resp.raw_response, None,
+                pool,
+                inserted.id,
+                Some(resp.broker_order_id.clone()),
+                &resp.status,
+                resp.raw_response,
+                None,
             )
             .await
             .map_err(|e| EngineError::Broker(e.to_string()))?;
@@ -720,9 +715,16 @@ pub async fn process_bar_window_multi(
             Ok(Some(inserted.id))
         }
         Err(e) => {
-            algo::mark_order_submitted(pool, inserted.id, None, "rejected", None, Some(e.to_string()))
-                .await
-                .map_err(|de| EngineError::Broker(de.to_string()))?;
+            algo::mark_order_submitted(
+                pool,
+                inserted.id,
+                None,
+                "rejected",
+                None,
+                Some(e.to_string()),
+            )
+            .await
+            .map_err(|de| EngineError::Broker(de.to_string()))?;
             Err(e)
         }
     }

@@ -48,10 +48,14 @@ impl Default for Rules {
 }
 
 #[derive(Debug, Clone)]
-pub struct BbSqueeze { pub rules: Rules }
+pub struct BbSqueeze {
+    pub rules: Rules,
+}
 
 impl BbSqueeze {
-    pub fn new(rules: Rules) -> Self { Self { rules } }
+    pub fn new(rules: Rules) -> Self {
+        Self { rules }
+    }
     pub fn from_json(entry_rules: &serde_json::Value) -> Self {
         let rules = serde_json::from_value::<Rules>(entry_rules.clone()).unwrap_or_default();
         Self { rules }
@@ -63,23 +67,28 @@ impl BbSqueeze {
 fn percentile_rank(window: &[Option<f64>], value: f64, min_obs: usize) -> Option<f64> {
     let mut count = 0usize;
     let mut below = 0usize;
-    for v in window {
-        if let Some(x) = v {
-            if x.is_finite() {
-                count += 1;
-                if *x < value { below += 1; }
+    for x in window.iter().flatten() {
+        if x.is_finite() {
+            count += 1;
+            if *x < value {
+                below += 1;
             }
         }
     }
-    if count < min_obs { return None; }
+    if count < min_obs {
+        return None;
+    }
     Some(below as f64 / count as f64)
 }
 
 impl Strategy for BbSqueeze {
-    fn kind(&self) -> StrategyKind { StrategyKind::BbSqueeze }
+    fn kind(&self) -> StrategyKind {
+        StrategyKind::BbSqueeze
+    }
 
     fn min_bars(&self) -> usize {
-        self.rules.squeeze_lookback
+        self.rules
+            .squeeze_lookback
             .max(self.rules.bb_period + 1)
             .max(self.rules.atr_period + 1)
             + 1
@@ -98,7 +107,9 @@ impl Strategy for BbSqueeze {
         let i = bars.len() - 1;
         let close_now = closes[i];
         let atr_now = atr.get(i).copied().flatten()?;
-        if atr_now <= 0.0 { return None; }
+        if atr_now <= 0.0 {
+            return None;
+        }
         // Squeeze condition is evaluated on the bar BEFORE the breakout —
         // a breakout bar's own range widens the sigma and lifts its BBW
         // out of the bottom decile, masking the setup. Bollinger's
@@ -117,10 +128,10 @@ impl Strategy for BbSqueeze {
         }
         let bbw_now = bbw_prev;
 
-        let want_long = matches!(side_mode, SideMode::Long | SideMode::Both)
-            && close_now > upper_now;
-        let want_short = matches!(side_mode, SideMode::Short | SideMode::Both)
-            && close_now < lower_now;
+        let want_long =
+            matches!(side_mode, SideMode::Long | SideMode::Both) && close_now > upper_now;
+        let want_short =
+            matches!(side_mode, SideMode::Short | SideMode::Both) && close_now < lower_now;
 
         if want_long {
             // Initial stop at the LOWER band — that's where the trade is
@@ -299,10 +310,24 @@ mod tests {
             .evaluate_entry(&bars, SideMode::Long)
             .expect("squeeze release must produce long entry");
         assert_eq!(sig.side, Side::Buy);
-        let bbw_pct = sig.diagnostic.get("bbw_pct").and_then(|v| v.as_f64()).unwrap();
-        assert!(bbw_pct <= 0.10, "BBW percentile {bbw_pct} must be in bottom decile");
-        let upper = sig.diagnostic.get("bb_upper").and_then(|v| v.as_f64()).unwrap();
-        assert!(sig.entry_price > upper, "entry close must exceed upper band");
+        let bbw_pct = sig
+            .diagnostic
+            .get("bbw_pct")
+            .and_then(|v| v.as_f64())
+            .unwrap();
+        assert!(
+            bbw_pct <= 0.10,
+            "BBW percentile {bbw_pct} must be in bottom decile"
+        );
+        let upper = sig
+            .diagnostic
+            .get("bb_upper")
+            .and_then(|v| v.as_f64())
+            .unwrap();
+        assert!(
+            sig.entry_price > upper,
+            "entry close must exceed upper band"
+        );
     }
 
     #[test]

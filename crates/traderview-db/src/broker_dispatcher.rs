@@ -12,7 +12,9 @@
 //! `broker_mode='internal_sim'` always returns `InMemorySink` regardless
 //! of `account.broker` — that's the in-app paper simulator path.
 
-use crate::algo_engine::{BrokerSink, EngineError, ImmediateFill, InMemorySink, OrderIntent, SubmittedOrder};
+use crate::algo_engine::{
+    BrokerSink, EngineError, ImmediateFill, InMemorySink, OrderIntent, SubmittedOrder,
+};
 use crate::alpaca_trading::{AlpacaTrading, BrokerMode as AlpacaBrokerMode, PlaceOrderRequest};
 use crate::ibkr_trading::{
     IbkrTrading, OrderSide as IbkrOrderSide, OrderType as IbkrOrderType,
@@ -26,9 +28,7 @@ use crate::schwab_trading::{
 use crate::tastytrade_trading::{
     EquityAction, PlaceEquityOrder as TastyEquityOrder, TastytradeEnv, TastytradeTrading,
 };
-use crate::tradier_trading::{
-    EquitySide, OtocoBracket, TradierEnv, TradierTrading,
-};
+use crate::tradier_trading::{EquitySide, OtocoBracket, TradierEnv, TradierTrading};
 use chrono::Utc;
 use rust_decimal::prelude::Zero;
 use rust_decimal::Decimal;
@@ -76,7 +76,11 @@ pub async fn sink_for_strategy(
                     detail: "no Alpaca credentials saved — go to Settings → Data sources".into(),
                 }));
             };
-            let mode = if paper { AlpacaBrokerMode::Paper } else { AlpacaBrokerMode::Live };
+            let mode = if paper {
+                AlpacaBrokerMode::Paper
+            } else {
+                AlpacaBrokerMode::Live
+            };
             let client = AlpacaTrading::new(mode, key_id, secret);
             Ok(Box::new(AlpacaSink { client }))
         }
@@ -92,7 +96,11 @@ pub async fn sink_for_strategy(
                     detail: "no Tradier credentials saved — go to Settings → Data sources".into(),
                 }));
             };
-            let env = if paper || sandbox { TradierEnv::Sandbox } else { TradierEnv::Live };
+            let env = if paper || sandbox {
+                TradierEnv::Sandbox
+            } else {
+                TradierEnv::Live
+            };
             let client = TradierTrading::new(env, token, account_id_str);
             Ok(Box::new(TradierSink { client }))
         }
@@ -114,7 +122,10 @@ pub async fn sink_for_strategy(
             // sink needs a lookup. For commit 41 we error out with a
             // pending message — conid resolution lands when
             // /iserver/secdef/search is wired in a follow-up.
-            Ok(Box::new(IbkrSink { client, account_label: "ibkr".into() }))
+            Ok(Box::new(IbkrSink {
+                client,
+                account_label: "ibkr".into(),
+            }))
         }
         "td" | "tdameritrade" | "schwab" => {
             // TD Ameritrade was retired Sep 2024 — Schwab Trader API is
@@ -142,8 +153,11 @@ pub async fn sink_for_strategy(
                     let pool = pool_clone.clone();
                     tokio::spawn(async move {
                         let _ = crate::data_source_keys::save_schwab_tokens(
-                            &pool, user_id, &new_tokens,
-                        ).await;
+                            &pool,
+                            user_id,
+                            &new_tokens,
+                        )
+                        .await;
                     });
                 });
             let client = SchwabTrading::new(client_id, client_secret, tokens, account_hash)
@@ -159,10 +173,15 @@ pub async fn sink_for_strategy(
                 return Ok(Box::new(IntegrationPendingSink {
                     broker: "tastytrade",
                     paper,
-                    detail: "no Tastytrade credentials saved — go to Settings → Data sources".into(),
+                    detail: "no Tastytrade credentials saved — go to Settings → Data sources"
+                        .into(),
                 }));
             };
-            let env = if paper || sandbox { TastytradeEnv::Sandbox } else { TastytradeEnv::Live };
+            let env = if paper || sandbox {
+                TastytradeEnv::Sandbox
+            } else {
+                TastytradeEnv::Live
+            };
             let client = TastytradeTrading::new(env, auth, account_number);
             Ok(Box::new(TastytradeSink { client }))
         }
@@ -187,8 +206,9 @@ impl BrokerSink for AlpacaSink {
     fn submit_bracket(
         &self,
         intent: OrderIntent,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>>
-    {
+    ) -> std::pin::Pin<
+        Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>,
+    > {
         let client = self.client.clone();
         Box::pin(async move {
             let side = match intent.side {
@@ -233,8 +253,9 @@ impl BrokerSink for IbkrSink {
     fn submit_bracket(
         &self,
         intent: OrderIntent,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>>
-    {
+    ) -> std::pin::Pin<
+        Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>,
+    > {
         let client = self.client.clone();
         Box::pin(async move {
             let conid = client
@@ -279,9 +300,10 @@ impl BrokerSink for IbkrSink {
                     .await
                     .map_err(|e| EngineError::Broker(format!("ibkr: {e}")))?
             };
-            let first = resps.into_iter().next().ok_or_else(|| {
-                EngineError::Broker("ibkr: empty order response array".into())
-            })?;
+            let first = resps
+                .into_iter()
+                .next()
+                .ok_or_else(|| EngineError::Broker("ibkr: empty order response array".into()))?;
             let order_id = first
                 .order_id
                 .clone()
@@ -310,8 +332,9 @@ impl BrokerSink for SchwabSink {
     fn submit_bracket(
         &self,
         intent: OrderIntent,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>>
-    {
+    ) -> std::pin::Pin<
+        Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>,
+    > {
         let client = self.client.clone();
         Box::pin(async move {
             let instruction = match intent.side {
@@ -379,8 +402,9 @@ impl BrokerSink for TradierSink {
     fn submit_bracket(
         &self,
         intent: OrderIntent,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>>
-    {
+    ) -> std::pin::Pin<
+        Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>,
+    > {
         let client = self.client.clone();
         Box::pin(async move {
             let entry_side = match intent.side {
@@ -432,8 +456,9 @@ impl BrokerSink for TastytradeSink {
     fn submit_bracket(
         &self,
         intent: OrderIntent,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>>
-    {
+    ) -> std::pin::Pin<
+        Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>,
+    > {
         let client = self.client.clone();
         Box::pin(async move {
             // Tastytrade uses 'Buy to Open' / 'Sell to Open' / etc.
@@ -460,9 +485,7 @@ impl BrokerSink for TastytradeSink {
             // surfaced via tracing::warn so the user sees the drop in
             // the desktop log. Risk-side responsibility shifts to the
             // user / kill-switch / position-size-cap for these.
-            if intent.take_profit_price > Decimal::zero()
-                || intent.stop_price > Decimal::zero()
-            {
+            if intent.take_profit_price > Decimal::zero() || intent.stop_price > Decimal::zero() {
                 tracing::warn!(
                     symbol = %intent.symbol,
                     take_profit = %intent.take_profit_price,
@@ -506,8 +529,9 @@ impl BrokerSink for IntegrationPendingSink {
     fn submit_bracket(
         &self,
         _intent: OrderIntent,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>>
-    {
+    ) -> std::pin::Pin<
+        Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>,
+    > {
         let b = self.broker;
         let d = self.detail.clone();
         Box::pin(async move {

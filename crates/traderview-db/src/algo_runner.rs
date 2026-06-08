@@ -30,11 +30,7 @@ const BAR_WINDOW_SIZE: i64 = 300;
 /// processed (skipped due to insufficient bars or empty universe → don't
 /// count). Errors from individual strategies are logged + swallowed so
 /// one broken config doesn't take the whole loop down.
-pub async fn tick(
-    pool: &PgPool,
-    now: DateTime<Utc>,
-    event_sink: Option<&EventSink>,
-) -> usize {
+pub async fn tick(pool: &PgPool, now: DateTime<Utc>, event_sink: Option<&EventSink>) -> usize {
     let strategies = match algo::list_active_strategies(pool).await {
         Ok(v) => v,
         Err(e) => {
@@ -154,10 +150,7 @@ fn next_boundary(now: DateTime<Utc>, interval: BarInterval) -> DateTime<Utc> {
     DateTime::<Utc>::from_timestamp(aligned, 0).unwrap_or(now)
 }
 
-async fn symbol_universe(
-    pool: &PgPool,
-    s: &AlgoStrategy,
-) -> Result<Vec<String>, anyhow::Error> {
+async fn symbol_universe(pool: &PgPool, s: &AlgoStrategy) -> Result<Vec<String>, anyhow::Error> {
     // Pairs / stat-arb: universe is hard-wired by the strategy's own
     // entry_rules (the legs of the spread). Ignore watchlist / autoscan.
     if s.strategy_type == "pairs" {
@@ -274,13 +267,21 @@ async fn drive_strategy(
         let mut bars_by_symbol = std::collections::HashMap::new();
         for symbol in symbols {
             let bars = fetch_recent_bars(pool, symbol, interval, BAR_WINDOW_SIZE).await?;
-            if bars.is_empty() { continue; }
+            if bars.is_empty() {
+                continue;
+            }
             bars_by_symbol.insert(symbol.clone(), bars);
         }
         if !bars_by_symbol.is_empty() {
             match algo_engine::process_bar_window_multi(
-                pool, sink, strategy, run.id, &bars_by_symbol,
-                equity, open_positions, event_sink,
+                pool,
+                sink,
+                strategy,
+                run.id,
+                &bars_by_symbol,
+                equity,
+                open_positions,
+                event_sink,
             )
             .await
             {
@@ -292,7 +293,10 @@ async fn drive_strategy(
             }
         }
         let _ = algo::increment_run_counter(
-            pool, run.id, algo::RunCounter::BarsProcessed, driven as i64,
+            pool,
+            run.id,
+            algo::RunCounter::BarsProcessed,
+            driven as i64,
         )
         .await;
         return Ok(driven);
@@ -304,7 +308,14 @@ async fn drive_strategy(
             continue;
         }
         match algo_engine::process_bar_window(
-            pool, sink, strategy, run.id, &bars, equity, open_positions, event_sink,
+            pool,
+            sink,
+            strategy,
+            run.id,
+            &bars,
+            equity,
+            open_positions,
+            event_sink,
         )
         .await
         {
@@ -317,13 +328,9 @@ async fn drive_strategy(
             }
         }
     }
-    let _ = algo::increment_run_counter(
-        pool,
-        run.id,
-        algo::RunCounter::BarsProcessed,
-        driven as i64,
-    )
-    .await;
+    let _ =
+        algo::increment_run_counter(pool, run.id, algo::RunCounter::BarsProcessed, driven as i64)
+            .await;
     Ok(driven)
 }
 
@@ -332,10 +339,7 @@ async fn drive_strategy(
 /// bound account. Doesn't subtract mark-to-market on open positions
 /// yet — that needs a quote lookup per held symbol; the first iter
 /// approximates equity by realized P&L only.
-pub async fn account_equity(
-    pool: &PgPool,
-    strategy: &AlgoStrategy,
-) -> Result<f64, anyhow::Error> {
+pub async fn account_equity(pool: &PgPool, strategy: &AlgoStrategy) -> Result<f64, anyhow::Error> {
     let starting = strategy
         .risk_gates
         .get("starting_equity")
@@ -401,17 +405,19 @@ async fn fetch_recent_bars(
     rows.reverse();
     Ok(rows
         .into_iter()
-        .map(|(symbol, iv, bar_time, open, high, low, close, volume, source)| PriceBar {
-            symbol,
-            interval: parse_interval(&iv),
-            bar_time,
-            open,
-            high,
-            low,
-            close,
-            volume,
-            source,
-        })
+        .map(
+            |(symbol, iv, bar_time, open, high, low, close, volume, source)| PriceBar {
+                symbol,
+                interval: parse_interval(&iv),
+                bar_time,
+                open,
+                high,
+                low,
+                close,
+                volume,
+                source,
+            },
+        )
         .collect())
 }
 
@@ -427,7 +433,6 @@ fn parse_interval(s: &str) -> BarInterval {
         _ => BarInterval::M1,
     }
 }
-
 
 #[cfg(test)]
 mod tests {

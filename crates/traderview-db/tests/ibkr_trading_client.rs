@@ -34,16 +34,19 @@ async fn place_market_order_wraps_in_orders_array() {
         .and(path("/iserver/account/DU1234567/orders"))
         .and(header("Authorization", "Bearer BEARER123"))
         .and(header("Accept", "application/json"))
-        .and(body_json_string(serde_json::to_string(&serde_json::json!({
-            "orders": [{
-                "conid": 265598,
-                "side": "BUY",
-                "orderType": "MKT",
-                "quantity": 10.0,
-                "tif": "DAY",
-                "cOID": "algo-abc",
-            }]
-        })).unwrap()))
+        .and(body_json_string(
+            serde_json::to_string(&serde_json::json!({
+                "orders": [{
+                    "conid": 265598,
+                    "side": "BUY",
+                    "orderType": "MKT",
+                    "quantity": 10.0,
+                    "tif": "DAY",
+                    "cOID": "algo-abc",
+                }]
+            }))
+            .unwrap(),
+        ))
         .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
             { "order_id": "1234567", "local_order_id": "loc-1", "order_status": "Submitted" }
         ])))
@@ -70,16 +73,19 @@ async fn place_limit_order_includes_price() {
     let (server, client) = server_with_token().await;
     Mock::given(method("POST"))
         .and(path("/iserver/account/DU1234567/orders"))
-        .and(body_json_string(serde_json::to_string(&serde_json::json!({
-            "orders": [{
-                "conid": 265598,
-                "side": "SELL",
-                "orderType": "LMT",
-                "quantity": 5.0,
-                "tif": "GTC",
-                "price": 187.5,
-            }]
-        })).unwrap()))
+        .and(body_json_string(
+            serde_json::to_string(&serde_json::json!({
+                "orders": [{
+                    "conid": 265598,
+                    "side": "SELL",
+                    "orderType": "LMT",
+                    "quantity": 5.0,
+                    "tif": "GTC",
+                    "price": 187.5,
+                }]
+            }))
+            .unwrap(),
+        ))
         .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
             { "order_id": "999", "order_status": "PendingSubmit" }
         ])))
@@ -138,8 +144,7 @@ async fn buying_power_403_mapped() {
     Mock::given(method("POST"))
         .and(path("/iserver/account/DU1234567/orders"))
         .respond_with(
-            ResponseTemplate::new(403)
-                .set_body_string("insufficient buying power for order"),
+            ResponseTemplate::new(403).set_body_string("insufficient buying power for order"),
         )
         .mount(&server)
         .await;
@@ -161,11 +166,14 @@ async fn resolve_stock_conid_picks_us_listing() {
     let (server, client) = server_with_token().await;
     Mock::given(method("POST"))
         .and(path("/iserver/secdef/search"))
-        .and(body_json_string(serde_json::to_string(&serde_json::json!({
-            "symbol": "AAPL",
-            "name": false,
-            "secType": "STK"
-        })).unwrap()))
+        .and(body_json_string(
+            serde_json::to_string(&serde_json::json!({
+                "symbol": "AAPL",
+                "name": false,
+                "secType": "STK"
+            }))
+            .unwrap(),
+        ))
         .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
             { "conid": 11111, "description": "AAPL.XETRA.STK" },
             { "conid": 265598, "description": "AAPL.NASDAQ.STK" },
@@ -234,36 +242,39 @@ async fn bracket_market_sends_three_orders_with_parentid() {
     let (server, client) = server_with_token().await;
     Mock::given(method("POST"))
         .and(path("/iserver/account/DU1234567/orders"))
-        .and(body_json_string(serde_json::to_string(&serde_json::json!({
-            "orders": [
-                {
-                    "conid": 265598,
-                    "side": "BUY",
-                    "orderType": "MKT",
-                    "quantity": 10.0,
-                    "tif": "DAY",
-                    "cOID": "parent-1",
-                },
-                {
-                    "conid": 265598,
-                    "side": "SELL",
-                    "orderType": "LMT",
-                    "quantity": 10.0,
-                    "tif": "DAY",
-                    "price": 200.0,
-                    "parentId": "parent-1",
-                },
-                {
-                    "conid": 265598,
-                    "side": "SELL",
-                    "orderType": "STP",
-                    "quantity": 10.0,
-                    "tif": "DAY",
-                    "price": 180.0,
-                    "parentId": "parent-1",
-                }
-            ]
-        })).unwrap()))
+        .and(body_json_string(
+            serde_json::to_string(&serde_json::json!({
+                "orders": [
+                    {
+                        "conid": 265598,
+                        "side": "BUY",
+                        "orderType": "MKT",
+                        "quantity": 10.0,
+                        "tif": "DAY",
+                        "cOID": "parent-1",
+                    },
+                    {
+                        "conid": 265598,
+                        "side": "SELL",
+                        "orderType": "LMT",
+                        "quantity": 10.0,
+                        "tif": "DAY",
+                        "price": 200.0,
+                        "parentId": "parent-1",
+                    },
+                    {
+                        "conid": 265598,
+                        "side": "SELL",
+                        "orderType": "STP",
+                        "quantity": 10.0,
+                        "tif": "DAY",
+                        "price": 180.0,
+                        "parentId": "parent-1",
+                    }
+                ]
+            }))
+            .unwrap(),
+        ))
         .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
             { "order_id": "PARENT", "order_status": "PreSubmitted" },
             { "order_id": "TP",     "order_status": "PreSubmitted" },
@@ -294,7 +305,9 @@ async fn bracket_short_uses_buy_exits() {
     // Pin only the exit-leg sides. Short entry → BUY exits.
     Mock::given(method("POST"))
         .and(path("/iserver/account/DU1234567/orders"))
-        .and(wiremock::matchers::body_string_contains("\"side\":\"SELL\""))
+        .and(wiremock::matchers::body_string_contains(
+            "\"side\":\"SELL\"",
+        ))
         .and(wiremock::matchers::body_string_contains("\"side\":\"BUY\""))
         .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
             { "order_id": "P", "order_status": "PreSubmitted" },

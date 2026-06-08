@@ -44,10 +44,14 @@ impl Default for Rules {
 }
 
 #[derive(Debug, Clone)]
-pub struct Orb { pub rules: Rules }
+pub struct Orb {
+    pub rules: Rules,
+}
 
 impl Orb {
-    pub fn new(rules: Rules) -> Self { Self { rules } }
+    pub fn new(rules: Rules) -> Self {
+        Self { rules }
+    }
     pub fn from_json(entry_rules: &serde_json::Value) -> Self {
         let rules = serde_json::from_value::<Rules>(entry_rules.clone()).unwrap_or_default();
         Self { rules }
@@ -66,17 +70,24 @@ fn ohlc_bars(bars: &[PriceBar]) -> Vec<OhlcBar> {
 }
 
 fn rolling_rvol(volumes: &[f64], i: usize, lookback: usize) -> Option<f64> {
-    if i < lookback { return None; }
+    if i < lookback {
+        return None;
+    }
     let avg = volumes[i - lookback..i].iter().sum::<f64>() / lookback as f64;
-    if avg <= 0.0 { return None; }
+    if avg <= 0.0 {
+        return None;
+    }
     Some(volumes[i] / avg)
 }
 
 impl Strategy for Orb {
-    fn kind(&self) -> StrategyKind { StrategyKind::Orb }
+    fn kind(&self) -> StrategyKind {
+        StrategyKind::Orb
+    }
 
     fn min_bars(&self) -> usize {
-        self.rules.opening_bars
+        self.rules
+            .opening_bars
             .max(self.rules.rvol_lookback + 1)
             .max(self.rules.atr_period + 1)
             + 1
@@ -103,10 +114,14 @@ impl Strategy for Orb {
 
         let i = bars.len() - 1;
         let atr_now = atr.get(i).copied().flatten()?;
-        if atr_now <= 0.0 { return None; }
+        if atr_now <= 0.0 {
+            return None;
+        }
         let close_now = closes[i];
         let rvol_now = rolling_rvol(&vols, i, self.rules.rvol_lookback)?;
-        if rvol_now < self.rules.rvol_min { return None; }
+        if rvol_now < self.rules.rvol_min {
+            return None;
+        }
 
         // Only fire on the FIRST breakout bar — `report.upper_break.bar_index`
         // must be the LATEST bar for the signal to be fresh. Stops the engine

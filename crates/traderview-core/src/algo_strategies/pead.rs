@@ -11,10 +11,10 @@
 //!
 //! Entry (long, given a symbol the runner pre-filtered to "had a
 //! recent positive earnings surprise"):
-//!   close[i] > max(highs[i-recent_high_lookback..i])   (still in drift
+//!   `close[i]` > `max(highs[i-recent_high_lookback..i])`   (still in drift
 //!                                                       mode — no fade
 //!                                                       of the gap)
-//!   close[i] > SMA(short_trend)                        (still above
+//!   `close[i]` > SMA(short_trend)                        (still above
 //!                                                       short trend)
 //!
 //! Exit: ATR trailing stop OR `hold_bars` elapsed since entry.
@@ -56,10 +56,14 @@ impl Default for Rules {
 }
 
 #[derive(Debug, Clone)]
-pub struct Pead { pub rules: Rules }
+pub struct Pead {
+    pub rules: Rules,
+}
 
 impl Pead {
-    pub fn new(rules: Rules) -> Self { Self { rules } }
+    pub fn new(rules: Rules) -> Self {
+        Self { rules }
+    }
     pub fn from_json(entry_rules: &serde_json::Value) -> Self {
         let rules = serde_json::from_value::<Rules>(entry_rules.clone()).unwrap_or_default();
         Self { rules }
@@ -67,7 +71,9 @@ impl Pead {
 }
 
 impl Strategy for Pead {
-    fn kind(&self) -> StrategyKind { StrategyKind::Pead }
+    fn kind(&self) -> StrategyKind {
+        StrategyKind::Pead
+    }
 
     fn min_bars(&self) -> usize {
         self.rules
@@ -95,12 +101,19 @@ impl Strategy for Pead {
         let i = bars.len() - 1;
         let close_now = closes[i];
         let atr_now = atr.get(i).copied().flatten()?;
-        if atr_now <= 0.0 { return None; }
+        if atr_now <= 0.0 {
+            return None;
+        }
         let sma_now = sma.get(i).copied().flatten()?;
-        if close_now <= sma_now { return None; }
+        if close_now <= sma_now {
+            return None;
+        }
 
         let lo = i.saturating_sub(self.rules.recent_high_lookback);
-        let recent_high = highs[lo..i].iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+        let recent_high = highs[lo..i]
+            .iter()
+            .cloned()
+            .fold(f64::NEG_INFINITY, f64::max);
         if close_now <= recent_high {
             return None;
         }
@@ -223,8 +236,17 @@ mod tests {
         let bars = drift_window();
         let sig = first_long(&bars, &strat).expect("drift past recent high + SMA → long");
         assert_eq!(sig.side, Side::Buy);
-        let sma = sig.diagnostic.get("sma_short").and_then(|v| v.as_f64()).unwrap();
-        assert!(sig.entry_price > sma, "close {} > SMA20 {}", sig.entry_price, sma);
+        let sma = sig
+            .diagnostic
+            .get("sma_short")
+            .and_then(|v| v.as_f64())
+            .unwrap();
+        assert!(
+            sig.entry_price > sma,
+            "close {} > SMA20 {}",
+            sig.entry_price,
+            sma
+        );
     }
 
     #[test]
@@ -252,7 +274,9 @@ mod tests {
         let strat = Pead::new(Rules::default());
         let bars = drift_window();
         for end in strat.min_bars()..=bars.len() {
-            assert!(strat.evaluate_entry(&bars[..end], SideMode::Short).is_none());
+            assert!(strat
+                .evaluate_entry(&bars[..end], SideMode::Short)
+                .is_none());
         }
     }
 

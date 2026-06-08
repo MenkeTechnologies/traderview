@@ -143,7 +143,9 @@ async fn test_alpaca(
             return Ok(Json(TestAlpacaResp {
                 ok,
                 feed: want_feed,
-                detail: Some(serde_json::json!({ "msg": msg, "age_ms": age_ms, "observed_feed": feed })),
+                detail: Some(
+                    serde_json::json!({ "msg": msg, "age_ms": age_ms, "observed_feed": feed }),
+                ),
             }));
         }
     }
@@ -212,7 +214,10 @@ async fn test_alpaca(
                 // welcome / status frames — keep reading
             }
         }
-        Ok((false, Some(serde_json::json!({"msg": "no auth response after 6 frames"}))))
+        Ok((
+            false,
+            Some(serde_json::json!({"msg": "no auth response after 6 frames"})),
+        ))
     };
     let (mut ok, mut detail) = match tokio::time::timeout(Duration::from_secs(5), test).await {
         Ok(Ok((ok, d))) => (ok, d),
@@ -241,7 +246,11 @@ async fn test_alpaca(
             }
         }
     }
-    Ok(Json(TestAlpacaResp { ok, feed: want_feed, detail }))
+    Ok(Json(TestAlpacaResp {
+        ok,
+        feed: want_feed,
+        detail,
+    }))
 }
 
 #[derive(Deserialize, Default)]
@@ -344,14 +353,13 @@ async fn test_finnhub(
         }))
     } else {
         // Surface Finnhub's own error string if present.
-        let err_msg = parsed
-            .get("error")
-            .and_then(|v| v.as_str())
-            .unwrap_or(if http_status == 200 {
+        let err_msg = parsed.get("error").and_then(|v| v.as_str()).unwrap_or(
+            if http_status == 200 {
                 "200 OK but no quote returned — key may have hit rate limit or have no entitlement"
             } else {
                 "Finnhub rejected the request"
-            });
+            },
+        );
         Some(serde_json::json!({ "msg": err_msg, "raw": parsed }))
     };
     Ok(Json(TestFinnhubResp {
@@ -373,7 +381,9 @@ struct TestTradierBody {
     sandbox: bool,
 }
 
-fn default_true_inline() -> bool { true }
+fn default_true_inline() -> bool {
+    true
+}
 
 #[derive(Serialize)]
 struct TestTradierResp {
@@ -439,9 +449,15 @@ async fn test_tradier(
         Err(e) => {
             // Map our typed error back to an HTTP-ish status the UI can act on.
             let (http_status, msg) = match &e {
-                traderview_db::tradier_trading::TradierError::AuthFailed => (401, "invalid access_token".to_string()),
-                traderview_db::tradier_trading::TradierError::InvalidRequest(b) => (400, format!("invalid request: {b}")),
-                traderview_db::tradier_trading::TradierError::Http { status, body } => (*status, format!("http {status}: {body}")),
+                traderview_db::tradier_trading::TradierError::AuthFailed => {
+                    (401, "invalid access_token".to_string())
+                }
+                traderview_db::tradier_trading::TradierError::InvalidRequest(b) => {
+                    (400, format!("invalid request: {b}"))
+                }
+                traderview_db::tradier_trading::TradierError::Http { status, body } => {
+                    (*status, format!("http {status}: {body}"))
+                }
                 other => (0, other.to_string()),
             };
             Ok(Json(TestTradierResp {
@@ -499,7 +515,9 @@ async fn test_tastytrade(
             let auth = match (token.clone(), login.clone(), password.clone()) {
                 (Some(t), _, _) => traderview_db::tastytrade_trading::Auth::SessionToken(t),
                 (None, Some(l), Some(p)) => traderview_db::tastytrade_trading::Auth::UserPass {
-                    login: l, password: p, remember_me: true,
+                    login: l,
+                    password: p,
+                    remember_me: true,
                 },
                 _ => {
                     let Some((stored_acc, stored_sb, stored_auth)) =
@@ -540,18 +558,12 @@ async fn test_tastytrade(
     run_tastytrade_probe(account_number, sandbox, auth).await
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, Default, serde::Deserialize)]
 #[serde(default)]
 struct TestIbkrBody {
     account_id: Option<String>,
     base_url: Option<String>,
     bearer_token: Option<String>,
-}
-
-impl Default for TestIbkrBody {
-    fn default() -> Self {
-        Self { account_id: None, base_url: None, bearer_token: None }
-    }
 }
 
 #[derive(Debug, serde::Serialize)]
@@ -582,16 +594,14 @@ async fn test_ibkr(
 
     let (account_id, base_url, token) = match supplied_account {
         Some(a) => {
-            let base = supplied_base.unwrap_or_else(|| {
-                traderview_db::ibkr_trading::DEFAULT_LOCAL_BASE.to_string()
-            });
+            let base = supplied_base
+                .unwrap_or_else(|| traderview_db::ibkr_trading::DEFAULT_LOCAL_BASE.to_string());
             (a, base, supplied_token)
         }
         None => {
-            let Some((a, b, t)) =
-                traderview_db::data_source_keys::ibkr_creds(&s.pool, u.id)
-                    .await
-                    .map_err(ApiError::Internal)?
+            let Some((a, b, t)) = traderview_db::data_source_keys::ibkr_creds(&s.pool, u.id)
+                .await
+                .map_err(ApiError::Internal)?
             else {
                 return Ok(Json(TestIbkrResp {
                     ok: false,
@@ -606,7 +616,9 @@ async fn test_ibkr(
     };
 
     let client = traderview_db::ibkr_trading::IbkrTrading::new(
-        base_url.clone(), token.clone(), account_id.clone(),
+        base_url.clone(),
+        token.clone(),
+        account_id.clone(),
     );
     match client.get_summary().await {
         Ok(sum) => Ok(Json(TestIbkrResp {
@@ -627,12 +639,12 @@ async fn test_ibkr(
                     401,
                     "auth failed — gateway not logged in or bearer token expired".into(),
                 ),
-                traderview_db::ibkr_trading::IbkrError::InvalidRequest(b) => (
-                    400, format!("invalid request: {b}"),
-                ),
-                traderview_db::ibkr_trading::IbkrError::Http { status, body } => (
-                    *status, format!("http {status}: {body}"),
-                ),
+                traderview_db::ibkr_trading::IbkrError::InvalidRequest(b) => {
+                    (400, format!("invalid request: {b}"))
+                }
+                traderview_db::ibkr_trading::IbkrError::Http { status, body } => {
+                    (*status, format!("http {status}: {body}"))
+                }
                 traderview_db::ibkr_trading::IbkrError::Transport(t) => (
                     0,
                     format!("transport error — is the gateway running at {base_url}? ({t})"),
@@ -692,8 +704,12 @@ async fn test_schwab(
 
     let (client_id, client_secret, tokens, account_hash) = match supplied {
         (Some(cid), Some(csec), Some(at), Some(rt), Some(ah)) => (
-            cid, csec,
-            traderview_db::schwab_trading::Tokens { access_token: at, refresh_token: rt },
+            cid,
+            csec,
+            traderview_db::schwab_trading::Tokens {
+                access_token: at,
+                refresh_token: rt,
+            },
             ah,
         ),
         _ => {
@@ -720,13 +736,20 @@ async fn test_schwab(
             let pool = pool.clone();
             tokio::spawn(async move {
                 let _ = traderview_db::data_source_keys::save_schwab_tokens(
-                    &pool, user_id, &new_tokens,
-                ).await;
+                    &pool,
+                    user_id,
+                    &new_tokens,
+                )
+                .await;
             });
         });
     let client = traderview_db::schwab_trading::SchwabTrading::new(
-        client_id, client_secret, tokens, account_hash.clone(),
-    ).on_token_refresh(persist);
+        client_id,
+        client_secret,
+        tokens,
+        account_hash.clone(),
+    )
+    .on_token_refresh(persist);
     match client.get_account().await {
         Ok(acc) => Ok(Json(TestSchwabResp {
             ok: true,
@@ -750,12 +773,12 @@ async fn test_schwab(
                     401,
                     "auth failed — refresh token expired, re-run the OAuth flow".into(),
                 ),
-                traderview_db::schwab_trading::SchwabError::InvalidRequest(b) => (
-                    400, format!("invalid request: {b}"),
-                ),
-                traderview_db::schwab_trading::SchwabError::Http { status, body } => (
-                    *status, format!("http {status}: {body}"),
-                ),
+                traderview_db::schwab_trading::SchwabError::InvalidRequest(b) => {
+                    (400, format!("invalid request: {b}"))
+                }
+                traderview_db::schwab_trading::SchwabError::Http { status, body } => {
+                    (*status, format!("http {status}: {body}"))
+                }
                 other => (0, other.to_string()),
             };
             Ok(Json(TestSchwabResp {
@@ -777,7 +800,8 @@ async fn run_tastytrade_probe(
     } else {
         traderview_db::tastytrade_trading::TastytradeEnv::Live
     };
-    let client = traderview_db::tastytrade_trading::TastytradeTrading::new(env, auth, account_number);
+    let client =
+        traderview_db::tastytrade_trading::TastytradeTrading::new(env, auth, account_number);
     match client.get_balances().await {
         Ok(b) => Ok(Json(TestTastytradeResp {
             ok: true,
@@ -792,9 +816,15 @@ async fn run_tastytrade_probe(
         })),
         Err(e) => {
             let (http_status, msg) = match &e {
-                traderview_db::tastytrade_trading::TastytradeError::AuthFailed => (401, "auth failed".to_string()),
-                traderview_db::tastytrade_trading::TastytradeError::InvalidRequest(b) => (400, format!("invalid request: {b}")),
-                traderview_db::tastytrade_trading::TastytradeError::Http { status, body } => (*status, format!("http {status}: {body}")),
+                traderview_db::tastytrade_trading::TastytradeError::AuthFailed => {
+                    (401, "auth failed".to_string())
+                }
+                traderview_db::tastytrade_trading::TastytradeError::InvalidRequest(b) => {
+                    (400, format!("invalid request: {b}"))
+                }
+                traderview_db::tastytrade_trading::TastytradeError::Http { status, body } => {
+                    (*status, format!("http {status}: {body}"))
+                }
                 other => (0, other.to_string()),
             };
             Ok(Json(TestTastytradeResp {

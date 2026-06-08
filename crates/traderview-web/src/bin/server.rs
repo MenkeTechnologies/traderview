@@ -291,7 +291,10 @@ async fn main() -> anyhow::Result<()> {
     {
         let pool = state.pool.clone();
         let sink = state.build_engine_event_sink();
-        tokio::spawn(traderview_db::algo_runner::run_loop(pool.clone(), Some(sink.clone())));
+        tokio::spawn(traderview_db::algo_runner::run_loop(
+            pool.clone(),
+            Some(sink.clone()),
+        ));
 
         // Alpaca trade_updates WS: one connection per active (user, paper-or-live)
         // tuple. Fills land in algo_fills + executions + trades via record_fill.
@@ -323,13 +326,17 @@ async fn main() -> anyhow::Result<()> {
         let t_registry = state.alpaca_pumps.clone();
         tokio::spawn(async move {
             match traderview_db::tradier_pump::spawn_pumps_for_active_strategies(
-                t_pool, Some(t_sink), t_registry,
+                t_pool,
+                Some(t_sink),
+                t_registry,
             )
             .await
             {
                 Ok(0) => tracing::info!("no tradier-bound algo strategies; pumps idle"),
                 Ok(n) => tracing::info!(pumps = n, "tradier events pumps spawned"),
-                Err(e) => tracing::warn!(error = %e, "tradier::spawn_pumps_for_active_strategies failed"),
+                Err(e) => {
+                    tracing::warn!(error = %e, "tradier::spawn_pumps_for_active_strategies failed")
+                }
             }
         });
 
@@ -339,13 +346,17 @@ async fn main() -> anyhow::Result<()> {
         let tt_registry = state.alpaca_pumps.clone();
         tokio::spawn(async move {
             match traderview_db::tastytrade_pump::spawn_pumps_for_active_strategies(
-                tt_pool, Some(tt_sink), tt_registry,
+                tt_pool,
+                Some(tt_sink),
+                tt_registry,
             )
             .await
             {
                 Ok(0) => tracing::info!("no tastytrade-bound algo strategies; pumps idle"),
                 Ok(n) => tracing::info!(pumps = n, "tastytrade account streamer pumps spawned"),
-                Err(e) => tracing::warn!(error = %e, "tastytrade::spawn_pumps_for_active_strategies failed"),
+                Err(e) => {
+                    tracing::warn!(error = %e, "tastytrade::spawn_pumps_for_active_strategies failed")
+                }
             }
         });
 
@@ -354,13 +365,17 @@ async fn main() -> anyhow::Result<()> {
         let sw_registry = state.alpaca_pumps.clone();
         tokio::spawn(async move {
             match traderview_db::schwab_pump::spawn_pumps_for_active_strategies(
-                sw_pool, Some(sw_sink), sw_registry,
+                sw_pool,
+                Some(sw_sink),
+                sw_registry,
             )
             .await
             {
                 Ok(0) => tracing::info!("no schwab-bound algo strategies; pumps idle"),
                 Ok(n) => tracing::info!(pumps = n, "schwab account streamer pumps spawned"),
-                Err(e) => tracing::warn!(error = %e, "schwab::spawn_pumps_for_active_strategies failed"),
+                Err(e) => {
+                    tracing::warn!(error = %e, "schwab::spawn_pumps_for_active_strategies failed")
+                }
             }
         });
 
@@ -369,13 +384,17 @@ async fn main() -> anyhow::Result<()> {
         let ib_registry = state.alpaca_pumps.clone();
         tokio::spawn(async move {
             match traderview_db::ibkr_pump::spawn_pumps_for_active_strategies(
-                ib_pool, Some(ib_sink), ib_registry,
+                ib_pool,
+                Some(ib_sink),
+                ib_registry,
             )
             .await
             {
                 Ok(0) => tracing::info!("no ibkr-bound algo strategies; pumps idle"),
                 Ok(n) => tracing::info!(pumps = n, "ibkr account streamer pumps spawned"),
-                Err(e) => tracing::warn!(error = %e, "ibkr::spawn_pumps_for_active_strategies failed"),
+                Err(e) => {
+                    tracing::warn!(error = %e, "ibkr::spawn_pumps_for_active_strategies failed")
+                }
             }
         });
     }

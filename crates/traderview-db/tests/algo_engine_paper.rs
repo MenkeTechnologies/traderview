@@ -138,13 +138,16 @@ fn fresh_long_window(symbol: &str) -> Vec<PriceBar> {
     let mut bars = Vec::new();
     let mut t = 1_700_000_000_i64;
     for _ in 0..35 {
-        bars.push(bar(t, symbol, "100.00", "100.10", "99.90", "100.00", 1_000_000));
+        bars.push(bar(
+            t, symbol, "100.00", "100.10", "99.90", "100.00", 1_000_000,
+        ));
         t += 60;
     }
     for i in 0..8 {
         let p = 100.0 - (i as f64 + 1.0) * 0.4;
         bars.push(bar(
-            t, symbol,
+            t,
+            symbol,
             &format!("{:.2}", p + 0.1),
             &format!("{:.2}", p + 0.2),
             &format!("{:.2}", p - 0.2),
@@ -157,7 +160,8 @@ fn fresh_long_window(symbol: &str) -> Vec<PriceBar> {
         let p = 96.6 + (i as f64 + 1.0) * 0.95;
         let vol = if i == 11 { 4_000_000 } else { 2_000_000 };
         bars.push(bar(
-            t, symbol,
+            t,
+            symbol,
             &format!("{:.2}", p - 0.3),
             &format!("{:.2}", p + 0.4),
             &format!("{:.2}", p - 0.4),
@@ -240,16 +244,19 @@ fn engine_submits_one_bracket_on_uptrend_signal() {
         let bars = fresh_long_window("AAPL");
 
         let sink = InMemorySink::default();
-        let signal_at = drive_engine_until_signal(
-            &pool, &sink, &strategy, run.id, &bars, 100_000.0,
-        )
-        .await
-        .expect("uptrend produced at least one signal");
+        let signal_at =
+            drive_engine_until_signal(&pool, &sink, &strategy, run.id, &bars, 100_000.0)
+                .await
+                .expect("uptrend produced at least one signal");
 
-        // Exactly one order on the captured side.
-        let submitted = sink.submitted.lock().unwrap();
-        assert_eq!(submitted.len(), 1, "exactly one bracket per uptrend");
-        let intent = &submitted[0];
+        // Exactly one order on the captured side. Clone the intent out
+        // before any further `.await` so the MutexGuard doesn't span
+        // an await point (clippy::await_holding_lock).
+        let intent = {
+            let submitted = sink.submitted.lock().unwrap();
+            assert_eq!(submitted.len(), 1, "exactly one bracket per uptrend");
+            submitted[0].clone()
+        };
         assert_eq!(intent.symbol, "AAPL");
         assert_eq!(intent.side, traderview_core::momentum_strategy::Side::Buy);
         assert!(intent.qty > Decimal::ZERO);
@@ -388,8 +395,17 @@ fn engine_refuses_when_position_size_cap_breached() {
         // produces a single trigger bar).
         let mut hit_cap = false;
         for end in 30..=bars.len() {
-            match process_bar_window(&pool, &sink, &strategy, run.id, &bars[..end], 100_000.0, 0, None)
-                .await
+            match process_bar_window(
+                &pool,
+                &sink,
+                &strategy,
+                run.id,
+                &bars[..end],
+                100_000.0,
+                0,
+                None,
+            )
+            .await
             {
                 Err(EngineError::PositionSizeCap { .. }) => {
                     hit_cap = true;
@@ -461,8 +477,17 @@ fn engine_trips_on_consecutive_losses_cap() {
         let sink = InMemorySink::default();
         let mut hit = false;
         for end in 30..=bars.len() {
-            match process_bar_window(&pool, &sink, &strategy, run.id, &bars[..end], 100_000.0, 0, None)
-                .await
+            match process_bar_window(
+                &pool,
+                &sink,
+                &strategy,
+                run.id,
+                &bars[..end],
+                100_000.0,
+                0,
+                None,
+            )
+            .await
             {
                 Err(EngineError::ConsecutiveLossesCap { cap: 3, streak: 3 }) => {
                     hit = true;
@@ -479,7 +504,10 @@ fn engine_trips_on_consecutive_losses_cap() {
             .await
             .expect("get")
             .expect("present");
-        assert!(after.kill_switch, "kill_switch must auto-engage on cap breach");
+        assert!(
+            after.kill_switch,
+            "kill_switch must auto-engage on cap breach"
+        );
         assert!(!after.enabled, "enabled must flip to false");
     });
 }
@@ -493,8 +521,9 @@ fn engine_records_rejection_when_sink_errors() {
         fn submit_bracket(
             &self,
             _intent: OrderIntent,
-        ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>>
-        {
+        ) -> std::pin::Pin<
+            Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>,
+        > {
             Box::pin(async { Err(EngineError::Broker("simulated".into())) })
         }
     }
@@ -509,10 +538,22 @@ fn engine_records_rejection_when_sink_errors() {
         // Drive forward — eventually a signal fires.
         let mut hit_error = false;
         for end in 30..=bars.len() {
-            match process_bar_window(&pool, &broken, &strategy, run.id, &bars[..end], 100_000.0, 0, None)
-                .await
+            match process_bar_window(
+                &pool,
+                &broken,
+                &strategy,
+                run.id,
+                &bars[..end],
+                100_000.0,
+                0,
+                None,
+            )
+            .await
             {
-                Err(EngineError::Broker(_)) => { hit_error = true; break; }
+                Err(EngineError::Broker(_)) => {
+                    hit_error = true;
+                    break;
+                }
                 _ => continue,
             }
         }
@@ -545,22 +586,20 @@ fn engine_fill_lands_in_executions_and_rolls_up_to_trades() {
             .await
             .expect("uptrend produced signal");
 
-        let (exec_count,): (i64,) = sqlx::query_as(
-            "SELECT COUNT(*) FROM executions WHERE account_id = $1",
-        )
-        .bind(account_id)
-        .fetch_one(&pool)
-        .await
-        .expect("count executions");
+        let (exec_count,): (i64,) =
+            sqlx::query_as("SELECT COUNT(*) FROM executions WHERE account_id = $1")
+                .bind(account_id)
+                .fetch_one(&pool)
+                .await
+                .expect("count executions");
         assert_eq!(exec_count, 1, "exactly one executions row per algo fill");
 
-        let (trade_count,): (i64,) = sqlx::query_as(
-            "SELECT COUNT(*) FROM trades WHERE account_id = $1",
-        )
-        .bind(account_id)
-        .fetch_one(&pool)
-        .await
-        .expect("count trades");
+        let (trade_count,): (i64,) =
+            sqlx::query_as("SELECT COUNT(*) FROM trades WHERE account_id = $1")
+                .bind(account_id)
+                .fetch_one(&pool)
+                .await
+                .expect("count trades");
         assert!(
             trade_count >= 1,
             "trades::rollup_account must materialize at least one trade row"

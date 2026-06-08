@@ -1,14 +1,14 @@
 //! Symbol catalog endpoints — drive the global frontend autocomplete.
 //!
-//!  * `GET  /api/symbols/list?seed_if_empty=true`
-//!     – returns every row in the `symbols` table. When the flag is
-//!       set and the table is empty, runs a Finnhub seed first so the
-//!       caller gets data on first ever request without an extra round
-//!       trip. Failures during auto-seed are logged but never fail
-//!       the response — an empty list is still useful (graceful).
-//!  * `POST /api/symbols/seed?exchange=US`
-//!     – idempotent re-seed. Use to refresh descriptions or pull a new
-//!       exchange (e.g. `?exchange=TO` for TSX).
+//! * `GET  /api/symbols/list?seed_if_empty=true`
+//!   returns every row in the `symbols` table. When the flag is
+//!   set and the table is empty, runs a Finnhub seed first so the
+//!   caller gets data on first ever request without an extra round
+//!   trip. Failures during auto-seed are logged but never fail
+//!   the response — an empty list is still useful (graceful).
+//! * `POST /api/symbols/seed?exchange=US`
+//!   idempotent re-seed. Use to refresh descriptions or pull a new
+//!   exchange (e.g. `?exchange=TO` for TSX).
 
 use crate::auth::AuthUser;
 use crate::error::ApiError;

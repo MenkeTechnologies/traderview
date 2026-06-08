@@ -37,7 +37,11 @@ pub enum BrokerMode {
 
 impl BrokerMode {
     pub fn from_str_lossy(s: &str) -> Self {
-        if s == "alpaca_live" { Self::Live } else { Self::Paper }
+        if s == "alpaca_live" {
+            Self::Live
+        } else {
+            Self::Paper
+        }
     }
     fn rest_base(self) -> &'static str {
         match self {
@@ -142,18 +146,22 @@ impl AlpacaTrading {
                 }
             }
             422 => Err(AlpacaError::InvalidRequest(body)),
-            _ => Err(AlpacaError::Http { status: status.as_u16(), body }),
+            _ => Err(AlpacaError::Http {
+                status: status.as_u16(),
+                body,
+            }),
         }
     }
 
     // ─── orders ────────────────────────────────────────────────────────
 
-    pub async fn place_order(
-        &self,
-        req: &PlaceOrderRequest,
-    ) -> Result<OrderResponse, AlpacaError> {
+    pub async fn place_order(&self, req: &PlaceOrderRequest) -> Result<OrderResponse, AlpacaError> {
         let url = format!("{}/v2/orders", self.rest_base);
-        let resp = self.auth_headers(self.http.post(&url)).json(req).send().await?;
+        let resp = self
+            .auth_headers(self.http.post(&url))
+            .json(req)
+            .send()
+            .await?;
         Self::handle_status(resp).await
     }
 
@@ -170,7 +178,10 @@ impl AlpacaTrading {
         if status.as_u16() == 422 {
             return Err(AlpacaError::InvalidRequest(body));
         }
-        Err(AlpacaError::Http { status: status.as_u16(), body })
+        Err(AlpacaError::Http {
+            status: status.as_u16(),
+            body,
+        })
     }
 
     pub async fn get_order(&self, broker_order_id: &str) -> Result<OrderResponse, AlpacaError> {
@@ -296,10 +307,10 @@ pub struct PlaceOrderRequest {
     pub qty: Option<Decimal>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub notional: Option<Decimal>,
-    pub side: String,           // "buy" | "sell"
+    pub side: String, // "buy" | "sell"
     #[serde(rename = "type")]
-    pub order_type: String,     // "market" | "limit" | "stop" | "stop_limit" | "trailing_stop"
-    pub time_in_force: String,  // "day" | "gtc" | "ioc" | "fok" | "opg" | "cls"
+    pub order_type: String, // "market" | "limit" | "stop" | "stop_limit" | "trailing_stop"
+    pub time_in_force: String, // "day" | "gtc" | "ioc" | "fok" | "opg" | "cls"
     #[serde(skip_serializing_if = "Option::is_none")]
     pub limit_price: Option<Decimal>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -377,8 +388,13 @@ impl PlaceOrderRequest {
             extended_hours: None,
             client_order_id: coid,
             order_class: Some("bracket".into()),
-            take_profit: Some(TakeProfitLeg { limit_price: take_profit }),
-            stop_loss: Some(StopLossLeg { stop_price: stop_loss, limit_price: None }),
+            take_profit: Some(TakeProfitLeg {
+                limit_price: take_profit,
+            }),
+            stop_loss: Some(StopLossLeg {
+                stop_price: stop_loss,
+                limit_price: None,
+            }),
         }
     }
 }

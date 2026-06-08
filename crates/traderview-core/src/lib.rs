@@ -6,12 +6,12 @@
 
 pub mod acceleration_deceleration;
 pub mod adx;
+pub mod algo_backtest;
+pub mod algo_optimize;
 pub mod alligator;
 pub mod anchored_vwap;
 pub mod arms_index;
 pub mod aroon;
-pub mod algo_backtest;
-pub mod algo_optimize;
 pub mod atr_cone;
 pub mod awesome_oscillator;
 pub mod backtest;
@@ -376,10 +376,10 @@ pub mod pca;
 pub mod power_option;
 pub mod trade_quality_stats;
 
+pub mod algo_strategies;
 pub mod chooser_option;
 pub mod conditional_drawdown;
 pub mod effective_spread;
-pub mod algo_strategies;
 pub mod momentum_12_1;
 pub mod momentum_strategy;
 pub mod pain_index;

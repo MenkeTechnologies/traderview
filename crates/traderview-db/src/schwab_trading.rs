@@ -56,8 +56,7 @@ pub struct Tokens {
     pub refresh_token: String,
 }
 
-pub type TokenCallback =
-    Arc<dyn Fn(Tokens) + Send + Sync + 'static>;
+pub type TokenCallback = Arc<dyn Fn(Tokens) + Send + Sync + 'static>;
 
 #[derive(Clone)]
 pub struct SchwabTrading {
@@ -165,7 +164,10 @@ impl SchwabTrading {
             if status.as_u16() == 400 || status.as_u16() == 401 {
                 return Err(SchwabError::AuthFailed);
             }
-            return Err(SchwabError::Http { status: status.as_u16(), body });
+            return Err(SchwabError::Http {
+                status: status.as_u16(),
+                body,
+            });
         }
         #[derive(Deserialize)]
         struct RefreshResp {
@@ -207,7 +209,10 @@ impl SchwabTrading {
                 Err(SchwabError::InsufficientBuyingPower)
             }
             400 | 422 => Err(SchwabError::InvalidRequest(body)),
-            _ => Err(SchwabError::Http { status: status.as_u16(), body }),
+            _ => Err(SchwabError::Http {
+                status: status.as_u16(),
+                body,
+            }),
         }
     }
 
@@ -277,7 +282,10 @@ impl SchwabTrading {
                 Err(SchwabError::InsufficientBuyingPower)
             }
             400 | 422 => Err(SchwabError::InvalidRequest(body)),
-            _ => Err(SchwabError::Http { status: status.as_u16(), body }),
+            _ => Err(SchwabError::Http {
+                status: status.as_u16(),
+                body,
+            }),
         }
     }
 
@@ -289,7 +297,10 @@ impl SchwabTrading {
     ///
     /// Auto-refresh on 401 mirrors `place_order` — one retry after a
     /// fresh access token, then surface AuthFailed.
-    pub async fn place_bracket(&self, req: &PlaceBracket) -> Result<PlaceOrderResponse, SchwabError> {
+    pub async fn place_bracket(
+        &self,
+        req: &PlaceBracket,
+    ) -> Result<PlaceOrderResponse, SchwabError> {
         let url = format!("{}/accounts/{}/orders", self.trader_base, self.account_hash);
         let body = req.to_json();
         let first = self.send_post(&url, &body).await;
@@ -348,7 +359,10 @@ impl SchwabTrading {
         }
         match status.as_u16() {
             401 => Err(SchwabError::AuthFailed),
-            _ => Err(SchwabError::Http { status: status.as_u16(), body }),
+            _ => Err(SchwabError::Http {
+                status: status.as_u16(),
+                body,
+            }),
         }
     }
 

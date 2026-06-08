@@ -47,7 +47,9 @@ pub struct KeltnerBreakout {
 }
 
 impl KeltnerBreakout {
-    pub fn new(rules: Rules) -> Self { Self { rules } }
+    pub fn new(rules: Rules) -> Self {
+        Self { rules }
+    }
     pub fn from_json(entry_rules: &serde_json::Value) -> Self {
         let rules = serde_json::from_value::<Rules>(entry_rules.clone()).unwrap_or_default();
         Self { rules }
@@ -85,7 +87,9 @@ fn keltner_bands(
 }
 
 impl Strategy for KeltnerBreakout {
-    fn kind(&self) -> StrategyKind { StrategyKind::KeltnerBreakout }
+    fn kind(&self) -> StrategyKind {
+        StrategyKind::KeltnerBreakout
+    }
 
     fn min_bars(&self) -> usize {
         self.rules.period.max(self.rules.atr_period) + 3

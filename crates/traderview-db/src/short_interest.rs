@@ -66,6 +66,7 @@ pub async fn yahoo_short_stats(symbol: &str) -> anyhow::Result<ShortStats> {
 ///   * `/stock/short-interest`  → latest + month-prior `shortInterest`
 ///   * `/stock/metric?metric=all` → shortRatio, shortPercentOfFloat,
 ///     sharesPercentSharesOut, sharesShort, float
+///
 /// Fields that aren't available on the user's tier stay `None`; the
 /// frontend renders "—" for missing values.
 pub async fn finnhub_short_stats(symbol: &str) -> anyhow::Result<ShortStats> {
@@ -79,9 +80,16 @@ pub async fn finnhub_short_stats(symbol: &str) -> anyhow::Result<ShortStats> {
     .await
     .ok();
     // Time series — newest first per Finnhub docs.
-    let (cur, prior) = match raw_si.as_ref().and_then(|v| v.get("data")).and_then(|v| v.as_array()) {
+    let (cur, prior) = match raw_si
+        .as_ref()
+        .and_then(|v| v.get("data"))
+        .and_then(|v| v.as_array())
+    {
         Some(arr) if !arr.is_empty() => {
-            let cur = arr.first().and_then(|e| e.get("shortInterest")).and_then(|x| x.as_f64());
+            let cur = arr
+                .first()
+                .and_then(|e| e.get("shortInterest"))
+                .and_then(|x| x.as_f64());
             let prior = arr
                 .get(1)
                 .and_then(|e| e.get("shortInterest"))

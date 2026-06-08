@@ -6,10 +6,10 @@
 //! volatility; the directional break is the play.
 //!
 //! Entry (long):
-//!   squeeze_on[i-1] == true        (squeeze WAS on)
-//!   squeeze_on[i]   == false       (released this bar)
-//!   momentum[i]     >  0
-//!   momentum[i]     >  momentum[i-1]   (still expanding)
+//!   `squeeze_on[i-1]` == true        (squeeze WAS on)
+//!   `squeeze_on[i]`   == false       (released this bar)
+//!   `momentum[i]`     >  0
+//!   `momentum[i]`     >  `momentum[i-1]`   (still expanding)
 //!
 //! Entry (short): mirror — momentum < 0 and falling.
 //!
@@ -51,10 +51,14 @@ impl Default for Rules {
 }
 
 #[derive(Debug, Clone)]
-pub struct TtmSqueeze { pub rules: Rules }
+pub struct TtmSqueeze {
+    pub rules: Rules,
+}
 
 impl TtmSqueeze {
-    pub fn new(rules: Rules) -> Self { Self { rules } }
+    pub fn new(rules: Rules) -> Self {
+        Self { rules }
+    }
     pub fn from_json(entry_rules: &serde_json::Value) -> Self {
         let rules = serde_json::from_value::<Rules>(entry_rules.clone()).unwrap_or_default();
         Self { rules }
@@ -73,7 +77,9 @@ fn ttm_bars(bars: &[PriceBar]) -> Vec<ttm_squeeze::Bar> {
 }
 
 impl Strategy for TtmSqueeze {
-    fn kind(&self) -> StrategyKind { StrategyKind::TtmSqueeze }
+    fn kind(&self) -> StrategyKind {
+        StrategyKind::TtmSqueeze
+    }
 
     fn min_bars(&self) -> usize {
         self.rules.period.max(self.rules.atr_period + 1) + 2
@@ -101,16 +107,20 @@ impl Strategy for TtmSqueeze {
         let mom_now = report.momentum.get(i).copied().flatten()?;
         let mom_prev = report.momentum.get(prev).copied().flatten()?;
         let atr_now = atr.get(i).copied().flatten()?;
-        if atr_now <= 0.0 { return None; }
+        if atr_now <= 0.0 {
+            return None;
+        }
         let close_now = closes[i];
 
         // Squeeze must be CURRENTLY off (released) AND there must have
         // been at least one squeeze_on=true bar inside the last
         // release_lookback bars — the coil that preceded the move.
-        if squeeze_now { return None; }
+        if squeeze_now {
+            return None;
+        }
         let lookback_start = i.saturating_sub(self.rules.release_lookback);
-        let had_squeeze_recently = (lookback_start..i)
-            .any(|k| report.squeeze_on.get(k).copied().flatten() == Some(true));
+        let had_squeeze_recently =
+            (lookback_start..i).any(|k| report.squeeze_on.get(k).copied().flatten() == Some(true));
         if !had_squeeze_recently {
             return None;
         }
@@ -295,9 +305,20 @@ mod tests {
         let bars = squeeze_release_window();
         let sig = first_long(&bars, &strat).expect("squeeze release must fire entry");
         assert_eq!(sig.side, Side::Buy);
-        let mom = sig.diagnostic.get("momentum").and_then(|v| v.as_f64()).unwrap();
-        let mom_prev = sig.diagnostic.get("momentum_prev").and_then(|v| v.as_f64()).unwrap();
-        assert!(mom > 0.0 && mom > mom_prev, "momentum {mom} > prev {mom_prev}");
+        let mom = sig
+            .diagnostic
+            .get("momentum")
+            .and_then(|v| v.as_f64())
+            .unwrap();
+        let mom_prev = sig
+            .diagnostic
+            .get("momentum_prev")
+            .and_then(|v| v.as_f64())
+            .unwrap();
+        assert!(
+            mom > 0.0 && mom > mom_prev,
+            "momentum {mom} > prev {mom_prev}"
+        );
     }
 
     #[test]
@@ -305,7 +326,16 @@ mod tests {
         let strat = TtmSqueeze::new(Rules::default());
         // 80 bars of pure squeeze — never releases.
         let bars: Vec<PriceBar> = (0..80)
-            .map(|i| bar(1_700_000_000 + i * 60, "100.00", "100.05", "99.95", "100.00", 1_000_000))
+            .map(|i| {
+                bar(
+                    1_700_000_000 + i * 60,
+                    "100.00",
+                    "100.05",
+                    "99.95",
+                    "100.00",
+                    1_000_000,
+                )
+            })
             .collect();
         assert!(first_long(&bars, &strat).is_none());
     }

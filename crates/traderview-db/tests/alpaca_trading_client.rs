@@ -6,9 +6,7 @@
 
 use rust_decimal::Decimal;
 use std::str::FromStr;
-use traderview_db::alpaca_trading::{
-    AlpacaError, AlpacaTrading, PlaceOrderRequest,
-};
+use traderview_db::alpaca_trading::{AlpacaError, AlpacaTrading, PlaceOrderRequest};
 use uuid::Uuid;
 use wiremock::matchers::{body_json, header, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -106,9 +104,8 @@ async fn place_bracket_market_includes_legs_and_class() {
         .mount(&server)
         .await;
 
-    let req = PlaceOrderRequest::bracket_market(
-        "TSLA", "buy", dec("5"), coid, dec("260"), dec("240"),
-    );
+    let req =
+        PlaceOrderRequest::bracket_market("TSLA", "buy", dec("5"), coid, dec("260"), dec("240"));
     let resp = client.place_order(&req).await.expect("bracket ok");
     assert_eq!(resp.order_class.as_deref(), Some("bracket"));
 }
@@ -128,7 +125,10 @@ async fn place_403_with_buying_power_message_maps_to_insufficient_buying_power()
 
     let req = PlaceOrderRequest::market("MSFT", "buy", dec("100000"), Uuid::new_v4());
     let err = client.place_order(&req).await.expect_err("must error");
-    assert!(matches!(err, AlpacaError::InsufficientBuyingPower), "got {err:?}");
+    assert!(
+        matches!(err, AlpacaError::InsufficientBuyingPower),
+        "got {err:?}"
+    );
 }
 
 #[tokio::test]
@@ -192,7 +192,10 @@ async fn cancel_422_after_terminal_state_maps_to_invalid_request() {
         })))
         .mount(&server)
         .await;
-    let err = client.cancel_order("already-filled").await.expect_err("must error");
+    let err = client
+        .cancel_order("already-filled")
+        .await
+        .expect_err("must error");
     assert!(matches!(err, AlpacaError::InvalidRequest(_)), "got {err:?}");
 }
 

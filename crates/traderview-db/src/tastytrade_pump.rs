@@ -3,11 +3,11 @@
 //! Protocol (per docs.tastytrade + tastytrade-api-js SDK 2026-06):
 //!   Production URL: wss://streamer.tastyworks.com
 //!   Sandbox URL:    wss://streamer.cert.tastyworks.com
-//!   Connect frame:  {"action": "connect", "value": "<auth-token>",
-//!                    "auth-token": "<auth-token>"}
-//!   Subscribe:      {"action": "account-subscribe",
-//!                    "value": ["<acct1>", "<acct2>"],
-//!                    "auth-token": "<auth-token>"}
+//!   Connect frame:  `{"action": "connect", "value": "<auth-token>",
+//!                     "auth-token": "<auth-token>"}`
+//!   Subscribe:      `{"action": "account-subscribe",
+//!                     "value": ["<acct1>", "<acct2>"],
+//!                     "auth-token": "<auth-token>"}`
 //!   Events stream as `{type: "Order"|"AccountBalance"|..., data: {...}}`.
 //!   Fill events carry an `order` payload with id, status, legs,
 //!   executions[]: {fill-price, quantity, fill-type}.
@@ -37,6 +37,12 @@ const STREAMER_SANDBOX: &str = "wss://streamer.cert.tastyworks.com";
 enum PumpError {
     #[error("ws: {0}")]
     Ws(#[from] tokio_tungstenite::tungstenite::Error),
+    /// Reserved for the future session-token expiry path. The match
+    /// arm in `run_pump` already handles it; nothing constructs it
+    /// today because `resolve_token` swallows errors into a unit type,
+    /// but keeping the variant ensures the reconnect loop knows what
+    /// to do once that wiring is plumbed.
+    #[allow(dead_code)]
     #[error("auth failed")]
     AuthFailed,
 }
@@ -89,8 +95,7 @@ async fn resolve_token(env: TastytradeEnv, auth: &Auth) -> Result<String, ()> {
         Auth::UserPass { .. } => {
             // We need a dummy account_number here just to construct
             // the client; the /sessions call doesn't use it.
-            let client =
-                TastytradeTrading::new(env, auth.clone(), "PLACEHOLDER".to_string());
+            let client = TastytradeTrading::new(env, auth.clone(), "PLACEHOLDER".to_string());
             // Force a token by making any cheap authenticated call —
             // get_balances will fail on the placeholder account but
             // still trigger the POST /sessions exchange. We then read
@@ -107,9 +112,11 @@ async fn resolve_token(env: TastytradeEnv, auth: &Auth) -> Result<String, ()> {
             // extract the cached token without exposing it. So we'll
             // re-implement the login inline:
             let (login, password, remember_me) = match auth {
-                Auth::UserPass { login, password, remember_me } => {
-                    (login.clone(), password.clone(), *remember_me)
-                }
+                Auth::UserPass {
+                    login,
+                    password,
+                    remember_me,
+                } => (login.clone(), password.clone(), *remember_me),
                 _ => unreachable!(),
             };
             let base = match env {
@@ -233,19 +240,13 @@ async fn handle_one_event(
 ) -> anyhow::Result<()> {
     // Tastytrade order events carry `type: "Order"` and either a status
     // field on the order body OR an executions[] array carrying the fills.
-    let typ = ev
-        .get("type")
-        .and_then(|x| x.as_str())
-        .unwrap_or_default();
+    let typ = ev.get("type").and_then(|x| x.as_str()).unwrap_or_default();
     if !matches!(typ, "Order" | "OrderFill" | "Fill") {
         return Ok(());
     }
 
     // Locate the order shape — may be at ev.order or at ev directly.
-    let order_obj = ev
-        .get("order")
-        .filter(|v| v.is_object())
-        .unwrap_or(ev);
+    let order_obj = ev.get("order").filter(|v| v.is_object()).unwrap_or(ev);
 
     // We tag every submission via the strategy's client_order_id UUID.
     // Tastytrade stores arbitrary metadata under an opaque key; for now
@@ -255,9 +256,14 @@ async fn handle_one_event(
         .and_then(|x| x.as_i64())
         .map(|n| n.to_string())
         .or_else(|| {
-            order_obj.get("id").and_then(|x| x.as_str()).map(String::from)
+            order_obj
+                .get("id")
+                .and_then(|x| x.as_str())
+                .map(String::from)
         });
-    let Some(boid) = broker_order_id else { return Ok(()); };
+    let Some(boid) = broker_order_id else {
+        return Ok(());
+    };
 
     // Resolve to our algo_orders row by broker_order_id.
     let row: Option<(Uuid, Uuid, Uuid, Uuid, String, String, Decimal)> = sqlx::query_as(
@@ -318,7 +324,9 @@ async fn handle_one_event(
         });
 
     let strategy = crate::algo::get_strategy_by_id(pool, strategy_id).await?;
-    let Some(strategy) = strategy else { return Ok(()); };
+    let Some(strategy) = strategy else {
+        return Ok(());
+    };
 
     let intent = crate::algo_engine::OrderIntent {
         strategy_id,
@@ -374,7 +382,11 @@ pub async fn spawn_pumps_for_active_strategies(
         else {
             continue;
         };
-        let env = if sandbox { TastytradeEnv::Sandbox } else { TastytradeEnv::Live };
+        let env = if sandbox {
+            TastytradeEnv::Sandbox
+        } else {
+            TastytradeEnv::Live
+        };
         // Dedupe in the registry by (user_id, sandbox-bool).
         {
             let mut guard = registry.lock().await;

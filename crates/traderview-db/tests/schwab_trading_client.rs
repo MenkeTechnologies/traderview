@@ -50,18 +50,21 @@ async fn place_market_buy_sends_canonical_json_and_extracts_location_id() {
     Mock::given(method("POST"))
         .and(path("/trader/v1/accounts/ACCT-HASH-1/orders"))
         .and(header("Authorization", "Bearer acc-1"))
-        .and(body_json_string(serde_json::to_string(&serde_json::json!({
-            "orderType": "MARKET",
-            "session": "NORMAL",
-            "duration": "DAY",
-            "orderStrategyType": "SINGLE",
-            "orderLegCollection": [{
-                "instruction": "BUY",
-                "quantity": 10.0,
-                "instrument": { "symbol": "AAPL", "assetType": "EQUITY" },
-                "comment": "algo-abc"
-            }]
-        })).unwrap()))
+        .and(body_json_string(
+            serde_json::to_string(&serde_json::json!({
+                "orderType": "MARKET",
+                "session": "NORMAL",
+                "duration": "DAY",
+                "orderStrategyType": "SINGLE",
+                "orderLegCollection": [{
+                    "instruction": "BUY",
+                    "quantity": 10.0,
+                    "instrument": { "symbol": "AAPL", "assetType": "EQUITY" },
+                    "comment": "algo-abc"
+                }]
+            }))
+            .unwrap(),
+        ))
         .respond_with(
             ResponseTemplate::new(201).insert_header("Location", "/orders/ACCT-HASH-1/9988776655"),
         )
@@ -88,18 +91,21 @@ async fn limit_order_includes_price_field() {
     let (server, client) = server_with_tokens("acc-1", "ref-1").await;
     Mock::given(method("POST"))
         .and(path("/trader/v1/accounts/ACCT-HASH-1/orders"))
-        .and(body_json_string(serde_json::to_string(&serde_json::json!({
-            "orderType": "LIMIT",
-            "session": "NORMAL",
-            "duration": "GOOD_TILL_CANCEL",
-            "orderStrategyType": "SINGLE",
-            "price": 187.5,
-            "orderLegCollection": [{
-                "instruction": "SELL",
-                "quantity": 5.0,
-                "instrument": { "symbol": "AAPL", "assetType": "EQUITY" }
-            }]
-        })).unwrap()))
+        .and(body_json_string(
+            serde_json::to_string(&serde_json::json!({
+                "orderType": "LIMIT",
+                "session": "NORMAL",
+                "duration": "GOOD_TILL_CANCEL",
+                "orderStrategyType": "SINGLE",
+                "price": 187.5,
+                "orderLegCollection": [{
+                    "instruction": "SELL",
+                    "quantity": 5.0,
+                    "instrument": { "symbol": "AAPL", "assetType": "EQUITY" }
+                }]
+            }))
+            .unwrap(),
+        ))
         .respond_with(
             ResponseTemplate::new(201).insert_header("Location", "/orders/ACCT-HASH-1/777"),
         )
@@ -278,7 +284,10 @@ async fn buying_power_403_mapped() {
         comment: None,
     };
     let err = client.place_order(&req).await.unwrap_err();
-    assert!(matches!(err, SchwabError::InsufficientBuyingPower), "got {err:?}");
+    assert!(
+        matches!(err, SchwabError::InsufficientBuyingPower),
+        "got {err:?}"
+    );
 }
 
 #[tokio::test]
@@ -286,47 +295,50 @@ async fn bracket_buy_sends_trigger_with_oco_children() {
     let (server, client) = server_with_tokens("acc-1", "ref-1").await;
     Mock::given(method("POST"))
         .and(path("/trader/v1/accounts/ACCT-HASH-1/orders"))
-        .and(body_json_string(serde_json::to_string(&serde_json::json!({
-            "orderType": "MARKET",
-            "session": "NORMAL",
-            "duration": "DAY",
-            "orderStrategyType": "TRIGGER",
-            "orderLegCollection": [{
-                "instruction": "BUY",
-                "quantity": 10.0,
-                "instrument": { "symbol": "AAPL", "assetType": "EQUITY" },
-                "comment": "algo-bracket"
-            }],
-            "childOrderStrategies": [{
-                "orderStrategyType": "OCO",
-                "childOrderStrategies": [
-                    {
-                        "orderType": "LIMIT",
-                        "session": "NORMAL",
-                        "duration": "DAY",
-                        "orderStrategyType": "SINGLE",
-                        "price": 200.0,
-                        "orderLegCollection": [{
-                            "instruction": "SELL",
-                            "quantity": 10.0,
-                            "instrument": { "symbol": "AAPL", "assetType": "EQUITY" }
-                        }]
-                    },
-                    {
-                        "orderType": "STOP",
-                        "session": "NORMAL",
-                        "duration": "DAY",
-                        "orderStrategyType": "SINGLE",
-                        "stopPrice": 180.0,
-                        "orderLegCollection": [{
-                            "instruction": "SELL",
-                            "quantity": 10.0,
-                            "instrument": { "symbol": "AAPL", "assetType": "EQUITY" }
-                        }]
-                    }
-                ]
-            }]
-        })).unwrap()))
+        .and(body_json_string(
+            serde_json::to_string(&serde_json::json!({
+                "orderType": "MARKET",
+                "session": "NORMAL",
+                "duration": "DAY",
+                "orderStrategyType": "TRIGGER",
+                "orderLegCollection": [{
+                    "instruction": "BUY",
+                    "quantity": 10.0,
+                    "instrument": { "symbol": "AAPL", "assetType": "EQUITY" },
+                    "comment": "algo-bracket"
+                }],
+                "childOrderStrategies": [{
+                    "orderStrategyType": "OCO",
+                    "childOrderStrategies": [
+                        {
+                            "orderType": "LIMIT",
+                            "session": "NORMAL",
+                            "duration": "DAY",
+                            "orderStrategyType": "SINGLE",
+                            "price": 200.0,
+                            "orderLegCollection": [{
+                                "instruction": "SELL",
+                                "quantity": 10.0,
+                                "instrument": { "symbol": "AAPL", "assetType": "EQUITY" }
+                            }]
+                        },
+                        {
+                            "orderType": "STOP",
+                            "session": "NORMAL",
+                            "duration": "DAY",
+                            "orderStrategyType": "SINGLE",
+                            "stopPrice": 180.0,
+                            "orderLegCollection": [{
+                                "instruction": "SELL",
+                                "quantity": 10.0,
+                                "instrument": { "symbol": "AAPL", "assetType": "EQUITY" }
+                            }]
+                        }
+                    ]
+                }]
+            }))
+            .unwrap(),
+        ))
         .respond_with(
             ResponseTemplate::new(201).insert_header("Location", "/orders/ACCT-HASH-1/BRK-1"),
         )
@@ -357,8 +369,12 @@ async fn bracket_short_uses_buy_to_cover_exit() {
     // produces BUY_TO_COVER exits, not SELL.
     Mock::given(method("POST"))
         .and(path("/trader/v1/accounts/ACCT-HASH-1/orders"))
-        .and(wiremock::matchers::body_string_contains("\"instruction\":\"SELL_SHORT\""))
-        .and(wiremock::matchers::body_string_contains("\"instruction\":\"BUY_TO_COVER\""))
+        .and(wiremock::matchers::body_string_contains(
+            "\"instruction\":\"SELL_SHORT\"",
+        ))
+        .and(wiremock::matchers::body_string_contains(
+            "\"instruction\":\"BUY_TO_COVER\"",
+        ))
         .respond_with(
             ResponseTemplate::new(201).insert_header("Location", "/orders/ACCT-HASH-1/BRK-2"),
         )

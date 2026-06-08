@@ -42,10 +42,14 @@ impl Default for Rules {
 }
 
 #[derive(Debug, Clone)]
-pub struct VwapScalp { pub rules: Rules }
+pub struct VwapScalp {
+    pub rules: Rules,
+}
 
 impl VwapScalp {
-    pub fn new(rules: Rules) -> Self { Self { rules } }
+    pub fn new(rules: Rules) -> Self {
+        Self { rules }
+    }
     pub fn from_json(entry_rules: &serde_json::Value) -> Self {
         let rules = serde_json::from_value::<Rules>(entry_rules.clone()).unwrap_or_default();
         Self { rules }
@@ -67,9 +71,13 @@ fn session_bars(bars: &[PriceBar]) -> Vec<session_vwap::Bar> {
 }
 
 impl Strategy for VwapScalp {
-    fn kind(&self) -> StrategyKind { StrategyKind::VwapScalp }
+    fn kind(&self) -> StrategyKind {
+        StrategyKind::VwapScalp
+    }
 
-    fn min_bars(&self) -> usize { self.rules.atr_period.max(20) + 2 }
+    fn min_bars(&self) -> usize {
+        self.rules.atr_period.max(20) + 2
+    }
 
     fn evaluate_entry(&self, bars: &[PriceBar], side_mode: SideMode) -> Option<EntrySignal> {
         if bars.len() < self.min_bars() {
@@ -86,11 +94,15 @@ impl Strategy for VwapScalp {
         let close_now = closes[i];
         let close_prev = closes[prev];
         let atr_now = atr.get(i).copied().flatten()?;
-        if atr_now <= 0.0 { return None; }
+        if atr_now <= 0.0 {
+            return None;
+        }
         let vwap_now = svw.vwap.get(i).copied().flatten()?;
         let upper_2 = svw.upper_2.get(i).copied().flatten()?;
         let sigma = ((upper_2 - vwap_now) / 2.0).abs();
-        if sigma <= 0.0 { return None; }
+        if sigma <= 0.0 {
+            return None;
+        }
         let z = (close_now - vwap_now) / sigma;
 
         let want_long = matches!(side_mode, SideMode::Long | SideMode::Both)
@@ -284,7 +296,16 @@ mod tests {
     fn entry_blocked_on_flat_window() {
         let strat = VwapScalp::new(Rules::default());
         let bars: Vec<PriceBar> = (0..60)
-            .map(|i| bar(1_700_000_000 + i * 60, "100.00", "100.05", "99.95", "100.00", 1_000_000))
+            .map(|i| {
+                bar(
+                    1_700_000_000 + i * 60,
+                    "100.00",
+                    "100.05",
+                    "99.95",
+                    "100.00",
+                    1_000_000,
+                )
+            })
             .collect();
         assert!(first_long(&bars, &strat).is_none());
     }

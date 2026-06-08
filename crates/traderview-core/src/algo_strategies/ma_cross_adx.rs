@@ -5,10 +5,10 @@
 //! sideways chop where MA crosses produce a string of small losers).
 //!
 //! Entry:
-//!   long  on  EMA(fast) crosses above EMA(slow) AND ADX[i] > adx_min
-//!             AND plus_di[i] > minus_di[i] (directional confirmation)
-//!   short on  EMA(fast) crosses below EMA(slow) AND ADX[i] > adx_min
-//!             AND minus_di[i] > plus_di[i]
+//!   long  on  EMA(fast) crosses above EMA(slow) AND `ADX[i]` > adx_min
+//!             AND `plus_di[i]` > `minus_di[i]` (directional confirmation)
+//!   short on  EMA(fast) crosses below EMA(slow) AND `ADX[i]` > adx_min
+//!             AND `minus_di[i]` > `plus_di[i]`
 //!
 //! Stop:   ATR-multiple below (long) / above (short) entry.
 //! Target: ATR-multiple beyond entry. Tunable via Rules.
@@ -59,7 +59,9 @@ pub struct MaCrossAdx {
 }
 
 impl MaCrossAdx {
-    pub fn new(rules: Rules) -> Self { Self { rules } }
+    pub fn new(rules: Rules) -> Self {
+        Self { rules }
+    }
     pub fn from_json(entry_rules: &serde_json::Value) -> Self {
         let rules = serde_json::from_value::<Rules>(entry_rules.clone()).unwrap_or_default();
         Self { rules }
@@ -67,7 +69,9 @@ impl MaCrossAdx {
 }
 
 impl Strategy for MaCrossAdx {
-    fn kind(&self) -> StrategyKind { StrategyKind::MaCrossAdx }
+    fn kind(&self) -> StrategyKind {
+        StrategyKind::MaCrossAdx
+    }
 
     fn min_bars(&self) -> usize {
         self.rules.slow_period.max(self.rules.adx_period * 2) + 3
@@ -103,9 +107,8 @@ impl Strategy for MaCrossAdx {
         let cross_up = fast_prev <= slow_prev && fast_now > slow_now;
         let cross_down = fast_prev >= slow_prev && fast_now < slow_now;
 
-        let want_long = matches!(side_mode, SideMode::Long | SideMode::Both)
-            && cross_up
-            && plus_di > minus_di;
+        let want_long =
+            matches!(side_mode, SideMode::Long | SideMode::Both) && cross_up && plus_di > minus_di;
         let want_short = matches!(side_mode, SideMode::Short | SideMode::Both)
             && cross_down
             && minus_di > plus_di;

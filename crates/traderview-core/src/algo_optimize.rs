@@ -46,7 +46,11 @@ impl OptimizeMetric {
             Self::TotalReturn => r.summary.total_return_pct,
             Self::ProfitFactor => {
                 let pf = r.summary.profit_factor;
-                if pf.is_finite() { pf } else { 0.0 }
+                if pf.is_finite() {
+                    pf
+                } else {
+                    0.0
+                }
             }
             Self::AvgR => r.summary.avg_r,
             Self::ReturnMinusDd => r.summary.total_return_pct - r.summary.max_drawdown_pct,
@@ -243,10 +247,7 @@ mod tests {
         let bars = uptrend_window();
         let baseline = serde_json::json!({});
         let mut grid = serde_json::Map::new();
-        grid.insert(
-            "atr_period".into(),
-            serde_json::json!([10, 14]),
-        );
+        grid.insert("atr_period".into(), serde_json::json!([10, 14]));
         grid.insert("multiplier".into(), serde_json::json!([2.0, 3.0, 4.0]));
         let res = run(
             &bars,
@@ -353,7 +354,10 @@ mod tests {
         .expect("optimize");
         for entry in &res.top {
             assert_eq!(
-                entry.entry_rules.get("atr_take_profit_mult").and_then(|v| v.as_f64()),
+                entry
+                    .entry_rules
+                    .get("atr_take_profit_mult")
+                    .and_then(|v| v.as_f64()),
                 Some(5.0),
                 "baseline key must survive the merge"
             );

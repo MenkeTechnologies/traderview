@@ -51,10 +51,14 @@ impl Default for Rules {
 }
 
 #[derive(Debug, Clone)]
-pub struct Pairs { pub rules: Rules }
+pub struct Pairs {
+    pub rules: Rules,
+}
 
 impl Pairs {
-    pub fn new(rules: Rules) -> Self { Self { rules } }
+    pub fn new(rules: Rules) -> Self {
+        Self { rules }
+    }
     pub fn from_json(entry_rules: &serde_json::Value) -> Self {
         let rules = serde_json::from_value::<Rules>(entry_rules.clone()).unwrap_or_default();
         Self { rules }
@@ -66,31 +70,44 @@ fn ln_closes(bars: &[PriceBar]) -> Vec<f64> {
     bars.iter()
         .map(|b| {
             let p = b.close.to_f64().unwrap_or(0.0);
-            if p > 0.0 { p.ln() } else { 0.0 }
+            if p > 0.0 {
+                p.ln()
+            } else {
+                0.0
+            }
         })
         .collect()
 }
 
 fn rolling_z(spread: &[f64], lookback: usize) -> Option<f64> {
-    if spread.len() < lookback + 1 { return None; }
+    if spread.len() < lookback + 1 {
+        return None;
+    }
     let i = spread.len() - 1;
     let window = &spread[i + 1 - lookback..i + 1];
     let mean = window.iter().sum::<f64>() / lookback as f64;
     let var = window.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / lookback as f64;
     let sd = var.sqrt();
-    if sd <= 0.0 { return None; }
+    if sd <= 0.0 {
+        return None;
+    }
     Some((spread[i] - mean) / sd)
 }
 
 impl Strategy for Pairs {
-    fn kind(&self) -> StrategyKind { StrategyKind::Pairs }
+    fn kind(&self) -> StrategyKind {
+        StrategyKind::Pairs
+    }
 
     fn min_bars(&self) -> usize {
         self.rules.lookback.max(self.rules.atr_period + 1) + 2
     }
 
     fn required_symbols(&self) -> Option<Vec<String>> {
-        Some(vec![self.rules.symbol_a.clone(), self.rules.symbol_b.clone()])
+        Some(vec![
+            self.rules.symbol_a.clone(),
+            self.rules.symbol_b.clone(),
+        ])
     }
 
     fn evaluate_entry(&self, _bars: &[PriceBar], _side_mode: SideMode) -> Option<EntrySignal> {
@@ -106,11 +123,16 @@ impl Strategy for Pairs {
         let bars_a = bars_by_symbol.get(&self.rules.symbol_a)?;
         let bars_b = bars_by_symbol.get(&self.rules.symbol_b)?;
         let n = bars_a.len().min(bars_b.len());
-        if n < self.min_bars() { return None; }
+        if n < self.min_bars() {
+            return None;
+        }
         let la = &ln_closes(&bars_a[bars_a.len() - n..]);
         let lb = &ln_closes(&bars_b[bars_b.len() - n..]);
-        let spread: Vec<f64> =
-            la.iter().zip(lb.iter()).map(|(a, b)| a - self.rules.hedge_ratio * b).collect();
+        let spread: Vec<f64> = la
+            .iter()
+            .zip(lb.iter())
+            .map(|(a, b)| a - self.rules.hedge_ratio * b)
+            .collect();
 
         let z = rolling_z(&spread, self.rules.lookback)?;
         let closes_a = indicators::closes(&bars_a[bars_a.len() - n..]);
@@ -119,16 +141,18 @@ impl Strategy for Pairs {
         let atr = indicators::atr(&highs_a, &lows_a, &closes_a, self.rules.atr_period);
         let i = n - 1;
         let atr_now = atr.get(i).copied().flatten()?;
-        if atr_now <= 0.0 { return None; }
+        if atr_now <= 0.0 {
+            return None;
+        }
         let close_a = closes_a[i];
 
         // z < -z_entry → leg A is UNDERPERFORMING vs leg B → long A.
         // z > +z_entry → leg A is OVERPERFORMING → short A (or no-op if
         // SideMode::Long).
-        let want_long = matches!(side_mode, SideMode::Long | SideMode::Both)
-            && z <= -self.rules.z_entry;
-        let want_short = matches!(side_mode, SideMode::Short | SideMode::Both)
-            && z >= self.rules.z_entry;
+        let want_long =
+            matches!(side_mode, SideMode::Long | SideMode::Both) && z <= -self.rules.z_entry;
+        let want_short =
+            matches!(side_mode, SideMode::Short | SideMode::Both) && z >= self.rules.z_entry;
 
         if want_long {
             let stop = close_a - self.rules.atr_stop_mult * atr_now;
@@ -250,7 +274,11 @@ mod tests {
             .evaluate_entry_multi(&map, SideMode::Long)
             .expect("4σ negative spread → long A");
         assert_eq!(sig.side, Side::Buy);
-        let z = sig.diagnostic.get("spread_z").and_then(|v| v.as_f64()).unwrap();
+        let z = sig
+            .diagnostic
+            .get("spread_z")
+            .and_then(|v| v.as_f64())
+            .unwrap();
         assert!(z <= -2.0, "spread_z {z} should be <= -2");
     }
 

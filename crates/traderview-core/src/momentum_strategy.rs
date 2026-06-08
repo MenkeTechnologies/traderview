@@ -73,7 +73,6 @@ impl Default for Rules {
     }
 }
 
-
 #[derive(Debug, Clone, Serialize)]
 pub struct EntrySignal {
     pub side: Side,
@@ -244,34 +243,70 @@ pub fn evaluate_exit(
             // ATR trailing stop anchored to the highest high since entry.
             let atr_stop = anchor_high - rules.atr_stop_mult * atr_now;
             if lows[i] <= atr_stop {
-                return Some(ExitSignal { reason: "atr_stop", exit_price: atr_stop, trigger_index: i });
+                return Some(ExitSignal {
+                    reason: "atr_stop",
+                    exit_price: atr_stop,
+                    trigger_index: i,
+                });
             }
             if close_now < es_now {
-                return Some(ExitSignal { reason: "ema_loss", exit_price: close_now, trigger_index: i });
+                return Some(ExitSignal {
+                    reason: "ema_loss",
+                    exit_price: close_now,
+                    trigger_index: i,
+                });
             }
             if rsi_now < rules.rsi_long_min {
-                return Some(ExitSignal { reason: "rsi_loss", exit_price: close_now, trigger_index: i });
+                return Some(ExitSignal {
+                    reason: "rsi_loss",
+                    exit_price: close_now,
+                    trigger_index: i,
+                });
             }
-            if let (Some(mn), Some(mp), Some(sn), Some(sp)) = (macd_now, macd_prev, sig_now, sig_prev) {
+            if let (Some(mn), Some(mp), Some(sn), Some(sp)) =
+                (macd_now, macd_prev, sig_now, sig_prev)
+            {
                 if mp >= sp && mn < sn {
-                    return Some(ExitSignal { reason: "macd_bearish", exit_price: close_now, trigger_index: i });
+                    return Some(ExitSignal {
+                        reason: "macd_bearish",
+                        exit_price: close_now,
+                        trigger_index: i,
+                    });
                 }
             }
         }
         Side::Sell => {
             let atr_stop = anchor_low + rules.atr_stop_mult * atr_now;
             if highs[i] >= atr_stop {
-                return Some(ExitSignal { reason: "atr_stop", exit_price: atr_stop, trigger_index: i });
+                return Some(ExitSignal {
+                    reason: "atr_stop",
+                    exit_price: atr_stop,
+                    trigger_index: i,
+                });
             }
             if close_now > es_now {
-                return Some(ExitSignal { reason: "ema_loss", exit_price: close_now, trigger_index: i });
+                return Some(ExitSignal {
+                    reason: "ema_loss",
+                    exit_price: close_now,
+                    trigger_index: i,
+                });
             }
             if rsi_now > rules.rsi_short_max {
-                return Some(ExitSignal { reason: "rsi_loss", exit_price: close_now, trigger_index: i });
+                return Some(ExitSignal {
+                    reason: "rsi_loss",
+                    exit_price: close_now,
+                    trigger_index: i,
+                });
             }
-            if let (Some(mn), Some(mp), Some(sn), Some(sp)) = (macd_now, macd_prev, sig_now, sig_prev) {
+            if let (Some(mn), Some(mp), Some(sn), Some(sp)) =
+                (macd_now, macd_prev, sig_now, sig_prev)
+            {
                 if mp <= sp && mn > sn {
-                    return Some(ExitSignal { reason: "macd_bearish", exit_price: close_now, trigger_index: i });
+                    return Some(ExitSignal {
+                        reason: "macd_bearish",
+                        exit_price: close_now,
+                        trigger_index: i,
+                    });
                 }
             }
         }
@@ -282,13 +317,7 @@ pub fn evaluate_exit(
 /// Position sizing — risk-first, capped by max_pos_pct.
 /// Returns the integer share count to trade (rounded down) or 0 if
 /// inputs make a single-share trade exceed the cap.
-pub fn size_shares(
-    equity: f64,
-    entry_price: f64,
-    atr: f64,
-    sizing: &Sizing,
-    rules: &Rules,
-) -> u64 {
+pub fn size_shares(equity: f64, entry_price: f64, atr: f64, sizing: &Sizing, rules: &Rules) -> u64 {
     if entry_price <= 0.0 || atr <= 0.0 || equity <= 0.0 {
         return 0;
     }
@@ -421,11 +450,20 @@ mod tests {
         assert_eq!(sig.side, Side::Buy);
         assert!(sig.stop_price < sig.entry_price);
         assert!(sig.take_profit_price > sig.entry_price);
-        assert!(sig.diagnostic.rvol >= 1.5, "rvol {} >= 1.5", sig.diagnostic.rvol);
-        assert!(sig.diagnostic.roc > 0.02, "roc {} > 0.02", sig.diagnostic.roc);
+        assert!(
+            sig.diagnostic.rvol >= 1.5,
+            "rvol {} >= 1.5",
+            sig.diagnostic.rvol
+        );
+        assert!(
+            sig.diagnostic.roc > 0.02,
+            "roc {} > 0.02",
+            sig.diagnostic.roc
+        );
         assert!(
             sig.diagnostic.rsi >= 50.0 && sig.diagnostic.rsi <= 70.0,
-            "rsi {} ∈ [50,70]", sig.diagnostic.rsi,
+            "rsi {} ∈ [50,70]",
+            sig.diagnostic.rsi,
         );
     }
 
@@ -468,7 +506,10 @@ mod tests {
             100_000.0,
             100.0,
             1.0,
-            &Sizing { risk_pct_per_trade: 0.01, max_pos_pct: 0.20 },
+            &Sizing {
+                risk_pct_per_trade: 0.01,
+                max_pos_pct: 0.20,
+            },
             &Rules::default(),
         );
         assert_eq!(qty, 200);
@@ -476,9 +517,18 @@ mod tests {
 
     #[test]
     fn size_shares_returns_zero_on_degenerate_inputs() {
-        assert_eq!(size_shares(0.0, 100.0, 1.0, &Sizing::default(), &Rules::default()), 0);
-        assert_eq!(size_shares(10_000.0, 0.0, 1.0, &Sizing::default(), &Rules::default()), 0);
-        assert_eq!(size_shares(10_000.0, 100.0, 0.0, &Sizing::default(), &Rules::default()), 0);
+        assert_eq!(
+            size_shares(0.0, 100.0, 1.0, &Sizing::default(), &Rules::default()),
+            0
+        );
+        assert_eq!(
+            size_shares(10_000.0, 0.0, 1.0, &Sizing::default(), &Rules::default()),
+            0
+        );
+        assert_eq!(
+            size_shares(10_000.0, 100.0, 0.0, &Sizing::default(), &Rules::default()),
+            0
+        );
     }
 
     #[test]

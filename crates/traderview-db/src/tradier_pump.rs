@@ -45,12 +45,7 @@ struct SessionInner {
 
 /// Reconnect loop. Spawn-and-forget. Refreshes the session before each
 /// reconnect so the 5-minute TTL never expires mid-stream.
-pub async fn run_pump(
-    pool: PgPool,
-    env: TradierEnv,
-    token: String,
-    event_sink: Option<EventSink>,
-) {
+pub async fn run_pump(pool: PgPool, env: TradierEnv, token: String, event_sink: Option<EventSink>) {
     let mut backoff = Duration::from_secs(1);
     const MAX_BACKOFF: Duration = Duration::from_secs(60);
     loop {
@@ -99,7 +94,10 @@ async fn run_session_once(
         if status.as_u16() == 401 {
             return Err(TradierError::AuthFailed);
         }
-        return Err(TradierError::Http { status: status.as_u16(), body });
+        return Err(TradierError::Http {
+            status: status.as_u16(),
+            body,
+        });
     }
     let SessionResponse { stream } = serde_json::from_str(&body)?;
     let ws_url = stream.url.clone();
@@ -214,7 +212,9 @@ async fn handle_one_event(
     };
 
     let strategy = crate::algo::get_strategy_by_id(pool, strategy_id).await?;
-    let Some(strategy) = strategy else { return Ok(()); };
+    let Some(strategy) = strategy else {
+        return Ok(());
+    };
 
     let f64_to_dec = |x: &serde_json::Value| -> Option<Decimal> {
         x.as_f64().and_then(|f| Decimal::try_from(f).ok())
@@ -250,7 +250,10 @@ async fn handle_one_event(
         qty: fill_qty,
         fee: Decimal::zero(),
         executed_at: Utc::now(),
-        broker_fill_id: ev.get("order_id").and_then(|x| x.as_i64()).map(|n| n.to_string()),
+        broker_fill_id: ev
+            .get("order_id")
+            .and_then(|x| x.as_i64())
+            .map(|n| n.to_string()),
     };
     crate::algo_engine::record_fill(pool, &strategy, &intent, order_id, &fill, event_sink)
         .await

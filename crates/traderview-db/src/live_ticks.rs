@@ -47,9 +47,9 @@ pub const ALPACA_WS_CRYPTO: &str = "wss://stream.data.alpaca.markets/v1beta3/cry
 /// Liberal; false-positives are harmless (Alpaca returns "symbol not
 /// found" for unknown crypto codes and the WS keeps running).
 const CRYPTO_PREFIXES: &[&str] = &[
-    "BTC", "ETH", "LTC", "BCH", "DOGE", "SOL", "AVAX", "MATIC", "ADA", "DOT", "XRP", "LINK",
-    "UNI", "SHIB", "AAVE", "ALGO", "ATOM", "BAT", "COMP", "CRV", "GRT", "MKR", "PAXG", "SUSHI",
-    "TRX", "XLM", "XTZ", "YFI", "ZRX",
+    "BTC", "ETH", "LTC", "BCH", "DOGE", "SOL", "AVAX", "MATIC", "ADA", "DOT", "XRP", "LINK", "UNI",
+    "SHIB", "AAVE", "ALGO", "ATOM", "BAT", "COMP", "CRV", "GRT", "MKR", "PAXG", "SUSHI", "TRX",
+    "XLM", "XTZ", "YFI", "ZRX",
 ];
 
 fn is_crypto_symbol(sym: &str) -> bool {
@@ -58,7 +58,7 @@ fn is_crypto_symbol(sym: &str) -> bool {
         return false;
     }
     let prefix = &upper[..upper.len() - 3];
-    CRYPTO_PREFIXES.iter().any(|p| *p == prefix)
+    CRYPTO_PREFIXES.contains(&prefix)
 }
 const MAX_SYMS_PER_CONN: usize = 25;
 /// Polygon's WS can fan a single connection across thousands of
@@ -238,11 +238,7 @@ impl LiveTickStore {
     /// is governed by `set_alpaca_use_sip` — flipping that does NOT
     /// restart workers automatically, callers (settings POST handler)
     /// trigger `restart_workers()` themselves once both setters land.
-    pub async fn set_alpaca_creds(
-        &self,
-        key_id: impl Into<String>,
-        secret: impl Into<String>,
-    ) {
+    pub async fn set_alpaca_creds(&self, key_id: impl Into<String>, secret: impl Into<String>) {
         *self.alpaca_creds.write().await = Some((key_id.into(), secret.into()));
     }
 
@@ -379,6 +375,7 @@ impl LiveTickStore {
     ///   2. Polygon (~$199/mo Advanced) — full CTA/UTP, switch up here
     ///      when Alpaca's symbol coverage / latency isn't enough.
     ///   3. Finnhub (aggregate, free 60 calls/min) — last-resort fallback.
+    ///
     /// Skips entirely when no provider key is configured.
     async fn spawn_workers(&self, symbols: Vec<String>) -> anyhow::Result<()> {
         // 1. Alpaca — cheapest real-time SIP at $99/mo (Algo Trader+).
@@ -389,13 +386,9 @@ impl LiveTickStore {
         //    US equity market open.
         if let Some((id, secret)) = self.alpaca_creds.read().await.clone() {
             let use_sip = self.alpaca_use_sip.load(Ordering::Acquire);
-            let (crypto, stocks): (Vec<String>, Vec<String>) = symbols
-                .into_iter()
-                .partition(|s| is_crypto_symbol(s));
-            for chunk in stocks
-                .chunks(ALPACA_MAX_SYMS_PER_CONN)
-                .map(|c| c.to_vec())
-            {
+            let (crypto, stocks): (Vec<String>, Vec<String>) =
+                symbols.into_iter().partition(|s| is_crypto_symbol(s));
+            for chunk in stocks.chunks(ALPACA_MAX_SYMS_PER_CONN).map(|c| c.to_vec()) {
                 let store = self.clone();
                 let id = id.clone();
                 let secret = secret.clone();
@@ -403,10 +396,7 @@ impl LiveTickStore {
                     store.run_alpaca_worker(id, secret, use_sip, chunk).await;
                 });
             }
-            for chunk in crypto
-                .chunks(ALPACA_MAX_SYMS_PER_CONN)
-                .map(|c| c.to_vec())
-            {
+            for chunk in crypto.chunks(ALPACA_MAX_SYMS_PER_CONN).map(|c| c.to_vec()) {
                 let store = self.clone();
                 let id = id.clone();
                 let secret = secret.clone();
@@ -629,7 +619,11 @@ impl LiveTickStore {
         use_sip: bool,
         symbols: &[String],
     ) -> anyhow::Result<()> {
-        let url = if use_sip { ALPACA_WS_SIP } else { ALPACA_WS_IEX };
+        let url = if use_sip {
+            ALPACA_WS_SIP
+        } else {
+            ALPACA_WS_IEX
+        };
         let (ws, _) = tokio_tungstenite::connect_async(url).await?;
         let (mut tx, mut rx) = ws.split();
         // 1. Auth.
@@ -658,7 +652,9 @@ impl LiveTickStore {
                         Ok(v) => v,
                         Err(_) => continue,
                     };
-                    let Some(events) = arr.as_array() else { continue };
+                    let Some(events) = arr.as_array() else {
+                        continue;
+                    };
                     let feed_name = if use_sip { "sip" } else { "iex" };
                     for ev in events {
                         let kind = ev.get("T").and_then(|v| v.as_str()).unwrap_or("");
@@ -696,8 +692,7 @@ impl LiveTickStore {
                             continue;
                         }
                         if kind == "success"
-                            && ev.get("msg").and_then(|v| v.as_str())
-                                == Some("authenticated")
+                            && ev.get("msg").and_then(|v| v.as_str()) == Some("authenticated")
                         {
                             self.record_alpaca_auth(true, feed_name).await;
                             continue;
@@ -750,12 +745,7 @@ impl LiveTickStore {
     /// confirm the wire-up while US equities are closed. Auth +
     /// subscribe frames mirror the equities worker; the only delta is
     /// the endpoint URL.
-    async fn run_alpaca_crypto_worker(
-        self,
-        key_id: String,
-        secret: String,
-        symbols: Vec<String>,
-    ) {
+    async fn run_alpaca_crypto_worker(self, key_id: String, secret: String, symbols: Vec<String>) {
         loop {
             match self
                 .run_alpaca_crypto_once(&key_id, &secret, &symbols)
@@ -798,7 +788,9 @@ impl LiveTickStore {
                         Ok(v) => v,
                         Err(_) => continue,
                     };
-                    let Some(events) = arr.as_array() else { continue };
+                    let Some(events) = arr.as_array() else {
+                        continue;
+                    };
                     for ev in events {
                         let kind = ev.get("T").and_then(|v| v.as_str()).unwrap_or("");
                         if kind == "error" {
@@ -822,8 +814,7 @@ impl LiveTickStore {
                             continue;
                         }
                         if kind == "success"
-                            && ev.get("msg").and_then(|v| v.as_str())
-                                == Some("authenticated")
+                            && ev.get("msg").and_then(|v| v.as_str()) == Some("authenticated")
                         {
                             self.record_alpaca_auth(true, "crypto").await;
                             continue;
@@ -912,7 +903,9 @@ impl LiveTickStore {
                         Ok(v) => v,
                         Err(_) => continue,
                     };
-                    let Some(events) = arr.as_array() else { continue };
+                    let Some(events) = arr.as_array() else {
+                        continue;
+                    };
                     for ev in events {
                         if ev.get("ev").and_then(|v| v.as_str()) != Some("T") {
                             // Could be a status, auth, or error frame;

@@ -23,8 +23,7 @@ impl Momentum {
     /// Decode the strategy's `entry_rules` JSONB column; missing fields
     /// fall back to `Rules::default()`.
     pub fn from_json(entry_rules: &serde_json::Value) -> Self {
-        let rules = serde_json::from_value::<Rules>(entry_rules.clone())
-            .unwrap_or_default();
+        let rules = serde_json::from_value::<Rules>(entry_rules.clone()).unwrap_or_default();
         Self { rules }
     }
 }

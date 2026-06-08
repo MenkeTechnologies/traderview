@@ -27,7 +27,7 @@ pub struct AlgoStrategy {
     pub user_id: Uuid,
     pub name: String,
     pub enabled: bool,
-    pub timeframe: String, // 'sec10' | 'min1'
+    pub timeframe: String,     // 'sec10' | 'min1'
     pub universe_mode: String, // 'watchlist' | 'autoscan'
     pub watchlist_id: Option<Uuid>,
     pub autoscan_top_n: i32,
@@ -89,12 +89,24 @@ pub struct AlgoStrategyInput {
     pub broker_mode: String,
 }
 
-fn default_timeframe() -> String { "min1".into() }
-fn default_universe_mode() -> String { "watchlist".into() }
-fn default_autoscan_top_n() -> i32 { 25 }
-fn default_side_mode() -> String { "long".into() }
-fn default_broker_mode() -> String { "internal_sim".into() }
-fn default_strategy_type() -> String { "momentum".into() }
+fn default_timeframe() -> String {
+    "min1".into()
+}
+fn default_universe_mode() -> String {
+    "watchlist".into()
+}
+fn default_autoscan_top_n() -> i32 {
+    25
+}
+fn default_side_mode() -> String {
+    "long".into()
+}
+fn default_broker_mode() -> String {
+    "internal_sim".into()
+}
+fn default_strategy_type() -> String {
+    "momentum".into()
+}
 
 #[derive(Debug, Clone, Serialize, sqlx::FromRow)]
 pub struct AlgoRun {
@@ -148,7 +160,9 @@ pub struct AlgoOrderInsert {
     pub raw_request: Option<Json>,
 }
 
-fn default_order_class() -> String { "simple".into() }
+fn default_order_class() -> String {
+    "simple".into()
+}
 
 #[derive(Debug, Clone, Serialize, sqlx::FromRow)]
 pub struct AlgoFill {
@@ -214,10 +228,7 @@ pub async fn list_active_strategies(pool: &PgPool) -> anyhow::Result<Vec<AlgoStr
 /// pumps (Alpaca trade_updates, scheduled runner) that already know
 /// the strategy_id is valid — they got it from a FK-linked row. Do not
 /// expose to HTTP routes; use `get_strategy(pool, user_id, id)` there.
-pub async fn get_strategy_by_id(
-    pool: &PgPool,
-    id: Uuid,
-) -> anyhow::Result<Option<AlgoStrategy>> {
+pub async fn get_strategy_by_id(pool: &PgPool, id: Uuid) -> anyhow::Result<Option<AlgoStrategy>> {
     Ok(
         sqlx::query_as::<_, AlgoStrategy>("SELECT * FROM algo_strategies WHERE id = $1")
             .bind(id)
@@ -331,13 +342,12 @@ pub async fn set_kill_switch(
 ) -> anyhow::Result<Option<AlgoStrategy>> {
     let mut tx = pool.begin().await?;
 
-    let current: Option<AlgoStrategy> = sqlx::query_as(
-        "SELECT * FROM algo_strategies WHERE id = $1 AND user_id = $2 FOR UPDATE",
-    )
-    .bind(strategy_id)
-    .bind(user_id)
-    .fetch_optional(&mut *tx)
-    .await?;
+    let current: Option<AlgoStrategy> =
+        sqlx::query_as("SELECT * FROM algo_strategies WHERE id = $1 AND user_id = $2 FOR UPDATE")
+            .bind(strategy_id)
+            .bind(user_id)
+            .fetch_optional(&mut *tx)
+            .await?;
 
     let Some(current) = current else {
         tx.rollback().await.ok();
@@ -419,12 +429,12 @@ pub async fn kill_switch_history(
 // ─── runs ───────────────────────────────────────────────────────────────────
 
 pub async fn start_run(pool: &PgPool, strategy_id: Uuid) -> anyhow::Result<AlgoRun> {
-    Ok(sqlx::query_as::<_, AlgoRun>(
-        "INSERT INTO algo_runs (strategy_id) VALUES ($1) RETURNING *",
+    Ok(
+        sqlx::query_as::<_, AlgoRun>("INSERT INTO algo_runs (strategy_id) VALUES ($1) RETURNING *")
+            .bind(strategy_id)
+            .fetch_one(pool)
+            .await?,
     )
-    .bind(strategy_id)
-    .fetch_one(pool)
-    .await?)
 }
 
 pub async fn stop_run(
@@ -449,10 +459,7 @@ pub async fn stop_run(
     .await?)
 }
 
-pub async fn get_open_run(
-    pool: &PgPool,
-    strategy_id: Uuid,
-) -> anyhow::Result<Option<AlgoRun>> {
+pub async fn get_open_run(pool: &PgPool, strategy_id: Uuid) -> anyhow::Result<Option<AlgoRun>> {
     Ok(sqlx::query_as::<_, AlgoRun>(
         "SELECT * FROM algo_runs
           WHERE strategy_id = $1 AND stopped_at IS NULL
@@ -501,18 +508,12 @@ pub async fn increment_run_counter(
     Ok(())
 }
 
-pub async fn add_realized_pnl(
-    pool: &PgPool,
-    run_id: Uuid,
-    delta: Decimal,
-) -> anyhow::Result<()> {
-    sqlx::query(
-        "UPDATE algo_runs SET pnl_realized = pnl_realized + $2 WHERE id = $1",
-    )
-    .bind(run_id)
-    .bind(delta)
-    .execute(pool)
-    .await?;
+pub async fn add_realized_pnl(pool: &PgPool, run_id: Uuid, delta: Decimal) -> anyhow::Result<()> {
+    sqlx::query("UPDATE algo_runs SET pnl_realized = pnl_realized + $2 WHERE id = $1")
+        .bind(run_id)
+        .bind(delta)
+        .execute(pool)
+        .await?;
     Ok(())
 }
 
@@ -629,10 +630,7 @@ pub async fn insert_fill(pool: &PgPool, insert: AlgoFillInsert) -> anyhow::Resul
     .await?)
 }
 
-pub async fn list_fills(
-    pool: &PgPool,
-    order_id: Uuid,
-) -> anyhow::Result<Vec<AlgoFill>> {
+pub async fn list_fills(pool: &PgPool, order_id: Uuid) -> anyhow::Result<Vec<AlgoFill>> {
     Ok(sqlx::query_as::<_, AlgoFill>(
         "SELECT * FROM algo_fills WHERE order_id = $1 ORDER BY filled_at DESC",
     )
@@ -754,14 +752,14 @@ pub async fn delete_backtest(
     user_id: Uuid,
     backtest_id: Uuid,
 ) -> anyhow::Result<u64> {
-    Ok(sqlx::query(
-        "DELETE FROM algo_backtests WHERE id = $1 AND user_id = $2",
+    Ok(
+        sqlx::query("DELETE FROM algo_backtests WHERE id = $1 AND user_id = $2")
+            .bind(backtest_id)
+            .bind(user_id)
+            .execute(pool)
+            .await?
+            .rows_affected(),
     )
-    .bind(backtest_id)
-    .bind(user_id)
-    .execute(pool)
-    .await?
-    .rows_affected())
 }
 
 // ─── live metrics: rollup for the dashboard tab ─────────────────────────────
@@ -804,13 +802,12 @@ pub async fn strategy_metrics(
 ) -> anyhow::Result<Option<StrategyMetrics>> {
     // Authorization: confirm the strategy belongs to this user before
     // exposing aggregate P&L numbers.
-    let owned: Option<(Uuid,)> = sqlx::query_as(
-        "SELECT id FROM algo_strategies WHERE id = $1 AND user_id = $2",
-    )
-    .bind(strategy_id)
-    .bind(user_id)
-    .fetch_optional(pool)
-    .await?;
+    let owned: Option<(Uuid,)> =
+        sqlx::query_as("SELECT id FROM algo_strategies WHERE id = $1 AND user_id = $2")
+            .bind(strategy_id)
+            .bind(user_id)
+            .fetch_optional(pool)
+            .await?;
     if owned.is_none() {
         return Ok(None);
     }

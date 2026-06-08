@@ -151,21 +151,33 @@ pub fn from_kind(
 ) -> Result<Box<dyn Strategy>, FactoryError> {
     match kind {
         "momentum" => Ok(Box::new(momentum::Momentum::from_json(entry_rules))),
-        "mean_reversion" => Ok(Box::new(mean_reversion::MeanReversion::from_json(entry_rules))),
+        "mean_reversion" => Ok(Box::new(mean_reversion::MeanReversion::from_json(
+            entry_rules,
+        ))),
         "orb" => Ok(Box::new(orb::Orb::from_json(entry_rules))),
-        "donchian_trend" => Ok(Box::new(donchian_trend::DonchianTrend::from_json(entry_rules))),
+        "donchian_trend" => Ok(Box::new(donchian_trend::DonchianTrend::from_json(
+            entry_rules,
+        ))),
         "bb_squeeze" => Ok(Box::new(bb_squeeze::BbSqueeze::from_json(entry_rules))),
         "ttm_squeeze" => Ok(Box::new(ttm_squeeze::TtmSqueeze::from_json(entry_rules))),
         "vwap_scalp" => Ok(Box::new(vwap_scalp::VwapScalp::from_json(entry_rules))),
         "supertrend" => Ok(Box::new(supertrend::Supertrend::from_json(entry_rules))),
-        "heikin_ashi_trend" => Ok(Box::new(heikin_ashi_trend::HeikinAshiTrend::from_json(entry_rules))),
+        "heikin_ashi_trend" => Ok(Box::new(heikin_ashi_trend::HeikinAshiTrend::from_json(
+            entry_rules,
+        ))),
         "connors_rsi2" => Ok(Box::new(connors_rsi2::ConnorsRsi2::from_json(entry_rules))),
-        "order_block_sweep" => Ok(Box::new(order_block_sweep::OrderBlockSweep::from_json(entry_rules))),
+        "order_block_sweep" => Ok(Box::new(order_block_sweep::OrderBlockSweep::from_json(
+            entry_rules,
+        ))),
         "pead" => Ok(Box::new(pead::Pead::from_json(entry_rules))),
         "pairs" => Ok(Box::new(pairs::Pairs::from_json(entry_rules))),
         "ma_cross_adx" => Ok(Box::new(ma_cross_adx::MaCrossAdx::from_json(entry_rules))),
-        "keltner_breakout" => Ok(Box::new(keltner_breakout::KeltnerBreakout::from_json(entry_rules))),
-        "ichimoku_cloud" => Ok(Box::new(ichimoku_cloud::IchimokuCloud::from_json(entry_rules))),
+        "keltner_breakout" => Ok(Box::new(keltner_breakout::KeltnerBreakout::from_json(
+            entry_rules,
+        ))),
+        "ichimoku_cloud" => Ok(Box::new(ichimoku_cloud::IchimokuCloud::from_json(
+            entry_rules,
+        ))),
         other => Err(FactoryError::Unknown(other.to_string())),
     }
 }

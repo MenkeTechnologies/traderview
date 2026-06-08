@@ -60,7 +60,9 @@ pub struct IchimokuCloud {
 }
 
 impl IchimokuCloud {
-    pub fn new(rules: Rules) -> Self { Self { rules } }
+    pub fn new(rules: Rules) -> Self {
+        Self { rules }
+    }
     pub fn from_json(entry_rules: &serde_json::Value) -> Self {
         let rules = serde_json::from_value::<Rules>(entry_rules.clone()).unwrap_or_default();
         Self { rules }
@@ -80,8 +82,12 @@ fn donchian_mid(bars: &[PriceBar], period: usize) -> Vec<Option<f64>> {
         let mut hi = f64::MIN;
         let mut lo = f64::MAX;
         for j in start..=i {
-            if highs[j] > hi { hi = highs[j]; }
-            if lows[j] < lo { lo = lows[j]; }
+            if highs[j] > hi {
+                hi = highs[j];
+            }
+            if lows[j] < lo {
+                lo = lows[j];
+            }
         }
         out.push(Some((hi + lo) / 2.0));
     }
@@ -127,7 +133,9 @@ fn ichimoku(
 }
 
 impl Strategy for IchimokuCloud {
-    fn kind(&self) -> StrategyKind { StrategyKind::IchimokuCloud }
+    fn kind(&self) -> StrategyKind {
+        StrategyKind::IchimokuCloud
+    }
 
     fn min_bars(&self) -> usize {
         self.rules.senkou_b_period + self.rules.displacement + 3
@@ -175,7 +183,9 @@ impl Strategy for IchimokuCloud {
             && bearish_cloud;
 
         if want_long {
-            let stop = k_now.min(close_now - 0.5 * cloud_thickness.max(0.01)).max(0.01);
+            let stop = k_now
+                .min(close_now - 0.5 * cloud_thickness.max(0.01))
+                .max(0.01);
             Some(EntrySignal {
                 side: Side::Buy,
                 entry_price: close_now,

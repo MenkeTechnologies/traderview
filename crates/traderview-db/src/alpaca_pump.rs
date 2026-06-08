@@ -9,9 +9,7 @@
 //! is the WS-side companion to the REST `alpaca_trading` client.
 
 use crate::algo_engine::{EventSink, ImmediateFill};
-use crate::alpaca_trading::{
-    AlpacaError, AlpacaTrading, BrokerMode, TradeUpdateEvent,
-};
+use crate::alpaca_trading::{AlpacaError, AlpacaTrading, BrokerMode, TradeUpdateEvent};
 use chrono::Utc;
 use rust_decimal::prelude::Zero;
 use rust_decimal::Decimal;
@@ -32,11 +30,7 @@ pub type AlpacaPumpRegistry = Arc<Mutex<HashSet<(Uuid, bool)>>>;
 /// Reconnect loop. Caller `tokio::spawn`s and forgets. Exits only
 /// on a fatal auth error (bad creds — no point retrying). Transient
 /// network/WS errors trigger a backoff loop up to MAX_BACKOFF.
-pub async fn run_pump(
-    pool: PgPool,
-    client: AlpacaTrading,
-    event_sink: Option<EventSink>,
-) {
+pub async fn run_pump(pool: PgPool, client: AlpacaTrading, event_sink: Option<EventSink>) {
     let mut backoff = Duration::from_secs(1);
     const MAX_BACKOFF: Duration = Duration::from_secs(60);
     loop {
@@ -86,9 +80,8 @@ pub async fn handle_trade_update(
         return Ok(());
     }
     let coid_str = event.order.client_order_id.clone();
-    let client_order_id = Uuid::from_str(&coid_str).map_err(|e| {
-        anyhow::anyhow!("alpaca client_order_id {coid_str} is not a UUID: {e}")
-    })?;
+    let client_order_id = Uuid::from_str(&coid_str)
+        .map_err(|e| anyhow::anyhow!("alpaca client_order_id {coid_str} is not a UUID: {e}"))?;
 
     let row: Option<(Uuid, Uuid, Uuid, String, String, Decimal)> = sqlx::query_as(
         "SELECT id, run_id, strategy_id, symbol, side, qty
@@ -232,7 +225,11 @@ pub async fn ensure_pump_for(
         }
     };
     let (key_id, secret, _) = creds;
-    let mode = if paper { BrokerMode::Paper } else { BrokerMode::Live };
+    let mode = if paper {
+        BrokerMode::Paper
+    } else {
+        BrokerMode::Live
+    };
     let client = AlpacaTrading::new(mode, key_id, secret);
     tokio::spawn(run_pump(pool, client, event_sink));
     true
