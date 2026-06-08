@@ -37,13 +37,29 @@ function killBadge(s) {
         : '';
 }
 
+const STRATEGY_KINDS = [
+    { value: 'momentum',       label_key: 'view.algo.opt.strat_momentum',       label: 'Momentum (EMA cross + RSI + ROC + RVOL)' },
+    { value: 'mean_reversion', label_key: 'view.algo.opt.strat_mean_reversion', label: 'Mean Reversion (Connors RSI + VWAP z-score)' },
+    { value: 'orb',            label_key: 'view.algo.opt.strat_orb',            label: 'Opening Range Breakout (OR high break + RVOL)' },
+    { value: 'donchian_trend', label_key: 'view.algo.opt.strat_donchian_trend', label: 'Donchian Trend / Turtle (Donchian + ADX filter)' },
+    { value: 'bb_squeeze',     label_key: 'view.algo.opt.strat_bb_squeeze',     label: 'Bollinger Squeeze (BBW bottom decile + band break)' },
+];
+
+const STRATEGY_HINTS = {
+    momentum:       'EMA(9)/EMA(21) crossover + RSI(14) ∈ [50,70] + ROC(10) > 2% + RVOL ≥ 1.5×. ATR-based bracket. Trend follower.',
+    mean_reversion: 'Connors RSI(3) < 10 + close < session VWAP − 2σ. Long the oversold pierce, target = VWAP. ATR stop.',
+    orb:            'First close that breaks the opening-range high (15 bars default) with RVOL ≥ 1.5×. ATR trailing stop. Day-trade setup.',
+    donchian_trend: 'Close > Donchian(20).upper + ADX(14) > 20 (chop filter). Exit on Donchian(10).low break or ATR trail. Long trends.',
+    bb_squeeze:     'BBW(20,2) in the bottom 10th percentile over 100 bars + close breaks BB.upper. Target = BB.middle. Volatility expansion.',
+};
+
 export async function renderAlgo(mount) {
     mount.innerHTML = `
-        <h1 data-i18n="view.algo.h1.algo_trading" class="view-title">// MOMENTUM ALGO TRADING</h1>
+        <h1 data-i18n="view.algo.h1.algo_trading" class="view-title">// ALGO TRADING</h1>
         <p class="muted small" data-i18n="view.algo.hint.intro">
-            EMA(9)/EMA(21) crossover + RSI(14) ∈ [50,70] + ROC(10) > 2% + RVOL ≥ 1.5×.
-            Native bracket order with ATR-based stop / take-profit. 1% risk per trade,
-            capped by max position % of equity. New strategies are paper-locked for 30 days.
+            Five strategy families: momentum, mean reversion, opening range breakout, Donchian trend, Bollinger squeeze.
+            Native bracket orders with strategy-specific stops / take-profits. 1% risk per trade, capped by max position % of equity.
+            New strategies are paper-locked for 30 days.
         </p>
 
         <div class="chart-panel">
@@ -54,6 +70,7 @@ export async function renderAlgo(mount) {
             <table class="trades" id="algo-strats-table">
                 <thead><tr>
                     <th data-i18n="view.algo.th.name">Name</th>
+                    <th data-i18n="view.algo.th.strategy_type">Strategy</th>
                     <th data-i18n="view.algo.th.timeframe">TF</th>
                     <th data-i18n="view.algo.th.universe">Universe</th>
                     <th data-i18n="view.algo.th.side">Side</th>
@@ -61,7 +78,7 @@ export async function renderAlgo(mount) {
                     <th data-i18n="view.algo.th.status">Status</th>
                     <th></th>
                 </tr></thead>
-                <tbody><tr><td colspan="7" class="muted">${esc(t('view.algo.loading'))}</td></tr></tbody>
+                <tbody><tr><td colspan="8" class="muted">${esc(t('view.algo.loading'))}</td></tr></tbody>
             </table>
         </div>
 
@@ -118,12 +135,13 @@ async function refreshStrategies(mount) {
         return;
     }
     if (!strategies.length) {
-        table.innerHTML = `<tr><td colspan="7" class="muted">${esc(t('view.algo.empty'))}</td></tr>`;
+        table.innerHTML = `<tr><td colspan="8" class="muted">${esc(t('view.algo.empty'))}</td></tr>`;
         return;
     }
     table.innerHTML = strategies.map(s => `
         <tr data-strat="${s.id}">
             <td>${esc(s.name)} ${paperLockBadge(s.paper_locked_until)} ${killBadge(s)}</td>
+            <td>${esc(s.strategy_type || 'momentum')}</td>
             <td>${esc(s.timeframe)}</td>
             <td>${esc(s.universe_mode)}${s.universe_mode === 'autoscan' ? ` (top ${s.autoscan_top_n})` : ''}</td>
             <td>${esc(s.side_mode)}</td>
@@ -283,12 +301,17 @@ function openStrategyModal(mount, existing = null) {
         watchlist_id: null,
         autoscan_top_n: 25,
         side_mode: 'long',
+        strategy_type: 'momentum',
         entry_rules: {},
         exit_rules: {},
         sizing: { risk_pct_per_trade: 0.01, max_pos_pct: 0.20 },
         risk_gates: { max_concurrent_positions: 5, daily_loss_limit_pct: 0.03, max_drawdown_pct: 0.10 },
         broker_mode: 'internal_sim',
     };
+    const stratOptions = STRATEGY_KINDS.map(k => {
+        const sel = (s.strategy_type || 'momentum') === k.value ? 'selected' : '';
+        return `<option value="${k.value}" ${sel} data-i18n="${k.label_key}">${esc(k.label)}</option>`;
+    }).join('');
     host.innerHTML = `
         <div class="modal-backdrop">
             <div class="modal">
@@ -297,6 +320,14 @@ function openStrategyModal(mount, existing = null) {
                     <label><span data-i18n="view.algo.label.name">Name</span>
                         <input name="name" value="${esc(s.name)}" required>
                     </label>
+                    <label><span data-i18n="view.algo.label.strategy_type">Strategy</span>
+                        <select name="strategy_type" id="algo-strategy-type">
+                            ${stratOptions}
+                        </select>
+                    </label>
+                    <p class="muted small" id="algo-strategy-hint" style="margin:0">
+                        ${esc(STRATEGY_HINTS[s.strategy_type || 'momentum'])}
+                    </p>
                     <label style="flex-direction:row;align-items:center;gap:6px">
                         <input type="checkbox" name="enabled" ${s.enabled ? 'checked' : ''}>
                         <span data-i18n="view.algo.label.enabled">Enabled</span>
@@ -348,6 +379,10 @@ function openStrategyModal(mount, existing = null) {
         </div>
     `;
     host.querySelector('#algo-cancel').addEventListener('click', () => { host.innerHTML = ''; });
+    host.querySelector('#algo-strategy-type').addEventListener('change', (e) => {
+        const v = e.target.value;
+        host.querySelector('#algo-strategy-hint').textContent = STRATEGY_HINTS[v] || '';
+    });
     host.querySelector('#algo-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const f = new FormData(e.target);
@@ -359,6 +394,7 @@ function openStrategyModal(mount, existing = null) {
             watchlist_id: s.watchlist_id || null,
             autoscan_top_n: Number(f.get('autoscan_top_n')) || 25,
             side_mode: f.get('side_mode'),
+            strategy_type: f.get('strategy_type') || 'momentum',
             entry_rules: s.entry_rules || {},
             exit_rules: s.exit_rules || {},
             sizing: {

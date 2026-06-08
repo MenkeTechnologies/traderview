@@ -48,6 +48,10 @@ async fn list_strategies(
     ))
 }
 
+const VALID_STRATEGY_TYPES: &[&str] = &[
+    "momentum", "mean_reversion", "orb", "donchian_trend", "bb_squeeze",
+];
+
 async fn create_strategy(
     State(s): State<AppState>,
     u: AuthUser,
@@ -55,6 +59,13 @@ async fn create_strategy(
 ) -> Result<Json<AlgoStrategy>, ApiError> {
     if body.name.trim().is_empty() {
         return Err(ApiError::BadRequest("name required".into()));
+    }
+    if !VALID_STRATEGY_TYPES.contains(&body.strategy_type.as_str()) {
+        return Err(ApiError::BadRequest(format!(
+            "unknown strategy_type {}; expected one of: {}",
+            body.strategy_type,
+            VALID_STRATEGY_TYPES.join(", "),
+        )));
     }
     // Engine code enforces paper_locked_until at submit-time, but the
     // route also rejects naked alpaca_live at create-time so the UI
@@ -78,6 +89,13 @@ async fn update_strategy(
     Path(id): Path<Uuid>,
     Json(body): Json<AlgoStrategyInput>,
 ) -> Result<Json<AlgoStrategy>, ApiError> {
+    if !VALID_STRATEGY_TYPES.contains(&body.strategy_type.as_str()) {
+        return Err(ApiError::BadRequest(format!(
+            "unknown strategy_type {}; expected one of: {}",
+            body.strategy_type,
+            VALID_STRATEGY_TYPES.join(", "),
+        )));
+    }
     // Allow alpaca_live on update only if existing paper_locked_until
     // has expired. Engine still re-checks at submit.
     if body.broker_mode == "alpaca_live" {
