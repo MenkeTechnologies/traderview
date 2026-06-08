@@ -167,12 +167,14 @@ async fn drive_strategy(
 ) -> Result<usize, anyhow::Error> {
     let Some(run) = algo::get_open_run(pool, strategy.id).await? else {
         // No open run → strategy is enabled but not actively running.
-        // The runner does not auto-start runs in commit 18; the UI's
-        // "start" button is the explicit gate.
+        // The runner does not auto-start runs; the UI's "start" button
+        // is the explicit gate.
         return Ok(0);
     };
-    let equity = 100_000.0; // placeholder; commit 19 plumbs real account equity
-    let open_positions: i64 = 0; // placeholder; commit 19 reads live_positions
+    let equity = account_equity(pool, strategy).await.unwrap_or(100_000.0);
+    let open_positions: i64 = open_position_count(pool, strategy.account_id)
+        .await
+        .unwrap_or(0);
     let mut driven = 0usize;
     for symbol in symbols {
         let bars = fetch_recent_bars(pool, symbol, interval, BAR_WINDOW_SIZE).await?;
@@ -201,6 +203,46 @@ async fn drive_strategy(
     )
     .await;
     Ok(driven)
+}
+
+/// Account equity = starting_equity from strategy.risk_gates JSON
+/// (default 100_000) + sum of closed-trade net_pnl on the strategy's
+/// bound account. Doesn't subtract mark-to-market on open positions
+/// yet — that needs a quote lookup per held symbol; the first iter
+/// approximates equity by realized P&L only.
+pub async fn account_equity(
+    pool: &PgPool,
+    strategy: &AlgoStrategy,
+) -> Result<f64, anyhow::Error> {
+    let starting = strategy
+        .risk_gates
+        .get("starting_equity")
+        .and_then(|v| v.as_f64())
+        .unwrap_or(100_000.0);
+    let (realized,): (Option<f64>,) = sqlx::query_as(
+        "SELECT COALESCE(SUM(net_pnl), 0)::float8
+           FROM trades
+          WHERE account_id = $1 AND status = 'closed' AND net_pnl IS NOT NULL",
+    )
+    .bind(strategy.account_id)
+    .fetch_one(pool)
+    .await?;
+    Ok(starting + realized.unwrap_or(0.0))
+}
+
+/// Count of currently-open trades against the account. Feeds the
+/// max_concurrent_positions risk gate so a strategy that hit its cap
+/// stops opening new ones until something closes.
+pub async fn open_position_count(
+    pool: &PgPool,
+    account_id: uuid::Uuid,
+) -> Result<i64, anyhow::Error> {
+    let (n,): (i64,) =
+        sqlx::query_as("SELECT COUNT(*) FROM trades WHERE account_id = $1 AND status = 'open'")
+            .bind(account_id)
+            .fetch_one(pool)
+            .await?;
+    Ok(n)
 }
 
 async fn fetch_recent_bars(
