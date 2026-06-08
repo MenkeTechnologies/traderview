@@ -316,7 +316,7 @@ function openStrategyModal(mount, existing = null) {
         <div class="modal">
             <div class="modal-inner">
                 <h2 data-i18n="view.algo.h2.${existing ? 'edit_strategy' : 'new_strategy'}">${existing ? 'Edit' : 'New'} strategy</h2>
-                <form id="algo-form" class="inline-form" style="flex-direction:column;gap:8px;min-width:420px">
+                <form id="algo-form" class="algo-form">
                     <label><span data-i18n="view.algo.label.name">Name</span>
                         <input name="name" value="${esc(s.name)}" required>
                     </label>
@@ -328,7 +328,7 @@ function openStrategyModal(mount, existing = null) {
                     <p class="muted small" id="algo-strategy-hint" style="margin:0">
                         ${esc(STRATEGY_HINTS[s.strategy_type || 'momentum'])}
                     </p>
-                    <label style="flex-direction:row;align-items:center;gap:6px">
+                    <label class="checkbox-row">
                         <input type="checkbox" name="enabled" ${s.enabled ? 'checked' : ''}>
                         <span data-i18n="view.algo.label.enabled">Enabled</span>
                     </label>
@@ -370,13 +370,23 @@ function openStrategyModal(mount, existing = null) {
                             <option value="alpaca_live"  ${s.broker_mode === 'alpaca_live'  ? 'selected' : ''} data-i18n="view.algo.opt.broker_live">Alpaca LIVE (after paper-lock)</option>
                         </select>
                     </label>
-                    <div class="row" style="gap:8px;justify-content:flex-end">
+                    <div class="algo-form-actions">
                         <button type="button" id="algo-cancel" data-i18n="view.algo.btn.cancel">Cancel</button>
                         <button type="submit" class="primary" data-i18n="view.algo.btn.save">Save</button>
                     </div>
                 </form>
             </div>
         </div>
+        <style>
+            .algo-form { display: flex; flex-direction: column; gap: 12px; min-width: 420px; }
+            .algo-form label { display: flex; flex-direction: column; gap: 4px; }
+            .algo-form label > span { color: var(--text-dim); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+            .algo-form input, .algo-form select { width: 100%; box-sizing: border-box; }
+            .algo-form label.checkbox-row { flex-direction: row; align-items: center; gap: 8px; }
+            .algo-form label.checkbox-row > span { text-transform: none; letter-spacing: normal; font-size: 13px; color: var(--text); }
+            .algo-form label.checkbox-row > input { width: auto; }
+            .algo-form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+        </style>
     `;
     host.querySelector('#algo-cancel').addEventListener('click', () => { host.innerHTML = ''; });
     host.querySelector('#algo-strategy-type').addEventListener('change', (e) => {
