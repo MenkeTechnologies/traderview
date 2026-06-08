@@ -741,6 +741,7 @@ async function refreshStrategies(mount) {
                 <button class="link" data-act="runs" data-i18n="view.algo.btn.runs">runs</button>
                 <button class="link" data-act="start" data-i18n="view.algo.btn.start">start</button>
                 <button class="link" data-act="stop" data-i18n="view.algo.btn.stop">stop</button>
+                <button class="link" data-act="metrics" data-i18n="view.algo.btn.metrics">metrics</button>
                 <button class="link" data-act="backtest" data-i18n="view.algo.btn.backtest">backtest</button>
                 <button class="link" data-act="kill" data-i18n="view.algo.btn.kill">${s.kill_switch ? 'release' : 'kill'}</button>
                 <button class="link" data-act="edit" data-i18n="view.algo.btn.edit">edit</button>
@@ -758,6 +759,7 @@ async function refreshStrategies(mount) {
             if (act === 'runs') return showRuns(mount, s);
             if (act === 'start') return startRun(mount, s);
             if (act === 'stop') return stopRun(mount, s);
+            if (act === 'metrics') return openMetricsModal(mount, s);
             if (act === 'backtest') return openBacktestModal(mount, s);
             if (act === 'kill') return toggleKill(mount, s);
             if (act === 'edit') return openStrategyModal(mount, s);
@@ -819,6 +821,98 @@ function fmtUsd(n) {
 function fmtPct(n) {
     if (!Number.isFinite(n)) return '—';
     return n.toFixed(2) + '%';
+}
+
+async function openMetricsModal(mount, s) {
+    const wrap = document.createElement('div');
+    wrap.className = 'modal';
+    wrap.innerHTML = `
+        <div class="modal-inner" style="max-width:960px">
+            <h2>Metrics: ${esc(s.name)}</h2>
+            <p class="muted small">Live aggregate over every algo_runs row for this strategy. Equity curve uses settled runs only (in-flight runs are excluded until stopped).</p>
+            <div id="mt-body"><p class="muted">Loading…</p></div>
+            <div class="row" style="gap:8px;margin-top:8px">
+                <button type="button" id="mt-refresh">Refresh</button>
+                <button type="button" id="mt-close">Close</button>
+            </div>
+        </div>`;
+    document.body.appendChild(wrap);
+    const close = () => wrap.remove();
+    wrap.querySelector('#mt-close').addEventListener('click', close);
+    wrap.addEventListener('click', e => { if (e.target === wrap) close(); });
+
+    const body = wrap.querySelector('#mt-body');
+    const load = async () => {
+        body.innerHTML = '<p class="muted">Loading…</p>';
+        try {
+            const m = await api.algoStrategyMetrics(s.id);
+            renderMetrics(body, m);
+        } catch (e) {
+            body.innerHTML = `<p class="error">Metrics failed: ${esc(e.message || String(e))}</p>`;
+        }
+    };
+    wrap.querySelector('#mt-refresh').addEventListener('click', load);
+    load();
+}
+
+function renderMetrics(host, m) {
+    const totalPnl = Number(m.total_realized_pnl || 0);
+    const fillRate = m.orders_submitted > 0
+        ? (m.fills_received / m.orders_submitted * 100)
+        : 0;
+    const rejectRate = (m.orders_submitted + m.orders_rejected) > 0
+        ? (m.orders_rejected / (m.orders_submitted + m.orders_rejected) * 100)
+        : 0;
+    const lastOrders = m.recent_orders.slice(0, 25);
+
+    // Equity curve as SVG sparkline — no chart-lib dep.
+    const eq = m.equity_curve;
+    let curve = '<p class="muted">No settled runs yet — start a run and let it complete to see the equity curve.</p>';
+    if (eq.length >= 2) {
+        const vals = eq.map(p => Number(p.cumulative_pnl));
+        const min = Math.min(0, ...vals);
+        const max = Math.max(0, ...vals);
+        const range = (max - min) || 1;
+        const w = 760, h = 160, pad = 8;
+        const xs = (i) => pad + i * ((w - 2 * pad) / (eq.length - 1));
+        const ys = (v) => h - pad - ((v - min) / range) * (h - 2 * pad);
+        const points = vals.map((v, i) => `${xs(i).toFixed(1)},${ys(v).toFixed(1)}`).join(' ');
+        const zeroY = ys(0).toFixed(1);
+        curve = `
+            <svg viewBox="0 0 ${w} ${h}" width="100%" style="max-width:100%;background:#0a0a0a;border:1px solid #222">
+                <line x1="${pad}" x2="${w - pad}" y1="${zeroY}" y2="${zeroY}" stroke="#444" stroke-dasharray="3,3"/>
+                <polyline fill="none" stroke="${totalPnl >= 0 ? '#39ff14' : '#ff5a5a'}" stroke-width="1.6" points="${points}"/>
+            </svg>`;
+    }
+
+    host.innerHTML = `
+        <div class="row" style="gap:24px;flex-wrap:wrap;margin-bottom:12px">
+            <div><strong>Total runs:</strong> ${m.runs}</div>
+            <div><strong>Bars processed:</strong> ${m.bars_processed.toLocaleString()}</div>
+            <div><strong>Signals:</strong> ${m.signals_emitted}</div>
+            <div><strong>Orders submitted:</strong> ${m.orders_submitted}</div>
+            <div><strong>Fills:</strong> ${m.fills_received}</div>
+            <div><strong>Fill rate:</strong> ${fillRate.toFixed(1)}%</div>
+            <div><strong>Rejected:</strong> ${m.orders_rejected} (${rejectRate.toFixed(1)}%)</div>
+            <div style="color:${totalPnl >= 0 ? '#39ff14' : '#ff5a5a'}"><strong>Total realized P&amp;L:</strong> ${fmtUsd(totalPnl)}</div>
+        </div>
+        <h3 style="margin-top:4px">Equity curve (settled runs)</h3>
+        ${curve}
+        <h3 style="margin-top:12px">Recent orders (last ${lastOrders.length})</h3>
+        <table class="trades">
+            <thead><tr><th>Submitted</th><th>Symbol</th><th>Side</th><th>Type</th><th>Qty</th><th>Status</th><th>Broker order</th></tr></thead>
+            <tbody>${lastOrders.map(o => `
+                <tr>
+                    <td>${esc((o.submitted_at || '').replace('T', ' ').slice(0, 19))}</td>
+                    <td>${esc(o.symbol)}</td>
+                    <td>${esc(o.side)}</td>
+                    <td>${esc(o.order_type)}</td>
+                    <td>${o.qty}</td>
+                    <td>${esc(o.status)}</td>
+                    <td><code class="small">${esc(o.broker_order_id || '—')}</code></td>
+                </tr>`).join('') || '<tr><td colspan="7" class="muted">No orders yet.</td></tr>'}
+            </tbody>
+        </table>`;
 }
 
 async function openBacktestModal(mount, s) {

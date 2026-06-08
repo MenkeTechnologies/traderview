@@ -34,6 +34,7 @@ pub fn router() -> Router<AppState> {
         .route("/algo/runs/:id/orders", get(list_orders))
         .route("/algo/orders/:id/fills", get(list_fills))
         .route("/algo/strategies/:id/backtest", post(post_backtest))
+        .route("/algo/strategies/:id/metrics", get(get_metrics))
 }
 
 // ─── strategy CRUD ──────────────────────────────────────────────────────────
@@ -524,4 +525,17 @@ async fn post_backtest(
     };
     let result = traderview_core::algo_backtest::run(&bars, strat.as_ref(), &sizing, cfg);
     Ok(Json(result))
+}
+
+/// GET /algo/strategies/:id/metrics — dashboard rollup.
+async fn get_metrics(
+    State(s): State<AppState>,
+    u: AuthUser,
+    Path(id): Path<Uuid>,
+) -> Result<Json<traderview_db::algo::StrategyMetrics>, ApiError> {
+    traderview_db::algo::strategy_metrics(&s.pool, u.id, id)
+        .await
+        .map_err(ApiError::Internal)?
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("strategy not found".into()))
 }

@@ -617,3 +617,122 @@ pub async fn list_fills(
     .fetch_all(pool)
     .await?)
 }
+
+// ─── live metrics: rollup for the dashboard tab ─────────────────────────────
+
+#[derive(Debug, Clone, Serialize)]
+pub struct EquityPoint {
+    pub at: DateTime<Utc>,
+    /// Cumulative pnl_realized up to AND including this run (in dollars).
+    pub cumulative_pnl: Decimal,
+    /// pnl_realized of this run alone — the delta from the previous point.
+    pub delta_pnl: Decimal,
+    pub run_id: Uuid,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct StrategyMetrics {
+    pub strategy_id: Uuid,
+    pub runs: i64,
+    pub bars_processed: i64,
+    pub signals_emitted: i64,
+    pub orders_submitted: i64,
+    pub fills_received: i64,
+    pub orders_rejected: i64,
+    pub total_realized_pnl: Decimal,
+    pub equity_curve: Vec<EquityPoint>,
+    pub recent_orders: Vec<AlgoOrder>,
+}
+
+/// Aggregates everything the dashboard needs in ONE round trip:
+///   - Lifetime counters (runs, bars, signals, orders, fills).
+///   - Equity curve: every stopped run's pnl_realized cumulatively.
+///     In-flight (`stopped_at IS NULL`) runs are skipped — their P&L
+///     isn't settled yet.
+///   - Recent orders (last 50) for the trades-table strip.
+///   - Orders-rejected count: algo_orders.status = 'rejected'.
+pub async fn strategy_metrics(
+    pool: &PgPool,
+    user_id: Uuid,
+    strategy_id: Uuid,
+) -> anyhow::Result<Option<StrategyMetrics>> {
+    // Authorization: confirm the strategy belongs to this user before
+    // exposing aggregate P&L numbers.
+    let owned: Option<(Uuid,)> = sqlx::query_as(
+        "SELECT id FROM algo_strategies WHERE id = $1 AND user_id = $2",
+    )
+    .bind(strategy_id)
+    .bind(user_id)
+    .fetch_optional(pool)
+    .await?;
+    if owned.is_none() {
+        return Ok(None);
+    }
+
+    let totals: (i64, i64, i64, i64, i64, Decimal) = sqlx::query_as(
+        "SELECT
+             COUNT(*)::bigint                                 AS runs,
+             COALESCE(SUM(bars_processed), 0)::bigint         AS bars,
+             COALESCE(SUM(signals_emitted), 0)::bigint        AS signals,
+             COALESCE(SUM(orders_submitted), 0)::bigint       AS orders,
+             COALESCE(SUM(fills_received), 0)::bigint         AS fills,
+             COALESCE(SUM(pnl_realized), 0)::numeric          AS pnl
+           FROM algo_runs
+          WHERE strategy_id = $1",
+    )
+    .bind(strategy_id)
+    .fetch_one(pool)
+    .await?;
+
+    let rejected: (i64,) = sqlx::query_as(
+        "SELECT COUNT(*)::bigint FROM algo_orders
+          WHERE strategy_id = $1 AND status = 'rejected'",
+    )
+    .bind(strategy_id)
+    .fetch_one(pool)
+    .await?;
+
+    // Equity curve: walk stopped runs in chronological order.
+    let curve_rows: Vec<(Uuid, DateTime<Utc>, Decimal)> = sqlx::query_as(
+        "SELECT id, stopped_at, pnl_realized FROM algo_runs
+          WHERE strategy_id = $1 AND stopped_at IS NOT NULL
+          ORDER BY stopped_at ASC",
+    )
+    .bind(strategy_id)
+    .fetch_all(pool)
+    .await?;
+    let mut equity_curve = Vec::with_capacity(curve_rows.len());
+    let mut cum = Decimal::ZERO;
+    for (rid, at, delta) in curve_rows {
+        cum += delta;
+        equity_curve.push(EquityPoint {
+            at,
+            cumulative_pnl: cum,
+            delta_pnl: delta,
+            run_id: rid,
+        });
+    }
+
+    let recent_orders: Vec<AlgoOrder> = sqlx::query_as::<_, AlgoOrder>(
+        "SELECT * FROM algo_orders
+          WHERE strategy_id = $1
+          ORDER BY submitted_at DESC
+          LIMIT 50",
+    )
+    .bind(strategy_id)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(Some(StrategyMetrics {
+        strategy_id,
+        runs: totals.0,
+        bars_processed: totals.1,
+        signals_emitted: totals.2,
+        orders_submitted: totals.3,
+        fills_received: totals.4,
+        orders_rejected: rejected.0,
+        total_realized_pnl: totals.5,
+        equity_curve,
+        recent_orders,
+    }))
+}
