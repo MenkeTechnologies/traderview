@@ -115,7 +115,7 @@ pub async fn sink_for_strategy(
             // /iserver/secdef/search is wired in a follow-up.
             Ok(Box::new(IbkrSink { client, account_label: "ibkr".into() }))
         }
-        "td" | "schwab" => {
+        "td" | "tdameritrade" | "schwab" => {
             // TD Ameritrade was retired Sep 2024 — Schwab Trader API is
             // the replacement. We accept the legacy "td" broker label
             // (existing accounts in user DBs) and route to the same

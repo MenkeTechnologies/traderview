@@ -21,16 +21,27 @@ function slugify(s) {
         .replace(/^_+|_+$/g, '');
 }
 
-// Brokers TraderView has a dedicated CSV import parser for. Keep this in
-// sync with `crates/traderview-import/src/brokers.rs::*Parser::source()`
-// — those slugs are what the import pipeline dispatches on, so the
-// slug picked here in the wizard MUST match exactly or trade imports
-// will fall through to the generic parser.
+// Brokers TraderView supports via either dedicated CSV import parsers OR
+// the algo trading dispatcher (REST + WS adapter modules). Slugs MUST
+// stay in sync with two consumers:
+//   1. CSV import — `crates/traderview-import/src/brokers.rs::*Parser::source()`.
+//      Unknown slugs fall through to the generic parser (still works,
+//      just less broker-specific column mapping).
+//   2. Algo dispatcher — `crates/traderview-web/src/routes/algo.rs::
+//      ALGO_SUPPORTED_BROKERS` + `crates/traderview-db/src/broker_dispatcher.rs`.
+//      Algo-eligible slugs MUST match exactly or strategy creation
+//      rejects the account.
+//
+// Algo-eligible brokers (REST submit + WS fill pump wired):
+//   alpaca, tradier, ibkr, schwab/td, tastytrade.
 const SUPPORTED_BROKERS = [
-    { slug: 'webull',       label: 'Webull',              home: 'https://www.webull.com' },
+    { slug: 'alpaca',       label: 'Alpaca',              home: 'https://alpaca.markets' },
+    { slug: 'tradier',      label: 'Tradier',             home: 'https://tradier.com' },
+    { slug: 'tastytrade',   label: 'tastytrade',          home: 'https://tastytrade.com' },
     { slug: 'ibkr',         label: 'Interactive Brokers', home: 'https://www.interactivebrokers.com' },
     { slug: 'schwab',       label: 'Charles Schwab',      home: 'https://www.schwab.com' },
     { slug: 'tdameritrade', label: 'TD Ameritrade',       home: 'https://www.tdameritrade.com' },
+    { slug: 'webull',       label: 'Webull',              home: 'https://www.webull.com' },
     { slug: 'tos',          label: 'thinkorswim',         home: 'https://www.thinkorswim.com' },
     { slug: 'fidelity',     label: 'Fidelity',            home: 'https://www.fidelity.com' },
     { slug: 'etrade',       label: 'E*TRADE',             home: 'https://us.etrade.com' },
