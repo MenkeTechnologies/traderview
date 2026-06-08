@@ -682,7 +682,30 @@ impl LiveTickStore {
 
     async fn persist_bucket(&self, symbol: &str, b: &TapeBucket) {
         let pool = { self.pool.read().await.clone() };
-        let Some(pool) = pool else { return };
+        let Some(pool) = pool else {
+            // Loud once per process — the boot path forgot to call
+            // set_pool, so every closed 10s bucket evaporates. The
+            // sweeper hits this in a tight loop; CAS guard ensures
+            // we only emit one error so it surfaces clearly without
+            // flooding the log.
+            static WARNED: std::sync::atomic::AtomicBool =
+                std::sync::atomic::AtomicBool::new(false);
+            if WARNED
+                .compare_exchange(
+                    false,
+                    true,
+                    std::sync::atomic::Ordering::AcqRel,
+                    std::sync::atomic::Ordering::Acquire,
+                )
+                .is_ok()
+            {
+                tracing::error!(
+                    symbol,
+                    "live_ticks: persist_bucket called but pool=None — set_pool was never wired at boot; every 10s bar silently dropped. price_bars stays empty, algo strategies SKIP forever."
+                );
+            }
+            return;
+        };
         let bar_time = match Utc.timestamp_opt(b.start_sec, 0).single() {
             Some(t) => t,
             None => return,

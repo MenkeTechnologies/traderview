@@ -364,6 +364,18 @@ async fn bring_up_backend(
         Ok(None) => tracing::info!("no alpaca creds configured"),
         Err(e) => tracing::warn!(error = %e, "failed to load alpaca creds from DB"),
     }
+    // CRITICAL: hand the DB pool to the live-tick store so the 10s
+    // tape aggregator can persist closed buckets into `price_bars`
+    // (interval='10s'). Without this call, every incoming WS trade
+    // gets bucketed in memory + the bucket crosses 10s + persist_bucket
+    // is spawned + reads self.pool → None → silently drops the bar
+    // with zero log output. price_bars stays empty forever, the algo
+    // runner's fetch_recent_bars returns nothing, every strategy SKIPs
+    // on no_bars. The standalone server.rs binary already does this;
+    // this commit closes the same gap in the Tauri desktop binary.
+    traderview_db::live_ticks::global()
+        .set_pool(embedded.pool.clone())
+        .await;
     // Boot-time push of the watchlist union into the live-tick
     // subscription set. Without this the WS workers stay idle until
     // the user mutates a watchlist or the candidates/scanner loop
