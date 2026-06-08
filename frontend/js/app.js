@@ -690,6 +690,25 @@ export async function mountApp({ cfg, me, accounts }) {
     state.accounts = accounts;
     if (state.accounts.length && !state.accountId) state.accountId = state.accounts[0].id;
 
+    // Version chip — dynamic, single-sourced from workspace.package.version
+    // via src-tauri/build.rs writing _version.js (loaded synchronously in
+    // index.html before app.js). Falls back to the cfg.version field
+    // already on hand from entry.js's api.config() call, then to fetches.
+    // mountApp is the real entry path used by entry.js; boot() below only
+    // fires on the tv:authed event after a login redirect.
+    {
+        const verEl = document.getElementById('tv-version');
+        const setVer = (v) => { if (verEl && v) verEl.textContent = `v${v}`; };
+        if (window.__TRADERVIEW_VERSION__) setVer(window.__TRADERVIEW_VERSION__);
+        else if (cfg && cfg.version) setVer(cfg.version);
+        else {
+            try {
+                const j = await fetch('./version.json', { cache: 'no-store' }).then(r => r.json());
+                setVer(j.version);
+            } catch (e) { console.warn('tv-version: all sources failed', e); }
+        }
+    }
+
     if (!uiWired) {
         bindTabs();
         uiWired = true;
