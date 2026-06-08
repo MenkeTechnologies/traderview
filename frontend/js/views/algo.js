@@ -87,9 +87,9 @@ function fmtDateTime(iso) {
 }
 
 function brokerBadge(mode) {
-    if (mode === 'alpaca_live') return '<span class="badge badge-danger">live</span>';
-    if (mode === 'alpaca_paper') return '<span class="badge">paper</span>';
-    return '<span class="badge muted">sim</span>';
+    if (mode === 'alpaca_live') return '<span class="badge badge-danger" title="Real money via Alpaca live trading">LIVE</span>';
+    if (mode === 'alpaca_paper') return '<span class="badge badge-paper" title="Alpaca paper-trading sandbox — no real money">PAPER</span>';
+    return '<span class="badge badge-paper" title="In-app simulator — no real money or broker connection">PAPER</span>';
 }
 
 function paperLockBadge(iso) {
@@ -847,13 +847,16 @@ async function openStrategyModal(mount, existing = null) {
                     <label><span data-i18n="view.algo.label.max_concurrent">Max concurrent positions</span>
                         <input type="number" name="max_concurrent_positions" min="1" max="50" value="${Number(s.risk_gates?.max_concurrent_positions ?? 5)}">
                     </label>
-                    <label><span data-i18n="view.algo.label.broker_mode">Broker</span>
+                    <label><span data-i18n="view.algo.label.broker_mode">Execution mode</span>
                         <select name="broker_mode">
-                            <option value="internal_sim"  ${s.broker_mode === 'internal_sim'  ? 'selected' : ''} data-i18n="view.algo.opt.broker_sim">Internal simulator</option>
-                            <option value="alpaca_paper" ${s.broker_mode === 'alpaca_paper' ? 'selected' : ''} data-i18n="view.algo.opt.broker_paper">Alpaca paper</option>
-                            <option value="alpaca_live"  ${s.broker_mode === 'alpaca_live'  ? 'selected' : ''} data-i18n="view.algo.opt.broker_live">Alpaca LIVE (after paper-lock)</option>
+                            <option value="internal_sim"  ${s.broker_mode === 'internal_sim'  ? 'selected' : ''} data-i18n="view.algo.opt.broker_sim">Paper — In-app simulator (no broker)</option>
+                            <option value="alpaca_paper"  ${s.broker_mode === 'alpaca_paper' ? 'selected' : ''} data-i18n="view.algo.opt.broker_paper">Paper — Alpaca sandbox</option>
+                            <option value="alpaca_live"   ${s.broker_mode === 'alpaca_live'  ? 'selected' : ''} data-i18n="view.algo.opt.broker_live">LIVE — Alpaca real money (after 30-day paper-lock)</option>
                         </select>
                     </label>
+                    <p class="muted small" style="margin:0" data-i18n="view.algo.hint.execution_safety">
+                        Both paper modes are zero-risk: in-app sim fills at last known price; Alpaca sandbox is their official paper environment. Live trades use real money and require completed 30-day paper-lock.
+                    </p>
                     <div class="algo-form-actions">
                         <button type="button" id="algo-cancel" data-i18n="view.algo.btn.cancel">Cancel</button>
                         <button type="submit" id="algo-save" class="primary"

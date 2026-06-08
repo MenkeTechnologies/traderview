@@ -305,6 +305,33 @@ body:not(.no-neon-glow) .chart-panel {
     padding-bottom: 6px; border-bottom: 1px solid var(--border);
 }
 
+/* Compact badges used throughout the algo widget (broker mode, kill
+   switch, paper-lock countdown, etc.). Keep small + monospace so they
+   sit inline with table text without breaking layout. */
+.badge {
+    display: inline-block;
+    padding: 1px 6px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 10px; letter-spacing: 0.5px;
+    text-transform: uppercase;
+    vertical-align: middle;
+}
+.badge.muted { opacity: 0.65; }
+.badge-danger {
+    background: rgba(255, 60, 60, 0.18);
+    border-color: rgba(255, 60, 60, 0.6);
+    color: #ff8a8a;
+}
+.badge-paper {
+    background: rgba(50, 220, 130, 0.14);
+    border-color: rgba(50, 220, 130, 0.55);
+    color: #66e6a0;
+}
+
 /* Per-strategy documentation — rendered both in the modal (during
    strategy pick) and in the main view's Strategy reference panel. */
 .algo-doc { display: flex; flex-direction: column; gap: 10px; }
