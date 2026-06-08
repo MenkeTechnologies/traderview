@@ -670,6 +670,20 @@ export async function renderAlgo(mount) {
             <div id="algo-stdout-panes"></div>
         </div>
 
+        <details class="chart-panel" id="algo-tape-panel" open>
+            <summary><h2 style="display:inline" data-i18n="view.algo.h2.tape">Raw tape — live trades off the Alpaca WS</h2></summary>
+            <p class="muted small" data-i18n="view.algo.hint.tape">
+                Every trade frame the live-tick worker parses off the WS. Per-symbol coalesce of 250ms so a chatty pair doesn't flood the pane.
+                Empty pane = the WS isn't producing trades for any subscribed symbol right now.
+            </p>
+            <div class="row" style="gap:8px;margin-bottom:6px">
+                <input type="text" id="algo-tape-filter" placeholder="filter symbol (e.g. BTC)" style="flex:1 1 auto">
+                <label style="white-space:nowrap"><input type="checkbox" id="algo-tape-autoscroll" checked> autoscroll</label>
+                <button class="link" id="algo-tape-clear" data-i18n="view.algo.btn.clear">clear</button>
+            </div>
+            <pre id="algo-tape" class="algo-stdout" style="max-height:280px;overflow:auto"></pre>
+        </details>
+
         <div id="algo-runs" class="chart-panel" style="display:none">
             <h2><span data-i18n="view.algo.h2.runs">Recent runs</span> — <span id="algo-runs-strategy-name" class="muted">…</span></h2>
             <table class="trades" id="algo-runs-table">
@@ -748,6 +762,42 @@ export async function renderAlgo(mount) {
     wsUnsubs.push(onWsEvent('algo_heartbeat', (msg) => {
         logHeartbeat(mount, msg);
     }));
+    wsUnsubs.push(onWsEvent('tick', (msg) => {
+        logTape(mount, msg);
+    }));
+    const clearBtn = mount.querySelector('#algo-tape-clear');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            const pane = mount.querySelector('#algo-tape');
+            if (pane) pane.textContent = '';
+            tapeLastEmit.clear();
+        });
+    }
+}
+
+// Raw tape pane — coalesce per (symbol) at 250ms so a chatty pair
+// (BTC/USD doing 100 trades/sec at peak) doesn't drown other symbols.
+const tapeLastEmit = new Map();
+const TAPE_MAX_LINES = 500;
+function logTape(mount, msg) {
+    const last = tapeLastEmit.get(msg.symbol) || 0;
+    const now = performance.now();
+    if (now - last < 250) return;
+    tapeLastEmit.set(msg.symbol, now);
+    const pane = mount.querySelector('#algo-tape');
+    if (!pane) return;
+    const filter = (mount.querySelector('#algo-tape-filter')?.value || '').trim().toLowerCase();
+    if (filter && !msg.symbol.toLowerCase().includes(filter)) return;
+    const ts = new Date(msg.ts_ms).toISOString().slice(11, 23);
+    const line = `${ts}  ${msg.symbol.padEnd(10)} @ ${Number(msg.price).toFixed(4).padStart(14)}  vol=${Number(msg.volume).toFixed(4)}`;
+    pane.textContent += (pane.textContent ? '\n' : '') + line;
+    // Trim to last TAPE_MAX_LINES
+    const lines = pane.textContent.split('\n');
+    if (lines.length > TAPE_MAX_LINES) {
+        pane.textContent = lines.slice(-TAPE_MAX_LINES).join('\n');
+    }
+    const autoscroll = mount.querySelector('#algo-tape-autoscroll');
+    if (autoscroll?.checked !== false) pane.scrollTop = pane.scrollHeight;
 }
 
 async function refreshStrategies(mount) {

@@ -96,6 +96,17 @@ pub enum Event {
         signals_emitted: i64,
         seconds_to_next_eval: i64,
     },
+    /// Raw trade off the live-tick WS — every parsed Trade is fanned
+    /// out so a frontend tape pane can render the unaggregated tick
+    /// stream as it arrives (separate from the per-state-update
+    /// `SymbolState` events). Useful for proving the WS feed is
+    /// genuinely streaming, not synthesized.
+    Tick {
+        symbol: String,
+        price: f64,
+        volume: f64,
+        ts_ms: i64,
+    },
 }
 
 #[derive(Clone)]

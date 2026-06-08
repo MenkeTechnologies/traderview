@@ -559,15 +559,19 @@ async fn drive_strategy(
     // there are more, so the user sees what's missing without 25 lines.
     if !no_bars.is_empty() {
         let head: Vec<_> = no_bars.iter().take(5).cloned().collect();
-        // Escalate the tail of the skip reason based on how stale the
-        // no-bars state is. The first few minutes after subscribe is
-        // expected (10s buckets need to accumulate); after that the
-        // live tick worker is genuinely stuck and the user needs to
-        // act (check Data sources / restart / etc.). Computed from
-        // run.started_at so a fresh run gets the "filling in" message
-        // and a long-running stuck run gets the actionable one.
+        // Escalation: ONLY show the "stuck" warning if no symbols
+        // evaluated this tick AND no symbols evaluated in earlier
+        // ticks (driven > 0 means some pair of the universe HAS
+        // bars). Mixed universes are normal — thin / new pairs lag
+        // until enough 10s buckets accumulate.
         let mins_since_start = (chrono::Utc::now() - run.started_at).num_minutes().max(0);
-        let tail = if mins_since_start < 3 {
+        let tail = if driven > 0 {
+            format!(
+                "other {} universe members already evaluating — these are still warming up (need ~{} bar window of 10s buckets)",
+                interval.label(),
+                interval.seconds() / 10,
+            )
+        } else if mins_since_start < 3 {
             format!(
                 "first {} window after autoscan; symbols were just subscribed to live tick worker, bars will fill in over the next minute or two",
                 interval.label(),

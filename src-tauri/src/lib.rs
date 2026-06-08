@@ -290,6 +290,20 @@ async fn bring_up_backend(
     {
         let pool = embedded.pool.clone();
         let sink = state.build_engine_event_sink();
+        // Forwarder: pipe live_ticks raw trade tape → realtime hub →
+        // frontend tape pane. Bounded broadcast (drops on lag).
+        let tape_hub = state.hub.clone();
+        let mut tape_rx = traderview_db::live_ticks::global().tape_subscribe();
+        tokio::spawn(async move {
+            while let Ok(t) = tape_rx.recv().await {
+                tape_hub.publish(traderview_web::realtime::Event::Tick {
+                    symbol: t.symbol,
+                    price: t.price,
+                    volume: t.volume,
+                    ts_ms: t.ts_ms,
+                });
+            }
+        });
         tokio::spawn(traderview_db::algo_runner::run_loop(
             pool.clone(),
             Some(sink.clone()),

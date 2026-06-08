@@ -212,6 +212,11 @@ struct TapeBucket {
 pub struct LiveTickStore {
     state: Arc<DashMap<String, SymbolState>>,
     tx: broadcast::Sender<SymbolState>,
+    /// Raw trade broadcast — every parsed Trade is sent through this
+    /// channel so consumers (algo view's tape pane, debug tooling)
+    /// can see the unaggregated tick stream as it arrives, not the
+    /// per-state snapshot the main `tx` carries.
+    tape_tx: broadcast::Sender<Trade>,
     /// Finnhub WS key — the legacy default provider.
     api_key: Arc<tokio::sync::RwLock<Option<String>>>,
     /// Polygon.io WS key. When present, the store prefers Polygon over
@@ -262,9 +267,11 @@ pub struct LiveTickStore {
 impl LiveTickStore {
     pub fn new() -> Self {
         let (tx, _) = broadcast::channel(1024);
+        let (tape_tx, _) = broadcast::channel(2048);
         Self {
             state: Arc::new(DashMap::new()),
             tx,
+            tape_tx,
             api_key: Arc::new(tokio::sync::RwLock::new(None)),
             polygon_key: Arc::new(tokio::sync::RwLock::new(None)),
             alpaca_creds: Arc::new(tokio::sync::RwLock::new(None)),
@@ -590,7 +597,20 @@ impl LiveTickStore {
     // the WS read loop — the previous inline `await` here would stall
     // every subsequent trade until Postgres ack'd, which Finnhub can
     // detect as backpressure and start dropping messages.
+    /// Subscribe to the raw trade tape — every parsed Trade is sent
+    /// here as the worker reads it off the WS. Late subscribers miss
+    /// historical trades; the broadcast channel is bounded to 2048
+    /// and oldest-evicts on lag.
+    pub fn tape_subscribe(&self) -> broadcast::Receiver<Trade> {
+        self.tape_tx.subscribe()
+    }
+
     fn feed_bucket(&self, t: &Trade) {
+        // Fire the raw trade onto the tape broadcast BEFORE bucket
+        // bookkeeping so a consumer sees every tick even if a
+        // downstream bucket close takes a moment to persist. No
+        // backpressure — the send is non-blocking and lossy on lag.
+        let _ = self.tape_tx.send(t.clone());
         let bucket_start = (t.ts_ms / 1000 / TAPE_BUCKET_SECS) * TAPE_BUCKET_SECS;
         let mut closed: Option<(String, TapeBucket)> = None;
         {

@@ -114,6 +114,22 @@ async fn main() -> anyhow::Result<()> {
     traderview_db::live_ticks::global()
         .set_pool(pool.clone())
         .await;
+    // Forwarder: pipe live_ticks raw trade tape → realtime hub →
+    // frontend tape pane. Lossy on lag (bounded broadcast).
+    {
+        let hub = state.hub.clone();
+        let mut rx = traderview_db::live_ticks::global().tape_subscribe();
+        tokio::spawn(async move {
+            while let Ok(t) = rx.recv().await {
+                hub.publish(crate::realtime::Event::Tick {
+                    symbol: t.symbol,
+                    price: t.price,
+                    volume: t.volume,
+                    ts_ms: t.ts_ms,
+                });
+            }
+        });
+    }
 
     // Background disclosure poller — every 20s for sub-30s EDGAR/Congress alerts.
     {
