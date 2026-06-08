@@ -13337,7 +13337,7 @@
   "view.settings.placeholder.polygon_api_key": "polygon.io key — Advanced tier for full SIP tape",
   "view.settings.label.databento_api_key": "Databento API key",
   "view.settings.placeholder.databento_api_key": "databento.com key — direct CTA / UTP / OPRA feeds",
-  "view.settings.label.alpaca_use_sip_feed": "Use Alpaca SIP feed (Live tier required)",
+  "view.settings.label.alpaca_use_sip_feed": "Use Alpaca SIP feed (Algo Trader Plus required)",
   "view.market_status.status.open": "OPEN",
   "view.market_status.status.closed": "CLOSED",
   "view.market_status.card.status": "Status",

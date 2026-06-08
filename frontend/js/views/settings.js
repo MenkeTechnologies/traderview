@@ -206,7 +206,7 @@ export async function renderSettings(mount, state) {
                 </label>
                 <label style="flex-direction:row;align-items:center;gap:6px">
                     <input type="checkbox" name="alpaca_use_sip_feed" ${ds.alpaca_use_sip_feed ? 'checked' : ''}>
-                    <span data-i18n="view.settings.label.alpaca_use_sip_feed">Use Alpaca SIP feed (Live tier required)</span>
+                    <span data-i18n="view.settings.label.alpaca_use_sip_feed">Use Alpaca SIP feed (Algo Trader Plus required)</span>
                 </label>
                 <button data-i18n="view.settings.btn.save_data_sources" class="primary" type="submit">Save data sources</button>
                 <button data-i18n="view.settings.btn.test_finnhub" class="btn btn-secondary" type="button" id="ds-test-finnhub">Test Finnhub</button>
