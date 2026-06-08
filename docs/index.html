@@ -424,6 +424,111 @@ cargo run -p traderview-web --bin server
       </section>
 
       <section class="tutorial-section">
+        <h2>Algo Trading — End-to-End Strategy Engine</h2>
+        <p>Full algorithmic trading subsystem: 16 strategies, 5 real brokers with native bracket orders, backtester, parameter optimizer, risk circuit breakers, and a live event stream. Built around the <code>Strategy</code> trait in <code>traderview-core</code> so the same code path runs in backtests and live.</p>
+
+        <h3 style="margin-top:1rem">Strategy Trait + Registry</h3>
+        <p>Every strategy implements <code>traderview_core::algo_strategies::Strategy</code>:</p>
+        <pre><code>pub trait Strategy: Send + Sync {
+    fn kind(&amp;self) -&gt; StrategyKind;
+    fn min_bars(&amp;self) -&gt; usize;
+    fn evaluate_entry(&amp;self, bars: &amp;[PriceBar], side_mode: SideMode) -&gt; Option&lt;EntrySignal&gt;;
+    fn evaluate_exit(&amp;self, bars: &amp;[PriceBar], side: Side,
+                     anchor_high: f64, anchor_low: f64) -&gt; Option&lt;ExitSignal&gt;;
+    // Multi-symbol strategies (pairs/stat-arb) override these:
+    fn required_symbols(&amp;self) -&gt; Option&lt;Vec&lt;String&gt;&gt; { None }
+    fn evaluate_entry_multi(&amp;self, bars_by_symbol: &amp;HashMap&lt;String, Vec&lt;PriceBar&gt;&gt;,
+                            side_mode: SideMode) -&gt; Option&lt;EntrySignal&gt; { None }
+}</code></pre>
+        <p>16 shipping strategies, each picked via <code>strategy_type</code> column on <code>algo_strategies</code>:</p>
+        <table class="tv-table">
+          <thead><tr><th>strategy_type</th><th>Family</th><th>Entry condition</th></tr></thead>
+          <tbody>
+            <tr><td><code>momentum</code></td><td>Trend follow</td><td>EMA cross + RSI ≥ min + ROC ≥ min + RVOL ≥ min</td></tr>
+            <tr><td><code>mean_reversion</code></td><td>Reversion</td><td>Connors RSI ≤ oversold + VWAP z-score ≤ −z_min</td></tr>
+            <tr><td><code>orb</code></td><td>Breakout</td><td>Opening Range high break + RVOL ≥ min</td></tr>
+            <tr><td><code>donchian_trend</code></td><td>Trend follow</td><td>Donchian channel break + ADX ≥ 20</td></tr>
+            <tr><td><code>bb_squeeze</code></td><td>Volatility</td><td>BBW bottom decile + band break</td></tr>
+            <tr><td><code>ttm_squeeze</code></td><td>Volatility</td><td>BB-inside-KC release + momentum histogram expanding</td></tr>
+            <tr><td><code>vwap_scalp</code></td><td>Reversion</td><td>VWAP z-score ≥ z_entry + 1×ATR stop</td></tr>
+            <tr><td><code>supertrend</code></td><td>Trend follow</td><td>Supertrend flag flip with ATR-banded stop</td></tr>
+            <tr><td><code>heikin_ashi_trend</code></td><td>Trend follow</td><td>Heikin-Ashi run of N + EMA confirm</td></tr>
+            <tr><td><code>connors_rsi2</code></td><td>Reversion</td><td>RSI(2) ≤ max + price above 200 SMA</td></tr>
+            <tr><td><code>order_block_sweep</code></td><td>SMC</td><td>Order block + liquidity sweep retest</td></tr>
+            <tr><td><code>pead</code></td><td>Fundamental</td><td>Post-earnings drift; runner pre-filters by earnings_cal</td></tr>
+            <tr><td><code>pairs</code></td><td>Stat-arb</td><td>Cointegrated spread z-score ≥ z_entry (multi-symbol)</td></tr>
+            <tr><td><code>ma_cross_adx</code></td><td>Trend follow</td><td>Fast/slow EMA cross gated on ADX ≥ adx_min + DI confirm</td></tr>
+            <tr><td><code>keltner_breakout</code></td><td>Volatility</td><td>Close clears EMA ± mult × ATR upper/lower band</td></tr>
+            <tr><td><code>ichimoku_cloud</code></td><td>Confluence</td><td>Close clears cloud + TK cross + Chikou clear + cloud color matches</td></tr>
+          </tbody>
+        </table>
+
+        <h3 style="margin-top:1rem">Broker Adapters — 5 Real REST + WS Fill Pumps</h3>
+        <p>Adapter trait <code>BrokerSink</code> in <code>algo_engine.rs</code>; dispatcher picks the impl from <code>accounts.broker</code> at submit time. Every adapter is wiremock-tested at the contract level (38 broker tests total).</p>
+        <table class="tv-table">
+          <thead><tr><th>Broker</th><th>REST adapter</th><th>Fill pump</th><th>Native bracket</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Alpaca</strong></td><td><code>alpaca_trading.rs</code> — POST /v2/orders, native bracket</td><td><code>alpaca_pump.rs</code> trade_updates WS</td><td>✓ (single envelope)</td></tr>
+            <tr><td><strong>Tradier</strong></td><td><code>tradier_trading.rs</code> — OTOCO complex order</td><td><code>tradier_pump.rs</code> account events streamer (5-min session refresh)</td><td>✓ (OTOCO)</td></tr>
+            <tr><td><strong>Schwab</strong></td><td><code>schwab_trading.rs</code> — OAuth 2.0 with 401→refresh→retry, TRIGGER+OCO bracket</td><td><code>schwab_pump.rs</code> ACCT_ACTIVITY streamer; XML MESSAGE_DATA scanner</td><td>✓ (TRIGGER+OCO)</td></tr>
+            <tr><td><strong>IBKR</strong></td><td><code>ibkr_trading.rs</code> — Client Portal Web API; symbol→conid resolver picks US listing</td><td><code>ibkr_pump.rs</code> /ws sor+str topics with cOID matcher</td><td>✓ (parent + 2 children with parentId)</td></tr>
+            <tr><td><strong>Tastytrade</strong></td><td><code>tastytrade_trading.rs</code> — REST single-leg; session-token or username/password</td><td><code>tastytrade_pump.rs</code> streamer.tastyworks.com</td><td>⚠ entry-only; logs <code>tracing::warn!</code> at submit so user sees the drop</td></tr>
+          </tbody>
+        </table>
+        <p>OAuth + cookie-jar handling, refresh-token rotation, auto-retry on 401, broker-specific JSON shape (hyphenated Tastytrade, camel-case Schwab, conid for IBKR) — all isolated inside the adapter; <code>BrokerSink::submit_bracket</code> presents one uniform interface to the engine.</p>
+
+        <h3 style="margin-top:1rem">Risk Circuit Breakers</h3>
+        <p>Three opt-in gates in <code>algo_strategies.risk_gates</code> JSON. Each gate auto-trips the kill switch (sets <code>enabled=false</code>, <code>kill_switch=true</code>, appends an audit row) and webhook-fires every enabled Discord/Slack hook the user has configured. Test coverage: <code>engine_trips_on_daily_loss_cap</code>, <code>engine_trips_on_consecutive_losses_cap</code>, <code>engine_refuses_when_position_size_cap_breached</code>.</p>
+        <pre><code>{
+  "max_concurrent_positions": 5,
+  "max_daily_loss_usd":       500.0,   // SUM(algo_runs.pnl_realized today) ≤ −cap
+  "max_consecutive_losses":   4,       // walk algo_runs newest-first
+  "max_position_size_usd":    10000.0  // entry_price × qty cap
+}</code></pre>
+
+        <h3 style="margin-top:1rem">Backtester + Parameter Optimizer</h3>
+        <p><code>traderview_core::algo_backtest</code> walks historical bars through the same <code>Strategy</code> trait the live engine uses. Pessimistic intra-bar fill model (SL wins ties when a bar's range covers both stop and TP). Returns trades, equity curve, summary stats (Sharpe, profit factor, max DD, avg R, exit-reason histogram). Covered by 9 unit tests pinning SL/TP/EOD resolution + short-side mirroring.</p>
+        <p><code>traderview_core::algo_optimize</code> takes a parameter grid <code>{key: [v1, v2, …]}</code>, expands the Cartesian product (hard cap 1024 combinations), runs the backtester for each combo, ranks by user-chosen metric (Sharpe / TotalReturn / ProfitFactor / AvgR / ReturnMinusDd). Frontend ships curated default grids per strategy_type — sane sweep on every strategy without writing JSON.</p>
+
+        <h3 style="margin-top:1rem">Live Engine Flow (per bar boundary)</h3>
+        <ol>
+          <li><code>algo_runner::tick</code> wakes on the 10s clock boundary (covers both <code>sec10</code> and <code>min1</code> strategies).</li>
+          <li><code>list_active_strategies</code>: <code>enabled=TRUE AND kill_switch=FALSE AND deleted_at IS NULL</code>.</li>
+          <li>For each strategy: emit <code>Heartbeat</code> event with subscribed-symbol count + next-eval countdown so the frontend stdout pane shows proof-of-life every 10s.</li>
+          <li>If <code>is_boundary(now, interval)</code> false, continue. Otherwise resolve <code>symbol_universe</code>: <code>watchlist_id</code> ⇒ watchlist symbols; <code>autoscan</code> ⇒ top-N from the 24k US-equity <code>symbols</code> catalog ranked by historical volume.</li>
+          <li>Side-effect: <code>LiveTickStore::ensure_subscribed(symbols)</code> registers every pick with the Alpaca/Polygon/Finnhub WS so 10s bars start writing to <code>price_bars</code> within seconds.</li>
+          <li>For each symbol, <code>fetch_recent_bars</code> tries the strategy's interval directly; if empty (typical for newly-subscribed symbols), pulls 6×/30×/90× as many 10s bars and aggregates on the fly via <code>rollup_s10</code> so the strategy sees its first M1 bar within ~60s.</li>
+          <li>Risk gates check (daily loss, consec losses, position-size cap). On breach: trip kill switch, fan-out webhooks, abort.</li>
+          <li><code>BrokerSink::submit_bracket(intent)</code> on the dispatcher-selected sink. Native bracket on 4/5 brokers ships entry + TP + SL in a single atomic submit.</li>
+          <li>Fill arrives async via the broker WS pump → <code>algo_engine::record_fill</code> → <code>executions</code> + <code>trades::rollup_account</code>. <em>Same pipeline every dashboard / R-distribution / equity curve already reads.</em></li>
+        </ol>
+
+        <h3 style="margin-top:1rem">Live Event Stream — <code>/api/ws</code></h3>
+        <p>Engine events fan out through the realtime hub with snake_case type tags. Frontend stdout pane in the algo view subscribes to all six:</p>
+        <table class="tv-table">
+          <thead><tr><th>Event</th><th>Fires when</th></tr></thead>
+          <tbody>
+            <tr><td><code>algo_heartbeat</code></td><td>Every 10s per active strategy. Payload: universe_size, subscribed_live, bars_processed, signals_emitted, seconds_to_next_eval.</td></tr>
+            <tr><td><code>algo_bar_evaluated</code></td><td>Strategy ran <code>evaluate_entry</code> with enough bars but returned None.</td></tr>
+            <tr><td><code>algo_tick_skipped</code></td><td>Runner short-circuited (no universe, no bars yet, broker-pending, etc.). Reason text is actionable; escalates after 3 min to "live tick worker is stuck — check log".</td></tr>
+            <tr><td><code>algo_signal_fired</code></td><td>Strategy returned <code>Some(EntrySignal)</code>. Order row inserted in <code>pending_submit</code> status before broker call.</td></tr>
+            <tr><td><code>algo_order_submitted</code></td><td>Broker accepted the order; <code>broker_order_id</code> known.</td></tr>
+            <tr><td><code>algo_fill_received</code></td><td>Fill landed in <code>algo_fills</code> + <code>executions</code>.</td></tr>
+          </tbody>
+        </table>
+
+        <h3 style="margin-top:1rem">UI Surfaces — Algo View</h3>
+        <ul>
+          <li><strong>New strategy</strong> modal — picks strategy_type (16 options), broker_mode (internal_sim / paper / live with 30-day paper-lock), bound account, watchlist or autoscan, side_mode, sizing JSON, risk_gates JSON.</li>
+          <li><strong>Stdout pane</strong> — multi-pane: one per strategy + global firehose. Renders HB / SKIP / EVAL / SIGNAL / ORDER / FILL lines with throttling so chatty events don't drown the rare important ones.</li>
+          <li><strong>Backtest modal</strong> — symbol, interval, days back, equity, fees, slippage. Renders summary stats + last-30 trades color-coded. History panel below auto-refreshes after each run.</li>
+          <li><strong>Optimize modal</strong> — grid JSON (pre-populated by strategy_type), metric picker, top-N. Result table has per-row "apply" button that PUTs the winning entry_rules back to the strategy.</li>
+          <li><strong>Metrics modal</strong> — runs / bars / signals / orders / fills counters, total realized P&amp;L, SVG sparkline equity curve, recent 25 orders.</li>
+          <li><strong>Kill switch</strong> — manual engage/release with reason text; webhook fan-out on every transition.</li>
+        </ul>
+      </section>
+
+      <section class="tutorial-section">
         <h2>Resilience &amp; Hardening</h2>
         <ul>
           <li><strong>Stale-lock recovery.</strong> Embedded Postgres checks <code>postmaster.pid</code> before start; if the recorded PID is dead, removes the lockfile so a SIGKILL'd parent doesn't permanently block the next launch.</li>
