@@ -16,7 +16,7 @@ use axum::extract::State;
 use axum::routing::{get, post};
 use axum::{Json, Router};
 use futures_util::{SinkExt, StreamExt};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tokio_tungstenite::tungstenite::Message as WsMessage;
 use traderview_db::data_source_keys::{self, DataSourceKeysDto};
@@ -27,6 +27,7 @@ pub fn router() -> Router<AppState> {
         .route("/data-sources/reveal", get(reveal_keys))
         .route("/data-sources/test-alpaca", post(test_alpaca))
         .route("/data-sources/test-finnhub", post(test_finnhub))
+        .route("/data-sources/test-tradier", post(test_tradier))
 }
 
 async fn get_keys(
@@ -355,4 +356,96 @@ async fn test_finnhub(
         http_status,
         detail,
     }))
+}
+
+#[derive(Deserialize)]
+struct TestTradierBody {
+    /// Pasted-but-not-yet-saved token; UI sends what's in the input
+    /// field. Empty / mask → fall back to the stored value.
+    #[serde(default)]
+    access_token: Option<String>,
+    #[serde(default)]
+    account_id: Option<String>,
+    #[serde(default = "default_true_inline")]
+    sandbox: bool,
+}
+
+fn default_true_inline() -> bool { true }
+
+#[derive(Serialize)]
+struct TestTradierResp {
+    ok: bool,
+    http_status: u16,
+    detail: Option<serde_json::Value>,
+}
+
+/// Verify Tradier creds via a balances probe. Sandbox responds
+/// identically to production for this endpoint; the only difference is
+/// the base URL.
+async fn test_tradier(
+    State(s): State<AppState>,
+    u: AuthUser,
+    Json(body): Json<TestTradierBody>,
+) -> Result<Json<TestTradierResp>, ApiError> {
+    let mask = "***";
+    let supplied_token = body
+        .access_token
+        .as_deref()
+        .filter(|k| !k.is_empty() && *k != mask);
+    let supplied_acct = body
+        .account_id
+        .as_deref()
+        .filter(|k| !k.is_empty() && *k != mask);
+    let (token, account_id, sandbox) = match (supplied_token, supplied_acct) {
+        (Some(t), Some(a)) => (t.to_string(), a.to_string(), body.sandbox),
+        _ => {
+            let Some((t, a, sb)) = data_source_keys::tradier_creds(&s.pool, u.id)
+                .await
+                .map_err(ApiError::Internal)?
+            else {
+                return Ok(Json(TestTradierResp {
+                    ok: false,
+                    http_status: 0,
+                    detail: Some(serde_json::json!({
+                        "msg": "no Tradier credentials configured — paste token + account_id first or save them"
+                    })),
+                }));
+            };
+            (t, a, sb)
+        }
+    };
+
+    let env = if sandbox {
+        traderview_db::tradier_trading::TradierEnv::Sandbox
+    } else {
+        traderview_db::tradier_trading::TradierEnv::Live
+    };
+    let client = traderview_db::tradier_trading::TradierTrading::new(env, &token, &account_id);
+    match client.get_balances().await {
+        Ok(b) => Ok(Json(TestTradierResp {
+            ok: true,
+            http_status: 200,
+            detail: Some(serde_json::json!({
+                "msg": "Tradier credentials valid — balances endpoint returned",
+                "account_number": b.balances.account_number,
+                "total_equity": b.balances.total_equity,
+                "total_cash": b.balances.total_cash,
+                "sandbox": sandbox,
+            })),
+        })),
+        Err(e) => {
+            // Map our typed error back to an HTTP-ish status the UI can act on.
+            let (http_status, msg) = match &e {
+                traderview_db::tradier_trading::TradierError::AuthFailed => (401, "invalid access_token".to_string()),
+                traderview_db::tradier_trading::TradierError::InvalidRequest(b) => (400, format!("invalid request: {b}")),
+                traderview_db::tradier_trading::TradierError::Http { status, body } => (*status, format!("http {status}: {body}")),
+                other => (0, other.to_string()),
+            };
+            Ok(Json(TestTradierResp {
+                ok: false,
+                http_status,
+                detail: Some(serde_json::json!({ "msg": msg, "sandbox": sandbox })),
+            }))
+        }
+    }
 }

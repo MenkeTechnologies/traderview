@@ -66,6 +66,23 @@ pub struct DataSourceKeysDto {
     /// more than the default IEX-only feed; some plans support both).
     #[serde(default)]
     pub alpaca_use_sip_feed: bool,
+    /// Tradier brokerage access token. Sandbox + live both use the same
+    /// header format (`Authorization: Bearer <token>`); the env switch
+    /// is `tradier_sandbox` below.
+    #[serde(default)]
+    pub tradier_access_token: Option<String>,
+    /// Tradier account number — the path segment in
+    /// `/v1/accounts/{account_id}/orders`. Get it from the Tradier
+    /// dashboard.
+    #[serde(default)]
+    pub tradier_account_id: Option<String>,
+    /// When true (default) routes to sandbox.tradier.com; false routes
+    /// to api.tradier.com. Independent of the per-strategy broker_mode —
+    /// a user can keep `tradier_sandbox=true` while running an algo
+    /// strategy in `broker_mode='live'` (the sandbox env wins; strategy
+    /// engine logs the discrepancy).
+    #[serde(default = "default_true")]
+    pub tradier_sandbox: bool,
 }
 
 fn default_true() -> bool {
@@ -81,6 +98,9 @@ struct Row {
     polygon_api_key: Option<String>,
     databento_api_key: Option<String>,
     alpaca_use_sip_feed: bool,
+    tradier_access_token: Option<String>,
+    tradier_account_id: Option<String>,
+    tradier_sandbox: bool,
 }
 
 fn mask(v: Option<String>) -> Option<String> {
@@ -98,7 +118,8 @@ pub async fn get_unmasked(pool: &PgPool, user_id: Uuid) -> anyhow::Result<DataSo
         .await?;
     let row: Row = sqlx::query_as(
         "SELECT finnhub_api_key, alpaca_key_id, alpaca_secret_key, alpaca_paper,
-                polygon_api_key, databento_api_key, alpaca_use_sip_feed
+                polygon_api_key, databento_api_key, alpaca_use_sip_feed,
+                tradier_access_token, tradier_account_id, tradier_sandbox
            FROM user_settings
           WHERE user_id = $1",
     )
@@ -113,6 +134,9 @@ pub async fn get_unmasked(pool: &PgPool, user_id: Uuid) -> anyhow::Result<DataSo
         polygon_api_key: row.polygon_api_key,
         databento_api_key: row.databento_api_key,
         alpaca_use_sip_feed: row.alpaca_use_sip_feed,
+        tradier_access_token: row.tradier_access_token,
+        tradier_account_id: row.tradier_account_id,
+        tradier_sandbox: row.tradier_sandbox,
     })
 }
 
@@ -126,7 +150,8 @@ pub async fn get(pool: &PgPool, user_id: Uuid) -> anyhow::Result<DataSourceKeysD
         .await?;
     let row: Row = sqlx::query_as(
         "SELECT finnhub_api_key, alpaca_key_id, alpaca_secret_key, alpaca_paper,
-                polygon_api_key, databento_api_key, alpaca_use_sip_feed
+                polygon_api_key, databento_api_key, alpaca_use_sip_feed,
+                tradier_access_token, tradier_account_id, tradier_sandbox
            FROM user_settings
           WHERE user_id = $1",
     )
@@ -142,6 +167,11 @@ pub async fn get(pool: &PgPool, user_id: Uuid) -> anyhow::Result<DataSourceKeysD
         polygon_api_key: mask(row.polygon_api_key),
         databento_api_key: mask(row.databento_api_key),
         alpaca_use_sip_feed: row.alpaca_use_sip_feed,
+        tradier_access_token: mask(row.tradier_access_token),
+        // Account ID isn't a secret (it appears in error messages, URLs)
+        // but mask consistently so the reveal-button UX stays uniform.
+        tradier_account_id: mask(row.tradier_account_id),
+        tradier_sandbox: row.tradier_sandbox,
     })
 }
 
@@ -163,49 +193,39 @@ pub async fn set(pool: &PgPool, user_id: Uuid, dto: &DataSourceKeysDto) -> anyho
         matches!(dto.polygon_api_key.as_deref(), Some(k) if k != MASK && !k.is_empty());
     let databento_supplied =
         matches!(dto.databento_api_key.as_deref(), Some(k) if k != MASK && !k.is_empty());
+    let tradier_token_supplied =
+        matches!(dto.tradier_access_token.as_deref(), Some(k) if k != MASK && !k.is_empty());
+    let tradier_acct_supplied =
+        matches!(dto.tradier_account_id.as_deref(), Some(k) if k != MASK && !k.is_empty());
 
     // Build a coalescing UPDATE so the caller can change a subset of fields
     // without re-supplying the others.
     sqlx::query(
         "UPDATE user_settings SET
-             finnhub_api_key     = COALESCE($2, finnhub_api_key),
-             alpaca_key_id       = COALESCE($3, alpaca_key_id),
-             alpaca_secret_key   = COALESCE($4, alpaca_secret_key),
-             alpaca_paper        = $5,
-             polygon_api_key     = COALESCE($6, polygon_api_key),
-             databento_api_key   = COALESCE($7, databento_api_key),
-             alpaca_use_sip_feed = $8,
-             updated_at          = now()
+             finnhub_api_key       = COALESCE($2, finnhub_api_key),
+             alpaca_key_id         = COALESCE($3, alpaca_key_id),
+             alpaca_secret_key     = COALESCE($4, alpaca_secret_key),
+             alpaca_paper          = $5,
+             polygon_api_key       = COALESCE($6, polygon_api_key),
+             databento_api_key     = COALESCE($7, databento_api_key),
+             alpaca_use_sip_feed   = $8,
+             tradier_access_token  = COALESCE($9, tradier_access_token),
+             tradier_account_id    = COALESCE($10, tradier_account_id),
+             tradier_sandbox       = $11,
+             updated_at            = now()
            WHERE user_id = $1",
     )
     .bind(user_id)
-    .bind(if finnhub_supplied {
-        dto.finnhub_api_key.as_deref()
-    } else {
-        None
-    })
-    .bind(if alpaca_id_supplied {
-        dto.alpaca_key_id.as_deref()
-    } else {
-        None
-    })
-    .bind(if alpaca_secret_supplied {
-        dto.alpaca_secret_key.as_deref()
-    } else {
-        None
-    })
+    .bind(if finnhub_supplied { dto.finnhub_api_key.as_deref() } else { None })
+    .bind(if alpaca_id_supplied { dto.alpaca_key_id.as_deref() } else { None })
+    .bind(if alpaca_secret_supplied { dto.alpaca_secret_key.as_deref() } else { None })
     .bind(dto.alpaca_paper)
-    .bind(if polygon_supplied {
-        dto.polygon_api_key.as_deref()
-    } else {
-        None
-    })
-    .bind(if databento_supplied {
-        dto.databento_api_key.as_deref()
-    } else {
-        None
-    })
+    .bind(if polygon_supplied { dto.polygon_api_key.as_deref() } else { None })
+    .bind(if databento_supplied { dto.databento_api_key.as_deref() } else { None })
     .bind(dto.alpaca_use_sip_feed)
+    .bind(if tradier_token_supplied { dto.tradier_access_token.as_deref() } else { None })
+    .bind(if tradier_acct_supplied { dto.tradier_account_id.as_deref() } else { None })
+    .bind(dto.tradier_sandbox)
     .execute(pool)
     .await?;
     Ok(())

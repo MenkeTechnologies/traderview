@@ -1047,6 +1047,8 @@ export const api = {
         request('/data-sources/test-alpaca', { method: 'POST', body: JSON.stringify(body || {}) }),
     testFinnhub: (body) =>
         request('/data-sources/test-finnhub', { method: 'POST', body: JSON.stringify(body || {}) }),
+    testTradier: (body) =>
+        request('/data-sources/test-tradier', { method: 'POST', body: JSON.stringify(body || {}) }),
 
     // Live squeeze scanner — candidate aggregator + rolling-window detector.
     // /ws/squeeze emits {type:'snapshot',events:[…]} on connect, then

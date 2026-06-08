@@ -208,9 +208,31 @@ export async function renderSettings(mount, state) {
                     <input type="checkbox" name="alpaca_use_sip_feed" ${ds.alpaca_use_sip_feed ? 'checked' : ''}>
                     <span data-i18n="view.settings.label.alpaca_use_sip_feed">Use Alpaca SIP feed (Algo Trader Plus required)</span>
                 </label>
+                <hr style="flex:1 1 100%;border:0;border-top:1px solid var(--border);margin:6px 0">
+                <p data-i18n="view.settings.hint.tradier" class="muted small" style="flex:1 1 100%">
+                    Tradier brokerage credentials — required when an algo strategy's account is on Tradier. Sandbox = sandbox.tradier.com (paper); off = api.tradier.com (live).
+                </p>
+                <label><span data-i18n="view.settings.label.tradier_access_token">Tradier access token</span>
+                    <input type="password" name="tradier_access_token" autocomplete="off" data-secret-field
+                           value="${esc(ds.tradier_access_token || '')}"
+                           placeholder="Tradier Bearer token (Settings → API Access on tradier.com)"
+                           data-i18n-placeholder="view.settings.placeholder.tradier_access_token"
+                           style="min-width:280px">
+                </label>
+                <label><span data-i18n="view.settings.label.tradier_account_id">Tradier account ID</span>
+                    <input type="text" name="tradier_account_id" autocomplete="off" data-secret-field
+                           value="${esc(ds.tradier_account_id || '')}"
+                           placeholder="Account number from Tradier dashboard (e.g. 6YA00001)"
+                           data-i18n-placeholder="view.settings.placeholder.tradier_account_id">
+                </label>
+                <label style="flex-direction:row;align-items:center;gap:6px">
+                    <input type="checkbox" name="tradier_sandbox" ${ds.tradier_sandbox !== false ? 'checked' : ''}>
+                    <span data-i18n="view.settings.label.tradier_sandbox">Use Tradier sandbox (recommended)</span>
+                </label>
                 <button data-i18n="view.settings.btn.save_data_sources" class="primary" type="submit">Save data sources</button>
                 <button data-i18n="view.settings.btn.test_finnhub" class="btn btn-secondary" type="button" id="ds-test-finnhub">Test Finnhub</button>
                 <button data-i18n="view.settings.btn.test_alpaca" class="btn btn-secondary" type="button" id="ds-test-alpaca">Test Alpaca</button>
+                <button data-i18n="view.settings.btn.test_tradier" class="btn btn-secondary" type="button" id="ds-test-tradier">Test Tradier</button>
                 <span id="ds-test-out" class="muted small" style="margin-left:8px"></span>
             </form>
         </div>
@@ -358,13 +380,16 @@ export async function renderSettings(mount, state) {
         const fd = new FormData(e.target);
         try {
             await api.updateDataSources({
-                finnhub_api_key:     fd.get('finnhub_api_key')   ?? null,
-                alpaca_key_id:       fd.get('alpaca_key_id')     ?? null,
-                alpaca_secret_key:   fd.get('alpaca_secret_key') ?? null,
-                alpaca_paper:        !!fd.get('alpaca_paper'),
-                polygon_api_key:     fd.get('polygon_api_key')   ?? null,
-                databento_api_key:   fd.get('databento_api_key') ?? null,
-                alpaca_use_sip_feed: !!fd.get('alpaca_use_sip_feed'),
+                finnhub_api_key:       fd.get('finnhub_api_key')       ?? null,
+                alpaca_key_id:         fd.get('alpaca_key_id')         ?? null,
+                alpaca_secret_key:     fd.get('alpaca_secret_key')     ?? null,
+                alpaca_paper:          !!fd.get('alpaca_paper'),
+                polygon_api_key:       fd.get('polygon_api_key')       ?? null,
+                databento_api_key:     fd.get('databento_api_key')     ?? null,
+                alpaca_use_sip_feed:   !!fd.get('alpaca_use_sip_feed'),
+                tradier_access_token:  fd.get('tradier_access_token')  ?? null,
+                tradier_account_id:    fd.get('tradier_account_id')    ?? null,
+                tradier_sandbox:       !!fd.get('tradier_sandbox'),
             });
             showToast(t('view.settings.toast.data_sources_saved'), { level: 'success' });
             if (!viewIsCurrent(tok)) return;
@@ -452,6 +477,48 @@ export async function renderSettings(mount, state) {
             out.textContent = t('view.settings.test_alpaca.fail', { msg });
             out.style.color = '#ff5a5a';
             showToast(t('view.settings.test_alpaca.toast_fail', { msg }), { level: 'error' });
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    // Test Tradier — REST probe against /balances. Falls back to stored
+    // creds when fields still show `***`.
+    mount.querySelector('#ds-test-tradier').addEventListener('click', async () => {
+        const form = mount.querySelector('#data-sources-form');
+        const out = mount.querySelector('#ds-test-out');
+        const btn = mount.querySelector('#ds-test-tradier');
+        const mask = '***';
+        const fd = new FormData(form);
+        const liveValue = (k) => {
+            const v = String(fd.get(k) || '').trim();
+            return (!v || v === mask) ? null : v;
+        };
+        btn.disabled = true;
+        out.textContent = t('view.settings.test_tradier.connecting');
+        out.style.color = '';
+        try {
+            const r = await api.testTradier({
+                access_token: liveValue('tradier_access_token'),
+                account_id:   liveValue('tradier_account_id'),
+                sandbox:      !!fd.get('tradier_sandbox'),
+            });
+            if (r.ok) {
+                const env = r.detail?.sandbox ? 'SANDBOX' : 'LIVE';
+                out.textContent = t('view.settings.test_tradier.ok', { env });
+                out.style.color = '#39ff14';
+                showToast(t('view.settings.test_tradier.toast_ok', { env }), { level: 'success' });
+            } else {
+                const msg = r.detail?.msg || JSON.stringify(r.detail || {});
+                out.textContent = t('view.settings.test_tradier.fail', { msg });
+                out.style.color = '#ff5a5a';
+                showToast(t('view.settings.test_tradier.toast_fail', { msg }), { level: 'error' });
+            }
+        } catch (err) {
+            const msg = err?.message || String(err);
+            out.textContent = t('view.settings.test_tradier.fail', { msg });
+            out.style.color = '#ff5a5a';
+            showToast(t('view.settings.test_tradier.toast_fail', { msg }), { level: 'error' });
         } finally {
             btn.disabled = false;
         }
