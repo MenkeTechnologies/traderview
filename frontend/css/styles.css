@@ -305,6 +305,32 @@ body:not(.no-neon-glow) .chart-panel {
     padding-bottom: 6px; border-bottom: 1px solid var(--border);
 }
 
+/* Per-strategy documentation — rendered both in the modal (during
+   strategy pick) and in the main view's Strategy reference panel. */
+.algo-doc { display: flex; flex-direction: column; gap: 10px; }
+.algo-doc h3 {
+    margin: 0; color: var(--cyan);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 12px; letter-spacing: 1.5px;
+}
+.algo-doc-family { margin: 0; font-style: italic; }
+.algo-doc-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.algo-doc-cols ul { margin: 4px 0 0 18px; padding: 0; }
+.algo-doc-cols li { margin-bottom: 3px; font-size: 12px; }
+.algo-doc-params { font-size: 11px; }
+.algo-doc-params td code { color: var(--cyan); }
+.algo-doc-modal { max-height: 360px; overflow-y: auto; padding: 8px 4px 0; border-top: 1px dashed var(--border); }
+.algo-docs-tab { padding: 3px 8px; font-size: 10px; cursor: pointer; }
+#algo-docs-panel { padding: 12px; }
+#algo-docs-panel > summary {
+    cursor: pointer; list-style: none;
+    color: var(--cyan); font-family: 'Orbitron', sans-serif;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 2px;
+    padding-bottom: 6px; border-bottom: 1px solid var(--border);
+}
+#algo-docs-panel > summary::-webkit-details-marker { display: none; }
+#algo-docs-panel[open] > summary { margin-bottom: 8px; }
+
 /* Live algo trades/stdout log — fixed-height scrolling pre. The pre
    gets autoscrolled on every event by the renderer; min/max height keeps
    the panel from growing unbounded as events stream in. */

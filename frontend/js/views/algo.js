@@ -124,21 +124,334 @@ const STRATEGY_KINDS = [
     { value: 'pairs',             label_key: 'view.algo.opt.strat_pairs',             label: 'Pairs Trading (spread z-score)' },
 ];
 
-const STRATEGY_HINTS = {
-    momentum:          'EMA(9)/EMA(21) crossover + RSI(14) ∈ [50,70] + ROC(10) > 2% + RVOL ≥ 1.5×. ATR-based bracket. Trend follower.',
-    mean_reversion:    'Connors RSI(3) < 10 + close < session VWAP − 2σ. Long the oversold pierce, target = VWAP. ATR stop.',
-    orb:               'First close that breaks the opening-range high (15 bars default) with RVOL ≥ 1.5×. ATR trailing stop. Day-trade setup.',
-    donchian_trend:    'Close > Donchian(20).upper + ADX(14) > 20 (chop filter). Exit on Donchian(10).low break or ATR trail. Long trends.',
-    bb_squeeze:        'BBW(20,2) in the bottom 10th percentile over 100 bars + close breaks BB.upper. Target = BB.middle. Volatility expansion.',
-    ttm_squeeze:       'BB inside KC = squeeze coil. After release (within 5 bars) + momentum histogram positive and accelerating = long entry.',
-    vwap_scalp:        'Pure z-score reversion: close ≤ session VWAP − 2σ + recovery tick. Tight 1×ATR stop, target = VWAP. Intraday scalp.',
-    supertrend:        'ATR(10)×3 banded reversal. Entry on trend flip (−1 → +1), exit on opposite flip. Simple trend follower.',
-    heikin_ashi_trend: '3 consecutive green HA candles + close > EMA(21). Noise-filtered trend follower; use on 5m+ bars for best signal-to-noise.',
-    connors_rsi2:      'Stock > SMA(200) + RSI(2) < 5 → long. Long-only mean-rev edge in trending stocks. Exit on close > SMA(5) or RSI > 70.',
-    order_block_sweep: 'SMC: recent bullish OB + low-side liquidity sweep + return to zone + bullish close → long. Stop below zone − 1.5×ATR.',
-    pead:              'Symbols with recent +5% earnings surprise drift higher. Runner gates on earnings_events; strategy confirms with new-high + SMA filter.',
-    pairs:             'Pair = (symbol_a, symbol_b, hedge_ratio). Enter long A when spread z ≤ −2σ. Set entry_rules.symbol_a / symbol_b / hedge_ratio.',
+// Rich per-strategy documentation rendered in the modal docs panel
+// and in the main-view "Strategy reference" expandable section. Each
+// entry: { title, family, entry[], exit[], params[][name,default,desc],
+// scope_note, when_to_use }.
+const STRATEGY_DOCS = {
+    momentum: {
+        title: 'Momentum (EMA cross + RSI + ROC + RVOL)',
+        family: 'Trend following · long or short',
+        entry: [
+            'EMA(9) crosses above EMA(21) on the latest bar',
+            'RSI(14) is in the [50, 70] band (uptrend but not exhausted)',
+            'ROC(10) > 2% (price has accelerated)',
+            'Relative Volume (20-bar) ≥ 1.5× (confirming participation)',
+        ],
+        exit: [
+            'Close breaks below EMA(21)',
+            'ATR(14) × 2 trailing stop anchored to the high-water mark',
+            'RSI(14) falls below 50',
+            'MACD bearish crossover',
+        ],
+        params: [
+            ['ema_fast', 9, 'Fast EMA period'],
+            ['ema_slow', 21, 'Slow EMA period'],
+            ['rsi_period', 14, 'RSI period'],
+            ['roc_period', 10, 'Rate-of-Change period'],
+            ['rvol_lookback', 20, 'RVOL trailing-average lookback'],
+            ['rvol_min', 1.5, 'Minimum relative volume multiple'],
+            ['atr_stop_mult', 2.0, 'ATR multiple for the trailing stop'],
+        ],
+        scope_note: 'Native bracket order: market entry + take-profit limit (+3×ATR) + stop-loss stop (−2×ATR).',
+        when_to_use: 'Trending intraday markets with persistent volume. Avoid on news-frozen / range-bound days.',
+    },
+    mean_reversion: {
+        title: 'Mean Reversion (Connors RSI + VWAP z-score)',
+        family: 'Counter-trend · long or short',
+        entry: [
+            'Connors RSI (3, 2, 100) < 10 (extreme oversold composite)',
+            'Close < session VWAP − 2σ (deep z-score deviation)',
+        ],
+        exit: [
+            'Price crosses back through session VWAP (mean-reversion target)',
+            'ATR(14) × 2 trailing stop anchored to low-water mark',
+        ],
+        params: [
+            ['crsi_oversold', 10, 'CRSI threshold for long entry'],
+            ['crsi_overbought', 90, 'CRSI threshold for short entry'],
+            ['vwap_z_min', 2.0, 'Required σ deviation from VWAP'],
+            ['atr_stop_mult', 2.0, 'ATR multiple for the stop'],
+        ],
+        scope_note: 'Stop-managed counter-trend bet — risk is invalidation, not "no follow-through". CRSI was invented to catch falling knives; don\'t wait for confirmation that the bounce already happened.',
+        when_to_use: 'Range-bound intraday markets, especially after panic selling on no-news. Disable during sustained trending sessions.',
+    },
+    orb: {
+        title: 'Opening Range Breakout (OR high + RVOL)',
+        family: 'Breakout · day-trade setup · long or short',
+        entry: [
+            'First N bars define the opening range (default 15 bars = 15 minutes)',
+            'A bar\'s close breaks the OR high (long) or OR low (short)',
+            'RVOL(20) ≥ 1.5× on the breakout bar',
+            'Only the FIRST breaking bar qualifies — subsequent in-range bars do not',
+        ],
+        exit: [
+            'ATR(14) × 2 trailing stop anchored to high/low-water mark',
+        ],
+        params: [
+            ['opening_bars', 15, 'Bars defining the opening range'],
+            ['close_only', true, 'Reject wick-only pierces (close-based only)'],
+            ['rvol_min', 1.5, 'Minimum relative-volume multiple'],
+            ['atr_stop_mult', 2.0, 'ATR multiple for the trailing stop'],
+        ],
+        scope_note: 'Crabel\'s canonical day-trade setup. close_only=true filters out liquidity-sweep wicks that hit OR boundaries then reverse.',
+        when_to_use: 'Standard equity index futures + high-volume stocks on regular session opens. Avoid earnings days.',
+    },
+    donchian_trend: {
+        title: 'Donchian Trend / Turtle (Donchian + ADX filter)',
+        family: 'Trend following · long or short',
+        entry: [
+            'Close > Donchian(20).upper (long) or close < Donchian(20).lower (short)',
+            'ADX(14) > 20 (chop filter — trend strength confirmation)',
+        ],
+        exit: [
+            'Close < Donchian(10).lower (long, the looser turtle exit)',
+            'ATR(14) × 2 trailing stop anchored to high-water mark',
+            'Whichever fires first',
+        ],
+        params: [
+            ['entry_period', 20, 'Donchian entry-channel lookback'],
+            ['exit_period', 10, 'Donchian exit-channel lookback (tighter)'],
+            ['adx_period', 14, 'ADX period'],
+            ['adx_min', 20.0, 'Minimum ADX to clear chop filter'],
+            ['atr_stop_mult', 2.0, 'ATR multiple for the trailing stop'],
+        ],
+        scope_note: 'Classic Turtle Trader rule set. ADX gate is what separates this from a noise-following whipsaw machine.',
+        when_to_use: 'Persistent trending markets. Particularly good on commodity / FX trends; equity uses with 1h+ bars.',
+    },
+    bb_squeeze: {
+        title: 'Bollinger Squeeze Breakout (BBW + band break)',
+        family: 'Volatility expansion · long or short',
+        entry: [
+            'BBW(20, 2) percentile-rank over 100 bars ≤ 10th (squeeze on the PRIOR bar)',
+            'Close > BB.upper on the breakout bar (mirror for short)',
+        ],
+        exit: [
+            'Price re-crosses BB.middle (target hit)',
+            'ATR(14) × 2 trailing stop',
+        ],
+        params: [
+            ['bb_period', 20, 'Bollinger period'],
+            ['bb_k', 2.0, 'Bollinger σ multiple'],
+            ['squeeze_lookback', 100, 'BBW percentile-rank window'],
+            ['squeeze_pct', 0.10, 'Bottom-decile threshold (0.10 = bottom 10%)'],
+            ['atr_stop_mult', 2.0, 'ATR multiple for the trailing stop'],
+        ],
+        scope_note: 'Squeeze check is evaluated on bar i-1 (BEFORE the breakout). The breakout bar\'s own wide range lifts its own BBW out of the bottom decile, masking the setup.',
+        when_to_use: 'Coiled stocks pre-catalyst (earnings, FDA, FOMC). Set timeframe ≥ 5m so the squeeze metric isn\'t dominated by tick noise.',
+    },
+    ttm_squeeze: {
+        title: 'TTM Squeeze Momentum (BB-in-KC release + histogram)',
+        family: 'Volatility expansion · long or short',
+        entry: [
+            'BB inside KC = squeeze ON (volatility coiled)',
+            'In the last 5 bars the squeeze RELEASED (BB expanded outside KC again)',
+            'Linear-regression momentum histogram > 0 AND > prior bar (long)',
+            'Mirror for short with momentum < 0 and falling',
+        ],
+        exit: [
+            'Momentum histogram crosses zero in the unfavorable direction',
+            'ATR(14) × 2 trailing stop',
+        ],
+        params: [
+            ['period', 20, 'BB + KC + momentum window'],
+            ['bb_mult', 2.0, 'Bollinger σ multiple'],
+            ['kc_mult', 1.5, 'Keltner ATR multiple'],
+            ['release_lookback', 5, 'Bars after release in which entry stays valid'],
+            ['atr_stop_mult', 2.0, 'ATR multiple for the trailing stop'],
+        ],
+        scope_note: 'release_lookback=5 (not 1) because TTM\'s momentum oscillator lags 1–3 bars behind the BB/KC release. Requiring the release on the current bar misses every practical entry.',
+        when_to_use: 'Intraday breakout candidates after a quiet morning consolidation. John Carter\'s canonical setup.',
+    },
+    vwap_scalp: {
+        title: 'VWAP Scalp (z-score reversion · 1× ATR stop)',
+        family: 'Intraday scalp · long or short',
+        entry: [
+            'Close ≤ session VWAP − 2σ (long) or ≥ +2σ (short)',
+            'Recovery tick: close > close_prev + 10% of ATR (long; filters falling knives)',
+        ],
+        exit: [
+            'Price crosses back through session VWAP (target)',
+            'ATR(14) × 1.0 trailing stop (DEFINING trait of a scalp)',
+        ],
+        params: [
+            ['z_min', 2.0, 'Required σ deviation from VWAP'],
+            ['recovery_buffer', 0.10, 'Min recovery as ATR fraction'],
+            ['atr_stop_mult', 1.0, 'ATR multiple for the (tight) stop'],
+        ],
+        scope_note: 'Distinct from Mean Reversion: no CRSI gate. Just pure z-score + the recovery filter. Tight 1×ATR stop is the scalp signature.',
+        when_to_use: 'High-volume, mean-reverting tickers (SPY, QQQ intraday). Stop drift / panic candles set up the entry.',
+    },
+    supertrend: {
+        title: 'Supertrend Cross (ATR-banded trend flip)',
+        family: 'Trend reversal · long or short',
+        entry: [
+            'Supertrend trend flag flips: −1 → 1 (long) or 1 → −1 (short)',
+        ],
+        exit: [
+            'Opposite Supertrend flip',
+            'ATR-bounded stop: max(supertrend_value, close − 2×ATR) for long',
+        ],
+        params: [
+            ['atr_period', 10, 'ATR period (Seban default)'],
+            ['multiplier', 3.0, 'ATR multiple for the bands (Seban default)'],
+            ['atr_take_profit_mult', 3.0, 'TP multiple'],
+            ['atr_stop_mult', 2.0, 'ATR multiple for the protective stop'],
+        ],
+        scope_note: 'Simpler than Donchian — fewer rules, no chop filter. Whipsaws in tight ranges; pair with a higher-timeframe regime filter for production use.',
+        when_to_use: 'Cleanly trending sessions. Avoid on overnight gap-and-fade days.',
+    },
+    heikin_ashi_trend: {
+        title: 'Heikin-Ashi Trend (HA run + EMA confirm)',
+        family: 'Noise-filtered trend follower · long or short',
+        entry: [
+            '3 consecutive same-color HA candles (green for long, red for short)',
+            'Close > EMA(21) (long) or < EMA(21) (short)',
+        ],
+        exit: [
+            'First opposing HA candle',
+            'Close < EMA(21) (long)',
+            'ATR(14) × 2 trailing stop',
+        ],
+        params: [
+            ['ema_slow', 21, 'Trend confirmation EMA period'],
+            ['green_run', 3, 'Consecutive same-color HA candles required'],
+            ['atr_stop_mult', 2.0, 'ATR multiple for the trailing stop'],
+        ],
+        scope_note: 'HA candles smooth wicks — slower turnover than raw-candle strategies. Best on 5m+ bars where the noise filter pays for itself.',
+        when_to_use: 'Multi-hour swing trends. Slower than momentum / Supertrend but with fewer false signals.',
+    },
+    connors_rsi2: {
+        title: 'Connors RSI-2 + 200 SMA (mean-rev classic)',
+        family: 'Mean reversion · LONG-ONLY',
+        entry: [
+            'Close > SMA(200) — only buy stocks above the long-term trend',
+            'RSI(2) < 5 — extreme oversold on a tight period',
+        ],
+        exit: [
+            'Close > SMA(5) (Connors\'s 5-day touch exit)',
+            'RSI(2) > 70',
+            'ATR(14) × 2 trailing stop',
+        ],
+        params: [
+            ['sma_trend', 200, 'Long-term trend SMA period'],
+            ['sma_exit', 5, 'Short-term exit SMA period'],
+            ['rsi_period', 2, 'RSI period (tight)'],
+            ['rsi_oversold', 5.0, 'RSI oversold threshold'],
+            ['rsi_overbought', 70.0, 'RSI exit threshold'],
+        ],
+        scope_note: 'Long-only by design. The published edge in stocks BELOW SMA(200) was historically negative; the strategy refuses short side even under SideMode::Short. Larry Connors\'s canonical published edge.',
+        when_to_use: 'End-of-day stock screens. Buy pullbacks in established uptrends. Best on individual stocks, not indices.',
+    },
+    order_block_sweep: {
+        title: 'Order Block + Liquidity Sweep (Smart Money Concepts)',
+        family: 'Pattern · long or short',
+        entry: [
+            'In the last 30 bars: bullish order block detected (down-candle before sharp up-expansion)',
+            'In the last 30 bars: confirmed liquidity sweep of a recent swing low',
+            'Latest bar overlaps the OB zone (price returned to support)',
+            'Latest bar closes bullish (close > open)',
+            'Mirror for short (bearish OB + high-side sweep)',
+        ],
+        exit: [
+            'ATR(14) × 1.5 trailing stop',
+        ],
+        params: [
+            ['lookback', 30, 'Bars to look back for OB + sweep'],
+            ['ob_expansion_window', 3, 'Bars for expansion confirmation'],
+            ['ob_expansion_multiple', 2.0, 'Required expansion size (× OB range)'],
+            ['grab_min_sweep_atrs', 0.1, 'Min sweep distance in ATRs'],
+            ['atr_stop_mult', 1.5, 'ATR multiple for the trailing stop'],
+        ],
+        scope_note: 'SMC pattern combining institutional-level (OB) with stop-hunt confirmation (liquidity sweep). The dual confirmation is what separates this from a generic support-bounce.',
+        when_to_use: 'Stocks with clear structural levels and institutional interest. Tighter stops than momentum — sized to OB-zone breach.',
+    },
+    pead: {
+        title: 'PEAD — Post-Earnings Announcement Drift',
+        family: 'Event-driven · LONG-ONLY',
+        entry: [
+            'Symbol\'s most recent earnings event had surprise_pct ≥ 5%',
+            'Within the last 5 days post-announcement',
+            '(Both above gated by the runner querying earnings_events)',
+            'Latest bar makes a new high above the last 10 bars',
+            'Close > SMA(20) (still drifting up)',
+        ],
+        exit: [
+            'ATR(14) × 2 trailing stop',
+            'Close < SMA(20) (trend invalidation)',
+        ],
+        params: [
+            ['min_surprise_pct', 5.0, 'Required EPS surprise % (runner gate)'],
+            ['max_days_since_earnings', 5, 'Eligibility window post-announcement'],
+            ['recent_high_lookback', 10, 'New-high confirmation window'],
+            ['short_trend_period', 20, 'Short-term trend SMA'],
+            ['atr_stop_mult', 2.0, 'ATR multiple for the trailing stop'],
+        ],
+        scope_note: 'Two-layer architecture: the runner queries earnings_events to filter the universe; the strategy confirms with technical alignment. Without the fundamental gate this would be just a momentum re-implementation. Ball & Brown / Bernard-Thomas anomaly — long-only.',
+        when_to_use: 'After-earnings-season hold strategy. Combine with a watchlist of recently-reported tickers.',
+    },
+    pairs: {
+        title: 'Pairs Trading (spread z-score)',
+        family: 'Multi-symbol · relative value · long or short',
+        entry: [
+            'Set symbol_a, symbol_b, hedge_ratio in entry_rules',
+            'spread = ln(price_a) − hedge_ratio × ln(price_b)',
+            'Spread\'s rolling z-score ≤ −2σ → long symbol_a (underperformer)',
+            'Spread\'s rolling z-score ≥ +2σ → short symbol_a (overperformer, if SideMode allows)',
+        ],
+        exit: [
+            'ATR(14) × 2 trailing stop on the executed leg',
+            '(Full z-revert exit is a follow-up — current build relies on the stop)',
+        ],
+        params: [
+            ['symbol_a', '(required)', 'Primary leg (the side that gets traded)'],
+            ['symbol_b', '(required)', 'Hedge leg (used only for spread calc)'],
+            ['hedge_ratio', 1.0, 'Multiplier for leg B in the spread'],
+            ['lookback', 60, 'Bars for z-score rolling window'],
+            ['z_entry', 2.0, 'Required deviation σ for entry'],
+            ['z_exit', 0.5, 'Mean-revert exit threshold (reserved)'],
+        ],
+        scope_note: 'True pairs is a simultaneous dual-leg position; this engine emits ONE order per signal, so the strategy fires on the underperforming leg only. For dollar-neutral pairs run two coupled strategies (one long-only on A, one short-only on B) tied to a shared account.',
+        when_to_use: 'Closely correlated names (KO/PEP, GLD/SLV, sector ETFs). Set hedge_ratio = 1.0 unless you\'ve done explicit cointegration regression.',
+    },
 };
+
+// One-line summary fallback — used by anything that still wants the
+// terse preview. Computed from the rich docs above.
+const STRATEGY_HINTS = Object.fromEntries(
+    Object.entries(STRATEGY_DOCS).map(([k, d]) => [k, d.title + ' — ' + d.family])
+);
+
+function renderStrategyDoc(kind) {
+    const d = STRATEGY_DOCS[kind];
+    if (!d) return `<p class="muted small">No docs for ${esc(kind)}.</p>`;
+    const ul = (arr) => arr.map(li => `<li>${esc(li)}</li>`).join('');
+    const paramRow = ([name, def, desc]) =>
+        `<tr><td><code>${esc(name)}</code></td><td>${esc(String(def))}</td><td>${esc(desc)}</td></tr>`;
+    return `
+        <div class="algo-doc">
+            <h3>${esc(d.title)}</h3>
+            <p class="muted small algo-doc-family">${esc(d.family)}</p>
+            <div class="algo-doc-cols">
+                <div>
+                    <strong data-i18n="view.algo.doc.entry">Entry rules</strong>
+                    <ul>${ul(d.entry)}</ul>
+                </div>
+                <div>
+                    <strong data-i18n="view.algo.doc.exit">Exit rules</strong>
+                    <ul>${ul(d.exit)}</ul>
+                </div>
+            </div>
+            <strong data-i18n="view.algo.doc.params">Parameters</strong>
+            <table class="trades algo-doc-params">
+                <thead><tr><th>Name</th><th>Default</th><th>Description</th></tr></thead>
+                <tbody>${d.params.map(paramRow).join('')}</tbody>
+            </table>
+            <p class="muted small"><strong data-i18n="view.algo.doc.scope_note">Note:</strong> ${esc(d.scope_note)}</p>
+            <p class="muted small"><strong data-i18n="view.algo.doc.when_to_use">When to use:</strong> ${esc(d.when_to_use)}</p>
+        </div>
+    `;
+}
 
 export async function renderAlgo(mount) {
     mount.innerHTML = `
@@ -168,6 +481,19 @@ export async function renderAlgo(mount) {
                 <tbody><tr><td colspan="8" class="muted">${esc(t('view.algo.loading'))}</td></tr></tbody>
             </table>
         </div>
+
+        <details class="chart-panel" id="algo-docs-panel">
+            <summary>
+                <span data-i18n="view.algo.h2.docs">Strategy reference</span>
+                <span class="muted small" data-i18n="view.algo.hint.docs">— full rules for all 13 strategies</span>
+            </summary>
+            <div class="row" style="gap:6px;flex-wrap:wrap;margin:8px 0">
+                ${STRATEGY_KINDS.map(k => `
+                    <button class="btn btn-secondary algo-docs-tab" data-kind="${k.value}">${esc(k.value)}</button>
+                `).join('')}
+            </div>
+            <div id="algo-docs-body">${renderStrategyDoc('momentum')}</div>
+        </details>
 
         <div class="chart-panel" id="algo-stdout-panel">
             <div class="row" style="justify-content:space-between;align-items:center">
@@ -230,6 +556,12 @@ export async function renderAlgo(mount) {
         renderStdout(mount);
     });
     mount.querySelector('#algo-stdout-filter').addEventListener('input', () => renderStdout(mount));
+    // Strategy reference tabs — clicking a button swaps the rendered doc.
+    mount.querySelectorAll('.algo-docs-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+            mount.querySelector('#algo-docs-body').innerHTML = renderStrategyDoc(btn.dataset.kind);
+        });
+    });
     await refreshStrategies(mount);
     renderStdout(mount);
 
@@ -477,9 +809,9 @@ async function openStrategyModal(mount, existing = null) {
                             ${stratOptions}
                         </select>
                     </label>
-                    <p class="muted small" id="algo-strategy-hint" style="margin:0">
-                        ${esc(STRATEGY_HINTS[s.strategy_type || 'momentum'])}
-                    </p>
+                    <div id="algo-strategy-doc" class="algo-doc-modal">
+                        ${renderStrategyDoc(s.strategy_type || 'momentum')}
+                    </div>
                     <label class="checkbox-row">
                         <input type="checkbox" name="enabled" ${s.enabled ? 'checked' : ''}>
                         <span data-i18n="view.algo.label.enabled">Enabled</span>
@@ -545,7 +877,7 @@ async function openStrategyModal(mount, existing = null) {
     host.querySelector('#algo-cancel').addEventListener('click', () => { host.innerHTML = ''; });
     host.querySelector('#algo-strategy-type').addEventListener('change', (e) => {
         const v = e.target.value;
-        host.querySelector('#algo-strategy-hint').textContent = STRATEGY_HINTS[v] || '';
+        host.querySelector('#algo-strategy-doc').innerHTML = renderStrategyDoc(v);
     });
     host.querySelector('#algo-form').addEventListener('submit', async (e) => {
         e.preventDefault();
