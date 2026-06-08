@@ -17,7 +17,8 @@
 //!   8. Persist broker response (broker_order_id, status, raw_response).
 //!   9. Sink reports a fill async → engine writes `algo_fills`.
 
-use crate::algo::{self, AlgoOrderInsert, AlgoStrategy};
+use crate::algo::{self, AlgoFillInsert, AlgoOrderInsert, AlgoStrategy};
+use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use rust_decimal::prelude::FromPrimitive;
 use serde_json::Value as Json;
@@ -25,6 +26,7 @@ use sqlx::PgPool;
 use std::sync::Arc;
 use traderview_core::algo_strategies::{self, EntrySignal, Side, SideMode, Sizing};
 use traderview_core::models::PriceBar;
+use traderview_import::ParsedExecution;
 use uuid::Uuid;
 
 #[derive(Debug, Clone)]
@@ -45,6 +47,20 @@ pub struct SubmittedOrder {
     pub broker_order_id: String,
     pub status: String,
     pub raw_response: Option<Json>,
+    /// Set when the broker confirmed an immediate fill (paper sim,
+    /// market orders against a live quote). Real-Alpaca flows leave this
+    /// `None` and emit fills later via the trade_updates WebSocket; the
+    /// WS handler calls `record_fill` directly with the same payload.
+    pub immediate_fill: Option<ImmediateFill>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ImmediateFill {
+    pub price: Decimal,
+    pub qty: Decimal,
+    pub fee: Decimal,
+    pub executed_at: DateTime<Utc>,
+    pub broker_fill_id: Option<String>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -91,11 +107,19 @@ impl BrokerSink for InMemorySink {
         let submitted = self.submitted.clone();
         Box::pin(async move {
             let id = intent.client_order_id.to_string();
+            let fill = ImmediateFill {
+                price: intent.entry_price,
+                qty: intent.qty,
+                fee: Decimal::ZERO,
+                executed_at: Utc::now(),
+                broker_fill_id: Some(format!("sim-fill-{id}")),
+            };
             submitted.lock().expect("lock").push(intent);
             Ok(SubmittedOrder {
                 broker_order_id: format!("sim-{id}"),
-                status: "accepted".into(),
+                status: "filled".into(),
                 raw_response: None,
+                immediate_fill: Some(fill),
             })
         })
     }
@@ -205,7 +229,7 @@ pub async fn process_bar_window(
             algo::mark_order_submitted(
                 pool,
                 inserted.id,
-                Some(resp.broker_order_id),
+                Some(resp.broker_order_id.clone()),
                 &resp.status,
                 resp.raw_response,
                 None,
@@ -215,6 +239,15 @@ pub async fn process_bar_window(
             algo::increment_run_counter(pool, run_id, algo::RunCounter::OrdersSubmitted, 1)
                 .await
                 .ok();
+
+            // Pipeline integration: any immediate fill becomes an
+            // executions row tagged with the strategy's broker account,
+            // then trades::rollup_account materializes the trade so
+            // every dashboard / R-dist / equity curve in the app sees
+            // it without needing an algo-specific code path.
+            if let Some(fill) = resp.immediate_fill {
+                record_fill(pool, strategy, &intent, inserted.id, &fill).await?;
+            }
             Ok(Some(inserted.id))
         }
         Err(e) => {
@@ -231,6 +264,78 @@ pub async fn process_bar_window(
             Err(e)
         }
     }
+}
+
+/// Record a fill against (a) `algo_fills` for broker audit and (b) the
+/// `executions` table tagged with the strategy's `account_id`, then
+/// trigger `trades::rollup_account` so the FIFO pipeline materializes
+/// the trade row. Exposed `pub(crate)` so a future WS trade_updates
+/// handler can drive it with the same shape for real-Alpaca fills.
+pub async fn record_fill(
+    pool: &PgPool,
+    strategy: &AlgoStrategy,
+    intent: &OrderIntent,
+    algo_order_id: Uuid,
+    fill: &ImmediateFill,
+) -> Result<(), EngineError> {
+    algo::insert_fill(
+        pool,
+        AlgoFillInsert {
+            order_id: algo_order_id,
+            broker_fill_id: fill.broker_fill_id.clone(),
+            fill_qty: fill.qty,
+            fill_price: fill.price,
+            commission: fill.fee,
+            raw: None,
+        },
+    )
+    .await
+    .map_err(|e| EngineError::Broker(e.to_string()))?;
+    algo::increment_run_counter(pool, intent.run_id, algo::RunCounter::FillsReceived, 1)
+        .await
+        .ok();
+
+    // Without account_id the engine still records to algo_fills but
+    // can't push into the executions pipeline. Route layer normally
+    // refuses unbound strategies, so this is just defense.
+    let Some(account_id) = strategy.account_id else { return Ok(()); };
+
+    let side = match intent.side {
+        Side::Buy => traderview_core::models::Side::Buy,
+        Side::Sell => traderview_core::models::Side::Sell,
+    };
+    let parsed = ParsedExecution {
+        symbol: intent.symbol.clone(),
+        side,
+        qty: fill.qty,
+        price: fill.price,
+        fee: fill.fee,
+        commission: Decimal::ZERO,
+        executed_at: fill.executed_at,
+        broker_order_id: fill.broker_fill_id.clone(),
+        raw: serde_json::json!({
+            "source": "algo_engine",
+            "strategy_id": strategy.id,
+            "client_order_id": intent.client_order_id,
+        }),
+        asset_class: traderview_core::models::AssetClass::Stock,
+        option_type: None,
+        strike: None,
+        expiration: None,
+        multiplier: Decimal::ONE,
+        tick_size: None,
+        tick_value: None,
+        base_ccy: None,
+        quote_ccy: None,
+        pip_size: None,
+    };
+    crate::executions::insert_manual(pool, account_id, &parsed)
+        .await
+        .map_err(|e| EngineError::Broker(format!("executions::insert_manual: {e}")))?;
+    crate::trades::rollup_account(pool, account_id)
+        .await
+        .map_err(|e| EngineError::Broker(format!("trades::rollup_account: {e}")))?;
+    Ok(())
 }
 
 fn build_intent(

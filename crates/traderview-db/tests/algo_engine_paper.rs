@@ -247,7 +247,10 @@ fn engine_submits_one_bracket_on_uptrend_signal() {
         assert_eq!(orders.len(), 1);
         assert_eq!(orders[0].symbol, "AAPL");
         assert_eq!(orders[0].order_class, "bracket");
-        assert_eq!(orders[0].status, "accepted");
+        // InMemorySink now also returns an immediate_fill payload to
+        // exercise the executions-pipeline path, so the order lands as
+        // 'filled' rather than the bare 'accepted' it used to.
+        assert_eq!(orders[0].status, "filled");
         assert!(orders[0].broker_order_id.is_some());
 
         // Run counters updated.
@@ -361,5 +364,72 @@ fn engine_records_rejection_when_sink_errors() {
         assert_eq!(orders.len(), 1);
         assert_eq!(orders[0].status, "rejected");
         assert!(orders[0].error.is_some());
+    });
+}
+
+/// When a strategy is bound to an account_id, the engine routes every
+/// fill through executions::insert_manual + trades::rollup_account so
+/// the standard trade pipeline materializes the position. This is the
+/// regression test for commit 12 — proves algo activity surfaces in the
+/// same tables the dashboards already read.
+#[test]
+fn engine_fill_lands_in_executions_and_rolls_up_to_trades() {
+    run(async {
+        let pool = pool();
+        let user = fresh_user_in(&pool).await;
+
+        // Real broker account that the strategy will be bound to.
+        let acct_name = format!("alpaca-{}", Uuid::new_v4());
+        let (account_id,): (Uuid,) = sqlx::query_as(
+            "INSERT INTO accounts (user_id, name, broker) VALUES ($1, $2, 'alpaca') RETURNING id",
+        )
+        .bind(user)
+        .bind(&acct_name)
+        .fetch_one(&pool)
+        .await
+        .expect("insert account");
+
+        let mut strategy = make_strategy(&pool, user, "internal_sim").await;
+        // Manual bind — make_strategy ships account_id None.
+        strategy.account_id = Some(account_id);
+        sqlx::query("UPDATE algo_strategies SET account_id = $1 WHERE id = $2")
+            .bind(account_id)
+            .bind(strategy.id)
+            .execute(&pool)
+            .await
+            .expect("bind account_id");
+
+        let run = algo::start_run(&pool, strategy.id).await.expect("run");
+        let bars = fresh_long_window("AAPL");
+        let sink = InMemorySink::default();
+        let _ = drive_engine_until_signal(&pool, &sink, &strategy, run.id, &bars, 100_000.0)
+            .await
+            .expect("uptrend produced signal");
+
+        let (exec_count,): (i64,) = sqlx::query_as(
+            "SELECT COUNT(*) FROM executions WHERE account_id = $1",
+        )
+        .bind(account_id)
+        .fetch_one(&pool)
+        .await
+        .expect("count executions");
+        assert_eq!(exec_count, 1, "exactly one executions row per algo fill");
+
+        let (trade_count,): (i64,) = sqlx::query_as(
+            "SELECT COUNT(*) FROM trades WHERE account_id = $1",
+        )
+        .bind(account_id)
+        .fetch_one(&pool)
+        .await
+        .expect("count trades");
+        assert!(
+            trade_count >= 1,
+            "trades::rollup_account must materialize at least one trade row"
+        );
+
+        // algo_fills still gets the audit row independently of the pipeline.
+        let orders = algo::list_orders(&pool, run.id, 10).await.expect("orders");
+        let fills = algo::list_fills(&pool, orders[0].id).await.expect("fills");
+        assert_eq!(fills.len(), 1, "algo_fills audit row present");
     });
 }
