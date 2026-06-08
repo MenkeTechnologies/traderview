@@ -115,6 +115,22 @@ impl AppState {
                     qty: qty.to_f64().unwrap_or(0.0),
                     price: price.to_f64().unwrap_or(0.0),
                 },
+                E::TickSkipped {
+                    strategy_id,
+                    reason,
+                } => crate::realtime::Event::AlgoTickSkipped {
+                    strategy_id: strategy_id.to_string(),
+                    reason,
+                },
+                E::BarEvaluated {
+                    strategy_id,
+                    symbol,
+                    bars,
+                } => crate::realtime::Event::AlgoBarEvaluated {
+                    strategy_id: strategy_id.to_string(),
+                    symbol,
+                    bars: bars as u64,
+                },
             };
             hub.publish(evt);
         })

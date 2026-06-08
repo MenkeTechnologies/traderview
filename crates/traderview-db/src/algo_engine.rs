@@ -86,6 +86,24 @@ pub enum EngineEvent {
         qty: Decimal,
         price: Decimal,
     },
+    /// Tick fired for this strategy but skipped without evaluating.
+    /// `reason` is a short slug ("no_universe", "no_symbols",
+    /// "broker_pending", "below_min_bars:AAPL=42", ...) the UI surfaces
+    /// in the stdout pane so the user can see WHY nothing is happening
+    /// instead of staring at an empty log.
+    TickSkipped {
+        strategy_id: Uuid,
+        reason: String,
+    },
+    /// Tick evaluated this strategy without firing a signal (the
+    /// strategy returned None). Tagged with the symbol so the user
+    /// sees "AAPL, MSFT, NVDA evaluated — no signal" in the stdout
+    /// pane, confirming the engine IS alive.
+    BarEvaluated {
+        strategy_id: Uuid,
+        symbol: String,
+        bars: usize,
+    },
 }
 
 pub type EventSink = std::sync::Arc<dyn Fn(EngineEvent) + Send + Sync>;

@@ -180,6 +180,7 @@ async fn create_strategy(
         ));
     }
     validate_account_for_algo(&s.pool, account_id, &body.broker_mode).await?;
+    validate_universe(&body).await?;
     // Engine code enforces paper_locked_until at submit-time, but the
     // route also rejects naked broker_mode='live' at create-time so the
     // UI doesn't show a misleading "saved" toast for a config the
@@ -195,6 +196,20 @@ async fn create_strategy(
         .map_err(ApiError::Internal)?;
     maybe_hot_spawn_pump(&s, u.id, &broker_mode, account_id).await;
     Ok(Json(created))
+}
+
+/// Reject configurations where `universe_mode='watchlist'` is set but
+/// no `watchlist_id` is picked — the silent failure mode where the
+/// strategy sits enabled, runs every tick against an empty universe,
+/// and produces zero observable behaviour.
+async fn validate_universe(body: &traderview_db::algo::AlgoStrategyInput) -> Result<(), ApiError> {
+    if body.universe_mode == "watchlist" && body.watchlist_id.is_none() {
+        return Err(ApiError::BadRequest(
+            "universe_mode='watchlist' requires a watchlist_id — \
+             pick a watchlist or switch to autoscan".into(),
+        ));
+    }
+    Ok(())
 }
 
 /// If the strategy's broker_mode is paper/live AND its account is on
@@ -264,6 +279,7 @@ async fn update_strategy(
         ));
     }
     validate_account_for_algo(&s.pool, account_id, &body.broker_mode).await?;
+    validate_universe(&body).await?;
     // Allow broker_mode='live' on update only if existing paper_locked_until
     // has expired. Engine still re-checks at submit.
     if body.broker_mode == "live" {

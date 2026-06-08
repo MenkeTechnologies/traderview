@@ -13,7 +13,7 @@
 //! Wired into `bin/server.rs::main` via a `tokio::spawn(algo_runner::run_loop(pool))`.
 
 use crate::algo::{self, AlgoStrategy};
-use crate::algo_engine::{self, BrokerSink, EventSink};
+use crate::algo_engine::{self, BrokerSink, EngineEvent, EventSink};
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use sqlx::PgPool;
@@ -53,11 +53,21 @@ pub async fn tick(pool: &PgPool, now: DateTime<Utc>, event_sink: Option<&EventSi
             Ok(syms) => syms,
             Err(e) => {
                 tracing::warn!(strategy = %s.id, error = %e, "symbol_universe failed");
+                emit_skip(event_sink, s.id, format!("universe_error: {e}"));
                 continue;
             }
         };
         if symbols.is_empty() {
-            tracing::debug!(strategy = %s.id, "no symbols in universe");
+            let reason = match s.universe_mode.as_str() {
+                "watchlist" if s.watchlist_id.is_none() => {
+                    "no_watchlist_id — pick a watchlist on the strategy".to_string()
+                }
+                "watchlist" => format!("watchlist {} has no symbols", s.watchlist_id.unwrap()),
+                "autoscan" => "autoscan returned 0 symbols".to_string(),
+                other => format!("unknown universe_mode={other}"),
+            };
+            tracing::info!(strategy = %s.id, name = %s.name, reason = %reason, "algo_runner skip");
+            emit_skip(event_sink, s.id, reason);
             continue;
         }
         // PEAD layer: narrow the universe to symbols with a recent
@@ -120,8 +130,25 @@ pub async fn run_loop(pool: PgPool, event_sink: Option<EventSink>) -> ! {
         tokio::time::sleep(Duration::from_millis(wait)).await;
         let processed = tick(&pool, Utc::now(), event_sink.as_ref()).await;
         if processed > 0 {
-            tracing::debug!(processed, "algo_runner tick");
+            tracing::info!(processed, "algo_runner tick");
         }
+    }
+}
+
+fn emit_skip(event_sink: Option<&EventSink>, strategy_id: uuid::Uuid, reason: String) {
+    if let Some(sink) = event_sink {
+        sink(EngineEvent::TickSkipped { strategy_id, reason });
+    }
+}
+
+fn emit_evaluated(
+    event_sink: Option<&EventSink>,
+    strategy_id: uuid::Uuid,
+    symbol: String,
+    bars: usize,
+) {
+    if let Some(sink) = event_sink {
+        sink(EngineEvent::BarEvaluated { strategy_id, symbol, bars });
     }
 }
 
@@ -251,7 +278,9 @@ async fn drive_strategy(
     let Some(run) = algo::get_open_run(pool, strategy.id).await? else {
         // No open run → strategy is enabled but not actively running.
         // The runner does not auto-start runs; the UI's "start" button
-        // is the explicit gate.
+        // is the explicit gate. Emit a skip so the stdout pane shows
+        // "test2 skipped: no_open_run — click Start to begin a run".
+        emit_skip(event_sink, strategy.id, "no_open_run — click Start".into());
         return Ok(0);
     };
     let equity = account_equity(pool, strategy).await.unwrap_or(100_000.0);
@@ -305,6 +334,11 @@ async fn drive_strategy(
     for symbol in symbols {
         let bars = fetch_recent_bars(pool, symbol, interval, BAR_WINDOW_SIZE).await?;
         if bars.is_empty() {
+            emit_skip(
+                event_sink,
+                strategy.id,
+                format!("no_bars:{symbol} — symbol has no recent price_bars rows"),
+            );
             continue;
         }
         match algo_engine::process_bar_window(
@@ -319,12 +353,20 @@ async fn drive_strategy(
         )
         .await
         {
-            Ok(_) => driven += 1,
+            Ok(Some(_)) => driven += 1,
+            Ok(None) => {
+                // No signal but the strategy WAS evaluated — emit a
+                // heartbeat so the stdout pane proves the engine is
+                // alive even on quiet bars.
+                emit_evaluated(event_sink, strategy.id, symbol.clone(), bars.len());
+                driven += 1;
+            }
             Err(e) => {
-                tracing::debug!(
+                tracing::info!(
                     strategy = %strategy.id, symbol, error = %e,
                     "process_bar_window non-fatal"
                 );
+                emit_skip(event_sink, strategy.id, format!("{symbol}: {e}"));
             }
         }
     }

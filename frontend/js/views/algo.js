@@ -91,6 +91,31 @@ function logFill(mount, msg) {
     appendStdout(mount, msg.strategy_id,
         `${fmtStdoutTs()} [${strategyLabel(msg.strategy_id)}] FILL ${msg.symbol} qty=${msg.qty} @ ${Number(msg.price).toFixed(4)}`);
 }
+// Throttle TickSkipped / BarEvaluated rendering — they can fire many
+// times per tick across N symbols and would otherwise drown the
+// stdout pane in repeated lines.
+const lastEmitAt = new Map(); // `${strategyId}:${reason}` → epoch ms
+function shouldEmit(key, intervalMs = 5000) {
+    const now = Date.now();
+    const prev = lastEmitAt.get(key) || 0;
+    if (now - prev < intervalMs) return false;
+    lastEmitAt.set(key, now);
+    return true;
+}
+function logTickSkipped(mount, msg) {
+    const key = `${msg.strategy_id}:skip:${msg.reason}`;
+    if (!shouldEmit(key)) return;
+    appendStdout(mount, msg.strategy_id,
+        `${fmtStdoutTs()} [${strategyLabel(msg.strategy_id)}] SKIP ${msg.reason}`);
+}
+function logBarEvaluated(mount, msg) {
+    // One heartbeat per (strategy, symbol) every 30s — proves the
+    // engine is alive without flooding when nothing's firing.
+    const key = `${msg.strategy_id}:eval:${msg.symbol}`;
+    if (!shouldEmit(key, 30000)) return;
+    appendStdout(mount, msg.strategy_id,
+        `${fmtStdoutTs()} [${strategyLabel(msg.strategy_id)}] EVAL ${msg.symbol} bars=${msg.bars} (no signal)`);
+}
 
 function renderStdoutPanes(mount, strategies) {
     const host = mount.querySelector('#algo-stdout-panes');
@@ -638,7 +663,7 @@ export async function renderAlgo(mount) {
         </div>
 
         <div id="algo-runs" class="chart-panel" style="display:none">
-            <h2 data-i18n="view.algo.h2.runs">Recent runs</h2>
+            <h2><span data-i18n="view.algo.h2.runs">Recent runs</span> — <span id="algo-runs-strategy-name" class="muted">…</span></h2>
             <table class="trades" id="algo-runs-table">
                 <thead><tr>
                     <th data-i18n="view.algo.th.started">Started</th>
@@ -704,6 +729,13 @@ export async function renderAlgo(mount) {
         flashRow(mount, msg.strategy_id);
         logFill(mount, msg);
         scheduleRefresh(mount);
+    }));
+    // Diagnostic events — no refresh, no flash, just stdout visibility.
+    wsUnsubs.push(onWsEvent('algo_tick_skipped', (msg) => {
+        logTickSkipped(mount, msg);
+    }));
+    wsUnsubs.push(onWsEvent('algo_bar_evaluated', (msg) => {
+        logBarEvaluated(mount, msg);
     }));
 }
 
@@ -1293,6 +1325,11 @@ async function deleteStrategy(mount, s) {
 async function showRuns(mount, s) {
     const panel = mount.querySelector('#algo-runs');
     const tbody = mount.querySelector('#algo-runs-table tbody');
+    const nameSlot = mount.querySelector('#algo-runs-strategy-name');
+    if (nameSlot) {
+        nameSlot.textContent = `${s.name} (${s.strategy_type}, ${s.timeframe})`;
+        nameSlot.classList.remove('muted');
+    }
     panel.style.display = 'block';
     tbody.innerHTML = `<tr><td colspan="9" class="muted">${esc(t('view.algo.loading'))}</td></tr>`;
     let runs;
