@@ -8,7 +8,7 @@ import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
-import { tConfirm } from '../dialog.js';
+import { tConfirm, tPrompt } from '../dialog.js';
 import { on as onWsEvent } from '../ws.js';
 
 // Single coalesced refresh on a short debounce — a burst of WS events
@@ -795,7 +795,7 @@ async function toggleKill(mount, s) {
     if (!s.kill_switch) {
         const ok = await tConfirm(t('view.algo.confirm.engage_kill'));
         if (!ok) return;
-        const reason = prompt(t('view.algo.prompt.kill_reason')) || null;
+        const reason = (await tPrompt('view.algo.prompt.kill_reason')) || null;
         try {
             await api.setAlgoKillSwitch(s.id, true, reason);
             showToast(t('view.algo.toast.kill_engaged'), { level: 'warning' });

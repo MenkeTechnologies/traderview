@@ -28422,6 +28422,8 @@
   "tile.calendar.desc": "Yearly P&L heatmap",
   "tile.backtest.label": "Backtest",
   "tile.backtest.desc": "stryke-JIT strategy backtester",
+  "tile.algo.label": "Algo Trading",
+  "tile.algo.desc": "16-strategy engine across 5 brokers — native brackets, risk gates, backtester + optimizer + metrics, webhook alerts on kill switch",
   "tile.alerts.label": "Alerts",
   "tile.alerts.desc": "Price / signal alert rules",
   "tile.webhooks.label": "Webhooks",
