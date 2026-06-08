@@ -9,7 +9,7 @@ fn main() {
     // file always reflects the workspace version at *build* time —
     // single-source from Cargo.toml.
     let ver = env!("CARGO_PKG_VERSION");
-    let out_path = Path::new("../frontend/.version.json");
+    let out_path = Path::new("../frontend/version.json");
     let body = format!("{{\"version\":\"{ver}\"}}\n");
     if let Err(e) = fs::write(out_path, body) {
         // Don't fail the build over this — the frontend has REST + npm

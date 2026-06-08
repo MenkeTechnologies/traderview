@@ -792,7 +792,6 @@ async function boot() {
     const setVersion = (v) => {
         if (verEl && v) {
             verEl.textContent = `v${v}`;
-            verEl.style.visibility = '';
             versionSet = true;
         }
     };
@@ -804,15 +803,16 @@ async function boot() {
     } catch (e) {
         console.warn('tv-version: /api/config failed, falling back to package.json', e);
     }
-    // Fallback 1: .version.json — emitted by src-tauri/build.rs every
+    // Fallback 1: version.json — emitted by src-tauri/build.rs every
     // build, single-sourced from workspace.package.version. Always fresh
-    // for a built binary even if /api/config is unreachable.
+    // for a built binary even if /api/config is unreachable. Plain name
+    // (no leading dot) so the Tauri asset bundler includes it.
     if (verEl && !versionSet) {
         try {
-            const v = await fetch('./.version.json', { cache: 'no-store' }).then(r => r.json());
+            const v = await fetch('./version.json', { cache: 'no-store' }).then(r => r.json());
             setVersion(v.version);
         } catch (e) {
-            console.warn('tv-version: .version.json fallback failed', e);
+            console.warn('tv-version: version.json fallback failed', e);
         }
     }
     // Fallback 2: frontend package.json — only useful in pure-web mode

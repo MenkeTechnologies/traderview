@@ -85,6 +85,10 @@ body.popout-mode #app { padding-top: 0 }
     font-size: 10px; line-height: 1.3;
     color: var(--text-muted);
     padding: 3px 7px;
+    /* keep chip wide enough that the 'v—' placeholder doesn't look
+       cut-off before the loader fills in the real version (e.g. 'v0.3.0') */
+    min-width: 38px;
+    text-align: center;
     border: 1px solid rgba(120,140,160,0.25);
     border-radius: 2px;
     letter-spacing: 0.04em;
