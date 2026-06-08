@@ -63,6 +63,8 @@ pub enum TradierError {
     Transport(#[from] reqwest::Error),
     #[error("decode: {0}")]
     Decode(#[from] serde_json::Error),
+    #[error("ws: {0}")]
+    Ws(#[from] tokio_tungstenite::tungstenite::Error),
 }
 
 #[derive(Debug, Clone)]

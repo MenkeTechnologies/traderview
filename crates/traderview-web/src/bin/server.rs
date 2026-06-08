@@ -314,6 +314,24 @@ async fn main() -> anyhow::Result<()> {
                 Err(e) => tracing::warn!(error = %e, "spawn_pumps_for_active_strategies failed"),
             }
         });
+
+        // Tradier events stream pump — parallel to Alpaca. One per
+        // distinct (user, sandbox-vs-live) tuple with at least one
+        // active Tradier-bound algo strategy.
+        let t_pool = pool.clone();
+        let t_sink = sink.clone();
+        let t_registry = state.alpaca_pumps.clone();
+        tokio::spawn(async move {
+            match traderview_db::tradier_pump::spawn_pumps_for_active_strategies(
+                t_pool, Some(t_sink), t_registry,
+            )
+            .await
+            {
+                Ok(0) => tracing::info!("no tradier-bound algo strategies; pumps idle"),
+                Ok(n) => tracing::info!(pumps = n, "tradier events pumps spawned"),
+                Err(e) => tracing::warn!(error = %e, "tradier::spawn_pumps_for_active_strategies failed"),
+            }
+        });
     }
 
     let api = router(state);
