@@ -1489,6 +1489,12 @@ async function openStrategyModal(mount, existing = null) {
                     <label><span data-i18n="view.algo.label.autoscan_top_n">Autoscan top N</span>
                         <input type="number" name="autoscan_top_n" min="1" max="500" value="${Number(s.autoscan_top_n) || 25}">
                     </label>
+                    <label><span data-i18n="view.algo.label.asset_class">Asset class</span>
+                        <select name="asset_class">
+                            <option value="equity" ${(s.entry_rules?.asset_class || 'equity') === 'equity' ? 'selected' : ''} data-i18n="view.algo.opt.asset_equity">Equity (US RTH + extended hours)</option>
+                            <option value="crypto" ${s.entry_rules?.asset_class === 'crypto' ? 'selected' : ''} data-i18n="view.algo.opt.asset_crypto">Crypto (24/7, BASE/USD universe)</option>
+                        </select>
+                    </label>
                     <label><span data-i18n="view.algo.label.side">Side</span>
                         <select name="side_mode">
                             <option value="long"  ${s.side_mode === 'long'  ? 'selected' : ''} data-i18n="view.algo.opt.side_long">Long only</option>
@@ -1559,7 +1565,13 @@ async function openStrategyModal(mount, existing = null) {
             side_mode: f.get('side_mode'),
             strategy_type: f.get('strategy_type') || 'momentum',
             account_id: f.get('account_id') || null,
-            entry_rules: s.entry_rules || {},
+            entry_rules: {
+                ...(s.entry_rules || {}),
+                // Asset class selector — merged into entry_rules so
+                // the backend's AssetClass::from_entry_rules picks it
+                // up. Default "equity" preserves prior behaviour.
+                asset_class: f.get('asset_class') || 'equity',
+            },
             exit_rules: s.exit_rules || {},
             sizing: {
                 risk_pct_per_trade: Number(f.get('risk_pct_per_trade')) || 0.01,
