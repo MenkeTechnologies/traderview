@@ -280,6 +280,45 @@ async fn bring_up_backend(
         jwt_secret,
         data_dir.clone(),
     );
+
+    // ── Algo runner + broker fill pumps ───────────────────────────
+    // Mirrors `crates/traderview-web/src/bin/server.rs::main`. Without
+    // this, the desktop binary's algo subsystem was DEAD: strategies
+    // could be created and runs started, but no tick ever drove them
+    // → no signals, no orders, no fills, no SKIP / EVAL events, no
+    // visibility for the user. bars_processed sat at 0 forever.
+    {
+        let pool = embedded.pool.clone();
+        let sink = state.build_engine_event_sink();
+        tokio::spawn(traderview_db::algo_runner::run_loop(
+            pool.clone(),
+            Some(sink.clone()),
+        ));
+
+        // Broker fill pumps — one per real broker. Each pump iterates
+        // active strategies and connects the appropriate WS / streamer
+        // so fills land in algo_fills + executions via record_fill.
+        macro_rules! spawn_pump {
+            ($mod_name:ident, $label:literal) => {{
+                let p = pool.clone();
+                let s = sink.clone();
+                let r = state.alpaca_pumps.clone();
+                tokio::spawn(async move {
+                    match traderview_db::$mod_name::spawn_pumps_for_active_strategies(p, Some(s), r).await {
+                        Ok(0) => tracing::info!(concat!("no ", $label, "-bound algo strategies; pumps idle")),
+                        Ok(n) => tracing::info!(pumps = n, concat!($label, " pumps spawned")),
+                        Err(e) => tracing::warn!(error = %e, concat!($label, " spawn_pumps_for_active_strategies failed")),
+                    }
+                });
+            }};
+        }
+        spawn_pump!(alpaca_pump, "alpaca");
+        spawn_pump!(tradier_pump, "tradier");
+        spawn_pump!(tastytrade_pump, "tastytrade");
+        spawn_pump!(schwab_pump, "schwab");
+        spawn_pump!(ibkr_pump, "ibkr");
+    }
+
     let app_router = router(state);
 
     // Warm Finnhub API key from DB into the LiveTickStore's in-memory

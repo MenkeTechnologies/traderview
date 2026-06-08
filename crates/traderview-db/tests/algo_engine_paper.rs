@@ -760,6 +760,22 @@ fn soft_delete_preserves_run_history() {
             "run history MUST survive soft-delete (regression: cascade-wipe bug)"
         );
 
+        // The open run must have been AUTO-STOPPED by delete_strategy
+        // — otherwise the runs panel shows an orphan permanently
+        // in-flight for a strategy that no longer exists.
+        let stopped: Option<(Option<chrono::DateTime<chrono::Utc>>, Option<String>)> =
+            sqlx::query_as("SELECT stopped_at, stopped_reason FROM algo_runs WHERE id = $1")
+                .bind(bg_run.id)
+                .fetch_optional(&pool)
+                .await
+                .expect("query");
+        let (stopped_at, stopped_reason) = stopped.expect("row present");
+        assert!(
+            stopped_at.is_some(),
+            "open run must be auto-stopped by delete_strategy (regression: orphan run on deleted strategy)"
+        );
+        assert_eq!(stopped_reason.as_deref(), Some("user"));
+
         // Second delete is a no-op.
         let again = algo::delete_strategy(&pool, user, strategy.id)
             .await

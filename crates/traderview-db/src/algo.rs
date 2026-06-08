@@ -340,6 +340,12 @@ pub async fn update_strategy(
 /// via `UPDATE algo_strategies SET deleted_at = NULL` (manual SQL —
 /// no dedicated route).
 pub async fn delete_strategy(pool: &PgPool, user_id: Uuid, id: Uuid) -> anyhow::Result<bool> {
+    // Wrap in a transaction so the soft-delete + open-run stop happen
+    // atomically. Without the stop step, the open run sat in the DB
+    // forever — the runner skipped it (enabled=false filter) but
+    // `stopped_at IS NULL` made every "runs" lookup show a phantom
+    // in-flight run for a strategy the user just deleted.
+    let mut tx = pool.begin().await?;
     let r = sqlx::query(
         "UPDATE algo_strategies
             SET deleted_at = now(),
@@ -349,9 +355,26 @@ pub async fn delete_strategy(pool: &PgPool, user_id: Uuid, id: Uuid) -> anyhow::
     )
     .bind(id)
     .bind(user_id)
-    .execute(pool)
+    .execute(&mut *tx)
     .await?;
-    Ok(r.rows_affected() > 0)
+    if r.rows_affected() == 0 {
+        tx.rollback().await.ok();
+        return Ok(false);
+    }
+    // Stop any open runs so the runs panel doesn't display a
+    // permanently-in-flight orphan. Idempotent — fires zero updates
+    // when the strategy has no open run.
+    sqlx::query(
+        "UPDATE algo_runs
+            SET stopped_at = now(),
+                stopped_reason = 'user'
+          WHERE strategy_id = $1 AND stopped_at IS NULL",
+    )
+    .bind(id)
+    .execute(&mut *tx)
+    .await?;
+    tx.commit().await?;
+    Ok(true)
 }
 
 // ─── kill switch ────────────────────────────────────────────────────────────
