@@ -965,6 +965,11 @@ export const api = {
             body: JSON.stringify(body || {}),
         }),
     algoStrategyMetrics: (id) => request(`/algo/strategies/${id}/metrics`),
+    optimizeAlgoStrategy: (id, body) =>
+        request(`/algo/strategies/${id}/optimize`, {
+            method: 'POST',
+            body: JSON.stringify(body || {}),
+        }),
 
     // Correlation matrix (pairwise Pearson on cached daily-bar log-returns)
     corrWatchlist: (wid, days = 90) =>

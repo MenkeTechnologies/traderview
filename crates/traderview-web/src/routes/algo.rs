@@ -35,6 +35,7 @@ pub fn router() -> Router<AppState> {
         .route("/algo/orders/:id/fills", get(list_fills))
         .route("/algo/strategies/:id/backtest", post(post_backtest))
         .route("/algo/strategies/:id/metrics", get(get_metrics))
+        .route("/algo/strategies/:id/optimize", post(post_optimize))
 }
 
 // ─── strategy CRUD ──────────────────────────────────────────────────────────
@@ -524,6 +525,100 @@ async fn post_backtest(
         side_mode,
     };
     let result = traderview_core::algo_backtest::run(&bars, strat.as_ref(), &sizing, cfg);
+    Ok(Json(result))
+}
+
+#[derive(Debug, Deserialize)]
+struct OptimizeBody {
+    /// Backtest bar source — same shape as BacktestBody.
+    #[serde(default = "default_bt_symbol")]
+    symbol: String,
+    #[serde(default = "default_bt_interval")]
+    interval: String,
+    #[serde(default = "default_bt_days_back")]
+    days_back: i64,
+    #[serde(default)]
+    from: Option<chrono::DateTime<chrono::Utc>>,
+    #[serde(default)]
+    to: Option<chrono::DateTime<chrono::Utc>>,
+    #[serde(default)]
+    initial_equity: Option<f64>,
+    #[serde(default)]
+    fee_per_trade: Option<f64>,
+    #[serde(default)]
+    slippage_bps: Option<f64>,
+    /// Parameter grid — { key: [v1, v2, ...] }. Each key whose value
+    /// is an array becomes a sweep dimension; scalar values pass
+    /// through as a single candidate.
+    grid: serde_json::Map<String, serde_json::Value>,
+    #[serde(default = "default_metric")]
+    metric: traderview_core::algo_optimize::OptimizeMetric,
+    #[serde(default = "default_top_n")]
+    top_n: usize,
+}
+
+fn default_metric() -> traderview_core::algo_optimize::OptimizeMetric {
+    traderview_core::algo_optimize::OptimizeMetric::Sharpe
+}
+
+fn default_top_n() -> usize { 10 }
+
+/// POST /algo/strategies/:id/optimize — runs the parameter optimizer
+/// against the strategy's saved kind + sizing + side_mode. Returns
+/// top-N entry_rules configs ranked by the chosen metric.
+async fn post_optimize(
+    State(s): State<AppState>,
+    u: AuthUser,
+    Path(id): Path<Uuid>,
+    Json(body): Json<OptimizeBody>,
+) -> Result<Json<traderview_core::algo_optimize::OptimizeResult>, ApiError> {
+    let strategy = traderview_db::algo::get_strategy(&s.pool, u.id, id)
+        .await
+        .map_err(ApiError::Internal)?
+        .ok_or_else(|| ApiError::BadRequest("strategy not found".into()))?;
+    let interval: traderview_core::BarInterval = serde_json::from_value(
+        serde_json::Value::String(normalize_interval(&body.interval)),
+    )
+    .map_err(|e| ApiError::BadRequest(format!("interval: {e}")))?;
+    let to = body.to.unwrap_or_else(chrono::Utc::now);
+    let from = body
+        .from
+        .unwrap_or_else(|| to - chrono::Duration::days(body.days_back));
+    let bars = traderview_db::prices::get_bars(&s.pool, &body.symbol, interval, from, to)
+        .await
+        .map_err(ApiError::Internal)?;
+    if bars.len() < 30 {
+        return Err(ApiError::BadRequest(format!(
+            "only {} bars available for {} {:?} between {from} and {to} — need >=30",
+            bars.len(),
+            body.symbol,
+            body.interval
+        )));
+    }
+    let sizing: traderview_core::algo_strategies::Sizing =
+        serde_json::from_value(strategy.sizing.clone()).unwrap_or_default();
+    let side_mode = match strategy.side_mode.as_str() {
+        "short" => traderview_core::algo_strategies::SideMode::Short,
+        "both" => traderview_core::algo_strategies::SideMode::Both,
+        _ => traderview_core::algo_strategies::SideMode::Long,
+    };
+    let cfg = traderview_core::algo_backtest::BacktestConfig {
+        initial_equity: body.initial_equity.unwrap_or(100_000.0),
+        fee_per_trade: body.fee_per_trade.unwrap_or(1.0),
+        slippage_bps: body.slippage_bps.unwrap_or(5.0),
+        side_mode,
+    };
+    let result = traderview_core::algo_optimize::run(
+        &bars,
+        &strategy.strategy_type,
+        &strategy.entry_rules,
+        &body.grid,
+        &sizing,
+        cfg,
+        body.metric,
+        body.top_n,
+    )
+    .map_err(|e| ApiError::BadRequest(format!("optimize: {e}")))?;
     Ok(Json(result))
 }
 

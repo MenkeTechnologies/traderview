@@ -11,6 +11,7 @@ pub mod anchored_vwap;
 pub mod arms_index;
 pub mod aroon;
 pub mod algo_backtest;
+pub mod algo_optimize;
 pub mod atr_cone;
 pub mod awesome_oscillator;
 pub mod backtest;

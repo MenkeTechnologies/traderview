@@ -743,6 +743,7 @@ async function refreshStrategies(mount) {
                 <button class="link" data-act="stop" data-i18n="view.algo.btn.stop">stop</button>
                 <button class="link" data-act="metrics" data-i18n="view.algo.btn.metrics">metrics</button>
                 <button class="link" data-act="backtest" data-i18n="view.algo.btn.backtest">backtest</button>
+                <button class="link" data-act="optimize" data-i18n="view.algo.btn.optimize">optimize</button>
                 <button class="link" data-act="kill" data-i18n="view.algo.btn.kill">${s.kill_switch ? 'release' : 'kill'}</button>
                 <button class="link" data-act="edit" data-i18n="view.algo.btn.edit">edit</button>
                 <button class="link" data-act="del" data-i18n="view.algo.btn.delete">delete</button>
@@ -761,6 +762,7 @@ async function refreshStrategies(mount) {
             if (act === 'stop') return stopRun(mount, s);
             if (act === 'metrics') return openMetricsModal(mount, s);
             if (act === 'backtest') return openBacktestModal(mount, s);
+            if (act === 'optimize') return openOptimizeModal(mount, s);
             if (act === 'kill') return toggleKill(mount, s);
             if (act === 'edit') return openStrategyModal(mount, s);
             if (act === 'del') return deleteStrategy(mount, s);
@@ -821,6 +823,205 @@ function fmtUsd(n) {
 function fmtPct(n) {
     if (!Number.isFinite(n)) return '—';
     return n.toFixed(2) + '%';
+}
+
+// Curated default grids — keep combos under ~120 so a sweep finishes
+// in a few seconds on a desktop. Users can edit the JSON before
+// submitting if they want a tighter or wider sweep.
+const OPTIMIZE_DEFAULT_GRIDS = {
+    momentum: {
+        ema_fast: [5, 9, 13],
+        ema_slow: [21, 34, 50],
+        rsi_min: [50, 55, 60],
+    },
+    mean_reversion: {
+        connors_rsi_max: [10, 15, 20],
+        vwap_z_min: [1.5, 2.0, 2.5],
+    },
+    orb: {
+        or_minutes: [5, 15, 30],
+        rvol_min: [1.5, 2.0, 3.0],
+    },
+    donchian_trend: {
+        period: [20, 40, 55],
+        adx_min: [20, 25, 30],
+    },
+    bb_squeeze: {
+        period: [15, 20, 30],
+        k: [1.5, 2.0, 2.5],
+    },
+    ttm_squeeze: {
+        bb_period: [15, 20, 25],
+        kc_period: [15, 20, 25],
+    },
+    vwap_scalp: {
+        z_entry: [1.5, 2.0, 2.5],
+        atr_stop_mult: [1.0, 1.5, 2.0],
+    },
+    supertrend: {
+        atr_period: [7, 10, 14],
+        multiplier: [2.0, 3.0, 4.0],
+    },
+    heikin_ashi_trend: {
+        run_min: [3, 4, 5],
+    },
+    connors_rsi2: {
+        rsi_period: [2, 3, 4],
+        rsi_max: [5, 10, 15],
+    },
+    order_block_sweep: {
+        lookback: [20, 30, 50],
+    },
+    pead: {
+        eps_surprise_min: [0.05, 0.1, 0.15],
+    },
+    pairs: {
+        lookback: [40, 60, 90],
+        z_entry: [1.5, 2.0, 2.5],
+    },
+    ma_cross_adx: {
+        fast_period: [5, 9, 13],
+        slow_period: [21, 34, 50],
+        adx_min: [20, 25, 30],
+    },
+    keltner_breakout: {
+        period: [15, 20, 30],
+        multiplier: [1.0, 1.5, 2.0],
+    },
+    ichimoku_cloud: {
+        tenkan_period: [7, 9, 11],
+        kijun_period: [22, 26, 30],
+    },
+};
+
+async function openOptimizeModal(mount, s) {
+    const defaultGrid = OPTIMIZE_DEFAULT_GRIDS[s.strategy_type] || { period: [10, 20, 30] };
+    const gridText = JSON.stringify(defaultGrid, null, 2);
+    const symbol = (s.entry_rules && s.entry_rules.symbol_a) || s.entry_rules?.symbol || 'SPY';
+    const interval = s.timeframe || '5m';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'modal';
+    wrap.innerHTML = `
+        <div class="modal-inner" style="max-width:1040px">
+            <h2>Optimize: ${esc(s.name)}</h2>
+            <p class="muted small">Sweeps the strategy's <code>entry_rules</code> across the grid below, runs the backtester for each combination, and ranks results by the chosen metric. Cap: 1024 combinations per sweep.</p>
+            <form id="opt-form" class="algo-form">
+                <label>Symbol
+                    <input name="symbol" value="${esc(symbol)}" required>
+                </label>
+                <label>Interval
+                    <select name="interval">
+                        <option value="1m" ${interval === '1m' || interval === 'min1' ? 'selected' : ''}>1m</option>
+                        <option value="5m" ${interval === '5m' || interval === 'min5' ? 'selected' : ''}>5m</option>
+                        <option value="15m" ${interval === '15m' || interval === 'min15' ? 'selected' : ''}>15m</option>
+                        <option value="1h" ${interval === '1h' || interval === 'hour1' ? 'selected' : ''}>1h</option>
+                        <option value="1d" ${interval === '1d' || interval === 'day1' ? 'selected' : ''}>1d</option>
+                    </select>
+                </label>
+                <label>Days back
+                    <input name="days_back" type="number" value="60" min="5" max="730" step="1">
+                </label>
+                <label>Initial equity
+                    <input name="initial_equity" type="number" value="100000" min="100" step="100">
+                </label>
+                <label>Metric
+                    <select name="metric">
+                        <option value="sharpe">Sharpe (bar)</option>
+                        <option value="total_return">Total return %</option>
+                        <option value="profit_factor">Profit factor</option>
+                        <option value="avg_r">Avg R-multiple</option>
+                        <option value="return_minus_dd">Return − max DD</option>
+                    </select>
+                </label>
+                <label>Top N
+                    <input name="top_n" type="number" value="10" min="1" max="50" step="1">
+                </label>
+                <label style="flex:1 1 100%">Grid (JSON, key → array of candidate values)
+                    <textarea name="grid" rows="9" style="font-family:monospace;width:100%">${esc(gridText)}</textarea>
+                </label>
+                <div class="row" style="gap:8px;margin-top:8px">
+                    <button type="submit" class="primary">Run sweep</button>
+                    <button type="button" id="opt-close">Close</button>
+                </div>
+            </form>
+            <div id="opt-results" style="margin-top:12px"></div>
+        </div>`;
+    document.body.appendChild(wrap);
+    const close = () => wrap.remove();
+    wrap.querySelector('#opt-close').addEventListener('click', close);
+    wrap.addEventListener('click', e => { if (e.target === wrap) close(); });
+
+    wrap.querySelector('#opt-form').addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const fd = new FormData(ev.target);
+        let grid;
+        try {
+            grid = JSON.parse(fd.get('grid'));
+            if (!grid || typeof grid !== 'object' || Array.isArray(grid)) {
+                throw new Error('grid must be a JSON object');
+            }
+        } catch (e) {
+            const out = wrap.querySelector('#opt-results');
+            out.innerHTML = `<p class="error">Bad grid JSON: ${esc(e.message || String(e))}</p>`;
+            return;
+        }
+        const body = {
+            symbol: fd.get('symbol'),
+            interval: fd.get('interval'),
+            days_back: Number(fd.get('days_back')),
+            initial_equity: Number(fd.get('initial_equity')),
+            metric: fd.get('metric'),
+            top_n: Number(fd.get('top_n')),
+            grid,
+        };
+        const out = wrap.querySelector('#opt-results');
+        out.innerHTML = '<p class="muted">Sweeping … this can take a moment for large grids.</p>';
+        try {
+            const r = await api.optimizeAlgoStrategy(s.id, body);
+            renderOptimizeResult(out, r, s);
+        } catch (e) {
+            out.innerHTML = `<p class="error">Optimize failed: ${esc(e.message || String(e))}</p>`;
+        }
+    });
+}
+
+function renderOptimizeResult(host, r, strategy) {
+    const rows = r.top.map((row, i) => {
+        const overrides = Object.entries(row.overrides)
+            .map(([k, v]) => `<code>${esc(k)}=${esc(JSON.stringify(v))}</code>`)
+            .join(' · ');
+        return `
+            <tr>
+                <td>${i + 1}</td>
+                <td>${row.metric_score.toFixed(4)}</td>
+                <td>${row.summary.trades}</td>
+                <td>${(row.summary.win_rate * 100).toFixed(1)}%</td>
+                <td>${Number.isFinite(row.summary.profit_factor) ? row.summary.profit_factor.toFixed(2) : '∞'}</td>
+                <td>${row.summary.total_return_pct.toFixed(2)}%</td>
+                <td>${row.summary.max_drawdown_pct.toFixed(2)}%</td>
+                <td>${row.summary.avg_r.toFixed(2)}</td>
+                <td>${overrides}</td>
+                <td><button class="link" data-apply="${esc(JSON.stringify(row.entry_rules))}">apply</button></td>
+            </tr>`;
+    }).join('');
+    host.innerHTML = `
+        <p class="muted small">Evaluated ${r.combinations_evaluated} combinations, ranked by <strong>${esc(r.metric)}</strong> (descending).</p>
+        <table class="trades">
+            <thead><tr><th>#</th><th>Score</th><th>Trades</th><th>Win %</th><th>PF</th><th>Return</th><th>Max DD</th><th>Avg R</th><th>Overrides</th><th></th></tr></thead>
+            <tbody>${rows || '<tr><td colspan="10" class="muted">No combinations produced trades.</td></tr>'}</tbody>
+        </table>`;
+    host.querySelectorAll('button[data-apply]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const newRules = JSON.parse(btn.dataset.apply);
+            try {
+                await api.updateAlgoStrategy(strategy.id, { ...strategy, entry_rules: newRules });
+                showToast('entry_rules updated', { level: 'success' });
+            } catch (e) {
+                showToast(`update failed: ${e.message || String(e)}`, { level: 'error' });
+            }
+        });
+    });
 }
 
 async function openMetricsModal(mount, s) {
