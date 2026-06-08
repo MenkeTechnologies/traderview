@@ -39404,5 +39404,9 @@
   "component.chart.ind.bb_squeeze": "BB memeras (BB + KC)",
   "component.chart.menu.filter_placeholder": "filter..",
   "component.chart.menu.no_matches": "tidak ada yang cocok",
-  "component.chart.ind.macd_cross": "MACD Crossover (12, 26, 9)"
+  "component.chart.ind.macd_cross": "MACD Crossover (12, 26, 9)",
+  "view.algo.opt.strat_connors_rsi2": "Connors RSI -2 + 200 SMA (mean -rev classic)",
+  "view.algo.opt.strat_order_block_sweep": "Pesan Block + Liquidity Sweep (SMC)",
+  "view.algo.opt.strat_pead": "PEAD (post- laba drift)",
+  "view.algo.opt.strat_pairs": "Pairs Trading (spread z-score)"
 }

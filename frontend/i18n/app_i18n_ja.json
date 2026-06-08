@@ -39399,5 +39399,9 @@
   "component.chart.ind.bb_squeeze": "BBスクイーズ (BB + KC)",
   "component.chart.menu.filter_placeholder": "フィルター..",
   "component.chart.menu.no_matches": "マッチなし",
-  "component.chart.ind.macd_cross": "MACD クロスオーバー (12, 26, 9)"
+  "component.chart.ind.macd_cross": "MACD クロスオーバー (12, 26, 9)",
+  "view.algo.opt.strat_connors_rsi2": "Connors RSI-2 + 200 SMA (mean-rev クラシック)",
+  "view.algo.opt.strat_order_block_sweep": "オーダーブロック + 流動性掃引(SMC)",
+  "view.algo.opt.strat_pead": "PEAD (ポストアーニングドリフト)",
+  "view.algo.opt.strat_pairs": "ペア取引(スプレッドzスコア)"
 }

@@ -39364,5 +39364,9 @@
   "component.chart.ind.supertrend": "Supertrend (10, 3)",
   "component.chart.ind.bb_squeeze": "BB Squeeze (BB + KC)",
   "component.chart.menu.filter_placeholder": "filtru..",
-  "component.chart.menu.no_matches": "fără chibrituri"
+  "component.chart.menu.no_matches": "fără chibrituri",
+  "view.algo.opt.strat_connors_rsi2": "Connors RSI-2 + 200 SMA (clasic medie-rev)",
+  "view.algo.opt.strat_order_block_sweep": "Bloc de ordine + lichidity Sweep (SMC)",
+  "view.algo.opt.strat_pead": "PEAD",
+  "view.algo.opt.strat_pairs": "Perechi Trading (împrăștiat z-score)"
 }

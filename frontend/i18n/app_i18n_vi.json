@@ -39366,5 +39366,9 @@
   "component.chart.ind.supertrend": "Supertrend (10, 3)",
   "component.chart.ind.bb_squeeze": "Chốt trục BB (BB + KC)",
   "component.chart.menu.filter_placeholder": "lọc..",
-  "component.chart.menu.no_matches": "không khớp"
+  "component.chart.menu.no_matches": "không khớp",
+  "view.algo.opt.strat_connors_rsi2": "ConnorsRSI-2 + 200SMA (mian-rev cổ điển)",
+  "view.algo.opt.strat_order_block_sweep": "Name",
+  "view.algo.opt.strat_pead": "PEAD (tiếng tai cột)",
+  "view.algo.opt.strat_pairs": "Trao đổi đôi ( phổ biến z-score)"
 }

@@ -39398,5 +39398,9 @@
   "component.chart.ind.supertrend": "Supertrend (10, 3)",
   "component.chart.ind.bb_squeeze": "BB szorító (BB + KC)",
   "component.chart.menu.filter_placeholder": "szűrő..",
-  "component.chart.menu.no_matches": "nincs egyezés"
+  "component.chart.menu.no_matches": "nincs egyezés",
+  "view.algo.opt.strat_connors_rsi2": "Connors RSI -2 + 200 SMA (mean- rev classic)",
+  "view.algo.opt.strat_order_block_sweep": "Rend Block + Likviditás Seep (SMC)",
+  "view.algo.opt.strat_pead": "PEAD",
+  "view.algo.opt.strat_pairs": "Pairs Trading (spread z- score)"
 }

@@ -39403,5 +39403,9 @@
   "component.chart.ind.bb_squeeze": "BB Squeeze (BB + KC)",
   "component.chart.menu.filter_placeholder": "фільтри",
   "component.chart.menu.no_matches": "немає матчів",
-  "component.chart.ind.macd_cross": "MACD кросовер (12, 26, 9)"
+  "component.chart.ind.macd_cross": "MACD кросовер (12, 26, 9)",
+  "view.algo.opt.strat_connors_rsi2": "Коннори RSI-2 + 200 SMA (меан-рев класичний)",
+  "view.algo.opt.strat_order_block_sweep": "Блок замовлення + Ліквідність Sweep (SMC)",
+  "view.algo.opt.strat_pead": "PEAD (пост-прайон)",
+  "view.algo.opt.strat_pairs": "Pairs Trading (прочитати z-score)"
 }

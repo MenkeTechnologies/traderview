@@ -39374,5 +39374,9 @@
   "component.chart.ind.supertrend": "超级趋势(10,3)",
   "component.chart.ind.bb_squeeze": "BB 挤压(BB + KC)",
   "component.chart.menu.filter_placeholder": "过滤器..",
-  "component.chart.menu.no_matches": "无匹配"
+  "component.chart.menu.no_matches": "无匹配",
+  "view.algo.opt.strat_connors_rsi2": "Connors RSI - 2 + 200 SMA (普通经典)",
+  "view.algo.opt.strat_order_block_sweep": "区块+流动性扫描(SMC)",
+  "view.algo.opt.strat_pead": "PEAD(学习后漂移)",
+  "view.algo.opt.strat_pairs": "平价交易( spread Z- score)"
 }

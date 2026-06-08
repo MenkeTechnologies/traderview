@@ -39399,5 +39399,9 @@
   "component.chart.ind.bb_squeeze": "BB Squeeze (BB + KC)",
   "component.chart.menu.filter_placeholder": "suodatin..",
   "component.chart.menu.no_matches": "ei osumia",
-  "component.chart.ind.macd_cross": "MACD Crossover (12, 26, 9)"
+  "component.chart.ind.macd_cross": "MACD Crossover (12, 26, 9)",
+  "view.algo.opt.strat_connors_rsi2": "Connors RSI-2 + 200 SMA (keskiarvo-rev klassikko)",
+  "view.algo.opt.strat_order_block_sweep": "Tilauslohko + Likviditeettikorjaus (SMC)",
+  "view.algo.opt.strat_pead": "PEAD",
+  "view.algo.opt.strat_pairs": "Parit Trading (hajautettu z-score)"
 }

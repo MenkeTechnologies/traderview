@@ -39389,5 +39389,9 @@
   "component.chart.ind.supertrend": "Supertrend (10, 3)",
   "component.chart.ind.bb_squeeze": "BB Squeeze (BB + KC)",
   "component.chart.menu.filter_placeholder": "filtro..",
-  "component.chart.menu.no_matches": "no hay coincidencias"
+  "component.chart.menu.no_matches": "no hay coincidencias",
+  "view.algo.opt.strat_connors_rsi2": "Connors RSI-2 + 200 SMA (mean-rev classic)",
+  "view.algo.opt.strat_order_block_sweep": "Bloque de pedido + Sweep de liquidez (SMC)",
+  "view.algo.opt.strat_pead": "PEAD (fut-earnings drift)",
+  "view.algo.opt.strat_pairs": "Trading de pares (spread z-score)"
 }

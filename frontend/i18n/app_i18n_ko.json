@@ -39393,5 +39393,9 @@
   "component.chart.ind.bb_squeeze": "BB 스퀴즈 (BB + KC)",
   "component.chart.menu.filter_placeholder": "필터 ..",
   "component.chart.menu.no_matches": "인기 상품",
-  "component.chart.ind.macd_cross": "MACD 크로스오버 (12, 26, 9)"
+  "component.chart.ind.macd_cross": "MACD 크로스오버 (12, 26, 9)",
+  "view.algo.opt.strat_connors_rsi2": "Connors RSI-2 + 200 SMA (mean-rev 클래식)",
+  "view.algo.opt.strat_order_block_sweep": "주문 블록 + 유동성 Sweep (SMC)",
+  "view.algo.opt.strat_pead": "PEAD",
+  "view.algo.opt.strat_pairs": "쌍 거래 (z-score를 포함하여)"
 }

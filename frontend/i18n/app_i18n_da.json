@@ -39407,5 +39407,9 @@
   "component.chart.ind.bb_squeeze": "BB Squeeze (BB + KC)",
   "component.chart.menu.filter_placeholder": "filter..",
   "component.chart.menu.no_matches": "ingen kampe",
-  "component.chart.ind.macd_cross": "MACD Crossover (12, 26, 9)"
+  "component.chart.ind.macd_cross": "MACD Crossover (12, 26, 9)",
+  "view.algo.opt.strat_connors_rsi2": "Connors RSI -2 + 200 SMA (mean- rev classic)",
+  "view.algo.opt.strat_order_block_sweep": "Bestil Block + Liquidity Sweep (SMC)",
+  "view.algo.opt.strat_pead": "PEAD (efter indtjening drift)",
+  "view.algo.opt.strat_pairs": "Pars Trading (spread z- score)"
 }

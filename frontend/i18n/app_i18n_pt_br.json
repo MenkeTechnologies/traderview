@@ -39294,5 +39294,7 @@
   "component.chart.ind.supertrend": "Supertendência (10, 3)",
   "component.chart.ind.bb_squeeze": "BB Squeeze (BB + KC)",
   "component.chart.menu.filter_placeholder": "filtro..",
-  "component.chart.menu.no_matches": "sem fósforos"
+  "component.chart.menu.no_matches": "sem fósforos",
+  "view.algo.opt.strat_order_block_sweep": "Bloco de Ordem + Varredura de Liquididade (SMC)",
+  "view.algo.opt.strat_pairs": "Pars Trading (Spread Z-Score)"
 }

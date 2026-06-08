@@ -39397,5 +39397,9 @@
   "component.chart.ind.bb_squeeze": "BB Squeeze (BB + KC)",
   "component.chart.menu.filter_placeholder": "filtre..",
   "component.chart.menu.no_matches": "pas de correspondance",
-  "component.chart.ind.macd_cross": "MACD Crossover (12, 26, 9)"
+  "component.chart.ind.macd_cross": "MACD Crossover (12, 26, 9)",
+  "view.algo.opt.strat_connors_rsi2": "Connors RSI-2 + 200 SMA (classique moyen)",
+  "view.algo.opt.strat_order_block_sweep": "Bloc de commande + Balayage de liquidité (SMC)",
+  "view.algo.opt.strat_pead": "PEAD (dérive après les gains)",
+  "view.algo.opt.strat_pairs": "Trading de paires (spread z-score)"
 }
