@@ -210,6 +210,22 @@ pub async fn list_active_strategies(pool: &PgPool) -> anyhow::Result<Vec<AlgoStr
     .await?)
 }
 
+/// System-internal lookup with no per-user scope. Used by background
+/// pumps (Alpaca trade_updates, scheduled runner) that already know
+/// the strategy_id is valid — they got it from a FK-linked row. Do not
+/// expose to HTTP routes; use `get_strategy(pool, user_id, id)` there.
+pub async fn get_strategy_by_id(
+    pool: &PgPool,
+    id: Uuid,
+) -> anyhow::Result<Option<AlgoStrategy>> {
+    Ok(
+        sqlx::query_as::<_, AlgoStrategy>("SELECT * FROM algo_strategies WHERE id = $1")
+            .bind(id)
+            .fetch_optional(pool)
+            .await?,
+    )
+}
+
 pub async fn get_strategy(
     pool: &PgPool,
     user_id: Uuid,

@@ -332,7 +332,27 @@ async fn main() -> anyhow::Result<()> {
                 };
                 hub.publish(evt);
             });
-        tokio::spawn(traderview_db::algo_runner::run_loop(pool, Some(sink)));
+        tokio::spawn(traderview_db::algo_runner::run_loop(pool.clone(), Some(sink.clone())));
+
+        // Alpaca trade_updates WS: one connection per active (user, paper-or-live)
+        // tuple. Fills land in algo_fills + executions + trades via record_fill.
+        // Idempotent — if there are zero alpaca-bound strategies at startup, no
+        // connections are opened. Strategies added after startup won't get a
+        // pump until restart (acceptable for the first iteration).
+        let pump_pool = pool.clone();
+        let pump_sink = sink.clone();
+        tokio::spawn(async move {
+            match traderview_db::alpaca_pump::spawn_pumps_for_active_strategies(
+                pump_pool,
+                Some(pump_sink),
+            )
+            .await
+            {
+                Ok(0) => tracing::info!("no alpaca-bound algo strategies; pumps idle"),
+                Ok(n) => tracing::info!(pumps = n, "alpaca trade_updates pumps spawned"),
+                Err(e) => tracing::warn!(error = %e, "spawn_pumps_for_active_strategies failed"),
+            }
+        });
     }
 
     let api = router(state);
