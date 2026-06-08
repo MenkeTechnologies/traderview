@@ -795,6 +795,13 @@ async function boot() {
             versionSet = true;
         }
     };
+    // Highest-priority source: window.__TRADERVIEW_VERSION__ set by
+    // _version.js (a tiny build-emitted script loaded synchronously in
+    // index.html). This bypasses every fetch failure mode below — if
+    // _version.js loaded, the chip resolves before boot() awaits a thing.
+    if (typeof window !== 'undefined' && window.__TRADERVIEW_VERSION__) {
+        setVersion(window.__TRADERVIEW_VERSION__);
+    }
     try {
         const cfg = await api.config();
         state.mode = cfg.mode;

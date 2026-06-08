@@ -36,3 +36,4 @@ Cargo.lock.bak
 # Generated at every cargo build by src-tauri/build.rs — content tracks
 # workspace.package.version, so it'd churn the git diff for no reason.
 frontend/version.json
+frontend/_version.js
