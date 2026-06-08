@@ -35,6 +35,10 @@ pub struct AlgoStrategy {
     /// Discriminator picked up by `traderview-core::algo_strategies::from_kind`.
     /// One of: momentum | mean_reversion | orb | donchian_trend | bb_squeeze.
     pub strategy_type: String,
+    /// Broker account the strategy produces executions against. Nullable
+    /// only because the column was added in migration 0054 — the route
+    /// layer refuses to start / submit a strategy with NULL.
+    pub account_id: Option<Uuid>,
     pub entry_rules: Json,
     pub exit_rules: Json,
     pub sizing: Json,
@@ -65,6 +69,12 @@ pub struct AlgoStrategyInput {
     pub side_mode: String,
     #[serde(default = "default_strategy_type")]
     pub strategy_type: String,
+    /// Required at the route layer — strategies without an account_id
+    /// cannot start a run or submit orders. Kept Option here so a
+    /// partially-populated dev row from a previous migration can still
+    /// be deserialized for edit / repair.
+    #[serde(default)]
+    pub account_id: Option<Uuid>,
     #[serde(default)]
     pub entry_rules: Json,
     #[serde(default)]
@@ -204,9 +214,9 @@ pub async fn create_strategy(
     Ok(sqlx::query_as::<_, AlgoStrategy>(
         "INSERT INTO algo_strategies
              (user_id, name, enabled, timeframe, universe_mode, watchlist_id,
-              autoscan_top_n, side_mode, strategy_type, entry_rules, exit_rules,
-              sizing, risk_gates, broker_mode)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+              autoscan_top_n, side_mode, strategy_type, account_id,
+              entry_rules, exit_rules, sizing, risk_gates, broker_mode)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
          RETURNING *",
     )
     .bind(user_id)
@@ -218,6 +228,7 @@ pub async fn create_strategy(
     .bind(input.autoscan_top_n)
     .bind(input.side_mode)
     .bind(input.strategy_type)
+    .bind(input.account_id)
     .bind(input.entry_rules)
     .bind(input.exit_rules)
     .bind(input.sizing)
@@ -237,9 +248,9 @@ pub async fn update_strategy(
         "UPDATE algo_strategies
             SET name = $3, enabled = $4, timeframe = $5, universe_mode = $6,
                 watchlist_id = $7, autoscan_top_n = $8, side_mode = $9,
-                strategy_type = $10, entry_rules = $11, exit_rules = $12,
-                sizing = $13, risk_gates = $14, broker_mode = $15,
-                updated_at = now()
+                strategy_type = $10, account_id = $11, entry_rules = $12,
+                exit_rules = $13, sizing = $14, risk_gates = $15,
+                broker_mode = $16, updated_at = now()
           WHERE id = $1 AND user_id = $2
           RETURNING *",
     )
@@ -253,6 +264,7 @@ pub async fn update_strategy(
     .bind(input.autoscan_top_n)
     .bind(input.side_mode)
     .bind(input.strategy_type)
+    .bind(input.account_id)
     .bind(input.entry_rules)
     .bind(input.exit_rules)
     .bind(input.sizing)

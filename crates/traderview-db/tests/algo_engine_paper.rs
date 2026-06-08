@@ -202,6 +202,7 @@ async fn make_strategy(pool: &PgPool, user_id: Uuid, broker_mode: &str) -> AlgoS
             autoscan_top_n: 25,
             side_mode: "long".into(),
                 strategy_type: "momentum".into(),
+                account_id: None,
             entry_rules: serde_json::json!({}),
             exit_rules: serde_json::json!({}),
             sizing: serde_json::json!({"risk_pct_per_trade": 0.01, "max_pos_pct": 0.20}),

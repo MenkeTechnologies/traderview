@@ -52,6 +52,21 @@ const VALID_STRATEGY_TYPES: &[&str] = &[
     "momentum", "mean_reversion", "orb", "donchian_trend", "bb_squeeze",
 ];
 
+async fn user_owns_account(
+    pool: &sqlx::PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+) -> Result<bool, ApiError> {
+    let row: Option<(Uuid,)> =
+        sqlx::query_as("SELECT id FROM accounts WHERE id = $1 AND user_id = $2")
+            .bind(account_id)
+            .bind(user_id)
+            .fetch_optional(pool)
+            .await
+            .map_err(|e| ApiError::Internal(e.into()))?;
+    Ok(row.is_some())
+}
+
 async fn create_strategy(
     State(s): State<AppState>,
     u: AuthUser,
@@ -66,6 +81,18 @@ async fn create_strategy(
             body.strategy_type,
             VALID_STRATEGY_TYPES.join(", "),
         )));
+    }
+    // Every strategy must be bound to a real broker account so fills
+    // flow into the standard executions → trades pipeline. Refuse the
+    // save outright instead of letting the row sit inert and confuse
+    // the user about why nothing happens.
+    let account_id = body
+        .account_id
+        .ok_or_else(|| ApiError::BadRequest(
+            "account_id required — pick a broker account before saving (Settings → Accounts to add one)".into(),
+        ))?;
+    if !user_owns_account(&s.pool, u.id, account_id).await? {
+        return Err(ApiError::BadRequest("account_id does not belong to you".into()));
     }
     // Engine code enforces paper_locked_until at submit-time, but the
     // route also rejects naked alpaca_live at create-time so the UI
@@ -95,6 +122,12 @@ async fn update_strategy(
             body.strategy_type,
             VALID_STRATEGY_TYPES.join(", "),
         )));
+    }
+    let account_id = body
+        .account_id
+        .ok_or_else(|| ApiError::BadRequest("account_id required".into()))?;
+    if !user_owns_account(&s.pool, u.id, account_id).await? {
+        return Err(ApiError::BadRequest("account_id does not belong to you".into()));
     }
     // Allow alpaca_live on update only if existing paper_locked_until
     // has expired. Engine still re-checks at submit.
@@ -191,6 +224,11 @@ async fn start_run(
     }
     if !strategy.enabled {
         return Err(ApiError::BadRequest("strategy is disabled".into()));
+    }
+    if strategy.account_id.is_none() {
+        return Err(ApiError::BadRequest(
+            "strategy has no broker account bound — edit it and pick one".into(),
+        ));
     }
     if let Some(open) = traderview_db::algo::get_open_run(&s.pool, id)
         .await

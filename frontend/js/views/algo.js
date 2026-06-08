@@ -291,7 +291,7 @@ async function showOrders(mount, runId) {
     `).join('');
 }
 
-function openStrategyModal(mount, existing = null) {
+async function openStrategyModal(mount, existing = null) {
     const host = mount.querySelector('#algo-modal-host');
     const s = existing || {
         name: '',
@@ -302,12 +302,23 @@ function openStrategyModal(mount, existing = null) {
         autoscan_top_n: 25,
         side_mode: 'long',
         strategy_type: 'momentum',
+        account_id: null,
         entry_rules: {},
         exit_rules: {},
         sizing: { risk_pct_per_trade: 0.01, max_pos_pct: 0.20 },
         risk_gates: { max_concurrent_positions: 5, daily_loss_limit_pct: 0.03, max_drawdown_pct: 0.10 },
         broker_mode: 'internal_sim',
     };
+    let accounts = [];
+    try { accounts = await api.accounts(); }
+    catch (e) { console.warn('algo modal: api.accounts() failed', e); }
+    const accountOptions = accounts.length
+        ? accounts.map(a => {
+            const sel = s.account_id === a.id ? 'selected' : '';
+            const label = a.broker ? `${a.name} · ${a.broker}` : a.name;
+            return `<option value="${esc(a.id)}" ${sel}>${esc(label)}</option>`;
+        }).join('')
+        : '';
     const stratOptions = STRATEGY_KINDS.map(k => {
         const sel = (s.strategy_type || 'momentum') === k.value ? 'selected' : '';
         return `<option value="${k.value}" ${sel} data-i18n="${k.label_key}">${esc(k.label)}</option>`;
@@ -320,6 +331,14 @@ function openStrategyModal(mount, existing = null) {
                     <label><span data-i18n="view.algo.label.name">Name</span>
                         <input name="name" value="${esc(s.name)}" required>
                     </label>
+                    <label><span data-i18n="view.algo.label.account">Broker account</span>
+                        <select name="account_id" required>
+                            ${accountOptions || `<option value="">${esc(t('view.algo.label.no_accounts'))}</option>`}
+                        </select>
+                    </label>
+                    ${accounts.length ? '' : `<p class="muted small" style="margin:-4px 0 0;color:var(--red)">
+                        ${esc(t('view.algo.hint.no_accounts'))}
+                    </p>`}
                     <label><span data-i18n="view.algo.label.strategy_type">Strategy</span>
                         <select name="strategy_type" id="algo-strategy-type">
                             ${stratOptions}
@@ -405,6 +424,7 @@ function openStrategyModal(mount, existing = null) {
             autoscan_top_n: Number(f.get('autoscan_top_n')) || 25,
             side_mode: f.get('side_mode'),
             strategy_type: f.get('strategy_type') || 'momentum',
+            account_id: f.get('account_id') || null,
             entry_rules: s.entry_rules || {},
             exit_rules: s.exit_rules || {},
             sizing: {
