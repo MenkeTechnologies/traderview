@@ -178,6 +178,7 @@
           <button type="button" class="btn btn-secondary" id="btnTheme" title="Toggle light/dark">Theme</button>
           <button type="button" class="btn btn-secondary active" id="btnCrt" title="CRT scanline overlay">CRT</button>
           <button type="button" class="btn btn-secondary active" id="btnNeon" title="Neon border pulse">Neon</button>
+          <a class="btn btn-secondary" href="tutorial/index.html">Tutorial</a>
           <a class="btn btn-secondary" href="report.html">Report</a>
           <a class="btn btn-secondary" href="https://github.com/MenkeTechnologies/traderview" target="_blank" rel="noopener noreferrer">GitHub</a>
         </div>
@@ -194,6 +195,12 @@
     <main class="tutorial-main">
       <h2 class="tutorial-title"><span class="step-hash">&gt;_</span>TRADERVIEW — FULL DESKTOP TRADING SUITE</h2>
       <p class="tutorial-subtitle"><strong>Replaces TraderVue ($30/mo journal) + DayTradeDash ($187/mo scanner) + StockInvest in one self-hosted binary — $2,604/yr saved.</strong> Tauri v2 desktop that downloads and runs an embedded PostgreSQL on first launch with a local auto-user, plus an axum web binary with argon2 + JWT for multi-user deployment. Both share seven library crates and the vanilla JS + uPlot frontend. 646 view modules across a 648-tile categorized launcher (Cmd-K). Live streams: Nasdaq halts (3s RSS), SEC EDGAR + 4 PR wires (catalyst radar), Finnhub WebSocket (6-panel intraday scanner), Webull broker (read-only positions). Executions are the atom; trades are FIFO-derived; the journal is markdown; expenses get OCR receipts and Schedule-C export.</p>
+
+      <section class="tutorial-section">
+        <h2>End-user walkthrough</h2>
+        <p>If you're trying TraderView for the first time, jump into the <strong><a href="tutorial/index.html">18-step tutorial</a></strong> — first launch through every major view, the 648-tile Cmd-K launcher, broker imports, FIFO trade roll-up, journal + AI post-mortem, the 17-cut report engine, live halt / catalyst / scanner streams, stryke-JIT backtests, custom indicators, strategy alerts, Schedule D / C tax exports, and the community surface. Each step is self-contained and references the route handlers in <code>crates/traderview-web/src/routes/</code> and the view modules in <code>frontend/js/</code> by path.</p>
+        <p><a class="btn btn-secondary" href="tutorial/index.html">Open tutorial →</a></p>
+      </section>
 
       <section class="tutorial-section">
         <h2>Quickstart</h2>
