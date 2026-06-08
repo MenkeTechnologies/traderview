@@ -20,6 +20,7 @@ pub mod momentum;
 pub mod orb;
 pub mod ttm_squeeze;
 pub mod types;
+pub mod vwap_scalp;
 
 pub use types::*;
 
@@ -105,7 +106,8 @@ pub fn from_kind(
         "donchian_trend" => Ok(Box::new(donchian_trend::DonchianTrend::from_json(entry_rules))),
         "bb_squeeze" => Ok(Box::new(bb_squeeze::BbSqueeze::from_json(entry_rules))),
         "ttm_squeeze" => Ok(Box::new(ttm_squeeze::TtmSqueeze::from_json(entry_rules))),
-        "vwap_scalp" | "supertrend" | "heikin_ashi_trend" => {
+        "vwap_scalp" => Ok(Box::new(vwap_scalp::VwapScalp::from_json(entry_rules))),
+        "supertrend" | "heikin_ashi_trend" => {
             Err(FactoryError::NotImplemented(kind.to_string()))
         }
         other => Err(FactoryError::Unknown(other.to_string())),
