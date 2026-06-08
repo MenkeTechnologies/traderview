@@ -13,6 +13,7 @@
 //! of `account.broker` — that's the in-app paper simulator path.
 
 use crate::algo_engine::{BrokerSink, EngineError, ImmediateFill, InMemorySink, OrderIntent, SubmittedOrder};
+use crate::alpaca_trading::{AlpacaTrading, BrokerMode as AlpacaBrokerMode, PlaceOrderRequest};
 use crate::tradier_trading::{
     EquitySide, OtocoBracket, TradierEnv, TradierTrading,
 };
@@ -51,14 +52,22 @@ pub async fn sink_for_strategy(
     let broker = broker_opt.unwrap_or_default().to_ascii_lowercase();
     let paper = strategy.broker_mode == "paper";
     match broker.as_str() {
-        // Alpaca: the alpaca_pump WS flow handles real fills coming
-        // back in. The outgoing place_order via REST isn't wired
-        // through the dispatcher yet — engine still uses the
-        // InMemorySink's immediate-fill simulation. Real Alpaca REST
-        // submission lands when the dispatcher fully takes over (the
-        // adapter exists in alpaca_trading.rs; just needs an
-        // AlpacaSink wrapper).
-        "alpaca" => Ok(Box::new(InMemorySink::default())),
+        "alpaca" => {
+            let Some((key_id, secret, _)) =
+                crate::data_source_keys::alpaca_creds_plain(pool, strategy.user_id)
+                    .await
+                    .map_err(|e| DispatchError::Db(sqlx::Error::Decode(e.into())))?
+            else {
+                return Ok(Box::new(IntegrationPendingSink {
+                    broker: "alpaca",
+                    paper,
+                    detail: "no Alpaca credentials saved — go to Settings → Data sources".into(),
+                }));
+            };
+            let mode = if paper { AlpacaBrokerMode::Paper } else { AlpacaBrokerMode::Live };
+            let client = AlpacaTrading::new(mode, key_id, secret);
+            Ok(Box::new(AlpacaSink { client }))
+        }
         "tradier" => {
             let Some((token, account_id_str, sandbox)) =
                 crate::data_source_keys::tradier_creds(pool, strategy.user_id)
@@ -95,6 +104,49 @@ pub async fn sink_for_strategy(
             paper,
             detail: "broker not in algo-supported set".into(),
         })),
+    }
+}
+
+/// Real Alpaca sink — places a native bracket order via REST. Fills
+/// come back through the alpaca_pump WS flow which calls `record_fill`
+/// directly, so this sink returns `immediate_fill=None`; the algo
+/// engine treats the order as 'accepted' until the WS event lands.
+#[derive(Debug, Clone)]
+struct AlpacaSink {
+    client: AlpacaTrading,
+}
+
+impl BrokerSink for AlpacaSink {
+    fn submit_bracket(
+        &self,
+        intent: OrderIntent,
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>>
+    {
+        let client = self.client.clone();
+        Box::pin(async move {
+            let side = match intent.side {
+                traderview_core::algo_strategies::Side::Buy => "buy",
+                traderview_core::algo_strategies::Side::Sell => "sell",
+            };
+            let req = PlaceOrderRequest::bracket_market(
+                intent.symbol.clone(),
+                side,
+                intent.qty,
+                intent.client_order_id,
+                intent.take_profit_price,
+                intent.stop_price,
+            );
+            let resp = client
+                .place_order(&req)
+                .await
+                .map_err(|e| EngineError::Broker(format!("alpaca: {e}")))?;
+            Ok(SubmittedOrder {
+                broker_order_id: resp.id,
+                status: resp.status,
+                raw_response: None,
+                immediate_fill: None,
+            })
+        })
     }
 }
 

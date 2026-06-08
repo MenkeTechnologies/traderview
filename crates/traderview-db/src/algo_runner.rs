@@ -13,7 +13,7 @@
 //! Wired into `bin/server.rs::main` via a `tokio::spawn(algo_runner::run_loop(pool))`.
 
 use crate::algo::{self, AlgoStrategy};
-use crate::algo_engine::{self, BrokerSink, EventSink, InMemorySink};
+use crate::algo_engine::{self, BrokerSink, EventSink};
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use sqlx::PgPool;
@@ -45,7 +45,6 @@ pub async fn tick(
     if strategies.is_empty() {
         return 0;
     }
-    let sink = InMemorySink::default();
     let mut processed = 0usize;
     for s in &strategies {
         let interval = parse_timeframe(&s.timeframe);
@@ -94,7 +93,17 @@ pub async fn tick(
         } else {
             symbols
         };
-        match drive_strategy(pool, &sink, s, interval, &symbols, event_sink).await {
+        // Build the right sink per-strategy via the dispatcher:
+        // alpaca → AlpacaSink (real REST); tradier → TradierSink (real REST);
+        // ibkr/td/tastytrade → IntegrationPendingSink (rejects).
+        let sink_box = match crate::broker_dispatcher::sink_for_strategy(pool, s).await {
+            Ok(b) => b,
+            Err(e) => {
+                tracing::warn!(strategy = %s.id, error = %e, "broker_dispatcher failed");
+                continue;
+            }
+        };
+        match drive_strategy(pool, sink_box.as_ref(), s, interval, &symbols, event_sink).await {
             Ok(n) => processed += n,
             Err(e) => tracing::warn!(strategy = %s.id, error = %e, "drive_strategy failed"),
         }
