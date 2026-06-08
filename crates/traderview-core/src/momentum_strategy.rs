@@ -21,24 +21,10 @@ use crate::indicators;
 use crate::models::PriceBar;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum SideMode {
-    Long,
-    Short,
-    Both,
-}
-
-impl Default for SideMode {
-    fn default() -> Self { Self::Long }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum Side {
-    Buy,
-    Sell,
-}
+// Side / SideMode / Sizing live in algo_strategies::types so every
+// strategy module shares one type — re-exported here so existing callers
+// (and the inline tests below) keep working unchanged.
+pub use crate::algo_strategies::types::{Side, SideMode, Sizing};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Rules {
@@ -87,19 +73,6 @@ impl Default for Rules {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Sizing {
-    /// Fraction of equity risked on the stop. Default 0.01 = 1%.
-    pub risk_pct_per_trade: f64,
-    /// Hard ceiling on a single position as a fraction of equity.
-    pub max_pos_pct: f64,
-}
-
-impl Default for Sizing {
-    fn default() -> Self {
-        Self { risk_pct_per_trade: 0.01, max_pos_pct: 0.20 }
-    }
-}
 
 #[derive(Debug, Clone, Serialize)]
 pub struct EntrySignal {
@@ -125,12 +98,9 @@ pub struct EntryDiagnostic {
     pub rvol: f64,
 }
 
-#[derive(Debug, Clone, Serialize)]
-pub struct ExitSignal {
-    pub reason: &'static str, // "ema_loss" | "rsi_loss" | "atr_stop" | "macd_bearish"
-    pub exit_price: f64,
-    pub trigger_index: usize,
-}
+// ExitSignal is defined once in algo_strategies::types so the engine
+// can consume any strategy's exit without converting.
+pub use crate::algo_strategies::types::ExitSignal;
 
 /// Evaluate the rule stack on the bar window. Returns `Some` only on the
 /// bar a crossover ACTUALLY happens — the engine calls this on every

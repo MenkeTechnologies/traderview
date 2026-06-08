@@ -32,6 +32,9 @@ pub struct AlgoStrategy {
     pub watchlist_id: Option<Uuid>,
     pub autoscan_top_n: i32,
     pub side_mode: String, // 'long' | 'short' | 'both'
+    /// Discriminator picked up by `traderview-core::algo_strategies::from_kind`.
+    /// One of: momentum | mean_reversion | orb | donchian_trend | bb_squeeze.
+    pub strategy_type: String,
     pub entry_rules: Json,
     pub exit_rules: Json,
     pub sizing: Json,
@@ -60,6 +63,8 @@ pub struct AlgoStrategyInput {
     pub autoscan_top_n: i32,
     #[serde(default = "default_side_mode")]
     pub side_mode: String,
+    #[serde(default = "default_strategy_type")]
+    pub strategy_type: String,
     #[serde(default)]
     pub entry_rules: Json,
     #[serde(default)]
@@ -77,6 +82,7 @@ fn default_universe_mode() -> String { "watchlist".into() }
 fn default_autoscan_top_n() -> i32 { 25 }
 fn default_side_mode() -> String { "long".into() }
 fn default_broker_mode() -> String { "internal_sim".into() }
+fn default_strategy_type() -> String { "momentum".into() }
 
 #[derive(Debug, Clone, Serialize, sqlx::FromRow)]
 pub struct AlgoRun {
@@ -198,9 +204,9 @@ pub async fn create_strategy(
     Ok(sqlx::query_as::<_, AlgoStrategy>(
         "INSERT INTO algo_strategies
              (user_id, name, enabled, timeframe, universe_mode, watchlist_id,
-              autoscan_top_n, side_mode, entry_rules, exit_rules, sizing,
-              risk_gates, broker_mode)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+              autoscan_top_n, side_mode, strategy_type, entry_rules, exit_rules,
+              sizing, risk_gates, broker_mode)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
          RETURNING *",
     )
     .bind(user_id)
@@ -211,6 +217,7 @@ pub async fn create_strategy(
     .bind(input.watchlist_id)
     .bind(input.autoscan_top_n)
     .bind(input.side_mode)
+    .bind(input.strategy_type)
     .bind(input.entry_rules)
     .bind(input.exit_rules)
     .bind(input.sizing)
@@ -230,8 +237,9 @@ pub async fn update_strategy(
         "UPDATE algo_strategies
             SET name = $3, enabled = $4, timeframe = $5, universe_mode = $6,
                 watchlist_id = $7, autoscan_top_n = $8, side_mode = $9,
-                entry_rules = $10, exit_rules = $11, sizing = $12,
-                risk_gates = $13, broker_mode = $14, updated_at = now()
+                strategy_type = $10, entry_rules = $11, exit_rules = $12,
+                sizing = $13, risk_gates = $14, broker_mode = $15,
+                updated_at = now()
           WHERE id = $1 AND user_id = $2
           RETURNING *",
     )
@@ -244,6 +252,7 @@ pub async fn update_strategy(
     .bind(input.watchlist_id)
     .bind(input.autoscan_top_n)
     .bind(input.side_mode)
+    .bind(input.strategy_type)
     .bind(input.entry_rules)
     .bind(input.exit_rules)
     .bind(input.sizing)

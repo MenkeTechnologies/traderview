@@ -23,10 +23,8 @@ use rust_decimal::prelude::FromPrimitive;
 use serde_json::Value as Json;
 use sqlx::PgPool;
 use std::sync::Arc;
+use traderview_core::algo_strategies::{self, EntrySignal, Side, SideMode, Sizing};
 use traderview_core::models::PriceBar;
-use traderview_core::momentum_strategy::{
-    self, EntrySignal, Rules, Side, SideMode, Sizing,
-};
 use uuid::Uuid;
 
 #[derive(Debug, Clone)]
@@ -103,12 +101,12 @@ impl BrokerSink for InMemorySink {
     }
 }
 
-/// Configuration loaded from `algo_strategies.entry_rules / exit_rules /
-/// sizing / risk_gates` JSON columns. Falls back to module defaults when
-/// keys are absent.
+/// Configuration loaded from `algo_strategies.sizing / risk_gates / side_mode`.
+/// The strategy itself is built lazily via the factory in
+/// `algo_strategies::from_kind` — different `strategy_type` columns produce
+/// different `Box<dyn Strategy>` impls.
 #[derive(Debug, Clone)]
 pub struct EngineConfig {
-    pub rules: Rules,
     pub sizing: Sizing,
     pub side_mode: SideMode,
     pub max_concurrent_positions: i64,
@@ -116,8 +114,6 @@ pub struct EngineConfig {
 
 impl EngineConfig {
     pub fn from_strategy(s: &AlgoStrategy) -> Self {
-        let rules = serde_json::from_value::<Rules>(s.entry_rules.clone())
-            .unwrap_or_else(|_| Rules::default());
         let sizing = serde_json::from_value::<Sizing>(s.sizing.clone())
             .unwrap_or_else(|_| Sizing::default());
         let side_mode = match s.side_mode.as_str() {
@@ -130,7 +126,7 @@ impl EngineConfig {
             .get("max_concurrent_positions")
             .and_then(|v| v.as_i64())
             .unwrap_or(5);
-        Self { rules, sizing, side_mode, max_concurrent_positions }
+        Self { sizing, side_mode, max_concurrent_positions }
     }
 }
 
@@ -162,10 +158,15 @@ pub async fn process_bar_window(
         return Err(EngineError::PositionCap(open_positions));
     }
 
-    let Some(sig) = momentum_strategy::evaluate_entry(bars, &cfg.rules, cfg.side_mode) else {
+    let strat = algo_strategies::from_kind(&strategy.strategy_type, &strategy.entry_rules)
+        .map_err(|e| EngineError::Broker(e.to_string()))?;
+
+    let Some(sig) = strat.evaluate_entry(bars, cfg.side_mode) else {
         return Ok(None);
     };
-    let qty = momentum_strategy::size_shares(equity, sig.entry_price, sig.atr, &cfg.sizing, &cfg.rules);
+    let qty = algo_strategies::size_shares(
+        equity, sig.entry_price, sig.stop_distance, &cfg.sizing,
+    );
     if qty == 0 {
         return Err(EngineError::ZeroQty);
     }
