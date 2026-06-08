@@ -38,19 +38,27 @@ function killBadge(s) {
 }
 
 const STRATEGY_KINDS = [
-    { value: 'momentum',       label_key: 'view.algo.opt.strat_momentum',       label: 'Momentum (EMA cross + RSI + ROC + RVOL)' },
-    { value: 'mean_reversion', label_key: 'view.algo.opt.strat_mean_reversion', label: 'Mean Reversion (Connors RSI + VWAP z-score)' },
-    { value: 'orb',            label_key: 'view.algo.opt.strat_orb',            label: 'Opening Range Breakout (OR high break + RVOL)' },
-    { value: 'donchian_trend', label_key: 'view.algo.opt.strat_donchian_trend', label: 'Donchian Trend / Turtle (Donchian + ADX filter)' },
-    { value: 'bb_squeeze',     label_key: 'view.algo.opt.strat_bb_squeeze',     label: 'Bollinger Squeeze (BBW bottom decile + band break)' },
+    { value: 'momentum',          label_key: 'view.algo.opt.strat_momentum',          label: 'Momentum (EMA cross + RSI + ROC + RVOL)' },
+    { value: 'mean_reversion',    label_key: 'view.algo.opt.strat_mean_reversion',    label: 'Mean Reversion (Connors RSI + VWAP z-score)' },
+    { value: 'orb',               label_key: 'view.algo.opt.strat_orb',               label: 'Opening Range Breakout (OR high break + RVOL)' },
+    { value: 'donchian_trend',    label_key: 'view.algo.opt.strat_donchian_trend',    label: 'Donchian Trend / Turtle (Donchian + ADX filter)' },
+    { value: 'bb_squeeze',        label_key: 'view.algo.opt.strat_bb_squeeze',        label: 'Bollinger Squeeze (BBW bottom decile + band break)' },
+    { value: 'ttm_squeeze',       label_key: 'view.algo.opt.strat_ttm_squeeze',       label: 'TTM Squeeze Momentum (BB-in-KC release + histogram)' },
+    { value: 'vwap_scalp',        label_key: 'view.algo.opt.strat_vwap_scalp',        label: 'VWAP Scalp (z-score reversion, 1×ATR stop)' },
+    { value: 'supertrend',        label_key: 'view.algo.opt.strat_supertrend',        label: 'Supertrend Cross (ATR-banded trend flip)' },
+    { value: 'heikin_ashi_trend', label_key: 'view.algo.opt.strat_heikin_ashi_trend', label: 'Heikin-Ashi Trend (HA run + EMA confirm)' },
 ];
 
 const STRATEGY_HINTS = {
-    momentum:       'EMA(9)/EMA(21) crossover + RSI(14) ∈ [50,70] + ROC(10) > 2% + RVOL ≥ 1.5×. ATR-based bracket. Trend follower.',
-    mean_reversion: 'Connors RSI(3) < 10 + close < session VWAP − 2σ. Long the oversold pierce, target = VWAP. ATR stop.',
-    orb:            'First close that breaks the opening-range high (15 bars default) with RVOL ≥ 1.5×. ATR trailing stop. Day-trade setup.',
-    donchian_trend: 'Close > Donchian(20).upper + ADX(14) > 20 (chop filter). Exit on Donchian(10).low break or ATR trail. Long trends.',
-    bb_squeeze:     'BBW(20,2) in the bottom 10th percentile over 100 bars + close breaks BB.upper. Target = BB.middle. Volatility expansion.',
+    momentum:          'EMA(9)/EMA(21) crossover + RSI(14) ∈ [50,70] + ROC(10) > 2% + RVOL ≥ 1.5×. ATR-based bracket. Trend follower.',
+    mean_reversion:    'Connors RSI(3) < 10 + close < session VWAP − 2σ. Long the oversold pierce, target = VWAP. ATR stop.',
+    orb:               'First close that breaks the opening-range high (15 bars default) with RVOL ≥ 1.5×. ATR trailing stop. Day-trade setup.',
+    donchian_trend:    'Close > Donchian(20).upper + ADX(14) > 20 (chop filter). Exit on Donchian(10).low break or ATR trail. Long trends.',
+    bb_squeeze:        'BBW(20,2) in the bottom 10th percentile over 100 bars + close breaks BB.upper. Target = BB.middle. Volatility expansion.',
+    ttm_squeeze:       'BB inside KC = squeeze coil. After release (within 5 bars) + momentum histogram positive and accelerating = long entry.',
+    vwap_scalp:        'Pure z-score reversion: close ≤ session VWAP − 2σ + recovery tick. Tight 1×ATR stop, target = VWAP. Intraday scalp.',
+    supertrend:        'ATR(10)×3 banded reversal. Entry on trend flip (−1 → +1), exit on opposite flip. Simple trend follower.',
+    heikin_ashi_trend: '3 consecutive green HA candles + close > EMA(21). Noise-filtered trend follower; use on 5m+ bars for best signal-to-noise.',
 };
 
 export async function renderAlgo(mount) {

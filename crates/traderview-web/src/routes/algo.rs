@@ -50,6 +50,7 @@ async fn list_strategies(
 
 const VALID_STRATEGY_TYPES: &[&str] = &[
     "momentum", "mean_reversion", "orb", "donchian_trend", "bb_squeeze",
+    "ttm_squeeze", "vwap_scalp", "supertrend", "heikin_ashi_trend",
 ];
 
 async fn user_owns_account(
