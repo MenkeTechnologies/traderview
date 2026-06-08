@@ -13,6 +13,7 @@
 use crate::models::PriceBar;
 use serde::{Deserialize, Serialize};
 
+pub mod donchian_trend;
 pub mod mean_reversion;
 pub mod momentum;
 pub mod orb;
@@ -87,8 +88,9 @@ pub fn from_kind(
         "momentum" => Ok(Box::new(momentum::Momentum::from_json(entry_rules))),
         "mean_reversion" => Ok(Box::new(mean_reversion::MeanReversion::from_json(entry_rules))),
         "orb" => Ok(Box::new(orb::Orb::from_json(entry_rules))),
-        // Slots populated in commits 8–9.
-        "donchian_trend" | "bb_squeeze" => {
+        "donchian_trend" => Ok(Box::new(donchian_trend::DonchianTrend::from_json(entry_rules))),
+        // Slot populated in commit 9.
+        "bb_squeeze" => {
             Err(FactoryError::NotImplemented(kind.to_string()))
         }
         other => Err(FactoryError::Unknown(other.to_string())),
