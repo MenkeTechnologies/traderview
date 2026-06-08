@@ -13,6 +13,7 @@
 use crate::models::PriceBar;
 use serde::{Deserialize, Serialize};
 
+pub mod bb_squeeze;
 pub mod donchian_trend;
 pub mod mean_reversion;
 pub mod momentum;
@@ -89,10 +90,7 @@ pub fn from_kind(
         "mean_reversion" => Ok(Box::new(mean_reversion::MeanReversion::from_json(entry_rules))),
         "orb" => Ok(Box::new(orb::Orb::from_json(entry_rules))),
         "donchian_trend" => Ok(Box::new(donchian_trend::DonchianTrend::from_json(entry_rules))),
-        // Slot populated in commit 9.
-        "bb_squeeze" => {
-            Err(FactoryError::NotImplemented(kind.to_string()))
-        }
+        "bb_squeeze" => Ok(Box::new(bb_squeeze::BbSqueeze::from_json(entry_rules))),
         other => Err(FactoryError::Unknown(other.to_string())),
     }
 }
