@@ -474,22 +474,41 @@ async fn drive_strategy(
     // there are more, so the user sees what's missing without 25 lines.
     if !no_bars.is_empty() {
         let head: Vec<_> = no_bars.iter().take(5).cloned().collect();
-        let reason = if no_bars.len() > head.len() {
+        // Escalate the tail of the skip reason based on how stale the
+        // no-bars state is. The first few minutes after subscribe is
+        // expected (10s buckets need to accumulate); after that the
+        // live tick worker is genuinely stuck and the user needs to
+        // act (check Data sources / restart / etc.). Computed from
+        // run.started_at so a fresh run gets the "filling in" message
+        // and a long-running stuck run gets the actionable one.
+        let mins_since_start = (chrono::Utc::now() - run.started_at).num_minutes().max(0);
+        let tail = if mins_since_start < 3 {
             format!(
-                "no_bars ({}/{} of universe): {} … and {} more — first {} window after autoscan; symbols were just subscribed to live tick worker, bars will fill in over the next minute or two",
-                no_bars.len(),
-                no_bars.len() + driven,
-                head.join(", "),
-                no_bars.len() - head.len(),
+                "first {} window after autoscan; symbols were just subscribed to live tick worker, bars will fill in over the next minute or two",
                 interval.label(),
             )
         } else {
             format!(
-                "no_bars ({}/{} of universe): {} — first {} window after autoscan; symbols were just subscribed to live tick worker, bars will fill in over the next minute or two",
+                "still no bars after {} min — live tick worker is stuck (Alpaca/Polygon/Finnhub WS auth failure, connection-limit collision, or stale desktop binary still using old mmap after rebuild). Check ~/Library/Application Support/com.menketechnologies.traderview/traderview.log for `alpaca WS error` frames + restart the app",
+                mins_since_start,
+            )
+        };
+        let reason = if no_bars.len() > head.len() {
+            format!(
+                "no_bars ({}/{} of universe): {} … and {} more — {}",
                 no_bars.len(),
                 no_bars.len() + driven,
                 head.join(", "),
-                interval.label(),
+                no_bars.len() - head.len(),
+                tail,
+            )
+        } else {
+            format!(
+                "no_bars ({}/{} of universe): {} — {}",
+                no_bars.len(),
+                no_bars.len() + driven,
+                head.join(", "),
+                tail,
             )
         };
         emit_skip(event_sink, strategy.id, reason);
