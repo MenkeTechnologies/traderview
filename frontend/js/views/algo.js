@@ -837,7 +837,7 @@ async function openStrategyModal(mount, existing = null) {
     // broker_dispatcher errors at submit time for the not-yet-real
     // adapters so the strategy can still be saved + scheduled.
     const algoBroker = (b) =>
-        ['alpaca', 'tradier', 'ibkr', 'td', 'tastytrade']
+        ['alpaca', 'tradier', 'ibkr', 'td', 'schwab', 'tastytrade']
             .includes(String(b || '').toLowerCase());
     // broker_mode is now broker-agnostic — internal_sim / paper / live.
     // The right paper/live endpoint is picked by the dispatcher based

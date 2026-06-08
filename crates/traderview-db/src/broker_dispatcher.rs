@@ -18,6 +18,10 @@ use crate::ibkr_trading::{
     IbkrTrading, OrderSide as IbkrOrderSide, OrderType as IbkrOrderType, PlaceOrder as IbkrPlaceOrder,
     Tif as IbkrTif,
 };
+use crate::schwab_trading::{
+    Duration_ as SchwabDuration, Instruction as SchwabInstruction, OrderType as SchwabOrderType,
+    PlaceOrder as SchwabPlaceOrder, SchwabTrading, Session as SchwabSession,
+};
 use crate::tastytrade_trading::{
     EquityAction, PlaceEquityOrder as TastyEquityOrder, TastytradeEnv, TastytradeTrading,
 };
@@ -111,11 +115,40 @@ pub async fn sink_for_strategy(
             // /iserver/secdef/search is wired in a follow-up.
             Ok(Box::new(IbkrSink { client, account_label: "ibkr".into() }))
         }
-        "td" => Ok(Box::new(IntegrationPendingSink {
-            broker: "td",
-            paper,
-            detail: "TD/Schwab API migration pending".into(),
-        })),
+        "td" | "schwab" => {
+            // TD Ameritrade was retired Sep 2024 — Schwab Trader API is
+            // the replacement. We accept the legacy "td" broker label
+            // (existing accounts in user DBs) and route to the same
+            // Schwab REST adapter.
+            let Some((client_id, client_secret, tokens, account_hash)) =
+                crate::data_source_keys::schwab_creds(pool, strategy.user_id)
+                    .await
+                    .map_err(|e| DispatchError::Db(sqlx::Error::Decode(e.into())))?
+            else {
+                return Ok(Box::new(IntegrationPendingSink {
+                    broker: "schwab",
+                    paper,
+                    detail: "no Schwab credentials saved — go to Settings → Data sources, run the OAuth flow".into(),
+                }));
+            };
+            // Persist rotated tokens to the DB so a refresh survives
+            // process restart. The closure captures pool + user_id; the
+            // pool clone is Arc-cheap.
+            let pool_clone = pool.clone();
+            let user_id = strategy.user_id;
+            let persist: crate::schwab_trading::TokenCallback =
+                std::sync::Arc::new(move |new_tokens| {
+                    let pool = pool_clone.clone();
+                    tokio::spawn(async move {
+                        let _ = crate::data_source_keys::save_schwab_tokens(
+                            &pool, user_id, &new_tokens,
+                        ).await;
+                    });
+                });
+            let client = SchwabTrading::new(client_id, client_secret, tokens, account_hash)
+                .on_token_refresh(persist);
+            Ok(Box::new(SchwabSink { client }))
+        }
         "tastytrade" => {
             let Some((account_number, sandbox, auth)) =
                 crate::data_source_keys::tastytrade_creds(pool, strategy.user_id)
@@ -240,6 +273,55 @@ impl BrokerSink for IbkrSink {
                 // the streaming /ws endpoint — a follow-up commit lands
                 // the pump. Until then the engine treats the order as
                 // accepted but unfilled.
+                immediate_fill: None,
+            })
+        })
+    }
+}
+
+/// Real Schwab sink — places a single-leg equity market order via
+/// /trader/v1/accounts/{accountHash}/orders. On 401 the underlying
+/// client transparently refreshes the access token once and retries.
+#[derive(Debug, Clone)]
+struct SchwabSink {
+    client: SchwabTrading,
+}
+
+impl BrokerSink for SchwabSink {
+    fn submit_bracket(
+        &self,
+        intent: OrderIntent,
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>>
+    {
+        let client = self.client.clone();
+        Box::pin(async move {
+            let instruction = match intent.side {
+                traderview_core::algo_strategies::Side::Buy => SchwabInstruction::Buy,
+                traderview_core::algo_strategies::Side::Sell => SchwabInstruction::SellShort,
+            };
+            let req = SchwabPlaceOrder {
+                symbol: intent.symbol.clone(),
+                instruction,
+                order_type: SchwabOrderType::Market,
+                quantity: intent.qty,
+                duration: SchwabDuration::Day,
+                session: SchwabSession::Normal,
+                price: None,
+                comment: Some(intent.client_order_id.to_string()),
+            };
+            let resp = client
+                .place_order(&req)
+                .await
+                .map_err(|e| EngineError::Broker(format!("schwab: {e}")))?;
+            Ok(SubmittedOrder {
+                broker_order_id: resp
+                    .order_id
+                    .clone()
+                    .unwrap_or_else(|| intent.client_order_id.to_string()),
+                status: resp.status.unwrap_or_else(|| "submitted".into()),
+                raw_response: None,
+                // Schwab fills land via the trader-streaming WebSocket
+                // (separate pump module, follow-up commit).
                 immediate_fill: None,
             })
         })

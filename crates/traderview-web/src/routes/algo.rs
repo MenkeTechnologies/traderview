@@ -83,7 +83,7 @@ async fn user_owns_account(
 /// status — picking one of them creates a working strategy row that
 /// just can't fire orders until the adapter is real.
 const ALGO_SUPPORTED_BROKERS: &[&str] = &[
-    "alpaca", "tradier", "ibkr", "td", "tastytrade",
+    "alpaca", "tradier", "ibkr", "td", "schwab", "tastytrade",
 ];
 
 /// `internal_sim` is broker-agnostic; `paper` and `live` route via the

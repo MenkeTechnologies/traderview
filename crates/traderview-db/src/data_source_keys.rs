@@ -114,6 +114,22 @@ pub struct DataSourceKeysDto {
     /// auth against the local gateway.
     #[serde(default)]
     pub ibkr_bearer_token: Option<String>,
+    /// Schwab Developer Portal app client_id.
+    #[serde(default)]
+    pub schwab_client_id: Option<String>,
+    /// Schwab Developer Portal app client_secret.
+    #[serde(default)]
+    pub schwab_client_secret: Option<String>,
+    /// Current OAuth access token (30-min TTL, auto-refreshed).
+    #[serde(default)]
+    pub schwab_access_token: Option<String>,
+    /// OAuth refresh token (7-day TTL, rotated on every refresh).
+    #[serde(default)]
+    pub schwab_refresh_token: Option<String>,
+    /// Per-account hash used as path segment in `/accounts/{hash}/orders`.
+    /// Not the same as the human-readable account number.
+    #[serde(default)]
+    pub schwab_account_hash: Option<String>,
 }
 
 fn default_true() -> bool {
@@ -140,6 +156,11 @@ struct Row {
     ibkr_account_id: Option<String>,
     ibkr_base_url: Option<String>,
     ibkr_bearer_token: Option<String>,
+    schwab_client_id: Option<String>,
+    schwab_client_secret: Option<String>,
+    schwab_access_token: Option<String>,
+    schwab_refresh_token: Option<String>,
+    schwab_account_hash: Option<String>,
 }
 
 fn mask(v: Option<String>) -> Option<String> {
@@ -161,7 +182,9 @@ pub async fn get_unmasked(pool: &PgPool, user_id: Uuid) -> anyhow::Result<DataSo
                 tradier_access_token, tradier_account_id, tradier_sandbox,
                 tastytrade_login, tastytrade_password, tastytrade_session_token,
                 tastytrade_account_number, tastytrade_sandbox,
-                ibkr_account_id, ibkr_base_url, ibkr_bearer_token
+                ibkr_account_id, ibkr_base_url, ibkr_bearer_token,
+                schwab_client_id, schwab_client_secret, schwab_access_token,
+                schwab_refresh_token, schwab_account_hash
            FROM user_settings
           WHERE user_id = $1",
     )
@@ -187,6 +210,11 @@ pub async fn get_unmasked(pool: &PgPool, user_id: Uuid) -> anyhow::Result<DataSo
         ibkr_account_id: row.ibkr_account_id,
         ibkr_base_url: row.ibkr_base_url,
         ibkr_bearer_token: row.ibkr_bearer_token,
+        schwab_client_id: row.schwab_client_id,
+        schwab_client_secret: row.schwab_client_secret,
+        schwab_access_token: row.schwab_access_token,
+        schwab_refresh_token: row.schwab_refresh_token,
+        schwab_account_hash: row.schwab_account_hash,
     })
 }
 
@@ -204,7 +232,9 @@ pub async fn get(pool: &PgPool, user_id: Uuid) -> anyhow::Result<DataSourceKeysD
                 tradier_access_token, tradier_account_id, tradier_sandbox,
                 tastytrade_login, tastytrade_password, tastytrade_session_token,
                 tastytrade_account_number, tastytrade_sandbox,
-                ibkr_account_id, ibkr_base_url, ibkr_bearer_token
+                ibkr_account_id, ibkr_base_url, ibkr_bearer_token,
+                schwab_client_id, schwab_client_secret, schwab_access_token,
+                schwab_refresh_token, schwab_account_hash
            FROM user_settings
           WHERE user_id = $1",
     )
@@ -235,6 +265,11 @@ pub async fn get(pool: &PgPool, user_id: Uuid) -> anyhow::Result<DataSourceKeysD
         ibkr_account_id: mask(row.ibkr_account_id),
         ibkr_base_url: mask(row.ibkr_base_url),
         ibkr_bearer_token: mask(row.ibkr_bearer_token),
+        schwab_client_id: mask(row.schwab_client_id),
+        schwab_client_secret: mask(row.schwab_client_secret),
+        schwab_access_token: mask(row.schwab_access_token),
+        schwab_refresh_token: mask(row.schwab_refresh_token),
+        schwab_account_hash: mask(row.schwab_account_hash),
     })
 }
 
@@ -274,6 +309,16 @@ pub async fn set(pool: &PgPool, user_id: Uuid, dto: &DataSourceKeysDto) -> anyho
         matches!(dto.ibkr_base_url.as_deref(), Some(k) if k != MASK && !k.is_empty());
     let ibkr_token_supplied =
         matches!(dto.ibkr_bearer_token.as_deref(), Some(k) if k != MASK && !k.is_empty());
+    let sw_client_id_supplied =
+        matches!(dto.schwab_client_id.as_deref(), Some(k) if k != MASK && !k.is_empty());
+    let sw_client_secret_supplied =
+        matches!(dto.schwab_client_secret.as_deref(), Some(k) if k != MASK && !k.is_empty());
+    let sw_access_supplied =
+        matches!(dto.schwab_access_token.as_deref(), Some(k) if k != MASK && !k.is_empty());
+    let sw_refresh_supplied =
+        matches!(dto.schwab_refresh_token.as_deref(), Some(k) if k != MASK && !k.is_empty());
+    let sw_acct_supplied =
+        matches!(dto.schwab_account_hash.as_deref(), Some(k) if k != MASK && !k.is_empty());
 
     // Build a coalescing UPDATE so the caller can change a subset of fields
     // without re-supplying the others.
@@ -297,6 +342,11 @@ pub async fn set(pool: &PgPool, user_id: Uuid, dto: &DataSourceKeysDto) -> anyho
              ibkr_account_id           = COALESCE($17, ibkr_account_id),
              ibkr_base_url             = COALESCE($18, ibkr_base_url),
              ibkr_bearer_token         = COALESCE($19, ibkr_bearer_token),
+             schwab_client_id          = COALESCE($20, schwab_client_id),
+             schwab_client_secret      = COALESCE($21, schwab_client_secret),
+             schwab_access_token       = COALESCE($22, schwab_access_token),
+             schwab_refresh_token      = COALESCE($23, schwab_refresh_token),
+             schwab_account_hash       = COALESCE($24, schwab_account_hash),
              updated_at                = now()
            WHERE user_id = $1",
     )
@@ -319,6 +369,11 @@ pub async fn set(pool: &PgPool, user_id: Uuid, dto: &DataSourceKeysDto) -> anyho
     .bind(if ibkr_acct_supplied { dto.ibkr_account_id.as_deref() } else { None })
     .bind(if ibkr_base_supplied { dto.ibkr_base_url.as_deref() } else { None })
     .bind(if ibkr_token_supplied { dto.ibkr_bearer_token.as_deref() } else { None })
+    .bind(if sw_client_id_supplied { dto.schwab_client_id.as_deref() } else { None })
+    .bind(if sw_client_secret_supplied { dto.schwab_client_secret.as_deref() } else { None })
+    .bind(if sw_access_supplied { dto.schwab_access_token.as_deref() } else { None })
+    .bind(if sw_refresh_supplied { dto.schwab_refresh_token.as_deref() } else { None })
+    .bind(if sw_acct_supplied { dto.schwab_account_hash.as_deref() } else { None })
     .execute(pool)
     .await?;
     Ok(())
@@ -347,6 +402,65 @@ pub async fn ibkr_creds(
         crate::ibkr_trading::DEFAULT_LOCAL_BASE.to_string()
     });
     Ok(Some((account, base, token.filter(|t| !t.is_empty()))))
+}
+
+/// Plaintext Schwab Trader API credentials. Returns
+/// `(client_id, client_secret, Tokens, account_hash)` when ALL
+/// required pieces are present.
+pub async fn schwab_creds(
+    pool: &PgPool,
+    user_id: Uuid,
+) -> anyhow::Result<Option<(String, String, crate::schwab_trading::Tokens, String)>> {
+    let row: Option<(
+        Option<String>,
+        Option<String>,
+        Option<String>,
+        Option<String>,
+        Option<String>,
+    )> = sqlx::query_as(
+        "SELECT schwab_client_id, schwab_client_secret, schwab_access_token,
+                schwab_refresh_token, schwab_account_hash
+           FROM user_settings WHERE user_id = $1",
+    )
+    .bind(user_id)
+    .fetch_optional(pool)
+    .await?;
+    let Some((cid, csec, atok, rtok, acct)) = row else { return Ok(None); };
+    let cid = match cid { Some(v) if !v.is_empty() => v, _ => return Ok(None) };
+    let csec = match csec { Some(v) if !v.is_empty() => v, _ => return Ok(None) };
+    let atok = match atok { Some(v) if !v.is_empty() => v, _ => return Ok(None) };
+    let rtok = match rtok { Some(v) if !v.is_empty() => v, _ => return Ok(None) };
+    let acct = match acct { Some(v) if !v.is_empty() => v, _ => return Ok(None) };
+    Ok(Some((
+        cid,
+        csec,
+        crate::schwab_trading::Tokens { access_token: atok, refresh_token: rtok },
+        acct,
+    )))
+}
+
+/// Persist a rotated Schwab token pair after an OAuth refresh. Called
+/// from the SchwabTrading `on_token_refresh` callback so the new
+/// refresh token survives a process restart. Uses a narrow UPDATE so
+/// we don't accidentally clobber an unrelated field on race.
+pub async fn save_schwab_tokens(
+    pool: &PgPool,
+    user_id: Uuid,
+    tokens: &crate::schwab_trading::Tokens,
+) -> anyhow::Result<()> {
+    sqlx::query(
+        "UPDATE user_settings
+            SET schwab_access_token  = $2,
+                schwab_refresh_token = $3,
+                updated_at           = now()
+          WHERE user_id = $1",
+    )
+    .bind(user_id)
+    .bind(&tokens.access_token)
+    .bind(&tokens.refresh_token)
+    .execute(pool)
+    .await?;
+    Ok(())
 }
 
 /// Plaintext Tastytrade credentials for backend callers. Returns

@@ -30,6 +30,7 @@ pub fn router() -> Router<AppState> {
         .route("/data-sources/test-tradier", post(test_tradier))
         .route("/data-sources/test-tastytrade", post(test_tastytrade))
         .route("/data-sources/test-ibkr", post(test_ibkr))
+        .route("/data-sources/test-schwab", post(test_schwab))
 }
 
 async fn get_keys(
@@ -644,6 +645,123 @@ async fn test_ibkr(
                 detail: Some(serde_json::json!({
                     "msg": msg, "base_url": base_url, "account_id": account_id,
                 })),
+            }))
+        }
+    }
+}
+
+#[derive(Debug, serde::Deserialize, Default)]
+#[serde(default)]
+struct TestSchwabBody {
+    client_id: Option<String>,
+    client_secret: Option<String>,
+    access_token: Option<String>,
+    refresh_token: Option<String>,
+    account_hash: Option<String>,
+}
+
+#[derive(Debug, serde::Serialize)]
+struct TestSchwabResp {
+    ok: bool,
+    http_status: u16,
+    detail: Option<serde_json::Value>,
+}
+
+/// Probes /trader/v1/accounts/{accountHash} against the configured (or
+/// supplied) Schwab Trader API credentials. A 200 + parseable account
+/// summary = creds work; 401 = refresh token expired (user needs to
+/// re-run OAuth flow).
+async fn test_schwab(
+    State(s): State<AppState>,
+    u: AuthUser,
+    Json(body): Json<TestSchwabBody>,
+) -> Result<Json<TestSchwabResp>, ApiError> {
+    const MASK: &str = "***";
+    fn live(v: Option<&String>) -> Option<String> {
+        v.map(|s| s.as_str())
+            .filter(|k| !k.is_empty() && *k != MASK)
+            .map(String::from)
+    }
+    let supplied = (
+        live(body.client_id.as_ref()),
+        live(body.client_secret.as_ref()),
+        live(body.access_token.as_ref()),
+        live(body.refresh_token.as_ref()),
+        live(body.account_hash.as_ref()),
+    );
+
+    let (client_id, client_secret, tokens, account_hash) = match supplied {
+        (Some(cid), Some(csec), Some(at), Some(rt), Some(ah)) => (
+            cid, csec,
+            traderview_db::schwab_trading::Tokens { access_token: at, refresh_token: rt },
+            ah,
+        ),
+        _ => {
+            let Some(c) = traderview_db::data_source_keys::schwab_creds(&s.pool, u.id)
+                .await
+                .map_err(ApiError::Internal)?
+            else {
+                return Ok(Json(TestSchwabResp {
+                    ok: false,
+                    http_status: 0,
+                    detail: Some(serde_json::json!({
+                        "msg": "no Schwab credentials supplied or saved — run the OAuth flow first"
+                    })),
+                }));
+            };
+            c
+        }
+    };
+
+    let pool = s.pool.clone();
+    let user_id = u.id;
+    let persist: traderview_db::schwab_trading::TokenCallback =
+        std::sync::Arc::new(move |new_tokens| {
+            let pool = pool.clone();
+            tokio::spawn(async move {
+                let _ = traderview_db::data_source_keys::save_schwab_tokens(
+                    &pool, user_id, &new_tokens,
+                ).await;
+            });
+        });
+    let client = traderview_db::schwab_trading::SchwabTrading::new(
+        client_id, client_secret, tokens, account_hash.clone(),
+    ).on_token_refresh(persist);
+    match client.get_account().await {
+        Ok(acc) => Ok(Json(TestSchwabResp {
+            ok: true,
+            http_status: 200,
+            detail: Some(serde_json::json!({
+                "msg": "Schwab credentials valid — account summary returned",
+                "account_hash": account_hash,
+                "liquidation_value": acc.securities_account
+                    .as_ref()
+                    .and_then(|s| s.current_balances.as_ref())
+                    .and_then(|b| b.liquidation_value),
+                "buying_power": acc.securities_account
+                    .as_ref()
+                    .and_then(|s| s.current_balances.as_ref())
+                    .and_then(|b| b.buying_power),
+            })),
+        })),
+        Err(e) => {
+            let (http_status, msg) = match &e {
+                traderview_db::schwab_trading::SchwabError::AuthFailed => (
+                    401,
+                    "auth failed — refresh token expired, re-run the OAuth flow".into(),
+                ),
+                traderview_db::schwab_trading::SchwabError::InvalidRequest(b) => (
+                    400, format!("invalid request: {b}"),
+                ),
+                traderview_db::schwab_trading::SchwabError::Http { status, body } => (
+                    *status, format!("http {status}: {body}"),
+                ),
+                other => (0, other.to_string()),
+            };
+            Ok(Json(TestSchwabResp {
+                ok: false,
+                http_status,
+                detail: Some(serde_json::json!({ "msg": msg, "account_hash": account_hash })),
             }))
         }
     }

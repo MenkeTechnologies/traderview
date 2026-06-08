@@ -289,6 +289,40 @@ export async function renderSettings(mount, state) {
                            data-i18n-placeholder="view.settings.placeholder.ibkr_bearer_token">
                 </label>
                 <button data-i18n="view.settings.btn.test_ibkr" class="btn btn-secondary" type="button" id="ds-test-ibkr">Test IBKR</button>
+                <p data-i18n="view.settings.hint.schwab" class="muted small" style="flex:1 1 100%">
+                    Schwab Trader API credentials (replaces retired TD Ameritrade API). Required: client_id + client_secret (from your Schwab Developer Portal app), an active access_token / refresh_token pair from the OAuth flow, and the per-account hash from /accounts/accountNumbers. Refresh tokens rotate every 7 days; the backend persists rotations automatically.
+                </p>
+                <label><span data-i18n="view.settings.label.schwab_client_id">Schwab client ID</span>
+                    <input type="text" name="schwab_client_id" autocomplete="off" data-secret-field
+                           value="${esc(ds.schwab_client_id || '')}"
+                           placeholder="Schwab Developer Portal app client_id"
+                           data-i18n-placeholder="view.settings.placeholder.schwab_client_id">
+                </label>
+                <label><span data-i18n="view.settings.label.schwab_client_secret">Schwab client secret</span>
+                    <input type="password" name="schwab_client_secret" autocomplete="off" data-secret-field
+                           value="${esc(ds.schwab_client_secret || '')}"
+                           placeholder="Schwab Developer Portal app client_secret"
+                           data-i18n-placeholder="view.settings.placeholder.schwab_client_secret">
+                </label>
+                <label><span data-i18n="view.settings.label.schwab_access_token">Schwab access token</span>
+                    <input type="password" name="schwab_access_token" autocomplete="off" data-secret-field
+                           value="${esc(ds.schwab_access_token || '')}"
+                           placeholder="30-min access token from OAuth flow"
+                           data-i18n-placeholder="view.settings.placeholder.schwab_access_token">
+                </label>
+                <label><span data-i18n="view.settings.label.schwab_refresh_token">Schwab refresh token</span>
+                    <input type="password" name="schwab_refresh_token" autocomplete="off" data-secret-field
+                           value="${esc(ds.schwab_refresh_token || '')}"
+                           placeholder="7-day refresh token from OAuth flow"
+                           data-i18n-placeholder="view.settings.placeholder.schwab_refresh_token">
+                </label>
+                <label><span data-i18n="view.settings.label.schwab_account_hash">Schwab account hash</span>
+                    <input type="text" name="schwab_account_hash" autocomplete="off" data-secret-field
+                           value="${esc(ds.schwab_account_hash || '')}"
+                           placeholder="hash value from /accounts/accountNumbers"
+                           data-i18n-placeholder="view.settings.placeholder.schwab_account_hash">
+                </label>
+                <button data-i18n="view.settings.btn.test_schwab" class="btn btn-secondary" type="button" id="ds-test-schwab">Test Schwab</button>
                 <span id="ds-test-out" class="muted small" style="margin-left:8px"></span>
             </form>
         </div>
@@ -454,6 +488,11 @@ export async function renderSettings(mount, state) {
                 ibkr_account_id:           fd.get('ibkr_account_id')           ?? null,
                 ibkr_base_url:             fd.get('ibkr_base_url')             ?? null,
                 ibkr_bearer_token:         fd.get('ibkr_bearer_token')         ?? null,
+                schwab_client_id:          fd.get('schwab_client_id')          ?? null,
+                schwab_client_secret:      fd.get('schwab_client_secret')      ?? null,
+                schwab_access_token:       fd.get('schwab_access_token')       ?? null,
+                schwab_refresh_token:      fd.get('schwab_refresh_token')      ?? null,
+                schwab_account_hash:       fd.get('schwab_account_hash')       ?? null,
             });
             showToast(t('view.settings.toast.data_sources_saved'), { level: 'success' });
             if (!viewIsCurrent(tok)) return;
@@ -669,6 +708,50 @@ export async function renderSettings(mount, state) {
             out.textContent = t('view.settings.test_ibkr.fail', { msg });
             out.style.color = '#ff5a5a';
             showToast(t('view.settings.test_ibkr.toast_fail', { msg }), { level: 'error' });
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    // Test Schwab — probes /trader/v1/accounts/{accountHash}. Falls back
+    // to stored creds when fields are masked. Triggers auto-refresh of
+    // the access token if it expired during the test.
+    mount.querySelector('#ds-test-schwab').addEventListener('click', async () => {
+        const form = mount.querySelector('#data-sources-form');
+        const out = mount.querySelector('#ds-test-out');
+        const btn = mount.querySelector('#ds-test-schwab');
+        const mask = '***';
+        const fd = new FormData(form);
+        const liveValue = (k) => {
+            const v = String(fd.get(k) || '').trim();
+            return (!v || v === mask) ? null : v;
+        };
+        btn.disabled = true;
+        out.textContent = t('view.settings.test_schwab.connecting');
+        out.style.color = '';
+        try {
+            const r = await api.testSchwab({
+                client_id:     liveValue('schwab_client_id'),
+                client_secret: liveValue('schwab_client_secret'),
+                access_token:  liveValue('schwab_access_token'),
+                refresh_token: liveValue('schwab_refresh_token'),
+                account_hash:  liveValue('schwab_account_hash'),
+            });
+            if (r.ok) {
+                out.textContent = t('view.settings.test_schwab.ok');
+                out.style.color = '#39ff14';
+                showToast(t('view.settings.test_schwab.toast_ok'), { level: 'success' });
+            } else {
+                const msg = r.detail?.msg || JSON.stringify(r.detail || {});
+                out.textContent = t('view.settings.test_schwab.fail', { msg });
+                out.style.color = '#ff5a5a';
+                showToast(t('view.settings.test_schwab.toast_fail', { msg }), { level: 'error' });
+            }
+        } catch (err) {
+            const msg = err?.message || String(err);
+            out.textContent = t('view.settings.test_schwab.fail', { msg });
+            out.style.color = '#ff5a5a';
+            showToast(t('view.settings.test_schwab.toast_fail', { msg }), { level: 'error' });
         } finally {
             btn.disabled = false;
         }
