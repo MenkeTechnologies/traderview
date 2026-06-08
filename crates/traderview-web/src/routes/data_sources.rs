@@ -28,6 +28,7 @@ pub fn router() -> Router<AppState> {
         .route("/data-sources/test-alpaca", post(test_alpaca))
         .route("/data-sources/test-finnhub", post(test_finnhub))
         .route("/data-sources/test-tradier", post(test_tradier))
+        .route("/data-sources/test-tastytrade", post(test_tastytrade))
 }
 
 async fn get_keys(
@@ -442,6 +443,132 @@ async fn test_tradier(
                 other => (0, other.to_string()),
             };
             Ok(Json(TestTradierResp {
+                ok: false,
+                http_status,
+                detail: Some(serde_json::json!({ "msg": msg, "sandbox": sandbox })),
+            }))
+        }
+    }
+}
+
+#[derive(Deserialize)]
+struct TestTastytradeBody {
+    #[serde(default)]
+    login: Option<String>,
+    #[serde(default)]
+    password: Option<String>,
+    #[serde(default)]
+    session_token: Option<String>,
+    #[serde(default)]
+    account_number: Option<String>,
+    #[serde(default = "default_true_inline")]
+    sandbox: bool,
+}
+
+#[derive(Serialize)]
+struct TestTastytradeResp {
+    ok: bool,
+    http_status: u16,
+    detail: Option<serde_json::Value>,
+}
+
+/// Verify Tastytrade creds via the balances endpoint. If the UI
+/// supplied a session_token, use it as-is; otherwise fall back to
+/// (login, password) → mints a fresh token via POST /sessions.
+async fn test_tastytrade(
+    State(s): State<AppState>,
+    u: AuthUser,
+    Json(body): Json<TestTastytradeBody>,
+) -> Result<Json<TestTastytradeResp>, ApiError> {
+    const MASK: &str = "***";
+    fn live(v: Option<&String>) -> Option<String> {
+        v.map(|s| s.as_str())
+            .filter(|k| !k.is_empty() && *k != MASK)
+            .map(String::from)
+    }
+    let token = live(body.session_token.as_ref());
+    let login = live(body.login.as_ref());
+    let password = live(body.password.as_ref());
+    let account = live(body.account_number.as_ref());
+
+    // Resolve creds — prefer the just-pasted values; fall back to stored.
+    let (account_number, sandbox, auth) = match account {
+        Some(acc) => {
+            let auth = match (token.clone(), login.clone(), password.clone()) {
+                (Some(t), _, _) => traderview_db::tastytrade_trading::Auth::SessionToken(t),
+                (None, Some(l), Some(p)) => traderview_db::tastytrade_trading::Auth::UserPass {
+                    login: l, password: p, remember_me: true,
+                },
+                _ => {
+                    let Some((stored_acc, stored_sb, stored_auth)) =
+                        traderview_db::data_source_keys::tastytrade_creds(&s.pool, u.id)
+                            .await
+                            .map_err(ApiError::Internal)?
+                    else {
+                        return Ok(Json(TestTastytradeResp {
+                            ok: false,
+                            http_status: 0,
+                            detail: Some(serde_json::json!({
+                                "msg": "no Tastytrade credentials supplied or saved"
+                            })),
+                        }));
+                    };
+                    return run_tastytrade_probe(stored_acc, stored_sb, stored_auth).await;
+                }
+            };
+            (acc, body.sandbox, auth)
+        }
+        None => {
+            let Some((stored_acc, stored_sb, stored_auth)) =
+                traderview_db::data_source_keys::tastytrade_creds(&s.pool, u.id)
+                    .await
+                    .map_err(ApiError::Internal)?
+            else {
+                return Ok(Json(TestTastytradeResp {
+                    ok: false,
+                    http_status: 0,
+                    detail: Some(serde_json::json!({
+                        "msg": "no Tastytrade credentials supplied or saved"
+                    })),
+                }));
+            };
+            (stored_acc, stored_sb, stored_auth)
+        }
+    };
+    run_tastytrade_probe(account_number, sandbox, auth).await
+}
+
+async fn run_tastytrade_probe(
+    account_number: String,
+    sandbox: bool,
+    auth: traderview_db::tastytrade_trading::Auth,
+) -> Result<Json<TestTastytradeResp>, ApiError> {
+    let env = if sandbox {
+        traderview_db::tastytrade_trading::TastytradeEnv::Sandbox
+    } else {
+        traderview_db::tastytrade_trading::TastytradeEnv::Live
+    };
+    let client = traderview_db::tastytrade_trading::TastytradeTrading::new(env, auth, account_number);
+    match client.get_balances().await {
+        Ok(b) => Ok(Json(TestTastytradeResp {
+            ok: true,
+            http_status: 200,
+            detail: Some(serde_json::json!({
+                "msg": "Tastytrade credentials valid — balances endpoint returned",
+                "account_number": b.data.account_number,
+                "net_liquidating_value": b.data.net_liquidating_value,
+                "equity_buying_power": b.data.equity_buying_power,
+                "sandbox": sandbox,
+            })),
+        })),
+        Err(e) => {
+            let (http_status, msg) = match &e {
+                traderview_db::tastytrade_trading::TastytradeError::AuthFailed => (401, "auth failed".to_string()),
+                traderview_db::tastytrade_trading::TastytradeError::InvalidRequest(b) => (400, format!("invalid request: {b}")),
+                traderview_db::tastytrade_trading::TastytradeError::Http { status, body } => (*status, format!("http {status}: {body}")),
+                other => (0, other.to_string()),
+            };
+            Ok(Json(TestTastytradeResp {
                 ok: false,
                 http_status,
                 detail: Some(serde_json::json!({ "msg": msg, "sandbox": sandbox })),

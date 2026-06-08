@@ -83,6 +83,25 @@ pub struct DataSourceKeysDto {
     /// engine logs the discrepancy).
     #[serde(default = "default_true")]
     pub tradier_sandbox: bool,
+    /// Tastytrade username (or email). Either (login + password) OR
+    /// session_token is needed; the dispatcher tries token first.
+    #[serde(default)]
+    pub tastytrade_login: Option<String>,
+    /// Tastytrade password — paired with login. Stored plaintext like
+    /// every other secret in this table; UI offers a 'reveal' button.
+    #[serde(default)]
+    pub tastytrade_password: Option<String>,
+    /// Long-lived session token from POST /sessions with
+    /// `remember-me: true`. Lets the dispatcher skip the login step.
+    #[serde(default)]
+    pub tastytrade_session_token: Option<String>,
+    /// Account number from the Tastytrade dashboard. Used as path
+    /// segment in `/accounts/{n}/orders`.
+    #[serde(default)]
+    pub tastytrade_account_number: Option<String>,
+    /// Sandbox vs prod. Sandbox = api.cert.tastyworks.com.
+    #[serde(default = "default_true")]
+    pub tastytrade_sandbox: bool,
 }
 
 fn default_true() -> bool {
@@ -101,6 +120,11 @@ struct Row {
     tradier_access_token: Option<String>,
     tradier_account_id: Option<String>,
     tradier_sandbox: bool,
+    tastytrade_login: Option<String>,
+    tastytrade_password: Option<String>,
+    tastytrade_session_token: Option<String>,
+    tastytrade_account_number: Option<String>,
+    tastytrade_sandbox: bool,
 }
 
 fn mask(v: Option<String>) -> Option<String> {
@@ -119,7 +143,9 @@ pub async fn get_unmasked(pool: &PgPool, user_id: Uuid) -> anyhow::Result<DataSo
     let row: Row = sqlx::query_as(
         "SELECT finnhub_api_key, alpaca_key_id, alpaca_secret_key, alpaca_paper,
                 polygon_api_key, databento_api_key, alpaca_use_sip_feed,
-                tradier_access_token, tradier_account_id, tradier_sandbox
+                tradier_access_token, tradier_account_id, tradier_sandbox,
+                tastytrade_login, tastytrade_password, tastytrade_session_token,
+                tastytrade_account_number, tastytrade_sandbox
            FROM user_settings
           WHERE user_id = $1",
     )
@@ -137,6 +163,11 @@ pub async fn get_unmasked(pool: &PgPool, user_id: Uuid) -> anyhow::Result<DataSo
         tradier_access_token: row.tradier_access_token,
         tradier_account_id: row.tradier_account_id,
         tradier_sandbox: row.tradier_sandbox,
+        tastytrade_login: row.tastytrade_login,
+        tastytrade_password: row.tastytrade_password,
+        tastytrade_session_token: row.tastytrade_session_token,
+        tastytrade_account_number: row.tastytrade_account_number,
+        tastytrade_sandbox: row.tastytrade_sandbox,
     })
 }
 
@@ -151,7 +182,9 @@ pub async fn get(pool: &PgPool, user_id: Uuid) -> anyhow::Result<DataSourceKeysD
     let row: Row = sqlx::query_as(
         "SELECT finnhub_api_key, alpaca_key_id, alpaca_secret_key, alpaca_paper,
                 polygon_api_key, databento_api_key, alpaca_use_sip_feed,
-                tradier_access_token, tradier_account_id, tradier_sandbox
+                tradier_access_token, tradier_account_id, tradier_sandbox,
+                tastytrade_login, tastytrade_password, tastytrade_session_token,
+                tastytrade_account_number, tastytrade_sandbox
            FROM user_settings
           WHERE user_id = $1",
     )
@@ -172,6 +205,11 @@ pub async fn get(pool: &PgPool, user_id: Uuid) -> anyhow::Result<DataSourceKeysD
         // but mask consistently so the reveal-button UX stays uniform.
         tradier_account_id: mask(row.tradier_account_id),
         tradier_sandbox: row.tradier_sandbox,
+        tastytrade_login: mask(row.tastytrade_login),
+        tastytrade_password: mask(row.tastytrade_password),
+        tastytrade_session_token: mask(row.tastytrade_session_token),
+        tastytrade_account_number: mask(row.tastytrade_account_number),
+        tastytrade_sandbox: row.tastytrade_sandbox,
     })
 }
 
@@ -197,22 +235,35 @@ pub async fn set(pool: &PgPool, user_id: Uuid, dto: &DataSourceKeysDto) -> anyho
         matches!(dto.tradier_access_token.as_deref(), Some(k) if k != MASK && !k.is_empty());
     let tradier_acct_supplied =
         matches!(dto.tradier_account_id.as_deref(), Some(k) if k != MASK && !k.is_empty());
+    let tt_login_supplied =
+        matches!(dto.tastytrade_login.as_deref(), Some(k) if k != MASK && !k.is_empty());
+    let tt_password_supplied =
+        matches!(dto.tastytrade_password.as_deref(), Some(k) if k != MASK && !k.is_empty());
+    let tt_token_supplied =
+        matches!(dto.tastytrade_session_token.as_deref(), Some(k) if k != MASK && !k.is_empty());
+    let tt_acct_supplied =
+        matches!(dto.tastytrade_account_number.as_deref(), Some(k) if k != MASK && !k.is_empty());
 
     // Build a coalescing UPDATE so the caller can change a subset of fields
     // without re-supplying the others.
     sqlx::query(
         "UPDATE user_settings SET
-             finnhub_api_key       = COALESCE($2, finnhub_api_key),
-             alpaca_key_id         = COALESCE($3, alpaca_key_id),
-             alpaca_secret_key     = COALESCE($4, alpaca_secret_key),
-             alpaca_paper          = $5,
-             polygon_api_key       = COALESCE($6, polygon_api_key),
-             databento_api_key     = COALESCE($7, databento_api_key),
-             alpaca_use_sip_feed   = $8,
-             tradier_access_token  = COALESCE($9, tradier_access_token),
-             tradier_account_id    = COALESCE($10, tradier_account_id),
-             tradier_sandbox       = $11,
-             updated_at            = now()
+             finnhub_api_key           = COALESCE($2, finnhub_api_key),
+             alpaca_key_id             = COALESCE($3, alpaca_key_id),
+             alpaca_secret_key         = COALESCE($4, alpaca_secret_key),
+             alpaca_paper              = $5,
+             polygon_api_key           = COALESCE($6, polygon_api_key),
+             databento_api_key         = COALESCE($7, databento_api_key),
+             alpaca_use_sip_feed       = $8,
+             tradier_access_token      = COALESCE($9, tradier_access_token),
+             tradier_account_id        = COALESCE($10, tradier_account_id),
+             tradier_sandbox           = $11,
+             tastytrade_login          = COALESCE($12, tastytrade_login),
+             tastytrade_password       = COALESCE($13, tastytrade_password),
+             tastytrade_session_token  = COALESCE($14, tastytrade_session_token),
+             tastytrade_account_number = COALESCE($15, tastytrade_account_number),
+             tastytrade_sandbox        = $16,
+             updated_at                = now()
            WHERE user_id = $1",
     )
     .bind(user_id)
@@ -226,9 +277,60 @@ pub async fn set(pool: &PgPool, user_id: Uuid, dto: &DataSourceKeysDto) -> anyho
     .bind(if tradier_token_supplied { dto.tradier_access_token.as_deref() } else { None })
     .bind(if tradier_acct_supplied { dto.tradier_account_id.as_deref() } else { None })
     .bind(dto.tradier_sandbox)
+    .bind(if tt_login_supplied { dto.tastytrade_login.as_deref() } else { None })
+    .bind(if tt_password_supplied { dto.tastytrade_password.as_deref() } else { None })
+    .bind(if tt_token_supplied { dto.tastytrade_session_token.as_deref() } else { None })
+    .bind(if tt_acct_supplied { dto.tastytrade_account_number.as_deref() } else { None })
+    .bind(dto.tastytrade_sandbox)
     .execute(pool)
     .await?;
     Ok(())
+}
+
+/// Plaintext Tastytrade credentials for backend callers. Returns
+/// `(account_number, sandbox, Auth)` where Auth is either a long-lived
+/// session_token or a (login, password) pair to mint one on demand.
+pub async fn tastytrade_creds(
+    pool: &PgPool,
+    user_id: Uuid,
+) -> anyhow::Result<Option<(String, bool, crate::tastytrade_trading::Auth)>> {
+    let row: Option<(Option<String>, Option<String>, Option<String>, Option<String>, bool)> =
+        sqlx::query_as(
+            "SELECT tastytrade_login, tastytrade_password, tastytrade_session_token,
+                    tastytrade_account_number, tastytrade_sandbox
+               FROM user_settings WHERE user_id = $1",
+        )
+        .bind(user_id)
+        .fetch_optional(pool)
+        .await?;
+    let Some((login, password, token, account_number, sandbox)) = row else {
+        return Ok(None);
+    };
+    let account_number = match account_number {
+        Some(a) if !a.is_empty() => a,
+        _ => return Ok(None),
+    };
+    if let Some(t) = token.filter(|t| !t.is_empty()) {
+        return Ok(Some((
+            account_number,
+            sandbox,
+            crate::tastytrade_trading::Auth::SessionToken(t),
+        )));
+    }
+    if let (Some(l), Some(p)) = (login, password) {
+        if !l.is_empty() && !p.is_empty() {
+            return Ok(Some((
+                account_number,
+                sandbox,
+                crate::tastytrade_trading::Auth::UserPass {
+                    login: l,
+                    password: p,
+                    remember_me: true,
+                },
+            )));
+        }
+    }
+    Ok(None)
 }
 
 /// Plaintext Polygon key for backend callers — env-var fallback for

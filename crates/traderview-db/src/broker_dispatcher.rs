@@ -14,6 +14,9 @@
 
 use crate::algo_engine::{BrokerSink, EngineError, ImmediateFill, InMemorySink, OrderIntent, SubmittedOrder};
 use crate::alpaca_trading::{AlpacaTrading, BrokerMode as AlpacaBrokerMode, PlaceOrderRequest};
+use crate::tastytrade_trading::{
+    EquityAction, PlaceEquityOrder as TastyEquityOrder, TastytradeEnv, TastytradeTrading,
+};
 use crate::tradier_trading::{
     EquitySide, OtocoBracket, TradierEnv, TradierTrading,
 };
@@ -94,11 +97,22 @@ pub async fn sink_for_strategy(
             paper,
             detail: "TD/Schwab API migration pending".into(),
         })),
-        "tastytrade" => Ok(Box::new(IntegrationPendingSink {
-            broker: "tastytrade",
-            paper,
-            detail: "tastytrade adapter pending".into(),
-        })),
+        "tastytrade" => {
+            let Some((account_number, sandbox, auth)) =
+                crate::data_source_keys::tastytrade_creds(pool, strategy.user_id)
+                    .await
+                    .map_err(|e| DispatchError::Db(sqlx::Error::Decode(e.into())))?
+            else {
+                return Ok(Box::new(IntegrationPendingSink {
+                    broker: "tastytrade",
+                    paper,
+                    detail: "no Tastytrade credentials saved — go to Settings → Data sources".into(),
+                }));
+            };
+            let env = if paper || sandbox { TastytradeEnv::Sandbox } else { TastytradeEnv::Live };
+            let client = TastytradeTrading::new(env, auth, account_number);
+            Ok(Box::new(TastytradeSink { client }))
+        }
         _ => Ok(Box::new(IntegrationPendingSink {
             broker: "unknown",
             paper,
@@ -195,6 +209,50 @@ impl BrokerSink for TradierSink {
                 broker_order_id: resp.id.to_string(),
                 status: resp.status,
                 raw_response: None,
+                immediate_fill: None,
+            })
+        })
+    }
+}
+
+/// Real Tastytrade sink — places a single-leg equity market order via
+/// REST. Native bracket support (Tastytrade's Complex Orders class) is
+/// a follow-up; entry-only orders work today.
+#[derive(Debug, Clone)]
+struct TastytradeSink {
+    client: TastytradeTrading,
+}
+
+impl BrokerSink for TastytradeSink {
+    fn submit_bracket(
+        &self,
+        intent: OrderIntent,
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>>
+    {
+        let client = self.client.clone();
+        Box::pin(async move {
+            // Tastytrade uses 'Buy to Open' / 'Sell to Open' / etc.
+            // semantics. Strategy intent.side maps to BuyToOpen (long)
+            // or SellToOpen (short). The follow-up complex-orders work
+            // adds the BuyToClose / SellToClose exit legs as a bracket.
+            let action = match intent.side {
+                traderview_core::algo_strategies::Side::Buy => EquityAction::BuyToOpen,
+                traderview_core::algo_strategies::Side::Sell => EquityAction::SellToOpen,
+            };
+            let req = TastyEquityOrder::market(intent.symbol.clone(), action, intent.qty);
+            let resp = client
+                .place_equity_order(&req)
+                .await
+                .map_err(|e| EngineError::Broker(format!("tastytrade: {e}")))?;
+            Ok(SubmittedOrder {
+                broker_order_id: resp.id.to_string(),
+                status: resp.status,
+                raw_response: None,
+                // Tastytrade reports fills via the streaming events
+                // websocket (separate pump module, future commit). For
+                // now the engine leaves the order in accepted state
+                // until the user manages the exit manually or the
+                // bracket-orders work lands.
                 immediate_fill: None,
             })
         })

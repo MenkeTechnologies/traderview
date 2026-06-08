@@ -233,6 +233,40 @@ export async function renderSettings(mount, state) {
                 <button data-i18n="view.settings.btn.test_finnhub" class="btn btn-secondary" type="button" id="ds-test-finnhub">Test Finnhub</button>
                 <button data-i18n="view.settings.btn.test_alpaca" class="btn btn-secondary" type="button" id="ds-test-alpaca">Test Alpaca</button>
                 <button data-i18n="view.settings.btn.test_tradier" class="btn btn-secondary" type="button" id="ds-test-tradier">Test Tradier</button>
+                <hr style="flex:1 1 100%;border:0;border-top:1px solid var(--border);margin:6px 0">
+                <p data-i18n="view.settings.hint.tastytrade" class="muted small" style="flex:1 1 100%">
+                    Tastytrade brokerage credentials — required when an algo strategy's account is on Tastytrade. Either save a long-lived session token OR username + password (the backend mints a token via POST /sessions on demand).
+                </p>
+                <label><span data-i18n="view.settings.label.tastytrade_login">Tastytrade login (email or username)</span>
+                    <input type="text" name="tastytrade_login" autocomplete="off" data-secret-field
+                           value="${esc(ds.tastytrade_login || '')}"
+                           placeholder="user@example.com"
+                           data-i18n-placeholder="view.settings.placeholder.tastytrade_login">
+                </label>
+                <label><span data-i18n="view.settings.label.tastytrade_password">Tastytrade password</span>
+                    <input type="password" name="tastytrade_password" autocomplete="off" data-secret-field
+                           value="${esc(ds.tastytrade_password || '')}"
+                           placeholder="Account password"
+                           data-i18n-placeholder="view.settings.placeholder.tastytrade_password">
+                </label>
+                <label><span data-i18n="view.settings.label.tastytrade_session_token">Tastytrade session token (optional)</span>
+                    <input type="password" name="tastytrade_session_token" autocomplete="off" data-secret-field
+                           value="${esc(ds.tastytrade_session_token || '')}"
+                           placeholder="Long-lived session token from remember-me login"
+                           data-i18n-placeholder="view.settings.placeholder.tastytrade_session_token"
+                           style="min-width:280px">
+                </label>
+                <label><span data-i18n="view.settings.label.tastytrade_account_number">Tastytrade account number</span>
+                    <input type="text" name="tastytrade_account_number" autocomplete="off" data-secret-field
+                           value="${esc(ds.tastytrade_account_number || '')}"
+                           placeholder="Account # from Tastytrade dashboard (e.g. 5WX12345)"
+                           data-i18n-placeholder="view.settings.placeholder.tastytrade_account_number">
+                </label>
+                <label style="flex-direction:row;align-items:center;gap:6px">
+                    <input type="checkbox" name="tastytrade_sandbox" ${ds.tastytrade_sandbox !== false ? 'checked' : ''}>
+                    <span data-i18n="view.settings.label.tastytrade_sandbox">Use Tastytrade sandbox (api.cert.tastyworks.com)</span>
+                </label>
+                <button data-i18n="view.settings.btn.test_tastytrade" class="btn btn-secondary" type="button" id="ds-test-tastytrade">Test Tastytrade</button>
                 <span id="ds-test-out" class="muted small" style="margin-left:8px"></span>
             </form>
         </div>
@@ -387,9 +421,14 @@ export async function renderSettings(mount, state) {
                 polygon_api_key:       fd.get('polygon_api_key')       ?? null,
                 databento_api_key:     fd.get('databento_api_key')     ?? null,
                 alpaca_use_sip_feed:   !!fd.get('alpaca_use_sip_feed'),
-                tradier_access_token:  fd.get('tradier_access_token')  ?? null,
-                tradier_account_id:    fd.get('tradier_account_id')    ?? null,
-                tradier_sandbox:       !!fd.get('tradier_sandbox'),
+                tradier_access_token:      fd.get('tradier_access_token')      ?? null,
+                tradier_account_id:        fd.get('tradier_account_id')        ?? null,
+                tradier_sandbox:           !!fd.get('tradier_sandbox'),
+                tastytrade_login:          fd.get('tastytrade_login')           ?? null,
+                tastytrade_password:       fd.get('tastytrade_password')        ?? null,
+                tastytrade_session_token:  fd.get('tastytrade_session_token')   ?? null,
+                tastytrade_account_number: fd.get('tastytrade_account_number')  ?? null,
+                tastytrade_sandbox:        !!fd.get('tastytrade_sandbox'),
             });
             showToast(t('view.settings.toast.data_sources_saved'), { level: 'success' });
             if (!viewIsCurrent(tok)) return;
@@ -519,6 +558,50 @@ export async function renderSettings(mount, state) {
             out.textContent = t('view.settings.test_tradier.fail', { msg });
             out.style.color = '#ff5a5a';
             showToast(t('view.settings.test_tradier.toast_fail', { msg }), { level: 'error' });
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    // Test Tastytrade — same shape as Tradier probe but supports
+    // session-token OR login/password auth.
+    mount.querySelector('#ds-test-tastytrade').addEventListener('click', async () => {
+        const form = mount.querySelector('#data-sources-form');
+        const out = mount.querySelector('#ds-test-out');
+        const btn = mount.querySelector('#ds-test-tastytrade');
+        const mask = '***';
+        const fd = new FormData(form);
+        const liveValue = (k) => {
+            const v = String(fd.get(k) || '').trim();
+            return (!v || v === mask) ? null : v;
+        };
+        btn.disabled = true;
+        out.textContent = t('view.settings.test_tastytrade.connecting');
+        out.style.color = '';
+        try {
+            const r = await api.testTastytrade({
+                login:          liveValue('tastytrade_login'),
+                password:       liveValue('tastytrade_password'),
+                session_token:  liveValue('tastytrade_session_token'),
+                account_number: liveValue('tastytrade_account_number'),
+                sandbox:        !!fd.get('tastytrade_sandbox'),
+            });
+            if (r.ok) {
+                const env = r.detail?.sandbox ? 'SANDBOX' : 'LIVE';
+                out.textContent = t('view.settings.test_tastytrade.ok', { env });
+                out.style.color = '#39ff14';
+                showToast(t('view.settings.test_tastytrade.toast_ok', { env }), { level: 'success' });
+            } else {
+                const msg = r.detail?.msg || JSON.stringify(r.detail || {});
+                out.textContent = t('view.settings.test_tastytrade.fail', { msg });
+                out.style.color = '#ff5a5a';
+                showToast(t('view.settings.test_tastytrade.toast_fail', { msg }), { level: 'error' });
+            }
+        } catch (err) {
+            const msg = err?.message || String(err);
+            out.textContent = t('view.settings.test_tastytrade.fail', { msg });
+            out.style.color = '#ff5a5a';
+            showToast(t('view.settings.test_tastytrade.toast_fail', { msg }), { level: 'error' });
         } finally {
             btn.disabled = false;
         }
