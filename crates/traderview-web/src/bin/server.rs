@@ -290,61 +290,22 @@ async fn main() -> anyhow::Result<()> {
     // the app uses.
     {
         let pool = state.pool.clone();
-        let hub = state.hub.clone();
-        let sink: traderview_db::algo_engine::EventSink =
-            std::sync::Arc::new(move |ev: traderview_db::algo_engine::EngineEvent| {
-                use traderview_db::algo_engine::EngineEvent as E;
-                let side_str = |s: traderview_core::algo_strategies::Side| match s {
-                    traderview_core::algo_strategies::Side::Buy => "buy",
-                    traderview_core::algo_strategies::Side::Sell => "sell",
-                };
-                use rust_decimal::prelude::ToPrimitive;
-                let evt = match ev {
-                    E::SignalFired {
-                        strategy_id, run_id, symbol, side, entry_price, kind,
-                    } => traderview_web::realtime::Event::AlgoSignalFired {
-                        strategy_id: strategy_id.to_string(),
-                        run_id: run_id.to_string(),
-                        symbol,
-                        side: side_str(side),
-                        entry_price: entry_price.to_f64().unwrap_or(0.0),
-                        kind,
-                    },
-                    E::OrderSubmitted {
-                        strategy_id, order_id, symbol, side, qty, broker_order_id,
-                    } => traderview_web::realtime::Event::AlgoOrderSubmitted {
-                        strategy_id: strategy_id.to_string(),
-                        order_id: order_id.to_string(),
-                        symbol,
-                        side: side_str(side).into(),
-                        qty: qty.to_f64().unwrap_or(0.0),
-                        broker_order_id,
-                    },
-                    E::FillReceived {
-                        strategy_id, order_id, symbol, qty, price,
-                    } => traderview_web::realtime::Event::AlgoFillReceived {
-                        strategy_id: strategy_id.to_string(),
-                        order_id: order_id.to_string(),
-                        symbol,
-                        qty: qty.to_f64().unwrap_or(0.0),
-                        price: price.to_f64().unwrap_or(0.0),
-                    },
-                };
-                hub.publish(evt);
-            });
+        let sink = state.build_engine_event_sink();
         tokio::spawn(traderview_db::algo_runner::run_loop(pool.clone(), Some(sink.clone())));
 
         // Alpaca trade_updates WS: one connection per active (user, paper-or-live)
         // tuple. Fills land in algo_fills + executions + trades via record_fill.
-        // Idempotent — if there are zero alpaca-bound strategies at startup, no
-        // connections are opened. Strategies added after startup won't get a
-        // pump until restart (acceptable for the first iteration).
+        // Strategies added after startup get hot-spawned via ensure_pump_for in
+        // the create/update route handlers — the shared registry on AppState
+        // gates against double-spawning.
         let pump_pool = pool.clone();
         let pump_sink = sink.clone();
+        let registry = state.alpaca_pumps.clone();
         tokio::spawn(async move {
             match traderview_db::alpaca_pump::spawn_pumps_for_active_strategies(
                 pump_pool,
                 Some(pump_sink),
+                registry,
             )
             .await
             {

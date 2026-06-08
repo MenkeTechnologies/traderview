@@ -1,9 +1,14 @@
 use sqlx::PgPool;
+use std::collections::HashSet;
 use std::path::PathBuf;
 use std::sync::Arc;
-use tokio::sync::Semaphore;
+use tokio::sync::{Mutex, Semaphore};
 
 use crate::realtime::Hub;
+
+// Registry type lives in traderview-db so the pump module owns it. Web
+// re-exports for convenience in route handlers.
+pub use traderview_db::alpaca_pump::AlpacaPumpRegistry;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum AppMode {
@@ -29,6 +34,12 @@ pub struct AppState {
     /// num_cpus) — small enough to leave the WebView and Postgres room
     /// to breathe on a laptop, large enough to keep the queue draining.
     pub ocr_sem: Arc<Semaphore>,
+    /// Shared registry of running Alpaca trade_updates pumps, keyed by
+    /// (user_id, paper-vs-live). Populated by both the startup pump
+    /// spawn and routes/algo.rs on strategy create/update — so a
+    /// freshly-created alpaca-bound strategy gets its pump immediately
+    /// instead of waiting for a server restart.
+    pub alpaca_pumps: AlpacaPumpRegistry,
 }
 
 impl AppState {
@@ -43,7 +54,56 @@ impl AppState {
             data_dir: Arc::new(data_dir),
             hub: Hub::new(),
             ocr_sem: Arc::new(Semaphore::new(permits)),
+            alpaca_pumps: Arc::new(Mutex::new(HashSet::new())),
         }
+    }
+
+    /// Build an EventSink that maps engine events → realtime::Event via
+    /// this state's hub. Used by both the startup pump spawn and the
+    /// route layer's ensure_pump_for so freshly-hot-spawned pumps emit
+    /// to the same WS stream.
+    pub fn build_engine_event_sink(&self) -> traderview_db::algo_engine::EventSink {
+        let hub = self.hub.clone();
+        Arc::new(move |ev: traderview_db::algo_engine::EngineEvent| {
+            use rust_decimal::prelude::ToPrimitive;
+            use traderview_db::algo_engine::EngineEvent as E;
+            let side_str = |s: traderview_core::algo_strategies::Side| match s {
+                traderview_core::algo_strategies::Side::Buy => "buy",
+                traderview_core::algo_strategies::Side::Sell => "sell",
+            };
+            let evt = match ev {
+                E::SignalFired { strategy_id, run_id, symbol, side, entry_price, kind } => {
+                    crate::realtime::Event::AlgoSignalFired {
+                        strategy_id: strategy_id.to_string(),
+                        run_id: run_id.to_string(),
+                        symbol,
+                        side: side_str(side),
+                        entry_price: entry_price.to_f64().unwrap_or(0.0),
+                        kind,
+                    }
+                }
+                E::OrderSubmitted { strategy_id, order_id, symbol, side, qty, broker_order_id } => {
+                    crate::realtime::Event::AlgoOrderSubmitted {
+                        strategy_id: strategy_id.to_string(),
+                        order_id: order_id.to_string(),
+                        symbol,
+                        side: side_str(side).into(),
+                        qty: qty.to_f64().unwrap_or(0.0),
+                        broker_order_id,
+                    }
+                }
+                E::FillReceived { strategy_id, order_id, symbol, qty, price } => {
+                    crate::realtime::Event::AlgoFillReceived {
+                        strategy_id: strategy_id.to_string(),
+                        order_id: order_id.to_string(),
+                        symbol,
+                        qty: qty.to_f64().unwrap_or(0.0),
+                        price: price.to_f64().unwrap_or(0.0),
+                    }
+                }
+            };
+            hub.publish(evt);
+        })
     }
 
     pub fn receipts_dir(&self) -> PathBuf {

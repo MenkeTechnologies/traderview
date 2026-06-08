@@ -104,11 +104,36 @@ async fn create_strategy(
             "new strategies must start in internal_sim or alpaca_paper; switch to alpaca_live after the 30-day paper-lock expires".into(),
         ));
     }
-    Ok(Json(
-        traderview_db::algo::create_strategy(&s.pool, u.id, body)
-            .await
-            .map_err(ApiError::Internal)?,
-    ))
+    let broker_mode = body.broker_mode.clone();
+    let created = traderview_db::algo::create_strategy(&s.pool, u.id, body)
+        .await
+        .map_err(ApiError::Internal)?;
+    maybe_hot_spawn_pump(&s, u.id, &broker_mode).await;
+    Ok(Json(created))
+}
+
+/// If the strategy's broker_mode points at Alpaca, ensure a
+/// trade_updates pump exists for (user, paper-or-live). Idempotent —
+/// no-op if one is already running for that tuple. Errors don't fail
+/// the route; the pump just won't push WS events until restart.
+async fn maybe_hot_spawn_pump(state: &AppState, user_id: Uuid, broker_mode: &str) {
+    let paper = match broker_mode {
+        "alpaca_paper" => true,
+        "alpaca_live" => false,
+        _ => return,
+    };
+    let sink = state.build_engine_event_sink();
+    let spawned = traderview_db::alpaca_pump::ensure_pump_for(
+        state.alpaca_pumps.clone(),
+        state.pool.clone(),
+        user_id,
+        paper,
+        Some(sink),
+    )
+    .await;
+    if spawned {
+        tracing::info!(user_id = %user_id, paper, "alpaca pump hot-spawned");
+    }
 }
 
 async fn update_strategy(
@@ -144,11 +169,13 @@ async fn update_strategy(
             )));
         }
     }
-    traderview_db::algo::update_strategy(&s.pool, u.id, id, body)
+    let broker_mode = body.broker_mode.clone();
+    let updated = traderview_db::algo::update_strategy(&s.pool, u.id, id, body)
         .await
         .map_err(ApiError::Internal)?
-        .map(Json)
-        .ok_or(ApiError::NotFound)
+        .ok_or(ApiError::NotFound)?;
+    maybe_hot_spawn_pump(&s, u.id, &broker_mode).await;
+    Ok(Json(updated))
 }
 
 async fn delete_strategy(

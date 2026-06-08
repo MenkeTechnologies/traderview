@@ -16,9 +16,18 @@ use chrono::Utc;
 use rust_decimal::prelude::Zero;
 use rust_decimal::Decimal;
 use sqlx::PgPool;
+use std::collections::HashSet;
 use std::str::FromStr;
+use std::sync::Arc;
 use std::time::Duration;
+use tokio::sync::Mutex;
 use uuid::Uuid;
+
+/// Shared registry of running pumps keyed by (user_id, paper-bool).
+/// Server startup populates from list_active_strategies; the
+/// create/update strategy route calls `ensure_pump_for` to hot-spawn
+/// for any newly-introduced (user, mode) tuple.
+pub type AlpacaPumpRegistry = Arc<Mutex<HashSet<(Uuid, bool)>>>;
 
 /// Reconnect loop. Caller `tokio::spawn`s and forgets. Exits only
 /// on a fatal auth error (bad creds — no point retrying). Transient
@@ -134,15 +143,15 @@ pub async fn handle_trade_update(
 }
 
 /// Convenience for the server startup: spawn pumps for every distinct
-/// `(key_id, secret, broker_mode)` tuple referenced by an active algo
-/// strategy. Returns the count spawned.
+/// `(user_id, paper-or-live)` tuple referenced by an active algo
+/// strategy. Records each spawn in `registry` so the route layer can
+/// later avoid double-spawning via `ensure_pump_for`. Returns count.
 pub async fn spawn_pumps_for_active_strategies(
     pool: PgPool,
     event_sink: Option<EventSink>,
+    registry: AlpacaPumpRegistry,
 ) -> anyhow::Result<usize> {
     let strategies = crate::algo::list_active_strategies(&pool).await?;
-    // (user_id, paper-bool) → spawn one pump
-    let mut seen: std::collections::HashSet<(Uuid, bool)> = std::collections::HashSet::new();
     let mut spawned = 0usize;
     for s in strategies {
         let paper = matches!(s.broker_mode.as_str(), "alpaca_paper");
@@ -150,21 +159,60 @@ pub async fn spawn_pumps_for_active_strategies(
         if !paper && !live {
             continue;
         }
-        if !seen.insert((s.user_id, paper)) {
-            continue;
+        if ensure_pump_for(
+            registry.clone(),
+            pool.clone(),
+            s.user_id,
+            paper,
+            event_sink.clone(),
+        )
+        .await
+        {
+            spawned += 1;
         }
-        let Some((key_id, secret, _)) = crate::data_source_keys::alpaca_creds_plain(&pool, s.user_id)
-            .await?
-        else {
-            tracing::warn!(user_id = %s.user_id, "alpaca strategy enabled but no creds");
-            continue;
-        };
-        let mode = if paper { BrokerMode::Paper } else { BrokerMode::Live };
-        let client = AlpacaTrading::new(mode, key_id, secret);
-        let pool_for_task = pool.clone();
-        let sink_for_task = event_sink.clone();
-        tokio::spawn(run_pump(pool_for_task, client, sink_for_task));
-        spawned += 1;
     }
     Ok(spawned)
+}
+
+/// Idempotent spawn — returns true when a new pump was actually
+/// started, false when one already existed for this (user, mode) or
+/// the user has no Alpaca credentials yet. Called from the routes
+/// after a successful create_strategy / update_strategy whose
+/// broker_mode lands in {alpaca_paper, alpaca_live}.
+///
+/// Mutex is held only across the insert; the long-running pump task
+/// is spawned AFTER the lock is dropped so the registry stays
+/// responsive even while pumps reconnect.
+pub async fn ensure_pump_for(
+    registry: AlpacaPumpRegistry,
+    pool: PgPool,
+    user_id: Uuid,
+    paper: bool,
+    event_sink: Option<EventSink>,
+) -> bool {
+    {
+        let mut guard = registry.lock().await;
+        if !guard.insert((user_id, paper)) {
+            return false;
+        }
+    }
+    let creds = match crate::data_source_keys::alpaca_creds_plain(&pool, user_id).await {
+        Ok(Some(c)) => c,
+        Ok(None) => {
+            tracing::warn!(user_id = %user_id, "alpaca strategy enabled but no creds");
+            // Roll back the registry entry so a later cred save can retry.
+            registry.lock().await.remove(&(user_id, paper));
+            return false;
+        }
+        Err(e) => {
+            tracing::warn!(user_id = %user_id, error = %e, "alpaca_creds_plain failed");
+            registry.lock().await.remove(&(user_id, paper));
+            return false;
+        }
+    };
+    let (key_id, secret, _) = creds;
+    let mode = if paper { BrokerMode::Paper } else { BrokerMode::Live };
+    let client = AlpacaTrading::new(mode, key_id, secret);
+    tokio::spawn(run_pump(pool, client, event_sink));
+    true
 }
