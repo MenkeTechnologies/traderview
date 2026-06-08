@@ -26761,6 +26761,7 @@
   "view.algo.doc.scope_note": "Note:",
   "view.algo.doc.when_to_use": "When to use:",
   "view.algo.h2.stdout": "Live stdout",
+  "view.algo.hint.stdout_multi": "One pane per strategy + a global firehose. Each pane keeps its own 200-line buffer.",
   "view.algo.h2.runs": "Recent runs",
   "view.algo.label.autoscroll": "auto-scroll",
   "view.algo.placeholder.stdout_filter": "filter by strategy id…",

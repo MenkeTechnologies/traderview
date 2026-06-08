@@ -36,34 +36,42 @@ function flashRow(mount, strategyId) {
     setTimeout(() => { tr.style.backgroundColor = ''; }, 600);
 }
 
-// Bounded ring buffer for live stdout — keeps the last N events so a
-// long-running session doesn't grow the DOM unbounded. 500 events at
-// ~80 chars each ≈ 40KB of text, well inside what a <pre> renders fast.
-const STDOUT_MAX_LINES = 500;
-const stdoutBuffer = [];
-let stdoutNameMap = new Map(); // strategy_id → display name (filled on refresh)
+// Per-strategy bounded ring buffers. Keys: strategy_id ('all' = global
+// firehose). 200 lines each so a 10-strategy account uses ~2k DOM
+// lines worst case, still fast.
+const STDOUT_MAX_LINES_PER_PANE = 200;
+const stdoutBuffers = new Map(); // strategy_id (or 'all') → string[]
+let stdoutNameMap = new Map();   // strategy_id → display name
 
 function fmtStdoutTs(d = new Date()) {
     return d.toISOString().slice(11, 23); // HH:MM:SS.mmm
 }
 
-function appendStdout(mount, line) {
-    stdoutBuffer.push(line);
-    if (stdoutBuffer.length > STDOUT_MAX_LINES) stdoutBuffer.shift();
-    renderStdout(mount);
+function bufferFor(key) {
+    if (!stdoutBuffers.has(key)) stdoutBuffers.set(key, []);
+    return stdoutBuffers.get(key);
 }
 
-function renderStdout(mount) {
-    const pre = mount.querySelector('#algo-stdout');
+function appendStdout(mount, strategyId, line) {
+    // Dual-write: per-strategy pane + global firehose pane.
+    for (const key of [strategyId, 'all']) {
+        const buf = bufferFor(key);
+        buf.push(line);
+        if (buf.length > STDOUT_MAX_LINES_PER_PANE) buf.shift();
+        renderPane(mount, key);
+    }
+}
+
+function renderPane(mount, key) {
+    const pre = mount.querySelector(`[data-stdout-pane="${key}"]`);
     if (!pre) return;
-    const filterEl = mount.querySelector('#algo-stdout-filter');
-    const autoEl = mount.querySelector('#algo-autoscroll');
+    const filterEl = mount.querySelector(`[data-stdout-filter="${key}"]`);
+    const autoEl = mount.querySelector(`[data-stdout-autoscroll="${key}"]`);
+    const buf = bufferFor(key);
     const filter = (filterEl?.value || '').trim().toLowerCase();
-    const lines = filter
-        ? stdoutBuffer.filter(l => l.toLowerCase().includes(filter))
-        : stdoutBuffer;
+    const lines = filter ? buf.filter(l => l.toLowerCase().includes(filter)) : buf;
     pre.textContent = lines.join('\n');
-    if (autoEl?.checked) pre.scrollTop = pre.scrollHeight;
+    if (autoEl?.checked !== false) pre.scrollTop = pre.scrollHeight;
 }
 
 function strategyLabel(id) {
@@ -72,13 +80,63 @@ function strategyLabel(id) {
 }
 
 function logSignal(mount, msg) {
-    appendStdout(mount, `${fmtStdoutTs()} [${strategyLabel(msg.strategy_id)}] SIGNAL ${msg.side.toUpperCase()} ${msg.symbol} @ ${Number(msg.entry_price).toFixed(2)} (${msg.kind})`);
+    appendStdout(mount, msg.strategy_id,
+        `${fmtStdoutTs()} [${strategyLabel(msg.strategy_id)}] SIGNAL ${msg.side.toUpperCase()} ${msg.symbol} @ ${Number(msg.entry_price).toFixed(2)} (${msg.kind})`);
 }
 function logOrder(mount, msg) {
-    appendStdout(mount, `${fmtStdoutTs()} [${strategyLabel(msg.strategy_id)}] ORDER ${msg.side.toUpperCase()} ${msg.symbol} qty=${msg.qty} broker=${msg.broker_order_id.slice(0, 12)}`);
+    appendStdout(mount, msg.strategy_id,
+        `${fmtStdoutTs()} [${strategyLabel(msg.strategy_id)}] ORDER ${msg.side.toUpperCase()} ${msg.symbol} qty=${msg.qty} broker=${msg.broker_order_id.slice(0, 12)}`);
 }
 function logFill(mount, msg) {
-    appendStdout(mount, `${fmtStdoutTs()} [${strategyLabel(msg.strategy_id)}] FILL ${msg.symbol} qty=${msg.qty} @ ${Number(msg.price).toFixed(4)}`);
+    appendStdout(mount, msg.strategy_id,
+        `${fmtStdoutTs()} [${strategyLabel(msg.strategy_id)}] FILL ${msg.symbol} qty=${msg.qty} @ ${Number(msg.price).toFixed(4)}`);
+}
+
+function renderStdoutPanes(mount, strategies) {
+    const host = mount.querySelector('#algo-stdout-panes');
+    if (!host) return;
+    const panes = [];
+    // Global firehose pane always present at the top.
+    panes.push(stdoutPane('all', 'All strategies (firehose)'));
+    for (const s of strategies) {
+        panes.push(stdoutPane(s.id, s.name));
+    }
+    host.innerHTML = panes.join('');
+    // Re-render every pane's contents after the DOM rebuild.
+    for (const key of [...stdoutBuffers.keys()]) renderPane(mount, key);
+    // Wire per-pane controls.
+    host.querySelectorAll('[data-stdout-clear]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const k = btn.dataset.stdoutClear;
+            bufferFor(k).length = 0;
+            renderPane(mount, k);
+        });
+    });
+    host.querySelectorAll('[data-stdout-filter]').forEach(inp => {
+        inp.addEventListener('input', () => renderPane(mount, inp.dataset.stdoutFilter));
+    });
+}
+
+function stdoutPane(key, title) {
+    const titleSafe = esc(title);
+    return `
+        <details class="algo-stdout-pane" ${key === 'all' ? 'open' : ''}>
+            <summary>
+                <span>${titleSafe}</span>
+                <span class="muted small" data-stdout-pane-count="${esc(key)}"></span>
+            </summary>
+            <div class="row" style="gap:8px;margin:6px 0">
+                <label class="row small" style="gap:4px;align-items:center">
+                    <input type="checkbox" data-stdout-autoscroll="${esc(key)}" checked>
+                    <span data-i18n="view.algo.label.autoscroll">auto-scroll</span>
+                </label>
+                <input type="text" data-stdout-filter="${esc(key)}"
+                       placeholder="filter…" style="min-width:160px;flex:1">
+                <button class="link" data-stdout-clear="${esc(key)}" data-i18n="view.algo.btn.clear">clear</button>
+            </div>
+            <pre data-stdout-pane="${esc(key)}" class="algo-stdout"></pre>
+        </details>
+    `;
 }
 
 function fmtDateTime(iso) {
@@ -498,17 +556,11 @@ export async function renderAlgo(mount) {
         <div class="chart-panel" id="algo-stdout-panel">
             <div class="row" style="justify-content:space-between;align-items:center">
                 <h2 data-i18n="view.algo.h2.stdout">Live stdout</h2>
-                <div class="row" style="gap:8px">
-                    <label class="row small" style="gap:4px;align-items:center">
-                        <input type="checkbox" id="algo-autoscroll" checked>
-                        <span data-i18n="view.algo.label.autoscroll">auto-scroll</span>
-                    </label>
-                    <input type="text" id="algo-stdout-filter" placeholder="filter by strategy id…"
-                           data-i18n-placeholder="view.algo.placeholder.stdout_filter" style="min-width:200px">
-                    <button id="algo-stdout-clear" class="link" data-i18n="view.algo.btn.clear">clear</button>
-                </div>
+                <span class="muted small" data-i18n="view.algo.hint.stdout_multi">
+                    One pane per strategy + a global firehose. Each pane keeps its own 200-line buffer.
+                </span>
             </div>
-            <pre id="algo-stdout" class="algo-stdout"></pre>
+            <div id="algo-stdout-panes"></div>
         </div>
 
         <div id="algo-runs" class="chart-panel" style="display:none">
@@ -551,11 +603,6 @@ export async function renderAlgo(mount) {
     `;
 
     mount.querySelector('#algo-new').addEventListener('click', () => openStrategyModal(mount));
-    mount.querySelector('#algo-stdout-clear').addEventListener('click', () => {
-        stdoutBuffer.length = 0;
-        renderStdout(mount);
-    });
-    mount.querySelector('#algo-stdout-filter').addEventListener('input', () => renderStdout(mount));
     // Strategy reference tabs — clicking a button swaps the rendered doc.
     mount.querySelectorAll('.algo-docs-tab').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -563,7 +610,6 @@ export async function renderAlgo(mount) {
         });
     });
     await refreshStrategies(mount);
-    renderStdout(mount);
 
     // Tear down any prior subscriptions (view re-mount on tab switch)
     // before wiring fresh ones — duplicates would multiply the refresh
@@ -599,6 +645,11 @@ async function refreshStrategies(mount) {
     // Keep the strategy_id → name map in sync so stdout shows readable
     // labels instead of bare UUID prefixes.
     stdoutNameMap = new Map(strategies.map(s => [s.id, s.name]));
+    // Rebuild stdout panes — one per strategy + the global firehose.
+    // Existing buffers preserve their contents (Map persists across the
+    // call). Newly-created strategies get a fresh pane; deleted ones
+    // disappear from the UI but their buffer lingers until view re-mount.
+    renderStdoutPanes(mount, strategies);
     if (!strategies.length) {
         table.innerHTML = `<tr><td colspan="8" class="muted">${esc(t('view.algo.empty'))}</td></tr>`;
         return;

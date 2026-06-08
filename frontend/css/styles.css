@@ -369,9 +369,32 @@ body:not(.no-neon-glow) .chart-panel {
     font-size: 11px; line-height: 1.5;
     margin: 0;
     padding: 8px 10px;
-    min-height: 180px; max-height: 420px;
+    min-height: 120px; max-height: 280px;
     overflow-y: auto; white-space: pre-wrap;
 }
+.algo-stdout-pane {
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 8px;
+    margin-bottom: 8px;
+    background: rgba(255, 255, 255, 0.02);
+}
+.algo-stdout-pane > summary {
+    cursor: pointer;
+    color: var(--cyan);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11px;
+    list-style: none;
+    display: flex; justify-content: space-between; align-items: center;
+}
+.algo-stdout-pane > summary::-webkit-details-marker { display: none; }
+.algo-stdout-pane > summary::before {
+    content: '▸';
+    color: var(--cyan);
+    margin-right: 6px;
+    transition: transform 0.15s;
+}
+.algo-stdout-pane[open] > summary::before { content: '▾'; }
 
 .panel-grid {
     display: grid;
