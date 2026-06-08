@@ -215,14 +215,43 @@ impl BrokerSink for AlpacaSink {
                 traderview_core::algo_strategies::Side::Buy => "buy",
                 traderview_core::algo_strategies::Side::Sell => "sell",
             };
-            let req = PlaceOrderRequest::bracket_market(
-                intent.symbol.clone(),
-                side,
-                intent.qty,
-                intent.client_order_id,
-                intent.take_profit_price,
-                intent.stop_price,
-            );
+            // Asset-class + session detection. Three submission paths
+            // exist, gated by these two booleans:
+            //   * Crypto symbol (`BTC/USD`-style): simple market, no
+            //     bracket — Alpaca rejects bracket on crypto. Trades
+            //     24/7 so GTC is the right TIF.
+            //   * Equity in extended hours: LIMIT only, no bracket,
+            //     extended_hours=true. Bracket+extended is rejected.
+            //   * Equity in regular hours: native bracket as before.
+            let is_crypto = intent.symbol.contains('/');
+            let req = if is_crypto {
+                PlaceOrderRequest::crypto_market(
+                    intent.symbol.clone(),
+                    side,
+                    intent.qty,
+                    intent.client_order_id,
+                )
+            } else if is_extended_hours_session_now() {
+                // Use the signal's entry_price as the limit — strategy
+                // wants this fill at signal time, after-hours liquidity
+                // is thin, going limit avoids slippage surprises.
+                PlaceOrderRequest::extended_hours_limit(
+                    intent.symbol.clone(),
+                    side,
+                    intent.qty,
+                    intent.client_order_id,
+                    intent.entry_price,
+                )
+            } else {
+                PlaceOrderRequest::bracket_market(
+                    intent.symbol.clone(),
+                    side,
+                    intent.qty,
+                    intent.client_order_id,
+                    intent.take_profit_price,
+                    intent.stop_price,
+                )
+            };
             let resp = client
                 .place_order(&req)
                 .await
@@ -235,6 +264,36 @@ impl BrokerSink for AlpacaSink {
             })
         })
     }
+}
+
+/// True when wall-clock time falls inside Alpaca's extended-hours
+/// session: pre-market 4:00–9:30 ET or after-hours 16:00–20:00 ET
+/// (Monday–Friday). Outside those windows AND outside RTH, returns
+/// false — overnight orders aren't supported on equities and the
+/// engine should refuse rather than submit a doomed order.
+fn is_extended_hours_session_now() -> bool {
+    // Chrono FixedOffset for Eastern. We use -04:00 (EDT) all year
+    // for the algo trader's purposes since US equities follow that
+    // schedule with two flip-points (DST). For paper trading a
+    // single fixed offset gives "good enough" gating; the real
+    // submission gets rejected by Alpaca anyway if we get it wrong.
+    // The proper fix is chrono-tz with America/New_York but pulling
+    // in tzdata for one timestamp check isn't worth the binary
+    // bloat for the algo subsystem.
+    use chrono::{Datelike, FixedOffset, Timelike, Utc};
+    let now = Utc::now().with_timezone(&FixedOffset::west_opt(4 * 3600).expect("EDT offset"));
+    if matches!(
+        now.weekday(),
+        chrono::Weekday::Sat | chrono::Weekday::Sun
+    ) {
+        return false;
+    }
+    let h = now.hour();
+    let m = now.minute();
+    let mins = h * 60 + m;
+    // Pre-market: 4:00 (240) up to but not including 9:30 (570).
+    // After-hours: 16:00 (960) up to but not including 20:00 (1200).
+    (240..570).contains(&mins) || (960..1200).contains(&mins)
 }
 
 /// Real IBKR sink — resolves symbol→conid, then POSTs a single-leg

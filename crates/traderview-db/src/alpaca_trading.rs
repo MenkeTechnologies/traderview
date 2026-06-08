@@ -365,6 +365,74 @@ impl PlaceOrderRequest {
         }
     }
 
+    /// Extended-hours LIMIT entry — pre-market (4:00-9:30 ET) or
+    /// after-hours (16:00-20:00 ET). Alpaca's extended-hours rules:
+    ///   * `order_type` MUST be `limit` (market rejected)
+    ///   * `time_in_force` MUST be `day`
+    ///   * `extended_hours: true`
+    ///   * `order_class` MUST be omitted (no bracket/OCO/OTO)
+    /// So the engine submits entry-only; the user manages exit
+    /// manually OR the risk circuit breakers / metrics dashboard
+    /// surface the open position for human review the next session.
+    pub fn extended_hours_limit(
+        symbol: impl Into<String>,
+        side: &str,
+        qty: Decimal,
+        coid: Uuid,
+        limit_price: Decimal,
+    ) -> Self {
+        Self {
+            symbol: symbol.into(),
+            qty: Some(qty),
+            notional: None,
+            side: side.into(),
+            order_type: "limit".into(),
+            time_in_force: "day".into(),
+            limit_price: Some(limit_price),
+            stop_price: None,
+            trail_price: None,
+            trail_percent: None,
+            extended_hours: Some(true),
+            client_order_id: coid,
+            order_class: None,
+            take_profit: None,
+            stop_loss: None,
+        }
+    }
+
+    /// Crypto simple-market — Alpaca's crypto venue uses the same
+    /// /v2/orders endpoint as equities BUT rejects bracket / OCO /
+    /// OTO order classes (no native bracket on crypto). Symbol must
+    /// be `BASE/QUOTE` (e.g. `BTC/USD`); fractional qty allowed.
+    /// Exit logic stays in the strategy (evaluate_exit) or the user
+    /// manages it manually.
+    pub fn crypto_market(
+        symbol: impl Into<String>,
+        side: &str,
+        qty: Decimal,
+        coid: Uuid,
+    ) -> Self {
+        Self {
+            symbol: symbol.into(),
+            qty: Some(qty),
+            notional: None,
+            side: side.into(),
+            order_type: "market".into(),
+            // Crypto markets 24/7 — gtc lets the order persist past
+            // a session close without re-submitting.
+            time_in_force: "gtc".into(),
+            limit_price: None,
+            stop_price: None,
+            trail_price: None,
+            trail_percent: None,
+            extended_hours: None,
+            client_order_id: coid,
+            order_class: None,
+            take_profit: None,
+            stop_loss: None,
+        }
+    }
+
     /// Convenience: native bracket with market entry + take_profit + stop_loss.
     pub fn bracket_market(
         symbol: impl Into<String>,

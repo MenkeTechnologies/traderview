@@ -252,12 +252,21 @@ async fn symbol_universe(pool: &PgPool, s: &AlgoStrategy) -> Result<Vec<String>,
         }
         "autoscan" => {
             let n = s.autoscan_top_n.max(1) as i64;
-            let picks = autoscan_topn(pool, n, parse_timeframe(&s.timeframe)).await?;
+            // entry_rules.asset_class = "crypto" → 24/7 universe
+            // (overnight / weekend testing). Default: equity (RTH).
+            let class = AssetClass::from_entry_rules(&s.entry_rules);
+            let picks = autoscan_topn_class(
+                pool,
+                n,
+                parse_timeframe(&s.timeframe),
+                class,
+            )
+            .await?;
             // Side-effect: make sure the live-tick worker is streaming
             // every autoscan pick. Without this, autoscan picks from the
-            // historical cache but the WS only ever subscribed to the
-            // user's watchlist union — so SPY/MSFT/etc. never get fresh
-            // 1m bars, and the strategy sits in `no_bars` forever.
+            // catalog but the WS only ever subscribed to the user's
+            // watchlist union — so SPY/MSFT/etc. never get fresh 1m
+            // bars, and the strategy sits in `no_bars` forever.
             let store = crate::live_ticks::global();
             if store.has_any_provider().await {
                 if let Err(e) = store.ensure_subscribed(picks.clone()).await {
@@ -317,6 +326,19 @@ const AUTOSCAN_SEED: &[&str] = &[
     "AAPL", "MSFT", "NVDA", "GOOGL", "META", "AMZN", "TSLA", "AMD", "SPY", "QQQ",
 ];
 
+/// Liquid Alpaca crypto pairs in the canonical `BASE/QUOTE` format
+/// Alpaca's v1beta3 crypto WS expects. Used when a strategy opts in
+/// to `entry_rules.asset_class = "crypto"` so the algo trader has a
+/// universe that streams 24/7 — perfect for after-hours / weekend
+/// development + paper testing when equities are silent.
+const AUTOSCAN_CRYPTO_UNIVERSE: &[&str] = &[
+    "BTC/USD", "ETH/USD", "SOL/USD", "AVAX/USD", "MATIC/USD",
+    "DOGE/USD", "SHIB/USD", "LTC/USD", "BCH/USD", "LINK/USD",
+    "UNI/USD", "AAVE/USD", "COMP/USD", "SUSHI/USD", "YFI/USD",
+    "MKR/USD", "GRT/USD", "BAT/USD", "CRV/USD", "XRP/USD",
+    "ADA/USD", "DOT/USD", "TRX/USD", "XLM/USD", "ALGO/USD",
+];
+
 /// Autoscan universe — pulls top-N most liquid US equities + ETFs from
 /// the `symbols` catalog (24k+ rows seeded by Finnhub), ranked by
 /// historical traded volume so the mega-caps surface first. The
@@ -347,11 +369,51 @@ const AUTOSCAN_SEED: &[&str] = &[
 /// signature so a future "pick only symbols already streaming the
 /// strategy's resolution" optimisation can drop in without callers
 /// changing.
+/// Asset class the strategy's autoscan should pick from.
+///   * Equity → query the `symbols` catalog ranked by historical volume.
+///   * Crypto → curated 25-pair `BASE/QUOTE` list. Trades 24/7.
+/// Selected via `entry_rules.asset_class` ("crypto" picks Crypto;
+/// anything else falls through to Equity for backward compatibility).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AssetClass {
+    Equity,
+    Crypto,
+}
+
+impl AssetClass {
+    pub fn from_entry_rules(v: &serde_json::Value) -> Self {
+        match v.get("asset_class").and_then(|s| s.as_str()) {
+            Some("crypto") => Self::Crypto,
+            _ => Self::Equity,
+        }
+    }
+}
+
 pub async fn autoscan_topn(
     pool: &PgPool,
     top_n: i64,
-    _interval: BarInterval,
+    interval: BarInterval,
 ) -> Result<Vec<String>, anyhow::Error> {
+    autoscan_topn_class(pool, top_n, interval, AssetClass::Equity).await
+}
+
+pub async fn autoscan_topn_class(
+    pool: &PgPool,
+    top_n: i64,
+    _interval: BarInterval,
+    class: AssetClass,
+) -> Result<Vec<String>, anyhow::Error> {
+    if class == AssetClass::Crypto {
+        // Crypto universe is curated + small — take the first `top_n`
+        // from the hardcoded list. Symbols are already in BASE/QUOTE
+        // form so the Alpaca crypto WS subscribes directly.
+        let cap = top_n.max(1) as usize;
+        return Ok(AUTOSCAN_CRYPTO_UNIVERSE
+            .iter()
+            .take(cap)
+            .map(|s| (*s).to_string())
+            .collect());
+    }
     let cap = top_n.max(1);
     // Query the catalog — symbols with the most historical volume
     // come first. The MAX() aggregate scoops the largest single bar
@@ -806,6 +868,29 @@ mod tests {
         assert_eq!(b.low.to_string(), "99");
         assert_eq!(b.volume.to_string(), "1050");
         assert_eq!(b.source, "rollup_s10");
+    }
+
+    #[test]
+    fn asset_class_picks_crypto_when_entry_rules_says_crypto() {
+        let r = serde_json::json!({ "asset_class": "crypto" });
+        assert_eq!(AssetClass::from_entry_rules(&r), AssetClass::Crypto);
+    }
+
+    #[test]
+    fn asset_class_defaults_to_equity_when_absent_or_other() {
+        assert_eq!(
+            AssetClass::from_entry_rules(&serde_json::json!({})),
+            AssetClass::Equity
+        );
+        assert_eq!(
+            AssetClass::from_entry_rules(&serde_json::json!({ "asset_class": "fx" })),
+            AssetClass::Equity,
+            "unknown asset_class falls back to equity, not panic"
+        );
+        assert_eq!(
+            AssetClass::from_entry_rules(&serde_json::json!({ "asset_class": "equity" })),
+            AssetClass::Equity
+        );
     }
 
     #[test]
