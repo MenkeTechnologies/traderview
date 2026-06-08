@@ -14,6 +14,28 @@ use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use uuid::Uuid;
 
+/// Plaintext Tradier credentials for the algo dispatcher. Returns
+/// `(access_token, account_id, sandbox)` — sandbox=true picks the
+/// sandbox.tradier.com base URL; false picks api.tradier.com.
+pub async fn tradier_creds(
+    pool: &PgPool,
+    user_id: Uuid,
+) -> anyhow::Result<Option<(String, String, bool)>> {
+    let row: Option<(Option<String>, Option<String>, bool)> = sqlx::query_as(
+        "SELECT tradier_access_token, tradier_account_id, tradier_sandbox
+           FROM user_settings WHERE user_id = $1",
+    )
+    .bind(user_id)
+    .fetch_optional(pool)
+    .await?;
+    if let Some((Some(tok), Some(acct), sandbox)) = row {
+        if !tok.is_empty() && !acct.is_empty() {
+            return Ok(Some((tok, acct, sandbox)));
+        }
+    }
+    Ok(None)
+}
+
 const MASK: &str = "***";
 
 /// Public DTO sent to / received from the settings UI. Secret fields are
