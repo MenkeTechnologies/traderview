@@ -438,12 +438,42 @@ impl BrokerSink for TastytradeSink {
         Box::pin(async move {
             // Tastytrade uses 'Buy to Open' / 'Sell to Open' / etc.
             // semantics. Strategy intent.side maps to BuyToOpen (long)
-            // or SellToOpen (short). The follow-up complex-orders work
-            // adds the BuyToClose / SellToClose exit legs as a bracket.
+            // or SellToOpen (short).
             let action = match intent.side {
                 traderview_core::algo_strategies::Side::Buy => EquityAction::BuyToOpen,
                 traderview_core::algo_strategies::Side::Sell => EquityAction::SellToOpen,
             };
+            // Bracket gap: the public Tastytrade REST API for retail
+            // equity does NOT expose an atomic OTOCO/bracket primitive.
+            // Their web UI stitches the parent + OCO children client-
+            // side over multiple separate POSTs; there is no
+            // "advanced-instructions: rules.route-after" envelope we
+            // can target safely. Submitting independent SL+TP orders
+            // BEFORE the entry fills would leave them live against a
+            // not-yet-open position (risk: the broker fills the SL on
+            // a momentary down-tick + later the entry fills, leaving
+            // a naked short).
+            //
+            // Until the pump grows a "on entry fill → submit OCO pair"
+            // callback (substrate-level change), Tastytrade strategies
+            // ship ENTRY-ONLY orders with the take-profit + stop-loss
+            // surfaced via tracing::warn so the user sees the drop in
+            // the desktop log. Risk-side responsibility shifts to the
+            // user / kill-switch / position-size-cap for these.
+            if intent.take_profit_price > Decimal::zero()
+                || intent.stop_price > Decimal::zero()
+            {
+                tracing::warn!(
+                    symbol = %intent.symbol,
+                    take_profit = %intent.take_profit_price,
+                    stop = %intent.stop_price,
+                    client_order_id = %intent.client_order_id,
+                    "tastytrade bracket dropped — entry-only submitted; \
+                     atomic OTOCO not available in Tastytrade public REST. \
+                     Manage the exit manually or use risk_gates.max_position_size_usd \
+                     as the safety floor."
+                );
+            }
             let req = TastyEquityOrder::market(intent.symbol.clone(), action, intent.qty);
             let resp = client
                 .place_equity_order(&req)
@@ -454,10 +484,7 @@ impl BrokerSink for TastytradeSink {
                 status: resp.status,
                 raw_response: None,
                 // Tastytrade reports fills via the streaming events
-                // websocket (separate pump module, future commit). For
-                // now the engine leaves the order in accepted state
-                // until the user manages the exit manually or the
-                // bracket-orders work lands.
+                // websocket (tastytrade_pump.rs).
                 immediate_fill: None,
             })
         })
