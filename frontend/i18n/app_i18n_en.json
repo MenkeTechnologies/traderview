@@ -26910,7 +26910,7 @@
   "view.algo.hint.broker_status": "Adapter status: alpaca wired; tradier scaffolded (next); ibkr / td / tastytrade scaffolded — strategy saves and runs, but orders return integration_pending until the per-broker adapter ships.",
   "view.algo.confirm.engage_kill": "Engage kill switch? Engine will refuse all new orders and cancel working orders.",
   "view.algo.confirm.release_kill": "Release kill switch? Strategy will resume placing orders on the next signal.",
-  "view.algo.confirm.delete": "Delete \"{{name}}\"? Strategy, runs, orders, and fills are wiped.",
+  "view.algo.confirm.delete": "Delete \"{{name}}\"? The strategy is hidden from the list but its runs, orders, and fills stay in the database (recoverable via SQL).",
   "view.algo.prompt.kill_reason": "Reason (optional):",
   "view.algo.toast.created": "Strategy created",
   "view.algo.toast.updated": "Strategy updated",

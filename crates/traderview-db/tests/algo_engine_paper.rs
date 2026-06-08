@@ -712,3 +712,67 @@ fn engine_fill_lands_in_executions_and_rolls_up_to_trades() {
         assert_eq!(fills.len(), 1, "algo_fills audit row present");
     });
 }
+
+/// Soft-delete invariant — deleting a strategy must:
+///   1. Drop it from list_strategies + list_active_strategies.
+///   2. PRESERVE its run rows in algo_runs so the runs panel can
+///      still show history.
+///   3. Return true on first call, false on second (idempotent
+///      double-delete returns "nothing changed" cleanly).
+#[test]
+fn soft_delete_preserves_run_history() {
+    run(async {
+        let pool = pool();
+        let user = fresh_user_in(&pool).await;
+        let strategy = make_strategy(&pool, user, "internal_sim").await;
+        let bg_run = algo::start_run(&pool, strategy.id).await.expect("run");
+
+        // Sanity: strategy is in both lists, run exists.
+        let listed = algo::list_strategies(&pool, user).await.expect("list");
+        assert!(listed.iter().any(|s| s.id == strategy.id));
+        let active = algo::list_active_strategies(&pool).await.expect("active");
+        assert!(active.iter().any(|s| s.id == strategy.id));
+
+        let deleted = algo::delete_strategy(&pool, user, strategy.id)
+            .await
+            .expect("delete");
+        assert!(deleted, "first delete returns true");
+
+        // After delete: dropped from both lists, runs PRESERVED.
+        let listed_after = algo::list_strategies(&pool, user).await.expect("list");
+        assert!(
+            !listed_after.iter().any(|s| s.id == strategy.id),
+            "soft-deleted strategy must drop from list_strategies"
+        );
+        let active_after = algo::list_active_strategies(&pool).await.expect("active");
+        assert!(
+            !active_after.iter().any(|s| s.id == strategy.id),
+            "runner must NOT drive soft-deleted strategies"
+        );
+        let run_still_there: Option<(Uuid,)> =
+            sqlx::query_as("SELECT id FROM algo_runs WHERE id = $1")
+                .bind(bg_run.id)
+                .fetch_optional(&pool)
+                .await
+                .expect("query");
+        assert!(
+            run_still_there.is_some(),
+            "run history MUST survive soft-delete (regression: cascade-wipe bug)"
+        );
+
+        // Second delete is a no-op.
+        let again = algo::delete_strategy(&pool, user, strategy.id)
+            .await
+            .expect("delete2");
+        assert!(!again, "second delete returns false (idempotent)");
+
+        // get_strategy still resolves the tombstoned row so the UI can
+        // render historical run-table headers ("test (momentum)" instead
+        // of "Unknown strategy").
+        let still_in_db = algo::get_strategy(&pool, user, strategy.id)
+            .await
+            .expect("get")
+            .expect("present");
+        assert!(still_in_db.deleted_at.is_some());
+    });
+}

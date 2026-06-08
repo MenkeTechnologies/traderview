@@ -51,6 +51,11 @@ pub struct AlgoStrategy {
     pub last_kill_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    /// Tombstone — soft-delete marker. NULL = active. Set by
+    /// `delete_strategy` so historical runs / orders / fills stay
+    /// intact while the UI hides the row.
+    #[serde(default)]
+    pub deleted_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -200,8 +205,12 @@ pub struct KillSwitchAudit {
 // ─── strategy CRUD ──────────────────────────────────────────────────────────
 
 pub async fn list_strategies(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Vec<AlgoStrategy>> {
+    // Soft-deleted strategies (deleted_at IS NOT NULL) drop out of
+    // the UI list but stay in the DB so their run history survives.
     Ok(sqlx::query_as::<_, AlgoStrategy>(
-        "SELECT * FROM algo_strategies WHERE user_id = $1 ORDER BY created_at DESC",
+        "SELECT * FROM algo_strategies
+          WHERE user_id = $1 AND deleted_at IS NULL
+          ORDER BY created_at DESC",
     )
     .bind(user_id)
     .fetch_all(pool)
@@ -216,6 +225,7 @@ pub async fn list_active_strategies(pool: &PgPool) -> anyhow::Result<Vec<AlgoStr
     Ok(sqlx::query_as::<_, AlgoStrategy>(
         "SELECT * FROM algo_strategies
           WHERE enabled = TRUE AND kill_switch = FALSE
+            AND deleted_at IS NULL
           ORDER BY
             CASE timeframe WHEN 'sec10' THEN 0 ELSE 1 END,
             created_at",
@@ -319,12 +329,28 @@ pub async fn update_strategy(
     .await?)
 }
 
+/// Soft delete — tombstone the strategy so its runs / orders / fills
+/// stay intact (ON DELETE CASCADE on those FKs used to nuke them).
+/// The runner skips strategies with `deleted_at IS NOT NULL`, the
+/// UI list filters them out, but the runs panel can still resolve
+/// the historical strategy name.
+///
+/// Re-creates the same logical effect of a delete from the UI's
+/// perspective while preserving audit + analytics data. Restore is
+/// via `UPDATE algo_strategies SET deleted_at = NULL` (manual SQL —
+/// no dedicated route).
 pub async fn delete_strategy(pool: &PgPool, user_id: Uuid, id: Uuid) -> anyhow::Result<bool> {
-    let r = sqlx::query("DELETE FROM algo_strategies WHERE id = $1 AND user_id = $2")
-        .bind(id)
-        .bind(user_id)
-        .execute(pool)
-        .await?;
+    let r = sqlx::query(
+        "UPDATE algo_strategies
+            SET deleted_at = now(),
+                enabled = FALSE,
+                updated_at = now()
+          WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL",
+    )
+    .bind(id)
+    .bind(user_id)
+    .execute(pool)
+    .await?;
     Ok(r.rows_affected() > 0)
 }
 
