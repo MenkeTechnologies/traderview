@@ -54,6 +54,15 @@ const CRYPTO_PREFIXES: &[&str] = &[
 
 fn is_crypto_symbol(sym: &str) -> bool {
     let upper = sym.to_uppercase();
+    // Canonical Alpaca form "BASE/USD" — the autoscan crypto universe
+    // ships symbols already in this shape. Strip the slash before
+    // checking the base against CRYPTO_PREFIXES, otherwise the prefix
+    // slice picks up the slash ("BTC/USD" → prefix "BTC/" → no match)
+    // and the symbol gets mis-routed to the equity IEX WS, which
+    // silently never delivers trades.
+    if let Some((base, quote)) = upper.split_once('/') {
+        return quote == "USD" && CRYPTO_PREFIXES.contains(&base);
+    }
     // BARE ticker (no quote currency) like "BTC" / "ETH" / "SOL" —
     // user-entered shorthand. Route to crypto WS as <ticker>/USD.
     if !upper.ends_with("USD") && CRYPTO_PREFIXES.contains(&upper.as_str()) {
@@ -1187,6 +1196,25 @@ mod tests {
         assert!(!is_crypto_symbol("SPY"));
         // FOOUSD: USD-ending but unknown prefix → equity (not crypto).
         assert!(!is_crypto_symbol("FOOUSD"));
+    }
+
+    #[test]
+    fn crypto_classifier_recognises_slash_form() {
+        // Canonical Alpaca form — the autoscan crypto universe ships
+        // these directly. Regression: pre-fix, "BTC/USD" sliced to
+        // prefix "BTC/" which wasn't in CRYPTO_PREFIXES, so the symbol
+        // got mis-routed to the equity IEX WS where it silently never
+        // received trades.
+        assert!(is_crypto_symbol("BTC/USD"));
+        assert!(is_crypto_symbol("ETH/USD"));
+        assert!(is_crypto_symbol("SOL/USD"));
+        assert!(is_crypto_symbol("AVAX/USD"));
+        assert!(is_crypto_symbol("eth/usd"), "lowercase should still classify");
+        // Wrong quote currency stays equity-side (Alpaca crypto WS
+        // only does USD pairs).
+        assert!(!is_crypto_symbol("BTC/EUR"));
+        // Slash form with unknown base → equity fallback.
+        assert!(!is_crypto_symbol("FOO/USD"));
     }
 
     #[test]
