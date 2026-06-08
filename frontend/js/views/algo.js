@@ -399,7 +399,9 @@ async function openStrategyModal(mount, existing = null) {
                     </label>
                     <div class="algo-form-actions">
                         <button type="button" id="algo-cancel" data-i18n="view.algo.btn.cancel">Cancel</button>
-                        <button type="submit" class="primary" data-i18n="view.algo.btn.save">Save</button>
+                        <button type="submit" id="algo-save" class="primary"
+                                ${accounts.length ? '' : 'disabled'}
+                                data-i18n="view.algo.btn.save">Save</button>
                     </div>
                 </form>
             </div>

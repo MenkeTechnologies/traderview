@@ -35,10 +35,11 @@ pub struct AlgoStrategy {
     /// Discriminator picked up by `traderview-core::algo_strategies::from_kind`.
     /// One of: momentum | mean_reversion | orb | donchian_trend | bb_squeeze.
     pub strategy_type: String,
-    /// Broker account the strategy produces executions against. Nullable
-    /// only because the column was added in migration 0054 — the route
-    /// layer refuses to start / submit a strategy with NULL.
-    pub account_id: Option<Uuid>,
+    /// Broker account the strategy produces executions against. Enforced
+    /// NOT NULL since migration 0056 — every algo strategy MUST be
+    /// bound to a real `accounts` row at the schema level. Route layer
+    /// rejects unbound input with a friendly error before INSERT.
+    pub account_id: Uuid,
     pub entry_rules: Json,
     pub exit_rules: Json,
     pub sizing: Json,
@@ -69,10 +70,11 @@ pub struct AlgoStrategyInput {
     pub side_mode: String,
     #[serde(default = "default_strategy_type")]
     pub strategy_type: String,
-    /// Required at the route layer — strategies without an account_id
-    /// cannot start a run or submit orders. Kept Option here so a
-    /// partially-populated dev row from a previous migration can still
-    /// be deserialized for edit / repair.
+    /// Required at the route layer with a friendly error message. Kept
+    /// Option here ONLY so the JSON deserializer doesn't 400 on a
+    /// missing field — the route handler maps None → BadRequest with
+    /// a usable message before the DB INSERT (which would otherwise
+    /// 23502 on NOT NULL).
     #[serde(default)]
     pub account_id: Option<Uuid>,
     #[serde(default)]

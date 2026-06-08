@@ -295,10 +295,10 @@ pub async fn record_fill(
         .await
         .ok();
 
-    // Without account_id the engine still records to algo_fills but
-    // can't push into the executions pipeline. Route layer normally
-    // refuses unbound strategies, so this is just defense.
-    let Some(account_id) = strategy.account_id else { return Ok(()); };
+    // account_id is NOT NULL since migration 0056 — strategies cannot
+    // exist without a bound account, so the executions pipeline always
+    // gets fed.
+    let account_id = strategy.account_id;
 
     let side = match intent.side {
         Side::Buy => traderview_core::models::Side::Buy,

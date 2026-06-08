@@ -189,7 +189,21 @@ async fn drive_engine_until_signal(
     None
 }
 
+async fn fresh_account_in(pool: &PgPool, user_id: Uuid) -> Uuid {
+    let name = format!("acct-{}", Uuid::new_v4());
+    let (id,): (Uuid,) = sqlx::query_as(
+        "INSERT INTO accounts (user_id, name, broker) VALUES ($1, $2, 'alpaca') RETURNING id",
+    )
+    .bind(user_id)
+    .bind(&name)
+    .fetch_one(pool)
+    .await
+    .expect("insert account");
+    id
+}
+
 async fn make_strategy(pool: &PgPool, user_id: Uuid, broker_mode: &str) -> AlgoStrategy {
+    let account_id = fresh_account_in(pool, user_id).await;
     algo::create_strategy(
         pool,
         user_id,
@@ -201,8 +215,8 @@ async fn make_strategy(pool: &PgPool, user_id: Uuid, broker_mode: &str) -> AlgoS
             watchlist_id: None,
             autoscan_top_n: 25,
             side_mode: "long".into(),
-                strategy_type: "momentum".into(),
-                account_id: None,
+            strategy_type: "momentum".into(),
+            account_id: Some(account_id),
             entry_rules: serde_json::json!({}),
             exit_rules: serde_json::json!({}),
             sizing: serde_json::json!({"risk_pct_per_trade": 0.01, "max_pos_pct": 0.20}),
@@ -377,28 +391,10 @@ fn engine_fill_lands_in_executions_and_rolls_up_to_trades() {
     run(async {
         let pool = pool();
         let user = fresh_user_in(&pool).await;
-
-        // Real broker account that the strategy will be bound to.
-        let acct_name = format!("alpaca-{}", Uuid::new_v4());
-        let (account_id,): (Uuid,) = sqlx::query_as(
-            "INSERT INTO accounts (user_id, name, broker) VALUES ($1, $2, 'alpaca') RETURNING id",
-        )
-        .bind(user)
-        .bind(&acct_name)
-        .fetch_one(&pool)
-        .await
-        .expect("insert account");
-
-        let mut strategy = make_strategy(&pool, user, "internal_sim").await;
-        // Manual bind — make_strategy ships account_id None.
-        strategy.account_id = Some(account_id);
-        sqlx::query("UPDATE algo_strategies SET account_id = $1 WHERE id = $2")
-            .bind(account_id)
-            .bind(strategy.id)
-            .execute(&pool)
-            .await
-            .expect("bind account_id");
-
+        // make_strategy now auto-binds a real account_id (NOT NULL since
+        // migration 0056). Capture it for the executions/trades query.
+        let strategy = make_strategy(&pool, user, "internal_sim").await;
+        let account_id = strategy.account_id;
         let run = algo::start_run(&pool, strategy.id).await.expect("run");
         let bars = fresh_long_window("AAPL");
         let sink = InMemorySink::default();

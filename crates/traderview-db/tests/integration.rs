@@ -674,6 +674,7 @@ fn paper_ensure_default_is_idempotent() {
 fn algo_strategy_create_defaults_paper_lock_30d_kill_off() {
     run(async {
         let user = fresh_user().await;
+        let account = fresh_account(user).await;
         let s = traderview_db::algo::create_strategy(
             &pool(),
             user,
@@ -686,7 +687,7 @@ fn algo_strategy_create_defaults_paper_lock_30d_kill_off() {
                 autoscan_top_n: 25,
                 side_mode: "long".into(),
                 strategy_type: "momentum".into(),
-                account_id: None,
+                account_id: Some(account),
                 entry_rules: serde_json::json!({}),
                 exit_rules: serde_json::json!({}),
                 sizing: serde_json::json!({"risk_pct_per_trade": 0.01}),
@@ -710,6 +711,7 @@ fn algo_strategy_create_defaults_paper_lock_30d_kill_off() {
 fn algo_kill_switch_toggles_and_audits() {
     run(async {
         let user = fresh_user().await;
+        let account = fresh_account(user).await;
         let s = traderview_db::algo::create_strategy(
             &pool(),
             user,
@@ -722,7 +724,7 @@ fn algo_kill_switch_toggles_and_audits() {
                 autoscan_top_n: 10,
                 side_mode: "both".into(),
                 strategy_type: "momentum".into(),
-                account_id: None,
+                account_id: Some(account),
                 entry_rules: serde_json::json!({}),
                 exit_rules: serde_json::json!({}),
                 sizing: serde_json::json!({}),
@@ -770,6 +772,7 @@ fn algo_kill_switch_toggles_and_audits() {
 fn algo_run_one_open_per_strategy_invariant() {
     run(async {
         let user = fresh_user().await;
+        let account = fresh_account(user).await;
         let s = traderview_db::algo::create_strategy(
             &pool(),
             user,
@@ -782,7 +785,7 @@ fn algo_run_one_open_per_strategy_invariant() {
                 autoscan_top_n: 25,
                 side_mode: "long".into(),
                 strategy_type: "momentum".into(),
-                account_id: None,
+                account_id: Some(account),
                 entry_rules: serde_json::json!({}),
                 exit_rules: serde_json::json!({}),
                 sizing: serde_json::json!({}),
@@ -811,6 +814,7 @@ fn algo_order_fill_round_trip() {
         use rust_decimal::Decimal;
         use std::str::FromStr;
         let user = fresh_user().await;
+        let account = fresh_account(user).await;
         let s = traderview_db::algo::create_strategy(
             &pool(),
             user,
@@ -823,7 +827,7 @@ fn algo_order_fill_round_trip() {
                 autoscan_top_n: 25,
                 side_mode: "long".into(),
                 strategy_type: "momentum".into(),
-                account_id: None,
+                account_id: Some(account),
                 entry_rules: serde_json::json!({}),
                 exit_rules: serde_json::json!({}),
                 sizing: serde_json::json!({}),

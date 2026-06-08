@@ -226,11 +226,9 @@ async fn start_run(
     if !strategy.enabled {
         return Err(ApiError::BadRequest("strategy is disabled".into()));
     }
-    if strategy.account_id.is_none() {
-        return Err(ApiError::BadRequest(
-            "strategy has no broker account bound — edit it and pick one".into(),
-        ));
-    }
+    // account_id is NOT NULL since migration 0056 — strategy must be
+    // bound. No defensive check needed; the row could not have been
+    // saved otherwise.
     if let Some(open) = traderview_db::algo::get_open_run(&s.pool, id)
         .await
         .map_err(ApiError::Internal)?
