@@ -636,6 +636,7 @@ import { renderPositionSize } from './views/position_size.js';
 import { renderLivePositions } from './views/live_positions.js';
 import { renderCorrMatrix } from './views/corr_matrix.js';
 import { renderStrategyAlerts } from './views/strategy_alerts.js';
+import { renderAlgo } from './views/algo.js';
 import { renderRebalance } from './views/rebalance.js';
 import { renderSectorRotation } from './views/sector_rotation.js';
 import { renderTapeReplay } from './views/tape_replay.js';
@@ -2784,6 +2785,7 @@ export async function dispatch() {
             case 'live':           await renderLivePositions(mount, state); break;
             case 'correlation':    await renderCorrMatrix(mount, state); break;
             case 'strategy-alerts': await renderStrategyAlerts(mount, state); break;
+            case 'algo':           await renderAlgo(mount, state); break;
             case 'rebalance':      await renderRebalance(mount, state); break;
             case 'sector-rotation': await renderSectorRotation(mount, state); break;
             case 'tape-replay':    await renderTapeReplay(mount, state, sym()); break;

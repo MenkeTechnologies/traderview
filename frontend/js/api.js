@@ -933,6 +933,33 @@ export const api = {
     strategyAlertsEvaluateNow: () =>
         request('/strategy-alerts/evaluate-now', { method: 'POST' }),
 
+    // Algo momentum strategies (CRUD + run lifecycle + kill switch)
+    listAlgoStrategies: () => request('/algo/strategies'),
+    createAlgoStrategy: (body) =>
+        request('/algo/strategies', { method: 'POST', body: JSON.stringify(body) }),
+    updateAlgoStrategy: (id, body) =>
+        request(`/algo/strategies/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+    deleteAlgoStrategy: (id) =>
+        request(`/algo/strategies/${id}`, { method: 'DELETE' }),
+    setAlgoKillSwitch: (id, engaged, reason = null) =>
+        request(`/algo/strategies/${id}/kill-switch`, {
+            method: 'POST',
+            body: JSON.stringify({ engaged, reason }),
+        }),
+    algoKillHistory: (id) => request(`/algo/strategies/${id}/kill-history`),
+    listAlgoRuns: (id, limit = 25) =>
+        request(`/algo/strategies/${id}/runs?limit=${limit}`),
+    startAlgoRun: (id) =>
+        request(`/algo/strategies/${id}/runs`, { method: 'POST' }),
+    stopAlgoRun: (id, reason = 'user') =>
+        request(`/algo/strategies/${id}/stop`, {
+            method: 'POST',
+            body: JSON.stringify({ reason }),
+        }),
+    listAlgoOrders: (runId, limit = 100) =>
+        request(`/algo/runs/${runId}/orders?limit=${limit}`),
+    listAlgoFills: (orderId) => request(`/algo/orders/${orderId}/fills`),
+
     // Correlation matrix (pairwise Pearson on cached daily-bar log-returns)
     corrWatchlist: (wid, days = 90) =>
         request(`/correlation/watchlist/${wid}?days=${days}`),

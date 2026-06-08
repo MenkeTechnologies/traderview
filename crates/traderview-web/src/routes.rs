@@ -7,6 +7,7 @@ use axum::Router;
 mod accounts;
 mod accounts_overview;
 mod alerts;
+mod algo;
 mod analysis;
 mod api_tokens;
 mod auth;
@@ -177,6 +178,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(live_ticks::router())
         .merge(corr_matrix::router())
         .merge(strategy_alerts::router())
+        .merge(algo::router())
         .merge(rebalance::router())
         .merge(sector_rotation::router())
         .merge(tape_replay::router())
