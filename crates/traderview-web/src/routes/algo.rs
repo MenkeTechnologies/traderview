@@ -36,6 +36,8 @@ pub fn router() -> Router<AppState> {
         .route("/algo/strategies/:id/backtest", post(post_backtest))
         .route("/algo/strategies/:id/metrics", get(get_metrics))
         .route("/algo/strategies/:id/optimize", post(post_optimize))
+        .route("/algo/strategies/:id/backtests", get(list_backtest_history))
+        .route("/algo/backtests/:id", axum::routing::delete(delete_backtest_row))
 }
 
 // ─── strategy CRUD ──────────────────────────────────────────────────────────
@@ -525,7 +527,74 @@ async fn post_backtest(
         side_mode,
     };
     let result = traderview_core::algo_backtest::run(&bars, strat.as_ref(), &sizing, cfg);
+
+    // Persist the summary so the history modal can show drift across
+    // re-runs without re-fetching bars. Failure to persist isn't fatal
+    // — the run still returns to the caller; we just log.
+    use rust_decimal::Decimal;
+    use std::str::FromStr;
+    let dec = |v: f64| Decimal::from_str(&format!("{:.8}", v)).unwrap_or_default();
+    let pf = if result.summary.profit_factor.is_finite() {
+        result.summary.profit_factor
+    } else {
+        0.0
+    };
+    let insert = traderview_db::algo::AlgoBacktestInsert {
+        strategy_id: strategy.id,
+        user_id: u.id,
+        symbol: body.symbol.clone(),
+        interval: body.interval.clone(),
+        range_from: from,
+        range_to: to,
+        initial_equity: dec(cfg.initial_equity),
+        fee_per_trade: dec(cfg.fee_per_trade),
+        slippage_bps: dec(cfg.slippage_bps),
+        entry_rules: strategy.entry_rules.clone(),
+        trades: result.summary.trades as i64,
+        wins: result.summary.wins as i64,
+        losses: result.summary.losses as i64,
+        win_rate: dec(result.summary.win_rate),
+        avg_r: dec(result.summary.avg_r),
+        profit_factor: dec(pf),
+        total_return_pct: dec(result.summary.total_return_pct),
+        max_drawdown_pct: dec(result.summary.max_drawdown_pct),
+        final_equity: dec(result.summary.final_equity),
+        sharpe: dec(result.summary.sharpe),
+    };
+    if let Err(e) = traderview_db::algo::save_backtest(&s.pool, insert).await {
+        tracing::warn!(error = %e, "backtest history persist failed");
+    }
     Ok(Json(result))
+}
+
+async fn list_backtest_history(
+    State(s): State<AppState>,
+    u: AuthUser,
+    Path(id): Path<Uuid>,
+    Query(q): Query<HistoryQuery>,
+) -> Result<Json<Vec<traderview_db::algo::AlgoBacktestRow>>, ApiError> {
+    Ok(Json(
+        traderview_db::algo::list_backtests(&s.pool, u.id, id, q.limit.unwrap_or(50))
+            .await
+            .map_err(ApiError::Internal)?,
+    ))
+}
+
+async fn delete_backtest_row(
+    State(s): State<AppState>,
+    u: AuthUser,
+    Path(id): Path<Uuid>,
+) -> Result<Json<serde_json::Value>, ApiError> {
+    let n = traderview_db::algo::delete_backtest(&s.pool, u.id, id)
+        .await
+        .map_err(ApiError::Internal)?;
+    Ok(Json(serde_json::json!({ "deleted": n })))
+}
+
+#[derive(Debug, Deserialize, Default)]
+struct HistoryQuery {
+    #[serde(default)]
+    limit: Option<i64>,
 }
 
 #[derive(Debug, Deserialize)]

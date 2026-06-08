@@ -618,6 +618,129 @@ pub async fn list_fills(
     .await?)
 }
 
+// ─── persisted backtest history ─────────────────────────────────────────────
+
+#[derive(Debug, Clone, Serialize, sqlx::FromRow)]
+pub struct AlgoBacktestRow {
+    pub id: Uuid,
+    pub strategy_id: Uuid,
+    pub user_id: Uuid,
+    pub created_at: DateTime<Utc>,
+    pub symbol: String,
+    pub interval: String,
+    pub range_from: DateTime<Utc>,
+    pub range_to: DateTime<Utc>,
+    pub initial_equity: Decimal,
+    pub fee_per_trade: Decimal,
+    pub slippage_bps: Decimal,
+    pub entry_rules: Json,
+    pub trades: i64,
+    pub wins: i64,
+    pub losses: i64,
+    pub win_rate: Decimal,
+    pub avg_r: Decimal,
+    pub profit_factor: Decimal,
+    pub total_return_pct: Decimal,
+    pub max_drawdown_pct: Decimal,
+    pub final_equity: Decimal,
+    pub sharpe: Decimal,
+}
+
+#[derive(Debug, Clone)]
+pub struct AlgoBacktestInsert {
+    pub strategy_id: Uuid,
+    pub user_id: Uuid,
+    pub symbol: String,
+    pub interval: String,
+    pub range_from: DateTime<Utc>,
+    pub range_to: DateTime<Utc>,
+    pub initial_equity: Decimal,
+    pub fee_per_trade: Decimal,
+    pub slippage_bps: Decimal,
+    pub entry_rules: Json,
+    pub trades: i64,
+    pub wins: i64,
+    pub losses: i64,
+    pub win_rate: Decimal,
+    pub avg_r: Decimal,
+    pub profit_factor: Decimal,
+    pub total_return_pct: Decimal,
+    pub max_drawdown_pct: Decimal,
+    pub final_equity: Decimal,
+    pub sharpe: Decimal,
+}
+
+pub async fn save_backtest(
+    pool: &PgPool,
+    insert: AlgoBacktestInsert,
+) -> anyhow::Result<AlgoBacktestRow> {
+    Ok(sqlx::query_as::<_, AlgoBacktestRow>(
+        "INSERT INTO algo_backtests
+            (strategy_id, user_id, symbol, interval, range_from, range_to,
+             initial_equity, fee_per_trade, slippage_bps, entry_rules,
+             trades, wins, losses, win_rate, avg_r, profit_factor,
+             total_return_pct, max_drawdown_pct, final_equity, sharpe)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
+         RETURNING *",
+    )
+    .bind(insert.strategy_id)
+    .bind(insert.user_id)
+    .bind(insert.symbol)
+    .bind(insert.interval)
+    .bind(insert.range_from)
+    .bind(insert.range_to)
+    .bind(insert.initial_equity)
+    .bind(insert.fee_per_trade)
+    .bind(insert.slippage_bps)
+    .bind(insert.entry_rules)
+    .bind(insert.trades)
+    .bind(insert.wins)
+    .bind(insert.losses)
+    .bind(insert.win_rate)
+    .bind(insert.avg_r)
+    .bind(insert.profit_factor)
+    .bind(insert.total_return_pct)
+    .bind(insert.max_drawdown_pct)
+    .bind(insert.final_equity)
+    .bind(insert.sharpe)
+    .fetch_one(pool)
+    .await?)
+}
+
+pub async fn list_backtests(
+    pool: &PgPool,
+    user_id: Uuid,
+    strategy_id: Uuid,
+    limit: i64,
+) -> anyhow::Result<Vec<AlgoBacktestRow>> {
+    Ok(sqlx::query_as::<_, AlgoBacktestRow>(
+        "SELECT * FROM algo_backtests
+          WHERE strategy_id = $1 AND user_id = $2
+          ORDER BY created_at DESC
+          LIMIT $3",
+    )
+    .bind(strategy_id)
+    .bind(user_id)
+    .bind(limit.clamp(1, 200))
+    .fetch_all(pool)
+    .await?)
+}
+
+pub async fn delete_backtest(
+    pool: &PgPool,
+    user_id: Uuid,
+    backtest_id: Uuid,
+) -> anyhow::Result<u64> {
+    Ok(sqlx::query(
+        "DELETE FROM algo_backtests WHERE id = $1 AND user_id = $2",
+    )
+    .bind(backtest_id)
+    .bind(user_id)
+    .execute(pool)
+    .await?
+    .rows_affected())
+}
+
 // ─── live metrics: rollup for the dashboard tab ─────────────────────────────
 
 #[derive(Debug, Clone, Serialize)]

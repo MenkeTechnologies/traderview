@@ -1156,11 +1156,23 @@ async function openBacktestModal(mount, s) {
                 </div>
             </form>
             <div id="bt-results" style="margin-top:12px"></div>
+            <h3 style="margin-top:12px">History</h3>
+            <div id="bt-history" class="muted small">Loading past runs…</div>
         </div>`;
     document.body.appendChild(wrap);
     const close = () => wrap.remove();
     wrap.querySelector('#bt-close').addEventListener('click', close);
     wrap.addEventListener('click', e => { if (e.target === wrap) close(); });
+
+    const refreshHistory = async () => {
+        const host = wrap.querySelector('#bt-history');
+        try {
+            const rows = await api.listAlgoBacktests(s.id, 25);
+            renderBacktestHistory(host, rows, refreshHistory);
+        } catch (e) {
+            host.innerHTML = `<p class="error">History fetch failed: ${esc(e.message || String(e))}</p>`;
+        }
+    };
 
     wrap.querySelector('#bt-form').addEventListener('submit', async (ev) => {
         ev.preventDefault();
@@ -1178,9 +1190,51 @@ async function openBacktestModal(mount, s) {
         try {
             const r = await api.backtestAlgoStrategy(s.id, body);
             renderBacktestResult(out, r);
+            await refreshHistory();
         } catch (e) {
             out.innerHTML = `<p class="error">Backtest failed: ${esc(e.message || String(e))}</p>`;
         }
+    });
+    refreshHistory();
+}
+
+function renderBacktestHistory(host, rows, onChange) {
+    if (!rows.length) {
+        host.innerHTML = '<p class="muted small">No past backtests for this strategy yet.</p>';
+        return;
+    }
+    const fmtTime = (s) => esc(String(s).replace('T', ' ').slice(0, 16));
+    host.innerHTML = `
+        <table class="trades small">
+            <thead><tr>
+                <th>When</th><th>Symbol</th><th>Interval</th><th>Trades</th>
+                <th>Win %</th><th>PF</th><th>Return</th><th>Max DD</th>
+                <th>Sharpe</th><th></th>
+            </tr></thead>
+            <tbody>${rows.map(r => `
+                <tr>
+                    <td>${fmtTime(r.created_at)}</td>
+                    <td>${esc(r.symbol)}</td>
+                    <td>${esc(r.interval)}</td>
+                    <td>${r.trades}</td>
+                    <td>${(Number(r.win_rate) * 100).toFixed(1)}%</td>
+                    <td>${Number(r.profit_factor).toFixed(2)}</td>
+                    <td style="color:${Number(r.total_return_pct) >= 0 ? '#39ff14' : '#ff5a5a'}">${Number(r.total_return_pct).toFixed(2)}%</td>
+                    <td>${Number(r.max_drawdown_pct).toFixed(2)}%</td>
+                    <td>${Number(r.sharpe).toFixed(3)}</td>
+                    <td><button class="link" data-del="${esc(r.id)}">×</button></td>
+                </tr>`).join('')}
+            </tbody>
+        </table>`;
+    host.querySelectorAll('button[data-del]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            try {
+                await api.deleteAlgoBacktest(btn.dataset.del);
+                if (onChange) await onChange();
+            } catch (e) {
+                showToast(`delete failed: ${e.message || String(e)}`, { level: 'error' });
+            }
+        });
     });
 }
 

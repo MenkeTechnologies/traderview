@@ -965,6 +965,10 @@ export const api = {
             body: JSON.stringify(body || {}),
         }),
     algoStrategyMetrics: (id) => request(`/algo/strategies/${id}/metrics`),
+    listAlgoBacktests: (id, limit = 50) =>
+        request(`/algo/strategies/${id}/backtests?limit=${limit}`),
+    deleteAlgoBacktest: (id) =>
+        request(`/algo/backtests/${id}`, { method: 'DELETE' }),
     optimizeAlgoStrategy: (id, body) =>
         request(`/algo/strategies/${id}/optimize`, {
             method: 'POST',
