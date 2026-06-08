@@ -222,6 +222,11 @@ pub async fn process_bar_window(
     let strat = algo_strategies::from_kind(&strategy.strategy_type, &strategy.entry_rules)
         .map_err(|e| EngineError::Broker(e.to_string()))?;
 
+    // Multi-symbol strategies don't use the single-bar evaluate_entry
+    // path. Caller (algo_runner) calls process_bar_window_multi instead.
+    if strat.required_symbols().is_some() {
+        return Ok(None);
+    }
     let Some(sig) = strat.evaluate_entry(bars, cfg.side_mode) else {
         return Ok(None);
     };
@@ -403,6 +408,109 @@ pub async fn record_fill(
         });
     }
     Ok(())
+}
+
+/// Multi-symbol variant of `process_bar_window`. Used by pairs / stat-arb
+/// strategies whose Strategy impl exposes `required_symbols`. Bars for
+/// every required symbol must be in `bars_by_symbol`. The order is
+/// submitted on the strategy's "primary" symbol (whatever the strategy's
+/// EntrySignal carries via the diagnostic) — for now we route through
+/// the first symbol returned by required_symbols (leg A in pairs).
+pub async fn process_bar_window_multi(
+    pool: &PgPool,
+    sink: &dyn BrokerSink,
+    strategy: &AlgoStrategy,
+    run_id: Uuid,
+    bars_by_symbol: &std::collections::HashMap<String, Vec<PriceBar>>,
+    equity: f64,
+    open_positions: i64,
+    event_sink: Option<&EventSink>,
+) -> Result<Option<Uuid>, EngineError> {
+    if strategy.kill_switch {
+        return Err(EngineError::KillSwitch { reason: strategy.kill_reason.clone() });
+    }
+    let cfg = EngineConfig::from_strategy(strategy);
+    if open_positions >= cfg.max_concurrent_positions {
+        return Err(EngineError::PositionCap(open_positions));
+    }
+    let strat = algo_strategies::from_kind(&strategy.strategy_type, &strategy.entry_rules)
+        .map_err(|e| EngineError::Broker(e.to_string()))?;
+    let primary_symbol = strat
+        .required_symbols()
+        .and_then(|v| v.into_iter().next())
+        .unwrap_or_default();
+    let Some(sig) = strat.evaluate_entry_multi(bars_by_symbol, cfg.side_mode) else {
+        return Ok(None);
+    };
+    let qty = algo_strategies::size_shares(equity, sig.entry_price, sig.stop_distance, &cfg.sizing);
+    if qty == 0 {
+        return Err(EngineError::ZeroQty);
+    }
+    algo::increment_run_counter(pool, run_id, algo::RunCounter::SignalsEmitted, 1)
+        .await
+        .ok();
+    let intent = build_intent(strategy, run_id, &primary_symbol, &sig, qty);
+    if let Some(emit) = event_sink {
+        emit(EngineEvent::SignalFired {
+            strategy_id: strategy.id,
+            run_id,
+            symbol: primary_symbol.clone(),
+            side: intent.side,
+            entry_price: intent.entry_price,
+            kind: sig.kind,
+        });
+    }
+    let inserted = algo::insert_order(
+        pool,
+        run_id,
+        strategy.id,
+        AlgoOrderInsert {
+            client_order_id: intent.client_order_id,
+            symbol: primary_symbol.clone(),
+            side: side_to_str(intent.side).into(),
+            order_type: "market".into(),
+            order_class: "bracket".into(),
+            qty: intent.qty,
+            limit_price: None,
+            stop_price: Some(intent.stop_price),
+            raw_request: Some(intent_to_request_json(&intent)),
+        },
+    )
+    .await
+    .map_err(|e| EngineError::Broker(e.to_string()))?;
+    match sink.submit_bracket(intent.clone()).await {
+        Ok(resp) => {
+            algo::mark_order_submitted(
+                pool, inserted.id, Some(resp.broker_order_id.clone()),
+                &resp.status, resp.raw_response, None,
+            )
+            .await
+            .map_err(|e| EngineError::Broker(e.to_string()))?;
+            algo::increment_run_counter(pool, run_id, algo::RunCounter::OrdersSubmitted, 1)
+                .await
+                .ok();
+            if let Some(emit) = event_sink {
+                emit(EngineEvent::OrderSubmitted {
+                    strategy_id: strategy.id,
+                    order_id: inserted.id,
+                    symbol: primary_symbol.clone(),
+                    side: intent.side,
+                    qty: intent.qty,
+                    broker_order_id: resp.broker_order_id.clone(),
+                });
+            }
+            if let Some(fill) = resp.immediate_fill {
+                record_fill(pool, strategy, &intent, inserted.id, &fill, event_sink).await?;
+            }
+            Ok(Some(inserted.id))
+        }
+        Err(e) => {
+            algo::mark_order_submitted(pool, inserted.id, None, "rejected", None, Some(e.to_string()))
+                .await
+                .map_err(|de| EngineError::Broker(de.to_string()))?;
+            Err(e)
+        }
+    }
 }
 
 fn build_intent(

@@ -21,6 +21,7 @@ pub mod mean_reversion;
 pub mod momentum;
 pub mod orb;
 pub mod order_block_sweep;
+pub mod pairs;
 pub mod pead;
 pub mod supertrend;
 pub mod ttm_squeeze;
@@ -43,6 +44,26 @@ pub trait Strategy: Send + Sync {
         anchor_high: f64,
         anchor_low: f64,
     ) -> Option<ExitSignal>;
+
+    /// Multi-symbol strategies (pairs, stat-arb, sector rotation) return
+    /// `Some(vec)` listing every symbol they need at evaluation time. The
+    /// runner fetches bars for ALL of them and calls
+    /// `evaluate_entry_multi`. Default: `None` — single-symbol strategy.
+    fn required_symbols(&self) -> Option<Vec<String>> {
+        None
+    }
+
+    /// Multi-symbol entry evaluator. Receives a map from symbol → bars
+    /// for every symbol declared by `required_symbols`. Default impl
+    /// returns None; only strategies that override `required_symbols`
+    /// need to implement this.
+    fn evaluate_entry_multi(
+        &self,
+        _bars_by_symbol: &std::collections::HashMap<String, Vec<PriceBar>>,
+        _side_mode: SideMode,
+    ) -> Option<EntrySignal> {
+        None
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -129,10 +150,7 @@ pub fn from_kind(
         "connors_rsi2" => Ok(Box::new(connors_rsi2::ConnorsRsi2::from_json(entry_rules))),
         "order_block_sweep" => Ok(Box::new(order_block_sweep::OrderBlockSweep::from_json(entry_rules))),
         "pead" => Ok(Box::new(pead::Pead::from_json(entry_rules))),
-        // Slot populated in commit 28.
-        "pairs" => {
-            Err(FactoryError::NotImplemented(kind.to_string()))
-        }
+        "pairs" => Ok(Box::new(pairs::Pairs::from_json(entry_rules))),
         other => Err(FactoryError::Unknown(other.to_string())),
     }
 }

@@ -118,6 +118,10 @@ const STRATEGY_KINDS = [
     { value: 'vwap_scalp',        label_key: 'view.algo.opt.strat_vwap_scalp',        label: 'VWAP Scalp (z-score reversion, 1×ATR stop)' },
     { value: 'supertrend',        label_key: 'view.algo.opt.strat_supertrend',        label: 'Supertrend Cross (ATR-banded trend flip)' },
     { value: 'heikin_ashi_trend', label_key: 'view.algo.opt.strat_heikin_ashi_trend', label: 'Heikin-Ashi Trend (HA run + EMA confirm)' },
+    { value: 'connors_rsi2',      label_key: 'view.algo.opt.strat_connors_rsi2',      label: 'Connors RSI-2 + 200 SMA (mean-rev classic)' },
+    { value: 'order_block_sweep', label_key: 'view.algo.opt.strat_order_block_sweep', label: 'Order Block + Liquidity Sweep (SMC)' },
+    { value: 'pead',              label_key: 'view.algo.opt.strat_pead',              label: 'PEAD (post-earnings drift)' },
+    { value: 'pairs',             label_key: 'view.algo.opt.strat_pairs',             label: 'Pairs Trading (spread z-score)' },
 ];
 
 const STRATEGY_HINTS = {
@@ -130,6 +134,10 @@ const STRATEGY_HINTS = {
     vwap_scalp:        'Pure z-score reversion: close ≤ session VWAP − 2σ + recovery tick. Tight 1×ATR stop, target = VWAP. Intraday scalp.',
     supertrend:        'ATR(10)×3 banded reversal. Entry on trend flip (−1 → +1), exit on opposite flip. Simple trend follower.',
     heikin_ashi_trend: '3 consecutive green HA candles + close > EMA(21). Noise-filtered trend follower; use on 5m+ bars for best signal-to-noise.',
+    connors_rsi2:      'Stock > SMA(200) + RSI(2) < 5 → long. Long-only mean-rev edge in trending stocks. Exit on close > SMA(5) or RSI > 70.',
+    order_block_sweep: 'SMC: recent bullish OB + low-side liquidity sweep + return to zone + bullish close → long. Stop below zone − 1.5×ATR.',
+    pead:              'Symbols with recent +5% earnings surprise drift higher. Runner gates on earnings_events; strategy confirms with new-high + SMA filter.',
+    pairs:             'Pair = (symbol_a, symbol_b, hedge_ratio). Enter long A when spread z ≤ −2σ. Set entry_rules.symbol_a / symbol_b / hedge_ratio.',
 };
 
 export async function renderAlgo(mount) {

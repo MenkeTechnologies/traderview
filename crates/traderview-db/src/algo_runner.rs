@@ -149,6 +149,26 @@ async fn symbol_universe(
     pool: &PgPool,
     s: &AlgoStrategy,
 ) -> Result<Vec<String>, anyhow::Error> {
+    // Pairs / stat-arb: universe is hard-wired by the strategy's own
+    // entry_rules (the legs of the spread). Ignore watchlist / autoscan.
+    if s.strategy_type == "pairs" {
+        let a = s
+            .entry_rules
+            .get("symbol_a")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let b = s
+            .entry_rules
+            .get("symbol_b")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        if a.is_empty() || b.is_empty() {
+            return Ok(Vec::new());
+        }
+        return Ok(vec![a, b]);
+    }
     match s.universe_mode.as_str() {
         "watchlist" => {
             let Some(watchlist_id) = s.watchlist_id else {
@@ -237,6 +257,38 @@ async fn drive_strategy(
         .await
         .unwrap_or(0);
     let mut driven = 0usize;
+
+    // Multi-symbol path (pairs / stat-arb): the symbols vec here is the
+    // strategy's required_symbols, not the universe. Fetch bars for each
+    // leg and call the multi evaluator once.
+    if strategy.strategy_type == "pairs" {
+        let mut bars_by_symbol = std::collections::HashMap::new();
+        for symbol in symbols {
+            let bars = fetch_recent_bars(pool, symbol, interval, BAR_WINDOW_SIZE).await?;
+            if bars.is_empty() { continue; }
+            bars_by_symbol.insert(symbol.clone(), bars);
+        }
+        if !bars_by_symbol.is_empty() {
+            match algo_engine::process_bar_window_multi(
+                pool, sink, strategy, run.id, &bars_by_symbol,
+                equity, open_positions, event_sink,
+            )
+            .await
+            {
+                Ok(_) => driven = 1,
+                Err(e) => tracing::debug!(
+                    strategy = %strategy.id, error = %e,
+                    "process_bar_window_multi non-fatal"
+                ),
+            }
+        }
+        let _ = algo::increment_run_counter(
+            pool, run.id, algo::RunCounter::BarsProcessed, driven as i64,
+        )
+        .await;
+        return Ok(driven);
+    }
+
     for symbol in symbols {
         let bars = fetch_recent_bars(pool, symbol, interval, BAR_WINDOW_SIZE).await?;
         if bars.is_empty() {
