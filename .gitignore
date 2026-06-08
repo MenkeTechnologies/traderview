@@ -32,3 +32,7 @@ Cargo.lock.bak
 # Un-ignore the docs/ site (global gitignore excludes docs/ by default)
 !docs/
 !docs/**
+
+# Generated at every cargo build by src-tauri/build.rs — content tracks
+# workspace.package.version, so it'd churn the git diff for no reason.
+frontend/.version.json
