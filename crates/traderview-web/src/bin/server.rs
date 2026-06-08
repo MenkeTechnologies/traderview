@@ -332,6 +332,22 @@ async fn main() -> anyhow::Result<()> {
                 Err(e) => tracing::warn!(error = %e, "tradier::spawn_pumps_for_active_strategies failed"),
             }
         });
+
+        // Tastytrade account-streamer pump.
+        let tt_pool = pool.clone();
+        let tt_sink = sink.clone();
+        let tt_registry = state.alpaca_pumps.clone();
+        tokio::spawn(async move {
+            match traderview_db::tastytrade_pump::spawn_pumps_for_active_strategies(
+                tt_pool, Some(tt_sink), tt_registry,
+            )
+            .await
+            {
+                Ok(0) => tracing::info!("no tastytrade-bound algo strategies; pumps idle"),
+                Ok(n) => tracing::info!(pumps = n, "tastytrade account streamer pumps spawned"),
+                Err(e) => tracing::warn!(error = %e, "tastytrade::spawn_pumps_for_active_strategies failed"),
+            }
+        });
     }
 
     let api = router(state);
