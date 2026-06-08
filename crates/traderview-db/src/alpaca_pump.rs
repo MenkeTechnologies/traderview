@@ -154,9 +154,15 @@ pub async fn spawn_pumps_for_active_strategies(
     let strategies = crate::algo::list_active_strategies(&pool).await?;
     let mut spawned = 0usize;
     for s in strategies {
-        let paper = matches!(s.broker_mode.as_str(), "alpaca_paper");
-        let live = matches!(s.broker_mode.as_str(), "alpaca_live");
+        let paper = matches!(s.broker_mode.as_str(), "paper");
+        let live = matches!(s.broker_mode.as_str(), "live");
         if !paper && !live {
+            continue;
+        }
+        // Only spawn Alpaca pumps for strategies whose bound account is
+        // on Alpaca. Other broker accounts get their own pump module
+        // (Tradier / IBKR / etc. in follow-up commits).
+        if !is_alpaca_account(&pool, s.account_id).await {
             continue;
         }
         if ensure_pump_for(
@@ -174,11 +180,26 @@ pub async fn spawn_pumps_for_active_strategies(
     Ok(spawned)
 }
 
+/// True when the account exists and its broker is 'alpaca'. Used to
+/// keep Alpaca-specific pump spawn from misfiring on Tradier/IBKR/etc.
+/// strategies. Errors / missing accounts return false (defensive).
+async fn is_alpaca_account(pool: &PgPool, account_id: Uuid) -> bool {
+    let row: Result<Option<(Option<String>,)>, _> =
+        sqlx::query_as("SELECT broker FROM accounts WHERE id = $1")
+            .bind(account_id)
+            .fetch_optional(pool)
+            .await;
+    matches!(
+        row,
+        Ok(Some((Some(b),))) if b.eq_ignore_ascii_case("alpaca")
+    )
+}
+
 /// Idempotent spawn — returns true when a new pump was actually
 /// started, false when one already existed for this (user, mode) or
 /// the user has no Alpaca credentials yet. Called from the routes
 /// after a successful create_strategy / update_strategy whose
-/// broker_mode lands in {alpaca_paper, alpaca_live}.
+/// broker_mode lands in {paper, live} and the account.broker is 'alpaca'.
 ///
 /// Mutex is held only across the insert; the long-running pump task
 /// is spawned AFTER the lock is dropped so the registry stays

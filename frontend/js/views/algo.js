@@ -832,19 +832,18 @@ async function openStrategyModal(mount, existing = null) {
     // Today: Alpaca (REST + WS, fully wired). Extend this list as more
     // broker integrations land; the backend route enforces the same
     // constraint independently (defense-in-depth).
+    // Scaffolded set; real implementation status differs (see
+    // ALGO_BROKER_STATUS). UI lets users pick any of them — backend's
+    // broker_dispatcher errors at submit time for the not-yet-real
+    // adapters so the strategy can still be saved + scheduled.
     const algoBroker = (b) =>
-        ['alpaca'].includes(String(b || '').toLowerCase());
-    // For alpaca_paper / alpaca_live broker_mode the account itself
-    // must be on Alpaca — can't ride those WS endpoints through a
-    // non-Alpaca account. internal_sim is mode-agnostic.
-    const modeAcceptsAccount = (mode, a) => {
-        const broker = String(a.broker || '').toLowerCase();
-        if (mode === 'alpaca_paper' || mode === 'alpaca_live') return broker === 'alpaca';
-        return algoBroker(a.broker);
-    };
-    const eligibleAccounts = accounts.filter(a =>
-        algoBroker(a.broker) && modeAcceptsAccount(s.broker_mode, a)
-    );
+        ['alpaca', 'tradier', 'ibkr', 'td', 'tastytrade']
+            .includes(String(b || '').toLowerCase());
+    // broker_mode is now broker-agnostic — internal_sim / paper / live.
+    // The right paper/live endpoint is picked by the dispatcher based
+    // on account.broker; the UI just needs to gate the account list on
+    // the algoBroker set.
+    const eligibleAccounts = accounts.filter(a => algoBroker(a.broker));
     const accountOptions = eligibleAccounts.length
         ? eligibleAccounts.map(a => {
             const sel = s.account_id === a.id ? 'selected' : '';
@@ -917,13 +916,16 @@ async function openStrategyModal(mount, existing = null) {
                     </label>
                     <label><span data-i18n="view.algo.label.broker_mode">Execution mode</span>
                         <select name="broker_mode">
-                            <option value="internal_sim"  ${s.broker_mode === 'internal_sim'  ? 'selected' : ''} data-i18n="view.algo.opt.broker_sim">Paper — In-app simulator (no broker)</option>
-                            <option value="alpaca_paper"  ${s.broker_mode === 'alpaca_paper' ? 'selected' : ''} data-i18n="view.algo.opt.broker_paper">Paper — Alpaca sandbox</option>
-                            <option value="alpaca_live"   ${s.broker_mode === 'alpaca_live'  ? 'selected' : ''} data-i18n="view.algo.opt.broker_live">LIVE — Alpaca real money (after 30-day paper-lock)</option>
+                            <option value="internal_sim"  ${s.broker_mode === 'internal_sim'  ? 'selected' : ''} data-i18n="view.algo.opt.broker_sim">Paper — In-app simulator (no broker call)</option>
+                            <option value="paper"         ${s.broker_mode === 'paper'         ? 'selected' : ''} data-i18n="view.algo.opt.broker_paper">Paper — Broker sandbox (uses selected account)</option>
+                            <option value="live"          ${s.broker_mode === 'live'          ? 'selected' : ''} data-i18n="view.algo.opt.broker_live">LIVE — Real money (after 30-day paper-lock)</option>
                         </select>
                     </label>
                     <p class="muted small" style="margin:0" data-i18n="view.algo.hint.execution_safety">
-                        Both paper modes are zero-risk: in-app sim fills at last known price; Alpaca sandbox is their official paper environment. Live trades use real money and require completed 30-day paper-lock.
+                        in-app sim fills at last known price (zero-risk). Broker paper uses the broker's sandbox (Alpaca: paper-api; Tradier: sandbox; etc.). Live trades real money and requires the 30-day paper-lock to expire.
+                    </p>
+                    <p class="muted small" style="margin:0" data-i18n="view.algo.hint.broker_status">
+                        Adapter status: <strong>alpaca</strong> wired; <strong>tradier</strong> scaffolded (coming next); <strong>ibkr</strong> / <strong>td</strong> / <strong>tastytrade</strong> scaffolded — strategy saves and runs, but orders return integration_pending until the per-broker adapter ships.
                     </p>
                     <div class="algo-form-actions">
                         <button type="button" id="algo-cancel" data-i18n="view.algo.btn.cancel">Cancel</button>
@@ -950,26 +952,9 @@ async function openStrategyModal(mount, existing = null) {
         const v = e.target.value;
         host.querySelector('#algo-strategy-doc').innerHTML = renderStrategyDoc(v);
     });
-    // Re-filter the account dropdown in place when broker_mode changes:
-    // alpaca_live / alpaca_paper require broker='alpaca'; internal_sim
-    // accepts any algo-supported broker.
-    host.querySelector('select[name="broker_mode"]').addEventListener('change', (e) => {
-        const mode = e.target.value;
-        const acctSel = host.querySelector('select[name="account_id"]');
-        const eligible = accounts.filter(a =>
-            algoBroker(a.broker) && modeAcceptsAccount(mode, a)
-        );
-        const prev = acctSel.value;
-        acctSel.innerHTML = eligible.length
-            ? eligible.map(a => {
-                const sel = prev === a.id ? 'selected' : '';
-                const label = a.broker ? `${a.name} · ${a.broker}` : a.name;
-                return `<option value="${esc(a.id)}" ${sel}>${esc(label)}</option>`;
-            }).join('')
-            : `<option value="">${esc(t('view.algo.label.no_accounts'))}</option>`;
-        const saveBtn = host.querySelector('#algo-save');
-        if (saveBtn) saveBtn.disabled = !eligible.length;
-    });
+    // No per-mode account filtering needed anymore — broker_mode is
+    // broker-agnostic (internal_sim / paper / live) and the account's
+    // broker is what selects the adapter at submit time.
     host.querySelector('#algo-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const f = new FormData(e.target);

@@ -69,23 +69,30 @@ async fn user_owns_account(
     Ok(row.is_some())
 }
 
-/// Brokers with a real algo-trading integration this codebase can drive.
-/// Today: Alpaca only (REST + WS, fully wired). Extend as more broker
-/// adapters land.
-const ALGO_SUPPORTED_BROKERS: &[&str] = &["alpaca"];
+/// Brokers with at least a scaffolded algo-trading adapter in this
+/// codebase. Real WS+REST integration status (commit 33):
+///   alpaca     — full (REST place_order/cancel + WS trade_updates pump)
+///   tradier    — scaffolded; real client lands in commit 34
+///   ibkr       — scaffolded; needs local TWS/Gateway, real client deferred
+///   td         — scaffolded; Schwab API migration pending real client
+///   tastytrade — scaffolded; real client deferred
+///
+/// The broker_dispatcher in `traderview_db::broker_dispatcher` returns
+/// EngineError::Broker("integration_pending: <broker>") at submit time
+/// for the scaffolded ones. UI + validation layers don't gate on impl
+/// status — picking one of them creates a working strategy row that
+/// just can't fire orders until the adapter is real.
+const ALGO_SUPPORTED_BROKERS: &[&str] = &[
+    "alpaca", "tradier", "ibkr", "td", "tastytrade",
+];
 
-/// (account_broker, broker_mode) combinations the engine can actually run.
-/// internal_sim is broker-agnostic; alpaca_paper / alpaca_live require an
-/// Alpaca account because that's the WS endpoint we connect to.
-fn broker_account_compatible(account_broker: &str, broker_mode: &str) -> bool {
+/// `internal_sim` is broker-agnostic; `paper` and `live` route via the
+/// broker named in `account.broker`. Each broker resolves its own
+/// paper-vs-live endpoint internally (e.g. paper-api.alpaca.markets vs
+/// api.alpaca.markets; sandbox.tradier.com vs api.tradier.com).
+fn broker_account_compatible(account_broker: &str, _broker_mode: &str) -> bool {
     let broker = account_broker.to_ascii_lowercase();
-    if !ALGO_SUPPORTED_BROKERS.contains(&broker.as_str()) {
-        return false;
-    }
-    match broker_mode {
-        "alpaca_paper" | "alpaca_live" => broker == "alpaca",
-        _ => true,
-    }
+    ALGO_SUPPORTED_BROKERS.contains(&broker.as_str())
 }
 
 /// Verify the account's broker is in the algo-supported set AND
@@ -108,8 +115,8 @@ async fn validate_account_for_algo(
     };
     if !broker_account_compatible(&broker, broker_mode) {
         return Err(ApiError::BadRequest(format!(
-            "account is on broker '{broker}', which does not support algo broker_mode '{broker_mode}'. \
-             Supported algo brokers: {}; alpaca_paper/alpaca_live require an Alpaca account.",
+            "account is on broker '{broker}', which is not in the algo-supported set. \
+             Supported brokers: {}.",
             ALGO_SUPPORTED_BROKERS.join(", "),
         )));
     }
@@ -145,32 +152,53 @@ async fn create_strategy(
     }
     validate_account_for_algo(&s.pool, account_id, &body.broker_mode).await?;
     // Engine code enforces paper_locked_until at submit-time, but the
-    // route also rejects naked alpaca_live at create-time so the UI
-    // doesn't show a misleading "saved" toast for a config the engine
-    // will refuse to run.
-    if body.broker_mode == "alpaca_live" {
+    // route also rejects naked broker_mode='live' at create-time so the
+    // UI doesn't show a misleading "saved" toast for a config the
+    // engine will refuse to run.
+    if body.broker_mode == "live" {
         return Err(ApiError::BadRequest(
-            "new strategies must start in internal_sim or alpaca_paper; switch to alpaca_live after the 30-day paper-lock expires".into(),
+            "new strategies must start in internal_sim or paper; switch to live after the 30-day paper-lock expires".into(),
         ));
     }
     let broker_mode = body.broker_mode.clone();
     let created = traderview_db::algo::create_strategy(&s.pool, u.id, body)
         .await
         .map_err(ApiError::Internal)?;
-    maybe_hot_spawn_pump(&s, u.id, &broker_mode).await;
+    maybe_hot_spawn_pump(&s, u.id, &broker_mode, account_id).await;
     Ok(Json(created))
 }
 
-/// If the strategy's broker_mode points at Alpaca, ensure a
-/// trade_updates pump exists for (user, paper-or-live). Idempotent —
-/// no-op if one is already running for that tuple. Errors don't fail
-/// the route; the pump just won't push WS events until restart.
-async fn maybe_hot_spawn_pump(state: &AppState, user_id: Uuid, broker_mode: &str) {
+/// If the strategy's broker_mode is paper/live AND its account is on
+/// Alpaca, ensure a trade_updates pump exists for (user, paper-or-live).
+/// Idempotent — no-op if one is already running. Errors don't fail the
+/// route; the pump just won't push WS events until restart. Per-broker
+/// pump spawn (Tradier / IBKR / etc.) lands as each adapter ships.
+async fn maybe_hot_spawn_pump(
+    state: &AppState,
+    user_id: Uuid,
+    broker_mode: &str,
+    account_id: Uuid,
+) {
     let paper = match broker_mode {
-        "alpaca_paper" => true,
-        "alpaca_live" => false,
+        "paper" => true,
+        "live" => false,
         _ => return,
     };
+    // Only Alpaca accounts get the Alpaca pump.
+    let broker: Option<(Option<String>,)> =
+        sqlx::query_as("SELECT broker FROM accounts WHERE id = $1")
+            .bind(account_id)
+            .fetch_optional(&state.pool)
+            .await
+            .ok()
+            .flatten();
+    let is_alpaca = matches!(
+        broker,
+        Some((Some(b),)) if b.eq_ignore_ascii_case("alpaca")
+    );
+    if !is_alpaca {
+        return;
+    }
     let sink = state.build_engine_event_sink();
     let spawned = traderview_db::alpaca_pump::ensure_pump_for(
         state.alpaca_pumps.clone(),
@@ -205,16 +233,16 @@ async fn update_strategy(
         return Err(ApiError::BadRequest("account_id does not belong to you".into()));
     }
     validate_account_for_algo(&s.pool, account_id, &body.broker_mode).await?;
-    // Allow alpaca_live on update only if existing paper_locked_until
+    // Allow broker_mode='live' on update only if existing paper_locked_until
     // has expired. Engine still re-checks at submit.
-    if body.broker_mode == "alpaca_live" {
+    if body.broker_mode == "live" {
         let existing = traderview_db::algo::get_strategy(&s.pool, u.id, id)
             .await
             .map_err(ApiError::Internal)?
             .ok_or(ApiError::NotFound)?;
         if chrono::Utc::now() <= existing.paper_locked_until {
             return Err(ApiError::BadRequest(format!(
-                "strategy is paper-locked until {}; cannot promote to alpaca_live yet",
+                "strategy is paper-locked until {}; cannot promote to live yet",
                 existing.paper_locked_until
             )));
         }
@@ -224,7 +252,7 @@ async fn update_strategy(
         .await
         .map_err(ApiError::Internal)?
         .ok_or(ApiError::NotFound)?;
-    maybe_hot_spawn_pump(&s, u.id, &broker_mode).await;
+    maybe_hot_spawn_pump(&s, u.id, &broker_mode, updated.account_id).await;
     Ok(Json(updated))
 }
 

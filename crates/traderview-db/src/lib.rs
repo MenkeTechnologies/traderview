@@ -9,6 +9,7 @@ pub mod algo_engine;
 pub mod algo_runner;
 pub mod alpaca_pump;
 pub mod alpaca_trading;
+pub mod broker_dispatcher;
 pub mod api_tokens;
 pub mod backtest_presets;
 pub mod breadth;

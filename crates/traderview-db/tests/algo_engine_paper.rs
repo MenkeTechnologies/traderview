@@ -326,9 +326,10 @@ fn engine_refuses_alpaca_live_inside_paper_lock_window() {
     run(async {
         let pool = pool();
         let user = fresh_user_in(&pool).await;
-        // Strategy is created with broker_mode=alpaca_live BUT paper_locked_until
+        // Strategy is created with broker_mode='live' (the broker-agnostic
+        // generalized value, post-migration 0058) BUT paper_locked_until
         // defaults to now() + 30 days at insert.
-        let mut s = make_strategy(&pool, user, "alpaca_live").await;
+        let mut s = make_strategy(&pool, user, "live").await;
         s.paper_locked_until = Utc::now() + ChronoDuration::days(30);
         let run = algo::start_run(&pool, s.id).await.expect("run");
         let bars = fresh_long_window("AAPL");

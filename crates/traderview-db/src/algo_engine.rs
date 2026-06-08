@@ -105,7 +105,7 @@ pub enum EngineError {
     KillSwitch { reason: Option<String> },
     #[error("max concurrent positions reached ({0})")]
     PositionCap(i64),
-    #[error("paper-locked until {0}; cannot send to alpaca_live")]
+    #[error("paper-locked until {0}; cannot promote broker_mode to live")]
     PaperLocked(chrono::DateTime<chrono::Utc>),
     #[error("sizing produced 0 shares")]
     ZeroQty,
@@ -207,7 +207,7 @@ pub async fn process_bar_window(
     if strategy.kill_switch {
         return Err(EngineError::KillSwitch { reason: strategy.kill_reason.clone() });
     }
-    if strategy.broker_mode == "alpaca_live"
+    if strategy.broker_mode == "live"
         && chrono::Utc::now() <= strategy.paper_locked_until
     {
         return Err(EngineError::PaperLocked(strategy.paper_locked_until));
