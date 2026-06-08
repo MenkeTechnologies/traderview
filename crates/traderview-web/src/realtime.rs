@@ -42,6 +42,33 @@ pub enum Event {
     },
     /// Heartbeat — server emits one every 30s so clients can detect deadness.
     Ping { ts: i64 },
+
+    /// Algo runner: strategy produced an entry signal on the latest bar.
+    AlgoSignalFired {
+        strategy_id: String,
+        run_id: String,
+        symbol: String,
+        side: &'static str,
+        entry_price: f64,
+        kind: &'static str,
+    },
+    /// Algo runner: order was accepted by the broker.
+    AlgoOrderSubmitted {
+        strategy_id: String,
+        order_id: String,
+        symbol: String,
+        side: String,
+        qty: f64,
+        broker_order_id: String,
+    },
+    /// Algo runner: fill landed in algo_fills + executions pipeline.
+    AlgoFillReceived {
+        strategy_id: String,
+        order_id: String,
+        symbol: String,
+        qty: f64,
+        price: f64,
+    },
 }
 
 #[derive(Clone)]

@@ -181,7 +181,7 @@ async fn drive_engine_until_signal(
 ) -> Option<usize> {
     for end in 30..=bars.len() {
         if let Ok(Some(_)) =
-            process_bar_window(pool, sink, strategy, run_id, &bars[..end], equity, 0).await
+            process_bar_window(pool, sink, strategy, run_id, &bars[..end], equity, 0, None).await
         {
             return Some(end);
         }
@@ -295,7 +295,7 @@ fn engine_refuses_when_kill_switch_engaged() {
 
         let bars = fresh_long_window("AAPL");
         let sink = InMemorySink::default();
-        let err = process_bar_window(&pool, &sink, &killed, run.id, &bars, 100_000.0, 0)
+        let err = process_bar_window(&pool, &sink, &killed, run.id, &bars, 100_000.0, 0, None)
             .await
             .expect_err("must refuse");
         assert!(matches!(err, EngineError::KillSwitch { .. }), "got {err:?}");
@@ -313,7 +313,7 @@ fn engine_refuses_when_position_cap_reached() {
         let bars = fresh_long_window("AAPL");
         let sink = InMemorySink::default();
         // strategy's max_concurrent_positions = 5; report 5 already open.
-        let err = process_bar_window(&pool, &sink, &strategy, run.id, &bars, 100_000.0, 5)
+        let err = process_bar_window(&pool, &sink, &strategy, run.id, &bars, 100_000.0, 5, None)
             .await
             .expect_err("must cap");
         assert!(matches!(err, EngineError::PositionCap(5)), "got {err:?}");
@@ -333,7 +333,7 @@ fn engine_refuses_alpaca_live_inside_paper_lock_window() {
         let run = algo::start_run(&pool, s.id).await.expect("run");
         let bars = fresh_long_window("AAPL");
         let sink = InMemorySink::default();
-        let err = process_bar_window(&pool, &sink, &s, run.id, &bars, 100_000.0, 0)
+        let err = process_bar_window(&pool, &sink, &s, run.id, &bars, 100_000.0, 0, None)
             .await
             .expect_err("must paper-lock");
         assert!(matches!(err, EngineError::PaperLocked(_)), "got {err:?}");
@@ -366,7 +366,7 @@ fn engine_records_rejection_when_sink_errors() {
         // Drive forward — eventually a signal fires.
         let mut hit_error = false;
         for end in 30..=bars.len() {
-            match process_bar_window(&pool, &broken, &strategy, run.id, &bars[..end], 100_000.0, 0)
+            match process_bar_window(&pool, &broken, &strategy, run.id, &bars[..end], 100_000.0, 0, None)
                 .await
             {
                 Err(EngineError::Broker(_)) => { hit_error = true; break; }

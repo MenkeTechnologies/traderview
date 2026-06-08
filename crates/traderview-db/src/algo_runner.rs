@@ -13,13 +13,12 @@
 //! Wired into `bin/server.rs::main` via a `tokio::spawn(algo_runner::run_loop(pool))`.
 
 use crate::algo::{self, AlgoStrategy};
-use crate::algo_engine::{self, BrokerSink, InMemorySink};
+use crate::algo_engine::{self, BrokerSink, EventSink, InMemorySink};
 use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use sqlx::PgPool;
 use std::time::Duration;
 use traderview_core::models::{BarInterval, PriceBar};
-use uuid::Uuid;
 
 /// How many bars to feed the strategy on each tick. Has to be ≥ each
 /// strategy's `min_bars()`; 250 covers every shipping strategy with
@@ -31,7 +30,11 @@ const BAR_WINDOW_SIZE: i64 = 300;
 /// processed (skipped due to insufficient bars or empty universe → don't
 /// count). Errors from individual strategies are logged + swallowed so
 /// one broken config doesn't take the whole loop down.
-pub async fn tick(pool: &PgPool, now: DateTime<Utc>) -> usize {
+pub async fn tick(
+    pool: &PgPool,
+    now: DateTime<Utc>,
+    event_sink: Option<&EventSink>,
+) -> usize {
     let strategies = match algo::list_active_strategies(pool).await {
         Ok(v) => v,
         Err(e) => {
@@ -51,12 +54,18 @@ pub async fn tick(pool: &PgPool, now: DateTime<Utc>) -> usize {
         if !is_boundary(now, interval) {
             continue;
         }
-        let symbols = symbol_universe(s);
+        let symbols = match symbol_universe(pool, s).await {
+            Ok(syms) => syms,
+            Err(e) => {
+                tracing::warn!(strategy = %s.id, error = %e, "symbol_universe failed");
+                continue;
+            }
+        };
         if symbols.is_empty() {
             tracing::debug!(strategy = %s.id, "no symbols in universe");
             continue;
         }
-        match drive_strategy(pool, &sink, s, interval, &symbols).await {
+        match drive_strategy(pool, &sink, s, interval, &symbols, event_sink).await {
             Ok(n) => processed += n,
             Err(e) => tracing::warn!(strategy = %s.id, error = %e, "drive_strategy failed"),
         }
@@ -69,13 +78,13 @@ pub async fn tick(pool: &PgPool, now: DateTime<Utc>) -> usize {
 /// (every tick) and min1 strategies (every 6th tick, on the 60s
 /// boundary). Caller is expected to `tokio::spawn` this and forget;
 /// no clean shutdown signal here yet.
-pub async fn run_loop(pool: PgPool) -> ! {
+pub async fn run_loop(pool: PgPool, event_sink: Option<EventSink>) -> ! {
     loop {
         let now = Utc::now();
         let next = next_boundary(now, BarInterval::S10);
         let wait = (next - now).num_milliseconds().max(0) as u64;
         tokio::time::sleep(Duration::from_millis(wait)).await;
-        let processed = tick(&pool, Utc::now()).await;
+        let processed = tick(&pool, Utc::now(), event_sink.as_ref()).await;
         if processed > 0 {
             tracing::debug!(processed, "algo_runner tick");
         }
@@ -107,14 +116,24 @@ fn next_boundary(now: DateTime<Utc>, interval: BarInterval) -> DateTime<Utc> {
     DateTime::<Utc>::from_timestamp(aligned, 0).unwrap_or(now)
 }
 
-/// For commit 18 the universe resolution is intentionally minimal:
-/// strategies with `universe_mode='autoscan'` get an empty list (the
-/// scanner integration lands in commit 19), and watchlist mode pulls
-/// nothing yet either — the runner skips strategies with empty universes.
-/// This keeps the loop alive without firing trades against the wrong
-/// symbols while the wiring matures.
-fn symbol_universe(_s: &AlgoStrategy) -> Vec<String> {
-    Vec::new()
+/// Watchlist universe lands; autoscan stays a stub returning empty (the
+/// RVOL scanner integration is heavier — needs price_bars aggregation
+/// across the full symbol-catalog — and slots into a later commit).
+async fn symbol_universe(
+    pool: &PgPool,
+    s: &AlgoStrategy,
+) -> Result<Vec<String>, anyhow::Error> {
+    match s.universe_mode.as_str() {
+        "watchlist" => {
+            let Some(watchlist_id) = s.watchlist_id else {
+                return Ok(Vec::new());
+            };
+            crate::watchlists::symbols(pool, watchlist_id).await
+        }
+        // Autoscan: empty until the RVOL ranker is wired. Strategies in
+        // this mode are inert (the runner skips them) but don't error.
+        _ => Ok(Vec::new()),
+    }
 }
 
 async fn drive_strategy(
@@ -123,6 +142,7 @@ async fn drive_strategy(
     strategy: &AlgoStrategy,
     interval: BarInterval,
     symbols: &[String],
+    event_sink: Option<&EventSink>,
 ) -> Result<usize, anyhow::Error> {
     let Some(run) = algo::get_open_run(pool, strategy.id).await? else {
         // No open run → strategy is enabled but not actively running.
@@ -139,7 +159,7 @@ async fn drive_strategy(
             continue;
         }
         match algo_engine::process_bar_window(
-            pool, sink, strategy, run.id, &bars, equity, open_positions,
+            pool, sink, strategy, run.id, &bars, equity, open_positions, event_sink,
         )
         .await
         {
@@ -223,11 +243,6 @@ fn parse_interval(s: &str) -> BarInterval {
     }
 }
 
-// Silence unused-import warning until commit 19 adds the symbol resolver
-// that constructs Uuid values from watchlist_id.
-const _: fn() = || {
-    let _ = std::mem::size_of::<Uuid>();
-};
 
 #[cfg(test)]
 mod tests {

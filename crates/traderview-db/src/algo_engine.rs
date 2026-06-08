@@ -54,6 +54,42 @@ pub struct SubmittedOrder {
     pub immediate_fill: Option<ImmediateFill>,
 }
 
+/// Lightweight event emitted by the engine on every state change so the
+/// web layer's realtime hub can push it to subscribed clients. Defined
+/// here (no web dependency) so traderview-db can publish without
+/// pulling in axum / hub plumbing.
+#[derive(Debug, Clone)]
+pub enum EngineEvent {
+    /// Strategy produced an entry signal.
+    SignalFired {
+        strategy_id: Uuid,
+        run_id: Uuid,
+        symbol: String,
+        side: Side,
+        entry_price: Decimal,
+        kind: &'static str,
+    },
+    /// Broker accepted the order.
+    OrderSubmitted {
+        strategy_id: Uuid,
+        order_id: Uuid,
+        symbol: String,
+        side: Side,
+        qty: Decimal,
+        broker_order_id: String,
+    },
+    /// Fill landed in algo_fills + executions.
+    FillReceived {
+        strategy_id: Uuid,
+        order_id: Uuid,
+        symbol: String,
+        qty: Decimal,
+        price: Decimal,
+    },
+}
+
+pub type EventSink = std::sync::Arc<dyn Fn(EngineEvent) + Send + Sync>;
+
 #[derive(Debug, Clone)]
 pub struct ImmediateFill {
     pub price: Decimal,
@@ -166,6 +202,7 @@ pub async fn process_bar_window(
     bars: &[PriceBar],
     equity: f64,
     open_positions: i64,
+    event_sink: Option<&EventSink>,
 ) -> Result<Option<Uuid>, EngineError> {
     if strategy.kill_switch {
         return Err(EngineError::KillSwitch { reason: strategy.kill_reason.clone() });
@@ -204,6 +241,16 @@ pub async fn process_bar_window(
         .map(|b| b.symbol.clone())
         .unwrap_or_default();
     let intent = build_intent(strategy, run_id, &symbol, &sig, qty);
+    if let Some(emit) = event_sink {
+        emit(EngineEvent::SignalFired {
+            strategy_id: strategy.id,
+            run_id,
+            symbol: symbol.clone(),
+            side: intent.side,
+            entry_price: intent.entry_price,
+            kind: sig.kind,
+        });
+    }
 
     let inserted = algo::insert_order(
         pool,
@@ -239,6 +286,16 @@ pub async fn process_bar_window(
             algo::increment_run_counter(pool, run_id, algo::RunCounter::OrdersSubmitted, 1)
                 .await
                 .ok();
+            if let Some(emit) = event_sink {
+                emit(EngineEvent::OrderSubmitted {
+                    strategy_id: strategy.id,
+                    order_id: inserted.id,
+                    symbol: symbol.clone(),
+                    side: intent.side,
+                    qty: intent.qty,
+                    broker_order_id: resp.broker_order_id.clone(),
+                });
+            }
 
             // Pipeline integration: any immediate fill becomes an
             // executions row tagged with the strategy's broker account,
@@ -246,7 +303,7 @@ pub async fn process_bar_window(
             // every dashboard / R-dist / equity curve in the app sees
             // it without needing an algo-specific code path.
             if let Some(fill) = resp.immediate_fill {
-                record_fill(pool, strategy, &intent, inserted.id, &fill).await?;
+                record_fill(pool, strategy, &intent, inserted.id, &fill, event_sink).await?;
             }
             Ok(Some(inserted.id))
         }
@@ -277,6 +334,7 @@ pub async fn record_fill(
     intent: &OrderIntent,
     algo_order_id: Uuid,
     fill: &ImmediateFill,
+    event_sink: Option<&EventSink>,
 ) -> Result<(), EngineError> {
     algo::insert_fill(
         pool,
@@ -335,6 +393,15 @@ pub async fn record_fill(
     crate::trades::rollup_account(pool, account_id)
         .await
         .map_err(|e| EngineError::Broker(format!("trades::rollup_account: {e}")))?;
+    if let Some(emit) = event_sink {
+        emit(EngineEvent::FillReceived {
+            strategy_id: strategy.id,
+            order_id: algo_order_id,
+            symbol: intent.symbol.clone(),
+            qty: fill.qty,
+            price: fill.price,
+        });
+    }
     Ok(())
 }
 

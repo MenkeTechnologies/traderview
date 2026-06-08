@@ -284,10 +284,55 @@ async fn main() -> anyhow::Result<()> {
     // Algo runner — drives every enabled, kill-switch-off strategy on
     // each bar boundary. Reads from price_bars (already populated by the
     // live_ticks worker) so no extra market-data infra is needed here.
-    // Commit 19 adds the WS event emitter + symbol-universe resolver.
+    // The event sink wraps Hub::publish, mapping the engine's
+    // domain-specific EngineEvent → realtime::Event so algo signals /
+    // orders / fills surface on the same /api/ws stream the rest of
+    // the app uses.
     {
         let pool = state.pool.clone();
-        tokio::spawn(traderview_db::algo_runner::run_loop(pool));
+        let hub = state.hub.clone();
+        let sink: traderview_db::algo_engine::EventSink =
+            std::sync::Arc::new(move |ev: traderview_db::algo_engine::EngineEvent| {
+                use traderview_db::algo_engine::EngineEvent as E;
+                let side_str = |s: traderview_core::algo_strategies::Side| match s {
+                    traderview_core::algo_strategies::Side::Buy => "buy",
+                    traderview_core::algo_strategies::Side::Sell => "sell",
+                };
+                use rust_decimal::prelude::ToPrimitive;
+                let evt = match ev {
+                    E::SignalFired {
+                        strategy_id, run_id, symbol, side, entry_price, kind,
+                    } => traderview_web::realtime::Event::AlgoSignalFired {
+                        strategy_id: strategy_id.to_string(),
+                        run_id: run_id.to_string(),
+                        symbol,
+                        side: side_str(side),
+                        entry_price: entry_price.to_f64().unwrap_or(0.0),
+                        kind,
+                    },
+                    E::OrderSubmitted {
+                        strategy_id, order_id, symbol, side, qty, broker_order_id,
+                    } => traderview_web::realtime::Event::AlgoOrderSubmitted {
+                        strategy_id: strategy_id.to_string(),
+                        order_id: order_id.to_string(),
+                        symbol,
+                        side: side_str(side).into(),
+                        qty: qty.to_f64().unwrap_or(0.0),
+                        broker_order_id,
+                    },
+                    E::FillReceived {
+                        strategy_id, order_id, symbol, qty, price,
+                    } => traderview_web::realtime::Event::AlgoFillReceived {
+                        strategy_id: strategy_id.to_string(),
+                        order_id: order_id.to_string(),
+                        symbol,
+                        qty: qty.to_f64().unwrap_or(0.0),
+                        price: price.to_f64().unwrap_or(0.0),
+                    },
+                };
+                hub.publish(evt);
+            });
+        tokio::spawn(traderview_db::algo_runner::run_loop(pool, Some(sink)));
     }
 
     let api = router(state);
