@@ -15,6 +15,7 @@ use serde::{Deserialize, Serialize};
 
 pub mod bb_squeeze;
 pub mod donchian_trend;
+pub mod heikin_ashi_trend;
 pub mod mean_reversion;
 pub mod momentum;
 pub mod orb;
@@ -109,9 +110,7 @@ pub fn from_kind(
         "ttm_squeeze" => Ok(Box::new(ttm_squeeze::TtmSqueeze::from_json(entry_rules))),
         "vwap_scalp" => Ok(Box::new(vwap_scalp::VwapScalp::from_json(entry_rules))),
         "supertrend" => Ok(Box::new(supertrend::Supertrend::from_json(entry_rules))),
-        "heikin_ashi_trend" => {
-            Err(FactoryError::NotImplemented(kind.to_string()))
-        }
+        "heikin_ashi_trend" => Ok(Box::new(heikin_ashi_trend::HeikinAshiTrend::from_json(entry_rules))),
         other => Err(FactoryError::Unknown(other.to_string())),
     }
 }
