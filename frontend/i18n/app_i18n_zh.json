@@ -39378,5 +39378,15 @@
   "view.algo.opt.strat_connors_rsi2": "Connors RSI - 2 + 200 SMA (普通经典)",
   "view.algo.opt.strat_order_block_sweep": "区块+流动性扫描(SMC)",
   "view.algo.opt.strat_pead": "PEAD(学习后漂移)",
-  "view.algo.opt.strat_pairs": "平价交易( spread Z- score)"
+  "view.algo.opt.strat_pairs": "平价交易( spread Z- score)",
+  "view.algo.h2.docs": "战略参考",
+  "view.algo.hint.docs": "所有13项战略的完整规则",
+  "view.algo.doc.entry": "条目规则",
+  "view.algo.doc.exit": "退出规则",
+  "view.algo.doc.params": "参数",
+  "view.algo.doc.scope_note": "说明:",
+  "view.algo.doc.when_to_use": "何时使用 :",
+  "view.algo.hint.stdout_multi": "每个战略一个面板+一个全球火花。 每个窗格都有自己的200线缓冲器.",
+  "view.algo.hint.no_algo_accounts": "没有他人支持的经纪人的账户 。 今天得到支持:阿尔帕卡. 转到设置 – 账户并添加一个 Alpaca 账户, 或者选择使用内部  sim 的策略 .",
+  "view.algo.hint.execution_safety": "两种纸币模式都是零风险: in-app sim以最后已知的价格填充;Alpaca沙盒是他们的官方纸币环境. 现场交易使用真钱,需要完成30天的纸锁."
 }

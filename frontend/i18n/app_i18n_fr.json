@@ -39401,5 +39401,15 @@
   "view.algo.opt.strat_connors_rsi2": "Connors RSI-2 + 200 SMA (classique moyen)",
   "view.algo.opt.strat_order_block_sweep": "Bloc de commande + Balayage de liquidité (SMC)",
   "view.algo.opt.strat_pead": "PEAD (dérive après les gains)",
-  "view.algo.opt.strat_pairs": "Trading de paires (spread z-score)"
+  "view.algo.opt.strat_pairs": "Trading de paires (spread z-score)",
+  "view.algo.h2.docs": "Référence stratégique",
+  "view.algo.hint.docs": "— règles complètes pour les 13 stratégies",
+  "view.algo.doc.entry": "Règles d'entrée",
+  "view.algo.doc.exit": "Règles de sortie",
+  "view.algo.doc.params": "Paramètres",
+  "view.algo.doc.scope_note": "Remarque:",
+  "view.algo.doc.when_to_use": "Quand utiliser:",
+  "view.algo.hint.stdout_multi": "Une vitre par stratégie + un feu d'artifice global. Chaque panneau conserve son propre tampon de 200 lignes.",
+  "view.algo.hint.no_algo_accounts": "Pas de comptes sur les courtiers soutenus par l'algo. Soutenu aujourd'hui : Alpaca. Allez dans Paramètres → Comptes et ajoutez un compte Alpaca, ou choisissez une stratégie qui utilise internal sim.",
+  "view.algo.hint.execution_safety": "Les deux modes de papier sont à risque zéro: in-app smills au dernier prix connu; Alpaca sandbox est leur environnement officiel de papier. Les métiers en direct utilisent de l'argent réel et nécessitent un papier-bloc de 30 jours."
 }

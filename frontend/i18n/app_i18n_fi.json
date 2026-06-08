@@ -39403,5 +39403,15 @@
   "view.algo.opt.strat_connors_rsi2": "Connors RSI-2 + 200 SMA (keskiarvo-rev klassikko)",
   "view.algo.opt.strat_order_block_sweep": "Tilauslohko + Likviditeettikorjaus (SMC)",
   "view.algo.opt.strat_pead": "PEAD",
-  "view.algo.opt.strat_pairs": "Parit Trading (hajautettu z-score)"
+  "view.algo.opt.strat_pairs": "Parit Trading (hajautettu z-score)",
+  "view.algo.h2.docs": "Strategian viite",
+  "view.algo.hint.docs": "kaikkien 13 strategian täydelliset säännöt",
+  "view.algo.doc.entry": "Maahantuloa koskevat säännöt",
+  "view.algo.doc.exit": "Poistumissäännöt",
+  "view.algo.doc.params": "Parametrit",
+  "view.algo.doc.scope_note": "Huom:",
+  "view.algo.doc.when_to_use": "Milloin valmistetta käytetään:",
+  "view.algo.hint.stdout_multi": "Yksi paneeli strategiaa kohti + globaali paloletku. Kullakin ruudulla on oma 200-riviinen puskuri.",
+  "view.algo.hint.no_algo_accounts": "Ei tilejä algo-tukimeklareille. Tuettu tänään: Alpaca. Siirry Asetukset → Tilit ja lisää Alpaca-tili tai valitse strategia, joka käyttää sisäistä sim.",
+  "view.algo.hint.execution_safety": "Molemmat paperitilat ovat nollariski: in-app sim täyttää viimein tunnettuun hintaan; Alpaca hiekkalaatikko on virallinen paperiympäristö. Live kaupat käyttävät oikeaa rahaa ja vaativat valmiiksi 30 päivän paperilukko."
 }

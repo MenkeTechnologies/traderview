@@ -39411,5 +39411,15 @@
   "view.algo.opt.strat_connors_rsi2": "Connors RSI -2 + 200 SMA (mean- rev classic)",
   "view.algo.opt.strat_order_block_sweep": "Bestil Block + Liquidity Sweep (SMC)",
   "view.algo.opt.strat_pead": "PEAD (efter indtjening drift)",
-  "view.algo.opt.strat_pairs": "Pars Trading (spread z- score)"
+  "view.algo.opt.strat_pairs": "Pars Trading (spread z- score)",
+  "view.algo.h2.docs": "Strategireference",
+  "view.algo.hint.docs": "- fulde regler for alle 13 strategier",
+  "view.algo.doc.entry": "Indgangsregler",
+  "view.algo.doc.exit": "Regler for udførsel",
+  "view.algo.doc.params": "Parametre",
+  "view.algo.doc.scope_note": "Bemærk:",
+  "view.algo.doc.when_to_use": "Hvornår skal du bruge:",
+  "view.algo.hint.stdout_multi": "En rude pr. strategi + en global brandslange. Hver rude har sin egen 200-line buffer.",
+  "view.algo.hint.no_algo_accounts": "Ingen konti på algostøttede mæglere. Støttet i dag: Alpaca. Gå til Indstillinger → Konti og tilføje en Alpaca-konto, eller vælg en strategi, der bruger intern _ sim.",
+  "view.algo.hint.execution_safety": "Begge papirmodes er zero-risiko: in-app sim fylder til sidst kendt pris; Alpaca sandkasse er deres officielle papir miljø. Levende handler bruger rigtige penge og kræver afsluttet 30-dages papirlås."
 }

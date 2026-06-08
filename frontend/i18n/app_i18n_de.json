@@ -39409,5 +39409,15 @@
   "view.algo.opt.strat_connors_rsi2": "Connors RSI-2 + 200 SMA (mean-rev classic)",
   "view.algo.opt.strat_order_block_sweep": "Orderblock + Liquidity Sweep (SMC)",
   "view.algo.opt.strat_pead": "PEAD (post-earnings-drift)",
-  "view.algo.opt.strat_pairs": "Pairs Trading (spread z-score)"
+  "view.algo.opt.strat_pairs": "Pairs Trading (spread z-score)",
+  "view.algo.h2.docs": "Strategiereferenz",
+  "view.algo.hint.docs": "vollständige regeln für alle 13 strategien",
+  "view.algo.doc.entry": "Einreiseregeln",
+  "view.algo.doc.exit": "Ausstiegsregeln",
+  "view.algo.doc.params": "Parameter",
+  "view.algo.doc.scope_note": "Anmerkung:",
+  "view.algo.doc.when_to_use": "Wann zu verwenden:",
+  "view.algo.hint.stdout_multi": "Ein Bereich pro Strategie + ein globaler Firehose. Jede Scheibe behält ihren eigenen 200-Zeilen-Puffer.",
+  "view.algo.hint.no_algo_accounts": "Keine Konten auf algo-unterstützten Brokern. Unterstützt heute: Alpaka. Gehen Sie zu Einstellungen → Konten und fügen Sie ein Alpaka-Konto hinzu, oder wählen Sie eine Strategie, die internal sim verwendet.",
+  "view.algo.hint.execution_safety": "Beide Papiermodi sind Null-Risiko: In-App-Sim füllt zum letzten bekannten Preis; Alpaka Sandbox ist ihre offizielle Papierumgebung. Live-Trades verwenden echtes Geld und erfordern eine 30-tägige Papiersperre."
 }

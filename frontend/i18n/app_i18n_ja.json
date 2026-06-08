@@ -39403,5 +39403,15 @@
   "view.algo.opt.strat_connors_rsi2": "Connors RSI-2 + 200 SMA (mean-rev クラシック)",
   "view.algo.opt.strat_order_block_sweep": "オーダーブロック + 流動性掃引(SMC)",
   "view.algo.opt.strat_pead": "PEAD (ポストアーニングドリフト)",
-  "view.algo.opt.strat_pairs": "ペア取引(スプレッドzスコア)"
+  "view.algo.opt.strat_pairs": "ペア取引(スプレッドzスコア)",
+  "view.algo.h2.docs": "戦略参照",
+  "view.algo.hint.docs": "— 全13の戦略の全ルール",
+  "view.algo.doc.entry": "エントリールール",
+  "view.algo.doc.exit": "出口ルール",
+  "view.algo.doc.params": "パラメーター",
+  "view.algo.doc.scope_note": "注意:",
+  "view.algo.doc.when_to_use": "使用する場合:",
+  "view.algo.hint.stdout_multi": "戦略ごとの1つのペイン+全体的な消火。 各ペインは独自の200ラインバッファを保持します.",
+  "view.algo.hint.no_algo_accounts": "アルゴサポートブローカーのアカウントはありません。 対応日: Alpaca [設定] → [アカウント] に移動し、Alpaca アカウントを追加したり、内部 sim を使用する戦略を選択します.",
+  "view.algo.hint.execution_safety": "紙モードはゼロリスクです。アプリ内シムは、既定の価格で満たします。 Alpaca sandboxは、公式の紙環境です。 ライブ取引は実際のお金を使用しており、30日間の紙ロックが必要です."
 }

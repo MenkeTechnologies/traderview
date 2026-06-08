@@ -39410,5 +39410,15 @@
   "view.algo.opt.strat_connors_rsi2": "Connors RSI-2 + 200 SMA (mean-rev klassiker)",
   "view.algo.opt.strat_order_block_sweep": "Beställ Block + Liquidity Sweep (SMC)",
   "view.algo.opt.strat_pead": "PEAD (post-earnings drift)",
-  "view.algo.opt.strat_pairs": "Pairs Trading (spread z-score)"
+  "view.algo.opt.strat_pairs": "Pairs Trading (spread z-score)",
+  "view.algo.h2.docs": "Strategi referens",
+  "view.algo.hint.docs": "fullständiga regler för alla 13 strategier",
+  "view.algo.doc.entry": "Inträdesregler",
+  "view.algo.doc.exit": "Exitregler",
+  "view.algo.doc.params": "Parametrar",
+  "view.algo.doc.scope_note": "Notera:",
+  "view.algo.doc.when_to_use": "När du ska använda:",
+  "view.algo.hint.stdout_multi": "En ruta per strategi + en global brandhos. Varje ruta håller sin egen 200-line buffert.",
+  "view.algo.hint.no_algo_accounts": "Inga konton på algo-stödda mäklare. Stöd idag: Alpaca. Gå till Inställningar → Konton och lägg till ett Alpaca-konto eller välj en strategi som använder interna sim.",
+  "view.algo.hint.execution_safety": "Båda papperslägena är nollrisk: in-app sim fyller till sist kända pris; Alpaca sandbox är deras officiella pappersmiljö. Levande affärer använder riktiga pengar och kräver slutförd 30-dagars papperslås."
 }

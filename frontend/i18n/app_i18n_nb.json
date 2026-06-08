@@ -39412,5 +39412,15 @@
   "view.algo.opt.strat_connors_rsi2": "Connors RSI-2 + 200 SMA (snittlig-rev-klassiker)",
   "view.algo.opt.strat_order_block_sweep": "Bestill blokk + flytende sweep (SMC)",
   "view.algo.opt.strat_pead": "PEAD",
-  "view.algo.opt.strat_pairs": "Parhandel (spread z-score)"
+  "view.algo.opt.strat_pairs": "Parhandel (spread z-score)",
+  "view.algo.h2.docs": "Strategireferanse",
+  "view.algo.hint.docs": "— fulle regler for alle 13 strategier",
+  "view.algo.doc.entry": "Inngangsregler",
+  "view.algo.doc.exit": "Utløpsregler",
+  "view.algo.doc.params": "Parametre",
+  "view.algo.doc.scope_note": "Merk:",
+  "view.algo.doc.when_to_use": "Når du skal bruke:",
+  "view.algo.hint.stdout_multi": "En rute per strategi + en global brannhose. Hver rute holder sin egen 200-linje buffer.",
+  "view.algo.hint.no_algo_accounts": "Ingen kontoer på algo-støttede meglere. Støttet i dag: Alpaca. Gå til Innstillinger → Kontoer og legg til en Alpaca-konto, eller velg en strategi som bruker intern sim.",
+  "view.algo.hint.execution_safety": "Begge papirmodusene er null-risiko: i app sim fyller til sist kjent pris; Alpaca sandkasse er deres offisielle papirmiljø. Live trades bruker ekte penger og krever fullført 30-dagers papirlås."
 }

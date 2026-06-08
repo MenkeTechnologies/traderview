@@ -39368,5 +39368,16 @@
   "view.algo.opt.strat_connors_rsi2": "Connors RSI-2 + 200 SMA (clasic medie-rev)",
   "view.algo.opt.strat_order_block_sweep": "Bloc de ordine + lichidity Sweep (SMC)",
   "view.algo.opt.strat_pead": "PEAD",
-  "view.algo.opt.strat_pairs": "Perechi Trading (împrăștiat z-score)"
+  "view.algo.opt.strat_pairs": "Perechi Trading (împrăștiat z-score)",
+  "view.algo.h2.docs": "Referință strategie",
+  "view.algo.hint.docs": "— full rules for all 13 strategies",
+  "view.algo.doc.entry": "Norme de intrare",
+  "view.algo.doc.exit": "Regulile de ieșire",
+  "view.algo.doc.params": "Parametrii",
+  "view.algo.doc.scope_note": "Notã:",
+  "view.algo.doc.when_to_use": "Când să utilizaţi:",
+  "view.algo.hint.stdout_multi": "Un geam pe strategie + un firehose global. Fiecare geam îşi păstrează tamponul de 200 de linii.",
+  "view.algo.hint.no_algo_accounts": "Nu există conturi pe brokeri algo-suportate. Susţinut astăzi: Alpaca. Du-te la Setări → Conturi și adaugă un cont Alpaca, sau alege o strategie care utilizează intern sim.",
+  "view.algo.opt.broker_live": "LIVE ",
+  "view.algo.hint.execution_safety": "Ambele moduri de hârtie sunt zero-risc: în-app sim umple la ultimul preț cunoscut; Alpaca sandbox este mediul lor oficial de hârtie. Schimburile live folosesc bani reali şi necesită 30 de zile de închidere."
 }

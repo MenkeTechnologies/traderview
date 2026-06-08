@@ -39408,5 +39408,15 @@
   "view.algo.opt.strat_connors_rsi2": "Connors RSI -2 + 200 SMA (mean -rev classic)",
   "view.algo.opt.strat_order_block_sweep": "Pesan Block + Liquidity Sweep (SMC)",
   "view.algo.opt.strat_pead": "PEAD (post- laba drift)",
-  "view.algo.opt.strat_pairs": "Pairs Trading (spread z-score)"
+  "view.algo.opt.strat_pairs": "Pairs Trading (spread z-score)",
+  "view.algo.h2.docs": "Referensi strategi",
+  "view.algo.hint.docs": "- aturan penuh untuk semua 13 strategi",
+  "view.algo.doc.entry": "Aturan masukan",
+  "view.algo.doc.exit": "Aturan keluar",
+  "view.algo.doc.params": "Parameter",
+  "view.algo.doc.scope_note": "Catatan:",
+  "view.algo.doc.when_to_use": "Kapan akan digunakan:",
+  "view.algo.hint.stdout_multi": "Satu panel per strategi + sebuah firehose global. Setiap panel menyimpan buffer 200 baris sendiri.",
+  "view.algo.hint.no_algo_accounts": "Tak ada akun pada broker yang didukung algo-. Didukung hari ini, Alpaca. Pergi ke Pengaturan Akuntansi dan tambahkan akun Alpaca, atau pilih strategi yang menggunakan internal _ sim.",
+  "view.algo.hint.execution_safety": "Kedua mode kertas adalah zero- risiko: in- app sim mengisi pada harga terakhir yang diketahui; Alpaca sandbox adalah lingkungan kertas resmi mereka. Perdagangan langsung menggunakan uang riil dan membutuhkan selesai kertas 30 hari - kunci."
 }

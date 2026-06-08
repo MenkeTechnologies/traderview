@@ -39407,5 +39407,15 @@
   "view.algo.opt.strat_connors_rsi2": "Connors RSI-2 + 200 SMA (mean-rev classic)",
   "view.algo.opt.strat_order_block_sweep": "Orderblok + Liquidity Sweep (SMC)",
   "view.algo.opt.strat_pead": "PEAD",
-  "view.algo.opt.strat_pairs": "Pairs Trading (spread z-score)"
+  "view.algo.opt.strat_pairs": "Pairs Trading (spread z-score)",
+  "view.algo.h2.docs": "Referentie strategie",
+  "view.algo.hint.docs": "volledige regels voor alle 13 strategieën",
+  "view.algo.doc.entry": "Toegangsregels",
+  "view.algo.doc.exit": "Afsluitregels",
+  "view.algo.doc.params": "Parameters",
+  "view.algo.doc.scope_note": "Opmerking:",
+  "view.algo.doc.when_to_use": "Wanneer te gebruiken:",
+  "view.algo.hint.stdout_multi": "Eén ruit per strategie + een wereldwijde brandslang. Elk paneel heeft zijn eigen 200-lijn buffer.",
+  "view.algo.hint.no_algo_accounts": "Geen rekeningen over algo-ondersteunde makelaars. Vandaag ondersteund: Alpaca. Ga naar Instellingen → Accounts en voeg een Alpaca-account toe, of kies een strategie die intern sim gebruikt.",
+  "view.algo.hint.execution_safety": "Beide papieren modi zijn nulrisico: in-app sim vult op laatste bekende prijs; Alpaca sandbox is hun officiële papieren omgeving. Live trades gebruiken echt geld en vereisen voltooid 30 dagen papier-lock."
 }

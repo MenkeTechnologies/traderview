@@ -39402,5 +39402,15 @@
   "view.algo.opt.strat_connors_rsi2": "Connors RSI -2 + 200 SMA (mean- rev classic)",
   "view.algo.opt.strat_order_block_sweep": "Rend Block + Likviditás Seep (SMC)",
   "view.algo.opt.strat_pead": "PEAD",
-  "view.algo.opt.strat_pairs": "Pairs Trading (spread z- score)"
+  "view.algo.opt.strat_pairs": "Pairs Trading (spread z- score)",
+  "view.algo.h2.docs": "Stratégiai hivatkozás",
+  "view.algo.hint.docs": "- a 13 stratégia teljes körű szabályai",
+  "view.algo.doc.entry": "Belépési szabályok",
+  "view.algo.doc.exit": "Kilépési szabályok",
+  "view.algo.doc.params": "Paraméterek",
+  "view.algo.doc.scope_note": "Megjegyzés:",
+  "view.algo.doc.when_to_use": "Mikor kell használni:",
+  "view.algo.hint.stdout_multi": "Stratégiánként egy tábla + egy globális tűzoltó tömlő. Minden pane megtartja a saját 200 soros pufferét.",
+  "view.algo.hint.no_algo_accounts": "Nincs könyvelés az algo- támogatott brókerekről. Támogatott ma, Alpaca. Ugrás a Beállítások → Fiók és adjunk hozzá egy Alpaca fiók, vagy válasszon egy stratégiát, amely a belső _ sim.",
+  "view.algo.hint.execution_safety": "Mindkét papír mód nulla-kockázat: in-app szimm kitöltések utolsó ismert áron; Alpaca sandbox a hivatalos papír környezet. Az élő kereskedelem valódi pénzt használ, és 30 napos papírzárolást igényel."
 }

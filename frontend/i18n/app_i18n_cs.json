@@ -39408,5 +39408,15 @@
   "view.algo.opt.strat_connors_rsi2": "Connors RSI -2 + 200 SMA (mean- rev classic)",
   "view.algo.opt.strat_order_block_sweep": "Blok objednávky + zametání likvidity (SMC)",
   "view.algo.opt.strat_pead": "PEAD",
-  "view.algo.opt.strat_pairs": "Pairs Trading (spread z- score)"
+  "view.algo.opt.strat_pairs": "Pairs Trading (spread z- score)",
+  "view.algo.h2.docs": "Odkaz na strategii",
+  "view.algo.hint.docs": "- plná pravidla pro všech 13 strategií",
+  "view.algo.doc.entry": "Pravidla vstupu",
+  "view.algo.doc.exit": "Pravidla výstupu",
+  "view.algo.doc.params": "Parametry",
+  "view.algo.doc.scope_note": "Poznámka:",
+  "view.algo.doc.when_to_use": "Kdy k použití:",
+  "view.algo.hint.stdout_multi": "Jedna tabule na strategii + globální požární hadice. Každá tabule má svůj vlastní 200- line buffer.",
+  "view.algo.hint.no_algo_accounts": "Žádné účty na algopodporovaných makléřů. Podporováno dnes: Alpaca. Přejděte na Nastavení → Účty a přidejte účet Alpaca, nebo vyberte strategii, která používá interní _ sim.",
+  "view.algo.hint.execution_safety": "Oba druhy papíru jsou nula-riziko: in- app sim vyplní za poslední známou cenu; Alpaca pískoviště je jejich oficiální papírové prostředí. Živé obchody využívají skutečné peníze a vyžadují vyplněný 30denní papírový zámek."
 }

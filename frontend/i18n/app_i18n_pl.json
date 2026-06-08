@@ -39405,5 +39405,15 @@
   "view.algo.opt.strat_connors_rsi2": "Connors RSI -2 + 200 SMA (mean-rev classic)",
   "view.algo.opt.strat_order_block_sweep": "Blok zamówień + zamiatanie płynności (SMC)",
   "view.algo.opt.strat_pead": "PEAD",
-  "view.algo.opt.strat_pairs": "Pairs Trading (spread z- score)"
+  "view.algo.opt.strat_pairs": "Pairs Trading (spread z- score)",
+  "view.algo.h2.docs": "Oznaczenie strategiczne",
+  "view.algo.hint.docs": "- pełne zasady dla wszystkich 13 strategii",
+  "view.algo.doc.entry": "Zasady wjazdu",
+  "view.algo.doc.exit": "Zasady wyjścia",
+  "view.algo.doc.params": "Parametry",
+  "view.algo.doc.scope_note": "Notatka:",
+  "view.algo.doc.when_to_use": "Kiedy stosować:",
+  "view.algo.hint.stdout_multi": "Jedna szyba na strategię + globalny wąż strażacki. Każda tafla utrzymuje swój własny bufor 200 linii.",
+  "view.algo.hint.no_algo_accounts": "Brak kont brokerów wspomaganych algo. Obsługiwane dzisiaj: Alpaca. Przejdź do Ustawienia → Konta i dodaj konto Alpaca, lub wybierz strategię, która wykorzystuje wewnętrzny _ sim.",
+  "view.algo.hint.execution_safety": "Oba tryby papieru są zerowe ryzyko: w -app sim wypełnia w ostatniej znanej cenie; Alpaca piaskownica jest ich oficjalne środowisko papieru. Żywe transakcje wykorzystują prawdziwe pieniądze i wymagają ukończone 30- dniowy papierowy zamek."
 }

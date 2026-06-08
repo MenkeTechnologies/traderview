@@ -39296,5 +39296,15 @@
   "component.chart.menu.filter_placeholder": "filtro..",
   "component.chart.menu.no_matches": "sem fósforos",
   "view.algo.opt.strat_order_block_sweep": "Bloco de Ordem + Varredura de Liquididade (SMC)",
-  "view.algo.opt.strat_pairs": "Pars Trading (Spread Z-Score)"
+  "view.algo.opt.strat_pairs": "Pars Trading (Spread Z-Score)",
+  "view.algo.h2.docs": "Referência estratégica",
+  "view.algo.hint.docs": "- regras completas para todas as 13 estratégias",
+  "view.algo.doc.entry": "Regras de entrada",
+  "view.algo.doc.exit": "Regras de saída",
+  "view.algo.doc.params": "Parâmetros",
+  "view.algo.doc.scope_note": "Nota:",
+  "view.algo.doc.when_to_use": "Quando usar:",
+  "view.algo.hint.stdout_multi": "Um painel por estratégia + um local de fogo global. Cada painel mantém seu próprio buffer de 200 linhas.",
+  "view.algo.hint.no_algo_accounts": "Nenhuma conta em corretores com algo. Apoiado hoje, Alpaca. Vá para Configurações → Contas e adicione uma conta Alpaca, ou escolha uma estratégia que use interna sim.",
+  "view.algo.hint.execution_safety": "Ambos os modos de papel são zero-risco: sim in-app preenche ao preço finalmente conhecido; sandbox Alpaca é seu ambiente oficial de papel. Trocas ao vivo usam dinheiro de verdade e requerem 30 dias de fechamento de papel."
 }

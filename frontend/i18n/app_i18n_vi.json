@@ -39370,5 +39370,15 @@
   "view.algo.opt.strat_connors_rsi2": "ConnorsRSI-2 + 200SMA (mian-rev cổ điển)",
   "view.algo.opt.strat_order_block_sweep": "Name",
   "view.algo.opt.strat_pead": "PEAD (tiếng tai cột)",
-  "view.algo.opt.strat_pairs": "Trao đổi đôi ( phổ biến z-score)"
+  "view.algo.opt.strat_pairs": "Trao đổi đôi ( phổ biến z-score)",
+  "view.algo.h2.docs": "Tham khảo chiến thuật",
+  "view.algo.hint.docs": "- luật lệ đầy đủ cho tất cả 13 chiến lược",
+  "view.algo.doc.entry": "Quy tắc của mục",
+  "view.algo.doc.exit": "Thoát khỏi quy tắc",
+  "view.algo.doc.params": "Tham số",
+  "view.algo.doc.scope_note": "Ghi chú:",
+  "view.algo.doc.when_to_use": "Khi nào cần dùng:",
+  "view.algo.hint.stdout_multi": "Một ô mỗi chiến lược + một hỏa hoạn toàn cầu. Mỗi ô có một bộ đệm 200 đường.",
+  "view.algo.hint.no_algo_accounts": "Không có tài khoản về nhà môi giới hỗ trợ Algo. Được ủng hộ hôm nay: Alpaca. Tới thiết lập tài khoản  vội và thêm một tài khoản Alpaca, hoặc chọn một chiến lược dùng nội bộ sim.",
+  "view.algo.hint.execution_safety": "Cả hai chế độ giấy là không có rủi ro: mô phỏng nhập giá cuối cùng được biết đến; Alpaca cátbox là môi trường giấy chính thức của họ. Thương mại sống sử dụng tiền thực và yêu cầu hoàn thành 30 ngày khóa giấy."
 }

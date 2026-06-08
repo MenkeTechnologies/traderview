@@ -39404,5 +39404,15 @@
   "view.algo.opt.strat_connors_rsi2": "Connors RSI-2 + 200 SMA (mean-rev klasik)",
   "view.algo.opt.strat_order_block_sweep": "Sipariş Blok + Sıvılık Sweep (SMC)",
   "view.algo.opt.strat_pead": "PEAD (post-earnings drag)",
-  "view.algo.opt.strat_pairs": "Pairs Trading (spread z-dice)"
+  "view.algo.opt.strat_pairs": "Pairs Trading (spread z-dice)",
+  "view.algo.h2.docs": "Strateji referans",
+  "view.algo.hint.docs": "- tüm 13 strateji için tam kurallar",
+  "view.algo.doc.entry": "Giriş kuralları",
+  "view.algo.doc.exit": "Çıkış kuralları",
+  "view.algo.doc.params": "Parametreler",
+  "view.algo.doc.scope_note": "Not:",
+  "view.algo.doc.when_to_use": "Ne zaman kullanılır:",
+  "view.algo.hint.stdout_multi": "Stratejide bir pane + küresel bir yangınhose. Her pane kendi 200-line tamponunu tutar.",
+  "view.algo.hint.no_algo_accounts": "Algo-supported brokerler hakkında hiçbir hesap yok. Bugün Desteklendi: Alpaca. Ayarlara gidin → Hesaplar ve bir Alpaca hesabı ekleyin veya iç sim kullanan bir strateji seçin.",
+  "view.algo.hint.execution_safety": "Her iki kağıt modları sıfır risktir: son bilinen fiyatta sim dolgular; Alpaca sandbox resmi kağıt ortamıdır. Canlı ticaretler gerçek para kullanıyor ve 30 günlük kağıt kilidi tamamlamalı."
 }

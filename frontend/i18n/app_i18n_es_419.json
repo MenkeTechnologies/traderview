@@ -39393,5 +39393,15 @@
   "view.algo.opt.strat_connors_rsi2": "Connors RSI-2 + 200 SMA (mean-rev classic)",
   "view.algo.opt.strat_order_block_sweep": "Bloque de pedido + Sweep de liquidez (SMC)",
   "view.algo.opt.strat_pead": "PEAD (fut-earnings drift)",
-  "view.algo.opt.strat_pairs": "Trading de pares (spread z-score)"
+  "view.algo.opt.strat_pairs": "Trading de pares (spread z-score)",
+  "view.algo.h2.docs": "Referencia de la estrategia",
+  "view.algo.hint.docs": "- reglas completas para las 13 estrategias",
+  "view.algo.doc.entry": "Reglas de entrada",
+  "view.algo.doc.exit": "Reglas de salida",
+  "view.algo.doc.params": "Parámetros",
+  "view.algo.doc.scope_note": "Nota:",
+  "view.algo.doc.when_to_use": "Cuándo utilizar:",
+  "view.algo.hint.stdout_multi": "Un panel por estrategia + una hoguera global. Cada panel mantiene su propio búfer de 200 líneas.",
+  "view.algo.hint.no_algo_accounts": "No hay cuentas sobre corredores respaldados por algo. Apoyado hoy: Alpaca. Ir a Ajustes → Cuentas y añadir una cuenta de Alpaca, o elegir una estrategia que use internal sim.",
+  "view.algo.hint.execution_safety": "Ambos modos de papel son de riesgo cero: rellenos de sim en la aplicación al último precio conocido; Alpaca sandbox es su entorno de papel oficial. Los comercios en vivo usan dinero real y requieren un bloqueo de papel de 30 días."
 }

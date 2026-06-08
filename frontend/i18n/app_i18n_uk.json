@@ -39407,5 +39407,15 @@
   "view.algo.opt.strat_connors_rsi2": "Коннори RSI-2 + 200 SMA (меан-рев класичний)",
   "view.algo.opt.strat_order_block_sweep": "Блок замовлення + Ліквідність Sweep (SMC)",
   "view.algo.opt.strat_pead": "PEAD (пост-прайон)",
-  "view.algo.opt.strat_pairs": "Pairs Trading (прочитати z-score)"
+  "view.algo.opt.strat_pairs": "Pairs Trading (прочитати z-score)",
+  "view.algo.h2.docs": "Стратегія",
+  "view.algo.hint.docs": "— повний правила для всіх 13 стратегій",
+  "view.algo.doc.entry": "Правила прийому",
+  "view.algo.doc.exit": "Правила",
+  "view.algo.doc.params": "Параметри",
+  "view.algo.doc.scope_note": "Примітка:",
+  "view.algo.doc.when_to_use": "При використанні:",
+  "view.algo.hint.stdout_multi": "Одна пане для стратегії + глобальна пожежа. Кожен пане зберігає свій 200-лінійний буфер.",
+  "view.algo.hint.no_algo_accounts": "Немає рахунків на алгопідтримувані брокери. Підтримуваний сьогодні: Alpaca. Перейти на налаштування → Облікові записи і додати обліковий запис Alpaca або вибрати стратегію, яка використовує внутрішній sim.",
+  "view.algo.hint.execution_safety": "Обидва паперові режими є нульовою рисою: в додатку sim заповнюється останніми відомими цінами; Alpaca sandbox є їх офіційним паперовим середовищем. Живі угоди використовують реальні гроші і вимагають завершено 30-денне паперове блокування."
 }
