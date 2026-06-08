@@ -363,6 +363,21 @@ async fn main() -> anyhow::Result<()> {
                 Err(e) => tracing::warn!(error = %e, "schwab::spawn_pumps_for_active_strategies failed"),
             }
         });
+
+        let ib_pool = state.pool.clone();
+        let ib_sink = sink.clone();
+        let ib_registry = state.alpaca_pumps.clone();
+        tokio::spawn(async move {
+            match traderview_db::ibkr_pump::spawn_pumps_for_active_strategies(
+                ib_pool, Some(ib_sink), ib_registry,
+            )
+            .await
+            {
+                Ok(0) => tracing::info!("no ibkr-bound algo strategies; pumps idle"),
+                Ok(n) => tracing::info!(pumps = n, "ibkr account streamer pumps spawned"),
+                Err(e) => tracing::warn!(error = %e, "ibkr::spawn_pumps_for_active_strategies failed"),
+            }
+        });
     }
 
     let api = router(state);

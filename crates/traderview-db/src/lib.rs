@@ -10,6 +10,7 @@ pub mod algo_runner;
 pub mod alpaca_pump;
 pub mod alpaca_trading;
 pub mod broker_dispatcher;
+pub mod ibkr_pump;
 pub mod ibkr_trading;
 pub mod schwab_pump;
 pub mod schwab_trading;
