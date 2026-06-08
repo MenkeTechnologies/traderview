@@ -118,6 +118,9 @@ quick-xml = { version = "0.36", features = ["serialize"] }
 clap = { version = "4", features = ["derive", "env"] }
 dirs = "5"
 
+# Test mocks (HTTP) — Alpaca trading client integration tests
+wiremock = "0.6"
+
 [profile.dev]
 opt-level = 1
 debug = 0
