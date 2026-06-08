@@ -14,6 +14,10 @@
 
 use crate::algo_engine::{BrokerSink, EngineError, ImmediateFill, InMemorySink, OrderIntent, SubmittedOrder};
 use crate::alpaca_trading::{AlpacaTrading, BrokerMode as AlpacaBrokerMode, PlaceOrderRequest};
+use crate::ibkr_trading::{
+    IbkrTrading, OrderSide as IbkrOrderSide, OrderType as IbkrOrderType, PlaceOrder as IbkrPlaceOrder,
+    Tif as IbkrTif,
+};
 use crate::tastytrade_trading::{
     EquityAction, PlaceEquityOrder as TastyEquityOrder, TastytradeEnv, TastytradeTrading,
 };
@@ -87,11 +91,26 @@ pub async fn sink_for_strategy(
             let client = TradierTrading::new(env, token, account_id_str);
             Ok(Box::new(TradierSink { client }))
         }
-        "ibkr" => Ok(Box::new(IntegrationPendingSink {
-            broker: "ibkr",
-            paper,
-            detail: "needs local TWS/Gateway process".into(),
-        })),
+        "ibkr" => {
+            let Some((account_id, base_url, bearer)) =
+                crate::data_source_keys::ibkr_creds(pool, strategy.user_id)
+                    .await
+                    .map_err(|e| DispatchError::Db(sqlx::Error::Decode(e.into())))?
+            else {
+                return Ok(Box::new(IntegrationPendingSink {
+                    broker: "ibkr",
+                    paper,
+                    detail: "no IBKR credentials saved — go to Settings → Data sources".into(),
+                }));
+            };
+            let client = IbkrTrading::new(base_url, bearer, account_id);
+            // Symbol-to-conid resolution: IBKR uses integer contract IDs
+            // (conid), not symbols. Strategies fire on symbols, so the
+            // sink needs a lookup. For commit 41 we error out with a
+            // pending message — conid resolution lands when
+            // /iserver/secdef/search is wired in a follow-up.
+            Ok(Box::new(IbkrSink { client, account_label: "ibkr".into() }))
+        }
         "td" => Ok(Box::new(IntegrationPendingSink {
             broker: "td",
             paper,
@@ -158,6 +177,69 @@ impl BrokerSink for AlpacaSink {
                 broker_order_id: resp.id,
                 status: resp.status,
                 raw_response: None,
+                immediate_fill: None,
+            })
+        })
+    }
+}
+
+/// Real IBKR sink — resolves symbol→conid, then POSTs a single-leg
+/// market order via /iserver/account/{id}/orders. Native bracket
+/// support on IBKR uses the parent-child orderType+parentId pattern;
+/// this commit ships entry-only and leaves brackets to a follow-up.
+#[derive(Debug, Clone)]
+struct IbkrSink {
+    client: IbkrTrading,
+    /// Reserved for future logging hooks.
+    #[allow(dead_code)]
+    account_label: String,
+}
+
+impl BrokerSink for IbkrSink {
+    fn submit_bracket(
+        &self,
+        intent: OrderIntent,
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>>
+    {
+        let client = self.client.clone();
+        Box::pin(async move {
+            let conid = client
+                .resolve_stock_conid(&intent.symbol)
+                .await
+                .map_err(|e| EngineError::Broker(format!("ibkr secdef: {e}")))?;
+            let side = match intent.side {
+                traderview_core::algo_strategies::Side::Buy => IbkrOrderSide::Buy,
+                traderview_core::algo_strategies::Side::Sell => IbkrOrderSide::Sell,
+            };
+            let req = IbkrPlaceOrder {
+                conid,
+                side,
+                order_type: IbkrOrderType::Market,
+                quantity: intent.qty,
+                tif: IbkrTif::Day,
+                price: None,
+                client_order_id: Some(intent.client_order_id.to_string()),
+            };
+            let resps = client
+                .place_order(&req)
+                .await
+                .map_err(|e| EngineError::Broker(format!("ibkr: {e}")))?;
+            let first = resps.into_iter().next().ok_or_else(|| {
+                EngineError::Broker("ibkr: empty order response array".into())
+            })?;
+            let order_id = first
+                .order_id
+                .clone()
+                .or(first.local_order_id.clone())
+                .unwrap_or_else(|| intent.client_order_id.to_string());
+            Ok(SubmittedOrder {
+                broker_order_id: order_id,
+                status: first.order_status.unwrap_or_else(|| "submitted".into()),
+                raw_response: None,
+                // IBKR fills land via /iserver/account/orders polling or
+                // the streaming /ws endpoint — a follow-up commit lands
+                // the pump. Until then the engine treats the order as
+                // accepted but unfilled.
                 immediate_fill: None,
             })
         })

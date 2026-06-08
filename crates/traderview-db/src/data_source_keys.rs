@@ -102,6 +102,18 @@ pub struct DataSourceKeysDto {
     /// Sandbox vs prod. Sandbox = api.cert.tastyworks.com.
     #[serde(default = "default_true")]
     pub tastytrade_sandbox: bool,
+    /// IBKR Client Portal account identifier (e.g. `DU1234567`). Path
+    /// segment used in `/portfolio/{id}/...` and `/iserver/account/{id}/orders`.
+    #[serde(default)]
+    pub ibkr_account_id: Option<String>,
+    /// Base URL for the gateway. Default `https://localhost:5000/v1/api`.
+    /// Cloud / Pro users override to point at remote gateway / OAuth.
+    #[serde(default)]
+    pub ibkr_base_url: Option<String>,
+    /// Optional bearer token (OAuth path). Empty = rely on cookie-jar
+    /// auth against the local gateway.
+    #[serde(default)]
+    pub ibkr_bearer_token: Option<String>,
 }
 
 fn default_true() -> bool {
@@ -125,6 +137,9 @@ struct Row {
     tastytrade_session_token: Option<String>,
     tastytrade_account_number: Option<String>,
     tastytrade_sandbox: bool,
+    ibkr_account_id: Option<String>,
+    ibkr_base_url: Option<String>,
+    ibkr_bearer_token: Option<String>,
 }
 
 fn mask(v: Option<String>) -> Option<String> {
@@ -145,7 +160,8 @@ pub async fn get_unmasked(pool: &PgPool, user_id: Uuid) -> anyhow::Result<DataSo
                 polygon_api_key, databento_api_key, alpaca_use_sip_feed,
                 tradier_access_token, tradier_account_id, tradier_sandbox,
                 tastytrade_login, tastytrade_password, tastytrade_session_token,
-                tastytrade_account_number, tastytrade_sandbox
+                tastytrade_account_number, tastytrade_sandbox,
+                ibkr_account_id, ibkr_base_url, ibkr_bearer_token
            FROM user_settings
           WHERE user_id = $1",
     )
@@ -168,6 +184,9 @@ pub async fn get_unmasked(pool: &PgPool, user_id: Uuid) -> anyhow::Result<DataSo
         tastytrade_session_token: row.tastytrade_session_token,
         tastytrade_account_number: row.tastytrade_account_number,
         tastytrade_sandbox: row.tastytrade_sandbox,
+        ibkr_account_id: row.ibkr_account_id,
+        ibkr_base_url: row.ibkr_base_url,
+        ibkr_bearer_token: row.ibkr_bearer_token,
     })
 }
 
@@ -184,7 +203,8 @@ pub async fn get(pool: &PgPool, user_id: Uuid) -> anyhow::Result<DataSourceKeysD
                 polygon_api_key, databento_api_key, alpaca_use_sip_feed,
                 tradier_access_token, tradier_account_id, tradier_sandbox,
                 tastytrade_login, tastytrade_password, tastytrade_session_token,
-                tastytrade_account_number, tastytrade_sandbox
+                tastytrade_account_number, tastytrade_sandbox,
+                ibkr_account_id, ibkr_base_url, ibkr_bearer_token
            FROM user_settings
           WHERE user_id = $1",
     )
@@ -210,6 +230,11 @@ pub async fn get(pool: &PgPool, user_id: Uuid) -> anyhow::Result<DataSourceKeysD
         tastytrade_session_token: mask(row.tastytrade_session_token),
         tastytrade_account_number: mask(row.tastytrade_account_number),
         tastytrade_sandbox: row.tastytrade_sandbox,
+        // account_id + base_url not strictly secrets, but mask uniformly
+        // for the reveal-button UX (same as tradier_account_id).
+        ibkr_account_id: mask(row.ibkr_account_id),
+        ibkr_base_url: mask(row.ibkr_base_url),
+        ibkr_bearer_token: mask(row.ibkr_bearer_token),
     })
 }
 
@@ -243,6 +268,12 @@ pub async fn set(pool: &PgPool, user_id: Uuid, dto: &DataSourceKeysDto) -> anyho
         matches!(dto.tastytrade_session_token.as_deref(), Some(k) if k != MASK && !k.is_empty());
     let tt_acct_supplied =
         matches!(dto.tastytrade_account_number.as_deref(), Some(k) if k != MASK && !k.is_empty());
+    let ibkr_acct_supplied =
+        matches!(dto.ibkr_account_id.as_deref(), Some(k) if k != MASK && !k.is_empty());
+    let ibkr_base_supplied =
+        matches!(dto.ibkr_base_url.as_deref(), Some(k) if k != MASK && !k.is_empty());
+    let ibkr_token_supplied =
+        matches!(dto.ibkr_bearer_token.as_deref(), Some(k) if k != MASK && !k.is_empty());
 
     // Build a coalescing UPDATE so the caller can change a subset of fields
     // without re-supplying the others.
@@ -263,6 +294,9 @@ pub async fn set(pool: &PgPool, user_id: Uuid, dto: &DataSourceKeysDto) -> anyho
              tastytrade_session_token  = COALESCE($14, tastytrade_session_token),
              tastytrade_account_number = COALESCE($15, tastytrade_account_number),
              tastytrade_sandbox        = $16,
+             ibkr_account_id           = COALESCE($17, ibkr_account_id),
+             ibkr_base_url             = COALESCE($18, ibkr_base_url),
+             ibkr_bearer_token         = COALESCE($19, ibkr_bearer_token),
              updated_at                = now()
            WHERE user_id = $1",
     )
@@ -282,9 +316,37 @@ pub async fn set(pool: &PgPool, user_id: Uuid, dto: &DataSourceKeysDto) -> anyho
     .bind(if tt_token_supplied { dto.tastytrade_session_token.as_deref() } else { None })
     .bind(if tt_acct_supplied { dto.tastytrade_account_number.as_deref() } else { None })
     .bind(dto.tastytrade_sandbox)
+    .bind(if ibkr_acct_supplied { dto.ibkr_account_id.as_deref() } else { None })
+    .bind(if ibkr_base_supplied { dto.ibkr_base_url.as_deref() } else { None })
+    .bind(if ibkr_token_supplied { dto.ibkr_bearer_token.as_deref() } else { None })
     .execute(pool)
     .await?;
     Ok(())
+}
+
+/// Plaintext IBKR Client Portal credentials. Returns
+/// `(account_id, base_url, bearer_token_opt)`. base_url defaults to
+/// the local gateway URL if not set.
+pub async fn ibkr_creds(
+    pool: &PgPool,
+    user_id: Uuid,
+) -> anyhow::Result<Option<(String, String, Option<String>)>> {
+    let row: Option<(Option<String>, Option<String>, Option<String>)> = sqlx::query_as(
+        "SELECT ibkr_account_id, ibkr_base_url, ibkr_bearer_token
+           FROM user_settings WHERE user_id = $1",
+    )
+    .bind(user_id)
+    .fetch_optional(pool)
+    .await?;
+    let Some((account, base, token)) = row else { return Ok(None); };
+    let account = match account {
+        Some(a) if !a.is_empty() => a,
+        _ => return Ok(None),
+    };
+    let base = base.filter(|s| !s.is_empty()).unwrap_or_else(|| {
+        crate::ibkr_trading::DEFAULT_LOCAL_BASE.to_string()
+    });
+    Ok(Some((account, base, token.filter(|t| !t.is_empty()))))
 }
 
 /// Plaintext Tastytrade credentials for backend callers. Returns

@@ -96,7 +96,7 @@ printpdf = { version = "0.7", default-features = false }
 calamine = "0.26"
 
 # HTTP client (price-data fetcher)
-reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json", "gzip"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json", "gzip", "cookies"] }
 
 # Tiny utilities
 once_cell = "1"

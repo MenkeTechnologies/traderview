@@ -29,6 +29,7 @@ pub fn router() -> Router<AppState> {
         .route("/data-sources/test-finnhub", post(test_finnhub))
         .route("/data-sources/test-tradier", post(test_tradier))
         .route("/data-sources/test-tastytrade", post(test_tastytrade))
+        .route("/data-sources/test-ibkr", post(test_ibkr))
 }
 
 async fn get_keys(
@@ -536,6 +537,116 @@ async fn test_tastytrade(
         }
     };
     run_tastytrade_probe(account_number, sandbox, auth).await
+}
+
+#[derive(Debug, serde::Deserialize)]
+#[serde(default)]
+struct TestIbkrBody {
+    account_id: Option<String>,
+    base_url: Option<String>,
+    bearer_token: Option<String>,
+}
+
+impl Default for TestIbkrBody {
+    fn default() -> Self {
+        Self { account_id: None, base_url: None, bearer_token: None }
+    }
+}
+
+#[derive(Debug, serde::Serialize)]
+struct TestIbkrResp {
+    ok: bool,
+    http_status: u16,
+    detail: Option<serde_json::Value>,
+}
+
+/// Probes /portfolio/{id}/summary against the configured (or supplied)
+/// IBKR Client Portal Web API. A 200 + parseable summary = creds work;
+/// 401 = gateway not authenticated; transport error = gateway not
+/// running on the configured base URL.
+async fn test_ibkr(
+    State(s): State<AppState>,
+    u: AuthUser,
+    Json(body): Json<TestIbkrBody>,
+) -> Result<Json<TestIbkrResp>, ApiError> {
+    const MASK: &str = "***";
+    fn live(v: Option<&String>) -> Option<String> {
+        v.map(|s| s.as_str())
+            .filter(|k| !k.is_empty() && *k != MASK)
+            .map(String::from)
+    }
+    let supplied_account = live(body.account_id.as_ref());
+    let supplied_base = live(body.base_url.as_ref());
+    let supplied_token = live(body.bearer_token.as_ref());
+
+    let (account_id, base_url, token) = match supplied_account {
+        Some(a) => {
+            let base = supplied_base.unwrap_or_else(|| {
+                traderview_db::ibkr_trading::DEFAULT_LOCAL_BASE.to_string()
+            });
+            (a, base, supplied_token)
+        }
+        None => {
+            let Some((a, b, t)) =
+                traderview_db::data_source_keys::ibkr_creds(&s.pool, u.id)
+                    .await
+                    .map_err(ApiError::Internal)?
+            else {
+                return Ok(Json(TestIbkrResp {
+                    ok: false,
+                    http_status: 0,
+                    detail: Some(serde_json::json!({
+                        "msg": "no IBKR credentials supplied or saved"
+                    })),
+                }));
+            };
+            (a, b, t)
+        }
+    };
+
+    let client = traderview_db::ibkr_trading::IbkrTrading::new(
+        base_url.clone(), token.clone(), account_id.clone(),
+    );
+    match client.get_summary().await {
+        Ok(sum) => Ok(Json(TestIbkrResp {
+            ok: true,
+            http_status: 200,
+            detail: Some(serde_json::json!({
+                "msg": "IBKR Client Portal credentials valid — summary endpoint returned",
+                "net_liquidation": sum.net_liquidation.as_ref().and_then(|v| v.amount),
+                "buying_power": sum.buying_power.as_ref().and_then(|v| v.amount),
+                "base_url": base_url,
+                "account_id": account_id,
+                "auth_mode": if token.is_some() { "bearer" } else { "cookie_jar" },
+            })),
+        })),
+        Err(e) => {
+            let (http_status, msg) = match &e {
+                traderview_db::ibkr_trading::IbkrError::AuthFailed => (
+                    401,
+                    "auth failed — gateway not logged in or bearer token expired".into(),
+                ),
+                traderview_db::ibkr_trading::IbkrError::InvalidRequest(b) => (
+                    400, format!("invalid request: {b}"),
+                ),
+                traderview_db::ibkr_trading::IbkrError::Http { status, body } => (
+                    *status, format!("http {status}: {body}"),
+                ),
+                traderview_db::ibkr_trading::IbkrError::Transport(t) => (
+                    0,
+                    format!("transport error — is the gateway running at {base_url}? ({t})"),
+                ),
+                other => (0, other.to_string()),
+            };
+            Ok(Json(TestIbkrResp {
+                ok: false,
+                http_status,
+                detail: Some(serde_json::json!({
+                    "msg": msg, "base_url": base_url, "account_id": account_id,
+                })),
+            }))
+        }
+    }
 }
 
 async fn run_tastytrade_probe(

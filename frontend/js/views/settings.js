@@ -267,6 +267,28 @@ export async function renderSettings(mount, state) {
                     <span data-i18n="view.settings.label.tastytrade_sandbox">Use Tastytrade sandbox (api.cert.tastyworks.com)</span>
                 </label>
                 <button data-i18n="view.settings.btn.test_tastytrade" class="btn btn-secondary" type="button" id="ds-test-tastytrade">Test Tastytrade</button>
+                <p data-i18n="view.settings.hint.ibkr" class="muted small" style="flex:1 1 100%">
+                    Interactive Brokers Client Portal Web API credentials. Run IB Gateway or Client Portal Gateway locally and log in via web — leave Bearer token empty for cookie-jar auth. For cloud / OAuth setups paste the Bearer token. Base URL defaults to https://localhost:5000/v1/api.
+                </p>
+                <label><span data-i18n="view.settings.label.ibkr_account_id">IBKR account ID</span>
+                    <input type="text" name="ibkr_account_id" autocomplete="off" data-secret-field
+                           value="${esc(ds.ibkr_account_id || '')}"
+                           placeholder="DU1234567 (paper) or U1234567 (live)"
+                           data-i18n-placeholder="view.settings.placeholder.ibkr_account_id">
+                </label>
+                <label><span data-i18n="view.settings.label.ibkr_base_url">IBKR base URL (optional)</span>
+                    <input type="text" name="ibkr_base_url" autocomplete="off" data-secret-field
+                           value="${esc(ds.ibkr_base_url || '')}"
+                           placeholder="https://localhost:5000/v1/api"
+                           data-i18n-placeholder="view.settings.placeholder.ibkr_base_url">
+                </label>
+                <label><span data-i18n="view.settings.label.ibkr_bearer_token">IBKR Bearer token (optional, OAuth)</span>
+                    <input type="password" name="ibkr_bearer_token" autocomplete="off" data-secret-field
+                           value="${esc(ds.ibkr_bearer_token || '')}"
+                           placeholder="leave empty to use local gateway cookie auth"
+                           data-i18n-placeholder="view.settings.placeholder.ibkr_bearer_token">
+                </label>
+                <button data-i18n="view.settings.btn.test_ibkr" class="btn btn-secondary" type="button" id="ds-test-ibkr">Test IBKR</button>
                 <span id="ds-test-out" class="muted small" style="margin-left:8px"></span>
             </form>
         </div>
@@ -429,6 +451,9 @@ export async function renderSettings(mount, state) {
                 tastytrade_session_token:  fd.get('tastytrade_session_token')   ?? null,
                 tastytrade_account_number: fd.get('tastytrade_account_number')  ?? null,
                 tastytrade_sandbox:        !!fd.get('tastytrade_sandbox'),
+                ibkr_account_id:           fd.get('ibkr_account_id')           ?? null,
+                ibkr_base_url:             fd.get('ibkr_base_url')             ?? null,
+                ibkr_bearer_token:         fd.get('ibkr_bearer_token')         ?? null,
             });
             showToast(t('view.settings.toast.data_sources_saved'), { level: 'success' });
             if (!viewIsCurrent(tok)) return;
@@ -602,6 +627,48 @@ export async function renderSettings(mount, state) {
             out.textContent = t('view.settings.test_tastytrade.fail', { msg });
             out.style.color = '#ff5a5a';
             showToast(t('view.settings.test_tastytrade.toast_fail', { msg }), { level: 'error' });
+        } finally {
+            btn.disabled = false;
+        }
+    });
+
+    // Test IBKR — probes the Client Portal Web API /portfolio/{id}/summary
+    // endpoint. Falls back to stored creds when fields are masked.
+    mount.querySelector('#ds-test-ibkr').addEventListener('click', async () => {
+        const form = mount.querySelector('#data-sources-form');
+        const out = mount.querySelector('#ds-test-out');
+        const btn = mount.querySelector('#ds-test-ibkr');
+        const mask = '***';
+        const fd = new FormData(form);
+        const liveValue = (k) => {
+            const v = String(fd.get(k) || '').trim();
+            return (!v || v === mask) ? null : v;
+        };
+        btn.disabled = true;
+        out.textContent = t('view.settings.test_ibkr.connecting');
+        out.style.color = '';
+        try {
+            const r = await api.testIbkr({
+                account_id:   liveValue('ibkr_account_id'),
+                base_url:     liveValue('ibkr_base_url'),
+                bearer_token: liveValue('ibkr_bearer_token'),
+            });
+            if (r.ok) {
+                const mode = r.detail?.auth_mode || 'cookie_jar';
+                out.textContent = t('view.settings.test_ibkr.ok', { mode });
+                out.style.color = '#39ff14';
+                showToast(t('view.settings.test_ibkr.toast_ok', { mode }), { level: 'success' });
+            } else {
+                const msg = r.detail?.msg || JSON.stringify(r.detail || {});
+                out.textContent = t('view.settings.test_ibkr.fail', { msg });
+                out.style.color = '#ff5a5a';
+                showToast(t('view.settings.test_ibkr.toast_fail', { msg }), { level: 'error' });
+            }
+        } catch (err) {
+            const msg = err?.message || String(err);
+            out.textContent = t('view.settings.test_ibkr.fail', { msg });
+            out.style.color = '#ff5a5a';
+            showToast(t('view.settings.test_ibkr.toast_fail', { msg }), { level: 'error' });
         } finally {
             btn.disabled = false;
         }
