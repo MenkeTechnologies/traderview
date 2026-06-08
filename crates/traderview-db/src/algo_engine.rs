@@ -314,6 +314,29 @@ async fn trip_kill_switch(
     .execute(pool)
     .await
     .map_err(|e| EngineError::Broker(format!("trip_audit: {e}")))?;
+
+    // Fan out to every enabled webhook the user has configured. Done
+    // AFTER the DB updates so a webhook failure can't roll back the
+    // kill-switch engagement. Best-effort: errors are swallowed inside
+    // `fan_out_all` (it updates last_status on each webhook row).
+    let strategy_name = sqlx::query_scalar::<_, String>(
+        "SELECT name FROM algo_strategies WHERE id = $1",
+    )
+    .bind(strategy_id)
+    .fetch_optional(pool)
+    .await
+    .ok()
+    .flatten()
+    .unwrap_or_else(|| "<unknown>".into());
+    let payload = crate::webhooks::AlertPayload {
+        title: format!("Algo strategy auto-paused: {strategy_name}"),
+        message: reason.to_string(),
+        symbol: None,
+        kind: "algo_risk_breach".into(),
+        url: None,
+        fired_at: Utc::now(),
+    };
+    crate::webhooks::fan_out_all(pool, user_id, &payload).await;
     Ok(())
 }
 

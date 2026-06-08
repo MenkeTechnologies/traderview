@@ -130,6 +130,10 @@ fn discord_body(p: &AlertPayload) -> serde_json::Value {
         "disclosure" => 0xff2a6d,
         "sentiment" => 0xb86bff,
         "earnings_iv" => 0xffdd57,
+        // Algo lifecycle events — distinctive red for engagement so it
+        // pops in a busy Discord/Slack channel, neutral grey for release.
+        "algo_risk_breach" | "algo_kill_engaged" => 0xff0033,
+        "algo_kill_released" => 0x9a9a9a,
         _ => 0x23d160,
     };
     serde_json::json!({

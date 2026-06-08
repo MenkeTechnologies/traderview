@@ -370,11 +370,34 @@ pub async fn set_kill_switch(
     .bind(strategy_id)
     .bind(user_id)
     .bind(if engaged { "engaged" } else { "released" })
-    .bind(reason)
+    .bind(reason.clone())
     .execute(&mut *tx)
     .await?;
 
     tx.commit().await?;
+
+    // Fan out to user webhooks AFTER the transaction commits so a flaky
+    // sink can't roll back the audit row. Best-effort.
+    let (title, kind) = if engaged {
+        (
+            format!("Kill switch engaged: {}", updated.name),
+            "algo_kill_engaged",
+        )
+    } else {
+        (
+            format!("Kill switch released: {}", updated.name),
+            "algo_kill_released",
+        )
+    };
+    let payload = crate::webhooks::AlertPayload {
+        title,
+        message: reason.unwrap_or_else(|| "(no reason supplied)".into()),
+        symbol: None,
+        kind: kind.into(),
+        url: None,
+        fired_at: Utc::now(),
+    };
+    crate::webhooks::fan_out_all(pool, user_id, &payload).await;
     Ok(Some(updated))
 }
 
