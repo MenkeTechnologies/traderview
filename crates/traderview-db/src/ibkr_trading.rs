@@ -123,6 +123,27 @@ impl IbkrTrading {
         Self::handle_status(resp).await
     }
 
+    /// POST /iserver/account/{accountId}/orders with a 3-order bracket:
+    /// parent (entry, MKT or LMT) + child take-profit (LMT, opposite
+    /// side) + child stop-loss (STP, opposite side). Children carry
+    /// `parentId` referencing the parent's `cOID` so the gateway
+    /// activates them only after the parent fills.
+    ///
+    /// The response array contains one entry per submitted order; the
+    /// caller cares about the parent's `order_id` for tracking.
+    pub async fn place_bracket(
+        &self,
+        req: &PlaceBracket,
+    ) -> Result<Vec<PlaceOrderResponse>, IbkrError> {
+        let url = format!(
+            "{}/iserver/account/{}/orders",
+            self.base, self.account_id
+        );
+        let body = serde_json::json!({ "orders": req.to_orders_json() });
+        let resp = self.auth(self.http.post(&url)).json(&body).send().await?;
+        Self::handle_status(resp).await
+    }
+
     pub async fn cancel_order(&self, order_id: &str) -> Result<(), IbkrError> {
         let url = format!(
             "{}/iserver/account/{}/order/{order_id}",
@@ -199,6 +220,77 @@ struct SecdefHit {
 }
 
 // ─── request shapes ─────────────────────────────────────────────────────────
+
+/// Native bracket order — parent entry + 2 children (TP limit, SL stop).
+/// IBKR brackets work by submitting all three in one `/orders` POST
+/// where each child's `parentId` references the parent's `cOID`. The
+/// gateway holds the children until the parent fills, then activates
+/// them as an OCO pair.
+///
+/// `entry` describes the parent leg. `take_profit_price` and
+/// `stop_loss_price` are the prices for the two exit children; their
+/// side is derived from the entry (BUY entry → SELL exits; SELL entry
+/// → BUY exits) and TIF mirrors the entry's TIF.
+#[derive(Debug, Clone)]
+pub struct PlaceBracket {
+    pub conid: i64,
+    pub side: OrderSide,
+    pub order_type: OrderType,
+    pub quantity: Decimal,
+    pub tif: Tif,
+    /// Required when `order_type` is LMT or STOP_LIMIT, otherwise None.
+    pub entry_price: Option<Decimal>,
+    pub take_profit_price: Decimal,
+    pub stop_loss_price: Decimal,
+    /// Parent `cOID`. Children carry `parentId = parent_coid`. Generate
+    /// fresh per call; the caller passes the engine's
+    /// client_order_id as the parent tag.
+    pub parent_coid: String,
+}
+
+impl PlaceBracket {
+    fn to_orders_json(&self) -> Vec<serde_json::Value> {
+        let qty: f64 = self.quantity.to_string().parse().unwrap_or(0.0);
+        let exit_side = match self.side {
+            OrderSide::Buy => OrderSide::Sell,
+            OrderSide::Sell => OrderSide::Buy,
+        };
+        let tp_price: f64 = self.take_profit_price.to_string().parse().unwrap_or(0.0);
+        let sl_price: f64 = self.stop_loss_price.to_string().parse().unwrap_or(0.0);
+
+        let mut parent = serde_json::Map::new();
+        parent.insert("conid".into(), self.conid.into());
+        parent.insert("side".into(), self.side.as_str().into());
+        parent.insert("orderType".into(), self.order_type.as_str().into());
+        parent.insert("quantity".into(), qty.into());
+        parent.insert("tif".into(), self.tif.as_str().into());
+        parent.insert("cOID".into(), self.parent_coid.clone().into());
+        if let Some(p) = self.entry_price {
+            let pf: f64 = p.to_string().parse().unwrap_or(0.0);
+            parent.insert("price".into(), pf.into());
+        }
+
+        let tp = serde_json::json!({
+            "conid": self.conid,
+            "side": exit_side.as_str(),
+            "orderType": OrderType::Limit.as_str(),
+            "quantity": qty,
+            "tif": self.tif.as_str(),
+            "price": tp_price,
+            "parentId": self.parent_coid,
+        });
+        let sl = serde_json::json!({
+            "conid": self.conid,
+            "side": exit_side.as_str(),
+            "orderType": OrderType::Stop.as_str(),
+            "quantity": qty,
+            "tif": self.tif.as_str(),
+            "price": sl_price,
+            "parentId": self.parent_coid,
+        });
+        vec![serde_json::Value::Object(parent), tp, sl]
+    }
+}
 
 #[derive(Debug, Clone)]
 pub struct PlaceOrder {

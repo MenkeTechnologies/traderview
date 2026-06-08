@@ -12,7 +12,7 @@
 use rust_decimal::Decimal;
 use std::str::FromStr;
 use traderview_db::ibkr_trading::{
-    IbkrError, IbkrTrading, OrderSide, OrderType, PlaceOrder, Tif,
+    IbkrError, IbkrTrading, OrderSide, OrderType, PlaceBracket, PlaceOrder, Tif,
 };
 use wiremock::matchers::{body_json_string, header, method, path};
 use wiremock::{Mock, MockServer, ResponseTemplate};
@@ -227,4 +227,94 @@ async fn cookie_jar_auth_when_no_bearer() {
         .await;
     let s = client.get_summary().await.expect("summary ok");
     assert_eq!(s.net_liquidation.and_then(|v| v.amount), Some(5000.0));
+}
+
+#[tokio::test]
+async fn bracket_market_sends_three_orders_with_parentid() {
+    let (server, client) = server_with_token().await;
+    Mock::given(method("POST"))
+        .and(path("/iserver/account/DU1234567/orders"))
+        .and(body_json_string(serde_json::to_string(&serde_json::json!({
+            "orders": [
+                {
+                    "conid": 265598,
+                    "side": "BUY",
+                    "orderType": "MKT",
+                    "quantity": 10.0,
+                    "tif": "DAY",
+                    "cOID": "parent-1",
+                },
+                {
+                    "conid": 265598,
+                    "side": "SELL",
+                    "orderType": "LMT",
+                    "quantity": 10.0,
+                    "tif": "DAY",
+                    "price": 200.0,
+                    "parentId": "parent-1",
+                },
+                {
+                    "conid": 265598,
+                    "side": "SELL",
+                    "orderType": "STP",
+                    "quantity": 10.0,
+                    "tif": "DAY",
+                    "price": 180.0,
+                    "parentId": "parent-1",
+                }
+            ]
+        })).unwrap()))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            { "order_id": "PARENT", "order_status": "PreSubmitted" },
+            { "order_id": "TP",     "order_status": "PreSubmitted" },
+            { "order_id": "SL",     "order_status": "PreSubmitted" }
+        ])))
+        .expect(1)
+        .mount(&server)
+        .await;
+    let req = PlaceBracket {
+        conid: 265598,
+        side: OrderSide::Buy,
+        order_type: OrderType::Market,
+        quantity: dec("10"),
+        tif: Tif::Day,
+        entry_price: None,
+        take_profit_price: dec("200"),
+        stop_loss_price: dec("180"),
+        parent_coid: "parent-1".into(),
+    };
+    let resp = client.place_bracket(&req).await.expect("bracket ok");
+    assert_eq!(resp.len(), 3);
+    assert_eq!(resp[0].order_id.as_deref(), Some("PARENT"));
+}
+
+#[tokio::test]
+async fn bracket_short_uses_buy_exits() {
+    let (server, client) = server_with_token().await;
+    // Pin only the exit-leg sides. Short entry → BUY exits.
+    Mock::given(method("POST"))
+        .and(path("/iserver/account/DU1234567/orders"))
+        .and(wiremock::matchers::body_string_contains("\"side\":\"SELL\""))
+        .and(wiremock::matchers::body_string_contains("\"side\":\"BUY\""))
+        .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!([
+            { "order_id": "P", "order_status": "PreSubmitted" },
+            { "order_id": "T", "order_status": "PreSubmitted" },
+            { "order_id": "S", "order_status": "PreSubmitted" }
+        ])))
+        .expect(1)
+        .mount(&server)
+        .await;
+    let req = PlaceBracket {
+        conid: 265598,
+        side: OrderSide::Sell,
+        order_type: OrderType::Market,
+        quantity: dec("5"),
+        tif: Tif::Day,
+        entry_price: None,
+        take_profit_price: dec("180"),
+        stop_loss_price: dec("220"),
+        parent_coid: "p-short".into(),
+    };
+    let resp = client.place_bracket(&req).await.expect("short bracket ok");
+    assert_eq!(resp.len(), 3);
 }

@@ -15,8 +15,8 @@
 use crate::algo_engine::{BrokerSink, EngineError, ImmediateFill, InMemorySink, OrderIntent, SubmittedOrder};
 use crate::alpaca_trading::{AlpacaTrading, BrokerMode as AlpacaBrokerMode, PlaceOrderRequest};
 use crate::ibkr_trading::{
-    IbkrTrading, OrderSide as IbkrOrderSide, OrderType as IbkrOrderType, PlaceOrder as IbkrPlaceOrder,
-    Tif as IbkrTif,
+    IbkrTrading, OrderSide as IbkrOrderSide, OrderType as IbkrOrderType,
+    PlaceBracket as IbkrPlaceBracket, PlaceOrder as IbkrPlaceOrder, Tif as IbkrTif,
 };
 use crate::schwab_trading::{
     Duration_ as SchwabDuration, Instruction as SchwabInstruction, OrderType as SchwabOrderType,
@@ -245,19 +245,40 @@ impl BrokerSink for IbkrSink {
                 traderview_core::algo_strategies::Side::Buy => IbkrOrderSide::Buy,
                 traderview_core::algo_strategies::Side::Sell => IbkrOrderSide::Sell,
             };
-            let req = IbkrPlaceOrder {
-                conid,
-                side,
-                order_type: IbkrOrderType::Market,
-                quantity: intent.qty,
-                tif: IbkrTif::Day,
-                price: None,
-                client_order_id: Some(intent.client_order_id.to_string()),
+            let parent_coid = intent.client_order_id.to_string();
+            let has_bracket =
+                intent.take_profit_price > Decimal::zero() && intent.stop_price > Decimal::zero();
+            let resps = if has_bracket {
+                let req = IbkrPlaceBracket {
+                    conid,
+                    side,
+                    order_type: IbkrOrderType::Market,
+                    quantity: intent.qty,
+                    tif: IbkrTif::Day,
+                    entry_price: None,
+                    take_profit_price: intent.take_profit_price,
+                    stop_loss_price: intent.stop_price,
+                    parent_coid: parent_coid.clone(),
+                };
+                client
+                    .place_bracket(&req)
+                    .await
+                    .map_err(|e| EngineError::Broker(format!("ibkr bracket: {e}")))?
+            } else {
+                let req = IbkrPlaceOrder {
+                    conid,
+                    side,
+                    order_type: IbkrOrderType::Market,
+                    quantity: intent.qty,
+                    tif: IbkrTif::Day,
+                    price: None,
+                    client_order_id: Some(parent_coid.clone()),
+                };
+                client
+                    .place_order(&req)
+                    .await
+                    .map_err(|e| EngineError::Broker(format!("ibkr: {e}")))?
             };
-            let resps = client
-                .place_order(&req)
-                .await
-                .map_err(|e| EngineError::Broker(format!("ibkr: {e}")))?;
             let first = resps.into_iter().next().ok_or_else(|| {
                 EngineError::Broker("ibkr: empty order response array".into())
             })?;
@@ -265,15 +286,12 @@ impl BrokerSink for IbkrSink {
                 .order_id
                 .clone()
                 .or(first.local_order_id.clone())
-                .unwrap_or_else(|| intent.client_order_id.to_string());
+                .unwrap_or(parent_coid);
             Ok(SubmittedOrder {
                 broker_order_id: order_id,
                 status: first.order_status.unwrap_or_else(|| "submitted".into()),
                 raw_response: None,
-                // IBKR fills land via /iserver/account/orders polling or
-                // the streaming /ws endpoint — a follow-up commit lands
-                // the pump. Until then the engine treats the order as
-                // accepted but unfilled.
+                // IBKR fills land via the /ws pump (ibkr_pump.rs).
                 immediate_fill: None,
             })
         })
