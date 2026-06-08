@@ -13,6 +13,7 @@
 use crate::models::PriceBar;
 use serde::{Deserialize, Serialize};
 
+pub mod mean_reversion;
 pub mod momentum;
 pub mod types;
 
@@ -83,8 +84,9 @@ pub fn from_kind(
 ) -> Result<Box<dyn Strategy>, FactoryError> {
     match kind {
         "momentum" => Ok(Box::new(momentum::Momentum::from_json(entry_rules))),
-        // Slots populated in commits 6–9.
-        "mean_reversion" | "orb" | "donchian_trend" | "bb_squeeze" => {
+        "mean_reversion" => Ok(Box::new(mean_reversion::MeanReversion::from_json(entry_rules))),
+        // Slots populated in commits 7–9.
+        "orb" | "donchian_trend" | "bb_squeeze" => {
             Err(FactoryError::NotImplemented(kind.to_string()))
         }
         other => Err(FactoryError::Unknown(other.to_string())),
