@@ -9,6 +9,32 @@ import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
 import { tConfirm } from '../dialog.js';
+import { on as onWsEvent } from '../ws.js';
+
+// Single coalesced refresh on a short debounce — a burst of WS events
+// (multi-leg bracket order: parent + take_profit + stop_loss accepts)
+// otherwise re-renders the strategies table 3+ times in rapid
+// succession. 250ms is short enough that the UI feels live but long
+// enough to soak up the burst.
+const REFRESH_DEBOUNCE_MS = 250;
+let refreshTimer = null;
+let wsUnsubs = [];
+
+function scheduleRefresh(mount) {
+    if (refreshTimer) clearTimeout(refreshTimer);
+    refreshTimer = setTimeout(() => {
+        refreshTimer = null;
+        refreshStrategies(mount).catch(e => console.warn('algo: refresh failed', e));
+    }, REFRESH_DEBOUNCE_MS);
+}
+
+function flashRow(mount, strategyId) {
+    const tr = mount.querySelector(`tr[data-strat="${strategyId}"]`);
+    if (!tr) return;
+    tr.style.transition = 'background-color 0.6s';
+    tr.style.backgroundColor = 'rgba(0, 229, 255, 0.25)';
+    setTimeout(() => { tr.style.backgroundColor = ''; }, 600);
+}
 
 function fmtDateTime(iso) {
     if (!iso) return '—';
@@ -131,6 +157,19 @@ export async function renderAlgo(mount) {
 
     mount.querySelector('#algo-new').addEventListener('click', () => openStrategyModal(mount));
     await refreshStrategies(mount);
+
+    // Tear down any prior subscriptions (view re-mount on tab switch)
+    // before wiring fresh ones — duplicates would multiply the refresh
+    // calls per event.
+    wsUnsubs.forEach(unsub => { try { unsub(); } catch (_) {} });
+    wsUnsubs = [];
+    const flashAndRefresh = (msg) => {
+        flashRow(mount, msg.strategy_id);
+        scheduleRefresh(mount);
+    };
+    wsUnsubs.push(onWsEvent('algo_signal_fired', flashAndRefresh));
+    wsUnsubs.push(onWsEvent('algo_order_submitted', flashAndRefresh));
+    wsUnsubs.push(onWsEvent('algo_fill_received', flashAndRefresh));
 }
 
 async function refreshStrategies(mount) {
