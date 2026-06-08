@@ -26812,6 +26812,7 @@
   "view.algo.label.account": "Broker account",
   "view.algo.label.no_accounts": "— no accounts —",
   "view.algo.hint.no_accounts": "No broker accounts found. Go to Settings → Accounts to add one before saving the strategy.",
+  "view.algo.hint.no_algo_accounts": "No accounts on algo-supported brokers. Supported today: Alpaca. Go to Settings → Accounts and add an Alpaca account, or pick a strategy that uses internal_sim.",
   "view.algo.label.enabled": "Enabled",
   "view.algo.label.timeframe": "Timeframe",
   "view.algo.label.universe": "Universe",

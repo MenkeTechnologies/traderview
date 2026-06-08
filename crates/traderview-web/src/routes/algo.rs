@@ -69,6 +69,53 @@ async fn user_owns_account(
     Ok(row.is_some())
 }
 
+/// Brokers with a real algo-trading integration this codebase can drive.
+/// Today: Alpaca only (REST + WS, fully wired). Extend as more broker
+/// adapters land.
+const ALGO_SUPPORTED_BROKERS: &[&str] = &["alpaca"];
+
+/// (account_broker, broker_mode) combinations the engine can actually run.
+/// internal_sim is broker-agnostic; alpaca_paper / alpaca_live require an
+/// Alpaca account because that's the WS endpoint we connect to.
+fn broker_account_compatible(account_broker: &str, broker_mode: &str) -> bool {
+    let broker = account_broker.to_ascii_lowercase();
+    if !ALGO_SUPPORTED_BROKERS.contains(&broker.as_str()) {
+        return false;
+    }
+    match broker_mode {
+        "alpaca_paper" | "alpaca_live" => broker == "alpaca",
+        _ => true,
+    }
+}
+
+/// Verify the account's broker is in the algo-supported set AND
+/// matches the requested broker_mode. Returns a friendly error
+/// message; route layer wraps into a 400 BadRequest.
+async fn validate_account_for_algo(
+    pool: &sqlx::PgPool,
+    account_id: Uuid,
+    broker_mode: &str,
+) -> Result<(), ApiError> {
+    let row: Option<(String,)> = sqlx::query_as(
+        "SELECT COALESCE(NULLIF(broker, ''), 'unknown') FROM accounts WHERE id = $1",
+    )
+    .bind(account_id)
+    .fetch_optional(pool)
+    .await
+    .map_err(|e| ApiError::Internal(e.into()))?;
+    let Some((broker,)) = row else {
+        return Err(ApiError::BadRequest("account not found".into()));
+    };
+    if !broker_account_compatible(&broker, broker_mode) {
+        return Err(ApiError::BadRequest(format!(
+            "account is on broker '{broker}', which does not support algo broker_mode '{broker_mode}'. \
+             Supported algo brokers: {}; alpaca_paper/alpaca_live require an Alpaca account.",
+            ALGO_SUPPORTED_BROKERS.join(", "),
+        )));
+    }
+    Ok(())
+}
+
 async fn create_strategy(
     State(s): State<AppState>,
     u: AuthUser,
@@ -96,6 +143,7 @@ async fn create_strategy(
     if !user_owns_account(&s.pool, u.id, account_id).await? {
         return Err(ApiError::BadRequest("account_id does not belong to you".into()));
     }
+    validate_account_for_algo(&s.pool, account_id, &body.broker_mode).await?;
     // Engine code enforces paper_locked_until at submit-time, but the
     // route also rejects naked alpaca_live at create-time so the UI
     // doesn't show a misleading "saved" toast for a config the engine
@@ -156,6 +204,7 @@ async fn update_strategy(
     if !user_owns_account(&s.pool, u.id, account_id).await? {
         return Err(ApiError::BadRequest("account_id does not belong to you".into()));
     }
+    validate_account_for_algo(&s.pool, account_id, &body.broker_mode).await?;
     // Allow alpaca_live on update only if existing paper_locked_until
     // has expired. Engine still re-checks at submit.
     if body.broker_mode == "alpaca_live" {

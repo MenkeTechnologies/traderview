@@ -828,8 +828,25 @@ async function openStrategyModal(mount, existing = null) {
     let accounts = [];
     try { accounts = await api.accounts(); }
     catch (e) { console.warn('algo modal: api.accounts() failed', e); }
-    const accountOptions = accounts.length
-        ? accounts.map(a => {
+    // Only brokers with an API integration we can drive an algo against.
+    // Today: Alpaca (REST + WS, fully wired). Extend this list as more
+    // broker integrations land; the backend route enforces the same
+    // constraint independently (defense-in-depth).
+    const algoBroker = (b) =>
+        ['alpaca'].includes(String(b || '').toLowerCase());
+    // For alpaca_paper / alpaca_live broker_mode the account itself
+    // must be on Alpaca — can't ride those WS endpoints through a
+    // non-Alpaca account. internal_sim is mode-agnostic.
+    const modeAcceptsAccount = (mode, a) => {
+        const broker = String(a.broker || '').toLowerCase();
+        if (mode === 'alpaca_paper' || mode === 'alpaca_live') return broker === 'alpaca';
+        return algoBroker(a.broker);
+    };
+    const eligibleAccounts = accounts.filter(a =>
+        algoBroker(a.broker) && modeAcceptsAccount(s.broker_mode, a)
+    );
+    const accountOptions = eligibleAccounts.length
+        ? eligibleAccounts.map(a => {
             const sel = s.account_id === a.id ? 'selected' : '';
             const label = a.broker ? `${a.name} · ${a.broker}` : a.name;
             return `<option value="${esc(a.id)}" ${sel}>${esc(label)}</option>`;
@@ -852,8 +869,8 @@ async function openStrategyModal(mount, existing = null) {
                             ${accountOptions || `<option value="">${esc(t('view.algo.label.no_accounts'))}</option>`}
                         </select>
                     </label>
-                    ${accounts.length ? '' : `<p class="muted small" style="margin:-4px 0 0;color:var(--red)">
-                        ${esc(t('view.algo.hint.no_accounts'))}
+                    ${eligibleAccounts.length ? '' : `<p class="muted small" style="margin:-4px 0 0;color:var(--red)">
+                        ${esc(t(accounts.length ? 'view.algo.hint.no_algo_accounts' : 'view.algo.hint.no_accounts'))}
                     </p>`}
                     <label><span data-i18n="view.algo.label.strategy_type">Strategy</span>
                         <select name="strategy_type" id="algo-strategy-type">
@@ -911,7 +928,7 @@ async function openStrategyModal(mount, existing = null) {
                     <div class="algo-form-actions">
                         <button type="button" id="algo-cancel" data-i18n="view.algo.btn.cancel">Cancel</button>
                         <button type="submit" id="algo-save" class="primary"
-                                ${accounts.length ? '' : 'disabled'}
+                                ${eligibleAccounts.length ? '' : 'disabled'}
                                 data-i18n="view.algo.btn.save">Save</button>
                     </div>
                 </form>
@@ -932,6 +949,26 @@ async function openStrategyModal(mount, existing = null) {
     host.querySelector('#algo-strategy-type').addEventListener('change', (e) => {
         const v = e.target.value;
         host.querySelector('#algo-strategy-doc').innerHTML = renderStrategyDoc(v);
+    });
+    // Re-filter the account dropdown in place when broker_mode changes:
+    // alpaca_live / alpaca_paper require broker='alpaca'; internal_sim
+    // accepts any algo-supported broker.
+    host.querySelector('select[name="broker_mode"]').addEventListener('change', (e) => {
+        const mode = e.target.value;
+        const acctSel = host.querySelector('select[name="account_id"]');
+        const eligible = accounts.filter(a =>
+            algoBroker(a.broker) && modeAcceptsAccount(mode, a)
+        );
+        const prev = acctSel.value;
+        acctSel.innerHTML = eligible.length
+            ? eligible.map(a => {
+                const sel = prev === a.id ? 'selected' : '';
+                const label = a.broker ? `${a.name} · ${a.broker}` : a.name;
+                return `<option value="${esc(a.id)}" ${sel}>${esc(label)}</option>`;
+            }).join('')
+            : `<option value="">${esc(t('view.algo.label.no_accounts'))}</option>`;
+        const saveBtn = host.querySelector('#algo-save');
+        if (saveBtn) saveBtn.disabled = !eligible.length;
     });
     host.querySelector('#algo-form').addEventListener('submit', async (e) => {
         e.preventDefault();
