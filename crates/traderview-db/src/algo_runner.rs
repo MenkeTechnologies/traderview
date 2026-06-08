@@ -116,9 +116,6 @@ fn next_boundary(now: DateTime<Utc>, interval: BarInterval) -> DateTime<Utc> {
     DateTime::<Utc>::from_timestamp(aligned, 0).unwrap_or(now)
 }
 
-/// Watchlist universe lands; autoscan stays a stub returning empty (the
-/// RVOL scanner integration is heavier — needs price_bars aggregation
-/// across the full symbol-catalog — and slots into a later commit).
 async fn symbol_universe(
     pool: &PgPool,
     s: &AlgoStrategy,
@@ -130,10 +127,34 @@ async fn symbol_universe(
             };
             crate::watchlists::symbols(pool, watchlist_id).await
         }
-        // Autoscan: empty until the RVOL ranker is wired. Strategies in
-        // this mode are inert (the runner skips them) but don't error.
+        "autoscan" => {
+            let n = s.autoscan_top_n.max(1) as i64;
+            autoscan_topn(pool, n).await
+        }
         _ => Ok(Vec::new()),
     }
+}
+
+/// Top-N symbols by traded volume in the last 30 minutes of 10s bars
+/// (current activity proxy — high turnover ≈ high RVOL right now).
+/// Cheaper than a true rolling-RVOL z-score and good enough for
+/// strategies that want "whatever's hot today". The intraday tick
+/// worker keeps `price_bars` fresh, so this query reflects truly
+/// real-time activity rather than yesterday's close.
+pub async fn autoscan_topn(pool: &PgPool, top_n: i64) -> Result<Vec<String>, anyhow::Error> {
+    let rows: Vec<(String,)> = sqlx::query_as(
+        "SELECT symbol
+           FROM price_bars
+          WHERE interval = '10s'::bar_interval_t
+            AND bar_time >= now() - INTERVAL '30 minutes'
+          GROUP BY symbol
+          ORDER BY SUM(volume) DESC
+          LIMIT $1",
+    )
+    .bind(top_n)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows.into_iter().map(|(s,)| s).collect())
 }
 
 async fn drive_strategy(
