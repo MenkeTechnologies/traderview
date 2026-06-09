@@ -74,6 +74,7 @@ mod r_distribution;
 mod rebalance;
 mod reports;
 mod research;
+mod rvol_accel;
 mod scans;
 mod screener;
 mod screenshots;
@@ -173,6 +174,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(gamma_squeeze::router())
         .merge(htb_ranker::router())
         .merge(breadth_divergence::router())
+        .merge(rvol_accel::router())
         .merge(webull::router())
         .merge(vol_surface::router())
         .merge(tax_lots::router())
