@@ -76,7 +76,7 @@ export async function renderInstitutional13F(mount, _appState) {
 async function load(tok) {
     const profEl = document.getElementById('i13f-profile');
     const portEl = document.getElementById('i13f-portfolio');
-    [profEl, portEl].forEach(el => el && (el.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`));
+    [profEl, portEl].forEach(el => el && (el.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`));
     try {
         const to = new Date();
         const from = new Date(to);

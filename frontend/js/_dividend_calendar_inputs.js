@@ -131,3 +131,73 @@ export function fmtAmount(a) {
     if (!Number.isFinite(a)) return '—';
     return `$${a.toFixed(4)}`;
 }
+
+// ── Market-wide calendar helpers ───────────────────────────────────────
+//
+// The investing.com-style calendar is sourced from the backend
+// `/dividends/calendar` endpoint (Nasdaq-backed), which returns every company
+// going ex in the window. Date fields arrive as ISO `YYYY-MM-DD` strings.
+
+/** Parse a `YYYY-MM-DD` string into a local Date at midnight, or null when
+ *  absent / unparseable. */
+export function parseYmd(s) {
+    if (typeof s !== 'string') return null;
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s.trim());
+    if (!m) return null;
+    const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    return isNaN(d.getTime()) ? null : d;
+}
+
+/** Format a number as a `$x.xx` annualized amount. Null → "—". */
+export function fmtAnnualized(a) {
+    if (!Number.isFinite(a)) return '—';
+    return `$${a.toFixed(2)}`;
+}
+
+/** Human-readable payment-frequency label from a payments-per-year count. */
+export function freqLabelFromPpy(ppy) {
+    switch (Number(ppy)) {
+        case 1:  return 'Annual';
+        case 2:  return 'Semi-annual';
+        case 3:  return 'Trimesterly';
+        case 4:  return 'Quarterly';
+        case 6:  return 'Bimonthly';
+        case 12: return 'Monthly';
+        case 52: return 'Weekly';
+        default: return '—';
+    }
+}
+
+/** Normalize the market-wide `/dividends/calendar` response into UI rows.
+ *
+ *  The backend (Nasdaq-sourced) returns `{ rows: [{ symbol, company, ex_date,
+ *  pay_date, record_date, announcement_date, amount, annual_dividend,
+ *  payments_per_year }] }` with ISO `YYYY-MM-DD` date strings. Rows without a
+ *  parseable ex-date are dropped. */
+export function extractCalendarRows(payload) {
+    const arr = payload && Array.isArray(payload.rows) ? payload.rows : null;
+    if (!arr) return [];
+    const out = [];
+    for (const r of arr) {
+        if (!r || typeof r !== 'object') continue;
+        const ex = parseYmd(r.ex_date);
+        const symbol = typeof r.symbol === 'string' ? r.symbol.trim().toUpperCase() : '';
+        if (!ex || !symbol) continue;
+        const amount = Number(r.amount);
+        const annual = Number(r.annual_dividend);
+        out.push({
+            symbol,
+            company: typeof r.company === 'string' ? r.company : '',
+            ex_date: ex,
+            pay_date: parseYmd(r.pay_date),
+            record_date: parseYmd(r.record_date),
+            announcement_date: parseYmd(r.announcement_date),
+            amount: Number.isFinite(amount) ? amount : null,
+            annualized: Number.isFinite(annual) ? annual : null,
+            payments_per_year: Number.isFinite(Number(r.payments_per_year)) ? Number(r.payments_per_year) : null,
+            price: null,
+            yield: null,
+        });
+    }
+    return out;
+}

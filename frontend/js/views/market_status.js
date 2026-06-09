@@ -48,8 +48,8 @@ export async function renderMarketStatus(mount, _appState) {
 
 async function load(tok) {
     const [statusEl, holEl] = ['ms-status', 'ms-holidays'].map(id => document.getElementById(id));
-    statusEl && (statusEl.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`);
-    holEl && (holEl.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`);
+    statusEl && (statusEl.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`);
+    holEl && (holEl.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`);
     try {
         const [st, hol] = await Promise.all([
             api.finnhubMarketStatus(state.exchange).catch(() => null),

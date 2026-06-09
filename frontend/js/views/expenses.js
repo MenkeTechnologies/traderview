@@ -1209,7 +1209,7 @@ async function renderDowChart(mount, year) {
 async function renderTopMerchants(mount, year) {
     const el = mount.querySelector('#tax-top-merchants');
     if (!el) return;
-    el.innerHTML = `<div class="muted small">${esc(t('common.loading'))}</div>`;
+    el.innerHTML = `<div class="muted small"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div>`;
     let rows = [];
     try { rows = await api.topMerchants({ year, limit: 20 }); }
     catch (_) { rows = []; }

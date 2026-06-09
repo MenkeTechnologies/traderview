@@ -17,7 +17,7 @@ export async function renderVol(mount) {
             <div id="vix-curve"></div>
         </div>
 
-        <div id="yields-cards" class="cards" style="margin-top:14px" data-i18n="view.vol.boot.loading_yields">loading yields…</div>
+        <div id="yields-cards" class="cards" style="margin-top:14px"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div>
         <div class="chart-panel">
             <h2 data-i18n="view.vol.h2.treasury_yield_curve">Treasury yield curve</h2>
             <div id="yc-chart"></div>

@@ -560,7 +560,7 @@ async function runReceiptSearch(mount, tok) {
     const pager = mount.querySelector('#rs-pager');
     if (!q || !wrap) return;
     if (pager) pager.innerHTML = '';
-    wrap.innerHTML = `<div class="muted">${esc(t('common.loading'))}</div>`;
+    wrap.innerHTML = `<div class="muted"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div>`;
     if (meta) meta.textContent = '';
 
     let hits;

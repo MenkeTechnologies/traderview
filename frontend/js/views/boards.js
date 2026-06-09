@@ -427,7 +427,7 @@ function tickEvery(secs, fn, tok) {
 }
 
 function mountWidget(body, w, tok) {
-    body.innerHTML = `<div class="muted small">${esc(t('common.loading'))}</div>`;
+    body.innerHTML = `<div class="muted small"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div>`;
     switch (w.kind) {
         case 'quote':       return mountQuote(body, w, tok);
         case 'mini_chart':  return mountMiniChart(body, w, tok);

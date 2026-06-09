@@ -98,8 +98,8 @@ export async function renderExports(mount, state) {
     mount.querySelectorAll('button[data-action]').forEach(btn => {
         btn.addEventListener('click', async () => {
             const action = btn.dataset.action;
-            const orig = btn.textContent;
-            btn.textContent = t('common.status.fetching');
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<span class="tv-spinner tv-spinner-inline" role="status" aria-label="loading"></span>';
             btn.disabled = true;
             try {
                 if (action === 'csv') {
@@ -123,7 +123,7 @@ export async function renderExports(mount, state) {
                 showToast(t('common.error', { err: e.message }), { level: 'error' });
             } finally {
                 if (viewIsCurrent(tok)) {
-                    btn.textContent = orig;
+                    btn.innerHTML = orig;
                     btn.disabled = false;
                 }
             }
@@ -134,7 +134,7 @@ export async function renderExports(mount, state) {
 async function renderYearChart(accountId, years, tok) {
     const el = document.getElementById('ex-chart');
     if (!el || !window.uPlot) return;
-    el.innerHTML = `<div class="muted" data-i18n="common.loading">${esc(t('common.loading'))}</div>`;
+    el.innerHTML = `<div class="muted"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div>`;
     let trades;
     try {
         trades = await api.trades(accountId, { status: 'closed', limit: 2000 });
@@ -180,7 +180,7 @@ async function renderYearChart(accountId, years, tok) {
 async function renderCumulativeChart(accountId, years, tok) {
     const el = document.getElementById('ex-cum-chart');
     if (!el || !window.uPlot) return;
-    el.innerHTML = `<div class="muted" data-i18n="common.loading">${esc(t('common.loading'))}</div>`;
+    el.innerHTML = `<div class="muted"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div>`;
     let trades;
     try {
         trades = await api.trades(accountId, { status: 'closed', limit: 2000 });

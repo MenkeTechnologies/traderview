@@ -38,7 +38,7 @@ export async function renderPriceTarget(mount, _appState, symbol = '') {
 
 async function load(tok) {
     const el = document.getElementById('pt-result');
-    if (el) el.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`;
+    if (el) el.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
     try {
         const [pt, q] = await Promise.all([
             api.symbolPriceTarget(state.symbol),

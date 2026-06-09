@@ -1,15 +1,14 @@
-// Dividend Yield Calendar — for a user-supplied symbol list, fetch
-// each symbol's dividend data in parallel via /symbols/:sym/dividends,
-// extract upcoming ex-date/amount/yield, and render a sortable
-// calendar table filtered by horizon (next 7 / 14 / 30 / 60 / 180
-// days).
+// Dividend Calendar — an investing.com-style, market-wide calendar of
+// *upcoming* ex-dividend events.
 //
-// Data source: the existing per-symbol dividends endpoint (Yahoo
-// quoteSummary blob). No additional backend wiring required.
+// Data source: the backend `/dividends/calendar?days=N` endpoint, which
+// aggregates Nasdaq's per-date dividend feed across the horizon and returns
+// *every* company going ex in the window (not a curated universe). Events are
+// grouped by ex-date so the table reads like a day-by-day calendar.
 //
-// Symbol input: textarea (one per line/comma/space) OR pre-populate
-// from the user's default watchlist via the "load from watchlist"
-// button if their account has one.
+// Yield needs a price, which the market-wide feed doesn't carry, so it is
+// enriched best-effort: for up to YIELD_CAP of the soonest symbols we pull a
+// (Yahoo-backed) quote and compute annualized ÷ price. The rest show "—".
 
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
@@ -17,59 +16,55 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
 import {
-    parseSymbolList, extractDividend, sortByExDate,
-    filterByHorizon, daysBetween,
-    fmtDate, fmtYield, fmtAmount,
+    daysBetween, fmtDate, fmtYield, fmtAmount,
+    extractCalendarRows, freqLabelFromPpy, fmtAnnualized,
 } from '../_dividend_calendar_inputs.js';
 
-const DEFAULT_SYMBOLS = `# One symbol per token (line / comma / space separated).
-# Demo: a handful of well-known dividend payers.
-KO  PG  JNJ  XOM  CVX  T  VZ  MCD  WMT  PEP  HD  IBM  PFE  MRK  ABBV
-`;
-
 const HORIZON_OPTIONS = [
-    { value: 7,    n: 7 },
-    { value: 14,   n: 14 },
-    { value: 30,   n: 30 },
-    { value: 60,   n: 60 },
-    { value: 180,  key: 'view.dividend_calendar.horizon.next_6_months' },
-    { value: 'all', key: 'view.dividend_calendar.horizon.all' },
+    { value: 7,  n: 7 },
+    { value: 14, n: 14 },
+    { value: 30, n: 30 },
+    { value: 60, n: 60 },
+    { value: 90, n: 90 },
 ];
 function horizonLabel(o) {
-    return o.key ? t(o.key) : t('view.dividend_calendar.horizon.next_n_days', { n: o.n });
+    return t('view.dividend_calendar.horizon.next_n_days', { n: o.n });
 }
 
+// Cap how many quotes we pull to enrich yields, to stay within rate limits.
+const YIELD_CAP = 60;
+
 let state = {
-    text: DEFAULT_SYMBOLS,
-    horizon: 30,
-    lastRows: null,
+    horizon: 14,
+    filter: '',
+    rows: null,
+    sortKey: 'ex_date',
+    sortDir: 'asc',
 };
 
 export async function renderDividendCalendar(mount, _appState) {
     const tok = currentViewToken();
 
     mount.innerHTML = `
-        <h1 data-i18n="view.dividend_calendar.h1.dividend_yield_calendar" class="view-title">// DIVIDEND YIELD CALENDAR</h1>
+        <h1 data-i18n="view.dividend_calendar.h1.dividend_yield_calendar" class="view-title">// DIVIDEND CALENDAR</h1>
 
         <div class="chart-panel">
-            <h2 data-i18n="view.dividend_calendar.h2.symbols">Symbols</h2>
-            <textarea id="dc-text" rows="5"
-                style="width:100%;font-family:monospace;font-size:13px"
-                data-tip="view.dividend_calendar.tip.text">${esc(state.text)}</textarea>
-            <div class="inline-form" style="margin-top:10px">
+            <h2 data-i18n="view.dividend_calendar.h2.calendar">Calendar</h2>
+            <div class="inline-form">
                 <label><span data-i18n="view.dividend_calendar.label.horizon">Horizon</span>
                     <select id="dc-horizon" data-tip="view.dividend_calendar.tip.horizon">
                         ${HORIZON_OPTIONS.map(o =>
                             `<option value="${o.value}" ${o.value === state.horizon ? 'selected' : ''}>${esc(horizonLabel(o))}</option>`
                         ).join('')}
                     </select></label>
-                <button data-i18n="view.dividend_calendar.btn.load_from_watchlist" id="dc-load-watchlist" class="secondary" type="button" data-tip="view.dividend_calendar.tip.load_watchlist">Load from watchlist</button>
-                <button data-i18n="view.dividend_calendar.btn.fetch_dividends" id="dc-run" class="primary" type="button" data-tip="view.dividend_calendar.tip.run" data-shortcut="dividend_calendar_run">Fetch dividends</button>
+                <label><span data-i18n="view.dividend_calendar.label.filter">Filter</span>
+                    <input id="dc-filter" type="text" placeholder="symbol / company"
+                        data-i18n-placeholder="view.dividend_calendar.placeholder.filter"
+                        value="${esc(state.filter)}" data-tip="view.dividend_calendar.tip.filter"></label>
             </div>
-            <p data-i18n="view.dividend_calendar.hint.pulls_per_symbol_dividend_data_in_parallel_from_th" class="muted">
-                Pulls per-symbol dividend data in parallel from the research backend.
-                Symbols without dividend data (non-payers, ETFs, ADRs) are silently
-                skipped. Past-dated ex-dates are filtered out.
+            <p data-i18n="view.dividend_calendar.hint.finnhub" class="muted">
+                Market-wide upcoming ex-dividend dates across all listed companies, sourced from the
+                Nasdaq dividend feed. Yield (annualized ÷ price) is filled best-effort for the soonest names.
             </p>
         </div>
 
@@ -95,109 +90,162 @@ export async function renderDividendCalendar(mount, _appState) {
 
     wireForm(mount, tok);
     void fmt;
+    void runFetch(tok);
 }
 
 function wireForm(mount, tok) {
-    document.getElementById('dc-run').addEventListener('click', () => {
-        state.text = document.getElementById('dc-text').value;
-        const h = document.getElementById('dc-horizon').value;
-        state.horizon = h === 'all' ? 'all' : Number(h);
-        void runFetch(mount, tok);
-    });
-    document.getElementById('dc-load-watchlist').addEventListener('click', () => {
-        void loadFromWatchlist(mount, tok);
-    });
     document.getElementById('dc-horizon').addEventListener('change', e => {
-        const h = e.target.value;
-        state.horizon = h === 'all' ? 'all' : Number(h);
-        // Re-render from cached rows without a refetch.
-        if (state.lastRows) renderTable(state.lastRows);
+        state.horizon = Number(e.target.value);
+        void runFetch(tok);
+    });
+    document.getElementById('dc-filter').addEventListener('input', e => {
+        state.filter = e.target.value;
+        if (state.rows) renderAll(state.rows);
     });
 }
 
-async function loadFromWatchlist(mount, tok) {
+async function runFetch(tok) {
     hideErr();
-    try {
-        const wls = await api.watchlists();
-        if (!viewIsCurrent(tok)) return;
-        if (!Array.isArray(wls) || wls.length === 0) {
-            showErr(t('view.dividend_calendar.err.no_watchlists_found_add_one_under_the_watchlists_v'));
-            showToast(t('view.dividend_calendar.toast.no_watchlists'), { level: 'warning' });
-            return;
-        }
-        const first = wls[0];
-        const syms = await api.watchlistSymbols(first.id);
-        if (!viewIsCurrent(tok)) return;
-        const tokens = (syms || []).map(s => s.symbol || s).filter(Boolean);
-        const text = `# Loaded from watchlist "${first.name}"\n${tokens.join('  ')}\n`;
-        document.getElementById('dc-text').value = text;
-        state.text = text;
-        showToast(t('view.dividend_calendar.toast.watchlist_loaded', { name: first.name, n: tokens.length }), { level: 'success' });
-    } catch (e) {
-        showErr(t('view.dividend_calendar.error.watchlist_load', { msg: e.message || e }));
-        showToast(t('view.dividend_calendar.toast.watchlist_error'), { level: 'error' });
-    }
-}
+    document.getElementById('dc-table').innerHTML =
+        `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
 
-async function runFetch(mount, tok) {
-    hideErr();
-    const symbols = parseSymbolList(state.text);
-    if (symbols.length === 0) {
-        showErr(t('view.dividend_calendar.err.no_symbols_parsed_from_input'));
-        showToast(t('view.dividend_calendar.toast.no_symbols'), { level: 'warning' });
+    let payload;
+    try {
+        payload = await api.dividendsCalendar(state.horizon);
+    } catch (e) {
+        showErr(`${t('view.dividend_calendar.error.load')}: ${e.message || e}`);
+        showToast(t('view.dividend_calendar.toast.error'), { level: 'error' });
         return;
     }
-    document.getElementById('dc-table').innerHTML = `<div class="boot">${esc(t('view.dividend_calendar.hint.fetching'))}</div>`;
+    if (!viewIsCurrent(tok)) return;
 
-    // Parallel fetch, but cap concurrency to avoid hammering the backend.
-    const rows = await fetchWithConcurrencyLimit(symbols, 8, async (sym) => {
+    const rows = extractCalendarRows(payload);
+    rows.sort((a, b) => a.ex_date - b.ex_date || a.symbol.localeCompare(b.symbol));
+    state.rows = rows;
+    renderAll(rows);
+    showToast(t('view.dividend_calendar.toast.loaded', { events: rows.length }), { level: 'success' });
+
+    // Best-effort yield enrichment for the soonest names, then re-render.
+    void enrichYields(tok, rows);
+}
+
+async function enrichYields(tok, rows) {
+    const seen = new Set();
+    const targets = [];
+    for (const r of rows) {
+        if (seen.has(r.symbol)) continue;
+        seen.add(r.symbol);
+        targets.push(r.symbol);
+        if (targets.length >= YIELD_CAP) break;
+    }
+    if (targets.length === 0) return;
+
+    const prices = {};
+    await fetchWithConcurrencyLimit(targets, 6, async (sym) => {
         try {
-            const payload = await api.symbolDividends(sym);
-            return extractDividend(sym, payload);
-        } catch (_e) {
-            return null;
-        }
+            const q = await api.quote(sym);
+            const px = Number(q && q.price);
+            if (Number.isFinite(px) && px > 0) prices[sym] = px;
+        } catch (_e) { /* leave blank */ }
     });
     if (!viewIsCurrent(tok)) return;
 
-    const valid = rows.filter(r => r !== null);
-    state.lastRows = valid;
-    renderSummary(symbols.length, valid);
-    renderTable(valid);
-    renderYieldChart(valid);
-    renderDteChart(valid);
-    showToast(t('view.dividend_calendar.toast.fetched', { payers: valid.length, total: symbols.length }), { level: 'success' });
+    let any = false;
+    for (const r of rows) {
+        const px = prices[r.symbol];
+        if (px && r.annualized != null) {
+            r.price = px;
+            r.yield = r.annualized / px;
+            any = true;
+        }
+    }
+    if (any && state.rows === rows) renderAll(rows);
 }
 
-// Bounded-concurrency mapper. Returns results in original-input order.
+function renderAll(rows) {
+    renderSummary(rows);
+    renderTable(rows);
+    renderYieldChart(rows);
+    renderDteChart(rows);
+}
+
+// Bounded-concurrency mapper.
 async function fetchWithConcurrencyLimit(items, limit, worker) {
-    const out = new Array(items.length);
     let next = 0;
     const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
         while (true) {
             const i = next++;
             if (i >= items.length) return;
-            out[i] = await worker(items[i]);
+            await worker(items[i]);
         }
     });
     await Promise.all(runners);
-    return out;
 }
 
-function renderSummary(requested, rows) {
-    const now = new Date();
-    const filtered = state.horizon === 'all'
-        ? sortByExDate(rows).filter(r => r.ex_date && r.ex_date >= now)
-        : filterByHorizon(sortByExDate(rows), now, state.horizon);
-    const yields = rows.map(r => r.yield).filter(y => Number.isFinite(y));
-    const avgYield = yields.length
-        ? yields.reduce((a, b) => a + b, 0) / yields.length
-        : NaN;
+const NUMERIC_SORT_KEYS = new Set(['amount', 'payments_per_year', 'annualized', 'yield']);
+
+function sortValue(r, key) {
+    switch (key) {
+        case 'symbol':            return r.symbol || '';
+        case 'company':           return r.company || '';
+        case 'ex_date':           return r.ex_date ? r.ex_date.getTime() : null;
+        case 'pay_date':          return r.pay_date ? r.pay_date.getTime() : null;
+        case 'record_date':       return r.record_date ? r.record_date.getTime() : null;
+        case 'amount':            return r.amount;
+        case 'payments_per_year': return r.payments_per_year;
+        case 'annualized':        return r.annualized;
+        case 'yield':             return r.yield;
+        default:                  return null;
+    }
+}
+
+function tieBreak(a, b) {
+    const at = a.ex_date ? a.ex_date.getTime() : Infinity;
+    const bt = b.ex_date ? b.ex_date.getTime() : Infinity;
+    return (at - bt) || a.symbol.localeCompare(b.symbol);
+}
+
+function isBlank(v) {
+    return v == null || (typeof v === 'number' && !Number.isFinite(v));
+}
+
+function sortRows(rows, key, dir) {
+    const mul = dir === 'asc' ? 1 : -1;
+    const isStr = key === 'symbol' || key === 'company';
+    return [...rows].sort((a, b) => {
+        const av = sortValue(a, key);
+        const bv = sortValue(b, key);
+        const an = isBlank(av);
+        const bn = isBlank(bv);
+        // Blanks always sort to the bottom, regardless of direction.
+        if (an && bn) return tieBreak(a, b);
+        if (an) return 1;
+        if (bn) return -1;
+        const c = isStr ? String(av).localeCompare(String(bv)) : av - bv;
+        return c === 0 ? tieBreak(a, b) : c * mul;
+    });
+}
+
+
+function applyFilter(rows) {
+    const q = state.filter.trim().toUpperCase();
+    if (!q) return rows;
+    return rows.filter(r =>
+        r.symbol.includes(q) || (r.company && r.company.toUpperCase().includes(q)));
+}
+
+function renderSummary(rows) {
+    const visible = applyFilter(rows);
+    const payers = new Set(visible.map(r => r.symbol)).size;
+    const yields = visible.map(r => r.yield).filter(y => Number.isFinite(y));
+    const avgYield = yields.length ? yields.reduce((a, b) => a + b, 0) / yields.length : NaN;
     const maxYield = yields.length ? Math.max(...yields) : NaN;
+    const soonest = visible.length ? fmtDate(visible[0].ex_date) : '—';
+
     document.getElementById('dc-summary').innerHTML = [
-        card(t('view.dividend_calendar.card.symbols_requested'), String(requested)),
-        card(t('view.dividend_calendar.card.dividend_payers_found'), String(rows.length)),
-        card(t('view.dividend_calendar.card.in_horizon', { window: state.horizon === 'all' ? t('view.dividend_calendar.horizon.all_upcoming') : state.horizon + 'd' }), String(filtered.length)),
+        card(t('view.dividend_calendar.card.events_in_horizon', { window: state.horizon + 'd' }), String(visible.length)),
+        card(t('view.dividend_calendar.card.dividend_payers_found'), String(payers)),
+        card(t('view.dividend_calendar.card.soonest_ex'), soonest),
         card(t('view.dividend_calendar.card.avg_yield_paying_set'), fmtYield(avgYield)),
         card(t('view.dividend_calendar.card.max_yield'), fmtYield(maxYield)),
     ].join('');
@@ -211,64 +259,91 @@ function card(label, value) {
 }
 
 function renderTable(rows) {
-    const now = new Date();
-    const sorted = sortByExDate(rows);
-    const visible = state.horizon === 'all'
-        ? sorted.filter(r => r.ex_date && r.ex_date >= now)
-        : filterByHorizon(sorted, now, state.horizon);
-
+    const visible = sortRows(applyFilter(rows), state.sortKey, state.sortDir);
+    const wrap = document.getElementById('dc-table');
     if (visible.length === 0) {
-        document.getElementById('dc-table').innerHTML =
-            `<div class="boot">${esc(t('view.dividend_calendar.empty.no_upcoming'))}</div>`;
+        wrap.innerHTML = `<div class="boot">${esc(t('view.dividend_calendar.empty.no_upcoming'))}</div>`;
         return;
     }
+    const now = new Date();
 
-    const rowHtml = visible.map(r => {
-        const days = r.ex_date ? daysBetween(now, r.ex_date) : null;
-        return `<tr data-context-scope="symbol-row" data-symbol="${esc(r.symbol)}">
-            <td>${esc(r.symbol)}</td>
-            <td>${esc(fmtDate(r.ex_date))}</td>
-            <td class="dc-days">${days == null ? '—' : days + 'd'}</td>
-            <td>${esc(fmtDate(r.pay_date))}</td>
-            <td class="dc-amount">${esc(fmtAmount(r.amount))}</td>
-            <td class="dc-yield">${esc(fmtYield(r.yield))}</td>
-            <td>${esc(fmtAmount(r.last_div_amount))}</td>
-            <td>${esc(fmtDate(r.last_div_date))}</td>
-        </tr>`;
+    const th = (key, labelKey, label) => {
+        const active = state.sortKey === key;
+        const arrow = active ? (state.sortDir === 'asc' ? ' ▲' : ' ▼') : '';
+        return `<th data-sort-key="${esc(key)}" class="sortable${active ? ' active' : ''}"
+                   data-i18n="${labelKey}">${esc(label)}${arrow}</th>`;
+    };
+
+    const body = visible.map(r => {
+        const days = daysBetween(now, r.ex_date);
+        const dayTxt = days == null ? '' : (days <= 0 ? t('view.dividend_calendar.today') : `${days}d`);
+        return `
+            <tr data-context-scope="symbol-row" data-symbol="${esc(r.symbol)}">
+                <td>${esc(fmtDate(r.ex_date))}${dayTxt ? ` <span class="muted">· ${esc(dayTxt)}</span>` : ''}</td>
+                <td><a class="link" href="#research/${encodeURIComponent(r.symbol)}">${esc(r.symbol)}</a></td>
+                <td class="dc-company">${esc(r.company)}</td>
+                <td class="dc-amount">${esc(fmtAmount(r.amount))}</td>
+                <td>${esc(freqLabelFromPpy(r.payments_per_year))}</td>
+                <td class="dc-amount">${esc(fmtAnnualized(r.annualized))}</td>
+                <td class="dc-yield">${esc(fmtYield(r.yield))}</td>
+                <td>${esc(fmtDate(r.pay_date))}</td>
+                <td>${esc(fmtDate(r.record_date))}</td>
+            </tr>`;
     }).join('');
 
-    document.getElementById('dc-table').innerHTML = `
+    wrap.innerHTML = `
         <table class="trades dc-table">
             <thead><tr>
-                <th data-i18n="view.dividend_calendar.th.symbol">Symbol</th>
-                <th data-i18n="view.dividend_calendar.th.ex_date">Ex-date</th>
-                <th data-i18n="view.dividend_calendar.th.days_to_ex">Days to ex</th>
-                <th data-i18n="view.dividend_calendar.th.pay_date">Pay date</th>
-                <th data-i18n="view.dividend_calendar.th.amount_yr">Amount / yr</th>
-                <th data-i18n="view.dividend_calendar.th.indicated_yield">Indicated yield</th>
-                <th data-i18n="view.dividend_calendar.th.last_paid_amount">Last paid (amount)</th>
-                <th data-i18n="view.dividend_calendar.th.last_paid_date">Last paid (date)</th>
+                ${th('ex_date',           'view.dividend_calendar.th.ex_date',         'Ex-date')}
+                ${th('symbol',            'view.dividend_calendar.th.symbol',          'Symbol')}
+                ${th('company',           'view.dividend_calendar.th.company',         'Company')}
+                ${th('amount',            'view.dividend_calendar.th.amount',          'Amount')}
+                ${th('payments_per_year', 'view.dividend_calendar.th.frequency',       'Frequency')}
+                ${th('annualized',        'view.dividend_calendar.th.annualized',      'Annualized')}
+                ${th('yield',             'view.dividend_calendar.th.indicated_yield', 'Indicated yield')}
+                ${th('pay_date',          'view.dividend_calendar.th.pay_date',        'Pay date')}
+                ${th('record_date',       'view.dividend_calendar.th.record_date',     'Record date')}
             </tr></thead>
-            <tbody>${rowHtml}</tbody>
+            <tbody>${body}</tbody>
         </table>`;
+
+    wrap.querySelectorAll('th.sortable').forEach(thEl => {
+        thEl.addEventListener('click', () => {
+            const key = thEl.dataset.sortKey;
+            if (state.sortKey === key) {
+                state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                state.sortKey = key;
+                state.sortDir = NUMERIC_SORT_KEYS.has(key) ? 'desc' : 'asc';
+            }
+            if (state.rows) renderTable(state.rows);
+        });
+    });
 }
 
 function renderYieldChart(rows) {
     const el = document.getElementById('dc-chart');
     if (!el || !window.uPlot) return;
     el.innerHTML = '';
-    const withYield = (rows || []).filter(r => Number.isFinite(r.yield));
-    if (withYield.length < 1) {
+    const bySym = new Map();
+    for (const r of applyFilter(rows)) {
+        if (!Number.isFinite(r.yield)) continue;
+        const prev = bySym.get(r.symbol);
+        if (prev == null || r.yield > prev) bySym.set(r.symbol, r.yield);
+    }
+    const data = [...bySym.entries()].map(([symbol, y]) => ({ symbol, yield: y }));
+    if (data.length < 1) {
         el.innerHTML = `<div class="muted" data-i18n="view.dividend_calendar.empty_chart">${esc(t('view.dividend_calendar.empty_chart'))}</div>`;
         return;
     }
-    const sorted = [...withYield].sort((a, b) => b.yield - a.yield);
-    const labels = sorted.map(r => r.symbol);
-    const yields = sorted.map(r => r.yield * 100);
+    data.sort((a, b) => b.yield - a.yield);
+    const top = data.slice(0, 30);
+    const labels = top.map(r => r.symbol);
+    const yields = top.map(r => r.yield * 100);
     const xs = labels.map((_, i) => i + 1);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 220,
-        scales: { x: { time: false,}, y: { auto: true } },
+        scales: { x: { time: false }, y: { auto: true } },
         series: [
             { label: t('view.dividend_calendar.chart.symbol_idx') },
             { label: t('view.dividend_calendar.chart.yield_pct'),
@@ -291,8 +366,8 @@ function renderDteChart(rows) {
     if (!el || !window.uPlot) return;
     el.innerHTML = '';
     const now = new Date();
-    const days = (rows || [])
-        .map(r => r.ex_date ? daysBetween(now, r.ex_date) : null)
+    const days = applyFilter(rows)
+        .map(r => daysBetween(now, r.ex_date))
         .filter(d => Number.isFinite(d) && d >= 0);
     if (days.length < 1) {
         el.innerHTML = `<div class="muted" data-i18n="view.dividend_calendar.empty_dte_chart">${esc(t('view.dividend_calendar.empty_dte_chart'))}</div>`;
@@ -303,8 +378,8 @@ function renderDteChart(rows) {
         { lo: 7,  hi: 14,  label: '7–14d' },
         { lo: 14, hi: 30,  label: '14–30d' },
         { lo: 30, hi: 60,  label: '30–60d' },
-        { lo: 60, hi: 180, label: '60–180d' },
-        { lo: 180, hi: Infinity, label: '≥180d' },
+        { lo: 60, hi: 90,  label: '60–90d' },
+        { lo: 90, hi: Infinity, label: '≥90d' },
     ];
     const counts = new Array(buckets.length).fill(0);
     for (const d of days) {
@@ -316,7 +391,7 @@ function renderDteChart(rows) {
     const xs = labels.map((_, i) => i + 1);
     new window.uPlot({
         title: '', width: el.clientWidth || 600, height: 200,
-        scales: { x: { time: false,}, y: { auto: true } },
+        scales: { x: { time: false }, y: { auto: true } },
         series: [
             { label: t('view.dividend_calendar.chart.dte_bucket') },
             { label: t('view.dividend_calendar.chart.payer_count'),

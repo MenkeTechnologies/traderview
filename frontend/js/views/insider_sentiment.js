@@ -42,7 +42,7 @@ export async function renderInsiderSentiment(mount, _appState, symbol = '') {
 async function load(tok) {
     const tEl = document.getElementById('is-table');
     const cEl = document.getElementById('is-chart');
-    if (tEl) tEl.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`;
+    if (tEl) tEl.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
     try {
         const to = new Date();
         const from = new Date(to);

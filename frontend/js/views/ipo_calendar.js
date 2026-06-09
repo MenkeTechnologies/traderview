@@ -51,7 +51,7 @@ export async function renderIpoCalendar(mount, _appState) {
 
 async function load(tok) {
     const el = document.getElementById('ipo-table');
-    if (el) el.innerHTML = `<div class="boot">${esc(t('view.ipo_calendar.hint.loading'))}</div>`;
+    if (el) el.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
     try {
         const today = new Date();
         const to = new Date(today);

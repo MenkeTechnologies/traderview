@@ -39517,5 +39517,22 @@
   "view.var_estimator.validate.confidence": "confidence must be in (0, 1)",
   "view.var_estimator.validate.returns_finite": "returns array contains non-finite values",
   "view.vpin.validate.return_window": "return_window must be a positive integer",
-  "view.vpin.validate.window_buckets": "window_buckets must be a positive integer"
+  "view.vpin.validate.window_buckets": "window_buckets must be a positive integer",
+  "view.dividend_calendar.hint.finnhub": "Market-wide upcoming ex-dividend dates across all listed companies, sourced from the Nasdaq dividend feed. Yield (annualized ÷ price) is filled best-effort for the soonest names.",
+  "view.dividend_calendar.card.events_in_horizon": "Events in horizon · {window}",
+  "view.dividend_calendar.card.soonest_ex": "Soonest ex-date",
+  "view.dividend_calendar.today": "today",
+  "view.dividend_calendar.th.amount": "Amount",
+  "view.dividend_calendar.th.frequency": "Frequency",
+  "view.dividend_calendar.th.annualized": "Annualized",
+  "view.dividend_calendar.th.record_date": "Record date",
+  "view.dividend_calendar.th.declaration_date": "Declared",
+  "view.dividend_calendar.h2.calendar": "Calendar",
+  "view.dividend_calendar.label.filter": "Filter",
+  "view.dividend_calendar.placeholder.filter": "symbol / company",
+  "view.dividend_calendar.tip.filter": "Filter the calendar by ticker or company name (client-side, no refetch)",
+  "view.dividend_calendar.th.company": "Company",
+  "view.dividend_calendar.error.load": "Failed to load dividend calendar",
+  "view.dividend_calendar.toast.error": "Dividends · failed to load calendar",
+  "view.dividend_calendar.toast.loaded": "Dividends · {events} upcoming ex-date(s)"
 }

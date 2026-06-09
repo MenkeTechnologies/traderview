@@ -60,7 +60,7 @@ async function load(tok) {
     if (grid) grid.innerHTML = METRICS.map(m =>
         `<div class="chart-panel">
             <h2>${esc(t('view.estimates.metric.' + m.key))}</h2>
-            <div id="est-${m.key}"><div class="boot">${esc(t('common.loading'))}</div></div>
+            <div id="est-${m.key}"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div>
         </div>`
     ).join('');
 

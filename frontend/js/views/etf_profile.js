@@ -55,7 +55,7 @@ export async function renderEtfProfile(mount, _appState, symbol = '') {
 async function load(tok) {
     const els = ['etf-profile', 'etf-holdings', 'etf-sectors', 'etf-countries']
         .map(id => document.getElementById(id));
-    els.forEach(el => el && (el.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`));
+    els.forEach(el => el && (el.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`));
     try {
         const [prof, hold, sec, ctry] = await Promise.all([
             api.finnhubEtfProfile(state.symbol).catch(() => null),

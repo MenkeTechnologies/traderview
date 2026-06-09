@@ -52,7 +52,7 @@ export async function renderBondYieldCurve(mount, _appState) {
 async function load(tok) {
     const tableEl = document.getElementById('byc-table');
     const chartEl = document.getElementById('byc-chart');
-    if (tableEl) tableEl.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`;
+    if (tableEl) tableEl.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
     try {
         const data = await api.finnhubBondYieldCurve(state.code);
         if (!viewIsCurrent(tok)) return;

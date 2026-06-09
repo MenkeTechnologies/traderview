@@ -11,7 +11,7 @@ export async function renderOptions(mount, _state, rest) {
         <h1 class="view-title">${esc(tr('view.options_chain.h1', { sym }))}</h1>
         <form id="of" class="inline-form">
             <input name="sym" value="${esc(sym)}" style="text-transform:uppercase">
-            <select name="exp" id="expsel"><option data-i18n="view.options_chain.opt.loading">loading…</option></select>
+            <select name="exp" id="expsel"><option>…</option></select>
             <label>r <input name="r" value="0.045" type="number" step="0.01" style="width:80px"></label>
             <button data-i18n="view.options_chain.btn.load" class="primary" type="submit">Load</button>
         </form>
@@ -50,7 +50,7 @@ export async function renderOptions(mount, _state, rest) {
         const s = form.sym.value.trim().toUpperCase() || 'SPY';
         r = Number(form.r.value || 0.045);
         const ocm = mount.querySelector('#oc-mount');
-        if (ocm) ocm.innerHTML = '<div class="boot" data-i18n="view.options_chain.status.fetching_chain">fetching chain…</div>';
+        if (ocm) ocm.innerHTML = '<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>';
         try {
             const chain = await api.options(s, activeExp);
             if (!viewIsCurrent(tok)) return;

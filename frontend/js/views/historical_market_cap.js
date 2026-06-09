@@ -52,7 +52,7 @@ export async function renderHistoricalMarketCap(mount, _appState, symbol = '') {
 async function load(tok) {
     const chartEl = document.getElementById('hmc-chart');
     const sumEl = document.getElementById('hmc-summary');
-    if (sumEl) sumEl.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`;
+    if (sumEl) sumEl.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
     try {
         const to = new Date();
         const from = new Date(to);

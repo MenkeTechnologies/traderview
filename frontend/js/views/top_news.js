@@ -48,7 +48,7 @@ export async function renderTopNews(mount, _appState) {
 
 async function load(tok) {
     const el = document.getElementById('tn-list');
-    if (el) el.innerHTML = `<div class="boot">${esc(t('view.top_news.hint.loading'))}</div>`;
+    if (el) el.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
     try {
         const items = await api.finnhubGeneralNews(state.category);
         if (!viewIsCurrent(tok)) return;

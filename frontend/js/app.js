@@ -1327,8 +1327,8 @@ function bindTabs() {
     });
     // View-scoped: `f` in dividend-calendar scope → click Fetch dividends.
     window.addEventListener('tv:dividend-calendar-run', () => {
-        const el = document.getElementById('dc-run');
-        if (el && typeof el.click === 'function') el.click();
+        const el = document.getElementById('dc-horizon');
+        if (el) el.dispatchEvent(new Event('change'));
     });
     // View-scoped: `d` in signal-decomposition scope → click Decompose.
     window.addEventListener('tv:signal-decomposition-run', () => {

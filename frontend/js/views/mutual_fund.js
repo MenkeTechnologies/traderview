@@ -56,7 +56,7 @@ export async function renderMutualFund(mount, _appState, symbol = '') {
 async function load(tok) {
     const els = ['mf-profile', 'mf-holdings', 'mf-sectors', 'mf-countries']
         .map(id => document.getElementById(id));
-    els.forEach(el => el && (el.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`));
+    els.forEach(el => el && (el.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`));
     try {
         const [prof, hold, sec, ctry] = await Promise.all([
             api.finnhubMfProfile(state.symbol).catch(() => null),

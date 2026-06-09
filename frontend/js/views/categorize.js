@@ -75,7 +75,7 @@ export async function renderCategorize(mount) {
 async function loadAndRender(mount, tok) {
     const list = mount.querySelector('#cz-list');
     if (!list) return;
-    list.innerHTML = `<div class="muted">${esc(t('common.loading'))}</div>`;
+    list.innerHTML = `<div class="muted"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div>`;
     try {
         STATE.groups = await api.receiptsByMerchant({
             default_only: STATE.defaultOnly ? 1 : 0,

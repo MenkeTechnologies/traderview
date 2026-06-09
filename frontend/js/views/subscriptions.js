@@ -49,7 +49,7 @@ export async function renderSubscriptions(mount, _appState) {
 async function load(tok) {
     const sumEl = document.getElementById('sub-summary');
     const tblEl = document.getElementById('sub-table');
-    if (sumEl) sumEl.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`;
+    if (sumEl) sumEl.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
     try {
         const since = new Date();
         since.setMonth(since.getMonth() - state.months);

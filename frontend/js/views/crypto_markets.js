@@ -55,7 +55,7 @@ export async function renderCryptoMarkets(mount, _appState) {
 
 async function loadExchanges(tok) {
     const el = document.getElementById('cm-exchanges');
-    if (el) el.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`;
+    if (el) el.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
     try {
         const data = await api.finnhubCryptoExchanges();
         if (!viewIsCurrent(tok)) return;
@@ -81,7 +81,7 @@ async function loadExchanges(tok) {
 
 async function loadSymbols(tok) {
     const el = document.getElementById('cm-symbols');
-    if (el) el.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`;
+    if (el) el.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
     try {
         const list = await api.finnhubCryptoSymbols(state.exchange);
         if (!viewIsCurrent(tok)) return;
@@ -118,7 +118,7 @@ async function loadSymbols(tok) {
 async function loadProfile(tok) {
     if (!state.profileQuery) return;
     const el = document.getElementById('cm-profile');
-    if (el) el.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`;
+    if (el) el.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
     try {
         const p = await api.finnhubCryptoProfile(state.profileQuery);
         if (!viewIsCurrent(tok)) return;

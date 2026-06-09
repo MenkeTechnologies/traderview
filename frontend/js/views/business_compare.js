@@ -54,7 +54,7 @@ export async function renderBusinessCompare(mount) {
             </div>
         </div>
         <div id="bizc-grid" class="bizc-grid">
-            <div class="muted small">${esc(t('common.loading'))}</div>
+            <div class="muted small"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div>
         </div>
     `;
     mount.querySelector('#bizc-year').addEventListener('change', (e) => {

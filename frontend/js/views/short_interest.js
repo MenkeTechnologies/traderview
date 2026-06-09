@@ -62,7 +62,7 @@ export async function renderShortInterest(mount, _state, sym) {
         const wid = fd.get('wl') || null;
         const el = mount.querySelector('#ranked');
         if (!el) return;
-        el.innerHTML = '<div class="boot" data-i18n="common.status.fetching">fetching…</div>';
+        el.innerHTML = '<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>';
         try {
             const rows = await api.shortRanked(wid);
             if (!viewIsCurrent(tok)) return;

@@ -65,7 +65,7 @@ export async function renderPositionSize(mount, state) {
     mount.querySelector('#ps-fill-history').addEventListener('click', async () => {
         if (!acct) return;
         const status = mount.querySelector('#ps-fill-status');
-        if (status) status.textContent = t('common.status.fetching');
+        if (status) status.innerHTML = '<span class="tv-spinner tv-spinner-inline" role="status" aria-label="loading"></span>';
         try {
             const r = await api.positionSizeWinRate(acct.id);
             if (!viewIsCurrent(tok)) return;

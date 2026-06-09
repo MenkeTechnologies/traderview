@@ -38,7 +38,7 @@ export async function renderCongressionalTrading(mount, _appState, symbol = '') 
 
 async function load(tok) {
     const el = document.getElementById('ct-result');
-    if (el) el.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`;
+    if (el) el.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
     try {
         const from = new Date();
         const to = new Date(from);

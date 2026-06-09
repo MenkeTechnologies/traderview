@@ -48,7 +48,7 @@ export async function renderSectorHeatmap(mount, _appState) {
 async function load(tok) {
     const grid = document.getElementById('sh-grid');
     const tableEl = document.getElementById('sh-table');
-    if (grid) grid.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`;
+    if (grid) grid.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
     try {
         const data = await api.finnhubSectorMetrics(state.region);
         if (!viewIsCurrent(tok)) return;

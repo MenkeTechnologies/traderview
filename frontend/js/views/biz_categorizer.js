@@ -142,7 +142,7 @@ function tagCls(tag) {
 async function scan(tok) {
     const summary = document.getElementById('bc-summary');
     const tableEl = document.getElementById('bc-table');
-    if (summary) summary.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`;
+    if (summary) summary.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
     try {
         const since = new Date();
         since.setMonth(since.getMonth() - state.months);

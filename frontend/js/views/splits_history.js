@@ -39,7 +39,7 @@ export async function renderSplitsHistory(mount, _appState, symbol = '') {
 
 async function load(tok) {
     const el = document.getElementById('sp-result');
-    if (el) el.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`;
+    if (el) el.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
     try {
         const to = new Date();
         const from = new Date(to);

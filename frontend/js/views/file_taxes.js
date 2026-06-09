@@ -79,7 +79,7 @@ export async function renderTaxWizard(mount) {
             <div class="tw-body">
                 <nav class="tw-rail" id="tw-rail"></nav>
                 <main class="tw-pane" id="tw-pane">
-                    <div class="muted">${esc(t('common.loading'))}</div>
+                    <div class="muted"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div>
                 </main>
             </div>
         </div>
@@ -726,7 +726,7 @@ async function wireEducation(pane, tok) {
         const magi = String(Number(pane.querySelector('#tw-edu-magi').value) || 0);
         const status = pane.querySelector('#tw-edu-status').value;
         const out = pane.querySelector('#tw-edu-out');
-        out.innerHTML = `<div class="muted small">${esc(t('common.loading'))}</div>`;
+        out.innerHTML = `<div class="muted small"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div>`;
         try {
             const [aotc, llc] = await Promise.all([
                 api.taxPlannerAotc({
@@ -776,7 +776,7 @@ async function wireIra(pane, tok) {
             age_50_or_older: body.age_50_or_older,
         };
         const out = pane.querySelector('#tw-ira-out');
-        out.innerHTML = `<div class="muted small">${esc(t('common.loading'))}</div>`;
+        out.innerHTML = `<div class="muted small"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div>`;
         try {
             const [trad, roth] = await Promise.all([
                 api.taxPlannerIra(body),
@@ -811,7 +811,7 @@ async function wireHsa(pane, tok) {
             hdhp_months: Number(pane.querySelector('#tw-hsa-months').value) || 0,
         };
         const out = pane.querySelector('#tw-hsa-out');
-        out.innerHTML = `<div class="muted small">${esc(t('common.loading'))}</div>`;
+        out.innerHTML = `<div class="muted small"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div>`;
         try {
             const r = await api.taxPlannerHsa(body);
             if (!viewIsCurrent(tok)) return;
@@ -842,7 +842,7 @@ async function wireLatePenalty(pane, tok) {
             filed_more_than_60_days_late: pane.querySelector('#tw-lp-over60').checked,
         };
         const out = pane.querySelector('#tw-lp-out');
-        out.innerHTML = `<div class="muted small">${esc(t('common.loading'))}</div>`;
+        out.innerHTML = `<div class="muted small"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div>`;
         try {
             const r = await api.taxLatePenalty(STATE.year, input);
             if (!viewIsCurrent(tok)) return;
@@ -870,7 +870,7 @@ async function wireSafeHarbor(pane, tok) {
     pane.querySelector('#tw-sh-run').addEventListener('click', async () => {
         const q = pane.querySelector('#tw-sh-quarter').value;
         const out = pane.querySelector('#tw-sh-out');
-        out.innerHTML = `<div class="muted small">${esc(t('common.loading'))}</div>`;
+        out.innerHTML = `<div class="muted small"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div>`;
         try {
             const r = await api.taxSafeHarbor(STATE.year, { quarter: q });
             if (!viewIsCurrent(tok)) return;
@@ -907,7 +907,7 @@ async function wireWhatIf(pane, tok) {
         const value = Number(pane.querySelector('#tw-wi-value').value);
         if (!Number.isFinite(value)) return;
         const out = pane.querySelector('#tw-wi-out');
-        out.innerHTML = `<div class="muted small">${esc(t('common.loading'))}</div>`;
+        out.innerHTML = `<div class="muted small"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div>`;
         try {
             const r = await api.taxWhatIf(STATE.year, { path, value: String(value) });
             if (!viewIsCurrent(tok)) return;

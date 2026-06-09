@@ -543,6 +543,170 @@ fn enc(s: &str) -> String {
     s.replace('^', "%5E").replace('=', "%3D")
 }
 
+// ===========================================================================
+// Market-wide dividend calendar (Nasdaq)
+// ===========================================================================
+//
+// Yahoo / Finnhub only expose dividends per-symbol, so a market-wide calendar
+// would require fanning out across every ticker. Nasdaq publishes a public
+// per-date dividend calendar that returns *every* company going ex on a given
+// day in a single call, which is what investing.com-style calendars use. We
+// loop the requested date range (concurrently) and aggregate.
+//
+// Nasdaq blocks non-browser User-Agents, so this needs its own client with a
+// browser UA + Accept headers (the shared `client()` UA gets dropped).
+
+const NASDAQ_UA: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) \
+     AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+
+fn nasdaq_client() -> reqwest::Client {
+    use reqwest::header;
+    let mut headers = header::HeaderMap::new();
+    headers.insert(
+        header::ACCEPT,
+        header::HeaderValue::from_static("application/json, text/plain, */*"),
+    );
+    headers.insert(
+        header::ACCEPT_LANGUAGE,
+        header::HeaderValue::from_static("en-US,en;q=0.9"),
+    );
+    reqwest::Client::builder()
+        .user_agent(NASDAQ_UA)
+        .default_headers(headers)
+        .timeout(std::time::Duration::from_secs(12))
+        .build()
+        .unwrap()
+}
+
+/// Parse Nasdaq's `M/D/YYYY` date format into ISO `YYYY-MM-DD`. Returns
+/// `None` for blanks / `N/A` / unparseable input.
+fn nasdaq_date_iso(s: &str) -> Option<String> {
+    let s = s.trim();
+    if s.is_empty() || s.eq_ignore_ascii_case("N/A") {
+        return None;
+    }
+    let parts: Vec<&str> = s.split('/').collect();
+    if parts.len() != 3 {
+        return None;
+    }
+    let m: u32 = parts[0].trim().parse().ok()?;
+    let d: u32 = parts[1].trim().parse().ok()?;
+    let y: i32 = parts[2].trim().parse().ok()?;
+    chrono::NaiveDate::from_ymd_opt(y, m, d).map(|nd| nd.format("%Y-%m-%d").to_string())
+}
+
+/// Coerce a Nasdaq numeric field that may arrive as a JSON number, a
+/// `$`-prefixed string, or `N/A` into an `f64`.
+fn nasdaq_num(v: &serde_json::Value) -> Option<f64> {
+    if let Some(n) = v.as_f64() {
+        return Some(n);
+    }
+    let s = v.as_str()?.trim().trim_start_matches('$').replace(',', "");
+    if s.is_empty() || s.eq_ignore_ascii_case("N/A") {
+        return None;
+    }
+    s.parse().ok()
+}
+
+/// Fetch + normalize a single day's dividend calendar from Nasdaq.
+async fn nasdaq_dividend_day(
+    client: &reqwest::Client,
+    date: chrono::NaiveDate,
+) -> anyhow::Result<Vec<serde_json::Value>> {
+    let url = format!(
+        "https://api.nasdaq.com/api/calendar/dividends?date={}",
+        date.format("%Y-%m-%d")
+    );
+    let resp = client.get(&url).send().await?;
+    if !resp.status().is_success() {
+        anyhow::bail!("nasdaq dividends HTTP {}", resp.status());
+    }
+    let v: serde_json::Value = resp.json().await?;
+    let rows = match v["data"]["calendar"]["rows"].as_array() {
+        Some(r) => r,
+        None => return Ok(Vec::new()), // weekend / holiday / no data
+    };
+    let ex_iso = date.format("%Y-%m-%d").to_string();
+    let mut out = Vec::with_capacity(rows.len());
+    for r in rows {
+        let symbol = match r["symbol"].as_str() {
+            Some(s) if !s.trim().is_empty() => s.trim().to_string(),
+            _ => continue,
+        };
+        let amount = nasdaq_num(&r["dividend_Rate"]);
+        let annual = nasdaq_num(&r["indicated_Annual_Dividend"]);
+        let payments_per_year = match (amount, annual) {
+            (Some(a), Some(ann)) if a > 0.0 && ann > 0.0 => {
+                let ppy = (ann / a).round();
+                if ppy >= 1.0 && ppy <= 52.0 {
+                    Some(ppy as i64)
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        };
+        out.push(serde_json::json!({
+            "symbol": symbol,
+            "company": r["companyName"].as_str().unwrap_or("").trim(),
+            "ex_date": ex_iso,
+            "pay_date": r["payment_Date"].as_str().and_then(nasdaq_date_iso),
+            "record_date": r["record_Date"].as_str().and_then(nasdaq_date_iso),
+            "announcement_date": r["announcement_Date"].as_str().and_then(nasdaq_date_iso),
+            "amount": amount,
+            "annual_dividend": annual,
+            "payments_per_year": payments_per_year,
+        }));
+    }
+    Ok(out)
+}
+
+/// Market-wide upcoming dividend calendar for the inclusive date range
+/// `[from, to]`. Aggregates Nasdaq's per-date feed (fetched concurrently)
+/// and returns rows sorted by ex-date then symbol.
+pub async fn dividends_calendar(
+    from: chrono::NaiveDate,
+    to: chrono::NaiveDate,
+) -> anyhow::Result<serde_json::Value> {
+    use futures_util::{stream, StreamExt};
+
+    let span = (to - from).num_days().max(0);
+    let dates: Vec<chrono::NaiveDate> = (0..=span)
+        .filter_map(|i| from.checked_add_signed(chrono::Duration::days(i)))
+        .collect();
+
+    let client = nasdaq_client();
+    let per_day: Vec<Vec<serde_json::Value>> = stream::iter(dates.into_iter().map(|date| {
+        let client = client.clone();
+        async move {
+            nasdaq_dividend_day(&client, date)
+                .await
+                .unwrap_or_else(|e| {
+                    tracing::warn!(%date, error = %e, "nasdaq dividend day failed");
+                    Vec::new()
+                })
+        }
+    }))
+    .buffer_unordered(6)
+    .collect()
+    .await;
+
+    let mut rows: Vec<serde_json::Value> = per_day.into_iter().flatten().collect();
+    rows.sort_by(|a, b| {
+        let ax = a["ex_date"].as_str().unwrap_or("");
+        let bx = b["ex_date"].as_str().unwrap_or("");
+        ax.cmp(bx)
+            .then_with(|| a["symbol"].as_str().unwrap_or("").cmp(b["symbol"].as_str().unwrap_or("")))
+    });
+
+    Ok(serde_json::json!({
+        "from": from.format("%Y-%m-%d").to_string(),
+        "to": to.format("%Y-%m-%d").to_string(),
+        "count": rows.len(),
+        "rows": rows,
+    }))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -630,5 +794,32 @@ mod tests {
         assert_eq!(v["title"], "Headline");
         assert_eq!(v["provider_publish_time"], 1700000000);
         assert!(v["thumbnail"].is_null());
+    }
+
+    // ── Nasdaq dividend-calendar helpers ──────────────────────────────────
+
+    #[test]
+    fn nasdaq_date_iso_converts_mdy_to_iso() {
+        assert_eq!(nasdaq_date_iso("6/9/2026").as_deref(), Some("2026-06-09"));
+        assert_eq!(nasdaq_date_iso("12/25/2026").as_deref(), Some("2026-12-25"));
+    }
+
+    #[test]
+    fn nasdaq_date_iso_rejects_blank_na_and_garbage() {
+        assert_eq!(nasdaq_date_iso(""), None);
+        assert_eq!(nasdaq_date_iso("N/A"), None);
+        assert_eq!(nasdaq_date_iso("not-a-date"), None);
+        assert_eq!(nasdaq_date_iso("13/40/2026"), None);
+    }
+
+    #[test]
+    fn nasdaq_num_handles_number_string_and_na() {
+        use serde_json::json;
+        assert_eq!(nasdaq_num(&json!(0.27)), Some(0.27));
+        assert_eq!(nasdaq_num(&json!("$1.08")), Some(1.08));
+        assert_eq!(nasdaq_num(&json!("1,234.5")), Some(1234.5));
+        assert_eq!(nasdaq_num(&json!("N/A")), None);
+        assert_eq!(nasdaq_num(&json!("")), None);
+        assert_eq!(nasdaq_num(&serde_json::Value::Null), None);
     }
 }

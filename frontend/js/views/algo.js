@@ -643,7 +643,7 @@ export async function renderAlgo(mount) {
                     <th data-i18n="view.algo.th.status">Status</th>
                     <th></th>
                 </tr></thead>
-                <tbody><tr><td colspan="8" class="muted">${esc(t('view.algo.loading'))}</td></tr></tbody>
+                <tbody><tr><td colspan="8" class="muted"><span class="tv-spinner tv-spinner-inline" role="status" aria-label="loading"></span></td></tr></tbody>
             </table>
         </div>
 
@@ -1159,7 +1159,7 @@ async function openMetricsModal(mount, s) {
         <div class="modal-inner" style="max-width:960px">
             <h2>Metrics: ${esc(s.name)}</h2>
             <p class="muted small">Live aggregate over every algo_runs row for this strategy. Equity curve uses settled runs only (in-flight runs are excluded until stopped).</p>
-            <div id="mt-body"><p class="muted">Loading…</p></div>
+            <div id="mt-body"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div>
             <div class="row" style="gap:8px;margin-top:8px">
                 <button type="button" id="mt-refresh">Refresh</button>
                 <button type="button" id="mt-close">Close</button>
@@ -1172,7 +1172,7 @@ async function openMetricsModal(mount, s) {
 
     const body = wrap.querySelector('#mt-body');
     const load = async () => {
-        body.innerHTML = '<p class="muted">Loading…</p>';
+        body.innerHTML = '<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>';
         try {
             const m = await api.algoStrategyMetrics(s.id);
             renderMetrics(body, m);
@@ -1285,7 +1285,7 @@ async function openBacktestModal(mount, s) {
             </form>
             <div id="bt-results" style="margin-top:12px"></div>
             <h3 style="margin-top:12px">History</h3>
-            <div id="bt-history" class="muted small">Loading past runs…</div>
+            <div id="bt-history" class="muted small"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div>
         </div>`;
     document.body.appendChild(wrap);
     const close = () => wrap.remove();
@@ -1427,7 +1427,7 @@ async function showRuns(mount, s) {
         nameSlot.classList.remove('muted');
     }
     panel.style.display = 'block';
-    tbody.innerHTML = `<tr><td colspan="9" class="muted">${esc(t('view.algo.loading'))}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" class="muted"><span class="tv-spinner tv-spinner-inline" role="status" aria-label="loading"></span></td></tr>`;
     let runs;
     try { runs = await api.listAlgoRuns(s.id, 25); }
     catch (e) { tbody.innerHTML = `<tr><td colspan="9" class="muted">${esc(e.message)}</td></tr>`; return; }
@@ -1460,7 +1460,7 @@ async function showOrders(mount, runId) {
     const panel = mount.querySelector('#algo-orders');
     const tbody = mount.querySelector('#algo-orders-table tbody');
     panel.style.display = 'block';
-    tbody.innerHTML = `<tr><td colspan="9" class="muted">${esc(t('view.algo.loading'))}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" class="muted"><span class="tv-spinner tv-spinner-inline" role="status" aria-label="loading"></span></td></tr>`;
     let orders;
     try { orders = await api.listAlgoOrders(runId, 100); }
     catch (e) { tbody.innerHTML = `<tr><td colspan="9" class="muted">${esc(e.message)}</td></tr>`; return; }

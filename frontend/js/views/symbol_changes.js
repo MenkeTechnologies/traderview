@@ -65,8 +65,8 @@ async function load(tok) {
     const from = new Date(today);
     from.setDate(from.getDate() - state.horizon);
     const [symEl, isinEl] = ['sc-symbols', 'sc-isins'].map(id => document.getElementById(id));
-    if (symEl) symEl.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`;
-    if (isinEl) isinEl.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`;
+    if (symEl) symEl.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
+    if (isinEl) isinEl.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
     try {
         const [symData, isinData] = await Promise.all([
             api.finnhubSymbolChange(fmtDay(from), fmtDay(today)).catch(() => null),

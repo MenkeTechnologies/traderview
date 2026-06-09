@@ -25,6 +25,7 @@ pub fn router() -> Router<AppState> {
         .route("/symbols/:symbol/insiders", get(insiders))
         .route("/symbols/:symbol/fundamentals", get(fundamentals))
         .route("/symbols/:symbol/holders", get(holders))
+        .route("/dividends/calendar", get(dividends_calendar))
 }
 
 async fn quote(
@@ -105,6 +106,31 @@ async fn dividends(
 ) -> Result<Json<Value>, ApiError> {
     Ok(Json(
         traderview_db::market_data::dividends(&symbol)
+            .await
+            .map_err(ApiError::Internal)?,
+    ))
+}
+
+#[derive(Deserialize)]
+struct DivCalQ {
+    #[serde(default = "default_cal_days")]
+    days: i64,
+}
+fn default_cal_days() -> i64 {
+    14
+}
+async fn dividends_calendar(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Query(q): Query<DivCalQ>,
+) -> Result<Json<Value>, ApiError> {
+    // Clamp the horizon so we never fan out an unbounded number of per-date
+    // Nasdaq calls. 1..=90 days.
+    let days = q.days.clamp(1, 90);
+    let from = Utc::now().date_naive();
+    let to = from + Duration::days(days);
+    Ok(Json(
+        traderview_db::market_data::dividends_calendar(from, to)
             .await
             .map_err(ApiError::Internal)?,
     ))

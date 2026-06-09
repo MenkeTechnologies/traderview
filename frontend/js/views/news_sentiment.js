@@ -38,7 +38,7 @@ export async function renderNewsSentiment(mount, _appState, symbol = '') {
 
 async function load(tok) {
     const el = document.getElementById('nsm-result');
-    if (el) el.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`;
+    if (el) el.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
     try {
         const data = await api.symbolNewsSentiment(state.symbol);
         if (!viewIsCurrent(tok)) return;

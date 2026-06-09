@@ -198,7 +198,7 @@ const WIDGETS = [
 
     // ── New gap-fill widgets (audit phase 2) ─────────────────────────
     { id: 'subscriptions', titleKey: 'view.exp_dash.widget.subscriptions', spans2: true,
-        html: () => `<div id="expd-subs" class="muted small">${esc(t('common.loading'))}</div>`,
+        html: () => `<div id="expd-subs" class="muted small"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div>`,
         mount: () => mountSubscriptions() },
 
     { id: 'pareto_merchants', titleKey: 'view.exp_dash.widget.pareto_merchants', spans2: true,
@@ -214,15 +214,15 @@ const WIDGETS = [
         mount: (d) => mountYoyMonthly(d.year) },
 
     { id: 'aging_buckets', titleKey: 'view.exp_dash.widget.aging',
-        html: () => `<div id="expd-aging" class="muted small">${esc(t('common.loading'))}</div>`,
+        html: () => `<div id="expd-aging" class="muted small"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div>`,
         mount: () => mountAging() },
 
     { id: 'per_property', titleKey: 'view.exp_dash.widget.per_property', spans2: true,
-        html: () => `<div id="expd-property" class="muted small">${esc(t('common.loading'))}</div>`,
+        html: () => `<div id="expd-property" class="muted small"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div>`,
         mount: (d) => mountPerProperty(d.year) },
 
     { id: 'anomalies', titleKey: 'view.exp_dash.widget.anomalies', spans2: true,
-        html: () => `<div id="expd-anomalies" class="muted small">${esc(t('common.loading'))}</div>`,
+        html: () => `<div id="expd-anomalies" class="muted small"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div>`,
         mount: () => mountAnomalies() },
 
     { id: 'drawdown', titleKey: 'view.exp_dash.widget.drawdown', spans2: true,
@@ -948,8 +948,7 @@ function setYear(y) {
 export async function renderExpenseDashboard(mount) {
     const tok = currentViewToken();
     const year = getYear();
-    mount.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div>
-        <div class="tv-spinner-text">${esc(t('common.loading'))}</div></div>`;
+    mount.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
 
     let data;
     try {

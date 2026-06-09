@@ -663,7 +663,7 @@ const WIDGETS = [
         html: (d) => openTradesWidget(d.openTrades) },
     // Budget status — this month's income/expense/savings rate + over-budget flag.
     { id: 'budget_status', titleKey: 'view.dashboard.tv.budget_status',
-        html: () => `<div id="dash-budget-status" class="dash-budget-status"><div class="muted small">${esc(t('common.loading'))}</div></div>`,
+        html: () => `<div id="dash-budget-status" class="dash-budget-status"><div class="muted small"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div></div>`,
         mount: async () => {
             const el = document.getElementById('dash-budget-status');
             if (!el) return;
@@ -694,7 +694,7 @@ const WIDGETS = [
         } },
     // Trades — recent trades list with a link to the full table.
     { id: 'recent_trades', titleKey: 'view.dashboard.tv.recent_trades',
-        html: () => `<div id="dash-recent-trades" class="dash-manage-list"><div class="muted small">${esc(t('common.loading'))}</div></div>`,
+        html: () => `<div id="dash-recent-trades" class="dash-manage-list"><div class="muted small"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div></div>`,
         mount: async () => {
             const el = document.getElementById('dash-recent-trades');
             if (!el) return;
@@ -736,7 +736,7 @@ const WIDGETS = [
         } },
     // Expense dashboard summary tile.
     { id: 'expense_dashboard_card', titleKey: 'view.dashboard.tv.expense_dashboard',
-        html: () => `<div id="dash-expense-dashboard" class="dash-manage-list"><div class="muted small">${esc(t('common.loading'))}</div></div>`,
+        html: () => `<div id="dash-expense-dashboard" class="dash-manage-list"><div class="muted small"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div></div>`,
         mount: async () => {
             const el = document.getElementById('dash-expense-dashboard');
             if (!el) return;
@@ -754,7 +754,7 @@ const WIDGETS = [
         } },
     // Expense calendar — current-month total + opener.
     { id: 'expense_calendar_card', titleKey: 'view.dashboard.tv.expense_calendar',
-        html: () => `<div id="dash-expense-calendar" class="dash-manage-list"><div class="muted small">${esc(t('common.loading'))}</div></div>`,
+        html: () => `<div id="dash-expense-calendar" class="dash-manage-list"><div class="muted small"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div></div>`,
         mount: async () => {
             const el = document.getElementById('dash-expense-calendar');
             if (!el) return;
@@ -777,7 +777,7 @@ const WIDGETS = [
     // Categorize queue size — sum of receipts pending item-level
     // category assignment.
     { id: 'categorize_card', titleKey: 'view.dashboard.tv.categorize',
-        html: () => `<div id="dash-categorize" class="dash-manage-list"><div class="muted small">${esc(t('common.loading'))}</div></div>`,
+        html: () => `<div id="dash-categorize" class="dash-manage-list"><div class="muted small"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div></div>`,
         mount: async () => {
             const el = document.getElementById('dash-categorize');
             if (!el) return;
@@ -799,7 +799,7 @@ const WIDGETS = [
         } },
     // Note templates — count + link.
     { id: 'note_templates_card', titleKey: 'view.dashboard.tv.note_templates',
-        html: () => `<div id="dash-note-templates" class="dash-manage-list"><div class="muted small">${esc(t('common.loading'))}</div></div>`,
+        html: () => `<div id="dash-note-templates" class="dash-manage-list"><div class="muted small"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div></div>`,
         mount: async () => {
             const el = document.getElementById('dash-note-templates');
             if (!el) return;
@@ -817,7 +817,7 @@ const WIDGETS = [
     // expectancy) condensed into a sparkline-style tile. Full view at
     // `#broker-compare`.
     { id: 'broker_compare_card', titleKey: 'view.dashboard.tv.broker_compare',
-        html: () => `<div id="dash-broker-compare" class="dash-manage-list"><div class="muted small">${esc(t('common.loading'))}</div></div>`,
+        html: () => `<div id="dash-broker-compare" class="dash-manage-list"><div class="muted small"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div></div>`,
         mount: async () => {
             const el = document.getElementById('dash-broker-compare');
             if (!el) return;
@@ -852,7 +852,7 @@ const WIDGETS = [
         } },
     // Side-by-side business comparison (expense totals).
     { id: 'business_compare_card', titleKey: 'view.dashboard.tv.business_compare',
-        html: () => `<div id="dash-business-compare" class="dash-manage-list"><div class="muted small">${esc(t('common.loading'))}</div></div>`,
+        html: () => `<div id="dash-business-compare" class="dash-manage-list"><div class="muted small"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div></div>`,
         mount: async () => {
             const el = document.getElementById('dash-business-compare');
             if (!el) return;
@@ -888,7 +888,7 @@ const WIDGETS = [
     // pattern: self-fetching tile that doubles as a dashboard widget
     // AND as the full-page management view at `#brokers`.
     { id: 'manage_brokers', titleKey: 'view.dashboard.tv.manage_brokers',
-        html: () => `<div id="dash-manage-brokers" class="dash-manage-list"><div class="muted small">${esc(t('common.loading'))}</div></div>`,
+        html: () => `<div id="dash-manage-brokers" class="dash-manage-list"><div class="muted small"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div></div>`,
         mount: async () => {
             const el = document.getElementById('dash-manage-brokers');
             if (!el) return;
@@ -918,7 +918,7 @@ const WIDGETS = [
         } },
     // Businesses — Schedule C entities list + quick actions.
     { id: 'manage_businesses', titleKey: 'view.dashboard.tv.manage_businesses',
-        html: () => `<div id="dash-manage-businesses" class="dash-manage-list"><div class="muted small">${esc(t('common.loading'))}</div></div>`,
+        html: () => `<div id="dash-manage-businesses" class="dash-manage-list"><div class="muted small"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div></div>`,
         mount: async () => {
             const el = document.getElementById('dash-manage-businesses');
             if (!el) return;
@@ -948,7 +948,7 @@ const WIDGETS = [
         } },
     // Tax wizard status. Self-fetching — doesn't read from `d`.
     { id: 'tax_filing_status', titleKey: 'view.dashboard.tv.tax_filing_status',
-        html: () => `<div id="dash-tax-filing" class="dash-tax-filing"><div class="muted small">${esc(t('common.loading'))}</div></div>`,
+        html: () => `<div id="dash-tax-filing" class="dash-tax-filing"><div class="muted small"><div class="tv-spinner-wrap"><div class="tv-spinner"></div></div></div></div>`,
         mount: async () => {
             const el = document.getElementById('dash-tax-filing');
             if (!el) return;

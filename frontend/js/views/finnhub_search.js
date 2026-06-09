@@ -36,7 +36,7 @@ export async function renderFinnhubSearch(mount, _appState) {
 
 async function load(tok) {
     const el = document.getElementById('fs-result');
-    if (el) el.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`;
+    if (el) el.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
     try {
         const data = await api.finnhubSymbolLookup(state.q);
         if (!viewIsCurrent(tok)) return;

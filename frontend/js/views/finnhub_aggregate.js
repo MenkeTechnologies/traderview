@@ -45,7 +45,7 @@ export async function renderFinnhubAggregate(mount, _appState, symbol = '') {
 
 async function load(tok) {
     const el = document.getElementById('fa-result');
-    if (el) el.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`;
+    if (el) el.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
     try {
         const data = await api.symbolScanAggregate(state.symbol, state.resolution);
         if (!viewIsCurrent(tok)) return;

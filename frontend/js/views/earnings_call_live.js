@@ -51,7 +51,7 @@ export async function renderEarningsCallLive(mount, _appState) {
 
 async function loadUpcoming(tok) {
     const el = document.getElementById('ec-list');
-    if (el) el.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`;
+    if (el) el.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
     try {
         const to = new Date();
         to.setDate(to.getDate() + state.lookbackDays);
@@ -92,7 +92,7 @@ async function loadUpcoming(tok) {
 async function loadTranscripts(tok) {
     if (!state.transcriptSym) return;
     const el = document.getElementById('ec-tr');
-    if (el) el.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`;
+    if (el) el.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
     try {
         const data = await api.symbolTranscriptsList(state.transcriptSym);
         if (!viewIsCurrent(tok)) return;

@@ -39,7 +39,7 @@ export async function renderSupplyChain(mount, _appState, symbol = '') {
 
 async function load(tok) {
     const el = document.getElementById('sc-result');
-    if (el) el.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`;
+    if (el) el.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
     try {
         const data = await api.symbolSupplyChain(state.symbol);
         if (!viewIsCurrent(tok)) return;

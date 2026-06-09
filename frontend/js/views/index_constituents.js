@@ -53,7 +53,7 @@ export async function renderIndexConstituents(mount, _appState) {
 
 async function load(tok) {
     const el = document.getElementById('idx-result');
-    if (el) el.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`;
+    if (el) el.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
     try {
         const data = await api.finnhubIndexConstituents(state.index);
         if (!viewIsCurrent(tok)) return;

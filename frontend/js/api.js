@@ -697,6 +697,7 @@ export const api = {
     symbolNews:      (sym, count = 20) => request(`/symbols/${encodeURIComponent(sym)}/news${qs({ count })}`),
     symbolEarnings:  (sym) => request(`/symbols/${encodeURIComponent(sym)}/earnings`),
     symbolDividends: (sym) => request(`/symbols/${encodeURIComponent(sym)}/dividends`),
+    dividendsCalendar: (days = 14) => request(`/dividends/calendar${qs({ days })}`),
     symbolRecs:      (sym) => request(`/symbols/${encodeURIComponent(sym)}/recommendations`),
     symbolInsiders:  (sym) => request(`/symbols/${encodeURIComponent(sym)}/insiders`),
     symbolFundamentals: (sym) => request(`/symbols/${encodeURIComponent(sym)}/fundamentals`),

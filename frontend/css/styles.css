@@ -3187,6 +3187,11 @@ kbd {
 @keyframes tv-spin {
     to { transform: rotate(360deg); }
 }
+/* Spinners are functional loading indicators, not decorative neon — keep them
+   animating even when `no-neon-glow` disables all other animations. */
+body.no-neon-glow .tv-spinner {
+    animation: tv-spin 0.8s linear infinite !important;
+}
 
 /* ---- portfolio allocator view (`pa-`) -------------------------------- */
 .op-inputs-grid {

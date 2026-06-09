@@ -49,7 +49,7 @@ export async function renderRevenueBreakdown(mount, _appState, symbol = '') {
 async function load(tok) {
     const segEl = document.getElementById('rb-segments');
     const geoEl = document.getElementById('rb-geo');
-    [segEl, geoEl].forEach(el => el && (el.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`));
+    [segEl, geoEl].forEach(el => el && (el.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`));
     try {
         const [v1, v2] = await Promise.all([
             api.symbolRevenueBreakdown(state.symbol).catch(() => null),

@@ -43,8 +43,8 @@ export async function renderEsg(mount, _appState, symbol = '') {
 async function load(tok) {
     const curEl = document.getElementById('esg-current');
     const histEl = document.getElementById('esg-historical');
-    if (curEl) curEl.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`;
-    if (histEl) histEl.innerHTML = `<div class="boot">${esc(t('common.loading'))}</div>`;
+    if (curEl) curEl.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
+    if (histEl) histEl.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
     try {
         const [cur, hist] = await Promise.all([
             api.symbolEsg(state.symbol).catch(() => null),

@@ -33,7 +33,7 @@ export async function renderVolSurface(mount) {
 async function fetchAndRender(sym, n, mount, tok) {
     const out = mount.querySelector('#vsOut');
     if (!out) return;
-    out.innerHTML = `<p class="muted small">${esc(t('view.vol_surface.hint.fetching', { sym, n }))}</p>`;
+    out.innerHTML = `<div class="tv-spinner-wrap"><div class="tv-spinner"></div></div>`;
     try {
         const s = await api.volSurface(sym, n);
         if (!viewIsCurrent(tok)) return;
