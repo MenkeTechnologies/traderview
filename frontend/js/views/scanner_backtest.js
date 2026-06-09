@@ -32,6 +32,8 @@ export async function renderScannerBacktest(mount, _state) {
                     <input type="checkbox" id="sb-friction">
                     <span class="muted small" data-i18n="view.scanner_backtest.field.friction">Friction-adjusted (slippage + SEC fee)</span>
                 </label>
+                <button class="btn btn-sm" id="sb-walk-pead" data-i18n="view.scanner_backtest.btn.walk_pead">📊 Walk-forward PEAD</button>
+                <button class="btn btn-sm" id="sb-walk-insider" data-i18n="view.scanner_backtest.btn.walk_insider">📊 Walk-forward Insider</button>
                 <span class="muted small" id="sb-meta"></span>
             </div>
             <div id="sb-all"></div>
@@ -41,6 +43,66 @@ export async function renderScannerBacktest(mount, _state) {
     mount.querySelector('#sb-run-all').addEventListener('click', () => runAll(mount));
     mount.querySelector('#sb-run').addEventListener('click', () => runScan(mount, 'pead'));
     mount.querySelector('#sb-run-insider').addEventListener('click', () => runScan(mount, 'insider-clusters'));
+    mount.querySelector('#sb-walk-pead').addEventListener('click', () => runWalk(mount, 'pead'));
+    mount.querySelector('#sb-walk-insider').addEventListener('click', () => runWalk(mount, 'insider-clusters'));
+}
+
+async function runWalk(mount, scanner) {
+    const result = mount.querySelector('#sb-result');
+    const meta = mount.querySelector('#sb-meta');
+    const days = parseInt(mount.querySelector('#sb-days').value, 10) || 365;
+    result.innerHTML = `<p class="muted">${esc(t('view.scanner_backtest.status.walking'))}</p>`;
+    if (meta) meta.textContent = '';
+    try {
+        const r = await api(`/scanner-backtest/${scanner}/walk-forward?days=${days}&train_pct=70`);
+        if (!r) {
+            result.innerHTML = `<p class="muted">${esc(t('view.scanner_backtest.empty.no_data'))}</p>`;
+            return;
+        }
+        const ratio = r.oos_to_is_sharpe_ratio_20d;
+        const ratioCls = ratio == null ? 'muted'
+            : ratio >= 0.7 ? 'pos' : ratio >= 0.3 ? '' : 'neg';
+        const ratioStr = ratio == null ? '—' : ratio.toFixed(2);
+        if (meta) meta.textContent = t('view.scanner_backtest.meta.walk_summary')
+            .replace('{s}', r.scanner).replace('{t}', r.train_samples_used).replace('{x}', r.test_samples_used);
+        result.innerHTML = `
+            <h2>${esc(r.scanner.toUpperCase())} · ${esc(t('view.scanner_backtest.h2.walk_forward'))} (${r.train_pct}% train)</h2>
+            <p class="small">${esc(t('view.scanner_backtest.field.oos_ratio'))}:
+                <strong class="${ratioCls}">${ratioStr}</strong>
+                <span class="muted small">${esc(t('view.scanner_backtest.hint.ratio_threshold'))}</span></p>
+            <h3 style="margin-bottom:0.25em">${esc(t('view.scanner_backtest.h3.train'))} · ${r.train_samples_used} ${esc(t('view.scanner_backtest.field.samples'))}</h3>
+            ${horizonTable(r.train_horizons)}
+            <h3 style="margin-bottom:0.25em">${esc(t('view.scanner_backtest.h3.test'))} · ${r.test_samples_used} ${esc(t('view.scanner_backtest.field.samples'))}</h3>
+            ${horizonTable(r.test_horizons)}
+            <p class="muted small">${esc(t('view.scanner_backtest.hint.walk_interpret'))}</p>
+        `;
+    } catch (e) {
+        result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
+    }
+}
+
+function horizonTable(horizons) {
+    return `
+        <table class="trades">
+            <thead><tr>
+                <th>Horizon</th><th>N</th><th>Hit %</th>
+                <th>Mean %</th><th>Stdev %</th><th>Sharpe</th><th>Max DD %</th>
+            </tr></thead>
+            <tbody>${(horizons || []).map(h => {
+                if (!h || h.n === 0) return '';
+                const sharpeCls = h.annualised_sharpe >= 1.0 ? 'pos'
+                                : h.annualised_sharpe >= 0.5 ? '' : 'muted';
+                return `<tr>
+                    <td><strong>${h.horizon_days}d</strong></td>
+                    <td>${h.n}</td>
+                    <td>${h.hit_rate_pct.toFixed(1)}%</td>
+                    <td>${h.mean_return_pct.toFixed(2)}%</td>
+                    <td>${h.stdev_pct.toFixed(2)}%</td>
+                    <td class="${sharpeCls}"><strong>${h.annualised_sharpe.toFixed(2)}</strong></td>
+                    <td class="neg">${h.max_drawdown_pct.toFixed(2)}%</td>
+                </tr>`;
+            }).join('')}</tbody>
+        </table>`;
 }
 
 async function runAll(mount) {

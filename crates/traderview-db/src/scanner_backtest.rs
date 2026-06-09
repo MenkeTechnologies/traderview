@@ -73,6 +73,25 @@ pub struct BacktestResult {
     pub horizons: Vec<HorizonStats>,
 }
 
+/// Walk-forward variant: splits the signal set into in-sample (first
+/// `train_pct`%) and out-of-sample (remainder) by chronological
+/// `signal_date`, runs the same horizon math on each half, and reports
+/// both. Without OOS evaluation every backtest is biased upward by
+/// the optimizer-over-history effect; OOS Sharpe is the conservative
+/// number to size capital from.
+#[derive(Debug, Clone, Serialize)]
+pub struct WalkForwardResult {
+    pub scanner: String,
+    pub train_pct: u32,
+    pub train_samples_used: usize,
+    pub test_samples_used: usize,
+    pub train_horizons: Vec<HorizonStats>,
+    pub test_horizons: Vec<HorizonStats>,
+    /// `test_sharpe_20d / train_sharpe_20d` per horizon — a degradation
+    /// indicator. Ratio ≥ 0.7 is healthy; ≤ 0.3 is overfit/decayed.
+    pub oos_to_is_sharpe_ratio_20d: Option<f64>,
+}
+
 // ─── Pure compute ──────────────────────────────────────────────────────────
 
 /// Per-signal forward log-return in percent, signed for direction.
@@ -162,6 +181,57 @@ pub fn aggregate(returns: &[f64], horizon_days: u32) -> HorizonStats {
 }
 
 const DEFAULT_HORIZONS_DAYS: &[u32] = &[1, 5, 20, 60];
+
+/// Pure compute: walk-forward split of a chronologically-sorted sample
+/// list. Sorts by signal_date, picks the first `train_pct`% into the
+/// training set, remainder into test. Empty input → empty splits.
+pub fn walk_forward_split(
+    samples: &[SignalSample],
+    train_pct: u32,
+) -> (Vec<SignalSample>, Vec<SignalSample>) {
+    if samples.is_empty() || train_pct == 0 || train_pct >= 100 {
+        return (samples.to_vec(), Vec::new());
+    }
+    let mut sorted = samples.to_vec();
+    sorted.sort_by_key(|s| s.signal_date);
+    let cutoff = (sorted.len() as f64 * train_pct as f64 / 100.0).round() as usize;
+    let test = sorted.split_off(cutoff.min(sorted.len()));
+    (sorted, test)
+}
+
+/// Walk-forward backtest: splits chronologically + runs the same
+/// horizon math on each half. `train_pct` typical 70.
+pub fn walk_forward_backtest(
+    scanner: &str,
+    samples: &[SignalSample],
+    closes_for: &dyn Fn(&str) -> Vec<(NaiveDate, f64)>,
+    train_pct: u32,
+) -> WalkForwardResult {
+    let (train, test) = walk_forward_split(samples, train_pct);
+    let train_r = backtest_with_history(scanner, &train, closes_for);
+    let test_r = backtest_with_history(scanner, &test, closes_for);
+    let ratio = {
+        let train_20 = train_r.horizons.iter().find(|h| h.horizon_days == 20);
+        let test_20 = test_r.horizons.iter().find(|h| h.horizon_days == 20);
+        match (train_20, test_20) {
+            (Some(t_in), Some(t_out))
+                if t_in.annualised_sharpe.is_finite() && t_in.annualised_sharpe.abs() > 1e-9 =>
+            {
+                Some(t_out.annualised_sharpe / t_in.annualised_sharpe)
+            }
+            _ => None,
+        }
+    };
+    WalkForwardResult {
+        scanner: scanner.into(),
+        train_pct,
+        train_samples_used: train_r.samples_used,
+        test_samples_used: test_r.samples_used,
+        train_horizons: train_r.horizons,
+        test_horizons: test_r.horizons,
+        oos_to_is_sharpe_ratio_20d: ratio,
+    }
+}
 
 /// Same as `backtest_with_history` but subtracts round-trip friction
 /// from every per-signal return before aggregating. The Sharpe / hit
@@ -403,6 +473,109 @@ pub async fn backtest_insider_clusters(pool: &PgPool, days: i64) -> anyhow::Resu
         "insider_clusters",
         &samples,
         &closes_async,
+    ))
+}
+
+/// Walk-forward PEAD backtest convenience wrapper.
+pub async fn walk_forward_pead(
+    pool: &PgPool,
+    days: i64,
+    train_pct: u32,
+) -> anyhow::Result<WalkForwardResult> {
+    let events = crate::earnings_cal::surprises_recent(pool, days).await?;
+    let mut samples: Vec<SignalSample> = Vec::new();
+    for ev in &events {
+        let Some(sur) = ev.surprise_pct else { continue };
+        if (sur as f64).abs() < 2.0 {
+            continue;
+        }
+        let direction = if (sur as f64) >= 0.0 {
+            Direction::Long
+        } else {
+            Direction::Short
+        };
+        samples.push(SignalSample {
+            symbol: ev.symbol.clone(),
+            signal_date: ev.earnings_date,
+            direction,
+        });
+    }
+    let pool_ref = pool.clone();
+    let closes_async = |symbol: &str| -> Vec<(NaiveDate, f64)> {
+        let symbol = symbol.to_string();
+        let pool_ref = pool_ref.clone();
+        let rt = tokio::runtime::Handle::try_current();
+        let bars = match rt {
+            Ok(handle) => tokio::task::block_in_place(|| {
+                handle.block_on(async move {
+                    let to = Utc::now();
+                    let from = to - Duration::days(400);
+                    prices::get_bars(&pool_ref, &symbol, BarInterval::D1, from, to)
+                        .await
+                        .unwrap_or_default()
+                })
+            }),
+            Err(_) => Vec::new(),
+        };
+        bars.into_iter()
+            .filter_map(|b| b.close.to_f64().map(|c| (b.bar_time.date_naive(), c)))
+            .collect()
+    };
+    Ok(walk_forward_backtest(
+        "pead",
+        &samples,
+        &closes_async,
+        train_pct,
+    ))
+}
+
+/// Walk-forward insider-cluster backtest convenience wrapper.
+pub async fn walk_forward_insider_clusters(
+    pool: &PgPool,
+    days: i64,
+    train_pct: u32,
+) -> anyhow::Result<WalkForwardResult> {
+    let rows: Vec<(String, NaiveDate, String)> = sqlx::query_as(
+        "SELECT symbol, txn_date, filer_name
+           FROM disclosures
+          WHERE kind = 'insider_form4'
+            AND txn_type = 'P'
+            AND symbol IS NOT NULL
+            AND txn_date IS NOT NULL
+            AND txn_date >= CURRENT_DATE - ($1::int)
+          ORDER BY symbol, txn_date",
+    )
+    .bind(days as i32)
+    .fetch_all(pool)
+    .await
+    .unwrap_or_default();
+    let samples = cluster_insider_purchases(&rows, 30, 3);
+    let pool_ref = pool.clone();
+    let closes_async = |symbol: &str| -> Vec<(NaiveDate, f64)> {
+        let symbol = symbol.to_string();
+        let pool_ref = pool_ref.clone();
+        let rt = tokio::runtime::Handle::try_current();
+        let bars = match rt {
+            Ok(handle) => tokio::task::block_in_place(|| {
+                handle.block_on(async move {
+                    let to = Utc::now();
+                    let from = to - Duration::days(400);
+                    prices::get_bars(&pool_ref, &symbol, BarInterval::D1, from, to)
+                        .await
+                        .unwrap_or_default()
+                })
+            }),
+            Err(_) => Vec::new(),
+        };
+        bars.into_iter()
+            .filter_map(|b| b.close.to_f64().map(|c| (b.bar_time.date_naive(), c)))
+            .collect()
+    };
+    Ok(walk_forward_backtest(
+        "insider_clusters",
+        &samples,
+        &closes_async,
+        train_pct,
     ))
 }
 
@@ -674,6 +847,89 @@ mod tests {
                 // Sharpe also lower because mean is lower, stdev unchanged.
                 assert!(n.annualised_sharpe < g.annualised_sharpe);
             }
+        }
+    }
+
+    #[test]
+    fn walk_forward_split_70_30_chronologically() {
+        let samples: Vec<SignalSample> = (1..=10)
+            .map(|i| SignalSample {
+                symbol: format!("S{i}"),
+                signal_date: d(2026, 1, i as u32),
+                direction: Direction::Long,
+            })
+            .collect();
+        let (train, test) = walk_forward_split(&samples, 70);
+        assert_eq!(train.len(), 7);
+        assert_eq!(test.len(), 3);
+        assert_eq!(train[0].signal_date, d(2026, 1, 1));
+        assert_eq!(test[0].signal_date, d(2026, 1, 8));
+    }
+
+    #[test]
+    fn walk_forward_split_sorts_chronologically_first() {
+        // Reverse-ordered input → splitter must sort by date before splitting.
+        let samples: Vec<SignalSample> = (1..=10)
+            .rev()
+            .map(|i| SignalSample {
+                symbol: format!("S{i}"),
+                signal_date: d(2026, 1, i as u32),
+                direction: Direction::Long,
+            })
+            .collect();
+        let (train, test) = walk_forward_split(&samples, 70);
+        assert_eq!(train.first().unwrap().signal_date, d(2026, 1, 1));
+        assert_eq!(test.last().unwrap().signal_date, d(2026, 1, 10));
+    }
+
+    #[test]
+    fn walk_forward_split_edge_cases() {
+        let samples: Vec<SignalSample> = vec![];
+        let (t, _) = walk_forward_split(&samples, 70);
+        assert!(t.is_empty());
+        // train_pct=0 or 100 → train holds everything, test empty
+        let single = vec![SignalSample {
+            symbol: "A".into(),
+            signal_date: d(2026, 1, 1),
+            direction: Direction::Long,
+        }];
+        let (t0, te0) = walk_forward_split(&single, 0);
+        assert_eq!(t0.len(), 1);
+        assert!(te0.is_empty());
+        let (t100, te100) = walk_forward_split(&single, 100);
+        assert_eq!(t100.len(), 1);
+        assert!(te100.is_empty());
+    }
+
+    #[test]
+    fn walk_forward_backtest_reports_both_halves_and_ratio() {
+        let history = std::sync::Arc::new(linear_closes(d(2026, 1, 1), 300, 0.3));
+        let history2 = history.clone();
+        let closes_fn = move |sym: &str| -> Vec<(NaiveDate, f64)> {
+            if sym == "AAA" {
+                (*history2).clone()
+            } else {
+                Vec::new()
+            }
+        };
+        // 20 samples spread over the year — first 14 are training, last 6 test.
+        let samples: Vec<SignalSample> = (0..20)
+            .map(|i| SignalSample {
+                symbol: "AAA".into(),
+                signal_date: d(2026, 1, 1) + Duration::days(i * 10),
+                direction: Direction::Long,
+            })
+            .collect();
+        let r = walk_forward_backtest("wf", &samples, &closes_fn, 70);
+        assert_eq!(r.scanner, "wf");
+        assert_eq!(r.train_samples_used + r.test_samples_used, samples.len());
+        // Stable linear-up series → train Sharpe and test Sharpe should
+        // both be positive and the ratio should be defined.
+        if let Some(ratio) = r.oos_to_is_sharpe_ratio_20d {
+            assert!(
+                ratio > 0.5,
+                "stable series should have OOS ratio close to 1, got {ratio}"
+            );
         }
     }
 

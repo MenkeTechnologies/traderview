@@ -14,6 +14,14 @@ pub fn router() -> Router<AppState> {
         .route("/scanner-backtest/pead", get(pead))
         .route("/scanner-backtest/insider-clusters", get(insider_clusters))
         .route("/scanner-backtest/all", get(all_scanners))
+        .route(
+            "/scanner-backtest/pead/walk-forward",
+            get(walk_forward_pead),
+        )
+        .route(
+            "/scanner-backtest/insider-clusters/walk-forward",
+            get(walk_forward_insider),
+        )
 }
 
 #[derive(Deserialize)]
@@ -44,6 +52,43 @@ async fn insider_clusters(
 ) -> Result<Json<scanner_backtest::BacktestResult>, ApiError> {
     Ok(Json(
         scanner_backtest::backtest_insider_clusters(&s.pool, q.days).await?,
+    ))
+}
+
+#[derive(Deserialize)]
+struct WalkForwardQ {
+    #[serde(default = "default_days")]
+    days: i64,
+    #[serde(default = "default_train_pct")]
+    train_pct: u32,
+}
+fn default_train_pct() -> u32 {
+    70
+}
+
+async fn walk_forward_pead(
+    State(s): State<AppState>,
+    _user: AuthUser,
+    Query(q): Query<WalkForwardQ>,
+) -> Result<Json<scanner_backtest::WalkForwardResult>, ApiError> {
+    if !(q.train_pct >= 30 && q.train_pct <= 90) {
+        return Err(ApiError::BadRequest("train_pct must be in [30, 90]".into()));
+    }
+    Ok(Json(
+        scanner_backtest::walk_forward_pead(&s.pool, q.days, q.train_pct).await?,
+    ))
+}
+
+async fn walk_forward_insider(
+    State(s): State<AppState>,
+    _user: AuthUser,
+    Query(q): Query<WalkForwardQ>,
+) -> Result<Json<scanner_backtest::WalkForwardResult>, ApiError> {
+    if !(q.train_pct >= 30 && q.train_pct <= 90) {
+        return Err(ApiError::BadRequest("train_pct must be in [30, 90]".into()));
+    }
+    Ok(Json(
+        scanner_backtest::walk_forward_insider_clusters(&s.pool, q.days, q.train_pct).await?,
     ))
 }
 
