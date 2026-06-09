@@ -28,6 +28,7 @@ mod comments;
 mod community;
 mod compare;
 mod confluence;
+mod confluence_autotrade;
 mod corr_matrix;
 mod crypto;
 mod csv_wizard;
@@ -200,6 +201,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(pead::router())
         .merge(sentiment_velocity::router())
         .merge(confluence::router())
+        .merge(confluence_autotrade::router())
         .merge(vrp::router())
         .merge(pairs::router())
         .merge(ipo_lockups::router())
