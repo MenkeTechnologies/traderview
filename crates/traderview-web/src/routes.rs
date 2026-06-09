@@ -45,6 +45,7 @@ mod extras;
 mod fear_greed;
 mod fill_quality;
 mod finnhub_extras;
+mod gamma_squeeze;
 mod goals;
 mod halts;
 mod heatmap;
@@ -167,6 +168,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(catalysts::router())
         .merge(catalyst_correlations::router())
         .merge(uoa_stream::router())
+        .merge(gamma_squeeze::router())
         .merge(webull::router())
         .merge(vol_surface::router())
         .merge(tax_lots::router())

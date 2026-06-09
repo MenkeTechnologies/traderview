@@ -624,6 +624,7 @@ import { renderLiveScanner } from './views/live_scanner.js';
 import { renderCatalysts } from './views/catalysts.js';
 import { renderCatalystCorrelations } from './views/catalyst_correlations.js';
 import { renderUoaStream } from './views/uoa_stream.js';
+import { renderGammaSqueeze } from './views/gamma_squeeze.js';
 import { renderWebull } from './views/webull.js';
 import { renderVolSurface } from './views/vol_surface.js';
 import { renderWalkForward } from './views/walk_forward.js';
@@ -2811,6 +2812,7 @@ export async function dispatch() {
             case 'catalysts':      await renderCatalysts(mount, state); break;
             case 'catalyst-correlations': await renderCatalystCorrelations(mount, state); break;
             case 'uoa-stream':     await renderUoaStream(mount, state); break;
+            case 'gamma-squeeze':  await renderGammaSqueeze(mount, state); break;
             case 'webull':         await renderWebull(mount, state); break;
             case 'vol-surface':    await renderVolSurface(mount, state); break;
             case 'walk-forward':   await renderWalkForward(mount, state); break;
