@@ -53,6 +53,7 @@ mod heatmap;
 mod hotkeys;
 mod htb_ranker;
 mod imports;
+mod insider_stream;
 mod institutional;
 mod ira_basis;
 mod journal;
@@ -175,6 +176,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(htb_ranker::router())
         .merge(breadth_divergence::router())
         .merge(rvol_accel::router())
+        .merge(insider_stream::router())
         .merge(webull::router())
         .merge(vol_surface::router())
         .merge(tax_lots::router())

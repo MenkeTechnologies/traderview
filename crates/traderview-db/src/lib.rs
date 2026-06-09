@@ -49,6 +49,7 @@ pub mod htb_ranker;
 pub mod ibkr_pump;
 pub mod ibkr_trading;
 pub mod imports;
+pub mod insider_stream;
 pub mod institutional;
 pub mod ira_basis;
 pub mod journal;
