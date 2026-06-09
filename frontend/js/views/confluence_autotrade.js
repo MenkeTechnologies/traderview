@@ -46,6 +46,22 @@ export async function renderConfluenceAutotrade(mount, _state) {
                     <span class="muted small" data-i18n="view.confluence_autotrade.field.max_open">Max open positions</span>
                     <input type="number" id="ca-max-open" step="1" min="1" style="width:100%">
                 </label>
+                <label>
+                    <span class="muted small" data-i18n="view.confluence_autotrade.field.sizing_mode">Sizing mode</span>
+                    <select id="ca-sizing-mode" style="width:100%">
+                        <option value="fixed_notional" data-i18n="view.confluence_autotrade.opt.fixed">Fixed notional</option>
+                        <option value="half_kelly" data-i18n="view.confluence_autotrade.opt.half_kelly">Half Kelly</option>
+                        <option value="quarter_kelly" data-i18n="view.confluence_autotrade.opt.quarter_kelly">Quarter Kelly</option>
+                    </select>
+                </label>
+                <label>
+                    <span class="muted small" data-i18n="view.confluence_autotrade.field.kelly_horizon">Kelly horizon (days)</span>
+                    <input type="number" id="ca-kelly-horizon" step="1" min="1" max="252" style="width:100%">
+                </label>
+                <label>
+                    <span class="muted small" data-i18n="view.confluence_autotrade.field.kelly_max">Kelly max fraction (cap)</span>
+                    <input type="number" id="ca-kelly-max" step="0.005" min="0.001" max="1" style="width:100%">
+                </label>
             </form>
             <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px">
                 <button class="btn btn-sm primary" id="ca-save" data-i18n="view.confluence_autotrade.btn.save">💾 Save Config</button>
@@ -61,10 +77,11 @@ export async function renderConfluenceAutotrade(mount, _state) {
                     <th data-i18n="view.confluence_autotrade.th.score">Score</th>
                     <th data-i18n="view.confluence_autotrade.th.sources">Sources</th>
                     <th data-i18n="view.confluence_autotrade.th.notional">Notional</th>
+                    <th data-i18n="view.confluence_autotrade.th.sizing">Sizing</th>
                     <th data-i18n="view.confluence_autotrade.th.action">Action</th>
                     <th data-i18n="view.confluence_autotrade.th.reason">Reason</th>
                 </tr></thead>
-                <tbody><tr><td colspan="7" class="muted" data-i18n="common.loading">loading…</td></tr></tbody>
+                <tbody><tr><td colspan="8" class="muted" data-i18n="common.loading">loading…</td></tr></tbody>
             </table>
         </div>
     `;
@@ -83,6 +100,9 @@ async function loadConfig(mount) {
         mount.querySelector('#ca-notional').value = c.notional_usd;
         mount.querySelector('#ca-cooldown').value = c.cooldown_minutes;
         mount.querySelector('#ca-max-open').value = c.max_open_positions;
+        mount.querySelector('#ca-sizing-mode').value = c.sizing_mode;
+        mount.querySelector('#ca-kelly-horizon').value = c.kelly_horizon_days;
+        mount.querySelector('#ca-kelly-max').value = c.kelly_max_fraction;
     } catch (e) {
         mount.querySelector('#ca-result').innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }
@@ -97,6 +117,9 @@ async function saveConfig(mount) {
         notional_usd: parseFloat(mount.querySelector('#ca-notional').value),
         cooldown_minutes: parseInt(mount.querySelector('#ca-cooldown').value, 10),
         max_open_positions: parseInt(mount.querySelector('#ca-max-open').value, 10),
+        sizing_mode: mount.querySelector('#ca-sizing-mode').value,
+        kelly_horizon_days: parseInt(mount.querySelector('#ca-kelly-horizon').value, 10),
+        kelly_max_fraction: parseFloat(mount.querySelector('#ca-kelly-max').value),
     };
     try {
         const c = await api('/confluence/autotrade/config', { method: 'PUT', body: JSON.stringify(body) });
@@ -134,22 +157,29 @@ async function loadLog(mount) {
     try {
         const rows = await api('/confluence/autotrade/log?limit=100');
         if (!rows || !rows.length) {
-            tbody.innerHTML = `<tr><td colspan="7" class="muted">${esc(t('view.confluence_autotrade.empty.no_log'))}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="8" class="muted">${esc(t('view.confluence_autotrade.empty.no_log'))}</td></tr>`;
             return;
         }
-        tbody.innerHTML = rows.map(r => `
+        tbody.innerHTML = rows.map(r => {
+            const sizing = r.sizing_used
+                ? (r.kelly_fraction != null
+                    ? `${esc(r.sizing_used)} · ${(r.kelly_fraction * 100).toFixed(2)}%`
+                    : esc(r.sizing_used))
+                : '';
+            return `
             <tr>
                 <td class="muted small">${esc(fmtDateTime(r.fired_at))}</td>
                 <td><strong>${esc(r.symbol)}</strong></td>
                 <td>${r.score.toFixed(2)}</td>
                 <td>${r.distinct_sources}</td>
                 <td>$${r.notional_usd.toFixed(0)}</td>
+                <td class="muted small">${sizing}</td>
                 <td class="${actionCls(r.action)}">${esc(r.action)}</td>
                 <td class="muted small">${esc(r.reason || '')}</td>
-            </tr>
-        `).join('');
+            </tr>`;
+        }).join('');
     } catch (e) {
-        tbody.innerHTML = `<tr><td colspan="7" class="neg">${esc(String(e))}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="neg">${esc(String(e))}</td></tr>`;
     }
 }
 

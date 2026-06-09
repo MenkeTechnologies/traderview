@@ -76,6 +76,7 @@ pub mod pairs_cointegration;
 pub mod paper;
 pub mod pead_tracker;
 pub mod plans;
+pub mod position_sizer;
 pub mod premarket;
 pub mod prices;
 pub mod r_distribution;

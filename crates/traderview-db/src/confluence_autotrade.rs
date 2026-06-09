@@ -43,6 +43,13 @@ pub struct AutotradeConfig {
     pub notional_usd: f64,
     pub cooldown_minutes: i32,
     pub max_open_positions: i32,
+    /// `fixed_notional` | `half_kelly` | `quarter_kelly`. When Kelly mode
+    /// can't be applied (no backtest stats, n too low, mean ≤ 0), the
+    /// sizer falls back to `notional_usd` and writes the reason to the
+    /// audit log.
+    pub sizing_mode: String,
+    pub kelly_horizon_days: i32,
+    pub kelly_max_fraction: f64,
     pub updated_at: DateTime<Utc>,
 }
 
@@ -56,6 +63,9 @@ impl AutotradeConfig {
             notional_usd: 1000.0,
             cooldown_minutes: 240,
             max_open_positions: 10,
+            sizing_mode: "fixed_notional".into(),
+            kelly_horizon_days: 20,
+            kelly_max_fraction: 0.05,
             updated_at: Utc::now(),
         }
     }
@@ -104,6 +114,8 @@ pub struct AutotradeLogRow {
     pub action: String,
     pub paper_order_id: Option<Uuid>,
     pub reason: Option<String>,
+    pub sizing_used: Option<String>,
+    pub kelly_fraction: Option<f64>,
     pub fired_at: DateTime<Utc>,
 }
 
@@ -206,16 +218,40 @@ fn reason_label(r: SkipReason) -> &'static str {
 // ─── Repository ────────────────────────────────────────────────────────────
 
 pub async fn get_config(pool: &PgPool, user_id: Uuid) -> anyhow::Result<AutotradeConfig> {
-    let row: Option<(bool, f64, i32, f64, i32, i32, DateTime<Utc>)> = sqlx::query_as(
+    type Row = (
+        bool,
+        f64,
+        i32,
+        f64,
+        i32,
+        i32,
+        String,
+        i32,
+        f64,
+        DateTime<Utc>,
+    );
+    let row: Option<Row> = sqlx::query_as(
         "SELECT enabled, min_score, min_distinct_sources, notional_usd,
-                cooldown_minutes, max_open_positions, updated_at
+                cooldown_minutes, max_open_positions,
+                sizing_mode, kelly_horizon_days, kelly_max_fraction, updated_at
            FROM confluence_autotrade_config WHERE user_id = $1",
     )
     .bind(user_id)
     .fetch_optional(pool)
     .await?;
     match row {
-        Some((enabled, min_score, src, notional, cd, max_open, updated)) => Ok(AutotradeConfig {
+        Some((
+            enabled,
+            min_score,
+            src,
+            notional,
+            cd,
+            max_open,
+            sizing_mode,
+            kelly_horizon,
+            kelly_max,
+            updated,
+        )) => Ok(AutotradeConfig {
             user_id,
             enabled,
             min_score,
@@ -223,6 +259,9 @@ pub async fn get_config(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Autotrad
             notional_usd: notional,
             cooldown_minutes: cd,
             max_open_positions: max_open,
+            sizing_mode,
+            kelly_horizon_days: kelly_horizon,
+            kelly_max_fraction: kelly_max,
             updated_at: updated,
         }),
         None => Ok(AutotradeConfig::default_for(user_id)),
@@ -236,8 +275,9 @@ pub async fn upsert_config(
     sqlx::query(
         "INSERT INTO confluence_autotrade_config
             (user_id, enabled, min_score, min_distinct_sources,
-             notional_usd, cooldown_minutes, max_open_positions, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, now())
+             notional_usd, cooldown_minutes, max_open_positions,
+             sizing_mode, kelly_horizon_days, kelly_max_fraction, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, now())
          ON CONFLICT (user_id) DO UPDATE SET
             enabled              = EXCLUDED.enabled,
             min_score            = EXCLUDED.min_score,
@@ -245,6 +285,9 @@ pub async fn upsert_config(
             notional_usd         = EXCLUDED.notional_usd,
             cooldown_minutes     = EXCLUDED.cooldown_minutes,
             max_open_positions   = EXCLUDED.max_open_positions,
+            sizing_mode          = EXCLUDED.sizing_mode,
+            kelly_horizon_days   = EXCLUDED.kelly_horizon_days,
+            kelly_max_fraction   = EXCLUDED.kelly_max_fraction,
             updated_at           = now()",
     )
     .bind(cfg.user_id)
@@ -254,6 +297,9 @@ pub async fn upsert_config(
     .bind(cfg.notional_usd)
     .bind(cfg.cooldown_minutes)
     .bind(cfg.max_open_positions)
+    .bind(&cfg.sizing_mode)
+    .bind(cfg.kelly_horizon_days)
+    .bind(cfg.kelly_max_fraction)
     .execute(pool)
     .await?;
     get_config(pool, cfg.user_id).await
@@ -264,7 +310,7 @@ pub async fn recent_log(
     user_id: Uuid,
     limit: i64,
 ) -> anyhow::Result<Vec<AutotradeLogRow>> {
-    let rows: Vec<(
+    type LogTup = (
         i64,
         Uuid,
         String,
@@ -274,10 +320,13 @@ pub async fn recent_log(
         String,
         Option<Uuid>,
         Option<String>,
+        Option<String>,
+        Option<f64>,
         DateTime<Utc>,
-    )> = sqlx::query_as(
+    );
+    let rows: Vec<LogTup> = sqlx::query_as(
         "SELECT id, user_id, symbol, score, distinct_sources, notional_usd,
-                action, paper_order_id, reason, fired_at
+                action, paper_order_id, reason, sizing_used, kelly_fraction, fired_at
            FROM confluence_autotrade_log
           WHERE user_id = $1
           ORDER BY fired_at DESC
@@ -290,17 +339,21 @@ pub async fn recent_log(
     Ok(rows
         .into_iter()
         .map(
-            |(id, u, sym, score, src, notional, action, oid, reason, fired)| AutotradeLogRow {
-                id,
-                user_id: u,
-                symbol: sym,
-                score,
-                distinct_sources: src,
-                notional_usd: notional,
-                action,
-                paper_order_id: oid,
-                reason,
-                fired_at: fired,
+            |(id, u, sym, score, src, notional, action, oid, reason, sizing, kf, fired)| {
+                AutotradeLogRow {
+                    id,
+                    user_id: u,
+                    symbol: sym,
+                    score,
+                    distinct_sources: src,
+                    notional_usd: notional,
+                    action,
+                    paper_order_id: oid,
+                    reason,
+                    sizing_used: sizing,
+                    kelly_fraction: kf,
+                    fired_at: fired,
+                }
             },
         )
         .collect())
@@ -325,6 +378,55 @@ async fn last_fire_lookup(
     Ok(rows.into_iter().collect())
 }
 
+/// Best-effort current equity (cash + mark-to-market positions). Falls
+/// back to cash-only when the quote fetch fails for any position symbol.
+async fn paper_equity_usd(pool: &PgPool, account_id: Uuid, cash: rust_decimal::Decimal) -> f64 {
+    use rust_decimal::prelude::ToPrimitive;
+    let cash_f64 = cash.to_f64().unwrap_or(0.0);
+    let pos = match crate::paper::positions(pool, account_id).await {
+        Ok(p) => p,
+        Err(_) => return cash_f64,
+    };
+    let mut mv = 0.0_f64;
+    for p in &pos {
+        let qty_f64 = p.qty.to_f64().unwrap_or(0.0);
+        if qty_f64 == 0.0 {
+            continue;
+        }
+        let price = match crate::market_data::quote(pool, &p.symbol).await {
+            Ok(q) => q.price,
+            Err(_) => p.avg_price.to_f64().unwrap_or(0.0),
+        };
+        mv += qty_f64 * price;
+    }
+    cash_f64 + mv
+}
+
+/// Pulls the PEAD backtest for the trailing 365 days and returns the
+/// stats row for the requested horizon (or the closest available).
+/// Returns `None` if the backtest can't be computed (e.g. no earnings
+/// events cached) or no horizon matches.
+async fn pead_stats_for_horizon(
+    pool: &PgPool,
+    horizon_days: u32,
+) -> Option<crate::position_sizer::ScannerStats> {
+    let report = crate::scanner_backtest::backtest_pead(pool, 365)
+        .await
+        .ok()?;
+    let hz = report
+        .horizons
+        .iter()
+        .min_by_key(|h| (h.horizon_days as i64 - horizon_days as i64).abs())?;
+    if hz.n == 0 {
+        return None;
+    }
+    Some(crate::position_sizer::ScannerStats {
+        mean_return_pct: hz.mean_return_pct,
+        stdev_pct: hz.stdev_pct,
+        n: hz.n,
+    })
+}
+
 async fn open_autotrade_positions(pool: &PgPool, account_id: Uuid) -> anyhow::Result<i64> {
     let (n,): (i64,) =
         sqlx::query_as("SELECT COUNT(*) FROM paper_positions WHERE paper_account_id = $1")
@@ -334,40 +436,48 @@ async fn open_autotrade_positions(pool: &PgPool, account_id: Uuid) -> anyhow::Re
     Ok(n)
 }
 
-async fn write_log(
-    pool: &PgPool,
+struct LogWrite<'a> {
     user_id: Uuid,
-    cand: &Candidate,
-    action: &str,
+    cand: &'a Candidate,
+    action: &'a str,
     paper_order_id: Option<Uuid>,
-    reason: Option<&str>,
-) -> anyhow::Result<AutotradeLogRow> {
+    reason: Option<&'a str>,
+    sizing_used: Option<&'a str>,
+    kelly_fraction: Option<f64>,
+}
+
+async fn write_log(pool: &PgPool, w: LogWrite<'_>) -> anyhow::Result<AutotradeLogRow> {
     let (id, fired_at): (i64, DateTime<Utc>) = sqlx::query_as(
         "INSERT INTO confluence_autotrade_log
-            (user_id, symbol, score, distinct_sources, notional_usd, action, paper_order_id, reason)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+            (user_id, symbol, score, distinct_sources, notional_usd,
+             action, paper_order_id, reason, sizing_used, kelly_fraction)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
          RETURNING id, fired_at",
     )
-    .bind(user_id)
-    .bind(&cand.symbol)
-    .bind(cand.score)
-    .bind(cand.distinct_sources)
-    .bind(cand.notional_usd)
-    .bind(action)
-    .bind(paper_order_id)
-    .bind(reason)
+    .bind(w.user_id)
+    .bind(&w.cand.symbol)
+    .bind(w.cand.score)
+    .bind(w.cand.distinct_sources)
+    .bind(w.cand.notional_usd)
+    .bind(w.action)
+    .bind(w.paper_order_id)
+    .bind(w.reason)
+    .bind(w.sizing_used)
+    .bind(w.kelly_fraction)
     .fetch_one(pool)
     .await?;
     Ok(AutotradeLogRow {
         id,
-        user_id,
-        symbol: cand.symbol.clone(),
-        score: cand.score,
-        distinct_sources: cand.distinct_sources,
-        notional_usd: cand.notional_usd,
-        action: action.into(),
-        paper_order_id,
-        reason: reason.map(|s| s.to_string()),
+        user_id: w.user_id,
+        symbol: w.cand.symbol.clone(),
+        score: w.cand.score,
+        distinct_sources: w.cand.distinct_sources,
+        notional_usd: w.cand.notional_usd,
+        action: w.action.into(),
+        paper_order_id: w.paper_order_id,
+        reason: w.reason.map(|s| s.to_string()),
+        sizing_used: w.sizing_used.map(|s| s.to_string()),
+        kelly_fraction: w.kelly_fraction,
         fired_at,
     })
 }
@@ -393,6 +503,15 @@ pub async fn run_once(pool: &PgPool, user_id: Uuid) -> anyhow::Result<RunOnceRes
     let account = crate::paper::ensure_default(pool, user_id).await?;
     let open_n = open_autotrade_positions(pool, account.id).await? as i32;
 
+    let sizing_mode = crate::position_sizer::SizingMode::parse(&cfg.sizing_mode)
+        .unwrap_or(crate::position_sizer::SizingMode::FixedNotional);
+    let equity_usd = paper_equity_usd(pool, account.id, account.cash).await;
+    let scanner_stats = if sizing_mode == crate::position_sizer::SizingMode::FixedNotional {
+        None
+    } else {
+        pead_stats_for_horizon(pool, cfg.kelly_horizon_days as u32).await
+    };
+
     let now = Utc::now();
     let last_fire_fn = |sym: &str| -> Option<DateTime<Utc>> { last_fire.get(sym).copied() };
     let (accepted, skipped) = select_candidates(&rows, &cfg, &last_fire_fn, open_n, now);
@@ -400,17 +519,34 @@ pub async fn run_once(pool: &PgPool, user_id: Uuid) -> anyhow::Result<RunOnceRes
 
     let mut submitted_rows: Vec<AutotradeLogRow> = Vec::new();
     let mut skipped_rows: Vec<AutotradeLogRow> = Vec::new();
-    for cand in &accepted {
+    for cand_init in &accepted {
+        let sizing = crate::position_sizer::size_notional(
+            sizing_mode,
+            equity_usd,
+            cfg.notional_usd,
+            scanner_stats,
+            cfg.kelly_max_fraction,
+        );
+        let cand = Candidate {
+            symbol: cand_init.symbol.clone(),
+            score: cand_init.score,
+            distinct_sources: cand_init.distinct_sources,
+            notional_usd: sizing.notional_usd,
+        };
         let quote = match crate::market_data::quote(pool, &cand.symbol).await {
             Ok(q) => q,
             Err(e) => {
                 let row = write_log(
                     pool,
-                    user_id,
-                    cand,
-                    "skipped_quote",
-                    None,
-                    Some(&format!("quote failed: {e}")),
+                    LogWrite {
+                        user_id,
+                        cand: &cand,
+                        action: "skipped_quote",
+                        paper_order_id: None,
+                        reason: Some(&format!("quote failed: {e}")),
+                        sizing_used: Some(sizing.sizing_used),
+                        kelly_fraction: sizing.kelly_fraction,
+                    },
                 )
                 .await?;
                 skipped_rows.push(row);
@@ -422,14 +558,18 @@ pub async fn run_once(pool: &PgPool, user_id: Uuid) -> anyhow::Result<RunOnceRes
             None => {
                 let row = write_log(
                     pool,
-                    user_id,
-                    cand,
-                    "skipped_quote",
-                    None,
-                    Some(&format!(
-                        "notional ${} at price ${} → < 1 share",
-                        cand.notional_usd, quote.price
-                    )),
+                    LogWrite {
+                        user_id,
+                        cand: &cand,
+                        action: "skipped_quote",
+                        paper_order_id: None,
+                        reason: Some(&format!(
+                            "notional ${:.2} at price ${} → < 1 share",
+                            cand.notional_usd, quote.price
+                        )),
+                        sizing_used: Some(sizing.sizing_used),
+                        kelly_fraction: sizing.kelly_fraction,
+                    },
                 )
                 .await?;
                 skipped_rows.push(row);
@@ -450,16 +590,25 @@ pub async fn run_once(pool: &PgPool, user_id: Uuid) -> anyhow::Result<RunOnceRes
             },
         )
         .await?;
+        let reason = if let Some(fb) = &sizing.fallback_reason {
+            format!(
+                "score={:.2} sources={} (sizing fallback: {fb})",
+                cand.score, cand.distinct_sources
+            )
+        } else {
+            format!("score={:.2} sources={}", cand.score, cand.distinct_sources)
+        };
         let row = write_log(
             pool,
-            user_id,
-            cand,
-            "submitted",
-            Some(order.id),
-            Some(&format!(
-                "score={:.2} sources={}",
-                cand.score, cand.distinct_sources
-            )),
+            LogWrite {
+                user_id,
+                cand: &cand,
+                action: "submitted",
+                paper_order_id: Some(order.id),
+                reason: Some(&reason),
+                sizing_used: Some(sizing.sizing_used),
+                kelly_fraction: sizing.kelly_fraction,
+            },
         )
         .await?;
         submitted_rows.push(row);
@@ -471,7 +620,19 @@ pub async fn run_once(pool: &PgPool, user_id: Uuid) -> anyhow::Result<RunOnceRes
             distinct_sources: distinct,
             notional_usd: cfg.notional_usd,
         };
-        let row = write_log(pool, user_id, &cand, reason_label(reason), None, None).await?;
+        let row = write_log(
+            pool,
+            LogWrite {
+                user_id,
+                cand: &cand,
+                action: reason_label(reason),
+                paper_order_id: None,
+                reason: None,
+                sizing_used: None,
+                kelly_fraction: None,
+            },
+        )
+        .await?;
         skipped_rows.push(row);
     }
 
@@ -509,6 +670,9 @@ mod tests {
             notional_usd: 1000.0,
             cooldown_minutes: 240,
             max_open_positions: 5,
+            sizing_mode: "fixed_notional".into(),
+            kelly_horizon_days: 20,
+            kelly_max_fraction: 0.05,
             updated_at: Utc::now(),
         }
     }

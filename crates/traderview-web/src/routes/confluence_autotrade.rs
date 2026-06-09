@@ -34,6 +34,9 @@ struct ConfigPatch {
     notional_usd: f64,
     cooldown_minutes: i32,
     max_open_positions: i32,
+    sizing_mode: String,
+    kelly_horizon_days: i32,
+    kelly_max_fraction: f64,
 }
 
 async fn put_config(
@@ -41,6 +44,16 @@ async fn put_config(
     user: AuthUser,
     Json(p): Json<ConfigPatch>,
 ) -> Result<Json<ca::AutotradeConfig>, ApiError> {
+    if traderview_db::position_sizer::SizingMode::parse(&p.sizing_mode).is_none() {
+        return Err(ApiError::BadRequest(
+            "sizing_mode must be fixed_notional | half_kelly | quarter_kelly".into(),
+        ));
+    }
+    if !(p.kelly_max_fraction > 0.0 && p.kelly_max_fraction <= 1.0) {
+        return Err(ApiError::BadRequest(
+            "kelly_max_fraction must be in (0, 1]".into(),
+        ));
+    }
     let cfg = ca::AutotradeConfig {
         user_id: user.id,
         enabled: p.enabled,
@@ -49,6 +62,9 @@ async fn put_config(
         notional_usd: p.notional_usd,
         cooldown_minutes: p.cooldown_minutes,
         max_open_positions: p.max_open_positions,
+        sizing_mode: p.sizing_mode,
+        kelly_horizon_days: p.kelly_horizon_days,
+        kelly_max_fraction: p.kelly_max_fraction,
         updated_at: chrono::Utc::now(),
     };
     Ok(Json(ca::upsert_config(&s.pool, &cfg).await?))
