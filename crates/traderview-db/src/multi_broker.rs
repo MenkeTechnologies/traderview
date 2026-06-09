@@ -291,6 +291,254 @@ pub async fn fetch_all(
     })
 }
 
+// ─── Kill switch ───────────────────────────────────────────────────────────
+
+/// Per-broker counts + per-broker errors for the kill-switch fan-out.
+#[derive(Debug, Clone, Serialize)]
+pub struct KillSwitchResult {
+    pub brokers_attempted: Vec<String>,
+    pub cancelled_orders: usize,
+    pub closed_positions: usize,
+    pub per_broker: Vec<KillSwitchBrokerOutcome>,
+    pub errors: Vec<BrokerError>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct KillSwitchBrokerOutcome {
+    pub broker: String,
+    pub cancelled_orders: usize,
+    pub closed_positions: usize,
+}
+
+/// Flat-everything across alpaca + tradier for `user_id`. Pulls creds
+/// from `user_settings` (same shape as `fetch_all`), then for each
+/// broker:
+///   1. Cancels every working order.
+///   2. Closes every open position (flat all).
+///
+/// Best-effort: brokers without creds are skipped; brokers whose API
+/// call fails contribute zero counts + an error entry. This intentional
+/// design lets a partial-success state still flow to the user instead
+/// of a 500 that hides what was actually done. Tradier has no bulk
+/// endpoint, so orders/positions iterate one-at-a-time.
+pub async fn kill_all_for_user(
+    pool: &sqlx::PgPool,
+    user_id: uuid::Uuid,
+) -> anyhow::Result<KillSwitchResult> {
+    let row: Option<(
+        Option<String>, // alpaca_key
+        Option<String>, // alpaca_secret
+        Option<String>, // alpaca_mode
+        Option<String>, // tradier_token
+        Option<String>, // tradier_account
+        Option<bool>,   // tradier_sandbox
+    )> = sqlx::query_as(
+        "SELECT alpaca_api_key, alpaca_api_secret, alpaca_mode,
+                tradier_access_token, tradier_account_id, tradier_sandbox
+           FROM user_settings WHERE user_id = $1",
+    )
+    .bind(user_id)
+    .fetch_optional(pool)
+    .await
+    .unwrap_or(None);
+
+    let (alpaca_key, alpaca_secret, alpaca_mode, tradier_token, tradier_acct, tradier_sandbox) =
+        row.unwrap_or((None, None, None, None, None, None));
+
+    let mut brokers_attempted: Vec<String> = Vec::new();
+    let mut per_broker: Vec<KillSwitchBrokerOutcome> = Vec::new();
+    let mut errors: Vec<BrokerError> = Vec::new();
+    let mut total_orders: usize = 0;
+    let mut total_positions: usize = 0;
+
+    // ─── Alpaca ──────────────────────────────────────────────────────
+    if let (Some(k), Some(s)) = (alpaca_key, alpaca_secret) {
+        if !k.is_empty() && !s.is_empty() {
+            brokers_attempted.push("alpaca".into());
+            let mode = match alpaca_mode.as_deref() {
+                Some("live") => alpaca_trading::BrokerMode::Live,
+                _ => alpaca_trading::BrokerMode::Paper,
+            };
+            let client = alpaca_trading::AlpacaTrading::new(mode, k, s);
+            let (cancelled, closed) = alpaca_kill(&client, &mut errors).await;
+            per_broker.push(KillSwitchBrokerOutcome {
+                broker: "alpaca".into(),
+                cancelled_orders: cancelled,
+                closed_positions: closed,
+            });
+            total_orders += cancelled;
+            total_positions += closed;
+        }
+    }
+
+    // ─── Tradier ─────────────────────────────────────────────────────
+    if let (Some(t), Some(a)) = (tradier_token, tradier_acct) {
+        if !t.is_empty() && !a.is_empty() {
+            brokers_attempted.push("tradier".into());
+            let env = if tradier_sandbox.unwrap_or(true) {
+                tradier_trading::TradierEnv::Sandbox
+            } else {
+                tradier_trading::TradierEnv::Live
+            };
+            let client = tradier_trading::TradierTrading::new(env, t, a);
+            let (cancelled, closed) = tradier_kill(&client, &mut errors).await;
+            per_broker.push(KillSwitchBrokerOutcome {
+                broker: "tradier".into(),
+                cancelled_orders: cancelled,
+                closed_positions: closed,
+            });
+            total_orders += cancelled;
+            total_positions += closed;
+        }
+    }
+
+    Ok(KillSwitchResult {
+        brokers_attempted,
+        cancelled_orders: total_orders,
+        closed_positions: total_positions,
+        per_broker,
+        errors,
+    })
+}
+
+async fn alpaca_kill(
+    client: &alpaca_trading::AlpacaTrading,
+    errors: &mut Vec<BrokerError>,
+) -> (usize, usize) {
+    // close_all_positions(cancel_orders = true) does both in one call,
+    // but counting precisely requires the pre-state lookup. Snapshot
+    // open orders + positions first so we report what we acted on, then
+    // fire the bulk endpoint.
+    let open_orders: Vec<alpaca_trading::OrderResponse> = match client.list_open_orders().await {
+        Ok(o) => o,
+        Err(e) => {
+            errors.push(BrokerError {
+                broker: "alpaca".into(),
+                message: format!("list_open_orders failed: {e}"),
+            });
+            Vec::new()
+        }
+    };
+    let positions: Vec<alpaca_trading::PositionResponse> = match client.list_positions().await {
+        Ok(p) => p,
+        Err(e) => {
+            errors.push(BrokerError {
+                broker: "alpaca".into(),
+                message: format!("list_positions failed: {e}"),
+            });
+            Vec::new()
+        }
+    };
+    if let Err(e) = client.close_all_positions(true).await {
+        errors.push(BrokerError {
+            broker: "alpaca".into(),
+            message: format!("close_all_positions failed: {e}"),
+        });
+    }
+    (open_orders.len(), positions.len())
+}
+
+async fn tradier_kill(
+    client: &tradier_trading::TradierTrading,
+    errors: &mut Vec<BrokerError>,
+) -> (usize, usize) {
+    let orders: Vec<tradier_trading::WorkingOrder> = match client.get_orders().await {
+        Ok(r) => r
+            .flatten()
+            .into_iter()
+            .filter(|o| {
+                // Tradier "working" filter — drop terminal states so we
+                // don't try to cancel filled/expired/rejected ones.
+                matches!(
+                    o.status.as_str(),
+                    "open" | "pending" | "partially_filled" | "accepted"
+                )
+            })
+            .collect(),
+        Err(e) => {
+            errors.push(BrokerError {
+                broker: "tradier".into(),
+                message: format!("get_orders failed: {e:?}"),
+            });
+            Vec::new()
+        }
+    };
+    let positions: Vec<tradier_trading::Position> = match client.get_positions().await {
+        Ok(resp) => match resp.positions {
+            None => Vec::new(),
+            Some(tradier_trading::PositionsList::Empty(_)) => Vec::new(),
+            Some(tradier_trading::PositionsList::Single { position }) => vec![position],
+            Some(tradier_trading::PositionsList::Many { position }) => position,
+        },
+        Err(e) => {
+            errors.push(BrokerError {
+                broker: "tradier".into(),
+                message: format!("get_positions failed: {e:?}"),
+            });
+            Vec::new()
+        }
+    };
+    let mut cancelled = 0;
+    for o in &orders {
+        match client.cancel_order(o.id).await {
+            Ok(()) => cancelled += 1,
+            Err(e) => errors.push(BrokerError {
+                broker: "tradier".into(),
+                message: format!("cancel_order({}) failed: {e:?}", o.id),
+            }),
+        }
+    }
+    let plan = plan_position_closes(&positions);
+    let mut closed = 0;
+    for action in &plan {
+        let req = tradier_trading::PlaceEquityOrder::market(
+            action.symbol.clone(),
+            action.side,
+            action.qty,
+        );
+        match client.place_equity_order(&req).await {
+            Ok(_) => closed += 1,
+            Err(e) => errors.push(BrokerError {
+                broker: "tradier".into(),
+                message: format!("close({}) failed: {e:?}", action.symbol),
+            }),
+        }
+    }
+    (cancelled, closed)
+}
+
+/// Pure compute: convert a list of broker positions into the close
+/// actions that flatten them. Long → Sell, Short → BuyToCover, qty
+/// preserved (always positive). Empty input → empty output.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PositionCloseAction {
+    pub symbol: String,
+    pub side: tradier_trading::EquitySide,
+    pub qty: Decimal,
+}
+
+pub fn plan_position_closes(positions: &[tradier_trading::Position]) -> Vec<PositionCloseAction> {
+    positions
+        .iter()
+        .filter_map(|p| {
+            let qty = p.quantity;
+            if qty.is_zero() {
+                return None;
+            }
+            let (side, abs_qty) = if qty.is_sign_negative() {
+                (tradier_trading::EquitySide::BuyToCover, -qty)
+            } else {
+                (tradier_trading::EquitySide::Sell, qty)
+            };
+            Some(PositionCloseAction {
+                symbol: p.symbol.clone(),
+                side,
+                qty: abs_qty,
+            })
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -299,6 +547,50 @@ mod tests {
 
     fn dec(s: &str) -> Decimal {
         Decimal::from_str(s).unwrap()
+    }
+
+    fn tradier_pos(symbol: &str, qty: &str) -> tradier_trading::Position {
+        tradier_trading::Position {
+            cost_basis: dec("0"),
+            date_acquired: None,
+            id: None,
+            quantity: dec(qty),
+            symbol: symbol.into(),
+        }
+    }
+
+    #[test]
+    fn plan_position_closes_emits_sell_for_long() {
+        let p = vec![tradier_pos("AAPL", "100"), tradier_pos("MSFT", "50")];
+        let plan = plan_position_closes(&p);
+        assert_eq!(plan.len(), 2);
+        assert_eq!(plan[0].symbol, "AAPL");
+        assert_eq!(plan[0].side, tradier_trading::EquitySide::Sell);
+        assert_eq!(plan[0].qty, dec("100"));
+        assert_eq!(plan[1].side, tradier_trading::EquitySide::Sell);
+    }
+
+    #[test]
+    fn plan_position_closes_emits_buy_to_cover_for_short() {
+        let p = vec![tradier_pos("TSLA", "-25")];
+        let plan = plan_position_closes(&p);
+        assert_eq!(plan.len(), 1);
+        assert_eq!(plan[0].side, tradier_trading::EquitySide::BuyToCover);
+        assert_eq!(plan[0].qty, dec("25"), "qty must be absolute, not signed");
+    }
+
+    #[test]
+    fn plan_position_closes_skips_zero_qty() {
+        let p = vec![tradier_pos("ZERO", "0"), tradier_pos("LIVE", "10")];
+        let plan = plan_position_closes(&p);
+        assert_eq!(plan.len(), 1);
+        assert_eq!(plan[0].symbol, "LIVE");
+    }
+
+    #[test]
+    fn plan_position_closes_empty_input_empty_output() {
+        let plan = plan_position_closes(&[]);
+        assert!(plan.is_empty());
     }
 
     #[test]

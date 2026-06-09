@@ -197,6 +197,14 @@ impl TradierTrading {
         let resp = self.auth(self.http.get(&url)).send().await?;
         Self::handle_status(resp).await
     }
+
+    /// All currently-working orders. Tradier API path is
+    /// `/accounts/:id/orders?includeTags=true`.
+    pub async fn get_orders(&self) -> Result<OrdersResponse, TradierError> {
+        let url = format!("{}/accounts/{}/orders", self.base, self.account_id);
+        let resp = self.auth(self.http.get(&url)).send().await?;
+        Self::handle_status(resp).await
+    }
 }
 
 // ─── request shapes ─────────────────────────────────────────────────────────
@@ -402,4 +410,36 @@ pub struct Position {
     pub id: Option<i64>,
     pub quantity: Decimal,
     pub symbol: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct OrdersResponse {
+    pub orders: Option<OrdersList>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(untagged)]
+pub enum OrdersList {
+    Empty(String),
+    Single { order: WorkingOrder },
+    Many { order: Vec<WorkingOrder> },
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct WorkingOrder {
+    pub id: i64,
+    pub status: String,
+    pub symbol: Option<String>,
+    pub side: Option<String>,
+}
+
+impl OrdersResponse {
+    pub fn flatten(self) -> Vec<WorkingOrder> {
+        match self.orders {
+            None => Vec::new(),
+            Some(OrdersList::Empty(_)) => Vec::new(),
+            Some(OrdersList::Single { order }) => vec![order],
+            Some(OrdersList::Many { order }) => order,
+        }
+    }
 }

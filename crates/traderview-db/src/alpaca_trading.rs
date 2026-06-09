@@ -165,6 +165,46 @@ impl AlpacaTrading {
         Self::handle_status(resp).await
     }
 
+    /// Alpaca bulk endpoint — cancels every open order on the account.
+    /// Returns the JSON body verbatim (server-shaped); empty Vec on
+    /// success when there's nothing open. Some terminal states come
+    /// back as 207 Multi-Status — caller treats success-or-partial as
+    /// "fine" since we'll re-list afterward to surface what's still
+    /// outstanding.
+    pub async fn cancel_all_orders(&self) -> Result<(), AlpacaError> {
+        let url = format!("{}/v2/orders", self.rest_base);
+        let resp = self.auth_headers(self.http.delete(&url)).send().await?;
+        let status = resp.status();
+        if status.is_success() || status.as_u16() == 207 {
+            return Ok(());
+        }
+        let body = resp.text().await?;
+        Err(AlpacaError::Http {
+            status: status.as_u16(),
+            body,
+        })
+    }
+
+    /// Alpaca bulk endpoint — issues a flat-everything close. Pass
+    /// `cancel_orders = true` to also cancel open orders in the same
+    /// call (recommended for kill-switch).
+    pub async fn close_all_positions(&self, cancel_orders: bool) -> Result<(), AlpacaError> {
+        let url = format!(
+            "{}/v2/positions?cancel_orders={}",
+            self.rest_base, cancel_orders
+        );
+        let resp = self.auth_headers(self.http.delete(&url)).send().await?;
+        let status = resp.status();
+        if status.is_success() || status.as_u16() == 207 {
+            return Ok(());
+        }
+        let body = resp.text().await?;
+        Err(AlpacaError::Http {
+            status: status.as_u16(),
+            body,
+        })
+    }
+
     pub async fn cancel_order(&self, broker_order_id: &str) -> Result<(), AlpacaError> {
         let url = format!("{}/v2/orders/{}", self.rest_base, broker_order_id);
         let resp = self.auth_headers(self.http.delete(&url)).send().await?;
@@ -182,6 +222,15 @@ impl AlpacaTrading {
             status: status.as_u16(),
             body,
         })
+    }
+
+    /// List open orders (status=open). Used to count what the bulk
+    /// `cancel_all_orders` / `close_all_positions(true)` call will act
+    /// on, so the kill-switch result can report a precise number.
+    pub async fn list_open_orders(&self) -> Result<Vec<OrderResponse>, AlpacaError> {
+        let url = format!("{}/v2/orders?status=open", self.rest_base);
+        let resp = self.auth_headers(self.http.get(&url)).send().await?;
+        Self::handle_status(resp).await
     }
 
     pub async fn get_order(&self, broker_order_id: &str) -> Result<OrderResponse, AlpacaError> {

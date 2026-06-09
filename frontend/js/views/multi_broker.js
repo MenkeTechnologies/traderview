@@ -162,15 +162,18 @@ async function triggerKill(mount) {
     try {
         const r = await api('/multi-broker/kill-switch', {
             method: 'POST',
-            body: { confirm_token: token },
+            body: { confirm_token: token, reason: 'manual UI invocation' },
         });
+        const perBroker = (r.per_broker || []).map(b =>
+            `<li>${esc(b.broker)}: cancelled ${b.cancelled_orders}, closed ${b.closed_positions}</li>`).join('');
         result.innerHTML = `<div class="neg">
             <strong>${esc(t('view.multi_broker.kill.result_title'))}</strong>
+            <p class="muted small">brokers attempted: ${(r.brokers_attempted || []).map(esc).join(', ') || '—'}</p>
             <ul>
                 <li>${esc(t('view.multi_broker.kill.cancelled_count'))}: ${r.cancelled_orders}</li>
                 <li>${esc(t('view.multi_broker.kill.closed_count'))}: ${r.closed_positions}</li>
             </ul>
-            ${r.note ? `<p class="muted small">${esc(r.note)}</p>` : ''}
+            ${perBroker ? `<ul>${perBroker}</ul>` : ''}
             ${r.errors && r.errors.length ? `<ul>${r.errors.map(e =>
                 `<li class="muted small">${esc(e.broker)}: ${esc(e.message)}</li>`).join('')}</ul>` : ''}
         </div>`;
