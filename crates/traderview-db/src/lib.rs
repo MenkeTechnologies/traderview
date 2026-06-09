@@ -64,6 +64,7 @@ pub mod news;
 pub mod note_templates;
 pub mod options;
 pub mod paper;
+pub mod pead_tracker;
 pub mod plans;
 pub mod premarket;
 pub mod prices;

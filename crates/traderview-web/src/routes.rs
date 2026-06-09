@@ -68,6 +68,7 @@ mod news;
 mod note_templates;
 mod options;
 mod paper;
+mod pead;
 mod plans;
 mod position_size;
 mod premarket;
@@ -177,6 +178,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(breadth_divergence::router())
         .merge(rvol_accel::router())
         .merge(insider_stream::router())
+        .merge(pead::router())
         .merge(webull::router())
         .merge(vol_surface::router())
         .merge(tax_lots::router())

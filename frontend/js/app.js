@@ -629,6 +629,7 @@ import { renderHtbRanker } from './views/htb_ranker.js';
 import { renderBreadthDivergence } from './views/breadth_divergence.js';
 import { renderRvolAccel } from './views/rvol_accel.js';
 import { renderInsiderStream } from './views/insider_stream.js';
+import { renderPead } from './views/pead.js';
 import { renderWebull } from './views/webull.js';
 import { renderVolSurface } from './views/vol_surface.js';
 import { renderWalkForward } from './views/walk_forward.js';
@@ -2821,6 +2822,7 @@ export async function dispatch() {
             case 'breadth-divergence': await renderBreadthDivergence(mount, state); break;
             case 'rvol-accel':     await renderRvolAccel(mount, state); break;
             case 'insider-stream': await renderInsiderStream(mount, state); break;
+            case 'pead':           await renderPead(mount, state); break;
             case 'webull':         await renderWebull(mount, state); break;
             case 'vol-surface':    await renderVolSurface(mount, state); break;
             case 'walk-forward':   await renderWalkForward(mount, state); break;
