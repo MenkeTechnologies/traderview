@@ -40,6 +40,7 @@ mod disclosures;
 mod dividend_capture;
 mod earnings_cal;
 mod earnings_iv;
+mod earnings_revisions;
 mod economy;
 mod equity_forecast;
 mod executions;
@@ -189,6 +190,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(rvol_accel::router())
         .merge(insider_stream::router())
         .merge(insider_clusters::router())
+        .merge(earnings_revisions::router())
         .merge(pead::router())
         .merge(sentiment_velocity::router())
         .merge(confluence::router())

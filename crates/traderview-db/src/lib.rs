@@ -35,6 +35,7 @@ pub mod disclosures;
 pub mod dividend_capture;
 pub mod earnings_cal;
 pub mod earnings_iv;
+pub mod earnings_revisions;
 pub mod economy;
 pub mod embedded;
 pub mod executions;
