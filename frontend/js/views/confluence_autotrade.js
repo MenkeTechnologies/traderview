@@ -74,10 +74,19 @@ export async function renderConfluenceAutotrade(mount, _state) {
                     <span class="muted small" data-i18n="view.confluence_autotrade.field.corr_window">Correlation window (days)</span>
                     <input type="number" id="ca-corr-window" step="5" min="10" max="252" style="width:100%">
                 </label>
+                <label>
+                    <span class="muted small" data-i18n="view.confluence_autotrade.field.max_holding">Max holding (days)</span>
+                    <input type="number" id="ca-max-holding" step="1" min="0" max="365" style="width:100%">
+                </label>
+                <label>
+                    <span class="muted small" data-i18n="view.confluence_autotrade.field.degradation_checks">Degradation checks</span>
+                    <input type="number" id="ca-degradation" step="1" min="1" max="20" style="width:100%">
+                </label>
             </form>
             <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px">
                 <button class="btn btn-sm primary" id="ca-save" data-i18n="view.confluence_autotrade.btn.save">💾 Save Config</button>
                 <button class="btn btn-sm primary" id="ca-run" data-shortcut="r" data-i18n="view.confluence_autotrade.btn.run">⚡ Run Once</button>
+                <button class="btn btn-sm" id="ca-sweep" data-i18n="view.confluence_autotrade.btn.sweep">↻ Sweep Exits</button>
                 <span class="muted small" id="ca-meta"></span>
             </div>
             <div id="ca-result"></div>
@@ -99,8 +108,29 @@ export async function renderConfluenceAutotrade(mount, _state) {
     `;
     mount.querySelector('#ca-save').addEventListener('click', () => saveConfig(mount));
     mount.querySelector('#ca-run').addEventListener('click', () => runOnce(mount));
+    mount.querySelector('#ca-sweep').addEventListener('click', () => sweepExits(mount));
     await loadConfig(mount);
     await loadLog(mount);
+}
+
+async function sweepExits(mount) {
+    const meta = mount.querySelector('#ca-meta');
+    const result = mount.querySelector('#ca-result');
+    if (meta) meta.textContent = t('view.confluence_autotrade.status.sweeping');
+    try {
+        const r = await api('/confluence/autotrade/sweep-exits', { method: 'POST' });
+        const flat = r.flattened || [];
+        const held = r.held || [];
+        result.innerHTML = `<p>
+            ${esc(t('view.confluence_autotrade.status.sweep_summary')
+                .replace('{c}', r.considered).replace('{f}', flat.length).replace('{h}', held.length))}
+        </p>${flat.length ? `<ul>${flat.map(f =>
+            `<li class="neg small">${esc(f.symbol)} — ${esc(f.reason)} (held ${f.days_held}d)</li>`).join('')}</ul>` : ''}`;
+        if (meta) meta.textContent = '';
+        await loadLog(mount);
+    } catch (e) {
+        result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
+    }
 }
 
 async function loadConfig(mount) {
@@ -118,6 +148,8 @@ async function loadConfig(mount) {
         mount.querySelector('#ca-corr-gate-enabled').checked = !!c.correlation_gate_enabled;
         mount.querySelector('#ca-max-corr').value = c.max_pairwise_correlation;
         mount.querySelector('#ca-corr-window').value = c.correlation_window_days;
+        mount.querySelector('#ca-max-holding').value = c.max_holding_days;
+        mount.querySelector('#ca-degradation').value = c.degradation_threshold_checks;
     } catch (e) {
         mount.querySelector('#ca-result').innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }
@@ -138,6 +170,8 @@ async function saveConfig(mount) {
         correlation_gate_enabled: mount.querySelector('#ca-corr-gate-enabled').checked,
         max_pairwise_correlation: parseFloat(mount.querySelector('#ca-max-corr').value),
         correlation_window_days: parseInt(mount.querySelector('#ca-corr-window').value, 10),
+        max_holding_days: parseInt(mount.querySelector('#ca-max-holding').value, 10),
+        degradation_threshold_checks: parseInt(mount.querySelector('#ca-degradation').value, 10),
     };
     try {
         const c = await api('/confluence/autotrade/config', { method: 'PUT', body: JSON.stringify(body) });
@@ -204,6 +238,7 @@ async function loadLog(mount) {
 function actionCls(a) {
     if (a === 'submitted') return 'pos';
     if (a === 'skipped_correlation') return 'neg';
+    if (a === 'exit_time_stop' || a === 'exit_degraded') return 'neg';
     if (a && a.startsWith('skipped_')) return 'muted';
     return '';
 }

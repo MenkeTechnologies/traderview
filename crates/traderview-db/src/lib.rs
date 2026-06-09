@@ -11,6 +11,7 @@ pub mod algo_runner;
 pub mod alpaca_pump;
 pub mod alpaca_trading;
 pub mod api_tokens;
+pub mod autotrade_exits;
 pub mod backtest_presets;
 pub mod breadth;
 pub mod breadth_divergence;

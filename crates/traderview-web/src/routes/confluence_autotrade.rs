@@ -17,6 +17,8 @@ pub fn router() -> Router<AppState> {
         )
         .route("/confluence/autotrade/log", get(log))
         .route("/confluence/autotrade/run-once", post(run_once))
+        .route("/confluence/autotrade/sweep-exits", post(sweep_exits))
+        .route("/confluence/autotrade/tags", get(list_tags))
 }
 
 async fn get_config(
@@ -40,6 +42,8 @@ struct ConfigPatch {
     correlation_gate_enabled: bool,
     max_pairwise_correlation: f64,
     correlation_window_days: i32,
+    max_holding_days: i32,
+    degradation_threshold_checks: i32,
 }
 
 async fn put_config(
@@ -67,6 +71,16 @@ async fn put_config(
             "correlation_window_days must be in [10, 252]".into(),
         ));
     }
+    if !(p.max_holding_days >= 0 && p.max_holding_days <= 365) {
+        return Err(ApiError::BadRequest(
+            "max_holding_days must be in [0, 365]".into(),
+        ));
+    }
+    if !(p.degradation_threshold_checks >= 1 && p.degradation_threshold_checks <= 20) {
+        return Err(ApiError::BadRequest(
+            "degradation_threshold_checks must be in [1, 20]".into(),
+        ));
+    }
     let cfg = ca::AutotradeConfig {
         user_id: user.id,
         enabled: p.enabled,
@@ -81,6 +95,8 @@ async fn put_config(
         correlation_gate_enabled: p.correlation_gate_enabled,
         max_pairwise_correlation: p.max_pairwise_correlation,
         correlation_window_days: p.correlation_window_days,
+        max_holding_days: p.max_holding_days,
+        degradation_threshold_checks: p.degradation_threshold_checks,
         updated_at: chrono::Utc::now(),
     };
     Ok(Json(ca::upsert_config(&s.pool, &cfg).await?))
@@ -108,4 +124,23 @@ async fn run_once(
     user: AuthUser,
 ) -> Result<Json<ca::RunOnceResult>, ApiError> {
     Ok(Json(ca::run_once(&s.pool, user.id).await?))
+}
+
+async fn sweep_exits(
+    State(s): State<AppState>,
+    user: AuthUser,
+) -> Result<Json<traderview_db::autotrade_exits::SweepResult>, ApiError> {
+    Ok(Json(
+        traderview_db::autotrade_exits::sweep_exits(&s.pool, user.id).await?,
+    ))
+}
+
+async fn list_tags(
+    State(s): State<AppState>,
+    user: AuthUser,
+) -> Result<Json<Vec<traderview_db::autotrade_exits::PositionTag>>, ApiError> {
+    let account = traderview_db::paper::ensure_default(&s.pool, user.id).await?;
+    Ok(Json(
+        traderview_db::autotrade_exits::list_tags(&s.pool, account.id).await?,
+    ))
 }
