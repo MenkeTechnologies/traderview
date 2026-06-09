@@ -80,6 +80,7 @@ pub mod pairs_cointegration;
 pub mod paper;
 pub mod pead_tracker;
 pub mod plans;
+pub mod portfolio_exposure;
 pub mod position_sizer;
 pub mod premarket;
 pub mod prices;

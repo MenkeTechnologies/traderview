@@ -115,6 +115,22 @@ const UNIVERSE: &[(&str, &[&str])] = &[
     ),
 ];
 
+/// Returns the GICS-ish sector name for `symbol` based on the hand-curated
+/// UNIVERSE above, or `None` when the symbol isn't in the top-name list.
+/// Used by the portfolio exposure dashboard to bucket positions by sector
+/// without needing a paid GICS feed.
+pub fn sector_for(symbol: &str) -> Option<&'static str> {
+    let upper = symbol.to_ascii_uppercase();
+    for (sector, tickers) in UNIVERSE {
+        for t in *tickers {
+            if t.eq_ignore_ascii_case(&upper) {
+                return Some(sector);
+            }
+        }
+    }
+    None
+}
+
 pub async fn build(pool: &PgPool, user_id: Uuid) -> anyhow::Result<HeatmapResponse> {
     // Per-user in-process cache. Building the grid fans out ~210 quote fetches;
     // even with the 60s on-disk quote cache that's noticeable work on every

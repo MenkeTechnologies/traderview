@@ -81,6 +81,7 @@ mod pairs;
 mod paper;
 mod pead;
 mod plans;
+mod portfolio_exposure;
 mod position_size;
 mod premarket;
 mod r_distribution;
@@ -200,6 +201,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(market_gamma_regime::router())
         .merge(scanner_backtest::router())
         .merge(pead::router())
+        .merge(portfolio_exposure::router())
         .merge(sentiment_velocity::router())
         .merge(confluence::router())
         .merge(confluence_autotrade::router())
