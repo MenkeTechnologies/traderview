@@ -7,8 +7,13 @@
 //! benchmark grid.
 
 use chrono::{DateTime, Utc};
+use once_cell::sync::Lazy;
 use serde::Serialize;
 use sqlx::PgPool;
+use std::collections::HashMap;
+use std::sync::Arc;
+use std::time::{Duration, Instant};
+use tokio::sync::Mutex;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize)]
@@ -111,6 +116,40 @@ const UNIVERSE: &[(&str, &[&str])] = &[
 ];
 
 pub async fn build(pool: &PgPool, user_id: Uuid) -> anyhow::Result<HeatmapResponse> {
+    // Per-user in-process cache. Building the grid fans out ~210 quote fetches;
+    // even with the 60s on-disk quote cache that's noticeable work on every
+    // visit. Cache the whole response per user for `CACHE_TTL` so repeat loads
+    // (and the auto-refresh poll) return instantly.
+    //
+    // Single-flight: the per-user lock is held for the entire build, so N
+    // concurrent requests for the same user trigger exactly one fan-out.
+    let entry = {
+        let mut map = CACHE.lock().await;
+        map.entry(user_id)
+            .or_insert_with(|| Arc::new(Mutex::new(None)))
+            .clone()
+    };
+    let mut cache = entry.lock().await;
+    if let Some((stored_at, resp)) = cache.as_ref() {
+        if stored_at.elapsed() < CACHE_TTL {
+            return Ok(resp.clone());
+        }
+    }
+
+    let resp = build_uncached(pool, user_id).await?;
+    *cache = Some((Instant::now(), resp.clone()));
+    Ok(resp)
+}
+
+// In-process heatmap cache, keyed by user (watchlist differs per user). Each
+// user gets their own inner lock so a slow build for one user doesn't block
+// cache hits for another. 60s freshness matches the on-disk quote cache.
+const CACHE_TTL: Duration = Duration::from_secs(60);
+#[allow(clippy::type_complexity)]
+static CACHE: Lazy<Mutex<HashMap<Uuid, Arc<Mutex<Option<(Instant, HeatmapResponse)>>>>>> =
+    Lazy::new(|| Mutex::new(HashMap::new()));
+
+async fn build_uncached(pool: &PgPool, user_id: Uuid) -> anyhow::Result<HeatmapResponse> {
     use std::collections::HashSet;
     // Watchlist symbols get pinned to a "Watchlist" pseudo-sector so they
     // always render even if not in the curated universe.

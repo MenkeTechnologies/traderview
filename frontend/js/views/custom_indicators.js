@@ -7,23 +7,18 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
 import { tConfirm } from '../dialog.js';
+import { INDICATOR_CATALOG, indicatorKind } from '../_indicators_catalog.js';
 
-const KINDS = [
-    { id: 'sma',       label: 'SMA',       params: { period: 20 } },
-    { id: 'ema',       label: 'EMA',       params: { period: 20 } },
-    { id: 'rsi',       label: 'RSI',       params: { period: 14 } },
-    { id: 'bollinger', label: 'Bollinger', params: { period: 20, k: 2 } },
-    { id: 'macd',      label: 'MACD',      params: { fast: 12, slow: 26, signal: 9 } },
-];
+const KINDS = INDICATOR_CATALOG;
 
 export async function renderCustomIndicators(mount) {
     const tok = currentViewToken();
     mount.innerHTML = `
         <h1 data-i18n="view.custom_indicators.h1.custom_indicators" class="view-title">// CUSTOM INDICATORS</h1>
-        <p data-i18n="view.custom_indicators.hint.save_named_indicator_parameter_combos_sma_ema_rsi_" class="muted small">Save named indicator + parameter combos (SMA, EMA, RSI, Bollinger,
-            MACD). The Charts tab gets a multi-select to overlay any of them on the SVG cursor.
+        <p data-i18n="view.custom_indicators.hint.save_named_indicator_parameter_combos_sma_ema_rsi_" class="muted small">Save named indicator + parameter combos (SMA, EMA, RSI, ATR, ADX/DI,
+            Stochastic, Bollinger, MACD). The Charts tab gets a multi-select to overlay any of them on the SVG cursor.
             Backend evaluates the chosen presets against cached bars and returns one series
-            per output line (Bollinger emits 3, MACD emits 3, scalars emit 1).</p>
+            per output line (Bollinger / MACD / ADX emit 3, Stochastic emits 2, scalars emit 1).</p>
 
         <div class="chart-panel">
             <h2 data-i18n="view.custom_indicators.h2.create_update_preset">Create / update preset</h2>
@@ -65,7 +60,7 @@ export async function renderCustomIndicators(mount) {
     `;
     const kindSel = mount.querySelector('#ci-form [name=kind]');
     const renderParams = () => {
-        const k = KINDS.find(x => x.id === kindSel.value);
+        const k = indicatorKind(kindSel.value);
         const params = mount.querySelector('#ci-params');
         if (params) params.innerHTML = Object.entries(k.params).map(
             ([key, val]) => `<label>${esc(key)}
@@ -77,7 +72,7 @@ export async function renderCustomIndicators(mount) {
     mount.querySelector('#ci-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
-        const k = KINDS.find(x => x.id === fd.get('kind'));
+        const k = indicatorKind(fd.get('kind'));
         const params = {};
         for (const key of Object.keys(k.params)) {
             const raw = fd.get(`param_${key}`);
@@ -163,7 +158,7 @@ function renderPeriodChart(rows) {
     let total = 0;
     for (const r of rows) {
         const def = r.definition || {};
-        if (!['sma', 'ema', 'rsi', 'bollinger'].includes(def.kind)) continue;
+        if (!['sma', 'ema', 'rsi', 'bollinger', 'atr', 'adx'].includes(def.kind)) continue;
         const p = Number(def.params && def.params.period);
         if (!Number.isFinite(p) || p < 0) continue;
         for (let i = 0; i < buckets.length; i++) {

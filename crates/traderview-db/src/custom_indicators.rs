@@ -9,7 +9,7 @@ use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use sqlx::PgPool;
-use traderview_core::indicators::{bollinger, ema, macd, rsi, sma};
+use traderview_core::indicators::{adx, atr, bollinger, ema, macd, rsi, sma, stochastic};
 use traderview_core::BarInterval;
 use uuid::Uuid;
 
@@ -127,11 +127,20 @@ pub async fn evaluate(
         .unwrap_or_default();
     let times: Vec<DateTime<Utc>> = bars.iter().map(|b| b.bar_time).collect();
     let closes: Vec<f64> = bars.iter().map(|b| dec(b.close)).collect();
+    let highs: Vec<f64> = bars.iter().map(|b| dec(b.high)).collect();
+    let lows: Vec<f64> = bars.iter().map(|b| dec(b.low)).collect();
     let interval_str = interval.label();
 
     let mut series_out: Vec<EvalSeries> = Vec::new();
     for ind in &indicators {
-        for s in compute_one(&ind.name, &ind.color, &ind.definition, &closes) {
+        for s in compute_one(
+            &ind.name,
+            &ind.color,
+            &ind.definition,
+            &closes,
+            &highs,
+            &lows,
+        ) {
             series_out.push(s);
         }
     }
@@ -144,7 +153,14 @@ pub async fn evaluate(
     })
 }
 
-fn compute_one(base_name: &str, color: &str, def: &Value, closes: &[f64]) -> Vec<EvalSeries> {
+fn compute_one(
+    base_name: &str,
+    color: &str,
+    def: &Value,
+    closes: &[f64],
+    highs: &[f64],
+    lows: &[f64],
+) -> Vec<EvalSeries> {
     let kind = def["kind"].as_str().unwrap_or("");
     let p = &def["params"];
     let p_usize = |k: &str, default: usize| p[k].as_u64().map(|x| x as usize).unwrap_or(default);
@@ -210,6 +226,47 @@ fn compute_one(base_name: &str, color: &str, def: &Value, closes: &[f64]) -> Vec
                 },
             ]
         }
+        "adx" => {
+            let a = adx(highs, lows, closes, p_usize("period", 14));
+            let period = p_usize("period", 14);
+            vec![
+                EvalSeries {
+                    name: format!("{} ADX({})", base_name, period),
+                    color: color.into(),
+                    values: a.adx,
+                },
+                EvalSeries {
+                    name: format!("{} +DI", base_name),
+                    color: color.into(),
+                    values: a.plus_di,
+                },
+                EvalSeries {
+                    name: format!("{} -DI", base_name),
+                    color: color.into(),
+                    values: a.minus_di,
+                },
+            ]
+        }
+        "stochastic" => {
+            let st = stochastic(highs, lows, closes, p_usize("k", 14), p_usize("d", 3));
+            vec![
+                EvalSeries {
+                    name: format!("{} %K", base_name),
+                    color: color.into(),
+                    values: st.k,
+                },
+                EvalSeries {
+                    name: format!("{} %D", base_name),
+                    color: color.into(),
+                    values: st.d,
+                },
+            ]
+        }
+        "atr" => vec![EvalSeries {
+            name: format!("{} ATR({})", base_name, p_usize("period", 14)),
+            color: color.into(),
+            values: atr(highs, lows, closes, p_usize("period", 14)),
+        }],
         _ => Vec::new(),
     }
 }
@@ -219,10 +276,24 @@ pub fn validate(def: &Value) -> anyhow::Result<()> {
         .as_str()
         .ok_or_else(|| anyhow::anyhow!("kind required"))?;
     match kind {
-        "sma" | "ema" | "rsi" => {
+        "sma" | "ema" | "rsi" | "atr" => {
             let p = def["params"]["period"].as_u64().unwrap_or(0);
             if !(2..=400).contains(&(p as i64)) {
                 anyhow::bail!("period must be 2..=400");
+            }
+        }
+        "adx" => {
+            let p = def["params"]["period"].as_u64().unwrap_or(0);
+            if !(2..=200).contains(&(p as i64)) {
+                anyhow::bail!("period must be 2..=200");
+            }
+        }
+        "stochastic" => {
+            for (key, lo, hi) in [("k", 1_i64, 400_i64), ("d", 1, 100)] {
+                let v = def["params"][key].as_u64().unwrap_or(0) as i64;
+                if !(lo..=hi).contains(&v) {
+                    anyhow::bail!("{key} must be {lo}..={hi}");
+                }
             }
         }
         "bollinger" => {
@@ -388,6 +459,76 @@ mod tests {
         let def = json!({"kind": "macd", "params": {"fast": 12, "slow": 26}});
         // signal missing → 0 → rejected.
         assert!(validate(&def).is_err());
+    }
+
+    // ===========================================================================
+    // validate — atr / adx / stochastic (added to the global catalog)
+    // ===========================================================================
+
+    #[test]
+    fn validate_atr_uses_same_bounds_as_sma() {
+        assert!(validate(&json!({"kind": "atr", "params": {"period": 14}})).is_ok());
+        assert!(validate(&json!({"kind": "atr", "params": {"period": 1}})).is_err());
+        assert!(validate(&json!({"kind": "atr", "params": {"period": 401}})).is_err());
+    }
+
+    #[test]
+    fn validate_adx_accepts_2_to_200() {
+        assert!(validate(&json!({"kind": "adx", "params": {"period": 14}})).is_ok());
+        assert!(validate(&json!({"kind": "adx", "params": {"period": 200}})).is_ok());
+        assert!(validate(&json!({"kind": "adx", "params": {"period": 1}})).is_err());
+        assert!(validate(&json!({"kind": "adx", "params": {"period": 201}})).is_err());
+    }
+
+    #[test]
+    fn validate_stochastic_requires_k_and_d_in_range() {
+        assert!(validate(&json!({"kind": "stochastic", "params": {"k": 14, "d": 3}})).is_ok());
+        // d out of range
+        let err = validate(&json!({"kind": "stochastic", "params": {"k": 14, "d": 0}}))
+            .unwrap_err()
+            .to_string();
+        assert!(err.contains("d must be"));
+        // k out of range
+        assert!(validate(&json!({"kind": "stochastic", "params": {"k": 401, "d": 3}})).is_err());
+    }
+
+    #[test]
+    fn compute_one_adx_emits_three_series() {
+        let n = 60;
+        let highs: Vec<f64> = (0..n).map(|i| 100.0 + (i as f64)).collect();
+        let lows: Vec<f64> = highs.iter().map(|h| h - 2.0).collect();
+        let closes: Vec<f64> = highs.iter().map(|h| h - 1.0).collect();
+        let def = json!({"kind": "adx", "params": {"period": 14}});
+        let out = compute_one("X", "#fff", &def, &closes, &highs, &lows);
+        assert_eq!(out.len(), 3);
+        assert!(out[0].name.contains("ADX(14)"));
+        assert!(out[1].name.contains("+DI"));
+        assert!(out[2].name.contains("-DI"));
+    }
+
+    #[test]
+    fn compute_one_stochastic_emits_k_and_d() {
+        let n = 40;
+        let highs: Vec<f64> = (0..n).map(|i| 100.0 + (i % 5) as f64).collect();
+        let lows: Vec<f64> = highs.iter().map(|h| h - 3.0).collect();
+        let closes: Vec<f64> = highs.iter().map(|h| h - 1.5).collect();
+        let def = json!({"kind": "stochastic", "params": {"k": 14, "d": 3}});
+        let out = compute_one("S", "#0f0", &def, &closes, &highs, &lows);
+        assert_eq!(out.len(), 2);
+        assert!(out[0].name.contains("%K"));
+        assert!(out[1].name.contains("%D"));
+    }
+
+    #[test]
+    fn compute_one_atr_emits_single_series() {
+        let n = 30;
+        let highs: Vec<f64> = (0..n).map(|i| 50.0 + i as f64).collect();
+        let lows: Vec<f64> = highs.iter().map(|h| h - 1.0).collect();
+        let closes: Vec<f64> = highs.iter().map(|h| h - 0.5).collect();
+        let def = json!({"kind": "atr", "params": {"period": 14}});
+        let out = compute_one("A", "#00f", &def, &closes, &highs, &lows);
+        assert_eq!(out.len(), 1);
+        assert!(out[0].name.contains("ATR(14)"));
     }
 
     // ===========================================================================
