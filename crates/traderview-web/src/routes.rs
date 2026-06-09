@@ -58,6 +58,7 @@ mod insider_stream;
 mod institutional;
 mod ipo_lockups;
 mod ira_basis;
+mod iv_term;
 mod journal;
 mod journal_ai;
 mod live_positions;
@@ -189,6 +190,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(vrp::router())
         .merge(pairs::router())
         .merge(ipo_lockups::router())
+        .merge(iv_term::router())
         .merge(webull::router())
         .merge(vol_surface::router())
         .merge(tax_lots::router())

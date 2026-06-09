@@ -10,7 +10,7 @@ use serde::Deserialize;
 use traderview_db::pairs_cointegration;
 
 pub fn router() -> Router<AppState> {
-    Router::new().route("/pairs/scan", get(scan))
+    Router::new().route("/pairs-coint/scan", get(scan))
 }
 
 #[derive(Deserialize)]

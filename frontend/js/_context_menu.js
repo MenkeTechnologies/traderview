@@ -370,7 +370,7 @@ export const SYMBOL_AWARE_SCOPES = [
     'vol-smile', 'vol-surface', 'option-payoff', 'compare',
     'live', 'pair-trade-calc',
     // symbol-displaying scanner / screener / tape / vol views
-    'screener', 'scanners', 'live-scanner', 'catalysts', 'catalyst-correlations', 'uoa-stream', 'gamma-squeeze', 'htb-ranker', 'rvol-accel', 'insider-stream', 'pead', 'sentiment-velocity', 'confluence', 'vrp', 'ipo-lockups', 'halts', 'after-hours',
+    'screener', 'scanners', 'live-scanner', 'catalysts', 'catalyst-correlations', 'uoa-stream', 'gamma-squeeze', 'htb-ranker', 'rvol-accel', 'insider-stream', 'pead', 'sentiment-velocity', 'confluence', 'vrp', 'ipo-lockups', 'iv-term', 'halts', 'after-hours',
     'heatmap', 'vol', 'tape', 'iv-rank', 'sector-rotation',
     'correlation',
     // symbol-keyed analysis / planning / event views
