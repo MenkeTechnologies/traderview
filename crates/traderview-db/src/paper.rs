@@ -136,7 +136,7 @@ pub async fn submit(
     let quote = crate::market_data::quote(pool, &req.symbol).await?;
     let last = Decimal::try_from(quote.price)?;
 
-    let fill_price = match req.order_type.as_str() {
+    let trigger_price = match req.order_type.as_str() {
         "market" => Some(last),
         "limit" => match (req.side, req.limit_price) {
             (Side::Buy | Side::Cover, Some(lp)) if last <= lp => Some(last),
@@ -149,6 +149,27 @@ pub async fn submit(
             _ => None,
         },
         _ => None,
+    };
+
+    // Apply friction to the trigger price so paper fills track live
+    // execution: buyer pays slippage up, seller receives slippage down,
+    // commission + SEC fee charged separately.
+    let friction_cfg = crate::friction::FrictionConfig::baseline_equity();
+    let (fill_price, friction_commission_usd, friction_sec_usd) = match trigger_price {
+        None => (None, 0.0, 0.0),
+        Some(p) => {
+            let side = match req.side {
+                Side::Buy => crate::friction::FillSide::BuyOpen,
+                Side::Sell => crate::friction::FillSide::SellClose,
+                Side::Short => crate::friction::FillSide::SellOpen,
+                Side::Cover => crate::friction::FillSide::BuyClose,
+            };
+            let quote_f64 = p.to_string().parse::<f64>().unwrap_or_else(|_| quote.price);
+            let qty_f64 = req.qty.to_string().parse::<f64>().unwrap_or(0.0);
+            let f = crate::friction::apply_fill_friction(quote_f64, qty_f64, side, friction_cfg);
+            let adjusted = Decimal::try_from(f.fill_price).unwrap_or(p);
+            (Some(adjusted), f.commission_usd, f.sec_fee_usd)
+        }
     };
 
     let side_str = match req.side {
@@ -194,6 +215,19 @@ pub async fn submit(
             price,
         )
         .await?;
+        // Commission + SEC fee deducted from cash on top of the
+        // already-friction-adjusted fill_price. Fees go negative on
+        // cash regardless of side.
+        let total_fee = friction_commission_usd + friction_sec_usd;
+        if total_fee > 0.0 {
+            if let Ok(fee_dec) = Decimal::try_from(total_fee) {
+                sqlx::query("UPDATE paper_accounts SET cash = cash - $2 WHERE id = $1")
+                    .bind(account_id)
+                    .bind(fee_dec)
+                    .execute(&mut *tx)
+                    .await?;
+            }
+        }
     }
     tx.commit().await?;
     Ok(order)

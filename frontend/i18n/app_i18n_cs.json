@@ -33348,6 +33348,7 @@
   "view.scanner_backtest.btn.run_all": "⚡ Run All Scanners",
   "view.scanner_backtest.btn.run_insider": "Insider clusters only",
   "view.scanner_backtest.empty.no_data": "No signals scored — try increasing the lookback window or seed earnings data.",
+  "view.scanner_backtest.field.friction": "Friction-adjusted (slippage + SEC fee)",
   "view.scanner_backtest.field.samples": "samples",
   "view.scanner_backtest.h2.all": "All Scanners — Comparable Sharpe Table",
   "view.scanner_backtest.hint.all": "Sorted by 20d Sharpe descending — the horizon Kelly defaults to. Scanners with no data (no historical events cached or no price_bars) appear with —.",

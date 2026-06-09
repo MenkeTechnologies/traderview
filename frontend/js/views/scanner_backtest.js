@@ -28,6 +28,10 @@ export async function renderScannerBacktest(mount, _state) {
                 <button class="btn btn-sm primary" id="sb-run-all" data-shortcut="r" data-i18n="view.scanner_backtest.btn.run_all">⚡ Run All Scanners</button>
                 <button class="btn btn-sm" id="sb-run" data-i18n="view.scanner_backtest.btn.run">PEAD only</button>
                 <button class="btn btn-sm" id="sb-run-insider" data-i18n="view.scanner_backtest.btn.run_insider">Insider clusters only</button>
+                <label style="display:flex;align-items:center;gap:6px">
+                    <input type="checkbox" id="sb-friction">
+                    <span class="muted small" data-i18n="view.scanner_backtest.field.friction">Friction-adjusted (slippage + SEC fee)</span>
+                </label>
                 <span class="muted small" id="sb-meta"></span>
             </div>
             <div id="sb-all"></div>
@@ -43,10 +47,11 @@ async function runAll(mount) {
     const all = mount.querySelector('#sb-all');
     const meta = mount.querySelector('#sb-meta');
     const days = parseInt(mount.querySelector('#sb-days').value, 10) || 365;
+    const friction = mount.querySelector('#sb-friction').checked ? 'true' : 'false';
     all.innerHTML = `<p class="muted">${esc(t('view.scanner_backtest.status.running_all'))}</p>`;
     if (meta) meta.textContent = '';
     try {
-        const r = await api(`/scanner-backtest/all?days=${days}`);
+        const r = await api(`/scanner-backtest/all?days=${days}&friction=${friction}`);
         const scanners = r.scanners || [];
         if (!scanners.length) {
             all.innerHTML = `<p class="muted">${esc(t('view.scanner_backtest.empty.no_data'))}</p>`;

@@ -20,6 +20,8 @@ pub fn router() -> Router<AppState> {
 struct DaysQ {
     #[serde(default = "default_days")]
     days: i64,
+    #[serde(default)]
+    friction: bool,
 }
 fn default_days() -> i64 {
     365
@@ -69,6 +71,29 @@ async fn all_scanners(
     _user: AuthUser,
     Query(q): Query<DaysQ>,
 ) -> Result<Json<AllScannersResult>, ApiError> {
+    let friction_cfg = if q.friction {
+        Some(traderview_db::friction::FrictionConfig::baseline_equity())
+    } else {
+        None
+    };
+    let apply = |mut r: scanner_backtest::BacktestResult| -> scanner_backtest::BacktestResult {
+        if let Some(cfg) = friction_cfg {
+            let cost = cfg.round_trip_pct();
+            for h in r.horizons.iter_mut() {
+                if h.n == 0 {
+                    continue;
+                }
+                h.mean_return_pct -= cost;
+                h.median_return_pct -= cost;
+                h.total_logret_signed -= cost * h.n as f64 / 100.0;
+                if h.stdev_pct > 0.0 && h.horizon_days > 0 {
+                    h.annualised_sharpe =
+                        h.mean_return_pct / h.stdev_pct * (252.0 / h.horizon_days as f64).sqrt();
+                }
+            }
+        }
+        r
+    };
     let mut rows: Vec<ScannerRow> = Vec::new();
     for (name, fut) in [
         (
@@ -80,7 +105,7 @@ async fn all_scanners(
             scanner_backtest::backtest_insider_clusters(&s.pool, q.days).await,
         ),
     ] {
-        match fut {
+        match fut.map(apply) {
             Ok(r) => rows.push(ScannerRow {
                 scanner: r.scanner,
                 samples_used: r.samples_used,

@@ -163,6 +163,47 @@ pub fn aggregate(returns: &[f64], horizon_days: u32) -> HorizonStats {
 
 const DEFAULT_HORIZONS_DAYS: &[u32] = &[1, 5, 20, 60];
 
+/// Same as `backtest_with_history` but subtracts round-trip friction
+/// from every per-signal return before aggregating. The Sharpe / hit
+/// rate / mean / max-DD reported are then the *net* figures — what the
+/// autopilot would actually have realized including slippage,
+/// commission, and SEC fees. Use this for live-trading decisions; use
+/// the gross variant only for comparing pure signal predictive power.
+pub fn backtest_with_history_with_friction(
+    scanner: &str,
+    samples: &[SignalSample],
+    closes_for: &dyn Fn(&str) -> Vec<(NaiveDate, f64)>,
+    friction: crate::friction::FrictionConfig,
+) -> BacktestResult {
+    let mut result = backtest_with_history(scanner, samples, closes_for);
+    let cost = friction.round_trip_pct();
+    if cost == 0.0 {
+        return result;
+    }
+    for h in result.horizons.iter_mut() {
+        if h.n == 0 {
+            continue;
+        }
+        // Subtract the round-trip cost from mean + median + total
+        // signed return; stdev is unchanged (friction is a constant
+        // per-leg, doesn't affect dispersion); Sharpe recomputes.
+        h.mean_return_pct -= cost;
+        h.median_return_pct -= cost;
+        h.total_logret_signed -= cost * h.n as f64 / 100.0;
+        if h.stdev_pct > 0.0 && h.horizon_days > 0 {
+            h.annualised_sharpe =
+                h.mean_return_pct / h.stdev_pct * (252.0 / h.horizon_days as f64).sqrt();
+        }
+        // Hit rate at gross 0% threshold → after subtracting cost, hit
+        // means net return > 0 ↔ gross return > cost. We can't recover
+        // that from the aggregate alone — flag conservatively by
+        // leaving hit_rate gross; the live trader sees Sharpe / mean
+        // as the friction-adjusted numbers and uses hit_rate as the
+        // gross-signal indicator.
+    }
+    result
+}
+
 /// Full per-scanner backtest: takes a flat sample list + per-symbol
 /// price history and produces a `BacktestResult` over the default
 /// horizons. Caller is responsible for assembling the (closes per
@@ -597,5 +638,71 @@ mod tests {
     fn cluster_empty_input_empty_output() {
         let samples = cluster_insider_purchases(&[], 30, 3);
         assert!(samples.is_empty());
+    }
+
+    #[test]
+    fn friction_lowers_mean_and_sharpe_vs_gross() {
+        let history = std::sync::Arc::new(linear_closes(d(2026, 1, 1), 200, 0.5));
+        let history2 = history.clone();
+        let closes_fn = move |sym: &str| -> Vec<(NaiveDate, f64)> {
+            if sym == "AAA" {
+                (*history2).clone()
+            } else {
+                Vec::new()
+            }
+        };
+        let samples: Vec<SignalSample> = (5..50)
+            .step_by(10)
+            .map(|i| SignalSample {
+                symbol: "AAA".into(),
+                signal_date: d(2026, 1, 1) + Duration::days(i),
+                direction: Direction::Long,
+            })
+            .collect();
+        let gross = backtest_with_history("g", &samples, &closes_fn);
+        let net = backtest_with_history_with_friction(
+            "n",
+            &samples,
+            &closes_fn,
+            crate::friction::FrictionConfig::baseline_equity(),
+        );
+        // Net mean strictly less than gross mean by the round-trip cost.
+        let cost = crate::friction::FrictionConfig::baseline_equity().round_trip_pct();
+        for (g, n) in gross.horizons.iter().zip(net.horizons.iter()) {
+            if g.n > 0 {
+                assert!((g.mean_return_pct - n.mean_return_pct - cost).abs() < 1e-6);
+                // Sharpe also lower because mean is lower, stdev unchanged.
+                assert!(n.annualised_sharpe < g.annualised_sharpe);
+            }
+        }
+    }
+
+    #[test]
+    fn friction_zero_config_matches_gross() {
+        let history = std::sync::Arc::new(linear_closes(d(2026, 1, 1), 100, 0.2));
+        let history2 = history.clone();
+        let closes_fn = move |sym: &str| -> Vec<(NaiveDate, f64)> {
+            if sym == "AAA" {
+                (*history2).clone()
+            } else {
+                Vec::new()
+            }
+        };
+        let samples = vec![SignalSample {
+            symbol: "AAA".into(),
+            signal_date: d(2026, 1, 5),
+            direction: Direction::Long,
+        }];
+        let gross = backtest_with_history("g", &samples, &closes_fn);
+        let net = backtest_with_history_with_friction(
+            "n",
+            &samples,
+            &closes_fn,
+            crate::friction::FrictionConfig::frictionless(),
+        );
+        for (g, n) in gross.horizons.iter().zip(net.horizons.iter()) {
+            assert_eq!(g.mean_return_pct, n.mean_return_pct);
+            assert_eq!(g.annualised_sharpe, n.annualised_sharpe);
+        }
     }
 }

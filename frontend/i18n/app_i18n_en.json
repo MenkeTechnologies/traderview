@@ -303,6 +303,7 @@
   "view.scanner_backtest.th.samples": "Samples",
   "view.scanner_backtest.th.notes": "Notes",
   "view.scanner_backtest.hint.all": "Sorted by 20d Sharpe descending — the horizon Kelly defaults to. Scanners with no data (no historical events cached or no price_bars) appear with —.",
+  "view.scanner_backtest.field.friction": "Friction-adjusted (slippage + SEC fee)",
   "view.confluence_autotrade.title": "// CONFLUENCE AUTOTRADE · PAPER",
   "view.confluence_autotrade.intro": "Wires the confluence dashboard's ranked output directly into your default paper account. When a symbol crosses <strong>min_score</strong> AND has at least <strong>min_distinct_sources</strong> independent scanners hitting, this submits a paper-market buy for <code>notional_usd / quote</code> shares. Cooldown prevents re-buying the same hot symbol every tick; max-open-positions caps simultaneous exposure. <strong>Run-once</strong> is user-triggered — a cron tick lands in a follow-up commit.",
   "view.confluence_autotrade.h2.config": "Config",

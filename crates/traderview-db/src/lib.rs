@@ -45,6 +45,7 @@ pub mod fear_greed;
 pub mod fill_quality;
 pub mod finnhub_rest;
 pub mod forum;
+pub mod friction;
 pub mod gamma_squeeze;
 pub mod goals;
 pub mod halts;
