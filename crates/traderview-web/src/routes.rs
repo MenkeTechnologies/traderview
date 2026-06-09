@@ -68,6 +68,7 @@ mod markets;
 mod mentorships;
 mod microstructure;
 mod mood_analytics;
+mod multi_broker;
 mod news;
 mod note_templates;
 mod options;
@@ -195,6 +196,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(iv_term::router())
         .merge(sp500_predict::router())
         .merge(dividend_capture::router())
+        .merge(multi_broker::router())
         .merge(webull::router())
         .merge(vol_surface::router())
         .merge(tax_lots::router())
