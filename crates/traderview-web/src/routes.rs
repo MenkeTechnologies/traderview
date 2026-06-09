@@ -27,6 +27,7 @@ mod client_errors;
 mod comments;
 mod community;
 mod compare;
+mod confluence;
 mod corr_matrix;
 mod crypto;
 mod csv_wizard;
@@ -181,6 +182,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(insider_stream::router())
         .merge(pead::router())
         .merge(sentiment_velocity::router())
+        .merge(confluence::router())
         .merge(webull::router())
         .merge(vol_surface::router())
         .merge(tax_lots::router())

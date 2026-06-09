@@ -283,6 +283,12 @@ async fn main() -> anyhow::Result<()> {
     traderview_db::rvol_accel::global();
     traderview_db::insider_stream::global();
     traderview_db::sentiment_velocity::global(state.pool.clone());
+    // confluence::global() must come AFTER every upstream global() has
+    // initialised — its consumers subscribe to all of those broadcasts.
+    // Boot order is: live_ticks → after_hours/catalyst_correlator/uoa_
+    // stream/gamma_squeeze/htb/breadth_div/rvol_accel/insider_stream/
+    // sentiment_velocity → confluence.
+    traderview_db::confluence::global();
 
     // Squeeze scanner — catalyst-driven candidate aggregator + rolling-
     // window squeeze detector. The aggregator subscribes to catalysts +

@@ -22,6 +22,7 @@ pub mod catalysts;
 pub mod chart_drawings;
 pub mod comments;
 pub mod compare;
+pub mod confluence;
 pub mod corr_matrix;
 pub mod crypto;
 pub mod csv_wizard;

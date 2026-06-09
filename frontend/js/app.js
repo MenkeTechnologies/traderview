@@ -631,6 +631,7 @@ import { renderRvolAccel } from './views/rvol_accel.js';
 import { renderInsiderStream } from './views/insider_stream.js';
 import { renderPead } from './views/pead.js';
 import { renderSentimentVelocity } from './views/sentiment_velocity.js';
+import { renderConfluence } from './views/confluence.js';
 import { renderWebull } from './views/webull.js';
 import { renderVolSurface } from './views/vol_surface.js';
 import { renderWalkForward } from './views/walk_forward.js';
@@ -2825,6 +2826,7 @@ export async function dispatch() {
             case 'insider-stream': await renderInsiderStream(mount, state); break;
             case 'pead':           await renderPead(mount, state); break;
             case 'sentiment-velocity': await renderSentimentVelocity(mount, state); break;
+            case 'confluence':     await renderConfluence(mount, state); break;
             case 'webull':         await renderWebull(mount, state); break;
             case 'vol-surface':    await renderVolSurface(mount, state); break;
             case 'walk-forward':   await renderWalkForward(mount, state); break;

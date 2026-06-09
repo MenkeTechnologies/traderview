@@ -134,7 +134,10 @@ pub struct RankedInput {
 /// timestamp, return the freshly fired events and the updated state
 /// map. Symbols that fail the velocity condition this round have their
 /// counters reset (so a single quiet hour breaks the run).
-pub fn evaluate(
+///
+/// Private because `SymbolState` is private; tests inside this module
+/// can still call it via `super::evaluate`.
+fn evaluate(
     rows: &[RankedInput],
     states: &mut std::collections::HashMap<String, SymbolState>,
     now: DateTime<Utc>,
@@ -241,8 +244,12 @@ pub fn spawn_refresher(store: VelocityStore, pool: PgPool) {
     });
 }
 
+// Module-level singleton so both `global(pool)` (initialiser) and
+// `try_global()` (read-only access without a pool, used by the
+// confluence module) reference the same store.
+static STORE: once_cell::sync::OnceCell<VelocityStore> = once_cell::sync::OnceCell::new();
+
 pub fn global(pool: PgPool) -> VelocityStore {
-    static STORE: once_cell::sync::OnceCell<VelocityStore> = once_cell::sync::OnceCell::new();
     STORE
         .get_or_init(|| {
             let s = VelocityStore::new();
@@ -250,6 +257,14 @@ pub fn global(pool: PgPool) -> VelocityStore {
             s
         })
         .clone()
+}
+
+/// Read-only handle. Returns `None` until the first `global(pool)` call
+/// has initialised the singleton. Used by callers that don't have a
+/// `PgPool` handy (e.g. the confluence consumer running in a fan-out
+/// task spawned before the route layer can pass the pool in).
+pub fn try_global() -> Option<VelocityStore> {
+    STORE.get().cloned()
 }
 
 #[cfg(test)]
