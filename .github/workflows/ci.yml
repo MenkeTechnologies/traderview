@@ -94,7 +94,10 @@ jobs:
     name: Release Build
     needs: [check, test]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
+    # macos aarch64 release build sits near 60 min on the hosted
+    # runner — 1h0m22s on c6d535eadb tipped it past the previous
+    # 60-min cap. 90 buys headroom while the workspace keeps growing.
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
