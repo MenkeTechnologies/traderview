@@ -13,6 +13,7 @@ pub mod alpaca_trading;
 pub mod api_tokens;
 pub mod backtest_presets;
 pub mod breadth;
+pub mod breadth_divergence;
 pub mod broker_dispatcher;
 pub mod candidates;
 pub mod carryover;

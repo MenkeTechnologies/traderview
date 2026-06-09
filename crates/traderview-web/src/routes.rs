@@ -15,6 +15,7 @@ mod auth;
 mod backtest;
 mod backtest_presets;
 mod breadth;
+mod breadth_divergence;
 mod calc;
 mod carryover;
 mod catalyst_correlations;
@@ -171,6 +172,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(uoa_stream::router())
         .merge(gamma_squeeze::router())
         .merge(htb_ranker::router())
+        .merge(breadth_divergence::router())
         .merge(webull::router())
         .merge(vol_surface::router())
         .merge(tax_lots::router())
