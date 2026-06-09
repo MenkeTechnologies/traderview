@@ -56,6 +56,7 @@ mod htb_ranker;
 mod imports;
 mod insider_stream;
 mod institutional;
+mod ipo_lockups;
 mod ira_basis;
 mod journal;
 mod journal_ai;
@@ -187,6 +188,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(confluence::router())
         .merge(vrp::router())
         .merge(pairs::router())
+        .merge(ipo_lockups::router())
         .merge(webull::router())
         .merge(vol_surface::router())
         .merge(tax_lots::router())

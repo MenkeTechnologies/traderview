@@ -2831,6 +2831,7 @@ export async function dispatch() {
             case 'confluence':     await renderConfluence(mount, state); break;
             case 'vrp':            await renderVrp(mount, state); break;
             case 'pairs':          await renderPairs(mount, state); break;
+            case 'ipo-lockups':    await renderIpoLockups(mount, state); break;
             case 'webull':         await renderWebull(mount, state); break;
             case 'vol-surface':    await renderVolSurface(mount, state); break;
             case 'walk-forward':   await renderWalkForward(mount, state); break;
