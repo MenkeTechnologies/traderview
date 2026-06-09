@@ -102,6 +102,7 @@ mod trades;
 mod uoa_stream;
 mod vol;
 mod vol_surface;
+mod vrp;
 mod watchlists;
 mod webhooks;
 mod webull;
@@ -183,6 +184,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(pead::router())
         .merge(sentiment_velocity::router())
         .merge(confluence::router())
+        .merge(vrp::router())
         .merge(webull::router())
         .merge(vol_surface::router())
         .merge(tax_lots::router())

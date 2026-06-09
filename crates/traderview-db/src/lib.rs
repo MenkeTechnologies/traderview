@@ -102,6 +102,7 @@ pub mod uoa_stream;
 pub mod users;
 pub mod vol;
 pub mod vol_surface;
+pub mod vrp_scanner;
 pub mod watchlists;
 pub mod webhooks;
 pub mod webull;

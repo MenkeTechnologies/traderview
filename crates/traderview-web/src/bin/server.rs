@@ -289,6 +289,7 @@ async fn main() -> anyhow::Result<()> {
     // stream/gamma_squeeze/htb/breadth_div/rvol_accel/insider_stream/
     // sentiment_velocity → confluence.
     traderview_db::confluence::global();
+    traderview_db::vrp_scanner::global(state.pool.clone());
 
     // Squeeze scanner — catalyst-driven candidate aggregator + rolling-
     // window squeeze detector. The aggregator subscribes to catalysts +
