@@ -86,6 +86,7 @@ mod rebalance;
 mod reports;
 mod research;
 mod rvol_accel;
+mod scanner_backtest;
 mod scans;
 mod screener;
 mod screenshots;
@@ -195,6 +196,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(earnings_revisions::router())
         .merge(sector_timing::router())
         .merge(market_gamma_regime::router())
+        .merge(scanner_backtest::router())
         .merge(pead::router())
         .merge(sentiment_velocity::router())
         .merge(confluence::router())

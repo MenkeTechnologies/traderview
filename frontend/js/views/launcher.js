@@ -33,6 +33,7 @@ export const TILES = [
     ['earnings-revisions', 'Earnings Revisions', '✏️', 'Analyst EPS revision velocity — 30d / 90d / accelerating composite per Womack 1996', 'NEW'],
     ['sector-timing', 'Sector Timing', '🔄', 'Sector RS rotation timing — MA crossover + slope accel + breakout proximity', 'NEW'],
     ['market-gamma', 'Market Gamma',  '🌐',  'SPY total dealer GEX regime — positive=mean-revert / negative=amplify / flip moments', 'NEW'],
+    ['scanner-backtest', 'Scanner Backtest', '📑', 'Backtest each scanner against historical bars — Sharpe, hit rate, max DD per horizon', 'NEW'],
     ['pead',         'PEAD Drift',    '📈',  'Post-earnings drift — surprise + 5/20/60d returns + drift score', 'NEW'],
     ['sentiment-velocity', 'Sentiment Velocity', '🔊', 'WSB+StockTwits mention acceleration — ≥3× hour-over-hour + ≥2 consecutive', 'NEW'],
     ['confluence',   'Confluence',    '🎯',  'Meta-scanner — symbols hitting the most independent edges, weighted', 'TOP'],

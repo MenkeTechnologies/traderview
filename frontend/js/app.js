@@ -633,6 +633,7 @@ import { renderInsiderClusters } from './views/insider_clusters.js';
 import { renderEarningsRevisions } from './views/earnings_revisions.js';
 import { renderSectorTiming } from './views/sector_timing.js';
 import { renderMarketGammaRegime } from './views/market_gamma_regime.js';
+import { renderScannerBacktest } from './views/scanner_backtest.js';
 import { renderPead } from './views/pead.js';
 import { renderSentimentVelocity } from './views/sentiment_velocity.js';
 import { renderConfluence } from './views/confluence.js';
@@ -2839,6 +2840,7 @@ export async function dispatch() {
             case 'earnings-revisions': await renderEarningsRevisions(mount, state); break;
             case 'sector-timing':  await renderSectorTiming(mount, state); break;
             case 'market-gamma':   await renderMarketGammaRegime(mount, state); break;
+            case 'scanner-backtest': await renderScannerBacktest(mount, state); break;
             case 'pead':           await renderPead(mount, state); break;
             case 'sentiment-velocity': await renderSentimentVelocity(mount, state); break;
             case 'confluence':     await renderConfluence(mount, state); break;
