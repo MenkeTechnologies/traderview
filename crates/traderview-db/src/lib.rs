@@ -88,6 +88,7 @@ pub mod sentiment_velocity;
 pub mod settings;
 pub mod shares;
 pub mod short_interest;
+pub mod sp500_predictor;
 pub mod squeeze_detector;
 pub mod strategy_alerts;
 pub mod symbols;

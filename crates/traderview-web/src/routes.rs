@@ -92,6 +92,7 @@ mod sentiment_velocity;
 mod settings;
 mod shares;
 mod short_interest;
+mod sp500_predict;
 mod squeeze_scanner;
 mod strategy_alerts;
 mod symbols_catalog;
@@ -191,6 +192,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(pairs::router())
         .merge(ipo_lockups::router())
         .merge(iv_term::router())
+        .merge(sp500_predict::router())
         .merge(webull::router())
         .merge(vol_surface::router())
         .merge(tax_lots::router())
