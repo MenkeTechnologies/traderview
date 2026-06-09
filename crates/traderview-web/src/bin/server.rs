@@ -276,6 +276,7 @@ async fn main() -> anyhow::Result<()> {
     // pre-market catalysts that arrive before any user opens the view.
     traderview_db::after_hours::global();
     traderview_db::catalyst_correlator::global();
+    traderview_db::uoa_stream::global();
 
     // Squeeze scanner — catalyst-driven candidate aggregator + rolling-
     // window squeeze detector. The aggregator subscribes to catalysts +

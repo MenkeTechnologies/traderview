@@ -91,6 +91,7 @@ mod trade_analytics;
 mod trade_compare;
 mod trade_reviews;
 mod trades;
+mod uoa_stream;
 mod vol;
 mod vol_surface;
 mod watchlists;
@@ -165,6 +166,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(client_errors::router())
         .merge(catalysts::router())
         .merge(catalyst_correlations::router())
+        .merge(uoa_stream::router())
         .merge(webull::router())
         .merge(vol_surface::router())
         .merge(tax_lots::router())

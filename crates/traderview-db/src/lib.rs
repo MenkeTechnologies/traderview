@@ -90,6 +90,7 @@ pub mod trade_reviews;
 pub mod trades;
 pub mod tradier_pump;
 pub mod tradier_trading;
+pub mod uoa_stream;
 pub mod users;
 pub mod vol;
 pub mod vol_surface;
