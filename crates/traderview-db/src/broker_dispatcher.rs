@@ -282,10 +282,7 @@ fn is_extended_hours_session_now() -> bool {
     // bloat for the algo subsystem.
     use chrono::{Datelike, FixedOffset, Timelike, Utc};
     let now = Utc::now().with_timezone(&FixedOffset::west_opt(4 * 3600).expect("EDT offset"));
-    if matches!(
-        now.weekday(),
-        chrono::Weekday::Sat | chrono::Weekday::Sun
-    ) {
+    if matches!(now.weekday(), chrono::Weekday::Sat | chrono::Weekday::Sun) {
         return false;
     }
     let h = now.hour();

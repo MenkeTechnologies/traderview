@@ -169,7 +169,10 @@ pub async fn run_loop(pool: PgPool, event_sink: Option<EventSink>) -> ! {
 
 fn emit_skip(event_sink: Option<&EventSink>, strategy_id: uuid::Uuid, reason: String) {
     if let Some(sink) = event_sink {
-        sink(EngineEvent::TickSkipped { strategy_id, reason });
+        sink(EngineEvent::TickSkipped {
+            strategy_id,
+            reason,
+        });
     }
 }
 
@@ -180,7 +183,11 @@ fn emit_evaluated(
     bars: usize,
 ) {
     if let Some(sink) = event_sink {
-        sink(EngineEvent::BarEvaluated { strategy_id, symbol, bars });
+        sink(EngineEvent::BarEvaluated {
+            strategy_id,
+            symbol,
+            bars,
+        });
     }
 }
 
@@ -255,13 +262,7 @@ async fn symbol_universe(pool: &PgPool, s: &AlgoStrategy) -> Result<Vec<String>,
             // entry_rules.asset_class = "crypto" → 24/7 universe
             // (overnight / weekend testing). Default: equity (RTH).
             let class = AssetClass::from_entry_rules(&s.entry_rules);
-            let picks = autoscan_topn_class(
-                pool,
-                n,
-                parse_timeframe(&s.timeframe),
-                class,
-            )
-            .await?;
+            let picks = autoscan_topn_class(pool, n, parse_timeframe(&s.timeframe), class).await?;
             // Side-effect: make sure the live-tick worker is streaming
             // every autoscan pick. Without this, autoscan picks from the
             // catalog but the WS only ever subscribed to the user's
@@ -332,11 +333,31 @@ const AUTOSCAN_SEED: &[&str] = &[
 /// universe that streams 24/7 — perfect for after-hours / weekend
 /// development + paper testing when equities are silent.
 const AUTOSCAN_CRYPTO_UNIVERSE: &[&str] = &[
-    "BTC/USD", "ETH/USD", "SOL/USD", "AVAX/USD", "MATIC/USD",
-    "DOGE/USD", "SHIB/USD", "LTC/USD", "BCH/USD", "LINK/USD",
-    "UNI/USD", "AAVE/USD", "COMP/USD", "SUSHI/USD", "YFI/USD",
-    "MKR/USD", "GRT/USD", "BAT/USD", "CRV/USD", "XRP/USD",
-    "ADA/USD", "DOT/USD", "TRX/USD", "XLM/USD", "ALGO/USD",
+    "BTC/USD",
+    "ETH/USD",
+    "SOL/USD",
+    "AVAX/USD",
+    "MATIC/USD",
+    "DOGE/USD",
+    "SHIB/USD",
+    "LTC/USD",
+    "BCH/USD",
+    "LINK/USD",
+    "UNI/USD",
+    "AAVE/USD",
+    "COMP/USD",
+    "SUSHI/USD",
+    "YFI/USD",
+    "MKR/USD",
+    "GRT/USD",
+    "BAT/USD",
+    "CRV/USD",
+    "XRP/USD",
+    "ADA/USD",
+    "DOT/USD",
+    "TRX/USD",
+    "XLM/USD",
+    "ALGO/USD",
 ];
 
 /// Autoscan universe — pulls top-N most liquid US equities + ETFs from
@@ -672,8 +693,7 @@ async fn fetch_recent_bars(
         _ => return Ok(Vec::new()),
     };
     // Pull enough 10s rows to cover the requested 1m / etc. window.
-    let s10_rows =
-        read_bars_at(pool, symbol, BarInterval::S10, limit * factor as i64).await?;
+    let s10_rows = read_bars_at(pool, symbol, BarInterval::S10, limit * factor as i64).await?;
     if s10_rows.is_empty() {
         return Ok(Vec::new());
     }
@@ -736,11 +756,7 @@ async fn read_bars_at(
 /// way Yahoo / Polygon would have written them. Open = first bar's
 /// open, close = last bar's close, high/low = max/min across group,
 /// volume = sum.
-fn rollup_s10(
-    s10_bars: Vec<PriceBar>,
-    target: BarInterval,
-    _factor: usize,
-) -> Vec<PriceBar> {
+fn rollup_s10(s10_bars: Vec<PriceBar>, target: BarInterval, _factor: usize) -> Vec<PriceBar> {
     use std::collections::BTreeMap;
     let target_secs = target.seconds();
     let mut buckets: BTreeMap<i64, Vec<PriceBar>> = BTreeMap::new();
@@ -772,8 +788,7 @@ fn rollup_s10(
         out.push(PriceBar {
             symbol: first.symbol.clone(),
             interval: target,
-            bar_time: chrono::DateTime::<Utc>::from_timestamp(key, 0)
-                .unwrap_or(first.bar_time),
+            bar_time: chrono::DateTime::<Utc>::from_timestamp(key, 0).unwrap_or(first.bar_time),
             open: first.open,
             high,
             low,
@@ -862,12 +877,12 @@ mod tests {
     fn rollup_s10_to_m1_uses_first_open_last_close_max_high_min_low_sum_volume() {
         // 6 ten-second bars covering one full minute [60, 120).
         let bars = vec![
-            s10_bar(60, "100", "101", "99",  "100.5", 100),
+            s10_bar(60, "100", "101", "99", "100.5", 100),
             s10_bar(70, "100.5", "102", "100.2", "101.7", 200),
             s10_bar(80, "101.7", "103.5", "101", "103.0", 150),
             s10_bar(90, "103.0", "104", "102.0", "102.5", 300),
-            s10_bar(100,"102.5", "102.8", "101.0", "101.2", 50),
-            s10_bar(110,"101.2", "103.0", "100.8", "102.0", 250),
+            s10_bar(100, "102.5", "102.8", "101.0", "101.2", 50),
+            s10_bar(110, "101.2", "103.0", "100.8", "102.0", 250),
         ];
         let m1 = rollup_s10(bars, BarInterval::M1, 6);
         assert_eq!(m1.len(), 1, "complete bucket should produce one M1");
@@ -915,11 +930,11 @@ mod tests {
         // 6 constituents per bucket and dropped every sparse window,
         // leaving crypto strategies in no_bars forever overnight.
         let bars = vec![
-            s10_bar(60,  "100",  "100", "100", "100", 10),
-            s10_bar(80,  "100",  "100", "100", "100", 10),
-            s10_bar(100, "100",  "100", "100", "100", 10),
-            s10_bar(120, "101",  "101", "101", "101", 10),
-            s10_bar(140, "101",  "101", "101", "101", 10),
+            s10_bar(60, "100", "100", "100", "100", 10),
+            s10_bar(80, "100", "100", "100", "100", 10),
+            s10_bar(100, "100", "100", "100", "100", 10),
+            s10_bar(120, "101", "101", "101", "101", 10),
+            s10_bar(140, "101", "101", "101", "101", 10),
         ];
         let m1 = rollup_s10(bars, BarInterval::M1, 6);
         assert_eq!(m1.len(), 2, "BOTH closed buckets survive");

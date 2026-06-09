@@ -206,7 +206,8 @@ async fn validate_universe(body: &traderview_db::algo::AlgoStrategyInput) -> Res
     if body.universe_mode == "watchlist" && body.watchlist_id.is_none() {
         return Err(ApiError::BadRequest(
             "universe_mode='watchlist' requires a watchlist_id — \
-             pick a watchlist or switch to autoscan".into(),
+             pick a watchlist or switch to autoscan"
+                .into(),
         ));
     }
     Ok(())

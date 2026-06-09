@@ -91,10 +91,7 @@ pub enum EngineEvent {
     /// "broker_pending", "below_min_bars:AAPL=42", ...) the UI surfaces
     /// in the stdout pane so the user can see WHY nothing is happening
     /// instead of staring at an empty log.
-    TickSkipped {
-        strategy_id: Uuid,
-        reason: String,
-    },
+    TickSkipped { strategy_id: Uuid, reason: String },
     /// Tick evaluated this strategy without firing a signal (the
     /// strategy returned None). Tagged with the symbol so the user
     /// sees "AAPL, MSFT, NVDA evaluated — no signal" in the stdout

@@ -73,10 +73,7 @@ pub enum Event {
     /// evaluating (no universe, no symbols, broker pending, etc.).
     /// Lets the UI stdout show "test2 skipped: no_universe — pick a
     /// watchlist or set autoscan" instead of staring at silence.
-    AlgoTickSkipped {
-        strategy_id: String,
-        reason: String,
-    },
+    AlgoTickSkipped { strategy_id: String, reason: String },
     /// Algo runner: a bar window was fed to the strategy but no
     /// signal fired. Confirms the engine is alive + symbol coverage
     /// is correct.

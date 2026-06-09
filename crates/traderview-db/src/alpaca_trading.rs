@@ -406,12 +406,7 @@ impl PlaceOrderRequest {
     /// be `BASE/QUOTE` (e.g. `BTC/USD`); fractional qty allowed.
     /// Exit logic stays in the strategy (evaluate_exit) or the user
     /// manages it manually.
-    pub fn crypto_market(
-        symbol: impl Into<String>,
-        side: &str,
-        qty: Decimal,
-        coid: Uuid,
-    ) -> Self {
+    pub fn crypto_market(symbol: impl Into<String>, side: &str, qty: Decimal, coid: Uuid) -> Self {
         Self {
             symbol: symbol.into(),
             qty: Some(qty),

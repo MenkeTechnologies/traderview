@@ -695,8 +695,12 @@ pub async fn dividends_calendar(
     rows.sort_by(|a, b| {
         let ax = a["ex_date"].as_str().unwrap_or("");
         let bx = b["ex_date"].as_str().unwrap_or("");
-        ax.cmp(bx)
-            .then_with(|| a["symbol"].as_str().unwrap_or("").cmp(b["symbol"].as_str().unwrap_or("")))
+        ax.cmp(bx).then_with(|| {
+            a["symbol"]
+                .as_str()
+                .unwrap_or("")
+                .cmp(b["symbol"].as_str().unwrap_or(""))
+        })
     });
 
     Ok(serde_json::json!({

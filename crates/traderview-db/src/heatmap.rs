@@ -125,23 +125,41 @@ pub async fn build(pool: &PgPool, user_id: Uuid) -> anyhow::Result<HeatmapRespon
         }
     }
 
-    let mut tiles = Vec::new();
+    // Flatten the universe (and de-duped watchlist) into one job list so the
+    // ~210 quote fetches run concurrently. A serial loop here blocks the
+    // request for a minute+ on a cold cache — see `market_data::quotes`.
+    let universe_syms: HashSet<&str> = UNIVERSE
+        .iter()
+        .flat_map(|(_, syms)| syms.iter().copied())
+        .collect();
+    let mut jobs: Vec<(&'static str, String)> = Vec::new();
     for (sector, syms) in UNIVERSE {
         for sym in *syms {
-            if let Some(t) = tile_for(pool, sym, sector).await {
-                tiles.push(t);
-            }
+            jobs.push((sector, (*sym).to_string()));
         }
     }
-    // Watchlist sector — only add symbols not already represented above.
-    let already: HashSet<String> = tiles.iter().map(|t| t.symbol.clone()).collect();
     for sym in &watchlist {
-        if already.contains(sym) {
-            continue;
+        if !universe_syms.contains(sym.as_str()) {
+            jobs.push(("Watchlist", sym.clone()));
         }
-        if let Some(t) = tile_for(pool, sym, "Watchlist").await {
-            tiles.push(t);
-        }
+    }
+
+    // Bounded concurrency: fetch in chunks of 16 (Yahoo tolerates ~16 parallel
+    // chart requests; unbounded fan-out risks rate limiting).
+    let mut tiles: Vec<HeatTile> = Vec::new();
+    for chunk in jobs.chunks(16) {
+        let futs = chunk.iter().map(|(sector, sym)| {
+            let pool = pool.clone();
+            let sym = sym.clone();
+            let sector: &'static str = sector;
+            async move { tile_for(&pool, &sym, sector).await }
+        });
+        tiles.extend(
+            futures_util::future::join_all(futs)
+                .await
+                .into_iter()
+                .flatten(),
+        );
     }
 
     Ok(HeatmapResponse {

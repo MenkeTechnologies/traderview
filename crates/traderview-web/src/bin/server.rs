@@ -121,7 +121,7 @@ async fn main() -> anyhow::Result<()> {
         let mut rx = traderview_db::live_ticks::global().tape_subscribe();
         tokio::spawn(async move {
             while let Ok(t) = rx.recv().await {
-                hub.publish(crate::realtime::Event::Tick {
+                hub.publish(traderview_web::realtime::Event::Tick {
                     symbol: t.symbol,
                     price: t.price,
                     volume: t.volume,

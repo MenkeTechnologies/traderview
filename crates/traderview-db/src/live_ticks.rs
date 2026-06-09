@@ -1097,10 +1097,7 @@ impl LiveTickStore {
                                 .and_then(|v| v.as_array())
                                 .map(|a| a.len())
                                 .unwrap_or(0);
-                            tracing::info!(
-                                trades = trades_n,
-                                "alpaca WS subscribed feed=crypto"
-                            );
+                            tracing::info!(trades = trades_n, "alpaca WS subscribed feed=crypto");
                             continue;
                         }
                         if kind != "t" {
@@ -1343,7 +1340,10 @@ mod tests {
         assert!(is_crypto_symbol("ETH/USD"));
         assert!(is_crypto_symbol("SOL/USD"));
         assert!(is_crypto_symbol("AVAX/USD"));
-        assert!(is_crypto_symbol("eth/usd"), "lowercase should still classify");
+        assert!(
+            is_crypto_symbol("eth/usd"),
+            "lowercase should still classify"
+        );
         // Wrong quote currency stays equity-side (Alpaca crypto WS
         // only does USD pairs).
         assert!(!is_crypto_symbol("BTC/EUR"));
@@ -1378,7 +1378,10 @@ mod tests {
         // must match what the user typed (or a stable canonical).
         for input in ["BTC", "BTCUSD", "ETH/USD", "eth", "DOGE"] {
             let alpaca = to_alpaca_crypto_symbol(input);
-            assert!(alpaca.contains('/'), "Alpaca form must have slash: {alpaca}");
+            assert!(
+                alpaca.contains('/'),
+                "Alpaca form must have slash: {alpaca}"
+            );
             let back = from_alpaca_crypto_symbol(&alpaca);
             assert!(!back.contains('/'), "state key must have NO slash: {back}");
             // Round-trip preserves the BASE+USD body.

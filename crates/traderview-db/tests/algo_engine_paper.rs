@@ -606,7 +606,11 @@ fn engine_trips_on_daily_loss_cap() {
         assert!(after.kill_switch, "kill_switch must engage");
         assert!(!after.enabled, "enabled must flip to false");
         assert!(
-            after.kill_reason.as_deref().unwrap_or("").contains("daily loss"),
+            after
+                .kill_reason
+                .as_deref()
+                .unwrap_or("")
+                .contains("daily loss"),
             "kill_reason should mention 'daily loss', got {:?}",
             after.kill_reason
         );
