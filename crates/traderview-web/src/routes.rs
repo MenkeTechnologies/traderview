@@ -66,6 +66,7 @@ mod journal;
 mod journal_ai;
 mod live_positions;
 mod live_ticks;
+mod market_gamma_regime;
 mod markets;
 mod mentorships;
 mod microstructure;
@@ -193,6 +194,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(insider_clusters::router())
         .merge(earnings_revisions::router())
         .merge(sector_timing::router())
+        .merge(market_gamma_regime::router())
         .merge(pead::router())
         .merge(sentiment_velocity::router())
         .merge(confluence::router())

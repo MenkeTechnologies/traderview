@@ -276,6 +276,7 @@ async fn main() -> anyhow::Result<()> {
     // pre-market catalysts that arrive before any user opens the view.
     traderview_db::after_hours::global();
     traderview_db::catalyst_correlator::global();
+    traderview_db::market_gamma_regime::global();
     traderview_db::uoa_stream::global();
     traderview_db::gamma_squeeze::global();
     traderview_db::htb_ranker::global();
