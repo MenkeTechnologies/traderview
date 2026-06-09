@@ -90,6 +90,7 @@ mod screener;
 mod screenshots;
 mod search;
 mod sector_rotation;
+mod sector_timing;
 mod sectors;
 mod sentiment;
 mod sentiment_velocity;
@@ -191,6 +192,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(insider_stream::router())
         .merge(insider_clusters::router())
         .merge(earnings_revisions::router())
+        .merge(sector_timing::router())
         .merge(pead::router())
         .merge(sentiment_velocity::router())
         .merge(confluence::router())
