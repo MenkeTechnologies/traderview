@@ -82,6 +82,22 @@ export async function renderConfluenceAutotrade(mount, _state) {
                     <span class="muted small" data-i18n="view.confluence_autotrade.field.degradation_checks">Degradation checks</span>
                     <input type="number" id="ca-degradation" step="1" min="1" max="20" style="width:100%">
                 </label>
+                <label>
+                    <span class="muted small" data-i18n="view.confluence_autotrade.field.stop_loss">Stop-loss %</span>
+                    <input type="number" id="ca-sl" step="0.5" min="0" max="50" style="width:100%">
+                </label>
+                <label>
+                    <span class="muted small" data-i18n="view.confluence_autotrade.field.take_profit">Take-profit %</span>
+                    <input type="number" id="ca-tp" step="0.5" min="0" max="200" style="width:100%">
+                </label>
+                <label class="ca-row" style="display:flex;align-items:center;gap:8px">
+                    <input type="checkbox" id="ca-trail-enabled">
+                    <span data-i18n="view.confluence_autotrade.field.trailing_enabled">Trailing stop enabled</span>
+                </label>
+                <label>
+                    <span class="muted small" data-i18n="view.confluence_autotrade.field.trailing_pct">Trailing %</span>
+                    <input type="number" id="ca-trail" step="0.5" min="0" max="50" style="width:100%">
+                </label>
             </form>
             <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px">
                 <button class="btn btn-sm primary" id="ca-save" data-i18n="view.confluence_autotrade.btn.save">💾 Save Config</button>
@@ -150,6 +166,10 @@ async function loadConfig(mount) {
         mount.querySelector('#ca-corr-window').value = c.correlation_window_days;
         mount.querySelector('#ca-max-holding').value = c.max_holding_days;
         mount.querySelector('#ca-degradation').value = c.degradation_threshold_checks;
+        mount.querySelector('#ca-sl').value = c.stop_loss_pct;
+        mount.querySelector('#ca-tp').value = c.take_profit_pct;
+        mount.querySelector('#ca-trail-enabled').checked = !!c.trailing_stop_enabled;
+        mount.querySelector('#ca-trail').value = c.trailing_stop_pct;
     } catch (e) {
         mount.querySelector('#ca-result').innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }
@@ -172,6 +192,10 @@ async function saveConfig(mount) {
         correlation_window_days: parseInt(mount.querySelector('#ca-corr-window').value, 10),
         max_holding_days: parseInt(mount.querySelector('#ca-max-holding').value, 10),
         degradation_threshold_checks: parseInt(mount.querySelector('#ca-degradation').value, 10),
+        stop_loss_pct: parseFloat(mount.querySelector('#ca-sl').value),
+        take_profit_pct: parseFloat(mount.querySelector('#ca-tp').value),
+        trailing_stop_enabled: mount.querySelector('#ca-trail-enabled').checked,
+        trailing_stop_pct: parseFloat(mount.querySelector('#ca-trail').value),
     };
     try {
         const c = await api('/confluence/autotrade/config', { method: 'PUT', body: JSON.stringify(body) });
@@ -237,8 +261,10 @@ async function loadLog(mount) {
 
 function actionCls(a) {
     if (a === 'submitted') return 'pos';
+    if (a === 'exit_take_profit') return 'pos';
     if (a === 'skipped_correlation') return 'neg';
-    if (a === 'exit_time_stop' || a === 'exit_degraded') return 'neg';
+    if (a === 'exit_stop_loss' || a === 'exit_trailing_stop'
+        || a === 'exit_time_stop' || a === 'exit_degraded') return 'neg';
     if (a && a.startsWith('skipped_')) return 'muted';
     return '';
 }

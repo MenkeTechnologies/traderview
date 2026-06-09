@@ -32,11 +32,16 @@ pub struct PositionTag {
     pub last_observed_score: Option<f64>,
     pub consecutive_degraded_checks: i32,
     pub last_evaluated_at: Option<DateTime<Utc>>,
+    pub entry_price: Option<f64>,
+    pub high_water_mark_price: Option<f64>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ExitReason {
+    StopLoss,
+    TakeProfit,
+    TrailingStop,
     TimeStop,
     SignalDegraded,
 }
@@ -130,6 +135,59 @@ pub fn next_consecutive_degraded(prior: i32, is_degraded: bool) -> i32 {
     }
 }
 
+/// Price-driven exit check. Evaluates in priority order:
+///   1. Take-profit (positive — close winner)
+///   2. Stop-loss / trailing-stop (negative — cut loser)
+/// All percentages are positive numbers in [0, 100] (5.0 = 5%).
+/// Returns `None` when no SL/TP rule fires or inputs are invalid.
+pub fn should_exit_price_driven(
+    entry_price: f64,
+    current_price: f64,
+    high_water_mark: f64,
+    stop_loss_pct: f64,
+    take_profit_pct: f64,
+    trailing_stop_enabled: bool,
+    trailing_stop_pct: f64,
+) -> Option<ExitReason> {
+    if !(entry_price > 0.0 && current_price > 0.0) {
+        return None;
+    }
+    // Compare directly against thresholds derived from entry_price to
+    // avoid floating-point precision loss in (current/entry - 1) × 100.
+    if take_profit_pct > 0.0 {
+        let tp_threshold = entry_price * (1.0 + take_profit_pct / 100.0);
+        if current_price >= tp_threshold {
+            return Some(ExitReason::TakeProfit);
+        }
+    }
+    if trailing_stop_enabled && trailing_stop_pct > 0.0 && high_water_mark > 0.0 {
+        let trail_threshold = high_water_mark * (1.0 - trailing_stop_pct / 100.0);
+        if current_price <= trail_threshold {
+            return Some(ExitReason::TrailingStop);
+        }
+    } else if stop_loss_pct > 0.0 {
+        // SL is silenced when trailing is on — they're mutually exclusive
+        // gates on the downside (use one or the other, not both).
+        let sl_threshold = entry_price * (1.0 - stop_loss_pct / 100.0);
+        if current_price <= sl_threshold {
+            return Some(ExitReason::StopLoss);
+        }
+    }
+    None
+}
+
+/// New high-water-mark price for trailing-stop tracking. Takes the max
+/// of prior HWM and current; falls back to current when no prior.
+pub fn next_high_water_mark(prior: Option<f64>, current: f64) -> f64 {
+    if !current.is_finite() || current <= 0.0 {
+        return prior.unwrap_or(0.0);
+    }
+    match prior {
+        Some(p) if p > current => p,
+        _ => current,
+    }
+}
+
 // ─── Repository ────────────────────────────────────────────────────────────
 
 pub async fn insert_tag(
@@ -138,28 +196,33 @@ pub async fn insert_tag(
     symbol: &str,
     opened_by_log_id: Option<i64>,
     score_at_open: f64,
+    entry_price: f64,
 ) -> anyhow::Result<()> {
     sqlx::query(
         "INSERT INTO autotrade_position_tags
-            (paper_account_id, symbol, opened_by_log_id, score_at_open)
-         VALUES ($1, $2, $3, $4)
+            (paper_account_id, symbol, opened_by_log_id, score_at_open,
+             entry_price, high_water_mark_price)
+         VALUES ($1, $2, $3, $4, $5, $5)
          ON CONFLICT (paper_account_id, symbol) DO UPDATE SET
             opened_by_log_id = EXCLUDED.opened_by_log_id,
             opened_at        = now(),
             score_at_open    = EXCLUDED.score_at_open,
+            entry_price      = EXCLUDED.entry_price,
+            high_water_mark_price = EXCLUDED.high_water_mark_price,
             consecutive_degraded_checks = 0",
     )
     .bind(paper_account_id)
     .bind(symbol)
     .bind(opened_by_log_id)
     .bind(score_at_open)
+    .bind(entry_price)
     .execute(pool)
     .await?;
     Ok(())
 }
 
 pub async fn list_tags(pool: &PgPool, paper_account_id: Uuid) -> anyhow::Result<Vec<PositionTag>> {
-    let rows: Vec<(
+    type Row = (
         i64,
         Uuid,
         String,
@@ -169,10 +232,14 @@ pub async fn list_tags(pool: &PgPool, paper_account_id: Uuid) -> anyhow::Result<
         Option<f64>,
         i32,
         Option<DateTime<Utc>>,
-    )> = sqlx::query_as(
+        Option<f64>,
+        Option<f64>,
+    );
+    let rows: Vec<Row> = sqlx::query_as(
         "SELECT id, paper_account_id, symbol, opened_by_log_id, opened_at,
                 score_at_open, last_observed_score,
-                consecutive_degraded_checks, last_evaluated_at
+                consecutive_degraded_checks, last_evaluated_at,
+                entry_price, high_water_mark_price
            FROM autotrade_position_tags
           WHERE paper_account_id = $1
           ORDER BY opened_at",
@@ -183,16 +250,20 @@ pub async fn list_tags(pool: &PgPool, paper_account_id: Uuid) -> anyhow::Result<
     Ok(rows
         .into_iter()
         .map(
-            |(id, acc, sym, log_id, opened, score, last_score, consec, last_ev)| PositionTag {
-                id,
-                paper_account_id: acc,
-                symbol: sym,
-                opened_by_log_id: log_id,
-                opened_at: opened,
-                score_at_open: score,
-                last_observed_score: last_score,
-                consecutive_degraded_checks: consec,
-                last_evaluated_at: last_ev,
+            |(id, acc, sym, log_id, opened, score, last_score, consec, last_ev, entry, hwm)| {
+                PositionTag {
+                    id,
+                    paper_account_id: acc,
+                    symbol: sym,
+                    opened_by_log_id: log_id,
+                    opened_at: opened,
+                    score_at_open: score,
+                    last_observed_score: last_score,
+                    consecutive_degraded_checks: consec,
+                    last_evaluated_at: last_ev,
+                    entry_price: entry,
+                    high_water_mark_price: hwm,
+                }
             },
         )
         .collect())
@@ -255,15 +326,55 @@ pub async fn sweep_exits(pool: &PgPool, user_id: Uuid) -> anyhow::Result<SweepRe
             .iter()
             .find(|r| r.symbol == tag.symbol)
             .map(|r| r.score);
-        let decision = should_exit(
-            tag.opened_at,
-            tag.consecutive_degraded_checks,
-            current_score,
-            cfg.min_score,
-            cfg.max_holding_days,
-            cfg.degradation_threshold_checks,
-            now,
-        );
+        // Price-driven exits take priority over time/degradation rules.
+        let price_decision = match (tag.entry_price, tag.high_water_mark_price) {
+            (Some(entry), prior_hwm) => {
+                let quote_price = match crate::market_data::quote(pool, &tag.symbol).await {
+                    Ok(q) => q.price,
+                    Err(_) => 0.0,
+                };
+                let new_hwm = next_high_water_mark(prior_hwm, quote_price);
+                // Persist the new HWM so trailing stop has accurate state
+                // on the next sweep.
+                let _ = sqlx::query(
+                    "UPDATE autotrade_position_tags
+                        SET high_water_mark_price = $3
+                      WHERE paper_account_id = $1 AND symbol = $2",
+                )
+                .bind(account.id)
+                .bind(&tag.symbol)
+                .bind(new_hwm)
+                .execute(pool)
+                .await;
+                should_exit_price_driven(
+                    entry,
+                    quote_price,
+                    new_hwm,
+                    cfg.stop_loss_pct,
+                    cfg.take_profit_pct,
+                    cfg.trailing_stop_enabled,
+                    cfg.trailing_stop_pct,
+                )
+                .map(|reason| ExitDecision {
+                    symbol: tag.symbol.clone(),
+                    reason,
+                    days_held: (now - tag.opened_at).num_days(),
+                    last_observed_score: current_score,
+                })
+            }
+            _ => None,
+        };
+        let decision = price_decision.or_else(|| {
+            should_exit(
+                tag.opened_at,
+                tag.consecutive_degraded_checks,
+                current_score,
+                cfg.min_score,
+                cfg.max_holding_days,
+                cfg.degradation_threshold_checks,
+                now,
+            )
+        });
         match decision {
             Some(d) => {
                 // Look up the open position qty to flatten.
@@ -301,6 +412,9 @@ pub async fn sweep_exits(pool: &PgPool, user_id: Uuid) -> anyhow::Result<SweepRe
                 )
                 .await?;
                 let action = match d.reason {
+                    ExitReason::StopLoss => "exit_stop_loss",
+                    ExitReason::TakeProfit => "exit_take_profit",
+                    ExitReason::TrailingStop => "exit_trailing_stop",
                     ExitReason::TimeStop => "exit_time_stop",
                     ExitReason::SignalDegraded => "exit_degraded",
                 };
@@ -426,5 +540,86 @@ mod tests {
     fn next_consecutive_resets_when_healthy() {
         assert_eq!(next_consecutive_degraded(5, false), 0);
         assert_eq!(next_consecutive_degraded(0, false), 0);
+    }
+
+    #[test]
+    fn take_profit_fires_at_threshold() {
+        // Entry 100, TP 15% → triggers at >= 115.
+        let r = should_exit_price_driven(100.0, 115.0, 115.0, 5.0, 15.0, false, 8.0);
+        assert_eq!(r, Some(ExitReason::TakeProfit));
+    }
+
+    #[test]
+    fn take_profit_does_not_fire_below_threshold() {
+        let r = should_exit_price_driven(100.0, 114.99, 114.99, 5.0, 15.0, false, 8.0);
+        assert_eq!(r, None);
+    }
+
+    #[test]
+    fn stop_loss_fires_at_threshold() {
+        let r = should_exit_price_driven(100.0, 95.0, 100.0, 5.0, 15.0, false, 8.0);
+        assert_eq!(r, Some(ExitReason::StopLoss));
+    }
+
+    #[test]
+    fn stop_loss_does_not_fire_when_trailing_enabled() {
+        // Even with current price below SL threshold, trailing-only mode
+        // ignores SL and uses HWM-relative trail. Current 95, HWM 100,
+        // trail 8% → trail threshold = 92, current 95 > 92 → no fire.
+        let r = should_exit_price_driven(100.0, 95.0, 100.0, 5.0, 15.0, true, 8.0);
+        assert_eq!(r, None);
+    }
+
+    #[test]
+    fn trailing_stop_fires_below_hwm_threshold() {
+        // HWM 120, trail 8% → threshold = 110.4. Current 110 ≤ 110.4 → fire.
+        let r = should_exit_price_driven(100.0, 110.0, 120.0, 5.0, 50.0, true, 8.0);
+        assert_eq!(r, Some(ExitReason::TrailingStop));
+    }
+
+    #[test]
+    fn take_profit_outranks_stop_loss() {
+        // Hypothetical: entry 100, current 115, but SL = 90 also triggers
+        // because we set crazy SL. Should still prefer TakeProfit.
+        let r = should_exit_price_driven(100.0, 115.0, 115.0, 99.0, 15.0, false, 8.0);
+        assert_eq!(r, Some(ExitReason::TakeProfit));
+    }
+
+    #[test]
+    fn price_driven_returns_none_on_invalid_inputs() {
+        assert_eq!(
+            should_exit_price_driven(0.0, 100.0, 100.0, 5.0, 15.0, false, 8.0),
+            None
+        );
+        assert_eq!(
+            should_exit_price_driven(100.0, 0.0, 100.0, 5.0, 15.0, false, 8.0),
+            None
+        );
+        assert_eq!(
+            should_exit_price_driven(-100.0, 100.0, 100.0, 5.0, 15.0, false, 8.0),
+            None
+        );
+    }
+
+    #[test]
+    fn next_high_water_mark_advances_when_price_up() {
+        assert_eq!(next_high_water_mark(Some(100.0), 110.0), 110.0);
+    }
+
+    #[test]
+    fn next_high_water_mark_holds_when_price_down() {
+        assert_eq!(next_high_water_mark(Some(100.0), 95.0), 100.0);
+    }
+
+    #[test]
+    fn next_high_water_mark_seeds_when_no_prior() {
+        assert_eq!(next_high_water_mark(None, 100.0), 100.0);
+        assert_eq!(next_high_water_mark(None, 0.0), 0.0);
+    }
+
+    #[test]
+    fn next_high_water_mark_falls_back_to_prior_on_invalid_current() {
+        assert_eq!(next_high_water_mark(Some(100.0), f64::NAN), 100.0);
+        assert_eq!(next_high_water_mark(Some(100.0), -5.0), 100.0);
     }
 }

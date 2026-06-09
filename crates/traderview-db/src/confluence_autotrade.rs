@@ -65,6 +65,10 @@ pub struct AutotradeConfig {
     /// score is below `min_score` (or the symbol has dropped from
     /// ranking entirely) before signal-degradation exit fires.
     pub degradation_threshold_checks: i32,
+    pub stop_loss_pct: f64,
+    pub take_profit_pct: f64,
+    pub trailing_stop_enabled: bool,
+    pub trailing_stop_pct: f64,
     pub updated_at: DateTime<Utc>,
 }
 
@@ -86,6 +90,10 @@ impl AutotradeConfig {
             correlation_window_days: 60,
             max_holding_days: 20,
             degradation_threshold_checks: 3,
+            stop_loss_pct: 5.0,
+            take_profit_pct: 15.0,
+            trailing_stop_enabled: false,
+            trailing_stop_pct: 8.0,
             updated_at: Utc::now(),
         }
     }
@@ -238,7 +246,9 @@ fn reason_label(r: SkipReason) -> &'static str {
 // ─── Repository ────────────────────────────────────────────────────────────
 
 pub async fn get_config(pool: &PgPool, user_id: Uuid) -> anyhow::Result<AutotradeConfig> {
-    type Row = (
+    // Two queries instead of one — sqlx tuple FromRow only goes to 16
+    // elements, and the config has 19 trackable columns now.
+    type CoreRow = (
         bool,
         f64,
         i32,
@@ -255,7 +265,7 @@ pub async fn get_config(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Autotrad
         i32,
         DateTime<Utc>,
     );
-    let row: Option<Row> = sqlx::query_as(
+    let core: Option<CoreRow> = sqlx::query_as(
         "SELECT enabled, min_score, min_distinct_sources, notional_usd,
                 cooldown_minutes, max_open_positions,
                 sizing_mode, kelly_horizon_days, kelly_max_fraction,
@@ -267,43 +277,55 @@ pub async fn get_config(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Autotrad
     .bind(user_id)
     .fetch_optional(pool)
     .await?;
-    match row {
-        Some((
-            enabled,
-            min_score,
-            src,
-            notional,
-            cd,
-            max_open,
-            sizing_mode,
-            kelly_horizon,
-            kelly_max,
-            corr_gate,
-            corr_max,
-            corr_window,
-            max_holding,
-            degradation_checks,
-            updated,
-        )) => Ok(AutotradeConfig {
-            user_id,
-            enabled,
-            min_score,
-            min_distinct_sources: src,
-            notional_usd: notional,
-            cooldown_minutes: cd,
-            max_open_positions: max_open,
-            sizing_mode,
-            kelly_horizon_days: kelly_horizon,
-            kelly_max_fraction: kelly_max,
-            correlation_gate_enabled: corr_gate,
-            max_pairwise_correlation: corr_max,
-            correlation_window_days: corr_window,
-            max_holding_days: max_holding,
-            degradation_threshold_checks: degradation_checks,
-            updated_at: updated,
-        }),
-        None => Ok(AutotradeConfig::default_for(user_id)),
-    }
+    let Some((
+        enabled,
+        min_score,
+        src,
+        notional,
+        cd,
+        max_open,
+        sizing_mode,
+        kelly_horizon,
+        kelly_max,
+        corr_gate,
+        corr_max,
+        corr_window,
+        max_holding,
+        degradation_checks,
+        updated,
+    )) = core
+    else {
+        return Ok(AutotradeConfig::default_for(user_id));
+    };
+    let sl_tp: (f64, f64, bool, f64) = sqlx::query_as(
+        "SELECT stop_loss_pct, take_profit_pct, trailing_stop_enabled, trailing_stop_pct
+           FROM confluence_autotrade_config WHERE user_id = $1",
+    )
+    .bind(user_id)
+    .fetch_one(pool)
+    .await?;
+    Ok(AutotradeConfig {
+        user_id,
+        enabled,
+        min_score,
+        min_distinct_sources: src,
+        notional_usd: notional,
+        cooldown_minutes: cd,
+        max_open_positions: max_open,
+        sizing_mode,
+        kelly_horizon_days: kelly_horizon,
+        kelly_max_fraction: kelly_max,
+        correlation_gate_enabled: corr_gate,
+        max_pairwise_correlation: corr_max,
+        correlation_window_days: corr_window,
+        max_holding_days: max_holding,
+        degradation_threshold_checks: degradation_checks,
+        stop_loss_pct: sl_tp.0,
+        take_profit_pct: sl_tp.1,
+        trailing_stop_enabled: sl_tp.2,
+        trailing_stop_pct: sl_tp.3,
+        updated_at: updated,
+    })
 }
 
 pub async fn upsert_config(
@@ -317,8 +339,11 @@ pub async fn upsert_config(
              sizing_mode, kelly_horizon_days, kelly_max_fraction,
              correlation_gate_enabled, max_pairwise_correlation,
              correlation_window_days,
-             max_holding_days, degradation_threshold_checks, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, now())
+             max_holding_days, degradation_threshold_checks,
+             stop_loss_pct, take_profit_pct, trailing_stop_enabled,
+             trailing_stop_pct, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14,
+                 $15, $16, $17, $18, now())
          ON CONFLICT (user_id) DO UPDATE SET
             enabled                       = EXCLUDED.enabled,
             min_score                     = EXCLUDED.min_score,
@@ -334,6 +359,10 @@ pub async fn upsert_config(
             correlation_window_days       = EXCLUDED.correlation_window_days,
             max_holding_days              = EXCLUDED.max_holding_days,
             degradation_threshold_checks  = EXCLUDED.degradation_threshold_checks,
+            stop_loss_pct                 = EXCLUDED.stop_loss_pct,
+            take_profit_pct               = EXCLUDED.take_profit_pct,
+            trailing_stop_enabled         = EXCLUDED.trailing_stop_enabled,
+            trailing_stop_pct             = EXCLUDED.trailing_stop_pct,
             updated_at                    = now()",
     )
     .bind(cfg.user_id)
@@ -351,6 +380,10 @@ pub async fn upsert_config(
     .bind(cfg.correlation_window_days)
     .bind(cfg.max_holding_days)
     .bind(cfg.degradation_threshold_checks)
+    .bind(cfg.stop_loss_pct)
+    .bind(cfg.take_profit_pct)
+    .bind(cfg.trailing_stop_enabled)
+    .bind(cfg.trailing_stop_pct)
     .execute(pool)
     .await?;
     get_config(pool, cfg.user_id).await
@@ -746,12 +779,20 @@ pub async fn run_once(pool: &PgPool, user_id: Uuid) -> anyhow::Result<RunOnceRes
         )
         .await?;
         // Tag the position so sweep_exits can decide when to flatten.
+        // entry_price = the friction-adjusted fill price recorded on
+        // the paper order; falls back to the current quote when not
+        // surfaced (legacy path; should never happen in normal flow).
+        let entry_price = match crate::market_data::quote(pool, &cand.symbol).await {
+            Ok(q) => q.price,
+            Err(_) => quote.price,
+        };
         let _ = crate::autotrade_exits::insert_tag(
             pool,
             account.id,
             &cand.symbol,
             Some(row.id),
             cand.score,
+            entry_price,
         )
         .await;
         submitted_rows.push(row);
@@ -821,6 +862,10 @@ mod tests {
             correlation_window_days: 60,
             max_holding_days: 20,
             degradation_threshold_checks: 3,
+            stop_loss_pct: 5.0,
+            take_profit_pct: 15.0,
+            trailing_stop_enabled: false,
+            trailing_stop_pct: 8.0,
             updated_at: Utc::now(),
         }
     }

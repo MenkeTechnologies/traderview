@@ -44,6 +44,10 @@ struct ConfigPatch {
     correlation_window_days: i32,
     max_holding_days: i32,
     degradation_threshold_checks: i32,
+    stop_loss_pct: f64,
+    take_profit_pct: f64,
+    trailing_stop_enabled: bool,
+    trailing_stop_pct: f64,
 }
 
 async fn put_config(
@@ -81,6 +85,21 @@ async fn put_config(
             "degradation_threshold_checks must be in [1, 20]".into(),
         ));
     }
+    if !(p.stop_loss_pct >= 0.0 && p.stop_loss_pct <= 50.0) {
+        return Err(ApiError::BadRequest(
+            "stop_loss_pct must be in [0, 50]".into(),
+        ));
+    }
+    if !(p.take_profit_pct >= 0.0 && p.take_profit_pct <= 200.0) {
+        return Err(ApiError::BadRequest(
+            "take_profit_pct must be in [0, 200]".into(),
+        ));
+    }
+    if !(p.trailing_stop_pct >= 0.0 && p.trailing_stop_pct <= 50.0) {
+        return Err(ApiError::BadRequest(
+            "trailing_stop_pct must be in [0, 50]".into(),
+        ));
+    }
     let cfg = ca::AutotradeConfig {
         user_id: user.id,
         enabled: p.enabled,
@@ -97,6 +116,10 @@ async fn put_config(
         correlation_window_days: p.correlation_window_days,
         max_holding_days: p.max_holding_days,
         degradation_threshold_checks: p.degradation_threshold_checks,
+        stop_loss_pct: p.stop_loss_pct,
+        take_profit_pct: p.take_profit_pct,
+        trailing_stop_enabled: p.trailing_stop_enabled,
+        trailing_stop_pct: p.trailing_stop_pct,
         updated_at: chrono::Utc::now(),
     };
     Ok(Json(ca::upsert_config(&s.pool, &cfg).await?))
