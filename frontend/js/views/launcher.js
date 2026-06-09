@@ -35,6 +35,7 @@ export const TILES = [
     ['market-gamma', 'Market Gamma',  '🌐',  'SPY total dealer GEX regime — positive=mean-revert / negative=amplify / flip moments', 'NEW'],
     ['scanner-backtest', 'Scanner Backtest', '📑', 'Backtest each scanner against historical bars — Sharpe, hit rate, max DD per horizon', 'NEW'],
     ['confluence-autotrade', 'Confluence Autotrade', '🤖', 'Auto-submit paper-market buys when a symbol crosses your confluence-score gate', 'NEW'],
+    ['drawdown-cutoff', 'Drawdown Cutoff', '🛑', 'Auto-fire kill-switch when live broker equity drops below your max-drawdown threshold', 'NEW'],
     ['pead',         'PEAD Drift',    '📈',  'Post-earnings drift — surprise + 5/20/60d returns + drift score', 'NEW'],
     ['sentiment-velocity', 'Sentiment Velocity', '🔊', 'WSB+StockTwits mention acceleration — ≥3× hour-over-hour + ≥2 consecutive', 'NEW'],
     ['confluence',   'Confluence',    '🎯',  'Meta-scanner — symbols hitting the most independent edges, weighted', 'TOP'],

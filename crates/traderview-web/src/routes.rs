@@ -39,6 +39,7 @@ mod data_sources;
 mod discipline;
 mod disclosures;
 mod dividend_capture;
+mod drawdown_cutoff;
 mod earnings_cal;
 mod earnings_iv;
 mod earnings_revisions;
@@ -208,6 +209,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(iv_term::router())
         .merge(sp500_predict::router())
         .merge(dividend_capture::router())
+        .merge(drawdown_cutoff::router())
         .merge(multi_broker::router())
         .merge(webull::router())
         .merge(vol_surface::router())
