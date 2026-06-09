@@ -51,6 +51,7 @@ pub mod htb_ranker;
 pub mod ibkr_pump;
 pub mod ibkr_trading;
 pub mod imports;
+pub mod insider_clusters;
 pub mod insider_stream;
 pub mod institutional;
 pub mod ipo_lockups;

@@ -629,6 +629,7 @@ import { renderHtbRanker } from './views/htb_ranker.js';
 import { renderBreadthDivergence } from './views/breadth_divergence.js';
 import { renderRvolAccel } from './views/rvol_accel.js';
 import { renderInsiderStream } from './views/insider_stream.js';
+import { renderInsiderClusters } from './views/insider_clusters.js';
 import { renderPead } from './views/pead.js';
 import { renderSentimentVelocity } from './views/sentiment_velocity.js';
 import { renderConfluence } from './views/confluence.js';
@@ -2831,6 +2832,7 @@ export async function dispatch() {
             case 'breadth-divergence': await renderBreadthDivergence(mount, state); break;
             case 'rvol-accel':     await renderRvolAccel(mount, state); break;
             case 'insider-stream': await renderInsiderStream(mount, state); break;
+            case 'insider-clusters': await renderInsiderClusters(mount, state); break;
             case 'pead':           await renderPead(mount, state); break;
             case 'sentiment-velocity': await renderSentimentVelocity(mount, state); break;
             case 'confluence':     await renderConfluence(mount, state); break;

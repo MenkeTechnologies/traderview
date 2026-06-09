@@ -55,6 +55,7 @@ mod heatmap;
 mod hotkeys;
 mod htb_ranker;
 mod imports;
+mod insider_clusters;
 mod insider_stream;
 mod institutional;
 mod ipo_lockups;
@@ -187,6 +188,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(breadth_divergence::router())
         .merge(rvol_accel::router())
         .merge(insider_stream::router())
+        .merge(insider_clusters::router())
         .merge(pead::router())
         .merge(sentiment_velocity::router())
         .merge(confluence::router())
