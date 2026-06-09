@@ -64,6 +64,7 @@ pub mod mood_analytics;
 pub mod news;
 pub mod note_templates;
 pub mod options;
+pub mod pairs_cointegration;
 pub mod paper;
 pub mod pead_tracker;
 pub mod plans;

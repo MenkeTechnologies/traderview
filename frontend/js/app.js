@@ -633,6 +633,7 @@ import { renderPead } from './views/pead.js';
 import { renderSentimentVelocity } from './views/sentiment_velocity.js';
 import { renderConfluence } from './views/confluence.js';
 import { renderVrp } from './views/vrp.js';
+import { renderPairs } from './views/pairs.js';
 import { renderWebull } from './views/webull.js';
 import { renderVolSurface } from './views/vol_surface.js';
 import { renderWalkForward } from './views/walk_forward.js';
@@ -2829,6 +2830,7 @@ export async function dispatch() {
             case 'sentiment-velocity': await renderSentimentVelocity(mount, state); break;
             case 'confluence':     await renderConfluence(mount, state); break;
             case 'vrp':            await renderVrp(mount, state); break;
+            case 'pairs':          await renderPairs(mount, state); break;
             case 'webull':         await renderWebull(mount, state); break;
             case 'vol-surface':    await renderVolSurface(mount, state); break;
             case 'walk-forward':   await renderWalkForward(mount, state); break;

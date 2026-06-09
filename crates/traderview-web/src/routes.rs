@@ -68,6 +68,7 @@ mod mood_analytics;
 mod news;
 mod note_templates;
 mod options;
+mod pairs;
 mod paper;
 mod pead;
 mod plans;
@@ -185,6 +186,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(sentiment_velocity::router())
         .merge(confluence::router())
         .merge(vrp::router())
+        .merge(pairs::router())
         .merge(webull::router())
         .merge(vol_surface::router())
         .merge(tax_lots::router())
