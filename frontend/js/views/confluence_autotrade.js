@@ -62,6 +62,18 @@ export async function renderConfluenceAutotrade(mount, _state) {
                     <span class="muted small" data-i18n="view.confluence_autotrade.field.kelly_max">Kelly max fraction (cap)</span>
                     <input type="number" id="ca-kelly-max" step="0.005" min="0.001" max="1" style="width:100%">
                 </label>
+                <label class="ca-row" style="display:flex;align-items:center;gap:8px">
+                    <input type="checkbox" id="ca-corr-gate-enabled">
+                    <span data-i18n="view.confluence_autotrade.field.corr_gate_enabled">Correlation gate enabled</span>
+                </label>
+                <label>
+                    <span class="muted small" data-i18n="view.confluence_autotrade.field.max_corr">Max pairwise |r|</span>
+                    <input type="number" id="ca-max-corr" step="0.05" min="0.05" max="1" style="width:100%">
+                </label>
+                <label>
+                    <span class="muted small" data-i18n="view.confluence_autotrade.field.corr_window">Correlation window (days)</span>
+                    <input type="number" id="ca-corr-window" step="5" min="10" max="252" style="width:100%">
+                </label>
             </form>
             <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px">
                 <button class="btn btn-sm primary" id="ca-save" data-i18n="view.confluence_autotrade.btn.save">💾 Save Config</button>
@@ -103,6 +115,9 @@ async function loadConfig(mount) {
         mount.querySelector('#ca-sizing-mode').value = c.sizing_mode;
         mount.querySelector('#ca-kelly-horizon').value = c.kelly_horizon_days;
         mount.querySelector('#ca-kelly-max').value = c.kelly_max_fraction;
+        mount.querySelector('#ca-corr-gate-enabled').checked = !!c.correlation_gate_enabled;
+        mount.querySelector('#ca-max-corr').value = c.max_pairwise_correlation;
+        mount.querySelector('#ca-corr-window').value = c.correlation_window_days;
     } catch (e) {
         mount.querySelector('#ca-result').innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }
@@ -120,6 +135,9 @@ async function saveConfig(mount) {
         sizing_mode: mount.querySelector('#ca-sizing-mode').value,
         kelly_horizon_days: parseInt(mount.querySelector('#ca-kelly-horizon').value, 10),
         kelly_max_fraction: parseFloat(mount.querySelector('#ca-kelly-max').value),
+        correlation_gate_enabled: mount.querySelector('#ca-corr-gate-enabled').checked,
+        max_pairwise_correlation: parseFloat(mount.querySelector('#ca-max-corr').value),
+        correlation_window_days: parseInt(mount.querySelector('#ca-corr-window').value, 10),
     };
     try {
         const c = await api('/confluence/autotrade/config', { method: 'PUT', body: JSON.stringify(body) });
@@ -185,6 +203,7 @@ async function loadLog(mount) {
 
 function actionCls(a) {
     if (a === 'submitted') return 'pos';
+    if (a === 'skipped_correlation') return 'neg';
     if (a && a.startsWith('skipped_')) return 'muted';
     return '';
 }

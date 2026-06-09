@@ -50,6 +50,13 @@ pub struct AutotradeConfig {
     pub sizing_mode: String,
     pub kelly_horizon_days: i32,
     pub kelly_max_fraction: f64,
+    /// When true, every order goes through the per-symbol pairwise
+    /// correlation check against currently open positions. Defaults to
+    /// TRUE — the failure mode of *not* checking is 5× exposure to one
+    /// factor (typically mega-cap tech) on news days.
+    pub correlation_gate_enabled: bool,
+    pub max_pairwise_correlation: f64,
+    pub correlation_window_days: i32,
     pub updated_at: DateTime<Utc>,
 }
 
@@ -66,6 +73,9 @@ impl AutotradeConfig {
             sizing_mode: "fixed_notional".into(),
             kelly_horizon_days: 20,
             kelly_max_fraction: 0.05,
+            correlation_gate_enabled: true,
+            max_pairwise_correlation: 0.85,
+            correlation_window_days: 60,
             updated_at: Utc::now(),
         }
     }
@@ -228,12 +238,17 @@ pub async fn get_config(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Autotrad
         String,
         i32,
         f64,
+        bool,
+        f64,
+        i32,
         DateTime<Utc>,
     );
     let row: Option<Row> = sqlx::query_as(
         "SELECT enabled, min_score, min_distinct_sources, notional_usd,
                 cooldown_minutes, max_open_positions,
-                sizing_mode, kelly_horizon_days, kelly_max_fraction, updated_at
+                sizing_mode, kelly_horizon_days, kelly_max_fraction,
+                correlation_gate_enabled, max_pairwise_correlation,
+                correlation_window_days, updated_at
            FROM confluence_autotrade_config WHERE user_id = $1",
     )
     .bind(user_id)
@@ -250,6 +265,9 @@ pub async fn get_config(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Autotrad
             sizing_mode,
             kelly_horizon,
             kelly_max,
+            corr_gate,
+            corr_max,
+            corr_window,
             updated,
         )) => Ok(AutotradeConfig {
             user_id,
@@ -262,6 +280,9 @@ pub async fn get_config(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Autotrad
             sizing_mode,
             kelly_horizon_days: kelly_horizon,
             kelly_max_fraction: kelly_max,
+            correlation_gate_enabled: corr_gate,
+            max_pairwise_correlation: corr_max,
+            correlation_window_days: corr_window,
             updated_at: updated,
         }),
         None => Ok(AutotradeConfig::default_for(user_id)),
@@ -276,19 +297,24 @@ pub async fn upsert_config(
         "INSERT INTO confluence_autotrade_config
             (user_id, enabled, min_score, min_distinct_sources,
              notional_usd, cooldown_minutes, max_open_positions,
-             sizing_mode, kelly_horizon_days, kelly_max_fraction, updated_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, now())
+             sizing_mode, kelly_horizon_days, kelly_max_fraction,
+             correlation_gate_enabled, max_pairwise_correlation,
+             correlation_window_days, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, now())
          ON CONFLICT (user_id) DO UPDATE SET
-            enabled              = EXCLUDED.enabled,
-            min_score            = EXCLUDED.min_score,
-            min_distinct_sources = EXCLUDED.min_distinct_sources,
-            notional_usd         = EXCLUDED.notional_usd,
-            cooldown_minutes     = EXCLUDED.cooldown_minutes,
-            max_open_positions   = EXCLUDED.max_open_positions,
-            sizing_mode          = EXCLUDED.sizing_mode,
-            kelly_horizon_days   = EXCLUDED.kelly_horizon_days,
-            kelly_max_fraction   = EXCLUDED.kelly_max_fraction,
-            updated_at           = now()",
+            enabled                  = EXCLUDED.enabled,
+            min_score                = EXCLUDED.min_score,
+            min_distinct_sources     = EXCLUDED.min_distinct_sources,
+            notional_usd             = EXCLUDED.notional_usd,
+            cooldown_minutes         = EXCLUDED.cooldown_minutes,
+            max_open_positions       = EXCLUDED.max_open_positions,
+            sizing_mode              = EXCLUDED.sizing_mode,
+            kelly_horizon_days       = EXCLUDED.kelly_horizon_days,
+            kelly_max_fraction       = EXCLUDED.kelly_max_fraction,
+            correlation_gate_enabled = EXCLUDED.correlation_gate_enabled,
+            max_pairwise_correlation = EXCLUDED.max_pairwise_correlation,
+            correlation_window_days  = EXCLUDED.correlation_window_days,
+            updated_at               = now()",
     )
     .bind(cfg.user_id)
     .bind(cfg.enabled)
@@ -300,6 +326,9 @@ pub async fn upsert_config(
     .bind(&cfg.sizing_mode)
     .bind(cfg.kelly_horizon_days)
     .bind(cfg.kelly_max_fraction)
+    .bind(cfg.correlation_gate_enabled)
+    .bind(cfg.max_pairwise_correlation)
+    .bind(cfg.correlation_window_days)
     .execute(pool)
     .await?;
     get_config(pool, cfg.user_id).await
@@ -427,6 +456,44 @@ async fn pead_stats_for_horizon(
     })
 }
 
+/// Daily closes for one symbol over the trailing `days` window from
+/// cached price_bars. Empty vec on any error so the gate degrades safely.
+async fn fetch_closes(pool: &PgPool, symbol: &str, days: i32) -> Vec<(chrono::NaiveDate, f64)> {
+    use rust_decimal::prelude::ToPrimitive;
+    let to = Utc::now();
+    let from = to - Duration::days(days as i64);
+    let bars = crate::prices::get_bars(pool, symbol, traderview_core::BarInterval::D1, from, to)
+        .await
+        .unwrap_or_default();
+    bars.into_iter()
+        .filter_map(|b| b.close.to_f64().map(|c| (b.bar_time.date_naive(), c)))
+        .collect()
+}
+
+/// Pre-fetch close history for every currently open paper position, so
+/// the correlation gate compares against a per-tick cache rather than
+/// hitting price_bars N times per candidate.
+async fn fetch_position_closes(
+    pool: &PgPool,
+    account_id: Uuid,
+    days: i32,
+) -> Vec<(String, Vec<(chrono::NaiveDate, f64)>)> {
+    let positions = crate::paper::positions(pool, account_id)
+        .await
+        .unwrap_or_default();
+    let mut out = Vec::with_capacity(positions.len());
+    for p in &positions {
+        if p.qty.is_zero() {
+            continue;
+        }
+        let closes = fetch_closes(pool, &p.symbol, days).await;
+        if closes.len() >= 5 {
+            out.push((p.symbol.clone(), closes));
+        }
+    }
+    out
+}
+
 async fn open_autotrade_positions(pool: &PgPool, account_id: Uuid) -> anyhow::Result<i64> {
     let (n,): (i64,) =
         sqlx::query_as("SELECT COUNT(*) FROM paper_positions WHERE paper_account_id = $1")
@@ -517,6 +584,15 @@ pub async fn run_once(pool: &PgPool, user_id: Uuid) -> anyhow::Result<RunOnceRes
     let (accepted, skipped) = select_candidates(&rows, &cfg, &last_fire_fn, open_n, now);
     let candidates_considered = accepted.len() + skipped.len();
 
+    // Pre-fetch close history for currently open positions once per
+    // tick so the correlation gate doesn't re-query for every candidate.
+    let open_position_closes: Vec<(String, Vec<(chrono::NaiveDate, f64)>)> =
+        if cfg.correlation_gate_enabled {
+            fetch_position_closes(pool, account.id, cfg.correlation_window_days).await
+        } else {
+            Vec::new()
+        };
+
     let mut submitted_rows: Vec<AutotradeLogRow> = Vec::new();
     let mut skipped_rows: Vec<AutotradeLogRow> = Vec::new();
     for cand_init in &accepted {
@@ -533,6 +609,42 @@ pub async fn run_once(pool: &PgPool, user_id: Uuid) -> anyhow::Result<RunOnceRes
             distinct_sources: cand_init.distinct_sources,
             notional_usd: sizing.notional_usd,
         };
+
+        // Correlation gate — skip when candidate is too correlated with
+        // any existing position. Runs against the per-tick cache so it's
+        // O(N positions × correlation_compute) not O(N × DB query).
+        if cfg.correlation_gate_enabled && !open_position_closes.is_empty() {
+            let candidate_closes =
+                fetch_closes(pool, &cand.symbol, cfg.correlation_window_days).await;
+            if !candidate_closes.is_empty() {
+                if let Some((offender, r)) = crate::correlation::max_pairwise_abs_correlation(
+                    &candidate_closes,
+                    &open_position_closes,
+                ) {
+                    if r > cfg.max_pairwise_correlation {
+                        let row = write_log(
+                            pool,
+                            LogWrite {
+                                user_id,
+                                cand: &cand,
+                                action: "skipped_correlation",
+                                paper_order_id: None,
+                                reason: Some(&format!(
+                                    "|r|={r:.3} vs open position {offender} > threshold {:.2}",
+                                    cfg.max_pairwise_correlation
+                                )),
+                                sizing_used: Some(sizing.sizing_used),
+                                kelly_fraction: sizing.kelly_fraction,
+                            },
+                        )
+                        .await?;
+                        skipped_rows.push(row);
+                        continue;
+                    }
+                }
+            }
+        }
+
         let quote = match crate::market_data::quote(pool, &cand.symbol).await {
             Ok(q) => q,
             Err(e) => {
@@ -673,6 +785,9 @@ mod tests {
             sizing_mode: "fixed_notional".into(),
             kelly_horizon_days: 20,
             kelly_max_fraction: 0.05,
+            correlation_gate_enabled: true,
+            max_pairwise_correlation: 0.85,
+            correlation_window_days: 60,
             updated_at: Utc::now(),
         }
     }

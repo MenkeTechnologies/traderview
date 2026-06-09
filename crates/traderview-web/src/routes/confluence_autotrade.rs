@@ -37,6 +37,9 @@ struct ConfigPatch {
     sizing_mode: String,
     kelly_horizon_days: i32,
     kelly_max_fraction: f64,
+    correlation_gate_enabled: bool,
+    max_pairwise_correlation: f64,
+    correlation_window_days: i32,
 }
 
 async fn put_config(
@@ -54,6 +57,16 @@ async fn put_config(
             "kelly_max_fraction must be in (0, 1]".into(),
         ));
     }
+    if !(p.max_pairwise_correlation > 0.0 && p.max_pairwise_correlation <= 1.0) {
+        return Err(ApiError::BadRequest(
+            "max_pairwise_correlation must be in (0, 1]".into(),
+        ));
+    }
+    if !(p.correlation_window_days >= 10 && p.correlation_window_days <= 252) {
+        return Err(ApiError::BadRequest(
+            "correlation_window_days must be in [10, 252]".into(),
+        ));
+    }
     let cfg = ca::AutotradeConfig {
         user_id: user.id,
         enabled: p.enabled,
@@ -65,6 +78,9 @@ async fn put_config(
         sizing_mode: p.sizing_mode,
         kelly_horizon_days: p.kelly_horizon_days,
         kelly_max_fraction: p.kelly_max_fraction,
+        correlation_gate_enabled: p.correlation_gate_enabled,
+        max_pairwise_correlation: p.max_pairwise_correlation,
+        correlation_window_days: p.correlation_window_days,
         updated_at: chrono::Utc::now(),
     };
     Ok(Json(ca::upsert_config(&s.pool, &cfg).await?))
