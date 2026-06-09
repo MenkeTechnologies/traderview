@@ -25,23 +25,90 @@ export async function renderScannerBacktest(mount, _state) {
                     <span data-i18n="view.scanner_backtest.label.days">lookback (days)</span>
                     <input type="number" id="sb-days" min="60" max="1825" step="30" value="365" style="width:80px">
                 </label>
-                <button class="btn btn-sm primary" id="sb-run" data-shortcut="r" data-i18n="view.scanner_backtest.btn.run">⚡ Run PEAD Backtest</button>
+                <button class="btn btn-sm primary" id="sb-run-all" data-shortcut="r" data-i18n="view.scanner_backtest.btn.run_all">⚡ Run All Scanners</button>
+                <button class="btn btn-sm" id="sb-run" data-i18n="view.scanner_backtest.btn.run">PEAD only</button>
+                <button class="btn btn-sm" id="sb-run-insider" data-i18n="view.scanner_backtest.btn.run_insider">Insider clusters only</button>
                 <span class="muted small" id="sb-meta"></span>
             </div>
+            <div id="sb-all"></div>
             <div id="sb-result"></div>
         </div>
     `;
-    mount.querySelector('#sb-run').addEventListener('click', () => runScan(mount));
+    mount.querySelector('#sb-run-all').addEventListener('click', () => runAll(mount));
+    mount.querySelector('#sb-run').addEventListener('click', () => runScan(mount, 'pead'));
+    mount.querySelector('#sb-run-insider').addEventListener('click', () => runScan(mount, 'insider-clusters'));
 }
 
-async function runScan(mount) {
+async function runAll(mount) {
+    const all = mount.querySelector('#sb-all');
+    const meta = mount.querySelector('#sb-meta');
+    const days = parseInt(mount.querySelector('#sb-days').value, 10) || 365;
+    all.innerHTML = `<p class="muted">${esc(t('view.scanner_backtest.status.running_all'))}</p>`;
+    if (meta) meta.textContent = '';
+    try {
+        const r = await api(`/scanner-backtest/all?days=${days}`);
+        const scanners = r.scanners || [];
+        if (!scanners.length) {
+            all.innerHTML = `<p class="muted">${esc(t('view.scanner_backtest.empty.no_data'))}</p>`;
+            return;
+        }
+        if (meta) meta.textContent = t('view.scanner_backtest.meta.all_summary').replace('{n}', scanners.length).replace('{d}', days);
+        const horizonList = scanners[0].horizons?.map(h => h.horizon_days) || [1, 5, 20, 60];
+        all.innerHTML = `
+            <h2 style="margin-top:0">${esc(t('view.scanner_backtest.h2.all'))}</h2>
+            <table class="trades">
+                <thead><tr>
+                    <th data-i18n="view.scanner_backtest.th.scanner">Scanner</th>
+                    <th data-i18n="view.scanner_backtest.th.samples">Samples</th>
+                    ${horizonList.map(d => `<th>${d}d Sharpe</th>`).join('')}
+                    ${horizonList.map(d => `<th>${d}d Hit%</th>`).join('')}
+                    <th data-i18n="view.scanner_backtest.th.notes">Notes</th>
+                </tr></thead>
+                <tbody>
+                ${scanners.map(s => {
+                    if (s.error) {
+                        return `<tr><td><strong>${esc(s.scanner)}</strong></td>
+                            <td>0</td>
+                            ${horizonList.map(_ => '<td class="muted">—</td>').join('')}
+                            ${horizonList.map(_ => '<td class="muted">—</td>').join('')}
+                            <td class="neg small">${esc(s.error)}</td></tr>`;
+                    }
+                    return `<tr>
+                        <td><strong>${esc(s.scanner)}</strong></td>
+                        <td>${s.samples_used}</td>
+                        ${horizonList.map(d => {
+                            const h = s.horizons.find(x => x.horizon_days === d);
+                            if (!h || h.n === 0) return '<td class="muted">—</td>';
+                            const cls = h.annualised_sharpe >= 1.0 ? 'pos'
+                                       : h.annualised_sharpe >= 0.5 ? '' : 'muted';
+                            return `<td class="${cls}"><strong>${h.annualised_sharpe.toFixed(2)}</strong></td>`;
+                        }).join('')}
+                        ${horizonList.map(d => {
+                            const h = s.horizons.find(x => x.horizon_days === d);
+                            if (!h || h.n === 0) return '<td class="muted">—</td>';
+                            const cls = h.hit_rate_pct >= 55 ? 'pos' : h.hit_rate_pct >= 45 ? '' : 'neg';
+                            return `<td class="${cls}">${h.hit_rate_pct.toFixed(0)}%</td>`;
+                        }).join('')}
+                        <td class="muted small"></td>
+                    </tr>`;
+                }).join('')}
+                </tbody>
+            </table>
+            <p class="muted small" data-i18n="view.scanner_backtest.hint.all">Sorted by 20d Sharpe descending — the horizon Kelly defaults to. Scanners with no data (no historical events cached or no price_bars) appear with —.</p>
+        `;
+    } catch (e) {
+        all.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
+    }
+}
+
+async function runScan(mount, scanner) {
     const result = mount.querySelector('#sb-result');
     const meta = mount.querySelector('#sb-meta');
     const days = parseInt(mount.querySelector('#sb-days').value, 10) || 365;
     result.innerHTML = `<p class="muted">${esc(t('view.scanner_backtest.status.running'))}</p>`;
     if (meta) meta.textContent = '';
     try {
-        const r = await api(`/scanner-backtest/pead?days=${days}`);
+        const r = await api(`/scanner-backtest/${scanner}?days=${days}`);
         if (!r || !r.horizons || !r.horizons.length) {
             result.innerHTML = `<p class="muted">${esc(t('view.scanner_backtest.empty.no_data'))}</p>`;
             return;

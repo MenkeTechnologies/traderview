@@ -253,6 +253,118 @@ pub async fn backtest_pead(pool: &PgPool, days: i64) -> anyhow::Result<BacktestR
     Ok(backtest_with_history("pead", &samples, &closes_async))
 }
 
+/// Pure compute: cluster insider-purchase events by (symbol, signal_date)
+/// where signal_date is the latest txn_date in the cluster. A cluster
+/// fires when ≥ `min_distinct_insiders` distinct insiders bought the
+/// same symbol within the trailing `window_days`. Each cluster becomes
+/// one Long sample on the latest txn_date.
+///
+/// Why cluster vs single-insider: Lakonishok & Lee 2001 + Cohen Malloy
+/// Pomorski 2012 both show single-insider buys are noisy but ≥3-insider
+/// opportunistic clusters predict ~12% alpha over the next 12 months.
+/// Same threshold the live `insider_clusters` scanner uses.
+pub fn cluster_insider_purchases(
+    events: &[(String, NaiveDate, String)],
+    window_days: i64,
+    min_distinct_insiders: usize,
+) -> Vec<SignalSample> {
+    use std::collections::HashMap;
+    let mut by_symbol: HashMap<String, Vec<(NaiveDate, String)>> = HashMap::new();
+    for (sym, date, filer) in events {
+        by_symbol
+            .entry(sym.clone())
+            .or_default()
+            .push((*date, filer.clone()));
+    }
+    let mut samples = Vec::new();
+    for (sym, mut rows) in by_symbol {
+        rows.sort_by_key(|(d, _)| *d);
+        // Rolling window: for each row, look back window_days and count
+        // distinct filers including this row. Emit one sample per
+        // cluster *event* but dedupe by signal_date so a single hot
+        // streak doesn't generate one sample per day.
+        let mut last_emitted: Option<NaiveDate> = None;
+        for i in 0..rows.len() {
+            let end_date = rows[i].0;
+            let start_date = end_date - Duration::days(window_days);
+            let window: std::collections::HashSet<&String> = rows[..=i]
+                .iter()
+                .filter(|(d, _)| *d >= start_date)
+                .map(|(_, f)| f)
+                .collect();
+            if window.len() >= min_distinct_insiders {
+                // Emit only when we haven't already emitted within the
+                // last window_days — otherwise consecutive insider days
+                // re-fire the same cluster.
+                let should_emit = match last_emitted {
+                    Some(last) => (end_date - last).num_days() >= window_days,
+                    None => true,
+                };
+                if should_emit {
+                    samples.push(SignalSample {
+                        symbol: sym.clone(),
+                        signal_date: end_date,
+                        direction: Direction::Long,
+                    });
+                    last_emitted = Some(end_date);
+                }
+            }
+        }
+    }
+    samples
+}
+
+/// Insider-cluster backtest: pulls every txn_type='P' (purchase) Form 4
+/// event over the trailing `days` window, clusters them per symbol with
+/// 30-day rolling window + ≥3 distinct insiders, and scores forward
+/// returns from cached price_bars. Same cluster logic as the live
+/// `insider_clusters` scanner.
+pub async fn backtest_insider_clusters(pool: &PgPool, days: i64) -> anyhow::Result<BacktestResult> {
+    let rows: Vec<(String, NaiveDate, String)> = sqlx::query_as(
+        "SELECT symbol, txn_date, filer_name
+           FROM disclosures
+          WHERE kind = 'insider_form4'
+            AND txn_type = 'P'
+            AND symbol IS NOT NULL
+            AND txn_date IS NOT NULL
+            AND txn_date >= CURRENT_DATE - ($1::int)
+          ORDER BY symbol, txn_date",
+    )
+    .bind(days as i32)
+    .fetch_all(pool)
+    .await
+    .unwrap_or_default();
+
+    let samples = cluster_insider_purchases(&rows, 30, 3);
+
+    let pool_ref = pool.clone();
+    let closes_async = |symbol: &str| -> Vec<(NaiveDate, f64)> {
+        let symbol = symbol.to_string();
+        let pool_ref = pool_ref.clone();
+        let rt = tokio::runtime::Handle::try_current();
+        let bars = match rt {
+            Ok(handle) => tokio::task::block_in_place(|| {
+                handle.block_on(async move {
+                    let to = Utc::now();
+                    let from = to - Duration::days(400);
+                    prices::get_bars(&pool_ref, &symbol, BarInterval::D1, from, to)
+                        .await
+                        .unwrap_or_default()
+                })
+            }),
+            Err(_) => Vec::new(),
+        };
+        bars.into_iter()
+            .filter_map(|b| b.close.to_f64().map(|c| (b.bar_time.date_naive(), c)))
+            .collect()
+    };
+    Ok(backtest_with_history(
+        "insider_clusters",
+        &samples,
+        &closes_async,
+    ))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -399,5 +511,91 @@ mod tests {
         for h in &r.horizons {
             assert_eq!(h.n, 0);
         }
+    }
+
+    fn insider(
+        symbol: &str,
+        year: i32,
+        month: u32,
+        day: u32,
+        filer: &str,
+    ) -> (String, NaiveDate, String) {
+        (symbol.into(), d(year, month, day), filer.into())
+    }
+
+    #[test]
+    fn cluster_fires_when_three_distinct_insiders_buy_within_window() {
+        let events = vec![
+            insider("AAA", 2026, 1, 1, "CEO Smith"),
+            insider("AAA", 2026, 1, 5, "Director Jones"),
+            insider("AAA", 2026, 1, 15, "CFO Brown"),
+        ];
+        let samples = cluster_insider_purchases(&events, 30, 3);
+        assert_eq!(samples.len(), 1, "exactly one cluster emitted");
+        assert_eq!(samples[0].symbol, "AAA");
+        assert_eq!(samples[0].direction, Direction::Long);
+        assert_eq!(samples[0].signal_date, d(2026, 1, 15));
+    }
+
+    #[test]
+    fn cluster_does_not_fire_below_distinct_threshold() {
+        let events = vec![
+            insider("BBB", 2026, 1, 1, "CEO Smith"),
+            insider("BBB", 2026, 1, 5, "CEO Smith"), // same filer again
+            insider("BBB", 2026, 1, 15, "CEO Smith"), // same filer
+        ];
+        let samples = cluster_insider_purchases(&events, 30, 3);
+        assert!(samples.is_empty(), "same filer 3x ≠ 3 distinct insiders");
+    }
+
+    #[test]
+    fn cluster_does_not_fire_outside_window() {
+        // 3 distinct insiders but spread 60 days → no window has 3.
+        let events = vec![
+            insider("CCC", 2026, 1, 1, "A"),
+            insider("CCC", 2026, 2, 5, "B"),
+            insider("CCC", 2026, 4, 15, "C"),
+        ];
+        let samples = cluster_insider_purchases(&events, 30, 3);
+        assert!(samples.is_empty(), "events too spread out → no cluster");
+    }
+
+    #[test]
+    fn cluster_dedupes_consecutive_hot_streak() {
+        // 5 insider buys in 10 days — should fire ONCE, not 5×.
+        let events = vec![
+            insider("DDD", 2026, 1, 1, "A"),
+            insider("DDD", 2026, 1, 3, "B"),
+            insider("DDD", 2026, 1, 5, "C"),
+            insider("DDD", 2026, 1, 7, "D"),
+            insider("DDD", 2026, 1, 10, "E"),
+        ];
+        let samples = cluster_insider_purchases(&events, 30, 3);
+        assert_eq!(
+            samples.len(),
+            1,
+            "hot streak dedupes to one cluster per window"
+        );
+    }
+
+    #[test]
+    fn cluster_can_fire_twice_when_separated_by_window() {
+        // First cluster Jan, second cluster May → two clusters total.
+        let events = vec![
+            insider("EEE", 2026, 1, 1, "A"),
+            insider("EEE", 2026, 1, 5, "B"),
+            insider("EEE", 2026, 1, 10, "C"),
+            insider("EEE", 2026, 5, 1, "D"),
+            insider("EEE", 2026, 5, 5, "E"),
+            insider("EEE", 2026, 5, 10, "F"),
+        ];
+        let samples = cluster_insider_purchases(&events, 30, 3);
+        assert_eq!(samples.len(), 2, "two clusters separated by > 30d");
+    }
+
+    #[test]
+    fn cluster_empty_input_empty_output() {
+        let samples = cluster_insider_purchases(&[], 30, 3);
+        assert!(samples.is_empty());
     }
 }
