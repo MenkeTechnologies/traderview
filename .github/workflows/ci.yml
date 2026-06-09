@@ -98,6 +98,15 @@ jobs:
     # runner — 1h0m22s on c6d535eadb tipped it past the previous
     # 60-min cap. 90 buys headroom while the workspace keeps growing.
     timeout-minutes: 90
+    # sccache wraps rustc and uses GHA cache as the storage backend, so
+    # subsequent runs reuse compiled crates instead of rebuilding from
+    # scratch every commit. CARGO_INCREMENTAL=0 because incremental
+    # fingerprints break sccache's content-addressed lookup — they'd
+    # produce unique objects every run and the cache would never hit.
+    env:
+      SCCACHE_GHA_ENABLED: "true"
+      RUSTC_WRAPPER: "sccache"
+      CARGO_INCREMENTAL: "0"
     strategy:
       fail-fast: false
       matrix:
@@ -113,9 +122,14 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.10
       - uses: Swatinem/rust-cache@v2
       - name: Build server binary
         run: cargo build --release --locked -p traderview-web --bin server --target ${{ matrix.target }}
+      - name: sccache stats
+        if: always()
+        run: sccache --show-stats || true
       - uses: actions/upload-artifact@v4
         with:
           name: traderview-server-${{ matrix.target }}
