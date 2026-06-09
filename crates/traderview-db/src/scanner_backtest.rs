@@ -60,6 +60,15 @@ pub struct HorizonStats {
     pub median_return_pct: f64,
     pub stdev_pct: f64,
     pub annualised_sharpe: f64,
+    /// Standard error of the annualised Sharpe per Andrew Lo 2002:
+    /// SE(SR) = sqrt((1 + 0.5 × SR²) / N). At N < 30 the SE is large
+    /// enough that the headline Sharpe number is mostly noise.
+    pub sharpe_se: f64,
+    /// 95% confidence interval lower bound. The conservative number to
+    /// size Kelly from. A Sharpe of 1.2 with SE = 0.5 has CI [0.22, 2.18]
+    /// — the headline is "1.2" but the trader's number is 0.22.
+    pub sharpe_ci_lo_95: f64,
+    pub sharpe_ci_hi_95: f64,
     pub max_drawdown_pct: f64,
     /// Sum of per-signal direction-adjusted log returns. Useful as a
     /// rough "what would I have made putting $1 on every signal."
@@ -152,6 +161,16 @@ pub fn aggregate(returns: &[f64], horizon_days: u32) -> HorizonStats {
     } else {
         0.0
     };
+    // Andrew Lo 2002 standard error for Sharpe ratio. At small N the
+    // headline number is mostly noise; the CI lower bound is what to
+    // size Kelly from.
+    let sharpe_se = if n >= 2 {
+        ((1.0 + 0.5 * annualised_sharpe * annualised_sharpe) / n as f64).sqrt()
+    } else {
+        0.0
+    };
+    let sharpe_ci_lo_95 = annualised_sharpe - 1.96 * sharpe_se;
+    let sharpe_ci_hi_95 = annualised_sharpe + 1.96 * sharpe_se;
     let mut cum = 0.0_f64;
     let mut peak = f64::NEG_INFINITY;
     let mut max_dd = 0.0_f64;
@@ -175,8 +194,92 @@ pub fn aggregate(returns: &[f64], horizon_days: u32) -> HorizonStats {
         median_return_pct: median,
         stdev_pct: stdev,
         annualised_sharpe,
+        sharpe_se,
+        sharpe_ci_lo_95,
+        sharpe_ci_hi_95,
         max_drawdown_pct: max_dd,
         total_logret_signed: total_logret,
+    }
+}
+
+/// Quarterly stability decomposition: split samples into 4
+/// chronological quarters and report Sharpe in each. A signal whose
+/// Sharpe trends down across quarters is degrading; one that's roughly
+/// flat across quarters is more trustworthy than the headline implies.
+#[derive(Debug, Clone, Serialize)]
+pub struct QuarterStats {
+    pub quarter_index: u32,
+    pub samples_used: usize,
+    pub horizon_stats: HorizonStats,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct StabilityReport {
+    pub scanner: String,
+    pub horizon_days: u32,
+    pub quarters: Vec<QuarterStats>,
+    /// Sharpe in the latest quarter / Sharpe in the earliest quarter.
+    /// < 1 = decaying, ~1 = stable, > 1 = improving.
+    pub q4_vs_q1_sharpe_ratio: Option<f64>,
+    /// Headline full-window stats for comparison.
+    pub full_window_horizon_stats: HorizonStats,
+}
+
+/// Pure compute: divide chronologically-sorted samples into N equal-size
+/// quarters by index, run the horizon's backtest on each.
+pub fn quarterly_decomposition(
+    scanner: &str,
+    samples: &[SignalSample],
+    closes_for: &dyn Fn(&str) -> Vec<(NaiveDate, f64)>,
+    horizon_days: u32,
+) -> StabilityReport {
+    let mut sorted = samples.to_vec();
+    sorted.sort_by_key(|s| s.signal_date);
+    let n = sorted.len();
+    let quarter_size = n / 4;
+    let mut quarters: Vec<QuarterStats> = Vec::with_capacity(4);
+    for i in 0..4 {
+        let start = i * quarter_size;
+        let end = if i == 3 { n } else { (i + 1) * quarter_size };
+        let chunk = if start < end {
+            &sorted[start..end]
+        } else {
+            &[]
+        };
+        let result = backtest_with_history(scanner, chunk, closes_for);
+        let horizon_stats = result
+            .horizons
+            .into_iter()
+            .find(|h| h.horizon_days == horizon_days)
+            .unwrap_or_default();
+        quarters.push(QuarterStats {
+            quarter_index: i as u32 + 1,
+            samples_used: result.samples_used,
+            horizon_stats,
+        });
+    }
+    let full = backtest_with_history(scanner, &sorted, closes_for);
+    let full_horizon = full
+        .horizons
+        .into_iter()
+        .find(|h| h.horizon_days == horizon_days)
+        .unwrap_or_default();
+    let q4_vs_q1 = match (quarters.first(), quarters.last()) {
+        (Some(q1), Some(q4))
+            if q1.horizon_stats.annualised_sharpe.abs() > 1e-9
+                && q1.horizon_stats.n > 0
+                && q4.horizon_stats.n > 0 =>
+        {
+            Some(q4.horizon_stats.annualised_sharpe / q1.horizon_stats.annualised_sharpe)
+        }
+        _ => None,
+    };
+    StabilityReport {
+        scanner: scanner.into(),
+        horizon_days,
+        quarters,
+        q4_vs_q1_sharpe_ratio: q4_vs_q1,
+        full_window_horizon_stats: full_horizon,
     }
 }
 
@@ -529,6 +632,59 @@ pub async fn walk_forward_pead(
     ))
 }
 
+/// PEAD quarterly stability report at the requested horizon.
+pub async fn stability_pead(
+    pool: &PgPool,
+    days: i64,
+    horizon_days: u32,
+) -> anyhow::Result<StabilityReport> {
+    let events = crate::earnings_cal::surprises_recent(pool, days).await?;
+    let mut samples: Vec<SignalSample> = Vec::new();
+    for ev in &events {
+        let Some(sur) = ev.surprise_pct else { continue };
+        if (sur as f64).abs() < 2.0 {
+            continue;
+        }
+        let direction = if (sur as f64) >= 0.0 {
+            Direction::Long
+        } else {
+            Direction::Short
+        };
+        samples.push(SignalSample {
+            symbol: ev.symbol.clone(),
+            signal_date: ev.earnings_date,
+            direction,
+        });
+    }
+    let pool_ref = pool.clone();
+    let closes_async = |symbol: &str| -> Vec<(NaiveDate, f64)> {
+        let symbol = symbol.to_string();
+        let pool_ref = pool_ref.clone();
+        let rt = tokio::runtime::Handle::try_current();
+        let bars = match rt {
+            Ok(handle) => tokio::task::block_in_place(|| {
+                handle.block_on(async move {
+                    let to = Utc::now();
+                    let from = to - Duration::days(400);
+                    prices::get_bars(&pool_ref, &symbol, BarInterval::D1, from, to)
+                        .await
+                        .unwrap_or_default()
+                })
+            }),
+            Err(_) => Vec::new(),
+        };
+        bars.into_iter()
+            .filter_map(|b| b.close.to_f64().map(|c| (b.bar_time.date_naive(), c)))
+            .collect()
+    };
+    Ok(quarterly_decomposition(
+        "pead",
+        &samples,
+        &closes_async,
+        horizon_days,
+    ))
+}
+
 /// Walk-forward insider-cluster backtest convenience wrapper.
 pub async fn walk_forward_insider_clusters(
     pool: &PgPool,
@@ -585,6 +741,85 @@ mod tests {
 
     fn d(y: i32, m: u32, day: u32) -> NaiveDate {
         NaiveDate::from_ymd_opt(y, m, day).unwrap()
+    }
+
+    #[test]
+    fn aggregate_emits_sharpe_se_and_ci() {
+        // 50 returns drawn around mean 1.0%, stdev 2% → annual SR
+        // around (1.0/2.0) × sqrt(252/5) ≈ 3.55 if horizon = 5d.
+        let returns: Vec<f64> = (0..50)
+            .map(|i| 1.0 + ((i % 4) as f64 - 1.5) * 0.5)
+            .collect();
+        let s = aggregate(&returns, 5);
+        assert!(s.sharpe_se > 0.0, "SE should be > 0 with N=50");
+        // CI is symmetric around the headline Sharpe by ±1.96·SE.
+        let mid = (s.sharpe_ci_lo_95 + s.sharpe_ci_hi_95) / 2.0;
+        assert!((mid - s.annualised_sharpe).abs() < 1e-9);
+        let half_width = (s.sharpe_ci_hi_95 - s.sharpe_ci_lo_95) / 2.0;
+        assert!((half_width - 1.96 * s.sharpe_se).abs() < 1e-9);
+    }
+
+    #[test]
+    fn aggregate_sharpe_se_shrinks_with_more_samples() {
+        // Same per-sample distribution, more samples → smaller SE.
+        let r10: Vec<f64> = (0..10).map(|i| 1.0 + (i % 2) as f64).collect();
+        let r100: Vec<f64> = (0..100).map(|i| 1.0 + (i % 2) as f64).collect();
+        let s10 = aggregate(&r10, 20);
+        let s100 = aggregate(&r100, 20);
+        assert!(s100.sharpe_se < s10.sharpe_se);
+    }
+
+    #[test]
+    fn aggregate_empty_returns_zero_se() {
+        let s = aggregate(&[], 20);
+        assert_eq!(s.sharpe_se, 0.0);
+        assert_eq!(s.sharpe_ci_lo_95, 0.0);
+        assert_eq!(s.sharpe_ci_hi_95, 0.0);
+    }
+
+    #[test]
+    fn quarterly_decomposition_splits_chronologically() {
+        let history = std::sync::Arc::new(linear_closes(d(2026, 1, 1), 400, 0.4));
+        let history2 = history.clone();
+        let closes_fn = move |sym: &str| -> Vec<(NaiveDate, f64)> {
+            if sym == "AAA" {
+                (*history2).clone()
+            } else {
+                Vec::new()
+            }
+        };
+        let samples: Vec<SignalSample> = (0..40)
+            .map(|i| SignalSample {
+                symbol: "AAA".into(),
+                signal_date: d(2026, 1, 1) + Duration::days(i * 8),
+                direction: Direction::Long,
+            })
+            .collect();
+        let r = quarterly_decomposition("test", &samples, &closes_fn, 20);
+        assert_eq!(r.scanner, "test");
+        assert_eq!(r.quarters.len(), 4);
+        // Each quarter should be roughly 10 samples (40/4).
+        for q in &r.quarters {
+            assert!(q.samples_used >= 9 && q.samples_used <= 11);
+        }
+        // Sharpe ratio should be defined (some signal in both endpoints).
+        // We don't pin a precise ratio because the 20d look-ahead pushes
+        // late-quarter signal returns past the end of cached history,
+        // which affects q4 sample count + variance asymmetrically.
+        // The point of this test is *the structure*, not the value.
+        assert!(r.full_window_horizon_stats.n > 0);
+    }
+
+    #[test]
+    fn quarterly_decomposition_empty_returns_four_empty_quarters() {
+        let closes_fn = |_: &str| -> Vec<(NaiveDate, f64)> { Vec::new() };
+        let r = quarterly_decomposition("e", &[], &closes_fn, 20);
+        assert_eq!(r.quarters.len(), 4);
+        for q in &r.quarters {
+            assert_eq!(q.samples_used, 0);
+            assert_eq!(q.horizon_stats.n, 0);
+        }
+        assert!(r.q4_vs_q1_sharpe_ratio.is_none());
     }
 
     fn linear_closes(start: NaiveDate, days: usize, gradient_pct: f64) -> Vec<(NaiveDate, f64)> {

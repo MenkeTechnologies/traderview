@@ -34,6 +34,7 @@ export async function renderScannerBacktest(mount, _state) {
                 </label>
                 <button class="btn btn-sm" id="sb-walk-pead" data-i18n="view.scanner_backtest.btn.walk_pead">📊 Walk-forward PEAD</button>
                 <button class="btn btn-sm" id="sb-walk-insider" data-i18n="view.scanner_backtest.btn.walk_insider">📊 Walk-forward Insider</button>
+                <button class="btn btn-sm" id="sb-stab-pead" data-i18n="view.scanner_backtest.btn.stability_pead">📈 PEAD Stability (Q1-Q4)</button>
                 <span class="muted small" id="sb-meta"></span>
             </div>
             <div id="sb-all"></div>
@@ -45,6 +46,73 @@ export async function renderScannerBacktest(mount, _state) {
     mount.querySelector('#sb-run-insider').addEventListener('click', () => runScan(mount, 'insider-clusters'));
     mount.querySelector('#sb-walk-pead').addEventListener('click', () => runWalk(mount, 'pead'));
     mount.querySelector('#sb-walk-insider').addEventListener('click', () => runWalk(mount, 'insider-clusters'));
+    mount.querySelector('#sb-stab-pead').addEventListener('click', () => runStability(mount));
+}
+
+async function runStability(mount) {
+    const result = mount.querySelector('#sb-result');
+    const meta = mount.querySelector('#sb-meta');
+    const days = parseInt(mount.querySelector('#sb-days').value, 10) || 365;
+    result.innerHTML = `<p class="muted">${esc(t('view.scanner_backtest.status.stability'))}</p>`;
+    if (meta) meta.textContent = '';
+    try {
+        const r = await api(`/scanner-backtest/pead/stability?days=${days}&horizon=20`);
+        if (!r) {
+            result.innerHTML = `<p class="muted">${esc(t('view.scanner_backtest.empty.no_data'))}</p>`;
+            return;
+        }
+        const ratio = r.q4_vs_q1_sharpe_ratio;
+        const ratioCls = ratio == null ? 'muted'
+            : ratio >= 0.7 ? 'pos' : ratio >= 0.3 ? '' : 'neg';
+        const ratioStr = ratio == null ? '—' : ratio.toFixed(2);
+        const fh = r.full_window_horizon_stats || {};
+        result.innerHTML = `
+            <h2>${esc(r.scanner.toUpperCase())} · ${esc(t('view.scanner_backtest.h2.stability'))} · ${r.horizon_days}d</h2>
+            <p class="small">${esc(t('view.scanner_backtest.field.q4_vs_q1'))}:
+                <strong class="${ratioCls}">${ratioStr}</strong>
+                <span class="muted small">${esc(t('view.scanner_backtest.hint.q_ratio'))}</span></p>
+            <h3 style="margin-bottom:0.25em">${esc(t('view.scanner_backtest.h3.full_window'))}</h3>
+            ${fullHorizonRow(fh)}
+            <h3 style="margin-bottom:0.25em">${esc(t('view.scanner_backtest.h3.per_quarter'))}</h3>
+            <table class="trades">
+                <thead><tr>
+                    <th data-i18n="view.scanner_backtest.th.quarter">Quarter</th>
+                    <th data-i18n="view.scanner_backtest.th.n">N</th>
+                    <th data-i18n="view.scanner_backtest.th.sharpe">Sharpe</th>
+                    <th data-i18n="view.scanner_backtest.th.sharpe_ci">95% CI</th>
+                    <th data-i18n="view.scanner_backtest.th.hit_rate">Hit %</th>
+                    <th data-i18n="view.scanner_backtest.th.mean">Mean %</th>
+                </tr></thead>
+                <tbody>${(r.quarters || []).map(q => {
+                    const hs = q.horizon_stats || {};
+                    if (!hs.n) return `<tr><td>Q${q.quarter_index}</td><td>0</td><td class="muted">—</td><td class="muted">—</td><td class="muted">—</td><td class="muted">—</td></tr>`;
+                    const sCls = hs.annualised_sharpe >= 1.0 ? 'pos'
+                                : hs.annualised_sharpe >= 0.5 ? '' : 'muted';
+                    return `<tr>
+                        <td><strong>Q${q.quarter_index}</strong></td>
+                        <td>${hs.n}</td>
+                        <td class="${sCls}"><strong>${hs.annualised_sharpe.toFixed(2)}</strong></td>
+                        <td class="muted small">[${hs.sharpe_ci_lo_95.toFixed(2)}, ${hs.sharpe_ci_hi_95.toFixed(2)}]</td>
+                        <td>${hs.hit_rate_pct.toFixed(1)}%</td>
+                        <td>${hs.mean_return_pct.toFixed(2)}%</td>
+                    </tr>`;
+                }).join('')}</tbody>
+            </table>
+            <p class="muted small">${esc(t('view.scanner_backtest.hint.stability_interpret'))}</p>
+        `;
+    } catch (e) {
+        result.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
+    }
+}
+
+function fullHorizonRow(h) {
+    if (!h || !h.n) return `<p class="muted small">${esc(t('view.scanner_backtest.empty.no_data'))}</p>`;
+    const sCls = h.annualised_sharpe >= 1.0 ? 'pos' : h.annualised_sharpe >= 0.5 ? '' : 'muted';
+    return `<p>
+        N=${h.n} · Sharpe <strong class="${sCls}">${h.annualised_sharpe.toFixed(2)}</strong>
+        · 95% CI <span class="muted small">[${h.sharpe_ci_lo_95.toFixed(2)}, ${h.sharpe_ci_hi_95.toFixed(2)}]</span>
+        · SE ${h.sharpe_se.toFixed(2)}
+    </p>`;
 }
 
 async function runWalk(mount, scanner) {

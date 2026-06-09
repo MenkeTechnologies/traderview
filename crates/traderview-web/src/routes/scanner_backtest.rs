@@ -22,6 +22,7 @@ pub fn router() -> Router<AppState> {
             "/scanner-backtest/insider-clusters/walk-forward",
             get(walk_forward_insider),
         )
+        .route("/scanner-backtest/pead/stability", get(stability_pead))
 }
 
 #[derive(Deserialize)]
@@ -89,6 +90,32 @@ async fn walk_forward_insider(
     }
     Ok(Json(
         scanner_backtest::walk_forward_insider_clusters(&s.pool, q.days, q.train_pct).await?,
+    ))
+}
+
+#[derive(Deserialize)]
+struct StabilityQ {
+    #[serde(default = "default_days")]
+    days: i64,
+    #[serde(default = "default_horizon")]
+    horizon: u32,
+}
+fn default_horizon() -> u32 {
+    20
+}
+
+async fn stability_pead(
+    State(s): State<AppState>,
+    _user: AuthUser,
+    Query(q): Query<StabilityQ>,
+) -> Result<Json<scanner_backtest::StabilityReport>, ApiError> {
+    if !matches!(q.horizon, 1 | 5 | 20 | 60) {
+        return Err(ApiError::BadRequest(
+            "horizon must be one of 1, 5, 20, 60".into(),
+        ));
+    }
+    Ok(Json(
+        scanner_backtest::stability_pead(&s.pool, q.days, q.horizon).await?,
     ))
 }
 
