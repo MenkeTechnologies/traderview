@@ -80,6 +80,7 @@ pub mod search;
 pub mod sector_rotation;
 pub mod sectors;
 pub mod sentiment;
+pub mod sentiment_velocity;
 pub mod settings;
 pub mod shares;
 pub mod short_interest;

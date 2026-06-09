@@ -84,6 +84,7 @@ mod search;
 mod sector_rotation;
 mod sectors;
 mod sentiment;
+mod sentiment_velocity;
 mod settings;
 mod shares;
 mod short_interest;
@@ -179,6 +180,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(rvol_accel::router())
         .merge(insider_stream::router())
         .merge(pead::router())
+        .merge(sentiment_velocity::router())
         .merge(webull::router())
         .merge(vol_surface::router())
         .merge(tax_lots::router())

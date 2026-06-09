@@ -282,6 +282,7 @@ async fn main() -> anyhow::Result<()> {
     traderview_db::breadth_divergence::global(state.pool.clone());
     traderview_db::rvol_accel::global();
     traderview_db::insider_stream::global();
+    traderview_db::sentiment_velocity::global(state.pool.clone());
 
     // Squeeze scanner — catalyst-driven candidate aggregator + rolling-
     // window squeeze detector. The aggregator subscribes to catalysts +
