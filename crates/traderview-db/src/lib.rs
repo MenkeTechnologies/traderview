@@ -16,6 +16,7 @@ pub mod breadth;
 pub mod broker_dispatcher;
 pub mod candidates;
 pub mod carryover;
+pub mod catalyst_correlator;
 pub mod catalysts;
 pub mod chart_drawings;
 pub mod comments;

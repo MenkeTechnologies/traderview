@@ -461,6 +461,15 @@ impl LiveTickStore {
         self.state.iter().map(|e| e.value().clone()).collect()
     }
 
+    /// O(1) lookup of the current `SymbolState` for one ticker. Returns
+    /// `None` if no trade has been observed for that symbol yet today.
+    /// Used by callers that need a baseline price (catalyst correlator,
+    /// alerting, position-size calculators) without iterating the full
+    /// snapshot.
+    pub fn get(&self, symbol: &str) -> Option<SymbolState> {
+        self.state.get(symbol).map(|e| e.value().clone())
+    }
+
     /// How many symbols are currently in the live subscription set.
     /// Used by the algo runner's heartbeat event so the user can see
     /// "live=27 symbols streaming" without having to query elsewhere.

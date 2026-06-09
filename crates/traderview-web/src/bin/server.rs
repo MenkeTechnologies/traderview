@@ -267,6 +267,16 @@ async fn main() -> anyhow::Result<()> {
         });
     }
 
+    // Warm the after-hours classifier + catalyst→price-action correlator
+    // at boot so their subscribers are already attached to the live_ticks
+    // + catalysts broadcast channels when the first events flow. Both are
+    // lazy-singleton OnceCell stores; calling global() spawns the
+    // classifier / correlator tasks idempotently. Doing it here (rather
+    // than waiting for the first /api hit) avoids missing early-morning
+    // pre-market catalysts that arrive before any user opens the view.
+    traderview_db::after_hours::global();
+    traderview_db::catalyst_correlator::global();
+
     // Squeeze scanner — catalyst-driven candidate aggregator + rolling-
     // window squeeze detector. The aggregator subscribes to catalysts +
     // halts firehoses, scores symbols, and pushes the top-N to

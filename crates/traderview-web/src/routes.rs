@@ -17,6 +17,7 @@ mod backtest_presets;
 mod breadth;
 mod calc;
 mod carryover;
+mod catalyst_correlations;
 mod catalysts;
 mod chart_drawings;
 mod chart_indicators;
@@ -163,6 +164,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(halts::router())
         .merge(client_errors::router())
         .merge(catalysts::router())
+        .merge(catalyst_correlations::router())
         .merge(webull::router())
         .merge(vol_surface::router())
         .merge(tax_lots::router())
