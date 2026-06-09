@@ -308,6 +308,7 @@ export const DEFAULT_SHORTCUTS = [
     { id: 'nav_dashboards',     keys: { key: 'o', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_dashboards',     actionKey: 'tv:nav-dashboards' },
     { id: 'nav_goals',          keys: { key: 'f', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_goals',          actionKey: 'tv:nav-goals' },
     { id: 'nav_halts',          keys: { key: 'h', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_halts',          actionKey: 'tv:nav-halts' },
+    { id: 'nav_after_hours',    keys: { key: 'e', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_after_hours',    actionKey: 'tv:nav-after-hours' },
     { id: 'nav_note_templates', keys: { key: 'n', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_note_templates', actionKey: 'tv:nav-note-templates' },
     { id: 'nav_reviews',        keys: { key: 'v', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_reviews',        actionKey: 'tv:nav-reviews' },
     { id: 'nav_risk_gate',      keys: { key: 'z', meta: true, ctrl: true, shift: false, alt: true }, scope: 'global', descKey: 'shortcut.nav_risk_gate',      actionKey: 'tv:nav-risk-gate' },

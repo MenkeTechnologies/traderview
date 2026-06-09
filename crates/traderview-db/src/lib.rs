@@ -3,6 +3,7 @@
 
 pub mod accounts;
 pub mod accounts_overview;
+pub mod after_hours;
 pub mod alerts;
 pub mod algo;
 pub mod algo_engine;

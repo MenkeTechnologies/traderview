@@ -370,7 +370,7 @@ export const SYMBOL_AWARE_SCOPES = [
     'vol-smile', 'vol-surface', 'option-payoff', 'compare',
     'live', 'pair-trade-calc',
     // symbol-displaying scanner / screener / tape / vol views
-    'screener', 'scanners', 'live-scanner', 'catalysts', 'halts',
+    'screener', 'scanners', 'live-scanner', 'catalysts', 'halts', 'after-hours',
     'heatmap', 'vol', 'tape', 'iv-rank', 'sector-rotation',
     'correlation',
     // symbol-keyed analysis / planning / event views

@@ -617,6 +617,7 @@ import { renderWebhooks } from './views/webhooks.js';
 import { renderBreadth } from './views/breadth.js';
 import { renderFearGreed } from './views/fear_greed.js';
 import { renderPremarket } from './views/premarket.js';
+import { renderAfterHours } from './views/after_hours.js';
 import { renderHalts } from './views/halts.js';
 import { renderLauncher } from './views/launcher.js';
 import { renderLiveScanner } from './views/live_scanner.js';
@@ -2358,6 +2359,7 @@ function bindTabs() {
     window.addEventListener('tv:nav-dashboards',     () => { window.location.hash = 'dashboards'; });
     window.addEventListener('tv:nav-goals',          () => { window.location.hash = 'goals'; });
     window.addEventListener('tv:nav-halts',          () => { window.location.hash = 'halts'; });
+    window.addEventListener('tv:nav-after-hours',    () => { window.location.hash = 'after-hours'; });
     window.addEventListener('tv:nav-note-templates', () => { window.location.hash = 'note-templates'; });
     window.addEventListener('tv:nav-reviews',        () => { window.location.hash = 'reviews'; });
     window.addEventListener('tv:nav-risk-gate',      () => { window.location.hash = 'risk-gate'; });
@@ -2801,6 +2803,7 @@ export async function dispatch() {
             case 'breadth':        await renderBreadth(mount, state); break;
             case 'fear-greed':     await renderFearGreed(mount, state); break;
             case 'premarket':      await renderPremarket(mount, state); break;
+            case 'after-hours':    await renderAfterHours(mount, state); break;
             case 'halts':          await renderHalts(mount, state); break;
             case 'live-scanner':   await renderLiveScanner(mount, state); break;
             case 'catalysts':      await renderCatalysts(mount, state); break;

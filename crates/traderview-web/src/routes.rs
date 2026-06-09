@@ -6,6 +6,7 @@ use axum::Router;
 
 mod accounts;
 mod accounts_overview;
+mod after_hours;
 mod alerts;
 mod algo;
 mod analysis;
@@ -158,6 +159,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(breadth::router())
         .merge(fear_greed::router())
         .merge(premarket::router())
+        .merge(after_hours::router())
         .merge(halts::router())
         .merge(client_errors::router())
         .merge(catalysts::router())
