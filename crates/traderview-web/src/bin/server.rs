@@ -278,6 +278,7 @@ async fn main() -> anyhow::Result<()> {
     traderview_db::catalyst_correlator::global();
     traderview_db::uoa_stream::global();
     traderview_db::gamma_squeeze::global();
+    traderview_db::htb_ranker::global();
 
     // Squeeze scanner — catalyst-driven candidate aggregator + rolling-
     // window squeeze detector. The aggregator subscribes to catalysts +

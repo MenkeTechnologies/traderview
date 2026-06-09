@@ -50,6 +50,7 @@ mod goals;
 mod halts;
 mod heatmap;
 mod hotkeys;
+mod htb_ranker;
 mod imports;
 mod institutional;
 mod ira_basis;
@@ -169,6 +170,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(catalyst_correlations::router())
         .merge(uoa_stream::router())
         .merge(gamma_squeeze::router())
+        .merge(htb_ranker::router())
         .merge(webull::router())
         .merge(vol_surface::router())
         .merge(tax_lots::router())

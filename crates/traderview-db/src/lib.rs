@@ -44,6 +44,7 @@ pub mod goals;
 pub mod halts;
 pub mod heatmap;
 pub mod hotkeys;
+pub mod htb_ranker;
 pub mod ibkr_pump;
 pub mod ibkr_trading;
 pub mod imports;
