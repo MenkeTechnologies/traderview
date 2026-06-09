@@ -637,6 +637,7 @@ import { renderPairsCoint } from './views/pairs_coint.js';
 import { renderIpoLockups } from './views/ipo_lockups.js';
 import { renderIvTerm } from './views/iv_term.js';
 import { renderSp500Predict } from './views/sp500_predict.js';
+import { renderDividendCapture } from './views/dividend_capture.js';
 import { renderWebull } from './views/webull.js';
 import { renderVolSurface } from './views/vol_surface.js';
 import { renderWalkForward } from './views/walk_forward.js';
@@ -2837,6 +2838,7 @@ export async function dispatch() {
             case 'ipo-lockups':    await renderIpoLockups(mount, state); break;
             case 'iv-term':        await renderIvTerm(mount, state); break;
             case 'sp500-predict':  await renderSp500Predict(mount, state); break;
+            case 'dividend-capture': await renderDividendCapture(mount, state); break;
             case 'webull':         await renderWebull(mount, state); break;
             case 'vol-surface':    await renderVolSurface(mount, state); break;
             case 'walk-forward':   await renderWalkForward(mount, state); break;

@@ -37,6 +37,7 @@ mod dashboards;
 mod data_sources;
 mod discipline;
 mod disclosures;
+mod dividend_capture;
 mod earnings_cal;
 mod earnings_iv;
 mod economy;
@@ -193,6 +194,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(ipo_lockups::router())
         .merge(iv_term::router())
         .merge(sp500_predict::router())
+        .merge(dividend_capture::router())
         .merge(webull::router())
         .merge(vol_surface::router())
         .merge(tax_lots::router())
