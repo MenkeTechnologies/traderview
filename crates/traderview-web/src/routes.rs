@@ -64,6 +64,7 @@ mod executions;
 mod export;
 mod extras;
 mod fafsa_efc;
+mod fat_fire;
 mod fear_greed;
 mod fifty_thirty_twenty;
 mod fill_quality;
@@ -255,6 +256,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(coast_fire::router())
         .merge(barista_fire::router())
         .merge(lean_fire::router())
+        .merge(fat_fire::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())

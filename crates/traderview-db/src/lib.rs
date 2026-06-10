@@ -59,6 +59,7 @@ pub mod embedded;
 pub mod ev_vs_ice;
 pub mod executions;
 pub mod fafsa_efc;
+pub mod fat_fire;
 pub mod fear_greed;
 pub mod fifty_thirty_twenty;
 pub mod fill_quality;

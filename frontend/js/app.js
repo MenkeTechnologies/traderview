@@ -678,6 +678,7 @@ import { renderEvVsIce } from './views/ev_vs_ice.js';
 import { renderCoastFire } from './views/coast_fire.js';
 import { renderBaristaFire } from './views/barista_fire.js';
 import { renderLeanFire } from './views/lean_fire.js';
+import { renderFatFire } from './views/fat_fire.js';
 import { renderDrawdownCutoff } from './views/drawdown_cutoff.js';
 import { renderPead } from './views/pead.js';
 import { renderSentimentVelocity } from './views/sentiment_velocity.js';
@@ -2927,6 +2928,7 @@ export async function dispatch() {
             case 'coast-fire': await renderCoastFire(mount, state); break;
             case 'barista-fire': await renderBaristaFire(mount, state); break;
             case 'lean-fire': await renderLeanFire(mount, state); break;
+            case 'fat-fire': await renderFatFire(mount, state); break;
             case 'drawdown-cutoff': await renderDrawdownCutoff(mount, state); break;
             case 'pead':           await renderPead(mount, state); break;
             case 'sentiment-velocity': await renderSentimentVelocity(mount, state); break;
