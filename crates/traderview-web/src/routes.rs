@@ -87,6 +87,7 @@ mod ira_basis;
 mod iv_term;
 mod journal;
 mod journal_ai;
+mod lean_fire;
 mod lease_vs_buy_car;
 mod live_positions;
 mod live_ticks;
@@ -253,6 +254,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(ev_vs_ice::router())
         .merge(coast_fire::router())
         .merge(barista_fire::router())
+        .merge(lean_fire::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())

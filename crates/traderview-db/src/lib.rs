@@ -86,6 +86,7 @@ pub mod ira_basis;
 pub mod iv_term_structure;
 pub mod journal;
 pub mod journal_ai;
+pub mod lean_fire;
 pub mod lease_vs_buy_car;
 pub mod live_positions;
 pub mod live_ticks;
