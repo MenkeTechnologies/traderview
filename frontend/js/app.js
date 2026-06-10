@@ -687,6 +687,7 @@ import { renderThreeFundPortfolio } from './views/three_fund_portfolio.js';
 import { renderBondTent } from './views/bond_tent.js';
 import { renderGlidePath } from './views/glide_path.js';
 import { renderAnnuityPvFv } from './views/annuity_pv_fv.js';
+import { renderCdLadder } from './views/cd_ladder.js';
 import { renderDrawdownCutoff } from './views/drawdown_cutoff.js';
 import { renderPead } from './views/pead.js';
 import { renderSentimentVelocity } from './views/sentiment_velocity.js';
@@ -2946,6 +2947,7 @@ export async function dispatch() {
             case 'bond-tent': await renderBondTent(mount, state); break;
             case 'glide-path': await renderGlidePath(mount, state); break;
             case 'annuity-pv-fv': await renderAnnuityPvFv(mount, state); break;
+            case 'cd-ladder': await renderCdLadder(mount, state); break;
             case 'drawdown-cutoff': await renderDrawdownCutoff(mount, state); break;
             case 'pead':           await renderPead(mount, state); break;
             case 'sentiment-velocity': await renderSentimentVelocity(mount, state); break;

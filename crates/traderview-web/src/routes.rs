@@ -25,6 +25,7 @@ mod cape_indicator;
 mod carryover;
 mod catalyst_correlations;
 mod catalysts;
+mod cd_ladder;
 mod chart_drawings;
 mod chart_indicators;
 mod charts;
@@ -273,6 +274,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(bond_tent::router())
         .merge(glide_path::router())
         .merge(annuity_pv_fv::router())
+        .merge(cd_ladder::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())
