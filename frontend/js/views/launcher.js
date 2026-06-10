@@ -60,6 +60,7 @@ export const TILES = [
     ['debt-snowball', 'Debt Snowball', '⛄', 'Dave Ramsey smallest-balance-first payoff — adherence wins from psychological early payoffs', 'NEW'],
     ['credit-utilization', 'Credit Utilization', '💳', 'Per-card + aggregate util % vs FICO thresholds (10/30%) + paydown needed to land under 30%', 'NEW'],
     ['auto-loan', 'Auto Loan', '🚗', 'Vehicle price + down + trade + tax + APR + term → monthly P+I + total interest + full schedule', 'NEW'],
+    ['mortgage-amortization', 'Mortgage', '🏠', 'PITI + PMI (LTV > 80) + extra-payment what-if — months saved + interest saved + schedule head', 'NEW'],
     ['drawdown-cutoff', 'Drawdown Cutoff', '🛑', 'Auto-fire kill-switch when live broker equity drops below your max-drawdown threshold', 'NEW'],
     ['pead',         'PEAD Drift',    '📈',  'Post-earnings drift — surprise + 5/20/60d returns + drift score', 'NEW'],
     ['sentiment-velocity', 'Sentiment Velocity', '🔊', 'WSB+StockTwits mention acceleration — ≥3× hour-over-hour + ≥2 consecutive', 'NEW'],

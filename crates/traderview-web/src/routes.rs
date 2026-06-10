@@ -87,6 +87,7 @@ mod markets;
 mod mentorships;
 mod microstructure;
 mod mood_analytics;
+mod mortgage_amortization;
 mod multi_broker;
 mod net_worth_tracker;
 mod news;
@@ -225,6 +226,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(debt_snowball::router())
         .merge(credit_utilization::router())
         .merge(auto_loan::router())
+        .merge(mortgage_amortization::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())
