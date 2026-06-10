@@ -101,6 +101,7 @@ pub mod r_distribution;
 pub mod rebalance;
 pub mod risk_rules;
 pub mod rvol_accel;
+pub mod savings_rate;
 pub mod scanner_backtest;
 pub mod scans;
 pub mod schwab_pump;

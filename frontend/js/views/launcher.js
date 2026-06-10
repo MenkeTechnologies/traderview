@@ -51,6 +51,7 @@ export const TILES = [
     ['personal-balance-sheet', 'Balance Sheet', '⚖️', 'GAAP-style current/non-current split + equity + working capital + current/quick ratios + D/E', 'NEW'],
     ['personal-cash-flow', 'Cash Flow Statement', '💵', 'GAAP operating / investing / financing split + net change in cash + savings rate', 'NEW'],
     ['financial-ratios', 'Financial Ratios', '📊', '7 CFP/Bogleheads ratios (savings, DTI, 28/36, liquidity, solvency, EF, retirement) + composite score', 'NEW'],
+    ['savings-rate', 'Savings Rate / FI', '🎯', 'MMM math: years to FI from savings rate at 5% real + 4% SWR, FI number, 10-70% sensitivity', 'NEW'],
     ['drawdown-cutoff', 'Drawdown Cutoff', '🛑', 'Auto-fire kill-switch when live broker equity drops below your max-drawdown threshold', 'NEW'],
     ['pead',         'PEAD Drift',    '📈',  'Post-earnings drift — surprise + 5/20/60d returns + drift score', 'NEW'],
     ['sentiment-velocity', 'Sentiment Velocity', '🔊', 'WSB+StockTwits mention acceleration — ≥3× hour-over-hour + ≥2 consecutive', 'NEW'],

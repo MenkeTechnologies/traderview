@@ -102,6 +102,7 @@ mod rebalance;
 mod reports;
 mod research;
 mod rvol_accel;
+mod savings_rate;
 mod scanner_backtest;
 mod scans;
 mod screener;
@@ -207,6 +208,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(personal_balance_sheet::router())
         .merge(personal_cash_flow::router())
         .merge(financial_ratios::router())
+        .merge(savings_rate::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())
