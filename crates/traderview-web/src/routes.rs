@@ -38,6 +38,7 @@ mod darkpool;
 mod dashboards;
 mod data_sources;
 mod dca_simulator;
+mod debt_avalanche;
 mod discipline;
 mod disclosures;
 mod dividend_aristocrats;
@@ -217,6 +218,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(zero_based_budget::router())
         .merge(fifty_thirty_twenty::router())
         .merge(envelope_budget::router())
+        .merge(debt_avalanche::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())

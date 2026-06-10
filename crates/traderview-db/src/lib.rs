@@ -35,6 +35,7 @@ pub mod darkpool;
 pub mod dashboards;
 pub mod data_source_keys;
 pub mod dca_simulator;
+pub mod debt_avalanche;
 pub mod discipline;
 pub mod disclosures;
 pub mod dividend_aristocrats;

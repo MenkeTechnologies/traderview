@@ -56,6 +56,7 @@ export const TILES = [
     ['zero-based-budget', 'Zero-Based Budget', '🟰', 'Dave Ramsey / YNAB — every dollar assigned, leftover = 0, per-category planned vs actual variance', 'NEW'],
     ['fifty-thirty-twenty', '50/30/20 Rule', '🥧', 'Warren 50/30/20 needs/wants/savings — bucket actual vs ideal $ + delta + status', 'NEW'],
     ['envelope-budget', 'Envelope Budget', '✉️', 'Digital cash-envelope method — per-envelope ok/warning/empty + rollover vs reset', 'NEW'],
+    ['debt-avalanche', 'Debt Avalanche', '💳', 'Highest-APR-first payoff sim — optimal for total interest minimisation; rolls minimums on payoff', 'NEW'],
     ['drawdown-cutoff', 'Drawdown Cutoff', '🛑', 'Auto-fire kill-switch when live broker equity drops below your max-drawdown threshold', 'NEW'],
     ['pead',         'PEAD Drift',    '📈',  'Post-earnings drift — surprise + 5/20/60d returns + drift score', 'NEW'],
     ['sentiment-velocity', 'Sentiment Velocity', '🔊', 'WSB+StockTwits mention acceleration — ≥3× hour-over-hour + ≥2 consecutive', 'NEW'],
