@@ -78,7 +78,7 @@ async function runCompute(mount) {
     };
     result.innerHTML = `<p class="muted">${esc(t('view.mortgage_amortization.status.computing'))}</p>`;
     try {
-        const r = await api('/mortgage-amortization/compute', { method: 'POST', body: JSON.stringify(input) });
+        const r = await api.request('/mortgage-amortization/compute', { method: 'POST', body: JSON.stringify(input) });
         const ltvCls = r.ltv_pct > 80 ? 'neg' : 'pos';
         const baseY = `${Math.floor(r.baseline_term_months / 12)}y ${r.baseline_term_months % 12}m`;
         const extraY = `${Math.floor(r.extra_term_months / 12)}y ${r.extra_term_months % 12}m`;

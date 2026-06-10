@@ -72,7 +72,7 @@ async function runCompute(mount) {
     };
     result.innerHTML = `<p class="muted">${esc(t('view.fire_calculator.status.computing'))}</p>`;
     try {
-        const r = await api('/fire-calculator/compute', { method: 'POST', body: JSON.stringify(input) });
+        const r = await api.request('/fire-calculator/compute', { method: 'POST', body: JSON.stringify(input) });
         const yearsCls = r.years_to_target == null
             ? 'neg'
             : r.years_to_target <= (input.target_retirement_age - input.current_age)

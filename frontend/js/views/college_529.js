@@ -57,7 +57,7 @@ async function runCompute(mount) {
     };
     result.innerHTML = `<p class="muted">${esc(t('view.college_529.status.computing'))}</p>`;
     try {
-        const r = await api('/college-529/compute', { method: 'POST', body: JSON.stringify(input) });
+        const r = await api.request('/college-529/compute', { method: 'POST', body: JSON.stringify(input) });
         const okCls = r.on_track ? 'pos' : 'neg';
         const reqCls = input.current_monthly_contribution_usd >= r.required_monthly_contribution_usd ? 'pos' : 'neg';
         result.innerHTML = `

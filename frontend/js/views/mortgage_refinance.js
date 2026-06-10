@@ -81,7 +81,7 @@ async function runCompute(mount) {
     };
     result.innerHTML = `<p class="muted">${esc(t('view.mortgage_refinance.status.computing'))}</p>`;
     try {
-        const r = await api('/mortgage-refinance/compute', { method: 'POST', body: JSON.stringify(input) });
+        const r = await api.request('/mortgage-refinance/compute', { method: 'POST', body: JSON.stringify(input) });
         const stCls = r.status === 'refi_wins' ? 'pos' : r.status === 'no_savings' ? 'neg' : '';
         const savCls = r.monthly_savings_usd > 0 ? 'pos' : 'neg';
         const beFmt = r.breakeven_months == null ? '∞'

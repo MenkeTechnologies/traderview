@@ -69,7 +69,7 @@ async function fetchAndRender(mount) {
     tbody.innerHTML = `<tr><td colspan="8" class="muted">${esc(t('common.loading'))}</td></tr>`;
     const path = viewMode === 'top' ? '/pead/top-drift' : '/pead/recent';
     try {
-        const rows = await api(`${path}?days=${lookbackDays}&limit=100`);
+        const rows = await api.request(`${path}?days=${lookbackDays}&limit=100`);
         if (!rows || !rows.length) {
             tbody.innerHTML = `<tr><td colspan="8" class="muted">${esc(t('view.pead.empty.no_rows'))}</td></tr>`;
             return;

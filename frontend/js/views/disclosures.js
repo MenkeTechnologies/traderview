@@ -5,6 +5,7 @@ import { esc, fmt, fmtDateTime } from '../util.js';
 import { on as onWsEvent } from '../ws.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 
 let wsUnsub = null;
 
@@ -101,20 +102,31 @@ export async function renderDisclosures(mount) {
         const fd = new FormData(e.target);
         const symbols = (fd.get('symbols') || '').split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
         const filers = (fd.get('filers') || '').split(',').map(s => s.trim()).filter(Boolean);
-        await api.createDisclosureWatcher({
-            name: fd.get('name'),
-            symbols: symbols.length ? symbols : null,
-            filers: filers.length ? filers : null,
-            min_amount_usd: fd.get('min_amount_usd') ? Number(fd.get('min_amount_usd')) : null,
-        });
-        if (!viewIsCurrent(tok)) return;
-        renderDisclosures(mount);
+        const name = fd.get('name');
+        try {
+            await api.createDisclosureWatcher({
+                name,
+                symbols: symbols.length ? symbols : null,
+                filers: filers.length ? filers : null,
+                min_amount_usd: fd.get('min_amount_usd') ? Number(fd.get('min_amount_usd')) : null,
+            });
+            if (!viewIsCurrent(tok)) return;
+            showToast(t('view.disclosures.toast.watcher_created', { name }), { level: 'success' });
+            renderDisclosures(mount);
+        } catch (err) {
+            showToast(t('toast.error.api', { err: err.message || err }), { level: 'error' });
+        }
     });
     mount.querySelectorAll('[data-del-w]').forEach(b =>
         b.addEventListener('click', async () => {
-            await api.deleteDisclosureWatcher(b.dataset.delW);
-            if (!viewIsCurrent(tok)) return;
-            renderDisclosures(mount);
+            try {
+                await api.deleteDisclosureWatcher(b.dataset.delW);
+                if (!viewIsCurrent(tok)) return;
+                showToast(t('view.disclosures.toast.watcher_deleted'), { level: 'success' });
+                renderDisclosures(mount);
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message || err }), { level: 'error' });
+            }
         }));
 
     // Poll loop — kept as a 60s safety net; WS push handles the real-time path.

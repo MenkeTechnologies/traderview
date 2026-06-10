@@ -81,7 +81,7 @@ async function runCompute(mount) {
     };
     result.innerHTML = `<p class="muted">${esc(t('view.financial_ratios.status.computing'))}</p>`;
     try {
-        const r = await api('/financial-ratios/compute', { method: 'POST', body: JSON.stringify(input) });
+        const r = await api.request('/financial-ratios/compute', { method: 'POST', body: JSON.stringify(input) });
         const compCls = r.composite_score_pct >= 75 ? 'pos' : r.composite_score_pct >= 50 ? '' : 'neg';
         const fmtValue = (key, v) => {
             switch (key) {

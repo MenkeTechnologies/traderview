@@ -50,7 +50,7 @@ async function runCompute(mount) {
     };
     result.innerHTML = `<p class="muted">${esc(t('view.pslf_tracker.status.computing'))}</p>`;
     try {
-        const r = await api('/pslf-tracker/compute', { method: 'POST', body: JSON.stringify(input) });
+        const r = await api.request('/pslf-tracker/compute', { method: 'POST', body: JSON.stringify(input) });
         const stCls = r.status === 'complete' || r.status === 'on_track' ? 'pos'
                     : r.status === 'paused' || r.status === 'ineligible_employer' ? 'neg' : '';
         const pctDone = (r.qualifying_payments_made / 120 * 100).toFixed(1);

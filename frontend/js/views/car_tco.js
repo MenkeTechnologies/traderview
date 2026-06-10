@@ -72,7 +72,7 @@ async function runCompute(mount) {
     };
     result.innerHTML = `<p class="muted">${esc(t('view.car_tco.status.computing'))}</p>`;
     try {
-        const r = await api('/car-tco/compute', { method: 'POST', body: JSON.stringify(input) });
+        const r = await api.request('/car-tco/compute', { method: 'POST', body: JSON.stringify(input) });
         result.innerHTML = `
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:1rem">
                 <div><div class="muted small">${esc(t('view.car_tco.field.total'))}</div>

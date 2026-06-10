@@ -56,7 +56,7 @@ async function runCompute(mount) {
     };
     result.innerHTML = `<p class="muted">${esc(t('view.heloc.status.computing'))}</p>`;
     try {
-        const r = await api('/heloc/compute', { method: 'POST', body: JSON.stringify(input) });
+        const r = await api.request('/heloc/compute', { method: 'POST', body: JSON.stringify(input) });
         const utilCls = r.utilization_pct > 80 ? 'neg' : r.utilization_pct < 10 ? 'pos' : '';
         const stCls = r.status === 'maxed' ? 'neg' : r.status === 'underutilized' || r.status === 'principal_reducing' ? 'pos' : '';
         result.innerHTML = `

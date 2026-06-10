@@ -85,7 +85,7 @@ function drawAssets(mount) {
             <td><input type="text" data-k="name" data-i="${i}" value="${esc(a.name)}" style="width:100%"></td>
             <td><input type="text" data-k="category" data-i="${i}" value="${esc(a.category)}" style="width:100%"></td>
             <td><input type="number" step="100" data-k="value_usd" data-i="${i}" value="${a.value_usd}" style="width:100%"></td>
-            <td><button class="btn btn-xs" data-del="${i}">✕</button></td>
+            <td><button class="btn btn-xs" data-del="${i}" data-tip="common.tip.remove_row" data-i18n-aria-label="common.aria.remove" aria-label="Remove">✕</button></td>
         </tr>
     `).join('');
     body.querySelectorAll('input').forEach(inp => {
@@ -110,7 +110,7 @@ function drawLiab(mount) {
             <td><input type="text" data-k="name" data-i="${i}" value="${esc(a.name)}" style="width:100%"></td>
             <td><input type="text" data-k="category" data-i="${i}" value="${esc(a.category)}" style="width:100%"></td>
             <td><input type="number" step="100" data-k="value_usd" data-i="${i}" value="${a.value_usd}" style="width:100%"></td>
-            <td><button class="btn btn-xs" data-del="${i}">✕</button></td>
+            <td><button class="btn btn-xs" data-del="${i}" data-tip="common.tip.remove_row" data-i18n-aria-label="common.aria.remove" aria-label="Remove">✕</button></td>
         </tr>
     `).join('');
     body.querySelectorAll('input').forEach(inp => {
@@ -143,7 +143,7 @@ async function runCompute(mount) {
     STATE.history = parseHistory(mount.querySelector('#nw-history').value);
     result.innerHTML = `<p class="muted">${esc(t('view.net_worth_tracker.status.computing'))}</p>`;
     try {
-        const r = await api('/net-worth-tracker/compute', { method: 'POST', body: JSON.stringify(STATE) });
+        const r = await api.request('/net-worth-tracker/compute', { method: 'POST', body: JSON.stringify(STATE) });
         const nwCls = r.net_worth_usd >= 0 ? 'pos' : 'neg';
         const momCls = r.mom_delta_usd == null ? 'muted' : r.mom_delta_usd >= 0 ? 'pos' : 'neg';
         const yoyCls = r.yoy_delta_usd == null ? 'muted' : r.yoy_delta_usd >= 0 ? 'pos' : 'neg';

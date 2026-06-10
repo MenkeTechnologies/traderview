@@ -41,7 +41,7 @@ async function runScore(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.cape_indicator.status.scoring'))}</p>`;
     if (meta) meta.textContent = '';
     try {
-        const r = await api(url);
+        const r = await api.request(url);
         const regimeCls = {
             depressed: 'pos',
             below_avg: 'pos',

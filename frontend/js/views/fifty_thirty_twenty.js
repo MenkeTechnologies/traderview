@@ -80,7 +80,7 @@ function drawRows(mount) {
                 </select>
             </td>
             <td><input type="number" step="25" min="0" data-k="amount_usd" data-i="${i}" value="${r.amount_usd}" style="width:100%"></td>
-            <td><button class="btn btn-xs" data-del="${i}">✕</button></td>
+            <td><button class="btn btn-xs" data-del="${i}" data-tip="common.tip.remove_row" data-i18n-aria-label="common.aria.remove" aria-label="Remove">✕</button></td>
         </tr>
     `).join('');
     body.querySelectorAll('input,select').forEach(inp => {
@@ -103,7 +103,7 @@ async function runCompute(mount) {
     const result = mount.querySelector('#fty-result');
     result.innerHTML = `<p class="muted">${esc(t('view.fifty_thirty_twenty.status.computing'))}</p>`;
     try {
-        const r = await api('/fifty-thirty-twenty/compute', { method: 'POST', body: JSON.stringify(STATE) });
+        const r = await api.request('/fifty-thirty-twenty/compute', { method: 'POST', body: JSON.stringify(STATE) });
         const overallCls = r.overall_status === 'on-track' ? 'pos' : 'neg';
         const bucketRow = b => `
             <tr>

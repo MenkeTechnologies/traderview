@@ -65,7 +65,7 @@ function drawGoals(mount) {
             <td><input type="number" step="25" min="0" data-k="current_balance_usd" data-i="${i}" value="${g.current_balance_usd}" style="width:100%"></td>
             <td><input type="number" step="1" min="0" data-k="target_date_months" data-i="${i}" value="${g.target_date_months}" style="width:100%"></td>
             <td><input type="number" step="10" min="0" data-k="monthly_contribution_usd" data-i="${i}" value="${g.monthly_contribution_usd}" style="width:100%"></td>
-            <td><button class="btn btn-xs" data-del="${i}">✕</button></td>
+            <td><button class="btn btn-xs" data-del="${i}" data-tip="common.tip.remove_row" data-i18n-aria-label="common.aria.remove" aria-label="Remove">✕</button></td>
         </tr>
     `).join('');
     body.querySelectorAll('input').forEach(inp => {
@@ -87,7 +87,7 @@ async function runCompute(mount) {
     const result = mount.querySelector('#sf-result');
     result.innerHTML = `<p class="muted">${esc(t('view.sinking_fund.status.computing'))}</p>`;
     try {
-        const r = await api('/sinking-fund/compute', { method: 'POST', body: JSON.stringify(STATE) });
+        const r = await api.request('/sinking-fund/compute', { method: 'POST', body: JSON.stringify(STATE) });
         const statusCls = r.status === 'on-track' ? 'pos' : 'neg';
         result.innerHTML = `
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:1rem">

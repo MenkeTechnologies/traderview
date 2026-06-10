@@ -82,7 +82,7 @@ function drawRows(mount) {
             <td><input type="number" step="1" min="1800" max="2200" data-k="install_year" data-i="${i}" value="${s.install_year}" style="width:100%"></td>
             <td><input type="number" step="1" min="1" max="200" data-k="expected_life_years" data-i="${i}" value="${s.expected_life_years}" style="width:100%"></td>
             <td><input type="number" step="100" min="0" data-k="replacement_cost_usd" data-i="${i}" value="${s.replacement_cost_usd}" style="width:100%"></td>
-            <td><button class="btn btn-xs" data-del="${i}">✕</button></td>
+            <td><button class="btn btn-xs" data-del="${i}" data-tip="common.tip.remove_row" data-i18n-aria-label="common.aria.remove" aria-label="Remove">✕</button></td>
         </tr>
     `).join('');
     body.querySelectorAll('input').forEach(inp => {
@@ -106,7 +106,7 @@ async function runCompute(mount) {
     const result = mount.querySelector('#hm-result');
     result.innerHTML = `<p class="muted">${esc(t('view.home_maintenance.status.computing'))}</p>`;
     try {
-        const r = await api('/home-maintenance/compute', { method: 'POST', body: JSON.stringify(STATE) });
+        const r = await api.request('/home-maintenance/compute', { method: 'POST', body: JSON.stringify(STATE) });
         const stCls = s => s === 'overdue' ? 'neg' : s === 'due_soon' ? '' : 'pos';
         result.innerHTML = `
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:1rem">

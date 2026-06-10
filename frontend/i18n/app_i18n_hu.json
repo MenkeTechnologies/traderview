@@ -7596,7 +7596,6 @@
   "view.car4.tip.series": "Whitespace / comma- separated PORT MKT SMB HML WML RF per line.",
   "view.car4.validate.field_array": "{field} kell egy tömb",
   "view.car4.validate.field_len": "{field} length ({len}) ≠ portfolio_returns length ({n})",
-<<<<<<< Updated upstream
   "view.car4.validate.field_number": "{field}[{i}] must be a number",
   "view.car4.validate.obs_min": "need at least {n} observations",
   "view.car_tco.btn.run": "⚡ Compute TCO",
@@ -7634,10 +7633,6 @@
   "view.car_tco.th.total_yr": "Year total",
   "view.car_tco.th.year": "Yr",
   "view.car_tco.title": "// VEHICLE TCO",
-=======
-  "view.car4.validate.field_number": "{field} [{i}] egy számnak kell lennie",
-  "view.car4.validate.obs_min": "legalább {n} megfigyelésre van szükség",
->>>>>>> Stashed changes
   "view.carry_score.badge.negative": "NEGATÍV SZÁLLÍTÁS",
   "view.carry_score.badge.okay": "OKAY CARRY",
   "view.carry_score.badge.poor": "POOR CARRY",

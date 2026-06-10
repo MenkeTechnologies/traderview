@@ -86,7 +86,7 @@ function drawAssets(mount) {
             <td><input type="number" step="100" data-k="value_usd" data-i="${i}" value="${a.value_usd}" style="width:100%"></td>
             <td style="text-align:center"><input type="checkbox" data-k="is_current" data-i="${i}" ${a.is_current ? 'checked' : ''}></td>
             <td style="text-align:center"><input type="checkbox" data-k="is_liquid" data-i="${i}" ${a.is_liquid ? 'checked' : ''}></td>
-            <td><button class="btn btn-xs" data-del="${i}">✕</button></td>
+            <td><button class="btn btn-xs" data-del="${i}" data-tip="common.tip.remove_row" data-i18n-aria-label="common.aria.remove" aria-label="Remove">✕</button></td>
         </tr>
     `).join('');
     body.querySelectorAll('input').forEach(inp => {
@@ -113,7 +113,7 @@ function drawLiab(mount) {
             <td><input type="text" data-k="name" data-i="${i}" value="${esc(a.name)}" style="width:100%"></td>
             <td><input type="number" step="100" data-k="value_usd" data-i="${i}" value="${a.value_usd}" style="width:100%"></td>
             <td style="text-align:center"><input type="checkbox" data-k="is_current" data-i="${i}" ${a.is_current ? 'checked' : ''}></td>
-            <td><button class="btn btn-xs" data-del="${i}">✕</button></td>
+            <td><button class="btn btn-xs" data-del="${i}" data-tip="common.tip.remove_row" data-i18n-aria-label="common.aria.remove" aria-label="Remove">✕</button></td>
         </tr>
     `).join('');
     body.querySelectorAll('input').forEach(inp => {
@@ -137,7 +137,7 @@ async function runCompute(mount) {
     const result = mount.querySelector('#pbs-result');
     result.innerHTML = `<p class="muted">${esc(t('view.personal_balance_sheet.status.computing'))}</p>`;
     try {
-        const r = await api('/personal-balance-sheet/compute', { method: 'POST', body: JSON.stringify(STATE) });
+        const r = await api.request('/personal-balance-sheet/compute', { method: 'POST', body: JSON.stringify(STATE) });
         const eqCls = r.equity_usd >= 0 ? 'pos' : 'neg';
         const wcCls = r.working_capital_usd >= 0 ? 'pos' : 'neg';
         const statusCls = r.status === 'solvent' ? 'pos' : r.status === 'illiquid' ? '' : 'neg';

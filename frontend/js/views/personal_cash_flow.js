@@ -80,7 +80,7 @@ function drawRows(mount) {
                 </select>
             </td>
             <td><input type="number" step="50" min="0" data-k="amount_usd" data-i="${i}" value="${r.amount_usd}" style="width:100%"></td>
-            <td><button class="btn btn-xs" data-del="${i}">✕</button></td>
+            <td><button class="btn btn-xs" data-del="${i}" data-tip="common.tip.remove_row" data-i18n-aria-label="common.aria.remove" aria-label="Remove">✕</button></td>
         </tr>
     `).join('');
     body.querySelectorAll('input,select').forEach(inp => {
@@ -103,7 +103,7 @@ async function runCompute(mount) {
     const result = mount.querySelector('#pcf-result');
     result.innerHTML = `<p class="muted">${esc(t('view.personal_cash_flow.status.computing'))}</p>`;
     try {
-        const r = await api('/personal-cash-flow/compute', { method: 'POST', body: JSON.stringify(STATE) });
+        const r = await api.request('/personal-cash-flow/compute', { method: 'POST', body: JSON.stringify(STATE) });
         const netCls = r.net_change_in_cash_usd > 0 ? 'pos' : r.net_change_in_cash_usd < 0 ? 'neg' : '';
         const statusCls = r.status === 'surplus' ? 'pos' : r.status === 'deficit' ? 'neg' : '';
         const section = (lbl, s) => `

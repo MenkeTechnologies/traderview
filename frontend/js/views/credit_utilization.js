@@ -61,7 +61,7 @@ function drawRows(mount) {
             <td><input type="text" data-k="name" data-i="${i}" value="${esc(c.name)}" style="width:100%"></td>
             <td><input type="number" step="25" min="0" data-k="balance_usd" data-i="${i}" value="${c.balance_usd}" style="width:100%"></td>
             <td><input type="number" step="500" min="0" data-k="limit_usd" data-i="${i}" value="${c.limit_usd}" style="width:100%"></td>
-            <td><button class="btn btn-xs" data-del="${i}">✕</button></td>
+            <td><button class="btn btn-xs" data-del="${i}" data-tip="common.tip.remove_row" data-i18n-aria-label="common.aria.remove" aria-label="Remove">✕</button></td>
         </tr>
     `).join('');
     body.querySelectorAll('input').forEach(inp => {
@@ -83,7 +83,7 @@ async function runCompute(mount) {
     const result = mount.querySelector('#cu-result');
     result.innerHTML = `<p class="muted">${esc(t('view.credit_utilization.status.computing'))}</p>`;
     try {
-        const r = await api('/credit-utilization/compute', { method: 'POST', body: JSON.stringify(STATE) });
+        const r = await api.request('/credit-utilization/compute', { method: 'POST', body: JSON.stringify(STATE) });
         const stCls = s => s === 'good' ? 'pos' : s === 'high' ? 'neg' : '';
         result.innerHTML = `
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:1rem">

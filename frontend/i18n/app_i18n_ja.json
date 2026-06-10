@@ -7594,7 +7594,6 @@
   "view.car4.tag.sig": "重要なポイント",
   "view.car4.tip.compute": "標準的なエラーでCarhart 4-factorの回帰を計算します.",
   "view.car4.tip.series": "Whitespace/comma-separated PORT MKT SMB HML WML RF/ラインごとの.",
-<<<<<<< Updated upstream
   "view.car4.validate.field_array": "{field} must be an array",
   "view.car4.validate.field_len": "{field} length ({len}) ≠ portfolio_returns length ({n})",
   "view.car4.validate.field_number": "{field}[{i}] must be a number",
@@ -7634,12 +7633,6 @@
   "view.car_tco.th.total_yr": "Year total",
   "view.car_tco.th.year": "Yr",
   "view.car_tco.title": "// VEHICLE TCO",
-=======
-  "view.car4.validate.field_array": "{field} は配列でなければなりません",
-  "view.car4.validate.field_len": "{field} の長さ ({len}) の 普通のポートフォリオ returns の長さ ({n})",
-  "view.car4.validate.field_number": "{field}[{i}] は番号でなければなりません",
-  "view.car4.validate.obs_min": "少なくとも {n} の観察が必要",
->>>>>>> Stashed changes
   "view.carry_score.badge.negative": "ネガティブ・キャリー",
   "view.carry_score.badge.okay": "OKAY CARRY",
   "view.carry_score.badge.poor": "POOR CARRY",

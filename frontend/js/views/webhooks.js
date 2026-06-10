@@ -87,14 +87,20 @@ export async function renderWebhooks(mount) {
     mount.querySelector('#wf').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
-        await api.createWebhook({
-            name: fd.get('name'),
-            kind: fd.get('kind'),
-            url:  fd.get('url'),
-            secret: fd.get('secret') || null,
-        });
-        if (!viewIsCurrent(tok)) return;
-        renderWebhooks(mount);
+        const name = fd.get('name');
+        try {
+            await api.createWebhook({
+                name,
+                kind: fd.get('kind'),
+                url:  fd.get('url'),
+                secret: fd.get('secret') || null,
+            });
+            if (!viewIsCurrent(tok)) return;
+            showToast(t('view.webhooks.toast.created', { name }), { level: 'success' });
+            renderWebhooks(mount);
+        } catch (err) {
+            showToast(t('toast.error.api', { err: err.message || err }), { level: 'error' });
+        }
     });
     mount.querySelectorAll('[data-test]').forEach(b =>
         b.addEventListener('click', async () => {
@@ -111,9 +117,14 @@ export async function renderWebhooks(mount) {
         }));
     mount.querySelectorAll('[data-del]').forEach(b =>
         b.addEventListener('click', async () => {
-            await api.deleteWebhook(b.dataset.del);
-            if (!viewIsCurrent(tok)) return;
-            renderWebhooks(mount);
+            try {
+                await api.deleteWebhook(b.dataset.del);
+                if (!viewIsCurrent(tok)) return;
+                showToast(t('view.webhooks.toast.deleted'), { level: 'success' });
+                renderWebhooks(mount);
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message || err }), { level: 'error' });
+            }
         }));
 }
 

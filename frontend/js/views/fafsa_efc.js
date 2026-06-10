@@ -51,7 +51,7 @@ async function runCompute(mount) {
     };
     result.innerHTML = `<p class="muted">${esc(t('view.fafsa_efc.status.computing'))}</p>`;
     try {
-        const r = await api('/fafsa-efc/compute', { method: 'POST', body: JSON.stringify(input) });
+        const r = await api.request('/fafsa-efc/compute', { method: 'POST', body: JSON.stringify(input) });
         const tierCls = r.aid_tier === 'max_pell' || r.aid_tier === 'pell_eligible' ? 'pos'
                        : r.aid_tier === 'full_pay_likely' ? 'neg' : '';
         result.innerHTML = `

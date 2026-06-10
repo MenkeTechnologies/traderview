@@ -12,6 +12,7 @@
     "allow-get-api-config",
     "allow-get-log-path",
     "allow-read-log-tail",
+    "allow-get-process-stats",
     "shell:allow-open",
     "dialog:default",
     "dialog:allow-open",

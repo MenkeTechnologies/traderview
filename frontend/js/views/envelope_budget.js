@@ -67,7 +67,7 @@ function drawRows(mount) {
             <td><input type="number" step="25" data-k="starting_balance_usd" data-i="${i}" value="${e.starting_balance_usd}" style="width:100%"></td>
             <td><input type="number" step="10" min="0" data-k="spent_this_period_usd" data-i="${i}" value="${e.spent_this_period_usd}" style="width:100%"></td>
             <td style="text-align:center"><input type="checkbox" data-k="rollover" data-i="${i}" ${e.rollover ? 'checked' : ''}></td>
-            <td><button class="btn btn-xs" data-del="${i}">✕</button></td>
+            <td><button class="btn btn-xs" data-del="${i}" data-tip="common.tip.remove_row" data-i18n-aria-label="common.aria.remove" aria-label="Remove">✕</button></td>
         </tr>
     `).join('');
     body.querySelectorAll('input').forEach(inp => {
@@ -91,7 +91,7 @@ async function runCompute(mount) {
     const result = mount.querySelector('#eb-result');
     result.innerHTML = `<p class="muted">${esc(t('view.envelope_budget.status.computing'))}</p>`;
     try {
-        const r = await api('/envelope-budget/compute', { method: 'POST', body: JSON.stringify(STATE) });
+        const r = await api.request('/envelope-budget/compute', { method: 'POST', body: JSON.stringify(STATE) });
         const overallCls = r.overall_status === 'healthy' ? 'pos'
                          : r.overall_status === 'envelope_empty' ? 'neg' : '';
         const stCls = s => s === 'ok' ? 'pos' : s === 'empty' ? 'neg' : '';

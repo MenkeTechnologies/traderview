@@ -1,0 +1,6 @@
+"$schema" = "schemas/schema.json"
+
+[[permission]]
+identifier = "allow-get-process-stats"
+description = "Enables the get_process_stats command so the About widget can display PID, RSS, uptime, host memory, CPU usage, and other process diagnostics."
+commands.allow = ["get_process_stats"]

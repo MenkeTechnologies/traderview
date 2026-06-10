@@ -72,7 +72,7 @@ async function runScan(mount) {
     if (meta) meta.textContent = '';
     try {
         const url = `/sp500-predict/scan?symbols=${encodeURIComponent(symbols)}&min_market_cap_usd=${minMcB * 1e9}`;
-        const rows = await api(url);
+        const rows = await api.request(url);
         if (!rows.length) {
             tbody.innerHTML = `<tr><td colspan="9" class="muted">${esc(t('view.sp500_predict.empty.no_rows'))}</td></tr>`;
             return;

@@ -74,7 +74,7 @@ function drawRows(mount) {
             <td><input type="text" data-k="name" data-i="${i}" value="${esc(c.name)}" style="width:100%"></td>
             <td><input type="number" step="25" min="0" data-k="planned_usd" data-i="${i}" value="${c.planned_usd}" style="width:100%"></td>
             <td><input type="number" step="25" min="0" data-k="actual_usd" data-i="${i}" value="${c.actual_usd}" style="width:100%"></td>
-            <td><button class="btn btn-xs" data-del="${i}">✕</button></td>
+            <td><button class="btn btn-xs" data-del="${i}" data-tip="common.tip.remove_row" data-i18n-aria-label="common.aria.remove" aria-label="Remove">✕</button></td>
         </tr>
     `).join('');
     body.querySelectorAll('input').forEach(inp => {
@@ -96,7 +96,7 @@ async function runCompute(mount) {
     const result = mount.querySelector('#zbb-result');
     result.innerHTML = `<p class="muted">${esc(t('view.zero_based_budget.status.computing'))}</p>`;
     try {
-        const r = await api('/zero-based-budget/compute', { method: 'POST', body: JSON.stringify(STATE) });
+        const r = await api.request('/zero-based-budget/compute', { method: 'POST', body: JSON.stringify(STATE) });
         const leftoverCls = r.is_zero_based ? 'pos' : r.leftover_usd > 0 ? '' : 'neg';
         const statusKey = r.status.replace(/-/g, '_');
         const statusCls = r.status === 'zero-based' ? 'pos' : r.status === 'over-allocated' ? 'neg' : '';

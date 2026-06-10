@@ -7594,7 +7594,6 @@
   "view.car4.tag.sig": "signifikant",
   "view.car4.tip.compute": "Beregne Carhart 4-faktor regresjon med standard feil.",
   "view.car4.tip.series": "Hvitrom/kommaseparert PORT MKT SMB HML WML RF per linje.",
-<<<<<<< Updated upstream
   "view.car4.validate.field_array": "{field} must be an array",
   "view.car4.validate.field_len": "{field} length ({len}) ≠ portfolio_returns length ({n})",
   "view.car4.validate.field_number": "{field}[{i}] must be a number",
@@ -7634,12 +7633,6 @@
   "view.car_tco.th.total_yr": "Year total",
   "view.car_tco.th.year": "Yr",
   "view.car_tco.title": "// VEHICLE TCO",
-=======
-  "view.car4.validate.field_array": "{field} må være en tabell",
-  "view.car4.validate.field_len": "{field} lengde ({len})  portfolio portefølje returns lengde ({n})",
-  "view.car4.validate.field_number": "{field}[{i}] må være et tall",
-  "view.car4.validate.obs_min": "trenger minst {n} observasjoner",
->>>>>>> Stashed changes
   "view.carry_score.badge.negative": "NEGATIV CARRY",
   "view.carry_score.badge.okay": "OKAY CARRY",
   "view.carry_score.badge.poor": "POOR CARRY",

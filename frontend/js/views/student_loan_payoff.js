@@ -50,7 +50,7 @@ async function runCompute(mount) {
     };
     result.innerHTML = `<p class="muted">${esc(t('view.student_loan_payoff.status.computing'))}</p>`;
     try {
-        const r = await api('/student-loan-payoff/compute', { method: 'POST', body: JSON.stringify(input) });
+        const r = await api.request('/student-loan-payoff/compute', { method: 'POST', body: JSON.stringify(input) });
         result.innerHTML = `
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:1rem">
                 <div><div class="muted small">${esc(t('view.student_loan_payoff.field.poverty'))}</div>

@@ -7594,7 +7594,6 @@
   "view.car4.tag.sig": "signifikan",
   "view.car4.tip.compute": "Komputer Carhart 4-faktor regresi dengan standar errors.",
   "view.car4.tip.series": "Whitespace / comma dipisahkan PORT MKT SMB HML WF per baris.",
-<<<<<<< Updated upstream
   "view.car4.validate.field_array": "{field} must be an array",
   "view.car4.validate.field_len": "{field} length ({len}) ≠ portfolio_returns length ({n})",
   "view.car4.validate.field_number": "{field}[{i}] must be a number",
@@ -7635,13 +7634,6 @@
   "view.car_tco.th.year": "Yr",
   "view.car_tco.title": "// VEHICLE TCO",
   "view.carry_score.badge.negative": "NEGATIVE CARRY",
-=======
-  "view.car4.validate.field_array": "{field} harus berupa sebuah array",
-  "view.car4.validate.field_len": "panjang {field} ({len}) portofolio _ return panjang ({n})",
-  "view.car4.validate.field_number": "{field} [{i}] harus berupa sebuah nomor",
-  "view.car4.validate.obs_min": "perlu paling tidak pengamatan {n}",
-  "view.carry_score.badge.negative": "NEG ATI VE CARRY",
->>>>>>> Stashed changes
   "view.carry_score.badge.okay": "OKAY CARRY",
   "view.carry_score.badge.poor": "POOR CARRY",
   "view.carry_score.badge.strong": "STRONG CARRY",

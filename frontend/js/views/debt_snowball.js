@@ -71,7 +71,7 @@ function drawRows(mount) {
             <td><input type="number" step="100" min="0" data-k="balance_usd" data-i="${i}" value="${d.balance_usd}" style="width:100%"></td>
             <td><input type="number" step="0.25" min="0" max="100" data-k="apr_pct" data-i="${i}" value="${d.apr_pct}" style="width:100%"></td>
             <td><input type="number" step="10" min="0" data-k="min_payment_usd" data-i="${i}" value="${d.min_payment_usd}" style="width:100%"></td>
-            <td><button class="btn btn-xs" data-del="${i}">✕</button></td>
+            <td><button class="btn btn-xs" data-del="${i}" data-tip="common.tip.remove_row" data-i18n-aria-label="common.aria.remove" aria-label="Remove">✕</button></td>
         </tr>
     `).join('');
     body.querySelectorAll('input').forEach(inp => {
@@ -93,7 +93,7 @@ async function runCompute(mount) {
     const result = mount.querySelector('#ds-result');
     result.innerHTML = `<p class="muted">${esc(t('view.debt_snowball.status.computing'))}</p>`;
     try {
-        const r = await api('/debt-snowball/compute', { method: 'POST', body: JSON.stringify(STATE) });
+        const r = await api.request('/debt-snowball/compute', { method: 'POST', body: JSON.stringify(STATE) });
         const yearsMo = `${Math.floor(r.total_months / 12)}y ${r.total_months % 12}m`;
         const statusCls = r.all_paid_off ? 'pos' : 'neg';
         result.innerHTML = `

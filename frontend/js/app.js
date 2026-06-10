@@ -740,6 +740,7 @@ import { renderBrokersManage } from './views/brokers_manage.js';
 import { renderBusinessesManage } from './views/businesses_manage.js';
 import { renderToastHistory } from './views/toast_history.js';
 import { renderLogViewer } from './views/log_viewer.js';
+import { renderAbout } from './views/about.js';
 import { renderReceipts } from './views/receipts.js';
 import { renderPurchases } from './views/purchases.js';
 import { renderCategorize } from './views/categorize.js';
@@ -2959,6 +2960,7 @@ export async function dispatch() {
             case 'businesses':        await renderBusinessesManage(mount); break;
             case 'toast-history':     await renderToastHistory(mount); break;
             case 'log-viewer':        await renderLogViewer(mount); break;
+            case 'about':             await renderAbout(mount, state); break;
             case 'receipts':       await renderReceipts(mount, state); break;
             case 'purchases':      await renderPurchases(mount, state); break;
             case 'categorize':     await renderCategorize(mount, state); break;
@@ -4110,6 +4112,38 @@ export const viewRenderers = {
     'webhooks': (m, s) => renderWebhooks(m, s),
     'yield-curve-pca': (m, s) => renderYieldCurvePca(m, s),
     'community': (m, s) => renderCommunity(m, s),
+
+    // ── Personal finance + budgeting (added by audit). All have uniform
+    // `case 'X': await renderY(mount, state); break;` routes in the go()
+    // switch; this block makes them mountable as dashboard tiles too.
+    'auto-loan': (m, s) => renderAutoLoan(m, s),
+    'cape-indicator': (m, s) => renderCapeIndicator(m, s),
+    'car-tco': (m, s) => renderCarTco(m, s),
+    'college-529': (m, s) => renderCollege529(m, s),
+    'credit-utilization': (m, s) => renderCreditUtilization(m, s),
+    'debt-avalanche': (m, s) => renderDebtAvalanche(m, s),
+    'debt-snowball': (m, s) => renderDebtSnowball(m, s),
+    'emergency-fund': (m, s) => renderEmergencyFund(m, s),
+    'envelope-budget': (m, s) => renderEnvelopeBudget(m, s),
+    'fafsa-efc': (m, s) => renderFafsaEfc(m, s),
+    'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),
+    'financial-ratios': (m, s) => renderFinancialRatios(m, s),
+    'fire-calculator': (m, s) => renderFireCalculator(m, s),
+    'heloc': (m, s) => renderHeloc(m, s),
+    'home-maintenance': (m, s) => renderHomeMaintenance(m, s),
+    'mortgage-amortization': (m, s) => renderMortgageAmortization(m, s),
+    'mortgage-refinance': (m, s) => renderMortgageRefinance(m, s),
+    'net-worth-tracker': (m, s) => renderNetWorthTracker(m, s),
+    'permanent-portfolio': (m, s) => renderPermanentPortfolio(m, s),
+    'personal-balance-sheet': (m, s) => renderPersonalBalanceSheet(m, s),
+    'personal-cash-flow': (m, s) => renderPersonalCashFlow(m, s),
+    'pslf-tracker': (m, s) => renderPslfTracker(m, s),
+    'rent-vs-buy': (m, s) => renderRentVsBuy(m, s),
+    'savings-rate': (m, s) => renderSavingsRate(m, s),
+    'sinking-fund': (m, s) => renderSinkingFund(m, s),
+    'student-loan-payoff': (m, s) => renderStudentLoanPayoff(m, s),
+    'zero-based-budget': (m, s) => renderZeroBasedBudget(m, s),
+    'about': (m, s) => renderAbout(m, s),
 };
 
 window.addEventListener('tv:authed', () => boot());

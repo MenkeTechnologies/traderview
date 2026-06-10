@@ -55,7 +55,7 @@ async function runCompute(mount) {
     };
     result.innerHTML = `<p class="muted">${esc(t('view.emergency_fund.status.computing'))}</p>`;
     try {
-        const r = await api('/emergency-fund/compute', { method: 'POST', body: JSON.stringify(input) });
+        const r = await api.request('/emergency-fund/compute', { method: 'POST', body: JSON.stringify(input) });
         const statusCls = r.status === 'complete' ? 'pos' : r.status === 'on-track' ? '' : 'neg';
         const statusLbl = t(`view.emergency_fund.status.${r.status.replace('-', '_')}`) || r.status;
         const monthsCls = r.months_covered_now >= input.target_months

@@ -422,7 +422,7 @@ function renderW2List(w2s) {
             <label>Box 2 <input type="number" data-field="box_2_federal_income_tax_withheld" value="${w.box_2_federal_income_tax_withheld || 0}"></label>
             <label>Box 3 <input type="number" data-field="box_3_ss_wages" value="${w.box_3_ss_wages || 0}"></label>
             <label>Box 5 <input type="number" data-field="box_5_medicare_wages" value="${w.box_5_medicare_wages || 0}"></label>
-            <button type="button" class="btn btn-secondary btn-compact tw-w2-rm" data-i="${i}">×</button>
+            <button type="button" class="btn btn-secondary btn-compact tw-w2-rm" data-i="${i}" data-tip="common.tip.remove_row" aria-label="Remove">×</button>
         </div>
     `).join('');
 }
@@ -978,7 +978,7 @@ function bindMoney(pane, id, setter, mount, tok, label) {
 
 function navButtons(nextSec, prevSec) {
     return `<nav class="tw-nav">
-        ${prevSec ? `<button type="button" class="btn btn-secondary tw-back" data-go="${prevSec}">← ${esc(t('common.back'))}</button>` : ''}
+        ${prevSec ? `<button type="button" class="btn btn-secondary tw-back" data-go="${prevSec}" data-tip="common.tip.wizard_back" aria-label="Back">← ${esc(t('common.back'))}</button>` : ''}
         ${nextSec ? `<button type="button" class="btn btn-primary tw-next" data-go="${nextSec}">${esc(t('common.next'))} →</button>` : ''}
     </nav>`;
 }

@@ -7594,7 +7594,6 @@
   "view.car4.tag.sig": "큰 가슴",
   "view.car4.tip.compute": "표준 오류를 가진 Compute Carhart 4-factor 회귀.",
   "view.car4.tip.series": "선 당 Whitespace/comma 격리된 항구 MKT SMB HML WML RF.",
-<<<<<<< Updated upstream
   "view.car4.validate.field_array": "{field} must be an array",
   "view.car4.validate.field_len": "{field} length ({len}) ≠ portfolio_returns length ({n})",
   "view.car4.validate.field_number": "{field}[{i}] must be a number",
@@ -7634,12 +7633,6 @@
   "view.car_tco.th.total_yr": "Year total",
   "view.car_tco.th.year": "Yr",
   "view.car_tco.title": "// VEHICLE TCO",
-=======
-  "view.car4.validate.field_array": "{field}은 배열이어야 합니다",
-  "view.car4.validate.field_len": "{field} 길이 ({len}) △ portfolio return 길이 ({n})",
-  "view.car4.validate.field_number": "{field}[{i}]는 숫자가 있어야 합니다",
-  "view.car4.validate.obs_min": "적어도 필요 {n} 관측",
->>>>>>> Stashed changes
   "view.carry_score.badge.negative": "NEGATIVE 카리",
   "view.carry_score.badge.okay": "OKAY CARRY",
   "view.carry_score.badge.poor": "POOR CARRY",

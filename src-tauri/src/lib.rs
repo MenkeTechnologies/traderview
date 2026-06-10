@@ -40,6 +40,97 @@ fn get_log_path() -> String {
     log_file_path().display().to_string()
 }
 
+#[derive(Clone, serde::Serialize)]
+struct ProcessStats {
+    pid: u32,
+    app_version: &'static str,
+    os: String,
+    arch: &'static str,
+    hostname: String,
+    cpus: usize,
+    cpu_percent: f32,
+    rss_bytes: u64,
+    virtual_bytes: u64,
+    threads: usize,
+    uptime_secs: u64,
+    total_memory_bytes: u64,
+    available_memory_bytes: u64,
+}
+
+/// One-shot snapshot of the running desktop process — PID, RSS / VIRT,
+/// CPU%, threads, uptime, host memory totals. Used by the About widget;
+/// cheap enough to call on every refresh (sysinfo's `refresh_*` are
+/// targeted, not a full re-walk).
+#[tauri::command]
+fn get_process_stats() -> ProcessStats {
+    use sysinfo::{Pid, ProcessRefreshKind, RefreshKind, System};
+    let pid = std::process::id();
+    let mut sys = System::new_with_specifics(
+        RefreshKind::new()
+            .with_memory(sysinfo::MemoryRefreshKind::everything())
+            .with_processes(ProcessRefreshKind::everything()),
+    );
+    // Second refresh gives sysinfo a delta to compute CPU%.
+    sys.refresh_processes_specifics(
+        sysinfo::ProcessesToUpdate::Some(&[Pid::from_u32(pid)]),
+        true,
+        ProcessRefreshKind::everything(),
+    );
+    std::thread::sleep(std::time::Duration::from_millis(120));
+    sys.refresh_processes_specifics(
+        sysinfo::ProcessesToUpdate::Some(&[Pid::from_u32(pid)]),
+        true,
+        ProcessRefreshKind::everything(),
+    );
+
+    let proc = sys.process(Pid::from_u32(pid));
+    let rss = proc.map(|p| p.memory()).unwrap_or(0);
+    let virt = proc.map(|p| p.virtual_memory()).unwrap_or(0);
+    let cpu_percent = proc.map(|p| p.cpu_usage()).unwrap_or(0.0);
+    let uptime = proc
+        .map(|p| p.run_time())
+        .unwrap_or_else(|| {
+            // Fallback: seconds since System::uptime if we couldn't read our own.
+            System::uptime()
+        });
+
+    // Thread count — best-effort via /proc on Linux, mach on macOS, NtQuery
+    // on Windows. sysinfo doesn't expose thread count cross-platform, so
+    // we count via std on platforms that allow it and report 0 otherwise.
+    let threads = thread_count_estimate();
+
+    ProcessStats {
+        pid,
+        app_version: env!("CARGO_PKG_VERSION"),
+        os: System::name().unwrap_or_else(|| "unknown".into()),
+        arch: std::env::consts::ARCH,
+        hostname: System::host_name().unwrap_or_else(|| "unknown".into()),
+        cpus: sys.cpus().len(),
+        cpu_percent,
+        rss_bytes: rss,
+        virtual_bytes: virt,
+        threads,
+        uptime_secs: uptime,
+        total_memory_bytes: sys.total_memory(),
+        available_memory_bytes: sys.available_memory(),
+    }
+}
+
+#[cfg(target_os = "linux")]
+fn thread_count_estimate() -> usize {
+    std::fs::read_dir(format!("/proc/{}/task", std::process::id()))
+        .map(|it| it.count())
+        .unwrap_or(0)
+}
+#[cfg(target_os = "macos")]
+fn thread_count_estimate() -> usize {
+    // mach_task_threads is a syscall; pulling in mach2 + libc just for
+    // one number isn't worth it — return 0 (UI hides the row when 0).
+    0
+}
+#[cfg(not(any(target_os = "linux", target_os = "macos")))]
+fn thread_count_estimate() -> usize { 0 }
+
 /// Read the tail of the log file — up to the last `max_bytes` (default
 /// 64 KiB). Returns the raw text so the frontend can render it in a
 /// monospaced viewer; line-splitting and filtering happen client-side
@@ -245,7 +336,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_api_config,
             get_log_path,
-            read_log_tail
+            read_log_tail,
+            get_process_stats
         ])
         .run(tauri::generate_context!());
 

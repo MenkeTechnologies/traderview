@@ -2,6 +2,7 @@ import { api } from '../api.js';
 import { esc, fmt, fmtDateTime } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { showToast } from '../toast.js';
 
 export async function renderPlans(mount, state) {
     const tok = currentViewToken();
@@ -82,15 +83,25 @@ export async function renderPlans(mount, state) {
             initial_target: fd.get('initial_target') ? Number(fd.get('initial_target')) : null,
             setup_notes: fd.get('setup_notes') || '',
         };
-        await api.createPlan(body);
-        if (!viewIsCurrent(tok)) return;
-        renderPlans(mount, state);
+        try {
+            await api.createPlan(body);
+            if (!viewIsCurrent(tok)) return;
+            showToast(t('view.plans.toast.created', { sym: body.symbol }), { level: 'success' });
+            renderPlans(mount, state);
+        } catch (err) {
+            showToast(t('toast.error.api', { err: err.message || err }), { level: 'error' });
+        }
     });
     mount.querySelectorAll('[data-del]').forEach(b =>
         b.addEventListener('click', async () => {
-            await api.abandonPlan(b.dataset.del);
-            if (!viewIsCurrent(tok)) return;
-            renderPlans(mount, state);
+            try {
+                await api.abandonPlan(b.dataset.del);
+                if (!viewIsCurrent(tok)) return;
+                showToast(t('view.plans.toast.abandoned'), { level: 'success' });
+                renderPlans(mount, state);
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message || err }), { level: 'error' });
+            }
         }));
 }
 

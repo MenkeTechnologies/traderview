@@ -64,7 +64,7 @@ async function runCompute(mount) {
     };
     result.innerHTML = `<p class="muted">${esc(t('view.savings_rate.status.computing'))}</p>`;
     try {
-        const r = await api('/savings-rate/compute', { method: 'POST', body: JSON.stringify(input) });
+        const r = await api.request('/savings-rate/compute', { method: 'POST', body: JSON.stringify(input) });
         const benchCls = r.benchmark === 'elite' || r.benchmark === 'excellent' ? 'pos'
                        : r.benchmark === 'poor' ? 'neg' : '';
         const yrsFmt = isFinite(r.years_to_fi) ? r.years_to_fi.toFixed(1) : '∞';

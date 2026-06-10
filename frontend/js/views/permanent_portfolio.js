@@ -42,7 +42,7 @@ async function runCompare(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.permanent_portfolio.status.running'))}</p>`;
     if (meta) meta.textContent = '';
     try {
-        const r = await api(`/permanent-portfolio/compare?days_back=${days}`);
+        const r = await api.request(`/permanent-portfolio/compare?days_back=${days}`);
         if (meta) meta.textContent = t('view.permanent_portfolio.meta.summary')
             .replace('{e}', r.errors.length);
         result.innerHTML = `

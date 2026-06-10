@@ -89,7 +89,7 @@ async function runCompute(mount) {
     };
     result.innerHTML = `<p class="muted">${esc(t('view.rent_vs_buy.status.computing'))}</p>`;
     try {
-        const r = await api('/rent-vs-buy/compute', { method: 'POST', body: JSON.stringify(input) });
+        const r = await api.request('/rent-vs-buy/compute', { method: 'POST', body: JSON.stringify(input) });
         const winnerCls = r.net_winner === 'buy' ? 'pos' : '';
         result.innerHTML = `
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:1rem">

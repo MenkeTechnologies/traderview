@@ -1359,7 +1359,7 @@ function renderBacktestHistory(host, rows, onChange) {
                     <td style="color:${Number(r.total_return_pct) >= 0 ? '#39ff14' : '#ff5a5a'}">${Number(r.total_return_pct).toFixed(2)}%</td>
                     <td>${Number(r.max_drawdown_pct).toFixed(2)}%</td>
                     <td>${Number(r.sharpe).toFixed(3)}</td>
-                    <td><button class="link" data-del="${esc(r.id)}">×</button></td>
+                    <td><button class="link" data-del="${esc(r.id)}" data-tip="common.tip.remove_row" aria-label="Remove">×</button></td>
                 </tr>`).join('')}
             </tbody>
         </table>`;

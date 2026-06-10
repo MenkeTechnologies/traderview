@@ -376,6 +376,23 @@ export const SYMBOL_AWARE_SCOPES = [
     // symbol-keyed analysis / planning / event views
     'crypto', 'earnings-cal', 'backtest', 'fill-quality',
     'futures-roll', 'dividend-calendar', 'alerts',
+    // Auto-registered from a `data-context-scope` audit — every
+    // indicator / pattern / risk view that surfaces a symbol row.
+    'abc-pattern', 'absorption', 'acf', 'active-share', 'ad-normality', 'ad-oscillator',
+    'adf', 'adl', 'alma', 'alphatrend', 'amihud', 'anchored-momentum',
+    'arch-lm', 'aroon', 'asi', 'atr-channel', 'atr-cone', 'atr-trailing-stop',
+    'bartlett', 'bb-squeeze', 'beta', 'beta-shrinkage', 'bid-ask-volume-ratio', 'black-litterman',
+    'block-bootstrap', 'bollinger-band-distance', 'bollinger-band-width', 'bollinger-bandwidth-percentile', 'bollinger-oscillators', 'bollinger-percent-b',
+    'bond-duration', 'bootstrap-pnl', 'bop', 'borrow-rate-indicator', 'bpv', 'breadth-thrust',
+    'breusch-godfrey', 'breusch-pagan', 'brier', 'brinson', 'burke', 'buying-power',
+    'camarilla-pivots', 'candle-strength-index', 'carhart-4', 'carry-score', 'centered-smoothed-momentum', 'chaikin-oscillator',
+    'chande-dynamic-momentum', 'chande-kroll-stop', 'chande-momentum-oscillator', 'chande-trend-index', 'chande-volatility-index', 'chandelier-exit',
+    'cholesky', 'commission-optimizer', 'cost-basis', 'currency-exposure', 'dollar-bar', 'eff-spread',
+    'equivolume', 'hawkes', 'heatmap-dow-hour', 'hhi', 'imb-bar', 'kagi',
+    'kyles-lambda', 'margin-call', 'margin-runway', 'market-breadth', 'mcp', 'mvar',
+    'range-bar', 'risk-on-off', 'risk-parity', 'risk-parity-solver', 'risk-reward', 'roll-spread',
+    'round-levels', 'stop-loss-backtest', 'tax-loss-harvest', 'tick-bar', 'tlb', 'vap',
+    'vix-term-structure', 'vol-bar', 'wash-sale', 'wmp', 'yield-curve',
 ];
 
 // Native edit actions surfaced when the right-click target is a text-
@@ -428,6 +445,21 @@ export const CATEGORIZE_GROUP_ITEMS = [
       actionKey: 'tv:categorize-reload', section: 'view' },
 ];
 
+// Favorites-manager + Bookmarks-manager bulk actions. The views have
+// per-row × buttons too; the context menu offers list-level shortcuts.
+export const FAVORITES_MANAGER_ITEMS = [
+    { id: 'favorites_refresh',    labelKey: 'ctxmenu.favorites.refresh',
+      actionKey: 'tv:favorites-refresh', section: 'view' },
+    { id: 'favorites_clear_all',  labelKey: 'ctxmenu.favorites.clear_all',
+      actionKey: 'tv:favorites-clear-all', section: 'destructive' },
+];
+export const BOOKMARKS_MANAGER_ITEMS = [
+    { id: 'bookmarks_refresh',    labelKey: 'ctxmenu.bookmarks.refresh',
+      actionKey: 'tv:bookmarks-refresh', section: 'view' },
+    { id: 'bookmarks_clear_all',  labelKey: 'ctxmenu.bookmarks.clear_all',
+      actionKey: 'tv:bookmarks-clear-all', section: 'destructive' },
+];
+
 // Aggregated registry of every scope-specific item set. Each entry is
 // `[scope, items]` so callers can iterate registrations or audit-tests
 // can validate the whole catalog without naming every constant. Order
@@ -454,6 +486,8 @@ export const ALL_SCOPED_ITEMS = [
     ['budget-row',             BUDGET_ROW_ITEMS],
     ['tax-wiz-section',        TAX_WIZ_ITEMS],
     ['categorize-group',       CATEGORIZE_GROUP_ITEMS],
+    ['favorites-manager',      FAVORITES_MANAGER_ITEMS],
+    ['bookmarks-manager',      BOOKMARKS_MANAGER_ITEMS],
 ];
 
 // Same as `mergeMenu`, but additionally prepends `editingItems` (followed

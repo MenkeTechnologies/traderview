@@ -93,6 +93,7 @@ export async function renderCustomIndicators(mount) {
             renderParams();
             const status2 = mount.querySelector('#ci-status');
             if (status2) status2.textContent = '';
+            showToast(t('view.custom_indicators.toast.saved', { name: body.name }), { level: 'success' });
             await refresh(mount, tok);
         }
         catch (err) {

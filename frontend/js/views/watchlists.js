@@ -3,6 +3,7 @@ import { go, currentViewToken, viewIsCurrent } from '../app.js';
 import { esc, fmt } from '../util.js';
 import { tConfirm, tPrompt } from '../dialog.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 
 export async function renderWatchlists(mount) {
     const tok = currentViewToken();
@@ -74,18 +75,30 @@ export async function renderWatchlists(mount) {
     mount.querySelector('#wl-create').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
-        await api.createWatchlist(fd.get('name'));
-        if (!viewIsCurrent(tok)) return;
-        renderWatchlists(mount);
+        const name = fd.get('name');
+        try {
+            await api.createWatchlist(name);
+            if (!viewIsCurrent(tok)) return;
+            showToast(t('view.watchlists.toast.created', { name }), { level: 'success' });
+            renderWatchlists(mount);
+        } catch (err) {
+            showToast(t('toast.error.api', { err: err.message || err }), { level: 'error' });
+        }
     });
 
     mount.querySelector('#add-sym').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
-        await api.addWatchlistSym(active.id, fd.get('symbol').trim().toUpperCase());
-        if (!viewIsCurrent(tok)) return;
-        e.target.reset();
-        await refresh(active.id);
+        const sym = fd.get('symbol').trim().toUpperCase();
+        try {
+            await api.addWatchlistSym(active.id, sym);
+            if (!viewIsCurrent(tok)) return;
+            showToast(t('view.watchlists.toast.symbol_added', { sym }), { level: 'success' });
+            e.target.reset();
+            await refresh(active.id);
+        } catch (err) {
+            showToast(t('toast.error.api', { err: err.message || err }), { level: 'error' });
+        }
     });
 
     mount.querySelector('#rename-wl').addEventListener('click', async () => {

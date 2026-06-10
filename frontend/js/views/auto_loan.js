@@ -65,7 +65,7 @@ async function runCompute(mount) {
     };
     result.innerHTML = `<p class="muted">${esc(t('view.auto_loan.status.computing'))}</p>`;
     try {
-        const r = await api('/auto-loan/compute', { method: 'POST', body: JSON.stringify(input) });
+        const r = await api.request('/auto-loan/compute', { method: 'POST', body: JSON.stringify(input) });
         result.innerHTML = `
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:1rem">
                 <div><div class="muted small">${esc(t('view.auto_loan.field.principal'))}</div>

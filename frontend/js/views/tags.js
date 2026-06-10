@@ -2,6 +2,7 @@ import { api } from '../api.js';
 import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
+import { showToast } from '../toast.js';
 
 export async function renderTags(mount) {
     const tok = currentViewToken();
@@ -44,15 +45,26 @@ export async function renderTags(mount) {
     mount.querySelector('#tag-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const fd = new FormData(e.target);
-        await api.createTag(fd.get('name'), fd.get('color'));
-        if (!viewIsCurrent(tok)) return;
-        renderTags(mount);
+        const name = fd.get('name');
+        try {
+            await api.createTag(name, fd.get('color'));
+            if (!viewIsCurrent(tok)) return;
+            showToast(t('view.tags.toast.created', { name }), { level: 'success' });
+            renderTags(mount);
+        } catch (err) {
+            showToast(t('toast.error.api', { err: err.message || err }), { level: 'error' });
+        }
     });
     mount.querySelectorAll('[data-del]').forEach(b =>
         b.addEventListener('click', async () => {
-            await api.deleteTag(b.dataset.del);
-            if (!viewIsCurrent(tok)) return;
-            renderTags(mount);
+            try {
+                await api.deleteTag(b.dataset.del);
+                if (!viewIsCurrent(tok)) return;
+                showToast(t('view.tags.toast.deleted'), { level: 'success' });
+                renderTags(mount);
+            } catch (err) {
+                showToast(t('toast.error.api', { err: err.message || err }), { level: 'error' });
+            }
         }));
 }
 
