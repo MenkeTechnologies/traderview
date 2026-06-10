@@ -158,6 +158,7 @@ mod tape_replay;
 mod tax_loss_harvest;
 mod tax_lots;
 mod three_fund_portfolio;
+mod tips_bond;
 mod trade_analytics;
 mod trade_compare;
 mod trade_reviews;
@@ -277,6 +278,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(annuity_pv_fv::router())
         .merge(cd_ladder::router())
         .merge(i_bond::router())
+        .merge(tips_bond::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())

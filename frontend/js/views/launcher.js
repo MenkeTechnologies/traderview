@@ -87,6 +87,7 @@ export const TILES = [
     ['annuity-pv-fv', 'Annuity PV / FV', '🪙', 'Time-value annuity: PV + FV + total payments + interest; ordinary or due', 'NEW'],
     ['cd-ladder', 'CD Ladder', '🪜', 'N-rung Certificate of Deposit ladder + blended APY + per-rung maturity schedule', 'NEW'],
     ['i-bond', 'I-Bond', '💵', 'Series I savings bond — composite rate + holding rules + 3mo penalty in 1-5y window', 'NEW'],
+    ['tips-bond', 'TIPS Bond', '🛡', 'Treasury Inflation-Protected Securities — semi-annual CPI accretion + real coupons + deflation floor', 'NEW'],
     ['drawdown-cutoff', 'Drawdown Cutoff', '🛑', 'Auto-fire kill-switch when live broker equity drops below your max-drawdown threshold', 'NEW'],
     ['inflation-calculator', 'Inflation Calculator', '💵', 'Future-dollar / real-value calculator — preserves purchasing power across N-year horizon at target CPI rate', 'NEW'],
     ['lump-sum-vs-dca', 'Lump-Sum vs DCA', '⚖️', 'Vanguard 2012 comparison — lump-sum end value vs DCA cadence end value + break-even market return', 'NEW'],
