@@ -54,6 +54,7 @@ pub mod economy;
 pub mod emergency_fund;
 pub mod envelope_budget;
 pub mod embedded;
+pub mod ev_vs_ice;
 pub mod executions;
 pub mod fafsa_efc;
 pub mod fear_greed;

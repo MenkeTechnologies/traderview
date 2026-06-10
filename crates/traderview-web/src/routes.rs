@@ -57,6 +57,7 @@ mod economy;
 mod emergency_fund;
 mod envelope_budget;
 mod equity_forecast;
+mod ev_vs_ice;
 mod executions;
 mod export;
 mod extras;
@@ -247,6 +248,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(fafsa_efc::router())
         .merge(car_tco::router())
         .merge(lease_vs_buy_car::router())
+        .merge(ev_vs_ice::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())
