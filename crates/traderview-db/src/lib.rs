@@ -50,6 +50,7 @@ pub mod embedded;
 pub mod executions;
 pub mod fear_greed;
 pub mod fill_quality;
+pub mod financial_ratios;
 pub mod finnhub_rest;
 pub mod fire_calculator;
 pub mod forum;

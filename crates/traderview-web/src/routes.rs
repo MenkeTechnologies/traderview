@@ -55,6 +55,7 @@ mod export;
 mod extras;
 mod fear_greed;
 mod fill_quality;
+mod financial_ratios;
 mod finnhub_extras;
 mod fire_calculator;
 mod gamma_squeeze;
@@ -205,6 +206,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(net_worth_tracker::router())
         .merge(personal_balance_sheet::router())
         .merge(personal_cash_flow::router())
+        .merge(financial_ratios::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())
