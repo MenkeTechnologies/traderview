@@ -109,6 +109,7 @@ mod pairs;
 mod paper;
 mod paper_rebalance;
 mod pead;
+mod pension_lump_vs_annuity;
 mod permanent_portfolio;
 mod personal_balance_sheet;
 mod personal_cash_flow;
@@ -263,6 +264,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(rmd_calculator::router())
         .merge(social_security_age::router())
         .merge(roth_vs_trad_401k::router())
+        .merge(pension_lump_vs_annuity::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())

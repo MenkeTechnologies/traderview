@@ -80,6 +80,7 @@ export const TILES = [
     ['rmd-calculator', 'RMD Calculator', '📅', 'IRS Uniform Lifetime Table — current RMD + N-year projection, SECURE 2.0 age 73/75 start', 'NEW'],
     ['social-security-age', 'Social Security Age', '🧓', 'Claim 62 vs FRA vs 70 — SSA reduction/DRC + lifetime totals + breakeven age', 'NEW'],
     ['roth-vs-trad-401k', 'Roth vs Trad 401k', '💸', 'Apples-to-apples Roth vs Traditional with side-account tax-savings model + breakeven retire rate', 'NEW'],
+    ['pension-lump-vs-annuity', 'Pension Lump vs Annuity', '🏦', 'PV(annuity) vs lump + implied IRR + runs-out year + leftover at life expectancy', 'NEW'],
     ['drawdown-cutoff', 'Drawdown Cutoff', '🛑', 'Auto-fire kill-switch when live broker equity drops below your max-drawdown threshold', 'NEW'],
     ['pead',         'PEAD Drift',    '📈',  'Post-earnings drift — surprise + 5/20/60d returns + drift score', 'NEW'],
     ['sentiment-velocity', 'Sentiment Velocity', '🔊', 'WSB+StockTwits mention acceleration — ≥3× hour-over-hour + ≥2 consecutive', 'NEW'],
