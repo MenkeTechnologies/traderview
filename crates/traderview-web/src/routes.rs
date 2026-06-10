@@ -69,6 +69,7 @@ mod journal;
 mod journal_ai;
 mod live_positions;
 mod live_ticks;
+mod magic_formula;
 mod market_gamma_regime;
 mod markets;
 mod mentorships;
@@ -203,6 +204,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(scanner_backtest::router())
         .merge(pead::router())
         .merge(portfolio_exposure::router())
+        .merge(magic_formula::router())
         .merge(sentiment_velocity::router())
         .merge(confluence::router())
         .merge(confluence_autotrade::router())

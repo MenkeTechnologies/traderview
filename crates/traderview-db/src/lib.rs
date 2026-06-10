@@ -68,6 +68,7 @@ pub mod journal;
 pub mod journal_ai;
 pub mod live_positions;
 pub mod live_ticks;
+pub mod magic_formula;
 pub mod market_data;
 pub mod market_gamma_regime;
 pub mod markets;

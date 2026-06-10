@@ -115,6 +115,11 @@ const UNIVERSE: &[(&str, &[&str])] = &[
     ),
 ];
 
+/// Public re-export so other modules (magic_formula, sector_rotation,
+/// etc.) can use the same hand-curated S&P universe without each maintaining
+/// their own copy.
+pub const UNIVERSE_EXPORT: &[(&str, &[&str])] = UNIVERSE;
+
 /// Returns the GICS-ish sector name for `symbol` based on the hand-curated
 /// UNIVERSE above, or `None` when the symbol isn't in the top-name list.
 /// Used by the portfolio exposure dashboard to bucket positions by sector
