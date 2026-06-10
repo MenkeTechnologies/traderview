@@ -55,6 +55,7 @@ mod extras;
 mod fear_greed;
 mod fill_quality;
 mod finnhub_extras;
+mod fire_calculator;
 mod gamma_squeeze;
 mod goals;
 mod halts;
@@ -195,6 +196,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(webhooks::router())
         .merge(breadth::router())
         .merge(fear_greed::router())
+        .merge(fire_calculator::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())

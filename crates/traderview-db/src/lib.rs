@@ -50,6 +50,7 @@ pub mod executions;
 pub mod fear_greed;
 pub mod fill_quality;
 pub mod finnhub_rest;
+pub mod fire_calculator;
 pub mod forum;
 pub mod friction;
 pub mod gamma_squeeze;
