@@ -1,7 +1,7 @@
 // Per-symbol research page — quote + signals + chart + news + fundamentals.
 import { api } from '../api.js';
 import { createTradingChart } from '../components/trading_chart.js';
-import { esc, fmt, fmtDateTime } from '../util.js';
+import { esc, fmt, fmtDateTime, applyBarWidths } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t, applyUiI18n } from '../i18n.js';
 
@@ -81,6 +81,10 @@ export async function renderResearch(mount, _state, sym) {
             </form>
         </h1>
         <div id="rs-quote" class="cards"><div class="tv-spinner-wrap"><div class="tv-spinner"></div><div class="tv-spinner-text" data-i18n="view.research.loading_quote">loading quote…</div></div></div>
+        <div class="chart-panel rs-rec-panel">
+            <h2 data-i18n="view.research.h2.recommendation">Recommendation</h2>
+            <div id="rs-rec"><span class="tv-spinner-inline" role="status" aria-label="loading"></span></div>
+        </div>
         <div class="chart-panel">
             <h2 data-i18n="view.research.h2.price_chart">Price chart</h2>
             <div id="rs-chart"></div>
@@ -162,6 +166,7 @@ export async function renderResearch(mount, _state, sym) {
 
     // Kick off everything in parallel.
     const q = api.quote(sym).catch(() => null);
+    const rec = api.symbolRecommendation(sym).catch(() => null);
     const sig = api.symbolSignals(sym).catch(() => null);
     const news = api.symbolNews(sym, 10).catch(() => []);
     const fund = api.symbolFundamentals(sym).catch(() => null);
@@ -179,6 +184,11 @@ export async function renderResearch(mount, _state, sym) {
     if (quoteEl) renderQuote(quoteEl, qv);
     const chartEl = mount.querySelector('#rs-chart');
     if (chartEl) createTradingChart(chartEl, { symbol: sym, interval: '1d', height: 380 });
+    rec.then(r => {
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#rs-rec');
+        if (el) renderRecommendation(el, r);
+    });
     sig.then(s => {
         if (!viewIsCurrent(tok)) return;
         renderSignals(s, mount);
@@ -304,6 +314,71 @@ function renderUpgrades(el, u) {
             </tr>`;
         }).join('')}</tbody>
     </table>`;
+}
+
+// stockinvest.us-style featured panel. Verdict badge + 5-star rating
+// + composite 0-100 score + 30-day target with upside percentage +
+// per-indicator breakdown bars. All numbers come from
+// /api/symbols/:sym/recommendation backed by stock_recommendation.rs.
+function renderRecommendation(el, r) {
+    if (!r) {
+        el.innerHTML = `<div class="boot">${esc(t('view.research.empty.no_recommendation'))}</div>`;
+        return;
+    }
+    const VERDICT_LABEL = {
+        strong_buy: 'STRONG BUY',
+        buy: 'BUY',
+        hold: 'HOLD',
+        sell: 'SELL',
+        strong_sell: 'STRONG SELL',
+    };
+    const VERDICT_CLS = {
+        strong_buy: 'pos strong',
+        buy: 'pos',
+        hold: 'neutral',
+        sell: 'neg',
+        strong_sell: 'neg strong',
+    };
+    const label = VERDICT_LABEL[r.verdict] || r.verdict.toUpperCase();
+    const vcls = VERDICT_CLS[r.verdict] || '';
+    const stars = '★'.repeat(r.stars) + '☆'.repeat(5 - r.stars);
+    const score = Math.round(r.score);
+    const target = r.target_price != null ? Number(r.target_price).toFixed(2) : '—';
+    const upside = r.upside_pct;
+    const upsideCls = upside > 0 ? 'pos' : upside < 0 ? 'neg' : '';
+    const upsideStr = upside != null ? (upside >= 0 ? '+' : '') + upside.toFixed(1) + '%' : '—';
+    const compBars = (r.components || []).map(c => {
+        const sc = Math.round(c.score);
+        const barCls = sc >= 60 ? 'pos' : sc <= 40 ? 'neg' : 'neutral';
+        return `
+            <div class="rs-rec-comp">
+                <div class="rs-rec-comp-head">
+                    <span class="rs-rec-comp-label">${esc(c.label)}</span>
+                    <span class="rs-rec-comp-score ${barCls}">${sc}</span>
+                </div>
+                <div class="rs-rec-bar"><div class="rs-rec-bar-fill ${barCls}" data-bar-pct="${sc}"></div></div>
+                <div class="rs-rec-comp-note muted small">${esc(c.note || '')}</div>
+            </div>
+        `;
+    }).join('');
+    el.innerHTML = `
+        <div class="rs-rec-head">
+            <div class="rs-rec-verdict ${vcls}">${label}</div>
+            <div class="rs-rec-stars" aria-label="${r.stars} of 5 stars">${stars}</div>
+            <div class="rs-rec-score-block">
+                <div class="rs-rec-score">${score}</div>
+                <div class="rs-rec-score-label muted small">SCORE / 100</div>
+            </div>
+            <div class="rs-rec-target-block">
+                <div class="rs-rec-target">$${target}</div>
+                <div class="muted small">${r.horizon_days}-DAY TARGET</div>
+                <div class="rs-rec-upside ${upsideCls}">${upsideStr}</div>
+            </div>
+        </div>
+        <div class="rs-rec-breakdown">${compBars}</div>
+        <div class="muted small rs-rec-foot">Composite of ${r.components.length} components, ${r.bars_analyzed} bars analyzed.</div>
+    `;
+    try { applyBarWidths(el); } catch (_) {}
 }
 
 function renderQuote(el, q) {

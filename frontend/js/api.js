@@ -705,6 +705,10 @@ export const api = {
     symbolDividends: (sym) => request(`/symbols/${encodeURIComponent(sym)}/dividends`),
     dividendsCalendar: (days = 14) => request(`/dividends/calendar${qs({ days })}`),
     symbolRecs:      (sym) => request(`/symbols/${encodeURIComponent(sym)}/recommendations`),
+    // Internal composite Buy/Sell/Hold + stars + score + target. Mirrors
+    // stockinvest.us's per-ticker surface but the algorithm is ours
+    // (see crates/traderview-db/src/stock_recommendation.rs).
+    symbolRecommendation: (sym) => request(`/symbols/${encodeURIComponent(sym)}/recommendation`),
     symbolInsiders:  (sym) => request(`/symbols/${encodeURIComponent(sym)}/insiders`),
     symbolFundamentals: (sym) => request(`/symbols/${encodeURIComponent(sym)}/fundamentals`),
     symbolHolders:   (sym) => request(`/symbols/${encodeURIComponent(sym)}/holders`),

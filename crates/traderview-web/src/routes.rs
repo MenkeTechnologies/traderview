@@ -152,6 +152,7 @@ mod sinking_fund;
 mod social_security_age;
 mod sp500_predict;
 mod squeeze_scanner;
+mod stock_recommendation;
 mod strategy_alerts;
 mod student_loan_payoff;
 mod symbols_catalog;
@@ -356,6 +357,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(accounts_overview::router())
         .merge(data_sources::router())
         .merge(squeeze_scanner::router())
+        .merge(stock_recommendation::router())
         .merge(finnhub_extras::router())
 }
 
