@@ -2,7 +2,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { on as onWsEvent } from '../ws.js';
-import { currentViewToken, viewIsCurrent } from '../app.js';
+import { currentViewToken, viewIsCurrent, routeIs } from '../app.js';
 import { t } from '../i18n.js';
 
 let timer = null;
@@ -84,7 +84,7 @@ export async function renderNews(mount) {
     wsUnsub = onWsEvent('news', () => { if (viewIsCurrent(tok)) refresh(mount, tok); });
 
     window.addEventListener('hashchange', () => {
-        if (!window.location.hash.startsWith('#news')) {
+        if (!routeIs('news')) {
             clearInterval(timer); timer = null;
             if (wsUnsub) { wsUnsub(); wsUnsub = null; }
         }

@@ -162,6 +162,27 @@ pub async fn evaluate_all(pool: &PgPool) -> anyhow::Result<EvalStats> {
     )
     .fetch_all(pool)
     .await?;
+    evaluate_rows(pool, rows).await
+}
+
+/// Evaluate only the alerts owned by `user_id`. Used by the route
+/// layer to gate POST /strategy-alerts/evaluate-now — without this,
+/// any authed user could trigger evaluation of every other user's
+/// alerts (which fire webhooks).
+pub async fn evaluate_for_user(pool: &PgPool, user_id: Uuid) -> anyhow::Result<EvalStats> {
+    let rows: Vec<StrategyAlert> = sqlx::query_as(
+        "SELECT id, user_id, name, enabled, ast, webhook_ids, last_truth,
+                last_evaluated_at, last_fired_at, fire_count, last_eval_error,
+                created_at, updated_at
+           FROM strategy_alerts WHERE enabled = TRUE AND user_id = $1",
+    )
+    .bind(user_id)
+    .fetch_all(pool)
+    .await?;
+    evaluate_rows(pool, rows).await
+}
+
+async fn evaluate_rows(pool: &PgPool, rows: Vec<StrategyAlert>) -> anyhow::Result<EvalStats> {
 
     let mut evaluated = 0;
     let mut fired = 0;

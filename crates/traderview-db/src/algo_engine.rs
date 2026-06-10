@@ -687,7 +687,7 @@ pub async fn record_fill(
     fill: &ImmediateFill,
     event_sink: Option<&EventSink>,
 ) -> Result<(), EngineError> {
-    algo::insert_fill(
+    let inserted_fill = algo::insert_fill(
         pool,
         AlgoFillInsert {
             order_id: algo_order_id,
@@ -700,6 +700,20 @@ pub async fn record_fill(
     )
     .await
     .map_err(|e| EngineError::Broker(e.to_string()))?;
+    if inserted_fill.is_none() {
+        // Idempotency short-circuit. Alpaca's trade_updates WS replays
+        // every fill on reconnect — without this guard we'd insert
+        // duplicate executions rows and double-count P&L through
+        // trades::rollup_account. The broker_fill_id UNIQUE caught
+        // the duplicate at the algo_fills layer; skip the rest of the
+        // pipeline because the first processing already ran it.
+        tracing::debug!(
+            strategy = %strategy.id, symbol = %intent.symbol,
+            broker_fill_id = ?fill.broker_fill_id,
+            "record_fill: fill already recorded; skipping pipeline"
+        );
+        return Ok(());
+    }
     algo::increment_run_counter(pool, intent.run_id, algo::RunCounter::FillsReceived, 1)
         .await
         .ok();

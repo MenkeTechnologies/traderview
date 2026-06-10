@@ -3,7 +3,7 @@
 
 import { api, ApiError } from '../api.js';
 import { esc, fmt } from '../util.js';
-import { go, currentViewToken, viewIsCurrent } from '../app.js';
+import { go, currentViewToken, viewIsCurrent, routeIs } from '../app.js';
 import { applyUiI18n, t } from '../i18n.js';
 import { showToast } from '../toast.js';
 
@@ -49,7 +49,9 @@ export async function renderLivePositions(mount, state) {
         refresh(acct.id, mount, tok);
     }, 30_000);
     window.addEventListener('hashchange', () => {
-        if (!window.location.hash.startsWith('#live')) {
+        // Exact match — `#live-scanner`, `#live-feed`, `#live-dashboard`
+        // are all real routes; the prefix leaked this interval.
+        if (!routeIs('live')) {
             clearInterval(timer); timer = null;
         }
     }, { once: true });

@@ -4,7 +4,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { t } from '../i18n.js';
-import { currentViewToken, viewIsCurrent } from '../app.js';
+import { currentViewToken, viewIsCurrent, routeIs } from '../app.js';
 
 export async function renderSectorRotation(mount) {
     const tok = currentViewToken();
@@ -20,7 +20,7 @@ export async function renderSectorRotation(mount) {
         refresh(mount, tok);
     }, 5 * 60_000);
     window.addEventListener('hashchange', () => {
-        if (!window.location.hash.startsWith('#sector-rotation')) clearInterval(t);
+        if (!routeIs('sector-rotation')) clearInterval(t);
     }, { once: true });
 }
 

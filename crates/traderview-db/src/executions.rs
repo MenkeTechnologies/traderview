@@ -249,32 +249,33 @@ pub struct ExecRow {
 
 impl From<ExecRow> for Execution {
     fn from(r: ExecRow) -> Self {
+        let side = match r.side.as_str() {
+            "buy" => Side::Buy,
+            "sell" => Side::Sell,
+            "short" => Side::Short,
+            "cover" => Side::Cover,
+            other => {
+                // The `side_t` ENUM (migration 0001) only accepts the
+                // four values above, so this branch is unreachable for
+                // rows the DB inserted itself. If we ever see it, schema
+                // drift or a hand-edit corrupted the row — log loudly
+                // instead of silently relabelling shorts as longs. We
+                // still fall through to a value because `From` cannot
+                // return Result; the error log surfaces in monitoring
+                // before P&L gets corrupted.
+                tracing::error!(
+                    execution_id = %r.id, account_id = %r.account_id,
+                    symbol = %r.symbol, side = other,
+                    "executions: unknown side string; defaulting to buy (CORRUPTION SIGNAL)"
+                );
+                Side::Buy
+            }
+        };
         Execution {
             id: r.id,
             account_id: r.account_id,
             symbol: r.symbol,
-            side: match r.side.as_str() {
-                "buy" => Side::Buy,
-                "sell" => Side::Sell,
-                "short" => Side::Short,
-                "cover" => Side::Cover,
-                other => {
-                    // The `side_t` ENUM (migration 0001) only accepts the
-                    // four values above, so this branch is unreachable
-                    // for rows the DB inserted itself. If we ever see it,
-                    // schema drift or a hand-edit corrupted the row —
-                    // log loudly instead of silently relabelling shorts
-                    // as longs. We still fall through to a value here
-                    // because `From` cannot return Result; the error log
-                    // surfaces in monitoring before P&L gets corrupted.
-                    tracing::error!(
-                        execution_id = %r.id, account_id = %r.account_id,
-                        symbol = %r.symbol, side = other,
-                        "executions: unknown side string; defaulting to buy (CORRUPTION SIGNAL)"
-                    );
-                    Side::Buy
-                }
-            },
+            side,
             qty: r.qty,
             price: r.price,
             fee: r.fee,

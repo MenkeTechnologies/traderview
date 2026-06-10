@@ -6,7 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { on as onWsEvent } from '../ws.js';
-import { currentViewToken, viewIsCurrent } from '../app.js';
+import { currentViewToken, viewIsCurrent, routeIs } from '../app.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
 import { tConfirm } from '../dialog.js';
@@ -135,7 +135,7 @@ export async function renderStrategyAlerts(mount) {
     if (wsUnsub) wsUnsub();
     wsUnsub = onWsEvent('alert_fired', () => { if (viewIsCurrent(tok)) refresh(mount, tok); });
     window.addEventListener('hashchange', () => {
-        if (!window.location.hash.startsWith('#strategy-alerts')) {
+        if (!routeIs('strategy-alerts')) {
             if (wsUnsub) { wsUnsub(); wsUnsub = null; }
         }
     }, { once: true });

@@ -342,9 +342,16 @@ async fn post_kill_switch(
 
 async fn get_kill_history(
     State(s): State<AppState>,
-    _u: AuthUser,
+    u: AuthUser,
     Path(id): Path<Uuid>,
 ) -> Result<Json<Vec<KillSwitchAudit>>, ApiError> {
+    // Ownership check — without this any authed user can read another
+    // user's kill-switch audit trail (reasons, timestamps), which is
+    // forensic data we treat as private.
+    traderview_db::algo::get_strategy(&s.pool, u.id, id)
+        .await
+        .map_err(ApiError::Internal)?
+        .ok_or(ApiError::NotFound)?;
     Ok(Json(
         traderview_db::algo::kill_switch_history(&s.pool, id, 100)
             .await
@@ -451,10 +458,19 @@ async fn list_runs(
 
 async fn list_orders(
     State(s): State<AppState>,
-    _u: AuthUser,
+    u: AuthUser,
     Path(id): Path<Uuid>,
     Query(q): Query<ListRunsQuery>,
 ) -> Result<Json<Vec<AlgoOrder>>, ApiError> {
+    // Ownership check on the run — without this any authed user can
+    // enumerate run UUIDs and read another trader's complete order tape.
+    let owner = traderview_db::algo::run_owner(&s.pool, id)
+        .await
+        .map_err(ApiError::Internal)?
+        .ok_or(ApiError::NotFound)?;
+    if owner != u.id {
+        return Err(ApiError::NotFound);
+    }
     Ok(Json(
         traderview_db::algo::list_orders(&s.pool, id, q.limit.clamp(1, 500))
             .await
@@ -464,9 +480,17 @@ async fn list_orders(
 
 async fn list_fills(
     State(s): State<AppState>,
-    _u: AuthUser,
+    u: AuthUser,
     Path(id): Path<Uuid>,
 ) -> Result<Json<Vec<AlgoFill>>, ApiError> {
+    // Ownership check on the order — same bypass as list_orders.
+    let owner = traderview_db::algo::order_owner(&s.pool, id)
+        .await
+        .map_err(ApiError::Internal)?
+        .ok_or(ApiError::NotFound)?;
+    if owner != u.id {
+        return Err(ApiError::NotFound);
+    }
     Ok(Json(
         traderview_db::algo::list_fills(&s.pool, id)
             .await

@@ -104,7 +104,14 @@ async fn kill_switch(
         )));
     }
     let r = multi_broker::kill_all_for_user(&s.pool, user.id).await?;
-    let _ = sqlx::query(
+    // Audit insert MUST surface failures — silently dropping the row
+    // after a destructive cancel/flat across all brokers is a
+    // compliance disaster. tracing::error so monitoring picks it up,
+    // then continue: the broker-side action already happened, so the
+    // handler still reports what was cancelled. We do NOT bubble the
+    // audit error to the caller because that would suggest the kill
+    // didn't fire when it did.
+    if let Err(e) = sqlx::query(
         "INSERT INTO multi_broker_kill_switch_audit
             (user_id, brokers_attempted, cancelled_orders, closed_positions, reason, error_count)
          VALUES ($1, $2, $3, $4, $5, $6)",
@@ -113,10 +120,34 @@ async fn kill_switch(
     .bind(r.brokers_attempted.join(","))
     .bind(r.cancelled_orders as i32)
     .bind(r.closed_positions as i32)
-    .bind(body.reason)
+    .bind(&body.reason)
     .bind(r.errors.len() as i32)
     .execute(&s.pool)
-    .await;
+    .await
+    {
+        tracing::error!(
+            user_id = %user.id, error = %e,
+            cancelled = r.cancelled_orders, closed = r.closed_positions,
+            "multi_broker kill_switch audit INSERT failed; destructive action completed but audit row missing"
+        );
+    }
+    // Partial-failure status: any per-broker error means the caller's
+    // monitoring should trip. Return 207 Multi-Status semantics via
+    // ApiError so the response body still carries the structured
+    // per-broker result.
+    if !r.errors.is_empty() {
+        let body = serde_json::to_string(&KillSwitchResponse {
+            brokers_attempted: r.brokers_attempted.clone(),
+            cancelled_orders: r.cancelled_orders,
+            closed_positions: r.closed_positions,
+            per_broker: r.per_broker.clone(),
+            errors: r.errors.clone(),
+        })
+        .unwrap_or_else(|_| "{\"errors\":\"serialization failed\"}".into());
+        return Err(ApiError::BadRequest(format!(
+            "partial broker failure (207 Multi-Status): {body}"
+        )));
+    }
     Ok(Json(KillSwitchResponse {
         brokers_attempted: r.brokers_attempted,
         cancelled_orders: r.cancelled_orders,

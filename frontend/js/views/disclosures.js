@@ -3,7 +3,7 @@ import { api } from '../api.js';
 import { playSound } from '../alert_engine.js';
 import { esc, fmt, fmtDateTime } from '../util.js';
 import { on as onWsEvent } from '../ws.js';
-import { currentViewToken, viewIsCurrent } from '../app.js';
+import { currentViewToken, viewIsCurrent, routeIs } from '../app.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
 
@@ -145,7 +145,7 @@ export async function renderDisclosures(mount) {
     });
 
     window.addEventListener('hashchange', () => {
-        if (!window.location.hash.startsWith('#disclosures')) {
+        if (!routeIs('disclosures')) {
             clearInterval(pollTimer); pollTimer = null;
             if (wsUnsub) { wsUnsub(); wsUnsub = null; }
         }

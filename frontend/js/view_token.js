@@ -20,3 +20,15 @@ export function currentViewToken() {
 export function viewIsCurrent(tok) {
     return _viewToken === tok;
 }
+
+// Exact-route check for view-cleanup guards. The previous pattern of
+// `window.location.hash.startsWith('#name')` was a bug: it matched
+// `#name-anything` too, so when the user navigated from `#sentiment`
+// to `#sentiment-velocity` the cleanup branch never ran and the
+// sentiment view's interval + WS subscription leaked. Use this instead:
+//   if (!routeIs('sentiment')) { clearInterval(timer); ... }
+export function routeIs(name) {
+    const hash = (typeof window !== 'undefined' && window.location && window.location.hash) || '';
+    const route = hash.slice(1).split('/')[0].split('?')[0];
+    return route === name;
+}

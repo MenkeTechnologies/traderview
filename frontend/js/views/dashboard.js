@@ -7,6 +7,7 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 import { initDragReorder, resetDragReorder } from '../drag_reorder.js';
 import * as dashStore from '../_dashboards_storage.js';
 import { showToast } from '../toast.js';
+import { localToday } from '../local_date.js';
 
 const INTERVAL_KEY = 'dashboard_interval_days';
 const PERIOD_KEY   = 'dashboard_period_key';
@@ -123,7 +124,11 @@ function dayStrip(cal) {
     for (let i = 6; i >= 0; i--) {
         const d = new Date(today);
         d.setDate(d.getDate() - i);
-        const key = d.toISOString().slice(0, 10);
+        // Use LOCAL date for the lookup key — `toISOString().slice(0,10)`
+        // is UTC, so after ~5pm PT / 8pm ET the cell labeled "today"
+        // (built from local d.getDate()) would query the next day's UTC
+        // key and miss every trade that landed today.
+        const key = localToday(d);
         const c = map.get(key);
         const pnl = Number(c?.net_pnl) || 0;
         const trades = Number(c?.trades) || 0;

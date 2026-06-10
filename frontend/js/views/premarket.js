@@ -2,7 +2,7 @@
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
 import { t } from '../i18n.js';
-import { currentViewToken, viewIsCurrent } from '../app.js';
+import { currentViewToken, viewIsCurrent, routeIs } from '../app.js';
 
 let timer = null;
 
@@ -33,7 +33,7 @@ export async function renderPremarket(mount) {
         refresh(mount, tok);
     }, 30_000);
     window.addEventListener('hashchange', () => {
-        if (!window.location.hash.startsWith('#premarket')) { clearInterval(timer); timer = null; }
+        if (!routeIs('premarket')) { clearInterval(timer); timer = null; }
     }, { once: true });
     await refresh(mount, tok);
 }

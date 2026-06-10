@@ -1,7 +1,7 @@
 // Market breadth — NYSE TICK / TRIN / A-D / Up-Down Vol / Put-Call + regime.
 import { api } from '../api.js';
 import { esc, fmt } from '../util.js';
-import { currentViewToken, viewIsCurrent } from '../app.js';
+import { currentViewToken, viewIsCurrent, routeIs } from '../app.js';
 import { applyUiI18n, t } from '../i18n.js';
 import { showToast } from '../toast.js';
 
@@ -54,7 +54,9 @@ export async function renderBreadth(mount) {
         refresh(mount, tok, false);
     }, 60_000);
     window.addEventListener('hashchange', () => {
-        if (!window.location.hash.startsWith('#breadth')) { clearInterval(timer); timer = null; }
+        // Exact match — `#breadth-divergence` / `#breadth-thrust` are
+        // real routes and the prefix would leak the interval.
+        if (!routeIs('breadth')) { clearInterval(timer); timer = null; }
     }, { once: true });
     const refreshBtn = document.getElementById('mb-refresh');
     if (refreshBtn) refreshBtn.addEventListener('click', () => { void refresh(mount, tok, true); });

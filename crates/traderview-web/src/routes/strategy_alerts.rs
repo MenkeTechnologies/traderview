@@ -86,10 +86,13 @@ async fn recent_fires(
 
 async fn evaluate_now(
     State(s): State<AppState>,
-    _u: AuthUser,
+    u: AuthUser,
 ) -> Result<Json<EvalStats>, ApiError> {
+    // Scope to the calling user — evaluate_all fires webhooks for every
+    // user with enabled alerts and would let any low-priv account flood
+    // other users' notification channels.
     Ok(Json(
-        traderview_db::strategy_alerts::evaluate_all(&s.pool)
+        traderview_db::strategy_alerts::evaluate_for_user(&s.pool, u.id)
             .await
             .map_err(ApiError::Internal)?,
     ))

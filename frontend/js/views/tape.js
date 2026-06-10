@@ -2,7 +2,7 @@
 // snapshot, refreshed every 30s.
 import { api } from '../api.js';
 import { esc, fmtDateTime } from '../util.js';
-import { currentViewToken, viewIsCurrent } from '../app.js';
+import { currentViewToken, viewIsCurrent, routeIs } from '../app.js';
 import { t } from '../i18n.js';
 
 let timer = null;
@@ -44,7 +44,9 @@ export async function renderTape(mount) {
     await refresh(mount, tok);
     // Stop polling when leaving the view.
     window.addEventListener('hashchange', () => {
-        if (!window.location.hash.startsWith('#tape')) {
+        // Exact match — `startsWith('#tape')` also matched `#tape-replay`
+        // and leaked the interval on every visit to that view.
+        if (!routeIs('tape')) {
             clearInterval(timer); timer = null;
         }
     }, { once: true });

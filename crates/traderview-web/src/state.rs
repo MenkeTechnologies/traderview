@@ -146,6 +146,19 @@ impl AppState {
                     signals_emitted,
                     seconds_to_next_eval,
                 },
+                E::OrderRejected {
+                    strategy_id,
+                    symbol,
+                    side,
+                    kind,
+                    reason,
+                } => crate::realtime::Event::AlgoOrderRejected {
+                    strategy_id: strategy_id.to_string(),
+                    symbol,
+                    side: side_str(side),
+                    kind,
+                    reason,
+                },
             };
             hub.publish(evt);
         })

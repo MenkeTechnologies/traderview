@@ -475,6 +475,38 @@ pub async fn kill_switch_history(
     .await?)
 }
 
+/// Return the user_id that owns the strategy bound to `run_id`, or
+/// `None` if no such run exists. Used by the web layer to gate
+/// /algo/runs/:id/orders + cross-tenant reads.
+pub async fn run_owner(pool: &PgPool, run_id: Uuid) -> anyhow::Result<Option<Uuid>> {
+    let row: Option<(Uuid,)> = sqlx::query_as(
+        "SELECT s.user_id
+           FROM algo_runs r
+           JOIN algo_strategies s ON s.id = r.strategy_id
+          WHERE r.id = $1",
+    )
+    .bind(run_id)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row.map(|(uid,)| uid))
+}
+
+/// Return the user_id that owns the strategy bound to `order_id`, or
+/// `None` if no such order exists. Used by the web layer to gate
+/// /algo/orders/:id/fills.
+pub async fn order_owner(pool: &PgPool, order_id: Uuid) -> anyhow::Result<Option<Uuid>> {
+    let row: Option<(Uuid,)> = sqlx::query_as(
+        "SELECT s.user_id
+           FROM algo_orders o
+           JOIN algo_strategies s ON s.id = o.strategy_id
+          WHERE o.id = $1",
+    )
+    .bind(order_id)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row.map(|(uid,)| uid))
+}
+
 // ─── runs ───────────────────────────────────────────────────────────────────
 
 pub async fn start_run(pool: &PgPool, strategy_id: Uuid) -> anyhow::Result<AlgoRun> {
@@ -581,16 +613,21 @@ pub async fn insert_order(
     strategy_id: Uuid,
     insert: AlgoOrderInsert,
 ) -> anyhow::Result<AlgoOrder> {
-    Ok(sqlx::query_as::<_, AlgoOrder>(
+    // Idempotent on `client_order_id` so a retry after a network
+    // timeout (where the caller can't tell if the first INSERT
+    // committed) returns the existing row instead of raising 23505.
+    let coid = insert.client_order_id;
+    let row: Option<AlgoOrder> = sqlx::query_as::<_, AlgoOrder>(
         "INSERT INTO algo_orders
              (run_id, strategy_id, client_order_id, symbol, side,
               order_type, order_class, qty, limit_price, stop_price, raw_request)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         ON CONFLICT (client_order_id) DO NOTHING
          RETURNING *",
     )
     .bind(run_id)
     .bind(strategy_id)
-    .bind(insert.client_order_id)
+    .bind(coid)
     .bind(insert.symbol)
     .bind(insert.side)
     .bind(insert.order_type)
@@ -599,8 +636,20 @@ pub async fn insert_order(
     .bind(insert.limit_price)
     .bind(insert.stop_price)
     .bind(insert.raw_request)
+    .fetch_optional(pool)
+    .await?;
+    if let Some(r) = row {
+        return Ok(r);
+    }
+    // Conflict path: the row already exists from a prior submit. Look
+    // it up so the caller can continue with the existing row's id.
+    let existing: AlgoOrder = sqlx::query_as::<_, AlgoOrder>(
+        "SELECT * FROM algo_orders WHERE client_order_id = $1",
+    )
+    .bind(coid)
     .fetch_one(pool)
-    .await?)
+    .await?;
+    Ok(existing)
 }
 
 /// Called once we have the broker's response. Sets `broker_order_id`,
@@ -688,12 +737,20 @@ pub async fn list_orders(
     .await?)
 }
 
-pub async fn insert_fill(pool: &PgPool, insert: AlgoFillInsert) -> anyhow::Result<AlgoFill> {
+pub async fn insert_fill(pool: &PgPool, insert: AlgoFillInsert) -> anyhow::Result<Option<AlgoFill>> {
+    // Idempotent on broker_fill_id (UNIQUE in the schema). Alpaca's
+    // trade_updates WS replays prior fills on every reconnect — without
+    // ON CONFLICT, the second insert raises 23505 and bubbles up
+    // through record_fill, aborting the entire flow including the
+    // executions + trades::rollup_account writes that already
+    // happened. Returns None on conflict so the caller can detect
+    // "this fill was already processed; skip the rest of record_fill".
     let fill_value = insert.fill_qty * insert.fill_price;
-    Ok(sqlx::query_as::<_, AlgoFill>(
+    let row = sqlx::query_as::<_, AlgoFill>(
         "INSERT INTO algo_fills
              (order_id, broker_fill_id, fill_qty, fill_price, fill_value, commission, raw)
          VALUES ($1, $2, $3, $4, $5, $6, $7)
+         ON CONFLICT (broker_fill_id) DO NOTHING
          RETURNING *",
     )
     .bind(insert.order_id)
@@ -703,8 +760,9 @@ pub async fn insert_fill(pool: &PgPool, insert: AlgoFillInsert) -> anyhow::Resul
     .bind(fill_value)
     .bind(insert.commission)
     .bind(insert.raw)
-    .fetch_one(pool)
-    .await?)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row)
 }
 
 pub async fn list_fills(pool: &PgPool, order_id: Uuid) -> anyhow::Result<Vec<AlgoFill>> {

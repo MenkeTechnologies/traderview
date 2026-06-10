@@ -2646,8 +2646,8 @@ export function go(view, params = '') {
 // Re-export the view-token machinery so the 80+ views that already import
 // it from app.js keep working. Implementation lives in `view_token.js` so
 // `node --test` can unit-test the semantics without pulling in the DOM.
-import { bumpViewToken, currentViewToken, viewIsCurrent } from './view_token.js';
-export { currentViewToken, viewIsCurrent };
+import { bumpViewToken, currentViewToken, viewIsCurrent, routeIs } from './view_token.js';
+export { currentViewToken, viewIsCurrent, routeIs };
 
 export async function dispatch() {
     // Invalidate every captured token from the previous view — pending awaits,

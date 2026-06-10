@@ -82,6 +82,16 @@ pub enum Event {
         symbol: String,
         bars: u64,
     },
+    /// Algo runner: broker rejected an entry or exit submission.
+    /// `kind` is "entry" or "exit" so the UI's stdout pane can label
+    /// the failure instead of going silent after a SignalFired.
+    AlgoOrderRejected {
+        strategy_id: String,
+        symbol: String,
+        side: &'static str,
+        kind: &'static str,
+        reason: String,
+    },
     /// Algo runner: per-tick heartbeat — proves the engine is alive
     /// even on M1 strategies that only formally evaluate once a
     /// minute.

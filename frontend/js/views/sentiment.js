@@ -5,7 +5,7 @@ import { api } from '../api.js';
 import { barChart } from '../charts.js';
 import { esc, fmt, fmtDateTime } from '../util.js';
 import { on as onWsEvent } from '../ws.js';
-import { currentViewToken, viewIsCurrent } from '../app.js';
+import { currentViewToken, viewIsCurrent, routeIs } from '../app.js';
 import { t, applyUiI18n } from '../i18n.js';
 
 let timer = null;
@@ -97,7 +97,9 @@ export async function renderSentiment(mount, _state, symbol) {
     wsUnsub = onWsEvent('sentiment', () => { if (viewIsCurrent(tok)) refresh(mount, tok); });
 
     window.addEventListener('hashchange', () => {
-        if (!window.location.hash.startsWith('#sentiment')) {
+        // Exact match — `#sentiment-velocity` is a sibling route; the
+        // prefix matched it and leaked both timer + WS subscription.
+        if (!routeIs('sentiment')) {
             clearInterval(timer); timer = null;
             if (wsUnsub) { wsUnsub(); wsUnsub = null; }
         }
