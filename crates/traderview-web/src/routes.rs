@@ -17,6 +17,7 @@ mod backtest_presets;
 mod breadth;
 mod breadth_divergence;
 mod calc;
+mod cape_indicator;
 mod carryover;
 mod catalyst_correlations;
 mod catalysts;
@@ -156,6 +157,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(charts::router())
         .merge(chart_indicators::router())
         .merge(calc::router())
+        .merge(cape_indicator::router())
         .merge(carryover::router())
         .merge(ira_basis::router())
         .merge(trade_analytics::router())

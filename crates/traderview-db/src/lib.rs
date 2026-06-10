@@ -17,6 +17,7 @@ pub mod breadth;
 pub mod breadth_divergence;
 pub mod broker_dispatcher;
 pub mod candidates;
+pub mod cape_indicator;
 pub mod carryover;
 pub mod catalyst_correlator;
 pub mod catalysts;

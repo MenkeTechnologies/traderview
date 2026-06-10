@@ -44,6 +44,7 @@ export const TILES = [
     ['dca-simulator', 'DCA Simulator', '📅', 'Dollar-cost-averaging scheduler with lump-sum comparison — does buying $N/month beat lump-summing?', 'NEW'],
     ['dividend-aristocrats', 'Aristocrats', '🎖️', '67 S&P 500 Dividend Aristocrats + Kings ranked by composite DGI score (yield + growth - payout penalty)', 'NEW'],
     ['permanent-portfolio', 'Permanent Portfolio', '🪨', 'All-Weather + Permanent Portfolio + 60/40 + 100% S&P backtested side-by-side — return, vol, Sharpe CI, max DD', 'NEW'],
+    ['cape-indicator', 'CAPE / Shiller P/E', '📊', 'Shiller CAPE ratio with percentile rank in 1881-2024 historical distribution + regime interpretation', 'NEW'],
     ['drawdown-cutoff', 'Drawdown Cutoff', '🛑', 'Auto-fire kill-switch when live broker equity drops below your max-drawdown threshold', 'NEW'],
     ['pead',         'PEAD Drift',    '📈',  'Post-earnings drift — surprise + 5/20/60d returns + drift score', 'NEW'],
     ['sentiment-velocity', 'Sentiment Velocity', '🔊', 'WSB+StockTwits mention acceleration — ≥3× hour-over-hour + ≥2 consecutive', 'NEW'],
