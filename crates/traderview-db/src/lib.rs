@@ -66,6 +66,7 @@ pub mod goals;
 pub mod halts;
 pub mod heatmap;
 pub mod heloc;
+pub mod home_maintenance;
 pub mod hotkeys;
 pub mod htb_ranker;
 pub mod ibkr_pump;

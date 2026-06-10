@@ -64,6 +64,7 @@ export const TILES = [
     ['mortgage-refinance', 'Mortgage Refi', '🔄', 'Closing costs / monthly savings breakeven — refi wins vs breakeven too long vs no savings', 'NEW'],
     ['rent-vs-buy', 'Rent vs Buy', '⚖️', 'NYT-style year-by-year NPV — breakeven year + net winner across N-year horizon', 'NEW'],
     ['heloc', 'HELOC', '🏘️', 'Variable-rate revolving home-equity line — draw + repayment phases, utilization, lifetime interest', 'NEW'],
+    ['home-maintenance', 'Home Maintenance', '🛠️', '1% rule + per-system replacement schedule with monthly set-aside and overdue flags', 'NEW'],
     ['drawdown-cutoff', 'Drawdown Cutoff', '🛑', 'Auto-fire kill-switch when live broker equity drops below your max-drawdown threshold', 'NEW'],
     ['pead',         'PEAD Drift',    '📈',  'Post-earnings drift — surprise + 5/20/60d returns + drift score', 'NEW'],
     ['sentiment-velocity', 'Sentiment Velocity', '🔊', 'WSB+StockTwits mention acceleration — ≥3× hour-over-hour + ≥2 consecutive', 'NEW'],

@@ -69,6 +69,7 @@ mod goals;
 mod halts;
 mod heatmap;
 mod heloc;
+mod home_maintenance;
 mod hotkeys;
 mod htb_ranker;
 mod imports;
@@ -233,6 +234,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(mortgage_refinance::router())
         .merge(rent_vs_buy::router())
         .merge(heloc::router())
+        .merge(home_maintenance::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())
