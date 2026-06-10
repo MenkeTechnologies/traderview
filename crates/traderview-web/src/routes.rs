@@ -49,6 +49,7 @@ mod earnings_iv;
 mod earnings_revisions;
 mod economy;
 mod emergency_fund;
+mod envelope_budget;
 mod equity_forecast;
 mod executions;
 mod export;
@@ -215,6 +216,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(sinking_fund::router())
         .merge(zero_based_budget::router())
         .merge(fifty_thirty_twenty::router())
+        .merge(envelope_budget::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())
