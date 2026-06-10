@@ -92,6 +92,17 @@ pub enum EngineEvent {
     /// in the stdout pane so the user can see WHY nothing is happening
     /// instead of staring at an empty log.
     TickSkipped { strategy_id: Uuid, reason: String },
+    /// Broker rejected an order submission. `kind` is "entry" or
+    /// "exit" so the UI's stdout pane can label the failure. Without
+    /// this, exit rejections silently disappeared into the trace log
+    /// and the user saw a SignalFired with no follow-up.
+    OrderRejected {
+        strategy_id: Uuid,
+        symbol: String,
+        side: Side,
+        kind: &'static str,
+        reason: String,
+    },
     /// Tick evaluated this strategy without firing a signal (the
     /// strategy returned None). Tagged with the symbol so the user
     /// sees "AAPL, MSFT, NVDA evaluated — no signal" in the stdout
@@ -543,6 +554,26 @@ pub async fn process_bar_window(
         }
     }
 
+    // Entry-side pyramid guard. On real-Alpaca, immediate_fill is None
+    // and the entry fill lands later via the trade_updates WebSocket.
+    // open_position_count (passed in from algo_runner) is queried once
+    // per tick BEFORE process_bar_window runs — until the WS pump
+    // records the fill, the trade row doesn't exist and the count
+    // stays stale. The next tick passes the position cap and submits a
+    // second bracket. Skip if there's already an outstanding same-side
+    // order on (strategy_id, symbol).
+    let entry_side_str = side_to_str(sig.side);
+    if algo::has_pending_order(pool, strategy.id, &symbol, entry_side_str)
+        .await
+        .map_err(|e| EngineError::Broker(format!("has_pending_order: {e}")))?
+    {
+        tracing::debug!(
+            strategy = %strategy.id, symbol,
+            "entry pass: same-side order already pending, skipping until WS settles"
+        );
+        return Ok(None);
+    }
+
     algo::increment_run_counter(pool, run_id, algo::RunCounter::SignalsEmitted, 1)
         .await
         .ok();
@@ -615,16 +646,26 @@ pub async fn process_bar_window(
             Ok(Some(inserted.id))
         }
         Err(e) => {
+            let reason = e.to_string();
             algo::mark_order_submitted(
                 pool,
                 inserted.id,
                 None,
                 "rejected",
                 None,
-                Some(e.to_string()),
+                Some(reason.clone()),
             )
             .await
             .map_err(|de| EngineError::Broker(de.to_string()))?;
+            if let Some(emit) = event_sink {
+                emit(EngineEvent::OrderRejected {
+                    strategy_id: strategy.id,
+                    symbol: symbol.clone(),
+                    side: intent.side,
+                    kind: "entry",
+                    reason,
+                });
+            }
             Err(e)
         }
     }
@@ -808,6 +849,20 @@ pub async fn process_bar_window_multi(
             return Err(EngineError::PositionSizeCap { notional, cap });
         }
     }
+    // Same pyramid guard as the single-symbol path — skip if there's
+    // an outstanding same-side entry on the primary leg still pending
+    // the WS fill.
+    let entry_side_str = side_to_str(sig.side);
+    if algo::has_pending_order(pool, strategy.id, &primary_symbol, entry_side_str)
+        .await
+        .map_err(|e| EngineError::Broker(format!("has_pending_order: {e}")))?
+    {
+        tracing::debug!(
+            strategy = %strategy.id, symbol = %primary_symbol,
+            "entry pass (multi): same-side order already pending, skipping"
+        );
+        return Ok(None);
+    }
     algo::increment_run_counter(pool, run_id, algo::RunCounter::SignalsEmitted, 1)
         .await
         .ok();
@@ -871,16 +926,26 @@ pub async fn process_bar_window_multi(
             Ok(Some(inserted.id))
         }
         Err(e) => {
+            let reason = e.to_string();
             algo::mark_order_submitted(
                 pool,
                 inserted.id,
                 None,
                 "rejected",
                 None,
-                Some(e.to_string()),
+                Some(reason.clone()),
             )
             .await
             .map_err(|de| EngineError::Broker(de.to_string()))?;
+            if let Some(emit) = event_sink {
+                emit(EngineEvent::OrderRejected {
+                    strategy_id: strategy.id,
+                    symbol: primary_symbol.clone(),
+                    side: intent.side,
+                    kind: "entry",
+                    reason,
+                });
+            }
             Err(e)
         }
     }
@@ -1011,6 +1076,24 @@ async fn run_exit_pass(
             );
             continue;
         }
+        // Re-fetch qty right before submitting — a partial entry-fill or
+        // a prior close fill landing via the WS pump can shrink the
+        // position between the snapshot at the top of run_exit_pass and
+        // now. Using the stale pos.qty would over-sell.
+        let live_qty =
+            match crate::trades::get_open_qty(pool, pos.id)
+                .await
+                .map_err(|e| EngineError::Broker(format!("get_open_qty: {e}")))?
+            {
+                Some(q) if q > Decimal::ZERO => q,
+                _ => {
+                    tracing::debug!(
+                        strategy = %strategy.id, symbol, trade_id = %pos.id,
+                        "exit pass: trade already closed or zero qty, skipping"
+                    );
+                    continue;
+                }
+            };
         let exit_price_dec = Decimal::from_f64(exit_sig.exit_price).unwrap_or_default();
         let coid = Uuid::new_v4();
         // Insert the close as a real algo_orders row first — algo_fills
@@ -1026,7 +1109,7 @@ async fn run_exit_pass(
                 side: close_side_str.into(),
                 order_type: "market".into(),
                 order_class: "simple".into(),
-                qty: pos.qty,
+                qty: live_qty,
                 limit_price: None,
                 stop_price: None,
                 raw_request: Some(serde_json::json!({
@@ -1040,7 +1123,7 @@ async fn run_exit_pass(
         .await
         .map_err(|e| EngineError::Broker(e.to_string()))?;
         let resp = match sink
-            .submit_market_close(symbol.to_string(), close_side, pos.qty, exit_price_dec, coid)
+            .submit_market_close(symbol.to_string(), close_side, live_qty, exit_price_dec, coid)
             .await
         {
             Ok(r) => r,
@@ -1050,16 +1133,26 @@ async fn run_exit_pass(
                     error = %e,
                     "submit_market_close failed; position stays open"
                 );
+                let reason = e.to_string();
                 algo::mark_order_submitted(
                     pool,
                     close_order.id,
                     None,
                     "rejected",
                     None,
-                    Some(e.to_string()),
+                    Some(reason.clone()),
                 )
                 .await
                 .map_err(|e| EngineError::Broker(e.to_string()))?;
+                if let Some(emit) = event_sink {
+                    emit(EngineEvent::OrderRejected {
+                        strategy_id: strategy.id,
+                        symbol: symbol.to_string(),
+                        side: close_side,
+                        kind: "exit",
+                        reason,
+                    });
+                }
                 continue;
             }
         };
@@ -1082,7 +1175,7 @@ async fn run_exit_pass(
                 order_id: close_order.id,
                 symbol: symbol.to_string(),
                 side: close_side,
-                qty: pos.qty,
+                qty: live_qty,
                 broker_order_id: resp.broker_order_id.clone(),
             });
         }
@@ -1093,7 +1186,7 @@ async fn run_exit_pass(
                 client_order_id: coid,
                 symbol: symbol.to_string(),
                 side: close_side,
-                qty: pos.qty,
+                qty: live_qty,
                 entry_price: exit_price_dec,
                 stop_price: Decimal::ZERO,
                 take_profit_price: Decimal::ZERO,

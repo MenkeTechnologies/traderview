@@ -558,6 +558,22 @@ pub struct OpenPositionRow {
     pub opened_at: DateTime<Utc>,
 }
 
+/// Current open qty for a trade, or `None` if it's already closed
+/// (status != 'open'). Used by the algo engine's exit pass to re-fetch
+/// the live qty right before submitting a close — a partial entry-fill
+/// or a previous close fill landing via the WS pump can shrink the
+/// position between the position-snapshot and the close submission,
+/// and using the stale snapshot would over-sell.
+pub async fn get_open_qty(pool: &PgPool, trade_id: Uuid) -> anyhow::Result<Option<Decimal>> {
+    let row: Option<(Decimal,)> = sqlx::query_as(
+        "SELECT qty FROM trades WHERE id = $1 AND status = 'open'",
+    )
+    .bind(trade_id)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row.map(|(q,)| q))
+}
+
 pub async fn open_positions_for_symbol(
     pool: &PgPool,
     account_id: Uuid,
