@@ -654,6 +654,7 @@ import { renderFinancialRatios } from './views/financial_ratios.js';
 import { renderSavingsRate } from './views/savings_rate.js';
 import { renderSinkingFund } from './views/sinking_fund.js';
 import { renderZeroBasedBudget } from './views/zero_based_budget.js';
+import { renderFiftyThirtyTwenty } from './views/fifty_thirty_twenty.js';
 import { renderDrawdownCutoff } from './views/drawdown_cutoff.js';
 import { renderPead } from './views/pead.js';
 import { renderSentimentVelocity } from './views/sentiment_velocity.js';
@@ -2882,6 +2883,7 @@ export async function dispatch() {
             case 'savings-rate': await renderSavingsRate(mount, state); break;
             case 'sinking-fund': await renderSinkingFund(mount, state); break;
             case 'zero-based-budget': await renderZeroBasedBudget(mount, state); break;
+            case 'fifty-thirty-twenty': await renderFiftyThirtyTwenty(mount, state); break;
             case 'drawdown-cutoff': await renderDrawdownCutoff(mount, state); break;
             case 'pead':           await renderPead(mount, state); break;
             case 'sentiment-velocity': await renderSentimentVelocity(mount, state); break;

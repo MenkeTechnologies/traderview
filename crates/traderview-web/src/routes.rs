@@ -54,6 +54,7 @@ mod executions;
 mod export;
 mod extras;
 mod fear_greed;
+mod fifty_thirty_twenty;
 mod fill_quality;
 mod financial_ratios;
 mod finnhub_extras;
@@ -213,6 +214,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(savings_rate::router())
         .merge(sinking_fund::router())
         .merge(zero_based_budget::router())
+        .merge(fifty_thirty_twenty::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())

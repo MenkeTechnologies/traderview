@@ -49,6 +49,7 @@ pub mod emergency_fund;
 pub mod embedded;
 pub mod executions;
 pub mod fear_greed;
+pub mod fifty_thirty_twenty;
 pub mod fill_quality;
 pub mod financial_ratios;
 pub mod finnhub_rest;
