@@ -164,7 +164,7 @@ pub async fn submit(
                 Side::Short => crate::friction::FillSide::SellOpen,
                 Side::Cover => crate::friction::FillSide::BuyClose,
             };
-            let quote_f64 = p.to_string().parse::<f64>().unwrap_or_else(|_| quote.price);
+            let quote_f64 = p.to_string().parse::<f64>().unwrap_or(quote.price);
             let qty_f64 = req.qty.to_string().parse::<f64>().unwrap_or(0.0);
             let f = crate::friction::apply_fill_friction(quote_f64, qty_f64, side, friction_cfg);
             let adjusted = Decimal::try_from(f.fill_price).unwrap_or(p);

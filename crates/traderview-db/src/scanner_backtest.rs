@@ -145,7 +145,7 @@ pub fn aggregate(returns: &[f64], horizon_days: u32) -> HorizonStats {
     let mean = returns.iter().sum::<f64>() / n as f64;
     let mut sorted = returns.to_vec();
     sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-    let median = if n % 2 == 0 {
+    let median = if n.is_multiple_of(2) {
         (sorted[n / 2 - 1] + sorted[n / 2]) / 2.0
     } else {
         sorted[n / 2]

@@ -33,7 +33,7 @@ async fn rank(
         ));
     }
     let universe = magic_formula::default_universe();
-    let symbols: Vec<&str> = universe.iter().copied().collect();
+    let symbols: Vec<&str> = universe.to_vec();
     Ok(Json(
         magic_formula::score_universe(&symbols, q.max_symbols).await,
     ))

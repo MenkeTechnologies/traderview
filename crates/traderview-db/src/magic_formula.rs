@@ -78,10 +78,8 @@ pub fn extract_inputs(symbol: &str, qs: &Value) -> MagicFormulaScore {
     let long_term_debt = pluck(bs, 0, "longTermDebt").unwrap_or(0.0);
     let short_long_debt = pluck(bs, 0, "shortLongTermDebt").unwrap_or(0.0);
     let cash = pluck(bs, 0, "cash").unwrap_or(0.0);
-    let invested_capital_usd = match total_equity {
-        Some(eq) => Some(eq + long_term_debt + short_long_debt - cash),
-        None => None,
-    };
+    let invested_capital_usd =
+        total_equity.map(|eq| eq + long_term_debt + short_long_debt - cash);
 
     let earnings_yield_pct = match (ebit_usd, enterprise_value_usd) {
         (Some(e), Some(ev)) if ev > 0.0 => Some(e / ev * 100.0),

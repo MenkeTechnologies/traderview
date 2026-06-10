@@ -382,9 +382,10 @@ const AUTOSCAN_CRYPTO_UNIVERSE: &[&str] = &[
 ///     connections work for SIP; with IEX you'll hit the cap fast).
 ///   * Polygon Stocks Starter+: thousands.
 ///   * Finnhub free: 25 symbols per connection, multiple connections.
-///   The runner doesn't enforce the cap — pick whatever top_n the
-///   strategy asks for and let the provider negotiate. Excess picks
-///   may stay "no bars" until a slot frees up.
+///
+/// The runner doesn't enforce the cap — pick whatever top_n the
+/// strategy asks for and let the provider negotiate. Excess picks
+/// may stay "no bars" until a slot frees up.
 ///
 /// `interval` is accepted but currently unused — kept in the
 /// signature so a future "pick only symbols already streaming the
@@ -393,6 +394,7 @@ const AUTOSCAN_CRYPTO_UNIVERSE: &[&str] = &[
 /// Asset class the strategy's autoscan should pick from.
 ///   * Equity → query the `symbols` catalog ranked by historical volume.
 ///   * Crypto → curated 25-pair `BASE/QUOTE` list. Trades 24/7.
+///
 /// Selected via `entry_rules.asset_class` ("crypto" picks Crypto;
 /// anything else falls through to Equity for backward compatibility).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

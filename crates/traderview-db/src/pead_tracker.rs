@@ -20,7 +20,7 @@
 //!      forward — close enough for ranking purposes and avoids a
 //!      separate trading-day calendar).
 //!   4. Score = signed-drift quality:
-//!         score = sign(surprise) · (return_20d - return_day0)
+//!      score = sign(surprise) · (return_20d - return_day0)
 //!      where the "post-day-0" piece is what PEAD actually claims.
 //!      A positive score means the surprise direction was followed by
 //!      drift in the same direction over the next ~month.
@@ -92,10 +92,7 @@ pub fn compute_row(
     let return_5d_pct = pct_after(earnings_date + Duration::days(7));
     let return_20d_pct = pct_after(earnings_date + Duration::days(28));
     let return_60d_pct = pct_after(earnings_date + Duration::days(84));
-    let score = match return_20d_pct {
-        Some(r20) => Some(surprise_pct.signum() * r20),
-        None => None,
-    };
+    let score = return_20d_pct.map(|r20| surprise_pct.signum() * r20);
     PeadRow {
         symbol: symbol.into(),
         earnings_date,

@@ -134,7 +134,7 @@ fn score_market_cap(mc: Option<f64>, threshold: f64) -> CriterionResult {
             CriterionResult {
                 name: "market_cap",
                 passed,
-                partial_score: partial.min(1.0).max(0.0),
+                partial_score: partial.clamp(0.0, 1.0),
                 detail: format!("${:.1}B vs threshold ${:.1}B", v / 1e9, threshold / 1e9),
             }
         }
@@ -157,7 +157,7 @@ fn score_float(float: Option<f64>, shares_out: Option<f64>, threshold: f64) -> C
             CriterionResult {
                 name: "public_float",
                 passed,
-                partial_score: partial.min(1.0).max(0.0),
+                partial_score: partial.clamp(0.0, 1.0),
                 detail: format!(
                     "float {:.1}% vs threshold {:.0}%",
                     ratio * 100.0,
@@ -199,7 +199,7 @@ fn score_liquidity(
             CriterionResult {
                 name: "liquidity",
                 passed,
-                partial_score: partial.min(1.0).max(0.0),
+                partial_score: partial.clamp(0.0, 1.0),
                 detail: format!(
                     "annual $-vol / FFMC = {:.2} vs threshold {:.2}",
                     ratio, threshold

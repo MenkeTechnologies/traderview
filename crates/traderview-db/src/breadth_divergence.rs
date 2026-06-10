@@ -22,8 +22,8 @@
 //!   3. After the window is full enough (≥ `MIN_SAMPLES`) we evaluate
 //!      the divergence rule:
 //!
-//!        spy_change_pct = (last_spy - first_spy) / first_spy * 100
-//!        breadth_avg    = mean(composite_score over window)
+//!      spy_change_pct = (last_spy - first_spy) / first_spy * 100
+//!      breadth_avg    = mean(composite_score over window)
 //!
 //!      * BearishDivergence: spy_change_pct ≥ +`PRICE_DELTA_PCT` AND
 //!        breadth_avg ≤ -`BREADTH_THRESHOLD`

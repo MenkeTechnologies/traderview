@@ -268,7 +268,7 @@ mod tests {
             short_ratio: dtc,
             short_pct_float: pct_float,
             short_pct_outstanding: None,
-            float: float,
+            float,
             change_pct: change,
             fetched_at: Utc::now(),
         }

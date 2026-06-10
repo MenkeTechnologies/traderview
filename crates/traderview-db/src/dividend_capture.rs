@@ -25,6 +25,7 @@
 //!          drop convention)
 //!        * `short_arb_edge_pct` = `(1 - LONG_RETENTION_PCT) × annual_yield
 //!          − borrow_proxy − tx_friction`
+//!
 //!      The two variants together let the user see whether a name is
 //!      better for the long-only capture or the short-hedged arb.
 //!
@@ -32,8 +33,7 @@
 //! per-name variant surfaces first. Names with negative edges on
 //! both sides are filtered.
 
-use chrono::{DateTime, Duration, Utc};
-use rust_decimal::prelude::ToPrimitive;
+use chrono::{DateTime, Utc};
 use serde::Serialize;
 use sqlx::PgPool;
 
@@ -157,7 +157,7 @@ fn parse_yahoo_dividends(
 /// upcoming ex-date within MAX_DAYS_TO_EX, or yields no positive-edge
 /// variant.
 pub async fn refresh_symbol(
-    pool: &PgPool,
+    _pool: &PgPool,
     symbol: &str,
 ) -> anyhow::Result<Option<DividendCaptureRow>> {
     let body = market_data::dividends(symbol).await?;

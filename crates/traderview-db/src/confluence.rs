@@ -5,8 +5,10 @@
 //! each event into a `(symbol, source, observed_at)` tuple, and
 //! computes a per-symbol confluence score:
 //!
-//!     score = Σ_{events in 24h} source_weight · recency_weight
-//!           + diversity_bonus(distinct sources hit)
+//! ```text
+//! score = Σ_{events in 24h} source_weight · recency_weight
+//!       + diversity_bonus(distinct sources hit)
+//! ```
 //!
 //! where:
 //!   * `source_weight` is fixed per `Source` variant — insider buys

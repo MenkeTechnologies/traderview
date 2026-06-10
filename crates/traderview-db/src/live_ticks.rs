@@ -332,7 +332,7 @@ impl LiveTickStore {
             per.push((entry.key().clone(), *entry.value()));
             total += *entry.value();
         }
-        per.sort_by(|a, b| b.1.cmp(&a.1));
+        per.sort_by_key(|x| std::cmp::Reverse(x.1));
         let top = per
             .iter()
             .take(10)

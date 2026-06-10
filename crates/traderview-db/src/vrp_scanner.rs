@@ -26,7 +26,7 @@
 //! 60 min in the background warmer keeps the table fresh without
 //! hammering Yahoo.
 
-use chrono::{DateTime, Duration, Utc};
+use chrono::{DateTime, Utc};
 use dashmap::DashMap;
 use rust_decimal::prelude::ToPrimitive;
 use serde::Serialize;

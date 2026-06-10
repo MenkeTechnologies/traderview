@@ -168,7 +168,7 @@ pub fn compute_metrics(symbol: &str, label: &str, daily_rs: &[f64]) -> Option<Ti
     }
     if accelerating {
         let slope_ratio = if slope_20d > 0.0 {
-            (slope_5d / slope_20d).min(2.0).max(0.0)
+            (slope_5d / slope_20d).clamp(0.0, 2.0)
         } else {
             // 20d slope ≤ 0 but 5d > 0 → maximum acceleration bonus.
             2.0

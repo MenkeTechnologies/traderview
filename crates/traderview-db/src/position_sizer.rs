@@ -4,14 +4,16 @@
 //!
 //!   * `FixedNotional` — flat $ per fire (legacy 0065 behavior).
 //!   * `HalfKelly`     — 0.5 · f* applied to current equity, clamped to
-//!                       `max_fraction`. Conservative practitioner's choice.
+//!     `max_fraction`. Conservative practitioner's choice.
 //!   * `QuarterKelly`  — 0.25 · f*, same clamp.
 //!
 //! Kelly is computed from the scanner backtest stats:
 //!
-//!     μ = scanner mean_return_pct / 100         (per-horizon mean)
-//!     σ = scanner stdev_pct / 100               (per-horizon stdev)
-//!     f* = μ / σ²                               (continuous, r_f = 0)
+//! ```text
+//! μ = scanner mean_return_pct / 100         (per-horizon mean)
+//! σ = scanner stdev_pct / 100               (per-horizon stdev)
+//! f* = μ / σ²                               (continuous, r_f = 0)
+//! ```
 //!
 //! When no scanner stats are available (e.g. the scanner hasn't been
 //! backtested yet, or n < min_n), the sizer falls back to

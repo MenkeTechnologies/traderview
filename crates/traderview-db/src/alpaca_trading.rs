@@ -420,6 +420,7 @@ impl PlaceOrderRequest {
     ///   * `time_in_force` MUST be `day`
     ///   * `extended_hours: true`
     ///   * `order_class` MUST be omitted (no bracket/OCO/OTO)
+    ///
     /// So the engine submits entry-only; the user manages exit
     /// manually OR the risk circuit breakers / metrics dashboard
     /// surface the open position for human review the next session.

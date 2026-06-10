@@ -357,7 +357,7 @@ mod tests {
         //   minute 9      : 800  <- 8× baseline of 100
         // For each minute we need to *close* it with a trade in the next.
         let mut emitted: Option<AccelEvent> = None;
-        let mut feed = |store: &RvolAccelStore, m: i64, v: f64| -> Option<AccelEvent> {
+        let feed = |store: &RvolAccelStore, m: i64, v: f64| -> Option<AccelEvent> {
             store.observe(&trade("A", v, m))
         };
         for m in 0..7 {
@@ -387,7 +387,7 @@ mod tests {
     fn no_fire_when_run_not_strictly_increasing() {
         let store = RvolAccelStore::new();
         let mut emitted = None;
-        let mut feed = |s: &RvolAccelStore, m: i64, v: f64| s.observe(&trade("B", v, m));
+        let feed = |s: &RvolAccelStore, m: i64, v: f64| s.observe(&trade("B", v, m));
         for m in 0..7 {
             emitted = emitted.or(feed(&store, m, 100.0));
         }
@@ -403,7 +403,7 @@ mod tests {
     fn no_fire_when_multiple_too_small() {
         let store = RvolAccelStore::new();
         let mut emitted = None;
-        let mut feed = |s: &RvolAccelStore, m: i64, v: f64| s.observe(&trade("C", v, m));
+        let feed = |s: &RvolAccelStore, m: i64, v: f64| s.observe(&trade("C", v, m));
         for m in 0..7 {
             emitted = emitted.or(feed(&store, m, 100.0));
         }
@@ -418,7 +418,7 @@ mod tests {
     #[test]
     fn second_fire_suppressed_until_run_breaks() {
         let store = RvolAccelStore::new();
-        let mut feed = |s: &RvolAccelStore, m: i64, v: f64| s.observe(&trade("D", v, m));
+        let feed = |s: &RvolAccelStore, m: i64, v: f64| s.observe(&trade("D", v, m));
         // Set up a fire.
         for m in 0..7 {
             feed(&store, m, 100.0);

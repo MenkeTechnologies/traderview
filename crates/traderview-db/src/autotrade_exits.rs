@@ -15,7 +15,7 @@
 //! used by `sweep_exits` to decide which positions to flatten. The
 //! repository layer handles tag persistence + the paper::submit call.
 
-use chrono::{DateTime, Duration, Utc};
+use chrono::{DateTime, Utc};
 use rust_decimal::Decimal;
 use serde::Serialize;
 use sqlx::PgPool;
@@ -138,6 +138,7 @@ pub fn next_consecutive_degraded(prior: i32, is_degraded: bool) -> i32 {
 /// Price-driven exit check. Evaluates in priority order:
 ///   1. Take-profit (positive — close winner)
 ///   2. Stop-loss / trailing-stop (negative — cut loser)
+///
 /// All percentages are positive numbers in [0, 100] (5.0 = 5%).
 /// Returns `None` when no SL/TP rule fires or inputs are invalid.
 pub fn should_exit_price_driven(
@@ -477,6 +478,7 @@ pub async fn sweep_exits(pool: &PgPool, user_id: Uuid) -> anyhow::Result<SweepRe
 #[cfg(test)]
 mod tests {
     use super::*;
+    use chrono::Duration;
 
     fn now() -> DateTime<Utc> {
         Utc::now()

@@ -120,6 +120,7 @@ mod tests {
         NaiveDate::from_ymd_opt(y, m, day).unwrap()
     }
 
+    #[allow(dead_code)]
     fn linear(start: NaiveDate, n: usize, daily_pct: f64) -> Vec<(NaiveDate, f64)> {
         let mut p = 100.0_f64;
         (0..n)
