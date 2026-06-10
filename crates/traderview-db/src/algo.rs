@@ -629,6 +629,34 @@ pub async fn mark_order_submitted(
     Ok(())
 }
 
+/// True when an outstanding (not yet filled / rejected / canceled /
+/// expired) algo_orders row exists for (strategy_id, symbol, side).
+/// The exit pass calls this BEFORE submitting a close — without it,
+/// real-Alpaca flows (where the entry fill lands later via the
+/// trade_updates WebSocket, not synchronously) re-submit the same
+/// close every tick until the WS finally closes the trade row, which
+/// can over-sell several times before settling.
+pub async fn has_pending_order(
+    pool: &PgPool,
+    strategy_id: Uuid,
+    symbol: &str,
+    side: &str,
+) -> anyhow::Result<bool> {
+    let (n,): (i64,) = sqlx::query_as(
+        "SELECT COUNT(*) FROM algo_orders
+          WHERE strategy_id = $1
+            AND symbol = $2
+            AND side = $3
+            AND status NOT IN ('filled', 'rejected', 'canceled', 'expired')",
+    )
+    .bind(strategy_id)
+    .bind(symbol)
+    .bind(side)
+    .fetch_one(pool)
+    .await?;
+    Ok(n > 0)
+}
+
 /// Called from the trade_updates WS handler.
 pub async fn update_order_status(
     pool: &PgPool,

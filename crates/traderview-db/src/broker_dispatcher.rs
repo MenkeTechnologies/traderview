@@ -270,6 +270,7 @@ impl BrokerSink for AlpacaSink {
         symbol: String,
         side: traderview_core::algo_strategies::Side,
         qty: Decimal,
+        reference_price: Decimal,
         coid: Uuid,
     ) -> std::pin::Pin<
         Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>,
@@ -280,12 +281,25 @@ impl BrokerSink for AlpacaSink {
                 traderview_core::algo_strategies::Side::Buy => "buy",
                 traderview_core::algo_strategies::Side::Sell => "sell",
             };
-            // Single-leg market flat — no bracket, no take-profit, no stop.
-            // Crypto stays on the crypto-market path (GTC TIF, /v2/orders
-            // rejects bracket); equities use the simple market helper.
+            // Asset / session split mirrors the entry path:
+            //   * Crypto: simple crypto_market (GTC, /v2/orders rejects
+            //     bracket on crypto and runs 24/7).
+            //   * Equity in extended hours: LIMIT at the strategy's
+            //     reference price — Alpaca REJECTS market orders during
+            //     pre-market (4–9:30 ET) and after-hours (16–20 ET),
+            //     so a market-only close path silently fails to exit.
+            //   * Equity in regular hours: simple market, day TIF.
             let is_crypto = symbol.contains('/');
             let req = if is_crypto {
                 PlaceOrderRequest::crypto_market(symbol.clone(), side_str, qty, coid)
+            } else if is_extended_hours_session_now() {
+                PlaceOrderRequest::extended_hours_limit(
+                    symbol.clone(),
+                    side_str,
+                    qty,
+                    coid,
+                    reference_price,
+                )
             } else {
                 PlaceOrderRequest::market(symbol.clone(), side_str, qty, coid)
             };

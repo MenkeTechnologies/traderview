@@ -165,14 +165,18 @@ pub trait BrokerSink: Send + Sync {
     /// by the runner's exit pass — the strategy's `evaluate_exit` fired,
     /// and the engine needs to flat the position at market. `side` is
     /// the CLOSING side (opposite of the position): `Sell` for a long
-    /// close, `Buy` for a short cover. Default impl returns a Broker
-    /// error so sinks that haven't been wired for exits don't accidentally
-    /// no-op silently — the runner logs the error and skips.
+    /// close, `Buy` for a short cover. `reference_price` is the
+    /// strategy's expected exit price — used by simulated sinks as the
+    /// fill price; live broker sinks ignore it (the broker prices at
+    /// market or, in extended hours, uses it as a LIMIT). Default impl
+    /// returns a Broker error so sinks that haven't been wired for
+    /// exits compile — the runner logs and skips.
     fn submit_market_close(
         &self,
         _symbol: String,
         _side: Side,
         _qty: Decimal,
+        _reference_price: Decimal,
         _coid: Uuid,
     ) -> std::pin::Pin<
         Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>,
@@ -224,6 +228,7 @@ impl BrokerSink for InMemorySink {
         symbol: String,
         side: Side,
         qty: Decimal,
+        reference_price: Decimal,
         coid: Uuid,
     ) -> std::pin::Pin<
         Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>,
@@ -231,11 +236,12 @@ impl BrokerSink for InMemorySink {
         let submitted = self.submitted.clone();
         Box::pin(async move {
             let id = coid.to_string();
-            // The InMemorySink doesn't know the live price — record the
-            // fill at qty>0 with price=0; tests asserting on close
-            // amounts can override via the explicit submitted vec.
+            // Sim fills at `reference_price`. Tests that assert on close
+            // P&L pass the entry signal's exit_price so realized P&L
+            // matches the strategy's intent. Filling at zero (the prior
+            // default) made every test trade look like a -100% loss.
             let fill = ImmediateFill {
-                price: Decimal::ZERO,
+                price: reference_price,
                 qty,
                 fee: Decimal::ZERO,
                 executed_at: Utc::now(),
@@ -248,7 +254,7 @@ impl BrokerSink for InMemorySink {
                 symbol,
                 side,
                 qty,
-                entry_price: Decimal::ZERO,
+                entry_price: reference_price,
                 stop_price: Decimal::ZERO,
                 take_profit_price: Decimal::ZERO,
             });
@@ -727,6 +733,11 @@ pub async fn process_bar_window_multi(
             reason: strategy.kill_reason.clone(),
         });
     }
+    // Paper-lock check — was missing in the original multi-symbol path,
+    // letting pair strategies submit live before the paper lock expired.
+    if strategy.broker_mode == "live" && chrono::Utc::now() <= strategy.paper_locked_until {
+        return Err(EngineError::PaperLocked(strategy.paper_locked_until));
+    }
     let cfg = EngineConfig::from_strategy(strategy);
     if open_positions >= cfg.max_concurrent_positions {
         return Err(EngineError::PositionCap(open_positions));
@@ -754,6 +765,35 @@ pub async fn process_bar_window_multi(
         .required_symbols()
         .and_then(|v| v.into_iter().next())
         .unwrap_or_default();
+
+    // Exit pass per leg. Pairs/stat-arb open one position per symbol,
+    // so we walk every leg's bars and ask the strategy whether each
+    // open position should flat. Without this, pair strategies leak
+    // positions — entry submits but evaluate_exit never gets called.
+    let mut any_exited = false;
+    for (sym, bars) in bars_by_symbol.iter() {
+        if bars.is_empty() {
+            continue;
+        }
+        let exited = run_exit_pass(
+            pool,
+            sink,
+            strategy,
+            run_id,
+            strat.as_ref(),
+            sym,
+            bars,
+            event_sink,
+        )
+        .await?;
+        if exited {
+            any_exited = true;
+        }
+    }
+    if any_exited {
+        return Ok(None);
+    }
+
     let Some(sig) = strat.evaluate_entry_multi(bars_by_symbol, cfg.side_mode) else {
         return Ok(None);
     };
@@ -953,6 +993,25 @@ async fn run_exit_pass(
             Side::Buy => Side::Sell,
             Side::Sell => Side::Buy,
         };
+        // Skip if a previous tick already submitted a close that hasn't
+        // come back as filled/rejected/canceled yet. On real Alpaca the
+        // fill lands via the trade_updates WebSocket — until that pump
+        // catches up, the trade row stays 'open' and the next tick
+        // would re-submit the same close, over-selling N times before
+        // it settles. InMemorySink and the paper sink return immediate
+        // fills so this is a no-op for them.
+        let close_side_str = side_to_str(close_side);
+        let pending = algo::has_pending_order(pool, strategy.id, symbol, close_side_str)
+            .await
+            .map_err(|e| EngineError::Broker(format!("has_pending_order: {e}")))?;
+        if pending {
+            tracing::debug!(
+                strategy = %strategy.id, symbol, trade_id = %pos.id,
+                "exit pass: close already pending, skipping until WS settles"
+            );
+            continue;
+        }
+        let exit_price_dec = Decimal::from_f64(exit_sig.exit_price).unwrap_or_default();
         let coid = Uuid::new_v4();
         // Insert the close as a real algo_orders row first — algo_fills
         // has a FK on order_id, so record_fill needs an order_id that
@@ -964,7 +1023,7 @@ async fn run_exit_pass(
             AlgoOrderInsert {
                 client_order_id: coid,
                 symbol: symbol.to_string(),
-                side: side_to_str(close_side).into(),
+                side: close_side_str.into(),
                 order_type: "market".into(),
                 order_class: "simple".into(),
                 qty: pos.qty,
@@ -981,7 +1040,7 @@ async fn run_exit_pass(
         .await
         .map_err(|e| EngineError::Broker(e.to_string()))?;
         let resp = match sink
-            .submit_market_close(symbol.to_string(), close_side, pos.qty, coid)
+            .submit_market_close(symbol.to_string(), close_side, pos.qty, exit_price_dec, coid)
             .await
         {
             Ok(r) => r,
@@ -1035,7 +1094,7 @@ async fn run_exit_pass(
                 symbol: symbol.to_string(),
                 side: close_side,
                 qty: pos.qty,
-                entry_price: Decimal::from_f64(exit_sig.exit_price).unwrap_or_default(),
+                entry_price: exit_price_dec,
                 stop_price: Decimal::ZERO,
                 take_profit_price: Decimal::ZERO,
             };
