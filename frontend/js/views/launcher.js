@@ -38,6 +38,7 @@ export const TILES = [
     ['portfolio-exposure', 'Portfolio Exposure', '🧭', 'Total β to SPY, sector concentration, single-name HHI, parametric 1-day 95% VaR', 'NEW'],
     ['dividend-tracker', 'Dividend Tracker', '💵', 'Price + DRIP total return per position, yield-on-cost, forward 12-month income estimate', 'NEW'],
     ['magic-formula', 'Magic Formula', '🪄', 'Greenblatt value scorer: rank S&P by combined (EBIT/EV + ROIC) ranking', 'NEW'],
+    ['paper-rebalance', 'Paper Rebalancer', '⚖️', 'Named target weight sets, drift detection, suggested rebalance trades for the paper account', 'NEW'],
     ['drawdown-cutoff', 'Drawdown Cutoff', '🛑', 'Auto-fire kill-switch when live broker equity drops below your max-drawdown threshold', 'NEW'],
     ['pead',         'PEAD Drift',    '📈',  'Post-earnings drift — surprise + 5/20/60d returns + drift score', 'NEW'],
     ['sentiment-velocity', 'Sentiment Velocity', '🔊', 'WSB+StockTwits mention acceleration — ≥3× hour-over-hour + ≥2 consecutive', 'NEW'],

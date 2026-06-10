@@ -80,6 +80,7 @@ pub mod note_templates;
 pub mod options;
 pub mod pairs_cointegration;
 pub mod paper;
+pub mod paper_rebalance;
 pub mod pead_tracker;
 pub mod plans;
 pub mod portfolio_exposure;
