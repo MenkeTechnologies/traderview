@@ -132,6 +132,7 @@ mod sinking_fund;
 mod sp500_predict;
 mod squeeze_scanner;
 mod strategy_alerts;
+mod student_loan_payoff;
 mod symbols_catalog;
 mod tags;
 mod tape_replay;
@@ -235,6 +236,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(rent_vs_buy::router())
         .merge(heloc::router())
         .merge(home_maintenance::router())
+        .merge(student_loan_payoff::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())

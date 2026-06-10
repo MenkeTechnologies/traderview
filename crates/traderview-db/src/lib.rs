@@ -132,6 +132,7 @@ pub mod sinking_fund;
 pub mod sp500_predictor;
 pub mod squeeze_detector;
 pub mod strategy_alerts;
+pub mod student_loan_payoff;
 pub mod symbols;
 pub mod tags;
 pub mod tape_replay;
