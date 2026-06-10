@@ -41,6 +41,7 @@ export const TILES = [
     ['paper-rebalance', 'Paper Rebalancer', '⚖️', 'Named target weight sets, drift detection, suggested rebalance trades for the paper account', 'NEW'],
     ['paper-tax-loss-harvest', 'Paper TLH', '📉', 'Paper account tax-loss harvest: find losses ≥ threshold, suggest non-substantially-identical replacement, flag wash-sale risk', 'NEW'],
     ['sector-rotation-strategy', 'Sector Rotation', '🔄', 'Faber-style monthly sector momentum rotation — Sharpe, CI, max DD on 11 sector ETFs', 'NEW'],
+    ['dca-simulator', 'DCA Simulator', '📅', 'Dollar-cost-averaging scheduler with lump-sum comparison — does buying $N/month beat lump-summing?', 'NEW'],
     ['drawdown-cutoff', 'Drawdown Cutoff', '🛑', 'Auto-fire kill-switch when live broker equity drops below your max-drawdown threshold', 'NEW'],
     ['pead',         'PEAD Drift',    '📈',  'Post-earnings drift — surprise + 5/20/60d returns + drift score', 'NEW'],
     ['sentiment-velocity', 'Sentiment Velocity', '🔊', 'WSB+StockTwits mention acceleration — ≥3× hour-over-hour + ≥2 consecutive', 'NEW'],

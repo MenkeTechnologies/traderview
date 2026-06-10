@@ -33,6 +33,7 @@ pub mod custom_indicators;
 pub mod darkpool;
 pub mod dashboards;
 pub mod data_source_keys;
+pub mod dca_simulator;
 pub mod discipline;
 pub mod disclosures;
 pub mod dividend_capture;

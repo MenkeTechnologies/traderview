@@ -36,6 +36,7 @@ mod custom_indicators;
 mod darkpool;
 mod dashboards;
 mod data_sources;
+mod dca_simulator;
 mod discipline;
 mod disclosures;
 mod dividend_capture;
@@ -217,6 +218,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(ipo_lockups::router())
         .merge(iv_term::router())
         .merge(sp500_predict::router())
+        .merge(dca_simulator::router())
         .merge(dividend_capture::router())
         .merge(dividend_tracker::router())
         .merge(drawdown_cutoff::router())
