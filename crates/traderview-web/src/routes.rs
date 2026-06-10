@@ -111,6 +111,7 @@ mod strategy_alerts;
 mod symbols_catalog;
 mod tags;
 mod tape_replay;
+mod tax_loss_harvest;
 mod tax_lots;
 mod trade_analytics;
 mod trade_compare;
@@ -222,6 +223,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(webull::router())
         .merge(vol_surface::router())
         .merge(tax_lots::router())
+        .merge(tax_loss_harvest::router())
         .merge(compare::router())
         .merge(export::router())
         .merge(chart_drawings::router())

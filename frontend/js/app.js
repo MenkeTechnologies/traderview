@@ -639,6 +639,7 @@ import { renderPortfolioExposure } from './views/portfolio_exposure.js';
 import { renderDividendTracker } from './views/dividend_tracker.js';
 import { renderMagicFormula } from './views/magic_formula.js';
 import { renderPaperRebalance } from './views/paper_rebalance.js';
+import { renderPaperTaxLossHarvest } from './views/paper_tax_loss_harvest.js';
 import { renderDrawdownCutoff } from './views/drawdown_cutoff.js';
 import { renderPead } from './views/pead.js';
 import { renderSentimentVelocity } from './views/sentiment_velocity.js';
@@ -2852,6 +2853,7 @@ export async function dispatch() {
             case 'dividend-tracker': await renderDividendTracker(mount, state); break;
             case 'magic-formula': await renderMagicFormula(mount, state); break;
             case 'paper-rebalance': await renderPaperRebalance(mount, state); break;
+            case 'paper-tax-loss-harvest': await renderPaperTaxLossHarvest(mount, state); break;
             case 'drawdown-cutoff': await renderDrawdownCutoff(mount, state); break;
             case 'pead':           await renderPead(mount, state); break;
             case 'sentiment-velocity': await renderSentimentVelocity(mount, state); break;
