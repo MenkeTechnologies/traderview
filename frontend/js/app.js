@@ -649,6 +649,16 @@ import { renderDividendAristocrats } from './views/dividend_aristocrats.js';
 import { renderPermanentPortfolio } from './views/permanent_portfolio.js';
 import { renderCapeIndicator } from './views/cape_indicator.js';
 import { renderFireCalculator } from './views/fire_calculator.js';
+import { renderInflationCalculator } from './views/inflation_calculator.js';
+import { renderLumpSumVsDca } from './views/lump_sum_vs_dca.js';
+import { renderBillCalendar } from './views/bill_calendar.js';
+import { renderCashFlowForecast } from './views/cash_flow_forecast.js';
+import { renderIncomeTaxEstimator } from './views/income_tax_estimator.js';
+import { renderCompoundInterest } from './views/compound_interest.js';
+import { renderTimeValueMoney } from './views/time_value_money.js';
+import { renderRothConversionLadder } from './views/roth_conversion_ladder.js';
+import { renderMortgagePayoffVsInvest } from './views/mortgage_payoff_vs_invest.js';
+import { renderIbondCalculator } from './views/ibond_calculator.js';
 import { renderEmergencyFund } from './views/emergency_fund.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
@@ -748,6 +758,7 @@ import { renderBusinessesManage } from './views/businesses_manage.js';
 import { renderToastHistory } from './views/toast_history.js';
 import { renderLogViewer } from './views/log_viewer.js';
 import { renderAbout } from './views/about.js';
+import { renderLiveFeed } from './views/live_feed.js';
 import { renderReceipts } from './views/receipts.js';
 import { renderPurchases } from './views/purchases.js';
 import { renderCategorize } from './views/categorize.js';
@@ -2910,6 +2921,16 @@ export async function dispatch() {
             case 'permanent-portfolio': await renderPermanentPortfolio(mount, state); break;
             case 'cape-indicator': await renderCapeIndicator(mount, state); break;
             case 'fire-calculator': await renderFireCalculator(mount, state); break;
+            case 'inflation-calculator': await renderInflationCalculator(mount, state); break;
+            case 'lump-sum-vs-dca': await renderLumpSumVsDca(mount, state); break;
+            case 'bill-calendar': await renderBillCalendar(mount, state); break;
+            case 'cash-flow-forecast': await renderCashFlowForecast(mount, state); break;
+            case 'income-tax-estimator': await renderIncomeTaxEstimator(mount, state); break;
+            case 'compound-interest': await renderCompoundInterest(mount, state); break;
+            case 'time-value-money': await renderTimeValueMoney(mount, state); break;
+            case 'roth-conversion-ladder': await renderRothConversionLadder(mount, state); break;
+            case 'mortgage-payoff-vs-invest': await renderMortgagePayoffVsInvest(mount, state); break;
+            case 'ibond-calculator': await renderIbondCalculator(mount, state); break;
             case 'emergency-fund': await renderEmergencyFund(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
@@ -2975,6 +2996,7 @@ export async function dispatch() {
             case 'toast-history':     await renderToastHistory(mount); break;
             case 'log-viewer':        await renderLogViewer(mount); break;
             case 'about':             await renderAbout(mount, state); break;
+            case 'live-feed':         await renderLiveFeed(mount, state); break;
             case 'receipts':       await renderReceipts(mount, state); break;
             case 'purchases':      await renderPurchases(mount, state); break;
             case 'categorize':     await renderCategorize(mount, state); break;
@@ -4143,6 +4165,16 @@ export const viewRenderers = {
     'fifty-thirty-twenty': (m, s) => renderFiftyThirtyTwenty(m, s),
     'financial-ratios': (m, s) => renderFinancialRatios(m, s),
     'fire-calculator': (m, s) => renderFireCalculator(m, s),
+    'inflation-calculator': (m, s) => renderInflationCalculator(m, s),
+    'lump-sum-vs-dca': (m, s) => renderLumpSumVsDca(m, s),
+    'bill-calendar': (m, s) => renderBillCalendar(m, s),
+    'cash-flow-forecast': (m, s) => renderCashFlowForecast(m, s),
+    'income-tax-estimator': (m, s) => renderIncomeTaxEstimator(m, s),
+    'compound-interest': (m, s) => renderCompoundInterest(m, s),
+    'time-value-money': (m, s) => renderTimeValueMoney(m, s),
+    'roth-conversion-ladder': (m, s) => renderRothConversionLadder(m, s),
+    'mortgage-payoff-vs-invest': (m, s) => renderMortgagePayoffVsInvest(m, s),
+    'ibond-calculator': (m, s) => renderIbondCalculator(m, s),
     'heloc': (m, s) => renderHeloc(m, s),
     'home-maintenance': (m, s) => renderHomeMaintenance(m, s),
     'mortgage-amortization': (m, s) => renderMortgageAmortization(m, s),
@@ -4158,6 +4190,7 @@ export const viewRenderers = {
     'student-loan-payoff': (m, s) => renderStudentLoanPayoff(m, s),
     'zero-based-budget': (m, s) => renderZeroBasedBudget(m, s),
     'about': (m, s) => renderAbout(m, s),
+    'live-feed': (m, s) => renderLiveFeed(m, s),
 };
 
 window.addEventListener('tv:authed', () => boot());

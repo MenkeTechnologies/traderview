@@ -3990,3 +3990,43 @@ mark.fzf-hl {
     font-weight: 600;
     text-shadow: 0 0 4px var(--cyan-glow, rgba(0, 229, 255, 0.6));
 }
+
+/* ── Live Feed (frontend/js/views/live_feed.js) ───────────────────── */
+.lf-out {
+    height: 60vh; max-height: 70vh; overflow-y: auto;
+    background: #08090c; border: 1px solid #1a1d22;
+    font-family: ui-monospace, SF Mono, Menlo, monospace;
+    font-size: 11.5px; padding: 2px 0;
+}
+.lf-row {
+    display: grid; grid-template-columns: 90px 160px 1fr; gap: 6px;
+    padding: 1px 8px; line-height: 1.5; white-space: nowrap;
+    overflow: hidden;
+}
+.lf-row:hover { background: #0d1015; }
+.lf-ts        { color: var(--text-muted, #889); }
+.lf-type      { color: var(--cyan); }
+.lf-body      { color: var(--text, #cdd6e0); overflow: hidden; text-overflow: ellipsis; }
+.lf-body strong { color: var(--accent, #ffd84a); font-weight: 600; }
+.lf-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border: 1px solid #1a1d22; border-radius: 12px;
+    background: #11141a; cursor: pointer; user-select: none;
+    font-size: 10px; font-family: ui-monospace, SF Mono, Menlo, monospace;
+}
+.lf-chip:hover { border-color: var(--cyan); }
+.lf-chip input { margin: 0; }
+/* Per-type accent on the chip + the row's type label */
+.lf-chip.lf-tick                .lf-type, .lf-row.lf-tick                > .lf-type { color: var(--green); }
+.lf-chip.lf-news                .lf-type, .lf-row.lf-news                > .lf-type { color: #f6c177; }
+.lf-chip.lf-sentiment           .lf-type, .lf-row.lf-sentiment           > .lf-type { color: #c4a7e7; }
+.lf-chip.lf-disclosure          .lf-type, .lf-row.lf-disclosure          > .lf-type { color: #ebbcba; }
+.lf-chip.lf-squeeze             .lf-type, .lf-row.lf-squeeze             > .lf-type { color: var(--red); }
+.lf-chip.lf-alert               .lf-type, .lf-row.lf-alert               > .lf-type { color: var(--red); font-weight: 700; }
+.lf-chip.lf-signal              .lf-type, .lf-row.lf-signal              > .lf-type { color: var(--accent, #ffd84a); }
+.lf-chip.lf-order               .lf-type, .lf-row.lf-order               > .lf-type { color: #88c0d0; }
+.lf-chip.lf-fill                .lf-type, .lf-row.lf-fill                > .lf-type { color: var(--green); }
+.lf-chip.lf-bar                 .lf-type, .lf-row.lf-bar                 > .lf-type { color: #6e7a8a; }
+.lf-chip.lf-skip                .lf-type, .lf-row.lf-skip                > .lf-type { color: #6e7a8a; font-style: italic; }
+.lf-chip.lf-heartbeat           .lf-type, .lf-row.lf-heartbeat           > .lf-type { color: #555; }
+.lf-chip.lf-ping                .lf-type, .lf-row.lf-ping                > .lf-type { color: #444; }

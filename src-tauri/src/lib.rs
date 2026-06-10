@@ -45,16 +45,29 @@ struct ProcessStats {
     pid: u32,
     app_version: &'static str,
     os: String,
+    os_version: Option<String>,
+    kernel_version: Option<String>,
     arch: &'static str,
     hostname: String,
     cpus: usize,
+    cpu_brand: Option<String>,
+    cpu_frequency_mhz: u64,
     cpu_percent: f32,
+    load_avg_1: f64,
+    load_avg_5: f64,
+    load_avg_15: f64,
     rss_bytes: u64,
     virtual_bytes: u64,
     threads: usize,
     uptime_secs: u64,
+    system_uptime_secs: u64,
+    boot_time_secs: u64,
     total_memory_bytes: u64,
     available_memory_bytes: u64,
+    used_swap_bytes: u64,
+    total_swap_bytes: u64,
+    disk_free_bytes: u64,
+    disk_total_bytes: u64,
 }
 
 /// One-shot snapshot of the running desktop process — PID, RSS / VIRT,
@@ -98,21 +111,51 @@ fn get_process_stats() -> ProcessStats {
     // on Windows. sysinfo doesn't expose thread count cross-platform, so
     // we count via std on platforms that allow it and report 0 otherwise.
     let threads = thread_count_estimate();
+    let load = System::load_average();
+
+    // Disk lookup — pick the root volume (Linux: '/', macOS: '/', Windows: 'C:').
+    let mut disks = sysinfo::Disks::new_with_refreshed_list();
+    disks.refresh();
+    let (disk_free, disk_total) = disks
+        .iter()
+        .find(|d| {
+            let mp = d.mount_point().to_string_lossy();
+            mp == "/" || mp.starts_with("C:")
+        })
+        .map(|d| (d.available_space(), d.total_space()))
+        .unwrap_or((0, 0));
+
+    let first_cpu = sys.cpus().first();
+    let cpu_brand = first_cpu.map(|c| c.brand().to_string());
+    let cpu_frequency_mhz = first_cpu.map(|c| c.frequency()).unwrap_or(0);
 
     ProcessStats {
         pid,
         app_version: env!("CARGO_PKG_VERSION"),
         os: System::name().unwrap_or_else(|| "unknown".into()),
+        os_version: System::long_os_version(),
+        kernel_version: System::kernel_version(),
         arch: std::env::consts::ARCH,
         hostname: System::host_name().unwrap_or_else(|| "unknown".into()),
         cpus: sys.cpus().len(),
+        cpu_brand,
+        cpu_frequency_mhz,
         cpu_percent,
+        load_avg_1: load.one,
+        load_avg_5: load.five,
+        load_avg_15: load.fifteen,
         rss_bytes: rss,
         virtual_bytes: virt,
         threads,
         uptime_secs: uptime,
+        system_uptime_secs: System::uptime(),
+        boot_time_secs: System::boot_time(),
         total_memory_bytes: sys.total_memory(),
         available_memory_bytes: sys.available_memory(),
+        used_swap_bytes: sys.used_swap(),
+        total_swap_bytes: sys.total_swap(),
+        disk_free_bytes: disk_free,
+        disk_total_bytes: disk_total,
     }
 }
 
