@@ -89,6 +89,7 @@ export const TILES = [
     ['i-bond', 'I-Bond', '💵', 'Series I savings bond — composite rate + holding rules + 3mo penalty in 1-5y window', 'NEW'],
     ['tips-bond', 'TIPS Bond', '🛡', 'Treasury Inflation-Protected Securities — semi-annual CPI accretion + real coupons + deflation floor', 'NEW'],
     ['hysa-compare', 'HYSA Compare', '🏧', 'Per-bank effective APY (with fees + min-balance) + winner by net gain', 'NEW'],
+    ['tax-bracket-optimizer', 'Tax Brackets', '🧾', '2026 IRS marginal brackets — current bracket + room remaining + effective rate', 'NEW'],
     ['drawdown-cutoff', 'Drawdown Cutoff', '🛑', 'Auto-fire kill-switch when live broker equity drops below your max-drawdown threshold', 'NEW'],
     ['inflation-calculator', 'Inflation Calculator', '💵', 'Future-dollar / real-value calculator — preserves purchasing power across N-year horizon at target CPI rate', 'NEW'],
     ['lump-sum-vs-dca', 'Lump-Sum vs DCA', '⚖️', 'Vanguard 2012 comparison — lump-sum end value vs DCA cadence end value + break-even market return', 'NEW'],

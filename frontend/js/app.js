@@ -701,6 +701,7 @@ import { renderCdLadder } from './views/cd_ladder.js';
 import { renderIBond } from './views/i_bond.js';
 import { renderTipsBond } from './views/tips_bond.js';
 import { renderHysaCompare } from './views/hysa_compare.js';
+import { renderTaxBracketOptimizer } from './views/tax_bracket_optimizer.js';
 import { renderDrawdownCutoff } from './views/drawdown_cutoff.js';
 import { renderPead } from './views/pead.js';
 import { renderSentimentVelocity } from './views/sentiment_velocity.js';
@@ -2975,6 +2976,7 @@ export async function dispatch() {
             case 'i-bond': await renderIBond(mount, state); break;
             case 'tips-bond': await renderTipsBond(mount, state); break;
             case 'hysa-compare': await renderHysaCompare(mount, state); break;
+            case 'tax-bracket-optimizer': await renderTaxBracketOptimizer(mount, state); break;
             case 'drawdown-cutoff': await renderDrawdownCutoff(mount, state); break;
             case 'pead':           await renderPead(mount, state); break;
             case 'sentiment-velocity': await renderSentimentVelocity(mount, state); break;

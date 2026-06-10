@@ -156,6 +156,7 @@ mod student_loan_payoff;
 mod symbols_catalog;
 mod tags;
 mod tape_replay;
+mod tax_bracket_optimizer;
 mod tax_loss_harvest;
 mod tax_lots;
 mod three_fund_portfolio;
@@ -281,6 +282,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(i_bond::router())
         .merge(tips_bond::router())
         .merge(hysa_compare::router())
+        .merge(tax_bracket_optimizer::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())

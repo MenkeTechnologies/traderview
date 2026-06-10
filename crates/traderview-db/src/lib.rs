@@ -158,6 +158,7 @@ pub mod tags;
 pub mod tape_replay;
 pub mod tastytrade_pump;
 pub mod tastytrade_trading;
+pub mod tax_bracket_optimizer;
 pub mod tax_loss_harvest;
 pub mod tax_lots;
 pub mod three_fund_portfolio;
