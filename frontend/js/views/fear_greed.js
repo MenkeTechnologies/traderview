@@ -2,7 +2,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
-import { currentViewToken, viewIsCurrent } from '../app.js';
+import { currentViewToken, viewIsCurrent, routeIs } from '../app.js';
 
 let timer = null;
 
@@ -47,7 +47,7 @@ export async function renderFearGreed(mount) {
         refresh(mount, tok);
     }, 90_000);
     window.addEventListener('hashchange', () => {
-        if (!window.location.hash.startsWith('#fear-greed')) { clearInterval(timer); timer = null; }
+        if (!routeIs('fear-greed')) { clearInterval(timer); timer = null; }
     }, { once: true });
     await refresh(mount, tok);
 }
