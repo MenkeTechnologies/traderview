@@ -117,6 +117,7 @@ mod sentiment_velocity;
 mod settings;
 mod shares;
 mod short_interest;
+mod sinking_fund;
 mod sp500_predict;
 mod squeeze_scanner;
 mod strategy_alerts;
@@ -209,6 +210,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(personal_cash_flow::router())
         .merge(financial_ratios::router())
         .merge(savings_rate::router())
+        .merge(sinking_fund::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())
