@@ -10,6 +10,7 @@ mod after_hours;
 mod alerts;
 mod algo;
 mod analysis;
+mod annuity_pv_fv;
 mod api_tokens;
 mod auth;
 mod auto_loan;
@@ -271,6 +272,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(three_fund_portfolio::router())
         .merge(bond_tent::router())
         .merge(glide_path::router())
+        .merge(annuity_pv_fv::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())

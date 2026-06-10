@@ -10,6 +10,7 @@ pub mod algo_engine;
 pub mod algo_runner;
 pub mod alpaca_pump;
 pub mod alpaca_trading;
+pub mod annuity_pv_fv;
 pub mod api_tokens;
 pub mod auto_loan;
 pub mod autotrade_exits;

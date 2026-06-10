@@ -83,6 +83,8 @@ export const TILES = [
     ['pension-lump-vs-annuity', 'Pension Lump vs Annuity', '🏦', 'PV(annuity) vs lump + implied IRR + runs-out year + leftover at life expectancy', 'NEW'],
     ['three-fund-portfolio', 'Three-Fund Portfolio', '🧮', 'Boglehead US + Intl + Bonds allocation by age + risk tolerance + drift + rebalance', 'NEW'],
     ['bond-tent', 'Bond Tent', '⛺', 'Kitces/Pfau rising-equity glide — ramp bonds up into retirement to dampen SORR', 'NEW'],
+    ['glide-path', 'Glide Path', '🛬', 'Target-Date-Fund-style 3-phase linear stock/bond glide', 'NEW'],
+    ['annuity-pv-fv', 'Annuity PV / FV', '🪙', 'Time-value annuity: PV + FV + total payments + interest; ordinary or due', 'NEW'],
     ['drawdown-cutoff', 'Drawdown Cutoff', '🛑', 'Auto-fire kill-switch when live broker equity drops below your max-drawdown threshold', 'NEW'],
     ['pead',         'PEAD Drift',    '📈',  'Post-earnings drift — surprise + 5/20/60d returns + drift score', 'NEW'],
     ['sentiment-velocity', 'Sentiment Velocity', '🔊', 'WSB+StockTwits mention acceleration — ≥3× hour-over-hour + ≥2 consecutive', 'NEW'],
