@@ -20,6 +20,7 @@ pub mod broker_dispatcher;
 pub mod candidates;
 pub mod cape_indicator;
 pub mod car_tco;
+pub mod coast_fire;
 pub mod college_529;
 pub mod carryover;
 pub mod catalyst_correlator;

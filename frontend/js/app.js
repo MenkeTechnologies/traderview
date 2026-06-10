@@ -675,6 +675,7 @@ import { renderFafsaEfc } from './views/fafsa_efc.js';
 import { renderCarTco } from './views/car_tco.js';
 import { renderLeaseVsBuyCar } from './views/lease_vs_buy_car.js';
 import { renderEvVsIce } from './views/ev_vs_ice.js';
+import { renderCoastFire } from './views/coast_fire.js';
 import { renderDrawdownCutoff } from './views/drawdown_cutoff.js';
 import { renderPead } from './views/pead.js';
 import { renderSentimentVelocity } from './views/sentiment_velocity.js';
@@ -2921,6 +2922,7 @@ export async function dispatch() {
             case 'car-tco': await renderCarTco(mount, state); break;
             case 'lease-vs-buy-car': await renderLeaseVsBuyCar(mount, state); break;
             case 'ev-vs-ice': await renderEvVsIce(mount, state); break;
+            case 'coast-fire': await renderCoastFire(mount, state); break;
             case 'drawdown-cutoff': await renderDrawdownCutoff(mount, state); break;
             case 'pead':           await renderPead(mount, state); break;
             case 'sentiment-velocity': await renderSentimentVelocity(mount, state); break;
