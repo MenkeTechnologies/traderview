@@ -39,6 +39,7 @@ mod data_sources;
 mod dca_simulator;
 mod discipline;
 mod disclosures;
+mod dividend_aristocrats;
 mod dividend_capture;
 mod dividend_tracker;
 mod drawdown_cutoff;
@@ -219,6 +220,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(iv_term::router())
         .merge(sp500_predict::router())
         .merge(dca_simulator::router())
+        .merge(dividend_aristocrats::router())
         .merge(dividend_capture::router())
         .merge(dividend_tracker::router())
         .merge(drawdown_cutoff::router())

@@ -642,6 +642,7 @@ import { renderPaperRebalance } from './views/paper_rebalance.js';
 import { renderPaperTaxLossHarvest } from './views/paper_tax_loss_harvest.js';
 import { renderSectorRotationStrategy } from './views/sector_rotation_strategy.js';
 import { renderDcaSimulator } from './views/dca_simulator.js';
+import { renderDividendAristocrats } from './views/dividend_aristocrats.js';
 import { renderDrawdownCutoff } from './views/drawdown_cutoff.js';
 import { renderPead } from './views/pead.js';
 import { renderSentimentVelocity } from './views/sentiment_velocity.js';
@@ -2858,6 +2859,7 @@ export async function dispatch() {
             case 'paper-tax-loss-harvest': await renderPaperTaxLossHarvest(mount, state); break;
             case 'sector-rotation-strategy': await renderSectorRotationStrategy(mount, state); break;
             case 'dca-simulator': await renderDcaSimulator(mount, state); break;
+            case 'dividend-aristocrats': await renderDividendAristocrats(mount, state); break;
             case 'drawdown-cutoff': await renderDrawdownCutoff(mount, state); break;
             case 'pead':           await renderPead(mount, state); break;
             case 'sentiment-velocity': await renderSentimentVelocity(mount, state); break;

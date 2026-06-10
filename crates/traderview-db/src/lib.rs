@@ -36,6 +36,7 @@ pub mod data_source_keys;
 pub mod dca_simulator;
 pub mod discipline;
 pub mod disclosures;
+pub mod dividend_aristocrats;
 pub mod dividend_capture;
 pub mod dividend_tracker;
 pub mod drawdown_cutoff;
