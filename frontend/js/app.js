@@ -636,6 +636,7 @@ import { renderMarketGammaRegime } from './views/market_gamma_regime.js';
 import { renderScannerBacktest } from './views/scanner_backtest.js';
 import { renderConfluenceAutotrade } from './views/confluence_autotrade.js';
 import { renderPortfolioExposure } from './views/portfolio_exposure.js';
+import { renderDividendTracker } from './views/dividend_tracker.js';
 import { renderDrawdownCutoff } from './views/drawdown_cutoff.js';
 import { renderPead } from './views/pead.js';
 import { renderSentimentVelocity } from './views/sentiment_velocity.js';
@@ -2846,6 +2847,7 @@ export async function dispatch() {
             case 'scanner-backtest': await renderScannerBacktest(mount, state); break;
             case 'confluence-autotrade': await renderConfluenceAutotrade(mount, state); break;
             case 'portfolio-exposure': await renderPortfolioExposure(mount, state); break;
+            case 'dividend-tracker': await renderDividendTracker(mount, state); break;
             case 'drawdown-cutoff': await renderDrawdownCutoff(mount, state); break;
             case 'pead':           await renderPead(mount, state); break;
             case 'sentiment-velocity': await renderSentimentVelocity(mount, state); break;
