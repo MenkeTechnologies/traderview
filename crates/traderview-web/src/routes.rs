@@ -83,6 +83,7 @@ mod heloc;
 mod home_maintenance;
 mod hotkeys;
 mod htb_ranker;
+mod hysa_compare;
 mod i_bond;
 mod imports;
 mod insider_clusters;
@@ -279,6 +280,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(cd_ladder::router())
         .merge(i_bond::router())
         .merge(tips_bond::router())
+        .merge(hysa_compare::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())
