@@ -646,6 +646,7 @@ import { renderDividendAristocrats } from './views/dividend_aristocrats.js';
 import { renderPermanentPortfolio } from './views/permanent_portfolio.js';
 import { renderCapeIndicator } from './views/cape_indicator.js';
 import { renderFireCalculator } from './views/fire_calculator.js';
+import { renderEmergencyFund } from './views/emergency_fund.js';
 import { renderDrawdownCutoff } from './views/drawdown_cutoff.js';
 import { renderPead } from './views/pead.js';
 import { renderSentimentVelocity } from './views/sentiment_velocity.js';
@@ -2866,6 +2867,7 @@ export async function dispatch() {
             case 'permanent-portfolio': await renderPermanentPortfolio(mount, state); break;
             case 'cape-indicator': await renderCapeIndicator(mount, state); break;
             case 'fire-calculator': await renderFireCalculator(mount, state); break;
+            case 'emergency-fund': await renderEmergencyFund(mount, state); break;
             case 'drawdown-cutoff': await renderDrawdownCutoff(mount, state); break;
             case 'pead':           await renderPead(mount, state); break;
             case 'sentiment-velocity': await renderSentimentVelocity(mount, state); break;

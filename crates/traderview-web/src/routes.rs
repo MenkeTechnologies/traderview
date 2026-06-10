@@ -48,6 +48,7 @@ mod earnings_cal;
 mod earnings_iv;
 mod earnings_revisions;
 mod economy;
+mod emergency_fund;
 mod equity_forecast;
 mod executions;
 mod export;
@@ -197,6 +198,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(breadth::router())
         .merge(fear_greed::router())
         .merge(fire_calculator::router())
+        .merge(emergency_fund::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())

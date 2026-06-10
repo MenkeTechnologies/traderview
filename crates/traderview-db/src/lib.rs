@@ -45,6 +45,7 @@ pub mod earnings_cal;
 pub mod earnings_iv;
 pub mod earnings_revisions;
 pub mod economy;
+pub mod emergency_fund;
 pub mod embedded;
 pub mod executions;
 pub mod fear_greed;
