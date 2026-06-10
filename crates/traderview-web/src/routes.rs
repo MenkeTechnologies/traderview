@@ -12,6 +12,7 @@ mod algo;
 mod analysis;
 mod api_tokens;
 mod auth;
+mod auto_loan;
 mod backtest;
 mod backtest_presets;
 mod breadth;
@@ -223,6 +224,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(debt_avalanche::router())
         .merge(debt_snowball::router())
         .merge(credit_utilization::router())
+        .merge(auto_loan::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())
