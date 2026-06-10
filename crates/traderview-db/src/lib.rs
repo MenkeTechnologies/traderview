@@ -19,6 +19,7 @@ pub mod breadth_divergence;
 pub mod broker_dispatcher;
 pub mod candidates;
 pub mod cape_indicator;
+pub mod college_529;
 pub mod carryover;
 pub mod catalyst_correlator;
 pub mod catalysts;

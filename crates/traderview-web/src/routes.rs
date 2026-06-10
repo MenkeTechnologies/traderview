@@ -26,6 +26,7 @@ mod chart_drawings;
 mod chart_indicators;
 mod charts;
 mod client_errors;
+mod college_529;
 mod comments;
 mod community;
 mod compare;
@@ -239,6 +240,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(home_maintenance::router())
         .merge(student_loan_payoff::router())
         .merge(pslf_tracker::router())
+        .merge(college_529::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())
