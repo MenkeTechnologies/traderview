@@ -663,6 +663,7 @@ import { renderAutoLoan } from './views/auto_loan.js';
 import { renderMortgageAmortization } from './views/mortgage_amortization.js';
 import { renderMortgageRefinance } from './views/mortgage_refinance.js';
 import { renderRentVsBuy } from './views/rent_vs_buy.js';
+import { renderHeloc } from './views/heloc.js';
 import { renderDrawdownCutoff } from './views/drawdown_cutoff.js';
 import { renderPead } from './views/pead.js';
 import { renderSentimentVelocity } from './views/sentiment_velocity.js';
@@ -2900,6 +2901,7 @@ export async function dispatch() {
             case 'mortgage-amortization': await renderMortgageAmortization(mount, state); break;
             case 'mortgage-refinance': await renderMortgageRefinance(mount, state); break;
             case 'rent-vs-buy': await renderRentVsBuy(mount, state); break;
+            case 'heloc': await renderHeloc(mount, state); break;
             case 'drawdown-cutoff': await renderDrawdownCutoff(mount, state); break;
             case 'pead':           await renderPead(mount, state); break;
             case 'sentiment-velocity': await renderSentimentVelocity(mount, state); break;

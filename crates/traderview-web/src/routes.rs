@@ -68,6 +68,7 @@ mod gamma_squeeze;
 mod goals;
 mod halts;
 mod heatmap;
+mod heloc;
 mod hotkeys;
 mod htb_ranker;
 mod imports;
@@ -231,6 +232,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(mortgage_amortization::router())
         .merge(mortgage_refinance::router())
         .merge(rent_vs_buy::router())
+        .merge(heloc::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())
