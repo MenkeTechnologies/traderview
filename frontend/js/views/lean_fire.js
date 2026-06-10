@@ -48,7 +48,7 @@ async function runCompute(mount) {
     };
     result.innerHTML = `<p class="muted">${esc(t('view.lean_fire.status.computing'))}</p>`;
     try {
-        const r = await api('/lean-fire/compute', { method: 'POST', body: JSON.stringify(input) });
+        const r = await api.request('/lean-fire/compute', { method: 'POST', body: JSON.stringify(input) });
         const fiCls = r.is_lean_fi ? 'pos' : 'neg';
         const tierCls = r.expense_tier === 'ultralean' || r.expense_tier === 'lean' ? 'pos'
                        : r.expense_tier === 'not_lean' ? 'neg' : '';

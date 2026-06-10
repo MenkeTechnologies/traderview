@@ -56,7 +56,7 @@ async function runCompute(mount) {
     };
     result.innerHTML = `<p class="muted">${esc(t('view.coast_fire.status.computing'))}</p>`;
     try {
-        const r = await api('/coast-fire/compute', { method: 'POST', body: JSON.stringify(input) });
+        const r = await api.request('/coast-fire/compute', { method: 'POST', body: JSON.stringify(input) });
         const coastCls = r.is_coast_fi ? 'pos' : 'neg';
         const deltaCls = r.current_vs_coast_delta_usd >= 0 ? 'pos' : 'neg';
         result.innerHTML = `

@@ -49,7 +49,7 @@ async function runCompute(mount) {
     };
     result.innerHTML = `<p class="muted">${esc(t('view.fat_fire.status.computing'))}</p>`;
     try {
-        const r = await api('/fat-fire/compute', { method: 'POST', body: JSON.stringify(input) });
+        const r = await api.request('/fat-fire/compute', { method: 'POST', body: JSON.stringify(input) });
         const fiCls = r.is_fat_fi ? 'pos' : 'neg';
         const tierCls = r.expense_tier === 'fat' || r.expense_tier === 'obese' ? 'pos'
                        : r.expense_tier === 'not_fat' ? 'neg' : '';

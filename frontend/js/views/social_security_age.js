@@ -49,7 +49,7 @@ async function runCompute(mount) {
     };
     result.innerHTML = `<p class="muted">${esc(t('view.social_security_age.status.computing'))}</p>`;
     try {
-        const r = await api('/social-security-age/compute', { method: 'POST', body: JSON.stringify(input) });
+        const r = await api.request('/social-security-age/compute', { method: 'POST', body: JSON.stringify(input) });
         const winnerLabel = r.net_winner_at_life_expectancy === 'claim_a'
             ? `Claim @ ${r.claim_a.claim_age}`
             : r.net_winner_at_life_expectancy === 'claim_b'

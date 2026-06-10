@@ -52,7 +52,7 @@ async function runCompute(mount) {
     };
     result.innerHTML = `<p class="muted">${esc(t('view.roth_vs_trad_401k.status.computing'))}</p>`;
     try {
-        const r = await api('/roth-vs-trad-401k/compute', { method: 'POST', body: JSON.stringify(input) });
+        const r = await api.request('/roth-vs-trad-401k/compute', { method: 'POST', body: JSON.stringify(input) });
         const winCls = r.net_winner === 'traditional' ? 'pos' : r.net_winner === 'roth' ? 'pos' : '';
         result.innerHTML = `
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:1rem">

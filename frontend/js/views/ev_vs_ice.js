@@ -157,7 +157,7 @@ async function runCompute(mount) {
     const result = mount.querySelector('#ei-result');
     result.innerHTML = `<p class="muted">${esc(t('view.ev_vs_ice.status.computing'))}</p>`;
     try {
-        const r = await api('/ev-vs-ice/compute', { method: 'POST', body: JSON.stringify(STATE) });
+        const r = await api.request('/ev-vs-ice/compute', { method: 'POST', body: JSON.stringify(STATE) });
         const winCls = r.net_winner === 'ev' ? 'pos' : '';
         const sCls = r.savings_ev_minus_ice_usd > 0 ? 'pos' : 'neg';
         const beFmt = r.years_to_breakeven == null ? '∞'

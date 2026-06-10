@@ -49,7 +49,7 @@ async function runCompute(mount) {
     };
     result.innerHTML = `<p class="muted">${esc(t('view.pension_lump_vs_annuity.status.computing'))}</p>`;
     try {
-        const r = await api('/pension-lump-vs-annuity/compute', { method: 'POST', body: JSON.stringify(input) });
+        const r = await api.request('/pension-lump-vs-annuity/compute', { method: 'POST', body: JSON.stringify(input) });
         const winCls = 'pos';
         result.innerHTML = `
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:1rem">

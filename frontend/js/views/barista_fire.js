@@ -54,7 +54,7 @@ async function runCompute(mount) {
     };
     result.innerHTML = `<p class="muted">${esc(t('view.barista_fire.status.computing'))}</p>`;
     try {
-        const r = await api('/barista-fire/compute', { method: 'POST', body: JSON.stringify(input) });
+        const r = await api.request('/barista-fire/compute', { method: 'POST', body: JSON.stringify(input) });
         const stCls = r.status === 'barista_fi' ? 'pos' : r.status === 'no_gap' ? 'pos' : 'neg';
         const deltaCls = r.current_vs_barista_delta_usd >= 0 ? 'pos' : 'neg';
         result.innerHTML = `
