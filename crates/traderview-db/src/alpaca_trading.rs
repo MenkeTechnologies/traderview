@@ -233,6 +233,22 @@ impl AlpacaTrading {
         Self::handle_status(resp).await
     }
 
+    /// All orders matching `status` ("open" / "closed" / "all"), most recent first.
+    /// `limit` is hard-clamped to 500 (Alpaca's API max).
+    pub async fn list_orders(
+        &self,
+        status: &str,
+        limit: u32,
+    ) -> Result<Vec<OrderResponse>, AlpacaError> {
+        let lim = limit.min(500);
+        let url = format!(
+            "{}/v2/orders?status={}&limit={}&direction=desc",
+            self.rest_base, status, lim
+        );
+        let resp = self.auth_headers(self.http.get(&url)).send().await?;
+        Self::handle_status(resp).await
+    }
+
     pub async fn get_order(&self, broker_order_id: &str) -> Result<OrderResponse, AlpacaError> {
         let url = format!("{}/v2/orders/{}", self.rest_base, broker_order_id);
         let resp = self.auth_headers(self.http.get(&url)).send().await?;
@@ -255,6 +271,23 @@ impl AlpacaTrading {
 
     pub async fn list_positions(&self) -> Result<Vec<PositionResponse>, AlpacaError> {
         let url = format!("{}/v2/positions", self.rest_base);
+        let resp = self.auth_headers(self.http.get(&url)).send().await?;
+        Self::handle_status(resp).await
+    }
+
+    /// Historical portfolio equity series. `period` accepts Alpaca's
+    /// codes: "1D", "1W", "1M", "3M", "1A", "all". `timeframe` accepts
+    /// "1Min", "5Min", "15Min", "1H", "1D". Returns aligned arrays —
+    /// timestamps (unix seconds), equity, profit/loss, p/l %.
+    pub async fn get_portfolio_history(
+        &self,
+        period: &str,
+        timeframe: &str,
+    ) -> Result<PortfolioHistory, AlpacaError> {
+        let url = format!(
+            "{}/v2/account/portfolio/history?period={}&timeframe={}",
+            self.rest_base, period, timeframe
+        );
         let resp = self.auth_headers(self.http.get(&url)).send().await?;
         Self::handle_status(resp).await
     }
@@ -554,6 +587,21 @@ pub struct AccountResponse {
     pub portfolio_value: Decimal,
     pub daytrade_count: Option<i64>,
     pub pattern_day_trader: Option<bool>,
+}
+
+/// Alpaca's `/v2/account/portfolio/history` payload. All arrays are
+/// aligned by index. Equity is in account currency. `timestamp` is
+/// seconds since epoch. `base_value` is the equity at the start of
+/// the requested window — useful for relative P/L if the absolute
+/// equity series is short or sparse.
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct PortfolioHistory {
+    pub timestamp: Vec<i64>,
+    pub equity: Vec<Option<f64>>,
+    pub profit_loss: Vec<Option<f64>>,
+    pub profit_loss_pct: Vec<Option<f64>>,
+    pub base_value: Option<f64>,
+    pub timeframe: String,
 }
 
 // ─── WebSocket envelope + trade update payload ──────────────────────────────

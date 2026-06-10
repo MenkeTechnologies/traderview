@@ -96,6 +96,7 @@ mod journal;
 mod journal_ai;
 mod lean_fire;
 mod lease_vs_buy_car;
+mod live_dashboard;
 mod live_positions;
 mod live_ticks;
 mod magic_formula;
@@ -331,6 +332,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(news::router())
         .merge(earnings_cal::router())
         .merge(position_size::router())
+        .merge(live_dashboard::router())
         .merge(live_positions::router())
         .merge(live_ticks::router())
         .merge(corr_matrix::router())

@@ -659,6 +659,21 @@ import { renderTimeValueMoney } from './views/time_value_money.js';
 import { renderRothConversionLadder } from './views/roth_conversion_ladder.js';
 import { renderMortgagePayoffVsInvest } from './views/mortgage_payoff_vs_invest.js';
 import { renderIbondCalculator } from './views/ibond_calculator.js';
+import { renderBondLadder } from './views/bond_ladder.js';
+import { renderLtcgHarvesting } from './views/ltcg_harvesting.js';
+import { renderSequenceOfReturns } from './views/sequence_of_returns.js';
+import { renderRuleOf72 } from './views/rule_of_72.js';
+import { renderGoalFunding } from './views/goal_funding.js';
+import { renderReverseMortgage } from './views/reverse_mortgage.js';
+import { renderNiitCalculator } from './views/niit_calculator.js';
+import { renderDripSimulator } from './views/drip_simulator.js';
+import { renderVerticalSpread } from './views/vertical_spread.js';
+import { renderIronCondor } from './views/iron_condor.js';
+import { renderStretchIra } from './views/stretch_ira.js';
+import { renderTipsBreakeven } from './views/tips_breakeven.js';
+import { renderYieldToCall } from './views/yield_to_call.js';
+import { renderCoveredCall } from './views/covered_call.js';
+import { renderRealEstateCapRate } from './views/real_estate_cap_rate.js';
 import { renderEmergencyFund } from './views/emergency_fund.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
@@ -762,6 +777,7 @@ import { renderToastHistory } from './views/toast_history.js';
 import { renderLogViewer } from './views/log_viewer.js';
 import { renderAbout } from './views/about.js';
 import { renderLiveFeed } from './views/live_feed.js';
+import { renderLiveDashboard } from './views/live_dashboard.js';
 import { renderReceipts } from './views/receipts.js';
 import { renderPurchases } from './views/purchases.js';
 import { renderCategorize } from './views/categorize.js';
@@ -2934,6 +2950,21 @@ export async function dispatch() {
             case 'roth-conversion-ladder': await renderRothConversionLadder(mount, state); break;
             case 'mortgage-payoff-vs-invest': await renderMortgagePayoffVsInvest(mount, state); break;
             case 'ibond-calculator': await renderIbondCalculator(mount, state); break;
+            case 'bond-ladder': await renderBondLadder(mount, state); break;
+            case 'ltcg-harvesting': await renderLtcgHarvesting(mount, state); break;
+            case 'sequence-of-returns': await renderSequenceOfReturns(mount, state); break;
+            case 'rule-of-72': await renderRuleOf72(mount, state); break;
+            case 'goal-funding': await renderGoalFunding(mount, state); break;
+            case 'reverse-mortgage': await renderReverseMortgage(mount, state); break;
+            case 'niit-calculator': await renderNiitCalculator(mount, state); break;
+            case 'drip-simulator': await renderDripSimulator(mount, state); break;
+            case 'vertical-spread': await renderVerticalSpread(mount, state); break;
+            case 'iron-condor': await renderIronCondor(mount, state); break;
+            case 'stretch-ira': await renderStretchIra(mount, state); break;
+            case 'tips-breakeven': await renderTipsBreakeven(mount, state); break;
+            case 'yield-to-call': await renderYieldToCall(mount, state); break;
+            case 'covered-call': await renderCoveredCall(mount, state); break;
+            case 'real-estate-cap-rate': await renderRealEstateCapRate(mount, state); break;
             case 'emergency-fund': await renderEmergencyFund(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
@@ -3003,6 +3034,7 @@ export async function dispatch() {
             case 'log-viewer':        await renderLogViewer(mount); break;
             case 'about':             await renderAbout(mount, state); break;
             case 'live-feed':         await renderLiveFeed(mount, state); break;
+            case 'live-dashboard':    await renderLiveDashboard(mount, state); break;
             case 'receipts':       await renderReceipts(mount, state); break;
             case 'purchases':      await renderPurchases(mount, state); break;
             case 'categorize':     await renderCategorize(mount, state); break;
@@ -4181,6 +4213,21 @@ export const viewRenderers = {
     'roth-conversion-ladder': (m, s) => renderRothConversionLadder(m, s),
     'mortgage-payoff-vs-invest': (m, s) => renderMortgagePayoffVsInvest(m, s),
     'ibond-calculator': (m, s) => renderIbondCalculator(m, s),
+    'bond-ladder': (m, s) => renderBondLadder(m, s),
+    'ltcg-harvesting': (m, s) => renderLtcgHarvesting(m, s),
+    'sequence-of-returns': (m, s) => renderSequenceOfReturns(m, s),
+    'rule-of-72': (m, s) => renderRuleOf72(m, s),
+    'goal-funding': (m, s) => renderGoalFunding(m, s),
+    'reverse-mortgage': (m, s) => renderReverseMortgage(m, s),
+    'niit-calculator': (m, s) => renderNiitCalculator(m, s),
+    'drip-simulator': (m, s) => renderDripSimulator(m, s),
+    'vertical-spread': (m, s) => renderVerticalSpread(m, s),
+    'iron-condor': (m, s) => renderIronCondor(m, s),
+    'stretch-ira': (m, s) => renderStretchIra(m, s),
+    'tips-breakeven': (m, s) => renderTipsBreakeven(m, s),
+    'yield-to-call': (m, s) => renderYieldToCall(m, s),
+    'covered-call': (m, s) => renderCoveredCall(m, s),
+    'real-estate-cap-rate': (m, s) => renderRealEstateCapRate(m, s),
     'heloc': (m, s) => renderHeloc(m, s),
     'home-maintenance': (m, s) => renderHomeMaintenance(m, s),
     'mortgage-amortization': (m, s) => renderMortgageAmortization(m, s),
@@ -4197,6 +4244,7 @@ export const viewRenderers = {
     'zero-based-budget': (m, s) => renderZeroBasedBudget(m, s),
     'about': (m, s) => renderAbout(m, s),
     'live-feed': (m, s) => renderLiveFeed(m, s),
+    'live-dashboard': (m, s) => renderLiveDashboard(m, s),
 };
 
 window.addEventListener('tv:authed', () => boot());
