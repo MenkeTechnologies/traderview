@@ -140,6 +140,7 @@ mod settings;
 mod shares;
 mod short_interest;
 mod sinking_fund;
+mod social_security_age;
 mod sp500_predict;
 mod squeeze_scanner;
 mod strategy_alerts;
@@ -259,6 +260,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(lean_fire::router())
         .merge(fat_fire::router())
         .merge(rmd_calculator::router())
+        .merge(social_security_age::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())

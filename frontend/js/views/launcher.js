@@ -78,6 +78,7 @@ export const TILES = [
     ['lean-fire', 'Lean FIRE', '🥗', 'Minimalist FIRE (≤ $40k/yr expenses) — FI number + years to target + expense tier classification', 'NEW'],
     ['fat-fire', 'Fat FIRE', '🍷', 'High-spend FIRE (≥ $100k/yr expenses) — conservative 3.5% SWR, bigger target, longer timeline', 'NEW'],
     ['rmd-calculator', 'RMD Calculator', '📅', 'IRS Uniform Lifetime Table — current RMD + N-year projection, SECURE 2.0 age 73/75 start', 'NEW'],
+    ['social-security-age', 'Social Security Age', '🧓', 'Claim 62 vs FRA vs 70 — SSA reduction/DRC + lifetime totals + breakeven age', 'NEW'],
     ['drawdown-cutoff', 'Drawdown Cutoff', '🛑', 'Auto-fire kill-switch when live broker equity drops below your max-drawdown threshold', 'NEW'],
     ['pead',         'PEAD Drift',    '📈',  'Post-earnings drift — surprise + 5/20/60d returns + drift score', 'NEW'],
     ['sentiment-velocity', 'Sentiment Velocity', '🔊', 'WSB+StockTwits mention acceleration — ≥3× hour-over-hour + ≥2 consecutive', 'NEW'],
