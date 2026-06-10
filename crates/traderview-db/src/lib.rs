@@ -141,6 +141,7 @@ pub mod vrp_scanner;
 pub mod watchlists;
 pub mod webhooks;
 pub mod webull;
+pub mod zero_based_budget;
 
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;

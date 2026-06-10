@@ -53,6 +53,7 @@ export const TILES = [
     ['financial-ratios', 'Financial Ratios', '📊', '7 CFP/Bogleheads ratios (savings, DTI, 28/36, liquidity, solvency, EF, retirement) + composite score', 'NEW'],
     ['savings-rate', 'Savings Rate / FI', '🎯', 'MMM math: years to FI from savings rate at 5% real + 4% SWR, FI number, 10-70% sensitivity', 'NEW'],
     ['sinking-fund', 'Sinking Fund', '🪣', 'Multi-goal monthly allocator — required/mo, months-to-target, shortfall, on-track per goal + aggregate', 'NEW'],
+    ['zero-based-budget', 'Zero-Based Budget', '🟰', 'Dave Ramsey / YNAB — every dollar assigned, leftover = 0, per-category planned vs actual variance', 'NEW'],
     ['drawdown-cutoff', 'Drawdown Cutoff', '🛑', 'Auto-fire kill-switch when live broker equity drops below your max-drawdown threshold', 'NEW'],
     ['pead',         'PEAD Drift',    '📈',  'Post-earnings drift — surprise + 5/20/60d returns + drift score', 'NEW'],
     ['sentiment-velocity', 'Sentiment Velocity', '🔊', 'WSB+StockTwits mention acceleration — ≥3× hour-over-hour + ≥2 consecutive', 'NEW'],

@@ -138,6 +138,7 @@ mod watchlists;
 mod webhooks;
 mod webull;
 mod ws;
+mod zero_based_budget;
 
 pub fn api_router() -> Router<AppState> {
     Router::new()
@@ -211,6 +212,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(financial_ratios::router())
         .merge(savings_rate::router())
         .merge(sinking_fund::router())
+        .merge(zero_based_budget::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())
