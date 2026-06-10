@@ -84,6 +84,7 @@ mod ira_basis;
 mod iv_term;
 mod journal;
 mod journal_ai;
+mod lease_vs_buy_car;
 mod live_positions;
 mod live_ticks;
 mod magic_formula;
@@ -245,6 +246,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(college_529::router())
         .merge(fafsa_efc::router())
         .merge(car_tco::router())
+        .merge(lease_vs_buy_car::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())
