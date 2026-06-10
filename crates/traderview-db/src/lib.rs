@@ -154,6 +154,7 @@ pub mod tastytrade_pump;
 pub mod tastytrade_trading;
 pub mod tax_loss_harvest;
 pub mod tax_lots;
+pub mod three_fund_portfolio;
 pub mod trade_compare;
 pub mod trade_reviews;
 pub mod trades;

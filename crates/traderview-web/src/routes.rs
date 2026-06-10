@@ -152,6 +152,7 @@ mod tags;
 mod tape_replay;
 mod tax_loss_harvest;
 mod tax_lots;
+mod three_fund_portfolio;
 mod trade_analytics;
 mod trade_compare;
 mod trade_reviews;
@@ -265,6 +266,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(social_security_age::router())
         .merge(roth_vs_trad_401k::router())
         .merge(pension_lump_vs_annuity::router())
+        .merge(three_fund_portfolio::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())
