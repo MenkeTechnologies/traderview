@@ -661,6 +661,7 @@ import { renderDebtSnowball } from './views/debt_snowball.js';
 import { renderCreditUtilization } from './views/credit_utilization.js';
 import { renderAutoLoan } from './views/auto_loan.js';
 import { renderMortgageAmortization } from './views/mortgage_amortization.js';
+import { renderMortgageRefinance } from './views/mortgage_refinance.js';
 import { renderDrawdownCutoff } from './views/drawdown_cutoff.js';
 import { renderPead } from './views/pead.js';
 import { renderSentimentVelocity } from './views/sentiment_velocity.js';
@@ -2896,6 +2897,7 @@ export async function dispatch() {
             case 'credit-utilization': await renderCreditUtilization(mount, state); break;
             case 'auto-loan': await renderAutoLoan(mount, state); break;
             case 'mortgage-amortization': await renderMortgageAmortization(mount, state); break;
+            case 'mortgage-refinance': await renderMortgageRefinance(mount, state); break;
             case 'drawdown-cutoff': await renderDrawdownCutoff(mount, state); break;
             case 'pead':           await renderPead(mount, state); break;
             case 'sentiment-velocity': await renderSentimentVelocity(mount, state); break;
