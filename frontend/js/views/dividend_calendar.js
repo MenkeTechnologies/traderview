@@ -15,6 +15,7 @@ import { esc, fmt } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
+import { searchScore, getMatchIndices, highlightWithIndices } from '../fzf.js';
 import {
     daysBetween, fmtDate, fmtYield, fmtAmount,
     extractCalendarRows, freqLabelFromPpy, fmtAnnualized,
@@ -228,10 +229,20 @@ function sortRows(rows, key, dir) {
 
 
 function applyFilter(rows) {
-    const q = state.filter.trim().toUpperCase();
+    const q = state.filter.trim();
     if (!q) return rows;
-    return rows.filter(r =>
-        r.symbol.includes(q) || (r.company && r.company.toUpperCase().includes(q)));
+    return rows
+        .map(r => ({ r, score: searchScore(q, [r.symbol || '', r.company || '']) }))
+        .filter(x => x.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .map(x => x.r);
+}
+
+function _dcHighlight(text) {
+    const q = state.filter.trim();
+    const str = String(text == null ? '' : text);
+    if (!q) return esc(str);
+    return highlightWithIndices(str, getMatchIndices(q, str));
 }
 
 function renderSummary(rows) {
@@ -280,8 +291,8 @@ function renderTable(rows) {
         return `
             <tr data-context-scope="symbol-row" data-symbol="${esc(r.symbol)}">
                 <td>${esc(fmtDate(r.ex_date))}${dayTxt ? ` <span class="muted">· ${esc(dayTxt)}</span>` : ''}</td>
-                <td><a class="link" href="#research/${encodeURIComponent(r.symbol)}">${esc(r.symbol)}</a></td>
-                <td class="dc-company">${esc(r.company)}</td>
+                <td><a class="link" href="#research/${encodeURIComponent(r.symbol)}">${_dcHighlight(r.symbol)}</a></td>
+                <td class="dc-company">${_dcHighlight(r.company)}</td>
                 <td class="dc-amount">${esc(fmtAmount(r.amount))}</td>
                 <td>${esc(freqLabelFromPpy(r.payments_per_year))}</td>
                 <td class="dc-amount">${esc(fmtAnnualized(r.annualized))}</td>

@@ -84,7 +84,7 @@ async function fetchAndRender(mount) {
     detailTbody.innerHTML = `<tr><td colspan="8" class="muted">${esc(t('common.loading'))}</td></tr>`;
     errBox.innerHTML = '';
     try {
-        const r = await api('/multi-broker/positions');
+        const r = await api.request('/multi-broker/positions');
         if (meta) meta.textContent = t('view.multi_broker.meta.summary')
             .replace('{n}', r.positions.length)
             .replace('{b}', r.broker_count);
@@ -160,7 +160,7 @@ async function triggerKill(mount) {
     }
     result.innerHTML = `<p class="muted small">${esc(t('view.multi_broker.kill.firing'))}</p>`;
     try {
-        const r = await api('/multi-broker/kill-switch', {
+        const r = await api.request('/multi-broker/kill-switch', {
             method: 'POST',
             body: { confirm_token: token, reason: 'manual UI invocation' },
         });

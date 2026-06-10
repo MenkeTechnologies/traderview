@@ -134,7 +134,7 @@ async function sweepExits(mount) {
     const result = mount.querySelector('#ca-result');
     if (meta) meta.textContent = t('view.confluence_autotrade.status.sweeping');
     try {
-        const r = await api('/confluence/autotrade/sweep-exits', { method: 'POST' });
+        const r = await api.request('/confluence/autotrade/sweep-exits', { method: 'POST' });
         const flat = r.flattened || [];
         const held = r.held || [];
         result.innerHTML = `<p>
@@ -151,7 +151,7 @@ async function sweepExits(mount) {
 
 async function loadConfig(mount) {
     try {
-        const c = await api('/confluence/autotrade/config');
+        const c = await api.request('/confluence/autotrade/config');
         mount.querySelector('#ca-enabled').checked = !!c.enabled;
         mount.querySelector('#ca-min-score').value = c.min_score;
         mount.querySelector('#ca-min-distinct').value = c.min_distinct_sources;
@@ -198,7 +198,7 @@ async function saveConfig(mount) {
         trailing_stop_pct: parseFloat(mount.querySelector('#ca-trail').value),
     };
     try {
-        const c = await api('/confluence/autotrade/config', { method: 'PUT', body: JSON.stringify(body) });
+        const c = await api.request('/confluence/autotrade/config', { method: 'PUT', body: JSON.stringify(body) });
         if (meta) meta.textContent = t('view.confluence_autotrade.status.saved').replace('{t}', fmtDateTime(c.updated_at));
     } catch (e) {
         if (meta) meta.textContent = `${t('common.error')}: ${String(e)}`;
@@ -210,7 +210,7 @@ async function runOnce(mount) {
     const result = mount.querySelector('#ca-result');
     if (meta) meta.textContent = t('view.confluence_autotrade.status.running');
     try {
-        const r = await api('/confluence/autotrade/run-once', { method: 'POST' });
+        const r = await api.request('/confluence/autotrade/run-once', { method: 'POST' });
         if (!r.config.enabled) {
             result.innerHTML = `<p class="muted">${esc(t('view.confluence_autotrade.status.disabled'))}</p>`;
         } else {
@@ -231,7 +231,7 @@ async function runOnce(mount) {
 async function loadLog(mount) {
     const tbody = mount.querySelector('#ca-log tbody');
     try {
-        const rows = await api('/confluence/autotrade/log?limit=100');
+        const rows = await api.request('/confluence/autotrade/log?limit=100');
         if (!rows || !rows.length) {
             tbody.innerHTML = `<tr><td colspan="8" class="muted">${esc(t('view.confluence_autotrade.empty.no_log'))}</td></tr>`;
             return;

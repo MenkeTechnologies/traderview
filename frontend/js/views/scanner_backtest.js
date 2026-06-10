@@ -58,7 +58,7 @@ async function runStability(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.scanner_backtest.status.stability'))}</p>`;
     if (meta) meta.textContent = '';
     try {
-        const r = await api(`/scanner-backtest/pead/stability?days=${days}&horizon=20`);
+        const r = await api.request(`/scanner-backtest/pead/stability?days=${days}&horizon=20`);
         if (!r) {
             result.innerHTML = `<p class="muted">${esc(t('view.scanner_backtest.empty.no_data'))}</p>`;
             return;
@@ -124,7 +124,7 @@ async function runWalk(mount, scanner) {
     result.innerHTML = `<p class="muted">${esc(t('view.scanner_backtest.status.walking'))}</p>`;
     if (meta) meta.textContent = '';
     try {
-        const r = await api(`/scanner-backtest/${scanner}/walk-forward?days=${days}&train_pct=70`);
+        const r = await api.request(`/scanner-backtest/${scanner}/walk-forward?days=${days}&train_pct=70`);
         if (!r) {
             result.innerHTML = `<p class="muted">${esc(t('view.scanner_backtest.empty.no_data'))}</p>`;
             return;
@@ -183,7 +183,7 @@ async function runAll(mount) {
     all.innerHTML = `<p class="muted">${esc(t('view.scanner_backtest.status.running_all'))}</p>`;
     if (meta) meta.textContent = '';
     try {
-        const r = await api(`/scanner-backtest/all?days=${days}&friction=${friction}`);
+        const r = await api.request(`/scanner-backtest/all?days=${days}&friction=${friction}`);
         const scanners = r.scanners || [];
         if (!scanners.length) {
             all.innerHTML = `<p class="muted">${esc(t('view.scanner_backtest.empty.no_data'))}</p>`;
@@ -245,7 +245,7 @@ async function runScan(mount, scanner) {
     result.innerHTML = `<p class="muted">${esc(t('view.scanner_backtest.status.running'))}</p>`;
     if (meta) meta.textContent = '';
     try {
-        const r = await api(`/scanner-backtest/${scanner}?days=${days}`);
+        const r = await api.request(`/scanner-backtest/${scanner}?days=${days}`);
         if (!r || !r.horizons || !r.horizons.length) {
             result.innerHTML = `<p class="muted">${esc(t('view.scanner_backtest.empty.no_data'))}</p>`;
             return;

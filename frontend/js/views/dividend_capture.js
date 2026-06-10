@@ -62,7 +62,7 @@ async function runScan(mount) {
     tbody.innerHTML = `<tr><td colspan="10" class="muted">${esc(t('view.dividend_capture.status.scanning'))}</td></tr>`;
     if (meta) meta.textContent = '';
     try {
-        const rows = await api(`/dividend-capture/scan?symbols=${encodeURIComponent(symbols)}`);
+        const rows = await api.request(`/dividend-capture/scan?symbols=${encodeURIComponent(symbols)}`);
         if (!rows.length) {
             tbody.innerHTML = `<tr><td colspan="10" class="muted">${esc(t('view.dividend_capture.empty.no_rows'))}</td></tr>`;
             return;

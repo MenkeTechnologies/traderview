@@ -146,6 +146,12 @@ export class ApiError extends Error {
 }
 
 export const api = {
+    // Generic passthrough — views written as `api.request('/path', opts)`
+    // route here. New endpoints SHOULD get a dedicated method on this
+    // object (`api.fooBar(...)`); this passthrough is for ad-hoc /
+    // experimental routes that haven't been promoted yet.
+    request,
+
     // auth
     config: () => request('/config'),
     me: () => request('/auth/me'),
@@ -1343,6 +1349,10 @@ export const api = {
     optionsMaxPain: (sym, q) => request(`/options/${encodeURIComponent(sym)}/max-pain${qs(q)}`),
     optionsGex:     (sym, q) => request(`/options/${encodeURIComponent(sym)}/gex${qs(q)}`),
     optionsIvSkew:  (sym, q) => request(`/options/${encodeURIComponent(sym)}/iv-skew${qs(q)}`),
+
+    // Portfolio-level dealer GEX regime — see views/market_gamma_regime.js.
+    marketGammaReport:  () => request('/market-gamma/report'),
+    marketGammaRefresh: () => request('/market-gamma/refresh', { method: 'POST' }),
 
     // ============================================================
     // Stateless calculators

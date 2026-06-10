@@ -45,7 +45,7 @@ async function fetchAndRender(mount) {
     const tbody = mount.querySelector('#htb-table tbody');
     const meta = mount.querySelector('#htb-meta');
     try {
-        const rows = await api('/htb-ranker/ranked?limit=50');
+        const rows = await api.request('/htb-ranker/ranked?limit=50');
         if (!rows || !rows.length) {
             tbody.innerHTML = `<tr><td colspan="8" class="muted">${esc(t('view.htb_ranker.empty.no_rows'))}</td></tr>`;
             meta.textContent = '';

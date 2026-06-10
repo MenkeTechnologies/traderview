@@ -10,6 +10,7 @@ import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
 import { tConfirm, tPrompt } from '../dialog.js';
 import { on as onWsEvent } from '../ws.js';
+import { searchMatch, getMatchIndices, highlightWithIndices } from '../fzf.js';
 
 // Single coalesced refresh on a short debounce — a burst of WS events
 // (multi-leg bracket order: parent + take_profit + stop_loss accepts)
@@ -68,9 +69,17 @@ function renderPane(mount, key) {
     const filterEl = mount.querySelector(`[data-stdout-filter="${key}"]`);
     const autoEl = mount.querySelector(`[data-stdout-autoscroll="${key}"]`);
     const buf = bufferFor(key);
-    const filter = (filterEl?.value || '').trim().toLowerCase();
-    const lines = filter ? buf.filter(l => l.toLowerCase().includes(filter)) : buf;
-    pre.textContent = lines.join('\n');
+    const filter = (filterEl?.value || '').trim();
+    if (!filter) {
+        // Fast path: dump the buffer verbatim via textContent.
+        pre.textContent = buf.join('\n');
+    } else {
+        const lines = buf.filter(l => searchMatch(filter, l));
+        // Highlight matched chars per line. innerHTML is unavoidable here
+        // (textContent strips the <mark> tags). esc() in highlightWithIndices
+        // keeps the raw bytes safe.
+        pre.innerHTML = lines.map(l => highlightWithIndices(l, getMatchIndices(filter, l))).join('\n');
+    }
     if (autoEl?.checked !== false) pre.scrollTop = pre.scrollHeight;
 }
 
@@ -803,9 +812,9 @@ function logTape(mount, msg) {
     tapeStats.perSymbol.set(msg.symbol, (tapeStats.perSymbol.get(msg.symbol) || 0) + 1);
     const pane = mount.querySelector('#algo-tape');
     if (!pane) return;
-    const filter = (mount.querySelector('#algo-tape-filter')?.value || '').trim().toLowerCase();
+    const filter = (mount.querySelector('#algo-tape-filter')?.value || '').trim();
     const ts = new Date(msg.ts_ms).toISOString().slice(11, 23);
-    if (!filter || msg.symbol.toLowerCase().includes(filter)) {
+    if (!filter || searchMatch(filter, msg.symbol || '')) {
         const line = `${ts}  ${msg.symbol.padEnd(10)} @ ${Number(msg.price).toFixed(4).padStart(14)}  vol=${Number(msg.volume).toFixed(6)}`;
         pane.textContent += (pane.textContent ? '\n' : '') + line;
         const lines = pane.textContent.split('\n');

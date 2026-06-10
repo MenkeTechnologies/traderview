@@ -42,7 +42,7 @@ async function runScore(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.magic_formula.status.scoring'))}</p>`;
     if (meta) meta.textContent = '';
     try {
-        const r = await api(`/magic-formula/rank?max_symbols=${maxSymbols}`);
+        const r = await api.request(`/magic-formula/rank?max_symbols=${maxSymbols}`);
         if (!r || !r.scored || !r.scored.length) {
             result.innerHTML = `<p class="muted">${esc(t('view.magic_formula.empty.no_data'))}</p>`;
             return;

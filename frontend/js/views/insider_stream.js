@@ -94,7 +94,7 @@ async function renderTopBuys(mount) {
     panel.style.display = '';
     panel.innerHTML = `<div class="muted small">${esc(t('common.loading'))}</div>`;
     try {
-        const rows = await api('/insider-stream/top-buys?days=30&limit=25');
+        const rows = await api.request('/insider-stream/top-buys?days=30&limit=25');
         if (!rows.length) {
             panel.innerHTML = `<div class="muted small">${esc(t('view.insider_stream.empty.no_top_buys'))}</div>`;
             return;

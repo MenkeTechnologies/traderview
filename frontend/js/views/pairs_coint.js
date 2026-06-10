@@ -67,7 +67,7 @@ async function runScan(mount) {
     tbody.innerHTML = `<tr><td colspan="9" class="muted">${esc(t('view.pairs_coint.status.scanning'))}</td></tr>`;
     if (meta) meta.textContent = '';
     try {
-        const rows = await api(`/pairs-coint/scan?symbols=${encodeURIComponent(symbols)}&days=${days}`);
+        const rows = await api.request(`/pairs-coint/scan?symbols=${encodeURIComponent(symbols)}&days=${days}`);
         if (!rows.length) {
             tbody.innerHTML = `<tr><td colspan="9" class="muted">${esc(t('view.pairs_coint.empty.no_rows'))}</td></tr>`;
             return;

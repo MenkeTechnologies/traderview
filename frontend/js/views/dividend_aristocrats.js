@@ -39,7 +39,7 @@ async function runRank(mount) {
     result.innerHTML = `<p class="muted">${esc(t('view.dividend_aristocrats.status.fetching'))}</p>`;
     if (meta) meta.textContent = '';
     try {
-        const r = await api(`/dividend-aristocrats/rank?max_symbols=${max}`);
+        const r = await api.request(`/dividend-aristocrats/rank?max_symbols=${max}`);
         const rows = r.rows || [];
         if (meta) meta.textContent = t('view.dividend_aristocrats.meta.summary')
             .replace('{n}', rows.length).replace('{e}', r.errors.length);

@@ -6,6 +6,9 @@ import { esc, fmt } from '../util.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
+import { searchScore, getMatchIndices, highlightWithIndices } from '../fzf.js';
+
+let lastSearchQuery = '';
 
 const COLORS = ['#00e5ff', '#ff7a1f', '#7af0a8', '#ff1f7a'];
 
@@ -34,8 +37,15 @@ export async function renderTradeCompare(mount, state) {
         renderPicker(trades, mount, tok);
         const searchEl = mount.querySelector('#tc-search');
         if (searchEl) searchEl.addEventListener('input', (e) => {
-            const q = e.target.value.toLowerCase().trim();
-            const filtered = q ? trades.filter(t => t.symbol.toLowerCase().includes(q)) : trades;
+            const q = e.target.value.trim();
+            lastSearchQuery = q;
+            const filtered = q
+                ? trades
+                    .map(t => ({ t, score: searchScore(q, t.symbol || '') }))
+                    .filter(x => x.score > 0)
+                    .sort((a, b) => b.score - a.score)
+                    .map(x => x.t)
+                : trades;
             renderPicker(filtered, mount, tok);
         });
     } catch (e) {
@@ -49,14 +59,17 @@ function renderPicker(trades, mount, tok) {
     const el = mount.querySelector('#tc-picker');
     if (!el) return;
     if (!trades.length) { el.innerHTML = '<p data-i18n="view.trade_compare.hint.no_closed_trades" class="muted small">no closed trades</p>'; return; }
+    const q = lastSearchQuery;
     el.innerHTML = trades.map(t => {
         const sel = selectedIds.includes(t.id);
         const cls = (t.net_pnl ?? 0) >= 0 ? 'pos' : 'neg';
+        const sym = t.symbol || '';
+        const symHtml = q ? highlightWithIndices(sym, getMatchIndices(q, sym)) : esc(sym);
         return `<label data-context-scope="trade-row" data-id="${esc(t.id)}"
                     style="display:flex;gap:6px;align-items:center;padding:4px 2px;border-bottom:1px solid var(--border);cursor:pointer;${sel ? 'background:rgba(0,229,255,0.10);' : ''}">
             <input type="checkbox" class="tc-pick" data-id="${t.id}" ${sel ? 'checked' : ''}>
             <span style="flex:1;font-size:11px;">
-                <strong>${esc(t.symbol)}</strong>
+                <strong>${symHtml}</strong>
                 <span class="muted">${esc(t.side)} · ${new Date(t.opened_at).toLocaleDateString()}</span>
             </span>
             <span class="${cls}" style="font-size:11px;">${

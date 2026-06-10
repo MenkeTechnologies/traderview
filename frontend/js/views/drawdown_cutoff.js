@@ -63,7 +63,7 @@ export async function renderDrawdownCutoff(mount, _state) {
 
 async function loadConfig(mount) {
     try {
-        const c = await api('/drawdown-cutoff/config');
+        const c = await api.request('/drawdown-cutoff/config');
         mount.querySelector('#dc-enabled').checked = !!c.enabled;
         mount.querySelector('#dc-max-dd').value = c.max_drawdown_pct;
         renderState(mount, c);
@@ -97,7 +97,7 @@ async function saveConfig(mount) {
         max_drawdown_pct: parseFloat(mount.querySelector('#dc-max-dd').value),
     };
     try {
-        const c = await api('/drawdown-cutoff/config', { method: 'PUT', body: JSON.stringify(body) });
+        const c = await api.request('/drawdown-cutoff/config', { method: 'PUT', body: JSON.stringify(body) });
         if (meta) meta.textContent = t('view.drawdown_cutoff.status.saved').replace('{t}', fmtDateTime(c.updated_at));
         renderState(mount, c);
     } catch (e) {
@@ -110,7 +110,7 @@ async function evaluateNow(mount) {
     const result = mount.querySelector('#dc-result');
     if (meta) meta.textContent = t('view.drawdown_cutoff.status.evaluating');
     try {
-        const r = await api('/drawdown-cutoff/evaluate', { method: 'POST' });
+        const r = await api.request('/drawdown-cutoff/evaluate', { method: 'POST' });
         renderState(mount, r.config);
         let html = `<p>${esc(t('view.drawdown_cutoff.field.equity'))}: <strong>$${r.current_equity.toFixed(2)}</strong>
             · ${esc(t('view.drawdown_cutoff.field.hwm'))}: <strong>$${r.high_water_mark.toFixed(2)}</strong>
@@ -138,7 +138,7 @@ async function resetRule(mount) {
     const meta = mount.querySelector('#dc-meta');
     if (meta) meta.textContent = t('view.drawdown_cutoff.status.resetting');
     try {
-        const c = await api('/drawdown-cutoff/reset', { method: 'POST' });
+        const c = await api.request('/drawdown-cutoff/reset', { method: 'POST' });
         renderState(mount, c);
         if (meta) meta.textContent = t('view.drawdown_cutoff.status.reset_done');
     } catch (e) {
@@ -149,7 +149,7 @@ async function resetRule(mount) {
 async function loadLog(mount) {
     const tbody = mount.querySelector('#dc-log tbody');
     try {
-        const rows = await api('/drawdown-cutoff/log?limit=100');
+        const rows = await api.request('/drawdown-cutoff/log?limit=100');
         if (!rows || !rows.length) {
             tbody.innerHTML = `<tr><td colspan="6" class="muted">${esc(t('view.drawdown_cutoff.empty.no_log'))}</td></tr>`;
             return;

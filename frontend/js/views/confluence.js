@@ -70,7 +70,7 @@ export async function renderConfluence(mount, _state) {
 
 async function refresh(mount) {
     try {
-        const fresh = await api(`/confluence/ranked?limit=50&min_sources=${minSources}`);
+        const fresh = await api.request(`/confluence/ranked?limit=50&min_sources=${minSources}`);
         rows.clear();
         for (const r of fresh) rows.set(r.symbol, r);
         render(mount);

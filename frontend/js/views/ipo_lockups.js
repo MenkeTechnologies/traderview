@@ -49,7 +49,7 @@ async function fetchAndRender(mount) {
     if (!tbody) return;
     tbody.innerHTML = `<tr><td colspan="9" class="muted">${esc(t('common.loading'))}</td></tr>`;
     try {
-        const rows = await api('/ipo-lockups/upcoming');
+        const rows = await api.request('/ipo-lockups/upcoming');
         if (!rows.length) {
             tbody.innerHTML = `<tr><td colspan="9" class="muted">${esc(t('view.ipo_lockups.empty.no_rows'))}</td></tr>`;
             if (meta) meta.textContent = '';

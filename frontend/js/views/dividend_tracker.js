@@ -56,7 +56,7 @@ async function fetchAndRender(mount) {
     summary.innerHTML = `<p class="muted">${esc(t('view.dividend_tracker.status.fetching'))}</p>`;
     if (meta) meta.textContent = '';
     try {
-        const r = await api('/dividend-tracker/report');
+        const r = await api.request('/dividend-tracker/report');
         if (!r || !r.positions || !r.positions.length) {
             summary.innerHTML = `<p class="muted">${esc(t('view.dividend_tracker.empty.no_positions'))}</p>`;
             tbody.innerHTML = '';

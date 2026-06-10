@@ -10,6 +10,7 @@ import * as favs from '../_favorites_storage.js';
 import * as dashStore from '../_dashboards_storage.js';
 import * as recents from '../_recents_storage.js';
 import { showToast } from '../toast.js';
+import { initDragReorder } from '../drag_reorder.js';
 
 // (view-id, label, glyph, description, badge | null)
 // `badge` shows a small chip — "LIVE" for streaming tiles, etc.
@@ -806,6 +807,29 @@ export async function renderLauncher(mount, _state) {
     renderGrid();
 }
 
+// Wire each per-category .launcher-tiles container so its child tiles can
+// be drag-reordered (Trello-style, pointer-driven — see drag_reorder.js).
+// Saved order lives in `tv:launcherOrder:<cat>` and is restored on every
+// renderGrid() rebuild, so it survives view re-renders + reloads. New
+// tiles released later append at the end of the saved sequence.
+function wireLauncherDrag() {
+    const grid = document.getElementById('launcher-grid');
+    if (!grid) return;
+    grid.querySelectorAll('.launcher-cat[data-cat] > .launcher-tiles').forEach(container => {
+        const sec = container.closest('.launcher-cat');
+        const cat = sec && sec.dataset.cat;
+        if (!cat) return;
+        initDragReorder(container, '.tile', `tv:launcherOrder:${cat}`, {
+            direction: 'horizontal',
+            // Only initiate drag from the tile body — clicking the
+            // favorite/pin/popout action buttons stays a click.
+            handleSelector: '.tile-glyph, .tile-body',
+            getKey: (el) => el.dataset.view,
+            toastKey: 'toast.reordered',
+        });
+    });
+}
+
 function renderGrid() {
     const q = (lastQuery || '').trim().toLowerCase();
     const byId = new Map(TILES.map(t => [t[0], t]));
@@ -839,11 +863,16 @@ function renderGrid() {
         // English literal fallback when key is missing.
         const catKey = `view.launcher.category.${cat}`;
         const catLabel = (() => { const v = t(catKey); return (v && v !== catKey) ? v : label; })();
-        return `<section class="launcher-cat">
+        return `<section class="launcher-cat" data-cat="${esc(cat)}">
             <h2>${esc(catLabel)}</h2>
             <div class="launcher-tiles">${tiles.map(renderTile).join('')}</div>
         </section>`;
     }).join('');
+
+    // Trello-style drag-to-reorder per category, persisted to localStorage.
+    // Disabled while a query is active — reordering a filtered subset would
+    // silently truncate the saved order to only-visible tiles.
+    if (!q) wireLauncherDrag();
 
     // Tile click navigates; favorites + pin sub-buttons stop propagation.
     grid.querySelectorAll('.tile[data-view]').forEach(el => {

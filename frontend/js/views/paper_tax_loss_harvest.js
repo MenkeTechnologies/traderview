@@ -50,7 +50,7 @@ async function runScan(mount) {
     summary.innerHTML = `<p class="muted">${esc(t('view.paper_tax_loss_harvest.status.scanning'))}</p>`;
     result.innerHTML = '';
     try {
-        const r = await api(`/paper-tax-loss-harvest/scan?marginal_rate_pct=${rate}&min_loss_threshold_pct=${threshold}`);
+        const r = await api.request(`/paper-tax-loss-harvest/scan?marginal_rate_pct=${rate}&min_loss_threshold_pct=${threshold}`);
         const n = (r.candidates || []).length;
         summary.innerHTML = `
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">

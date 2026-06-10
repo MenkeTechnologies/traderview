@@ -327,6 +327,65 @@ export function moveTileTo(state, dashboardId, tileId, newIndex) {
     };
 }
 
+// Reorder all tiles in `dashboardId` to the order given by `tileIds`.
+// IDs not in `tileIds` keep their current relative order, appended at the
+// end — protects against losing tiles when a drag-reorder pass writes a
+// partial sequence (e.g. mid-render race). No-op if the resolved order
+// matches the current one.
+export function reorderTiles(state, dashboardId, tileIds) {
+    const d = state.dashboards[dashboardId];
+    if (!d || !Array.isArray(tileIds)) return state;
+    const byId = new Map(d.tiles.map(t => [t.id, t]));
+    const out = [];
+    const seen = new Set();
+    for (const id of tileIds) {
+        const t = byId.get(id);
+        if (t && !seen.has(id)) { out.push(t); seen.add(id); }
+    }
+    for (const t of d.tiles) {
+        if (!seen.has(t.id)) out.push(t);
+    }
+    // Bail when the new order equals the existing one — keeps state
+    // referentially stable so React-style consumers don't repaint.
+    if (out.length === d.tiles.length && out.every((t, i) => d.tiles[i].id === t.id)) {
+        return state;
+    }
+    return {
+        ...state,
+        dashboards: {
+            ...state.dashboards,
+            [dashboardId]: { ...d, tiles: out },
+        },
+    };
+}
+
+// Persist a tile's grid span (CSS grid col-span / row-span). Stored in
+// the tile's `config.size = { col, row }` so it travels with the dashboard
+// export/import flow. Values are clamped to [1, 6] — beyond that the grid
+// breaks on common monitor widths.
+export function setTileSize(state, dashboardId, tileId, size) {
+    const d = state.dashboards[dashboardId];
+    if (!d) return state;
+    const i = d.tiles.findIndex(t => t.id === tileId);
+    if (i < 0) return state;
+    const clamp = (n, lo = 1, hi = 6) => Math.max(lo, Math.min(hi, Math.round(Number(n) || 1)));
+    const next = {
+        col: clamp(size?.col ?? 1),
+        row: clamp(size?.row ?? 1),
+    };
+    const prev = d.tiles[i].config?.size;
+    if (prev && prev.col === next.col && prev.row === next.row) return state;
+    const tiles = [...d.tiles];
+    tiles[i] = { ...tiles[i], config: { ...(tiles[i].config || {}), size: next } };
+    return {
+        ...state,
+        dashboards: {
+            ...state.dashboards,
+            [dashboardId]: { ...d, tiles },
+        },
+    };
+}
+
 // Helpers ────────────────────────────────────────────────────────────
 
 export function getActiveDashboard(state) {

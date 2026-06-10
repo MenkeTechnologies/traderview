@@ -17,6 +17,8 @@ import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
 import { tConfirm, tPrompt } from '../dialog.js';
 import { WIDGETS_BY_ID, loadAnalyticsBundle } from './dashboard.js';
+import { searchScore, getMatchIndices, highlightWithIndices } from '../fzf.js';
+import { initDragReorder, resetDragReorder } from '../drag_reorder.js';
 
 // Re-export so the rest of the app can mount the same renderers in
 // other contexts later (e.g., browser extensions, popups).
@@ -35,16 +37,51 @@ async function getRenderers() {
 
 const TILE_INDEX = new Map(TILES.map(t => [t[0], { label: t[1], glyph: t[2], desc: t[3] }]));
 
+// Views that own a WS connection, a sub-second rerender, or another
+// hard-to-tear-down side effect. Putting more than one of these (or
+// mixing them with other live tiles) makes the dashboard visibly flash
+// as they fight for the module-level singletons (ws, setInterval handle).
+// Show a "open standalone" hint instead of mounting.
+// Only block views that would recursively mount THIS view inside itself —
+// every other live view renders normally as a tile, even if its WS / poll
+// owns module-level state. (The recursion was the actual flash source.)
+const TILE_DENYLIST = new Set([
+    'dashboards',
+]);
+
 let state = store.loadState();
 let editMode = false;
 let _wired = false;
+// Sidebar collapse — persisted across sessions. Default expanded.
+const SIDEBAR_COLLAPSED_KEY = 'tv:dashSidebarCollapsed';
+let sidebarCollapsed = (() => {
+    try { return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === '1'; }
+    catch { return false; }
+})();
+
+// Per-tile teardown callbacks returned by view renderers (squeeze_scanner,
+// live_scanner, etc. that open WS + start polling). Without this, every
+// renderTiles() re-mount stacks another WS + setTimeout chain on top of
+// the previous one — visible as runaway /api/squeeze/candidates polling.
+const tileTeardowns = new Map();
+function tearDownAllTiles() {
+    for (const fn of tileTeardowns.values()) {
+        try { fn(); } catch (e) { console.warn('tile teardown threw', e); }
+    }
+    tileTeardowns.clear();
+}
 
 export async function renderDashboards(mount, _appState) {
     state = store.loadState();
     mount.innerHTML = `
         <h1 data-i18n="view.dashboards.h1.dashboards" class="view-title">// DASHBOARDS</h1>
-        <div class="db-shell">
+        <div class="db-shell ${sidebarCollapsed ? 'db-shell--collapsed' : ''}" id="db-shell">
             <aside id="db-sidebar" class="db-sidebar"></aside>
+            <button id="db-sidebar-toggle" class="db-sidebar-toggle" type="button"
+                    title="${esc(t('view.dashboards.tip.toggle_sidebar') || 'Toggle sidebar')}"
+                    aria-label="${esc(t('view.dashboards.tip.toggle_sidebar') || 'Toggle sidebar')}">
+                <span class="db-sidebar-toggle-glyph">${sidebarCollapsed ? '›' : '‹'}</span>
+            </button>
             <section id="db-main" class="db-main"></section>
         </div>
         <div class="chart-panel">
@@ -60,6 +97,19 @@ export async function renderDashboards(mount, _appState) {
     await renderActive();
     renderTilesChart();
     renderTileFreqChart();
+    // Sidebar collapse toggle — flips a class on the shell so the CSS
+    // grid template changes column widths; persists across sessions.
+    const toggleBtn = mount.querySelector('#db-sidebar-toggle');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+            sidebarCollapsed = !sidebarCollapsed;
+            try { localStorage.setItem(SIDEBAR_COLLAPSED_KEY, sidebarCollapsed ? '1' : '0'); } catch {}
+            const shell = mount.querySelector('#db-shell');
+            if (shell) shell.classList.toggle('db-shell--collapsed', sidebarCollapsed);
+            const glyph = toggleBtn.querySelector('.db-sidebar-toggle-glyph');
+            if (glyph) glyph.textContent = sidebarCollapsed ? '›' : '‹';
+        });
+    }
     if (!_wired) {
         _wired = true;
         // External mutations (e.g. launcher 📌 pin button) wake this view
@@ -356,7 +406,32 @@ function renderFavsSection() {
     });
 }
 
+// Coalesce + drain renderActive() calls. Multiple sources can chain into
+// renderActive in the same tick (addTile → persist → renderSidebar →
+// renderActive, plus the tv:dashboards-changed listener). Naive serial
+// invocation visibly flashes when any tile renderer is slow (the
+// analytics-dashboard bundle fetch is the worst offender). The drain
+// loop guarantees a final render after the last state change without
+// running 60 redundant renders along the way.
+// Coalesce + drain renderActive() calls so several chained handlers
+// (addTile → persist → renderSidebar → renderActive plus the
+// tv:dashboards-changed listener) collapse to one render — and any state
+// change that lands DURING a render gets a follow-up pass.
+let _renderRunning = false;
+let _renderQueued = false;
 async function renderActive() {
+    if (_renderRunning) { _renderQueued = true; return; }
+    _renderRunning = true;
+    try {
+        do {
+            _renderQueued = false;
+            await _renderActiveOnce();
+        } while (_renderQueued);
+    } finally {
+        _renderRunning = false;
+    }
+}
+async function _renderActiveOnce() {
     const wrap = document.getElementById('db-main');
     if (!wrap) return;
     const d = store.getActiveDashboard(state);
@@ -415,17 +490,19 @@ function wirePicker(activeDashboard) {
             desc:  tr(`tile.${id}.desc`,  desc || ''),
         }));
         const all = [...GRAPH_ITEMS, ...viewItems];
-        const filtered = all.filter(item => {
-            if (!q) return true;
-            const needle = q.toLowerCase();
-            return item.label.toLowerCase().includes(needle)
-                || (item.desc || '').toLowerCase().includes(needle);
-        });
-        grid.innerHTML = filtered.map(item =>
+        const ranked = q
+            ? all
+                .map(item => ({ item, score: searchScore(q, [item.label, item.desc || '']) }))
+                .filter(x => x.score > 0)
+                .sort((a, b) => b.score - a.score)
+                .map(x => x.item)
+            : all;
+        const hlLabel = (s) => q ? highlightWithIndices(s, getMatchIndices(q, s)) : esc(s);
+        grid.innerHTML = ranked.map(item =>
             `<button class="db-pick-tile" data-kind="${item.kind}" data-add="${esc(item.id)}" type="button"
                     title="${esc(item.desc)}">
                 <span class="db-pick-glyph">${esc(item.glyph)}</span>
-                <span class="db-pick-label">${esc(item.label)}</span>
+                <span class="db-pick-label">${hlLabel(item.label)}</span>
             </button>`
         ).join('') || `<div class="muted" data-i18n="view.dashboards.empty.no_views_match">No views match the filter.</div>`;
         grid.querySelectorAll('button[data-add]').forEach(btn => {
@@ -446,12 +523,11 @@ function wirePicker(activeDashboard) {
 async function renderTiles(dashboard) {
     const gridEl = document.getElementById('db-grid');
     const renderers = await getRenderers();
-    // Interleave drop-zones between every pair of tiles + at the head and
-    // tail. Each drop-zone carries the destination index so the storage
-    // layer's `moveTileTo` can resolve it deterministically.
-    const dropZone = (idx) =>
-        editMode ? `<div class="db-dropzone" data-drop-index="${idx}"></div>` : '';
-    let html = dropZone(0);
+    // Cancel WS / polling / intervals from the previous render BEFORE
+    // we rewrite innerHTML — otherwise the orphaned setTimeout chains
+    // keep firing and the squeeze/candidates poll runs unbounded.
+    tearDownAllTiles();
+    let html = '';
     for (let idx = 0; idx < dashboard.tiles.length; idx++) {
         const tile = dashboard.tiles[idx];
         // Graph tiles read meta from the analytics dashboard's WIDGETS
@@ -464,37 +540,48 @@ async function renderTiles(dashboard) {
         } else {
             meta = TILE_INDEX.get(tile.viewId) || { label: tile.viewId, glyph: '·' };
         }
+        // Saved span (config.size.col / .row) — defaults to 1×1.
+        const size = (tile.config && tile.config.size) || { col: 1, row: 1 };
+        const spanStyle = `grid-column:span ${size.col};grid-row:span ${size.row};`;
         html += `
-            <div class="db-tile ${editMode ? 'db-tile-draggable' : ''}"
+            <div class="db-tile db-tile-draggable"
                  data-tile-id="${esc(tile.id)}"
-                 ${editMode ? `draggable="true"` : ''}>
+                 data-col="${size.col}" data-row="${size.row}"
+                 style="${spanStyle}">
                 <div class="db-tile-head">
+                    <span class="db-tile-grip" title="${esc(t('view.dashboards.tip.drag'))}" aria-hidden="true">⋮⋮</span>
                     <span class="db-tile-glyph">${esc(meta.glyph)}</span>
                     <span class="db-tile-label">${esc(meta.label)}</span>
-                    ${editMode ? `
-                        <span class="db-tile-controls">
-                            <span class="db-tile-drag" data-i18n-title="view.dashboards.tip.drag" title="Drag to reorder">⋮⋮</span>
+                    <span class="db-tile-controls">
+                        ${editMode ? `
                             <button class="db-tile-btn" data-move="up" data-tile="${esc(tile.id)}"   ${idx === 0 ? 'disabled' : ''} data-i18n-title="view.dashboards.tip.move_up" title="Move up">▲</button>
                             <button class="db-tile-btn" data-move="down" data-tile="${esc(tile.id)}" ${idx === dashboard.tiles.length - 1 ? 'disabled' : ''} data-i18n-title="view.dashboards.tip.move_down" title="Move down">▼</button>
-                            <button class="db-tile-btn db-tile-remove" data-remove="${esc(tile.id)}" data-i18n-title="view.dashboards.tip.remove_tile" title="Remove tile">×</button>
-                        </span>
-                    ` : ''}
+                        ` : ''}
+                        <button class="db-tile-btn db-tile-remove" data-remove="${esc(tile.id)}" data-i18n-title="view.dashboards.tip.remove_tile" title="${esc(t('view.dashboards.tip.remove_tile'))}">×</button>
+                    </span>
                 </div>
                 <div class="db-tile-body" id="db-tile-body-${esc(tile.id)}"></div>
+                <span class="db-tile-resize"
+                      data-resize-tile="${esc(tile.id)}"
+                      title="${esc(t('view.dashboards.tip.resize'))}"
+                      aria-label="${esc(t('view.dashboards.tip.resize'))}"></span>
             </div>
         `;
-        html += dropZone(idx + 1);
     }
     gridEl.innerHTML = html;
 
-    if (editMode) {
-        gridEl.querySelectorAll('button[data-remove]').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                state = store.removeTile(state, dashboard.id, btn.dataset.remove);
-                persist();
-                await renderActive();
-            });
+    // Remove (×) is always available — no need to enter edit mode just to
+    // delete a tile. Move-up / move-down arrows still only appear in edit
+    // mode since drag-reorder covers the same need ergonomically.
+    gridEl.querySelectorAll('button[data-remove]').forEach(btn => {
+        btn.addEventListener('click', async (ev) => {
+            ev.stopPropagation();
+            state = store.removeTile(state, dashboard.id, btn.dataset.remove);
+            persist();
+            await renderActive();
         });
+    });
+    if (editMode) {
         gridEl.querySelectorAll('button[data-move]').forEach(btn => {
             btn.addEventListener('click', async () => {
                 const dir = btn.dataset.move === 'up' ? -1 : 1;
@@ -503,8 +590,11 @@ async function renderTiles(dashboard) {
                 await renderActive();
             });
         });
-        wireDragAndDrop(dashboard);
     }
+    // Drag-reorder + resize are always-on (not edit-mode gated). Pointer-
+    // driven engine works through canvases (uPlot tiles) where the old
+    // HTML5 dragstart/dragover/drop path was eaten by the chart.
+    wireDragAndResize(dashboard);
 
     // If any graph tile is present, fetch the analytics bundle ONCE and
     // reuse the same `data` for every widget render — same as the
@@ -561,13 +651,29 @@ async function renderTiles(dashboard) {
             continue;
         }
 
+        if (TILE_DENYLIST.has(tile.viewId)) {
+            // Self-recursive view (mounting Dashboards inside a tile inside
+            // Dashboards recurses infinitely — verified via stack trace).
+            // No other views are blocked here.
+            body.innerHTML = `<div class="boot" style="padding:14px;text-align:center;color:var(--text-muted, #aab);font-size:12px">
+                Can't embed the Dashboards view inside itself.
+            </div>`;
+            continue;
+        }
         const fn = renderers[tile.viewId];
         if (!fn) {
             body.innerHTML = `<div class="boot" style="color:var(--red)">${esc(t('view.dashboards.tile.err.not_found', { view: tile.viewId }))}</div>`;
             continue;
         }
         try {
-            await fn(body, {});
+            // Pass the REAL app state — many renderers do `state.accounts.find(...)`
+            // and crash on an empty object.
+            const teardown = await fn(body, appState);
+            // Renderers that return a teardown (squeeze_scanner, live_scanner,
+            // any WS/poll-owning view) get cleaned up on the next renderTiles().
+            if (typeof teardown === 'function') {
+                tileTeardowns.set(tile.id, teardown);
+            }
         } catch (e) {
             body.innerHTML = `<div class="boot" style="color:var(--red)">${esc(t('view.dashboards.tile.err.render_failed', { err: String(e.message || e) }))}</div>`;
         }
@@ -579,45 +685,86 @@ async function renderTiles(dashboard) {
 // .db-dropzone is the drop target. We use a dataTransfer payload of
 // `tile-id:<id>` so cross-context drags (e.g. from the launcher) can be
 // distinguished by prefix in a future cross-context handler.
-function wireDragAndDrop(dashboard) {
+// Always-on Trello-style reorder + corner resize. State persistence flows
+// through _dashboards_storage (reorderTiles / setTileSize) so the tile
+// order + sizes survive view re-renders, dashboard switches, and reloads.
+function wireDragAndResize(dashboard) {
     const grid = document.getElementById('db-grid');
     if (!grid) return;
-    let draggingId = null;
-    grid.querySelectorAll('.db-tile-draggable').forEach(tileEl => {
-        tileEl.addEventListener('dragstart', (ev) => {
-            draggingId = tileEl.dataset.tileId;
-            tileEl.classList.add('db-tile-dragging');
-            if (ev.dataTransfer) {
-                ev.dataTransfer.effectAllowed = 'move';
-                ev.dataTransfer.setData('text/plain', `tile-id:${draggingId}`);
+    // Re-arm the drag engine after every render — the grid div is the
+    // same element across renders (innerHTML replaces children, not the
+    // host), so the `_trelloDragInit` guard would otherwise block a re-init.
+    resetDragReorder(grid);
+    initDragReorder(grid, '.db-tile', null, {
+        direction: 'horizontal',
+        // Only the grip / glyph / label start a drag — NOT the controls
+        // (× delete, ▲/▼ move) or the body. Without this restriction
+        // mousedown on a button triggered drag-init + preventDefault,
+        // which suppressed the subsequent click event so the button
+        // appeared dead.
+        handleSelector: '.db-tile-grip, .db-tile-glyph, .db-tile-label',
+        getKey: (el) => el.dataset.tileId,
+        // Push new order into authoritative dashboard state. The drag
+        // engine already moved the DOM; we mirror that into state and
+        // skip a re-render (DOM is already correct).
+        onReorder: (newKeys) => {
+            const next = store.reorderTiles(state, dashboard.id, newKeys);
+            if (next !== state) {
+                state = next;
+                persist();
             }
-        });
-        tileEl.addEventListener('dragend', () => {
-            tileEl.classList.remove('db-tile-dragging');
-            grid.querySelectorAll('.db-dropzone').forEach(z => z.classList.remove('db-dropzone-active'));
-            draggingId = null;
-        });
+        },
+        toastKey: 'toast.reordered',
     });
-    grid.querySelectorAll('.db-dropzone').forEach(zone => {
-        zone.addEventListener('dragover', (ev) => {
-            if (!draggingId) return;
+
+    // Corner-handle resize → grid-column / grid-row span.
+    grid.querySelectorAll('.db-tile-resize').forEach(handle => {
+        // Capture phase + stopImmediatePropagation so this fires BEFORE the
+        // drag-engine's bubble-phase mousedown on the grid container, and
+        // before any sibling click handlers — guarantees resize wins over
+        // drag-reorder when the user grabs the corner.
+        handle.addEventListener('mousedown', (ev) => {
             ev.preventDefault();
-            if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'move';
-            zone.classList.add('db-dropzone-active');
-        });
-        zone.addEventListener('dragleave', () => {
-            zone.classList.remove('db-dropzone-active');
-        });
-        zone.addEventListener('drop', async (ev) => {
-            ev.preventDefault();
-            zone.classList.remove('db-dropzone-active');
-            if (!draggingId) return;
-            const dropIndex = parseInt(zone.dataset.dropIndex, 10);
-            if (!Number.isInteger(dropIndex)) return;
-            state = store.moveTileTo(state, dashboard.id, draggingId, dropIndex);
-            persist();
-            draggingId = null;
-            await renderActive();
-        });
+            ev.stopImmediatePropagation();
+            const tileEl = handle.closest('.db-tile');
+            if (!tileEl) return;
+            const tileId = tileEl.dataset.tileId;
+            // Approximate cell size from the tile's current rendered
+            // footprint divided by its current span — robust against
+            // future grid template tweaks.
+            const startCol = parseInt(tileEl.dataset.col, 10) || 1;
+            const startRow = parseInt(tileEl.dataset.row, 10) || 1;
+            const rect = tileEl.getBoundingClientRect();
+            const cellW = rect.width / startCol;
+            const cellH = rect.height / startRow;
+            const startX = ev.clientX, startY = ev.clientY;
+
+            tileEl.classList.add('db-tile-resizing');
+
+            const onMove = (mv) => {
+                const dx = mv.clientX - startX;
+                const dy = mv.clientY - startY;
+                const col = Math.max(1, Math.min(6, startCol + Math.round(dx / cellW)));
+                const row = Math.max(1, Math.min(6, startRow + Math.round(dy / cellH)));
+                tileEl.style.gridColumn = `span ${col}`;
+                tileEl.style.gridRow = `span ${row}`;
+                tileEl.dataset.col = String(col);
+                tileEl.dataset.row = String(row);
+            };
+            const onUp = () => {
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
+                tileEl.classList.remove('db-tile-resizing');
+                const col = parseInt(tileEl.dataset.col, 10) || 1;
+                const row = parseInt(tileEl.dataset.row, 10) || 1;
+                const next = store.setTileSize(state, dashboard.id, tileId, { col, row });
+                if (next !== state) {
+                    state = next;
+                    persist();
+                }
+            };
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+        }, /* capture */ true);
     });
 }

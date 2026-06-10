@@ -60,7 +60,7 @@ async function runSim(mount) {
     summary.innerHTML = `<p class="muted">${esc(t('view.dca_simulator.status.simulating'))}</p>`;
     purchases.innerHTML = '';
     try {
-        const r = await api(`/dca-simulator/run?symbol=${symbol}&contribution_usd=${contribution}&frequency=${frequency}&days_back=${days}`);
+        const r = await api.request(`/dca-simulator/run?symbol=${symbol}&contribution_usd=${contribution}&frequency=${frequency}&days_back=${days}`);
         if (!r) {
             summary.innerHTML = `<p class="muted">${esc(t('view.dca_simulator.empty.no_data'))}</p>`;
             return;

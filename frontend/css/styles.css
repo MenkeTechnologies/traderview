@@ -3509,8 +3509,21 @@ body.no-neon-glow .tv-spinner-inline {
 .st-cell.st-worst         { box-shadow: inset 0 0 0 2px #ffd84a; font-weight: bold; }
 .st-cell.st-best          { box-shadow: inset 0 0 0 2px #00e5ff; font-weight: bold; }
 /* Dashboards — user-customizable view grid */
-.db-shell                 { display: grid; grid-template-columns: 260px 1fr; gap: 12px; align-items: flex-start; }
-.db-sidebar               { background: #11141a; border: 1px solid #1a1d22; padding: 10px; position: sticky; top: 10px; max-height: calc(100vh - 60px); overflow-y: auto; }
+.db-shell                 { display: grid; grid-template-columns: 260px 20px 1fr; gap: 8px; align-items: flex-start; }
+.db-shell--collapsed      { grid-template-columns: 0 20px 1fr; }
+.db-shell--collapsed .db-sidebar { width: 0; padding: 0; border: 0; overflow: hidden; }
+.db-sidebar               { background: #11141a; border: 1px solid #1a1d22; padding: 10px; position: sticky; top: 10px; max-height: calc(100vh - 60px); overflow-y: auto; transition: width 180ms ease; }
+.db-sidebar-toggle {
+    position: sticky; top: 10px;
+    width: 20px; height: 64px;
+    background: #11141a; border: 1px solid #1a1d22; border-left: 2px solid var(--cyan);
+    color: var(--cyan); font-size: 14px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0; user-select: none;
+    transition: background 120ms;
+}
+.db-sidebar-toggle:hover  { background: color-mix(in srgb, var(--cyan) 14%, #11141a); }
+.db-sidebar-toggle-glyph  { line-height: 1; }
 .db-sidebar-head          { font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 1.5px; color: #aab; text-transform: uppercase; margin-bottom: 6px; }
 .db-list                  { list-style: none; padding: 0; margin: 0 0 8px 0; }
 .db-list-item             { margin: 2px 0; }
@@ -3529,8 +3542,8 @@ body.no-neon-glow .tv-spinner-inline {
 .db-pick-tile:hover       { background: #1d2330; border-color: #00e5ff; }
 .db-pick-glyph            { font-size: 18px; margin-bottom: 4px; }
 .db-pick-label            { text-align: center; }
-.db-grid                  { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 10px; }
-.db-tile                  { background: #0e1116; border: 1px solid #1a1d22; display: flex; flex-direction: column; max-height: 800px; overflow: hidden; }
+.db-grid                  { display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); grid-auto-rows: 380px; gap: 10px; }
+.db-tile                  { position: relative; background: #0e1116; border: 1px solid #1a1d22; display: flex; flex-direction: column; overflow: hidden; }
 .db-tile-head             { display: flex; align-items: center; padding: 6px 10px; background: #161a1f; border-bottom: 1px solid #1a1d22; font-family: 'Orbitron', sans-serif; font-size: 11px; letter-spacing: 1.2px; }
 .db-tile-glyph            { margin-right: 8px; font-size: 14px; }
 .db-tile-label            { flex: 1; color: #ccd; }
@@ -3539,20 +3552,45 @@ body.no-neon-glow .tv-spinner-inline {
 .db-tile-btn:hover:not(:disabled) { background: #2a2d33; color: #fff; }
 .db-tile-btn:disabled     { opacity: 0.3; cursor: not-allowed; }
 .db-tile-remove           { color: #ff3860; }
-.db-tile-body             { overflow-y: auto; padding: 6px; max-height: 740px; }
+.db-tile-body             { flex: 1; overflow: auto; padding: 6px; min-height: 0; }
 .db-tile-body .view-title { font-size: 11px; margin: 4px 0; }
 .db-tile-body .chart-panel { padding: 8px; }
 .db-tile-body .cards      { gap: 6px; }
 .db-tile-body .card       { padding: 4px 8px; min-width: 90px; }
 .db-tile-body .card .label { font-size: 9px; }
 .db-tile-body .card .value { font-size: 12px; }
-/* Drag-and-drop dashboard tile reorder */
-.db-tile-draggable        { cursor: grab; }
-.db-tile-draggable:active { cursor: grabbing; }
-.db-tile-dragging         { opacity: 0.4; }
-.db-tile-drag             { color: #aab; font-family: ui-monospace, monospace; cursor: grab; padding: 0 4px; user-select: none; }
-.db-dropzone              { min-height: 14px; border: 1px dashed transparent; border-radius: 2px; transition: all 120ms ease-out; }
-.db-dropzone-active       { border-color: #00e5ff; background: #00e5ff14; min-height: 36px; }
+/* Always-on dashboard tile reorder + resize (pointer-driven). */
+.db-tile-draggable        { user-select: none; }
+.db-tile-head             { cursor: grab; user-select: none; }
+.db-tile-head:active      { cursor: grabbing; }
+.db-tile-grip             { color: #555; font-family: ui-monospace, monospace; padding: 0 6px 0 0; user-select: none; letter-spacing: -1px; }
+.db-tile-head:hover .db-tile-grip { color: var(--cyan); }
+/* Resize strip is a FLEX SIBLING below the body, NOT an absolutely
+ * positioned overlay. This is the only way to avoid the body's vertical
+ * scrollbar (browser-painted, always wins click hit-testing against page
+ * DOM regardless of CSS z-index) sitting on top of the strip's hit zone. */
+.db-tile-resize {
+    flex: 0 0 14px;
+    cursor: nwse-resize;
+    background: linear-gradient(90deg,
+        rgba(0, 229, 255, 0.06) 0%,
+        rgba(0, 229, 255, 0.06) 80%,
+        rgba(0, 229, 255, 0.35) 100%);
+    border-top: 1px solid color-mix(in srgb, var(--cyan) 20%, transparent);
+    position: relative;
+    user-select: none;
+}
+.db-tile-resize::after {
+    content: '◢';
+    position: absolute;
+    right: 4px; bottom: -1px;
+    color: var(--cyan);
+    font-size: 11px;
+    line-height: 1;
+    opacity: 0.85;
+}
+.db-tile-resize:hover     { background: rgba(0, 229, 255, 0.12); }
+.db-tile-resizing         { outline: 2px dashed var(--cyan); outline-offset: -2px; }
 /* Custom alert rule cards */
 .ar-rule                  { background: #11141a; border: 1px solid #1a1d22; padding: 8px 10px; margin: 6px 0; }
 .ar-rule-head             { display: flex; align-items: center; gap: 8px; font-family: 'Orbitron', sans-serif; font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; }
@@ -3893,4 +3931,62 @@ body.no-neon-glow .tv-spinner-inline {
 }
 @media (max-width: 900px) {
     .chart-grid { grid-template-columns: 1fr !important; }
+}
+
+/* Global table enhancement — sort + column resize. Auto-applied by
+ * frontend/js/table_enhance.js's MutationObserver to every <table> in
+ * the DOM. Opt out per-table with data-no-enhance="1". */
+table.te-enhanced th {
+    position: relative;
+    user-select: none;
+    /* Reserve space for the sort indicator and resize handle so labels
+     * don't crowd against them. */
+    padding-right: 18px !important;
+}
+table.te-enhanced th.te-sortable {
+    cursor: pointer;
+}
+table.te-enhanced th.te-sortable::after {
+    content: '↕';
+    position: absolute;
+    right: 9px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 9px;
+    opacity: 0.25;
+    color: var(--text-muted, #aab);
+    pointer-events: none;
+    line-height: 1;
+}
+table.te-enhanced th[data-sort-dir="asc"]::after {
+    content: '▲'; opacity: 1; color: var(--cyan);
+}
+table.te-enhanced th[data-sort-dir="desc"]::after {
+    content: '▼'; opacity: 1; color: var(--cyan);
+}
+table.te-enhanced th.te-resizing {
+    outline: 1px dashed var(--cyan); outline-offset: -1px;
+}
+.te-resize-handle {
+    position: absolute;
+    right: 0; top: 0; bottom: 0;
+    width: 5px;
+    cursor: col-resize;
+    background: transparent;
+    transition: background 0.1s;
+    /* Sit above the th's ::after sort indicator so the column edge is
+     * grabbable even when the indicator is fully opaque. */
+    z-index: 2;
+}
+.te-resize-handle:hover { background: var(--cyan); opacity: 0.6; }
+.te-resize-handle:active { background: var(--cyan); opacity: 0.9; }
+
+/* fzf char-match highlight (emitted by frontend/js/fzf.js::highlightWithIndices) */
+mark.fzf-hl {
+    background: color-mix(in srgb, var(--cyan) 32%, transparent);
+    color: var(--cyan);
+    padding: 0;
+    border-radius: 1px;
+    font-weight: 600;
+    text-shadow: 0 0 4px var(--cyan-glow, rgba(0, 229, 255, 0.6));
 }

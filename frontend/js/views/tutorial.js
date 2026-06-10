@@ -6,6 +6,7 @@ import { go } from '../app.js';
 import { esc } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t } from '../i18n.js';
+import { searchMatch } from '../fzf.js';
 
 const SECTIONS = [
     {
@@ -246,13 +247,15 @@ export async function renderTutorial(mount, _state) {
     });
 
     // Filter — shows only sections whose text matches the query.
+    // (Section body innerHTML highlight skipped: too aggressive to rewrap
+    // arbitrary HTML mid-stream without breaking nested markup.)
     const q = mount.querySelector('#tut-q');
     if (q) {
         q.addEventListener('input', () => {
-            const needle = q.value.trim().toLowerCase();
+            const needle = q.value.trim();
             mount.querySelectorAll('.tut-section').forEach(sec => {
                 if (!needle) { sec.style.display = ''; return; }
-                sec.style.display = sec.textContent.toLowerCase().includes(needle) ? '' : 'none';
+                sec.style.display = searchMatch(needle, sec.textContent || '') ? '' : 'none';
             });
         });
         q.focus();

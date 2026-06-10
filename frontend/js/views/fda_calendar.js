@@ -6,6 +6,7 @@ import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { showToast } from '../toast.js';
+import { searchScore, getMatchIndices, highlightWithIndices } from '../fzf.js';
 
 const state = { rows: [], filter: '' };
 
@@ -107,16 +108,23 @@ function renderTable() {
         const desc = r.eventDescription || r.eventName || '';
         return { r, desc, committee: deriveCommittee(desc) };
     });
-    const q = state.filter.trim().toLowerCase();
-    const visible = q
-        ? enriched.filter(({ r, desc, committee }) =>
-            `${desc} ${committee} ${fmtDate(r.fromDate)} ${fmtDate(r.toDate)}`
-                .toLowerCase().includes(q))
-        : enriched;
-    if (!visible.length) {
+    const q = state.filter.trim();
+    const ranked = q
+        ? enriched
+            .map(row => {
+                const { r, desc, committee } = row;
+                const fields = [desc, committee, fmtDate(r.fromDate), fmtDate(r.toDate)];
+                const score = searchScore(q, fields);
+                return score > 0 ? { row, score } : null;
+            })
+            .filter(Boolean)
+            .sort((a, b) => b.score - a.score)
+        : enriched.map(row => ({ row, score: 0 }));
+    if (!ranked.length) {
         el.innerHTML = `<p class="muted" data-i18n="view.fda_calendar.no_match">No meetings match the filter.</p>`;
         return;
     }
+    const hl = (text) => q ? highlightWithIndices(text, getMatchIndices(q, text)) : esc(text);
     el.innerHTML = `<table class="trades">
         <thead><tr>
             <th data-i18n="view.fda_calendar.th.event_date">Event date</th>
@@ -125,15 +133,16 @@ function renderTable() {
             <th data-i18n="view.fda_calendar.th.start">Start</th>
             <th data-i18n="view.fda_calendar.th.end">End</th>
         </tr></thead>
-        <tbody>${visible.map(({ r, desc, committee }) => {
+        <tbody>${ranked.map(({ row: { r, desc, committee } }) => {
+            const descText = desc || '—';
             const eventCell = r.url
-                ? `<a class="link" href="${esc(r.url)}" target="_blank" rel="noopener">${esc(desc || '—')}</a>`
-                : esc(desc || '—');
+                ? `<a class="link" href="${esc(r.url)}" target="_blank" rel="noopener">${hl(descText)}</a>`
+                : hl(descText);
             return `
             <tr>
                 <td><strong>${esc(fmtDate(r.fromDate) || '—')}</strong></td>
                 <td>${eventCell}</td>
-                <td class="muted">${esc(committee || '—')}</td>
+                <td class="muted">${hl(committee || '—')}</td>
                 <td class="muted">${esc(fmtDateTime(r.fromDate) || '—')}</td>
                 <td class="muted">${esc(fmtDateTime(r.toDate) || '—')}</td>
             </tr>`;

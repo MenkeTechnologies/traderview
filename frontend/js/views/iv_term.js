@@ -49,7 +49,7 @@ async function fetchAndRender(mount) {
     if (!tbody) return;
     tbody.innerHTML = `<tr><td colspan="9" class="muted">${esc(t('common.loading'))}</td></tr>`;
     try {
-        const rows = await api('/iv-term/ranked?limit=30');
+        const rows = await api.request('/iv-term/ranked?limit=30');
         if (!rows.length) {
             tbody.innerHTML = `<tr><td colspan="9" class="muted">${esc(t('view.iv_term.empty.no_rows'))}</td></tr>`;
             if (meta) meta.textContent = '';

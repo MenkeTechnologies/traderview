@@ -59,7 +59,7 @@ async function saveTarget(mount) {
         return;
     }
     try {
-        await api('/paper-rebalance/targets', {
+        await api.request('/paper-rebalance/targets', {
             method: 'POST',
             body: JSON.stringify({
                 name,
@@ -79,7 +79,7 @@ async function saveTarget(mount) {
 async function loadList(mount) {
     const list = mount.querySelector('#pr-list');
     try {
-        const targets = await api('/paper-rebalance/targets');
+        const targets = await api.request('/paper-rebalance/targets');
         if (!targets || !targets.length) {
             list.innerHTML = `<p class="muted">${esc(t('view.paper_rebalance.empty.no_targets'))}</p>`;
             return;
@@ -118,7 +118,7 @@ async function loadList(mount) {
 
 async function deleteTarget(mount, id) {
     try {
-        await api(`/paper-rebalance/targets/${id}`, { method: 'DELETE' });
+        await api.request(`/paper-rebalance/targets/${id}`, { method: 'DELETE' });
         await loadList(mount);
     } catch (e) {
         const meta = mount.querySelector('#pr-meta');
@@ -130,7 +130,7 @@ async function loadPlan(mount, id) {
     const planEl = mount.querySelector('#pr-plan');
     planEl.innerHTML = `<p class="muted">${esc(t('view.paper_rebalance.status.computing'))}</p>`;
     try {
-        const r = await api(`/paper-rebalance/plan/${id}`, { method: 'POST' });
+        const r = await api.request(`/paper-rebalance/plan/${id}`, { method: 'POST' });
         const driftCls = r.above_threshold ? 'neg' : 'pos';
         const trades = r.plan.trades || [];
         planEl.innerHTML = `

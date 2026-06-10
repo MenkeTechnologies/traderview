@@ -57,7 +57,7 @@ async function runStrategy(mount) {
     current.innerHTML = '';
     history.innerHTML = '';
     try {
-        const r = await api(`/sector-rotation-strategy/run?days_back=${days}&lookback_months=${lookback}&top_k=${topK}`);
+        const r = await api.request(`/sector-rotation-strategy/run?days_back=${days}&lookback_months=${lookback}&top_k=${topK}`);
         const sharpeCls = r.annualised_sharpe >= 1.0 ? 'pos' : r.annualised_sharpe >= 0.5 ? '' : 'muted';
         const ciCls = r.sharpe_ci_lo_95 > 0 ? 'pos' : 'neg';
         summary.innerHTML = `

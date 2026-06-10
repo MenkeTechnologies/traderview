@@ -5,26 +5,64 @@ import { esc, fmt, fmtDateTime } from '../util.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 import { t, applyUiI18n } from '../i18n.js';
 
+// Normalize user-typed symbols to the form the data layer expects (Yahoo).
+//   BTC/USD   → BTC-USD   (slash → dash for any X/Y pair)
+//   BTC.USD   → BTC-USD
+//   BTC USD   → BTC-USD
+//   BTCUSD    → BTC-USD   (common quote-currency suffixes — extend as needed)
+//   BTC-USD   → BTC-USD   (passthrough)
+// Pure ticker symbols (AAPL, ^GSPC, CL=F) flow through untouched.
+const CRYPTO_QUOTE_CURRENCIES = ['USDT', 'USDC', 'USD', 'BUSD', 'EUR', 'GBP', 'JPY', 'BTC', 'ETH'];
+function normalizeSymbol(raw) {
+    if (!raw) return '';
+    let s = String(raw).trim().toUpperCase();
+    if (!s) return '';
+    // Pair separators: /, \, ., space, colon — collapse to dash.
+    if (/[\/\\.: ]/.test(s)) s = s.replace(/[\/\\.: ]+/g, '-');
+    // Already has a dash separator: keep as-is (Yahoo's BTC-USD form).
+    if (s.includes('-')) return s;
+    // Bare concatenated pair like BTCUSD / ETHUSDT — split on the longest
+    // quote-currency suffix we recognize. Skip when the symbol contains
+    // characters that wouldn't appear in a crypto base (^, =).
+    if (/[\^=]/.test(s)) return s;
+    for (const qc of CRYPTO_QUOTE_CURRENCIES) {
+        if (s.length > qc.length && s.endsWith(qc)) {
+            const base = s.slice(0, -qc.length);
+            // Heuristic: base must be 2-6 chars of letters/digits to avoid
+            // false positives like a ticker that happens to end in "USD".
+            if (/^[A-Z0-9]{2,6}$/.test(base)) return `${base}-${qc}`;
+        }
+    }
+    return s;
+}
+
 export async function renderResearch(mount, _state, sym) {
     const tok = currentViewToken();
     if (!sym) {
         mount.innerHTML = `
             <h1 data-i18n="view.research.h1.research" class="view-title">// RESEARCH</h1>
             <form id="rs-form" class="inline-form">
-                <input name="symbol" placeholder="symbol — AAPL, NVDA, ^GSPC, BTC-USD" data-i18n-placeholder="view.research.placeholder.symbol"
+                <input name="symbol" placeholder="symbol — AAPL, ^GSPC, CL=F, BTC-USD, BTC/USD" data-i18n-placeholder="view.research.placeholder.symbol"
                        data-tip="view.research.tip.symbol" data-shortcut="focus_search" required autofocus style="min-width:300px;text-transform:uppercase">
                 <button data-i18n="view.research.btn.research" data-tip="view.research.tip.submit" data-shortcut="research_action" class="primary" type="submit">Research</button>
             </form>
-            <p data-i18n="view.research.hint.tip_anything_yahoo_recognizes_works_stocks_indices" class="muted small">Tip: anything Yahoo recognizes works — stocks, indices (^FTSE), futures (CL=F), crypto (BTC-USD).</p>
+            <p data-i18n="view.research.hint.tip_anything_yahoo_recognizes_works_stocks_indices" class="muted small">Tip: anything Yahoo recognizes works — stocks, indices (^FTSE), futures (CL=F), crypto (BTC-USD or BTC/USD).</p>
         `;
         mount.querySelector('#rs-form').addEventListener('submit', (e) => {
             e.preventDefault();
-            const s = new FormData(e.target).get('symbol').trim().toUpperCase();
+            const s = normalizeSymbol(new FormData(e.target).get('symbol'));
             if (s) window.location.hash = `research/${encodeURIComponent(s)}`;
         });
         return;
     }
-    sym = sym.toUpperCase();
+    const normalized = normalizeSymbol(sym);
+    // Bounce the URL to the canonical Yahoo form so reload / share / back-
+    // button always land on a working route.
+    if (normalized !== String(sym).trim().toUpperCase()) {
+        window.location.hash = `research/${encodeURIComponent(normalized)}`;
+        return;
+    }
+    sym = normalized;
     mount.innerHTML = `
         <h1 class="view-title rs-title">
             <span class="rs-title-prefix">//</span>
@@ -106,7 +144,7 @@ export async function renderResearch(mount, _state, sym) {
     if (symForm && symInput) {
         symForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const next = (symInput.value || '').trim().toUpperCase();
+            const next = normalizeSymbol(symInput.value);
             if (next && next !== sym) {
                 window.location.hash = `research/${encodeURIComponent(next)}`;
             } else if (!next) {

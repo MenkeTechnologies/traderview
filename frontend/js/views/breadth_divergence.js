@@ -60,7 +60,7 @@ export async function renderBreadthDivergence(mount, _state) {
 
 async function refreshCurrent(mount) {
     try {
-        const cur = await api('/breadth-divergence/current');
+        const cur = await api.request('/breadth-divergence/current');
         const el = mount.querySelector('#bd-current-regime');
         if (el) {
             if (cur && cur.regime) {

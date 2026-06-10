@@ -7,6 +7,7 @@
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
 import { showToast } from '../toast.js';
+import { searchMatch, getMatchIndices, highlightWithIndices } from '../fzf.js';
 
 const STATE = {
     refreshTimer: null,
@@ -69,13 +70,13 @@ export async function renderLogViewer(mount) {
         // don't preserve it across reflows.
         const wasNearBottom = !firstRender &&
             (outEl.scrollHeight - outEl.scrollTop - outEl.clientHeight < 64);
-        const q = STATE.textFilter.trim().toLowerCase();
+        const q = STATE.textFilter.trim();
         const lvl = STATE.levelFilter;
         const lines = STATE.raw.split('\n');
         const visible = lines.filter(line => {
             if (!line) return false;
             if (lvl !== 'all' && !line.includes(` ${lvl} `) && !line.includes(`${lvl} `)) return false;
-            if (q && !line.toLowerCase().includes(q)) return false;
+            if (q && !searchMatch(q, line)) return false;
             return true;
         });
         outEl.innerHTML = visible.map(line => {
@@ -85,7 +86,8 @@ export async function renderLogViewer(mount) {
                 : line.includes(' DEBUG ') ? 'lv-debug'
                 : line.includes(' TRACE ') ? 'lv-trace'
                 : '';
-            return `<div class="lv-line ${cls}">${esc(line)}</div>`;
+            const body = q ? highlightWithIndices(line, getMatchIndices(q, line)) : esc(line);
+            return `<div class="lv-line ${cls}">${body}</div>`;
         }).join('');
         // First render: always snap to bottom so the user lands on the
         // freshest entries without having to scroll. Subsequent renders:

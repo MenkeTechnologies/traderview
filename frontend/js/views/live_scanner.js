@@ -16,10 +16,16 @@ let ws = null;
 let rerenderHandle = null;
 let voiceOn = true;
 let viewTok = 0;
+// Bumped by teardown — close-handler's 4s reconnect closure compares its
+// captured generation against this and bails when stale. Without it, every
+// re-render leaves orphaned setTimeout chains that re-open ws onto the
+// new mount, producing the runaway /api/ws/ticks reconnect storm.
+let liveScannerGen = 0;
 const announced = new Set();   // dedupe TTS alerts per session
 
 export async function renderLiveScanner(mount, _state) {
     viewTok = currentViewToken();
+    const myGen = ++liveScannerGen;
     mount.innerHTML = `
         <h1 class="view-title"><span data-i18n="view.live_scanner.title">// LIVE SCANNER · DayTradeDash replacement</span>
             <span class="status-dot" id="ls-status" data-i18n-title="common.status.connecting" title="connecting">●</span>
@@ -32,11 +38,6 @@ export async function renderLiveScanner(mount, _state) {
         <div class="chart-panel">
             <h2 data-i18n="view.live_scanner.h2.configure">Configure</h2>
             <form id="ls-config" class="inline-form">
-                <label><span data-i18n="view.live_scanner.label.api_key">Finnhub API key</span>
-                    <input name="api_key" type="password" placeholder="finnhub.io free tier (25 syms/conn)"
-                           data-i18n-placeholder="view.live_scanner.placeholder.api_key"
-                           data-tip="view.live_scanner.tip.api_key" style="min-width:280px">
-                </label>
                 <label><span data-i18n="view.live_scanner.label.symbols">Universe (comma-sep symbols)</span>
                     <input name="symbols" type="text" data-shortcut="focus_search" placeholder="AAPL,TSLA,NVDA,SPCE,GME,..."
                            data-i18n-placeholder="view.live_scanner.placeholder.symbols"
@@ -47,7 +48,7 @@ export async function renderLiveScanner(mount, _state) {
             <p data-i18n="view.live_scanner.hint.finnhub_s_free_websocket_gives_25_subscriptions_pe" class="muted small">
                 Finnhub's free WebSocket gives 25 subscriptions per connection.
                 Larger universes chunk across parallel connections automatically.
-                Key is held in process memory only — never written to disk.
+                Set your Finnhub API key in Settings.
             </p>
         </div>
 
@@ -78,43 +79,55 @@ export async function renderLiveScanner(mount, _state) {
         e.preventDefault();
         const fd = new FormData(e.target);
         const symbols = fd.get('symbols').split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
-        const api_key = fd.get('api_key').trim() || undefined;
         try {
-            const r = await api.configureLiveTicks({ api_key, symbols });
+            // Finnhub key is owned by Settings — passed as undefined here so
+            // the server uses whatever's already configured.
+            const r = await api.configureLiveTicks({ symbols });
             if (!viewIsCurrent(viewTok)) return;
-            connectWs(mount, viewTok);
+            connectWs(mount, viewTok, myGen);
             showToast(t('view.live_scanner.alert.subscribed', { n: r.subscribed, hasKey: r.has_key }), { level: 'success' });
         } catch (err) {
             showToast(t('view.live_scanner.alert.configure_failed', { err: err.message }), { level: 'error' });
         }
     });
 
-    connectWs(mount, viewTok);
+    connectWs(mount, viewTok, myGen);
     if (rerenderHandle) clearInterval(rerenderHandle);
     rerenderHandle = setInterval(() => {
-        if (!viewIsCurrent(viewTok)) {
+        if (!viewIsCurrent(viewTok) || myGen !== liveScannerGen) {
             clearInterval(rerenderHandle);
             rerenderHandle = null;
             return;
         }
         rerender(mount);
     }, 300);
+
+    // Teardown for dashboards-as-tile callers. Bumps the generation so any
+    // pending close-handler reconnects bail; closes the open WS; stops the
+    // 300ms rerender tick. Without this, every dashboards re-render stacks
+    // another reconnect chain on top of the module singletons (visible as
+    // /api/ws/ticks status=101 spam at multi-Hz).
+    return () => {
+        liveScannerGen++;
+        if (rerenderHandle) { clearInterval(rerenderHandle); rerenderHandle = null; }
+        if (ws) { try { ws.close(); } catch (_) {} ws = null; }
+    };
 }
 
-function connectWs(mount, tok) {
+function connectWs(mount, tok, gen) {
     try { if (ws) ws.close(); } catch (_) {}
-    if (!viewIsCurrent(tok)) return;
+    if (!viewIsCurrent(tok) || gen !== liveScannerGen) return;
     const dot = mount.querySelector('#ls-status');
     if (!dot) return;
     states.clear();
     announced.clear();
     ws = new WebSocket(wsUrl('/api/ws/ticks'));
-    ws.addEventListener('open',  () => { if (viewIsCurrent(tok)) { dot.style.color = 'var(--green)'; dot.title = t('common.status.connected'); } });
-    ws.addEventListener('error', () => { if (viewIsCurrent(tok)) { dot.style.color = 'var(--red)';   dot.title = t('common.status.error'); } });
+    ws.addEventListener('open',  () => { if (viewIsCurrent(tok) && gen === liveScannerGen) { dot.style.color = 'var(--green)'; dot.title = t('common.status.connected'); } });
+    ws.addEventListener('error', () => { if (viewIsCurrent(tok) && gen === liveScannerGen) { dot.style.color = 'var(--red)';   dot.title = t('common.status.error'); } });
     ws.addEventListener('close', () => {
-        if (!viewIsCurrent(tok)) return;
+        if (!viewIsCurrent(tok) || gen !== liveScannerGen) return;
         dot.style.color = 'var(--text-muted)'; dot.title = t('common.status.disconnected');
-        setTimeout(() => { if (viewIsCurrent(tok)) connectWs(mount, tok); }, 4000);
+        setTimeout(() => { if (viewIsCurrent(tok) && gen === liveScannerGen) connectWs(mount, tok, gen); }, 4000);
     });
     ws.addEventListener('message', (e) => {
         try {
@@ -157,8 +170,15 @@ function speak(text) {
 }
 function spell(s) { return s.split('').join(' '); }
 
+// Skip the entire repaint when there's no data AND the mount already has
+// the empty-state painted — eliminates the 300ms innerHTML churn on
+// dashboards-as-tile mounts that never get an API key configured (which
+// was the visible "flashing" on Main with multiple Live Scanner tiles).
 function rerender(mount) {
+    if (states.size === 0 && mount.dataset.lsEmptyPainted === '1') return;
     const all = Array.from(states.values());
+    if (all.length === 0) mount.dataset.lsEmptyPainted = '1';
+    else delete mount.dataset.lsEmptyPainted;
     panel(mount, 'p-gap',  all.filter(s => s.gap_pct      !== 0).sort((a, b) => b.gap_pct      - a.gap_pct).slice(0, 12), 'gap_pct');
     panel(mount, 'p-gain', all.filter(s => s.change_pct    > 0).sort((a, b) => b.change_pct   - a.change_pct).slice(0, 12), 'change_pct');
     panel(mount, 'p-loss', all.filter(s => s.change_pct    < 0).sort((a, b) => a.change_pct   - b.change_pct).slice(0, 12), 'change_pct');
@@ -262,10 +282,16 @@ function panel(mount, id, rows, pctField) {
     const el = mount.querySelector('#' + id);
     if (!el) return;
     if (!rows.length) {
+        // Cache the empty-state too — assigning identical innerHTML is
+        // not free; the browser re-creates child nodes and the WebView
+        // repaints. Skipping when content is unchanged eliminates the
+        // 300ms repaint flicker that was visible on multi-tile Main.
+        if (el._lsLast === '__empty__') return;
+        el._lsLast = '__empty__';
         el.innerHTML = '<div class="muted small">—</div>';
         return;
     }
-    el.innerHTML = `<table class="trades scanner-table">
+    const html = `<table class="trades scanner-table">
         <thead><tr><th data-i18n="view.live_scanner.th.sym">Sym</th><th data-i18n="view.live_scanner.th.last">Last</th><th>${pctLabel(pctField)}</th><th data-i18n="view.live_scanner.th.vol">Vol</th></tr></thead>
         <tbody>${rows.map(s => {
             const v = s[pctField] ?? 0;
@@ -278,6 +304,9 @@ function panel(mount, id, rows, pctField) {
             </tr>`;
         }).join('')}</tbody>
     </table>`;
+    if (el._lsLast === html) return;
+    el._lsLast = html;
+    el.innerHTML = html;
 }
 
 function pctLabel(field) {

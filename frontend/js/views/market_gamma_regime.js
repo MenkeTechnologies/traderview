@@ -56,7 +56,7 @@ export async function renderMarketGammaRegime(mount, _state) {
     mount.querySelector('#mg-refresh').addEventListener('click', async () => {
         const meta = mount.querySelector('#mg-meta');
         if (meta) meta.textContent = t('view.market_gamma_regime.status.refreshing');
-        try { await api('/market-gamma/refresh'); } catch (_) {}
+        try { await api.marketGammaRefresh(); } catch (_) {}
         fetchAndRender(mount);
     });
     fetchAndRender(mount);
@@ -68,7 +68,7 @@ async function fetchAndRender(mount) {
     const histTbody = mount.querySelector('#mg-history tbody');
     const meta = mount.querySelector('#mg-meta');
     try {
-        const r = await api('/market-gamma/report');
+        const r = await api.marketGammaReport();
         if (!r) {
             cur.innerHTML = `<p class="muted">${esc(t('view.market_gamma_regime.empty.no_data'))}</p>`;
             flipsTbody.innerHTML = '';

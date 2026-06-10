@@ -52,7 +52,7 @@ async function fetchAndRender(mount) {
     if (!tbody) return;
     tbody.innerHTML = `<tr><td colspan="9" class="muted">${esc(t('common.loading'))}</td></tr>`;
     try {
-        const rows = await api('/sector-timing/ranked');
+        const rows = await api.request('/sector-timing/ranked');
         if (!rows.length) {
             tbody.innerHTML = `<tr><td colspan="9" class="muted">${esc(t('view.sector_timing.empty.no_rows'))}</td></tr>`;
             return;

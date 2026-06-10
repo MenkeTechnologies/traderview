@@ -61,7 +61,7 @@ async function fetchAndRender(mount) {
     summary.innerHTML = `<p class="muted">${esc(t('view.portfolio_exposure.status.computing'))}</p>`;
     if (meta) meta.textContent = '';
     try {
-        const r = await api('/portfolio-exposure');
+        const r = await api.request('/portfolio-exposure');
         if (!r || r.total_market_value === 0 || !r.positions.length) {
             summary.innerHTML = `<p class="muted">${esc(t('view.portfolio_exposure.empty.no_positions'))}</p>`;
             sectTbody.innerHTML = '';

@@ -9,6 +9,7 @@ import { getToastHistory, subscribeToastHistory, clearToastHistory } from '../to
 import { esc, fmtDateTime } from '../util.js';
 import { t } from '../i18n.js';
 import { tConfirm } from '../dialog.js';
+import { searchMatch, getMatchIndices, highlightWithIndices } from '../fzf.js';
 
 const STATE = {
     levelFilter: 'all',   // 'all' | 'error' | 'warning' | 'success' | 'info'
@@ -42,23 +43,27 @@ export async function renderToastHistory(mount) {
 
     const repaint = () => {
         const all = getToastHistory();
-        const q = STATE.textFilter.trim().toLowerCase();
+        const q = STATE.textFilter.trim();
         const visible = all
             .filter(e => STATE.levelFilter === 'all' || e.level === STATE.levelFilter)
-            .filter(e => !q || e.message.toLowerCase().includes(q))
+            .filter(e => !q || searchMatch(q, e.message))
             .slice().reverse();   // newest first
         countEl.textContent = t('view.toast_history.count', { shown: visible.length, total: all.length });
         if (visible.length === 0) {
             listEl.innerHTML = `<p class="muted">${esc(t('view.toast_history.empty'))}</p>`;
             return;
         }
-        listEl.innerHTML = visible.map(e => `
+        listEl.innerHTML = visible.map(e => {
+            const msg = e.message || '';
+            const msgHtml = q ? highlightWithIndices(msg, getMatchIndices(q, msg)) : esc(msg);
+            return `
             <div class="th-row th-${esc(e.level || 'info')}">
                 <span class="th-ts muted small">${esc(fmtDateTime(new Date(e.ts).toISOString()))}</span>
                 <span class="th-level th-level-${esc(e.level)}">${esc((e.level || 'info').toUpperCase())}</span>
-                <span class="th-msg">${esc(e.message)}</span>
+                <span class="th-msg">${msgHtml}</span>
                 ${e.view ? `<a class="th-view muted small" href="#${esc(e.view)}">${esc(e.view)}</a>` : ''}
-            </div>`).join('');
+            </div>`;
+        }).join('');
     };
     filterEl.addEventListener('input', () => { STATE.textFilter = filterEl.value; repaint(); });
     levelEl.addEventListener('change', () => { STATE.levelFilter = levelEl.value; repaint(); });

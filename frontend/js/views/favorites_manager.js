@@ -11,6 +11,7 @@ import { tilesByViewId } from '../_command_palette_inputs.js';
 import { showToast } from '../toast.js';
 import { tConfirm, tPrompt } from '../dialog.js';
 import * as favs from '../_favorites_storage.js';
+import { searchScore, getMatchIndices, highlightWithIndices } from '../fzf.js';
 
 let _filter = '';
 let _wired  = false;
@@ -93,11 +94,17 @@ export async function renderFavoritesManager(mount, _state) {
 }
 
 function matchesFilter(label, viewId, name) {
-    const q = (_filter || '').trim().toLowerCase();
+    const q = (_filter || '').trim();
     if (!q) return true;
-    return (label || '').toLowerCase().includes(q)
-        || (viewId || '').toLowerCase().includes(q)
-        || (name || '').toLowerCase().includes(q);
+    return searchScore(q, [label || '', viewId || '', name || '']) > 0;
+}
+
+// Highlight a value against the active filter (no-op when filter empty).
+function hl(text) {
+    const q = (_filter || '').trim();
+    const str = String(text == null ? '' : text);
+    if (!q) return esc(str);
+    return highlightWithIndices(str, getMatchIndices(q, str));
 }
 
 function paint() {
@@ -131,8 +138,8 @@ function paint() {
                             const label = tile ? tile[1] : vid;
                             return `<tr data-go="${esc(vid)}">
                                 <td>${esc(icon)}</td>
-                                <td>${esc(label)}</td>
-                                <td class="muted"><code>${esc(vid)}</code></td>
+                                <td>${hl(label)}</td>
+                                <td class="muted"><code>${hl(vid)}</code></td>
                                 <td><button class="btn btn-secondary"
                                             data-remove-fav="${esc(vid)}"
                                             data-tip="view.favorites.tip.remove_fav"
@@ -188,8 +195,8 @@ function paint() {
                             const icon = tile ? tile[2] : '📌';
                             return `<tr data-go="${esc(b.viewId)}">
                                 <td>${esc(icon)}</td>
-                                <td>${esc(b.name)}</td>
-                                <td class="muted"><code>${esc(b.viewId)}</code></td>
+                                <td>${hl(b.name)}</td>
+                                <td class="muted"><code>${hl(b.viewId)}</code></td>
                                 <td class="muted">${esc((b.created_at || '').slice(0, 10))}</td>
                                 <td>
                                     <button class="btn btn-secondary"

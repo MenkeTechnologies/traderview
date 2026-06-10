@@ -52,7 +52,7 @@ async function fetchAndRender(mount) {
     if (!tbody) return;
     tbody.innerHTML = `<tr><td colspan="10" class="muted">${esc(t('common.loading'))}</td></tr>`;
     try {
-        const rows = await api('/insider-clusters/ranked?limit=50');
+        const rows = await api.request('/insider-clusters/ranked?limit=50');
         if (!rows.length) {
             tbody.innerHTML = `<tr><td colspan="10" class="muted">${esc(t('view.insider_clusters.empty.no_rows'))}</td></tr>`;
             if (meta) meta.textContent = '';

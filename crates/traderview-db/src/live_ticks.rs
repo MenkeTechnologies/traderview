@@ -518,11 +518,35 @@ impl LiveTickStore {
         *current = deduped.clone();
         drop(current);
 
-        // Seed prev_close from quote_snapshots cache if missing.
+        // Seed each symbol's SymbolState with its prev_close so the live
+        // scanner's TOP GAPPERS / TOP GAINERS / TOP LOSERS panels render
+        // immediately when the first WS tick arrives. Without this, gap_pct
+        // and change_pct stay at 0 (panels stay empty) until a separate
+        // quote-fetch path happens to warm the cache.
+        //
+        // Uses `market_data::quotes()` which is cache-first + Yahoo-backed
+        // — works without Finnhub. Failure is non-fatal; symbols without a
+        // resolved prev_close just won't show gap until one lands.
+        let pool_opt = self.pool.read().await.clone();
+        let prev_closes: std::collections::HashMap<String, f64> = if let Some(pool) = pool_opt {
+            crate::market_data::quotes(&pool, &deduped)
+                .await
+                .into_iter()
+                .filter_map(|q| q.prev_close.map(|pc| (q.symbol, pc)))
+                .collect()
+        } else {
+            std::collections::HashMap::new()
+        };
         for s in &deduped {
+            let seeded = prev_closes.get(s).copied();
             self.state
                 .entry(s.clone())
-                .or_insert_with(|| SymbolState::new(s, None));
+                .and_modify(|st| {
+                    if st.prev_close.is_none() {
+                        st.prev_close = seeded;
+                    }
+                })
+                .or_insert_with(|| SymbolState::new(s, seeded));
         }
 
         self.spawn_workers(deduped).await
