@@ -5,8 +5,6 @@
 // (Social Security + Medicare + Additional Medicare 0.9% over the
 // threshold). Output is an effective+marginal breakdown table.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 
 // 2025 federal brackets (IRS Rev. Proc. 2024-40, official inflation
 // adjustments for tax year 2025).

@@ -3,8 +3,6 @@
 // regular contributions, and an optional contribution growth rate
 // (e.g. 3%/yr to match raises). Year-by-year balance + interest table.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 
 export async function renderCompoundInterest(mount, _state) {
     mount.innerHTML = `

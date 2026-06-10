@@ -5,8 +5,6 @@
 // 10% early-withdrawal penalty. Tracks: tax cost per conversion, taxable
 // income filling lower brackets, year-by-year laddered access schedule.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 
 const STD_DED_2025 = { single: 15000, mfj: 30000, mfs: 15000, hoh: 22500 };
 const BRACKETS_2025 = {

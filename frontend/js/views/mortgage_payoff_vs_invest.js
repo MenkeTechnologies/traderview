@@ -5,8 +5,6 @@
 // horizon — house equity + investment account in both paths.
 // Includes mortgage-interest tax deduction adjustment for itemizers.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 
 export async function renderMortgagePayoffVsInvest(mount, _state) {
     mount.innerHTML = `

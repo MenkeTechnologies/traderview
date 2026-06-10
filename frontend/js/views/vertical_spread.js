@@ -8,7 +8,6 @@
 // breakeven, and per-strike P&L curve.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 
 const STRATEGIES = {
     bull_call:  { dir: 'bullish', kind: 'debit',  desc: 'Buy lower-strike call, sell higher-strike call' },

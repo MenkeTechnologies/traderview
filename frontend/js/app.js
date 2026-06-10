@@ -1350,6 +1350,25 @@ function bindTabs() {
     window.addEventListener('tv:dashboard-refresh', () => {
         window.dispatchEvent(new HashChangeEvent('hashchange'));
     });
+    // Favorites manager — context menu on the manager pane.
+    // refresh: re-fire hashchange to re-render; clear: wipe the prefs slot.
+    window.addEventListener('tv:favorites-refresh', () => {
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+    });
+    window.addEventListener('tv:favorites-clear-all', () => {
+        try { localStorage.removeItem('tv.favorites.v1'); } catch (_) {}
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+        window.dispatchEvent(new Event('tv:favorites-changed'));
+    });
+    // Bookmarks manager — same shape.
+    window.addEventListener('tv:bookmarks-refresh', () => {
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+    });
+    window.addEventListener('tv:bookmarks-clear-all', () => {
+        try { localStorage.removeItem('tv.bookmarks.v1'); } catch (_) {}
+        window.dispatchEvent(new HashChangeEvent('hashchange'));
+        window.dispatchEvent(new Event('tv:bookmarks-changed'));
+    });
     // View-scoped: `n` in journal scope → focus the body textarea.
     // Works on both /journal/<date> and trade-detail's journal block
     // (they use #body and #journal-body respectively).

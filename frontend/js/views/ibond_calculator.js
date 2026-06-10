@@ -8,7 +8,6 @@
 // Tax: federal-taxable, state-exempt; deferrable until redemption.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 
 // Recent rate history (Treasury Direct, May 2022 → Nov 2024). Used as
 // "what if you'd held through these resets" historical replay.

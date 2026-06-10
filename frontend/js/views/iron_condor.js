@@ -6,7 +6,6 @@
 // realized vs IV implied.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 
 export async function renderIronCondor(mount, _state) {
     mount.innerHTML = `

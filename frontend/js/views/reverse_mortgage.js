@@ -9,8 +9,6 @@
 // shape (older + lower rates = more cash). Use HUD's actual PLF table
 // for a binding quote.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 
 const FHA_MAX_2025 = 1209750;        // FHA HECM lending limit (2025)
 const ORIG_FEE_BASE = 2500;          // higher of $2,500 or 2% of first $200k + 1% over $200k, capped at $6k

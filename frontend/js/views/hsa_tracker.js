@@ -7,8 +7,6 @@
 // rates for non-medical), giving a 4th "stealth retirement account" mode.
 // 2026 limits: $4,400 individual / $8,750 family / $1,000 age-55 catchup.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 
 const LIMITS_2026 = {
     individual: 4400,

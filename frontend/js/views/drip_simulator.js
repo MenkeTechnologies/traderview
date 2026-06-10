@@ -4,8 +4,6 @@
 // dividend stocks, total return is ~60% dividends-reinvested and ~40%
 // price appreciation. Compares DRIP vs cash dividends side by side.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 
 export async function renderDripSimulator(mount, _state) {
     mount.innerHTML = `

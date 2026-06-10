@@ -3,7 +3,6 @@
 // localStorage if present), and ad-hoc upcoming inflows/outflows.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 
 const ADHOC_KEY = 'tv.cash_flow.adhoc.v1';
 const SETTINGS_KEY = 'tv.cash_flow.settings.v1';

@@ -8,7 +8,6 @@
 // worst") to avoid being surprised by an early call.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 
 export async function renderYieldToCall(mount, _state) {
     mount.innerHTML = `

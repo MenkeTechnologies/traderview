@@ -4,7 +4,6 @@
 // (lump-sum + monthly). Includes sensitivity table across rate × horizon.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 
 export async function renderGoalFunding(mount, _state) {
     mount.innerHTML = `

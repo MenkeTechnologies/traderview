@@ -11,7 +11,6 @@
 // active business income.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 
 const THRESHOLD = { single: 200000, mfj: 250000, mfs: 125000, hoh: 200000 };
 const NIIT_RATE = 0.038;

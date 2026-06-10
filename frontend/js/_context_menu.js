@@ -379,20 +379,20 @@ export const SYMBOL_AWARE_SCOPES = [
     // Auto-registered from a `data-context-scope` audit — every
     // indicator / pattern / risk view that surfaces a symbol row.
     'abc-pattern', 'absorption', 'acf', 'active-share', 'ad-normality', 'ad-oscillator',
-    'adf', 'adl', 'alma', 'alphatrend', 'amihud', 'anchored-momentum',
+    'adf-test', 'adl', 'alma', 'alphatrend', 'amihud', 'anchored-momentum',
     'arch-lm', 'aroon', 'asi', 'atr-channel', 'atr-cone', 'atr-trailing-stop',
-    'bartlett', 'bb-squeeze', 'beta', 'beta-shrinkage', 'bid-ask-volume-ratio', 'black-litterman',
+    'bartlett-variance', 'bb-squeeze', 'beta', 'beta-shrinkage', 'bid-ask-volume-ratio', 'black-litterman',
     'block-bootstrap', 'bollinger-band-distance', 'bollinger-band-width', 'bollinger-bandwidth-percentile', 'bollinger-oscillators', 'bollinger-percent-b',
-    'bond-duration', 'bootstrap-pnl', 'bop', 'borrow-rate-indicator', 'bpv', 'breadth-thrust',
-    'breusch-godfrey', 'breusch-pagan', 'brier', 'brinson', 'burke', 'buying-power',
+    'bond-duration', 'bootstrap-pnl', 'balance-of-power', 'borrow-rate-indicator', 'bipower-variation', 'breadth-thrust',
+    'breusch-godfrey', 'breusch-pagan', 'brier-score', 'brinson', 'burke-ratio', 'buying-power',
     'camarilla-pivots', 'candle-strength-index', 'carhart-4', 'carry-score', 'centered-smoothed-momentum', 'chaikin-oscillator',
     'chande-dynamic-momentum', 'chande-kroll-stop', 'chande-momentum-oscillator', 'chande-trend-index', 'chande-volatility-index', 'chandelier-exit',
-    'cholesky', 'commission-optimizer', 'cost-basis', 'currency-exposure', 'dollar-bar', 'eff-spread',
-    'equivolume', 'hawkes', 'heatmap-dow-hour', 'hhi', 'imb-bar', 'kagi',
-    'kyles-lambda', 'margin-call', 'margin-runway', 'market-breadth', 'mcp', 'mvar',
+    'cholesky', 'commission-optimizer', 'cost-basis', 'currency-exposure', 'dollar-bar', 'effective-spread',
+    'equivolume', 'hawkes', 'heatmap-dow-hour', 'herfindahl', 'imbalance-bar', 'kagi',
+    'kyles-lambda', 'margin-call', 'margin-runway', 'breadth',
     'range-bar', 'risk-on-off', 'risk-parity', 'risk-parity-solver', 'risk-reward', 'roll-spread',
-    'round-levels', 'stop-loss-backtest', 'tax-loss-harvest', 'tick-bar', 'tlb', 'vap',
-    'vix-term-structure', 'vol-bar', 'wash-sale', 'wmp', 'yield-curve',
+    'round-levels', 'stop-loss-backtest', 'tax-loss-harvest', 'tick-bar', 'three-line-break', 'volume-at-price',
+    'vix-term-structure', 'wash-sale', 'weighted-midprice', 'yield-curve',
 ];
 
 // Native edit actions surfaced when the right-click target is a text-

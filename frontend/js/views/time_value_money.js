@@ -4,7 +4,6 @@
 // with standard sign convention (outflows negative, inflows positive).
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 
 const SOLVE = ['fv', 'pv', 'pmt', 'n', 'r'];
 

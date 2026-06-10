@@ -10,7 +10,6 @@
 // based on user's expected ordinary-income bracket.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 
 export async function renderStretchIra(mount, _state) {
     mount.innerHTML = `

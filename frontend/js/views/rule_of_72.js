@@ -7,7 +7,6 @@
 // against the exact closed-form solution below for honest error reporting.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 
 export async function renderRuleOf72(mount, _state) {
     mount.innerHTML = `

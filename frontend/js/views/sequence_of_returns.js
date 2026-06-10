@@ -12,7 +12,6 @@
 // different terminal values.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 
 // Default sequence: SPY annual total returns 2000-2024 (approximate).
 // Captures the "lost decade" (2000-2010) ideal for sequence-risk demos.

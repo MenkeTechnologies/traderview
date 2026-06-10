@@ -7,8 +7,6 @@
 // of ordinary income, so the 0% room is (bracket ceiling) − (ordinary
 // taxable income). Below the ceiling = 0% federal. Above it = 15%.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 
 const STD_DED_2025 = { single: 15000, mfj: 30000, mfs: 15000, hoh: 22500 };
 // 2025 LTCG brackets (IRS Rev. Proc. 2024-40).

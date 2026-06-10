@@ -6,7 +6,6 @@
 // but you still lose on the underlying.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 
 export async function renderCoveredCall(mount, _state) {
     mount.innerHTML = `

@@ -8,7 +8,6 @@
 // management, HOA) but NOT debt service or depreciation.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 
 export async function renderRealEstateCapRate(mount, _state) {
     mount.innerHTML = `

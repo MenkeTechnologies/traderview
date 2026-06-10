@@ -4,7 +4,7 @@
 // State persists in localStorage; no backend.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
+import { tConfirm } from '../dialog.js';
 
 const STORAGE_KEY = 'tv.bill_calendar.v1';
 
@@ -175,8 +175,9 @@ export async function renderBillCalendar(mount, _state) {
         render();
     });
 
-    mount.querySelector('#bc-reset').addEventListener('click', () => {
-        if (!confirm(t('view.bill_calendar.confirm.reset') || 'Reset bill list to defaults? Your custom entries will be lost.')) return;
+    mount.querySelector('#bc-reset').addEventListener('click', async () => {
+        const ok = await tConfirm('view.bill_calendar.confirm.reset');
+        if (!ok) return;
         bills = [...DEFAULT_BILLS];
         saveBills(bills);
         render();

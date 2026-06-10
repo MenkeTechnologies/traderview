@@ -7,8 +7,6 @@
 // Supports Treasuries (semi-annual coupons), CDs (compound interest),
 // and "agency / muni-equivalent" generic mode.
 
-import { esc } from '../util.js';
-import { t } from '../i18n.js';
 
 export async function renderBondLadder(mount, _state) {
     mount.innerHTML = `

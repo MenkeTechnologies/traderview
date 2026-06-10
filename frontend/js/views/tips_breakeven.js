@@ -7,7 +7,6 @@
 // already pricing more inflation than I expect" — under-favors TIPS.
 
 import { esc } from '../util.js';
-import { t } from '../i18n.js';
 
 const RECENT_HISTORY = [
     { date: 'Dec 2024', be5: 2.28, be10: 2.30, be30: 2.27 },

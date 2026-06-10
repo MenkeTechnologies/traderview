@@ -58,6 +58,12 @@ const SCOPE_REQUIRED_ATTRS = {
     'tax-wiz-section':       [],
     // Categorize merchant group — data-i is the group index in STATE.groups.
     'categorize-group':      ['data-i'],
+    // Favorites manager — actions target tile IDs already stored in
+    // localStorage prefs, no per-row data needed (refresh / clear all
+    // operate on the whole list).
+    'favorites-manager':     [],
+    // Bookmarks manager — same pattern: actions iterate the saved list.
+    'bookmarks-manager':     [],
 };
 
 test('SCOPE_REQUIRED_ATTRS covers every scope in ALL_SCOPED_ITEMS', () => {
