@@ -15,6 +15,7 @@ mod auth;
 mod auto_loan;
 mod backtest;
 mod backtest_presets;
+mod barista_fire;
 mod breadth;
 mod breadth_divergence;
 mod calc;
@@ -251,6 +252,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(lease_vs_buy_car::router())
         .merge(ev_vs_ice::router())
         .merge(coast_fire::router())
+        .merge(barista_fire::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())

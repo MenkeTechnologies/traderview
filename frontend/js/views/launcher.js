@@ -74,6 +74,7 @@ export const TILES = [
     ['lease-vs-buy-car', 'Lease vs Buy Car', '🔁', 'NPV lease vs buy over N-year horizon with breakeven monthly lease payment', 'NEW'],
     ['ev-vs-ice', 'EV vs ICE', '⚡', 'EV vs gas total cost — electricity vs fuel, EV credits, maintenance delta, battery replacement', 'NEW'],
     ['coast-fire', 'Coast FIRE', '🏖️', 'NW needed today to compound to FI with NO more contributions by target retirement age', 'NEW'],
+    ['barista-fire', 'Barista FIRE', '☕', 'Portfolio covers the gap between expenses and part-time income — smaller FI number', 'NEW'],
     ['drawdown-cutoff', 'Drawdown Cutoff', '🛑', 'Auto-fire kill-switch when live broker equity drops below your max-drawdown threshold', 'NEW'],
     ['pead',         'PEAD Drift',    '📈',  'Post-earnings drift — surprise + 5/20/60d returns + drift score', 'NEW'],
     ['sentiment-velocity', 'Sentiment Velocity', '🔊', 'WSB+StockTwits mention acceleration — ≥3× hour-over-hour + ≥2 consecutive', 'NEW'],
