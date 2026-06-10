@@ -83,6 +83,7 @@ mod heloc;
 mod home_maintenance;
 mod hotkeys;
 mod htb_ranker;
+mod i_bond;
 mod imports;
 mod insider_clusters;
 mod insider_stream;
@@ -275,6 +276,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(glide_path::router())
         .merge(annuity_pv_fv::router())
         .merge(cd_ladder::router())
+        .merge(i_bond::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())

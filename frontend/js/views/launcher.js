@@ -86,6 +86,7 @@ export const TILES = [
     ['glide-path', 'Glide Path', '🛬', 'Target-Date-Fund-style 3-phase linear stock/bond glide', 'NEW'],
     ['annuity-pv-fv', 'Annuity PV / FV', '🪙', 'Time-value annuity: PV + FV + total payments + interest; ordinary or due', 'NEW'],
     ['cd-ladder', 'CD Ladder', '🪜', 'N-rung Certificate of Deposit ladder + blended APY + per-rung maturity schedule', 'NEW'],
+    ['i-bond', 'I-Bond', '💵', 'Series I savings bond — composite rate + holding rules + 3mo penalty in 1-5y window', 'NEW'],
     ['drawdown-cutoff', 'Drawdown Cutoff', '🛑', 'Auto-fire kill-switch when live broker equity drops below your max-drawdown threshold', 'NEW'],
     ['pead',         'PEAD Drift',    '📈',  'Post-earnings drift — surprise + 5/20/60d returns + drift score', 'NEW'],
     ['sentiment-velocity', 'Sentiment Velocity', '🔊', 'WSB+StockTwits mention acceleration — ≥3× hour-over-hour + ≥2 consecutive', 'NEW'],

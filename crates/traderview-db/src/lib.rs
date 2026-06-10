@@ -80,6 +80,7 @@ pub mod heloc;
 pub mod home_maintenance;
 pub mod hotkeys;
 pub mod htb_ranker;
+pub mod i_bond;
 pub mod ibkr_pump;
 pub mod ibkr_trading;
 pub mod imports;
