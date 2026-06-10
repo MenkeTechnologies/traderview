@@ -91,6 +91,7 @@ mod paper_rebalance;
 mod pead;
 mod permanent_portfolio;
 mod personal_balance_sheet;
+mod personal_cash_flow;
 mod plans;
 mod portfolio_exposure;
 mod position_size;
@@ -203,6 +204,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(emergency_fund::router())
         .merge(net_worth_tracker::router())
         .merge(personal_balance_sheet::router())
+        .merge(personal_cash_flow::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())

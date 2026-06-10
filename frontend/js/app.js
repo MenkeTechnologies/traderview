@@ -649,6 +649,7 @@ import { renderFireCalculator } from './views/fire_calculator.js';
 import { renderEmergencyFund } from './views/emergency_fund.js';
 import { renderNetWorthTracker } from './views/net_worth_tracker.js';
 import { renderPersonalBalanceSheet } from './views/personal_balance_sheet.js';
+import { renderPersonalCashFlow } from './views/personal_cash_flow.js';
 import { renderDrawdownCutoff } from './views/drawdown_cutoff.js';
 import { renderPead } from './views/pead.js';
 import { renderSentimentVelocity } from './views/sentiment_velocity.js';
@@ -2872,6 +2873,7 @@ export async function dispatch() {
             case 'emergency-fund': await renderEmergencyFund(mount, state); break;
             case 'net-worth-tracker': await renderNetWorthTracker(mount, state); break;
             case 'personal-balance-sheet': await renderPersonalBalanceSheet(mount, state); break;
+            case 'personal-cash-flow': await renderPersonalCashFlow(mount, state); break;
             case 'drawdown-cutoff': await renderDrawdownCutoff(mount, state); break;
             case 'pead':           await renderPead(mount, state); break;
             case 'sentiment-velocity': await renderSentimentVelocity(mount, state); break;

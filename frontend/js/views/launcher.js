@@ -49,6 +49,7 @@ export const TILES = [
     ['emergency-fund', 'Emergency Fund', '🛟', 'Months covered + 3/6/9/12-month target gaps + months-to-target at your contribution rate', 'NEW'],
     ['net-worth-tracker', 'Net Worth Tracker', '📒', 'Assets − Liabilities across categories + M/M + Y/Y delta + debt-to-asset %', 'NEW'],
     ['personal-balance-sheet', 'Balance Sheet', '⚖️', 'GAAP-style current/non-current split + equity + working capital + current/quick ratios + D/E', 'NEW'],
+    ['personal-cash-flow', 'Cash Flow Statement', '💵', 'GAAP operating / investing / financing split + net change in cash + savings rate', 'NEW'],
     ['drawdown-cutoff', 'Drawdown Cutoff', '🛑', 'Auto-fire kill-switch when live broker equity drops below your max-drawdown threshold', 'NEW'],
     ['pead',         'PEAD Drift',    '📈',  'Post-earnings drift — surprise + 5/20/60d returns + drift score', 'NEW'],
     ['sentiment-velocity', 'Sentiment Velocity', '🔊', 'WSB+StockTwits mention acceleration — ≥3× hour-over-hour + ≥2 consecutive', 'NEW'],

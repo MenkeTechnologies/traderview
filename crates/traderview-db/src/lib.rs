@@ -90,6 +90,7 @@ pub mod paper_rebalance;
 pub mod pead_tracker;
 pub mod permanent_portfolio;
 pub mod personal_balance_sheet;
+pub mod personal_cash_flow;
 pub mod plans;
 pub mod portfolio_exposure;
 pub mod position_sizer;
