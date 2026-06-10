@@ -668,6 +668,7 @@ import { renderHomeMaintenance } from './views/home_maintenance.js';
 import { renderStudentLoanPayoff } from './views/student_loan_payoff.js';
 import { renderPslfTracker } from './views/pslf_tracker.js';
 import { renderCollege529 } from './views/college_529.js';
+import { renderFafsaEfc } from './views/fafsa_efc.js';
 import { renderDrawdownCutoff } from './views/drawdown_cutoff.js';
 import { renderPead } from './views/pead.js';
 import { renderSentimentVelocity } from './views/sentiment_velocity.js';
@@ -2910,6 +2911,7 @@ export async function dispatch() {
             case 'student-loan-payoff': await renderStudentLoanPayoff(mount, state); break;
             case 'pslf-tracker': await renderPslfTracker(mount, state); break;
             case 'college-529': await renderCollege529(mount, state); break;
+            case 'fafsa-efc': await renderFafsaEfc(mount, state); break;
             case 'drawdown-cutoff': await renderDrawdownCutoff(mount, state); break;
             case 'pead':           await renderPead(mount, state); break;
             case 'sentiment-velocity': await renderSentimentVelocity(mount, state); break;

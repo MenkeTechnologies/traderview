@@ -68,6 +68,7 @@ export const TILES = [
     ['student-loan-payoff', 'Student Loan', '🎓', 'Compare Standard 10y vs IBR vs PAYE vs SAVE — monthly + total paid + months + forgiven balance', 'NEW'],
     ['pslf-tracker', 'PSLF Tracker', '🏛️', '120 qualifying payments → tax-free federal loan forgiveness for public-service / 501(c)(3) employees', 'NEW'],
     ['college-529', '529 College', '🎒', '4-year college cost inflated to enrollment + monthly contribution needed at expected return', 'NEW'],
+    ['fafsa-efc', 'FAFSA SAI', '📋', 'Simplified Student Aid Index estimator — parent+student income+asset graduated contributions', 'NEW'],
     ['drawdown-cutoff', 'Drawdown Cutoff', '🛑', 'Auto-fire kill-switch when live broker equity drops below your max-drawdown threshold', 'NEW'],
     ['pead',         'PEAD Drift',    '📈',  'Post-earnings drift — surprise + 5/20/60d returns + drift score', 'NEW'],
     ['sentiment-velocity', 'Sentiment Velocity', '🔊', 'WSB+StockTwits mention acceleration — ≥3× hour-over-hour + ≥2 consecutive', 'NEW'],

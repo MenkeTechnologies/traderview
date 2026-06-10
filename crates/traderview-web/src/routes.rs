@@ -59,6 +59,7 @@ mod equity_forecast;
 mod executions;
 mod export;
 mod extras;
+mod fafsa_efc;
 mod fear_greed;
 mod fifty_thirty_twenty;
 mod fill_quality;
@@ -241,6 +242,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(student_loan_payoff::router())
         .merge(pslf_tracker::router())
         .merge(college_529::router())
+        .merge(fafsa_efc::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())
