@@ -107,6 +107,7 @@ mod position_size;
 mod premarket;
 mod r_distribution;
 mod rebalance;
+mod rent_vs_buy;
 mod reports;
 mod research;
 mod rvol_accel;
@@ -229,6 +230,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(auto_loan::router())
         .merge(mortgage_amortization::router())
         .merge(mortgage_refinance::router())
+        .merge(rent_vs_buy::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())
