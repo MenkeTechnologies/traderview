@@ -85,6 +85,7 @@ mod pairs;
 mod paper;
 mod paper_rebalance;
 mod pead;
+mod permanent_portfolio;
 mod plans;
 mod portfolio_exposure;
 mod position_size;
@@ -173,6 +174,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(sectors::router())
         .merge(paper::router())
         .merge(paper_rebalance::router())
+        .merge(permanent_portfolio::router())
         .merge(alerts::router())
         .merge(hotkeys::router())
         .merge(earnings_iv::router())
