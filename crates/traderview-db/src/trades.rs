@@ -543,6 +543,47 @@ fn sum_opt<I: Iterator<Item = Option<Decimal>>>(iter: I) -> Option<Decimal> {
     acc
 }
 
+/// Open positions for a single symbol on a single account. Used by the
+/// algo engine's exit pass: the runner asks the strategy to evaluate
+/// each open position against the latest bar window and flats any that
+/// hit a rule-based exit (mean reversion target, momentum loss, time
+/// stop, etc). Returns side as "long" / "short" so the caller maps it
+/// to the close side (long → Sell, short → Buy).
+#[derive(Debug, Clone)]
+pub struct OpenPositionRow {
+    pub id: Uuid,
+    pub side: String,
+    pub qty: Decimal,
+    pub entry_avg: Decimal,
+    pub opened_at: DateTime<Utc>,
+}
+
+pub async fn open_positions_for_symbol(
+    pool: &PgPool,
+    account_id: Uuid,
+    symbol: &str,
+) -> anyhow::Result<Vec<OpenPositionRow>> {
+    let rows = sqlx::query_as::<_, (Uuid, String, Decimal, Decimal, DateTime<Utc>)>(
+        "SELECT id, side::text, qty, entry_avg, opened_at
+           FROM trades
+          WHERE account_id = $1 AND symbol = $2 AND status = 'open'",
+    )
+    .bind(account_id)
+    .bind(symbol)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows
+        .into_iter()
+        .map(|(id, side, qty, entry_avg, opened_at)| OpenPositionRow {
+            id,
+            side,
+            qty,
+            entry_avg,
+            opened_at,
+        })
+        .collect())
+}
+
 /// Insert zero-priced closing executions for every option leg whose
 /// expiration date has passed and which still has an open trade open.
 pub async fn close_expired_options(pool: &PgPool, account_id: Uuid) -> anyhow::Result<usize> {

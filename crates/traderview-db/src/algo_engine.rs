@@ -160,6 +160,29 @@ pub trait BrokerSink: Send + Sync {
     ) -> std::pin::Pin<
         Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>,
     >;
+
+    /// Submit a single-leg market order to close an open position. Used
+    /// by the runner's exit pass — the strategy's `evaluate_exit` fired,
+    /// and the engine needs to flat the position at market. `side` is
+    /// the CLOSING side (opposite of the position): `Sell` for a long
+    /// close, `Buy` for a short cover. Default impl returns a Broker
+    /// error so sinks that haven't been wired for exits don't accidentally
+    /// no-op silently — the runner logs the error and skips.
+    fn submit_market_close(
+        &self,
+        _symbol: String,
+        _side: Side,
+        _qty: Decimal,
+        _coid: Uuid,
+    ) -> std::pin::Pin<
+        Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>,
+    > {
+        Box::pin(async move {
+            Err(EngineError::Broker(
+                "submit_market_close not implemented for this sink".into(),
+            ))
+        })
+    }
 }
 
 /// Captures every submitted order. Used by tests + by the route layer
@@ -189,6 +212,48 @@ impl BrokerSink for InMemorySink {
             submitted.lock().expect("lock").push(intent);
             Ok(SubmittedOrder {
                 broker_order_id: format!("sim-{id}"),
+                status: "filled".into(),
+                raw_response: None,
+                immediate_fill: Some(fill),
+            })
+        })
+    }
+
+    fn submit_market_close(
+        &self,
+        symbol: String,
+        side: Side,
+        qty: Decimal,
+        coid: Uuid,
+    ) -> std::pin::Pin<
+        Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>,
+    > {
+        let submitted = self.submitted.clone();
+        Box::pin(async move {
+            let id = coid.to_string();
+            // The InMemorySink doesn't know the live price — record the
+            // fill at qty>0 with price=0; tests asserting on close
+            // amounts can override via the explicit submitted vec.
+            let fill = ImmediateFill {
+                price: Decimal::ZERO,
+                qty,
+                fee: Decimal::ZERO,
+                executed_at: Utc::now(),
+                broker_fill_id: Some(format!("sim-close-{id}")),
+            };
+            submitted.lock().expect("lock").push(OrderIntent {
+                strategy_id: Uuid::nil(),
+                run_id: Uuid::nil(),
+                client_order_id: coid,
+                symbol,
+                side,
+                qty,
+                entry_price: Decimal::ZERO,
+                stop_price: Decimal::ZERO,
+                take_profit_price: Decimal::ZERO,
+            });
+            Ok(SubmittedOrder {
+                broker_order_id: format!("sim-close-{id}"),
                 status: "filled".into(),
                 raw_response: None,
                 immediate_fill: Some(fill),
@@ -427,6 +492,31 @@ pub async fn process_bar_window(
     if strat.required_symbols().is_some() {
         return Ok(None);
     }
+
+    // ── Exit pass: ask the strategy whether each open position on this
+    // symbol should flat at market. Runs BEFORE entry eval so we never
+    // pyramid into a position the same tick the rule says to exit.
+    let symbol = bars.last().map(|b| b.symbol.clone()).unwrap_or_default();
+    if !symbol.is_empty() {
+        let exited = run_exit_pass(
+            pool,
+            sink,
+            strategy,
+            run_id,
+            strat.as_ref(),
+            &symbol,
+            bars,
+            event_sink,
+        )
+        .await?;
+        if exited {
+            // A position closed this tick. Skip the entry eval — caller
+            // will see Some(_) and increment the "evaluated" counter,
+            // and the next tick can decide on a fresh entry.
+            return Ok(None);
+        }
+    }
+
     let Some(sig) = strat.evaluate_entry(bars, cfg.side_mode) else {
         return Ok(None);
     };
@@ -451,7 +541,6 @@ pub async fn process_bar_window(
         .await
         .ok();
 
-    let symbol = bars.last().map(|b| b.symbol.clone()).unwrap_or_default();
     let intent = build_intent(strategy, run_id, &symbol, &sig, qty);
     if let Some(emit) = event_sink {
         emit(EngineEvent::SignalFired {
@@ -796,4 +885,165 @@ fn intent_to_request_json(i: &OrderIntent) -> Json {
         "client_order_id": i.client_order_id.to_string(),
         "time_in_force": "day",
     })
+}
+
+/// Ask the strategy whether each open position on `symbol` should flat
+/// at market this tick. Iterates `trades.open_positions_for_symbol`,
+/// computes per-position anchor_high / anchor_low from the bars window,
+/// calls `Strategy::evaluate_exit`, and submits a single-leg market
+/// close via the sink on a signal. Returns `true` if at least one
+/// position was closed so the caller can skip the entry pass.
+async fn run_exit_pass(
+    pool: &PgPool,
+    sink: &dyn BrokerSink,
+    strategy: &AlgoStrategy,
+    run_id: Uuid,
+    strat: &dyn traderview_core::algo_strategies::Strategy,
+    symbol: &str,
+    bars: &[PriceBar],
+    event_sink: Option<&EventSink>,
+) -> Result<bool, EngineError> {
+    use rust_decimal::prelude::ToPrimitive;
+
+    let positions = crate::trades::open_positions_for_symbol(pool, strategy.account_id, symbol)
+        .await
+        .map_err(|e| EngineError::Broker(format!("open_positions_for_symbol: {e}")))?;
+    if positions.is_empty() {
+        return Ok(false);
+    }
+    let mut closed_any = false;
+    for pos in positions {
+        // Position side recorded in `trades.side` is "long" or "short"
+        // (the entry direction). evaluate_exit takes that same Side.
+        let entry_side = match pos.side.as_str() {
+            "long" => Side::Buy,
+            "short" => Side::Sell,
+            other => {
+                tracing::debug!(
+                    strategy = %strategy.id, symbol, side = other,
+                    "exit pass: unknown trade.side, skipping"
+                );
+                continue;
+            }
+        };
+        let entry_price = pos.entry_avg.to_f64().unwrap_or(0.0);
+        // Anchor = high-water / low-water from entry through the current
+        // bar window. Bars older than `opened_at` aren't part of this
+        // position's lifetime so they're filtered out. If the window
+        // doesn't reach the entry (entry is older than window), the
+        // entry_avg itself anchors the calc — degenerate but correct
+        // for momentum / trailing-stop logic that just wants "best
+        // price since I'm long".
+        let mut anchor_high = entry_price;
+        let mut anchor_low = entry_price;
+        for b in bars.iter().filter(|b| b.bar_time >= pos.opened_at) {
+            let h = b.high.to_f64().unwrap_or(0.0);
+            let l = b.low.to_f64().unwrap_or(0.0);
+            if h > anchor_high {
+                anchor_high = h;
+            }
+            if l < anchor_low {
+                anchor_low = l;
+            }
+        }
+        let Some(exit_sig) = strat.evaluate_exit(bars, entry_side, anchor_high, anchor_low) else {
+            continue;
+        };
+        let close_side = match entry_side {
+            Side::Buy => Side::Sell,
+            Side::Sell => Side::Buy,
+        };
+        let coid = Uuid::new_v4();
+        // Insert the close as a real algo_orders row first — algo_fills
+        // has a FK on order_id, so record_fill needs an order_id that
+        // exists before it can persist the close fill.
+        let close_order = algo::insert_order(
+            pool,
+            run_id,
+            strategy.id,
+            AlgoOrderInsert {
+                client_order_id: coid,
+                symbol: symbol.to_string(),
+                side: side_to_str(close_side).into(),
+                order_type: "market".into(),
+                order_class: "simple".into(),
+                qty: pos.qty,
+                limit_price: None,
+                stop_price: None,
+                raw_request: Some(serde_json::json!({
+                    "kind": "exit",
+                    "trade_id": pos.id,
+                    "reason": exit_sig.reason,
+                    "exit_price": exit_sig.exit_price,
+                })),
+            },
+        )
+        .await
+        .map_err(|e| EngineError::Broker(e.to_string()))?;
+        let resp = match sink
+            .submit_market_close(symbol.to_string(), close_side, pos.qty, coid)
+            .await
+        {
+            Ok(r) => r,
+            Err(e) => {
+                tracing::info!(
+                    strategy = %strategy.id, symbol, trade_id = %pos.id,
+                    error = %e,
+                    "submit_market_close failed; position stays open"
+                );
+                algo::mark_order_submitted(
+                    pool,
+                    close_order.id,
+                    None,
+                    "rejected",
+                    None,
+                    Some(e.to_string()),
+                )
+                .await
+                .map_err(|e| EngineError::Broker(e.to_string()))?;
+                continue;
+            }
+        };
+        algo::mark_order_submitted(
+            pool,
+            close_order.id,
+            Some(resp.broker_order_id.clone()),
+            &resp.status,
+            resp.raw_response.clone(),
+            None,
+        )
+        .await
+        .map_err(|e| EngineError::Broker(e.to_string()))?;
+        algo::increment_run_counter(pool, run_id, algo::RunCounter::OrdersSubmitted, 1)
+            .await
+            .ok();
+        if let Some(emit) = event_sink {
+            emit(EngineEvent::OrderSubmitted {
+                strategy_id: strategy.id,
+                order_id: close_order.id,
+                symbol: symbol.to_string(),
+                side: close_side,
+                qty: pos.qty,
+                broker_order_id: resp.broker_order_id.clone(),
+            });
+        }
+        if let Some(fill) = resp.immediate_fill {
+            let exit_intent = OrderIntent {
+                strategy_id: strategy.id,
+                run_id,
+                client_order_id: coid,
+                symbol: symbol.to_string(),
+                side: close_side,
+                qty: pos.qty,
+                entry_price: Decimal::from_f64(exit_sig.exit_price).unwrap_or_default(),
+                stop_price: Decimal::ZERO,
+                take_profit_price: Decimal::ZERO,
+            };
+            // record_fill inserts the closing execution; trades::rollup_account
+            // matches it to the open trade and writes status='closed'.
+            record_fill(pool, strategy, &exit_intent, close_order.id, &fill, event_sink).await?;
+        }
+        closed_any = true;
+    }
+    Ok(closed_any)
 }

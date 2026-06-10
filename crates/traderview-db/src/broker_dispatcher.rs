@@ -264,6 +264,43 @@ impl BrokerSink for AlpacaSink {
             })
         })
     }
+
+    fn submit_market_close(
+        &self,
+        symbol: String,
+        side: traderview_core::algo_strategies::Side,
+        qty: Decimal,
+        coid: Uuid,
+    ) -> std::pin::Pin<
+        Box<dyn std::future::Future<Output = Result<SubmittedOrder, EngineError>> + Send + '_>,
+    > {
+        let client = self.client.clone();
+        Box::pin(async move {
+            let side_str = match side {
+                traderview_core::algo_strategies::Side::Buy => "buy",
+                traderview_core::algo_strategies::Side::Sell => "sell",
+            };
+            // Single-leg market flat — no bracket, no take-profit, no stop.
+            // Crypto stays on the crypto-market path (GTC TIF, /v2/orders
+            // rejects bracket); equities use the simple market helper.
+            let is_crypto = symbol.contains('/');
+            let req = if is_crypto {
+                PlaceOrderRequest::crypto_market(symbol.clone(), side_str, qty, coid)
+            } else {
+                PlaceOrderRequest::market(symbol.clone(), side_str, qty, coid)
+            };
+            let resp = client
+                .place_order(&req)
+                .await
+                .map_err(|e| EngineError::Broker(format!("alpaca close: {e}")))?;
+            Ok(SubmittedOrder {
+                broker_order_id: resp.id,
+                status: resp.status,
+                raw_response: None,
+                immediate_fill: None,
+            })
+        })
+    }
 }
 
 /// True when wall-clock time falls inside Alpaca's extended-hours
