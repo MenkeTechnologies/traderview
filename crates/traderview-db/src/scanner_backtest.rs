@@ -685,6 +685,55 @@ pub async fn stability_pead(
     ))
 }
 
+/// IPO lockup backtest: pulls every IPO whose 180-day lockup expired
+/// in the trailing `days` window, projects signal_date = lockup_expiry,
+/// direction = Short (Field & Hanka 2001 — mechanical supply pressure
+/// when insider/employee shares unlock). Scores forward 1d/5d/20d/60d
+/// returns from cached price_bars.
+///
+/// First Finnhub fetch can be slow + rate-limited; subsequent calls hit
+/// whatever cache the finnhub_rest layer maintains. Bars come from the
+/// same price_bars table the autopilot uses.
+pub async fn backtest_ipo_lockups(pool: &PgPool, days: i64) -> anyhow::Result<BacktestResult> {
+    let events = crate::ipo_lockups::historical(days)
+        .await
+        .unwrap_or_default();
+    let samples: Vec<SignalSample> = events
+        .into_iter()
+        .map(|e| SignalSample {
+            symbol: e.symbol,
+            signal_date: e.lockup_expires_at,
+            direction: Direction::Short,
+        })
+        .collect();
+    let pool_ref = pool.clone();
+    let closes_async = |symbol: &str| -> Vec<(NaiveDate, f64)> {
+        let symbol = symbol.to_string();
+        let pool_ref = pool_ref.clone();
+        let rt = tokio::runtime::Handle::try_current();
+        let bars = match rt {
+            Ok(handle) => tokio::task::block_in_place(|| {
+                handle.block_on(async move {
+                    let to = Utc::now();
+                    let from = to - Duration::days(400);
+                    prices::get_bars(&pool_ref, &symbol, BarInterval::D1, from, to)
+                        .await
+                        .unwrap_or_default()
+                })
+            }),
+            Err(_) => Vec::new(),
+        };
+        bars.into_iter()
+            .filter_map(|b| b.close.to_f64().map(|c| (b.bar_time.date_naive(), c)))
+            .collect()
+    };
+    Ok(backtest_with_history(
+        "ipo_lockups",
+        &samples,
+        &closes_async,
+    ))
+}
+
 /// Walk-forward insider-cluster backtest convenience wrapper.
 pub async fn walk_forward_insider_clusters(
     pool: &PgPool,

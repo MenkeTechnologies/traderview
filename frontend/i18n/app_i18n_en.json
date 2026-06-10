@@ -296,6 +296,7 @@
   "view.scanner_backtest.hint.interpret": "<strong>Interpret:</strong> annualised Sharpe ≥ 1 on the longer horizons suggests a real edge worth capital. Hit rate ≥ 55% with positive mean is consistent. Max-DD shows the worst peak-to-trough — keep it bounded vs your risk budget.",
   "view.scanner_backtest.btn.run_all": "⚡ Run All Scanners",
   "view.scanner_backtest.btn.run_insider": "Insider clusters only",
+  "view.scanner_backtest.btn.run_ipo": "IPO lockups only",
   "view.scanner_backtest.status.running_all": "scoring every wired adapter…",
   "view.scanner_backtest.meta.all_summary": "{n} scanners scored at {d} days lookback",
   "view.scanner_backtest.h2.all": "All Scanners — Comparable Sharpe Table",

@@ -28,6 +28,7 @@ export async function renderScannerBacktest(mount, _state) {
                 <button class="btn btn-sm primary" id="sb-run-all" data-shortcut="r" data-i18n="view.scanner_backtest.btn.run_all">⚡ Run All Scanners</button>
                 <button class="btn btn-sm" id="sb-run" data-i18n="view.scanner_backtest.btn.run">PEAD only</button>
                 <button class="btn btn-sm" id="sb-run-insider" data-i18n="view.scanner_backtest.btn.run_insider">Insider clusters only</button>
+                <button class="btn btn-sm" id="sb-run-ipo" data-i18n="view.scanner_backtest.btn.run_ipo">IPO lockups only</button>
                 <label style="display:flex;align-items:center;gap:6px">
                     <input type="checkbox" id="sb-friction">
                     <span class="muted small" data-i18n="view.scanner_backtest.field.friction">Friction-adjusted (slippage + SEC fee)</span>
@@ -44,6 +45,7 @@ export async function renderScannerBacktest(mount, _state) {
     mount.querySelector('#sb-run-all').addEventListener('click', () => runAll(mount));
     mount.querySelector('#sb-run').addEventListener('click', () => runScan(mount, 'pead'));
     mount.querySelector('#sb-run-insider').addEventListener('click', () => runScan(mount, 'insider-clusters'));
+    mount.querySelector('#sb-run-ipo').addEventListener('click', () => runScan(mount, 'ipo-lockups'));
     mount.querySelector('#sb-walk-pead').addEventListener('click', () => runWalk(mount, 'pead'));
     mount.querySelector('#sb-walk-insider').addEventListener('click', () => runWalk(mount, 'insider-clusters'));
     mount.querySelector('#sb-stab-pead').addEventListener('click', () => runStability(mount));

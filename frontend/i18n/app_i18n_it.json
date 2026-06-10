@@ -33382,6 +33382,7 @@
   "view.scanner_backtest.btn.run": "⚡ Run PEAD Backtest",
   "view.scanner_backtest.btn.run_all": "⚡ Run All Scanners",
   "view.scanner_backtest.btn.run_insider": "Insider clusters only",
+  "view.scanner_backtest.btn.run_ipo": "IPO lockups only",
   "view.scanner_backtest.btn.stability_pead": "📈 PEAD Stability (Q1-Q4)",
   "view.scanner_backtest.btn.walk_insider": "📊 Walk-forward Insider",
   "view.scanner_backtest.btn.walk_pead": "📊 Walk-forward PEAD",

@@ -13,6 +13,7 @@ pub fn router() -> Router<AppState> {
     Router::new()
         .route("/scanner-backtest/pead", get(pead))
         .route("/scanner-backtest/insider-clusters", get(insider_clusters))
+        .route("/scanner-backtest/ipo-lockups", get(ipo_lockups))
         .route("/scanner-backtest/all", get(all_scanners))
         .route(
             "/scanner-backtest/pead/walk-forward",
@@ -53,6 +54,16 @@ async fn insider_clusters(
 ) -> Result<Json<scanner_backtest::BacktestResult>, ApiError> {
     Ok(Json(
         scanner_backtest::backtest_insider_clusters(&s.pool, q.days).await?,
+    ))
+}
+
+async fn ipo_lockups(
+    State(s): State<AppState>,
+    _user: AuthUser,
+    Query(q): Query<DaysQ>,
+) -> Result<Json<scanner_backtest::BacktestResult>, ApiError> {
+    Ok(Json(
+        scanner_backtest::backtest_ipo_lockups(&s.pool, q.days).await?,
     ))
 }
 
@@ -175,6 +186,10 @@ async fn all_scanners(
         (
             "insider_clusters",
             scanner_backtest::backtest_insider_clusters(&s.pool, q.days).await,
+        ),
+        (
+            "ipo_lockups",
+            scanner_backtest::backtest_ipo_lockups(&s.pool, q.days).await,
         ),
     ] {
         match fut.map(apply) {

@@ -164,6 +164,111 @@ pub async fn upcoming() -> anyhow::Result<Vec<LockupExpiry>> {
     Ok(parse_lockups(&body, today, FORWARD_DAYS, LOCKUP_DAYS))
 }
 
+/// Pure: variant of `parse_lockups` that includes historical (already-
+/// expired) lockup events so backtest can score forward returns from
+/// dates whose price action is already known. Returns every parseable
+/// IPO in the body whose projected lockup expiry falls within
+/// `lookback_days` of today, regardless of sign.
+pub fn parse_historical_lockups(
+    body: &Value,
+    today: NaiveDate,
+    lookback_days: i64,
+    lockup_days: i64,
+) -> Vec<LockupExpiry> {
+    let Some(arr) = body.get("ipoCalendar").and_then(|v| v.as_array()) else {
+        return Vec::new();
+    };
+    let mut out: Vec<LockupExpiry> = Vec::new();
+    for entry in arr {
+        let symbol = match entry.get("symbol").and_then(|v| v.as_str()) {
+            Some(s) if !s.is_empty() => s.to_string(),
+            _ => continue,
+        };
+        let status = entry.get("status").and_then(|v| v.as_str()).unwrap_or("");
+        if status == "expected" || status == "withdrawn" || status == "filed" {
+            continue;
+        }
+        let ipo_date = match entry.get("date").and_then(|v| v.as_str()) {
+            Some(s) => match NaiveDate::parse_from_str(s, "%Y-%m-%d") {
+                Ok(d) => d,
+                Err(_) => continue,
+            },
+            None => continue,
+        };
+        if ipo_date > today {
+            continue;
+        }
+        let lockup_expires_at = ipo_date + Duration::days(lockup_days);
+        let days_since_expiry = (today - lockup_expires_at).num_days();
+        // Include only historical events whose price action is already
+        // in cached bars — past expiry, within lookback window.
+        if !(days_since_expiry >= 0 && days_since_expiry <= lookback_days) {
+            continue;
+        }
+        let name = entry
+            .get("name")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let exchange = entry
+            .get("exchange")
+            .and_then(|v| v.as_str())
+            .unwrap_or("")
+            .to_string();
+        let ipo_share_count = entry
+            .get("numberOfShares")
+            .and_then(|v| v.as_f64().or_else(|| v.as_i64().map(|n| n as f64)))
+            .map(|n| n.max(0.0).round() as u64)
+            .unwrap_or(0);
+        if ipo_share_count == 0 {
+            continue;
+        }
+        let estimated_unlocked_shares = (ipo_share_count as f64 * INSIDER_MULTIPLE).round() as u64;
+        out.push(LockupExpiry {
+            symbol,
+            name,
+            exchange,
+            ipo_date,
+            lockup_expires_at,
+            days_until_expiry: -days_since_expiry,
+            ipo_share_count,
+            estimated_unlocked_shares,
+            float_multiple_estimate: INSIDER_MULTIPLE,
+            ipo_price_range: entry
+                .get("price")
+                .and_then(|v| v.as_str())
+                .filter(|s| !s.is_empty())
+                .map(|s| s.to_string()),
+            total_shares_value_usd: entry
+                .get("totalSharesValue")
+                .and_then(|v| v.as_f64().or_else(|| v.as_i64().map(|n| n as f64))),
+        });
+    }
+    out.sort_by_key(|r| r.lockup_expires_at);
+    out
+}
+
+/// Historical IPO lockup events for the backtest framework. Pulls the
+/// Finnhub `ipo_calendar` over the last `days_back + 180` days so every
+/// lockup expiry within the trailing `days_back` is in scope (lockup =
+/// 180 days after IPO date, so IPOs from the last days_back + 180 days
+/// produce expiries within the trailing days_back).
+pub async fn historical(days_back: i64) -> anyhow::Result<Vec<LockupExpiry>> {
+    let today = Utc::now().date_naive();
+    let total_lookback = days_back + LOCKUP_DAYS;
+    let from = (today - Duration::days(total_lookback))
+        .format("%Y-%m-%d")
+        .to_string();
+    let to = today.format("%Y-%m-%d").to_string();
+    let body = crate::finnhub_rest::ipo_calendar(&from, &to).await?;
+    Ok(parse_historical_lockups(
+        &body,
+        today,
+        days_back,
+        LOCKUP_DAYS,
+    ))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -171,6 +276,107 @@ mod tests {
 
     fn today() -> NaiveDate {
         NaiveDate::from_ymd_opt(2026, 6, 9).unwrap()
+    }
+
+    #[test]
+    fn parse_historical_includes_already_expired_within_window() {
+        let today = today();
+        // A: lockup expired 30 days ago (within 60d window) → INCLUDED
+        // B: lockup expired 100 days ago (outside 60d window) → EXCLUDED
+        // C: lockup in the future → EXCLUDED (use parse_lockups for those)
+        let body = json!({
+            "ipoCalendar": [
+                {
+                    "symbol": "AAA",
+                    "name": "Past30",
+                    "exchange": "NASDAQ",
+                    "date": (today - chrono::Duration::days(210)).format("%Y-%m-%d").to_string(),
+                    "status": "priced",
+                    "numberOfShares": 5_000_000_u64,
+                    "price": "10.00",
+                },
+                {
+                    "symbol": "BBB",
+                    "name": "Past100",
+                    "exchange": "NYSE",
+                    "date": (today - chrono::Duration::days(280)).format("%Y-%m-%d").to_string(),
+                    "status": "priced",
+                    "numberOfShares": 3_000_000_u64,
+                    "price": "20.00",
+                },
+                {
+                    "symbol": "CCC",
+                    "name": "FutureExpiry",
+                    "exchange": "NASDAQ",
+                    "date": (today - chrono::Duration::days(60)).format("%Y-%m-%d").to_string(),
+                    "status": "priced",
+                    "numberOfShares": 2_000_000_u64,
+                    "price": "15.00",
+                },
+            ]
+        });
+        let r = parse_historical_lockups(&body, today, 60, LOCKUP_DAYS);
+        let syms: Vec<&str> = r.iter().map(|x| x.symbol.as_str()).collect();
+        assert_eq!(
+            syms,
+            vec!["AAA"],
+            "only AAA falls in the 60d historical window"
+        );
+    }
+
+    #[test]
+    fn parse_historical_skips_unknown_share_count() {
+        let today = today();
+        let body = json!({
+            "ipoCalendar": [{
+                "symbol": "UNK",
+                "name": "Unknown",
+                "exchange": "",
+                "date": (today - chrono::Duration::days(210)).format("%Y-%m-%d").to_string(),
+                "status": "priced",
+                "numberOfShares": 0_u64,
+                "price": "10.00",
+            }]
+        });
+        let r = parse_historical_lockups(&body, today, 60, LOCKUP_DAYS);
+        assert!(r.is_empty(), "zero share count must be skipped");
+    }
+
+    #[test]
+    fn parse_historical_sorts_by_lockup_expiry() {
+        let today = today();
+        // Three IPOs expiring 10, 30, 50 days ago — should sort earliest first.
+        let body = json!({
+            "ipoCalendar": [
+                {
+                    "symbol": "MID",
+                    "name": "Mid",
+                    "exchange": "",
+                    "date": (today - chrono::Duration::days(210)).format("%Y-%m-%d").to_string(),
+                    "status": "priced",
+                    "numberOfShares": 1_000_000_u64,
+                },
+                {
+                    "symbol": "LATE",
+                    "name": "Late",
+                    "exchange": "",
+                    "date": (today - chrono::Duration::days(190)).format("%Y-%m-%d").to_string(),
+                    "status": "priced",
+                    "numberOfShares": 1_000_000_u64,
+                },
+                {
+                    "symbol": "EARLY",
+                    "name": "Early",
+                    "exchange": "",
+                    "date": (today - chrono::Duration::days(230)).format("%Y-%m-%d").to_string(),
+                    "status": "priced",
+                    "numberOfShares": 1_000_000_u64,
+                },
+            ]
+        });
+        let r = parse_historical_lockups(&body, today, 60, LOCKUP_DAYS);
+        let syms: Vec<&str> = r.iter().map(|x| x.symbol.as_str()).collect();
+        assert_eq!(syms, vec!["EARLY", "MID", "LATE"], "earliest expiry first");
     }
 
     #[test]
