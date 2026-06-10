@@ -684,6 +684,7 @@ import { renderSocialSecurityAge } from './views/social_security_age.js';
 import { renderRothVsTrad401k } from './views/roth_vs_trad_401k.js';
 import { renderPensionLumpVsAnnuity } from './views/pension_lump_vs_annuity.js';
 import { renderThreeFundPortfolio } from './views/three_fund_portfolio.js';
+import { renderBondTent } from './views/bond_tent.js';
 import { renderDrawdownCutoff } from './views/drawdown_cutoff.js';
 import { renderPead } from './views/pead.js';
 import { renderSentimentVelocity } from './views/sentiment_velocity.js';
@@ -2940,6 +2941,7 @@ export async function dispatch() {
             case 'roth-vs-trad-401k': await renderRothVsTrad401k(mount, state); break;
             case 'pension-lump-vs-annuity': await renderPensionLumpVsAnnuity(mount, state); break;
             case 'three-fund-portfolio': await renderThreeFundPortfolio(mount, state); break;
+            case 'bond-tent': await renderBondTent(mount, state); break;
             case 'drawdown-cutoff': await renderDrawdownCutoff(mount, state); break;
             case 'pead':           await renderPead(mount, state); break;
             case 'sentiment-velocity': await renderSentimentVelocity(mount, state); break;

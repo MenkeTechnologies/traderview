@@ -15,6 +15,7 @@ pub mod auto_loan;
 pub mod autotrade_exits;
 pub mod backtest_presets;
 pub mod barista_fire;
+pub mod bond_tent;
 pub mod breadth;
 pub mod breadth_divergence;
 pub mod broker_dispatcher;

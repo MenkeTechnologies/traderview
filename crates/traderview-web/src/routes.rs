@@ -16,6 +16,7 @@ mod auto_loan;
 mod backtest;
 mod backtest_presets;
 mod barista_fire;
+mod bond_tent;
 mod breadth;
 mod breadth_divergence;
 mod calc;
@@ -267,6 +268,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(roth_vs_trad_401k::router())
         .merge(pension_lump_vs_annuity::router())
         .merge(three_fund_portfolio::router())
+        .merge(bond_tent::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())
