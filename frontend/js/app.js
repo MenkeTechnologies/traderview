@@ -658,6 +658,7 @@ import { renderFiftyThirtyTwenty } from './views/fifty_thirty_twenty.js';
 import { renderEnvelopeBudget } from './views/envelope_budget.js';
 import { renderDebtAvalanche } from './views/debt_avalanche.js';
 import { renderDebtSnowball } from './views/debt_snowball.js';
+import { renderCreditUtilization } from './views/credit_utilization.js';
 import { renderDrawdownCutoff } from './views/drawdown_cutoff.js';
 import { renderPead } from './views/pead.js';
 import { renderSentimentVelocity } from './views/sentiment_velocity.js';
@@ -2890,6 +2891,7 @@ export async function dispatch() {
             case 'envelope-budget': await renderEnvelopeBudget(mount, state); break;
             case 'debt-avalanche': await renderDebtAvalanche(mount, state); break;
             case 'debt-snowball': await renderDebtSnowball(mount, state); break;
+            case 'credit-utilization': await renderCreditUtilization(mount, state); break;
             case 'drawdown-cutoff': await renderDrawdownCutoff(mount, state); break;
             case 'pead':           await renderPead(mount, state); break;
             case 'sentiment-velocity': await renderSentimentVelocity(mount, state); break;

@@ -31,6 +31,7 @@ mod compare;
 mod confluence;
 mod confluence_autotrade;
 mod corr_matrix;
+mod credit_utilization;
 mod crypto;
 mod csv_wizard;
 mod custom_indicators;
@@ -221,6 +222,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(envelope_budget::router())
         .merge(debt_avalanche::router())
         .merge(debt_snowball::router())
+        .merge(credit_utilization::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())

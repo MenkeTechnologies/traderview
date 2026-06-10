@@ -28,6 +28,7 @@ pub mod confluence;
 pub mod confluence_autotrade;
 pub mod corr_matrix;
 pub mod correlation;
+pub mod credit_utilization;
 pub mod crypto;
 pub mod csv_wizard;
 pub mod custom_indicators;
