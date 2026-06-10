@@ -106,6 +106,7 @@ mod personal_cash_flow;
 mod plans;
 mod portfolio_exposure;
 mod position_size;
+mod pslf_tracker;
 mod premarket;
 mod r_distribution;
 mod rebalance;
@@ -237,6 +238,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(heloc::router())
         .merge(home_maintenance::router())
         .merge(student_loan_payoff::router())
+        .merge(pslf_tracker::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())

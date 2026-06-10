@@ -104,6 +104,7 @@ pub mod personal_balance_sheet;
 pub mod personal_cash_flow;
 pub mod plans;
 pub mod portfolio_exposure;
+pub mod pslf_tracker;
 pub mod position_sizer;
 pub mod premarket;
 pub mod prices;
