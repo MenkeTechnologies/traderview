@@ -3,7 +3,7 @@
 // announcement. Positive score = drift in same direction as surprise.
 
 import { api } from '../api.js';
-import { esc, fmtDateTime } from '../util.js';
+import { esc } from '../util.js';
 import { t } from '../i18n.js';
 
 let lookbackDays = 90;

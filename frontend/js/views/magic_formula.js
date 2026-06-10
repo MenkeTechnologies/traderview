@@ -4,7 +4,7 @@
 // year, rebalance annually.
 
 import { api } from '../api.js';
-import { esc, fmtDateTime } from '../util.js';
+import { esc } from '../util.js';
 import { t } from '../i18n.js';
 
 export async function renderMagicFormula(mount, _state) {

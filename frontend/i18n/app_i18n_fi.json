@@ -16193,7 +16193,6 @@
   "view.paper.tip.symbol": "Kaupankäyntiin tarkoitettu ketju; isot ketjut",
   "view.paper.toast.filled": "{side} {qty} {symbol} täytetty {price}",
   "view.paper.toast.reset": "Paperitilin nollaus 200k dollariin",
-<<<<<<< Updated upstream
   "view.paper.toast.submitted": "{side} {qty} {symbol} submitted",
   "view.paper_rebalance.btn.save": "💾 Save Target Set",
   "view.paper_rebalance.empty.no_targets": "No saved target sets yet.",
@@ -16220,9 +16219,6 @@
   "view.paper_rebalance.th.name": "Name",
   "view.paper_rebalance.th.symbols": "Symbols",
   "view.paper_rebalance.title": "// PAPER REBALANCER",
-=======
-  "view.paper.toast.submitted": "{side} {qty} {symbol} toimitettu",
->>>>>>> Stashed changes
   "view.pattern_discovery.btn.discover": "Etsi",
   "view.pattern_discovery.card.top_discords": "Top discords",
   "view.pattern_discovery.card.top_discords_dist": "Top discords (etäisyydellä)",

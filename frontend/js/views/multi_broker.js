@@ -5,7 +5,7 @@
 // trigger gated behind an explicit confirm token typed by the user.
 
 import { api } from '../api.js';
-import { esc, fmtDateTime } from '../util.js';
+import { esc } from '../util.js';
 import { tConfirm } from '../dialog.js';
 import { t } from '../i18n.js';
 

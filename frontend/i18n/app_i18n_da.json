@@ -16193,7 +16193,6 @@
   "view.paper.tip.symbol": "Tilgang til handel; uppercased efter indgivelse",
   "view.paper.toast.filled": "{side} {qty} {symbol} fyldt på {price}",
   "view.paper.toast.reset": "Papirkonto nulstillet til $200k",
-<<<<<<< Updated upstream
   "view.paper.toast.submitted": "{side} {qty} {symbol} submitted",
   "view.paper_rebalance.btn.save": "💾 Save Target Set",
   "view.paper_rebalance.empty.no_targets": "No saved target sets yet.",
@@ -16220,9 +16219,6 @@
   "view.paper_rebalance.th.name": "Name",
   "view.paper_rebalance.th.symbols": "Symbols",
   "view.paper_rebalance.title": "// PAPER REBALANCER",
-=======
-  "view.paper.toast.submitted": "{side} {qty} {symbol} indsendt",
->>>>>>> Stashed changes
   "view.pattern_discovery.btn.discover": "Oplev",
   "view.pattern_discovery.card.top_discords": "Top discords",
   "view.pattern_discovery.card.top_discords_dist": "Top discords (efter afstand)",

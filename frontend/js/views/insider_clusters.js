@@ -4,7 +4,7 @@
 // ~12% alpha over the next 12 months. Highest-edge insider signal.
 
 import { api } from '../api.js';
-import { esc, fmtDateTime } from '../util.js';
+import { esc } from '../util.js';
 import { t } from '../i18n.js';
 
 export async function renderInsiderClusters(mount, _state) {
