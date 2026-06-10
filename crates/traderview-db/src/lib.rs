@@ -120,6 +120,7 @@ pub mod prices;
 pub mod r_distribution;
 pub mod rebalance;
 pub mod rent_vs_buy;
+pub mod rmd_calculator;
 pub mod risk_rules;
 pub mod rvol_accel;
 pub mod savings_rate;

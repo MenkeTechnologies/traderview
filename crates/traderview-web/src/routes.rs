@@ -120,6 +120,7 @@ mod premarket;
 mod r_distribution;
 mod rebalance;
 mod rent_vs_buy;
+mod rmd_calculator;
 mod reports;
 mod research;
 mod rvol_accel;
@@ -257,6 +258,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(barista_fire::router())
         .merge(lean_fire::router())
         .merge(fat_fire::router())
+        .merge(rmd_calculator::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())
