@@ -121,6 +121,7 @@ mod r_distribution;
 mod rebalance;
 mod rent_vs_buy;
 mod rmd_calculator;
+mod roth_vs_trad_401k;
 mod reports;
 mod research;
 mod rvol_accel;
@@ -261,6 +262,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(fat_fire::router())
         .merge(rmd_calculator::router())
         .merge(social_security_age::router())
+        .merge(roth_vs_trad_401k::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())

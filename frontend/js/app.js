@@ -681,6 +681,7 @@ import { renderLeanFire } from './views/lean_fire.js';
 import { renderFatFire } from './views/fat_fire.js';
 import { renderRmdCalculator } from './views/rmd_calculator.js';
 import { renderSocialSecurityAge } from './views/social_security_age.js';
+import { renderRothVsTrad401k } from './views/roth_vs_trad_401k.js';
 import { renderDrawdownCutoff } from './views/drawdown_cutoff.js';
 import { renderPead } from './views/pead.js';
 import { renderSentimentVelocity } from './views/sentiment_velocity.js';
@@ -2933,6 +2934,7 @@ export async function dispatch() {
             case 'fat-fire': await renderFatFire(mount, state); break;
             case 'rmd-calculator': await renderRmdCalculator(mount, state); break;
             case 'social-security-age': await renderSocialSecurityAge(mount, state); break;
+            case 'roth-vs-trad-401k': await renderRothVsTrad401k(mount, state); break;
             case 'drawdown-cutoff': await renderDrawdownCutoff(mount, state); break;
             case 'pead':           await renderPead(mount, state); break;
             case 'sentiment-velocity': await renderSentimentVelocity(mount, state); break;
