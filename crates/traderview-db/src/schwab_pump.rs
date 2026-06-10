@@ -280,14 +280,34 @@ async fn handle_one_acct_activity(
         return Ok(());
     };
 
-    let fill_price = scan_decimal_after(xml, "<ExecutionPrice>")
+    let Some(fill_price) = scan_decimal_after(xml, "<ExecutionPrice>")
         .or_else(|| scan_decimal_after(xml, "<Price>"))
         .or_else(|| scan_decimal_after(xml, "<AveragePrice>"))
-        .unwrap_or_else(Decimal::zero);
+    else {
+        tracing::error!(
+            client_order_id = %client_order_id,
+            "schwab fill XML missing ExecutionPrice/Price/AveragePrice; dropping event"
+        );
+        return Ok(());
+    };
+    if !fill_price.is_sign_positive() || fill_price.is_zero() {
+        tracing::error!(
+            client_order_id = %client_order_id, %fill_price,
+            "schwab fill price non-positive; dropping event"
+        );
+        return Ok(());
+    }
     let fill_qty = scan_decimal_after(xml, "<ExecutionQuantity>")
         .or_else(|| scan_decimal_after(xml, "<FilledQuantity>"))
         .or_else(|| scan_decimal_after(xml, "<Quantity>"))
         .unwrap_or(qty);
+    if fill_qty.is_zero() {
+        tracing::error!(
+            client_order_id = %client_order_id, %fill_qty,
+            "schwab fill qty zero; dropping event"
+        );
+        return Ok(());
+    }
     let broker_fill_id =
         scan_text_after(xml, "<OrderKey>").or_else(|| scan_text_after(xml, "<OrderID>"));
 
@@ -409,14 +429,34 @@ pub async fn spawn_pumps_for_active_strategies(
             std::sync::Arc::new(move |new_tokens: Tokens| {
                 let pool = persist_pool.clone();
                 tokio::spawn(async move {
-                    let _ =
+                    if let Err(e) =
                         crate::data_source_keys::save_schwab_tokens(&pool, user_id, &new_tokens)
-                            .await;
+                            .await
+                    {
+                        // Losing the rotated refresh_token silently means
+                        // the next process restart can't auth and the
+                        // strategy goes offline. Surface loudly so ops
+                        // sees it before tokens expire.
+                        tracing::error!(
+                            user_id = %user_id, error = %e,
+                            "schwab token rotation save failed; rotated refresh_token lost"
+                        );
+                    }
                 });
             });
         let client = SchwabTrading::new(client_id, client_secret, tokens, account_hash)
             .on_token_refresh(persist);
-        tokio::spawn(run_pump(pool_clone, client, sink_clone));
+        let pump_user_id = s.user_id;
+        tokio::spawn(async move {
+            use futures_util::FutureExt;
+            let res = std::panic::AssertUnwindSafe(run_pump(pool_clone, client, sink_clone))
+                .catch_unwind()
+                .await;
+            match res {
+                Ok(()) => tracing::warn!(user_id = %pump_user_id, "schwab pump exited"),
+                Err(_) => tracing::error!(user_id = %pump_user_id, "schwab pump panicked"),
+            }
+        });
         spawned += 1;
     }
     Ok(spawned)

@@ -111,13 +111,21 @@ async fn resolve_token(env: TastytradeEnv, auth: &Auth) -> Result<String, ()> {
             // ensure_token does the login. We don't have a way to
             // extract the cached token without exposing it. So we'll
             // re-implement the login inline:
+            // Outer match already gated to `Auth::UserPass`, but keep the
+            // unreachable-replacement defensive — a new Auth variant must
+            // not panic the long-lived pump task.
             let (login, password, remember_me) = match auth {
                 Auth::UserPass {
                     login,
                     password,
                     remember_me,
                 } => (login.clone(), password.clone(), *remember_me),
-                _ => unreachable!(),
+                _ => {
+                    tracing::error!(
+                        "tastytrade pump: unexpected Auth variant in UserPass branch; aborting login"
+                    );
+                    return Err(());
+                }
             };
             let base = match env {
                 TastytradeEnv::Sandbox => crate::tastytrade_trading::SANDBOX_BASE,
@@ -293,35 +301,54 @@ async fn handle_one_event(
     let f64_to_dec = |x: &serde_json::Value| -> Option<Decimal> {
         x.as_f64().and_then(|f| Decimal::try_from(f).ok())
     };
-    // Try executions[].fill-price first; fall back to root price.
-    let (fill_price, fill_qty) = order_obj
+    // Try executions[].fill-price first; fall back to order-level price.
+    let fill_pair: Option<(Decimal, Decimal)> = order_obj
         .get("executions")
         .and_then(|x| x.as_array())
         .and_then(|arr| arr.last())
-        .map(|exec| {
+        .and_then(|exec| {
             let p = exec
                 .get("fill-price")
                 .and_then(|x| x.as_str())
                 .and_then(|s| Decimal::from_str(s).ok())
-                .or_else(|| exec.get("fill-price").and_then(f64_to_dec))
-                .unwrap_or_else(Decimal::zero);
+                .or_else(|| exec.get("fill-price").and_then(f64_to_dec))?;
             let q = exec
                 .get("quantity")
                 .and_then(|x| x.as_str())
                 .and_then(|s| Decimal::from_str(s).ok())
-                .or_else(|| exec.get("quantity").and_then(f64_to_dec))
-                .unwrap_or_else(Decimal::zero);
-            (p, q)
+                .or_else(|| exec.get("quantity").and_then(f64_to_dec))?;
+            Some((p, q))
         })
-        .unwrap_or_else(|| {
+        .or_else(|| {
+            // Order-level price + the row's bound qty (caller pulled it).
             let p = order_obj
                 .get("price")
                 .and_then(|x| x.as_str())
                 .and_then(|s| Decimal::from_str(s).ok())
-                .or_else(|| order_obj.get("price").and_then(f64_to_dec))
-                .unwrap_or_else(Decimal::zero);
-            (p, qty)
+                .or_else(|| order_obj.get("price").and_then(f64_to_dec))?;
+            Some((p, qty))
         });
+    let Some((fill_price, fill_qty)) = fill_pair else {
+        tracing::error!(
+            client_order_id = %client_order_id,
+            "tastytrade fill missing price/qty in executions+order; dropping event"
+        );
+        return Ok(());
+    };
+    if !fill_price.is_sign_positive() || fill_price.is_zero() {
+        tracing::error!(
+            client_order_id = %client_order_id, %fill_price,
+            "tastytrade fill price non-positive; dropping event"
+        );
+        return Ok(());
+    }
+    if fill_qty.is_zero() {
+        tracing::error!(
+            client_order_id = %client_order_id, %fill_qty,
+            "tastytrade fill qty zero; dropping event"
+        );
+        return Ok(());
+    }
 
     let strategy = crate::algo::get_strategy_by_id(pool, strategy_id).await?;
     let Some(strategy) = strategy else {
@@ -397,13 +424,25 @@ pub async fn spawn_pumps_for_active_strategies(
         let pool_clone = pool.clone();
         let sink_clone = event_sink.clone();
         let auth_clone = auth.clone();
-        tokio::spawn(run_pump(
-            pool_clone,
-            env,
-            auth_clone,
-            vec![account_number],
-            sink_clone,
-        ));
+        let registry_for_drop = registry.clone();
+        let key = (user_id, sandbox);
+        tokio::spawn(async move {
+            use futures_util::FutureExt;
+            let res = std::panic::AssertUnwindSafe(run_pump(
+                pool_clone,
+                env,
+                auth_clone,
+                vec![account_number],
+                sink_clone,
+            ))
+            .catch_unwind()
+            .await;
+            match res {
+                Ok(()) => tracing::warn!(?key, "tastytrade pump exited; clearing registry"),
+                Err(_) => tracing::error!(?key, "tastytrade pump panicked; clearing registry"),
+            }
+            registry_for_drop.lock().await.remove(&key);
+        });
         spawned += 1;
     }
     Ok(spawned)

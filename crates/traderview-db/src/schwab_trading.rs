@@ -222,7 +222,7 @@ impl SchwabTrading {
     /// orderStrategyType + orderLegCollection.
     pub async fn place_order(&self, req: &PlaceOrder) -> Result<PlaceOrderResponse, SchwabError> {
         let url = format!("{}/accounts/{}/orders", self.trader_base, self.account_hash);
-        let body = req.to_json();
+        let body = req.to_json()?;
         let first = self.send_post(&url, &body).await;
         let resp = match first {
             Err(SchwabError::AuthFailed) => {
@@ -302,7 +302,7 @@ impl SchwabTrading {
         req: &PlaceBracket,
     ) -> Result<PlaceOrderResponse, SchwabError> {
         let url = format!("{}/accounts/{}/orders", self.trader_base, self.account_hash);
-        let body = req.to_json();
+        let body = req.to_json()?;
         let first = self.send_post(&url, &body).await;
         match first {
             Err(SchwabError::AuthFailed) => {
@@ -397,8 +397,13 @@ pub struct PlaceOrder {
 }
 
 impl PlaceOrder {
-    fn to_json(&self) -> serde_json::Value {
-        let qty: f64 = self.quantity.to_string().parse().unwrap_or(0.0);
+    fn to_json(&self) -> Result<serde_json::Value, SchwabError> {
+        // qty and price MUST NOT silently fall back to 0 on parse
+        // failure — a $0 LIMIT sell would give the position away. Any
+        // failure here is a corrupt Decimal we shouldn't ship to the
+        // broker. Schwab's REST API consumes f64 so we accept the
+        // bounded precision but propagate the error.
+        let qty = dec_to_finite_f64(self.quantity, "quantity")?;
         let mut o = serde_json::json!({
             "orderType": self.order_type.as_str(),
             "session": self.session.as_str(),
@@ -414,14 +419,31 @@ impl PlaceOrder {
             }]
         });
         if let Some(p) = self.price {
-            o["price"] = p.to_string().parse::<f64>().unwrap_or(0.0).into();
+            o["price"] = dec_to_finite_f64(p, "price")?.into();
         }
         if let Some(c) = &self.comment {
             // Schwab's order strategy JSON tucks the tag on the leg.
             o["orderLegCollection"][0]["comment"] = c.clone().into();
         }
-        o
+        Ok(o)
     }
+}
+
+/// Decimal → f64 with hard rejection on non-finite results. Schwab's
+/// JSON shape requires raw numbers, but `Decimal::to_string().parse()`
+/// can silently produce `Inf` for Decimals larger than f64::MAX, and
+/// the previous `unwrap_or(0.0)` would convert that to a $0 leg.
+fn dec_to_finite_f64(d: Decimal, field: &'static str) -> Result<f64, SchwabError> {
+    let s = d.to_string();
+    let f: f64 = s.parse().map_err(|_| {
+        SchwabError::InvalidRequest(format!("schwab order: unparseable {field}: {s}"))
+    })?;
+    if !f.is_finite() {
+        return Err(SchwabError::InvalidRequest(format!(
+            "schwab order: non-finite {field}: {s}"
+        )));
+    }
+    Ok(f)
 }
 
 /// Native bracket order: entry leg + OCO exit pair (TP limit + SL stop).
@@ -446,8 +468,8 @@ pub struct PlaceBracket {
 }
 
 impl PlaceBracket {
-    fn to_json(&self) -> serde_json::Value {
-        let qty: f64 = self.quantity.to_string().parse().unwrap_or(0.0);
+    fn to_json(&self) -> Result<serde_json::Value, SchwabError> {
+        let qty = dec_to_finite_f64(self.quantity, "quantity")?;
         let exit_instruction = match self.instruction {
             Instruction::Buy => "SELL",
             Instruction::SellShort => "BUY_TO_COVER",
@@ -458,8 +480,8 @@ impl PlaceBracket {
             Instruction::Sell => "BUY",
             Instruction::BuyToCover => "SELL",
         };
-        let tp: f64 = self.take_profit_price.to_string().parse().unwrap_or(0.0);
-        let sl: f64 = self.stop_loss_price.to_string().parse().unwrap_or(0.0);
+        let tp = dec_to_finite_f64(self.take_profit_price, "take_profit_price")?;
+        let sl = dec_to_finite_f64(self.stop_loss_price, "stop_loss_price")?;
 
         let mut parent = serde_json::json!({
             "orderType": self.order_type.as_str(),
@@ -502,13 +524,12 @@ impl PlaceBracket {
             }]
         });
         if let Some(p) = self.entry_price {
-            let pf: f64 = p.to_string().parse().unwrap_or(0.0);
-            parent["price"] = pf.into();
+            parent["price"] = dec_to_finite_f64(p, "entry_price")?.into();
         }
         if let Some(c) = &self.comment {
             parent["orderLegCollection"][0]["comment"] = c.clone().into();
         }
-        parent
+        Ok(parent)
     }
 }
 

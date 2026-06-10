@@ -104,8 +104,34 @@ pub async fn handle_trade_update(
         return Ok(());
     };
 
-    let fill_price = event.price.unwrap_or_else(Decimal::zero);
-    let fill_qty = event.qty.unwrap_or_else(Decimal::zero);
+    // Hard-reject events missing price or qty. The prior behaviour was
+    // to default both to zero — a malformed `fill` payload then flowed
+    // through `record_fill` as a $0 trade, corrupting executions/trades
+    // and breaking every downstream P&L number for that strategy. The
+    // reconnect path will re-fetch state from /v2/orders on the next
+    // session if a fill is genuinely lost.
+    let Some(fill_price) = event.price else {
+        tracing::error!(client_order_id = %coid_str, "alpaca fill missing price; dropping event");
+        return Ok(());
+    };
+    let Some(fill_qty) = event.qty else {
+        tracing::error!(client_order_id = %coid_str, "alpaca fill missing qty; dropping event");
+        return Ok(());
+    };
+    if !fill_price.is_sign_positive() || fill_price.is_zero() {
+        tracing::error!(
+            client_order_id = %coid_str, %fill_price,
+            "alpaca fill price non-positive; dropping event"
+        );
+        return Ok(());
+    }
+    if fill_qty.is_zero() {
+        tracing::error!(
+            client_order_id = %coid_str, %fill_qty,
+            "alpaca fill qty zero; dropping event"
+        );
+        return Ok(());
+    }
     let executed_at = event.timestamp.unwrap_or_else(Utc::now);
 
     let intent = crate::algo_engine::OrderIntent {
@@ -231,6 +257,24 @@ pub async fn ensure_pump_for(
         BrokerMode::Live
     };
     let client = AlpacaTrading::new(mode, key_id, secret);
-    tokio::spawn(run_pump(pool, client, event_sink));
+    let registry_for_drop = registry.clone();
+    let key = (user_id, paper);
+    // Supervisor wrapper: when run_pump exits (fatal auth, or panics
+    // from a decode bug / sqlx pool exhaustion / etc.), clear the
+    // registry entry so a later `ensure_pump_for` can respawn. Without
+    // this the registry stays "alive" forever — fills accumulate at the
+    // broker with no consumer, and `has_pending_order` blocks all
+    // future entries on that strategy.
+    tokio::spawn(async move {
+        use futures_util::FutureExt;
+        let result = std::panic::AssertUnwindSafe(run_pump(pool, client, event_sink))
+            .catch_unwind()
+            .await;
+        match result {
+            Ok(()) => tracing::warn!(?key, "alpaca pump exited; clearing registry"),
+            Err(_) => tracing::error!(?key, "alpaca pump panicked; clearing registry"),
+        }
+        registry_for_drop.lock().await.remove(&key);
+    });
     true
 }

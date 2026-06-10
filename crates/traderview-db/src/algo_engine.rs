@@ -542,13 +542,18 @@ pub async fn process_bar_window(
         return Err(EngineError::ZeroQty);
     }
 
+    // Build the intent up-front — surfaces NaN/Inf/zero prices from the
+    // strategy as a clean EngineError instead of silently shipping a
+    // zero-priced bracket. Done before the position-size cap so the
+    // notional check works on a real entry price.
+    let intent = build_intent(strategy, run_id, &symbol, &sig, qty)?;
+
     // Risk gate: position-size notional cap. Hard reject — we don't
     // shrink the position because qty came from the sizing function
     // that already factored equity + per-trade risk; shrinking it
     // silently would violate the user's risk-per-trade contract.
     if let Some(cap) = cfg.max_position_size_usd {
-        let entry_price = Decimal::try_from(sig.entry_price).unwrap_or_else(|_| Decimal::zero());
-        let notional = entry_price * Decimal::from(qty);
+        let notional = intent.entry_price * Decimal::from(qty);
         if notional > cap {
             return Err(EngineError::PositionSizeCap { notional, cap });
         }
@@ -577,8 +582,6 @@ pub async fn process_bar_window(
     algo::increment_run_counter(pool, run_id, algo::RunCounter::SignalsEmitted, 1)
         .await
         .ok();
-
-    let intent = build_intent(strategy, run_id, &symbol, &sig, qty);
     if let Some(emit) = event_sink {
         emit(EngineEvent::SignalFired {
             strategy_id: strategy.id,
@@ -741,6 +744,23 @@ pub async fn record_fill(
     crate::trades::rollup_account(pool, account_id)
         .await
         .map_err(|e| EngineError::Broker(format!("trades::rollup_account: {e}")))?;
+    // If this fill closed a trade, accumulate its net_pnl into the run's
+    // pnl_realized. Without this, `today_realized_pnl` and the daily-loss
+    // risk gate always see 0 and the auto-pause never fires. Window the
+    // lookup at `fill.executed_at - 5s` so a clock skew between the
+    // broker-side fill timestamp and our DB write doesn't miss the close.
+    let since = fill
+        .executed_at
+        .checked_sub_signed(chrono::Duration::seconds(5))
+        .unwrap_or(fill.executed_at);
+    let delta = crate::trades::realized_pnl_closed_since(pool, account_id, &intent.symbol, since)
+        .await
+        .map_err(|e| EngineError::Broker(format!("realized_pnl_closed_since: {e}")))?;
+    if let Some(d) = delta {
+        algo::add_realized_pnl(pool, intent.run_id, d)
+            .await
+            .map_err(|e| EngineError::Broker(format!("add_realized_pnl: {e}")))?;
+    }
     if let Some(emit) = event_sink {
         emit(EngineEvent::FillReceived {
             strategy_id: strategy.id,
@@ -842,9 +862,12 @@ pub async fn process_bar_window_multi(
     if qty == 0 {
         return Err(EngineError::ZeroQty);
     }
+    // Build the intent up-front so NaN/Inf/zero prices fail fast as a
+    // clean EngineError rather than silently producing a zero-priced
+    // bracket. The position-size cap below uses intent.entry_price.
+    let intent = build_intent(strategy, run_id, &primary_symbol, &sig, qty)?;
     if let Some(cap) = cfg.max_position_size_usd {
-        let entry_price = Decimal::try_from(sig.entry_price).unwrap_or_else(|_| Decimal::zero());
-        let notional = entry_price * Decimal::from(qty);
+        let notional = intent.entry_price * Decimal::from(qty);
         if notional > cap {
             return Err(EngineError::PositionSizeCap { notional, cap });
         }
@@ -866,7 +889,6 @@ pub async fn process_bar_window_multi(
     algo::increment_run_counter(pool, run_id, algo::RunCounter::SignalsEmitted, 1)
         .await
         .ok();
-    let intent = build_intent(strategy, run_id, &primary_symbol, &sig, qty);
     if let Some(emit) = event_sink {
         emit(EngineEvent::SignalFired {
             strategy_id: strategy.id,
@@ -951,24 +973,46 @@ pub async fn process_bar_window_multi(
     }
 }
 
+/// Convert a strategy's f64 prices into Decimal for the broker intent.
+/// Returns Err when ANY price is non-finite (NaN/Inf) or non-positive —
+/// previously these silently became Decimal::ZERO, so an indicator math
+/// glitch would submit a $0 stop or $0 take-profit (broker either
+/// rejects, or worse on some venues accepts as a market-at-zero leg).
 fn build_intent(
     strategy: &AlgoStrategy,
     run_id: Uuid,
     symbol: &str,
     sig: &EntrySignal,
     qty: u64,
-) -> OrderIntent {
-    OrderIntent {
+) -> Result<OrderIntent, EngineError> {
+    let entry_price = finite_positive_dec(sig.entry_price, "entry_price")?;
+    let stop_price = finite_positive_dec(sig.stop_price, "stop_price")?;
+    let take_profit_price = finite_positive_dec(sig.take_profit_price, "take_profit_price")?;
+    Ok(OrderIntent {
         strategy_id: strategy.id,
         run_id,
         client_order_id: Uuid::new_v4(),
         symbol: symbol.to_string(),
         side: sig.side,
         qty: Decimal::from(qty),
-        entry_price: Decimal::from_f64(sig.entry_price).unwrap_or_default(),
-        stop_price: Decimal::from_f64(sig.stop_price).unwrap_or_default(),
-        take_profit_price: Decimal::from_f64(sig.take_profit_price).unwrap_or_default(),
+        entry_price,
+        stop_price,
+        take_profit_price,
+    })
+}
+
+/// Convert a strategy-emitted f64 price into Decimal, rejecting NaN /
+/// Inf / non-positive values that would otherwise become Decimal::ZERO
+/// via `unwrap_or_default` and ship a zero-priced bracket to the broker.
+fn finite_positive_dec(v: f64, field: &'static str) -> Result<Decimal, EngineError> {
+    if !v.is_finite() || v <= 0.0 {
+        return Err(EngineError::Broker(format!(
+            "signal {field} is not finite-positive: {v}"
+        )));
     }
+    Decimal::from_f64(v).ok_or_else(|| {
+        EngineError::Broker(format!("signal {field} cannot be represented as Decimal: {v}"))
+    })
 }
 
 fn side_to_str(s: Side) -> &'static str {
@@ -1094,7 +1138,20 @@ async fn run_exit_pass(
                     continue;
                 }
             };
-        let exit_price_dec = Decimal::from_f64(exit_sig.exit_price).unwrap_or_default();
+        // Same finite-positive guard as build_intent. Previously,
+        // unwrap_or_default zeroed a NaN/Inf exit price → the close
+        // ran at $0 (in sim) or sent a $0 LIMIT in extended hours.
+        let exit_price_dec = match finite_positive_dec(exit_sig.exit_price, "exit_price") {
+            Ok(d) => d,
+            Err(e) => {
+                tracing::error!(
+                    strategy = %strategy.id, symbol, trade_id = %pos.id,
+                    error = %e,
+                    "exit pass: non-finite exit price; skipping this position"
+                );
+                continue;
+            }
+        };
         let coid = Uuid::new_v4();
         // Insert the close as a real algo_orders row first — algo_fills
         // has a FK on order_id, so record_fill needs an order_id that

@@ -490,7 +490,7 @@ async fn drive_strategy(
         return Ok(0);
     };
     let equity = account_equity(pool, strategy).await.unwrap_or(100_000.0);
-    let open_positions: i64 = open_position_count(pool, strategy.account_id)
+    let mut open_positions: i64 = open_position_count(pool, strategy.account_id)
         .await
         .unwrap_or(0);
     let mut driven = 0usize;
@@ -561,7 +561,20 @@ async fn drive_strategy(
         )
         .await
         {
-            Ok(Some(_)) => driven += 1,
+            Ok(Some(_)) => {
+                // Optimistically count this entry against the cap for the
+                // rest of the universe loop. Without this, a 25-symbol
+                // universe with a 5-position cap and a strong-trend bar
+                // would submit 25 entries — process_bar_window checked
+                // the SAME stale `open_positions` snapshot 25 times.
+                // process_bar_window returns Ok(Some) for both entries
+                // AND exits; the exit case incorrectly increments the
+                // cap counter here, but the cap is a CEILING not a floor
+                // so over-counting is safe (it just makes subsequent
+                // entries this tick skip — desirable for a thin window).
+                open_positions += 1;
+                driven += 1;
+            }
             Ok(None) => {
                 // No signal but the strategy WAS evaluated — emit a
                 // heartbeat so the stdout pane proves the engine is

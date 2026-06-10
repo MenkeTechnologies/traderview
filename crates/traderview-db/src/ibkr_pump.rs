@@ -255,7 +255,7 @@ async fn handle_one_trade(
     let f64_to_dec = |x: &serde_json::Value| -> Option<Decimal> {
         x.as_f64().and_then(|f| Decimal::try_from(f).ok())
     };
-    let fill_price = ev
+    let Some(fill_price) = ev
         .get("price")
         .and_then(f64_to_dec)
         .or_else(|| {
@@ -263,7 +263,20 @@ async fn handle_one_trade(
                 .and_then(|x| x.as_str())
                 .and_then(|s| Decimal::from_str(s).ok())
         })
-        .unwrap_or_else(Decimal::zero);
+    else {
+        tracing::error!(
+            client_order_id = %client_order_id,
+            "ibkr fill missing price; dropping event"
+        );
+        return Ok(());
+    };
+    if !fill_price.is_sign_positive() || fill_price.is_zero() {
+        tracing::error!(
+            client_order_id = %client_order_id, %fill_price,
+            "ibkr fill price non-positive; dropping event"
+        );
+        return Ok(());
+    }
     let fill_qty = ev
         .get("size")
         .and_then(f64_to_dec)
@@ -273,6 +286,13 @@ async fn handle_one_trade(
                 .and_then(|s| Decimal::from_str(s).ok())
         })
         .unwrap_or(qty);
+    if fill_qty.is_zero() {
+        tracing::error!(
+            client_order_id = %client_order_id, %fill_qty,
+            "ibkr fill qty zero; dropping event"
+        );
+        return Ok(());
+    }
     let broker_fill_id = ev
         .get("execution_id")
         .and_then(|x| x.as_str())
@@ -332,7 +352,20 @@ pub async fn spawn_pumps_for_active_strategies(
         }
         let pool_clone = pool.clone();
         let sink_clone = event_sink.clone();
-        tokio::spawn(run_pump(pool_clone, base_url, bearer, sink_clone));
+        let registry_for_drop = registry.clone();
+        let key = (s.user_id, false);
+        tokio::spawn(async move {
+            use futures_util::FutureExt;
+            let res =
+                std::panic::AssertUnwindSafe(run_pump(pool_clone, base_url, bearer, sink_clone))
+                    .catch_unwind()
+                    .await;
+            match res {
+                Ok(()) => tracing::warn!(?key, "ibkr pump exited; clearing registry"),
+                Err(_) => tracing::error!(?key, "ibkr pump panicked; clearing registry"),
+            }
+            registry_for_drop.lock().await.remove(&key);
+        });
         spawned += 1;
     }
     Ok(spawned)

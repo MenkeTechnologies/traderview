@@ -558,6 +558,35 @@ pub struct OpenPositionRow {
     pub opened_at: DateTime<Utc>,
 }
 
+/// Net realized P&L for the trade that closed at-or-after `since` on
+/// (account_id, symbol). Used by the algo engine's `record_fill` to
+/// recognize "this fill closed a trade, here's the delta to add to
+/// the run's pnl_realized" — so the daily-loss + consecutive-losses
+/// risk gates have a real number to compare against. Returns `None`
+/// when the most recent close on the pair is older than `since`
+/// (this fill was a partial fill or an open, not a close).
+pub async fn realized_pnl_closed_since(
+    pool: &PgPool,
+    account_id: Uuid,
+    symbol: &str,
+    since: DateTime<Utc>,
+) -> anyhow::Result<Option<Decimal>> {
+    let row: Option<(Option<Decimal>,)> = sqlx::query_as(
+        "SELECT COALESCE(SUM(net_pnl), 0)::numeric
+           FROM trades
+          WHERE account_id = $1
+            AND symbol = $2
+            AND status = 'closed'
+            AND closed_at >= $3",
+    )
+    .bind(account_id)
+    .bind(symbol)
+    .bind(since)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row.and_then(|(v,)| v).filter(|d| !d.is_zero()))
+}
+
 /// Current open qty for a trade, or `None` if it's already closed
 /// (status != 'open'). Used by the algo engine's exit pass to re-fetch
 /// the live qty right before submitting a close — a partial entry-fill

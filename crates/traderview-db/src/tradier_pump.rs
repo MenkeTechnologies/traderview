@@ -219,18 +219,44 @@ async fn handle_one_event(
     let f64_to_dec = |x: &serde_json::Value| -> Option<Decimal> {
         x.as_f64().and_then(|f| Decimal::try_from(f).ok())
     };
-    let fill_price = ev
+    let Some(fill_price) = ev
         .get("avg_fill_price")
         .and_then(|x| x.as_str())
         .and_then(|s| Decimal::from_str(s).ok())
         .or_else(|| ev.get("price").and_then(f64_to_dec))
-        .unwrap_or_else(Decimal::zero);
-    let fill_qty = ev
+    else {
+        tracing::error!(
+            client_order_id = %client_order_id,
+            "tradier fill missing avg_fill_price/price; dropping event"
+        );
+        return Ok(());
+    };
+    if !fill_price.is_sign_positive() || fill_price.is_zero() {
+        tracing::error!(
+            client_order_id = %client_order_id, %fill_price,
+            "tradier fill price non-positive; dropping event"
+        );
+        return Ok(());
+    }
+    let Some(fill_qty) = ev
         .get("filled_quantity")
         .and_then(|x| x.as_str())
         .and_then(|s| Decimal::from_str(s).ok())
         .or_else(|| ev.get("quantity").and_then(f64_to_dec))
-        .unwrap_or_else(Decimal::zero);
+    else {
+        tracing::error!(
+            client_order_id = %client_order_id,
+            "tradier fill missing filled_quantity/quantity; dropping event"
+        );
+        return Ok(());
+    };
+    if fill_qty.is_zero() {
+        tracing::error!(
+            client_order_id = %client_order_id, %fill_qty,
+            "tradier fill qty zero; dropping event"
+        );
+        return Ok(());
+    }
     let intent = crate::algo_engine::OrderIntent {
         strategy_id,
         run_id,
@@ -313,7 +339,20 @@ pub async fn spawn_pumps_for_active_strategies(
         let pool_clone = pool.clone();
         let sink_clone = event_sink.clone();
         let token_clone = token.clone();
-        tokio::spawn(run_pump(pool_clone, env, token_clone, sink_clone));
+        let registry_for_drop = registry.clone();
+        let key = (s.user_id, dedupe_paper_flag);
+        tokio::spawn(async move {
+            use futures_util::FutureExt;
+            let res =
+                std::panic::AssertUnwindSafe(run_pump(pool_clone, env, token_clone, sink_clone))
+                    .catch_unwind()
+                    .await;
+            match res {
+                Ok(()) => tracing::warn!(?key, "tradier pump exited; clearing registry"),
+                Err(_) => tracing::error!(?key, "tradier pump panicked; clearing registry"),
+            }
+            registry_for_drop.lock().await.remove(&key);
+        });
         spawned += 1;
     }
     Ok(spawned)
