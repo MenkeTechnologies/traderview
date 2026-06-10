@@ -81,6 +81,7 @@ mod mentorships;
 mod microstructure;
 mod mood_analytics;
 mod multi_broker;
+mod net_worth_tracker;
 mod news;
 mod note_templates;
 mod options;
@@ -199,6 +200,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(fear_greed::router())
         .merge(fire_calculator::router())
         .merge(emergency_fund::router())
+        .merge(net_worth_tracker::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())

@@ -47,6 +47,7 @@ export const TILES = [
     ['cape-indicator', 'CAPE / Shiller P/E', '📊', 'Shiller CAPE ratio with percentile rank in 1881-2024 historical distribution + regime interpretation', 'NEW'],
     ['fire-calculator', 'FIRE Calculator', '🔥', 'Years-to-target, required savings, year-by-year projection, return×contribution sensitivity table', 'NEW'],
     ['emergency-fund', 'Emergency Fund', '🛟', 'Months covered + 3/6/9/12-month target gaps + months-to-target at your contribution rate', 'NEW'],
+    ['net-worth-tracker', 'Net Worth Tracker', '📒', 'Assets − Liabilities across categories + M/M + Y/Y delta + debt-to-asset %', 'NEW'],
     ['drawdown-cutoff', 'Drawdown Cutoff', '🛑', 'Auto-fire kill-switch when live broker equity drops below your max-drawdown threshold', 'NEW'],
     ['pead',         'PEAD Drift',    '📈',  'Post-earnings drift — surprise + 5/20/60d returns + drift score', 'NEW'],
     ['sentiment-velocity', 'Sentiment Velocity', '🔊', 'WSB+StockTwits mention acceleration — ≥3× hour-over-hour + ≥2 consecutive', 'NEW'],
