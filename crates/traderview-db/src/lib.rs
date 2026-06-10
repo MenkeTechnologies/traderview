@@ -98,6 +98,7 @@ pub mod schwab_trading;
 pub mod screenshots;
 pub mod search;
 pub mod sector_rotation;
+pub mod sector_rotation_strategy;
 pub mod sector_rotation_timing;
 pub mod sectors;
 pub mod sentiment;

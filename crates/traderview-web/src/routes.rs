@@ -98,6 +98,7 @@ mod screener;
 mod screenshots;
 mod search;
 mod sector_rotation;
+mod sector_rotation_strategy;
 mod sector_timing;
 mod sectors;
 mod sentiment;
@@ -241,6 +242,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(algo::router())
         .merge(rebalance::router())
         .merge(sector_rotation::router())
+        .merge(sector_rotation_strategy::router())
         .merge(tape_replay::router())
         .merge(backtest_presets::router())
         .merge(mood_analytics::router())
