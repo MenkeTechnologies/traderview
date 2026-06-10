@@ -73,6 +73,7 @@ mod financial_ratios;
 mod finnhub_extras;
 mod fire_calculator;
 mod gamma_squeeze;
+mod glide_path;
 mod goals;
 mod halts;
 mod heatmap;
@@ -269,6 +270,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(pension_lump_vs_annuity::router())
         .merge(three_fund_portfolio::router())
         .merge(bond_tent::router())
+        .merge(glide_path::router())
         .merge(premarket::router())
         .merge(after_hours::router())
         .merge(halts::router())

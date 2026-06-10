@@ -70,6 +70,7 @@ pub mod fire_calculator;
 pub mod forum;
 pub mod friction;
 pub mod gamma_squeeze;
+pub mod glide_path;
 pub mod goals;
 pub mod halts;
 pub mod heatmap;
