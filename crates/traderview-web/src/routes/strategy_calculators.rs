@@ -36,6 +36,7 @@
 //!   GET  /symbols/:sym/drawdown-episodes — top-N peak/trough/recovery
 //!   GET  /symbols/:sym/opex-week         — third-Friday expiration window
 //!   GET  /symbols/:sym/pre-holiday       — pre-holiday drift (2024+ cal)
+//!   GET  /symbols/:sym/ex-div-study      — ex-date recovery behavior
 //!   POST /symbols/:sym/event-study       — caller-dated FOMC/CPI study
 //!   POST /calc/double-barrier            — target-vs-stop hit-first odds
 //!   POST /calc/futures-sizing            — tick math + margin-capped size
@@ -103,6 +104,7 @@ pub fn router() -> Router<AppState> {
         )
         .route("/symbols/:symbol/opex-week", get(get_opex_week))
         .route("/symbols/:symbol/pre-holiday", get(get_pre_holiday))
+        .route("/symbols/:symbol/ex-div-study", get(get_ex_div_study))
         .route("/symbols/:symbol/event-study", post(post_event_study))
         .route("/calc/double-barrier", post(post_double_barrier))
         .route("/calc/futures-sizing", post(post_futures_sizing))
@@ -726,14 +728,38 @@ async fn get_pre_holiday(
         .map_err(map_tom_err)
 }
 
+#[derive(Debug, Deserialize)]
+struct OpexQ {
+    years: Option<u32>,
+    quarterly: Option<bool>,
+}
+
 async fn get_opex_week(
+    State(s): State<AppState>,
+    _u: AuthUser,
+    Path(symbol): Path<String>,
+    Query(q): Query<OpexQ>,
+) -> Result<Json<strategy_calculators::EventStudyReport>, ApiError> {
+    let sym = validate_symbol(&symbol)?;
+    strategy_calculators::opex_week(
+        &s.pool,
+        &sym,
+        q.years.unwrap_or(10),
+        q.quarterly.unwrap_or(false),
+    )
+    .await
+    .map(Json)
+    .map_err(map_tom_err)
+}
+
+async fn get_ex_div_study(
     State(s): State<AppState>,
     _u: AuthUser,
     Path(symbol): Path<String>,
     Query(q): Query<TomQ>,
 ) -> Result<Json<strategy_calculators::EventStudyReport>, ApiError> {
     let sym = validate_symbol(&symbol)?;
-    strategy_calculators::opex_week(&s.pool, &sym, q.years.unwrap_or(10))
+    strategy_calculators::ex_div_study(&s.pool, &sym, q.years.unwrap_or(10))
         .await
         .map(Json)
         .map_err(map_tom_err)

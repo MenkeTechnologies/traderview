@@ -818,10 +818,13 @@ pub async fn pre_holiday(
     event_study(pool, symbol, years, &anchors, 3, 2).await
 }
 
+/// Monthly OpEx study; `quarterly` restricts to the Mar/Jun/Sep/Dec
+/// triple-witching expirations.
 pub async fn opex_week(
     pool: &PgPool,
     symbol: &str,
     years: u32,
+    quarterly: bool,
 ) -> Result<EventStudyReport, TomError> {
     let years = years.clamp(1, 20);
     let now = Utc::now().date_naive();
@@ -829,6 +832,9 @@ pub async fn opex_week(
     for back in 0..=(years * 12) {
         let months_total = now.year() * 12 + now.month() as i32 - 1 - back as i32;
         let (y, m) = (months_total.div_euclid(12), months_total.rem_euclid(12) as u32 + 1);
+        if quarterly && m % 3 != 0 {
+            continue;
+        }
         if let Some(d) = third_friday(y, m) {
             if d <= now {
                 anchors.push(d);
@@ -836,6 +842,33 @@ pub async fn opex_week(
         }
     }
     event_study(pool, symbol, years, &anchors, 4, 2).await
+}
+
+/// Ex-dividend behavior study — anchors at each historical ex-date
+/// (Yahoo dividend events), answering the dividend-capture question:
+/// does the price recover the drop, and how fast?
+pub async fn ex_div_study(
+    pool: &PgPool,
+    symbol: &str,
+    years: u32,
+) -> Result<EventStudyReport, TomError> {
+    let years = years.clamp(1, 20);
+    let now = Utc::now().date_naive();
+    let from = now - chrono::Duration::days(366 * years as i64);
+    let (events, _) = crate::dividend_tracker::fetch_dividend_events(symbol).await;
+    let anchors: Vec<chrono::NaiveDate> = events
+        .iter()
+        .map(|e| e.ex_date)
+        .filter(|d| *d >= from && *d <= now)
+        .collect();
+    if anchors.is_empty() {
+        return Err(TomError::Insufficient {
+            symbol: symbol.to_string(),
+            got: 0,
+            need: 1,
+        });
+    }
+    event_study(pool, symbol, years, &anchors, 3, 3).await
 }
 
 // ===========================================================================

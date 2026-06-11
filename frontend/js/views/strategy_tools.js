@@ -1392,12 +1392,22 @@ const TOOLS = {
     },
     'opex-week': {
         label: 'OpEx Week',
-        call: (b) => api.opexWeek(b.symbol, b.years),
+        call: (b) => api.opexWeek(b.symbol, b.years, b.quarterly === 1),
         fields: [
             { key: 'symbol', label: 'Symbol', def: 'SPY', text: true },
             { key: 'years', label: 'Lookback years', def: 10, int: true },
+            { key: 'quarterly', label: 'Triple witching only (1 = yes)', def: 0, int: true },
         ],
         render: (r) => renderEventStudy(r, 'third-Friday expiration'),
+    },
+    'ex-div-study': {
+        label: 'Ex-Div Behavior',
+        call: (b) => api.exDivStudy(b.symbol, b.years),
+        fields: [
+            { key: 'symbol', label: 'Symbol', def: 'KO', text: true },
+            { key: 'years', label: 'Lookback years', def: 10, int: true },
+        ],
+        render: (r) => renderEventStudy(r, 'ex-dividend'),
     },
     'pre-holiday': {
         label: 'Pre-Holiday Effect',
