@@ -148,6 +148,34 @@ const TOOLS = {
             skipped trades accrue on paper. Shortens decaying-edge losing streaks, pays whipsaw tax on
             choppy ones — the verdict tells you which system you have.</p>`,
     },
+    'futures-sizing': {
+        label: 'Futures Sizing',
+        call: (b) => api.calcFuturesSizing(b),
+        fields: [
+            { key: 'account', label: 'Account ($)', def: 100000 },
+            { key: 'risk_pct', label: 'Risk per trade (%)', def: 1 },
+            { key: 'entry', label: 'Entry', def: 5000 },
+            { key: 'stop', label: 'Stop', def: 4990 },
+            { key: 'tick_size', label: 'Tick size', def: 0.25 },
+            { key: 'tick_value', label: 'Tick value ($)', def: 12.5 },
+            { key: 'initial_margin', label: 'Initial margin ($/contract)', def: 15000 },
+            { key: 'margin_cap_pct', label: 'Margin cap (% of account)', def: 50 },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Contracts</div>
+                    <div class="value ${r.contracts > 0 ? 'pos' : 'neg'}">${r.contracts}</div>
+                    <div class="small muted">${r.contracts_by_risk} by risk · ${r.contracts_by_margin} by margin — ${esc(r.binding_constraint)} binds</div></div>
+                <div class="card"><div class="label">Risk</div>
+                    <div class="value">$${r.total_risk.toFixed(0)}</div>
+                    <div class="small muted">$${r.risk_per_contract.toFixed(0)}/contract · ${r.stop_distance_points} pts × $${r.dollars_per_point.toFixed(0)}/pt</div></div>
+                <div class="card"><div class="label">Margin / notional</div>
+                    <div class="value">${r.margin_utilization_pct.toFixed(0)}%</div>
+                    <div class="small muted">$${Math.round(r.margin_used).toLocaleString()} margin · $${Math.round(r.notional).toLocaleString()} notional</div></div>
+            </div>
+            <p class="muted small">Size = min(risk budget ÷ stop cost, margin cap ÷ initial margin). When
+            exchanges hike margin on vol spikes, the binding constraint flips — the report says which.</p>`,
+    },
     'risk-of-ruin': {
         label: 'Risk of Ruin',
         call: (b) => api.calcRiskOfRuin(b),

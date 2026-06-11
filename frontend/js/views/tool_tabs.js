@@ -13,8 +13,10 @@ import { currentViewToken, viewIsCurrent } from '../app.js';
 
 export function renderToolTabs(mount, { titleKey, title, hintKey, tools, defaultKey }) {
     const tok = currentViewToken();
+    const many = Object.keys(tools).length > 8;
     mount.innerHTML = `
         <h1 data-i18n="${titleKey}" class="view-title">${esc(title)}</h1>
+        ${many ? '<div class="gs-filter-row"><input type="text" class="tt-filter" placeholder="filter tools…"></div>' : ''}
         <div class="gs-filter-row vt-tabs">
             ${Object.entries(tools).map(([k, v]) => `
                 <button class="btn btn-secondary gs-filter vt-tab" data-key="${k}">${esc(v.label)}</button>
@@ -24,6 +26,16 @@ export function renderToolTabs(mount, { titleKey, title, hintKey, tools, default
         <div class="chart-panel"><div class="tt-result muted" data-i18n="${hintKey}">Pick a tool, fill the form, hit Compute.</div></div>
     `;
     try { applyUiI18n(mount); } catch (_) {}
+
+    const filterBox = mount.querySelector('.tt-filter');
+    if (filterBox) {
+        filterBox.addEventListener('input', () => {
+            const q = filterBox.value.trim().toLowerCase();
+            mount.querySelectorAll('.vt-tab').forEach(b => {
+                b.classList.toggle('tt-hidden', q !== '' && !b.textContent.toLowerCase().includes(q));
+            });
+        });
+    }
 
     const body = mount.querySelector('.tt-body');
     const out = mount.querySelector('.tt-result');

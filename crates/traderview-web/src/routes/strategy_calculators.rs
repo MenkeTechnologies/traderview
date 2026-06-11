@@ -33,6 +33,7 @@
 //!   GET  /symbols/:sym/santa-rally       — Hirsch 7-session window stats
 //!   GET  /symbols/:sym/overnight-split   — overnight vs intraday legs
 //!   POST /calc/double-barrier            — target-vs-stop hit-first odds
+//!   POST /calc/futures-sizing            — tick math + margin-capped size
 
 use crate::auth::AuthUser;
 use crate::error::ApiError;
@@ -83,6 +84,7 @@ pub fn router() -> Router<AppState> {
         .route("/symbols/:symbol/santa-rally", get(get_santa_rally))
         .route("/symbols/:symbol/overnight-split", get(get_overnight_split))
         .route("/calc/double-barrier", post(post_double_barrier))
+        .route("/calc/futures-sizing", post(post_futures_sizing))
 }
 
 async fn post_grid_trading(
@@ -459,6 +461,16 @@ async fn post_equity_curve_filter(
         .ok_or_else(|| {
             ApiError::BadRequest("need more trades than the MA length, ma_length >= 2".into())
         })
+}
+
+async fn post_futures_sizing(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<traderview_core::futures_sizing::FuturesSizingInput>,
+) -> Result<Json<traderview_core::futures_sizing::FuturesSizingReport>, ApiError> {
+    traderview_core::futures_sizing::compute(&b)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("invalid sizing inputs".into()))
 }
 
 async fn post_dual_momentum(
