@@ -401,6 +401,14 @@ pub fn us_eastern_offset_hours(now: DateTime<Utc>) -> i64 {
     }
 }
 
+/// US-Eastern wall-clock minutes since midnight — shared clock for
+/// every entry-window check (live gate and backtest replay).
+pub fn us_eastern_minutes(now: DateTime<Utc>) -> u32 {
+    use chrono::Timelike;
+    let local = now + chrono::Duration::hours(us_eastern_offset_hours(now));
+    local.hour() * 60 + local.minute()
+}
+
 fn is_us_rth(now: DateTime<Utc>) -> bool {
     use chrono::{Datelike, Timelike, Weekday};
     let local = now + chrono::Duration::hours(us_eastern_offset_hours(now));

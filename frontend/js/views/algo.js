@@ -1922,6 +1922,7 @@ async function openBacktestModal(mount, s) {
                 <label>Slippage (bps)
                     <input name="slippage_bps" type="number" value="5" min="0" step="0.5">
                 </label>
+                <label class="small"><input type="checkbox" name="apply_gates" checked data-tip="view.algo.tip.apply_gates"> <span data-i18n="view.algo.label.apply_gates">Apply risk gates (entry window, daily cap, loss cooldown)</span></label>
                 <div class="row" style="gap:8px;margin-top:8px">
                     <button type="submit" class="primary">Run backtest</button>
                     <button type="button" id="bt-close">Close</button>
@@ -1956,6 +1957,7 @@ async function openBacktestModal(mount, s) {
             initial_equity: Number(fd.get('initial_equity')),
             fee_per_trade: Number(fd.get('fee_per_trade')),
             slippage_bps: Number(fd.get('slippage_bps')),
+            apply_gates: fd.get('apply_gates') === 'on',
         };
         const out = wrap.querySelector('#bt-results');
         out.innerHTML = '<p class="muted">Running backtest …</p>';
@@ -2028,6 +2030,9 @@ function renderBacktestResult(host, r) {
             <div><strong>Sharpe (bar):</strong> ${sm.sharpe.toFixed(3)}</div>
             <div><strong>Final equity:</strong> ${finalRow}</div>
             <div><strong>Exits:</strong> SL ${sm.exits_by_stop} / TP ${sm.exits_by_tp} / Sig ${sm.exits_by_signal} / EOD ${sm.exits_by_eod}</div>
+            ${r.gate_skips && (r.gate_skips.entry_window + r.gate_skips.daily_entry_cap + r.gate_skips.loss_cooldown) > 0
+                ? `<div><strong>Gate skips:</strong> window ${r.gate_skips.entry_window} / daily cap ${r.gate_skips.daily_entry_cap} / cooldown ${r.gate_skips.loss_cooldown} — entries the gates removed from this run</div>`
+                : ''}
         </div>
         <details ${trades.length ? 'open' : ''}>
             <summary>Last ${trades.length} trades</summary>

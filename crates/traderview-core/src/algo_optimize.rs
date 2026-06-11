@@ -416,6 +416,7 @@ mod tests {
             exits_by_eod: 0,
         };
         let result = AlgoBtResult {
+            gate_skips: crate::algo_backtest::GateSkips::default(),
             strategy_kind: "synthetic",
             trades: vec![],
             equity: vec![],
@@ -454,6 +455,7 @@ mod tests {
             exits_by_eod: 0,
         };
         let r = AlgoBtResult {
+            gate_skips: crate::algo_backtest::GateSkips::default(),
             strategy_kind: "synthetic",
             trades: vec![],
             equity: vec![],
@@ -466,6 +468,7 @@ mod tests {
         // pf=0 (no wins, has losses) returns 0.0 cleanly too.
         summary.profit_factor = 0.0;
         let r2 = AlgoBtResult {
+            gate_skips: crate::algo_backtest::GateSkips::default(),
             strategy_kind: "synthetic",
             trades: vec![],
             equity: vec![],

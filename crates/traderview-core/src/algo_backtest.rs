@@ -46,6 +46,99 @@ fn default_side_mode() -> SideMode {
     SideMode::Long
 }
 
+/// Time-replayable risk gates for backtests — the subset of the live
+/// engine's gates that depend only on the bar clock and the backtest's
+/// own trade history (portfolio- and data-dependent gates like
+/// correlation / earnings can't replay from one bar series).
+#[derive(Debug, Clone, Default, serde::Deserialize)]
+pub struct BtGates {
+    /// US-Eastern minutes since midnight, [start, end).
+    pub entry_window: Option<(u32, u32)>,
+    /// Entries per UTC day.
+    pub max_entries_per_day: Option<usize>,
+    /// Minutes after a losing trade closes before the next entry.
+    pub loss_cooldown_minutes: Option<i64>,
+}
+
+/// Entries each gate blocked during the run — quantifies what the
+/// discipline costs (or saves) historically.
+#[derive(Debug, Clone, Default, Serialize)]
+pub struct GateSkips {
+    pub entry_window: usize,
+    pub daily_entry_cap: usize,
+    pub loss_cooldown: usize,
+}
+
+/// Replay-state for the gates. Pinned directly by unit tests so the
+/// run loop only wires it.
+#[derive(Debug, Clone)]
+pub struct GateState {
+    gates: BtGates,
+    cur_day: Option<chrono::NaiveDate>,
+    entries_today: usize,
+    last_loss_at: Option<DateTime<Utc>>,
+    pub skips: GateSkips,
+}
+
+impl GateState {
+    pub fn new(gates: BtGates) -> Self {
+        Self {
+            gates,
+            cur_day: None,
+            entries_today: 0,
+            last_loss_at: None,
+            skips: GateSkips::default(),
+        }
+    }
+
+    /// None = entry allowed; Some(gate) = blocked (skip counted).
+    pub fn blocks_entry(&mut self, bar_time: DateTime<Utc>) -> Option<&'static str> {
+        let day = bar_time.date_naive();
+        if self.cur_day != Some(day) {
+            self.cur_day = Some(day);
+            self.entries_today = 0;
+        }
+        if let Some(w) = self.gates.entry_window {
+            let m = crate::risk_gate::us_eastern_minutes(bar_time);
+            if !(w.0..w.1).contains(&m) {
+                self.skips.entry_window += 1;
+                return Some("entry_window");
+            }
+        }
+        if let Some(cap) = self.gates.max_entries_per_day {
+            if self.entries_today >= cap {
+                self.skips.daily_entry_cap += 1;
+                return Some("daily_entry_cap");
+            }
+        }
+        if let Some(cd) = self.gates.loss_cooldown_minutes {
+            if let Some(t) = self.last_loss_at {
+                let mins = (bar_time - t).num_minutes();
+                if mins >= 0 && mins < cd {
+                    self.skips.loss_cooldown += 1;
+                    return Some("loss_cooldown");
+                }
+            }
+        }
+        None
+    }
+
+    pub fn on_entry(&mut self, bar_time: DateTime<Utc>) {
+        let day = bar_time.date_naive();
+        if self.cur_day != Some(day) {
+            self.cur_day = Some(day);
+            self.entries_today = 0;
+        }
+        self.entries_today += 1;
+    }
+
+    pub fn on_trade_closed(&mut self, pnl: f64, exit_time: DateTime<Utc>) {
+        if pnl < 0.0 {
+            self.last_loss_at = Some(exit_time);
+        }
+    }
+}
+
 impl Default for BacktestConfig {
     fn default() -> Self {
         Self {
@@ -121,6 +214,8 @@ pub struct AlgoBtResult {
     pub trades: Vec<AlgoBtTrade>,
     pub equity: Vec<AlgoBtPoint>,
     pub summary: AlgoBtSummary,
+    /// Entries blocked per gate (all zero when no gates were applied).
+    pub gate_skips: GateSkips,
 }
 
 #[derive(Debug, Clone)]
@@ -141,6 +236,19 @@ pub fn run(
     sizing: &Sizing,
     cfg: BacktestConfig,
 ) -> AlgoBtResult {
+    run_with_gates(bars, strategy, sizing, cfg, BtGates::default())
+}
+
+/// The gated run: same engine, with the time-replayable discipline
+/// gates applied to entries (exits are never gated, matching live).
+pub fn run_with_gates(
+    bars: &[PriceBar],
+    strategy: &dyn Strategy,
+    sizing: &Sizing,
+    cfg: BacktestConfig,
+    gates: BtGates,
+) -> AlgoBtResult {
+    let mut gate_state = GateState::new(gates);
     let n = bars.len();
     let slip = cfg.slippage_bps / 10_000.0;
     let mut equity = cfg.initial_equity;
@@ -230,11 +338,16 @@ pub fn run(
                 bars_held: i - pos.entry_index,
                 exit_reason: reason,
             });
+            gate_state.on_trade_closed(net, bar_time);
             open = None;
         }
 
         // ── entry eval ─────────────────────────────────────────────
-        if open.is_none() && i + 1 >= min_bars && i + 1 < n {
+        if open.is_none()
+            && i + 1 >= min_bars
+            && i + 1 < n
+            && gate_state.blocks_entry(bar_time).is_none()
+        {
             if let Some(sig) = strategy.evaluate_entry(&bars[..=i], cfg.side_mode) {
                 let qty = size_shares(equity, sig.entry_price, sig.stop_distance, sizing) as f64;
                 if qty > 0.0 {
@@ -254,6 +367,7 @@ pub fn run(
                         entry_index: i + 1,
                         entry_time: bars[i + 1].bar_time,
                     });
+                    gate_state.on_entry(bar_time);
                 }
             }
         }
@@ -298,6 +412,7 @@ pub fn run(
     AlgoBtResult {
         strategy_kind: kind_str,
         trades,
+        gate_skips: gate_state.skips,
         equity: points,
         summary,
     }
@@ -771,5 +886,75 @@ mod tests {
             + res.summary.exits_by_signal
             + res.summary.exits_by_eod;
         assert_eq!(by_reason, res.summary.trades);
+    }
+}
+
+#[cfg(test)]
+mod gate_state_tests {
+    use super::*;
+    use chrono::TimeZone;
+
+    fn t(h: u32, m: u32) -> DateTime<Utc> {
+        // June 2026 -> EDT (UTC-4).
+        Utc.with_ymd_and_hms(2026, 6, 10, h, m, 0).unwrap()
+    }
+
+    #[test]
+    fn entry_window_blocks_outside_and_counts() {
+        let mut g = GateState::new(BtGates {
+            entry_window: Some((600, 930)), // 10:00-15:30 ET
+            ..BtGates::default()
+        });
+        // 14:00 UTC = 10:00 EDT — allowed.
+        assert_eq!(g.blocks_entry(t(14, 0)), None);
+        // 13:30 UTC = 09:30 EDT — blocked and counted.
+        assert_eq!(g.blocks_entry(t(13, 30)), Some("entry_window"));
+        assert_eq!(g.skips.entry_window, 1);
+    }
+
+    #[test]
+    fn daily_cap_resets_on_a_new_day() {
+        let mut g = GateState::new(BtGates {
+            max_entries_per_day: Some(2),
+            ..BtGates::default()
+        });
+        let day1 = t(14, 0);
+        assert_eq!(g.blocks_entry(day1), None);
+        g.on_entry(day1);
+        assert_eq!(g.blocks_entry(day1), None);
+        g.on_entry(day1);
+        // Third entry the same day: blocked.
+        assert_eq!(g.blocks_entry(day1), Some("daily_entry_cap"));
+        // Next day: counter reset.
+        let day2 = Utc.with_ymd_and_hms(2026, 6, 11, 14, 0, 0).unwrap();
+        assert_eq!(g.blocks_entry(day2), None);
+        assert_eq!(g.skips.daily_entry_cap, 1);
+    }
+
+    #[test]
+    fn loss_cooldown_blocks_then_releases() {
+        let mut g = GateState::new(BtGates {
+            loss_cooldown_minutes: Some(30),
+            ..BtGates::default()
+        });
+        g.on_trade_closed(-50.0, t(14, 0));
+        // 10 minutes later: blocked.
+        assert_eq!(g.blocks_entry(t(14, 10)), Some("loss_cooldown"));
+        // 30 minutes later: clear (window is [0, 30)).
+        assert_eq!(g.blocks_entry(t(14, 30)), None);
+        // A WINNING close never arms the clock.
+        let mut g2 = GateState::new(BtGates {
+            loss_cooldown_minutes: Some(30),
+            ..BtGates::default()
+        });
+        g2.on_trade_closed(80.0, t(14, 0));
+        assert_eq!(g2.blocks_entry(t(14, 1)), None);
+    }
+
+    #[test]
+    fn no_gates_never_blocks() {
+        let mut g = GateState::new(BtGates::default());
+        assert_eq!(g.blocks_entry(t(2, 0)), None);
+        assert_eq!(g.skips.entry_window + g.skips.daily_entry_cap + g.skips.loss_cooldown, 0);
     }
 }

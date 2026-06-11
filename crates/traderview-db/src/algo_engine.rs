@@ -613,10 +613,7 @@ pub fn parse_entry_window(s: &str) -> Option<(u32, u32)> {
 /// Is `now` inside the Eastern wall-clock window? Start inclusive,
 /// end exclusive; offset via the shared chrono-tz-free approximation.
 pub fn in_entry_window(now: chrono::DateTime<chrono::Utc>, window: (u32, u32)) -> bool {
-    use chrono::Timelike;
-    let offset = traderview_core::risk_gate::us_eastern_offset_hours(now);
-    let local = now + chrono::Duration::hours(offset);
-    let minutes = local.hour() * 60 + local.minute();
+    let minutes = traderview_core::risk_gate::us_eastern_minutes(now);
     (window.0..window.1).contains(&minutes)
 }
 

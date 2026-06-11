@@ -524,6 +524,11 @@ struct BacktestBody {
     fee_per_trade: Option<f64>,
     #[serde(default)]
     slippage_bps: Option<f64>,
+    /// Replay the strategy's time-replayable risk gates (entry window,
+    /// daily entry cap, loss cooldown) inside the backtest, so the
+    /// simulated system is the one that will actually run live.
+    #[serde(default)]
+    apply_gates: bool,
 }
 
 fn default_bt_symbol() -> String {
@@ -603,7 +608,30 @@ async fn post_backtest(
         slippage_bps: body.slippage_bps.unwrap_or(5.0),
         side_mode,
     };
-    let result = traderview_core::algo_backtest::run(&bars, strat.as_ref(), &sizing, cfg);
+    let gates = if body.apply_gates {
+        traderview_core::algo_backtest::BtGates {
+            entry_window: strategy
+                .risk_gates
+                .get("entry_window")
+                .and_then(|v| v.as_str())
+                .and_then(traderview_db::algo_engine::parse_entry_window),
+            max_entries_per_day: strategy
+                .risk_gates
+                .get("max_entries_per_day")
+                .and_then(|v| v.as_u64())
+                .filter(|n| *n > 0)
+                .map(|n| n as usize),
+            loss_cooldown_minutes: strategy
+                .risk_gates
+                .get("loss_cooldown_minutes")
+                .and_then(|v| v.as_i64())
+                .filter(|n| *n > 0),
+        }
+    } else {
+        traderview_core::algo_backtest::BtGates::default()
+    };
+    let result =
+        traderview_core::algo_backtest::run_with_gates(&bars, strat.as_ref(), &sizing, cfg, gates);
 
     // Persist the summary so the history modal can show drift across
     // re-runs without re-fetching bars. Failure to persist isn't fatal
