@@ -17279,6 +17279,7 @@
   "view.paper.h2.bracket_ticket": "Bracket (OCO) ticket",
   "view.paper.h2.dividends": "受取配当金",
   "view.paper.h2.equity_curve": "Equity curve",
+  "view.paper.h2.greeks": "Option greeks",
   "view.paper.h2.leaderboard": "Strategy leaderboard",
   "view.paper.h2.notional_chart": "シンボルごとの位置の表記",
   "view.paper.h2.open_positions": "オープンポジション",

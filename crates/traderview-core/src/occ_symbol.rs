@@ -75,6 +75,12 @@ pub fn fill_price(bid: Option<f64>, ask: Option<f64>, last: Option<f64>) -> Opti
     }
 }
 
+/// Year-fraction to expiry, floored at 0 (expired/today = 0 — the
+/// greeks core's intrinsic-only path takes over there).
+pub fn years_to_expiry(expiry: NaiveDate, today: NaiveDate) -> f64 {
+    ((expiry - today).num_days().max(0) as f64) / 365.0
+}
+
 /// Expiration intrinsic value: what cash settlement pays per share.
 pub fn intrinsic(call: bool, strike: f64, spot: f64) -> f64 {
     if call {
@@ -111,6 +117,14 @@ mod tests {
         assert!(parse("AAPL260117C00000000").is_none()); // zero strike
         assert!(!is_occ("TSLA"));
         assert!(is_occ("TSLA270115P00200000"));
+    }
+
+    #[test]
+    fn years_to_expiry_pins_floor_and_one_year() {
+        let d = |y, m, dd| NaiveDate::from_ymd_opt(y, m, dd).unwrap();
+        assert!((years_to_expiry(d(2027, 6, 10), d(2026, 6, 10)) - 1.0).abs() < 1e-9);
+        assert_eq!(years_to_expiry(d(2026, 6, 10), d(2026, 6, 10)), 0.0);
+        assert_eq!(years_to_expiry(d(2026, 6, 1), d(2026, 6, 10)), 0.0);
     }
 
     #[test]

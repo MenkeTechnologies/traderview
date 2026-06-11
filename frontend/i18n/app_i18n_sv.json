@@ -17279,6 +17279,7 @@
   "view.paper.h2.bracket_ticket": "Bracket (OCO) ticket",
   "view.paper.h2.dividends": "Mottagna utdelningar",
   "view.paper.h2.equity_curve": "Equity curve",
+  "view.paper.h2.greeks": "Option greeks",
   "view.paper.h2.leaderboard": "Strategy leaderboard",
   "view.paper.h2.notional_chart": "Position tänkt per symbol",
   "view.paper.h2.open_positions": "Öppna positioner",

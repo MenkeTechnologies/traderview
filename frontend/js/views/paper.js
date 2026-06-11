@@ -157,6 +157,11 @@ export async function renderPaper(mount) {
             </div>
         </div>
 
+        <div class="chart-panel" id="paper-greeks-panel" style="display:none">
+            <h2 data-i18n="view.paper.h2.greeks">Option greeks</h2>
+            <div id="paper-greeks"></div>
+        </div>
+
         ${accounts.length > 1 ? `
         <div class="chart-panel">
             <h2 data-i18n="view.paper.h2.leaderboard">Strategy leaderboard</h2>
@@ -215,6 +220,11 @@ export async function renderPaper(mount) {
     api.paperEquityHistory(acct.id)
         .then(h => { if (viewIsCurrent(tok)) renderEquityCurve(h); })
         .catch(() => {});
+    if (positions.some(p => p.symbol.length > 15)) {
+        api.paperOptionGreeks(acct.id)
+            .then(g => { if (viewIsCurrent(tok)) renderGreeks(g); })
+            .catch(() => {});
+    }
     if (accounts.length > 1) {
         api.paperAccountComparison()
             .then(rows => { if (viewIsCurrent(tok)) renderLeaderboard(rows, acct.id); })
@@ -349,6 +359,32 @@ export async function renderPaper(mount) {
             renderPaper(mount);
         } catch (err) { showToast(t('toast.error.api', { err: err.message }), { level: 'error' }); }
     });
+}
+
+function renderGreeks(g) {
+    const panel = document.getElementById('paper-greeks-panel');
+    const el = document.getElementById('paper-greeks');
+    if (!panel || !el || !g.positions.length) return;
+    panel.style.display = '';
+    const f = (v, d = 1) => v != null ? v.toFixed(d) : '\u2014';
+    el.innerHTML = `
+        <p class="small"><strong>Net:</strong> \u0394 ${f(g.net_delta)} \u00b7 \u0393 ${f(g.net_gamma, 3)} \u00b7 \u0398/day ${f(g.net_theta_per_day, 2)} \u00b7 vega ${f(g.net_vega, 1)}
+        <span class="muted">(positions missing chain IV are listed but excluded from nets)</span></p>
+        <table class="trades">
+            <thead><tr><th>Contract</th><th>Qty</th><th>Spot</th><th>IV</th><th>\u0394</th><th>\u0393</th><th>\u0398/day</th><th>Vega</th></tr></thead>
+            <tbody>${g.positions.map(p => `
+                <tr>
+                    <td class="small">${esc(p.symbol)}</td>
+                    <td>${fmt(p.qty, 0)}</td>
+                    <td>${p.spot.toFixed(2)}</td>
+                    <td>${p.iv != null ? (p.iv * 100).toFixed(1) + '%' : '\u2014'}</td>
+                    <td class="${(p.delta ?? 0) >= 0 ? 'pos' : 'neg'}">${f(p.delta)}</td>
+                    <td>${f(p.gamma, 3)}</td>
+                    <td class="${(p.theta_per_day ?? 0) >= 0 ? 'pos' : 'neg'}">${f(p.theta_per_day, 2)}</td>
+                    <td>${f(p.vega)}</td>
+                </tr>`).join('')}
+            </tbody>
+        </table>`;
 }
 
 function renderLeaderboard(rows, currentId) {

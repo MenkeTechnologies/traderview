@@ -925,6 +925,111 @@ pub async fn submit_spread(
     })
 }
 
+/// Risk-free rate assumption for paper option greeks. Constant by
+/// design — paper greeks are for position awareness, not pricing desks.
+const GREEKS_RISK_FREE: f64 = 0.045;
+
+#[derive(Debug, Clone, Serialize)]
+pub struct PositionGreeks {
+    pub symbol: String,
+    pub qty: Decimal,
+    pub spot: f64,
+    pub iv: Option<f64>,
+    /// Position-scaled (× qty × 100); None when the chain has no IV.
+    pub delta: Option<f64>,
+    pub gamma: Option<f64>,
+    pub theta_per_day: Option<f64>,
+    pub vega: Option<f64>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct AccountOptionGreeks {
+    pub positions: Vec<PositionGreeks>,
+    /// Sums over positions WITH greeks; positions missing IV are
+    /// listed but excluded — and that exclusion is visible per row.
+    pub net_delta: f64,
+    pub net_gamma: f64,
+    pub net_theta_per_day: f64,
+    pub net_vega: f64,
+}
+
+/// BS greeks for every OCC position on the account, scaled by qty and
+/// the 100× multiplier (shorts scale negative naturally). IV and spot
+/// come from the chain; a contract the chain doesn't quote IV for is
+/// listed with None greeks rather than silently dropped.
+pub async fn option_greeks(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+) -> anyhow::Result<AccountOptionGreeks> {
+    let owner: Option<(Uuid,)> = sqlx::query_as("SELECT user_id FROM paper_accounts WHERE id = $1")
+        .bind(account_id)
+        .fetch_optional(pool)
+        .await?;
+    if !matches!(owner, Some((u,)) if u == user_id) {
+        anyhow::bail!("forbidden");
+    }
+    let rows: Vec<(String, Decimal)> = sqlx::query_as(
+        "SELECT symbol, qty FROM paper_positions WHERE paper_account_id = $1 ORDER BY symbol",
+    )
+    .bind(account_id)
+    .fetch_all(pool)
+    .await?;
+    let today = Utc::now().date_naive();
+    let mut positions = Vec::new();
+    let (mut nd, mut ng, mut nt, mut nv) = (0.0, 0.0, 0.0, 0.0);
+    for (symbol, qty) in rows {
+        let Some(occ) = traderview_core::occ_symbol::parse(&symbol) else {
+            continue; // equities have no option greeks
+        };
+        let chain = crate::options::chain(&occ.underlying, Some(occ.expiry)).await?;
+        let list = if occ.call { &chain.calls } else { &chain.puts };
+        let contract = list.iter().find(|c| (c.strike - occ.strike).abs() < 1e-6);
+        let iv = contract.and_then(|c| c.implied_vol).filter(|v| *v > 0.0);
+        let qty_f: f64 = qty.to_string().parse().unwrap_or(0.0);
+        let scale = qty_f * 100.0;
+        let g = iv.map(|sigma| {
+            let kind = if occ.call {
+                traderview_core::greeks::OptKind::Call
+            } else {
+                traderview_core::greeks::OptKind::Put
+            };
+            traderview_core::greeks::price_and_greeks(
+                kind,
+                chain.spot,
+                occ.strike,
+                traderview_core::occ_symbol::years_to_expiry(occ.expiry, today),
+                sigma,
+                GREEKS_RISK_FREE,
+                0.0,
+            )
+        });
+        if let Some(g) = &g {
+            nd += g.delta * scale;
+            ng += g.gamma * scale;
+            nt += g.theta * scale;
+            nv += g.vega * scale;
+        }
+        positions.push(PositionGreeks {
+            symbol,
+            qty,
+            spot: chain.spot,
+            iv,
+            delta: g.as_ref().map(|g| g.delta * scale),
+            gamma: g.as_ref().map(|g| g.gamma * scale),
+            theta_per_day: g.as_ref().map(|g| g.theta * scale),
+            vega: g.as_ref().map(|g| g.vega * scale),
+        });
+    }
+    Ok(AccountOptionGreeks {
+        positions,
+        net_delta: nd,
+        net_gamma: ng,
+        net_theta_per_day: nt,
+        net_vega: nv,
+    })
+}
+
 /// Settle expired option positions at intrinsic value — cash
 /// settlement against the UNDERLYING's spot, the day after expiry so
 /// expiry-day trading is never interrupted. ITM pays intrinsic × 100;
