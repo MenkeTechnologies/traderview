@@ -1,4 +1,4 @@
--- 0082 — Paper dividend crediting: cash credits for paper positions held
+-- 0084 — Paper dividend crediting: cash credits for paper positions held
 -- through an ex-date (shorts are debited). One row per account × symbol ×
 -- ex-date; the UNIQUE constraint makes the background crediting pass
 -- idempotent across restarts and overlapping runs.
