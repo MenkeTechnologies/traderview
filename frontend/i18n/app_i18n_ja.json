@@ -2542,6 +2542,8 @@
   "tile.str-loophole.label": "STRループホール",
   "tile.strategy-alerts.desc": "戦略トリガーアラート",
   "tile.strategy-alerts.label": "戦略アラート",
+  "tile.strategy-tools.desc": "フィルター可能なタブビューに71のクオンツ計算機 — サイジング（グリッド/固定比率/ケリー基準/先物）、オプション数学（Heston、POP、パリティ裁定、デイリー）、イベントスタディ（OpEx、サンタ、配当落ち、分割）、スクリーナー（季節性/リスク/モメンタム/平均回帰）、マクロ + バリュエーション指標",
+  "tile.strategy-tools.label": "戦略ツール",
   "tile.strategy.desc": "ウォークフォーワード",
   "tile.strategy.label": "// STRATEGY & AUTOMATION(ストラテジー&オートメーション)",
   "tile.stress-test.desc": "ポートフォリオP&Lヒートマップ価格×IV×時間の衝撃",

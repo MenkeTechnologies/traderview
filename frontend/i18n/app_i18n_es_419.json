@@ -2542,6 +2542,8 @@
   "tile.str-loophole.label": "Laguna STR",
   "tile.strategy-alerts.desc": "Alertas de activación de estrategia",
   "tile.strategy-alerts.label": "Alertas de estrategia",
+  "tile.strategy-tools.desc": "71 calculadoras cuantitativas tras una vista de pestañas filtrable — dimensionamiento (grid/fixed-ratio/contexto Kelly/futuros), matemática de opciones (Heston, POP, arbitrajes de paridad, diarias), estudios de eventos (OpEx, Santa, ex-div, splits), screeners (estacionalidad/riesgo/momentum/reversión a la media), indicadores macro + de valoración",
+  "tile.strategy-tools.label": "Herramientas de estrategia",
   "tile.strategy.desc": "caminar hacia adelante",
   "tile.strategy.label": "// ESTRATEGIA Y AUTOMATIZACIÓN', ['backtest",
   "tile.stress-test.desc": "Mapa de calor de pérdidas y ganancias de la cartera por debajo del precio × IV × shocks temporales",

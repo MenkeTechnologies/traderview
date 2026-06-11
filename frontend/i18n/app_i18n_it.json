@@ -2542,6 +2542,8 @@
   "tile.str-loophole.label": "STR Scappatoia",
   "tile.strategy-alerts.desc": "Avvisi che attivano la strategia",
   "tile.strategy-alerts.label": "Avvisi strategici",
+  "tile.strategy-tools.desc": "71 calcolatori quantitativi dietro un'unica vista a schede filtrabile — dimensionamento (grid/fixed-ratio/contesto Kelly/futures), matematica delle opzioni (Heston, POP, arbitraggi di parità, giornaliere), studi di eventi (OpEx, Santa, ex-div, split), screener (stagionalità/rischio/momentum/mean-reversion), indicatori macro + di valutazione",
+  "tile.strategy-tools.label": "Strumenti di strategia",
   "tile.strategy.desc": "camminare in avanti",
   "tile.strategy.label": "// STRATEGIA E AUTOMAZIONE', ['backtest",
   "tile.stress-test.desc": "Mappa termica dei profitti e delle perdite del portafoglio in base agli shock di prezzo × IV × temporali",

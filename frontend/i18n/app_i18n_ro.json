@@ -2542,6 +2542,8 @@
   "tile.str-loophole.label": "STR Loophole",
   "tile.strategy-alerts.desc": "Alerte de declanșare a strategiei",
   "tile.strategy-alerts.label": "Alerte strategice",
+  "tile.strategy-tools.desc": "71 de calculatoare cantitative într-o singură vizualizare cu file filtrabilă — dimensionare (grid/fixed-ratio/context Kelly/futures), matematica opțiunilor (Heston, POP, arbitraje de paritate, zilnice), studii de evenimente (OpEx, Santa, ex-div, splituri), screenere (sezonalitate/risc/momentum/mean-reversion), indicatori macro + de evaluare",
+  "tile.strategy-tools.label": "Instrumente de strategie",
   "tile.strategy.desc": "mers înainte",
   "tile.strategy.label": "// STRATEGIE & AUTOMARE,\"",
   "tile.stress-test.desc": "Portfolio P&L heatmap la preț × IV × șocuri temporale",

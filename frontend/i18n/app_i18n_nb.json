@@ -2542,6 +2542,8 @@
   "tile.str-loophole.label": "STR Loophole",
   "tile.strategy-alerts.desc": "Strategi-trigger varsler",
   "tile.strategy-alerts.label": "Strategivarsler",
+  "tile.strategy-tools.desc": "71 kvant-kalkulatorer bak én filtrerbar fanevisning — posisjonsstørrelse (grid/fixed-ratio/Kelly-kontekst/futures), opsjonsmatematikk (Heston, POP, paritetsarbitrasjer, daglige), hendelsesstudier (OpEx, Santa, ex-div, splitter), screenere (sesongvariasjon/risiko/momentum/mean-reversion), makro- + verdsettelsesmålere",
+  "tile.strategy-tools.label": "Strategiverktøy",
   "tile.strategy.desc": "gå framover",
   "tile.strategy.label": "// STRATEGY & AUTOMATION, ['backtest",
   "tile.stress-test.desc": "Portfolio P&L varmekart under pris × IV × tid sjokk",

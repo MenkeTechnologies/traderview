@@ -2542,6 +2542,8 @@
   "tile.str-loophole.label": "STR Loophole",
   "tile.strategy-alerts.desc": "Strategiaa koskevat hälytykset",
   "tile.strategy-alerts.label": "Strategiavaroitus",
+  "tile.strategy-tools.desc": "71 kvanttilaskuria yhden suodatettavan välilehtinäkymän takana — position mitoitus (grid/fixed-ratio/Kelly-konteksti/futuurit), optiomatematiikka (Heston, POP, pariteettiarbitraasit, päivittäiset), tapahtumatutkimukset (OpEx, Santa, ex-div, splitit), seulonnat (kausiluonteisuus/riski/momentum/mean-reversion), makro- + arvostusmittarit",
+  "tile.strategy-tools.label": "Strategiatyökalut",
   "tile.strategy.desc": "kävelykello",
   "tile.strategy.label": "// STRATEGIA & AUTOMOINTI,\" [\"backtest",
   "tile.stress-test.desc": "Portfolion P&L lämpökartta hintaan × IV × aikasokit",

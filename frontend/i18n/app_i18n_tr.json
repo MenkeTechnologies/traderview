@@ -2542,6 +2542,8 @@
   "tile.str-loophole.label": "STR döngü delik",
   "tile.strategy-alerts.desc": "Strateji-trigger uyarıları",
   "tile.strategy-alerts.label": "Strateji Uyarıları",
+  "tile.strategy-tools.desc": "Filtrelenebilir tek sekmeli görünümde 71 kantitatif hesaplayıcı — boyutlandırma (grid/sabit oran/Kelly bağlamı/vadeli işlemler), opsiyon matematiği (Heston, POP, parite arbitrajları, günlükler), olay çalışmaları (OpEx, Santa, temettü hariç, bölünmeler), tarayıcılar (mevsimsellik/risk/momentum/ortalamaya dönüş), makro + değerleme göstergeleri",
+  "tile.strategy-tools.label": "Strateji araçları",
   "tile.strategy.desc": "yürüyüş- ileri",
   "tile.strategy.label": "// STRATEGY & AUTOMATION', [geri test]",
   "tile.stress-test.desc": "Portfolio P&L ısımap fiyat altında × IV × zaman şokları",

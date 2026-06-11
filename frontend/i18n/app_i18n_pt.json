@@ -2542,6 +2542,8 @@
   "tile.str-loophole.label": "Brecha de FOR",
   "tile.strategy-alerts.desc": "Alertas de gatilho de estratégia",
   "tile.strategy-alerts.label": "Alertas de estratégia",
+  "tile.strategy-tools.desc": "71 calculadoras quantitativas atrás de uma vista de separadores filtrável — dimensionamento (grid/fixed-ratio/contexto Kelly/futuros), matemática de opções (Heston, POP, arbitragens de paridade, diárias), estudos de eventos (OpEx, Santa, ex-div, splits), screeners (sazonalidade/risco/momentum/reversão à média), indicadores macro + de avaliação",
+  "tile.strategy-tools.label": "Ferramentas de estratégia",
   "tile.strategy.desc": "avançar",
   "tile.strategy.label": "// ESTRATÉGIA E AUTOMAÇÃO', ['backtest",
   "tile.stress-test.desc": "Mapa de calor do P&L do portfólio abaixo do preço × IV × choques temporais",

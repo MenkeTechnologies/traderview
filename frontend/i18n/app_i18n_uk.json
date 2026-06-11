@@ -2542,6 +2542,8 @@
   "tile.str-loophole.label": "Стрижка",
   "tile.strategy-alerts.desc": "Стратегія-тригерні оповіщення",
   "tile.strategy-alerts.label": "Стратегії Alerts",
+  "tile.strategy-tools.desc": "71 квант-калькулятор в одному фільтрованому вигляді з вкладками — сайзинг (сітка/fixed-ratio/контекст Келлі/ф'ючерси), математика опціонів (Хестон, POP, паритетні арбітражі, денні), event-study (OpEx, Санта, екс-дивіденд, спліти), скринери (сезонність/ризик/моментум/повернення до середнього), макро- + оціночні індикатори",
+  "tile.strategy-tools.label": "Інструменти стратегій",
   "tile.strategy.desc": "прогулянка",
   "tile.strategy.label": "// STRATEGY & AUTOMATION', ['backtest",
   "tile.stress-test.desc": "Портфоліо P&L теплової карти за ціною × IV × шоків часу",

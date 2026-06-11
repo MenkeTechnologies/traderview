@@ -2542,6 +2542,8 @@
   "tile.str-loophole.label": "Lintasan STR",
   "tile.strategy-alerts.desc": "Peringatanpemicu",
   "tile.strategy-alerts.label": "Alerts Strategi",
+  "tile.strategy-tools.desc": "71 kalkulator kuantitatif di balik satu tampilan tab yang dapat difilter — penentuan ukuran (grid/fixed-ratio/konteks Kelly/futures), matematika opsi (Heston, POP, arbitrase paritas, harian), studi peristiwa (OpEx, Santa, ex-div, split), screener (musiman/risiko/momentum/mean-reversion), pengukur makro + valuasi",
+  "tile.strategy-tools.label": "Alat strategi",
   "tile.strategy.desc": "walk -forward",
   "tile.strategy.label": "/ / STRATEGY & AUTOMATION ', [' backtest",
   "tile.stress-test.desc": "Portfolio P & amp; L heatmap dibawah harga × IV × time shock",

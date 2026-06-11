@@ -2542,6 +2542,8 @@
   "tile.str-loophole.label": "Faille STR",
   "tile.strategy-alerts.desc": "Alertes déclencheurs de stratégie",
   "tile.strategy-alerts.label": "Alertes stratégiques",
+  "tile.strategy-tools.desc": "71 calculateurs quantitatifs derrière une vue à onglets filtrable — dimensionnement (grid/fixed-ratio/contexte Kelly/futures), maths des options (Heston, POP, arbitrages de parité, quotidiens), études d'événements (OpEx, Santa, ex-div, splits), screeners (saisonnalité/risque/momentum/mean-reversion), jauges macro + valorisation",
+  "tile.strategy-tools.label": "Outils de stratégie",
   "tile.strategy.desc": "avancer",
   "tile.strategy.label": "// STRATÉGIE & AUTOMATISATION', ['backtest",
   "tile.stress-test.desc": "Carte thermique P&amp;L du portefeuille sous prix × IV × chocs temporels",

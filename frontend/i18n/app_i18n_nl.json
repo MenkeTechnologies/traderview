@@ -2542,6 +2542,8 @@
   "tile.str-loophole.label": "STR maas in de wet",
   "tile.strategy-alerts.desc": "Waarschuwingen voor strategietriggers",
   "tile.strategy-alerts.label": "Strategiewaarschuwingen",
+  "tile.strategy-tools.desc": "71 kwantitatieve rekentools achter één filterbare tabbladweergave — positiegrootte (grid/fixed-ratio/Kelly-context/futures), optiewiskunde (Heston, POP, pariteitsarbitrages, dagelijks), eventstudies (OpEx, Santa, ex-div, splits), screeners (seizoensgebondenheid/risico/momentum/mean-reversion), macro- + waarderingsmeters",
+  "tile.strategy-tools.label": "Strategietools",
   "tile.strategy.desc": "loop vooruit",
   "tile.strategy.label": "// STRATEGIE & AUTOMATISERING', ['backtest",
   "tile.stress-test.desc": "Portfolio P&L heatmap onder prijs × IV × tijdschokken",

@@ -2542,6 +2542,8 @@
   "tile.str-loophole.label": "STR Loophole",
   "tile.strategy-alerts.desc": "Strategy-trigger alerts",
   "tile.strategy-alerts.label": "Strategy Alerts",
+  "tile.strategy-tools.desc": "71 quant calculators behind one filterable tabbed view — sizing (grid/fixed-ratio/Kelly-context/futures), options desk math (Heston, POP, parity arbs, dailies), event studies (OpEx, Santa, ex-div, splits), screeners (seasonality/risk/momentum/mean-reversion), macro + valuation gauges",
+  "tile.strategy-tools.label": "Strategy Tools",
   "tile.strategy.desc": "walk-forward",
   "tile.strategy.label": "// STRATEGY & AUTOMATION', ['backtest",
   "tile.stress-test.desc": "Portfolio P&amp;L heatmap under price × IV × time shocks",

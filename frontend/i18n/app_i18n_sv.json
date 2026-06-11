@@ -2542,6 +2542,8 @@
   "tile.str-loophole.label": "STR kryphål",
   "tile.strategy-alerts.desc": "Strategiutlösare varningar",
   "tile.strategy-alerts.label": "Strategivarningar",
+  "tile.strategy-tools.desc": "71 kvantkalkylatorer bakom en filtrerbar flikvy — positionsstorlek (grid/fixed-ratio/Kelly-kontext/terminer), optionsmatematik (Heston, POP, paritetsarbitrage, dagliga), händelsestudier (OpEx, Santa, x-datum, splittar), screeners (säsongsvariation/risk/momentum/mean-reversion), makro- + värderingsmätare",
+  "tile.strategy-tools.label": "Strategiverktyg",
   "tile.strategy.desc": "gå framåt",
   "tile.strategy.label": "// STRATEGI & AUTOMATION', ['backtest",
   "tile.stress-test.desc": "Portfölj P&L värmekarta under pris × IV × tidschocker",

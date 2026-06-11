@@ -2542,6 +2542,8 @@
   "tile.str-loophole.label": "STR 루프홀",
   "tile.strategy-alerts.desc": "전략 트리거 경고",
   "tile.strategy-alerts.label": "전략 경고",
+  "tile.strategy-tools.desc": "필터링 가능한 탭 뷰 하나에 71개의 퀀트 계산기 — 사이징(그리드/고정비율/켈리 기준/선물), 옵션 수학(Heston, POP, 패리티 차익거래, 데일리), 이벤트 스터디(OpEx, 산타, 배당락, 분할), 스크리너(계절성/리스크/모멘텀/평균회귀), 매크로 + 밸류에이션 게이지",
+  "tile.strategy-tools.label": "전략 도구",
   "tile.strategy.desc": "오시는 길",
   "tile.strategy.label": "// STRATEGY & AUTOMATION', ['backtest''",
   "tile.stress-test.desc": "포트폴리오 P&L heatmap 가격 × IV × 시간 충격",

@@ -2542,6 +2542,8 @@
   "tile.str-loophole.label": "STR hurok",
   "tile.strategy-alerts.desc": "Stratégia - figyelmeztető jelzések",
   "tile.strategy-alerts.label": "Stratégiai figyelmeztetések",
+  "tile.strategy-tools.desc": "71 kvant-kalkulátor egyetlen szűrhető füles nézet mögött — pozícióméretezés (grid/fixed-ratio/Kelly-kontextus/futures), opciós matematika (Heston, POP, paritás-arbitrázsok, napiak), eseménytanulmányok (OpEx, Santa, ex-div, splitek), szűrők (szezonalitás/kockázat/momentum/mean-reversion), makró + értékelési mutatók",
+  "tile.strategy-tools.label": "Stratégiai eszközök",
   "tile.strategy.desc": "előre",
   "tile.strategy.label": "/ / STRATÉGIA ÉS AUTOMÁCIÓ \", [\" háttérpróba \"",
   "tile.stress-test.desc": "Portfolio P & amp; L hőtérkép ár × IV × idősokkok",

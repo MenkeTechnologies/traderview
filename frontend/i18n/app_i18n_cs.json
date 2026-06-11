@@ -2542,6 +2542,8 @@
   "tile.str-loophole.label": "Uzávěrka STR",
   "tile.strategy-alerts.desc": "Výstražná signalizace",
   "tile.strategy-alerts.label": "Strategické výstrahy",
+  "tile.strategy-tools.desc": "71 kvantitativních kalkulaček v jednom filtrovatelném zobrazení se záložkami — dimenzování (grid/fixed-ratio/Kelly kontext/futures), opční matematika (Heston, POP, paritní arbitráže, denní), event studie (OpEx, Santa, ex-div, splity), screenery (sezónnost/riziko/momentum/mean-reversion), makro + valuační ukazatele",
+  "tile.strategy-tools.label": "Strategické nástroje",
   "tile.strategy.desc": "dopředu",
   "tile.strategy.label": "/ / STRATEGIE & AUTOMATION \", ['backtest",
   "tile.stress-test.desc": "Portfolio P & amp; L heatmap v ceně × IV × časové šoky",

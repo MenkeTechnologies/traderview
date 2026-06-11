@@ -2542,6 +2542,8 @@
   "tile.str-loophole.label": "STR Luka",
   "tile.strategy-alerts.desc": "Alerty wyzwalające strategię",
   "tile.strategy-alerts.label": "Alerty strategiczne",
+  "tile.strategy-tools.desc": "71 kalkulatorów kwantowych w jednym filtrowalnym widoku z zakładkami — wielkość pozycji (grid/fixed-ratio/kontekst Kelly/futures), matematyka opcji (Heston, POP, arbitraże parytetu, dzienne), studia zdarzeń (OpEx, Santa, ex-div, splity), skanery (sezonowość/ryzyko/momentum/mean-reversion), wskaźniki makro + wyceny",
+  "tile.strategy-tools.label": "Narzędzia strategii",
   "tile.strategy.desc": "iść do przodu",
   "tile.strategy.label": "// STRATEGIA I AUTOMATYZACJA', ['test historyczny",
   "tile.stress-test.desc": "Mapa cieplna portfela zysków i strat w ramach szoków cenowych × IV × czasowych",

@@ -2542,6 +2542,8 @@
   "tile.str-loophole.label": "STR 循环",
   "tile.strategy-alerts.desc": "战略触发警报",
   "tile.strategy-alerts.label": "战略警报",
+  "tile.strategy-tools.desc": "71 个量化计算器集于一个可筛选的标签页视图 — 仓位规模（网格/固定比例/凯利上下文/期货）、期权数学（Heston、POP、平价套利、每日）、事件研究（OpEx、圣诞行情、除息、拆股）、筛选器（季节性/风险/动量/均值回归）、宏观 + 估值仪表",
+  "tile.strategy-tools.label": "策略工具",
   "tile.strategy.desc": "前进",
   "tile.strategy.label": "// 战略与评估', ['backest",
   "tile.stress-test.desc": "价格下的组合 P&L热映射",

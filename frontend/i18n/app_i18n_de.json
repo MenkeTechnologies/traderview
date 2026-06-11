@@ -2542,6 +2542,8 @@
   "tile.str-loophole.label": "STR-Lücke",
   "tile.strategy-alerts.desc": "Strategieauslöserwarnungen",
   "tile.strategy-alerts.label": "Strategiewarnungen",
+  "tile.strategy-tools.desc": "71 Quant-Rechner hinter einer filterbaren Tab-Ansicht — Positionsgrößen (Grid/Fixed-Ratio/Kelly-Kontext/Futures), Options-Mathematik (Heston, POP, Paritäts-Arbitragen, Dailies), Event-Studien (OpEx, Santa, Ex-Div, Splits), Screener (Saisonalität/Risiko/Momentum/Mean-Reversion), Makro- + Bewertungsanzeigen",
+  "tile.strategy-tools.label": "Strategie-Tools",
   "tile.strategy.desc": "vorwärts gehen",
   "tile.strategy.label": "// STRATEGIE & AUTOMATISIERUNG', ['backtest",
   "tile.stress-test.desc": "Portfolio-GuV-Heatmap unter Preis × IV × Zeitschocks",

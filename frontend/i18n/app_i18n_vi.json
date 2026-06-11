@@ -2542,6 +2542,8 @@
   "tile.str-loophole.label": "LS Loophole",
   "tile.strategy-alerts.desc": "Comment",
   "tile.strategy-alerts.label": "Báo động chiến thuật",
+  "tile.strategy-tools.desc": "71 máy tính định lượng trong một giao diện tab có thể lọc — định cỡ vị thế (grid/fixed-ratio/bối cảnh Kelly/hợp đồng tương lai), toán quyền chọn (Heston, POP, arbitrage ngang giá, hằng ngày), nghiên cứu sự kiện (OpEx, Santa, ex-div, chia tách), bộ lọc (tính mùa vụ/rủi ro/động lượng/hồi quy trung bình), thước đo vĩ mô + định giá",
+  "tile.strategy-tools.label": "Công cụ chiến lược",
   "tile.strategy.desc": "đi lại",
   "tile.strategy.label": "// SROATEGY & AUTOY, [ phản đối]",
   "tile.stress-test.desc": "Name",
