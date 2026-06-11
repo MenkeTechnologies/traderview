@@ -27,6 +27,7 @@ use traderview_core::{
     ultimate_oscillator, vhf, vidya, volume_flow, volume_indices, vortex, vwap_bands, williams_r,
     williams_vix_fix, wma, zigzag, zlema, BarInterval, PriceBar,
 };
+use traderview_core::{anchored_obv, coppock_rsi, wolfe_wave};
 
 pub fn router() -> Router<AppState> {
     Router::new()
@@ -41,6 +42,9 @@ pub fn router() -> Router<AppState> {
         .route("/bars/:symbol/trix", get(trix_route))
         .route("/bars/:symbol/dpo", get(dpo_route))
         .route("/bars/:symbol/coppock", get(coppock_route))
+        .route("/bars/:symbol/coppock-rsi", get(coppock_rsi_route))
+        .route("/bars/:symbol/anchored-obv", get(anchored_obv_route))
+        .route("/bars/:symbol/wolfe-wave", get(wolfe_wave_route))
         .route("/bars/:symbol/vix-fix", get(vix_fix_route))
         .route("/bars/:symbol/laguerre-rsi", get(laguerre_rsi_route))
         .route("/bars/:symbol/rs-line", get(rs_line_route))
@@ -441,6 +445,128 @@ async fn coppock_route(
     Ok(Json(PlainSeries {
         t: bars.iter().map(|b| b.bar_time).collect(),
         v,
+    }))
+}
+
+#[derive(Deserialize)]
+struct CoppockRsiQ {
+    interval: String,
+    from: i64,
+    to: i64,
+    #[serde(default = "d_crsi_rsi")]
+    rsi_period: usize,
+    #[serde(default = "d_crsi_short")]
+    short_roc: usize,
+    #[serde(default = "d_crsi_long")]
+    long_roc: usize,
+    #[serde(default = "d_crsi_wma")]
+    wma_period: usize,
+}
+fn d_crsi_rsi() -> usize { 14 }
+fn d_crsi_short() -> usize { 11 }
+fn d_crsi_long() -> usize { 14 }
+fn d_crsi_wma() -> usize { 10 }
+
+/// Coppock-of-RSI — momentum-of-momentum, crosses zero earlier than
+/// the price-level Coppock above.
+async fn coppock_rsi_route(
+    State(s): State<AppState>,
+    Path(sym): Path<String>,
+    Query(q): Query<CoppockRsiQ>,
+) -> Result<Json<ScalarSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let closes = indicators::closes(&bars);
+    let v = coppock_rsi::compute(
+        &closes,
+        coppock_rsi::Config {
+            rsi_period: q.rsi_period,
+            short_roc: q.short_roc,
+            long_roc: q.long_roc,
+            wma_period: q.wma_period,
+        },
+    );
+    Ok(Json(ScalarSeries {
+        t: bars.iter().map(|b| b.bar_time).collect(),
+        v,
+    }))
+}
+
+#[derive(Deserialize)]
+struct AnchoredObvQ {
+    interval: String,
+    from: i64,
+    to: i64,
+    #[serde(default)]
+    anchor_index: usize,
+}
+
+/// OBV accumulated from a chosen anchor bar — same anchoring idea as
+/// anchored VWAP, applied to on-balance volume.
+async fn anchored_obv_route(
+    State(s): State<AppState>,
+    Path(sym): Path<String>,
+    Query(q): Query<AnchoredObvQ>,
+) -> Result<Json<ScalarSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    if q.anchor_index >= bars.len() && !bars.is_empty() {
+        return Err(ApiError::BadRequest(format!(
+            "anchor_index {} out of bounds (window has {} bars)",
+            q.anchor_index,
+            bars.len()
+        )));
+    }
+    let closes = indicators::closes(&bars);
+    let volumes = indicators::volumes(&bars);
+    let v = anchored_obv::compute(&closes, &volumes, q.anchor_index);
+    Ok(Json(ScalarSeries {
+        t: bars.iter().map(|b| b.bar_time).collect(),
+        v,
+    }))
+}
+
+#[derive(Deserialize)]
+struct WolfeWaveQ {
+    interval: String,
+    from: i64,
+    to: i64,
+    #[serde(default = "d_wolfe_lookback")]
+    lookback: usize,
+    #[serde(default = "d_wolfe_tolerance")]
+    line_tolerance: f64,
+}
+fn d_wolfe_lookback() -> usize { 5 }
+fn d_wolfe_tolerance() -> f64 { 0.10 }
+
+#[derive(Serialize)]
+struct WolfeWaveOut {
+    t: Vec<DateTime<Utc>>,
+    events: Vec<wolfe_wave::WolfeEvent>,
+}
+
+/// Wolfe Wave 5-pivot channel pattern over confirmed swings.
+async fn wolfe_wave_route(
+    State(s): State<AppState>,
+    Path(sym): Path<String>,
+    Query(q): Query<WolfeWaveQ>,
+) -> Result<Json<WolfeWaveOut>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let sbars: Vec<swing_points::Bar> = bars
+        .iter()
+        .map(|b| swing_points::Bar {
+            high: dec_f64(b.high),
+            low: dec_f64(b.low),
+        })
+        .collect();
+    let swings = swing_points::detect(&sbars, q.lookback.max(1));
+    let report = wolfe_wave::detect(
+        &swings,
+        &wolfe_wave::WolfeConfig {
+            line_tolerance: q.line_tolerance,
+        },
+    );
+    Ok(Json(WolfeWaveOut {
+        t: bars.iter().map(|b| b.bar_time).collect(),
+        events: report.events,
     }))
 }
 

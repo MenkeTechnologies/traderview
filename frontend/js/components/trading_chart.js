@@ -178,6 +178,8 @@ const OSCILLATOR_INDICATORS = [
     { id: 'coppock', apiFn: 'indCoppock', q: { roc1: 14, roc2: 11, wma: 10 }, color: '#ff66c4', labelKey: 'component.chart.ind.coppock', scaleId: 'coppock' },
     { id: 'vixfix22', apiFn: 'indVixFix', q: { period: 22 }, color: '#ff3366', labelKey: 'component.chart.ind.vix_fix', period: 22, scaleId: 'vixfix' },
     { id: 'laguerre', apiFn: 'indLaguerreRsi', q: { gamma: 0.5 }, color: '#36c8d4', labelKey: 'component.chart.ind.laguerre_rsi', scaleId: 'laguerre' },
+    { id: 'coppockrsi', apiFn: 'indCoppockRsi', q: { rsi_period: 14, short_roc: 11, long_roc: 14, wma_period: 10 }, color: '#f97316', labelKey: 'component.chart.ind.coppock_rsi', scaleId: 'coppockrsi' },
+    { id: 'anchoredobv', apiFn: 'indAnchoredObv', q: { anchor_index: 0 }, color: '#a78bfa', labelKey: 'component.chart.ind.anchored_obv', scaleId: 'anchoredobv' },
     { id: 'rsline', apiFn: 'indRsLine', q: { benchmark: 'SPY', period: 52 }, labelKey: 'component.chart.ind.rs_line', scaleId: 'rsline',
       lines: [
           { key: 'rs',        color: '#00e5ff' },
