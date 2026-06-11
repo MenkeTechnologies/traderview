@@ -35,6 +35,7 @@
 //!   GET  /symbols/:sym/best-days         — miss-the-best-days study
 //!   GET  /symbols/:sym/drawdown-episodes — top-N peak/trough/recovery
 //!   GET  /symbols/:sym/opex-week         — third-Friday expiration window
+//!   GET  /symbols/:sym/pre-holiday       — pre-holiday drift (2024+ cal)
 //!   POST /symbols/:sym/event-study       — caller-dated FOMC/CPI study
 //!   POST /calc/double-barrier            — target-vs-stop hit-first odds
 //!   POST /calc/futures-sizing            — tick math + margin-capped size
@@ -101,6 +102,7 @@ pub fn router() -> Router<AppState> {
             get(get_drawdown_episodes),
         )
         .route("/symbols/:symbol/opex-week", get(get_opex_week))
+        .route("/symbols/:symbol/pre-holiday", get(get_pre_holiday))
         .route("/symbols/:symbol/event-study", post(post_event_study))
         .route("/calc/double-barrier", post(post_double_barrier))
         .route("/calc/futures-sizing", post(post_futures_sizing))
@@ -706,6 +708,19 @@ async fn get_drawdown_episodes(
 ) -> Result<Json<strategy_calculators::EpisodesSymbolReport>, ApiError> {
     let sym = validate_symbol(&symbol)?;
     strategy_calculators::drawdown_episodes(&s.pool, &sym, q.years.unwrap_or(10), q.n.unwrap_or(5))
+        .await
+        .map(Json)
+        .map_err(map_tom_err)
+}
+
+async fn get_pre_holiday(
+    State(s): State<AppState>,
+    _u: AuthUser,
+    Path(symbol): Path<String>,
+    Query(q): Query<TomQ>,
+) -> Result<Json<strategy_calculators::EventStudyReport>, ApiError> {
+    let sym = validate_symbol(&symbol)?;
+    strategy_calculators::pre_holiday(&s.pool, &sym, q.years.unwrap_or(5))
         .await
         .map(Json)
         .map_err(map_tom_err)

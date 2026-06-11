@@ -802,6 +802,22 @@ pub async fn event_study(
     })
 }
 
+/// Pre-holiday drift study — anchors at each market holiday (the
+/// event-study snap lands on the last session BEFORE it). The embedded
+/// calendar covers 2024+, so events_used reflects the covered slice of
+/// the lookback, not all of it.
+pub async fn pre_holiday(
+    pool: &PgPool,
+    symbol: &str,
+    years: u32,
+) -> Result<EventStudyReport, TomError> {
+    let years = years.clamp(1, 20);
+    let now = Utc::now().date_naive();
+    let from = now - chrono::Duration::days(366 * years as i64);
+    let anchors = traderview_core::holiday_calendar::holidays_in_range(from, now);
+    event_study(pool, symbol, years, &anchors, 3, 2).await
+}
+
 pub async fn opex_week(
     pool: &PgPool,
     symbol: &str,

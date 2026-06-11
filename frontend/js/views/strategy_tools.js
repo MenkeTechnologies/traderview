@@ -1399,6 +1399,15 @@ const TOOLS = {
         ],
         render: (r) => renderEventStudy(r, 'third-Friday expiration'),
     },
+    'pre-holiday': {
+        label: 'Pre-Holiday Effect',
+        call: (b) => api.preHoliday(b.symbol, b.years),
+        fields: [
+            { key: 'symbol', label: 'Symbol', def: 'SPY', text: true },
+            { key: 'years', label: 'Lookback years (calendar covers 2024+)', def: 5, int: true },
+        ],
+        render: (r) => renderEventStudy(r, 'market-holiday'),
+    },
     'event-study': {
         label: 'Event Study',
         call: (b) => api.eventStudy(b.symbol, {

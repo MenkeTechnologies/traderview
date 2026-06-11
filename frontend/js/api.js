@@ -777,6 +777,7 @@ export const api = {
     bestDays:                (sym, years = 10, n = 10) => request(`/symbols/${encodeURIComponent(sym)}/best-days${qs({ years, n })}`),
     drawdownEpisodes:        (sym, years = 10, n = 5) => request(`/symbols/${encodeURIComponent(sym)}/drawdown-episodes${qs({ years, n })}`),
     opexWeek:                (sym, years = 10) => request(`/symbols/${encodeURIComponent(sym)}/opex-week${qs({ years })}`),
+    preHoliday:              (sym, years = 5) => request(`/symbols/${encodeURIComponent(sym)}/pre-holiday${qs({ years })}`),
     eventStudy:              (sym, body) => request(`/symbols/${encodeURIComponent(sym)}/event-study`, { method: 'POST', body: JSON.stringify(body) }),
     calcImpliedDividend:     (body) => request('/options/calc/implied-dividend', { method: 'POST', body: JSON.stringify(body) }),
     calcWarrant:             (body) => request('/options/calc/warrant', { method: 'POST', body: JSON.stringify(body) }),

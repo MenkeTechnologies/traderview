@@ -71,6 +71,19 @@ pub fn trading_days_between(start: NaiveDate, end: NaiveDate) -> i32 {
     count
 }
 
+/// All embedded holidays inside [from, to], ascending. The calendar
+/// covers 2024–2030 — callers studying longer histories get only the
+/// covered slice (count the result, don't assume).
+pub fn holidays_in_range(from: NaiveDate, to: NaiveDate) -> Vec<NaiveDate> {
+    let mut out: Vec<NaiveDate> = HOLIDAYS
+        .iter()
+        .filter_map(|(y, m, d)| NaiveDate::from_ymd_opt(*y, *m, *d))
+        .filter(|d| *d >= from && *d <= to)
+        .collect();
+    out.sort();
+    out
+}
+
 // US equity-market holidays for 2024-2030 (NYSE/NASDAQ standard).
 // Format: (year, month, day). Refresh when extending past 2030.
 const HOLIDAYS: &[(i32, u32, u32)] = &[
@@ -165,6 +178,18 @@ mod tests {
     fn weekday_non_holiday_is_trading_day() {
         // 2026-05-27 = Wednesday, not a holiday.
         assert!(is_trading_day(d(2026, 5, 27)));
+    }
+
+    #[test]
+    fn holidays_in_range_slices_and_sorts() {
+        // Calendar-year 2026 must contain New Year's Day and be sorted.
+        let h = holidays_in_range(d(2026, 1, 1), d(2026, 12, 31));
+        assert!(!h.is_empty());
+        assert_eq!(h[0], d(2026, 1, 1));
+        assert!(h.windows(2).all(|w| w[0] < w[1]));
+        assert!(h.iter().all(|x| x.year() == 2026 && is_holiday(*x)));
+        // Outside the embedded 2024–2030 coverage: empty, not wrong.
+        assert!(holidays_in_range(d(2010, 1, 1), d(2010, 12, 31)).is_empty());
     }
 
     #[test]
