@@ -21,11 +21,11 @@ use traderview_core::{
     chaikin_money_flow, chaikin_volatility, cmo, connors_rsi, coppock, dema, demarker, donchian,
     dpo, ease_of_movement, ehlers_decycler, ehlers_super_smoother, elder_force, elder_ray,
     fisher_transform, force_index, fractals, frama, hull_ma, indicators, kama, keltner,
-    klinger_oscillator, mass_index, mcginley_dynamic, mfi, parabolic_sar, ppo, qqe,
+    klinger_oscillator, laguerre_rsi, mass_index, mcginley_dynamic, mfi, parabolic_sar, ppo, qqe,
     relative_vigor_index, relative_volume, roc, rsi_divergence, schaff_trend, squeeze_momentum,
     stoch_rsi, swing_index, swing_points, t3_ma, tema, trend_channel, trix, tsi,
     ultimate_oscillator, vhf, vidya, volume_flow, volume_indices, vortex, vwap_bands, williams_r,
-    wma, zigzag, zlema, BarInterval, PriceBar,
+    williams_vix_fix, wma, zigzag, zlema, BarInterval, PriceBar,
 };
 
 pub fn router() -> Router<AppState> {
@@ -41,6 +41,8 @@ pub fn router() -> Router<AppState> {
         .route("/bars/:symbol/trix", get(trix_route))
         .route("/bars/:symbol/dpo", get(dpo_route))
         .route("/bars/:symbol/coppock", get(coppock_route))
+        .route("/bars/:symbol/vix-fix", get(vix_fix_route))
+        .route("/bars/:symbol/laguerre-rsi", get(laguerre_rsi_route))
         .route("/bars/:symbol/schaff-trend", get(schaff_trend_route))
         .route("/bars/:symbol/mass-index", get(mass_index_route))
         // Bar-based indicators with dedicated modules.
@@ -435,6 +437,59 @@ async fn coppock_route(
     let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
     let closes = indicators::closes(&bars);
     let v = coppock::compute(&closes, q.roc1, q.roc2, q.wma);
+    Ok(Json(PlainSeries {
+        t: bars.iter().map(|b| b.bar_time).collect(),
+        v,
+    }))
+}
+
+#[derive(Deserialize)]
+struct VixFixQ {
+    interval: String,
+    from: i64,
+    to: i64,
+    #[serde(default = "default_vix_fix_period")]
+    period: usize,
+}
+fn default_vix_fix_period() -> usize {
+    22
+}
+
+async fn vix_fix_route(
+    State(s): State<AppState>,
+    Path(sym): Path<String>,
+    Query(q): Query<VixFixQ>,
+) -> Result<Json<PlainSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let closes = indicators::closes(&bars);
+    let lows = indicators::lows(&bars);
+    let v = williams_vix_fix::compute(&closes, &lows, q.period);
+    Ok(Json(PlainSeries {
+        t: bars.iter().map(|b| b.bar_time).collect(),
+        v,
+    }))
+}
+
+#[derive(Deserialize)]
+struct LaguerreRsiQ {
+    interval: String,
+    from: i64,
+    to: i64,
+    #[serde(default = "default_laguerre_gamma")]
+    gamma: f64,
+}
+fn default_laguerre_gamma() -> f64 {
+    0.5
+}
+
+async fn laguerre_rsi_route(
+    State(s): State<AppState>,
+    Path(sym): Path<String>,
+    Query(q): Query<LaguerreRsiQ>,
+) -> Result<Json<PlainSeries>, ApiError> {
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let closes = indicators::closes(&bars);
+    let v = laguerre_rsi::compute(&closes, q.gamma);
     Ok(Json(PlainSeries {
         t: bars.iter().map(|b| b.bar_time).collect(),
         v,

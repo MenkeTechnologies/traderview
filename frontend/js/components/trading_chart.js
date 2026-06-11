@@ -176,6 +176,8 @@ const OSCILLATOR_INDICATORS = [
     { id: 'trix15', apiFn: 'indTrix', q: { period: 15 }, color: '#bd10e0', labelKey: 'component.chart.ind.trix', period: 15, scaleId: 'trix' },
     { id: 'dpo20',  apiFn: 'indDpo',  q: { period: 20 }, color: '#39ff14', labelKey: 'component.chart.ind.dpo',  period: 20, scaleId: 'dpo' },
     { id: 'coppock', apiFn: 'indCoppock', q: { roc1: 14, roc2: 11, wma: 10 }, color: '#ff66c4', labelKey: 'component.chart.ind.coppock', scaleId: 'coppock' },
+    { id: 'vixfix22', apiFn: 'indVixFix', q: { period: 22 }, color: '#ff3366', labelKey: 'component.chart.ind.vix_fix', period: 22, scaleId: 'vixfix' },
+    { id: 'laguerre', apiFn: 'indLaguerreRsi', q: { gamma: 0.5 }, color: '#36c8d4', labelKey: 'component.chart.ind.laguerre_rsi', scaleId: 'laguerre' },
     { id: 'adx14',  apiFn: 'indAdx',  q: { period: 14 }, labelKey: 'component.chart.ind.adx', period: 14, scaleId: 'adx',
       lines: [
           { key: 'adx',      color: '#facc15' },

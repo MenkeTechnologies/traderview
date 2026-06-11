@@ -874,5 +874,7 @@ pub mod lowess_smoother;
 pub mod pin_risk_scanner;
 pub mod polynomial_regression;
 pub mod theil_sen_estimator;
+pub mod williams_vix_fix;
+pub mod laguerre_rsi;
 
 pub use models::*;
