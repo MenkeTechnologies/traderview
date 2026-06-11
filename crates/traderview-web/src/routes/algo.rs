@@ -39,6 +39,7 @@ pub fn router() -> Router<AppState> {
         .route("/algo/strategies/:id/backtest", post(post_backtest))
         .route("/algo/strategies/:id/metrics", get(get_metrics))
         .route("/algo/strategies/:id/optimize", post(post_optimize))
+        .route("/algo/tournament", post(post_tournament))
         .route("/algo/strategies/:id/backtests", get(list_backtest_history))
         .route(
             "/algo/backtests/:id",
@@ -707,6 +708,70 @@ fn default_metric() -> traderview_core::algo_optimize::OptimizeMetric {
 
 fn default_top_n() -> usize {
     10
+}
+
+#[derive(serde::Deserialize)]
+struct TournamentBody {
+    #[serde(default = "default_bt_symbol")]
+    symbol: String,
+    #[serde(default = "default_bt_interval")]
+    interval: String,
+    #[serde(default = "default_bt_days_back")]
+    days_back: i64,
+    #[serde(default)]
+    initial_equity: Option<f64>,
+    #[serde(default)]
+    fee_per_trade: Option<f64>,
+    #[serde(default)]
+    slippage_bps: Option<f64>,
+    /// "long" | "short" | "both" (default both — fair to every family).
+    #[serde(default)]
+    side_mode: Option<String>,
+    #[serde(default)]
+    rank_by: traderview_core::algo_tournament::RankMetric,
+}
+
+/// POST /algo/tournament — run EVERY single-symbol registry strategy
+/// with default rules over the same bars and rank them. Multi-symbol
+/// strategies are reported as skipped, never silently dropped.
+async fn post_tournament(
+    State(s): State<AppState>,
+    _u: AuthUser,
+    Json(body): Json<TournamentBody>,
+) -> Result<Json<traderview_core::algo_tournament::TournamentResult>, ApiError> {
+    let interval: traderview_core::BarInterval = serde_json::from_value(serde_json::Value::String(
+        normalize_interval(&body.interval),
+    ))
+    .map_err(|e| ApiError::BadRequest(format!("interval: {e}")))?;
+    let to = chrono::Utc::now();
+    let from = to - chrono::Duration::days(body.days_back);
+    let symbol = body.symbol.trim().to_uppercase();
+    let bars = traderview_db::prices::get_bars(&s.pool, &symbol, interval, from, to)
+        .await
+        .map_err(ApiError::Internal)?;
+    if bars.len() < 30 {
+        return Err(ApiError::BadRequest(format!(
+            "only {} bars available for {symbol} — need >=30",
+            bars.len()
+        )));
+    }
+    let side_mode = match body.side_mode.as_deref() {
+        Some("long") => traderview_core::algo_strategies::SideMode::Long,
+        Some("short") => traderview_core::algo_strategies::SideMode::Short,
+        _ => traderview_core::algo_strategies::SideMode::Both,
+    };
+    let cfg = traderview_core::algo_backtest::BacktestConfig {
+        initial_equity: body.initial_equity.unwrap_or(100_000.0),
+        fee_per_trade: body.fee_per_trade.unwrap_or(1.0),
+        slippage_bps: body.slippage_bps.unwrap_or(5.0),
+        side_mode,
+    };
+    Ok(Json(traderview_core::algo_tournament::tournament(
+        &bars,
+        &traderview_core::algo_strategies::Sizing::default(),
+        &cfg,
+        body.rank_by,
+    )))
 }
 
 /// POST /algo/strategies/:id/optimize — runs the parameter optimizer

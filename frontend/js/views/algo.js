@@ -770,6 +770,7 @@ export async function renderAlgo(mount) {
         <div class="chart-panel">
             <div class="row" style="justify-content:space-between;align-items:center">
                 <h2 data-i18n="view.algo.h2.strategies">Strategies</h2>
+                <button id="algo-tournament" data-i18n="view.algo.btn.tournament" data-tip="view.algo.tip.tournament">Tournament</button>
                 <button id="algo-new" class="primary" data-i18n="view.algo.btn.new_strategy">New strategy</button>
             </div>
             <table class="trades" id="algo-strats-table">
@@ -865,6 +866,7 @@ export async function renderAlgo(mount) {
     `;
 
     mount.querySelector('#algo-new').addEventListener('click', () => openStrategyModal(mount));
+    mount.querySelector('#algo-tournament').addEventListener('click', () => openTournamentModal());
     // Strategy reference tabs — clicking a button swaps the rendered doc.
     mount.querySelectorAll('.algo-docs-tab').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -1185,6 +1187,70 @@ const OPTIMIZE_DEFAULT_GRIDS = {
         kijun_period: [22, 26, 30],
     },
 };
+
+
+async function openTournamentModal() {
+    const wrap = document.createElement('div');
+    wrap.className = 'modal';
+    wrap.innerHTML = `
+        <div class="modal-inner" style="max-width:980px">
+            <h2 data-i18n="view.algo.h2.tournament">Strategy tournament</h2>
+            <p class="muted small" data-i18n="view.algo.hint.tournament">Runs every single-symbol registry strategy with DEFAULT rules over the same bars and ranks them. Multi-symbol strategies are listed as skipped. Default rules mean this measures the setup's fit to the tape, not a tuned config — optimize the winners afterwards.</p>
+            <form id="tournament-form" class="inline-form">
+                <input name="symbol" value="SPY" required style="text-transform:uppercase">
+                <select name="interval">
+                    <option value="day1" selected>1d</option>
+                    <option value="hour1">1h</option>
+                    <option value="min15">15m</option>
+                    <option value="min5">5m</option>
+                </select>
+                <input name="days_back" type="number" value="365" min="30">
+                <select name="rank_by">
+                    <option value="sharpe" selected>Sharpe</option>
+                    <option value="total_return">Total return</option>
+                    <option value="profit_factor">Profit factor</option>
+                </select>
+                <button class="primary" type="submit" data-i18n="view.algo.btn.run_tournament">RUN</button>
+                <button type="button" class="link" id="tournament-close" data-i18n="common.btn.cancel">Cancel</button>
+            </form>
+            <div id="tournament-result" class="muted small"></div>
+        </div>`;
+    document.body.appendChild(wrap);
+    const close = () => wrap.remove();
+    wrap.querySelector('#tournament-close').addEventListener('click', close);
+    wrap.addEventListener('click', (e) => { if (e.target === wrap) close(); });
+    wrap.querySelector('#tournament-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const out = wrap.querySelector('#tournament-result');
+        out.textContent = t('common.loading');
+        try {
+            const r = await api.algoTournament({
+                symbol: fd.get('symbol').trim().toUpperCase(),
+                interval: fd.get('interval'),
+                days_back: Number(fd.get('days_back')),
+                rank_by: fd.get('rank_by'),
+            });
+            out.innerHTML = `<table class="trades">
+                <thead><tr><th>#</th><th>Strategy</th><th>Trades</th><th>Win rate</th><th>PF</th><th>Return</th><th>Max DD</th><th>Sharpe</th></tr></thead>
+                <tbody>${r.rows.map((row, i) => `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${esc(row.kind)}</td>
+                        <td>${row.summary.trades}</td>
+                        <td>${(row.summary.win_rate * 100).toFixed(0)}%</td>
+                        <td>${Number.isFinite(row.summary.profit_factor) ? row.summary.profit_factor.toFixed(2) : '\u221e'}</td>
+                        <td class="${row.summary.total_return_pct >= 0 ? 'pos' : 'neg'}">${row.summary.total_return_pct.toFixed(1)}%</td>
+                        <td>${row.summary.max_drawdown_pct.toFixed(1)}%</td>
+                        <td>${row.summary.sharpe.toFixed(2)}</td>
+                    </tr>`).join('')}
+                </tbody></table>
+                ${r.skipped.length ? `<p class="muted small">Skipped (multi-symbol): ${r.skipped.map(esc).join(', ')}</p>` : ''}`;
+        } catch (err) {
+            out.textContent = t('common.error', { err: err.message });
+        }
+    });
+}
 
 async function openOptimizeModal(mount, s) {
     const defaultGrid = OPTIMIZE_DEFAULT_GRIDS[s.strategy_type] || { period: [10, 20, 30] };

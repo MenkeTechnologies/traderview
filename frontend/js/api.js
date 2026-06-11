@@ -1102,6 +1102,11 @@ export const api = {
             method: 'POST',
             body: JSON.stringify(body || {}),
         }),
+    algoTournament: (body) =>
+        request('/algo/tournament', {
+            method: 'POST',
+            body: JSON.stringify(body || {}),
+        }),
 
     // Correlation matrix (pairwise Pearson on cached daily-bar log-returns)
     corrWatchlist: (wid, days = 90) =>
