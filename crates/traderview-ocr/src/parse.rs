@@ -1485,13 +1485,37 @@ pub fn guess_category(name: &str) -> String {
     for (cat, kws) in cats {
         let score: i32 = kws
             .iter()
-            .map(|kw| if n.contains(kw) { 1 } else { 0 })
+            .map(|kw| if keyword_matches(&n, kw) { 1 } else { 0 })
             .sum();
         if score > best.0 {
             best = (score, cat);
         }
     }
     best.1.to_string()
+}
+
+/// True when `kw` occurs in `name` at the start of a word — the byte before
+/// the match is not an ASCII alphanumeric. This keeps stem matches
+/// (`advert` → `advertising`) and multi-word brands (`google ads`) working
+/// while rejecting mid-word collisions: the 2-char keyword `ad` no longer
+/// matches `unleaded`, `gatorade`, or `lemonade`. Strictly narrower than a
+/// raw `contains` — it can only drop mid-word false positives, never add a
+/// match. `name` is already lowercased by the caller; `kw` is lowercase by
+/// construction.
+fn keyword_matches(name: &str, kw: &str) -> bool {
+    if kw.is_empty() {
+        return false;
+    }
+    let bytes = name.as_bytes();
+    let mut from = 0;
+    while let Some(off) = name[from..].find(kw) {
+        let at = from + off;
+        if at == 0 || !bytes[at - 1].is_ascii_alphanumeric() {
+            return true;
+        }
+        from = at + 1;
+    }
+    false
 }
 
 /// Default tax bucket for a newly-extracted item, given its category.

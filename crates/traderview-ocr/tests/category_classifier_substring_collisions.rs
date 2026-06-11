@@ -3,61 +3,59 @@
 //! tests before this file.
 //!
 //! `guess_category` scores each category by counting how many of its
-//! keywords appear as **substrings** of the lowercased item name
-//! (`parse.rs:1488` `if n.contains(kw)`), then takes the first category —
-//! in declaration order — with the strictly-highest score (`parse.rs:1490`
-//! `if score > best.0`). Two structural hazards fall out of that design and
-//! are the bug classes these tests pin:
+//! keywords appear in the lowercased item name via `keyword_matches`, which
+//! requires the keyword to land at a **word start** (the byte before it is
+//! not ASCII-alphanumeric), then takes the first category — in declaration
+//! order — with the strictly-highest score (`if score > best.0`). The
+//! word-start rule closes the short-keyword collision class these tests
+//! guard:
 //!
-//!   1. Short keywords match inside unrelated words. `"ad"` (the very first
-//!      keyword of the first category, `advertising`, `parse.rs:1098`)
-//!      matches any name containing the bigram "ad" — including the fuel
-//!      label "unleaded" and the drink "Gatorade".
-//!   2. Ties resolve to the earliest-declared category, not the most
-//!      specific one. `advertising` is declared first, so on a tie it wins
-//!      over the semantically-correct category.
+//!   1. Short keywords no longer match inside unrelated words. `"ad"` (the
+//!      first keyword of `advertising`) used to match the bigram "ad" inside
+//!      any name; it now matches only at a word boundary, so the fuel label
+//!      "unleaded" classifies as `vehicle_fuel` and the drink "Gatorade"
+//!      (no keyword at all) falls back to `other`.
+//!   2. Ties still resolve to the earliest-declared category (`>` not `>=`);
+//!      with the collision gone, "Unleaded" no longer ties advertising, so
+//!      the more-specific category wins outright.
 //!
-//! `default_bucket_for_category` is an exact, case-sensitive `match`
-//! (`parse.rs:1514`); a capitalized category id silently falls through the
-//! `_` arm to `"business"`.
+//! `default_bucket_for_category` is an exact, case-sensitive `match`;
+//! a capitalized category id silently falls through the `_` arm to
+//! `"business"`.
 //!
-//! These tests assert the CURRENT behavior so the substring/tie/case
-//! semantics are pinned — any future change to keyword length, declaration
-//! order, or the bucket match will trip exactly one of them.
+//! These tests assert the corrected classification and the case-sensitive
+//! bucket map — any regression of the word-start rule, declaration order,
+//! or the bucket match trips exactly one of them.
 
 use traderview_ocr::parse::{default_bucket_for_category, guess_category};
 
-/// The fuel label "Unleaded" hits TWO categories with score 1 each:
-/// `advertising` via the substring "ad" inside "unle**ad**ed"
-/// (`parse.rs:1098`) and `vehicle_fuel` via the exact keyword "unleaded"
-/// (`parse.rs:1117`). Because `advertising` is declared first and the
-/// scorer keeps the earliest category on a tie (`>` not `>=`,
-/// `parse.rs:1490`), the fuel item is misclassified as advertising.
-/// This pins both the "ad"-substring collision and the tie-to-first rule
-/// in a single, realistic OCR token.
+/// The fuel label "Unleaded" must classify as `vehicle_fuel`. The keyword
+/// "ad" no longer matches the mid-word "ad" inside "unle**ad**ed" (it is not
+/// at a word start), so `advertising` scores 0 and only `vehicle_fuel`
+/// (exact keyword "unleaded") scores — no tie, the specific category wins.
+/// Pins the word-start rule on a realistic OCR token that previously
+/// collided.
 #[test]
-fn unleaded_fuel_label_collides_with_advertising_ad_substring() {
+fn unleaded_fuel_label_classifies_as_vehicle_fuel_not_advertising() {
     assert_eq!(
         guess_category("Unleaded"),
-        "advertising",
-        "the 'ad' substring in 'unleaded' ties advertising with vehicle_fuel; \
-         advertising wins because it is declared first and the scorer keeps \
-         the earliest category on a tie"
+        "vehicle_fuel",
+        "'ad' inside 'unleaded' is mid-word, so advertising no longer scores; \
+         only the 'unleaded' fuel keyword matches"
     );
 }
 
-/// A drink with no grocery keyword still lands in `advertising` purely
-/// because "Gator**ad**e" contains the "ad" bigram. None of the grocery
-/// keywords ("juice", "soda", "water bottle", …) are substrings of
-/// "gatorade", so advertising's lone point is the global max. Pins the
-/// over-broad short-keyword match in isolation (no competing category).
+/// A drink with no category keyword must fall back to `other`. "Gatorade"
+/// contains the "ad" bigram only mid-word ("gator**ad**e"), so the
+/// word-start rule rejects it and no other keyword matches — the over-broad
+/// short-keyword collision is gone.
 #[test]
-fn gatorade_misclassified_as_advertising_via_ad_substring() {
+fn gatorade_no_keyword_match_falls_back_to_other() {
     assert_eq!(
         guess_category("Gatorade"),
-        "advertising",
-        "'gatorade' contains 'ad'; no grocery keyword matches, so advertising \
-         is the sole scorer and wins"
+        "other",
+        "'ad' in 'gatorade' is mid-word so advertising no longer scores; \
+         no category keyword matches → other"
     );
 }
 
