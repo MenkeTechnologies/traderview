@@ -105,13 +105,15 @@ use traderview_core::{
     opening_range, optimal_execution_pov_schedule, optimal_execution_twap_schedule,
     optimal_execution_vwap_schedule, option_open_interest_distribution, option_payoff_diagram,
     options_margin, order_block, ornstein_uhlenbeck, pain_index, pair_trade, pair_trade_zscore,
-    partial_autocorrelation, pca, peaks_over_threshold, pelt_segmentation, permutation_entropy,
+    par_curve_bootstrap, partial_autocorrelation, pca, peaks_over_threshold, pelt_segmentation,
+    permutation_entropy,
     pickands_estimator, pin_bar, pin_risk_scanner, pinball_setup, pivot_points, pocket_pivot_buy,
     point_and_figure, polynomial_regression, portfolio_heat, position_aging, position_irr,
     positive_volume_index, post_earnings_drift, power_bar, power_option, pp_test,
     premarket_gap_scanner, premier_stochastic, premium_discount, pretty_good_oscillator,
     price_volume_oscillator, price_volume_trend, principal_component_yield_curve,
-    probability_of_informed_trading, put_call_ratio, qstick, quality_factor, quantile_regression,
+    probability_of_informed_trading, probability_of_profit, put_call_ratio, qstick,
+    quality_factor, quantile_regression,
     quanto_option, ramsey_reset, random_walk_index, range_bar_chart, range_contraction,
     range_expansion, range_filter, range_volatility, rank_correlation, ratio_chart,
     realized_correlation, realized_higher_moments, realized_kernel, realized_quarticity,
@@ -795,6 +797,14 @@ pub fn router() -> Router<AppState> {
         )
         .route("/options/calc/seagull", post(seagull_route))
         .route("/options/calc/heston", post(heston_route))
+        .route(
+            "/options/calc/probability-of-profit",
+            post(probability_of_profit_route),
+        )
+        .route(
+            "/bonds/calc/bootstrap-zero-curve",
+            post(bootstrap_zero_curve_route),
+        )
         .route(
             "/options/calc/jelly-roll-arbitrage",
             post(jelly_roll_arbitrage_route),
@@ -7148,6 +7158,26 @@ async fn heston_route(
     Json(b): Json<heston::HestonInput>,
 ) -> Json<Option<heston::HestonReport>> {
     Json(heston::compute(&b))
+}
+
+async fn probability_of_profit_route(
+    _u: AuthUser,
+    Json(b): Json<probability_of_profit::PopInput>,
+) -> Json<Option<probability_of_profit::PopReport>> {
+    Json(probability_of_profit::compute(&b))
+}
+
+#[derive(Deserialize)]
+struct BootstrapCurveBody {
+    /// Par rates (decimal) for consecutive annual tenors 1..N.
+    par_rates: Vec<f64>,
+}
+
+async fn bootstrap_zero_curve_route(
+    _u: AuthUser,
+    Json(b): Json<BootstrapCurveBody>,
+) -> Json<Option<Vec<par_curve_bootstrap::CurvePoint>>> {
+    Json(par_curve_bootstrap::compute(&b.par_rates))
 }
 
 #[derive(Deserialize)]

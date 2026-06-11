@@ -404,6 +404,71 @@ const TOOLS = {
             SPY/TLT inverse-to-coupled flip is the classic risk-parity pain trade.</p>`;
         },
     },
+    'probability-of-profit': {
+        label: 'POP Calculator',
+        call: (b) => api.calcProbabilityOfProfit({
+            spot: b.spot,
+            iv: b.iv,
+            time_to_expiry_years: b.time_to_expiry_years,
+            risk_free_rate: b.risk_free_rate,
+            zero_drift: b.zero_drift === 1,
+            lower_breakeven: b.lower_breakeven > 0 ? b.lower_breakeven : null,
+            upper_breakeven: b.upper_breakeven > 0 ? b.upper_breakeven : null,
+            profit_between: b.profit_between === 1,
+        }),
+        fields: [
+            { key: 'spot', label: 'Spot ($)', def: 100 },
+            { key: 'iv', label: 'Implied vol (decimal)', def: 0.25 },
+            { key: 'time_to_expiry_years', label: 'Time to expiry (years)', def: 0.25 },
+            { key: 'risk_free_rate', label: 'Risk-free rate (decimal)', def: 0.05 },
+            { key: 'zero_drift', label: 'Zero drift (1 = retail convention)', def: 1, int: true },
+            { key: 'lower_breakeven', label: 'Lower breakeven ($, 0 = none)', def: 90 },
+            { key: 'upper_breakeven', label: 'Upper breakeven ($, 0 = none)', def: 110 },
+            { key: 'profit_between', label: 'Profit between (1) / outside (0)', def: 1, int: true },
+        ],
+        render: (r) => {
+            if (!r) return '<span class="neg">invalid inputs (need at least one breakeven)</span>';
+            return `
+            <div class="cards">
+                <div class="card"><div class="label">Probability of profit</div>
+                    <div class="value ${r.probability_of_profit >= 0.5 ? 'pos' : 'neg'}">${(r.probability_of_profit * 100).toFixed(1)}%</div></div>
+                <div class="card"><div class="label">Tail probabilities</div>
+                    <div class="value">${r.prob_below_lower != null ? (r.prob_below_lower * 100).toFixed(1) + '%' : '—'} / ${r.prob_above_upper != null ? (r.prob_above_upper * 100).toFixed(1) + '%' : '—'}</div>
+                    <div class="small muted">below lower / above upper</div></div>
+                <div class="card"><div class="label">Expected spot</div>
+                    <div class="value">$${r.expected_spot.toFixed(2)}</div></div>
+            </div>
+            <p class="muted small">Lognormal terminal-price probabilities. Credit spreads/condors profit
+            BETWEEN breakevens; long straddles/strangles OUTSIDE.</p>`;
+        },
+    },
+    'zero-curve': {
+        label: 'Zero Curve Bootstrap',
+        call: (b) => api.calcBootstrapZeroCurve({
+            par_rates: String(b.par_rates).split(/[\s,]+/).map(Number).filter(x => isFinite(x)).map(x => x / 100),
+        }),
+        fields: [
+            { key: 'par_rates', label: 'Par rates %, year 1..N (comma-sep)', def: '4.5, 4.3, 4.2, 4.2, 4.3, 4.4, 4.5', text: true },
+        ],
+        render: (r) => {
+            if (!r) return '<span class="neg">invalid par curve</span>';
+            return `
+            <table class="gs-table">
+                <thead><tr><th>Tenor</th><th>Par</th><th>Zero</th><th>1y Fwd</th><th>DF</th></tr></thead>
+                <tbody>${r.map(p => `
+                    <tr>
+                        <td>${p.tenor_years}y</td>
+                        <td>${(p.par_rate * 100).toFixed(2)}%</td>
+                        <td>${(p.zero_rate * 100).toFixed(3)}%</td>
+                        <td>${(p.forward_rate * 100).toFixed(3)}%</td>
+                        <td>${p.discount_factor.toFixed(5)}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+            <p class="muted small">Annual-coupon par bonds bootstrap one discount factor per tenor; zero
+            rates are annually compounded, forwards are the implied 1-year rates between tenors.</p>`;
+        },
+    },
     'turn-of-month': {
         label: 'Turn of Month',
         call: (b) => api.turnOfMonth(b.symbol, b.years),

@@ -883,5 +883,7 @@ pub mod seagull_spread;
 pub mod heston;
 pub mod correlation_regime;
 pub mod risk_of_ruin;
+pub mod probability_of_profit;
+pub mod par_curve_bootstrap;
 
 pub use models::*;
