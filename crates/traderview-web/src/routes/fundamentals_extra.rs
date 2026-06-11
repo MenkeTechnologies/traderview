@@ -35,6 +35,95 @@ pub fn router() -> Router<AppState> {
         .route("/symbols/:symbol/gap-stats", get(get_gap_stats))
         .route("/symbols/:symbol/seasonality", get(get_seasonality))
         .route("/rrg", get(get_rrg))
+        .route("/symbols/:symbol/beneish", get(get_beneish))
+        .route("/symbols/:symbol/chowder", get(get_chowder))
+        .route("/market/fed-model", get(get_fed_model))
+        .route("/market/nh-nl", get(get_nh_nl))
+        .route("/sim/value-averaging", post(post_value_averaging))
+        .route("/sim/cppi", post(post_cppi))
+}
+
+async fn get_beneish(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Path(symbol): Path<String>,
+) -> Result<Json<traderview_db::beneish::BeneishReport>, ApiError> {
+    let sym = validate_symbol(&symbol)?;
+    traderview_db::beneish::compute(&sym)
+        .await
+        .map(Json)
+        .map_err(|e| match e {
+            traderview_db::beneish::BeneishError::NotEnoughReports { .. } => {
+                ApiError::BadRequest(e.to_string())
+            }
+            traderview_db::beneish::BeneishError::Fetch(inner) => ApiError::Internal(inner),
+        })
+}
+
+async fn get_chowder(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Path(symbol): Path<String>,
+) -> Result<Json<traderview_db::market_valuation::ChowderReport>, ApiError> {
+    let sym = validate_symbol(&symbol)?;
+    traderview_db::market_valuation::chowder(&sym)
+        .await
+        .map(Json)
+        .map_err(|e| match e {
+            traderview_db::market_valuation::ChowderError::Fetch(inner) => {
+                ApiError::Internal(inner)
+            }
+            other => ApiError::BadRequest(other.to_string()),
+        })
+}
+
+async fn get_fed_model(
+    State(s): State<AppState>,
+    _u: AuthUser,
+) -> Result<Json<traderview_db::market_valuation::FedModelReport>, ApiError> {
+    traderview_db::market_valuation::fed_model(&s.pool)
+        .await
+        .map(Json)
+        .map_err(ApiError::Internal)
+}
+
+async fn get_nh_nl(
+    State(s): State<AppState>,
+    _u: AuthUser,
+) -> Result<Json<traderview_db::market_valuation::NhNlReport>, ApiError> {
+    Ok(Json(traderview_db::market_valuation::nh_nl(&s.pool).await))
+}
+
+async fn post_value_averaging(
+    State(s): State<AppState>,
+    _u: AuthUser,
+    Json(input): Json<traderview_db::strategy_simulators::VaInput>,
+) -> Result<Json<traderview_db::strategy_simulators::VaReport>, ApiError> {
+    traderview_db::strategy_simulators::value_averaging(&s.pool, &input)
+        .await
+        .map(Json)
+        .map_err(|e| match e {
+            traderview_db::strategy_simulators::SimError::PriceFetch(inner) => {
+                ApiError::Internal(inner)
+            }
+            other => ApiError::BadRequest(other.to_string()),
+        })
+}
+
+async fn post_cppi(
+    State(s): State<AppState>,
+    _u: AuthUser,
+    Json(input): Json<traderview_db::strategy_simulators::CppiInput>,
+) -> Result<Json<traderview_db::strategy_simulators::CppiReport>, ApiError> {
+    traderview_db::strategy_simulators::cppi(&s.pool, &input)
+        .await
+        .map(Json)
+        .map_err(|e| match e {
+            traderview_db::strategy_simulators::SimError::PriceFetch(inner) => {
+                ApiError::Internal(inner)
+            }
+            other => ApiError::BadRequest(other.to_string()),
+        })
 }
 
 fn validate_symbol(s: &str) -> Result<String, ApiError> {

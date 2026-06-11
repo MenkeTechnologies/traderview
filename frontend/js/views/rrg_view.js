@@ -22,6 +22,7 @@ export async function renderRrg(mount) {
             RS-Ratio (x) vs RS-Momentum (y). Clockwise rotation: improving → leading →
             weakening → lagging. Tails show the last ~8 weeks.
         </p>
+        <div id="rrg-market" class="cards"></div>
         <div class="chart-panel">
             <canvas id="rrg-canvas" width="900" height="620"></canvas>
         </div>
@@ -30,6 +31,27 @@ export async function renderRrg(mount) {
         </div></div>
     `;
     try { applyUiI18n(mount); } catch (_) {}
+
+    // Market-level gauges ride alongside the rotation chart.
+    Promise.all([
+        api.marketFedModel().catch(() => null),
+        api.marketNhNl().catch(() => null),
+    ]).then(([fed, nhnl]) => {
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#rrg-market');
+        if (!el) return;
+        const fedCard = fed ? `
+            <div class="card"><div class="label">Fed model spread</div>
+                <div class="value ${fed.spread_pct > 0 ? 'pos' : 'neg'}">${(fed.spread_pct >= 0 ? '+' : '') + fed.spread_pct.toFixed(2)}pp</div>
+                <div class="small muted">earnings yield ${fed.earnings_yield_pct.toFixed(2)}% vs 10Y ${fed.treasury_10y_pct.toFixed(2)}% — ${esc(fed.verdict.replace('_', ' '))}</div>
+            </div>` : '';
+        const nhnlCard = nhnl ? `
+            <div class="card"><div class="label">52-wk NH − NL</div>
+                <div class="value ${nhnl.nh_nl_diff > 0 ? 'pos' : nhnl.nh_nl_diff < 0 ? 'neg' : ''}">${nhnl.nh_nl_diff > 0 ? '+' : ''}${nhnl.nh_nl_diff}</div>
+                <div class="small muted">${nhnl.new_highs.length} highs / ${nhnl.new_lows.length} lows of ${nhnl.evaluated} names (${nhnl.nh_nl_pct.toFixed(0)}%)</div>
+            </div>` : '';
+        el.innerHTML = fedCard + nhnlCard;
+    });
 
     const report = await api.rrg().catch(() => null);
     if (!viewIsCurrent(tok)) return;

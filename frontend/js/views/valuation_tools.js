@@ -73,6 +73,53 @@ const TOOLS = {
             <p class="muted small">Greenwald EPV: value at ZERO growth. Price above EPV means
             the market is paying for growth; below means even no-growth earnings cover it.</p>`,
     },
+    'value-averaging': {
+        label: 'Value Avg vs DCA',
+        call: (b) => api.simValueAveraging(b),
+        fields: [
+            { key: 'symbol', label: 'Symbol', def: 'SPY', text: true },
+            { key: 'years', label: 'Backtest years', def: 5, int: true },
+            { key: 'monthly_amount', label: 'Monthly amount ($)', def: 1000 },
+            { key: 'target_growth_pct_monthly', label: 'VA target growth (%/mo)', def: 0.5 },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Value averaging</div>
+                    <div class="value ${r.va_return_pct >= 0 ? 'pos' : 'neg'}">${r.va_return_pct.toFixed(1)}%</div>
+                    <div class="small muted">$${Math.round(r.va_final_value).toLocaleString()} on $${Math.round(r.va_total_contributed).toLocaleString()} in</div></div>
+                <div class="card"><div class="label">DCA</div>
+                    <div class="value ${r.dca_return_pct >= 0 ? 'pos' : 'neg'}">${r.dca_return_pct.toFixed(1)}%</div>
+                    <div class="small muted">$${Math.round(r.dca_final_value).toLocaleString()} on $${Math.round(r.dca_total_contributed).toLocaleString()} in</div></div>
+                <div class="card"><div class="label">VA edge</div>
+                    <div class="value ${r.va_edge_pct >= 0 ? 'pos' : 'neg'}">${(r.va_edge_pct >= 0 ? '+' : '') + r.va_edge_pct.toFixed(1)}pp</div>
+                    <div class="small muted">${r.months} months on ${esc(r.symbol)}</div></div>
+            </div>`,
+    },
+    cppi: {
+        label: 'CPPI',
+        call: (b) => api.simCppi(b),
+        fields: [
+            { key: 'symbol', label: 'Symbol', def: 'SPY', text: true },
+            { key: 'years', label: 'Backtest years', def: 5, int: true },
+            { key: 'initial_capital', label: 'Initial capital ($)', def: 100000 },
+            { key: 'floor_fraction', label: 'Floor (fraction, e.g. 0.8)', def: 0.8 },
+            { key: 'multiplier', label: 'Multiplier', def: 4 },
+            { key: 'cash_rate_pct', label: 'Cash rate (%/yr)', def: 4 },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">CPPI return</div>
+                    <div class="value ${r.total_return_pct >= 0 ? 'pos' : 'neg'}">${r.total_return_pct.toFixed(1)}%</div>
+                    <div class="small muted">$${Math.round(r.final_value).toLocaleString()} final</div></div>
+                <div class="card"><div class="label">Buy & hold</div>
+                    <div class="value ${r.buy_and_hold_return_pct >= 0 ? 'pos' : 'neg'}">${r.buy_and_hold_return_pct.toFixed(1)}%</div></div>
+                <div class="card"><div class="label">Max drawdown</div>
+                    <div class="value neg">${r.max_drawdown_pct.toFixed(1)}%</div></div>
+                <div class="card"><div class="label">Floor</div>
+                    <div class="value ${r.floor_breached ? 'neg' : 'pos'}">$${Math.round(r.floor_value).toLocaleString()}</div>
+                    <div class="small ${r.floor_breached ? 'neg' : 'muted'}">${r.floor_breached ? 'BREACHED (gap risk)' : 'held'}</div></div>
+            </div>`,
+    },
     wheel: {
         label: 'Wheel Calculator',
         call: (b) => api.calcWheel(b),
@@ -126,7 +173,9 @@ export async function renderValuationTools(mount) {
                 ${tool.fields.map(f => `
                     <label class="dcf-field">
                         <span class="dcf-label">${esc(f.label)}</span>
-                        <input name="${f.key}" type="number" step="any" value="${f.def}">
+                        <input name="${f.key}" type="${f.text ? 'text' : 'number'}"
+                               ${f.text ? 'style="text-transform:uppercase"' : 'step="any"'}
+                               value="${f.def}">
                     </label>`).join('')}
                 <button type="submit" class="primary">Compute</button>
             </form>`;
@@ -137,6 +186,7 @@ export async function renderValuationTools(mount) {
             for (const f of tool.fields) {
                 const raw = fd.get(f.key);
                 if (f.optional && raw === '') { payload[f.key] = null; continue; }
+                if (f.text) { payload[f.key] = String(raw).trim().toUpperCase(); continue; }
                 payload[f.key] = f.int ? (parseInt(raw, 10) || 0) : (Number(raw) || 0);
             }
             out.textContent = '…';

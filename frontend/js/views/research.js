@@ -194,6 +194,8 @@ export async function renderResearch(mount, _state, sym) {
     const upgr = api.symbolUpgrades(sym).catch(() => null);
     const health = api.symbolFundamentalHealth(sym).catch(() => null);
     const r40 = api.symbolRuleOf40(sym).catch(() => null);
+    const beneish = api.symbolBeneish(sym).catch(() => null);
+    const chowder = api.symbolChowder(sym).catch(() => null);
     const gaps = api.symbolGapStats(sym).catch(() => null);
     const seas = api.symbolSeasonality(sym).catch(() => null);
 
@@ -257,10 +259,10 @@ export async function renderResearch(mount, _state, sym) {
         const el = mount.querySelector('#rs-upgrades');
         if (el) renderUpgrades(el, u);
     });
-    Promise.all([health, r40]).then(([h, r]) => {
+    Promise.all([health, r40, beneish, chowder]).then(([h, r, b, c]) => {
         if (!viewIsCurrent(tok)) return;
         const el = mount.querySelector('#rs-health');
-        if (el) renderFundamentalHealth(el, h, r);
+        if (el) renderFundamentalHealth(el, h, r, b, c);
     });
     gaps.then(g => {
         if (!viewIsCurrent(tok)) return;
@@ -274,12 +276,22 @@ export async function renderResearch(mount, _state, sym) {
     });
 }
 
-function renderFundamentalHealth(el, h, r40 = null) {
+function renderFundamentalHealth(el, h, r40 = null, beneish = null, chowder = null) {
     if (!h) { el.innerHTML = `<p class="muted">${esc(t('common.empty.no_data'))}</p>`; return; }
     const r40Card = r40 ? `
         <div class="card"><div class="label">Rule of 40</div>
             <div class="value ${r40.passes ? 'pos' : 'neg'}">${r40.score.toFixed(1)}</div>
             <div class="small muted">${r40.revenue_growth_pct.toFixed(1)}% growth + ${r40.fcf_margin_pct.toFixed(1)}% FCF margin</div>
+        </div>` : '';
+    const beneishCard = beneish ? `
+        <div class="card"><div class="label">Beneish M-Score</div>
+            <div class="value ${beneish.likely_manipulator ? 'neg' : 'pos'}">${beneish.m_score.toFixed(2)}</div>
+            <div class="small ${beneish.likely_manipulator ? 'neg' : 'muted'}">${beneish.likely_manipulator ? 'manipulation flag (> −1.78)' : 'clean (≤ −1.78)'}${beneish.missing.length ? ' · ' + beneish.missing.length + ' inputs approximated' : ''}</div>
+        </div>` : '';
+    const chowderCard = chowder ? `
+        <div class="card"><div class="label">Chowder Number</div>
+            <div class="value ${chowder.passes ? 'pos' : 'neg'}">${chowder.chowder_number.toFixed(1)}</div>
+            <div class="small muted">${chowder.dividend_yield_pct.toFixed(1)}% yield + ${chowder.dividend_cagr_5y_pct.toFixed(1)}% 5y div CAGR vs ${chowder.threshold}</div>
         </div>` : '';
     const fCls = h.piotroski_score >= 7 ? 'pos' : h.piotroski_score <= 3 ? 'neg' : 'neutral';
     const zoneCls = { safe: 'pos', grey: 'neutral', distress: 'neg' }[h.altman_zone] || '';
@@ -306,6 +318,8 @@ function renderFundamentalHealth(el, h, r40 = null) {
                 <div class="small muted">${esc(h.altman_zone || '')}</div></div>` : ''}
             ${grahamRow}
             ${r40Card}
+            ${beneishCard}
+            ${chowderCard}
         </div>
         <div class="rs-health-checks">${checks}</div>
     `;
