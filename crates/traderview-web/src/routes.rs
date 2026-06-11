@@ -153,6 +153,9 @@ mod social_security_age;
 mod sp500_predict;
 mod squeeze_scanner;
 mod stock_recommendation;
+// stock_recommendation::router() also serves
+// /recommendations/golden-stars + /recommendations/sectors +
+// watchers CRUD; no separate module needed.
 mod strategy_alerts;
 mod student_loan_payoff;
 mod symbols_catalog;

@@ -29,13 +29,14 @@
 //! required for ADX/MACD to seed cleanly; the function returns an
 //! `EngineError::Insufficient` if fewer than 60 bars come back.
 
-use chrono::{Duration, Utc};
+use chrono::{DateTime, Duration, Utc};
 use rust_decimal::prelude::FromPrimitive;
 use rust_decimal::Decimal;
 use serde::Serialize;
 use sqlx::PgPool;
 use traderview_core::indicators;
 use traderview_core::BarInterval;
+use uuid::Uuid;
 
 const MIN_BARS: usize = 60;
 const LOOKBACK_DAYS: i64 = 220;
@@ -139,9 +140,54 @@ pub enum RecommendationError {
     InvalidPrice(Decimal),
 }
 
+/// Per-component weight overrides. None for any field keeps the
+/// algorithm's default. Used by `compute_with_weights` and the
+/// `?trend_w=...&rsi_w=...` query parameters on the HTTP route so the
+/// user can tune the blend without a redeploy. Component scores
+/// themselves are unchanged — only the weighting changes.
+#[derive(Debug, Clone, Default, serde::Deserialize)]
+pub struct WeightOverrides {
+    pub trend: Option<f64>,
+    pub momentum: Option<f64>,
+    pub macd: Option<f64>,
+    pub rsi: Option<f64>,
+    pub adx: Option<f64>,
+    pub volume: Option<f64>,
+}
+
+impl WeightOverrides {
+    pub fn any(&self) -> bool {
+        self.trend.is_some()
+            || self.momentum.is_some()
+            || self.macd.is_some()
+            || self.rsi.is_some()
+            || self.adx.is_some()
+            || self.volume.is_some()
+    }
+    fn lookup(&self, key: &str) -> Option<f64> {
+        match key {
+            "trend" => self.trend,
+            "momentum" => self.momentum,
+            "macd" => self.macd,
+            "rsi" => self.rsi,
+            "adx" => self.adx,
+            "volume" => self.volume,
+            _ => None,
+        }
+    }
+}
+
 pub async fn compute(
     pool: &PgPool,
     symbol: &str,
+) -> Result<StockRecommendation, RecommendationError> {
+    compute_with_weights(pool, symbol, None).await
+}
+
+pub async fn compute_with_weights(
+    pool: &PgPool,
+    symbol: &str,
+    overrides: Option<&WeightOverrides>,
 ) -> Result<StockRecommendation, RecommendationError> {
     let to = Utc::now();
     let from = to - Duration::days(LOOKBACK_DAYS);
@@ -165,7 +211,7 @@ pub async fn compute(
     let lows = indicators::lows(&bars);
     let volumes = indicators::volumes(&bars);
 
-    let components = vec![
+    let mut components = vec![
         score_trend(&closes),
         score_momentum(&closes),
         score_macd(&closes),
@@ -173,6 +219,24 @@ pub async fn compute(
         score_adx(&highs, &lows, &closes),
         score_volume(&volumes, &closes),
     ];
+    if let Some(ov) = overrides {
+        if ov.any() {
+            // Apply each non-None override; renormalize so the
+            // resulting weights still sum to 1.0 (otherwise a small
+            // override silently dilutes the score).
+            for c in components.iter_mut() {
+                if let Some(w) = ov.lookup(c.key) {
+                    c.weight = w.max(0.0);
+                }
+            }
+            let total: f64 = components.iter().map(|c| c.weight).sum();
+            if total > 0.0 {
+                for c in components.iter_mut() {
+                    c.weight /= total;
+                }
+            }
+        }
+    }
     let weighted: f64 = components.iter().map(|c| c.weight * c.score).sum();
     let total_weight: f64 = components.iter().map(|c| c.weight).sum();
     let score = if total_weight > 0.0 {
@@ -439,6 +503,514 @@ fn score_volume(volumes: &[f64], closes: &[f64]) -> Component {
 
 fn decimal_to_f64(d: Decimal) -> f64 {
     d.to_string().parse().unwrap_or(0.0)
+}
+
+// ===========================================================================
+// Persistence: stock_recommendations table
+// ===========================================================================
+
+/// One row in `stock_recommendations`. Mirrors `StockRecommendation` but
+/// carries the database id + the computed_at timestamp. Used by the
+/// leaderboard, the backtest tooling, and the verdict-change alerter.
+#[derive(Debug, Clone, Serialize)]
+pub struct StoredRecommendation {
+    pub id: Uuid,
+    pub symbol: String,
+    pub computed_at: DateTime<Utc>,
+    pub verdict: String,
+    pub score: f64,
+    pub stars: i16,
+    pub current_price: Decimal,
+    pub target_price: Decimal,
+    pub upside_pct: f64,
+    pub horizon_days: i32,
+    pub bars_analyzed: i32,
+    pub components: serde_json::Value,
+}
+
+/// Persist a freshly-computed recommendation. The cron uses this after
+/// every per-symbol `compute()` call. Each call inserts a new row —
+/// keeping history (so the alerter can diff and the backtester can
+/// replay) at the cost of unbounded growth, which a future cron
+/// retention job can prune.
+pub async fn save(
+    pool: &PgPool,
+    r: &StockRecommendation,
+) -> anyhow::Result<StoredRecommendation> {
+    let components = serde_json::to_value(&r.components).unwrap_or(serde_json::json!([]));
+    let score_dec = Decimal::from_f64(r.score).unwrap_or_default();
+    let upside_dec = Decimal::from_f64(r.upside_pct).unwrap_or_default();
+    let row: (
+        Uuid,
+        String,
+        DateTime<Utc>,
+        String,
+        Decimal,
+        i16,
+        Decimal,
+        Decimal,
+        Decimal,
+        i32,
+        i32,
+        serde_json::Value,
+    ) = sqlx::query_as(
+        "INSERT INTO stock_recommendations
+            (symbol, verdict, score, stars, current_price, target_price,
+             upside_pct, horizon_days, bars_analyzed, components)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         RETURNING id, symbol, computed_at, verdict, score, stars,
+                   current_price, target_price, upside_pct, horizon_days,
+                   bars_analyzed, components",
+    )
+    .bind(&r.symbol)
+    .bind(r.verdict.as_str())
+    .bind(score_dec)
+    .bind(r.stars as i16)
+    .bind(r.current_price)
+    .bind(r.target_price)
+    .bind(upside_dec)
+    .bind(r.horizon_days as i32)
+    .bind(r.bars_analyzed as i32)
+    .bind(components)
+    .fetch_one(pool)
+    .await?;
+    let (
+        id,
+        symbol,
+        computed_at,
+        verdict,
+        score,
+        stars,
+        current_price,
+        target_price,
+        upside_pct,
+        horizon_days,
+        bars_analyzed,
+        components,
+    ) = row;
+    Ok(StoredRecommendation {
+        id,
+        symbol,
+        computed_at,
+        verdict,
+        score: decimal_to_f64(score),
+        stars,
+        current_price,
+        target_price,
+        upside_pct: decimal_to_f64(upside_pct),
+        horizon_days,
+        bars_analyzed,
+        components,
+    })
+}
+
+/// Most-recent recommendation per symbol, ordered by score descending.
+/// Backs the Golden Stars leaderboard. The `min_verdict` filter lets
+/// callers say "buy candidates only" so the view doesn't show the
+/// strong_sell list alongside the buys.
+pub async fn leaderboard(
+    pool: &PgPool,
+    limit: i64,
+    min_score: Option<f64>,
+) -> anyhow::Result<Vec<StoredRecommendation>> {
+    let min = min_score.unwrap_or(0.0);
+    let min_dec = Decimal::from_f64(min).unwrap_or_default();
+    let rows: Vec<(
+        Uuid,
+        String,
+        DateTime<Utc>,
+        String,
+        Decimal,
+        i16,
+        Decimal,
+        Decimal,
+        Decimal,
+        i32,
+        i32,
+        serde_json::Value,
+    )> = sqlx::query_as(
+        "SELECT DISTINCT ON (symbol)
+                id, symbol, computed_at, verdict, score, stars,
+                current_price, target_price, upside_pct, horizon_days,
+                bars_analyzed, components
+           FROM stock_recommendations
+          WHERE score >= $1
+          ORDER BY symbol, computed_at DESC",
+    )
+    .bind(min_dec)
+    .fetch_all(pool)
+    .await?;
+    // Re-sort by score descending in app code (DISTINCT ON forces a
+    // symbol-keyed sort; doing the score sort in SQL would need a CTE).
+    let mut out: Vec<StoredRecommendation> = rows
+        .into_iter()
+        .map(
+            |(
+                id,
+                symbol,
+                computed_at,
+                verdict,
+                score,
+                stars,
+                current_price,
+                target_price,
+                upside_pct,
+                horizon_days,
+                bars_analyzed,
+                components,
+            )| StoredRecommendation {
+                id,
+                symbol,
+                computed_at,
+                verdict,
+                score: decimal_to_f64(score),
+                stars,
+                current_price,
+                target_price,
+                upside_pct: decimal_to_f64(upside_pct),
+                horizon_days,
+                bars_analyzed,
+                components,
+            },
+        )
+        .collect();
+    out.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+    out.truncate(limit.max(1) as usize);
+    Ok(out)
+}
+
+/// Latest single recommendation for one symbol (or None if never
+/// computed). Used by the verdict-change alerter to find the prior
+/// verdict before comparing against the new compute.
+pub async fn latest_for_symbol(
+    pool: &PgPool,
+    symbol: &str,
+) -> anyhow::Result<Option<StoredRecommendation>> {
+    let row: Option<(
+        Uuid,
+        String,
+        DateTime<Utc>,
+        String,
+        Decimal,
+        i16,
+        Decimal,
+        Decimal,
+        Decimal,
+        i32,
+        i32,
+        serde_json::Value,
+    )> = sqlx::query_as(
+        "SELECT id, symbol, computed_at, verdict, score, stars,
+                current_price, target_price, upside_pct, horizon_days,
+                bars_analyzed, components
+           FROM stock_recommendations
+          WHERE symbol = $1
+          ORDER BY computed_at DESC
+          LIMIT 1",
+    )
+    .bind(symbol)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row.map(
+        |(
+            id,
+            symbol,
+            computed_at,
+            verdict,
+            score,
+            stars,
+            current_price,
+            target_price,
+            upside_pct,
+            horizon_days,
+            bars_analyzed,
+            components,
+        )| StoredRecommendation {
+            id,
+            symbol,
+            computed_at,
+            verdict,
+            score: decimal_to_f64(score),
+            stars,
+            current_price,
+            target_price,
+            upside_pct: decimal_to_f64(upside_pct),
+            horizon_days,
+            bars_analyzed,
+            components,
+        },
+    ))
+}
+
+// ===========================================================================
+// Universes
+// ===========================================================================
+
+/// The 11 SPDR sector ETFs. Used by the sector-aggregation view and by
+/// the default Golden Stars universe when the user hasn't bound the
+/// symbols catalog.
+pub const SECTOR_ETFS: &[(&str, &str)] = &[
+    ("XLK", "Technology"),
+    ("XLF", "Financials"),
+    ("XLE", "Energy"),
+    ("XLV", "Health Care"),
+    ("XLI", "Industrials"),
+    ("XLY", "Consumer Discretionary"),
+    ("XLP", "Consumer Staples"),
+    ("XLU", "Utilities"),
+    ("XLRE", "Real Estate"),
+    ("XLB", "Materials"),
+    ("XLC", "Communication Services"),
+];
+
+/// Default Golden Stars universe — anchors of major indexes + each
+/// sector ETF + the highest-liquidity names from each sector. Kept
+/// hardcoded so the leaderboard ships without depending on a
+/// user-curated watchlist. The cron iterates this; if a name fails
+/// (no bars), the cron logs + continues.
+pub const DEFAULT_UNIVERSE: &[&str] = &[
+    // Index / leadership
+    "SPY", "QQQ", "DIA", "IWM",
+    // Sector SPDRs
+    "XLK", "XLF", "XLE", "XLV", "XLI", "XLY", "XLP", "XLU", "XLRE", "XLB", "XLC",
+    // Mega-cap tech
+    "AAPL", "MSFT", "GOOGL", "AMZN", "META", "NVDA", "TSLA", "AVGO", "ORCL", "CRM",
+    "ADBE", "AMD", "INTC", "QCOM", "TXN", "MU", "PYPL", "NFLX",
+    // Financials
+    "JPM", "BAC", "WFC", "GS", "MS", "C", "V", "MA", "AXP", "BLK",
+    // Energy
+    "XOM", "CVX", "COP", "SLB", "EOG",
+    // Health care
+    "UNH", "JNJ", "LLY", "PFE", "ABBV", "MRK", "TMO", "ABT",
+    // Consumer
+    "WMT", "HD", "COST", "MCD", "NKE", "SBUX", "TGT", "LOW",
+    // Industrials / defense
+    "BA", "CAT", "GE", "LMT", "RTX", "HON", "UPS", "FDX",
+    // Communications
+    "DIS", "CMCSA", "T", "VZ",
+];
+
+// ===========================================================================
+// Cron: compute + persist for a universe
+// ===========================================================================
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CronResult {
+    pub attempted: usize,
+    pub succeeded: usize,
+    pub failed: usize,
+    pub failures: Vec<(String, String)>,
+}
+
+/// Run `compute()` for every symbol in `universe`, persist each
+/// successful result, and report a per-symbol roll-up. Failures
+/// (insufficient history, price-fetch errors) are logged + skipped so
+/// the cron doesn't abort mid-batch. Returns the universe size and
+/// success/failure counts.
+pub async fn cron_compute_universe(
+    pool: &PgPool,
+    universe: &[&str],
+) -> CronResult {
+    let mut succeeded = 0usize;
+    let mut failed = 0usize;
+    let mut failures: Vec<(String, String)> = Vec::new();
+    for sym in universe {
+        match compute(pool, sym).await {
+            Ok(r) => match save(pool, &r).await {
+                Ok(_) => {
+                    succeeded += 1;
+                }
+                Err(e) => {
+                    failed += 1;
+                    failures.push((sym.to_string(), format!("save: {e}")));
+                    tracing::warn!(symbol = %sym, error = %e, "stock_rec: save failed");
+                }
+            },
+            Err(e) => {
+                failed += 1;
+                failures.push((sym.to_string(), format!("compute: {e}")));
+                tracing::debug!(symbol = %sym, error = %e, "stock_rec: compute failed");
+            }
+        }
+    }
+    CronResult {
+        attempted: universe.len(),
+        succeeded,
+        failed,
+        failures,
+    }
+}
+
+// ===========================================================================
+// Historical accuracy backtest
+// ===========================================================================
+
+/// One historical "what would the algorithm have said" event.
+#[derive(Debug, Clone, Serialize)]
+pub struct BacktestSignal {
+    pub at: DateTime<Utc>,
+    pub verdict: Verdict,
+    pub score: f64,
+    pub close: f64,
+    /// Forward 30-bar return in percent (None if the bar window doesn't
+    /// extend `horizon_bars` past `at`).
+    pub forward_return_pct: Option<f64>,
+    /// Was the verdict's directional bias correct? Buy/StrongBuy require
+    /// forward_return_pct > 0; Sell/StrongSell require < 0; Hold is
+    /// neutral (always None).
+    pub correct: Option<bool>,
+}
+
+/// Per-verdict roll-up: hit rate + sample count + average forward
+/// return. Renders alongside the recommendation panel so the user can
+/// see "strong_buy hit 72% over 31 prior fires" before acting on
+/// today's signal.
+#[derive(Debug, Clone, Serialize, Default)]
+pub struct BacktestVerdictStats {
+    pub verdict: Option<String>,
+    pub sample_count: usize,
+    pub hit_count: usize,
+    pub hit_rate_pct: f64,
+    pub avg_forward_return_pct: f64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct BacktestReport {
+    pub symbol: String,
+    pub bars_used: usize,
+    pub horizon_bars: usize,
+    /// One stats row per verdict bucket that had ≥1 sample.
+    pub by_verdict: Vec<BacktestVerdictStats>,
+    /// Most recent 50 signals so the UI can plot them along the chart.
+    pub recent_signals: Vec<BacktestSignal>,
+}
+
+/// Replay the algorithm across every day in the bar window. For each
+/// day with ≥`MIN_BARS` of trailing data, run the same component blend
+/// as `compute()` then observe the return `horizon_bars` ahead. Returns
+/// per-verdict hit rates so the panel can show "buys correct 67% over
+/// 31 prior fires."
+///
+/// `horizon_bars` defaults to 22 (≈1 trading month) when None — same
+/// horizon the `target_price` heuristic projects to.
+pub async fn backtest(
+    pool: &PgPool,
+    symbol: &str,
+    horizon_bars: Option<usize>,
+) -> Result<BacktestReport, RecommendationError> {
+    let horizon = horizon_bars.unwrap_or(22);
+    // Lookback enough days to fit MIN_BARS + horizon + a year of replays.
+    let to = Utc::now();
+    let from = to - Duration::days(LOOKBACK_DAYS * 3 + horizon as i64 * 2);
+    let bars = crate::prices::get_bars(pool, symbol, BarInterval::D1, from, to)
+        .await
+        .map_err(RecommendationError::PriceFetch)?;
+    let n = bars.len();
+    if n < MIN_BARS + horizon {
+        return Err(RecommendationError::Insufficient {
+            symbol: symbol.to_string(),
+            got: n,
+            need: MIN_BARS + horizon,
+        });
+    }
+    let closes_all = indicators::closes(&bars);
+    let highs_all = indicators::highs(&bars);
+    let lows_all = indicators::lows(&bars);
+    let volumes_all = indicators::volumes(&bars);
+    let mut signals: Vec<BacktestSignal> = Vec::new();
+    for i in MIN_BARS..(n - horizon) {
+        let closes = &closes_all[..=i];
+        let highs = &highs_all[..=i];
+        let lows = &lows_all[..=i];
+        let volumes = &volumes_all[..=i];
+        let components = vec![
+            score_trend(closes),
+            score_momentum(closes),
+            score_macd(closes),
+            score_rsi(closes),
+            score_adx(highs, lows, closes),
+            score_volume(volumes, closes),
+        ];
+        let weighted: f64 = components.iter().map(|c| c.weight * c.score).sum();
+        let total_weight: f64 = components.iter().map(|c| c.weight).sum();
+        let score = if total_weight > 0.0 {
+            weighted / total_weight
+        } else {
+            50.0
+        };
+        let verdict = Verdict::from_score(score);
+        let close_now = closes[i];
+        let close_future = closes_all[i + horizon];
+        let forward_return_pct = if close_now.abs() > 1e-9 {
+            Some((close_future - close_now) / close_now * 100.0)
+        } else {
+            None
+        };
+        let correct = match verdict {
+            Verdict::StrongBuy | Verdict::Buy => forward_return_pct.map(|r| r > 0.0),
+            Verdict::Sell | Verdict::StrongSell => forward_return_pct.map(|r| r < 0.0),
+            Verdict::Hold => None,
+        };
+        signals.push(BacktestSignal {
+            at: bars[i].bar_time,
+            verdict,
+            score,
+            close: close_now,
+            forward_return_pct,
+            correct,
+        });
+    }
+    // Per-verdict roll-up.
+    let mut by_verdict_map: std::collections::HashMap<&'static str, (usize, usize, f64)> =
+        std::collections::HashMap::new();
+    for s in &signals {
+        let key = s.verdict.as_str();
+        let entry = by_verdict_map.entry(key).or_insert((0, 0, 0.0));
+        entry.0 += 1;
+        if matches!(s.correct, Some(true)) {
+            entry.1 += 1;
+        }
+        if let Some(r) = s.forward_return_pct {
+            entry.2 += r;
+        }
+    }
+    let mut by_verdict: Vec<BacktestVerdictStats> = by_verdict_map
+        .into_iter()
+        .map(|(verdict, (count, hits, sum_ret))| BacktestVerdictStats {
+            verdict: Some(verdict.to_string()),
+            sample_count: count,
+            hit_count: hits,
+            hit_rate_pct: if count > 0 {
+                hits as f64 / count as f64 * 100.0
+            } else {
+                0.0
+            },
+            avg_forward_return_pct: if count > 0 { sum_ret / count as f64 } else { 0.0 },
+        })
+        .collect();
+    by_verdict.sort_by(|a, b| {
+        b.hit_rate_pct
+            .partial_cmp(&a.hit_rate_pct)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+    // Keep the last 50 signals — the UI plots them as small dots over
+    // the price chart so the user sees where the algorithm flipped.
+    let recent_signals = signals
+        .iter()
+        .rev()
+        .take(50)
+        .cloned()
+        .collect::<Vec<_>>()
+        .into_iter()
+        .rev()
+        .collect();
+    Ok(BacktestReport {
+        symbol: symbol.to_string(),
+        bars_used: n,
+        horizon_bars: horizon,
+        by_verdict,
+        recent_signals,
+    })
 }
 
 #[cfg(test)]

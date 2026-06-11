@@ -152,6 +152,7 @@ pub mod social_security_age;
 pub mod sp500_predictor;
 pub mod squeeze_detector;
 pub mod stock_recommendation;
+pub mod stock_recommendation_watchers;
 pub mod strategy_alerts;
 pub mod student_loan_payoff;
 pub mod symbols;

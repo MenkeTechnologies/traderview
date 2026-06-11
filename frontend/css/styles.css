@@ -322,6 +322,24 @@ main#app {
 .rs-rec-comp-note { margin-top: 4px; }
 .rs-rec-foot { margin-top: 12px; padding-top: 8px; border-top: 1px dashed var(--border); }
 
+/* ---- recommendation backtest panel --------------------------------- */
+.rs-rec-bt { margin-top: 14px; padding-top: 10px; border-top: 1px dashed var(--border); }
+.rs-rec-bt-title { margin-bottom: 6px; letter-spacing: 1px; text-transform: uppercase; }
+.rs-rec-bt-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.rs-rec-bt-table th { text-align: left; padding: 4px 8px; color: var(--text-dim); font-size: 10px; letter-spacing: 1px; text-transform: uppercase; }
+.rs-rec-bt-table td { padding: 4px 8px; border-top: 1px solid rgba(255,255,255,0.04); }
+.rs-rec-bt-table .pos { color: var(--green); }
+.rs-rec-bt-table .neg { color: var(--red); }
+
+/* ---- watcher widget ------------------------------------------------ */
+.rs-rec-watcher { margin-top: 14px; padding: 10px; border: 1px solid var(--border); border-radius: 2px; background: rgba(255,255,255,0.02); }
+.rs-rec-watcher-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.rs-rec-watcher-status { color: var(--text-dim); font-size: 11px; }
+.rs-rec-watcher-row { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; font-size: 11px; }
+.rs-rec-wh { display: inline-flex; align-items: center; gap: 4px; }
+.rs-rec-watcher-actions { display: flex; gap: 8px; }
+.rs-rec-watcher-actions .btn { font-size: 10px; letter-spacing: 2px; padding: 4px 10px; }
+
 @media (max-width: 720px) {
     .rs-rec-head { grid-template-columns: 1fr 1fr; gap: 10px; }
     .rs-rec-verdict { font-size: 16px; padding: 8px 10px; }
@@ -329,6 +347,108 @@ main#app {
     .rs-rec-target { font-size: 20px; }
     .rs-rec-stars { font-size: 22px; letter-spacing: 3px; }
 }
+
+/* ---- golden stars leaderboard --------------------------------------- */
+.gs-controls { margin-bottom: 12px; }
+.gs-filter-row {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.gs-filter { font-size: 10px; letter-spacing: 2px; padding: 4px 10px; }
+.gs-filter.active {
+    background: var(--cyan); color: var(--bg-deep); border-color: var(--cyan);
+    box-shadow: 0 0 8px var(--cyan-glow);
+}
+.gs-meta { margin-left: auto; }
+.gs-run { font-size: 10px; letter-spacing: 2px; padding: 4px 10px; }
+.gs-table {
+    width: 100%; border-collapse: collapse; font-size: 12px;
+}
+.gs-table th {
+    text-align: left; padding: 6px 8px;
+    color: var(--cyan); font-family: 'Orbitron', sans-serif;
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+}
+.gs-table td { padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+.gs-row:hover { background: rgba(0, 229, 255, 0.05); }
+.gs-rank { color: var(--text-dim); font-family: 'Share Tech Mono', monospace; }
+.gs-sym a { color: var(--cyan); font-weight: 700; text-decoration: none; }
+.gs-sym a:hover { text-decoration: underline; }
+.gs-verdict {
+    display: inline-block; padding: 2px 8px; border-radius: 2px;
+    font-size: 10px; letter-spacing: 2px; font-weight: 700;
+    border: 1px solid var(--border);
+}
+.gs-verdict.pos { color: var(--green); border-color: var(--green); }
+.gs-verdict.pos.strong { background: rgba(57,255,20,0.18); }
+.gs-verdict.neg { color: var(--red); border-color: var(--red); }
+.gs-verdict.neg.strong { background: rgba(255,56,96,0.18); }
+.gs-verdict.neutral { color: var(--yellow); border-color: var(--yellow); }
+.gs-stars { color: var(--yellow); font-size: 14px; letter-spacing: 2px; }
+.gs-score { min-width: 90px; }
+.gs-score-num {
+    font-family: 'Orbitron', sans-serif; font-weight: 700; font-size: 13px;
+    color: var(--cyan);
+}
+.gs-score-bar {
+    height: 4px; background: rgba(255,255,255,0.05); border-radius: 1px;
+    margin-top: 2px; overflow: hidden;
+}
+.gs-score-bar-fill { height: 100%; transition: width 200ms ease; }
+.gs-score-bar-fill.pos { background: var(--green); }
+.gs-score-bar-fill.neg { background: var(--red); }
+.gs-score-bar-fill.neutral { background: var(--yellow); }
+.gs-price, .gs-target { font-family: 'Share Tech Mono', monospace; }
+.gs-upside.pos { color: var(--green); }
+.gs-upside.neg { color: var(--red); }
+
+/* ---- sector heatmap ------------------------------------------------- */
+.rs-sector-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+}
+.rs-sector-tile {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 2px; padding: 12px;
+    display: flex; flex-direction: column; gap: 6px;
+    min-height: 130px; position: relative;
+}
+.rs-sector-tile.sb-strong-buy   { border-color: var(--green); background: linear-gradient(180deg, rgba(57,255,20,0.18), transparent); }
+.rs-sector-tile.sb-buy          { border-color: var(--green); }
+.rs-sector-tile.sb-hold         { border-color: var(--yellow); }
+.rs-sector-tile.sb-sell         { border-color: var(--red); }
+.rs-sector-tile.sb-strong-sell  { border-color: var(--red); background: linear-gradient(180deg, rgba(255,56,96,0.18), transparent); }
+.rs-sector-err { border-color: var(--text-muted); }
+.rs-sector-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+}
+.rs-sector-ticker {
+    font-family: 'Orbitron', sans-serif; font-weight: 700; color: var(--cyan);
+    text-decoration: none; font-size: 16px;
+}
+.rs-sector-stars { color: var(--yellow); letter-spacing: 2px; }
+.rs-sector-verdict {
+    font-family: 'Orbitron', sans-serif; font-weight: 700; letter-spacing: 2px;
+    font-size: 13px; padding: 2px 0;
+}
+.rs-sector-tile.sb-strong-buy .rs-sector-verdict,
+.rs-sector-tile.sb-buy .rs-sector-verdict { color: var(--green); }
+.rs-sector-tile.sb-sell .rs-sector-verdict,
+.rs-sector-tile.sb-strong-sell .rs-sector-verdict { color: var(--red); }
+.rs-sector-tile.sb-hold .rs-sector-verdict { color: var(--yellow); }
+.rs-sector-stats {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-top: auto;
+}
+.rs-sector-score {
+    font-family: 'Orbitron', sans-serif; font-weight: 700;
+    font-size: 22px; color: var(--cyan);
+}
+.rs-sector-upside { font-size: 12px; font-weight: 700; }
+.rs-sector-upside.pos { color: var(--green); }
+.rs-sector-upside.neg { color: var(--red); }
 
 /* ---- stat cards ----------------------------------------------------- */
 .cards {

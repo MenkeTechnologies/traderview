@@ -708,7 +708,15 @@ export const api = {
     // Internal composite Buy/Sell/Hold + stars + score + target. Mirrors
     // stockinvest.us's per-ticker surface but the algorithm is ours
     // (see crates/traderview-db/src/stock_recommendation.rs).
-    symbolRecommendation: (sym) => request(`/symbols/${encodeURIComponent(sym)}/recommendation`),
+    symbolRecommendation:        (sym) => request(`/symbols/${encodeURIComponent(sym)}/recommendation`),
+    symbolRecommendationBacktest:(sym, horizon = 22) => request(`/symbols/${encodeURIComponent(sym)}/recommendation/backtest${qs({ horizon })}`),
+    recommendationLeaderboard:   ({ limit = 100, min_score = 0 } = {}) =>
+        request(`/recommendations/golden-stars${qs({ limit, min_score })}`),
+    recommendationSectors:       () => request('/recommendations/sectors'),
+    recommendationCronRun:       () => request('/recommendations/cron/run', { method: 'POST' }),
+    recommendationWatchers:      () => request('/recommendations/watchers'),
+    recommendationWatcherUpsert: (body) => request('/recommendations/watchers', { method: 'POST', body: JSON.stringify(body) }),
+    recommendationWatcherDelete: (id) => request(`/recommendations/watchers/${encodeURIComponent(id)}`, { method: 'DELETE' }),
     symbolInsiders:  (sym) => request(`/symbols/${encodeURIComponent(sym)}/insiders`),
     symbolFundamentals: (sym) => request(`/symbols/${encodeURIComponent(sym)}/fundamentals`),
     symbolHolders:   (sym) => request(`/symbols/${encodeURIComponent(sym)}/holders`),

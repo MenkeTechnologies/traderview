@@ -411,6 +411,8 @@ import { renderSearch } from './views/search.js';
 import { renderNewTrade } from './views/new_trade.js';
 import { renderWatchlists } from './views/watchlists.js';
 import { renderResearch } from './views/research.js';
+import { renderGoldenStars } from './views/golden_stars.js';
+import { renderRecommendationSectors } from './views/recommendation_sectors.js';
 import { renderScreener } from './views/screener.js';
 import { renderTopSignals } from './views/top_signals.js';
 import { renderScanners } from './views/scanners.js';
@@ -2732,6 +2734,8 @@ export async function dispatch() {
             case 'search':      await renderSearch(mount, state); break;
             case 'watchlists':  await renderWatchlists(mount, state); break;
             case 'research':    await renderResearch(mount, state, sym()); break;
+            case 'golden-stars': await renderGoldenStars(mount, state); break;
+            case 'recommendation-sectors': await renderRecommendationSectors(mount, state); break;
             case 'screener':    await renderScreener(mount, state); break;
             case 'top-signals': await renderTopSignals(mount, state); break;
             case 'scanners':    await renderScanners(mount, state); break;

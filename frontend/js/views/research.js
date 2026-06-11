@@ -167,6 +167,9 @@ export async function renderResearch(mount, _state, sym) {
     // Kick off everything in parallel.
     const q = api.quote(sym).catch(() => null);
     const rec = api.symbolRecommendation(sym).catch(() => null);
+    const recBt = api.symbolRecommendationBacktest(sym).catch(() => null);
+    const recWatchers = api.recommendationWatchers().catch(() => []);
+    const recWebhooks = api.webhooks?.().catch(() => []);
     const sig = api.symbolSignals(sym).catch(() => null);
     const news = api.symbolNews(sym, 10).catch(() => []);
     const fund = api.symbolFundamentals(sym).catch(() => null);
@@ -184,10 +187,10 @@ export async function renderResearch(mount, _state, sym) {
     if (quoteEl) renderQuote(quoteEl, qv);
     const chartEl = mount.querySelector('#rs-chart');
     if (chartEl) createTradingChart(chartEl, { symbol: sym, interval: '1d', height: 380 });
-    rec.then(r => {
+    Promise.all([rec, recBt, recWatchers, recWebhooks]).then(([r, bt, watchers, webhooks]) => {
         if (!viewIsCurrent(tok)) return;
         const el = mount.querySelector('#rs-rec');
-        if (el) renderRecommendation(el, r);
+        if (el) renderRecommendation(el, r, bt, watchers || [], webhooks || [], sym);
     });
     sig.then(s => {
         if (!viewIsCurrent(tok)) return;
@@ -320,7 +323,7 @@ function renderUpgrades(el, u) {
 // + composite 0-100 score + 30-day target with upside percentage +
 // per-indicator breakdown bars. All numbers come from
 // /api/symbols/:sym/recommendation backed by stock_recommendation.rs.
-function renderRecommendation(el, r) {
+function renderRecommendation(el, r, backtest = null, watchers = [], webhooks = [], symbol = '') {
     if (!r) {
         el.innerHTML = `<div class="boot">${esc(t('view.research.empty.no_recommendation'))}</div>`;
         return;
@@ -376,9 +379,102 @@ function renderRecommendation(el, r) {
             </div>
         </div>
         <div class="rs-rec-breakdown">${compBars}</div>
+        ${renderBacktestSummary(backtest)}
+        ${renderWatcherWidget(symbol, watchers, webhooks)}
         <div class="muted small rs-rec-foot">Composite of ${r.components.length} components, ${r.bars_analyzed} bars analyzed.</div>
     `;
     try { applyBarWidths(el); } catch (_) {}
+    wireWatcherWidget(el, symbol, watchers, webhooks);
+}
+
+function renderBacktestSummary(bt) {
+    if (!bt || !bt.by_verdict || !bt.by_verdict.length) return '';
+    const rows = bt.by_verdict.map(s => {
+        const cls = (s.verdict === 'strong_buy' || s.verdict === 'buy') ? 'pos'
+                  : (s.verdict === 'strong_sell' || s.verdict === 'sell') ? 'neg' : 'neutral';
+        return `
+            <tr>
+                <td><span class="gs-verdict ${cls}">${esc((s.verdict || '').toUpperCase().replace('_', ' '))}</span></td>
+                <td>${s.sample_count}</td>
+                <td>${s.hit_rate_pct.toFixed(1)}%</td>
+                <td class="${s.avg_forward_return_pct >= 0 ? 'pos' : 'neg'}">${(s.avg_forward_return_pct >= 0 ? '+' : '') + s.avg_forward_return_pct.toFixed(2)}%</td>
+            </tr>
+        `;
+    }).join('');
+    return `
+        <div class="rs-rec-bt">
+            <div class="rs-rec-bt-title muted small">Historical accuracy (last ${bt.bars_used} bars, ${bt.horizon_bars}-bar horizon)</div>
+            <table class="rs-rec-bt-table">
+                <thead><tr><th>Verdict</th><th>Samples</th><th>Hit rate</th><th>Avg return</th></tr></thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
+    `;
+}
+
+function renderWatcherWidget(symbol, watchers, webhooks) {
+    if (!symbol) return '';
+    const existing = (watchers || []).find(w => w.symbol === symbol);
+    const whOpts = (webhooks || []).filter(w => w.enabled).map(w =>
+        `<label class="rs-rec-wh"><input type="checkbox" data-wh="${esc(w.id)}" ${existing && existing.webhook_ids && existing.webhook_ids.includes(w.id) ? 'checked' : ''}> ${esc(w.label || w.kind || w.url)}</label>`
+    ).join('');
+    if (!whOpts) {
+        return `<div class="rs-rec-watcher muted small">No webhooks configured — add one in Settings to enable verdict alerts for ${esc(symbol)}.</div>`;
+    }
+    return `
+        <div class="rs-rec-watcher">
+            <div class="rs-rec-watcher-head">
+                <strong>Watch verdict changes for ${esc(symbol)}</strong>
+                ${existing ? `<span class="rs-rec-watcher-status">last verdict: ${esc(existing.last_verdict || '—')}</span>` : ''}
+            </div>
+            <div class="rs-rec-watcher-row">${whOpts}</div>
+            <div class="rs-rec-watcher-actions">
+                <button class="btn btn-secondary rs-rec-watch-save">${existing ? 'Update' : 'Watch'}</button>
+                ${existing ? `<button class="btn btn-secondary rs-rec-watch-del" data-id="${esc(existing.id)}">Remove</button>` : ''}
+            </div>
+        </div>
+    `;
+}
+
+function wireWatcherWidget(el, symbol, watchers, webhooks) {
+    if (!el || !symbol) return;
+    const saveBtn = el.querySelector('.rs-rec-watch-save');
+    const delBtn = el.querySelector('.rs-rec-watch-del');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', async () => {
+            const ids = Array.from(el.querySelectorAll('input[data-wh]:checked'))
+                .map(cb => cb.getAttribute('data-wh'));
+            saveBtn.disabled = true;
+            try {
+                await api.recommendationWatcherUpsert({
+                    symbol,
+                    webhook_ids: ids,
+                    fire_on: null,
+                    enabled: true,
+                });
+                saveBtn.textContent = 'Saved';
+            } catch (e) {
+                saveBtn.textContent = 'Failed';
+            } finally {
+                setTimeout(() => { saveBtn.disabled = false; saveBtn.textContent = 'Update'; }, 2500);
+            }
+        });
+    }
+    if (delBtn) {
+        delBtn.addEventListener('click', async () => {
+            const id = delBtn.getAttribute('data-id');
+            if (!id) return;
+            delBtn.disabled = true;
+            try {
+                await api.recommendationWatcherDelete(id);
+                delBtn.textContent = 'Removed';
+            } catch (e) {
+                delBtn.textContent = 'Failed';
+            } finally {
+                setTimeout(() => { delBtn.disabled = false; delBtn.textContent = 'Remove'; }, 2500);
+            }
+        });
+    }
 }
 
 function renderQuote(el, q) {
