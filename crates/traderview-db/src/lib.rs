@@ -119,6 +119,7 @@ pub mod options;
 pub mod pairs_cointegration;
 pub mod paper;
 pub mod paper_rebalance;
+pub mod paper_recurring;
 pub mod paper_dividends;
 pub mod paper_equity;
 pub mod paper_parent_orders;

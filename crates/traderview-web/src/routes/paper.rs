@@ -34,6 +34,16 @@ pub fn router() -> Router<AppState> {
         .route("/paper/accounts/:id/spreads", post(submit_spread))
         .route("/paper/accounts/:id/option-greeks", get(option_greeks))
         .route("/paper/spreads/preview", post(preview_spread))
+        .route(
+            "/paper/accounts/:id/recurring",
+            post(create_recurring),
+        )
+        .route("/paper/recurring", get(list_recurring))
+        .route("/paper/recurring/:id/toggle", post(toggle_recurring))
+        .route(
+            "/paper/recurring/:id",
+            axum::routing::delete(delete_recurring),
+        )
         .route("/paper/accounts/:id/equity-history", get(equity_history))
         .route("/paper/accounts/comparison", get(account_comparison))
         .route("/paper/accounts/create", post(create_account))
@@ -162,6 +172,66 @@ async fn preview_spread(
         .await
         .map(Json)
         .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+#[derive(Deserialize)]
+struct RecurringBody {
+    symbol: String,
+    notional_usd: Decimal,
+    cadence: String,
+}
+
+/// Auto-invest: "$N of SYMBOL daily/weekly/monthly" on the paper account.
+async fn create_recurring(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(account_id): Path<Uuid>,
+    Json(b): Json<RecurringBody>,
+) -> Result<Json<traderview_db::paper_recurring::RecurringOrder>, ApiError> {
+    traderview_db::paper_recurring::create(
+        &s.pool, user.id, account_id, &b.symbol, b.notional_usd, &b.cadence,
+    )
+    .await
+    .map(Json)
+    .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+async fn list_recurring(
+    State(s): State<AppState>,
+    user: AuthUser,
+) -> Result<Json<Vec<traderview_db::paper_recurring::RecurringOrder>>, ApiError> {
+    traderview_db::paper_recurring::list(&s.pool, user.id)
+        .await
+        .map(Json)
+        .map_err(ApiError::Internal)
+}
+
+#[derive(Deserialize)]
+struct ToggleBody {
+    enabled: bool,
+}
+
+async fn toggle_recurring(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<Uuid>,
+    Json(b): Json<ToggleBody>,
+) -> Result<Json<bool>, ApiError> {
+    traderview_db::paper_recurring::set_enabled(&s.pool, user.id, id, b.enabled)
+        .await
+        .map(Json)
+        .map_err(ApiError::Internal)
+}
+
+async fn delete_recurring(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<Uuid>,
+) -> Result<Json<bool>, ApiError> {
+    traderview_db::paper_recurring::delete(&s.pool, user.id, id)
+        .await
+        .map(Json)
+        .map_err(ApiError::Internal)
 }
 
 /// Atomic multi-leg option spread (2-4 OCC legs, one underlying).

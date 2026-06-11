@@ -52,6 +52,9 @@ pub const STRATEGY_DRIFT_WATCH: Duration = Duration::from_secs(12 * 60 * 60);
 /// Rebalance drift sweep — allocation drift also moves on the scale
 /// of sessions.
 pub const REBALANCE_DRIFT_WATCH: Duration = Duration::from_secs(12 * 60 * 60);
+/// Auto-invest pass — cadences are daily+; an hourly pass keeps
+/// catch-up snappy after the app was closed.
+pub const PAPER_RECURRING_TICK: Duration = Duration::from_secs(60 * 60);
 /// Paper dividend crediting — ex-dates are daily-bar data and the pass
 /// is idempotent, so a few runs a day is plenty.
 pub const PAPER_DIVIDEND_CREDIT: Duration = Duration::from_secs(6 * 60 * 60);
@@ -120,6 +123,7 @@ pub fn spawn_refreshers(pool: PgPool, cache: TileCache, hub: crate::realtime::Hu
     spawn_paper_twap_ticker(pool.clone(), hub.clone());
     spawn_strategy_drift_watch(pool.clone(), hub.clone());
     spawn_rebalance_drift_watch(pool.clone(), hub);
+    spawn_paper_recurring(pool.clone());
     spawn_paper_equity_snapshots(pool.clone());
     spawn_paper_dividend_credits(pool.clone());
     spawn_paper_split_adjustments(pool.clone());
@@ -239,6 +243,21 @@ fn spawn_rebalance_drift_watch(pool: PgPool, hub: crate::realtime::Hub) {
                 Err(e) => tracing::warn!(error = %e, "rebalance drift sweep failed"),
             }
             tokio::time::sleep(REBALANCE_DRIFT_WATCH).await;
+        }
+    });
+}
+
+/// Auto-invest — submits due recurring buys through the normal paper
+/// fill path; the module advances schedules from the SCHEDULED time.
+fn spawn_paper_recurring(pool: PgPool) {
+    tokio::spawn(async move {
+        loop {
+            match traderview_db::paper_recurring::tick(&pool).await {
+                Ok(0) => {}
+                Ok(n) => tracing::info!(submitted = n, "auto-invest orders submitted"),
+                Err(e) => tracing::warn!(error = %e, "auto-invest tick failed"),
+            }
+            tokio::time::sleep(PAPER_RECURRING_TICK).await;
         }
     });
 }

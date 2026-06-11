@@ -159,6 +159,21 @@ export async function renderPaper(mount) {
             </div>
         </div>
 
+        <div class="chart-panel">
+            <h2 data-i18n="view.paper.h2.auto_invest">Auto-invest</h2>
+            <form id="recur-form" class="inline-form">
+                <input name="symbol" placeholder="symbol" data-i18n-placeholder="common.placeholder.symbol" required style="text-transform:uppercase">
+                <input name="notional_usd" type="number" min="1" step="50" value="500" data-tip="view.paper.tip.recur_notional">
+                <select name="cadence">
+                    <option value="weekly" selected>weekly</option>
+                    <option value="daily">daily</option>
+                    <option value="monthly">monthly</option>
+                </select>
+                <button class="primary" type="submit" data-i18n="view.paper.btn.recur_add">ADD</button>
+            </form>
+            <div id="recur-list" class="muted small"></div>
+        </div>
+
         <div class="chart-panel" id="paper-greeks-panel" style="display:none">
             <h2 data-i18n="view.paper.h2.greeks">Option greeks</h2>
             <div id="paper-greeks"></div>
@@ -222,6 +237,23 @@ export async function renderPaper(mount) {
     api.paperEquityHistory(acct.id)
         .then(h => { if (viewIsCurrent(tok)) renderEquityCurve(h); })
         .catch(() => {});
+    api.paperRecurringList()
+        .then(rows => { if (viewIsCurrent(tok)) renderRecurring(mount, rows); })
+        .catch(() => {});
+    mount.querySelector('#recur-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        try {
+            await api.paperRecurringCreate(acct.id, {
+                symbol: fd.get('symbol').trim().toUpperCase(),
+                notional_usd: String(fd.get('notional_usd')),
+                cadence: fd.get('cadence'),
+            });
+            if (!viewIsCurrent(tok)) return;
+            const rows = await api.paperRecurringList();
+            renderRecurring(mount, rows);
+        } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
+    });
     if (positions.some(p => p.symbol.length > 15)) {
         api.paperOptionGreeks(acct.id)
             .then(g => { if (viewIsCurrent(tok)) renderGreeks(g); })
@@ -387,6 +419,40 @@ export async function renderPaper(mount) {
             renderPaper(mount);
         } catch (err) { showToast(t('toast.error.api', { err: err.message }), { level: 'error' }); }
     });
+}
+
+function renderRecurring(mount, rows) {
+    const el = mount.querySelector('#recur-list');
+    if (!el) return;
+    if (!rows.length) {
+        el.innerHTML = `<p class="muted" data-i18n="view.paper.empty.recurring">${esc(t('view.paper.empty.recurring'))}</p>`;
+        return;
+    }
+    el.innerHTML = `<table class="trades">
+        <thead><tr><th>Symbol</th><th>Notional</th><th>Cadence</th><th>Next run</th><th>Last</th><th></th><th></th></tr></thead>
+        <tbody>${rows.map(r => `
+            <tr class="${r.enabled ? '' : 'muted'}">
+                <td>${esc(r.symbol)}</td>
+                <td>$${fmt(r.notional_usd)}</td>
+                <td>${esc(r.cadence)}</td>
+                <td class="small">${new Date(r.next_run_at).toLocaleString()}</td>
+                <td class="small">${esc(r.last_status || '—')}</td>
+                <td><button class="link recur-toggle" data-id="${esc(r.id)}" data-on="${r.enabled ? 0 : 1}">${r.enabled ? 'pause' : 'resume'}</button></td>
+                <td><button class="link recur-del" data-id="${esc(r.id)}" data-i18n="common.btn.cancel">${esc(t('common.btn.cancel'))}</button></td>
+            </tr>`).join('')}
+        </tbody></table>`;
+    el.querySelectorAll('.recur-toggle').forEach(btn => btn.addEventListener('click', async () => {
+        try {
+            await api.paperRecurringToggle(btn.dataset.id, btn.dataset.on === '1');
+            renderRecurring(mount, await api.paperRecurringList());
+        } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
+    }));
+    el.querySelectorAll('.recur-del').forEach(btn => btn.addEventListener('click', async () => {
+        try {
+            await api.paperRecurringDelete(btn.dataset.id);
+            renderRecurring(mount, await api.paperRecurringList());
+        } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
+    }));
 }
 
 function renderGreeks(g) {

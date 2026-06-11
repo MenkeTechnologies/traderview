@@ -849,6 +849,12 @@ export const api = {
     paperOptionGreeks: (id) => request(`/paper/accounts/${id}/option-greeks`),
     paperSpreadPreview: (req) =>
         request('/paper/spreads/preview', { method: 'POST', body: JSON.stringify(req) }),
+    paperRecurringCreate: (id, req) =>
+        request(`/paper/accounts/${id}/recurring`, { method: 'POST', body: JSON.stringify(req) }),
+    paperRecurringList: () => request('/paper/recurring'),
+    paperRecurringToggle: (id, enabled) =>
+        request(`/paper/recurring/${id}/toggle`, { method: 'POST', body: JSON.stringify({ enabled }) }),
+    paperRecurringDelete: (id) => request(`/paper/recurring/${id}`, { method: 'DELETE' }),
     paperEquityHistory: (id) => request(`/paper/accounts/${id}/equity-history`),
     paperAccountCreate: (name, starting_cash) =>
         request('/paper/accounts/create', { method: 'POST', body: JSON.stringify({ name, starting_cash }) }),
