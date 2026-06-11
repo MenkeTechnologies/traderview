@@ -41,8 +41,13 @@ async fn for_symbol(
     Ok(Json(catalysts::global().latest_for(&symbol, q.limit)))
 }
 
-async fn ws(State(_s): State<AppState>, upgrade: WebSocketUpgrade) -> Response {
-    upgrade.on_upgrade(handle_ws)
+async fn ws(
+    State(s): State<AppState>,
+    Query(tq): Query<crate::auth::WsTokenQuery>,
+    upgrade: WebSocketUpgrade,
+) -> Result<Response, ApiError> {
+    crate::auth::require_ws_auth(&s, tq.token.as_deref())?;
+    Ok(upgrade.on_upgrade(handle_ws))
 }
 
 async fn handle_ws(mut socket: WebSocket) {

@@ -23,6 +23,43 @@ use sqlx::PgPool;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
+
+/// Exponential backoff with jitter for the live-tick WS workers. Each
+/// successive failure waits min(BASE * 2^n, CAP) + rand(0..BASE)
+/// seconds; a successful run resets the counter. Prevents the tight
+/// 3-second reconnect storm the old fixed sleep produced when an
+/// upstream was rate-limiting (Alpaca 406 connection-limit exceeded
+/// would hammer the provider indefinitely).
+struct Backoff {
+    n: u32,
+}
+
+impl Backoff {
+    const BASE_SECS: u64 = 2;
+    const CAP_SECS: u64 = 60;
+
+    fn new() -> Self {
+        Self { n: 0 }
+    }
+    fn reset(&mut self) {
+        self.n = 0;
+    }
+    fn next(&mut self) -> Duration {
+        // 2 * 2^n clamped to CAP, plus 0..BASE seconds of jitter so
+        // many simultaneous reconnects don't dogpile the upstream.
+        let exp = (Self::BASE_SECS).saturating_mul(1u64 << self.n.min(6));
+        let base = exp.min(Self::CAP_SECS);
+        self.n = self.n.saturating_add(1);
+        // Cheap jitter without dragging in `rand` here — XOR a few
+        // bits of `Instant::now()` against a small mask. Good enough
+        // for a few-second spread; not for cryptographic randomness.
+        let now_nanos = std::time::Instant::now()
+            .elapsed()
+            .as_nanos() as u64;
+        let jitter = (now_nanos ^ (self.n as u64)) % (Self::BASE_SECS + 1);
+        Duration::from_secs(base.saturating_add(jitter))
+    }
+}
 use tokio::sync::broadcast;
 use tokio_tungstenite::tungstenite::Message as WsMessage;
 use traderview_core::{BarInterval, PriceBar};
@@ -615,7 +652,15 @@ impl LiveTickStore {
                     "live_ticks: spawning alpaca equity worker",
                 );
                 let h = tokio::spawn(async move {
-                    store.run_alpaca_worker(id, secret, use_sip, chunk).await;
+                    use futures_util::FutureExt;
+                    if let Err(_) = std::panic::AssertUnwindSafe(
+                        store.run_alpaca_worker(id, secret, use_sip, chunk),
+                    )
+                    .catch_unwind()
+                    .await
+                    {
+                        tracing::error!("live_ticks: alpaca equity worker PANICKED");
+                    }
                 });
                 new_handles.push(h);
             }
@@ -626,7 +671,15 @@ impl LiveTickStore {
                 let n = chunk.len();
                 tracing::info!(symbols = n, "live_ticks: spawning alpaca crypto worker");
                 let h = tokio::spawn(async move {
-                    store.run_alpaca_crypto_worker(id, secret, chunk).await;
+                    use futures_util::FutureExt;
+                    if let Err(_) = std::panic::AssertUnwindSafe(
+                        store.run_alpaca_crypto_worker(id, secret, chunk),
+                    )
+                    .catch_unwind()
+                    .await
+                    {
+                        tracing::error!("live_ticks: alpaca crypto worker PANICKED");
+                    }
                 });
                 new_handles.push(h);
             }
@@ -646,7 +699,14 @@ impl LiveTickStore {
                 let n = chunk.len();
                 tracing::info!(symbols = n, "live_ticks: spawning polygon worker");
                 let h = tokio::spawn(async move {
-                    store.run_polygon_worker(key, chunk).await;
+                    use futures_util::FutureExt;
+                    if let Err(_) =
+                        std::panic::AssertUnwindSafe(store.run_polygon_worker(key, chunk))
+                            .catch_unwind()
+                            .await
+                    {
+                        tracing::error!("live_ticks: polygon worker PANICKED");
+                    }
                 });
                 new_handles.push(h);
             }
@@ -668,7 +728,14 @@ impl LiveTickStore {
             let n = chunk.len();
             tracing::info!(symbols = n, "live_ticks: spawning finnhub worker");
             let h = tokio::spawn(async move {
-                store.run_worker(key, chunk).await;
+                use futures_util::FutureExt;
+                if let Err(_) =
+                    std::panic::AssertUnwindSafe(store.run_worker(key, chunk))
+                        .catch_unwind()
+                        .await
+                {
+                    tracing::error!("live_ticks: finnhub worker PANICKED");
+                }
             });
             new_handles.push(h);
         }
@@ -677,11 +744,22 @@ impl LiveTickStore {
     }
 
     async fn run_worker(self, api_key: String, symbols: Vec<String>) {
+        let mut backoff = Backoff::new();
         loop {
             match self.run_once(&api_key, &symbols).await {
-                Ok(()) => tracing::info!("finnhub WS exited cleanly; reconnecting in 2s"),
-                Err(e) => tracing::warn!(?e, "finnhub WS error; reconnecting in 5s"),
+                Ok(()) => {
+                    tracing::info!("finnhub WS exited cleanly; reconnecting");
+                    backoff.reset();
+                }
+                Err(e) => {
+                    let wait = backoff.next();
+                    tracing::warn!(?e, ?wait, "finnhub WS error; backing off");
+                    tokio::time::sleep(wait).await;
+                    continue;
+                }
             }
+            // Clean exits still need a short pause to avoid a tight
+            // loop on a misbehaving upstream that immediately disconnects.
             tokio::time::sleep(Duration::from_secs(3)).await;
         }
     }
@@ -878,13 +956,22 @@ impl LiveTickStore {
         use_sip: bool,
         symbols: Vec<String>,
     ) {
+        let mut backoff = Backoff::new();
         loop {
             match self
                 .run_alpaca_once(&key_id, &secret, use_sip, &symbols)
                 .await
             {
-                Ok(()) => tracing::info!("alpaca WS exited cleanly; reconnecting in 2s"),
-                Err(e) => tracing::warn!(?e, "alpaca WS error; reconnecting in 5s"),
+                Ok(()) => {
+                    tracing::info!("alpaca WS exited cleanly; reconnecting");
+                    backoff.reset();
+                }
+                Err(e) => {
+                    let wait = backoff.next();
+                    tracing::warn!(?e, ?wait, "alpaca WS error; backing off");
+                    tokio::time::sleep(wait).await;
+                    continue;
+                }
             }
             tokio::time::sleep(Duration::from_secs(3)).await;
         }
@@ -1038,13 +1125,22 @@ impl LiveTickStore {
     /// subscribe frames mirror the equities worker; the only delta is
     /// the endpoint URL.
     async fn run_alpaca_crypto_worker(self, key_id: String, secret: String, symbols: Vec<String>) {
+        let mut backoff = Backoff::new();
         loop {
             match self
                 .run_alpaca_crypto_once(&key_id, &secret, &symbols)
                 .await
             {
-                Ok(()) => tracing::info!("alpaca crypto WS exited cleanly; reconnecting in 2s"),
-                Err(e) => tracing::warn!(?e, "alpaca crypto WS error; reconnecting in 5s"),
+                Ok(()) => {
+                    tracing::info!("alpaca crypto WS exited cleanly; reconnecting");
+                    backoff.reset();
+                }
+                Err(e) => {
+                    let wait = backoff.next();
+                    tracing::warn!(?e, ?wait, "alpaca crypto WS error; backing off");
+                    tokio::time::sleep(wait).await;
+                    continue;
+                }
             }
             tokio::time::sleep(Duration::from_secs(3)).await;
         }
@@ -1191,10 +1287,19 @@ impl LiveTickStore {
     ///   3. `{action:"subscribe", params:"T.AAPL,T.MSFT,..."}` (T. = trades)
     ///   4. Receive `[{ev:"T", sym, p, s, t, ...}, ...]` arrays
     async fn run_polygon_worker(self, api_key: String, symbols: Vec<String>) {
+        let mut backoff = Backoff::new();
         loop {
             match self.run_polygon_once(&api_key, &symbols).await {
-                Ok(()) => tracing::info!("polygon WS exited cleanly; reconnecting in 2s"),
-                Err(e) => tracing::warn!(?e, "polygon WS error; reconnecting in 5s"),
+                Ok(()) => {
+                    tracing::info!("polygon WS exited cleanly; reconnecting");
+                    backoff.reset();
+                }
+                Err(e) => {
+                    let wait = backoff.next();
+                    tracing::warn!(?e, ?wait, "polygon WS error; backing off");
+                    tokio::time::sleep(wait).await;
+                    continue;
+                }
             }
             tokio::time::sleep(Duration::from_secs(3)).await;
         }

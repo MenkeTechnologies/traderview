@@ -31,8 +31,13 @@ async fn latest(
     Ok(Json(halts::global().latest(q.limit)))
 }
 
-async fn ws(State(_s): State<AppState>, upgrade: WebSocketUpgrade) -> Response {
-    upgrade.on_upgrade(handle_ws)
+async fn ws(
+    State(s): State<AppState>,
+    Query(tq): Query<crate::auth::WsTokenQuery>,
+    upgrade: WebSocketUpgrade,
+) -> Result<Response, ApiError> {
+    crate::auth::require_ws_auth(&s, tq.token.as_deref())?;
+    Ok(upgrade.on_upgrade(handle_ws))
 }
 
 async fn handle_ws(mut socket: WebSocket) {
@@ -60,7 +65,18 @@ async fn handle_ws(mut socket: WebSocket) {
                             .await.is_err() { break; }
                     }
                 }
-                Err(_) => break,
+                // Slow consumer: drop the lag and resync on next event.
+                // Sending a `lagged` frame lets the client decide whether
+                // to re-fetch the snapshot. Previously we broke the
+                // socket on Lagged, forcing a full reconnect over a
+                // transient hiccup.
+                Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => {
+                    let _ = socket
+                        .send(Message::Text("{\"type\":\"lagged\"}".into()))
+                        .await;
+                    continue;
+                }
+                Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
             },
             msg = socket.recv() => {
                 match msg {

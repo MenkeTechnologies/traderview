@@ -74,7 +74,24 @@ async fn log_failure(
             return Response::from_parts(parts, Body::empty()).into_response();
         }
     };
-    let snippet = snippet_for_log(&bytes);
+    // Skip body capture on auth-sensitive paths — error responses from
+    // /auth/* and /api-tokens* can echo password/token field values
+    // back when validation fails, and we don't want those landing in
+    // plaintext logs. The status line is still captured.
+    let sensitive_path = {
+        let p = uri.path();
+        p.starts_with("/auth/")
+            || p.starts_with("/api/auth/")
+            || p.starts_with("/api-tokens")
+            || p.starts_with("/api/api-tokens")
+            || p.starts_with("/webhooks")
+            || p.starts_with("/api/webhooks")
+    };
+    let snippet = if sensitive_path {
+        "[redacted]".to_string()
+    } else {
+        scrub_secrets(&snippet_for_log(&bytes))
+    };
     if status.is_server_error() {
         tracing::error!(
             method = %method,
@@ -95,6 +112,43 @@ async fn log_failure(
         );
     }
     Response::from_parts(parts, Body::from(bytes)).into_response()
+}
+
+/// Replace anything that LOOKS like a token / password value with a
+/// `[redacted]` marker. Pattern-based, not field-aware — covers
+/// `"password":"…"`, `"token":"…"`, `"secret":"…"`,
+/// `"authorization":"Bearer …"`, plus naked Bearer / pat_… strings.
+/// Defense in depth on top of the path skip.
+fn scrub_secrets(s: &str) -> String {
+    let mut out = s.to_string();
+    for key in ["password", "token", "secret", "authorization", "api_key", "apiKey"] {
+        // Crude: walk for `"<key>":"<value>"` and replace the value.
+        let needle = format!("\"{key}\":\"");
+        while let Some(start) = out.find(&needle) {
+            let value_start = start + needle.len();
+            // Find the closing quote (no escape handling — JSON
+            // strings in error bodies rarely contain literal `\"` and
+            // we'd rather over-scrub than under-scrub).
+            if let Some(rel_end) = out[value_start..].find('"') {
+                let value_end = value_start + rel_end;
+                out.replace_range(value_start..value_end, "[redacted]");
+            } else {
+                break;
+            }
+        }
+    }
+    // Naked Bearer / PAT-shaped strings that aren't inside quoted fields.
+    for prefix in ["Bearer ", "pat_"] {
+        while let Some(start) = out.find(prefix) {
+            let value_start = start + prefix.len();
+            let end = out[value_start..]
+                .find(|c: char| c.is_whitespace() || c == '"' || c == ',' || c == '}')
+                .map(|r| value_start + r)
+                .unwrap_or(out.len());
+            out.replace_range(value_start..end, "[redacted]");
+        }
+    }
+    out
 }
 
 fn snippet_for_log(bytes: &Bytes) -> String {

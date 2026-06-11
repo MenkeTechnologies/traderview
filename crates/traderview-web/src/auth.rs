@@ -50,6 +50,30 @@ pub fn issue_token(secret: &[u8], user_id: Uuid, ttl_hours: i64) -> Result<Strin
     .map_err(|e| ApiError::Internal(anyhow::anyhow!("jwt encode: {e}")))
 }
 
+/// Query-string token shape used by every WS upgrade handler. The
+/// browser can't set Authorization on a WS handshake, so the token
+/// rides as `?token=<jwt>` instead.
+#[derive(Debug, Deserialize)]
+pub struct WsTokenQuery {
+    pub token: Option<String>,
+}
+
+/// Gate a WebSocket upgrade. Returns Ok when the request is authorized
+/// (valid `?token=<jwt>` in Web mode, or Desktop mode where the local
+/// user is always present). Returns `ApiError::Unauthorized` otherwise.
+///
+/// Use this from EVERY `async fn ws(...)` upgrade handler — the
+/// per-route WS handlers (uoa_stream, halts, insider_stream, etc.)
+/// historically omitted any check and were callable by
+/// unauthenticated clients.
+pub fn require_ws_auth(state: &AppState, token: Option<&str>) -> Result<(), ApiError> {
+    if matches!(state.mode, AppMode::Desktop) {
+        return Ok(());
+    }
+    let tok = token.ok_or(ApiError::Unauthorized)?;
+    decode_token(&state.jwt_secret, tok).map(|_| ())
+}
+
 pub fn decode_token(secret: &[u8], token: &str) -> Result<Claims, ApiError> {
     let data = decode::<Claims>(
         token,
@@ -101,16 +125,28 @@ where
         // can't attach an Authorization header to <a download>. Same secret;
         // only used when the header path didn't match. Hand-decodes %xx since
         // we don't want to drag in a urlencoding dep just for this one path.
-        if let Some(q) = parts.uri.query() {
-            for kv in q.split('&') {
-                if let Some(tok) = kv.strip_prefix("token=") {
-                    let raw = percent_decode_simple(tok);
-                    if let Some(rest) = raw.strip_prefix("pat_") {
-                        let user_id = verify_pat(&app, rest).await?;
-                        return Ok(AuthUser { id: user_id });
-                    }
-                    if let Ok(claims) = decode_token(&app.jwt_secret, &raw) {
-                        return Ok(AuthUser { id: claims.sub });
+        //
+        // GATED TO GET (and HEAD/OPTIONS) ONLY. A token placed in a URL
+        // leaks to browser history, referer headers, reverse-proxy logs,
+        // and copy/paste — so it must not authorize mutating requests.
+        // Without this gate a leaked download URL would let an attacker
+        // POST/PATCH/DELETE from anywhere they could exfiltrate it.
+        let method = &parts.method;
+        if matches!(
+            *method,
+            axum::http::Method::GET | axum::http::Method::HEAD | axum::http::Method::OPTIONS
+        ) {
+            if let Some(q) = parts.uri.query() {
+                for kv in q.split('&') {
+                    if let Some(tok) = kv.strip_prefix("token=") {
+                        let raw = percent_decode_simple(tok);
+                        if let Some(rest) = raw.strip_prefix("pat_") {
+                            let user_id = verify_pat(&app, rest).await?;
+                            return Ok(AuthUser { id: user_id });
+                        }
+                        if let Ok(claims) = decode_token(&app.jwt_secret, &raw) {
+                            return Ok(AuthUser { id: claims.sub });
+                        }
                     }
                 }
             }

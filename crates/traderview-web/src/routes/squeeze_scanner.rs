@@ -14,7 +14,7 @@
 use crate::auth::AuthUser;
 use crate::error::ApiError;
 use crate::state::AppState;
-use axum::extract::{ws::Message, ws::WebSocket, State, WebSocketUpgrade};
+use axum::extract::{ws::Message, ws::WebSocket, Query, State, WebSocketUpgrade};
 use axum::response::Response;
 use axum::routing::get;
 use axum::{Json, Router};
@@ -66,8 +66,13 @@ async fn config_set(
     Ok(Json(serde_json::json!({ "ok": true })))
 }
 
-async fn ws_handler(State(_s): State<AppState>, upgrade: WebSocketUpgrade) -> Response {
-    upgrade.on_upgrade(handle_ws)
+async fn ws_handler(
+    State(s): State<AppState>,
+    Query(tq): Query<crate::auth::WsTokenQuery>,
+    upgrade: WebSocketUpgrade,
+) -> Result<Response, ApiError> {
+    crate::auth::require_ws_auth(&s, tq.token.as_deref())?;
+    Ok(upgrade.on_upgrade(handle_ws))
 }
 
 async fn handle_ws(mut socket: WebSocket) {
