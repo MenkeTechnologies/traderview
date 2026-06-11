@@ -1015,6 +1015,7 @@ async function refreshStrategies(mount) {
                 <button class="link" data-act="backtest" data-i18n="view.algo.btn.backtest">backtest</button>
                 <button class="link" data-act="optimize" data-i18n="view.algo.btn.optimize">optimize</button>
                 <button class="link" data-act="walkforward" data-i18n="view.algo.btn.walkforward">walk-fwd</button>
+                <button class="link" data-act="mc" data-i18n="view.algo.btn.mc">mc</button>
                 <button class="link" data-act="kill" data-i18n="view.algo.btn.kill">${s.kill_switch ? 'release' : 'kill'}</button>
                 <button class="link" data-act="edit" data-i18n="view.algo.btn.edit">edit</button>
                 <button class="link" data-act="del" data-i18n="view.algo.btn.delete">delete</button>
@@ -1035,6 +1036,7 @@ async function refreshStrategies(mount) {
             if (act === 'backtest') return openBacktestModal(mount, s);
             if (act === 'optimize') return openOptimizeModal(mount, s);
             if (act === 'walkforward') return openWalkForwardModal(s);
+            if (act === 'mc') return openMcModal(s);
             if (act === 'kill') return toggleKill(mount, s);
             if (act === 'edit') return openStrategyModal(mount, s);
             if (act === 'del') return deleteStrategy(mount, s);
@@ -1191,6 +1193,72 @@ const OPTIMIZE_DEFAULT_GRIDS = {
 };
 
 
+
+
+async function openMcModal(s) {
+    const symbol = (s.entry_rules && s.entry_rules.symbol_a) || s.entry_rules?.symbol || 'SPY';
+    const wrap = document.createElement('div');
+    wrap.className = 'modal';
+    wrap.innerHTML = `
+        <div class="modal-inner" style="max-width:900px">
+            <h2>Monte Carlo resequencing: ${esc(s.name)}</h2>
+            <p class="muted small" data-i18n="view.algo.hint.mc">Runs the backtest, then resamples its ACTUAL trade PnLs into thousands of alternate orderings. The single backtest\u2019s max drawdown is one draw from a distribution \u2014 budget risk off the p95, not the one path you happened to see.</p>
+            <form id="mc-form" class="inline-form">
+                <input name="symbol" value="${esc(symbol)}" required style="text-transform:uppercase">
+                <select name="interval">
+                    <option value="day1" selected>1d</option>
+                    <option value="hour1">1h</option>
+                    <option value="min15">15m</option>
+                </select>
+                <input name="days_back" type="number" value="730" min="60">
+                <input name="n_curves" type="number" value="1000" min="100" max="20000" data-tip="view.algo.tip.mc_curves">
+                <input name="ruin_fraction" type="number" value="0.5" min="0.05" max="0.95" step="0.05" data-tip="view.algo.tip.mc_ruin">
+                <button class="primary" type="submit">RUN</button>
+                <button type="button" class="link" id="mc-close" data-i18n="common.btn.cancel">Cancel</button>
+            </form>
+            <div id="mc-result" class="muted small"></div>
+        </div>`;
+    document.body.appendChild(wrap);
+    const close = () => wrap.remove();
+    wrap.querySelector('#mc-close').addEventListener('click', close);
+    wrap.addEventListener('click', (e) => { if (e.target === wrap) close(); });
+    wrap.querySelector('#mc-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const out = wrap.querySelector('#mc-result');
+        out.textContent = t('common.loading');
+        try {
+            const r = await api.algoBacktestMc(s.id, {
+                symbol: fd.get('symbol').trim().toUpperCase(),
+                interval: fd.get('interval'),
+                days_back: Number(fd.get('days_back')),
+                n_curves: Number(fd.get('n_curves')),
+                ruin_fraction: Number(fd.get('ruin_fraction')),
+            });
+            const m = r.mc;
+            const pct = (v) => (v * 100).toFixed(1) + '%';
+            out.innerHTML = `
+                <p><strong>${r.trades_used}</strong> trades resampled into <strong>${m.n_curves}</strong> curves \u00b7
+                P(ruin @ ${pct(Number(fd.get('ruin_fraction')))}): <span class="${m.probability_of_ruin > 0.01 ? 'neg' : 'pos'}">${pct(m.probability_of_ruin)}</span> \u00b7
+                P(profit): ${pct(m.probability_profitable)}</p>
+                <table class="trades">
+                <thead><tr><th></th><th>p05</th><th>p25</th><th>p50</th><th>p75</th><th>p95</th><th>mean</th></tr></thead>
+                <tbody>
+                    <tr><td>Ending equity</td>
+                        <td>$${fmt(m.ending_equity_p05)}</td><td>$${fmt(m.ending_equity_p25)}</td>
+                        <td>$${fmt(m.ending_equity_p50)}</td><td>$${fmt(m.ending_equity_p75)}</td>
+                        <td>$${fmt(m.ending_equity_p95)}</td><td>$${fmt(m.mean_ending_equity)}</td></tr>
+                    <tr><td>Max drawdown</td>
+                        <td class="pos">${pct(m.max_drawdown_p05)}</td><td></td>
+                        <td>${pct(m.max_drawdown_p50)}</td><td></td>
+                        <td class="neg">${pct(m.max_drawdown_p95)}</td><td>${pct(m.mean_max_drawdown)}</td></tr>
+                </tbody></table>
+                <p class="muted small">Backtest path itself: ${r.backtest_summary.trades} trades \u00b7 ${r.backtest_summary.total_return_pct.toFixed(1)}% return \u00b7 ${r.backtest_summary.max_drawdown_pct.toFixed(1)}% max DD (one draw from the distribution above).</p>`;
+        } catch (err) {
+            out.textContent = t('common.error', { err: err.message });
+        }
+    });
+}
 
 async function openWalkForwardModal(s) {
     const defaultGrid = OPTIMIZE_DEFAULT_GRIDS[s.strategy_type] || { period: [10, 20, 30] };

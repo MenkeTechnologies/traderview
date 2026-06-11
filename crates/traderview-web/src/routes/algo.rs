@@ -41,6 +41,7 @@ pub fn router() -> Router<AppState> {
         .route("/algo/strategies/:id/optimize", post(post_optimize))
         .route("/algo/tournament", post(post_tournament))
         .route("/algo/strategies/:id/walk-forward", post(post_walk_forward))
+        .route("/algo/strategies/:id/backtest-mc", post(post_backtest_mc))
         .route("/algo/strategies/:id/backtests", get(list_backtest_history))
         .route(
             "/algo/backtests/:id",
@@ -924,6 +925,115 @@ async fn post_walk_forward(
     )
     .map(Json)
     .map_err(|e| ApiError::BadRequest(format!("walk-forward: {e}")))
+}
+
+#[derive(serde::Deserialize)]
+struct BacktestMcBody {
+    #[serde(default = "default_bt_symbol")]
+    symbol: String,
+    #[serde(default = "default_bt_interval")]
+    interval: String,
+    #[serde(default = "default_bt_days_back")]
+    days_back: i64,
+    #[serde(default)]
+    initial_equity: Option<f64>,
+    #[serde(default)]
+    fee_per_trade: Option<f64>,
+    #[serde(default)]
+    slippage_bps: Option<f64>,
+    #[serde(default = "default_mc_curves")]
+    n_curves: usize,
+    #[serde(default)]
+    trades_per_curve: Option<usize>,
+    #[serde(default = "default_ruin_fraction")]
+    ruin_fraction: f64,
+    /// Fixed seed reproduces the distribution exactly; omitted = time-based.
+    #[serde(default)]
+    seed: Option<u64>,
+}
+
+fn default_mc_curves() -> usize {
+    1000
+}
+fn default_ruin_fraction() -> f64 {
+    0.5
+}
+
+#[derive(serde::Serialize)]
+struct BacktestMcResult {
+    backtest_summary: traderview_core::algo_backtest::AlgoBtSummary,
+    trades_used: usize,
+    mc: traderview_core::monte_carlo::McReport,
+}
+
+/// POST /algo/strategies/:id/backtest-mc — run the backtest, then
+/// resample its ACTUAL trade PnLs into thousands of orderings. The
+/// single backtest's max drawdown is one draw from a distribution;
+/// this returns the distribution.
+async fn post_backtest_mc(
+    State(s): State<AppState>,
+    u: AuthUser,
+    Path(id): Path<Uuid>,
+    Json(body): Json<BacktestMcBody>,
+) -> Result<Json<BacktestMcResult>, ApiError> {
+    let strategy = traderview_db::algo::get_strategy(&s.pool, u.id, id)
+        .await
+        .map_err(ApiError::Internal)?
+        .ok_or_else(|| ApiError::BadRequest("strategy not found".into()))?;
+    let interval: traderview_core::BarInterval = serde_json::from_value(serde_json::Value::String(
+        normalize_interval(&body.interval),
+    ))
+    .map_err(|e| ApiError::BadRequest(format!("interval: {e}")))?;
+    let to = chrono::Utc::now();
+    let from = to - chrono::Duration::days(body.days_back);
+    let bars = traderview_db::prices::get_bars(&s.pool, &body.symbol, interval, from, to)
+        .await
+        .map_err(ApiError::Internal)?;
+    if bars.len() < 30 {
+        return Err(ApiError::BadRequest(format!(
+            "only {} bars available for {} — need >=30",
+            bars.len(),
+            body.symbol
+        )));
+    }
+    let strat =
+        traderview_core::algo_strategies::from_kind(&strategy.strategy_type, &strategy.entry_rules)
+            .map_err(|e| ApiError::BadRequest(format!("strategy_type: {e}")))?;
+    let sizing: traderview_core::algo_strategies::Sizing =
+        serde_json::from_value(strategy.sizing.clone()).unwrap_or_default();
+    let side_mode = match strategy.side_mode.as_str() {
+        "short" => traderview_core::algo_strategies::SideMode::Short,
+        "both" => traderview_core::algo_strategies::SideMode::Both,
+        _ => traderview_core::algo_strategies::SideMode::Long,
+    };
+    let initial_equity = body.initial_equity.unwrap_or(100_000.0);
+    let cfg = traderview_core::algo_backtest::BacktestConfig {
+        initial_equity,
+        fee_per_trade: body.fee_per_trade.unwrap_or(1.0),
+        slippage_bps: body.slippage_bps.unwrap_or(5.0),
+        side_mode,
+    };
+    let bt = traderview_core::algo_backtest::run(&bars, strat.as_ref(), &sizing, cfg);
+    let pnls: Vec<f64> = bt.trades.iter().map(|t| t.pnl).collect();
+    if pnls.len() < 10 {
+        return Err(ApiError::BadRequest(format!(
+            "{} trades is too few for a meaningful resequencing distribution — need >=10",
+            pnls.len()
+        )));
+    }
+    let params = traderview_core::algo_backtest_mc::McBridgeParams {
+        n_curves: body.n_curves.min(20_000),
+        trades_per_curve: body.trades_per_curve,
+        ruin_fraction: body.ruin_fraction,
+        seed: body.seed.unwrap_or_else(|| chrono::Utc::now().timestamp() as u64),
+    };
+    let mc = traderview_core::algo_backtest_mc::from_pnls(&pnls, initial_equity, &params)
+        .ok_or_else(|| ApiError::BadRequest("degenerate MC parameters".into()))?;
+    Ok(Json(BacktestMcResult {
+        backtest_summary: bt.summary,
+        trades_used: pnls.len(),
+        mc,
+    }))
 }
 
 /// GET /algo/strategies/:id/metrics — dashboard rollup.

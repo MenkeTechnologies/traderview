@@ -7,6 +7,7 @@
 pub mod acceleration_deceleration;
 pub mod adx;
 pub mod algo_backtest;
+pub mod algo_backtest_mc;
 pub mod algo_tournament;
 pub mod algo_walk_forward;
 pub mod algo_optimize;

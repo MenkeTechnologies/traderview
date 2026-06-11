@@ -1112,6 +1112,11 @@ export const api = {
             method: 'POST',
             body: JSON.stringify(body || {}),
         }),
+    algoBacktestMc: (id, body) =>
+        request(`/algo/strategies/${id}/backtest-mc`, {
+            method: 'POST',
+            body: JSON.stringify(body || {}),
+        }),
 
     // Correlation matrix (pairwise Pearson on cached daily-bar log-returns)
     corrWatchlist: (wid, days = 90) =>
