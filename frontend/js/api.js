@@ -843,6 +843,11 @@ export const api = {
     paperBracketCreate: (id, req) =>
         request(`/paper/accounts/${id}/brackets`, { method: 'POST', body: JSON.stringify(req) }),
     paperEquityHistory: (id) => request(`/paper/accounts/${id}/equity-history`),
+    paperAccountCreate: (name, starting_cash) =>
+        request('/paper/accounts/create', { method: 'POST', body: JSON.stringify({ name, starting_cash }) }),
+    paperAccountRename: (id, name) =>
+        request(`/paper/accounts/${id}/rename`, { method: 'POST', body: JSON.stringify({ name }) }),
+    paperAccountDelete: (id) => request(`/paper/accounts/${id}/delete`, { method: 'POST' }),
 
     // alerts
     alerts:        () => request('/alerts'),

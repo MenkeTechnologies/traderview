@@ -81,6 +81,90 @@ pub async fn ensure_default(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Pape
     .await?)
 }
 
+/// Cap so a runaway client can't mint unbounded accounts.
+const MAX_ACCOUNTS_PER_USER: i64 = 12;
+
+/// Create a named paper account (e.g. one per strategy). Names are
+/// unique per user (enforced by the 0011 UNIQUE constraint; checked
+/// here first for a readable error).
+pub async fn create_account(
+    pool: &PgPool,
+    user_id: Uuid,
+    name: &str,
+    starting_cash: Decimal,
+) -> anyhow::Result<PaperAccount> {
+    let name = name.trim();
+    if name.is_empty() || name.len() > 60 {
+        anyhow::bail!("name must be 1..=60 characters");
+    }
+    if starting_cash <= Decimal::ZERO {
+        anyhow::bail!("starting_cash must be positive");
+    }
+    let (count,): (i64,) =
+        sqlx::query_as("SELECT count(*) FROM paper_accounts WHERE user_id = $1")
+            .bind(user_id)
+            .fetch_one(pool)
+            .await?;
+    if count >= MAX_ACCOUNTS_PER_USER {
+        anyhow::bail!("account limit reached ({MAX_ACCOUNTS_PER_USER})");
+    }
+    let taken: Option<(Uuid,)> =
+        sqlx::query_as("SELECT id FROM paper_accounts WHERE user_id = $1 AND name = $2")
+            .bind(user_id)
+            .bind(name)
+            .fetch_optional(pool)
+            .await?;
+    if taken.is_some() {
+        anyhow::bail!("an account named '{name}' already exists");
+    }
+    Ok(sqlx::query_as::<_, PaperAccount>(
+        "INSERT INTO paper_accounts (user_id, name, starting_cash, cash)
+              VALUES ($1, $2, $3, $3)
+         RETURNING id, user_id, name, starting_cash, cash, created_at, reset_at",
+    )
+    .bind(user_id)
+    .bind(name)
+    .bind(starting_cash)
+    .fetch_one(pool)
+    .await?)
+}
+
+pub async fn rename_account(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+    name: &str,
+) -> anyhow::Result<bool> {
+    let name = name.trim();
+    if name.is_empty() || name.len() > 60 {
+        anyhow::bail!("name must be 1..=60 characters");
+    }
+    let res = sqlx::query(
+        "UPDATE paper_accounts SET name = $3 WHERE id = $1 AND user_id = $2",
+    )
+    .bind(account_id)
+    .bind(user_id)
+    .bind(name)
+    .execute(pool)
+    .await?;
+    Ok(res.rows_affected() > 0)
+}
+
+/// Delete an account; orders, positions, parent orders, and equity
+/// snapshots all cascade (FKs in migrations 0011/0076/0081).
+pub async fn delete_account(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+) -> anyhow::Result<bool> {
+    let res = sqlx::query("DELETE FROM paper_accounts WHERE id = $1 AND user_id = $2")
+        .bind(account_id)
+        .bind(user_id)
+        .execute(pool)
+        .await?;
+    Ok(res.rows_affected() > 0)
+}
+
 pub async fn reset(
     pool: &PgPool,
     user_id: Uuid,

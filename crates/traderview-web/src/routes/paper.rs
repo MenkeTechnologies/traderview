@@ -32,6 +32,55 @@ pub fn router() -> Router<AppState> {
         .route("/paper/orders/:id/cancel", post(cancel_order))
         .route("/paper/accounts/:id/brackets", post(submit_bracket))
         .route("/paper/accounts/:id/equity-history", get(equity_history))
+        .route("/paper/accounts/create", post(create_account))
+        .route("/paper/accounts/:id/rename", post(rename_account))
+        .route("/paper/accounts/:id/delete", post(delete_account))
+}
+
+#[derive(Deserialize)]
+struct CreateAccountBody {
+    name: String,
+    starting_cash: Decimal,
+}
+
+/// Named paper account — one per strategy is the intended use.
+async fn create_account(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Json(b): Json<CreateAccountBody>,
+) -> Result<Json<PaperAccount>, ApiError> {
+    traderview_db::paper::create_account(&s.pool, user.id, &b.name, b.starting_cash)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+#[derive(Deserialize)]
+struct RenameBody {
+    name: String,
+}
+
+async fn rename_account(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<Uuid>,
+    Json(b): Json<RenameBody>,
+) -> Result<Json<bool>, ApiError> {
+    traderview_db::paper::rename_account(&s.pool, user.id, id, &b.name)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+async fn delete_account(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<Uuid>,
+) -> Result<Json<bool>, ApiError> {
+    traderview_db::paper::delete_account(&s.pool, user.id, id)
+        .await
+        .map(Json)
+        .map_err(ApiError::Internal)
 }
 
 /// Background-sampled equity curve with return/drawdown summary.

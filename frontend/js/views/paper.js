@@ -15,7 +15,8 @@ export async function renderPaper(mount) {
         if (!viewIsCurrent(tok)) return;
         return renderPaper(mount);
     }
-    const acct = accounts[0];
+    const savedId = localStorage.getItem('paper.acctId');
+    const acct = accounts.find(a => a.id === savedId) || accounts[0];
     const [positions, orders] = await Promise.all([
         api.paperPositions(acct.id),
         api.paperOrders(acct.id, 50),
@@ -50,6 +51,17 @@ export async function renderPaper(mount) {
 
     mount.innerHTML = `
         <h1 class="view-title">// PAPER TRADING · ${esc(acct.name)}</h1>
+
+        <div class="inline-form">
+            <select id="acct-sel" data-tip="view.paper.tip.account_sel">
+                ${accounts.map(a => `<option value="${esc(a.id)}"${a.id === acct.id ? ' selected' : ''}>${esc(a.name)}</option>`).join('')}
+            </select>
+            <input id="acct-name" placeholder="account name" data-i18n-placeholder="view.paper.placeholder.account_name" maxlength="60">
+            <input id="acct-cash" type="number" min="1" step="1000" value="200000" data-tip="view.paper.tip.account_cash">
+            <button id="acct-create" data-i18n="view.paper.btn.new_account" data-tip="view.paper.tip.account_create">NEW ACCOUNT</button>
+            <button id="acct-rename" class="link" data-i18n="view.paper.btn.rename_account" data-tip="view.paper.tip.account_rename">Rename</button>
+            <button id="acct-delete" class="link" data-i18n="view.paper.btn.delete_account" data-tip="view.paper.tip.account_delete">Delete</button>
+        </div>
 
         <div class="cards">
             <div class="card"><div class="label" data-i18n="view.paper.card.cash">Cash</div><div class="value">$${fmt(cash)}</div></div>
@@ -215,6 +227,38 @@ export async function renderPaper(mount) {
             } else {
                 showToast(t('view.paper.toast.submitted', { side: body.side, qty: body.qty, symbol: body.symbol }), { level: 'info' });
             }
+            renderPaper(mount);
+        } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
+    });
+    mount.querySelector('#acct-sel').addEventListener('change', (e) => {
+        localStorage.setItem('paper.acctId', e.target.value);
+        renderPaper(mount);
+    });
+    mount.querySelector('#acct-create').addEventListener('click', async () => {
+        const name = mount.querySelector('#acct-name').value.trim();
+        if (!name) { showToast(t('view.paper.toast.name_required'), { level: 'error' }); return; }
+        try {
+            const a = await api.paperAccountCreate(name, Number(mount.querySelector('#acct-cash').value) || 200000);
+            if (!viewIsCurrent(tok)) return;
+            localStorage.setItem('paper.acctId', a.id);
+            renderPaper(mount);
+        } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
+    });
+    mount.querySelector('#acct-rename').addEventListener('click', async () => {
+        const name = mount.querySelector('#acct-name').value.trim();
+        if (!name) { showToast(t('view.paper.toast.name_required'), { level: 'error' }); return; }
+        try {
+            await api.paperAccountRename(acct.id, name);
+            if (!viewIsCurrent(tok)) return;
+            renderPaper(mount);
+        } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
+    });
+    mount.querySelector('#acct-delete').addEventListener('click', async () => {
+        if (!await tConfirm('view.paper.confirm.delete_account', { name: acct.name }, { level: 'danger' })) return;
+        try {
+            await api.paperAccountDelete(acct.id);
+            if (!viewIsCurrent(tok)) return;
+            localStorage.removeItem('paper.acctId');
             renderPaper(mount);
         } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
     });
