@@ -45,6 +45,7 @@
 //!   POST /screeners/momentum             — 12-1, 52w-high, RS vs bench
 //!   POST /screeners/mean-reversion       — RSI(2), 20d z, MA distance
 //!   GET  /futures/:root/curve            — term structure + roll yield
+//!   GET  /futures/carry-screen           — all curves ranked by roll
 //!   POST /symbols/:sym/event-study       — caller-dated FOMC/CPI study
 //!   POST /calc/double-barrier            — target-vs-stop hit-first odds
 //!   POST /calc/futures-sizing            — tick math + margin-capped size
@@ -124,6 +125,7 @@ pub fn router() -> Router<AppState> {
         .route("/screeners/momentum", post(post_momentum_screen))
         .route("/screeners/mean-reversion", post(post_mean_reversion_screen))
         .route("/futures/:root/curve", get(get_futures_curve))
+        .route("/futures/carry-screen", get(get_carry_screen))
         .route("/symbols/:symbol/event-study", post(post_event_study))
         .route("/calc/double-barrier", post(post_double_barrier))
         .route("/calc/futures-sizing", post(post_futures_sizing))
@@ -933,6 +935,21 @@ async fn get_futures_curve(
         .await
         .map(Json)
         .map_err(map_tom_err)
+}
+
+#[derive(Debug, Deserialize)]
+struct CarryScreenQ {
+    months: Option<usize>,
+}
+
+async fn get_carry_screen(
+    State(s): State<AppState>,
+    _u: AuthUser,
+    Query(q): Query<CarryScreenQ>,
+) -> Result<Json<strategy_calculators::CarryScreen>, ApiError> {
+    Ok(Json(
+        strategy_calculators::carry_screen(&s.pool, q.months.unwrap_or(6)).await,
+    ))
 }
 
 #[derive(Debug, Deserialize)]

@@ -1623,6 +1623,29 @@ const TOOLS = {
         ],
         render: (r) => renderEventStudy(r, 'third-Friday expiration'),
     },
+    'carry-screen': {
+        label: 'Commodity Carry Screen',
+        call: (b) => api.carryScreen(b.months),
+        fields: [
+            { key: 'months', label: 'Months out per curve', def: 6, int: true },
+        ],
+        render: (r) => `
+            <table class="gs-table">
+                <thead><tr><th>Market</th><th>Front</th><th>Shape</th><th>Roll (ann.)</th><th>Months</th></tr></thead>
+                <tbody>${r.rows.map(row => `
+                    <tr>
+                        <td>${esc(row.name)} (${esc(row.root)})</td>
+                        <td>${row.front_price.toFixed(2)}</td>
+                        <td class="${row.shape === 'backwardation' ? 'pos' : row.shape === 'contango' ? 'neg' : ''}">${esc(row.shape)}</td>
+                        <td class="${row.roll_annualized_pct <= 0 ? 'pos' : 'neg'}">${row.roll_annualized_pct.toFixed(1)}%</td>
+                        <td>${row.months_listed}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+            ${r.skipped.length ? `<p class="muted small neg">skipped (no listed months): ${r.skipped.map(esc).join(', ')}</p>` : ''}
+            <p class="muted small">Best carry first — the canonical commodity carry strategy is long the
+            most backwardated markets, short the steepest contango. Live curves, every fire.</p>`,
+    },
     'futures-curve': {
         label: 'Futures Curve',
         call: (b) => api.futuresCurve(b.root, b.exchange, b.months),

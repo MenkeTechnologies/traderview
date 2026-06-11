@@ -887,6 +887,67 @@ pub async fn futures_curve(
 }
 
 // ===========================================================================
+// Commodity carry screen — every curve's shape + roll, ranked
+// ===========================================================================
+
+/// (root, exchange, label). CL/NG/GC/ES/ZC verified live; the rest
+/// follow the same convention and degrade to skipped when unlisted.
+const CARRY_UNIVERSE: &[(&str, &str, &str)] = &[
+    ("CL", "NYM", "WTI Crude"),
+    ("NG", "NYM", "Natural Gas"),
+    ("HO", "NYM", "Heating Oil"),
+    ("RB", "NYM", "RBOB Gasoline"),
+    ("GC", "CMX", "Gold"),
+    ("SI", "CMX", "Silver"),
+    ("HG", "CMX", "Copper"),
+    ("ZC", "CBT", "Corn"),
+    ("ZS", "CBT", "Soybeans"),
+    ("ZW", "CBT", "Wheat"),
+    ("ES", "CME", "E-mini S&P"),
+];
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CarryScreenRow {
+    pub root: String,
+    pub name: String,
+    pub front_price: f64,
+    pub shape: &'static str,
+    pub roll_annualized_pct: f64,
+    pub months_listed: usize,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CarryScreen {
+    /// Best carry first (most negative annualized roll = longs earn).
+    pub rows: Vec<CarryScreenRow>,
+    pub skipped: Vec<String>,
+}
+
+pub async fn carry_screen(pool: &PgPool, months: usize) -> CarryScreen {
+    let mut rows = Vec::new();
+    let mut skipped = Vec::new();
+    for (root, exchange, name) in CARRY_UNIVERSE {
+        match futures_curve(pool, root, exchange, months).await {
+            Ok(r) => rows.push(CarryScreenRow {
+                root: root.to_string(),
+                name: name.to_string(),
+                front_price: r.curve.rows.first().map(|x| x.price).unwrap_or(0.0),
+                shape: r.curve.shape,
+                roll_annualized_pct: r.curve.overall_roll_annualized_pct,
+                months_listed: r.months_listed,
+            }),
+            Err(_) => skipped.push(root.to_string()),
+        }
+    }
+    rows.sort_by(|a, b| {
+        a.roll_annualized_pct
+            .partial_cmp(&b.roll_annualized_pct)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+    CarryScreen { rows, skipped }
+}
+
+// ===========================================================================
 // Mean-reversion screener — RSI(2), 20d z-score, MA distance
 // ===========================================================================
 
