@@ -548,16 +548,17 @@ pub async fn santa_rally(
 // traderview_core::correlation_regime)
 // ===========================================================================
 
-pub async fn correlation_regime(
+/// Date-inner-joined close series for a pair — holidays/listing gaps
+/// drop everywhere. Shared by the correlation-regime and pair-sheet
+/// endpoints.
+async fn aligned_closes(
     pool: &PgPool,
     symbol_a: &str,
     symbol_b: &str,
-    window: usize,
     years: u32,
-) -> Result<traderview_core::correlation_regime::CorrelationRegimeReport, TomError> {
+) -> Result<(Vec<f64>, Vec<f64>), TomError> {
     let ca = daily_closes(pool, symbol_a, years).await?;
     let cb = daily_closes(pool, symbol_b, years).await?;
-    // Inner-join on date so holidays/listing gaps drop everywhere.
     let by_date: std::collections::BTreeMap<chrono::NaiveDate, f64> = cb.into_iter().collect();
     let mut a = Vec::new();
     let mut b = Vec::new();
@@ -567,12 +568,73 @@ pub async fn correlation_regime(
             b.push(*x);
         }
     }
+    Ok((a, b))
+}
+
+pub async fn correlation_regime(
+    pool: &PgPool,
+    symbol_a: &str,
+    symbol_b: &str,
+    window: usize,
+    years: u32,
+) -> Result<traderview_core::correlation_regime::CorrelationRegimeReport, TomError> {
+    let (a, b) = aligned_closes(pool, symbol_a, symbol_b, years).await?;
     traderview_core::correlation_regime::compute(&a, &b, window).ok_or_else(|| {
         TomError::Insufficient {
             symbol: format!("{symbol_a}/{symbol_b}"),
             got: a.len(),
             need: window + 1,
         }
+    })
+}
+
+// ===========================================================================
+// Pair character sheet — aligned fetch once, every pair analysis on it
+// ===========================================================================
+
+#[derive(Debug, Clone, Serialize)]
+pub struct PairSheet {
+    pub symbol_a: String,
+    pub symbol_b: String,
+    pub sessions: usize,
+    /// OLS hedge + spread z + signal (pair_trade core).
+    pub pair: Option<traderview_core::pair_trade::PairReport>,
+    pub correlation: Option<traderview_core::correlation_regime::CorrelationRegimeReport>,
+    /// Total returns over the joined sample, %.
+    pub return_a_pct: f64,
+    pub return_b_pct: f64,
+    pub relative_pct: f64,
+}
+
+pub async fn pair_sheet(
+    pool: &PgPool,
+    symbol_a: &str,
+    symbol_b: &str,
+    years: u32,
+) -> Result<PairSheet, TomError> {
+    let (a, b) = aligned_closes(pool, symbol_a, symbol_b, years).await?;
+    if a.len() < MIN_DAYS {
+        return Err(TomError::Insufficient {
+            symbol: format!("{symbol_a}/{symbol_b}"),
+            got: a.len(),
+            need: MIN_DAYS,
+        });
+    }
+    let ret = |s: &[f64]| (s[s.len() - 1] / s[0] - 1.0) * 100.0;
+    let (ra, rb) = (ret(&a), ret(&b));
+    Ok(PairSheet {
+        symbol_a: symbol_a.to_string(),
+        symbol_b: symbol_b.to_string(),
+        sessions: a.len(),
+        pair: traderview_core::pair_trade::analyze(
+            &a,
+            &b,
+            &traderview_core::pair_trade::PairConfig::default(),
+        ),
+        correlation: traderview_core::correlation_regime::compute(&a, &b, 63),
+        return_a_pct: ra,
+        return_b_pct: rb,
+        relative_pct: ra - rb,
     })
 }
 

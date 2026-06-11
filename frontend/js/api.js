@@ -794,6 +794,7 @@ export const api = {
     dayOfWeekSeasonality:    (sym, years = 10) => request(`/symbols/${encodeURIComponent(sym)}/day-of-week${qs({ years })}`),
     santaRally:              (sym, years = 15) => request(`/symbols/${encodeURIComponent(sym)}/santa-rally${qs({ years })}`),
     correlationRegime:       (a, b, window = 63, years = 5) => request(`/correlation/regime${qs({ a, b, window, years })}`),
+    pairSheet:               (a, b, years = 5) => request(`/correlation/pair-sheet${qs({ a, b, years })}`),
     calcConversionReversal:  (body) => request('/options/calc/conversion-reversal', { method: 'POST', body: JSON.stringify(body) }),
     calcSeagull:             (body) => request('/options/calc/seagull', { method: 'POST', body: JSON.stringify(body) }),
     calcHeston:              (body) => request('/options/calc/heston', { method: 'POST', body: JSON.stringify(body) }),

@@ -1642,6 +1642,35 @@ const TOOLS = {
             <p class="muted small">Hirsch's Santa Claus rally: "if Santa Claus should fail to call, bears may
             come to Broad and Wall" — a negative window has historically preceded weak Januaries.</p>`,
     },
+    'pair-sheet': {
+        label: 'Pair Sheet',
+        call: (b) => api.pairSheet(b.a, b.b, b.years),
+        fields: [
+            { key: 'a', label: 'Symbol A (long leg)', def: 'XLE', text: true },
+            { key: 'b', label: 'Symbol B (short leg)', def: 'XOP', text: true },
+            { key: 'years', label: 'Lookback years', def: 5, int: true },
+        ],
+        render: (r) => {
+            const p = r.pair;
+            const c = r.correlation;
+            const sig = p ? String(p.signal).replace(/_/g, ' ') : '';
+            return `
+            <div class="cards">
+                ${p ? `<div class="card"><div class="label">Spread z-score</div>
+                    <div class="value ${Math.abs(p.current_z) >= 2 ? 'neg' : ''}">${p.current_z.toFixed(2)}</div>
+                    <div class="small muted">β ${p.hedge_ratio.toFixed(3)} · signal: ${esc(sig)}</div></div>` : ''}
+                ${c ? `<div class="card"><div class="label">Correlation (63d)</div>
+                    <div class="value">${c.current.toFixed(2)}</div>
+                    <div class="small muted">${esc(c.current_regime)} · ${c.breaks.length} regime breaks</div></div>` : ''}
+                <div class="card"><div class="label">Relative performance</div>
+                    <div class="value ${r.relative_pct >= 0 ? 'pos' : 'neg'}">${(r.relative_pct >= 0 ? '+' : '') + r.relative_pct.toFixed(1)}pp</div>
+                    <div class="small muted">${esc(r.symbol_a)} ${r.return_a_pct.toFixed(1)}% vs ${esc(r.symbol_b)} ${r.return_b_pct.toFixed(1)}%</div></div>
+            </div>
+            <p class="muted small">One aligned fetch over ${r.sessions} joint sessions: OLS hedge + spread
+            z + signal, the rolling-correlation regime, and who's been winning. A stretched z is only a
+            trade while the correlation regime that created it still holds.</p>`;
+        },
+    },
     'correlation-regime': {
         label: 'Correlation Regime',
         call: (b) => api.correlationRegime(b.a, b.b, b.window, b.years),

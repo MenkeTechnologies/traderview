@@ -13,6 +13,31 @@ pub fn router() -> Router<AppState> {
         .route("/correlation/watchlist/:wid", get(for_watchlist))
         .route("/correlation/symbols", get(for_symbols))
         .route("/correlation/regime", get(regime))
+        .route("/correlation/pair-sheet", get(pair_sheet))
+}
+
+/// One-look pair profile: OLS hedge + spread z + signal, rolling
+/// correlation regime, and relative performance over the joined
+/// sample.
+async fn pair_sheet(
+    State(s): State<AppState>,
+    _u: AuthUser,
+    Query(q): Query<RegimeQ>,
+) -> Result<Json<traderview_db::strategy_calculators::PairSheet>, ApiError> {
+    let a = q.a.trim().to_uppercase();
+    let b = q.b.trim().to_uppercase();
+    if a.is_empty() || b.is_empty() || a.len() > 20 || b.len() > 20 {
+        return Err(ApiError::BadRequest("invalid symbols".into()));
+    }
+    traderview_db::strategy_calculators::pair_sheet(&s.pool, &a, &b, q.years.unwrap_or(5))
+        .await
+        .map(Json)
+        .map_err(|e| match e {
+            traderview_db::strategy_calculators::TomError::PriceFetch(inner) => {
+                ApiError::Internal(inner)
+            }
+            other => ApiError::BadRequest(other.to_string()),
+        })
 }
 
 #[derive(Debug, Deserialize)]
