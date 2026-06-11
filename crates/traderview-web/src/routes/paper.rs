@@ -20,6 +20,50 @@ pub fn router() -> Router<AppState> {
         .route("/paper/accounts/:id/reset", post(reset))
         .route("/paper/accounts/:id/orders", get(orders).post(submit))
         .route("/paper/accounts/:id/positions", get(positions))
+        .route(
+            "/paper/accounts/:id/parent-orders",
+            post(create_parent_order),
+        )
+        .route("/paper/parent-orders", get(list_parent_orders))
+        .route(
+            "/paper/parent-orders/:id/cancel",
+            post(cancel_parent_order),
+        )
+}
+
+/// TWAP parent order: child market slices submitted by the background
+/// ticker through the same fill path as manual paper orders.
+async fn create_parent_order(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(account_id): Path<Uuid>,
+    Json(inp): Json<traderview_db::paper_parent_orders::ParentOrderInput>,
+) -> Result<Json<traderview_db::paper_parent_orders::ParentOrder>, ApiError> {
+    traderview_db::paper_parent_orders::create(&s.pool, user.id, account_id, &inp)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+async fn list_parent_orders(
+    State(s): State<AppState>,
+    user: AuthUser,
+) -> Result<Json<Vec<traderview_db::paper_parent_orders::ParentOrder>>, ApiError> {
+    traderview_db::paper_parent_orders::list(&s.pool, user.id)
+        .await
+        .map(Json)
+        .map_err(ApiError::Internal)
+}
+
+async fn cancel_parent_order(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<Uuid>,
+) -> Result<Json<bool>, ApiError> {
+    traderview_db::paper_parent_orders::cancel(&s.pool, user.id, id)
+        .await
+        .map(Json)
+        .map_err(ApiError::Internal)
 }
 
 async fn list(

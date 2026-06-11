@@ -119,6 +119,7 @@ pub mod options;
 pub mod pairs_cointegration;
 pub mod paper;
 pub mod paper_rebalance;
+pub mod paper_parent_orders;
 pub mod pead_tracker;
 pub mod pension_lump_vs_annuity;
 pub mod permanent_portfolio;

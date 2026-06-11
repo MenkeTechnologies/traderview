@@ -40,6 +40,9 @@ pub const MARKETS_REFRESH: Duration = Duration::from_secs(60);
 /// Screener snapshot cadence — the screens run on daily bars, so
 /// twice a day keeps them fresh without burning quota.
 pub const SCREENER_REFRESH: Duration = Duration::from_secs(12 * 60 * 60);
+/// Paper TWAP ticker — child-order submission resolution. 5s gives
+/// per-slice timing error well under any allowed interval.
+pub const PAPER_TWAP_TICK: Duration = Duration::from_secs(5);
 
 async fn compute_tile(pool: &PgPool, key: &'static str) -> anyhow::Result<serde_json::Value> {
     Ok(match key {
@@ -95,7 +98,23 @@ pub fn spawn_refreshers(pool: PgPool, cache: TileCache) {
     spawn_heatmap_universe(pool.clone());
     spawn_markets_snapshot();
     spawn_screener_snapshots(pool.clone());
+    spawn_paper_twap_ticker(pool.clone());
     spawn_golden_stars(pool);
+}
+
+/// Paper TWAP execution ticker — submits due child orders for working
+/// parent orders through the paper engine's own fill model.
+fn spawn_paper_twap_ticker(pool: PgPool) {
+    tokio::spawn(async move {
+        loop {
+            match traderview_db::paper_parent_orders::tick(&pool).await {
+                Ok(0) => {}
+                Ok(n) => tracing::info!(children = n, "paper TWAP slices submitted"),
+                Err(e) => tracing::warn!(error = %e, "paper TWAP tick failed"),
+            }
+            tokio::time::sleep(PAPER_TWAP_TICK).await;
+        }
+    });
 }
 
 /// Screener snapshot refresh — persists each run of the four bar

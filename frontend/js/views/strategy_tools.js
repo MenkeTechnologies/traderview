@@ -1623,6 +1623,46 @@ const TOOLS = {
         ],
         render: (r) => renderEventStudy(r, 'third-Friday expiration'),
     },
+    'paper-twap': {
+        label: 'Paper TWAP',
+        call: async (b) => {
+            if (String(b.symbol).trim()) {
+                const acct = await api.paperEnsure();
+                await api.paperParentOrderCreate(acct.id, {
+                    symbol: b.symbol,
+                    side: String(b.side).toLowerCase(),
+                    total_qty: String(b.total_qty),
+                    slices: b.slices,
+                    interval_seconds: b.interval_seconds,
+                });
+            }
+            return api.paperParentOrders();
+        },
+        fields: [
+            { key: 'symbol', label: 'Symbol (empty = just list)', def: '', text: true },
+            { key: 'side', label: 'Side (buy/sell/short/cover)', def: 'buy', text: true },
+            { key: 'total_qty', label: 'Total quantity', def: 300, int: true },
+            { key: 'slices', label: 'Slices', def: 6, int: true },
+            { key: 'interval_seconds', label: 'Interval (seconds)', def: 60, int: true },
+        ],
+        render: (rows) => `
+            <table class="gs-table">
+                <thead><tr><th>Symbol</th><th>Side</th><th>Progress</th><th>Qty filled</th><th>Status</th><th>Next slice</th></tr></thead>
+                <tbody>${rows.map(o => `
+                    <tr>
+                        <td>${esc(o.symbol)}</td>
+                        <td>${esc(o.side)}</td>
+                        <td>${o.slices_filled}/${o.slices}</td>
+                        <td>${esc(String(o.qty_filled))} / ${esc(String(o.total_qty))}</td>
+                        <td class="${o.status === 'done' ? 'pos' : o.status === 'error' ? 'neg' : ''}">${esc(o.status)}${o.last_error ? ' — ' + esc(o.last_error) : ''}</td>
+                        <td class="muted small">${o.status === 'working' ? new Date(o.next_slice_at).toLocaleTimeString() : '—'}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+            <p class="muted small">Equal time slices as child MARKET orders through the paper engine's
+            friction model (first slice fires within ~5s). A failed child stops the parent with the error
+            shown — execution risk is part of the lesson.</p>`,
+    },
     'screener-snapshots': {
         label: 'Saved Screens',
         call: (b) => api.screenerSnapshot(String(b.name).trim().toLowerCase()),
