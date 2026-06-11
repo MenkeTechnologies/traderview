@@ -350,6 +350,64 @@ const TOOLS = {
             covered call" when the back leg is deep ITM). Back leg revalued by Black-Scholes at front expiry.</p>`;
         },
     },
+    'taylor-rule': {
+        label: 'Taylor Rule',
+        call: (b) => api.calcTaylorRule(b),
+        fields: [
+            { key: 'neutral_real_rate', label: 'Neutral real rate r* (%)', def: 2 },
+            { key: 'inflation', label: 'Inflation (%)', def: 3 },
+            { key: 'inflation_target', label: 'Inflation target (%)', def: 2 },
+            { key: 'output_gap', label: 'Output gap (% of potential)', def: 0.5 },
+            { key: 'actual_rate', label: 'Actual policy rate (%)', def: 4.5 },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Prescribed rate</div>
+                    <div class="value">${r.prescribed_rate.toFixed(2)}%</div>
+                    <div class="small muted">vs ${r.actual_rate.toFixed(2)}% actual</div></div>
+                <div class="card"><div class="label">Stance</div>
+                    <div class="value ${r.stance === 'tight' ? 'neg' : r.stance === 'loose' ? 'pos' : ''}">${esc(r.stance.toUpperCase())}</div>
+                    <div class="small muted">${(r.gap >= 0 ? '+' : '') + r.gap.toFixed(2)}pp vs rule</div></div>
+            </div>
+            <p class="muted small">Taylor (1993): i = r* + π + ½(π − π*) + ½·gap. Policy looser than the
+            rule has historically been an inflation tailwind for real assets, tighter a headwind.</p>`,
+    },
+    'sahm-rule': {
+        label: 'Sahm Rule',
+        call: (b) => api.calcSahmRule({
+            monthly_unemployment: String(b.monthly_unemployment).split(/[\s,]+/).map(Number).filter(x => isFinite(x)),
+        }),
+        fields: [
+            { key: 'monthly_unemployment', label: 'Monthly unemployment %, oldest first (≥15)', def: '3.6,3.6,3.5,3.5,3.6,3.6,3.7,3.7,3.8,3.8,3.9,4.0,4.1,4.2,4.2', text: true },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Sahm indicator</div>
+                    <div class="value ${r.triggered ? 'neg' : 'pos'}">${r.sahm_value.toFixed(2)}pp</div>
+                    <div class="small ${r.triggered ? 'neg' : 'muted'}">${r.triggered ? 'TRIGGERED — recession signal' : 'below 0.50 trigger'}</div></div>
+                <div class="card"><div class="label">3-month averages</div>
+                    <div class="value">${r.current_3mo_avg.toFixed(2)}%</div>
+                    <div class="small muted">vs ${r.min_prior_12mo.toFixed(2)}% 12-month low</div></div>
+            </div>
+            <p class="muted small">Sahm (2019): a 0.50pp rise in the 3-month average unemployment rate above
+            its 12-month low has flagged every US recession since 1970 with no false positives in-sample.</p>`,
+    },
+    'misery-index': {
+        label: 'Misery Index',
+        call: (b) => api.calcMiseryIndex(b),
+        fields: [
+            { key: 'inflation', label: 'Inflation (%)', def: 3.2 },
+            { key: 'unemployment', label: 'Unemployment (%)', def: 4.1 },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Misery index</div>
+                    <div class="value ${r.misery_index > 10 ? 'neg' : 'pos'}">${r.misery_index.toFixed(1)}</div>
+                    <div class="small muted">${r.inflation.toFixed(1)}% inflation + ${r.unemployment.toFixed(1)}% unemployment</div></div>
+            </div>
+            <p class="muted small">Okun's misery index — single-number macro pain gauge; readings above ~10
+            historically coincide with hostile equity regimes.</p>`,
+    },
     'santa-rally': {
         label: 'Santa Rally',
         call: (b) => api.santaRally(b.symbol, b.years),

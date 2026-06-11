@@ -3,6 +3,9 @@
 //!   POST /calc/fixed-ratio               — Ryan Jones contract thresholds
 //!   POST /calc/anti-martingale           — press-winners streak sizing
 //!   POST /calc/risk-of-ruin              — analytic gambler's-ruin RoR
+//!   POST /calc/taylor-rule               — prescribed policy rate + stance
+//!   POST /calc/sahm-rule                 — unemployment recession trigger
+//!   POST /calc/misery-index              — inflation + unemployment
 //!   POST /sim/dual-momentum              — Antonacci GEM backtest
 //!   GET  /symbols/:sym/turn-of-month     — TOM seasonality stats
 //!   GET  /symbols/:sym/vol-cone          — realized-vol percentile cone
@@ -28,6 +31,9 @@ pub fn router() -> Router<AppState> {
         .route("/calc/fixed-ratio", post(post_fixed_ratio))
         .route("/calc/anti-martingale", post(post_anti_martingale))
         .route("/calc/risk-of-ruin", post(post_risk_of_ruin))
+        .route("/calc/taylor-rule", post(post_taylor_rule))
+        .route("/calc/sahm-rule", post(post_sahm_rule))
+        .route("/calc/misery-index", post(post_misery_index))
         .route("/sim/dual-momentum", post(post_dual_momentum))
         .route("/symbols/:symbol/turn-of-month", get(get_turn_of_month))
         .route("/symbols/:symbol/vol-cone", get(get_vol_cone))
@@ -73,6 +79,50 @@ async fn post_risk_of_ruin(
     traderview_core::risk_of_ruin::compute(&input)
         .map(Json)
         .ok_or_else(|| ApiError::BadRequest("invalid risk-of-ruin inputs".into()))
+}
+
+async fn post_taylor_rule(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(input): Json<traderview_core::macro_calculators::TaylorInput>,
+) -> Result<Json<traderview_core::macro_calculators::TaylorReport>, ApiError> {
+    traderview_core::macro_calculators::taylor_rule(&input)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("invalid Taylor-rule inputs".into()))
+}
+
+#[derive(Debug, Deserialize)]
+struct SahmBody {
+    /// Monthly unemployment rates oldest-first, % (≥ 15 months).
+    monthly_unemployment: Vec<f64>,
+}
+
+async fn post_sahm_rule(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(input): Json<SahmBody>,
+) -> Result<Json<traderview_core::macro_calculators::SahmReport>, ApiError> {
+    traderview_core::macro_calculators::sahm_rule(&input.monthly_unemployment)
+        .map(Json)
+        .ok_or_else(|| {
+            ApiError::BadRequest("need >= 15 valid monthly unemployment readings".into())
+        })
+}
+
+#[derive(Debug, Deserialize)]
+struct MiseryBody {
+    inflation: f64,
+    unemployment: f64,
+}
+
+async fn post_misery_index(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(input): Json<MiseryBody>,
+) -> Result<Json<traderview_core::macro_calculators::MiseryReport>, ApiError> {
+    traderview_core::macro_calculators::misery_index(input.inflation, input.unemployment)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("invalid misery-index inputs".into()))
 }
 
 async fn post_dual_momentum(
