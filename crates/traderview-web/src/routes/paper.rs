@@ -55,6 +55,20 @@ async fn submit_bracket(
     Path(account_id): Path<Uuid>,
     Json(req): Json<traderview_db::paper::BracketRequest>,
 ) -> Result<Json<traderview_db::paper::Bracket>, ApiError> {
+    run_risk_gate(
+        &s,
+        user.id,
+        account_id,
+        &req.symbol,
+        req.side,
+        req.qty,
+        // Limit entry price when known; market entries degrade to zero.
+        req.limit_price.unwrap_or(Decimal::ZERO),
+        Some(req.stop_loss),
+        // A bracket IS an attached plan: stop and target up front.
+        true,
+    )
+    .await?;
     traderview_db::paper::submit_bracket(&s.pool, user.id, account_id, req)
         .await
         .map(Json)
@@ -81,6 +95,21 @@ async fn create_parent_order(
     Path(account_id): Path<Uuid>,
     Json(inp): Json<traderview_db::paper_parent_orders::ParentOrderInput>,
 ) -> Result<Json<traderview_db::paper_parent_orders::ParentOrder>, ApiError> {
+    // Gate the FULL parent quantity up front — gating per child slice
+    // would let a sized-up parent sneak past max-position rules one
+    // slice at a time.
+    run_risk_gate(
+        &s,
+        user.id,
+        account_id,
+        &inp.symbol,
+        inp.side,
+        inp.total_qty,
+        Decimal::ZERO, // market children — % price rules degrade gracefully
+        None,
+        false,
+    )
+    .await?;
     traderview_db::paper_parent_orders::create(&s.pool, user.id, account_id, &inp)
         .await
         .map(Json)
@@ -171,38 +200,42 @@ async fn orders(
     ))
 }
 
-async fn submit(
-    State(s): State<AppState>,
-    user: AuthUser,
-    Path(id): Path<Uuid>,
-    Json(req): Json<OrderRequest>,
-) -> Result<Json<PaperOrder>, ApiError> {
-    // ─── Run the pre-trade Risk Gate against paper orders too ────────────
-    // Same rules the live new-trade form enforces. Paper trading is the
-    // place to BUILD the habit; gating only live trades would let the
-    // user practice rule-breaking. We use the paper account id as the
-    // context source so paper-specific equity / today's P&L drive the
-    // % checks.
+/// Pre-trade Risk Gate shared by EVERY paper entry point — manual
+/// orders, bracket entries, and parent-order creation. Same rules the
+/// live new-trade form enforces. Paper trading is the place to BUILD
+/// the habit; any ungated path is a place to practice rule-breaking.
+/// The paper account id is the context source so paper-specific
+/// equity / today's P&L drive the % checks.
+#[allow(clippy::too_many_arguments)]
+async fn run_risk_gate(
+    s: &AppState,
+    user_id: Uuid,
+    account_id: Uuid,
+    symbol: &str,
+    side: traderview_core::Side,
+    qty: Decimal,
+    entry_price: Decimal,
+    stop_loss: Option<Decimal>,
+    has_attached_plan: bool,
+) -> Result<(), ApiError> {
     let proposed = ProposedTrade {
-        symbol: req.symbol.clone(),
-        // Side mapping: paper OrderRequest uses Side (buy/sell/short/cover);
-        // ProposedTrade wants TradeSide. Same mapping as new_trade.js.
-        side: match req.side {
+        symbol: symbol.to_string(),
+        // Side mapping: paper Side (buy/sell/short/cover) → TradeSide.
+        // Same mapping as new_trade.js.
+        side: match side {
             traderview_core::Side::Buy | traderview_core::Side::Sell => TradeSide::Long,
             traderview_core::Side::Short | traderview_core::Side::Cover => TradeSide::Short,
         },
-        qty: req.qty,
-        // Best-effort entry price for the gate — limit price if set, else
-        // stop, else zero (the % rules would just degrade gracefully).
-        entry_price: req.limit_price.or(req.stop_price).unwrap_or(Decimal::ZERO),
-        stop_loss: req.stop_price,
+        qty,
+        entry_price,
+        stop_loss,
         asset_class: AssetClass::Stock,
         multiplier: Decimal::ONE,
         tick_size: None,
         tick_value: None,
-        has_attached_plan: false,
+        has_attached_plan,
     };
-    let rows = risk_rules::list(&s.pool, user.id, Some(id))
+    let rows = risk_rules::list(&s.pool, user_id, Some(account_id))
         .await
         .map_err(ApiError::Internal)?;
     let rules: Vec<_> = rows
@@ -211,7 +244,7 @@ async fn submit(
         .map(|r| r.rule)
         .collect();
     if !rules.is_empty() {
-        let ctx = risk_rules::build_context(&s.pool, id)
+        let ctx = risk_rules::build_context(&s.pool, account_id)
             .await
             .map_err(ApiError::Internal)?;
         let decision = evaluate(&proposed, &ctx, &rules, Utc::now());
@@ -226,7 +259,29 @@ async fn submit(
             return Err(ApiError::BadRequest(format!("Risk Gate blocked: {msg}")));
         }
     }
+    Ok(())
+}
 
+async fn submit(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<Uuid>,
+    Json(req): Json<OrderRequest>,
+) -> Result<Json<PaperOrder>, ApiError> {
+    run_risk_gate(
+        &s,
+        user.id,
+        id,
+        &req.symbol,
+        req.side,
+        req.qty,
+        // Best-effort entry price for the gate — limit price if set, else
+        // stop, else zero (the % rules would just degrade gracefully).
+        req.limit_price.or(req.stop_price).unwrap_or(Decimal::ZERO),
+        req.stop_price,
+        false,
+    )
+    .await?;
     Ok(Json(
         traderview_db::paper::submit(&s.pool, user.id, id, req)
             .await
