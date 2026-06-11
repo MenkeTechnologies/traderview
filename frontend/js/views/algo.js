@@ -867,7 +867,7 @@ export async function renderAlgo(mount) {
     `;
 
     mount.querySelector('#algo-new').addEventListener('click', () => openStrategyModal(mount));
-    mount.querySelector('#algo-tournament').addEventListener('click', () => openTournamentModal());
+    mount.querySelector('#algo-tournament').addEventListener('click', () => openTournamentModal(mount));
     mount.querySelector('#algo-portfolio').addEventListener('click', () => openPortfolioModal());
     // Strategy reference tabs — clicking a button swaps the rendered doc.
     mount.querySelectorAll('.algo-docs-tab').forEach(btn => {
@@ -1474,7 +1474,7 @@ async function openPortfolioModal() {
     });
 }
 
-async function openTournamentModal() {
+async function openTournamentModal(mount) {
     const wrap = document.createElement('div');
     wrap.className = 'modal';
     wrap.innerHTML = `
@@ -1547,7 +1547,7 @@ async function openTournamentModal() {
                 \u00b7 ${r.benchmark.max_drawdown_pct.toFixed(1)}% max DD \u00b7 Sharpe ${r.benchmark.sharpe.toFixed(3)}
                 \u2014 a row below this return is negative alpha regardless of rank.</p>
                 <table class="trades">
-                <thead><tr><th>#</th><th>Strategy</th><th>Trades</th><th>Win rate</th><th>PF</th><th>Return</th><th>Max DD</th><th>Sharpe</th></tr></thead>
+                <thead><tr><th>#</th><th>Strategy</th><th>Trades</th><th>Win rate</th><th>PF</th><th>Return</th><th>Max DD</th><th>Sharpe</th><th></th></tr></thead>
                 <tbody>${r.rows.map((row, i) => `
                     <tr>
                         <td>${i + 1}</td>
@@ -1558,9 +1558,21 @@ async function openTournamentModal() {
                         <td class="${row.summary.total_return_pct >= 0 ? 'pos' : 'neg'}">${row.summary.total_return_pct.toFixed(1)}%</td>
                         <td>${row.summary.max_drawdown_pct.toFixed(1)}%</td>
                         <td>${row.summary.sharpe.toFixed(2)}</td>
+                        <td>${row.summary.trades > 0 ? `<button class="link tournament-deploy" data-kind="${esc(row.kind)}" data-i18n="view.algo.btn.deploy">deploy</button>` : ''}</td>
                     </tr>`).join('')}
                 </tbody></table>
                 ${r.skipped.length ? `<p class="muted small">Skipped (multi-symbol): ${r.skipped.map(esc).join(', ')}</p>` : ''}`;
+            out.querySelectorAll('.tournament-deploy').forEach(btn => btn.addEventListener('click', () => {
+                const kind = btn.dataset.kind;
+                close();
+                openStrategyModal(mount, null, {
+                    name: `${kind} ${symbols[0]}`,
+                    strategy_type: kind,
+                    side_mode: 'both',
+                    timeframe: fd.get('interval') === 'day1' ? 'day1' : fd.get('interval'),
+                    entry_rules: { symbol: symbols[0] },
+                });
+            }));
         } catch (err) {
             out.textContent = t('common.error', { err: err.message });
         }
@@ -2028,9 +2040,9 @@ async function showOrders(mount, runId) {
     `).join('');
 }
 
-async function openStrategyModal(mount, existing = null) {
+async function openStrategyModal(mount, existing = null, prefill = null) {
     const host = mount.querySelector('#algo-modal-host');
-    const s = existing || {
+    const s = existing || Object.assign({
         name: '',
         enabled: true,
         timeframe: 'min1',
@@ -2045,7 +2057,7 @@ async function openStrategyModal(mount, existing = null) {
         sizing: { risk_pct_per_trade: 0.01, max_pos_pct: 0.20 },
         risk_gates: { max_concurrent_positions: 5, daily_loss_limit_pct: 0.03, max_drawdown_pct: 0.10 },
         broker_mode: 'internal_sim',
-    };
+    }, prefill || {});
     let accounts = [];
     try { accounts = await api.accounts(); }
     catch (e) { console.warn('algo modal: api.accounts() failed', e); }

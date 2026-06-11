@@ -3854,6 +3854,7 @@
   "view.algo.btn.cancel": "Stornierung",
   "view.algo.btn.clear": "klar",
   "view.algo.btn.delete": "löschen",
+  "view.algo.btn.deploy": "deploy",
   "view.algo.btn.edit": "edit",
   "view.algo.btn.kill": "tötung",
   "view.algo.btn.mc": "mc",

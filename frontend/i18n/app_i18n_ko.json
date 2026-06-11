@@ -3854,6 +3854,7 @@
   "view.algo.btn.cancel": "이름 *",
   "view.algo.btn.clear": "제품정보",
   "view.algo.btn.delete": "기타 제품",
+  "view.algo.btn.deploy": "deploy",
   "view.algo.btn.edit": "관련 기사",
   "view.algo.btn.kill": "뚱 베어",
   "view.algo.btn.mc": "mc",

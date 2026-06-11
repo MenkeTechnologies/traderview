@@ -3854,6 +3854,7 @@
   "view.algo.btn.cancel": "Зареєструватися",
   "view.algo.btn.clear": "прозорий",
   "view.algo.btn.delete": "видалення",
+  "view.algo.btn.deploy": "deploy",
   "view.algo.btn.edit": "редагування",
   "view.algo.btn.kill": "вбити",
   "view.algo.btn.mc": "mc",
