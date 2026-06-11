@@ -43,6 +43,9 @@ pub const SCREENER_REFRESH: Duration = Duration::from_secs(12 * 60 * 60);
 /// Paper TWAP ticker — child-order submission resolution. 5s gives
 /// per-slice timing error well under any allowed interval.
 pub const PAPER_TWAP_TICK: Duration = Duration::from_secs(5);
+/// Paper equity sampling — 15min resolves intraday swings without
+/// flooding the table; unchanged readings are skipped anyway.
+pub const PAPER_EQUITY_SNAPSHOT: Duration = Duration::from_secs(15 * 60);
 
 async fn compute_tile(pool: &PgPool, key: &'static str) -> anyhow::Result<serde_json::Value> {
     Ok(match key {
@@ -99,6 +102,7 @@ pub fn spawn_refreshers(pool: PgPool, cache: TileCache) {
     spawn_markets_snapshot();
     spawn_screener_snapshots(pool.clone());
     spawn_paper_twap_ticker(pool.clone());
+    spawn_paper_equity_snapshots(pool.clone());
     spawn_golden_stars(pool);
 }
 
@@ -119,6 +123,21 @@ fn spawn_paper_twap_ticker(pool: PgPool) {
                 Err(e) => tracing::warn!(error = %e, "paper pending check failed"),
             }
             tokio::time::sleep(PAPER_TWAP_TICK).await;
+        }
+    });
+}
+
+/// Paper equity sampler — one snapshot per account per interval,
+/// skipped when equity is unchanged or a position can't be marked.
+fn spawn_paper_equity_snapshots(pool: PgPool) {
+    tokio::spawn(async move {
+        loop {
+            match traderview_db::paper_equity::snapshot_all(&pool).await {
+                Ok(0) => {}
+                Ok(n) => tracing::info!(snapshots = n, "paper equity sampled"),
+                Err(e) => tracing::warn!(error = %e, "paper equity sampling failed"),
+            }
+            tokio::time::sleep(PAPER_EQUITY_SNAPSHOT).await;
         }
     });
 }

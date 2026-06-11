@@ -31,6 +31,19 @@ pub fn router() -> Router<AppState> {
         )
         .route("/paper/orders/:id/cancel", post(cancel_order))
         .route("/paper/accounts/:id/brackets", post(submit_bracket))
+        .route("/paper/accounts/:id/equity-history", get(equity_history))
+}
+
+/// Background-sampled equity curve with return/drawdown summary.
+async fn equity_history(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(account_id): Path<Uuid>,
+) -> Result<Json<traderview_db::paper_equity::EquityHistory>, ApiError> {
+    traderview_db::paper_equity::history(&s.pool, user.id, account_id, 2000)
+        .await
+        .map(Json)
+        .map_err(ApiError::Internal)
 }
 
 /// Bracket / OCO: entry + linked stop-loss and take-profit legs; the

@@ -138,6 +138,12 @@ export async function renderPaper(mount) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.paper.h2.equity_curve">Equity curve</h2>
+            <div id="paper-equity-summary" class="muted small"></div>
+            <div id="paper-equity-chart" style="width:100%;height:240px"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.paper.h2.unrealized_chart">Unrealized P&L per open position</h2>
             <div id="paper-chart" style="width:100%;height:240px"></div>
         </div>
@@ -170,6 +176,9 @@ export async function renderPaper(mount) {
 
     renderUnrealizedChart(positions, quotes);
     renderNotionalChart(positions, quotes);
+    api.paperEquityHistory(acct.id)
+        .then(h => { if (viewIsCurrent(tok)) renderEquityCurve(h); })
+        .catch(() => {});
 
     mount.querySelector('#ord-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -243,6 +252,37 @@ export async function renderPaper(mount) {
             renderPaper(mount);
         } catch (err) { showToast(t('toast.error.api', { err: err.message }), { level: 'error' }); }
     });
+}
+
+function renderEquityCurve(hist) {
+    const el = document.getElementById('paper-equity-chart');
+    const sumEl = document.getElementById('paper-equity-summary');
+    if (!el || !window.uPlot) return;
+    el.innerHTML = '';
+    const snaps = (hist && hist.snapshots) || [];
+    if (snaps.length < 2) {
+        el.innerHTML = `<div class="muted" data-i18n="view.paper.empty_equity_curve">${esc(t('view.paper.empty_equity_curve'))}</div>`;
+        return;
+    }
+    if (sumEl && hist.summary) {
+        const s = hist.summary;
+        sumEl.innerHTML = `<span class="${s.return_pct >= 0 ? 'pos' : 'neg'}">${s.return_pct >= 0 ? '+' : ''}${s.return_pct.toFixed(2)}%</span>
+            · max DD ${s.max_drawdown_pct.toFixed(2)}%${s.currently_underwater ? ' · ' + esc(t('view.paper.label.underwater')) : ''}`;
+    }
+    const xs = snaps.map(p => Math.floor(new Date(p.taken_at).getTime() / 1000));
+    const ys = snaps.map(p => Number(p.equity));
+    new window.uPlot({
+        title: '', width: el.clientWidth || 600, height: 220,
+        series: [
+            {},
+            { label: t('view.paper.chart.equity'), stroke: '#00e5ff', width: 1.5, points: { show: false } },
+        ],
+        axes: [
+            { stroke: '#aab' },
+            { stroke: '#aab', size: 70 },
+        ],
+        legend: { show: false },
+    }, [xs, ys], el);
 }
 
 function renderUnrealizedChart(positions, quotes) {
