@@ -925,6 +925,80 @@ pub async fn submit_spread(
     })
 }
 
+/// Settle expired option positions at intrinsic value — cash
+/// settlement against the UNDERLYING's spot, the day after expiry so
+/// expiry-day trading is never interrupted. ITM pays intrinsic × 100;
+/// OTM expires worthless (a close at price 0: realized = −avg × qty ×
+/// 100, exactly the premium burned). Long positions sell, shorts
+/// cover, both through the normal apply_fill path, with a synthetic
+/// filled order row left as the audit trail. Idempotent: a settled
+/// position is gone, so the next pass finds nothing. Returns
+/// positions settled.
+pub async fn settle_expired_options(pool: &PgPool) -> anyhow::Result<usize> {
+    let positions: Vec<(Uuid, String, Decimal)> = sqlx::query_as(
+        "SELECT paper_account_id, symbol, qty FROM paper_positions",
+    )
+    .fetch_all(pool)
+    .await?;
+    let today = Utc::now().date_naive();
+    let mut settled = 0usize;
+    for (account_id, symbol, qty) in positions {
+        let Some(occ) = traderview_core::occ_symbol::parse(&symbol) else {
+            continue;
+        };
+        if occ.expiry >= today {
+            continue; // settle strictly AFTER expiry day
+        }
+        // Spot from the underlying; a failed quote skips this pass
+        // (transient) — the position settles on a later pass.
+        let Ok(quote) = crate::market_data::quote(pool, &occ.underlying).await else {
+            continue;
+        };
+        let intrinsic =
+            traderview_core::occ_symbol::intrinsic(occ.call, occ.strike, quote.price);
+        let Ok(price) = Decimal::try_from(intrinsic) else { continue };
+        // Closing side: longs sell, shorts cover.
+        let (side, side_str) = if qty > Decimal::ZERO {
+            (Side::Sell, "sell")
+        } else {
+            (Side::Cover, "cover")
+        };
+        let close_qty = qty.abs();
+        let mut tx = pool.begin().await?;
+        sqlx::query(
+            "INSERT INTO paper_orders
+                (paper_account_id, symbol, side, qty, order_type,
+                 status, filled_price, filled_qty, filled_at, reject_reason)
+             VALUES ($1, $2, $3::side_t, $4, 'market',
+                     'filled', $5, $4, now(), 'expiry settlement at intrinsic')",
+        )
+        .bind(account_id)
+        .bind(&symbol)
+        .bind(side_str)
+        .bind(close_qty)
+        .bind(price)
+        .execute(&mut *tx)
+        .await?;
+        apply_fill(
+            &mut tx,
+            account_id,
+            &symbol,
+            side,
+            close_qty,
+            price,
+            Decimal::from(100),
+        )
+        .await?;
+        tx.commit().await?;
+        settled += 1;
+        tracing::info!(
+            account = %account_id, symbol, intrinsic,
+            "expired option settled"
+        );
+    }
+    Ok(settled)
+}
+
 struct ResolvedQuote {
     last: Decimal,
     multiplier: Decimal,

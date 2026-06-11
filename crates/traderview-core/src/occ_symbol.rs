@@ -75,6 +75,15 @@ pub fn fill_price(bid: Option<f64>, ask: Option<f64>, last: Option<f64>) -> Opti
     }
 }
 
+/// Expiration intrinsic value: what cash settlement pays per share.
+pub fn intrinsic(call: bool, strike: f64, spot: f64) -> f64 {
+    if call {
+        (spot - strike).max(0.0)
+    } else {
+        (strike - spot).max(0.0)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -102,6 +111,15 @@ mod tests {
         assert!(parse("AAPL260117C00000000").is_none()); // zero strike
         assert!(!is_occ("TSLA"));
         assert!(is_occ("TSLA270115P00200000"));
+    }
+
+    #[test]
+    fn intrinsic_pins_itm_otm_atm() {
+        assert!((intrinsic(true, 190.0, 200.0) - 10.0).abs() < 1e-12); // ITM call
+        assert_eq!(intrinsic(true, 190.0, 180.0), 0.0); // OTM call
+        assert!((intrinsic(false, 190.0, 180.0) - 10.0).abs() < 1e-12); // ITM put
+        assert_eq!(intrinsic(false, 190.0, 200.0), 0.0); // OTM put
+        assert_eq!(intrinsic(true, 190.0, 190.0), 0.0); // ATM expires worthless
     }
 
     #[test]

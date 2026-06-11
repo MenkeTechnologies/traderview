@@ -56,6 +56,9 @@ pub const PAPER_DIVIDEND_CREDIT: Duration = Duration::from_secs(6 * 60 * 60);
 /// idempotent passes a day also keeps the trade-after-split skip
 /// window small.
 pub const PAPER_SPLIT_ADJUST: Duration = Duration::from_secs(6 * 60 * 60);
+/// Paper option expiry settlement — expiry is a daily-date event and
+/// the pass is idempotent; settles the day AFTER expiry.
+pub const PAPER_OPTION_SETTLE: Duration = Duration::from_secs(6 * 60 * 60);
 
 async fn compute_tile(pool: &PgPool, key: &'static str) -> anyhow::Result<serde_json::Value> {
     Ok(match key {
@@ -116,6 +119,7 @@ pub fn spawn_refreshers(pool: PgPool, cache: TileCache, hub: crate::realtime::Hu
     spawn_paper_equity_snapshots(pool.clone());
     spawn_paper_dividend_credits(pool.clone());
     spawn_paper_split_adjustments(pool.clone());
+    spawn_paper_option_settlement(pool.clone());
     spawn_golden_stars(pool);
 }
 
@@ -207,6 +211,23 @@ fn spawn_paper_equity_snapshots(pool: PgPool) {
                 Err(e) => tracing::warn!(error = %e, "paper equity sampling failed"),
             }
             tokio::time::sleep(PAPER_EQUITY_SNAPSHOT).await;
+        }
+    });
+}
+
+/// Paper option expiry settlement — ITM cash-settles at intrinsic vs
+/// the underlying spot, OTM expires worthless; without this, expired
+/// positions zombie (the chain stops quoting and the equity sampler
+/// marks the whole account unmarkable forever).
+fn spawn_paper_option_settlement(pool: PgPool) {
+    tokio::spawn(async move {
+        loop {
+            match traderview_db::paper::settle_expired_options(&pool).await {
+                Ok(0) => {}
+                Ok(n) => tracing::info!(settled = n, "expired paper options settled"),
+                Err(e) => tracing::warn!(error = %e, "option settlement failed"),
+            }
+            tokio::time::sleep(PAPER_OPTION_SETTLE).await;
         }
     });
 }
