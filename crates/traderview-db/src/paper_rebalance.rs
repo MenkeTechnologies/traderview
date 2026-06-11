@@ -96,6 +96,15 @@ pub fn parse_targets(json: &Value) -> Vec<TargetInput> {
 
 // ─── Repository ────────────────────────────────────────────────────────────
 
+/// (id, user_id, name) of every target — the drift-watch sweep list.
+pub async fn all_target_ids(pool: &PgPool) -> anyhow::Result<Vec<(Uuid, Uuid, String)>> {
+    Ok(sqlx::query_as(
+        "SELECT id, user_id, name FROM paper_rebalance_targets",
+    )
+    .fetch_all(pool)
+    .await?)
+}
+
 pub async fn list(pool: &PgPool, user_id: Uuid) -> anyhow::Result<Vec<PaperRebalanceTarget>> {
     Ok(sqlx::query_as::<_, PaperRebalanceTarget>(
         "SELECT id, user_id, name, targets, cash_target_pct, drift_threshold_pct,

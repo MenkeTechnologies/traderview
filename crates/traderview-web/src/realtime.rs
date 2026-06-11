@@ -53,6 +53,15 @@ pub enum Event {
         order_type: String,
     },
 
+    /// Background rebalance watch: a paper target portfolio's max
+    /// drift crossed its own threshold.
+    RebalanceDrift {
+        target_id: String,
+        name: String,
+        max_drift_pct: f64,
+        threshold_pct: f64,
+    },
+
     /// Background drift watch: a strategy's live record has diverged
     /// from its backtest expectation.
     StrategyDrift {

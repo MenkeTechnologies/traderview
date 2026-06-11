@@ -49,6 +49,9 @@ pub const PAPER_EQUITY_SNAPSHOT: Duration = Duration::from_secs(15 * 60);
 /// Strategy drift sweep — live-vs-backtest divergence across every
 /// active strategy. Twice a day: drift moves on the scale of sessions.
 pub const STRATEGY_DRIFT_WATCH: Duration = Duration::from_secs(12 * 60 * 60);
+/// Rebalance drift sweep — allocation drift also moves on the scale
+/// of sessions.
+pub const REBALANCE_DRIFT_WATCH: Duration = Duration::from_secs(12 * 60 * 60);
 /// Paper dividend crediting — ex-dates are daily-bar data and the pass
 /// is idempotent, so a few runs a day is plenty.
 pub const PAPER_DIVIDEND_CREDIT: Duration = Duration::from_secs(6 * 60 * 60);
@@ -115,7 +118,8 @@ pub fn spawn_refreshers(pool: PgPool, cache: TileCache, hub: crate::realtime::Hu
     spawn_markets_snapshot();
     spawn_screener_snapshots(pool.clone());
     spawn_paper_twap_ticker(pool.clone(), hub.clone());
-    spawn_strategy_drift_watch(pool.clone(), hub);
+    spawn_strategy_drift_watch(pool.clone(), hub.clone());
+    spawn_rebalance_drift_watch(pool.clone(), hub);
     spawn_paper_equity_snapshots(pool.clone());
     spawn_paper_dividend_credits(pool.clone());
     spawn_paper_split_adjustments(pool.clone());
@@ -196,6 +200,45 @@ fn spawn_strategy_drift_watch(pool: PgPool, hub: crate::realtime::Hub) {
                 Err(e) => tracing::warn!(error = %e, "drift sweep failed"),
             }
             tokio::time::sleep(STRATEGY_DRIFT_WATCH).await;
+        }
+    });
+}
+
+/// Rebalance drift watch — plans every paper target portfolio and
+/// publishes RebalanceDrift when max drift crosses the target's OWN
+/// drift_threshold_pct. Within-tolerance portfolios stay silent.
+fn spawn_rebalance_drift_watch(pool: PgPool, hub: crate::realtime::Hub) {
+    tokio::spawn(async move {
+        loop {
+            match traderview_db::paper_rebalance::all_target_ids(&pool).await {
+                Ok(rows) => {
+                    for (id, user_id, name) in rows {
+                        match traderview_db::paper_rebalance::plan(&pool, user_id, id).await {
+                            Ok(Some(p)) if p.above_threshold => {
+                                tracing::warn!(
+                                    target = %name,
+                                    drift = p.max_drift_pct,
+                                    threshold = p.target.drift_threshold_pct,
+                                    "rebalance drift above tolerance"
+                                );
+                                hub.publish(crate::realtime::Event::RebalanceDrift {
+                                    target_id: id.to_string(),
+                                    name: name.clone(),
+                                    max_drift_pct: p.max_drift_pct,
+                                    threshold_pct: p.target.drift_threshold_pct,
+                                });
+                            }
+                            Ok(_) => {}
+                            Err(e) => tracing::debug!(
+                                target = %name, error = %e,
+                                "rebalance drift check failed (transient quotes likely)"
+                            ),
+                        }
+                    }
+                }
+                Err(e) => tracing::warn!(error = %e, "rebalance drift sweep failed"),
+            }
+            tokio::time::sleep(REBALANCE_DRIFT_WATCH).await;
         }
     });
 }
