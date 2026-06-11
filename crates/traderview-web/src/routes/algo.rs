@@ -42,6 +42,7 @@ pub fn router() -> Router<AppState> {
         .route("/algo/tournament", post(post_tournament))
         .route("/algo/strategies/:id/walk-forward", post(post_walk_forward))
         .route("/algo/strategies/:id/backtest-mc", post(post_backtest_mc))
+        .route("/algo/strategies/:id/backtest-regimes", post(post_backtest_regimes))
         .route("/algo/strategies/:id/backtests", get(list_backtest_history))
         .route(
             "/algo/backtests/:id",
@@ -1033,6 +1034,89 @@ async fn post_backtest_mc(
         backtest_summary: bt.summary,
         trades_used: pnls.len(),
         mc,
+    }))
+}
+
+#[derive(serde::Deserialize)]
+struct BacktestRegimesBody {
+    #[serde(default = "default_bt_symbol")]
+    symbol: String,
+    #[serde(default = "default_bt_interval")]
+    interval: String,
+    #[serde(default = "default_bt_days_back")]
+    days_back: i64,
+    #[serde(default)]
+    initial_equity: Option<f64>,
+    #[serde(default)]
+    fee_per_trade: Option<f64>,
+    #[serde(default)]
+    slippage_bps: Option<f64>,
+    /// Regime-classifier efficiency window.
+    #[serde(default = "default_regime_period")]
+    regime_period: usize,
+}
+
+fn default_regime_period() -> usize {
+    20
+}
+
+#[derive(serde::Serialize)]
+struct BacktestRegimesResult {
+    backtest_summary: traderview_core::algo_backtest::AlgoBtSummary,
+    attribution: traderview_core::algo_regime_attribution::RegimeAttribution,
+}
+
+/// POST /algo/strategies/:id/backtest-regimes — backtest, then bucket
+/// every trade by the market regime at its ENTRY bar. Answers "WHEN
+/// does this strategy earn" so a regime gate is added deliberately.
+async fn post_backtest_regimes(
+    State(s): State<AppState>,
+    u: AuthUser,
+    Path(id): Path<Uuid>,
+    Json(body): Json<BacktestRegimesBody>,
+) -> Result<Json<BacktestRegimesResult>, ApiError> {
+    let strategy = traderview_db::algo::get_strategy(&s.pool, u.id, id)
+        .await
+        .map_err(ApiError::Internal)?
+        .ok_or_else(|| ApiError::BadRequest("strategy not found".into()))?;
+    let interval: traderview_core::BarInterval = serde_json::from_value(serde_json::Value::String(
+        normalize_interval(&body.interval),
+    ))
+    .map_err(|e| ApiError::BadRequest(format!("interval: {e}")))?;
+    let to = chrono::Utc::now();
+    let from = to - chrono::Duration::days(body.days_back);
+    let bars = traderview_db::prices::get_bars(&s.pool, &body.symbol, interval, from, to)
+        .await
+        .map_err(ApiError::Internal)?;
+    if bars.len() < 30 {
+        return Err(ApiError::BadRequest(format!(
+            "only {} bars available for {} — need >=30",
+            bars.len(),
+            body.symbol
+        )));
+    }
+    let strat =
+        traderview_core::algo_strategies::from_kind(&strategy.strategy_type, &strategy.entry_rules)
+            .map_err(|e| ApiError::BadRequest(format!("strategy_type: {e}")))?;
+    let sizing: traderview_core::algo_strategies::Sizing =
+        serde_json::from_value(strategy.sizing.clone()).unwrap_or_default();
+    let side_mode = match strategy.side_mode.as_str() {
+        "short" => traderview_core::algo_strategies::SideMode::Short,
+        "both" => traderview_core::algo_strategies::SideMode::Both,
+        _ => traderview_core::algo_strategies::SideMode::Long,
+    };
+    let cfg = traderview_core::algo_backtest::BacktestConfig {
+        initial_equity: body.initial_equity.unwrap_or(100_000.0),
+        fee_per_trade: body.fee_per_trade.unwrap_or(1.0),
+        slippage_bps: body.slippage_bps.unwrap_or(5.0),
+        side_mode,
+    };
+    let bt = traderview_core::algo_backtest::run(&bars, strat.as_ref(), &sizing, cfg);
+    let attribution =
+        traderview_core::algo_regime_attribution::attribute(&bt.trades, &bars, body.regime_period);
+    Ok(Json(BacktestRegimesResult {
+        backtest_summary: bt.summary,
+        attribution,
     }))
 }
 

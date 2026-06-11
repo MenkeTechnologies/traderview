@@ -1016,6 +1016,7 @@ async function refreshStrategies(mount) {
                 <button class="link" data-act="optimize" data-i18n="view.algo.btn.optimize">optimize</button>
                 <button class="link" data-act="walkforward" data-i18n="view.algo.btn.walkforward">walk-fwd</button>
                 <button class="link" data-act="mc" data-i18n="view.algo.btn.mc">mc</button>
+                <button class="link" data-act="regimes" data-i18n="view.algo.btn.regimes">regimes</button>
                 <button class="link" data-act="kill" data-i18n="view.algo.btn.kill">${s.kill_switch ? 'release' : 'kill'}</button>
                 <button class="link" data-act="edit" data-i18n="view.algo.btn.edit">edit</button>
                 <button class="link" data-act="del" data-i18n="view.algo.btn.delete">delete</button>
@@ -1037,6 +1038,7 @@ async function refreshStrategies(mount) {
             if (act === 'optimize') return openOptimizeModal(mount, s);
             if (act === 'walkforward') return openWalkForwardModal(s);
             if (act === 'mc') return openMcModal(s);
+            if (act === 'regimes') return openRegimesModal(s);
             if (act === 'kill') return toggleKill(mount, s);
             if (act === 'edit') return openStrategyModal(mount, s);
             if (act === 'del') return deleteStrategy(mount, s);
@@ -1194,6 +1196,73 @@ const OPTIMIZE_DEFAULT_GRIDS = {
 
 
 
+
+
+async function openRegimesModal(s) {
+    const symbol = (s.entry_rules && s.entry_rules.symbol_a) || s.entry_rules?.symbol || 'SPY';
+    const wrap = document.createElement('div');
+    wrap.className = 'modal';
+    wrap.innerHTML = `
+        <div class="modal-inner" style="max-width:900px">
+            <h2>Regime attribution: ${esc(s.name)}</h2>
+            <p class="muted small" data-i18n="view.algo.hint.regimes">Buckets every backtest trade by the market regime at its ENTRY bar (trend-up / trend-down / range / chop via the efficiency-ratio classifier). A strategy that looks mediocre overall is often excellent in one regime and bleeding in another \u2014 gate it deliberately, not by vibes.</p>
+            <form id="regimes-form" class="inline-form">
+                <input name="symbol" value="${esc(symbol)}" required style="text-transform:uppercase">
+                <select name="interval">
+                    <option value="day1" selected>1d</option>
+                    <option value="hour1">1h</option>
+                    <option value="min15">15m</option>
+                </select>
+                <input name="days_back" type="number" value="730" min="60">
+                <input name="regime_period" type="number" value="20" min="5" data-tip="view.algo.tip.regime_period">
+                <button class="primary" type="submit">RUN</button>
+                <button type="button" class="link" id="regimes-close" data-i18n="common.btn.cancel">Cancel</button>
+            </form>
+            <div id="regimes-result" class="muted small"></div>
+        </div>`;
+    document.body.appendChild(wrap);
+    const close = () => wrap.remove();
+    wrap.querySelector('#regimes-close').addEventListener('click', close);
+    wrap.addEventListener('click', (e) => { if (e.target === wrap) close(); });
+    wrap.querySelector('#regimes-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const out = wrap.querySelector('#regimes-result');
+        out.textContent = t('common.loading');
+        try {
+            const r = await api.algoBacktestRegimes(s.id, {
+                symbol: fd.get('symbol').trim().toUpperCase(),
+                interval: fd.get('interval'),
+                days_back: Number(fd.get('days_back')),
+                regime_period: Number(fd.get('regime_period')),
+            });
+            const a = r.attribution;
+            const row = (name, b) => b.trades === 0 ? '' : `
+                <tr>
+                    <td>${name}</td>
+                    <td>${b.trades}</td>
+                    <td>${(b.win_rate * 100).toFixed(0)}%</td>
+                    <td class="${b.total_pnl >= 0 ? 'pos' : 'neg'}">$${fmt(b.total_pnl)}</td>
+                    <td>$${fmt(b.avg_pnl)}</td>
+                    <td>${b.avg_r.toFixed(2)}</td>
+                    <td>${b.profit_factor != null ? b.profit_factor.toFixed(2) : '\u2014'}</td>
+                </tr>`;
+            out.innerHTML = `
+                <table class="trades">
+                <thead><tr><th>Regime</th><th>Trades</th><th>Win rate</th><th>Total PnL</th><th>Avg PnL</th><th>Avg R</th><th>PF</th></tr></thead>
+                <tbody>
+                    ${row('Trend up', a.trend_up)}
+                    ${row('Trend down', a.trend_down)}
+                    ${row('Range', a.range)}
+                    ${row('Chop', a.chop)}
+                    ${row('Unclassified', a.unclassified)}
+                </tbody></table>
+                <p class="muted small">${r.backtest_summary.trades} trades total \u00b7 ${r.backtest_summary.total_return_pct.toFixed(1)}% return over the full path. Empty regimes are omitted.</p>`;
+        } catch (err) {
+            out.textContent = t('common.error', { err: err.message });
+        }
+    });
+}
 
 async function openMcModal(s) {
     const symbol = (s.entry_rules && s.entry_rules.symbol_a) || s.entry_rules?.symbol || 'SPY';
