@@ -1020,6 +1020,7 @@ async function refreshStrategies(mount) {
                 <button class="link" data-act="mc" data-i18n="view.algo.btn.mc">mc</button>
                 <button class="link" data-act="regimes" data-i18n="view.algo.btn.regimes">regimes</button>
                 <button class="link" data-act="drift" data-i18n="view.algo.btn.drift">drift</button>
+                <button class="link" data-act="gates" data-i18n="view.algo.btn.gates">gates</button>
                 <button class="link" data-act="kill" data-i18n="view.algo.btn.kill">${s.kill_switch ? 'release' : 'kill'}</button>
                 <button class="link" data-act="edit" data-i18n="view.algo.btn.edit">edit</button>
                 <button class="link" data-act="del" data-i18n="view.algo.btn.delete">delete</button>
@@ -1043,6 +1044,7 @@ async function refreshStrategies(mount) {
             if (act === 'mc') return openMcModal(s);
             if (act === 'regimes') return openRegimesModal(s);
             if (act === 'drift') return openDriftModal(s);
+            if (act === 'gates') return openGatesModal(s);
             if (act === 'kill') return toggleKill(mount, s);
             if (act === 'edit') return openStrategyModal(mount, s);
             if (act === 'del') return deleteStrategy(mount, s);
@@ -1202,6 +1204,48 @@ const OPTIMIZE_DEFAULT_GRIDS = {
 
 
 
+
+
+async function openGatesModal(s) {
+    const wrap = document.createElement('div');
+    wrap.className = 'modal';
+    wrap.innerHTML = `
+        <div class="modal-inner" style="max-width:760px">
+            <h2>Gate fires: ${esc(s.name)}</h2>
+            <div id="gates-result" class="muted small">${esc(t('common.loading'))}</div>
+            <button type="button" class="link" id="gates-close" data-i18n="common.btn.cancel">Close</button>
+        </div>`;
+    document.body.appendChild(wrap);
+    const close = () => wrap.remove();
+    wrap.querySelector('#gates-close').addEventListener('click', close);
+    wrap.addEventListener('click', (e) => { if (e.target === wrap) close(); });
+    try {
+        const r = await api.algoGateFires(s.id);
+        const out = wrap.querySelector('#gates-result');
+        if (!r.counts.length && !r.recent.length) {
+            out.textContent = t('view.algo.empty.gate_fires');
+            return;
+        }
+        out.innerHTML = `
+            <p data-i18n="view.algo.hint.gate_fires">Every row is an entry a gate skipped — tune gate configs from these counts, not vibes.</p>
+            ${r.counts.length ? `<table class="trades">
+                <thead><tr><th>Gate</th><th>Fires (last ${r.window_days}d)</th></tr></thead>
+                <tbody>${r.counts.map(c => `<tr><td>${esc(c.gate)}</td><td>${c.fires}</td></tr>`).join('')}</tbody>
+            </table>` : ''}
+            <table class="trades">
+                <thead><tr><th>When</th><th>Gate</th><th>Detail</th></tr></thead>
+                <tbody>${r.recent.map(x => `
+                    <tr>
+                        <td class="small">${new Date(x.fired_at).toLocaleString()}</td>
+                        <td>${esc(x.gate)}</td>
+                        <td class="small">${esc(x.detail)}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>`;
+    } catch (err) {
+        wrap.querySelector('#gates-result').textContent = t('common.error', { err: err.message });
+    }
+}
 
 async function openDriftModal(s) {
     const wrap = document.createElement('div');

@@ -298,6 +298,26 @@ impl BrokerSink for InMemorySink {
     }
 }
 
+impl EngineError {
+    /// The gate name when this error is a RISK-GATE fire (the thing
+    /// the audit table counts), None for infra/state errors. Keep in
+    /// lockstep with the variants — pinned by a test.
+    pub fn gate_name(&self) -> Option<&'static str> {
+        match self {
+            Self::PositionCap(_) => Some("position_cap"),
+            Self::DailyLossCap { .. } => Some("daily_loss_cap"),
+            Self::ConsecutiveLossesCap { .. } => Some("consecutive_losses"),
+            Self::PositionSizeCap { .. } => Some("position_size_cap"),
+            Self::EarningsBlackout { .. } => Some("earnings_blackout"),
+            Self::OutsideEntryWindow { .. } => Some("entry_window"),
+            Self::DailyEntryCap { .. } => Some("daily_entry_cap"),
+            Self::LossCooldown { .. } => Some("loss_cooldown"),
+            Self::CorrelationGate { .. } => Some("correlation"),
+            _ => None,
+        }
+    }
+}
+
 /// Configuration loaded from `algo_strategies.sizing / risk_gates / side_mode`.
 /// The strategy itself is built lazily via the factory in
 /// `algo_strategies::from_kind` — different `strategy_type` columns produce
@@ -1631,6 +1651,34 @@ mod earnings_blackout_tests {
         // No loss on record / clock skew (loss in the future): clear.
         assert!(!in_loss_cooldown(None, 1_000_000, 30));
         assert!(!in_loss_cooldown(Some(1_000_600), 1_000_000, 30));
+    }
+
+    #[test]
+    fn gate_names_cover_gate_variants_and_skip_infra() {
+        use rust_decimal::Decimal;
+        let gates: Vec<EngineError> = vec![
+            EngineError::PositionCap(5),
+            EngineError::DailyLossCap { cap: Decimal::ONE, pnl: Decimal::ZERO },
+            EngineError::ConsecutiveLossesCap { cap: 3, streak: 3 },
+            EngineError::PositionSizeCap { notional: Decimal::ONE, cap: Decimal::ONE },
+            EngineError::EarningsBlackout {
+                symbol: "X".into(),
+                date: chrono::NaiveDate::from_ymd_opt(2026, 6, 12).unwrap(),
+                days: 2,
+            },
+            EngineError::OutsideEntryWindow { window: "10:00-15:30".into() },
+            EngineError::DailyEntryCap { cap: 6, count: 6 },
+            EngineError::LossCooldown { minutes_ago: 5, cooldown: 30 },
+            EngineError::CorrelationGate {
+                symbol: "X".into(), other: "Y".into(), rho: 0.9, cap: 0.8,
+            },
+        ];
+        let names: Vec<&str> = gates.iter().filter_map(|e| e.gate_name()).collect();
+        assert_eq!(names.len(), gates.len(), "every gate variant must name itself");
+        // Infra/state errors are NOT gate fires.
+        assert_eq!(EngineError::ZeroQty.gate_name(), None);
+        assert_eq!(EngineError::Broker("x".into()).gate_name(), None);
+        assert_eq!(EngineError::KillSwitch { reason: None }.gate_name(), None);
     }
 
     #[test]

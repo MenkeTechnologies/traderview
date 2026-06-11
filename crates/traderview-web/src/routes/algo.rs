@@ -46,6 +46,7 @@ pub fn router() -> Router<AppState> {
         .route("/algo/strategies/:id/backtest-mc", post(post_backtest_mc))
         .route("/algo/strategies/:id/backtest-regimes", post(post_backtest_regimes))
         .route("/algo/strategies/:id/live-vs-backtest", get(get_live_vs_backtest))
+        .route("/algo/strategies/:id/gate-fires", get(get_gate_fires))
         .route("/algo/strategies/:id/backtests", get(list_backtest_history))
         .route(
             "/algo/backtests/:id",
@@ -1289,6 +1290,31 @@ async fn get_live_vs_backtest(
         expectation_backtest_at,
         expectation_symbol,
     }))
+}
+
+#[derive(serde::Deserialize)]
+struct GateFiresQ {
+    #[serde(default = "default_gate_window")]
+    window_days: i64,
+}
+fn default_gate_window() -> i64 {
+    7
+}
+
+/// GET /algo/strategies/:id/gate-fires — per-gate fire counts over the
+/// trailing window + the latest audit rows. The data that turns gate
+/// tuning from vibes into engineering.
+async fn get_gate_fires(
+    State(s): State<AppState>,
+    u: AuthUser,
+    Path(id): Path<Uuid>,
+    Query(q): Query<GateFiresQ>,
+) -> Result<Json<traderview_db::algo::GateFireSummary>, ApiError> {
+    traderview_db::algo::gate_fire_summary(&s.pool, u.id, id, q.window_days.clamp(1, 365))
+        .await
+        .map_err(ApiError::Internal)?
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("strategy not found".into()))
 }
 
 /// GET /algo/strategies/:id/metrics — dashboard rollup.

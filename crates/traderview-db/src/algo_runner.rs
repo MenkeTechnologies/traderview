@@ -587,6 +587,15 @@ async fn drive_strategy(
                     strategy = %strategy.id, symbol, error = %e,
                     "process_bar_window non-fatal"
                 );
+                // Risk-gate fires get an audit row so gate configs can
+                // be tuned from data; infra errors don't.
+                if let Some(gate) = e.gate_name() {
+                    if let Err(rec) =
+                        algo::record_gate_fire(pool, strategy.id, gate, &e.to_string()).await
+                    {
+                        tracing::warn!(strategy = %strategy.id, error = %rec, "gate-fire audit failed");
+                    }
+                }
                 emit_skip(event_sink, strategy.id, format!("{symbol}: {e}"));
             }
         }

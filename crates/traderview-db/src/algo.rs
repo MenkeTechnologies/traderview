@@ -990,6 +990,83 @@ pub async fn last_losing_trip_ts(
     Ok(last)
 }
 
+/// One audit row per risk-gate fire. Non-fatal at call sites: the
+/// audit must never break the tick loop.
+pub async fn record_gate_fire(
+    pool: &PgPool,
+    strategy_id: Uuid,
+    gate: &str,
+    detail: &str,
+) -> anyhow::Result<()> {
+    sqlx::query("INSERT INTO algo_gate_fires (strategy_id, gate, detail) VALUES ($1, $2, $3)")
+        .bind(strategy_id)
+        .bind(gate)
+        .bind(detail)
+        .execute(pool)
+        .await?;
+    Ok(())
+}
+
+#[derive(Debug, Clone, Serialize, sqlx::FromRow)]
+pub struct GateFireCount {
+    pub gate: String,
+    pub fires: i64,
+}
+
+#[derive(Debug, Clone, Serialize, sqlx::FromRow)]
+pub struct GateFireRow {
+    pub gate: String,
+    pub detail: String,
+    pub fired_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct GateFireSummary {
+    pub window_days: i64,
+    pub counts: Vec<GateFireCount>,
+    pub recent: Vec<GateFireRow>,
+}
+
+/// Per-gate fire counts over the trailing window + the latest rows.
+pub async fn gate_fire_summary(
+    pool: &PgPool,
+    user_id: Uuid,
+    strategy_id: Uuid,
+    window_days: i64,
+) -> anyhow::Result<Option<GateFireSummary>> {
+    let owned: Option<(Uuid,)> = sqlx::query_as(
+        "SELECT id FROM algo_strategies WHERE id = $1 AND user_id = $2",
+    )
+    .bind(strategy_id)
+    .bind(user_id)
+    .fetch_optional(pool)
+    .await?;
+    if owned.is_none() {
+        return Ok(None);
+    }
+    let counts: Vec<GateFireCount> = sqlx::query_as(
+        "SELECT gate, count(*) AS fires FROM algo_gate_fires
+          WHERE strategy_id = $1 AND fired_at >= now() - make_interval(days => $2::int)
+          GROUP BY gate ORDER BY fires DESC",
+    )
+    .bind(strategy_id)
+    .bind(window_days)
+    .fetch_all(pool)
+    .await?;
+    let recent: Vec<GateFireRow> = sqlx::query_as(
+        "SELECT gate, detail, fired_at FROM algo_gate_fires
+          WHERE strategy_id = $1 ORDER BY fired_at DESC LIMIT 50",
+    )
+    .bind(strategy_id)
+    .fetch_all(pool)
+    .await?;
+    Ok(Some(GateFireSummary {
+        window_days,
+        counts,
+        recent,
+    }))
+}
+
 /// Entry orders submitted today (UTC) — the overtrading-gate counter.
 pub async fn entries_today(pool: &PgPool, strategy_id: Uuid) -> anyhow::Result<i64> {
     let (n,): (i64,) = sqlx::query_as(

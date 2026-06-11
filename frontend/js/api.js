@@ -1135,6 +1135,7 @@ export const api = {
             body: JSON.stringify(body || {}),
         }),
     algoLiveVsBacktest: (id) => request(`/algo/strategies/${id}/live-vs-backtest`),
+    algoGateFires: (id, windowDays = 7) => request(`/algo/strategies/${id}/gate-fires?window_days=${windowDays}`),
 
     // Correlation matrix (pairwise Pearson on cached daily-bar log-returns)
     corrWatchlist: (wid, days = 90) =>
