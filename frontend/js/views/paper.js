@@ -112,8 +112,10 @@ export async function renderPaper(mount) {
                     <input name="leg1" placeholder="buy leg OCC (e.g. AAPL260117C00190000)" data-i18n-placeholder="view.paper.placeholder.spread_buy" data-tip="view.paper.tip.spread_leg" required style="min-width:220px">
                     <input name="leg2" placeholder="sell leg OCC" data-i18n-placeholder="view.paper.placeholder.spread_sell" required style="min-width:220px">
                     <input name="qty" type="number" min="1" step="1" value="1" data-tip="view.paper.tip.spread_qty">
+                    <button type="button" id="spread-preview" data-i18n="view.paper.btn.preview_spread" data-tip="view.paper.tip.preview_spread">PREVIEW</button>
                     <button data-i18n="view.paper.btn.submit_spread" class="primary" type="submit">SPREAD</button>
                 </form>
+                <div id="spread-preview-out" class="muted small"></div>
 
                 <h2 data-i18n="view.paper.h2.bracket_ticket">Bracket (OCO) ticket</h2>
                 <form id="bracket-form" class="inline-form">
@@ -306,6 +308,32 @@ export async function renderPaper(mount) {
             localStorage.removeItem('paper.acctId');
             renderPaper(mount);
         } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
+    });
+    mount.querySelector('#spread-preview').addEventListener('click', async () => {
+        const form = mount.querySelector('#spread-form');
+        const fd = new FormData(form);
+        const out = mount.querySelector('#spread-preview-out');
+        const leg1 = (fd.get('leg1') || '').trim().toUpperCase();
+        const leg2 = (fd.get('leg2') || '').trim().toUpperCase();
+        if (!leg1 || !leg2) { out.textContent = t('view.paper.err.spread_legs'); return; }
+        out.textContent = t('common.loading');
+        try {
+            const r = await api.paperSpreadPreview({
+                legs: [
+                    { symbol: leg1, buy: true, ratio: 1 },
+                    { symbol: leg2, buy: false, ratio: 1 },
+                ],
+                qty: Number(fd.get('qty')) || 1,
+            });
+            const p = r.payoff;
+            out.innerHTML = `
+                <strong>${r.net_premium_usd >= 0 ? 'Credit' : 'Debit'} $${Math.abs(r.net_premium_usd).toFixed(2)}</strong>
+                \u00b7 max profit $${p.max_profit.toFixed(0)} \u00b7 max loss $${p.max_loss.toFixed(0)}
+                \u00b7 breakeven${p.breakevens.length === 1 ? '' : 's'} ${p.breakevens.length ? p.breakevens.map(b => b.toFixed(2)).join(', ') : '\u2014'}
+                \u00b7 legs @ ${r.legs.map(l => l.mid.toFixed(2)).join(' / ')}`;
+        } catch (err) {
+            out.textContent = t('common.error', { err: err.message });
+        }
     });
     mount.querySelector('#spread-form').addEventListener('submit', async (e) => {
         e.preventDefault();

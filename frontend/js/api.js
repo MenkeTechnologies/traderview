@@ -847,6 +847,8 @@ export const api = {
     paperSpreadCreate: (id, req) =>
         request(`/paper/accounts/${id}/spreads`, { method: 'POST', body: JSON.stringify(req) }),
     paperOptionGreeks: (id) => request(`/paper/accounts/${id}/option-greeks`),
+    paperSpreadPreview: (req) =>
+        request('/paper/spreads/preview', { method: 'POST', body: JSON.stringify(req) }),
     paperEquityHistory: (id) => request(`/paper/accounts/${id}/equity-history`),
     paperAccountCreate: (name, starting_cash) =>
         request('/paper/accounts/create', { method: 'POST', body: JSON.stringify({ name, starting_cash }) }),

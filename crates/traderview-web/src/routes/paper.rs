@@ -33,6 +33,7 @@ pub fn router() -> Router<AppState> {
         .route("/paper/accounts/:id/brackets", post(submit_bracket))
         .route("/paper/accounts/:id/spreads", post(submit_spread))
         .route("/paper/accounts/:id/option-greeks", get(option_greeks))
+        .route("/paper/spreads/preview", post(preview_spread))
         .route("/paper/accounts/:id/equity-history", get(equity_history))
         .route("/paper/accounts/comparison", get(account_comparison))
         .route("/paper/accounts/create", post(create_account))
@@ -145,6 +146,19 @@ async fn option_greeks(
     Path(account_id): Path<Uuid>,
 ) -> Result<Json<traderview_db::paper::AccountOptionGreeks>, ApiError> {
     traderview_db::paper::option_greeks(&s.pool, user.id, account_id)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+/// Stateless spread quote: per-leg mids + expiry payoff profile,
+/// priced by the same chain source the submit fills against.
+async fn preview_spread(
+    State(s): State<AppState>,
+    _user: AuthUser,
+    Json(req): Json<traderview_db::paper::SpreadRequest>,
+) -> Result<Json<traderview_db::paper::SpreadPreview>, ApiError> {
+    traderview_db::paper::preview_spread(&s.pool, &req)
         .await
         .map(Json)
         .map_err(|e| ApiError::BadRequest(e.to_string()))

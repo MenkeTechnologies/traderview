@@ -925,6 +925,79 @@ pub async fn submit_spread(
     })
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct SpreadLegQuote {
+    pub symbol: String,
+    pub mid: f64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SpreadPreview {
+    pub legs: Vec<SpreadLegQuote>,
+    pub net_premium_usd: f64,
+    pub payoff: traderview_core::spread_payoff::PayoffReport,
+}
+
+/// Quote a spread WITHOUT touching the book: per-leg chain mids, net
+/// premium, and the expiry payoff profile (max profit/loss,
+/// breakevens) over spot ± 30%. Same validation and quote source as
+/// submit_spread, so the preview prices what the submit would fill.
+pub async fn preview_spread(pool: &PgPool, req: &SpreadRequest) -> anyhow::Result<SpreadPreview> {
+    traderview_core::option_spread::validate(&req.legs).map_err(|e| anyhow::anyhow!(e))?;
+    if req.qty <= Decimal::ZERO || req.qty > Decimal::from(1000) {
+        anyhow::bail!("qty must be in 1..=1000 spreads");
+    }
+    let qty_f = req.qty.to_string().parse::<f64>().unwrap_or(0.0);
+    let mut leg_quotes = Vec::with_capacity(req.legs.len());
+    let mut payoff_legs = Vec::with_capacity(req.legs.len());
+    let mut prices = Vec::with_capacity(req.legs.len());
+    let mut spot = 0.0_f64;
+    for leg in &req.legs {
+        let occ = traderview_core::occ_symbol::parse(&leg.symbol)
+            .ok_or_else(|| anyhow::anyhow!("{} is not an OCC symbol", leg.symbol))?;
+        if occ.expiry < Utc::now().date_naive() {
+            anyhow::bail!("contract expired {}", occ.expiry);
+        }
+        let chain = crate::options::chain(&occ.underlying, Some(occ.expiry)).await?;
+        spot = chain.spot;
+        let list = if occ.call { &chain.calls } else { &chain.puts };
+        let mid = list
+            .iter()
+            .find(|c| (c.strike - occ.strike).abs() < 1e-6)
+            .and_then(|c| traderview_core::occ_symbol::fill_price(c.bid, c.ask, c.last_price))
+            .ok_or_else(|| anyhow::anyhow!("no usable quote for {}", leg.symbol))?;
+        prices.push(mid);
+        leg_quotes.push(SpreadLegQuote {
+            symbol: leg.symbol.clone(),
+            mid,
+        });
+        payoff_legs.push(traderview_core::spread_payoff::Leg {
+            kind: if occ.call {
+                traderview_core::spread_payoff::OptionKind::Call
+            } else {
+                traderview_core::spread_payoff::OptionKind::Put
+            },
+            strike: occ.strike,
+            contracts: (leg.ratio as i64) * if leg.buy { 1 } else { -1 } * qty_f as i64,
+            premium_per_share: mid,
+        });
+    }
+    let per_share = traderview_core::option_spread::net_premium(&req.legs, &prices)
+        .ok_or_else(|| anyhow::anyhow!("degenerate leg prices"))?;
+    let payoff = traderview_core::spread_payoff::payoff(
+        &payoff_legs,
+        spot * 0.7,
+        spot * 1.3,
+        120,
+        100.0,
+    );
+    Ok(SpreadPreview {
+        legs: leg_quotes,
+        net_premium_usd: per_share * 100.0 * qty_f,
+        payoff,
+    })
+}
+
 /// Risk-free rate assumption for paper option greeks. Constant by
 /// design — paper greeks are for position awareness, not pricing desks.
 const GREEKS_RISK_FREE: f64 = 0.045;
