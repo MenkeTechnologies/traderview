@@ -227,6 +227,7 @@ const STRATEGY_KINDS = [
     { value: 'rsi_divergence',    label_key: 'view.algo.opt.strat_rsi_divergence',    label: 'RSI Divergence (exhaustion reversal at confirmed swings)' },
     { value: 'gap_fade',          label_key: 'view.algo.opt.strat_gap_fade',          label: 'Gap Fade (fade 1-4% opening gaps toward prior close)' },
     { value: 'adx_pullback',      label_key: 'view.algo.opt.strat_adx_pullback',      label: 'ADX Pullback \u2014 Raschke Holy Grail (EMA20 touch + resumption in strong trend)' },
+    { value: 'nr7_breakout',      label_key: 'view.algo.opt.strat_nr7_breakout',      label: 'NR7 Breakout \u2014 Crabel narrow-range expansion (optional inside-bar combo)' },
     { value: 'keltner_breakout',  label_key: 'view.algo.opt.strat_keltner_breakout',  label: 'Keltner Channel Breakout (EMA ± ATR band)' },
     { value: 'ichimoku_cloud',    label_key: 'view.algo.opt.strat_ichimoku_cloud',    label: 'Ichimoku Cloud (TK cross + cloud break + Chikou clear)' },
 ];
@@ -649,6 +650,30 @@ const STRATEGY_DOCS = {
         ],
         scope_note: 'The resumption trigger (prior-bar-high break) is what separates this from knife-catching \u2014 the dip alone is never the entry. Stop placement below the pullback low, not below entry, gives the trade the room the setup logically needs.',
         when_to_use: 'Strong trends that refuse to give a crossover exit \u2014 this adds to winners on dips. Street Smarts (1996) setup; complements ma_cross_adx, which only enters on the initial cross.',
+    },
+    nr7_breakout: {
+        title: 'NR7 Breakout (Crabel)',
+        family: 'Volatility contraction \u00b7 long or short \u00b7 expansion follows compression',
+        entry: [
+            'Detect the narrowest-range bar of the last 7 (or 4 with pattern=nr4) via the shared range-contraction core',
+            'Long: close breaks ABOVE the narrow bar\u2019s high within max_age_bars',
+            'Short: close breaks BELOW its low',
+            'require_inside_bar: the narrow bar must also nest inside its predecessor (NR+IB \u2014 Crabel\u2019s tighter combo)',
+        ],
+        exit: [
+            'ATR trailing stop from the high/low watermark \u2014 expansion days are ridden, not faded',
+            'Initial stop = the opposite side of the narrow bar: the contraction range IS the risk',
+        ],
+        params: [
+            ['pattern', 'nr7', '\u201cnr7\u201d (stricter) or \u201cnr4\u201d'],
+            ['require_inside_bar', false, 'Demand the NR+IB combo'],
+            ['max_age_bars', 2, 'Breakout freshness window after the pattern'],
+            ['atr_period', 14, 'ATR window'],
+            ['atr_stop_mult', 2.0, 'Trailing-stop distance in ATRs'],
+            ['atr_take_profit_mult', 3.0, 'Target distance in ATRs'],
+        ],
+        scope_note: 'The stop at the opposite side of the narrow bar is unusually tight \u2014 that asymmetry (tiny risk, expansion-sized reward) is the entire economics of the setup. A close back inside the range means the expansion picked the other direction.',
+        when_to_use: 'Quiet compression before catalysts, post-consolidation continuation. Complements ORB: same expansion thesis keyed off range compression instead of the session open.',
     },
     keltner_breakout: {
         title: 'Keltner Channel Breakout',
@@ -1146,6 +1171,10 @@ const OPTIMIZE_DEFAULT_GRIDS = {
         adx_min: [25, 30, 35],
         ema_period: [10, 20, 30],
         touch_age: [2, 3, 5],
+    },
+    nr7_breakout: {
+        max_age_bars: [1, 2, 3],
+        atr_stop_mult: [1.5, 2.0, 2.5],
     },
     keltner_breakout: {
         period: [15, 20, 30],

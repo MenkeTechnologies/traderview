@@ -3926,6 +3926,7 @@
   "view.algo.opt.strat_macd_cross": "MACD Cross (signal-line crossover, optional zero-line filter)",
   "view.algo.opt.strat_mean_reversion": "平均还原( Connors RSI + VWAP z 分数)",
   "view.algo.opt.strat_momentum": "运动 (EMA 交叉 + RSI + ROC + RVOL )",
+  "view.algo.opt.strat_nr7_breakout": "NR7 Breakout — Crabel narrow-range expansion (optional inside-bar combo)",
   "view.algo.opt.strat_orb": "Opening Range Breakout (OR high break + RVOL)",
   "view.algo.opt.strat_order_block_sweep": "区块+流动性扫描(SMC)",
   "view.algo.opt.strat_pairs": "平价交易( spread Z- score)",

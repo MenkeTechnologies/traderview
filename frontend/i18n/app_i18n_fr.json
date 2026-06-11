@@ -3926,6 +3926,7 @@
   "view.algo.opt.strat_macd_cross": "MACD Cross (signal-line crossover, optional zero-line filter)",
   "view.algo.opt.strat_mean_reversion": "Réversion moyenne (Connors RSI + VWAP z-score)",
   "view.algo.opt.strat_momentum": "Momentum (EMA croix + RSI + ROC + RVOL)",
+  "view.algo.opt.strat_nr7_breakout": "NR7 Breakout — Crabel narrow-range expansion (optional inside-bar combo)",
   "view.algo.opt.strat_orb": "Gamme d'ouverture Breakout (OU haute rupture + RVOL)",
   "view.algo.opt.strat_order_block_sweep": "Bloc de commande + Balayage de liquidité (SMC)",
   "view.algo.opt.strat_pairs": "Trading de paires (spread z-score)",

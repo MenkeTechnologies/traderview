@@ -23,6 +23,7 @@ pub mod ma_cross_adx;
 pub mod adx_pullback;
 pub mod gap_fade;
 pub mod macd_cross;
+pub mod nr7_breakout;
 pub mod rsi_divergence_reversal;
 pub mod mean_reversion;
 pub mod momentum;
@@ -94,6 +95,7 @@ pub enum StrategyKind {
     RsiDivergence,
     GapFade,
     AdxPullback,
+    Nr7Breakout,
     KeltnerBreakout,
     IchimokuCloud,
 }
@@ -119,6 +121,7 @@ impl StrategyKind {
             Self::RsiDivergence => "rsi_divergence",
             Self::GapFade => "gap_fade",
             Self::AdxPullback => "adx_pullback",
+            Self::Nr7Breakout => "nr7_breakout",
             Self::KeltnerBreakout => "keltner_breakout",
             Self::IchimokuCloud => "ichimoku_cloud",
         }
@@ -144,6 +147,7 @@ impl StrategyKind {
             Self::RsiDivergence,
             Self::GapFade,
             Self::AdxPullback,
+            Self::Nr7Breakout,
             Self::KeltnerBreakout,
             Self::IchimokuCloud,
         ]
@@ -194,6 +198,7 @@ pub fn from_kind(
         )),
         "gap_fade" => Ok(Box::new(gap_fade::GapFade::from_json(entry_rules))),
         "adx_pullback" => Ok(Box::new(adx_pullback::AdxPullback::from_json(entry_rules))),
+        "nr7_breakout" => Ok(Box::new(nr7_breakout::Nr7Breakout::from_json(entry_rules))),
         "keltner_breakout" => Ok(Box::new(keltner_breakout::KeltnerBreakout::from_json(
             entry_rules,
         ))),

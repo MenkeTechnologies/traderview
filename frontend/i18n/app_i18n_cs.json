@@ -3926,6 +3926,7 @@
   "view.algo.opt.strat_macd_cross": "MACD Cross (signal-line crossover, optional zero-line filter)",
   "view.algo.opt.strat_mean_reversion": "Střední reverze (Connors RSI + VWAP z- skóre)",
   "view.algo.opt.strat_momentum": "Momentum (EMA kříž + RSI + ROC + R VOL)",
+  "view.algo.opt.strat_nr7_breakout": "NR7 Breakout — Crabel narrow-range expansion (optional inside-bar combo)",
   "view.algo.opt.strat_orb": "Mezera v rozjezdu (OR high break + R VOL)",
   "view.algo.opt.strat_order_block_sweep": "Blok objednávky + zametání likvidity (SMC)",
   "view.algo.opt.strat_pairs": "Pairs Trading (spread z- score)",

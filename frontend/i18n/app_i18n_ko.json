@@ -3926,6 +3926,7 @@
   "view.algo.opt.strat_macd_cross": "MACD Cross (signal-line crossover, optional zero-line filter)",
   "view.algo.opt.strat_mean_reversion": "의미 Reversion (Connors RSI + VWAP z-score)",
   "view.algo.opt.strat_momentum": "Momentum (EMA 크로스 + RSI + ROC + R VOL)",
+  "view.algo.opt.strat_nr7_breakout": "NR7 Breakout — Crabel narrow-range expansion (optional inside-bar combo)",
   "view.algo.opt.strat_orb": "개방 범위 브레이크 아웃 (또는 높은 휴식 + R VOL)",
   "view.algo.opt.strat_order_block_sweep": "주문 블록 + 유동성 Sweep (SMC)",
   "view.algo.opt.strat_pairs": "쌍 거래 (z-score를 포함하여)",

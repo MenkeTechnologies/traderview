@@ -3926,6 +3926,7 @@
   "view.algo.opt.strat_macd_cross": "MACD Cross (signal-line crossover, optional zero-line filter)",
   "view.algo.opt.strat_mean_reversion": "Có nghĩa là đảo ngược (Connors RSI +VWAP z-score)",
   "view.algo.opt.strat_momentum": "Khoảnh khắc (EMA thánh giá +RSI +ROC + RVOL",
+  "view.algo.opt.strat_nr7_breakout": "NR7 Breakout — Crabel narrow-range expansion (optional inside-bar combo)",
   "view.algo.opt.strat_orb": "Mở phạm vi thoát ra ( siêu độ cao phá vỡ + RVOL)",
   "view.algo.opt.strat_order_block_sweep": "Name",
   "view.algo.opt.strat_pairs": "Trao đổi đôi ( phổ biến z-score)",
