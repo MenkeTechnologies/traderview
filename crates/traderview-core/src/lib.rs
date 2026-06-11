@@ -41,6 +41,7 @@ pub mod commission_optimizer;
 pub mod concentration;
 pub mod coppock;
 pub mod correlation;
+pub mod correlation_gate;
 pub mod correlation_clusters;
 pub mod cost_basis;
 pub mod crossover;

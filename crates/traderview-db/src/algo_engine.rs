@@ -165,6 +165,13 @@ pub enum EngineError {
     DailyEntryCap { cap: i64, count: i64 },
     #[error("loss cooldown: last losing trade closed {minutes_ago}m ago (cooldown {cooldown}m); entry skipped")]
     LossCooldown { minutes_ago: i64, cooldown: i64 },
+    #[error("correlation gate: {symbol} vs open {other} has rho={rho:.2} (cap {cap}); entry adds concentration, skipped")]
+    CorrelationGate {
+        symbol: String,
+        other: String,
+        rho: f64,
+        cap: f64,
+    },
     #[error("broker: {0}")]
     Broker(String),
     #[error("db: {0}")]
@@ -306,7 +313,9 @@ impl BrokerSink for InMemorySink {
 ///   "earnings_blackout_days": 2,
 ///   "entry_window": "10:00-15:30",
 ///   "max_entries_per_day": 6,
-///   "loss_cooldown_minutes": 30
+///   "loss_cooldown_minutes": 30,
+///   "max_entry_correlation": 0.8,
+///   "correlation_lookback_days": 60
 /// }
 /// ```
 #[derive(Debug, Clone)]
@@ -336,6 +345,12 @@ pub struct EngineConfig {
     /// Revenge-trading gate: minutes to wait after a LOSING round trip
     /// closes before the next entry. Exits never blocked. None = off.
     pub loss_cooldown_minutes: Option<i64>,
+    /// Concentration gate: skip entries whose daily-return correlation
+    /// with ANY open position exceeds this (|rho|, so perfect hedges
+    /// gate too — a mirror is still the same trade). None = off.
+    pub max_entry_correlation: Option<f64>,
+    /// Daily bars of history for the correlation comparison.
+    pub correlation_lookback_days: i64,
 }
 
 impl EngineConfig {
@@ -387,6 +402,17 @@ impl EngineConfig {
             .get("loss_cooldown_minutes")
             .and_then(|v| v.as_i64())
             .filter(|n| *n > 0);
+        let max_entry_correlation = s
+            .risk_gates
+            .get("max_entry_correlation")
+            .and_then(|v| v.as_f64())
+            .filter(|c| (0.0..1.0).contains(c) && *c > 0.0);
+        let correlation_lookback_days = s
+            .risk_gates
+            .get("correlation_lookback_days")
+            .and_then(|v| v.as_i64())
+            .filter(|n| *n >= 20)
+            .unwrap_or(60);
         Self {
             sizing,
             side_mode,
@@ -398,6 +424,8 @@ impl EngineConfig {
             entry_window,
             max_entries_per_day,
             loss_cooldown_minutes,
+            max_entry_correlation,
+            correlation_lookback_days,
         }
     }
 }
@@ -719,6 +747,56 @@ pub async fn process_bar_window(
                 minutes_ago: (now_ts - last.unwrap()) / 60,
                 cooldown,
             });
+        }
+    }
+    // Risk gate: entry correlation — don't stack the same trade. The
+    // candidate is compared against every OTHER open symbol on the
+    // account (same-symbol pyramiding is the pending-order guard's
+    // job). Symbols with thin history are skipped, not blocked.
+    if let Some(cap) = cfg.max_entry_correlation {
+        let open = crate::trades::open_symbols(pool, strategy.account_id)
+            .await
+            .map_err(|e| EngineError::Broker(format!("open_symbols: {e}")))?;
+        let others: Vec<String> = open.into_iter().filter(|s| s != &symbol).collect();
+        if !others.is_empty() {
+            let to = chrono::Utc::now();
+            let from = to - chrono::Duration::days(cfg.correlation_lookback_days);
+            let cand_bars = crate::prices::get_bars(
+                pool, &symbol, traderview_core::BarInterval::D1, from, to,
+            )
+            .await
+            .map_err(|e| EngineError::Broker(format!("corr bars: {e}")))?;
+            let closes = |bars: &[PriceBar]| -> Vec<f64> {
+                use rust_decimal::prelude::ToPrimitive;
+                bars.iter().map(|b| b.close.to_f64().unwrap_or(0.0)).collect()
+            };
+            let cand_returns =
+                traderview_core::correlation_gate::daily_returns(&closes(&cand_bars));
+            let mut open_returns = Vec::with_capacity(others.len());
+            for other in &others {
+                let bars = crate::prices::get_bars(
+                    pool, other, traderview_core::BarInterval::D1, from, to,
+                )
+                .await
+                .map_err(|e| EngineError::Broker(format!("corr bars {other}: {e}")))?;
+                open_returns.push((
+                    other.clone(),
+                    traderview_core::correlation_gate::daily_returns(&closes(&bars)),
+                ));
+            }
+            if let Some(hit) = traderview_core::correlation_gate::worst_correlation(
+                &cand_returns,
+                &open_returns,
+                cap,
+                20,
+            ) {
+                return Err(EngineError::CorrelationGate {
+                    symbol: symbol.clone(),
+                    other: hit.symbol,
+                    rho: hit.rho,
+                    cap,
+                });
+            }
         }
     }
     let qty = algo_strategies::size_shares(equity, sig.entry_price, sig.stop_distance, &cfg.sizing);
@@ -1553,6 +1631,20 @@ mod earnings_blackout_tests {
         // No loss on record / clock skew (loss in the future): clear.
         assert!(!in_loss_cooldown(None, 1_000_000, 30));
         assert!(!in_loss_cooldown(Some(1_000_600), 1_000_000, 30));
+    }
+
+    #[test]
+    fn correlation_cap_rejects_out_of_range() {
+        let get = |v: serde_json::Value| -> Option<f64> {
+            v.get("max_entry_correlation")
+                .and_then(|x| x.as_f64())
+                .filter(|c| (0.0..1.0).contains(c) && *c > 0.0)
+        };
+        assert_eq!(get(serde_json::json!({"max_entry_correlation": 0.8})), Some(0.8));
+        // 1.0 would never fire (|rho| <= 1); 0 and negatives are nonsense.
+        assert_eq!(get(serde_json::json!({"max_entry_correlation": 1.0})), None);
+        assert_eq!(get(serde_json::json!({"max_entry_correlation": 0.0})), None);
+        assert_eq!(get(serde_json::json!({"max_entry_correlation": -0.5})), None);
     }
 
     #[test]

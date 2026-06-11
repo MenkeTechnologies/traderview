@@ -2208,6 +2208,9 @@ async function openStrategyModal(mount, existing = null, prefill = null) {
                     <label><span data-i18n="view.algo.label.loss_cooldown">Loss cooldown (min, 0 = off)</span>
                         <input type="number" name="loss_cooldown_minutes" min="0" max="1440" value="${Number(s.risk_gates?.loss_cooldown_minutes ?? 0)}" data-tip="view.algo.tip.loss_cooldown">
                     </label>
+                    <label><span data-i18n="view.algo.label.max_corr">Max entry correlation (0 = off)</span>
+                        <input type="number" name="max_entry_correlation" min="0" max="0.99" step="0.05" value="${Number(s.risk_gates?.max_entry_correlation ?? 0)}" data-tip="view.algo.tip.max_corr">
+                    </label>
                     <label><span data-i18n="view.algo.label.broker_mode">Execution mode</span>
                         <select name="broker_mode">
                             <option value="internal_sim"  ${s.broker_mode === 'internal_sim'  ? 'selected' : ''} data-i18n="view.algo.opt.broker_sim">Paper — In-app simulator (no broker call)</option>
@@ -2280,6 +2283,7 @@ async function openStrategyModal(mount, existing = null, prefill = null) {
                 entry_window: (f.get('entry_window') || '').trim(),
                 max_entries_per_day: Number(f.get('max_entries_per_day')) || 0,
                 loss_cooldown_minutes: Number(f.get('loss_cooldown_minutes')) || 0,
+                max_entry_correlation: Number(f.get('max_entry_correlation')) || 0,
             }),
             broker_mode: f.get('broker_mode'),
         };

@@ -643,6 +643,18 @@ pub async fn latest_trade_id(
     Ok(row.map(|(id,)| id))
 }
 
+/// Distinct symbols with open positions on the account — the
+/// correlation gate's comparison set.
+pub async fn open_symbols(pool: &PgPool, account_id: Uuid) -> anyhow::Result<Vec<String>> {
+    let rows: Vec<(String,)> = sqlx::query_as(
+        "SELECT DISTINCT symbol FROM trades WHERE account_id = $1 AND status = 'open'",
+    )
+    .bind(account_id)
+    .fetch_all(pool)
+    .await?;
+    Ok(rows.into_iter().map(|(s,)| s).collect())
+}
+
 pub async fn open_positions_for_symbol(
     pool: &PgPool,
     account_id: Uuid,
