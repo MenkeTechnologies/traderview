@@ -743,6 +743,7 @@ export const api = {
     calcTaylorRule:          (body) => request('/calc/taylor-rule', { method: 'POST', body: JSON.stringify(body) }),
     calcSahmRule:            (body) => request('/calc/sahm-rule', { method: 'POST', body: JSON.stringify(body) }),
     calcMiseryIndex:         (body) => request('/calc/misery-index', { method: 'POST', body: JSON.stringify(body) }),
+    calcValuationGauges:     (body) => request('/calc/valuation-gauges', { method: 'POST', body: JSON.stringify(body) }),
     simDualMomentum:         (body) => request('/sim/dual-momentum', { method: 'POST', body: JSON.stringify(body) }),
     turnOfMonth:             (sym, years = 10) => request(`/symbols/${encodeURIComponent(sym)}/turn-of-month${qs({ years })}`),
     volCone:                 (sym, years = 5) => request(`/symbols/${encodeURIComponent(sym)}/vol-cone${qs({ years })}`),

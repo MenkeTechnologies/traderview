@@ -6,6 +6,7 @@
 //!   POST /calc/taylor-rule               — prescribed policy rate + stance
 //!   POST /calc/sahm-rule                 — unemployment recession trigger
 //!   POST /calc/misery-index              — inflation + unemployment
+//!   POST /calc/valuation-gauges          — Buffett / Tobin Q / ERP / ECY
 //!   POST /sim/dual-momentum              — Antonacci GEM backtest
 //!   GET  /symbols/:sym/turn-of-month     — TOM seasonality stats
 //!   GET  /symbols/:sym/vol-cone          — realized-vol percentile cone
@@ -34,6 +35,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/taylor-rule", post(post_taylor_rule))
         .route("/calc/sahm-rule", post(post_sahm_rule))
         .route("/calc/misery-index", post(post_misery_index))
+        .route("/calc/valuation-gauges", post(post_valuation_gauges))
         .route("/sim/dual-momentum", post(post_dual_momentum))
         .route("/symbols/:symbol/turn-of-month", get(get_turn_of_month))
         .route("/symbols/:symbol/vol-cone", get(get_vol_cone))
@@ -123,6 +125,68 @@ async fn post_misery_index(
     traderview_core::macro_calculators::misery_index(input.inflation, input.unemployment)
         .map(Json)
         .ok_or_else(|| ApiError::BadRequest("invalid misery-index inputs".into()))
+}
+
+#[derive(Debug, Deserialize)]
+struct ValuationGaugesBody {
+    // Buffett indicator (both or neither).
+    total_market_cap: Option<f64>,
+    gdp: Option<f64>,
+    // Tobin's Q.
+    market_value: Option<f64>,
+    replacement_cost: Option<f64>,
+    // ERP.
+    pe_ratio: Option<f64>,
+    treasury_yield_pct: Option<f64>,
+    // Excess CAPE yield.
+    cape: Option<f64>,
+    real_yield_pct: Option<f64>,
+}
+
+#[derive(Debug, serde::Serialize)]
+struct ValuationGaugesReport {
+    buffett: Option<traderview_core::valuation_gauges::BuffettReport>,
+    tobin: Option<traderview_core::valuation_gauges::TobinReport>,
+    erp: Option<traderview_core::valuation_gauges::ErpReport>,
+    ecy: Option<traderview_core::valuation_gauges::EcyReport>,
+}
+
+/// Composite endpoint — each gauge computes when its inputs are
+/// supplied; at least one must be.
+async fn post_valuation_gauges(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<ValuationGaugesBody>,
+) -> Result<Json<ValuationGaugesReport>, ApiError> {
+    use traderview_core::valuation_gauges as vg;
+    let report = ValuationGaugesReport {
+        buffett: match (b.total_market_cap, b.gdp) {
+            (Some(m), Some(g)) => vg::buffett_indicator(m, g),
+            _ => None,
+        },
+        tobin: match (b.market_value, b.replacement_cost) {
+            (Some(m), Some(r)) => vg::tobins_q(m, r),
+            _ => None,
+        },
+        erp: match (b.pe_ratio, b.treasury_yield_pct) {
+            (Some(p), Some(t)) => vg::equity_risk_premium(p, t),
+            _ => None,
+        },
+        ecy: match (b.cape, b.real_yield_pct) {
+            (Some(c), Some(r)) => vg::excess_cape_yield(c, r),
+            _ => None,
+        },
+    };
+    if report.buffett.is_none()
+        && report.tobin.is_none()
+        && report.erp.is_none()
+        && report.ecy.is_none()
+    {
+        return Err(ApiError::BadRequest(
+            "supply inputs for at least one gauge".into(),
+        ));
+    }
+    Ok(Json(report))
 }
 
 async fn post_dual_momentum(

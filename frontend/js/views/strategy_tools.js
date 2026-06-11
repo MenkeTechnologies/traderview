@@ -350,6 +350,46 @@ const TOOLS = {
             covered call" when the back leg is deep ITM). Back leg revalued by Black-Scholes at front expiry.</p>`;
         },
     },
+    'valuation-gauges': {
+        label: 'Valuation Gauges',
+        call: (b) => api.calcValuationGauges({
+            total_market_cap: b.total_market_cap > 0 ? b.total_market_cap : null,
+            gdp: b.gdp > 0 ? b.gdp : null,
+            market_value: b.market_value > 0 ? b.market_value : null,
+            replacement_cost: b.replacement_cost > 0 ? b.replacement_cost : null,
+            pe_ratio: b.pe_ratio > 0 ? b.pe_ratio : null,
+            treasury_yield_pct: b.pe_ratio > 0 ? b.treasury_yield_pct : null,
+            cape: b.cape > 0 ? b.cape : null,
+            real_yield_pct: b.cape > 0 ? b.real_yield_pct : null,
+        }),
+        fields: [
+            { key: 'total_market_cap', label: 'Total market cap ($T, 0 = skip)', def: 55 },
+            { key: 'gdp', label: 'GDP ($T)', def: 28 },
+            { key: 'market_value', label: "Tobin market value ($T, 0 = skip)", def: 0 },
+            { key: 'replacement_cost', label: 'Replacement cost ($T)', def: 0 },
+            { key: 'pe_ratio', label: 'Market P/E (0 = skip)', def: 22 },
+            { key: 'treasury_yield_pct', label: '10y treasury (%)', def: 4.3 },
+            { key: 'cape', label: 'Shiller CAPE (0 = skip)', def: 32 },
+            { key: 'real_yield_pct', label: 'Real 10y yield (%)', def: 1.8 },
+        ],
+        render: (r) => `
+            <div class="cards">
+                ${r.buffett ? `<div class="card"><div class="label">Buffett indicator</div>
+                    <div class="value ${r.buffett.ratio_pct >= 115 ? 'neg' : 'pos'}">${r.buffett.ratio_pct.toFixed(0)}%</div>
+                    <div class="small muted">${esc(r.buffett.band)}</div></div>` : ''}
+                ${r.tobin ? `<div class="card"><div class="label">Tobin's Q</div>
+                    <div class="value ${r.tobin.q >= 1 ? 'neg' : 'pos'}">${r.tobin.q.toFixed(2)}</div>
+                    <div class="small muted">${esc(r.tobin.band)}</div></div>` : ''}
+                ${r.erp ? `<div class="card"><div class="label">Equity risk premium</div>
+                    <div class="value ${r.erp.favors_equities ? 'pos' : 'neg'}">${r.erp.equity_risk_premium_pct.toFixed(2)}pp</div>
+                    <div class="small muted">${r.erp.earnings_yield_pct.toFixed(2)}% EY − ${r.erp.treasury_yield_pct.toFixed(2)}% 10y</div></div>` : ''}
+                ${r.ecy ? `<div class="card"><div class="label">Excess CAPE yield</div>
+                    <div class="value ${r.ecy.excess_cape_yield_pct >= 2 ? 'pos' : 'neg'}">${r.ecy.excess_cape_yield_pct.toFixed(2)}pp</div>
+                    <div class="small muted">1/${r.ecy.cape.toFixed(0)} − ${r.ecy.real_yield_pct.toFixed(1)}% real</div></div>` : ''}
+            </div>
+            <p class="muted small">Whole-market valuation gauges. Bands are the commonly cited heuristics
+            (Buffett 2001 Fortune thresholds, ~0.7 long-run Tobin mean, Shiller's ECY) — context, not signals.</p>`,
+    },
     'taylor-rule': {
         label: 'Taylor Rule',
         call: (b) => api.calcTaylorRule(b),

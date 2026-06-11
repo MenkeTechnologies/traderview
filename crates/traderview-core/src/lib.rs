@@ -888,5 +888,6 @@ pub mod par_curve_bootstrap;
 pub mod optimize;
 pub mod heston_calibration;
 pub mod macro_calculators;
+pub mod valuation_gauges;
 
 pub use models::*;
