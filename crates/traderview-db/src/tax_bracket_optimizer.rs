@@ -18,6 +18,11 @@ use serde::{Deserialize, Serialize};
 pub struct TaxBracketInput {
     pub filing_status: String,  // "single" | "mfj" | "hoh"
     pub taxable_ordinary_income_usd: f64,
+    /// Tax year to compute against. Defaults to the current calendar
+    /// year when None — once 2027+ brackets publish, only the
+    /// dispatch table below needs the new entries.
+    #[serde(default)]
+    pub tax_year: Option<i32>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -42,9 +47,29 @@ pub struct TaxBracketReport {
 
 // ─── Pure compute ─────────────────────────────────────────────────────────
 
-/// Returns 2026 brackets for the given filing status as (rate%, lower).
+/// Returns brackets for the given (tax_year, status) as (rate%, lower).
 /// Upper is implied by the next bracket's lower (last upper = infinity).
-fn brackets_2026(status: &str) -> Vec<(f64, f64)> {
+/// New tax years are added by appending a match arm here.
+pub fn brackets_for(year: i32, status: &str) -> Vec<(f64, f64)> {
+    // Match the highest published year ≤ requested. The IRS publishes
+    // inflation-adjusted brackets in late Q3/Q4 of the prior year, so
+    // a 2027 request before publication transparently falls back to
+    // 2026 numbers — not perfect, but the alternative is a stale
+    // hardcoded year that lies silently when the calendar rolls over.
+    if year >= 2026 {
+        return brackets_2026_table(status);
+    }
+    // No tables earlier than 2026 are embedded — fall through with a
+    // best-effort 2026 dispatch + a one-time warning so callers using
+    // historical years see a clear signal in the log.
+    tracing::warn!(
+        tax_year = year,
+        "tax_bracket_optimizer: requested year predates embedded tables; using 2026 brackets"
+    );
+    brackets_2026_table(status)
+}
+
+fn brackets_2026_table(status: &str) -> Vec<(f64, f64)> {
     match status {
         "mfj" => vec![
             (10.0, 0.0),
@@ -76,6 +101,11 @@ fn brackets_2026(status: &str) -> Vec<(f64, f64)> {
     }
 }
 
+#[deprecated(note = "Use brackets_for(year, status) instead")]
+pub fn brackets_2026(status: &str) -> Vec<(f64, f64)> {
+    brackets_2026_table(status)
+}
+
 pub fn liability(brackets: &[(f64, f64)], taxable: f64) -> f64 {
     if taxable <= 0.0 { return 0.0; }
     let mut tax = 0.0_f64;
@@ -90,7 +120,10 @@ pub fn liability(brackets: &[(f64, f64)], taxable: f64) -> f64 {
 }
 
 pub fn compute(input: &TaxBracketInput) -> TaxBracketReport {
-    let raw = brackets_2026(&input.filing_status);
+    let year = input
+        .tax_year
+        .unwrap_or_else(|| chrono::Utc::now().date_naive().format("%Y").to_string().parse().unwrap_or(2026));
+    let raw = brackets_for(year, &input.filing_status);
     let taxable = input.taxable_ordinary_income_usd.max(0.0);
 
     // Find current bracket.

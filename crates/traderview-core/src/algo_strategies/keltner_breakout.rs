@@ -186,15 +186,21 @@ impl Strategy for KeltnerBreakout {
 
         match side {
             Side::Buy => {
-                if close_now < mid_now {
+                // Check the more specific exit reason FIRST. Since
+                // lower < mid by construction, the prior `close < mid`
+                // branch always fired before `close < lower` could —
+                // every below-the-band exit got mislabeled as a
+                // mid-break. The trade still exits either way; this
+                // only fixes the audit/UI label.
+                if close_now < lower_now {
                     Some(ExitSignal {
-                        reason: "keltner_mid_break_long",
+                        reason: "keltner_lower_touch_long",
                         exit_price: close_now,
                         trigger_index: i,
                     })
-                } else if close_now < lower_now {
+                } else if close_now < mid_now {
                     Some(ExitSignal {
-                        reason: "keltner_lower_touch_long",
+                        reason: "keltner_mid_break_long",
                         exit_price: close_now,
                         trigger_index: i,
                     })
@@ -203,15 +209,15 @@ impl Strategy for KeltnerBreakout {
                 }
             }
             Side::Sell => {
-                if close_now > mid_now {
+                if close_now > upper_now {
                     Some(ExitSignal {
-                        reason: "keltner_mid_break_short",
+                        reason: "keltner_upper_touch_short",
                         exit_price: close_now,
                         trigger_index: i,
                     })
-                } else if close_now > upper_now {
+                } else if close_now > mid_now {
                     Some(ExitSignal {
-                        reason: "keltner_upper_touch_short",
+                        reason: "keltner_mid_break_short",
                         exit_price: close_now,
                         trigger_index: i,
                     })
