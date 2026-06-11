@@ -30,6 +30,22 @@ pub fn router() -> Router<AppState> {
             post(cancel_parent_order),
         )
         .route("/paper/orders/:id/cancel", post(cancel_order))
+        .route("/paper/accounts/:id/brackets", post(submit_bracket))
+}
+
+/// Bracket / OCO: entry + linked stop-loss and take-profit legs; the
+/// legs activate when the entry fills and the first to fill cancels
+/// the other.
+async fn submit_bracket(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(account_id): Path<Uuid>,
+    Json(req): Json<traderview_db::paper::BracketRequest>,
+) -> Result<Json<traderview_db::paper::Bracket>, ApiError> {
+    traderview_db::paper::submit_bracket(&s.pool, user.id, account_id, req)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
 }
 
 /// Cancel a RESTING (pending) limit/stop order.

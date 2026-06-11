@@ -36,6 +36,8 @@ pub struct PaperOrder {
     pub trail_value: Option<Decimal>,
     pub trail_is_pct: Option<bool>,
     pub trail_extreme: Option<Decimal>,
+    pub oco_group: Option<Uuid>,
+    pub parent_order_id: Option<Uuid>,
     pub filled_price: Option<Decimal>,
     pub filled_qty: Option<Decimal>,
     pub fee: Decimal,
@@ -151,6 +153,39 @@ pub fn trigger_price(
         },
         _ => None,
     }
+}
+
+/// Bracket sanity: exits must sit on the correct sides of each other,
+/// and a known entry price must sit between them. Long brackets need
+/// stop below target; short brackets are the mirror.
+pub fn validate_bracket(
+    side: Side,
+    entry_hint: Option<Decimal>,
+    stop_loss: Decimal,
+    take_profit: Decimal,
+) -> Result<(), &'static str> {
+    if !matches!(side, Side::Buy | Side::Short) {
+        return Err("bracket entry side must be buy or short");
+    }
+    let long = matches!(side, Side::Buy);
+    let (lo, hi) = if long {
+        (stop_loss, take_profit)
+    } else {
+        (take_profit, stop_loss)
+    };
+    if lo >= hi {
+        return Err(if long {
+            "buy bracket needs stop_loss < take_profit"
+        } else {
+            "short bracket needs take_profit < stop_loss"
+        });
+    }
+    if let Some(e) = entry_hint {
+        if e <= lo || e >= hi {
+            return Err("entry price must sit between stop and target");
+        }
+    }
+    Ok(())
 }
 
 /// Trailing-stop ratchet: fold the latest price into the tracked
@@ -277,7 +312,7 @@ pub async fn submit(
                  $8::paper_order_status_t, $9, $10, $11, $12, $13, $14, $15)
          RETURNING id, paper_account_id, symbol, side::text, qty, order_type::text,
                    limit_price, stop_price, status::text,
-                   trail_value, trail_is_pct, trail_extreme,
+                   trail_value, trail_is_pct, trail_extreme, oco_group, parent_order_id,
                    filled_price, filled_qty, fee, submitted_at, filled_at, cancel_at, reject_reason",
     )
     .bind(account_id).bind(req.symbol.to_uppercase()).bind(side_str)
@@ -342,10 +377,19 @@ pub async fn check_pending(pool: &PgPool) -> anyhow::Result<usize> {
         trail_value: Option<Decimal>,
         trail_is_pct: Option<bool>,
         trail_extreme: Option<Decimal>,
+        oco_group: Option<Uuid>,
     }
+    // Promote bracket exit legs whose entry has filled: held → pending.
+    sqlx::query(
+        "UPDATE paper_orders SET status = 'pending'
+          WHERE status = 'held'
+            AND parent_order_id IN (SELECT id FROM paper_orders WHERE status = 'filled')",
+    )
+    .execute(pool)
+    .await?;
     let rows: Vec<Pending> = sqlx::query_as(
         "SELECT id, paper_account_id, symbol, side::text, qty, order_type::text,
-                limit_price, stop_price, trail_value, trail_is_pct, trail_extreme
+                limit_price, stop_price, trail_value, trail_is_pct, trail_extreme, oco_group
            FROM paper_orders
           WHERE status = 'pending'
           ORDER BY submitted_at
@@ -410,25 +454,179 @@ pub async fn check_pending(pool: &PgPool) -> anyhow::Result<usize> {
         }
         apply_fill(&mut tx, o.paper_account_id, &o.symbol, side, o.qty, adjusted).await?;
         deduct_fee(&mut tx, o.paper_account_id, fee).await?;
+        // OCO: the first leg to fill kills its siblings — atomically
+        // with the fill so a crash can't leave both legs live.
+        if let Some(group) = o.oco_group {
+            sqlx::query(
+                "UPDATE paper_orders SET status = 'cancelled'
+                  WHERE oco_group = $1 AND id <> $2 AND status IN ('pending', 'held')",
+            )
+            .bind(group)
+            .bind(o.id)
+            .execute(&mut *tx)
+            .await?;
+        }
         tx.commit().await?;
         filled += 1;
     }
     Ok(filled)
 }
 
-/// Cancel a RESTING order. Only 'pending' cancels; filled is history.
+/// Cancel a RESTING ('pending') or bracket-held order. Cancelling an
+/// entry also cancels its still-held exit legs — they could never
+/// activate. Filled is history.
 pub async fn cancel_order(pool: &PgPool, user_id: Uuid, order_id: Uuid) -> anyhow::Result<bool> {
     let res = sqlx::query(
         "UPDATE paper_orders o SET status = 'cancelled'
            FROM paper_accounts a
           WHERE o.id = $1 AND o.paper_account_id = a.id
-            AND a.user_id = $2 AND o.status = 'pending'",
+            AND a.user_id = $2 AND o.status IN ('pending', 'held')",
     )
     .bind(order_id)
     .bind(user_id)
     .execute(pool)
     .await?;
-    Ok(res.rows_affected() > 0)
+    let cancelled = res.rows_affected() > 0;
+    if cancelled {
+        sqlx::query(
+            "UPDATE paper_orders SET status = 'cancelled'
+              WHERE parent_order_id = $1 AND status = 'held'",
+        )
+        .bind(order_id)
+        .execute(pool)
+        .await?;
+    }
+    Ok(cancelled)
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct BracketRequest {
+    pub symbol: String,
+    pub side: Side, // buy or short — the ENTRY direction
+    pub qty: Decimal,
+    pub entry_type: String, // 'market' | 'limit'
+    pub limit_price: Option<Decimal>,
+    pub stop_loss: Decimal,
+    pub take_profit: Decimal,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct Bracket {
+    pub entry: PaperOrder,
+    pub stop: PaperOrder,
+    pub target: PaperOrder,
+}
+
+/// Submit a bracket: entry through the normal path (market fills now,
+/// limit rests), then two exit legs sharing an oco_group — a stop at
+/// stop_loss and a limit at take_profit. Legs rest 'held' until the
+/// entry fills (the ticker promotes them), or 'pending' immediately
+/// when the entry filled on the spot. First leg to fill cancels the
+/// other.
+pub async fn submit_bracket(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+    req: BracketRequest,
+) -> anyhow::Result<Bracket> {
+    if !matches!(req.entry_type.as_str(), "market" | "limit") {
+        anyhow::bail!("entry_type must be 'market' or 'limit'");
+    }
+    if req.entry_type == "limit" && req.limit_price.is_none() {
+        anyhow::bail!("limit entry needs limit_price");
+    }
+    let entry_hint = (req.entry_type == "limit")
+        .then_some(req.limit_price)
+        .flatten();
+    validate_bracket(req.side, entry_hint, req.stop_loss, req.take_profit)
+        .map_err(|e| anyhow::anyhow!(e))?;
+
+    let entry = submit(
+        pool,
+        user_id,
+        account_id,
+        OrderRequest {
+            symbol: req.symbol.clone(),
+            side: req.side,
+            qty: req.qty,
+            order_type: req.entry_type.clone(),
+            limit_price: req.limit_price,
+            stop_price: None,
+            trail_value: None,
+            trail_is_pct: None,
+        },
+    )
+    .await?;
+    if entry.status == "rejected" {
+        anyhow::bail!(
+            "entry rejected: {}",
+            entry.reject_reason.as_deref().unwrap_or("unknown")
+        );
+    }
+
+    let exit_side = match req.side {
+        Side::Buy => "sell",
+        _ => "cover",
+    };
+    let leg_status = if entry.status == "filled" {
+        "pending"
+    } else {
+        "held"
+    };
+    let group = Uuid::new_v4();
+    let symbol = req.symbol.trim().to_uppercase();
+    let mut tx = pool.begin().await?;
+    let stop = insert_leg(
+        &mut tx, account_id, &symbol, exit_side, req.qty,
+        "stop", None, Some(req.stop_loss), leg_status, group, entry.id,
+    )
+    .await?;
+    let target = insert_leg(
+        &mut tx, account_id, &symbol, exit_side, req.qty,
+        "limit", Some(req.take_profit), None, leg_status, group, entry.id,
+    )
+    .await?;
+    tx.commit().await?;
+    Ok(Bracket { entry, stop, target })
+}
+
+#[allow(clippy::too_many_arguments)]
+async fn insert_leg(
+    tx: &mut sqlx::PgConnection,
+    account_id: Uuid,
+    symbol: &str,
+    side: &str,
+    qty: Decimal,
+    order_type: &str,
+    limit_price: Option<Decimal>,
+    stop_price: Option<Decimal>,
+    status: &str,
+    group: Uuid,
+    parent: Uuid,
+) -> anyhow::Result<PaperOrder> {
+    Ok(sqlx::query_as(
+        "INSERT INTO paper_orders
+            (paper_account_id, symbol, side, qty, order_type, limit_price, stop_price,
+             status, oco_group, parent_order_id)
+         VALUES ($1, $2, $3::side_t, $4, $5::paper_order_type_t, $6, $7,
+                 $8::paper_order_status_t, $9, $10)
+         RETURNING id, paper_account_id, symbol, side::text, qty, order_type::text,
+                   limit_price, stop_price, status::text,
+                   trail_value, trail_is_pct, trail_extreme, oco_group, parent_order_id,
+                   filled_price, filled_qty, fee, submitted_at, filled_at, cancel_at, reject_reason",
+    )
+    .bind(account_id)
+    .bind(symbol)
+    .bind(side)
+    .bind(qty)
+    .bind(order_type)
+    .bind(limit_price)
+    .bind(stop_price)
+    .bind(status)
+    .bind(group)
+    .bind(parent)
+    .fetch_one(&mut *tx)
+    .await?)
 }
 
 async fn apply_fill(
@@ -536,7 +734,7 @@ pub async fn list_orders(
     Ok(sqlx::query_as::<_, PaperOrder>(
         "SELECT id, paper_account_id, symbol, side::text, qty, order_type::text,
                 limit_price, stop_price, status::text,
-                trail_value, trail_is_pct, trail_extreme,
+                trail_value, trail_is_pct, trail_extreme, oco_group, parent_order_id,
                 filled_price, filled_qty, fee, submitted_at, filled_at, cancel_at, reject_reason
            FROM paper_orders WHERE paper_account_id = $1
           ORDER BY submitted_at DESC LIMIT $2",
@@ -637,6 +835,34 @@ mod tests {
         assert_eq!((e, fired), (d(76), false));
         let (e, fired) = trail_update(Side::Cover, Decimal::new(798, 1), e, tv, true);
         assert_eq!((e, fired), (d(76), true));
+    }
+
+    #[test]
+    fn buy_bracket_needs_stop_below_entry_below_target() {
+        assert!(validate_bracket(Side::Buy, Some(d(100)), d(95), d(110)).is_ok());
+        // Inverted exits.
+        assert!(validate_bracket(Side::Buy, None, d(110), d(95)).is_err());
+        // Entry outside the bracket.
+        assert!(validate_bracket(Side::Buy, Some(d(94)), d(95), d(110)).is_err());
+        assert!(validate_bracket(Side::Buy, Some(d(111)), d(95), d(110)).is_err());
+    }
+
+    #[test]
+    fn short_bracket_is_the_mirror() {
+        // Short at 100: profit below (90), stop above (105).
+        assert!(validate_bracket(Side::Short, Some(d(100)), d(105), d(90)).is_ok());
+        assert!(validate_bracket(Side::Short, None, d(90), d(105)).is_err());
+    }
+
+    #[test]
+    fn exit_sides_cannot_open_a_bracket() {
+        assert!(validate_bracket(Side::Sell, None, d(95), d(110)).is_err());
+        assert!(validate_bracket(Side::Cover, None, d(105), d(90)).is_err());
+    }
+
+    #[test]
+    fn degenerate_equal_stop_and_target_rejected() {
+        assert!(validate_bracket(Side::Buy, None, d(100), d(100)).is_err());
     }
 
     #[test]

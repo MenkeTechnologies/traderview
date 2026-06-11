@@ -89,6 +89,23 @@ export async function renderPaper(mount) {
                     </select>
                     <button data-i18n="view.paper.btn.submit" data-tip="view.paper.tip.submit" data-shortcut="paper_submit" class="primary" type="submit">SUBMIT</button>
                 </form>
+                <h2 data-i18n="view.paper.h2.bracket_ticket">Bracket (OCO) ticket</h2>
+                <form id="bracket-form" class="inline-form">
+                    <input name="symbol" placeholder="symbol" data-i18n-placeholder="common.placeholder.symbol" data-tip="view.paper.tip.symbol" required style="text-transform:uppercase">
+                    <select name="side" data-tip="view.paper.tip.bracket_side">
+                        <option data-i18n="view.paper.opt.buy" value="buy">BUY</option>
+                        <option data-i18n="view.paper.opt.short" value="short">SHORT</option>
+                    </select>
+                    <input name="qty" type="number" step="0.01" placeholder="qty" data-i18n-placeholder="common.placeholder.qty" required>
+                    <select name="entry_type" data-tip="view.paper.tip.bracket_entry">
+                        <option data-i18n="view.paper.opt.market" value="market">market</option>
+                        <option data-i18n="view.paper.opt.limit" value="limit">limit</option>
+                    </select>
+                    <input name="limit_price" type="number" step="0.01" placeholder="limit" data-i18n-placeholder="common.placeholder.limit">
+                    <input name="stop_loss" type="number" step="0.01" placeholder="stop loss" data-i18n-placeholder="common.placeholder.stop_loss" data-tip="view.paper.tip.bracket_stop" required>
+                    <input name="take_profit" type="number" step="0.01" placeholder="target" data-i18n-placeholder="common.placeholder.target" data-tip="view.paper.tip.bracket_target" required>
+                    <button data-i18n="view.paper.btn.submit_bracket" class="primary" type="submit">BRACKET</button>
+                </form>
                 <button data-i18n="view.paper.btn.reset_account_200k" data-tip="view.paper.tip.reset" class="link" id="reset">Reset account ($200k)</button>
             </div>
 
@@ -140,7 +157,7 @@ export async function renderPaper(mount) {
                         <td class="${o.status === 'filled' ? 'pos' : (o.status === 'rejected' ? 'neg' : '')}">${o.status}</td>
                         <td>${o.filled_price != null ? fmt(o.filled_price) : '—'}</td>
                         <td>${o.filled_at ? fmtDateTime(o.filled_at) : '—'}</td>
-                        <td>${o.status === 'pending' ? `<button class="ord-cancel" data-id="${esc(o.id)}" data-i18n="common.btn.cancel">${esc(t('common.btn.cancel'))}</button>` : ''}</td>
+                        <td>${(o.status === 'pending' || o.status === 'held') ? `<button class="ord-cancel" data-id="${esc(o.id)}" data-i18n="common.btn.cancel">${esc(t('common.btn.cancel'))}</button>` : ''}</td>
                     </tr>`).join('')}</tbody></table>` : '<p data-i18n="view.paper.hint.no_orders_yet" class="muted">No orders yet.</p>'}
         </div>
     `;
@@ -177,6 +194,24 @@ export async function renderPaper(mount) {
             } else {
                 showToast(t('view.paper.toast.submitted', { side: body.side, qty: body.qty, symbol: body.symbol }), { level: 'info' });
             }
+            renderPaper(mount);
+        } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
+    });
+    mount.querySelector('#bracket-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        try {
+            await api.paperBracketCreate(acct.id, {
+                symbol: fd.get('symbol').trim().toUpperCase(),
+                side: fd.get('side'),
+                qty: Number(fd.get('qty')),
+                entry_type: fd.get('entry_type'),
+                limit_price: fd.get('limit_price') ? Number(fd.get('limit_price')) : null,
+                stop_loss: Number(fd.get('stop_loss')),
+                take_profit: Number(fd.get('take_profit')),
+            });
+            if (!viewIsCurrent(tok)) return;
+            showToast(t('view.paper.toast.bracket_submitted'), { level: 'success' });
             renderPaper(mount);
         } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
     });
