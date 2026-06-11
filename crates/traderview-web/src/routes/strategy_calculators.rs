@@ -16,6 +16,9 @@
 //!   POST /calc/sbc-dilution              — buyback yield net of SBC
 //!   POST /calc/sum-of-parts              — SOTP NAV vs market cap
 //!   POST /calc/odd-lot-tender            — odd-lot priority tender arb
+//!   POST /calc/crack-spread              — refiner 3-2-1 margin
+//!   POST /calc/crush-spread              — soybean board crush
+//!   POST /calc/spark-spread              — generation margin (spark/dark)
 //!   POST /sim/dual-momentum              — Antonacci GEM backtest
 //!   GET  /symbols/:sym/turn-of-month     — TOM seasonality stats
 //!   GET  /symbols/:sym/vol-cone          — realized-vol percentile cone
@@ -54,6 +57,9 @@ pub fn router() -> Router<AppState> {
         .route("/calc/sbc-dilution", post(post_sbc_dilution))
         .route("/calc/sum-of-parts", post(post_sum_of_parts))
         .route("/calc/odd-lot-tender", post(post_odd_lot_tender))
+        .route("/calc/crack-spread", post(post_crack_spread))
+        .route("/calc/crush-spread", post(post_crush_spread))
+        .route("/calc/spark-spread", post(post_spark_spread))
         .route("/sim/dual-momentum", post(post_dual_momentum))
         .route("/symbols/:symbol/turn-of-month", get(get_turn_of_month))
         .route("/symbols/:symbol/vol-cone", get(get_vol_cone))
@@ -306,6 +312,57 @@ async fn post_odd_lot_tender(
     traderview_core::odd_lot_tender::compute(&b)
         .map(Json)
         .ok_or_else(|| ApiError::BadRequest("invalid tender inputs".into()))
+}
+
+#[derive(Debug, Deserialize)]
+struct CrackBody {
+    crude: f64,
+    gasoline: f64,
+    distillate: f64,
+}
+
+async fn post_crack_spread(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<CrackBody>,
+) -> Result<Json<traderview_core::processing_spreads::CrackReport>, ApiError> {
+    traderview_core::processing_spreads::crack_321(b.crude, b.gasoline, b.distillate)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("prices must be positive".into()))
+}
+
+#[derive(Debug, Deserialize)]
+struct CrushBody {
+    beans: f64,
+    meal: f64,
+    oil: f64,
+}
+
+async fn post_crush_spread(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<CrushBody>,
+) -> Result<Json<traderview_core::processing_spreads::CrushReport>, ApiError> {
+    traderview_core::processing_spreads::soybean_crush(b.beans, b.meal, b.oil)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("prices must be positive".into()))
+}
+
+#[derive(Debug, Deserialize)]
+struct SparkBody {
+    power: f64,
+    fuel: f64,
+    heat_rate: f64,
+}
+
+async fn post_spark_spread(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<SparkBody>,
+) -> Result<Json<traderview_core::processing_spreads::SparkReport>, ApiError> {
+    traderview_core::processing_spreads::spark_spread(b.power, b.fuel, b.heat_rate)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("inputs must be positive".into()))
 }
 
 async fn post_dual_momentum(

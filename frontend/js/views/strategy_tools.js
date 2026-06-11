@@ -350,6 +350,69 @@ const TOOLS = {
             covered call" when the back leg is deep ITM). Back leg revalued by Black-Scholes at front expiry.</p>`;
         },
     },
+    'crack-spread': {
+        label: 'Crack Spread',
+        call: (b) => api.calcCrackSpread(b),
+        fields: [
+            { key: 'crude', label: 'Crude ($/bbl)', def: 80 },
+            { key: 'gasoline', label: 'Gasoline ($/gal)', def: 2.5 },
+            { key: 'distillate', label: 'Distillate/ULSD ($/gal)', def: 2.8 },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">3-2-1 crack</div>
+                    <div class="value ${r.crack_321 >= 0 ? 'pos' : 'neg'}">$${r.crack_321.toFixed(2)}/bbl</div>
+                    <div class="small muted">${r.margin_pct.toFixed(1)}% of crude</div></div>
+                <div class="card"><div class="label">Gasoline crack</div>
+                    <div class="value">$${r.gasoline_crack.toFixed(2)}</div></div>
+                <div class="card"><div class="label">Distillate crack</div>
+                    <div class="value">$${r.distillate_crack.toFixed(2)}</div></div>
+            </div>
+            <p class="muted small">3 bbl crude → 2 gasoline + 1 distillate at 42 gal/bbl — the refiner
+            margin behind XLE/CRAK earnings and the classic CL/RB/HO futures spread.</p>`,
+    },
+    'crush-spread': {
+        label: 'Crush Spread',
+        call: (b) => api.calcCrushSpread(b),
+        fields: [
+            { key: 'beans', label: 'Soybeans ($/bu)', def: 12 },
+            { key: 'meal', label: 'Soybean meal ($/short ton)', def: 350 },
+            { key: 'oil', label: 'Soybean oil ($/lb)', def: 0.45 },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Board crush</div>
+                    <div class="value ${r.crush >= 0 ? 'pos' : 'neg'}">$${r.crush.toFixed(2)}/bu</div>
+                    <div class="small muted">${r.margin_pct.toFixed(1)}% of beans</div></div>
+                <div class="card"><div class="label">Product value</div>
+                    <div class="value">$${(r.meal_value_per_bu + r.oil_value_per_bu).toFixed(2)}</div>
+                    <div class="small muted">meal $${r.meal_value_per_bu.toFixed(2)} + oil $${r.oil_value_per_bu.toFixed(2)}</div></div>
+            </div>
+            <p class="muted small">CME yields: 1 bu (60 lb) → 44 lb meal (0.022 ton) + 11 lb oil — the
+            ZS/ZM/ZL board crush.</p>`,
+    },
+    'spark-spread': {
+        label: 'Spark Spread',
+        call: (b) => api.calcSparkSpread(b),
+        fields: [
+            { key: 'power', label: 'Power ($/MWh)', def: 50 },
+            { key: 'fuel', label: 'Fuel ($/MMBtu)', def: 4 },
+            { key: 'heat_rate', label: 'Heat rate (MMBtu/MWh; gas ~7, coal ~10)', def: 7.5 },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Spread</div>
+                    <div class="value ${r.spread >= 0 ? 'pos' : 'neg'}">$${r.spread.toFixed(2)}/MWh</div>
+                    <div class="small muted">fuel cost $${r.fuel_cost_per_mwh.toFixed(2)}</div></div>
+                <div class="card"><div class="label">Breakeven power</div>
+                    <div class="value">$${r.breakeven_power.toFixed(2)}</div></div>
+                <div class="card"><div class="label">Market heat rate</div>
+                    <div class="value">${r.market_implied_heat_rate.toFixed(1)}</div>
+                    <div class="small muted">above plant HR = in the money</div></div>
+            </div>
+            <p class="muted small">Generation margin: power − fuel × heat rate. Gas fuel = spark spread;
+            coal fuel at ~10 heat rate = dark spread.</p>`,
+    },
     'sum-of-parts': {
         label: 'Sum of Parts',
         call: (b) => api.calcSumOfParts({
