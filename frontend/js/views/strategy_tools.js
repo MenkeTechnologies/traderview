@@ -280,6 +280,52 @@ const TOOLS = {
             equity-style downside skew a flat-vol Black-Scholes can't.</p>`;
         },
     },
+    'diagonal-spread': {
+        label: 'Diagonal Spread',
+        call: (b) => api.calcDiagonalSpread({
+            spread: {
+                front_strike: b.front_strike,
+                back_strike: b.back_strike,
+                kind: b.kind === 1 ? 'put' : 'call',
+                front_premium: b.front_premium,
+                back_premium: b.back_premium,
+                back_time_after_front_expiry: b.back_time_after_front_expiry,
+                risk_free: b.risk_free,
+                dividend_yield: 0,
+                sigma: b.sigma,
+                contracts: 1,
+                multiplier: 100,
+            },
+        }),
+        fields: [
+            { key: 'front_strike', label: 'Short front strike ($)', def: 105 },
+            { key: 'back_strike', label: 'Long back strike ($)', def: 90 },
+            { key: 'kind', label: 'Kind (0 = call, 1 = put)', def: 0, int: true },
+            { key: 'front_premium', label: 'Front premium ($)', def: 2 },
+            { key: 'back_premium', label: 'Back premium ($)', def: 12 },
+            { key: 'back_time_after_front_expiry', label: 'Back time after front expiry (years)', def: 0.25 },
+            { key: 'risk_free', label: 'Risk-free rate (decimal)', def: 0.05 },
+            { key: 'sigma', label: 'Volatility (decimal)', def: 0.25 },
+        ],
+        render: (r) => {
+            if (!r) return '<span class="neg">invalid inputs</span>';
+            return `
+            <div class="cards">
+                <div class="card"><div class="label">Net debit</div>
+                    <div class="value">$${r.net_debit.toFixed(2)}</div>
+                    <div class="small muted">1 contract × 100</div></div>
+                <div class="card"><div class="label">Max profit (at front expiry)</div>
+                    <div class="value pos">$${r.max_profit.toFixed(2)}</div>
+                    <div class="small muted">at $${r.max_profit_at.toFixed(2)}</div></div>
+                <div class="card"><div class="label">Max loss (grid)</div>
+                    <div class="value neg">$${r.max_loss.toFixed(2)}</div></div>
+                <div class="card"><div class="label">Breakevens</div>
+                    <div class="value">${r.breakevens.length ? r.breakevens.map(x => '$' + x.toFixed(2)).join(' / ') : '—'}</div></div>
+            </div>
+            <p class="muted small">Short front-month at one strike, long back-month at another ("poor man's
+            covered call" when the back leg is deep ITM). Back leg revalued by Black-Scholes at front expiry.</p>`;
+        },
+    },
     'turn-of-month': {
         label: 'Turn of Month',
         call: (b) => api.turnOfMonth(b.symbol, b.years),

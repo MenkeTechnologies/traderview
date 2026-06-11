@@ -365,6 +365,7 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/ewma-volatility", post(ewma_volatility_route))
         .route("/futures/cot-report", post(cot_report_route))
         .route("/options/calc/calendar-spread", post(calendar_spread_route))
+        .route("/options/calc/diagonal-spread", post(diagonal_spread_route))
         .route("/options/calc/iron-condor", post(iron_condor_route))
         .route("/portfolio/marginal-var", post(marginal_var_route))
         .route(
@@ -3123,6 +3124,20 @@ async fn calendar_spread_route(
     Json(b): Json<CalendarSpreadBody>,
 ) -> Json<Option<calendar_spread::CalendarReport>> {
     Json(calendar_spread::analyze(&b.spread, &b.config))
+}
+
+#[derive(Deserialize)]
+struct DiagonalSpreadBody {
+    spread: calendar_spread::DiagonalSpread,
+    #[serde(default)]
+    config: calendar_spread::AnalyzerConfig,
+}
+
+async fn diagonal_spread_route(
+    _u: AuthUser,
+    Json(b): Json<DiagonalSpreadBody>,
+) -> Json<Option<calendar_spread::CalendarReport>> {
+    Json(calendar_spread::analyze_diagonal(&b.spread, &b.config))
 }
 
 #[derive(Deserialize)]
