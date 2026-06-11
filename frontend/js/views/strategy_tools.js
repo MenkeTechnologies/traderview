@@ -1624,7 +1624,7 @@ const TOOLS = {
         render: (r) => renderEventStudy(r, 'third-Friday expiration'),
     },
     'paper-twap': {
-        label: 'Paper TWAP',
+        label: 'Paper TWAP/VWAP',
         call: async (b) => {
             if (String(b.symbol).trim()) {
                 const acct = await api.paperEnsure();
@@ -1634,6 +1634,7 @@ const TOOLS = {
                     total_qty: String(b.total_qty),
                     slices: b.slices,
                     interval_seconds: b.interval_seconds,
+                    style: String(b.style).toLowerCase(),
                 });
             }
             return api.paperParentOrders();
@@ -1644,14 +1645,16 @@ const TOOLS = {
             { key: 'total_qty', label: 'Total quantity', def: 300, int: true },
             { key: 'slices', label: 'Slices', def: 6, int: true },
             { key: 'interval_seconds', label: 'Interval (seconds)', def: 60, int: true },
+            { key: 'style', label: 'Style (twap = equal, vwap = U-curve)', def: 'twap', text: true },
         ],
         render: (rows) => `
             <table class="gs-table">
-                <thead><tr><th>Symbol</th><th>Side</th><th>Progress</th><th>Qty filled</th><th>Status</th><th>Next slice</th></tr></thead>
+                <thead><tr><th>Symbol</th><th>Side</th><th>Style</th><th>Progress</th><th>Qty filled</th><th>Status</th><th>Next slice</th></tr></thead>
                 <tbody>${rows.map(o => `
                     <tr>
                         <td>${esc(o.symbol)}</td>
                         <td>${esc(o.side)}</td>
+                        <td>${esc(o.style)}</td>
                         <td>${o.slices_filled}/${o.slices}</td>
                         <td>${esc(String(o.qty_filled))} / ${esc(String(o.total_qty))}</td>
                         <td class="${o.status === 'done' ? 'pos' : o.status === 'error' ? 'neg' : ''}">${esc(o.status)}${o.last_error ? ' — ' + esc(o.last_error) : ''}</td>
@@ -1659,9 +1662,10 @@ const TOOLS = {
                     </tr>`).join('')}
                 </tbody>
             </table>
-            <p class="muted small">Equal time slices as child MARKET orders through the paper engine's
-            friction model (first slice fires within ~5s). A failed child stops the parent with the error
-            shown — execution risk is part of the lesson.</p>`,
+            <p class="muted small">Child MARKET orders through the paper engine's friction model (first
+            slice fires within ~5s). TWAP slices equally; VWAP weights slices by the stylized intraday
+            volume U-curve (heavy open/close, light midday). A failed child stops the parent with the
+            error shown — execution risk is part of the lesson.</p>`,
     },
     'screener-snapshots': {
         label: 'Saved Screens',

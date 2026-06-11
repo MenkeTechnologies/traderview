@@ -31,8 +31,8 @@ pub fn router() -> Router<AppState> {
         )
 }
 
-/// TWAP parent order: child market slices submitted by the background
-/// ticker through the same fill path as manual paper orders.
+/// TWAP/VWAP parent order: child market slices submitted by the
+/// background ticker through the same fill path as manual paper orders.
 async fn create_parent_order(
     State(s): State<AppState>,
     user: AuthUser,
