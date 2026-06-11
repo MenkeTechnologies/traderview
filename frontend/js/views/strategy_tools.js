@@ -433,6 +433,40 @@ const TOOLS = {
             </div>
             <p class="muted small">${r.positive_carry ? 'Positive carry — the rebate pays you to be short.' : 'The stock must fall this much just to cover carry — squeeze-name fees compound daily.'}</p>`,
     },
+    'funding-arb': {
+        label: 'Funding Arb',
+        call: (b) => api.cryptoFundingArb({
+            spot_price: b.spot_price,
+            perp_price: b.perp_price,
+            funding_rate_8h: b.funding_rate_8h,
+            notional_usd: b.notional_usd,
+            taker_fee_pct: b.taker_fee_pct,
+            days_held: b.days_held,
+        }),
+        fields: [
+            { key: 'spot_price', label: 'Spot price', def: 50000 },
+            { key: 'perp_price', label: 'Perp price', def: 50100 },
+            { key: 'funding_rate_8h', label: 'Funding rate / 8h (decimal, 0.0001 = 1bp)', def: 0.0001 },
+            { key: 'notional_usd', label: 'Notional (USD)', def: 100000 },
+            { key: 'taker_fee_pct', label: 'Taker fee per leg (%)', def: 0.05 },
+            { key: 'days_held', label: 'Days held', def: 30, int: true },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Direction</div>
+                    <div class="value">${esc(r.direction.replace(/_/g, ' '))}</div>
+                    <div class="small muted">funding APR ${r.funding_apr_pct.toFixed(2)}%</div></div>
+                <div class="card"><div class="label">Net PnL (funding − fees)</div>
+                    <div class="value ${r.net_pnl_usd >= 0 ? 'pos' : 'neg'}">$${r.net_pnl_usd.toFixed(0)}</div>
+                    <div class="small muted">$${r.daily_funding_usd.toFixed(0)}/day · fees $${r.total_fees_usd.toFixed(0)}</div></div>
+                <div class="card"><div class="label">Breakeven</div>
+                    <div class="value">${r.breakeven_days != null ? r.breakeven_days.toFixed(1) + 'd' : '—'}</div>
+                    <div class="small muted">basis ${r.basis_pct.toFixed(3)}% ($${r.basis_edge_usd.toFixed(0)} if it converges)</div></div>
+            </div>
+            <p class="muted small">Delta-neutral cash-and-carry: positive funding = longs pay shorts, collected by
+            long spot + short perp; negative funding reverses the legs. The basis edge is reported separately —
+            a perp has no expiry forcing convergence, so it's only captured if the basis actually reverts.</p>`,
+    },
     'impermanent-loss': {
         label: 'Impermanent Loss',
         call: (b) => api.calcImpermanentLoss(b),

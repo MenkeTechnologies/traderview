@@ -917,6 +917,7 @@ pub mod win_rate_confidence;
 pub mod equity_curve_filter;
 pub mod double_barrier;
 pub mod overnight_intraday;
+pub mod funding_rate_arb;
 pub mod futures_sizing;
 pub mod impermanent_loss;
 pub mod average_down;

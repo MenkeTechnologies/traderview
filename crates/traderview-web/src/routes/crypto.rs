@@ -2,7 +2,7 @@ use crate::auth::AuthUser;
 use crate::error::ApiError;
 use crate::state::AppState;
 use axum::extract::{Query, State};
-use axum::routing::get;
+use axum::routing::{get, post};
 use axum::{Json, Router};
 use once_cell::sync::Lazy;
 use serde::Deserialize;
@@ -16,6 +16,19 @@ pub fn router() -> Router<AppState> {
         .route("/crypto/markets", get(markets))
         .route("/crypto/global", get(global_stats))
         .route("/crypto/btc/chain", get(btc_chain))
+        .route("/crypto/calc/funding-arb", post(funding_arb))
+}
+
+/// Perp funding-rate arbitrage ledger — pure compute over the caller's
+/// live prices and venue rates.
+async fn funding_arb(
+    _s: State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<traderview_core::funding_rate_arb::Input>,
+) -> Result<Json<traderview_core::funding_rate_arb::Report>, ApiError> {
+    traderview_core::funding_rate_arb::compute(&b)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("invalid inputs: prices/notional must be positive, fee/days non-negative".into()))
 }
 
 #[derive(Deserialize)]
