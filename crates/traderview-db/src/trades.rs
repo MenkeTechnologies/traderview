@@ -269,12 +269,33 @@ pub async fn get(pool: &PgPool, trade_id: Uuid) -> anyhow::Result<Option<Trade>>
 
 /// Drop all trades+legs for `account_id` and re-derive from current executions.
 /// Idempotent. Returns the count of trades emitted.
+///
+/// Concurrency: two callers writing executions to the same account
+/// (e.g. the algo runner's record_fill + a WS pump landing a different
+/// fill on a peer strategy bound to the same account) both call this
+/// from separate transactions. Without a per-account lock they race on
+/// the full DELETE+INSERT — the second commit overwrites the first
+/// with a stale snapshot. We take a Postgres advisory transaction lock
+/// keyed on `hashtext('trades_rollup' || account_id)` as the first
+/// statement so concurrent calls serialize per account. The lock
+/// auto-releases at COMMIT.
 pub async fn rollup_account(pool: &PgPool, account_id: Uuid) -> anyhow::Result<usize> {
+    let mut tx = pool.begin().await?;
+    // Stable 32-bit key from "trades_rollup:" + account_id UUID. Two
+    // concurrent rollup_account calls on the same account block at
+    // this statement; rollups on different accounts proceed in
+    // parallel. The integer cast is required because pg_advisory_xact_lock
+    // takes a single bigint or two int4s, not a TEXT directly.
+    sqlx::query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))")
+        .bind(format!("trades_rollup:{account_id}"))
+        .execute(&mut *tx)
+        .await?;
+    // Re-read executions INSIDE the locked tx — without this we'd
+    // operate on a snapshot taken before another writer's commit
+    // became visible, defeating the lock.
     let execs = executions::list_for_account(pool, account_id).await?;
     let trades = rollup(&execs, LotMethod::Fifo)?;
     let n = trades.len();
-
-    let mut tx = pool.begin().await?;
     sqlx::query("DELETE FROM trades WHERE account_id = $1")
         .bind(account_id)
         .execute(&mut *tx)

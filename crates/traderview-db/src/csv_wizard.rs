@@ -222,10 +222,22 @@ fn build_exec(r: &csv::StringRecord, c: ColIdx) -> anyhow::Result<ParsedExecutio
     let side = parse_side(get(c.side))?;
     let qty = parse_decimal(get(c.qty), "qty")?;
     let price = parse_decimal(get(c.pri), "price")?;
-    let fee = c
-        .fee
-        .map(|i| parse_decimal(get(i), "fee").unwrap_or(Decimal::ZERO))
-        .unwrap_or(Decimal::ZERO);
+    // Fee: propagate parse failures the same way qty/price do above —
+    // silently zeroing an unparseable fee ("1.23 USD", malformed
+    // thousands separator) would under-report cost basis and overstate
+    // net P&L for the import. A missing column (c.fee = None) is still
+    // valid and means "this CSV doesn't carry per-row fees" → 0.
+    let fee = match c.fee {
+        Some(i) => {
+            let v = get(i);
+            if v.is_empty() {
+                Decimal::ZERO
+            } else {
+                parse_decimal(v, "fee")?
+            }
+        }
+        None => Decimal::ZERO,
+    };
     let executed_at = parse_dt(get(c.ts))?;
     let broker_order_id = c.oid.and_then(|i| {
         let v = get(i);

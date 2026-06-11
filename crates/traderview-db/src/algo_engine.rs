@@ -403,6 +403,15 @@ async fn trip_kill_switch(
     user_id: Uuid,
     reason: &str,
 ) -> Result<(), EngineError> {
+    // Wrap the strategy update + audit insert in a single tx so partial
+    // failure (audit insert fails, strategy update succeeded) can't
+    // leave divergent state: a paused strategy without a paired audit
+    // row is a compliance gap. Webhook fan-out stays OUTSIDE the tx by
+    // design — best-effort, must not roll back the kill.
+    let mut tx = pool
+        .begin()
+        .await
+        .map_err(|e| EngineError::Broker(format!("trip_kill begin: {e}")))?;
     sqlx::query(
         "UPDATE algo_strategies
             SET enabled = FALSE,
@@ -413,7 +422,7 @@ async fn trip_kill_switch(
     )
     .bind(strategy_id)
     .bind(reason)
-    .execute(pool)
+    .execute(&mut *tx)
     .await
     .map_err(|e| EngineError::Broker(format!("trip_kill: {e}")))?;
     sqlx::query(
@@ -423,9 +432,12 @@ async fn trip_kill_switch(
     .bind(strategy_id)
     .bind(user_id)
     .bind(reason)
-    .execute(pool)
+    .execute(&mut *tx)
     .await
     .map_err(|e| EngineError::Broker(format!("trip_audit: {e}")))?;
+    tx.commit()
+        .await
+        .map_err(|e| EngineError::Broker(format!("trip_kill commit: {e}")))?;
 
     // Fan out to every enabled webhook the user has configured. Done
     // AFTER the DB updates so a webhook failure can't roll back the

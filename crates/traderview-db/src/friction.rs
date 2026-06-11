@@ -69,26 +69,94 @@ impl FrictionConfig {
     /// Breakdown:
     ///   * 2 × slippage_bps / 100 → percent (entry slip + exit slip)
     ///   * sec_fee_bps / 100      → percent (sell side only)
-    ///   * commission as % of notional (approximated at $50/share
-    ///     average — caller can override via `round_trip_pct_at_price`)
+    ///   * commission as % of notional — sized as 100 shares at
+    ///     $50/share (i.e. $5,000 notional) so the per-order $1 floor
+    ///     doesn't bleed into the per-share rate. Caller can override
+    ///     via `round_trip_pct_at_size`.
     pub fn round_trip_pct(self) -> f64 {
-        self.round_trip_pct_at_price(50.0)
+        self.round_trip_pct_at_size(50.0, 100)
     }
 
+    /// `round_trip_pct` at a caller-supplied price (assumes 100 shares).
+    /// Kept for backwards compat; new callers should use
+    /// `round_trip_pct_at_size` which lets them pass typical lot size.
     pub fn round_trip_pct_at_price(self, avg_share_price: f64) -> f64 {
+        self.round_trip_pct_at_size(avg_share_price, 100)
+    }
+
+    /// Round-trip friction at a specific notional. `avg_share_price`
+    /// is per share and `typical_shares` is the lot size used to gate
+    /// the per-order $ floor. The old formula `max(per_share, min_usd)`
+    /// silently mixed units — for a $50 stock and a $1 floor it claimed
+    /// the floor was a per-share rate, overstating round-trip friction
+    /// by ~100× on typical lots. The corrected math:
+    ///   leg_commission = max(per_share * typical_shares, min_usd)
+    ///   notional       = avg_share_price * typical_shares
+    ///   commission_pct = 2 * leg_commission / notional * 100
+    pub fn round_trip_pct_at_size(self, avg_share_price: f64, typical_shares: u32) -> f64 {
         let slip_pct = 2.0 * self.slippage_bps / 100.0;
         let sec_pct = self.sec_fee_bps / 100.0;
-        let comm_pct = if avg_share_price > 0.0 {
-            // Round trip = entry + exit commission; each leg uses max
-            // of per-share OR floor. We approximate the average leg
-            // as comm_per_share * 1 share at the typical price, with
-            // floor enforced.
-            let leg = (self.commission_per_share).max(self.commission_min_usd / 1.0);
-            2.0 * leg / avg_share_price * 100.0
+        let shares = typical_shares.max(1) as f64;
+        let notional = avg_share_price * shares;
+        let comm_pct = if notional > 0.0 {
+            let per_share_leg = self.commission_per_share * shares;
+            let leg = per_share_leg.max(self.commission_min_usd);
+            2.0 * leg / notional * 100.0
         } else {
             0.0
         };
         slip_pct + sec_pct + comm_pct
+    }
+}
+
+#[cfg(test)]
+mod round_trip_tests {
+    use super::*;
+
+    #[test]
+    fn per_share_only_no_floor() {
+        let f = FrictionConfig {
+            slippage_bps: 0.0,
+            commission_per_share: 0.005, // half-cent/share
+            commission_min_usd: 0.0,
+            sec_fee_bps: 0.0,
+        };
+        // $50 × 100 shares = $5000 notional. Round-trip commission:
+        // 2 × (0.005 × 100) = $1. As % of $5000: 0.02%.
+        let pct = f.round_trip_pct();
+        assert!((pct - 0.02).abs() < 1e-6, "got {pct}");
+    }
+
+    #[test]
+    fn floor_kicks_in_for_tiny_orders() {
+        let f = FrictionConfig {
+            slippage_bps: 0.0,
+            commission_per_share: 0.005,
+            commission_min_usd: 1.0,
+            sec_fee_bps: 0.0,
+        };
+        // 10 shares × $50 = $500 notional. per_share leg = 0.005×10 = $0.05;
+        // floor = $1. So leg = $1, round-trip = $2. Pct = 2/500*100 = 0.4%.
+        let pct = f.round_trip_pct_at_size(50.0, 10);
+        assert!((pct - 0.4).abs() < 1e-6, "got {pct}");
+    }
+
+    #[test]
+    fn does_not_overstate_on_typical_lot() {
+        // Regression for the old `max(per_share, min_usd / 1.0)` bug
+        // that mixed $/share with $/order. With per_share=0.005 and
+        // min=$1, the old formula treated the $1 as per-share → leg=$1
+        // → round-trip commission ≈ 4% at $50/share. The fixed math
+        // returns 0.02% (a $1 floor distributed over a 100-share, $5000
+        // notional order is negligible).
+        let f = FrictionConfig {
+            slippage_bps: 0.0,
+            commission_per_share: 0.005,
+            commission_min_usd: 1.0,
+            sec_fee_bps: 0.0,
+        };
+        let pct = f.round_trip_pct();
+        assert!(pct < 0.1, "old bug returned ~4%, fixed math should be <0.1%, got {pct}");
     }
 }
 

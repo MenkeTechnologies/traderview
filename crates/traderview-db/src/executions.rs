@@ -113,7 +113,18 @@ pub async fn insert_manual(
     account_id: Uuid,
     p: &ParsedExecution,
 ) -> anyhow::Result<Uuid> {
-    let (id,): (Uuid,) = sqlx::query_as(
+    // Idempotent on the executions_dedupe_idx UNIQUE
+    // (account_id, broker_order_id, executed_at, symbol, side, qty, price)
+    // — defense against WS reconnect replays and against ANY pump that
+    // emits both partial and final fill events. The dedupe index is
+    // partial (broker_order_id IS NOT NULL), so rows without a
+    // broker_order_id still insert normally — those use import_id-based
+    // dedupe at the importer layer.
+    //
+    // RETURNING id is wrapped in DISTINCT-ON-conflict semantics: if the
+    // INSERT was a no-op (conflict), we fall back to SELECTing the
+    // existing row's id so callers keep getting a real Uuid.
+    let inserted: Option<(Uuid,)> = sqlx::query_as(
         "INSERT INTO executions (
             account_id, symbol, side, qty, price, fee, commissions, executed_at,
             broker_order_id, raw, asset_class, option_type, strike, expiration, multiplier,
@@ -122,7 +133,10 @@ pub async fn insert_manual(
             $1, $2, $3::side_t, $4, $5, $6, $7, $8,
             $9, $10, $11::asset_class_t, $12::option_type_t, $13, $14, $15,
             $16, $17, $18, $19, $20
-         ) RETURNING id",
+         )
+         ON CONFLICT (account_id, broker_order_id, executed_at, symbol, side, qty, price)
+            WHERE broker_order_id IS NOT NULL DO NOTHING
+         RETURNING id",
     )
     .bind(account_id)
     .bind(&p.symbol)
@@ -144,9 +158,32 @@ pub async fn insert_manual(
     .bind(p.base_ccy.as_deref())
     .bind(p.quote_ccy.as_deref())
     .bind(p.pip_size)
+    .fetch_optional(pool)
+    .await?;
+    if let Some((id,)) = inserted {
+        return Ok(id);
+    }
+    // Conflict path: row already exists. Look it up by the dedupe
+    // key and return its id so the caller stays Result<Uuid>.
+    let (existing,): (Uuid,) = sqlx::query_as(
+        "SELECT id FROM executions
+          WHERE account_id = $1 AND broker_order_id = $9
+            AND executed_at = $8 AND symbol = $2 AND side = $3::side_t
+            AND qty = $4 AND price = $5
+          LIMIT 1",
+    )
+    .bind(account_id)
+    .bind(&p.symbol)
+    .bind(side_to_pg(p.side))
+    .bind(p.qty)
+    .bind(p.price)
+    .bind(p.fee)
+    .bind(p.commission)
+    .bind(p.executed_at)
+    .bind(p.broker_order_id.as_deref())
     .fetch_one(pool)
     .await?;
-    Ok(id)
+    Ok(existing)
 }
 
 pub async fn delete(pool: &PgPool, execution_id: Uuid) -> anyhow::Result<bool> {

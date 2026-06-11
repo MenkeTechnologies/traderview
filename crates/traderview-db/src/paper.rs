@@ -246,9 +246,16 @@ async fn apply_fill(
         Side::Sell | Side::Short => -qty,
     };
     let notional = price * qty;
+    // FOR UPDATE locks the row for the duration of this tx so two
+    // concurrent fills on the same (paper_account_id, symbol) serialize
+    // — without it the SELECT-Rust-compute-INSERT race silently lost
+    // one fill's qty delta (last writer of the ON CONFLICT DO UPDATE
+    // wins with its pre-conflict snapshot). The lock is row-level and
+    // releases at COMMIT.
     let row: Option<(Decimal, Decimal, Decimal)> = sqlx::query_as(
         "SELECT qty, avg_price, realized_pnl FROM paper_positions
-          WHERE paper_account_id = $1 AND symbol = $2",
+          WHERE paper_account_id = $1 AND symbol = $2
+          FOR UPDATE",
     )
     .bind(account_id)
     .bind(symbol)

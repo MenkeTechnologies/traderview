@@ -74,9 +74,14 @@ pub async fn handle_trade_update(
     event: TradeUpdateEvent,
     event_sink: Option<&EventSink>,
 ) -> anyhow::Result<()> {
-    if event.event != "fill" && event.event != "partial_fill" {
-        // new / canceled / replaced / done_for_day etc. — interesting
-        // for UI state but not for the executions pipeline.
+    // Only consume the final `fill` event. Alpaca emits one or more
+    // `partial_fill` events as a multi-leg order works through, then a
+    // terminal `fill` carrying the cumulative aggregate. The
+    // executions_dedupe_idx UNIQUE keys on qty, so partials with
+    // different qtys insert separate rows alongside the final fill —
+    // double-counting through trades::rollup_account. Skipping
+    // partials sidesteps the issue without losing data.
+    if event.event != "fill" {
         return Ok(());
     }
     let coid_str = event.order.client_order_id.clone();
