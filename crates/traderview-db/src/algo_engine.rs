@@ -161,6 +161,8 @@ pub enum EngineError {
     },
     #[error("outside entry window {window} ET; entry skipped")]
     OutsideEntryWindow { window: String },
+    #[error("daily entry cap reached ({count}/{cap}); entry skipped until tomorrow")]
+    DailyEntryCap { cap: i64, count: i64 },
     #[error("broker: {0}")]
     Broker(String),
     #[error("db: {0}")]
@@ -300,7 +302,8 @@ impl BrokerSink for InMemorySink {
 ///   "max_consecutive_losses": 4,
 ///   "max_position_size_usd": 10000.0,
 ///   "earnings_blackout_days": 2,
-///   "entry_window": "10:00-15:30"
+///   "entry_window": "10:00-15:30",
+///   "max_entries_per_day": 6
 /// }
 /// ```
 #[derive(Debug, Clone)]
@@ -324,6 +327,9 @@ pub struct EngineConfig {
     /// as minutes since midnight (start inclusive, end exclusive).
     /// Exits are never blocked. None = always.
     pub entry_window: Option<(u32, u32)>,
+    /// Overtrading gate: cap on entry orders per UTC day. Exits are
+    /// never blocked. None = unlimited.
+    pub max_entries_per_day: Option<i64>,
 }
 
 impl EngineConfig {
@@ -365,6 +371,11 @@ impl EngineConfig {
             .get("entry_window")
             .and_then(|v| v.as_str())
             .and_then(parse_entry_window);
+        let max_entries_per_day = s
+            .risk_gates
+            .get("max_entries_per_day")
+            .and_then(|v| v.as_i64())
+            .filter(|n| *n > 0);
         Self {
             sizing,
             side_mode,
@@ -374,6 +385,7 @@ impl EngineConfig {
             max_position_size_usd,
             earnings_blackout_days,
             entry_window,
+            max_entries_per_day,
         }
     }
 }
@@ -662,6 +674,16 @@ pub async fn process_bar_window(
             });
         }
     }
+    // Risk gate: daily entry cap — overtrading discipline; exits and
+    // already-open positions are untouched.
+    if let Some(cap) = cfg.max_entries_per_day {
+        let count = algo::entries_today(pool, strategy.id)
+            .await
+            .map_err(|e| EngineError::Broker(format!("entries_today: {e}")))?;
+        if count >= cap {
+            return Err(EngineError::DailyEntryCap { cap, count });
+        }
+    }
     let qty = algo_strategies::size_shares(equity, sig.entry_price, sig.stop_distance, &cfg.sizing);
     if qty == 0 {
         return Err(EngineError::ZeroQty);
@@ -728,6 +750,7 @@ pub async fn process_bar_window(
             side: side_to_str(intent.side).into(),
             order_type: "market".into(),
             order_class: "bracket".into(),
+            kind: "entry".into(),
             qty: intent.qty,
             limit_price: None,
             stop_price: Some(intent.stop_price),
@@ -1048,6 +1071,7 @@ pub async fn process_bar_window_multi(
             side: side_to_str(intent.side).into(),
             order_type: "market".into(),
             order_class: "bracket".into(),
+            kind: "entry".into(),
             qty: intent.qty,
             limit_price: None,
             stop_price: Some(intent.stop_price),
@@ -1305,6 +1329,7 @@ async fn run_exit_pass(
                 side: close_side_str.into(),
                 order_type: "market".into(),
                 order_class: "simple".into(),
+                kind: "exit".into(),
                 qty: live_qty,
                 limit_price: None,
                 stop_price: None,
@@ -1450,6 +1475,18 @@ mod earnings_blackout_tests {
         // January = EST (UTC-5): 15:00 UTC = 10:00 ET.
         let t = chrono::Utc.with_ymd_and_hms(2026, 1, 13, 15, 0, 0).unwrap();
         assert!(in_entry_window(t, w));
+    }
+
+    #[test]
+    fn max_entries_per_day_rejects_nonpositive() {
+        let get = |v: serde_json::Value| -> Option<i64> {
+            v.get("max_entries_per_day")
+                .and_then(|x| x.as_i64())
+                .filter(|n| *n > 0)
+        };
+        assert_eq!(get(serde_json::json!({"max_entries_per_day": 6})), Some(6));
+        assert_eq!(get(serde_json::json!({"max_entries_per_day": 0})), None);
+        assert_eq!(get(serde_json::json!({"max_entries_per_day": -2})), None);
     }
 
     #[test]

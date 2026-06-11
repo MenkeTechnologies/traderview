@@ -163,6 +163,13 @@ pub struct AlgoOrderInsert {
     pub limit_price: Option<Decimal>,
     pub stop_price: Option<Decimal>,
     pub raw_request: Option<Json>,
+    /// 'entry' | 'exit' — set by the engine at submit time.
+    #[serde(default = "default_order_kind")]
+    pub kind: String,
+}
+
+fn default_order_kind() -> String {
+    "entry".into()
 }
 
 fn default_order_class() -> String {
@@ -620,8 +627,8 @@ pub async fn insert_order(
     let row: Option<AlgoOrder> = sqlx::query_as::<_, AlgoOrder>(
         "INSERT INTO algo_orders
              (run_id, strategy_id, client_order_id, symbol, side,
-              order_type, order_class, qty, limit_price, stop_price, raw_request)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+              order_type, order_class, qty, limit_price, stop_price, raw_request, kind)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
          ON CONFLICT (client_order_id) DO NOTHING
          RETURNING *",
     )
@@ -636,6 +643,7 @@ pub async fn insert_order(
     .bind(insert.limit_price)
     .bind(insert.stop_price)
     .bind(insert.raw_request)
+    .bind(insert.kind)
     .fetch_optional(pool)
     .await?;
     if let Some(r) = row {
@@ -945,6 +953,19 @@ pub async fn all_active_strategy_ids(
     )
     .fetch_all(pool)
     .await?)
+}
+
+/// Entry orders submitted today (UTC) — the overtrading-gate counter.
+pub async fn entries_today(pool: &PgPool, strategy_id: Uuid) -> anyhow::Result<i64> {
+    let (n,): (i64,) = sqlx::query_as(
+        "SELECT count(*) FROM algo_orders
+          WHERE strategy_id = $1 AND kind = 'entry'
+            AND submitted_at >= date_trunc('day', now() AT TIME ZONE 'UTC')",
+    )
+    .bind(strategy_id)
+    .fetch_one(pool)
+    .await?;
+    Ok(n)
 }
 
 pub async fn list_backtests(
