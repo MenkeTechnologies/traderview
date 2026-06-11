@@ -22,6 +22,7 @@ const EVENT_TYPES = [
     'disclosure',
     'squeeze_fired',
     'alert_fired',
+    'paper_fill',
     'algo_signal_fired',
     'algo_order_submitted',
     'algo_fill_received',
@@ -39,6 +40,7 @@ const TYPE_COLOR = {
     disclosure:          'lf-disclosure',
     squeeze_fired:       'lf-squeeze',
     alert_fired:         'lf-alert',
+    paper_fill:          'lf-fill',
     algo_signal_fired:   'lf-signal',
     algo_order_submitted:'lf-order',
     algo_fill_received:  'lf-fill',
@@ -250,6 +252,8 @@ function summarize(type, d) {
             return `<strong>${esc(d.symbol)}</strong> @ ${num(d.price, 2)} pct=${num(d.pct_change, 2)}% burst=${num(d.burst_ratio, 1)}×`;
         case 'alert_fired':
             return `<strong>${esc(d.symbol)}</strong> rule=${esc(d.rule_id)} — ${esc(d.message)}`;
+        case 'paper_fill':
+            return `<strong>${esc(d.symbol)}</strong> ${esc(d.side)} ${num(d.qty, 2)} @ ${num(d.price, 4)} (${esc(d.order_type)} filled in background)`;
         case 'algo_signal_fired':
             return `<strong>${esc(d.symbol)}</strong> ${esc(d.side)} @ ${num(d.entry_price, 4)} (${esc(d.kind)}) strat=${esc(d.strategy_id?.slice(0, 8))}`;
         case 'algo_order_submitted':

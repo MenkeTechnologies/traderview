@@ -473,7 +473,7 @@ async fn bring_up_backend(
     // universe — mirrors server.rs so opening those views never
     // triggers a multi-symbol compute. Intervals live in
     // traderview_web::background.
-    traderview_web::background::spawn_refreshers(embedded.pool.clone(), state.tiles.clone());
+    traderview_web::background::spawn_refreshers(embedded.pool.clone(), state.tiles.clone(), state.hub.clone());
 
     let app_router = router(state);
 

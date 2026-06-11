@@ -444,7 +444,7 @@ async fn main() -> anyhow::Result<()> {
     // Background refreshers: precomputed dashboard tiles (sectors,
     // breadth, fear/greed, sector rotation, RRG) + the Golden Stars
     // universe. See traderview_web::background for the intervals.
-    traderview_web::background::spawn_refreshers(pool.clone(), state.tiles.clone());
+    traderview_web::background::spawn_refreshers(pool.clone(), state.tiles.clone(), state.hub.clone());
 
     let api = router(state);
 

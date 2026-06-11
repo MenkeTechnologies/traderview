@@ -467,11 +467,22 @@ async fn deduct_fee(
     Ok(())
 }
 
+/// Details of a background fill, for the caller to surface (live feed,
+/// notifications) — the user wasn't watching when it happened.
+#[derive(Debug, Clone)]
+pub struct BackgroundFill {
+    pub symbol: String,
+    pub side: String,
+    pub qty: Decimal,
+    pub price: Decimal,
+    pub order_type: String,
+}
+
 /// One ticker pass over RESTING orders: fill every pending limit/stop
 /// whose trigger the current quote satisfies. The status='pending'
 /// guard on the claiming UPDATE makes a racing duplicate pass a no-op.
-/// Returns the number of orders filled.
-pub async fn check_pending(pool: &PgPool) -> anyhow::Result<usize> {
+/// Returns the fills executed this pass.
+pub async fn check_pending(pool: &PgPool) -> anyhow::Result<Vec<BackgroundFill>> {
     #[derive(sqlx::FromRow)]
     struct Pending {
         id: Uuid,
@@ -522,7 +533,7 @@ pub async fn check_pending(pool: &PgPool) -> anyhow::Result<usize> {
     )
     .fetch_all(pool)
     .await?;
-    let mut filled = 0usize;
+    let mut filled: Vec<BackgroundFill> = Vec::new();
     for o in rows {
         let Ok(side) = serde_json::from_value::<Side>(serde_json::Value::String(o.side.clone()))
         else {
@@ -592,7 +603,13 @@ pub async fn check_pending(pool: &PgPool) -> anyhow::Result<usize> {
             .await?;
         }
         tx.commit().await?;
-        filled += 1;
+        filled.push(BackgroundFill {
+            symbol: o.symbol.clone(),
+            side: o.side.clone(),
+            qty: o.qty,
+            price: adjusted,
+            order_type: o.order_type.clone(),
+        });
     }
     Ok(filled)
 }

@@ -43,6 +43,16 @@ pub enum Event {
     /// Heartbeat — server emits one every 30s so clients can detect deadness.
     Ping { ts: i64 },
 
+    /// A RESTING paper order (limit/stop/trailing/bracket leg) filled
+    /// in the background — the user wasn't watching when it happened.
+    PaperFill {
+        symbol: String,
+        side: String,
+        qty: f64,
+        price: f64,
+        order_type: String,
+    },
+
     /// Algo runner: strategy produced an entry signal on the latest bar.
     AlgoSignalFired {
         strategy_id: String,

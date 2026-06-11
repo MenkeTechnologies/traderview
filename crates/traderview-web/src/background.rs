@@ -76,7 +76,7 @@ pub async fn tile(
 }
 
 /// Spawn every background refresher. Call once at boot.
-pub fn spawn_refreshers(pool: PgPool, cache: TileCache) {
+pub fn spawn_refreshers(pool: PgPool, cache: TileCache, hub: crate::realtime::Hub) {
     for (key, every) in [
         (SECTORS, SECTORS_REFRESH),
         (BREADTH, BREADTH_REFRESH),
@@ -101,7 +101,7 @@ pub fn spawn_refreshers(pool: PgPool, cache: TileCache) {
     spawn_heatmap_universe(pool.clone());
     spawn_markets_snapshot();
     spawn_screener_snapshots(pool.clone());
-    spawn_paper_twap_ticker(pool.clone());
+    spawn_paper_twap_ticker(pool.clone(), hub);
     spawn_paper_equity_snapshots(pool.clone());
     spawn_golden_stars(pool);
 }
@@ -109,7 +109,9 @@ pub fn spawn_refreshers(pool: PgPool, cache: TileCache) {
 /// Paper execution ticker — submits due child orders for working
 /// parent orders AND fills resting limit/stop orders whose trigger the
 /// current quote satisfies, all through the paper engine's fill model.
-fn spawn_paper_twap_ticker(pool: PgPool) {
+/// Background fills publish a PaperFill event so the user hears about
+/// fills that happened while they weren't watching.
+fn spawn_paper_twap_ticker(pool: PgPool, hub: crate::realtime::Hub) {
     tokio::spawn(async move {
         loop {
             match traderview_db::paper_parent_orders::tick(&pool).await {
@@ -118,8 +120,20 @@ fn spawn_paper_twap_ticker(pool: PgPool) {
                 Err(e) => tracing::warn!(error = %e, "paper TWAP tick failed"),
             }
             match traderview_db::paper::check_pending(&pool).await {
-                Ok(0) => {}
-                Ok(n) => tracing::info!(filled = n, "resting paper orders filled"),
+                Ok(fills) => {
+                    if !fills.is_empty() {
+                        tracing::info!(filled = fills.len(), "resting paper orders filled");
+                    }
+                    for f in fills {
+                        hub.publish(crate::realtime::Event::PaperFill {
+                            symbol: f.symbol,
+                            side: f.side,
+                            qty: f.qty.to_string().parse().unwrap_or(0.0),
+                            price: f.price.to_string().parse().unwrap_or(0.0),
+                            order_type: f.order_type,
+                        });
+                    }
+                }
                 Err(e) => tracing::warn!(error = %e, "paper pending check failed"),
             }
             tokio::time::sleep(PAPER_TWAP_TICK).await;
