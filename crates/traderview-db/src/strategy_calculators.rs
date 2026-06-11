@@ -440,6 +440,110 @@ pub async fn day_of_week(
 }
 
 // ===========================================================================
+// Santa Claus rally (data wrapper around
+// traderview_core::holiday_seasonality — per-offset stats live there)
+// ===========================================================================
+
+/// Last 4 trading days of December + the anchor (last Dec session) +
+/// first 2 of January — Hirsch's classic 7-session window.
+const SANTA_BEFORE: u32 = 4;
+const SANTA_AFTER: u32 = 2;
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SantaYearRow {
+    pub year: i32,
+    pub window_return_pct: f64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SantaReport {
+    pub symbol: String,
+    pub years_analyzed: usize,
+    /// Mean cumulative return over the 7-session window across years.
+    pub rally_avg_return_pct: f64,
+    pub rally_hit_rate_pct: f64,
+    pub yearly: Vec<SantaYearRow>,
+    /// Per-offset stats from holiday_seasonality (offset 0 = last
+    /// December session).
+    pub offsets: traderview_core::holiday_seasonality::HolidaySeasonalityReport,
+}
+
+/// Pure core over (date, close) pairs, oldest→newest.
+pub fn santa_stats(symbol: &str, closes: &[(chrono::NaiveDate, f64)]) -> Option<SantaReport> {
+    use traderview_core::holiday_seasonality::{self, TradingDay};
+    // Anchor = index of the LAST trading day of each December.
+    let mut anchors: Vec<usize> = Vec::new();
+    for (i, (d, _)) in closes.iter().enumerate() {
+        if d.month() == 12 {
+            let next_is_new_month = closes
+                .get(i + 1)
+                .map(|(nd, _)| nd.month() != 12)
+                .unwrap_or(false);
+            if next_is_new_month {
+                anchors.push(i);
+            }
+        }
+    }
+    // Per-year cumulative window return — needs the full window on
+    // both sides; partial years are skipped, not approximated.
+    let before = SANTA_BEFORE as usize;
+    let after = SANTA_AFTER as usize;
+    let mut yearly: Vec<SantaYearRow> = Vec::new();
+    for &i in &anchors {
+        if i < before + 1 || i + after >= closes.len() {
+            continue;
+        }
+        let base = closes[i - before - 1].1;
+        let end = closes[i + after].1;
+        if base <= 0.0 {
+            continue;
+        }
+        yearly.push(SantaYearRow {
+            year: closes[i].0.year(),
+            window_return_pct: (end / base - 1.0) * 100.0,
+        });
+    }
+    if yearly.is_empty() {
+        return None;
+    }
+    let avg = yearly.iter().map(|y| y.window_return_pct).sum::<f64>() / yearly.len() as f64;
+    let hits = yearly.iter().filter(|y| y.window_return_pct > 0.0).count();
+    // Per-offset stats via the existing holiday_seasonality core.
+    let days: Vec<TradingDay> = closes
+        .iter()
+        .enumerate()
+        .map(|(i, (_, c))| TradingDay {
+            trading_day_index: i as u32,
+            close: *c,
+        })
+        .collect();
+    let anchor_indices: Vec<u32> = anchors.iter().map(|i| *i as u32).collect();
+    let offsets =
+        holiday_seasonality::compute(&days, &anchor_indices, SANTA_BEFORE, SANTA_AFTER)?;
+    Some(SantaReport {
+        symbol: symbol.to_string(),
+        years_analyzed: yearly.len(),
+        rally_avg_return_pct: avg,
+        rally_hit_rate_pct: hits as f64 / yearly.len() as f64 * 100.0,
+        yearly,
+        offsets,
+    })
+}
+
+pub async fn santa_rally(
+    pool: &PgPool,
+    symbol: &str,
+    years: u32,
+) -> Result<SantaReport, TomError> {
+    let closes = daily_closes(pool, symbol, years).await?;
+    santa_stats(symbol, &closes).ok_or_else(|| TomError::Insufficient {
+        symbol: symbol.to_string(),
+        got: closes.len(),
+        need: MIN_DAYS,
+    })
+}
+
+// ===========================================================================
 // Volatility cone (data wrapper around traderview_core::vol_cone)
 // ===========================================================================
 
@@ -706,6 +810,96 @@ mod tests {
         assert!(anti_martingale(&AntiMartingaleInput { max_risk_pct: 0.5, ..base.clone() }).is_err());
         assert!(anti_martingale(&AntiMartingaleInput { sequence: "WXL".into(), ..base.clone() }).is_err());
         assert!(anti_martingale(&AntiMartingaleInput { sequence: "".into(), ..base }).is_err());
+    }
+
+    // ── santa rally ───────────────────────────────────────────────────────
+
+    /// Weekday-only closes across a date range, all at `flat` price.
+    fn weekdays(
+        from: NaiveDate,
+        to: NaiveDate,
+        flat: f64,
+    ) -> Vec<(NaiveDate, f64)> {
+        let mut out = Vec::new();
+        let mut d = from;
+        while d <= to {
+            if d.weekday().num_days_from_monday() < 5 {
+                out.push((d, flat));
+            }
+            d = d.succ_opt().expect("valid date");
+        }
+        out
+    }
+
+    /// Two full Dec/Jan turns; +1% per session inside each 7-session
+    /// Santa window, flat elsewhere.
+    fn santa_closes() -> Vec<(NaiveDate, f64)> {
+        let mut days = weekdays(
+            NaiveDate::from_ymd_opt(2022, 11, 1).expect("valid"),
+            NaiveDate::from_ymd_opt(2024, 1, 31).expect("valid"),
+            0.0,
+        );
+        // Anchor per year = last December session index.
+        let mut anchors = Vec::new();
+        for (i, (d, _)) in days.iter().enumerate() {
+            if d.month() == 12 && days.get(i + 1).map(|(n, _)| n.month() != 12).unwrap_or(false) {
+                anchors.push(i);
+            }
+        }
+        assert_eq!(anchors.len(), 2, "fixture needs two Decembers");
+        let mut price = 100.0;
+        for i in 0..days.len() {
+            let in_window = anchors
+                .iter()
+                .any(|&a| i + 4 >= a && i <= a + 2 && a >= 4);
+            if in_window {
+                price *= 1.01;
+            }
+            days[i].1 = price;
+        }
+        days
+    }
+
+    #[test]
+    fn santa_rally_measures_the_seven_session_window() {
+        let closes = santa_closes();
+        let r = santa_stats("TEST", &closes).expect("report");
+        assert_eq!(r.years_analyzed, 2);
+        // Each year compounds 1.01^7 − 1 ≈ 7.214% over the window.
+        let want = (1.01_f64.powi(7) - 1.0) * 100.0;
+        for y in &r.yearly {
+            assert!((y.window_return_pct - want).abs() < 1e-9, "{y:?}");
+        }
+        assert!((r.rally_avg_return_pct - want).abs() < 1e-9);
+        assert!((r.rally_hit_rate_pct - 100.0).abs() < 1e-12);
+        // Per-offset stats (from holiday_seasonality) see ln(1.01) at
+        // every offset in the window.
+        for o in &r.offsets.by_offset {
+            assert!((o.mean_return - 1.01_f64.ln()).abs() < 1e-9, "{o:?}");
+            assert!((o.hit_rate - 1.0).abs() < 1e-12);
+        }
+    }
+
+    #[test]
+    fn santa_rally_skips_partial_years() {
+        // Truncate before the +2 January sessions of the second year:
+        // only the first year has a complete window.
+        let closes = santa_closes();
+        let cutoff = NaiveDate::from_ymd_opt(2023, 12, 29).expect("valid");
+        let truncated: Vec<_> = closes.into_iter().filter(|(d, _)| *d <= cutoff).collect();
+        let r = santa_stats("TEST", &truncated).expect("report");
+        assert_eq!(r.years_analyzed, 1);
+        assert_eq!(r.yearly[0].year, 2022);
+    }
+
+    #[test]
+    fn santa_rally_requires_at_least_one_complete_window() {
+        let flat = weekdays(
+            NaiveDate::from_ymd_opt(2024, 3, 1).expect("valid"),
+            NaiveDate::from_ymd_opt(2024, 6, 1).expect("valid"),
+            100.0,
+        );
+        assert!(santa_stats("TEST", &flat).is_none());
     }
 
     // ── turn of month ─────────────────────────────────────────────────────

@@ -6,6 +6,7 @@
 //!   GET  /symbols/:sym/turn-of-month     — TOM seasonality stats
 //!   GET  /symbols/:sym/vol-cone          — realized-vol percentile cone
 //!   GET  /symbols/:sym/day-of-week       — weekday return seasonality
+//!   GET  /symbols/:sym/santa-rally       — Hirsch 7-session window stats
 
 use crate::auth::AuthUser;
 use crate::error::ApiError;
@@ -16,7 +17,7 @@ use axum::{Json, Router};
 use serde::Deserialize;
 use traderview_db::strategy_calculators::{
     self, AntiMartingaleInput, AntiMartingaleReport, DowReport, FixedRatioInput,
-    FixedRatioReport, GridInput, GridReport, TomError, TomReport, VolConeReport,
+    FixedRatioReport, GridInput, GridReport, SantaReport, TomError, TomReport, VolConeReport,
 };
 use traderview_db::strategy_simulators::{self, GemInput, GemReport, SimError};
 
@@ -29,6 +30,7 @@ pub fn router() -> Router<AppState> {
         .route("/symbols/:symbol/turn-of-month", get(get_turn_of_month))
         .route("/symbols/:symbol/vol-cone", get(get_vol_cone))
         .route("/symbols/:symbol/day-of-week", get(get_day_of_week))
+        .route("/symbols/:symbol/santa-rally", get(get_santa_rally))
 }
 
 async fn post_grid_trading(
@@ -129,6 +131,19 @@ async fn get_day_of_week(
 ) -> Result<Json<DowReport>, ApiError> {
     let sym = validate_symbol(&symbol)?;
     strategy_calculators::day_of_week(&s.pool, &sym, q.years.unwrap_or(10))
+        .await
+        .map(Json)
+        .map_err(map_tom_err)
+}
+
+async fn get_santa_rally(
+    State(s): State<AppState>,
+    _u: AuthUser,
+    Path(symbol): Path<String>,
+    Query(q): Query<TomQ>,
+) -> Result<Json<SantaReport>, ApiError> {
+    let sym = validate_symbol(&symbol)?;
+    strategy_calculators::santa_rally(&s.pool, &sym, q.years.unwrap_or(15))
         .await
         .map(Json)
         .map_err(map_tom_err)

@@ -326,6 +326,32 @@ const TOOLS = {
             covered call" when the back leg is deep ITM). Back leg revalued by Black-Scholes at front expiry.</p>`;
         },
     },
+    'santa-rally': {
+        label: 'Santa Rally',
+        call: (b) => api.santaRally(b.symbol, b.years),
+        fields: [
+            { key: 'symbol', label: 'Symbol', def: 'SPY', text: true },
+            { key: 'years', label: 'Lookback years', def: 15, int: true },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Avg window return</div>
+                    <div class="value ${r.rally_avg_return_pct >= 0 ? 'pos' : 'neg'}">${r.rally_avg_return_pct.toFixed(2)}%</div>
+                    <div class="small muted">last 5 Dec + first 2 Jan sessions</div></div>
+                <div class="card"><div class="label">Hit rate</div>
+                    <div class="value">${r.rally_hit_rate_pct.toFixed(0)}%</div>
+                    <div class="small muted">${r.years_analyzed} complete windows on ${esc(r.symbol)}</div></div>
+            </div>
+            <table class="gs-table">
+                <thead><tr><th>Year</th><th>Window return</th></tr></thead>
+                <tbody>${r.yearly.map(y => `
+                    <tr><td>${y.year}→${y.year + 1}</td>
+                        <td class="${y.window_return_pct >= 0 ? 'pos' : 'neg'}">${y.window_return_pct.toFixed(2)}%</td></tr>`).join('')}
+                </tbody>
+            </table>
+            <p class="muted small">Hirsch's Santa Claus rally: "if Santa Claus should fail to call, bears may
+            come to Broad and Wall" — a negative window has historically preceded weak Januaries.</p>`,
+    },
     'turn-of-month': {
         label: 'Turn of Month',
         call: (b) => api.turnOfMonth(b.symbol, b.years),
