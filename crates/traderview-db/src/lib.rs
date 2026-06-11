@@ -48,6 +48,7 @@ pub mod dca_simulator;
 pub mod dcf_valuation;
 pub mod debt_avalanche;
 pub mod debt_snowball;
+pub mod deep_value;
 pub mod discipline;
 pub mod disclosures;
 pub mod dividend_aristocrats;

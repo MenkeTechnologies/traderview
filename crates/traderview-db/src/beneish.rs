@@ -44,8 +44,9 @@ pub enum BeneishError {
 }
 
 /// Search every statement section of a report for the first concept
-/// whose tag contains any of `needles` (case-insensitive).
-fn find_concept(report: &Value, needles: &[&str]) -> Option<f64> {
+/// whose tag contains any of `needles` (case-insensitive). Shared with
+/// deep_value, which screens the same financials_reported payloads.
+pub(crate) fn find_concept(report: &Value, needles: &[&str]) -> Option<f64> {
     for section in ["bs", "ic", "cf"] {
         let Some(items) = report
             .pointer(&format!("/report/{section}"))

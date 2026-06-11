@@ -196,6 +196,7 @@ export async function renderResearch(mount, _state, sym) {
     const r40 = api.symbolRuleOf40(sym).catch(() => null);
     const beneish = api.symbolBeneish(sym).catch(() => null);
     const chowder = api.symbolChowder(sym).catch(() => null);
+    const deepValue = api.symbolDeepValue(sym).catch(() => null);
     const gaps = api.symbolGapStats(sym).catch(() => null);
     const seas = api.symbolSeasonality(sym).catch(() => null);
 
@@ -259,10 +260,10 @@ export async function renderResearch(mount, _state, sym) {
         const el = mount.querySelector('#rs-upgrades');
         if (el) renderUpgrades(el, u);
     });
-    Promise.all([health, r40, beneish, chowder]).then(([h, r, b, c]) => {
+    Promise.all([health, r40, beneish, chowder, deepValue]).then(([h, r, b, c, dv]) => {
         if (!viewIsCurrent(tok)) return;
         const el = mount.querySelector('#rs-health');
-        if (el) renderFundamentalHealth(el, h, r, b, c);
+        if (el) renderFundamentalHealth(el, h, r, b, c, dv);
     });
     gaps.then(g => {
         if (!viewIsCurrent(tok)) return;
@@ -276,7 +277,7 @@ export async function renderResearch(mount, _state, sym) {
     });
 }
 
-function renderFundamentalHealth(el, h, r40 = null, beneish = null, chowder = null) {
+function renderFundamentalHealth(el, h, r40 = null, beneish = null, chowder = null, deepValue = null) {
     if (!h) { el.innerHTML = `<p class="muted">${esc(t('common.empty.no_data'))}</p>`; return; }
     const r40Card = r40 ? `
         <div class="card"><div class="label">Rule of 40</div>
@@ -292,6 +293,21 @@ function renderFundamentalHealth(el, h, r40 = null, beneish = null, chowder = nu
         <div class="card"><div class="label">Chowder Number</div>
             <div class="value ${chowder.passes ? 'pos' : 'neg'}">${chowder.chowder_number.toFixed(1)}</div>
             <div class="small muted">${chowder.dividend_yield_pct.toFixed(1)}% yield + ${chowder.dividend_cagr_5y_pct.toFixed(1)}% 5y div CAGR vs ${chowder.threshold}</div>
+        </div>` : '';
+    const ncavCard = deepValue && deepValue.ncav_per_share != null ? `
+        <div class="card"><div class="label">Graham NCAV</div>
+            <div class="value ${deepValue.is_net_net ? 'pos' : 'neutral'}">$${deepValue.ncav_per_share.toFixed(2)}</div>
+            <div class="small ${deepValue.is_net_net ? 'pos' : 'muted'}">${deepValue.is_net_net ? 'NET-NET — under ⅔ NCAV' : deepValue.price_to_ncav != null ? (deepValue.price_to_ncav).toFixed(2) + '× NCAV' : 'negative NCAV'}</div>
+        </div>` : '';
+    const amCard = deepValue && deepValue.acquirers_multiple != null ? `
+        <div class="card"><div class="label">Acquirer's Multiple</div>
+            <div class="value ${deepValue.acquirers_multiple < 8 ? 'pos' : deepValue.acquirers_multiple > 16 ? 'neg' : 'neutral'}">${deepValue.acquirers_multiple.toFixed(1)}×</div>
+            <div class="small muted">EV / operating earnings (FY${deepValue.year})</div>
+        </div>` : '';
+    const syCard = deepValue && deepValue.shareholder_yield_pct != null ? `
+        <div class="card"><div class="label">Shareholder Yield</div>
+            <div class="value ${deepValue.shareholder_yield_pct >= 0 ? 'pos' : 'neg'}">${deepValue.shareholder_yield_pct.toFixed(1)}%</div>
+            <div class="small muted">div ${deepValue.dividend_yield_pct != null ? deepValue.dividend_yield_pct.toFixed(1) : '—'}% · buyback ${deepValue.net_buyback_yield_pct != null ? deepValue.net_buyback_yield_pct.toFixed(1) : '—'}% · debt ${deepValue.net_debt_paydown_yield_pct != null ? deepValue.net_debt_paydown_yield_pct.toFixed(1) : '—'}%</div>
         </div>` : '';
     const fCls = h.piotroski_score >= 7 ? 'pos' : h.piotroski_score <= 3 ? 'neg' : 'neutral';
     const zoneCls = { safe: 'pos', grey: 'neutral', distress: 'neg' }[h.altman_zone] || '';
@@ -320,6 +336,9 @@ function renderFundamentalHealth(el, h, r40 = null, beneish = null, chowder = nu
             ${r40Card}
             ${beneishCard}
             ${chowderCard}
+            ${ncavCard}
+            ${amCard}
+            ${syCard}
         </div>
         <div class="rs-health-checks">${checks}</div>
     `;

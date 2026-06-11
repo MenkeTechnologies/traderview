@@ -35,11 +35,27 @@ pub fn router() -> Router<AppState> {
         .route("/symbols/:symbol/seasonality", get(get_seasonality))
         .route("/rrg", get(get_rrg))
         .route("/symbols/:symbol/beneish", get(get_beneish))
+        .route("/symbols/:symbol/deep-value", get(get_deep_value))
         .route("/symbols/:symbol/chowder", get(get_chowder))
         .route("/market/fed-model", get(get_fed_model))
         .route("/market/nh-nl", get(get_nh_nl))
         .route("/sim/value-averaging", post(post_value_averaging))
         .route("/sim/cppi", post(post_cppi))
+}
+
+async fn get_deep_value(
+    State(s): State<AppState>,
+    _u: AuthUser,
+    Path(symbol): Path<String>,
+) -> Result<Json<traderview_db::deep_value::DeepValueReport>, ApiError> {
+    let sym = validate_symbol(&symbol)?;
+    traderview_db::deep_value::compute(&s.pool, &sym)
+        .await
+        .map(Json)
+        .map_err(|e| match e {
+            traderview_db::deep_value::DeepValueError::Fetch(inner) => ApiError::Internal(inner),
+            other => ApiError::BadRequest(other.to_string()),
+        })
 }
 
 async fn get_beneish(

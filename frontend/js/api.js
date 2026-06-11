@@ -729,6 +729,7 @@ export const api = {
     symbolRuleOf40:          (sym) => request(`/symbols/${encodeURIComponent(sym)}/rule-of-40`),
     rrg:                     () => request('/rrg'),
     symbolBeneish:           (sym) => request(`/symbols/${encodeURIComponent(sym)}/beneish`),
+    symbolDeepValue:         (sym) => request(`/symbols/${encodeURIComponent(sym)}/deep-value`),
     symbolChowder:           (sym) => request(`/symbols/${encodeURIComponent(sym)}/chowder`),
     marketFedModel:          () => request('/market/fed-model'),
     marketNhNl:              () => request('/market/nh-nl'),
