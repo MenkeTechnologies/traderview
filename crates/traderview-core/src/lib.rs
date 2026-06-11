@@ -881,5 +881,6 @@ pub mod vol_cone;
 pub mod conversion_reversal;
 pub mod seagull_spread;
 pub mod heston;
+pub mod correlation_regime;
 
 pub use models::*;

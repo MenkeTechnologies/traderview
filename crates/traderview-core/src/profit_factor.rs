@@ -1,6 +1,7 @@
-//! Profit Factor + Recovery Factor + GPR (Gain-to-Pain Ratio).
+//! Profit Factor + Recovery Factor + GPR (Gain-to-Pain Ratio) + PRR
+//! (Pessimistic Return Ratio).
 //!
-//! Three system-quality metrics traders use alongside Sharpe:
+//! System-quality metrics traders use alongside Sharpe:
 //!
 //! **Profit Factor** = total_gross_profit / total_gross_loss
 //!   - > 1.0 = profitable, > 1.5 = good, > 2.0 = excellent
@@ -13,6 +14,16 @@
 //! **GPR (Gain-to-Pain Ratio)** = net_profit / sum_of_monthly_losses
 //!   - Pain-adjusted. Higher = less "underwater" feeling per dollar
 //!     of profit. Jack Schwager's preferred metric.
+//!
+//! **PRR (Pessimistic Return Ratio)** — Ralph Vince's small-sample
+//! haircut on the profit factor: assume √W fewer wins and √L more
+//! losses at the observed averages:
+//!
+//!   PRR = ((W − √W) · avg_win) / ((L + √L) · avg_loss)
+//!
+//!   Always below the profit factor; converges to it as the sample
+//!   grows. PRR > 1 on a small sample is a much stronger claim than
+//!   PF > 1.
 //!
 //! Pure compute.
 
@@ -30,6 +41,11 @@ pub struct SystemQualityReport {
     pub recovery_factor: Option<f64>,
     /// net_profit / sum_of_monthly_losses. None when no monthly losses.
     pub gain_to_pain: Option<f64>,
+    pub win_count: u32,
+    pub loss_count: u32,
+    /// Vince's PRR — profit factor with a √n pessimism haircut. None
+    /// when there are no losing trades.
+    pub pessimistic_return_ratio: Option<f64>,
 }
 
 pub fn analyze(
@@ -41,14 +57,26 @@ pub fn analyze(
     if !trade_pnls.is_empty() {
         let wins: f64 = trade_pnls.iter().filter(|p| **p > 0.0).sum();
         let losses: f64 = trade_pnls.iter().filter(|p| **p < 0.0).map(|p| -p).sum();
+        let w = trade_pnls.iter().filter(|p| **p > 0.0).count() as f64;
+        let l = trade_pnls.iter().filter(|p| **p < 0.0).count() as f64;
         report.gross_profit = wins;
         report.gross_loss = losses;
         report.net_profit = wins - losses;
+        report.win_count = w as u32;
+        report.loss_count = l as u32;
         report.profit_factor = if losses > 0.0 {
             Some(wins / losses)
         } else {
             None
         };
+        // PRR: (W − √W)·avg_win over (L + √L)·avg_loss. avg·count
+        // collapses back to gross, so haircut the gross totals by the
+        // √n/n factors directly.
+        if l > 0.0 && losses > 0.0 {
+            let adj_profit = if w > 0.0 { wins * (w - w.sqrt()) / w } else { 0.0 };
+            let adj_loss = losses * (l + l.sqrt()) / l;
+            report.pessimistic_return_ratio = Some(adj_profit / adj_loss);
+        }
     }
     if !equity_curve.is_empty() {
         let mut peak = equity_curve[0];
@@ -142,6 +170,46 @@ mod tests {
         let r = analyze(&[300.0, -700.0], &[], &[]);
         assert!(r.profit_factor.unwrap() < 1.0);
         assert!(r.net_profit < 0.0);
+    }
+
+    #[test]
+    fn prr_haircuts_the_profit_factor() {
+        // 4 wins × $250, 4 losses × $125: PF = 1000/500 = 2.0.
+        // PRR = (4−2)/4·1000 ÷ (4+2)/4·500 = 500/750 = 0.6667.
+        let trades = vec![250.0, 250.0, 250.0, 250.0, -125.0, -125.0, -125.0, -125.0];
+        let r = analyze(&trades, &[], &[]);
+        assert_eq!(r.win_count, 4);
+        assert_eq!(r.loss_count, 4);
+        assert_eq!(r.profit_factor, Some(2.0));
+        assert!((r.pessimistic_return_ratio.unwrap() - 2.0 / 3.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn prr_is_always_below_profit_factor() {
+        let trades = vec![900.0, 300.0, -100.0, -200.0, 50.0, -75.0];
+        let r = analyze(&trades, &[], &[]);
+        assert!(r.pessimistic_return_ratio.unwrap() < r.profit_factor.unwrap());
+    }
+
+    #[test]
+    fn prr_converges_toward_pf_with_sample_size() {
+        // Same PF, 4 trades vs 400 trades — the haircut shrinks.
+        let small: Vec<f64> = vec![200.0, 200.0, -100.0, -100.0];
+        let large: Vec<f64> = (0..400)
+            .map(|i| if i % 2 == 0 { 200.0 } else { -100.0 })
+            .collect();
+        let rs = analyze(&small, &[], &[]);
+        let rl = analyze(&large, &[], &[]);
+        let gap_small = rs.profit_factor.unwrap() - rs.pessimistic_return_ratio.unwrap();
+        let gap_large = rl.profit_factor.unwrap() - rl.pessimistic_return_ratio.unwrap();
+        assert!(gap_large < gap_small, "{gap_large} vs {gap_small}");
+    }
+
+    #[test]
+    fn prr_none_without_losses_zero_with_only_losses() {
+        assert!(analyze(&[100.0, 200.0], &[], &[]).pessimistic_return_ratio.is_none());
+        let r = analyze(&[-100.0, -200.0], &[], &[]);
+        assert_eq!(r.pessimistic_return_ratio, Some(0.0));
     }
 
     #[test]

@@ -352,6 +352,34 @@ const TOOLS = {
             <p class="muted small">Hirsch's Santa Claus rally: "if Santa Claus should fail to call, bears may
             come to Broad and Wall" — a negative window has historically preceded weak Januaries.</p>`,
     },
+    'correlation-regime': {
+        label: 'Correlation Regime',
+        call: (b) => api.correlationRegime(b.a, b.b, b.window, b.years),
+        fields: [
+            { key: 'a', label: 'Symbol A', def: 'SPY', text: true },
+            { key: 'b', label: 'Symbol B', def: 'TLT', text: true },
+            { key: 'window', label: 'Rolling window (days)', def: 63, int: true },
+            { key: 'years', label: 'Lookback years', def: 5, int: true },
+        ],
+        render: (r) => {
+            const cls = { coupled: 'pos', neutral: '', inverse: 'neg' };
+            return `
+            <div class="cards">
+                <div class="card"><div class="label">Current ρ (${r.window}d)</div>
+                    <div class="value ${cls[r.current_regime] || ''}">${r.current.toFixed(2)}</div>
+                    <div class="small muted">${esc(r.current_regime)} · mean ${r.mean.toFixed(2)}</div></div>
+                <div class="card"><div class="label">Time in regime</div>
+                    <div class="value">${r.pct_coupled.toFixed(0)} / ${r.pct_neutral.toFixed(0)} / ${r.pct_inverse.toFixed(0)}%</div>
+                    <div class="small muted">coupled / neutral / inverse</div></div>
+                <div class="card"><div class="label">Regime breaks</div>
+                    <div class="value">${r.breaks.length}</div>
+                    <div class="small muted">${r.breaks.length ? 'last: ' + esc(r.breaks[r.breaks.length - 1].from) + ' → ' + esc(r.breaks[r.breaks.length - 1].to) : 'stable'}</div></div>
+            </div>
+            <p class="muted small">Rolling Pearson correlation of daily log returns; ±0.5 thresholds split
+            coupled / neutral / inverse. Breaks mark the bars where a hedge pair stops hedging — the
+            SPY/TLT inverse-to-coupled flip is the classic risk-parity pain trade.</p>`;
+        },
+    },
     'turn-of-month': {
         label: 'Turn of Month',
         call: (b) => api.turnOfMonth(b.symbol, b.years),

@@ -544,6 +544,39 @@ pub async fn santa_rally(
 }
 
 // ===========================================================================
+// Correlation regime (data wrapper around
+// traderview_core::correlation_regime)
+// ===========================================================================
+
+pub async fn correlation_regime(
+    pool: &PgPool,
+    symbol_a: &str,
+    symbol_b: &str,
+    window: usize,
+    years: u32,
+) -> Result<traderview_core::correlation_regime::CorrelationRegimeReport, TomError> {
+    let ca = daily_closes(pool, symbol_a, years).await?;
+    let cb = daily_closes(pool, symbol_b, years).await?;
+    // Inner-join on date so holidays/listing gaps drop everywhere.
+    let by_date: std::collections::BTreeMap<chrono::NaiveDate, f64> = cb.into_iter().collect();
+    let mut a = Vec::new();
+    let mut b = Vec::new();
+    for (d, c) in &ca {
+        if let Some(x) = by_date.get(d) {
+            a.push(*c);
+            b.push(*x);
+        }
+    }
+    traderview_core::correlation_regime::compute(&a, &b, window).ok_or_else(|| {
+        TomError::Insufficient {
+            symbol: format!("{symbol_a}/{symbol_b}"),
+            got: a.len(),
+            need: window + 1,
+        }
+    })
+}
+
+// ===========================================================================
 // Volatility cone (data wrapper around traderview_core::vol_cone)
 // ===========================================================================
 
