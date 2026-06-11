@@ -158,6 +158,7 @@ mod stock_recommendation;
 // /recommendations/golden-stars + /recommendations/sectors +
 // watchers CRUD; no separate module needed.
 mod strategy_alerts;
+mod strategy_calculators;
 mod student_loan_payoff;
 mod symbols_catalog;
 mod tags;
@@ -342,6 +343,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(live_ticks::router())
         .merge(corr_matrix::router())
         .merge(strategy_alerts::router())
+        .merge(strategy_calculators::router())
         .merge(algo::router())
         .merge(rebalance::router())
         .merge(sector_rotation::router())

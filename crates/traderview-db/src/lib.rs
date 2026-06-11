@@ -160,6 +160,7 @@ pub mod squeeze_detector;
 pub mod stock_recommendation;
 pub mod stock_recommendation_watchers;
 pub mod strategy_alerts;
+pub mod strategy_calculators;
 pub mod strategy_simulators;
 pub mod student_loan_payoff;
 pub mod symbols;

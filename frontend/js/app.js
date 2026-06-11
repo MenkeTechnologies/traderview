@@ -415,6 +415,7 @@ import { renderGoldenStars } from './views/golden_stars.js';
 import { renderRecommendationSectors } from './views/recommendation_sectors.js';
 import { renderDcfValuation } from './views/dcf_valuation.js';
 import { renderValuationTools } from './views/valuation_tools.js';
+import { renderStrategyTools } from './views/strategy_tools.js';
 import { renderRrg } from './views/rrg_view.js';
 import { renderScreener } from './views/screener.js';
 import { renderTopSignals } from './views/top_signals.js';
@@ -2741,6 +2742,7 @@ export async function dispatch() {
             case 'recommendation-sectors': await renderRecommendationSectors(mount, state); break;
             case 'dcf':         await renderDcfValuation(mount, state, sym()); break;
             case 'valuation-tools': await renderValuationTools(mount, state); break;
+            case 'strategy-tools': await renderStrategyTools(mount, state); break;
             case 'rrg':         await renderRrg(mount, state); break;
             case 'screener':    await renderScreener(mount, state); break;
             case 'top-signals': await renderTopSignals(mount, state); break;
@@ -3874,6 +3876,7 @@ export const viewRenderers = {
     'recommendation-sectors': (m, s) => renderRecommendationSectors(m, s),
     'dcf': (m, s) => renderDcfValuation(m, s),
     'valuation-tools': (m, s) => renderValuationTools(m, s),
+    'strategy-tools': (m, s) => renderStrategyTools(m, s),
     'rrg': (m, s) => renderRrg(m, s),
     'residency-daycount': (m, s) => renderResidencyDaycount(m, s),
     'retirement-max': (m, s) => renderRetirementMax(m, s),

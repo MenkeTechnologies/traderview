@@ -734,6 +734,10 @@ export const api = {
     marketNhNl:              () => request('/market/nh-nl'),
     simValueAveraging:       (body) => request('/sim/value-averaging', { method: 'POST', body: JSON.stringify(body) }),
     simCppi:                 (body) => request('/sim/cppi', { method: 'POST', body: JSON.stringify(body) }),
+    // --- strategy tools (grid / fixed-ratio / turn-of-month) -----------
+    calcGridTrading:         (body) => request('/calc/grid-trading', { method: 'POST', body: JSON.stringify(body) }),
+    calcFixedRatio:          (body) => request('/calc/fixed-ratio', { method: 'POST', body: JSON.stringify(body) }),
+    turnOfMonth:             (sym, years = 10) => request(`/symbols/${encodeURIComponent(sym)}/turn-of-month${qs({ years })}`),
     symbolInsiders:  (sym) => request(`/symbols/${encodeURIComponent(sym)}/insiders`),
     symbolFundamentals: (sym) => request(`/symbols/${encodeURIComponent(sym)}/fundamentals`),
     symbolHolders:   (sym) => request(`/symbols/${encodeURIComponent(sym)}/holders`),
