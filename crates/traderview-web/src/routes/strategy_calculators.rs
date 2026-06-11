@@ -4,6 +4,7 @@
 //!   POST /calc/anti-martingale           — press-winners streak sizing
 //!   POST /sim/dual-momentum              — Antonacci GEM backtest
 //!   GET  /symbols/:sym/turn-of-month     — TOM seasonality stats
+//!   GET  /symbols/:sym/vol-cone          — realized-vol percentile cone
 
 use crate::auth::AuthUser;
 use crate::error::ApiError;
@@ -14,7 +15,7 @@ use axum::{Json, Router};
 use serde::Deserialize;
 use traderview_db::strategy_calculators::{
     self, AntiMartingaleInput, AntiMartingaleReport, FixedRatioInput, FixedRatioReport,
-    GridInput, GridReport, TomError, TomReport,
+    GridInput, GridReport, TomError, TomReport, VolConeReport,
 };
 use traderview_db::strategy_simulators::{self, GemInput, GemReport, SimError};
 
@@ -25,6 +26,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/anti-martingale", post(post_anti_martingale))
         .route("/sim/dual-momentum", post(post_dual_momentum))
         .route("/symbols/:symbol/turn-of-month", get(get_turn_of_month))
+        .route("/symbols/:symbol/vol-cone", get(get_vol_cone))
 }
 
 async fn post_grid_trading(
@@ -76,21 +78,43 @@ struct TomQ {
     years: Option<u32>,
 }
 
+fn validate_symbol(s: &str) -> Result<String, ApiError> {
+    let sym = s.trim().to_uppercase();
+    if sym.is_empty() || sym.len() > 20 || sym.contains('/') || sym.contains('\\') {
+        return Err(ApiError::BadRequest("invalid symbol".into()));
+    }
+    Ok(sym)
+}
+
+fn map_tom_err(e: TomError) -> ApiError {
+    match e {
+        TomError::PriceFetch(inner) => ApiError::Internal(inner),
+        other => ApiError::BadRequest(other.to_string()),
+    }
+}
+
 async fn get_turn_of_month(
     State(s): State<AppState>,
     _u: AuthUser,
     Path(symbol): Path<String>,
     Query(q): Query<TomQ>,
 ) -> Result<Json<TomReport>, ApiError> {
-    let sym = symbol.trim().to_uppercase();
-    if sym.is_empty() || sym.len() > 20 || sym.contains('/') || sym.contains('\\') {
-        return Err(ApiError::BadRequest("invalid symbol".into()));
-    }
+    let sym = validate_symbol(&symbol)?;
     strategy_calculators::turn_of_month(&s.pool, &sym, q.years.unwrap_or(10))
         .await
         .map(Json)
-        .map_err(|e| match e {
-            TomError::PriceFetch(inner) => ApiError::Internal(inner),
-            other => ApiError::BadRequest(other.to_string()),
-        })
+        .map_err(map_tom_err)
+}
+
+async fn get_vol_cone(
+    State(s): State<AppState>,
+    _u: AuthUser,
+    Path(symbol): Path<String>,
+    Query(q): Query<TomQ>,
+) -> Result<Json<VolConeReport>, ApiError> {
+    let sym = validate_symbol(&symbol)?;
+    strategy_calculators::vol_cone(&s.pool, &sym, q.years.unwrap_or(5))
+        .await
+        .map(Json)
+        .map_err(map_tom_err)
 }

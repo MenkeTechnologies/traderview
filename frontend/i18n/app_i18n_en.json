@@ -577,6 +577,7 @@
   "component.chart.ind.klinger": "Klinger Oscillator",
   "component.chart.ind.laguerre_rsi": "Laguerre RSI",
   "component.chart.ind.macd": "MACD (12, 26, 9)",
+  "component.chart.ind.rs_line": "RS Line vs SPY + Mansfield",
   "component.chart.ind.macd_cross": "MACD Crossover (12, 26, 9)",
   "component.chart.ind.mass": "Mass Index",
   "component.chart.ind.mcginley": "McGinley Dynamic {period}",

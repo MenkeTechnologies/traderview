@@ -22,8 +22,8 @@ use traderview_core::{
     dpo, ease_of_movement, ehlers_decycler, ehlers_super_smoother, elder_force, elder_ray,
     fisher_transform, force_index, fractals, frama, hull_ma, indicators, kama, keltner,
     klinger_oscillator, laguerre_rsi, mass_index, mcginley_dynamic, mfi, parabolic_sar, ppo, qqe,
-    relative_vigor_index, relative_volume, roc, rsi_divergence, schaff_trend, squeeze_momentum,
-    stoch_rsi, swing_index, swing_points, t3_ma, tema, trend_channel, trix, tsi,
+    relative_vigor_index, relative_volume, roc, rs_line, rsi_divergence, schaff_trend,
+    squeeze_momentum, stoch_rsi, swing_index, swing_points, t3_ma, tema, trend_channel, trix, tsi,
     ultimate_oscillator, vhf, vidya, volume_flow, volume_indices, vortex, vwap_bands, williams_r,
     williams_vix_fix, wma, zigzag, zlema, BarInterval, PriceBar,
 };
@@ -43,6 +43,7 @@ pub fn router() -> Router<AppState> {
         .route("/bars/:symbol/coppock", get(coppock_route))
         .route("/bars/:symbol/vix-fix", get(vix_fix_route))
         .route("/bars/:symbol/laguerre-rsi", get(laguerre_rsi_route))
+        .route("/bars/:symbol/rs-line", get(rs_line_route))
         .route("/bars/:symbol/schaff-trend", get(schaff_trend_route))
         .route("/bars/:symbol/mass-index", get(mass_index_route))
         // Bar-based indicators with dedicated modules.
@@ -494,6 +495,65 @@ async fn laguerre_rsi_route(
         t: bars.iter().map(|b| b.bar_time).collect(),
         v,
     }))
+}
+
+#[derive(Deserialize)]
+struct RsLineQ {
+    interval: String,
+    from: i64,
+    to: i64,
+    #[serde(default = "default_rs_benchmark")]
+    benchmark: String,
+    /// Mansfield SMA period — 52 on weekly bars, ~252 on daily.
+    #[serde(default = "default_rs_period")]
+    period: usize,
+}
+fn default_rs_benchmark() -> String {
+    "SPY".into()
+}
+fn default_rs_period() -> usize {
+    52
+}
+
+#[derive(Serialize)]
+struct RsLineResponse {
+    t: Vec<DateTime<Utc>>,
+    rs: Vec<f64>,
+    mansfield: Vec<f64>,
+}
+
+async fn rs_line_route(
+    State(s): State<AppState>,
+    Path(sym): Path<String>,
+    Query(q): Query<RsLineQ>,
+) -> Result<Json<RsLineResponse>, ApiError> {
+    let bench_sym = q.benchmark.trim().to_uppercase();
+    if bench_sym.is_empty() || bench_sym.len() > 20 {
+        return Err(ApiError::BadRequest("invalid benchmark".into()));
+    }
+    let bars = fetch_bars(&s, &sym, &q.interval, q.from, q.to).await?;
+    let bench_bars = fetch_bars(&s, &bench_sym, &q.interval, q.from, q.to).await?;
+    let sym_closes = indicators::closes(&bars);
+    let bench_closes = indicators::closes(&bench_bars);
+    // Inner-join the two series on bar_time — holidays and listing
+    // gaps drop the bar everywhere instead of skewing the ratio.
+    let bench_by_time: std::collections::HashMap<DateTime<Utc>, f64> = bench_bars
+        .iter()
+        .zip(&bench_closes)
+        .map(|(b, c)| (b.bar_time, *c))
+        .collect();
+    let mut t = Vec::new();
+    let mut closes = Vec::new();
+    let mut bench = Vec::new();
+    for (b, c) in bars.iter().zip(&sym_closes) {
+        if let Some(bc) = bench_by_time.get(&b.bar_time) {
+            t.push(b.bar_time);
+            closes.push(*c);
+            bench.push(*bc);
+        }
+    }
+    let (rs, mansfield) = rs_line::compute(&closes, &bench, q.period);
+    Ok(Json(RsLineResponse { t, rs, mansfield }))
 }
 
 #[derive(Deserialize)]

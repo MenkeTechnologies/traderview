@@ -397,11 +397,36 @@ pub fn tom_stats(symbol: &str, closes: &[(chrono::NaiveDate, f64)]) -> TomReport
     }
 }
 
-pub async fn turn_of_month(
+// ===========================================================================
+// Volatility cone (data wrapper around traderview_core::vol_cone)
+// ===========================================================================
+
+#[derive(Debug, Clone, Serialize)]
+pub struct VolConeReport {
+    pub symbol: String,
+    pub days_analyzed: usize,
+    pub rows: Vec<traderview_core::vol_cone::VolConeRow>,
+}
+
+/// Standard option-desk horizons: 1w / 2w / 1m / 2m / 3m / 6m.
+const VOL_CONE_HORIZONS: &[usize] = &[5, 10, 21, 42, 63, 126];
+
+pub async fn vol_cone(pool: &PgPool, symbol: &str, years: u32) -> Result<VolConeReport, TomError> {
+    let closes = daily_closes(pool, symbol, years).await?;
+    let series: Vec<f64> = closes.iter().map(|(_, c)| *c).collect();
+    Ok(VolConeReport {
+        symbol: symbol.to_string(),
+        days_analyzed: series.len(),
+        rows: traderview_core::vol_cone::compute(&series, VOL_CONE_HORIZONS),
+    })
+}
+
+/// Daily (date, close) pairs shared by turn_of_month and vol_cone.
+async fn daily_closes(
     pool: &PgPool,
     symbol: &str,
     years: u32,
-) -> Result<TomReport, TomError> {
+) -> Result<Vec<(chrono::NaiveDate, f64)>, TomError> {
     let years = years.clamp(1, 20);
     let to = Utc::now();
     let from = to - Duration::days(366 * years as i64);
@@ -422,6 +447,15 @@ pub async fn turn_of_month(
             need: MIN_DAYS,
         });
     }
+    Ok(closes)
+}
+
+pub async fn turn_of_month(
+    pool: &PgPool,
+    symbol: &str,
+    years: u32,
+) -> Result<TomReport, TomError> {
+    let closes = daily_closes(pool, symbol, years).await?;
     Ok(tom_stats(symbol, &closes))
 }
 

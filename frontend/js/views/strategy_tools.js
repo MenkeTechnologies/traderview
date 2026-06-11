@@ -122,6 +122,33 @@ const TOOLS = {
             trailing lookback return when either beats T-bills; otherwise retreat to bonds.
             Recent holdings: ${esc(r.rows.slice(-6).map(x => x.holding).join(' → '))}.</p>`,
     },
+    'vol-cone': {
+        label: 'Vol Cone',
+        call: (b) => api.volCone(b.symbol, b.years),
+        fields: [
+            { key: 'symbol', label: 'Symbol', def: 'SPY', text: true },
+            { key: 'years', label: 'Lookback years', def: 5, int: true },
+        ],
+        render: (r) => `
+            <table class="gs-table">
+                <thead><tr><th>Horizon</th><th>Min</th><th>P25</th><th>Median</th><th>P75</th><th>Max</th><th>Current</th><th>Rank</th></tr></thead>
+                <tbody>${r.rows.map(row => `
+                    <tr>
+                        <td>${row.horizon_days}d</td>
+                        <td>${row.min_pct.toFixed(1)}%</td>
+                        <td>${row.p25_pct.toFixed(1)}%</td>
+                        <td>${row.median_pct.toFixed(1)}%</td>
+                        <td>${row.p75_pct.toFixed(1)}%</td>
+                        <td>${row.max_pct.toFixed(1)}%</td>
+                        <td class="${row.current_rank_pct >= 75 ? 'neg' : row.current_rank_pct <= 25 ? 'pos' : ''}">${row.current_pct.toFixed(1)}%</td>
+                        <td>${row.current_rank_pct.toFixed(0)}%</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+            <p class="muted small">Burghardt-Lane realized-vol cone over ${r.days_analyzed} daily closes of
+            ${esc(r.symbol)}. Compare an option's implied vol against the row at its horizon: current RV in
+            the bottom quartile (green) flags cheap realized regimes, top quartile (red) rich ones.</p>`,
+    },
     'turn-of-month': {
         label: 'Turn of Month',
         call: (b) => api.turnOfMonth(b.symbol, b.years),

@@ -876,5 +876,7 @@ pub mod polynomial_regression;
 pub mod theil_sen_estimator;
 pub mod williams_vix_fix;
 pub mod laguerre_rsi;
+pub mod rs_line;
+pub mod vol_cone;
 
 pub use models::*;
