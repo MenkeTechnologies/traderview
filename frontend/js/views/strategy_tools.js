@@ -433,6 +433,38 @@ const TOOLS = {
             </div>
             <p class="muted small">${r.positive_carry ? 'Positive carry — the rebate pays you to be short.' : 'The stock must fall this much just to cover carry — squeeze-name fees compound daily.'}</p>`,
     },
+    'fx-carry': {
+        label: 'FX Carry',
+        call: (b) => api.calcFxCarry({
+            spot: b.spot,
+            base_rate_pct: b.base_rate_pct,
+            quote_rate_pct: b.quote_rate_pct,
+            days: b.days,
+            notional: b.notional,
+        }),
+        fields: [
+            { key: 'spot', label: 'Spot (quote per base, e.g. USDJPY 150)', def: 150 },
+            { key: 'base_rate_pct', label: 'Base ccy rate %/yr (the one you are long)', def: 5 },
+            { key: 'quote_rate_pct', label: 'Quote (funding) ccy rate %/yr', def: 0.5 },
+            { key: 'days', label: 'Days held', def: 365, int: true },
+            { key: 'notional', label: 'Notional (base ccy units)', def: 100000 },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Carry</div>
+                    <div class="value ${r.carry_apr_pct >= 0 ? 'pos' : 'neg'}">${r.carry_apr_pct.toFixed(2)}%/yr</div>
+                    <div class="small muted">income ${r.carry_income.toFixed(0)} over the period</div></div>
+                <div class="card"><div class="label">CIP forward</div>
+                    <div class="value">${r.forward_rate.toFixed(4)}</div>
+                    <div class="small muted">points ${r.forward_points.toFixed(4)}</div></div>
+                <div class="card"><div class="label">Breakeven spot drop</div>
+                    <div class="value">${r.breakeven_depreciation_pct.toFixed(2)}%</div>
+                    <div class="small muted">hedged return = ${r.hedged_return_apr_pct.toFixed(2)}% (quote rate, exactly)</div></div>
+            </div>
+            <p class="muted small">Covered interest parity prices the high-yielder at a forward discount — hedging
+            with that forward locks the QUOTE rate and nothing more. The unhedged carry is real but is
+            compensation for depreciation risk; the breakeven is the spot move that erases it.</p>`,
+    },
     'funding-arb': {
         label: 'Funding Arb',
         call: (b) => api.cryptoFundingArb({

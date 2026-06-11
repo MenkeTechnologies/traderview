@@ -425,6 +425,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/yield-curve", post(yield_curve_route))
         .route("/calc/bond-duration", post(bond_duration_route))
         .route("/calc/carry-score", post(carry_score_route))
+        .route("/calc/fx-carry", post(fx_carry_route))
         .route("/calc/currency-exposure", post(currency_exposure_route))
         .route("/calc/vix-term-structure", post(vix_term_structure_route))
 }
@@ -709,6 +710,16 @@ async fn carry_score_route(
         b.funding_rate,
         b.annualized_vol,
     ))
+}
+
+/// FX carry + covered interest parity — pure compute.
+async fn fx_carry_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::fx_carry::Input>,
+) -> Result<Json<traderview_core::fx_carry::Report>, ApiError> {
+    traderview_core::fx_carry::compute(&b)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("invalid inputs: spot/notional/days must be positive, rates finite".into()))
 }
 
 #[derive(Deserialize)]

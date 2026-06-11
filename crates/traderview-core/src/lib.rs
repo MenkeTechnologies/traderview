@@ -918,6 +918,7 @@ pub mod equity_curve_filter;
 pub mod double_barrier;
 pub mod overnight_intraday;
 pub mod funding_rate_arb;
+pub mod fx_carry;
 pub mod futures_sizing;
 pub mod impermanent_loss;
 pub mod average_down;
