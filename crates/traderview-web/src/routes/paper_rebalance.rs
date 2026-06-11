@@ -17,6 +17,7 @@ pub fn router() -> Router<AppState> {
         )
         .route("/paper-rebalance/targets/:id", delete(delete_target))
         .route("/paper-rebalance/plan/:id", post(plan))
+        .route("/paper-rebalance/execute/:id", post(execute))
 }
 
 async fn list_targets(
@@ -52,4 +53,19 @@ async fn plan(
         .await?
         .map(Json)
         .ok_or(ApiError::NotFound)
+}
+
+/// Execute the plan as paper market orders — re-planned fresh, sells
+/// first so freed cash funds the buys; failed legs reported, not
+/// hidden.
+async fn execute(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<Uuid>,
+) -> Result<Json<paper_rebalance::ExecutionResult>, ApiError> {
+    paper_rebalance::execute(&s.pool, user.id, id)
+        .await
+        .map_err(ApiError::Internal)?
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("target not found".into()))
 }

@@ -6,6 +6,7 @@
 import { api } from '../api.js';
 import { esc } from '../util.js';
 import { t } from '../i18n.js';
+import { tConfirm } from '../dialog.js';
 
 export async function renderPaperRebalance(mount, _state) {
     mount.innerHTML = `
@@ -174,7 +175,24 @@ async function loadPlan(mount, id) {
                     .replace('{n}', trades.length)
                     .replace('{v}', '$' + r.plan.total_trade_value.toFixed(0)))}
             </p>
+            ${trades.length ? `<button id="pr-execute" class="primary" data-i18n="view.paper_rebalance.btn.execute">EXECUTE PLAN</button>
+            <div id="pr-execute-out" class="muted small"></div>` : ''}
         `;
+        const execBtn = planEl.querySelector('#pr-execute');
+        if (execBtn) execBtn.addEventListener('click', async () => {
+            if (!await tConfirm('view.paper_rebalance.confirm.execute', { n: trades.length }, { level: 'danger' })) return;
+            const out = planEl.querySelector('#pr-execute-out');
+            out.textContent = t('view.paper_rebalance.status.executing');
+            try {
+                const res = await api.request(`/paper-rebalance/execute/${id}`, { method: 'POST' });
+                out.innerHTML = `
+                    ${res.executed.map(x => `<div>${esc(x.side)} ${x.qty} ${esc(x.symbol)} \u2192 ${esc(x.status)}${x.fill_price != null ? ' @ ' + Number(x.fill_price).toFixed(2) : ''}</div>`).join('')}
+                    ${res.skipped.length ? `<div class="neg">skipped: ${res.skipped.map(esc).join(' \u00b7 ')}</div>` : ''}`;
+                loadPlan(mount, id);
+            } catch (e2) {
+                out.innerHTML = `<span class="neg">${esc(String(e2))}</span>`;
+            }
+        });
     } catch (e) {
         planEl.innerHTML = `<p class="neg">${esc(String(e))}</p>`;
     }

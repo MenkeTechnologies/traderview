@@ -157,6 +157,85 @@ pub async fn delete(pool: &PgPool, user_id: Uuid, id: Uuid) -> anyhow::Result<bo
     Ok(r.rows_affected() > 0)
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct ExecutedTrade {
+    pub symbol: String,
+    pub side: String,
+    pub qty: i64,
+    pub status: String,
+    pub fill_price: Option<rust_decimal::Decimal>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct ExecutionResult {
+    pub executed: Vec<ExecutedTrade>,
+    pub skipped: Vec<String>,
+    /// The plan that was executed — re-planned fresh at execute time,
+    /// never a stale snapshot from the preview the user looked at.
+    pub plan_max_drift_pct: f64,
+}
+
+/// Execute the rebalance: re-plan FRESH (prices move between preview
+/// and click), then submit the plan's trades as paper market orders —
+/// SELLS FIRST so the freed cash funds the buys. Each order goes
+/// through paper::submit (friction, fills, journaling); a failed leg
+/// is recorded and execution continues — a rebalance is N independent
+/// orders, not an atomic spread.
+pub async fn execute(
+    pool: &PgPool,
+    user_id: Uuid,
+    target_id: Uuid,
+) -> anyhow::Result<Option<ExecutionResult>> {
+    let Some(p) = plan(pool, user_id, target_id).await? else {
+        return Ok(None);
+    };
+    let account = crate::paper::ensure_default(pool, user_id).await?;
+    // Sells first: ordering is the difference between "rebalanced" and
+    // "insufficient cash" on accounts that are near fully invested.
+    let mut trades: Vec<_> = p.plan.trades.clone();
+    trades.sort_by_key(|t| if t.trade_qty < 0 { 0 } else { 1 });
+    let mut executed = Vec::new();
+    let mut skipped = Vec::new();
+    for row in trades {
+        if row.trade_qty == 0 {
+            continue;
+        }
+        let side = if row.trade_qty > 0 {
+            traderview_core::Side::Buy
+        } else {
+            traderview_core::Side::Sell
+        };
+        let qty = rust_decimal::Decimal::from(row.trade_qty.abs());
+        let req = crate::paper::OrderRequest {
+            symbol: row.symbol.clone(),
+            side,
+            qty,
+            order_type: "market".into(),
+            limit_price: None,
+            stop_price: None,
+            trail_value: None,
+            trail_is_pct: None,
+            time_in_force: None,
+            expire_at: None,
+        };
+        match crate::paper::submit(pool, user_id, account.id, req).await {
+            Ok(o) => executed.push(ExecutedTrade {
+                symbol: row.symbol.clone(),
+                side: o.side.clone(),
+                qty: row.trade_qty.abs(),
+                status: o.status.clone(),
+                fill_price: o.filled_price,
+            }),
+            Err(e) => skipped.push(format!("{}: {e}", row.symbol)),
+        }
+    }
+    Ok(Some(ExecutionResult {
+        executed,
+        skipped,
+        plan_max_drift_pct: p.max_drift_pct,
+    }))
+}
+
 /// Build the rebalance plan for one named target set against the user's
 /// default paper account. Snapshots positions + cash at call time.
 pub async fn plan(
