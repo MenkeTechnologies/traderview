@@ -799,7 +799,7 @@ export const TILES = [
     ['recommendation-sectors', 'Sector Heatmap', '🗺️',  '11 SPDR sector ETFs color-coded by aggregated buy/sell recommendation — spot rotating sectors at a glance', null],
     ['dcf',               'DCF Valuation',       '🧮',  'Two-stage discounted cash-flow intrinsic-value calculator — pre-fills FCF/shares from fundamentals when given a symbol', null],
     ['valuation-tools',   'Valuation Tools',     '🧰',  'Reverse DCF, Dividend Discount, Earnings Power Value, and options Wheel calculator behind one tabbed view', null],
-    ['strategy-tools',    'Strategy Tools',      '🎛️',  'Grid trading, fixed-ratio + anti-martingale sizing, dual momentum (GEM), vol cone, conversion/reversal arb, seagull spread, turn-of-month + day-of-week seasonality', null],
+    ['strategy-tools',    'Strategy Tools',      '🎛️',  '71 quant calculators behind one filterable tabbed view — sizing (grid/fixed-ratio/Kelly-context/futures), options desk math (Heston, POP, parity arbs, dailies), event studies (OpEx, Santa, ex-div, splits), screeners (seasonality/risk/momentum/mean-reversion), macro + valuation gauges', null],
     ['rrg',               'RRG Rotation',        '🌀',  'Relative Rotation Graph — 11 sector ETFs vs SPY on RS-Ratio / RS-Momentum axes with comet tails', null],
 ];
 
