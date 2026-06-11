@@ -101,11 +101,15 @@ pub fn project_draw_balance(
     let r = apr_pct / 100.0 / 12.0;
     let mut bal = balance;
     let mut interest_acc = 0.0;
-    let principal_min = balance * min_pct / 100.0;
     for _ in 0..months {
         if bal <= 0.0 { break; }
         let interest = bal * r;
         interest_acc += interest;
+        // Recalculate min on the CURRENT balance each month. Real HELOCs
+        // amortize the minimum off the outstanding principal, not the
+        // initial draw — the previous fixed `principal_min` overstated
+        // paydown as `bal` shrank and underreported total interest.
+        let principal_min = bal * min_pct / 100.0;
         let pay_principal = (principal_min + voluntary).min(bal);
         bal -= pay_principal;
         if bal < 0.005 { bal = 0.0; }

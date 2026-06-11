@@ -74,6 +74,16 @@ pub fn compute(input: &DebtSnowballInput) -> DebtSnowballReport {
     let mut payoff_month: Vec<Option<u32>> = vec![None; n];
     let starts: Vec<f64> = balances.clone();
     let mut rolling_extra = input.extra_payment_usd;
+    // Roll in the min_payment_usd from any $0-balance debts (already
+    // paid off) so the snowball starts with the user's full freed cash.
+    // Same fix as debt_avalanche.rs.
+    for i in 0..n {
+        if balances[i] <= 0.005 {
+            balances[i] = 0.0;
+            payoff_month[i] = Some(0);
+            rolling_extra += input.debts[i].min_payment_usd;
+        }
+    }
     let mut total_months: u32 = 0;
     let mut all_paid = false;
     let mut month: u32 = 0;

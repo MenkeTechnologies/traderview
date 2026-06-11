@@ -179,7 +179,12 @@ impl Strategy for VwapScalp {
 
         match side {
             Side::Buy => {
-                let trail = anchor_low - self.rules.atr_stop_mult * atr_now;
+                // Trail off the HIGH-water mark for a long. The prior
+                // code anchored to anchor_low, which is the trade's
+                // worst-case mark — the stop sat below it and could
+                // never trail toward profit. Symmetric fix for shorts
+                // below.
+                let trail = anchor_high - self.rules.atr_stop_mult * atr_now;
                 if lows[i] <= trail {
                     return Some(ExitSignal {
                         reason: "atr_trailing_stop",
@@ -196,7 +201,8 @@ impl Strategy for VwapScalp {
                 }
             }
             Side::Sell => {
-                let trail = anchor_high + self.rules.atr_stop_mult * atr_now;
+                // Trail off the LOW-water mark for a short.
+                let trail = anchor_low + self.rules.atr_stop_mult * atr_now;
                 if highs[i] >= trail {
                     return Some(ExitSignal {
                         reason: "atr_trailing_stop",

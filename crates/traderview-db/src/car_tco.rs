@@ -102,6 +102,38 @@ pub fn monthly_payment(principal: f64, apr_pct: f64, term_months: u32) -> f64 {
     principal * r / (1.0 - (1.0 + r).powf(-n))
 }
 
+/// Sum of monthly interest charges over the first `months_to_count`
+/// months of a standard amortization. Returns 0 for degenerate inputs
+/// (non-positive monthly payment, zero principal). Handles rate=0 as a
+/// special case (interest is 0 every month).
+fn amortized_interest_for_months(
+    principal: f64,
+    apr_pct: f64,
+    monthly: f64,
+    months_to_count: u32,
+) -> f64 {
+    if principal <= 0.0 || monthly <= 0.0 || months_to_count == 0 {
+        return 0.0;
+    }
+    let r = apr_pct / 100.0 / 12.0;
+    if r == 0.0 {
+        return 0.0;
+    }
+    let mut balance = principal;
+    let mut interest_total = 0.0;
+    for _ in 0..months_to_count {
+        if balance <= 0.0 {
+            break;
+        }
+        let interest = balance * r;
+        let principal_portion = (monthly - interest).max(0.0);
+        let paid_principal = principal_portion.min(balance);
+        interest_total += interest;
+        balance -= paid_principal;
+    }
+    interest_total
+}
+
 pub fn compute(input: &CarTcoInput) -> CarTcoReport {
     let tax = input.purchase_price_usd * input.sales_tax_pct / 100.0;
     let principal = (input.purchase_price_usd + tax - input.down_payment_usd).max(0.0);
@@ -144,7 +176,17 @@ pub fn compute(input: &CarTcoInput) -> CarTcoReport {
         });
     }
     let total_financing_payments = total_loan_payments_in_hold;
-    let total_financing_interest = (total_financing_payments - principal.min(total_financing_payments)).max(0.0);
+    // Real interest paid during the hold = sum of each month's
+    // interest portion from a proper amortization schedule, capped at
+    // hold*12 months. The previous formula was
+    // `(total_payments - principal).max(0)` which silently CLAMPED to
+    // 0 whenever hold < loan_term — because by month `hold*12` the
+    // borrower has paid only `hold*12 * monthly` < principal, so the
+    // subtraction goes negative and gets zeroed. A 3-year hold of a
+    // 5-year auto loan reported $0 financing interest under the old
+    // math, even though ~3 years of monthly interest accrued.
+    let total_financing_interest =
+        amortized_interest_for_months(principal, input.apr_pct, monthly, hold * 12);
     let residual = input.purchase_price_usd * input.residual_pct_after_hold / 100.0;
     let depreciation = (input.purchase_price_usd + tax - residual).max(0.0);
     // Total cost = depreciation + interest paid + fuel + insurance + maintenance + registration

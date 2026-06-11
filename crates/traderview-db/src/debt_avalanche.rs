@@ -87,6 +87,19 @@ pub fn compute(input: &DebtAvalancheInput) -> DebtAvalancheReport {
     let mut payoff_month: Vec<Option<u32>> = vec![None; n];
     let starts: Vec<f64> = balances.clone();
     let mut rolling_extra = input.extra_payment_usd;
+    // Debts entered with balance == 0 still carry a min_payment_usd
+    // that the user has freed up. Without the pre-loop pass below the
+    // simulation pretends that money is gone forever, lengthening
+    // payoff time on every other debt. Tag them as paid at month 0 and
+    // roll their min into the extra pool so the avalanche has the
+    // correct starting cash.
+    for i in 0..n {
+        if balances[i] <= 0.005 {
+            balances[i] = 0.0;
+            payoff_month[i] = Some(0);
+            rolling_extra += input.debts[i].min_payment_usd;
+        }
+    }
     let mut total_months: u32 = 0;
     let mut all_paid = false;
     let mut month: u32 = 0;

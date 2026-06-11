@@ -96,7 +96,28 @@ fn add_months(d: NaiveDate, n: u32) -> NaiveDate {
         month -= 12;
         year += 1;
     }
-    NaiveDate::from_ymd_opt(year, month as u32, d.day()).unwrap_or(d)
+    let month_u = month as u32;
+    // Saturate day to the last valid day of the target month so e.g.
+    // Jan 31 + 1mo → Feb 28/29 instead of falling back to the input
+    // date. The old `.unwrap_or(d)` returned `d` on invalid day-of-month
+    // (Jan 31 + 1mo → invalid Feb 31), which made the simulate loop's
+    // period_end == period_start and spun forever.
+    let day = d.day().min(last_day_of_month(year, month_u));
+    NaiveDate::from_ymd_opt(year, month_u, day)
+        .expect("clamped day-of-month is always valid")
+}
+
+fn last_day_of_month(year: i32, month: u32) -> u32 {
+    // Step into the next month, then back one day. Avoids hard-coding
+    // 28/29/30/31 logic + handles leap years correctly.
+    let (next_year, next_month) = if month == 12 {
+        (year + 1, 1)
+    } else {
+        (year, month + 1)
+    };
+    let first_of_next = NaiveDate::from_ymd_opt(next_year, next_month, 1)
+        .expect("first-of-month is always valid");
+    first_of_next.pred_opt().expect("predecessor exists").day()
 }
 
 fn close_at_or_after(closes: &[(NaiveDate, f64)], target: NaiveDate) -> Option<f64> {

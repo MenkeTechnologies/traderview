@@ -60,11 +60,13 @@ pub fn annuity_present_value(monthly: f64, annual_return_pct: f64, years: u32) -
 }
 
 /// Solve for the internal rate where PV(annuity) = lump.
-/// Bisection on r ∈ [-50%, 100%].
+/// Bisection on r ∈ [-50%, 100%]. A NEGATIVE implied rate is a valid
+/// answer (annuity is worth less than the lump even at 0% → the
+/// lump-sum is the better deal). The previous early-out at
+/// `total_undiscounted < lump` rejected those cases — exactly when a
+/// user most needs to see the negative number to compare offers.
 pub fn implied_internal_rate(lump: f64, monthly: f64, years: u32) -> Option<f64> {
     if lump <= 0.0 || monthly <= 0.0 || years == 0 { return None; }
-    let total_undiscounted = monthly * 12.0 * years as f64;
-    if total_undiscounted < lump { return None; }
     let mut lo = -50.0_f64;
     let mut hi = 100.0_f64;
     for _ in 0..200 {

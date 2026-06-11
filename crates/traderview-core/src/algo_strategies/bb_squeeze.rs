@@ -141,13 +141,21 @@ impl Strategy for BbSqueeze {
             let atr_stop = close_now - self.rules.atr_stop_mult * atr_now;
             let stop = band_stop.min(atr_stop);
             let stop_distance = (close_now - stop).max(0.01);
+            // Project TP by the same band-width that triggered the
+            // breakout, measured from the middle band. Previously this
+            // was `middle_now` which sits BELOW the entry on a long
+            // breakout (since entry > upper > middle), making the TP
+            // immediately satisfied / wrong-direction. New target sits
+            // strictly above entry by the width of the upper half-band.
+            let band_width = (upper_now - middle_now).max(0.01);
+            let take_profit = close_now + band_width;
             Some(EntrySignal {
                 side: Side::Buy,
                 entry_price: close_now,
                 stop_distance,
                 trigger_index: i,
                 stop_price: stop.max(0.01),
-                take_profit_price: middle_now,
+                take_profit_price: take_profit,
                 kind: "bb_squeeze",
                 diagnostic: serde_json::json!({
                     "bbw": bbw_now,
@@ -163,13 +171,18 @@ impl Strategy for BbSqueeze {
             let atr_stop = close_now + self.rules.atr_stop_mult * atr_now;
             let stop = band_stop.max(atr_stop);
             let stop_distance = (stop - close_now).max(0.01);
+            // TP strictly BELOW entry on a short breakout; mirror the
+            // long-side fix. Old `middle_now` was ABOVE entry for shorts
+            // (entry < lower < middle), making the TP wrong-direction.
+            let band_width = (middle_now - lower_now).max(0.01);
+            let take_profit = (close_now - band_width).max(0.01);
             Some(EntrySignal {
                 side: Side::Sell,
                 entry_price: close_now,
                 stop_distance,
                 trigger_index: i,
                 stop_price: stop,
-                take_profit_price: middle_now,
+                take_profit_price: take_profit,
                 kind: "bb_squeeze",
                 diagnostic: serde_json::json!({
                     "bbw": bbw_now,
