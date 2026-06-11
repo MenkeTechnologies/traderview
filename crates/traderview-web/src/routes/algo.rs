@@ -65,21 +65,27 @@ async fn list_strategies(
     ))
 }
 
-const VALID_STRATEGY_TYPES: &[&str] = &[
-    "momentum",
-    "mean_reversion",
-    "orb",
-    "donchian_trend",
-    "bb_squeeze",
-    "ttm_squeeze",
-    "vwap_scalp",
-    "supertrend",
-    "heikin_ashi_trend",
-    "connors_rsi2",
-    "order_block_sweep",
-    "pead",
-    "pairs",
-];
+/// Valid strategy types are DERIVED from the registry — a hardcoded
+/// list here silently rejected every strategy added after it was
+/// typed (8 kinds were unsaveable while the factory, backtester, and
+/// UI dropdown all supported them).
+fn valid_strategy_types() -> Vec<&'static str> {
+    traderview_core::algo_strategies::StrategyKind::all()
+        .iter()
+        .map(|k| k.as_str())
+        .collect()
+}
+
+fn validate_strategy_type(strategy_type: &str) -> Result<(), ApiError> {
+    let valid = valid_strategy_types();
+    if !valid.contains(&strategy_type) {
+        return Err(ApiError::BadRequest(format!(
+            "unknown strategy_type {strategy_type}; expected one of: {}",
+            valid.join(", "),
+        )));
+    }
+    Ok(())
+}
 
 async fn user_owns_account(
     pool: &sqlx::PgPool,
@@ -164,13 +170,7 @@ async fn create_strategy(
     if body.name.trim().is_empty() {
         return Err(ApiError::BadRequest("name required".into()));
     }
-    if !VALID_STRATEGY_TYPES.contains(&body.strategy_type.as_str()) {
-        return Err(ApiError::BadRequest(format!(
-            "unknown strategy_type {}; expected one of: {}",
-            body.strategy_type,
-            VALID_STRATEGY_TYPES.join(", "),
-        )));
-    }
+    validate_strategy_type(&body.strategy_type)?;
     // Every strategy must be bound to a real broker account so fills
     // flow into the standard executions → trades pipeline. Refuse the
     // save outright instead of letting the row sit inert and confuse
@@ -270,13 +270,7 @@ async fn update_strategy(
     Path(id): Path<Uuid>,
     Json(body): Json<AlgoStrategyInput>,
 ) -> Result<Json<AlgoStrategy>, ApiError> {
-    if !VALID_STRATEGY_TYPES.contains(&body.strategy_type.as_str()) {
-        return Err(ApiError::BadRequest(format!(
-            "unknown strategy_type {}; expected one of: {}",
-            body.strategy_type,
-            VALID_STRATEGY_TYPES.join(", "),
-        )));
-    }
+    validate_strategy_type(&body.strategy_type)?;
     let account_id = body
         .account_id
         .ok_or_else(|| ApiError::BadRequest("account_id required".into()))?;
@@ -1276,4 +1270,29 @@ async fn get_metrics(
         .map_err(ApiError::Internal)?
         .map(Json)
         .ok_or_else(|| ApiError::BadRequest("strategy not found".into()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The immune-system test for the bug this replaces: a hardcoded
+    /// type list silently rejected 8 registry strategies. Validation
+    /// must accept EVERY kind the registry exposes, forever.
+    #[test]
+    fn every_registry_kind_is_saveable() {
+        for kind in traderview_core::algo_strategies::StrategyKind::all() {
+            validate_strategy_type(kind.as_str())
+                .unwrap_or_else(|_| panic!("{} rejected by route validation", kind.as_str()));
+        }
+    }
+
+    #[test]
+    fn unknown_kind_is_rejected_with_the_full_list() {
+        let err = validate_strategy_type("not_a_strategy").unwrap_err();
+        let msg = format!("{err:?}");
+        assert!(msg.contains("not_a_strategy"));
+        // The error enumerates the registry, derived not typed.
+        assert!(msg.contains("macd_cross") && msg.contains("pairs"));
+    }
 }
