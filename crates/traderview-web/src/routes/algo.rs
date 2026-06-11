@@ -41,6 +41,7 @@ pub fn router() -> Router<AppState> {
         .route("/algo/strategies/:id/optimize", post(post_optimize))
         .route("/algo/tournament", post(post_tournament))
         .route("/algo/portfolio", post(post_portfolio))
+        .route("/algo/tournament-matrix", post(post_tournament_matrix))
         .route("/algo/strategies/:id/walk-forward", post(post_walk_forward))
         .route("/algo/strategies/:id/backtest-mc", post(post_backtest_mc))
         .route("/algo/strategies/:id/backtest-regimes", post(post_backtest_regimes))
@@ -835,6 +836,87 @@ async fn post_optimize(
     )
     .map_err(|e| ApiError::BadRequest(format!("optimize: {e}")))?;
     Ok(Json(result))
+}
+
+#[derive(serde::Deserialize)]
+struct TournamentMatrixBody {
+    /// 2..=20 symbols — the column axis.
+    symbols: Vec<String>,
+    #[serde(default = "default_bt_interval")]
+    interval: String,
+    #[serde(default = "default_bt_days_back")]
+    days_back: i64,
+    #[serde(default)]
+    initial_equity: Option<f64>,
+    #[serde(default)]
+    fee_per_trade: Option<f64>,
+    #[serde(default)]
+    slippage_bps: Option<f64>,
+    #[serde(default)]
+    rank_by: traderview_core::algo_tournament::RankMetric,
+}
+
+#[derive(serde::Serialize)]
+struct TournamentMatrixResult {
+    matrix: traderview_core::algo_tournament::MatrixResult,
+    /// Symbols with too few bars — reported, never silently dropped.
+    skipped_symbols: Vec<String>,
+}
+
+/// POST /algo/tournament-matrix — strategies × symbols: every
+/// single-symbol registry kind backtested on every listed symbol,
+/// with the per-column best and a buy-and-hold baseline per symbol.
+async fn post_tournament_matrix(
+    State(s): State<AppState>,
+    _u: AuthUser,
+    Json(body): Json<TournamentMatrixBody>,
+) -> Result<Json<TournamentMatrixResult>, ApiError> {
+    if body.symbols.len() < 2 || body.symbols.len() > 20 {
+        return Err(ApiError::BadRequest("symbols must list 2..=20 entries".into()));
+    }
+    let interval: traderview_core::BarInterval = serde_json::from_value(serde_json::Value::String(
+        normalize_interval(&body.interval),
+    ))
+    .map_err(|e| ApiError::BadRequest(format!("interval: {e}")))?;
+    let to = chrono::Utc::now();
+    let from = to - chrono::Duration::days(body.days_back);
+    let mut per_symbol = Vec::new();
+    let mut skipped_symbols = Vec::new();
+    for raw in &body.symbols {
+        let symbol = raw.trim().to_uppercase();
+        if symbol.is_empty() {
+            continue;
+        }
+        let bars = traderview_db::prices::get_bars(&s.pool, &symbol, interval, from, to)
+            .await
+            .map_err(ApiError::Internal)?;
+        if bars.len() < 30 {
+            skipped_symbols.push(symbol);
+        } else {
+            per_symbol.push((symbol, bars));
+        }
+    }
+    if per_symbol.is_empty() {
+        return Err(ApiError::BadRequest(
+            "no symbol had enough bars (need >=30 each)".into(),
+        ));
+    }
+    let cfg = traderview_core::algo_backtest::BacktestConfig {
+        initial_equity: body.initial_equity.unwrap_or(100_000.0),
+        fee_per_trade: body.fee_per_trade.unwrap_or(1.0),
+        slippage_bps: body.slippage_bps.unwrap_or(5.0),
+        side_mode: traderview_core::algo_strategies::SideMode::Both,
+    };
+    let matrix = traderview_core::algo_tournament::matrix(
+        &per_symbol,
+        &traderview_core::algo_strategies::Sizing::default(),
+        &cfg,
+        body.rank_by,
+    );
+    Ok(Json(TournamentMatrixResult {
+        matrix,
+        skipped_symbols,
+    }))
 }
 
 #[derive(serde::Deserialize)]

@@ -3982,6 +3982,7 @@
   "view.algo.tip.portfolio": "Correlation matrix + equal-weight combination of chosen strategies",
   "view.algo.tip.regime_period": "Efficiency-ratio window for the regime classifier",
   "view.algo.tip.tournament": "Backtest every registry strategy on one symbol and rank them",
+  "view.algo.tip.tournament_symbols": "One symbol ranks strategies; comma-separated symbols (e.g. SPY, QQQ, IWM) build the strategies-by-symbols matrix",
   "view.algo.tip.wf_is": "In-sample window (bars) the optimizer trains on",
   "view.algo.tip.wf_oos": "Out-of-sample window (bars) the winner is validated on, unseen",
   "view.algo.toast.created": "Luotu strategia",

@@ -1112,6 +1112,11 @@ export const api = {
             method: 'POST',
             body: JSON.stringify(body || {}),
         }),
+    algoTournamentMatrix: (body) =>
+        request('/algo/tournament-matrix', {
+            method: 'POST',
+            body: JSON.stringify(body || {}),
+        }),
     algoWalkForward: (id, body) =>
         request(`/algo/strategies/${id}/walk-forward`, {
             method: 'POST',

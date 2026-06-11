@@ -102,6 +102,80 @@ pub fn tournament(
     }
 }
 
+/// The registry's single-symbol kinds, in stable registry order —
+/// the row axis of the matrix.
+pub fn single_symbol_kinds() -> Vec<&'static str> {
+    StrategyKind::all()
+        .iter()
+        .filter_map(|k| {
+            let slug = k.as_str();
+            let strat = from_kind(slug, &serde_json::json!({})).ok()?;
+            strat.required_symbols().is_none().then_some(slug)
+        })
+        .collect()
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SymbolColumn {
+    pub symbol: String,
+    /// Metric score per kind, aligned with `MatrixResult::kinds`;
+    /// None = the strategy never traded this symbol.
+    pub scores: Vec<Option<f64>>,
+    pub best_kind: Option<&'static str>,
+    pub benchmark: crate::algo_strategy_portfolio::CurveStats,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct MatrixResult {
+    pub kinds: Vec<&'static str>,
+    pub columns: Vec<SymbolColumn>,
+    pub rank_by: RankMetric,
+}
+
+/// Strategies × symbols: every single-symbol kind backtested (default
+/// rules) on every symbol's bars. Column order follows the input;
+/// row order is the stable registry order, NOT per-column ranking, so
+/// rows align across columns.
+pub fn matrix(
+    per_symbol: &[(String, Vec<PriceBar>)],
+    sizing: &Sizing,
+    cfg: &BacktestConfig,
+    rank_by: RankMetric,
+) -> MatrixResult {
+    let kinds = single_symbol_kinds();
+    let columns = per_symbol
+        .iter()
+        .map(|(symbol, bars)| {
+            let mut scores = Vec::with_capacity(kinds.len());
+            let mut best: Option<(&'static str, f64)> = None;
+            for slug in &kinds {
+                let score = from_kind(slug, &serde_json::json!({}))
+                    .ok()
+                    .map(|strat| run(bars, strat.as_ref(), sizing, cfg.clone()))
+                    .filter(|bt| bt.summary.trades > 0)
+                    .map(|bt| metric_value(&bt.summary, rank_by));
+                if let Some(v) = score {
+                    if v.is_finite() && best.map_or(true, |(_, b)| v > b) {
+                        best = Some((slug, v));
+                    }
+                }
+                scores.push(score);
+            }
+            SymbolColumn {
+                symbol: symbol.clone(),
+                scores,
+                best_kind: best.map(|(k, _)| k),
+                benchmark: buy_and_hold(bars),
+            }
+        })
+        .collect();
+    MatrixResult {
+        kinds,
+        columns,
+        rank_by,
+    }
+}
+
 /// Buy-and-hold stats over the bars' closes — the passive baseline.
 pub fn buy_and_hold(bars: &[PriceBar]) -> crate::algo_strategy_portfolio::CurveStats {
     use rust_decimal::prelude::ToPrimitive;
@@ -195,6 +269,48 @@ mod tests {
             close: Decimal::from_str(&format!("{p:.4}")).unwrap(),
             volume: Decimal::from(1_000_000u64),
             source: "test".into(),
+        }
+    }
+
+    #[test]
+    fn matrix_rows_align_across_columns_and_best_is_argmax() {
+        let mk = |seed: f64| -> Vec<PriceBar> {
+            (0..120)
+                .map(|i| {
+                    bar(
+                        1_700_000_000 + i * 86_400,
+                        100.0 + ((i as f64 * 0.3) + seed).sin() * 6.0 + i as f64 * 0.05,
+                    )
+                })
+                .collect()
+        };
+        let per_symbol = vec![("AAA".to_string(), mk(0.0)), ("BBB".to_string(), mk(1.5))];
+        let cfg = BacktestConfig {
+            initial_equity: 100_000.0,
+            fee_per_trade: 1.0,
+            slippage_bps: 5.0,
+            side_mode: crate::algo_strategies::SideMode::Both,
+        };
+        let m = matrix(&per_symbol, &Sizing::default(), &cfg, RankMetric::Sharpe);
+        // Row axis is the registry's single-symbol kinds; every column
+        // aligns with it exactly.
+        assert_eq!(m.kinds, single_symbol_kinds());
+        assert!(!m.kinds.contains(&"pairs"));
+        for col in &m.columns {
+            assert_eq!(col.scores.len(), m.kinds.len());
+            // best_kind is the argmax over the column's Some scores.
+            if let Some(best) = col.best_kind {
+                let bi = m.kinds.iter().position(|k| *k == best).unwrap();
+                let bv = col.scores[bi].unwrap();
+                assert!(col
+                    .scores
+                    .iter()
+                    .flatten()
+                    .filter(|v| v.is_finite())
+                    .all(|v| *v <= bv));
+            } else {
+                assert!(col.scores.iter().all(|s| s.is_none()));
+            }
         }
     }
 

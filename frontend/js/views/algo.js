@@ -1482,7 +1482,7 @@ async function openTournamentModal() {
             <h2 data-i18n="view.algo.h2.tournament">Strategy tournament</h2>
             <p class="muted small" data-i18n="view.algo.hint.tournament">Runs every single-symbol registry strategy with DEFAULT rules over the same bars and ranks them. Multi-symbol strategies are listed as skipped. Default rules mean this measures the setup's fit to the tape, not a tuned config — optimize the winners afterwards.</p>
             <form id="tournament-form" class="inline-form">
-                <input name="symbol" value="SPY" required style="text-transform:uppercase">
+                <input name="symbol" value="SPY" required style="text-transform:uppercase" data-tip="view.algo.tip.tournament_symbols">
                 <select name="interval">
                     <option value="day1" selected>1d</option>
                     <option value="hour1">1h</option>
@@ -1509,9 +1509,35 @@ async function openTournamentModal() {
         const fd = new FormData(e.target);
         const out = wrap.querySelector('#tournament-result');
         out.textContent = t('common.loading');
+        const symbols = fd.get('symbol').split(',').map(x => x.trim().toUpperCase()).filter(Boolean);
+        if (symbols.length > 1) {
+            try {
+                const { matrix, skipped_symbols } = await api.algoTournamentMatrix({
+                    symbols,
+                    interval: fd.get('interval'),
+                    days_back: Number(fd.get('days_back')),
+                    rank_by: fd.get('rank_by'),
+                });
+                out.innerHTML = `<table class="trades">
+                    <thead><tr><th>Strategy</th>${matrix.columns.map(c => `<th>${esc(c.symbol)}</th>`).join('')}</tr></thead>
+                    <tbody>
+                        ${matrix.kinds.map((k, ki) => `
+                        <tr><td>${esc(k)}</td>${matrix.columns.map(c => {
+                            const v = c.scores[ki];
+                            const best = c.best_kind === k;
+                            return `<td class="${best ? 'pos' : ''}">${v != null ? (best ? '\u2605 ' : '') + v.toFixed(2) : '\u2014'}</td>`;
+                        }).join('')}</tr>`).join('')}
+                        <tr><td class="muted">buy &amp; hold ${matrix.rank_by === 'total_return' ? 'return %' : 'baseline'}</td>${matrix.columns.map(c => `<td class="muted">${matrix.rank_by === 'sharpe' ? c.benchmark.sharpe.toFixed(2) : c.benchmark.total_return_pct.toFixed(1)}</td>`).join('')}</tr>
+                    </tbody></table>
+                    <p class="muted small">\u2605 = best per symbol \u00b7 \u2014 = never traded${skipped_symbols.length ? ` \u00b7 skipped (too few bars): ${skipped_symbols.map(esc).join(', ')}` : ''}</p>`;
+            } catch (err) {
+                out.textContent = t('common.error', { err: err.message });
+            }
+            return;
+        }
         try {
             const r = await api.algoTournament({
-                symbol: fd.get('symbol').trim().toUpperCase(),
+                symbol: symbols[0],
                 interval: fd.get('interval'),
                 days_back: Number(fd.get('days_back')),
                 rank_by: fd.get('rank_by'),
