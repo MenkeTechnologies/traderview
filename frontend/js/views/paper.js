@@ -162,6 +162,11 @@ export async function renderPaper(mount) {
         </div>
 
         <div class="chart-panel">
+            <h2 data-i18n="view.paper.h2.dividends">Dividends received</h2>
+            <div id="paper-dividends"></div>
+        </div>
+
+        <div class="chart-panel">
             <h2 data-i18n="view.paper.h2.unrealized_chart">Unrealized P&L per open position</h2>
             <div id="paper-chart" style="width:100%;height:240px"></div>
         </div>
@@ -202,6 +207,9 @@ export async function renderPaper(mount) {
             .then(rows => { if (viewIsCurrent(tok)) renderLeaderboard(rows, acct.id); })
             .catch(() => {});
     }
+    api.paperDividends(acct.id)
+        .then(d => { if (viewIsCurrent(tok)) renderDividends(d); })
+        .catch(() => {});
 
     mount.querySelector('#ord-form').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -324,6 +332,32 @@ function renderLeaderboard(rows, currentId) {
             </tr>`).join('')}
         </tbody></table>
         <p class="muted small" data-i18n="view.paper.hint.leaderboard">Return is measured against each account's starting cash — comparable across accounts created at different times. ↓ = currently below its high-water mark.</p>`;
+}
+
+function renderDividends(rows) {
+    const el = document.getElementById('paper-dividends');
+    if (!el) return;
+    if (!rows || !rows.length) {
+        el.innerHTML = `<p class="muted" data-i18n="view.paper.empty_dividends">${esc(t('view.paper.empty_dividends'))}</p>`;
+        return;
+    }
+    const total = rows.reduce((s, r) => s + Number(r.cash_credited), 0);
+    el.innerHTML = `
+        <div class="muted small"><span data-i18n="view.paper.dividends.total">${esc(t('view.paper.dividends.total'))}</span>:
+            <span class="${total >= 0 ? 'pos' : 'neg'}">${total >= 0 ? '+' : ''}$${fmt(total)}</span></div>
+        <table class="trades">
+            <thead><tr><th data-i18n="view.paper.th.ex_date">Ex-date</th><th data-i18n="view.paper.th.sym">Sym</th><th data-i18n="view.paper.th.qty">Qty</th>
+            <th data-i18n="view.paper.th.per_share">Per share</th><th data-i18n="view.paper.th.cash">Cash</th></tr></thead>
+            <tbody>${rows.map(r => {
+                const cash = Number(r.cash_credited);
+                return `<tr data-context-scope="symbol-row" data-symbol="${esc(r.symbol)}">
+                    <td>${esc(r.ex_date)}</td>
+                    <td><a href="#research/${encodeURIComponent(r.symbol)}">${esc(r.symbol)}</a></td>
+                    <td>${fmt(r.qty, 0)}</td>
+                    <td>$${fmt(r.amount_per_share)}</td>
+                    <td class="${cash >= 0 ? 'pos' : 'neg'}">${cash >= 0 ? '+' : ''}$${fmt(cash)}</td>
+                </tr>`;
+            }).join('')}</tbody></table>`;
 }
 
 function renderEquityCurve(hist) {

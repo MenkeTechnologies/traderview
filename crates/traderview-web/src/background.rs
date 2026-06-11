@@ -46,6 +46,9 @@ pub const PAPER_TWAP_TICK: Duration = Duration::from_secs(5);
 /// Paper equity sampling — 15min resolves intraday swings without
 /// flooding the table; unchanged readings are skipped anyway.
 pub const PAPER_EQUITY_SNAPSHOT: Duration = Duration::from_secs(15 * 60);
+/// Paper dividend crediting — ex-dates are daily-bar data and the pass
+/// is idempotent, so a few runs a day is plenty.
+pub const PAPER_DIVIDEND_CREDIT: Duration = Duration::from_secs(6 * 60 * 60);
 
 async fn compute_tile(pool: &PgPool, key: &'static str) -> anyhow::Result<serde_json::Value> {
     Ok(match key {
@@ -103,6 +106,7 @@ pub fn spawn_refreshers(pool: PgPool, cache: TileCache, hub: crate::realtime::Hu
     spawn_screener_snapshots(pool.clone());
     spawn_paper_twap_ticker(pool.clone(), hub);
     spawn_paper_equity_snapshots(pool.clone());
+    spawn_paper_dividend_credits(pool.clone());
     spawn_golden_stars(pool);
 }
 
@@ -152,6 +156,23 @@ fn spawn_paper_equity_snapshots(pool: PgPool) {
                 Err(e) => tracing::warn!(error = %e, "paper equity sampling failed"),
             }
             tokio::time::sleep(PAPER_EQUITY_SNAPSHOT).await;
+        }
+    });
+}
+
+/// Paper dividend crediting — reconstructs each account's share count
+/// going into recent ex-dates from the fill ledger and posts the cash
+/// (longs credited, shorts debited). Idempotent via the unique
+/// account × symbol × ex-date constraint.
+fn spawn_paper_dividend_credits(pool: PgPool) {
+    tokio::spawn(async move {
+        loop {
+            match traderview_db::paper_dividends::credit_all(&pool).await {
+                Ok(0) => {}
+                Ok(n) => tracing::info!(credits = n, "paper dividends credited"),
+                Err(e) => tracing::warn!(error = %e, "paper dividend crediting failed"),
+            }
+            tokio::time::sleep(PAPER_DIVIDEND_CREDIT).await;
         }
     });
 }

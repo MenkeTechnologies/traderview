@@ -849,6 +849,7 @@ export const api = {
         request(`/paper/accounts/${id}/rename`, { method: 'POST', body: JSON.stringify({ name }) }),
     paperAccountDelete: (id) => request(`/paper/accounts/${id}/delete`, { method: 'POST' }),
     paperAccountComparison: () => request('/paper/accounts/comparison'),
+    paperDividends: (id) => request(`/paper/accounts/${id}/dividends`),
 
     // alerts
     alerts:        () => request('/alerts'),

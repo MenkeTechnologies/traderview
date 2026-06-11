@@ -36,6 +36,20 @@ pub fn router() -> Router<AppState> {
         .route("/paper/accounts/create", post(create_account))
         .route("/paper/accounts/:id/rename", post(rename_account))
         .route("/paper/accounts/:id/delete", post(delete_account))
+        .route("/paper/accounts/:id/dividends", get(dividends))
+}
+
+/// Dividend cash credited to the account by the background pass —
+/// longs held through an ex-date are credited, shorts debited.
+async fn dividends(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(account_id): Path<Uuid>,
+) -> Result<Json<Vec<traderview_db::paper_dividends::PaperDividend>>, ApiError> {
+    traderview_db::paper_dividends::list(&s.pool, user.id, account_id, 500)
+        .await
+        .map(Json)
+        .map_err(ApiError::Internal)
 }
 
 /// Strategy leaderboard across the user's paper accounts.
