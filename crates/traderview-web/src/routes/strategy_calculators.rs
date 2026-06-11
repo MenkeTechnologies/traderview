@@ -24,6 +24,8 @@
 //!   POST /calc/rebalance-bands           — Swedroe 5/25 drift screen
 //!   POST /calc/iv-cone                   — IV-term expected-move bands
 //!   POST /calc/fund-fees                 — 2-and-20 waterfall + drag
+//!   POST /calc/win-rate-confidence       — Wilson interval vs breakeven
+//!   POST /calc/equity-curve-filter       — trade-above-own-MA backtest
 //!   POST /sim/dual-momentum              — Antonacci GEM backtest
 //!   GET  /symbols/:sym/turn-of-month     — TOM seasonality stats
 //!   GET  /symbols/:sym/vol-cone          — realized-vol percentile cone
@@ -70,6 +72,8 @@ pub fn router() -> Router<AppState> {
         .route("/calc/rebalance-bands", post(post_rebalance_bands))
         .route("/calc/iv-cone", post(post_iv_cone))
         .route("/calc/fund-fees", post(post_fund_fees))
+        .route("/calc/win-rate-confidence", post(post_win_rate_confidence))
+        .route("/calc/equity-curve-filter", post(post_equity_curve_filter))
         .route("/sim/dual-momentum", post(post_dual_momentum))
         .route("/symbols/:symbol/turn-of-month", get(get_turn_of_month))
         .route("/symbols/:symbol/vol-cone", get(get_vol_cone))
@@ -429,6 +433,28 @@ async fn post_fund_fees(
     traderview_core::fund_fees::compute(&b)
         .map(Json)
         .ok_or_else(|| ApiError::BadRequest("invalid fee inputs".into()))
+}
+
+async fn post_win_rate_confidence(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<traderview_core::win_rate_confidence::WinRateInput>,
+) -> Result<Json<traderview_core::win_rate_confidence::WinRateReport>, ApiError> {
+    traderview_core::win_rate_confidence::compute(&b)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("invalid win-rate inputs".into()))
+}
+
+async fn post_equity_curve_filter(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<traderview_core::equity_curve_filter::EcfInput>,
+) -> Result<Json<traderview_core::equity_curve_filter::EcfReport>, ApiError> {
+    traderview_core::equity_curve_filter::compute(&b)
+        .map(Json)
+        .ok_or_else(|| {
+            ApiError::BadRequest("need more trades than the MA length, ma_length >= 2".into())
+        })
 }
 
 async fn post_dual_momentum(

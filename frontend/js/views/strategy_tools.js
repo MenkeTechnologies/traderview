@@ -96,6 +96,58 @@ const TOOLS = {
             <p class="muted small">Press risk after wins (capped), cut back toward base after losses —
             the opposite of a martingale. The control row trades the same sequence at flat base risk.</p>`,
     },
+    'win-rate-confidence': {
+        label: 'Win-Rate Confidence',
+        call: (b) => api.calcWinRateConfidence(b),
+        fields: [
+            { key: 'wins', label: 'Wins', def: 30, int: true },
+            { key: 'losses', label: 'Losses', def: 20, int: true },
+            { key: 'payoff_ratio', label: 'Payoff ratio (R)', def: 1 },
+            { key: 'z', label: 'z (1.96 = 95%)', def: 1.96 },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Win rate (Wilson)</div>
+                    <div class="value">${r.observed_win_rate_pct.toFixed(1)}%</div>
+                    <div class="small muted">[${r.wilson_low_pct.toFixed(1)}%, ${r.wilson_high_pct.toFixed(1)}%]</div></div>
+                <div class="card"><div class="label">Edge is real?</div>
+                    <div class="value ${r.statistically_significant ? 'pos' : 'neg'}">${r.statistically_significant ? 'YES' : 'NOT YET'}</div>
+                    <div class="small muted">breakeven ${r.breakeven_win_rate_pct.toFixed(1)}% at this payoff</div></div>
+                <div class="card"><div class="label">Trades needed</div>
+                    <div class="value">${r.trades_needed != null ? r.trades_needed : '∞'}</div>
+                    <div class="small muted">${r.trades_needed != null ? 'for significance at this rate' : 'observed rate ≤ breakeven'}</div></div>
+            </div>
+            <p class="muted small">Wilson interval vs the 1/(1+R) breakeven — a 60% win rate over 50
+            trades still straddles breakeven at 95% confidence.</p>`,
+    },
+    'equity-curve-filter': {
+        label: 'Equity Curve Filter',
+        call: (b) => api.calcEquityCurveFilter({
+            starting_equity: b.starting_equity,
+            trade_pnls: String(b.trade_pnls).split(/[\s,]+/).map(Number).filter(x => isFinite(x)),
+            ma_length: b.ma_length,
+        }),
+        fields: [
+            { key: 'starting_equity', label: 'Starting equity ($)', def: 10000 },
+            { key: 'trade_pnls', label: 'Trade P/Ls (comma-sep, oldest first)', def: '100,100,100,100,100,100,100,100,100,100,-100,-100,-100,-100,-100,-100,-100,-100,-100,-100,100,100,100', text: true },
+            { key: 'ma_length', label: 'MA length (trades)', def: 5, int: true },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Filtered</div>
+                    <div class="value ${r.filter_helped ? 'pos' : ''}">$${Math.round(r.filtered_final).toLocaleString()}</div>
+                    <div class="small muted">max DD $${Math.round(r.filtered_max_dd).toLocaleString()}</div></div>
+                <div class="card"><div class="label">Unfiltered</div>
+                    <div class="value">$${Math.round(r.unfiltered_final).toLocaleString()}</div>
+                    <div class="small muted">max DD $${Math.round(r.unfiltered_max_dd).toLocaleString()}</div></div>
+                <div class="card"><div class="label">Verdict</div>
+                    <div class="value ${r.filter_helped ? 'pos' : 'neg'}">${r.filter_helped ? 'FILTER HELPED' : 'filter cost money'}</div>
+                    <div class="small muted">${r.trades_taken} taken · ${r.trades_skipped} skipped</div></div>
+            </div>
+            <p class="muted small">Trade only while the system's own equity sits at/above its N-trade SMA;
+            skipped trades accrue on paper. Shortens decaying-edge losing streaks, pays whipsaw tax on
+            choppy ones — the verdict tells you which system you have.</p>`,
+    },
     'risk-of-ruin': {
         label: 'Risk of Ruin',
         call: (b) => api.calcRiskOfRuin(b),

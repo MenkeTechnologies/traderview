@@ -908,5 +908,7 @@ pub mod rebalance_bands;
 pub mod options_dailies;
 pub mod iv_cone;
 pub mod fund_fees;
+pub mod win_rate_confidence;
+pub mod equity_curve_filter;
 
 pub use models::*;
