@@ -148,6 +148,56 @@ const TOOLS = {
             skipped trades accrue on paper. Shortens decaying-edge losing streaks, pays whipsaw tax on
             choppy ones — the verdict tells you which system you have.</p>`,
     },
+    'impermanent-loss': {
+        label: 'Impermanent Loss',
+        call: (b) => api.calcImpermanentLoss(b),
+        fields: [
+            { key: 'price_ratio', label: 'Price ratio (end ÷ entry)', def: 2 },
+            { key: 'holding_days', label: 'Holding period (days)', def: 90 },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Impermanent loss</div>
+                    <div class="value neg">${r.il_pct.toFixed(2)}%</div>
+                    <div class="small muted">LP worth ${r.lp_vs_hodl_pct.toFixed(1)}% of HODL</div></div>
+                <div class="card"><div class="label">Breakeven fee APR</div>
+                    <div class="value">${r.breakeven_fee_apr_pct.toFixed(1)}%</div>
+                    <div class="small muted">pool fees must beat this</div></div>
+            </div>
+            <table class="gs-table">
+                <thead><tr><th>Ratio</th><th>IL</th></tr></thead>
+                <tbody>${r.curve.map(p => `
+                    <tr><td>${p.price_ratio}×</td>
+                        <td class="${p.il_pct < -1 ? 'neg' : ''}">${p.il_pct.toFixed(2)}%</td></tr>`).join('')}
+                </tbody>
+            </table>
+            <p class="muted small">50/50 constant-product pool: IL = 2√r/(1+r) − 1, symmetric in r and
+            1/r. The ±4× waypoint costs exactly 20% vs holding.</p>`,
+    },
+    'average-down': {
+        label: 'Average Down',
+        call: (b) => api.calcAverageDown(b),
+        fields: [
+            { key: 'current_shares', label: 'Current shares', def: 100 },
+            { key: 'current_avg_cost', label: 'Current avg cost ($)', def: 50 },
+            { key: 'add_shares', label: 'Shares to add', def: 100 },
+            { key: 'add_price', label: 'Add price ($)', def: 40 },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">New average</div>
+                    <div class="value">$${r.new_avg_cost.toFixed(2)}</div>
+                    <div class="small muted">${r.new_shares} shares · $${Math.round(r.total_capital).toLocaleString()} in</div></div>
+                <div class="card"><div class="label">Bounce to breakeven</div>
+                    <div class="value">${r.bounce_needed_after_pct.toFixed(1)}%</div>
+                    <div class="small muted">was ${r.bounce_needed_before_pct.toFixed(1)}% before the add</div></div>
+                <div class="card"><div class="label">Exposure added</div>
+                    <div class="value neg">+${r.exposure_increase_pct.toFixed(0)}%</div>
+                    <div class="small muted">$${Math.round(r.capital_added).toLocaleString()} · sitting ${r.unrealized_at_add < 0 ? '−' : '+'}$${Math.abs(Math.round(r.unrealized_at_add)).toLocaleString()} unrealized</div></div>
+            </div>
+            <p class="muted small">The add always lowers the breakeven bounce — the table prices what that
+            costs in fresh capital at risk.</p>`,
+    },
     'futures-sizing': {
         label: 'Futures Sizing',
         call: (b) => api.calcFuturesSizing(b),

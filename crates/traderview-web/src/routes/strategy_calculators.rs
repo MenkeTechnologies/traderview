@@ -34,6 +34,8 @@
 //!   GET  /symbols/:sym/overnight-split   — overnight vs intraday legs
 //!   POST /calc/double-barrier            — target-vs-stop hit-first odds
 //!   POST /calc/futures-sizing            — tick math + margin-capped size
+//!   POST /calc/impermanent-loss          — AMM IL + fee-APR breakeven
+//!   POST /calc/average-down              — position blend + bounce math
 
 use crate::auth::AuthUser;
 use crate::error::ApiError;
@@ -85,6 +87,8 @@ pub fn router() -> Router<AppState> {
         .route("/symbols/:symbol/overnight-split", get(get_overnight_split))
         .route("/calc/double-barrier", post(post_double_barrier))
         .route("/calc/futures-sizing", post(post_futures_sizing))
+        .route("/calc/impermanent-loss", post(post_impermanent_loss))
+        .route("/calc/average-down", post(post_average_down))
 }
 
 async fn post_grid_trading(
@@ -471,6 +475,26 @@ async fn post_futures_sizing(
     traderview_core::futures_sizing::compute(&b)
         .map(Json)
         .ok_or_else(|| ApiError::BadRequest("invalid sizing inputs".into()))
+}
+
+async fn post_impermanent_loss(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<traderview_core::impermanent_loss::IlInput>,
+) -> Result<Json<traderview_core::impermanent_loss::IlReport>, ApiError> {
+    traderview_core::impermanent_loss::compute(&b)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("price ratio and days must be positive".into()))
+}
+
+async fn post_average_down(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<traderview_core::average_down::AverageDownInput>,
+) -> Result<Json<traderview_core::average_down::AverageDownReport>, ApiError> {
+    traderview_core::average_down::compute(&b)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("all inputs must be positive".into()))
 }
 
 async fn post_dual_momentum(

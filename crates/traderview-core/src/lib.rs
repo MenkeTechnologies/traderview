@@ -913,5 +913,7 @@ pub mod equity_curve_filter;
 pub mod double_barrier;
 pub mod overnight_intraday;
 pub mod futures_sizing;
+pub mod impermanent_loss;
+pub mod average_down;
 
 pub use models::*;
