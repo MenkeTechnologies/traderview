@@ -765,6 +765,7 @@ export const api = {
     calcEquityCurveFilter:   (body) => request('/calc/equity-curve-filter', { method: 'POST', body: JSON.stringify(body) }),
     tradeReportCard:         (body) => request('/analytics/report-card', { method: 'POST', body: JSON.stringify(body) }),
     thirteenFDiff:           (cik) => request(`/13f/${encodeURIComponent(cik)}/diff`),
+    futuresCurve:            (root, exchange = 'NYM', months = 8) => request(`/futures/${encodeURIComponent(root)}/curve${qs({ exchange, months })}`),
     calcDoubleBarrier:       (body) => request('/calc/double-barrier', { method: 'POST', body: JSON.stringify(body) }),
     calcFuturesSizing:       (body) => request('/calc/futures-sizing', { method: 'POST', body: JSON.stringify(body) }),
     calcImpermanentLoss:     (body) => request('/calc/impermanent-loss', { method: 'POST', body: JSON.stringify(body) }),

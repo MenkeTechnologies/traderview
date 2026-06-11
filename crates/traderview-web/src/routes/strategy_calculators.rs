@@ -44,6 +44,7 @@
 //!   POST /screeners/risk                 — vol ranks + drawdown state
 //!   POST /screeners/momentum             — 12-1, 52w-high, RS vs bench
 //!   POST /screeners/mean-reversion       — RSI(2), 20d z, MA distance
+//!   GET  /futures/:root/curve            — term structure + roll yield
 //!   POST /symbols/:sym/event-study       — caller-dated FOMC/CPI study
 //!   POST /calc/double-barrier            — target-vs-stop hit-first odds
 //!   POST /calc/futures-sizing            — tick math + margin-capped size
@@ -122,6 +123,7 @@ pub fn router() -> Router<AppState> {
         .route("/screeners/risk", post(post_risk_screen))
         .route("/screeners/momentum", post(post_momentum_screen))
         .route("/screeners/mean-reversion", post(post_mean_reversion_screen))
+        .route("/futures/:root/curve", get(get_futures_curve))
         .route("/symbols/:symbol/event-study", post(post_event_study))
         .route("/calc/double-barrier", post(post_double_barrier))
         .route("/calc/futures-sizing", post(post_futures_sizing))
@@ -897,6 +899,40 @@ async fn post_mean_reversion_screen(
         strategy_calculators::mean_reversion_screen(&s.pool, &symbols, b.years.unwrap_or(2))
             .await,
     ))
+}
+
+#[derive(Debug, Deserialize)]
+struct FuturesCurveQ {
+    /// Yahoo exchange suffix: NYM, CMX, CME, CBT (all live-verified).
+    exchange: Option<String>,
+    months: Option<usize>,
+}
+
+async fn get_futures_curve(
+    State(s): State<AppState>,
+    _u: AuthUser,
+    Path(root): Path<String>,
+    Query(q): Query<FuturesCurveQ>,
+) -> Result<Json<strategy_calculators::FuturesCurveReport>, ApiError> {
+    let root = root.trim().to_uppercase();
+    if root.is_empty() || root.len() > 4 || !root.bytes().all(|b| b.is_ascii_alphanumeric()) {
+        return Err(ApiError::BadRequest("invalid futures root".into()));
+    }
+    let exchange = q
+        .exchange
+        .as_deref()
+        .unwrap_or("NYM")
+        .trim()
+        .to_uppercase();
+    if !["NYM", "CMX", "CME", "CBT"].contains(&exchange.as_str()) {
+        return Err(ApiError::BadRequest(
+            "exchange must be one of NYM, CMX, CME, CBT".into(),
+        ));
+    }
+    strategy_calculators::futures_curve(&s.pool, &root, &exchange, q.months.unwrap_or(8))
+        .await
+        .map(Json)
+        .map_err(map_tom_err)
 }
 
 #[derive(Debug, Deserialize)]

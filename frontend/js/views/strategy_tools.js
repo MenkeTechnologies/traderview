@@ -1623,6 +1623,38 @@ const TOOLS = {
         ],
         render: (r) => renderEventStudy(r, 'third-Friday expiration'),
     },
+    'futures-curve': {
+        label: 'Futures Curve',
+        call: (b) => api.futuresCurve(b.root, b.exchange, b.months),
+        fields: [
+            { key: 'root', label: 'Root (CL, NG, GC, ES, ZC…)', def: 'CL', text: true },
+            { key: 'exchange', label: 'Exchange (NYM/CMX/CME/CBT)', def: 'NYM', text: true },
+            { key: 'months', label: 'Months out', def: 8, int: true },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Shape</div>
+                    <div class="value ${r.shape === 'backwardation' ? 'pos' : r.shape === 'contango' ? 'neg' : ''}">${esc(r.shape.toUpperCase())}</div>
+                    <div class="small muted">${r.months_listed} months listed · ${r.months_missing} unlisted</div></div>
+                <div class="card"><div class="label">Roll yield (front→back, ann.)</div>
+                    <div class="value ${r.overall_roll_annualized_pct <= 0 ? 'pos' : 'neg'}">${r.overall_roll_annualized_pct.toFixed(1)}%</div>
+                    <div class="small muted">negative roll = longs EARN the roll</div></div>
+            </div>
+            <table class="gs-table">
+                <thead><tr><th>Month</th><th>Price</th><th>Spread</th><th>Roll (ann.)</th></tr></thead>
+                <tbody>${r.rows.map(row => `
+                    <tr>
+                        <td>${esc(row.label)}</td>
+                        <td>${row.price.toFixed(2)}</td>
+                        <td>${row.spread_pct != null ? (row.spread_pct >= 0 ? '+' : '') + row.spread_pct.toFixed(2) + '%' : '—'}</td>
+                        <td class="${row.roll_annualized_pct != null ? (row.roll_annualized_pct <= 0 ? 'pos' : 'neg') : ''}">${row.roll_annualized_pct != null ? row.roll_annualized_pct.toFixed(1) + '%' : '—'}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+            <p class="muted small">Live contract months off the Yahoo chain (symbol convention verified
+            against NYM/CMX/CME/CBT). The roll yield IS the commodity carry trade — backwardation pays
+            longs to roll, contango bleeds them.</p>`,
+    },
     '13f-diff': {
         label: '13F Whale Diff',
         call: (b) => api.thirteenFDiff(String(b.cik).trim()),

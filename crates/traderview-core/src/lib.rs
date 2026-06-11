@@ -924,5 +924,6 @@ pub mod lynch_fair_value;
 pub mod best_worst_days;
 pub mod drawdown_episodes;
 pub mod trade_report_card;
+pub mod futures_curve;
 
 pub use models::*;

@@ -832,6 +832,61 @@ pub async fn momentum_screen(
 }
 
 // ===========================================================================
+// Futures term structure (quotes each contract month via the cached
+// quote path; curve math in traderview_core::futures_curve)
+// ===========================================================================
+
+#[derive(Debug, Clone, Serialize)]
+pub struct FuturesCurveReport {
+    pub root: String,
+    pub exchange: String,
+    pub months_listed: usize,
+    pub months_missing: usize,
+    #[serde(flatten)]
+    pub curve: traderview_core::futures_curve::CurveReport,
+}
+
+pub async fn futures_curve(
+    pool: &PgPool,
+    root: &str,
+    exchange: &str,
+    months: usize,
+) -> Result<FuturesCurveReport, TomError> {
+    let now = Utc::now().date_naive();
+    let symbols = traderview_core::futures_curve::next_contract_symbols(
+        root,
+        exchange,
+        now.year(),
+        now.month(),
+        months.clamp(2, 18),
+    );
+    let mut points: Vec<(String, u32, f64)> = Vec::new();
+    let mut missing = 0usize;
+    for (sym, label, months_out) in &symbols {
+        // Unlisted months (expired front, thin back) are skipped — the
+        // curve math uses actual month spacing, so gaps stay honest.
+        match crate::market_data::quote(pool, sym).await {
+            Ok(q) if q.price > 0.0 => points.push((label.clone(), *months_out, q.price)),
+            _ => missing += 1,
+        }
+    }
+    let curve = traderview_core::futures_curve::analyze_curve(&points).ok_or_else(|| {
+        TomError::Insufficient {
+            symbol: format!("{root}.{exchange}"),
+            got: points.len(),
+            need: 2,
+        }
+    })?;
+    Ok(FuturesCurveReport {
+        root: root.to_string(),
+        exchange: exchange.to_string(),
+        months_listed: points.len(),
+        months_missing: missing,
+        curve,
+    })
+}
+
+// ===========================================================================
 // Mean-reversion screener — RSI(2), 20d z-score, MA distance
 // ===========================================================================
 
