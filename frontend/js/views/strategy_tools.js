@@ -1096,6 +1096,51 @@ const TOOLS = {
             <p class="muted small">Carr-Wu variance risk premium — persistently positive on equity indexes;
             pair the realized leg with the Vol Cone tab's current reading.</p>`,
     },
+    'options-quick-math': {
+        label: 'Options Quick Math',
+        call: (b) => api.calcOptionsQuickMath(b),
+        fields: [
+            { key: 'spot', label: 'Spot ($)', def: 100 },
+            { key: 'iv_pct', label: 'IV (%)', def: 25 },
+            { key: 'days_to_expiry', label: 'Days to expiry', def: 21 },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Daily move</div>
+                    <div class="value">±${r.daily_move_rule16_pct.toFixed(2)}%</div>
+                    <div class="small muted">rule of 16 · exact ${r.daily_move_exact_pct.toFixed(2)}% · weekly ${r.weekly_move_exact_pct.toFixed(2)}%</div></div>
+                <div class="card"><div class="label">ATM straddle</div>
+                    <div class="value">$${r.straddle_approx.toFixed(2)}</div>
+                    <div class="small muted">0.8·S·σ√T · exact $${r.straddle_exact.toFixed(2)} (${r.straddle_approx_error_pct >= 0 ? '+' : ''}${r.straddle_approx_error_pct.toFixed(2)}%)</div></div>
+                <div class="card"><div class="label">ATM call</div>
+                    <div class="value">$${r.atm_call_approx.toFixed(2)}</div>
+                    <div class="small muted">0.4·S·σ√T · exact $${r.atm_call_exact.toFixed(2)}</div></div>
+            </div>
+            <p class="muted small">The desk shortcuts with their exact Black-Scholes counterparts beside
+            them — the 0.8 constant is really √(2/π)·2 ≈ 0.7979.</p>`,
+    },
+    'lynch-fair-value': {
+        label: 'Lynch Fair Value',
+        call: (b) => api.calcLynchFairValue(b),
+        fields: [
+            { key: 'eps_growth_pct', label: 'EPS growth (%/yr)', def: 20 },
+            { key: 'dividend_yield_pct', label: 'Dividend yield (%)', def: 2 },
+            { key: 'pe_ratio', label: 'P/E', def: 11 },
+            { key: 'eps', label: 'EPS ($, 0 = skip fair price)', def: 5 },
+            { key: 'price', label: 'Price ($, 0 = skip upside)', def: 55 },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Adjusted PEG</div>
+                    <div class="value ${r.adjusted_peg >= 1.5 ? 'pos' : r.adjusted_peg < 1 ? 'neg' : ''}">${r.adjusted_peg.toFixed(2)}</div>
+                    <div class="small muted">${esc(r.band)} — (growth + yield) ÷ P/E</div></div>
+                ${r.fair_price != null ? `<div class="card"><div class="label">Fair price (P/E = growth)</div>
+                    <div class="value">$${r.fair_price.toFixed(2)}</div>
+                    ${r.upside_pct != null ? `<div class="small ${r.upside_pct >= 0 ? 'pos' : 'neg'}">${(r.upside_pct >= 0 ? '+' : '') + r.upside_pct.toFixed(1)}% vs price</div>` : ''}</div>` : ''}
+            </div>
+            <p class="muted small">Lynch's bands: <1 poor · 1–1.5 fair · 1.5–2 good · ≥2 attractive.
+            Heuristics from One Up On Wall Street, not a DCF.</p>`,
+    },
     'early-assignment': {
         label: 'Early Assignment',
         call: (b) => api.calcEarlyAssignment(b),

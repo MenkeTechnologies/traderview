@@ -771,6 +771,8 @@ export const api = {
     calcShortCarry:          (body) => request('/calc/short-carry', { method: 'POST', body: JSON.stringify(body) }),
     calcAssetLocation:       (body) => request('/calc/asset-location', { method: 'POST', body: JSON.stringify(body) }),
     calcAlphaHorizon:        (body) => request('/calc/alpha-horizon', { method: 'POST', body: JSON.stringify(body) }),
+    calcOptionsQuickMath:    (body) => request('/calc/options-quick-math', { method: 'POST', body: JSON.stringify(body) }),
+    calcLynchFairValue:      (body) => request('/calc/lynch-fair-value', { method: 'POST', body: JSON.stringify(body) }),
     overnightSplit:          (sym, years = 10) => request(`/symbols/${encodeURIComponent(sym)}/overnight-split${qs({ years })}`),
     calcImpliedDividend:     (body) => request('/options/calc/implied-dividend', { method: 'POST', body: JSON.stringify(body) }),
     calcWarrant:             (body) => request('/options/calc/warrant', { method: 'POST', body: JSON.stringify(body) }),

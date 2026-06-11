@@ -40,6 +40,8 @@
 //!   POST /calc/short-carry               — borrow/rebate/dividend carry
 //!   POST /calc/asset-location            — taxable-account tax drag rank
 //!   POST /calc/alpha-horizon             — signal-vs-cost breakeven days
+//!   POST /calc/options-quick-math        — rule-of-16 / 0.8σ√T vs exact
+//!   POST /calc/lynch-fair-value          — dividend-adjusted PEG
 
 use crate::auth::AuthUser;
 use crate::error::ApiError;
@@ -97,6 +99,8 @@ pub fn router() -> Router<AppState> {
         .route("/calc/short-carry", post(post_short_carry))
         .route("/calc/asset-location", post(post_asset_location))
         .route("/calc/alpha-horizon", post(post_alpha_horizon))
+        .route("/calc/options-quick-math", post(post_options_quick_math))
+        .route("/calc/lynch-fair-value", post(post_lynch_fair_value))
 }
 
 async fn post_grid_trading(
@@ -543,6 +547,26 @@ async fn post_alpha_horizon(
     traderview_core::alpha_horizon::compute(&b)
         .map(Json)
         .ok_or_else(|| ApiError::BadRequest("invalid alpha-horizon inputs".into()))
+}
+
+async fn post_options_quick_math(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<traderview_core::options_quick_math::QuickMathInput>,
+) -> Result<Json<traderview_core::options_quick_math::QuickMathReport>, ApiError> {
+    traderview_core::options_quick_math::compute(&b)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("spot, IV, and days must be positive".into()))
+}
+
+async fn post_lynch_fair_value(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<traderview_core::lynch_fair_value::LynchInput>,
+) -> Result<Json<traderview_core::lynch_fair_value::LynchReport>, ApiError> {
+    traderview_core::lynch_fair_value::compute(&b)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("invalid Lynch inputs".into()))
 }
 
 async fn post_dual_momentum(

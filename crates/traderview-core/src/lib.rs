@@ -919,5 +919,7 @@ pub mod leveraged_etf_decay;
 pub mod short_economics;
 pub mod asset_location;
 pub mod alpha_horizon;
+pub mod options_quick_math;
+pub mod lynch_fair_value;
 
 pub use models::*;
