@@ -37,6 +37,7 @@
 //!   GET  /symbols/:sym/opex-week         — third-Friday expiration window
 //!   GET  /symbols/:sym/pre-holiday       — pre-holiday drift (2024+ cal)
 //!   GET  /symbols/:sym/ex-div-study      — ex-date recovery behavior
+//!   POST /symbols/:sym/vol-rich-cheap    — IV term vs realized cone
 //!   POST /symbols/:sym/event-study       — caller-dated FOMC/CPI study
 //!   POST /calc/double-barrier            — target-vs-stop hit-first odds
 //!   POST /calc/futures-sizing            — tick math + margin-capped size
@@ -105,6 +106,7 @@ pub fn router() -> Router<AppState> {
         .route("/symbols/:symbol/opex-week", get(get_opex_week))
         .route("/symbols/:symbol/pre-holiday", get(get_pre_holiday))
         .route("/symbols/:symbol/ex-div-study", get(get_ex_div_study))
+        .route("/symbols/:symbol/vol-rich-cheap", post(post_vol_rich_cheap))
         .route("/symbols/:symbol/event-study", post(post_event_study))
         .route("/calc/double-barrier", post(post_double_barrier))
         .route("/calc/futures-sizing", post(post_futures_sizing))
@@ -801,6 +803,29 @@ async fn post_event_study(
     .await
     .map(Json)
     .map_err(map_tom_err)
+}
+
+#[derive(Debug, Deserialize)]
+struct VolRichCheapBody {
+    /// (trading-day horizon, IV %) pairs from the live chain.
+    term: Vec<(usize, f64)>,
+    years: Option<u32>,
+}
+
+async fn post_vol_rich_cheap(
+    State(s): State<AppState>,
+    _u: AuthUser,
+    Path(symbol): Path<String>,
+    Json(b): Json<VolRichCheapBody>,
+) -> Result<Json<strategy_calculators::VolRichCheapReport>, ApiError> {
+    let sym = validate_symbol(&symbol)?;
+    if b.term.is_empty() || b.term.len() > 50 {
+        return Err(ApiError::BadRequest("supply 1..=50 term points".into()));
+    }
+    strategy_calculators::vol_rich_cheap(&s.pool, &sym, b.years.unwrap_or(5), &b.term)
+        .await
+        .map(Json)
+        .map_err(map_tom_err)
 }
 
 #[derive(Debug, Deserialize)]

@@ -449,6 +449,38 @@ const TOOLS = {
             hurdle) — the HWM blocks double-charging after a down year.</p>`;
         },
     },
+    'vol-rich-cheap': {
+        label: 'Vol Rich/Cheap',
+        call: (b) => api.volRichCheap(b.symbol, {
+            term: String(b.term).split(';').map(s => s.trim()).filter(Boolean).map(s => {
+                const [d, iv] = s.split(',').map(x => Number(x.trim()));
+                return [d, iv];
+            }),
+            years: b.years,
+        }),
+        fields: [
+            { key: 'symbol', label: 'Symbol', def: 'SPY', text: true },
+            { key: 'term', label: 'IV term: days,IV%; …', def: '5,18; 21,17; 63,16', text: true },
+            { key: 'years', label: 'Realized lookback (years)', def: 5, int: true },
+        ],
+        render: (r) => `
+            <table class="gs-table">
+                <thead><tr><th>Horizon</th><th>IV</th><th>Realized</th><th>RV rank</th><th>Spread</th><th>Regime</th></tr></thead>
+                <tbody>${r.rows.map(row => `
+                    <tr>
+                        <td>${row.days}d</td>
+                        <td>${row.iv_pct.toFixed(1)}%</td>
+                        <td>${row.realized_pct.toFixed(1)}%</td>
+                        <td>${row.realized_rank_pct.toFixed(0)}%</td>
+                        <td class="${row.vol_spread_pct >= 0 ? 'pos' : 'neg'}">${row.vol_spread_pct.toFixed(1)}pp</td>
+                        <td class="${row.premium_regime === 'rich' ? 'pos' : row.premium_regime === 'cheap' ? 'neg' : ''}">${esc(row.premium_regime)}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+            <p class="muted small">Live IV term vs the realized cone's current reading per horizon —
+            "rich" premium AND a low realized rank is the short-vol setup; "cheap" against an elevated
+            rank says the market is underpricing motion. ${r.days_analyzed} closes on ${esc(r.symbol)}.</p>`,
+    },
     'vol-cone': {
         label: 'Vol Cone',
         call: (b) => api.volCone(b.symbol, b.years),

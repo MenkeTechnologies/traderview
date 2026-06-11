@@ -872,6 +872,76 @@ pub async fn ex_div_study(
 }
 
 // ===========================================================================
+// Vol rich/cheap — per-horizon IV vs realized (vol_cone ×
+// variance_risk_premium composition)
+// ===========================================================================
+
+#[derive(Debug, Clone, Serialize)]
+pub struct VolRichCheapRow {
+    pub days: usize,
+    pub iv_pct: f64,
+    pub realized_pct: f64,
+    /// Where current realized sits in its own history at this horizon.
+    pub realized_rank_pct: f64,
+    pub vrp_variance_points: f64,
+    pub vol_spread_pct: f64,
+    pub premium_regime: &'static str,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct VolRichCheapReport {
+    pub symbol: String,
+    pub days_analyzed: usize,
+    pub rows: Vec<VolRichCheapRow>,
+}
+
+/// `term` = (horizon trading days, implied vol %) pairs from the
+/// live chain; realized legs come from the cone over real closes.
+pub async fn vol_rich_cheap(
+    pool: &PgPool,
+    symbol: &str,
+    years: u32,
+    term: &[(usize, f64)],
+) -> Result<VolRichCheapReport, TomError> {
+    let closes = daily_closes(pool, symbol, years).await?;
+    let series: Vec<f64> = closes.iter().map(|(_, c)| *c).collect();
+    let horizons: Vec<usize> = term.iter().map(|(d, _)| *d).collect();
+    let cone = traderview_core::vol_cone::compute(&series, &horizons);
+    let mut rows = Vec::with_capacity(term.len());
+    for &(days, iv) in term {
+        let Some(cone_row) = cone.iter().find(|r| r.horizon_days == days) else {
+            continue; // horizon longer than the sample — skip, don't fake
+        };
+        let Some(vrp) =
+            traderview_core::variance_risk_premium::compute(iv, cone_row.current_pct)
+        else {
+            continue;
+        };
+        rows.push(VolRichCheapRow {
+            days,
+            iv_pct: iv,
+            realized_pct: cone_row.current_pct,
+            realized_rank_pct: cone_row.current_rank_pct,
+            vrp_variance_points: vrp.vrp_variance_points,
+            vol_spread_pct: vrp.vol_spread_pct,
+            premium_regime: vrp.premium_regime,
+        });
+    }
+    if rows.is_empty() {
+        return Err(TomError::Insufficient {
+            symbol: symbol.to_string(),
+            got: series.len(),
+            need: MIN_DAYS,
+        });
+    }
+    Ok(VolRichCheapReport {
+        symbol: symbol.to_string(),
+        days_analyzed: series.len(),
+        rows,
+    })
+}
+
+// ===========================================================================
 // Volatility cone (data wrapper around traderview_core::vol_cone)
 // ===========================================================================
 

@@ -778,6 +778,7 @@ export const api = {
     drawdownEpisodes:        (sym, years = 10, n = 5) => request(`/symbols/${encodeURIComponent(sym)}/drawdown-episodes${qs({ years, n })}`),
     opexWeek:                (sym, years = 10, quarterly = false) => request(`/symbols/${encodeURIComponent(sym)}/opex-week${qs({ years, quarterly })}`),
     exDivStudy:              (sym, years = 10) => request(`/symbols/${encodeURIComponent(sym)}/ex-div-study${qs({ years })}`),
+    volRichCheap:            (sym, body) => request(`/symbols/${encodeURIComponent(sym)}/vol-rich-cheap`, { method: 'POST', body: JSON.stringify(body) }),
     preHoliday:              (sym, years = 5) => request(`/symbols/${encodeURIComponent(sym)}/pre-holiday${qs({ years })}`),
     eventStudy:              (sym, body) => request(`/symbols/${encodeURIComponent(sym)}/event-study`, { method: 'POST', body: JSON.stringify(body) }),
     calcImpliedDividend:     (body) => request('/options/calc/implied-dividend', { method: 'POST', body: JSON.stringify(body) }),
