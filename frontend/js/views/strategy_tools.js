@@ -465,6 +465,37 @@ const TOOLS = {
             <p class="muted small">Carr-Wu variance risk premium — persistently positive on equity indexes;
             pair the realized leg with the Vol Cone tab's current reading.</p>`,
     },
+    warrant: {
+        label: 'Warrant Pricer',
+        call: (b) => api.calcWarrant(b),
+        fields: [
+            { key: 'spot', label: 'Spot ($)', def: 100 },
+            { key: 'strike', label: 'Strike ($)', def: 100 },
+            { key: 'time_to_expiry_years', label: 'Time to expiry (years)', def: 1 },
+            { key: 'risk_free_rate', label: 'Risk-free rate (decimal)', def: 0.05 },
+            { key: 'volatility', label: 'Volatility (decimal)', def: 0.2 },
+            { key: 'shares_outstanding', label: 'Shares outstanding (M)', def: 100 },
+            { key: 'warrants_outstanding', label: 'Warrants outstanding (M)', def: 20 },
+        ],
+        render: (r) => {
+            if (!r) return '<span class="neg">invalid inputs</span>';
+            return `
+            <div class="cards">
+                <div class="card"><div class="label">Warrant value</div>
+                    <div class="value">$${r.warrant_value.toFixed(4)}</div>
+                    <div class="small muted">converged in ${r.iterations} iterations</div></div>
+                <div class="card"><div class="label">Plain call</div>
+                    <div class="value">$${r.plain_call_value.toFixed(4)}</div>
+                    <div class="small muted">dilution-free upper bound</div></div>
+                <div class="card"><div class="label">Dilution discount</div>
+                    <div class="value neg">−${r.dilution_discount_pct.toFixed(2)}%</div>
+                    <div class="small muted">factor N/(N+M) = ${r.dilution_factor.toFixed(3)}</div></div>
+            </div>
+            <p class="muted small">Galai-Schneller: W = N/(N+M) · BS(S + M·W/N, K) — exercise mints new
+            shares but the strike proceeds raise per-share asset value, so the warrant lands between
+            the naive factor × call and the plain call.</p>`;
+        },
+    },
     'implied-dividend': {
         label: 'Implied Dividend',
         call: (b) => api.calcImpliedDividend(b),

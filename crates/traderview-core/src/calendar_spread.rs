@@ -204,33 +204,13 @@ pub fn analyze_diagonal(spread: &DiagonalSpread, cfg: &AnalyzerConfig) -> Option
     })
 }
 
+/// Delegates to the shared pricer (`black_scholes`) — extracted from
+/// this module, identical numerics.
 fn bs_price(s: f64, k: f64, t: f64, r: f64, q: f64, sigma: f64, kind: OptionKind) -> f64 {
-    let sqrt_t = t.sqrt();
-    let d1 = ((s / k).ln() + (r - q + 0.5 * sigma * sigma) * t) / (sigma * sqrt_t);
-    let d2 = d1 - sigma * sqrt_t;
-    let nd1 = norm_cdf(d1);
-    let nd2 = norm_cdf(d2);
-    let dq = (-q * t).exp();
-    let dr = (-r * t).exp();
     match kind {
-        OptionKind::Call => s * dq * nd1 - k * dr * nd2,
-        OptionKind::Put => k * dr * (1.0 - nd2) - s * dq * (1.0 - nd1),
+        OptionKind::Call => crate::black_scholes::call(s, k, t, r, q, sigma),
+        OptionKind::Put => crate::black_scholes::put(s, k, t, r, q, sigma),
     }
-}
-
-fn norm_cdf(x: f64) -> f64 {
-    // A&S 26.2.17, max err 7.5e-8.
-    let a1 = 0.254829592_f64;
-    let a2 = -0.284496736_f64;
-    let a3 = 1.421413741_f64;
-    let a4 = -1.453152027_f64;
-    let a5 = 1.061405429_f64;
-    let p = 0.3275911_f64;
-    let sign = if x < 0.0 { -1.0 } else { 1.0 };
-    let xa = x.abs() / std::f64::consts::SQRT_2;
-    let t = 1.0 / (1.0 + p * xa);
-    let y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * (-xa * xa).exp();
-    0.5 * (1.0 + sign * y)
 }
 
 #[cfg(test)]

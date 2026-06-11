@@ -155,7 +155,8 @@ use traderview_core::{
     volume_weighted_macd, volume_zone_oscillator, vortex_indicator, vpin, vsa, vwema, walk_forward,
     wasserstein_1d, wavelet_decomposition_haar, weighted_close, weighted_midprice,
     weinstein_stages, weiss_wave, welch_periodogram, white_robust_se, wilcoxon_signed_rank,
-    williams_accumulation_distribution, woodie_pivots, woodies_cci, wyckoff, yield_curve_bootstrap,
+    warrant_valuation, williams_accumulation_distribution, woodie_pivots, woodies_cci, wyckoff,
+    yield_curve_bootstrap,
     z_score_indicator, z_spread, zero_lag_macd,
 };
 
@@ -802,6 +803,7 @@ pub fn router() -> Router<AppState> {
             "/options/calc/implied-dividend",
             post(implied_dividend_route),
         )
+        .route("/options/calc/warrant", post(warrant_route))
         .route("/options/calc/heston", post(heston_route))
         .route(
             "/options/calc/heston-calibrate",
@@ -7178,6 +7180,13 @@ struct ImpliedDividendBody {
     put_price: f64,
     time_to_expiry_years: f64,
     market_risk_free_rate: f64,
+}
+
+async fn warrant_route(
+    _u: AuthUser,
+    Json(b): Json<warrant_valuation::WarrantInput>,
+) -> Json<Option<warrant_valuation::WarrantReport>> {
+    Json(warrant_valuation::compute(&b))
 }
 
 async fn implied_dividend_route(

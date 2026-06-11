@@ -14,6 +14,14 @@
 //! A flat par curve bootstraps to an identical flat zero curve; an
 //! upward par curve puts long zeros above par (coupon effect).
 //!
+//! Related to but DISTINCT from `yield_curve_bootstrap`: that module
+//! exact-fits raw coupon-bond cash flows under a no-arbitrage DF ≤ 1
+//! constraint (continuously-compounded zeros, rejects negative-rate
+//! curves by design — pinned by its arbitrage_violation test). This
+//! one speaks the par-rate convention with annual compounding and
+//! supports negative-rate regimes (DF > 1), which that contract
+//! forbids — hence the standalone recurrence instead of delegation.
+//!
 //! Pure compute. Companion to `nelson_siegel`, `fra`, `bond_convexity`.
 
 use serde::Serialize;

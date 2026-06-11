@@ -894,5 +894,7 @@ pub mod implied_dividend;
 pub mod scale_out_planner;
 pub mod merger_arb;
 pub mod buyback_accretion;
+pub mod black_scholes;
+pub mod warrant_valuation;
 
 pub use models::*;
