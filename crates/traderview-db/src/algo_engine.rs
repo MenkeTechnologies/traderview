@@ -153,6 +153,12 @@ pub enum EngineError {
     ConsecutiveLossesCap { cap: i64, streak: i64 },
     #[error("position size ${notional} exceeds cap ${cap}; order rejected")]
     PositionSizeCap { notional: Decimal, cap: Decimal },
+    #[error("earnings blackout: {symbol} reports on {date} (within {days}d window); entry skipped")]
+    EarningsBlackout {
+        symbol: String,
+        date: chrono::NaiveDate,
+        days: i64,
+    },
     #[error("broker: {0}")]
     Broker(String),
     #[error("db: {0}")]
@@ -290,7 +296,8 @@ impl BrokerSink for InMemorySink {
 ///   "max_concurrent_positions": 5,
 ///   "max_daily_loss_usd": 500.0,
 ///   "max_consecutive_losses": 4,
-///   "max_position_size_usd": 10000.0
+///   "max_position_size_usd": 10000.0,
+///   "earnings_blackout_days": 2
 /// }
 /// ```
 #[derive(Debug, Clone)]
@@ -306,6 +313,10 @@ pub struct EngineConfig {
     pub max_consecutive_losses: Option<i64>,
     /// Reject orders whose entry-price × qty exceeds this notional cap.
     pub max_position_size_usd: Option<Decimal>,
+    /// Skip ENTRIES when the symbol's next earnings report is within
+    /// this many days (forward-looking: the risk being managed is
+    /// holding INTO the print). Exits are never blocked.
+    pub earnings_blackout_days: Option<i64>,
 }
 
 impl EngineConfig {
@@ -337,6 +348,11 @@ impl EngineConfig {
             .risk_gates
             .get("max_position_size_usd")
             .and_then(f64_to_dec);
+        let earnings_blackout_days = s
+            .risk_gates
+            .get("earnings_blackout_days")
+            .and_then(|v| v.as_i64())
+            .filter(|n| *n > 0);
         Self {
             sizing,
             side_mode,
@@ -344,6 +360,7 @@ impl EngineConfig {
             max_daily_loss_usd,
             max_consecutive_losses,
             max_position_size_usd,
+            earnings_blackout_days,
         }
     }
 }
@@ -467,6 +484,40 @@ async fn trip_kill_switch(
 /// current account equity, and the count of currently-open positions.
 /// Returns `Some(AlgoOrder.id)` when an order was submitted, `None`
 /// when no signal fired (caller treats as a no-op, not an error).
+/// Forward-looking blackout test: true when the NEXT earnings date is
+/// today or within `blackout_days` days. Past earnings never block.
+pub fn in_earnings_blackout(
+    next_earnings: Option<chrono::NaiveDate>,
+    today: chrono::NaiveDate,
+    blackout_days: i64,
+) -> bool {
+    match next_earnings {
+        Some(d) => {
+            let delta = (d - today).num_days();
+            (0..=blackout_days).contains(&delta)
+        }
+        None => false,
+    }
+}
+
+/// Next scheduled earnings date for the symbol, today or later.
+async fn next_earnings_date(
+    pool: &PgPool,
+    symbol: &str,
+    today: chrono::NaiveDate,
+) -> Result<Option<chrono::NaiveDate>, EngineError> {
+    let row: Option<(chrono::NaiveDate,)> = sqlx::query_as(
+        "SELECT earnings_date FROM earnings_events
+          WHERE symbol = $1 AND earnings_date >= $2
+          ORDER BY earnings_date LIMIT 1",
+    )
+    .bind(symbol)
+    .bind(today)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row.map(|(d,)| d))
+}
+
 pub async fn process_bar_window(
     pool: &PgPool,
     sink: &dyn BrokerSink,
@@ -549,6 +600,19 @@ pub async fn process_bar_window(
     let Some(sig) = strat.evaluate_entry(bars, cfg.side_mode) else {
         return Ok(None);
     };
+    // Risk gate: earnings blackout — entries only; the exit pass above
+    // already ran, so positions can always flatten into the print.
+    if let Some(days) = cfg.earnings_blackout_days {
+        let today = chrono::Utc::now().date_naive();
+        let next = next_earnings_date(pool, &symbol, today).await?;
+        if in_earnings_blackout(next, today, days) {
+            return Err(EngineError::EarningsBlackout {
+                symbol: symbol.clone(),
+                date: next.unwrap(),
+                days,
+            });
+        }
+    }
     let qty = algo_strategies::size_shares(equity, sig.entry_price, sig.stop_distance, &cfg.sizing);
     if qty == 0 {
         return Err(EngineError::ZeroQty);
@@ -1281,4 +1345,46 @@ async fn run_exit_pass(
         closed_any = true;
     }
     Ok(closed_any)
+}
+
+#[cfg(test)]
+mod earnings_blackout_tests {
+    use super::*;
+    use chrono::NaiveDate;
+
+    fn d(y: i32, m: u32, day: u32) -> NaiveDate {
+        NaiveDate::from_ymd_opt(y, m, day).unwrap()
+    }
+
+    #[test]
+    fn boundary_days_pin_the_window() {
+        let today = d(2026, 6, 10);
+        // Earnings TODAY blocks; exactly N days out blocks; N+1 clears.
+        assert!(in_earnings_blackout(Some(today), today, 2));
+        assert!(in_earnings_blackout(Some(d(2026, 6, 12)), today, 2));
+        assert!(!in_earnings_blackout(Some(d(2026, 6, 13)), today, 2));
+    }
+
+    #[test]
+    fn past_earnings_and_no_earnings_never_block() {
+        let today = d(2026, 6, 10);
+        // Yesterday's print is history — the gate is forward-looking.
+        assert!(!in_earnings_blackout(Some(d(2026, 6, 9)), today, 5));
+        assert!(!in_earnings_blackout(None, today, 5));
+    }
+
+    #[test]
+    fn config_parses_and_rejects_nonpositive() {
+        let mk = |v: serde_json::Value| {
+            serde_json::json!({ "earnings_blackout_days": v })
+        };
+        let get = |rg: serde_json::Value| -> Option<i64> {
+            rg.get("earnings_blackout_days")
+                .and_then(|v| v.as_i64())
+                .filter(|n| *n > 0)
+        };
+        assert_eq!(get(mk(serde_json::json!(2))), Some(2));
+        assert_eq!(get(mk(serde_json::json!(0))), None);
+        assert_eq!(get(mk(serde_json::json!(-3))), None);
+    }
 }

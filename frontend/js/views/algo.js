@@ -2196,6 +2196,9 @@ async function openStrategyModal(mount, existing = null, prefill = null) {
                     <label><span data-i18n="view.algo.label.max_concurrent">Max concurrent positions</span>
                         <input type="number" name="max_concurrent_positions" min="1" max="50" value="${Number(s.risk_gates?.max_concurrent_positions ?? 5)}">
                     </label>
+                    <label><span data-i18n="view.algo.label.earnings_blackout">Earnings blackout (days, 0 = off)</span>
+                        <input type="number" name="earnings_blackout_days" min="0" max="30" value="${Number(s.risk_gates?.earnings_blackout_days ?? 0)}" data-tip="view.algo.tip.earnings_blackout">
+                    </label>
                     <label><span data-i18n="view.algo.label.broker_mode">Execution mode</span>
                         <select name="broker_mode">
                             <option value="internal_sim"  ${s.broker_mode === 'internal_sim'  ? 'selected' : ''} data-i18n="view.algo.opt.broker_sim">Paper — In-app simulator (no broker call)</option>
@@ -2264,6 +2267,7 @@ async function openStrategyModal(mount, existing = null, prefill = null) {
             },
             risk_gates: Object.assign({}, s.risk_gates || {}, {
                 max_concurrent_positions: Number(f.get('max_concurrent_positions')) || 5,
+                earnings_blackout_days: Number(f.get('earnings_blackout_days')) || 0,
             }),
             broker_mode: f.get('broker_mode'),
         };
