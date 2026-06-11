@@ -78,9 +78,15 @@ export async function renderPaper(mount) {
                         <option data-i18n="view.paper.opt.market" value="market">market</option>
                         <option data-i18n="view.paper.opt.limit" value="limit">limit</option>
                         <option data-i18n="view.paper.opt.stop" value="stop">stop</option>
+                        <option data-i18n="view.paper.opt.trailing" value="trailing">trailing</option>
                     </select>
                     <input name="limit_price" type="number" step="0.01" placeholder="limit" data-i18n-placeholder="common.placeholder.limit" data-tip="view.paper.tip.limit">
                     <input name="stop_price"  type="number" step="0.01" placeholder="stop" data-i18n-placeholder="common.placeholder.stop" data-tip="view.paper.tip.stop">
+                    <input name="trail_value" type="number" step="0.01" min="0" placeholder="trail" data-i18n-placeholder="common.placeholder.trail" data-tip="view.paper.tip.trail">
+                    <select name="trail_unit" data-tip="view.paper.tip.trail_unit">
+                        <option value="usd">$</option>
+                        <option value="pct">%</option>
+                    </select>
                     <button data-i18n="view.paper.btn.submit" data-tip="view.paper.tip.submit" data-shortcut="paper_submit" class="primary" type="submit">SUBMIT</button>
                 </form>
                 <button data-i18n="view.paper.btn.reset_account_200k" data-tip="view.paper.tip.reset" class="link" id="reset">Reset account ($200k)</button>
@@ -130,7 +136,7 @@ export async function renderPaper(mount) {
                         <td>${esc(o.symbol)}</td>
                         <td>${o.side}</td>
                         <td>${fmt(o.qty, 0)}</td>
-                        <td>${o.order_type}${o.limit_price != null ? ' @' + fmt(o.limit_price) : ''}${o.stop_price != null ? ' stop ' + fmt(o.stop_price) : ''}</td>
+                        <td>${o.order_type}${o.limit_price != null ? ' @' + fmt(o.limit_price) : ''}${o.stop_price != null ? ' stop ' + fmt(o.stop_price) : ''}${o.trail_value != null ? ' ' + (o.trail_is_pct ? (Number(o.trail_value) * 100).toFixed(1) + '%' : '$' + fmt(o.trail_value)) + (o.status === 'pending' && o.trail_extreme != null ? ' (hwm ' + fmt(o.trail_extreme) + ')' : '') : ''}</td>
                         <td class="${o.status === 'filled' ? 'pos' : (o.status === 'rejected' ? 'neg' : '')}">${o.status}</td>
                         <td>${o.filled_price != null ? fmt(o.filled_price) : '—'}</td>
                         <td>${o.filled_at ? fmtDateTime(o.filled_at) : '—'}</td>
@@ -152,6 +158,11 @@ export async function renderPaper(mount) {
             order_type: fd.get('order_type'),
             limit_price: fd.get('limit_price') ? Number(fd.get('limit_price')) : null,
             stop_price: fd.get('stop_price') ? Number(fd.get('stop_price')) : null,
+            // A "5" with % selected means 5% — the engine wants 0.05.
+            trail_value: fd.get('trail_value')
+                ? Number(fd.get('trail_value')) / (fd.get('trail_unit') === 'pct' ? 100 : 1)
+                : null,
+            trail_is_pct: fd.get('trail_value') ? fd.get('trail_unit') === 'pct' : null,
         };
         try {
             const o = await api.paperSubmit(acct.id, body);

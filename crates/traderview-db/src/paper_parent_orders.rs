@@ -324,6 +324,8 @@ pub async fn tick(pool: &PgPool) -> anyhow::Result<usize> {
             order_type: "market".into(),
             limit_price: None,
             stop_price: None,
+            trail_value: None,
+            trail_is_pct: None,
         };
         match crate::paper::submit(pool, d.user_id, d.account_id, req).await {
             Ok(_) => {

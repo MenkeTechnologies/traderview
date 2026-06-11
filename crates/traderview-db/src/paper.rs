@@ -33,6 +33,9 @@ pub struct PaperOrder {
     pub limit_price: Option<Decimal>,
     pub stop_price: Option<Decimal>,
     pub status: String,
+    pub trail_value: Option<Decimal>,
+    pub trail_is_pct: Option<bool>,
+    pub trail_extreme: Option<Decimal>,
     pub filled_price: Option<Decimal>,
     pub filled_qty: Option<Decimal>,
     pub fee: Decimal,
@@ -112,9 +115,15 @@ pub struct OrderRequest {
     pub symbol: String,
     pub side: Side,
     pub qty: Decimal,
-    pub order_type: String, // 'market' | 'limit' | 'stop' | 'stop_limit'
+    pub order_type: String, // 'market' | 'limit' | 'stop' | 'trailing'
     pub limit_price: Option<Decimal>,
     pub stop_price: Option<Decimal>,
+    /// Trailing stop distance: dollars, or a fraction of the extreme
+    /// (e.g. 0.05 = 5%) when trail_is_pct.
+    #[serde(default)]
+    pub trail_value: Option<Decimal>,
+    #[serde(default)]
+    pub trail_is_pct: Option<bool>,
 }
 
 /// Price at which an order triggers against the current quote: market
@@ -142,6 +151,36 @@ pub fn trigger_price(
         },
         _ => None,
     }
+}
+
+/// Trailing-stop ratchet: fold the latest price into the tracked
+/// extreme (high-water for sell/short exits, low-water for buy/cover
+/// entries-or-covers) and report whether the retrace from that extreme
+/// has reached the trail distance. Returns (new extreme, triggered).
+pub fn trail_update(
+    side: Side,
+    last: Decimal,
+    extreme: Decimal,
+    trail_value: Decimal,
+    trail_is_pct: bool,
+) -> (Decimal, bool) {
+    let sellish = matches!(side, Side::Sell | Side::Short);
+    let new_extreme = if sellish {
+        extreme.max(last)
+    } else {
+        extreme.min(last)
+    };
+    let trail = if trail_is_pct {
+        new_extreme * trail_value
+    } else {
+        trail_value
+    };
+    let triggered = if sellish {
+        last <= new_extreme - trail
+    } else {
+        last >= new_extreme + trail
+    };
+    (new_extreme, triggered)
 }
 
 /// Apply the baseline-equity friction model to a triggered price:
@@ -206,12 +245,19 @@ pub async fn submit(
         Side::Cover => "cover",
     };
 
-    // Untriggered but well-formed limit/stop orders REST; only orders
-    // missing the price their type requires (or an unknown type) reject.
+    // Untriggered but well-formed limit/stop/trailing orders REST; only
+    // orders missing the price/trail their type requires (or an unknown
+    // type) reject. A trailing trail is dollars > 0, or a fraction in
+    // (0, 1) of the ratcheting extreme when trail_is_pct.
+    let trail_ok = req.trail_value.is_some_and(|v| {
+        v > Decimal::ZERO && (!req.trail_is_pct.unwrap_or(false) || v < Decimal::ONE)
+    });
     let well_formed = matches!(
         (req.order_type.as_str(), req.limit_price, req.stop_price),
         ("limit", Some(_), _) | ("stop", _, Some(_))
-    );
+    ) || (req.order_type == "trailing" && trail_ok);
+    // A resting trailing stop starts its ratchet at the current price.
+    let trail_extreme = (req.order_type == "trailing" && trail_ok).then_some(last);
     let mut tx = pool.begin().await?;
     let (status, filled_at, reject) = match (fill_price, well_formed) {
         (Some(_), _) => ("filled", Some(Utc::now()), None),
@@ -219,23 +265,26 @@ pub async fn submit(
         (None, false) => (
             "rejected",
             None,
-            Some("order type needs its limit/stop price".to_string()),
+            Some("order type needs its limit/stop price or trail value".to_string()),
         ),
     };
     let order: PaperOrder = sqlx::query_as(
         "INSERT INTO paper_orders
             (paper_account_id, symbol, side, qty, order_type, limit_price, stop_price,
-             status, filled_price, filled_qty, filled_at, reject_reason)
+             status, filled_price, filled_qty, filled_at, reject_reason,
+             trail_value, trail_is_pct, trail_extreme)
          VALUES ($1, $2, $3::side_t, $4, $5::paper_order_type_t, $6, $7,
-                 $8::paper_order_status_t, $9, $10, $11, $12)
+                 $8::paper_order_status_t, $9, $10, $11, $12, $13, $14, $15)
          RETURNING id, paper_account_id, symbol, side::text, qty, order_type::text,
                    limit_price, stop_price, status::text,
+                   trail_value, trail_is_pct, trail_extreme,
                    filled_price, filled_qty, fee, submitted_at, filled_at, cancel_at, reject_reason",
     )
     .bind(account_id).bind(req.symbol.to_uppercase()).bind(side_str)
     .bind(req.qty).bind(&req.order_type).bind(req.limit_price).bind(req.stop_price)
     .bind(status).bind(fill_price).bind(fill_price.map(|_| req.qty))
     .bind(filled_at).bind(reject)
+    .bind(req.trail_value).bind(req.trail_is_pct).bind(trail_extreme)
     .fetch_one(&mut *tx)
     .await?;
 
@@ -290,10 +339,13 @@ pub async fn check_pending(pool: &PgPool) -> anyhow::Result<usize> {
         order_type: String,
         limit_price: Option<Decimal>,
         stop_price: Option<Decimal>,
+        trail_value: Option<Decimal>,
+        trail_is_pct: Option<bool>,
+        trail_extreme: Option<Decimal>,
     }
     let rows: Vec<Pending> = sqlx::query_as(
         "SELECT id, paper_account_id, symbol, side::text, qty, order_type::text,
-                limit_price, stop_price
+                limit_price, stop_price, trail_value, trail_is_pct, trail_extreme
            FROM paper_orders
           WHERE status = 'pending'
           ORDER BY submitted_at
@@ -315,9 +367,30 @@ pub async fn check_pending(pool: &PgPool) -> anyhow::Result<usize> {
         let Ok(last) = Decimal::try_from(quote.price) else {
             continue;
         };
-        let Some(p) = trigger_price(&o.order_type, side, last, o.limit_price, o.stop_price)
-        else {
-            continue;
+        let p = if o.order_type == "trailing" {
+            let (Some(tv), Some(extreme)) = (o.trail_value, o.trail_extreme) else {
+                continue;
+            };
+            let (new_extreme, triggered) =
+                trail_update(side, last, extreme, tv, o.trail_is_pct.unwrap_or(false));
+            if !triggered {
+                if new_extreme != extreme {
+                    sqlx::query("UPDATE paper_orders SET trail_extreme = $2 WHERE id = $1")
+                        .bind(o.id)
+                        .bind(new_extreme)
+                        .execute(pool)
+                        .await
+                        .ok();
+                }
+                continue;
+            }
+            last
+        } else {
+            let Some(p) = trigger_price(&o.order_type, side, last, o.limit_price, o.stop_price)
+            else {
+                continue;
+            };
+            p
         };
         let (adjusted, fee) = frictioned_fill(p, o.qty, side);
         let mut tx = pool.begin().await?;
@@ -463,6 +536,7 @@ pub async fn list_orders(
     Ok(sqlx::query_as::<_, PaperOrder>(
         "SELECT id, paper_account_id, symbol, side::text, qty, order_type::text,
                 limit_price, stop_price, status::text,
+                trail_value, trail_is_pct, trail_extreme,
                 filled_price, filled_qty, fee, submitted_at, filled_at, cancel_at, reject_reason
            FROM paper_orders WHERE paper_account_id = $1
           ORDER BY submitted_at DESC LIMIT $2",
@@ -535,6 +609,43 @@ mod tests {
     fn missing_required_price_or_unknown_type_never_triggers() {
         assert_eq!(trigger_price("limit", Side::Buy, d(99), None, None), None);
         assert_eq!(trigger_price("stop", Side::Sell, d(94), None, None), None);
+        // Trailing has its own ratchet path — never via trigger_price.
         assert_eq!(trigger_price("trailing", Side::Buy, d(99), Some(d(100)), Some(d(95))), None);
+    }
+
+    #[test]
+    fn sell_trail_ratchets_up_and_fires_on_dollar_retrace() {
+        // $2 trail protecting a long. Walk: 100 → 103 (ratchet) → 101.5
+        // (1.5 retrace, holds) → 101 (2.0 retrace, fires).
+        let tv = d(2);
+        let (e, fired) = trail_update(Side::Sell, d(103), d(100), tv, false);
+        assert_eq!((e, fired), (d(103), false));
+        let (e, fired) = trail_update(Side::Sell, Decimal::new(1015, 1), e, tv, false);
+        assert_eq!((e, fired), (d(103), false));
+        let (e, fired) = trail_update(Side::Sell, d(101), e, tv, false);
+        assert_eq!((e, fired), (d(103), true));
+    }
+
+    #[test]
+    fn cover_trail_ratchets_down_and_fires_on_percent_bounce() {
+        // 5% trail covering a short. Walk: 80 → 76 (ratchet) → 79
+        // (3.95% bounce, holds) → 79.8 (= 76 × 1.05, fires).
+        let tv = Decimal::new(5, 2);
+        let (e, fired) = trail_update(Side::Cover, d(76), d(80), tv, true);
+        assert_eq!((e, fired), (d(76), false));
+        let (e, fired) = trail_update(Side::Cover, d(79), e, tv, true);
+        assert_eq!((e, fired), (d(76), false));
+        let (e, fired) = trail_update(Side::Cover, Decimal::new(798, 1), e, tv, true);
+        assert_eq!((e, fired), (d(76), true));
+    }
+
+    #[test]
+    fn trail_extreme_never_loosens() {
+        // A sell trail's extreme only moves up — a dip must not lower it.
+        let (e, _) = trail_update(Side::Sell, d(98), d(103), d(10), false);
+        assert_eq!(e, d(103));
+        // A cover trail's extreme only moves down.
+        let (e, _) = trail_update(Side::Cover, d(85), d(76), d(20), false);
+        assert_eq!(e, d(76));
     }
 }

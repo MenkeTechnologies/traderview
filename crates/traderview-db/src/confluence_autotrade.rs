@@ -754,6 +754,8 @@ pub async fn run_once(pool: &PgPool, user_id: Uuid) -> anyhow::Result<RunOnceRes
                 order_type: "market".into(),
                 limit_price: None,
                 stop_price: None,
+                trail_value: None,
+                trail_is_pct: None,
             },
         )
         .await?;
