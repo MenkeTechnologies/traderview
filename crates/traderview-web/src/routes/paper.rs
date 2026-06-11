@@ -318,8 +318,16 @@ async fn run_risk_gate(
         qty,
         entry_price,
         stop_loss,
-        asset_class: AssetClass::Stock,
-        multiplier: Decimal::ONE,
+        asset_class: if traderview_core::occ_symbol::is_occ(symbol) {
+            AssetClass::Option
+        } else {
+            AssetClass::Stock
+        },
+        multiplier: if traderview_core::occ_symbol::is_occ(symbol) {
+            Decimal::from(100)
+        } else {
+            Decimal::ONE
+        },
         tick_size: None,
         tick_value: None,
         has_attached_plan,

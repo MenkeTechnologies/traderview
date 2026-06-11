@@ -70,6 +70,18 @@ pub async fn snapshot_all(pool: &PgPool) -> anyhow::Result<usize> {
         let mut position_value = Decimal::ZERO;
         let mut all_marked = true;
         for (symbol, qty) in &positions {
+            // Option positions mark at the chain mid x 100 multiplier;
+            // equities at the cached quote.
+            if let Some(occ) = traderview_core::occ_symbol::parse(symbol) {
+                match crate::paper::option_quote(&occ).await {
+                    Ok(Some(p)) => match Decimal::try_from(p * 100.0) {
+                        Ok(v) => position_value += v * qty,
+                        Err(_) => all_marked = false,
+                    },
+                    _ => all_marked = false,
+                }
+                continue;
+            }
             match crate::market_data::quote(pool, symbol).await {
                 Ok(q) => match Decimal::try_from(q.price) {
                     Ok(p) => position_value += p * qty,

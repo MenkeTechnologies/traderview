@@ -348,6 +348,12 @@ pub async fn submit(
         anyhow::bail!("forbidden");
     }
 
+    // Options route through their own fill path: chain-quoted mid,
+    // contract multiplier, per-contract commission.
+    if traderview_core::occ_symbol::is_occ(&req.symbol) {
+        return submit_option(pool, account_id, req).await;
+    }
+
     let quote = crate::market_data::quote(pool, &req.symbol).await?;
     let last = Decimal::try_from(quote.price)?;
 
@@ -439,6 +445,7 @@ pub async fn submit(
             req.side,
             req.qty,
             price,
+            Decimal::ONE,
         )
         .await?;
         // Commission + SEC fee deducted from cash on top of the
@@ -588,7 +595,7 @@ pub async fn check_pending(pool: &PgPool) -> anyhow::Result<Vec<BackgroundFill>>
             tx.rollback().await?;
             continue;
         }
-        apply_fill(&mut tx, o.paper_account_id, &o.symbol, side, o.qty, adjusted).await?;
+        apply_fill(&mut tx, o.paper_account_id, &o.symbol, side, o.qty, adjusted, Decimal::ONE).await?;
         deduct_fee(&mut tx, o.paper_account_id, fee).await?;
         // OCO: the first leg to fill kills its siblings — atomically
         // with the fill so a crash can't leave both legs live.
@@ -773,6 +780,84 @@ async fn insert_leg(
     .await?)
 }
 
+/// Chain-quoted price for one OCC contract: mid of bid/ask, last as
+/// fallback, None when the contract has no usable price.
+pub(crate) async fn option_quote(
+    occ: &traderview_core::occ_symbol::OccContract,
+) -> anyhow::Result<Option<f64>> {
+    let chain = crate::options::chain(&occ.underlying, Some(occ.expiry)).await?;
+    let list = if occ.call { &chain.calls } else { &chain.puts };
+    Ok(list
+        .iter()
+        .find(|c| (c.strike - occ.strike).abs() < 1e-6)
+        .and_then(|c| traderview_core::occ_symbol::fill_price(c.bid, c.ask, c.last_price)))
+}
+
+/// Per-contract commission for paper option fills (retail standard).
+const OPTION_COMMISSION_PER_CONTRACT: f64 = 0.65;
+
+/// Option fills: MARKET only this pass (resting option orders would
+/// need the ticker to quote chains per pending row), at the chain mid
+/// with the 100x contract multiplier and per-contract commission.
+async fn submit_option(
+    pool: &PgPool,
+    account_id: Uuid,
+    req: OrderRequest,
+) -> anyhow::Result<PaperOrder> {
+    if req.order_type != "market" {
+        anyhow::bail!("options support market orders only (limit/stop/trailing not yet)");
+    }
+    if req.qty <= Decimal::ZERO {
+        anyhow::bail!("qty must be positive");
+    }
+    let symbol = req.symbol.trim().to_uppercase();
+    let occ = traderview_core::occ_symbol::parse(&symbol)
+        .ok_or_else(|| anyhow::anyhow!("unparseable OCC symbol"))?;
+    if occ.expiry < Utc::now().date_naive() {
+        anyhow::bail!("contract expired {}", occ.expiry);
+    }
+    let price = option_quote(&occ)
+        .await?
+        .ok_or_else(|| anyhow::anyhow!("no usable quote for {symbol} (zero bid/ask and no last)"))?;
+    let price = Decimal::try_from(price)?;
+    let multiplier = Decimal::from(100);
+    let fee = Decimal::try_from(OPTION_COMMISSION_PER_CONTRACT)? * req.qty;
+    let side_str = match req.side {
+        Side::Buy => "buy",
+        Side::Sell => "sell",
+        Side::Short => "short",
+        Side::Cover => "cover",
+    };
+    let mut tx = pool.begin().await?;
+    let order: PaperOrder = sqlx::query_as(
+        "INSERT INTO paper_orders
+            (paper_account_id, symbol, side, qty, order_type,
+             status, filled_price, filled_qty, filled_at, fee)
+         VALUES ($1, $2, $3::side_t, $4, 'market',
+                 'filled', $5, $4, now(), $6)
+         RETURNING id, paper_account_id, symbol, side::text, qty, order_type::text,
+                   limit_price, stop_price, status::text,
+                   trail_value, trail_is_pct, trail_extreme, oco_group, parent_order_id,
+                   filled_price, filled_qty, fee, submitted_at, filled_at, cancel_at, reject_reason",
+    )
+    .bind(account_id)
+    .bind(&symbol)
+    .bind(side_str)
+    .bind(req.qty)
+    .bind(price)
+    .bind(fee)
+    .fetch_one(&mut *tx)
+    .await?;
+    apply_fill(&mut tx, account_id, &symbol, req.side, req.qty, price, multiplier).await?;
+    sqlx::query("UPDATE paper_accounts SET cash = cash - $2 WHERE id = $1")
+        .bind(account_id)
+        .bind(fee)
+        .execute(&mut *tx)
+        .await?;
+    tx.commit().await?;
+    Ok(order)
+}
+
 async fn apply_fill(
     tx: &mut sqlx::PgConnection,
     account_id: Uuid,
@@ -780,6 +865,7 @@ async fn apply_fill(
     side: Side,
     qty: Decimal,
     price: Decimal,
+    multiplier: Decimal,
 ) -> anyhow::Result<()> {
     let signed_qty = match side {
         Side::Buy | Side::Cover => qty,
@@ -825,7 +911,7 @@ async fn apply_fill(
                 } else {
                     -Decimal::ONE
                 };
-                let realized = (price - cur_avg) * close_qty * direction;
+                let realized = (price - cur_avg) * close_qty * direction * multiplier;
                 let avg = if new_q.abs() > Decimal::ZERO {
                     if (cur_qty > Decimal::ZERO) == (new_q > Decimal::ZERO) {
                         cur_avg
@@ -859,7 +945,7 @@ async fn apply_fill(
     }
 
     // Cash impact (no fees in sim).
-    let cash_delta = -signed_qty * price; // buy decreases cash, sell increases
+    let cash_delta = -signed_qty * price * multiplier; // buy decreases cash, sell increases
     sqlx::query("UPDATE paper_accounts SET cash = cash + $2 WHERE id = $1")
         .bind(account_id)
         .bind(cash_delta)
