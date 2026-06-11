@@ -770,6 +770,7 @@ export async function renderAlgo(mount) {
         <div class="chart-panel">
             <div class="row" style="justify-content:space-between;align-items:center">
                 <h2 data-i18n="view.algo.h2.strategies">Strategies</h2>
+                <button id="algo-portfolio" data-i18n="view.algo.btn.portfolio" data-tip="view.algo.tip.portfolio">Portfolio</button>
                 <button id="algo-tournament" data-i18n="view.algo.btn.tournament" data-tip="view.algo.tip.tournament">Tournament</button>
                 <button id="algo-new" class="primary" data-i18n="view.algo.btn.new_strategy">New strategy</button>
             </div>
@@ -867,6 +868,7 @@ export async function renderAlgo(mount) {
 
     mount.querySelector('#algo-new').addEventListener('click', () => openStrategyModal(mount));
     mount.querySelector('#algo-tournament').addEventListener('click', () => openTournamentModal());
+    mount.querySelector('#algo-portfolio').addEventListener('click', () => openPortfolioModal());
     // Strategy reference tabs — clicking a button swaps the rendered doc.
     mount.querySelectorAll('.algo-docs-tab').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -1398,6 +1400,73 @@ async function openWalkForwardModal(s) {
                         <td>${w.oos_summary.max_drawdown_pct.toFixed(1)}%</td>
                     </tr>`).join('')}
                 </tbody></table>`;
+        } catch (err) {
+            out.textContent = t('common.error', { err: err.message });
+        }
+    });
+}
+
+
+async function openPortfolioModal() {
+    const kinds = STRATEGIES.map(s => s.value).filter(v => v !== 'pairs');
+    const wrap = document.createElement('div');
+    wrap.className = 'modal';
+    wrap.innerHTML = `
+        <div class="modal-inner" style="max-width:1100px">
+            <h2 data-i18n="view.algo.h2.portfolio">Strategy portfolio</h2>
+            <p class="muted small" data-i18n="view.algo.hint.portfolio">Runs the checked strategies (default rules) over the same bars and reports their pairwise return correlation plus the equal-weight combined curve. Two mediocre strategies with low correlation can beat either alone \u2014 the diversification benefit is combined Sharpe minus average individual Sharpe.</p>
+            <form id="portfolio-form" class="inline-form">
+                <input name="symbol" value="SPY" required style="text-transform:uppercase">
+                <select name="interval">
+                    <option value="day1" selected>1d</option>
+                    <option value="hour1">1h</option>
+                </select>
+                <input name="days_back" type="number" value="365" min="60">
+                <button class="primary" type="submit">RUN</button>
+                <button type="button" class="link" id="portfolio-close" data-i18n="common.btn.cancel">Cancel</button>
+            </form>
+            <div class="row" style="flex-wrap:wrap;gap:6px;margin:8px 0">${kinds.map(k => `
+                <label class="small"><input type="checkbox" name="kind" value="${esc(k)}"${['momentum','mean_reversion','macd_cross','adx_pullback'].includes(k) ? ' checked' : ''}> ${esc(k)}</label>`).join('')}
+            </div>
+            <div id="portfolio-result" class="muted small"></div>
+        </div>`;
+    document.body.appendChild(wrap);
+    const close = () => wrap.remove();
+    wrap.querySelector('#portfolio-close').addEventListener('click', close);
+    wrap.addEventListener('click', (e) => { if (e.target === wrap) close(); });
+    wrap.querySelector('#portfolio-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const chosen = [...wrap.querySelectorAll('input[name="kind"]:checked')].map(c => c.value);
+        const out = wrap.querySelector('#portfolio-result');
+        if (chosen.length < 2) { out.textContent = t('view.algo.err.portfolio_min'); return; }
+        out.textContent = t('common.loading');
+        try {
+            const r = await api.algoPortfolio({
+                symbol: fd.get('symbol').trim().toUpperCase(),
+                interval: fd.get('interval'),
+                days_back: Number(fd.get('days_back')),
+                kinds: chosen,
+            });
+            const corrCell = (c) => c == null ? '\u2014'
+                : `<span class="${Math.abs(c) < 0.3 ? 'pos' : (Math.abs(c) > 0.7 ? 'neg' : '')}">${c.toFixed(2)}</span>`;
+            out.innerHTML = `
+                <p><strong>Combined:</strong> ${r.combined.total_return_pct.toFixed(1)}% return \u00b7 ${r.combined.max_drawdown_pct.toFixed(1)}% max DD \u00b7 Sharpe ${r.combined.sharpe.toFixed(3)}
+                \u00b7 avg individual Sharpe ${r.avg_individual_sharpe.toFixed(3)}
+                \u00b7 <strong>diversification benefit:</strong> <span class="${r.diversification_benefit >= 0 ? 'pos' : 'neg'}">${r.diversification_benefit >= 0 ? '+' : ''}${r.diversification_benefit.toFixed(3)}</span></p>
+                <table class="trades">
+                <thead><tr><th>Strategy</th><th>Trades</th><th>Return</th><th>Max DD</th><th>Sharpe</th>${r.legs.map(l => `<th class="small">${esc(l.kind.slice(0, 8))}</th>`).join('')}</tr></thead>
+                <tbody>${r.legs.map((l, i) => `
+                    <tr>
+                        <td>${esc(l.kind)}</td>
+                        <td>${l.trades}</td>
+                        <td class="${l.stats.total_return_pct >= 0 ? 'pos' : 'neg'}">${l.stats.total_return_pct.toFixed(1)}%</td>
+                        <td>${l.stats.max_drawdown_pct.toFixed(1)}%</td>
+                        <td>${l.stats.sharpe.toFixed(3)}</td>
+                        ${r.correlation[i].map(c => `<td>${corrCell(c)}</td>`).join('')}
+                    </tr>`).join('')}
+                </tbody></table>
+                <p class="muted small">Correlation colors: |\u03c1| &lt; 0.3 diversifies (green), |\u03c1| &gt; 0.7 redundant (red).</p>`;
         } catch (err) {
             out.textContent = t('common.error', { err: err.message });
         }

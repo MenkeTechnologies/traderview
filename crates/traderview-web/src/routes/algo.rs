@@ -40,6 +40,7 @@ pub fn router() -> Router<AppState> {
         .route("/algo/strategies/:id/metrics", get(get_metrics))
         .route("/algo/strategies/:id/optimize", post(post_optimize))
         .route("/algo/tournament", post(post_tournament))
+        .route("/algo/portfolio", post(post_portfolio))
         .route("/algo/strategies/:id/walk-forward", post(post_walk_forward))
         .route("/algo/strategies/:id/backtest-mc", post(post_backtest_mc))
         .route("/algo/strategies/:id/backtest-regimes", post(post_backtest_regimes))
@@ -834,6 +835,68 @@ async fn post_optimize(
     )
     .map_err(|e| ApiError::BadRequest(format!("optimize: {e}")))?;
     Ok(Json(result))
+}
+
+#[derive(serde::Deserialize)]
+struct PortfolioBody {
+    #[serde(default = "default_bt_symbol")]
+    symbol: String,
+    #[serde(default = "default_bt_interval")]
+    interval: String,
+    #[serde(default = "default_bt_days_back")]
+    days_back: i64,
+    #[serde(default)]
+    initial_equity: Option<f64>,
+    #[serde(default)]
+    fee_per_trade: Option<f64>,
+    #[serde(default)]
+    slippage_bps: Option<f64>,
+    /// Strategy kinds to combine (2..=21, default rules each).
+    kinds: Vec<String>,
+}
+
+/// POST /algo/portfolio — run the chosen strategy kinds over the same
+/// bars, return the pairwise return-correlation matrix, per-leg stats,
+/// the equal-weight combined curve, and the diversification benefit
+/// (combined Sharpe minus average individual Sharpe).
+async fn post_portfolio(
+    State(s): State<AppState>,
+    _u: AuthUser,
+    Json(body): Json<PortfolioBody>,
+) -> Result<Json<traderview_core::algo_strategy_portfolio::PortfolioResult>, ApiError> {
+    if body.kinds.len() < 2 || body.kinds.len() > 21 {
+        return Err(ApiError::BadRequest("kinds must list 2..=21 strategies".into()));
+    }
+    let interval: traderview_core::BarInterval = serde_json::from_value(serde_json::Value::String(
+        normalize_interval(&body.interval),
+    ))
+    .map_err(|e| ApiError::BadRequest(format!("interval: {e}")))?;
+    let to = chrono::Utc::now();
+    let from = to - chrono::Duration::days(body.days_back);
+    let symbol = body.symbol.trim().to_uppercase();
+    let bars = traderview_db::prices::get_bars(&s.pool, &symbol, interval, from, to)
+        .await
+        .map_err(ApiError::Internal)?;
+    if bars.len() < 30 {
+        return Err(ApiError::BadRequest(format!(
+            "only {} bars available for {symbol} — need >=30",
+            bars.len()
+        )));
+    }
+    let cfg = traderview_core::algo_backtest::BacktestConfig {
+        initial_equity: body.initial_equity.unwrap_or(100_000.0),
+        fee_per_trade: body.fee_per_trade.unwrap_or(1.0),
+        slippage_bps: body.slippage_bps.unwrap_or(5.0),
+        side_mode: traderview_core::algo_strategies::SideMode::Both,
+    };
+    traderview_core::algo_strategy_portfolio::analyze(
+        &bars,
+        &body.kinds,
+        &traderview_core::algo_strategies::Sizing::default(),
+        &cfg,
+    )
+    .map(Json)
+    .map_err(ApiError::BadRequest)
 }
 
 #[derive(serde::Deserialize)]

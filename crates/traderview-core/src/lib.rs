@@ -381,6 +381,7 @@ pub mod power_option;
 pub mod trade_quality_stats;
 
 pub mod algo_strategies;
+pub mod algo_strategy_portfolio;
 pub mod chooser_option;
 pub mod conditional_drawdown;
 pub mod effective_spread;
