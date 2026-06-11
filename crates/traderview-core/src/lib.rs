@@ -904,5 +904,6 @@ pub mod odd_lot_tender;
 pub mod processing_spreads;
 pub mod curve_trade;
 pub mod cheapest_to_deliver;
+pub mod rebalance_bands;
 
 pub use models::*;

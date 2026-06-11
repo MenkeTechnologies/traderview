@@ -758,6 +758,7 @@ export const api = {
     calcSparkSpread:         (body) => request('/calc/spark-spread', { method: 'POST', body: JSON.stringify(body) }),
     calcCurveTrade:          (body) => request('/calc/curve-trade', { method: 'POST', body: JSON.stringify(body) }),
     calcCheapestToDeliver:   (body) => request('/calc/cheapest-to-deliver', { method: 'POST', body: JSON.stringify(body) }),
+    calcRebalanceBands:      (body) => request('/calc/rebalance-bands', { method: 'POST', body: JSON.stringify(body) }),
     calcImpliedDividend:     (body) => request('/options/calc/implied-dividend', { method: 'POST', body: JSON.stringify(body) }),
     calcWarrant:             (body) => request('/options/calc/warrant', { method: 'POST', body: JSON.stringify(body) }),
     simDualMomentum:         (body) => request('/sim/dual-momentum', { method: 'POST', body: JSON.stringify(body) }),

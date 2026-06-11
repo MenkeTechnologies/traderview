@@ -350,6 +350,50 @@ const TOOLS = {
             covered call" when the back leg is deep ITM). Back leg revalued by Black-Scholes at front expiry.</p>`;
         },
     },
+    'rebalance-bands': {
+        label: '5/25 Bands',
+        call: (b) => api.calcRebalanceBands({
+            assets: String(b.assets).split(';').map(s => s.trim()).filter(Boolean).map(s => {
+                const i = s.lastIndexOf(',');
+                const j = s.lastIndexOf(',', i - 1);
+                return {
+                    name: s.slice(0, j).trim(),
+                    target_weight_pct: Number(s.slice(j + 1, i)),
+                    current_weight_pct: Number(s.slice(i + 1)),
+                };
+            }),
+            absolute_band_pp: b.absolute_band_pp,
+            relative_band_pct: b.relative_band_pct,
+        }),
+        fields: [
+            { key: 'assets', label: 'Assets: name,target%,current%; …', def: 'US equity,40,46; Intl,20,18; Bonds,30,29; EM small value,4,5.2', text: true },
+            { key: 'absolute_band_pp', label: 'Absolute band (pp)', def: 5 },
+            { key: 'relative_band_pct', label: 'Relative band (% of target)', def: 25 },
+        ],
+        render: (r) => {
+            if (!r) return '<span class="neg">invalid assets</span>';
+            return `
+            <div class="cards">
+                <div class="card"><div class="label">Action</div>
+                    <div class="value ${r.any_breach ? 'neg' : 'pos'}">${r.any_breach ? 'REBALANCE' : 'hold'}</div></div>
+            </div>
+            <table class="gs-table">
+                <thead><tr><th>Asset</th><th>Target</th><th>Current</th><th>Drift</th><th>Band</th><th>Trade</th></tr></thead>
+                <tbody>${r.rows.map(row => `
+                    <tr>
+                        <td>${esc(row.name)}</td>
+                        <td>${row.target_weight_pct.toFixed(1)}%</td>
+                        <td>${row.current_weight_pct.toFixed(1)}%</td>
+                        <td class="${row.breached ? 'neg' : ''}">${(row.drift_pp >= 0 ? '+' : '') + row.drift_pp.toFixed(1)}pp</td>
+                        <td>±${row.band_pp.toFixed(1)}pp (${esc(row.binding_rule)})</td>
+                        <td>${row.breached ? (row.trade_pp >= 0 ? '+' : '') + row.trade_pp.toFixed(1) + 'pp' : '—'}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+            <p class="muted small">Swedroe 5/25: trade only past the narrower of 5pp absolute or 25%-of-
+            target relative — big sleeves bind absolute, small sleeves relative.</p>`;
+        },
+    },
     'curve-trade': {
         label: 'Curve Trade',
         call: (b) => api.calcCurveTrade({

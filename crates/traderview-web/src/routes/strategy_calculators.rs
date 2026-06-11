@@ -21,6 +21,7 @@
 //!   POST /calc/spark-spread              — generation margin (spark/dark)
 //!   POST /calc/curve-trade               — DV01-neutral spread/butterfly
 //!   POST /calc/cheapest-to-deliver       — basket basis + implied repo
+//!   POST /calc/rebalance-bands           — Swedroe 5/25 drift screen
 //!   POST /sim/dual-momentum              — Antonacci GEM backtest
 //!   GET  /symbols/:sym/turn-of-month     — TOM seasonality stats
 //!   GET  /symbols/:sym/vol-cone          — realized-vol percentile cone
@@ -64,6 +65,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/spark-spread", post(post_spark_spread))
         .route("/calc/curve-trade", post(post_curve_trade))
         .route("/calc/cheapest-to-deliver", post(post_ctd))
+        .route("/calc/rebalance-bands", post(post_rebalance_bands))
         .route("/sim/dual-momentum", post(post_dual_momentum))
         .route("/symbols/:symbol/turn-of-month", get(get_turn_of_month))
         .route("/symbols/:symbol/vol-cone", get(get_vol_cone))
@@ -387,6 +389,16 @@ async fn post_ctd(
     traderview_core::cheapest_to_deliver::compute(&b)
         .map(Json)
         .ok_or_else(|| ApiError::BadRequest("invalid deliverable basket".into()))
+}
+
+async fn post_rebalance_bands(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<traderview_core::rebalance_bands::BandsInput>,
+) -> Result<Json<traderview_core::rebalance_bands::BandsReport>, ApiError> {
+    traderview_core::rebalance_bands::compute(&b)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("invalid band inputs".into()))
 }
 
 async fn post_dual_momentum(
