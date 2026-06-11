@@ -166,6 +166,11 @@ export async function renderPaper(mount) {
             <div id="paper-dividends"></div>
         </div>
 
+        <div class="chart-panel" id="paper-splits-panel" style="display:none">
+            <h2 data-i18n="view.paper.h2.splits">Split adjustments</h2>
+            <div id="paper-splits"></div>
+        </div>
+
         <div class="chart-panel">
             <h2 data-i18n="view.paper.h2.unrealized_chart">Unrealized P&L per open position</h2>
             <div id="paper-chart" style="width:100%;height:240px"></div>
@@ -209,6 +214,9 @@ export async function renderPaper(mount) {
     }
     api.paperDividends(acct.id)
         .then(d => { if (viewIsCurrent(tok)) renderDividends(d); })
+        .catch(() => {});
+    api.paperSplits(acct.id)
+        .then(s => { if (viewIsCurrent(tok)) renderSplits(s); })
         .catch(() => {});
 
     mount.querySelector('#ord-form').addEventListener('submit', async (e) => {
@@ -332,6 +340,26 @@ function renderLeaderboard(rows, currentId) {
             </tr>`).join('')}
         </tbody></table>
         <p class="muted small" data-i18n="view.paper.hint.leaderboard">Return is measured against each account's starting cash — comparable across accounts created at different times. ↓ = currently below its high-water mark.</p>`;
+}
+
+function renderSplits(rows) {
+    const panel = document.getElementById('paper-splits-panel');
+    const el = document.getElementById('paper-splits');
+    // Splits are rare — the panel only appears once one has been applied.
+    if (!panel || !el || !rows || !rows.length) return;
+    panel.style.display = '';
+    el.innerHTML = `
+        <table class="trades">
+            <thead><tr><th data-i18n="view.paper.th.split_date">Split date</th><th data-i18n="view.paper.th.sym">Sym</th><th data-i18n="view.paper.th.ratio">Ratio</th>
+            <th data-i18n="view.paper.th.qty_before">Qty before</th><th data-i18n="view.paper.th.qty_after">Qty after</th></tr></thead>
+            <tbody>${rows.map(r => `
+                <tr data-context-scope="symbol-row" data-symbol="${esc(r.symbol)}">
+                    <td>${esc(r.split_date)}</td>
+                    <td><a href="#research/${encodeURIComponent(r.symbol)}">${esc(r.symbol)}</a></td>
+                    <td>${fmt(r.numerator, 0)}:${fmt(r.denominator, 0)}</td>
+                    <td>${fmt(r.qty_before, 0)}</td>
+                    <td>${fmt(r.qty_after, 0)}</td>
+                </tr>`).join('')}</tbody></table>`;
 }
 
 function renderDividends(rows) {

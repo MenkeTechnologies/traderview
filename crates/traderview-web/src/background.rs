@@ -49,6 +49,10 @@ pub const PAPER_EQUITY_SNAPSHOT: Duration = Duration::from_secs(15 * 60);
 /// Paper dividend crediting — ex-dates are daily-bar data and the pass
 /// is idempotent, so a few runs a day is plenty.
 pub const PAPER_DIVIDEND_CREDIT: Duration = Duration::from_secs(6 * 60 * 60);
+/// Paper split adjustment — splits are rare daily-bar events; a few
+/// idempotent passes a day also keeps the trade-after-split skip
+/// window small.
+pub const PAPER_SPLIT_ADJUST: Duration = Duration::from_secs(6 * 60 * 60);
 
 async fn compute_tile(pool: &PgPool, key: &'static str) -> anyhow::Result<serde_json::Value> {
     Ok(match key {
@@ -107,6 +111,7 @@ pub fn spawn_refreshers(pool: PgPool, cache: TileCache, hub: crate::realtime::Hu
     spawn_paper_twap_ticker(pool.clone(), hub);
     spawn_paper_equity_snapshots(pool.clone());
     spawn_paper_dividend_credits(pool.clone());
+    spawn_paper_split_adjustments(pool.clone());
     spawn_golden_stars(pool);
 }
 
@@ -173,6 +178,23 @@ fn spawn_paper_dividend_credits(pool: PgPool) {
                 Err(e) => tracing::warn!(error = %e, "paper dividend crediting failed"),
             }
             tokio::time::sleep(PAPER_DIVIDEND_CREDIT).await;
+        }
+    });
+}
+
+/// Paper split adjustment — rewrites positions held through a stock
+/// split (qty × ratio, avg ÷ ratio, value-preserving) so the equity
+/// curve doesn't record a fake 75% drawdown on a 4:1. Idempotent via
+/// the unique account × symbol × split-date constraint.
+fn spawn_paper_split_adjustments(pool: PgPool) {
+    tokio::spawn(async move {
+        loop {
+            match traderview_db::paper_splits::adjust_all(&pool).await {
+                Ok(0) => {}
+                Ok(n) => tracing::info!(adjustments = n, "paper splits applied"),
+                Err(e) => tracing::warn!(error = %e, "paper split adjustment failed"),
+            }
+            tokio::time::sleep(PAPER_SPLIT_ADJUST).await;
         }
     });
 }

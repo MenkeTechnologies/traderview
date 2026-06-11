@@ -850,6 +850,7 @@ export const api = {
     paperAccountDelete: (id) => request(`/paper/accounts/${id}/delete`, { method: 'POST' }),
     paperAccountComparison: () => request('/paper/accounts/comparison'),
     paperDividends: (id) => request(`/paper/accounts/${id}/dividends`),
+    paperSplits: (id) => request(`/paper/accounts/${id}/splits`),
 
     // alerts
     alerts:        () => request('/alerts'),

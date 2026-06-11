@@ -37,6 +37,20 @@ pub fn router() -> Router<AppState> {
         .route("/paper/accounts/:id/rename", post(rename_account))
         .route("/paper/accounts/:id/delete", post(delete_account))
         .route("/paper/accounts/:id/dividends", get(dividends))
+        .route("/paper/accounts/:id/splits", get(splits))
+}
+
+/// Split adjustments applied to the account by the background pass —
+/// qty × ratio, avg ÷ ratio, value-preserving.
+async fn splits(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(account_id): Path<Uuid>,
+) -> Result<Json<Vec<traderview_db::paper_splits::PaperSplit>>, ApiError> {
+    traderview_db::paper_splits::list(&s.pool, user.id, account_id, 200)
+        .await
+        .map(Json)
+        .map_err(ApiError::Internal)
 }
 
 /// Dividend cash credited to the account by the background pass —
