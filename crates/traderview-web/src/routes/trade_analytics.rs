@@ -50,6 +50,7 @@ pub fn router() -> Router<AppState> {
         .route("/analytics/cagr-simple", post(cagr_simple_route))
         .route("/analytics/cagr-rolling", post(cagr_rolling_route))
         .route("/analytics/profit-factor", post(profit_factor_route))
+        .route("/analytics/report-card", post(report_card_route))
         .route("/analytics/sortino", post(sortino_route))
         .route("/analytics/treynor", post(treynor_route))
         .route("/analytics/sharpe-by-window", post(sharpe_by_window_route))
@@ -263,6 +264,13 @@ async fn profit_factor_route(
         &b.monthly_pnls,
         &b.equity_curve,
     ))
+}
+
+async fn report_card_route(
+    _u: AuthUser,
+    Json(b): Json<traderview_core::trade_report_card::ReportCardInput>,
+) -> Json<Option<traderview_core::trade_report_card::ReportCard>> {
+    Json(traderview_core::trade_report_card::compute(&b))
 }
 
 #[derive(Deserialize)]

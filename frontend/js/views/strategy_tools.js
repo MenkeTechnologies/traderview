@@ -96,6 +96,45 @@ const TOOLS = {
             <p class="muted small">Press risk after wins (capped), cut back toward base after losses —
             the opposite of a martingale. The control row trades the same sequence at flat base risk.</p>`,
     },
+    'report-card': {
+        label: 'Trade Report Card',
+        call: (b) => api.tradeReportCard({
+            starting_equity: b.starting_equity,
+            trade_pnls: String(b.trade_pnls).split(/[\s,]+/).map(Number).filter(x => isFinite(x)),
+        }),
+        fields: [
+            { key: 'starting_equity', label: 'Starting equity ($)', def: 10000 },
+            { key: 'trade_pnls', label: 'Trade P/Ls (comma-sep, oldest first)', def: '300,300,-200,300,-200,300,300,-200,-200,300', text: true },
+        ],
+        render: (r) => {
+            if (!r) return '<span class="neg">need ≥2 finite trades and positive equity</span>';
+            const q = r.quality;
+            const wr = r.win_rate;
+            const ror = r.risk_of_ruin;
+            const dd = r.drawdowns;
+            const ecf = r.equity_filter;
+            return `
+            <div class="cards">
+                <div class="card"><div class="label">Profit factor / PRR</div>
+                    <div class="value">${q.profit_factor != null ? q.profit_factor.toFixed(2) : '∞'} / ${q.pessimistic_return_ratio != null ? q.pessimistic_return_ratio.toFixed(2) : '—'}</div>
+                    <div class="small muted">${q.win_count}W / ${q.loss_count}L · net $${Math.round(q.net_profit).toLocaleString()}</div></div>
+                ${wr ? `<div class="card"><div class="label">Edge is real?</div>
+                    <div class="value ${wr.statistically_significant ? 'pos' : 'neg'}">${wr.statistically_significant ? 'YES' : 'NOT YET'}</div>
+                    <div class="small muted">Wilson [${wr.wilson_low_pct.toFixed(0)}%, ${wr.wilson_high_pct.toFixed(0)}%] vs ${wr.breakeven_win_rate_pct.toFixed(0)}% breakeven${wr.trades_needed != null ? ' · need ' + wr.trades_needed : ''}</div></div>` : ''}
+                ${ror ? `<div class="card"><div class="label">Risk of ruin</div>
+                    <div class="value ${ror.risk_of_ruin > 0.05 ? 'neg' : 'pos'}">${(ror.risk_of_ruin * 100).toPrecision(3)}%</div>
+                    <div class="small muted">at observed p, R=${r.observed_payoff_ratio.toFixed(2)}, risk $${r.observed_avg_loss.toFixed(0)}/trade</div></div>` : ''}
+                ${dd ? `<div class="card"><div class="label">Worst drawdown</div>
+                    <div class="value neg">${dd.episodes.length ? dd.episodes[0].depth_pct.toFixed(1) + '%' : 'none'}</div>
+                    <div class="small muted">${dd.currently_underwater ? 'currently underwater' : 'at highs'}</div></div>` : ''}
+                ${ecf ? `<div class="card"><div class="label">Equity-curve filter</div>
+                    <div class="value ${ecf.filter_helped ? 'pos' : ''}">${ecf.filter_helped ? 'WOULD HAVE HELPED' : 'not needed'}</div>
+                    <div class="small muted">$${Math.round(ecf.filtered_final).toLocaleString()} vs $${Math.round(ecf.unfiltered_final).toLocaleString()}</div></div>` : ''}
+            </div>
+            <p class="muted small">One P/L list, five verdicts cross-read — PF beside the Wilson interval
+            that says whether it's proven, and ruin odds at the sizing you actually used.</p>`;
+        },
+    },
     'win-rate-confidence': {
         label: 'Win-Rate Confidence',
         call: (b) => api.calcWinRateConfidence(b),

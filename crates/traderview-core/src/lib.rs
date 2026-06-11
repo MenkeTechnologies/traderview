@@ -923,5 +923,6 @@ pub mod options_quick_math;
 pub mod lynch_fair_value;
 pub mod best_worst_days;
 pub mod drawdown_episodes;
+pub mod trade_report_card;
 
 pub use models::*;
