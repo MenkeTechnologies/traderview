@@ -880,5 +880,6 @@ pub mod rs_line;
 pub mod vol_cone;
 pub mod conversion_reversal;
 pub mod seagull_spread;
+pub mod heston;
 
 pub use models::*;

@@ -745,6 +745,7 @@ export const api = {
     dayOfWeekSeasonality:    (sym, years = 10) => request(`/symbols/${encodeURIComponent(sym)}/day-of-week${qs({ years })}`),
     calcConversionReversal:  (body) => request('/options/calc/conversion-reversal', { method: 'POST', body: JSON.stringify(body) }),
     calcSeagull:             (body) => request('/options/calc/seagull', { method: 'POST', body: JSON.stringify(body) }),
+    calcHeston:              (body) => request('/options/calc/heston', { method: 'POST', body: JSON.stringify(body) }),
     symbolInsiders:  (sym) => request(`/symbols/${encodeURIComponent(sym)}/insiders`),
     symbolFundamentals: (sym) => request(`/symbols/${encodeURIComponent(sym)}/fundamentals`),
     symbolHolders:   (sym) => request(`/symbols/${encodeURIComponent(sym)}/holders`),

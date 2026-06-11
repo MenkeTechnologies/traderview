@@ -245,6 +245,41 @@ const TOOLS = {
             ${esc(String(r.call_low_strike))}→${esc(String(r.call_high_strike))} paid for with downside risk below ${esc(String(r.put_strike))}.</p>`;
         },
     },
+    heston: {
+        label: 'Heston Pricer',
+        call: (b) => api.calcHeston(b),
+        fields: [
+            { key: 'spot', label: 'Spot ($)', def: 100 },
+            { key: 'strike', label: 'Strike ($)', def: 100 },
+            { key: 'time_to_expiry_years', label: 'Time to expiry (years)', def: 0.5 },
+            { key: 'risk_free_rate', label: 'Risk-free rate (decimal)', def: 0.03 },
+            { key: 'dividend_yield', label: 'Dividend yield (decimal)', def: 0 },
+            { key: 'v0', label: 'Initial variance v₀', def: 0.04 },
+            { key: 'kappa', label: 'Mean reversion κ', def: 2 },
+            { key: 'theta', label: 'Long-run variance θ', def: 0.04 },
+            { key: 'vol_of_vol', label: 'Vol of vol σ', def: 0.3 },
+            { key: 'rho', label: 'Correlation ρ', def: -0.7 },
+        ],
+        render: (r) => {
+            if (!r) return '<span class="neg">invalid inputs</span>';
+            return `
+            <div class="cards">
+                <div class="card"><div class="label">Call</div>
+                    <div class="value pos">$${r.call_price.toFixed(4)}</div></div>
+                <div class="card"><div class="label">Put</div>
+                    <div class="value">$${r.put_price.toFixed(4)}</div></div>
+                <div class="card"><div class="label">Exercise probs</div>
+                    <div class="value">${(r.p2 * 100).toFixed(1)}%</div>
+                    <div class="small muted">P1 ${(r.p1 * 100).toFixed(1)}% · P2 risk-neutral ITM</div></div>
+                <div class="card"><div class="label">Feller 2κθ ≥ σ²</div>
+                    <div class="value ${r.feller_satisfied ? 'pos' : 'neg'}">${r.feller_satisfied ? 'satisfied' : 'VIOLATED'}</div>
+                    <div class="small muted">${r.feller_satisfied ? 'variance stays positive' : 'variance can hit zero'}</div></div>
+            </div>
+            <p class="muted small">Heston (1993) stochastic-vol European pricer — semi-analytic
+            characteristic-function integration ("little trap" form). Negative ρ produces the
+            equity-style downside skew a flat-vol Black-Scholes can't.</p>`;
+        },
+    },
     'turn-of-month': {
         label: 'Turn of Month',
         call: (b) => api.turnOfMonth(b.symbol, b.years),

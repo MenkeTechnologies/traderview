@@ -73,7 +73,8 @@ use traderview_core::{
     gonzalo_granger_decomposition, gpd_tail_fit, granger_causality, greeks_profile, guppy_mma,
     halt_resume_monitor, hampel_filter, hanging_man_shooting_star, har_volatility, harami_pattern,
     harmonic_patterns, hawkes_intensity, hawkins_dynamic_zones, head_shoulders,
-    heikin_ashi_reversal, henriksson_merton, herfindahl, hierarchical_risk_parity, hikkake_pattern,
+    heikin_ashi_reversal, henriksson_merton, herfindahl, heston, hierarchical_risk_parity,
+    hikkake_pattern,
     hilbert_transform, hill_estimator, hindenburg_omen, hodrick_prescott, holiday_calendar,
     holiday_seasonality, holt_winters, holy_grail, hull_white, hurst_exponent, iceberg_detector,
     imbalance_bar_chart, impulse_system, information_coefficient, information_ratio,
@@ -792,6 +793,7 @@ pub fn router() -> Router<AppState> {
             post(conversion_reversal_route),
         )
         .route("/options/calc/seagull", post(seagull_route))
+        .route("/options/calc/heston", post(heston_route))
         .route(
             "/options/calc/jelly-roll-arbitrage",
             post(jelly_roll_arbitrage_route),
@@ -7124,6 +7126,13 @@ async fn seagull_route(
         b.call_low_price,
         b.call_high_price,
     ))
+}
+
+async fn heston_route(
+    _u: AuthUser,
+    Json(b): Json<heston::HestonInput>,
+) -> Json<Option<heston::HestonReport>> {
+    Json(heston::compute(&b))
 }
 
 #[derive(Deserialize)]
