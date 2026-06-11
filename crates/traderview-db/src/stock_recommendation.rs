@@ -106,6 +106,17 @@ pub struct Component {
     pub note: String,
 }
 
+/// Volatility-based risk classification, stockinvest.us-style badge.
+/// Computed from annualized daily-return volatility:
+///   < 25%  → Low, 25–50% → Medium, > 50% → High.
+#[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum RiskLevel {
+    Low,
+    Medium,
+    High,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct StockRecommendation {
     pub symbol: String,
@@ -121,6 +132,23 @@ pub struct StockRecommendation {
     /// Upside as a percentage from `current_price` to `target_price`.
     pub upside_pct: f64,
     pub horizon_days: i64,
+    /// Risk badge from annualized volatility of daily returns.
+    pub risk_level: RiskLevel,
+    /// Annualized volatility percent backing `risk_level` (e.g. 32.5).
+    pub annualized_vol_pct: f64,
+    /// Nearest support below current price — highest swing low in the
+    /// last 60 bars that sits below the close. None when no swing low
+    /// qualifies (e.g. price at all-time low).
+    pub support: Option<Decimal>,
+    /// Nearest resistance above current price — lowest swing high in
+    /// the last 60 bars that sits above the close.
+    pub resistance: Option<Decimal>,
+    /// 3-month (66 trading days) forecast band: the score-biased drift
+    /// from `target_price` extended to the longer horizon, widened by
+    /// ±1σ of horizon volatility. The honest "could be anywhere in
+    /// here" range, not a point estimate.
+    pub forecast_3m_low: Decimal,
+    pub forecast_3m_high: Decimal,
     pub components: Vec<Component>,
     /// Total bars used to compute the score (after filtering).
     pub bars_analyzed: usize,
@@ -256,6 +284,18 @@ pub async fn compute_with_weights(
         0.0
     };
 
+    // Risk badge from annualized daily-return volatility.
+    let annualized_vol_pct = annualized_volatility_pct(&closes);
+    let risk_level = risk_from_vol(annualized_vol_pct);
+
+    // Support/resistance: swing levels from the last 60 bars.
+    let (support, resistance) = swing_levels(&highs, &lows, current_f);
+
+    // 3-month forecast band: score-biased drift over 66 trading days,
+    // widened by ±1σ of horizon volatility (vol_annual × sqrt(66/252)).
+    let (forecast_3m_low, forecast_3m_high) =
+        forecast_band(current_f, score, annualized_vol_pct);
+
     Ok(StockRecommendation {
         symbol: symbol.to_string(),
         verdict,
@@ -265,9 +305,99 @@ pub async fn compute_with_weights(
         target_price,
         upside_pct,
         horizon_days: TARGET_HORIZON_DAYS,
+        risk_level,
+        annualized_vol_pct,
+        support,
+        resistance,
+        forecast_3m_low,
+        forecast_3m_high,
         components,
         bars_analyzed: n,
     })
+}
+
+/// Annualized volatility (%) from daily close-to-close returns over the
+/// full bar window. sqrt(252) scaling. Returns 0 for degenerate input.
+fn annualized_volatility_pct(closes: &[f64]) -> f64 {
+    if closes.len() < 2 {
+        return 0.0;
+    }
+    let mut rets: Vec<f64> = Vec::with_capacity(closes.len() - 1);
+    for w in closes.windows(2) {
+        if w[0].abs() > 1e-9 {
+            rets.push((w[1] - w[0]) / w[0]);
+        }
+    }
+    if rets.len() < 2 {
+        return 0.0;
+    }
+    let mean = rets.iter().sum::<f64>() / rets.len() as f64;
+    let var = rets.iter().map(|r| (r - mean).powi(2)).sum::<f64>() / (rets.len() - 1) as f64;
+    var.sqrt() * (252.0_f64).sqrt() * 100.0
+}
+
+fn risk_from_vol(vol_pct: f64) -> RiskLevel {
+    if vol_pct < 25.0 {
+        RiskLevel::Low
+    } else if vol_pct <= 50.0 {
+        RiskLevel::Medium
+    } else {
+        RiskLevel::High
+    }
+}
+
+/// Swing-level S/R from the last `SR_WINDOW` bars. A swing high is a
+/// bar whose high exceeds both neighbours' highs (3-bar pivot); swing
+/// low symmetric. Support = HIGHEST swing low strictly below current
+/// price; resistance = LOWEST swing high strictly above. The nearest
+/// meaningful levels, not the extremes.
+fn swing_levels(highs: &[f64], lows: &[f64], current: f64) -> (Option<Decimal>, Option<Decimal>) {
+    const SR_WINDOW: usize = 60;
+    let n = highs.len();
+    if n < 3 || current <= 0.0 {
+        return (None, None);
+    }
+    let start = n.saturating_sub(SR_WINDOW).max(1);
+    let mut best_support: Option<f64> = None;
+    let mut best_resist: Option<f64> = None;
+    for i in start..(n - 1) {
+        // 3-bar pivot high.
+        if highs[i] > highs[i - 1] && highs[i] > highs[i + 1] && highs[i] > current {
+            best_resist = Some(match best_resist {
+                Some(r) => r.min(highs[i]),
+                None => highs[i],
+            });
+        }
+        // 3-bar pivot low.
+        if lows[i] < lows[i - 1] && lows[i] < lows[i + 1] && lows[i] < current {
+            best_support = Some(match best_support {
+                Some(s) => s.max(lows[i]),
+                None => lows[i],
+            });
+        }
+    }
+    (
+        best_support.and_then(Decimal::from_f64),
+        best_resist.and_then(Decimal::from_f64),
+    )
+}
+
+/// 3-month (66 trading-day) forecast band. Center = score-biased drift
+/// extended from the 30-day swing to the longer horizon; half-width =
+/// 1σ of horizon volatility. Low is floored at a cent.
+fn forecast_band(current: f64, score: f64, annualized_vol_pct: f64) -> (Decimal, Decimal) {
+    const HORIZON_TRADING_DAYS: f64 = 66.0;
+    let bias = ((score - 50.0) / 50.0).clamp(-1.0, 1.0);
+    // 30-day swing is TARGET_SWING_PCT; scale drift linearly with time.
+    let drift = bias * TARGET_SWING_PCT * (HORIZON_TRADING_DAYS / 22.0);
+    let center = current * (1.0 + drift);
+    let sigma = annualized_vol_pct / 100.0 * (HORIZON_TRADING_DAYS / 252.0_f64).sqrt();
+    let low = (center * (1.0 - sigma)).max(0.01);
+    let high = center * (1.0 + sigma);
+    (
+        Decimal::from_f64(low).unwrap_or_default(),
+        Decimal::from_f64(high).unwrap_or_default(),
+    )
 }
 
 fn stars_from_score(score: f64) -> u8 {
@@ -525,7 +655,19 @@ pub struct StoredRecommendation {
     pub upside_pct: f64,
     pub horizon_days: i32,
     pub bars_analyzed: i32,
+    /// "low" | "medium" | "high" — NULL for rows written before
+    /// migration 0074; the next nightly compute backfills.
+    pub risk_level: Option<String>,
+    pub annualized_vol_pct: f64,
     pub components: serde_json::Value,
+}
+
+fn risk_level_str(r: RiskLevel) -> &'static str {
+    match r {
+        RiskLevel::Low => "low",
+        RiskLevel::Medium => "medium",
+        RiskLevel::High => "high",
+    }
 }
 
 /// Persist a freshly-computed recommendation. The cron uses this after
@@ -556,8 +698,11 @@ pub async fn save(
     ) = sqlx::query_as(
         "INSERT INTO stock_recommendations
             (symbol, verdict, score, stars, current_price, target_price,
-             upside_pct, horizon_days, bars_analyzed, components)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+             upside_pct, horizon_days, bars_analyzed, components,
+             risk_level, annualized_vol_pct, support, resistance,
+             forecast_3m_low, forecast_3m_high)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+                 $11, $12, $13, $14, $15, $16)
          RETURNING id, symbol, computed_at, verdict, score, stars,
                    current_price, target_price, upside_pct, horizon_days,
                    bars_analyzed, components",
@@ -572,6 +717,12 @@ pub async fn save(
     .bind(r.horizon_days as i32)
     .bind(r.bars_analyzed as i32)
     .bind(components)
+    .bind(risk_level_str(r.risk_level))
+    .bind(Decimal::from_f64(r.annualized_vol_pct).unwrap_or_default())
+    .bind(r.support)
+    .bind(r.resistance)
+    .bind(r.forecast_3m_low)
+    .bind(r.forecast_3m_high)
     .fetch_one(pool)
     .await?;
     let (
@@ -600,6 +751,8 @@ pub async fn save(
         upside_pct: decimal_to_f64(upside_pct),
         horizon_days,
         bars_analyzed,
+        risk_level: Some(risk_level_str(r.risk_level).to_string()),
+        annualized_vol_pct: r.annualized_vol_pct,
         components,
     })
 }
@@ -627,12 +780,14 @@ pub async fn leaderboard(
         Decimal,
         i32,
         i32,
+        Option<String>,
+        Decimal,
         serde_json::Value,
     )> = sqlx::query_as(
         "SELECT DISTINCT ON (symbol)
                 id, symbol, computed_at, verdict, score, stars,
                 current_price, target_price, upside_pct, horizon_days,
-                bars_analyzed, components
+                bars_analyzed, risk_level, annualized_vol_pct, components
            FROM stock_recommendations
           WHERE score >= $1
           ORDER BY symbol, computed_at DESC",
@@ -657,6 +812,8 @@ pub async fn leaderboard(
                 upside_pct,
                 horizon_days,
                 bars_analyzed,
+                risk_level,
+                annualized_vol_pct,
                 components,
             )| StoredRecommendation {
                 id,
@@ -670,6 +827,8 @@ pub async fn leaderboard(
                 upside_pct: decimal_to_f64(upside_pct),
                 horizon_days,
                 bars_analyzed,
+                risk_level,
+                annualized_vol_pct: decimal_to_f64(annualized_vol_pct),
                 components,
             },
         )
@@ -698,11 +857,13 @@ pub async fn latest_for_symbol(
         Decimal,
         i32,
         i32,
+        Option<String>,
+        Decimal,
         serde_json::Value,
     )> = sqlx::query_as(
         "SELECT id, symbol, computed_at, verdict, score, stars,
                 current_price, target_price, upside_pct, horizon_days,
-                bars_analyzed, components
+                bars_analyzed, risk_level, annualized_vol_pct, components
            FROM stock_recommendations
           WHERE symbol = $1
           ORDER BY computed_at DESC
@@ -724,6 +885,8 @@ pub async fn latest_for_symbol(
             upside_pct,
             horizon_days,
             bars_analyzed,
+            risk_level,
+            annualized_vol_pct,
             components,
         )| StoredRecommendation {
             id,
@@ -737,6 +900,8 @@ pub async fn latest_for_symbol(
             upside_pct: decimal_to_f64(upside_pct),
             horizon_days,
             bars_analyzed,
+            risk_level,
+            annualized_vol_pct: decimal_to_f64(annualized_vol_pct),
             components,
         },
     ))
@@ -1095,6 +1260,62 @@ mod tests {
         let c = score_rsi(&closes);
         // Should be in the buy zone (>60).
         assert!(c.score >= 60.0, "expected ≥60, got {}", c.score);
+    }
+
+    #[test]
+    fn risk_levels_at_boundaries() {
+        assert_eq!(risk_from_vol(10.0), RiskLevel::Low);
+        assert_eq!(risk_from_vol(24.99), RiskLevel::Low);
+        assert_eq!(risk_from_vol(25.0), RiskLevel::Medium);
+        assert_eq!(risk_from_vol(50.0), RiskLevel::Medium);
+        assert_eq!(risk_from_vol(50.01), RiskLevel::High);
+        assert_eq!(risk_from_vol(120.0), RiskLevel::High);
+    }
+
+    #[test]
+    fn annualized_vol_zero_for_flat_series() {
+        let closes = vec![100.0; 50];
+        assert!((annualized_volatility_pct(&closes) - 0.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn annualized_vol_positive_for_noisy_series() {
+        // Alternate ±1% daily — definitely positive volatility.
+        let mut closes = vec![100.0];
+        for i in 1..100 {
+            let prev: f64 = *closes.last().unwrap();
+            closes.push(if i % 2 == 0 { prev * 1.01 } else { prev * 0.99 });
+        }
+        let v = annualized_volatility_pct(&closes);
+        assert!(v > 5.0, "expected meaningful vol, got {v}");
+    }
+
+    #[test]
+    fn swing_levels_find_nearest_pivots() {
+        // Build a series with a clear pivot low at 90 and pivot high
+        // at 110 around a current price of 100.
+        let mut highs = vec![100.0; 20];
+        let mut lows = vec![95.0; 20];
+        highs[10] = 110.0; // pivot high (neighbors are 100)
+        lows[5] = 90.0; // pivot low (neighbors are 95)
+        let (support, resistance) = swing_levels(&highs, &lows, 100.0);
+        let s = support.map(decimal_to_f64).unwrap_or(0.0);
+        let r = resistance.map(decimal_to_f64).unwrap_or(0.0);
+        assert!((s - 90.0).abs() < 1e-9, "support {s}");
+        assert!((r - 110.0).abs() < 1e-9, "resistance {r}");
+    }
+
+    #[test]
+    fn forecast_band_straddles_drift_center() {
+        // Neutral score (50) → no drift; band must straddle current.
+        let (lo, hi) = forecast_band(100.0, 50.0, 30.0);
+        let lo_f = decimal_to_f64(lo);
+        let hi_f = decimal_to_f64(hi);
+        assert!(lo_f < 100.0 && hi_f > 100.0, "band [{lo_f}, {hi_f}]");
+        // Bullish score → center above current.
+        let (lo_b, hi_b) = forecast_band(100.0, 100.0, 30.0);
+        let mid_b = (decimal_to_f64(lo_b) + decimal_to_f64(hi_b)) / 2.0;
+        assert!(mid_b > 100.0, "bullish mid {mid_b}");
     }
 
     #[test]

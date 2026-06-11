@@ -220,6 +220,7 @@ mod tests {
         let r = compute(&TaxBracketInput {
             filing_status: "single".into(),
             taxable_ordinary_income_usd: 5_000.0,
+            tax_year: Some(2026),
         });
         assert_eq!(r.current_marginal_rate_pct, 10.0);
         assert_eq!(r.next_bracket_rate_pct, 12.0);
@@ -232,6 +233,7 @@ mod tests {
         let r = compute(&TaxBracketInput {
             filing_status: "single".into(),
             taxable_ordinary_income_usd: 80_000.0,
+            tax_year: Some(2026),
         });
         // $80k single: bracket = 22% [48,475 → 103,350]
         assert_eq!(r.current_marginal_rate_pct, 22.0);
@@ -243,9 +245,11 @@ mod tests {
     fn compute_mfj_lower_marginal_at_same_income() {
         let single = compute(&TaxBracketInput {
             filing_status: "single".into(), taxable_ordinary_income_usd: 100_000.0,
+            tax_year: Some(2026),
         });
         let mfj = compute(&TaxBracketInput {
             filing_status: "mfj".into(), taxable_ordinary_income_usd: 100_000.0,
+            tax_year: Some(2026),
         });
         // MFJ brackets wider, so $100k MFJ is in lower marginal than single.
         assert!(mfj.current_marginal_rate_pct <= single.current_marginal_rate_pct);
@@ -255,6 +259,7 @@ mod tests {
     fn compute_effective_rate_below_marginal() {
         let r = compute(&TaxBracketInput {
             filing_status: "single".into(), taxable_ordinary_income_usd: 200_000.0,
+            tax_year: Some(2026),
         });
         // 32% marginal but effective is lower (progressive).
         assert!(r.effective_rate_pct < r.current_marginal_rate_pct);
@@ -264,6 +269,7 @@ mod tests {
     fn compute_bracket_row_count_seven() {
         let r = compute(&TaxBracketInput {
             filing_status: "single".into(), taxable_ordinary_income_usd: 50_000.0,
+            tax_year: Some(2026),
         });
         assert_eq!(r.brackets.len(), 7);
     }
@@ -272,6 +278,7 @@ mod tests {
     fn compute_zero_income_zero_liability() {
         let r = compute(&TaxBracketInput {
             filing_status: "single".into(), taxable_ordinary_income_usd: 0.0,
+            tax_year: Some(2026),
         });
         assert_eq!(r.federal_tax_liability_usd, 0.0);
         assert_eq!(r.effective_rate_pct, 0.0);

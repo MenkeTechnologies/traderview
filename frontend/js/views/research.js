@@ -364,9 +364,31 @@ function renderRecommendation(el, r, backtest = null, watchers = [], webhooks = 
             </div>
         `;
     }).join('');
+    const RISK_LABEL = { low: 'LOW RISK', medium: 'MED RISK', high: 'HIGH RISK' };
+    const RISK_CLS = { low: 'pos', medium: 'neutral', high: 'neg' };
+    const riskBadge = r.risk_level
+        ? `<span class="rs-rec-risk ${RISK_CLS[r.risk_level] || ''}"
+                 title="annualized vol ${Number(r.annualized_vol_pct).toFixed(1)}%">
+               ${RISK_LABEL[r.risk_level] || r.risk_level.toUpperCase()}
+           </span>`
+        : '';
+    const srRow = (r.support != null || r.resistance != null) ? `
+        <div class="rs-rec-sr muted small">
+            ${r.support != null ? `Support <strong>$${Number(r.support).toFixed(2)}</strong>` : ''}
+            ${r.support != null && r.resistance != null ? ' · ' : ''}
+            ${r.resistance != null ? `Resistance <strong>$${Number(r.resistance).toFixed(2)}</strong>` : ''}
+        </div>` : '';
+    const fcRow = (r.forecast_3m_low != null && r.forecast_3m_high != null) ? `
+        <div class="rs-rec-fc muted small">
+            3-month range <strong>$${Number(r.forecast_3m_low).toFixed(2)}</strong>
+            – <strong>$${Number(r.forecast_3m_high).toFixed(2)}</strong>
+        </div>` : '';
     el.innerHTML = `
         <div class="rs-rec-head">
-            <div class="rs-rec-verdict ${vcls}">${label}</div>
+            <div class="rs-rec-verdict-wrap">
+                <div class="rs-rec-verdict ${vcls}">${label}</div>
+                ${riskBadge}
+            </div>
             <div class="rs-rec-stars" aria-label="${r.stars} of 5 stars">${stars}</div>
             <div class="rs-rec-score-block">
                 <div class="rs-rec-score">${score}</div>
@@ -378,6 +400,7 @@ function renderRecommendation(el, r, backtest = null, watchers = [], webhooks = 
                 <div class="rs-rec-upside ${upsideCls}">${upsideStr}</div>
             </div>
         </div>
+        ${srRow}${fcRow}
         <div class="rs-rec-breakdown">${compBars}</div>
         ${renderBacktestSummary(backtest)}
         ${renderWatcherWidget(symbol, watchers, webhooks)}

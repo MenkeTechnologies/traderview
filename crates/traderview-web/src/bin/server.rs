@@ -441,6 +441,81 @@ async fn main() -> anyhow::Result<()> {
         });
     }
 
+    // Nightly Golden Stars compute. Runs once on boot when the table is
+    // empty (so a fresh install has a leaderboard immediately), then
+    // every 24h at ~22:30 UTC (after US close + settlement chatter).
+    // Verdict-change watchers fire right after each compute.
+    {
+        let rec_pool = pool.clone();
+        tokio::spawn(async move {
+            use chrono::Timelike;
+            // Boot seed: only when no rows exist yet — avoids hammering
+            // Yahoo on every dev-loop restart.
+            let have_rows: Option<(i64,)> =
+                sqlx::query_as("SELECT COUNT(*) FROM stock_recommendations")
+                    .fetch_optional(&rec_pool)
+                    .await
+                    .ok()
+                    .flatten();
+            if matches!(have_rows, Some((0,))) {
+                tracing::info!("golden-stars: empty table, running boot seed compute");
+                let res = traderview_db::stock_recommendation::cron_compute_universe(
+                    &rec_pool,
+                    traderview_db::stock_recommendation::DEFAULT_UNIVERSE,
+                )
+                .await;
+                tracing::info!(
+                    succeeded = res.succeeded, failed = res.failed,
+                    "golden-stars boot seed done"
+                );
+                let fired = traderview_db::stock_recommendation_watchers::check_and_fire(&rec_pool)
+                    .await
+                    .unwrap_or(0);
+                if fired > 0 {
+                    tracing::info!(fired, "golden-stars watchers fired");
+                }
+            }
+            loop {
+                // Sleep until the next 22:30 UTC (≈17:30/18:30 ET).
+                let now = chrono::Utc::now();
+                let target_today = now
+                    .date_naive()
+                    .and_hms_opt(22, 30, 0)
+                    .expect("valid time");
+                let target = if now.time().hour() >= 23
+                    || (now.time().hour() == 22 && now.time().minute() >= 30)
+                {
+                    target_today + chrono::Duration::days(1)
+                } else {
+                    target_today
+                };
+                let wait = (target - now.naive_utc())
+                    .to_std()
+                    .unwrap_or(std::time::Duration::from_secs(3600));
+                tracing::info!(?wait, "golden-stars: sleeping until next nightly compute");
+                tokio::time::sleep(wait).await;
+                let res = traderview_db::stock_recommendation::cron_compute_universe(
+                    &rec_pool,
+                    traderview_db::stock_recommendation::DEFAULT_UNIVERSE,
+                )
+                .await;
+                tracing::info!(
+                    succeeded = res.succeeded, failed = res.failed,
+                    "golden-stars nightly compute done"
+                );
+                let fired = traderview_db::stock_recommendation_watchers::check_and_fire(&rec_pool)
+                    .await
+                    .unwrap_or(0);
+                if fired > 0 {
+                    tracing::info!(fired, "golden-stars watchers fired");
+                }
+                // Guard against immediate re-trigger if the compute
+                // finished within the same minute as the target.
+                tokio::time::sleep(std::time::Duration::from_secs(120)).await;
+            }
+        });
+    }
+
     let api = router(state);
 
     let static_service = ServeDir::new(&args.static_dir).append_index_html_on_directories(true);

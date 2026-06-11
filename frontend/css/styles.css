@@ -321,6 +321,23 @@ main#app {
 .rs-rec-bar-fill.neutral { background: var(--yellow); }
 .rs-rec-comp-note { margin-top: 4px; }
 .rs-rec-foot { margin-top: 12px; padding-top: 8px; border-top: 1px dashed var(--border); }
+.rs-rec-verdict-wrap { display: flex; flex-direction: column; gap: 6px; align-items: center; }
+.rs-rec-risk {
+    font-size: 10px; letter-spacing: 2px; font-weight: 700;
+    padding: 2px 8px; border-radius: 2px; border: 1px solid var(--border);
+}
+.rs-rec-risk.pos { color: var(--green); border-color: var(--green); }
+.rs-rec-risk.neutral { color: var(--yellow); border-color: var(--yellow); }
+.rs-rec-risk.neg { color: var(--red); border-color: var(--red); }
+.rs-rec-sr, .rs-rec-fc { margin-top: 8px; letter-spacing: 1px; }
+.rs-rec-sr strong, .rs-rec-fc strong { color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
+.gs-risk {
+    font-size: 10px; letter-spacing: 1px; font-weight: 700;
+    padding: 1px 6px; border-radius: 2px; border: 1px solid var(--border);
+}
+.gs-risk.pos { color: var(--green); border-color: var(--green); }
+.gs-risk.neutral { color: var(--yellow); border-color: var(--yellow); }
+.gs-risk.neg { color: var(--red); border-color: var(--red); }
 
 /* ---- recommendation backtest panel --------------------------------- */
 .rs-rec-bt { margin-top: 14px; padding-top: 10px; border-top: 1px dashed var(--border); }

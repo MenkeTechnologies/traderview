@@ -140,9 +140,6 @@ pub fn compute(input: &CarTcoInput) -> CarTcoReport {
     let monthly = monthly_payment(principal, input.apr_pct, input.loan_term_months);
     let hold = input.hold_years.max(1);
     let mut yearly: Vec<YearRow> = Vec::with_capacity(hold as usize);
-    let _financing_remaining = monthly * input.loan_term_months as f64 - principal;
-    let _financing_left_total = monthly * input.loan_term_months as f64;
-    let total_loan_payments_in_hold: f64 = (hold * 12).min(input.loan_term_months) as f64 * monthly;
     let mut total_fuel = 0.0;
     let mut total_insurance = 0.0;
     let mut total_maintenance = 0.0;
@@ -175,7 +172,6 @@ pub fn compute(input: &CarTcoInput) -> CarTcoReport {
             total_year_usd: financing_year + fuel_year + insurance_year + maint_year + reg_year,
         });
     }
-    let total_financing_payments = total_loan_payments_in_hold;
     // Real interest paid during the hold = sum of each month's
     // interest portion from a proper amortization schedule, capped at
     // hold*12 months. The previous formula was

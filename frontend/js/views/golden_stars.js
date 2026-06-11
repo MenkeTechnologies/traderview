@@ -102,12 +102,18 @@ function renderBody(el, rows) {
         el.innerHTML = `<div class="boot muted">${esc(t('view.golden_stars.empty') || 'No recommendations yet — click "Run compute now" to seed the leaderboard.')}</div>`;
         return;
     }
+    const RISK_LABEL = { low: 'LOW', medium: 'MED', high: 'HIGH' };
+    const RISK_CLS = { low: 'pos', medium: 'neutral', high: 'neg' };
     const rowsHtml = rows.map((r, i) => {
         const verdictCls = verdictClass(r.verdict);
         const stars = '★'.repeat(r.stars) + '☆'.repeat(5 - r.stars);
         const upsideCls = r.upside_pct > 0 ? 'pos' : r.upside_pct < 0 ? 'neg' : '';
         const upside = (r.upside_pct >= 0 ? '+' : '') + Number(r.upside_pct).toFixed(1) + '%';
         const scoreInt = Math.round(r.score);
+        const risk = r.risk_level
+            ? `<span class="gs-risk ${RISK_CLS[r.risk_level] || ''}"
+                     title="annualized vol ${Number(r.annualized_vol_pct).toFixed(1)}%">${RISK_LABEL[r.risk_level] || ''}</span>`
+            : '<span class="muted">—</span>';
         return `
             <tr class="gs-row" data-symbol="${esc(r.symbol)}">
                 <td class="gs-rank">${i + 1}</td>
@@ -118,6 +124,7 @@ function renderBody(el, rows) {
                     <div class="gs-score-num">${scoreInt}</div>
                     <div class="gs-score-bar"><div class="gs-score-bar-fill ${verdictCls}" data-bar-pct="${scoreInt}"></div></div>
                 </td>
+                <td>${risk}</td>
                 <td class="gs-price">$${Number(r.current_price).toFixed(2)}</td>
                 <td class="gs-target">$${Number(r.target_price).toFixed(2)}</td>
                 <td class="gs-upside ${upsideCls}">${upside}</td>
@@ -133,6 +140,7 @@ function renderBody(el, rows) {
                 <th>Verdict</th>
                 <th>Stars</th>
                 <th>Score</th>
+                <th>Risk</th>
                 <th>Price</th>
                 <th>Target</th>
                 <th>Upside</th>
