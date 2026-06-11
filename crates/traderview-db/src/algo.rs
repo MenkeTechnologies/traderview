@@ -306,6 +306,22 @@ pub async fn update_strategy(
     id: Uuid,
     input: AlgoStrategyInput,
 ) -> anyhow::Result<Option<AlgoStrategy>> {
+    // Snapshot the PRIOR config before overwriting — the revision
+    // history that lets drift detection ask "what changed". Inside
+    // one INSERT…SELECT so the snapshot can't race the update.
+    sqlx::query(
+        "INSERT INTO algo_strategy_revisions
+            (strategy_id, name, timeframe, side_mode, strategy_type,
+             entry_rules, exit_rules, sizing, risk_gates, broker_mode)
+         SELECT id, name, timeframe, side_mode, strategy_type,
+                entry_rules, exit_rules, sizing, risk_gates, broker_mode
+           FROM algo_strategies
+          WHERE id = $1 AND user_id = $2",
+    )
+    .bind(id)
+    .bind(user_id)
+    .execute(pool)
+    .await?;
     Ok(sqlx::query_as::<_, AlgoStrategy>(
         "UPDATE algo_strategies
             SET name = $3, enabled = $4, timeframe = $5, universe_mode = $6,
@@ -988,6 +1004,54 @@ pub async fn last_losing_trip_ts(
         }
     }
     Ok(last)
+}
+
+#[derive(Debug, Clone, Serialize, sqlx::FromRow)]
+pub struct StrategyRevision {
+    pub id: i64,
+    pub name: String,
+    pub timeframe: String,
+    pub side_mode: String,
+    pub strategy_type: String,
+    pub entry_rules: Json,
+    pub exit_rules: Json,
+    pub sizing: Json,
+    pub risk_gates: Json,
+    pub broker_mode: String,
+    pub replaced_at: DateTime<Utc>,
+}
+
+/// Prior configs newest-first, ownership-checked. None = not yours.
+pub async fn list_revisions(
+    pool: &PgPool,
+    user_id: Uuid,
+    strategy_id: Uuid,
+    limit: i64,
+) -> anyhow::Result<Option<Vec<StrategyRevision>>> {
+    let owned: Option<(Uuid,)> = sqlx::query_as(
+        "SELECT id FROM algo_strategies WHERE id = $1 AND user_id = $2",
+    )
+    .bind(strategy_id)
+    .bind(user_id)
+    .fetch_optional(pool)
+    .await?;
+    if owned.is_none() {
+        return Ok(None);
+    }
+    Ok(Some(
+        sqlx::query_as::<_, StrategyRevision>(
+            "SELECT id, name, timeframe, side_mode, strategy_type,
+                    entry_rules, exit_rules, sizing, risk_gates, broker_mode, replaced_at
+               FROM algo_strategy_revisions
+              WHERE strategy_id = $1
+              ORDER BY replaced_at DESC
+              LIMIT $2",
+        )
+        .bind(strategy_id)
+        .bind(limit.clamp(1, 200))
+        .fetch_all(pool)
+        .await?,
+    ))
 }
 
 /// One audit row per risk-gate fire. Non-fatal at call sites: the

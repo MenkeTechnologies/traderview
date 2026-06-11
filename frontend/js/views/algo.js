@@ -1021,6 +1021,7 @@ async function refreshStrategies(mount) {
                 <button class="link" data-act="regimes" data-i18n="view.algo.btn.regimes">regimes</button>
                 <button class="link" data-act="drift" data-i18n="view.algo.btn.drift">drift</button>
                 <button class="link" data-act="gates" data-i18n="view.algo.btn.gates">gates</button>
+                <button class="link" data-act="history" data-i18n="view.algo.btn.history">history</button>
                 <button class="link" data-act="kill" data-i18n="view.algo.btn.kill">${s.kill_switch ? 'release' : 'kill'}</button>
                 <button class="link" data-act="edit" data-i18n="view.algo.btn.edit">edit</button>
                 <button class="link" data-act="del" data-i18n="view.algo.btn.delete">delete</button>
@@ -1045,6 +1046,7 @@ async function refreshStrategies(mount) {
             if (act === 'regimes') return openRegimesModal(s);
             if (act === 'drift') return openDriftModal(s);
             if (act === 'gates') return openGatesModal(s);
+            if (act === 'history') return openRevisionsModal(s);
             if (act === 'kill') return toggleKill(mount, s);
             if (act === 'edit') return openStrategyModal(mount, s);
             if (act === 'del') return deleteStrategy(mount, s);
@@ -1205,6 +1207,45 @@ const OPTIMIZE_DEFAULT_GRIDS = {
 
 
 
+
+
+async function openRevisionsModal(s) {
+    const wrap = document.createElement('div');
+    wrap.className = 'modal';
+    wrap.innerHTML = `
+        <div class="modal-inner" style="max-width:860px">
+            <h2>Config history: ${esc(s.name)}</h2>
+            <div id="revs-result" class="muted small">${esc(t('common.loading'))}</div>
+            <button type="button" class="link" id="revs-close" data-i18n="common.btn.cancel">Close</button>
+        </div>`;
+    document.body.appendChild(wrap);
+    const close = () => wrap.remove();
+    wrap.querySelector('#revs-close').addEventListener('click', close);
+    wrap.addEventListener('click', (e) => { if (e.target === wrap) close(); });
+    try {
+        const rows = await api.algoRevisions(s.id);
+        const out = wrap.querySelector('#revs-result');
+        if (!rows.length) {
+            out.textContent = t('view.algo.empty.revisions');
+            return;
+        }
+        out.innerHTML = `
+            <p data-i18n="view.algo.hint.revisions">Each row is the config BEFORE that save overwrote it — when drift fires, this is where "what changed" gets answered.</p>
+            ${rows.map(r => `
+            <details style="margin-bottom:6px">
+                <summary>${new Date(r.replaced_at).toLocaleString()} \u00b7 ${esc(r.strategy_type)} \u00b7 ${esc(r.timeframe)} \u00b7 ${esc(r.side_mode)} \u00b7 ${esc(r.broker_mode)}</summary>
+                <pre class="small" style="overflow:auto;max-height:240px">${esc(JSON.stringify({
+                    name: r.name,
+                    entry_rules: r.entry_rules,
+                    exit_rules: r.exit_rules,
+                    sizing: r.sizing,
+                    risk_gates: r.risk_gates,
+                }, null, 2))}</pre>
+            </details>`).join('')}`;
+    } catch (err) {
+        wrap.querySelector('#revs-result').textContent = t('common.error', { err: err.message });
+    }
+}
 
 async function openGatesModal(s) {
     const wrap = document.createElement('div');

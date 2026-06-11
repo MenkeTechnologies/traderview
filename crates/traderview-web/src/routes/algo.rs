@@ -47,6 +47,7 @@ pub fn router() -> Router<AppState> {
         .route("/algo/strategies/:id/backtest-regimes", post(post_backtest_regimes))
         .route("/algo/strategies/:id/live-vs-backtest", get(get_live_vs_backtest))
         .route("/algo/strategies/:id/gate-fires", get(get_gate_fires))
+        .route("/algo/strategies/:id/revisions", get(get_revisions))
         .route("/algo/strategies/:id/backtests", get(list_backtest_history))
         .route(
             "/algo/backtests/:id",
@@ -1339,6 +1340,21 @@ async fn get_gate_fires(
     Query(q): Query<GateFiresQ>,
 ) -> Result<Json<traderview_db::algo::GateFireSummary>, ApiError> {
     traderview_db::algo::gate_fire_summary(&s.pool, u.id, id, q.window_days.clamp(1, 365))
+        .await
+        .map_err(ApiError::Internal)?
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("strategy not found".into()))
+}
+
+/// GET /algo/strategies/:id/revisions — prior configs newest-first.
+/// Pairs with drift detection: when performance falls off, this is
+/// where "what changed" gets answered.
+async fn get_revisions(
+    State(s): State<AppState>,
+    u: AuthUser,
+    Path(id): Path<Uuid>,
+) -> Result<Json<Vec<traderview_db::algo::StrategyRevision>>, ApiError> {
+    traderview_db::algo::list_revisions(&s.pool, u.id, id, 50)
         .await
         .map_err(ApiError::Internal)?
         .map(Json)
