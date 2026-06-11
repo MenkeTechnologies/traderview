@@ -2205,6 +2205,9 @@ async function openStrategyModal(mount, existing = null, prefill = null) {
                     <label><span data-i18n="view.algo.label.max_entries_day">Max entries / day (0 = unlimited)</span>
                         <input type="number" name="max_entries_per_day" min="0" max="500" value="${Number(s.risk_gates?.max_entries_per_day ?? 0)}" data-tip="view.algo.tip.max_entries_day">
                     </label>
+                    <label><span data-i18n="view.algo.label.loss_cooldown">Loss cooldown (min, 0 = off)</span>
+                        <input type="number" name="loss_cooldown_minutes" min="0" max="1440" value="${Number(s.risk_gates?.loss_cooldown_minutes ?? 0)}" data-tip="view.algo.tip.loss_cooldown">
+                    </label>
                     <label><span data-i18n="view.algo.label.broker_mode">Execution mode</span>
                         <select name="broker_mode">
                             <option value="internal_sim"  ${s.broker_mode === 'internal_sim'  ? 'selected' : ''} data-i18n="view.algo.opt.broker_sim">Paper — In-app simulator (no broker call)</option>
@@ -2276,6 +2279,7 @@ async function openStrategyModal(mount, existing = null, prefill = null) {
                 earnings_blackout_days: Number(f.get('earnings_blackout_days')) || 0,
                 entry_window: (f.get('entry_window') || '').trim(),
                 max_entries_per_day: Number(f.get('max_entries_per_day')) || 0,
+                loss_cooldown_minutes: Number(f.get('loss_cooldown_minutes')) || 0,
             }),
             broker_mode: f.get('broker_mode'),
         };

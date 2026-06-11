@@ -926,13 +926,15 @@ pub async fn live_divergence(
                 qty: f.fill_qty.to_f64().unwrap_or(0.0),
                 price: f.fill_price.to_f64().unwrap_or(0.0),
                 commission: f.commission.to_f64().unwrap_or(0.0),
+                ts: f.filled_at.timestamp(),
             },
         );
     }
-    let mut pnls = Vec::new();
+    let mut trips = Vec::new();
     for fills in by_symbol.values() {
-        pnls.extend(traderview_core::live_vs_backtest::round_trips(fills));
+        trips.extend(traderview_core::live_vs_backtest::round_trips(fills));
     }
+    let pnls: Vec<f64> = trips.iter().map(|t| t.pnl).collect();
     let report = traderview_core::live_vs_backtest::compare(
         &pnls,
         traderview_core::live_vs_backtest::Expectation {
@@ -953,6 +955,39 @@ pub async fn all_active_strategy_ids(
     )
     .fetch_all(pool)
     .await?)
+}
+
+/// Epoch seconds of the most recent LOSING closed round trip, from
+/// the strategy's fill record — the loss-cooldown gate's clock.
+pub async fn last_losing_trip_ts(
+    pool: &PgPool,
+    user_id: Uuid,
+    strategy_id: Uuid,
+) -> anyhow::Result<Option<i64>> {
+    use rust_decimal::prelude::ToPrimitive;
+    let fills = fills_for_strategy(pool, user_id, strategy_id).await?;
+    let mut by_symbol: std::collections::BTreeMap<String, Vec<traderview_core::live_vs_backtest::Fill>> =
+        std::collections::BTreeMap::new();
+    for f in fills {
+        by_symbol.entry(f.symbol.clone()).or_default().push(
+            traderview_core::live_vs_backtest::Fill {
+                buy: f.side == "buy",
+                qty: f.fill_qty.to_f64().unwrap_or(0.0),
+                price: f.fill_price.to_f64().unwrap_or(0.0),
+                commission: f.commission.to_f64().unwrap_or(0.0),
+                ts: f.filled_at.timestamp(),
+            },
+        );
+    }
+    let mut last: Option<i64> = None;
+    for fills in by_symbol.values() {
+        for trip in traderview_core::live_vs_backtest::round_trips(fills) {
+            if trip.pnl < 0.0 && last.map_or(true, |l| trip.closed_ts > l) {
+                last = Some(trip.closed_ts);
+            }
+        }
+    }
+    Ok(last)
 }
 
 /// Entry orders submitted today (UTC) — the overtrading-gate counter.

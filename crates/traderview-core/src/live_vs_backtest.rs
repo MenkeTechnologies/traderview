@@ -26,11 +26,20 @@ pub struct Fill {
     pub qty: f64,
     pub price: f64,
     pub commission: f64,
+    /// Fill time, epoch seconds — stamps the trip's close.
+    pub ts: i64,
 }
 
-/// FIFO round-trip PnLs from one symbol's chronological fills. The
+#[derive(Debug, Clone, Copy)]
+pub struct Trip {
+    pub pnl: f64,
+    /// Epoch seconds of the fill that closed the trip.
+    pub closed_ts: i64,
+}
+
+/// FIFO round trips from one symbol's chronological fills. The
 /// trailing open position (if any) is ignored — closed outcomes only.
-pub fn round_trips(fills: &[Fill]) -> Vec<f64> {
+pub fn round_trips(fills: &[Fill]) -> Vec<Trip> {
     let mut out = Vec::new();
     let mut pos = 0.0_f64; // signed shares
     let mut avg = 0.0_f64;
@@ -55,7 +64,7 @@ pub fn round_trips(fills: &[Fill]) -> Vec<f64> {
             let remaining = f.qty - close_qty;
             pos += if f.buy { close_qty } else { -close_qty };
             if pos == 0.0 {
-                out.push(trip_pnl - trip_comm);
+                out.push(Trip { pnl: trip_pnl - trip_comm, closed_ts: f.ts });
                 trip_pnl = 0.0;
                 trip_comm = 0.0;
                 if remaining > 0.0 {
@@ -123,7 +132,10 @@ mod tests {
     use super::*;
 
     fn fill(buy: bool, qty: f64, price: f64, c: f64) -> Fill {
-        Fill { buy, qty, price, commission: c }
+        // ts increments per construction so closed_ts is observable.
+        use std::sync::atomic::{AtomicI64, Ordering};
+        static T: AtomicI64 = AtomicI64::new(1_000);
+        Fill { buy, qty, price, commission: c, ts: T.fetch_add(60, Ordering::Relaxed) }
     }
 
     #[test]
@@ -137,8 +149,10 @@ mod tests {
             fill(true, 50.0, 18.0, 1.0),
         ]);
         assert_eq!(pnls.len(), 2);
-        assert!((pnls[0] - 198.0).abs() < 1e-9);
-        assert!((pnls[1] - 98.0).abs() < 1e-9);
+        assert!((pnls[0].pnl - 198.0).abs() < 1e-9);
+        assert!((pnls[1].pnl - 98.0).abs() < 1e-9);
+        // The trip closes at the CLOSING fill's timestamp.
+        assert!(pnls[0].closed_ts < pnls[1].closed_ts);
     }
 
     #[test]
@@ -150,7 +164,7 @@ mod tests {
             fill(false, 150.0, 12.0, 1.0),
         ]);
         assert_eq!(pnls.len(), 1);
-        assert!((pnls[0] - 198.0).abs() < 1e-9);
+        assert!((pnls[0].pnl - 198.0).abs() < 1e-9);
     }
 
     #[test]

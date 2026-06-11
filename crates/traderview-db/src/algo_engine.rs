@@ -163,6 +163,8 @@ pub enum EngineError {
     OutsideEntryWindow { window: String },
     #[error("daily entry cap reached ({count}/{cap}); entry skipped until tomorrow")]
     DailyEntryCap { cap: i64, count: i64 },
+    #[error("loss cooldown: last losing trade closed {minutes_ago}m ago (cooldown {cooldown}m); entry skipped")]
+    LossCooldown { minutes_ago: i64, cooldown: i64 },
     #[error("broker: {0}")]
     Broker(String),
     #[error("db: {0}")]
@@ -303,7 +305,8 @@ impl BrokerSink for InMemorySink {
 ///   "max_position_size_usd": 10000.0,
 ///   "earnings_blackout_days": 2,
 ///   "entry_window": "10:00-15:30",
-///   "max_entries_per_day": 6
+///   "max_entries_per_day": 6,
+///   "loss_cooldown_minutes": 30
 /// }
 /// ```
 #[derive(Debug, Clone)]
@@ -330,6 +333,9 @@ pub struct EngineConfig {
     /// Overtrading gate: cap on entry orders per UTC day. Exits are
     /// never blocked. None = unlimited.
     pub max_entries_per_day: Option<i64>,
+    /// Revenge-trading gate: minutes to wait after a LOSING round trip
+    /// closes before the next entry. Exits never blocked. None = off.
+    pub loss_cooldown_minutes: Option<i64>,
 }
 
 impl EngineConfig {
@@ -376,6 +382,11 @@ impl EngineConfig {
             .get("max_entries_per_day")
             .and_then(|v| v.as_i64())
             .filter(|n| *n > 0);
+        let loss_cooldown_minutes = s
+            .risk_gates
+            .get("loss_cooldown_minutes")
+            .and_then(|v| v.as_i64())
+            .filter(|n| *n > 0);
         Self {
             sizing,
             side_mode,
@@ -386,6 +397,7 @@ impl EngineConfig {
             earnings_blackout_days,
             entry_window,
             max_entries_per_day,
+            loss_cooldown_minutes,
         }
     }
 }
@@ -532,6 +544,18 @@ pub fn in_entry_window(now: chrono::DateTime<chrono::Utc>, window: (u32, u32)) -
     let local = now + chrono::Duration::hours(offset);
     let minutes = local.hour() * 60 + local.minute();
     (window.0..window.1).contains(&minutes)
+}
+
+/// Revenge-trading check: true while inside the cooldown window after
+/// the last losing trip. No loss on record = no cooldown.
+pub fn in_loss_cooldown(last_loss_ts: Option<i64>, now_ts: i64, cooldown_minutes: i64) -> bool {
+    match last_loss_ts {
+        Some(t) => {
+            let elapsed_min = (now_ts - t) / 60;
+            elapsed_min >= 0 && elapsed_min < cooldown_minutes
+        }
+        None => false,
+    }
 }
 
 /// Forward-looking blackout test: true when the NEXT earnings date is
@@ -682,6 +706,19 @@ pub async fn process_bar_window(
             .map_err(|e| EngineError::Broker(format!("entries_today: {e}")))?;
         if count >= cap {
             return Err(EngineError::DailyEntryCap { cap, count });
+        }
+    }
+    // Risk gate: post-loss cooldown — the revenge-trading brake.
+    if let Some(cooldown) = cfg.loss_cooldown_minutes {
+        let last = algo::last_losing_trip_ts(pool, strategy.user_id, strategy.id)
+            .await
+            .map_err(|e| EngineError::Broker(format!("last_losing_trip: {e}")))?;
+        let now_ts = chrono::Utc::now().timestamp();
+        if in_loss_cooldown(last, now_ts, cooldown) {
+            return Err(EngineError::LossCooldown {
+                minutes_ago: (now_ts - last.unwrap()) / 60,
+                cooldown,
+            });
         }
     }
     let qty = algo_strategies::size_shares(equity, sig.entry_price, sig.stop_distance, &cfg.sizing);
@@ -1475,6 +1512,19 @@ mod earnings_blackout_tests {
         // January = EST (UTC-5): 15:00 UTC = 10:00 ET.
         let t = chrono::Utc.with_ymd_and_hms(2026, 1, 13, 15, 0, 0).unwrap();
         assert!(in_entry_window(t, w));
+    }
+
+    #[test]
+    fn loss_cooldown_pins_window_and_no_loss_case() {
+        // Loss closed 10 min ago, 30-min cooldown: blocked.
+        assert!(in_loss_cooldown(Some(1_000_000), 1_000_600, 30));
+        // Exactly at the boundary (30 min): clear — the window is [0, 30).
+        assert!(!in_loss_cooldown(Some(1_000_000), 1_001_800, 30));
+        // 29 min 59s: still blocked (integer minutes floor).
+        assert!(in_loss_cooldown(Some(1_000_000), 1_001_799, 30));
+        // No loss on record / clock skew (loss in the future): clear.
+        assert!(!in_loss_cooldown(None, 1_000_000, 30));
+        assert!(!in_loss_cooldown(Some(1_000_600), 1_000_000, 30));
     }
 
     #[test]
