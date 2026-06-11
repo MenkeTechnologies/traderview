@@ -764,6 +764,7 @@ export const api = {
     calcWinRateConfidence:   (body) => request('/calc/win-rate-confidence', { method: 'POST', body: JSON.stringify(body) }),
     calcEquityCurveFilter:   (body) => request('/calc/equity-curve-filter', { method: 'POST', body: JSON.stringify(body) }),
     tradeReportCard:         (body) => request('/analytics/report-card', { method: 'POST', body: JSON.stringify(body) }),
+    thirteenFDiff:           (cik) => request(`/13f/${encodeURIComponent(cik)}/diff`),
     calcDoubleBarrier:       (body) => request('/calc/double-barrier', { method: 'POST', body: JSON.stringify(body) }),
     calcFuturesSizing:       (body) => request('/calc/futures-sizing', { method: 'POST', body: JSON.stringify(body) }),
     calcImpermanentLoss:     (body) => request('/calc/impermanent-loss', { method: 'POST', body: JSON.stringify(body) }),

@@ -167,6 +167,7 @@ pub mod student_loan_payoff;
 pub mod symbols;
 pub mod tags;
 pub mod tape_replay;
+pub mod thirteen_f;
 pub mod tastytrade_pump;
 pub mod tastytrade_trading;
 pub mod tax_bracket_optimizer;

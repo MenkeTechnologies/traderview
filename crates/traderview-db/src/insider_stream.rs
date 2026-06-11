@@ -265,7 +265,9 @@ pub fn extract_form4_xml_href(body: &str, index_url: &str) -> Option<String> {
     None
 }
 
-fn absolutize_href(base: &str, href: &str) -> String {
+/// Shared with thirteen_f (13F infotable discovery uses the same
+/// EDGAR index-page convention).
+pub(crate) fn absolutize_href(base: &str, href: &str) -> String {
     if href.starts_with("http") {
         return href.to_string();
     }

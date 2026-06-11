@@ -163,6 +163,7 @@ mod student_loan_payoff;
 mod symbols_catalog;
 mod tags;
 mod tape_replay;
+mod thirteen_f;
 mod tax_bracket_optimizer;
 mod tax_loss_harvest;
 mod tax_lots;
@@ -349,6 +350,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(sector_rotation::router())
         .merge(sector_rotation_strategy::router())
         .merge(tape_replay::router())
+        .merge(thirteen_f::router())
         .merge(backtest_presets::router())
         .merge(mood_analytics::router())
         .merge(discipline::router())

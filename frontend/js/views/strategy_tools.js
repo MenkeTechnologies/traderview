@@ -1623,6 +1623,43 @@ const TOOLS = {
         ],
         render: (r) => renderEventStudy(r, 'third-Friday expiration'),
     },
+    '13f-diff': {
+        label: '13F Whale Diff',
+        call: (b) => api.thirteenFDiff(String(b.cik).trim()),
+        fields: [
+            { key: 'cik', label: 'Fund CIK (e.g. 1067983 = Berkshire)', def: '1067983', text: true },
+        ],
+        render: (r) => {
+            const bucket = (title, rows, cls) => rows.length ? `
+                <p class="small" style="margin-bottom:2px"><b>${title}</b> (${rows.length})</p>
+                <table class="gs-table">
+                    <thead><tr><th>Issuer</th><th>Class</th><th>Prior</th><th>Latest</th><th>Δ shares</th><th>Δ%</th></tr></thead>
+                    <tbody>${rows.slice(0, 15).map(x => `
+                        <tr>
+                            <td>${esc(x.issuer)}</td>
+                            <td>${esc(x.class)}</td>
+                            <td>${Math.round(x.shares_prior).toLocaleString()}</td>
+                            <td>${Math.round(x.shares_latest).toLocaleString()}</td>
+                            <td class="${cls}">${(x.shares_delta >= 0 ? '+' : '') + Math.round(x.shares_delta).toLocaleString()}</td>
+                            <td>${x.pct_change != null ? (x.pct_change >= 0 ? '+' : '') + x.pct_change.toFixed(1) + '%' : '—'}</td>
+                        </tr>`).join('')}
+                    </tbody>
+                </table>` : '';
+            return `
+            <div class="cards">
+                <div class="card"><div class="label">Filings compared</div>
+                    <div class="value">${esc(r.prior_filed)} → ${esc(r.latest_filed)}</div>
+                    <div class="small muted">${r.prior_positions} → ${r.latest_positions} positions · ${r.unchanged} unchanged</div></div>
+            </div>
+            ${bucket('New positions', r.new_positions, 'pos')}
+            ${bucket('Exited', r.exited, 'neg')}
+            ${bucket('Increased', r.increased, 'pos')}
+            ${bucket('Decreased', r.decreased, 'neg')}
+            <p class="muted small">Holdings diffed by shares between the last two 13F-HR filings, straight
+            from EDGAR (rows aggregated across managers; options classed separately, never netted against
+            stock). Values as filed — 13Fs lag up to 45 days; this is position research, not a signal.</p>`;
+        },
+    },
     'split-study': {
         label: 'Split Behavior',
         call: (b) => api.splitStudy(b.symbol, b.years),
