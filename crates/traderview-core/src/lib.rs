@@ -889,5 +889,8 @@ pub mod optimize;
 pub mod heston_calibration;
 pub mod macro_calculators;
 pub mod valuation_gauges;
+pub mod variance_risk_premium;
+pub mod implied_dividend;
+pub mod scale_out_planner;
 
 pub use models::*;

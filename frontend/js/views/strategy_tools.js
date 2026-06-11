@@ -350,6 +350,95 @@ const TOOLS = {
             covered call" when the back leg is deep ITM). Back leg revalued by Black-Scholes at front expiry.</p>`;
         },
     },
+    'scale-out': {
+        label: 'Scale-Out Ladder',
+        call: (b) => api.calcScaleOut({
+            entry: b.entry,
+            stop: b.stop,
+            total_shares: b.total_shares,
+            breakeven_after_first: b.breakeven_after_first === 1,
+            // "price:shares; ..." nearest target first.
+            legs: String(b.legs).split(';').map(s => s.trim()).filter(Boolean).map(s => {
+                const [t, sh] = s.split(',').map(x => Number(x.trim()));
+                return { target_price: t, shares: sh };
+            }),
+        }),
+        fields: [
+            { key: 'entry', label: 'Entry ($)', def: 100 },
+            { key: 'stop', label: 'Stop ($)', def: 95 },
+            { key: 'total_shares', label: 'Total shares', def: 300 },
+            { key: 'legs', label: 'Targets: price,shares; …', def: '105,100; 110,100; 115,100', text: true },
+            { key: 'breakeven_after_first', label: 'Stop to breakeven after T1 (1 = yes)', def: 1, int: true },
+        ],
+        render: (r) => {
+            if (!r) return '<span class="neg">invalid ladder</span>';
+            return `
+            <div class="cards">
+                <div class="card"><div class="label">Total risk</div>
+                    <div class="value">$${r.total_risk.toFixed(0)}</div>
+                    <div class="small muted">$${r.risk_per_share.toFixed(2)}/share · ${r.is_long ? 'long' : 'short'}</div></div>
+                <div class="card"><div class="label">Max R (all targets)</div>
+                    <div class="value pos">${r.max_r.toFixed(2)}R</div></div>
+            </div>
+            <table class="gs-table">
+                <thead><tr><th>Scenario</th><th>P&amp;L</th><th>R</th></tr></thead>
+                <tbody>${r.scenarios.map(s => `
+                    <tr>
+                        <td>${esc(s.label.replace(/_/g, ' '))}</td>
+                        <td class="${s.pnl >= 0 ? 'pos' : 'neg'}">$${s.pnl.toFixed(0)}</td>
+                        <td class="${s.r_multiple >= 0 ? 'pos' : 'neg'}">${s.r_multiple.toFixed(2)}R</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+            <p class="muted small">Every stop-out path priced before entry — ladders feel safe but cap the
+            right tail; the scenario table makes the tradeoff concrete.</p>`;
+        },
+    },
+    'variance-risk-premium': {
+        label: 'Variance Risk Premium',
+        call: (b) => api.calcVarianceRiskPremium(b),
+        fields: [
+            { key: 'implied_vol_pct', label: 'Implied vol (%)', def: 20 },
+            { key: 'realized_vol_pct', label: 'Realized vol (%)', def: 16 },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">VRP</div>
+                    <div class="value ${r.vrp_variance_points >= 0 ? 'pos' : 'neg'}">${r.vrp_variance_points.toFixed(0)}</div>
+                    <div class="small muted">variance points (IV² − RV²)</div></div>
+                <div class="card"><div class="label">Vol spread</div>
+                    <div class="value">${r.vol_spread_pct.toFixed(1)}pp</div>
+                    <div class="small muted">ratio ${r.iv_rv_ratio.toFixed(2)} · ${esc(r.premium_regime)}</div></div>
+            </div>
+            <p class="muted small">Carr-Wu variance risk premium — persistently positive on equity indexes;
+            pair the realized leg with the Vol Cone tab's current reading.</p>`,
+    },
+    'implied-dividend': {
+        label: 'Implied Dividend',
+        call: (b) => api.calcImpliedDividend(b),
+        fields: [
+            { key: 'spot', label: 'Spot ($)', def: 100 },
+            { key: 'strike', label: 'Strike ($)', def: 100 },
+            { key: 'call_price', label: 'Call price ($)', def: 4.5 },
+            { key: 'put_price', label: 'Put price ($)', def: 4 },
+            { key: 'time_to_expiry_years', label: 'Time to expiry (years)', def: 0.5 },
+            { key: 'market_risk_free_rate', label: 'Risk-free rate (decimal)', def: 0.04 },
+        ],
+        render: (r) => {
+            if (!r) return '<span class="neg">invalid inputs</span>';
+            return `
+            <div class="cards">
+                <div class="card"><div class="label">PV of dividends</div>
+                    <div class="value">$${r.pv_dividends.toFixed(3)}</div>
+                    <div class="small muted">to expiry, per share</div></div>
+                <div class="card"><div class="label">Implied yield</div>
+                    <div class="value ${r.negative_implies_borrow_cost ? 'neg' : 'pos'}">${r.implied_annual_yield_pct.toFixed(2)}%/yr</div>
+                    <div class="small ${r.negative_implies_borrow_cost ? 'neg' : 'muted'}">${r.negative_implies_borrow_cost ? 'negative — hard-to-borrow fee in parity' : 'option-market dividend forecast'}</div></div>
+            </div>
+            <p class="muted small">From put-call parity: PV(div) = S − (C − P) − K·e^(−rT). Often sharper
+            than analyst estimates around cut/raise events.</p>`;
+        },
+    },
     'valuation-gauges': {
         label: 'Valuation Gauges',
         call: (b) => api.calcValuationGauges({

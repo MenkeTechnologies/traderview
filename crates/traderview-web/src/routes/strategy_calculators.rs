@@ -7,6 +7,8 @@
 //!   POST /calc/sahm-rule                 — unemployment recession trigger
 //!   POST /calc/misery-index              — inflation + unemployment
 //!   POST /calc/valuation-gauges          — Buffett / Tobin Q / ERP / ECY
+//!   POST /calc/variance-risk-premium     — IV² − RV² short-vol edge
+//!   POST /calc/scale-out                 — partial-exit ladder scenarios
 //!   POST /sim/dual-momentum              — Antonacci GEM backtest
 //!   GET  /symbols/:sym/turn-of-month     — TOM seasonality stats
 //!   GET  /symbols/:sym/vol-cone          — realized-vol percentile cone
@@ -36,6 +38,8 @@ pub fn router() -> Router<AppState> {
         .route("/calc/sahm-rule", post(post_sahm_rule))
         .route("/calc/misery-index", post(post_misery_index))
         .route("/calc/valuation-gauges", post(post_valuation_gauges))
+        .route("/calc/variance-risk-premium", post(post_vrp))
+        .route("/calc/scale-out", post(post_scale_out))
         .route("/sim/dual-momentum", post(post_dual_momentum))
         .route("/symbols/:symbol/turn-of-month", get(get_turn_of_month))
         .route("/symbols/:symbol/vol-cone", get(get_vol_cone))
@@ -187,6 +191,37 @@ async fn post_valuation_gauges(
         ));
     }
     Ok(Json(report))
+}
+
+#[derive(Debug, Deserialize)]
+struct VrpBody {
+    implied_vol_pct: f64,
+    realized_vol_pct: f64,
+}
+
+async fn post_vrp(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<VrpBody>,
+) -> Result<Json<traderview_core::variance_risk_premium::VrpReport>, ApiError> {
+    traderview_core::variance_risk_premium::compute(b.implied_vol_pct, b.realized_vol_pct)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("vols must be positive".into()))
+}
+
+async fn post_scale_out(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<traderview_core::scale_out_planner::ScaleOutInput>,
+) -> Result<Json<traderview_core::scale_out_planner::ScaleOutReport>, ApiError> {
+    traderview_core::scale_out_planner::compute(&b)
+        .map(Json)
+        .ok_or_else(|| {
+            ApiError::BadRequest(
+                "invalid ladder — targets must step away from entry, shares within position"
+                    .into(),
+            )
+        })
 }
 
 async fn post_dual_momentum(

@@ -77,6 +77,7 @@ use traderview_core::{
     hierarchical_risk_parity,
     hikkake_pattern,
     hilbert_transform, hill_estimator, hindenburg_omen, hodrick_prescott, holiday_calendar,
+    implied_dividend,
     holiday_seasonality, holt_winters, holy_grail, hull_white, hurst_exponent, iceberg_detector,
     imbalance_bar_chart, impulse_system, information_coefficient, information_ratio,
     inside_bar_breakout, insider_buying_scanner, intraday_intensity_index, intraday_seasonality,
@@ -797,6 +798,10 @@ pub fn router() -> Router<AppState> {
             post(conversion_reversal_route),
         )
         .route("/options/calc/seagull", post(seagull_route))
+        .route(
+            "/options/calc/implied-dividend",
+            post(implied_dividend_route),
+        )
         .route("/options/calc/heston", post(heston_route))
         .route(
             "/options/calc/heston-calibrate",
@@ -7163,6 +7168,30 @@ async fn heston_route(
     Json(b): Json<heston::HestonInput>,
 ) -> Json<Option<heston::HestonReport>> {
     Json(heston::compute(&b))
+}
+
+#[derive(Deserialize)]
+struct ImpliedDividendBody {
+    spot: f64,
+    strike: f64,
+    call_price: f64,
+    put_price: f64,
+    time_to_expiry_years: f64,
+    market_risk_free_rate: f64,
+}
+
+async fn implied_dividend_route(
+    _u: AuthUser,
+    Json(b): Json<ImpliedDividendBody>,
+) -> Json<Option<implied_dividend::ImpliedDividendReport>> {
+    Json(implied_dividend::compute(
+        b.spot,
+        b.strike,
+        b.call_price,
+        b.put_price,
+        b.time_to_expiry_years,
+        b.market_risk_free_rate,
+    ))
 }
 
 async fn heston_calibrate_route(
