@@ -184,6 +184,66 @@ pub async fn fetch_dividend_events(symbol: &str) -> (Vec<DividendEvent>, Option<
     (events, current_price)
 }
 
+/// A historical split: 4-for-1 ⇒ numerator 4, denominator 1.
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct SplitEvent {
+    pub date: chrono::NaiveDate,
+    pub numerator: f64,
+    pub denominator: f64,
+}
+
+impl SplitEvent {
+    /// > 1 = forward split, < 1 = reverse.
+    pub fn ratio(&self) -> f64 {
+        if self.denominator > 0.0 {
+            self.numerator / self.denominator
+        } else {
+            0.0
+        }
+    }
+}
+
+/// Split events from the same Yahoo chart endpoint the dividend fetch
+/// uses (`events=split`). Empty on never-split symbols or fetch errors.
+pub async fn fetch_split_events(symbol: &str) -> Vec<SplitEvent> {
+    let encoded = symbol.replace('^', "%5E").replace('=', "%3D");
+    let url = format!(
+        "https://query1.finance.yahoo.com/v8/finance/chart/{encoded}\
+         ?interval=1d&range=20y&events=split",
+    );
+    let Ok(client) = reqwest::Client::builder()
+        .user_agent("Mozilla/5.0 (compatible; traderview/0.10)")
+        .timeout(std::time::Duration::from_secs(10))
+        .build()
+    else {
+        return Vec::new();
+    };
+    let resp = match client.get(&url).send().await {
+        Ok(r) if r.status().is_success() => r,
+        _ => return Vec::new(),
+    };
+    let Ok(v) = resp.json::<serde_json::Value>().await else {
+        return Vec::new();
+    };
+    let mut events: Vec<SplitEvent> = v["chart"]["result"][0]["events"]["splits"]
+        .as_object()
+        .map(|m| {
+            m.values()
+                .filter_map(|ev| {
+                    let date = ev["date"].as_i64()?;
+                    Some(SplitEvent {
+                        date: chrono::DateTime::<Utc>::from_timestamp(date, 0)?.date_naive(),
+                        numerator: ev["numerator"].as_f64()?,
+                        denominator: ev["denominator"].as_f64()?,
+                    })
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    events.sort_by_key(|e| e.date);
+    events
+}
+
 pub async fn compute_report(
     pool: &PgPool,
     user_id: Uuid,

@@ -1191,6 +1191,48 @@ pub async fn pre_holiday(
     event_study(pool, symbol, years, &anchors, 3, 2).await
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct SplitStudyReport {
+    pub symbol: String,
+    /// (date, ratio) — ratio > 1 forward, < 1 reverse.
+    pub splits: Vec<(chrono::NaiveDate, f64)>,
+    #[serde(flatten)]
+    pub study: EventStudyReport,
+}
+
+/// Split-date behavior study — bars are split-adjusted, so the offsets
+/// read momentum/attention effects around the event, not the mechanical
+/// price change.
+pub async fn split_study(
+    pool: &PgPool,
+    symbol: &str,
+    years: u32,
+) -> Result<SplitStudyReport, TomError> {
+    let years = years.clamp(1, 20);
+    let now = Utc::now().date_naive();
+    let from = now - chrono::Duration::days(366 * years as i64);
+    let events = crate::dividend_tracker::fetch_split_events(symbol).await;
+    let splits: Vec<(chrono::NaiveDate, f64)> = events
+        .iter()
+        .filter(|e| e.date >= from && e.date <= now)
+        .map(|e| (e.date, e.ratio()))
+        .collect();
+    if splits.is_empty() {
+        return Err(TomError::Insufficient {
+            symbol: symbol.to_string(),
+            got: 0,
+            need: 1,
+        });
+    }
+    let anchors: Vec<chrono::NaiveDate> = splits.iter().map(|(d, _)| *d).collect();
+    let study = event_study(pool, symbol, years, &anchors, 5, 5).await?;
+    Ok(SplitStudyReport {
+        symbol: symbol.to_string(),
+        splits,
+        study,
+    })
+}
+
 /// Monthly OpEx study; `quarterly` restricts to the Mar/Jun/Sep/Dec
 /// triple-witching expirations.
 pub async fn opex_week(

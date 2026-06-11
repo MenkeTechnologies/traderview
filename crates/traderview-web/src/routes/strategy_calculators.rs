@@ -37,6 +37,7 @@
 //!   GET  /symbols/:sym/opex-week         — third-Friday expiration window
 //!   GET  /symbols/:sym/pre-holiday       — pre-holiday drift (2024+ cal)
 //!   GET  /symbols/:sym/ex-div-study      — ex-date recovery behavior
+//!   GET  /symbols/:sym/split-study       — split-date behavior
 //!   POST /symbols/:sym/vol-rich-cheap    — IV term vs realized cone
 //!   GET  /symbols/:sym/character-sheet   — all bar studies, one fetch
 //!   POST /screeners/seasonality          — calendar edges across a list
@@ -111,6 +112,7 @@ pub fn router() -> Router<AppState> {
         .route("/symbols/:symbol/opex-week", get(get_opex_week))
         .route("/symbols/:symbol/pre-holiday", get(get_pre_holiday))
         .route("/symbols/:symbol/ex-div-study", get(get_ex_div_study))
+        .route("/symbols/:symbol/split-study", get(get_split_study))
         .route("/symbols/:symbol/vol-rich-cheap", post(post_vol_rich_cheap))
         .route(
             "/symbols/:symbol/character-sheet",
@@ -765,6 +767,19 @@ async fn get_opex_week(
     .await
     .map(Json)
     .map_err(map_tom_err)
+}
+
+async fn get_split_study(
+    State(s): State<AppState>,
+    _u: AuthUser,
+    Path(symbol): Path<String>,
+    Query(q): Query<TomQ>,
+) -> Result<Json<strategy_calculators::SplitStudyReport>, ApiError> {
+    let sym = validate_symbol(&symbol)?;
+    strategy_calculators::split_study(&s.pool, &sym, q.years.unwrap_or(15))
+        .await
+        .map(Json)
+        .map_err(map_tom_err)
 }
 
 async fn get_ex_div_study(

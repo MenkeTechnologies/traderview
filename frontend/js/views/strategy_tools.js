@@ -1623,6 +1623,17 @@ const TOOLS = {
         ],
         render: (r) => renderEventStudy(r, 'third-Friday expiration'),
     },
+    'split-study': {
+        label: 'Split Behavior',
+        call: (b) => api.splitStudy(b.symbol, b.years),
+        fields: [
+            { key: 'symbol', label: 'Symbol', def: 'NVDA', text: true },
+            { key: 'years', label: 'Lookback years', def: 15, int: true },
+        ],
+        render: (r) => `
+            <p class="muted small">Splits: ${r.splits.map(([d, ratio]) => `${esc(d)} (${ratio >= 1 ? ratio.toFixed(0) + ':1' : '1:' + (1 / ratio).toFixed(0)})`).join(' · ')}</p>
+            ${renderEventStudy(r, 'split')}`,
+    },
     'ex-div-study': {
         label: 'Ex-Div Behavior',
         call: (b) => api.exDivStudy(b.symbol, b.years),
