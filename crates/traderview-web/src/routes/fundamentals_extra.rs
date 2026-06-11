@@ -14,6 +14,11 @@ use serde::Deserialize;
 use traderview_db::dcf_valuation::{self, DcfInput, DcfReport};
 use traderview_db::fundamental_health::{self, FundamentalHealth};
 use traderview_db::gap_stats::{self, GapReport};
+use traderview_db::rrg;
+use traderview_db::valuation_models::{
+    self, DdmInput, DdmReport, EpvInput, EpvReport, ReverseDcfInput, ReverseDcfReport,
+    RuleOf40Report, WheelInput, WheelReport,
+};
 
 pub fn router() -> Router<AppState> {
     Router::new()
@@ -22,8 +27,14 @@ pub fn router() -> Router<AppState> {
             get(get_fundamental_health),
         )
         .route("/calc/dcf", post(post_dcf))
+        .route("/calc/reverse-dcf", post(post_reverse_dcf))
+        .route("/calc/ddm", post(post_ddm))
+        .route("/calc/epv", post(post_epv))
+        .route("/calc/wheel", post(post_wheel))
+        .route("/symbols/:symbol/rule-of-40", get(get_rule_of_40))
         .route("/symbols/:symbol/gap-stats", get(get_gap_stats))
         .route("/symbols/:symbol/seasonality", get(get_seasonality))
+        .route("/rrg", get(get_rrg))
 }
 
 fn validate_symbol(s: &str) -> Result<String, ApiError> {
@@ -60,6 +71,83 @@ async fn post_dcf(
     dcf_valuation::compute(&input)
         .map(Json)
         .map_err(|e| ApiError::BadRequest(e.to_string()))
+}
+
+async fn post_reverse_dcf(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(input): Json<ReverseDcfInput>,
+) -> Result<Json<ReverseDcfReport>, ApiError> {
+    valuation_models::reverse_dcf(&input)
+        .map(Json)
+        .ok_or_else(|| {
+            ApiError::BadRequest(
+                "price not reachable within growth bracket [-50%, +100%] — check inputs".into(),
+            )
+        })
+}
+
+async fn post_ddm(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(input): Json<DdmInput>,
+) -> Result<Json<DdmReport>, ApiError> {
+    valuation_models::ddm(&input).map(Json).ok_or_else(|| {
+        ApiError::BadRequest(
+            "invalid DDM inputs — required return must exceed terminal growth, dividend > 0"
+                .into(),
+        )
+    })
+}
+
+async fn post_epv(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(input): Json<EpvInput>,
+) -> Result<Json<EpvReport>, ApiError> {
+    valuation_models::epv(&input).map(Json).ok_or_else(|| {
+        ApiError::BadRequest("invalid EPV inputs — WACC and shares must be positive".into())
+    })
+}
+
+async fn post_wheel(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(input): Json<WheelInput>,
+) -> Result<Json<WheelReport>, ApiError> {
+    valuation_models::wheel(&input).map(Json).ok_or_else(|| {
+        ApiError::BadRequest("invalid wheel inputs — strikes, price, DTEs must be positive".into())
+    })
+}
+
+/// Rule of 40 from Finnhub metric=all: revenue growth (TTM YoY) +
+/// FCF margin (FCF/share ÷ revenue/share). Both best-effort.
+async fn get_rule_of_40(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Path(symbol): Path<String>,
+) -> Result<Json<RuleOf40Report>, ApiError> {
+    let sym = validate_symbol(&symbol)?;
+    let m = traderview_db::finnhub_rest::metric_all(&sym)
+        .await
+        .map_err(ApiError::Internal)?;
+    let g = |k: &str| m.get("metric").and_then(|x| x.get(k)).and_then(|v| v.as_f64());
+    let rev_growth = g("revenueGrowthTTMYoy")
+        .ok_or_else(|| ApiError::BadRequest(format!("no revenue growth data for {sym}")))?;
+    let fcf_ps = g("cashFlowPerShareTTM").or_else(|| g("cashFlowPerShareAnnual"));
+    let rev_ps = g("revenuePerShareTTM").or_else(|| g("revenuePerShareAnnual"));
+    let fcf_margin = match (fcf_ps, rev_ps) {
+        (Some(f), Some(r)) if r.abs() > 1e-9 => f / r * 100.0,
+        _ => return Err(ApiError::BadRequest(format!("no FCF margin data for {sym}"))),
+    };
+    Ok(Json(valuation_models::rule_of_40(rev_growth, fcf_margin)))
+}
+
+async fn get_rrg(
+    State(s): State<AppState>,
+    _u: AuthUser,
+) -> Result<Json<rrg::RrgReport>, ApiError> {
+    Ok(Json(rrg::compute(&s.pool).await))
 }
 
 #[derive(Debug, Deserialize)]

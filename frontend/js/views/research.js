@@ -193,6 +193,7 @@ export async function renderResearch(mount, _state, sym) {
     const peer = api.symbolPeers(sym).catch(() => null);
     const upgr = api.symbolUpgrades(sym).catch(() => null);
     const health = api.symbolFundamentalHealth(sym).catch(() => null);
+    const r40 = api.symbolRuleOf40(sym).catch(() => null);
     const gaps = api.symbolGapStats(sym).catch(() => null);
     const seas = api.symbolSeasonality(sym).catch(() => null);
 
@@ -256,10 +257,10 @@ export async function renderResearch(mount, _state, sym) {
         const el = mount.querySelector('#rs-upgrades');
         if (el) renderUpgrades(el, u);
     });
-    health.then(h => {
+    Promise.all([health, r40]).then(([h, r]) => {
         if (!viewIsCurrent(tok)) return;
         const el = mount.querySelector('#rs-health');
-        if (el) renderFundamentalHealth(el, h);
+        if (el) renderFundamentalHealth(el, h, r);
     });
     gaps.then(g => {
         if (!viewIsCurrent(tok)) return;
@@ -273,8 +274,13 @@ export async function renderResearch(mount, _state, sym) {
     });
 }
 
-function renderFundamentalHealth(el, h) {
+function renderFundamentalHealth(el, h, r40 = null) {
     if (!h) { el.innerHTML = `<p class="muted">${esc(t('common.empty.no_data'))}</p>`; return; }
+    const r40Card = r40 ? `
+        <div class="card"><div class="label">Rule of 40</div>
+            <div class="value ${r40.passes ? 'pos' : 'neg'}">${r40.score.toFixed(1)}</div>
+            <div class="small muted">${r40.revenue_growth_pct.toFixed(1)}% growth + ${r40.fcf_margin_pct.toFixed(1)}% FCF margin</div>
+        </div>` : '';
     const fCls = h.piotroski_score >= 7 ? 'pos' : h.piotroski_score <= 3 ? 'neg' : 'neutral';
     const zoneCls = { safe: 'pos', grey: 'neutral', distress: 'neg' }[h.altman_zone] || '';
     const checks = (h.piotroski_checks || []).map(c => `
@@ -299,6 +305,7 @@ function renderFundamentalHealth(el, h) {
                 <div class="value ${zoneCls}">${Number(h.altman_z).toFixed(2)}</div>
                 <div class="small muted">${esc(h.altman_zone || '')}</div></div>` : ''}
             ${grahamRow}
+            ${r40Card}
         </div>
         <div class="rs-health-checks">${checks}</div>
     `;
