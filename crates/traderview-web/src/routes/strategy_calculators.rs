@@ -22,6 +22,8 @@
 //!   POST /calc/curve-trade               — DV01-neutral spread/butterfly
 //!   POST /calc/cheapest-to-deliver       — basket basis + implied repo
 //!   POST /calc/rebalance-bands           — Swedroe 5/25 drift screen
+//!   POST /calc/iv-cone                   — IV-term expected-move bands
+//!   POST /calc/fund-fees                 — 2-and-20 waterfall + drag
 //!   POST /sim/dual-momentum              — Antonacci GEM backtest
 //!   GET  /symbols/:sym/turn-of-month     — TOM seasonality stats
 //!   GET  /symbols/:sym/vol-cone          — realized-vol percentile cone
@@ -66,6 +68,8 @@ pub fn router() -> Router<AppState> {
         .route("/calc/curve-trade", post(post_curve_trade))
         .route("/calc/cheapest-to-deliver", post(post_ctd))
         .route("/calc/rebalance-bands", post(post_rebalance_bands))
+        .route("/calc/iv-cone", post(post_iv_cone))
+        .route("/calc/fund-fees", post(post_fund_fees))
         .route("/sim/dual-momentum", post(post_dual_momentum))
         .route("/symbols/:symbol/turn-of-month", get(get_turn_of_month))
         .route("/symbols/:symbol/vol-cone", get(get_vol_cone))
@@ -399,6 +403,32 @@ async fn post_rebalance_bands(
     traderview_core::rebalance_bands::compute(&b)
         .map(Json)
         .ok_or_else(|| ApiError::BadRequest("invalid band inputs".into()))
+}
+
+#[derive(Debug, Deserialize)]
+struct IvConeBody {
+    spot: f64,
+    term: Vec<traderview_core::iv_cone::TermPoint>,
+}
+
+async fn post_iv_cone(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<IvConeBody>,
+) -> Result<Json<Vec<traderview_core::iv_cone::ConeRow>>, ApiError> {
+    traderview_core::iv_cone::compute(b.spot, &b.term)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("invalid term structure".into()))
+}
+
+async fn post_fund_fees(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<traderview_core::fund_fees::FundFeesInput>,
+) -> Result<Json<traderview_core::fund_fees::FundFeesReport>, ApiError> {
+    traderview_core::fund_fees::compute(&b)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("invalid fee inputs".into()))
 }
 
 async fn post_dual_momentum(

@@ -147,6 +147,84 @@ const TOOLS = {
             trailing lookback return when either beats T-bills; otherwise retreat to bonds.
             Recent holdings: ${esc(r.rows.slice(-6).map(x => x.holding).join(' → '))}.</p>`,
     },
+    'iv-cone': {
+        label: 'IV Cone',
+        call: (b) => api.calcIvCone({
+            spot: b.spot,
+            term: String(b.term).split(';').map(s => s.trim()).filter(Boolean).map(s => {
+                const [d, iv] = s.split(',').map(x => Number(x.trim()));
+                return { days: d, iv_pct: iv };
+            }),
+        }),
+        fields: [
+            { key: 'spot', label: 'Spot ($)', def: 100 },
+            { key: 'term', label: 'Term: days,IV%; …', def: '5,25; 21,22; 63,20; 252,18', text: true },
+        ],
+        render: (r) => {
+            if (!r) return '<span class="neg">invalid term structure</span>';
+            return `
+            <table class="gs-table">
+                <thead><tr><th>Horizon</th><th>IV</th><th>±1σ move</th><th>1σ range</th><th>2σ range</th></tr></thead>
+                <tbody>${r.map(row => `
+                    <tr>
+                        <td>${row.days}d</td>
+                        <td>${row.iv_pct.toFixed(1)}%</td>
+                        <td>±${row.move_1s_pct.toFixed(2)}%</td>
+                        <td>$${row.low_1s.toFixed(2)} – $${row.high_1s.toFixed(2)}</td>
+                        <td>$${row.low_2s.toFixed(2)} – $${row.high_2s.toFixed(2)}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+            <p class="muted small">Where the options market PRICES the underlying to live (σ√T bands per
+            term point) — pair with the realized Vol Cone to spot rich/cheap horizons.</p>`;
+        },
+    },
+    'fund-fees': {
+        label: '2-and-20 Fees',
+        call: (b) => api.calcFundFees({
+            initial_investment: b.initial_investment,
+            gross_returns_pct: String(b.gross_returns_pct).split(/[\s,]+/).map(Number).filter(x => isFinite(x)),
+            management_fee_pct: b.management_fee_pct,
+            incentive_fee_pct: b.incentive_fee_pct,
+            hurdle_pct: b.hurdle_pct,
+        }),
+        fields: [
+            { key: 'initial_investment', label: 'Investment ($)', def: 100000 },
+            { key: 'gross_returns_pct', label: 'Gross returns %/yr (comma-sep)', def: '20, -10, 15, 12, 8', text: true },
+            { key: 'management_fee_pct', label: 'Management fee (%)', def: 2 },
+            { key: 'incentive_fee_pct', label: 'Incentive fee (%)', def: 20 },
+            { key: 'hurdle_pct', label: 'Hurdle (%/yr)', def: 0 },
+        ],
+        render: (r) => {
+            if (!r) return '<span class="neg">invalid fee inputs</span>';
+            return `
+            <div class="cards">
+                <div class="card"><div class="label">Net CAGR</div>
+                    <div class="value ${r.net_cagr_pct >= 0 ? 'pos' : 'neg'}">${r.net_cagr_pct.toFixed(2)}%</div>
+                    <div class="small muted">vs ${r.gross_cagr_pct.toFixed(2)}% gross</div></div>
+                <div class="card"><div class="label">Fee drag</div>
+                    <div class="value neg">−${r.fee_drag_pp.toFixed(2)}pp/yr</div>
+                    <div class="small muted">$${Math.round(r.total_fees).toLocaleString()} total fees</div></div>
+                <div class="card"><div class="label">Final NAV</div>
+                    <div class="value">$${Math.round(r.final_net_nav).toLocaleString()}</div>
+                    <div class="small muted">vs $${Math.round(r.final_gross_nav).toLocaleString()} gross</div></div>
+            </div>
+            <table class="gs-table">
+                <thead><tr><th>Year</th><th>Gross</th><th>Mgmt</th><th>Incentive</th><th>Net NAV</th></tr></thead>
+                <tbody>${r.years.map(y => `
+                    <tr>
+                        <td>${y.year}</td>
+                        <td class="${y.gross_return_pct >= 0 ? 'pos' : 'neg'}">${y.gross_return_pct.toFixed(1)}%</td>
+                        <td>$${y.management_fee.toFixed(0)}</td>
+                        <td>$${y.incentive_fee.toFixed(0)}</td>
+                        <td>$${Math.round(y.net_nav).toLocaleString()}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+            <p class="muted small">Mgmt on beginning NAV; incentive only above max(high-water mark,
+            hurdle) — the HWM blocks double-charging after a down year.</p>`;
+        },
+    },
     'vol-cone': {
         label: 'Vol Cone',
         call: (b) => api.volCone(b.symbol, b.years),

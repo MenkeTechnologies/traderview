@@ -906,5 +906,7 @@ pub mod curve_trade;
 pub mod cheapest_to_deliver;
 pub mod rebalance_bands;
 pub mod options_dailies;
+pub mod iv_cone;
+pub mod fund_fees;
 
 pub use models::*;
