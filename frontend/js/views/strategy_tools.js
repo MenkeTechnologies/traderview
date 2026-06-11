@@ -350,6 +350,80 @@ const TOOLS = {
             covered call" when the back leg is deep ITM). Back leg revalued by Black-Scholes at front expiry.</p>`;
         },
     },
+    'cef-discount': {
+        label: 'CEF Discount',
+        call: (b) => api.calcCefDiscount({
+            price: b.price,
+            nav: b.nav,
+            annual_distribution: b.annual_distribution,
+            mean_discount_pct: b.std_discount_pct > 0 ? b.mean_discount_pct : null,
+            std_discount_pct: b.std_discount_pct > 0 ? b.std_discount_pct : null,
+        }),
+        fields: [
+            { key: 'price', label: 'Market price ($)', def: 9.2 },
+            { key: 'nav', label: 'NAV ($)', def: 10 },
+            { key: 'annual_distribution', label: 'Annual distribution ($/sh)', def: 0.92 },
+            { key: 'mean_discount_pct', label: 'Historical mean discount (%)', def: -5 },
+            { key: 'std_discount_pct', label: 'Discount std dev (%, 0 = skip z)', def: 2 },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">${r.discount_pct < 0 ? 'Discount' : 'Premium'}</div>
+                    <div class="value ${r.discount_pct < 0 ? 'pos' : 'neg'}">${r.discount_pct.toFixed(2)}%</div>
+                    ${r.z_score != null ? `<div class="small ${r.z_score <= -1 ? 'pos' : 'muted'}">z = ${r.z_score.toFixed(2)} vs own history</div>` : ''}</div>
+                ${r.yield_on_price_pct != null ? `<div class="card"><div class="label">Yield pickup</div>
+                    <div class="value">${r.yield_on_price_pct.toFixed(2)}%</div>
+                    <div class="small muted">vs ${r.yield_on_nav_pct.toFixed(2)}% on NAV</div></div>` : ''}
+            </div>
+            <p class="muted small">CEF discounts mean-revert — the screen wants deep-negative z (cheap vs
+            its OWN history), not just a wide absolute discount.</p>`,
+    },
+    'adr-premium': {
+        label: 'ADR Premium',
+        call: (b) => api.calcAdrPremium(b),
+        fields: [
+            { key: 'adr_price', label: 'ADR price ($)', def: 73.5 },
+            { key: 'ordinary_price_local', label: 'Ordinary price (local ccy)', def: 1000 },
+            { key: 'usd_per_local', label: 'USD per local unit', def: 0.007 },
+            { key: 'ordinaries_per_adr', label: 'Ordinaries per ADR', def: 10 },
+            { key: 'conversion_fee_pct', label: 'Round-trip fee (%)', def: 1 },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Parity</div>
+                    <div class="value">$${r.parity_usd.toFixed(2)}</div></div>
+                <div class="card"><div class="label">${r.premium_pct >= 0 ? 'Premium' : 'Discount'}</div>
+                    <div class="value ${Math.abs(r.premium_pct) > 2 ? 'neg' : ''}">${r.premium_pct.toFixed(2)}%</div></div>
+                <div class="card"><div class="label">Capturable after fees</div>
+                    <div class="value ${r.arb_exists ? 'pos' : 'neg'}">${r.capturable_pct.toFixed(2)}%</div>
+                    <div class="small muted">${r.arb_exists ? 'ARB — gap clears friction' : 'friction eats the gap'}</div></div>
+            </div>
+            <p class="muted small">ADR vs ordinary × FX × ratio. Persistent premiums signal conversion
+            restrictions; fleeting ones are the cross-listing arb.</p>`,
+    },
+    'sbc-dilution': {
+        label: 'SBC Dilution',
+        call: (b) => api.calcSbcDilution(b),
+        fields: [
+            { key: 'market_cap', label: 'Market cap ($M)', def: 100000 },
+            { key: 'annual_sbc', label: 'Annual SBC ($M)', def: 3000 },
+            { key: 'annual_buybacks', label: 'Annual buybacks ($M)', def: 5000 },
+            { key: 'annual_revenue', label: 'Annual revenue ($M, 0 = skip)', def: 40000 },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">SBC dilution</div>
+                    <div class="value neg">−${r.sbc_dilution_pct.toFixed(2)}%/yr</div>
+                    ${r.sbc_to_revenue_pct != null ? `<div class="small muted">${r.sbc_to_revenue_pct.toFixed(1)}% of revenue</div>` : ''}</div>
+                <div class="card"><div class="label">Net buyback yield</div>
+                    <div class="value ${r.net_buyback_yield_pct >= 0 ? 'pos' : 'neg'}">${r.net_buyback_yield_pct.toFixed(2)}%</div>
+                    <div class="small muted">${r.gross_buyback_yield_pct.toFixed(2)}% gross</div></div>
+                ${r.buyback_consumed_by_sbc_pct != null ? `<div class="card"><div class="label">Buyback consumed by SBC</div>
+                    <div class="value ${r.buyback_consumed_by_sbc_pct >= 100 ? 'neg' : ''}">${r.buyback_consumed_by_sbc_pct.toFixed(0)}%</div></div>` : ''}
+            </div>
+            <p class="muted small">Gross shareholder-yield screens miss SBC re-issuing shares out the back
+            door — the net row is the real return of capital.</p>`,
+    },
     'merger-arb': {
         label: 'Merger Arb',
         call: (b) => api.calcMergerArb(b),

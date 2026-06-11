@@ -896,5 +896,8 @@ pub mod merger_arb;
 pub mod buyback_accretion;
 pub mod black_scholes;
 pub mod warrant_valuation;
+pub mod cef_discount;
+pub mod adr_premium;
+pub mod sbc_dilution;
 
 pub use models::*;

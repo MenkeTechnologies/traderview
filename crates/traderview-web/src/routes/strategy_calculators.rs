@@ -11,6 +11,9 @@
 //!   POST /calc/scale-out                 — partial-exit ladder scenarios
 //!   POST /calc/merger-arb                — deal spread + implied probability
 //!   POST /calc/buyback-accretion         — EPS accretion + breakeven P/E
+//!   POST /calc/cef-discount              — CEF discount + z-score screen
+//!   POST /calc/adr-premium               — ADR vs ordinary parity arb
+//!   POST /calc/sbc-dilution              — buyback yield net of SBC
 //!   POST /sim/dual-momentum              — Antonacci GEM backtest
 //!   GET  /symbols/:sym/turn-of-month     — TOM seasonality stats
 //!   GET  /symbols/:sym/vol-cone          — realized-vol percentile cone
@@ -44,6 +47,9 @@ pub fn router() -> Router<AppState> {
         .route("/calc/scale-out", post(post_scale_out))
         .route("/calc/merger-arb", post(post_merger_arb))
         .route("/calc/buyback-accretion", post(post_buyback_accretion))
+        .route("/calc/cef-discount", post(post_cef_discount))
+        .route("/calc/adr-premium", post(post_adr_premium))
+        .route("/calc/sbc-dilution", post(post_sbc_dilution))
         .route("/sim/dual-momentum", post(post_dual_momentum))
         .route("/symbols/:symbol/turn-of-month", get(get_turn_of_month))
         .route("/symbols/:symbol/vol-cone", get(get_vol_cone))
@@ -246,6 +252,36 @@ async fn post_buyback_accretion(
     traderview_core::buyback_accretion::compute(&b)
         .map(Json)
         .ok_or_else(|| ApiError::BadRequest("invalid buyback inputs".into()))
+}
+
+async fn post_cef_discount(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<traderview_core::cef_discount::CefInput>,
+) -> Result<Json<traderview_core::cef_discount::CefReport>, ApiError> {
+    traderview_core::cef_discount::compute(&b)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("invalid CEF inputs".into()))
+}
+
+async fn post_adr_premium(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<traderview_core::adr_premium::AdrInput>,
+) -> Result<Json<traderview_core::adr_premium::AdrReport>, ApiError> {
+    traderview_core::adr_premium::compute(&b)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("invalid ADR inputs".into()))
+}
+
+async fn post_sbc_dilution(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<traderview_core::sbc_dilution::SbcInput>,
+) -> Result<Json<traderview_core::sbc_dilution::SbcReport>, ApiError> {
+    traderview_core::sbc_dilution::compute(&b)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("invalid SBC inputs".into()))
 }
 
 async fn post_dual_momentum(
