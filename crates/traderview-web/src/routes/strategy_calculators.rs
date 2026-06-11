@@ -14,6 +14,8 @@
 //!   POST /calc/cef-discount              — CEF discount + z-score screen
 //!   POST /calc/adr-premium               — ADR vs ordinary parity arb
 //!   POST /calc/sbc-dilution              — buyback yield net of SBC
+//!   POST /calc/sum-of-parts              — SOTP NAV vs market cap
+//!   POST /calc/odd-lot-tender            — odd-lot priority tender arb
 //!   POST /sim/dual-momentum              — Antonacci GEM backtest
 //!   GET  /symbols/:sym/turn-of-month     — TOM seasonality stats
 //!   GET  /symbols/:sym/vol-cone          — realized-vol percentile cone
@@ -50,6 +52,8 @@ pub fn router() -> Router<AppState> {
         .route("/calc/cef-discount", post(post_cef_discount))
         .route("/calc/adr-premium", post(post_adr_premium))
         .route("/calc/sbc-dilution", post(post_sbc_dilution))
+        .route("/calc/sum-of-parts", post(post_sum_of_parts))
+        .route("/calc/odd-lot-tender", post(post_odd_lot_tender))
         .route("/sim/dual-momentum", post(post_dual_momentum))
         .route("/symbols/:symbol/turn-of-month", get(get_turn_of_month))
         .route("/symbols/:symbol/vol-cone", get(get_vol_cone))
@@ -282,6 +286,26 @@ async fn post_sbc_dilution(
     traderview_core::sbc_dilution::compute(&b)
         .map(Json)
         .ok_or_else(|| ApiError::BadRequest("invalid SBC inputs".into()))
+}
+
+async fn post_sum_of_parts(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<traderview_core::sum_of_parts::SotpInput>,
+) -> Result<Json<traderview_core::sum_of_parts::SotpReport>, ApiError> {
+    traderview_core::sum_of_parts::compute(&b)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("invalid SOTP inputs".into()))
+}
+
+async fn post_odd_lot_tender(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<traderview_core::odd_lot_tender::OddLotInput>,
+) -> Result<Json<traderview_core::odd_lot_tender::OddLotReport>, ApiError> {
+    traderview_core::odd_lot_tender::compute(&b)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("invalid tender inputs".into()))
 }
 
 async fn post_dual_momentum(

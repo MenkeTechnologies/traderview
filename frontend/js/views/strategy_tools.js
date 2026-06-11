@@ -350,6 +350,74 @@ const TOOLS = {
             covered call" when the back leg is deep ITM). Back leg revalued by Black-Scholes at front expiry.</p>`;
         },
     },
+    'sum-of-parts': {
+        label: 'Sum of Parts',
+        call: (b) => api.calcSumOfParts({
+            // "Name,value; ..." segment syntax.
+            segments: String(b.segments).split(';').map(s => s.trim()).filter(Boolean).map(s => {
+                const i = s.lastIndexOf(',');
+                return { name: s.slice(0, i).trim(), value: Number(s.slice(i + 1)) };
+            }),
+            net_debt: b.net_debt,
+            conglomerate_discount_pct: b.conglomerate_discount_pct,
+            market_cap: b.market_cap,
+        }),
+        fields: [
+            { key: 'segments', label: 'Segments: name,value; …', def: 'Cloud,60; Ads,30; Hardware,10', text: true },
+            { key: 'net_debt', label: 'Net debt ($, negative = cash)', def: 20 },
+            { key: 'conglomerate_discount_pct', label: 'Conglomerate discount (%)', def: 15 },
+            { key: 'market_cap', label: 'Market cap ($)', def: 60 },
+        ],
+        render: (r) => {
+            if (!r) return '<span class="neg">invalid SOTP inputs</span>';
+            return `
+            <div class="cards">
+                <div class="card"><div class="label">SOTP equity value</div>
+                    <div class="value">$${r.sotp_equity_value.toFixed(1)}</div>
+                    <div class="small muted">NAV $${r.nav.toFixed(1)} less discount</div></div>
+                <div class="card"><div class="label">Upside</div>
+                    <div class="value ${r.upside_pct >= 0 ? 'pos' : 'neg'}">${(r.upside_pct >= 0 ? '+' : '') + r.upside_pct.toFixed(1)}%</div></div>
+                <div class="card"><div class="label">Market-implied discount</div>
+                    <div class="value">${r.market_implied_discount_pct.toFixed(1)}%</div>
+                    <div class="small muted">what the market charges vs NAV</div></div>
+            </div>
+            <table class="gs-table">
+                <thead><tr><th>Segment</th><th>Value</th><th>Weight</th></tr></thead>
+                <tbody>${r.rows.map(s => `
+                    <tr><td>${esc(s.name)}</td><td>$${s.value.toFixed(1)}</td>
+                        <td>${s.weight_pct.toFixed(1)}%</td></tr>`).join('')}
+                </tbody>
+            </table>
+            <p class="muted small">Undiscounted SOTP upside is the oldest value trap going — holdcos sit
+            10–30% below NAV persistently, so the discount is priced in up front.</p>`;
+        },
+    },
+    'odd-lot-tender': {
+        label: 'Odd-Lot Tender',
+        call: (b) => api.calcOddLotTender({ ...b, accounts: b.accounts > 0 ? b.accounts : null }),
+        fields: [
+            { key: 'market_price', label: 'Market price ($)', def: 19 },
+            { key: 'tender_price', label: 'Tender price ($)', def: 20 },
+            { key: 'shares', label: 'Shares (≤99 for priority)', def: 99, int: true },
+            { key: 'fees', label: 'Fees per account ($)', def: 1 },
+            { key: 'days_to_payment', label: 'Days to payment', def: 36.5 },
+            { key: 'accounts', label: 'Accounts (0 = 1)', def: 1, int: true },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Profit / account</div>
+                    <div class="value ${r.profit_per_account >= 0 ? 'pos' : 'neg'}">$${r.profit_per_account.toFixed(2)}</div>
+                    <div class="small muted">on $${r.capital_per_account.toFixed(0)} capital</div></div>
+                <div class="card"><div class="label">Return</div>
+                    <div class="value">${r.return_pct.toFixed(2)}%</div>
+                    <div class="small muted">${r.annualized_pct.toFixed(1)}% annualized</div></div>
+                <div class="card"><div class="label">Odd-lot priority</div>
+                    <div class="value ${r.odd_lot_priority ? 'pos' : 'neg'}">${r.odd_lot_priority ? 'YES — no proration' : 'NO — proration risk'}</div>
+                    <div class="small muted">total $${r.total_profit.toFixed(0)} across accounts</div></div>
+            </div>
+            <p class="muted small">Tenders with odd-lot priority take ≤99-share holders in full ahead of
+            proration — tiny in dollars, large annualized, and it scales per account.</p>`,
+    },
     'cef-discount': {
         label: 'CEF Discount',
         call: (b) => api.calcCefDiscount({
