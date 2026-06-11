@@ -904,6 +904,11 @@ const CARRY_UNIVERSE: &[(&str, &str, &str)] = &[
     ("ZS", "CBT", "Soybeans"),
     ("ZW", "CBT", "Wheat"),
     ("ES", "CME", "E-mini S&P"),
+    // Crypto basis — CME futures months live-verified (BTCQ26/ETHQ26).
+    // Contango here is the cash-and-carry yield: long spot, short the
+    // future, earn the roll-down.
+    ("BTC", "CME", "Bitcoin (basis)"),
+    ("ETH", "CME", "Ethereum (basis)"),
 ];
 
 #[derive(Debug, Clone, Serialize)]
