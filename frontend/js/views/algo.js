@@ -1454,6 +1454,7 @@ async function openPortfolioModal() {
                 <p><strong>Combined:</strong> ${r.combined.total_return_pct.toFixed(1)}% return \u00b7 ${r.combined.max_drawdown_pct.toFixed(1)}% max DD \u00b7 Sharpe ${r.combined.sharpe.toFixed(3)}
                 \u00b7 avg individual Sharpe ${r.avg_individual_sharpe.toFixed(3)}
                 \u00b7 <strong>diversification benefit:</strong> <span class="${r.diversification_benefit >= 0 ? 'pos' : 'neg'}">${r.diversification_benefit >= 0 ? '+' : ''}${r.diversification_benefit.toFixed(3)}</span></p>
+                <p><strong>Buy &amp; hold baseline:</strong> ${r.benchmark.total_return_pct.toFixed(1)}% return \u00b7 ${r.benchmark.max_drawdown_pct.toFixed(1)}% max DD \u00b7 Sharpe ${r.benchmark.sharpe.toFixed(3)}</p>
                 <table class="trades">
                 <thead><tr><th>Strategy</th><th>Trades</th><th>Return</th><th>Max DD</th><th>Sharpe</th>${r.legs.map(l => `<th class="small">${esc(l.kind.slice(0, 8))}</th>`).join('')}</tr></thead>
                 <tbody>${r.legs.map((l, i) => `
@@ -1515,7 +1516,11 @@ async function openTournamentModal() {
                 days_back: Number(fd.get('days_back')),
                 rank_by: fd.get('rank_by'),
             });
-            out.innerHTML = `<table class="trades">
+            out.innerHTML = `<p><strong>Buy &amp; hold baseline:</strong>
+                <span class="${r.benchmark.total_return_pct >= 0 ? 'pos' : 'neg'}">${r.benchmark.total_return_pct.toFixed(1)}%</span>
+                \u00b7 ${r.benchmark.max_drawdown_pct.toFixed(1)}% max DD \u00b7 Sharpe ${r.benchmark.sharpe.toFixed(3)}
+                \u2014 a row below this return is negative alpha regardless of rank.</p>
+                <table class="trades">
                 <thead><tr><th>#</th><th>Strategy</th><th>Trades</th><th>Win rate</th><th>PF</th><th>Return</th><th>Max DD</th><th>Sharpe</th></tr></thead>
                 <tbody>${r.rows.map((row, i) => `
                     <tr>

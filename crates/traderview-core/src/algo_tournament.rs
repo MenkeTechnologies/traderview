@@ -38,6 +38,9 @@ pub struct TournamentResult {
     /// Strategies not run (multi-symbol) — reported, never silent.
     pub skipped: Vec<&'static str>,
     pub rank_by: RankMetric,
+    /// Buy-and-hold over the same bars — the bar every row must clear.
+    /// A 20% strategy on a 30% tape is negative alpha, not a win.
+    pub benchmark: crate::algo_strategy_portfolio::CurveStats,
 }
 
 fn metric_value(s: &AlgoBtSummary, m: RankMetric) -> f64 {
@@ -95,7 +98,20 @@ pub fn tournament(
         rows,
         skipped,
         rank_by,
+        benchmark: buy_and_hold(bars),
     }
+}
+
+/// Buy-and-hold stats over the bars' closes — the passive baseline.
+pub fn buy_and_hold(bars: &[PriceBar]) -> crate::algo_strategy_portfolio::CurveStats {
+    use rust_decimal::prelude::ToPrimitive;
+    let closes: Vec<f64> = bars
+        .iter()
+        .map(|b| b.close.to_f64().unwrap_or(0.0))
+        .collect();
+    crate::algo_strategy_portfolio::curve_stats(&crate::algo_strategy_portfolio::bar_returns(
+        &closes,
+    ))
 }
 
 #[cfg(test)]
@@ -180,6 +196,19 @@ mod tests {
             volume: Decimal::from(1_000_000u64),
             source: "test".into(),
         }
+    }
+
+    #[test]
+    fn benchmark_pins_buy_and_hold_math() {
+        // 100 → 110 → 99: total −1%, max drawdown (110−99)/110 = 10%.
+        let bars = vec![
+            bar(1_700_000_000, 100.0),
+            bar(1_700_086_400, 110.0),
+            bar(1_700_172_800, 99.0),
+        ];
+        let b = buy_and_hold(&bars);
+        assert!((b.total_return_pct + 1.0).abs() < 1e-9);
+        assert!((b.max_drawdown_pct - 10.0).abs() < 1e-9);
     }
 
     #[test]

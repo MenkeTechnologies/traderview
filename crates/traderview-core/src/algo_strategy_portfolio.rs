@@ -41,6 +41,9 @@ pub struct PortfolioResult {
     pub avg_individual_sharpe: f64,
     /// Combined Sharpe − average individual Sharpe.
     pub diversification_benefit: f64,
+    /// Buy-and-hold over the same bars — the passive baseline the
+    /// combination must clear.
+    pub benchmark: CurveStats,
 }
 
 /// Per-bar simple returns from an equity series.
@@ -143,6 +146,7 @@ pub fn analyze(
         correlation,
         combined,
         avg_individual_sharpe,
+        benchmark: crate::algo_tournament::buy_and_hold(bars),
     })
 }
 
