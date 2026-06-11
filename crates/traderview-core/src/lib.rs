@@ -882,5 +882,6 @@ pub mod conversion_reversal;
 pub mod seagull_spread;
 pub mod heston;
 pub mod correlation_regime;
+pub mod risk_of_ruin;
 
 pub use models::*;

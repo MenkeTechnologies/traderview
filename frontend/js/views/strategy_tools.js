@@ -96,6 +96,30 @@ const TOOLS = {
             <p class="muted small">Press risk after wins (capped), cut back toward base after losses —
             the opposite of a martingale. The control row trades the same sequence at flat base risk.</p>`,
     },
+    'risk-of-ruin': {
+        label: 'Risk of Ruin',
+        call: (b) => api.calcRiskOfRuin(b),
+        fields: [
+            { key: 'win_probability', label: 'Win probability (0–1)', def: 0.55 },
+            { key: 'payoff_ratio', label: 'Payoff ratio (R)', def: 1.5 },
+            { key: 'capital', label: 'Capital ($)', def: 10000 },
+            { key: 'risk_per_trade', label: 'Risk per trade ($)', def: 250 },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Risk of ruin</div>
+                    <div class="value ${r.risk_of_ruin > 0.05 ? 'neg' : 'pos'}">${(r.risk_of_ruin * 100).toPrecision(3)}%</div>
+                    <div class="small muted">${r.risk_units.toFixed(1)} risk units · z₀ ${r.z0.toFixed(4)}</div></div>
+                <div class="card"><div class="label">Expectancy</div>
+                    <div class="value ${r.expectancy_r > 0 ? 'pos' : 'neg'}">${r.expectancy_r.toFixed(3)}R</div></div>
+                <div class="card"><div class="label">Full Kelly</div>
+                    <div class="value">${(r.kelly_fraction * 100).toFixed(1)}%</div>
+                    <div class="small muted">of capital per trade</div></div>
+            </div>
+            <p class="muted small">Closed-form gambler's-ruin: each trade risks 1 unit, wins R units with
+            probability p; RoR = z₀^units from the characteristic equation. Non-positive expectancy ⇒
+            ruin certain. Complements the Monte Carlo simulator with an analytic answer.</p>`,
+    },
     'dual-momentum': {
         label: 'Dual Momentum',
         call: (b) => api.simDualMomentum(b),

@@ -739,6 +739,7 @@ export const api = {
     calcGridTrading:         (body) => request('/calc/grid-trading', { method: 'POST', body: JSON.stringify(body) }),
     calcFixedRatio:          (body) => request('/calc/fixed-ratio', { method: 'POST', body: JSON.stringify(body) }),
     calcAntiMartingale:      (body) => request('/calc/anti-martingale', { method: 'POST', body: JSON.stringify(body) }),
+    calcRiskOfRuin:          (body) => request('/calc/risk-of-ruin', { method: 'POST', body: JSON.stringify(body) }),
     simDualMomentum:         (body) => request('/sim/dual-momentum', { method: 'POST', body: JSON.stringify(body) }),
     turnOfMonth:             (sym, years = 10) => request(`/symbols/${encodeURIComponent(sym)}/turn-of-month${qs({ years })}`),
     volCone:                 (sym, years = 5) => request(`/symbols/${encodeURIComponent(sym)}/vol-cone${qs({ years })}`),

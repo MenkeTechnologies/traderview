@@ -2,6 +2,7 @@
 //!   POST /calc/grid-trading              — grid ladder + per-grid profit
 //!   POST /calc/fixed-ratio               — Ryan Jones contract thresholds
 //!   POST /calc/anti-martingale           — press-winners streak sizing
+//!   POST /calc/risk-of-ruin              — analytic gambler's-ruin RoR
 //!   POST /sim/dual-momentum              — Antonacci GEM backtest
 //!   GET  /symbols/:sym/turn-of-month     — TOM seasonality stats
 //!   GET  /symbols/:sym/vol-cone          — realized-vol percentile cone
@@ -26,6 +27,7 @@ pub fn router() -> Router<AppState> {
         .route("/calc/grid-trading", post(post_grid_trading))
         .route("/calc/fixed-ratio", post(post_fixed_ratio))
         .route("/calc/anti-martingale", post(post_anti_martingale))
+        .route("/calc/risk-of-ruin", post(post_risk_of_ruin))
         .route("/sim/dual-momentum", post(post_dual_momentum))
         .route("/symbols/:symbol/turn-of-month", get(get_turn_of_month))
         .route("/symbols/:symbol/vol-cone", get(get_vol_cone))
@@ -61,6 +63,16 @@ async fn post_anti_martingale(
     strategy_calculators::anti_martingale(&input)
         .map(Json)
         .map_err(|e| ApiError::BadRequest(e.into()))
+}
+
+async fn post_risk_of_ruin(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(input): Json<traderview_core::risk_of_ruin::RuinInput>,
+) -> Result<Json<traderview_core::risk_of_ruin::RuinReport>, ApiError> {
+    traderview_core::risk_of_ruin::compute(&input)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("invalid risk-of-ruin inputs".into()))
 }
 
 async fn post_dual_momentum(
