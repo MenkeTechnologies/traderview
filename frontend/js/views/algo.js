@@ -2255,6 +2255,17 @@ async function openStrategyModal(mount, existing = null, prefill = null) {
                     <label><span data-i18n="view.algo.label.max_corr">Max entry correlation (0 = off)</span>
                         <input type="number" name="max_entry_correlation" min="0" max="0.99" step="0.05" value="${Number(s.risk_gates?.max_entry_correlation ?? 0)}" data-tip="view.algo.tip.max_corr">
                     </label>
+                    <label><span data-i18n="view.algo.label.htf_filter">HTF trend filter (interval + EMA)</span>
+                        <span class="row" style="gap:4px">
+                            <select name="htf_interval" data-tip="view.algo.tip.htf_filter">
+                                <option value="">off</option>
+                                <option value="15m" ${s.risk_gates?.htf_interval === '15m' ? 'selected' : ''}>15m</option>
+                                <option value="1h" ${s.risk_gates?.htf_interval === '1h' ? 'selected' : ''}>1h</option>
+                                <option value="1d" ${s.risk_gates?.htf_interval === '1d' ? 'selected' : ''}>1d</option>
+                            </select>
+                            <input type="number" name="htf_ema_period" min="2" max="400" value="${Number(s.risk_gates?.htf_ema_period ?? 50)}" style="width:70px">
+                        </span>
+                    </label>
                     <label><span data-i18n="view.algo.label.broker_mode">Execution mode</span>
                         <select name="broker_mode">
                             <option value="internal_sim"  ${s.broker_mode === 'internal_sim'  ? 'selected' : ''} data-i18n="view.algo.opt.broker_sim">Paper — In-app simulator (no broker call)</option>
@@ -2328,6 +2339,8 @@ async function openStrategyModal(mount, existing = null, prefill = null) {
                 max_entries_per_day: Number(f.get('max_entries_per_day')) || 0,
                 loss_cooldown_minutes: Number(f.get('loss_cooldown_minutes')) || 0,
                 max_entry_correlation: Number(f.get('max_entry_correlation')) || 0,
+                htf_interval: f.get('htf_interval') || null,
+                htf_ema_period: Number(f.get('htf_ema_period')) || 50,
             }),
             broker_mode: f.get('broker_mode'),
         };

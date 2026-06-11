@@ -172,6 +172,12 @@ pub enum EngineError {
         rho: f64,
         cap: f64,
     },
+    #[error("HTF trend filter: {side} entry against the {interval} EMA{ema_period} trend; skipped")]
+    HtfTrendFilter {
+        side: &'static str,
+        interval: String,
+        ema_period: usize,
+    },
     #[error("broker: {0}")]
     Broker(String),
     #[error("db: {0}")]
@@ -313,6 +319,7 @@ impl EngineError {
             Self::DailyEntryCap { .. } => Some("daily_entry_cap"),
             Self::LossCooldown { .. } => Some("loss_cooldown"),
             Self::CorrelationGate { .. } => Some("correlation"),
+            Self::HtfTrendFilter { .. } => Some("htf_trend"),
             _ => None,
         }
     }
@@ -335,7 +342,9 @@ impl EngineError {
 ///   "max_entries_per_day": 6,
 ///   "loss_cooldown_minutes": 30,
 ///   "max_entry_correlation": 0.8,
-///   "correlation_lookback_days": 60
+///   "correlation_lookback_days": 60,
+///   "htf_interval": "1h",
+///   "htf_ema_period": 50
 /// }
 /// ```
 #[derive(Debug, Clone)]
@@ -371,6 +380,11 @@ pub struct EngineConfig {
     pub max_entry_correlation: Option<f64>,
     /// Daily bars of history for the correlation comparison.
     pub correlation_lookback_days: i64,
+    /// Higher-timeframe trend filter: longs only above the EMA on this
+    /// interval, shorts only below. Both keys required to enable.
+    /// Insufficient higher-TF history SKIPS the gate (allow + log),
+    /// matching the correlation gate's thin-history convention.
+    pub htf_filter: Option<(traderview_core::BarInterval, usize)>,
 }
 
 impl EngineConfig {
@@ -433,6 +447,17 @@ impl EngineConfig {
             .and_then(|v| v.as_i64())
             .filter(|n| *n >= 20)
             .unwrap_or(60);
+        let htf_filter = (|| {
+            let interval_str = s.risk_gates.get("htf_interval")?.as_str()?;
+            let interval: traderview_core::BarInterval =
+                serde_json::from_value(serde_json::Value::String(interval_str.to_string())).ok()?;
+            let period = s
+                .risk_gates
+                .get("htf_ema_period")?
+                .as_u64()
+                .filter(|p| (2..=400).contains(p))? as usize;
+            Some((interval, period))
+        })();
         Self {
             sizing,
             side_mode,
@@ -446,6 +471,7 @@ impl EngineConfig {
             loss_cooldown_minutes,
             max_entry_correlation,
             correlation_lookback_days,
+            htf_filter,
         }
     }
 }
@@ -592,6 +618,21 @@ pub fn in_entry_window(now: chrono::DateTime<chrono::Utc>, window: (u32, u32)) -
     let local = now + chrono::Duration::hours(offset);
     let minutes = local.hour() * 60 + local.minute();
     (window.0..window.1).contains(&minutes)
+}
+
+/// Higher-timeframe trend verdict: Some(true) = the entry side agrees
+/// with the trend (long above EMA / short below), Some(false) = it
+/// fights it, None = not enough history to compute (caller ALLOWS and
+/// logs — a missing higher-TF series must not silently ban a symbol).
+pub fn htf_trend_allows(is_long: bool, closes: &[f64], ema_period: usize) -> Option<bool> {
+    let ema = traderview_core::indicators::ema(closes, ema_period);
+    let last_ema = ema.last().copied().flatten()?;
+    let last_close = *closes.last()?;
+    Some(if is_long {
+        last_close > last_ema
+    } else {
+        last_close < last_ema
+    })
 }
 
 /// Revenge-trading check: true while inside the cooldown window after
@@ -816,6 +857,37 @@ pub async fn process_bar_window(
                     rho: hit.rho,
                     cap,
                 });
+            }
+        }
+    }
+    // Risk gate: higher-timeframe trend filter — longs only above the
+    // HTF EMA, shorts only below. Insufficient HTF history allows.
+    if let Some((htf_interval, ema_period)) = cfg.htf_filter {
+        let to = chrono::Utc::now();
+        let from = to
+            - chrono::Duration::seconds(htf_interval.seconds() * (ema_period as i64) * 3);
+        let htf_bars = crate::prices::get_bars(pool, &symbol, htf_interval, from, to)
+            .await
+            .map_err(|e| EngineError::Broker(format!("htf bars: {e}")))?;
+        let closes: Vec<f64> = {
+            use rust_decimal::prelude::ToPrimitive;
+            htf_bars.iter().map(|b| b.close.to_f64().unwrap_or(0.0)).collect()
+        };
+        let is_long = matches!(sig.side, algo_strategies::Side::Buy);
+        match htf_trend_allows(is_long, &closes, ema_period) {
+            Some(false) => {
+                return Err(EngineError::HtfTrendFilter {
+                    side: if is_long { "long" } else { "short" },
+                    interval: htf_interval.label().to_string(),
+                    ema_period,
+                });
+            }
+            Some(true) => {}
+            None => {
+                tracing::debug!(
+                    strategy = %strategy.id, symbol,
+                    "htf filter: insufficient higher-TF history; gate skipped"
+                );
             }
         }
     }
@@ -1672,6 +1744,9 @@ mod earnings_blackout_tests {
             EngineError::CorrelationGate {
                 symbol: "X".into(), other: "Y".into(), rho: 0.9, cap: 0.8,
             },
+            EngineError::HtfTrendFilter {
+                side: "long", interval: "1h".into(), ema_period: 50,
+            },
         ];
         let names: Vec<&str> = gates.iter().filter_map(|e| e.gate_name()).collect();
         assert_eq!(names.len(), gates.len(), "every gate variant must name itself");
@@ -1679,6 +1754,21 @@ mod earnings_blackout_tests {
         assert_eq!(EngineError::ZeroQty.gate_name(), None);
         assert_eq!(EngineError::Broker("x".into()).gate_name(), None);
         assert_eq!(EngineError::KillSwitch { reason: None }.gate_name(), None);
+    }
+
+    #[test]
+    fn htf_trend_pins_sides_and_insufficient_history() {
+        // Rising series: last close above its EMA.
+        let up: Vec<f64> = (0..60).map(|i| 100.0 + i as f64).collect();
+        assert_eq!(htf_trend_allows(true, &up, 20), Some(true));
+        assert_eq!(htf_trend_allows(false, &up, 20), Some(false));
+        // Falling series: shorts agree, longs fight.
+        let down: Vec<f64> = (0..60).map(|i| 160.0 - i as f64).collect();
+        assert_eq!(htf_trend_allows(true, &down, 20), Some(false));
+        assert_eq!(htf_trend_allows(false, &down, 20), Some(true));
+        // Too little history to compute the EMA: None (caller allows).
+        assert_eq!(htf_trend_allows(true, &up[..10], 20), None);
+        assert_eq!(htf_trend_allows(true, &[], 20), None);
     }
 
     #[test]
