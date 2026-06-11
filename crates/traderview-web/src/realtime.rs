@@ -53,6 +53,16 @@ pub enum Event {
         order_type: String,
     },
 
+    /// Background drift watch: a strategy's live record has diverged
+    /// from its backtest expectation.
+    StrategyDrift {
+        strategy_id: String,
+        name: String,
+        verdict: &'static str,
+        win_rate_z: Option<f64>,
+        live_trades: usize,
+    },
+
     /// Algo runner: strategy produced an entry signal on the latest bar.
     AlgoSignalFired {
         strategy_id: String,

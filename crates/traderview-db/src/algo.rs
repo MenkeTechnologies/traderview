@@ -894,6 +894,59 @@ pub async fn fills_for_strategy(
     .await?)
 }
 
+/// Live-vs-backtest divergence for one strategy: live fills FIFO into
+/// closed round trips, tested against the LATEST persisted backtest.
+/// None when no backtest exists (nothing to test against). Shared by
+/// the on-demand route and the background drift watch — one code path.
+pub async fn live_divergence(
+    pool: &PgPool,
+    user_id: Uuid,
+    strategy_id: Uuid,
+) -> anyhow::Result<Option<(traderview_core::live_vs_backtest::DivergenceReport, DateTime<Utc>, String)>> {
+    use rust_decimal::prelude::ToPrimitive;
+    let backtests = list_backtests(pool, user_id, strategy_id, 1).await?;
+    let Some(bt) = backtests.first() else {
+        return Ok(None);
+    };
+    let fills = fills_for_strategy(pool, user_id, strategy_id).await?;
+    let mut by_symbol: std::collections::BTreeMap<String, Vec<traderview_core::live_vs_backtest::Fill>> =
+        std::collections::BTreeMap::new();
+    for f in fills {
+        by_symbol.entry(f.symbol.clone()).or_default().push(
+            traderview_core::live_vs_backtest::Fill {
+                buy: f.side == "buy",
+                qty: f.fill_qty.to_f64().unwrap_or(0.0),
+                price: f.fill_price.to_f64().unwrap_or(0.0),
+                commission: f.commission.to_f64().unwrap_or(0.0),
+            },
+        );
+    }
+    let mut pnls = Vec::new();
+    for fills in by_symbol.values() {
+        pnls.extend(traderview_core::live_vs_backtest::round_trips(fills));
+    }
+    let report = traderview_core::live_vs_backtest::compare(
+        &pnls,
+        traderview_core::live_vs_backtest::Expectation {
+            win_rate: bt.win_rate.to_f64().unwrap_or(0.0),
+            profit_factor: bt.profit_factor.to_f64().unwrap_or(0.0),
+        },
+    );
+    Ok(Some((report, bt.created_at, bt.symbol.clone())))
+}
+
+/// (id, user_id, name) of every live strategy — the drift-watch sweep
+/// list. Soft-deleted strategies excluded.
+pub async fn all_active_strategy_ids(
+    pool: &PgPool,
+) -> anyhow::Result<Vec<(Uuid, Uuid, String)>> {
+    Ok(sqlx::query_as(
+        "SELECT id, user_id, name FROM algo_strategies WHERE deleted_at IS NULL",
+    )
+    .fetch_all(pool)
+    .await?)
+}
+
 pub async fn list_backtests(
     pool: &PgPool,
     user_id: Uuid,

@@ -1277,45 +1277,17 @@ async fn get_live_vs_backtest(
     u: AuthUser,
     Path(id): Path<Uuid>,
 ) -> Result<Json<LiveVsBacktestResult>, ApiError> {
-    use rust_decimal::prelude::ToPrimitive;
-    let backtests = traderview_db::algo::list_backtests(&s.pool, u.id, id, 1)
-        .await
-        .map_err(ApiError::Internal)?;
-    let bt = backtests.first().ok_or_else(|| {
-        ApiError::BadRequest("no persisted backtest — run a backtest first so there's an expectation to test against".into())
-    })?;
-    let fills = traderview_db::algo::fills_for_strategy(&s.pool, u.id, id)
-        .await
-        .map_err(ApiError::Internal)?;
-    // FIFO round trips per symbol, then pooled — fills are already
-    // chronological from the query.
-    let mut by_symbol: std::collections::BTreeMap<String, Vec<traderview_core::live_vs_backtest::Fill>> =
-        std::collections::BTreeMap::new();
-    for f in fills {
-        by_symbol.entry(f.symbol.clone()).or_default().push(
-            traderview_core::live_vs_backtest::Fill {
-                buy: f.side == "buy",
-                qty: f.fill_qty.to_f64().unwrap_or(0.0),
-                price: f.fill_price.to_f64().unwrap_or(0.0),
-                commission: f.commission.to_f64().unwrap_or(0.0),
-            },
-        );
-    }
-    let mut pnls = Vec::new();
-    for fills in by_symbol.values() {
-        pnls.extend(traderview_core::live_vs_backtest::round_trips(fills));
-    }
-    let report = traderview_core::live_vs_backtest::compare(
-        &pnls,
-        traderview_core::live_vs_backtest::Expectation {
-            win_rate: bt.win_rate.to_f64().unwrap_or(0.0),
-            profit_factor: bt.profit_factor.to_f64().unwrap_or(0.0),
-        },
-    );
+    let (report, expectation_backtest_at, expectation_symbol) =
+        traderview_db::algo::live_divergence(&s.pool, u.id, id)
+            .await
+            .map_err(ApiError::Internal)?
+            .ok_or_else(|| {
+                ApiError::BadRequest("no persisted backtest — run a backtest first so there's an expectation to test against".into())
+            })?;
     Ok(Json(LiveVsBacktestResult {
         report,
-        expectation_backtest_at: bt.created_at,
-        expectation_symbol: bt.symbol.clone(),
+        expectation_backtest_at,
+        expectation_symbol,
     }))
 }
 

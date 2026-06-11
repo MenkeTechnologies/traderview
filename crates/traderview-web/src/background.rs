@@ -46,6 +46,9 @@ pub const PAPER_TWAP_TICK: Duration = Duration::from_secs(5);
 /// Paper equity sampling — 15min resolves intraday swings without
 /// flooding the table; unchanged readings are skipped anyway.
 pub const PAPER_EQUITY_SNAPSHOT: Duration = Duration::from_secs(15 * 60);
+/// Strategy drift sweep — live-vs-backtest divergence across every
+/// active strategy. Twice a day: drift moves on the scale of sessions.
+pub const STRATEGY_DRIFT_WATCH: Duration = Duration::from_secs(12 * 60 * 60);
 /// Paper dividend crediting — ex-dates are daily-bar data and the pass
 /// is idempotent, so a few runs a day is plenty.
 pub const PAPER_DIVIDEND_CREDIT: Duration = Duration::from_secs(6 * 60 * 60);
@@ -108,7 +111,8 @@ pub fn spawn_refreshers(pool: PgPool, cache: TileCache, hub: crate::realtime::Hu
     spawn_heatmap_universe(pool.clone());
     spawn_markets_snapshot();
     spawn_screener_snapshots(pool.clone());
-    spawn_paper_twap_ticker(pool.clone(), hub);
+    spawn_paper_twap_ticker(pool.clone(), hub.clone());
+    spawn_strategy_drift_watch(pool.clone(), hub);
     spawn_paper_equity_snapshots(pool.clone());
     spawn_paper_dividend_credits(pool.clone());
     spawn_paper_split_adjustments(pool.clone());
@@ -146,6 +150,48 @@ fn spawn_paper_twap_ticker(pool: PgPool, hub: crate::realtime::Hub) {
                 Err(e) => tracing::warn!(error = %e, "paper pending check failed"),
             }
             tokio::time::sleep(PAPER_TWAP_TICK).await;
+        }
+    });
+}
+
+/// Strategy drift watch — sweeps every active strategy through the
+/// shared live-vs-backtest comparison and publishes a StrategyDrift
+/// event for degraded/watch verdicts. Healthy and insufficient-sample
+/// strategies stay silent: the feed is for divergence, not status.
+fn spawn_strategy_drift_watch(pool: PgPool, hub: crate::realtime::Hub) {
+    tokio::spawn(async move {
+        loop {
+            match traderview_db::algo::all_active_strategy_ids(&pool).await {
+                Ok(rows) => {
+                    for (id, user_id, name) in rows {
+                        match traderview_db::algo::live_divergence(&pool, user_id, id).await {
+                            Ok(Some((report, _, _)))
+                                if matches!(report.verdict, "degraded" | "watch") =>
+                            {
+                                tracing::warn!(
+                                    strategy = %name,
+                                    verdict = report.verdict,
+                                    z = ?report.win_rate_z,
+                                    "strategy drift detected"
+                                );
+                                hub.publish(crate::realtime::Event::StrategyDrift {
+                                    strategy_id: id.to_string(),
+                                    name: name.clone(),
+                                    verdict: report.verdict,
+                                    win_rate_z: report.win_rate_z,
+                                    live_trades: report.live_trades,
+                                });
+                            }
+                            Ok(_) => {}
+                            Err(e) => {
+                                tracing::warn!(strategy = %name, error = %e, "drift check failed")
+                            }
+                        }
+                    }
+                }
+                Err(e) => tracing::warn!(error = %e, "drift sweep failed"),
+            }
+            tokio::time::sleep(STRATEGY_DRIFT_WATCH).await;
         }
     });
 }
