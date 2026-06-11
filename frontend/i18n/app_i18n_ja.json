@@ -3921,6 +3921,7 @@
   "view.algo.opt.strat_connors_rsi2": "Connors RSI-2 + 200 SMA (mean-rev クラシック)",
   "view.algo.opt.strat_donchian_trend": "Donchianの傾向/カメ(Donchian + ADXフィルター)",
   "view.algo.opt.strat_heikin_ashi_trend": "Heikin-Ashiトレンド(HA run + EMA 確認済み)",
+  "view.algo.opt.strat_macd_cross": "MACD Cross (signal-line crossover, optional zero-line filter)",
   "view.algo.opt.strat_mean_reversion": "平均反転(Connors RSI + VWAP z-score)",
   "view.algo.opt.strat_momentum": "モメンタム (EMA クロス + RSI + ROC + RVOL)",
   "view.algo.opt.strat_orb": "開始の範囲のブレイクアウト(か高い壊れ目+ RVOL)",

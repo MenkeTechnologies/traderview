@@ -3921,6 +3921,7 @@
   "view.algo.opt.strat_connors_rsi2": "ConnorsRSI-2 + 200SMA (mian-rev cổ điển)",
   "view.algo.opt.strat_donchian_trend": "Donchian Trend / Turtle (Donchian + ADX filter)",
   "view.algo.opt.strat_heikin_ashi_trend": "Heikin-Ashi Trend (Tiếng voi chạy +EMA xác nhận)",
+  "view.algo.opt.strat_macd_cross": "MACD Cross (signal-line crossover, optional zero-line filter)",
   "view.algo.opt.strat_mean_reversion": "Có nghĩa là đảo ngược (Connors RSI +VWAP z-score)",
   "view.algo.opt.strat_momentum": "Khoảnh khắc (EMA thánh giá +RSI +ROC + RVOL",
   "view.algo.opt.strat_orb": "Mở phạm vi thoát ra ( siêu độ cao phá vỡ + RVOL)",

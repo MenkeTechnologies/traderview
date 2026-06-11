@@ -20,6 +20,7 @@ pub mod heikin_ashi_trend;
 pub mod ichimoku_cloud;
 pub mod keltner_breakout;
 pub mod ma_cross_adx;
+pub mod macd_cross;
 pub mod mean_reversion;
 pub mod momentum;
 pub mod orb;
@@ -86,6 +87,7 @@ pub enum StrategyKind {
     Pead,
     Pairs,
     MaCrossAdx,
+    MacdCross,
     KeltnerBreakout,
     IchimokuCloud,
 }
@@ -107,6 +109,7 @@ impl StrategyKind {
             Self::Pead => "pead",
             Self::Pairs => "pairs",
             Self::MaCrossAdx => "ma_cross_adx",
+            Self::MacdCross => "macd_cross",
             Self::KeltnerBreakout => "keltner_breakout",
             Self::IchimokuCloud => "ichimoku_cloud",
         }
@@ -128,6 +131,7 @@ impl StrategyKind {
             Self::Pead,
             Self::Pairs,
             Self::MaCrossAdx,
+            Self::MacdCross,
             Self::KeltnerBreakout,
             Self::IchimokuCloud,
         ]
@@ -172,6 +176,7 @@ pub fn from_kind(
         "pead" => Ok(Box::new(pead::Pead::from_json(entry_rules))),
         "pairs" => Ok(Box::new(pairs::Pairs::from_json(entry_rules))),
         "ma_cross_adx" => Ok(Box::new(ma_cross_adx::MaCrossAdx::from_json(entry_rules))),
+        "macd_cross" => Ok(Box::new(macd_cross::MacdCross::from_json(entry_rules))),
         "keltner_breakout" => Ok(Box::new(keltner_breakout::KeltnerBreakout::from_json(
             entry_rules,
         ))),

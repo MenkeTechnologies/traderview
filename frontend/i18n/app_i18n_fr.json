@@ -3921,6 +3921,7 @@
   "view.algo.opt.strat_connors_rsi2": "Connors RSI-2 + 200 SMA (classique moyen)",
   "view.algo.opt.strat_donchian_trend": "Tendance de Donchian / Tortue (filtre Donchian + ADX)",
   "view.algo.opt.strat_heikin_ashi_trend": "Tendance Heikin-Ashi (HA run + EMA confirmer)",
+  "view.algo.opt.strat_macd_cross": "MACD Cross (signal-line crossover, optional zero-line filter)",
   "view.algo.opt.strat_mean_reversion": "Réversion moyenne (Connors RSI + VWAP z-score)",
   "view.algo.opt.strat_momentum": "Momentum (EMA croix + RSI + ROC + RVOL)",
   "view.algo.opt.strat_orb": "Gamme d'ouverture Breakout (OU haute rupture + RVOL)",

@@ -3921,6 +3921,7 @@
   "view.algo.opt.strat_connors_rsi2": "Connors RSI-2 + 200 SMA (mean-rev klasik)",
   "view.algo.opt.strat_donchian_trend": "Donchian Trend / Kaplumbağa (Donchian + ADX filtre)",
   "view.algo.opt.strat_heikin_ashi_trend": "Heikin-Ashi Trendi (HA koşmak + EMA doğru)",
+  "view.algo.opt.strat_macd_cross": "MACD Cross (signal-line crossover, optional zero-line filter)",
   "view.algo.opt.strat_mean_reversion": "Revers (Connors RSI + VWAP z-<)",
   "view.algo.opt.strat_momentum": "Momentum (EMA haç + RSI + ROC + RVOL",
   "view.algo.opt.strat_orb": "Opening Range Breakout (OR high break + RVOL)",

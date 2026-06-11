@@ -223,6 +223,7 @@ const STRATEGY_KINDS = [
     { value: 'pead',              label_key: 'view.algo.opt.strat_pead',              label: 'PEAD (post-earnings drift)' },
     { value: 'pairs',             label_key: 'view.algo.opt.strat_pairs',             label: 'Pairs Trading (spread z-score)' },
     { value: 'ma_cross_adx',      label_key: 'view.algo.opt.strat_ma_cross_adx',      label: 'MA Cross + ADX filter (EMA cross gated on trend strength)' },
+    { value: 'macd_cross',        label_key: 'view.algo.opt.strat_macd_cross',        label: 'MACD Cross (signal-line crossover, optional zero-line filter)' },
     { value: 'keltner_breakout',  label_key: 'view.algo.opt.strat_keltner_breakout',  label: 'Keltner Channel Breakout (EMA ± ATR band)' },
     { value: 'ichimoku_cloud',    label_key: 'view.algo.opt.strat_ichimoku_cloud',    label: 'Ichimoku Cloud (TK cross + cloud break + Chikou clear)' },
 ];
@@ -543,6 +544,31 @@ const STRATEGY_DOCS = {
         ],
         scope_note: 'The ADX gate is the entire point — naked MA crosses get chopped to death in sideways markets. ADX ≥ 25 ensures the directional component is genuinely in force.',
         when_to_use: 'Multi-bar trends. Strong daily/hourly trends in liquid names. Useless intraday in tight ranges.',
+    },
+    macd_cross: {
+        title: 'MACD Signal-Line Cross',
+        family: 'Momentum turn · long or short · the baseline crossover',
+        entry: [
+            'Compute MACD(fast_period, slow_period) and its signal EMA(signal_period)',
+            'Long: MACD line crosses above the signal line',
+            'Short: MACD line crosses below the signal line',
+            'require_zero_side: only take bullish crosses BELOW zero / bearish crosses ABOVE zero (Appel\u2019s early-reversal reading)',
+        ],
+        exit: [
+            'Opposite-direction signal-line cross',
+            'ATR-multiple stop / take-profit (atr_stop_mult / atr_take_profit_mult)',
+        ],
+        params: [
+            ['fast_period', 12, 'Fast EMA window'],
+            ['slow_period', 26, 'Slow EMA window'],
+            ['signal_period', 9, 'Signal-line EMA window'],
+            ['require_zero_side', false, 'Gate crosses to the reversal side of the zero line'],
+            ['atr_period', 14, 'ATR window for stop/target sizing'],
+            ['atr_stop_mult', 1.5, 'Stop distance in ATRs'],
+            ['atr_take_profit_mult', 3.0, 'Target distance in ATRs'],
+        ],
+        scope_note: 'Ungated signal-line crosses fire constantly in chop \u2014 the zero-side filter (or pairing with a trend gate) is what separates usable from noise.',
+        when_to_use: 'Swing reversals after extended moves (zero-side on), or as the plain momentum baseline other strategies are judged against.',
     },
     keltner_breakout: {
         title: 'Keltner Channel Breakout',
@@ -1020,6 +1046,11 @@ const OPTIMIZE_DEFAULT_GRIDS = {
         fast_period: [5, 9, 13],
         slow_period: [21, 34, 50],
         adx_min: [20, 25, 30],
+    },
+    macd_cross: {
+        fast_period: [8, 12, 16],
+        slow_period: [21, 26, 35],
+        signal_period: [7, 9, 12],
     },
     keltner_breakout: {
         period: [15, 20, 30],

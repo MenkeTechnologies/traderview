@@ -3921,6 +3921,7 @@
   "view.algo.opt.strat_connors_rsi2": "Connors RSI-2 + 200 SMA (mean-rev 클래식)",
   "view.algo.opt.strat_donchian_trend": "Donchian Trend / Turtle (Donchian + ADX 필터)",
   "view.algo.opt.strat_heikin_ashi_trend": "Heikin-Ashi Trend (HA 실행 + EMA 확인)",
+  "view.algo.opt.strat_macd_cross": "MACD Cross (signal-line crossover, optional zero-line filter)",
   "view.algo.opt.strat_mean_reversion": "의미 Reversion (Connors RSI + VWAP z-score)",
   "view.algo.opt.strat_momentum": "Momentum (EMA 크로스 + RSI + ROC + R VOL)",
   "view.algo.opt.strat_orb": "개방 범위 브레이크 아웃 (또는 높은 휴식 + R VOL)",
