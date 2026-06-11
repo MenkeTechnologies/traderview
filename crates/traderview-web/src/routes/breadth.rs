@@ -1,21 +1,23 @@
 use crate::auth::AuthUser;
+use crate::background;
 use crate::error::ApiError;
 use crate::state::AppState;
 use axum::extract::State;
 use axum::routing::get;
 use axum::{Json, Router};
-use traderview_db::breadth::BreadthSnapshot;
 
 pub fn router() -> Router<AppState> {
     Router::new().route("/breadth/snapshot", get(snapshot))
 }
 
+/// Served from the precomputed tile cache — the background refresher
+/// recomputes the 5-index snapshot on interval (see background.rs).
 async fn snapshot(
     State(s): State<AppState>,
     _u: AuthUser,
-) -> Result<Json<BreadthSnapshot>, ApiError> {
+) -> Result<Json<serde_json::Value>, ApiError> {
     Ok(Json(
-        traderview_db::breadth::snapshot(&s.pool)
+        background::tile(&s.pool, &s.tiles, background::BREADTH)
             .await
             .map_err(ApiError::Internal)?,
     ))

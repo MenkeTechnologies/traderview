@@ -21,8 +21,7 @@ export async function renderGoldenStars(mount) {
         <h1 data-i18n="view.golden_stars.h1" class="view-title">// GOLDEN STARS</h1>
         <p class="muted small" data-i18n="view.golden_stars.subtitle">
             Top-ranked names by composite score (RSI + MACD + trend + momentum + ADX + volume).
-            Refreshes whenever the nightly compute writes new rows; manually re-run via
-            POST /api/recommendations/cron/run.
+            Recomputed automatically by a background refresh every few hours.
         </p>
         <div class="gs-controls">
             <div class="gs-filter-row">
@@ -30,7 +29,6 @@ export async function renderGoldenStars(mount) {
                     <button class="btn btn-secondary gs-filter" data-key="${k}">${esc(v.label)}</button>
                 `).join('')}
                 <span class="muted small gs-meta" id="gs-meta"></span>
-                <button class="btn btn-secondary gs-run" id="gs-run" data-i18n="view.golden_stars.btn.run">Run compute now</button>
             </div>
         </div>
         <div class="chart-panel">
@@ -67,26 +65,6 @@ export async function renderGoldenStars(mount) {
     });
     mount.querySelector('.gs-filter[data-key="all"]')?.classList.add('active');
 
-    const runBtn = mount.querySelector('#gs-run');
-    if (runBtn) {
-        runBtn.addEventListener('click', async () => {
-            runBtn.disabled = true;
-            runBtn.textContent = 'Running…';
-            try {
-                const res = await api.recommendationCronRun();
-                runBtn.textContent = `Done · ${res?.compute?.succeeded || 0} computed, ${res?.fired_alerts || 0} alerts fired`;
-            } catch (e) {
-                runBtn.textContent = 'Failed';
-            } finally {
-                setTimeout(() => {
-                    runBtn.disabled = false;
-                    runBtn.textContent = 'Run compute now';
-                }, 4000);
-                reload();
-            }
-        });
-    }
-
     await reload();
     // Poll every 60s so the user sees fresh rows after the cron fires.
     if (timer) clearInterval(timer);
@@ -99,7 +77,7 @@ export async function renderGoldenStars(mount) {
 function renderBody(el, rows) {
     if (!el) return;
     if (!rows.length) {
-        el.innerHTML = `<div class="boot muted">${esc(t('view.golden_stars.empty') || 'No recommendations yet — click "Run compute now" to seed the leaderboard.')}</div>`;
+        el.innerHTML = `<div class="boot muted">${esc(t('view.golden_stars.empty') || 'No recommendations yet — the background refresh is seeding the leaderboard.')}</div>`;
         return;
     }
     const RISK_LABEL = { low: 'LOW', medium: 'MED', high: 'HIGH' };

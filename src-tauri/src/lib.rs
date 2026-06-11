@@ -468,6 +468,13 @@ async fn bring_up_backend(
         spawn_pump!(ibkr_pump, "ibkr");
     }
 
+    // Background refreshers: precomputed dashboard tiles (sectors,
+    // breadth, fear/greed, sector rotation, RRG) + the Golden Stars
+    // universe — mirrors server.rs so opening those views never
+    // triggers a multi-symbol compute. Intervals live in
+    // traderview_web::background.
+    traderview_web::background::spawn_refreshers(embedded.pool.clone(), state.tiles.clone());
+
     let app_router = router(state);
 
     // Warm Finnhub API key from DB into the LiveTickStore's in-memory

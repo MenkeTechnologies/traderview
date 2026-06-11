@@ -713,7 +713,6 @@ export const api = {
     recommendationLeaderboard:   ({ limit = 100, min_score = 0 } = {}) =>
         request(`/recommendations/golden-stars${qs({ limit, min_score })}`),
     recommendationSectors:       () => request('/recommendations/sectors'),
-    recommendationCronRun:       () => request('/recommendations/cron/run', { method: 'POST' }),
     recommendationWatchers:      () => request('/recommendations/watchers'),
     recommendationWatcherUpsert: (body) => request('/recommendations/watchers', { method: 'POST', body: JSON.stringify(body) }),
     recommendationWatcherDelete: (id) => request(`/recommendations/watchers/${encodeURIComponent(id)}`, { method: 'DELETE' }),

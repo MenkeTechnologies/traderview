@@ -15,7 +15,7 @@ export async function renderRecommendationSectors(mount) {
         <h1 data-i18n="view.rec_sectors.h1" class="view-title">// SECTOR HEATMAP — Buy/Sell verdicts</h1>
         <p class="muted small" data-i18n="view.rec_sectors.subtitle">
             Composite verdict for each SPDR sector ETF. Same algorithm as the per-symbol
-            recommendation, run live across the 11 sector proxies.
+            recommendation, recomputed in the background every few hours.
         </p>
         <div class="chart-panel">
             <div id="rs-sectors-body">

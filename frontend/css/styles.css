@@ -418,7 +418,6 @@ main#app {
     box-shadow: 0 0 8px var(--cyan-glow);
 }
 .gs-meta { margin-left: auto; }
-.gs-run { font-size: 10px; letter-spacing: 2px; padding: 4px 10px; }
 .gs-table {
     width: 100%; border-collapse: collapse; font-size: 12px;
 }

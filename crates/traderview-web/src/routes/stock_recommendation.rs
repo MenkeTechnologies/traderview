@@ -17,9 +17,9 @@ use axum::routing::{delete, get, post};
 use axum::{Json, Router};
 use serde::Deserialize;
 use traderview_db::stock_recommendation::{
-    backtest, compute, compute_with_weights, cron_compute_universe, leaderboard, BacktestReport,
-    CronResult, RecommendationError, StockRecommendation, StoredRecommendation, WeightOverrides,
-    DEFAULT_UNIVERSE, SECTOR_ETFS,
+    backtest, compute, compute_with_weights, cron_compute_universe, latest_for_symbol,
+    leaderboard, BacktestReport, CronResult, RecommendationError, StockRecommendation,
+    StoredRecommendation, WeightOverrides, DEFAULT_UNIVERSE, SECTOR_ETFS,
 };
 use traderview_db::stock_recommendation_watchers::{
     self as watchers, Watcher, WatcherInput,
@@ -162,21 +162,27 @@ async fn get_leaderboard(
     ))
 }
 
-/// Sector heatmap: live-compute the 11 SPDR ETFs and return a list of
-/// (sector_name, recommendation). Stored history isn't required — the
-/// algorithm is fast enough to run 11 times on demand.
+/// Sector heatmap: serve the latest stored recommendation for each of
+/// the 11 SPDR ETFs. All of them are in DEFAULT_UNIVERSE, so the
+/// background refresh keeps them fresh — this route never computes.
 async fn get_sectors(
     State(s): State<AppState>,
     _u: AuthUser,
 ) -> Result<Json<Vec<SectorEntry>>, ApiError> {
     let mut out = Vec::with_capacity(SECTOR_ETFS.len());
     for (ticker, name) in SECTOR_ETFS {
-        match compute(&s.pool, ticker).await {
-            Ok(r) => out.push(SectorEntry {
+        match latest_for_symbol(&s.pool, ticker).await {
+            Ok(Some(r)) => out.push(SectorEntry {
                 ticker: ticker.to_string(),
                 name: name.to_string(),
                 recommendation: Some(r),
                 error: None,
+            }),
+            Ok(None) => out.push(SectorEntry {
+                ticker: ticker.to_string(),
+                name: name.to_string(),
+                recommendation: None,
+                error: Some("pending background compute".to_string()),
             }),
             Err(e) => out.push(SectorEntry {
                 ticker: ticker.to_string(),
@@ -193,7 +199,7 @@ async fn get_sectors(
 struct SectorEntry {
     ticker: String,
     name: String,
-    recommendation: Option<StockRecommendation>,
+    recommendation: Option<StoredRecommendation>,
     error: Option<String>,
 }
 

@@ -40,6 +40,11 @@ pub struct AppState {
     /// freshly-created alpaca-bound strategy gets its pump immediately
     /// instead of waiting for a server restart.
     pub alpaca_pumps: AlpacaPumpRegistry,
+    /// Precomputed dashboard-tile payloads (sector heatmap, breadth,
+    /// fear/greed, sector rotation, RRG), refreshed on interval by
+    /// `background::spawn_refreshers` so the routes never compute on
+    /// demand.
+    pub tiles: crate::background::TileCache,
 }
 
 impl AppState {
@@ -55,6 +60,7 @@ impl AppState {
             hub: Hub::new(),
             ocr_sem: Arc::new(Semaphore::new(permits)),
             alpaca_pumps: Arc::new(Mutex::new(HashSet::new())),
+            tiles: Arc::new(dashmap::DashMap::new()),
         }
     }
 

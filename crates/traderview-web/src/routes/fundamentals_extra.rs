@@ -14,7 +14,6 @@ use serde::Deserialize;
 use traderview_db::dcf_valuation::{self, DcfInput, DcfReport};
 use traderview_db::fundamental_health::{self, FundamentalHealth};
 use traderview_db::gap_stats::{self, GapReport};
-use traderview_db::rrg;
 use traderview_db::valuation_models::{
     self, DdmInput, DdmReport, EpvInput, EpvReport, ReverseDcfInput, ReverseDcfReport,
     RuleOf40Report, WheelInput, WheelReport,
@@ -232,11 +231,17 @@ async fn get_rule_of_40(
     Ok(Json(valuation_models::rule_of_40(rev_growth, fcf_margin)))
 }
 
+/// Served from the precomputed tile cache — the background refresher
+/// recomputes the 12-symbol RRG on interval (see background.rs).
 async fn get_rrg(
     State(s): State<AppState>,
     _u: AuthUser,
-) -> Result<Json<rrg::RrgReport>, ApiError> {
-    Ok(Json(rrg::compute(&s.pool).await))
+) -> Result<Json<serde_json::Value>, ApiError> {
+    Ok(Json(
+        crate::background::tile(&s.pool, &s.tiles, crate::background::RRG)
+            .await
+            .map_err(ApiError::Internal)?,
+    ))
 }
 
 #[derive(Debug, Deserialize)]

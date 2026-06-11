@@ -9,6 +9,7 @@
 //! `is_local = true` user instead of demanding credentials.
 
 pub mod auth;
+pub mod background;
 pub mod broker_routes;
 pub mod budget_routes;
 pub mod business_routes;
