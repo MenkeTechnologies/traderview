@@ -10,9 +10,6 @@ use chrono::{DateTime, Utc};
 use once_cell::sync::Lazy;
 use serde::Serialize;
 use sqlx::PgPool;
-use std::collections::HashMap;
-use std::sync::Arc;
-use std::time::{Duration, Instant};
 use tokio::sync::Mutex;
 use uuid::Uuid;
 
@@ -136,42 +133,42 @@ pub fn sector_for(symbol: &str) -> Option<&'static str> {
     None
 }
 
-pub async fn build(pool: &PgPool, user_id: Uuid) -> anyhow::Result<HeatmapResponse> {
-    // Per-user in-process cache. Building the grid fans out ~210 quote fetches;
-    // even with the 60s on-disk quote cache that's noticeable work on every
-    // visit. Cache the whole response per user for `CACHE_TTL` so repeat loads
-    // (and the auto-refresh poll) return instantly.
-    //
-    // Single-flight: the per-user lock is held for the entire build, so N
-    // concurrent requests for the same user trigger exactly one fan-out.
-    let entry = {
-        let mut map = CACHE.lock().await;
-        map.entry(user_id)
-            .or_insert_with(|| Arc::new(Mutex::new(None)))
-            .clone()
-    };
-    let mut cache = entry.lock().await;
-    if let Some((stored_at, resp)) = cache.as_ref() {
-        if stored_at.elapsed() < CACHE_TTL {
-            return Ok(resp.clone());
-        }
-    }
+// Precomputed universe grid. The ~210 universe quote fetches run ONLY
+// in the background refresher (background::spawn_refreshers calls
+// refresh_universe on interval) — a request never triggers the fan-out.
+// The per-user watchlist overlay is small and fetched per request
+// against the 60s on-disk quote cache.
+static UNIVERSE_CACHE: Lazy<Mutex<Option<Vec<HeatTile>>>> = Lazy::new(|| Mutex::new(None));
 
-    let resp = build_uncached(pool, user_id).await?;
-    *cache = Some((Instant::now(), resp.clone()));
-    Ok(resp)
+/// Fan out the curated universe and park the tiles in the in-process
+/// cache. Called by the background refresher; also used inline once on
+/// the cold-boot race before the first refresh lands.
+pub async fn refresh_universe(pool: &PgPool) -> anyhow::Result<usize> {
+    let jobs: Vec<(&'static str, String)> = UNIVERSE
+        .iter()
+        .flat_map(|(sector, syms)| syms.iter().map(move |s| (*sector, (*s).to_string())))
+        .collect();
+    let tiles = fetch_tiles(pool, jobs).await;
+    let n = tiles.len();
+    *UNIVERSE_CACHE.lock().await = Some(tiles);
+    Ok(n)
 }
 
-// In-process heatmap cache, keyed by user (watchlist differs per user). Each
-// user gets their own inner lock so a slow build for one user doesn't block
-// cache hits for another. 60s freshness matches the on-disk quote cache.
-const CACHE_TTL: Duration = Duration::from_secs(60);
-#[allow(clippy::type_complexity)]
-static CACHE: Lazy<Mutex<HashMap<Uuid, Arc<Mutex<Option<(Instant, HeatmapResponse)>>>>>> =
-    Lazy::new(|| Mutex::new(HashMap::new()));
-
-async fn build_uncached(pool: &PgPool, user_id: Uuid) -> anyhow::Result<HeatmapResponse> {
+pub async fn build(pool: &PgPool, user_id: Uuid) -> anyhow::Result<HeatmapResponse> {
     use std::collections::HashSet;
+    // Universe grid from the precomputed cache; compute inline only on
+    // the cold-boot race before the first background refresh lands.
+    let universe_tiles = {
+        let cached = UNIVERSE_CACHE.lock().await.clone();
+        match cached {
+            Some(t) => t,
+            None => {
+                refresh_universe(pool).await?;
+                UNIVERSE_CACHE.lock().await.clone().unwrap_or_default()
+            }
+        }
+    };
+
     // Watchlist symbols get pinned to a "Watchlist" pseudo-sector so they
     // always render even if not in the curated universe.
     let mut watchlist: HashSet<String> = HashSet::new();
@@ -184,28 +181,27 @@ async fn build_uncached(pool: &PgPool, user_id: Uuid) -> anyhow::Result<HeatmapR
             }
         }
     }
-
-    // Flatten the universe (and de-duped watchlist) into one job list so the
-    // ~210 quote fetches run concurrently. A serial loop here blocks the
-    // request for a minute+ on a cold cache — see `market_data::quotes`.
     let universe_syms: HashSet<&str> = UNIVERSE
         .iter()
         .flat_map(|(_, syms)| syms.iter().copied())
         .collect();
-    let mut jobs: Vec<(&'static str, String)> = Vec::new();
-    for (sector, syms) in UNIVERSE {
-        for sym in *syms {
-            jobs.push((sector, (*sym).to_string()));
-        }
-    }
-    for sym in &watchlist {
-        if !universe_syms.contains(sym.as_str()) {
-            jobs.push(("Watchlist", sym.clone()));
-        }
-    }
+    let watch_jobs: Vec<(&'static str, String)> = watchlist
+        .iter()
+        .filter(|s| !universe_syms.contains(s.as_str()))
+        .map(|s| ("Watchlist", s.clone()))
+        .collect();
+    let mut tiles = universe_tiles;
+    tiles.extend(fetch_tiles(pool, watch_jobs).await);
 
-    // Bounded concurrency: fetch in chunks of 16 (Yahoo tolerates ~16 parallel
-    // chart requests; unbounded fan-out risks rate limiting).
+    Ok(HeatmapResponse {
+        tiles,
+        generated_at: Utc::now(),
+    })
+}
+
+/// Bounded-concurrency quote fan-out: chunks of 16 (Yahoo tolerates
+/// ~16 parallel chart requests; unbounded fan-out risks rate limiting).
+async fn fetch_tiles(pool: &PgPool, jobs: Vec<(&'static str, String)>) -> Vec<HeatTile> {
     let mut tiles: Vec<HeatTile> = Vec::new();
     for chunk in jobs.chunks(16) {
         let futs = chunk.iter().map(|(sector, sym)| {
@@ -221,11 +217,7 @@ async fn build_uncached(pool: &PgPool, user_id: Uuid) -> anyhow::Result<HeatmapR
                 .flatten(),
         );
     }
-
-    Ok(HeatmapResponse {
-        tiles,
-        generated_at: Utc::now(),
-    })
+    tiles
 }
 
 async fn tile_for(pool: &PgPool, sym: &str, sector: &'static str) -> Option<HeatTile> {

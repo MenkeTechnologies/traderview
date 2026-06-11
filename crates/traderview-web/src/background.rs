@@ -32,6 +32,9 @@ pub const SECTOR_ROTATION_REFRESH: Duration = Duration::from_secs(4 * 60 * 60);
 pub const RRG_REFRESH: Duration = Duration::from_secs(4 * 60 * 60);
 /// Golden Stars (stock recommendations) universe recompute cadence.
 pub const GOLDEN_STARS_REFRESH: Duration = Duration::from_secs(4 * 60 * 60);
+/// Market-heatmap universe (~210 quotes) recompute cadence — matches
+/// the 60s on-disk quote cache so tiles stay one refresh fresh.
+pub const HEATMAP_REFRESH: Duration = Duration::from_secs(60);
 
 async fn compute_tile(pool: &PgPool, key: &'static str) -> anyhow::Result<serde_json::Value> {
     Ok(match key {
@@ -84,7 +87,23 @@ pub fn spawn_refreshers(pool: PgPool, cache: TileCache) {
             }
         });
     }
+    spawn_heatmap_universe(pool.clone());
     spawn_golden_stars(pool);
+}
+
+/// Market-heatmap universe refresh. The grid's ~210 quote fan-out runs
+/// here on interval; the route only merges the per-user watchlist
+/// overlay on top of the precomputed tiles.
+fn spawn_heatmap_universe(pool: PgPool) {
+    tokio::spawn(async move {
+        loop {
+            match traderview_db::heatmap::refresh_universe(&pool).await {
+                Ok(n) => tracing::debug!(tiles = n, "heatmap universe refreshed"),
+                Err(e) => tracing::warn!(error = %e, "heatmap universe refresh failed"),
+            }
+            tokio::time::sleep(HEATMAP_REFRESH).await;
+        }
+    });
 }
 
 /// Golden Stars universe refresh. Recomputes the whole universe
