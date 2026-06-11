@@ -3928,6 +3928,7 @@
   "view.algo.opt.strat_order_block_sweep": "주문 블록 + 유동성 Sweep (SMC)",
   "view.algo.opt.strat_pairs": "쌍 거래 (z-score를 포함하여)",
   "view.algo.opt.strat_pead": "PEAD",
+  "view.algo.opt.strat_rsi_divergence": "RSI Divergence (exhaustion reversal at confirmed swings)",
   "view.algo.opt.strat_supertrend": "Supertrend Cross (ATR-banded 추세 플립)",
   "view.algo.opt.strat_ttm_squeeze": "TTM 스퀴즈 모멘텀 (BB-in-KC release + histogram)",
   "view.algo.opt.strat_vwap_scalp": "VWAP 스칼프 (z-score reversion, 1×ATR 중지)",

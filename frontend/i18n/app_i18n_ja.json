@@ -3928,6 +3928,7 @@
   "view.algo.opt.strat_order_block_sweep": "オーダーブロック + 流動性掃引(SMC)",
   "view.algo.opt.strat_pairs": "ペア取引(スプレッドzスコア)",
   "view.algo.opt.strat_pead": "PEAD (ポストアーニングドリフト)",
+  "view.algo.opt.strat_rsi_divergence": "RSI Divergence (exhaustion reversal at confirmed swings)",
   "view.algo.opt.strat_supertrend": "スーパートレンドクロス(ATR-バンドトレンドフリップ)",
   "view.algo.opt.strat_ttm_squeeze": "TTM Squeeze Momentum (BB-in-KC解放+ヒストグラム)",
   "view.algo.opt.strat_vwap_scalp": "VWAP Scalp (z-score reversion, 1×ATR 停止)",

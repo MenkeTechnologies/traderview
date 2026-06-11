@@ -3928,6 +3928,7 @@
   "view.algo.opt.strat_order_block_sweep": "Tilauslohko + Likviditeettikorjaus (SMC)",
   "view.algo.opt.strat_pairs": "Parit Trading (hajautettu z-score)",
   "view.algo.opt.strat_pead": "PEAD",
+  "view.algo.opt.strat_rsi_divergence": "RSI Divergence (exhaustion reversal at confirmed swings)",
   "view.algo.opt.strat_supertrend": "Supertrend Cross (ATR-kaistainen trendi käänne)",
   "view.algo.opt.strat_ttm_squeeze": "TTM Purista hetki (BB-in-KC julkaisu + histogrammi)",
   "view.algo.opt.strat_vwap_scalp": "VWAP Scalp (z-score-reversio, 1×ATR stop)",

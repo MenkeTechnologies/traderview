@@ -21,6 +21,7 @@ pub mod ichimoku_cloud;
 pub mod keltner_breakout;
 pub mod ma_cross_adx;
 pub mod macd_cross;
+pub mod rsi_divergence_reversal;
 pub mod mean_reversion;
 pub mod momentum;
 pub mod orb;
@@ -88,6 +89,7 @@ pub enum StrategyKind {
     Pairs,
     MaCrossAdx,
     MacdCross,
+    RsiDivergence,
     KeltnerBreakout,
     IchimokuCloud,
 }
@@ -110,6 +112,7 @@ impl StrategyKind {
             Self::Pairs => "pairs",
             Self::MaCrossAdx => "ma_cross_adx",
             Self::MacdCross => "macd_cross",
+            Self::RsiDivergence => "rsi_divergence",
             Self::KeltnerBreakout => "keltner_breakout",
             Self::IchimokuCloud => "ichimoku_cloud",
         }
@@ -132,6 +135,7 @@ impl StrategyKind {
             Self::Pairs,
             Self::MaCrossAdx,
             Self::MacdCross,
+            Self::RsiDivergence,
             Self::KeltnerBreakout,
             Self::IchimokuCloud,
         ]
@@ -177,6 +181,9 @@ pub fn from_kind(
         "pairs" => Ok(Box::new(pairs::Pairs::from_json(entry_rules))),
         "ma_cross_adx" => Ok(Box::new(ma_cross_adx::MaCrossAdx::from_json(entry_rules))),
         "macd_cross" => Ok(Box::new(macd_cross::MacdCross::from_json(entry_rules))),
+        "rsi_divergence" => Ok(Box::new(
+            rsi_divergence_reversal::RsiDivergenceReversal::from_json(entry_rules),
+        )),
         "keltner_breakout" => Ok(Box::new(keltner_breakout::KeltnerBreakout::from_json(
             entry_rules,
         ))),

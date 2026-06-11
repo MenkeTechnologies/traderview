@@ -224,6 +224,7 @@ const STRATEGY_KINDS = [
     { value: 'pairs',             label_key: 'view.algo.opt.strat_pairs',             label: 'Pairs Trading (spread z-score)' },
     { value: 'ma_cross_adx',      label_key: 'view.algo.opt.strat_ma_cross_adx',      label: 'MA Cross + ADX filter (EMA cross gated on trend strength)' },
     { value: 'macd_cross',        label_key: 'view.algo.opt.strat_macd_cross',        label: 'MACD Cross (signal-line crossover, optional zero-line filter)' },
+    { value: 'rsi_divergence',    label_key: 'view.algo.opt.strat_rsi_divergence',    label: 'RSI Divergence (exhaustion reversal at confirmed swings)' },
     { value: 'keltner_breakout',  label_key: 'view.algo.opt.strat_keltner_breakout',  label: 'Keltner Channel Breakout (EMA ± ATR band)' },
     { value: 'ichimoku_cloud',    label_key: 'view.algo.opt.strat_ichimoku_cloud',    label: 'Ichimoku Cloud (TK cross + cloud break + Chikou clear)' },
 ];
@@ -569,6 +570,32 @@ const STRATEGY_DOCS = {
         ],
         scope_note: 'Ungated signal-line crosses fire constantly in chop \u2014 the zero-side filter (or pairing with a trend gate) is what separates usable from noise.',
         when_to_use: 'Swing reversals after extended moves (zero-side on), or as the plain momentum baseline other strategies are judged against.',
+    },
+    rsi_divergence: {
+        title: 'RSI Divergence Reversal',
+        family: 'Reversal · long or short · confirmed-swing exhaustion',
+        entry: [
+            'Detect swing highs/lows (swing_lookback bars strictly beyond on each side)',
+            'Long: price prints a LOWER swing low while RSI prints a HIGHER low, with the divergence low\u2019s RSI below rsi_oversold',
+            'Short: mirror \u2014 higher swing high, lower RSI high, above rsi_overbought',
+            'Setup must be fresh: at most max_age_bars since the confirming swing',
+        ],
+        exit: [
+            'RSI reaches the opposite extreme (reversal played out)',
+            'Stop beyond the divergence extreme \u00b1 ATR buffer \u2014 the thesis-invalidation level',
+        ],
+        params: [
+            ['rsi_period', 14, 'Wilder RSI window'],
+            ['swing_lookback', 5, 'Bars each side defining a confirmed swing'],
+            ['rsi_oversold', 35, 'Divergence low must print RSI below this (long)'],
+            ['rsi_overbought', 65, 'Divergence high must print RSI above this (short)'],
+            ['max_age_bars', 4, 'Freshness budget after swing confirmation'],
+            ['atr_period', 14, 'ATR window for stop/target sizing'],
+            ['atr_stop_mult', 1.0, 'Stop buffer beyond the divergence extreme, in ATRs'],
+            ['atr_take_profit_mult', 3.0, 'Target distance in ATRs'],
+        ],
+        scope_note: 'Confirmed swings mean the signal lags the low by swing_lookback bars \u2014 that lag is the false-signal filter, not a defect. Divergences off mid-range RSI are noise; the oversold/overbought gate is what makes these tradeable.',
+        when_to_use: 'Exhaustion turns after extended one-way moves. Complements trend-followers: this fires exactly where they stop out.',
     },
     keltner_breakout: {
         title: 'Keltner Channel Breakout',
@@ -1051,6 +1078,11 @@ const OPTIMIZE_DEFAULT_GRIDS = {
         fast_period: [8, 12, 16],
         slow_period: [21, 26, 35],
         signal_period: [7, 9, 12],
+    },
+    rsi_divergence: {
+        rsi_period: [9, 14, 21],
+        swing_lookback: [3, 5, 8],
+        rsi_oversold: [25, 30, 35],
     },
     keltner_breakout: {
         period: [15, 20, 30],

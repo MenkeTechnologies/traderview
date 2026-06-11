@@ -3928,6 +3928,7 @@
   "view.algo.opt.strat_order_block_sweep": "区块+流动性扫描(SMC)",
   "view.algo.opt.strat_pairs": "平价交易( spread Z- score)",
   "view.algo.opt.strat_pead": "PEAD(学习后漂移)",
+  "view.algo.opt.strat_rsi_divergence": "RSI Divergence (exhaustion reversal at confirmed swings)",
   "view.algo.opt.strat_supertrend": "超潮流交叉( ATR 带宽趋势翻转)",
   "view.algo.opt.strat_ttm_squeeze": "TTM 挤压运动( BB- in- KC 释放 + 直方图)",
   "view.algo.opt.strat_vwap_scalp": "VWAP Scalp(z分数重置, 1×ATR 停)",

@@ -3928,6 +3928,7 @@
   "view.algo.opt.strat_order_block_sweep": "Rend Block + Likviditás Seep (SMC)",
   "view.algo.opt.strat_pairs": "Pairs Trading (spread z- score)",
   "view.algo.opt.strat_pead": "PEAD",
+  "view.algo.opt.strat_rsi_divergence": "RSI Divergence (exhaustion reversal at confirmed swings)",
   "view.algo.opt.strat_supertrend": "Supertrend Cross (ATR -banded trend flip)",
   "view.algo.opt.strat_ttm_squeeze": "TTM Szorítsa össze a Momentumot (BB- in- KC felszabadulása + hisztogram)",
   "view.algo.opt.strat_vwap_scalp": "VWAP Scalp (z- score reversion, 1 × ATR stop)",

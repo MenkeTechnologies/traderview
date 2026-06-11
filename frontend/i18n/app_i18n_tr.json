@@ -3928,6 +3928,7 @@
   "view.algo.opt.strat_order_block_sweep": "Sipariş Blok + Sıvılık Sweep (SMC)",
   "view.algo.opt.strat_pairs": "Pairs Trading (spread z-dice)",
   "view.algo.opt.strat_pead": "PEAD (post-earnings drag)",
+  "view.algo.opt.strat_rsi_divergence": "RSI Divergence (exhaustion reversal at confirmed swings)",
   "view.algo.opt.strat_supertrend": "Supertrend Cross (ATR-banded trend Döndü)",
   "view.algo.opt.strat_ttm_squeeze": "TTM Squeeze Momentum (BB-in-KC serbest bırakılması + histogram)",
   "view.algo.opt.strat_vwap_scalp": "VWAP Scalp (z-mark revers, 1×ATR dur)",

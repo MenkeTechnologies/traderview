@@ -3928,6 +3928,7 @@
   "view.algo.opt.strat_order_block_sweep": "Bloco de ordem + Varrimento de liquidez (SMC)",
   "view.algo.opt.strat_pairs": "Negociação de pares (escore z distribuído)",
   "view.algo.opt.strat_pead": "PEAD",
+  "view.algo.opt.strat_rsi_divergence": "RSI Divergence (exhaustion reversal at confirmed swings)",
   "view.algo.opt.strat_supertrend": "Cruz de Supertendência (flip de tendência em banda ATR)",
   "view.algo.opt.strat_ttm_squeeze": "TTM Squeeze Momentum (BB- in- KC versão + histograma)",
   "view.algo.opt.strat_vwap_scalp": "VWAP Scalp (reversão do score z, paragem de 1×ATR)",

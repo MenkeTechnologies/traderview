@@ -3928,6 +3928,7 @@
   "view.algo.opt.strat_order_block_sweep": "Bloco de Ordem + Varredura de Liquididade (SMC)",
   "view.algo.opt.strat_pairs": "Pars Trading (Spread Z-Score)",
   "view.algo.opt.strat_pead": "PEAD (post-earnings drift)",
+  "view.algo.opt.strat_rsi_divergence": "RSI Divergence (exhaustion reversal at confirmed swings)",
   "view.algo.opt.strat_supertrend": "Supertrend Cross (ATR-banded trend flip)",
   "view.algo.opt.strat_ttm_squeeze": "TTM Squeeze Momentum (BB-in-KC release + histogram)",
   "view.algo.opt.strat_vwap_scalp": "VWAP Scalp (z-score reversion, 1×ATR stop)",
