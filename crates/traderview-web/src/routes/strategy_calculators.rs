@@ -38,6 +38,7 @@
 //!   GET  /symbols/:sym/pre-holiday       — pre-holiday drift (2024+ cal)
 //!   GET  /symbols/:sym/ex-div-study      — ex-date recovery behavior
 //!   POST /symbols/:sym/vol-rich-cheap    — IV term vs realized cone
+//!   GET  /symbols/:sym/character-sheet   — all bar studies, one fetch
 //!   POST /symbols/:sym/event-study       — caller-dated FOMC/CPI study
 //!   POST /calc/double-barrier            — target-vs-stop hit-first odds
 //!   POST /calc/futures-sizing            — tick math + margin-capped size
@@ -107,6 +108,10 @@ pub fn router() -> Router<AppState> {
         .route("/symbols/:symbol/pre-holiday", get(get_pre_holiday))
         .route("/symbols/:symbol/ex-div-study", get(get_ex_div_study))
         .route("/symbols/:symbol/vol-rich-cheap", post(post_vol_rich_cheap))
+        .route(
+            "/symbols/:symbol/character-sheet",
+            get(get_character_sheet),
+        )
         .route("/symbols/:symbol/event-study", post(post_event_study))
         .route("/calc/double-barrier", post(post_double_barrier))
         .route("/calc/futures-sizing", post(post_futures_sizing))
@@ -803,6 +808,19 @@ async fn post_event_study(
     .await
     .map(Json)
     .map_err(map_tom_err)
+}
+
+async fn get_character_sheet(
+    State(s): State<AppState>,
+    _u: AuthUser,
+    Path(symbol): Path<String>,
+    Query(q): Query<TomQ>,
+) -> Result<Json<strategy_calculators::CharacterSheet>, ApiError> {
+    let sym = validate_symbol(&symbol)?;
+    strategy_calculators::character_sheet(&s.pool, &sym, q.years.unwrap_or(10))
+        .await
+        .map(Json)
+        .map_err(map_tom_err)
 }
 
 #[derive(Debug, Deserialize)]

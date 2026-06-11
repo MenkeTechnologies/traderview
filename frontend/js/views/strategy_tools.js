@@ -96,6 +96,42 @@ const TOOLS = {
             <p class="muted small">Press risk after wins (capped), cut back toward base after losses —
             the opposite of a martingale. The control row trades the same sequence at flat base risk.</p>`,
     },
+    'character-sheet': {
+        label: 'Symbol Character',
+        call: (b) => api.characterSheet(b.symbol, b.years),
+        fields: [
+            { key: 'symbol', label: 'Symbol', def: 'SPY', text: true },
+            { key: 'years', label: 'Lookback years', def: 10, int: true },
+        ],
+        render: (r) => {
+            const on = r.overnight;
+            const tom = r.turn_of_month;
+            const dd = r.drawdowns;
+            const cc = r.concentration;
+            const cone21 = r.vol_cone.find(x => x.horizon_days === 21);
+            return `
+            <div class="cards">
+                ${tom ? `<div class="card"><div class="label">Turn-of-month edge</div>
+                    <div class="value ${tom.edge_pct >= 0 ? 'pos' : 'neg'}">${(tom.edge_pct >= 0 ? '+' : '') + tom.edge_pct.toFixed(3)}pp/day</div></div>` : ''}
+                ${on ? `<div class="card"><div class="label">Overnight vs intraday</div>
+                    <div class="value">${on.overnight_total_pct.toFixed(0)}% / ${on.intraday_total_pct.toFixed(0)}%</div></div>` : ''}
+                ${r.santa ? `<div class="card"><div class="label">Santa rally</div>
+                    <div class="value ${r.santa.rally_avg_return_pct >= 0 ? 'pos' : 'neg'}">${r.santa.rally_avg_return_pct.toFixed(2)}%</div>
+                    <div class="small muted">hit ${r.santa.rally_hit_rate_pct.toFixed(0)}% × ${r.santa.years_analyzed}y</div></div>` : ''}
+                ${cone21 ? `<div class="card"><div class="label">21d realized vol</div>
+                    <div class="value">${cone21.current_pct.toFixed(1)}%</div>
+                    <div class="small muted">rank ${cone21.current_rank_pct.toFixed(0)}% of own history</div></div>` : ''}
+                ${dd && dd.episodes.length ? `<div class="card"><div class="label">Worst drawdown</div>
+                    <div class="value neg">${dd.episodes[0].depth_pct.toFixed(1)}%</div>
+                    <div class="small muted">${dd.currently_underwater ? r.symbol + ' underwater now' : 'recovered'}</div></div>` : ''}
+                ${cc ? `<div class="card"><div class="label">Missing 10 best days</div>
+                    <div class="value neg">${cc.missing_best_pct.toFixed(0)}%</div>
+                    <div class="small muted">vs ${cc.total_return_pct.toFixed(0)}% buy-and-hold</div></div>` : ''}
+            </div>
+            <p class="muted small">One bar fetch, every study in the toolbox: ${r.days_analyzed} sessions
+            of ${esc(r.symbol)}. Missing cards mean not enough history for that leg — partial, never faked.</p>`;
+        },
+    },
     'report-card': {
         label: 'Trade Report Card',
         call: (b) => api.tradeReportCard({

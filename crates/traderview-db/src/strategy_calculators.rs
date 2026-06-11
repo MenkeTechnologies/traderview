@@ -872,6 +872,84 @@ pub async fn ex_div_study(
 }
 
 // ===========================================================================
+// Symbol character sheet — ONE bar fetch, every pure seasonal/vol/
+// drawdown analysis in this module run over it
+// ===========================================================================
+
+#[derive(Debug, Clone, Serialize)]
+pub struct CharacterSheet {
+    pub symbol: String,
+    pub days_analyzed: usize,
+    pub turn_of_month: Option<TomReport>,
+    pub day_of_week: Option<traderview_core::day_of_week_seasonality::DayOfWeekSeasonalityReport>,
+    pub santa: Option<SantaReport>,
+    pub overnight: Option<traderview_core::overnight_intraday::OvernightReport>,
+    pub vol_cone: Vec<traderview_core::vol_cone::VolConeRow>,
+    pub drawdowns: Option<traderview_core::drawdown_episodes::EpisodesReport>,
+    pub concentration: Option<traderview_core::best_worst_days::ConcentrationReport>,
+}
+
+/// Every leg is Option — a symbol with enough history for the cone but
+/// not for Santa gets partial results, never errors or fakes.
+pub async fn character_sheet(
+    pool: &PgPool,
+    symbol: &str,
+    years: u32,
+) -> Result<CharacterSheet, TomError> {
+    use traderview_core::day_of_week_seasonality::{self as dow, DailyClose};
+    let years = years.clamp(1, 20);
+    let to = Utc::now();
+    let from = to - Duration::days(366 * years as i64);
+    let bars = crate::prices::get_bars(pool, symbol, BarInterval::D1, from, to)
+        .await
+        .map_err(TomError::PriceFetch)?;
+    let dated: Vec<(chrono::NaiveDate, f64)> = bars
+        .iter()
+        .filter_map(|b| {
+            let close: f64 = b.close.to_string().parse().unwrap_or(0.0);
+            (close > 0.0).then(|| (b.bar_time.date_naive(), close))
+        })
+        .collect();
+    if dated.len() < MIN_DAYS {
+        return Err(TomError::Insufficient {
+            symbol: symbol.to_string(),
+            got: dated.len(),
+            need: MIN_DAYS,
+        });
+    }
+    let closes: Vec<f64> = dated.iter().map(|(_, c)| *c).collect();
+    let oc: Vec<(f64, f64)> = bars
+        .iter()
+        .filter_map(|b| {
+            let open: f64 = b.open.to_string().parse().unwrap_or(0.0);
+            let close: f64 = b.close.to_string().parse().unwrap_or(0.0);
+            (open > 0.0 && close > 0.0).then_some((open, close))
+        })
+        .collect();
+    let tagged: Vec<DailyClose> = dated
+        .iter()
+        .filter_map(|(d, c)| {
+            let wd = d.weekday().num_days_from_monday() as u8 + 1;
+            (wd <= 5).then_some(DailyClose {
+                day_of_week: wd,
+                close: *c,
+            })
+        })
+        .collect();
+    Ok(CharacterSheet {
+        symbol: symbol.to_string(),
+        days_analyzed: dated.len(),
+        turn_of_month: Some(tom_stats(symbol, &dated)),
+        day_of_week: dow::compute(&tagged),
+        santa: santa_stats(symbol, &dated),
+        overnight: traderview_core::overnight_intraday::compute(&oc),
+        vol_cone: traderview_core::vol_cone::compute(&closes, VOL_CONE_HORIZONS),
+        drawdowns: traderview_core::drawdown_episodes::compute(&closes, 3),
+        concentration: traderview_core::best_worst_days::compute(&closes, 10),
+    })
+}
+
+// ===========================================================================
 // Vol rich/cheap — per-horizon IV vs realized (vol_cone ×
 // variance_risk_premium composition)
 // ===========================================================================
