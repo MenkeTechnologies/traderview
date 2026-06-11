@@ -35,6 +35,8 @@ pub const GOLDEN_STARS_REFRESH: Duration = Duration::from_secs(4 * 60 * 60);
 /// Market-heatmap universe (~210 quotes) recompute cadence — matches
 /// the 60s on-disk quote cache so tiles stay one refresh fresh.
 pub const HEATMAP_REFRESH: Duration = Duration::from_secs(60);
+/// World-markets snapshot (16 Yahoo pins) recompute cadence.
+pub const MARKETS_REFRESH: Duration = Duration::from_secs(60);
 
 async fn compute_tile(pool: &PgPool, key: &'static str) -> anyhow::Result<serde_json::Value> {
     Ok(match key {
@@ -88,7 +90,21 @@ pub fn spawn_refreshers(pool: PgPool, cache: TileCache) {
         });
     }
     spawn_heatmap_universe(pool.clone());
+    spawn_markets_snapshot();
     spawn_golden_stars(pool);
+}
+
+/// World-markets snapshot refresh — 16 Yahoo chart pins for the
+/// dashboard world map, kept warm so no request pays the ~1.2s fetch.
+fn spawn_markets_snapshot() {
+    tokio::spawn(async move {
+        loop {
+            if let Err(e) = traderview_db::markets::refresh().await {
+                tracing::warn!(error = %e, "markets snapshot refresh failed");
+            }
+            tokio::time::sleep(MARKETS_REFRESH).await;
+        }
+    });
 }
 
 /// Market-heatmap universe refresh. The grid's ~210 quote fan-out runs

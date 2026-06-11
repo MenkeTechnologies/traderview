@@ -457,30 +457,40 @@ const PINS: &[Pin] = &[
     },
 ];
 
-// In-process snapshot cache. The world-map view polls this on every dashboard
-// load; without caching we paid ~1.2s on every visit to hit 16 Yahoo endpoints.
-// 60s freshness matches the on-disk quote cache used elsewhere.
-const CACHE_TTL: Duration = Duration::from_secs(60);
+// In-process snapshot cache, written by the background refresher
+// (background::spawn_refreshers calls `refresh` on interval). Requests
+// always serve the cached value; the inline fetch happens only on the
+// cold-boot race before the first refresh lands. CACHE_TTL is kept for
+// tests that pin staleness semantics.
+pub const CACHE_TTL: Duration = Duration::from_secs(60);
 static CACHE: Lazy<Mutex<Option<(Instant, MarketsSnapshot)>>> = Lazy::new(|| Mutex::new(None));
 
-/// Fetch the latest snapshot. Hits Yahoo's v8 chart endpoint for each pin
-/// concurrently. Result is cached in-process for 60s; subsequent calls within
-/// the window return the cached value immediately (sub-millisecond).
+/// Fetch all pins from Yahoo and overwrite the cache. Called by the
+/// background refresher on interval.
+pub async fn refresh() -> anyhow::Result<MarketsSnapshot> {
+    let snap = fetch_snapshot().await?;
+    *CACHE.lock().await = Some((Instant::now(), snap.clone()));
+    Ok(snap)
+}
+
+/// Serve the cached snapshot. Computes inline only when the cache has
+/// never been filled (cold boot); staleness is the background
+/// refresher's job, never the request's.
 ///
-/// Single-flight: the cache lock is held for the entire fetch. Concurrent
-/// callers that arrive during a fetch await the lock and then observe the
-/// freshly-written cache entry, so N concurrent requests cause exactly one
-/// fan-out to Yahoo instead of N. Without this the prior implementation
-/// dropped the lock before fetching, letting N callers each issue 16
-/// concurrent Yahoo requests (16×N) when the cache had just expired.
+/// Single-flight on the cold path: the cache lock is held for the
+/// entire fetch, so N concurrent first-callers cause exactly one
+/// 16-endpoint fan-out to Yahoo instead of 16×N.
 pub async fn snapshot() -> anyhow::Result<MarketsSnapshot> {
     let mut cache = CACHE.lock().await;
-    if let Some((stored_at, snap)) = cache.as_ref() {
-        if stored_at.elapsed() < CACHE_TTL {
-            return Ok(snap.clone());
-        }
+    if let Some((_, snap)) = cache.as_ref() {
+        return Ok(snap.clone());
     }
+    let snap = fetch_snapshot().await?;
+    *cache = Some((Instant::now(), snap.clone()));
+    Ok(snap)
+}
 
+async fn fetch_snapshot() -> anyhow::Result<MarketsSnapshot> {
     let client = reqwest::Client::builder()
         .user_agent(USER_AGENT)
         .timeout(std::time::Duration::from_secs(8))
@@ -511,16 +521,14 @@ pub async fn snapshot() -> anyhow::Result<MarketsSnapshot> {
             None => commodities.push(r), // shouldn't happen — keep round-trip honest
         }
     }
-    let snap = MarketsSnapshot {
+    Ok(MarketsSnapshot {
         indices,
         commodities,
         fx,
         crypto,
         us_market_open,
         fetched_at: Utc::now(),
-    };
-    *cache = Some((Instant::now(), snap.clone()));
-    Ok(snap)
+    })
 }
 
 async fn fetch_one(client: &reqwest::Client, p: &Pin) -> Option<MarketTile> {
@@ -640,9 +648,10 @@ mod tests {
         );
     }
 
-    /// Verify TTL: an entry stored 2 minutes ago must be treated as stale.
-    /// We can't test the *fetch* path without network, but we can verify the
-    /// cache check returns None for expired entries by inspecting the static.
+    /// Verify the staleness probe the background refresher relies on: an
+    /// entry stored 2 minutes ago must read as older than CACHE_TTL. We
+    /// can't test the *fetch* path without network, but we can verify the
+    /// backdated timestamp arithmetic by inspecting the static.
     #[tokio::test]
     async fn cache_expires_after_ttl() {
         let _guard = TEST_LOCK.lock().await;
