@@ -624,6 +624,25 @@ pub async fn get_open_qty(pool: &PgPool, trade_id: Uuid) -> anyhow::Result<Optio
     Ok(row.map(|(q,)| q))
 }
 
+/// Most recent trade row on (account, symbol) — the row the engine's
+/// fill just rolled into. Used for algo auto-tagging.
+pub async fn latest_trade_id(
+    pool: &PgPool,
+    account_id: Uuid,
+    symbol: &str,
+) -> anyhow::Result<Option<Uuid>> {
+    let row: Option<(Uuid,)> = sqlx::query_as(
+        "SELECT id FROM trades
+          WHERE account_id = $1 AND symbol = $2
+          ORDER BY opened_at DESC LIMIT 1",
+    )
+    .bind(account_id)
+    .bind(symbol)
+    .fetch_optional(pool)
+    .await?;
+    Ok(row.map(|(id,)| id))
+}
+
 pub async fn open_positions_for_symbol(
     pool: &PgPool,
     account_id: Uuid,

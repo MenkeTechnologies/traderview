@@ -864,6 +864,28 @@ pub async fn process_bar_window(
 /// trigger `trades::rollup_account` so the FIFO pipeline materializes
 /// the trade row. Exposed `pub(crate)` so a future WS trade_updates
 /// handler can drive it with the same shape for real-Alpaca fills.
+/// Ensure the "algo:<strategy name>" tag exists and attach it to the
+/// most recent trade on (account, symbol) — the row the fill that just
+/// rolled up belongs to. Both steps are idempotent.
+async fn tag_trade_with_strategy(
+    pool: &PgPool,
+    strategy: &AlgoStrategy,
+    account_id: Uuid,
+    symbol: &str,
+) -> anyhow::Result<()> {
+    let Some(trade_id) = crate::trades::latest_trade_id(pool, account_id, symbol).await? else {
+        return Ok(());
+    };
+    let tag_id = crate::tags::ensure(
+        pool,
+        strategy.user_id,
+        &format!("algo:{}", strategy.name),
+        "#7c3aed",
+    )
+    .await?;
+    crate::tags::attach_to_trade(pool, trade_id, tag_id).await
+}
+
 pub async fn record_fill(
     pool: &PgPool,
     strategy: &AlgoStrategy,
@@ -943,6 +965,12 @@ pub async fn record_fill(
     crate::trades::rollup_account(pool, account_id)
         .await
         .map_err(|e| EngineError::Broker(format!("trades::rollup_account: {e}")))?;
+    // Auto-tag the trade with its strategy so the journal's existing
+    // by-tag report gives per-strategy P&L without a schema change.
+    // Non-fatal: a tagging hiccup must never fail the fill pipeline.
+    if let Err(e) = tag_trade_with_strategy(pool, strategy, account_id, &intent.symbol).await {
+        tracing::warn!(strategy = %strategy.id, error = %e, "algo trade auto-tag failed");
+    }
     // If this fill closed a trade, accumulate its net_pnl into the run's
     // pnl_realized. Without this, `today_realized_pnl` and the daily-loss
     // risk gate always see 0 and the auto-pause never fires. Window the

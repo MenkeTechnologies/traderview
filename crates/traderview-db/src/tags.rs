@@ -36,6 +36,30 @@ pub async fn create(pool: &PgPool, user_id: Uuid, name: &str, color: &str) -> an
     })
 }
 
+/// Get-or-create a tag by name. The insert is guarded by WHERE NOT
+/// EXISTS rather than a unique constraint (the tags table predates
+/// this and may hold user-created duplicates); the residual two-
+/// connection race worst-cases as a duplicate tag, not an error.
+pub async fn ensure(pool: &PgPool, user_id: Uuid, name: &str, color: &str) -> anyhow::Result<Uuid> {
+    sqlx::query(
+        "INSERT INTO tags (user_id, name, color)
+         SELECT $1, $2, $3
+          WHERE NOT EXISTS (SELECT 1 FROM tags WHERE user_id = $1 AND name = $2)",
+    )
+    .bind(user_id)
+    .bind(name)
+    .bind(color)
+    .execute(pool)
+    .await?;
+    let (id,): (Uuid,) =
+        sqlx::query_as("SELECT id FROM tags WHERE user_id = $1 AND name = $2 LIMIT 1")
+            .bind(user_id)
+            .bind(name)
+            .fetch_one(pool)
+            .await?;
+    Ok(id)
+}
+
 pub async fn delete(pool: &PgPool, user_id: Uuid, tag_id: Uuid) -> anyhow::Result<bool> {
     let r = sqlx::query("DELETE FROM tags WHERE id = $1 AND user_id = $2")
         .bind(tag_id)
