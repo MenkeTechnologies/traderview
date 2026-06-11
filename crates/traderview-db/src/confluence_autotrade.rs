@@ -756,6 +756,8 @@ pub async fn run_once(pool: &PgPool, user_id: Uuid) -> anyhow::Result<RunOnceRes
                 stop_price: None,
                 trail_value: None,
                 trail_is_pct: None,
+                time_in_force: None,
+                expire_at: None,
             },
         )
         .await?;

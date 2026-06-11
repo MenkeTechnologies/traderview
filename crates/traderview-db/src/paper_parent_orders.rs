@@ -326,6 +326,8 @@ pub async fn tick(pool: &PgPool) -> anyhow::Result<usize> {
             stop_price: None,
             trail_value: None,
             trail_is_pct: None,
+            time_in_force: None,
+            expire_at: None,
         };
         match crate::paper::submit(pool, d.user_id, d.account_id, req).await {
             Ok(_) => {

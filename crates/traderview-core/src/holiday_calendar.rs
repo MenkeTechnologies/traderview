@@ -8,7 +8,25 @@
 //! Pure compute. Calendar embedded; refresh manually when extending the
 //! horizon past 2030.
 
-use chrono::{Datelike, Duration, NaiveDate, Weekday};
+use chrono::{DateTime, Datelike, Duration, NaiveDate, NaiveTime, TimeZone, Utc, Weekday};
+
+/// When a DAY order submitted at `now` expires: 16:00 US Eastern on the
+/// current trading day, or on the NEXT trading day when submitted after
+/// the close, on a weekend, or on a holiday. Eastern offset comes from
+/// the shared chrono-tz-free approximation in risk_gate.
+pub fn day_order_expiry(now: DateTime<Utc>) -> DateTime<Utc> {
+    let close = NaiveTime::from_hms_opt(16, 0, 0).unwrap();
+    let local = now + Duration::hours(crate::risk_gate::us_eastern_offset_hours(now));
+    let mut date = local.date_naive();
+    if !is_trading_day(date) || local.time() >= close {
+        date = next_trading_day(date);
+    }
+    let expiry_local = date.and_time(close);
+    // Re-derive the offset AT the expiry date — submission and expiry
+    // can straddle a DST switch.
+    let approx = Utc.from_utc_datetime(&expiry_local);
+    approx - Duration::hours(crate::risk_gate::us_eastern_offset_hours(approx))
+}
 
 /// Returns true if `date` is a US equity-market trading day (not a
 /// weekend AND not on the holiday list).
@@ -195,6 +213,42 @@ mod tests {
     #[test]
     fn saturday_not_trading_day() {
         assert!(!is_trading_day(d(2026, 5, 30))); // Sat
+    }
+
+    fn utc(y: i32, mo: u32, dy: u32, h: u32, mi: u32) -> DateTime<Utc> {
+        Utc.with_ymd_and_hms(y, mo, dy, h, mi, 0).unwrap()
+    }
+
+    #[test]
+    fn day_order_intraday_expires_same_close() {
+        // Tue 2026-06-09 14:00 UTC = 10:00 EDT → expires 16:00 EDT = 20:00 UTC.
+        assert_eq!(day_order_expiry(utc(2026, 6, 9, 14, 0)), utc(2026, 6, 9, 20, 0));
+    }
+
+    #[test]
+    fn day_order_after_close_rolls_to_next_session() {
+        // Fri 2026-06-12 21:00 UTC = 17:00 EDT (past close) → Mon 2026-06-15 close.
+        assert_eq!(day_order_expiry(utc(2026, 6, 12, 21, 0)), utc(2026, 6, 15, 20, 0));
+    }
+
+    #[test]
+    fn day_order_on_weekend_rolls_to_monday() {
+        // Sat 2026-06-13 → Mon 2026-06-15 close.
+        assert_eq!(day_order_expiry(utc(2026, 6, 13, 12, 0)), utc(2026, 6, 15, 20, 0));
+    }
+
+    #[test]
+    fn day_order_on_holiday_skips_it() {
+        // 2026-07-03 (observed July 4th, in HOLIDAYS) is a Friday →
+        // Mon 2026-07-06 close.
+        assert!(is_holiday(d(2026, 7, 3)));
+        assert_eq!(day_order_expiry(utc(2026, 7, 3, 14, 0)), utc(2026, 7, 6, 20, 0));
+    }
+
+    #[test]
+    fn day_order_in_winter_uses_est() {
+        // Tue 2026-01-13 15:00 UTC = 10:00 EST → 16:00 EST = 21:00 UTC.
+        assert_eq!(day_order_expiry(utc(2026, 1, 13, 15, 0)), utc(2026, 1, 13, 21, 0));
     }
 
     #[test]

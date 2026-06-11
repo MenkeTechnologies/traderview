@@ -367,13 +367,13 @@ fn check_rule(
 /// Mon-Fri)? Does NOT consult a holiday calendar — that's the caller's job
 /// if needed. Implemented via chrono-tz-free UTC-offset math so we don't
 /// pull a TZ database into the workspace for one check.
-fn is_us_rth(now: DateTime<Utc>) -> bool {
-    use chrono::{Datelike, Timelike, Weekday};
-    // US Eastern is UTC-5 (EST) or UTC-4 (EDT). Approximation: DST runs
-    // from second Sunday of March to first Sunday of November. This is a
-    // best-effort guess; perfect handling requires chrono-tz. The error
-    // window is at most one hour twice a year — acceptable for a gate
-    // rule users can override.
+/// US Eastern UTC offset (-4 EDT / -5 EST) via chrono-tz-free math so we
+/// don't pull a TZ database into the workspace. Approximation: DST runs
+/// from second Sunday of March to first Sunday of November, ignoring the
+/// 2am switchover hour — the error window is at most one hour twice a
+/// year. Shared by the RTH gate rule and paper DAY-order expiry.
+pub fn us_eastern_offset_hours(now: DateTime<Utc>) -> i64 {
+    use chrono::Datelike;
     let month = now.month();
     let day = now.day();
     let in_dst = match month {
@@ -394,8 +394,16 @@ fn is_us_rth(now: DateTime<Utc>) -> bool {
         4..=10 => true,
         _ => false,
     };
-    let offset_hours: i64 = if in_dst { -4 } else { -5 };
-    let local = now + chrono::Duration::hours(offset_hours);
+    if in_dst {
+        -4
+    } else {
+        -5
+    }
+}
+
+fn is_us_rth(now: DateTime<Utc>) -> bool {
+    use chrono::{Datelike, Timelike, Weekday};
+    let local = now + chrono::Duration::hours(us_eastern_offset_hours(now));
     match local.weekday() {
         Weekday::Sat | Weekday::Sun => return false,
         _ => {}

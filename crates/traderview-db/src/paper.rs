@@ -126,6 +126,13 @@ pub struct OrderRequest {
     pub trail_value: Option<Decimal>,
     #[serde(default)]
     pub trail_is_pct: Option<bool>,
+    /// Time in force for RESTING orders: 'gtc' (default), 'day'
+    /// (expires at the next 16:00 US Eastern close), or 'gtd'
+    /// (expires at expire_at). Ignored on orders that fill immediately.
+    #[serde(default)]
+    pub time_in_force: Option<String>,
+    #[serde(default)]
+    pub expire_at: Option<DateTime<Utc>>,
 }
 
 /// Price at which an order triggers against the current quote: market
@@ -293,6 +300,23 @@ pub async fn submit(
     ) || (req.order_type == "trailing" && trail_ok);
     // A resting trailing stop starts its ratchet at the current price.
     let trail_extreme = (req.order_type == "trailing" && trail_ok).then_some(last);
+    // Time in force → cancel_at. Only meaningful on orders that rest.
+    let cancel_at = match req.time_in_force.as_deref().unwrap_or("gtc") {
+        "gtc" => None,
+        "day" => Some(traderview_core::holiday_calendar::day_order_expiry(
+            Utc::now(),
+        )),
+        "gtd" => {
+            let at = req
+                .expire_at
+                .ok_or_else(|| anyhow::anyhow!("gtd needs expire_at"))?;
+            if at <= Utc::now() {
+                anyhow::bail!("expire_at must be in the future");
+            }
+            Some(at)
+        }
+        other => anyhow::bail!("unknown time_in_force '{other}'"),
+    };
     let mut tx = pool.begin().await?;
     let (status, filled_at, reject) = match (fill_price, well_formed) {
         (Some(_), _) => ("filled", Some(Utc::now()), None),
@@ -307,9 +331,9 @@ pub async fn submit(
         "INSERT INTO paper_orders
             (paper_account_id, symbol, side, qty, order_type, limit_price, stop_price,
              status, filled_price, filled_qty, filled_at, reject_reason,
-             trail_value, trail_is_pct, trail_extreme)
+             trail_value, trail_is_pct, trail_extreme, cancel_at)
          VALUES ($1, $2, $3::side_t, $4, $5::paper_order_type_t, $6, $7,
-                 $8::paper_order_status_t, $9, $10, $11, $12, $13, $14, $15)
+                 $8::paper_order_status_t, $9, $10, $11, $12, $13, $14, $15, $16)
          RETURNING id, paper_account_id, symbol, side::text, qty, order_type::text,
                    limit_price, stop_price, status::text,
                    trail_value, trail_is_pct, trail_extreme, oco_group, parent_order_id,
@@ -319,7 +343,7 @@ pub async fn submit(
     .bind(req.qty).bind(&req.order_type).bind(req.limit_price).bind(req.stop_price)
     .bind(status).bind(fill_price).bind(fill_price.map(|_| req.qty))
     .bind(filled_at).bind(reject)
-    .bind(req.trail_value).bind(req.trail_is_pct).bind(trail_extreme)
+    .bind(req.trail_value).bind(req.trail_is_pct).bind(trail_extreme).bind(cancel_at)
     .fetch_one(&mut *tx)
     .await?;
 
@@ -379,6 +403,23 @@ pub async fn check_pending(pool: &PgPool) -> anyhow::Result<usize> {
         trail_extreme: Option<Decimal>,
         oco_group: Option<Uuid>,
     }
+    // Expire resting orders whose time in force has lapsed, then any
+    // held legs orphaned by a cancelled/expired entry.
+    sqlx::query(
+        "UPDATE paper_orders
+            SET status = 'cancelled', reject_reason = 'expired (time in force)'
+          WHERE status IN ('pending', 'held')
+            AND cancel_at IS NOT NULL AND cancel_at <= now()",
+    )
+    .execute(pool)
+    .await?;
+    sqlx::query(
+        "UPDATE paper_orders SET status = 'cancelled'
+          WHERE status = 'held'
+            AND parent_order_id IN (SELECT id FROM paper_orders WHERE status = 'cancelled')",
+    )
+    .execute(pool)
+    .await?;
     // Promote bracket exit legs whose entry has filled: held → pending.
     sqlx::query(
         "UPDATE paper_orders SET status = 'pending'
@@ -554,6 +595,8 @@ pub async fn submit_bracket(
             stop_price: None,
             trail_value: None,
             trail_is_pct: None,
+            time_in_force: None,
+            expire_at: None,
         },
     )
     .await?;

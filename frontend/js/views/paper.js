@@ -87,6 +87,12 @@ export async function renderPaper(mount) {
                         <option value="usd">$</option>
                         <option value="pct">%</option>
                     </select>
+                    <select name="time_in_force" data-tip="view.paper.tip.tif">
+                        <option value="gtc">GTC</option>
+                        <option value="day">DAY</option>
+                        <option value="gtd">GTD</option>
+                    </select>
+                    <input name="expire_at" type="datetime-local" data-tip="view.paper.tip.gtd_expiry">
                     <button data-i18n="view.paper.btn.submit" data-tip="view.paper.tip.submit" data-shortcut="paper_submit" class="primary" type="submit">SUBMIT</button>
                 </form>
                 <h2 data-i18n="view.paper.h2.bracket_ticket">Bracket (OCO) ticket</h2>
@@ -154,7 +160,7 @@ export async function renderPaper(mount) {
                         <td>${o.side}</td>
                         <td>${fmt(o.qty, 0)}</td>
                         <td>${o.order_type}${o.limit_price != null ? ' @' + fmt(o.limit_price) : ''}${o.stop_price != null ? ' stop ' + fmt(o.stop_price) : ''}${o.trail_value != null ? ' ' + (o.trail_is_pct ? (Number(o.trail_value) * 100).toFixed(1) + '%' : '$' + fmt(o.trail_value)) + (o.status === 'pending' && o.trail_extreme != null ? ' (hwm ' + fmt(o.trail_extreme) + ')' : '') : ''}</td>
-                        <td class="${o.status === 'filled' ? 'pos' : (o.status === 'rejected' ? 'neg' : '')}">${o.status}</td>
+                        <td class="${o.status === 'filled' ? 'pos' : (o.status === 'rejected' ? 'neg' : '')}">${o.status}${(o.status === 'pending' || o.status === 'held') && o.cancel_at ? ' · exp ' + fmtDateTime(o.cancel_at) : ''}</td>
                         <td>${o.filled_price != null ? fmt(o.filled_price) : '—'}</td>
                         <td>${o.filled_at ? fmtDateTime(o.filled_at) : '—'}</td>
                         <td>${(o.status === 'pending' || o.status === 'held') ? `<button class="ord-cancel" data-id="${esc(o.id)}" data-i18n="common.btn.cancel">${esc(t('common.btn.cancel'))}</button>` : ''}</td>
@@ -180,6 +186,12 @@ export async function renderPaper(mount) {
                 ? Number(fd.get('trail_value')) / (fd.get('trail_unit') === 'pct' ? 100 : 1)
                 : null,
             trail_is_pct: fd.get('trail_value') ? fd.get('trail_unit') === 'pct' : null,
+            time_in_force: fd.get('time_in_force'),
+            // datetime-local has no zone; toISOString converts the
+            // browser-local wall time to the UTC instant the API wants.
+            expire_at: fd.get('time_in_force') === 'gtd' && fd.get('expire_at')
+                ? new Date(fd.get('expire_at')).toISOString()
+                : null,
         };
         try {
             const o = await api.paperSubmit(acct.id, body);
