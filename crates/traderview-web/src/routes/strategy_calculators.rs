@@ -46,6 +46,7 @@
 //!   POST /screeners/mean-reversion       — RSI(2), 20d z, MA distance
 //!   GET  /futures/:root/curve            — term structure + roll yield
 //!   GET  /futures/carry-screen           — all curves ranked by roll
+//!   GET  /screeners/snapshots/:name      — stored run + shape flips
 //!   POST /symbols/:sym/event-study       — caller-dated FOMC/CPI study
 //!   POST /calc/double-barrier            — target-vs-stop hit-first odds
 //!   POST /calc/futures-sizing            — tick math + margin-capped size
@@ -126,6 +127,7 @@ pub fn router() -> Router<AppState> {
         .route("/screeners/mean-reversion", post(post_mean_reversion_screen))
         .route("/futures/:root/curve", get(get_futures_curve))
         .route("/futures/carry-screen", get(get_carry_screen))
+        .route("/screeners/snapshots/:name", get(get_screener_snapshot))
         .route("/symbols/:symbol/event-study", post(post_event_study))
         .route("/calc/double-barrier", post(post_double_barrier))
         .route("/calc/futures-sizing", post(post_futures_sizing))
@@ -950,6 +952,50 @@ async fn get_carry_screen(
     Ok(Json(
         strategy_calculators::carry_screen(&s.pool, q.months.unwrap_or(6)).await,
     ))
+}
+
+#[derive(Debug, serde::Serialize)]
+struct SnapshotResponse {
+    screener: String,
+    created_at: chrono::DateTime<chrono::Utc>,
+    payload: serde_json::Value,
+    /// Categorical flips vs the prior snapshot (carry shape,
+    /// underwater state) — empty when no prior run exists.
+    changes: Vec<traderview_db::screener_snapshots::ShapeChange>,
+}
+
+async fn get_screener_snapshot(
+    State(s): State<AppState>,
+    _u: AuthUser,
+    Path(name): Path<String>,
+) -> Result<Json<SnapshotResponse>, ApiError> {
+    use traderview_db::screener_snapshots as snaps;
+    let name = name.trim().to_lowercase();
+    if !snaps::SCREENERS.contains(&name.as_str()) {
+        return Err(ApiError::BadRequest(format!(
+            "unknown screener — one of {:?}",
+            snaps::SCREENERS
+        )));
+    }
+    let mut rows = snaps::latest_two(&s.pool, &name)
+        .await
+        .map_err(ApiError::Internal)?;
+    if rows.is_empty() {
+        return Err(ApiError::BadRequest(
+            "no snapshot yet — the background refresher runs twice a day".into(),
+        ));
+    }
+    let latest = rows.remove(0);
+    let changes = rows
+        .first()
+        .map(|prior| snaps::detect_changes(&prior.payload, &latest.payload))
+        .unwrap_or_default();
+    Ok(Json(SnapshotResponse {
+        screener: name,
+        created_at: latest.created_at,
+        payload: latest.payload,
+        changes,
+    }))
 }
 
 #[derive(Debug, Deserialize)]

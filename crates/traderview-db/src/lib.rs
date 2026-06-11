@@ -143,6 +143,7 @@ pub mod scanner_backtest;
 pub mod scans;
 pub mod schwab_pump;
 pub mod schwab_trading;
+pub mod screener_snapshots;
 pub mod screenshots;
 pub mod search;
 pub mod sector_rotation;

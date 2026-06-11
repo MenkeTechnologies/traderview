@@ -37,6 +37,9 @@ pub const GOLDEN_STARS_REFRESH: Duration = Duration::from_secs(4 * 60 * 60);
 pub const HEATMAP_REFRESH: Duration = Duration::from_secs(60);
 /// World-markets snapshot (16 Yahoo pins) recompute cadence.
 pub const MARKETS_REFRESH: Duration = Duration::from_secs(60);
+/// Screener snapshot cadence — the screens run on daily bars, so
+/// twice a day keeps them fresh without burning quota.
+pub const SCREENER_REFRESH: Duration = Duration::from_secs(12 * 60 * 60);
 
 async fn compute_tile(pool: &PgPool, key: &'static str) -> anyhow::Result<serde_json::Value> {
     Ok(match key {
@@ -91,7 +94,77 @@ pub fn spawn_refreshers(pool: PgPool, cache: TileCache) {
     }
     spawn_heatmap_universe(pool.clone());
     spawn_markets_snapshot();
+    spawn_screener_snapshots(pool.clone());
     spawn_golden_stars(pool);
+}
+
+/// Screener snapshot refresh — persists each run of the four bar
+/// screeners (default ETF universe) plus the carry screen, so the
+/// snapshot routes serve history + shape flips without recomputing.
+/// Skips the run when a snapshot newer than the cadence exists
+/// (restart-safe, like golden stars).
+fn spawn_screener_snapshots(pool: PgPool) {
+    use traderview_db::screener_snapshots::{self as snaps, SNAPSHOT_UNIVERSE};
+    use traderview_db::strategy_calculators as calc;
+    tokio::spawn(async move {
+        loop {
+            let fresh = snaps::latest_two(&pool, "carry")
+                .await
+                .ok()
+                .and_then(|v| v.first().map(|s| s.created_at))
+                .map(|ts| {
+                    (chrono::Utc::now() - ts).to_std().unwrap_or_default() < SCREENER_REFRESH
+                })
+                .unwrap_or(false);
+            if !fresh {
+                let symbols: Vec<String> =
+                    SNAPSHOT_UNIVERSE.iter().map(|s| s.to_string()).collect();
+                let runs: Vec<(&str, serde_json::Value)> = vec![
+                    (
+                        "seasonality",
+                        serde_json::to_value(calc::seasonality_screen(&pool, &symbols, 10).await)
+                            .unwrap_or_default(),
+                    ),
+                    (
+                        "risk",
+                        serde_json::to_value(calc::risk_screen(&pool, &symbols, 5).await)
+                            .unwrap_or_default(),
+                    ),
+                    (
+                        "momentum",
+                        calc::momentum_screen(&pool, &symbols, "SPY", 3)
+                            .await
+                            .ok()
+                            .and_then(|r| serde_json::to_value(r).ok())
+                            .unwrap_or_default(),
+                    ),
+                    (
+                        "mean-reversion",
+                        serde_json::to_value(
+                            calc::mean_reversion_screen(&pool, &symbols, 2).await,
+                        )
+                        .unwrap_or_default(),
+                    ),
+                    (
+                        "carry",
+                        serde_json::to_value(calc::carry_screen(&pool, 6).await)
+                            .unwrap_or_default(),
+                    ),
+                ];
+                for (name, payload) in runs {
+                    if payload.is_null() {
+                        tracing::warn!(screener = name, "screener snapshot produced no payload");
+                        continue;
+                    }
+                    if let Err(e) = snaps::save(&pool, name, &payload).await {
+                        tracing::warn!(screener = name, error = %e, "screener snapshot save failed");
+                    }
+                }
+                tracing::info!("screener snapshots refreshed");
+            }
+            tokio::time::sleep(SCREENER_REFRESH).await;
+        }
+    });
 }
 
 /// World-markets snapshot refresh — 16 Yahoo chart pins for the

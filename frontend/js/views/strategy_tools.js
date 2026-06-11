@@ -1623,6 +1623,25 @@ const TOOLS = {
         ],
         render: (r) => renderEventStudy(r, 'third-Friday expiration'),
     },
+    'screener-snapshots': {
+        label: 'Saved Screens',
+        call: (b) => api.screenerSnapshot(String(b.name).trim().toLowerCase()),
+        fields: [
+            { key: 'name', label: 'Screener (seasonality/risk/momentum/mean-reversion/carry)', def: 'carry', text: true },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">${esc(r.screener)} snapshot</div>
+                    <div class="value">${new Date(r.created_at).toLocaleString()}</div>
+                    <div class="small muted">refreshed twice a day in the background</div></div>
+                <div class="card"><div class="label">Changes vs prior run</div>
+                    <div class="value ${r.changes.length ? 'neg' : 'pos'}">${r.changes.length || 'none'}</div>
+                    ${r.changes.length ? `<div class="small neg">${r.changes.map(c => `${esc(c.key)}: ${esc(c.from)} → ${esc(c.to)}`).join(' · ')}</div>` : ''}</div>
+            </div>
+            <pre class="small muted" style="max-height:300px;overflow:auto">${esc(JSON.stringify(r.payload, null, 2))}</pre>
+            <p class="muted small">Stored runs over the default ETF universe — regime flips (carry shape,
+            underwater state) surface without recomputing anything on open.</p>`,
+    },
     'carry-screen': {
         label: 'Commodity Carry Screen',
         call: (b) => api.carryScreen(b.months),
