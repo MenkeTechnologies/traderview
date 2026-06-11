@@ -164,6 +164,127 @@ pub fn fixed_ratio(input: &FixedRatioInput) -> Result<FixedRatioReport, &'static
 }
 
 // ===========================================================================
+// Anti-martingale streak sizing
+// ===========================================================================
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct AntiMartingaleInput {
+    pub starting_capital: f64,
+    /// Risk on the first trade, % of current equity.
+    pub base_risk_pct: f64,
+    /// Multiplier applied to risk after a WIN (>1 presses winners).
+    pub win_factor: f64,
+    /// Multiplier applied to risk after a LOSS (<1 cuts back).
+    pub loss_factor: f64,
+    /// Hard cap on risk per trade, % of equity.
+    pub max_risk_pct: f64,
+    /// Reward-to-risk per winning trade (R multiple, e.g. 1.5).
+    pub win_payoff_r: f64,
+    /// Trade outcomes oldest-first, e.g. "WWLWLLW".
+    pub sequence: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct AntiMartingaleRow {
+    pub trade: usize,
+    pub outcome: char,
+    pub risk_pct: f64,
+    pub pnl: f64,
+    pub equity: f64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct AntiMartingaleReport {
+    pub rows: Vec<AntiMartingaleRow>,
+    pub final_equity: f64,
+    pub total_return_pct: f64,
+    /// Same sequence traded at flat base_risk_pct — the control arm.
+    pub fixed_risk_final_equity: f64,
+    pub fixed_risk_return_pct: f64,
+    pub max_drawdown_pct: f64,
+}
+
+pub fn anti_martingale(
+    input: &AntiMartingaleInput,
+) -> Result<AntiMartingaleReport, &'static str> {
+    if input.starting_capital <= 0.0 {
+        return Err("starting_capital must be positive");
+    }
+    if input.base_risk_pct <= 0.0 || input.base_risk_pct > 100.0 {
+        return Err("base_risk_pct must be in (0, 100]");
+    }
+    if input.win_factor <= 0.0 || input.loss_factor <= 0.0 {
+        return Err("win_factor and loss_factor must be positive");
+    }
+    if input.max_risk_pct < input.base_risk_pct {
+        return Err("max_risk_pct must be >= base_risk_pct");
+    }
+    if input.win_payoff_r <= 0.0 {
+        return Err("win_payoff_r must be positive");
+    }
+    let seq: Vec<char> = input
+        .sequence
+        .trim()
+        .to_uppercase()
+        .chars()
+        .filter(|c| !c.is_whitespace())
+        .collect();
+    if seq.is_empty() || seq.len() > 500 {
+        return Err("sequence must have 1..=500 outcomes");
+    }
+    if seq.iter().any(|c| *c != 'W' && *c != 'L') {
+        return Err("sequence may only contain W and L");
+    }
+    let mut equity = input.starting_capital;
+    let mut fixed = input.starting_capital;
+    let mut risk_pct = input.base_risk_pct;
+    let mut peak = equity;
+    let mut max_dd = 0.0_f64;
+    let mut rows = Vec::with_capacity(seq.len());
+    for (i, &c) in seq.iter().enumerate() {
+        let risked = equity * risk_pct / 100.0;
+        let fixed_risked = fixed * input.base_risk_pct / 100.0;
+        let pnl = if c == 'W' {
+            risked * input.win_payoff_r
+        } else {
+            -risked
+        };
+        equity += pnl;
+        fixed += if c == 'W' {
+            fixed_risked * input.win_payoff_r
+        } else {
+            -fixed_risked
+        };
+        peak = peak.max(equity);
+        if peak > 0.0 {
+            max_dd = max_dd.max((peak - equity) / peak * 100.0);
+        }
+        rows.push(AntiMartingaleRow {
+            trade: i + 1,
+            outcome: c,
+            risk_pct,
+            pnl,
+            equity,
+        });
+        // Anti-martingale: press after wins, cut after losses,
+        // clamped to [base, max].
+        risk_pct = if c == 'W' {
+            (risk_pct * input.win_factor).min(input.max_risk_pct)
+        } else {
+            (risk_pct * input.loss_factor).max(input.base_risk_pct).min(input.max_risk_pct)
+        };
+    }
+    Ok(AntiMartingaleReport {
+        final_equity: equity,
+        total_return_pct: (equity / input.starting_capital - 1.0) * 100.0,
+        fixed_risk_final_equity: fixed,
+        fixed_risk_return_pct: (fixed / input.starting_capital - 1.0) * 100.0,
+        max_drawdown_pct: max_dd,
+        rows,
+    })
+}
+
+// ===========================================================================
 // Turn-of-month seasonality
 // ===========================================================================
 
@@ -445,6 +566,70 @@ mod tests {
             profit_per_trade_per_contract: 0.0,
         })
         .is_err());
+    }
+
+    // ── anti-martingale ───────────────────────────────────────────────────
+
+    #[test]
+    fn anti_martingale_presses_wins_and_resets_on_loss() {
+        // base 1%, ×2 on win, ×0.5 on loss (floored at base), 1R payoff.
+        let r = anti_martingale(&AntiMartingaleInput {
+            starting_capital: 10_000.0,
+            base_risk_pct: 1.0,
+            win_factor: 2.0,
+            loss_factor: 0.5,
+            max_risk_pct: 4.0,
+            win_payoff_r: 1.0,
+            sequence: "WWWL".into(),
+        })
+        .unwrap();
+        // Risk schedule: 1%, 2%, 4% (capped), 4%.
+        let risks: Vec<f64> = r.rows.iter().map(|row| row.risk_pct).collect();
+        assert_eq!(risks, vec![1.0, 2.0, 4.0, 4.0]);
+        // Hand-walked equity: 10000 →+100→ 10100 →+202→ 10302 →+412.08→
+        // 10714.08 →−428.5632→ 10285.5168.
+        assert!((r.final_equity - 10_285.5168).abs() < 1e-6, "{}", r.final_equity);
+        // Fixed 1% control: ×1.01³ ×0.99.
+        let fixed_want = 10_000.0 * 1.01_f64.powi(3) * 0.99;
+        assert!((r.fixed_risk_final_equity - fixed_want).abs() < 1e-6);
+        // The press grew faster on this win-streak sequence.
+        assert!(r.final_equity > r.fixed_risk_final_equity);
+    }
+
+    #[test]
+    fn anti_martingale_loss_floor_is_base_risk() {
+        let r = anti_martingale(&AntiMartingaleInput {
+            starting_capital: 10_000.0,
+            base_risk_pct: 2.0,
+            win_factor: 1.5,
+            loss_factor: 0.25,
+            max_risk_pct: 6.0,
+            win_payoff_r: 1.0,
+            sequence: "LLW".into(),
+        })
+        .unwrap();
+        // Losses never push risk below base.
+        let risks: Vec<f64> = r.rows.iter().map(|row| row.risk_pct).collect();
+        assert_eq!(risks, vec![2.0, 2.0, 2.0]);
+        assert!(r.max_drawdown_pct > 0.0);
+    }
+
+    #[test]
+    fn anti_martingale_rejects_bad_inputs() {
+        let base = AntiMartingaleInput {
+            starting_capital: 10_000.0,
+            base_risk_pct: 1.0,
+            win_factor: 2.0,
+            loss_factor: 0.5,
+            max_risk_pct: 4.0,
+            win_payoff_r: 1.5,
+            sequence: "WL".into(),
+        };
+        assert!(anti_martingale(&AntiMartingaleInput { starting_capital: 0.0, ..base.clone() }).is_err());
+        assert!(anti_martingale(&AntiMartingaleInput { base_risk_pct: 0.0, ..base.clone() }).is_err());
+        assert!(anti_martingale(&AntiMartingaleInput { max_risk_pct: 0.5, ..base.clone() }).is_err());
+        assert!(anti_martingale(&AntiMartingaleInput { sequence: "WXL".into(), ..base.clone() }).is_err());
+        assert!(anti_martingale(&AntiMartingaleInput { sequence: "".into(), ..base }).is_err());
     }
 
     // ── turn of month ─────────────────────────────────────────────────────

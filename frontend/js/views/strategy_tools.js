@@ -1,7 +1,7 @@
 // Strategy tools — Grid Trading ladder, Fixed-Ratio position sizing
-// (Ryan Jones), and Turn-of-Month seasonality behind one tabbed view.
-// Each tool is a server-side compute; the tab/form/result chrome lives
-// in tool_tabs.js.
+// (Ryan Jones), Anti-Martingale streak sizing, Dual Momentum (GEM),
+// and Turn-of-Month seasonality behind one tabbed view. Each tool is a
+// server-side compute; the tab/form/result chrome lives in tool_tabs.js.
 
 import { api } from '../api.js';
 import { esc } from '../util.js';
@@ -56,6 +56,71 @@ const TOOLS = {
             <p class="muted small">Total gain to max size: $${Math.round(r.total_gain_to_max).toLocaleString()}.
             Fixed ratio (Ryan Jones): each added contract requires delta × current contracts of NEW profit —
             growth is conservative early, accelerating only as equity compounds.</p>`,
+    },
+    'anti-martingale': {
+        label: 'Anti-Martingale',
+        call: (b) => api.calcAntiMartingale(b),
+        fields: [
+            { key: 'starting_capital', label: 'Starting capital ($)', def: 10000 },
+            { key: 'base_risk_pct', label: 'Base risk (%/trade)', def: 1 },
+            { key: 'win_factor', label: 'Risk × after win', def: 1.5 },
+            { key: 'loss_factor', label: 'Risk × after loss', def: 0.5 },
+            { key: 'max_risk_pct', label: 'Max risk (%)', def: 4 },
+            { key: 'win_payoff_r', label: 'Win payoff (R)', def: 1.5 },
+            { key: 'sequence', label: 'Outcomes (e.g. WWLWL)', def: 'WWLWLLWWW', text: true },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Anti-martingale</div>
+                    <div class="value ${r.total_return_pct >= 0 ? 'pos' : 'neg'}">${r.total_return_pct.toFixed(2)}%</div>
+                    <div class="small muted">$${Math.round(r.final_equity).toLocaleString()} final</div></div>
+                <div class="card"><div class="label">Fixed risk (control)</div>
+                    <div class="value ${r.fixed_risk_return_pct >= 0 ? 'pos' : 'neg'}">${r.fixed_risk_return_pct.toFixed(2)}%</div>
+                    <div class="small muted">$${Math.round(r.fixed_risk_final_equity).toLocaleString()} final</div></div>
+                <div class="card"><div class="label">Max drawdown</div>
+                    <div class="value neg">${r.max_drawdown_pct.toFixed(2)}%</div></div>
+            </div>
+            <table class="gs-table">
+                <thead><tr><th>#</th><th>Outcome</th><th>Risk</th><th>P&amp;L</th><th>Equity</th></tr></thead>
+                <tbody>${r.rows.map(row => `
+                    <tr>
+                        <td>${row.trade}</td>
+                        <td class="${row.outcome === 'W' ? 'pos' : 'neg'}">${row.outcome}</td>
+                        <td>${row.risk_pct.toFixed(2)}%</td>
+                        <td class="${row.pnl >= 0 ? 'pos' : 'neg'}">$${row.pnl.toFixed(2)}</td>
+                        <td>$${Math.round(row.equity).toLocaleString()}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+            <p class="muted small">Press risk after wins (capped), cut back toward base after losses —
+            the opposite of a martingale. The control row trades the same sequence at flat base risk.</p>`,
+    },
+    'dual-momentum': {
+        label: 'Dual Momentum',
+        call: (b) => api.simDualMomentum(b),
+        fields: [
+            { key: 'years', label: 'Backtest years', def: 10, int: true },
+            { key: 'lookback_months', label: 'Lookback (months)', def: 12, int: true },
+            { key: 'equity_us', label: 'US equity', def: 'SPY', text: true },
+            { key: 'equity_intl', label: 'Intl equity', def: 'EFA', text: true },
+            { key: 'tbill', label: 'T-bill proxy', def: 'BIL', text: true },
+            { key: 'bonds', label: 'Risk-off sleeve', def: 'AGG', text: true },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Signal now</div>
+                    <div class="value">${esc(r.current_signal)}</div>
+                    <div class="small muted">${r.switches} switches over ${r.months} months</div></div>
+                <div class="card"><div class="label">GEM return</div>
+                    <div class="value ${r.gem_return_pct >= 0 ? 'pos' : 'neg'}">${r.gem_return_pct.toFixed(1)}%</div>
+                    <div class="small muted">max DD ${r.gem_max_drawdown_pct.toFixed(1)}%</div></div>
+                <div class="card"><div class="label">Buy &amp; hold</div>
+                    <div class="value ${r.buy_hold_return_pct >= 0 ? 'pos' : 'neg'}">${r.buy_hold_return_pct.toFixed(1)}%</div>
+                    <div class="small muted">max DD ${r.buy_hold_max_drawdown_pct.toFixed(1)}%</div></div>
+            </div>
+            <p class="muted small">Antonacci GEM: each month-end, hold the stronger of US/intl equities by
+            trailing lookback return when either beats T-bills; otherwise retreat to bonds.
+            Recent holdings: ${esc(r.rows.slice(-6).map(x => x.holding).join(' → '))}.</p>`,
     },
     'turn-of-month': {
         label: 'Turn of Month',
