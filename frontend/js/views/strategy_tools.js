@@ -96,6 +96,35 @@ const TOOLS = {
             <p class="muted small">Press risk after wins (capped), cut back toward base after losses —
             the opposite of a martingale. The control row trades the same sequence at flat base risk.</p>`,
     },
+    'momentum-screen': {
+        label: 'Momentum Screen',
+        call: (b) => api.momentumScreen({
+            symbols: String(b.symbols).split(/[\s,]+/).filter(Boolean),
+            benchmark: b.benchmark,
+            years: b.years,
+        }),
+        fields: [
+            { key: 'symbols', label: 'Symbols (comma-sep, ≤30)', def: 'NVDA, MSFT, AAPL, XLE, XLF, IWM, TLT', text: true },
+            { key: 'benchmark', label: 'Benchmark', def: 'SPY', text: true },
+            { key: 'years', label: 'Lookback years', def: 3, int: true },
+        ],
+        render: (r) => `
+            <table class="gs-table">
+                <thead><tr><th>Symbol</th><th>12-1 momentum</th><th>Off 52w high</th><th>RS 63d</th><th>RS 252d</th></tr></thead>
+                <tbody>${r.rows.map(row => `
+                    <tr>
+                        <td>${esc(row.symbol)}</td>
+                        <td class="${row.momentum_12_1_pct >= 0 ? 'pos' : 'neg'}">${(row.momentum_12_1_pct >= 0 ? '+' : '') + row.momentum_12_1_pct.toFixed(1)}%</td>
+                        <td class="${row.off_52w_high_pct <= 5 ? 'pos' : row.off_52w_high_pct >= 20 ? 'neg' : ''}">−${row.off_52w_high_pct.toFixed(1)}%</td>
+                        <td class="${row.rs_63d_pp >= 0 ? 'pos' : 'neg'}">${(row.rs_63d_pp >= 0 ? '+' : '') + row.rs_63d_pp.toFixed(1)}pp</td>
+                        <td class="${row.rs_252d_pp >= 0 ? 'pos' : 'neg'}">${(row.rs_252d_pp >= 0 ? '+' : '') + row.rs_252d_pp.toFixed(1)}pp</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+            ${r.skipped.length ? `<p class="muted small neg">skipped (needs >252 sessions): ${r.skipped.map(esc).join(', ')}</p>` : ''}
+            <p class="muted small">Classic 12-1 (skips the most recent month's reversal), distance from
+            the 52-week high, and relative strength vs ${esc(r.benchmark)} at two horizons.</p>`,
+    },
     'risk-screen': {
         label: 'Risk Screen',
         call: (b) => api.riskScreen({

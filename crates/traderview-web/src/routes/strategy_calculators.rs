@@ -41,6 +41,7 @@
 //!   GET  /symbols/:sym/character-sheet   — all bar studies, one fetch
 //!   POST /screeners/seasonality          — calendar edges across a list
 //!   POST /screeners/risk                 — vol ranks + drawdown state
+//!   POST /screeners/momentum             — 12-1, 52w-high, RS vs bench
 //!   POST /symbols/:sym/event-study       — caller-dated FOMC/CPI study
 //!   POST /calc/double-barrier            — target-vs-stop hit-first odds
 //!   POST /calc/futures-sizing            — tick math + margin-capped size
@@ -116,6 +117,7 @@ pub fn router() -> Router<AppState> {
         )
         .route("/screeners/seasonality", post(post_seasonality_screen))
         .route("/screeners/risk", post(post_risk_screen))
+        .route("/screeners/momentum", post(post_momentum_screen))
         .route("/symbols/:symbol/event-study", post(post_event_study))
         .route("/calc/double-barrier", post(post_double_barrier))
         .route("/calc/futures-sizing", post(post_futures_sizing))
@@ -866,6 +868,34 @@ async fn post_risk_screen(
     Ok(Json(
         strategy_calculators::risk_screen(&s.pool, &symbols, b.years.unwrap_or(5)).await,
     ))
+}
+
+#[derive(Debug, Deserialize)]
+struct MomentumScreenBody {
+    symbols: Vec<String>,
+    benchmark: Option<String>,
+    years: Option<u32>,
+}
+
+async fn post_momentum_screen(
+    State(s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<MomentumScreenBody>,
+) -> Result<Json<strategy_calculators::MomentumScreen>, ApiError> {
+    let symbols = clean_symbol_list(&b.symbols)?;
+    let bench = b
+        .benchmark
+        .as_deref()
+        .unwrap_or("SPY")
+        .trim()
+        .to_uppercase();
+    if bench.is_empty() || bench.len() > 20 {
+        return Err(ApiError::BadRequest("invalid benchmark".into()));
+    }
+    strategy_calculators::momentum_screen(&s.pool, &symbols, &bench, b.years.unwrap_or(3))
+        .await
+        .map(Json)
+        .map_err(map_tom_err)
 }
 
 #[derive(Debug, Deserialize)]

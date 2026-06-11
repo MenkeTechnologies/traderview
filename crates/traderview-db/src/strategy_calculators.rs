@@ -735,6 +735,103 @@ pub async fn risk_screen(pool: &PgPool, symbols: &[String], years: u32) -> RiskS
 }
 
 // ===========================================================================
+// Momentum screener — 12-1 momentum, 52w-high proximity, RS vs a
+// benchmark across a list
+// ===========================================================================
+
+#[derive(Debug, Clone, Serialize)]
+pub struct MomentumScreenRow {
+    pub symbol: String,
+    /// Classic 12-1: return from ~252 to ~21 sessions ago, %.
+    pub momentum_12_1_pct: f64,
+    /// Distance below the 52-week high, % (0 = at the high).
+    pub off_52w_high_pct: f64,
+    /// Symbol return − benchmark return, pp.
+    pub rs_63d_pp: f64,
+    pub rs_252d_pp: f64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct MomentumScreen {
+    pub benchmark: String,
+    /// Ranked by 12-1 momentum descending.
+    pub rows: Vec<MomentumScreenRow>,
+    pub skipped: Vec<String>,
+}
+
+fn window_return_pct(series: &[f64], sessions_back: usize) -> Option<f64> {
+    let n = series.len();
+    if n <= sessions_back {
+        return None;
+    }
+    let p0 = series[n - 1 - sessions_back];
+    (p0 > 0.0).then(|| (series[n - 1] / p0 - 1.0) * 100.0)
+}
+
+pub async fn momentum_screen(
+    pool: &PgPool,
+    symbols: &[String],
+    benchmark: &str,
+    years: u32,
+) -> Result<MomentumScreen, TomError> {
+    let bench = daily_closes(pool, benchmark, years).await?;
+    let bench_series: Vec<f64> = bench.iter().map(|(_, c)| *c).collect();
+    let bench_63 = window_return_pct(&bench_series, 63);
+    let bench_252 = window_return_pct(&bench_series, 252);
+    let mut rows = Vec::new();
+    let mut skipped = Vec::new();
+    for sym in symbols {
+        let Ok(dated) = daily_closes(pool, sym, years).await else {
+            skipped.push(sym.clone());
+            continue;
+        };
+        let series: Vec<f64> = dated.iter().map(|(_, c)| *c).collect();
+        let n = series.len();
+        // 12-1 needs 252 back and the 21-ago endpoint.
+        let (Some(_full_12m), true) = (window_return_pct(&series, 252), n > 252) else {
+            skipped.push(sym.clone());
+            continue;
+        };
+        let p_252 = series[n - 1 - 252];
+        let p_21 = series[n - 1 - 21];
+        if p_252 <= 0.0 {
+            skipped.push(sym.clone());
+            continue;
+        }
+        let high_52w = series[n - 252..]
+            .iter()
+            .copied()
+            .fold(f64::MIN, f64::max);
+        let (Some(r63), Some(r252), Some(b63), Some(b252)) = (
+            window_return_pct(&series, 63),
+            window_return_pct(&series, 252),
+            bench_63,
+            bench_252,
+        ) else {
+            skipped.push(sym.clone());
+            continue;
+        };
+        rows.push(MomentumScreenRow {
+            symbol: sym.clone(),
+            momentum_12_1_pct: (p_21 / p_252 - 1.0) * 100.0,
+            off_52w_high_pct: (1.0 - series[n - 1] / high_52w) * 100.0,
+            rs_63d_pp: r63 - b63,
+            rs_252d_pp: r252 - b252,
+        });
+    }
+    rows.sort_by(|a, b| {
+        b.momentum_12_1_pct
+            .partial_cmp(&a.momentum_12_1_pct)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+    Ok(MomentumScreen {
+        benchmark: benchmark.to_string(),
+        rows,
+        skipped,
+    })
+}
+
+// ===========================================================================
 // Pair character sheet — aligned fetch once, every pair analysis on it
 // ===========================================================================
 
