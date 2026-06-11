@@ -794,6 +794,76 @@ const TOOLS = {
             <p class="muted small">Carr-Wu variance risk premium — persistently positive on equity indexes;
             pair the realized leg with the Vol Cone tab's current reading.</p>`,
     },
+    'early-assignment': {
+        label: 'Early Assignment',
+        call: (b) => api.calcEarlyAssignment(b),
+        fields: [
+            { key: 'spot', label: 'Spot ($)', def: 104 },
+            { key: 'strike', label: 'Strike ($)', def: 100 },
+            { key: 'call_price', label: 'Call price ($)', def: 5.2 },
+            { key: 'dividend', label: 'Dividend ($/sh)', def: 1.5 },
+        ],
+        render: (r) => {
+            if (!r) return '<span class="neg">invalid inputs</span>';
+            return `
+            <div class="cards">
+                <div class="card"><div class="label">Assignment risk</div>
+                    <div class="value ${r.assignment_likely ? 'neg' : 'pos'}">${r.assignment_likely ? 'LIKELY TONIGHT' : 'unlikely'}</div>
+                    <div class="small muted">edge ${(r.exercise_edge >= 0 ? '+' : '') + r.exercise_edge.toFixed(2)}</div></div>
+                <div class="card"><div class="label">Extrinsic vs dividend</div>
+                    <div class="value">$${r.extrinsic.toFixed(2)} / $${r.dividend.toFixed(2)}</div>
+                    <div class="small muted">intrinsic $${r.intrinsic.toFixed(2)}</div></div>
+            </div>
+            <p class="muted small">Calls exercise ahead of ex-div when the dividend beats remaining
+            extrinsic — short ITM calls with thin extrinsic get assigned the night before.</p>`;
+        },
+    },
+    'event-vol': {
+        label: 'Event Vol / IV Crush',
+        call: (b) => api.calcEventVol(b),
+        fields: [
+            { key: 'total_iv_pct', label: 'Total IV (%)', def: 60 },
+            { key: 'ambient_iv_pct', label: 'Ambient IV (%)', def: 30 },
+            { key: 'days_to_expiry', label: 'Trading days to expiry', def: 5 },
+        ],
+        render: (r) => {
+            if (!r) return '<span class="neg">invalid inputs</span>';
+            return `
+            <div class="cards">
+                <div class="card"><div class="label">Implied event move</div>
+                    <div class="value">±${r.implied_event_move_pct.toFixed(2)}%</div>
+                    <div class="small muted">one-day, from the vol decomposition</div></div>
+                <div class="card"><div class="label">Expected crush</div>
+                    <div class="value neg">−${r.iv_crush_pct_points.toFixed(1)}pp</div>
+                    <div class="small muted">to ${r.post_event_iv_pct.toFixed(0)}% post-event</div></div>
+            </div>
+            <p class="muted small">σ²_tot·T = σ²_amb·(T−1d) + move² — the straddle is only cheap if you
+            expect a bigger move than the one the decomposition prices.</p>`;
+        },
+    },
+    'gamma-theta': {
+        label: 'Gamma-Theta Breakeven',
+        call: (b) => api.calcGammaThetaBreakeven(b),
+        fields: [
+            { key: 'gamma', label: 'Gamma (per $)', def: 0.05 },
+            { key: 'theta_daily', label: 'Theta ($/day)', def: -2.5 },
+            { key: 'spot', label: 'Spot ($)', def: 200 },
+        ],
+        render: (r) => {
+            if (!r) return '<span class="neg">invalid inputs</span>';
+            return `
+            <div class="cards">
+                <div class="card"><div class="label">Breakeven daily move</div>
+                    <div class="value">±$${r.breakeven_move.toFixed(2)}</div>
+                    <div class="small muted">${r.breakeven_move_pct.toFixed(2)}% of spot</div></div>
+                <div class="card"><div class="label">Implied breakeven vol</div>
+                    <div class="value">${r.implied_breakeven_vol_pct.toFixed(1)}%</div>
+                    <div class="small muted">long gamma pays above this realized vol</div></div>
+            </div>
+            <p class="muted small">½·Γ·ΔS² = |θ| ⇒ ΔS = √(2|θ|/Γ) — the daily move where the gamma
+            scalp covers the decay.</p>`;
+        },
+    },
     warrant: {
         label: 'Warrant Pricer',
         call: (b) => api.calcWarrant(b),

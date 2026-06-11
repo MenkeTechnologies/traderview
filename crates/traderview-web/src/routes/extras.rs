@@ -105,6 +105,7 @@ use traderview_core::{
     negative_volume_index, nelson_siegel, nelson_siegel_svensson, newey_west,
     noise_to_signal_ratio, nyse_tick, omega_ratio, on_balance_volume, on_neck_in_neck,
     opening_range, optimal_execution_pov_schedule, optimal_execution_twap_schedule,
+    options_dailies,
     optimal_execution_vwap_schedule, option_open_interest_distribution, option_payoff_diagram,
     options_margin, order_block, ornstein_uhlenbeck, pain_index, pair_trade, pair_trade_zscore,
     par_curve_bootstrap, partial_autocorrelation, pca, peaks_over_threshold, pelt_segmentation,
@@ -804,6 +805,15 @@ pub fn router() -> Router<AppState> {
             post(implied_dividend_route),
         )
         .route("/options/calc/warrant", post(warrant_route))
+        .route(
+            "/options/calc/early-assignment",
+            post(early_assignment_route),
+        )
+        .route("/options/calc/event-vol", post(event_vol_route))
+        .route(
+            "/options/calc/gamma-theta-breakeven",
+            post(gamma_theta_breakeven_route),
+        )
         .route("/options/calc/heston", post(heston_route))
         .route(
             "/options/calc/heston-calibrate",
@@ -7187,6 +7197,62 @@ async fn warrant_route(
     Json(b): Json<warrant_valuation::WarrantInput>,
 ) -> Json<Option<warrant_valuation::WarrantReport>> {
     Json(warrant_valuation::compute(&b))
+}
+
+#[derive(Deserialize)]
+struct EarlyAssignmentBody {
+    spot: f64,
+    strike: f64,
+    call_price: f64,
+    dividend: f64,
+}
+
+async fn early_assignment_route(
+    _u: AuthUser,
+    Json(b): Json<EarlyAssignmentBody>,
+) -> Json<Option<options_dailies::EarlyAssignmentReport>> {
+    Json(options_dailies::early_assignment(
+        b.spot,
+        b.strike,
+        b.call_price,
+        b.dividend,
+    ))
+}
+
+#[derive(Deserialize)]
+struct EventVolBody {
+    total_iv_pct: f64,
+    ambient_iv_pct: f64,
+    days_to_expiry: f64,
+}
+
+async fn event_vol_route(
+    _u: AuthUser,
+    Json(b): Json<EventVolBody>,
+) -> Json<Option<options_dailies::EventVolReport>> {
+    Json(options_dailies::event_vol(
+        b.total_iv_pct,
+        b.ambient_iv_pct,
+        b.days_to_expiry,
+    ))
+}
+
+#[derive(Deserialize)]
+struct GammaThetaBody {
+    gamma: f64,
+    theta_daily: f64,
+    spot: f64,
+}
+
+async fn gamma_theta_breakeven_route(
+    _u: AuthUser,
+    Json(b): Json<GammaThetaBody>,
+) -> Json<Option<options_dailies::GammaThetaReport>> {
+    Json(options_dailies::gamma_theta_breakeven(
+        b.gamma,
+        b.theta_daily,
+        b.spot,
+    ))
 }
 
 async fn implied_dividend_route(
