@@ -5,7 +5,7 @@
 
 import { api } from '../api.js';
 import { esc } from '../util.js';
-import { t, applyUiI18n } from '../i18n.js';
+import { applyUiI18n } from '../i18n.js';
 import { currentViewToken, viewIsCurrent } from '../app.js';
 
 const FIELDS = [
