@@ -717,6 +717,12 @@ export const api = {
     recommendationWatchers:      () => request('/recommendations/watchers'),
     recommendationWatcherUpsert: (body) => request('/recommendations/watchers', { method: 'POST', body: JSON.stringify(body) }),
     recommendationWatcherDelete: (id) => request(`/recommendations/watchers/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+    // Classic valuation extras — Piotroski/Altman/Graham, DCF, gap
+    // fill-rates, monthly seasonality.
+    symbolFundamentalHealth: (sym) => request(`/symbols/${encodeURIComponent(sym)}/fundamental-health`),
+    symbolGapStats:          (sym, threshold = 0.5) => request(`/symbols/${encodeURIComponent(sym)}/gap-stats${qs({ threshold })}`),
+    symbolSeasonality:       (sym) => request(`/symbols/${encodeURIComponent(sym)}/seasonality`),
+    calcDcf:                 (body) => request('/calc/dcf', { method: 'POST', body: JSON.stringify(body) }),
     symbolInsiders:  (sym) => request(`/symbols/${encodeURIComponent(sym)}/insiders`),
     symbolFundamentals: (sym) => request(`/symbols/${encodeURIComponent(sym)}/fundamentals`),
     symbolHolders:   (sym) => request(`/symbols/${encodeURIComponent(sym)}/holders`),

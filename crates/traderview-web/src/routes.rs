@@ -150,6 +150,7 @@ mod shares;
 mod short_interest;
 mod sinking_fund;
 mod social_security_age;
+mod fundamentals_extra;
 mod sp500_predict;
 mod squeeze_scanner;
 mod stock_recommendation;
@@ -361,6 +362,7 @@ pub fn api_router() -> Router<AppState> {
         .merge(data_sources::router())
         .merge(squeeze_scanner::router())
         .merge(stock_recommendation::router())
+        .merge(fundamentals_extra::router())
         .merge(finnhub_extras::router())
 }
 

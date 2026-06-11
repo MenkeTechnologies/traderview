@@ -138,6 +138,18 @@ export async function renderResearch(mount, _state, sym) {
                 <h2 data-i18n="view.research.h2.upgrades">Analyst Upgrades / Downgrades</h2>
                 <div id="rs-upgrades"><span class="tv-spinner-inline" role="status" aria-label="loading"></span></div>
             </div>
+            <div class="chart-panel">
+                <h2 data-i18n="view.research.h2.fundamental_health">Fundamental Health (Piotroski · Altman · Graham)</h2>
+                <div id="rs-health"><span class="tv-spinner-inline" role="status" aria-label="loading"></span></div>
+            </div>
+            <div class="chart-panel">
+                <h2 data-i18n="view.research.h2.gap_stats">Gap Statistics</h2>
+                <div id="rs-gaps"><span class="tv-spinner-inline" role="status" aria-label="loading"></span></div>
+            </div>
+            <div class="chart-panel">
+                <h2 data-i18n="view.research.h2.seasonality">Monthly Seasonality</h2>
+                <div id="rs-seasonality"><span class="tv-spinner-inline" role="status" aria-label="loading"></span></div>
+            </div>
         </div>
     `;
 
@@ -180,6 +192,9 @@ export async function renderResearch(mount, _state, sym) {
     const prof = api.symbolProfile(sym).catch(() => null);
     const peer = api.symbolPeers(sym).catch(() => null);
     const upgr = api.symbolUpgrades(sym).catch(() => null);
+    const health = api.symbolFundamentalHealth(sym).catch(() => null);
+    const gaps = api.symbolGapStats(sym).catch(() => null);
+    const seas = api.symbolSeasonality(sym).catch(() => null);
 
     const qv = await q;
     if (!viewIsCurrent(tok)) return;
@@ -241,6 +256,97 @@ export async function renderResearch(mount, _state, sym) {
         const el = mount.querySelector('#rs-upgrades');
         if (el) renderUpgrades(el, u);
     });
+    health.then(h => {
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#rs-health');
+        if (el) renderFundamentalHealth(el, h);
+    });
+    gaps.then(g => {
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#rs-gaps');
+        if (el) renderGapStats(el, g);
+    });
+    seas.then(sn => {
+        if (!viewIsCurrent(tok)) return;
+        const el = mount.querySelector('#rs-seasonality');
+        if (el) renderSeasonality(el, sn);
+    });
+}
+
+function renderFundamentalHealth(el, h) {
+    if (!h) { el.innerHTML = `<p class="muted">${esc(t('common.empty.no_data'))}</p>`; return; }
+    const fCls = h.piotroski_score >= 7 ? 'pos' : h.piotroski_score <= 3 ? 'neg' : 'neutral';
+    const zoneCls = { safe: 'pos', grey: 'neutral', distress: 'neg' }[h.altman_zone] || '';
+    const checks = (h.piotroski_checks || []).map(c => `
+        <div class="rs-health-check">
+            <span class="rs-health-mark ${c.passed === true ? 'pos' : c.passed === false ? 'neg' : 'muted'}">
+                ${c.passed === true ? '✔' : c.passed === false ? '✘' : '—'}
+            </span>
+            <span class="rs-health-label">${esc(c.label)}</span>
+            <span class="rs-health-detail muted small">${esc(c.detail)}</span>
+        </div>`).join('');
+    const grahamRow = h.graham_number != null ? `
+        <div class="card"><div class="label">Graham Number</div>
+            <div class="value">$${Number(h.graham_number).toFixed(2)}</div>
+            ${h.graham_upside_pct != null ? `<div class="small ${h.graham_upside_pct >= 0 ? 'pos' : 'neg'}">${(h.graham_upside_pct >= 0 ? '+' : '') + h.graham_upside_pct.toFixed(1)}% vs price</div>` : ''}
+        </div>` : '';
+    el.innerHTML = `
+        <div class="cards">
+            <div class="card"><div class="label">Piotroski F-Score</div>
+                <div class="value ${fCls}">${h.piotroski_score} / ${h.piotroski_available}</div></div>
+            ${h.altman_z != null ? `
+            <div class="card"><div class="label">Altman Z (approx)</div>
+                <div class="value ${zoneCls}">${Number(h.altman_z).toFixed(2)}</div>
+                <div class="small muted">${esc(h.altman_zone || '')}</div></div>` : ''}
+            ${grahamRow}
+        </div>
+        <div class="rs-health-checks">${checks}</div>
+    `;
+}
+
+function renderGapStats(el, g) {
+    if (!g) { el.innerHTML = `<p class="muted">${esc(t('common.empty.no_data'))}</p>`; return; }
+    const sideRow = (label, s) => `
+        <tr><td>${label}</td><td>${s.count}</td>
+            <td>${s.avg_gap_pct.toFixed(2)}%</td>
+            <td>${s.same_day_fill_rate_pct.toFixed(0)}%</td>
+            <td>${s.window_fill_rate_pct.toFixed(0)}%</td>
+            <td>${s.avg_sessions_to_fill.toFixed(1)}</td></tr>`;
+    el.innerHTML = `
+        <table class="gs-table">
+            <thead><tr><th>Side</th><th>Count</th><th>Avg gap</th>
+                <th>Same-day fill</th><th>5-day fill</th><th>Avg fill (sess)</th></tr></thead>
+            <tbody>
+                ${sideRow('Gap up', g.up)}
+                ${sideRow('Gap down', g.down)}
+            </tbody>
+        </table>
+        <p class="muted small">Threshold ±${g.threshold_pct}% · ${g.bars_analyzed} bars analyzed.</p>
+    `;
+}
+
+function renderSeasonality(el, sn) {
+    if (!sn || !sn.by_month || !sn.by_month.length) {
+        el.innerHTML = `<p class="muted">${esc(t('common.empty.no_data'))}</p>`;
+        return;
+    }
+    const NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const cells = sn.by_month.map(m => {
+        // mean_return / hit_rate arrive as fractions (0.012 = +1.2%).
+        const avg = Number(m.mean_return) * 100;
+        const hit = Number(m.hit_rate) * 100;
+        const cls = avg > 0.5 ? 'pos' : avg < -0.5 ? 'neg' : 'neutral';
+        return `
+            <div class="rs-seas-cell ${cls}" title="${m.sample_count} samples, σ ${(Number(m.std_return) * 100).toFixed(1)}%">
+                <div class="rs-seas-month">${NAMES[(m.month || 1) - 1]}</div>
+                <div class="rs-seas-val">${(avg >= 0 ? '+' : '') + avg.toFixed(1)}%</div>
+                <div class="rs-seas-wr muted small">${hit.toFixed(0)}% up</div>
+            </div>`;
+    }).join('');
+    el.innerHTML = `
+        <div class="rs-seas-grid">${cells}</div>
+        <p class="muted small">${sn.n_observations} monthly observations.</p>
+    `;
 }
 
 function renderProfile(el, p) {
