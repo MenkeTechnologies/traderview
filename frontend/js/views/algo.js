@@ -2199,6 +2199,9 @@ async function openStrategyModal(mount, existing = null, prefill = null) {
                     <label><span data-i18n="view.algo.label.earnings_blackout">Earnings blackout (days, 0 = off)</span>
                         <input type="number" name="earnings_blackout_days" min="0" max="30" value="${Number(s.risk_gates?.earnings_blackout_days ?? 0)}" data-tip="view.algo.tip.earnings_blackout">
                     </label>
+                    <label><span data-i18n="view.algo.label.entry_window">Entry window ET (empty = always)</span>
+                        <input type="text" name="entry_window" placeholder="10:00-15:30" value="${esc(s.risk_gates?.entry_window ?? '')}" data-tip="view.algo.tip.entry_window">
+                    </label>
                     <label><span data-i18n="view.algo.label.broker_mode">Execution mode</span>
                         <select name="broker_mode">
                             <option value="internal_sim"  ${s.broker_mode === 'internal_sim'  ? 'selected' : ''} data-i18n="view.algo.opt.broker_sim">Paper — In-app simulator (no broker call)</option>
@@ -2268,6 +2271,7 @@ async function openStrategyModal(mount, existing = null, prefill = null) {
             risk_gates: Object.assign({}, s.risk_gates || {}, {
                 max_concurrent_positions: Number(f.get('max_concurrent_positions')) || 5,
                 earnings_blackout_days: Number(f.get('earnings_blackout_days')) || 0,
+                entry_window: (f.get('entry_window') || '').trim(),
             }),
             broker_mode: f.get('broker_mode'),
         };

@@ -159,6 +159,8 @@ pub enum EngineError {
         date: chrono::NaiveDate,
         days: i64,
     },
+    #[error("outside entry window {window} ET; entry skipped")]
+    OutsideEntryWindow { window: String },
     #[error("broker: {0}")]
     Broker(String),
     #[error("db: {0}")]
@@ -297,7 +299,8 @@ impl BrokerSink for InMemorySink {
 ///   "max_daily_loss_usd": 500.0,
 ///   "max_consecutive_losses": 4,
 ///   "max_position_size_usd": 10000.0,
-///   "earnings_blackout_days": 2
+///   "earnings_blackout_days": 2,
+///   "entry_window": "10:00-15:30"
 /// }
 /// ```
 #[derive(Debug, Clone)]
@@ -317,6 +320,10 @@ pub struct EngineConfig {
     /// this many days (forward-looking: the risk being managed is
     /// holding INTO the print). Exits are never blocked.
     pub earnings_blackout_days: Option<i64>,
+    /// ENTRIES allowed only inside this US-Eastern wall-clock window,
+    /// as minutes since midnight (start inclusive, end exclusive).
+    /// Exits are never blocked. None = always.
+    pub entry_window: Option<(u32, u32)>,
 }
 
 impl EngineConfig {
@@ -353,6 +360,11 @@ impl EngineConfig {
             .get("earnings_blackout_days")
             .and_then(|v| v.as_i64())
             .filter(|n| *n > 0);
+        let entry_window = s
+            .risk_gates
+            .get("entry_window")
+            .and_then(|v| v.as_str())
+            .and_then(parse_entry_window);
         Self {
             sizing,
             side_mode,
@@ -361,6 +373,7 @@ impl EngineConfig {
             max_consecutive_losses,
             max_position_size_usd,
             earnings_blackout_days,
+            entry_window,
         }
     }
 }
@@ -484,6 +497,31 @@ async fn trip_kill_switch(
 /// current account equity, and the count of currently-open positions.
 /// Returns `Some(AlgoOrder.id)` when an order was submitted, `None`
 /// when no signal fired (caller treats as a no-op, not an error).
+/// Parse "HH:MM-HH:MM" into minutes-since-midnight. Malformed input
+/// or a non-increasing window (overnight wrap unsupported for US
+/// equities) disables the gate by returning None.
+pub fn parse_entry_window(s: &str) -> Option<(u32, u32)> {
+    let (a, b) = s.split_once('-')?;
+    let parse = |t: &str| -> Option<u32> {
+        let (h, m) = t.trim().split_once(':')?;
+        let h: u32 = h.parse().ok()?;
+        let m: u32 = m.parse().ok()?;
+        (h < 24 && m < 60).then_some(h * 60 + m)
+    };
+    let (start, end) = (parse(a)?, parse(b)?);
+    (start < end).then_some((start, end))
+}
+
+/// Is `now` inside the Eastern wall-clock window? Start inclusive,
+/// end exclusive; offset via the shared chrono-tz-free approximation.
+pub fn in_entry_window(now: chrono::DateTime<chrono::Utc>, window: (u32, u32)) -> bool {
+    use chrono::Timelike;
+    let offset = traderview_core::risk_gate::us_eastern_offset_hours(now);
+    let local = now + chrono::Duration::hours(offset);
+    let minutes = local.hour() * 60 + local.minute();
+    (window.0..window.1).contains(&minutes)
+}
+
 /// Forward-looking blackout test: true when the NEXT earnings date is
 /// today or within `blackout_days` days. Past earnings never block.
 pub fn in_earnings_blackout(
@@ -610,6 +648,17 @@ pub async fn process_bar_window(
                 symbol: symbol.clone(),
                 date: next.unwrap(),
                 days,
+            });
+        }
+    }
+    // Risk gate: entry window — entries only, same placement rationale.
+    if let Some(window) = cfg.entry_window {
+        if !in_entry_window(chrono::Utc::now(), window) {
+            return Err(EngineError::OutsideEntryWindow {
+                window: format!(
+                    "{:02}:{:02}-{:02}:{:02}",
+                    window.0 / 60, window.0 % 60, window.1 / 60, window.1 % 60
+                ),
             });
         }
     }
@@ -1371,6 +1420,36 @@ mod earnings_blackout_tests {
         // Yesterday's print is history — the gate is forward-looking.
         assert!(!in_earnings_blackout(Some(d(2026, 6, 9)), today, 5));
         assert!(!in_earnings_blackout(None, today, 5));
+    }
+
+    #[test]
+    fn entry_window_parse_pins_format_and_ordering() {
+        assert_eq!(parse_entry_window("10:00-15:30"), Some((600, 930)));
+        assert_eq!(parse_entry_window(" 9:35 - 11:00 "), Some((575, 660)));
+        // Malformed, out-of-range, and non-increasing all disable.
+        assert_eq!(parse_entry_window("10:00"), None);
+        assert_eq!(parse_entry_window("25:00-26:00"), None);
+        assert_eq!(parse_entry_window("10:61-11:00"), None);
+        assert_eq!(parse_entry_window("15:30-10:00"), None);
+        assert_eq!(parse_entry_window("10:00-10:00"), None);
+    }
+
+    #[test]
+    fn entry_window_check_pins_edt_boundaries() {
+        use chrono::TimeZone;
+        let w = (600, 930); // 10:00-15:30 ET
+        // June = EDT (UTC-4): 14:00 UTC = 10:00 ET — start is inclusive.
+        let t = chrono::Utc.with_ymd_and_hms(2026, 6, 10, 14, 0, 0).unwrap();
+        assert!(in_entry_window(t, w));
+        // 13:59 UTC = 09:59 ET — before the window.
+        let t = chrono::Utc.with_ymd_and_hms(2026, 6, 10, 13, 59, 0).unwrap();
+        assert!(!in_entry_window(t, w));
+        // 19:30 UTC = 15:30 ET — end is exclusive.
+        let t = chrono::Utc.with_ymd_and_hms(2026, 6, 10, 19, 30, 0).unwrap();
+        assert!(!in_entry_window(t, w));
+        // January = EST (UTC-5): 15:00 UTC = 10:00 ET.
+        let t = chrono::Utc.with_ymd_and_hms(2026, 1, 13, 15, 0, 0).unwrap();
+        assert!(in_entry_window(t, w));
     }
 
     #[test]
