@@ -40,6 +40,7 @@
 //!   POST /symbols/:sym/vol-rich-cheap    — IV term vs realized cone
 //!   GET  /symbols/:sym/character-sheet   — all bar studies, one fetch
 //!   POST /screeners/seasonality          — calendar edges across a list
+//!   POST /screeners/risk                 — vol ranks + drawdown state
 //!   POST /symbols/:sym/event-study       — caller-dated FOMC/CPI study
 //!   POST /calc/double-barrier            — target-vs-stop hit-first odds
 //!   POST /calc/futures-sizing            — tick math + margin-capped size
@@ -114,6 +115,7 @@ pub fn router() -> Router<AppState> {
             get(get_character_sheet),
         )
         .route("/screeners/seasonality", post(post_seasonality_screen))
+        .route("/screeners/risk", post(post_risk_screen))
         .route("/symbols/:symbol/event-study", post(post_event_study))
         .route("/calc/double-barrier", post(post_double_barrier))
         .route("/calc/futures-sizing", post(post_futures_sizing))
@@ -831,13 +833,8 @@ struct SeasonalityScreenBody {
     years: Option<u32>,
 }
 
-async fn post_seasonality_screen(
-    State(s): State<AppState>,
-    _u: AuthUser,
-    Json(b): Json<SeasonalityScreenBody>,
-) -> Result<Json<strategy_calculators::SeasonalityScreen>, ApiError> {
-    let symbols: Vec<String> = b
-        .symbols
+fn clean_symbol_list(raw: &[String]) -> Result<Vec<String>, ApiError> {
+    let symbols: Vec<String> = raw
         .iter()
         .map(|x| x.trim().to_uppercase())
         .filter(|x| !x.is_empty() && x.len() <= 20)
@@ -846,8 +843,28 @@ async fn post_seasonality_screen(
     if symbols.is_empty() {
         return Err(ApiError::BadRequest("supply 1..=30 symbols".into()));
     }
+    Ok(symbols)
+}
+
+async fn post_seasonality_screen(
+    State(s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<SeasonalityScreenBody>,
+) -> Result<Json<strategy_calculators::SeasonalityScreen>, ApiError> {
+    let symbols = clean_symbol_list(&b.symbols)?;
     Ok(Json(
         strategy_calculators::seasonality_screen(&s.pool, &symbols, b.years.unwrap_or(10)).await,
+    ))
+}
+
+async fn post_risk_screen(
+    State(s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<SeasonalityScreenBody>,
+) -> Result<Json<strategy_calculators::RiskScreen>, ApiError> {
+    let symbols = clean_symbol_list(&b.symbols)?;
+    Ok(Json(
+        strategy_calculators::risk_screen(&s.pool, &symbols, b.years.unwrap_or(5)).await,
     ))
 }
 

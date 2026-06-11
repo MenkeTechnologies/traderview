@@ -96,6 +96,35 @@ const TOOLS = {
             <p class="muted small">Press risk after wins (capped), cut back toward base after losses —
             the opposite of a martingale. The control row trades the same sequence at flat base risk.</p>`,
     },
+    'risk-screen': {
+        label: 'Risk Screen',
+        call: (b) => api.riskScreen({
+            symbols: String(b.symbols).split(/[\s,]+/).filter(Boolean),
+            years: b.years,
+        }),
+        fields: [
+            { key: 'symbols', label: 'Symbols (comma-sep, ≤30)', def: 'SPY, QQQ, IWM, NVDA, TSLA, TLT, GLD', text: true },
+            { key: 'years', label: 'Lookback years', def: 5, int: true },
+        ],
+        render: (r) => `
+            <table class="gs-table">
+                <thead><tr><th>Symbol</th><th>RV 21d</th><th>Rank</th><th>RV 63d</th><th>Rank</th><th>Worst DD</th><th>Now</th></tr></thead>
+                <tbody>${r.rows.map(row => `
+                    <tr>
+                        <td>${esc(row.symbol)}</td>
+                        <td>${row.rv21_pct.toFixed(1)}%</td>
+                        <td class="${row.rv21_rank_pct >= 75 ? 'neg' : row.rv21_rank_pct <= 25 ? 'pos' : ''}">${row.rv21_rank_pct.toFixed(0)}%</td>
+                        <td>${row.rv63_pct.toFixed(1)}%</td>
+                        <td>${row.rv63_rank_pct.toFixed(0)}%</td>
+                        <td class="neg">${row.worst_drawdown_pct.toFixed(1)}%</td>
+                        <td class="${row.currently_underwater ? 'neg' : 'pos'}">${row.currently_underwater ? row.current_drawdown_pct.toFixed(1) + '%' : 'highs'}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+            ${r.skipped.length ? `<p class="muted small neg">skipped (insufficient history): ${r.skipped.map(esc).join(', ')}</p>` : ''}
+            <p class="muted small">Hottest first by 21-day realized rank — a high rank says the name is
+            living at the top of its own vol history right now, whatever its absolute level.</p>`,
+    },
     'seasonality-screen': {
         label: 'Seasonality Screen',
         call: (b) => api.seasonalityScreen({

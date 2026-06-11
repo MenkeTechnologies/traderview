@@ -671,6 +671,70 @@ pub async fn seasonality_screen(
 }
 
 // ===========================================================================
+// Risk screener — vol-cone ranks + drawdown state across a list
+// ===========================================================================
+
+#[derive(Debug, Clone, Serialize)]
+pub struct RiskScreenRow {
+    pub symbol: String,
+    pub rv21_pct: f64,
+    /// Where the 21d realized sits in its own history, %.
+    pub rv21_rank_pct: f64,
+    pub rv63_pct: f64,
+    pub rv63_rank_pct: f64,
+    pub worst_drawdown_pct: f64,
+    pub currently_underwater: bool,
+    pub current_drawdown_pct: f64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct RiskScreen {
+    /// Hottest first (21d realized rank descending).
+    pub rows: Vec<RiskScreenRow>,
+    pub skipped: Vec<String>,
+}
+
+pub async fn risk_screen(pool: &PgPool, symbols: &[String], years: u32) -> RiskScreen {
+    let mut rows = Vec::new();
+    let mut skipped = Vec::new();
+    for sym in symbols {
+        let Ok(dated) = daily_closes(pool, sym, years).await else {
+            skipped.push(sym.clone());
+            continue;
+        };
+        let series: Vec<f64> = dated.iter().map(|(_, c)| *c).collect();
+        let cone = traderview_core::vol_cone::compute(&series, &[21, 63]);
+        let (Some(rv21), Some(rv63)) = (
+            cone.iter().find(|r| r.horizon_days == 21),
+            cone.iter().find(|r| r.horizon_days == 63),
+        ) else {
+            skipped.push(sym.clone());
+            continue;
+        };
+        let Some(dd) = traderview_core::drawdown_episodes::compute(&series, 1) else {
+            skipped.push(sym.clone());
+            continue;
+        };
+        rows.push(RiskScreenRow {
+            symbol: sym.clone(),
+            rv21_pct: rv21.current_pct,
+            rv21_rank_pct: rv21.current_rank_pct,
+            rv63_pct: rv63.current_pct,
+            rv63_rank_pct: rv63.current_rank_pct,
+            worst_drawdown_pct: dd.episodes.first().map(|e| e.depth_pct).unwrap_or(0.0),
+            currently_underwater: dd.currently_underwater,
+            current_drawdown_pct: dd.current_drawdown_pct,
+        });
+    }
+    rows.sort_by(|a, b| {
+        b.rv21_rank_pct
+            .partial_cmp(&a.rv21_rank_pct)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+    RiskScreen { rows, skipped }
+}
+
+// ===========================================================================
 // Pair character sheet — aligned fetch once, every pair analysis on it
 // ===========================================================================
 
