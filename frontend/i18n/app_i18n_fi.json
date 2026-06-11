@@ -3917,6 +3917,7 @@
   "view.algo.opt.side_both": "Pitkä + lyhyt",
   "view.algo.opt.side_long": "Vain pitkä",
   "view.algo.opt.side_short": "Vain lyhyt",
+  "view.algo.opt.strat_adx_pullback": "ADX Pullback — Raschke Holy Grail (EMA20 touch + resumption in strong trend)",
   "view.algo.opt.strat_bb_squeeze": "Bollinger Squeeze (BBW pohjakymmenys + tauko)",
   "view.algo.opt.strat_connors_rsi2": "Connors RSI-2 + 200 SMA (keskiarvo-rev klassikko)",
   "view.algo.opt.strat_donchian_trend": "Donchian Trend / Kilpikonna (Donchian + ADX suodatin)",

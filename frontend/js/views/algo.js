@@ -226,6 +226,7 @@ const STRATEGY_KINDS = [
     { value: 'macd_cross',        label_key: 'view.algo.opt.strat_macd_cross',        label: 'MACD Cross (signal-line crossover, optional zero-line filter)' },
     { value: 'rsi_divergence',    label_key: 'view.algo.opt.strat_rsi_divergence',    label: 'RSI Divergence (exhaustion reversal at confirmed swings)' },
     { value: 'gap_fade',          label_key: 'view.algo.opt.strat_gap_fade',          label: 'Gap Fade (fade 1-4% opening gaps toward prior close)' },
+    { value: 'adx_pullback',      label_key: 'view.algo.opt.strat_adx_pullback',      label: 'ADX Pullback \u2014 Raschke Holy Grail (EMA20 touch + resumption in strong trend)' },
     { value: 'keltner_breakout',  label_key: 'view.algo.opt.strat_keltner_breakout',  label: 'Keltner Channel Breakout (EMA ± ATR band)' },
     { value: 'ichimoku_cloud',    label_key: 'view.algo.opt.strat_ichimoku_cloud',    label: 'Ichimoku Cloud (TK cross + cloud break + Chikou clear)' },
 ];
@@ -622,6 +623,32 @@ const STRATEGY_DOCS = {
         ],
         scope_note: 'The target is fixed at the prior close \u2014 there is no take-profit parameter because the gap fill defines the trade. The reclaim-above-open condition is the confirmation that fading has begun; entering a still-sinking gap is catching a falling knife.',
         when_to_use: 'Quiet-news moderate gaps in liquid names at the open. Skip earnings/news gaps \u2014 those are the continuation regime this strategy deliberately excludes.',
+    },
+    adx_pullback: {
+        title: 'ADX Pullback (Raschke \u201cHoly Grail\u201d)',
+        family: 'Trend continuation \u00b7 long or short \u00b7 buy the dip, enter on the resumption',
+        entry: [
+            'Established trend: ADX(adx_period) > adx_min (Raschke uses 30) with +DI > \u2212DI for longs',
+            'Price pulls back to TOUCH the EMA(ema_period) within the last touch_age bars',
+            'Enter when the close breaks the PRIOR bar\u2019s high \u2014 the resumption, never the dip itself',
+            'Short: full mirror (EMA touch from below, close breaks prior low, \u2212DI > +DI)',
+        ],
+        exit: [
+            'Close crossing the EMA against the position by atr_exit_buffer ATRs \u2014 trend support broken',
+            'Stop beyond the pullback extreme \u00b1 atr_stop_buffer ATRs \u2014 pullback became a reversal',
+        ],
+        params: [
+            ['adx_period', 14, 'ADX/DI window'],
+            ['adx_min', 30, 'Raschke\u2019s trend threshold (stricter than the generic 25)'],
+            ['ema_period', 20, 'Pullback EMA'],
+            ['touch_age', 3, 'Bars since the EMA touch'],
+            ['atr_period', 14, 'ATR window'],
+            ['atr_stop_buffer', 0.25, 'Stop buffer beyond the pullback extreme, in ATRs'],
+            ['atr_take_profit_mult', 3.0, 'Target distance in ATRs'],
+            ['atr_exit_buffer', 1.0, 'EMA-break exit buffer, in ATRs'],
+        ],
+        scope_note: 'The resumption trigger (prior-bar-high break) is what separates this from knife-catching \u2014 the dip alone is never the entry. Stop placement below the pullback low, not below entry, gives the trade the room the setup logically needs.',
+        when_to_use: 'Strong trends that refuse to give a crossover exit \u2014 this adds to winners on dips. Street Smarts (1996) setup; complements ma_cross_adx, which only enters on the initial cross.',
     },
     keltner_breakout: {
         title: 'Keltner Channel Breakout',
@@ -1114,6 +1141,11 @@ const OPTIMIZE_DEFAULT_GRIDS = {
         gap_min_pct: [0.75, 1.0, 1.5],
         gap_max_pct: [3.0, 4.0, 5.0],
         confirm_bars: [2, 3, 5],
+    },
+    adx_pullback: {
+        adx_min: [25, 30, 35],
+        ema_period: [10, 20, 30],
+        touch_age: [2, 3, 5],
     },
     keltner_breakout: {
         period: [15, 20, 30],

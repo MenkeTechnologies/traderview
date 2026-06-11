@@ -3917,6 +3917,7 @@
   "view.algo.opt.side_both": "Довгий + короткий",
   "view.algo.opt.side_long": "Довгий тільки",
   "view.algo.opt.side_short": "Короткий опис",
+  "view.algo.opt.strat_adx_pullback": "ADX Pullback — Raschke Holy Grail (EMA20 touch + resumption in strong trend)",
   "view.algo.opt.strat_bb_squeeze": "Bollinger Squeeze (BBW нижня кришка + смуга розриву)",
   "view.algo.opt.strat_connors_rsi2": "Коннори RSI-2 + 200 SMA (меан-рев класичний)",
   "view.algo.opt.strat_donchian_trend": "Donchian Trend / Turtle (Дончян + ADX фільтр)",

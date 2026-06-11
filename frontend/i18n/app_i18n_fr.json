@@ -3917,6 +3917,7 @@
   "view.algo.opt.side_both": "Long + court",
   "view.algo.opt.side_long": "Longue seulement",
   "view.algo.opt.side_short": "Court seulement",
+  "view.algo.opt.strat_adx_pullback": "ADX Pullback — Raschke Holy Grail (EMA20 touch + resumption in strong trend)",
   "view.algo.opt.strat_bb_squeeze": "Bollinger Squeeze (BBW décile inférieur + rupture de bande)",
   "view.algo.opt.strat_connors_rsi2": "Connors RSI-2 + 200 SMA (classique moyen)",
   "view.algo.opt.strat_donchian_trend": "Tendance de Donchian / Tortue (filtre Donchian + ADX)",

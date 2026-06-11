@@ -3917,6 +3917,7 @@
   "view.algo.opt.side_both": "Dài + ngắn",
   "view.algo.opt.side_long": "Chỉ dài",
   "view.algo.opt.side_short": "Chỉ ngắn",
+  "view.algo.opt.strat_adx_pullback": "ADX Pullback — Raschke Holy Grail (EMA20 touch + resumption in strong trend)",
   "view.algo.opt.strat_bb_squeeze": "Thắt kiểu Bollinger (BBW..",
   "view.algo.opt.strat_connors_rsi2": "ConnorsRSI-2 + 200SMA (mian-rev cổ điển)",
   "view.algo.opt.strat_donchian_trend": "Donchian Trend / Turtle (Donchian + ADX filter)",

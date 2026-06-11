@@ -3917,6 +3917,7 @@
   "view.algo.opt.side_both": "长+短",
   "view.algo.opt.side_long": "只有长",
   "view.algo.opt.side_short": "仅短",
+  "view.algo.opt.strat_adx_pullback": "ADX Pullback — Raschke Holy Grail (EMA20 touch + resumption in strong trend)",
   "view.algo.opt.strat_bb_squeeze": "Bollinger Squeeze (BBW 底部十进制 + 段断)",
   "view.algo.opt.strat_connors_rsi2": "Connors RSI - 2 + 200 SMA (普通经典)",
   "view.algo.opt.strat_donchian_trend": "Donchian Trend / Turtle (Donchian + ADX 过滤器)",

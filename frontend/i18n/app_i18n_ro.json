@@ -3917,6 +3917,7 @@
   "view.algo.opt.side_both": "Lungă + scurtă",
   "view.algo.opt.side_long": "Numai mult timp",
   "view.algo.opt.side_short": "Numai scurt",
+  "view.algo.opt.strat_adx_pullback": "ADX Pullback — Raschke Holy Grail (EMA20 touch + resumption in strong trend)",
   "view.algo.opt.strat_bb_squeeze": "Bollinger Squeeze (BBW Decile de jos + pauză bandă)",
   "view.algo.opt.strat_connors_rsi2": "Connors RSI-2 + 200 SMA (clasic medie-rev)",
   "view.algo.opt.strat_donchian_trend": "Donchian Trend / Turtle (Donchian + filtru ADX)",

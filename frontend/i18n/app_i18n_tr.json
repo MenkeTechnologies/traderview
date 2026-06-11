@@ -3917,6 +3917,7 @@
   "view.algo.opt.side_both": "Uzun + kısa",
   "view.algo.opt.side_long": "Sadece uzun",
   "view.algo.opt.side_short": "Kısa sadece kısa",
+  "view.algo.opt.strat_adx_pullback": "ADX Pullback — Raschke Holy Grail (EMA20 touch + resumption in strong trend)",
   "view.algo.opt.strat_bb_squeeze": "Bollinger Squeeze (BBW alt decile + grup molası)",
   "view.algo.opt.strat_connors_rsi2": "Connors RSI-2 + 200 SMA (mean-rev klasik)",
   "view.algo.opt.strat_donchian_trend": "Donchian Trend / Kaplumbağa (Donchian + ADX filtre)",
