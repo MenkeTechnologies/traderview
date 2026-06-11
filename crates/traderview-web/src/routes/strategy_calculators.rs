@@ -5,6 +5,7 @@
 //!   POST /sim/dual-momentum              — Antonacci GEM backtest
 //!   GET  /symbols/:sym/turn-of-month     — TOM seasonality stats
 //!   GET  /symbols/:sym/vol-cone          — realized-vol percentile cone
+//!   GET  /symbols/:sym/day-of-week       — weekday return seasonality
 
 use crate::auth::AuthUser;
 use crate::error::ApiError;
@@ -14,8 +15,8 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use serde::Deserialize;
 use traderview_db::strategy_calculators::{
-    self, AntiMartingaleInput, AntiMartingaleReport, FixedRatioInput, FixedRatioReport,
-    GridInput, GridReport, TomError, TomReport, VolConeReport,
+    self, AntiMartingaleInput, AntiMartingaleReport, DowReport, FixedRatioInput,
+    FixedRatioReport, GridInput, GridReport, TomError, TomReport, VolConeReport,
 };
 use traderview_db::strategy_simulators::{self, GemInput, GemReport, SimError};
 
@@ -27,6 +28,7 @@ pub fn router() -> Router<AppState> {
         .route("/sim/dual-momentum", post(post_dual_momentum))
         .route("/symbols/:symbol/turn-of-month", get(get_turn_of_month))
         .route("/symbols/:symbol/vol-cone", get(get_vol_cone))
+        .route("/symbols/:symbol/day-of-week", get(get_day_of_week))
 }
 
 async fn post_grid_trading(
@@ -114,6 +116,19 @@ async fn get_vol_cone(
 ) -> Result<Json<VolConeReport>, ApiError> {
     let sym = validate_symbol(&symbol)?;
     strategy_calculators::vol_cone(&s.pool, &sym, q.years.unwrap_or(5))
+        .await
+        .map(Json)
+        .map_err(map_tom_err)
+}
+
+async fn get_day_of_week(
+    State(s): State<AppState>,
+    _u: AuthUser,
+    Path(symbol): Path<String>,
+    Query(q): Query<TomQ>,
+) -> Result<Json<DowReport>, ApiError> {
+    let sym = validate_symbol(&symbol)?;
+    strategy_calculators::day_of_week(&s.pool, &sym, q.years.unwrap_or(10))
         .await
         .map(Json)
         .map_err(map_tom_err)

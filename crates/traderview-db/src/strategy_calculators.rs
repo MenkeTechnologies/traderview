@@ -398,6 +398,48 @@ pub fn tom_stats(symbol: &str, closes: &[(chrono::NaiveDate, f64)]) -> TomReport
 }
 
 // ===========================================================================
+// Day-of-week seasonality (data wrapper around
+// traderview_core::day_of_week_seasonality — the stats live there)
+// ===========================================================================
+
+#[derive(Debug, Clone, Serialize)]
+pub struct DowReport {
+    pub symbol: String,
+    pub days_analyzed: usize,
+    #[serde(flatten)]
+    pub stats: traderview_core::day_of_week_seasonality::DayOfWeekSeasonalityReport,
+}
+
+pub async fn day_of_week(
+    pool: &PgPool,
+    symbol: &str,
+    years: u32,
+) -> Result<DowReport, TomError> {
+    use traderview_core::day_of_week_seasonality::{self as dow, DailyClose};
+    let closes = daily_closes(pool, symbol, years).await?;
+    let tagged: Vec<DailyClose> = closes
+        .iter()
+        .filter_map(|(d, c)| {
+            let wd = d.weekday().num_days_from_monday() as u8 + 1; // 1=Mon
+            (wd <= 5).then_some(DailyClose {
+                day_of_week: wd,
+                close: *c,
+            })
+        })
+        .collect();
+    let stats = dow::compute(&tagged).ok_or_else(|| TomError::Insufficient {
+        symbol: symbol.to_string(),
+        got: tagged.len(),
+        need: MIN_DAYS,
+    })?;
+    Ok(DowReport {
+        symbol: symbol.to_string(),
+        days_analyzed: tagged.len(),
+        stats,
+    })
+}
+
+// ===========================================================================
 // Volatility cone (data wrapper around traderview_core::vol_cone)
 // ===========================================================================
 

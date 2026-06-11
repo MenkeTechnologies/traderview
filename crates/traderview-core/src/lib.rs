@@ -878,5 +878,7 @@ pub mod williams_vix_fix;
 pub mod laguerre_rsi;
 pub mod rs_line;
 pub mod vol_cone;
+pub mod conversion_reversal;
+pub mod seagull_spread;
 
 pub use models::*;

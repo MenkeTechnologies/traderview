@@ -1,7 +1,8 @@
-// Strategy tools — Grid Trading ladder, Fixed-Ratio position sizing
-// (Ryan Jones), Anti-Martingale streak sizing, Dual Momentum (GEM),
-// and Turn-of-Month seasonality behind one tabbed view. Each tool is a
-// server-side compute; the tab/form/result chrome lives in tool_tabs.js.
+// Strategy tools — grid trading, fixed-ratio and anti-martingale
+// sizing, dual momentum (GEM), vol cone, conversion/reversal arb,
+// seagull spread, and turn-of-month / day-of-week seasonality behind
+// one tabbed view. Each tool is a server-side compute; the
+// tab/form/result chrome lives in tool_tabs.js.
 
 import { api } from '../api.js';
 import { esc } from '../util.js';
@@ -148,6 +149,101 @@ const TOOLS = {
             <p class="muted small">Burghardt-Lane realized-vol cone over ${r.days_analyzed} daily closes of
             ${esc(r.symbol)}. Compare an option's implied vol against the row at its horizon: current RV in
             the bottom quartile (green) flags cheap realized regimes, top quartile (red) rich ones.</p>`,
+    },
+    'day-of-week': {
+        label: 'Day of Week',
+        call: (b) => api.dayOfWeekSeasonality(b.symbol, b.years),
+        fields: [
+            { key: 'symbol', label: 'Symbol', def: 'SPY', text: true },
+            { key: 'years', label: 'Lookback years', def: 10, int: true },
+        ],
+        render: (r) => {
+            const NAMES = { 1: 'Mon', 2: 'Tue', 3: 'Wed', 4: 'Thu', 5: 'Fri', 6: 'Sat', 7: 'Sun' };
+            const rows = r.by_weekday.filter(x => x.sample_count > 0);
+            return `
+            <table class="gs-table">
+                <thead><tr><th>Day</th><th>Mean return</th><th>Std dev</th><th>Hit rate</th><th>N</th></tr></thead>
+                <tbody>${rows.map(row => `
+                    <tr>
+                        <td>${NAMES[row.day_of_week] || row.day_of_week}</td>
+                        <td class="${row.mean_return >= 0 ? 'pos' : 'neg'}">${(row.mean_return * 100).toFixed(3)}%</td>
+                        <td>${(row.std_return * 100).toFixed(2)}%</td>
+                        <td>${(row.hit_rate * 100).toFixed(0)}%</td>
+                        <td>${row.sample_count}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+            <p class="muted small">Per-weekday log-return stats over ${r.days_analyzed} daily closes of
+            ${esc(r.symbol)} — the classic Monday-effect / Friday-strength study.</p>`;
+        },
+    },
+    'conversion-reversal': {
+        label: 'Conversion/Reversal',
+        call: (b) => api.calcConversionReversal(b),
+        fields: [
+            { key: 'spot', label: 'Spot ($)', def: 100 },
+            { key: 'strike', label: 'Strike ($)', def: 100 },
+            { key: 'call_price', label: 'Call price ($)', def: 4.25 },
+            { key: 'put_price', label: 'Put price ($)', def: 3 },
+            { key: 'pv_dividends', label: 'PV dividends ($)', def: 0 },
+            { key: 'time_to_expiry_years', label: 'Time to expiry (years)', def: 0.25 },
+            { key: 'market_risk_free_rate', label: 'Market rate (decimal)', def: 0.05 },
+            { key: 'arbitrage_threshold_bps', label: 'Arb threshold (bps)', def: 50 },
+        ],
+        render: (r) => {
+            if (!r) return '<span class="neg">invalid inputs</span>';
+            return `
+            <div class="cards">
+                <div class="card"><div class="label">Implied rate</div>
+                    <div class="value">${isFinite(r.implied_continuous_rate) ? (r.implied_continuous_rate * 100).toFixed(2) + '%' : '∞'}</div>
+                    <div class="small muted">vs ${(r.market_rate * 100).toFixed(2)}% market</div></div>
+                <div class="card"><div class="label">Deviation</div>
+                    <div class="value ${r.is_arbitrage_opportunity ? 'neg' : 'pos'}">${isFinite(r.deviation_basis_points) ? r.deviation_basis_points.toFixed(0) + ' bps' : '∞'}</div>
+                    <div class="small muted">${esc(r.arbitrage_side)} ${r.is_arbitrage_opportunity ? '— ARB' : ''}</div></div>
+                <div class="card"><div class="label">Edge / share</div>
+                    <div class="value ${r.edge_per_share >= 0 ? 'pos' : 'neg'}">$${r.edge_per_share.toFixed(3)}</div>
+                    <div class="small muted">conversion cost $${r.conversion_cost.toFixed(2)} → $${r.strike.toFixed(0)} locked</div></div>
+            </div>
+            <p class="muted small">Put-call parity check: conversion (+stock +put −call) locks the strike at
+            expiry. Implied rate above market = do the conversion; below = do the reversal.</p>`;
+        },
+    },
+    seagull: {
+        label: 'Seagull Spread',
+        call: (b) => api.calcSeagull(b),
+        fields: [
+            { key: 'put_strike', label: 'Short put strike ($)', def: 90 },
+            { key: 'call_low_strike', label: 'Long call strike ($)', def: 100 },
+            { key: 'call_high_strike', label: 'Short call strike ($)', def: 110 },
+            { key: 'put_price', label: 'Put premium ($)', def: 2 },
+            { key: 'call_low_price', label: 'Long call premium ($)', def: 3 },
+            { key: 'call_high_price', label: 'Short call premium ($)', def: 1 },
+        ],
+        render: (r) => {
+            if (!r) return '<span class="neg">invalid inputs (need K_put < K_call_low < K_call_high)</span>';
+            return `
+            <div class="cards">
+                <div class="card"><div class="label">Net ${r.net_debit >= 0 ? 'debit' : 'credit'}</div>
+                    <div class="value">$${Math.abs(r.net_debit).toFixed(2)}</div>
+                    <div class="small ${r.is_zero_cost ? 'pos' : 'muted'}">${r.is_zero_cost ? 'zero-cost structure' : ''}</div></div>
+                <div class="card"><div class="label">Max profit</div>
+                    <div class="value pos">$${r.max_profit.toFixed(2)}</div>
+                    <div class="small muted">above $${r.call_high_strike.toFixed(0)}</div></div>
+                <div class="card"><div class="label">Loss at zero</div>
+                    <div class="value neg">$${r.max_loss_at_zero.toFixed(2)}</div></div>
+                <div class="card"><div class="label">Breakevens</div>
+                    <div class="value">${r.downside_breakeven != null ? '$' + r.downside_breakeven.toFixed(2) : ''}${r.upside_breakeven != null ? ' $' + r.upside_breakeven.toFixed(2) : ''}</div></div>
+            </div>
+            <table class="gs-table">
+                <thead><tr><th>Price</th><th>P&amp;L</th></tr></thead>
+                <tbody>${r.payoff_points.map(([s, p]) => `
+                    <tr><td>$${s.toFixed(2)}</td>
+                        <td class="${p >= 0 ? 'pos' : 'neg'}">$${p.toFixed(2)}</td></tr>`).join('')}
+                </tbody>
+            </table>
+            <p class="muted small">Bullish seagull: short put finances a call spread — upside participation
+            ${esc(String(r.call_low_strike))}→${esc(String(r.call_high_strike))} paid for with downside risk below ${esc(String(r.put_strike))}.</p>`;
+        },
     },
     'turn-of-month': {
         label: 'Turn of Month',

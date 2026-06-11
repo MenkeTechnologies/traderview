@@ -41,7 +41,8 @@ use traderview_core::{
     cliquet_option, cointegration, collar, component_var, composite_factor_scoring,
     compound_option, compound_pivots, conditional_drawdown, conditional_var,
     continuous_ranked_probability_score, convertible_bond, coppock_curve, cornish_fisher,
-    corwin_schultz_spread, cot_report, counter_attack_lines, crab_pattern, cross_currency_basis,
+    conversion_reversal, corwin_schultz_spread, cot_report, counter_attack_lines, crab_pattern,
+    cross_currency_basis,
     crossover, cumulative_delta, cumulative_tick_trin, cumulative_tick_zscore,
     cumulative_volume_delta_zscore, cup_and_handle, cusum, cypher_pattern, daily_loss_limit,
     damiani_volatmeter, dark_cloud_piercing, dark_pool_index, darvas_box, day_of_week_seasonality,
@@ -120,7 +121,8 @@ use traderview_core::{
     risk_parity_weights, risk_reversal_25_delta_butterfly, risk_reward, roll_spread, rolling_beta,
     rolling_drawdown, rolling_quantile, rolling_sharpe, rolling_sortino, rolling_zscore,
     roofing_filter, ross_hook, round_levels, rounding_pattern, runs_test, sabr, sample_entropy,
-    savitzky_golay, scan_orchestrator, second_order_greeks, sector_rotation, separating_lines,
+    savitzky_golay, scan_orchestrator, seagull_spread, second_order_greeks, sector_rotation,
+    separating_lines,
     session_vwap, shark_pattern, short_interest_scanner, side_by_side_white_lines,
     singular_spectrum_analysis, sip_simulator, spearman_correlation, sperandeo_1_2_3,
     spinning_top_marubozu, spread_attribution, spread_chart, standard_error_bands, starc_bands,
@@ -785,6 +787,11 @@ pub fn router() -> Router<AppState> {
             post(information_coefficient_route),
         )
         .route("/options/calc/box-spread", post(box_spread_route))
+        .route(
+            "/options/calc/conversion-reversal",
+            post(conversion_reversal_route),
+        )
+        .route("/options/calc/seagull", post(seagull_route))
         .route(
             "/options/calc/jelly-roll-arbitrage",
             post(jelly_roll_arbitrage_route),
@@ -7062,6 +7069,60 @@ async fn box_spread_route(
         b.time_to_expiry_years,
         b.market_risk_free_rate,
         b.arbitrage_threshold_bps,
+    ))
+}
+
+#[derive(Deserialize)]
+struct ConversionReversalBody {
+    spot: f64,
+    strike: f64,
+    call_price: f64,
+    put_price: f64,
+    #[serde(default)]
+    pv_dividends: f64,
+    time_to_expiry_years: f64,
+    market_risk_free_rate: f64,
+    #[serde(default = "default_box_arb_bps")]
+    arbitrage_threshold_bps: f64,
+}
+
+async fn conversion_reversal_route(
+    _u: AuthUser,
+    Json(b): Json<ConversionReversalBody>,
+) -> Json<Option<conversion_reversal::ConversionReversalReport>> {
+    Json(conversion_reversal::compute(
+        b.spot,
+        b.strike,
+        b.call_price,
+        b.put_price,
+        b.pv_dividends,
+        b.time_to_expiry_years,
+        b.market_risk_free_rate,
+        b.arbitrage_threshold_bps,
+    ))
+}
+
+#[derive(Deserialize)]
+struct SeagullBody {
+    put_strike: f64,
+    call_low_strike: f64,
+    call_high_strike: f64,
+    put_price: f64,
+    call_low_price: f64,
+    call_high_price: f64,
+}
+
+async fn seagull_route(
+    _u: AuthUser,
+    Json(b): Json<SeagullBody>,
+) -> Json<Option<seagull_spread::SeagullReport>> {
+    Json(seagull_spread::compute(
+        b.put_strike,
+        b.call_low_strike,
+        b.call_high_strike,
+        b.put_price,
+        b.call_low_price,
+        b.call_high_price,
     ))
 }
 
