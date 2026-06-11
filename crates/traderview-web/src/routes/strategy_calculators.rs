@@ -31,6 +31,8 @@
 //!   GET  /symbols/:sym/vol-cone          — realized-vol percentile cone
 //!   GET  /symbols/:sym/day-of-week       — weekday return seasonality
 //!   GET  /symbols/:sym/santa-rally       — Hirsch 7-session window stats
+//!   GET  /symbols/:sym/overnight-split   — overnight vs intraday legs
+//!   POST /calc/double-barrier            — target-vs-stop hit-first odds
 
 use crate::auth::AuthUser;
 use crate::error::ApiError;
@@ -79,6 +81,8 @@ pub fn router() -> Router<AppState> {
         .route("/symbols/:symbol/vol-cone", get(get_vol_cone))
         .route("/symbols/:symbol/day-of-week", get(get_day_of_week))
         .route("/symbols/:symbol/santa-rally", get(get_santa_rally))
+        .route("/symbols/:symbol/overnight-split", get(get_overnight_split))
+        .route("/calc/double-barrier", post(post_double_barrier))
 }
 
 async fn post_grid_trading(
@@ -541,4 +545,37 @@ async fn get_santa_rally(
         .await
         .map(Json)
         .map_err(map_tom_err)
+}
+
+async fn get_overnight_split(
+    State(s): State<AppState>,
+    _u: AuthUser,
+    Path(symbol): Path<String>,
+    Query(q): Query<TomQ>,
+) -> Result<Json<strategy_calculators::OvernightSplitReport>, ApiError> {
+    let sym = validate_symbol(&symbol)?;
+    strategy_calculators::overnight_split(&s.pool, &sym, q.years.unwrap_or(10))
+        .await
+        .map(Json)
+        .map_err(map_tom_err)
+}
+
+#[derive(Debug, Deserialize)]
+struct DoubleBarrierBody {
+    spot: f64,
+    lower: f64,
+    upper: f64,
+    #[serde(default)]
+    drift: f64,
+    vol: f64,
+}
+
+async fn post_double_barrier(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<DoubleBarrierBody>,
+) -> Result<Json<traderview_core::double_barrier::DoubleBarrierReport>, ApiError> {
+    traderview_core::double_barrier::compute(b.spot, b.lower, b.upper, b.drift, b.vol)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("need lower < spot < upper, vol > 0".into()))
 }

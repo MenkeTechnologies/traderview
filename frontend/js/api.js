@@ -763,6 +763,8 @@ export const api = {
     calcFundFees:            (body) => request('/calc/fund-fees', { method: 'POST', body: JSON.stringify(body) }),
     calcWinRateConfidence:   (body) => request('/calc/win-rate-confidence', { method: 'POST', body: JSON.stringify(body) }),
     calcEquityCurveFilter:   (body) => request('/calc/equity-curve-filter', { method: 'POST', body: JSON.stringify(body) }),
+    calcDoubleBarrier:       (body) => request('/calc/double-barrier', { method: 'POST', body: JSON.stringify(body) }),
+    overnightSplit:          (sym, years = 10) => request(`/symbols/${encodeURIComponent(sym)}/overnight-split${qs({ years })}`),
     calcImpliedDividend:     (body) => request('/options/calc/implied-dividend', { method: 'POST', body: JSON.stringify(body) }),
     calcWarrant:             (body) => request('/options/calc/warrant', { method: 'POST', body: JSON.stringify(body) }),
     calcEarlyAssignment:     (body) => request('/options/calc/early-assignment', { method: 'POST', body: JSON.stringify(body) }),

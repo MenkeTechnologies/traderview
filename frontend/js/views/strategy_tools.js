@@ -1149,6 +1149,52 @@ const TOOLS = {
             <p class="muted small">Okun's misery index — single-number macro pain gauge; readings above ~10
             historically coincide with hostile equity regimes.</p>`,
     },
+    'double-barrier': {
+        label: 'Target vs Stop Odds',
+        call: (b) => api.calcDoubleBarrier(b),
+        fields: [
+            { key: 'spot', label: 'Spot ($)', def: 100 },
+            { key: 'lower', label: 'Stop ($)', def: 90 },
+            { key: 'upper', label: 'Target ($)', def: 110 },
+            { key: 'drift', label: 'Annual drift (decimal)', def: 0 },
+            { key: 'vol', label: 'Annual vol (decimal)', def: 0.2 },
+        ],
+        render: (r) => {
+            if (!r) return '<span class="neg">need stop < spot < target</span>';
+            return `
+            <div class="cards">
+                <div class="card"><div class="label">Target hit first</div>
+                    <div class="value pos">${(r.p_upper_first * 100).toFixed(1)}%</div></div>
+                <div class="card"><div class="label">Stop hit first</div>
+                    <div class="value neg">${(r.p_lower_first * 100).toFixed(1)}%</div>
+                    <div class="small muted">log drift ν = ${r.log_drift.toFixed(4)}</div></div>
+            </div>
+            <p class="muted small">GBM exit-split — which bracket leg fires first, in closed form. A tight
+            target over a wide stop posts a seductive win rate with the skew hidden in the loser.</p>`;
+        },
+    },
+    'overnight-split': {
+        label: 'Overnight vs Intraday',
+        call: (b) => api.overnightSplit(b.symbol, b.years),
+        fields: [
+            { key: 'symbol', label: 'Symbol', def: 'SPY', text: true },
+            { key: 'years', label: 'Lookback years', def: 10, int: true },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Overnight (close→open)</div>
+                    <div class="value ${r.overnight_total_pct >= 0 ? 'pos' : 'neg'}">${r.overnight_total_pct.toFixed(1)}%</div>
+                    <div class="small muted">avg ${r.overnight_avg_pct.toFixed(3)}%/night · hit ${r.overnight_hit_rate_pct.toFixed(0)}%</div></div>
+                <div class="card"><div class="label">Intraday (open→close)</div>
+                    <div class="value ${r.intraday_total_pct >= 0 ? 'pos' : 'neg'}">${r.intraday_total_pct.toFixed(1)}%</div>
+                    <div class="small muted">avg ${r.intraday_avg_pct.toFixed(3)}%/day · hit ${r.intraday_hit_rate_pct.toFixed(0)}%</div></div>
+                <div class="card"><div class="label">Close-to-close</div>
+                    <div class="value">${r.close_to_close_total_pct.toFixed(1)}%</div>
+                    <div class="small muted">${r.sessions} sessions on ${esc(r.symbol)}</div></div>
+            </div>
+            <p class="muted small">The two legs compound back to close-to-close exactly. Equity-index
+            returns famously concentrate overnight — decisive for holding day-trades past the bell.</p>`,
+    },
     'santa-rally': {
         label: 'Santa Rally',
         call: (b) => api.santaRally(b.symbol, b.years),

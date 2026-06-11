@@ -577,6 +577,56 @@ pub async fn correlation_regime(
 }
 
 // ===========================================================================
+// Overnight vs intraday split (data wrapper around
+// traderview_core::overnight_intraday)
+// ===========================================================================
+
+#[derive(Debug, Clone, Serialize)]
+pub struct OvernightSplitReport {
+    pub symbol: String,
+    #[serde(flatten)]
+    pub stats: traderview_core::overnight_intraday::OvernightReport,
+}
+
+pub async fn overnight_split(
+    pool: &PgPool,
+    symbol: &str,
+    years: u32,
+) -> Result<OvernightSplitReport, TomError> {
+    let years = years.clamp(1, 20);
+    let to = Utc::now();
+    let from = to - Duration::days(366 * years as i64);
+    let bars = crate::prices::get_bars(pool, symbol, BarInterval::D1, from, to)
+        .await
+        .map_err(TomError::PriceFetch)?;
+    let pairs: Vec<(f64, f64)> = bars
+        .iter()
+        .filter_map(|b| {
+            let open: f64 = b.open.to_string().parse().unwrap_or(0.0);
+            let close: f64 = b.close.to_string().parse().unwrap_or(0.0);
+            (open > 0.0 && close > 0.0).then_some((open, close))
+        })
+        .collect();
+    if pairs.len() < MIN_DAYS {
+        return Err(TomError::Insufficient {
+            symbol: symbol.to_string(),
+            got: pairs.len(),
+            need: MIN_DAYS,
+        });
+    }
+    traderview_core::overnight_intraday::compute(&pairs)
+        .map(|stats| OvernightSplitReport {
+            symbol: symbol.to_string(),
+            stats,
+        })
+        .ok_or_else(|| TomError::Insufficient {
+            symbol: symbol.to_string(),
+            got: pairs.len(),
+            need: MIN_DAYS,
+        })
+}
+
+// ===========================================================================
 // Volatility cone (data wrapper around traderview_core::vol_cone)
 // ===========================================================================
 
