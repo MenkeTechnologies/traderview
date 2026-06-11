@@ -96,6 +96,33 @@ const TOOLS = {
             <p class="muted small">Press risk after wins (capped), cut back toward base after losses —
             the opposite of a martingale. The control row trades the same sequence at flat base risk.</p>`,
     },
+    'mean-reversion-screen': {
+        label: 'Mean-Reversion Screen',
+        call: (b) => api.meanReversionScreen({
+            symbols: String(b.symbols).split(/[\s,]+/).filter(Boolean),
+            years: b.years,
+        }),
+        fields: [
+            { key: 'symbols', label: 'Symbols (comma-sep, ≤30)', def: 'SPY, QQQ, XLE, XLF, XLV, IWM, DIA', text: true },
+            { key: 'years', label: 'Lookback years', def: 2, int: true },
+        ],
+        render: (r) => `
+            <table class="gs-table">
+                <thead><tr><th>Symbol</th><th>RSI(2)</th><th>20d z</th><th>vs MA20</th><th>5d return</th></tr></thead>
+                <tbody>${r.rows.map(row => `
+                    <tr>
+                        <td>${esc(row.symbol)}</td>
+                        <td class="${row.rsi2 <= 10 ? 'pos' : row.rsi2 >= 90 ? 'neg' : ''}">${row.rsi2.toFixed(1)}</td>
+                        <td class="${row.z20 <= -2 ? 'pos' : row.z20 >= 2 ? 'neg' : ''}">${row.z20.toFixed(2)}</td>
+                        <td>${(row.pct_from_ma20 >= 0 ? '+' : '') + row.pct_from_ma20.toFixed(1)}%</td>
+                        <td class="${row.return_5d_pct >= 0 ? 'pos' : 'neg'}">${row.return_5d_pct.toFixed(1)}%</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+            ${r.skipped.length ? `<p class="muted small neg">skipped: ${r.skipped.map(esc).join(', ')}</p>` : ''}
+            <p class="muted small">Most washed-out first — Connors RSI(2) under 10 with a −2σ 20-day
+            z-score is the classic snap-back setup; the same numbers inverted flag the fades.</p>`,
+    },
     'momentum-screen': {
         label: 'Momentum Screen',
         call: (b) => api.momentumScreen({

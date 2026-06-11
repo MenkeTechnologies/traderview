@@ -42,6 +42,7 @@
 //!   POST /screeners/seasonality          — calendar edges across a list
 //!   POST /screeners/risk                 — vol ranks + drawdown state
 //!   POST /screeners/momentum             — 12-1, 52w-high, RS vs bench
+//!   POST /screeners/mean-reversion       — RSI(2), 20d z, MA distance
 //!   POST /symbols/:sym/event-study       — caller-dated FOMC/CPI study
 //!   POST /calc/double-barrier            — target-vs-stop hit-first odds
 //!   POST /calc/futures-sizing            — tick math + margin-capped size
@@ -118,6 +119,7 @@ pub fn router() -> Router<AppState> {
         .route("/screeners/seasonality", post(post_seasonality_screen))
         .route("/screeners/risk", post(post_risk_screen))
         .route("/screeners/momentum", post(post_momentum_screen))
+        .route("/screeners/mean-reversion", post(post_mean_reversion_screen))
         .route("/symbols/:symbol/event-study", post(post_event_study))
         .route("/calc/double-barrier", post(post_double_barrier))
         .route("/calc/futures-sizing", post(post_futures_sizing))
@@ -867,6 +869,18 @@ async fn post_risk_screen(
     let symbols = clean_symbol_list(&b.symbols)?;
     Ok(Json(
         strategy_calculators::risk_screen(&s.pool, &symbols, b.years.unwrap_or(5)).await,
+    ))
+}
+
+async fn post_mean_reversion_screen(
+    State(s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<SeasonalityScreenBody>,
+) -> Result<Json<strategy_calculators::MeanReversionScreen>, ApiError> {
+    let symbols = clean_symbol_list(&b.symbols)?;
+    Ok(Json(
+        strategy_calculators::mean_reversion_screen(&s.pool, &symbols, b.years.unwrap_or(2))
+            .await,
     ))
 }
 

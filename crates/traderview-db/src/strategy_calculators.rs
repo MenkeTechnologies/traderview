@@ -832,6 +832,74 @@ pub async fn momentum_screen(
 }
 
 // ===========================================================================
+// Mean-reversion screener — RSI(2), 20d z-score, MA distance
+// ===========================================================================
+
+#[derive(Debug, Clone, Serialize)]
+pub struct MeanReversionRow {
+    pub symbol: String,
+    /// Connors-style RSI(2) — the short-term washout gauge.
+    pub rsi2: f64,
+    /// Z-score of the last close vs the 20-day mean/std.
+    pub z20: f64,
+    /// Distance from the 20-day MA, %.
+    pub pct_from_ma20: f64,
+    pub return_5d_pct: f64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct MeanReversionScreen {
+    /// Most washed-out first (lowest RSI(2)).
+    pub rows: Vec<MeanReversionRow>,
+    pub skipped: Vec<String>,
+}
+
+pub async fn mean_reversion_screen(
+    pool: &PgPool,
+    symbols: &[String],
+    years: u32,
+) -> MeanReversionScreen {
+    let mut rows = Vec::new();
+    let mut skipped = Vec::new();
+    for sym in symbols {
+        let Ok(dated) = daily_closes(pool, sym, years).await else {
+            skipped.push(sym.clone());
+            continue;
+        };
+        let series: Vec<f64> = dated.iter().map(|(_, c)| *c).collect();
+        let n = series.len();
+        if n < 30 {
+            skipped.push(sym.clone());
+            continue;
+        }
+        let Some(Some(rsi2)) = traderview_core::indicators::rsi(&series, 2).last().copied()
+        else {
+            skipped.push(sym.clone());
+            continue;
+        };
+        let window = &series[n - 20..];
+        let mean = window.iter().sum::<f64>() / 20.0;
+        let var = window.iter().map(|x| (x - mean).powi(2)).sum::<f64>() / 19.0;
+        let std = var.sqrt();
+        let last = series[n - 1];
+        let z20 = if std > 0.0 { (last - mean) / std } else { 0.0 };
+        let Some(r5) = window_return_pct(&series, 5) else {
+            skipped.push(sym.clone());
+            continue;
+        };
+        rows.push(MeanReversionRow {
+            symbol: sym.clone(),
+            rsi2,
+            z20,
+            pct_from_ma20: (last / mean - 1.0) * 100.0,
+            return_5d_pct: r5,
+        });
+    }
+    rows.sort_by(|a, b| a.rsi2.partial_cmp(&b.rsi2).unwrap_or(std::cmp::Ordering::Equal));
+    MeanReversionScreen { rows, skipped }
+}
+
+// ===========================================================================
 // Pair character sheet — aligned fetch once, every pair analysis on it
 // ===========================================================================
 
