@@ -1139,6 +1139,8 @@ export const api = {
     algoRevisions: (id) => request(`/algo/strategies/${id}/revisions`),
     algoRestoreRevision: (id, revId) =>
         request(`/algo/strategies/${id}/revisions/${revId}/restore`, { method: 'POST' }),
+    algoForkStrategy: (id, name) =>
+        request(`/algo/strategies/${id}/fork`, { method: 'POST', body: JSON.stringify(name ? { name } : {}) }),
 
     // Correlation matrix (pairwise Pearson on cached daily-bar log-returns)
     corrWatchlist: (wid, days = 90) =>

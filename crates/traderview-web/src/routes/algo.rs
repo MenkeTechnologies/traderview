@@ -52,6 +52,7 @@ pub fn router() -> Router<AppState> {
             "/algo/strategies/:id/revisions/:rev_id/restore",
             post(post_restore_revision),
         )
+        .route("/algo/strategies/:id/fork", post(post_fork_strategy))
         .route("/algo/strategies/:id/backtests", get(list_backtest_history))
         .route(
             "/algo/backtests/:id",
@@ -1414,6 +1415,56 @@ async fn post_restore_revision(
         .map_err(ApiError::Internal)?
         .map(Json)
         .ok_or_else(|| ApiError::BadRequest("strategy not found".into()))
+}
+
+#[derive(serde::Deserialize)]
+struct ForkBody {
+    /// Challenger name; default "<champion> (fork)".
+    #[serde(default)]
+    name: Option<String>,
+}
+
+/// POST /algo/strategies/:id/fork — champion/challenger: duplicate the
+/// strategy so a tweak can run side by side with the original instead
+/// of replacing it. The fork starts DISABLED in internal_sim
+/// regardless of the champion's mode (an experiment never inherits
+/// live execution), and the auto-tagging from fills (algo:<name>)
+/// keeps the two attributable separately in the journal for free.
+async fn post_fork_strategy(
+    State(s): State<AppState>,
+    u: AuthUser,
+    Path(id): Path<Uuid>,
+    Json(body): Json<ForkBody>,
+) -> Result<Json<AlgoStrategy>, ApiError> {
+    let src = traderview_db::algo::get_strategy(&s.pool, u.id, id)
+        .await
+        .map_err(ApiError::Internal)?
+        .ok_or_else(|| ApiError::BadRequest("strategy not found".into()))?;
+    let name = body
+        .name
+        .map(|n| n.trim().to_string())
+        .filter(|n| !n.is_empty())
+        .unwrap_or_else(|| format!("{} (fork)", src.name));
+    let input = AlgoStrategyInput {
+        name,
+        enabled: false,
+        timeframe: src.timeframe.clone(),
+        universe_mode: src.universe_mode.clone(),
+        watchlist_id: src.watchlist_id,
+        autoscan_top_n: src.autoscan_top_n,
+        side_mode: src.side_mode.clone(),
+        strategy_type: src.strategy_type.clone(),
+        account_id: Some(src.account_id),
+        entry_rules: src.entry_rules.clone(),
+        exit_rules: src.exit_rules.clone(),
+        sizing: src.sizing.clone(),
+        risk_gates: src.risk_gates.clone(),
+        broker_mode: "internal_sim".into(),
+    };
+    traderview_db::algo::create_strategy(&s.pool, u.id, input)
+        .await
+        .map(Json)
+        .map_err(ApiError::Internal)
 }
 
 /// GET /algo/strategies/:id/metrics — dashboard rollup.

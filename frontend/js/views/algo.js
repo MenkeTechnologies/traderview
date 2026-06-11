@@ -1022,6 +1022,7 @@ async function refreshStrategies(mount) {
                 <button class="link" data-act="drift" data-i18n="view.algo.btn.drift">drift</button>
                 <button class="link" data-act="gates" data-i18n="view.algo.btn.gates">gates</button>
                 <button class="link" data-act="history" data-i18n="view.algo.btn.history">history</button>
+                <button class="link" data-act="fork" data-i18n="view.algo.btn.fork">fork</button>
                 <button class="link" data-act="kill" data-i18n="view.algo.btn.kill">${s.kill_switch ? 'release' : 'kill'}</button>
                 <button class="link" data-act="edit" data-i18n="view.algo.btn.edit">edit</button>
                 <button class="link" data-act="del" data-i18n="view.algo.btn.delete">delete</button>
@@ -1047,6 +1048,16 @@ async function refreshStrategies(mount) {
             if (act === 'drift') return openDriftModal(s);
             if (act === 'gates') return openGatesModal(s);
             if (act === 'history') return openRevisionsModal(s);
+            if (act === 'fork') {
+                try {
+                    await api.algoForkStrategy(s.id);
+                    showToast(t('view.algo.toast.forked'), { level: 'success' });
+                    await refreshStrategies(mount);
+                } catch (err) {
+                    showToast(t('common.error', { err: err.message }), { level: 'error' });
+                }
+                return;
+            }
             if (act === 'kill') return toggleKill(mount, s);
             if (act === 'edit') return openStrategyModal(mount, s);
             if (act === 'del') return deleteStrategy(mount, s);
