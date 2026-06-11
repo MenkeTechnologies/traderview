@@ -824,6 +824,107 @@ pub(crate) async fn option_quote(
 /// Per-contract commission for paper option fills (retail standard).
 const OPTION_COMMISSION_PER_CONTRACT: f64 = 0.65;
 
+#[derive(Debug, Clone, Deserialize)]
+pub struct SpreadRequest {
+    pub legs: Vec<traderview_core::option_spread::SpreadLeg>,
+    /// Spread quantity: each leg fills qty × ratio contracts.
+    pub qty: Decimal,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SpreadResult {
+    pub orders: Vec<PaperOrder>,
+    /// Per-share net premium × 100 × qty: positive = credit collected.
+    pub net_premium_usd: f64,
+    pub total_fees_usd: f64,
+}
+
+/// Atomic multi-leg option order: every leg quotes from the chain mid
+/// and fills in ONE transaction — a spread never partially fills. Any
+/// unquotable or expired leg fails the whole submit (the atomicity IS
+/// the feature; legging in is what the single-order ticket is for).
+pub async fn submit_spread(
+    pool: &PgPool,
+    user_id: Uuid,
+    account_id: Uuid,
+    req: SpreadRequest,
+) -> anyhow::Result<SpreadResult> {
+    traderview_core::option_spread::validate(&req.legs).map_err(|e| anyhow::anyhow!(e))?;
+    if req.qty <= Decimal::ZERO || req.qty > Decimal::from(1000) {
+        anyhow::bail!("qty must be in 1..=1000 spreads");
+    }
+    let owner: Option<(Uuid,)> = sqlx::query_as("SELECT user_id FROM paper_accounts WHERE id = $1")
+        .bind(account_id)
+        .fetch_optional(pool)
+        .await?;
+    if !matches!(owner, Some((u,)) if u == user_id) {
+        anyhow::bail!("forbidden");
+    }
+    // Quote every leg BEFORE touching the book — atomicity.
+    let mut prices = Vec::with_capacity(req.legs.len());
+    for leg in &req.legs {
+        let rq = resolve_quote(pool, &leg.symbol).await?;
+        prices.push(rq.last.to_string().parse::<f64>().unwrap_or(0.0));
+    }
+    let per_share = traderview_core::option_spread::net_premium(&req.legs, &prices)
+        .ok_or_else(|| anyhow::anyhow!("degenerate leg prices"))?;
+    let qty_f = req.qty.to_string().parse::<f64>().unwrap_or(0.0);
+    let net_premium_usd = per_share * 100.0 * qty_f;
+    let mut total_fees_usd = 0.0;
+    let mut tx = pool.begin().await?;
+    let mut orders = Vec::with_capacity(req.legs.len());
+    let mut first_id: Option<Uuid> = None;
+    for (leg, price) in req.legs.iter().zip(&prices) {
+        let leg_qty = req.qty * Decimal::from(leg.ratio);
+        let side = if leg.buy { Side::Buy } else { Side::Sell };
+        let side_str = if leg.buy { "buy" } else { "sell" };
+        let price_dec = Decimal::try_from(*price)?;
+        let fee = OPTION_COMMISSION_PER_CONTRACT * leg_qty.to_string().parse::<f64>().unwrap_or(0.0);
+        total_fees_usd += fee;
+        let order: PaperOrder = sqlx::query_as(
+            "INSERT INTO paper_orders
+                (paper_account_id, symbol, side, qty, order_type,
+                 status, filled_price, filled_qty, filled_at, fee, parent_order_id)
+             VALUES ($1, $2, $3::side_t, $4, 'market',
+                     'filled', $5, $4, now(), $6, $7)
+             RETURNING id, paper_account_id, symbol, side::text, qty, order_type::text,
+                       limit_price, stop_price, status::text,
+                       trail_value, trail_is_pct, trail_extreme, oco_group, parent_order_id,
+                       filled_price, filled_qty, fee, submitted_at, filled_at, cancel_at, reject_reason",
+        )
+        .bind(account_id)
+        .bind(leg.symbol.trim().to_uppercase())
+        .bind(side_str)
+        .bind(leg_qty)
+        .bind(price_dec)
+        .bind(Decimal::try_from(fee)?)
+        .bind(first_id) // legs 2..n point at leg 1 for display grouping
+        .fetch_one(&mut *tx)
+        .await?;
+        apply_fill(
+            &mut tx,
+            account_id,
+            &leg.symbol.trim().to_uppercase(),
+            side,
+            leg_qty,
+            price_dec,
+            Decimal::from(100),
+        )
+        .await?;
+        if first_id.is_none() {
+            first_id = Some(order.id);
+        }
+        orders.push(order);
+    }
+    deduct_fee(&mut tx, account_id, total_fees_usd).await?;
+    tx.commit().await?;
+    Ok(SpreadResult {
+        orders,
+        net_premium_usd,
+        total_fees_usd,
+    })
+}
+
 struct ResolvedQuote {
     last: Decimal,
     multiplier: Decimal,

@@ -31,6 +31,7 @@ pub fn router() -> Router<AppState> {
         )
         .route("/paper/orders/:id/cancel", post(cancel_order))
         .route("/paper/accounts/:id/brackets", post(submit_bracket))
+        .route("/paper/accounts/:id/spreads", post(submit_spread))
         .route("/paper/accounts/:id/equity-history", get(equity_history))
         .route("/paper/accounts/comparison", get(account_comparison))
         .route("/paper/accounts/create", post(create_account))
@@ -133,6 +134,19 @@ async fn equity_history(
         .await
         .map(Json)
         .map_err(ApiError::Internal)
+}
+
+/// Atomic multi-leg option spread (2-4 OCC legs, one underlying).
+async fn submit_spread(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(account_id): Path<Uuid>,
+    Json(req): Json<traderview_db::paper::SpreadRequest>,
+) -> Result<Json<traderview_db::paper::SpreadResult>, ApiError> {
+    traderview_db::paper::submit_spread(&s.pool, user.id, account_id, req)
+        .await
+        .map(Json)
+        .map_err(|e| ApiError::BadRequest(e.to_string()))
 }
 
 /// Bracket / OCO: entry + linked stop-loss and take-profit legs; the

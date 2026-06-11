@@ -908,6 +908,7 @@ pub mod adr_premium;
 pub mod sbc_dilution;
 pub mod sum_of_parts;
 pub mod occ_symbol;
+pub mod option_spread;
 pub mod odd_lot_tender;
 pub mod processing_spreads;
 pub mod curve_trade;

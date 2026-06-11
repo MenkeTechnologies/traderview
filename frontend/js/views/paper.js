@@ -107,6 +107,14 @@ export async function renderPaper(mount) {
                     <input name="expire_at" type="datetime-local" data-tip="view.paper.tip.gtd_expiry">
                     <button data-i18n="view.paper.btn.submit" data-tip="view.paper.tip.submit" data-shortcut="paper_submit" class="primary" type="submit">SUBMIT</button>
                 </form>
+                <h2 data-i18n="view.paper.h2.spread_ticket">Option spread ticket</h2>
+                <form id="spread-form" class="inline-form">
+                    <input name="leg1" placeholder="buy leg OCC (e.g. AAPL260117C00190000)" data-i18n-placeholder="view.paper.placeholder.spread_buy" data-tip="view.paper.tip.spread_leg" required style="min-width:220px">
+                    <input name="leg2" placeholder="sell leg OCC" data-i18n-placeholder="view.paper.placeholder.spread_sell" required style="min-width:220px">
+                    <input name="qty" type="number" min="1" step="1" value="1" data-tip="view.paper.tip.spread_qty">
+                    <button data-i18n="view.paper.btn.submit_spread" class="primary" type="submit">SPREAD</button>
+                </form>
+
                 <h2 data-i18n="view.paper.h2.bracket_ticket">Bracket (OCO) ticket</h2>
                 <form id="bracket-form" class="inline-form">
                     <input name="symbol" placeholder="symbol" data-i18n-placeholder="common.placeholder.symbol" data-tip="view.paper.tip.symbol" required style="text-transform:uppercase">
@@ -286,6 +294,24 @@ export async function renderPaper(mount) {
             await api.paperAccountDelete(acct.id);
             if (!viewIsCurrent(tok)) return;
             localStorage.removeItem('paper.acctId');
+            renderPaper(mount);
+        } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
+    });
+    mount.querySelector('#spread-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        try {
+            const r = await api.paperSpreadCreate(acct.id, {
+                legs: [
+                    { symbol: fd.get('leg1').trim().toUpperCase(), buy: true, ratio: 1 },
+                    { symbol: fd.get('leg2').trim().toUpperCase(), buy: false, ratio: 1 },
+                ],
+                qty: Number(fd.get('qty')) || 1,
+            });
+            if (!viewIsCurrent(tok)) return;
+            showToast(t('view.paper.toast.spread_filled', {
+                premium: (r.net_premium_usd >= 0 ? '+' : '') + r.net_premium_usd.toFixed(2),
+            }), { level: 'success' });
             renderPaper(mount);
         } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
     });
