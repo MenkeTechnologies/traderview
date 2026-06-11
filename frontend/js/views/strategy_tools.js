@@ -148,6 +148,52 @@ const TOOLS = {
             skipped trades accrue on paper. Shortens decaying-edge losing streaks, pays whipsaw tax on
             choppy ones — the verdict tells you which system you have.</p>`,
     },
+    'leveraged-etf-decay': {
+        label: 'Leveraged ETF Decay',
+        call: (b) => api.calcLeveragedEtfDecay(b),
+        fields: [
+            { key: 'leverage', label: 'Leverage (2, 3, −1, −2…)', def: 3 },
+            { key: 'index_return_pct', label: 'Index return over period (%)', def: 0 },
+            { key: 'index_vol_pct', label: 'Index vol (%/yr)', def: 40 },
+            { key: 'years', label: 'Period (years)', def: 1 },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Expected ETF return</div>
+                    <div class="value ${r.letf_return_pct >= 0 ? 'pos' : 'neg'}">${r.letf_return_pct.toFixed(1)}%</div>
+                    <div class="small muted">naive k×R says ${r.naive_return_pct.toFixed(1)}%</div></div>
+                <div class="card"><div class="label">Vol drag</div>
+                    <div class="value neg">−${r.vol_drag_pp.toFixed(1)}pp</div>
+                    <div class="small muted">vs ${r.compounded_no_vol_pct.toFixed(1)}% levered compounding alone</div></div>
+            </div>
+            <p class="muted small">(1+R)^k · e^(−k(k−1)σ²T/2) — smooth trends compound in your favor,
+            chop bleeds: a 3× on a flat 40%-vol index loses ~38% in a year.</p>`,
+    },
+    'short-carry': {
+        label: 'Short Carry',
+        call: (b) => api.calcShortCarry(b),
+        fields: [
+            { key: 'short_price', label: 'Short price ($)', def: 50 },
+            { key: 'shares', label: 'Shares', def: 100 },
+            { key: 'borrow_fee_pct', label: 'Borrow fee (%/yr)', def: 8 },
+            { key: 'cash_rate_pct', label: 'Rebate on proceeds (%/yr)', def: 5 },
+            { key: 'annual_dividend', label: 'Dividend ($/sh/yr)', def: 2 },
+            { key: 'holding_days', label: 'Holding days', def: 90 },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Net carry</div>
+                    <div class="value ${r.positive_carry ? 'pos' : 'neg'}">${r.net_carry_rate_pct.toFixed(2)}%/yr</div>
+                    <div class="small muted">fee − rebate + dividend yield</div></div>
+                <div class="card"><div class="label">Breakeven decline</div>
+                    <div class="value">${r.breakeven_decline_pct.toFixed(2)}%</div>
+                    <div class="small muted">over the holding period</div></div>
+                <div class="card"><div class="label">Cost</div>
+                    <div class="value">$${r.carry_cost.toFixed(0)}</div>
+                    <div class="small muted">$${r.daily_cost.toFixed(2)}/day</div></div>
+            </div>
+            <p class="muted small">${r.positive_carry ? 'Positive carry — the rebate pays you to be short.' : 'The stock must fall this much just to cover carry — squeeze-name fees compound daily.'}</p>`,
+    },
     'impermanent-loss': {
         label: 'Impermanent Loss',
         call: (b) => api.calcImpermanentLoss(b),

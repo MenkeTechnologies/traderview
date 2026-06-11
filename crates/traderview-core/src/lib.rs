@@ -915,5 +915,7 @@ pub mod overnight_intraday;
 pub mod futures_sizing;
 pub mod impermanent_loss;
 pub mod average_down;
+pub mod leveraged_etf_decay;
+pub mod short_economics;
 
 pub use models::*;

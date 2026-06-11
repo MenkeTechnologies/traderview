@@ -767,6 +767,8 @@ export const api = {
     calcFuturesSizing:       (body) => request('/calc/futures-sizing', { method: 'POST', body: JSON.stringify(body) }),
     calcImpermanentLoss:     (body) => request('/calc/impermanent-loss', { method: 'POST', body: JSON.stringify(body) }),
     calcAverageDown:         (body) => request('/calc/average-down', { method: 'POST', body: JSON.stringify(body) }),
+    calcLeveragedEtfDecay:   (body) => request('/calc/leveraged-etf-decay', { method: 'POST', body: JSON.stringify(body) }),
+    calcShortCarry:          (body) => request('/calc/short-carry', { method: 'POST', body: JSON.stringify(body) }),
     overnightSplit:          (sym, years = 10) => request(`/symbols/${encodeURIComponent(sym)}/overnight-split${qs({ years })}`),
     calcImpliedDividend:     (body) => request('/options/calc/implied-dividend', { method: 'POST', body: JSON.stringify(body) }),
     calcWarrant:             (body) => request('/options/calc/warrant', { method: 'POST', body: JSON.stringify(body) }),

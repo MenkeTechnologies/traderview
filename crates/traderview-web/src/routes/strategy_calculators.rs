@@ -36,6 +36,8 @@
 //!   POST /calc/futures-sizing            — tick math + margin-capped size
 //!   POST /calc/impermanent-loss          — AMM IL + fee-APR breakeven
 //!   POST /calc/average-down              — position blend + bounce math
+//!   POST /calc/leveraged-etf-decay       — k× daily-reset vol drag
+//!   POST /calc/short-carry               — borrow/rebate/dividend carry
 
 use crate::auth::AuthUser;
 use crate::error::ApiError;
@@ -89,6 +91,8 @@ pub fn router() -> Router<AppState> {
         .route("/calc/futures-sizing", post(post_futures_sizing))
         .route("/calc/impermanent-loss", post(post_impermanent_loss))
         .route("/calc/average-down", post(post_average_down))
+        .route("/calc/leveraged-etf-decay", post(post_letf_decay))
+        .route("/calc/short-carry", post(post_short_carry))
 }
 
 async fn post_grid_trading(
@@ -495,6 +499,26 @@ async fn post_average_down(
     traderview_core::average_down::compute(&b)
         .map(Json)
         .ok_or_else(|| ApiError::BadRequest("all inputs must be positive".into()))
+}
+
+async fn post_letf_decay(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<traderview_core::leveraged_etf_decay::LetfInput>,
+) -> Result<Json<traderview_core::leveraged_etf_decay::LetfReport>, ApiError> {
+    traderview_core::leveraged_etf_decay::compute(&b)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("invalid leverage/vol inputs".into()))
+}
+
+async fn post_short_carry(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<traderview_core::short_economics::ShortCarryInput>,
+) -> Result<Json<traderview_core::short_economics::ShortCarryReport>, ApiError> {
+    traderview_core::short_economics::compute(&b)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("invalid short-carry inputs".into()))
 }
 
 async fn post_dual_momentum(
