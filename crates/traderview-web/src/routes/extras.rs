@@ -73,7 +73,8 @@ use traderview_core::{
     gonzalo_granger_decomposition, gpd_tail_fit, granger_causality, greeks_profile, guppy_mma,
     halt_resume_monitor, hampel_filter, hanging_man_shooting_star, har_volatility, harami_pattern,
     harmonic_patterns, hawkes_intensity, hawkins_dynamic_zones, head_shoulders,
-    heikin_ashi_reversal, henriksson_merton, herfindahl, heston, hierarchical_risk_parity,
+    heikin_ashi_reversal, henriksson_merton, herfindahl, heston, heston_calibration,
+    hierarchical_risk_parity,
     hikkake_pattern,
     hilbert_transform, hill_estimator, hindenburg_omen, hodrick_prescott, holiday_calendar,
     holiday_seasonality, holt_winters, holy_grail, hull_white, hurst_exponent, iceberg_detector,
@@ -797,6 +798,10 @@ pub fn router() -> Router<AppState> {
         )
         .route("/options/calc/seagull", post(seagull_route))
         .route("/options/calc/heston", post(heston_route))
+        .route(
+            "/options/calc/heston-calibrate",
+            post(heston_calibrate_route),
+        )
         .route(
             "/options/calc/probability-of-profit",
             post(probability_of_profit_route),
@@ -7158,6 +7163,13 @@ async fn heston_route(
     Json(b): Json<heston::HestonInput>,
 ) -> Json<Option<heston::HestonReport>> {
     Json(heston::compute(&b))
+}
+
+async fn heston_calibrate_route(
+    _u: AuthUser,
+    Json(b): Json<heston_calibration::CalibrationInput>,
+) -> Json<Option<heston_calibration::CalibrationReport>> {
+    Json(heston_calibration::calibrate(&b))
 }
 
 async fn probability_of_profit_route(

@@ -404,6 +404,57 @@ const TOOLS = {
             SPY/TLT inverse-to-coupled flip is the classic risk-parity pain trade.</p>`;
         },
     },
+    'heston-calibrate': {
+        label: 'Heston Calibrate',
+        call: (b) => api.calcHestonCalibrate({
+            spot: b.spot,
+            risk_free_rate: b.risk_free_rate,
+            dividend_yield: 0,
+            // "strike,years,C|P,price; ..." → Quote objects.
+            quotes: String(b.quotes).split(';').map(s => s.trim()).filter(Boolean).map(s => {
+                const [k, t, cp, px] = s.split(',').map(x => x.trim());
+                return {
+                    strike: Number(k),
+                    time_to_expiry_years: Number(t),
+                    is_call: String(cp).toUpperCase().startsWith('C'),
+                    mid_price: Number(px),
+                };
+            }),
+        }),
+        fields: [
+            { key: 'spot', label: 'Spot ($)', def: 100 },
+            { key: 'risk_free_rate', label: 'Risk-free rate (decimal)', def: 0.03 },
+            { key: 'quotes', label: 'Quotes: strike,years,C|P,price; …', def: '90,0.25,P,2.1; 100,0.25,C,4.8; 110,0.25,C,1.2; 100,0.75,C,8.4', text: true },
+        ],
+        render: (r) => {
+            if (!r) return '<span class="neg">invalid quotes</span>';
+            return `
+            <div class="cards">
+                <div class="card"><div class="label">v₀ / θ</div>
+                    <div class="value">${r.v0.toFixed(4)} / ${r.theta.toFixed(4)}</div>
+                    <div class="small muted">spot vol ${(Math.sqrt(r.v0) * 100).toFixed(1)}% · long-run ${(Math.sqrt(r.theta) * 100).toFixed(1)}%</div></div>
+                <div class="card"><div class="label">κ / σ / ρ</div>
+                    <div class="value">${r.kappa.toFixed(2)} / ${r.vol_of_vol.toFixed(2)} / ${r.rho.toFixed(2)}</div>
+                    <div class="small ${r.feller_satisfied ? 'muted' : 'neg'}">${r.feller_satisfied ? 'Feller satisfied' : 'Feller VIOLATED'}</div></div>
+                <div class="card"><div class="label">RMSE</div>
+                    <div class="value ${r.rmse < 0.1 ? 'pos' : 'neg'}">$${r.rmse.toFixed(4)}</div></div>
+            </div>
+            <table class="gs-table">
+                <thead><tr><th>Strike</th><th>T</th><th>Market</th><th>Model</th><th>Error</th></tr></thead>
+                <tbody>${r.fits.map(f => `
+                    <tr>
+                        <td>$${f.strike.toFixed(0)}</td>
+                        <td>${f.time_to_expiry_years.toFixed(2)}y</td>
+                        <td>$${f.market.toFixed(2)}</td>
+                        <td>$${f.model.toFixed(2)}</td>
+                        <td class="${Math.abs(f.error) < 0.1 ? 'pos' : 'neg'}">${f.error >= 0 ? '+' : ''}${f.error.toFixed(3)}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+            <p class="muted small">Nelder-Mead least-squares over the quote prices in an unconstrained
+            parameter transform; fits re-priced on the full integration grid.</p>`;
+        },
+    },
     'probability-of-profit': {
         label: 'POP Calculator',
         call: (b) => api.calcProbabilityOfProfit({

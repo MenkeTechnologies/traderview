@@ -64,8 +64,12 @@ pub fn estimate(returns: &[f64]) -> Option<GjrGarchReport> {
         logit(0.05),                      // logit(gamma)
     ];
     let centered: Vec<f64> = returns.iter().map(|r| r - mean).collect();
-    // Nelder-Mead.
-    nelder_mead(&mut params, &centered, 500);
+    // Nelder-Mead (shared optimizer — same coefficients the inline
+    // version used, so fitted params are unchanged).
+    let (best, _) = crate::optimize::nelder_mead(&params, 0.1, 500, |p| {
+        neg_log_likelihood_at(&[p[0], p[1], p[2], p[3]], &centered)
+    });
+    params.copy_from_slice(&best);
     let omega = params[0].exp();
     let alpha = sigmoid(params[1]);
     let beta = sigmoid(params[2]);
@@ -133,101 +137,6 @@ fn neg_log_likelihood_at(params: &[f64; 4], r: &[f64]) -> f64 {
     let uncond_var = omega / (1.0 - persistence);
     let v = compute_variance_path(r, omega, alpha, beta, gamma, uncond_var);
     -log_likelihood(r, &v)
-}
-
-#[allow(clippy::needless_range_loop)]
-fn nelder_mead(start: &mut [f64; 4], data: &[f64], max_iter: usize) {
-    let n = 4;
-    let alpha = 1.0;
-    let gamma_nm = 2.0;
-    let rho = 0.5;
-    let sigma = 0.5;
-    // Build initial simplex.
-    let mut simplex: Vec<[f64; 4]> = Vec::with_capacity(n + 1);
-    simplex.push(*start);
-    for i in 0..n {
-        let mut p = *start;
-        p[i] += 0.1;
-        simplex.push(p);
-    }
-    let mut values: Vec<f64> = simplex
-        .iter()
-        .map(|p| neg_log_likelihood_at(p, data))
-        .collect();
-    for _ in 0..max_iter {
-        // Order by value.
-        let mut idx: Vec<usize> = (0..=n).collect();
-        idx.sort_by(|a, b| {
-            values[*a]
-                .partial_cmp(&values[*b])
-                .unwrap_or(std::cmp::Ordering::Equal)
-        });
-        let best = idx[0];
-        let worst = idx[n];
-        let second_worst = idx[n - 1];
-        // Centroid of all except worst.
-        let mut centroid = [0.0_f64; 4];
-        for i in &idx[..n] {
-            for j in 0..n {
-                centroid[j] += simplex[*i][j];
-            }
-        }
-        for j in 0..n {
-            centroid[j] /= n as f64;
-        }
-        // Reflection.
-        let mut reflected = [0.0_f64; 4];
-        for j in 0..n {
-            reflected[j] = centroid[j] + alpha * (centroid[j] - simplex[worst][j]);
-        }
-        let v_refl = neg_log_likelihood_at(&reflected, data);
-        if v_refl < values[second_worst] && v_refl >= values[best] {
-            simplex[worst] = reflected;
-            values[worst] = v_refl;
-            continue;
-        }
-        if v_refl < values[best] {
-            let mut expanded = [0.0_f64; 4];
-            for j in 0..n {
-                expanded[j] = centroid[j] + gamma_nm * (reflected[j] - centroid[j]);
-            }
-            let v_exp = neg_log_likelihood_at(&expanded, data);
-            if v_exp < v_refl {
-                simplex[worst] = expanded;
-                values[worst] = v_exp;
-            } else {
-                simplex[worst] = reflected;
-                values[worst] = v_refl;
-            }
-            continue;
-        }
-        // Contraction.
-        let mut contracted = [0.0_f64; 4];
-        for j in 0..n {
-            contracted[j] = centroid[j] + rho * (simplex[worst][j] - centroid[j]);
-        }
-        let v_con = neg_log_likelihood_at(&contracted, data);
-        if v_con < values[worst] {
-            simplex[worst] = contracted;
-            values[worst] = v_con;
-            continue;
-        }
-        // Shrink.
-        for i in 1..=n {
-            let bi = idx[0];
-            for j in 0..n {
-                simplex[idx[i]][j] = simplex[bi][j] + sigma * (simplex[idx[i]][j] - simplex[bi][j]);
-            }
-            values[idx[i]] = neg_log_likelihood_at(&simplex[idx[i]], data);
-        }
-    }
-    let best_idx = values
-        .iter()
-        .enumerate()
-        .min_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
-        .map(|(i, _)| i)
-        .unwrap_or(0);
-    *start = simplex[best_idx];
 }
 
 fn sigmoid(x: f64) -> f64 {

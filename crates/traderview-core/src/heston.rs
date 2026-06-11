@@ -142,10 +142,8 @@ fn f_j(u: f64, j: u8, inp: &HestonInput) -> Cx {
     big_c.add(big_d.scale(inp.v0)).add(x).exp()
 }
 
-/// Pⱼ via composite Simpson on u ∈ (ε, U_MAX].
-fn p_j(j: u8, inp: &HestonInput) -> f64 {
-    const U_MAX: f64 = 200.0;
-    const N: usize = 2000; // even
+/// Pⱼ via composite Simpson on u ∈ (ε, u_max].
+fn p_j_with(j: u8, inp: &HestonInput, u_max: f64, n: usize) -> f64 {
     let ln_k = inp.strike.ln();
     let integrand = |u: f64| -> f64 {
         let phi = f_j(u, j, inp);
@@ -154,16 +152,30 @@ fn p_j(j: u8, inp: &HestonInput) -> f64 {
         e.mul(phi).div(Cx::new(0.0, u)).re
     };
     let a = 1e-8;
-    let h = (U_MAX - a) / N as f64;
-    let mut sum = integrand(a) + integrand(U_MAX);
-    for k in 1..N {
+    let h = (u_max - a) / n as f64;
+    let mut sum = integrand(a) + integrand(u_max);
+    for k in 1..n {
         let u = a + h * k as f64;
         sum += integrand(u) * if k % 2 == 1 { 4.0 } else { 2.0 };
     }
     0.5 + (sum * h / 3.0) / std::f64::consts::PI
 }
 
+/// Price with a caller-chosen integration grid — the calibrator runs
+/// thousands of evaluations and uses a coarser (still Simpson) grid.
+pub fn compute_with_resolution(
+    inp: &HestonInput,
+    u_max: f64,
+    n: usize,
+) -> Option<HestonReport> {
+    compute_inner(inp, u_max, n.max(4) & !1)
+}
+
 pub fn compute(inp: &HestonInput) -> Option<HestonReport> {
+    compute_inner(inp, 200.0, 2000)
+}
+
+fn compute_inner(inp: &HestonInput, u_max: f64, n: usize) -> Option<HestonReport> {
     if ![
         inp.spot,
         inp.strike,
@@ -189,8 +201,8 @@ pub fn compute(inp: &HestonInput) -> Option<HestonReport> {
     {
         return None;
     }
-    let p1 = p_j(1, inp).clamp(0.0, 1.0);
-    let p2 = p_j(2, inp).clamp(0.0, 1.0);
+    let p1 = p_j_with(1, inp, u_max, n).clamp(0.0, 1.0);
+    let p2 = p_j_with(2, inp, u_max, n).clamp(0.0, 1.0);
     let disc_s = inp.spot * (-inp.dividend_yield * inp.time_to_expiry_years).exp();
     let disc_k = inp.strike * (-inp.risk_free_rate * inp.time_to_expiry_years).exp();
     let call = (disc_s * p1 - disc_k * p2).max(0.0);

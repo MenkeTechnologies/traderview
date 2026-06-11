@@ -749,6 +749,7 @@ export const api = {
     calcConversionReversal:  (body) => request('/options/calc/conversion-reversal', { method: 'POST', body: JSON.stringify(body) }),
     calcSeagull:             (body) => request('/options/calc/seagull', { method: 'POST', body: JSON.stringify(body) }),
     calcHeston:              (body) => request('/options/calc/heston', { method: 'POST', body: JSON.stringify(body) }),
+    calcHestonCalibrate:     (body) => request('/options/calc/heston-calibrate', { method: 'POST', body: JSON.stringify(body) }),
     calcDiagonalSpread:      (body) => request('/options/calc/diagonal-spread', { method: 'POST', body: JSON.stringify(body) }),
     calcProbabilityOfProfit: (body) => request('/options/calc/probability-of-profit', { method: 'POST', body: JSON.stringify(body) }),
     calcBootstrapZeroCurve:  (body) => request('/bonds/calc/bootstrap-zero-curve', { method: 'POST', body: JSON.stringify(body) }),

@@ -885,5 +885,7 @@ pub mod correlation_regime;
 pub mod risk_of_ruin;
 pub mod probability_of_profit;
 pub mod par_curve_bootstrap;
+pub mod optimize;
+pub mod heston_calibration;
 
 pub use models::*;
