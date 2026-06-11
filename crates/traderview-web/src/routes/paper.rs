@@ -29,6 +29,19 @@ pub fn router() -> Router<AppState> {
             "/paper/parent-orders/:id/cancel",
             post(cancel_parent_order),
         )
+        .route("/paper/orders/:id/cancel", post(cancel_order))
+}
+
+/// Cancel a RESTING (pending) limit/stop order.
+async fn cancel_order(
+    State(s): State<AppState>,
+    user: AuthUser,
+    Path(id): Path<Uuid>,
+) -> Result<Json<bool>, ApiError> {
+    traderview_db::paper::cancel_order(&s.pool, user.id, id)
+        .await
+        .map(Json)
+        .map_err(ApiError::Internal)
 }
 
 /// TWAP/VWAP parent order: child market slices submitted by the

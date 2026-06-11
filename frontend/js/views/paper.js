@@ -123,17 +123,18 @@ export async function renderPaper(mount) {
             <h2 data-i18n="view.paper.h2.order_history">Order history</h2>
             ${orders.length ? `<table class="trades">
                 <thead><tr><th data-i18n="view.paper.th.submitted">Submitted</th><th data-i18n="view.paper.th.symbol">Symbol</th><th data-i18n="view.paper.th.side">Side</th><th data-i18n="view.paper.th.qty_2">Qty</th><th data-i18n="view.paper.th.type">Type</th>
-                <th data-i18n="view.paper.th.status">Status</th><th data-i18n="view.paper.th.fill_price">Fill price</th><th data-i18n="view.paper.th.filled">Filled</th></tr></thead>
+                <th data-i18n="view.paper.th.status">Status</th><th data-i18n="view.paper.th.fill_price">Fill price</th><th data-i18n="view.paper.th.filled">Filled</th><th></th></tr></thead>
                 <tbody>${orders.map(o => `
                     <tr data-context-scope="symbol-row" data-symbol="${esc(o.symbol)}">
                         <td>${fmtDateTime(o.submitted_at)}</td>
                         <td>${esc(o.symbol)}</td>
                         <td>${o.side}</td>
                         <td>${fmt(o.qty, 0)}</td>
-                        <td>${o.order_type}</td>
+                        <td>${o.order_type}${o.limit_price != null ? ' @' + fmt(o.limit_price) : ''}${o.stop_price != null ? ' stop ' + fmt(o.stop_price) : ''}</td>
                         <td class="${o.status === 'filled' ? 'pos' : (o.status === 'rejected' ? 'neg' : '')}">${o.status}</td>
                         <td>${o.filled_price != null ? fmt(o.filled_price) : '—'}</td>
                         <td>${o.filled_at ? fmtDateTime(o.filled_at) : '—'}</td>
+                        <td>${o.status === 'pending' ? `<button class="ord-cancel" data-id="${esc(o.id)}" data-i18n="common.btn.cancel">${esc(t('common.btn.cancel'))}</button>` : ''}</td>
                     </tr>`).join('')}</tbody></table>` : '<p data-i18n="view.paper.hint.no_orders_yet" class="muted">No orders yet.</p>'}
         </div>
     `;
@@ -168,6 +169,13 @@ export async function renderPaper(mount) {
             renderPaper(mount);
         } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
     });
+    mount.querySelectorAll('.ord-cancel').forEach(btn => btn.addEventListener('click', async () => {
+        try {
+            await api.paperOrderCancel(btn.dataset.id);
+            if (!viewIsCurrent(tok)) return;
+            renderPaper(mount);
+        } catch (err) { showToast(t('common.error', { err: err.message }), { level: 'error' }); }
+    }));
     mount.querySelector('#reset').addEventListener('click', async () => {
         if (!await tConfirm('view.paper.confirm.reset', {}, { level: 'danger' })) return;
         try {

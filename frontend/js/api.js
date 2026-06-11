@@ -839,6 +839,7 @@ export const api = {
     paperSubmit:    (id, req) =>
         request(`/paper/accounts/${id}/orders`, { method: 'POST', body: JSON.stringify(req) }),
     paperPositions: (id) => request(`/paper/accounts/${id}/positions`),
+    paperOrderCancel: (id) => request(`/paper/orders/${encodeURIComponent(id)}/cancel`, { method: 'POST' }),
 
     // alerts
     alerts:        () => request('/alerts'),

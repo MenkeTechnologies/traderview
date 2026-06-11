@@ -102,8 +102,9 @@ pub fn spawn_refreshers(pool: PgPool, cache: TileCache) {
     spawn_golden_stars(pool);
 }
 
-/// Paper TWAP execution ticker — submits due child orders for working
-/// parent orders through the paper engine's own fill model.
+/// Paper execution ticker — submits due child orders for working
+/// parent orders AND fills resting limit/stop orders whose trigger the
+/// current quote satisfies, all through the paper engine's fill model.
 fn spawn_paper_twap_ticker(pool: PgPool) {
     tokio::spawn(async move {
         loop {
@@ -111,6 +112,11 @@ fn spawn_paper_twap_ticker(pool: PgPool) {
                 Ok(0) => {}
                 Ok(n) => tracing::info!(children = n, "paper TWAP slices submitted"),
                 Err(e) => tracing::warn!(error = %e, "paper TWAP tick failed"),
+            }
+            match traderview_db::paper::check_pending(&pool).await {
+                Ok(0) => {}
+                Ok(n) => tracing::info!(filled = n, "resting paper orders filled"),
+                Err(e) => tracing::warn!(error = %e, "paper pending check failed"),
             }
             tokio::time::sleep(PAPER_TWAP_TICK).await;
         }
