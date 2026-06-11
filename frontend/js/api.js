@@ -774,6 +774,8 @@ export const api = {
     calcOptionsQuickMath:    (body) => request('/calc/options-quick-math', { method: 'POST', body: JSON.stringify(body) }),
     calcLynchFairValue:      (body) => request('/calc/lynch-fair-value', { method: 'POST', body: JSON.stringify(body) }),
     overnightSplit:          (sym, years = 10) => request(`/symbols/${encodeURIComponent(sym)}/overnight-split${qs({ years })}`),
+    bestDays:                (sym, years = 10, n = 10) => request(`/symbols/${encodeURIComponent(sym)}/best-days${qs({ years, n })}`),
+    drawdownEpisodes:        (sym, years = 10, n = 5) => request(`/symbols/${encodeURIComponent(sym)}/drawdown-episodes${qs({ years, n })}`),
     calcImpliedDividend:     (body) => request('/options/calc/implied-dividend', { method: 'POST', body: JSON.stringify(body) }),
     calcWarrant:             (body) => request('/options/calc/warrant', { method: 'POST', body: JSON.stringify(body) }),
     calcEarlyAssignment:     (body) => request('/options/calc/early-assignment', { method: 'POST', body: JSON.stringify(body) }),

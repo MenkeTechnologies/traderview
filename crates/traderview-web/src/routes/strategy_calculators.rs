@@ -32,6 +32,8 @@
 //!   GET  /symbols/:sym/day-of-week       — weekday return seasonality
 //!   GET  /symbols/:sym/santa-rally       — Hirsch 7-session window stats
 //!   GET  /symbols/:sym/overnight-split   — overnight vs intraday legs
+//!   GET  /symbols/:sym/best-days         — miss-the-best-days study
+//!   GET  /symbols/:sym/drawdown-episodes — top-N peak/trough/recovery
 //!   POST /calc/double-barrier            — target-vs-stop hit-first odds
 //!   POST /calc/futures-sizing            — tick math + margin-capped size
 //!   POST /calc/impermanent-loss          — AMM IL + fee-APR breakeven
@@ -91,6 +93,11 @@ pub fn router() -> Router<AppState> {
         .route("/symbols/:symbol/day-of-week", get(get_day_of_week))
         .route("/symbols/:symbol/santa-rally", get(get_santa_rally))
         .route("/symbols/:symbol/overnight-split", get(get_overnight_split))
+        .route("/symbols/:symbol/best-days", get(get_best_days))
+        .route(
+            "/symbols/:symbol/drawdown-episodes",
+            get(get_drawdown_episodes),
+        )
         .route("/calc/double-barrier", post(post_double_barrier))
         .route("/calc/futures-sizing", post(post_futures_sizing))
         .route("/calc/impermanent-loss", post(post_impermanent_loss))
@@ -663,6 +670,38 @@ async fn get_overnight_split(
 ) -> Result<Json<strategy_calculators::OvernightSplitReport>, ApiError> {
     let sym = validate_symbol(&symbol)?;
     strategy_calculators::overnight_split(&s.pool, &sym, q.years.unwrap_or(10))
+        .await
+        .map(Json)
+        .map_err(map_tom_err)
+}
+
+#[derive(Debug, Deserialize)]
+struct NQ {
+    years: Option<u32>,
+    n: Option<usize>,
+}
+
+async fn get_best_days(
+    State(s): State<AppState>,
+    _u: AuthUser,
+    Path(symbol): Path<String>,
+    Query(q): Query<NQ>,
+) -> Result<Json<strategy_calculators::ConcentrationSymbolReport>, ApiError> {
+    let sym = validate_symbol(&symbol)?;
+    strategy_calculators::best_worst_days(&s.pool, &sym, q.years.unwrap_or(10), q.n.unwrap_or(10))
+        .await
+        .map(Json)
+        .map_err(map_tom_err)
+}
+
+async fn get_drawdown_episodes(
+    State(s): State<AppState>,
+    _u: AuthUser,
+    Path(symbol): Path<String>,
+    Query(q): Query<NQ>,
+) -> Result<Json<strategy_calculators::EpisodesSymbolReport>, ApiError> {
+    let sym = validate_symbol(&symbol)?;
+    strategy_calculators::drawdown_episodes(&s.pool, &sym, q.years.unwrap_or(10), q.n.unwrap_or(5))
         .await
         .map(Json)
         .map_err(map_tom_err)

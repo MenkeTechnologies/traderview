@@ -921,5 +921,7 @@ pub mod asset_location;
 pub mod alpha_horizon;
 pub mod options_quick_math;
 pub mod lynch_fair_value;
+pub mod best_worst_days;
+pub mod drawdown_episodes;
 
 pub use models::*;

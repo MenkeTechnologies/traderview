@@ -627,6 +627,88 @@ pub async fn overnight_split(
 }
 
 // ===========================================================================
+// Best/worst-days concentration + drawdown episodes (data wrappers)
+// ===========================================================================
+
+#[derive(Debug, Clone, Serialize)]
+pub struct ConcentrationSymbolReport {
+    pub symbol: String,
+    #[serde(flatten)]
+    pub stats: traderview_core::best_worst_days::ConcentrationReport,
+}
+
+pub async fn best_worst_days(
+    pool: &PgPool,
+    symbol: &str,
+    years: u32,
+    n: usize,
+) -> Result<ConcentrationSymbolReport, TomError> {
+    let closes = daily_closes(pool, symbol, years).await?;
+    let series: Vec<f64> = closes.iter().map(|(_, c)| *c).collect();
+    traderview_core::best_worst_days::compute(&series, n.clamp(1, 50))
+        .map(|stats| ConcentrationSymbolReport {
+            symbol: symbol.to_string(),
+            stats,
+        })
+        .ok_or_else(|| TomError::Insufficient {
+            symbol: symbol.to_string(),
+            got: series.len(),
+            need: MIN_DAYS,
+        })
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct EpisodesSymbolReport {
+    pub symbol: String,
+    /// Dates resolved from episode indices, worst-first.
+    pub rows: Vec<EpisodeRow>,
+    pub currently_underwater: bool,
+    pub current_drawdown_pct: f64,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct EpisodeRow {
+    pub peak_date: chrono::NaiveDate,
+    pub trough_date: chrono::NaiveDate,
+    pub depth_pct: f64,
+    pub decline_bars: usize,
+    pub recovery_bars: Option<usize>,
+}
+
+pub async fn drawdown_episodes(
+    pool: &PgPool,
+    symbol: &str,
+    years: u32,
+    top_n: usize,
+) -> Result<EpisodesSymbolReport, TomError> {
+    let closes = daily_closes(pool, symbol, years).await?;
+    let series: Vec<f64> = closes.iter().map(|(_, c)| *c).collect();
+    let report = traderview_core::drawdown_episodes::compute(&series, top_n.clamp(1, 25))
+        .ok_or_else(|| TomError::Insufficient {
+            symbol: symbol.to_string(),
+            got: series.len(),
+            need: MIN_DAYS,
+        })?;
+    let rows = report
+        .episodes
+        .iter()
+        .map(|e| EpisodeRow {
+            peak_date: closes[e.peak_index].0,
+            trough_date: closes[e.trough_index].0,
+            depth_pct: e.depth_pct,
+            decline_bars: e.decline_bars,
+            recovery_bars: e.recovery_bars,
+        })
+        .collect();
+    Ok(EpisodesSymbolReport {
+        symbol: symbol.to_string(),
+        rows,
+        currently_underwater: report.currently_underwater,
+        current_drawdown_pct: report.current_drawdown_pct,
+    })
+}
+
+// ===========================================================================
 // Volatility cone (data wrapper around traderview_core::vol_cone)
 // ===========================================================================
 

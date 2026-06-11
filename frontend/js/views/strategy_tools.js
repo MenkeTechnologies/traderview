@@ -1390,6 +1390,58 @@ const TOOLS = {
             target over a wide stop posts a seductive win rate with the skew hidden in the loser.</p>`;
         },
     },
+    'best-days': {
+        label: 'Miss the Best Days',
+        call: (b) => api.bestDays(b.symbol, b.years, b.n),
+        fields: [
+            { key: 'symbol', label: 'Symbol', def: 'SPY', text: true },
+            { key: 'years', label: 'Lookback years', def: 10, int: true },
+            { key: 'n', label: 'Days to exclude (N)', def: 10, int: true },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Buy &amp; hold</div>
+                    <div class="value ${r.total_return_pct >= 0 ? 'pos' : 'neg'}">${r.total_return_pct.toFixed(1)}%</div>
+                    <div class="small muted">${r.days} sessions on ${esc(r.symbol)}</div></div>
+                <div class="card"><div class="label">Missing ${r.n_excluded} best</div>
+                    <div class="value neg">${r.missing_best_pct.toFixed(1)}%</div></div>
+                <div class="card"><div class="label">Missing ${r.n_excluded} worst</div>
+                    <div class="value pos">${r.missing_worst_pct.toFixed(1)}%</div></div>
+                <div class="card"><div class="label">Missing both</div>
+                    <div class="value">${r.missing_both_pct.toFixed(1)}%</div></div>
+            </div>
+            <p class="muted small">Best days: ${r.best_days_pct.map(x => '+' + x.toFixed(1) + '%').join(', ')} ·
+            Worst: ${r.worst_days_pct.map(x => x.toFixed(1) + '%').join(', ')} — they cluster together,
+            which is why the timing argument cuts both ways.</p>`,
+    },
+    'drawdown-episodes': {
+        label: 'Drawdown Episodes',
+        call: (b) => api.drawdownEpisodes(b.symbol, b.years, b.n),
+        fields: [
+            { key: 'symbol', label: 'Symbol', def: 'SPY', text: true },
+            { key: 'years', label: 'Lookback years', def: 10, int: true },
+            { key: 'n', label: 'Top N episodes', def: 5, int: true },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Status</div>
+                    <div class="value ${r.currently_underwater ? 'neg' : 'pos'}">${r.currently_underwater ? r.current_drawdown_pct.toFixed(1) + '% underwater' : 'at highs'}</div></div>
+            </div>
+            <table class="gs-table">
+                <thead><tr><th>Peak</th><th>Trough</th><th>Depth</th><th>Decline</th><th>Recovery</th></tr></thead>
+                <tbody>${r.rows.map(e => `
+                    <tr>
+                        <td>${esc(e.peak_date)}</td>
+                        <td>${esc(e.trough_date)}</td>
+                        <td class="neg">${e.depth_pct.toFixed(1)}%</td>
+                        <td>${e.decline_bars} bars</td>
+                        <td>${e.recovery_bars != null ? e.recovery_bars + ' bars' : 'still underwater'}</td>
+                    </tr>`).join('')}
+                </tbody>
+            </table>
+            <p class="muted small">Max-DD hides the frequency and the time underwater — the episode table
+            shows how often it hurts and how long the holes last.</p>`,
+    },
     'overnight-split': {
         label: 'Overnight vs Intraday',
         call: (b) => api.overnightSplit(b.symbol, b.years),
