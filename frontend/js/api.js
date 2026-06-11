@@ -1107,6 +1107,11 @@ export const api = {
             method: 'POST',
             body: JSON.stringify(body || {}),
         }),
+    algoWalkForward: (id, body) =>
+        request(`/algo/strategies/${id}/walk-forward`, {
+            method: 'POST',
+            body: JSON.stringify(body || {}),
+        }),
 
     // Correlation matrix (pairwise Pearson on cached daily-bar log-returns)
     corrWatchlist: (wid, days = 90) =>

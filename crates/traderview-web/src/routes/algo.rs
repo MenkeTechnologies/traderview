@@ -40,6 +40,7 @@ pub fn router() -> Router<AppState> {
         .route("/algo/strategies/:id/metrics", get(get_metrics))
         .route("/algo/strategies/:id/optimize", post(post_optimize))
         .route("/algo/tournament", post(post_tournament))
+        .route("/algo/strategies/:id/walk-forward", post(post_walk_forward))
         .route("/algo/strategies/:id/backtests", get(list_backtest_history))
         .route(
             "/algo/backtests/:id",
@@ -831,6 +832,98 @@ async fn post_optimize(
     )
     .map_err(|e| ApiError::BadRequest(format!("optimize: {e}")))?;
     Ok(Json(result))
+}
+
+#[derive(serde::Deserialize)]
+struct WalkForwardBody {
+    #[serde(default = "default_bt_symbol")]
+    symbol: String,
+    #[serde(default = "default_bt_interval")]
+    interval: String,
+    #[serde(default = "default_bt_days_back")]
+    days_back: i64,
+    #[serde(default)]
+    initial_equity: Option<f64>,
+    #[serde(default)]
+    fee_per_trade: Option<f64>,
+    #[serde(default)]
+    slippage_bps: Option<f64>,
+    grid: serde_json::Map<String, serde_json::Value>,
+    #[serde(default = "default_metric")]
+    metric: traderview_core::algo_optimize::OptimizeMetric,
+    #[serde(default = "default_wf_is_bars")]
+    is_bars: usize,
+    #[serde(default = "default_wf_oos_bars")]
+    oos_bars: usize,
+    #[serde(default)]
+    step_bars: Option<usize>,
+}
+
+fn default_wf_is_bars() -> usize {
+    120
+}
+fn default_wf_oos_bars() -> usize {
+    60
+}
+
+/// POST /algo/strategies/:id/walk-forward — rolling optimize-then-
+/// validate against the strategy's saved kind/rules/sizing/side_mode.
+/// The wf_efficiency in the result is the overfit detector the plain
+/// optimizer can't provide.
+async fn post_walk_forward(
+    State(s): State<AppState>,
+    u: AuthUser,
+    Path(id): Path<Uuid>,
+    Json(body): Json<WalkForwardBody>,
+) -> Result<Json<traderview_core::algo_walk_forward::AlgoWfResult>, ApiError> {
+    let strategy = traderview_db::algo::get_strategy(&s.pool, u.id, id)
+        .await
+        .map_err(ApiError::Internal)?
+        .ok_or_else(|| ApiError::BadRequest("strategy not found".into()))?;
+    let interval: traderview_core::BarInterval = serde_json::from_value(serde_json::Value::String(
+        normalize_interval(&body.interval),
+    ))
+    .map_err(|e| ApiError::BadRequest(format!("interval: {e}")))?;
+    let to = chrono::Utc::now();
+    let from = to - chrono::Duration::days(body.days_back);
+    let bars = traderview_db::prices::get_bars(&s.pool, &body.symbol, interval, from, to)
+        .await
+        .map_err(ApiError::Internal)?;
+    if bars.len() < body.is_bars + body.oos_bars {
+        return Err(ApiError::BadRequest(format!(
+            "only {} bars for {} — need at least is_bars + oos_bars = {}",
+            bars.len(),
+            body.symbol,
+            body.is_bars + body.oos_bars
+        )));
+    }
+    let sizing: traderview_core::algo_strategies::Sizing =
+        serde_json::from_value(strategy.sizing.clone()).unwrap_or_default();
+    let side_mode = match strategy.side_mode.as_str() {
+        "short" => traderview_core::algo_strategies::SideMode::Short,
+        "both" => traderview_core::algo_strategies::SideMode::Both,
+        _ => traderview_core::algo_strategies::SideMode::Long,
+    };
+    let cfg = traderview_core::algo_backtest::BacktestConfig {
+        initial_equity: body.initial_equity.unwrap_or(100_000.0),
+        fee_per_trade: body.fee_per_trade.unwrap_or(1.0),
+        slippage_bps: body.slippage_bps.unwrap_or(5.0),
+        side_mode,
+    };
+    traderview_core::algo_walk_forward::run(
+        &bars,
+        &strategy.strategy_type,
+        &strategy.entry_rules,
+        &body.grid,
+        &sizing,
+        cfg,
+        body.metric,
+        body.is_bars,
+        body.oos_bars,
+        body.step_bars,
+    )
+    .map(Json)
+    .map_err(|e| ApiError::BadRequest(format!("walk-forward: {e}")))
 }
 
 /// GET /algo/strategies/:id/metrics — dashboard rollup.

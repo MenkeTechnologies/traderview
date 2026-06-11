@@ -1014,6 +1014,7 @@ async function refreshStrategies(mount) {
                 <button class="link" data-act="metrics" data-i18n="view.algo.btn.metrics">metrics</button>
                 <button class="link" data-act="backtest" data-i18n="view.algo.btn.backtest">backtest</button>
                 <button class="link" data-act="optimize" data-i18n="view.algo.btn.optimize">optimize</button>
+                <button class="link" data-act="walkforward" data-i18n="view.algo.btn.walkforward">walk-fwd</button>
                 <button class="link" data-act="kill" data-i18n="view.algo.btn.kill">${s.kill_switch ? 'release' : 'kill'}</button>
                 <button class="link" data-act="edit" data-i18n="view.algo.btn.edit">edit</button>
                 <button class="link" data-act="del" data-i18n="view.algo.btn.delete">delete</button>
@@ -1033,6 +1034,7 @@ async function refreshStrategies(mount) {
             if (act === 'metrics') return openMetricsModal(mount, s);
             if (act === 'backtest') return openBacktestModal(mount, s);
             if (act === 'optimize') return openOptimizeModal(mount, s);
+            if (act === 'walkforward') return openWalkForwardModal(s);
             if (act === 'kill') return toggleKill(mount, s);
             if (act === 'edit') return openStrategyModal(mount, s);
             if (act === 'del') return deleteStrategy(mount, s);
@@ -1188,6 +1190,82 @@ const OPTIMIZE_DEFAULT_GRIDS = {
     },
 };
 
+
+
+async function openWalkForwardModal(s) {
+    const defaultGrid = OPTIMIZE_DEFAULT_GRIDS[s.strategy_type] || { period: [10, 20, 30] };
+    const symbol = (s.entry_rules && s.entry_rules.symbol_a) || s.entry_rules?.symbol || 'SPY';
+    const wrap = document.createElement('div');
+    wrap.className = 'modal';
+    wrap.innerHTML = `
+        <div class="modal-inner" style="max-width:1040px">
+            <h2>Walk-forward: ${esc(s.name)}</h2>
+            <p class="muted small" data-i18n="view.algo.hint.walkforward">Rolling optimize-then-validate: the grid winner from each in-sample window is backtested on the unseen out-of-sample slice that follows. Walk-forward efficiency = avg OOS / avg IS score \u2014 below ~0.5 the optimizer curve-fit.</p>
+            <form id="wf-form" class="inline-form">
+                <input name="symbol" value="${esc(symbol)}" required style="text-transform:uppercase">
+                <select name="interval">
+                    <option value="day1" selected>1d</option>
+                    <option value="hour1">1h</option>
+                    <option value="min15">15m</option>
+                </select>
+                <input name="days_back" type="number" value="730" min="60">
+                <input name="is_bars" type="number" value="120" min="30" data-tip="view.algo.tip.wf_is">
+                <input name="oos_bars" type="number" value="60" min="10" data-tip="view.algo.tip.wf_oos">
+                <select name="metric">
+                    <option value="sharpe" selected>Sharpe</option>
+                    <option value="total_return">Total return</option>
+                    <option value="return_minus_dd">Return \u2212 DD</option>
+                </select>
+                <button class="primary" type="submit">RUN</button>
+                <button type="button" class="link" id="wf-close" data-i18n="common.btn.cancel">Cancel</button>
+            </form>
+            <textarea id="wf-grid" rows="5" style="width:100%;font-family:monospace">${esc(JSON.stringify(defaultGrid, null, 2))}</textarea>
+            <div id="wf-result" class="muted small"></div>
+        </div>`;
+    document.body.appendChild(wrap);
+    const close = () => wrap.remove();
+    wrap.querySelector('#wf-close').addEventListener('click', close);
+    wrap.addEventListener('click', (e) => { if (e.target === wrap) close(); });
+    wrap.querySelector('#wf-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fd = new FormData(e.target);
+        const out = wrap.querySelector('#wf-result');
+        let grid;
+        try { grid = JSON.parse(wrap.querySelector('#wf-grid').value); }
+        catch (err) { out.textContent = 'grid JSON: ' + err.message; return; }
+        out.textContent = t('common.loading');
+        try {
+            const r = await api.algoWalkForward(s.id, {
+                symbol: fd.get('symbol').trim().toUpperCase(),
+                interval: fd.get('interval'),
+                days_back: Number(fd.get('days_back')),
+                is_bars: Number(fd.get('is_bars')),
+                oos_bars: Number(fd.get('oos_bars')),
+                metric: fd.get('metric'),
+                grid,
+            });
+            const wfe = r.wf_efficiency;
+            out.innerHTML = `
+                <p><strong>WF efficiency:</strong> <span class="${wfe != null && wfe >= 0.5 ? 'pos' : 'neg'}">${wfe != null ? wfe.toFixed(2) : '\u2014 (non-positive IS base)'}</span>
+                \u00b7 avg IS ${r.avg_is_score.toFixed(2)} \u00b7 avg OOS ${r.avg_oos_score.toFixed(2)} \u00b7 OOS trades ${r.oos_total_trades}</p>
+                <table class="trades">
+                <thead><tr><th>#</th><th>Winner</th><th>IS score</th><th>OOS score</th><th>OOS trades</th><th>OOS return</th><th>OOS max DD</th></tr></thead>
+                <tbody>${r.windows.map(w => `
+                    <tr>
+                        <td>${w.window + 1}</td>
+                        <td class="small">${esc(JSON.stringify(w.best_overrides))}</td>
+                        <td>${w.is_score.toFixed(2)}</td>
+                        <td class="${w.oos_score >= w.is_score * 0.5 ? 'pos' : 'neg'}">${w.oos_score.toFixed(2)}</td>
+                        <td>${w.oos_summary.trades}</td>
+                        <td>${w.oos_summary.total_return_pct.toFixed(1)}%</td>
+                        <td>${w.oos_summary.max_drawdown_pct.toFixed(1)}%</td>
+                    </tr>`).join('')}
+                </tbody></table>`;
+        } catch (err) {
+            out.textContent = t('common.error', { err: err.message });
+        }
+    });
+}
 
 async function openTournamentModal() {
     const wrap = document.createElement('div');
