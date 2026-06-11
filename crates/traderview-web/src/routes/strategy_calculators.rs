@@ -9,6 +9,8 @@
 //!   POST /calc/valuation-gauges          — Buffett / Tobin Q / ERP / ECY
 //!   POST /calc/variance-risk-premium     — IV² − RV² short-vol edge
 //!   POST /calc/scale-out                 — partial-exit ladder scenarios
+//!   POST /calc/merger-arb                — deal spread + implied probability
+//!   POST /calc/buyback-accretion         — EPS accretion + breakeven P/E
 //!   POST /sim/dual-momentum              — Antonacci GEM backtest
 //!   GET  /symbols/:sym/turn-of-month     — TOM seasonality stats
 //!   GET  /symbols/:sym/vol-cone          — realized-vol percentile cone
@@ -40,6 +42,8 @@ pub fn router() -> Router<AppState> {
         .route("/calc/valuation-gauges", post(post_valuation_gauges))
         .route("/calc/variance-risk-premium", post(post_vrp))
         .route("/calc/scale-out", post(post_scale_out))
+        .route("/calc/merger-arb", post(post_merger_arb))
+        .route("/calc/buyback-accretion", post(post_buyback_accretion))
         .route("/sim/dual-momentum", post(post_dual_momentum))
         .route("/symbols/:symbol/turn-of-month", get(get_turn_of_month))
         .route("/symbols/:symbol/vol-cone", get(get_vol_cone))
@@ -222,6 +226,26 @@ async fn post_scale_out(
                     .into(),
             )
         })
+}
+
+async fn post_merger_arb(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<traderview_core::merger_arb::MergerArbInput>,
+) -> Result<Json<traderview_core::merger_arb::MergerArbReport>, ApiError> {
+    traderview_core::merger_arb::compute(&b).map(Json).ok_or_else(|| {
+        ApiError::BadRequest("invalid deal inputs — need deal > break, days > 0".into())
+    })
+}
+
+async fn post_buyback_accretion(
+    State(_s): State<AppState>,
+    _u: AuthUser,
+    Json(b): Json<traderview_core::buyback_accretion::BuybackInput>,
+) -> Result<Json<traderview_core::buyback_accretion::BuybackReport>, ApiError> {
+    traderview_core::buyback_accretion::compute(&b)
+        .map(Json)
+        .ok_or_else(|| ApiError::BadRequest("invalid buyback inputs".into()))
 }
 
 async fn post_dual_momentum(

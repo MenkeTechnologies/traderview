@@ -350,6 +350,58 @@ const TOOLS = {
             covered call" when the back leg is deep ITM). Back leg revalued by Black-Scholes at front expiry.</p>`;
         },
     },
+    'merger-arb': {
+        label: 'Merger Arb',
+        call: (b) => api.calcMergerArb(b),
+        fields: [
+            { key: 'current_price', label: 'Current price ($)', def: 98 },
+            { key: 'deal_price', label: 'Deal price ($)', def: 100 },
+            { key: 'break_price', label: 'Break price ($)', def: 90 },
+            { key: 'days_to_close', label: 'Days to close', def: 73 },
+            { key: 'estimated_probability', label: 'Your completion prob (0–1)', def: 0.9 },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">Spread</div>
+                    <div class="value ${r.gross_spread_pct >= 0 ? 'pos' : 'neg'}">${r.gross_spread_pct.toFixed(2)}%</div>
+                    <div class="small muted">${r.annualized_spread_pct.toFixed(1)}% annualized</div></div>
+                <div class="card"><div class="label">Market-implied prob</div>
+                    <div class="value">${(r.implied_probability * 100).toFixed(0)}%</div></div>
+                <div class="card"><div class="label">EV at your prob</div>
+                    <div class="value ${r.expected_return_pct >= 0 ? 'pos' : 'neg'}">${r.expected_return_pct.toFixed(2)}%</div>
+                    <div class="small muted">$${r.expected_price.toFixed(2)} expected</div></div>
+                <div class="card"><div class="label">Reward : risk</div>
+                    <div class="value">${r.reward_risk != null ? r.reward_risk.toFixed(2) : '—'}</div>
+                    <div class="small neg">${r.downside_pct.toFixed(1)}% on break</div></div>
+            </div>
+            <p class="muted small">P = p·deal + (1−p)·break solves the completion probability the market is
+            charging — the edge is the gap between that and your estimate.</p>`,
+    },
+    'buyback-accretion': {
+        label: 'Buyback Accretion',
+        call: (b) => api.calcBuybackAccretion(b),
+        fields: [
+            { key: 'net_income', label: 'Net income ($M)', def: 1000 },
+            { key: 'shares_outstanding', label: 'Shares outstanding (M)', def: 100 },
+            { key: 'share_price', label: 'Share price ($)', def: 200 },
+            { key: 'buyback_amount', label: 'Buyback ($M)', def: 2000 },
+            { key: 'funding_rate', label: 'Funding rate (decimal)', def: 0.05 },
+            { key: 'tax_rate', label: 'Tax rate (decimal)', def: 0.21 },
+        ],
+        render: (r) => `
+            <div class="cards">
+                <div class="card"><div class="label">EPS accretion</div>
+                    <div class="value ${r.is_accretive ? 'pos' : 'neg'}">${(r.accretion_pct >= 0 ? '+' : '') + r.accretion_pct.toFixed(2)}%</div>
+                    <div class="small muted">$${r.old_eps.toFixed(2)} → $${r.new_eps.toFixed(2)}</div></div>
+                <div class="card"><div class="label">Breakeven P/E</div>
+                    <div class="value">${r.breakeven_pe != null ? r.breakeven_pe.toFixed(1) : '∞'}</div>
+                    <div class="small ${r.is_accretive ? 'pos' : 'neg'}">current ${r.current_pe.toFixed(1)} — ${r.is_accretive ? 'accretive' : 'DILUTIVE'}</div></div>
+                <div class="card"><div class="label">Shares retired</div>
+                    <div class="value">${r.shares_retired.toFixed(1)}M</div></div>
+            </div>
+            <p class="muted small">A buyback is accretive only while the earnings yield beats the after-tax
+            funding rate — breakeven P/E = 1 / (rate × (1 − tax)).</p>`,
+    },
     'scale-out': {
         label: 'Scale-Out Ladder',
         call: (b) => api.calcScaleOut({

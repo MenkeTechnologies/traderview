@@ -892,5 +892,7 @@ pub mod valuation_gauges;
 pub mod variance_risk_premium;
 pub mod implied_dividend;
 pub mod scale_out_planner;
+pub mod merger_arb;
+pub mod buyback_accretion;
 
 pub use models::*;

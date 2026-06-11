@@ -746,6 +746,8 @@ export const api = {
     calcValuationGauges:     (body) => request('/calc/valuation-gauges', { method: 'POST', body: JSON.stringify(body) }),
     calcVarianceRiskPremium: (body) => request('/calc/variance-risk-premium', { method: 'POST', body: JSON.stringify(body) }),
     calcScaleOut:            (body) => request('/calc/scale-out', { method: 'POST', body: JSON.stringify(body) }),
+    calcMergerArb:           (body) => request('/calc/merger-arb', { method: 'POST', body: JSON.stringify(body) }),
+    calcBuybackAccretion:    (body) => request('/calc/buyback-accretion', { method: 'POST', body: JSON.stringify(body) }),
     calcImpliedDividend:     (body) => request('/options/calc/implied-dividend', { method: 'POST', body: JSON.stringify(body) }),
     simDualMomentum:         (body) => request('/sim/dual-momentum', { method: 'POST', body: JSON.stringify(body) }),
     turnOfMonth:             (sym, years = 10) => request(`/symbols/${encodeURIComponent(sym)}/turn-of-month${qs({ years })}`),
